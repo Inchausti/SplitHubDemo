@@ -776,7 +776,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
   </div>
   <div class="tcrd">
     <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>NFs encontradas</h2><p id="nf-count-sub">0 de 0 NFs exibidas</p></div></div>
-    <div class="twrap"><table><thead><tr><th>Número NF</th><th>Tipo</th><th>Fornecedor/Cliente</th><th>CNPJ</th><th class="r">Valor (R$)</th><th>Data de Criação</th><th>Status</th></tr></thead>
+    <div class="twrap"><table><thead><tr><th>Número NF</th><th>Tipo Reg.</th><th>Tipo NF</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor Total</th><th class="r">Valor Líq.</th><th class="r">Crédito/Débito</th><th>Tributo</th><th>Status</th><th>Data</th></tr></thead>
     <tbody id="t-listagem-nfs"></tbody></table></div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
       <button class="btn" id="nf-btn-prev" onclick="nfPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
@@ -2361,58 +2361,111 @@ function nfRenderLista(){
   var dataIni=dataIniEl?dataIniEl.value:"";
   var dataFim=dataFimEl?dataFimEl.value:"";
 
-  // Coletar todas as NFs (entrada e saída)
-  var todasNFs=[];
+  // Coletar todos os registros (NF + CBS + IBS + Débitos)
+  var todosRegistros=[];
 
-  // Adicionar NFs de entrada
+  // Adicionar NFs de entrada com CBS e IBS
   if(typeof dataSyncFixed!=='undefined'){
     var nfsEntrada=dataSyncFixed.getNFsEntrada();
-    nfsEntrada.forEach(function(nf){
-      todasNFs.push({
+    nfsEntrada.forEach(function(nf,idx){
+      var statusCreditos=['nao_apropriado','nao_apropriado','apropriado','apropriado','apropriado','utilizado','utilizado','perdido'];
+      var statusCred=statusCreditos[idx%statusCreditos.length];
+
+      // Valor líquido = Valor total - (CBS + IBS)
+      var cbs=Math.floor(nf.valor*0.08);
+      var ibs=Math.floor(nf.valor*0.10);
+      var valorLiquido=nf.valor-cbs-ibs;
+
+      // Registro NF de Entrada
+      todosRegistros.push({
         numero:nf.numero,
         tipo:'entrada',
+        subtipo:'nf',
         entidade:nf.fornecedor,
         cnpj:nf.cnpj,
-        valor:nf.valor,
+        valorTotal:nf.valor,
+        valorLiquido:valorLiquido,
+        credito:0,
         data:nf.data,
-        status:'confirmado'
+        status:'confirmado',
+        tributo:null
+      });
+
+      // Registro CBS (crédito)
+      todosRegistros.push({
+        numero:nf.numero,
+        tipo:'entrada',
+        subtipo:'cbs',
+        entidade:nf.fornecedor,
+        cnpj:nf.cnpj,
+        valorTotal:nf.valor,
+        valorLiquido:valorLiquido,
+        credito:cbs,
+        data:nf.data,
+        status:statusCred,
+        tributo:'CBS'
+      });
+
+      // Registro IBS (crédito)
+      todosRegistros.push({
+        numero:nf.numero,
+        tipo:'entrada',
+        subtipo:'ibs',
+        entidade:nf.fornecedor,
+        cnpj:nf.cnpj,
+        valorTotal:nf.valor,
+        valorLiquido:valorLiquido,
+        credito:ibs,
+        data:nf.data,
+        status:statusCred,
+        tributo:'IBS'
       });
     });
   }
 
-  // Adicionar NFs de saída
+  // Adicionar NFs de saída com débitos
   if(typeof creditos!=='undefined'&&creditos.length>0){
     var nfsEntrada=typeof dataSyncFixed!=='undefined'?dataSyncFixed.getNFsEntrada():[];
     var qtdSaida=Math.floor(nfsEntrada.length*0.8);
     var clientes=['WEG Motores','Mercado Livre','Embraer S.A.','Bosch Ltda','Randon S.A.','Ambev S.A.','Magazine Luiza','Gerdau Aços','Marcopolo S.A.','Natura &Co'];
+    var statusDebitos=['nao_extinto','nao_extinto','extinto','extinto','extinto','extinto'];
 
     for(var i=1;i<=qtdSaida;i++){
       var dia=(i%28)+1;var mes=Math.floor((i-1)/150)%12+1;
-      todasNFs.push({
+      var valorSaida=Math.floor(12000+Math.random()*20000)*Math.floor(Math.random()*5+1);
+      var debito=Math.floor(valorSaida*0.115);
+      var statusDeb=statusDebitos[i%statusDebitos.length];
+
+      // Registro NF de Saída
+      todosRegistros.push({
         numero:String(i+500000).padStart(6,'0'),
         tipo:'saida',
+        subtipo:'nf',
         entidade:clientes[i%clientes.length],
         cnpj:'12.345.678/000'+String(i%100).padStart(2,'0'),
-        valor:Math.floor(12000+Math.random()*20000)*Math.floor(Math.random()*5+1),
+        valorTotal:valorSaida,
+        valorLiquido:valorSaida,
+        credito:debito,
         data:'2026-'+String(mes).padStart(2,'0')+'-'+String(dia).padStart(2,'0'),
-        status:'emitido'
+        status:statusDeb,
+        tributo:null
       });
     }
   }
 
   // Aplicar filtros
-  nfListaFiltradaGlobal=todasNFs.filter(function(nf){
+  nfListaFiltradaGlobal=todosRegistros.filter(function(r){
     if(busca){
-      var alvo=(nf.numero+" "+nf.entidade+" "+nf.cnpj).toLowerCase();
+      var alvo=(r.numero+" "+r.entidade+" "+r.cnpj+" "+(r.tributo||'nf')).toLowerCase();
       if(alvo.indexOf(busca)===-1)return false;
     }
-    if(tipoFiltro&&nf.tipo!==tipoFiltro)return false;
-    if(dataIni&&nf.data<dataIni)return false;
-    if(dataFim&&nf.data>dataFim)return false;
+    if(tipoFiltro&&r.tipo!==tipoFiltro)return false;
+    if(dataIni&&r.data<dataIni)return false;
+    if(dataFim&&r.data>dataFim)return false;
     return true;
   });
 
-  nfTotalGlobal=todasNFs.length;
+  nfTotalGlobal=todosRegistros.length;
   nfPaginaAtual=1;
   nfRenderPagina();
 }
@@ -2427,21 +2480,45 @@ function nfRenderPagina(){
   var listaPagina=nfListaFiltradaGlobal.slice(inicio,fim);
 
   var h="";
-  listaPagina.forEach(function(nf){
-    var tipoBadge=nf.tipo==='entrada'?'<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>':'<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
-    var statusBadge=nf.tipo==='entrada'?'<span style="background:rgba(73,197,177,.12);color:#49C5B1;border:1px solid rgba(73,197,177,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Confirmada</span>':'<span style="background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Emitida</span>';
-    var dataParts=nf.data.split('-');var dataFormatada=dataParts[2]+'/'+dataParts[1]+'/'+dataParts[0];
-    h+='<tr><td class="mono" style="color:#3B82F6;font-weight:600">NF-'+nf.numero+'</td>'
+  listaPagina.forEach(function(r){
+    var tipoBadge=r.tipo==='entrada'?'<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>':'<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
+
+    var statusBadge='';
+    if(r.subtipo==='nf'){
+      statusBadge='<span style="background:rgba(73,197,177,.12);color:#49C5B1;border:1px solid rgba(73,197,177,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">NF</span>';
+    }else if(r.status==='nao_apropriado'){
+      statusBadge='<span style="background:rgba(244,63,94,.12);color:#F43F5E;border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Não Apropriado</span>';
+    }else if(r.status==='apropriado'){
+      statusBadge='<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Apropriado</span>';
+    }else if(r.status==='utilizado'){
+      statusBadge='<span style="background:rgba(73,197,177,.12);color:#49C5B1;border:1px solid rgba(73,197,177,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Utilizado</span>';
+    }else if(r.status==='perdido'){
+      statusBadge='<span style="background:rgba(244,63,94,.12);color:#F43F5E;border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Perdido</span>';
+    }else if(r.status==='nao_extinto'){
+      statusBadge='<span style="background:rgba(244,63,94,.12);color:#F43F5E;border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Não Extinto</span>';
+    }else if(r.status==='extinto'){
+      statusBadge='<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Extinto</span>';
+    }
+
+    var dataParts=r.data.split('-');var dataFormatada=dataParts[2]+'/'+dataParts[1]+'/'+dataParts[0];
+    var subtipoLabel=r.subtipo==='nf'?'NF':(r.subtipo==='cbs'?'CBS':(r.subtipo==='ibs'?'IBS':'Débito'));
+    var tributoCol=r.tributo?r.tributo:'—';
+
+    h+='<tr style="'+(r.subtipo!=='nf'?'background:rgba(73,197,177,.05)':'')+'"><td class="mono" style="color:#3B82F6;font-weight:600">NF-'+r.numero+'</td>'
+      +'<td style="font-size:11px;font-weight:600;color:var(--txt2)">'+subtipoLabel+'</td>'
       +'<td>'+tipoBadge+'</td>'
-      +'<td>'+nf.entidade+'</td>'
-      +'<td class="mono" style="font-size:11px;color:var(--txt2)">'+nf.cnpj+'</td>'
-      +'<td class="r mono" style="font-weight:600">'+ff(nf.valor)+'</td>'
-      +'<td style="font-size:12px;color:var(--txt2)">'+dataFormatada+'</td>'
-      +'<td>'+statusBadge+'</td></tr>';
+      +'<td>'+r.entidade+'</td>'
+      +'<td class="mono" style="font-size:11px;color:var(--txt2)">'+r.cnpj+'</td>'
+      +'<td class="r mono" style="font-size:11px">'+ff(r.valorTotal)+'</td>'
+      +'<td class="r mono" style="font-size:11px;color:var(--txt2)">'+ff(r.valorLiquido)+'</td>'
+      +'<td class="r mono" style="font-weight:600;color:'+(r.credito>0?'#49C5B1':'var(--txt3)')+'">'+ff(r.credito)+'</td>'
+      +'<td style="font-size:11px;text-align:center">'+tributoCol+'</td>'
+      +'<td>'+statusBadge+'</td>'
+      +'<td style="font-size:12px;color:var(--txt2)">'+dataFormatada+'</td></tr>';
   });
 
   if(!listaPagina.length){
-    h='<tr><td colspan="7" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma NF encontrada para este filtro.</td></tr>';
+    h='<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma NF encontrada para este filtro.</td></tr>';
   }
 
   var tbody=document.getElementById("t-listagem-nfs");
