@@ -756,6 +756,29 @@ tr:hover td{background:rgba(73,197,177,.02)}
     <div class="twrap"><table><thead><tr><th>RF</th><th>Fornecedor</th><th>CNPJ</th><th>NF-e</th><th class="r">Valor NF</th><th>Status</th><th>Inconsistência</th><th>Identificada em</th><th>Ação sugerida</th></tr></thead>
     <tbody id="t-gestao-dfs"></tbody></table></div>
   </div>
+
+  <!-- ABA: LISTAGEM DE NFs -->
+  <div class="crd" style="margin-top:24px">
+    <div class="sechdr"><h2>Listagem de NFs</h2><p>Todas as Notas Fiscais de entrada e saída · Aplique filtros para refinar a busca</p></div>
+    <div class="flt" style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+      <input type="text" id="nf-busca" placeholder="Buscar por número, fornecedor/cliente, CNPJ…" oninput="nfRenderLista()"/>
+      <select id="nf-filtro-tipo" onchange="nfRenderLista()">
+        <option value="">Tipo — todos</option>
+        <option value="entrada">Entrada</option>
+        <option value="saida">Saída</option>
+      </select>
+      <div style="display:flex;gap:10px">
+        <input type="date" id="nf-data-inicio" onchange="nfRenderLista()" style="flex:1"/>
+        <input type="date" id="nf-data-fim" onchange="nfRenderLista()" style="flex:1"/>
+      </div>
+      <button class="btn" onclick="nfLimparFiltros()">✕ Limpar</button>
+    </div>
+  </div>
+  <div class="tcrd">
+    <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>NFs encontradas</h2><p id="nf-count-sub">0 de 0 NFs exibidas</p></div></div>
+    <div class="twrap"><table><thead><tr><th>Número NF</th><th>Tipo</th><th>Fornecedor/Cliente</th><th>CNPJ</th><th class="r">Valor (R$)</th><th>Data de Criação</th><th>Status</th></tr></thead>
+    <tbody id="t-listagem-nfs"></tbody></table></div>
+  </div>
 </div>
 
 <!-- INTELIGÊNCIA -->
@@ -2313,6 +2336,109 @@ function conciliacaoLimparFiltros(){
   conciliacaoRenderDFs();
 }
 
+function nfRenderLista(){
+  var buscaEl=document.getElementById("nf-busca");
+  var tipoEl=document.getElementById("nf-filtro-tipo");
+  var dataIniEl=document.getElementById("nf-data-inicio");
+  var dataFimEl=document.getElementById("nf-data-fim");
+
+  var busca=buscaEl?buscaEl.value.trim().toLowerCase():"";
+  var tipoFiltro=tipoEl?tipoEl.value:"";
+  var dataIni=dataIniEl?dataIniEl.value:"";
+  var dataFim=dataFimEl?dataFimEl.value:"";
+
+  // Coletar todas as NFs (entrada e saída)
+  var todasNFs=[];
+
+  // Adicionar NFs de entrada
+  if(typeof dataSyncFixed!=='undefined'){
+    var nfsEntrada=dataSyncFixed.getNFsEntrada();
+    nfsEntrada.forEach(function(nf){
+      todasNFs.push({
+        numero:nf.numero,
+        tipo:'entrada',
+        entidade:nf.fornecedor,
+        cnpj:nf.cnpj,
+        valor:nf.valor,
+        data:nf.data,
+        status:'confirmado'
+      });
+    });
+  }
+
+  // Adicionar NFs de saída (simular com base em débitos)
+  if(typeof creditos!=='undefined'&&creditos.length>0){
+    // Usar metade da quantidade de NFs de entrada para saída
+    var nfsEntrada=typeof dataSyncFixed!=='undefined'?dataSyncFixed.getNFsEntrada():[];
+    var qtdSaida=Math.floor(nfsEntrada.length*0.8);
+    var clientes=['WEG Motores','Mercado Livre','Embraer S.A.','Bosch Ltda','Randon S.A.','Ambev S.A.','Magazine Luiza','Gerdau Aços','Marcopolo S.A.','Natura &Co'];
+
+    for(var i=1;i<=qtdSaida;i++){
+      var dia=(i%28)+1;var mes=Math.floor((i-1)/150)%12+1;
+      todasNFs.push({
+        numero:String(i+500000).padStart(6,'0'),
+        tipo:'saida',
+        entidade:clientes[i%clientes.length],
+        cnpj:'12.345.678/000'+String(i%100).padStart(2,'0'),
+        valor:Math.floor(12000+Math.random()*20000)*Math.floor(Math.random()*5+1),
+        data:'2026-'+String(mes).padStart(2,'0')+'-'+String(dia).padStart(2,'0'),
+        status:'emitido'
+      });
+    }
+  }
+
+  // Aplicar filtros
+  var listaFiltrada=todasNFs.filter(function(nf){
+    if(busca){
+      var alvo=(nf.numero+" "+nf.entidade+" "+nf.cnpj).toLowerCase();
+      if(alvo.indexOf(busca)===-1)return false;
+    }
+    if(tipoFiltro&&nf.tipo!==tipoFiltro)return false;
+    if(dataIni&&nf.data<dataIni)return false;
+    if(dataFim&&nf.data>dataFim)return false;
+    return true;
+  });
+
+  // Renderizar tabela
+  var h="";
+  listaFiltrada.forEach(function(nf){
+    var tipoBadge=nf.tipo==='entrada'?'<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>':'<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
+    var statusBadge=nf.tipo==='entrada'?'<span style="background:rgba(73,197,177,.12);color:#49C5B1;border:1px solid rgba(73,197,177,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Confirmada</span>':'<span style="background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Emitida</span>';
+    var dataParts=nf.data.split('-');var dataFormatada=dataParts[2]+'/'+dataParts[1]+'/'+dataParts[0];
+    h+='<tr><td class="mono" style="color:#3B82F6;font-weight:600">NF-'+nf.numero+'</td>'
+      +'<td>'+tipoBadge+'</td>'
+      +'<td>'+nf.entidade+'</td>'
+      +'<td class="mono" style="font-size:11px;color:var(--txt2)">'+nf.cnpj+'</td>'
+      +'<td class="r mono" style="font-weight:600">'+ff(nf.valor)+'</td>'
+      +'<td style="font-size:12px;color:var(--txt2)">'+dataFormatada+'</td>'
+      +'<td>'+statusBadge+'</td></tr>';
+  });
+
+  if(!listaFiltrada.length){
+    h='<tr><td colspan="7" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma NF encontrada para este filtro.</td></tr>';
+  }
+
+  var tbody=document.getElementById("t-listagem-nfs");
+  if(tbody)tbody.innerHTML=h;
+
+  var sub=document.getElementById("nf-count-sub");
+  if(sub)sub.textContent=listaFiltrada.length+" de "+todasNFs.length+" NFs exibidas";
+}
+
+function nfLimparFiltros(){
+  var busca=document.getElementById("nf-busca");
+  var tipo=document.getElementById("nf-filtro-tipo");
+  var dataIni=document.getElementById("nf-data-inicio");
+  var dataFim=document.getElementById("nf-data-fim");
+
+  if(busca)busca.value="";
+  if(tipo)tipo.value="";
+  if(dataIni)dataIni.value="";
+  if(dataFim)dataFim.value="";
+
+  nfRenderLista();
+}
+
 function creditosRenderTabela(){
   var h="";
   var lista=creditos;
@@ -2421,6 +2547,8 @@ function init(){
   inconsistRenderTabela();
   // conciliação — gestão de dfs
   conciliacaoRenderDFs();
+  // listagem de nfs
+  nfRenderLista();
 }
 
 function fctSaldoFinal(d){
