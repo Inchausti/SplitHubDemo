@@ -518,11 +518,29 @@ tr:hover td{background:rgba(73,197,177,.02)}
 
 <!-- CRÉDITOS -->
 <div id="view-creditos" class="view">
-  <div class="pg-hdr"><div><div class="pg-title">Gestão de Créditos</div><div class="pg-sub">Posição IBS + CBS · Art. 48 LC 214/2025 · Abril 2026</div></div></div>
+  <div class="pg-hdr">
+    <div>
+      <div class="pg-title">Gestão de Créditos</div>
+      <div class="pg-sub" id="cred-periodo-sub">Posição IBS + CBS · Art. 48 LC 214/2025 · Todos os períodos</div>
+    </div>
+    <div class="hdr-act">
+      <select id="cred-mes-ano" onchange="window.creditosFiltrarMesAno()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--txt1);font-size:13px;font-weight:600;font-family:inherit;padding:8px 16px;cursor:pointer;outline:none">
+        <option value="">Todos os períodos</option>
+        <option value="2025-10">out/2025</option>
+        <option value="2025-11">nov/2025</option>
+        <option value="2025-12">dez/2025</option>
+        <option value="2026-01">jan/2026</option>
+        <option value="2026-02">fev/2026</option>
+        <option value="2026-03">mar/2026</option>
+        <option value="2026-04">abr/2026</option>
+      </select>
+    </div>
+  </div>
   <div class="sechdr" style="margin-bottom:10px"><h2>Créditos</h2></div>
-  <div class="kgrid k4">
+  <div class="kgrid k5">
     <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">Total de créditos</div><div class="kval" id="cred-total">R$ 65,6M</div><div class="ksub">IBS + CBS · abr/26</div></div>
     <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">Apropriados</div><div class="kval" id="cred-aprop">R$ 52,3M</div><div class="ksub" id="cred-aprop-sub">79,7% — retorno Plataforma</div></div>
+    <div class="kcard" style="border-top-color:#A7A8AA"><div class="klbl">Não Apropriados</div><div class="kval" id="cred-nao-aprop">—</div><div class="ksub" id="cred-nao-aprop-sub">Soma de RFs com status Não Apropriado</div></div>
     <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Em risco</div><div class="kval" id="cred-risco">R$ 2,4M</div><div class="ksub"><span id="cred-risco-sub">3,7% — vencimento próximo</span><br/><a href="javascript:void(0)" onclick="creditosVerRegistrosRisco()" style="color:var(--amber);font-weight:600;text-decoration:none;font-size:11px">Ver registros em risco →</a></div></div>
     <div class="kcard" style="border-top-color:var(--txt1)"><div class="klbl">Utilizados</div><div class="kval" id="cred-util">R$ 38,9M</div><div class="ksub" id="cred-util-sub">74,4% dos apropriados — abateram débito</div></div>
   </div>
@@ -535,12 +553,41 @@ tr:hover td{background:rgba(73,197,177,.02)}
   <div class="sechdr" style="margin-bottom:10px;margin-top:4px"><h2>Exceções</h2><p>Créditos fora do fluxo padrão de apropriação</p></div>
   <div class="kgrid" style="grid-template-columns:repeat(2,1fr)">
     <div class="kcard" style="border-top-color:var(--blue)"><div class="klbl">Aguardando</div><div class="kval" id="cred-aguard">R$ 10,9M</div><div class="ksub" id="cred-aguard-sub">16,6% — pagamento efetuado</div></div>
-    <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Perda acumulada</div><div class="kval" id="cred-perda">R$ 168K</div><div class="ksub"><span id="cred-perda-sub">0,3% — crédito perdido</span><br/><a href="javascript:void(0)" onclick="creditosVerRelatorioPerdas()" style="color:var(--red);font-weight:600;text-decoration:none;font-size:11px">Ver relatório detalhado →</a></div></div>
+    <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Perda acumulada</div><div class="kval" id="cred-perda">—</div><div class="ksub"><span id="cred-perda-desc" style="display:block;font-size:10px;color:var(--txt3);margin-bottom:4px">Perda acumulada do ano · IBS + CBS com status Vencido</span><span id="cred-perda-sub" style="color:var(--red);font-weight:600"></span><br/><a href="javascript:void(0)" onclick="creditosVerRelatorioPerdas()" style="color:var(--red);font-weight:600;text-decoration:none;font-size:11px">Ver relatório detalhado →</a></div></div>
   </div>
-  <div class="ccrd" style="margin-bottom:24px">
-    <div class="ctitle">Composição de créditos</div><div class="csub">R$ milhões · últimos 7 meses</div>
-    <div class="cwrap" style="height:220px"><div id="cComposicao"></div></div>
-    <div class="leg"><span class="li"><span class="ls" style="background:var(--green)"></span>Apropriados</span><span class="li"><span class="ls" style="background:var(--blue)"></span>Aguardando</span><span class="li"><span class="ls" style="background:var(--red)"></span>Em risco</span></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">
+    <div class="ccrd">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px">
+        <div>
+          <div class="ctitle">Composição de créditos</div>
+          <div class="csub" id="cComposicao-sub">R$ milhões · IBS + CBS · por status de RF · mês a mês</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button id="btn-comp-todos" onclick="window.renderizarComposicaoCreditos('')"  style="background:var(--teal);color:#fff;border:1px solid var(--teal);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer">Todos</button>
+          <button id="btn-comp-ibs"   onclick="window.renderizarComposicaoCreditos('ibs')" style="background:transparent;color:var(--txt2);border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer">IBS</button>
+          <button id="btn-comp-cbs"   onclick="window.renderizarComposicaoCreditos('cbs')" style="background:transparent;color:var(--txt2);border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer">CBS</button>
+        </div>
+      </div>
+      <div class="cwrap" style="height:200px"><div id="cComposicao"></div></div>
+      <div class="leg">
+        <span class="li"><span class="ls" style="background:#22C55E"></span>Apropriado</span>
+        <span class="li"><span class="ls" style="background:#3B82F6"></span>Utilizado</span>
+        <span class="li"><span class="ls" style="background:#A7A8AA"></span>Não Apropriado</span>
+        <span class="li"><span class="ls" style="background:#F59E0B"></span>Vencido</span>
+        <span class="li"><span class="ls" style="background:#F43F5E"></span>Inconsistência</span>
+      </div>
+    </div>
+    <div class="ccrd">
+      <div style="margin-bottom:4px">
+        <div class="ctitle">Método de pagamento</div>
+        <div class="csub" id="cPagMetodo-sub">R$ milhões · RAD vs Fornecedor · pagamentos realizados · mês a mês</div>
+      </div>
+      <div class="cwrap" style="height:200px"><div id="cPagMetodo"></div></div>
+      <div class="leg">
+        <span class="li"><span class="ls" style="background:#8B5CF6"></span>RAD</span>
+        <span class="li"><span class="ls" style="background:#3B82F6"></span>Fornecedor</span>
+      </div>
+    </div>
   </div>
   <div id="creditos-filtro-chip" style="display:none;align-items:center;gap:8px;margin-bottom:14px">
     <span style="font-size:11px;color:var(--txt3)">Filtro ativo:</span>
