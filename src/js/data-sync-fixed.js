@@ -104,7 +104,7 @@ var _PAG_ALL_TBODIES = [
   't-gestao-rfs','t-listagem-nfs','t-rad-prazo',
   't-apur-resumo','t-apur-cred','t-apur-deb',
   't-contratos','t-adm-fornecedores',
-  't-inc-tipo','t-inc-fornecedores','t-inconsistencias'
+  't-inc-tipo','t-inc-fornecedores','t-inconsistencias','t-inc-rfs'
 ];
 
 function _pagBtnStyle(dis) {
@@ -602,6 +602,72 @@ window.atualizarPerdaAcumulada = function() {
   if (elSub) {
     elSub.textContent = countRFs + ' RF' + (countRFs !== 1 ? 's' : '') + ' vencidos · IBS + CBS';
   }
+};
+
+// ============================================================
+// INCONSISTÊNCIAS — RFs de crédito com status inconsistencia
+// ============================================================
+
+window.creditosIrParaInconsistencias = function() {
+  var btn = document.getElementById('subnav-inconsist-lista');
+  if (typeof showInconsistSub === 'function' && btn) {
+    showInconsistSub('lista', btn);
+  }
+  try { if (typeof inconsistRenderTabela === 'function') inconsistRenderTabela(); } catch(e) {}
+  try { window.renderizarRFsInconsistencias(); } catch(e) {}
+};
+
+window.renderizarRFsInconsistencias = function() {
+  var lista = [];
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada' || !nf.registrosFiscais) return;
+    nf.registrosFiscais.forEach(function(rf) {
+      if (rf.status !== 'inconsistencia') return;
+      var valorLiq = rf.valorLiquidoNF || 0;
+      var cred = rf.tipoFiscal === 'cbs'
+        ? Math.floor(valorLiq * 0.08)
+        : Math.floor(valorLiq * 0.10);
+      var dp = (rf.data || '').split('-');
+      lista.push({
+        rf:         rf.id || '—',
+        tf:         rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
+        nf:         'NF-' + (rf.nfVinculada || nf.numero || ''),
+        forn:       rf.entidade || nf.entidade || '—',
+        cnpj:       rf.cnpj    || nf.cnpj    || '—',
+        data:       dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
+        cred:       cred,
+        contrato:   rf.contratoId || nf.contratoId || '—'
+      });
+    });
+  });
+
+  var h = '';
+  lista.forEach(function(r) {
+    var tfBadge = r.tf === 'IBS'
+      ? '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">IBS</span>'
+      : '<span style="background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">CBS</span>';
+    var incBadge = '<span style="background:rgba(244,63,94,.12);color:#F43F5E;border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Inconsistência</span>';
+    h += '<tr>'
+      + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + r.rf + '</td>'
+      + '<td>' + tfBadge + '</td>'
+      + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.nf + '</td>'
+      + '<td style="font-size:12px">' + r.forn + '</td>'
+      + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + r.cnpj + '</td>'
+      + '<td style="font-size:11px;color:var(--txt2)">' + r.data + '</td>'
+      + '<td class="r mono" style="font-size:11px;font-weight:700;color:#F43F5E">' + ff(r.cred) + '</td>'
+      + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + r.contrato + '</td>'
+      + '</tr>';
+  });
+
+  if (!lista.length) {
+    h = '<tr><td colspan="8" style="text-align:center;color:var(--txt3);padding:24px">Nenhum RF com inconsistência encontrado.</td></tr>';
+  }
+
+  var tbody = document.getElementById('t-inc-rfs');
+  if (tbody) tbody.innerHTML = h;
+
+  var sub = document.getElementById('inc-rf-count-sub');
+  if (sub) sub.textContent = lista.length + ' RF' + (lista.length !== 1 ? 's' : '') + ' com inconsistência · IBS + CBS';
 };
 
 // ============================================================
@@ -1621,6 +1687,13 @@ document.addEventListener('DOMContentLoaded', function() {
         window.renderizarTabelaCreditos();
       } catch(e) {
         console.error('[data-sync-fixed] Erro ao renderizar tabela:', e);
+      }
+
+      // Renderizar RFs com inconsistência (seção Gestão de Inconsistências)
+      try {
+        window.renderizarRFsInconsistencias();
+      } catch(e) {
+        console.error('[data-sync-fixed] Erro ao renderizar RFs de inconsistência:', e);
       }
 
       // Renderizar módulo de débitos (seção Gestão de Débitos)
