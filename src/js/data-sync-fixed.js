@@ -41,19 +41,19 @@ class DataSyncManagerFixed {
     ];
 
     const somaTotal = 500000000; // R$ 500M
-    const valorBase = Math.floor(somaTotal / 500);
+    const valorBase = Math.floor(somaTotal / 100);
     let somaAcumulada = 0;
 
-    for (let i = 1; i <= 500; i++) {
+    for (let i = 1; i <= 100; i++) {
       let valor;
 
-      if (i === 500) {
+      if (i === 100) {
         valor = somaTotal - somaAcumulada;
       } else {
         const variacao = 0.8 + Math.random() * 0.4;
         valor = Math.floor(valorBase * variacao);
         if (somaAcumulada + valor > somaTotal) {
-          valor = somaTotal - somaAcumulada - (500 - i) * valorBase;
+          valor = somaTotal - somaAcumulada - (100 - i) * valorBase;
         }
       }
 
@@ -179,6 +179,10 @@ document.addEventListener('DOMContentLoaded', function() {
   setTimeout(function() {
     const dataSyncFixed = new DataSyncManagerFixed();
     window.dataSyncFixed = dataSyncFixed; // Expor globalmente
+
+    if (typeof nfRenderLista === 'function') {
+      nfRenderLista();
+    }
 
     // Sincronizar a cada 30 segundos
     setInterval(() => {

@@ -112,6 +112,12 @@ th.r{text-align:right}
 td{font-size:13px;color:var(--txt1);padding:11px 12px;border-bottom:1px solid rgba(58,56,54,.5)}
 td.r{text-align:right}
 td.mono{font-family:'IBM Plex Mono',monospace}
+.nf-fiscal{background:rgba(73,197,177,.08);padding:8px 12px;margin:0;font-size:12px;display:flex;gap:12px;align-items:center;cursor:move;transition:background 0.2s}
+.nf-fiscal:hover{background:rgba(73,197,177,.15)}
+.nf-fiscal.dragging{opacity:0.5;background:rgba(73,197,177,.25)}
+.nf-fiscal-tipo{font-weight:600;min-width:50px;color:#49C5B1}
+.nf-fiscal-valor{font-weight:600;font-family:'IBM Plex Mono',monospace}
+.nf-expand{background:none;border:none;cursor:pointer;padding:4px;color:var(--txt2);font-size:14px;width:24px;text-align:center}
 .mono{font-family:'IBM Plex Mono',monospace}
 tr:hover td{background:rgba(73,197,177,.02)}
 .stabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:24px}
@@ -543,7 +549,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
   </div>
   <div class="tcrd">
     <div class="tcrd-hdr"><div class="sechdr"><h2>Detalhamento por documento fiscal</h2><p>RF × TF × Crédito — conciliação trifásica</p></div></div>
-    <div class="twrap"><table><thead><tr><th>RF</th><th>Nota Fiscal</th><th>Fornecedor</th><th>Data NF</th><th class="r">Valor NF</th><th class="r">Crédito</th><th class="r">CBS</th><th class="r">IBS</th><th>Pagamento</th><th>Status</th><th>Contrato</th></tr></thead><tbody id="t-creditos"></tbody></table></div>
+    <div class="twrap"><table><thead><tr><th>RF</th><th>Tipo Fiscal</th><th>Nota Fiscal</th><th>Fornecedor</th><th>Data NF</th><th class="r">Valor Total</th><th class="r">Valor Líquido</th><th class="r">CBS</th><th class="r">IBS</th><th class="r">Crédito</th><th>Pagamento</th><th>Status</th><th>Contrato</th><th>Método de Pagamento</th></tr></thead><tbody id="t-creditos"></tbody></table></div>
   </div>
 </div>
 
@@ -752,9 +758,22 @@ tr:hover td{background:rgba(73,197,177,.02)}
     </div>
   </div>
   <div class="tcrd">
-    <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>Gestão de DFs</h2><p id="df-count-sub">0 de 0 DFs exibidos</p></div></div>
-    <div class="twrap"><table><thead><tr><th>RF</th><th>Fornecedor</th><th>CNPJ</th><th>NF-e</th><th class="r">Valor NF</th><th>Status</th><th>Inconsistência</th><th>Identificada em</th><th>Ação sugerida</th></tr></thead>
-    <tbody id="t-gestao-dfs"></tbody></table></div>
+    <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>Gestão de Registros Fiscais</h2><p id="rf-count-sub">0 RFs criados</p></div></div>
+    <div class="twrap"><table><thead><tr><th>ID RF</th><th>Tipo Fiscal</th><th>Tipo NF</th><th>NF Vinculada</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor</th><th class="r">NF Total</th><th class="r">NF Líquido</th><th>Status</th><th>Data</th><th>Inconsistência</th></tr></thead>
+    <tbody id="t-gestao-rfs"></tbody></table></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
+      <button class="btn" id="rf-btn-prev" onclick="rfPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:12px;color:var(--txt2)">Página</span>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:4px 12px;min-width:50px;text-align:center">
+          <span id="rf-pag-atual" style="color:var(--txt1);font-weight:600;font-size:13px">1</span>
+          <span style="color:var(--txt3);font-size:12px"> / </span>
+          <span id="rf-pag-total" style="color:var(--txt2);font-size:12px">1</span>
+        </div>
+        <span style="font-size:12px;color:var(--txt2)" id="rf-pag-info">(25 RFs por página)</span>
+      </div>
+      <button class="btn" id="rf-btn-prox" onclick="rfProximaPagina()">Próxima →</button>
+    </div>
   </div>
 
   <!-- ABA: LISTAGEM DE NFs -->
@@ -776,7 +795,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
   </div>
   <div class="tcrd">
     <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>NFs encontradas</h2><p id="nf-count-sub">0 de 0 NFs exibidas</p></div></div>
-    <div class="twrap"><table><thead><tr><th>Número NF</th><th>Tipo Reg.</th><th>Tipo NF</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor Total</th><th class="r">Valor Líq.</th><th class="r">Crédito/Débito</th><th>Tributo</th><th>Status</th><th>Data</th></tr></thead>
+    <div class="twrap"><table><thead><tr><th>Número NF</th><th>Tipo NF</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor Total</th><th class="r">Valor Líq.</th><th class="r">CBS</th><th class="r">IBS</th><th>Status</th><th>Data</th></tr></thead>
     <tbody id="t-listagem-nfs"></tbody></table></div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
       <button class="btn" id="nf-btn-prev" onclick="nfPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
@@ -811,20 +830,12 @@ tr:hover td{background:rgba(73,197,177,.02)}
         <div id="nf-detail-tipo" style="color:var(--txt1);font-weight:600;font-size:15px;margin-bottom:12px">—</div>
       </div>
       <div>
-        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Tipo de Registro</div>
-        <div id="nf-detail-subtipo" style="color:var(--txt1);font-weight:600">—</div>
-      </div>
-      <div>
         <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Entidade</div>
         <div id="nf-detail-entidade" style="color:var(--txt1);font-weight:600">—</div>
       </div>
       <div>
         <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">CNPJ</div>
         <div id="nf-detail-cnpj" style="color:var(--txt1);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:12px">—</div>
-      </div>
-      <div>
-        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Tributo</div>
-        <div id="nf-detail-tributo" style="color:var(--txt1);font-weight:600">—</div>
       </div>
       <div>
         <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Valor Total</div>
@@ -835,8 +846,12 @@ tr:hover td{background:rgba(73,197,177,.02)}
         <div id="nf-detail-valor-liquido" style="color:var(--txt1);font-weight:600">—</div>
       </div>
       <div>
-        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Crédito/Débito</div>
-        <div id="nf-detail-credito" style="color:var(--txt1);font-weight:600">—</div>
+        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">CBS</div>
+        <div id="nf-detail-cbs" style="color:#F59E0B;font-weight:600">—</div>
+      </div>
+      <div>
+        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">IBS</div>
+        <div id="nf-detail-ibs" style="color:#3B82F6;font-weight:600">—</div>
       </div>
       <div>
         <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Status</div>
@@ -845,6 +860,52 @@ tr:hover td{background:rgba(73,197,177,.02)}
       <div style="grid-column:1/3">
         <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Data de Criação</div>
         <div id="nf-detail-data" style="color:var(--txt1);font-weight:600">—</div>
+      </div>
+      <div style="grid-column:1/3;border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
+        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:12px;font-weight:600">Registros Fiscais</div>
+        <div id="nf-detail-fiscais" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px">
+          <!-- Registros fiscais serão renderizados aqui -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Comprovante de Pagamento -->
+<div id="comprovante-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;padding:24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h2 style="font-size:18px;font-weight:600;color:var(--txt1);margin:0">Comprovante de Pagamento</h2>
+      <button style="background:none;border:none;color:var(--txt2);cursor:pointer;font-size:24px;padding:0;line-height:1" onclick="document.getElementById('comprovante-modal').style.display='none'">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13px">
+      <div>
+        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Número de Transação</div>
+        <div id="comprovante-numero-transacao" style="color:var(--txt1);font-weight:600;font-size:14px;font-family:monospace">—</div>
+      </div>
+      <div>
+        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Status</div>
+        <div id="comprovante-status" style="color:#22C55E;font-weight:600;font-size:14px">—</div>
+      </div>
+      <div style="grid-column:1/3">
+        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Data e Hora do Pagamento</div>
+        <div id="comprovante-data-pagamento" style="color:var(--txt1);font-weight:600;font-size:14px">—</div>
+      </div>
+      <div style="grid-column:1/3">
+        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Valor Pago</div>
+        <div id="comprovante-valor" style="color:#49C5B1;font-weight:600;font-size:16px">—</div>
+      </div>
+      <div>
+        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Fornecedor</div>
+        <div id="comprovante-fornecedor" style="color:var(--txt1);font-weight:600">—</div>
+      </div>
+      <div>
+        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">RF</div>
+        <div id="comprovante-rf" style="color:#3B82F6;font-weight:600;font-family:monospace;font-size:12px">—</div>
+      </div>
+      <div style="grid-column:1/3">
+        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Método de Pagamento</div>
+        <div id="comprovante-metodo" style="color:var(--txt1);font-weight:600">—</div>
       </div>
     </div>
   </div>
@@ -2405,7 +2466,130 @@ function conciliacaoLimparFiltros(){
   conciliacaoRenderDFs();
 }
 
-var nfPaginaAtual=1;var nfListaFiltradaGlobal=[];var nfTotalGlobal=0;var nfItensPorPagina=25;
+var rfGlobal={};var rfPaginaAtual=1;var rfListaGlobal=[];var rfItensPorPagina=25;function rfRenderGestao(){
+  var todosRFs=[];
+  if(nfListaFiltradaGlobal){
+    nfListaFiltradaGlobal.forEach(function(nf){
+      if(nf.registrosFiscais && nf.registrosFiscais.length){
+        nf.registrosFiscais.forEach(function(rf){
+          todosRFs.push(rf);
+          if(!rfGlobal[rf.id]){
+            rfGlobal[rf.id]={
+              ...rf,
+              statusInterno:rf.status,
+              historicoStatus:[{status:rf.status,data:new Date().toISOString()}]
+            };
+          }
+        });
+      }
+    });
+  }
+  rfListaGlobal=todosRFs;
+  var qtd10Pct=Math.ceil(rfListaGlobal.length*0.1);
+  var inconsistenciasLabels=['Não conciliado','Valor imposto divergente','Vencido','Sem Comprovante'];
+  for(var i=0;i<qtd10Pct;i++){
+    var idxAleat=Math.floor(Math.random()*rfListaGlobal.length);
+    var rfAleat=rfListaGlobal[idxAleat];
+    var labelAleat=inconsistenciasLabels[Math.floor(Math.random()*inconsistenciasLabels.length)];
+    rfAleat.inconsistencia=labelAleat;
+  }
+  rfPaginaAtual=1;
+  rfRenderPagina();
+}
+function rfRenderPagina(){
+  var totalPaginas=Math.ceil(rfListaGlobal.length/rfItensPorPagina)||1;
+  if(rfPaginaAtual>totalPaginas)rfPaginaAtual=totalPaginas;
+  if(rfPaginaAtual<1)rfPaginaAtual=1;
+  var inicio=(rfPaginaAtual-1)*rfItensPorPagina;
+  var fim=inicio+rfItensPorPagina;
+  var listaPagina=rfListaGlobal.slice(inicio,fim);
+  var h="";
+  listaPagina.forEach(function(rf){
+    var tipoLabel=rf.tipo==='entrada'?'Entrada':'Saída';
+    var tipoBadge=rf.tipo==='entrada'?'<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>':'<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
+    var tipoFiscalLabel=rf.tipoFiscal==='ibs'?'IBS':'CBS';
+    var tipoNFLabel=rf.tipo==='entrada'?'Entrada':'Saída';
+    var tipoNFBadge=rf.tipo==='entrada'?'<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>':'<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
+    var statusLabels={'nao_apropriado':'Não Apropriado','apropriado':'Apropriado','utilizado':'Utilizado','nao_extinto':'Não Extinto','extinto':'Extinto'};
+    var statusBadge='';
+    var status=rfGlobal[rf.id]?rfGlobal[rf.id].statusInterno:rf.status;
+    if(status==='nao_apropriado'){
+      statusBadge='<span style="background:rgba(244,63,94,.12);color:#F43F5E;border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Não Apropriado</span>';
+    }else if(status==='apropriado'){
+      statusBadge='<span style="background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Apropriado</span>';
+    }else if(status==='utilizado'){
+      statusBadge='<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Utilizado</span>';
+    }else if(status==='nao_extinto'){
+      statusBadge='<span style="background:rgba(244,63,94,.12);color:#F43F5E;border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Não Extinto</span>';
+    }else if(status==='extinto'){
+      statusBadge='<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Extinto</span>';
+    }
+    if(rf.inconsistencia){
+      statusBadge='<span style="background:rgba(139,92,246,.12);color:#8B5CF6;border:1px solid rgba(139,92,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Inconsistência</span>';
+    }
+    var dataParts=rf.data.split('-');var dataFormatada=dataParts[2]+'/'+dataParts[1]+'/'+dataParts[0];
+    var inconsistenciaBadge='';
+    if(rf.inconsistencia){
+      var incColor={
+        'Não conciliado':'#F43F5E',
+        'Valor imposto divergente':'#F59E0B',
+        'Vencido':'#EF4444',
+        'Sem Comprovante':'#8B5CF6'
+      }[rf.inconsistencia]||'#666';
+      var incBg={
+        'Não conciliado':'rgba(244,63,94,.12)',
+        'Valor imposto divergente':'rgba(245,158,11,.12)',
+        'Vencido':'rgba(239,68,68,.12)',
+        'Sem Comprovante':'rgba(139,92,246,.12)'
+      }[rf.inconsistencia]||'transparent';
+      inconsistenciaBadge='<span style="background:'+incBg+';color:'+incColor+';border:1px solid '+incColor+'33;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">'+rf.inconsistencia+'</span>';
+    }else{
+      inconsistenciaBadge='<span style="color:var(--txt3);font-size:11px">—</span>';
+    }
+    h+='<tr><td class="mono" style="color:#3B82F6;font-weight:600">'+rf.id+'</td>'
+      +'<td style="font-size:11px">'+tipoFiscalLabel+'</td>'
+      +'<td>'+tipoNFBadge+'</td>'
+      +'<td class="mono" style="font-size:11px;color:var(--txt2)">NF-'+rf.nfVinculada+'</td>'
+      +'<td>'+rf.entidade+'</td>'
+      +'<td class="mono" style="font-size:11px;color:var(--txt2)">'+rf.cnpj+'</td>'
+      +'<td class="r mono" style="font-size:11px;font-weight:600;color:'+(rf.tipoFiscal==='ibs'?'#3B82F6':'#F59E0B')+'">'+ff(rf.valor)+'</td>'
+      +'<td class="r mono" style="font-size:11px">'+ff(rf.valorTotalNF)+'</td>'
+      +'<td class="r mono" style="font-size:11px;color:var(--txt2)">'+ff(rf.valorLiquidoNF)+'</td>'
+      +'<td>'+statusBadge+'</td>'
+      +'<td style="font-size:12px;color:var(--txt2)">'+dataFormatada+'</td>'
+      +'<td>'+inconsistenciaBadge+'</td></tr>';
+  });
+  if(!listaPagina.length){
+    h='<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:24px">Nenhum RF encontrado.</td></tr>';
+  }
+  document.getElementById("t-gestao-rfs").innerHTML=h;
+  var sub=document.getElementById("rf-count-sub");
+  if(sub)sub.textContent=rfListaGlobal.length+" RFs criados";
+  var pagAtual=document.getElementById("rf-pag-atual");
+  var pagTotal=document.getElementById("rf-pag-total");
+  if(pagAtual)pagAtual.textContent=rfPaginaAtual;
+  if(pagTotal)pagTotal.textContent=totalPaginas;
+  var btnPrev=document.getElementById("rf-btn-prev");
+  var btnProx=document.getElementById("rf-btn-prox");
+  if(btnPrev){
+    if(rfPaginaAtual<=1){btnPrev.style.opacity="0.5";btnPrev.disabled=true;}
+    else{btnPrev.style.opacity="1";btnPrev.disabled=false;}
+  }
+  if(btnProx){
+    if(rfPaginaAtual>=totalPaginas){btnProx.style.opacity="0.5";btnProx.disabled=true;}
+    else{btnProx.style.opacity="1";btnProx.disabled=false;}
+  }
+}
+function rfProximaPagina(){
+  var totalPaginas=Math.ceil(rfListaGlobal.length/rfItensPorPagina)||1;
+  if(rfPaginaAtual<totalPaginas){rfPaginaAtual++;rfRenderPagina();}
+}
+function rfPaginaAnterior(){
+  if(rfPaginaAtual>1){rfPaginaAtual--;rfRenderPagina();}
+}
+
+var nfPaginaAtual=1;var nfListaFiltradaGlobal=[];var nfTotalGlobal=0;var nfItensPorPagina=25;var nfExpandidas={};var rfIdCounter=0;
+function nfGerarIdRegistroFiscal(){return 'RF-'+String(++rfIdCounter).padStart(8,'0');}
 function nfRenderLista(){
   var buscaEl=document.getElementById("nf-busca");
   var tipoEl=document.getElementById("nf-filtro-tipo");
@@ -2424,88 +2608,129 @@ function nfRenderLista(){
   if(typeof dataSyncFixed!=='undefined'){
     var nfsEntrada=dataSyncFixed.getNFsEntrada();
     nfsEntrada.forEach(function(nf,idx){
-      var statusCreditos=['nao_apropriado','nao_apropriado','apropriado','apropriado','apropriado','utilizado','utilizado','perdido'];
+      // Crédito: nao_apropriado → apropriado → utilizado
+      var statusCreditos=['nao_apropriado','nao_apropriado','apropriado','apropriado','apropriado','utilizado','utilizado','utilizado'];
       var statusCred=statusCreditos[idx%statusCreditos.length];
 
-      // Valor líquido = Valor total - (CBS + IBS)
-      var cbs=Math.floor(nf.valor*0.08);
-      var ibs=Math.floor(nf.valor*0.10);
-      var valorLiquido=nf.valor-cbs-ibs;
+      // CBS = 8% do líquido, IBS = 10% do líquido, bruto = líquido + CBS + IBS
+      var valorLiquido=Math.floor(nf.valor/1.18);
+      var cbs=Math.floor(valorLiquido*0.08);
+      var ibs=Math.floor(valorLiquido*0.10);
+      var valorBruto=valorLiquido+cbs+ibs;
 
       // Registro NF de Entrada
-      todosRegistros.push({
+      var nfRecord={
         numero:nf.numero,
         tipo:'entrada',
-        subtipo:'nf',
+        subTipo:'nf',
         entidade:nf.fornecedor,
         cnpj:nf.cnpj,
-        valorTotal:nf.valor,
+        valorTotal:valorBruto,
         valorLiquido:valorLiquido,
-        credito:0,
-        data:nf.data,
-        status:'confirmado',
-        tributo:null
-      });
-
-      // Registro CBS (crédito)
-      todosRegistros.push({
-        numero:nf.numero,
-        tipo:'entrada',
-        subtipo:'cbs',
-        entidade:nf.fornecedor,
-        cnpj:nf.cnpj,
-        valorTotal:nf.valor,
-        valorLiquido:valorLiquido,
-        credito:cbs,
+        cbs:cbs,
+        ibs:ibs,
         data:nf.data,
         status:statusCred,
-        tributo:'CBS'
-      });
+        registrosFiscais:[]
+      };
 
-      // Registro IBS (crédito)
-      todosRegistros.push({
-        numero:nf.numero,
+      // Registros Fiscais (IBS e CBS) - com todas as informações base da NF
+      nfRecord.registrosFiscais.push({
+        id:nfGerarIdRegistroFiscal(),
         tipo:'entrada',
-        subtipo:'ibs',
+        subTipo:'fiscal',
+        tipoFiscal:'ibs',
+        nfVinculada:nf.numero,
         entidade:nf.fornecedor,
         cnpj:nf.cnpj,
-        valorTotal:nf.valor,
-        valorLiquido:valorLiquido,
-        credito:ibs,
-        data:nf.data,
+        valor:ibs,
         status:statusCred,
-        tributo:'IBS'
+        data:nf.data,
+        valorTotalNF:valorBruto,
+        valorLiquidoNF:valorLiquido
       });
+
+      nfRecord.registrosFiscais.push({
+        id:nfGerarIdRegistroFiscal(),
+        tipo:'entrada',
+        subTipo:'fiscal',
+        tipoFiscal:'cbs',
+        nfVinculada:nf.numero,
+        entidade:nf.fornecedor,
+        cnpj:nf.cnpj,
+        valor:cbs,
+        status:statusCred,
+        data:nf.data,
+        valorTotalNF:valorBruto,
+        valorLiquidoNF:valorLiquido
+      });
+
+      todosRegistros.push(nfRecord);
     });
   }
 
   // Adicionar NFs de saída com débitos
   if(typeof creditos!=='undefined'&&creditos.length>0){
     var nfsEntrada=typeof dataSyncFixed!=='undefined'?dataSyncFixed.getNFsEntrada():[];
-    var qtdSaida=Math.floor(nfsEntrada.length*0.8);
+    var qtdSaida=100;
     var clientes=['WEG Motores','Mercado Livre','Embraer S.A.','Bosch Ltda','Randon S.A.','Ambev S.A.','Magazine Luiza','Gerdau Aços','Marcopolo S.A.','Natura &Co'];
     var statusDebitos=['nao_extinto','nao_extinto','extinto','extinto','extinto','extinto'];
 
     for(var i=1;i<=qtdSaida;i++){
       var dia=(i%28)+1;var mes=Math.floor((i-1)/150)%12+1;
-      var valorSaida=Math.floor(12000+Math.random()*20000)*Math.floor(Math.random()*5+1);
-      var debito=Math.floor(valorSaida*0.115);
+      var valorSaidaLiq=Math.floor(12000+Math.random()*20000)*Math.floor(Math.random()*5+1);
+      var cbsSaida=Math.floor(valorSaidaLiq*0.08);
+      var ibsSaida=Math.floor(valorSaidaLiq*0.10);
+      var valorSaidaBruto=valorSaidaLiq+cbsSaida+ibsSaida;
       var statusDeb=statusDebitos[i%statusDebitos.length];
 
-      // Registro NF de Saída
-      todosRegistros.push({
-        numero:String(i+500000).padStart(6,'0'),
+      var nfSaidaNum=String(i+500000).padStart(6,'0');
+      var nfSaidaRecord={
+        numero:nfSaidaNum,
         tipo:'saida',
-        subtipo:'nf',
+        subTipo:'nf',
         entidade:clientes[i%clientes.length],
         cnpj:'12.345.678/000'+String(i%100).padStart(2,'0'),
-        valorTotal:valorSaida,
-        valorLiquido:valorSaida,
-        credito:debito,
+        valorTotal:valorSaidaBruto,
+        valorLiquido:valorSaidaLiq,
+        cbs:cbsSaida,
+        ibs:ibsSaida,
         data:'2026-'+String(mes).padStart(2,'0')+'-'+String(dia).padStart(2,'0'),
         status:statusDeb,
-        tributo:null
+        registrosFiscais:[]
+      };
+
+      nfSaidaRecord.registrosFiscais.push({
+        id:nfGerarIdRegistroFiscal(),
+        tipo:'saida',
+        subTipo:'fiscal',
+        tipoFiscal:'ibs',
+        nfVinculada:nfSaidaNum,
+        entidade:clientes[i%clientes.length],
+        cnpj:'12.345.678/000'+String(i%100).padStart(2,'0'),
+        valor:ibsSaida,
+        status:statusDeb,
+        data:nfSaidaRecord.data,
+        valorTotalNF:valorSaidaBruto,
+        valorLiquidoNF:valorSaidaLiq
       });
+
+      nfSaidaRecord.registrosFiscais.push({
+        id:nfGerarIdRegistroFiscal(),
+        tipo:'saida',
+        subTipo:'fiscal',
+        tipoFiscal:'cbs',
+        nfVinculada:nfSaidaNum,
+        entidade:clientes[i%clientes.length],
+        cnpj:'12.345.678/000'+String(i%100).padStart(2,'0'),
+        valor:cbsSaida,
+        status:statusDeb,
+        data:nfSaidaRecord.data,
+        valorTotalNF:valorSaidaBruto,
+        valorLiquidoNF:valorSaidaLiq
+      });
+
+      todosRegistros.push(nfSaidaRecord);
     }
   }
 
@@ -2524,6 +2749,7 @@ function nfRenderLista(){
   nfTotalGlobal=todosRegistros.length;
   nfPaginaAtual=1;
   nfRenderPagina();
+  rfRenderGestao();
 }
 
 function nfRenderPagina(){
@@ -2540,16 +2766,12 @@ function nfRenderPagina(){
     var tipoBadge=r.tipo==='entrada'?'<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>':'<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
 
     var statusBadge='';
-    if(r.subtipo==='nf'){
-      statusBadge='<span style="background:rgba(73,197,177,.12);color:#49C5B1;border:1px solid rgba(73,197,177,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">NF</span>';
-    }else if(r.status==='nao_apropriado'){
+    if(r.status==='nao_apropriado'){
       statusBadge='<span style="background:rgba(244,63,94,.12);color:#F43F5E;border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Não Apropriado</span>';
     }else if(r.status==='apropriado'){
-      statusBadge='<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Apropriado</span>';
+      statusBadge='<span style="background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Apropriado</span>';
     }else if(r.status==='utilizado'){
-      statusBadge='<span style="background:rgba(73,197,177,.12);color:#49C5B1;border:1px solid rgba(73,197,177,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Utilizado</span>';
-    }else if(r.status==='perdido'){
-      statusBadge='<span style="background:rgba(244,63,94,.12);color:#F43F5E;border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Perdido</span>';
+      statusBadge='<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Utilizado</span>';
     }else if(r.status==='nao_extinto'){
       statusBadge='<span style="background:rgba(244,63,94,.12);color:#F43F5E;border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Não Extinto</span>';
     }else if(r.status==='extinto'){
@@ -2557,24 +2779,33 @@ function nfRenderPagina(){
     }
 
     var dataParts=r.data.split('-');var dataFormatada=dataParts[2]+'/'+dataParts[1]+'/'+dataParts[0];
-    var subtipoLabel=r.subtipo==='nf'?'NF':(r.subtipo==='cbs'?'CBS':(r.subtipo==='ibs'?'IBS':'Débito'));
-    var tributoCol=r.tributo?r.tributo:'—';
+    var idx=inicio+listaPagina.indexOf(r);
+    var expandKey='nf_'+r.numero;
+    var isExpanded=nfExpandidas[expandKey];
+    var arrow=isExpanded?'▼':'▶';
 
-    h+='<tr style="'+(r.subtipo!=='nf'?'background:rgba(73,197,177,.05)':'')+'"><td class="mono" style="color:#3B82F6;font-weight:600"><button style="background:none;border:none;color:#3B82F6;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit" onclick="nfAbrirDetalhes(\''+r.numero+'\',\''+r.tipo+'\',\''+r.subtipo+'\',\''+r.entidade+'\',\''+r.cnpj+'\','+r.valorTotal+','+r.valorLiquido+','+r.credito+',\''+r.tributo+'\',\''+r.status+'\',\''+r.data+'\')">NF-'+r.numero+'</button></td>'
-      +'<td style="font-size:11px;font-weight:600;color:var(--txt2)">'+subtipoLabel+'</td>'
+    h+='<tr><td class="mono" style="color:#3B82F6;font-weight:600;display:flex;gap:8px;align-items:center"><button class="nf-expand" onclick="nfToggleExpand(\''+expandKey+'\')">'+arrow+'</button><button style="background:none;border:none;color:#3B82F6;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit" onclick="nfAbrirDetalhes('+idx+')">NF-'+r.numero+'</button></td>'
       +'<td>'+tipoBadge+'</td>'
       +'<td>'+r.entidade+'</td>'
       +'<td class="mono" style="font-size:11px;color:var(--txt2)">'+r.cnpj+'</td>'
       +'<td class="r mono" style="font-size:11px">'+ff(r.valorTotal)+'</td>'
       +'<td class="r mono" style="font-size:11px;color:var(--txt2)">'+ff(r.valorLiquido)+'</td>'
-      +'<td class="r mono" style="font-weight:600;color:'+(r.credito>0?'#49C5B1':'var(--txt3)')+'">'+ff(r.credito)+'</td>'
-      +'<td style="font-size:11px;text-align:center">'+tributoCol+'</td>'
+      +'<td class="r mono" style="font-size:11px;font-weight:600;color:'+(r.cbs>0?'#F59E0B':'var(--txt3)')+'">'+ff(r.cbs)+'</td>'
+      +'<td class="r mono" style="font-size:11px;font-weight:600;color:'+(r.ibs>0?'#3B82F6':'var(--txt3)')+'">'+ff(r.ibs)+'</td>'
       +'<td>'+statusBadge+'</td>'
       +'<td style="font-size:12px;color:var(--txt2)">'+dataFormatada+'</td></tr>';
+
+    if(isExpanded && r.registrosFiscais && r.registrosFiscais.length){
+      r.registrosFiscais.forEach(function(rf){
+        var rfValorLabel=rf.tipoFiscal==='ibs'?'IBS':'CBS';
+        var rfCorLabel=rf.tipoFiscal==='ibs'?'#3B82F6':'#F59E0B';
+        h+='<tr><td colspan="10"><div class="nf-fiscal" draggable="true" ondragstart="nfDragStart(event,\''+rf.id+'\',\''+r.numero+'\',\''+rf.tipoFiscal+'\')" ondragend="nfDragEnd(event)"><span class="nf-fiscal-tipo" style="color:'+rfCorLabel+'">'+rfValorLabel+'</span><span class="nf-fiscal-valor" style="color:'+rfCorLabel+'">'+ff(rf.valor)+'</span><span style="font-size:11px;color:var(--txt2)">'+rf.id+' • NF-'+r.numero+'</span></div></td></tr>';
+      });
+    }
   });
 
   if(!listaPagina.length){
-    h='<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma NF encontrada para este filtro.</td></tr>';
+    h='<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma NF encontrada para este filtro.</td></tr>';
   }
 
   var tbody=document.getElementById("t-listagem-nfs");
@@ -2612,23 +2843,56 @@ function nfPaginaAnterior(){
   if(nfPaginaAtual>1){nfPaginaAtual--;nfRenderPagina();}
 }
 
-function nfAbrirDetalhes(numero,tipo,subtipo,entidade,cnpj,valorTotal,valorLiquido,credito,tributo,status,data){
-  var dataParts=data.split('-');
+function abrirDetalhesNFporNumero(nfNumero){
+  // Encontrar o índice da NF na lista filtrada pelo número
+  var idx=-1;
+  for(var i=0;i<nfListaFiltradaGlobal.length;i++){
+    if(nfListaFiltradaGlobal[i].numero===nfNumero){
+      idx=i;
+      break;
+    }
+  }
+  if(idx>=0){
+    nfAbrirDetalhes(idx);
+  }
+}
+function nfAbrirDetalhes(idx){
+  var r=nfListaFiltradaGlobal[idx];
+  if(!r)return;
+  var dataParts=r.data.split('-');
   var dataFormatada=dataParts[2]+'/'+dataParts[1]+'/'+dataParts[0];
-  var subtipoLabel=subtipo==='nf'?'NF':(subtipo==='cbs'?'CBS':(subtipo==='ibs'?'IBS':'Débito'));
-  var tipoLabel=tipo==='entrada'?'Entrada':'Saída';
+  var tipoLabel=r.tipo==='entrada'?'Entrada':'Saída';
 
-  document.getElementById('nf-detail-numero').textContent='NF-'+numero;
+  document.getElementById('nf-detail-numero').textContent='NF-'+r.numero;
   document.getElementById('nf-detail-tipo').textContent=tipoLabel;
-  document.getElementById('nf-detail-subtipo').textContent=subtipoLabel;
-  document.getElementById('nf-detail-entidade').textContent=entidade;
-  document.getElementById('nf-detail-cnpj').textContent=cnpj;
-  document.getElementById('nf-detail-tributo').textContent=tributo||'—';
-  document.getElementById('nf-detail-valor-total').textContent=ff(valorTotal);
-  document.getElementById('nf-detail-valor-liquido').textContent=ff(valorLiquido);
-  document.getElementById('nf-detail-credito').textContent=ff(credito);
-  document.getElementById('nf-detail-status').textContent=status;
+  document.getElementById('nf-detail-entidade').textContent=r.entidade;
+  document.getElementById('nf-detail-cnpj').textContent=r.cnpj;
+  document.getElementById('nf-detail-valor-total').textContent=ff(r.valorTotal);
+  document.getElementById('nf-detail-valor-liquido').textContent=ff(r.valorLiquido);
+  document.getElementById('nf-detail-cbs').textContent=ff(r.cbs);
+  document.getElementById('nf-detail-ibs').textContent=ff(r.ibs);
+  var statusLabels={'nao_apropriado':'Não Apropriado','apropriado':'Apropriado','utilizado':'Utilizado','nao_extinto':'Não Extinto','extinto':'Extinto'};
+  document.getElementById('nf-detail-status').textContent=statusLabels[r.status]||r.status;
   document.getElementById('nf-detail-data').textContent=dataFormatada;
+
+  var fiscaisHtml='';
+  if(r.registrosFiscais && r.registrosFiscais.length){
+    r.registrosFiscais.forEach(function(rf){
+      var rfLabel=rf.tipoFiscal==='ibs'?'IBS':'CBS';
+      var rfCor=rf.tipoFiscal==='ibs'?'#3B82F6':'#F59E0B';
+      var rfStatus=statusLabels[rf.status]||rf.status;
+      fiscaisHtml+='<div style="background:rgba(73,197,177,.06);border:1px solid rgba(73,197,177,.2);border-radius:6px;padding:12px;font-size:11px">'
+        +'<div style="font-weight:600;color:'+rfCor+';margin-bottom:8px">'+rfLabel+' • '+rf.id+'</div>'
+        +'<div style="color:var(--txt2);margin-bottom:6px">Entidade: <span style="color:var(--txt1)">'+rf.entidade+'</span></div>'
+        +'<div style="color:var(--txt2);margin-bottom:6px;font-family:monospace;font-size:10px">CNPJ: '+rf.cnpj+'</div>'
+        +'<div style="color:var(--txt2);margin-bottom:6px">Valor: <span style="color:var(--txt1);font-weight:600">'+ff(rf.valor)+'</span></div>'
+        +'<div style="color:var(--txt2);margin-bottom:6px">NF Total: <span style="color:var(--txt1)">'+ff(rf.valorTotalNF)+'</span></div>'
+        +'<div style="color:var(--txt2);margin-bottom:6px">NF Líquido: <span style="color:var(--txt1)">'+ff(rf.valorLiquidoNF)+'</span></div>'
+        +'<div style="color:var(--txt2)">Status: <span style="color:var(--txt1);font-weight:600">'+rfStatus+'</span></div>'
+        +'</div>';
+    });
+  }
+  document.getElementById('nf-detail-fiscais').innerHTML=fiscaisHtml;
 
   document.getElementById('nf-modal').style.display='flex';
 }
@@ -2641,7 +2905,42 @@ function nfFecharDetalhes(){
 document.addEventListener('click',function(e){
   var modal=document.getElementById('nf-modal');
   if(e.target===modal){modal.style.display='none';}
+
+  var comprovantModal=document.getElementById('comprovante-modal');
+  if(e.target===comprovantModal){comprovantModal.style.display='none';}
 });
+
+function abrirComprovanteSimples(dataPagamento,rfId,valor,forn){
+  var numeroTransacao='TRX'+String(Math.floor(Math.random()*900000)+100000);
+  var statusPagamento='Confirmado';
+  var metodoPagamento=Math.random()>0.5?'Pix':'TED';
+
+  document.getElementById('comprovante-numero-transacao').textContent=numeroTransacao;
+  document.getElementById('comprovante-data-pagamento').textContent=dataPagamento;
+  document.getElementById('comprovante-valor').textContent=ff(valor);
+  document.getElementById('comprovante-fornecedor').textContent=forn;
+  document.getElementById('comprovante-rf').textContent=rfId;
+  document.getElementById('comprovante-status').textContent=statusPagamento;
+  document.getElementById('comprovante-metodo').textContent=metodoPagamento;
+
+  document.getElementById('comprovante-modal').style.display='flex';
+}
+});
+
+function nfToggleExpand(expandKey){
+  nfExpandidas[expandKey]=!nfExpandidas[expandKey];
+  nfRenderPagina();
+}
+
+function nfDragStart(e,rfId,nfNum,tipoFiscal){
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',JSON.stringify({tipo:'registro-fiscal',rfId:rfId,nfNum:nfNum,tipoFiscal:tipoFiscal}));
+  e.target.classList.add('dragging');
+}
+
+function nfDragEnd(e){
+  e.target.classList.remove('dragging');
+}
 
 function nfLimparFiltros(){
   var busca=document.getElementById("nf-busca");
@@ -2659,11 +2958,50 @@ function nfLimparFiltros(){
 
 function creditosRenderTabela(){
   var h="";
-  var lista=creditos;
+  // Coletar todos os RFs das NFs de entrada da conciliação
+  var listaRFs=[];
+  if(nfListaFiltradaGlobal){
+    nfListaFiltradaGlobal.forEach(function(nf){
+      if(nf.tipo==='entrada' && nf.registrosFiscais && nf.registrosFiscais.length){
+        nf.registrosFiscais.forEach(function(rf){
+          // Converter RF para formato compatível com a tabela
+          var tipoFiscalLabel=rf.tipoFiscal==='ibs'?'IBS':'CBS';
+          // Gerar data/hora de pagamento para 60% dos registros
+          var temPagamento=Math.random()<0.6;
+          var dataPagamento='—';
+          if(temPagamento){
+            var dia=String(Math.floor(Math.random()*28)+1).padStart(2,'0');
+            var hora=String(Math.floor(Math.random()*24)).padStart(2,'0');
+            var minuto=String(Math.floor(Math.random()*60)).padStart(2,'0');
+            dataPagamento=dia+'/04/2026 '+hora+':'+minuto;
+          }
+          var valorLiq=rf.valorLiquidoNF||0;
+          var cbsVal=Math.floor(valorLiq*0.08);
+          var ibsVal=Math.floor(valorLiq*0.10);
+          listaRFs.push({
+            rf:rf.id,
+            tipoFiscal:tipoFiscalLabel,
+            nf:'NF-'+rf.nfVinculada,
+            forn:rf.entidade,
+            cnpj:rf.cnpj,
+            data:rf.data.split('-').reverse().join('/'),
+            valorTotal:rf.valorTotalNF,
+            valorLiq:valorLiq,
+            cbs:cbsVal,
+            ibs:ibsVal,
+            cred:rf.valor,
+            pag:dataPagamento,
+            status:rfGlobal[rf.id]?rfGlobal[rf.id].statusInterno:rf.status
+          });
+        });
+      }
+    });
+  }
+  var lista=listaRFs.length>0?listaRFs:creditos;
   if(creditosFiltroStatus){lista=lista.filter(function(r){return r.status===creditosFiltroStatus;});}
   if(creditosFiltroForn){lista=lista.filter(function(r){return r.forn===creditosFiltroForn;});}
-  if(!lista.length){h='<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhum crédito encontrado para este filtro.</td></tr>';}
-  for(var i=0;i<lista.length;i++){var r=lista[i];var pc=r.pag==="—"?"#53565A":(r.status==="perdido"||r.status==="em_risco")?"#F43F5E":"#22C55E";var ct=getContratoPorForn(r.forn);var ctCell=ct?('<span class="mono" style="color:var(--txt2);font-size:11px">'+ct.id+'</span> '+contratoMecanismoBadge(ct.rad)):'<span style="background:rgba(244,63,94,.12);color:var(--red);border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 7px;font-size:11px">Sem contrato</span>';h+='<tr><td class="mono" style="color:#3B82F6;font-size:11px">'+r.rf+'</td><td class="mono" style="font-size:11px">'+r.nf+'</td><td>'+r.forn+'</td><td>'+r.data+'</td><td class="r mono">'+ff(r.valorNF)+'</td><td class="r mono" style="color:#49C5B1;font-weight:700">'+ff(r.cred)+'</td><td class="r mono" style="color:#A7A8AA;font-size:11px">'+ff(r.cbs)+'</td><td class="r mono" style="color:#A7A8AA;font-size:11px">'+ff(r.ibs)+'</td><td style="font-size:11px;color:'+pc+'">'+r.pag+'</td><td>'+bdg(r.status)+'</td><td style="white-space:nowrap">'+ctCell+'</td></tr>';}
+  if(!lista.length){h='<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhum crédito encontrado para este filtro.</td></tr>';}
+  for(var i=0;i<lista.length;i++){var r=lista[i];var pc=r.pag==="—"?"#53565A":(r.status==="perdido"||r.status==="em_risco")?"#F43F5E":"#22C55E";var ct=getContratoPorForn(r.forn);var ctIdCell=ct?'<span class="mono" style="color:var(--txt2);font-size:11px">'+ct.id+'</span>':'<span style="background:rgba(244,63,94,.12);color:var(--red);border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 7px;font-size:11px">Sem contrato</span>';var ctMethodCell=ct?contratoMecanismoBadge(ct.rad):'—';var tipoFiscalBadge='<span style="font-size:11px;font-weight:600;color:'+(r.tipoFiscal==='IBS'?'#3B82F6':'#F59E0B')+'">'+r.tipoFiscal+'</span>';var nfNumero=r.nf.replace('NF-','');var pagCell=r.pag!=='—'?'<span style="cursor:pointer;text-decoration:underline" onclick="abrirComprovanteSimples(\''+r.pag+'\',\''+r.rf+'\','+r.cred+',\''+r.forn+'\')">'+r.pag+'</span>':r.pag;h+='<tr><td class="mono" style="color:#3B82F6;font-size:11px">'+r.rf+'</td><td>'+tipoFiscalBadge+'</td><td class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline" onclick="abrirDetalhesNFporNumero(\''+nfNumero+'\')">'+r.nf+'</td><td>'+r.forn+'</td><td>'+r.data+'</td><td class="r mono">'+ff(r.valorTotal)+'</td><td class="r mono">'+ff(r.valorLiq)+'</td><td class="r mono" style="color:#F59E0B;font-weight:600">'+ff(r.cbs)+'</td><td class="r mono" style="color:#3B82F6;font-weight:600">'+ff(r.ibs)+'</td><td class="r mono" style="color:#49C5B1;font-weight:700">'+ff(r.cred)+'</td><td style="font-size:11px;color:'+pc+'">'+pagCell+'</td><td>'+bdg(r.status)+'</td><td style="white-space:nowrap">'+ctIdCell+'</td><td style="white-space:nowrap">'+ctMethodCell+'</td></tr>';}
   document.getElementById("t-creditos").innerHTML=h;
 }
 function creditosAgruparPorEmpresa(lista){
@@ -2740,8 +3078,6 @@ function init(){
   h="";
   for(var i=0;i<fornecedores.length;i++){var r=fornecedores[i];h+='<tr><td style="font-weight:500">'+r.nome+'</td><td class="mono" style="font-size:11px;color:#A7A8AA">'+r.cnpj+'</td><td class="r mono">'+fc(r.volume)+'</td><td class="r mono" style="color:#49C5B1;font-weight:600">'+fc(r.cred)+'</td><td><span style="color:#F2F0EF">'+r.pagtos+'</span> <span style="font-size:11px;color:#53565A">pagtos</span></td><td><span style="color:'+(r.pend>0?"#F59E0B":"#22C55E")+';font-weight:600">'+r.pend+'</span></td><td>'+sco(r.score)+'</td><td>'+bdg(r.status)+'</td></tr>';}
   document.getElementById("t-forn").innerHTML=h;
-  // creditos
-  creditosRenderTabela();
   // score bars
   var sf=[...fornecedores].sort(function(a,b){return b.score-a.score;});
   h="";
@@ -2767,6 +3103,8 @@ function init(){
   conciliacaoRenderDFs();
   // listagem de nfs
   nfRenderLista();
+  // creditos - chamada após nfRenderLista() para sincronizar com RFs
+  creditosRenderTabela();
 }
 
 function fctSaldoFinal(d){
