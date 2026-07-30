@@ -53,6 +53,8 @@ function bdg(status) {
     'utilizado':     'Utilizado',
     'inconsistencia':'Inconsistência',
     'vencido':       'Vencido',
+    'extinto':       'Extinto',
+    'nao_extinto':   'Não Extinto',
     'aguardando':    'Aguardando',
     'em_risco':      'Em risco',
     'perdido':       'Perdido',
@@ -68,6 +70,8 @@ function bdg(status) {
     'utilizado':     '#3B82F6',
     'inconsistencia':'#F43F5E',
     'vencido':       '#F59E0B',
+    'extinto':       '#22C55E',
+    'nao_extinto':   '#A7A8AA',
     'aguardando':    '#F59E0B',
     'em_risco':      '#F43F5E',
     'perdido':       '#F43F5E',
@@ -96,7 +100,7 @@ var _PAG_SIZE = 25;
 window._paginacao = {};
 
 var _PAG_ALL_TBODIES = [
-  't-recent','t-impostos','t-forn','t-creditos',
+  't-recent','t-impostos','t-forn','t-creditos','t-debitos',
   't-gestao-rfs','t-listagem-nfs','t-rad-prazo',
   't-apur-resumo','t-apur-cred','t-apur-deb',
   't-contratos','t-adm-fornecedores',
@@ -176,9 +180,9 @@ window.iniciarPaginacaoUniversal = function() {
   });
 };
 
-// Renderizar listagem de NFs (substitui nfRenderPagina do HTML) — renderiza TODOS os itens
+// Renderizar listagem de NFs (Conciliação) — apenas NFs de entrada
 window.renderizarListaNFs = function() {
-  var lista = window.nfListaFiltradaGlobal || [];
+  var lista = (window.nfListaFiltradaGlobal || []).filter(function(nf) { return nf.tipo === 'entrada'; });
 
   var h = '';
   lista.forEach(function(r) {
@@ -594,6 +598,432 @@ window.atualizarPerdaAcumulada = function() {
   }
   if (elSub) {
     elSub.textContent = countRFs + ' RF' + (countRFs !== 1 ? 's' : '') + ' vencidos · IBS + CBS';
+  }
+};
+
+// ============================================================
+// MÓDULO GESTÃO DE DÉBITOS — NFs de saída · IBS + CBS
+// ============================================================
+
+window._enriquecerNFsSaida = function() {
+  var meses = ['2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04'];
+  var statusDist = [
+    'extinto','extinto','extinto','extinto','extinto','extinto','extinto',
+    'nao_extinto','nao_extinto','nao_extinto','nao_extinto',
+    'vencido','vencido','vencido',
+    'inconsistencia','inconsistencia'
+  ];
+  var metodos = ['RAD','RAD','Compensacao'];
+  var idx = 0;
+
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'saida') return;
+    var mes     = meses[idx % meses.length];
+    var day     = 1 + ((idx * 7) % 27);
+    var dayStr  = day < 10 ? '0' + day : '' + day;
+    var dataISO = mes + '-' + dayStr;
+    var stRF    = statusDist[idx % statusDist.length];
+
+    nf.data   = dataISO;
+    nf.status = (stRF === 'extinto') ? 'extinto' : 'nao_extinto';
+
+    (nf.registrosFiscais || []).forEach(function(rf, ri) {
+      rf.data           = dataISO;
+      rf.status         = stRF;
+      rf.metodoExtincao = metodos[(idx + ri) % metodos.length];
+      if (stRF === 'extinto') {
+        var extDay    = Math.min(day + 5, 28);
+        var extDayStr = extDay < 10 ? '0' + extDay : '' + extDay;
+        var mp = mes.split('-');
+        rf.dataExtincao = extDayStr + '/' + mp[1] + '/' + mp[0] + ' 09:00';
+      } else {
+        rf.dataExtincao = '—';
+      }
+    });
+    idx++;
+  });
+};
+
+window._filtrosDebitos = {
+  mesAno: '', busca: '', tipoFiscal: '', status: '',
+  metodo: '', extincao: '', dataNFDe: '', dataNFAte: '',
+  debMin: '', debMax: ''
+};
+
+window.injetarFiltrosDebitos = function() {
+  if (document.getElementById('filtros-debitos-avancado')) return;
+  var tcrd = document.querySelector('#view-debitos .tcrd');
+  if (!tcrd) return;
+
+  var html = '<div id="filtros-debitos-avancado" style="background:var(--card);border:1px solid var(--brd);border-radius:10px;margin-bottom:16px;overflow:hidden">'
+    + '<button onclick="window.debitosToggleFiltros()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;padding:14px 20px;cursor:pointer;text-align:left">'
+    + '<span style="font-size:12px;font-weight:700;color:var(--txt1);text-transform:uppercase;letter-spacing:.05em">Filtros</span>'
+    + '<span id="fd-toggle-icon" style="font-size:16px;color:var(--txt2);transition:transform .2s">▾</span>'
+    + '</button>'
+    + '<div id="fd-corpo" style="padding:0 20px 16px;display:none">'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;align-items:end">'
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Busca (RF / NF / Cliente)</label>'
+    + '<input id="fd-busca" type="text" placeholder="Pesquisar…" oninput="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo Fiscal</label>'
+    + '<select id="fd-tipo" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
+    + '<option value="">Todos</option><option value="IBS">IBS</option><option value="CBS">CBS</option></select></div>'
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Status</label>'
+    + '<select id="fd-status" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
+    + '<option value="">Todos</option><option value="extinto">Extinto</option><option value="nao_extinto">Não Extinto</option>'
+    + '<option value="vencido">Vencido</option><option value="inconsistencia">Inconsistência</option></select></div>'
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Método de Extinção</label>'
+    + '<select id="fd-metodo" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
+    + '<option value="">Todos</option><option value="RAD">RAD</option><option value="Compensacao">Compensação</option></select></div>'
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Extinção</label>'
+    + '<select id="fd-extincao" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
+    + '<option value="">Todos</option><option value="com">Com extinção</option><option value="sem">Sem extinção</option></select></div>'
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data NF — de</label>'
+    + '<input id="fd-data-de" type="date" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data NF — até</label>'
+    + '<input id="fd-data-ate" type="date" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Débito — mín (R$)</label>'
+    + '<input id="fd-deb-min" type="number" min="0" placeholder="0" oninput="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Débito — máx (R$)</label>'
+    + '<input id="fd-deb-max" type="number" min="0" placeholder="∞" oninput="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
+    + '</div>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--brd)">'
+    + '<span id="fd-contagem" style="font-size:11px;color:var(--txt2)">200 registros</span>'
+    + '<button onclick="window.debitosLimparFiltrosGrid()" style="background:none;border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;color:var(--txt2);cursor:pointer">✕ Limpar filtros</button>'
+    + '</div></div></div>';
+
+  tcrd.insertAdjacentHTML('beforebegin', html);
+};
+
+window.debitosToggleFiltros = function() {
+  var corpo = document.getElementById('fd-corpo');
+  var icon  = document.getElementById('fd-toggle-icon');
+  if (!corpo) return;
+  var aberto = corpo.style.display !== 'none';
+  corpo.style.display = aberto ? 'none' : 'block';
+  if (icon) icon.style.transform = aberto ? '' : 'rotate(180deg)';
+};
+
+window.debitosFiltrarGrid = function() {
+  var f = window._filtrosDebitos;
+  f.busca      = (document.getElementById('fd-busca')    || {}).value || '';
+  f.tipoFiscal = (document.getElementById('fd-tipo')     || {}).value || '';
+  f.status     = (document.getElementById('fd-status')   || {}).value || '';
+  f.metodo     = (document.getElementById('fd-metodo')   || {}).value || '';
+  f.extincao   = (document.getElementById('fd-extincao') || {}).value || '';
+  f.dataNFDe   = (document.getElementById('fd-data-de') || {}).value || '';
+  f.dataNFAte  = (document.getElementById('fd-data-ate')|| {}).value || '';
+  f.debMin     = (document.getElementById('fd-deb-min') || {}).value || '';
+  f.debMax     = (document.getElementById('fd-deb-max') || {}).value || '';
+  window.renderizarTabelaDebitos();
+};
+
+window.debitosFiltrarMesAno = function() {
+  var sel = document.getElementById('deb-mes-ano');
+  window._filtrosDebitos.mesAno = sel ? sel.value : '';
+  var mesLabels = {
+    '2025-10':'out/2025','2025-11':'nov/2025','2025-12':'dez/2025',
+    '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026'
+  };
+  var label = window._filtrosDebitos.mesAno
+    ? (mesLabels[window._filtrosDebitos.mesAno] || window._filtrosDebitos.mesAno)
+    : 'Todos os períodos';
+  var sub = document.getElementById('deb-periodo-sub');
+  if (sub) sub.textContent = 'Posição IBS + CBS · Art. 153-A LC 214/2025 · ' + label;
+  window.renderizarTabelaDebitos();
+  try { window.renderizarComposicaoDebitos(window._composicaoDebitosFiltro || ''); } catch(e) {}
+  try { window.atualizarPerdaAcumuladaDebitos(); } catch(e) {}
+  try { window.renderizarExtincaoMetodo(); } catch(e) {}
+};
+
+window.debitosLimparFiltrosGrid = function() {
+  ['fd-busca','fd-tipo','fd-status','fd-metodo','fd-extincao','fd-data-de','fd-data-ate','fd-deb-min','fd-deb-max'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var selMes = document.getElementById('deb-mes-ano');
+  if (selMes) selMes.value = '';
+  var sub = document.getElementById('deb-periodo-sub');
+  if (sub) sub.textContent = 'Posição IBS + CBS · Art. 153-A LC 214/2025 · Todos os períodos';
+  window._filtrosDebitos = {
+    mesAno: '', busca: '', tipoFiscal: '', status: '',
+    metodo: '', extincao: '', dataNFDe: '', dataNFAte: '',
+    debMin: '', debMax: ''
+  };
+  window.renderizarTabelaDebitos();
+  try { window.renderizarComposicaoDebitos(window._composicaoDebitosFiltro || ''); } catch(e) {}
+  try { window.atualizarPerdaAcumuladaDebitos(); } catch(e) {}
+  try { window.renderizarExtincaoMetodo(); } catch(e) {}
+};
+
+window.renderizarTabelaDebitos = function() {
+  var listaRFs = [];
+  var f    = window._filtrosDebitos || {};
+  var busca = (f.busca || '').toLowerCase();
+  var stCoresMap  = {'extinto':'34,197,94','nao_extinto':'167,168,170','vencido':'245,158,11','inconsistencia':'244,63,94'};
+  var stHexMap    = {'extinto':'#22C55E','nao_extinto':'#A7A8AA','vencido':'#F59E0B','inconsistencia':'#F43F5E'};
+  var stLblMap    = {'extinto':'Extinto','nao_extinto':'Não Extinto','vencido':'Vencido','inconsistencia':'Inconsistência'};
+  var metCoresMap = {'RAD':'#8B5CF6','Compensacao':'#14B8A6'};
+  var metLblMap   = {'RAD':'RAD','Compensacao':'Compensação'};
+
+  if (window.nfListaFiltradaGlobal) {
+    window.nfListaFiltradaGlobal.forEach(function(nf) {
+      if (nf.tipo !== 'saida' || !nf.registrosFiscais) return;
+      nf.registrosFiscais.forEach(function(rf) {
+        var valorLiq = rf.valorLiquidoNF || nf.valorLiquido || 0;
+        var cbsVal   = rf.tipoFiscal === 'cbs' ? Math.floor(valorLiq * 0.08) : 0;
+        var ibsVal   = rf.tipoFiscal === 'ibs' ? Math.floor(valorLiq * 0.10) : 0;
+        var debVal   = cbsVal || ibsVal;
+        var dp       = (rf.data || '').split('-');
+        listaRFs.push({
+          rf:   rf.id || '—',
+          tf:   rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
+          nf:   'NF-' + (rf.nfVinculada || nf.numero || ''),
+          dataNF: rf.data || '',
+          data: dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
+          cliente:   rf.entidade || nf.entidade || '—',
+          valorTotal: rf.valorTotalNF  || nf.valorTotal   || 0,
+          valorLiq:   valorLiq,
+          cbs: cbsVal, ibs: ibsVal, deb: debVal,
+          extincao:       rf.dataExtincao   || '—',
+          status:         rf.status         || 'nao_extinto',
+          metodoExtincao: rf.metodoExtincao || '—'
+        });
+      });
+    });
+  }
+
+  listaRFs = listaRFs.filter(function(r) {
+    if (f.mesAno    && !r.dataNF.startsWith(f.mesAno)) return false;
+    if (busca) {
+      var s = r.rf.toLowerCase() + r.nf.toLowerCase() + r.cliente.toLowerCase();
+      if (!s.includes(busca)) return false;
+    }
+    if (f.tipoFiscal && r.tf !== f.tipoFiscal) return false;
+    if (f.status     && r.status !== f.status) return false;
+    if (f.metodo     && r.metodoExtincao !== f.metodo) return false;
+    if (f.extincao === 'com' && r.extincao === '—') return false;
+    if (f.extincao === 'sem' && r.extincao !== '—') return false;
+    if (f.dataNFDe   && r.dataNF < f.dataNFDe) return false;
+    if (f.dataNFAte  && r.dataNF > f.dataNFAte) return false;
+    if (f.debMin !== '' && r.deb < parseFloat(f.debMin)) return false;
+    if (f.debMax !== '' && r.deb > parseFloat(f.debMax)) return false;
+    return true;
+  });
+
+  var cnt = document.getElementById('fd-contagem');
+  if (cnt) cnt.textContent = listaRFs.length + ' registros';
+
+  var h = '';
+  listaRFs.forEach(function(r) {
+    var stCor  = stHexMap[r.status]  || '#A7A8AA';
+    var stRgb  = stCoresMap[r.status] || '167,168,170';
+    var stLbl  = stLblMap[r.status]  || r.status;
+    var stBadge = '<span style="background:rgba('+stRgb+',.12);color:'+stCor+';border:1px solid rgba('+stRgb+',.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">'+stLbl+'</span>';
+    var tfBadge = r.tf === 'IBS'
+      ? '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">IBS</span>'
+      : '<span style="background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">CBS</span>';
+    var mCor = metCoresMap[r.metodoExtincao] || 'var(--txt3)';
+    var mLbl = metLblMap[r.metodoExtincao]   || r.metodoExtincao;
+    var mBadge = (r.metodoExtincao && r.metodoExtincao !== '—')
+      ? '<span style="color:'+mCor+';font-weight:600;font-size:11px">'+mLbl+'</span>'
+      : '<span style="color:var(--txt3);font-size:11px">—</span>';
+
+    h += '<tr>'
+      + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + r.rf + '</td>'
+      + '<td>' + tfBadge + '</td>'
+      + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.nf + '</td>'
+      + '<td style="font-size:12px">' + r.cliente + '</td>'
+      + '<td style="font-size:11px;color:var(--txt2)">' + r.data + '</td>'
+      + '<td class="r mono" style="font-size:11px">' + ff(r.valorTotal) + '</td>'
+      + '<td class="r mono" style="font-size:11px;color:var(--txt2)">' + ff(r.valorLiq) + '</td>'
+      + '<td class="r mono" style="font-size:11px;font-weight:600;color:#F59E0B">' + ffz(r.cbs) + '</td>'
+      + '<td class="r mono" style="font-size:11px;font-weight:600;color:#3B82F6">' + ffz(r.ibs) + '</td>'
+      + '<td class="r mono" style="font-size:11px;font-weight:700;color:var(--txt1)">' + ff(r.deb) + '</td>'
+      + '<td style="font-size:11px;color:var(--txt2)">' + r.extincao + '</td>'
+      + '<td>' + stBadge + '</td>'
+      + '<td>' + mBadge + '</td>'
+      + '</tr>';
+  });
+
+  if (!listaRFs.length) {
+    h = '<tr><td colspan="13" style="text-align:center;color:var(--txt3);padding:24px">Nenhum RF de débito encontrado para este filtro.</td></tr>';
+  }
+
+  var tbody = document.getElementById('t-debitos');
+  if (tbody) tbody.innerHTML = h;
+
+  window.atualizarKPIsDebitos(listaRFs);
+  try { window.renderizarComposicaoDebitos(window._composicaoDebitosFiltro || ''); } catch(e) {}
+  try { window.renderizarExtincaoMetodo(); } catch(e) {}
+};
+
+window.atualizarKPIsDebitos = function(listaRFs) {
+  var total = 0, extinto = 0, naoExtinto = 0, vencido = 0, inconsist = 0;
+  (listaRFs || []).forEach(function(r) {
+    var v = r.deb || 0;
+    total += v;
+    if (r.status === 'extinto')        extinto    += v;
+    if (r.status === 'nao_extinto')    naoExtinto += v;
+    if (r.status === 'vencido')        vencido    += v;
+    if (r.status === 'inconsistencia') inconsist  += v;
+  });
+  var fmt = function(v) {
+    if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
+    if (v >= 1e3) return 'R$ ' + Math.round(v / 1e3) + 'K';
+    return ff(v);
+  };
+  var set = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+  set('deb-total',           fmt(total));
+  set('deb-extinto',         fmt(extinto));
+  set('deb-extinto-sub',     total > 0 ? (extinto/total*100).toFixed(1).replace('.',',') + '% do total — extinção confirmada' : '—');
+  set('deb-nao-extinto',     fmt(naoExtinto));
+  set('deb-nao-extinto-sub', total > 0 ? (naoExtinto/total*100).toFixed(1).replace('.',',') + '% — aguardando extinção' : '—');
+  set('deb-vencido',         fmt(vencido));
+  set('deb-vencido-sub',     total > 0 ? (vencido/total*100).toFixed(1).replace('.',',') + '% — prazo de extinção vencido' : '—');
+  set('deb-inconsist',       fmt(inconsist));
+  set('deb-inconsist-sub',   total > 0 ? (inconsist/total*100).toFixed(1).replace('.',',') + '% — requer revisão manual' : '—');
+  set('deb-aguard',          fmt(naoExtinto));
+  set('deb-aguard-sub',      total > 0 ? (naoExtinto/total*100).toFixed(1).replace('.',',') + '% — recolhimento pendente' : '—');
+};
+
+window.atualizarPerdaAcumuladaDebitos = function() {
+  var totalVencido = 0, countRFs = 0;
+  var mesAno = (window._filtrosDebitos || {}).mesAno || '';
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'saida') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (mesAno && !(rf.data || '').startsWith(mesAno)) return;
+      if (rf.status === 'vencido') { totalVencido += rf.valor || 0; countRFs++; }
+    });
+  });
+  var elVal = document.getElementById('deb-perda');
+  var elSub = document.getElementById('deb-perda-sub');
+  if (elVal) {
+    if (totalVencido >= 1e6)      elVal.textContent = 'R$ ' + (totalVencido/1e6).toFixed(1).replace('.',',') + 'M';
+    else if (totalVencido >= 1e3) elVal.textContent = 'R$ ' + Math.round(totalVencido/1e3) + 'K';
+    else                          elVal.textContent = ff(totalVencido);
+  }
+  if (elSub) elSub.textContent = countRFs + ' RF' + (countRFs !== 1 ? 's' : '') + ' vencidos · IBS + CBS';
+};
+
+window._composicaoDebitosFiltro = '';
+
+window.renderizarComposicaoDebitos = function(filtroTipo) {
+  if (filtroTipo !== undefined) window._composicaoDebitosFiltro = filtroTipo;
+  var filtro = window._composicaoDebitosFiltro || '';
+  var mesesLabels = ['Out','Nov','Dez','Jan','Fev','Mar','Abr'];
+  var mesesISO    = ['2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04'];
+  var statusList  = ['extinto','nao_extinto','vencido','inconsistencia'];
+  var statusCores = {'extinto':'#22C55E','nao_extinto':'#A7A8AA','vencido':'#F59E0B','inconsistencia':'#F43F5E'};
+  var statusLabels = {'extinto':'Extinto','nao_extinto':'Não Extinto','vencido':'Vencido','inconsistencia':'Inconsistência'};
+
+  var agg = {};
+  mesesISO.forEach(function(m) {
+    agg[m] = {};
+    statusList.forEach(function(s) { agg[m][s] = 0; });
+  });
+
+  var f = window._filtrosDebitos || {};
+  var busca = (f.busca || '').toLowerCase();
+
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'saida') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (filtro && rf.tipoFiscal !== filtro) return;
+      if (f.mesAno   && !(rf.data||'').startsWith(f.mesAno)) return;
+      if (busca) {
+        var s = (rf.id||'').toLowerCase() + ('nf-'+(rf.nfVinculada||'')).toLowerCase() + (rf.entidade||'').toLowerCase();
+        if (!s.includes(busca)) return;
+      }
+      if (f.tipoFiscal && rf.tipoFiscal !== f.tipoFiscal.toLowerCase()) return;
+      if (f.status    && rf.status !== f.status) return;
+      if (f.metodo    && rf.metodoExtincao !== f.metodo) return;
+      if (f.dataNFDe  && rf.data < f.dataNFDe) return;
+      if (f.dataNFAte && rf.data > f.dataNFAte) return;
+      var mes    = (rf.data||'').substring(0,7);
+      if (!agg[mes]) return;
+      var valorLiq = rf.valorLiquidoNF || 0;
+      var debVal   = rf.tipoFiscal === 'cbs' ? Math.floor(valorLiq*0.08) : Math.floor(valorLiq*0.10);
+      if (f.debMin !== '' && debVal < parseFloat(f.debMin)) return;
+      if (f.debMax !== '' && debVal > parseFloat(f.debMax)) return;
+      var valM = Math.round(debVal/1e6*1000)/1000;
+      var st   = rf.status || 'nao_extinto';
+      if (agg[mes][st] !== undefined) agg[mes][st] += valM;
+    });
+  });
+
+  var datasets = statusList.map(function(st) {
+    return { label: statusLabels[st], color: statusCores[st],
+      data: mesesISO.map(function(m) { return Math.round((agg[m][st]||0)*100)/100; }) };
+  });
+  _svgStackedBar('cDebComposicao', datasets, mesesLabels, 200);
+
+  var totais = {};
+  statusList.forEach(function(s) { totais[s] = mesesISO.reduce(function(a,m){return a+(agg[m][s]||0);},0); });
+  var totalGeral = statusList.reduce(function(a,s){return a+totais[s];},0);
+  var sub = document.getElementById('cDebComposicao-sub');
+  if (sub) {
+    sub.textContent = totalGeral > 0
+      ? 'R$ milhões · Extinto ' + (totais['extinto']/totalGeral*100).toFixed(0) + '% · IBS + CBS · por status · mês a mês'
+      : 'R$ milhões · IBS + CBS · por status de RF · mês a mês';
+  }
+
+  ['btn-deb-todos','btn-deb-ibs','btn-deb-cbs'].forEach(function(id) {
+    var btn = document.getElementById(id); if (!btn) return;
+    var active = (id==='btn-deb-todos'&&!filtro)||(id==='btn-deb-ibs'&&filtro==='ibs')||(id==='btn-deb-cbs'&&filtro==='cbs');
+    btn.style.background  = active ? 'var(--teal)' : 'transparent';
+    btn.style.color       = active ? '#fff' : 'var(--txt2)';
+    btn.style.borderColor = active ? 'var(--teal)' : 'var(--brd)';
+  });
+};
+
+window.renderizarExtincaoMetodo = function() {
+  var mesesLabels = ['Out','Nov','Dez','Jan','Fev','Mar','Abr'];
+  var mesesISO    = ['2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04'];
+  var f    = window._filtrosDebitos || {};
+  var busca = (f.busca || '').toLowerCase();
+  var radPorMes  = [0,0,0,0,0,0,0];
+  var compPorMes = [0,0,0,0,0,0,0];
+
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'saida') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (!rf.dataExtincao || rf.dataExtincao === '—') return;
+      if (f.mesAno   && !(rf.data||'').startsWith(f.mesAno)) return;
+      if (busca) {
+        var s = (rf.id||'').toLowerCase() + ('nf-'+(rf.nfVinculada||'')).toLowerCase() + (rf.entidade||'').toLowerCase();
+        if (!s.includes(busca)) return;
+      }
+      if (f.tipoFiscal && rf.tipoFiscal !== f.tipoFiscal.toLowerCase()) return;
+      if (f.status    && rf.status !== f.status) return;
+      if (f.metodo    && rf.metodoExtincao !== f.metodo) return;
+      if (f.dataNFDe  && rf.data < f.dataNFDe) return;
+      if (f.dataNFAte && rf.data > f.dataNFAte) return;
+      var mes = (rf.data||'').substring(0,7);
+      var idx = mesesISO.indexOf(mes); if (idx < 0) return;
+      var valorLiq = rf.valorLiquidoNF || 0;
+      var debVal   = rf.tipoFiscal === 'cbs' ? Math.floor(valorLiq*0.08) : Math.floor(valorLiq*0.10);
+      if (f.debMin !== '' && debVal < parseFloat(f.debMin)) return;
+      if (f.debMax !== '' && debVal > parseFloat(f.debMax)) return;
+      var valM = Math.round(debVal/1e6*1000)/1000;
+      if (rf.metodoExtincao === 'RAD') radPorMes[idx]  += valM;
+      else                             compPorMes[idx] += valM;
+    });
+  });
+
+  var round2 = function(v) { return Math.round(v*100)/100; };
+  _svgStackedBar('cDebMetodo', [
+    { label:'RAD',         color:'#8B5CF6', data:radPorMes.map(round2)  },
+    { label:'Compensação', color:'#14B8A6', data:compPorMes.map(round2) }
+  ], mesesLabels, 200);
+
+  var tRad  = radPorMes.reduce(function(a,b){return a+b;},0);
+  var tComp = compPorMes.reduce(function(a,b){return a+b;},0);
+  var tot   = tRad + tComp;
+  var sub   = document.getElementById('cDebMetodo-sub');
+  if (sub) {
+    sub.textContent = tot > 0
+      ? 'R$ milhões · RAD '+(tRad/tot*100).toFixed(0)+'% · Compensação '+(tComp/tot*100).toFixed(0)+'% · extinções realizadas'
+      : 'R$ milhões · RAD vs Compensação · extinções realizadas · mês a mês';
   }
 };
 
@@ -1167,7 +1597,14 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('[data-sync-fixed] nfListaFiltradaGlobal populado com', window.nfListaFiltradaGlobal.length, 'registros');
       }
 
-      // Renderizar listagem de NFs (seção Conciliação)
+      // Enriquecer NFs de saída com dados de extinção
+      try {
+        window._enriquecerNFsSaida();
+      } catch(e) {
+        console.error('[data-sync-fixed] Erro ao enriquecer NFs de saída:', e);
+      }
+
+      // Renderizar listagem de NFs de entrada (seção Conciliação)
       try {
         window.renderizarListaNFs();
       } catch(e) {
@@ -1181,6 +1618,17 @@ document.addEventListener('DOMContentLoaded', function() {
         window.renderizarTabelaCreditos();
       } catch(e) {
         console.error('[data-sync-fixed] Erro ao renderizar tabela:', e);
+      }
+
+      // Renderizar módulo de débitos (seção Gestão de Débitos)
+      try {
+        window.injetarFiltrosDebitos();
+        window.renderizarTabelaDebitos();
+        window.renderizarComposicaoDebitos('');
+        window.renderizarExtincaoMetodo();
+        window.atualizarPerdaAcumuladaDebitos();
+      } catch(e) {
+        console.error('[data-sync-fixed] Erro ao renderizar débitos:', e);
       }
 
       // Gráfico de composição de créditos por status mês a mês
