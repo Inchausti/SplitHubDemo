@@ -1,41 +1,39 @@
-name: Deploy to GitHub Pages
+name: Sync src to docs (GitHub Pages)
 
 on:
   push:
     branches: [master]
+    paths:
+      - 'src/**'
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
 jobs:
-  deploy:
+  sync-docs:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Copy CNAME into src
-        run: cp CNAME src/CNAME
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact (src/ folder)
-        uses: actions/upload-pages-artifact@v3
         with:
-          path: ./src
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Sync src/ → docs/
+        run: |
+          mkdir -p docs/js docs/css
+          cp src/index.html docs/index.html
+          cp src/js/data-sync-fixed.js  docs/js/data-sync-fixed.js
+          cp src/js/apuracao-completa.js docs/js/apuracao-completa.js
+          cp src/js/main.js             docs/js/main.js
+          cp src/js/charts.js           docs/js/charts.js
+          cp src/css/style.css          docs/css/style.css
+
+      - name: Commit and push docs/
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore: sync docs/ from src/ [skip ci]"
+          git push
