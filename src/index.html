@@ -2750,6 +2750,10 @@ function nfRenderLista(){
   nfPaginaAtual=1;
   nfRenderPagina();
   rfRenderGestao();
+  // Renderizar tabela de créditos após popular nfListaFiltradaGlobal
+  if (typeof creditosRenderTabela === 'function') {
+    creditosRenderTabela();
+  }
 }
 
 function nfRenderPagina(){
@@ -2960,7 +2964,7 @@ function creditosRenderTabela(){
   var h="";
   // Coletar todos os RFs das NFs de entrada da conciliação
   var listaRFs=[];
-  if(nfListaFiltradaGlobal){
+  if(nfListaFiltradaGlobal && nfListaFiltradaGlobal.length > 0){
     nfListaFiltradaGlobal.forEach(function(nf){
       if(nf.tipo==='entrada' && nf.registrosFiscais && nf.registrosFiscais.length){
         nf.registrosFiscais.forEach(function(rf){
@@ -3000,7 +3004,7 @@ function creditosRenderTabela(){
   var lista=listaRFs.length>0?listaRFs:creditos;
   if(creditosFiltroStatus){lista=lista.filter(function(r){return r.status===creditosFiltroStatus;});}
   if(creditosFiltroForn){lista=lista.filter(function(r){return r.forn===creditosFiltroForn;});}
-  if(!lista.length){h='<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhum crédito encontrado para este filtro.</td></tr>';}
+  if(!lista.length){h='<tr><td colspan="14" style="text-align:center;color:var(--txt3);padding:24px">Nenhum crédito encontrado para este filtro.</td></tr>';}
   for(var i=0;i<lista.length;i++){var r=lista[i];var pc=r.pag==="—"?"#53565A":(r.status==="perdido"||r.status==="em_risco")?"#F43F5E":"#22C55E";var ct=getContratoPorForn(r.forn);var ctIdCell=ct?'<span class="mono" style="color:var(--txt2);font-size:11px">'+ct.id+'</span>':'<span style="background:rgba(244,63,94,.12);color:var(--red);border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 7px;font-size:11px">Sem contrato</span>';var ctMethodCell=ct?contratoMecanismoBadge(ct.rad):'—';var tipoFiscalBadge='<span style="font-size:11px;font-weight:600;color:'+(r.tipoFiscal==='IBS'?'#3B82F6':'#F59E0B')+'">'+r.tipoFiscal+'</span>';var nfNumero=r.nf.replace('NF-','');var pagCell=r.pag!=='—'?'<span style="cursor:pointer;text-decoration:underline" onclick="abrirComprovanteSimples(\''+r.pag+'\',\''+r.rf+'\','+r.cred+',\''+r.forn+'\')">'+r.pag+'</span>':r.pag;h+='<tr><td class="mono" style="color:#3B82F6;font-size:11px">'+r.rf+'</td><td>'+tipoFiscalBadge+'</td><td class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline" onclick="abrirDetalhesNFporNumero(\''+nfNumero+'\')">'+r.nf+'</td><td>'+r.forn+'</td><td>'+r.data+'</td><td class="r mono">'+ff(r.valorTotal)+'</td><td class="r mono">'+ff(r.valorLiq)+'</td><td class="r mono" style="color:#F59E0B;font-weight:600">'+ff(r.cbs)+'</td><td class="r mono" style="color:#3B82F6;font-weight:600">'+ff(r.ibs)+'</td><td class="r mono" style="color:#49C5B1;font-weight:700">'+ff(r.cred)+'</td><td style="font-size:11px;color:'+pc+'">'+pagCell+'</td><td>'+bdg(r.status)+'</td><td style="white-space:nowrap">'+ctIdCell+'</td><td style="white-space:nowrap">'+ctMethodCell+'</td></tr>';}
   document.getElementById("t-creditos").innerHTML=h;
 }
@@ -3101,10 +3105,6 @@ function init(){
   inconsistRenderTabela();
   // conciliação — gestão de dfs
   conciliacaoRenderDFs();
-  // listagem de nfs
-  nfRenderLista();
-  // creditos - chamada após nfRenderLista() para sincronizar com RFs
-  creditosRenderTabela();
 }
 
 function fctSaldoFinal(d){
