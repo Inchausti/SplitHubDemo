@@ -542,7 +542,7 @@ window.renderizarTabelaCreditos = function() {
 };
 
 window.atualizarKPIsCreditos = function(listaRFs) {
-  var total = 0, aprop = 0, naoAprop = 0, risco = 0, util = 0, aguard = 0;
+  var total = 0, aprop = 0, naoAprop = 0, risco = 0, util = 0, aguard = 0, inconsist = 0;
   (listaRFs || []).forEach(function(r) {
     var v = r.cred || 0;
     total += v;
@@ -551,6 +551,7 @@ window.atualizarKPIsCreditos = function(listaRFs) {
     if (r.status === 'vencido')        risco    += v;
     if (r.status === 'utilizado')      util     += v;
     if (r.status === 'nao_apropriado') aguard   += v;
+    if (r.status === 'inconsistencia') inconsist += v;
   });
   var fmt = function(v) {
     if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
@@ -569,6 +570,8 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   set('cred-util-sub', aprop > 0 ? (util / aprop * 100).toFixed(1).replace('.', ',') + '% dos apropriados — abateram débito' : '—');
   set('cred-aguard', fmt(aguard));
   set('cred-aguard-sub', total > 0 ? (aguard / total * 100).toFixed(1).replace('.', ',') + '% — pagamento efetuado' : '—');
+  set('cred-inconsist', fmt(inconsist));
+  set('cred-inconsist-sub', total > 0 ? (inconsist / total * 100).toFixed(1).replace('.', ',') + '% do total · requer revisão' : 'RFs com inconsistência · requer revisão');
 };
 
 window.atualizarPerdaAcumulada = function() {
