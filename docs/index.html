@@ -397,6 +397,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
     <button class="nav-btn" onclick="showView('apuracao',this)"><span class="nav-icon">⊞</span> Apuração</button>
     <button class="nav-btn" onclick="showView('pagamentos',this)"><span class="nav-icon">⊟</span> Gestão de Pagamentos</button>
     <button class="nav-btn" onclick="showView('creditos',this)"><span class="nav-icon">◈</span> Gestão de Créditos</button>
+    <button class="nav-btn" onclick="showView('debitos',this)"><span class="nav-icon">◇</span> Gestão de Débitos</button>
     <button class="nav-btn" onclick="showView('conciliacao',this)"><span class="nav-icon">⋈</span> Conciliação</button>
     <button class="nav-btn" id="nav-analytics-btn" onclick="showAnalyticsSub('inteligencia',document.getElementById('subnav-analytics-inteligencia'))"><span class="nav-icon">◆</span> Analytics</button>
     <div class="nav-sub-group" id="nav-sub-group-analytics">
@@ -597,6 +598,78 @@ tr:hover td{background:rgba(73,197,177,.02)}
   <div class="tcrd">
     <div class="tcrd-hdr"><div class="sechdr"><h2>Detalhamento por documento fiscal</h2><p>RF × TF × Crédito — conciliação trifásica</p></div></div>
     <div class="twrap"><table><thead><tr><th>RF</th><th>Tipo Fiscal</th><th>Nota Fiscal</th><th>Fornecedor</th><th>Data NF</th><th class="r">Valor Total</th><th class="r">Valor Líquido</th><th class="r">CBS</th><th class="r">IBS</th><th class="r">Crédito</th><th>Pagamento</th><th>Status</th><th>Contrato</th><th>Método de Pagamento</th></tr></thead><tbody id="t-creditos"></tbody></table></div>
+  </div>
+</div>
+
+<!-- DÉBITOS -->
+<div id="view-debitos" class="view">
+  <div class="pg-hdr">
+    <div>
+      <div class="pg-title">Gestão de Débitos</div>
+      <div class="pg-sub" id="deb-periodo-sub">Posição IBS + CBS · Art. 153-A LC 214/2025 · Todos os períodos</div>
+    </div>
+    <div class="hdr-act">
+      <select id="deb-mes-ano" onchange="window.debitosFiltrarMesAno()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--txt1);font-size:13px;font-weight:600;font-family:inherit;padding:8px 16px;cursor:pointer;outline:none">
+        <option value="">Todos os períodos</option>
+        <option value="2025-10">out/2025</option>
+        <option value="2025-11">nov/2025</option>
+        <option value="2025-12">dez/2025</option>
+        <option value="2026-01">jan/2026</option>
+        <option value="2026-02">fev/2026</option>
+        <option value="2026-03">mar/2026</option>
+        <option value="2026-04">abr/2026</option>
+      </select>
+    </div>
+  </div>
+  <div class="sechdr" style="margin-bottom:10px"><h2>Débitos</h2><p>IBS + CBS apurados em NFs de saída · extinção via RAD ou compensação de créditos</p></div>
+  <div class="kgrid k5">
+    <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">Total de débitos</div><div class="kval" id="deb-total">—</div><div class="ksub">IBS + CBS · NFs de saída</div></div>
+    <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">Extintos</div><div class="kval" id="deb-extinto">—</div><div class="ksub" id="deb-extinto-sub">— extinção confirmada</div></div>
+    <div class="kcard" style="border-top-color:#A7A8AA"><div class="klbl">Não Extintos</div><div class="kval" id="deb-nao-extinto">—</div><div class="ksub" id="deb-nao-extinto-sub">— aguardando extinção</div></div>
+    <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Vencidos</div><div class="kval" id="deb-vencido">—</div><div class="ksub" id="deb-vencido-sub">— prazo de extinção vencido</div></div>
+    <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Inconsistências</div><div class="kval" id="deb-inconsist">—</div><div class="ksub" id="deb-inconsist-sub">— requer revisão manual</div></div>
+  </div>
+  <div class="sechdr" style="margin-bottom:10px;margin-top:4px"><h2>Exceções</h2><p>Débitos fora do fluxo padrão de extinção</p></div>
+  <div class="kgrid" style="grid-template-columns:repeat(2,1fr)">
+    <div class="kcard" style="border-top-color:var(--blue)"><div class="klbl">Aguardando Extinção</div><div class="kval" id="deb-aguard">—</div><div class="ksub" id="deb-aguard-sub">— recolhimento pendente</div></div>
+    <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Perda acumulada</div><div class="kval" id="deb-perda">—</div><div class="ksub"><span style="display:block;font-size:10px;color:var(--txt3);margin-bottom:4px">Débitos vencidos sem extinção · IBS + CBS</span><span id="deb-perda-sub" style="color:var(--red);font-weight:600"></span></div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">
+    <div class="ccrd">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px">
+        <div>
+          <div class="ctitle">Composição de débitos</div>
+          <div class="csub" id="cDebComposicao-sub">R$ milhões · IBS + CBS · por status de RF · mês a mês</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button id="btn-deb-todos" onclick="window.renderizarComposicaoDebitos('')"  style="background:var(--teal);color:#fff;border:1px solid var(--teal);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer">Todos</button>
+          <button id="btn-deb-ibs"   onclick="window.renderizarComposicaoDebitos('ibs')" style="background:transparent;color:var(--txt2);border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer">IBS</button>
+          <button id="btn-deb-cbs"   onclick="window.renderizarComposicaoDebitos('cbs')" style="background:transparent;color:var(--txt2);border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer">CBS</button>
+        </div>
+      </div>
+      <div class="cwrap" style="height:200px"><div id="cDebComposicao"></div></div>
+      <div class="leg">
+        <span class="li"><span class="ls" style="background:#22C55E"></span>Extinto</span>
+        <span class="li"><span class="ls" style="background:#A7A8AA"></span>Não Extinto</span>
+        <span class="li"><span class="ls" style="background:#F59E0B"></span>Vencido</span>
+        <span class="li"><span class="ls" style="background:#F43F5E"></span>Inconsistência</span>
+      </div>
+    </div>
+    <div class="ccrd">
+      <div style="margin-bottom:4px">
+        <div class="ctitle">Método de extinção</div>
+        <div class="csub" id="cDebMetodo-sub">R$ milhões · RAD vs Compensação · extinções realizadas · mês a mês</div>
+      </div>
+      <div class="cwrap" style="height:200px"><div id="cDebMetodo"></div></div>
+      <div class="leg">
+        <span class="li"><span class="ls" style="background:#8B5CF6"></span>RAD</span>
+        <span class="li"><span class="ls" style="background:#14B8A6"></span>Compensação</span>
+      </div>
+    </div>
+  </div>
+  <div class="tcrd">
+    <div class="tcrd-hdr"><div class="sechdr"><h2>Detalhamento por documento fiscal</h2><p>RF × TF × Débito — NFs de saída · IBS + CBS</p></div></div>
+    <div class="twrap"><table><thead><tr><th>RF</th><th>Tipo Fiscal</th><th>Nota Fiscal</th><th>Cliente</th><th>Data NF</th><th class="r">Valor Total</th><th class="r">Valor Líquido</th><th class="r">CBS</th><th class="r">IBS</th><th class="r">Débito</th><th>Extinção</th><th>Status</th><th>Método de Extinção</th></tr></thead><tbody id="t-debitos"></tbody></table></div>
   </div>
 </div>
 
@@ -825,14 +898,9 @@ tr:hover td{background:rgba(73,197,177,.02)}
 
   <!-- ABA: LISTAGEM DE NFs -->
   <div class="crd" style="margin-top:24px">
-    <div class="sechdr"><h2>Listagem de NFs</h2><p>Todas as Notas Fiscais de entrada e saída · Aplique filtros para refinar a busca</p></div>
-    <div class="flt" style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
-      <input type="text" id="nf-busca" placeholder="Buscar por número, fornecedor/cliente, CNPJ…" oninput="nfRenderLista()"/>
-      <select id="nf-filtro-tipo" onchange="nfRenderLista()">
-        <option value="">Tipo — todos</option>
-        <option value="entrada">Entrada</option>
-        <option value="saida">Saída</option>
-      </select>
+    <div class="sechdr"><h2>Listagem de NFs de Entrada</h2><p>Notas Fiscais de entrada · fornecedores · créditos IBS + CBS · Aplique filtros para refinar a busca</p></div>
+    <div class="flt" style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end">
+      <input type="text" id="nf-busca" placeholder="Buscar por número, fornecedor, CNPJ…" oninput="nfRenderLista()"/>
       <div style="display:flex;gap:10px">
         <input type="date" id="nf-data-inicio" onchange="nfRenderLista()" style="flex:1"/>
         <input type="date" id="nf-data-fim" onchange="nfRenderLista()" style="flex:1"/>
