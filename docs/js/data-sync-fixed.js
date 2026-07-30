@@ -1740,35 +1740,63 @@ document.addEventListener('DOMContentLoaded', function() {
           window.nfListaFiltradaGlobal.push(nfRecord);
         });
 
-        // Gerar NFs de saída (100 clientes) para preencher o módulo de Débitos
+        // Gerar NFs de saída (100 clientes) — mesma estrutura das NFs de entrada
         var _clientesSaida = ['WEG Motores','Mercado Livre','Embraer S.A.','Bosch Ltda','Randon S.A.','Ambev S.A.','Magazine Luiza','Gerdau Aços','Marcopolo S.A.','Natura &Co'];
+        var _mesesSaida    = ['2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04'];
+        var _statusSaida   = ['extinto','extinto','extinto','extinto','extinto','nao_extinto','nao_extinto','nao_extinto','vencido','inconsistencia'];
+        var _metodosSaida  = ['RAD','RAD','Compensacao'];
         for (var _si = 1; _si <= 100; _si++) {
-          var _vliq  = Math.floor(12000 + (_si * 317) % 20000) * ((_si % 5) + 1);
-          var _cbs   = Math.floor(_vliq * 0.08);
-          var _ibs   = Math.floor(_vliq * 0.10);
-          var _vbrut = _vliq + _cbs + _ibs;
-          var _nsNum = String(_si + 500000).padStart(6, '0');
-          var _nfS   = {
+          var _vliq   = Math.floor(12000 + (_si * 317) % 20000) * ((_si % 5) + 1);
+          var _cbs    = Math.floor(_vliq * 0.08);
+          var _ibs    = Math.floor(_vliq * 0.10);
+          var _vbrut  = _vliq + _cbs + _ibs;
+          var _nsNum  = String(_si + 500000).padStart(6, '0');
+          var _mes    = _mesesSaida[(_si - 1) % _mesesSaida.length];
+          var _dia    = String(1 + ((_si * 7) % 27)).padStart(2, '0');
+          var _dataS  = _mes + '-' + _dia;
+          var _stS    = _statusSaida[(_si - 1) % _statusSaida.length];
+          var _metS   = _stS === 'extinto' ? _metodosSaida[(_si - 1) % _metodosSaida.length] : '—';
+          var _extDay = String(Math.min(parseInt(_dia) + 5, 28)).padStart(2, '0');
+          var _mp     = _mes.split('-');
+          var _dtExt  = _stS === 'extinto' ? (_extDay + '/' + _mp[1] + '/' + _mp[0] + ' 09:00') : '—';
+
+          var _nfS = {
             numero: _nsNum, tipo: 'saida', subTipo: 'nf',
             entidade: _clientesSaida[_si % _clientesSaida.length],
             cnpj: '12.345.678/000' + String(_si % 100).padStart(2, '0'),
             valorTotal: _vbrut, valorLiquido: _vliq, cbs: _cbs, ibs: _ibs,
-            data: '2026-01-01', status: 'nao_extinto', registrosFiscais: []
+            data: _dataS, status: _stS === 'extinto' ? 'extinto' : 'nao_extinto',
+            contratoId: null, registrosFiscais: []
           };
+
+          // RF IBS — mesma estrutura de RF de entrada (dataPagamento → dataExtincao, metodoPagamento → metodoExtincao)
           _nfS.registrosFiscais.push({
             id: 'RF-' + String(++window._rfIdCounter).padStart(8, '0'),
             tipo: 'saida', subTipo: 'fiscal', tipoFiscal: 'ibs',
             nfVinculada: _nsNum, entidade: _nfS.entidade, cnpj: _nfS.cnpj,
-            valor: _ibs, status: 'nao_extinto', data: '2026-01-01',
+            valor: _ibs,
+            status: _stS,
+            dataExtincao: _dtExt,
+            metodoExtincao: _metS,
+            contratoId: null,
+            data: _dataS,
             valorTotalNF: _vbrut, valorLiquidoNF: _vliq
           });
+
+          // RF CBS — mesma estrutura de RF de entrada
           _nfS.registrosFiscais.push({
             id: 'RF-' + String(++window._rfIdCounter).padStart(8, '0'),
             tipo: 'saida', subTipo: 'fiscal', tipoFiscal: 'cbs',
             nfVinculada: _nsNum, entidade: _nfS.entidade, cnpj: _nfS.cnpj,
-            valor: _cbs, status: 'nao_extinto', data: '2026-01-01',
+            valor: _cbs,
+            status: _stS,
+            dataExtincao: _dtExt,
+            metodoExtincao: _metS,
+            contratoId: null,
+            data: _dataS,
             valorTotalNF: _vbrut, valorLiquidoNF: _vliq
           });
+
           window.nfListaFiltradaGlobal.push(_nfS);
         }
 
