@@ -605,6 +605,68 @@ window.atualizarPerdaAcumulada = function() {
 };
 
 // ============================================================
+// KPIs DASHBOARD — derivados de nfListaFiltradaGlobal
+// ============================================================
+
+window.atualizarKPIsDashboard = function() {
+  var aprop = 0, naoAprop = 0, risco = 0;
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      var v = rf.valor || 0;
+      if (rf.status === 'apropriado' || rf.status === 'utilizado') aprop   += v;
+      if (rf.status === 'nao_apropriado')                          naoAprop += v;
+      if (rf.status === 'vencido')                                 risco    += v;
+    });
+  });
+  function fmtM(v) {
+    if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
+    if (v >= 1e3) return 'R$ ' + Math.round(v / 1e3) + 'K';
+    return 'R$ ' + v.toLocaleString('pt-BR');
+  }
+  function setEl(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; }
+  setEl('dash-cred-aprop',     fmtM(aprop));
+  setEl('dash-cred-apropriar', fmtM(naoAprop));
+  setEl('dash-cred-risco',     fmtM(risco));
+};
+
+// ============================================================
+// ESTATÍSTICAS DE CONCILIAÇÃO — derivadas de nfListaFiltradaGlobal
+// ============================================================
+
+window.atualizarEstatisticasConciliacao = function() {
+  var lista = window.nfListaFiltradaGlobal || [];
+  var totalNFs = lista.length;
+  var totalRFs = 0, tfOk = 0, aprovados = 0, inconsist = 0;
+  lista.forEach(function(nf) {
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      totalRFs++;
+      var temPag = rf.dataPagamento && rf.dataPagamento !== '—';
+      var temExt = rf.dataExtincao  && rf.dataExtincao  !== '—';
+      if (temPag || temExt) tfOk++;
+      if (rf.status === 'apropriado' || rf.status === 'utilizado' || rf.status === 'extinto') aprovados++;
+      if (rf.status === 'inconsistencia') inconsist++;
+    });
+  });
+  var pctRF  = totalNFs  > 0 ? (totalRFs / totalNFs * 100).toFixed(1).replace('.', ',') : '0,0';
+  var pctTF  = totalRFs  > 0 ? (tfOk     / totalRFs * 100).toFixed(1).replace('.', ',') : '0,0';
+  var pctDiv = totalRFs  > 0 ? (inconsist / totalRFs * 100).toFixed(1).replace('.', ',') : '0,0';
+  function setEl(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; }
+  setEl('conc-dfe',     totalNFs.toLocaleString('pt-BR'));
+  setEl('conc-dfe-sub', 'NF-e · entrada e saída processadas');
+  setEl('conc-rf',      totalRFs.toLocaleString('pt-BR'));
+  setEl('conc-rf-sub',  pctRF + '% com RF registrado');
+  setEl('conc-tf',      tfOk.toLocaleString('pt-BR'));
+  setEl('conc-tf-sub',  pctTF + '% com TF validada');
+  setEl('conc-div',     inconsist.toLocaleString('pt-BR'));
+  setEl('conc-div-sub', pctDiv + '% — em análise');
+  setEl('pipe-dfe',  totalNFs.toLocaleString('pt-BR'));
+  setEl('pipe-rf',   totalRFs.toLocaleString('pt-BR'));
+  setEl('pipe-tf',   tfOk.toLocaleString('pt-BR'));
+  setEl('pipe-cred', aprovados.toLocaleString('pt-BR'));
+};
+
+// ============================================================
 // INCONSISTÊNCIAS — RFs de crédito com status inconsistencia
 // ============================================================
 
@@ -1537,6 +1599,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const dataSyncFixed = new DataSyncManagerFixed();
     window.dataSyncFixed = dataSyncFixed; // Expor globalmente
 
+    // Função de pós-processamento global — roda após nfListaFiltradaGlobal ser populado
+    function _postProcessarDados() {
+      try { window._enriquecerNFsSaida(); } catch(e) { console.error('[data-sync-fixed] Erro _enriquecerNFsSaida:', e); }
+      try { window.renderizarListaNFs(); } catch(e) {}
+      try { window.injetarFiltrosCreditos(); window.renderizarTabelaCreditos(); } catch(e) {}
+      try { window.renderizarRFsInconsistencias(); } catch(e) {}
+      try { window.injetarFiltrosDebitos(); window.renderizarTabelaDebitos(); window.renderizarComposicaoDebitos(''); window.renderizarExtincaoMetodo(); window.atualizarPerdaAcumuladaDebitos(); } catch(e) {}
+      try { window.renderizarComposicaoCreditos(''); } catch(e) {}
+      try { window.renderizarPagamentosMetodo(); } catch(e) {}
+      try { window.atualizarPerdaAcumulada(); } catch(e) {}
+      try { window.atualizarKPIsDashboard(); } catch(e) {}
+      try { window.atualizarEstatisticasConciliacao(); } catch(e) {}
+      try { window.iniciarPaginacaoUniversal(); } catch(e) {}
+    }
+
     // Tentar chamar nfRenderLista se disponível, caso contrário popula nfListaFiltradaGlobal manualmente
     console.log('[data-sync-fixed] typeof nfRenderLista:', typeof nfRenderLista);
     if (typeof nfRenderLista === 'function') {
@@ -1544,6 +1621,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try {
         nfRenderLista();
         console.log('[data-sync-fixed] nfRenderLista() concluída com sucesso');
+        _postProcessarDados();
       } catch(e) {
         console.error('[data-sync-fixed] Erro ao chamar nfRenderLista():', e);
       }
@@ -1662,78 +1740,43 @@ document.addEventListener('DOMContentLoaded', function() {
           window.nfListaFiltradaGlobal.push(nfRecord);
         });
 
+        // Gerar NFs de saída (100 clientes) para preencher o módulo de Débitos
+        var _clientesSaida = ['WEG Motores','Mercado Livre','Embraer S.A.','Bosch Ltda','Randon S.A.','Ambev S.A.','Magazine Luiza','Gerdau Aços','Marcopolo S.A.','Natura &Co'];
+        for (var _si = 1; _si <= 100; _si++) {
+          var _vliq  = Math.floor(12000 + (_si * 317) % 20000) * ((_si % 5) + 1);
+          var _cbs   = Math.floor(_vliq * 0.08);
+          var _ibs   = Math.floor(_vliq * 0.10);
+          var _vbrut = _vliq + _cbs + _ibs;
+          var _nsNum = String(_si + 500000).padStart(6, '0');
+          var _nfS   = {
+            numero: _nsNum, tipo: 'saida', subTipo: 'nf',
+            entidade: _clientesSaida[_si % _clientesSaida.length],
+            cnpj: '12.345.678/000' + String(_si % 100).padStart(2, '0'),
+            valorTotal: _vbrut, valorLiquido: _vliq, cbs: _cbs, ibs: _ibs,
+            data: '2026-01-01', status: 'nao_extinto', registrosFiscais: []
+          };
+          _nfS.registrosFiscais.push({
+            id: 'RF-' + String(++window._rfIdCounter).padStart(8, '0'),
+            tipo: 'saida', subTipo: 'fiscal', tipoFiscal: 'ibs',
+            nfVinculada: _nsNum, entidade: _nfS.entidade, cnpj: _nfS.cnpj,
+            valor: _ibs, status: 'nao_extinto', data: '2026-01-01',
+            valorTotalNF: _vbrut, valorLiquidoNF: _vliq
+          });
+          _nfS.registrosFiscais.push({
+            id: 'RF-' + String(++window._rfIdCounter).padStart(8, '0'),
+            tipo: 'saida', subTipo: 'fiscal', tipoFiscal: 'cbs',
+            nfVinculada: _nsNum, entidade: _nfS.entidade, cnpj: _nfS.cnpj,
+            valor: _cbs, status: 'nao_extinto', data: '2026-01-01',
+            valorTotalNF: _vbrut, valorLiquidoNF: _vliq
+          });
+          window.nfListaFiltradaGlobal.push(_nfS);
+        }
+
         window.nfTotalGlobal = window.nfListaFiltradaGlobal.length;
         console.log('[data-sync-fixed] nfListaFiltradaGlobal populado com', window.nfListaFiltradaGlobal.length, 'registros');
       }
 
-      // Enriquecer NFs de saída com dados de extinção
-      try {
-        window._enriquecerNFsSaida();
-      } catch(e) {
-        console.error('[data-sync-fixed] Erro ao enriquecer NFs de saída:', e);
-      }
-
-      // Renderizar listagem de NFs de entrada (seção Conciliação)
-      try {
-        window.renderizarListaNFs();
-      } catch(e) {
-        console.error('[data-sync-fixed] Erro ao renderizar listagem de NFs:', e);
-      }
-
-      // Renderizar tabela de créditos (seção Gestão de Créditos)
-      console.log('[data-sync-fixed] Renderizando tabela de créditos manualmente...');
-      try {
-        window.injetarFiltrosCreditos();
-        window.renderizarTabelaCreditos();
-      } catch(e) {
-        console.error('[data-sync-fixed] Erro ao renderizar tabela:', e);
-      }
-
-      // Renderizar RFs com inconsistência (seção Gestão de Inconsistências)
-      try {
-        window.renderizarRFsInconsistencias();
-      } catch(e) {
-        console.error('[data-sync-fixed] Erro ao renderizar RFs de inconsistência:', e);
-      }
-
-      // Renderizar módulo de débitos (seção Gestão de Débitos)
-      try {
-        window.injetarFiltrosDebitos();
-        window.renderizarTabelaDebitos();
-        window.renderizarComposicaoDebitos('');
-        window.renderizarExtincaoMetodo();
-        window.atualizarPerdaAcumuladaDebitos();
-      } catch(e) {
-        console.error('[data-sync-fixed] Erro ao renderizar débitos:', e);
-      }
-
-      // Gráfico de composição de créditos por status mês a mês
-      try {
-        window.renderizarComposicaoCreditos('');
-      } catch(e) {
-        console.error('[data-sync-fixed] Erro ao renderizar composição:', e);
-      }
-
-      // Gráfico de método de pagamento — RAD vs Fornecedor mês a mês
-      try {
-        window.renderizarPagamentosMetodo();
-      } catch(e) {
-        console.error('[data-sync-fixed] Erro ao renderizar gráfico de método de pagamento:', e);
-      }
-
-      // Totalizador Perda Acumulada — RFs vencidos (IBS + CBS)
-      try {
-        window.atualizarPerdaAcumulada();
-      } catch(e) {
-        console.error('[data-sync-fixed] Erro ao calcular perda acumulada:', e);
-      }
-
-      // Paginação universal — 25 itens em todas as listagens
-      try {
-        window.iniciarPaginacaoUniversal();
-      } catch(e) {
-        console.error('[data-sync-fixed] Erro ao iniciar paginação:', e);
-      }
+      _postProcessarDados();
     }
 
     // Sincronizar a cada 30 segundos
