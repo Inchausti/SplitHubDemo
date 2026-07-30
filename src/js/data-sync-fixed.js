@@ -175,7 +175,7 @@ class DataSyncManagerFixed {
 
 // Instanciar quando o documento está pronto
 document.addEventListener('DOMContentLoaded', function() {
-  // Esperar um pouco para garantir que as funções do HTML já foram carregadas
+  // Esperar 2 segundos para garantir que as funções do HTML já foram carregadas
   setTimeout(function() {
     const dataSyncFixed = new DataSyncManagerFixed();
     window.dataSyncFixed = dataSyncFixed; // Expor globalmente
@@ -190,5 +190,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 30000);
 
     console.log('✓ Sistema de sincronização de dados ativo');
-  }, 500);
+  }, 2000);
 });
