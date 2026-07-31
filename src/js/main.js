@@ -73,20 +73,36 @@ function showAnalyticsSub(viewName, btnElement) {
   parentBtn.classList.add('active');
 }
 
-function showAdminSub(viewName, btnElement) {
-  const group = document.getElementById('nav-sub-group-admin');
+function showAdminSub(id, btnElement) {
   const parentBtn = document.getElementById('nav-admin-btn');
 
-  if (!group.classList.contains('expanded')) {
-    group.classList.add('expanded');
+  // Navegar para view-admin (não view-contratos / view-fornecedores)
+  showView('admin', parentBtn);
+
+  // Expandir nav group
+  document.querySelectorAll('.nav-sub-group').forEach(g => g.classList.remove('expanded'));
+  const group = document.getElementById('nav-sub-group-admin');
+  if (group) group.classList.add('expanded');
+
+  // Marcar sub-botão ativo
+  document.querySelectorAll('.nav-sub-btn').forEach(b => b.classList.remove('active'));
+  if (btnElement) btnElement.classList.add('active');
+
+  // Ativar stab correspondente
+  document.querySelectorAll('#view-admin .stab').forEach(b => b.classList.remove('active'));
+  const stab = document.querySelector('#view-admin .stab[onclick*="\'' + id + '\'"]');
+  if (stab) stab.classList.add('active');
+
+  // Alternar sv
+  document.querySelectorAll('[id^="admin-"]').forEach(sv => sv.classList.remove('active'));
+  const sv = document.getElementById('admin-' + (id || 'contratos'));
+  if (sv) sv.classList.add('active');
+
+  closeSidebar();
+
+  if (id === 'organizacao') {
+    setTimeout(function() { if (window.orgRenderTabela) window.orgRenderTabela(); }, 0);
   }
-
-  showView(viewName, btnElement);
-
-  const buttons = document.querySelectorAll('#nav-sub-group-admin .nav-sub-btn');
-  buttons.forEach(b => b.classList.remove('active'));
-  btnElement.classList.add('active');
-  parentBtn.classList.add('active');
 }
 
 function showInconsistSub(id, btnElement) {
@@ -222,7 +238,13 @@ function creditosVerRelatorioPerdas() {
 }
 
 function creditosLimparFiltro() {
-  document.getElementById('creditos-filtro-chip').style.display = 'none';
+  if (window._filtrosCreditos) {
+    window._filtrosCreditos.status = '';
+    window._filtrosCreditos.statusMulti = [];
+  }
+  var chip = document.getElementById('creditos-filtro-chip');
+  if (chip) chip.style.display = 'none';
+  if (window.renderizarTabelaCreditos) window.renderizarTabelaCreditos();
 }
 
 // ─── FCT (FLUXO DE CAIXA TRIBUTÁRIO) ───
