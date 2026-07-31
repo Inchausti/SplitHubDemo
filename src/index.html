@@ -926,7 +926,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
   </div>
   <div class="tcrd">
     <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>NFs encontradas</h2><p id="nf-count-sub">0 de 0 NFs exibidas</p></div></div>
-    <div class="twrap"><table><thead><tr><th>Número NF</th><th>Tipo NF</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor Total</th><th class="r">Valor Líq.</th><th class="r">CBS</th><th class="r">IBS</th><th>Status</th><th>Data</th></tr></thead>
+    <div class="twrap"><table><thead><tr><th>Número NF</th><th>Tipo NF</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor Total</th><th class="r">Valor Líq.</th><th class="r">CBS</th><th class="r">IBS</th><th>Status</th><th>Data</th><th>Chave NF-e</th></tr></thead>
     <tbody id="t-listagem-nfs"></tbody></table></div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
       <button class="btn" id="nf-btn-prev" onclick="nfPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
@@ -991,6 +991,10 @@ tr:hover td{background:rgba(73,197,177,.02)}
       <div style="grid-column:1/3">
         <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Data de Criação</div>
         <div id="nf-detail-data" style="color:var(--txt1);font-weight:600">—</div>
+      </div>
+      <div style="grid-column:1/3">
+        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Chave de Acesso NF-e</div>
+        <div id="nf-detail-chave" style="color:var(--txt2);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;word-break:break-all;line-height:1.7">—</div>
       </div>
       <div style="grid-column:1/3;border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
         <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:12px;font-weight:600">Registros Fiscais</div>
@@ -2797,6 +2801,20 @@ function rfPaginaAnterior(){
 
 var nfPaginaAtual=1;var nfListaFiltradaGlobal=[];var nfTotalGlobal=0;var nfItensPorPagina=25;var nfExpandidas={};var rfIdCounter=0;
 function nfGerarIdRegistroFiscal(){return 'RF-'+String(++rfIdCounter).padStart(8,'0');}
+function gerarChaveNFe(cnpj,numero,data){
+  var cnpjD=(cnpj||'').replace(/\D/g,'').padEnd(14,'0').slice(0,14);
+  var parts=(data||'2026-01-01').split('-');
+  var aamm=(parts[0]||'2026').slice(2)+(parts[1]||'01');
+  var nNF=String(parseInt(numero,10)||1).padStart(9,'0');
+  var seed=parseInt(numero,10)||1;
+  var cNF=String((seed*31337+12345)%100000000).padStart(8,'0');
+  var base='35'+aamm+cnpjD+'55001'+nNF+'1'+cNF;
+  var w=[2,3,4,5,6,7,8,9];var sum=0;
+  for(var i=base.length-1,wi=0;i>=0;i--,wi++)sum+=parseInt(base[i],10)*w[wi%8];
+  var rem=sum%11;
+  return base+((rem===0||rem===1)?'0':String(11-rem));
+}
+function formatarChaveNFe(c){return c.replace(/(.{4})(?=.)/g,'$1 ');}
 function nfRenderLista(){
   var buscaEl=document.getElementById("nf-busca");
   var tipoEl=document.getElementById("nf-filtro-tipo");
@@ -2838,6 +2856,7 @@ function nfRenderLista(){
         ibs:ibs,
         data:nf.data,
         status:statusCred,
+        chaveAcesso:gerarChaveNFe(nf.cnpj,nf.numero,nf.data),
         registrosFiscais:[]
       };
 
@@ -2904,6 +2923,7 @@ function nfRenderLista(){
         ibs:ibsSaida,
         data:'2026-'+String(mes).padStart(2,'0')+'-'+String(dia).padStart(2,'0'),
         status:statusDeb,
+        chaveAcesso:gerarChaveNFe('12345678000'+String(i%100).padStart(2,'0'),nfSaidaNum,'2026-'+String(mes).padStart(2,'0')+'-'+String(dia).padStart(2,'0')),
         registrosFiscais:[]
       };
 
@@ -3008,6 +3028,8 @@ function nfRenderPagina(){
     var isExpanded=nfExpandidas[expandKey];
     var arrow=isExpanded?'▼':'▶';
 
+    var chave=r.chaveAcesso||'';
+    var chaveTrunc=chave?(chave.slice(0,4)+' '+chave.slice(4,8)+' '+chave.slice(8,12)+' …'):'—';
     h+='<tr><td class="mono" style="color:#3B82F6;font-weight:600;display:flex;gap:8px;align-items:center"><button class="nf-expand" onclick="nfToggleExpand(\''+expandKey+'\')">'+arrow+'</button><button style="background:none;border:none;color:#3B82F6;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit" onclick="nfAbrirDetalhes('+idx+')">NF-'+r.numero+'</button></td>'
       +'<td>'+tipoBadge+'</td>'
       +'<td>'+r.entidade+'</td>'
@@ -3017,7 +3039,8 @@ function nfRenderPagina(){
       +'<td class="r mono" style="font-size:11px;font-weight:600;color:'+(r.cbs>0?'#F59E0B':'var(--txt3)')+'">'+ff(r.cbs)+'</td>'
       +'<td class="r mono" style="font-size:11px;font-weight:600;color:'+(r.ibs>0?'#3B82F6':'var(--txt3)')+'">'+ff(r.ibs)+'</td>'
       +'<td>'+statusBadge+'</td>'
-      +'<td style="font-size:12px;color:var(--txt2)">'+dataFormatada+'</td></tr>';
+      +'<td style="font-size:12px;color:var(--txt2)">'+dataFormatada+'</td>'
+      +'<td class="mono" style="font-size:10px;color:var(--txt3)" title="'+chave+'">'+chaveTrunc+'</td></tr>';
 
     if(isExpanded && r.registrosFiscais && r.registrosFiscais.length){
       r.registrosFiscais.forEach(function(rf){
@@ -3029,7 +3052,7 @@ function nfRenderPagina(){
   });
 
   if(!listaPagina.length){
-    h='<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma NF encontrada para este filtro.</td></tr>';
+    h='<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma NF encontrada para este filtro.</td></tr>';
   }
 
   var tbody=document.getElementById("t-listagem-nfs");
@@ -3098,6 +3121,8 @@ function nfAbrirDetalhes(idx){
   var statusLabels={'nao_apropriado':'Não Apropriado','apropriado':'Apropriado','utilizado':'Utilizado','nao_extinto':'Não Extinto','extinto':'Extinto'};
   document.getElementById('nf-detail-status').textContent=statusLabels[r.status]||r.status;
   document.getElementById('nf-detail-data').textContent=dataFormatada;
+  var chaveEl=document.getElementById('nf-detail-chave');
+  if(chaveEl)chaveEl.textContent=r.chaveAcesso?formatarChaveNFe(r.chaveAcesso):'—';
 
   var fiscaisHtml='';
   if(r.registrosFiscais && r.registrosFiscais.length){

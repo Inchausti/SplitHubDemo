@@ -262,6 +262,8 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   setEl('nf-detail-ibs',           ffz(r.ibs));
   setEl('nf-detail-status',        statusLabels[r.status] || r.status);
   setEl('nf-detail-data',          dataFormatada);
+  var chaveEl = document.getElementById('nf-detail-chave');
+  if (chaveEl) chaveEl.textContent = r.chaveAcesso ? r.chaveAcesso.replace(/(.{4})(?=.)/g, '$1 ') : '—';
 
   var fiscaisHtml = '';
   if (r.registrosFiscais && r.registrosFiscais.length) {
