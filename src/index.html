@@ -485,8 +485,22 @@ tr:hover td{background:rgba(73,197,177,.02)}
 <!-- PAGAMENTOS -->
 <div id="view-pagamentos" class="view">
   <div class="pg-hdr">
-    <div><div class="pg-title">Gestão de Pagamentos</div><div class="pg-sub">Impostos (DARF/Guia IBS) e fornecedores · Abril 2026</div></div>
-    <button class="btn btn-t">+ Novo pagamento manual</button>
+    <div>
+      <div class="pg-title">Gestão de Pagamentos</div>
+      <div class="pg-sub" id="pag-periodo-sub">Impostos (DARF/Guia IBS) e fornecedores · Todos os períodos</div>
+    </div>
+    <div class="hdr-act">
+      <select id="pag-mes-ano" onchange="window.pagamentosFiltrarMesAno()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--txt1);font-size:13px;font-weight:600;font-family:inherit;padding:8px 16px;cursor:pointer;outline:none">
+        <option value="">Todos os períodos</option>
+        <option value="2025-10">out/2025</option>
+        <option value="2025-11">nov/2025</option>
+        <option value="2025-12">dez/2025</option>
+        <option value="2026-01">jan/2026</option>
+        <option value="2026-02">fev/2026</option>
+        <option value="2026-03">mar/2026</option>
+        <option value="2026-04">abr/2026</option>
+      </select>
+    </div>
   </div>
   <div class="stabs">
     <button class="stab active" onclick="showSub('pag','imp',this)">Impostos (DARF / Guia IBS)</button>
@@ -494,17 +508,27 @@ tr:hover td{background:rgba(73,197,177,.02)}
   </div>
   <div id="pag-imp" class="sv active">
     <div class="kgrid k4">
-      <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">A vencer (7 dias)</div><div class="kval" id="pag-avencer">R$ 4,1M</div><div class="ksub" id="pag-avencer-sub">4 guias pendentes</div></div>
-      <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Vencendo hoje</div><div class="kval" id="pag-vencendo">R$ 512K</div><div class="ksub" id="pag-vencendo-sub">1 guia — Vale S.A.</div></div>
-      <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Atrasados</div><div class="kval" id="pag-atrasado">R$ 168K</div><div class="ksub" id="pag-atrasado-sub">1 guia — Randon S.A.</div></div>
-      <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">Pagos em abril</div><div class="kval" id="pag-pago">R$ 6,8M</div><div class="ksub" id="pag-pago-sub">38 guias executadas</div></div>
+      <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">A vencer</div><div class="kval" id="pag-avencer">—</div><div class="ksub" id="pag-avencer-sub">guias pendentes</div></div>
+      <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Em risco / Inconsistência</div><div class="kval" id="pag-vencendo">—</div><div class="ksub" id="pag-vencendo-sub">requer atenção</div></div>
+      <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Atrasados</div><div class="kval" id="pag-atrasado">—</div><div class="ksub" id="pag-atrasado-sub">guias vencidas</div></div>
+      <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">Pagos</div><div class="kval" id="pag-pago">—</div><div class="ksub" id="pag-pago-sub">guias executadas</div></div>
     </div>
     <div class="flt">
-      <select><option>Todos os status</option><option>Pendente</option><option>Pago</option><option>Atrasado</option></select>
-      <select><option>Todos os tipos</option><option>DARF CBS</option><option>Guia IBS</option></select>
-      <input type="text" placeholder="Buscar fornecedor ou RF…"/>
+      <select id="pag-status" onchange="window.renderizarTabelaPagamentos()">
+        <option value="">Todos os status</option>
+        <option value="pendente">Pendente</option>
+        <option value="pago">Pago</option>
+        <option value="atrasado">Atrasado</option>
+        <option value="vencendo">Em risco</option>
+      </select>
+      <select id="pag-tipo" onchange="window.renderizarTabelaPagamentos()">
+        <option value="">Todos os tipos</option>
+        <option value="DARF CBS">DARF CBS</option>
+        <option value="Guia IBS">Guia IBS</option>
+      </select>
+      <input type="text" id="pag-busca" placeholder="Buscar fornecedor ou RF…" oninput="window.renderizarTabelaPagamentos()"/>
     </div>
-    <div class="tcrd"><div class="twrap"><table><thead><tr><th>ID</th><th>RF</th><th>Fornecedor</th><th>Tipo</th><th class="r">Valor</th><th>Vencimento</th><th>Status</th><th>Ação</th></tr></thead><tbody id="t-impostos"></tbody></table></div></div>
+    <div class="tcrd"><div class="twrap"><table><thead><tr><th>RF</th><th>Fornecedor</th><th>Tipo</th><th class="r">Valor</th><th>Data RF</th><th>Pagamento</th><th>Status</th><th>Ação</th></tr></thead><tbody id="t-impostos"></tbody></table></div></div>
   </div>
   <div id="pag-forn" class="sv">
     <div class="kgrid k4">

@@ -1426,6 +1426,142 @@ function _svgStackedBar(id, datasets, labels, H) {
 }
 
 // ============================================================
+// GESTÃO DE PAGAMENTOS — filtro global de mês + tabela dinâmica
+// ============================================================
+
+window._filtrosPagamentos = { mesAno: '', tipo: '', status: '', busca: '' };
+
+window.pagamentosFiltrarMesAno = function() {
+  var sel = document.getElementById('pag-mes-ano');
+  window._filtrosPagamentos.mesAno = sel ? sel.value : '';
+  var mesLabels = {
+    '2025-10':'out/2025','2025-11':'nov/2025','2025-12':'dez/2025',
+    '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026'
+  };
+  var label = window._filtrosPagamentos.mesAno
+    ? (mesLabels[window._filtrosPagamentos.mesAno] || window._filtrosPagamentos.mesAno)
+    : 'Todos os períodos';
+  var sub = document.getElementById('pag-periodo-sub');
+  if (sub) sub.textContent = 'Impostos (DARF/Guia IBS) e fornecedores · ' + label;
+  window.renderizarTabelaPagamentos();
+};
+
+window.renderizarTabelaPagamentos = function() {
+  var f    = window._filtrosPagamentos;
+  var busca = ((document.getElementById('pag-busca') || {}).value || f.busca || '').toLowerCase();
+  var tipo  = (document.getElementById('pag-tipo')   || {}).value || f.tipo   || '';
+  var stFlt = (document.getElementById('pag-status') || {}).value || f.status || '';
+
+  var stCoresMap  = { pendente:'73,197,177', vencendo:'245,158,11', atrasado:'244,63,94', pago:'34,197,94' };
+  var stHexMap    = { pendente:'#49C5B1', vencendo:'#F59E0B', atrasado:'#F43F5E', pago:'#22C55E' };
+  var stLblMap    = { pendente:'Pendente', vencendo:'Em risco', atrasado:'Atrasado', pago:'Pago' };
+
+  var rows = [];
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (f.mesAno && !(rf.data || '').startsWith(f.mesAno)) return;
+
+      var tipoCol = rf.tipoFiscal === 'ibs' ? 'Guia IBS' : 'DARF CBS';
+      if (tipo && tipoCol !== tipo) return;
+
+      var temPag = rf.dataPagamento && rf.dataPagamento !== '—';
+      var rfSt;
+      if (temPag)                        rfSt = 'pago';
+      else if (rf.status === 'vencido')  rfSt = 'atrasado';
+      else if (rf.status === 'inconsistencia') rfSt = 'vencendo';
+      else                               rfSt = 'pendente';
+      if (stFlt && rfSt !== stFlt) return;
+
+      if (busca) {
+        var s = (rf.id || '').toLowerCase() + (rf.entidade || '').toLowerCase() + (nf.numero || '').toLowerCase();
+        if (!s.includes(busca)) return;
+      }
+
+      var dp = (rf.data || '').split('-');
+      var dataFmt = dp.length === 3 ? dp[2] + '/' + dp[1] + '/' + dp[0] : '—';
+      var pagFmt  = temPag ? rf.dataPagamento : '—';
+
+      rows.push({
+        rf: rf.id || '—', forn: rf.entidade || nf.entidade || '—',
+        cnpj: rf.cnpj || nf.cnpj || '—',
+        tipo: tipoCol, valor: rf.valor || 0,
+        dataRF: dataFmt, pagamento: pagFmt, status: rfSt
+      });
+    });
+  });
+
+  var h = '';
+  rows.forEach(function(r) {
+    var stCor  = stHexMap[r.status]  || '#A7A8AA';
+    var stRgb  = stCoresMap[r.status] || '167,168,170';
+    var stLbl  = stLblMap[r.status]  || r.status;
+    var badge  = '<span style="background:rgba('+stRgb+',.12);color:'+stCor+';border:1px solid rgba('+stRgb+',.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">'+stLbl+'</span>';
+    var tipoBadge = r.tipo === 'Guia IBS'
+      ? '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Guia IBS</span>'
+      : '<span style="background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">DARF CBS</span>';
+    var act = r.status !== 'pago'
+      ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px">Pagar via Pix</button>'
+      : '<span style="font-size:11px;color:var(--txt3)">Concluído</span>';
+    h += '<tr>'
+      + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.rf + '</td>'
+      + '<td><div style="font-weight:500;font-size:13px">' + r.forn + '</div><div style="font-size:11px;color:var(--txt2)">' + r.cnpj + '</div></td>'
+      + '<td>' + tipoBadge + '</td>'
+      + '<td class="r mono" style="font-weight:600">' + ff(r.valor) + '</td>'
+      + '<td style="font-size:11px;color:var(--txt2)">' + r.dataRF + '</td>'
+      + '<td style="font-size:11px;color:var(--txt2)">' + r.pagamento + '</td>'
+      + '<td>' + badge + '</td>'
+      + '<td>' + act + '</td>'
+      + '</tr>';
+  });
+
+  if (!rows.length) {
+    h = '<tr><td colspan="8" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento encontrado para este filtro.</td></tr>';
+  }
+  var tbody = document.getElementById('t-impostos');
+  if (tbody) tbody.innerHTML = h;
+
+  window.atualizarKPIsPagamentos();
+};
+
+window.atualizarKPIsPagamentos = function() {
+  var f = window._filtrosPagamentos;
+  var pendente = 0, cntPend = 0;
+  var vencendo = 0, cntVenc = 0, lastVenc = null;
+  var atrasado = 0, cntAtr  = 0, lastAtr  = null;
+  var pago     = 0, cntPago = 0;
+
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (f.mesAno && !(rf.data || '').startsWith(f.mesAno)) return;
+      var temPag = rf.dataPagamento && rf.dataPagamento !== '—';
+      var v = rf.valor || 0;
+      if (temPag)                              { pago     += v; cntPago++; }
+      else if (rf.status === 'vencido')        { atrasado += v; cntAtr++;  lastAtr  = rf.entidade || nf.entidade; }
+      else if (rf.status === 'inconsistencia') { vencendo += v; cntVenc++; lastVenc = rf.entidade || nf.entidade; }
+      else                                     { pendente += v; cntPend++; }
+    });
+  });
+
+  function fmtM(v) {
+    if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
+    if (v >= 1e3) return 'R$ ' + Math.round(v / 1e3) + 'K';
+    return 'R$ ' + v.toLocaleString('pt-BR');
+  }
+  function setEl(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; }
+
+  setEl('pag-avencer',     fmtM(pendente));
+  setEl('pag-avencer-sub', cntPend + ' guias pendentes');
+  setEl('pag-vencendo',     fmtM(vencendo));
+  setEl('pag-vencendo-sub', cntVenc + (cntVenc === 1 && lastVenc ? ' guia — ' + lastVenc : ' guias · requer atenção'));
+  setEl('pag-atrasado',     fmtM(atrasado));
+  setEl('pag-atrasado-sub', cntAtr  + (cntAtr  === 1 && lastAtr  ? ' guia — ' + lastAtr  : ' guias vencidas'));
+  setEl('pag-pago',         fmtM(pago));
+  setEl('pag-pago-sub',     cntPago + ' guias executadas');
+};
+
+// ============================================================
 // GRÁFICO DE MÉTODO DE PAGAMENTO — RAD vs Fornecedor · mês a mês
 // ============================================================
 window.renderizarPagamentosMetodo = function() {
@@ -1604,6 +1740,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window._enriquecerNFsSaida(); } catch(e) { console.error('[data-sync-fixed] Erro _enriquecerNFsSaida:', e); }
       try { window.renderizarListaNFs(); } catch(e) {}
       try { window.injetarFiltrosCreditos(); window.renderizarTabelaCreditos(); } catch(e) {}
+      try { window.renderizarTabelaPagamentos(); } catch(e) {}
       try { window.renderizarRFsInconsistencias(); } catch(e) {}
       try { window.injetarFiltrosDebitos(); window.renderizarTabelaDebitos(); window.renderizarComposicaoDebitos(''); window.renderizarExtincaoMetodo(); window.atualizarPerdaAcumuladaDebitos(); } catch(e) {}
       try { window.renderizarComposicaoCreditos(''); } catch(e) {}
