@@ -963,6 +963,151 @@ window.incRfPaginaAnterior = function() {
 };
 
 // ============================================================
+// KANBAN DE INCONSISTÊNCIAS
+// ============================================================
+
+window._kanbanState = {};
+
+var _kbColunas = [
+  { id: 'identificado',   label: 'Identificado',       cor: '#F43F5E', icon: '🔴' },
+  { id: 'analise',        label: 'Em Análise',          cor: '#F59E0B', icon: '🔍' },
+  { id: 'tratamento',     label: 'Em Tratamento',       cor: '#3B82F6', icon: '🔧' },
+  { id: 'aguardando',     label: 'Aguardando Retorno',  cor: '#8B5CF6', icon: '⏳' },
+  { id: 'resolvido',      label: 'Resolvido',           cor: '#22C55E', icon: '✅' }
+];
+
+var _kbIncCores = {
+  'Não conciliado':          '#F43F5E',
+  'Valor imposto divergente':'#F59E0B',
+  'Vencido':                 '#EF4444',
+  'Sem Comprovante':         '#8B5CF6'
+};
+
+window.renderizarKanbanInconsistencias = function() {
+  var board = document.getElementById('inc-kanban-board');
+  if (!board) return;
+
+  // Coletar RFs com inconsistência
+  var rfs = [];
+  var nfs = window.nfListaFiltradaGlobal || [];
+  nfs.forEach(function(nf) {
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (rf.status === 'inconsistencia') {
+        rfs.push({
+          id: rf.id || ('RF-' + Math.random().toString(36).slice(2,7).toUpperCase()),
+          tipoNF: nf.tipo || 'entrada',
+          tipoFiscal: rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
+          entidade: rf.entidade || nf.entidade || '—',
+          cnpj: rf.cnpj || nf.cnpj || '—',
+          valor: rf.valor || 0,
+          data: rf.data || nf.data || '',
+          nfNumero: nf.numero || '—',
+          inconsistencia: rf.inconsistencia || 'Não conciliado'
+        });
+      }
+    });
+  });
+
+  // Atualizar badge total
+  var badge = document.getElementById('inc-kb-total-badge');
+  if (badge) badge.textContent = rfs.length + (rfs.length === 1 ? ' cartão' : ' cartões');
+
+  // Inicializar estado para novos RFs (padrão: identificado)
+  rfs.forEach(function(rf) {
+    if (!window._kanbanState[rf.id]) window._kanbanState[rf.id] = 'identificado';
+  });
+
+  // Agrupar por coluna
+  var grupos = {};
+  _kbColunas.forEach(function(c) { grupos[c.id] = []; });
+  rfs.forEach(function(rf) {
+    var col = window._kanbanState[rf.id] || 'identificado';
+    if (!grupos[col]) col = 'identificado';
+    grupos[col].push(rf);
+  });
+
+  function ff(v) {
+    if (!v && v !== 0) return '—';
+    return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Construir board
+  var html = '';
+  _kbColunas.forEach(function(col) {
+    var cards = grupos[col.id] || [];
+    var cardsHtml = '';
+    cards.forEach(function(rf) {
+      var incCor = _kbIncCores[rf.inconsistencia] || '#64748B';
+      var nfTipoCor = rf.tipoNF === 'entrada' ? '#22C55E' : '#F59E0B';
+      var ftCor = rf.tipoFiscal === 'IBS' ? '#3B82F6' : '#2DD4BF';
+      cardsHtml += '<div class="kb-card" draggable="true"'
+        + ' ondragstart="window._kbDragStart(event,\'' + rf.id.replace(/'/g,"\\'") + '\')"'
+        + ' style="background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:grab;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:opacity .15s,transform .15s,box-shadow .15s"'
+        + ' onmouseenter="this.style.boxShadow=\'0 4px 14px rgba(0,0,0,.18)\';this.style.transform=\'translateY(-1px)\'"'
+        + ' onmouseleave="this.style.boxShadow=\'0 1px 4px rgba(0,0,0,.08)\';this.style.transform=\'\'">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+        + '<span style="font-size:9px;font-family:\'IBM Plex Mono\',monospace;color:var(--txt3);letter-spacing:.05em">' + rf.id + '</span>'
+        + '<span style="background:' + incCor + '22;color:' + incCor + ';border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700;letter-spacing:.03em">' + rf.inconsistencia + '</span>'
+        + '</div>'
+        + '<div style="font-size:12px;font-weight:600;color:var(--txt1);margin-bottom:6px;line-height:1.3">' + rf.entidade + '</div>'
+        + '<div style="font-size:11px;color:var(--txt2);margin-bottom:8px;font-family:\'IBM Plex Mono\',monospace">' + rf.cnpj + '</div>'
+        + '<div style="font-size:13px;font-weight:700;color:var(--txt1);margin-bottom:8px">' + ff(rf.valor) + '</div>'
+        + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+        + '<span style="background:' + nfTipoCor + '22;color:' + nfTipoCor + ';border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700">' + (rf.tipoNF === 'entrada' ? 'ENTRADA' : 'SAÍDA') + '</span>'
+        + '<span style="background:' + ftCor + '22;color:' + ftCor + ';border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700">' + rf.tipoFiscal + '</span>'
+        + '<span style="font-size:10px;color:var(--txt3);margin-left:auto">' + (rf.data ? rf.data.split('T')[0] : '—') + '</span>'
+        + '</div>'
+        + '</div>';
+    });
+
+    html += '<div style="flex:0 0 230px;min-width:230px">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 14px;background:var(--card);border:1px solid var(--brd);border-radius:10px;border-top:3px solid ' + col.cor + '">'
+      + '<span style="font-size:14px">' + col.icon + '</span>'
+      + '<span style="font-size:12px;font-weight:700;color:var(--txt1);flex:1">' + col.label + '</span>'
+      + '<span style="background:' + col.cor + '22;color:' + col.cor + ';border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700">' + cards.length + '</span>'
+      + '</div>'
+      + '<div id="kb-col-' + col.id + '" data-col="' + col.id + '"'
+      + ' ondragover="window._kbDragOver(event)"'
+      + ' ondragleave="window._kbDragLeave(event)"'
+      + ' ondrop="window._kbDrop(event,\'' + col.id + '\')"'
+      + ' style="min-height:400px;padding:4px;border:2px dashed transparent;border-radius:10px;transition:border-color .15s,background .15s">'
+      + cardsHtml
+      + '</div>'
+      + '</div>';
+  });
+
+  board.innerHTML = html;
+};
+
+window._kbDragStart = function(e, rfId) {
+  e.dataTransfer.setData('text/plain', rfId);
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(function() { if (e.target) e.target.style.opacity = '0.45'; }, 0);
+};
+
+window._kbDragOver = function(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  var col = e.currentTarget;
+  col.style.borderColor = 'var(--teal)';
+  col.style.background = 'rgba(45,212,191,.06)';
+};
+
+window._kbDragLeave = function(e) {
+  var col = e.currentTarget;
+  col.style.borderColor = 'transparent';
+  col.style.background = '';
+};
+
+window._kbDrop = function(e, colId) {
+  e.preventDefault();
+  var rfId = e.dataTransfer.getData('text/plain');
+  if (!rfId) return;
+  window._kanbanState[rfId] = colId;
+  window.renderizarKanbanInconsistencias();
+};
+
+// ============================================================
 // MÓDULO GESTÃO DE DÉBITOS — NFs de saída · IBS + CBS
 // ============================================================
 

@@ -89,20 +89,41 @@ function showAdminSub(viewName, btnElement) {
   parentBtn.classList.add('active');
 }
 
-function showInconsistSub(viewName, btnElement) {
-  const group = document.getElementById('nav-sub-group-inconsist');
+function showInconsistSub(id, btnElement) {
   const parentBtn = document.getElementById('nav-inconsist-btn');
 
-  if (!group.classList.contains('expanded')) {
-    group.classList.add('expanded');
+  // Always navigate to the main inconsistências view
+  showView('inconsistencias', parentBtn);
+  // Garantir que a view fique visível mesmo se showView falhar internamente
+  const vInc = document.getElementById('view-inconsistencias');
+  if (vInc) vInc.classList.add('active');
+
+  // Expandir grupo de nav (expandNavGroup não existe no main.js — inline)
+  document.querySelectorAll('.nav-sub-group').forEach(g => g.classList.remove('expanded'));
+  const group = document.getElementById('nav-sub-group-inconsist');
+  if (group) group.classList.add('expanded');
+
+  // Marcar sub-botão ativo
+  document.querySelectorAll('.nav-sub-btn').forEach(b => b.classList.remove('active'));
+  if (btnElement) btnElement.classList.add('active');
+
+  // Alternar sub-view (lista ou kanban)
+  document.querySelectorAll('[id^="inconsistencias-"]').forEach(sv => sv.classList.remove('active'));
+  const subView = document.getElementById('inconsistencias-' + (id || 'lista'));
+  if (subView) subView.classList.add('active');
+
+  closeSidebar();
+
+  if (!id || id === 'lista') {
+    setTimeout(function() {
+      try { if (typeof inconsistRenderTabela === 'function') inconsistRenderTabela(); } catch(e) {}
+      if (window.renderizarRFsInconsistencias) window.renderizarRFsInconsistencias();
+    }, 0);
+  } else if (id === 'kanban') {
+    setTimeout(function() {
+      if (window.renderizarKanbanInconsistencias) window.renderizarKanbanInconsistencias();
+    }, 0);
   }
-
-  showView(viewName, btnElement);
-
-  const buttons = document.querySelectorAll('#nav-sub-group-inconsist .nav-sub-btn');
-  buttons.forEach(b => b.classList.remove('active'));
-  btnElement.classList.add('active');
-  parentBtn.classList.add('active');
 }
 
 // ─── TAB SWITCHING ───
