@@ -1441,10 +1441,166 @@ function _svgStackedBar(id, datasets, labels, H) {
 }
 
 // ============================================================
+// CRÉDITOS — top 5 RFs com inconsistência por volume financeiro
+// ============================================================
+
+window.renderizarTop5Inconsistencias = function() {
+  var el = document.getElementById('c-top5-inconsist');
+  if (!el) return;
+
+  var lista = [];
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (rf.status === 'inconsistencia') {
+        lista.push({
+          id: rf.id || '—',
+          forn: (rf.entidade || nf.entidade || '—').slice(0, 22),
+          tipo: rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
+          valor: rf.valor || 0
+        });
+      }
+    });
+  });
+
+  if (!lista.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--txt3);font-size:12px;padding:24px 0">Nenhuma inconsistência encontrada.</div>';
+    return;
+  }
+
+  lista.sort(function(a, b) { return b.valor - a.valor; });
+  var top5 = lista.slice(0, 5);
+  var maxVal = top5[0].valor;
+
+  var W = 560, barH = 20, gap = 14, padL = 170, padR = 80, padT = 8, padB = 4;
+  var totalH = padT + top5.length * (barH + gap) - gap + padB;
+
+  var tipoCor = { IBS: '#3B82F6', CBS: '#F59E0B' };
+
+  var s = '<svg viewBox="0 0 ' + W + ' ' + totalH + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
+
+  top5.forEach(function(r, i) {
+    var y = padT + i * (barH + gap);
+    var barW = Math.max(4, Math.round((r.valor / maxVal) * (W - padL - padR)));
+    var cor = tipoCor[r.tipo] || '#F43F5E';
+    var valM = (r.valor / 1e6).toFixed(2).replace('.', ',');
+
+    // Label esquerda: RF ID + fornecedor
+    s += '<text x="' + (padL - 8) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#A7A8AA" font-size="10" font-family="Montserrat,sans-serif">'
+      + r.id + ' · ' + r.forn + '</text>';
+
+    // Barra de fundo
+    s += '<rect x="' + padL + '" y="' + y + '" width="' + (W - padL - padR) + '" height="' + barH + '" rx="4" fill="rgba(244,63,94,.08)"/>';
+
+    // Barra colorida
+    s += '<rect x="' + padL + '" y="' + y + '" width="' + barW + '" height="' + barH + '" rx="4" fill="' + cor + '" opacity=".85"/>';
+
+    // Badge tipo
+    s += '<rect x="' + (padL + barW + 6) + '" y="' + (y + 3) + '" width="26" height="14" rx="3" fill="' + cor + '" opacity=".18"/>';
+    s += '<text x="' + (padL + barW + 19) + '" y="' + (y + 13) + '" text-anchor="middle" fill="' + cor + '" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">' + r.tipo + '</text>';
+
+    // Valor à direita
+    s += '<text x="' + (W - 4) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#F43F5E" font-size="10" font-weight="700" font-family="Montserrat,sans-serif">R$ ' + valM + 'M</text>';
+  });
+
+  s += '</svg>';
+  el.innerHTML = s;
+};
+
+// ============================================================
 // GESTÃO DE PAGAMENTOS — filtro global de mês + tabela dinâmica
 // ============================================================
 
-window._filtrosPagamentos = { mesAno: '', tipo: '', status: '', busca: '' };
+window._filtrosPagamentos = { mesAno: '', tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '' };
+
+window.injetarFiltrosPagamentos = function() {
+  if (document.getElementById('filtros-pagamentos-avancado')) return;
+  var tcrd = document.querySelector('#pag-imp .tcrd');
+  if (!tcrd) return;
+
+  var html = '<div id="filtros-pagamentos-avancado" style="background:var(--card);border:1px solid var(--brd);border-radius:10px;margin-bottom:16px;overflow:hidden">'
+    + '<button onclick="window.pagamentosToggleFiltros()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;padding:14px 20px;cursor:pointer;text-align:left">'
+    + '<span style="font-size:12px;font-weight:700;color:var(--txt1);text-transform:uppercase;letter-spacing:.05em">Filtros</span>'
+    + '<span id="fp-toggle-icon" style="font-size:16px;color:var(--txt2);transition:transform .2s">▾</span>'
+    + '</button>'
+    + '<div id="fp-corpo" style="padding:0 20px 16px;display:none">'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;align-items:end">'
+
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Busca (RF / Fornecedor / CNPJ)</label>'
+    + '<input id="fp-busca" type="text" placeholder="Pesquisar…" oninput="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
+
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo</label>'
+    + '<select id="fp-tipo" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
+    + '<option value="">Todos</option><option value="Guia IBS">Guia IBS</option><option value="DARF CBS">DARF CBS</option>'
+    + '</select></div>'
+
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Status</label>'
+    + '<select id="fp-status" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
+    + '<option value="">Todos</option>'
+    + '<option value="pago">Pago</option>'
+    + '<option value="pendente">Pendente</option>'
+    + '<option value="atrasado">Atrasado</option>'
+    + '<option value="vencendo">Em risco</option>'
+    + '</select></div>'
+
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Pagamento</label>'
+    + '<select id="fp-pagamento" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
+    + '<option value="">Todos</option><option value="com">Com pagamento</option><option value="sem">Sem pagamento</option>'
+    + '</select></div>'
+
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data RF — de</label>'
+    + '<input id="fp-data-de" type="date" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
+
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data RF — até</label>'
+    + '<input id="fp-data-ate" type="date" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
+
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Valor — mín (R$)</label>'
+    + '<input id="fp-valor-min" type="number" min="0" placeholder="0" oninput="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
+
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Valor — máx (R$)</label>'
+    + '<input id="fp-valor-max" type="number" min="0" placeholder="∞" oninput="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
+
+    + '</div>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--brd)">'
+    + '<span id="fp-contagem" style="font-size:11px;color:var(--txt2)">— registros</span>'
+    + '<button onclick="window.pagamentosLimparFiltros()" style="background:none;border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;color:var(--txt2);cursor:pointer">✕ Limpar filtros</button>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
+
+  tcrd.insertAdjacentHTML('beforebegin', html);
+};
+
+window.pagamentosToggleFiltros = function() {
+  var corpo = document.getElementById('fp-corpo');
+  var icon  = document.getElementById('fp-toggle-icon');
+  if (!corpo) return;
+  var aberto = corpo.style.display !== 'none';
+  corpo.style.display = aberto ? 'none' : 'block';
+  if (icon) icon.style.transform = aberto ? '' : 'rotate(180deg)';
+};
+
+window.pagamentosFiltrarGrid = function() {
+  var f = window._filtrosPagamentos;
+  f.busca    = (document.getElementById('fp-busca')     || {}).value || '';
+  f.tipo     = (document.getElementById('fp-tipo')      || {}).value || '';
+  f.status   = (document.getElementById('fp-status')    || {}).value || '';
+  f.pagamento= (document.getElementById('fp-pagamento') || {}).value || '';
+  f.dataRFDe = (document.getElementById('fp-data-de')   || {}).value || '';
+  f.dataRFAte= (document.getElementById('fp-data-ate')  || {}).value || '';
+  f.valorMin = (document.getElementById('fp-valor-min') || {}).value || '';
+  f.valorMax = (document.getElementById('fp-valor-max') || {}).value || '';
+  window.renderizarTabelaPagamentos();
+};
+
+window.pagamentosLimparFiltros = function() {
+  ['fp-busca','fp-tipo','fp-status','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  window._filtrosPagamentos = { mesAno: window._filtrosPagamentos.mesAno, tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '' };
+  window.renderizarTabelaPagamentos();
+};
 
 window.pagamentosFiltrarMesAno = function() {
   var sel = document.getElementById('pag-mes-ano');
@@ -1462,14 +1618,14 @@ window.pagamentosFiltrarMesAno = function() {
 };
 
 window.renderizarTabelaPagamentos = function() {
-  var f    = window._filtrosPagamentos;
-  var busca = ((document.getElementById('pag-busca') || {}).value || f.busca || '').toLowerCase();
-  var tipo  = (document.getElementById('pag-tipo')   || {}).value || f.tipo   || '';
-  var stFlt = (document.getElementById('pag-status') || {}).value || f.status || '';
+  var f     = window._filtrosPagamentos;
+  var busca = (f.busca || '').toLowerCase();
+  var tipo  = f.tipo  || '';
+  var stFlt = f.status || '';
 
-  var stCoresMap  = { pendente:'73,197,177', vencendo:'245,158,11', atrasado:'244,63,94', pago:'34,197,94' };
-  var stHexMap    = { pendente:'#49C5B1', vencendo:'#F59E0B', atrasado:'#F43F5E', pago:'#22C55E' };
-  var stLblMap    = { pendente:'Pendente', vencendo:'Em risco', atrasado:'Atrasado', pago:'Pago' };
+  var stCoresMap = { pendente:'73,197,177', vencendo:'245,158,11', atrasado:'244,63,94', pago:'34,197,94' };
+  var stHexMap   = { pendente:'#49C5B1', vencendo:'#F59E0B', atrasado:'#F43F5E', pago:'#22C55E' };
+  var stLblMap   = { pendente:'Pendente', vencendo:'Em risco', atrasado:'Atrasado', pago:'Pago' };
 
   var rows = [];
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
@@ -1480,7 +1636,7 @@ window.renderizarTabelaPagamentos = function() {
       var tipoCol = rf.tipoFiscal === 'ibs' ? 'Guia IBS' : 'DARF CBS';
       if (tipo && tipoCol !== tipo) return;
 
-      var temPag     = rf.dataPagamento && rf.dataPagamento !== '—';
+      var temPag      = rf.dataPagamento && rf.dataPagamento !== '—';
       var eApropriado = rf.status === 'apropriado' || rf.status === 'utilizado';
       var rfSt;
       if (temPag || eApropriado)               rfSt = 'pago';
@@ -1489,12 +1645,24 @@ window.renderizarTabelaPagamentos = function() {
       else                                     rfSt = 'pendente';
       if (stFlt && rfSt !== stFlt) return;
 
+      // filtro pagamento com/sem
+      if (f.pagamento === 'com' && rfSt !== 'pago') return;
+      if (f.pagamento === 'sem' && rfSt === 'pago') return;
+
+      var valor = rf.valor || 0;
+      if (f.valorMin !== '' && valor < parseFloat(f.valorMin)) return;
+      if (f.valorMax !== '' && valor > parseFloat(f.valorMax)) return;
+
+      var dataRFIso = rf.data || '';
+      if (f.dataRFDe  && dataRFIso < f.dataRFDe)  return;
+      if (f.dataRFAte && dataRFIso > f.dataRFAte) return;
+
       if (busca) {
-        var s = (rf.id || '').toLowerCase() + (rf.entidade || '').toLowerCase() + (nf.numero || '').toLowerCase();
+        var s = (rf.id || '').toLowerCase() + (rf.entidade || '').toLowerCase() + (rf.cnpj || '').toLowerCase() + (nf.numero || '').toLowerCase();
         if (!s.includes(busca)) return;
       }
 
-      var dp = (rf.data || '').split('-');
+      var dp = dataRFIso.split('-');
       var dataFmt = dp.length === 3 ? dp[2] + '/' + dp[1] + '/' + dp[0] : '—';
       var pagFmt;
       if (temPag) {
@@ -1510,11 +1678,14 @@ window.renderizarTabelaPagamentos = function() {
         rfId: rf.id || '',
         rf: rf.id || '—', forn: rf.entidade || nf.entidade || '—',
         cnpj: rf.cnpj || nf.cnpj || '—',
-        tipo: tipoCol, valor: rf.valor || 0,
-        dataRF: dataFmt, pagamento: pagFmt, status: rfSt
+        tipo: tipoCol, valor: valor,
+        dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, status: rfSt
       });
     });
   });
+
+  var cnt = document.getElementById('fp-contagem');
+  if (cnt) cnt.textContent = rows.length + ' registro' + (rows.length !== 1 ? 's' : '');
 
   var h = '';
   rows.forEach(function(r) {
@@ -1526,7 +1697,7 @@ window.renderizarTabelaPagamentos = function() {
       ? '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Guia IBS</span>'
       : '<span style="background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">DARF CBS</span>';
     var act = r.status !== 'pago'
-      ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px">Pagar via Pix</button>'
+      ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px">Gerar Guia</button>'
       : '<span style="font-size:11px;color:var(--txt3)">Concluído</span>';
     h += '<tr>'
       + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.rf + '</td>'
@@ -1536,7 +1707,7 @@ window.renderizarTabelaPagamentos = function() {
       + '<td style="font-size:11px;color:var(--txt2)">' + r.dataRF + '</td>'
       + '<td style="font-size:11px">' + (r.status === 'pago'
           ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pagamento + '</a>'
-          : '<span style="color:var(--txt2)">' + r.pagamento + '</span>') + '</td>'
+          : '<span style="color:var(--txt2)">—</span>') + '</td>'
       + '<td>' + badge + '</td>'
       + '<td>' + act + '</td>'
       + '</tr>';
@@ -1881,8 +2052,9 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window._enriquecerNFsSaida(); } catch(e) { console.error('[data-sync-fixed] Erro _enriquecerNFsSaida:', e); }
       try { window.renderizarListaNFs(); } catch(e) {}
       try { window.injetarFiltrosCreditos(); window.renderizarTabelaCreditos(); } catch(e) {}
-      try { window.renderizarTabelaPagamentos(); } catch(e) {}
+      try { window.injetarFiltrosPagamentos(); window.renderizarTabelaPagamentos(); } catch(e) {}
       try { window.renderizarRFsInconsistencias(); } catch(e) {}
+      try { window.renderizarTop5Inconsistencias(); } catch(e) {}
       try { window.injetarFiltrosDebitos(); window.renderizarTabelaDebitos(); window.renderizarComposicaoDebitos(''); window.renderizarExtincaoMetodo(); window.atualizarPerdaAcumuladaDebitos(); } catch(e) {}
       try { window.renderizarComposicaoCreditos(''); } catch(e) {}
       try { window.renderizarPagamentosMetodo(); } catch(e) {}
