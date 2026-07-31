@@ -394,7 +394,6 @@ tr:hover td{background:rgba(73,197,177,.02)}
   </div>
   <nav>
     <button class="nav-btn active" onclick="showView('dashboard',this)"><span class="nav-icon">◉</span> Dashboard</button>
-    <button class="nav-btn" onclick="showView('apuracao',this)"><span class="nav-icon">⊞</span> Apuração</button>
     <button class="nav-btn" onclick="showView('pagamentos',this)"><span class="nav-icon">⊟</span> Gestão de Pagamentos</button>
     <button class="nav-btn" onclick="showView('creditos',this)"><span class="nav-icon">◈</span> Gestão de Créditos</button>
     <button class="nav-btn" onclick="showView('debitos',this)"><span class="nav-icon">◇</span> Gestão de Débitos</button>
@@ -404,6 +403,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
       <button class="nav-sub-btn" id="subnav-analytics-inteligencia" onclick="showAnalyticsSub('inteligencia',this)"><span class="nav-sub-dot"></span> Inteligência</button>
       <button class="nav-sub-btn" id="subnav-analytics-assistente" onclick="showAnalyticsSub('assistente',this)"><span class="nav-sub-dot"></span> Assistente Tributário</button>
       <button class="nav-sub-btn" id="subnav-analytics-fct" onclick="showAnalyticsSub('fct',this)"><span class="nav-sub-dot"></span> Fluxo de Caixa Tributário</button>
+      <button class="nav-sub-btn" id="subnav-analytics-apuracao" onclick="showAnalyticsSub('apuracao',this)"><span class="nav-sub-dot"></span> Apuração IBS/CBS</button>
     </div>
     <button class="nav-btn" id="nav-admin-btn" onclick="showAdminSub('contratos',document.getElementById('subnav-admin-contratos'))"><span class="nav-icon">⚙</span> Admin</button>
     <div class="nav-sub-group" id="nav-sub-group-admin">
@@ -874,23 +874,51 @@ tr:hover td{background:rgba(73,197,177,.02)}
       <div class="pstep" style="border:1px solid rgba(163,230,53,.3)"><div class="pnum" style="color:#A3E635" id="pipe-cred">—</div><div class="plbl">Crédito apropriado</div><div class="pdesc">Retorno Plataforma Centralizada</div></div>
     </div>
   </div>
-  <div class="crd" style="margin-bottom:24px">
-    <div class="sechdr"><h2>Filtros</h2><p>Filtre os DFs por RF, CNPJ, fornecedor, NF-e, status de conciliação ou inconsistência</p></div>
-    <div class="flt" style="margin-top:14px">
-      <input type="text" id="df-busca" placeholder="Buscar por RF, NF-e, CNPJ ou fornecedor…" oninput="conciliacaoRenderDFs()"/>
-      <select id="df-filtro-status" onchange="conciliacaoRenderDFs()">
-        <option value="">Status — todos</option>
-        <option value="confirmado">Conciliado</option>
-        <option value="aguardando">Aguardando TF</option>
-        <option value="em_risco">Em risco</option>
-        <option value="perdido">Divergência</option>
-      </select>
-      <select id="df-filtro-inconsistencia" onchange="conciliacaoRenderDFs()">
-        <option value="">Inconsistência — todas</option>
-        <option value="com">Com inconsistência</option>
-        <option value="sem">Sem inconsistência</option>
-      </select>
-      <button class="btn" onclick="conciliacaoLimparFiltros()">✕ Limpar filtros</button>
+  <div class="crd" style="margin-bottom:24px;background:var(--card);border:1px solid var(--brd);border-radius:10px;overflow:hidden">
+    <button onclick="window.rfToggleFiltros()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;padding:14px 20px;cursor:pointer;text-align:left">
+      <span style="font-size:12px;font-weight:700;color:var(--txt1);text-transform:uppercase;letter-spacing:.05em">Filtros — Registros Fiscais</span>
+      <span id="rf-toggle-icon" style="font-size:16px;color:var(--txt2);transition:transform .2s">▾</span>
+    </button>
+    <div id="rf-filtro-corpo" style="padding:0 20px 16px;display:none">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;align-items:end">
+        <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Busca (RF / NF / Entidade / CNPJ)</label>
+          <input id="rf-busca" type="text" placeholder="Pesquisar…" oninput="window.conciliacaoFiltrarRFs()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
+        <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo NF</label>
+          <select id="rf-tipo-nf" onchange="window.conciliacaoFiltrarRFs()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
+            <option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option>
+          </select></div>
+        <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo Fiscal</label>
+          <select id="rf-tipo-fiscal" onchange="window.conciliacaoFiltrarRFs()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
+            <option value="">Todos</option><option value="ibs">IBS</option><option value="cbs">CBS</option>
+          </select></div>
+        <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Status</label>
+          <select id="rf-status-filtro" onchange="window.conciliacaoFiltrarRFs()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
+            <option value="">Todos</option>
+            <option value="nao_apropriado">Não Apropriado</option>
+            <option value="apropriado">Apropriado</option>
+            <option value="utilizado">Utilizado</option>
+            <option value="vencido">Vencido</option>
+            <option value="inconsistencia">Inconsistência</option>
+            <option value="nao_extinto">Não Extinto</option>
+            <option value="extinto">Extinto</option>
+          </select></div>
+        <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Inconsistência</label>
+          <select id="rf-inconsistencia-filtro" onchange="window.conciliacaoFiltrarRFs()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
+            <option value="">Todas</option><option value="com">Com inconsistência</option><option value="sem">Sem inconsistência</option>
+          </select></div>
+        <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data RF — de</label>
+          <input id="rf-data-de" type="date" onchange="window.conciliacaoFiltrarRFs()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
+        <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data RF — até</label>
+          <input id="rf-data-ate" type="date" onchange="window.conciliacaoFiltrarRFs()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
+        <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Valor RF — mín</label>
+          <input id="rf-valor-min" type="number" min="0" placeholder="0" oninput="window.conciliacaoFiltrarRFs()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
+        <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Valor RF — máx</label>
+          <input id="rf-valor-max" type="number" min="0" placeholder="∞" oninput="window.conciliacaoFiltrarRFs()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--brd)">
+        <span id="rf-filtro-contagem" style="font-size:11px;color:var(--txt2)">— registros</span>
+        <button onclick="window.rfLimparFiltros()" style="background:none;border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;color:var(--txt2);cursor:pointer">✕ Limpar filtros</button>
+      </div>
     </div>
   </div>
   <div class="tcrd">
@@ -912,36 +940,6 @@ tr:hover td{background:rgba(73,197,177,.02)}
     </div>
   </div>
 
-  <!-- ABA: LISTAGEM DE NFs -->
-  <div class="crd" style="margin-top:24px">
-    <div class="sechdr"><h2>Listagem de NFs de Entrada</h2><p>Notas Fiscais de entrada · fornecedores · créditos IBS + CBS · Aplique filtros para refinar a busca</p></div>
-    <div class="flt" style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end">
-      <input type="text" id="nf-busca" placeholder="Buscar por número, fornecedor, CNPJ…" oninput="nfRenderLista()"/>
-      <div style="display:flex;gap:10px">
-        <input type="date" id="nf-data-inicio" onchange="nfRenderLista()" style="flex:1"/>
-        <input type="date" id="nf-data-fim" onchange="nfRenderLista()" style="flex:1"/>
-      </div>
-      <button class="btn" onclick="nfLimparFiltros()">✕ Limpar</button>
-    </div>
-  </div>
-  <div class="tcrd">
-    <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>NFs encontradas</h2><p id="nf-count-sub">0 de 0 NFs exibidas</p></div></div>
-    <div class="twrap"><table><thead><tr><th>Número NF</th><th>Tipo NF</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor Total</th><th class="r">Valor Líq.</th><th class="r">CBS</th><th class="r">IBS</th><th>Status</th><th>Data</th></tr></thead>
-    <tbody id="t-listagem-nfs"></tbody></table></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
-      <button class="btn" id="nf-btn-prev" onclick="nfPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:12px;color:var(--txt2)">Página</span>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:4px 12px;min-width:50px;text-align:center">
-          <span id="nf-pag-atual" style="color:var(--txt1);font-weight:600;font-size:13px">1</span>
-          <span style="color:var(--txt3);font-size:12px"> / </span>
-          <span id="nf-pag-total" style="color:var(--txt2);font-size:12px">1</span>
-        </div>
-        <span style="font-size:12px;color:var(--txt2)" id="nf-pag-info">(25 NFs por página)</span>
-      </div>
-      <button class="btn" id="nf-btn-prox" onclick="nfProximaPagina()">Próxima →</button>
-    </div>
-  </div>
 </div>
 
 <!-- MODAL DETALHES NF -->
@@ -1659,8 +1657,8 @@ tr:hover td{background:rgba(73,197,177,.02)}
       </div>
     </div>
     <div class="tcrd" style="margin-bottom:24px">
-      <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>RFs com inconsistência — Créditos</h2><p id="inc-rf-count-sub">RFs de entrada com status Inconsistência · IBS + CBS</p></div></div>
-      <div class="twrap"><table><thead><tr><th>RF</th><th>Tipo Fiscal</th><th>Nota Fiscal</th><th>Fornecedor</th><th>CNPJ</th><th>Data</th><th class="r">Crédito</th><th>Contrato</th></tr></thead><tbody id="t-inc-rfs"></tbody></table></div>
+      <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>Todos os RFs com Inconsistência — Entrada e Saída</h2><p id="inc-rf-count-sub">RFs com status Inconsistência · IBS + CBS · entrada e saída</p></div></div>
+      <div class="twrap"><table><thead><tr><th>ID RF</th><th>Tipo Fiscal</th><th>Tipo NF</th><th>NF Vinculada</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor</th><th class="r">NF Total</th><th class="r">NF Líquido</th><th>Status</th><th>Data</th><th>Inconsistência</th></tr></thead><tbody id="t-inc-rfs"></tbody></table></div>
     </div>
     <div class="tcrd">
       <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>Inconsistências registradas</h2><p id="inc-count-sub">0 de 0 inconsistências exibidas</p></div></div>
@@ -3537,11 +3535,12 @@ function showView(id,btn,fromBottomNav){
   // sync the other nav
   if(fromBottomNav){
     var sidebtns=document.querySelectorAll(".nav-btn");
-    var map={dashboard:0,apuracao:1,pagamentos:2,creditos:3,conciliacao:4,inteligencia:5,assistente:5,fct:5};
+    var map={dashboard:0,pagamentos:1,creditos:2,conciliacao:4,inteligencia:5,assistente:5,fct:5,apuracao:5};
     if(map[id]!==undefined) sidebtns[map[id]].classList.add("active");
     if(id==='inteligencia'){var sub=document.getElementById("subnav-analytics-inteligencia");if(sub)sub.classList.add("active");expandNavGroup("nav-sub-group-analytics");}
     if(id==='assistente'){var sub2=document.getElementById("subnav-analytics-assistente");if(sub2)sub2.classList.add("active");expandNavGroup("nav-sub-group-analytics");}
     if(id==='fct'){var sub3=document.getElementById("subnav-analytics-fct");if(sub3)sub3.classList.add("active");expandNavGroup("nav-sub-group-analytics");}
+    if(id==='apuracao'){var sub4=document.getElementById("subnav-analytics-apuracao");if(sub4)sub4.classList.add("active");expandNavGroup("nav-sub-group-analytics");}
   } else {
     var bbtns=document.querySelectorAll(".bnav-btn");
     var map2={dashboard:0,pagamentos:1,creditos:2,conciliacao:3,inteligencia:4};
