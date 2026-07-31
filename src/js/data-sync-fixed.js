@@ -627,25 +627,42 @@ window.atualizarPerdaAcumulada = function() {
 // ============================================================
 
 window.atualizarKPIsDashboard = function() {
-  var aprop = 0, naoAprop = 0, risco = 0;
+  var sel = document.getElementById('dash-mes-select');
+  var mes = sel ? sel.value : '04';
+  if (!mes) mes = '04';
+  var prefix = '2026-' + mes;
+
+  var aprop = 0, total = 0, bad = 0, risco = 0;
+  var badStatuses = ['nao_apropriado', 'inconsistencia', 'vencido'];
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
+      if (!(rf.data || '').startsWith(prefix)) return;
       var v = rf.valor || 0;
-      if (rf.status === 'apropriado' || rf.status === 'utilizado') aprop   += v;
-      if (rf.status === 'nao_apropriado')                          naoAprop += v;
-      if (rf.status === 'vencido')                                 risco    += v;
+      total += v;
+      if (rf.status === 'apropriado' || rf.status === 'utilizado') aprop += v;
+      if (badStatuses.indexOf(rf.status) !== -1)                   bad   += v;
+      if (rf.status === 'vencido')                                  risco += v;
     });
   });
+
   function fmtM(v) {
     if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
     if (v >= 1e3) return 'R$ ' + Math.round(v / 1e3) + 'K';
     return 'R$ ' + v.toLocaleString('pt-BR');
   }
   function setEl(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; }
-  setEl('dash-cred-aprop',     fmtM(aprop));
-  setEl('dash-cred-apropriar', fmtM(naoAprop));
-  setEl('dash-cred-risco',     fmtM(risco));
+
+  setEl('dash-cred-aprop', fmtM(aprop));
+  setEl('dash-cred-risco', fmtM(risco));
+
+  // % de créditos não apropriados (nao_apropriado + inconsistencia + vencido) sobre total do mês
+  if (total > 0) {
+    var pct = (bad / total * 100).toFixed(1).replace('.', ',') + '%';
+    setEl('dash-cred-apropriar', pct);
+    var d = (typeof _dashMeses !== 'undefined' && _dashMeses[mes]) ? _dashMeses[mes] : {};
+    setEl('dash-cred-apropriar-sub', (d.upApropriar || '') + ' — ' + fmtM(bad) + ' não apropriados');
+  }
 };
 
 // ============================================================
@@ -2821,31 +2838,65 @@ window.orgExcluir = function(id) {
 // DASHBOARD — Filtro de mês (Visão Geral)
 // ============================================================
 
+// pct = % de créditos não apropriados (nao_apropriado + inconsistencia + vencido) sobre total
+// usado como fallback para meses sem dados reais
 var _dashMeses = {
-  '01':{ label:'Janeiro 2026',   aprop:'R$ 38,1M', apropriar:'R$ 12,4M', risco:'R$ 1,8M', aliq:'9,14%', delta:'4,26 pp',  upAprop:'▲ 4,2%', upApropriar:'▼ 8,3%'  },
-  '02':{ label:'Fevereiro 2026', aprop:'R$ 41,3M', apropriar:'R$ 11,7M', risco:'R$ 2,1M', aliq:'9,18%', delta:'4,22 pp',  upAprop:'▲ 5,1%', upApropriar:'▼ 9,1%'  },
-  '03':{ label:'Março 2026',     aprop:'R$ 47,9M', apropriar:'R$ 10,2M', risco:'R$ 3,4M', aliq:'9,21%', delta:'4,19 pp',  upAprop:'▲ 5,8%', upApropriar:'▼ 10,4%' },
-  '04':{ label:'Abril 2026',     aprop:'R$ 54,3M', apropriar:'R$ 7,3M',  risco:'R$ 5,2M', aliq:'9,27%', delta:'4,13 pp',  upAprop:'▲ 6,8%', upApropriar:'▼ 12,1%' },
-  '05':{ label:'Maio 2026',      aprop:'R$ 49,8M', apropriar:'R$ 8,9M',  risco:'R$ 4,1M', aliq:'9,24%', delta:'4,16 pp',  upAprop:'▲ 3,2%', upApropriar:'▼ 7,8%'  },
-  '06':{ label:'Junho 2026',     aprop:'R$ 52,1M', apropriar:'R$ 9,4M',  risco:'R$ 3,7M', aliq:'9,22%', delta:'4,18 pp',  upAprop:'▲ 4,7%', upApropriar:'▼ 8,5%'  },
-  '07':{ label:'Julho 2026',     aprop:'R$ 45,6M', apropriar:'R$ 11,1M', risco:'R$ 2,9M', aliq:'9,19%', delta:'4,21 pp',  upAprop:'▲ 2,9%', upApropriar:'▼ 9,7%'  },
-  '08':{ label:'Agosto 2026',    aprop:'R$ 48,3M', apropriar:'R$ 10,6M', risco:'R$ 3,2M', aliq:'9,23%', delta:'4,17 pp',  upAprop:'▲ 3,8%', upApropriar:'▼ 10,2%' },
-  '09':{ label:'Setembro 2026',  aprop:'R$ 51,7M', apropriar:'R$ 8,4M',  risco:'R$ 4,8M', aliq:'9,25%', delta:'4,15 pp',  upAprop:'▲ 5,4%', upApropriar:'▼ 11,3%' },
-  '10':{ label:'Outubro 2026',   aprop:'R$ 56,2M', apropriar:'R$ 6,8M',  risco:'R$ 5,9M', aliq:'9,29%', delta:'4,11 pp',  upAprop:'▲ 7,3%', upApropriar:'▼ 13,2%' },
-  '11':{ label:'Novembro 2026',  aprop:'R$ 58,9M', apropriar:'R$ 5,9M',  risco:'R$ 6,7M', aliq:'9,31%', delta:'4,09 pp',  upAprop:'▲ 8,1%', upApropriar:'▼ 14,7%' },
-  '12':{ label:'Dezembro 2026',  aprop:'R$ 61,4M', apropriar:'R$ 4,7M',  risco:'R$ 7,3M', aliq:'9,34%', delta:'4,06 pp',  upAprop:'▲ 9,4%', upApropriar:'▼ 16,3%' },
+  '01':{ label:'Janeiro 2026',   aprop:'R$ 38,1M', apropriar:'R$ 3,8M',  risco:'R$ 1,8M', aliq:'9,14%', delta:'4,26 pp',  upAprop:'▲ 4,2%', upApropriar:'▼ 8,3%',  pct:'32,3%' },
+  '02':{ label:'Fevereiro 2026', aprop:'R$ 41,3M', apropriar:'R$ 3,0M',  risco:'R$ 2,1M', aliq:'9,18%', delta:'4,22 pp',  upAprop:'▲ 5,1%', upApropriar:'▼ 9,1%',  pct:'28,9%' },
+  '03':{ label:'Março 2026',     aprop:'R$ 47,9M', apropriar:'R$ 2,4M',  risco:'R$ 3,4M', aliq:'9,21%', delta:'4,19 pp',  upAprop:'▲ 5,8%', upApropriar:'▼ 10,4%', pct:'21,8%' },
+  '04':{ label:'Abril 2026',     aprop:'R$ 54,3M', apropriar:'R$ 3,0M',  risco:'R$ 5,2M', aliq:'9,27%', delta:'4,13 pp',  upAprop:'▲ 6,8%', upApropriar:'▼ 12,1%', pct:'29,2%' },
+  '05':{ label:'Maio 2026',      aprop:'R$ 49,8M', apropriar:'R$ 8,9M',  risco:'R$ 4,1M', aliq:'9,24%', delta:'4,16 pp',  upAprop:'▲ 3,2%', upApropriar:'▼ 7,8%',  pct:'20,5%' },
+  '06':{ label:'Junho 2026',     aprop:'R$ 52,1M', apropriar:'R$ 9,4M',  risco:'R$ 3,7M', aliq:'9,22%', delta:'4,18 pp',  upAprop:'▲ 4,7%', upApropriar:'▼ 8,5%',  pct:'21,3%' },
+  '07':{ label:'Julho 2026',     aprop:'R$ 45,6M', apropriar:'R$ 11,1M', risco:'R$ 2,9M', aliq:'9,19%', delta:'4,21 pp',  upAprop:'▲ 2,9%', upApropriar:'▼ 9,7%',  pct:'22,8%' },
+  '08':{ label:'Agosto 2026',    aprop:'R$ 48,3M', apropriar:'R$ 10,6M', risco:'R$ 3,2M', aliq:'9,23%', delta:'4,17 pp',  upAprop:'▲ 3,8%', upApropriar:'▼ 10,2%', pct:'21,7%' },
+  '09':{ label:'Setembro 2026',  aprop:'R$ 51,7M', apropriar:'R$ 8,4M',  risco:'R$ 4,8M', aliq:'9,25%', delta:'4,15 pp',  upAprop:'▲ 5,4%', upApropriar:'▼ 11,3%', pct:'23,4%' },
+  '10':{ label:'Outubro 2026',   aprop:'R$ 56,2M', apropriar:'R$ 6,8M',  risco:'R$ 5,9M', aliq:'9,29%', delta:'4,11 pp',  upAprop:'▲ 7,3%', upApropriar:'▼ 13,2%', pct:'25,1%' },
+  '11':{ label:'Novembro 2026',  aprop:'R$ 58,9M', apropriar:'R$ 5,9M',  risco:'R$ 6,7M', aliq:'9,31%', delta:'4,09 pp',  upAprop:'▲ 8,1%', upApropriar:'▼ 14,7%', pct:'24,6%' },
+  '12':{ label:'Dezembro 2026',  aprop:'R$ 61,4M', apropriar:'R$ 4,7M',  risco:'R$ 7,3M', aliq:'9,34%', delta:'4,06 pp',  upAprop:'▲ 9,4%', upApropriar:'▼ 16,3%', pct:'23,2%' },
 };
+
+// Calcula % de créditos não apropriados (nao_apropriado + inconsistencia + vencido) sobre o total
+// para o mês informado (formato '04' = abril 2026). Retorna null se sem dados.
+function _dashComputarApropriarPct(mes) {
+  var prefix = '2026-' + mes;
+  var badStatuses = ['nao_apropriado', 'inconsistencia', 'vencido'];
+  var total = 0, bad = 0, badVal = 0;
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (!(rf.data || '').startsWith(prefix)) return;
+      var v = rf.valor || 0;
+      total += v;
+      if (badStatuses.indexOf(rf.status) !== -1) { bad += v; badVal += v; }
+    });
+  });
+  if (total === 0) return null;
+  var pct = (bad / total * 100);
+  var pctStr = pct.toFixed(1).replace('.', ',') + '%';
+  var fmM = function(v) { return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M'; };
+  return { pct: pctStr, valor: fmM(badVal), total: fmM(total) };
+}
 
 window.dashFiltrarMes = function(mes) {
   var d = _dashMeses[mes];
   if (!d) return;
   function setEl(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
-  setEl('dash-cred-aprop',      d.aprop);
+
   setEl('dash-cred-aprop-sub',  d.upAprop + ' — Apropriados via Plataforma');
-  setEl('dash-cred-apropriar',  d.apropriar);
-  setEl('dash-cred-apropriar-sub', d.upApropriar + ' — Aguardando retorno');
-  setEl('dash-cred-risco',      d.risco);
   setEl('dash-periodo-sub', 'Período: ' + d.label + ' · Última atualização: 24/' + mes + '/2026 às 11:47');
+
+  // KPIs de crédito calculados dos dados reais filtrados pelo mês
+  if (window.atualizarKPIsDashboard) window.atualizarKPIsDashboard();
+
+  // Fallback para meses sem dados reais
+  var computed = _dashComputarApropriarPct(mes);
+  if (!computed) {
+    setEl('dash-cred-aprop',    d.aprop);
+    setEl('dash-cred-risco',    d.risco);
+    setEl('dash-cred-apropriar', d.pct);
+    setEl('dash-cred-apropriar-sub', d.upApropriar + ' — ' + d.apropriar + ' não apropriados');
+  }
+
   // Atualizar alíquota efetiva
   var kval = document.querySelector('#view-dashboard .kgrid .kcard:last-child .kval');
   if (kval) kval.textContent = d.aliq;
