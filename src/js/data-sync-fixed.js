@@ -520,10 +520,11 @@ window.renderizarTabelaCreditos = function() {
   if (contagemEl) contagemEl.textContent = listaRFs.length + ' registro' + (listaRFs.length !== 1 ? 's' : '');
 
   if (!listaRFs.length) {
-    h = '<tr><td colspan="14" style="text-align:center;color:var(--txt3);padding:24px">Nenhum crédito encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="15" style="text-align:center;color:var(--txt3);padding:24px">Nenhum crédito encontrado para este filtro.</td></tr>';
   } else {
     listaRFs.forEach(function(r) {
       var tipoFiscalBadge = '<span style="font-size:11px;font-weight:600;color:' + (r.tipoFiscal === 'IBS' ? '#3B82F6' : '#F59E0B') + '">' + r.tipoFiscal + '</span>';
+      var nfTipoBadgeCred = '<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>';
       var nfNumero = r.nfNumero || r.nf.replace('NF-', '');
       var nfLink = '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline" onclick="window.abrirDetalhesNFporNumero(\'' + nfNumero + '\')">' + r.nf + '</span>';
       var contratoCell = r.contratoId
@@ -537,7 +538,7 @@ window.renderizarTabelaCreditos = function() {
       var pagCell = r.isPago
         ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pag + '</a>'
         : '<span style="color:var(--txt3)">—</span>';
-      h += '<tr><td class="mono" style="color:#3B82F6;font-size:11px">' + r.rf + '</td><td>' + tipoFiscalBadge + '</td><td>' + nfLink + '</td><td>' + r.forn + '</td><td>' + r.data + '</td><td class="r mono">' + ff(r.valorTotal) + '</td><td class="r mono">' + ff(r.valorLiq) + '</td><td class="r mono" style="color:#F59E0B;font-weight:600">' + ffz(r.cbs) + '</td><td class="r mono" style="color:#3B82F6;font-weight:600">' + ffz(r.ibs) + '</td><td class="r mono" style="color:#49C5B1;font-weight:700">' + ff(r.cred) + '</td><td style="font-size:11px">' + pagCell + '</td><td>' + bdg(r.status) + '</td><td style="white-space:nowrap">' + contratoCell + '</td><td style="white-space:nowrap">' + metodoCell + '</td></tr>';
+      h += '<tr><td class="mono" style="color:#3B82F6;font-size:11px">' + r.rf + '</td><td>' + tipoFiscalBadge + '</td><td>' + nfTipoBadgeCred + '</td><td>' + nfLink + '</td><td>' + r.forn + '</td><td>' + r.data + '</td><td class="r mono">' + ff(r.valorTotal) + '</td><td class="r mono">' + ff(r.valorLiq) + '</td><td class="r mono" style="color:#F59E0B;font-weight:600">' + ffz(r.cbs) + '</td><td class="r mono" style="color:#3B82F6;font-weight:600">' + ffz(r.ibs) + '</td><td class="r mono" style="color:#49C5B1;font-weight:700">' + ff(r.cred) + '</td><td style="font-size:11px">' + pagCell + '</td><td>' + bdg(r.status) + '</td><td style="white-space:nowrap">' + contratoCell + '</td><td style="white-space:nowrap">' + metodoCell + '</td></tr>';
     });
   }
 
@@ -1300,6 +1301,7 @@ window.renderizarTabelaDebitos = function() {
         listaRFs.push({
           rf:   rf.id || '—',
           tf:   rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
+          tipoNF: nf.tipo || 'saida',
           nf:   'NF-' + (rf.nfVinculada || nf.numero || ''),
           dataNF: rf.data || '',
           data: dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
@@ -1351,9 +1353,13 @@ window.renderizarTabelaDebitos = function() {
       ? '<span style="color:'+mCor+';font-weight:600;font-size:11px">'+mLbl+'</span>'
       : '<span style="color:var(--txt3);font-size:11px">—</span>';
 
+    var nfTipoBadgeDeb = r.tipoNF === 'entrada'
+      ? '<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>'
+      : '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
     h += '<tr>'
       + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + r.rf + '</td>'
       + '<td>' + tfBadge + '</td>'
+      + '<td>' + nfTipoBadgeDeb + '</td>'
       + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.nf + '</td>'
       + '<td style="font-size:12px">' + r.cliente + '</td>'
       + '<td style="font-size:11px;color:var(--txt2)">' + r.data + '</td>'
@@ -1369,7 +1375,7 @@ window.renderizarTabelaDebitos = function() {
   });
 
   if (!listaRFs.length) {
-    h = '<tr><td colspan="13" style="text-align:center;color:var(--txt3);padding:24px">Nenhum RF de débito encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="14" style="text-align:center;color:var(--txt3);padding:24px">Nenhum RF de débito encontrado para este filtro.</td></tr>';
   }
 
   var tbody = document.getElementById('t-debitos');
@@ -2131,7 +2137,7 @@ window.renderizarTabelaPagamentos = function() {
         rfId: rf.id || '',
         rf: rf.id || '—', forn: rf.entidade || nf.entidade || '—',
         cnpj: rf.cnpj || nf.cnpj || '—',
-        tipo: tipoCol, valor: valor,
+        tipo: tipoCol, tipoNF: nf.tipo || 'entrada', valor: valor,
         dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, status: rfSt
       });
     });
@@ -2152,10 +2158,14 @@ window.renderizarTabelaPagamentos = function() {
     var act = r.status !== 'pago'
       ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px">Gerar Guia</button>'
       : '<span style="font-size:11px;color:var(--txt3)">Concluído</span>';
+    var nfTipoBadgePag = r.tipoNF === 'entrada'
+      ? '<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>'
+      : '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
     h += '<tr>'
       + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.rf + '</td>'
       + '<td><div style="font-weight:500;font-size:13px">' + r.forn + '</div><div style="font-size:11px;color:var(--txt2)">' + r.cnpj + '</div></td>'
       + '<td>' + tipoBadge + '</td>'
+      + '<td>' + nfTipoBadgePag + '</td>'
       + '<td class="r mono" style="font-weight:600">' + ff(r.valor) + '</td>'
       + '<td style="font-size:11px;color:var(--txt2)">' + r.dataRF + '</td>'
       + '<td style="font-size:11px">' + (r.status === 'pago'
@@ -2167,7 +2177,7 @@ window.renderizarTabelaPagamentos = function() {
   });
 
   if (!rows.length) {
-    h = '<tr><td colspan="8" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="9" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento encontrado para este filtro.</td></tr>';
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;
@@ -2706,6 +2716,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         window.nfTotalGlobal = window.nfListaFiltradaGlobal.length;
         console.log('[data-sync-fixed] nfListaFiltradaGlobal populado com', window.nfListaFiltradaGlobal.length, 'registros');
+
+        // Enriquecer cada RF com tipoNF da NF pai (entrada | saida)
+        window.nfListaFiltradaGlobal.forEach(function(nf) {
+          (nf.registrosFiscais || []).forEach(function(rf) {
+            rf.tipoNF = nf.tipo || 'entrada';
+          });
+        });
       }
 
       _postProcessarDados();
