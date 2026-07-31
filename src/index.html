@@ -410,9 +410,8 @@ tr:hover td{background:rgba(73,197,177,.02)}
       <button class="nav-sub-btn" id="subnav-admin-contratos" onclick="showAdminSub('contratos',this)"><span class="nav-sub-dot"></span> Gestão de Contratos</button>
       <button class="nav-sub-btn" id="subnav-admin-fornecedores" onclick="showAdminSub('fornecedores',this)"><span class="nav-sub-dot"></span> Cadastro de Fornecedor</button>
     </div>
-    <button class="nav-btn" id="nav-inconsist-btn" onclick="showInconsistSub('dashboard',document.getElementById('subnav-inconsist-dashboard'))"><span class="nav-icon">⚠</span> Gestão de Inconsistências</button>
+    <button class="nav-btn" id="nav-inconsist-btn" onclick="showInconsistSub('lista',document.getElementById('subnav-inconsist-lista'))"><span class="nav-icon">⚠</span> Gestão de Inconsistências</button>
     <div class="nav-sub-group" id="nav-sub-group-inconsist">
-      <button class="nav-sub-btn" id="subnav-inconsist-dashboard" onclick="showInconsistSub('dashboard',this)"><span class="nav-sub-dot"></span> Dashboard</button>
       <button class="nav-sub-btn" id="subnav-inconsist-lista" onclick="showInconsistSub('lista',this)"><span class="nav-sub-dot"></span> Inconsistências</button>
     </div>
   </nav>
@@ -1600,43 +1599,8 @@ tr:hover td{background:rgba(73,197,177,.02)}
 <!-- GESTÃO DE INCONSISTÊNCIAS -->
 <div id="view-inconsistencias" class="view">
   <div class="pg-hdr"><div><div class="pg-title">Gestão de Inconsistências</div><div class="pg-sub">Ciclo de vida da NF · erros de importação, duplicidade, impostos vencidos e divergências de CBS</div></div></div>
-  <div class="stabs">
-    <button class="stab active" onclick="showSub('inconsistencias','dashboard',this);inconsistRenderDashboard();">Dashboard</button>
-    <button class="stab" onclick="showSub('inconsistencias','lista',this);inconsistRenderTabela();if(window.renderizarRFsInconsistencias)window.renderizarRFsInconsistencias();">Inconsistências</button>
-  </div>
-
-  <!-- TAB: DASHBOARD -->
-  <div id="inconsistencias-dashboard" class="sv active">
-    <div class="kgrid k4">
-      <div class="kcard" style="border-top-color:var(--txt1)"><div class="klbl">Total de inconsistências</div><div class="kval" id="inc-total">0</div><div class="ksub">Ciclo de vida da NF</div></div>
-      <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Abertas</div><div class="kval" id="inc-abertas">0</div><div class="ksub" id="inc-abertas-sub">Pendentes de tratamento</div></div>
-      <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">Resolvidas</div><div class="kval" id="inc-resolvidas">0</div><div class="ksub" id="inc-resolvidas-sub">Já tratadas</div></div>
-      <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Volume financeiro envolvido</div><div class="kval" id="inc-volume">R$ 0</div><div class="ksub">Soma do valor de NF das inconsistências</div></div>
-    </div>
-    <div class="cgrid c21">
-      <div class="ccrd">
-        <div class="ctitle">Volume financeiro por tipo de inconsistência</div><div class="csub">R$ milhões</div>
-        <div class="cwrap" style="height:200px"><div id="cIncTipo"></div></div>
-        <div class="leg" id="inc-leg-tipo"></div>
-      </div>
-      <div class="ccrd">
-        <div class="ctitle">Inconsistências por severidade</div>
-        <div class="sbars" id="inc-sev-bars"></div>
-        <p style="font-size:11px;color:var(--txt3);margin-top:14px;line-height:1.5">Severidade calculada a partir do impacto financeiro e do risco de perda de crédito.</p>
-      </div>
-    </div>
-    <div class="tcrd">
-      <div class="tcrd-hdr"><div class="sechdr"><h2>Detalhamento por tipo de inconsistência</h2><p>Quantidade, volume financeiro e % do total — por tipo</p></div></div>
-      <div class="twrap"><table><thead><tr><th>Tipo</th><th class="r">Qtde.</th><th class="r">Abertas</th><th class="r">Volume financeiro</th><th class="r">% do total</th></tr></thead><tbody id="t-inc-tipo"></tbody></table></div>
-    </div>
-    <div class="tcrd">
-      <div class="tcrd-hdr"><div class="sechdr"><h2>Principais fornecedores envolvidos</h2><p>Ranking por volume financeiro em inconsistências</p></div></div>
-      <div class="twrap"><table><thead><tr><th>Fornecedor</th><th>CNPJ</th><th class="r">Qtde. inconsistências</th><th class="r">Volume financeiro</th></tr></thead><tbody id="t-inc-fornecedores"></tbody></table></div>
-    </div>
-  </div>
-
   <!-- TAB: LISTA DE INCONSISTÊNCIAS -->
-  <div id="inconsistencias-lista" class="sv">
+  <div id="inconsistencias-lista" class="sv active">
     <div class="crd" style="margin-bottom:24px">
       <div class="sechdr"><h2>Filtros</h2><p>Filtre as inconsistências por tipo, status, severidade, NF ou fornecedor</p></div>
       <div class="flt" style="margin-top:14px">
@@ -3622,11 +3586,9 @@ function showInconsistSub(id,btn){
   showView("inconsistencias",parent);
   expandNavGroup("nav-sub-group-inconsist");
   document.querySelectorAll(".nav-sub-btn").forEach(function(b){b.classList.remove("active");});
-  btn.classList.add("active");
-  var tabBtn=document.querySelector('#view-inconsistencias .stab[onclick*="'+id+'"]');
-  if(tabBtn)showSub("inconsistencias",id,tabBtn);
+  if(btn)btn.classList.add("active");
   closeSidebar();
-  if(id==="dashboard")setTimeout(inconsistRenderDashboard,0);
+  setTimeout(function(){inconsistRenderTabela();if(window.renderizarRFsInconsistencias)window.renderizarRFsInconsistencias();},0);
 }
 
 function updateSim(){
