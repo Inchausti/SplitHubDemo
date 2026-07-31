@@ -1601,38 +1601,102 @@ tr:hover td{background:rgba(73,197,177,.02)}
   <div class="pg-hdr"><div><div class="pg-title">Gestão de Inconsistências</div><div class="pg-sub">Ciclo de vida da NF · erros de importação, duplicidade, impostos vencidos e divergências de CBS</div></div></div>
   <!-- TAB: LISTA DE INCONSISTÊNCIAS -->
   <div id="inconsistencias-lista" class="sv active">
-    <div class="crd" style="margin-bottom:24px">
-      <div class="sechdr"><h2>Filtros</h2><p>Filtre as inconsistências por tipo, status, severidade, NF ou fornecedor</p></div>
-      <div class="flt" style="margin-top:14px">
-        <input type="text" id="inc-busca" placeholder="Buscar por NF, CNPJ ou fornecedor…" oninput="inconsistRenderTabela()"/>
-        <select id="inc-filtro-tipo" onchange="inconsistRenderTabela()">
-          <option value="">Tipo — todos</option>
-          <option value="nf_erro">NF importada com erro</option>
-          <option value="nf_duplicada">NF importada duplicada</option>
-          <option value="imposto_vencido">Imposto da NF vencido</option>
-          <option value="cbs_incorreto">Valor CBS incorreto</option>
-        </select>
-        <select id="inc-filtro-status" onchange="inconsistRenderTabela()">
-          <option value="">Status — todos</option>
-          <option value="aberta">Aberta</option>
-          <option value="resolvida">Resolvida</option>
-        </select>
-        <select id="inc-filtro-severidade" onchange="inconsistRenderTabela()">
-          <option value="">Severidade — todas</option>
-          <option value="alta">Alta</option>
-          <option value="media">Média</option>
-          <option value="baixa">Baixa</option>
-        </select>
-        <button class="btn" onclick="inconsistLimparFiltros()">✕ Limpar filtros</button>
+    <!-- KPIs -->
+    <div class="kgrid k4">
+      <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Total RFs com Inconsistência</div><div class="kval" id="inc2-total">—</div><div class="ksub" id="inc2-total-sub">IBS + CBS · entrada e saída</div></div>
+      <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Volume Financeiro</div><div class="kval" id="inc2-volume">—</div><div class="ksub" id="inc2-volume-sub">Soma dos valores em inconsistência</div></div>
+      <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">RFs de Entrada</div><div class="kval" id="inc2-entrada">—</div><div class="ksub" id="inc2-entrada-sub">Créditos · IBS + CBS</div></div>
+      <div class="kcard" style="border-top-color:var(--blue)"><div class="klbl">RFs de Saída</div><div class="kval" id="inc2-saida">—</div><div class="ksub" id="inc2-saida-sub">Débitos · IBS + CBS</div></div>
+    </div>
+    <!-- Gráficos row 1 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="ccrd">
+        <div class="ctitle">Top 5 Fornecedores por Volume</div>
+        <div class="csub">Volume total de RFs com inconsistência · R$ milhões</div>
+        <div id="c-inc-top5-forn" style="min-height:130px"></div>
+      </div>
+      <div class="ccrd">
+        <div class="ctitle">Por Tipo de Inconsistência</div>
+        <div class="csub">Distribuição por categoria · R$ milhões</div>
+        <div id="c-inc-tipos" style="min-height:130px"></div>
       </div>
     </div>
-    <div class="tcrd" style="margin-bottom:24px">
-      <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>Todos os RFs com Inconsistência — Entrada e Saída</h2><p id="inc-rf-count-sub">RFs com status Inconsistência · IBS + CBS · entrada e saída</p></div></div>
-      <div class="twrap"><table><thead><tr><th>ID RF</th><th>Tipo Fiscal</th><th>Tipo NF</th><th>NF Vinculada</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor</th><th class="r">NF Total</th><th class="r">NF Líquido</th><th>Status</th><th>Data</th><th>Inconsistência</th></tr></thead><tbody id="t-inc-rfs"></tbody></table></div>
+    <!-- Gráficos row 2 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px">
+      <div class="ccrd">
+        <div class="ctitle">IBS vs CBS</div>
+        <div class="csub">Volume por tipo fiscal · R$ milhões</div>
+        <div id="c-inc-ibs-cbs" style="min-height:110px"></div>
+      </div>
+      <div class="ccrd">
+        <div class="ctitle">Entrada vs Saída</div>
+        <div class="csub">Volume por tipo de NF · R$ milhões</div>
+        <div id="c-inc-ent-sai" style="min-height:110px"></div>
+      </div>
+      <div class="ccrd">
+        <div class="ctitle">Evolução Mensal</div>
+        <div class="csub">Quantidade de RFs com inconsistência por mês</div>
+        <div id="c-inc-mensal" style="min-height:110px"></div>
+      </div>
     </div>
+    <!-- Filtros colapsáveis -->
+    <div style="background:var(--card);border:1px solid var(--brd);border-radius:10px;overflow:hidden;margin-bottom:16px">
+      <button onclick="window.incRfToggleFiltros()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;padding:14px 20px;cursor:pointer;text-align:left">
+        <span style="font-size:12px;font-weight:700;color:var(--txt1);text-transform:uppercase;letter-spacing:.05em">Filtros — Registros Fiscais</span>
+        <span id="inc-rf-toggle-icon" style="font-size:16px;color:var(--txt2);transition:transform .2s">▾</span>
+      </button>
+      <div id="inc-rf-filtro-corpo" style="padding:0 20px 16px;display:none">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;align-items:end">
+          <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Busca (RF / NF / Entidade / CNPJ)</label>
+            <input id="inc-rf-busca" type="text" placeholder="Pesquisar…" oninput="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
+          <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo NF</label>
+            <select id="inc-rf-tipo-nf" onchange="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
+              <option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option>
+            </select></div>
+          <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo Fiscal</label>
+            <select id="inc-rf-tipo-fiscal" onchange="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
+              <option value="">Todos</option><option value="ibs">IBS</option><option value="cbs">CBS</option>
+            </select></div>
+          <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo Inconsistência</label>
+            <select id="inc-rf-inc-tipo" onchange="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
+              <option value="">Todas</option>
+              <option value="Não conciliado">Não conciliado</option>
+              <option value="Valor imposto divergente">Valor imposto divergente</option>
+              <option value="Vencido">Vencido</option>
+              <option value="Sem Comprovante">Sem Comprovante</option>
+            </select></div>
+          <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data RF — de</label>
+            <input id="inc-rf-data-de" type="date" onchange="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
+          <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data RF — até</label>
+            <input id="inc-rf-data-ate" type="date" onchange="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
+          <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Valor RF — mín (R$)</label>
+            <input id="inc-rf-valor-min" type="number" min="0" placeholder="0" oninput="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
+          <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Valor RF — máx (R$)</label>
+            <input id="inc-rf-valor-max" type="number" min="0" placeholder="∞" oninput="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--brd)">
+          <span id="inc-rf-contagem" style="font-size:11px;color:var(--txt2)">— registros</span>
+          <button onclick="window.incRfLimparFiltros()" style="background:none;border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;color:var(--txt2);cursor:pointer">✕ Limpar filtros</button>
+        </div>
+      </div>
+    </div>
+    <!-- Tabela RF com paginação -->
     <div class="tcrd">
-      <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>Inconsistências registradas</h2><p id="inc-count-sub">0 de 0 inconsistências exibidas</p></div></div>
-      <div class="twrap"><table><thead><tr><th>ID</th><th>Tipo</th><th>NF</th><th>Fornecedor</th><th>CNPJ</th><th>Detectada em</th><th class="r">Valor NF</th><th>Severidade</th><th>Status</th><th>Ação</th></tr></thead><tbody id="t-inconsistencias"></tbody></table></div>
+      <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>Registros Fiscais com Inconsistência</h2><p id="inc-rf-count-sub">— RFs · IBS + CBS · entrada e saída</p></div></div>
+      <div class="twrap"><table><thead><tr><th>ID RF</th><th>Tipo Fiscal</th><th>Tipo NF</th><th>NF Vinculada</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor</th><th class="r">NF Total</th><th class="r">NF Líquido</th><th>Status</th><th>Data</th><th>Inconsistência</th></tr></thead><tbody id="t-inc-rfs"></tbody></table></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
+        <button class="btn" id="inc-rf-btn-prev" onclick="window.incRfPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:12px;color:var(--txt2)">Página</span>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:4px 12px;min-width:50px;text-align:center">
+            <span id="inc-rf-pag-atual" style="color:var(--txt1);font-weight:600;font-size:13px">1</span>
+            <span style="color:var(--txt3);font-size:12px"> / </span>
+            <span id="inc-rf-pag-total" style="color:var(--txt2);font-size:12px">1</span>
+          </div>
+          <span style="font-size:12px;color:var(--txt2)" id="inc-rf-pag-info">(25 RFs por página)</span>
+        </div>
+        <button class="btn" id="inc-rf-btn-prox" onclick="window.incRfProximaPagina()">Próxima →</button>
+      </div>
     </div>
   </div>
 </div>
