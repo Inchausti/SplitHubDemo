@@ -294,7 +294,7 @@ window._filtrosCreditos = {
   mesAno: '',
   busca: '', tipoFiscal: '', status: '', contrato: '',
   metodo: '', pagamento: '', dataNFDe: '', dataNFAte: '',
-  credMin: '', credMax: ''
+  credMin: '', credMax: '', tipoDFe: ''
 };
 
 window.injetarFiltrosCreditos = function() {
@@ -368,6 +368,12 @@ window.injetarFiltrosCreditos = function() {
     + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Crédito — máx (R$)</label>'
     + '<input id="fc-cred-max" type="number" min="0" placeholder="∞" oninput="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
 
+    // Tipo de DFe
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo de DFe</label>'
+    + '<select id="fc-tipo-dfe" onchange="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
+    + '<option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option>'
+    + '</select></div>'
+
     + '</div>'
     // Rodapé: contagem + limpar
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--brd)">'
@@ -401,6 +407,7 @@ window.creditosFiltrarGrid = function() {
   f.dataNFAte  = (document.getElementById('fc-data-ate')|| {}).value || '';
   f.credMin    = (document.getElementById('fc-cred-min') || {}).value || '';
   f.credMax    = (document.getElementById('fc-cred-max') || {}).value || '';
+  f.tipoDFe    = (document.getElementById('fc-tipo-dfe') || {}).value || '';
   window.renderizarTabelaCreditos();
 };
 
@@ -422,7 +429,7 @@ window.creditosFiltrarMesAno = function() {
 };
 
 window.creditosLimparFiltrosGrid = function() {
-  ['fc-busca','fc-tipo','fc-status','fc-contrato','fc-metodo','fc-pagamento','fc-data-de','fc-data-ate','fc-cred-min','fc-cred-max'].forEach(function(id) {
+  ['fc-busca','fc-tipo','fc-status','fc-contrato','fc-metodo','fc-pagamento','fc-data-de','fc-data-ate','fc-cred-min','fc-cred-max','fc-tipo-dfe'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -433,7 +440,7 @@ window.creditosLimparFiltrosGrid = function() {
   window._filtrosCreditos = {
     mesAno:'', busca:'', tipoFiscal:'', status:'', contrato:'',
     metodo:'', pagamento:'', dataNFDe:'', dataNFAte:'',
-    credMin:'', credMax:''
+    credMin:'', credMax:'', tipoDFe:''
   };
   window.renderizarTabelaCreditos();
   try { window.renderizarComposicaoCreditos(window._composicaoFiltro || ''); } catch(e) {}
@@ -451,9 +458,10 @@ window.renderizarTabelaCreditos = function() {
         nf.registrosFiscais.forEach(function(rf) {
           var tipoFiscalLabel = rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS';
           var valorLiq = rf.valorLiquidoNF || 0;
-          var cbsVal = rf.tipoFiscal === 'cbs' ? Math.floor(valorLiq * 0.08) : 0;
-          var ibsVal = rf.tipoFiscal === 'ibs' ? Math.floor(valorLiq * 0.10) : 0;
-          var credVal = rf.tipoFiscal === 'cbs' ? cbsVal : ibsVal;
+          // Usar rf.valor (sincronizado com alíquota do imposto) ao invés de recomputar
+          var credVal = rf.valor || 0;
+          var cbsVal = rf.tipoFiscal === 'cbs' ? credVal : 0;
+          var ibsVal = rf.tipoFiscal === 'ibs' ? credVal : 0;
           var _eApropriado = rf.status === 'apropriado' || rf.status === 'utilizado';
           var _temPag = rf.dataPagamento && rf.dataPagamento !== '—';
           var _dp = (rf.data || '').split('-');
@@ -469,6 +477,7 @@ window.renderizarTabelaCreditos = function() {
             rfId: rf.id,
             rf: rf.id,
             tipoFiscal: tipoFiscalLabel,
+            tipoNF: rf.tipoNF || nf.tipo || 'entrada',
             nf: 'NF-' + rf.nfVinculada,
             nfNumero: rf.nfVinculada,
             forn: rf.entidade,
@@ -494,7 +503,8 @@ window.renderizarTabelaCreditos = function() {
   // Aplicar filtros
   var f = window._filtrosCreditos || {};
   if (f.mesAno || f.busca || f.tipoFiscal || f.status || f.contrato || f.metodo ||
-      f.pagamento || f.dataNFDe || f.dataNFAte || f.credMin || f.credMax) {
+      f.pagamento || f.dataNFDe || f.dataNFAte || f.credMin || f.credMax || f.tipoDFe ||
+      (f.statusMulti && f.statusMulti.length)) {
     var busca = (f.busca || '').toLowerCase();
     listaRFs = listaRFs.filter(function(r) {
       if (f.mesAno && !(r.dataNF || '').startsWith(f.mesAno)) return false;
@@ -502,6 +512,7 @@ window.renderizarTabelaCreditos = function() {
       if (f.tipoFiscal && r.tipoFiscal !== f.tipoFiscal) return false;
       if (f.status && r.status !== f.status) return false;
       if (f.statusMulti && f.statusMulti.length && !f.statusMulti.includes(r.status)) return false;
+      if (f.tipoDFe && r.tipoNF !== f.tipoDFe) return false;
       if (f.contrato === '__sem__' && r.contratoId) return false;
       if (f.contrato && f.contrato !== '__sem__' && r.contratoId !== f.contrato) return false;
       if (f.metodo && r.metodoPagamento !== f.metodo) return false;
@@ -524,7 +535,9 @@ window.renderizarTabelaCreditos = function() {
   } else {
     listaRFs.forEach(function(r) {
       var tipoFiscalBadge = '<span style="font-size:11px;font-weight:600;color:' + (r.tipoFiscal === 'IBS' ? '#3B82F6' : '#F59E0B') + '">' + r.tipoFiscal + '</span>';
-      var nfTipoBadgeCred = '<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>';
+      var nfTipoBadgeCred = r.tipoNF === 'saida'
+        ? '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>'
+        : '<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>';
       var nfNumero = r.nfNumero || r.nf.replace('NF-', '');
       var nfLink = '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline" onclick="window.abrirDetalhesNFporNumero(\'' + nfNumero + '\')">' + r.nf + '</span>';
       var contratoCell = r.contratoId
@@ -1131,33 +1144,70 @@ window._kbDrop = function(e, colId) {
 // ============================================================
 
 window._enriquecerNFsSaida = function() {
-  var meses = ['2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04'];
+  // Alíquotas definidas por imposto
+  var ALIQ_CBS = 0.08; // 8%
+  var ALIQ_IBS = 0.10; // 10%
+
+  var meses = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06',
+               '2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
+  var diasNoMes = [31,28,31,30,31,30,31,31,30,31,30,31];
   var statusDist = [
-    'extinto','extinto','extinto','extinto','extinto','extinto','extinto',
-    'nao_extinto','nao_extinto','nao_extinto','nao_extinto',
-    'vencido','vencido','vencido',
+    'extinto','extinto','extinto','extinto','extinto',
+    'nao_extinto','nao_extinto','nao_extinto',
+    'vencido','vencido',
     'inconsistencia','inconsistencia'
   ];
   var metodos = ['RAD','RAD','Compensacao'];
-  var idx = 0;
 
+  // Pré-calcular valores escalados: sum(valorBruto) = R$ 100M
+  // valorBruto = vliq * (1 + ALIQ_CBS + ALIQ_IBS) = vliq * 1.18
+  var _vliqBase = [];
+  for (var _j = 1; _j <= 100; _j++) {
+    var _s = (_j * 73856093 ^ _j * 19349663 ^ _j * 83492791) >>> 0;
+    _vliqBase.push(500000 + (_s % 800001));
+  }
+  var _sumBase   = _vliqBase.reduce(function(s, v) { return s + v; }, 0);
+  var _targetLiq = Math.round(100000000 / (1 + ALIQ_CBS + ALIQ_IBS));
+  var _scale     = _targetLiq / _sumBase;
+
+  var idx = 0;
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'saida') return;
-    var mes     = meses[idx % meses.length];
-    var day     = 1 + ((idx * 7) % 27);
-    var dayStr  = day < 10 ? '0' + day : '' + day;
+
+    // Valores determinísticos sincronizados com as alíquotas
+    var vliq  = Math.round(_vliqBase[idx % 100] * _scale);
+    var cbs   = Math.floor(vliq * ALIQ_CBS);
+    var ibs   = Math.floor(vliq * ALIQ_IBS);
+    var vbrut = vliq + cbs + ibs;
+
+    // Distribuição de datas pelos 12 meses de 2026
+    var mesIdx  = (idx * 7 + 3) % 12;
+    var mes     = meses[mesIdx];
+    var maxDia  = diasNoMes[mesIdx];
+    var dia     = 1 + ((idx * 11 + 7) % maxDia);
+    var dayStr  = dia < 10 ? '0' + dia : '' + dia;
     var dataISO = mes + '-' + dayStr;
     var stRF    = statusDist[idx % statusDist.length];
 
-    nf.data   = dataISO;
-    nf.status = (stRF === 'extinto') ? 'extinto' : 'nao_extinto';
+    // Atualizar NF com valores sincronizados
+    nf.data         = dataISO;
+    nf.status       = (stRF === 'extinto') ? 'extinto' : 'nao_extinto';
+    nf.valorLiquido = vliq;
+    nf.cbs          = cbs;
+    nf.ibs          = ibs;
+    nf.valorTotal   = vbrut;
 
     (nf.registrosFiscais || []).forEach(function(rf, ri) {
       rf.data           = dataISO;
       rf.status         = stRF;
       rf.metodoExtincao = metodos[(idx + ri) % metodos.length];
+      // Sincronizar valor do RF com alíquota do imposto correspondente
+      rf.valor          = rf.tipoFiscal === 'cbs' ? cbs : ibs;
+      rf.valorTotalNF   = vbrut;
+      rf.valorLiquidoNF = vliq;
+      rf.tipoNF         = 'saida';
       if (stRF === 'extinto') {
-        var extDay    = Math.min(day + 5, 28);
+        var extDay    = Math.min(dia + 5, maxDia);
         var extDayStr = extDay < 10 ? '0' + extDay : '' + extDay;
         var mp = mes.split('-');
         rf.dataExtincao = extDayStr + '/' + mp[1] + '/' + mp[0] + ' 09:00';
@@ -1172,7 +1222,7 @@ window._enriquecerNFsSaida = function() {
 window._filtrosDebitos = {
   mesAno: '', busca: '', tipoFiscal: '', status: '',
   metodo: '', extincao: '', dataNFDe: '', dataNFAte: '',
-  debMin: '', debMax: ''
+  debMin: '', debMax: '', tipoDFe: ''
 };
 
 window.injetarFiltrosDebitos = function() {
@@ -1210,6 +1260,10 @@ window.injetarFiltrosDebitos = function() {
     + '<input id="fd-deb-min" type="number" min="0" placeholder="0" oninput="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
     + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Débito — máx (R$)</label>'
     + '<input id="fd-deb-max" type="number" min="0" placeholder="∞" oninput="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo de DFe</label>'
+    + '<select id="fd-tipo-dfe" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
+    + '<option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option>'
+    + '</select></div>'
     + '</div>'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--brd)">'
     + '<span id="fd-contagem" style="font-size:11px;color:var(--txt2)">200 registros</span>'
@@ -1239,6 +1293,7 @@ window.debitosFiltrarGrid = function() {
   f.dataNFAte  = (document.getElementById('fd-data-ate')|| {}).value || '';
   f.debMin     = (document.getElementById('fd-deb-min') || {}).value || '';
   f.debMax     = (document.getElementById('fd-deb-max') || {}).value || '';
+  f.tipoDFe    = (document.getElementById('fd-tipo-dfe') || {}).value || '';
   window.renderizarTabelaDebitos();
 };
 
@@ -1261,7 +1316,7 @@ window.debitosFiltrarMesAno = function() {
 };
 
 window.debitosLimparFiltrosGrid = function() {
-  ['fd-busca','fd-tipo','fd-status','fd-metodo','fd-extincao','fd-data-de','fd-data-ate','fd-deb-min','fd-deb-max'].forEach(function(id) {
+  ['fd-busca','fd-tipo','fd-status','fd-metodo','fd-extincao','fd-data-de','fd-data-ate','fd-deb-min','fd-deb-max','fd-tipo-dfe'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.value = '';
   });
   var selMes = document.getElementById('deb-mes-ano');
@@ -1271,7 +1326,7 @@ window.debitosLimparFiltrosGrid = function() {
   window._filtrosDebitos = {
     mesAno: '', busca: '', tipoFiscal: '', status: '',
     metodo: '', extincao: '', dataNFDe: '', dataNFAte: '',
-    debMin: '', debMax: ''
+    debMin: '', debMax: '', tipoDFe: ''
   };
   window.renderizarTabelaDebitos();
   try { window.renderizarComposicaoDebitos(window._composicaoDebitosFiltro || ''); } catch(e) {}
@@ -1294,14 +1349,15 @@ window.renderizarTabelaDebitos = function() {
       if (nf.tipo !== 'saida' || !nf.registrosFiscais) return;
       nf.registrosFiscais.forEach(function(rf) {
         var valorLiq = rf.valorLiquidoNF || nf.valorLiquido || 0;
-        var cbsVal   = rf.tipoFiscal === 'cbs' ? Math.floor(valorLiq * 0.08) : 0;
-        var ibsVal   = rf.tipoFiscal === 'ibs' ? Math.floor(valorLiq * 0.10) : 0;
-        var debVal   = cbsVal || ibsVal;
+        // Usar rf.valor (sincronizado com alíquota do imposto) ao invés de recomputar
+        var debVal   = rf.valor || 0;
+        var cbsVal   = rf.tipoFiscal === 'cbs' ? debVal : 0;
+        var ibsVal   = rf.tipoFiscal === 'ibs' ? debVal : 0;
         var dp       = (rf.data || '').split('-');
         listaRFs.push({
           rf:   rf.id || '—',
           tf:   rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
-          tipoNF: nf.tipo || 'saida',
+          tipoNF: rf.tipoNF || nf.tipo || 'saida',
           nf:   'NF-' + (rf.nfVinculada || nf.numero || ''),
           dataNF: rf.data || '',
           data: dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
@@ -1325,6 +1381,7 @@ window.renderizarTabelaDebitos = function() {
     }
     if (f.tipoFiscal && r.tf !== f.tipoFiscal) return false;
     if (f.status     && r.status !== f.status) return false;
+    if (f.tipoDFe    && r.tipoNF !== f.tipoDFe) return false;
     if (f.metodo     && r.metodoExtincao !== f.metodo) return false;
     if (f.extincao === 'com' && r.extincao === '—') return false;
     if (f.extincao === 'sem' && r.extincao !== '—') return false;
@@ -1471,8 +1528,7 @@ window.renderizarComposicaoDebitos = function(filtroTipo) {
       if (f.dataNFAte && rf.data > f.dataNFAte) return;
       var mes    = (rf.data||'').substring(0,7);
       if (!agg[mes]) return;
-      var valorLiq = rf.valorLiquidoNF || 0;
-      var debVal   = rf.tipoFiscal === 'cbs' ? Math.floor(valorLiq*0.08) : Math.floor(valorLiq*0.10);
+      var debVal = rf.valor || 0;
       if (f.debMin !== '' && debVal < parseFloat(f.debMin)) return;
       if (f.debMax !== '' && debVal > parseFloat(f.debMax)) return;
       var valM = Math.round(debVal/1e6*1000)/1000;
@@ -1970,7 +2026,7 @@ window.renderizarTop10Empresas = function() {
 // GESTÃO DE PAGAMENTOS — filtro global de mês + tabela dinâmica
 // ============================================================
 
-window._filtrosPagamentos = { mesAno: '', tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '' };
+window._filtrosPagamentos = { mesAno: '', tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
 
 window.injetarFiltrosPagamentos = function() {
   if (document.getElementById('filtros-pagamentos-avancado')) return;
@@ -2019,6 +2075,11 @@ window.injetarFiltrosPagamentos = function() {
     + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Valor — máx (R$)</label>'
     + '<input id="fp-valor-max" type="number" min="0" placeholder="∞" oninput="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
 
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo de DFe</label>'
+    + '<select id="fp-tipo-dfe" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
+    + '<option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option>'
+    + '</select></div>'
+
     + '</div>'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--brd)">'
     + '<span id="fp-contagem" style="font-size:11px;color:var(--txt2)">— registros</span>'
@@ -2049,15 +2110,16 @@ window.pagamentosFiltrarGrid = function() {
   f.dataRFAte= (document.getElementById('fp-data-ate')  || {}).value || '';
   f.valorMin = (document.getElementById('fp-valor-min') || {}).value || '';
   f.valorMax = (document.getElementById('fp-valor-max') || {}).value || '';
+  f.tipoDFe  = (document.getElementById('fp-tipo-dfe')  || {}).value || '';
   window.renderizarTabelaPagamentos();
 };
 
 window.pagamentosLimparFiltros = function() {
-  ['fp-busca','fp-tipo','fp-status','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max'].forEach(function(id) {
+  ['fp-busca','fp-tipo','fp-status','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max','fp-tipo-dfe'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
-  window._filtrosPagamentos = { mesAno: window._filtrosPagamentos.mesAno, tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '' };
+  window._filtrosPagamentos = { mesAno: window._filtrosPagamentos.mesAno, tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
   window.renderizarTabelaPagamentos();
 };
 
@@ -2111,6 +2173,7 @@ window.renderizarTabelaPagamentos = function() {
       var valor = rf.valor || 0;
       if (f.valorMin !== '' && valor < parseFloat(f.valorMin)) return;
       if (f.valorMax !== '' && valor > parseFloat(f.valorMax)) return;
+      if (f.tipoDFe && (rf.tipoNF || nf.tipo || 'entrada') !== f.tipoDFe) return;
 
       var dataRFIso = rf.data || '';
       if (f.dataRFDe  && dataRFIso < f.dataRFDe)  return;
@@ -2366,9 +2429,7 @@ window.renderizarPagamentosMetodo = function() {
       if (f.dataNFDe && rf.data < f.dataNFDe) return;
       if (f.dataNFAte && rf.data > f.dataNFAte) return;
 
-      var credVal = rf.tipoFiscal === 'cbs'
-        ? Math.floor((rf.valorLiquidoNF || 0) * 0.08)
-        : Math.floor((rf.valorLiquidoNF || 0) * 0.10);
+      var credVal = rf.valor || 0;
       if (f.credMin !== '' && credVal < parseFloat(f.credMin)) return;
       if (f.credMax !== '' && credVal > parseFloat(f.credMax)) return;
 
@@ -2455,9 +2516,7 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
       if (f.mesAno && !(rf.data || '').startsWith(f.mesAno)) return;
       if (f.dataNFDe && rf.data < f.dataNFDe) return;
       if (f.dataNFAte && rf.data > f.dataNFAte) return;
-      var credVal = rf.tipoFiscal === 'cbs'
-        ? Math.floor((rf.valorLiquidoNF || 0) * 0.08)
-        : Math.floor((rf.valorLiquidoNF || 0) * 0.10);
+      var credVal = rf.valor || 0;
       if (f.credMin !== '' && credVal < parseFloat(f.credMin)) return;
       if (f.credMax !== '' && credVal > parseFloat(f.credMax)) return;
 
@@ -2654,23 +2713,38 @@ document.addEventListener('DOMContentLoaded', function() {
           window.nfListaFiltradaGlobal.push(nfRecord);
         });
 
-        // Gerar NFs de saída (100 clientes) — mesma estrutura das NFs de entrada
+        // Gerar NFs de saída (100 clientes) — datas 2026 inteiro, montante total = R$ 100M
         var _clientesSaida = ['WEG Motores','Mercado Livre','Embraer S.A.','Bosch Ltda','Randon S.A.','Ambev S.A.','Magazine Luiza','Gerdau Aços','Marcopolo S.A.','Natura &Co'];
-        var _mesesSaida    = ['2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04'];
+        var _mesesSaida2026 = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
         var _statusSaida   = ['extinto','extinto','extinto','extinto','extinto','nao_extinto','nao_extinto','nao_extinto','vencido','inconsistencia'];
         var _metodosSaida  = ['RAD','RAD','Compensacao'];
+
+        // Pré-calcular vliq base com variação pseudo-aleatória, depois escalar para sum(valorTotal)=100M
+        // valorTotal = vliq * 1.18, target sum(valorTotal) = 100M → sum(vliq) = 100M/1.18 ≈ 84.745.763
+        var _vliqBase = [];
+        for (var _sj = 1; _sj <= 100; _sj++) {
+          var _seed = (_sj * 73856093 ^ _sj * 19349663 ^ _sj * 83492791) >>> 0;
+          _vliqBase.push(500000 + (_seed % 800001)); // range 500K–1.3M
+        }
+        var _sumVliqBase = _vliqBase.reduce(function(s,v){ return s+v; }, 0);
+        var _targetSumVliq = Math.round(100000000 / 1.18);
+        var _scaleSaida = _targetSumVliq / _sumVliqBase;
+
         for (var _si = 1; _si <= 100; _si++) {
-          var _vliq   = Math.floor(12000 + (_si * 317) % 20000) * ((_si % 5) + 1);
+          var _vliq   = Math.round(_vliqBase[_si - 1] * _scaleSaida);
           var _cbs    = Math.floor(_vliq * 0.08);
           var _ibs    = Math.floor(_vliq * 0.10);
           var _vbrut  = _vliq + _cbs + _ibs;
           var _nsNum  = String(_si + 500000).padStart(6, '0');
-          var _mes    = _mesesSaida[(_si - 1) % _mesesSaida.length];
-          var _dia    = String(1 + ((_si * 7) % 27)).padStart(2, '0');
+          // Data aleatória espalhada por todos os 12 meses de 2026
+          var _mesIdx = (_si * 7 + 3) % 12;
+          var _mes    = _mesesSaida2026[_mesIdx];
+          var _diasNoMes = [31,28,31,30,31,30,31,31,30,31,30,31][_mesIdx];
+          var _dia    = String(1 + ((_si * 11 + 7) % _diasNoMes)).padStart(2, '0');
           var _dataS  = _mes + '-' + _dia;
           var _stS    = _statusSaida[(_si - 1) % _statusSaida.length];
           var _metS   = _stS === 'extinto' ? _metodosSaida[(_si - 1) % _metodosSaida.length] : '—';
-          var _extDay = String(Math.min(parseInt(_dia) + 5, 28)).padStart(2, '0');
+          var _extDay = String(Math.min(parseInt(_dia) + 5, _diasNoMes)).padStart(2, '0');
           var _mp     = _mes.split('-');
           var _dtExt  = _stS === 'extinto' ? (_extDay + '/' + _mp[1] + '/' + _mp[0] + ' 09:00') : '—';
 
