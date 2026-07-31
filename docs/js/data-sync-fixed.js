@@ -452,7 +452,19 @@ window.renderizarTabelaCreditos = function() {
           var cbsVal = rf.tipoFiscal === 'cbs' ? Math.floor(valorLiq * 0.08) : 0;
           var ibsVal = rf.tipoFiscal === 'ibs' ? Math.floor(valorLiq * 0.10) : 0;
           var credVal = rf.tipoFiscal === 'cbs' ? cbsVal : ibsVal;
+          var _eApropriado = rf.status === 'apropriado' || rf.status === 'utilizado';
+          var _temPag = rf.dataPagamento && rf.dataPagamento !== '—';
+          var _dp = (rf.data || '').split('-');
+          var _pagVal;
+          if (_temPag) {
+            _pagVal = rf.dataPagamento;
+          } else if (_eApropriado && _dp.length === 3) {
+            _pagVal = String(Math.min(parseInt(_dp[2], 10) + 5, 28)).padStart(2,'0') + '/' + _dp[1] + '/' + _dp[0] + ' 09:00';
+          } else {
+            _pagVal = '—';
+          }
           listaRFs.push({
+            rfId: rf.id,
             rf: rf.id,
             tipoFiscal: tipoFiscalLabel,
             nf: 'NF-' + rf.nfVinculada,
@@ -466,7 +478,8 @@ window.renderizarTabelaCreditos = function() {
             cbs: cbsVal,
             ibs: ibsVal,
             cred: credVal,
-            pag: rf.dataPagamento || '—',
+            pag: _pagVal,
+            isPago: _eApropriado || _temPag,
             status: rf.status || 'nao_apropriado',
             contratoId: rf.contratoId || nf.contratoId || null,
             metodoPagamento: rf.metodoPagamento || nf.metodoPagamento || null
@@ -507,7 +520,6 @@ window.renderizarTabelaCreditos = function() {
     h = '<tr><td colspan="14" style="text-align:center;color:var(--txt3);padding:24px">Nenhum crédito encontrado para este filtro.</td></tr>';
   } else {
     listaRFs.forEach(function(r) {
-      var pc = r.pag === "—" ? "#53565A" : (r.status === "perdido" || r.status === "em_risco") ? "#F43F5E" : "#22C55E";
       var tipoFiscalBadge = '<span style="font-size:11px;font-weight:600;color:' + (r.tipoFiscal === 'IBS' ? '#3B82F6' : '#F59E0B') + '">' + r.tipoFiscal + '</span>';
       var nfNumero = r.nfNumero || r.nf.replace('NF-', '');
       var nfLink = '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline" onclick="window.abrirDetalhesNFporNumero(\'' + nfNumero + '\')">' + r.nf + '</span>';
@@ -519,7 +531,10 @@ window.renderizarTabelaCreditos = function() {
         : r.metodoPagamento === 'Fornecedor'
           ? '<span style="font-size:11px;font-weight:600;color:#3B82F6">Fornecedor</span>'
           : '<span style="color:var(--txt3)">—</span>';
-      h += '<tr><td class="mono" style="color:#3B82F6;font-size:11px">' + r.rf + '</td><td>' + tipoFiscalBadge + '</td><td>' + nfLink + '</td><td>' + r.forn + '</td><td>' + r.data + '</td><td class="r mono">' + ff(r.valorTotal) + '</td><td class="r mono">' + ff(r.valorLiq) + '</td><td class="r mono" style="color:#F59E0B;font-weight:600">' + ffz(r.cbs) + '</td><td class="r mono" style="color:#3B82F6;font-weight:600">' + ffz(r.ibs) + '</td><td class="r mono" style="color:#49C5B1;font-weight:700">' + ff(r.cred) + '</td><td style="font-size:11px;color:' + pc + '">' + r.pag + '</td><td>' + bdg(r.status) + '</td><td style="white-space:nowrap">' + contratoCell + '</td><td style="white-space:nowrap">' + metodoCell + '</td></tr>';
+      var pagCell = r.isPago
+        ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pag + '</a>'
+        : '<span style="color:var(--txt3)">—</span>';
+      h += '<tr><td class="mono" style="color:#3B82F6;font-size:11px">' + r.rf + '</td><td>' + tipoFiscalBadge + '</td><td>' + nfLink + '</td><td>' + r.forn + '</td><td>' + r.data + '</td><td class="r mono">' + ff(r.valorTotal) + '</td><td class="r mono">' + ff(r.valorLiq) + '</td><td class="r mono" style="color:#F59E0B;font-weight:600">' + ffz(r.cbs) + '</td><td class="r mono" style="color:#3B82F6;font-weight:600">' + ffz(r.ibs) + '</td><td class="r mono" style="color:#49C5B1;font-weight:700">' + ff(r.cred) + '</td><td style="font-size:11px">' + pagCell + '</td><td>' + bdg(r.status) + '</td><td style="white-space:nowrap">' + contratoCell + '</td><td style="white-space:nowrap">' + metodoCell + '</td></tr>';
     });
   }
 
