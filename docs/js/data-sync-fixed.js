@@ -1483,6 +1483,7 @@ window.renderizarTabelaPagamentos = function() {
       var pagFmt  = temPag ? rf.dataPagamento : '—';
 
       rows.push({
+        rfId: rf.id || '',
         rf: rf.id || '—', forn: rf.entidade || nf.entidade || '—',
         cnpj: rf.cnpj || nf.cnpj || '—',
         tipo: tipoCol, valor: rf.valor || 0,
@@ -1509,7 +1510,9 @@ window.renderizarTabelaPagamentos = function() {
       + '<td>' + tipoBadge + '</td>'
       + '<td class="r mono" style="font-weight:600">' + ff(r.valor) + '</td>'
       + '<td style="font-size:11px;color:var(--txt2)">' + r.dataRF + '</td>'
-      + '<td style="font-size:11px;color:var(--txt2)">' + r.pagamento + '</td>'
+      + '<td style="font-size:11px">' + (r.status === 'pago'
+          ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pagamento + '</a>'
+          : '<span style="color:var(--txt2)">' + r.pagamento + '</span>') + '</td>'
       + '<td>' + badge + '</td>'
       + '<td>' + act + '</td>'
       + '</tr>';
@@ -1559,6 +1562,119 @@ window.atualizarKPIsPagamentos = function() {
   setEl('pag-atrasado-sub', cntAtr  + (cntAtr  === 1 && lastAtr  ? ' guia — ' + lastAtr  : ' guias vencidas'));
   setEl('pag-pago',         fmtM(pago));
   setEl('pag-pago-sub',     cntPago + ' guias executadas');
+};
+
+// ============================================================
+// COMPROVANTE DE PAGAMENTO PIX — modal com dados do RF
+// ============================================================
+
+window.fecharComprovanteRF = function() {
+  var ov = document.getElementById('comprovante-modal-overlay');
+  if (ov) ov.style.display = 'none';
+};
+
+window.imprimirComprovanteRF = function() {
+  window.print();
+};
+
+window.abrirComprovanteRF = function(rfId) {
+  // Localizar o RF e sua NF em nfListaFiltradaGlobal
+  var rfEncontrado = null, nfEncontrada = null;
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (rfEncontrado) return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (rf.id === rfId) { rfEncontrado = rf; nfEncontrada = nf; }
+    });
+  });
+  if (!rfEncontrado) return;
+
+  var rf  = rfEncontrado;
+  var nf  = nfEncontrada;
+  var isIBS = rf.tipoFiscal === 'ibs';
+
+  // --- Recebedor conforme tributo ---
+  var recNome  = isIBS ? 'CG-IBS — Comitê Gestor do IBS'         : 'RFB — Receita Federal do Brasil';
+  var recCNPJ  = isIBS ? '50.873.548/0001-08'                     : '00.394.460/0057-53';
+  var recChave = isIBS ? '50873548000108 (CNPJ)'                  : '00394460005753 (CNPJ)';
+  var recBanco = 'Banco do Brasil S.A.';
+
+  // --- Pagador (empresa) ---
+  var pagNome  = 'Positivo Soluções em Pagamentos';
+  var pagCNPJ  = '01.123.456/0001-99';
+  var pagBanco = 'BTG Pactual S.A.';
+  var pagConta = '0001 / 234567-8';
+
+  // --- Valor ---
+  var valor = rf.valor || 0;
+
+  // --- Período de apuração ---
+  var mesLabels = {
+    '2025-10':'out/2025','2025-11':'nov/2025','2025-12':'dez/2025',
+    '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026'
+  };
+  var mesPart  = (rf.data || '').substring(0, 7);
+  var periodo  = mesLabels[mesPart] || mesPart;
+
+  // --- Data/hora do pagamento ---
+  var dataPag  = rf.dataPagamento || '—';
+
+  // --- E2EId determinístico (E + ISPB(8) + YYYYMMDDHHMMSS(14) + 10chars) ---
+  var ispb = '01526114'; // BTG Pactual
+  var dp   = (dataPag || '').split(' ');
+  var dp0  = (dp[0] || '').split('/');
+  var dp1  = (dp[1] || '09:00').split(':');
+  var dtPart = dp0.length === 3
+    ? dp0[2] + dp0[1] + dp0[0] + dp1[0] + dp1[1] + '00'
+    : '20260424090000';
+  var seed = rfId.replace(/\D/g, '');
+  var n = parseInt(seed.slice(-8)) || 12345678;
+  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  var rndPart = '';
+  for (var i = 0; i < 10; i++) { rndPart += chars[n % chars.length]; n = Math.floor(n / 37) + i * 13 + 7; }
+  var e2eId = 'E' + ispb + dtPart + rndPart;
+
+  // --- Autenticação bancária ---
+  var authSeed = parseInt(seed.slice(-6)) || 987654;
+  var authPart = '';
+  for (var j = 0; j < 12; j++) { authPart += chars[authSeed % chars.length]; authSeed = Math.floor(authSeed / 29) + j * 17 + 3; }
+  var auth = 'BTG' + authPart;
+
+  // --- Tipo de tributo + referência ---
+  var tipoLabel = isIBS ? 'Guia IBS' : 'DARF CBS';
+  var refLabel  = (isIBS ? 'Guia IBS' : 'DARF CBS') + ' · Split Payment · Art. 48 LC 214/2025';
+
+  // --- NF vinculada ---
+  var nfNum = 'NF-e ' + (rf.nfVinculada || nf.numero || '—');
+
+  // --- População dos elementos do modal ---
+  function setEl(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; }
+
+  document.getElementById('cmp-tipo-label').textContent = tipoLabel + ' · Split Payment LC 214/2025';
+  setEl('cmp-valor', 'R$ ' + valor.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}));
+  setEl('cmp-datetime', dataPag);
+
+  setEl('cmp-pag-nome',  pagNome);
+  setEl('cmp-pag-cnpj',  pagCNPJ);
+  setEl('cmp-pag-banco', pagBanco);
+  setEl('cmp-pag-conta', pagConta);
+
+  setEl('cmp-rec-nome',  recNome);
+  setEl('cmp-rec-cnpj',  recCNPJ);
+  setEl('cmp-rec-chave', recChave);
+  setEl('cmp-rec-banco', recBanco);
+
+  setEl('cmp-det-tipo',    tipoLabel);
+  setEl('cmp-det-periodo', periodo);
+  setEl('cmp-det-rf',      rf.id || '—');
+  setEl('cmp-det-nf',      nfNum);
+  setEl('cmp-det-ref',     refLabel);
+
+  setEl('cmp-e2e',  e2eId);
+  setEl('cmp-auth', auth);
+
+  // Exibir modal
+  var ov = document.getElementById('comprovante-modal-overlay');
+  if (ov) ov.style.display = 'flex';
 };
 
 // ============================================================
