@@ -1465,12 +1465,13 @@ window.renderizarTabelaPagamentos = function() {
       var tipoCol = rf.tipoFiscal === 'ibs' ? 'Guia IBS' : 'DARF CBS';
       if (tipo && tipoCol !== tipo) return;
 
-      var temPag = rf.dataPagamento && rf.dataPagamento !== '—';
+      var temPag     = rf.dataPagamento && rf.dataPagamento !== '—';
+      var eApropriado = rf.status === 'apropriado' || rf.status === 'utilizado';
       var rfSt;
-      if (temPag)                        rfSt = 'pago';
-      else if (rf.status === 'vencido')  rfSt = 'atrasado';
+      if (temPag || eApropriado)               rfSt = 'pago';
+      else if (rf.status === 'vencido')        rfSt = 'atrasado';
       else if (rf.status === 'inconsistencia') rfSt = 'vencendo';
-      else                               rfSt = 'pendente';
+      else                                     rfSt = 'pendente';
       if (stFlt && rfSt !== stFlt) return;
 
       if (busca) {
@@ -1480,7 +1481,15 @@ window.renderizarTabelaPagamentos = function() {
 
       var dp = (rf.data || '').split('-');
       var dataFmt = dp.length === 3 ? dp[2] + '/' + dp[1] + '/' + dp[0] : '—';
-      var pagFmt  = temPag ? rf.dataPagamento : '—';
+      var pagFmt;
+      if (temPag) {
+        pagFmt = rf.dataPagamento;
+      } else if (eApropriado && dp.length === 3) {
+        var diaNum = Math.min(parseInt(dp[2], 10) + 5, 28);
+        pagFmt = String(diaNum).padStart(2,'0') + '/' + dp[1] + '/' + dp[0] + ' 09:00';
+      } else {
+        pagFmt = '—';
+      }
 
       rows.push({
         rfId: rf.id || '',
@@ -1538,9 +1547,10 @@ window.atualizarKPIsPagamentos = function() {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
       if (f.mesAno && !(rf.data || '').startsWith(f.mesAno)) return;
-      var temPag = rf.dataPagamento && rf.dataPagamento !== '—';
+      var temPag     = rf.dataPagamento && rf.dataPagamento !== '—';
+      var eApropriado = rf.status === 'apropriado' || rf.status === 'utilizado';
       var v = rf.valor || 0;
-      if (temPag)                              { pago     += v; cntPago++; }
+      if (temPag || eApropriado)               { pago     += v; cntPago++; }
       else if (rf.status === 'vencido')        { atrasado += v; cntAtr++;  lastAtr  = rf.entidade || nf.entidade; }
       else if (rf.status === 'inconsistencia') { vencendo += v; cntVenc++; lastVenc = rf.entidade || nf.entidade; }
       else                                     { pendente += v; cntPend++; }
