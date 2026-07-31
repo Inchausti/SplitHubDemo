@@ -695,25 +695,27 @@ window.creditosIrParaInconsistencias = function() {
 };
 
 window.renderizarRFsInconsistencias = function() {
+  var incCores = { 'Não conciliado':'#F43F5E','Valor imposto divergente':'#F59E0B','Vencido':'#EF4444','Sem Comprovante':'#8B5CF6' };
   var lista = [];
+
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
-    if (nf.tipo !== 'entrada' || !nf.registrosFiscais) return;
+    if (!nf.registrosFiscais) return;
+    var tipoNF = nf.tipo || 'entrada';
     nf.registrosFiscais.forEach(function(rf) {
       if (rf.status !== 'inconsistencia') return;
-      var valorLiq = rf.valorLiquidoNF || 0;
-      var cred = rf.tipoFiscal === 'cbs'
-        ? Math.floor(valorLiq * 0.08)
-        : Math.floor(valorLiq * 0.10);
       var dp = (rf.data || '').split('-');
       lista.push({
-        rf:         rf.id || '—',
-        tf:         rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
-        nf:         'NF-' + (rf.nfVinculada || nf.numero || ''),
-        forn:       rf.entidade || nf.entidade || '—',
-        cnpj:       rf.cnpj    || nf.cnpj    || '—',
-        data:       dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
-        cred:       cred,
-        contrato:   rf.contratoId || nf.contratoId || '—'
+        id:        rf.id || '—',
+        tf:        rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
+        tipoNF:    tipoNF,
+        nfVinc:    'NF-' + (rf.nfVinculada || nf.numero || ''),
+        forn:      rf.entidade || nf.entidade || '—',
+        cnpj:      rf.cnpj    || nf.cnpj    || '—',
+        valor:     rf.valor   || 0,
+        valorTotal: rf.valorTotalNF || 0,
+        valorLiq:  rf.valorLiquidoNF || 0,
+        data:      dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
+        inc:       rf.inconsistencia || null
       });
     });
   });
@@ -723,28 +725,38 @@ window.renderizarRFsInconsistencias = function() {
     var tfBadge = r.tf === 'IBS'
       ? '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">IBS</span>'
       : '<span style="background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">CBS</span>';
-    var incBadge = '<span style="background:rgba(244,63,94,.12);color:#F43F5E;border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Inconsistência</span>';
+    var tipoNFBadge = r.tipoNF === 'entrada'
+      ? '<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>'
+      : '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
+    var stBadge = '<span style="background:rgba(139,92,246,.12);color:#8B5CF6;border:1px solid rgba(139,92,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Inconsistência</span>';
+    var incBadge = r.inc
+      ? '<span style="color:' + (incCores[r.inc] || '#666') + ';font-size:11px;font-weight:600">' + r.inc + '</span>'
+      : '<span style="color:var(--txt3);font-size:11px">—</span>';
     h += '<tr>'
-      + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + r.rf + '</td>'
+      + '<td class="mono" style="color:#8B5CF6;font-weight:600">' + r.id + '</td>'
       + '<td>' + tfBadge + '</td>'
-      + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.nf + '</td>'
+      + '<td>' + tipoNFBadge + '</td>'
+      + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.nfVinc + '</td>'
       + '<td style="font-size:12px">' + r.forn + '</td>'
       + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + r.cnpj + '</td>'
+      + '<td class="r mono" style="font-size:11px;font-weight:700;color:' + (r.tf === 'IBS' ? '#3B82F6' : '#F59E0B') + '">' + ff(r.valor) + '</td>'
+      + '<td class="r mono" style="font-size:11px">' + ff(r.valorTotal) + '</td>'
+      + '<td class="r mono" style="font-size:11px;color:var(--txt2)">' + ff(r.valorLiq) + '</td>'
+      + '<td>' + stBadge + '</td>'
       + '<td style="font-size:11px;color:var(--txt2)">' + r.data + '</td>'
-      + '<td class="r mono" style="font-size:11px;font-weight:700;color:#F43F5E">' + ff(r.cred) + '</td>'
-      + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + r.contrato + '</td>'
+      + '<td>' + incBadge + '</td>'
       + '</tr>';
   });
 
   if (!lista.length) {
-    h = '<tr><td colspan="8" style="text-align:center;color:var(--txt3);padding:24px">Nenhum RF com inconsistência encontrado.</td></tr>';
+    h = '<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:24px">Nenhum RF com inconsistência encontrado.</td></tr>';
   }
 
   var tbody = document.getElementById('t-inc-rfs');
   if (tbody) tbody.innerHTML = h;
 
   var sub = document.getElementById('inc-rf-count-sub');
-  if (sub) sub.textContent = lista.length + ' RF' + (lista.length !== 1 ? 's' : '') + ' com inconsistência · IBS + CBS';
+  if (sub) sub.textContent = lista.length + ' RF' + (lista.length !== 1 ? 's' : '') + ' com inconsistência · IBS + CBS · entrada e saída';
 };
 
 // ============================================================
@@ -1505,6 +1517,114 @@ window.renderizarTop5Inconsistencias = function() {
 
   s += '</svg>';
   el.innerHTML = s;
+};
+
+// ============================================================
+// CONCILIAÇÃO — filtros da tabela de Registros Fiscais
+// ============================================================
+
+window.rfToggleFiltros = function() {
+  var corpo = document.getElementById('rf-filtro-corpo');
+  var icon  = document.getElementById('rf-toggle-icon');
+  if (!corpo) return;
+  var aberto = corpo.style.display !== 'none';
+  corpo.style.display = aberto ? 'none' : 'block';
+  if (icon) icon.style.transform = aberto ? '' : 'rotate(180deg)';
+};
+
+window.conciliacaoFiltrarRFs = function() {
+  var busca     = ((document.getElementById('rf-busca')              || {}).value || '').toLowerCase();
+  var tipoNF    = (document.getElementById('rf-tipo-nf')             || {}).value || '';
+  var tipoFisc  = (document.getElementById('rf-tipo-fiscal')         || {}).value || '';
+  var status    = (document.getElementById('rf-status-filtro')       || {}).value || '';
+  var inc       = (document.getElementById('rf-inconsistencia-filtro')|| {}).value || '';
+  var dataDe    = (document.getElementById('rf-data-de')             || {}).value || '';
+  var dataAte   = (document.getElementById('rf-data-ate')            || {}).value || '';
+  var valorMin  = (document.getElementById('rf-valor-min')           || {}).value || '';
+  var valorMax  = (document.getElementById('rf-valor-max')           || {}).value || '';
+
+  var lista = (window.rfListaGlobal || []).filter(function(rf) {
+    if (tipoNF   && rf.tipo       !== tipoNF)   return false;
+    if (tipoFisc && rf.tipoFiscal !== tipoFisc) return false;
+    var rfStatus = (window.rfGlobal && window.rfGlobal[rf.id]) ? window.rfGlobal[rf.id].statusInterno : rf.status;
+    if (status   && rfStatus !== status)        return false;
+    if (inc === 'com' && !rf.inconsistencia)    return false;
+    if (inc === 'sem' &&  rf.inconsistencia)    return false;
+    if (dataDe  && (rf.data || '') < dataDe)   return false;
+    if (dataAte && (rf.data || '') > dataAte)  return false;
+    var v = rf.valor || 0;
+    if (valorMin !== '' && v < parseFloat(valorMin)) return false;
+    if (valorMax !== '' && v > parseFloat(valorMax)) return false;
+    if (busca) {
+      var s = (rf.id || '').toLowerCase() + (rf.nfVinculada || '').toLowerCase()
+            + (rf.entidade || '').toLowerCase() + (rf.cnpj || '').toLowerCase();
+      if (!s.includes(busca)) return false;
+    }
+    return true;
+  });
+
+  var cnt = document.getElementById('rf-filtro-contagem');
+  if (cnt) cnt.textContent = lista.length + ' registro' + (lista.length !== 1 ? 's' : '');
+
+  // render filtered subset (reuse rfRenderPagina pattern)
+  var rfIpp = 25;
+  var totalPag = Math.ceil(lista.length / rfIpp) || 1;
+  var pagina = 1;
+  var paginaDados = lista.slice(0, rfIpp);
+
+  if (typeof window._rfRenderLista === 'function') {
+    window._rfRenderLista(paginaDados, lista.length, pagina, totalPag);
+  }
+};
+
+window.rfLimparFiltros = function() {
+  ['rf-busca','rf-tipo-nf','rf-tipo-fiscal','rf-status-filtro','rf-inconsistencia-filtro','rf-data-de','rf-data-ate','rf-valor-min','rf-valor-max'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  window.conciliacaoFiltrarRFs();
+};
+
+window._rfRenderLista = function(lista, total, pagina, totalPag) {
+  var statusLabels = { nao_apropriado:'Não Apropriado', apropriado:'Apropriado', utilizado:'Utilizado', nao_extinto:'Não Extinto', extinto:'Extinto', vencido:'Vencido', inconsistencia:'Inconsistência' };
+  var statusCores  = { nao_apropriado:'#F43F5E', apropriado:'#F59E0B', utilizado:'#22C55E', nao_extinto:'#F43F5E', extinto:'#22C55E', vencido:'#EF4444', inconsistencia:'#8B5CF6' };
+  var incCores     = { 'Não conciliado':'#F43F5E','Valor imposto divergente':'#F59E0B','Vencido':'#EF4444','Sem Comprovante':'#8B5CF6' };
+
+  var h = '';
+  lista.forEach(function(rf) {
+    var tipoFiscalLabel = rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS';
+    var tipoNFBadge = rf.tipo === 'entrada'
+      ? '<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>'
+      : '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
+    var rfStatus = (window.rfGlobal && window.rfGlobal[rf.id]) ? window.rfGlobal[rf.id].statusInterno : (rf.inconsistencia ? 'inconsistencia' : rf.status);
+    var stLbl = statusLabels[rfStatus] || rfStatus;
+    var stCor = statusCores[rfStatus] || '#A7A8AA';
+    var stRgb = stCor.replace('#','');
+    var statusBadge = '<span style="background:rgba(' + parseInt(stRgb.slice(0,2),16) + ',' + parseInt(stRgb.slice(2,4),16) + ',' + parseInt(stRgb.slice(4,6),16) + ',.12);color:' + stCor + ';border:1px solid ' + stCor + '33;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLbl + '</span>';
+    var dp = (rf.data || '').split('-');
+    var dataFmt = dp.length === 3 ? dp[2] + '/' + dp[1] + '/' + dp[0] : '—';
+    var incBadge = rf.inconsistencia
+      ? '<span style="color:' + (incCores[rf.inconsistencia] || '#666') + ';font-size:11px;font-weight:600">' + rf.inconsistencia + '</span>'
+      : '<span style="color:var(--txt3);font-size:11px">—</span>';
+    h += '<tr>'
+      + '<td class="mono" style="color:#3B82F6;font-weight:600">' + rf.id + '</td>'
+      + '<td style="font-size:11px">' + tipoFiscalLabel + '</td>'
+      + '<td>' + tipoNFBadge + '</td>'
+      + '<td class="mono" style="font-size:11px;color:var(--txt2)">NF-' + (rf.nfVinculada || '') + '</td>'
+      + '<td>' + (rf.entidade || '—') + '</td>'
+      + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + (rf.cnpj || '—') + '</td>'
+      + '<td class="r mono" style="font-size:11px;font-weight:600;color:' + (rf.tipoFiscal === 'ibs' ? '#3B82F6' : '#F59E0B') + '">' + ff(rf.valor || 0) + '</td>'
+      + '<td class="r mono" style="font-size:11px">' + ff(rf.valorTotalNF || 0) + '</td>'
+      + '<td class="r mono" style="font-size:11px;color:var(--txt2)">' + ff(rf.valorLiquidoNF || 0) + '</td>'
+      + '<td>' + statusBadge + '</td>'
+      + '<td style="font-size:12px;color:var(--txt2)">' + dataFmt + '</td>'
+      + '<td>' + incBadge + '</td></tr>';
+  });
+  if (!lista.length) h = '<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:24px">Nenhum RF encontrado para este filtro.</td></tr>';
+
+  var tbody = document.getElementById('t-gestao-rfs');
+  if (tbody) tbody.innerHTML = h;
+  var sub = document.getElementById('rf-count-sub');
+  if (sub) sub.textContent = total + ' RF' + (total !== 1 ? 's' : '') + ' encontrado' + (total !== 1 ? 's' : '');
 };
 
 window.renderizarTop10Empresas = function() {
