@@ -501,6 +501,7 @@ window.renderizarTabelaCreditos = function() {
       if (busca && !(r.rf.toLowerCase().includes(busca) || r.nf.toLowerCase().includes(busca) || r.forn.toLowerCase().includes(busca))) return false;
       if (f.tipoFiscal && r.tipoFiscal !== f.tipoFiscal) return false;
       if (f.status && r.status !== f.status) return false;
+      if (f.statusMulti && f.statusMulti.length && !f.statusMulti.includes(r.status)) return false;
       if (f.contrato === '__sem__' && r.contratoId) return false;
       if (f.contrato && f.contrato !== '__sem__' && r.contratoId !== f.contrato) return false;
       if (f.metodo && r.metodoPagamento !== f.metodo) return false;
@@ -2701,3 +2702,199 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✓ Sistema de sincronização de dados ativo');
   }, 3000);
 });
+
+// ============================================================
+// GESTÃO ORGANIZAÇÃO — CRUD de CNPJs compradores (Positivo)
+// ============================================================
+
+window._orgCnpjs = [
+  { id:1, cnpj:'81.243.735/0001-48', razao:'Positivo Tecnologia S.A.', ie:'9029-6',     uf:'PR', tipo:'Matriz', status:'ativo'   },
+  { id:2, cnpj:'81.243.735/0002-29', razao:'Positivo Tecnologia S.A.', ie:'9029-6/002', uf:'SP', tipo:'Filial', status:'ativo'   },
+  { id:3, cnpj:'81.243.735/0003-00', razao:'Positivo Tecnologia S.A.', ie:'9029-6/003', uf:'MG', tipo:'Filial', status:'ativo'   },
+  { id:4, cnpj:'81.243.735/0004-81', razao:'Positivo Tecnologia S.A.', ie:'9029-6/004', uf:'SC', tipo:'Filial', status:'inativo' },
+  { id:5, cnpj:'81.243.735/0005-62', razao:'Positivo Tecnologia S.A.', ie:'9029-6/005', uf:'RJ', tipo:'Filial', status:'ativo'   },
+  { id:6, cnpj:'81.243.735/0006-43', razao:'Positivo Tecnologia S.A.', ie:'9029-6/006', uf:'RS', tipo:'Filial', status:'ativo'   },
+  { id:7, cnpj:'81.243.735/0007-24', razao:'Positivo Tecnologia S.A.', ie:'9029-6/007', uf:'BA', tipo:'Filial', status:'ativo'   },
+];
+window._orgNextId = 8;
+window._orgEditId = null;
+
+window.orgRenderTabela = function() {
+  var busca = (document.getElementById('org-busca')||{value:''}).value.toLowerCase();
+  var filtUF = (document.getElementById('org-filtro-uf')||{value:''}).value;
+  var filtTipo = (document.getElementById('org-filtro-tipo')||{value:''}).value;
+  var filtStatus = (document.getElementById('org-filtro-status')||{value:''}).value;
+
+  var lista = (window._orgCnpjs || []).filter(function(r) {
+    if (busca && !(r.cnpj+' '+r.razao+' '+r.ie).toLowerCase().includes(busca)) return false;
+    if (filtUF && r.uf !== filtUF) return false;
+    if (filtTipo && r.tipo !== filtTipo) return false;
+    if (filtStatus && r.status !== filtStatus) return false;
+    return true;
+  });
+
+  var ativos = (window._orgCnpjs||[]).filter(function(r){return r.status==='ativo';}).length;
+  var matrizes = (window._orgCnpjs||[]).filter(function(r){return r.tipo==='Matriz';}).length;
+  var filiais = (window._orgCnpjs||[]).filter(function(r){return r.tipo==='Filial';}).length;
+  function setEl(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
+  setEl('org-total',  window._orgCnpjs.length);
+  setEl('org-ativos', ativos);
+  setEl('org-matrizes', matrizes);
+  setEl('org-filiais', filiais);
+  setEl('org-ativos-sub', ativos + ' de ' + window._orgCnpjs.length + ' habilitados');
+  setEl('org-count-sub', lista.length + ' CNPJ' + (lista.length!==1?'s':'') + ' exibido' + (lista.length!==1?'s':''));
+
+  var tbody = document.getElementById('t-org-cnpjs');
+  if (!tbody) return;
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--txt3)">Nenhum CNPJ encontrado com os filtros aplicados.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(function(r) {
+    var sCorBg = r.status === 'ativo' ? 'rgba(34,197,94,.15)' : 'rgba(100,116,139,.15)';
+    var sCor   = r.status === 'ativo' ? 'var(--green)' : 'var(--txt3)';
+    var sLabel = r.status === 'ativo' ? 'Ativo' : 'Inativo';
+    var tipoBg = r.tipo === 'Matriz' ? 'rgba(59,130,246,.15)' : 'rgba(139,92,246,.15)';
+    var tipoCor = r.tipo === 'Matriz' ? 'var(--blue)' : '#8B5CF6';
+    return '<tr>'
+      + '<td class="mono" style="font-size:11px">' + r.cnpj + '</td>'
+      + '<td style="font-size:12px;font-weight:500;color:var(--txt1)">' + r.razao + '</td>'
+      + '<td class="mono" style="font-size:11px">' + r.ie + '</td>'
+      + '<td><span style="font-size:11px;font-weight:700;color:var(--txt2)">' + r.uf + '</span></td>'
+      + '<td><span style="background:'+tipoBg+';color:'+tipoCor+';border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700">' + r.tipo + '</span></td>'
+      + '<td><span style="background:'+sCorBg+';color:'+sCor+';border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700">' + sLabel + '</span></td>'
+      + '<td style="text-align:center;white-space:nowrap">'
+      + '<button onclick="window.orgAbrirModal(' + r.id + ')" style="background:none;border:1px solid var(--brd);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--txt2);cursor:pointer;margin-right:6px">✏ Editar</button>'
+      + '<button onclick="window.orgExcluir(' + r.id + ')" style="background:none;border:1px solid rgba(244,63,94,.4);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--red);cursor:pointer">✕</button>'
+      + '</td>'
+      + '</tr>';
+  }).join('');
+};
+
+window.orgAbrirModal = function(id) {
+  window._orgEditId = id;
+  var r = id ? (window._orgCnpjs||[]).find(function(x){return x.id===id;}) : null;
+  var ov = document.getElementById('org-modal-overlay');
+  if (!ov) return;
+  document.getElementById('org-modal-titulo').textContent = id ? 'Editar CNPJ' : 'Novo CNPJ';
+  document.getElementById('org-form-cnpj').value   = r ? r.cnpj   : '';
+  document.getElementById('org-form-razao').value  = r ? r.razao  : '';
+  document.getElementById('org-form-ie').value     = r ? r.ie     : '';
+  document.getElementById('org-form-uf').value     = r ? r.uf     : 'PR';
+  document.getElementById('org-form-tipo').value   = r ? r.tipo   : 'Filial';
+  document.getElementById('org-form-status').value = r ? r.status : 'ativo';
+  ov.style.display = 'flex';
+};
+
+window.orgFecharModal = function() {
+  var ov = document.getElementById('org-modal-overlay');
+  if (ov) ov.style.display = 'none';
+  window._orgEditId = null;
+};
+
+window.orgSalvar = function() {
+  var cnpj   = (document.getElementById('org-form-cnpj')||{value:''}).value.trim();
+  var razao  = (document.getElementById('org-form-razao')||{value:''}).value.trim();
+  var ie     = (document.getElementById('org-form-ie')||{value:''}).value.trim();
+  var uf     = (document.getElementById('org-form-uf')||{value:'PR'}).value;
+  var tipo   = (document.getElementById('org-form-tipo')||{value:'Filial'}).value;
+  var status = (document.getElementById('org-form-status')||{value:'ativo'}).value;
+  if (!cnpj || !razao) { alert('CNPJ e Razão Social são obrigatórios.'); return; }
+  var id = window._orgEditId;
+  if (id) {
+    var idx = (window._orgCnpjs||[]).findIndex(function(x){return x.id===id;});
+    if (idx > -1) window._orgCnpjs[idx] = {id:id, cnpj:cnpj, razao:razao, ie:ie, uf:uf, tipo:tipo, status:status};
+  } else {
+    window._orgCnpjs.push({id:window._orgNextId++, cnpj:cnpj, razao:razao, ie:ie, uf:uf, tipo:tipo, status:status});
+  }
+  window.orgFecharModal();
+  window.orgRenderTabela();
+};
+
+window.orgExcluir = function(id) {
+  if (!confirm('Remover este CNPJ da organização?')) return;
+  window._orgCnpjs = (window._orgCnpjs||[]).filter(function(x){return x.id!==id;});
+  window.orgRenderTabela();
+};
+
+// ============================================================
+// DASHBOARD — Filtro de mês (Visão Geral)
+// ============================================================
+
+var _dashMeses = {
+  '01':{ label:'Janeiro 2026',   aprop:'R$ 38,1M', apropriar:'R$ 12,4M', risco:'R$ 1,8M', aliq:'9,14%', delta:'4,26 pp',  upAprop:'▲ 4,2%', upApropriar:'▼ 8,3%'  },
+  '02':{ label:'Fevereiro 2026', aprop:'R$ 41,3M', apropriar:'R$ 11,7M', risco:'R$ 2,1M', aliq:'9,18%', delta:'4,22 pp',  upAprop:'▲ 5,1%', upApropriar:'▼ 9,1%'  },
+  '03':{ label:'Março 2026',     aprop:'R$ 47,9M', apropriar:'R$ 10,2M', risco:'R$ 3,4M', aliq:'9,21%', delta:'4,19 pp',  upAprop:'▲ 5,8%', upApropriar:'▼ 10,4%' },
+  '04':{ label:'Abril 2026',     aprop:'R$ 54,3M', apropriar:'R$ 7,3M',  risco:'R$ 5,2M', aliq:'9,27%', delta:'4,13 pp',  upAprop:'▲ 6,8%', upApropriar:'▼ 12,1%' },
+  '05':{ label:'Maio 2026',      aprop:'R$ 49,8M', apropriar:'R$ 8,9M',  risco:'R$ 4,1M', aliq:'9,24%', delta:'4,16 pp',  upAprop:'▲ 3,2%', upApropriar:'▼ 7,8%'  },
+  '06':{ label:'Junho 2026',     aprop:'R$ 52,1M', apropriar:'R$ 9,4M',  risco:'R$ 3,7M', aliq:'9,22%', delta:'4,18 pp',  upAprop:'▲ 4,7%', upApropriar:'▼ 8,5%'  },
+  '07':{ label:'Julho 2026',     aprop:'R$ 45,6M', apropriar:'R$ 11,1M', risco:'R$ 2,9M', aliq:'9,19%', delta:'4,21 pp',  upAprop:'▲ 2,9%', upApropriar:'▼ 9,7%'  },
+  '08':{ label:'Agosto 2026',    aprop:'R$ 48,3M', apropriar:'R$ 10,6M', risco:'R$ 3,2M', aliq:'9,23%', delta:'4,17 pp',  upAprop:'▲ 3,8%', upApropriar:'▼ 10,2%' },
+  '09':{ label:'Setembro 2026',  aprop:'R$ 51,7M', apropriar:'R$ 8,4M',  risco:'R$ 4,8M', aliq:'9,25%', delta:'4,15 pp',  upAprop:'▲ 5,4%', upApropriar:'▼ 11,3%' },
+  '10':{ label:'Outubro 2026',   aprop:'R$ 56,2M', apropriar:'R$ 6,8M',  risco:'R$ 5,9M', aliq:'9,29%', delta:'4,11 pp',  upAprop:'▲ 7,3%', upApropriar:'▼ 13,2%' },
+  '11':{ label:'Novembro 2026',  aprop:'R$ 58,9M', apropriar:'R$ 5,9M',  risco:'R$ 6,7M', aliq:'9,31%', delta:'4,09 pp',  upAprop:'▲ 8,1%', upApropriar:'▼ 14,7%' },
+  '12':{ label:'Dezembro 2026',  aprop:'R$ 61,4M', apropriar:'R$ 4,7M',  risco:'R$ 7,3M', aliq:'9,34%', delta:'4,06 pp',  upAprop:'▲ 9,4%', upApropriar:'▼ 16,3%' },
+};
+
+window.dashFiltrarMes = function(mes) {
+  var d = _dashMeses[mes];
+  if (!d) return;
+  function setEl(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
+  setEl('dash-cred-aprop',      d.aprop);
+  setEl('dash-cred-aprop-sub',  d.upAprop + ' — Apropriados via Plataforma');
+  setEl('dash-cred-apropriar',  d.apropriar);
+  setEl('dash-cred-apropriar-sub', d.upApropriar + ' — Aguardando retorno');
+  setEl('dash-cred-risco',      d.risco);
+  setEl('dash-periodo-sub', 'Período: ' + d.label + ' · Última atualização: 24/' + mes + '/2026 às 11:47');
+  // Atualizar alíquota efetiva
+  var kval = document.querySelector('#view-dashboard .kgrid .kcard:last-child .kval');
+  if (kval) kval.textContent = d.aliq;
+  var ksub = document.querySelector('#view-dashboard .kgrid .kcard:last-child .ksub');
+  if (ksub) ksub.textContent = '▼ ' + d.delta + ' abaixo da alíquota de mercado';
+  var labels = document.querySelectorAll('#view-dashboard .kgrid .kcard:last-child [style*="Efetiva"]');
+  labels.forEach(function(el){ el.textContent = 'Efetiva ' + d.aliq; });
+};
+
+// ── DASHBOARD LINKS → Créditos e Pagamentos ──────────────────────────────
+
+window.dashIrParaCreditos = function() {
+  // Navegar para view-creditos
+  var btn = document.querySelector('.nav-btn[onclick*="creditos"]');
+  if (typeof showView === 'function') showView('creditos', btn);
+
+  // Aplicar filtro multi-status
+  if (!window._filtrosCreditos) window._filtrosCreditos = {};
+  window._filtrosCreditos.status = '';
+  window._filtrosCreditos.statusMulti = ['nao_apropriado', 'inconsistencia', 'vencido'];
+
+  // Exibir chip de filtro ativo
+  var chip = document.getElementById('creditos-filtro-chip');
+  var lbl  = document.getElementById('creditos-filtro-label');
+  if (lbl)  lbl.textContent = 'Não apropriado · Inconsistência · Vencido';
+  if (chip) chip.style.display = 'flex';
+
+  // Renderizar tabela com filtro aplicado
+  if (window.renderizarTabelaCreditos) window.renderizarTabelaCreditos();
+};
+
+window.dashIrParaPagamentosRisco = function() {
+  // Navegar para view-pagamentos
+  var btn = document.querySelector('.nav-btn[onclick*="pagamentos"]');
+  if (typeof showView === 'function') showView('pagamentos', btn);
+
+  // Garantir que a aba pag-imp (guias de impostos) esteja ativa
+  document.querySelectorAll('#view-pagamentos .sv').forEach(function(sv) { sv.classList.remove('active'); });
+  var svImp = document.getElementById('pag-imp');
+  if (svImp) svImp.classList.add('active');
+  document.querySelectorAll('#view-pagamentos .stab').forEach(function(b) { b.classList.remove('active'); });
+  var stabImp = document.querySelector('#view-pagamentos .stab[onclick*="\'imp\'"]');
+  if (stabImp) stabImp.classList.add('active');
+
+  // Aplicar filtro status pendente (a vencer)
+  if (!window._filtrosPagamentos) window._filtrosPagamentos = {};
+  window._filtrosPagamentos.status = 'pendente';
+
+  // Renderizar tabela filtrada
+  if (window.renderizarTabelaPagamentos) window.renderizarTabelaPagamentos();
+  if (window.atualizarKPIsPagamentos) window.atualizarKPIsPagamentos();
+};

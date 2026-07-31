@@ -409,6 +409,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
     <div class="nav-sub-group" id="nav-sub-group-admin">
       <button class="nav-sub-btn" id="subnav-admin-contratos" onclick="showAdminSub('contratos',this)"><span class="nav-sub-dot"></span> Gestão de Contratos</button>
       <button class="nav-sub-btn" id="subnav-admin-fornecedores" onclick="showAdminSub('fornecedores',this)"><span class="nav-sub-dot"></span> Cadastro de Fornecedor</button>
+      <button class="nav-sub-btn" id="subnav-admin-organizacao" onclick="showAdminSub('organizacao',this)"><span class="nav-sub-dot"></span> Gestão Organização</button>
     </div>
     <button class="nav-btn" id="nav-inconsist-btn" onclick="showInconsistSub('lista',document.getElementById('subnav-inconsist-lista'))"><span class="nav-icon">⚠</span> Gestão de Inconsistências</button>
     <div class="nav-sub-group" id="nav-sub-group-inconsist">
@@ -435,8 +436,22 @@ tr:hover td{background:rgba(73,197,177,.02)}
 <!-- DASHBOARD -->
 <div id="view-dashboard" class="view active">
   <div class="pg-hdr">
-    <div><div class="pg-title">Visão Geral</div><div class="pg-sub">Período: Abril 2026 · Última atualização: 24/04/2026 às 11:47</div></div>
+    <div><div class="pg-title">Visão Geral</div><div class="pg-sub" id="dash-periodo-sub">Período: Abril 2026 · Última atualização: 24/04/2026 às 11:47</div></div>
     <div class="hdr-act">
+      <select id="dash-mes-select" onchange="window.dashFiltrarMes(this.value)" style="background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 12px;font-size:12px;color:var(--txt1);font-family:inherit;cursor:pointer;outline:none">
+        <option value="01">Jan 2026</option>
+        <option value="02">Fev 2026</option>
+        <option value="03">Mar 2026</option>
+        <option value="04" selected>Abr 2026</option>
+        <option value="05">Mai 2026</option>
+        <option value="06">Jun 2026</option>
+        <option value="07">Jul 2026</option>
+        <option value="08">Ago 2026</option>
+        <option value="09">Set 2026</option>
+        <option value="10">Out 2026</option>
+        <option value="11">Nov 2026</option>
+        <option value="12">Dez 2026</option>
+      </select>
       <div class="cnpj-filter" id="cnpj-filter">
         <button class="btn" id="cnpj-filter-btn" onclick="dashCnpjToggleDropdown(event)">Todos os CNPJs ▾</button>
         <div class="cnpj-filter-panel" id="cnpj-filter-panel">
@@ -451,8 +466,8 @@ tr:hover td{background:rgba(73,197,177,.02)}
   </div>
   <div class="kgrid k4">
     <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">Créditos Apropriados</div><div class="kval" id="dash-cred-aprop">R$ 52,3M</div><div class="ksub up" id="dash-cred-aprop-sub">▲ 6,8% — Apropriados via Plataforma</div></div>
-    <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Créditos A Apropriar</div><div class="kval" id="dash-cred-apropriar">R$ 10,9M</div><div class="ksub down" id="dash-cred-apropriar-sub">▼ 12,1% — Aguardando retorno</div></div>
-    <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Créditos em risco</div><div class="kval" id="dash-cred-risco">R$ 2,4M</div><div class="ksub">Vencimento em menos de 48h</div></div>
+    <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Créditos A Apropriar</div><div class="kval" id="dash-cred-apropriar">R$ 10,9M</div><div class="ksub down" id="dash-cred-apropriar-sub">▼ 12,1% — Aguardando retorno</div><div class="ksub" style="margin-top:6px"><a href="javascript:void(0)" onclick="window.dashIrParaCreditos()" style="color:var(--amber);font-weight:600;text-decoration:none;font-size:11px">Ver RFs não apropriadas, inconsistentes e vencidas →</a></div></div>
+    <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Créditos em risco</div><div class="kval" id="dash-cred-risco">R$ 2,4M</div><div class="ksub">Vencimento em menos de 48h</div><div class="ksub" style="margin-top:6px"><a href="javascript:void(0)" onclick="window.dashIrParaPagamentosRisco()" style="color:var(--red);font-weight:600;text-decoration:none;font-size:11px">Ver RFs a vencer em Pagamentos →</a></div></div>
     <div class="kcard" style="border-top-color:var(--blue)">
       <div class="klbl">Alíquota Efetiva</div>
       <div class="kval" style="font-size:24px">9,27%</div>
@@ -1451,6 +1466,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
   <div class="stabs">
     <button class="stab active" onclick="showSub('admin','contratos',this)">Gestão de Contratos</button>
     <button class="stab" onclick="showSub('admin','fornecedores',this)">Cadastro de Fornecedor</button>
+    <button class="stab" onclick="showSub('admin','organizacao',this)">Gestão Organização</button>
   </div>
   <div id="admin-contratos" class="sv active">
     <div class="kgrid k5">
@@ -1525,6 +1541,50 @@ tr:hover td{background:rgba(73,197,177,.02)}
         <button class="btn btn-t" onclick="adminFornAbrirModal()" style="flex-shrink:0">+ Novo fornecedor</button>
       </div>
       <div class="twrap"><table><thead><tr><th>CNPJ</th><th>Razão social</th><th>Status</th><th class="r">Score</th><th>Contrato</th><th class="r">Vol. compras</th><th class="r">Créditos gerados</th><th>Pendências</th></tr></thead><tbody id="t-adm-fornecedores"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- GESTÃO ORGANIZAÇÃO -->
+  <div id="admin-organizacao" class="sv">
+    <div class="kgrid k4">
+      <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">CNPJs da Organização</div><div class="kval" id="org-total">—</div><div class="ksub">Positivo Tecnologia S.A.</div></div>
+      <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">CNPJs Ativos</div><div class="kval" id="org-ativos">—</div><div class="ksub" id="org-ativos-sub">Habilitados para compra</div></div>
+      <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Matrizes</div><div class="kval" id="org-matrizes">—</div><div class="ksub">CNPJs raiz</div></div>
+      <div class="kcard" style="border-top-color:var(--blue)"><div class="klbl">Filiais</div><div class="kval" id="org-filiais">—</div><div class="ksub">Estabelecimentos vinculados</div></div>
+    </div>
+    <!-- Busca -->
+    <div class="crd" style="margin-bottom:24px">
+      <div class="sechdr"><h2>Filtros</h2><p>CNPJs compradores de NF de entrada — organização Positivo Tecnologia</p></div>
+      <div class="flt" style="margin-top:14px">
+        <input type="text" id="org-busca" placeholder="Buscar por CNPJ, razão social ou IE…" oninput="window.orgRenderTabela()"/>
+        <select id="org-filtro-uf" onchange="window.orgRenderTabela()">
+          <option value="">UF — todas</option>
+          <option value="PR">PR</option><option value="SP">SP</option><option value="MG">MG</option>
+          <option value="SC">SC</option><option value="RJ">RJ</option><option value="RS">RS</option>
+          <option value="BA">BA</option><option value="GO">GO</option><option value="CE">CE</option>
+        </select>
+        <select id="org-filtro-tipo" onchange="window.orgRenderTabela()">
+          <option value="">Tipo — todos</option>
+          <option value="Matriz">Matriz</option>
+          <option value="Filial">Filial</option>
+        </select>
+        <select id="org-filtro-status" onchange="window.orgRenderTabela()">
+          <option value="">Status — todos</option>
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+        </select>
+        <button class="btn" onclick="document.getElementById('org-busca').value='';document.getElementById('org-filtro-uf').value='';document.getElementById('org-filtro-tipo').value='';document.getElementById('org-filtro-status').value='';window.orgRenderTabela()">✕ Limpar</button>
+      </div>
+    </div>
+    <!-- Tabela CRUD -->
+    <div class="tcrd">
+      <div class="tcrd-hdr" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div class="sechdr" style="margin-bottom:0"><h2>CNPJs Cadastrados — Organização</h2><p id="org-count-sub">— CNPJs exibidos</p></div>
+        <button class="btn btn-t" onclick="window.orgAbrirModal(null)" style="flex-shrink:0">+ Novo CNPJ</button>
+      </div>
+      <div class="twrap"><table><thead><tr>
+        <th>CNPJ</th><th>Razão Social</th><th>IE</th><th>UF</th><th>Tipo</th><th>Status</th><th style="text-align:center">Ações</th>
+      </tr></thead><tbody id="t-org-cnpjs"></tbody></table></div>
     </div>
   </div>
 </div>
@@ -1731,6 +1791,57 @@ tr:hover td{background:rgba(73,197,177,.02)}
 </div>
 </div><!-- /main -->
 
+<!-- MODAL: GESTÃO ORGANIZAÇÃO — CRUD CNPJ -->
+<div id="org-modal-overlay" onclick="if(event.target===this)window.orgFecharModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;align-items:center;justify-content:center">
+  <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:14px;padding:28px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 12px 48px rgba(0,0,0,.4)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <span id="org-modal-titulo" style="font-size:15px;font-weight:700;color:var(--txt1)">Novo CNPJ</span>
+      <button onclick="window.orgFecharModal()" style="background:none;border:none;font-size:18px;color:var(--txt3);cursor:pointer;line-height:1">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:20px">Cadastre um CNPJ comprador da organização Positivo Tecnologia para vinculação às NFs de entrada.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div style="grid-column:1/3">
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">CNPJ *</div>
+        <input type="text" id="org-form-cnpj" placeholder="00.000.000/0000-00" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:7px;padding:8px 12px;font-size:13px;color:var(--txt1);font-family:'IBM Plex Mono',monospace;outline:none"/>
+      </div>
+      <div style="grid-column:1/3">
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Razão Social *</div>
+        <input type="text" id="org-form-razao" placeholder="Razão social completa" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:7px;padding:8px 12px;font-size:13px;color:var(--txt1);outline:none"/>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Inscrição Estadual</div>
+        <input type="text" id="org-form-ie" placeholder="Ex: 9029-6/001" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:7px;padding:8px 12px;font-size:13px;color:var(--txt1);font-family:'IBM Plex Mono',monospace;outline:none"/>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">UF</div>
+        <select id="org-form-uf" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:7px;padding:8px 12px;font-size:13px;color:var(--txt1);outline:none;font-family:inherit">
+          <option value="PR">PR</option><option value="SP">SP</option><option value="MG">MG</option>
+          <option value="SC">SC</option><option value="RJ">RJ</option><option value="RS">RS</option>
+          <option value="BA">BA</option><option value="GO">GO</option><option value="CE">CE</option>
+          <option value="AM">AM</option><option value="PE">PE</option><option value="MA">MA</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Tipo</div>
+        <select id="org-form-tipo" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:7px;padding:8px 12px;font-size:13px;color:var(--txt1);outline:none;font-family:inherit">
+          <option value="Matriz">Matriz</option>
+          <option value="Filial">Filial</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Status</div>
+        <select id="org-form-status" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:7px;padding:8px 12px;font-size:13px;color:var(--txt1);outline:none;font-family:inherit">
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:16px;border-top:1px solid var(--brd)">
+      <button onclick="window.orgFecharModal()" style="background:none;border:1px solid var(--brd);border-radius:7px;padding:8px 18px;font-size:13px;color:var(--txt2);cursor:pointer;font-family:inherit">Cancelar</button>
+      <button onclick="window.orgSalvar()" style="background:var(--teal);border:none;border-radius:7px;padding:8px 20px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">Salvar</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL: COMPROVANTE DE PAGAMENTO PIX -->
 <div id="comprovante-modal-overlay" onclick="if(event.target===this)window.fecharComprovanteRF()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center">
@@ -4426,9 +4537,9 @@ fctRender();
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.js"></script>
-<script src="js/data-sync-fixed.js?v=2"></script>
+<script src="js/data-sync-fixed.js?v=3"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
-<script src="js/main.js?v=2"></script>
+<script src="js/main.js?v=3"></script>
 <script src="js/charts.js"></script>
 </body>
 </html>
