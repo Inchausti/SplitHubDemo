@@ -416,7 +416,9 @@ window.creditosFiltrarMesAno = function() {
   window._filtrosCreditos.mesAno = sel ? sel.value : '';
   var mesLabels = {
     '2025-10':'out/2025','2025-11':'nov/2025','2025-12':'dez/2025',
-    '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026'
+    '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026',
+    '2026-05':'mai/2026','2026-06':'jun/2026','2026-07':'jul/2026','2026-08':'ago/2026',
+    '2026-09':'set/2026','2026-10':'out/2026','2026-11':'nov/2026','2026-12':'dez/2026'
   };
   var label = window._filtrosCreditos.mesAno
     ? (mesLabels[window._filtrosCreditos.mesAno] || window._filtrosCreditos.mesAno)
@@ -1302,7 +1304,9 @@ window.debitosFiltrarMesAno = function() {
   window._filtrosDebitos.mesAno = sel ? sel.value : '';
   var mesLabels = {
     '2025-10':'out/2025','2025-11':'nov/2025','2025-12':'dez/2025',
-    '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026'
+    '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026',
+    '2026-05':'mai/2026','2026-06':'jun/2026','2026-07':'jul/2026','2026-08':'ago/2026',
+    '2026-09':'set/2026','2026-10':'out/2026','2026-11':'nov/2026','2026-12':'dez/2026'
   };
   var label = window._filtrosDebitos.mesAno
     ? (mesLabels[window._filtrosDebitos.mesAno] || window._filtrosDebitos.mesAno)
@@ -1668,8 +1672,11 @@ class DataSyncManagerFixed {
 
       somaAcumulada += valor;
       const fornecedor = fornecedores[i % fornecedores.length];
-      const dia = (i % 28) + 1;
-      const mes = Math.floor((i - 1) / 150) % 12 + 1;
+      // Distribuição determinística pelos 12 meses de 2026
+      const _diasNoMes = [31,28,31,30,31,30,31,31,30,31,30,31];
+      const mesIdx = (i * 7 + 3) % 12;
+      const mes    = mesIdx + 1;
+      const dia    = 1 + ((i * 11 + 7) % _diasNoMes[mesIdx]);
 
       this.nfsEntrada.push({
         id: i,
@@ -2128,7 +2135,9 @@ window.pagamentosFiltrarMesAno = function() {
   window._filtrosPagamentos.mesAno = sel ? sel.value : '';
   var mesLabels = {
     '2025-10':'out/2025','2025-11':'nov/2025','2025-12':'dez/2025',
-    '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026'
+    '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026',
+    '2026-05':'mai/2026','2026-06':'jun/2026','2026-07':'jul/2026','2026-08':'ago/2026',
+    '2026-09':'set/2026','2026-10':'out/2026','2026-11':'nov/2026','2026-12':'dez/2026'
   };
   var label = window._filtrosPagamentos.mesAno
     ? (mesLabels[window._filtrosPagamentos.mesAno] || window._filtrosPagamentos.mesAno)
@@ -2332,7 +2341,9 @@ window.abrirComprovanteRF = function(rfId) {
   // --- Período de apuração ---
   var mesLabels = {
     '2025-10':'out/2025','2025-11':'nov/2025','2025-12':'dez/2025',
-    '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026'
+    '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026',
+    '2026-05':'mai/2026','2026-06':'jun/2026','2026-07':'jul/2026','2026-08':'ago/2026',
+    '2026-09':'set/2026','2026-10':'out/2026','2026-11':'nov/2026','2026-12':'dez/2026'
   };
   var mesPart  = (rf.data || '').substring(0, 7);
   var periodo  = mesLabels[mesPart] || mesPart;
@@ -2570,8 +2581,39 @@ document.addEventListener('DOMContentLoaded', function() {
     window.dataSyncFixed = dataSyncFixed; // Expor globalmente
 
     // Função de pós-processamento global — roda após nfListaFiltradaGlobal ser populado
+    function _popularFiltrosMes() {
+      var mesesSet = {};
+      var mesLabels = {
+        '2025-10':'out/2025','2025-11':'nov/2025','2025-12':'dez/2025',
+        '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026',
+        '2026-05':'mai/2026','2026-06':'jun/2026','2026-07':'jul/2026','2026-08':'ago/2026',
+        '2026-09':'set/2026','2026-10':'out/2026','2026-11':'nov/2026','2026-12':'dez/2026'
+      };
+      (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+        (nf.registrosFiscais || []).forEach(function(rf) {
+          var mes = (rf.data || '').substring(0, 7);
+          if (mes) mesesSet[mes] = true;
+        });
+      });
+      var meses = Object.keys(mesesSet).sort();
+      ['pag-mes-ano','cred-mes-ano','deb-mes-ano'].forEach(function(id) {
+        var sel = document.getElementById(id);
+        if (!sel) return;
+        var cur = sel.value;
+        sel.innerHTML = '<option value="">Todos os períodos</option>';
+        meses.forEach(function(m) {
+          var opt = document.createElement('option');
+          opt.value = m;
+          opt.textContent = mesLabels[m] || m;
+          sel.appendChild(opt);
+        });
+        if (cur) sel.value = cur;
+      });
+    }
+
     function _postProcessarDados() {
       try { window._enriquecerNFsSaida(); } catch(e) { console.error('[data-sync-fixed] Erro _enriquecerNFsSaida:', e); }
+      try { _popularFiltrosMes(); } catch(e) { console.error('[data-sync-fixed] Erro _popularFiltrosMes:', e); }
       try { window.renderizarListaNFs(); } catch(e) {}
       try { window.injetarFiltrosCreditos(); window.renderizarTabelaCreditos(); } catch(e) {}
       try { window.injetarFiltrosPagamentos(); window.renderizarTabelaPagamentos(); } catch(e) {}
@@ -2617,14 +2659,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Coletar NFs de entrada
         var nfsEntrada = window.dataSyncFixed.getNFsEntrada();
         // Meses para distribuição das NFs (correspondente aos demais gráficos do dashboard)
-        var _mesesSpread = ['2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04'];
+        var _mesesSpread = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
+        var _diasNoMesEnt = [31,28,31,30,31,30,31,31,30,31,30,31];
         nfsEntrada.forEach(function(nf, idx) {
           var statusCreditos = ['nao_apropriado','nao_apropriado','apropriado','apropriado','apropriado','utilizado','utilizado','utilizado'];
           var statusCred = statusCreditos[idx % statusCreditos.length];
 
-          // Espalhar datas dos RFs pelos 7 meses do dashboard
-          var mesIdx = Math.floor(idx * _mesesSpread.length / nfsEntrada.length);
-          var dia = String(1 + (idx % 28)).padStart(2, '0');
+          // Espalhar datas dos RFs pelos 12 meses de 2026
+          var mesIdx = (idx * 7 + 3) % 12;
+          var maxDiaEnt = _diasNoMesEnt[mesIdx];
+          var dia = String(1 + ((idx * 11 + 7) % maxDiaEnt)).padStart(2, '0');
           var dataEfetiva = _mesesSpread[mesIdx] + '-' + dia;
 
           var valorLiquido = Math.floor(nf.valor / 1.18);
