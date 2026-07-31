@@ -1507,6 +1507,77 @@ window.renderizarTop5Inconsistencias = function() {
   el.innerHTML = s;
 };
 
+window.renderizarTop10Empresas = function() {
+  var el = document.getElementById('c-top10-empresas');
+  if (!el) return;
+
+  var mapa = {};
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (rf.status !== 'vencido' && rf.status !== 'inconsistencia') return;
+      var nome = (rf.entidade || nf.entidade || '—');
+      if (!mapa[nome]) mapa[nome] = { nome: nome, vencido: 0, inconsistencia: 0 };
+      if (rf.status === 'vencido')        mapa[nome].vencido       += rf.valor || 0;
+      if (rf.status === 'inconsistencia') mapa[nome].inconsistencia += rf.valor || 0;
+    });
+  });
+
+  var lista = Object.values(mapa).map(function(e) {
+    return { nome: e.nome.slice(0, 18), total: e.vencido + e.inconsistencia, vencido: e.vencido, inconsistencia: e.inconsistencia };
+  });
+
+  if (!lista.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--txt3);font-size:12px;padding:24px 0">Nenhum registro encontrado.</div>';
+    return;
+  }
+
+  lista.sort(function(a, b) { return b.total - a.total; });
+  var top10 = lista.slice(0, 10);
+  var maxVal = top10[0].total;
+
+  var W = 520, barH = 14, gap = 10, padL = 120, padR = 64, padT = 6, padB = 4;
+  var totalH = padT + top10.length * (barH + gap) - gap + padB;
+
+  var s = '<svg viewBox="0 0 ' + W + ' ' + totalH + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
+
+  top10.forEach(function(r, i) {
+    var y = padT + i * (barH + gap);
+    var barWTotal  = Math.max(4, Math.round((r.total        / maxVal) * (W - padL - padR)));
+    var barWVenc   = Math.max(0, Math.round((r.vencido      / maxVal) * (W - padL - padR)));
+    var barWIncons = Math.max(0, Math.round((r.inconsistencia / maxVal) * (W - padL - padR)));
+
+    // label
+    s += '<text x="' + (padL - 6) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#A7A8AA" font-size="9" font-family="Montserrat,sans-serif">' + r.nome + '</text>';
+
+    // fundo
+    s += '<rect x="' + padL + '" y="' + y + '" width="' + (W - padL - padR) + '" height="' + barH + '" rx="3" fill="rgba(244,63,94,.07)"/>';
+
+    // segmento vencido (vermelho)
+    if (barWVenc > 0) {
+      s += '<rect x="' + padL + '" y="' + y + '" width="' + barWVenc + '" height="' + barH + '" rx="3" fill="#F43F5E" opacity=".8"/>';
+    }
+    // segmento inconsistência (âmbar) empilhado
+    if (barWIncons > 0) {
+      var xIncons = padL + barWVenc;
+      s += '<rect x="' + xIncons + '" y="' + y + '" width="' + barWIncons + '" height="' + barH + '" rx="3" fill="#F59E0B" opacity=".8"/>';
+    }
+
+    // valor total
+    var valM = (r.total / 1e6).toFixed(2).replace('.', ',');
+    s += '<text x="' + (W - 2) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#A7A8AA" font-size="9" font-weight="600" font-family="Montserrat,sans-serif">R$ ' + valM + 'M</text>';
+  });
+
+  // legenda
+  s += '<rect x="' + padL + '" y="' + (totalH - 2) + '" width="10" height="6" rx="1" fill="#F43F5E" opacity=".8"/>';
+  s += '<text x="' + (padL + 13) + '" y="' + (totalH + 2) + '" fill="#A7A8AA" font-size="8" font-family="Montserrat,sans-serif">Vencido</text>';
+  s += '<rect x="' + (padL + 65) + '" y="' + (totalH - 2) + '" width="10" height="6" rx="1" fill="#F59E0B" opacity=".8"/>';
+  s += '<text x="' + (padL + 78) + '" y="' + (totalH + 2) + '" fill="#A7A8AA" font-size="8" font-family="Montserrat,sans-serif">Inconsistência</text>';
+
+  s += '</svg>';
+  el.innerHTML = s;
+};
+
 // ============================================================
 // GESTÃO DE PAGAMENTOS — filtro global de mês + tabela dinâmica
 // ============================================================
@@ -2055,6 +2126,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window.injetarFiltrosPagamentos(); window.renderizarTabelaPagamentos(); } catch(e) {}
       try { window.renderizarRFsInconsistencias(); } catch(e) {}
       try { window.renderizarTop5Inconsistencias(); } catch(e) {}
+      try { window.renderizarTop10Empresas(); } catch(e) {}
       try { window.injetarFiltrosDebitos(); window.renderizarTabelaDebitos(); window.renderizarComposicaoDebitos(''); window.renderizarExtincaoMetodo(); window.atualizarPerdaAcumuladaDebitos(); } catch(e) {}
       try { window.renderizarComposicaoCreditos(''); } catch(e) {}
       try { window.renderizarPagamentosMetodo(); } catch(e) {}
