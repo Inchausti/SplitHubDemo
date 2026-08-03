@@ -2218,8 +2218,9 @@ window.renderizarTabelaPagamentos = function() {
   var cnt = document.getElementById('fp-contagem');
   if (cnt) cnt.textContent = rows.length + ' registro' + (rows.length !== 1 ? 's' : '');
 
+  window._pagImpRows = rows;
   var h = '';
-  rows.forEach(function(r) {
+  rows.forEach(function(r, idx) {
     var stCor  = stHexMap[r.status]  || '#A7A8AA';
     var stRgb  = stCoresMap[r.status] || '167,168,170';
     var stLbl  = stLblMap[r.status]  || r.status;
@@ -2228,7 +2229,7 @@ window.renderizarTabelaPagamentos = function() {
       ? '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Guia IBS</span>'
       : '<span style="background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">DARF CBS</span>';
     var act = r.status !== 'pago'
-      ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px">Gerar Guia</button>'
+      ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px" onclick="window.abrirGuiaDARF('+idx+')">Gerar Guia</button>'
       : '<span style="font-size:11px;color:var(--txt3)">Concluído</span>';
     var nfTipoBadgePag = r.tipoNF === 'entrada'
       ? '<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>'
@@ -3083,4 +3084,280 @@ window.dashIrParaPagamentosRisco = function() {
   // Renderizar tabela filtrada
   if (window.renderizarTabelaPagamentos) window.renderizarTabelaPagamentos();
   if (window.atualizarKPIsPagamentos) window.atualizarKPIsPagamentos();
+};
+
+/* ── MODAL GUIA DARF/IBS ── */
+
+function _darfRng(seed) {
+  var s = (seed ^ 0xDEADBEEF) >>> 0;
+  return function() {
+    s = Math.imul(s ^ (s >>> 16), 0x45d9f3b) >>> 0;
+    s = Math.imul(s ^ (s >>> 16), 0x45d9f3b) >>> 0;
+    s = (s ^ (s >>> 16)) >>> 0;
+    return s / 0xffffffff;
+  };
+}
+
+function _darfSeed(str) {
+  var h = 5381;
+  for (var i = 0; i < str.length; i++) h = (Math.imul(h, 31) + str.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function _darfFmt(v) {
+  return 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+window.abrirGuiaDARF = function(idx) {
+  var r = (window._pagImpRows || [])[idx];
+  if (!r) return;
+
+  var isIBS    = r.tipo === 'Guia IBS';
+  var codRec   = isIBS ? '6912' : '5952';
+  var nomeTrib = isIBS ? 'IBS — Imposto sobre Bens e Serviços' : 'CBS — Contribuição sobre Bens e Serviços';
+  var seed     = _darfSeed(r.rfId || r.rf || String(idx));
+  var rng      = _darfRng(seed);
+
+  var docNum   = String(Math.floor(rng() * 900000000) + 100000000);
+  var dp       = (r.dataRFIso || '').split('-');
+  var periodo  = dp.length === 3 ? dp[1] + '/' + dp[0] : '—';
+  var vencimento = '—';
+  if (dp.length === 3) {
+    var dv2 = new Date(+dp[0], +dp[1] - 1, +dp[2] + 15);
+    vencimento = String(dv2.getDate()).padStart(2,'0') + '/' + String(dv2.getMonth()+1).padStart(2,'0') + '/' + dv2.getFullYear();
+  }
+
+  var s1 = codRec + '0' + String(Math.floor(rng()*99999+10000));
+  var s2 = String(Math.floor(rng()*9999999+1000000)) + '0';
+  var s3 = String(Math.floor(rng()*9999999+1000000)) + '0';
+  var dvN  = String(Math.floor(rng() * 9) + 1);
+  var val14 = String(Math.round(r.valor * 100)).padStart(14, '0');
+  var linha = s1.substring(0,5) + '.' + s1.substring(5) + ' ' +
+              s2.substring(0,6) + '.' + s2.substring(6) + ' ' +
+              s3.substring(0,6) + '.' + s3.substring(6) + ' ' +
+              dvN + ' ' + val14;
+
+  var valorStr = r.valor.toFixed(2);
+  var pixPayload = '00020126580014br.gov.bcb.pix0136' +
+    docNum.substring(0,8) + '-' + codRec + '-' + (dp[0]||'2026') + (dp[1]||'01') +
+    '5204' + codRec + '5303986' +
+    '54' + String(valorStr.length).padStart(2,'0') + valorStr +
+    '5802BR5920RECEITA FEDERAL BR6008BRASILIA' +
+    (isIBS ? '62070904IBS' : '62080804DARF') +
+    '6304' + Math.floor(rng()*0xFFFF).toString(16).toUpperCase().padStart(4,'0');
+
+  var badge = document.getElementById('darf-tipo-badge');
+  badge.textContent = isIBS ? 'Guia IBS' : 'DARF CBS';
+  badge.style.cssText = isIBS
+    ? 'display:inline-block;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:8px;background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)'
+    : 'display:inline-block;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:8px;background:rgba(245,158,11,.15);color:#F59E0B;border:1px solid rgba(245,158,11,.3)';
+
+  document.getElementById('darf-modal-title').textContent = 'Guia de Recolhimento';
+  document.getElementById('darf-modal-sub').textContent   = nomeTrib;
+  document.getElementById('darf-cod-receita').textContent = codRec;
+  document.getElementById('darf-periodo').textContent     = periodo;
+  document.getElementById('darf-cnpj').textContent        = r.cnpj;
+  document.getElementById('darf-numero').textContent      = docNum;
+  document.getElementById('darf-rf').textContent          = r.rf;
+  document.getElementById('darf-forn').textContent        = r.forn;
+  document.getElementById('darf-vencimento').textContent  = vencimento;
+  document.getElementById('darf-valor-imp').textContent   = _darfFmt(r.valor);
+  document.getElementById('darf-total').textContent       = _darfFmt(r.valor);
+  document.getElementById('darf-linha-digitavel').textContent = linha;
+  document.getElementById('darf-pix-payload').textContent = pixPayload;
+
+  window._darfLinha   = linha;
+  window._darfPix     = pixPayload;
+  window._darfAtual   = r;
+  window._darfSeedVal = seed;
+
+  var modal = document.getElementById('darf-modal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  setTimeout(function() {
+    window.darfTab('barcode');
+    _darfDrawBarcode(seed);
+    _darfDrawQR(seed);
+  }, 50);
+};
+
+window.fecharGuiaDARF = function() {
+  document.getElementById('darf-modal').style.display = 'none';
+  document.body.style.overflow = '';
+};
+
+window.darfTab = function(tab) {
+  var isBarcode = tab === 'barcode';
+  document.getElementById('darf-panel-barcode').style.display = isBarcode ? 'block' : 'none';
+  document.getElementById('darf-panel-pix').style.display     = isBarcode ? 'none'  : 'block';
+  var btnB = document.getElementById('darf-tab-btn-barcode');
+  var btnP = document.getElementById('darf-tab-btn-pix');
+  btnB.style.borderBottomColor = isBarcode ? 'var(--teal)' : 'transparent';
+  btnB.style.color             = isBarcode ? 'var(--teal)' : 'var(--txt2)';
+  btnB.style.fontWeight        = isBarcode ? '600' : '400';
+  btnP.style.borderBottomColor = isBarcode ? 'transparent' : 'var(--teal)';
+  btnP.style.color             = isBarcode ? 'var(--txt2)' : 'var(--teal)';
+  btnP.style.fontWeight        = isBarcode ? '400' : '600';
+  if (!isBarcode) setTimeout(function(){ _darfDrawQR(window._darfSeedVal || 0); }, 30);
+};
+
+window.copiarLinhaDigitavel = function() {
+  var btn = document.getElementById('darf-copy-btn');
+  navigator.clipboard.writeText(window._darfLinha || '').then(function() {
+    if (btn) { btn.textContent = 'Copiado!'; setTimeout(function(){ btn.textContent = 'Copiar'; }, 2000); }
+  });
+};
+
+window.copiarChavePix = function() {
+  var btn = document.getElementById('darf-pix-copy-btn');
+  navigator.clipboard.writeText(window._darfPix || '').then(function() {
+    if (btn) { btn.textContent = 'Copiado!'; setTimeout(function(){ btn.textContent = 'Copiar payload'; }, 2000); }
+  });
+};
+
+function _darfDrawBarcode(seed) {
+  var cv = document.getElementById('darf-barcode-canvas');
+  if (!cv) return;
+  var W   = cv.parentElement ? Math.max(200, cv.parentElement.offsetWidth - 32) : 500;
+  var H   = 72;
+  var dpr = window.devicePixelRatio || 1;
+  cv.width  = W * dpr;
+  cv.height = H * dpr;
+  cv.style.width  = W + 'px';
+  cv.style.height = H + 'px';
+  var ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, W, H);
+
+  var rng     = _darfRng(seed);
+  var numBars = 92;
+  var widths  = [];
+  for (var i = 0; i < numBars; i++) widths.push(Math.floor(rng() * 3) + 1);
+  var sum   = widths.reduce(function(a,b){return a+b;}, 0);
+  var avail = W - 28;
+  var x     = 14;
+  ctx.fillStyle = '#111111';
+  ctx.fillRect(x, 6, 2, H-14); x += 3;
+  ctx.fillRect(x, 6, 1, H-14); x += 3;
+  for (var i = 0; i < numBars; i++) {
+    var bw = Math.max(1, Math.round(widths[i] * avail / sum));
+    if (i % 2 === 0) ctx.fillRect(x, 6, bw, (i % 12 < 2) ? H-14 : H-26);
+    x += bw;
+  }
+  x = W - 16;
+  ctx.fillRect(x, 6, 1, H-14); x += 2;
+  ctx.fillRect(x, 6, 2, H-14);
+}
+
+function _darfDrawQR(seed) {
+  var cv = document.getElementById('darf-qr-canvas');
+  if (!cv) return;
+  var size = 160;
+  var dpr  = window.devicePixelRatio || 1;
+  cv.width  = size * dpr;
+  cv.height = size * dpr;
+  cv.style.width  = size + 'px';
+  cv.style.height = size + 'px';
+  var ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, size, size);
+
+  var cells = 25;
+  var cs    = Math.floor((size - 8) / cells);
+  var ox    = Math.floor((size - cells * cs) / 2);
+  var oy    = ox;
+  var rng   = _darfRng(seed);
+  var grid  = [];
+  for (var row = 0; row < cells; row++) {
+    grid[row] = [];
+    for (var col = 0; col < cells; col++) grid[row][col] = rng() > 0.48 ? 1 : 0;
+  }
+
+  function applyFinder(fr, fc) {
+    for (var dr = -1; dr <= 7; dr++) {
+      for (var dc = -1; dc <= 7; dc++) {
+        var rr = fr+dr, cc = fc+dc;
+        if (rr < 0 || rr >= cells || cc < 0 || cc >= cells) continue;
+        if (dr === -1 || dr === 7 || dc === -1 || dc === 7) { grid[rr][cc] = 0; }
+        else grid[rr][cc] = (dr===0||dr===6||dc===0||dc===6||(dr>=2&&dr<=4&&dc>=2&&dc<=4)) ? 1 : 0;
+      }
+    }
+  }
+  applyFinder(0, 0); applyFinder(0, cells-7); applyFinder(cells-7, 0);
+  for (var ti = 8; ti < cells-8; ti++) { grid[6][ti] = ti%2===0?1:0; grid[ti][6] = ti%2===0?1:0; }
+
+  ctx.fillStyle = '#111111';
+  for (var row = 0; row < cells; row++) for (var col = 0; col < cells; col++) if (grid[row][col]) ctx.fillRect(ox+col*cs, oy+row*cs, cs, cs);
+}
+
+window.downloadGuiaDARF = function() {
+  var r = window._darfAtual;
+  if (!r) return;
+  var isIBS    = r.tipo === 'Guia IBS';
+  var codRec   = isIBS ? '6912' : '5952';
+  var nomeTrib = isIBS ? 'IBS — Imposto sobre Bens e Serviços' : 'CBS — Contribuição sobre Bens e Serviços';
+  var doc     = document.getElementById('darf-numero').textContent;
+  var periodo = document.getElementById('darf-periodo').textContent;
+  var venc    = document.getElementById('darf-vencimento').textContent;
+  var total   = document.getElementById('darf-total').textContent;
+  var linha   = window._darfLinha || '—';
+  var bcCV    = document.getElementById('darf-barcode-canvas');
+  var qrCV    = document.getElementById('darf-qr-canvas');
+  var bcImg   = bcCV ? bcCV.toDataURL('image/png') : '';
+  var qrImg   = qrCV ? qrCV.toDataURL('image/png') : '';
+  var dataNow = new Date().toLocaleDateString('pt-BR');
+  var badgeCSS = isIBS ? 'background:#dbeafe;color:#1d4ed8' : 'background:#fef3c7;color:#92400e';
+
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Guia ' + (isIBS?'IBS':'DARF CBS') + ' – ' + doc + '</title>' +
+    '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#1a1a1a;padding:24px;max-width:680px;margin:0 auto}' +
+    'h1{font-size:16px;font-weight:700;margin-bottom:2px}.sub{font-size:11px;color:#666;margin-bottom:16px}' +
+    '.badge{display:inline-block;border-radius:3px;padding:2px 8px;font-size:10px;font-weight:700;margin-bottom:10px;' + badgeCSS + '}' +
+    '.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-bottom:16px}' +
+    '.field label{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#888;display:block;margin-bottom:2px}' +
+    '.field span{font-size:12px;font-weight:600;font-family:monospace}' +
+    '.total-box{background:#f0faf8;border:1px solid #a7f3d0;border-radius:6px;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}' +
+    '.total-box .lbl{font-size:13px;font-weight:600}.total-box .val{font-size:18px;font-weight:700;color:#059669;font-family:monospace}' +
+    'hr{border:none;border-top:1px solid #e5e7eb;margin:14px 0}' +
+    '.stitle{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:8px;font-weight:600}' +
+    '.bc-img{width:100%;height:68px;border:1px solid #e5e7eb;border-radius:4px;object-fit:fill}' +
+    '.linha{font-family:monospace;font-size:11px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:8px 10px;margin-top:8px;word-break:break-all;line-height:1.7}' +
+    '.pix-row{display:flex;gap:16px;align-items:flex-start;margin-top:6px}' +
+    '.pix-row img{width:110px;height:110px;border:1px solid #e5e7eb;border-radius:4px}' +
+    '.pix-payload{font-family:monospace;font-size:9px;color:#555;background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:6px 8px;word-break:break-all;line-height:1.6;flex:1}' +
+    '.footer{margin-top:20px;font-size:9px;color:#aaa;text-align:center;border-top:1px solid #e5e7eb;padding-top:10px}' +
+    '@media print{button{display:none}}' +
+    '</style></head><body>' +
+    '<div class="badge">' + (isIBS?'Guia IBS':'DARF CBS') + '</div>' +
+    '<h1>Guia de Recolhimento</h1>' +
+    '<div class="sub">' + nomeTrib + ' &nbsp;&middot;&nbsp; Emitido em ' + dataNow + '</div>' +
+    '<div class="grid">' +
+    '<div class="field"><label>Código de Receita</label><span>' + codRec + '</span></div>' +
+    '<div class="field"><label>Período de Apuração</label><span>' + periodo + '</span></div>' +
+    '<div class="field"><label>CNPJ do Contribuinte</label><span>' + r.cnpj + '</span></div>' +
+    '<div class="field"><label>Número do Documento</label><span>' + doc + '</span></div>' +
+    '<div class="field"><label>Referência RF</label><span>' + r.rf + '</span></div>' +
+    '<div class="field"><label>Fornecedor</label><span style="font-weight:500">' + r.forn + '</span></div>' +
+    '<div class="field"><label>Data de Vencimento</label><span>' + venc + '</span></div>' +
+    '<div class="field"><label>Valor do Imposto</label><span>' + total + '</span></div>' +
+    '<div class="field"><label>Multa</label><span style="color:#999">R$ 0,00</span></div>' +
+    '<div class="field"><label>Juros / Encargos</label><span style="color:#999">R$ 0,00</span></div>' +
+    '</div>' +
+    '<div class="total-box"><span class="lbl">Total a Recolher</span><span class="val">' + total + '</span></div>' +
+    '<hr><div class="stitle">Código de Barras</div>' +
+    '<img class="bc-img" src="' + bcImg + '">' +
+    '<div class="linha">' + linha + '</div>' +
+    '<hr><div class="stitle">Pagamento via PIX</div>' +
+    '<div class="pix-row"><img src="' + qrImg + '"><div class="pix-payload">' + (window._darfPix || '—') + '</div></div>' +
+    '<div class="footer">Gerado pelo SplitHub &nbsp;&middot;&nbsp; Positivo Tecnologia &nbsp;&middot;&nbsp; IBS/CBS — LC 214/2025 &nbsp;&middot;&nbsp; Documento sem validade fiscal sem autenticação da Receita Federal.</div>' +
+    '</body></html>';
+
+  var win = window.open('', '_blank', 'width=740,height=920');
+  if (!win) { alert('Permita pop-ups para baixar o PDF.'); return; }
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(function() { win.print(); }, 700);
 };
