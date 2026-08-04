@@ -987,108 +987,167 @@ tr:hover td{background:rgba(73,197,177,.02)}
 
 <!-- CONCILIAÇÃO -->
 <div id="view-conciliacao" class="view">
-  <div class="pg-hdr"><div><div class="pg-title">Conciliação</div><div class="pg-sub">Match DF-e × Pagamento × Crédito apropriado · Art. 48 LC 214</div></div></div>
-  <div class="kgrid k4">
-    <div class="kcard" style="border-top-color:var(--blue)"><div class="klbl">DF-e recebidos</div><div class="kval" id="conc-dfe">—</div><div class="ksub" id="conc-dfe-sub">NF-e processadas</div></div>
-    <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">RF vinculados</div><div class="kval" id="conc-rf">—</div><div class="ksub" id="conc-rf-sub">com RF registrado</div></div>
-    <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">TF confirmadas</div><div class="kval" id="conc-tf">—</div><div class="ksub" id="conc-tf-sub">com TF validada</div></div>
-    <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Divergências</div><div class="kval" id="conc-div">—</div><div class="ksub" id="conc-div-sub">em análise</div></div>
-  </div>
-  <div class="crd">
-    <div class="sechdr"><h2>Pipeline de conciliação</h2><p>Fluxo DF-e → RF → Pagamento → Crédito apropriado</p></div>
-    <div class="pipe">
-      <div class="pstep" style="border:1px solid rgba(59,130,246,.3)"><div class="pnum" style="color:var(--blue)" id="pipe-dfe">—</div><div class="plbl">DF-e recebido</div><div class="pdesc">NF-e/NFS-e via SEFAZ</div></div>
-      <div class="parr">→</div>
-      <div class="pstep" style="border:1px solid rgba(73,197,177,.3)"><div class="pnum" style="color:var(--teal)" id="pipe-rf">—</div><div class="plbl">RF extraído</div><div class="pdesc">Registro Fiscal identificado</div></div>
-      <div class="parr">→</div>
-      <div class="pstep" style="border:1px solid rgba(34,197,94,.3)"><div class="pnum" style="color:var(--green)" id="pipe-tf">—</div><div class="plbl">TF executada</div><div class="pdesc">Pix enviado à RFB + CG-IBS</div></div>
-      <div class="parr">→</div>
-      <div class="pstep" style="border:1px solid rgba(163,230,53,.3)"><div class="pnum" style="color:#A3E635" id="pipe-cred">—</div><div class="plbl">Crédito apropriado</div><div class="pdesc">Retorno Plataforma Centralizada</div></div>
+  <div class="pg-hdr">
+    <div>
+      <div class="pg-title">Conciliação</div>
+      <div class="pg-sub">Jornada de apropriação do crédito · Apuração Assistida × Governo · Conciliação Financeira · Art. 48 LC 214</div>
     </div>
-  </div>
-  <div class="crd" style="margin-bottom:24px">
-    <div class="sechdr"><h2>Filtros</h2><p>Filtre os DFs por RF, CNPJ, fornecedor, NF-e, status de conciliação ou inconsistência</p></div>
-    <div class="flt" style="margin-top:14px">
-      <input type="text" id="df-busca" placeholder="Buscar por RF, NF-e, CNPJ ou fornecedor…" oninput="conciliacaoRenderDFs()"/>
-      <select id="df-filtro-status" onchange="conciliacaoRenderDFs()">
-        <option value="">Status — todos</option>
-        <option value="confirmado">Conciliado</option>
-        <option value="aguardando">Aguardando TF</option>
-        <option value="em_risco">Em risco</option>
-        <option value="perdido">Divergência</option>
+    <div class="hdr-act">
+      <select id="conc-mes-select" onchange="window.conciliacaoFiltrarMes&&window.conciliacaoFiltrarMes()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;color:var(--txt1);font-family:inherit;cursor:pointer;outline:none">
+        <option value="">Todos os períodos</option>
+        <option value="2026-01">Jan 2026</option><option value="2026-02">Fev 2026</option><option value="2026-03">Mar 2026</option>
+        <option value="2026-04">Abr 2026</option><option value="2026-05">Mai 2026</option><option value="2026-06">Jun 2026</option>
+        <option value="2026-07">Jul 2026</option><option value="2026-08">Ago 2026</option><option value="2026-09">Set 2026</option>
+        <option value="2026-10">Out 2026</option><option value="2026-11">Nov 2026</option><option value="2026-12">Dez 2026</option>
       </select>
-      <select id="df-filtro-inconsistencia" onchange="conciliacaoRenderDFs()">
-        <option value="">Inconsistência — todas</option>
-        <option value="com">Com inconsistência</option>
-        <option value="sem">Sem inconsistência</option>
-      </select>
-      <button class="btn" onclick="conciliacaoLimparFiltros()">✕ Limpar filtros</button>
     </div>
   </div>
-  <div class="tcrd">
-    <div class="tcrd-hdr" style="flex-direction:column;align-items:flex-start;gap:10px">
-      <div class="sechdr" style="margin-bottom:0"><h2>Gestão de Registros Fiscais</h2><p id="rf-count-sub">0 RFs criados</p></div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-bottom:4px">
-        <input type="text" id="rf-gestao-busca" placeholder="Buscar RF / NF / Entidade…" oninput="rfFiltrarGestao()" style="background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none;width:200px"/>
-        <select id="rf-gestao-tipo-dfe" onchange="rfFiltrarGestao()" style="background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
-          <option value="">Tipo de DFe — todos</option>
-          <option value="entrada">Entrada</option>
-          <option value="saida">Saída</option>
+  <!-- KPIs -->
+  <div class="kgrid k5" style="margin-bottom:20px">
+    <div class="kcard" style="border-top-color:var(--blue)"><div class="klbl">DFs Processadas</div><div class="kval" id="conc-dfe">—</div><div class="ksub" id="conc-dfe-sub">ingeridas corretamente</div></div>
+    <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">Apuração Gov Confirmada</div><div class="kval" id="conc-kpi-apur">—</div><div class="ksub" id="conc-kpi-apur-sub">confirmadas na Apuração Assistida</div></div>
+    <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">Conciliação Financeira</div><div class="kval" id="conc-kpi-fin">—</div><div class="ksub" id="conc-kpi-fin-sub">IBS + CBS conciliados</div></div>
+    <div class="kcard" style="border-top-color:#22C55E"><div class="klbl">Crédito Apropriado</div><div class="kval" id="conc-rf">—</div><div class="ksub" id="conc-rf-sub">jornada concluída</div></div>
+    <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Inconsistências</div><div class="kval" id="conc-div">—</div><div class="ksub" id="conc-div-sub">requerem atenção</div></div>
+  </div>
+  <!-- Pipeline Jornada -->
+  <div class="crd" style="margin-bottom:20px">
+    <div class="sechdr"><h2>Jornada de Conciliação por DF</h2><p>Ciclo completo: ingestão → apuração gov → pagamento IBS → pagamento CBS → crédito apropriado</p></div>
+    <div class="pipe" style="margin-top:16px;overflow-x:auto">
+      <div class="pstep" style="border:1px solid rgba(59,130,246,.3)"><div class="pnum" style="color:var(--blue)" id="pipe-dfe">—</div><div class="plbl">DF Ingerida</div><div class="pdesc">Entrada correta no sistema</div></div>
+      <div class="parr">→</div>
+      <div class="pstep" style="border:1px solid rgba(73,197,177,.3)"><div class="pnum" style="color:var(--teal)" id="pipe-apur">—</div><div class="plbl">Gov Confirmou</div><div class="pdesc">Apuração Assistida</div></div>
+      <div class="parr">→</div>
+      <div class="pstep" style="border:1px solid rgba(59,130,246,.3)"><div class="pnum" style="color:var(--blue)" id="pipe-ibs">—</div><div class="plbl">IBS Pago</div><div class="pdesc">Guia IBS quitada</div></div>
+      <div class="parr">→</div>
+      <div class="pstep" style="border:1px solid rgba(245,158,11,.3)"><div class="pnum" style="color:var(--amber)" id="pipe-cbs">—</div><div class="plbl">CBS Pago</div><div class="pdesc">DARF CBS quitada</div></div>
+      <div class="parr">→</div>
+      <div class="pstep" style="border:1px solid rgba(163,230,53,.3)"><div class="pnum" style="color:#A3E635" id="pipe-cred">—</div><div class="plbl">Crédito Apropriado</div><div class="pdesc">Retorno Plataforma</div></div>
+    </div>
+    <div style="display:flex;gap:20px;margin-top:14px;font-size:11px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border)">
+      <span style="color:var(--txt3)">Apuração divergente: <span id="pipe-apur-div" style="color:var(--amber);font-weight:700">—</span></span>
+      <span style="color:var(--txt3)">Financeira inconsistente: <span id="pipe-fin-inc" style="color:var(--red);font-weight:700">—</span></span>
+      <span style="color:var(--txt3)">Aguardando pagamento: <span id="pipe-pend" style="color:#8B5CF6;font-weight:700">—</span></span>
+    </div>
+    <span id="pipe-rf" style="display:none"></span><span id="pipe-tf" style="display:none"></span>
+    <span id="conc-tf" style="display:none"></span><span id="conc-tf-sub" style="display:none"></span>
+  </div>
+  <!-- Tabs -->
+  <div class="stabs">
+    <button class="stab active" onclick="showSub('conc','apur',this)">Apuração Governo</button>
+    <button class="stab" onclick="showSub('conc','fin',this)">Conciliação Financeira</button>
+    <button class="stab" onclick="showSub('conc','rfs',this);rfRenderGestao()">Registros Fiscais</button>
+  </div>
+  <!-- Tab 1: Apuração Governo -->
+  <div id="conc-apur" class="sv active">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin-bottom:16px">
+      <div class="flt">
+        <input type="text" id="apur-busca" placeholder="Buscar por NF, fornecedor, CNPJ, protocolo…" oninput="window.concApuracaoFiltrar&&window.concApuracaoFiltrar()"/>
+        <select id="apur-tipo" onchange="window.concApuracaoFiltrar&&window.concApuracaoFiltrar()">
+          <option value="">Tipo DF — todos</option>
+          <option value="entrada">Entrada (Crédito)</option>
+          <option value="saida">Saída (Débito)</option>
         </select>
-        <select id="rf-gestao-tipo-fiscal" onchange="rfFiltrarGestao()" style="background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
-          <option value="">Tipo Fiscal — todos</option>
-          <option value="ibs">IBS</option>
-          <option value="cbs">CBS</option>
+        <select id="apur-status" onchange="window.concApuracaoFiltrar&&window.concApuracaoFiltrar()">
+          <option value="">Status Apuração — todos</option>
+          <option value="confirmado">Confirmado</option>
+          <option value="divergente">Divergente</option>
+          <option value="pendente">Pendente</option>
         </select>
-        <button class="btn" onclick="rfLimparFiltrosGestao()">✕ Limpar</button>
+        <button class="btn" onclick="window.concApuracaoLimpar&&window.concApuracaoLimpar()">✕ Limpar</button>
       </div>
     </div>
-    <div class="twrap"><table><thead><tr><th>ID RF</th><th>Tipo Fiscal</th><th>Tipo de DFe</th><th>NF Vinculada</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor</th><th class="r">NF Total</th><th class="r">NF Líquido</th><th>Status</th><th>Data</th><th>Inconsistência</th></tr></thead>
-    <tbody id="t-gestao-rfs"></tbody></table></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
-      <button class="btn" id="rf-btn-prev" onclick="rfPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:12px;color:var(--txt2)">Página</span>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:4px 12px;min-width:50px;text-align:center">
-          <span id="rf-pag-atual" style="color:var(--txt1);font-weight:600;font-size:13px">1</span>
-          <span style="color:var(--txt3);font-size:12px"> / </span>
-          <span id="rf-pag-total" style="color:var(--txt2);font-size:12px">1</span>
-        </div>
-        <span style="font-size:12px;color:var(--txt2)" id="rf-pag-info">(25 RFs por página)</span>
+    <div class="tcrd">
+      <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>Apuração Assistida — Governo</h2><p id="apur-sub">0 DFs</p></div></div>
+      <div class="twrap"><table><thead><tr>
+        <th>NF / DF</th><th>Tipo</th><th>Fornecedor / Cliente</th><th>CNPJ</th>
+        <th class="r">Valor DF</th><th class="r">Valor Gov</th><th class="r">Δ Valor</th>
+        <th>Protocolo Gov</th><th>Data Apuração</th><th>Status Apuração</th>
+      </tr></thead><tbody id="t-conc-apur"></tbody></table></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1px solid var(--border)">
+        <button class="btn" id="apur-btn-prev" onclick="window.concApuracaoPag&&window.concApuracaoPag(-1)" disabled style="opacity:.5">← Anterior</button>
+        <span style="font-size:12px;color:var(--txt2)">Pág. <span id="apur-pag-cur">1</span> / <span id="apur-pag-tot">1</span></span>
+        <button class="btn" id="apur-btn-prox" onclick="window.concApuracaoPag&&window.concApuracaoPag(1)">Próxima →</button>
       </div>
-      <button class="btn" id="rf-btn-prox" onclick="rfProximaPagina()">Próxima →</button>
     </div>
   </div>
-
-  <!-- ABA: LISTAGEM DE NFs -->
-  <div class="crd" style="margin-top:24px;display:none">
-    <div class="sechdr"><h2>Listagem de NFs de Entrada</h2><p>Notas Fiscais de entrada · fornecedores · créditos IBS + CBS · Aplique filtros para refinar a busca</p></div>
-    <div class="flt" style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end">
-      <input type="text" id="nf-busca" placeholder="Buscar por número, fornecedor, CNPJ…" oninput="nfRenderLista()"/>
-      <div style="display:flex;gap:10px">
-        <input type="date" id="nf-data-inicio" onchange="nfRenderLista()" style="flex:1"/>
-        <input type="date" id="nf-data-fim" onchange="nfRenderLista()" style="flex:1"/>
+  <!-- Tab 2: Conciliação Financeira -->
+  <div id="conc-fin" class="sv">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin-bottom:16px">
+      <div class="flt">
+        <input type="text" id="fin-busca" placeholder="Buscar por NF, fornecedor, CNPJ…" oninput="window.concFinanceiraFiltrar&&window.concFinanceiraFiltrar()"/>
+        <select id="fin-tipo" onchange="window.concFinanceiraFiltrar&&window.concFinanceiraFiltrar()">
+          <option value="">Tipo DF — todos</option>
+          <option value="entrada">Entrada (Crédito)</option>
+          <option value="saida">Saída (Débito)</option>
+        </select>
+        <select id="fin-status" onchange="window.concFinanceiraFiltrar&&window.concFinanceiraFiltrar()">
+          <option value="">Status — todos</option>
+          <option value="completo">Conciliado</option>
+          <option value="parcial">Parcial</option>
+          <option value="pendente">Pendente</option>
+          <option value="inconsistente">Inconsistente</option>
+        </select>
+        <button class="btn" onclick="window.concFinanceiraLimpar&&window.concFinanceiraLimpar()">✕ Limpar</button>
       </div>
-      <button class="btn" onclick="nfLimparFiltros()">✕ Limpar</button>
+    </div>
+    <div class="tcrd">
+      <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>Conciliação Financeira — IBS × CBS × Comprovante</h2><p id="fin-sub">0 DFs</p></div></div>
+      <div class="twrap"><table><thead><tr>
+        <th>NF / DF</th><th>Tipo</th><th>Fornecedor / Cliente</th>
+        <th class="r">IBS</th><th>Status IBS</th>
+        <th class="r">CBS</th><th>Status CBS</th>
+        <th>Comprovante</th><th>Status Final</th><th>Próxima Ação</th>
+      </tr></thead><tbody id="t-conc-fin"></tbody></table></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1px solid var(--border)">
+        <button class="btn" id="fin-btn-prev" onclick="window.concFinanceiraPag&&window.concFinanceiraPag(-1)" disabled style="opacity:.5">← Anterior</button>
+        <span style="font-size:12px;color:var(--txt2)">Pág. <span id="fin-pag-cur">1</span> / <span id="fin-pag-tot">1</span></span>
+        <button class="btn" id="fin-btn-prox" onclick="window.concFinanceiraPag&&window.concFinanceiraPag(1)">Próxima →</button>
+      </div>
     </div>
   </div>
-  <div class="tcrd">
-    <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>NFs encontradas</h2><p id="nf-count-sub">0 de 0 NFs exibidas</p></div></div>
-    <div class="twrap"><table><thead><tr><th>Número DF</th><th>Tipo DF</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor Total</th><th class="r">Valor Líq.</th><th class="r">CBS</th><th class="r">IBS</th><th>Status</th><th>Data</th><th>Chave DF</th></tr></thead>
-    <tbody id="t-listagem-nfs"></tbody></table></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
-      <button class="btn" id="nf-btn-prev" onclick="nfPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:12px;color:var(--txt2)">Página</span>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:4px 12px;min-width:50px;text-align:center">
-          <span id="nf-pag-atual" style="color:var(--txt1);font-weight:600;font-size:13px">1</span>
-          <span style="color:var(--txt3);font-size:12px"> / </span>
-          <span id="nf-pag-total" style="color:var(--txt2);font-size:12px">1</span>
+  <!-- Tab 3: Registros Fiscais -->
+  <div id="conc-rfs" class="sv">
+    <div class="tcrd">
+      <div class="tcrd-hdr" style="flex-direction:column;align-items:flex-start;gap:10px">
+        <div class="sechdr" style="margin-bottom:0"><h2>Gestão de Registros Fiscais</h2><p id="rf-count-sub">0 RFs</p></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-bottom:4px">
+          <input type="text" id="rf-gestao-busca" placeholder="Buscar RF / NF / Entidade…" oninput="rfFiltrarGestao()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none;width:200px"/>
+          <select id="rf-gestao-tipo-dfe" onchange="rfFiltrarGestao()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
+            <option value="">Tipo de DFe — todos</option>
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+          </select>
+          <select id="rf-gestao-tipo-fiscal" onchange="rfFiltrarGestao()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
+            <option value="">Tipo Fiscal — todos</option>
+            <option value="ibs">IBS</option>
+            <option value="cbs">CBS</option>
+          </select>
+          <button class="btn" onclick="rfLimparFiltrosGestao()">✕ Limpar</button>
         </div>
-        <span style="font-size:12px;color:var(--txt2)" id="nf-pag-info">(25 NFs por página)</span>
       </div>
-      <button class="btn" id="nf-btn-prox" onclick="nfProximaPagina()">Próxima →</button>
+      <div class="twrap"><table><thead><tr><th>ID RF</th><th>Tipo Fiscal</th><th>Tipo de DFe</th><th>NF Vinculada</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor</th><th class="r">NF Total</th><th class="r">NF Líquido</th><th>Status</th><th>Data</th><th>Inconsistência</th></tr></thead>
+      <tbody id="t-gestao-rfs"></tbody></table></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
+        <button class="btn" id="rf-btn-prev" onclick="rfPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:12px;color:var(--txt2)">Página</span>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:4px 12px;min-width:50px;text-align:center">
+            <span id="rf-pag-atual" style="color:var(--txt1);font-weight:600;font-size:13px">1</span>
+            <span style="color:var(--txt3);font-size:12px"> / </span>
+            <span id="rf-pag-total" style="color:var(--txt2);font-size:12px">1</span>
+          </div>
+          <span style="font-size:12px;color:var(--txt2)" id="rf-pag-info">(25 RFs por página)</span>
+        </div>
+        <button class="btn" id="rf-btn-prox" onclick="rfProximaPagina()">Próxima →</button>
+      </div>
     </div>
+  </div>
+  <!-- Compat: NFs listagem (hidden, referenced by pagination system) -->
+  <div style="display:none">
+    <table><tbody id="t-listagem-nfs"></tbody></table>
+    <span id="nf-count-sub"></span><span id="nf-pag-atual"></span><span id="nf-pag-total"></span>
+    <span id="nf-pag-info"></span><span id="nf-busca"></span>
   </div>
 </div>
 
@@ -4973,7 +5032,7 @@ fctRender();
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.js"></script>
-<script src="js/data-sync-fixed.js?v=18"></script>
+<script src="js/data-sync-fixed.js?v=19"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=4"></script>
 <script src="js/charts.js"></script>

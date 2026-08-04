@@ -790,36 +790,316 @@ window.atualizarKPIsDashboard = function() {
 // ESTATÍSTICAS DE CONCILIAÇÃO — derivadas de nfListaFiltradaGlobal
 // ============================================================
 
-window.atualizarEstatisticasConciliacao = function() {
+// ============================================================
+// CONCILIAÇÃO — hash determinístico + dados de apuração + financeira
+// ============================================================
+
+function _concHash(str) {
+  var h = 0;
+  for (var i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+var _apurDist = ['confirmado','confirmado','confirmado','confirmado','confirmado','confirmado','confirmado','divergente','divergente','pendente'];
+
+function _concBuildLista(filtroMes) {
   var lista = window.nfListaFiltradaGlobal || [];
-  var totalNFs = lista.length;
-  var totalRFs = 0, tfOk = 0, aprovados = 0, inconsist = 0;
-  lista.forEach(function(nf) {
+  var result = [];
+  lista.forEach(function(nf, idx) {
+    var seed = _concHash(nf.id + nf.numero + idx);
+    var statusApur = _apurDist[seed % 10];
+    var protocolo = 'APU2026-' + String(seed % 999999 + 1).padStart(6, '0');
+    var valorDF = 0;
+    var ibsRF = null, cbsRF = null;
     (nf.registrosFiscais || []).forEach(function(rf) {
-      totalRFs++;
-      var temPag = rf.dataPagamento && rf.dataPagamento !== '—';
-      var temExt = rf.dataExtincao  && rf.dataExtincao  !== '—';
-      if (temPag || temExt) tfOk++;
-      if (rf.status === 'apropriado' || rf.status === 'utilizado' || rf.status === 'extinto') aprovados++;
-      if (rf.status === 'inconsistencia') inconsist++;
+      valorDF += rf.valor || 0;
+      if (rf.tipoFiscal === 'ibs') ibsRF = rf;
+      if (rf.tipoFiscal === 'cbs') cbsRF = rf;
+    });
+    var valorGov = statusApur === 'divergente'
+      ? valorDF * (1 + ((seed % 7) - 3) * 0.003)
+      : valorDF;
+    var deltaValor = valorGov - valorDF;
+
+    var dataBase = nf.dataEmissao || nf.data || '2026-01-15';
+    if (filtroMes && !dataBase.startsWith(filtroMes)) return;
+
+    var apurDia = String((seed % 28) + 1).padStart(2, '0');
+    var apurMes = dataBase.substring(0, 7);
+    var dataApur = apurMes + '-' + apurDia;
+
+    // Financeira
+    var ibsPago = ibsRF && (ibsRF.dataPagamento && ibsRF.dataPagamento !== '—' ||
+      ibsRF.status === 'apropriado' || ibsRF.status === 'utilizado' || ibsRF.status === 'extinto');
+    var cbsPago = cbsRF && (cbsRF.dataPagamento && cbsRF.dataPagamento !== '—' ||
+      cbsRF.status === 'apropriado' || cbsRF.status === 'utilizado' || cbsRF.status === 'extinto');
+    var ibsInc = ibsRF && ibsRF.status === 'inconsistencia';
+    var cbsInc = cbsRF && cbsRF.status === 'inconsistencia';
+    var statusFin;
+    if (ibsInc || cbsInc) statusFin = 'inconsistente';
+    else if (ibsPago && cbsPago) statusFin = 'completo';
+    else if (ibsPago || cbsPago) statusFin = 'parcial';
+    else statusFin = 'pendente';
+    var comprovante = ibsPago && cbsPago;
+    var proxAcao = statusFin === 'completo' ? '—'
+      : statusFin === 'parcial'   ? 'Quitar imposto pendente'
+      : statusFin === 'pendente'  ? 'Emitir guia DARF/IBS'
+      : 'Resolver inconsistência';
+
+    result.push({
+      nf: nf, idx: idx,
+      statusApur: statusApur, protocolo: protocolo,
+      valorDF: valorDF, valorGov: valorGov, deltaValor: deltaValor, dataApur: dataApur,
+      ibsRF: ibsRF, cbsRF: cbsRF,
+      ibsPago: ibsPago, cbsPago: cbsPago, ibsInc: ibsInc, cbsInc: cbsInc,
+      statusFin: statusFin, comprovante: comprovante, proxAcao: proxAcao
     });
   });
-  var pctRF  = totalNFs  > 0 ? (totalRFs / totalNFs * 100).toFixed(1).replace('.', ',') : '0,0';
-  var pctTF  = totalRFs  > 0 ? (tfOk     / totalRFs * 100).toFixed(1).replace('.', ',') : '0,0';
-  var pctDiv = totalRFs  > 0 ? (inconsist / totalRFs * 100).toFixed(1).replace('.', ',') : '0,0';
-  function setEl(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; }
-  setEl('conc-dfe',     totalNFs.toLocaleString('pt-BR'));
-  setEl('conc-dfe-sub', 'NF-e · entrada e saída processadas');
-  setEl('conc-rf',      totalRFs.toLocaleString('pt-BR'));
-  setEl('conc-rf-sub',  pctRF + '% com RF registrado');
-  setEl('conc-tf',      tfOk.toLocaleString('pt-BR'));
-  setEl('conc-tf-sub',  pctTF + '% com TF validada');
-  setEl('conc-div',     inconsist.toLocaleString('pt-BR'));
-  setEl('conc-div-sub', pctDiv + '% — em análise');
-  setEl('pipe-dfe',  totalNFs.toLocaleString('pt-BR'));
-  setEl('pipe-rf',   totalRFs.toLocaleString('pt-BR'));
-  setEl('pipe-tf',   tfOk.toLocaleString('pt-BR'));
-  setEl('pipe-cred', aprovados.toLocaleString('pt-BR'));
+  return result;
+}
+
+window._concListaGlobal = [];
+window._concApurFiltrada = [];
+window._concApurPag = 1;
+var _concApurIpp = 25;
+window._concFinFiltrada = [];
+window._concFinPag = 1;
+var _concFinIpp = 25;
+
+function _concSetEl(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; }
+function _concFmt(v) {
+  if (Math.abs(v) >= 1e6) return 'R$ ' + (v/1e6).toFixed(2).replace('.',',') + 'M';
+  if (Math.abs(v) >= 1e3) return 'R$ ' + (v/1e3).toFixed(1).replace('.',',') + 'K';
+  return 'R$ ' + v.toFixed(2).replace('.',',');
+}
+
+function _apurBadge(s) {
+  var map = {confirmado:'var(--green)',divergente:'var(--amber)',pendente:'#8B5CF6'};
+  return '<span style="background:'+( map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+s+'</span>';
+}
+function _finBadge(s) {
+  var map = {completo:'var(--green)',parcial:'var(--blue)',pendente:'#8B5CF6',inconsistente:'var(--red)'};
+  var lbl = {completo:'Conciliado',parcial:'Parcial',pendente:'Pendente',inconsistente:'Inconsistente'};
+  return '<span style="background:'+(map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+(lbl[s]||s)+'</span>';
+}
+function _rfStatusBadge(rf) {
+  if (!rf) return '<span style="color:var(--txt3);font-size:10px">—</span>';
+  var color = {apropriado:'var(--green)',utilizado:'var(--teal)',extinto:'#22C55E',vencido:'var(--red)',nao_apropriado:'var(--amber)',inconsistencia:'#F43F5E'}[rf.status] || '#555';
+  return '<span style="background:'+color+';color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">'+(rf.status||'—')+'</span>';
+}
+
+window.atualizarEstatisticasConciliacao = function() {
+  var filtroMes = '';
+  var sel = document.getElementById('conc-mes-select');
+  if (sel) filtroMes = sel.value || '';
+  window._concListaGlobal = _concBuildLista(filtroMes);
+  var lista = window._concListaGlobal;
+
+  var totalDFs = lista.length;
+  var apurConf = 0, apurDiv = 0;
+  var finComp = 0, finInc = 0, finPend = 0;
+  var credAprop = 0;
+  lista.forEach(function(r) {
+    if (r.statusApur === 'confirmado') apurConf++;
+    if (r.statusApur === 'divergente') apurDiv++;
+    if (r.statusFin === 'completo')    finComp++;
+    if (r.statusFin === 'inconsistente') finInc++;
+    if (r.statusFin === 'pendente' || r.statusFin === 'parcial') finPend++;
+    if (r.statusApur === 'confirmado' && r.statusFin === 'completo') credAprop++;
+  });
+
+  var pctApur = totalDFs > 0 ? Math.round(apurConf / totalDFs * 100) : 0;
+  var pctFin  = totalDFs > 0 ? Math.round(finComp  / totalDFs * 100) : 0;
+  var pctCred = totalDFs > 0 ? Math.round(credAprop / totalDFs * 100) : 0;
+
+  _concSetEl('conc-dfe',    totalDFs.toLocaleString('pt-BR'));
+  _concSetEl('conc-dfe-sub','NF-e · entrada e saída processadas');
+  _concSetEl('conc-kpi-apur', apurConf.toLocaleString('pt-BR') + ' (' + pctApur + '%)');
+  _concSetEl('conc-kpi-apur-sub', 'de ' + totalDFs + ' DFs na Apuração Assistida');
+  _concSetEl('conc-kpi-fin', finComp.toLocaleString('pt-BR') + ' (' + pctFin + '%)');
+  _concSetEl('conc-kpi-fin-sub', 'IBS + CBS quitados com comprovante');
+  _concSetEl('conc-rf',    credAprop.toLocaleString('pt-BR') + ' (' + pctCred + '%)');
+  _concSetEl('conc-rf-sub','apuração + financeira completos');
+  _concSetEl('conc-div',   (apurDiv + finInc).toLocaleString('pt-BR'));
+  _concSetEl('conc-div-sub', apurDiv + ' apuração · ' + finInc + ' financeira');
+
+  // Pipeline
+  _concSetEl('pipe-dfe',  totalDFs.toLocaleString('pt-BR'));
+  _concSetEl('pipe-apur', apurConf.toLocaleString('pt-BR'));
+  var ibsPagoCount = lista.filter(function(r){ return r.ibsPago; }).length;
+  var cbsPagoCount = lista.filter(function(r){ return r.cbsPago; }).length;
+  _concSetEl('pipe-ibs',  ibsPagoCount.toLocaleString('pt-BR'));
+  _concSetEl('pipe-cbs',  cbsPagoCount.toLocaleString('pt-BR'));
+  _concSetEl('pipe-cred', credAprop.toLocaleString('pt-BR'));
+  _concSetEl('pipe-apur-div', apurDiv);
+  _concSetEl('pipe-fin-inc',  finInc);
+  _concSetEl('pipe-pend',     finPend);
+
+  // Inicializa tabs
+  window._concApurFiltrada = lista.slice();
+  window._concFinFiltrada  = lista.slice();
+  window._concApurPag = 1;
+  window._concFinPag  = 1;
+  _concApurRender();
+  _concFinRender();
+};
+
+function _concApurRender() {
+  var lista = window._concApurFiltrada || [];
+  var pag = window._concApurPag || 1;
+  var total = Math.ceil(lista.length / _concApurIpp) || 1;
+  if (pag > total) pag = total;
+  window._concApurPag = pag;
+  var start = (pag - 1) * _concApurIpp;
+  var slice = lista.slice(start, start + _concApurIpp);
+  _concSetEl('apur-sub', lista.length + ' DFs');
+  _concSetEl('apur-pag-cur', pag);
+  _concSetEl('apur-pag-tot', total);
+  var prev = document.getElementById('apur-btn-prev');
+  var prox = document.getElementById('apur-btn-prox');
+  if (prev) { prev.disabled = pag <= 1; prev.style.opacity = pag <= 1 ? '.5' : '1'; }
+  if (prox) { prox.disabled = pag >= total; prox.style.opacity = pag >= total ? '.5' : '1'; }
+  var tbody = document.getElementById('t-conc-apur');
+  if (!tbody) return;
+  if (!slice.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro encontrado.</td></tr>'; return; }
+  var html = '';
+  slice.forEach(function(r) {
+    var nf = r.nf;
+    var delta = r.deltaValor;
+    var deltaStr = delta === 0 ? '—' : (delta > 0 ? '+' : '') + _concFmt(delta);
+    var deltaColor = delta > 5 ? 'color:var(--amber)' : delta < -5 ? 'color:var(--red)' : 'color:var(--txt3)';
+    html += '<tr>'
+      + '<td style="font-weight:600;color:var(--txt1)">' + (nf.numero || nf.id) + '</td>'
+      + '<td>' + (nf.tipo === 'entrada' ? '<span style="color:var(--teal);font-size:10px;font-weight:700">ENTRADA</span>' : '<span style="color:var(--blue);font-size:10px;font-weight:700">SAÍDA</span>') + '</td>'
+      + '<td style="color:var(--txt2)">' + (nf.fornecedor || nf.cliente || '—') + '</td>'
+      + '<td style="font-family:monospace;font-size:11px;color:var(--txt3)">' + (nf.cnpj || '—') + '</td>'
+      + '<td class="r" style="font-family:monospace">' + _concFmt(r.valorDF) + '</td>'
+      + '<td class="r" style="font-family:monospace">' + _concFmt(r.valorGov) + '</td>'
+      + '<td class="r" style="font-family:monospace;' + deltaColor + '">' + deltaStr + '</td>'
+      + '<td style="font-family:monospace;font-size:11px;color:#8B5CF6">' + r.protocolo + '</td>'
+      + '<td style="color:var(--txt3);font-size:11px">' + r.dataApur + '</td>'
+      + '<td>' + _apurBadge(r.statusApur) + '</td>'
+      + '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+function _concFinRender() {
+  var lista = window._concFinFiltrada || [];
+  var pag = window._concFinPag || 1;
+  var total = Math.ceil(lista.length / _concFinIpp) || 1;
+  if (pag > total) pag = total;
+  window._concFinPag = pag;
+  var start = (pag - 1) * _concFinIpp;
+  var slice = lista.slice(start, start + _concFinIpp);
+  _concSetEl('fin-sub', lista.length + ' DFs');
+  _concSetEl('fin-pag-cur', pag);
+  _concSetEl('fin-pag-tot', total);
+  var prev = document.getElementById('fin-btn-prev');
+  var prox = document.getElementById('fin-btn-prox');
+  if (prev) { prev.disabled = pag <= 1; prev.style.opacity = pag <= 1 ? '.5' : '1'; }
+  if (prox) { prox.disabled = pag >= total; prox.style.opacity = pag >= total ? '.5' : '1'; }
+  var tbody = document.getElementById('t-conc-fin');
+  if (!tbody) return;
+  if (!slice.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro encontrado.</td></tr>'; return; }
+  var html = '';
+  slice.forEach(function(r) {
+    var nf = r.nf;
+    var ibsVal = r.ibsRF ? _concFmt(r.ibsRF.valor || 0) : '—';
+    var cbsVal = r.cbsRF ? _concFmt(r.cbsRF.valor || 0) : '—';
+    var comprIcon = r.comprovante
+      ? '<span style="color:var(--green);font-weight:700">✓ Sim</span>'
+      : '<span style="color:var(--txt3)">—</span>';
+    html += '<tr>'
+      + '<td style="font-weight:600;color:var(--txt1)">' + (nf.numero || nf.id) + '</td>'
+      + '<td>' + (nf.tipo === 'entrada' ? '<span style="color:var(--teal);font-size:10px;font-weight:700">ENTRADA</span>' : '<span style="color:var(--blue);font-size:10px;font-weight:700">SAÍDA</span>') + '</td>'
+      + '<td style="color:var(--txt2)">' + (nf.fornecedor || nf.cliente || '—') + '</td>'
+      + '<td class="r" style="font-family:monospace">' + ibsVal + '</td>'
+      + '<td>' + _rfStatusBadge(r.ibsRF) + '</td>'
+      + '<td class="r" style="font-family:monospace">' + cbsVal + '</td>'
+      + '<td>' + _rfStatusBadge(r.cbsRF) + '</td>'
+      + '<td style="text-align:center">' + comprIcon + '</td>'
+      + '<td>' + _finBadge(r.statusFin) + '</td>'
+      + '<td style="font-size:11px;color:var(--txt3)">' + r.proxAcao + '</td>'
+      + '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+window.concApuracaoFiltrar = function() {
+  var busca  = (document.getElementById('apur-busca')  || {}).value || '';
+  var tipo   = (document.getElementById('apur-tipo')   || {}).value || '';
+  var status = (document.getElementById('apur-status') || {}).value || '';
+  busca = busca.toLowerCase();
+  window._concApurFiltrada = (window._concListaGlobal || []).filter(function(r) {
+    var nf = r.nf;
+    if (tipo   && nf.tipo      !== tipo)   return false;
+    if (status && r.statusApur !== status) return false;
+    if (busca) {
+      var hay = [(nf.numero||''),(nf.id||''),(nf.fornecedor||''),(nf.cliente||''),(nf.cnpj||''),r.protocolo].join(' ').toLowerCase();
+      if (hay.indexOf(busca) === -1) return false;
+    }
+    return true;
+  });
+  window._concApurPag = 1;
+  _concApurRender();
+};
+
+window.concApuracaoPag = function(dir) {
+  var total = Math.ceil((window._concApurFiltrada || []).length / _concApurIpp) || 1;
+  window._concApurPag = Math.max(1, Math.min(total, (window._concApurPag || 1) + dir));
+  _concApurRender();
+};
+
+window.concApuracaoLimpar = function() {
+  var ids = ['apur-busca','apur-tipo','apur-status'];
+  ids.forEach(function(id) { var e = document.getElementById(id); if (e) e.value = ''; });
+  window._concApurFiltrada = (window._concListaGlobal || []).slice();
+  window._concApurPag = 1;
+  _concApurRender();
+};
+
+window.concFinanceiraFiltrar = function() {
+  var busca  = (document.getElementById('fin-busca')  || {}).value || '';
+  var tipo   = (document.getElementById('fin-tipo')   || {}).value || '';
+  var status = (document.getElementById('fin-status') || {}).value || '';
+  busca = busca.toLowerCase();
+  window._concFinFiltrada = (window._concListaGlobal || []).filter(function(r) {
+    var nf = r.nf;
+    if (tipo   && nf.tipo      !== tipo)   return false;
+    if (status && r.statusFin  !== status) return false;
+    if (busca) {
+      var hay = [(nf.numero||''),(nf.id||''),(nf.fornecedor||''),(nf.cliente||''),(nf.cnpj||'')].join(' ').toLowerCase();
+      if (hay.indexOf(busca) === -1) return false;
+    }
+    return true;
+  });
+  window._concFinPag = 1;
+  _concFinRender();
+};
+
+window.concFinanceiraPag = function(dir) {
+  var total = Math.ceil((window._concFinFiltrada || []).length / _concFinIpp) || 1;
+  window._concFinPag = Math.max(1, Math.min(total, (window._concFinPag || 1) + dir));
+  _concFinRender();
+};
+
+window.concFinanceiraLimpar = function() {
+  var ids = ['fin-busca','fin-tipo','fin-status'];
+  ids.forEach(function(id) { var e = document.getElementById(id); if (e) e.value = ''; });
+  window._concFinFiltrada = (window._concListaGlobal || []).slice();
+  window._concFinPag = 1;
+  _concFinRender();
+};
+
+window.conciliacaoFiltrarMes = function() {
+  window.atualizarEstatisticasConciliacao();
+};
+
+window.conciliacaoInit = function() {
+  window.atualizarEstatisticasConciliacao();
 };
 
 // ============================================================
@@ -3283,7 +3563,7 @@ window.dashIrParaDebitos = function() {
 window.dashIrParaConciliacao = function() {
   var btn = document.querySelector('.nav-btn[onclick*="conciliacao"]');
   if (typeof showView === 'function') showView('conciliacao', btn);
-  try { if (window.atualizarEstatisticasConciliacao) window.atualizarEstatisticasConciliacao(); } catch(e) {}
+  try { if (window.conciliacaoInit) window.conciliacaoInit(); } catch(e) {}
 };
 
 window.dashIrParaInconsistencias = function() {
