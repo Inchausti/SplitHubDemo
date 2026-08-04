@@ -971,7 +971,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
   </div>
   <div class="tcrd">
     <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>NFs encontradas</h2><p id="nf-count-sub">0 de 0 NFs exibidas</p></div></div>
-    <div class="twrap"><table><thead><tr><th>Número NF</th><th>Tipo de DFe</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor Total</th><th class="r">Valor Líq.</th><th class="r">CBS</th><th class="r">IBS</th><th>Status</th><th>Data</th><th>Chave NF-e</th></tr></thead>
+    <div class="twrap"><table><thead><tr><th>Número DF</th><th>Tipo DF</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor Total</th><th class="r">Valor Líq.</th><th class="r">CBS</th><th class="r">IBS</th><th>Status</th><th>Data</th><th>Chave DF</th></tr></thead>
     <tbody id="t-listagem-nfs"></tbody></table></div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
       <button class="btn" id="nf-btn-prev" onclick="nfPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
@@ -1046,7 +1046,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
   <div class="crd" style="margin-bottom:20px">
     <div class="sechdr"><h2>Filtros</h2><p>Filtre os DFs por chave, tipo, emitente, status ou resultado de validação</p></div>
     <div class="flt" style="margin-top:14px">
-      <input type="text" id="ing-busca" placeholder="Buscar por chave NF-e, CNPJ ou emitente…" oninput="ingestaoFiltrar()" style="min-width:260px"/>
+      <input type="text" id="ing-busca" placeholder="Buscar por chave DF, CNPJ ou emitente…" oninput="ingestaoFiltrar()" style="min-width:260px"/>
       <select id="ing-filtro-tipo" onchange="ingestaoFiltrar()">
         <option value="">Tipo de DF — todos</option>
         <option value="NF-e Entrada">NF-e Entrada</option>
@@ -1087,7 +1087,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
       <table>
         <thead>
           <tr>
-            <th>Chave NF-e</th>
+            <th>Chave DF</th>
             <th>Tipo DF</th>
             <th>Emitente</th>
             <th class="r">Valor</th>
@@ -1141,7 +1141,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
         <div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Data de Ingestão</div><div style="color:var(--txt1);font-weight:600" id="ing-modal-ingestao">—</div></div>
         <div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Valor do Documento</div><div style="color:var(--teal);font-weight:700;font-family:monospace;font-size:15px" id="ing-modal-valor">—</div></div>
         <div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">CFOP</div><div style="color:var(--txt1);font-family:monospace" id="ing-modal-cfop">—</div></div>
-        <div style="grid-column:1/3"><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Chave de Acesso NF-e</div><div style="color:var(--txt2);font-family:monospace;font-size:11px;word-break:break-all;line-height:1.6" id="ing-modal-chave-full">—</div></div>
+        <div style="grid-column:1/3"><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Chave DF</div><div style="color:var(--txt2);font-family:monospace;font-size:11px;word-break:break-all;line-height:1.6" id="ing-modal-chave-full">—</div></div>
       </div>
       <!-- Validações detalhadas -->
       <div style="font-size:12px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">Resultado das Validações</div>
@@ -1202,7 +1202,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
         <div id="nf-detail-data" style="color:var(--txt1);font-weight:600">—</div>
       </div>
       <div style="grid-column:1/3">
-        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Chave de Acesso NF-e</div>
+        <div style="color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">Chave DF</div>
         <div id="nf-detail-chave" style="color:var(--txt2);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;word-break:break-all;line-height:1.7">—</div>
       </div>
       <div style="grid-column:1/3;border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
@@ -3247,20 +3247,31 @@ function rfPaginaAnterior(){
 
 var nfPaginaAtual=1;var nfListaFiltradaGlobal=[];var nfTotalGlobal=0;var nfItensPorPagina=25;var nfExpandidas={};var rfIdCounter=0;
 function nfGerarIdRegistroFiscal(){return 'RF-'+String(++rfIdCounter).padStart(8,'0');}
-function gerarChaveNFe(cnpj,numero,data){
+var _dfTiposGlobal=['NF-e','NF-e','NF-e','NFC-e','NFCom','NF3-e','NFS-e','CT-e','CT-e','NFAg','NFGás','MDF-e','BP-e'];
+var _dfModCodes={'NF-e':'55','NFC-e':'65','NFCom':'62','NF3-e':'66','CT-e':'57','NFAg':'01','NFGás':'59','MDF-e':'58','BP-e':'63'};
+function _getDFTipoParaNF(numero){var n=parseInt(numero,10)||1;return _dfTiposGlobal[n%_dfTiposGlobal.length];}
+function gerarChaveDF(tipoDF,cnpj,numero,data){
   var cnpjD=(cnpj||'').replace(/\D/g,'').padEnd(14,'0').slice(0,14);
   var parts=(data||'2026-01-01').split('-');
   var aamm=(parts[0]||'2026').slice(2)+(parts[1]||'01');
-  var nNF=String(parseInt(numero,10)||1).padStart(9,'0');
   var seed=parseInt(numero,10)||1;
+  var nNF=String(seed).padStart(9,'0');
   var cNF=String((seed*31337+12345)%100000000).padStart(8,'0');
-  var base='35'+aamm+cnpjD+'55001'+nNF+'1'+cNF;
+  if(tipoDF==='NFS-e'){
+    var cMun='3550308';var cServ=String((seed*7+1)%100000).padStart(5,'0');
+    var nNFS=String((seed*137+42)%1000000000000000).padStart(15,'0').slice(0,15);
+    var comp=aamm+'01';var dvNFS=String((seed*31+17)%1000).padStart(3,'0');
+    return cMun+cServ+nNFS+cnpjD+comp+dvNFS;
+  }
+  var mod=_dfModCodes[tipoDF]||'55';
+  var base='35'+aamm+cnpjD+mod+'001'+nNF+'1'+cNF;
   var w=[2,3,4,5,6,7,8,9];var sum=0;
   for(var i=base.length-1,wi=0;i>=0;i--,wi++)sum+=parseInt(base[i],10)*w[wi%8];
   var rem=sum%11;
   return base+((rem===0||rem===1)?'0':String(11-rem));
 }
-function formatarChaveNFe(c){return c.replace(/(.{4})(?=.)/g,'$1 ');}
+function formatarChaveDF(c){if(!c)return'—';return c.replace(/(.{4})(?=.)/g,'$1 ');}
+function gerarChaveNFe(cnpj,numero,data){return gerarChaveDF('NF-e',cnpj,numero,data);}
 function nfRenderLista(){
   var buscaEl=document.getElementById("nf-busca");
   var tipoEl=document.getElementById("nf-filtro-tipo");
@@ -3290,10 +3301,12 @@ function nfRenderLista(){
       var valorBruto=valorLiquido+cbs+ibs;
 
       // Registro NF de Entrada
+      var _tipoDF_ent=_getDFTipoParaNF(nf.numero);
       var nfRecord={
         numero:nf.numero,
         tipo:'entrada',
         subTipo:'nf',
+        tipoDF:_tipoDF_ent,
         entidade:nf.fornecedor,
         cnpj:nf.cnpj,
         valorTotal:valorBruto,
@@ -3302,7 +3315,7 @@ function nfRenderLista(){
         ibs:ibs,
         data:nf.data,
         status:statusCred,
-        chaveAcesso:gerarChaveNFe(nf.cnpj,nf.numero,nf.data),
+        chaveDF:gerarChaveDF(_tipoDF_ent,nf.cnpj,nf.numero,nf.data),
         registrosFiscais:[]
       };
 
@@ -3357,19 +3370,23 @@ function nfRenderLista(){
       var statusDeb=statusDebitos[i%statusDebitos.length];
 
       var nfSaidaNum=String(i+500000).padStart(6,'0');
+      var _tipoDF_sai=_getDFTipoParaNF(nfSaidaNum);
+      var _dataSai='2026-'+String(mes).padStart(2,'0')+'-'+String(dia).padStart(2,'0');
+      var _cnpjSai='12.345.678/000'+String(i%100).padStart(2,'0');
       var nfSaidaRecord={
         numero:nfSaidaNum,
         tipo:'saida',
         subTipo:'nf',
+        tipoDF:_tipoDF_sai,
         entidade:clientes[i%clientes.length],
-        cnpj:'12.345.678/000'+String(i%100).padStart(2,'0'),
+        cnpj:_cnpjSai,
         valorTotal:valorSaidaBruto,
         valorLiquido:valorSaidaLiq,
         cbs:cbsSaida,
         ibs:ibsSaida,
-        data:'2026-'+String(mes).padStart(2,'0')+'-'+String(dia).padStart(2,'0'),
+        data:_dataSai,
         status:statusDeb,
-        chaveAcesso:gerarChaveNFe('12345678000'+String(i%100).padStart(2,'0'),nfSaidaNum,'2026-'+String(mes).padStart(2,'0')+'-'+String(dia).padStart(2,'0')),
+        chaveDF:gerarChaveDF(_tipoDF_sai,_cnpjSai,nfSaidaNum,_dataSai),
         registrosFiscais:[]
       };
 
@@ -3423,7 +3440,7 @@ function nfRenderLista(){
   // Aplicar filtros
   nfListaFiltradaGlobal=todosRegistros.filter(function(r){
     if(busca){
-      var alvo=(r.numero+" "+r.entidade+" "+r.cnpj+" "+(r.tributo||'nf')).toLowerCase();
+      var alvo=(r.numero+" "+r.entidade+" "+r.cnpj+" "+(r.tributo||'nf')+" "+(r.tipoDF||'')).toLowerCase();
       if(alvo.indexOf(busca)===-1)return false;
     }
     if(tipoFiltro&&r.tipo!==tipoFiltro)return false;
@@ -3453,7 +3470,10 @@ function nfRenderPagina(){
 
   var h="";
   listaPagina.forEach(function(r){
-    var tipoBadge=r.tipo==='entrada'?'<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>':'<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
+    var _dfT=r.tipoDF||'NF-e';
+    var _dfColors={'NF-e':['rgba(59,130,246,.12)','#3B82F6','rgba(59,130,246,.25)'],'NFC-e':['rgba(99,102,241,.12)','#6366F1','rgba(99,102,241,.25)'],'NFCom':['rgba(16,185,129,.12)','#10B981','rgba(16,185,129,.25)'],'NF3-e':['rgba(20,184,166,.12)','#14B8A6','rgba(20,184,166,.25)'],'NFS-e':['rgba(34,197,94,.12)','#22C55E','rgba(34,197,94,.25)'],'CT-e':['rgba(245,158,11,.12)','#F59E0B','rgba(245,158,11,.25)'],'NFAg':['rgba(132,204,22,.12)','#84CC16','rgba(132,204,22,.25)'],'NFGás':['rgba(234,179,8,.12)','#EAB308','rgba(234,179,8,.25)'],'MDF-e':['rgba(168,85,247,.12)','#A855F7','rgba(168,85,247,.25)'],'BP-e':['rgba(73,197,177,.12)','var(--teal)','rgba(73,197,177,.25)']};
+    var _dc=_dfColors[_dfT]||_dfColors['NF-e'];
+    var tipoBadge='<span style="background:'+_dc[0]+';color:'+_dc[1]+';border:1px solid '+_dc[2]+';border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">'+_dfT+'</span>';
 
     var statusBadge='';
     if(r.status==='nao_apropriado'){
@@ -3474,9 +3494,11 @@ function nfRenderPagina(){
     var isExpanded=nfExpandidas[expandKey];
     var arrow=isExpanded?'▼':'▶';
 
-    var chave=r.chaveAcesso||'';
+    var chave=r.chaveDF||'';
+    var chaveLen=chave.length;
     var chaveTrunc=chave?(chave.slice(0,4)+' '+chave.slice(4,8)+' '+chave.slice(8,12)+' …'):'—';
-    h+='<tr><td class="mono" style="color:#3B82F6;font-weight:600;display:flex;gap:8px;align-items:center"><button class="nf-expand" onclick="nfToggleExpand(\''+expandKey+'\')">'+arrow+'</button><button style="background:none;border:none;color:#3B82F6;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit" onclick="nfAbrirDetalhes('+idx+')">NF-'+r.numero+'</button></td>'
+    var numLabel=_dfT+' '+r.numero;
+    h+='<tr><td class="mono" style="color:#3B82F6;font-weight:600;display:flex;gap:8px;align-items:center"><button class="nf-expand" onclick="nfToggleExpand(\''+expandKey+'\')">'+arrow+'</button><button style="background:none;border:none;color:#3B82F6;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:11px" onclick="nfAbrirDetalhes('+idx+')">'+numLabel+'</button></td>'
       +'<td>'+tipoBadge+'</td>'
       +'<td>'+r.entidade+'</td>'
       +'<td class="mono" style="font-size:11px;color:var(--txt2)">'+r.cnpj+'</td>'
@@ -3486,13 +3508,13 @@ function nfRenderPagina(){
       +'<td class="r mono" style="font-size:11px;font-weight:600;color:'+(r.ibs>0?'#3B82F6':'var(--txt3)')+'">'+ff(r.ibs)+'</td>'
       +'<td>'+statusBadge+'</td>'
       +'<td style="font-size:12px;color:var(--txt2)">'+dataFormatada+'</td>'
-      +'<td class="mono" style="font-size:10px;color:var(--txt3)" title="'+chave+'">'+chaveTrunc+'</td></tr>';
+      +'<td class="mono" style="font-size:10px;color:var(--txt3)" title="'+chave+' ('+chaveLen+' dígitos)">'+chaveTrunc+'</td></tr>';
 
     if(isExpanded && r.registrosFiscais && r.registrosFiscais.length){
       r.registrosFiscais.forEach(function(rf){
         var rfValorLabel=rf.tipoFiscal==='ibs'?'IBS':'CBS';
         var rfCorLabel=rf.tipoFiscal==='ibs'?'#3B82F6':'#F59E0B';
-        h+='<tr><td colspan="10"><div class="nf-fiscal" draggable="true" ondragstart="nfDragStart(event,\''+rf.id+'\',\''+r.numero+'\',\''+rf.tipoFiscal+'\')" ondragend="nfDragEnd(event)"><span class="nf-fiscal-tipo" style="color:'+rfCorLabel+'">'+rfValorLabel+'</span><span class="nf-fiscal-valor" style="color:'+rfCorLabel+'">'+ff(rf.valor)+'</span><span style="font-size:11px;color:var(--txt2)">'+rf.id+' • NF-'+r.numero+'</span></div></td></tr>';
+        h+='<tr><td colspan="11"><div class="nf-fiscal" draggable="true" ondragstart="nfDragStart(event,\''+rf.id+'\',\''+r.numero+'\',\''+rf.tipoFiscal+'\')" ondragend="nfDragEnd(event)"><span class="nf-fiscal-tipo" style="color:'+rfCorLabel+'">'+rfValorLabel+'</span><span class="nf-fiscal-valor" style="color:'+rfCorLabel+'">'+ff(rf.valor)+'</span><span style="font-size:11px;color:var(--txt2)">'+rf.id+' • '+(r.tipoDF||'DF')+' '+r.numero+'</span></div></td></tr>';
       });
     }
   });
@@ -4817,7 +4839,7 @@ fctRender();
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.js"></script>
-<script src="js/data-sync-fixed.js?v=10"></script>
+<script src="js/data-sync-fixed.js?v=11"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=4"></script>
 <script src="js/charts.js"></script>

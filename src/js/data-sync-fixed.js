@@ -184,11 +184,19 @@ window.iniciarPaginacaoUniversal = function() {
 window.renderizarListaNFs = function() {
   var lista = (window.nfListaFiltradaGlobal || []).filter(function(nf) { return nf.tipo === 'entrada'; });
 
+  var _dfColorsMap = {
+    'NF-e':   ['59,130,246','#3B82F6'], 'NFC-e':  ['99,102,241','#6366F1'],
+    'NFCom':  ['16,185,129','#10B981'], 'NF3-e':  ['20,184,166','#14B8A6'],
+    'NFS-e':  ['34,197,94','#22C55E'], 'CT-e':   ['245,158,11','#F59E0B'],
+    'NFAg':   ['132,204,22','#84CC16'],'NFGás':  ['234,179,8','#EAB308'],
+    'MDF-e':  ['168,85,247','#A855F7'],'BP-e':   ['73,197,177','var(--teal)']
+  };
+
   var h = '';
   lista.forEach(function(r) {
-    var tipoBadge = r.tipo === 'entrada'
-      ? '<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>'
-      : '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
+    var _dfT = r.tipoDF || 'NF-e';
+    var _dc = _dfColorsMap[_dfT] || _dfColorsMap['NF-e'];
+    var tipoBadge = '<span style="background:rgba(' + _dc[0] + ',.12);color:' + _dc[1] + ';border:1px solid rgba(' + _dc[0] + ',.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + _dfT + '</span>';
 
     var statusMap = {
       'nao_apropriado': ['244,63,94','#F43F5E','Não Apropriado'],
@@ -203,8 +211,12 @@ window.renderizarListaNFs = function() {
     var dataParts = r.data.split('-');
     var dataFormatada = dataParts[2] + '/' + dataParts[1] + '/' + dataParts[0];
 
+    var chave = r.chaveDF || '';
+    var chaveTrunc = chave ? (chave.slice(0,4) + ' ' + chave.slice(4,8) + ' ' + chave.slice(8,12) + ' …') : '—';
+    var numLabel = _dfT + ' ' + r.numero;
+
     h += '<tr>'
-      + '<td class="mono"><button onclick="window.abrirDetalhesNFporNumero(\'' + r.numero + '\')" style="background:none;border:none;color:#3B82F6;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:inherit">NF-' + r.numero + '</button></td>'
+      + '<td class="mono"><button onclick="window.abrirDetalhesNFporNumero(\'' + r.numero + '\')" style="background:none;border:none;color:#3B82F6;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:11px">' + numLabel + '</button></td>'
       + '<td>' + tipoBadge + '</td>'
       + '<td>' + r.entidade + '</td>'
       + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + r.cnpj + '</td>'
@@ -214,11 +226,12 @@ window.renderizarListaNFs = function() {
       + '<td class="r mono" style="font-size:11px;font-weight:600;color:' + (r.ibs > 0 ? '#3B82F6' : 'var(--txt3)') + '">' + ffz(r.ibs) + '</td>'
       + '<td>' + statusBadge + '</td>'
       + '<td style="font-size:12px;color:var(--txt2)">' + dataFormatada + '</td>'
+      + '<td class="mono" style="font-size:10px;color:var(--txt3)" title="' + chave + ' (' + chave.length + ' dígitos)">' + chaveTrunc + '</td>'
       + '</tr>';
   });
 
   if (!lista.length) {
-    h = '<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma NF encontrada para este filtro.</td></tr>';
+    h = '<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma NF encontrada para este filtro.</td></tr>';
   }
 
   var tbody = document.getElementById('t-listagem-nfs');
@@ -252,7 +265,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     if (el) el.textContent = val;
   }
 
-  setEl('nf-detail-numero',        'NF-' + r.numero);
+  setEl('nf-detail-numero',        (r.tipoDF || 'DF') + ' ' + r.numero);
   setEl('nf-detail-tipo',          tipoLabel);
   setEl('nf-detail-entidade',      r.entidade);
   setEl('nf-detail-cnpj',          r.cnpj);
@@ -263,7 +276,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   setEl('nf-detail-status',        statusLabels[r.status] || r.status);
   setEl('nf-detail-data',          dataFormatada);
   var chaveEl = document.getElementById('nf-detail-chave');
-  if (chaveEl) chaveEl.textContent = r.chaveAcesso ? r.chaveAcesso.replace(/(.{4})(?=.)/g, '$1 ') : '—';
+  if (chaveEl) chaveEl.textContent = r.chaveDF ? r.chaveDF.replace(/(.{4})(?=.)/g, '$1 ') : '—';
 
   var fiscaisHtml = '';
   if (r.registrosFiscais && r.registrosFiscais.length) {
@@ -480,7 +493,7 @@ window.renderizarTabelaCreditos = function() {
             rf: rf.id,
             tipoFiscal: tipoFiscalLabel,
             tipoNF: rf.tipoNF || nf.tipo || 'entrada',
-            nf: 'NF-' + rf.nfVinculada,
+            nf: (nf.tipoDF || 'DF') + ' ' + rf.nfVinculada,
             nfNumero: rf.nfVinculada,
             forn: rf.entidade,
             cnpj: rf.cnpj,
@@ -821,7 +834,7 @@ window.renderizarRFsInconsistencias = function() {
         id:        rf.id || '—',
         tf:        rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
         tipoNF:    tipoNF,
-        nfVinc:    'NF-' + (rf.nfVinculada || nf.numero || ''),
+        nfVinc:    (nf.tipoDF || 'DF') + ' ' + (rf.nfVinculada || nf.numero || ''),
         forn:      (rf.entidade || nf.entidade || '—'),
         cnpj:      rf.cnpj || nf.cnpj || '—',
         valor:     rf.valor || 0,
@@ -1362,7 +1375,7 @@ window.renderizarTabelaDebitos = function() {
           rf:   rf.id || '—',
           tf:   rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
           tipoNF: rf.tipoNF || nf.tipo || 'saida',
-          nf:   'NF-' + (rf.nfVinculada || nf.numero || ''),
+          nf:   (nf.tipoDF || 'DF') + ' ' + (rf.nfVinculada || nf.numero || ''),
           dataNF: rf.data || '',
           data: dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
           cliente:   rf.entidade || nf.entidade || '—',
@@ -2657,6 +2670,30 @@ document.addEventListener('DOMContentLoaded', function() {
         // Inicializar contador de RF
         window._rfIdCounter = 0;
 
+        // Geradores locais de Tipo DF e Chave DF (espelham index.html para o path de fallback)
+        var _dfTiposLoc=['NF-e','NF-e','NF-e','NFC-e','NFCom','NF3-e','NFS-e','CT-e','CT-e','NFAg','NFGás','MDF-e','BP-e'];
+        var _dfModLoc={'NF-e':'55','NFC-e':'65','NFCom':'62','NF3-e':'66','CT-e':'57','NFAg':'01','NFGás':'59','MDF-e':'58','BP-e':'63'};
+        function _getTipoDFLoc(numero){var n=parseInt(numero,10)||1;return _dfTiposLoc[n%_dfTiposLoc.length];}
+        function _gerarChaveDFLoc(tipoDF,cnpj,numero,data){
+          var cnpjD=(cnpj||'').replace(/\D/g,'').padEnd(14,'0').slice(0,14);
+          var parts=(data||'2026-01-01').split('-');
+          var aamm=(parts[0]||'2026').slice(2)+(parts[1]||'01');
+          var seed=parseInt(numero,10)||1;
+          var nNF=String(seed).padStart(9,'0');
+          var cNF=String((seed*31337+12345)%100000000).padStart(8,'0');
+          if(tipoDF==='NFS-e'){
+            var cMun='3550308';var cServ=String((seed*7+1)%100000).padStart(5,'0');
+            var nNFS=String((seed*137+42)%1000000000000000).padStart(15,'0').slice(0,15);
+            var comp=aamm+'01';var dvNFS=String((seed*31+17)%1000).padStart(3,'0');
+            return cMun+cServ+nNFS+cnpjD+comp+dvNFS;
+          }
+          var mod=_dfModLoc[tipoDF]||'55';
+          var base='35'+aamm+cnpjD+mod+'001'+nNF+'1'+cNF;
+          var w=[2,3,4,5,6,7,8,9];var sum=0;
+          for(var i=base.length-1,wi=0;i>=0;i--,wi++)sum+=parseInt(base[i],10)*w[wi%8];
+          var rem=sum%11;return base+((rem===0||rem===1)?'0':String(11-rem));
+        }
+
         // Coletar NFs de entrada
         var nfsEntrada = window.dataSyncFixed.getNFsEntrada();
         // Meses para distribuição das NFs (correspondente aos demais gráficos do dashboard)
@@ -2684,10 +2721,12 @@ document.addEventListener('DOMContentLoaded', function() {
             : (Math.random() < 0.5);
           var metodoPagamento = rad ? 'RAD' : 'Fornecedor';
 
+          var _tipoDFEnt = _getTipoDFLoc(nf.numero);
           var nfRecord = {
             numero: nf.numero,
             tipo: 'entrada',
             subTipo: 'nf',
+            tipoDF: _tipoDFEnt,
             entidade: nf.fornecedor,
             cnpj: nf.cnpj,
             valorTotal: valorBruto,
@@ -2698,6 +2737,7 @@ document.addEventListener('DOMContentLoaded', function() {
             status: statusCred,
             contratoId: contratoId,
             metodoPagamento: metodoPagamento,
+            chaveDF: _gerarChaveDFLoc(_tipoDFEnt, nf.cnpj, nf.numero, dataEfetiva),
             registrosFiscais: []
           };
 
@@ -2793,13 +2833,18 @@ document.addEventListener('DOMContentLoaded', function() {
           var _mp     = _mes.split('-');
           var _dtExt  = _stS === 'extinto' ? (_extDay + '/' + _mp[1] + '/' + _mp[0] + ' 09:00') : '—';
 
+          var _tipoDFSai = _getTipoDFLoc(_nsNum);
+          var _cnpjSai = '12.345.678/000' + String(_si % 100).padStart(2, '0');
           var _nfS = {
             numero: _nsNum, tipo: 'saida', subTipo: 'nf',
+            tipoDF: _tipoDFSai,
             entidade: _clientesSaida[_si % _clientesSaida.length],
-            cnpj: '12.345.678/000' + String(_si % 100).padStart(2, '0'),
+            cnpj: _cnpjSai,
             valorTotal: _vbrut, valorLiquido: _vliq, cbs: _cbs, ibs: _ibs,
             data: _dataS, status: _stS === 'extinto' ? 'extinto' : 'nao_extinto',
-            contratoId: null, registrosFiscais: []
+            contratoId: null,
+            chaveDF: _gerarChaveDFLoc(_tipoDFSai, _cnpjSai, _nsNum, _dataS),
+            registrosFiscais: []
           };
 
           // RF IBS — mesma estrutura de RF de entrada (dataPagamento → dataExtincao, metodoPagamento → metodoExtincao)
@@ -3390,7 +3435,7 @@ window.downloadGuiaDARF = function() {
     { nome: 'Votorantim S.A.', cnpj: '73.406.527/0001-74' }
   ];
 
-  var _tipos = ['NF-e Entrada', 'NF-e Entrada', 'NF-e Entrada', 'NF-e Saída', 'NF-e Saída', 'NFS-e', 'CT-e'];
+  var _tipos = ['NF-e Entrada', 'NF-e Entrada', 'NF-e Entrada', 'NF-e Saída', 'NF-e Saída', 'NFC-e', 'NFCom', 'NF3-e', 'NFS-e', 'CT-e', 'CT-e', 'NFAg', 'NFGás', 'MDF-e', 'BP-e'];
   var _cfops = ['1101', '1102', '1201', '1401', '2101', '5101', '5102', '5201', '6101', '7101'];
   var _statusDist = [
     'integrado','integrado','integrado','integrado','integrado','integrado','integrado','integrado','integrado',
@@ -3416,18 +3461,27 @@ window.downloadGuiaDARF = function() {
     return p[2] + '/' + p[1] + '/' + p[0];
   }
 
-  function _chave(rnd, emit, seq) {
-    var cuf = '35';
-    var aamm = '2601';
+  var _ingModCodes = {'NF-e Entrada':'55','NF-e Saída':'55','NFC-e':'65','NFCom':'62','NF3-e':'66','CT-e':'57','NFAg':'01','NFGás':'59','MDF-e':'58','BP-e':'63'};
+
+  function _chave(rnd, emit, seq, tipo) {
     var cnpj = emit.cnpj.replace(/\D/g, '');
-    var mod = '55';
-    var serie = '001';
+    var aamm = '2601';
     var nNF = String(seq + 1).padStart(9, '0');
-    var tpEmis = '1';
-    var cNF = String(Math.floor(rnd() * 90000000) + 10000000);
-    var base = cuf + aamm + cnpj + mod + serie + nNF + tpEmis + cNF;
-    var dv = String(Math.floor(rnd() * 9) + 1);
-    return base + dv;
+    var cNF = String(Math.floor(rnd() * 90000000) + 10000000).padStart(8, '0');
+    if (tipo === 'NFS-e') {
+      var cMun = '3550308';
+      var cServ = String(Math.floor(rnd() * 100000)).padStart(5, '0');
+      var nNFS = String(Math.floor(rnd() * 1e14)).padStart(15, '0').slice(0, 15);
+      var comp = aamm + '01';
+      var dvNFS = String(Math.floor(rnd() * 1000)).padStart(3, '0');
+      return cMun + cServ + nNFS + cnpj + comp + dvNFS;
+    }
+    var mod = _ingModCodes[tipo] || '55';
+    var base = '35' + aamm + cnpj + mod + '001' + nNF + '1' + cNF;
+    var w = [2,3,4,5,6,7,8,9]; var sum = 0;
+    for (var i = base.length-1, wi=0; i>=0; i--, wi++) sum += parseInt(base[i],10) * w[wi%8];
+    var rem = sum % 11;
+    return base + ((rem===0||rem===1) ? '0' : String(11-rem));
   }
 
   function _validacoesParaStatus(status, rnd) {
@@ -3541,7 +3595,7 @@ window.downloadGuiaDARF = function() {
       var dIngH = String(Math.floor(r() * 24)).padStart(2,'0');
       var dIngM = String(Math.floor(r() * 60)).padStart(2,'0');
       var dIngestao = partsE[2].padStart(2,'0') + '/' + partsE[1] + '/' + partsE[0] + ' ' + dIngH + ':' + dIngM;
-      var chave = _chave(r, emit, i);
+      var chave = _chave(r, emit, i, tipo);
       var validacoes = _validacoesParaStatus(status, r);
       var vDeriv = _derivaValidacoes(status, validacoes);
 
@@ -3846,7 +3900,7 @@ window.downloadGuiaDARF = function() {
     var dEmissao = now.getFullYear() + '-' + mm + '-' + dd;
     var dIngestao = dd + '/' + mm + '/' + now.getFullYear() + ' ' + hh + ':' + min;
     var newId = _ingDados.length;
-    var chave = _chave(rnd, emit, newId);
+    var chave = _chave(rnd, emit, newId, tipo);
     var status = 'pendente';
     var validacoes = _validacoesParaStatus(status, rnd);
     var vDeriv = _derivaValidacoes(status, validacoes);
