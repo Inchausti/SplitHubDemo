@@ -418,6 +418,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
     <button class="nav-btn" onclick="showView('creditos',this)"><span class="nav-icon">◈</span> Gestão de Créditos</button>
     <button class="nav-btn" onclick="showView('debitos',this)"><span class="nav-icon">◇</span> Gestão de Débitos</button>
     <button class="nav-btn" onclick="showView('conciliacao',this)"><span class="nav-icon">⋈</span> Conciliação</button>
+    <button class="nav-btn" onclick="showView('ingestao',this)"><span class="nav-icon">↓</span> Ingestão de DFs</button>
     <button class="nav-btn" id="nav-analytics-btn" onclick="showAnalyticsSub('inteligencia',document.getElementById('subnav-analytics-inteligencia'))"><span class="nav-icon">◆</span> Analytics</button>
     <div class="nav-sub-group" id="nav-sub-group-analytics">
       <button class="nav-sub-btn" id="subnav-analytics-inteligencia" onclick="showAnalyticsSub('inteligencia',this)"><span class="nav-sub-dot"></span> Inteligência</button>
@@ -984,6 +985,170 @@ tr:hover td{background:rgba(73,197,177,.02)}
         <span style="font-size:12px;color:var(--txt2)" id="nf-pag-info">(25 NFs por página)</span>
       </div>
       <button class="btn" id="nf-btn-prox" onclick="nfProximaPagina()">Próxima →</button>
+    </div>
+  </div>
+</div>
+
+<!-- INGESTÃO DE DFs -->
+<div id="view-ingestao" class="view">
+  <div class="pg-hdr">
+    <div>
+      <div class="pg-title">Ingestão de DFs</div>
+      <div class="pg-sub">Gestão da entrada e validação de Documentos Fiscais · Layout · Validade · Dados</div>
+    </div>
+    <div class="hdr-act">
+      <button class="btn btn-t" onclick="ingestaoSimularImportacao()" style="font-size:12px">+ Importar DF</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kgrid k6" style="margin-bottom:20px">
+    <div class="kcard" style="border-top-color:var(--blue)"><div class="klbl">Total recebidos</div><div class="kval mono" id="ing-total">—</div><div class="ksub" id="ing-total-sub">no período</div></div>
+    <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">Integrados</div><div class="kval mono" id="ing-ok">—</div><div class="ksub" id="ing-ok-sub">validados com sucesso</div></div>
+    <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Em processamento</div><div class="kval mono" id="ing-pend">—</div><div class="ksub" id="ing-pend-sub">na fila de validação</div></div>
+    <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Com erro</div><div class="kval mono" id="ing-erro">—</div><div class="ksub" id="ing-erro-sub">requerem atenção</div></div>
+    <div class="kcard" style="border-top-color:var(--txt3)"><div class="klbl">Duplicados</div><div class="kval mono" id="ing-dup">—</div><div class="ksub">chave já existente</div></div>
+    <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">Taxa de sucesso</div><div class="kval mono" id="ing-taxa">—</div><div class="ksub">DFs integrados / total</div></div>
+  </div>
+
+  <!-- Pipeline de ingestão + Gráfico -->
+  <div class="cgrid c11" style="margin-bottom:20px">
+    <div class="ccrd">
+      <div class="ctitle">Pipeline de Ingestão</div>
+      <div class="csub">Fluxo de validação por etapa · contagem de DFs em cada estágio</div>
+      <div class="pipe" style="margin-top:14px;flex-wrap:wrap;gap:8px">
+        <div class="pstep" style="border:1px solid rgba(59,130,246,.3);min-width:80px"><div class="pnum" style="color:var(--blue)" id="pipe-ing-receb">—</div><div class="plbl">Recebido</div><div class="pdesc">SEFAZ / ERP / Upload</div></div>
+        <div class="parr">→</div>
+        <div class="pstep" style="border:1px solid rgba(167,168,170,.3);min-width:80px"><div class="pnum" style="color:var(--txt2)" id="pipe-ing-triagem">—</div><div class="plbl">Triagem</div><div class="pdesc">Tipo DF identificado</div></div>
+        <div class="parr">→</div>
+        <div class="pstep" style="border:1px solid rgba(245,158,11,.3);min-width:80px"><div class="pnum" style="color:var(--amber)" id="pipe-ing-layout">—</div><div class="plbl">Val. Layout</div><div class="pdesc">Schema XML / estrutura</div></div>
+        <div class="parr">→</div>
+        <div class="pstep" style="border:1px solid rgba(73,197,177,.3);min-width:80px"><div class="pnum" style="color:var(--teal)" id="pipe-ing-dados">—</div><div class="plbl">Val. Dados</div><div class="pdesc">CNPJ · CFOP · Alíquotas</div></div>
+        <div class="parr">→</div>
+        <div class="pstep" style="border:1px solid rgba(34,197,94,.3);min-width:80px"><div class="pnum" style="color:var(--green)" id="pipe-ing-integ">—</div><div class="plbl">Integrado</div><div class="pdesc">RF criado na plataforma</div></div>
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:20px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span>Erro layout: <strong id="pipe-ing-err-lay" style="color:var(--txt1)">—</strong></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span>Erro dados: <strong id="pipe-ing-err-dat" style="color:var(--txt1)">—</strong></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--txt3);display:inline-block"></span>Duplicados: <strong id="pipe-ing-err-dup" style="color:var(--txt1)">—</strong></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block"></span>Rejeitados SEFAZ: <strong id="pipe-ing-err-rej" style="color:var(--txt1)">—</strong></div>
+      </div>
+    </div>
+    <div class="ccrd">
+      <div class="ctitle">Volume de ingestão</div>
+      <div class="csub" id="ing-chart-sub">DFs recebidos × integrados · últimos 7 dias</div>
+      <div class="cwrap" style="height:160px"><div id="cIngestao"></div></div>
+      <div class="leg"><span class="li"><span class="ls" style="background:var(--blue)"></span>Recebidos</span><span class="li"><span class="ls" style="background:var(--green)"></span>Integrados</span><span class="li"><span class="ls" style="background:var(--red)"></span>Com erro</span></div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="crd" style="margin-bottom:20px">
+    <div class="sechdr"><h2>Filtros</h2><p>Filtre os DFs por chave, tipo, emitente, status ou resultado de validação</p></div>
+    <div class="flt" style="margin-top:14px">
+      <input type="text" id="ing-busca" placeholder="Buscar por chave NF-e, CNPJ ou emitente…" oninput="ingestaoFiltrar()" style="min-width:260px"/>
+      <select id="ing-filtro-tipo" onchange="ingestaoFiltrar()">
+        <option value="">Tipo de DF — todos</option>
+        <option value="NF-e Entrada">NF-e Entrada</option>
+        <option value="NF-e Saída">NF-e Saída</option>
+        <option value="NFS-e">NFS-e</option>
+        <option value="CT-e">CT-e</option>
+      </select>
+      <select id="ing-filtro-status" onchange="ingestaoFiltrar()">
+        <option value="">Status — todos</option>
+        <option value="integrado">Integrado</option>
+        <option value="pendente">Em processamento</option>
+        <option value="erro_layout">Erro de layout</option>
+        <option value="erro_dados">Erro de dados</option>
+        <option value="rejeitado">Rejeitado SEFAZ</option>
+        <option value="duplicado">Duplicado</option>
+      </select>
+      <select id="ing-filtro-val" onchange="ingestaoFiltrar()">
+        <option value="">Validação — todas</option>
+        <option value="ok">Todas OK</option>
+        <option value="erro">Com falha</option>
+      </select>
+      <button class="btn" onclick="ingestaoLimparFiltros()">✕ Limpar</button>
+    </div>
+  </div>
+
+  <!-- Tabela de DFs -->
+  <div class="tcrd">
+    <div class="tcrd-hdr" style="flex-direction:column;align-items:flex-start;gap:6px">
+      <div class="sechdr" style="margin-bottom:0"><h2>Documentos Fiscais Ingeridos</h2><p id="ing-count-sub">— DFs no período</p></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-bottom:4px">
+        <span style="font-size:11px;color:var(--txt3)">Legenda validação:</span>
+        <span style="font-size:11px;padding:1px 8px;border-radius:3px;background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)">✓ Aprovado</span>
+        <span style="font-size:11px;padding:1px 8px;border-radius:3px;background:rgba(244,63,94,.12);color:var(--red);border:1px solid rgba(244,63,94,.25)">✗ Falha</span>
+        <span style="font-size:11px;padding:1px 8px;border-radius:3px;background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25)">⏳ Pendente</span>
+      </div>
+    </div>
+    <div class="twrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Chave NF-e</th>
+            <th>Tipo DF</th>
+            <th>Emitente</th>
+            <th class="r">Valor</th>
+            <th>Emissão</th>
+            <th>Ingestão</th>
+            <th style="text-align:center">Layout</th>
+            <th style="text-align:center">Validade</th>
+            <th style="text-align:center">Dados</th>
+            <th>Status</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody id="t-ingestao"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
+      <button class="btn" id="ing-btn-prev" onclick="ingestaoPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:12px;color:var(--txt2)">Página</span>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:4px 12px;min-width:50px;text-align:center">
+          <span id="ing-pag-atual" style="color:var(--txt1);font-weight:600;font-size:13px">1</span>
+          <span style="color:var(--txt3);font-size:12px"> / </span>
+          <span id="ing-pag-total" style="color:var(--txt2);font-size:12px">1</span>
+        </div>
+        <span style="font-size:12px;color:var(--txt2)" id="ing-pag-info">(25 DFs por página)</span>
+      </div>
+      <button class="btn" id="ing-btn-prox" onclick="ingestaoProximaPagina()">Próxima →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detalhe DF Ingestão -->
+<div id="ing-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:1100;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)fecharIngModal()">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div id="ing-modal-tipo-badge" style="display:inline-block;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700;margin-bottom:8px;background:var(--blue-dim,rgba(59,130,246,.12));color:var(--blue);border:1px solid rgba(59,130,246,.25)">NF-e</div>
+        <div style="font-size:17px;font-weight:700;color:var(--txt1)">Detalhe do Documento Fiscal</div>
+        <div style="font-size:12px;color:var(--txt2);margin-top:2px" id="ing-modal-chave" style="font-family:monospace">—</div>
+      </div>
+      <button onclick="fecharIngModal()" style="background:none;border:none;color:var(--txt2);cursor:pointer;font-size:24px;line-height:1;padding:0;flex-shrink:0">×</button>
+    </div>
+    <div style="padding:20px 24px">
+      <!-- Status geral -->
+      <div id="ing-modal-status-bar" style="border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px"></div>
+      <!-- Dados do documento -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;margin-bottom:20px;font-size:13px">
+        <div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Emitente</div><div style="color:var(--txt1);font-weight:600" id="ing-modal-emit">—</div></div>
+        <div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">CNPJ Emitente</div><div style="color:var(--txt1);font-family:monospace;font-size:12px" id="ing-modal-cnpj">—</div></div>
+        <div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Data de Emissão</div><div style="color:var(--txt1);font-weight:600" id="ing-modal-emissao">—</div></div>
+        <div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Data de Ingestão</div><div style="color:var(--txt1);font-weight:600" id="ing-modal-ingestao">—</div></div>
+        <div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Valor do Documento</div><div style="color:var(--teal);font-weight:700;font-family:monospace;font-size:15px" id="ing-modal-valor">—</div></div>
+        <div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">CFOP</div><div style="color:var(--txt1);font-family:monospace" id="ing-modal-cfop">—</div></div>
+        <div style="grid-column:1/3"><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Chave de Acesso NF-e</div><div style="color:var(--txt2);font-family:monospace;font-size:11px;word-break:break-all;line-height:1.6" id="ing-modal-chave-full">—</div></div>
+      </div>
+      <!-- Validações detalhadas -->
+      <div style="font-size:12px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">Resultado das Validações</div>
+      <div id="ing-modal-validacoes" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <div style="padding:14px 24px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+      <button onclick="fecharIngModal()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--txt2);font-size:13px;font-family:inherit;padding:8px 20px;cursor:pointer">Fechar</button>
     </div>
   </div>
 </div>
@@ -3858,6 +4023,7 @@ function showView(id,btn,fromBottomNav){
   }
   if(id==='dashboard'||id==='creditos'||id==='inteligencia') setTimeout(buildCharts,0);
   if(id==='fct') setTimeout(fctRenderChart,0);
+  if(id==='ingestao') setTimeout(ingestaoInit,0);
 }
 
 function toggleSidebar(){

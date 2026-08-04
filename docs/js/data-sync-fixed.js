@@ -3361,3 +3361,518 @@ window.downloadGuiaDARF = function() {
   win.focus();
   setTimeout(function() { win.print(); }, 700);
 };
+
+/* ═══════════════════════════════════════════════════════════
+   MÓDULO INGESTÃO DE DFs
+   ═══════════════════════════════════════════════════════════ */
+(function() {
+  var _ingDados = [];
+  var _ingFiltrados = [];
+  var _ingPagina = 1;
+  var _ingPorPagina = 25;
+  var _ingIniciado = false;
+
+  var _emitentes = [
+    { nome: 'Randon S.A.', cnpj: '17.197.585/0001-21' },
+    { nome: 'WEG S.A.', cnpj: '84.429.695/0001-11' },
+    { nome: 'Marcopolo S.A.', cnpj: '88.611.835/0001-29' },
+    { nome: 'Braskem S.A.', cnpj: '42.150.391/0001-70' },
+    { nome: 'Embraer S.A.', cnpj: '07.689.002/0001-89' },
+    { nome: 'Gerdau S.A.', cnpj: '33.611.500/0001-19' },
+    { nome: 'Suzano S.A.', cnpj: '16.404.287/0001-55' },
+    { nome: 'Localiza S.A.', cnpj: '16.670.085/0001-55' },
+    { nome: 'Ambev S.A.', cnpj: '07.526.557/0001-00' },
+    { nome: 'BRF S.A.', cnpj: '01.838.723/0001-27' },
+    { nome: 'Ultrapar S.A.', cnpj: '33.256.439/0001-39' },
+    { nome: 'CVC Corp S.A.', cnpj: '01.972.984/0001-03' },
+    { nome: 'Rumo S.A.', cnpj: '02.387.241/0001-60' },
+    { nome: 'JSL S.A.', cnpj: '52.548.435/0001-79' },
+    { nome: 'Votorantim S.A.', cnpj: '73.406.527/0001-74' }
+  ];
+
+  var _tipos = ['NF-e Entrada', 'NF-e Entrada', 'NF-e Entrada', 'NF-e Saída', 'NF-e Saída', 'NFS-e', 'CT-e'];
+  var _cfops = ['1101', '1102', '1201', '1401', '2101', '5101', '5102', '5201', '6101', '7101'];
+  var _statusDist = [
+    'integrado','integrado','integrado','integrado','integrado','integrado','integrado','integrado','integrado',
+    'pendente','pendente',
+    'erro_layout','erro_layout',
+    'erro_dados','erro_dados',
+    'rejeitado',
+    'duplicado'
+  ];
+
+  function _rng(seed) {
+    var s = seed % 2147483647;
+    if (s <= 0) s += 2147483646;
+    return function() { s = s * 16807 % 2147483647; return (s - 1) / 2147483646; };
+  }
+
+  function _fmtBRL(v) {
+    return 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  function _fmtData(d) {
+    var p = d.split('-');
+    return p[2] + '/' + p[1] + '/' + p[0];
+  }
+
+  function _chave(rnd, emit, seq) {
+    var cuf = '35';
+    var aamm = '2601';
+    var cnpj = emit.cnpj.replace(/\D/g, '');
+    var mod = '55';
+    var serie = '001';
+    var nNF = String(seq + 1).padStart(9, '0');
+    var tpEmis = '1';
+    var cNF = String(Math.floor(rnd() * 90000000) + 10000000);
+    var base = cuf + aamm + cnpj + mod + serie + nNF + tpEmis + cNF;
+    var dv = String(Math.floor(rnd() * 9) + 1);
+    return base + dv;
+  }
+
+  function _validacoesParaStatus(status, rnd) {
+    var schemaNFe = { tipo: 'Schema XML NF-e 4.0', ok: true, mensagem: 'Estrutura válida conforme XSD 4.0' };
+    var campos = { tipo: 'Campos obrigatórios', ok: true, mensagem: 'Todos os campos obrigatórios presentes' };
+    var cert = { tipo: 'Validade do certificado', ok: true, mensagem: 'Certificado válido até 12/2027' };
+    var cnpjV = { tipo: 'CNPJ emitente (Receita Federal)', ok: true, mensagem: 'CNPJ ativo e regular' };
+    var cfopV = { tipo: 'CFOP compatível com operação', ok: true, mensagem: 'CFOP válido para o tipo de operação' };
+    var aliq = { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: true, mensagem: 'Alíquotas dentro do intervalo regulatório' };
+    var dup = { tipo: 'Chave de acesso (unicidade)', ok: true, mensagem: 'Chave de acesso única no banco' };
+
+    if (status === 'integrado') {
+      return [schemaNFe, campos, cert, cnpjV, cfopV, aliq, dup];
+    }
+    if (status === 'pendente') {
+      return [
+        schemaNFe,
+        campos,
+        cert,
+        { tipo: 'CNPJ emitente (Receita Federal)', ok: null, mensagem: 'Aguardando consulta à RF' },
+        { tipo: 'CFOP compatível com operação', ok: null, mensagem: 'Aguardando validação de dados' },
+        { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: null, mensagem: 'Em processamento' },
+        dup
+      ];
+    }
+    if (status === 'erro_layout') {
+      var erros = [
+        { tipo: 'Schema XML NF-e 4.0', ok: false, mensagem: 'Elemento <infNFe> malformado na linha 47' },
+        { tipo: 'Schema XML NF-e 4.0', ok: false, mensagem: 'Namespace inválido: esperado NF-e 4.00, recebido 3.10' },
+        { tipo: 'Campos obrigatórios', ok: false, mensagem: 'Campo <CNPJ> ausente em <emit>' },
+        { tipo: 'Schema XML NF-e 4.0', ok: false, mensagem: 'Atributo versão fora do padrão SEFAZ' }
+      ];
+      var e = erros[Math.floor(rnd() * erros.length)];
+      return [e, campos, cert, cnpjV, cfopV, aliq, dup];
+    }
+    if (status === 'erro_dados') {
+      var errosDados = [
+        { tipo: 'CNPJ emitente (Receita Federal)', ok: false, mensagem: 'CNPJ 00.000.000/0001-00 não localizado na RF' },
+        { tipo: 'CFOP compatível com operação', ok: false, mensagem: 'CFOP 5101 incompatível com NF-e de entrada' },
+        { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: false, mensagem: 'Alíquota CBS 8.5% fora do intervalo (0%–7.9%)' }
+      ];
+      var ed = errosDados[Math.floor(rnd() * errosDados.length)];
+      return [schemaNFe, campos, cert, ed, cfopV, aliq, dup];
+    }
+    if (status === 'rejeitado') {
+      return [
+        { tipo: 'Schema XML NF-e 4.0', ok: true, mensagem: 'Estrutura válida' },
+        campos,
+        { tipo: 'Assinatura digital (SEFAZ)', ok: false, mensagem: 'Código 228 — Rejeição: assinatura inválida do XML' },
+        cnpjV,
+        cfopV,
+        aliq,
+        dup
+      ];
+    }
+    if (status === 'duplicado') {
+      return [
+        schemaNFe,
+        campos,
+        cert,
+        cnpjV,
+        cfopV,
+        aliq,
+        { tipo: 'Chave de acesso (unicidade)', ok: false, mensagem: 'Chave já existente — documento recebido em ' + _fmtData('2026-0' + (Math.floor(rnd()*6)+1) + '-' + String(Math.floor(rnd()*27)+1).padStart(2,'0')) }
+      ];
+    }
+    return [schemaNFe, campos, cert, cnpjV, cfopV, aliq, dup];
+  }
+
+  function _derivaValidacoes(status, vals) {
+    var layout = null, validade = null, dados = null;
+    vals.forEach(function(v) {
+      if (v.tipo.indexOf('Schema') !== -1 || v.tipo.indexOf('Campos') !== -1 || v.tipo.indexOf('estrutura') !== -1 || v.tipo.indexOf('Assinatura') !== -1) {
+        if (layout === null) layout = v.ok;
+        else if (v.ok === false) layout = false;
+      } else if (v.tipo.indexOf('certif') !== -1 || v.tipo.indexOf('Validade') !== -1) {
+        if (validade === null) validade = v.ok;
+        else if (v.ok === false) validade = false;
+      } else if (v.tipo.indexOf('CNPJ') !== -1 || v.tipo.indexOf('CFOP') !== -1 || v.tipo.indexOf('Alíquota') !== -1 || v.tipo.indexOf('unicidade') !== -1) {
+        if (dados === null) dados = v.ok;
+        else if (v.ok === false) dados = false;
+      }
+    });
+    if (status === 'pendente') { validade = null; dados = null; }
+    return { valLayout: layout, valValidade: validade, valDados: dados };
+  }
+
+  function _gerarDados() {
+    var dados = [];
+    var r = _rng(20260101);
+    var datas = [
+      '2026-01-15','2026-01-22','2026-01-29',
+      '2026-02-05','2026-02-12','2026-02-19','2026-02-26',
+      '2026-03-04','2026-03-11','2026-03-18','2026-03-25',
+      '2026-04-02','2026-04-09','2026-04-16','2026-04-23',
+      '2026-05-07','2026-05-14','2026-05-21','2026-05-28',
+      '2026-06-04','2026-06-11','2026-06-18','2026-06-25',
+      '2026-07-02','2026-07-09','2026-07-16','2026-07-23',
+      '2026-08-01','2026-08-04'
+    ];
+
+    for (var i = 0; i < 152; i++) {
+      var emit = _emitentes[Math.floor(r() * _emitentes.length)];
+      var tipo = _tipos[Math.floor(r() * _tipos.length)];
+      var status = _statusDist[Math.floor(r() * _statusDist.length)];
+      var cfop = _cfops[Math.floor(r() * _cfops.length)];
+      var valor = Math.round((r() * 980000 + 2000) * 100) / 100;
+      var dEmissao = datas[Math.floor(r() * datas.length)];
+      var partsE = dEmissao.split('-');
+      var dIngDay = Math.min(parseInt(partsE[2]) + Math.floor(r() * 3), 28);
+      var dIngH = String(Math.floor(r() * 24)).padStart(2,'0');
+      var dIngM = String(Math.floor(r() * 60)).padStart(2,'0');
+      var dIngestao = partsE[2].padStart(2,'0') + '/' + partsE[1] + '/' + partsE[0] + ' ' + dIngH + ':' + dIngM;
+      var chave = _chave(r, emit, i);
+      var validacoes = _validacoesParaStatus(status, r);
+      var vDeriv = _derivaValidacoes(status, validacoes);
+
+      dados.push({
+        id: i,
+        chave: chave,
+        tipo: tipo,
+        emitente: emit.nome,
+        cnpj: emit.cnpj,
+        valor: valor,
+        cfop: cfop,
+        dataEmissao: dEmissao,
+        dataIngestao: dIngestao,
+        status: status,
+        valLayout: vDeriv.valLayout,
+        valValidade: vDeriv.valValidade,
+        valDados: vDeriv.valDados,
+        validacoes: validacoes
+      });
+    }
+    return dados;
+  }
+
+  function _valChip(v) {
+    if (v === true) return '<span style="color:var(--green);font-weight:700;font-size:15px">✓</span>';
+    if (v === false) return '<span style="color:var(--red);font-weight:700;font-size:15px">✗</span>';
+    return '<span style="color:var(--amber);font-size:13px">⏳</span>';
+  }
+
+  function _statusLabel(s) {
+    var m = {
+      integrado: { lbl: 'Integrado', bg: 'rgba(34,197,94,.12)', col: 'var(--green)', bdr: 'rgba(34,197,94,.25)' },
+      pendente: { lbl: 'Processando', bg: 'rgba(245,158,11,.12)', col: 'var(--amber)', bdr: 'rgba(245,158,11,.25)' },
+      erro_layout: { lbl: 'Erro Layout', bg: 'rgba(244,63,94,.12)', col: 'var(--red)', bdr: 'rgba(244,63,94,.25)' },
+      erro_dados: { lbl: 'Erro Dados', bg: 'rgba(244,63,94,.12)', col: 'var(--red)', bdr: 'rgba(244,63,94,.25)' },
+      rejeitado: { lbl: 'Rejeitado', bg: 'rgba(244,63,94,.12)', col: 'var(--red)', bdr: 'rgba(244,63,94,.25)' },
+      duplicado: { lbl: 'Duplicado', bg: 'rgba(167,168,170,.12)', col: 'var(--txt3)', bdr: 'rgba(167,168,170,.25)' }
+    };
+    var c = m[s] || { lbl: s, bg: 'rgba(167,168,170,.12)', col: 'var(--txt2)', bdr: 'rgba(167,168,170,.25)' };
+    return '<span style="display:inline-block;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;background:' + c.bg + ';color:' + c.col + ';border:1px solid ' + c.bdr + '">' + c.lbl + '</span>';
+  }
+
+  function _tipoLabel(tipo) {
+    var m = {
+      'NF-e Entrada': 'rgba(59,130,246,.12)',
+      'NF-e Saída': 'rgba(73,197,177,.12)',
+      'NFS-e': 'rgba(245,158,11,.12)',
+      'CT-e': 'rgba(167,168,170,.12)'
+    };
+    var col = m[tipo] || 'rgba(167,168,170,.12)';
+    return '<span style="display:inline-block;border-radius:3px;padding:1px 7px;font-size:11px;font-weight:600;background:' + col + ';color:var(--txt2)">' + tipo + '</span>';
+  }
+
+  function _renderKPIs(dados) {
+    var total = dados.length;
+    var ok = dados.filter(function(d) { return d.status === 'integrado'; }).length;
+    var pend = dados.filter(function(d) { return d.status === 'pendente'; }).length;
+    var erroLay = dados.filter(function(d) { return d.status === 'erro_layout'; }).length;
+    var erroDat = dados.filter(function(d) { return d.status === 'erro_dados'; }).length;
+    var rej = dados.filter(function(d) { return d.status === 'rejeitado'; }).length;
+    var dup = dados.filter(function(d) { return d.status === 'duplicado'; }).length;
+    var erroTotal = erroLay + erroDat + rej;
+    var taxa = total > 0 ? Math.round((ok / total) * 100) : 0;
+
+    function _el(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+
+    _el('ing-total', total);
+    _el('ing-ok', ok);
+    _el('ing-pend', pend);
+    _el('ing-erro', erroTotal);
+    _el('ing-dup', dup);
+    _el('ing-taxa', taxa + '%');
+
+    _el('pipe-ing-receb', total);
+    _el('pipe-ing-triagem', total - rej);
+    _el('pipe-ing-layout', total - rej - erroLay);
+    _el('pipe-ing-dados', total - rej - erroLay - erroDat - dup);
+    _el('pipe-ing-integ', ok);
+    _el('pipe-ing-err-lay', erroLay);
+    _el('pipe-ing-err-dat', erroDat);
+    _el('pipe-ing-err-dup', dup);
+    _el('pipe-ing-err-rej', rej);
+  }
+
+  function _renderChart(dados) {
+    var el = document.getElementById('cIngestao');
+    if (!el) return;
+
+    var byDay = {};
+    dados.forEach(function(d) {
+      var k = d.dataEmissao;
+      if (!byDay[k]) byDay[k] = { rec: 0, ok: 0, err: 0 };
+      byDay[k].rec++;
+      if (d.status === 'integrado') byDay[k].ok++;
+      else if (d.status !== 'pendente') byDay[k].err++;
+    });
+
+    var keys = Object.keys(byDay).sort().slice(-7);
+    var recArr = [], okArr = [], errArr = [];
+    var labels = [];
+    keys.forEach(function(k) {
+      var p = k.split('-');
+      labels.push(p[2] + '/' + p[1]);
+      recArr.push(byDay[k].rec);
+      okArr.push(byDay[k].ok);
+      errArr.push(byDay[k].err);
+    });
+
+    if (typeof _svgStackedBar === 'function') {
+      _svgStackedBar('cIngestao', [
+        { label: 'Recebidos', data: recArr, color: '#3B82F6' },
+        { label: 'Integrados', data: okArr, color: '#22C55E' },
+        { label: 'Com erro', data: errArr, color: '#F43F5E' }
+      ], labels, 148);
+    }
+  }
+
+  function _renderTabela() {
+    var tbody = document.getElementById('t-ingestao');
+    if (!tbody) return;
+
+    var total = _ingFiltrados.length;
+    var totalPags = Math.max(1, Math.ceil(total / _ingPorPagina));
+    if (_ingPagina > totalPags) _ingPagina = totalPags;
+
+    var start = (_ingPagina - 1) * _ingPorPagina;
+    var slice = _ingFiltrados.slice(start, start + _ingPorPagina);
+
+    var html = '';
+    slice.forEach(function(d) {
+      var chaveShort = d.chave.substring(0, 8) + '…' + d.chave.slice(-8);
+      html += '<tr>' +
+        '<td class="mono" style="font-size:11px;color:var(--txt2)">' + chaveShort + '</td>' +
+        '<td>' + _tipoLabel(d.tipo) + '</td>' +
+        '<td style="font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + d.emitente + '</td>' +
+        '<td class="r mono" style="font-size:12px">' + _fmtBRL(d.valor) + '</td>' +
+        '<td style="font-size:12px">' + _fmtData(d.dataEmissao) + '</td>' +
+        '<td style="font-size:11px;color:var(--txt2)">' + d.dataIngestao + '</td>' +
+        '<td style="text-align:center">' + _valChip(d.valLayout) + '</td>' +
+        '<td style="text-align:center">' + _valChip(d.valValidade) + '</td>' +
+        '<td style="text-align:center">' + _valChip(d.valDados) + '</td>' +
+        '<td>' + _statusLabel(d.status) + '</td>' +
+        '<td><button class="btn" style="font-size:11px;padding:4px 10px;border-radius:6px" onclick="abrirIngModal(' + d.id + ')">Detalhar</button></td>' +
+        '</tr>';
+    });
+
+    if (!html) {
+      html = '<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:40px">Nenhum documento encontrado para os filtros selecionados.</td></tr>';
+    }
+
+    tbody.innerHTML = html;
+
+    document.getElementById('ing-pag-atual').textContent = _ingPagina;
+    document.getElementById('ing-pag-total').textContent = totalPags;
+    document.getElementById('ing-pag-info').textContent = '(' + total + ' DF' + (total !== 1 ? 's' : '') + ')';
+    document.getElementById('ing-count-sub').textContent = total + ' DF' + (total !== 1 ? 's' : '') + ' no período';
+
+    var prevBtn = document.getElementById('ing-btn-prev');
+    var proxBtn = document.getElementById('ing-btn-prox');
+    if (prevBtn) {
+      prevBtn.disabled = _ingPagina <= 1;
+      prevBtn.style.opacity = _ingPagina <= 1 ? '0.4' : '1';
+      prevBtn.style.cursor = _ingPagina <= 1 ? 'not-allowed' : 'pointer';
+    }
+    if (proxBtn) {
+      proxBtn.disabled = _ingPagina >= totalPags;
+      proxBtn.style.opacity = _ingPagina >= totalPags ? '0.4' : '1';
+      proxBtn.style.cursor = _ingPagina >= totalPags ? 'not-allowed' : 'pointer';
+    }
+  }
+
+  function _aplicarFiltros() {
+    var busca = (document.getElementById('ing-busca') || {}).value || '';
+    var filtTipo = (document.getElementById('ing-filtro-tipo') || {}).value || '';
+    var filtStatus = (document.getElementById('ing-filtro-status') || {}).value || '';
+    var filtVal = (document.getElementById('ing-filtro-val') || {}).value || '';
+
+    busca = busca.toLowerCase();
+
+    _ingFiltrados = _ingDados.filter(function(d) {
+      if (busca && d.chave.toLowerCase().indexOf(busca) === -1 &&
+          d.emitente.toLowerCase().indexOf(busca) === -1 &&
+          d.cnpj.toLowerCase().indexOf(busca) === -1) return false;
+      if (filtTipo && d.tipo !== filtTipo) return false;
+      if (filtStatus && d.status !== filtStatus) return false;
+      if (filtVal === 'ok' && (d.valLayout === false || d.valValidade === false || d.valDados === false)) return false;
+      if (filtVal === 'erro' && d.valLayout !== false && d.valValidade !== false && d.valDados !== false) return false;
+      return true;
+    });
+  }
+
+  window.ingestaoInit = function() {
+    if (!_ingIniciado) {
+      _ingDados = _gerarDados();
+      _ingIniciado = true;
+    }
+    _ingFiltrados = _ingDados.slice();
+    _ingPagina = 1;
+    _renderKPIs(_ingDados);
+    _renderChart(_ingDados);
+    _renderTabela();
+  };
+
+  window.ingestaoFiltrar = function() {
+    _aplicarFiltros();
+    _ingPagina = 1;
+    _renderTabela();
+  };
+
+  window.ingestaoLimparFiltros = function() {
+    var el;
+    el = document.getElementById('ing-busca'); if (el) el.value = '';
+    el = document.getElementById('ing-filtro-tipo'); if (el) el.value = '';
+    el = document.getElementById('ing-filtro-status'); if (el) el.value = '';
+    el = document.getElementById('ing-filtro-val'); if (el) el.value = '';
+    _ingFiltrados = _ingDados.slice();
+    _ingPagina = 1;
+    _renderTabela();
+  };
+
+  window.ingestaoPaginaAnterior = function() {
+    if (_ingPagina > 1) { _ingPagina--; _renderTabela(); }
+  };
+
+  window.ingestaoProximaPagina = function() {
+    var totalPags = Math.ceil(_ingFiltrados.length / _ingPorPagina);
+    if (_ingPagina < totalPags) { _ingPagina++; _renderTabela(); }
+  };
+
+  window.abrirIngModal = function(idx) {
+    var d = _ingDados[idx];
+    if (!d) return;
+
+    var badge = document.getElementById('ing-modal-tipo-badge');
+    if (badge) badge.textContent = d.tipo;
+
+    var chaveEl = document.getElementById('ing-modal-chave');
+    if (chaveEl) chaveEl.textContent = d.chave.substring(0,14) + '…';
+
+    function _set(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+    _set('ing-modal-emit', d.emitente);
+    _set('ing-modal-cnpj', d.cnpj);
+    _set('ing-modal-emissao', _fmtData(d.dataEmissao));
+    _set('ing-modal-ingestao', d.dataIngestao);
+    _set('ing-modal-valor', _fmtBRL(d.valor));
+    _set('ing-modal-cfop', d.cfop);
+    _set('ing-modal-chave-full', d.chave);
+
+    var statusBar = document.getElementById('ing-modal-status-bar');
+    if (statusBar) {
+      var sConf = {
+        integrado: { icon: '✓', txt: 'Documento integrado com sucesso — todos os critérios de validação aprovados.', bg: 'rgba(34,197,94,.12)', col: 'var(--green)' },
+        pendente: { icon: '⏳', txt: 'Documento em processamento — validações ainda em andamento.', bg: 'rgba(245,158,11,.12)', col: 'var(--amber)' },
+        erro_layout: { icon: '✗', txt: 'Falha de layout — estrutura XML inválida, documento rejeitado na triagem.', bg: 'rgba(244,63,94,.12)', col: 'var(--red)' },
+        erro_dados: { icon: '✗', txt: 'Falha de dados — inconsistência nos dados fiscais do documento.', bg: 'rgba(244,63,94,.12)', col: 'var(--red)' },
+        rejeitado: { icon: '✗', txt: 'Rejeitado pela SEFAZ — assinatura ou autorização inválida.', bg: 'rgba(244,63,94,.12)', col: 'var(--red)' },
+        duplicado: { icon: '⚠', txt: 'Documento duplicado — chave de acesso já existente na base.', bg: 'rgba(167,168,170,.12)', col: 'var(--txt2)' }
+      };
+      var sc = sConf[d.status] || sConf.pendente;
+      statusBar.style.background = sc.bg;
+      statusBar.style.color = sc.col;
+      statusBar.innerHTML = '<span style="font-size:18px">' + sc.icon + '</span><span>' + sc.txt + '</span>';
+    }
+
+    var valDiv = document.getElementById('ing-modal-validacoes');
+    if (valDiv) {
+      var vhtml = '';
+      d.validacoes.forEach(function(v) {
+        var ico = v.ok === true ? '✓' : (v.ok === false ? '✗' : '⏳');
+        var col = v.ok === true ? 'var(--green)' : (v.ok === false ? 'var(--red)' : 'var(--amber)');
+        var bg = v.ok === true ? 'rgba(34,197,94,.06)' : (v.ok === false ? 'rgba(244,63,94,.06)' : 'rgba(245,158,11,.06)');
+        vhtml += '<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border-radius:7px;border:1px solid var(--border);background:' + bg + '">' +
+          '<span style="color:' + col + ';font-weight:700;font-size:16px;line-height:1.2;flex-shrink:0">' + ico + '</span>' +
+          '<div><div style="font-size:12px;font-weight:600;color:var(--txt1);margin-bottom:2px">' + v.tipo + '</div>' +
+          '<div style="font-size:11px;color:var(--txt2)">' + v.mensagem + '</div></div>' +
+          '</div>';
+      });
+      valDiv.innerHTML = vhtml;
+    }
+
+    var modal = document.getElementById('ing-modal');
+    if (modal) { modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+  };
+
+  window.fecharIngModal = function() {
+    var modal = document.getElementById('ing-modal');
+    if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
+  };
+
+  window.ingestaoSimularImportacao = function() {
+    if (!_ingIniciado) { window.ingestaoInit(); return; }
+    var rnd = _rng(Date.now() % 2147483647);
+    var emit = _emitentes[Math.floor(rnd() * _emitentes.length)];
+    var tipo = _tipos[Math.floor(rnd() * _tipos.length)];
+    var valor = Math.round((rnd() * 200000 + 5000) * 100) / 100;
+    var cfop = _cfops[Math.floor(rnd() * _cfops.length)];
+    var now = new Date();
+    var mm = String(now.getMonth() + 1).padStart(2, '0');
+    var dd = String(now.getDate()).padStart(2, '0');
+    var hh = String(now.getHours()).padStart(2, '0');
+    var min = String(now.getMinutes()).padStart(2, '0');
+    var dEmissao = now.getFullYear() + '-' + mm + '-' + dd;
+    var dIngestao = dd + '/' + mm + '/' + now.getFullYear() + ' ' + hh + ':' + min;
+    var newId = _ingDados.length;
+    var chave = _chave(rnd, emit, newId);
+    var status = 'pendente';
+    var validacoes = _validacoesParaStatus(status, rnd);
+    var vDeriv = _derivaValidacoes(status, validacoes);
+
+    var novoDF = {
+      id: newId,
+      chave: chave,
+      tipo: tipo,
+      emitente: emit.nome,
+      cnpj: emit.cnpj,
+      valor: valor,
+      cfop: cfop,
+      dataEmissao: dEmissao,
+      dataIngestao: dIngestao,
+      status: status,
+      valLayout: vDeriv.valLayout,
+      valValidade: vDeriv.valValidade,
+      valDados: vDeriv.valDados,
+      validacoes: validacoes
+    };
+
+    _ingDados.unshift(novoDF);
+    _ingDados.forEach(function(d, i) { d.id = i; });
+    _ingFiltrados = _ingDados.slice();
+    _ingPagina = 1;
+    _renderKPIs(_ingDados);
+    _renderTabela();
+  };
+})();
