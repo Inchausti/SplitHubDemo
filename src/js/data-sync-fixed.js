@@ -656,23 +656,67 @@ window.atualizarPerdaAcumulada = function() {
 // ============================================================
 
 window.atualizarKPIsDashboard = function() {
+  if (!window._ingDadosGlobal) { try { window.ingestaoInit && window.ingestaoInit(); } catch(e) {} }
   var sel = document.getElementById('dash-mes-select');
   var mes = sel ? sel.value : '04';
   if (!mes) mes = '04';
   var prefix = '2026-' + mes;
 
+  // --- CRÉDITOS (entrada, período selecionado) ---
   var aprop = 0, total = 0, bad = 0, risco = 0;
+  // --- DÉBITOS (saída, período selecionado) ---
+  var debTotal = 0, debExtinto = 0, debVencido = 0;
+  // --- PAGAMENTOS (entrada) ---
+  var pagPago = 0, pagPendente = 0, pagAtrasado = 0;
+  // --- CONCILIAÇÃO (todos os períodos) ---
+  var concNFs = 0, concRFs = 0, concTFOk = 0, concInconsist = 0;
   var badStatuses = ['nao_apropriado', 'inconsistencia', 'vencido'];
+
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
-    if (nf.tipo !== 'entrada') return;
+    concNFs++;
     (nf.registrosFiscais || []).forEach(function(rf) {
-      if (!(rf.data || '').startsWith(prefix)) return;
+      var rfDate = rf.data || '';
+      var inPeriod = rfDate.startsWith(prefix);
+      // Conciliação: todos os períodos
+      concRFs++;
+      var temPag = rf.dataPagamento && rf.dataPagamento !== '—';
+      var temExt = rf.dataExtincao  && rf.dataExtincao  !== '—';
+      if (temPag || temExt) concTFOk++;
+      if (rf.status === 'inconsistencia') concInconsist++;
+      if (!inPeriod) return;
       var v = rf.valor || 0;
-      total += v;
-      if (rf.status === 'apropriado' || rf.status === 'utilizado') aprop += v;
-      if (badStatuses.indexOf(rf.status) !== -1)                   bad   += v;
-      if (rf.status === 'vencido')                                  risco += v;
+      if (nf.tipo === 'entrada') {
+        total += v;
+        if (rf.status === 'apropriado' || rf.status === 'utilizado') aprop += v;
+        if (badStatuses.indexOf(rf.status) !== -1)                    bad   += v;
+        if (rf.status === 'vencido')                                  risco += v;
+        // Pagamentos (guias de impostos)
+        var eAprop = rf.status === 'apropriado' || rf.status === 'utilizado';
+        if (temPag || eAprop)             pagPago     += v;
+        else if (rf.status === 'vencido') pagAtrasado += v;
+        else                              pagPendente += v;
+      } else if (nf.tipo === 'saida') {
+        debTotal += v;
+        if (rf.status === 'extinto' || rf.status === 'utilizado') debExtinto += v;
+        if (rf.status === 'vencido')                              debVencido += v;
+      }
     });
+  });
+
+  // --- INCONSISTÊNCIAS (derivadas dos dados brutos) ---
+  var incTotal = 0, incIng = 0, incCred = 0, incDeb = 0, incPag = 0;
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (rf.status !== 'inconsistencia') return;
+      incTotal++;
+      if (nf.tipo === 'saida') { incDeb++; }
+      else if (rf.inconsistencia === 'Vencido') { incPag++; }
+      else { incCred++; }
+    });
+  });
+  var ingFalhas = ['erro_layout','erro_dados','rejeitado','duplicado'];
+  (window._ingDadosGlobal || []).forEach(function(d) {
+    if (ingFalhas.indexOf(d.status) !== -1) { incTotal++; incIng++; }
   });
 
   function fmtM(v) {
@@ -681,17 +725,65 @@ window.atualizarKPIsDashboard = function() {
     return 'R$ ' + v.toLocaleString('pt-BR');
   }
   function setEl(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; }
+  function setStyle(id, prop, val) { var e = document.getElementById(id); if (e) e.style[prop] = val; }
 
-  setEl('dash-cred-aprop', fmtM(aprop));
-  setEl('dash-cred-risco', fmtM(risco));
+  // --- HERO ---
+  var heroPct = total > 0 ? (aprop / total * 100) : 0;
+  var heroPctStr = heroPct.toFixed(1).replace('.', ',') + '%';
+  var heroColor = heroPct >= 75 ? 'var(--teal)' : heroPct >= 50 ? 'var(--amber)' : 'var(--red)';
+  var heroBadge = heroPct >= 75 ? 'Saudável' : heroPct >= 50 ? 'Atenção' : 'Crítico';
+  var heroBg    = heroPct >= 75 ? 'rgba(73,197,177,.12)'  : heroPct >= 50 ? 'rgba(245,158,11,.12)' : 'rgba(244,63,94,.12)';
+  var heroBdr   = heroPct >= 75 ? 'rgba(73,197,177,.25)'  : heroPct >= 50 ? 'rgba(245,158,11,.25)' : 'rgba(244,63,94,.25)';
+  var heroFill  = heroPct >= 75 ? 'linear-gradient(90deg,var(--teal),#22C55E)' : heroPct >= 50 ? 'var(--amber)' : 'var(--red)';
+  setEl('dash-hero-pct',       heroPctStr);
+  setEl('dash-hero-total',     fmtM(total));
+  setEl('dash-hero-aprop-val', fmtM(aprop));
+  setEl('dash-hero-bad',       fmtM(bad));
+  setEl('dash-hero-risco-val', fmtM(risco));
+  setStyle('dash-hero-pct',  'color', heroColor);
+  setStyle('dash-hero-fill', 'width', Math.min(100, heroPct) + '%');
+  setStyle('dash-hero-fill', 'background', heroFill);
+  var badgeEl = document.getElementById('dash-hero-badge');
+  if (badgeEl) { badgeEl.textContent = heroBadge; badgeEl.style.background = heroBg; badgeEl.style.color = heroColor; badgeEl.style.borderColor = heroBdr; }
 
-  // % de créditos não apropriados (nao_apropriado + inconsistencia + vencido) sobre total do mês
+  // --- CARD CRÉDITO ---
+  var credPct = total > 0 ? (aprop / total * 100).toFixed(1).replace('.', ',') + '%' : '—';
+  setEl('dash-cred-aprop',  fmtM(aprop));
+  setEl('dash-cred-risco',  fmtM(risco));
+  setEl('dash-cred-pct',    credPct);
+  setStyle('dash-cred-bar', 'width', total > 0 ? Math.min(100, aprop / total * 100) + '%' : '0%');
+  // backward compat IDs
   if (total > 0) {
-    var pct = (bad / total * 100).toFixed(1).replace('.', ',') + '%';
-    setEl('dash-cred-apropriar', pct);
+    setEl('dash-cred-apropriar', (bad / total * 100).toFixed(1).replace('.', ',') + '%');
     var d = (typeof _dashMeses !== 'undefined' && _dashMeses[mes]) ? _dashMeses[mes] : {};
     setEl('dash-cred-apropriar-sub', (d.upApropriar || '') + ' — ' + fmtM(bad) + ' não apropriados');
   }
+
+  // --- CARD DÉBITO ---
+  var debPct = debTotal > 0 ? (debExtinto / debTotal * 100).toFixed(1).replace('.', ',') + '%' : '—';
+  setEl('dash-deb-total',   fmtM(debTotal));
+  setEl('dash-deb-pct',     debPct);
+  setEl('dash-deb-vencido', fmtM(debVencido));
+  setStyle('dash-deb-bar', 'width', debTotal > 0 ? Math.min(100, debExtinto / debTotal * 100) + '%' : '0%');
+
+  // --- CARD PAGAMENTO ---
+  setEl('dash-pag-pago',     fmtM(pagPago));
+  setEl('dash-pag-avencer',  fmtM(pagPendente));
+  setEl('dash-pag-atrasado', fmtM(pagAtrasado));
+
+  // --- CARD CONCILIAÇÃO ---
+  var concPct = concRFs > 0 ? (concTFOk / concRFs * 100).toFixed(1).replace('.', ',') + '%' : '—';
+  setEl('dash-conc-nf',  concNFs.toLocaleString('pt-BR'));
+  setEl('dash-conc-pct', concPct);
+  setEl('dash-conc-div', concInconsist.toLocaleString('pt-BR'));
+  setStyle('dash-conc-bar', 'width', concRFs > 0 ? Math.min(100, concTFOk / concRFs * 100) + '%' : '0%');
+
+  // --- CARD INCONSISTÊNCIAS ---
+  setEl('dash-inc-total', incTotal.toLocaleString('pt-BR'));
+  setEl('dash-inc-ing',   incIng.toLocaleString('pt-BR'));
+  setEl('dash-inc-cred',  incCred.toLocaleString('pt-BR'));
+  setEl('dash-inc-deb',   incDeb.toLocaleString('pt-BR'));
+  setEl('dash-inc-pag',   incPag.toLocaleString('pt-BR'));
 };
 
 // ============================================================
@@ -2946,6 +3038,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 30000);
 
     console.log('✓ Sistema de sincronização de dados ativo');
+    // Refresh dashboard KPIs after ingestão data is available
+    setTimeout(function() {
+      try { window.atualizarKPIsDashboard && window.atualizarKPIsDashboard(); } catch(e) {}
+    }, 500);
   }, 3000);
 });
 
@@ -3177,6 +3273,24 @@ window.dashIrParaPagamentosRisco = function() {
   // Renderizar tabela filtrada
   if (window.renderizarTabelaPagamentos) window.renderizarTabelaPagamentos();
   if (window.atualizarKPIsPagamentos) window.atualizarKPIsPagamentos();
+};
+
+window.dashIrParaDebitos = function() {
+  var btn = document.querySelector('.nav-btn[onclick*="debitos"]');
+  if (typeof showView === 'function') showView('debitos', btn);
+};
+
+window.dashIrParaConciliacao = function() {
+  var btn = document.querySelector('.nav-btn[onclick*="conciliacao"]');
+  if (typeof showView === 'function') showView('conciliacao', btn);
+  try { if (window.atualizarEstatisticasConciliacao) window.atualizarEstatisticasConciliacao(); } catch(e) {}
+};
+
+window.dashIrParaInconsistencias = function() {
+  var btn = document.getElementById('nav-inconsist-btn') || document.querySelector('.nav-btn[onclick*="inconsist"]');
+  if (typeof showView === 'function') showView('inconsistencias', btn);
+  try { if (window.ingestaoInit) window.ingestaoInit(); } catch(e) {}
+  try { if (window.renderizarRFsInconsistencias) window.renderizarRFsInconsistencias(); } catch(e) {}
 };
 
 /* ── MODAL GUIA DARF/IBS ── */
