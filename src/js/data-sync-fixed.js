@@ -982,8 +982,9 @@ function _concApurRender() {
     var tipoBadge = nf.tipo === 'entrada'
       ? '<span style="color:var(--teal);font-size:10px;font-weight:700">' + (nf.tipoDF || 'ENTRADA') + '</span>'
       : '<span style="color:var(--blue);font-size:10px;font-weight:700">' + (nf.tipoDF || 'SAÍDA') + '</span>';
+    var nfLabel = ((nf.tipoDF || '') + ' ' + (nf.numero || '')).trim() || '—';
     html += '<tr>'
-      + '<td style="font-weight:600;color:var(--txt1)">' + (nf.numero || '—') + '</td>'
+      + '<td style="font-weight:600;color:var(--txt1);white-space:nowrap">' + nfLabel + '</td>'
       + '<td>' + tipoBadge + '</td>'
       + '<td style="color:var(--txt2)">' + (nf.entidade || '—') + '</td>'
       + '<td style="font-family:monospace;font-size:11px;color:var(--txt3)">' + (nf.cnpj || '—') + '</td>'
@@ -1028,8 +1029,9 @@ function _concFinRender() {
     var comprIcon = r.comprovante
       ? '<span style="color:var(--green);font-weight:700">✓ Sim</span>'
       : '<span style="color:var(--txt3)">—</span>';
+    var nfLabel = ((nf.tipoDF || '') + ' ' + (nf.numero || '')).trim() || '—';
     html += '<tr>'
-      + '<td style="font-weight:600;color:var(--txt1)">' + (nf.numero || '—') + '</td>'
+      + '<td style="font-weight:600;color:var(--txt1);white-space:nowrap">' + nfLabel + '</td>'
       + '<td>' + tipoBadge + '</td>'
       + '<td style="color:var(--txt2)">' + (nf.entidade || '—') + '</td>'
       + '<td class="r" style="font-family:monospace">' + ibsVal + '</td>'
