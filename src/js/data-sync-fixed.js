@@ -808,44 +808,53 @@ function _concBuildLista(filtroMes) {
   var lista = window.nfListaFiltradaGlobal || [];
   var result = [];
   lista.forEach(function(nf, idx) {
-    var seed = _concHash(nf.id + nf.numero + idx);
+    var dataBase = nf.data || '2026-01-15';
+    if (filtroMes && !dataBase.startsWith(filtroMes)) return;
+
+    var seed = _concHash((nf.numero || '') + (nf.cnpj || '') + idx);
     var statusApur = _apurDist[seed % 10];
     var protocolo = 'APU2026-' + String(seed % 999999 + 1).padStart(6, '0');
-    var valorDF = 0;
-    var ibsRF = null, cbsRF = null;
-    (nf.registrosFiscais || []).forEach(function(rf) {
-      valorDF += rf.valor || 0;
-      if (rf.tipoFiscal === 'ibs') ibsRF = rf;
-      if (rf.tipoFiscal === 'cbs') cbsRF = rf;
-    });
+
+    // Valor total da DF vem direto do registro NF
+    var valorDF = nf.valorTotal || 0;
     var valorGov = statusApur === 'divergente'
       ? valorDF * (1 + ((seed % 7) - 3) * 0.003)
       : valorDF;
     var deltaValor = valorGov - valorDF;
 
-    var dataBase = nf.dataEmissao || nf.data || '2026-01-15';
-    if (filtroMes && !dataBase.startsWith(filtroMes)) return;
-
     var apurDia = String((seed % 28) + 1).padStart(2, '0');
-    var apurMes = dataBase.substring(0, 7);
-    var dataApur = apurMes + '-' + apurDia;
+    var dataApur = dataBase.substring(0, 7) + '-' + apurDia;
 
-    // Financeira
-    var ibsPago = ibsRF && (ibsRF.dataPagamento && ibsRF.dataPagamento !== '—' ||
-      ibsRF.status === 'apropriado' || ibsRF.status === 'utilizado' || ibsRF.status === 'extinto');
-    var cbsPago = cbsRF && (cbsRF.dataPagamento && cbsRF.dataPagamento !== '—' ||
-      cbsRF.status === 'apropriado' || cbsRF.status === 'utilizado' || cbsRF.status === 'extinto');
+    // RF IBS e CBS a partir dos registrosFiscais globais
+    var ibsRF = null, cbsRF = null;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (rf.tipoFiscal === 'ibs' && !ibsRF) ibsRF = rf;
+      if (rf.tipoFiscal === 'cbs' && !cbsRF) cbsRF = rf;
+    });
+
+    // Conciliação Financeira: usa status e dataPagamento reais dos RFs
+    var _finalStatus = { apropriado: 1, utilizado: 1, extinto: 1 };
+    var ibsPago = ibsRF && (
+      (ibsRF.dataPagamento && ibsRF.dataPagamento !== '—') ||
+      _finalStatus[ibsRF.status]
+    );
+    var cbsPago = cbsRF && (
+      (cbsRF.dataPagamento && cbsRF.dataPagamento !== '—') ||
+      _finalStatus[cbsRF.status]
+    );
     var ibsInc = ibsRF && ibsRF.status === 'inconsistencia';
     var cbsInc = cbsRF && cbsRF.status === 'inconsistencia';
+
     var statusFin;
-    if (ibsInc || cbsInc) statusFin = 'inconsistente';
+    if (ibsInc || cbsInc)       statusFin = 'inconsistente';
     else if (ibsPago && cbsPago) statusFin = 'completo';
     else if (ibsPago || cbsPago) statusFin = 'parcial';
-    else statusFin = 'pendente';
+    else                         statusFin = 'pendente';
+
     var comprovante = ibsPago && cbsPago;
-    var proxAcao = statusFin === 'completo' ? '—'
-      : statusFin === 'parcial'   ? 'Quitar imposto pendente'
-      : statusFin === 'pendente'  ? 'Emitir guia DARF/IBS'
+    var proxAcao = statusFin === 'completo'     ? '—'
+      : statusFin === 'parcial'                 ? 'Quitar imposto pendente'
+      : statusFin === 'pendente'                ? 'Emitir guia DARF/IBS'
       : 'Resolver inconsistência';
 
     result.push({
@@ -853,7 +862,7 @@ function _concBuildLista(filtroMes) {
       statusApur: statusApur, protocolo: protocolo,
       valorDF: valorDF, valorGov: valorGov, deltaValor: deltaValor, dataApur: dataApur,
       ibsRF: ibsRF, cbsRF: cbsRF,
-      ibsPago: ibsPago, cbsPago: cbsPago, ibsInc: ibsInc, cbsInc: cbsInc,
+      ibsPago: !!ibsPago, cbsPago: !!cbsPago, ibsInc: ibsInc, cbsInc: cbsInc,
       statusFin: statusFin, comprovante: comprovante, proxAcao: proxAcao
     });
   });
@@ -968,12 +977,15 @@ function _concApurRender() {
   slice.forEach(function(r) {
     var nf = r.nf;
     var delta = r.deltaValor;
-    var deltaStr = delta === 0 ? '—' : (delta > 0 ? '+' : '') + _concFmt(delta);
-    var deltaColor = delta > 5 ? 'color:var(--amber)' : delta < -5 ? 'color:var(--red)' : 'color:var(--txt3)';
+    var deltaStr = Math.abs(delta) < 1 ? '—' : (delta > 0 ? '+' : '') + _concFmt(delta);
+    var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? 'color:var(--amber)' : 'color:var(--red)') : 'color:var(--txt3)';
+    var tipoBadge = nf.tipo === 'entrada'
+      ? '<span style="color:var(--teal);font-size:10px;font-weight:700">' + (nf.tipoDF || 'ENTRADA') + '</span>'
+      : '<span style="color:var(--blue);font-size:10px;font-weight:700">' + (nf.tipoDF || 'SAÍDA') + '</span>';
     html += '<tr>'
-      + '<td style="font-weight:600;color:var(--txt1)">' + (nf.numero || nf.id) + '</td>'
-      + '<td>' + (nf.tipo === 'entrada' ? '<span style="color:var(--teal);font-size:10px;font-weight:700">ENTRADA</span>' : '<span style="color:var(--blue);font-size:10px;font-weight:700">SAÍDA</span>') + '</td>'
-      + '<td style="color:var(--txt2)">' + (nf.fornecedor || nf.cliente || '—') + '</td>'
+      + '<td style="font-weight:600;color:var(--txt1)">' + (nf.numero || '—') + '</td>'
+      + '<td>' + tipoBadge + '</td>'
+      + '<td style="color:var(--txt2)">' + (nf.entidade || '—') + '</td>'
       + '<td style="font-family:monospace;font-size:11px;color:var(--txt3)">' + (nf.cnpj || '—') + '</td>'
       + '<td class="r" style="font-family:monospace">' + _concFmt(r.valorDF) + '</td>'
       + '<td class="r" style="font-family:monospace">' + _concFmt(r.valorGov) + '</td>'
@@ -1007,15 +1019,19 @@ function _concFinRender() {
   var html = '';
   slice.forEach(function(r) {
     var nf = r.nf;
-    var ibsVal = r.ibsRF ? _concFmt(r.ibsRF.valor || 0) : '—';
-    var cbsVal = r.cbsRF ? _concFmt(r.cbsRF.valor || 0) : '—';
+    // Usa valores de IBS/CBS direto do NF (campos globais) e RF para status
+    var ibsVal = r.ibsRF ? _concFmt(r.ibsRF.valor || nf.ibs || 0) : (nf.ibs ? _concFmt(nf.ibs) : '—');
+    var cbsVal = r.cbsRF ? _concFmt(r.cbsRF.valor || nf.cbs || 0) : (nf.cbs ? _concFmt(nf.cbs) : '—');
+    var tipoBadge = nf.tipo === 'entrada'
+      ? '<span style="color:var(--teal);font-size:10px;font-weight:700">' + (nf.tipoDF || 'ENTRADA') + '</span>'
+      : '<span style="color:var(--blue);font-size:10px;font-weight:700">' + (nf.tipoDF || 'SAÍDA') + '</span>';
     var comprIcon = r.comprovante
       ? '<span style="color:var(--green);font-weight:700">✓ Sim</span>'
       : '<span style="color:var(--txt3)">—</span>';
     html += '<tr>'
-      + '<td style="font-weight:600;color:var(--txt1)">' + (nf.numero || nf.id) + '</td>'
-      + '<td>' + (nf.tipo === 'entrada' ? '<span style="color:var(--teal);font-size:10px;font-weight:700">ENTRADA</span>' : '<span style="color:var(--blue);font-size:10px;font-weight:700">SAÍDA</span>') + '</td>'
-      + '<td style="color:var(--txt2)">' + (nf.fornecedor || nf.cliente || '—') + '</td>'
+      + '<td style="font-weight:600;color:var(--txt1)">' + (nf.numero || '—') + '</td>'
+      + '<td>' + tipoBadge + '</td>'
+      + '<td style="color:var(--txt2)">' + (nf.entidade || '—') + '</td>'
       + '<td class="r" style="font-family:monospace">' + ibsVal + '</td>'
       + '<td>' + _rfStatusBadge(r.ibsRF) + '</td>'
       + '<td class="r" style="font-family:monospace">' + cbsVal + '</td>'
@@ -1038,7 +1054,7 @@ window.concApuracaoFiltrar = function() {
     if (tipo   && nf.tipo      !== tipo)   return false;
     if (status && r.statusApur !== status) return false;
     if (busca) {
-      var hay = [(nf.numero||''),(nf.id||''),(nf.fornecedor||''),(nf.cliente||''),(nf.cnpj||''),r.protocolo].join(' ').toLowerCase();
+      var hay = [(nf.numero||''),(nf.entidade||''),(nf.cnpj||''),(nf.tipoDF||''),r.protocolo].join(' ').toLowerCase();
       if (hay.indexOf(busca) === -1) return false;
     }
     return true;
@@ -1071,7 +1087,7 @@ window.concFinanceiraFiltrar = function() {
     if (tipo   && nf.tipo      !== tipo)   return false;
     if (status && r.statusFin  !== status) return false;
     if (busca) {
-      var hay = [(nf.numero||''),(nf.id||''),(nf.fornecedor||''),(nf.cliente||''),(nf.cnpj||'')].join(' ').toLowerCase();
+      var hay = [(nf.numero||''),(nf.entidade||''),(nf.cnpj||''),(nf.tipoDF||'')].join(' ').toLowerCase();
       if (hay.indexOf(busca) === -1) return false;
     }
     return true;
