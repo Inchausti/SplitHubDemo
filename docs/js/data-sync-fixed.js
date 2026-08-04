@@ -3930,11 +3930,15 @@ window.downloadGuiaDARF = function() {
     }
   }
 
+  var _ingStatusInconsistencia = ['erro_layout','erro_dados','rejeitado','duplicado'];
+
   function _aplicarFiltros() {
-    var busca = (document.getElementById('ing-busca') || {}).value || '';
-    var filtTipo = (document.getElementById('ing-filtro-tipo') || {}).value || '';
-    var filtStatus = (document.getElementById('ing-filtro-status') || {}).value || '';
-    var filtVal = (document.getElementById('ing-filtro-val') || {}).value || '';
+    var busca      = (document.getElementById('ing-busca')            || {}).value || '';
+    var filtTipo   = (document.getElementById('ing-filtro-tipo')      || {}).value || '';
+    var filtStatus = (document.getElementById('ing-filtro-status')    || {}).value || '';
+    var filtVal    = (document.getElementById('ing-filtro-val')       || {}).value || '';
+    var dataDe     = (document.getElementById('ing-filtro-data-de')   || {}).value || '';
+    var dataAte    = (document.getElementById('ing-filtro-data-ate')  || {}).value || '';
 
     busca = busca.toLowerCase();
 
@@ -3943,9 +3947,15 @@ window.downloadGuiaDARF = function() {
           d.emitente.toLowerCase().indexOf(busca) === -1 &&
           d.cnpj.toLowerCase().indexOf(busca) === -1) return false;
       if (filtTipo && d.tipo !== filtTipo) return false;
-      if (filtStatus && d.status !== filtStatus) return false;
-      if (filtVal === 'ok' && (d.valLayout === false || d.valValidade === false || d.valDados === false)) return false;
-      if (filtVal === 'erro' && d.valLayout !== false && d.valValidade !== false && d.valDados !== false) return false;
+      if (filtStatus === 'inconsistencia_todos') {
+        if (_ingStatusInconsistencia.indexOf(d.status) === -1) return false;
+      } else if (filtStatus && d.status !== filtStatus) {
+        return false;
+      }
+      if (filtVal === 'ok'   && (d.valLayout === false || d.valValidade === false || d.valDados === false)) return false;
+      if (filtVal === 'erro' && d.valLayout !== false && d.valValidade !== false && d.valDados !== false)   return false;
+      if (dataDe  && d.dataEmissao < dataDe)  return false;
+      if (dataAte && d.dataEmissao > dataAte) return false;
       return true;
     });
   }
@@ -3970,11 +3980,9 @@ window.downloadGuiaDARF = function() {
   };
 
   window.ingestaoLimparFiltros = function() {
-    var el;
-    el = document.getElementById('ing-busca'); if (el) el.value = '';
-    el = document.getElementById('ing-filtro-tipo'); if (el) el.value = '';
-    el = document.getElementById('ing-filtro-status'); if (el) el.value = '';
-    el = document.getElementById('ing-filtro-val'); if (el) el.value = '';
+    ['ing-busca','ing-filtro-tipo','ing-filtro-status','ing-filtro-val','ing-filtro-data-de','ing-filtro-data-ate'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
     _ingFiltrados = _ingDados.slice();
     _ingPagina = 1;
     _renderTabela();
