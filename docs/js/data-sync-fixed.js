@@ -982,10 +982,8 @@ function _concApurRender() {
     var tipoBadge = nf.tipo === 'entrada'
       ? '<span style="color:var(--teal);font-size:10px;font-weight:700">' + (nf.tipoDF || 'ENTRADA') + '</span>'
       : '<span style="color:var(--blue);font-size:10px;font-weight:700">' + (nf.tipoDF || 'SAÍDA') + '</span>';
-    var chave = nf.chaveDF || nf.numero || '—';
-    var chaveDisp = chave.length > 16 ? chave.substring(0, 10) + '…' + chave.slice(-6) : chave;
     html += '<tr>'
-      + '<td style="font-family:monospace;font-size:11px;color:var(--txt1)" title="' + chave + '">' + chaveDisp + '</td>'
+      + '<td style="font-weight:600;color:var(--txt1)">' + (nf.numero || '—') + '</td>'
       + '<td>' + tipoBadge + '</td>'
       + '<td style="color:var(--txt2)">' + (nf.entidade || '—') + '</td>'
       + '<td style="font-family:monospace;font-size:11px;color:var(--txt3)">' + (nf.cnpj || '—') + '</td>'
@@ -1030,10 +1028,8 @@ function _concFinRender() {
     var comprIcon = r.comprovante
       ? '<span style="color:var(--green);font-weight:700">✓ Sim</span>'
       : '<span style="color:var(--txt3)">—</span>';
-    var chave = nf.chaveDF || nf.numero || '—';
-    var chaveDisp = chave.length > 16 ? chave.substring(0, 10) + '…' + chave.slice(-6) : chave;
     html += '<tr>'
-      + '<td style="font-family:monospace;font-size:11px;color:var(--txt1)" title="' + chave + '">' + chaveDisp + '</td>'
+      + '<td style="font-weight:600;color:var(--txt1)">' + (nf.numero || '—') + '</td>'
       + '<td>' + tipoBadge + '</td>'
       + '<td style="color:var(--txt2)">' + (nf.entidade || '—') + '</td>'
       + '<td class="r" style="font-family:monospace">' + ibsVal + '</td>'
