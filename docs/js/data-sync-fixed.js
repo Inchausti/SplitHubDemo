@@ -791,6 +791,231 @@ window.atualizarKPIsDashboard = function() {
 // ============================================================
 
 // ============================================================
+// INTELIGÊNCIA — sincronização com dados globais reais
+// ============================================================
+
+window.atualizarInteligencia = function() {
+  var lista = window.nfListaFiltradaGlobal || [];
+  if (!lista.length) return;
+
+  var fmtM = function(v) {
+    if (Math.abs(v) >= 1e9) return 'R$ ' + (v/1e9).toFixed(2).replace('.',',') + 'B';
+    if (Math.abs(v) >= 1e6) return 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M';
+    if (Math.abs(v) >= 1e3) return 'R$ ' + Math.round(v/1e3) + 'K';
+    return 'R$ ' + v.toFixed(0);
+  };
+  var setEl = function(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
+  var finalOk = { apropriado: 1, utilizado: 1, extinto: 1 };
+
+  // ── 1. KPIs executivos ──────────────────────────────────
+  var totalCred = 0, apropCred = 0, riscoCred = 0, pendCred = 0;
+  lista.forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      var v = rf.valor || 0;
+      totalCred += v;
+      if (finalOk[rf.status])                                              apropCred += v;
+      else if (rf.status === 'vencido' || rf.status === 'inconsistencia')  riscoCred += v;
+      else if (rf.status === 'nao_apropriado')                             pendCred  += v;
+    });
+  });
+  var pct = totalCred > 0 ? Math.round(apropCred / totalCred * 100) : 0;
+
+  setEl('intel-aprov-pct',     pct + '%');
+  setEl('intel-aprov-sub',     fmtM(apropCred) + ' de ' + fmtM(totalCred) + ' disponível');
+  setEl('intel-aprov-val',     fmtM(apropCred));
+  setEl('intel-aprov-val-sub', pct + '% do total disponível');
+  setEl('intel-risco-val',     fmtM(riscoCred));
+  setEl('intel-risco-sub',     'requerem ação imediata · art. 48 LC 214');
+  setEl('intel-pend-val',      fmtM(pendCred));
+  setEl('intel-pend-sub',      'aguardando emissão/pagamento de guia');
+
+  // ── 2. Evolução mensal (últimos 6 meses com dados) ──────
+  var byMonth = {};
+  lista.forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    var mes = (nf.data || '2026-01').substring(0, 7);
+    if (!byMonth[mes]) byMonth[mes] = { aprop: 0, pend: 0, risco: 0 };
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      var v = rf.valor || 0;
+      if (finalOk[rf.status])                                              byMonth[mes].aprop += v;
+      else if (rf.status === 'vencido' || rf.status === 'inconsistencia')  byMonth[mes].risco += v;
+      else                                                                 byMonth[mes].pend  += v;
+    });
+  });
+  var meses  = Object.keys(byMonth).sort().slice(-6);
+  var labM   = meses.map(function(m) { return m.substring(5,7) + '/' + m.substring(2,4); });
+  var dAprop = meses.map(function(m) { return +(byMonth[m].aprop / 1e6).toFixed(2); });
+  var dPend  = meses.map(function(m) { return +(byMonth[m].pend  / 1e6).toFixed(2); });
+  var dRisco = meses.map(function(m) { return +(byMonth[m].risco / 1e6).toFixed(2); });
+  if (typeof svgBar === 'function' && meses.length) {
+    svgBar('cAprovMensal', [
+      { data: dAprop, color: '#22C55E' },
+      { data: dPend,  color: '#F59E0B' },
+      { data: dRisco, color: '#F43F5E' }
+    ], labM, 200);
+  }
+
+  // ── 3. Alíquota efetiva por mês (real vs projetada vs mercado) ──
+  var aliqReal = meses.map(function(m) {
+    var tot = 0, tax = 0;
+    lista.forEach(function(nf) {
+      if (nf.tipo !== 'entrada' || (nf.data||'').substring(0,7) !== m) return;
+      tot += nf.valorTotal || 0;
+      tax += (nf.ibs || 0) + (nf.cbs || 0);
+    });
+    return tot > 0 ? +((tax / tot) * 100).toFixed(2) : 9.5;
+  });
+  var aliqProj = aliqReal.map(function(v) { return +(v * 0.98).toFixed(2); });
+  var aliqMerc = meses.map(function() { return 9.65; });
+  var aliqMin  = Math.min.apply(null, aliqReal) - 0.3;
+  var aliqMax  = Math.max.apply(null, aliqMerc) + 0.2;
+  if (typeof svgLine === 'function' && meses.length) {
+    svgLine('cAliquota', [
+      { data: aliqReal, color: '#49C5B1', dots: true, w: 2.5 },
+      { data: aliqProj, color: '#3B82F6', dash: true },
+      { data: aliqMerc, color: '#53565A', dash2: true }
+    ], labM, 200, { min: aliqMin, max: aliqMax });
+  }
+
+  // ── 4. Score de risco por fornecedor (de RFs reais) ─────
+  var scoreMap = {};
+  lista.forEach(function(nf) {
+    var ent = nf.entidade || '—';
+    if (!scoreMap[ent]) scoreMap[ent] = { good: 0, bad: 0, vol: 0 };
+    scoreMap[ent].vol += nf.valorTotal || 0;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (finalOk[rf.status])                                              scoreMap[ent].good++;
+      if (rf.status === 'inconsistencia' || rf.status === 'vencido')       scoreMap[ent].bad++;
+    });
+  });
+  var scoreLista = Object.keys(scoreMap).map(function(ent) {
+    var d = scoreMap[ent];
+    var denom = d.good + d.bad * 2;
+    var rawScore = denom > 0 ? Math.round(d.good / denom * 100) : 75;
+    return { nome: ent, score: Math.max(5, Math.min(100, rawScore)), vol: d.vol };
+  });
+  scoreLista.sort(function(a, b) { return b.vol - a.vol; });
+  var sbEl = document.getElementById('score-bars');
+  if (sbEl) {
+    var h = '';
+    scoreLista.slice(0, 10).forEach(function(r) {
+      var c = r.score >= 80 ? '#22C55E' : r.score >= 60 ? '#F59E0B' : '#F43F5E';
+      var nome = r.nome.length > 18 ? r.nome.substring(0,17) + '…' : r.nome;
+      h += '<div class="srow"><span class="sname">' + nome + '</span>'
+         + '<div class="strk"><div class="sfil" style="width:' + r.score + '%;background:' + c + '"></div></div>'
+         + '<span class="snum" style="color:' + c + '">' + r.score + '</span></div>';
+    });
+    sbEl.innerHTML = h || '<div style="color:var(--txt3);font-size:12px;padding:12px 0">Sem dados</div>';
+  }
+
+  // ── 5. Projeção de recuperação ───────────────────────────
+  var projEl = document.getElementById('intel-projecao');
+  if (projEl) {
+    var novoPct = totalCred > 0 ? Math.round((apropCred + pendCred) / totalCred * 100) : pct;
+    projEl.innerHTML =
+      '<div style="display:flex;flex-direction:column;gap:14px">'
+      + '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:10px;padding:14px 18px">'
+      + '<div style="font-size:11px;color:var(--txt3);margin-bottom:4px">Se todos os créditos pendentes fossem regularizados</div>'
+      + '<div style="font-size:22px;font-weight:700;color:#8B5CF6">' + fmtM(pendCred) + '</div>'
+      + '<div style="font-size:11px;color:var(--txt3);margin-top:4px">adicionais · aproveitamento subiria de <strong style="color:var(--txt1)">'
+      + pct + '%</strong> para <strong style="color:#22C55E">' + novoPct + '%</strong></div>'
+      + '</div>'
+      + '<div style="background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.2);border-radius:10px;padding:14px 18px">'
+      + '<div style="font-size:11px;color:var(--txt3);margin-bottom:4px">Crédito em risco de perda definitiva (vencidos + inconsistentes)</div>'
+      + '<div style="font-size:22px;font-weight:700;color:var(--red)">' + fmtM(riscoCred) + '</div>'
+      + '<div style="font-size:11px;color:var(--txt3);margin-top:4px">art. 48 LC 214 — perda irreversível se não quitado</div>'
+      + '</div></div>';
+  }
+
+  // ── 6. Simulador ROI — pré-seeding com volume real ──────
+  var volEntrada = lista.filter(function(nf) { return nf.tipo === 'entrada'; })
+                        .reduce(function(s, nf) { return s + (nf.valorTotal || 0); }, 0);
+  var simEl = document.getElementById('sim-c');
+  if (simEl && volEntrada > 0) {
+    var volM = Math.round(volEntrada / 1e6 / 50) * 50;
+    simEl.value = Math.max(100, Math.min(20000, volM));
+    if (typeof updateSim === 'function') updateSim();
+  }
+
+  // ── 7. Alertas dinâmicos gerados de dados reais ─────────
+  var alertsEl = document.getElementById('intel-alerts');
+  if (!alertsEl) return;
+  var alertas = [];
+  var hoje = '04/08';
+
+  // Crítico: vencidos por fornecedor
+  var vencMap = {};
+  lista.forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais||[]).forEach(function(rf) {
+      if (rf.status !== 'vencido') return;
+      var e = nf.entidade;
+      if (!vencMap[e]) vencMap[e] = { val: 0, n: 0 };
+      vencMap[e].val += rf.valor || 0; vencMap[e].n++;
+    });
+  });
+  Object.keys(vencMap).sort(function(a,b){return vencMap[b].val-vencMap[a].val;}).slice(0,3).forEach(function(ent) {
+    var d = vencMap[ent];
+    alertas.push({ sev:'CRÍTICO', color:'var(--red)', bg:'rgba(244,63,94,.15)',
+      msg: ent + ' — ' + d.n + ' RF(s) vencido(s). Crédito de ' + fmtM(d.val) + ' em risco de perda definitiva (art. 48 LC 214). Ação imediata necessária.' });
+  });
+
+  // Atenção: inconsistências
+  var incMap = {};
+  lista.forEach(function(nf) {
+    (nf.registrosFiscais||[]).forEach(function(rf) {
+      if (rf.status !== 'inconsistencia') return;
+      var e = nf.entidade;
+      if (!incMap[e]) incMap[e] = { val: 0, n: 0 };
+      incMap[e].val += rf.valor || 0; incMap[e].n++;
+    });
+  });
+  Object.keys(incMap).sort(function(a,b){return incMap[b].val-incMap[a].val;}).slice(0,3).forEach(function(ent) {
+    var d = incMap[ent];
+    alertas.push({ sev:'ATENÇÃO', color:'var(--amber)', bg:'rgba(245,158,11,.15)',
+      msg: ent + ' — ' + d.n + ' inconsistência(s) em RF detectada(s) (' + fmtM(d.val) + '). Regularizar para garantir aproveitamento do crédito.' });
+  });
+
+  // Atenção: maiores volumes pendentes de pagamento
+  var pendMap = {};
+  lista.forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais||[]).forEach(function(rf) {
+      if (rf.status !== 'nao_apropriado') return;
+      var e = nf.entidade;
+      if (!pendMap[e]) pendMap[e] = { val: 0, n: 0 };
+      pendMap[e].val += rf.valor || 0; pendMap[e].n++;
+    });
+  });
+  Object.keys(pendMap).sort(function(a,b){return pendMap[b].val-pendMap[a].val;}).slice(0,2).forEach(function(ent) {
+    var d = pendMap[ent];
+    alertas.push({ sev:'ATENÇÃO', color:'var(--amber)', bg:'rgba(245,158,11,.15)',
+      msg: ent + ' — ' + d.n + ' RF(s) com crédito não apropriad (' + fmtM(d.val) + '). Emitir guia DARF/IBS para regularizar.' });
+  });
+
+  // Info: aproveitamento geral
+  var nível = pct >= 75 ? 'Índice saudável.' : pct >= 50 ? 'Requer atenção.' : 'Índice crítico — ação necessária.';
+  alertas.push({ sev:'INFO', color:'var(--blue)', bg:'rgba(59,130,246,.15)',
+    msg: 'Aproveitamento geral: ' + pct + '% (' + fmtM(apropCred) + ' de ' + fmtM(totalCred) + '). ' + nível });
+
+  // Info: melhor fornecedor
+  if (scoreLista.length && scoreLista[0].score >= 80) {
+    alertas.push({ sev:'INFO', color:'var(--teal)', bg:'rgba(73,197,177,.15)',
+      msg: scoreLista[0].nome + ' — melhor score de risco (' + scoreLista[0].score + '/100). Histórico de pagamentos consistente, créditos em dia.' });
+  }
+
+  var htmlA = '';
+  alertas.forEach(function(a) {
+    htmlA += '<div class="arow" style="border-left-color:' + a.color + '">'
+           + '<span class="asev" style="background:' + a.bg + ';color:' + a.color + '">' + a.sev + '</span>'
+           + '<div class="amsg">' + a.msg + '</div>'
+           + '<span class="atim">' + hoje + '</span></div>';
+  });
+  alertsEl.innerHTML = htmlA || '<div style="text-align:center;padding:24px;color:var(--txt3);font-size:12px">Nenhum alerta detectado.</div>';
+};
+
+// ============================================================
 // CONCILIAÇÃO — hash determinístico + dados de apuração + financeira
 // ============================================================
 
