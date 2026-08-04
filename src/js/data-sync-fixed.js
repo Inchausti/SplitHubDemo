@@ -4740,3 +4740,26 @@ window.downloadGuiaDARF = function() {
     _renderTabela();
   };
 })();
+
+
+// Patch showView para garantir que atualizarInteligencia seja chamada
+// independente da versão do HTML em cache
+(function() {
+  function _patchShowView() {
+    if (typeof showView !== 'function') return;
+    var _orig = showView;
+    window.showView = function(id, btn, fromBottomNav) {
+      _orig.call(this, id, btn, fromBottomNav);
+      if (id === 'inteligencia') {
+        setTimeout(function() {
+          try { if (window.atualizarInteligencia) window.atualizarInteligencia(); } catch(e) {}
+        }, 50);
+      }
+    };
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _patchShowView);
+  } else {
+    _patchShowView();
+  }
+})();
