@@ -3569,46 +3569,144 @@ window.downloadGuiaDARF = function() {
     return { valLayout: layout, valValidade: validade, valDados: dados };
   }
 
-  function _gerarDados() {
+  function _fmtIngData(data, offsetDays, rng) {
+    var p = (data || '2026-01-01').split('-');
+    var dia = Math.min(parseInt(p[2], 10) + offsetDays, 28);
+    var hh = String(Math.floor(rng() * 24)).padStart(2, '0');
+    var mm = String(Math.floor(rng() * 60)).padStart(2, '0');
+    return String(dia).padStart(2, '0') + '/' + p[1] + '/' + p[0] + ' ' + hh + ':' + mm;
+  }
+
+  function _tipoIngDisplay(tipoDF, direcao) {
+    if (tipoDF === 'NF-e' || tipoDF === 'NFC-e') {
+      return tipoDF + (direcao === 'entrada' ? ' Entrada' : ' Saída');
+    }
+    return tipoDF;
+  }
+
+  function _gerarDadosDeGlobais() {
+    var nfs = window.nfListaFiltradaGlobal || [];
     var dados = [];
-    var r = _rng(20260101);
-    var datas = [
-      '2026-01-15','2026-01-22','2026-01-29',
-      '2026-02-05','2026-02-12','2026-02-19','2026-02-26',
-      '2026-03-04','2026-03-11','2026-03-18','2026-03-25',
-      '2026-04-02','2026-04-09','2026-04-16','2026-04-23',
-      '2026-05-07','2026-05-14','2026-05-21','2026-05-28',
-      '2026-06-04','2026-06-11','2026-06-18','2026-06-25',
-      '2026-07-02','2026-07-09','2026-07-16','2026-07-23',
-      '2026-08-01','2026-08-04'
+
+    // ── Base: todos os DFs globais como "integrado" ──
+    nfs.forEach(function(nf, idx) {
+      var rng = _rng(idx * 1337 + 42);
+      var dataIngestao = _fmtIngData(nf.data, 1 + Math.floor(rng() * 2), rng);
+      var cfop = _cfops[idx % _cfops.length];
+      var tipo = _tipoIngDisplay(nf.tipoDF || 'NF-e', nf.tipo || 'entrada');
+      var validacoes = _validacoesParaStatus('integrado', rng);
+      var vDeriv = _derivaValidacoes('integrado', validacoes);
+
+      dados.push({
+        id: idx,
+        chave: nf.chaveDF || '',
+        tipo: tipo,
+        emitente: nf.entidade,
+        cnpj: nf.cnpj,
+        valor: nf.valorTotal,
+        cfop: cfop,
+        dataEmissao: nf.data,
+        dataIngestao: dataIngestao,
+        status: 'integrado',
+        valLayout: vDeriv.valLayout,
+        valValidade: vDeriv.valValidade,
+        valDados: vDeriv.valDados,
+        validacoes: validacoes
+      });
+    });
+
+    // ── Extra 20%: erros determinísticos ──
+    var extraCount = Math.ceil(nfs.length * 0.20);
+    // Distribuição dos erros: prioriza os tipos mais didáticos
+    var extraStatus = [
+      'erro_layout','erro_layout','erro_layout',
+      'erro_dados','erro_dados','erro_dados',
+      'rejeitado','rejeitado',
+      'duplicado','duplicado',
+      'pendente','pendente',
+      'erro_layout','erro_dados','rejeitado','duplicado',
+      'erro_layout','erro_dados','pendente','duplicado'
+    ];
+    // Mensagens de erro ricas por tipo para variedade
+    var errosLayout = [
+      'Elemento <infNFe> malformado na linha 47',
+      'Namespace inválido: esperado NF-e 4.00, recebido 3.10',
+      'Campo <CNPJ> ausente no grupo <emit>',
+      'Atributo versão fora do padrão SEFAZ (esperado 4.00)',
+      'Tag XML não fechada: <det> na linha 183',
+      'Codificação charset inválida — esperado UTF-8'
+    ];
+    var errosDados = [
+      'CNPJ emitente não localizado na base da Receita Federal',
+      'CFOP 5101 incompatível com NF-e de entrada',
+      'Alíquota CBS 8.5% fora do intervalo regulatório (0%–7.9%)',
+      'Inscrição Estadual inválida para o estado de origem',
+      'NCM 8471.30.19 sem tributação IBS configurada',
+      'Divergência entre valor total e soma dos itens (R$ 0,01)'
     ];
 
-    for (var i = 0; i < 152; i++) {
-      var emit = _emitentes[Math.floor(r() * _emitentes.length)];
-      var tipo = _tipos[Math.floor(r() * _tipos.length)];
-      var status = _statusDist[Math.floor(r() * _statusDist.length)];
-      var cfop = _cfops[Math.floor(r() * _cfops.length)];
-      var valor = Math.round((r() * 980000 + 2000) * 100) / 100;
-      var dEmissao = datas[Math.floor(r() * datas.length)];
-      var partsE = dEmissao.split('-');
-      var dIngDay = Math.min(parseInt(partsE[2]) + Math.floor(r() * 3), 28);
-      var dIngH = String(Math.floor(r() * 24)).padStart(2,'0');
-      var dIngM = String(Math.floor(r() * 60)).padStart(2,'0');
-      var dIngestao = partsE[2].padStart(2,'0') + '/' + partsE[1] + '/' + partsE[0] + ' ' + dIngH + ':' + dIngM;
-      var chave = _chave(r, emit, i, tipo);
-      var validacoes = _validacoesParaStatus(status, r);
+    for (var i = 0; i < extraCount; i++) {
+      var rng2 = _rng(20260000 + i * 7331 + 99);
+      var status = extraStatus[i % extraStatus.length];
+      var emit = _emitentes[i % _emitentes.length];
+      var tipoBaseIdx = i % _tipos.length;
+      var tipoBase = _tipos[tipoBaseIdx];
+      var tipoKey = tipoBase.replace(' Entrada','').replace(' Saída','');
+      var mesNum = (i % 8) + 1;
+      var dia = String((i * 3 + 7) % 28 + 1).padStart(2, '0');
+      var dEmissao = '2026-' + String(mesNum).padStart(2, '0') + '-' + dia;
+      var rng2b = _rng(i * 4441 + 17);
+      var dataIngestao = _fmtIngData(dEmissao, 1, rng2b);
+      var cfop = _cfops[(i + 3) % _cfops.length];
+      var valor = Math.round((500000 + ((i * 73856093 ^ i * 19349663) >>> 0) % 490001) * 100) / 100;
+
+      var chave;
+      if (status === 'duplicado') {
+        // Referencia chave de um DF já integrado
+        chave = dados[i % dados.length].chave;
+      } else {
+        chave = _chave(rng2, emit, dados.length + i, tipoKey);
+      }
+
+      // Validações especializadas por tipo de erro
+      var validacoes;
+      if (status === 'erro_layout') {
+        var errMsg = errosLayout[i % errosLayout.length];
+        validacoes = [
+          { tipo: 'Schema XML NF-e 4.0', ok: false, mensagem: errMsg },
+          { tipo: 'Campos obrigatórios', ok: false, mensagem: 'Validação interrompida por falha de layout' },
+          { tipo: 'Validade do certificado', ok: null, mensagem: 'Não verificado — layout inválido' },
+          { tipo: 'CNPJ emitente (Receita Federal)', ok: null, mensagem: 'Não verificado — layout inválido' },
+          { tipo: 'CFOP compatível com operação', ok: null, mensagem: 'Não verificado — layout inválido' },
+          { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: null, mensagem: 'Não verificado — layout inválido' },
+          { tipo: 'Chave de acesso (unicidade)', ok: null, mensagem: 'Não verificado — layout inválido' }
+        ];
+      } else if (status === 'erro_dados') {
+        var errMsg2 = errosDados[i % errosDados.length];
+        validacoes = [
+          { tipo: 'Schema XML NF-e 4.0', ok: true, mensagem: 'Estrutura válida conforme XSD 4.0' },
+          { tipo: 'Campos obrigatórios', ok: true, mensagem: 'Todos os campos obrigatórios presentes' },
+          { tipo: 'Validade do certificado', ok: true, mensagem: 'Certificado válido até 12/2027' },
+          { tipo: 'CNPJ emitente (Receita Federal)', ok: i % 3 === 0 ? false : true, mensagem: i % 3 === 0 ? 'CNPJ inativo na Receita Federal' : 'CNPJ ativo e regular' },
+          { tipo: 'CFOP compatível com operação', ok: i % 3 === 1 ? false : true, mensagem: i % 3 === 1 ? errMsg2 : 'CFOP válido para a operação' },
+          { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: i % 3 === 2 ? false : true, mensagem: i % 3 === 2 ? errMsg2 : 'Alíquotas dentro do intervalo regulatório' },
+          { tipo: 'Chave de acesso (unicidade)', ok: true, mensagem: 'Chave única na base' }
+        ];
+      } else {
+        validacoes = _validacoesParaStatus(status, rng2);
+      }
       var vDeriv = _derivaValidacoes(status, validacoes);
 
       dados.push({
-        id: i,
+        id: dados.length,
         chave: chave,
-        tipo: tipo,
+        tipo: tipoBase,
         emitente: emit.nome,
         cnpj: emit.cnpj,
         valor: valor,
         cfop: cfop,
         dataEmissao: dEmissao,
-        dataIngestao: dIngestao,
+        dataIngestao: dataIngestao,
         status: status,
         valLayout: vDeriv.valLayout,
         valValidade: vDeriv.valValidade,
@@ -3616,6 +3714,9 @@ window.downloadGuiaDARF = function() {
         validacoes: validacoes
       });
     }
+
+    // Re-indexar IDs
+    dados.forEach(function(d, i) { d.id = i; });
     return dados;
   }
 
@@ -3640,13 +3741,26 @@ window.downloadGuiaDARF = function() {
 
   function _tipoLabel(tipo) {
     var m = {
-      'NF-e Entrada': 'rgba(59,130,246,.12)',
-      'NF-e Saída': 'rgba(73,197,177,.12)',
-      'NFS-e': 'rgba(245,158,11,.12)',
-      'CT-e': 'rgba(167,168,170,.12)'
+      'NF-e Entrada':['rgba(59,130,246,.12)','#3B82F6'],
+      'NF-e Saída':  ['rgba(73,197,177,.12)','var(--teal)'],
+      'NFC-e Entrada':['rgba(99,102,241,.12)','#6366F1'],
+      'NFC-e Saída': ['rgba(99,102,241,.12)','#6366F1'],
+      'NFCom':       ['rgba(16,185,129,.12)','#10B981'],
+      'NF3-e':       ['rgba(20,184,166,.12)','#14B8A6'],
+      'NFS-e':       ['rgba(34,197,94,.12)','#22C55E'],
+      'CT-e':        ['rgba(245,158,11,.12)','#F59E0B'],
+      'NFAg':        ['rgba(132,204,22,.12)','#84CC16'],
+      'NFGás':       ['rgba(234,179,8,.12)','#EAB308'],
+      'MDF-e':       ['rgba(168,85,247,.12)','#A855F7'],
+      'BP-e':        ['rgba(73,197,177,.12)','var(--teal)']
     };
-    var col = m[tipo] || 'rgba(167,168,170,.12)';
-    return '<span style="display:inline-block;border-radius:3px;padding:1px 7px;font-size:11px;font-weight:600;background:' + col + ';color:var(--txt2)">' + tipo + '</span>';
+    var key = tipo; // try exact match first
+    if (!m[key]) {
+      // try prefix match (e.g. "NFCom Entrada" → "NFCom")
+      for (var k in m) { if (tipo.indexOf(k) === 0) { key = k; break; } }
+    }
+    var c = m[key] || ['rgba(167,168,170,.12)','var(--txt2)'];
+    return '<span style="display:inline-block;border-radius:3px;padding:1px 7px;font-size:11px;font-weight:600;background:' + c[0] + ';color:' + c[1] + '">' + tipo + '</span>';
   }
 
   function _renderKPIs(dados) {
@@ -3789,7 +3903,7 @@ window.downloadGuiaDARF = function() {
 
   window.ingestaoInit = function() {
     if (!_ingIniciado) {
-      _ingDados = _gerarDados();
+      _ingDados = _gerarDadosDeGlobais();
       _ingIniciado = true;
     }
     _ingFiltrados = _ingDados.slice();
