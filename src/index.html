@@ -405,11 +405,21 @@ tr:hover td{background:rgba(73,197,177,.02)}
       <path d="M327.7,323.3c0-7.9-3.2-13.3-9.6-16.2c-6.4-2.9-20.8-6.9-43.1-11.8c-26.5-5.4-44.3-11.8-53.4-19.2c-9.1-7.4-13.6-19-13.6-35c0-19.4,5.9-33.5,17.7-42.4c11.8-8.8,31-13.3,57.5-13.3c24.3,0,45,2.6,61.9,7.7c5.2,1.5,8.7,3.3,10.7,5.5c2,2.2,2.9,5.7,2.9,10.3v9.6c0,3.4-1,6.2-2.9,8.3c-2,2.1-4.7,3.1-8.1,3.1c-1.5,0-8.9-2-22.3-5.9c-13.4-3.9-27.3-5.9-41.8-5.9c-14.5,0-24.4,1.7-29.8,5c-5.4,3.3-8.1,9.2-8.1,17.5c0,6.4,2.5,11,7.6,13.8c5,2.8,16.5,6.3,34.5,10.5c31.4,6.6,52.3,13.5,62.5,20.6c10.2,7.1,15.3,18.9,15.3,35.4c0,20.9-6.4,36.2-19.3,46.1c-12.9,9.8-34.3,14.7-64.3,14.7c-24.1,0-44.7-2.3-61.9-7c-5.2-1.5-8.7-3.4-10.7-5.7c-2-2.3-2.9-5.8-2.9-10.5v-9.6c0-3.4,1-6.2,3.1-8.3c2.1-2.1,4.7-3.1,7.9-3.1c1.7,0,9.7,2,24,5.9c14.2,3.9,28.4,5.9,42.4,5.9c17,0,28.6-2.2,34.8-6.5C324.6,338.7,327.7,332.1,327.7,323.3z"/>
     </svg>
   </div>
-  <div class="sb-co">
-    <div class="sb-co-box">
-      <div class="lbl">Empresa ativa</div>
-      <div class="val" id="co-name" onclick="editCompanyName(this)" title="Clique para editar">Industria ABC Ltda</div>
-      <div class="sub">01.123.456/0001-99 ↕</div>
+  <div class="sb-co" style="position:relative">
+    <div class="sb-co-box" id="sb-empresa-btn" onclick="window.sbToggleEmpresa(event)" style="cursor:pointer;user-select:none" title="Clique para trocar empresa">
+      <div class="lbl" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Empresa ativa</span>
+        <span id="sb-empresa-chevron" style="font-size:10px;color:var(--txt3);transition:transform .2s">▾</span>
+      </div>
+      <div class="val" id="co-name">Positivo Tecnologia S.A.</div>
+      <div class="sub" id="co-cnpj-sub">81.243.735/0001-48 · PR · Matriz</div>
+    </div>
+    <!-- Dropdown de seleção de empresa -->
+    <div id="sb-empresa-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--sidebar);border:1px solid var(--brd);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:500;overflow:hidden;margin-top:4px">
+      <div style="padding:10px 12px 6px;border-bottom:1px solid var(--brd)">
+        <div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em">Grupo Econômico · Positivo</div>
+      </div>
+      <div id="sb-empresa-lista" style="max-height:260px;overflow-y:auto;padding:6px 0"></div>
     </div>
   </div>
   <nav>
@@ -431,6 +441,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
       <button class="nav-sub-btn" id="subnav-admin-fornecedores" onclick="showAdminSub('fornecedores',this)"><span class="nav-sub-dot"></span> Cadastro de Fornecedor</button>
       <button class="nav-sub-btn" id="subnav-admin-organizacao" onclick="showAdminSub('organizacao',this)"><span class="nav-sub-dot"></span> Gestão Organização</button>
       <button class="nav-sub-btn" id="subnav-admin-ingestao" onclick="showAdminSub('ingestao',this)"><span class="nav-sub-dot"></span> Ingestão de DFs</button>
+      <button class="nav-sub-btn" id="subnav-admin-automacoes" onclick="showAdminSub('automacoes',this)"><span class="nav-sub-dot"></span> Automações</button>
     </div>
     <button class="nav-btn" id="nav-inconsist-btn" onclick="showInconsistSub('lista',document.getElementById('subnav-inconsist-lista'))"><span class="nav-icon">⚠</span> Inconsistências</button>
     <div class="nav-sub-group" id="nav-sub-group-inconsist">
@@ -1907,6 +1918,119 @@ tr:hover td{background:rgba(73,197,177,.02)}
       </tr></thead><tbody id="t-org-cnpjs"></tbody></table></div>
     </div>
   </div>
+
+  <!-- INGESTÃO DE DFs (sub-módulo Admin) -->
+  <div id="admin-ingestao" class="sv">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+      <button class="btn btn-t" onclick="ingestaoSimularImportacao()" style="font-size:12px">+ Importar DF</button>
+    </div>
+    <!-- KPIs -->
+    <div class="kgrid k6" style="margin-bottom:20px">
+      <div class="kcard" style="border-top-color:var(--blue)"><div class="klbl">Total recebidos</div><div class="kval mono" id="ing-total">—</div><div class="ksub" id="ing-total-sub">no período</div></div>
+      <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">Integrados</div><div class="kval mono" id="ing-ok">—</div><div class="ksub" id="ing-ok-sub">validados com sucesso</div></div>
+      <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Em processamento</div><div class="kval mono" id="ing-pend">—</div><div class="ksub" id="ing-pend-sub">na fila de validação</div></div>
+      <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Com erro</div><div class="kval mono" id="ing-erro">—</div><div class="ksub" id="ing-erro-sub">requerem atenção</div></div>
+      <div class="kcard" style="border-top-color:var(--txt3)"><div class="klbl">Duplicados</div><div class="kval mono" id="ing-dup">—</div><div class="ksub">chave já existente</div></div>
+      <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">Taxa de sucesso</div><div class="kval mono" id="ing-taxa">—</div><div class="ksub">DFs integrados / total</div></div>
+    </div>
+    <!-- Pipeline + Gráfico -->
+    <div class="cgrid c11" style="margin-bottom:20px">
+      <div class="ccrd">
+        <div class="ctitle">Pipeline de Ingestão</div>
+        <div class="csub">Fluxo de validação por etapa · contagem de DFs em cada estágio</div>
+        <div class="pipe" style="margin-top:14px;flex-wrap:wrap;gap:8px">
+          <div class="pstep" style="border:1px solid rgba(59,130,246,.3);min-width:80px"><div class="pnum" style="color:var(--blue)" id="pipe-ing-receb">—</div><div class="plbl">Recebido</div><div class="pdesc">SEFAZ / ERP / Upload</div></div>
+          <div class="parr">→</div>
+          <div class="pstep" style="border:1px solid rgba(167,168,170,.3);min-width:80px"><div class="pnum" style="color:var(--txt2)" id="pipe-ing-triagem">—</div><div class="plbl">Triagem</div><div class="pdesc">Tipo DF identificado</div></div>
+          <div class="parr">→</div>
+          <div class="pstep" style="border:1px solid rgba(245,158,11,.3);min-width:80px"><div class="pnum" style="color:var(--amber)" id="pipe-ing-layout">—</div><div class="plbl">Val. Layout</div><div class="pdesc">Schema XML / estrutura</div></div>
+          <div class="parr">→</div>
+          <div class="pstep" style="border:1px solid rgba(73,197,177,.3);min-width:80px"><div class="pnum" style="color:var(--teal)" id="pipe-ing-dados">—</div><div class="plbl">Val. Dados</div><div class="pdesc">CNPJ · CFOP · Alíquotas</div></div>
+          <div class="parr">→</div>
+          <div class="pstep" style="border:1px solid rgba(34,197,94,.3);min-width:80px"><div class="pnum" style="color:var(--green)" id="pipe-ing-integ">—</div><div class="plbl">Integrado</div><div class="pdesc">RF criado na plataforma</div></div>
+        </div>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:20px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span>Erro layout: <strong id="pipe-ing-err-lay" style="color:var(--txt1)">—</strong></div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span>Erro dados: <strong id="pipe-ing-err-dat" style="color:var(--txt1)">—</strong></div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--txt3);display:inline-block"></span>Duplicados: <strong id="pipe-ing-err-dup" style="color:var(--txt1)">—</strong></div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block"></span>Rejeitados SEFAZ: <strong id="pipe-ing-err-rej" style="color:var(--txt1)">—</strong></div>
+        </div>
+      </div>
+      <div class="ccrd">
+        <div class="ctitle">Volume de ingestão</div>
+        <div class="csub" id="ing-chart-sub">DFs recebidos × integrados · últimos 7 dias</div>
+        <div class="cwrap" style="height:160px"><div id="cIngestao"></div></div>
+        <div class="leg"><span class="li"><span class="ls" style="background:var(--blue)"></span>Recebidos</span><span class="li"><span class="ls" style="background:var(--green)"></span>Integrados</span><span class="li"><span class="ls" style="background:var(--red)"></span>Com erro</span></div>
+      </div>
+    </div>
+    <!-- Filtros -->
+    <div class="crd" style="margin-bottom:20px">
+      <div class="sechdr"><h2>Filtros</h2><p>Filtre os DFs por chave, tipo, emitente, status, data ou resultado de validação</p></div>
+      <div class="flt" style="margin-top:14px;flex-wrap:wrap;gap:8px">
+        <input type="text" id="ing-busca" placeholder="Buscar por chave DF, CNPJ ou emitente…" oninput="ingestaoFiltrar()" style="min-width:240px"/>
+        <select id="ing-filtro-tipo" onchange="ingestaoFiltrar()">
+          <option value="">Tipo de DF — todos</option>
+          <optgroup label="NF-e"><option value="NF-e Entrada">NF-e Entrada</option><option value="NF-e Saída">NF-e Saída</option></optgroup>
+          <optgroup label="NFC-e"><option value="NFC-e Entrada">NFC-e Entrada</option><option value="NFC-e Saída">NFC-e Saída</option></optgroup>
+          <optgroup label="Outros tipos"><option value="NFCom">NFCom</option><option value="NF3-e">NF3-e</option><option value="NFS-e">NFS-e</option><option value="CT-e">CT-e</option><option value="NFAg">NFAg</option><option value="NFGás">NFGás</option><option value="MDF-e">MDF-e</option><option value="BP-e">BP-e</option></optgroup>
+        </select>
+        <select id="ing-filtro-status" onchange="ingestaoFiltrar()">
+          <option value="">Status — todos</option>
+          <option value="integrado">Integrado</option>
+          <option value="pendente">Em processamento</option>
+          <option value="inconsistencia_todos">Inconsistência (todos)</option>
+          <optgroup label="Detalhe da inconsistência">
+            <option value="erro_layout">— Falha de Layout</option>
+            <option value="erro_dados">— Inconsistência de Dados</option>
+            <option value="rejeitado">— Rejeitado SEFAZ</option>
+            <option value="duplicado">— Documento Duplicado</option>
+          </optgroup>
+        </select>
+        <select id="ing-filtro-val" onchange="ingestaoFiltrar()">
+          <option value="">Validação — todas</option>
+          <option value="ok">Todas aprovadas</option>
+          <option value="erro">Com falha</option>
+        </select>
+        <div style="display:flex;align-items:center;gap:6px">
+          <label style="font-size:11px;color:var(--txt2);white-space:nowrap">Emissão de</label>
+          <input type="date" id="ing-filtro-data-de" onchange="ingestaoFiltrar()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--txt1);outline:none"/>
+          <label style="font-size:11px;color:var(--txt2)">até</label>
+          <input type="date" id="ing-filtro-data-ate" onchange="ingestaoFiltrar()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--txt1);outline:none"/>
+        </div>
+        <button class="btn" onclick="ingestaoLimparFiltros()">✕ Limpar</button>
+      </div>
+    </div>
+    <!-- Tabela -->
+    <div class="tcrd">
+      <div class="tcrd-hdr" style="flex-direction:column;align-items:flex-start;gap:6px">
+        <div class="sechdr" style="margin-bottom:0"><h2>Documentos Fiscais Ingeridos</h2><p id="ing-count-sub">— DFs no período</p></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-bottom:4px">
+          <span style="font-size:11px;color:var(--txt3)">Legenda validação:</span>
+          <span style="font-size:11px;padding:1px 8px;border-radius:3px;background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)">✓ Aprovado</span>
+          <span style="font-size:11px;padding:1px 8px;border-radius:3px;background:rgba(244,63,94,.12);color:var(--red);border:1px solid rgba(244,63,94,.25)">✗ Falha</span>
+          <span style="font-size:11px;padding:1px 8px;border-radius:3px;background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25)">⏳ Pendente</span>
+        </div>
+      </div>
+      <div class="twrap"><table><thead><tr><th>Chave DF</th><th>Tipo DF</th><th>Emitente</th><th class="r">Valor</th><th>Emissão</th><th>Ingestão</th><th style="text-align:center">Layout</th><th style="text-align:center">Validade</th><th style="text-align:center">Dados</th><th>Status</th><th>Ação</th></tr></thead><tbody id="t-ingestao"></tbody></table></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
+        <button class="btn" id="ing-btn-prev" onclick="ingestaoPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:12px;color:var(--txt2)">Página</span>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:4px 12px;min-width:50px;text-align:center">
+            <span id="ing-pag-atual" style="color:var(--txt1);font-weight:600;font-size:13px">1</span>
+            <span style="color:var(--txt3);font-size:12px"> / </span>
+            <span id="ing-pag-total" style="color:var(--txt2);font-size:12px">1</span>
+          </div>
+          <span style="font-size:12px;color:var(--txt2)" id="ing-pag-info">(25 DFs por página)</span>
+        </div>
+        <button class="btn" id="ing-btn-prox" onclick="ingestaoProximaPagina()">Próxima →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="admin-automacoes" class="sv">
+    <div id="autom-root"></div>
+  </div>
 </div>
 
 <!-- MODAL: NOVO FORNECEDOR -->
@@ -1989,8 +2113,10 @@ tr:hover td{background:rgba(73,197,177,.02)}
       <button class="btn btn-t" onclick="contratosCadastrar()">+ Cadastrar contrato</button>
     </div>
   </div>
-  <!-- INGESTÃO DE DFs (sub-módulo Admin) -->
-  <div id="admin-ingestao" class="sv">
+</div>
+
+<!-- admin-ingestao movido para dentro de view-admin -->
+<div style="display:none">
     <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
       <button class="btn btn-t" onclick="ingestaoSimularImportacao()" style="font-size:12px">+ Importar DF</button>
     </div>
@@ -2203,7 +2329,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
       <!-- Tabela RF com paginação -->
       <div class="tcrd">
         <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>Registros Fiscais com Inconsistência</h2><p id="inc-rf-count-sub">— RFs · IBS + CBS · entrada e saída</p></div></div>
-        <div class="twrap"><table><thead><tr><th>ID</th><th>Etapa</th><th>Tipo Fiscal</th><th>Tipo de DFe</th><th>DF Vinculada</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor</th><th class="r">DF Total</th><th class="r">DF Líquido</th><th>Status</th><th>Data</th><th>Inconsistência</th></tr></thead><tbody id="t-inc-rfs"></tbody></table></div>
+        <div class="twrap"><table><thead><tr><th>ID</th><th>Etapa</th><th>Tipo Fiscal</th><th>Tipo de DFe</th><th>DF Vinculada</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor</th><th class="r">DF Total</th><th class="r">DF Líquido</th><th>Status</th><th>Data</th><th>Inconsistência</th><th>Ações</th></tr></thead><tbody id="t-inc-rfs"></tbody></table></div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
           <button class="btn" id="inc-rf-btn-prev" onclick="window.incRfPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
           <div style="display:flex;align-items:center;gap:12px">
@@ -5056,7 +5182,7 @@ fctRender();
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.js"></script>
-<script src="js/data-sync-fixed.js?v=36"></script>
+<script src="js/data-sync-fixed.js?v=45"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=6"></script>
 <script src="js/charts.js"></script>

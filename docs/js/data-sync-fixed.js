@@ -5812,3 +5812,507 @@ window.downloadGuiaDARF = function() {
     _patchShowView();
   }
 })();
+
+// ============================================================
+// MÓDULO AUTOMAÇÕES
+// ============================================================
+
+window._automState = {
+  abaAtiva: 'relatorios',
+  relatorios: [
+    { id:'REL-001', nome:'Créditos IBS+CBS — Mensal', modulo:'creditos', destinatarios:['fiscal@positivo.com','controladoria@positivo.com'], recorrencia:'mensal', diaHora:'1 · 08:00', formato:'PDF', ativo:true,  ultimoEnvio:'01/06/2026', proximoEnvio:'01/07/2026' },
+    { id:'REL-002', nome:'Inconsistências — Semanal',  modulo:'inconsistencias', destinatarios:['compliance@positivo.com'], recorrencia:'semanal', diaHora:'Segunda · 07:00', formato:'Excel', ativo:true,  ultimoEnvio:'24/06/2026', proximoEnvio:'01/07/2026' },
+    { id:'REL-003', nome:'Pagamentos Executados — Quinzenal', modulo:'pagamentos', destinatarios:['tesouraria@positivo.com','cfo@positivo.com'], recorrencia:'quinzenal', diaHora:'1 e 15 · 09:00', formato:'PDF', ativo:false, ultimoEnvio:'15/06/2026', proximoEnvio:'— (inativo)' }
+  ],
+  itsm: {
+    configurado: true, sistema:'ServiceNow', urlBase:'https://positivo.service-now.com/api/now/table/', authTipo:'bearer',
+    token:'••••••••••••••••••••••••',
+    eventos: [
+      { id:'nova_inconsistencia',  label:'Nova inconsistência detectada',     ativo:true,  ultimoEvento:'30/06/2026 14:22', totalEnviados:47 },
+      { id:'status_alterado',      label:'Status de RF alterado',             ativo:true,  ultimoEvento:'30/06/2026 10:05', totalEnviados:218 },
+      { id:'rf_vencido',           label:'RF próximo ao vencimento (7 dias)', ativo:true,  ultimoEvento:'29/06/2026 08:00', totalEnviados:12 },
+      { id:'conciliacao_pendente', label:'Conciliação pendente há 30+ dias',  ativo:false, ultimoEvento:'—',               totalEnviados:0 }
+    ],
+    camposTitulo:'[SplitHub] {{tipo}} — RF {{rf_id}} · {{fornecedor}}',
+    camposPrioridade:'2',
+    camposCategoria:'Tributário IBS/CBS',
+    historico:[
+      { ts:'30/06 14:22', evento:'Nova inconsistência', rf:'RF-00000082', status:'201 Created', ticket:'INC0041872' },
+      { ts:'30/06 10:05', evento:'Status alterado',     rf:'RF-00000061', status:'201 Created', ticket:'INC0041803' },
+      { ts:'29/06 08:01', evento:'RF vencimento',       rf:'RF-00000035', status:'201 Created', ticket:'INC0041654' },
+      { ts:'28/06 14:18', evento:'Nova inconsistência', rf:'RF-00000077', status:'422 Error',   ticket:'—'          }
+    ]
+  },
+  cobranca: [
+    { id:'COB-001', nome:'Alerta pré-vencimento (7 dias)',  gatilho:'pre', diasGatilho:7,  maxEnvios:2, intervalo:3, canal:'email', assunto:'[Ação necessária] Imposto IBS+CBS vence em {{dias_vencimento}} dias — {{fornecedor}}', corpo:'Prezado(a) {{contato_fornecedor}},\n\nInformamos que o Registro Fiscal {{rf_id}} referente ao imposto {{tipo_fiscal}} no valor de {{valor_rf}} vence em {{data_vencimento}} ({{dias_vencimento}} dias).\n\nPara evitar penalidades, solicite a regularização junto ao seu departamento fiscal.\n\nAtenciosamente,\nEquipe Fiscal · Positivo Tecnologia', ativo:true,  totalEnviados:34, ultimoDisparo:'28/06/2026' },
+    { id:'COB-002', nome:'Cobrança pós-vencimento',         gatilho:'pos', diasGatilho:1,  maxEnvios:4, intervalo:5, canal:'email', assunto:'[URGENTE] Imposto IBS+CBS vencido — RF {{rf_id}} · {{fornecedor}}', corpo:'Prezado(a) {{contato_fornecedor}},\n\nO Registro Fiscal {{rf_id}} ({{tipo_fiscal}} — {{valor_rf}}) encontra-se VENCIDO desde {{data_vencimento}}.\n\nSolicite regularização imediata para evitar glosa do crédito tributário.\n\nAtenciosamente,\nEquipe Fiscal · Positivo Tecnologia', ativo:true,  totalEnviados:19, ultimoDisparo:'30/06/2026' }
+  ]
+};
+
+var _automCor = { bg:'#1A1817', card:'#232120', brd:'#3A3836', txt1:'#F2F0EF', txt2:'#A7A8AA', txt3:'#6B6D6F', teal:'#49C5B1', blue:'#3B82F6', green:'#22C55E', red:'#F43F5E', amber:'#F59E0B', purple:'#8B5CF6' };
+var _ac = _automCor;
+
+var _automModLabels = { creditos:'Créditos', debitos:'Débitos', inconsistencias:'Inconsistências', pagamentos:'Pagamentos', consolidado:'Consolidado (Visão Geral)' };
+var _automModCores  = { creditos:_ac.teal, debitos:_ac.blue, inconsistencias:_ac.red, pagamentos:_ac.green, consolidado:_ac.purple };
+
+function _automFmt(v) { return v >= 1e6 ? 'R$ '+(v/1e6).toFixed(1).replace('.',',')+'M' : v >= 1e3 ? 'R$ '+Math.round(v/1e3)+'K' : 'R$ '+v; }
+
+function _automBadge(txt, cor, bg) {
+  bg = bg || cor.replace('#','').length === 6 ? cor + '22' : 'rgba(99,99,99,.15)';
+  return '<span style="background:' + cor + '22;color:' + cor + ';border:1px solid ' + cor + '44;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + txt + '</span>';
+}
+
+function _automToggle(tipo, id, field) {
+  var arr = window._automState[tipo];
+  var item = arr.filter(function(x){ return x.id === id; })[0];
+  if (item) { item[field] = !item[field]; window.automInit(); }
+}
+
+function _automExcluir(tipo, id) {
+  window._automState[tipo] = window._automState[tipo].filter(function(x){ return x.id !== id; });
+  window.automInit();
+}
+
+// ── Renderizadores de aba ───────────────────────────────────────
+
+function _automRenderRelatorios(root) {
+  var rels = window._automState.relatorios;
+  var h = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">'
+    + '<div><div style="font-size:15px;font-weight:700;color:' + _ac.txt1 + '">Relatórios Agendados</div>'
+    + '<div style="font-size:12px;color:' + _ac.txt2 + ';margin-top:2px">Envio automático de relatórios por e-mail com filtros e recorrência configuráveis</div></div>'
+    + '<button onclick="window._automAbrirModalRel()" style="background:' + _ac.teal + ';color:#0a0a0a;border:none;border-radius:7px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ Novo Relatório</button>'
+    + '</div>';
+
+  if (!rels.length) {
+    h += '<div style="text-align:center;padding:48px;color:' + _ac.txt3 + ';font-size:13px">Nenhum relatório agendado. Clique em "+ Novo Relatório" para criar.</div>';
+  } else {
+    h += '<div style="display:flex;flex-direction:column;gap:12px">';
+    rels.forEach(function(r) {
+      var modCor = _automModCores[r.modulo] || _ac.txt2;
+      var modLbl = _automModLabels[r.modulo] || r.modulo;
+      var recBadge = { diaria:'Diária', semanal:'Semanal', quinzenal:'Quinzenal', mensal:'Mensal' }[r.recorrencia] || r.recorrencia;
+      h += '<div style="background:' + _ac.card + ';border:1px solid ' + _ac.brd + ';border-left:3px solid ' + modCor + ';border-radius:8px;padding:16px 18px">'
+        + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">'
+        + '<div style="flex:1">'
+        + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+        + '<span style="font-size:13px;font-weight:700;color:' + _ac.txt1 + '">' + r.nome + '</span>'
+        + _automBadge(modLbl, modCor)
+        + _automBadge(recBadge, _ac.purple)
+        + _automBadge(r.formato, _ac.txt2)
+        + (r.ativo ? _automBadge('Ativo', _ac.green) : _automBadge('Inativo', _ac.txt3))
+        + '</div>'
+        + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">'
+        + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:3px">Destinatários</div><div style="font-size:12px;color:' + _ac.txt2 + '">' + r.destinatarios.join(', ') + '</div></div>'
+        + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:3px">Agendamento</div><div style="font-size:12px;color:' + _ac.txt2 + '">' + r.diaHora + '</div></div>'
+        + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:3px">Próximo envio</div><div style="font-size:12px;color:' + _ac.txt1 + ';font-weight:600">' + r.proximoEnvio + '</div></div>'
+        + '</div>'
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">'
+        + '<label style="display:flex;align-items:center;gap:7px;cursor:pointer">'
+        + '<span style="font-size:11px;color:' + _ac.txt2 + '">' + (r.ativo ? 'Ativo' : 'Inativo') + '</span>'
+        + '<div onclick="window._automToggle(\'relatorios\',\'' + r.id + '\',\'ativo\')" style="width:36px;height:20px;border-radius:10px;background:' + (r.ativo ? _ac.teal : _ac.brd) + ';position:relative;cursor:pointer;transition:background .2s">'
+        + '<div style="position:absolute;top:3px;left:' + (r.ativo ? '18' : '3') + 'px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s"></div></div>'
+        + '</label>'
+        + '<div style="display:flex;gap:6px">'
+        + '<button onclick="window._automAbrirModalRel(\'' + r.id + '\')" style="background:none;border:1px solid ' + _ac.brd + ';border-radius:5px;padding:4px 10px;font-size:11px;color:' + _ac.txt2 + ';cursor:pointer;font-family:inherit">Editar</button>'
+        + '<button onclick="window._automExcluir(\'relatorios\',\'' + r.id + '\')" style="background:none;border:1px solid rgba(244,63,94,.3);border-radius:5px;padding:4px 10px;font-size:11px;color:' + _ac.red + ';cursor:pointer;font-family:inherit">Excluir</button>'
+        + '</div>'
+        + '</div>'
+        + '</div>'
+        + '<div style="font-size:11px;color:' + _ac.txt3 + ';border-top:1px solid ' + _ac.brd + ';padding-top:10px;margin-top:4px">Último envio: ' + r.ultimoEnvio + ' · ID: ' + r.id + '</div>'
+        + '</div>';
+    });
+    h += '</div>';
+  }
+  root.innerHTML = h;
+}
+
+function _automRenderITSM(root) {
+  var cfg = window._automState.itsm;
+  var sistemasCores = { ServiceNow:_ac.green, 'Jira Service Desk':_ac.blue, Zendesk:'#F79009', Custom:_ac.txt2 };
+  var sisCor = sistemasCores[cfg.sistema] || _ac.txt2;
+  var h = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">'
+    + '<div><div style="font-size:15px;font-weight:700;color:' + _ac.txt1 + '">Integração ITSM</div>'
+    + '<div style="font-size:12px;color:' + _ac.txt2 + ';margin-top:2px">Envio de eventos de inconsistências para sistema externo via API REST (padrão ITSM de mercado)</div></div>'
+    + (cfg.configurado ? '<div style="display:flex;align-items:center;gap:8px">' + _automBadge('● Conectado · ' + cfg.sistema, _ac.green) + '<button onclick="window._automTestarConexao()" style="background:none;border:1px solid ' + _ac.brd + ';border-radius:5px;padding:6px 12px;font-size:11px;color:' + _ac.txt2 + ';cursor:pointer;font-family:inherit">Testar conexão</button></div>' : '')
+    + '</div>';
+
+  // Config panel
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">';
+  h += _automFieldCard('Sistema ITSM', cfg.sistema, sisCor, true);
+  h += _automFieldCard('URL Base da API', cfg.urlBase, _ac.blue, false, true);
+  h += _automFieldCard('Autenticação', cfg.authTipo === 'bearer' ? 'Bearer Token' : cfg.authTipo, _ac.txt2);
+  h += _automFieldCard('Credencial', cfg.token, _ac.txt3);
+  h += _automFieldCard('Título do Ticket', cfg.camposTitulo, _ac.txt2, false, true);
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    + _automFieldCard('Prioridade padrão', {1:'1 – Crítica',2:'2 – Alta',3:'3 – Média',4:'4 – Baixa'}[cfg.camposPrioridade]||cfg.camposPrioridade, _ac.amber)
+    + _automFieldCard('Categoria', cfg.camposCategoria, _ac.teal)
+    + '</div>';
+  h += '</div>';
+  h += '<button onclick="window._automAbrirModalITSM()" style="background:' + _ac.blue + '22;border:1px solid ' + _ac.blue + '44;color:' + _ac.blue + ';border-radius:7px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:20px">✏️ Editar configuração</button>';
+
+  // Eventos
+  h += '<div style="font-size:13px;font-weight:700;color:' + _ac.txt1 + ';margin-bottom:12px">Eventos mapeados</div>';
+  h += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">';
+  cfg.eventos.forEach(function(ev) {
+    h += '<div style="background:' + _ac.card + ';border:1px solid ' + _ac.brd + ';border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:14px">'
+      + '<div onclick="ev_toggle_' + ev.id + '()" id="ev-tog-' + ev.id + '" style="width:36px;height:20px;border-radius:10px;background:' + (ev.ativo ? _ac.teal : _ac.brd) + ';position:relative;cursor:pointer;flex-shrink:0;transition:background .2s" onclick="window._automToggleEvento(\'' + ev.id + '\')">'
+      + '<div style="position:absolute;top:3px;left:' + (ev.ativo ? '18' : '3') + 'px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s"></div></div>'
+      + '<div style="flex:1">'
+      + '<div style="font-size:12px;font-weight:600;color:' + _ac.txt1 + '">' + ev.label + '</div>'
+      + '<div style="font-size:11px;color:' + _ac.txt3 + ';margin-top:2px">Último envio: ' + ev.ultimoEvento + ' · Total: ' + ev.totalEnviados + ' eventos</div>'
+      + '</div>'
+      + (ev.ativo ? _automBadge('Ativo', _ac.green) : _automBadge('Inativo', _ac.txt3))
+      + '</div>';
+  });
+  h += '</div>';
+
+  // Histórico
+  h += '<div style="font-size:13px;font-weight:700;color:' + _ac.txt1 + ';margin-bottom:10px">Histórico de envios recentes</div>';
+  h += '<div class="twrap"><table><thead><tr><th>Timestamp</th><th>Evento</th><th>RF</th><th>HTTP Status</th><th>Ticket criado</th></tr></thead><tbody>';
+  cfg.historico.forEach(function(row) {
+    var ok = row.status.indexOf('201') >= 0;
+    h += '<tr>'
+      + '<td class="mono" style="font-size:11px;color:' + _ac.txt3 + '">' + row.ts + '</td>'
+      + '<td style="font-size:12px">' + row.evento + '</td>'
+      + '<td class="mono" style="color:' + _ac.blue + ';font-size:11px">' + row.rf + '</td>'
+      + '<td>' + _automBadge(row.status, ok ? _ac.green : _ac.red) + '</td>'
+      + '<td class="mono" style="color:' + _ac.teal + ';font-size:11px">' + row.ticket + '</td>'
+      + '</tr>';
+  });
+  h += '</tbody></table></div>';
+  root.innerHTML = h;
+
+  // Bind toggle events
+  cfg.eventos.forEach(function(ev) {
+    var tog = document.getElementById('ev-tog-' + ev.id);
+    if (tog) tog.onclick = function() { window._automToggleEvento(ev.id); };
+  });
+}
+
+function _automFieldCard(label, val, cor, badge, mono) {
+  return '<div style="background:' + _ac.card + ';border:1px solid ' + _ac.brd + ';border-radius:7px;padding:12px 14px">'
+    + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:5px">' + label + '</div>'
+    + (badge ? _automBadge(val, cor) : '<div style="font-size:' + (mono ? '11px' : '12px') + ';color:' + cor + ';font-family:' + (mono ? 'monospace' : 'inherit') + ';word-break:break-all">' + val + '</div>')
+    + '</div>';
+}
+
+function _automRenderCobranca(root) {
+  var regras = window._automState.cobranca;
+  var h = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">'
+    + '<div><div style="font-size:15px;font-weight:700;color:' + _ac.txt1 + '">Régua de Cobrança</div>'
+    + '<div style="font-size:12px;color:' + _ac.txt2 + ';margin-top:2px">Envio automático de alertas aos fornecedores com impostos próximos ao vencimento ou vencidos</div></div>'
+    + '<button onclick="window._automAbrirModalCob()" style="background:' + _ac.amber + ';color:#0a0a0a;border:none;border-radius:7px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ Nova Régua</button>'
+    + '</div>';
+
+  // Estatísticas rápidas
+  var totalEnv = regras.reduce(function(s,r){ return s+r.totalEnviados; }, 0);
+  var ativas = regras.filter(function(r){ return r.ativo; }).length;
+  h += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">'
+    + _automKpiMini('Réguas ativas', ativas + '/' + regras.length, _ac.amber)
+    + _automKpiMini('Alertas enviados (total)', totalEnv.toString(), _ac.blue)
+    + _automKpiMini('Fornecedores em cobrança', '6', _ac.red)
+    + '</div>';
+
+  if (!regras.length) {
+    h += '<div style="text-align:center;padding:48px;color:' + _ac.txt3 + ';font-size:13px">Nenhuma régua configurada.</div>';
+  } else {
+    h += '<div style="display:flex;flex-direction:column;gap:14px">';
+    regras.forEach(function(r) {
+      var gatCor = r.gatilho === 'pre' ? _ac.amber : _ac.red;
+      var gatLbl = r.gatilho === 'pre' ? r.diasGatilho + ' dias antes do vencimento' : 'Vencido há ' + r.diasGatilho + '+ dias';
+      h += '<div style="background:' + _ac.card + ';border:1px solid ' + _ac.brd + ';border-left:3px solid ' + gatCor + ';border-radius:8px;padding:16px 18px">'
+        + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px">'
+        + '<div>'
+        + '<div style="font-size:13px;font-weight:700;color:' + _ac.txt1 + ';margin-bottom:6px">' + r.nome + '</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
+        + _automBadge(gatLbl, gatCor)
+        + _automBadge('Máx. ' + r.maxEnvios + ' envio' + (r.maxEnvios > 1 ? 's' : ''), _ac.blue)
+        + _automBadge('A cada ' + r.intervalo + ' dias', _ac.purple)
+        + _automBadge(r.canal === 'email' ? '✉️ E-mail' : r.canal, _ac.txt2)
+        + (r.ativo ? _automBadge('Ativa', _ac.green) : _automBadge('Inativa', _ac.txt3))
+        + '</div>'
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">'
+        + '<label style="display:flex;align-items:center;gap:7px;cursor:pointer">'
+        + '<span style="font-size:11px;color:' + _ac.txt2 + '">' + (r.ativo ? 'Ativa' : 'Inativa') + '</span>'
+        + '<div onclick="window._automToggle(\'cobranca\',\'' + r.id + '\',\'ativo\')" style="width:36px;height:20px;border-radius:10px;background:' + (r.ativo ? _ac.teal : _ac.brd) + ';position:relative;cursor:pointer;transition:background .2s">'
+        + '<div style="position:absolute;top:3px;left:' + (r.ativo ? '18' : '3') + 'px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s"></div></div>'
+        + '</label>'
+        + '<div style="display:flex;gap:6px">'
+        + '<button onclick="window._automAbrirModalCob(\'' + r.id + '\')" style="background:none;border:1px solid ' + _ac.brd + ';border-radius:5px;padding:4px 10px;font-size:11px;color:' + _ac.txt2 + ';cursor:pointer;font-family:inherit">Editar</button>'
+        + '<button onclick="window._automExcluir(\'cobranca\',\'' + r.id + '\')" style="background:none;border:1px solid rgba(244,63,94,.3);border-radius:5px;padding:4px 10px;font-size:11px;color:' + _ac.red + ';cursor:pointer;font-family:inherit">Excluir</button>'
+        + '</div>'
+        + '</div>'
+        + '</div>'
+        // Template preview
+        + '<div style="background:#1A1817;border:1px solid ' + _ac.brd + ';border-radius:6px;padding:12px 14px;margin-bottom:10px">'
+        + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:6px">Template de e-mail</div>'
+        + '<div style="font-size:11px;font-weight:600;color:' + _ac.txt1 + ';margin-bottom:4px">Assunto: ' + r.assunto + '</div>'
+        + '<div style="font-size:11px;color:' + _ac.txt2 + ';white-space:pre-line;line-height:1.6;max-height:80px;overflow:hidden">' + r.corpo.substring(0, 200) + (r.corpo.length > 200 ? '…' : '') + '</div>'
+        + '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">'
+        + ['{{fornecedor}}','{{rf_id}}','{{tipo_fiscal}}','{{valor_rf}}','{{data_vencimento}}','{{dias_vencimento}}','{{contato_fornecedor}}'].map(function(v){ return '<code style="background:rgba(73,197,177,.1);color:' + _ac.teal + ';border-radius:3px;padding:1px 5px;font-size:10px">' + v + '</code>'; }).join('')
+        + '</div></div>'
+        + '<div style="font-size:11px;color:' + _ac.txt3 + '">Último disparo: ' + r.ultimoDisparo + ' · Total enviados: ' + r.totalEnviados + ' · ID: ' + r.id + '</div>'
+        + '</div>';
+    });
+    h += '</div>';
+  }
+  root.innerHTML = h;
+}
+
+function _automKpiMini(label, val, cor) {
+  return '<div style="background:' + _ac.card + ';border:1px solid ' + _ac.brd + ';border-top:2px solid ' + cor + ';border-radius:8px;padding:14px 16px">'
+    + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:6px">' + label + '</div>'
+    + '<div style="font-size:22px;font-weight:700;color:' + cor + ';font-family:\'Montserrat\',sans-serif">' + val + '</div>'
+    + '</div>';
+}
+
+// ── automInit — ponto de entrada ────────────────────────────────
+
+window.automInit = function() {
+  var sv = document.getElementById('admin-automacoes');
+  if (!sv) return;
+  var aba = window._automState.abaAtiva;
+
+  // Header + tabs
+  var tabsCfg = [
+    { id:'relatorios', label:'📧  Relatórios Agendados' },
+    { id:'itsm',       label:'🔗  Integração ITSM'     },
+    { id:'cobranca',   label:'🔔  Régua de Cobrança'   }
+  ];
+
+  var tabsHtml = tabsCfg.map(function(t) {
+    var active = t.id === aba;
+    return '<button onclick="window._automSetAba(\'' + t.id + '\')" style="padding:9px 18px;font-size:13px;font-weight:' + (active ? '700' : '500') + ';color:' + (active ? _ac.teal : _ac.txt2) + ';background:' + (active ? 'rgba(73,197,177,.08)' : 'transparent') + ';border:none;border-bottom:2px solid ' + (active ? _ac.teal : 'transparent') + ';cursor:pointer;font-family:inherit;white-space:nowrap;transition:color .15s">' + t.label + '</button>';
+  }).join('');
+
+  var root = document.getElementById('autom-root');
+  if (!root) return;
+  root.innerHTML = '<div style="border-bottom:1px solid ' + _ac.brd + ';margin-bottom:24px;display:flex;gap:4px">' + tabsHtml + '</div>'
+    + '<div id="autom-content"></div>';
+
+  var content = document.getElementById('autom-content');
+  if (aba === 'relatorios') _automRenderRelatorios(content);
+  else if (aba === 'itsm')   _automRenderITSM(content);
+  else                       _automRenderCobranca(content);
+};
+
+window._automSetAba = function(id) {
+  window._automState.abaAtiva = id;
+  window.automInit();
+};
+
+window._automToggle = function(tipo, id, field) {
+  var arr = window._automState[tipo];
+  var item = arr.filter(function(x){ return x.id === id; })[0];
+  if (item) { item[field] = !item[field]; window.automInit(); }
+};
+
+window._automToggleEvento = function(evId) {
+  var ev = (window._automState.itsm.eventos || []).filter(function(e){ return e.id === evId; })[0];
+  if (ev) { ev.ativo = !ev.ativo; window.automInit(); }
+};
+
+window._automExcluir = function(tipo, id) {
+  window._automState[tipo] = window._automState[tipo].filter(function(x){ return x.id !== id; });
+  window.automInit();
+};
+
+window._automTestarConexao = function() {
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:28px;right:24px;background:#232120;border:1px solid rgba(34,197,94,.4);border-left:4px solid #22C55E;border-radius:8px;padding:14px 18px;z-index:10001;font-family:Montserrat,sans-serif;min-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.5)';
+  toast.innerHTML = '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">✅ Conexão bem-sucedida</div><div style="font-size:11px;color:#A7A8AA">ServiceNow · HTTP 200 · latência 142ms</div>';
+  document.body.appendChild(toast);
+  setTimeout(function(){ if(toast.parentNode) toast.parentNode.removeChild(toast); }, 3500);
+};
+
+// ── Modais de criação/edição ────────────────────────────────────
+
+window._automAbrirModalRel = function(id) {
+  var r = id ? (window._automState.relatorios.filter(function(x){ return x.id === id; })[0]) : null;
+  var titulo = r ? 'Editar Relatório' : 'Novo Relatório Agendado';
+  var v = r || { nome:'', modulo:'creditos', destinatarios:[], recorrencia:'mensal', diaHora:'1 · 08:00', formato:'PDF', ativo:true };
+  var html = _automOverlay(titulo,
+    _automCampo('Nome do relatório', '<input id="am-nome" value="' + (v.nome||'') + '" style="' + _automInputStyle() + '">')
+    + _automCampo('Módulo / dados',
+      '<select id="am-modulo" style="' + _automInputStyle() + '">'
+      + ['creditos','debitos','inconsistencias','pagamentos','consolidado'].map(function(m){ return '<option value="' + m + '"' + (v.modulo===m?' selected':'') + '>' + (_automModLabels[m]||m) + '</option>'; }).join('')
+      + '</select>')
+    + _automCampo('Destinatários (e-mails, separados por vírgula)', '<input id="am-dest" value="' + (v.destinatarios||[]).join(', ') + '" placeholder="email@empresa.com, outro@empresa.com" style="' + _automInputStyle() + '">')
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + _automCampo('Recorrência',
+      '<select id="am-rec" style="' + _automInputStyle() + '">'
+      + ['diaria','semanal','quinzenal','mensal'].map(function(x){ return '<option value="' + x + '"' + (v.recorrencia===x?' selected':'') + '>' + {diaria:'Diária',semanal:'Semanal',quinzenal:'Quinzenal',mensal:'Mensal'}[x] + '</option>'; }).join('')
+      + '</select>')
+    + _automCampo('Dia / hora', '<input id="am-hora" value="' + (v.diaHora||'') + '" placeholder="1 · 08:00" style="' + _automInputStyle() + '">')
+    + '</div>'
+    + _automCampo('Formato',
+      '<select id="am-fmt" style="' + _automInputStyle() + '">'
+      + ['PDF','Excel','CSV'].map(function(x){ return '<option' + (v.formato===x?' selected':'') + '>' + x + '</option>'; }).join('')
+      + '</select>'),
+    'window._automSalvarRel(\'' + (id||'') + '\')'
+  );
+  document.getElementById('_automOverlay') && document.getElementById('_automOverlay').remove();
+  document.body.insertAdjacentHTML('beforeend', html);
+};
+
+window._automSalvarRel = function(id) {
+  var nome = document.getElementById('am-nome').value.trim();
+  var dest = document.getElementById('am-dest').value.split(',').map(function(e){ return e.trim(); }).filter(Boolean);
+  if (!nome || !dest.length) { alert('Nome e destinatário são obrigatórios.'); return; }
+  var obj = {
+    id:          id || 'REL-' + String(Date.now()).slice(-3),
+    nome:        nome,
+    modulo:      document.getElementById('am-modulo').value,
+    destinatarios: dest,
+    recorrencia: document.getElementById('am-rec').value,
+    diaHora:     document.getElementById('am-hora').value,
+    formato:     document.getElementById('am-fmt').value,
+    ativo:       true, ultimoEnvio:'—', proximoEnvio:'Calculando…'
+  };
+  if (id) {
+    var idx = window._automState.relatorios.findIndex(function(x){ return x.id === id; });
+    if (idx >= 0) window._automState.relatorios[idx] = obj;
+  } else {
+    window._automState.relatorios.push(obj);
+  }
+  document.getElementById('_automOverlay').remove();
+  window.automInit();
+  _automToast('Relatório salvo com sucesso', _ac.green);
+};
+
+window._automAbrirModalITSM = function() {
+  var cfg = window._automState.itsm;
+  var html = _automOverlay('Configurar Integração ITSM',
+    _automCampo('Sistema ITSM',
+      '<select id="am-itsm-sys" style="' + _automInputStyle() + '">'
+      + ['ServiceNow','Jira Service Desk','Zendesk','Custom'].map(function(s){ return '<option' + (cfg.sistema===s?' selected':'') + '>' + s + '</option>'; }).join('')
+      + '</select>')
+    + _automCampo('URL base da API', '<input id="am-itsm-url" value="' + cfg.urlBase + '" placeholder="https://empresa.service-now.com/api/..." style="' + _automInputStyle() + '">')
+    + _automCampo('Tipo de autenticação',
+      '<select id="am-itsm-auth" style="' + _automInputStyle() + '">'
+      + [{v:'bearer',l:'Bearer Token'},{v:'basic',l:'Basic Auth (user:pass)'},{v:'apikey',l:'API Key (header)'}].map(function(a){ return '<option value="' + a.v + '"' + (cfg.authTipo===a.v?' selected':'') + '>' + a.l + '</option>'; }).join('')
+      + '</select>')
+    + _automCampo('Token / Credencial', '<input id="am-itsm-tok" type="password" value="" placeholder="Cole o token ou credencial aqui" style="' + _automInputStyle() + '">')
+    + _automCampo('Template do título do ticket', '<input id="am-itsm-tit" value="' + cfg.camposTitulo + '" style="' + _automInputStyle() + '">')
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + _automCampo('Prioridade padrão',
+      '<select id="am-itsm-prio" style="' + _automInputStyle() + '">'
+      + [{v:'1',l:'1 – Crítica'},{v:'2',l:'2 – Alta'},{v:'3',l:'3 – Média'},{v:'4',l:'4 – Baixa'}].map(function(p){ return '<option value="' + p.v + '"' + (cfg.camposPrioridade===p.v?' selected':'') + '>' + p.l + '</option>'; }).join('')
+      + '</select>')
+    + _automCampo('Categoria', '<input id="am-itsm-cat" value="' + cfg.camposCategoria + '" style="' + _automInputStyle() + '">')
+    + '</div>'
+    + '<div style="background:rgba(73,197,177,.06);border:1px solid rgba(73,197,177,.2);border-radius:6px;padding:10px 12px;font-size:11px;color:' + _ac.txt2 + ';margin-top:4px">Variáveis disponíveis no título: <code style="color:' + _ac.teal + '">{{tipo}} {{rf_id}} {{fornecedor}} {{inconsistencia}} {{valor}} {{data}}</code></div>',
+    'window._automSalvarITSM()'
+  );
+  document.getElementById('_automOverlay') && document.getElementById('_automOverlay').remove();
+  document.body.insertAdjacentHTML('beforeend', html);
+};
+
+window._automSalvarITSM = function() {
+  var url = document.getElementById('am-itsm-url').value.trim();
+  if (!url) { alert('URL da API é obrigatória.'); return; }
+  window._automState.itsm.sistema        = document.getElementById('am-itsm-sys').value;
+  window._automState.itsm.urlBase        = url;
+  window._automState.itsm.authTipo       = document.getElementById('am-itsm-auth').value;
+  window._automState.itsm.camposTitulo   = document.getElementById('am-itsm-tit').value;
+  window._automState.itsm.camposPrioridade = document.getElementById('am-itsm-prio').value;
+  window._automState.itsm.camposCategoria  = document.getElementById('am-itsm-cat').value;
+  window._automState.itsm.configurado = true;
+  document.getElementById('_automOverlay').remove();
+  window.automInit();
+  _automToast('Configuração ITSM salva', _ac.green);
+};
+
+window._automAbrirModalCob = function(id) {
+  var r = id ? (window._automState.cobranca.filter(function(x){ return x.id === id; })[0]) : null;
+  var titulo = r ? 'Editar Régua de Cobrança' : 'Nova Régua de Cobrança';
+  var v = r || { nome:'', gatilho:'pre', diasGatilho:7, maxEnvios:3, intervalo:3, canal:'email', assunto:'', corpo:'', ativo:true };
+  var html = _automOverlay(titulo,
+    _automCampo('Nome da régua', '<input id="am-cob-nome" value="' + (v.nome||'') + '" style="' + _automInputStyle() + '">')
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + _automCampo('Gatilho',
+      '<select id="am-cob-gat" style="' + _automInputStyle() + '">'
+      + [{v:'pre',l:'Antes do vencimento'},{v:'pos',l:'Após o vencimento'}].map(function(g){ return '<option value="' + g.v + '"' + (v.gatilho===g.v?' selected':'') + '>' + g.l + '</option>'; }).join('')
+      + '</select>')
+    + _automCampo('Dias do gatilho', '<input id="am-cob-dias" type="number" min="1" max="90" value="' + (v.diasGatilho||7) + '" style="' + _automInputStyle() + '">')
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">'
+    + _automCampo('Máx. de envios', '<input id="am-cob-max" type="number" min="1" max="10" value="' + (v.maxEnvios||3) + '" style="' + _automInputStyle() + '">')
+    + _automCampo('Intervalo (dias)', '<input id="am-cob-int" type="number" min="1" max="30" value="' + (v.intervalo||3) + '" style="' + _automInputStyle() + '">')
+    + _automCampo('Canal',
+      '<select id="am-cob-canal" style="' + _automInputStyle() + '">'
+      + [{v:'email',l:'✉️ E-mail'},{v:'whatsapp',l:'💬 WhatsApp'},{v:'ambos',l:'✉️+💬 Ambos'}].map(function(c){ return '<option value="' + c.v + '"' + (v.canal===c.v?' selected':'') + '>' + c.l + '</option>'; }).join('')
+      + '</select>')
+    + '</div>'
+    + _automCampo('Assunto do e-mail', '<input id="am-cob-ass" value="' + (v.assunto||'') + '" placeholder="[Ação necessária] Imposto {{tipo_fiscal}} vence em {{dias_vencimento}} dias" style="' + _automInputStyle() + '">')
+    + _automCampo('Corpo do e-mail',
+      '<textarea id="am-cob-corpo" rows="6" style="' + _automInputStyle() + 'resize:vertical;font-family:monospace;font-size:11px">' + (v.corpo||'') + '</textarea>')
+    + '<div style="background:rgba(73,197,177,.06);border:1px solid rgba(73,197,177,.2);border-radius:6px;padding:10px 12px;font-size:11px;color:' + _ac.txt2 + '">Variáveis: '
+    + ['{{fornecedor}}','{{rf_id}}','{{tipo_fiscal}}','{{valor_rf}}','{{data_vencimento}}','{{dias_vencimento}}','{{contato_fornecedor}}'].map(function(v){ return '<code style="color:' + _ac.teal + '">' + v + '</code>'; }).join(' ')
+    + '</div>',
+    'window._automSalvarCob(\'' + (id||'') + '\')'
+  );
+  document.getElementById('_automOverlay') && document.getElementById('_automOverlay').remove();
+  document.body.insertAdjacentHTML('beforeend', html);
+};
+
+window._automSalvarCob = function(id) {
+  var nome = document.getElementById('am-cob-nome').value.trim();
+  if (!nome) { alert('Nome é obrigatório.'); return; }
+  var obj = {
+    id:           id || 'COB-' + String(Date.now()).slice(-3),
+    nome:         nome,
+    gatilho:      document.getElementById('am-cob-gat').value,
+    diasGatilho:  parseInt(document.getElementById('am-cob-dias').value) || 7,
+    maxEnvios:    parseInt(document.getElementById('am-cob-max').value) || 3,
+    intervalo:    parseInt(document.getElementById('am-cob-int').value) || 3,
+    canal:        document.getElementById('am-cob-canal').value,
+    assunto:      document.getElementById('am-cob-ass').value,
+    corpo:        document.getElementById('am-cob-corpo').value,
+    ativo:        true, totalEnviados: r ? r.totalEnviados : 0, ultimoDisparo: r ? r.ultimoDisparo : '—'
+  };
+  var r = id ? (window._automState.cobranca.filter(function(x){ return x.id === id; })[0]) : null;
+  if (id) {
+    var idx = window._automState.cobranca.findIndex(function(x){ return x.id === id; });
+    if (idx >= 0) window._automState.cobranca[idx] = obj;
+  } else {
+    window._automState.cobranca.push(obj);
+  }
+  document.getElementById('_automOverlay').remove();
+  window.automInit();
+  _automToast('Régua de cobrança salva', _ac.green);
+};
+
+// ── Helpers de UI ───────────────────────────────────────────────
+
+function _automInputStyle() {
+  return 'width:100%;background:#1A1817;border:1px solid #3A3836;border-radius:6px;padding:9px 12px;color:#F2F0EF;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;';
+}
+
+function _automCampo(label, input) {
+  return '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:600;color:#A7A8AA;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">' + label + '</label>' + input + '</div>';
+}
+
+function _automOverlay(titulo, campos, onSave) {
+  return '<div id="_automOverlay" onclick="if(event.target===this)document.getElementById(\'_automOverlay\').remove()" style="position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px">'
+    + '<div style="background:#232120;border:1px solid #3A3836;border-radius:12px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #3A3836;position:sticky;top:0;background:#232120;z-index:1">'
+    + '<div style="font-size:15px;font-weight:700;color:#F2F0EF">' + titulo + '</div>'
+    + '<button onclick="document.getElementById(\'_automOverlay\').remove()" style="background:none;border:none;color:#A7A8AA;font-size:20px;cursor:pointer;line-height:1;padding:4px">✕</button>'
+    + '</div>'
+    + '<div style="padding:20px">' + campos + '</div>'
+    + '<div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid #3A3836">'
+    + '<button onclick="document.getElementById(\'_automOverlay\').remove()" style="background:none;border:1px solid #3A3836;border-radius:7px;padding:9px 18px;color:#A7A8AA;font-size:13px;cursor:pointer;font-family:inherit">Cancelar</button>'
+    + '<button onclick="' + onSave + '" style="background:#49C5B1;border:none;border-radius:7px;padding:9px 18px;color:#0a0a0a;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Salvar</button>'
+    + '</div></div></div>';
+}
+
+function _automToast(msg, cor) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:28px;right:24px;background:#232120;border:1px solid ' + cor + '44;border-left:4px solid ' + cor + ';border-radius:8px;padding:12px 18px;z-index:10001;font-family:Montserrat,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.5);font-size:13px;font-weight:600;color:#F2F0EF';
+  t.textContent = '✓  ' + msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3000);
+}
