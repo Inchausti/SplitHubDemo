@@ -114,9 +114,6 @@ function showAdminSub(id, btnElement) {
   if (id === 'organizacao') {
     setTimeout(function() { if (window.orgRenderTabela) window.orgRenderTabela(); }, 0);
   }
-  if (id === 'ingestao') {
-    setTimeout(function() { if (window.ingestaoInit) window.ingestaoInit(); }, 0);
-  }
 }
 
 function showInconsistSub(id, btnElement) {
@@ -197,7 +194,46 @@ function closeSettings() {
 }
 
 // ─── CNPJ FILTER ───
-// dashCnpjToggleDropdown sobrescrito em data-sync-fixed.js (usa _orgCnpjs)
+function dashCnpjToggleDropdown(event) {
+  event.stopPropagation();
+  const panel = document.getElementById('cnpj-filter-panel');
+  const list = document.getElementById('cnpj-filter-list');
+
+  panel.classList.toggle('open');
+
+  if (panel.classList.contains('open') && list.children.length === 0) {
+    const cnpjs = [
+      { cnpj: '01.123.456/0001-99', name: 'Indústria ABC Ltda' },
+      { cnpj: '17.197.585/0001-21', name: 'Randon S.A.' },
+      { cnpj: '17.197.757/0001-00', name: 'Marcopolo S.A.' },
+      { cnpj: '33.592.510/0001-62', name: 'Vale S.A.' }
+    ];
+
+    list.innerHTML = cnpjs.map(item => `
+      <label class="cnpj-filter-item">
+        <input type="checkbox" checked>
+        <div>${item.name}<br><span class="cfi-cnpj">${item.cnpj}</span></div>
+      </label>
+    `).join('');
+  }
+
+  document.addEventListener('click', function closePicker(e) {
+    if (!document.getElementById('cnpj-filter').contains(e.target)) {
+      panel.classList.remove('open');
+      document.removeEventListener('click', closePicker);
+    }
+  });
+}
+
+function dashCnpjSelecionarTodos() {
+  const checkboxes = document.querySelectorAll('#cnpj-filter-list input[type="checkbox"]');
+  checkboxes.forEach(cb => cb.checked = true);
+}
+
+function dashCnpjLimpar() {
+  const checkboxes = document.querySelectorAll('#cnpj-filter-list input[type="checkbox"]');
+  checkboxes.forEach(cb => cb.checked = false);
+}
 
 // ─── CREDITOS FUNCTIONS ───
 function creditosVerRegistrosRisco() {
