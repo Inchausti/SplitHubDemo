@@ -990,9 +990,9 @@ window.atualizarDashboard = function() {
   var rnd = function(v) { return Math.round(v * 100) / 100; };
   if (typeof svgLine === 'function') {
     svgLine('cCreditos', [
-      { data: aprop.map(rnd),   color: '#49C5B1', fill: true, dots: true },
-      { data: aApropr.map(rnd), color: '#F59E0B', dash: true },
-      { data: emRisco.map(rnd), color: '#F43F5E', dots: true, w: 1.5 }
+      { data: aprop.map(rnd),   color: '#49C5B1', fill: true, dots: true, label: 'Apropriados' },
+      { data: aApropr.map(rnd), color: '#F59E0B', dash: true,             label: 'A Apropriar'  },
+      { data: emRisco.map(rnd), color: '#F43F5E', dots: true, w: 1.5,    label: 'Em Risco'     }
     ], mesesLabels, 200);
   }
   // atualiza subtítulo
@@ -1018,7 +1018,7 @@ window.atualizarDashboard = function() {
   if (typeof svgBar === 'function') {
     svgBar('cPagamentos', [
       { data: pagCBS.map(rnd), color: '#3B82F6', label: 'DARF CBS' },
-      { data: pagIBS.map(rnd), color: '#49C5B1', label: 'Guia IBS' }
+      { data: pagIBS.map(rnd), color: '#49C5B1', label: 'Guia IBS'  }
     ], mesesLabels, 200);
   }
   var subPag = document.getElementById('dash-sub-pagamentos');
@@ -1128,17 +1128,37 @@ if (typeof svgLine !== 'function') {
     var rng=maxV-minV||1;
     function xp(i){return Math.round(padL+(i/(n-1||1))*plotW);}
     function yp(v){return Math.round(padT+(1-(v-minV)/rng)*plotH);}
-    var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block">';
+    function fmtTip(v){return v>=1000?(v/1000).toFixed(1).replace('.',',')+'M':(v>=1?v.toFixed(2).replace('.',','):'0')+'M';}
+    var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block;overflow:visible">';
     labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
     datasets.forEach(function(ds){
       var pts=ds.data.map(function(v,i){return xp(i)+','+yp(v);}).join(' ');
       if(ds.fill){var fp=pts+' '+xp(n-1)+','+(H-padB)+' '+padL+','+(H-padB);s+='<polygon points="'+fp+'" fill="'+ds.color+'" fill-opacity="0.15" stroke="none"/>';}
       var da=ds.dash?'stroke-dasharray="5 3"':(ds.dash2?'stroke-dasharray="2 4"':'');
       s+='<polyline points="'+pts+'" fill="none" stroke="'+ds.color+'" stroke-width="'+(ds.w||2)+'" '+da+' stroke-linejoin="round" stroke-linecap="round"/>';
-      if(ds.dots){ds.data.forEach(function(v,i){s+='<circle cx="'+xp(i)+'" cy="'+yp(v)+'" r="3" fill="'+ds.color+'"/>';});}
+      if(ds.dots){ds.data.forEach(function(v,i){
+        var cx=xp(i),cy=yp(v);
+        // invisible larger hit circle for easier hover
+        s+='<circle cx="'+cx+'" cy="'+cy+'" r="10" fill="transparent" class="_svgDot" data-i="'+i+'"/>';
+        s+='<circle cx="'+cx+'" cy="'+cy+'" r="3.5" fill="'+ds.color+'" stroke="'+ds.color+'" stroke-width="1.5" pointer-events="none"/>';
+      });}
     });
+    // transparent column zones for tooltip at each x position
+    for(var ci=0;ci<n;ci++){
+      var tipParts=[labels[ci]];
+      datasets.forEach(function(ds){tipParts.push(ds.color,ds.label||'Valor',fmtTip(ds.data[ci]||0));});
+      var tipStr=tipParts.join('|').replace(/"/g,'&quot;');
+      var zoneW=Math.max(14,Math.floor(plotW/n));
+      s+='<rect x="'+(xp(ci)-Math.floor(zoneW/2))+'" y="'+padT+'" width="'+zoneW+'" height="'+plotH+'" fill="transparent" class="_svgZone" data-tip="'+tipStr+'" style="cursor:crosshair"/>';
+    }
     s+='</svg>';
     el.style.cssText='display:block;width:100%'; el.innerHTML=s;
+    // attach tooltip events after DOM insert
+    el.querySelectorAll('._svgZone').forEach(function(z){
+      z.addEventListener('mouseenter',function(e){if(window._svgTipShow)window._svgTipShow(e,z.getAttribute('data-tip'));});
+      z.addEventListener('mousemove', function(e){if(window._svgTipShow)window._svgTipShow(e,z.getAttribute('data-tip'));});
+      z.addEventListener('mouseleave',function(){if(window._svgTipHide)window._svgTipHide();});
+    });
   };
 }
 if (typeof svgBar !== 'function') {
@@ -1147,15 +1167,35 @@ if (typeof svgBar !== 'function') {
     var padT=8,padB=26,padL=8,padR=8;
     var cw=(el.parentElement&&el.parentElement.offsetWidth)||el.offsetWidth||440;
     var W=cw>50?cw:440, plotW=W-padL-padR, plotH=H-padT-padB, n=labels.length;
-    var stk=[];for(var i=0;i<n;i++){var sm=0;datasets.forEach(function(d){sm+=d.data[i]||0;});stk.push(sm);}
+    var stk=[];for(var ki=0;ki<n;ki++){var sm=0;datasets.forEach(function(d){sm+=d.data[ki]||0;});stk.push(sm);}
     var maxV=Math.max.apply(null,stk)||1;
     var bW=Math.floor(plotW/n*0.52);
     function xp(i){return Math.round(padL+(i+0.5)*plotW/n);}
-    var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block">';
+    function fmtTip(v){return (v>=1?v.toFixed(2).replace('.',','):v.toFixed(3).replace('.',','))+'M';}
+    var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block;overflow:visible">';
     labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
-    for(var i=0;i<n;i++){var yBase=H-padB;datasets.slice().reverse().forEach(function(ds){var bH=Math.max(1,Math.round((ds.data[i]||0)/maxV*plotH));var x=xp(i)-Math.floor(bW/2);var y=yBase-bH;s+='<rect x="'+x+'" y="'+y+'" width="'+bW+'" height="'+bH+'" fill="'+ds.color+'" rx="2"/>';yBase=y;});}
+    for(var bi=0;bi<n;bi++){
+      var yBase=H-padB;
+      var tipParts=[labels[bi]];
+      datasets.forEach(function(ds){tipParts.push(ds.color,ds.label||'Valor',fmtTip(ds.data[bi]||0));});
+      var tipStr=tipParts.join('|').replace(/"/g,'&quot;');
+      datasets.slice().reverse().forEach(function(ds){
+        var bH=Math.max(1,Math.round((ds.data[bi]||0)/maxV*plotH));
+        var x=xp(bi)-Math.floor(bW/2);var y=yBase-bH;
+        s+='<rect x="'+x+'" y="'+y+'" width="'+bW+'" height="'+bH+'" fill="'+ds.color+'" rx="2" class="_svgBar" data-tip="'+tipStr+'" style="cursor:pointer;transition:opacity .15s"/>';
+        yBase=y;
+      });
+      // invisible full-height zone for easier hover
+      var zW=Math.max(bW+8,Math.floor(plotW/n));
+      s+='<rect x="'+(xp(bi)-Math.floor(zW/2))+'" y="'+padT+'" width="'+zW+'" height="'+plotH+'" fill="transparent" class="_svgZone" data-tip="'+tipStr+'" style="cursor:pointer"/>';
+    }
     s+='</svg>';
     el.style.cssText='display:block;width:100%'; el.innerHTML=s;
+    el.querySelectorAll('._svgBar,._svgZone').forEach(function(r){
+      r.addEventListener('mouseenter',function(e){if(window._svgTipShow)window._svgTipShow(e,r.getAttribute('data-tip'));if(r.classList.contains('_svgBar'))r.style.opacity='0.8';});
+      r.addEventListener('mousemove', function(e){if(window._svgTipShow)window._svgTipShow(e,r.getAttribute('data-tip'));});
+      r.addEventListener('mouseleave',function(){if(window._svgTipHide)window._svgTipHide();if(r.classList.contains('_svgBar'))r.style.opacity='1';});
+    });
   };
 }
 // ============================================================
