@@ -1933,6 +1933,8 @@ var _kbIncCores = {
   'Sem Comprovante':         '#8B5CF6'
 };
 
+window._kbRfsData = {};
+
 window.renderizarKanbanInconsistencias = function() {
   var board = document.getElementById('inc-kanban-board');
   if (!board) return;
@@ -1943,7 +1945,7 @@ window.renderizarKanbanInconsistencias = function() {
   nfs.forEach(function(nf) {
     (nf.registrosFiscais || []).forEach(function(rf) {
       if (rf.status === 'inconsistencia') {
-        rfs.push({
+        var obj = {
           id: rf.id || ('RF-' + Math.random().toString(36).slice(2,7).toUpperCase()),
           tipoNF: nf.tipo || 'entrada',
           tipoFiscal: rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
@@ -1952,8 +1954,11 @@ window.renderizarKanbanInconsistencias = function() {
           valor: rf.valor || 0,
           data: rf.data || nf.data || '',
           nfNumero: nf.numero || '—',
+          nfTipoDF: nf.tipoDF || '—',
           inconsistencia: rf.inconsistencia || 'Não conciliado'
-        });
+        };
+        rfs.push(obj);
+        window._kbRfsData[obj.id] = obj;
       }
     });
   });
@@ -1990,10 +1995,12 @@ window.renderizarKanbanInconsistencias = function() {
       var incCor = _kbIncCores[rf.inconsistencia] || '#64748B';
       var nfTipoCor = rf.tipoNF === 'entrada' ? '#22C55E' : '#F59E0B';
       var ftCor = rf.tipoFiscal === 'IBS' ? '#3B82F6' : '#2DD4BF';
+      var safeId = rf.id.replace(/'/g,"\\'");
       cardsHtml += '<div class="kb-card" draggable="true"'
-        + ' ondragstart="window._kbDragStart(event,\'' + rf.id.replace(/'/g,"\\'") + '\')"'
-        + ' style="background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:grab;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:opacity .15s,transform .15s,box-shadow .15s"'
-        + ' onmouseenter="this.style.boxShadow=\'0 4px 14px rgba(0,0,0,.18)\';this.style.transform=\'translateY(-1px)\'"'
+        + ' ondragstart="window._kbDragStart(event,\'' + safeId + '\')"'
+        + ' onclick="window.kbAbrirCard(\'' + safeId + '\')"'
+        + ' style="background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:opacity .15s,transform .15s,box-shadow .15s"'
+        + ' onmouseenter="this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.22)\';this.style.transform=\'translateY(-2px)\'"'
         + ' onmouseleave="this.style.boxShadow=\'0 1px 4px rgba(0,0,0,.08)\';this.style.transform=\'\'">'
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
         + '<span style="font-size:9px;font-family:\'IBM Plex Mono\',monospace;color:var(--txt3);letter-spacing:.05em">' + rf.id + '</span>'
@@ -2056,6 +2063,180 @@ window._kbDrop = function(e, colId) {
   window._kanbanState[rfId] = colId;
   window.renderizarKanbanInconsistencias();
 };
+
+// ── Modal de detalhe do card kanban ──────────────────────────
+var _kbAcoesMap = {
+  'Não conciliado': [
+    { label: 'Solicitar Conciliação Manual', icon: '🔄', desc: 'Abre processo de conciliação com a SEFAZ' },
+    { label: 'Comparar com NF Original',     icon: '📄', desc: 'Exibe os dados originais da NF para comparação' },
+    { label: 'Enviar para Contabilidade',    icon: '📊', desc: 'Escala para a equipe de contabilidade' }
+  ],
+  'Valor imposto divergente': [
+    { label: 'Solicitar Retificação de NF',  icon: '✏️', desc: 'Inicia processo de nota retificadora' },
+    { label: 'Recalcular IBS/CBS',           icon: '🧮', desc: 'Aplica as alíquotas vigentes e gera diferença' },
+    { label: 'Enviar para Contabilidade',    icon: '📊', desc: 'Escala para a equipe de contabilidade' }
+  ],
+  'Vencido': [
+    { label: 'Gerar DARF com Multa',         icon: '💸', desc: 'Calcula multa e juros SELIC e gera guia' },
+    { label: 'Negociar Parcelamento',        icon: '🤝', desc: 'Abre pedido de parcelamento na Receita' },
+    { label: 'Consultar Situação Fiscal',    icon: '🔍', desc: 'Verifica pendências na Receita Federal' }
+  ],
+  'Sem Comprovante': [
+    { label: 'Solicitar Comprovante',        icon: '📩', desc: 'Notifica o fornecedor por e-mail' },
+    { label: 'Registrar Comprovante Manual', icon: '📎', desc: 'Faz upload de comprovante alternativo' },
+    { label: 'Marcar Comprovante Dispensado',icon: '✔️', desc: 'Registra dispensa de comprovação' }
+  ],
+  'Falha de Layout': [
+    { label: 'Reenviar Documento',           icon: '🔁', desc: 'Solicita reemissão ao emissor' },
+    { label: 'Corrigir Layout Manualmente',  icon: '🛠️', desc: 'Abre editor de campos do documento' }
+  ],
+  'Inconsistência de Dados': [
+    { label: 'Validar CNPJ / CFOP',          icon: '🔎', desc: 'Consulta Receita Federal e SINTEGRA' },
+    { label: 'Solicitar Correção ao Emissor', icon: '📨', desc: 'Notifica o emissor da NF' },
+    { label: 'Enviar para Contabilidade',    icon: '📊', desc: 'Escala para a equipe de contabilidade' }
+  ],
+  'Rejeitado SEFAZ': [
+    { label: 'Reenviar à SEFAZ',             icon: '🔁', desc: 'Tenta nova autorização eletrônica' },
+    { label: 'Consultar Motivo de Rejeição', icon: '🔍', desc: 'Exibe código e descrição do erro SEFAZ' },
+    { label: 'Emitir NF Substituta',         icon: '📄', desc: 'Abre emissão de NF corretiva' }
+  ],
+  'Documento Duplicado': [
+    { label: 'Cancelar Duplicata',           icon: '🗑️', desc: 'Remove o registro duplicado' },
+    { label: 'Mesclar Registros',            icon: '🔗', desc: 'Une os dois RFs em um único registro' },
+    { label: 'Marcar como Aceito',           icon: '✔️', desc: 'Aceita a duplicidade como intencional' }
+  ]
+};
+
+window.kbAbrirCard = function(rfId) {
+  var rf = window._kbRfsData[rfId];
+  if (!rf) return;
+
+  var modal = document.getElementById('kb-card-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'kb-card-modal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.72);z-index:1200;display:flex;align-items:center;justify-content:center;padding:16px';
+    modal.onclick = function(e) { if (e.target === modal) modal.style.display = 'none'; };
+    document.body.appendChild(modal);
+  }
+
+  var fmtV = function(v) {
+    return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  var fmtD = function(d) {
+    if (!d) return '—';
+    var p = d.split('-'); return p.length === 3 ? p[2]+'/'+p[1]+'/'+p[0] : d;
+  };
+
+  var incCor = _kbIncCores[rf.inconsistencia] || '#64748B';
+  var ftCor  = rf.tipoFiscal === 'IBS' ? '#3B82F6' : '#2DD4BF';
+  var nfCor  = rf.tipoNF === 'entrada' ? '#22C55E' : '#F59E0B';
+  var colAtual = window._kanbanState[rfId] || 'identificado';
+
+  // Opções de coluna
+  var colOpts = _kbColunas.map(function(c) {
+    return '<option value="'+c.id+'"'+(c.id===colAtual?' selected':'')+'>'+c.icon+' '+c.label+'</option>';
+  }).join('');
+
+  // Ações contextuais
+  var acoes = _kbAcoesMap[rf.inconsistencia] || [
+    { label: 'Enviar para Contabilidade', icon: '📊', desc: 'Escala para a equipe de contabilidade' },
+    { label: 'Marcar como Resolvido',     icon: '✅', desc: 'Move para a coluna Resolvido' }
+  ];
+  var acoesHtml = acoes.map(function(a, i) {
+    return '<button onclick="window._kbExecutarAcao(\''+rfId+'\','+i+')" style="display:flex;align-items:flex-start;gap:10px;width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:12px 14px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s" onmouseenter="this.style.borderColor=\'var(--teal)\'" onmouseleave="this.style.borderColor=\'var(--brd)\'">'
+      + '<span style="font-size:18px;flex-shrink:0;margin-top:1px">'+a.icon+'</span>'
+      + '<div><div style="font-size:13px;font-weight:600;color:var(--txt1);margin-bottom:2px">'+a.label+'</div>'
+      + '<div style="font-size:11px;color:var(--txt3)">'+a.desc+'</div></div>'
+      + '</button>';
+  }).join('');
+
+  modal.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column">'
+    // Cabeçalho
+    + '<div style="padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:12px">'
+    +   '<div>'
+    +     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+    +       '<span style="font-size:10px;font-family:monospace;color:var(--txt3)">'+rf.id+'</span>'
+    +       '<span style="background:'+incCor+'22;color:'+incCor+';border:1px solid '+incCor+'44;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700">'+rf.inconsistencia+'</span>'
+    +     '</div>'
+    +     '<div style="font-size:17px;font-weight:700;color:var(--txt1)">'+rf.entidade+'</div>'
+    +     '<div style="font-size:12px;color:var(--txt2);font-family:monospace;margin-top:3px">'+rf.cnpj+'</div>'
+    +   '</div>'
+    +   '<button onclick="document.getElementById(\'kb-card-modal\').style.display=\'none\'" style="background:none;border:none;color:var(--txt2);font-size:24px;cursor:pointer;line-height:1;padding:0;flex-shrink:0">×</button>'
+    + '</div>'
+    // Detalhes
+    + '<div style="padding:20px 24px;border-bottom:1px solid var(--border)">'
+    +   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;font-size:13px;margin-bottom:16px">'
+    +     _kbDetalheItem('Valor RF', fmtV(rf.valor), 'var(--teal)', true)
+    +     _kbDetalheItem('NF / DF', (rf.nfTipoDF||'NF') + ' ' + rf.nfNumero)
+    +     _kbDetalheItem('Tipo Fiscal', rf.tipoFiscal, ftCor, true)
+    +     _kbDetalheItem('Tipo NF', rf.tipoNF === 'entrada' ? 'Entrada' : 'Saída', nfCor, true)
+    +     _kbDetalheItem('Data RF', fmtD(rf.data))
+    +   '</div>'
+    // Mover de coluna
+    +   '<div style="margin-top:4px">'
+    +     '<div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Estágio atual</div>'
+    +     '<select id="kb-col-select" onchange="window._kbMoverColuna(\''+rfId+'\',this.value)" style="width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--txt1);font-family:inherit;outline:none;cursor:pointer">'
+    +       colOpts
+    +     '</select>'
+    +   '</div>'
+    + '</div>'
+    // Ações
+    + '<div style="padding:20px 24px">'
+    +   '<div style="font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Ações disponíveis</div>'
+    +   '<div style="display:flex;flex-direction:column;gap:8px">'+acoesHtml+'</div>'
+    + '</div>'
+    + '</div>';
+
+  modal.style.display = 'flex';
+  // salvar ações para execução
+  modal._acoes = acoes;
+  modal._rfId  = rfId;
+};
+
+function _kbDetalheItem(label, value, cor, bold) {
+  return '<div>'
+    + '<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">'+label+'</div>'
+    + '<div style="color:'+(cor||'var(--txt1)')+';font-weight:'+(bold?'700':'500')+';font-size:13px">'+value+'</div>'
+    + '</div>';
+}
+
+window._kbMoverColuna = function(rfId, colId) {
+  window._kanbanState[rfId] = colId;
+  window.renderizarKanbanInconsistencias();
+};
+
+window._kbExecutarAcao = function(rfId, aIdx) {
+  var modal = document.getElementById('kb-card-modal');
+  var acoes = modal && modal._acoes;
+  var acao  = acoes && acoes[aIdx];
+  if (!acao) return;
+
+  // Se "Marcar como Resolvido" → mover para coluna resolvido
+  if (acao.label.toLowerCase().includes('resolvido') || acao.label.toLowerCase().includes('cancelar') || acao.label.toLowerCase().includes('aceito') || acao.label.toLowerCase().includes('dispensado')) {
+    window._kanbanState[rfId] = 'resolvido';
+  } else if (acao.label.toLowerCase().includes('contabilidade') || acao.label.toLowerCase().includes('retificaç') || acao.label.toLowerCase().includes('solicitar') || acao.label.toLowerCase().includes('reenviar') || acao.label.toLowerCase().includes('notifica')) {
+    window._kanbanState[rfId] = 'aguardando';
+  } else {
+    window._kanbanState[rfId] = 'tratamento';
+  }
+
+  // Feedback no botão
+  var btn = document.querySelectorAll('#kb-card-modal button')[aIdx + 1];
+  if (btn) {
+    var orig = btn.innerHTML;
+    btn.innerHTML = '<span style="color:var(--teal);font-weight:700;font-size:13px">✓ Ação registrada — card movido</span>';
+    btn.disabled = true;
+    setTimeout(function() {
+      modal.style.display = 'none';
+      window.renderizarKanbanInconsistencias();
+    }, 1000);
+  } else {
+    modal.style.display = 'none';
+    window.renderizarKanbanInconsistencias();
+  }
+};
+// ─────────────────────────────────────────────────────────────
 
 // ============================================================
 // MÓDULO GESTÃO DE DÉBITOS — NFs de saída · IBS + CBS
