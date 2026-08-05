@@ -822,12 +822,79 @@ window.atualizarPerdaAcumulada = function() {
 // KPIs DASHBOARD — derivados de nfListaFiltradaGlobal
 // ============================================================
 
+// ── DASHBOARD — seletor de período multi-mês ──────────────────────────────
+window._dashMesesSelecionados = ['2026-04']; // estado inicial: Abril
+var _dashMesesLabels = {
+  '2026-01':'Jan 2026','2026-02':'Fev 2026','2026-03':'Mar 2026','2026-04':'Abr 2026',
+  '2026-05':'Mai 2026','2026-06':'Jun 2026','2026-07':'Jul 2026','2026-08':'Ago 2026',
+  '2026-09':'Set 2026','2026-10':'Out 2026','2026-11':'Nov 2026','2026-12':'Dez 2026'
+};
+
+window.dashPeriodoInit = function() {
+  var list = document.getElementById('dash-periodo-list');
+  if (!list) return;
+  var sel = window._dashMesesSelecionados || [];
+  var html = '';
+  Object.keys(_dashMesesLabels).forEach(function(k) {
+    var chk = sel.indexOf(k) !== -1 ? 'checked' : '';
+    html += '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;padding:3px 0">'
+      + '<input type="checkbox" value="' + k + '" ' + chk + ' onchange="window.dashPeriodoAplicar&&window.dashPeriodoAplicar()">'
+      + _dashMesesLabels[k] + '</label>';
+  });
+  list.innerHTML = html;
+  window.dashPeriodoAtualizarBotao();
+};
+
+window.dashPeriodoToggle = function(e) {
+  e.stopPropagation();
+  var panel = document.getElementById('dash-periodo-panel');
+  if (!panel) return;
+  var open = panel.style.display !== 'none';
+  if (open) { panel.style.display = 'none'; return; }
+  if (!document.getElementById('dash-periodo-list').children.length) window.dashPeriodoInit();
+  panel.style.display = 'block';
+  setTimeout(function() {
+    document.addEventListener('click', function _c(ev) {
+      if (!panel.contains(ev.target)) { panel.style.display = 'none'; document.removeEventListener('click', _c); }
+    });
+  }, 0);
+};
+
+window.dashPeriodoToggleAll = function(checked) {
+  var list = document.getElementById('dash-periodo-list');
+  if (list) list.querySelectorAll('input[type=checkbox]').forEach(function(cb) { cb.checked = checked; });
+  window.dashPeriodoAplicar();
+};
+
+window.dashPeriodoAplicar = function() {
+  var list = document.getElementById('dash-periodo-list');
+  var sel = [];
+  if (list) list.querySelectorAll('input[type=checkbox]:checked').forEach(function(cb) { sel.push(cb.value); });
+  sel.sort();
+  window._dashMesesSelecionados = sel;
+  var allCb = document.getElementById('dash-periodo-all');
+  if (allCb) allCb.checked = (sel.length === 12);
+  window.dashPeriodoAtualizarBotao();
+  try { window.atualizarKPIsDashboard(); } catch(e) {}
+  try { window.atualizarDashboard(); } catch(e) {}
+};
+
+window.dashPeriodoAtualizarBotao = function() {
+  var btn = document.getElementById('dash-periodo-btn');
+  var sub = document.getElementById('dash-periodo-sub');
+  var sel = window._dashMesesSelecionados || [];
+  var todos = !sel.length || sel.length >= 12;
+  var label = todos ? 'Todos os períodos' : sel.length === 1 ? (_dashMesesLabels[sel[0]] || sel[0]) : sel.length + ' períodos';
+  if (btn) btn.textContent = label + ' ▾';
+  if (sub) sub.textContent = 'Período: ' + label + ' · Última atualização: 24/04/2026 às 11:47';
+};
+
 window.atualizarKPIsDashboard = function() {
   if (!window._ingDadosGlobal) { try { window.ingestaoInit && window.ingestaoInit(); } catch(e) {} }
-  var sel = document.getElementById('dash-mes-select');
-  var mes = sel ? sel.value : '04';
-  if (!mes) mes = '04';
-  var prefix = '2026-' + mes;
+  var mesesSel = window._dashMesesSelecionados || [];
+  var todosMeses = !mesesSel.length || mesesSel.length >= 12;
+  // fallback: primeiro mês selecionado para funções que ainda usam mês único
+  var mes = todosMeses ? '04' : mesesSel[0].substring(5);
 
   // --- CRÉDITOS (entrada, período selecionado) ---
   var aprop = 0, total = 0, bad = 0, risco = 0;
@@ -839,12 +906,16 @@ window.atualizarKPIsDashboard = function() {
   var concNFs = 0, concRFs = 0, concTFOk = 0, concInconsist = 0;
   var badStatuses = ['nao_apropriado', 'inconsistencia', 'vencido', 'em_risco'];
 
+  function _inPeriod(date) {
+    if (todosMeses) return true;
+    return mesesSel.some(function(p) { return date.startsWith(p); });
+  }
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
-    var nfTemPeriodo = (nf.registrosFiscais || []).some(function(rf) { return (rf.data || '').startsWith(prefix); });
+    var nfTemPeriodo = todosMeses || (nf.registrosFiscais || []).some(function(rf) { return _inPeriod(rf.data || ''); });
     if (nfTemPeriodo) concNFs++;
     (nf.registrosFiscais || []).forEach(function(rf) {
       var rfDate = rf.data || '';
-      var inPeriod = rfDate.startsWith(prefix);
+      var inPeriod = _inPeriod(rfDate);
       if (!inPeriod) return;
       // Conciliação e inconsistências filtradas pelo período selecionado
       concRFs++;
@@ -876,7 +947,7 @@ window.atualizarKPIsDashboard = function() {
   var incTotal = 0, incIng = 0, incCred = 0, incDeb = 0, incPag = 0;
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     (nf.registrosFiscais || []).forEach(function(rf) {
-      if (!(rf.data || '').startsWith(prefix)) return;
+      if (!_inPeriod(rf.data || '')) return;
       if (rf.status !== 'inconsistencia') return;
       incTotal++;
       if (nf.tipo === 'saida') { incDeb++; }
