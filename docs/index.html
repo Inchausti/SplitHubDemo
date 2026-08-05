@@ -1907,6 +1907,115 @@ tr:hover td{background:rgba(73,197,177,.02)}
       </tr></thead><tbody id="t-org-cnpjs"></tbody></table></div>
     </div>
   </div>
+
+  <!-- INGESTÃO DE DFs (sub-módulo Admin) -->
+  <div id="admin-ingestao" class="sv">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+      <button class="btn btn-t" onclick="ingestaoSimularImportacao()" style="font-size:12px">+ Importar DF</button>
+    </div>
+    <!-- KPIs -->
+    <div class="kgrid k6" style="margin-bottom:20px">
+      <div class="kcard" style="border-top-color:var(--blue)"><div class="klbl">Total recebidos</div><div class="kval mono" id="ing-total">—</div><div class="ksub" id="ing-total-sub">no período</div></div>
+      <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">Integrados</div><div class="kval mono" id="ing-ok">—</div><div class="ksub" id="ing-ok-sub">validados com sucesso</div></div>
+      <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Em processamento</div><div class="kval mono" id="ing-pend">—</div><div class="ksub" id="ing-pend-sub">na fila de validação</div></div>
+      <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Com erro</div><div class="kval mono" id="ing-erro">—</div><div class="ksub" id="ing-erro-sub">requerem atenção</div></div>
+      <div class="kcard" style="border-top-color:var(--txt3)"><div class="klbl">Duplicados</div><div class="kval mono" id="ing-dup">—</div><div class="ksub">chave já existente</div></div>
+      <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">Taxa de sucesso</div><div class="kval mono" id="ing-taxa">—</div><div class="ksub">DFs integrados / total</div></div>
+    </div>
+    <!-- Pipeline + Gráfico -->
+    <div class="cgrid c11" style="margin-bottom:20px">
+      <div class="ccrd">
+        <div class="ctitle">Pipeline de Ingestão</div>
+        <div class="csub">Fluxo de validação por etapa · contagem de DFs em cada estágio</div>
+        <div class="pipe" style="margin-top:14px;flex-wrap:wrap;gap:8px">
+          <div class="pstep" style="border:1px solid rgba(59,130,246,.3);min-width:80px"><div class="pnum" style="color:var(--blue)" id="pipe-ing-receb">—</div><div class="plbl">Recebido</div><div class="pdesc">SEFAZ / ERP / Upload</div></div>
+          <div class="parr">→</div>
+          <div class="pstep" style="border:1px solid rgba(167,168,170,.3);min-width:80px"><div class="pnum" style="color:var(--txt2)" id="pipe-ing-triagem">—</div><div class="plbl">Triagem</div><div class="pdesc">Tipo DF identificado</div></div>
+          <div class="parr">→</div>
+          <div class="pstep" style="border:1px solid rgba(245,158,11,.3);min-width:80px"><div class="pnum" style="color:var(--amber)" id="pipe-ing-layout">—</div><div class="plbl">Val. Layout</div><div class="pdesc">Schema XML / estrutura</div></div>
+          <div class="parr">→</div>
+          <div class="pstep" style="border:1px solid rgba(73,197,177,.3);min-width:80px"><div class="pnum" style="color:var(--teal)" id="pipe-ing-dados">—</div><div class="plbl">Val. Dados</div><div class="pdesc">CNPJ · CFOP · Alíquotas</div></div>
+          <div class="parr">→</div>
+          <div class="pstep" style="border:1px solid rgba(34,197,94,.3);min-width:80px"><div class="pnum" style="color:var(--green)" id="pipe-ing-integ">—</div><div class="plbl">Integrado</div><div class="pdesc">RF criado na plataforma</div></div>
+        </div>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:20px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span>Erro layout: <strong id="pipe-ing-err-lay" style="color:var(--txt1)">—</strong></div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span>Erro dados: <strong id="pipe-ing-err-dat" style="color:var(--txt1)">—</strong></div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--txt3);display:inline-block"></span>Duplicados: <strong id="pipe-ing-err-dup" style="color:var(--txt1)">—</strong></div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block"></span>Rejeitados SEFAZ: <strong id="pipe-ing-err-rej" style="color:var(--txt1)">—</strong></div>
+        </div>
+      </div>
+      <div class="ccrd">
+        <div class="ctitle">Volume de ingestão</div>
+        <div class="csub" id="ing-chart-sub">DFs recebidos × integrados · últimos 7 dias</div>
+        <div class="cwrap" style="height:160px"><div id="cIngestao"></div></div>
+        <div class="leg"><span class="li"><span class="ls" style="background:var(--blue)"></span>Recebidos</span><span class="li"><span class="ls" style="background:var(--green)"></span>Integrados</span><span class="li"><span class="ls" style="background:var(--red)"></span>Com erro</span></div>
+      </div>
+    </div>
+    <!-- Filtros -->
+    <div class="crd" style="margin-bottom:20px">
+      <div class="sechdr"><h2>Filtros</h2><p>Filtre os DFs por chave, tipo, emitente, status, data ou resultado de validação</p></div>
+      <div class="flt" style="margin-top:14px;flex-wrap:wrap;gap:8px">
+        <input type="text" id="ing-busca" placeholder="Buscar por chave DF, CNPJ ou emitente…" oninput="ingestaoFiltrar()" style="min-width:240px"/>
+        <select id="ing-filtro-tipo" onchange="ingestaoFiltrar()">
+          <option value="">Tipo de DF — todos</option>
+          <optgroup label="NF-e"><option value="NF-e Entrada">NF-e Entrada</option><option value="NF-e Saída">NF-e Saída</option></optgroup>
+          <optgroup label="NFC-e"><option value="NFC-e Entrada">NFC-e Entrada</option><option value="NFC-e Saída">NFC-e Saída</option></optgroup>
+          <optgroup label="Outros tipos"><option value="NFCom">NFCom</option><option value="NF3-e">NF3-e</option><option value="NFS-e">NFS-e</option><option value="CT-e">CT-e</option><option value="NFAg">NFAg</option><option value="NFGás">NFGás</option><option value="MDF-e">MDF-e</option><option value="BP-e">BP-e</option></optgroup>
+        </select>
+        <select id="ing-filtro-status" onchange="ingestaoFiltrar()">
+          <option value="">Status — todos</option>
+          <option value="integrado">Integrado</option>
+          <option value="pendente">Em processamento</option>
+          <option value="inconsistencia_todos">Inconsistência (todos)</option>
+          <optgroup label="Detalhe da inconsistência">
+            <option value="erro_layout">— Falha de Layout</option>
+            <option value="erro_dados">— Inconsistência de Dados</option>
+            <option value="rejeitado">— Rejeitado SEFAZ</option>
+            <option value="duplicado">— Documento Duplicado</option>
+          </optgroup>
+        </select>
+        <select id="ing-filtro-val" onchange="ingestaoFiltrar()">
+          <option value="">Validação — todas</option>
+          <option value="ok">Todas aprovadas</option>
+          <option value="erro">Com falha</option>
+        </select>
+        <div style="display:flex;align-items:center;gap:6px">
+          <label style="font-size:11px;color:var(--txt2);white-space:nowrap">Emissão de</label>
+          <input type="date" id="ing-filtro-data-de" onchange="ingestaoFiltrar()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--txt1);outline:none"/>
+          <label style="font-size:11px;color:var(--txt2)">até</label>
+          <input type="date" id="ing-filtro-data-ate" onchange="ingestaoFiltrar()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--txt1);outline:none"/>
+        </div>
+        <button class="btn" onclick="ingestaoLimparFiltros()">✕ Limpar</button>
+      </div>
+    </div>
+    <!-- Tabela -->
+    <div class="tcrd">
+      <div class="tcrd-hdr" style="flex-direction:column;align-items:flex-start;gap:6px">
+        <div class="sechdr" style="margin-bottom:0"><h2>Documentos Fiscais Ingeridos</h2><p id="ing-count-sub">— DFs no período</p></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-bottom:4px">
+          <span style="font-size:11px;color:var(--txt3)">Legenda validação:</span>
+          <span style="font-size:11px;padding:1px 8px;border-radius:3px;background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)">✓ Aprovado</span>
+          <span style="font-size:11px;padding:1px 8px;border-radius:3px;background:rgba(244,63,94,.12);color:var(--red);border:1px solid rgba(244,63,94,.25)">✗ Falha</span>
+          <span style="font-size:11px;padding:1px 8px;border-radius:3px;background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25)">⏳ Pendente</span>
+        </div>
+      </div>
+      <div class="twrap"><table><thead><tr><th>Chave DF</th><th>Tipo DF</th><th>Emitente</th><th class="r">Valor</th><th>Emissão</th><th>Ingestão</th><th style="text-align:center">Layout</th><th style="text-align:center">Validade</th><th style="text-align:center">Dados</th><th>Status</th><th>Ação</th></tr></thead><tbody id="t-ingestao"></tbody></table></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
+        <button class="btn" id="ing-btn-prev" onclick="ingestaoPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:12px;color:var(--txt2)">Página</span>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:4px 12px;min-width:50px;text-align:center">
+            <span id="ing-pag-atual" style="color:var(--txt1);font-weight:600;font-size:13px">1</span>
+            <span style="color:var(--txt3);font-size:12px"> / </span>
+            <span id="ing-pag-total" style="color:var(--txt2);font-size:12px">1</span>
+          </div>
+          <span style="font-size:12px;color:var(--txt2)" id="ing-pag-info">(25 DFs por página)</span>
+        </div>
+        <button class="btn" id="ing-btn-prox" onclick="ingestaoProximaPagina()">Próxima →</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: NOVO FORNECEDOR -->
@@ -1989,8 +2098,10 @@ tr:hover td{background:rgba(73,197,177,.02)}
       <button class="btn btn-t" onclick="contratosCadastrar()">+ Cadastrar contrato</button>
     </div>
   </div>
-  <!-- INGESTÃO DE DFs (sub-módulo Admin) -->
-  <div id="admin-ingestao" class="sv">
+</div>
+
+<!-- admin-ingestao movido para dentro de view-admin -->
+<div style="display:none">
     <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
       <button class="btn btn-t" onclick="ingestaoSimularImportacao()" style="font-size:12px">+ Importar DF</button>
     </div>

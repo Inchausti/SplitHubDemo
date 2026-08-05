@@ -114,6 +114,9 @@ function showAdminSub(id, btnElement) {
   if (id === 'organizacao') {
     setTimeout(function() { if (window.orgRenderTabela) window.orgRenderTabela(); }, 0);
   }
+  if (id === 'ingestao') {
+    setTimeout(function() { if (window.ingestaoInit) window.ingestaoInit(); }, 0);
+  }
 }
 
 function showInconsistSub(id, btnElement) {
