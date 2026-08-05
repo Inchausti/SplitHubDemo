@@ -792,6 +792,50 @@ window.atualizarKPIsDashboard = function() {
 
 // ============================================================
 // INTELIGÊNCIA — sincronização com dados globais reais
+
+// Fallback: define svgLine/svgBar caso o bloco inline do HTML não tenha carregado
+if (typeof svgLine !== 'function') {
+  window.svgLine = function(id, datasets, labels, H, opts) {
+    var el = document.getElementById(id); if (!el) return;
+    var padT=8,padB=26,padL=8,padR=8;
+    var cw=(el.parentElement&&el.parentElement.offsetWidth)||el.offsetWidth||440;
+    var W=cw>50?cw:440, plotW=W-padL-padR, plotH=H-padT-padB, n=labels.length;
+    var minV,maxV;
+    if(opts&&opts.min!==undefined){minV=opts.min;maxV=opts.max;}
+    else{var all=[];datasets.forEach(function(d){all=all.concat(d.data);});minV=Math.min.apply(null,all);maxV=Math.max.apply(null,all);}
+    var rng=maxV-minV||1;
+    function xp(i){return Math.round(padL+(i/(n-1||1))*plotW);}
+    function yp(v){return Math.round(padT+(1-(v-minV)/rng)*plotH);}
+    var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block">';
+    labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
+    datasets.forEach(function(ds){
+      var pts=ds.data.map(function(v,i){return xp(i)+','+yp(v);}).join(' ');
+      if(ds.fill){var fp=pts+' '+xp(n-1)+','+(H-padB)+' '+padL+','+(H-padB);s+='<polygon points="'+fp+'" fill="'+ds.color+'" fill-opacity="0.15" stroke="none"/>';}
+      var da=ds.dash?'stroke-dasharray="5 3"':(ds.dash2?'stroke-dasharray="2 4"':'');
+      s+='<polyline points="'+pts+'" fill="none" stroke="'+ds.color+'" stroke-width="'+(ds.w||2)+'" '+da+' stroke-linejoin="round" stroke-linecap="round"/>';
+      if(ds.dots){ds.data.forEach(function(v,i){s+='<circle cx="'+xp(i)+'" cy="'+yp(v)+'" r="3" fill="'+ds.color+'"/>';});}
+    });
+    s+='</svg>';
+    el.style.cssText='display:block;width:100%'; el.innerHTML=s;
+  };
+}
+if (typeof svgBar !== 'function') {
+  window.svgBar = function(id, datasets, labels, H) {
+    var el = document.getElementById(id); if (!el) return;
+    var padT=8,padB=26,padL=8,padR=8;
+    var cw=(el.parentElement&&el.parentElement.offsetWidth)||el.offsetWidth||440;
+    var W=cw>50?cw:440, plotW=W-padL-padR, plotH=H-padT-padB, n=labels.length;
+    var stk=[];for(var i=0;i<n;i++){var sm=0;datasets.forEach(function(d){sm+=d.data[i]||0;});stk.push(sm);}
+    var maxV=Math.max.apply(null,stk)||1;
+    var bW=Math.floor(plotW/n*0.52);
+    function xp(i){return Math.round(padL+(i+0.5)*plotW/n);}
+    var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block">';
+    labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
+    for(var i=0;i<n;i++){var yBase=H-padB;datasets.slice().reverse().forEach(function(ds){var bH=Math.max(1,Math.round((ds.data[i]||0)/maxV*plotH));var x=xp(i)-Math.floor(bW/2);var y=yBase-bH;s+='<rect x="'+x+'" y="'+y+'" width="'+bW+'" height="'+bH+'" fill="'+ds.color+'" rx="2"/>';yBase=y;});}
+    s+='</svg>';
+    el.style.cssText='display:block;width:100%'; el.innerHTML=s;
+  };
+}
 // ============================================================
 
 window.atualizarInteligencia = function() {
