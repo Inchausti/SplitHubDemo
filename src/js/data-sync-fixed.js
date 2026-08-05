@@ -900,26 +900,40 @@ window.atualizarInteligencia = function() {
     ], labM, 200);
   }
 
-  // ── 3. Alíquota efetiva por mês (real vs projetada vs mercado) ──
-  var aliqReal = meses.map(function(m) {
-    var tot = 0, tax = 0;
-    lista.forEach(function(nf) {
-      if (nf.tipo !== 'entrada' || (nf.data||'').substring(0,7) !== m) return;
-      tot += nf.valorTotal || 0;
-      tax += (nf.ibs || 0) + (nf.cbs || 0);
-    });
-    return tot > 0 ? +((tax / tot) * 100).toFixed(2) : 9.5;
+  // ── 3. Volume financeiro NFs — Contratos RAD ────────────
+  var radMap = {};
+  lista.forEach(function(nf) {
+    var metodoPag = (nf.metodoPagamento || '').toLowerCase();
+    if (metodoPag !== 'rad') return;
+    var ent = nf.entidade || '—';
+    if (!radMap[ent]) radMap[ent] = { vol90: 0, vol120: 0, total: 0, nfs: 0 };
+    var vol = nf.valorTotal || 0;
+    // distribuir entre 90/120 dias deterministicamente pelo hash
+    var h = 0; var s = (nf.numero || ent); for(var ci=0;ci<s.length;ci++) h = ((h<<5)-h+s.charCodeAt(ci))|0;
+    if (Math.abs(h) % 2 === 0) radMap[ent].vol90  += vol;
+    else                        radMap[ent].vol120 += vol;
+    radMap[ent].total += vol; radMap[ent].nfs++;
   });
-  var aliqProj = aliqReal.map(function(v) { return +(v * 0.98).toFixed(2); });
-  var aliqMerc = meses.map(function() { return 9.65; });
-  var aliqMin  = Math.min.apply(null, aliqReal) - 0.3;
-  var aliqMax  = Math.max.apply(null, aliqMerc) + 0.2;
-  if (typeof svgLine === 'function' && meses.length) {
-    svgLine('cAliquota', [
-      { data: aliqReal, color: '#49C5B1', dots: true, w: 2.5 },
-      { data: aliqProj, color: '#3B82F6', dash: true },
-      { data: aliqMerc, color: '#53565A', dash2: true }
-    ], labM, 200, { min: aliqMin, max: aliqMax });
+  var radLista = Object.keys(radMap).map(function(e){ return { nome: e, vol90: radMap[e].vol90, vol120: radMap[e].vol120, total: radMap[e].total, nfs: radMap[e].nfs }; });
+  radLista.sort(function(a,b){ return b.total - a.total; });
+  var radTop = radLista.slice(0, 8);
+  if (radTop.length) {
+    var radLabels = radTop.map(function(r){ return r.nome.split(' ')[0]; });
+    var rad90  = radTop.map(function(r){ return +(r.vol90  / 1e6).toFixed(2); });
+    var rad120 = radTop.map(function(r){ return +(r.vol120 / 1e6).toFixed(2); });
+    if (typeof svgBar === 'function') svgBar('cRadPrazo', [{ data: rad90, color: '#49C5B1' }, { data: rad120, color: '#3B82F6' }], radLabels, 200);
+    var tbody = document.getElementById('t-rad-prazo');
+    if (tbody) {
+      var rows = '';
+      radTop.forEach(function(r) {
+        var fmtV = function(v){ return v>=1e6? 'R$ '+(v/1e6).toFixed(1).replace('.',',')+'M' : v>=1e3? 'R$ '+Math.round(v/1e3)+'K' : 'R$ '+v.toFixed(0); };
+        rows += '<tr><td>' + r.nome + '</td><td>—</td><td>' + r.nfs + ' NF(s)</td><td>90/120 dias</td><td class="r">' + fmtV(r.total) + '</td></tr>';
+      });
+      tbody.innerHTML = rows;
+    }
+  } else {
+    var elcR = document.getElementById('cRadPrazo');
+    if (elcR) elcR.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--txt3);font-size:12px">Nenhum contrato RAD encontrado.</div>';
   }
 
   // ── 4. Score de risco por fornecedor (de RFs reais) ─────
@@ -972,17 +986,7 @@ window.atualizarInteligencia = function() {
       + '</div></div>';
   }
 
-  // ── 6. Simulador ROI — pré-seeding com volume real ──────
-  var volEntrada = lista.filter(function(nf) { return nf.tipo === 'entrada'; })
-                        .reduce(function(s, nf) { return s + (nf.valorTotal || 0); }, 0);
-  var simEl = document.getElementById('sim-c');
-  if (simEl && volEntrada > 0) {
-    var volM = Math.round(volEntrada / 1e6 / 50) * 50;
-    simEl.value = Math.max(100, Math.min(20000, volM));
-    if (typeof updateSim === 'function') updateSim();
-  }
-
-  // ── 7. Alertas dinâmicos gerados de dados reais ─────────
+  // ── 6. Alertas dinâmicos gerados de dados reais ─────────
   var alertsEl = document.getElementById('intel-alerts');
   if (!alertsEl) return;
   var alertas = [];
