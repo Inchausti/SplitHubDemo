@@ -4363,8 +4363,9 @@ window.sbRenderDropdown = function() {
     var isAt = ids.indexOf(c.id) >= 0;
     var isIn = c.status === 'inativo';
     var tCor = c.tipo === 'Matriz' ? '#49C5B1' : '#3B82F6';
-    h += '<div onclick="window.sbToggleEmpresaItem(' + c.id + ')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;background:' + (isAt ? 'rgba(73,197,177,.1)' : 'transparent') + ';border-left:2px solid ' + (isAt ? '#49C5B1' : 'transparent') + ';opacity:' + (isIn ? '0.5' : '1') + '">'
-      + '<span style="font-size:13px;color:#49C5B1;width:16px;text-align:center">' + (isAt ? '✓' : '') + '</span>'
+    var bgItem = isAt ? 'rgba(73,197,177,.12)' : 'transparent';
+    h += '<div onclick="event.stopPropagation();window.sbToggleEmpresaItem(' + c.id + ')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;background:' + bgItem + ';border-left:2px solid ' + (isAt ? '#49C5B1' : 'transparent') + ';opacity:' + (isIn ? '0.5' : '1') + ';transition:background .15s">'
+      + '<span style="font-size:13px;color:#49C5B1;width:16px;text-align:center;flex-shrink:0">' + (isAt ? '✓' : '') + '</span>'
       + '<div style="flex:1;min-width:0">'
       + '<div style="font-size:12px;font-weight:' + (isAt ? '700' : '500') + ';color:' + (isIn ? 'var(--txt3)' : 'var(--txt1)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + c.razao + ' <span style="font-size:9px;font-weight:400;color:var(--txt2)">' + c.uf + (isIn ? ' · Inativo' : '') + '</span></div>'
       + '<div style="font-size:10px;color:var(--txt2);font-family:monospace;margin-top:1px">' + c.cnpj + '</div>'
@@ -4409,16 +4410,46 @@ window.sbToggleEmpresaItem = function(id) {
   var idx = ids.indexOf(id);
   if (idx >= 0) { ids.splice(idx, 1); } else { ids.push(id); }
   window._empresasAtivas = ids;
+  // re-render ambos os dropdowns sem fechar
   window.sbRenderDropdown();
+  window._dashCnpjRenderList();
   window._sbAtualizarLabel();
   window._aplicarFiltroCnpjEmpresa();
 };
 
 window.sbSelecionarTodos = function() {
   window._empresasAtivas = [];
-  window.sbRenderDropdown();
+  // fechar ambos os dropdowns ao selecionar todos
+  var sbDd = document.getElementById('sb-empresa-dropdown');
+  if (sbDd) sbDd.style.display = 'none';
+  var ch = document.getElementById('sb-empresa-chevron');
+  if (ch) ch.style.transform = '';
+  var panel = document.getElementById('cnpj-filter-panel');
+  if (panel) panel.classList.remove('open');
   window._sbAtualizarLabel();
   window._aplicarFiltroCnpjEmpresa();
+};
+
+// Renderiza apenas a lista do filtro dashboard (sem abrir/fechar o panel)
+window._dashCnpjRenderList = function() {
+  var list = document.getElementById('cnpj-filter-list');
+  if (!list) return;
+  var ids = window._empresasAtivas || [];
+  var allSel = !ids.length;
+  var h = '<div onclick="window.sbSelecionarTodos()" class="cnpj-filter-item" style="border-left:2px solid ' + (allSel ? '#49C5B1' : 'transparent') + '">'
+    + '<span style="font-size:13px;color:#49C5B1;width:16px;display:inline-block;text-align:center">' + (allSel ? '✓' : '') + '</span>'
+    + '<div><div style="font-weight:' + (allSel ? '700' : '500') + ';color:var(--txt1)">Todos os estabelecimentos</div>'
+    + '<span class="cfi-cnpj">Visão consolidada do grupo</span></div></div>';
+  (window._orgCnpjs || []).forEach(function(c) {
+    var isAt = ids.indexOf(c.id) >= 0;
+    var isIn = c.status === 'inativo';
+    h += '<div onclick="event.stopPropagation();window.sbToggleEmpresaItem(' + c.id + ')" class="cnpj-filter-item" style="background:' + (isAt ? 'rgba(73,197,177,.08)' : '') + ';border-left:2px solid ' + (isAt ? '#49C5B1' : 'transparent') + ';opacity:' + (isIn ? '0.5' : '1') + '">'
+      + '<span style="font-size:13px;color:#49C5B1;width:16px;display:inline-block;text-align:center">' + (isAt ? '✓' : '') + '</span>'
+      + '<div style="flex:1"><div style="font-weight:' + (isAt ? '700' : '500') + ';color:' + (isIn ? 'var(--txt3)' : 'var(--txt1)') + '">' + c.razao + ' <span style="font-size:9px;color:var(--txt2)">' + c.uf + ' · ' + c.tipo + '</span></div>'
+      + '<span class="cfi-cnpj">' + c.cnpj + (isIn ? ' · Inativo' : '') + '</span></div>'
+      + '</div>';
+  });
+  list.innerHTML = h;
 };
 
 window._aplicarFiltroCnpjEmpresa = function() {
@@ -4449,31 +4480,15 @@ window._aplicarFiltroCnpjEmpresa = function() {
 window.dashCnpjToggleDropdown = function(event) {
   event.stopPropagation();
   var panel = document.getElementById('cnpj-filter-panel');
-  var list  = document.getElementById('cnpj-filter-list');
-  if (!panel || !list) return;
+  if (!panel) return;
   panel.classList.toggle('open');
   if (panel.classList.contains('open')) {
-    var ids = window._empresasAtivas || [];
-    var allSel = !ids.length;
-    var h = '<div onclick="window.sbSelecionarTodos()" class="cnpj-filter-item" style="border-left:2px solid ' + (allSel ? '#49C5B1' : 'transparent') + '">'
-      + '<span style="font-size:13px;color:#49C5B1;width:16px;display:inline-block;text-align:center">' + (allSel ? '✓' : '') + '</span>'
-      + '<div><div style="font-weight:' + (allSel ? '700' : '500') + ';color:var(--txt1)">Todos os estabelecimentos</div>'
-      + '<span class="cfi-cnpj">Visão consolidada do grupo</span></div></div>';
-    (window._orgCnpjs || []).forEach(function(c) {
-      var isAt = ids.indexOf(c.id) >= 0;
-      var isIn = c.status === 'inativo';
-      h += '<div onclick="window.sbToggleEmpresaItem(' + c.id + ')" class="cnpj-filter-item" style="border-left:2px solid ' + (isAt ? '#49C5B1' : 'transparent') + ';opacity:' + (isIn ? '0.5' : '1') + '">'
-        + '<span style="font-size:13px;color:#49C5B1;width:16px;display:inline-block;text-align:center">' + (isAt ? '✓' : '') + '</span>'
-        + '<div style="flex:1"><div style="font-weight:' + (isAt ? '700' : '500') + ';color:' + (isIn ? 'var(--txt3)' : 'var(--txt1)') + '">' + c.razao + ' <span style="font-size:9px;color:var(--txt2)">' + c.uf + ' · ' + c.tipo + '</span></div>'
-        + '<span class="cfi-cnpj">' + c.cnpj + (isIn ? ' · Inativo' : '') + '</span></div>'
-        + '</div>';
-    });
-    list.innerHTML = h;
+    window._dashCnpjRenderList();
     document.addEventListener('click', function _ddClose(e) {
-      if (!document.getElementById('cnpj-filter').contains(e.target)) {
+      var filter = document.getElementById('cnpj-filter');
+      if (filter && !filter.contains(e.target)) {
         panel.classList.remove('open');
         document.removeEventListener('click', _ddClose);
-        window._sbAtualizarLabel();
       }
     });
   }
