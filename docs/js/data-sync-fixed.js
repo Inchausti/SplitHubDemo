@@ -1223,8 +1223,8 @@ window.atualizarInteligencia = function() {
       var v = rf.valor || 0;
       totalCred += v;
       if (finalOk[rf.status])                                              apropCred += v;
-      else if (rf.status === 'vencido' || rf.status === 'inconsistencia')  riscoCred += v;
-      else if (rf.status === 'nao_apropriado')                             pendCred  += v;
+      else if (rf.status === 'vencido' || rf.status === 'em_risco' || rf.status === 'inconsistencia')  riscoCred += v;
+      else if (rf.status === 'nao_apropriado')                                                        pendCred  += v;
     });
   });
   var pct = totalCred > 0 ? Math.round(apropCred / totalCred * 100) : 0;
@@ -1247,7 +1247,7 @@ window.atualizarInteligencia = function() {
     (nf.registrosFiscais || []).forEach(function(rf) {
       var v = rf.valor || 0;
       if (finalOk[rf.status])                                              byMonth[mes].aprop += v;
-      else if (rf.status === 'vencido' || rf.status === 'inconsistencia')  byMonth[mes].risco += v;
+      else if (rf.status === 'vencido' || rf.status === 'em_risco' || rf.status === 'inconsistencia')  byMonth[mes].risco += v;
       else                                                                 byMonth[mes].pend  += v;
     });
   });
@@ -1308,7 +1308,7 @@ window.atualizarInteligencia = function() {
     scoreMap[ent].vol += nf.valorTotal || 0;
     (nf.registrosFiscais || []).forEach(function(rf) {
       if (finalOk[rf.status])                                              scoreMap[ent].good++;
-      if (rf.status === 'inconsistencia' || rf.status === 'vencido')       scoreMap[ent].bad++;
+      if (rf.status === 'inconsistencia' || rf.status === 'vencido' || rf.status === 'em_risco') scoreMap[ent].bad++;
     });
   });
   var scoreLista = Object.keys(scoreMap).map(function(ent) {
@@ -1569,7 +1569,7 @@ function _finBadge(s) {
 }
 function _rfStatusBadge(rf) {
   if (!rf) return '<span style="color:var(--txt3);font-size:10px">—</span>';
-  var color = {apropriado:'var(--green)',utilizado:'var(--teal)',extinto:'#22C55E',vencido:'var(--red)',nao_apropriado:'var(--amber)',inconsistencia:'#F43F5E'}[rf.status] || '#555';
+  var color = {apropriado:'var(--green)',utilizado:'var(--teal)',extinto:'#22C55E',em_risco:'#F59E0B',vencido:'var(--red)',nao_apropriado:'var(--amber)',inconsistencia:'#F43F5E'}[rf.status] || '#555';
   return '<span style="background:'+color+';color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">'+(rf.status||'—')+'</span>';
 }
 
