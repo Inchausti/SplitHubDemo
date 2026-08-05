@@ -3679,6 +3679,7 @@ window.renderizarTabelaPagamentos = function() {
         rfId: rf.id || '',
         rf: rf.id || '—', forn: rf.entidade || nf.entidade || '—',
         cnpj: rf.cnpj || nf.cnpj || '—',
+        nfVinc: rf.nfVinculada || nf.numero || '—',
         tipo: tipoCol, tipoNF: nf.tipo || 'entrada', valor: valor,
         dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, status: rfSt,
         metodo: rf.metodoPagamento || nf.metodoPagamento || '—'
@@ -3714,9 +3715,13 @@ window.renderizarTabelaPagamentos = function() {
     var chkCell = r.status !== 'pago'
       ? '<td style="text-align:center"><input type="checkbox" class="pag-chk" data-idx="'+idx+'" onchange="window.pagAtualizarSelecao()" style="cursor:pointer;width:15px;height:15px"></td>'
       : '<td></td>';
+    var nfCell = r.nfVinc !== '—'
+      ? '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline;font-weight:600" onclick="if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + r.nfVinc + '\')">' + r.nfVinc + '</span>'
+      : '<span style="color:var(--txt3)">—</span>';
     h += '<tr>'
       + chkCell
       + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.rf + '</td>'
+      + '<td>' + nfCell + '</td>'
       + '<td><div style="font-weight:500;font-size:13px">' + r.forn + '</div><div style="font-size:11px;color:var(--txt2)">' + r.cnpj + '</div></td>'
       + '<td>' + tipoBadge + '</td>'
       + '<td>' + nfTipoBadgePag + '</td>'
@@ -3732,7 +3737,7 @@ window.renderizarTabelaPagamentos = function() {
   });
 
   if (!rows.length) {
-    h = '<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento encontrado para este filtro.</td></tr>';
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;
