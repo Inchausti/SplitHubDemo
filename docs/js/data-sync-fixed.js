@@ -722,7 +722,7 @@ window.renderizarTabelaCreditos = function() {
       var nfNumero = r.nfNumero || r.nf.replace('NF-', '');
       var nfLink = '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline" onclick="window.abrirDetalhesNFporNumero(\'' + nfNumero + '\')">' + r.nf + '</span>';
       var contratoCell = r.contratoId
-        ? '<span class="mono" style="font-size:11px;color:#49C5B1;font-weight:600">' + r.contratoId + '</span>'
+        ? '<span class="mono" style="font-size:11px;color:#49C5B1;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\'' + r.contratoId + '\')">' + r.contratoId + '</span>'
         : '<span style="color:var(--txt3)">—</span>';
       var metodoCell = r.metodoPagamento === 'RAD'
         ? '<span style="font-size:11px;font-weight:600;color:#8B5CF6">RAD</span>'
@@ -2087,7 +2087,7 @@ window._incRfRenderPagina = function() {
       + '<td>' + etapaBadge + '</td>'
       + '<td>' + tfBadge + '</td>'
       + '<td>' + nfBadge + '</td>'
-      + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.nfVinc + '</td>'
+      + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\'' + r.nfVinc.replace(/^[^\s]+\s*/,'') + '\')">' + r.nfVinc + '</td>'
       + '<td style="font-size:12px">' + r.forn + '</td>'
       + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + r.cnpj + '</td>'
       + '<td class="r mono" style="font-size:11px;font-weight:700;color:' + (r.tf==='IBS'?'#3B82F6':r.tf==='CBS'?'#F59E0B':'var(--txt2)') + '">' + ff(r.valor) + '</td>'
@@ -2815,7 +2815,7 @@ window.renderizarTabelaDebitos = function() {
       + '<td class="mono" style="font-size:11px"><button onclick="window.abrirDetalheRF(\'' + r.rf + '\')" style="background:none;border:none;color:#A7A8AA;cursor:pointer;font-size:11px;font-weight:500;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
       + '<td>' + tfBadge + '</td>'
       + '<td>' + nfTipoBadgeDeb + '</td>'
-      + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.nf + '</td>'
+      + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\'' + r.nf.replace(/^NF-/,'') + '\')">' + r.nf + '</td>'
       + '<td style="font-size:12px">' + r.cliente + '</td>'
       + '<td style="font-size:11px;color:var(--txt2)">' + r.data + '</td>'
       + '<td class="r mono" style="font-size:11px">' + ff(r.valorTotal) + '</td>'
