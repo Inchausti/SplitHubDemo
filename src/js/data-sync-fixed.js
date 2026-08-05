@@ -1157,6 +1157,43 @@ function _concFmt(v) {
   return 'R$ ' + v.toFixed(2).replace('.',',');
 }
 
+function _concRFDetail(nf, ibsRF, cbsRF) {
+  var fmtV = function(v) { return v ? 'R$ ' + (v/1).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; };
+  var stColor = {
+    apropriado:'#22C55E', utilizado:'#49C5B1', extinto:'#22C55E',
+    nao_apropriado:'#F59E0B', vencido:'#F43F5E', inconsistencia:'#F43F5E'
+  };
+  function rfCard(rf, label) {
+    if (!rf) return '<div style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:12px 14px;min-width:220px">'
+      + '<div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">' + label + '</div>'
+      + '<div style="font-size:11px;color:var(--txt3)">Sem RF vinculado</div></div>';
+    var sc = stColor[rf.status] || '#A7A8AA';
+    var pago = rf.dataPagamento && rf.dataPagamento !== '—';
+    return '<div style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-left:3px solid ' + sc + ';border-radius:8px;padding:12px 14px;min-width:220px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      + '<span style="font-size:10px;font-weight:700;color:' + sc + ';text-transform:uppercase;letter-spacing:.07em">' + label + '</span>'
+      + '<span style="background:' + sc + ';color:#fff;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700">' + (rf.status || '—') + '</span>'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
+      + '<span style="color:var(--txt3)">ID RF</span><span style="color:var(--txt1);font-family:monospace">' + (rf.id || '—') + '</span>'
+      + '<span style="color:var(--txt3)">Valor</span><span style="color:var(--txt1);font-weight:600">' + fmtV(rf.valor) + '</span>'
+      + '<span style="color:var(--txt3)">Data RF</span><span style="color:var(--txt2)">' + (rf.data || '—') + '</span>'
+      + '<span style="color:var(--txt3)">Pagamento</span><span style="color:' + (pago ? '#22C55E' : 'var(--txt3)') + ';font-weight:' + (pago ? '600' : '400') + '">' + (pago ? rf.dataPagamento : 'Pendente') + '</span>'
+      + (rf.inconsistencia ? ('<span style="color:var(--txt3)">Inconsistência</span><span style="color:#F43F5E;font-size:10px">' + rf.inconsistencia + '</span>') : '')
+      + '</div></div>';
+  }
+  var nfTotal = 'R$ ' + ((nf.valorTotal||0)/1).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  return '<div style="padding:10px 16px 14px">'
+    + '<div style="font-size:10px;color:var(--txt3);margin-bottom:8px">Valor total NF: <strong style="color:var(--txt1)">' + nfTotal + '</strong>'
+    + ' · IBS: <strong style="color:var(--txt1)">' + fmtV(nf.ibs) + '</strong>'
+    + ' · CBS: <strong style="color:var(--txt1)">' + fmtV(nf.cbs) + '</strong>'
+    + ' · Data: <strong style="color:var(--txt1)">' + (nf.data||'—') + '</strong></div>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+    + rfCard(ibsRF, 'RF — IBS')
+    + rfCard(cbsRF, 'RF — CBS')
+    + '</div></div>';
+}
+
 function _apurBadge(s) {
   var map = {confirmado:'var(--green)',divergente:'var(--amber)',pendente:'#8B5CF6'};
   return '<span style="background:'+( map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+s+'</span>';
@@ -1245,10 +1282,11 @@ function _concApurRender() {
   if (prox) { prox.disabled = pag >= total; prox.style.opacity = pag >= total ? '.5' : '1'; }
   var tbody = document.getElementById('t-conc-apur');
   if (!tbody) return;
-  if (!slice.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro encontrado.</td></tr>'; return; }
+  if (!slice.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro encontrado.</td></tr>'; return; }
   var html = '';
-  slice.forEach(function(r) {
+  slice.forEach(function(r, ri) {
     var nf = r.nf;
+    var rowId = 'capur-' + ri;
     var delta = r.deltaValor;
     var deltaStr = Math.abs(delta) < 1 ? '—' : (delta > 0 ? '+' : '') + _concFmt(delta);
     var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? 'color:var(--amber)' : 'color:var(--red)') : 'color:var(--txt3)';
@@ -1256,8 +1294,9 @@ function _concApurRender() {
       ? '<span style="color:var(--teal);font-size:10px;font-weight:700">' + (nf.tipoDF || 'ENTRADA') + '</span>'
       : '<span style="color:var(--blue);font-size:10px;font-weight:700">' + (nf.tipoDF || 'SAÍDA') + '</span>';
     var nfLabel = ((nf.tipoDF || '') + ' ' + (nf.numero || '')).trim() || '—';
-    html += '<tr>'
-      + '<td style="font-weight:600;color:var(--txt1);white-space:nowrap">' + nfLabel + '</td>'
+    var hasRF = r.ibsRF || r.cbsRF;
+    html += '<tr style="cursor:pointer" onclick="(function(el){el.nextElementSibling.style.display=el.nextElementSibling.style.display===\'none\'?\'table-row\':\'none\';})(this)">'
+      + '<td style="font-weight:600;color:var(--txt1);white-space:nowrap"><span style="color:var(--txt3);font-size:10px;margin-right:4px">' + (hasRF ? '▶' : '·') + '</span>' + nfLabel + '</td>'
       + '<td>' + tipoBadge + '</td>'
       + '<td style="color:var(--txt2)">' + (nf.entidade || '—') + '</td>'
       + '<td style="font-family:monospace;font-size:11px;color:var(--txt3)">' + (nf.cnpj || '—') + '</td>'
@@ -1267,7 +1306,11 @@ function _concApurRender() {
       + '<td style="font-family:monospace;font-size:11px;color:#8B5CF6">' + r.protocolo + '</td>'
       + '<td style="color:var(--txt3);font-size:11px">' + r.dataApur + '</td>'
       + '<td>' + _apurBadge(r.statusApur) + '</td>'
-      + '</tr>';
+      + '</tr>'
+      + '<tr id="' + rowId + '" style="display:none;background:rgba(73,197,177,.04)">'
+      + '<td colspan="10" style="padding:0">'
+      + _concRFDetail(nf, r.ibsRF, r.cbsRF)
+      + '</td></tr>';
   });
   tbody.innerHTML = html;
 }
@@ -1291,9 +1334,8 @@ function _concFinRender() {
   if (!tbody) return;
   if (!slice.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro encontrado.</td></tr>'; return; }
   var html = '';
-  slice.forEach(function(r) {
+  slice.forEach(function(r, ri) {
     var nf = r.nf;
-    // Usa valores de IBS/CBS direto do NF (campos globais) e RF para status
     var ibsVal = r.ibsRF ? _concFmt(r.ibsRF.valor || nf.ibs || 0) : (nf.ibs ? _concFmt(nf.ibs) : '—');
     var cbsVal = r.cbsRF ? _concFmt(r.cbsRF.valor || nf.cbs || 0) : (nf.cbs ? _concFmt(nf.cbs) : '—');
     var tipoBadge = nf.tipo === 'entrada'
@@ -1303,8 +1345,9 @@ function _concFinRender() {
       ? '<span style="color:var(--green);font-weight:700">✓ Sim</span>'
       : '<span style="color:var(--txt3)">—</span>';
     var nfLabel = ((nf.tipoDF || '') + ' ' + (nf.numero || '')).trim() || '—';
-    html += '<tr>'
-      + '<td style="font-weight:600;color:var(--txt1);white-space:nowrap">' + nfLabel + '</td>'
+    var hasRF = r.ibsRF || r.cbsRF;
+    html += '<tr style="cursor:pointer" onclick="(function(el){el.nextElementSibling.style.display=el.nextElementSibling.style.display===\'none\'?\'table-row\':\'none\';})(this)">'
+      + '<td style="font-weight:600;color:var(--txt1);white-space:nowrap"><span style="color:var(--txt3);font-size:10px;margin-right:4px">' + (hasRF ? '▶' : '·') + '</span>' + nfLabel + '</td>'
       + '<td>' + tipoBadge + '</td>'
       + '<td style="color:var(--txt2)">' + (nf.entidade || '—') + '</td>'
       + '<td class="r" style="font-family:monospace">' + ibsVal + '</td>'
@@ -1314,7 +1357,11 @@ function _concFinRender() {
       + '<td style="text-align:center">' + comprIcon + '</td>'
       + '<td>' + _finBadge(r.statusFin) + '</td>'
       + '<td style="font-size:11px;color:var(--txt3)">' + r.proxAcao + '</td>'
-      + '</tr>';
+      + '</tr>'
+      + '<tr style="display:none;background:rgba(73,197,177,.04)">'
+      + '<td colspan="10" style="padding:0">'
+      + _concRFDetail(nf, r.ibsRF, r.cbsRF)
+      + '</td></tr>';
   });
   tbody.innerHTML = html;
 }
