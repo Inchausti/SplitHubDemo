@@ -3158,7 +3158,11 @@ window.renderizarTabelaPagamentos = function() {
       : r.metodo === 'Fornecedor'
         ? '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Fornecedor</span>'
         : '<span style="color:var(--txt3)">—</span>';
+    var chkCell = r.status !== 'pago'
+      ? '<td style="text-align:center"><input type="checkbox" class="pag-chk" data-idx="'+idx+'" onchange="window.pagAtualizarSelecao()" style="cursor:pointer;width:15px;height:15px"></td>'
+      : '<td></td>';
     h += '<tr>'
+      + chkCell
       + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.rf + '</td>'
       + '<td><div style="font-weight:500;font-size:13px">' + r.forn + '</div><div style="font-size:11px;color:var(--txt2)">' + r.cnpj + '</div></td>'
       + '<td>' + tipoBadge + '</td>'
@@ -3175,13 +3179,123 @@ window.renderizarTabelaPagamentos = function() {
   });
 
   if (!rows.length) {
-    h = '<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento encontrado para este filtro.</td></tr>';
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;
 
+  // reset seleção ao re-renderizar
+  window.pagAtualizarSelecao();
+  var chkAll = document.getElementById('pag-chk-all');
+  if (chkAll) chkAll.checked = false;
+
   window.atualizarKPIsPagamentos();
 };
+
+// ── Seleção múltipla e geração em lote ──────────────────────
+window.pagAtualizarSelecao = function() {
+  var chks = document.querySelectorAll('.pag-chk:checked');
+  var bar  = document.getElementById('pag-lote-bar');
+  var info = document.getElementById('pag-lote-info');
+  var valEl= document.getElementById('pag-lote-valor');
+  if (!bar) return;
+  var total = 0;
+  chks.forEach(function(c) {
+    var idx = parseInt(c.getAttribute('data-idx'), 10);
+    var r = (window._pagImpRows || [])[idx];
+    if (r) total += r.valor || 0;
+  });
+  if (chks.length > 0) {
+    bar.style.display = 'flex';
+    info.textContent  = chks.length + ' selecionado' + (chks.length > 1 ? 's' : '');
+    valEl.textContent = 'R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  } else {
+    bar.style.display = 'none';
+  }
+};
+
+window.pagToggleAll = function(chkAll) {
+  document.querySelectorAll('.pag-chk').forEach(function(c) { c.checked = chkAll.checked; });
+  window.pagAtualizarSelecao();
+};
+
+window.pagLimparSelecao = function() {
+  document.querySelectorAll('.pag-chk').forEach(function(c) { c.checked = false; });
+  var chkAll = document.getElementById('pag-chk-all');
+  if (chkAll) chkAll.checked = false;
+  window.pagAtualizarSelecao();
+};
+
+window.pagGerarGuiaLote = function() {
+  var chks = document.querySelectorAll('.pag-chk:checked');
+  if (!chks.length) return;
+  var selecionados = [];
+  var totalGeral = 0;
+  chks.forEach(function(c) {
+    var idx = parseInt(c.getAttribute('data-idx'), 10);
+    var r = (window._pagImpRows || [])[idx];
+    if (r) { selecionados.push(r); totalGeral += r.valor || 0; }
+  });
+
+  // montar modal
+  var modal = document.getElementById('pag-lote-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'pag-lote-modal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.72);z-index:1200;display:flex;align-items:center;justify-content:center;padding:16px';
+    modal.onclick = function(e){ if(e.target===modal) modal.style.display='none'; };
+    document.body.appendChild(modal);
+  }
+
+  var fmtV = function(v) { return 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2}); };
+  var rows = selecionados.map(function(r) {
+    var cor = r.tipo === 'Guia IBS' ? '#3B82F6' : '#F59E0B';
+    return '<tr style="border-bottom:1px solid var(--brd)">'
+      + '<td style="padding:8px 12px;font-size:12px;color:#3B82F6;font-weight:600;font-family:monospace">' + r.rf + '</td>'
+      + '<td style="padding:8px 12px;font-size:12px;color:var(--txt1)">' + r.forn + '</td>'
+      + '<td style="padding:8px 12px"><span style="font-size:11px;font-weight:600;color:'+cor+'">' + r.tipo + '</span></td>'
+      + '<td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:600;font-family:monospace;color:var(--txt1)">' + fmtV(r.valor) + '</td>'
+      + '</tr>';
+  }).join('');
+
+  modal.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;width:100%;max-width:640px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column">'
+    + '<div style="padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">'
+    +   '<div><div style="font-size:17px;font-weight:700;color:var(--txt1)">Gerar Guias em Lote</div>'
+    +   '<div style="font-size:12px;color:var(--txt3);margin-top:3px">' + selecionados.length + ' guia(s) · Total: ' + fmtV(totalGeral) + '</div></div>'
+    +   '<button onclick="document.getElementById(\'pag-lote-modal\').style.display=\'none\'" style="background:none;border:none;color:var(--txt2);font-size:24px;cursor:pointer;line-height:1;padding:0">×</button>'
+    + '</div>'
+    + '<div style="overflow-y:auto;flex:1;padding:16px 24px">'
+    +   '<table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:1px solid var(--brd)">'
+    +     '<th style="padding:6px 12px;font-size:11px;color:var(--txt3);text-align:left;font-weight:600">RF</th>'
+    +     '<th style="padding:6px 12px;font-size:11px;color:var(--txt3);text-align:left;font-weight:600">Fornecedor</th>'
+    +     '<th style="padding:6px 12px;font-size:11px;color:var(--txt3);text-align:left;font-weight:600">Tipo</th>'
+    +     '<th style="padding:6px 12px;font-size:11px;color:var(--txt3);text-align:right;font-weight:600">Valor</th>'
+    +   '</tr></thead><tbody>' + rows + '</tbody>'
+    +   '<tfoot><tr><td colspan="3" style="padding:12px 12px;font-size:13px;font-weight:700;color:var(--txt1)">Total geral</td>'
+    +   '<td style="padding:12px 12px;text-align:right;font-size:14px;font-weight:700;color:var(--teal);font-family:monospace">' + fmtV(totalGeral) + '</td></tr></tfoot>'
+    +   '</table>'
+    + '</div>'
+    + '<div style="padding:14px 24px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end">'
+    +   '<button onclick="document.getElementById(\'pag-lote-modal\').style.display=\'none\'" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--txt2);font-size:13px;font-family:inherit;padding:9px 20px;cursor:pointer">Cancelar</button>'
+    +   '<button onclick="window._pagConfirmarLote()" style="background:var(--teal);border:none;border-radius:8px;color:#0E1210;font-size:13px;font-weight:700;font-family:inherit;padding:9px 22px;cursor:pointer">Confirmar Geração</button>'
+    + '</div>'
+    + '</div>';
+  modal.style.display = 'flex';
+};
+
+window._pagConfirmarLote = function() {
+  var chks = document.querySelectorAll('.pag-chk:checked');
+  var n = chks.length;
+  document.getElementById('pag-lote-modal').style.display = 'none';
+  // Feedback visual
+  var bar = document.getElementById('pag-lote-bar');
+  if (bar) {
+    var info = document.getElementById('pag-lote-info');
+    if (info) info.textContent = n + ' guia(s) gerada(s) com sucesso!';
+    setTimeout(function() { window.pagLimparSelecao(); }, 2000);
+  }
+};
+// ─────────────────────────────────────────────────────────────
 
 window.atualizarKPIsPagamentos = function() {
   var f = window._filtrosPagamentos;
