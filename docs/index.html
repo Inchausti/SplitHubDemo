@@ -1851,7 +1851,26 @@ tr:hover td{background:rgba(73,197,177,.02)}
     <div class="crd" style="margin-bottom:24px">
       <div class="sechdr"><h2>Filtros</h2><p>A listagem abaixo está sincronizada com todos os CNPJs de fornecedores já cadastrados no projeto</p></div>
       <div class="flt" style="margin-top:14px">
-        <input type="text" id="adm-forn-busca" placeholder="Buscar por CNPJ ou razão social…" oninput="adminFornRenderTabela()"/>
+        <input type="text" id="adm-forn-busca" placeholder="Buscar por CNPJ, razão social ou grupo…" oninput="adminFornRenderTabela()"/>
+        <select id="adm-forn-grupo" onchange="adminFornRenderTabela()">
+          <option value="">Grupo econômico — todos</option>
+          <option value="g-bosch">Grupo Bosch</option>
+          <option value="g-vale">Grupo Vale</option>
+          <option value="g-embraer">Grupo Embraer</option>
+          <option value="g-petrobras">Grupo Petrobras</option>
+          <option value="g-randon">Grupo Randon</option>
+          <option value="g-weg">Grupo WEG</option>
+          <option value="g-marcopolo">Grupo Marcopolo</option>
+          <option value="g-ambev">Grupo Ambev</option>
+          <option value="g-gerdau">Grupo Gerdau</option>
+          <option value="g-suzano">Grupo Suzano</option>
+          <option value="g-tupy">Grupo Tupy</option>
+        </select>
+        <select id="adm-forn-tipo" onchange="adminFornRenderTabela()">
+          <option value="">Tipo — Matriz / Filial</option>
+          <option value="Matriz">Apenas Matrizes</option>
+          <option value="Filial">Apenas Filiais</option>
+        </select>
         <select id="adm-forn-status" onchange="adminFornRenderTabela()">
           <option value="">Todos os status</option>
           <option value="ok">Regular</option>
@@ -1871,7 +1890,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
         <div class="sechdr" style="margin-bottom:0"><h2>CNPJs cadastrados</h2><p id="adm-forn-count-sub">0 de 0 fornecedores exibidos</p></div>
         <button class="btn btn-t" onclick="adminFornAbrirModal()" style="flex-shrink:0">+ Novo fornecedor</button>
       </div>
-      <div class="twrap"><table><thead><tr><th>CNPJ</th><th>Razão social</th><th>Status</th><th class="r">Score</th><th>Contrato</th><th class="r">Vol. compras</th><th class="r">Créditos gerados</th><th>Pendências</th></tr></thead><tbody id="t-adm-fornecedores"></tbody></table></div>
+      <div class="twrap"><table id="tbl-adm-fornecedores"><thead><tr><th>Grupo / CNPJ</th><th>Razão Social</th><th>Tipo</th><th>Status</th><th class="r">Score</th><th>Contrato</th><th class="r">Vol. compras</th><th class="r">Créditos</th><th>Pend.</th></tr></thead><tbody id="t-adm-fornecedores"></tbody></table></div>
     </div>
   </div>
 
@@ -2571,18 +2590,61 @@ var impostos=[
   {id:"TXN-9852",tipo:"Guia IBS",forn:"Tupy Fund.",cnpj:"84.683.481/0001-04",valor:78900,venc:"01/05/2026",status:"pago",rf:"RF-28852-L"},
   {id:"TXN-9853",tipo:"DARF CBS",forn:"Marcopolo S.A.",cnpj:"88.611.835/0001-29",valor:221500,venc:"03/05/2026",status:"vencendo",rf:"RF-28853-M"}
 ];
+// ── Grupos Econômicos ────────────────────────────────────────────
+window._gruposEconomicos = [
+  { id:'g-bosch',     nome:'Grupo Bosch',     setor:'Industrial / Autopeças',  cnpjRaiz:'07.200.002' },
+  { id:'g-vale',      nome:'Grupo Vale',      setor:'Mineração',               cnpjRaiz:'33.592.510' },
+  { id:'g-embraer',   nome:'Grupo Embraer',   setor:'Aeronáutica / Defesa',    cnpjRaiz:'07.200.001' },
+  { id:'g-petrobras', nome:'Grupo Petrobras', setor:'Energia / Combustíveis',  cnpjRaiz:'34.274.233' },
+  { id:'g-randon',    nome:'Grupo Randon',    setor:'Transporte / Implementos',cnpjRaiz:'89.086.144' },
+  { id:'g-weg',       nome:'Grupo WEG',       setor:'Energia Elétrica / Motor',cnpjRaiz:'84.429.695' },
+  { id:'g-marcopolo', nome:'Grupo Marcopolo', setor:'Carroçaria / Ônibus',     cnpjRaiz:'88.611.835' },
+  { id:'g-ambev',     nome:'Grupo Ambev',     setor:'Bebidas / FMCG',          cnpjRaiz:'07.526.557' },
+  { id:'g-gerdau',    nome:'Grupo Gerdau',    setor:'Siderurgia / Aços Longos',cnpjRaiz:'33.611.500' },
+  { id:'g-suzano',    nome:'Grupo Suzano',    setor:'Papel / Celulose',        cnpjRaiz:'16.404.287' },
+  { id:'g-tupy',      nome:'Grupo Tupy',      setor:'Fundição / Autopeças',    cnpjRaiz:'84.683.481' }
+];
+
 var fornecedores=[
-  {nome:"Bosch Ltda",cnpj:"07.200.002/0001-18",volume:2487000,cred:248700,status:"ok",score:94,pagtos:38,pend:2},
-  {nome:"Vale S.A.",cnpj:"33.592.510/0001-54",volume:5124000,cred:512400,status:"alerta",score:71,pagtos:61,pend:4},
-  {nome:"Embraer S.A.",cnpj:"07.200.001/0001-05",volume:1832000,cred:183200,status:"ok",score:89,pagtos:29,pend:1},
-  {nome:"Petrobras Dist.",cnpj:"34.274.233/0001-02",volume:3289000,cred:328900,status:"ok",score:97,pagtos:47,pend:0},
-  {nome:"Randon S.A.",cnpj:"89.086.144/0001-16",volume:1678000,cred:167800,status:"risco",score:52,pagtos:18,pend:7},
-  {nome:"WEG Equipamentos",cnpj:"84.429.695/0001-11",volume:943000,cred:94300,status:"ok",score:88,pagtos:22,pend:1},
-  {nome:"Marcopolo S.A.",cnpj:"88.611.835/0001-29",volume:2215000,cred:221500,status:"alerta",score:68,pagtos:34,pend:3},
-  {nome:"Ambev S.A.",cnpj:"07.526.557/0001-00",volume:4200000,cred:420000,status:"ok",score:91,pagtos:55,pend:1},
-  {nome:"Gerdau Aços",cnpj:"33.611.500/0001-19",volume:1950000,cred:195000,status:"ok",score:85,pagtos:26,pend:2},
-  {nome:"Suzano Papel",cnpj:"16.404.287/0001-55",volume:2740000,cred:274000,status:"alerta",score:74,pagtos:31,pend:3},
-  {nome:"Tupy Fund.",cnpj:"84.683.481/0001-04",volume:789000,cred:78900,status:"ok",score:90,pagtos:15,pend:1}
+  // ── Grupo Bosch ────────────────────────────────────────────────
+  {nome:"Bosch Ltda",                    cnpj:"07.200.002/0001-18",tipo:"Matriz",grupoId:"g-bosch",    grupoNome:"Grupo Bosch",    cnpjMatriz:null,                volume:2487000,cred:248700,status:"ok",   score:94,pagtos:38,pend:2},
+  {nome:"Bosch Sistemas Automotivos",    cnpj:"07.200.002/0002-80",tipo:"Filial",grupoId:"g-bosch",    grupoNome:"Grupo Bosch",    cnpjMatriz:"07.200.002/0001-18",volume:1100000,cred:110000,status:"ok",   score:91,pagtos:17,pend:1},
+  {nome:"Bosch Termotecnologia",         cnpj:"07.200.002/0003-61",tipo:"Filial",grupoId:"g-bosch",    grupoNome:"Grupo Bosch",    cnpjMatriz:"07.200.002/0001-18",volume: 750000,cred: 75000,status:"ok",   score:89,pagtos:11,pend:0},
+  // ── Grupo Vale ─────────────────────────────────────────────────
+  {nome:"Vale S.A.",                     cnpj:"33.592.510/0001-54",tipo:"Matriz",grupoId:"g-vale",     grupoNome:"Grupo Vale",     cnpjMatriz:null,                volume:5124000,cred:512400,status:"alerta",score:71,pagtos:61,pend:4},
+  {nome:"Vale Fertilizantes",            cnpj:"33.592.510/0002-35",tipo:"Filial",grupoId:"g-vale",     grupoNome:"Grupo Vale",     cnpjMatriz:"33.592.510/0001-54",volume:1800000,cred:180000,status:"alerta",score:70,pagtos:22,pend:2},
+  {nome:"Vale Manganês",                 cnpj:"33.592.510/0003-16",tipo:"Filial",grupoId:"g-vale",     grupoNome:"Grupo Vale",     cnpjMatriz:"33.592.510/0001-54",volume: 980000,cred: 98000,status:"ok",   score:80,pagtos:13,pend:1},
+  // ── Grupo Embraer ──────────────────────────────────────────────
+  {nome:"Embraer S.A.",                  cnpj:"07.200.001/0001-05",tipo:"Matriz",grupoId:"g-embraer",  grupoNome:"Grupo Embraer",  cnpjMatriz:null,                volume:1832000,cred:183200,status:"ok",   score:89,pagtos:29,pend:1},
+  {nome:"Embraer Defesa e Segurança",    cnpj:"07.200.001/0002-86",tipo:"Filial",grupoId:"g-embraer",  grupoNome:"Grupo Embraer",  cnpjMatriz:"07.200.001/0001-05",volume: 920000,cred: 92000,status:"ok",   score:87,pagtos:14,pend:0},
+  // ── Grupo Petrobras ────────────────────────────────────────────
+  {nome:"Petrobras Dist.",               cnpj:"34.274.233/0001-02",tipo:"Matriz",grupoId:"g-petrobras",grupoNome:"Grupo Petrobras",cnpjMatriz:null,                volume:3289000,cred:328900,status:"ok",   score:97,pagtos:47,pend:0},
+  {nome:"Petrobras Lubrificantes",       cnpj:"34.274.233/0002-83",tipo:"Filial",grupoId:"g-petrobras",grupoNome:"Grupo Petrobras",cnpjMatriz:"34.274.233/0001-02",volume:1450000,cred:145000,status:"ok",   score:96,pagtos:21,pend:0},
+  {nome:"Petrobras Gás",                 cnpj:"34.274.233/0003-64",tipo:"Filial",grupoId:"g-petrobras",grupoNome:"Grupo Petrobras",cnpjMatriz:"34.274.233/0001-02",volume: 890000,cred: 89000,status:"ok",   score:94,pagtos:12,pend:0},
+  // ── Grupo Randon ───────────────────────────────────────────────
+  {nome:"Randon S.A.",                   cnpj:"89.086.144/0001-16",tipo:"Matriz",grupoId:"g-randon",   grupoNome:"Grupo Randon",   cnpjMatriz:null,                volume:1678000,cred:167800,status:"risco",score:52,pagtos:18,pend:7},
+  {nome:"Randon Implementos",            cnpj:"89.086.144/0002-90",tipo:"Filial",grupoId:"g-randon",   grupoNome:"Grupo Randon",   cnpjMatriz:"89.086.144/0001-16",volume: 680000,cred: 68000,status:"risco",score:55,pagtos: 8,pend:3},
+  // ── Grupo WEG ──────────────────────────────────────────────────
+  {nome:"WEG Equipamentos",              cnpj:"84.429.695/0001-11",tipo:"Matriz",grupoId:"g-weg",      grupoNome:"Grupo WEG",      cnpjMatriz:null,                volume: 943000,cred: 94300,status:"ok",   score:88,pagtos:22,pend:1},
+  {nome:"WEG Transformadores",           cnpj:"84.429.695/0002-92",tipo:"Filial",grupoId:"g-weg",      grupoNome:"Grupo WEG",      cnpjMatriz:"84.429.695/0001-11",volume: 520000,cred: 52000,status:"ok",   score:87,pagtos:12,pend:0},
+  {nome:"WEG Drives & Controls",         cnpj:"84.429.695/0003-73",tipo:"Filial",grupoId:"g-weg",      grupoNome:"Grupo WEG",      cnpjMatriz:"84.429.695/0001-11",volume: 410000,cred: 41000,status:"ok",   score:85,pagtos: 9,pend:1},
+  // ── Grupo Marcopolo ────────────────────────────────────────────
+  {nome:"Marcopolo S.A.",                cnpj:"88.611.835/0001-29",tipo:"Matriz",grupoId:"g-marcopolo",grupoNome:"Grupo Marcopolo",cnpjMatriz:null,                volume:2215000,cred:221500,status:"alerta",score:68,pagtos:34,pend:3},
+  {nome:"Marcopolo Latin America",       cnpj:"88.611.835/0002-00",tipo:"Filial",grupoId:"g-marcopolo",grupoNome:"Grupo Marcopolo",cnpjMatriz:"88.611.835/0001-29",volume: 780000,cred: 78000,status:"alerta",score:66,pagtos:11,pend:2},
+  // ── Grupo Ambev ────────────────────────────────────────────────
+  {nome:"Ambev S.A.",                    cnpj:"07.526.557/0001-00",tipo:"Matriz",grupoId:"g-ambev",    grupoNome:"Grupo Ambev",    cnpjMatriz:null,                volume:4200000,cred:420000,status:"ok",   score:91,pagtos:55,pend:1},
+  {nome:"Ambev — Filial Sudeste",        cnpj:"07.526.557/0002-81",tipo:"Filial",grupoId:"g-ambev",    grupoNome:"Grupo Ambev",    cnpjMatriz:"07.526.557/0001-00",volume:1900000,cred:190000,status:"ok",   score:90,pagtos:25,pend:0},
+  {nome:"Ambev — Filial Nordeste",       cnpj:"07.526.557/0003-62",tipo:"Filial",grupoId:"g-ambev",    grupoNome:"Grupo Ambev",    cnpjMatriz:"07.526.557/0001-00",volume:1100000,cred:110000,status:"ok",   score:88,pagtos:14,pend:1},
+  // ── Grupo Gerdau ───────────────────────────────────────────────
+  {nome:"Gerdau Aços",                   cnpj:"33.611.500/0001-19",tipo:"Matriz",grupoId:"g-gerdau",   grupoNome:"Grupo Gerdau",   cnpjMatriz:null,                volume:1950000,cred:195000,status:"ok",   score:85,pagtos:26,pend:2},
+  {nome:"Gerdau Açominas",               cnpj:"33.611.500/0002-00",tipo:"Filial",grupoId:"g-gerdau",   grupoNome:"Grupo Gerdau",   cnpjMatriz:"33.611.500/0001-19",volume:1200000,cred:120000,status:"ok",   score:83,pagtos:16,pend:1},
+  // ── Grupo Suzano ───────────────────────────────────────────────
+  {nome:"Suzano Papel",                  cnpj:"16.404.287/0001-55",tipo:"Matriz",grupoId:"g-suzano",   grupoNome:"Grupo Suzano",   cnpjMatriz:null,                volume:2740000,cred:274000,status:"alerta",score:74,pagtos:31,pend:3},
+  {nome:"Suzano Mucuri",                 cnpj:"16.404.287/0002-36",tipo:"Filial",grupoId:"g-suzano",   grupoNome:"Grupo Suzano",   cnpjMatriz:"16.404.287/0001-55",volume:1100000,cred:110000,status:"alerta",score:73,pagtos:13,pend:2},
+  {nome:"Facepa",                        cnpj:"16.404.287/0003-17",tipo:"Filial",grupoId:"g-suzano",   grupoNome:"Grupo Suzano",   cnpjMatriz:"16.404.287/0001-55",volume: 650000,cred: 65000,status:"ok",   score:78,pagtos: 8,pend:1},
+  // ── Grupo Tupy ─────────────────────────────────────────────────
+  {nome:"Tupy Fund.",                    cnpj:"84.683.481/0001-04",tipo:"Matriz",grupoId:"g-tupy",     grupoNome:"Grupo Tupy",     cnpjMatriz:null,                volume: 789000,cred: 78900,status:"ok",   score:90,pagtos:15,pend:1},
+  {nome:"Tupy Joinville",                cnpj:"84.683.481/0002-77",tipo:"Filial",grupoId:"g-tupy",     grupoNome:"Grupo Tupy",     cnpjMatriz:"84.683.481/0001-04",volume: 340000,cred: 34000,status:"ok",   score:88,pagtos: 7,pend:0}
 ];
 var contratos=[
   {id:"CT-0001",cnpj:"07.200.002/0001-18",inicio:"01/01/2025",fim:"31/12/2025",rad:false,prazo:"30"},
@@ -2944,7 +3006,8 @@ function fornecedoresRenderKPIs(){
 
 function adminFornRenderKPIs(){
   var set=function(id,val){var el=document.getElementById(id);if(el)el.textContent=val;};
-  set("adm-forn-total",fornecedores.length);
+  var grupos=new Set(fornecedores.map(function(f){return f.grupoId;}));
+  set("adm-forn-total",fornecedores.length+" CNPJs · "+grupos.size+" grupos");
   set("adm-forn-regular",fornecedores.filter(function(f){return f.status==="ok";}).length);
   set("adm-forn-alerta",fornecedores.filter(function(f){return f.status==="alerta";}).length);
   set("adm-forn-risco",fornecedores.filter(function(f){return f.status==="risco";}).length);
@@ -2954,15 +3017,17 @@ function adminFornPossuiContratoAtivo(cnpj){
   return !!(ct&&contratoStatus(ct)==="ativo");
 }
 function adminFornRenderTabela(){
-  var buscaEl=document.getElementById("adm-forn-busca");
-  var statusEl=document.getElementById("adm-forn-status");
-  var ctEl=document.getElementById("adm-forn-contrato");
-  var busca=buscaEl?buscaEl.value.trim().toLowerCase():"";
-  var status=statusEl?statusEl.value:"";
-  var ctFiltro=ctEl?ctEl.value:"";
+  var busca=(document.getElementById("adm-forn-busca")||{value:""}).value.trim().toLowerCase();
+  var status=(document.getElementById("adm-forn-status")||{value:""}).value;
+  var ctFiltro=(document.getElementById("adm-forn-contrato")||{value:""}).value;
+  var grupoFiltro=(document.getElementById("adm-forn-grupo")||{value:""}).value;
+  var tipoFiltro=(document.getElementById("adm-forn-tipo")||{value:""}).value;
+
   var lista=fornecedores.filter(function(f){
-    if(busca&&f.cnpj.toLowerCase().indexOf(busca)===-1&&f.nome.toLowerCase().indexOf(busca)===-1)return false;
+    if(busca&&f.cnpj.toLowerCase().indexOf(busca)===-1&&f.nome.toLowerCase().indexOf(busca)===-1&&(f.grupoNome||"").toLowerCase().indexOf(busca)===-1)return false;
     if(status&&f.status!==status)return false;
+    if(grupoFiltro&&f.grupoId!==grupoFiltro)return false;
+    if(tipoFiltro&&f.tipo!==tipoFiltro)return false;
     if(ctFiltro){
       var ativo=adminFornPossuiContratoAtivo(f.cnpj);
       if(ctFiltro==="ativo"&&!ativo)return false;
@@ -2970,34 +3035,82 @@ function adminFornRenderTabela(){
     }
     return true;
   });
+
   var statusLbl={ok:"Regular",alerta:"Alerta",risco:"Risco"};
   var statusCor={ok:"var(--green)",alerta:"var(--amber)",risco:"var(--red)"};
+  var tipoCor={Matriz:"#8B5CF6",Filial:"#A7A8AA"};
   var h="";
+
+  // Agrupar por grupoId preservando a ordem dos grupos
+  var gruposVisiveis=[];
+  var grupoMap={};
   lista.forEach(function(f){
-    var ct=getContratoVigentePorCnpj(f.cnpj);
-    var ctCell=ct?(ct.id+" · "+contratoStatusBadge(contratoStatus(ct))):'<span style="background:rgba(244,63,94,.12);color:var(--red);border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 7px;font-size:11px">Sem contrato</span>';
-    h+='<tr><td class="mono" style="font-size:11px">'+f.cnpj+'</td>'
-      +'<td style="font-weight:500">'+f.nome+'</td>'
-      +'<td><span style="color:'+(statusCor[f.status]||"var(--txt2)")+';font-weight:600;font-size:12px">'+(statusLbl[f.status]||f.status)+'</span></td>'
-      +'<td class="r mono">'+f.score+'</td>'
-      +'<td style="white-space:nowrap;font-size:12px">'+ctCell+'</td>'
-      +'<td class="r mono">'+fc(f.volume)+'</td>'
-      +'<td class="r mono" style="color:var(--teal)">'+fc(f.cred)+'</td>'
-      +'<td><span style="color:'+(f.pend>0?"var(--amber)":"var(--green)")+';font-weight:600">'+f.pend+'</span></td></tr>';
+    if(!grupoMap[f.grupoId]){grupoMap[f.grupoId]=[];gruposVisiveis.push(f.grupoId);}
+    grupoMap[f.grupoId].push(f);
   });
-  if(!lista.length)h='<tr><td colspan="8" style="text-align:center;color:var(--txt3);padding:24px">Nenhum fornecedor encontrado para este filtro.</td></tr>';
+
+  var ge=window._gruposEconomicos||[];
+  var geMap={};
+  ge.forEach(function(g){geMap[g.id]=g;});
+
+  gruposVisiveis.forEach(function(gid){
+    var membros=grupoMap[gid];
+    var gInfo=geMap[gid]||{nome:gid,setor:""};
+    var volTotal=membros.reduce(function(s,f){return s+f.volume;},0);
+    var credTotal=membros.reduce(function(s,f){return s+f.cred;},0);
+    var pendTotal=membros.reduce(function(s,f){return s+f.pend;},0);
+    var hasRisco=membros.some(function(f){return f.status==="risco";});
+    var hasAlerta=membros.some(function(f){return f.status==="alerta";});
+    var grupoStatusCor=hasRisco?"var(--red)":hasAlerta?"var(--amber)":"var(--teal)";
+
+    // Linha de cabeçalho do grupo
+    h+='<tr style="background:rgba(139,92,246,.07);border-top:2px solid rgba(139,92,246,.25)">'
+      +'<td colspan="9" style="padding:10px 14px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+      +'<span style="background:rgba(139,92,246,.18);color:#8B5CF6;border:1px solid rgba(139,92,246,.35);border-radius:4px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.06em">GRUPO</span>'
+      +'<span style="font-size:13px;font-weight:700;color:var(--txt1)">'+gInfo.nome+'</span>'
+      +'<span style="font-size:11px;color:var(--txt3)">'+gInfo.setor+'</span>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:16px;font-size:11px;color:var(--txt2)">'
+      +'<span><b style="color:var(--txt1)">'+membros.length+'</b> CNPJ'+( membros.length>1?"s":"")+' · '+membros.filter(function(f){return f.tipo==="Matriz";}).length+' Matriz · '+membros.filter(function(f){return f.tipo==="Filial";}).length+' Filial'+( membros.filter(function(f){return f.tipo==="Filial";}).length!==1?"is":"")+'</span>'
+      +'<span>Vol. <b style="color:var(--txt1)">'+fc(volTotal)+'</b></span>'
+      +'<span>Créditos <b style="color:var(--teal)">'+fc(credTotal)+'</b></span>'
+      +(pendTotal>0?'<span>Pend. <b style="color:var(--amber)">'+pendTotal+'</b></span>':"")
+      +'</div>'
+      +'</div></td></tr>';
+
+    // Linhas dos membros
+    membros.forEach(function(f){
+      var ct=getContratoVigentePorCnpj(f.cnpj);
+      var ctCell=ct?(ct.id+" · "+contratoStatusBadge(contratoStatus(ct))):'<span style="background:rgba(244,63,94,.12);color:var(--red);border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 7px;font-size:11px">Sem contrato</span>';
+      var isFilial=f.tipo==="Filial";
+      var cnpjCell=isFilial
+        ?'<span style="color:var(--txt3);padding-right:4px;font-size:10px">└</span><span class="mono" style="font-size:11px;color:var(--txt2)">'+f.cnpj+'</span>'
+        :'<span class="mono" style="font-size:11px;color:var(--txt1)">'+f.cnpj+'</span>';
+      h+='<tr style="'+(isFilial?"background:rgba(0,0,0,.12)":"")+'opacity:'+(isFilial?.88:1)+'">'
+        +'<td style="padding-left:'+(isFilial?28:14)+'px">'+cnpjCell+'</td>'
+        +'<td style="font-weight:'+(isFilial?400:600)+';color:'+(isFilial?"var(--txt2)":"var(--txt1)")+'">'+f.nome+'</td>'
+        +'<td><span style="background:'+tipoCor[f.tipo]+'22;color:'+tipoCor[f.tipo]+';border:1px solid '+tipoCor[f.tipo]+'44;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">'+f.tipo+'</span></td>'
+        +'<td><span style="color:'+(statusCor[f.status]||"var(--txt2)")+';font-weight:600;font-size:12px">'+(statusLbl[f.status]||f.status)+'</span></td>'
+        +'<td class="r mono">'+f.score+'</td>'
+        +'<td style="white-space:nowrap;font-size:12px">'+ctCell+'</td>'
+        +'<td class="r mono">'+fc(f.volume)+'</td>'
+        +'<td class="r mono" style="color:var(--teal)">'+fc(f.cred)+'</td>'
+        +'<td><span style="color:'+(f.pend>0?"var(--amber)":"var(--green)")+';font-weight:600">'+f.pend+'</span></td></tr>';
+    });
+  });
+
+  if(!lista.length)h='<tr><td colspan="9" style="text-align:center;color:var(--txt3);padding:24px">Nenhum fornecedor encontrado para este filtro.</td></tr>';
   var tb=document.getElementById("t-adm-fornecedores");
   if(tb)tb.innerHTML=h;
   var sub=document.getElementById("adm-forn-count-sub");
-  if(sub)sub.textContent=lista.length+" de "+fornecedores.length+" fornecedores exibidos";
+  if(sub)sub.textContent=lista.length+" CNPJs em "+gruposVisiveis.length+" grupo(s) exibidos";
 }
 function adminFornLimparFiltros(){
-  var buscaEl=document.getElementById("adm-forn-busca");
-  var statusEl=document.getElementById("adm-forn-status");
-  var ctEl=document.getElementById("adm-forn-contrato");
-  if(buscaEl)buscaEl.value="";
-  if(statusEl)statusEl.value="";
-  if(ctEl)ctEl.value="";
+  ["adm-forn-busca","adm-forn-status","adm-forn-contrato","adm-forn-grupo","adm-forn-tipo"].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value="";
+  });
   adminFornRenderTabela();
 }
 function adminFornAbrirModal(){
@@ -3023,7 +3136,7 @@ function adminFornCadastrar(){
   var cnpjRegex=/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
   if(!cnpjRegex.test(cnpj)){setMsg("CNPJ inválido. Use o formato 00.000.000/0000-00.","var(--red)");return;}
   if(fornecedores.some(function(f){return f.cnpj===cnpj;})){setMsg("Já existe um fornecedor cadastrado com este CNPJ.","var(--red)");return;}
-  fornecedores.push({nome:nome,cnpj:cnpj,volume:0,cred:0,status:status,score:100,pagtos:0,pend:0});
+  fornecedores.push({nome:nome,cnpj:cnpj,tipo:"Matriz",grupoId:"g-"+cnpj.replace(/\D/g,"").substring(0,8),grupoNome:nome,cnpjMatriz:null,volume:0,cred:0,status:status,score:100,pagtos:0,pend:0});
   adminFornRenderKPIs();
   adminFornRenderTabela();
   fornecedoresRenderKPIs();
@@ -5182,7 +5295,7 @@ fctRender();
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.js"></script>
-<script src="js/data-sync-fixed.js?v=45"></script>
+<script src="js/data-sync-fixed.js?v=46"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=6"></script>
 <script src="js/charts.js"></script>
