@@ -4006,6 +4006,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function _postProcessarDados() {
       try { window._enriquecerNFsSaida(); } catch(e) { console.error('[data-sync-fixed] Erro _enriquecerNFsSaida:', e); }
       try {
+        // Atribuir cnpjComprador round-robin pelos CNPJs ativos da Positivo
+        var _ativosOrg = (window._orgCnpjs || []).filter(function(c) { return c.status === 'ativo'; });
+        if (_ativosOrg.length > 0) {
+          (window.nfListaFiltradaGlobal || []).forEach(function(nf, i) {
+            nf.cnpjComprador = _ativosOrg[i % _ativosOrg.length].cnpj;
+          });
+        }
+        window._nfListaCompleta = (window.nfListaFiltradaGlobal || []).slice();
+      } catch(e) {}
+      try {
         window._rfIndex = {};
         (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
           (nf.registrosFiscais || []).forEach(function(rf) { window._rfIndex[rf.id] = { rf: rf, nf: nf }; });
@@ -4302,6 +4312,174 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================================
 // GESTÃO ORGANIZAÇÃO — CRUD de CNPJs compradores (Positivo)
 // ============================================================
+
+// ── Seletor de Empresa Ativa (Sidebar + Filtro Dashboard) ─────────────────
+// _empresasAtivas: array de ids selecionados; vazio = todos
+
+window._empresasAtivas = [];
+
+window._sbLabelAtual = function() {
+  var ids = window._empresasAtivas || [];
+  if (!ids.length) return null; // todos
+  var cnpjs = (window._orgCnpjs || []).filter(function(c) { return ids.indexOf(c.id) >= 0; });
+  if (cnpjs.length === 1) return cnpjs[0];
+  return { razao: ids.length + ' CNPJs selecionados', cnpj: ids.length + ' estabelecimentos', uf: '', tipo: '' };
+};
+
+window._sbAtualizarLabel = function() {
+  var ids = window._empresasAtivas || [];
+  var nameEl = document.getElementById('co-name');
+  var subEl  = document.getElementById('co-cnpj-sub');
+  var dashBtn = document.getElementById('cnpj-filter-btn');
+  if (!ids.length) {
+    if (nameEl)  nameEl.textContent  = 'Positivo Tecnologia S.A.';
+    if (subEl)   subEl.textContent   = 'Todos os estabelecimentos';
+    if (dashBtn) dashBtn.textContent = 'Todos os CNPJs ▾';
+  } else if (ids.length === 1) {
+    var c = (window._orgCnpjs || []).filter(function(x) { return x.id === ids[0]; })[0];
+    if (c) {
+      if (nameEl)  nameEl.textContent  = c.razao;
+      if (subEl)   subEl.textContent   = c.cnpj + ' · ' + c.uf + ' · ' + c.tipo;
+      if (dashBtn) dashBtn.textContent = c.cnpj + ' ▾';
+    }
+  } else {
+    if (nameEl)  nameEl.textContent  = 'Positivo Tecnologia S.A.';
+    if (subEl)   subEl.textContent   = ids.length + ' estabelecimentos selecionados';
+    if (dashBtn) dashBtn.textContent = ids.length + ' CNPJs ▾';
+  }
+};
+
+window.sbRenderDropdown = function() {
+  var lista = document.getElementById('sb-empresa-lista');
+  if (!lista) return;
+  var ids = window._empresasAtivas || [];
+  var allSel = !ids.length;
+  var h = '<div onclick="window.sbSelecionarTodos()" style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;background:' + (allSel ? 'rgba(73,197,177,.1)' : 'transparent') + ';border-left:2px solid ' + (allSel ? '#49C5B1' : 'transparent') + '">'
+    + '<span style="font-size:13px;color:#49C5B1;width:16px;text-align:center">' + (allSel ? '✓' : '') + '</span>'
+    + '<div style="flex:1"><div style="font-size:12px;font-weight:' + (allSel ? '700' : '500') + ';color:var(--txt1)">Todos os estabelecimentos</div>'
+    + '<div style="font-size:10px;color:var(--txt2)">Visão consolidada do grupo econômico</div></div></div>';
+
+  (window._orgCnpjs || []).forEach(function(c) {
+    var isAt = ids.indexOf(c.id) >= 0;
+    var isIn = c.status === 'inativo';
+    var tCor = c.tipo === 'Matriz' ? '#49C5B1' : '#3B82F6';
+    h += '<div onclick="window.sbToggleEmpresaItem(' + c.id + ')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;background:' + (isAt ? 'rgba(73,197,177,.1)' : 'transparent') + ';border-left:2px solid ' + (isAt ? '#49C5B1' : 'transparent') + ';opacity:' + (isIn ? '0.5' : '1') + '">'
+      + '<span style="font-size:13px;color:#49C5B1;width:16px;text-align:center">' + (isAt ? '✓' : '') + '</span>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:12px;font-weight:' + (isAt ? '700' : '500') + ';color:' + (isIn ? 'var(--txt3)' : 'var(--txt1)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + c.razao + ' <span style="font-size:9px;font-weight:400;color:var(--txt2)">' + c.uf + (isIn ? ' · Inativo' : '') + '</span></div>'
+      + '<div style="font-size:10px;color:var(--txt2);font-family:monospace;margin-top:1px">' + c.cnpj + '</div>'
+      + '</div>'
+      + '<span style="font-size:9px;font-weight:700;color:' + tCor + ';background:rgba(73,197,177,.1);border-radius:3px;padding:1px 5px;flex-shrink:0">' + c.tipo + '</span>'
+      + '</div>';
+  });
+  lista.innerHTML = h;
+};
+
+window.sbToggleEmpresa = function(event) {
+  event.stopPropagation();
+  var dd = document.getElementById('sb-empresa-dropdown');
+  if (!dd) return;
+  var isOpen = dd.style.display !== 'none';
+  if (isOpen) {
+    dd.style.display = 'none';
+    var ch = document.getElementById('sb-empresa-chevron');
+    if (ch) ch.style.transform = '';
+  } else {
+    window.sbRenderDropdown();
+    dd.style.display = 'block';
+    var ch = document.getElementById('sb-empresa-chevron');
+    if (ch) ch.style.transform = 'rotate(180deg)';
+    setTimeout(function() {
+      document.addEventListener('click', function _sbClose(e) {
+        var el = document.getElementById('sb-empresa-dropdown');
+        var btn = document.getElementById('sb-empresa-btn');
+        if (el && !el.contains(e.target) && btn && !btn.contains(e.target)) {
+          el.style.display = 'none';
+          var ch2 = document.getElementById('sb-empresa-chevron');
+          if (ch2) ch2.style.transform = '';
+          document.removeEventListener('click', _sbClose);
+        }
+      });
+    }, 0);
+  }
+};
+
+window.sbToggleEmpresaItem = function(id) {
+  var ids = window._empresasAtivas || [];
+  var idx = ids.indexOf(id);
+  if (idx >= 0) { ids.splice(idx, 1); } else { ids.push(id); }
+  window._empresasAtivas = ids;
+  window.sbRenderDropdown();
+  window._sbAtualizarLabel();
+  window._aplicarFiltroCnpjEmpresa();
+};
+
+window.sbSelecionarTodos = function() {
+  window._empresasAtivas = [];
+  window.sbRenderDropdown();
+  window._sbAtualizarLabel();
+  window._aplicarFiltroCnpjEmpresa();
+};
+
+window._aplicarFiltroCnpjEmpresa = function() {
+  if (!window._nfListaCompleta) {
+    window._nfListaCompleta = (window.nfListaFiltradaGlobal || []).slice();
+  }
+  var ids = window._empresasAtivas || [];
+  if (!ids.length) {
+    window.nfListaFiltradaGlobal = window._nfListaCompleta.slice();
+  } else {
+    var cnpjsSel = (window._orgCnpjs || []).filter(function(c) { return ids.indexOf(c.id) >= 0; }).map(function(c) { return c.cnpj; });
+    window.nfListaFiltradaGlobal = (window._nfListaCompleta || []).filter(function(nf) {
+      return cnpjsSel.indexOf(nf.cnpjComprador) >= 0;
+    });
+  }
+  try { window._rfIndex = {}; (window.nfListaFiltradaGlobal||[]).forEach(function(nf){ (nf.registrosFiscais||[]).forEach(function(rf){ window._rfIndex[rf.id]={rf:rf,nf:nf}; }); }); } catch(e) {}
+  try { window.atualizarDashboard(); } catch(e) {}
+  try { window.atualizarKPIsDashboard(); } catch(e) {}
+  try { window.renderizarListaNFs(); } catch(e) {}
+  try { window.renderizarTabelaCreditos(); } catch(e) {}
+  try { window.renderizarTabelaPagamentos(); } catch(e) {}
+  try { window.renderizarRFsInconsistencias(); } catch(e) {}
+  try { window.renderizarTabelaDebitos(); } catch(e) {}
+  try { window.atualizarInteligencia(); } catch(e) {}
+};
+
+// Repopular filtro dashboard com CNPJs da organização
+window.dashCnpjToggleDropdown = function(event) {
+  event.stopPropagation();
+  var panel = document.getElementById('cnpj-filter-panel');
+  var list  = document.getElementById('cnpj-filter-list');
+  if (!panel || !list) return;
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    var ids = window._empresasAtivas || [];
+    var allSel = !ids.length;
+    var h = '<div onclick="window.sbSelecionarTodos()" class="cnpj-filter-item" style="border-left:2px solid ' + (allSel ? '#49C5B1' : 'transparent') + '">'
+      + '<span style="font-size:13px;color:#49C5B1;width:16px;display:inline-block;text-align:center">' + (allSel ? '✓' : '') + '</span>'
+      + '<div><div style="font-weight:' + (allSel ? '700' : '500') + ';color:var(--txt1)">Todos os estabelecimentos</div>'
+      + '<span class="cfi-cnpj">Visão consolidada do grupo</span></div></div>';
+    (window._orgCnpjs || []).forEach(function(c) {
+      var isAt = ids.indexOf(c.id) >= 0;
+      var isIn = c.status === 'inativo';
+      h += '<div onclick="window.sbToggleEmpresaItem(' + c.id + ')" class="cnpj-filter-item" style="border-left:2px solid ' + (isAt ? '#49C5B1' : 'transparent') + ';opacity:' + (isIn ? '0.5' : '1') + '">'
+        + '<span style="font-size:13px;color:#49C5B1;width:16px;display:inline-block;text-align:center">' + (isAt ? '✓' : '') + '</span>'
+        + '<div style="flex:1"><div style="font-weight:' + (isAt ? '700' : '500') + ';color:' + (isIn ? 'var(--txt3)' : 'var(--txt1)') + '">' + c.razao + ' <span style="font-size:9px;color:var(--txt2)">' + c.uf + ' · ' + c.tipo + '</span></div>'
+        + '<span class="cfi-cnpj">' + c.cnpj + (isIn ? ' · Inativo' : '') + '</span></div>'
+        + '</div>';
+    });
+    list.innerHTML = h;
+    document.addEventListener('click', function _ddClose(e) {
+      if (!document.getElementById('cnpj-filter').contains(e.target)) {
+        panel.classList.remove('open');
+        document.removeEventListener('click', _ddClose);
+        window._sbAtualizarLabel();
+      }
+    });
+  }
+};
+
+// ── Gestão Organização — CNPJs compradores (Positivo) ──────────────────────
 
 window._orgCnpjs = [
   { id:1, cnpj:'81.243.735/0001-48', razao:'Positivo Tecnologia S.A.', ie:'9029-6',     uf:'PR', tipo:'Matriz', status:'ativo'   },
