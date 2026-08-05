@@ -2713,28 +2713,37 @@ function fmM(v){
 }
 
 function creditosRenderKPIs(){
-  var total=0,aprop=0,aguard=0,risco=0,perda=0;
-  creditos.forEach(function(r){
-    total+=r.cred;
-    if(r.status==="confirmado")aprop+=r.cred;
-    else if(r.status==="aguardando")aguard+=r.cred;
-    else if(r.status==="em_risco")risco+=r.cred;
-    else if(r.status==="perdido")perda+=r.cred;
+  var total=0,aprop=0,utilizado=0,naoAprop=0,aguard=0,risco=0,perda=0,inconsist=0;
+  var finalOk={apropriado:1,utilizado:1,extinto:1};
+  (window.nfListaFiltradaGlobal||[]).forEach(function(nf){
+    if(nf.tipo!=='entrada') return;
+    (nf.registrosFiscais||[]).forEach(function(rf){
+      var v=rf.valor||0;
+      total+=v;
+      if(rf.status==='apropriado')       { aprop+=v; }
+      else if(rf.status==='utilizado')   { aprop+=v; utilizado+=v; }
+      else if(rf.status==='nao_apropriado'){ naoAprop+=v; }
+      else if(rf.status==='vencido')     { risco+=v; }
+      else if(rf.status==='inconsistencia'){ inconsist+=v; }
+    });
   });
-  var util=aprop*0.7; // parcela dos apropriados já utilizada para abatimento de débito
   var pct=function(v){return total?((v/total)*100).toFixed(1).replace(".",","):"0,0";};
   var set=function(id,val){var el=document.getElementById(id);if(el)el.textContent=val;};
   set("cred-total",fmM(total));
   set("cred-aprop",fmM(aprop));
-  set("cred-aprop-sub",pct(aprop)+"% — retorno Plataforma");
-  set("cred-aguard",fmM(aguard));
-  set("cred-aguard-sub",pct(aguard)+"% — pagamento efetuado");
+  set("cred-aprop-sub",pct(aprop)+"% do total · IBS+CBS apropriad");
+  set("cred-nao-aprop",fmM(naoAprop));
+  set("cred-nao-aprop-sub","aguardando pagamento de guia");
+  set("cred-aguard",fmM(naoAprop));
+  set("cred-aguard-sub",pct(naoAprop)+"% — pagamento pendente");
   set("cred-risco",fmM(risco));
-  set("cred-risco-sub",pct(risco)+"% — vencimento próximo");
-  set("cred-perda",fmM(perda));
-  set("cred-perda-sub",pct(perda)+"% — crédito perdido");
-  set("cred-util",fmM(util));
-  set("cred-util-sub",(aprop?((util/aprop)*100).toFixed(1).replace(".",","):"0,0")+"% dos apropriados — abateram débito");
+  set("cred-risco-sub",pct(risco)+"% — créditos vencidos");
+  set("cred-inconsist",fmM(inconsist));
+  set("cred-inconsist-sub","RFs com inconsistência · requer revisão");
+  set("cred-util",fmM(utilizado));
+  set("cred-util-sub",(aprop?((utilizado/aprop)*100).toFixed(1).replace(".",","):"0,0")+"% dos apropriados — abateram débito");
+  set("cred-perda",fmM(risco));
+  set("cred-perda-sub",pct(risco)+"% — vencidos sem quitação");
 }
 
 var dashCnpjSelecionados=[]; // vazio = todos os CNPJs
@@ -5061,7 +5070,7 @@ fctRender();
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.js"></script>
-<script src="js/data-sync-fixed.js?v=28"></script>
+<script src="js/data-sync-fixed.js?v=29"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=5"></script>
 <script src="js/charts.js"></script>
