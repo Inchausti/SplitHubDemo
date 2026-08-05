@@ -3513,6 +3513,8 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window.atualizarKPIsDashboard(); } catch(e) {}
       try { window.atualizarEstatisticasConciliacao(); } catch(e) {}
       try { window.iniciarPaginacaoUniversal(); } catch(e) {}
+      try { window.atualizarDashboard(); } catch(e) {}
+      try { window.atualizarInteligencia(); } catch(e) {}
     }
 
     // Tentar chamar nfRenderLista se disponível, caso contrário popula nfListaFiltradaGlobal manualmente
