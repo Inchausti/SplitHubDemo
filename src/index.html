@@ -672,6 +672,13 @@ tr:hover td{background:rgba(73,197,177,.02)}
       </select>
     </div>
   </div>
+  <div class="stabs">
+    <button class="stab active" onclick="showSub('cred','visao',this)">Visão Geral</button>
+    <button class="stab" onclick="showSub('cred','listagem',this)">Listagem</button>
+  </div>
+
+  <!-- ABA: Visão Geral -->
+  <div id="cred-visao" class="sv active">
   <div class="sechdr" style="margin-bottom:10px"><h2>Créditos</h2></div>
   <div class="kgrid k6">
     <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">Total de créditos</div><div class="kval" id="cred-total">R$ 65,6M</div><div class="ksub">IBS + CBS · abr/26</div></div>
@@ -732,15 +739,20 @@ tr:hover td{background:rgba(73,197,177,.02)}
       </div>
     </div>
   </div>
-  <div id="creditos-filtro-chip" style="display:none;align-items:center;gap:8px;margin-bottom:14px">
-    <span style="font-size:11px;color:var(--txt3)">Filtro ativo:</span>
-    <span id="creditos-filtro-label" style="background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600"></span>
-    <button class="btn" style="font-size:11px;padding:4px 10px" onclick="creditosLimparFiltro()">✕ Limpar filtro</button>
-  </div>
-  <div class="tcrd">
-    <div class="tcrd-hdr"><div class="sechdr"><h2>Detalhamento por documento fiscal</h2><p>RF × TF × Crédito — conciliação trifásica</p></div></div>
-    <div class="twrap"><table><thead><tr><th>RF</th><th>Tipo Fiscal</th><th>Tipo de DFe</th><th>Nota Fiscal</th><th>Fornecedor</th><th>Data NF</th><th class="r">Valor Total</th><th class="r">Valor Líquido</th><th class="r">CBS</th><th class="r">IBS</th><th class="r">Crédito</th><th>Pagamento</th><th>Status</th><th>Contrato</th><th>Método de Pagamento</th></tr></thead><tbody id="t-creditos"></tbody></table></div>
-  </div>
+  </div><!-- /cred-visao -->
+
+  <!-- ABA: Listagem -->
+  <div id="cred-listagem" class="sv">
+    <div id="creditos-filtro-chip" style="display:none;align-items:center;gap:8px;margin-bottom:14px">
+      <span style="font-size:11px;color:var(--txt3)">Filtro ativo:</span>
+      <span id="creditos-filtro-label" style="background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600"></span>
+      <button class="btn" style="font-size:11px;padding:4px 10px" onclick="creditosLimparFiltro()">✕ Limpar filtro</button>
+    </div>
+    <div class="tcrd">
+      <div class="tcrd-hdr"><div class="sechdr"><h2>Detalhamento por documento fiscal</h2><p>RF × TF × Crédito — conciliação trifásica</p></div></div>
+      <div class="twrap"><table><thead><tr><th>RF</th><th>Tipo Fiscal</th><th>Tipo de DFe</th><th>Nota Fiscal</th><th>Fornecedor</th><th>Data NF</th><th class="r">Valor Total</th><th class="r">Valor Líquido</th><th class="r">CBS</th><th class="r">IBS</th><th class="r">Crédito</th><th>Pagamento</th><th>Status</th><th>Contrato</th><th>Método de Pagamento</th></tr></thead><tbody id="t-creditos"></tbody></table></div>
+    </div>
+  </div><!-- /cred-listagem -->
 </div>
 
 <!-- DÉBITOS -->
@@ -3939,6 +3951,10 @@ function creditosAgruparPorEmpresa(lista){
   });
   return Object.keys(porForn).map(function(k){return porForn[k];}).sort(function(a,b){return b.total-a.total;});
 }
+function _credIrListagem(){
+  var tabBtn=document.querySelector('#view-creditos .stab:nth-child(2)');
+  if(tabBtn&&!tabBtn.classList.contains('active'))tabBtn.click();
+}
 function creditosVerRegistrosRisco(){
   var risco=creditos.filter(function(r){return r.status==="em_risco";});
   if(!risco.length)return;
@@ -3952,6 +3968,7 @@ function creditosVerRegistrosRisco(){
   var lbl=document.getElementById("creditos-filtro-label");
   if(lbl)lbl.textContent="Em risco — "+ranking.length+" empresa(s) · "+ff(totalRisco);
   if(chip)chip.style.display="flex";
+  _credIrListagem();
   var tcrd=document.getElementById("t-creditos");
   if(tcrd)tcrd.closest(".tcrd").scrollIntoView({behavior:"smooth",block:"center"});
   // relatório detalhado: principais empresas e volumes financeiros envolvidos
