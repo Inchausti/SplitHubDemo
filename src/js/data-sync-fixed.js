@@ -850,8 +850,8 @@ window.atualizarDashboard = function() {
   });
   if (typeof svgBar === 'function') {
     svgBar('cPagamentos', [
-      { data: pagCBS.map(rnd), color: '#3B82F6' },
-      { data: pagIBS.map(rnd), color: '#49C5B1' }
+      { data: pagCBS.map(rnd), color: '#3B82F6', label: 'DARF CBS' },
+      { data: pagIBS.map(rnd), color: '#49C5B1', label: 'Guia IBS' }
     ], mesesLabels, 200);
   }
   var subPag = document.getElementById('dash-sub-pagamentos');
@@ -911,6 +911,39 @@ window.atualizarDashboard = function() {
       + '</tr>';
   });
   tbody.innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:var(--txt3);padding:20px">Sem transações</td></tr>';
+};
+
+// Tooltip global para gráficos SVG
+window._svgTipShow = function(evt, raw) {
+  var tip = document.getElementById('_svgTip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = '_svgTip';
+    tip.style.cssText = 'position:fixed;pointer-events:none;display:none;background:#1a1d23;color:#e8e9ea;font-size:12px;padding:8px 12px;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.5);z-index:9999;white-space:nowrap;font-family:Montserrat,sans-serif;line-height:1.9;border:1px solid rgba(255,255,255,.08)';
+    document.body.appendChild(tip);
+  }
+  var parts = raw.split('|');
+  var html = '<div style="font-weight:700;color:#fff;margin-bottom:4px;font-size:13px">' + parts[0] + '</div>';
+  for (var i = 1; i + 2 < parts.length; i += 3) {
+    var cor = parts[i], nome = parts[i+1], val = 'R$ ' + parts[i+2];
+    html += '<div style="display:flex;align-items:center;gap:6px">'
+      + '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;flex-shrink:0;background:' + cor + '"></span>'
+      + '<span style="color:#adb5bd">' + nome + '</span>'
+      + '<span style="font-weight:600;color:#fff;margin-left:auto;padding-left:16px">' + val + '</span>'
+      + '</div>';
+  }
+  tip.innerHTML = html;
+  tip.style.display = 'block';
+  var x = evt.clientX + 16, y = evt.clientY - 20;
+  tip.style.left = x + 'px';
+  tip.style.top  = y + 'px';
+  var r = tip.getBoundingClientRect();
+  if (r.right  > window.innerWidth  - 8) tip.style.left = (evt.clientX - r.width  - 16) + 'px';
+  if (r.bottom > window.innerHeight - 8) tip.style.top  = (evt.clientY - r.height + 8)  + 'px';
+};
+window._svgTipHide = function() {
+  var tip = document.getElementById('_svgTip');
+  if (tip) tip.style.display = 'none';
 };
 
 // INTELIGÊNCIA — sincronização com dados globais reais
@@ -3095,7 +3128,8 @@ window.renderizarTabelaPagamentos = function() {
         rf: rf.id || '—', forn: rf.entidade || nf.entidade || '—',
         cnpj: rf.cnpj || nf.cnpj || '—',
         tipo: tipoCol, tipoNF: nf.tipo || 'entrada', valor: valor,
-        dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, status: rfSt
+        dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, status: rfSt,
+        metodo: rf.metodoPagamento || nf.metodoPagamento || '—'
       });
     });
   });
@@ -3119,11 +3153,17 @@ window.renderizarTabelaPagamentos = function() {
     var nfTipoBadgePag = r.tipoNF === 'entrada'
       ? '<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>'
       : '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
+    var metodoBadge = r.metodo === 'RAD'
+      ? '<span style="background:rgba(139,92,246,.12);color:#8B5CF6;border:1px solid rgba(139,92,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">RAD</span>'
+      : r.metodo === 'Fornecedor'
+        ? '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Fornecedor</span>'
+        : '<span style="color:var(--txt3)">—</span>';
     h += '<tr>'
       + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.rf + '</td>'
       + '<td><div style="font-weight:500;font-size:13px">' + r.forn + '</div><div style="font-size:11px;color:var(--txt2)">' + r.cnpj + '</div></td>'
       + '<td>' + tipoBadge + '</td>'
       + '<td>' + nfTipoBadgePag + '</td>'
+      + '<td>' + metodoBadge + '</td>'
       + '<td class="r mono" style="font-weight:600">' + ff(r.valor) + '</td>'
       + '<td style="font-size:11px;color:var(--txt2)">' + r.dataRF + '</td>'
       + '<td style="font-size:11px">' + (r.status === 'pago'
@@ -3135,7 +3175,7 @@ window.renderizarTabelaPagamentos = function() {
   });
 
   if (!rows.length) {
-    h = '<tr><td colspan="9" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento encontrado para este filtro.</td></tr>';
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;

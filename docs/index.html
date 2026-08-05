@@ -655,7 +655,7 @@ tr:hover td{background:rgba(73,197,177,.02)}
       <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Atrasados</div><div class="kval" id="pag-atrasado">—</div><div class="ksub" id="pag-atrasado-sub">guias vencidas</div></div>
       <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">Pagos</div><div class="kval" id="pag-pago">—</div><div class="ksub" id="pag-pago-sub">guias executadas</div></div>
     </div>
-    <div class="tcrd"><div class="twrap"><table><thead><tr><th>RF</th><th>Fornecedor</th><th>Tipo Fiscal</th><th>Tipo de DFe</th><th class="r">Valor</th><th>Data RF</th><th>Pagamento</th><th>Status</th><th>Ação</th></tr></thead><tbody id="t-impostos"></tbody></table></div></div>
+    <div class="tcrd"><div class="twrap"><table><thead><tr><th>RF</th><th>Fornecedor</th><th>Tipo Fiscal</th><th>Tipo de DFe</th><th>Método</th><th class="r">Valor</th><th>Data RF</th><th>Pagamento</th><th>Status</th><th>Ação</th></tr></thead><tbody id="t-impostos"></tbody></table></div></div>
   </div>
 </div>
 
@@ -4386,13 +4386,24 @@ function svgBar(id,datasets,labels,H){
   var cw=(el.parentElement&&el.parentElement.offsetWidth)||el.offsetWidth||0;
   var W=cw>50?cw:440;
   var plotW=W-padL-padR,plotH=H-padT-padB,n=labels.length;
-  var stk=[];for(var i=0;i<n;i++){var sm=0;datasets.forEach(function(d){sm+=d.data[i];});stk.push(sm);}
-  var maxV=Math.max.apply(null,stk);
+  var stk=[];for(var i=0;i<n;i++){var sm=0;datasets.forEach(function(d){sm+=d.data[i]||0;});stk.push(sm);}
+  var maxV=Math.max.apply(null,stk)||1;
   var bW=Math.floor(plotW/n*0.52);
+  var hasLabels=datasets.some(function(d){return d.label;});
   function xp(i){return Math.round(padL+(i+0.5)*plotW/n);}
+  function fv(v){return v>=1?v.toFixed(1).replace('.',',')+'M':Math.round(v*1000)+'K';}
   var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block">';
   labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
-  for(var i=0;i<n;i++){var yBase=H-padB;datasets.slice().reverse().forEach(function(ds){var bH=Math.max(1,Math.round(ds.data[i]/maxV*plotH));var x=xp(i)-Math.floor(bW/2);var y=yBase-bH;s+='<rect x="'+x+'" y="'+y+'" width="'+bW+'" height="'+bH+'" fill="'+ds.color+'" rx="2"/>';yBase=y;});}
+  for(var i=0;i<n;i++){var yBase=H-padB;datasets.slice().reverse().forEach(function(ds){var bH=Math.max(1,Math.round((ds.data[i]||0)/maxV*plotH));var x=xp(i)-Math.floor(bW/2);var y=yBase-bH;s+='<rect x="'+x+'" y="'+y+'" width="'+bW+'" height="'+bH+'" fill="'+ds.color+'" rx="2"/>';yBase=y;});}
+  if(hasLabels){
+    for(var i=0;i<n;i++){
+      var tp=[labels[i]];
+      datasets.forEach(function(ds){tp.push(ds.color,ds.label||'',fv(ds.data[i]||0));});
+      var enc=tp.join('|');
+      var ox=xp(i)-Math.floor(bW/2)-4;
+      s+='<rect x="'+ox+'" y="'+padT+'" width="'+(bW+8)+'" height="'+plotH+'" fill="transparent" style="cursor:default" onmousemove="_svgTipShow(event,\''+enc+'\')" onmouseleave="_svgTipHide()"/>';
+    }
+  }
   s+='</svg>';
   el.style.cssText='display:block;width:100%';
   el.innerHTML=s;
@@ -5071,7 +5082,7 @@ fctRender();
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.js"></script>
-<script src="js/data-sync-fixed.js?v=32"></script>
+<script src="js/data-sync-fixed.js?v=33"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=6"></script>
 <script src="js/charts.js"></script>
