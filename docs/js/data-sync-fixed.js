@@ -4022,9 +4022,8 @@ window.renderizarPagamentosMetodo = function() {
   var fornPorMes = [0,0,0,0,0,0,0,0,0,0,0,0];
 
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
-      // Apenas pagamentos realizados
-      if (!rf.dataPagamento || rf.dataPagamento === '—') return;
       // Filtros globais
       if (f.mesAno && !(rf.data || '').startsWith(f.mesAno)) return;
       if (busca) {
@@ -4068,9 +4067,9 @@ window.renderizarPagamentosMetodo = function() {
   var sub = document.getElementById('cPagMetodo-sub');
   if (sub) {
     if (total > 0) {
-      sub.textContent = 'R$ milhões · RAD ' + (totalRad/total*100).toFixed(0) + '% · Fornecedor ' + (totalForn/total*100).toFixed(0) + '% · pagamentos realizados';
+      sub.textContent = 'R$ milhões · RAD ' + (totalRad/total*100).toFixed(0) + '% · Fornecedor ' + (totalForn/total*100).toFixed(0) + '% · créditos IBS+CBS';
     } else {
-      sub.textContent = 'R$ milhões · RAD vs Fornecedor · pagamentos realizados · mês a mês';
+      sub.textContent = 'R$ milhões · RAD vs Fornecedor · créditos IBS+CBS · mês a mês';
     }
   }
 };
