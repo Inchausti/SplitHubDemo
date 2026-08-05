@@ -2081,6 +2081,7 @@ window._incRfRenderPagina = function() {
     var incIdCell = r.id.indexOf('ING-') === 0
       ? '<td class="mono" style="color:#8B5CF6;font-weight:600">' + r.id + '</td>'
       : '<td class="mono" style="font-weight:600"><button onclick="window.abrirDetalheRF(\'' + r.id + '\')" style="background:none;border:none;color:#8B5CF6;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.id + '</button></td>';
+    var acaoBtn = '<button onclick="window._incAbrirAcao(\'' + r.id + '\')" style="background:rgba(139,92,246,.12);color:#8B5CF6;border:1px solid rgba(139,92,246,.3);border-radius:5px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Corrigir →</button>';
     h += '<tr>'
       + incIdCell
       + '<td>' + etapaBadge + '</td>'
@@ -2095,9 +2096,10 @@ window._incRfRenderPagina = function() {
       + '<td>' + stBadge + '</td>'
       + '<td style="font-size:11px;color:var(--txt2)">' + r.data + '</td>'
       + '<td>' + incBadge + '</td>'
+      + '<td>' + acaoBtn + '</td>'
       + '</tr>';
   });
-  if (!pag.length) h = '<tr><td colspan="13" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro com inconsistência encontrado para este filtro.</td></tr>';
+  if (!pag.length) h = '<tr><td colspan="14" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro com inconsistência encontrado para este filtro.</td></tr>';
 
   var tbody = document.getElementById('t-inc-rfs');
   if (tbody) tbody.innerHTML = h;
@@ -2111,6 +2113,89 @@ window._incRfRenderPagina = function() {
   var btnN = document.getElementById('inc-rf-btn-prox');
   if (btnP) { btnP.disabled = pagAtual <= 1; btnP.style.opacity = pagAtual <= 1 ? '0.5' : '1'; btnP.style.cursor = pagAtual <= 1 ? 'not-allowed' : 'pointer'; }
   if (btnN) { btnN.disabled = pagAtual >= totalPag; btnN.style.opacity = pagAtual >= totalPag ? '0.5' : '1'; btnN.style.cursor = pagAtual >= totalPag ? 'not-allowed' : 'pointer'; }
+};
+
+// Mapa de ações disponíveis por tipo de inconsistência
+var _incAcoesMap = {
+  'Não conciliado':           [{ label: 'Conciliar RF manualmente',          icon: '🔗', cor: '#49C5B1' }, { label: 'Encaminhar para análise fiscal',      icon: '🔍', cor: '#3B82F6' }, { label: 'Notificar fornecedor',               icon: '✉️', cor: '#8B5CF6' }],
+  'Valor imposto divergente': [{ label: 'Corrigir valor do imposto',          icon: '✏️', cor: '#F59E0B' }, { label: 'Solicitar nota de crédito ao fornecedor', icon: '📋', cor: '#3B82F6' }, { label: 'Abrir chamado na SEFAZ',             icon: '🏛️', cor: '#8B5CF6' }],
+  'Vencido':                  [{ label: 'Emitir nova guia de pagamento',      icon: '📄', cor: '#F43F5E' }, { label: 'Solicitar prorrogação de prazo',     icon: '📅', cor: '#F59E0B' }, { label: 'Regularizar junto ao Fisco',         icon: '🏛️', cor: '#8B5CF6' }],
+  'Sem Comprovante':          [{ label: 'Anexar comprovante de pagamento',    icon: '📎', cor: '#49C5B1' }, { label: 'Solicitar comprovante ao fornecedor', icon: '✉️', cor: '#3B82F6' }, { label: 'Reprocessar após anexo',             icon: '🔄', cor: '#22C55E' }],
+  'Falha de Layout':          [{ label: 'Reprocessar documento',              icon: '🔄', cor: '#49C5B1' }, { label: 'Solicitar reenvio ao fornecedor',    icon: '✉️', cor: '#3B82F6' }, { label: 'Corrigir layout e reimportar',       icon: '✏️', cor: '#F59E0B' }],
+  'Inconsistência de Dados':  [{ label: 'Corrigir dados do documento',       icon: '✏️', cor: '#F59E0B' }, { label: 'Revalidar após correção',            icon: '✅', cor: '#22C55E' }, { label: 'Encaminhar para revisão manual',    icon: '🔍', cor: '#3B82F6' }],
+  'Rejeitado SEFAZ':          [{ label: 'Corrigir e reenviar à SEFAZ',       icon: '🏛️', cor: '#F43F5E' }, { label: 'Solicitar manifestação do destinatário', icon: '📋', cor: '#F59E0B' }, { label: 'Cancelar e emitir novo documento',  icon: '❌', cor: '#8B5CF6' }],
+  'Documento Duplicado':      [{ label: 'Anular documento duplicado',         icon: '🗑️', cor: '#F43F5E' }, { label: 'Manter original e descartar',       icon: '✅', cor: '#22C55E' }, { label: 'Encaminhar para auditoria',          icon: '🔍', cor: '#8B5CF6' }]
+};
+
+window._incAbrirAcao = function(id) {
+  var r = (window._rfIncGlobal || []).filter(function(x){ return x.id === id; })[0];
+  if (!r) return;
+
+  var tipo = r.inc || 'Não conciliado';
+  var acoes = _incAcoesMap[tipo] || [{ label: 'Encaminhar para análise', icon: '🔍', cor: '#3B82F6' }];
+  var incCor = _incCores[tipo] || '#8B5CF6';
+  var fmtV = function(v){ if(v>=1e6) return 'R$ '+(v/1e6).toFixed(2).replace('.',',')+'M'; if(v>=1e3) return 'R$ '+Math.round(v/1e3)+'K'; return 'R$ '+v.toFixed(2).replace('.',','); };
+
+  var acoesHtml = acoes.map(function(a, i) {
+    return '<button onclick="window._incExecutarAcao(\'' + id + '\',' + i + ')" style="display:flex;align-items:center;gap:10px;width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:12px 14px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s;margin-bottom:8px" onmouseenter="this.style.borderColor=\'' + a.cor + '\'" onmouseleave="this.style.borderColor=\'var(--brd)\'">'
+      + '<span style="font-size:20px;width:28px;flex-shrink:0">' + a.icon + '</span>'
+      + '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--txt1)">' + a.label + '</div>'
+      + '<div style="font-size:11px;color:var(--txt2);margin-top:2px">Clicar para iniciar o processo de correção</div></div>'
+      + '<span style="font-size:11px;font-weight:700;color:' + a.cor + ';background:' + a.cor.replace('#','rgba(').replace(/^rgba\(([^)]+)\)$/, 'rgba($1,.12)') + ';padding:3px 9px;border-radius:4px">Iniciar</span>'
+      + '</button>';
+  }).join('');
+
+  var html = '<div id="_incAcaoOverlay" onclick="if(event.target===this)window._incFecharAcao()" style="position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px">'
+    + '<div style="background:var(--bg2);border:1px solid var(--brd);border-radius:12px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--brd)">'
+    + '<div><div style="font-size:15px;font-weight:700;color:var(--txt1)">Ações de Correção</div>'
+    + '<div style="font-size:12px;color:var(--txt2);margin-top:2px">' + r.id + ' · ' + (r.forn||'—') + '</div></div>'
+    + '<button onclick="window._incFecharAcao()" style="background:none;border:none;color:var(--txt3);font-size:20px;cursor:pointer;line-height:1;padding:4px">✕</button>'
+    + '</div>'
+    + '<div style="padding:16px 20px;border-bottom:1px solid var(--brd);display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Inconsistência</div><div style="font-size:13px;font-weight:700;color:' + incCor + '">' + tipo + '</div></div>'
+    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Valor RF</div><div style="font-size:13px;font-weight:700;color:var(--txt1)">' + fmtV(r.valor) + '</div></div>'
+    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Etapa</div><div style="font-size:13px;color:var(--txt1)">' + (r.etapa||'—') + '</div></div>'
+    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Data</div><div style="font-size:13px;color:var(--txt1)">' + (r.data||'—') + '</div></div>'
+    + '</div>'
+    + '<div style="padding:18px 20px">'
+    + '<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:12px">Selecione a ação de correção</div>'
+    + acoesHtml
+    + '<button onclick="window._incFecharAcao()" style="width:100%;background:none;border:1px solid var(--brd);border-radius:8px;padding:10px;color:var(--txt2);font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px">Cancelar</button>'
+    + '</div></div></div>';
+
+  var el = document.getElementById('_incAcaoOverlay');
+  if (el) el.remove();
+  document.body.insertAdjacentHTML('beforeend', html);
+};
+
+window._incFecharAcao = function() {
+  var el = document.getElementById('_incAcaoOverlay');
+  if (el) el.remove();
+};
+
+window._incExecutarAcao = function(id, acaoIdx) {
+  var r = (window._rfIncGlobal || []).filter(function(x){ return x.id === id; })[0];
+  if (!r) return;
+  var tipo = r.inc || 'Não conciliado';
+  var acoes = _incAcoesMap[tipo] || [];
+  var acao = acoes[acaoIdx] || { label: 'Ação', icon: '✅' };
+
+  window._incFecharAcao();
+
+  // Mover para "Em Análise" no kanban
+  if (window._kanbanState && r.id.indexOf('ING-') < 0) {
+    window._kanbanState[r.id] = 'analise';
+  }
+
+  // Toast de confirmação
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:28px;right:24px;background:#1a1d23;border:1px solid rgba(139,92,246,.4);border-left:4px solid #8B5CF6;border-radius:8px;padding:14px 18px;z-index:10001;font-family:Montserrat,sans-serif;min-width:300px;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:_slideIn .2s ease';
+  toast.innerHTML = '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">' + acao.icon + ' Ação iniciada com sucesso</div>'
+    + '<div style="font-size:11px;color:#adb5bd">' + acao.label + ' · ' + r.id + '</div>'
+    + '<div style="font-size:11px;color:#8B5CF6;margin-top:6px">Registro encaminhado para acompanhamento</div>';
+  document.body.appendChild(toast);
+  setTimeout(function(){ if(toast.parentNode) toast.parentNode.removeChild(toast); }, 4000);
 };
 
 window.incRfProximaPagina = function() {
