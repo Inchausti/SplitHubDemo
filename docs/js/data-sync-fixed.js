@@ -859,9 +859,10 @@ window.atualizarKPIsDashboard = function() {
         if (rf.status === 'vencido' || rf.status === 'em_risco')      risco += v;
         // Pagamentos (guias de impostos)
         var eAprop = rf.status === 'apropriado' || rf.status === 'utilizado';
-        if (temPag || eAprop)             pagPago     += v;
-        else if (rf.status === 'vencido')   pagAtrasado += v;
-        else                                pagPendente += v;
+        if (temPag || eAprop)                              pagPago     += v;
+        else if (rf.status === 'vencido')                  pagAtrasado += v;
+        else if (rf.status === 'em_risco')                 pagAtrasado += v;
+        else                                               pagPendente += v;
       } else if (nf.tipo === 'saida') {
         debTotal += v;
         if (rf.status === 'extinto' || rf.status === 'utilizado') debExtinto += v;
@@ -984,7 +985,7 @@ window.atualizarDashboard = function() {
       var v = (rf.valor || 0) / 1e6;
       if (finalOk[rf.status])               aprop[idx]   += v;
       else if (rf.status === 'nao_apropriado') aApropr[idx] += v;
-      else if (rf.status === 'vencido' || rf.status === 'inconsistencia') emRisco[idx] += v;
+      else if (rf.status === 'vencido' || rf.status === 'em_risco' || rf.status === 'inconsistencia') emRisco[idx] += v;
     });
   });
   var rnd = function(v) { return Math.round(v * 100) / 100; };
@@ -1055,6 +1056,7 @@ window.atualizarDashboard = function() {
     utilizado:     { label: 'Utilizado',     c: '#49C5B1' },
     extinto:       { label: 'Extinto',       c: '#22C55E' },
     nao_apropriado:{ label: 'Pendente',      c: '#F59E0B' },
+    em_risco:      { label: 'Em Risco',       c: '#F59E0B' },
     vencido:       { label: 'Vencido',       c: '#F43F5E' },
     inconsistencia:{ label: 'Inconsistência',c: '#F43F5E' }
   };
