@@ -791,6 +791,128 @@ window.atualizarKPIsDashboard = function() {
 // ============================================================
 
 // ============================================================
+// ============================================================
+// DASHBOARD — sincronização com dados globais reais
+// ============================================================
+
+window.atualizarDashboard = function() {
+  var lista = window.nfListaFiltradaGlobal || [];
+  if (!lista.length) return;
+
+  var mesesISO    = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
+  var mesesLabels = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var finalOk = { apropriado: 1, utilizado: 1, extinto: 1 };
+
+  // ── 1. Evolução de Créditos IBS+CBS ──
+  var aprop  = mesesISO.map(function() { return 0; });
+  var aApropr = mesesISO.map(function() { return 0; });
+  var emRisco = mesesISO.map(function() { return 0; });
+
+  lista.forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      var mes = (rf.data || '').substring(0, 7);
+      var idx = mesesISO.indexOf(mes);
+      if (idx < 0) return;
+      var v = (rf.valor || 0) / 1e6;
+      if (finalOk[rf.status])               aprop[idx]   += v;
+      else if (rf.status === 'nao_apropriado') aApropr[idx] += v;
+      else if (rf.status === 'vencido' || rf.status === 'inconsistencia') emRisco[idx] += v;
+    });
+  });
+  var rnd = function(v) { return Math.round(v * 100) / 100; };
+  if (typeof svgLine === 'function') {
+    svgLine('cCreditos', [
+      { data: aprop.map(rnd),   color: '#49C5B1', fill: true, dots: true },
+      { data: aApropr.map(rnd), color: '#F59E0B', dash: true },
+      { data: emRisco.map(rnd), color: '#F43F5E', dots: true, w: 1.5 }
+    ], mesesLabels, 200);
+  }
+  // atualiza subtítulo
+  var subCred = document.getElementById('dash-sub-creditos');
+  if (subCred) subCred.textContent = 'R$ milhões · IBS+CBS · Jan–Dez 2026 · NFs de entrada';
+
+  // ── 2. Pagamentos Executados ──
+  var pagCBS = mesesISO.map(function() { return 0; });
+  var pagIBS = mesesISO.map(function() { return 0; });
+
+  lista.forEach(function(nf) {
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if (!rf.dataPagamento || rf.dataPagamento === '—') return;
+      // usar data do RF como competência do pagamento
+      var mes = (rf.data || '').substring(0, 7);
+      var idx = mesesISO.indexOf(mes);
+      if (idx < 0) return;
+      var v = (rf.valor || 0) / 1e6;
+      if (rf.tipoFiscal === 'cbs') pagCBS[idx] += v;
+      else                          pagIBS[idx] += v;
+    });
+  });
+  if (typeof svgBar === 'function') {
+    svgBar('cPagamentos', [
+      { data: pagCBS.map(rnd), color: '#3B82F6' },
+      { data: pagIBS.map(rnd), color: '#49C5B1' }
+    ], mesesLabels, 200);
+  }
+  var subPag = document.getElementById('dash-sub-pagamentos');
+  if (subPag) subPag.textContent = 'R$ milhões · DARF CBS + Guia IBS · Jan–Dez 2026';
+
+  // ── 3. Últimas transações ──
+  var tbody = document.getElementById('t-recent');
+  if (!tbody) return;
+
+  // Coletar todos os RFs com pagamento ou data recente, ordenar desc
+  var rfs = [];
+  lista.forEach(function(nf) {
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      rfs.push({
+        id:        rf.id || '—',
+        entidade:  nf.entidade || '—',
+        tipo:      rf.tipoFiscal === 'ibs' ? 'Guia IBS' : 'DARF CBS',
+        valor:     rf.valor || 0,
+        data:      rf.dataPagamento && rf.dataPagamento !== '—' ? rf.dataPagamento : (rf.data || '—'),
+        status:    rf.status || '—',
+        pago:      rf.dataPagamento && rf.dataPagamento !== '—'
+      });
+    });
+  });
+  // ordenar: pagos mais recentes primeiro, depois por data RF
+  rfs.sort(function(a, b) {
+    var da = a.data === '—' ? '0' : a.data;
+    var db = b.data === '—' ? '0' : b.data;
+    return db.localeCompare(da);
+  });
+
+  var statusMap = {
+    apropriado:    { label: 'Apropriado',    c: '#22C55E' },
+    utilizado:     { label: 'Utilizado',     c: '#49C5B1' },
+    extinto:       { label: 'Extinto',       c: '#22C55E' },
+    nao_apropriado:{ label: 'Pendente',      c: '#F59E0B' },
+    vencido:       { label: 'Vencido',       c: '#F43F5E' },
+    inconsistencia:{ label: 'Inconsistência',c: '#F43F5E' }
+  };
+  var fmtV = function(v) {
+    if (v >= 1e6) return 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M';
+    if (v >= 1e3) return 'R$ ' + Math.round(v/1e3) + 'K';
+    return 'R$ ' + v.toFixed(2).replace('.',',');
+  };
+
+  var rows = '';
+  rfs.slice(0, 10).forEach(function(r) {
+    var st = statusMap[r.status] || { label: r.status, c: '#A7A8AA' };
+    var badge = '<span style="background:' + st.c + ';color:#fff;font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700">' + st.label + '</span>';
+    rows += '<tr>'
+      + '<td class="mono" style="font-size:11px;color:var(--txt3)">' + r.id + '</td>'
+      + '<td style="color:var(--txt2)">' + r.entidade + '</td>'
+      + '<td><span style="font-size:11px;color:var(--blue);font-weight:600">' + r.tipo + '</span></td>'
+      + '<td class="r mono" style="font-weight:600">' + fmtV(r.valor) + '</td>'
+      + '<td style="font-size:11px;color:var(--txt3)">' + r.data + '</td>'
+      + '<td>' + badge + '</td>'
+      + '</tr>';
+  });
+  tbody.innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:var(--txt3);padding:20px">Sem transações</td></tr>';
+};
+
 // INTELIGÊNCIA — sincronização com dados globais reais
 
 // Fallback: define svgLine/svgBar caso o bloco inline do HTML não tenha carregado

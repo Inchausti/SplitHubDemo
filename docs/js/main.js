@@ -60,6 +60,11 @@ function showView(viewName, btnElement, isMobile = false) {
       try { if (window.atualizarInteligencia) window.atualizarInteligencia(); } catch(e) {}
     }, 50);
   }
+  if (viewName === 'dashboard') {
+    setTimeout(function() {
+      try { if (window.atualizarDashboard) window.atualizarDashboard(); } catch(e) {}
+    }, 50);
+  }
 }
 
 // ─── SUBMENU TOGGLE ───
