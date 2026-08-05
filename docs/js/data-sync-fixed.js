@@ -357,8 +357,8 @@ window._rfGerarHistorico = function(rf, nf) {
   }
   if (rf.dataPagamento && rf.dataPagamento !== '—') {
     var dpStr = rf.dataPagamento.substring(0, 10);
-    ev.push({ data: F(dpStr),   tipo: 'PAGAMENTO',   modulo: 'Pagamentos', ator: rf.metodoPagamento || nf.metodoPagamento || 'Split Payment',
-      desc: 'Guia ' + (rf.tipoFiscal === 'ibs' ? 'IBS' : 'DARF CBS') + ' quitada · ' + ff(rf.valor) + ' · via ' + (rf.metodoPagamento || nf.metodoPagamento || 'Split Payment'), cls: 'ok' });
+    ev.push({ data: F(dpStr),   tipo: 'PAGAMENTO',   modulo: 'Pagamentos', ator: rf.metodoPagamento || nf.metodoPagamento || 'Fornecedor',
+      desc: 'Guia ' + (rf.tipoFiscal === 'ibs' ? 'IBS' : 'DARF CBS') + ' quitada · ' + ff(rf.valor) + ' · via ' + (rf.metodoPagamento || nf.metodoPagamento || 'Fornecedor'), cls: 'ok' });
   }
   if (rf.status === 'utilizado') {
     ev.push({ data: F(A(d0,20)), tipo: 'UTILIZAÇÃO', modulo: 'Pagamentos', ator: 'SplitHub',
@@ -840,17 +840,18 @@ window.atualizarKPIsDashboard = function() {
   var badStatuses = ['nao_apropriado', 'inconsistencia', 'vencido', 'em_risco'];
 
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
-    concNFs++;
+    var nfTemPeriodo = (nf.registrosFiscais || []).some(function(rf) { return (rf.data || '').startsWith(prefix); });
+    if (nfTemPeriodo) concNFs++;
     (nf.registrosFiscais || []).forEach(function(rf) {
       var rfDate = rf.data || '';
       var inPeriod = rfDate.startsWith(prefix);
-      // Conciliação: todos os períodos
+      if (!inPeriod) return;
+      // Conciliação e inconsistências filtradas pelo período selecionado
       concRFs++;
       var temPag = rf.dataPagamento && rf.dataPagamento !== '—';
       var temExt = rf.dataExtincao  && rf.dataExtincao  !== '—';
       if (temPag || temExt) concTFOk++;
       if (rf.status === 'inconsistencia') concInconsist++;
-      if (!inPeriod) return;
       var v = rf.valor || 0;
       if (nf.tipo === 'entrada') {
         total += v;
@@ -871,10 +872,11 @@ window.atualizarKPIsDashboard = function() {
     });
   });
 
-  // --- INCONSISTÊNCIAS (derivadas dos dados brutos) ---
+  // --- INCONSISTÊNCIAS filtradas pelo período selecionado ---
   var incTotal = 0, incIng = 0, incCred = 0, incDeb = 0, incPag = 0;
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     (nf.registrosFiscais || []).forEach(function(rf) {
+      if (!(rf.data || '').startsWith(prefix)) return;
       if (rf.status !== 'inconsistencia') return;
       incTotal++;
       if (nf.tipo === 'saida') { incDeb++; }
