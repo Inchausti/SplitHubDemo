@@ -54,6 +54,12 @@ function showView(viewName, btnElement, isMobile = false) {
   }
 
   closeSidebar();
+
+  if (viewName === 'inteligencia') {
+    setTimeout(function() {
+      try { if (window.atualizarInteligencia) window.atualizarInteligencia(); } catch(e) {}
+    }, 50);
+  }
 }
 
 // ─── SUBMENU TOGGLE ───
