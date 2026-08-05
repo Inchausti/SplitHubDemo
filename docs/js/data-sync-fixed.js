@@ -762,7 +762,7 @@ window.atualizarKPIsCreditos = function(listaRFs) {
     total += v;
     if (r.status === 'apropriado')     aprop    += v;
     if (r.status === 'nao_apropriado') naoAprop += v;
-    if (r.status === 'vencido')        risco    += v;
+    if (r.status === 'vencido' || r.status === 'em_risco') risco += v;
     if (r.status === 'utilizado')      util     += v;
     if (r.status === 'nao_apropriado') aguard   += v;
     if (r.status === 'inconsistencia') inconsist += v;
@@ -837,7 +837,7 @@ window.atualizarKPIsDashboard = function() {
   var pagPago = 0, pagPendente = 0, pagAtrasado = 0;
   // --- CONCILIAÇÃO (todos os períodos) ---
   var concNFs = 0, concRFs = 0, concTFOk = 0, concInconsist = 0;
-  var badStatuses = ['nao_apropriado', 'inconsistencia', 'vencido'];
+  var badStatuses = ['nao_apropriado', 'inconsistencia', 'vencido', 'em_risco'];
 
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     concNFs++;
@@ -856,11 +856,12 @@ window.atualizarKPIsDashboard = function() {
         total += v;
         if (rf.status === 'apropriado' || rf.status === 'utilizado') aprop += v;
         if (badStatuses.indexOf(rf.status) !== -1)                    bad   += v;
-        if (rf.status === 'vencido')                                  risco += v;
+        if (rf.status === 'vencido' || rf.status === 'em_risco')      risco += v;
         // Pagamentos (guias de impostos)
         var eAprop = rf.status === 'apropriado' || rf.status === 'utilizado';
         if (temPag || eAprop)             pagPago     += v;
         else if (rf.status === 'vencido') pagAtrasado += v;
+        else if (rf.status === 'em_risco') pagPendente += v;
         else                              pagPendente += v;
       } else if (nf.tipo === 'saida') {
         debTotal += v;
@@ -4756,7 +4757,7 @@ var _dashMeses = {
 // para o mês informado (formato '04' = abril 2026). Retorna null se sem dados.
 function _dashComputarApropriarPct(mes) {
   var prefix = '2026-' + mes;
-  var badStatuses = ['nao_apropriado', 'inconsistencia', 'vencido'];
+  var badStatuses = ['nao_apropriado', 'inconsistencia', 'vencido', 'em_risco'];
   var total = 0, bad = 0, badVal = 0;
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
