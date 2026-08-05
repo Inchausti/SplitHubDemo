@@ -2137,7 +2137,7 @@ window._incAbrirAcao = function(id) {
   var fmtV = function(v){ if(v>=1e6) return 'R$ '+(v/1e6).toFixed(2).replace('.',',')+'M'; if(v>=1e3) return 'R$ '+Math.round(v/1e3)+'K'; return 'R$ '+v.toFixed(2).replace('.',','); };
 
   var acoesHtml = acoes.map(function(a, i) {
-    return '<button onclick="window._incExecutarAcao(\'' + id + '\',' + i + ')" style="display:flex;align-items:center;gap:10px;width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:12px 14px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s;margin-bottom:8px" onmouseenter="this.style.borderColor=\'' + a.cor + '\'" onmouseleave="this.style.borderColor=\'var(--brd)\'">'
+    return '<button onclick="window._incExecutarAcao(\'' + id + '\',' + i + ')" style="display:flex;align-items:center;gap:10px;width:100%;background:#1A1817;border:1px solid #3A3836;border-radius:8px;padding:12px 14px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s;margin-bottom:8px" onmouseenter="this.style.borderColor=\'' + a.cor + '\'" onmouseleave="this.style.borderColor=\'#3A3836\'">'
       + '<span style="font-size:20px;width:28px;flex-shrink:0">' + a.icon + '</span>'
       + '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--txt1)">' + a.label + '</div>'
       + '<div style="font-size:11px;color:var(--txt2);margin-top:2px">Clicar para iniciar o processo de correção</div></div>'
@@ -2145,23 +2145,23 @@ window._incAbrirAcao = function(id) {
       + '</button>';
   }).join('');
 
-  var html = '<div id="_incAcaoOverlay" onclick="if(event.target===this)window._incFecharAcao()" style="position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px">'
-    + '<div style="background:var(--bg2);border:1px solid var(--brd);border-radius:12px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--brd)">'
-    + '<div><div style="font-size:15px;font-weight:700;color:var(--txt1)">Ações de Correção</div>'
-    + '<div style="font-size:12px;color:var(--txt2);margin-top:2px">' + r.id + ' · ' + (r.forn||'—') + '</div></div>'
-    + '<button onclick="window._incFecharAcao()" style="background:none;border:none;color:var(--txt3);font-size:20px;cursor:pointer;line-height:1;padding:4px">✕</button>'
+  var html = '<div id="_incAcaoOverlay" onclick="if(event.target===this)window._incFecharAcao()" style="position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px">'
+    + '<div style="background:#232120;border:1px solid #3A3836;border-radius:12px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #3A3836">'
+    + '<div><div style="font-size:15px;font-weight:700;color:#F2F0EF">Ações de Correção</div>'
+    + '<div style="font-size:12px;color:#A7A8AA;margin-top:2px">' + r.id + ' · ' + (r.forn||'—') + '</div></div>'
+    + '<button onclick="window._incFecharAcao()" style="background:none;border:none;color:#A7A8AA;font-size:20px;cursor:pointer;line-height:1;padding:4px">✕</button>'
     + '</div>'
-    + '<div style="padding:16px 20px;border-bottom:1px solid var(--brd);display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Inconsistência</div><div style="font-size:13px;font-weight:700;color:' + incCor + '">' + tipo + '</div></div>'
-    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Valor RF</div><div style="font-size:13px;font-weight:700;color:var(--txt1)">' + fmtV(r.valor) + '</div></div>'
-    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Etapa</div><div style="font-size:13px;color:var(--txt1)">' + (r.etapa||'—') + '</div></div>'
-    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Data</div><div style="font-size:13px;color:var(--txt1)">' + (r.data||'—') + '</div></div>'
+    + '<div style="padding:16px 20px;border-bottom:1px solid #3A3836;display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#6B6D6F;margin-bottom:4px">Inconsistência</div><div style="font-size:13px;font-weight:700;color:' + incCor + '">' + tipo + '</div></div>'
+    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#6B6D6F;margin-bottom:4px">Valor RF</div><div style="font-size:13px;font-weight:700;color:#F2F0EF">' + fmtV(r.valor) + '</div></div>'
+    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#6B6D6F;margin-bottom:4px">Etapa</div><div style="font-size:13px;color:#F2F0EF">' + (r.etapa||'—') + '</div></div>'
+    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#6B6D6F;margin-bottom:4px">Data</div><div style="font-size:13px;color:#F2F0EF">' + (r.data||'—') + '</div></div>'
     + '</div>'
     + '<div style="padding:18px 20px">'
-    + '<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:12px">Selecione a ação de correção</div>'
+    + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6B6D6F;margin-bottom:12px">Selecione a ação de correção</div>'
     + acoesHtml
-    + '<button onclick="window._incFecharAcao()" style="width:100%;background:none;border:1px solid var(--brd);border-radius:8px;padding:10px;color:var(--txt2);font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px">Cancelar</button>'
+    + '<button onclick="window._incFecharAcao()" style="width:100%;background:none;border:1px solid #3A3836;border-radius:8px;padding:10px;color:#A7A8AA;font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px">Cancelar</button>'
     + '</div></div></div>';
 
   var el = document.getElementById('_incAcaoOverlay');
