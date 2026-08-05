@@ -3874,11 +3874,10 @@ function nfRenderLista(){
   if(typeof dataSyncFixed!=='undefined'){
     var nfsEntrada=dataSyncFixed.getNFsEntrada();
     nfsEntrada.forEach(function(nf,idx){
-      // Status distribuído pseudo-aleatoriamente por NF (~15% em_risco, ~15% nao_apropriado, ~25% apropriado, ~45% utilizado)
-      var _nfSeedStr=nf.numero||String(idx);
-      var _nfSeed=0;for(var _ci=0;_ci<_nfSeedStr.length;_ci++)_nfSeed=(_nfSeed*31+_nfSeedStr.charCodeAt(_ci))&0x7fffffff;
-      var _p=_nfSeed%100;
-      var statusCred=_p<15?'em_risco':_p<30?'nao_apropriado':_p<55?'apropriado':'utilizado';
+      // Distribuição determinística por idx (gcd(37,100)=1 → percorre todos 100 valores):
+      // ~5% vencido, ~15% em_risco, ~15% nao_apropriado, ~20% apropriado, ~45% utilizado
+      var _p=(idx*37+13)%100;
+      var statusCred=_p<5?'vencido':_p<20?'em_risco':_p<35?'nao_apropriado':_p<55?'apropriado':'utilizado';
 
       // CBS = 8% do líquido, IBS = 10% do líquido, bruto = líquido + CBS + IBS
       var valorLiquido=Math.floor(nf.valor/1.18);

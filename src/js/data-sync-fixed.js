@@ -860,9 +860,8 @@ window.atualizarKPIsDashboard = function() {
         // Pagamentos (guias de impostos)
         var eAprop = rf.status === 'apropriado' || rf.status === 'utilizado';
         if (temPag || eAprop)             pagPago     += v;
-        else if (rf.status === 'vencido') pagAtrasado += v;
-        else if (rf.status === 'em_risco') pagPendente += v;
-        else                              pagPendente += v;
+        else if (rf.status === 'vencido')   pagAtrasado += v;
+        else                                pagPendente += v;
       } else if (nf.tipo === 'saida') {
         debTotal += v;
         if (rf.status === 'extinto' || rf.status === 'utilizado') debExtinto += v;
@@ -3566,6 +3565,7 @@ window.renderizarTabelaPagamentos = function() {
       var rfSt;
       if (temPag || eApropriado)               rfSt = 'pago';
       else if (rf.status === 'vencido')        rfSt = 'atrasado';
+      else if (rf.status === 'em_risco')       rfSt = 'vencendo';
       else if (rf.status === 'inconsistencia') rfSt = 'vencendo';
       else                                     rfSt = 'pendente';
       if (stFlt && rfSt !== stFlt) return;
@@ -3791,6 +3791,7 @@ window.atualizarKPIsPagamentos = function() {
       var v = rf.valor || 0;
       if (temPag || eApropriado)               { pago     += v; cntPago++; }
       else if (rf.status === 'vencido')        { atrasado += v; cntAtr++;  lastAtr  = rf.entidade || nf.entidade; }
+      else if (rf.status === 'em_risco')       { vencendo += v; cntVenc++; lastVenc = rf.entidade || nf.entidade; }
       else if (rf.status === 'inconsistencia') { vencendo += v; cntVenc++; lastVenc = rf.entidade || nf.entidade; }
       else                                     { pendente += v; cntPend++; }
     });
