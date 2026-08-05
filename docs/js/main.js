@@ -111,6 +111,19 @@ function showAdminSub(id, btnElement) {
 
   closeSidebar();
 
+  if (id === 'contratos') {
+    setTimeout(function() {
+      if (typeof contratosRenderTabela === 'function') contratosRenderTabela();
+      if (typeof contratosRenderKPIs === 'function') contratosRenderKPIs();
+      if (typeof contratosPopulateSelect === 'function') contratosPopulateSelect();
+    }, 0);
+  }
+  if (id === 'fornecedores') {
+    setTimeout(function() {
+      if (typeof adminFornRenderTabela === 'function') adminFornRenderTabela();
+      if (typeof adminFornRenderKPIs === 'function') adminFornRenderKPIs();
+    }, 0);
+  }
   if (id === 'organizacao') {
     setTimeout(function() { if (window.orgRenderTabela) window.orgRenderTabela(); }, 0);
   }
