@@ -766,7 +766,7 @@ window.atualizarKPIsCreditos = function(listaRFs) {
     else if (r.status === 'vencido')    { vencido  += v; }
     else if (r.status === 'inconsistencia') { inconsist += v; }
   });
-  var total = aprop + naoAprop;
+  var total = aprop + naoAprop + emRisco + vencido + inconsist;
   var fmt = function(v) {
     if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
     if (v >= 1e3) return 'R$ ' + Math.round(v / 1e3) + 'K';
@@ -796,6 +796,7 @@ window.atualizarPerdaAcumulada = function() {
   var countRFs = 0;
   var mesAno = (window._filtrosCreditos || {}).mesAno || '';
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
       if (mesAno && !(rf.data || '').startsWith(mesAno)) return;
       if (rf.status === 'vencido') {
