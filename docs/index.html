@@ -4323,12 +4323,14 @@ function _credIrListagem(){
   if(tabBtn&&!tabBtn.classList.contains('active'))tabBtn.click();
 }
 function creditosVerRegistrosRisco(){
-  var risco=creditos.filter(function(r){return r.status==="em_risco";});
-  if(!risco.length)return;
-  // filtra a grid principal para mostrar todos os registros em risco (todas as empresas)
+  // Navega para o módulo de créditos
+  var navBtn = document.querySelector('.nav-btn[onclick*="creditos"]');
+  if(navBtn) showView('creditos', navBtn);
+  // Aplica filtro em_risco e vai para a aba Listagem
   creditosFiltroStatus="em_risco";
   creditosFiltroForn=null;
   creditosRenderTabela();
+  var risco=creditos.filter(function(r){return r.status==="em_risco";});
   var totalRisco=risco.reduce(function(s,r){return s+r.cred;},0);
   var ranking=creditosAgruparPorEmpresa(risco);
   var chip=document.getElementById("creditos-filtro-chip");
@@ -4336,26 +4338,10 @@ function creditosVerRegistrosRisco(){
   if(lbl)lbl.textContent="Em risco — "+ranking.length+" empresa(s) · "+ff(totalRisco);
   if(chip)chip.style.display="flex";
   _credIrListagem();
-  var tcrd=document.getElementById("t-creditos");
-  if(tcrd)tcrd.closest(".tcrd").scrollIntoView({behavior:"smooth",block:"center"});
-  // relatório detalhado: principais empresas e volumes financeiros envolvidos
-  var b='<div style="font-size:12px;color:var(--txt2);margin-bottom:16px;line-height:1.6">Créditos com vencimento próximo (art. 48 LC 214/2025), por empresa envolvida.</div>';
-  b+='<div class="twrap"><table style="font-size:12px"><thead><tr>'
-    +'<th>#</th><th>Empresa</th><th>CNPJ</th><th class="r">Volume em risco</th><th class="r">% do total</th><th>Documentos</th></tr></thead><tbody>';
-  ranking.forEach(function(r,i){
-    var forn=fornecedores.find(function(f){return f.nome===r.forn;});
-    var pct=totalRisco?((r.total/totalRisco)*100).toFixed(1):"0.0";
-    b+='<tr><td class="mono" style="color:var(--txt3)">'+(i+1)+'</td>'
-      +'<td style="font-weight:600">'+r.forn+'</td>'
-      +'<td class="mono" style="font-size:11px;color:var(--txt2)">'+(forn?forn.cnpj:"—")+'</td>'
-      +'<td class="r mono" style="color:var(--amber);font-weight:700">'+ff(r.total)+'</td>'
-      +'<td class="r mono" style="color:var(--txt2)">'+pct+'%</td>'
-      +'<td style="font-size:11px;color:var(--txt2)">'+r.docs.map(function(d){return d.nf;}).join(", ")+'</td></tr>';
-  });
-  b+='</tbody></table></div>';
-  b+='<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px">'
-    +'<span style="color:var(--txt2)">Total geral em risco</span><span class="mono" style="color:var(--amber);font-weight:700">'+ff(totalRisco)+'</span></div>';
-  openApurModal('Créditos em Risco — Empresas envolvidas',b);
+  setTimeout(function(){
+    var tcrd=document.getElementById("t-creditos");
+    if(tcrd)tcrd.closest(".tcrd").scrollIntoView({behavior:"smooth",block:"center"});
+  },100);
 }
 function creditosLimparFiltro(){
   creditosFiltroForn=null;

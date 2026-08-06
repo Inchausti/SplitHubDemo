@@ -1891,11 +1891,23 @@ window.conciliacaoInit = function() {
 
 window.creditosIrParaInconsistencias = function() {
   var btn = document.getElementById('subnav-inconsist-lista');
-  if (typeof showInconsistSub === 'function' && btn) {
-    showInconsistSub('lista', btn);
+  if (typeof showInconsistSub === 'function') {
+    showInconsistSub('lista', btn || document.getElementById('nav-inconsist-btn'));
   }
-  try { if (typeof inconsistRenderTabela === 'function') inconsistRenderTabela(); } catch(e) {}
-  try { window.renderizarRFsInconsistencias(); } catch(e) {}
+  setTimeout(function() {
+    try { if (typeof inconsistRenderTabela === 'function') inconsistRenderTabela(); } catch(e) {}
+    try { window.renderizarRFsInconsistencias(); } catch(e) {}
+    // Expande o painel de filtros para evidenciar os filtros ativos
+    var filtroCorpo = document.getElementById('inc-rf-filtro-corpo');
+    var toggleIcon  = document.getElementById('inc-rf-toggle-icon');
+    if (filtroCorpo && filtroCorpo.style.display === 'none') {
+      filtroCorpo.style.display = 'block';
+      if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+    }
+    // Rola até a tabela
+    var tabela = document.getElementById('t-inc-rfs');
+    if (tabela) tabela.closest('.tcrd').scrollIntoView({behavior:'smooth', block:'start'});
+  }, 100);
 };
 
 // ============================================================
