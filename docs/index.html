@@ -4739,17 +4739,26 @@ function svgLine(id,datasets,labels,H,opts){
   if(opts&&opts.min!==undefined){minV=opts.min;maxV=opts.max;}
   else{var all=[];datasets.forEach(function(d){all=all.concat(d.data);});minV=Math.min.apply(null,all);maxV=Math.max.apply(null,all);}
   var rng=maxV-minV||1;
-  function xp(i){return Math.round(padL+(i/(n-1))*plotW);}
+  function xp(i){return Math.round(padL+(i/(n-1||1))*plotW);}
   function yp(v){return Math.round(padT+(1-(v-minV)/rng)*plotH);}
-  var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block">';
+  function fv(v){return v>=1?v.toFixed(2).replace('.',',')+'M':v>=0.001?Math.round(v*1000)+'K':'0';}
+  var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block;overflow:visible">';
   labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
   datasets.forEach(function(ds){
     var pts=ds.data.map(function(v,i){return xp(i)+','+yp(v);}).join(' ');
     if(ds.fill){var fp=pts+' '+xp(n-1)+','+(H-padB)+' '+padL+','+(H-padB);s+='<polygon points="'+fp+'" fill="'+ds.color+'" fill-opacity="0.15" stroke="none"/>';}
     var da=ds.dash?'stroke-dasharray="5 3"':(ds.dash2?'stroke-dasharray="2 4"':'');
     s+='<polyline points="'+pts+'" fill="none" stroke="'+ds.color+'" stroke-width="'+(ds.w||2)+'" '+da+' stroke-linejoin="round" stroke-linecap="round"/>';
-    if(ds.dots){ds.data.forEach(function(v,i){s+='<circle cx="'+xp(i)+'" cy="'+yp(v)+'" r="3" fill="'+ds.color+'"/>';});}
+    if(ds.dots){ds.data.forEach(function(v,i){s+='<circle cx="'+xp(i)+'" cy="'+yp(v)+'" r="3.5" fill="'+ds.color+'" pointer-events="none"/>';});}
   });
+  // coluna invisível por ponto — tooltip ao passar o mouse
+  var zW=Math.max(16,Math.floor(plotW/(n||1)));
+  for(var ci=0;ci<n;ci++){
+    var tp=[labels[ci]];
+    datasets.forEach(function(ds){tp.push(ds.color,ds.label||'Valor',fv(ds.data[ci]||0));});
+    var enc=tp.join('|').replace(/'/g,'&apos;');
+    s+='<rect x="'+(xp(ci)-Math.floor(zW/2))+'" y="'+padT+'" width="'+zW+'" height="'+plotH+'" fill="transparent" style="cursor:crosshair" onmousemove="_svgTipShow(event,\''+enc+'\')" onmouseleave="_svgTipHide()"/>';
+  }
   s+='</svg>';
   el.style.cssText='display:block;width:100%';
   el.innerHTML=s;
