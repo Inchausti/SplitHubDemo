@@ -1555,26 +1555,21 @@ function _concBuildLista(filtroMes) {
     var ibsInc = ibsRF && ibsRF.status === 'inconsistencia';
     var cbsInc = cbsRF && cbsRF.status === 'inconsistencia';
 
+    // Etapa 2 avalia ao nível de RF, independente do status de apuração
+    var paidCount = (ibsPago ? 1 : 0) + (cbsPago ? 1 : 0);
+    var incCount  = (ibsInc  ? 1 : 0) + (cbsInc  ? 1 : 0);
     var statusFin;
-    var comprovante = false;
-    var proxAcao;
-    if (statusApur !== 'confirmado') {
-      // Etapa 2 bloqueada enquanto Etapa 1 não estiver confirmada
-      statusFin = 'bloqueado';
-      proxAcao = statusApur === 'divergente'
-        ? 'Resolver divergência de apuração'
-        : 'Aguardar confirmação de apuração';
-    } else {
-      if (ibsInc || cbsInc)       statusFin = 'inconsistente';
-      else if (ibsPago && cbsPago) statusFin = 'completo';
-      else if (ibsPago || cbsPago) statusFin = 'parcial';
-      else                         statusFin = 'pendente';
-      comprovante = ibsPago && cbsPago;
-      proxAcao = statusFin === 'completo'     ? '—'
-        : statusFin === 'parcial'             ? 'Quitar imposto pendente'
-        : statusFin === 'pendente'            ? 'Emitir guia DARF/IBS'
-        : 'Resolver inconsistência';
-    }
+    if (paidCount === 2 && incCount === 0)      statusFin = 'completo';
+    else if (paidCount >= 1 && incCount >= 1)   statusFin = 'parcial';
+    else if (paidCount === 1 && incCount === 0) statusFin = 'parcial';
+    else if (incCount > 0)                      statusFin = 'inconsistente';
+    else                                        statusFin = 'pendente';
+
+    var comprovante = ibsPago && cbsPago;
+    var proxAcao = statusFin === 'completo'     ? '—'
+      : statusFin === 'parcial'                 ? 'Quitar imposto pendente'
+      : statusFin === 'inconsistente'           ? 'Resolver inconsistência RF'
+      : 'Emitir guia DARF/IBS';
 
     result.push({
       nf: nf, idx: idx,
@@ -1649,12 +1644,13 @@ function _concRFDetail(nf, ibsRF, cbsRF) {
 }
 
 function _apurBadge(s) {
-  var map = {confirmado:'var(--green)',divergente:'var(--amber)',pendente:'#8B5CF6'};
-  return '<span style="background:'+( map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+s+'</span>';
+  var map = {confirmado:'var(--green)',divergente:'var(--red)',pendente:'var(--amber)'};
+  var lbl = {confirmado:'Conciliado',divergente:'Não conciliado',pendente:'Pendente'};
+  return '<span style="background:'+(map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+(lbl[s]||s)+'</span>';
 }
 function _finBadge(s) {
-  var map = {completo:'var(--green)',parcial:'var(--blue)',pendente:'#8B5CF6',inconsistente:'var(--red)',bloqueado:'#6B7280'};
-  var lbl = {completo:'Conciliado',parcial:'Parcial',pendente:'Pendente',inconsistente:'Inconsistente',bloqueado:'Bloqueado'};
+  var map = {completo:'var(--green)',parcial:'var(--blue)',pendente:'var(--amber)',inconsistente:'var(--red)'};
+  var lbl = {completo:'Conciliado',parcial:'Parcial',pendente:'Pendente',inconsistente:'Não conciliado'};
   return '<span style="background:'+(map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+(lbl[s]||s)+'</span>';
 }
 function _rfStatusBadge(rf) {
