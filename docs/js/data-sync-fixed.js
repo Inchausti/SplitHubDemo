@@ -766,7 +766,7 @@ window.atualizarKPIsCreditos = function(listaRFs) {
     else if (r.status === 'vencido')    { vencido  += v; }
     else if (r.status === 'inconsistencia') { inconsist += v; }
   });
-  var total = aprop + naoAprop + emRisco + vencido + inconsist;
+  var total = aprop + naoAprop;
   var fmt = function(v) {
     if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
     if (v >= 1e3) return 'R$ ' + Math.round(v / 1e3) + 'K';
