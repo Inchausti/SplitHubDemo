@@ -1606,18 +1606,26 @@ function _concRFDetail(nf, ibsRF, cbsRF) {
       + '<div style="font-size:11px;color:var(--txt3)">Sem RF vinculado</div></div>';
     var sc = stColor[rf.status] || '#A7A8AA';
     var pago = rf.dataPagamento && rf.dataPagamento !== '—';
-    return '<div style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-left:3px solid ' + sc + ';border-radius:8px;padding:12px 14px;min-width:220px">'
+    var rfId = rf.id || '—';
+    var canOpen = rfId !== '—' && window._rfIndex && window._rfIndex[rfId];
+    var clickAttr = canOpen
+      ? 'onclick="event.stopPropagation();if(window.abrirDetalheRF)window.abrirDetalheRF(\'' + rfId + '\')" style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-left:3px solid ' + sc + ';border-radius:8px;padding:12px 14px;min-width:220px;cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor=\'' + sc + '\'" onmouseleave="this.style.borderColor=\'var(--border)\'"'
+      : 'style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-left:3px solid ' + sc + ';border-radius:8px;padding:12px 14px;min-width:220px"';
+    return '<div ' + clickAttr + '>'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
       + '<span style="font-size:10px;font-weight:700;color:' + sc + ';text-transform:uppercase;letter-spacing:.07em">' + label + '</span>'
       + '<span style="background:' + sc + ';color:#fff;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700">' + (rf.status || '—') + '</span>'
       + '</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
-      + '<span style="color:var(--txt3)">ID RF</span><span style="color:var(--txt1);font-family:monospace">' + (rf.id || '—') + '</span>'
+      + '<span style="color:var(--txt3)">ID RF</span>'
+      + '<span style="color:#3B82F6;font-family:monospace;font-weight:700' + (canOpen ? ';text-decoration:underline dotted' : '') + '">' + rfId + '</span>'
       + '<span style="color:var(--txt3)">Valor</span><span style="color:var(--txt1);font-weight:600">' + fmtV(rf.valor) + '</span>'
       + '<span style="color:var(--txt3)">Data RF</span><span style="color:var(--txt2)">' + (rf.data || '—') + '</span>'
       + '<span style="color:var(--txt3)">Pagamento</span><span style="color:' + (pago ? '#22C55E' : 'var(--txt3)') + ';font-weight:' + (pago ? '600' : '400') + '">' + (pago ? rf.dataPagamento : 'Pendente') + '</span>'
       + (rf.inconsistencia ? ('<span style="color:var(--txt3)">Inconsistência</span><span style="color:#F43F5E;font-size:10px">' + rf.inconsistencia + '</span>') : '')
-      + '</div></div>';
+      + '</div>'
+      + (canOpen ? '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:#3B82F6;font-weight:600">Ver detalhes do RF →</div>' : '')
+      + '</div>';
   }
   var nfTotal = 'R$ ' + ((nf.valorTotal||0)/1).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   return '<div style="padding:10px 16px 14px">'
