@@ -1556,25 +1556,16 @@ function _concBuildLista(filtroMes) {
     var cbsInc = cbsRF && cbsRF.status === 'inconsistencia';
 
     var statusFin;
-    var comprovante = false;
-    var proxAcao;
-    if (statusApur !== 'confirmado') {
-      // Etapa 2 bloqueada enquanto Etapa 1 não estiver confirmada
-      statusFin = 'bloqueado';
-      proxAcao = statusApur === 'divergente'
-        ? 'Resolver divergência de apuração'
-        : 'Aguardar confirmação de apuração';
-    } else {
-      if (ibsInc || cbsInc)       statusFin = 'inconsistente';
-      else if (ibsPago && cbsPago) statusFin = 'completo';
-      else if (ibsPago || cbsPago) statusFin = 'parcial';
-      else                         statusFin = 'pendente';
-      comprovante = ibsPago && cbsPago;
-      proxAcao = statusFin === 'completo'     ? '—'
-        : statusFin === 'parcial'             ? 'Quitar imposto pendente'
-        : statusFin === 'pendente'            ? 'Emitir guia DARF/IBS'
-        : 'Resolver inconsistência';
-    }
+    if (ibsInc || cbsInc)       statusFin = 'inconsistente';
+    else if (ibsPago && cbsPago) statusFin = 'completo';
+    else if (ibsPago || cbsPago) statusFin = 'parcial';
+    else                         statusFin = 'pendente';
+
+    var comprovante = ibsPago && cbsPago;
+    var proxAcao = statusFin === 'completo'     ? '—'
+      : statusFin === 'parcial'                 ? 'Quitar imposto pendente'
+      : statusFin === 'pendente'                ? 'Emitir guia DARF/IBS'
+      : 'Resolver inconsistência';
 
     result.push({
       nf: nf, idx: idx,
@@ -1653,8 +1644,8 @@ function _apurBadge(s) {
   return '<span style="background:'+( map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+s+'</span>';
 }
 function _finBadge(s) {
-  var map = {completo:'var(--green)',parcial:'var(--blue)',pendente:'#8B5CF6',inconsistente:'var(--red)',bloqueado:'#6B7280'};
-  var lbl = {completo:'Conciliado',parcial:'Parcial',pendente:'Pendente',inconsistente:'Inconsistente',bloqueado:'Bloqueado'};
+  var map = {completo:'var(--green)',parcial:'var(--blue)',pendente:'#8B5CF6',inconsistente:'var(--red)'};
+  var lbl = {completo:'Conciliado',parcial:'Parcial',pendente:'Pendente',inconsistente:'Inconsistente'};
   return '<span style="background:'+(map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+(lbl[s]||s)+'</span>';
 }
 function _rfStatusBadge(rf) {
@@ -1768,19 +1759,6 @@ function _concUnifiedRender() {
       + '</div></div>';
   }
   function stageFin(r) {
-    var blocked = r.statusFin === 'bloqueado';
-    var borderColor = blocked ? '#6B7280' : '#10B981';
-    var titleColor  = blocked ? '#6B7280' : '#10B981';
-    if (blocked) {
-      return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid ' + borderColor + ';border-radius:8px;padding:10px 12px;min-width:200px;opacity:.6">'
-        + '<div style="font-size:10px;font-weight:700;color:' + titleColor + ';text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 2 — Conciliação Financeira</div>'
-        + '<div style="display:flex;align-items:center;gap:8px;padding:10px 0">'
-        + '<span style="font-size:16px">🔒</span>'
-        + '<div>'
-        + '<div style="font-size:12px;font-weight:600;color:var(--txt2)">Etapa bloqueada</div>'
-        + '<div style="font-size:11px;color:var(--txt3);margin-top:2px">' + r.proxAcao + '</div>'
-        + '</div></div></div>';
-    }
     var nf = r.nf;
     var ibsVal = r.ibsRF ? fmtV(r.ibsRF.valor || nf.ibs || 0) : (nf.ibs ? fmtV(nf.ibs) : '—');
     var cbsVal = r.cbsRF ? fmtV(r.cbsRF.valor || nf.cbs || 0) : (nf.cbs ? fmtV(nf.cbs) : '—');
@@ -1789,8 +1767,8 @@ function _concUnifiedRender() {
     var ibsSt = r.ibsRF ? (r.ibsRF.status || '—') : '—';
     var cbsSt = r.cbsRF ? (r.cbsRF.status || '—') : '—';
     var compr = r.comprovante ? '<span style="color:var(--green);font-weight:600">✓ Recebido</span>' : '<span style="color:var(--txt3)">Aguardando</span>';
-    return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid ' + borderColor + ';border-radius:8px;padding:10px 12px;min-width:200px">'
-      + '<div style="font-size:10px;font-weight:700;color:' + titleColor + ';text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 2 — Conciliação Financeira</div>'
+    return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid #10B981;border-radius:8px;padding:10px 12px;min-width:200px">'
+      + '<div style="font-size:10px;font-weight:700;color:#10B981;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 2 — Conciliação Financeira</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
       + '<span style="color:var(--txt3)">IBS</span><span style="font-weight:600">' + ibsVal + '</span>'
       + '<span style="color:var(--txt3)">Status IBS</span><span><span style="background:' + ibsSc + ';color:#fff;font-size:9px;padding:2px 6px;border-radius:8px">' + ibsSt + '</span></span>'
