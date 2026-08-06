@@ -6397,3 +6397,221 @@ function _automToast(msg, cor) {
   document.body.appendChild(t);
   setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3000);
 }
+
+// ============================================================
+// RAG — Assistente Tributário com BM25 + Claude API
+// ============================================================
+
+// ── BM25 ────────────────────────────────────────────────────
+window._rag = (function() {
+  var k1 = 1.5, b = 0.75;
+
+  function tok(text) {
+    return (text || '').toLowerCase()
+      .replace(/[^a-z0-9áéíóúãõâêôçàü\s]/g, ' ')
+      .split(/\s+/)
+      .filter(function(t) { return t.length > 1; });
+  }
+
+  function buildIndex(docs) {
+    var N = docs.length || 1;
+    var tfs = docs.map(function(d) {
+      var terms = tok(d.text);
+      var tf = {};
+      terms.forEach(function(t) { tf[t] = (tf[t] || 0) + 1; });
+      return { tf: tf, len: terms.length };
+    });
+    var df = {};
+    tfs.forEach(function(d) {
+      Object.keys(d.tf).forEach(function(t) { df[t] = (df[t] || 0) + 1; });
+    });
+    var avgdl = tfs.reduce(function(s, d) { return s + d.len; }, 0) / N;
+
+    return function score(query, idx) {
+      var d = tfs[idx];
+      return tok(query).reduce(function(acc, t) {
+        var f = d.tf[t] || 0;
+        if (!f) return acc;
+        var idf = Math.log((N - (df[t] || 0) + 0.5) / ((df[t] || 0) + 0.5) + 1);
+        var tf_n = (f * (k1 + 1)) / (f + k1 * (1 - b + b * d.len / avgdl));
+        return acc + idf * tf_n;
+      }, 0);
+    };
+  }
+
+  return { buildIndex: buildIndex };
+})();
+
+window._ragDocs  = [];
+window._ragScore = null;
+
+// ── Construção do índice ─────────────────────────────────────
+window.ragBuildIndex = function() {
+  var docs = [];
+
+  // 1. Base de conhecimento tributário (legislação)
+  [
+    { id:'kb-split',     src:'LC 214/2025 arts. 47–52',           text:'split payment mecanismo retenção automática tributo IBS CBS instituição financeira PIX cartão boleto recolhimento transferência fiscal TF comprador fornecedor pagamento automático' },
+    { id:'kb-aliquota',  src:'LC 214/2025 arts. 54–89',           text:'alíquota CBS 8.8% IBS 0.1% imposto seletivo IS percentual taxa reforma tributária 2026 2033 cálculo base' },
+    { id:'kb-credito',   src:'LC 214/2025 arts. 44–55',           text:'crédito tributário apropriar apropriação não-cumulatividade glosa perda crédito fornecedor pagamento confirmado plataforma centralizada ressarcimento em risco vencido inconsistência' },
+    { id:'kb-rad',       src:'LC 214/2025 art. 51; Decreto 12.955 arts. 12–15', text:'RAD recolhimento pelo adquirente substituto ente público regime especial B2B adquirente retém recolhe fornecedor' },
+    { id:'kb-cronograma',src:'LC 214/2025 arts. 348–421',         text:'cronograma implementação transição 2026 2027 2028 2033 split payment obrigatório fase PIS COFINS ISS ICMS extinção prazo vigência quando' },
+    { id:'kb-marketplace',src:'LC 214/2025 arts. 38–42',          text:'marketplace plataforma digital e-commerce intermediário responsabilidade solidária adquirente serviço pagamento estrangeiro' },
+    { id:'kb-lc214',     src:'LC 214/2025',                       text:'lei complementar 214 2025 reforma tributária IBS CBS IS imposto bens serviços contribuição seletivo não-cumulatividade destino origem' },
+    { id:'kb-decreto',   src:'Decreto 12.955/2026',               text:'decreto 12.955 2026 regulamentação split payment fases obrigações instituições pagamento plataforma centralizada CG-IBS contingência RAD' },
+    { id:'kb-plataforma',src:'LC 214/2025 arts. 26–35',           text:'plataforma centralizada CG-IBS comitê gestor validação RF TF transferência fiscal confirmação crédito distribuição estados municípios hub tecnológico' },
+    { id:'kb-nfe',       src:'LC 214/2025',                       text:'nota fiscal NF-e NFC-e DF-e documento fiscal registro fiscal RF ciclo conciliação trifásica divergência RF TF inconsistência' },
+    { id:'kb-inconsist', src:'Dados do projeto',                  text:'inconsistência RF registro fiscal divergência alíquota valor imposto base cálculo CNPJ não localizado contrato ausente período inválido vencido em risco gestão regularizar contestar' },
+  ].forEach(function(d) { docs.push({ id: d.id, src: d.src, type: 'kb', text: d.text }); });
+
+  // 2. Chunks de NFs ao vivo
+  var nfLista = window.nfListaFiltradaGlobal || [];
+  nfLista.forEach(function(nf) {
+    var rfs = nf.registrosFiscais || [];
+    var rfInc   = rfs.filter(function(r) { return r.status === 'inconsistencia'; });
+    var rfRisco = rfs.filter(function(r) { return r.status === 'em_risco' || r.status === 'vencido'; });
+    var rfAprop = rfs.filter(function(r) { return r.status === 'apropriado' || r.status === 'utilizado'; });
+
+    docs.push({
+      id:   'nf-' + nf.numero,
+      src:  'Dados ao vivo · NF ' + nf.numero,
+      type: 'nf',
+      text: [
+        'NF ' + (nf.numero || ''), 'nota fiscal ' + (nf.numero || ''),
+        'fornecedor ' + (nf.entidade || ''), 'empresa ' + (nf.entidade || ''),
+        'CNPJ ' + (nf.cnpj || ''),
+        'data ' + (nf.data || ''), 'período ' + (nf.data || '').substring(0,7),
+        'valor ' + (nf.valorTotal || nf.valor || 0),
+        'tipo ' + (nf.tipo || ''),
+        'método pagamento ' + (nf.metodoPagamento || ''),
+        rfInc.length   ? rfInc.length   + ' inconsistência inconsistente ' + rfInc.map(function(r){return r.inconsistencia||'';}).join(' ') : '',
+        rfRisco.length ? rfRisco.length + ' em risco vencido crédito risco' : '',
+        rfAprop.length ? rfAprop.length + ' apropriado crédito aprovado utilizado' : '',
+      ].filter(Boolean).join(' '),
+      meta: { numero: nf.numero, entidade: nf.entidade, cnpj: nf.cnpj, data: nf.data,
+              valor: nf.valorTotal || nf.valor || 0, tipo: nf.tipo,
+              rfInc: rfInc.length, rfRisco: rfRisco.length, rfAprop: rfAprop.length,
+              metodo: nf.metodoPagamento }
+    });
+
+    // chunk por RF inconsistente
+    rfInc.forEach(function(rf) {
+      docs.push({
+        id:   'rf-' + rf.id,
+        src:  'Dados ao vivo · RF ' + rf.id + ' (NF ' + nf.numero + ')',
+        type: 'rf',
+        text: 'RF ' + rf.id + ' inconsistência ' + (rf.inconsistencia || '') +
+              ' NF ' + nf.numero + ' fornecedor ' + (nf.entidade || '') +
+              ' CNPJ ' + (nf.cnpj || '') + ' tipo fiscal ' + (rf.tipoFiscal || '') +
+              ' valor ' + (rf.valor || 0) + ' data ' + (rf.data || '') +
+              ' divergência erro problema inconsistente',
+        meta: { rfId: rf.id, nfNum: nf.numero, entidade: nf.entidade,
+                tipoFiscal: rf.tipoFiscal, valor: rf.valor,
+                inconsistencia: rf.inconsistencia, data: rf.data }
+      });
+    });
+  });
+
+  window._ragDocs  = docs;
+  window._ragScore = window._rag.buildIndex(docs);
+  console.log('[RAG] índice: ' + docs.length + ' docs (' + nfLista.length + ' NFs)');
+  var badge = document.getElementById('rag-index-badge');
+  if (badge) badge.textContent = docs.length + ' documentos indexados (' + nfLista.length + ' NFs)';
+};
+
+// ── Retrieval ────────────────────────────────────────────────
+window.ragRetrieve = function(query, topK) {
+  topK = topK || 6;
+  if (!window._ragScore) window.ragBuildIndex();
+  return window._ragDocs
+    .map(function(doc, i) { return { score: window._ragScore(query, i), doc: doc }; })
+    .filter(function(r) { return r.score > 0.01; })
+    .sort(function(a, b) { return b.score - a.score; })
+    .slice(0, topK);
+};
+
+// ── Claude API (streaming) ───────────────────────────────────
+window._ragKey = '';
+
+window.ragCallClaude = async function(systemPrompt, history, userMsg, onChunk) {
+  var key = window._ragKey;
+  if (!key) throw new Error('API key não configurada');
+
+  var messages = history.slice(-8).concat([{ role: 'user', content: userMsg }]);
+
+  var resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1024,
+      stream: true,
+      system: systemPrompt,
+      messages: messages
+    })
+  });
+
+  if (!resp.ok) {
+    var err = await resp.json().catch(function() { return { error: { message: 'Erro ' + resp.status } }; });
+    throw new Error((err.error && err.error.message) || 'Erro ' + resp.status);
+  }
+
+  var reader = resp.body.getReader();
+  var decoder = new TextDecoder();
+  var full = '';
+  while (true) {
+    var _ref = await reader.read();
+    if (_ref.done) break;
+    var lines = decoder.decode(_ref.value, { stream: true }).split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (!line.startsWith('data: ')) continue;
+      var data = line.slice(6);
+      if (data === '[DONE]') continue;
+      try {
+        var ev = JSON.parse(data);
+        if (ev.type === 'content_block_delta' && ev.delta && ev.delta.text) {
+          full += ev.delta.text;
+          if (onChunk) onChunk(full);
+        }
+      } catch(e) {}
+    }
+  }
+  return full;
+};
+
+// ── Atualizar painel de fontes com retrieval ─────────────────
+window.ragShowSources = function(retrieved) {
+  var panel = document.getElementById('rag-retrieved-sources');
+  if (!panel) return;
+  if (!retrieved || !retrieved.length) { panel.style.display = 'none'; return; }
+
+  var typeLbl = { kb: 'Legislação', nf: 'Dados NF', rf: 'Dados RF' };
+  var typeClr = { kb: 'var(--teal)', nf: 'var(--blue)', rf: 'var(--amber)' };
+  var html = '<div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Fontes recuperadas</div>';
+  retrieved.forEach(function(r, i) {
+    var c = typeClr[r.doc.type] || 'var(--txt2)';
+    var l = typeLbl[r.doc.type] || r.doc.type;
+    html += '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">'
+      + '<span style="flex-shrink:0;font-size:10px;font-weight:700;background:rgba(0,0,0,.2);color:' + c + ';border:1px solid ' + c + '44;border-radius:4px;padding:2px 6px;margin-top:1px">[' + (i+1) + '] ' + l + '</span>'
+      + '<span style="font-size:11px;color:var(--txt2);line-height:1.4">' + escHtml(r.doc.src) + '</span>'
+      + '</div>';
+  });
+  panel.innerHTML = html;
+  panel.style.display = 'block';
+};
+
+// Reconstrói índice quando dados reais chegarem
+(function() {
+  var _t = setInterval(function() {
+    if (window.nfListaFiltradaGlobal && window.nfListaFiltradaGlobal.length > 0) {
+      clearInterval(_t);
+      window.ragBuildIndex();
+    }
+  }, 800);
+})();

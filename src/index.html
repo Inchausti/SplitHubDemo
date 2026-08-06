@@ -1480,47 +1480,54 @@ tr:hover td{background:rgba(73,197,177,.02)}
     <div class="sources-panel">
       <div class="sources-panel-title">
         <div class="ai-dot"></div>
-        Fontes disponíveis
+        Assistente RAG
+      </div>
+
+      <!-- API Key config -->
+      <div id="rag-key-section" style="margin-bottom:14px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Anthropic API Key</div>
+        <div id="rag-key-status" style="display:none;font-size:11px;color:var(--teal);margin-bottom:6px">✓ Chave configurada — Claude ativo</div>
+        <div style="display:flex;gap:6px">
+          <input id="rag-key-input" type="password" placeholder="sk-ant-..." autocomplete="off"
+            style="flex:1;min-width:0;background:var(--inp,var(--card));border:1px solid var(--border);border-radius:5px;padding:6px 8px;font-size:11px;color:var(--txt1);font-family:monospace;outline:none"
+            onkeydown="if(event.key==='Enter')ragSaveKey()"/>
+          <button onclick="ragSaveKey()" style="background:var(--teal);color:#0B1513;border:none;border-radius:5px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Salvar</button>
+        </div>
+        <div style="font-size:10px;color:var(--txt3);margin-top:6px">Chave fica na sessão — não é armazenada.</div>
+      </div>
+
+      <!-- Fontes recuperadas pelo RAG -->
+      <div id="rag-retrieved-sources" style="display:none;margin-bottom:14px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:8px"></div>
+
+      <!-- Fontes estáticas indexadas -->
+      <div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Base indexada</div>
+
+      <div class="source-item">
+        <div class="source-name">Dados ao vivo do projeto</div>
+        <div class="source-desc">NFs, RFs, inconsistências e contratos — indexados via BM25 em tempo real.</div>
+        <span id="rag-index-badge" style="font-size:10px;color:var(--teal);font-weight:600">Aguardando dados…</span>
       </div>
 
       <div class="source-item">
         <div class="source-name">Lei Complementar 214/2025</div>
-        <div class="source-desc">IBS, CBS e IS — lei base da reforma tributária. Indexada integralmente.</div>
-        <a class="source-link" href="https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm" target="_blank" rel="noopener">Acessar documento →</a>
+        <div class="source-desc">IBS, CBS e IS — lei base da reforma tributária.</div>
+        <a class="source-link" href="https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm" target="_blank" rel="noopener">Acessar →</a>
       </div>
 
       <div class="source-item">
         <div class="source-name">Decreto 12.955/2026</div>
-        <div class="source-desc">Regulamentação completa da LC 214 e split payment em duas etapas.</div>
-        <a class="source-link" href="https://www.in.gov.br/web/dou/-/decreto-n-12.955-de-29-de-abril-de-2026-702415229" target="_blank" rel="noopener">Acessar documento →</a>
+        <div class="source-desc">Regulamentação da LC 214 e split payment.</div>
+        <a class="source-link" href="https://www.in.gov.br/web/dou/-/decreto-n-12.955-de-29-de-abril-de-2026-702415229" target="_blank" rel="noopener">Acessar →</a>
       </div>
 
       <div class="source-item pending">
-        <div class="source-name">Nota Técnica RFB 2025.001</div>
-        <div class="source-desc">Receita Federal — em indexação</div>
-        <span class="source-tag">Em breve</span>
-      </div>
-
-      <div class="source-item pending">
-        <div class="source-name">Nota Técnica RFB 2025.002</div>
-        <div class="source-desc">Receita Federal — em indexação</div>
-        <span class="source-tag">Em breve</span>
-      </div>
-
-      <div class="source-item pending">
-        <div class="source-name">Nota Técnica RFB 2026.001</div>
-        <div class="source-desc">Receita Federal — em indexação</div>
-        <span class="source-tag">Em breve</span>
-      </div>
-
-      <div class="source-item pending">
-        <div class="source-name">Nota Técnica RFB 2026.004</div>
+        <div class="source-name">Notas Técnicas RFB 2025–2026</div>
         <div class="source-desc">Receita Federal — em indexação</div>
         <span class="source-tag">Em breve</span>
       </div>
 
       <div class="disclaimer-box">
-        As respostas são baseadas em fontes públicas e não substituem consultoria jurídica ou contábil.
+        As respostas são geradas por IA com base nos dados do projeto e fontes públicas. Não substituem consultoria jurídica.
       </div>
     </div>
   </div>
@@ -4903,11 +4910,25 @@ function toggleTheme(){
 var chatHistory=[];
 var chatSending=false;
 var CHAT_SUGGESTIONS=[
+  'Quais NFs têm inconsistências em aberto e qual o valor exposto?',
+  'Qual o total de crédito IBS+CBS em risco este período?',
+  'Quais fornecedores concentram mais RFs com inconsistência?',
   'Como o split payment afeta o recolhimento de IBS nas operações via marketplace?',
   'Quais são as alíquotas de CBS e IBS previstas na LC 214?',
-  'Qual o cronograma de implementação do split payment pelo Decreto 12.955?',
-  'O que muda para empresas com a adoção obrigatória do split payment em 2027?'
+  'Qual o cronograma de implementação do split payment pelo Decreto 12.955?'
 ];
+
+function ragSaveKey(){
+  var inp=document.getElementById('rag-key-input');
+  var key=(inp?inp.value:'').trim();
+  if(!key)return;
+  window._ragKey=key;
+  if(inp)inp.value='';
+  var st=document.getElementById('rag-key-status');
+  if(st){st.style.display='block';}
+  // rebuild index with latest data
+  if(window.ragBuildIndex)window.ragBuildIndex();
+}
 
 function clearChat(){
   chatHistory=[];
@@ -5052,7 +5073,6 @@ async function sendChatMessage(){
   chatSending=true;
   if(send){send.disabled=true;send.textContent='Aguardando...';send.classList.add('btn-loading');}
 
-  // Remove tela de boas-vindas na primeira mensagem
   var welcome=document.querySelector('.chat-welcome');
   if(welcome)welcome.remove();
 
@@ -5060,12 +5080,90 @@ async function sendChatMessage(){
   chatHistory.push({role:'user',content:text});
   showChatTyping();
 
-  await new Promise(function(resolve){setTimeout(resolve,900+Math.random()*600);});
+  // ── RAG pipeline ──────────────────────────────────────────
+  if(window._ragKey && window.ragRetrieve){
+    try{
+      // 1. Retrieve
+      var retrieved=window.ragRetrieve(text,6);
+      window.ragShowSources&&window.ragShowSources(retrieved);
 
-  removeChatTyping();
-  var response=getChatResponse(text);
-  appendChatMsg('assistant',response);
-  chatHistory.push({role:'assistant',content:response});
+      // 2. Montar contexto
+      var nfLista=window.nfListaFiltradaGlobal||[];
+      var rfIncTotal=0,nfIncTotal=0,valorRisco=0,valorAprop=0;
+      nfLista.forEach(function(nf){
+        var rfsInc=(nf.registrosFiscais||[]).filter(function(r){return r.status==='inconsistencia';});
+        var rfsRisco=(nf.registrosFiscais||[]).filter(function(r){return r.status==='em_risco'||r.status==='vencido';});
+        var rfsAprop=(nf.registrosFiscais||[]).filter(function(r){return r.status==='apropriado'||r.status==='utilizado';});
+        rfIncTotal+=rfsInc.length;
+        if(rfsInc.length)nfIncTotal++;
+        rfsRisco.forEach(function(r){valorRisco+=(r.valor||0);});
+        rfsAprop.forEach(function(r){valorAprop+=(r.valor||0);});
+      });
+      var fmtR=function(v){return v>=1e6?'R$ '+(v/1e6).toFixed(2).replace('.',',')+'M':v>=1e3?'R$ '+Math.round(v/1e3)+'K':'R$ '+v.toFixed(0);};
+      var resumo=[
+        'Total NFs indexadas: '+nfLista.length,
+        'NFs com inconsistência: '+nfIncTotal,
+        'RFs com inconsistência: '+rfIncTotal,
+        'Crédito em risco (em_risco+vencido): '+fmtR(valorRisco),
+        'Crédito apropriado/utilizado: '+fmtR(valorAprop),
+        'Período ativo: '+((window._dashMesesSelecionados||['2026-04']).join(', ')),
+      ].join('\n');
+
+      var ctxChunks=retrieved.map(function(r,i){
+        return '['+(i+1)+'] Fonte: '+r.doc.src+'\n'+r.doc.text;
+      }).join('\n\n');
+
+      var systemPrompt='Você é o Assistente Tributário do SplitHub, especializado em IBS/CBS (LC 214/2025) e nos dados fiscais da Positivo Tecnologia.\n\n'
+        +'## Resumo dos dados ao vivo\n'+resumo+'\n\n'
+        +'## Trechos recuperados (BM25)\n'+ctxChunks+'\n\n'
+        +'## Instruções\n'
+        +'- Responda em português, citando a fonte entre colchetes quando relevante.\n'
+        +'- Para perguntas sobre NFs/RFs específicos, use os dados ao vivo acima.\n'
+        +'- Para perguntas sobre legislação, cite artigos da LC 214 ou do Decreto 12.955.\n'
+        +'- Seja preciso e direto. Use **negrito** para termos-chave.\n'
+        +'- Se não houver informação suficiente nos trechos, diga claramente.';
+
+      // 3. Streaming com Claude
+      removeChatTyping();
+      var bubble=null;
+      var msgs=document.getElementById('chat-messages');
+      var wrap=document.createElement('div');
+      wrap.className='msg-wrap assistant';
+      bubble=document.createElement('div');
+      bubble.className='msg-bubble assistant';
+      bubble.innerHTML='<span style="opacity:.4">▍</span>';
+      var tm=document.createElement('div');
+      tm.className='msg-time';
+      tm.textContent=chatNowTime();
+      wrap.appendChild(bubble);wrap.appendChild(tm);
+      msgs.appendChild(wrap);
+      msgs.scrollTop=msgs.scrollHeight;
+
+      var fullText=await window.ragCallClaude(systemPrompt,chatHistory.slice(0,-1),text,function(partial){
+        bubble.innerHTML=renderMd(partial)+'<span style="opacity:.4">▍</span>';
+        msgs.scrollTop=msgs.scrollHeight;
+      });
+      bubble.innerHTML=renderMd(fullText);
+      msgs.scrollTop=msgs.scrollHeight;
+      chatHistory.push({role:'assistant',content:fullText});
+
+    }catch(err){
+      removeChatTyping();
+      var errMsg='**Erro ao chamar Claude:** '+escHtml(err.message||String(err))+'\n\nVerifique se a API key está correta. Usando resposta local como fallback.';
+      appendChatMsg('assistant',errMsg);
+      chatHistory.push({role:'assistant',content:errMsg});
+    }
+  } else {
+    // Fallback: KB estática local
+    await new Promise(function(resolve){setTimeout(resolve,600+Math.random()*400);});
+    removeChatTyping();
+    var response=getChatResponse(text);
+    if(!window._ragKey){
+      response='⚠️ **Configure a API Key** no painel à direita para ativar respostas via Claude com RAG.\n\n---\n\n'+response;
+    }
+    appendChatMsg('assistant',response);
+    chatHistory.push({role:'assistant',content:response});
+  }
 
   chatSending=false;
   if(send){send.disabled=false;send.textContent='Enviar';send.classList.remove('btn-loading');}
@@ -5466,7 +5564,7 @@ fctRender();
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.js"></script>
-<script src="js/data-sync-fixed.js?v=54"></script>
+<script src="js/data-sync-fixed.js?v=56"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=6"></script>
 <script src="js/charts.js"></script>
