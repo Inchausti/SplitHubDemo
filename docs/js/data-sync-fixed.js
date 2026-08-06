@@ -1701,180 +1701,155 @@ window.atualizarEstatisticasConciliacao = function() {
   _concSetEl('pipe-fin-inc',  finInc);
   _concSetEl('pipe-pend',     finPend);
 
-  // Inicializa tabs
-  window._concApurFiltrada = lista.slice();
-  window._concFinFiltrada  = lista.slice();
-  window._concApurPag = 1;
-  window._concFinPag  = 1;
-  _concApurRender();
-  _concFinRender();
+  // Inicializa tab unificada
+  window._concUniFiltrada = lista.slice();
+  window._concUniPag = 1;
+  _concUnifiedRender();
 };
 
-function _concApurRender() {
-  var lista = window._concApurFiltrada || [];
-  var pag = window._concApurPag || 1;
-  var total = Math.ceil(lista.length / _concApurIpp) || 1;
+var _concUniIpp = 20;
+
+function _concUnifiedRender() {
+  var lista = window._concUniFiltrada || [];
+  var pag = window._concUniPag || 1;
+  var total = Math.ceil(lista.length / _concUniIpp) || 1;
   if (pag > total) pag = total;
-  window._concApurPag = pag;
-  var start = (pag - 1) * _concApurIpp;
-  var slice = lista.slice(start, start + _concApurIpp);
-  _concSetEl('apur-sub', lista.length + ' DFs');
-  _concSetEl('apur-pag-cur', pag);
-  _concSetEl('apur-pag-tot', total);
-  var prev = document.getElementById('apur-btn-prev');
-  var prox = document.getElementById('apur-btn-prox');
+  window._concUniPag = pag;
+  var start = (pag - 1) * _concUniIpp;
+  var slice = lista.slice(start, start + _concUniIpp);
+  _concSetEl('uni-sub', lista.length + ' DFs');
+  _concSetEl('uni-pag-cur', pag);
+  _concSetEl('uni-pag-tot', total);
+  var prev = document.getElementById('uni-btn-prev');
+  var prox = document.getElementById('uni-btn-prox');
   if (prev) { prev.disabled = pag <= 1; prev.style.opacity = pag <= 1 ? '.5' : '1'; }
   if (prox) { prox.disabled = pag >= total; prox.style.opacity = pag >= total ? '.5' : '1'; }
-  var tbody = document.getElementById('t-conc-apur');
+  var tbody = document.getElementById('t-conc-uni');
   if (!tbody) return;
-  if (!slice.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro encontrado.</td></tr>'; return; }
-  var html = '';
-  slice.forEach(function(r, ri) {
-    var nf = r.nf;
-    var rowId = 'capur-' + ri;
+  if (!slice.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro encontrado.</td></tr>';
+    return;
+  }
+  var fmtV = function(v) { return v ? 'R$ ' + (v/1).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; };
+  var stColor = {
+    apropriado:'#22C55E', utilizado:'#49C5B1', extinto:'#22C55E',
+    nao_apropriado:'#F59E0B', vencido:'#F43F5E', inconsistencia:'#F43F5E', em_risco:'#F59E0B'
+  };
+  function rfChip(rf, label) {
+    if (!rf) return '';
+    var rfId = rf.id || '—';
+    var canOpen = rfId !== '—' && window._rfIndex && window._rfIndex[rfId];
+    var click = canOpen ? 'onclick="event.stopPropagation();if(window.abrirDetalheRF)window.abrirDetalheRF(\'' + rfId + '\')" style="cursor:pointer"' : '';
+    return '<span ' + click + ' style="display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;font-family:monospace;color:var(--blue);background:rgba(59,130,246,.07)' + (canOpen ? ';cursor:pointer' : '') + '">'
+      + label + ' · ' + rfId + '</span>';
+  }
+  function stageApur(r) {
     var delta = r.deltaValor;
     var deltaStr = Math.abs(delta) < 1 ? '—' : (delta > 0 ? '+' : '') + _concFmt(delta);
-    var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? 'color:var(--amber)' : 'color:var(--red)') : 'color:var(--txt3)';
-    var tipoBadge = nf.tipo === 'entrada'
-      ? '<span style="color:var(--teal);font-size:10px;font-weight:700">' + (nf.tipoDF || 'ENTRADA') + '</span>'
-      : '<span style="color:var(--blue);font-size:10px;font-weight:700">' + (nf.tipoDF || 'SAÍDA') + '</span>';
-    var nfLabel = ((nf.tipoDF || '') + ' ' + (nf.numero || '')).trim() || '—';
-    var hasRF = r.ibsRF || r.cbsRF;
-    html += '<tr style="cursor:pointer" onclick="(function(el){el.nextElementSibling.style.display=el.nextElementSibling.style.display===\'none\'?\'table-row\':\'none\';})(this)">'
-      + '<td style="font-weight:600;color:var(--txt1);white-space:nowrap"><span style="color:var(--txt3);font-size:10px;margin-right:4px">' + (hasRF ? '▶' : '·') + '</span>' + nfLabel + '</td>'
-      + '<td>' + tipoBadge + '</td>'
-      + '<td style="color:var(--txt2)">' + (nf.entidade || '—') + '</td>'
-      + '<td style="font-family:monospace;font-size:11px;color:var(--txt3)">' + (nf.cnpj || '—') + '</td>'
-      + '<td class="r" style="font-family:monospace">' + _concFmt(r.valorDF) + '</td>'
-      + '<td class="r" style="font-family:monospace">' + _concFmt(r.valorGov) + '</td>'
-      + '<td class="r" style="font-family:monospace;' + deltaColor + '">' + deltaStr + '</td>'
-      + '<td style="font-family:monospace;font-size:11px;color:#8B5CF6">' + r.protocolo + '</td>'
-      + '<td style="color:var(--txt3);font-size:11px">' + r.dataApur + '</td>'
-      + '<td>' + _apurBadge(r.statusApur) + '</td>'
-      + '</tr>'
-      + '<tr id="' + rowId + '" style="display:none;background:rgba(73,197,177,.04)">'
-      + '<td colspan="10" style="padding:0">'
-      + _concRFDetail(nf, r.ibsRF, r.cbsRF)
-      + '</td></tr>';
-  });
-  tbody.innerHTML = html;
-}
-
-function _concFinRender() {
-  var lista = window._concFinFiltrada || [];
-  var pag = window._concFinPag || 1;
-  var total = Math.ceil(lista.length / _concFinIpp) || 1;
-  if (pag > total) pag = total;
-  window._concFinPag = pag;
-  var start = (pag - 1) * _concFinIpp;
-  var slice = lista.slice(start, start + _concFinIpp);
-  _concSetEl('fin-sub', lista.length + ' DFs');
-  _concSetEl('fin-pag-cur', pag);
-  _concSetEl('fin-pag-tot', total);
-  var prev = document.getElementById('fin-btn-prev');
-  var prox = document.getElementById('fin-btn-prox');
-  if (prev) { prev.disabled = pag <= 1; prev.style.opacity = pag <= 1 ? '.5' : '1'; }
-  if (prox) { prox.disabled = pag >= total; prox.style.opacity = pag >= total ? '.5' : '1'; }
-  var tbody = document.getElementById('t-conc-fin');
-  if (!tbody) return;
-  if (!slice.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro encontrado.</td></tr>'; return; }
-  var html = '';
-  slice.forEach(function(r, ri) {
+    var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? '#F59E0B' : '#F43F5E') : 'var(--txt3)';
+    return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid #3B82F6;border-radius:8px;padding:10px 12px;min-width:200px">'
+      + '<div style="font-size:10px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 1 — Apuração Governo</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
+      + '<span style="color:var(--txt3)">Valor DF</span><span style="font-weight:600">' + _concFmt(r.valorDF) + '</span>'
+      + '<span style="color:var(--txt3)">Valor Gov</span><span style="font-weight:600">' + _concFmt(r.valorGov) + '</span>'
+      + '<span style="color:var(--txt3)">Δ Valor</span><span style="color:' + deltaColor + ';font-weight:600">' + deltaStr + '</span>'
+      + '<span style="color:var(--txt3)">Protocolo</span><span style="font-family:monospace;font-size:10px;color:#8B5CF6">' + r.protocolo + '</span>'
+      + '<span style="color:var(--txt3)">Data</span><span>' + r.dataApur + '</span>'
+      + '<span style="color:var(--txt3)">Status</span><span>' + _apurBadge(r.statusApur) + '</span>'
+      + '</div></div>';
+  }
+  function stageFin(r) {
     var nf = r.nf;
-    var ibsVal = r.ibsRF ? _concFmt(r.ibsRF.valor || nf.ibs || 0) : (nf.ibs ? _concFmt(nf.ibs) : '—');
-    var cbsVal = r.cbsRF ? _concFmt(r.cbsRF.valor || nf.cbs || 0) : (nf.cbs ? _concFmt(nf.cbs) : '—');
+    var ibsVal = r.ibsRF ? fmtV(r.ibsRF.valor || nf.ibs || 0) : (nf.ibs ? fmtV(nf.ibs) : '—');
+    var cbsVal = r.cbsRF ? fmtV(r.cbsRF.valor || nf.cbs || 0) : (nf.cbs ? fmtV(nf.cbs) : '—');
+    var ibsSc = r.ibsRF ? (stColor[r.ibsRF.status] || '#888') : '#888';
+    var cbsSc = r.cbsRF ? (stColor[r.cbsRF.status] || '#888') : '#888';
+    var ibsSt = r.ibsRF ? (r.ibsRF.status || '—') : '—';
+    var cbsSt = r.cbsRF ? (r.cbsRF.status || '—') : '—';
+    var compr = r.comprovante ? '<span style="color:var(--green);font-weight:600">✓ Recebido</span>' : '<span style="color:var(--txt3)">Aguardando</span>';
+    return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid #10B981;border-radius:8px;padding:10px 12px;min-width:200px">'
+      + '<div style="font-size:10px;font-weight:700;color:#10B981;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 2 — Conciliação Financeira</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
+      + '<span style="color:var(--txt3)">IBS</span><span style="font-weight:600">' + ibsVal + '</span>'
+      + '<span style="color:var(--txt3)">Status IBS</span><span><span style="background:' + ibsSc + ';color:#fff;font-size:9px;padding:2px 6px;border-radius:8px">' + ibsSt + '</span></span>'
+      + '<span style="color:var(--txt3)">CBS</span><span style="font-weight:600">' + cbsVal + '</span>'
+      + '<span style="color:var(--txt3)">Status CBS</span><span><span style="background:' + cbsSc + ';color:#fff;font-size:9px;padding:2px 6px;border-radius:8px">' + cbsSt + '</span></span>'
+      + '<span style="color:var(--txt3)">Comprovante</span><span>' + compr + '</span>'
+      + '<span style="color:var(--txt3)">Próxima ação</span><span style="color:var(--txt2)">' + r.proxAcao + '</span>'
+      + '</div></div>';
+  }
+  var html = '';
+  slice.forEach(function(r) {
+    var nf = r.nf;
     var tipoBadge = nf.tipo === 'entrada'
       ? '<span style="color:var(--teal);font-size:10px;font-weight:700">' + (nf.tipoDF || 'ENTRADA') + '</span>'
       : '<span style="color:var(--blue);font-size:10px;font-weight:700">' + (nf.tipoDF || 'SAÍDA') + '</span>';
-    var comprIcon = r.comprovante
-      ? '<span style="color:var(--green);font-weight:700">✓ Sim</span>'
-      : '<span style="color:var(--txt3)">—</span>';
     var nfLabel = ((nf.tipoDF || '') + ' ' + (nf.numero || '')).trim() || '—';
-    var hasRF = r.ibsRF || r.cbsRF;
-    html += '<tr style="cursor:pointer" onclick="(function(el){el.nextElementSibling.style.display=el.nextElementSibling.style.display===\'none\'?\'table-row\':\'none\';})(this)">'
-      + '<td style="font-weight:600;color:var(--txt1);white-space:nowrap"><span style="color:var(--txt3);font-size:10px;margin-right:4px">' + (hasRF ? '▶' : '·') + '</span>' + nfLabel + '</td>'
+    var delta = r.deltaValor;
+    var deltaStr = Math.abs(delta) < 1 ? '—' : (delta > 0 ? '+' : '') + _concFmt(delta);
+    var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? 'color:#F59E0B' : 'color:#F43F5E') : 'color:var(--txt3)';
+    var detail = '<div style="padding:10px 16px 14px">'
+      + '<div style="font-size:10px;color:var(--txt3);margin-bottom:10px">Valor total NF: <strong style="color:var(--txt1)">' + fmtV(nf.valorTotal||0) + '</strong>'
+      + ' · IBS: <strong style="color:var(--txt1)">' + fmtV(nf.ibs) + '</strong>'
+      + ' · CBS: <strong style="color:var(--txt1)">' + fmtV(nf.cbs) + '</strong>'
+      + ' · Fornecedor: <strong style="color:var(--txt1)">' + (nf.entidade||'—') + '</strong></div>'
+      + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'
+      + stageApur(r)
+      + stageFin(r)
+      + '</div>'
+      + '<div style="border-top:1px solid var(--border);padding-top:8px;display:flex;gap:8px;flex-wrap:wrap">'
+      + rfChip(r.ibsRF, 'IBS')
+      + rfChip(r.cbsRF, 'CBS')
+      + '</div></div>';
+    html += '<tr style="cursor:pointer" onclick="(function(el){var nx=el.nextElementSibling;nx.style.display=nx.style.display===\'none\'?\'table-row\':\'none\';})(this)">'
+      + '<td style="font-weight:600;color:var(--txt1);white-space:nowrap"><span style="color:var(--txt3);font-size:10px;margin-right:4px">▶</span>' + nfLabel + '</td>'
       + '<td>' + tipoBadge + '</td>'
       + '<td style="color:var(--txt2)">' + (nf.entidade || '—') + '</td>'
-      + '<td class="r" style="font-family:monospace">' + ibsVal + '</td>'
-      + '<td>' + _rfStatusBadge(r.ibsRF) + '</td>'
-      + '<td class="r" style="font-family:monospace">' + cbsVal + '</td>'
-      + '<td>' + _rfStatusBadge(r.cbsRF) + '</td>'
-      + '<td style="text-align:center">' + comprIcon + '</td>'
+      + '<td class="r" style="font-family:monospace">' + _concFmt(r.valorDF) + '</td>'
+      + '<td class="r" style="font-family:monospace;' + deltaColor + '">' + deltaStr + '</td>'
+      + '<td>' + _apurBadge(r.statusApur) + '</td>'
       + '<td>' + _finBadge(r.statusFin) + '</td>'
-      + '<td style="font-size:11px;color:var(--txt3)">' + r.proxAcao + '</td>'
       + '</tr>'
       + '<tr style="display:none;background:rgba(73,197,177,.04)">'
-      + '<td colspan="10" style="padding:0">'
-      + _concRFDetail(nf, r.ibsRF, r.cbsRF)
-      + '</td></tr>';
+      + '<td colspan="7" style="padding:0">' + detail + '</td></tr>';
   });
   tbody.innerHTML = html;
 }
 
-window.concApuracaoFiltrar = function() {
-  var busca  = (document.getElementById('apur-busca')  || {}).value || '';
-  var tipo   = (document.getElementById('apur-tipo')   || {}).value || '';
-  var status = (document.getElementById('apur-status') || {}).value || '';
+window.concUnifiedFiltrar = function() {
+  var busca  = (document.getElementById('uni-busca') || {}).value || '';
+  var tipo   = (document.getElementById('uni-tipo')  || {}).value || '';
+  var apur   = (document.getElementById('uni-apur')  || {}).value || '';
+  var fin    = (document.getElementById('uni-fin')   || {}).value || '';
   busca = busca.toLowerCase();
-  window._concApurFiltrada = (window._concListaGlobal || []).filter(function(r) {
+  window._concUniFiltrada = (window._concListaGlobal || []).filter(function(r) {
     var nf = r.nf;
-    if (tipo   && nf.tipo      !== tipo)   return false;
-    if (status && r.statusApur !== status) return false;
+    if (tipo && nf.tipo      !== tipo) return false;
+    if (apur && r.statusApur !== apur) return false;
+    if (fin  && r.statusFin  !== fin)  return false;
     if (busca) {
       var hay = [(nf.numero||''),(nf.entidade||''),(nf.cnpj||''),(nf.tipoDF||''),r.protocolo].join(' ').toLowerCase();
       if (hay.indexOf(busca) === -1) return false;
     }
     return true;
   });
-  window._concApurPag = 1;
-  _concApurRender();
+  window._concUniPag = 1;
+  _concUnifiedRender();
 };
 
-window.concApuracaoPag = function(dir) {
-  var total = Math.ceil((window._concApurFiltrada || []).length / _concApurIpp) || 1;
-  window._concApurPag = Math.max(1, Math.min(total, (window._concApurPag || 1) + dir));
-  _concApurRender();
+window.concUnifiedPag = function(dir) {
+  var total = Math.ceil((window._concUniFiltrada || []).length / _concUniIpp) || 1;
+  window._concUniPag = Math.max(1, Math.min(total, (window._concUniPag || 1) + dir));
+  _concUnifiedRender();
 };
 
-window.concApuracaoLimpar = function() {
-  var ids = ['apur-busca','apur-tipo','apur-status'];
-  ids.forEach(function(id) { var e = document.getElementById(id); if (e) e.value = ''; });
-  window._concApurFiltrada = (window._concListaGlobal || []).slice();
-  window._concApurPag = 1;
-  _concApurRender();
-};
-
-window.concFinanceiraFiltrar = function() {
-  var busca  = (document.getElementById('fin-busca')  || {}).value || '';
-  var tipo   = (document.getElementById('fin-tipo')   || {}).value || '';
-  var status = (document.getElementById('fin-status') || {}).value || '';
-  busca = busca.toLowerCase();
-  window._concFinFiltrada = (window._concListaGlobal || []).filter(function(r) {
-    var nf = r.nf;
-    if (tipo   && nf.tipo      !== tipo)   return false;
-    if (status && r.statusFin  !== status) return false;
-    if (busca) {
-      var hay = [(nf.numero||''),(nf.entidade||''),(nf.cnpj||''),(nf.tipoDF||'')].join(' ').toLowerCase();
-      if (hay.indexOf(busca) === -1) return false;
-    }
-    return true;
+window.concUnifiedLimpar = function() {
+  ['uni-busca','uni-tipo','uni-apur','uni-fin'].forEach(function(id) {
+    var e = document.getElementById(id); if (e) e.value = '';
   });
-  window._concFinPag = 1;
-  _concFinRender();
-};
-
-window.concFinanceiraPag = function(dir) {
-  var total = Math.ceil((window._concFinFiltrada || []).length / _concFinIpp) || 1;
-  window._concFinPag = Math.max(1, Math.min(total, (window._concFinPag || 1) + dir));
-  _concFinRender();
-};
-
-window.concFinanceiraLimpar = function() {
-  var ids = ['fin-busca','fin-tipo','fin-status'];
-  ids.forEach(function(id) { var e = document.getElementById(id); if (e) e.value = ''; });
-  window._concFinFiltrada = (window._concListaGlobal || []).slice();
-  window._concFinPag = 1;
-  _concFinRender();
+  window._concUniFiltrada = (window._concListaGlobal || []).slice();
+  window._concUniPag = 1;
+  _concUnifiedRender();
 };
 
 window.conciliacaoFiltrarMes = function() {
