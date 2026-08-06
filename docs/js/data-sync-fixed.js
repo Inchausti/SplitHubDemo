@@ -4907,43 +4907,27 @@ window.dashFiltrarMes = function(mes) {
 // ── DASHBOARD LINKS → Créditos e Pagamentos ──────────────────────────────
 
 window.dashIrParaCreditos = function() {
-  // Navegar para view-creditos
   var btn = document.querySelector('.nav-btn[onclick*="creditos"]');
   if (typeof showView === 'function') showView('creditos', btn);
-
-  // Aplicar filtro multi-status
-  if (!window._filtrosCreditos) window._filtrosCreditos = {};
-  window._filtrosCreditos.status = '';
-  window._filtrosCreditos.statusMulti = ['nao_apropriado', 'inconsistencia', 'vencido'];
-
-  // Exibir chip de filtro ativo
+  // Limpar filtros — card mostra visão geral do módulo
+  creditosFiltroStatus = null;
+  creditosFiltroForn   = null;
   var chip = document.getElementById('creditos-filtro-chip');
-  var lbl  = document.getElementById('creditos-filtro-label');
-  if (lbl)  lbl.textContent = 'Não apropriado · Inconsistência · Vencido';
-  if (chip) chip.style.display = 'flex';
-
-  // Renderizar tabela com filtro aplicado
-  if (window.renderizarTabelaCreditos) window.renderizarTabelaCreditos();
+  if (chip) chip.style.display = 'none';
+  if (typeof creditosRenderTabela === 'function') creditosRenderTabela();
+  setTimeout(function() {
+    if (typeof _credIrListagem === 'function') _credIrListagem();
+  }, 100);
 };
 
 window.dashIrParaPagamentosRisco = function() {
-  // Navegar para view-pagamentos
   var btn = document.querySelector('.nav-btn[onclick*="pagamentos"]');
   if (typeof showView === 'function') showView('pagamentos', btn);
-
-  // Garantir que a aba pag-imp (guias de impostos) esteja ativa
-  document.querySelectorAll('#view-pagamentos .sv').forEach(function(sv) { sv.classList.remove('active'); });
-  var svImp = document.getElementById('pag-imp');
-  if (svImp) svImp.classList.add('active');
-  document.querySelectorAll('#view-pagamentos .stab').forEach(function(b) { b.classList.remove('active'); });
-  var stabImp = document.querySelector('#view-pagamentos .stab[onclick*="\'imp\'"]');
-  if (stabImp) stabImp.classList.add('active');
-
-  // Aplicar filtro status pendente (a vencer)
+  // Filtrar por pendente (a vencer / atrasados) — detalhe destacado no card
   if (!window._filtrosPagamentos) window._filtrosPagamentos = {};
   window._filtrosPagamentos.status = 'pendente';
-
-  // Renderizar tabela filtrada
+  var sel = document.getElementById('pag-filtro-status');
+  if (sel) sel.value = 'pendente';
   if (window.renderizarTabelaPagamentos) window.renderizarTabelaPagamentos();
   if (window.atualizarKPIsPagamentos) window.atualizarKPIsPagamentos();
 };
@@ -4951,6 +4935,12 @@ window.dashIrParaPagamentosRisco = function() {
 window.dashIrParaDebitos = function() {
   var btn = document.querySelector('.nav-btn[onclick*="debitos"]');
   if (typeof showView === 'function') showView('debitos', btn);
+  // Filtrar por vencido — detalhe destacado no card
+  if (!window._filtrosDebitos) window._filtrosDebitos = {};
+  window._filtrosDebitos.status = 'vencido';
+  var sel = document.getElementById('fd-status');
+  if (sel) sel.value = 'vencido';
+  if (window.renderizarTabelaDebitos) window.renderizarTabelaDebitos();
 };
 
 window.dashIrParaConciliacao = function() {
