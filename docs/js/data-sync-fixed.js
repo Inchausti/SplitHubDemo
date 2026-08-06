@@ -756,36 +756,39 @@ window.renderizarTabelaCreditos = function() {
 };
 
 window.atualizarKPIsCreditos = function(listaRFs) {
-  var total = 0, aprop = 0, naoAprop = 0, risco = 0, util = 0, aguard = 0, inconsist = 0;
+  var aprop = 0, naoAprop = 0, emRisco = 0, vencido = 0, util = 0, inconsist = 0;
   (listaRFs || []).forEach(function(r) {
     var v = r.cred || 0;
-    total += v;
-    if (r.status === 'apropriado')     aprop    += v;
-    if (r.status === 'nao_apropriado') naoAprop += v;
-    if (r.status === 'vencido' || r.status === 'em_risco') risco += v;
-    if (r.status === 'utilizado')      util     += v;
-    if (r.status === 'nao_apropriado') aguard   += v;
-    if (r.status === 'inconsistencia') inconsist += v;
+    if (r.status === 'apropriado')      { aprop    += v; }
+    else if (r.status === 'utilizado')  { aprop    += v; util += v; }
+    else if (r.status === 'nao_apropriado') { naoAprop += v; }
+    else if (r.status === 'em_risco')   { emRisco  += v; }
+    else if (r.status === 'vencido')    { vencido  += v; }
+    else if (r.status === 'inconsistencia') { inconsist += v; }
   });
+  var total = aprop + naoAprop;
   var fmt = function(v) {
     if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
     if (v >= 1e3) return 'R$ ' + Math.round(v / 1e3) + 'K';
     return ff(v);
   };
+  var pct = function(v, base) { return base > 0 ? (v / base * 100).toFixed(1).replace('.', ',') + '%' : '0,0%'; };
   var set = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
-  set('cred-total', fmt(total));
-  set('cred-aprop', fmt(aprop));
-  set('cred-aprop-sub', total > 0 ? (aprop / total * 100).toFixed(1).replace('.', ',') + '% — retorno Plataforma' : '—');
-  set('cred-nao-aprop', fmt(naoAprop));
-  set('cred-nao-aprop-sub', total > 0 ? (naoAprop / total * 100).toFixed(1).replace('.', ',') + '% do total · IBS + CBS' : 'Soma de RFs com status Não Apropriado');
-  set('cred-risco', fmt(risco));
-  set('cred-risco-sub', total > 0 ? (risco / total * 100).toFixed(1).replace('.', ',') + '% — vencimento próximo' : '—');
-  set('cred-util', fmt(util));
-  set('cred-util-sub', aprop > 0 ? (util / aprop * 100).toFixed(1).replace('.', ',') + '% dos apropriados — abateram débito' : '—');
-  set('cred-aguard', fmt(aguard));
-  set('cred-aguard-sub', total > 0 ? (aguard / total * 100).toFixed(1).replace('.', ',') + '% — pagamento efetuado' : '—');
-  set('cred-inconsist', fmt(inconsist));
-  set('cred-inconsist-sub', total > 0 ? (inconsist / total * 100).toFixed(1).replace('.', ',') + '% do total · requer revisão' : 'RFs com inconsistência · requer revisão');
+  set('cred-total',         fmt(total));
+  set('cred-aprop',         fmt(aprop));
+  set('cred-aprop-sub',     pct(aprop, total) + ' do total · IBS+CBS apropriados');
+  set('cred-nao-aprop',     fmt(naoAprop));
+  set('cred-nao-aprop-sub', pct(naoAprop, total) + ' do total · aguardando apropriação');
+  set('cred-risco',         fmt(emRisco));
+  set('cred-risco-sub',     pct(emRisco, total) + ' — vencimento próximo');
+  set('cred-util',          fmt(util));
+  set('cred-util-sub',      aprop > 0 ? pct(util, aprop) + ' dos apropriados — abateram débito' : '—');
+  set('cred-aguard',        fmt(naoAprop));
+  set('cred-aguard-sub',    pct(naoAprop, total) + ' — apropriação pendente');
+  set('cred-inconsist',     fmt(inconsist));
+  set('cred-inconsist-sub', pct(inconsist, total) + ' do total · requer revisão');
+  set('cred-perda',         fmt(vencido));
+  set('cred-perda-sub',     pct(vencido, total) + ' — vencidos sem quitação');
 };
 
 window.atualizarPerdaAcumulada = function() {
@@ -3217,31 +3220,21 @@ class DataSyncManagerFixed {
   }
 
   atualizarDashboard() {
-    // Chamar funções de atualização do dashboard
-    if (typeof creditosRenderKPIs === 'function') {
-      creditosRenderKPIs();
-      console.log('✓ creditosRenderKPIs() executado');
-    }
-
     if (typeof dashRenderCreditKPIs === 'function') {
       dashRenderCreditKPIs();
-      console.log('✓ dashRenderCreditKPIs() executado');
     }
-
     if (typeof pagRenderKPIs === 'function') {
       pagRenderKPIs();
-      console.log('✓ pagRenderKPIs() executado');
     }
-
     if (typeof conciliRender === 'function') {
       conciliRender();
-      console.log('✓ conciliRender() executado');
     }
   }
 
   sincronizar() {
-    // Atualizar dashboard periodicamente
     this.atualizarDashboard();
+    // Atualizar KPIs de crédito respeitando filtro de período ativo
+    try { window.renderizarTabelaCreditos && window.renderizarTabelaCreditos(); } catch(e) {}
   }
 
   // Getter para acessar os créditos
