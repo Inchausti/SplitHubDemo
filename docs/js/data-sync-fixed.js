@@ -2071,8 +2071,115 @@ window.renderizarRFsInconsistencias = function() {
   lista.forEach(function(r){ var m=(r.dataISO||'').slice(0,7); if(m) mapMes[m]=(mapMes[m]||0)+1; });
   _incSvgMensal(document.getElementById('c-inc-mensal'), mapMes, 280);
 
-  // 8. Renderizar listagem filtrada
+  // 8. Renderizar listagem de RFs filtrada
   window.incRfFiltrar();
+
+  // 9. Renderizar tabela de NFs
+  try { window.incNfRenderTabela(); } catch(e) {}
+};
+
+// ── NF inconsistências: status de gestão por NF número ──
+window._incNfStatus = window._incNfStatus || {};
+
+window.incNfMarcarStatus = function(nfNum, novoStatus) {
+  window._incNfStatus[nfNum] = novoStatus;
+  window.incNfFiltrar();
+};
+
+window.incNfRenderTabela = function() {
+  var nfList = window.nfListaFiltradaGlobal || [];
+  // Agrupar NFs que têm ao menos 1 RF com status 'inconsistencia'
+  var map = {};
+  nfList.forEach(function(nf) {
+    if (!nf.registrosFiscais) return;
+    var rfsInc = nf.registrosFiscais.filter(function(rf) { return rf.status === 'inconsistencia'; });
+    if (!rfsInc.length) return;
+    var num = nf.numero || '—';
+    if (!map[num]) {
+      var dp = (nf.data || '').split('-');
+      map[num] = {
+        num: num,
+        forn: nf.entidade || '—',
+        cnpj: nf.cnpj || '—',
+        valorTotal: nf.valorTotal || nf.valor || 0,
+        data: dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
+        dataISO: nf.data || '',
+        rfs: [],
+        tipos: {}
+      };
+    }
+    rfsInc.forEach(function(rf) {
+      map[num].rfs.push(rf.id || '—');
+      var t = rf.inconsistencia || 'Inconsistência de Dados';
+      map[num].tipos[t] = true;
+    });
+  });
+  window._incNfGlobal = Object.keys(map).map(function(k) { return map[k]; });
+  window.incNfFiltrar();
+};
+
+window.incNfFiltrar = function() {
+  var busca = ((document.getElementById('inc-nf-busca') || {}).value || '').toLowerCase();
+  var stFiltro = ((document.getElementById('inc-nf-status-filtro') || {}).value || '');
+  var lista = (window._incNfGlobal || []).filter(function(n) {
+    var st = window._incNfStatus[n.num] || 'aberta';
+    if (stFiltro && st !== stFiltro) return false;
+    if (busca) {
+      var s = (n.num + n.forn + n.cnpj).toLowerCase();
+      if (!s.includes(busca)) return false;
+    }
+    return true;
+  });
+
+  var _incStBadge = function(st) {
+    if (st === 'resolvida') return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--txt1)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10B981;flex-shrink:0"></span>Resolvida</span>';
+    if (st === 'revisao')   return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--txt1)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#F59E0B;flex-shrink:0"></span>Em Revisão</span>';
+    return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--txt1)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#EF4444;flex-shrink:0"></span>Em Aberto</span>';
+  };
+  var _tipoChip = function(t) {
+    return '<span style="display:inline-block;font-size:10px;font-weight:600;background:rgba(139,92,246,.12);color:#C4B5FD;border:1px solid rgba(139,92,246,.25);border-radius:99px;padding:2px 7px;white-space:nowrap">' + t + '</span>';
+  };
+  var ff2 = function(v){ return 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+
+  var h = '';
+  lista.forEach(function(n) {
+    var st = window._incNfStatus[n.num] || 'aberta';
+    var qtd = n.rfs.length;
+    var qtdChip = qtd > 0
+      ? '<span style="display:inline-block;font-size:11px;font-weight:600;background:rgba(239,68,68,.12);color:#F87171;border:1px solid rgba(239,68,68,.25);border-radius:99px;padding:2px 9px">' + qtd + ' RF' + (qtd !== 1 ? 's' : '') + '</span>'
+      : '<span style="color:var(--txt3);font-size:11px">—</span>';
+    var tipos = Object.keys(n.tipos).map(_tipoChip).join(' ');
+    var acoes = '';
+    if (st === 'aberta') {
+      acoes = '<button onclick="window.incNfMarcarStatus(\'' + n.num + '\',\'revisao\')" style="background:rgba(13,148,136,.12);color:#14B8A8;border:1px solid rgba(13,148,136,.35);border-radius:5px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-right:4px">Regularizar</button>'
+            + '<button onclick="window.incNfMarcarStatus(\'' + n.num + '\',\'revisao\')" style="background:none;border:1px solid var(--brd);border-radius:5px;padding:4px 10px;font-size:11px;color:var(--txt2);cursor:pointer;font-family:inherit">Contestar</button>';
+    } else if (st === 'revisao') {
+      acoes = '<button onclick="window.incNfMarcarStatus(\'' + n.num + '\',\'resolvida\')" style="background:rgba(16,185,129,.12);color:#6EE7B7;border:1px solid rgba(16,185,129,.3);border-radius:5px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-right:4px">Resolver</button>'
+            + '<button onclick="window.incNfMarcarStatus(\'' + n.num + '\',\'aberta\')" style="background:none;border:1px solid var(--brd);border-radius:5px;padding:4px 10px;font-size:11px;color:var(--txt2);cursor:pointer;font-family:inherit">Reabrir</button>';
+    } else {
+      acoes = '<button onclick="window.incNfMarcarStatus(\'' + n.num + '\',\'aberta\')" style="background:none;border:1px solid var(--brd);border-radius:5px;padding:4px 10px;font-size:11px;color:var(--txt2);cursor:pointer;font-family:inherit">Reabrir</button>';
+    }
+    var nfLink = '<button onclick="if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + n.num + '\')" style="background:none;border:none;color:#3B82F6;cursor:pointer;font-size:11px;font-weight:700;padding:0;text-decoration:underline dotted;font-family:monospace">' + n.num + '</button>';
+    h += '<tr>'
+      + '<td class="mono">' + nfLink + '</td>'
+      + '<td style="font-size:12px">' + n.forn + '</td>'
+      + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + n.cnpj + '</td>'
+      + '<td class="r mono" style="font-weight:700;font-size:11px">' + ff2(n.valorTotal) + '</td>'
+      + '<td style="text-align:center">' + qtdChip + '</td>'
+      + '<td><div style="display:flex;gap:4px;flex-wrap:wrap">' + tipos + '</div></td>'
+      + '<td>' + _incStBadge(st) + '</td>'
+      + '<td style="font-size:11px;color:var(--txt2)">' + n.data + '</td>'
+      + '<td style="white-space:nowrap">' + acoes + '</td>'
+      + '</tr>';
+  });
+  if (!lista.length) h = '<tr><td colspan="9" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma NF com inconsistência encontrada para este filtro.</td></tr>';
+
+  var tbody = document.getElementById('t-inc-nfs');
+  if (tbody) tbody.innerHTML = h;
+  var sub = document.getElementById('inc-nf-count-sub');
+  if (sub) sub.textContent = lista.length + ' NF' + (lista.length !== 1 ? 's' : '') + ' com ao menos 1 RF em inconsistência';
+  var cnt = document.getElementById('inc-nf-contagem');
+  if (cnt) cnt.textContent = lista.length + ' nota' + (lista.length !== 1 ? 's' : '');
 };
 
 window.incRfToggleFiltros = function() {
