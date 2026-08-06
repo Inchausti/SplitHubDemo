@@ -1555,21 +1555,28 @@ function _concBuildLista(filtroMes) {
     var ibsInc = ibsRF && ibsRF.status === 'inconsistencia';
     var cbsInc = cbsRF && cbsRF.status === 'inconsistencia';
 
-    // Etapa 2 avalia ao nível de RF, independente do status de apuração
-    var paidCount = (ibsPago ? 1 : 0) + (cbsPago ? 1 : 0);
-    var incCount  = (ibsInc  ? 1 : 0) + (cbsInc  ? 1 : 0);
     var statusFin;
-    if (paidCount === 2 && incCount === 0)      statusFin = 'completo';
-    else if (paidCount >= 1 && incCount >= 1)   statusFin = 'parcial';
-    else if (paidCount === 1 && incCount === 0) statusFin = 'parcial';
-    else if (incCount > 0)                      statusFin = 'inconsistente';
-    else                                        statusFin = 'pendente';
-
-    var comprovante = ibsPago && cbsPago;
-    var proxAcao = statusFin === 'completo'     ? '—'
-      : statusFin === 'parcial'                 ? 'Quitar imposto pendente'
-      : statusFin === 'inconsistente'           ? 'Resolver inconsistência RF'
-      : 'Emitir guia DARF/IBS';
+    var comprovante = false;
+    var proxAcao;
+    if (statusApur === 'pendente') {
+      // Apuração pendente — financeira aguarda resolução
+      statusFin = 'pendente';
+      proxAcao = 'Aguardar conciliação de apuração';
+    } else {
+      // Apuração conciliada ou não conciliada — avalia Etapa 2 ao nível de RF
+      var paidCount = (ibsPago ? 1 : 0) + (cbsPago ? 1 : 0);
+      var incCount  = (ibsInc  ? 1 : 0) + (cbsInc  ? 1 : 0);
+      if (paidCount === 2 && incCount === 0)      statusFin = 'completo';
+      else if (paidCount >= 1 && incCount >= 1)   statusFin = 'parcial';
+      else if (paidCount === 1 && incCount === 0) statusFin = 'parcial';
+      else if (incCount > 0)                      statusFin = 'inconsistente';
+      else                                        statusFin = 'pendente';
+      comprovante = ibsPago && cbsPago;
+      proxAcao = statusFin === 'completo'     ? '—'
+        : statusFin === 'parcial'             ? 'Quitar imposto pendente'
+        : statusFin === 'inconsistente'       ? 'Resolver inconsistência RF'
+        : 'Emitir guia DARF/IBS';
+    }
 
     result.push({
       nf: nf, idx: idx,
