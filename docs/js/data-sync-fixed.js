@@ -1079,8 +1079,8 @@ window.atualizarDashboard = function() {
 
   lista.forEach(function(nf) {
     (nf.registrosFiscais || []).forEach(function(rf) {
-      if (!rf.dataPagamento || rf.dataPagamento === '—') return;
-      // usar data do RF como competência do pagamento
+      // pagamento executado = RF com status que indica liquidação
+      if (rf.status !== 'utilizado' && rf.status !== 'apropriado') return;
       var mes = (rf.data || '').substring(0, 7);
       var idx = mesesISO.indexOf(mes);
       if (idx < 0) return;
@@ -1203,7 +1203,7 @@ if (typeof svgLine !== 'function') {
     var rng=maxV-minV||1;
     function xp(i){return Math.round(padL+(i/(n-1||1))*plotW);}
     function yp(v){return Math.round(padT+(1-(v-minV)/rng)*plotH);}
-    function fmtTip(v){return v>=1000?(v/1000).toFixed(1).replace('.',',')+'M':(v>=1?v.toFixed(2).replace('.',','):'0')+'M';}
+    function fmtTip(v){return v>=1?v.toFixed(2).replace('.',',')+'M':v>=0.001?(v*1000).toFixed(0)+'K':'0,00M';}
     var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block;overflow:visible">';
     labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
     datasets.forEach(function(ds){
