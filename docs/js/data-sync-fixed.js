@@ -1760,7 +1760,7 @@ function _concUnifiedRender() {
     var deltaStr = Math.abs(delta) < 1 ? '—' : (delta > 0 ? '+' : '') + _concFmt(delta);
     var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? '#F59E0B' : '#F43F5E') : 'var(--txt3)';
     return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid #3B82F6;border-radius:8px;padding:10px 12px;min-width:200px">'
-      + '<div style="font-size:10px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 1 — Apuração Governo</div>'
+      + '<div style="font-size:10px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 1 — Conciliação Apuração</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
       + '<span style="color:var(--txt3)">Valor DF</span><span style="font-weight:600">' + _concFmt(r.valorDF) + '</span>'
       + '<span style="color:var(--txt3)">Valor Gov</span><span style="font-weight:600">' + _concFmt(r.valorGov) + '</span>'
