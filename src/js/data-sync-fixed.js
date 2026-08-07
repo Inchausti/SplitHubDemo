@@ -756,36 +756,39 @@ window.renderizarTabelaCreditos = function() {
 };
 
 window.atualizarKPIsCreditos = function(listaRFs) {
-  var total = 0, aprop = 0, naoAprop = 0, risco = 0, util = 0, aguard = 0, inconsist = 0;
+  var aprop = 0, naoAprop = 0, emRisco = 0, vencido = 0, util = 0, inconsist = 0;
   (listaRFs || []).forEach(function(r) {
     var v = r.cred || 0;
-    total += v;
-    if (r.status === 'apropriado')     aprop    += v;
-    if (r.status === 'nao_apropriado') naoAprop += v;
-    if (r.status === 'vencido' || r.status === 'em_risco') risco += v;
-    if (r.status === 'utilizado')      util     += v;
-    if (r.status === 'nao_apropriado') aguard   += v;
-    if (r.status === 'inconsistencia') inconsist += v;
+    if (r.status === 'apropriado')      { aprop    += v; }
+    else if (r.status === 'utilizado')  { aprop    += v; util += v; }
+    else if (r.status === 'nao_apropriado') { naoAprop += v; }
+    else if (r.status === 'em_risco')   { emRisco  += v; }
+    else if (r.status === 'vencido')    { vencido  += v; }
+    else if (r.status === 'inconsistencia') { inconsist += v; }
   });
+  var total = aprop + naoAprop;
   var fmt = function(v) {
     if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
     if (v >= 1e3) return 'R$ ' + Math.round(v / 1e3) + 'K';
     return ff(v);
   };
+  var pct = function(v, base) { return base > 0 ? (v / base * 100).toFixed(1).replace('.', ',') + '%' : '0,0%'; };
   var set = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
-  set('cred-total', fmt(total));
-  set('cred-aprop', fmt(aprop));
-  set('cred-aprop-sub', total > 0 ? (aprop / total * 100).toFixed(1).replace('.', ',') + '% — retorno Plataforma' : '—');
-  set('cred-nao-aprop', fmt(naoAprop));
-  set('cred-nao-aprop-sub', total > 0 ? (naoAprop / total * 100).toFixed(1).replace('.', ',') + '% do total · IBS + CBS' : 'Soma de RFs com status Não Apropriado');
-  set('cred-risco', fmt(risco));
-  set('cred-risco-sub', total > 0 ? (risco / total * 100).toFixed(1).replace('.', ',') + '% — vencimento próximo' : '—');
-  set('cred-util', fmt(util));
-  set('cred-util-sub', aprop > 0 ? (util / aprop * 100).toFixed(1).replace('.', ',') + '% dos apropriados — abateram débito' : '—');
-  set('cred-aguard', fmt(aguard));
-  set('cred-aguard-sub', total > 0 ? (aguard / total * 100).toFixed(1).replace('.', ',') + '% — pagamento efetuado' : '—');
-  set('cred-inconsist', fmt(inconsist));
-  set('cred-inconsist-sub', total > 0 ? (inconsist / total * 100).toFixed(1).replace('.', ',') + '% do total · requer revisão' : 'RFs com inconsistência · requer revisão');
+  set('cred-total',         fmt(total));
+  set('cred-aprop',         fmt(aprop));
+  set('cred-aprop-sub',     pct(aprop, total) + ' do total · IBS+CBS apropriados');
+  set('cred-nao-aprop',     fmt(naoAprop));
+  set('cred-nao-aprop-sub', pct(naoAprop, total) + ' do total · aguardando apropriação');
+  set('cred-risco',         fmt(emRisco));
+  set('cred-risco-sub',     pct(emRisco, total) + ' — vencimento próximo');
+  set('cred-util',          fmt(util));
+  set('cred-util-sub',      aprop > 0 ? pct(util, aprop) + ' dos apropriados — abateram débito' : '—');
+  set('cred-aguard',        fmt(naoAprop));
+  set('cred-aguard-sub',    pct(naoAprop, total) + ' — apropriação pendente');
+  set('cred-inconsist',     fmt(inconsist));
+  set('cred-inconsist-sub', pct(inconsist, total) + ' do total · requer revisão');
+  set('cred-perda',         fmt(vencido));
+  set('cred-perda-sub',     pct(vencido, total) + ' — vencidos sem quitação');
 };
 
 window.atualizarPerdaAcumulada = function() {
@@ -793,6 +796,7 @@ window.atualizarPerdaAcumulada = function() {
   var countRFs = 0;
   var mesAno = (window._filtrosCreditos || {}).mesAno || '';
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
       if (mesAno && !(rf.data || '').startsWith(mesAno)) return;
       if (rf.status === 'vencido') {
@@ -1556,16 +1560,27 @@ function _concBuildLista(filtroMes) {
     var cbsInc = cbsRF && cbsRF.status === 'inconsistencia';
 
     var statusFin;
-    if (ibsInc || cbsInc)       statusFin = 'inconsistente';
-    else if (ibsPago && cbsPago) statusFin = 'completo';
-    else if (ibsPago || cbsPago) statusFin = 'parcial';
-    else                         statusFin = 'pendente';
-
-    var comprovante = ibsPago && cbsPago;
-    var proxAcao = statusFin === 'completo'     ? '—'
-      : statusFin === 'parcial'                 ? 'Quitar imposto pendente'
-      : statusFin === 'pendente'                ? 'Emitir guia DARF/IBS'
-      : 'Resolver inconsistência';
+    var comprovante = false;
+    var proxAcao;
+    if (statusApur === 'pendente') {
+      // Apuração pendente — financeira aguarda resolução
+      statusFin = 'pendente';
+      proxAcao = 'Aguardar conciliação de apuração';
+    } else {
+      // Apuração conciliada ou não conciliada — avalia Etapa 2 ao nível de RF
+      var paidCount = (ibsPago ? 1 : 0) + (cbsPago ? 1 : 0);
+      var incCount  = (ibsInc  ? 1 : 0) + (cbsInc  ? 1 : 0);
+      if (paidCount === 2 && incCount === 0)      statusFin = 'completo';
+      else if (paidCount >= 1 && incCount >= 1)   statusFin = 'parcial';
+      else if (paidCount === 1 && incCount === 0) statusFin = 'parcial';
+      else if (incCount > 0)                      statusFin = 'inconsistente';
+      else                                        statusFin = 'pendente';
+      comprovante = ibsPago && cbsPago;
+      proxAcao = statusFin === 'completo'     ? '—'
+        : statusFin === 'parcial'             ? 'Quitar imposto pendente'
+        : statusFin === 'inconsistente'       ? 'Resolver inconsistência RF'
+        : 'Emitir guia DARF/IBS';
+    }
 
     result.push({
       nf: nf, idx: idx,
@@ -1606,18 +1621,26 @@ function _concRFDetail(nf, ibsRF, cbsRF) {
       + '<div style="font-size:11px;color:var(--txt3)">Sem RF vinculado</div></div>';
     var sc = stColor[rf.status] || '#A7A8AA';
     var pago = rf.dataPagamento && rf.dataPagamento !== '—';
-    return '<div style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-left:3px solid ' + sc + ';border-radius:8px;padding:12px 14px;min-width:220px">'
+    var rfId = rf.id || '—';
+    var canOpen = rfId !== '—' && window._rfIndex && window._rfIndex[rfId];
+    var clickAttr = canOpen
+      ? 'onclick="event.stopPropagation();if(window.abrirDetalheRF)window.abrirDetalheRF(\'' + rfId + '\')" style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-left:3px solid ' + sc + ';border-radius:8px;padding:12px 14px;min-width:220px;cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor=\'' + sc + '\'" onmouseleave="this.style.borderColor=\'var(--border)\'"'
+      : 'style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-left:3px solid ' + sc + ';border-radius:8px;padding:12px 14px;min-width:220px"';
+    return '<div ' + clickAttr + '>'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
       + '<span style="font-size:10px;font-weight:700;color:' + sc + ';text-transform:uppercase;letter-spacing:.07em">' + label + '</span>'
       + '<span style="background:' + sc + ';color:#fff;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700">' + (rf.status || '—') + '</span>'
       + '</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
-      + '<span style="color:var(--txt3)">ID RF</span><span style="color:var(--txt1);font-family:monospace">' + (rf.id || '—') + '</span>'
+      + '<span style="color:var(--txt3)">ID RF</span>'
+      + '<span style="color:#3B82F6;font-family:monospace;font-weight:700' + (canOpen ? ';text-decoration:underline dotted' : '') + '">' + rfId + '</span>'
       + '<span style="color:var(--txt3)">Valor</span><span style="color:var(--txt1);font-weight:600">' + fmtV(rf.valor) + '</span>'
       + '<span style="color:var(--txt3)">Data RF</span><span style="color:var(--txt2)">' + (rf.data || '—') + '</span>'
       + '<span style="color:var(--txt3)">Pagamento</span><span style="color:' + (pago ? '#22C55E' : 'var(--txt3)') + ';font-weight:' + (pago ? '600' : '400') + '">' + (pago ? rf.dataPagamento : 'Pendente') + '</span>'
       + (rf.inconsistencia ? ('<span style="color:var(--txt3)">Inconsistência</span><span style="color:#F43F5E;font-size:10px">' + rf.inconsistencia + '</span>') : '')
-      + '</div></div>';
+      + '</div>'
+      + (canOpen ? '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:#3B82F6;font-weight:600">Ver detalhes do RF →</div>' : '')
+      + '</div>';
   }
   var nfTotal = 'R$ ' + ((nf.valorTotal||0)/1).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   return '<div style="padding:10px 16px 14px">'
@@ -1632,12 +1655,13 @@ function _concRFDetail(nf, ibsRF, cbsRF) {
 }
 
 function _apurBadge(s) {
-  var map = {confirmado:'var(--green)',divergente:'var(--amber)',pendente:'#8B5CF6'};
-  return '<span style="background:'+( map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+s+'</span>';
+  var map = {confirmado:'var(--green)',divergente:'var(--red)',pendente:'var(--amber)'};
+  var lbl = {confirmado:'Conciliado',divergente:'Não conciliado',pendente:'Pendente'};
+  return '<span style="background:'+(map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+(lbl[s]||s)+'</span>';
 }
 function _finBadge(s) {
-  var map = {completo:'var(--green)',parcial:'var(--blue)',pendente:'#8B5CF6',inconsistente:'var(--red)'};
-  var lbl = {completo:'Conciliado',parcial:'Parcial',pendente:'Pendente',inconsistente:'Inconsistente'};
+  var map = {completo:'var(--green)',parcial:'var(--blue)',pendente:'var(--amber)',inconsistente:'var(--red)'};
+  var lbl = {completo:'Conciliado',parcial:'Parcial',pendente:'Pendente',inconsistente:'Não conciliado'};
   return '<span style="background:'+(map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+(lbl[s]||s)+'</span>';
 }
 function _rfStatusBadge(rf) {
@@ -1693,180 +1717,168 @@ window.atualizarEstatisticasConciliacao = function() {
   _concSetEl('pipe-fin-inc',  finInc);
   _concSetEl('pipe-pend',     finPend);
 
-  // Inicializa tabs
-  window._concApurFiltrada = lista.slice();
-  window._concFinFiltrada  = lista.slice();
-  window._concApurPag = 1;
-  window._concFinPag  = 1;
-  _concApurRender();
-  _concFinRender();
+  // Inicializa tab unificada
+  window._concUniFiltrada = lista.slice();
+  window._concUniPag = 1;
+  _concUnifiedRender();
 };
 
-function _concApurRender() {
-  var lista = window._concApurFiltrada || [];
-  var pag = window._concApurPag || 1;
-  var total = Math.ceil(lista.length / _concApurIpp) || 1;
+var _concUniIpp = 20;
+
+function _concUnifiedRender() {
+  var lista = window._concUniFiltrada || [];
+  var pag = window._concUniPag || 1;
+  var total = Math.ceil(lista.length / _concUniIpp) || 1;
   if (pag > total) pag = total;
-  window._concApurPag = pag;
-  var start = (pag - 1) * _concApurIpp;
-  var slice = lista.slice(start, start + _concApurIpp);
-  _concSetEl('apur-sub', lista.length + ' DFs');
-  _concSetEl('apur-pag-cur', pag);
-  _concSetEl('apur-pag-tot', total);
-  var prev = document.getElementById('apur-btn-prev');
-  var prox = document.getElementById('apur-btn-prox');
+  window._concUniPag = pag;
+  var start = (pag - 1) * _concUniIpp;
+  var slice = lista.slice(start, start + _concUniIpp);
+  _concSetEl('uni-sub', lista.length + ' DFs');
+  _concSetEl('uni-pag-cur', pag);
+  _concSetEl('uni-pag-tot', total);
+  var prev = document.getElementById('uni-btn-prev');
+  var prox = document.getElementById('uni-btn-prox');
   if (prev) { prev.disabled = pag <= 1; prev.style.opacity = pag <= 1 ? '.5' : '1'; }
   if (prox) { prox.disabled = pag >= total; prox.style.opacity = pag >= total ? '.5' : '1'; }
-  var tbody = document.getElementById('t-conc-apur');
+  var tbody = document.getElementById('t-conc-uni');
   if (!tbody) return;
-  if (!slice.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro encontrado.</td></tr>'; return; }
-  var html = '';
-  slice.forEach(function(r, ri) {
-    var nf = r.nf;
-    var rowId = 'capur-' + ri;
+  if (!slice.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro encontrado.</td></tr>';
+    return;
+  }
+  var fmtV = function(v) { return v ? 'R$ ' + (v/1).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; };
+  var stColor = {
+    apropriado:'#22C55E', utilizado:'#49C5B1', extinto:'#22C55E',
+    nao_apropriado:'#F59E0B', vencido:'#F43F5E', inconsistencia:'#F43F5E', em_risco:'#F59E0B'
+  };
+  function rfChip(rf, label) {
+    if (!rf) return '';
+    var rfId = rf.id || '—';
+    var canOpen = rfId !== '—' && window._rfIndex && window._rfIndex[rfId];
+    var click = canOpen ? 'onclick="event.stopPropagation();if(window.abrirDetalheRF)window.abrirDetalheRF(\'' + rfId + '\')" style="cursor:pointer"' : '';
+    return '<span ' + click + ' style="display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;font-family:monospace;color:var(--blue);background:rgba(59,130,246,.07)' + (canOpen ? ';cursor:pointer' : '') + '">'
+      + label + ' · ' + rfId + '</span>';
+  }
+  function stageApur(r) {
     var delta = r.deltaValor;
     var deltaStr = Math.abs(delta) < 1 ? '—' : (delta > 0 ? '+' : '') + _concFmt(delta);
-    var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? 'color:var(--amber)' : 'color:var(--red)') : 'color:var(--txt3)';
-    var tipoBadge = nf.tipo === 'entrada'
-      ? '<span style="color:var(--teal);font-size:10px;font-weight:700">' + (nf.tipoDF || 'ENTRADA') + '</span>'
-      : '<span style="color:var(--blue);font-size:10px;font-weight:700">' + (nf.tipoDF || 'SAÍDA') + '</span>';
-    var nfLabel = ((nf.tipoDF || '') + ' ' + (nf.numero || '')).trim() || '—';
-    var hasRF = r.ibsRF || r.cbsRF;
-    html += '<tr style="cursor:pointer" onclick="(function(el){el.nextElementSibling.style.display=el.nextElementSibling.style.display===\'none\'?\'table-row\':\'none\';})(this)">'
-      + '<td style="font-weight:600;color:var(--txt1);white-space:nowrap"><span style="color:var(--txt3);font-size:10px;margin-right:4px">' + (hasRF ? '▶' : '·') + '</span>' + nfLabel + '</td>'
-      + '<td>' + tipoBadge + '</td>'
-      + '<td style="color:var(--txt2)">' + (nf.entidade || '—') + '</td>'
-      + '<td style="font-family:monospace;font-size:11px;color:var(--txt3)">' + (nf.cnpj || '—') + '</td>'
-      + '<td class="r" style="font-family:monospace">' + _concFmt(r.valorDF) + '</td>'
-      + '<td class="r" style="font-family:monospace">' + _concFmt(r.valorGov) + '</td>'
-      + '<td class="r" style="font-family:monospace;' + deltaColor + '">' + deltaStr + '</td>'
-      + '<td style="font-family:monospace;font-size:11px;color:#8B5CF6">' + r.protocolo + '</td>'
-      + '<td style="color:var(--txt3);font-size:11px">' + r.dataApur + '</td>'
-      + '<td>' + _apurBadge(r.statusApur) + '</td>'
-      + '</tr>'
-      + '<tr id="' + rowId + '" style="display:none;background:rgba(73,197,177,.04)">'
-      + '<td colspan="10" style="padding:0">'
-      + _concRFDetail(nf, r.ibsRF, r.cbsRF)
-      + '</td></tr>';
-  });
-  tbody.innerHTML = html;
-}
-
-function _concFinRender() {
-  var lista = window._concFinFiltrada || [];
-  var pag = window._concFinPag || 1;
-  var total = Math.ceil(lista.length / _concFinIpp) || 1;
-  if (pag > total) pag = total;
-  window._concFinPag = pag;
-  var start = (pag - 1) * _concFinIpp;
-  var slice = lista.slice(start, start + _concFinIpp);
-  _concSetEl('fin-sub', lista.length + ' DFs');
-  _concSetEl('fin-pag-cur', pag);
-  _concSetEl('fin-pag-tot', total);
-  var prev = document.getElementById('fin-btn-prev');
-  var prox = document.getElementById('fin-btn-prox');
-  if (prev) { prev.disabled = pag <= 1; prev.style.opacity = pag <= 1 ? '.5' : '1'; }
-  if (prox) { prox.disabled = pag >= total; prox.style.opacity = pag >= total ? '.5' : '1'; }
-  var tbody = document.getElementById('t-conc-fin');
-  if (!tbody) return;
-  if (!slice.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro encontrado.</td></tr>'; return; }
-  var html = '';
-  slice.forEach(function(r, ri) {
+    var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? '#F59E0B' : '#F43F5E') : 'var(--txt3)';
+    return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid #3B82F6;border-radius:8px;padding:10px 12px;min-width:200px">'
+      + '<div style="font-size:10px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 1 — Conciliação Apuração</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
+      + '<span style="color:var(--txt3)">Valor DF</span><span style="font-weight:600">' + _concFmt(r.valorDF) + '</span>'
+      + '<span style="color:var(--txt3)">Valor Gov</span><span style="font-weight:600">' + _concFmt(r.valorGov) + '</span>'
+      + '<span style="color:var(--txt3)">Δ Valor</span><span style="color:' + deltaColor + ';font-weight:600">' + deltaStr + '</span>'
+      + '<span style="color:var(--txt3)">Protocolo</span><span style="font-family:monospace;font-size:10px;color:#8B5CF6">' + r.protocolo + '</span>'
+      + '<span style="color:var(--txt3)">Data</span><span>' + r.dataApur + '</span>'
+      + '<span style="color:var(--txt3)">Status</span><span>' + _apurBadge(r.statusApur) + '</span>'
+      + '</div></div>';
+  }
+  function stageFin(r) {
+    var blocked = r.statusFin === 'bloqueado';
+    var borderColor = blocked ? '#6B7280' : '#10B981';
+    var titleColor  = blocked ? '#6B7280' : '#10B981';
+    if (blocked) {
+      return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid ' + borderColor + ';border-radius:8px;padding:10px 12px;min-width:200px;opacity:.6">'
+        + '<div style="font-size:10px;font-weight:700;color:' + titleColor + ';text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 2 — Conciliação Financeira</div>'
+        + '<div style="display:flex;align-items:center;gap:8px;padding:10px 0">'
+        + '<span style="font-size:16px">🔒</span>'
+        + '<div>'
+        + '<div style="font-size:12px;font-weight:600;color:var(--txt2)">Etapa bloqueada</div>'
+        + '<div style="font-size:11px;color:var(--txt3);margin-top:2px">' + r.proxAcao + '</div>'
+        + '</div></div></div>';
+    }
     var nf = r.nf;
-    var ibsVal = r.ibsRF ? _concFmt(r.ibsRF.valor || nf.ibs || 0) : (nf.ibs ? _concFmt(nf.ibs) : '—');
-    var cbsVal = r.cbsRF ? _concFmt(r.cbsRF.valor || nf.cbs || 0) : (nf.cbs ? _concFmt(nf.cbs) : '—');
+    var ibsVal = r.ibsRF ? fmtV(r.ibsRF.valor || nf.ibs || 0) : (nf.ibs ? fmtV(nf.ibs) : '—');
+    var cbsVal = r.cbsRF ? fmtV(r.cbsRF.valor || nf.cbs || 0) : (nf.cbs ? fmtV(nf.cbs) : '—');
+    var ibsSc = r.ibsRF ? (stColor[r.ibsRF.status] || '#888') : '#888';
+    var cbsSc = r.cbsRF ? (stColor[r.cbsRF.status] || '#888') : '#888';
+    var ibsSt = r.ibsRF ? (r.ibsRF.status || '—') : '—';
+    var cbsSt = r.cbsRF ? (r.cbsRF.status || '—') : '—';
+    var compr = r.comprovante ? '<span style="color:var(--green);font-weight:600">✓ Recebido</span>' : '<span style="color:var(--txt3)">Aguardando</span>';
+    return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid ' + borderColor + ';border-radius:8px;padding:10px 12px;min-width:200px">'
+      + '<div style="font-size:10px;font-weight:700;color:' + titleColor + ';text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 2 — Conciliação Financeira</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
+      + '<span style="color:var(--txt3)">IBS</span><span style="font-weight:600">' + ibsVal + '</span>'
+      + '<span style="color:var(--txt3)">Status IBS</span><span><span style="background:' + ibsSc + ';color:#fff;font-size:9px;padding:2px 6px;border-radius:8px">' + ibsSt + '</span></span>'
+      + '<span style="color:var(--txt3)">CBS</span><span style="font-weight:600">' + cbsVal + '</span>'
+      + '<span style="color:var(--txt3)">Status CBS</span><span><span style="background:' + cbsSc + ';color:#fff;font-size:9px;padding:2px 6px;border-radius:8px">' + cbsSt + '</span></span>'
+      + '<span style="color:var(--txt3)">Comprovante</span><span>' + compr + '</span>'
+      + '<span style="color:var(--txt3)">Próxima ação</span><span style="color:var(--txt2)">' + r.proxAcao + '</span>'
+      + '</div></div>';
+  }
+  var html = '';
+  slice.forEach(function(r) {
+    var nf = r.nf;
     var tipoBadge = nf.tipo === 'entrada'
       ? '<span style="color:var(--teal);font-size:10px;font-weight:700">' + (nf.tipoDF || 'ENTRADA') + '</span>'
       : '<span style="color:var(--blue);font-size:10px;font-weight:700">' + (nf.tipoDF || 'SAÍDA') + '</span>';
-    var comprIcon = r.comprovante
-      ? '<span style="color:var(--green);font-weight:700">✓ Sim</span>'
-      : '<span style="color:var(--txt3)">—</span>';
     var nfLabel = ((nf.tipoDF || '') + ' ' + (nf.numero || '')).trim() || '—';
-    var hasRF = r.ibsRF || r.cbsRF;
-    html += '<tr style="cursor:pointer" onclick="(function(el){el.nextElementSibling.style.display=el.nextElementSibling.style.display===\'none\'?\'table-row\':\'none\';})(this)">'
-      + '<td style="font-weight:600;color:var(--txt1);white-space:nowrap"><span style="color:var(--txt3);font-size:10px;margin-right:4px">' + (hasRF ? '▶' : '·') + '</span>' + nfLabel + '</td>'
+    var delta = r.deltaValor;
+    var deltaStr = Math.abs(delta) < 1 ? '—' : (delta > 0 ? '+' : '') + _concFmt(delta);
+    var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? 'color:#F59E0B' : 'color:#F43F5E') : 'color:var(--txt3)';
+    var detail = '<div style="padding:10px 16px 14px">'
+      + '<div style="font-size:10px;color:var(--txt3);margin-bottom:10px">Valor total NF: <strong style="color:var(--txt1)">' + fmtV(nf.valorTotal||0) + '</strong>'
+      + ' · IBS: <strong style="color:var(--txt1)">' + fmtV(nf.ibs) + '</strong>'
+      + ' · CBS: <strong style="color:var(--txt1)">' + fmtV(nf.cbs) + '</strong>'
+      + ' · Fornecedor: <strong style="color:var(--txt1)">' + (nf.entidade||'—') + '</strong></div>'
+      + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'
+      + stageApur(r)
+      + stageFin(r)
+      + '</div>'
+      + '<div style="border-top:1px solid var(--border);padding-top:8px;display:flex;gap:8px;flex-wrap:wrap">'
+      + rfChip(r.ibsRF, 'IBS')
+      + rfChip(r.cbsRF, 'CBS')
+      + '</div></div>';
+    html += '<tr style="cursor:pointer" onclick="(function(el){var nx=el.nextElementSibling;nx.style.display=nx.style.display===\'none\'?\'table-row\':\'none\';})(this)">'
+      + '<td style="font-weight:600;color:var(--txt1);white-space:nowrap"><span style="color:var(--txt3);font-size:10px;margin-right:4px">▶</span>' + nfLabel + '</td>'
       + '<td>' + tipoBadge + '</td>'
       + '<td style="color:var(--txt2)">' + (nf.entidade || '—') + '</td>'
-      + '<td class="r" style="font-family:monospace">' + ibsVal + '</td>'
-      + '<td>' + _rfStatusBadge(r.ibsRF) + '</td>'
-      + '<td class="r" style="font-family:monospace">' + cbsVal + '</td>'
-      + '<td>' + _rfStatusBadge(r.cbsRF) + '</td>'
-      + '<td style="text-align:center">' + comprIcon + '</td>'
+      + '<td class="r" style="font-family:monospace">' + _concFmt(r.valorDF) + '</td>'
+      + '<td class="r" style="font-family:monospace;' + deltaColor + '">' + deltaStr + '</td>'
+      + '<td>' + _apurBadge(r.statusApur) + '</td>'
       + '<td>' + _finBadge(r.statusFin) + '</td>'
-      + '<td style="font-size:11px;color:var(--txt3)">' + r.proxAcao + '</td>'
       + '</tr>'
       + '<tr style="display:none;background:rgba(73,197,177,.04)">'
-      + '<td colspan="10" style="padding:0">'
-      + _concRFDetail(nf, r.ibsRF, r.cbsRF)
-      + '</td></tr>';
+      + '<td colspan="7" style="padding:0">' + detail + '</td></tr>';
   });
   tbody.innerHTML = html;
 }
 
-window.concApuracaoFiltrar = function() {
-  var busca  = (document.getElementById('apur-busca')  || {}).value || '';
-  var tipo   = (document.getElementById('apur-tipo')   || {}).value || '';
-  var status = (document.getElementById('apur-status') || {}).value || '';
+window.concUnifiedFiltrar = function() {
+  var busca  = (document.getElementById('uni-busca') || {}).value || '';
+  var tipo   = (document.getElementById('uni-tipo')  || {}).value || '';
+  var apur   = (document.getElementById('uni-apur')  || {}).value || '';
+  var fin    = (document.getElementById('uni-fin')   || {}).value || '';
   busca = busca.toLowerCase();
-  window._concApurFiltrada = (window._concListaGlobal || []).filter(function(r) {
+  window._concUniFiltrada = (window._concListaGlobal || []).filter(function(r) {
     var nf = r.nf;
-    if (tipo   && nf.tipo      !== tipo)   return false;
-    if (status && r.statusApur !== status) return false;
+    if (tipo && nf.tipo      !== tipo) return false;
+    if (apur && r.statusApur !== apur) return false;
+    if (fin  && r.statusFin  !== fin)  return false;
     if (busca) {
       var hay = [(nf.numero||''),(nf.entidade||''),(nf.cnpj||''),(nf.tipoDF||''),r.protocolo].join(' ').toLowerCase();
       if (hay.indexOf(busca) === -1) return false;
     }
     return true;
   });
-  window._concApurPag = 1;
-  _concApurRender();
+  window._concUniPag = 1;
+  _concUnifiedRender();
 };
 
-window.concApuracaoPag = function(dir) {
-  var total = Math.ceil((window._concApurFiltrada || []).length / _concApurIpp) || 1;
-  window._concApurPag = Math.max(1, Math.min(total, (window._concApurPag || 1) + dir));
-  _concApurRender();
+window.concUnifiedPag = function(dir) {
+  var total = Math.ceil((window._concUniFiltrada || []).length / _concUniIpp) || 1;
+  window._concUniPag = Math.max(1, Math.min(total, (window._concUniPag || 1) + dir));
+  _concUnifiedRender();
 };
 
-window.concApuracaoLimpar = function() {
-  var ids = ['apur-busca','apur-tipo','apur-status'];
-  ids.forEach(function(id) { var e = document.getElementById(id); if (e) e.value = ''; });
-  window._concApurFiltrada = (window._concListaGlobal || []).slice();
-  window._concApurPag = 1;
-  _concApurRender();
-};
-
-window.concFinanceiraFiltrar = function() {
-  var busca  = (document.getElementById('fin-busca')  || {}).value || '';
-  var tipo   = (document.getElementById('fin-tipo')   || {}).value || '';
-  var status = (document.getElementById('fin-status') || {}).value || '';
-  busca = busca.toLowerCase();
-  window._concFinFiltrada = (window._concListaGlobal || []).filter(function(r) {
-    var nf = r.nf;
-    if (tipo   && nf.tipo      !== tipo)   return false;
-    if (status && r.statusFin  !== status) return false;
-    if (busca) {
-      var hay = [(nf.numero||''),(nf.entidade||''),(nf.cnpj||''),(nf.tipoDF||'')].join(' ').toLowerCase();
-      if (hay.indexOf(busca) === -1) return false;
-    }
-    return true;
+window.concUnifiedLimpar = function() {
+  ['uni-busca','uni-tipo','uni-apur','uni-fin'].forEach(function(id) {
+    var e = document.getElementById(id); if (e) e.value = '';
   });
-  window._concFinPag = 1;
-  _concFinRender();
-};
-
-window.concFinanceiraPag = function(dir) {
-  var total = Math.ceil((window._concFinFiltrada || []).length / _concFinIpp) || 1;
-  window._concFinPag = Math.max(1, Math.min(total, (window._concFinPag || 1) + dir));
-  _concFinRender();
-};
-
-window.concFinanceiraLimpar = function() {
-  var ids = ['fin-busca','fin-tipo','fin-status'];
-  ids.forEach(function(id) { var e = document.getElementById(id); if (e) e.value = ''; });
-  window._concFinFiltrada = (window._concListaGlobal || []).slice();
-  window._concFinPag = 1;
-  _concFinRender();
+  window._concUniFiltrada = (window._concListaGlobal || []).slice();
+  window._concUniPag = 1;
+  _concUnifiedRender();
 };
 
 window.conciliacaoFiltrarMes = function() {
@@ -1883,11 +1895,23 @@ window.conciliacaoInit = function() {
 
 window.creditosIrParaInconsistencias = function() {
   var btn = document.getElementById('subnav-inconsist-lista');
-  if (typeof showInconsistSub === 'function' && btn) {
-    showInconsistSub('lista', btn);
+  if (typeof showInconsistSub === 'function') {
+    showInconsistSub('lista', btn || document.getElementById('nav-inconsist-btn'));
   }
-  try { if (typeof inconsistRenderTabela === 'function') inconsistRenderTabela(); } catch(e) {}
-  try { window.renderizarRFsInconsistencias(); } catch(e) {}
+  setTimeout(function() {
+    try { if (typeof inconsistRenderTabela === 'function') inconsistRenderTabela(); } catch(e) {}
+    try { window.renderizarRFsInconsistencias(); } catch(e) {}
+    // Expande o painel de filtros para evidenciar os filtros ativos
+    var filtroCorpo = document.getElementById('inc-rf-filtro-corpo');
+    var toggleIcon  = document.getElementById('inc-rf-toggle-icon');
+    if (filtroCorpo && filtroCorpo.style.display === 'none') {
+      filtroCorpo.style.display = 'block';
+      if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+    }
+    // Rola até a tabela
+    var tabela = document.getElementById('t-inc-rfs');
+    if (tabela) tabela.closest('.tcrd').scrollIntoView({behavior:'smooth', block:'start'});
+  }, 100);
 };
 
 // ============================================================
@@ -3197,31 +3221,21 @@ class DataSyncManagerFixed {
   }
 
   atualizarDashboard() {
-    // Chamar funções de atualização do dashboard
-    if (typeof creditosRenderKPIs === 'function') {
-      creditosRenderKPIs();
-      console.log('✓ creditosRenderKPIs() executado');
-    }
-
     if (typeof dashRenderCreditKPIs === 'function') {
       dashRenderCreditKPIs();
-      console.log('✓ dashRenderCreditKPIs() executado');
     }
-
     if (typeof pagRenderKPIs === 'function') {
       pagRenderKPIs();
-      console.log('✓ pagRenderKPIs() executado');
     }
-
     if (typeof conciliRender === 'function') {
       conciliRender();
-      console.log('✓ conciliRender() executado');
     }
   }
 
   sincronizar() {
-    // Atualizar dashboard periodicamente
     this.atualizarDashboard();
+    // Atualizar KPIs de crédito respeitando filtro de período ativo
+    try { window.renderizarTabelaCreditos && window.renderizarTabelaCreditos(); } catch(e) {}
   }
 
   // Getter para acessar os créditos
@@ -4887,43 +4901,27 @@ window.dashFiltrarMes = function(mes) {
 // ── DASHBOARD LINKS → Créditos e Pagamentos ──────────────────────────────
 
 window.dashIrParaCreditos = function() {
-  // Navegar para view-creditos
   var btn = document.querySelector('.nav-btn[onclick*="creditos"]');
   if (typeof showView === 'function') showView('creditos', btn);
-
-  // Aplicar filtro multi-status
-  if (!window._filtrosCreditos) window._filtrosCreditos = {};
-  window._filtrosCreditos.status = '';
-  window._filtrosCreditos.statusMulti = ['nao_apropriado', 'inconsistencia', 'vencido'];
-
-  // Exibir chip de filtro ativo
+  // Limpar filtros — card mostra visão geral do módulo
+  creditosFiltroStatus = null;
+  creditosFiltroForn   = null;
   var chip = document.getElementById('creditos-filtro-chip');
-  var lbl  = document.getElementById('creditos-filtro-label');
-  if (lbl)  lbl.textContent = 'Não apropriado · Inconsistência · Vencido';
-  if (chip) chip.style.display = 'flex';
-
-  // Renderizar tabela com filtro aplicado
-  if (window.renderizarTabelaCreditos) window.renderizarTabelaCreditos();
+  if (chip) chip.style.display = 'none';
+  if (typeof creditosRenderTabela === 'function') creditosRenderTabela();
+  setTimeout(function() {
+    if (typeof _credIrListagem === 'function') _credIrListagem();
+  }, 100);
 };
 
 window.dashIrParaPagamentosRisco = function() {
-  // Navegar para view-pagamentos
   var btn = document.querySelector('.nav-btn[onclick*="pagamentos"]');
   if (typeof showView === 'function') showView('pagamentos', btn);
-
-  // Garantir que a aba pag-imp (guias de impostos) esteja ativa
-  document.querySelectorAll('#view-pagamentos .sv').forEach(function(sv) { sv.classList.remove('active'); });
-  var svImp = document.getElementById('pag-imp');
-  if (svImp) svImp.classList.add('active');
-  document.querySelectorAll('#view-pagamentos .stab').forEach(function(b) { b.classList.remove('active'); });
-  var stabImp = document.querySelector('#view-pagamentos .stab[onclick*="\'imp\'"]');
-  if (stabImp) stabImp.classList.add('active');
-
-  // Aplicar filtro status pendente (a vencer)
+  // Filtrar por pendente (a vencer / atrasados) — detalhe destacado no card
   if (!window._filtrosPagamentos) window._filtrosPagamentos = {};
   window._filtrosPagamentos.status = 'pendente';
-
-  // Renderizar tabela filtrada
+  var sel = document.getElementById('pag-filtro-status');
+  if (sel) sel.value = 'pendente';
   if (window.renderizarTabelaPagamentos) window.renderizarTabelaPagamentos();
   if (window.atualizarKPIsPagamentos) window.atualizarKPIsPagamentos();
 };
@@ -4931,6 +4929,12 @@ window.dashIrParaPagamentosRisco = function() {
 window.dashIrParaDebitos = function() {
   var btn = document.querySelector('.nav-btn[onclick*="debitos"]');
   if (typeof showView === 'function') showView('debitos', btn);
+  // Filtrar por vencido — detalhe destacado no card
+  if (!window._filtrosDebitos) window._filtrosDebitos = {};
+  window._filtrosDebitos.status = 'vencido';
+  var sel = document.getElementById('fd-status');
+  if (sel) sel.value = 'vencido';
+  if (window.renderizarTabelaDebitos) window.renderizarTabelaDebitos();
 };
 
 window.dashIrParaConciliacao = function() {
