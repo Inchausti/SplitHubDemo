@@ -2236,7 +2236,7 @@ window._incAbrirAcao = function(id) {
   var fmtV = function(v){ if(v>=1e6) return 'R$ '+(v/1e6).toFixed(2).replace('.',',')+'M'; if(v>=1e3) return 'R$ '+Math.round(v/1e3)+'K'; return 'R$ '+v.toFixed(2).replace('.',','); };
 
   var acoesHtml = acoes.map(function(a, i) {
-    return '<button onclick="window._incExecutarAcao(\'' + id + '\',' + i + ')" style="display:flex;align-items:center;gap:10px;width:100%;background:#1A1817;border:1px solid #3A3836;border-radius:8px;padding:12px 14px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s;margin-bottom:8px" onmouseenter="this.style.borderColor=\'' + a.cor + '\'" onmouseleave="this.style.borderColor=\'#3A3836\'">'
+    return '<button onclick="window._incExecutarAcao(\'' + id + '\',' + i + ')" style="display:flex;align-items:center;gap:10px;width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s;margin-bottom:8px" onmouseenter="this.style.borderColor=\'' + a.cor + '\'" onmouseleave="this.style.borderColor=\'var(--border)\'">'
       + '<span style="font-size:20px;width:28px;flex-shrink:0">' + a.icon + '</span>'
       + '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--txt1)">' + a.label + '</div>'
       + '<div style="font-size:11px;color:var(--txt2);margin-top:2px">Clicar para iniciar o processo de correção</div></div>'
@@ -2245,22 +2245,22 @@ window._incAbrirAcao = function(id) {
   }).join('');
 
   var html = '<div id="_incAcaoOverlay" onclick="if(event.target===this)window._incFecharAcao()" style="position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px">'
-    + '<div style="background:#232120;border:1px solid #3A3836;border-radius:12px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #3A3836">'
-    + '<div><div style="font-size:15px;font-weight:700;color:#F2F0EF">Ações de Correção</div>'
-    + '<div style="font-size:12px;color:#A7A8AA;margin-top:2px">' + r.id + ' · ' + (r.forn||'—') + '</div></div>'
-    + '<button onclick="window._incFecharAcao()" style="background:none;border:none;color:#A7A8AA;font-size:20px;cursor:pointer;line-height:1;padding:4px">✕</button>'
+    + '<div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border)">'
+    + '<div><div style="font-size:15px;font-weight:700;color:var(--txt1)">Ações de Correção</div>'
+    + '<div style="font-size:12px;color:var(--txt2);margin-top:2px">' + r.id + ' · ' + (r.forn||'—') + '</div></div>'
+    + '<button onclick="window._incFecharAcao()" style="background:none;border:none;color:var(--txt2);font-size:20px;cursor:pointer;line-height:1;padding:4px">✕</button>'
     + '</div>'
-    + '<div style="padding:16px 20px;border-bottom:1px solid #3A3836;display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#6B6D6F;margin-bottom:4px">Inconsistência</div><div style="font-size:13px;font-weight:700;color:' + incCor + '">' + tipo + '</div></div>'
-    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#6B6D6F;margin-bottom:4px">Valor RF</div><div style="font-size:13px;font-weight:700;color:#F2F0EF">' + fmtV(r.valor) + '</div></div>'
-    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#6B6D6F;margin-bottom:4px">Etapa</div><div style="font-size:13px;color:#F2F0EF">' + (r.etapa||'—') + '</div></div>'
-    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#6B6D6F;margin-bottom:4px">Data</div><div style="font-size:13px;color:#F2F0EF">' + (r.data||'—') + '</div></div>'
+    + '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Inconsistência</div><div style="font-size:13px;font-weight:700;color:' + incCor + '">' + tipo + '</div></div>'
+    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Valor RF</div><div style="font-size:13px;font-weight:700;color:var(--txt1)">' + fmtV(r.valor) + '</div></div>'
+    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Etapa</div><div style="font-size:13px;color:var(--txt1)">' + (r.etapa||'—') + '</div></div>'
+    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Data</div><div style="font-size:13px;color:var(--txt1)">' + (r.data||'—') + '</div></div>'
     + '</div>'
     + '<div style="padding:18px 20px">'
-    + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6B6D6F;margin-bottom:12px">Selecione a ação de correção</div>'
+    + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:12px">Selecione a ação de correção</div>'
     + acoesHtml
-    + '<button onclick="window._incFecharAcao()" style="width:100%;background:none;border:1px solid #3A3836;border-radius:8px;padding:10px;color:#A7A8AA;font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px">Cancelar</button>'
+    + '<button onclick="window._incFecharAcao()" style="width:100%;background:none;border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--txt2);font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px">Cancelar</button>'
     + '</div></div></div>';
 
   var el = document.getElementById('_incAcaoOverlay');
@@ -3279,7 +3279,7 @@ function _ensureChartTooltip() {
   if (document.getElementById('chart-tooltip')) return;
   var t = document.createElement('div');
   t.id = 'chart-tooltip';
-  t.style.cssText = 'position:fixed;display:none;background:#1D1C1B;border:1px solid #3D3C3A;border-radius:8px;padding:8px 12px;font-size:12px;font-family:Montserrat,sans-serif;color:#F2F0EF;pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.5);line-height:1.5';
+  t.style.cssText = 'position:fixed;display:none;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;font-family:Montserrat,sans-serif;color:var(--txt1);pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.3);line-height:1.5';
   document.body.appendChild(t);
   document.addEventListener('mousemove', function(e) {
     var tt = document.getElementById('chart-tooltip');
@@ -5934,7 +5934,7 @@ window._automState = {
   ]
 };
 
-var _automCor = { bg:'#1A1817', card:'#232120', brd:'#3A3836', txt1:'#F2F0EF', txt2:'#A7A8AA', txt3:'#6B6D6F', teal:'#49C5B1', blue:'#3B82F6', green:'#22C55E', red:'#F43F5E', amber:'#F59E0B', purple:'#8B5CF6' };
+var _automCor = { bg:'var(--bg)', card:'var(--card)', brd:'var(--border)', txt1:'var(--txt1)', txt2:'var(--txt2)', txt3:'var(--txt3)', teal:'#49C5B1', blue:'#3B82F6', green:'#22C55E', red:'#F43F5E', amber:'#F59E0B', purple:'#8B5CF6' };
 var _ac = _automCor;
 
 var _automModLabels = { creditos:'Créditos', debitos:'Débitos', inconsistencias:'Inconsistências', pagamentos:'Pagamentos', consolidado:'Consolidado (Visão Geral)' };
@@ -6131,7 +6131,7 @@ function _automRenderCobranca(root) {
         + '</div>'
         + '</div>'
         // Template preview
-        + '<div style="background:#1A1817;border:1px solid ' + _ac.brd + ';border-radius:6px;padding:12px 14px;margin-bottom:10px">'
+        + '<div style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:10px">'
         + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:6px">Template de e-mail</div>'
         + '<div style="font-size:11px;font-weight:600;color:' + _ac.txt1 + ';margin-bottom:4px">Assunto: ' + r.assunto + '</div>'
         + '<div style="font-size:11px;color:' + _ac.txt2 + ';white-space:pre-line;line-height:1.6;max-height:80px;overflow:hidden">' + r.corpo.substring(0, 200) + (r.corpo.length > 200 ? '…' : '') + '</div>'
@@ -6206,8 +6206,8 @@ window._automExcluir = function(tipo, id) {
 
 window._automTestarConexao = function() {
   var toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:28px;right:24px;background:#232120;border:1px solid rgba(34,197,94,.4);border-left:4px solid #22C55E;border-radius:8px;padding:14px 18px;z-index:10001;font-family:Montserrat,sans-serif;min-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.5)';
-  toast.innerHTML = '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">✅ Conexão bem-sucedida</div><div style="font-size:11px;color:#A7A8AA">ServiceNow · HTTP 200 · latência 142ms</div>';
+  toast.style.cssText = 'position:fixed;bottom:28px;right:24px;background:var(--card);border:1px solid rgba(34,197,94,.4);border-left:4px solid #22C55E;border-radius:8px;padding:14px 18px;z-index:10001;font-family:Montserrat,sans-serif;min-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.3)';
+  toast.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--txt1);margin-bottom:3px">✅ Conexão bem-sucedida</div><div style="font-size:11px;color:var(--txt2)">ServiceNow · HTTP 200 · latência 142ms</div>';
   document.body.appendChild(toast);
   setTimeout(function(){ if(toast.parentNode) toast.parentNode.removeChild(toast); }, 3500);
 };
@@ -6373,30 +6373,30 @@ window._automSalvarCob = function(id) {
 // ── Helpers de UI ───────────────────────────────────────────────
 
 function _automInputStyle() {
-  return 'width:100%;background:#1A1817;border:1px solid #3A3836;border-radius:6px;padding:9px 12px;color:#F2F0EF;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;';
+  return 'width:100%;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--txt1);font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;';
 }
 
 function _automCampo(label, input) {
-  return '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:600;color:#A7A8AA;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">' + label + '</label>' + input + '</div>';
+  return '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:600;color:var(--txt2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">' + label + '</label>' + input + '</div>';
 }
 
 function _automOverlay(titulo, campos, onSave) {
   return '<div id="_automOverlay" onclick="if(event.target===this)document.getElementById(\'_automOverlay\').remove()" style="position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px">'
-    + '<div style="background:#232120;border:1px solid #3A3836;border-radius:12px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #3A3836;position:sticky;top:0;background:#232120;z-index:1">'
-    + '<div style="font-size:15px;font-weight:700;color:#F2F0EF">' + titulo + '</div>'
-    + '<button onclick="document.getElementById(\'_automOverlay\').remove()" style="background:none;border:none;color:#A7A8AA;font-size:20px;cursor:pointer;line-height:1;padding:4px">✕</button>'
+    + '<div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.6)">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:1">'
+    + '<div style="font-size:15px;font-weight:700;color:var(--txt1)">' + titulo + '</div>'
+    + '<button onclick="document.getElementById(\'_automOverlay\').remove()" style="background:none;border:none;color:var(--txt2);font-size:20px;cursor:pointer;line-height:1;padding:4px">✕</button>'
     + '</div>'
     + '<div style="padding:20px">' + campos + '</div>'
-    + '<div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid #3A3836">'
-    + '<button onclick="document.getElementById(\'_automOverlay\').remove()" style="background:none;border:1px solid #3A3836;border-radius:7px;padding:9px 18px;color:#A7A8AA;font-size:13px;cursor:pointer;font-family:inherit">Cancelar</button>'
+    + '<div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border)">'
+    + '<button onclick="document.getElementById(\'_automOverlay\').remove()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:9px 18px;color:var(--txt2);font-size:13px;cursor:pointer;font-family:inherit">Cancelar</button>'
     + '<button onclick="' + onSave + '" style="background:#49C5B1;border:none;border-radius:7px;padding:9px 18px;color:#0a0a0a;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Salvar</button>'
     + '</div></div></div>';
 }
 
 function _automToast(msg, cor) {
   var t = document.createElement('div');
-  t.style.cssText = 'position:fixed;bottom:28px;right:24px;background:#232120;border:1px solid ' + cor + '44;border-left:4px solid ' + cor + ';border-radius:8px;padding:12px 18px;z-index:10001;font-family:Montserrat,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.5);font-size:13px;font-weight:600;color:#F2F0EF';
+  t.style.cssText = 'position:fixed;bottom:28px;right:24px;background:var(--card);border:1px solid ' + cor + '44;border-left:4px solid ' + cor + ';border-radius:8px;padding:12px 18px;z-index:10001;font-family:Montserrat,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3);font-size:13px;font-weight:600;color:var(--txt1)';
   t.textContent = '✓  ' + msg;
   document.body.appendChild(t);
   setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3000);
