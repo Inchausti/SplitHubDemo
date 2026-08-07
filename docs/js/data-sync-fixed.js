@@ -950,8 +950,8 @@ window.atualizarKPIsDashboard = function() {
   // --- INCONSISTÊNCIAS filtradas pelo período selecionado ---
   var incTotal = 0, incIng = 0, incCred = 0, incDeb = 0, incPag = 0;
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (!_inPeriod(nf.data || '')) return;
     (nf.registrosFiscais || []).forEach(function(rf) {
-      if (!_inPeriod(rf.data || '')) return;
       if (rf.status !== 'inconsistencia') return;
       incTotal++;
       if (nf.tipo === 'saida') { incDeb++; }
