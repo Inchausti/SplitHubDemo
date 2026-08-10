@@ -4006,14 +4006,15 @@ window.atualizarKPIsPagamentos = function() {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
       if (f.mesAno && !(rf.data || '').startsWith(f.mesAno)) return;
-      var temPag     = rf.dataPagamento && rf.dataPagamento !== '—';
-      var eApropriado = rf.status === 'apropriado' || rf.status === 'utilizado';
+      var temPag      = rf.dataPagamento && rf.dataPagamento !== '—';
+      var sc          = rf.statusCredito || rf.status || '';
+      var sr          = rf.statusRegistro || null;
+      var eApropriado = sc === 'apropriado' || sc === 'utilizado';
       var v = rf.valor || 0;
-      if (temPag || eApropriado)               { pago     += v; cntPago++; }
-      else if (rf.status === 'vencido')        { atrasado += v; cntAtr++;  lastAtr  = rf.entidade || nf.entidade; }
-      else if (rf.status === 'em_risco')       { vencendo += v; cntVenc++; lastVenc = rf.entidade || nf.entidade; }
-      else if (rf.status === 'inconsistencia') { vencendo += v; cntVenc++; lastVenc = rf.entidade || nf.entidade; }
-      else                                     { pendente += v; cntPend++; }
+      if (temPag || eApropriado)                                              { pago     += v; cntPago++; }
+      else if (sr === 'vencido')                                              { atrasado += v; cntAtr++;  lastAtr  = rf.entidade || nf.entidade; }
+      else if (sr === 'em_risco' || sr === 'a_prescrever' || sr === 'inconsistencia') { vencendo += v; cntVenc++; lastVenc = rf.entidade || nf.entidade; }
+      else                                                                    { pendente += v; cntPend++; }
     });
   });
 
