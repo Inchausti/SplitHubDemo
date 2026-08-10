@@ -2692,16 +2692,22 @@ window._enriquecerNFsSaida = function() {
   ];
   var metodos = ['RAD','RAD','Compensacao'];
 
-  // Pré-calcular valores escalados: sum(valorBruto) = R$ 100M
-  // valorBruto = vliq * (1 + ALIQ_CBS + ALIQ_IBS) = vliq * 1.18
-  var _vliqBase = [];
-  for (var _j = 1; _j <= 100; _j++) {
-    var _s = (_j * 73856093 ^ _j * 19349663 ^ _j * 83492791) >>> 0;
-    _vliqBase.push(500000 + (_s % 800001));
+  // Pré-calcular valores escalados: sum(débitos saída) = sum(créditos entrada) × 1.15
+  var _totalCred = 0;
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) { _totalCred += (rf.valor || 0); });
+  });
+  if (!_totalCred) _totalCred = 76271081;
+  var _targetLiq = Math.round(_totalCred * 1.15 / (ALIQ_CBS + ALIQ_IBS));
+  // LCG seed determinístico (evita overflow do XOR anterior)
+  var _vliqBase = [], _lcg = 1013904223;
+  for (var _j = 0; _j < 100; _j++) {
+    _lcg = (_lcg * 1664525 + 1013904223) >>> 0;
+    _vliqBase.push(500000 + (_lcg % 800001));
   }
-  var _sumBase   = _vliqBase.reduce(function(s, v) { return s + v; }, 0);
-  var _targetLiq = Math.round(100000000 / (1 + ALIQ_CBS + ALIQ_IBS));
-  var _scale     = _targetLiq / _sumBase;
+  var _sumBase = _vliqBase.reduce(function(s, v) { return s + v; }, 0);
+  var _scale   = _targetLiq / _sumBase;
 
   var idx = 0;
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
