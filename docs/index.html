@@ -2798,10 +2798,12 @@ var sc={
   alerta:{l:"Atenção",bg:"rgba(245,158,11,.12)",c:"#F59E0B",bc:"rgba(245,158,11,.25)"},
   risco:{l:"Risco",bg:"rgba(244,63,94,.12)",c:"#F43F5E",bc:"rgba(244,63,94,.25)"},
   vencido:{l:"Vencido",bg:"rgba(244,63,94,.12)",c:"#F43F5E",bc:"rgba(244,63,94,.25)"},
-  nao_apropriado:{l:"Não Apropriado",bg:"rgba(244,63,94,.12)",c:"#F43F5E",bc:"rgba(244,63,94,.25)"},
+  nao_apropriado:{l:"Não Apropriado",bg:"rgba(167,168,170,.12)",c:"#A7A8AA",bc:"rgba(167,168,170,.25)"},
   apropriado:{l:"Apropriado",bg:"rgba(34,197,94,.12)",c:"#22C55E",bc:"rgba(34,197,94,.25)"},
   utilizado:{l:"Utilizado",bg:"rgba(73,197,177,.12)",c:"#49C5B1",bc:"rgba(73,197,177,.25)"},
-  inconsistencia:{l:"Inconsistência",bg:"rgba(244,63,94,.12)",c:"#F43F5E",bc:"rgba(244,63,94,.25)"}
+  glosado:{l:"Glosado",bg:"rgba(139,92,246,.12)",c:"#8B5CF6",bc:"rgba(139,92,246,.25)"},
+  inconsistencia:{l:"Inconsistência",bg:"rgba(244,63,94,.12)",c:"#F43F5E",bc:"rgba(244,63,94,.25)"},
+  a_prescrever:{l:"A Prescrever",bg:"rgba(251,146,60,.12)",c:"#FB923C",bc:"rgba(251,146,60,.25)"}
 };
 
 function bdg(s){var c=sc[s]||sc.pendente;return'<span style="background:'+c.bg+';color:'+c.c+';border:1px solid '+c.bc+';border-radius:4px;padding:2px 8px;font-size:11px;font-weight:500;font-family:IBM Plex Mono,monospace">'+c.l+'</span>';}
@@ -3689,14 +3691,7 @@ function rfRenderGestao(){
     });
   }
   rfListaGlobal=todosRFs;
-  var qtd10Pct=Math.ceil(rfListaGlobal.length*0.1);
-  var inconsistenciasLabels=['Não conciliado','Valor imposto divergente','Vencido','Sem Comprovante'];
-  for(var i=0;i<qtd10Pct;i++){
-    var idxAleat=Math.floor(Math.random()*rfListaGlobal.length);
-    var rfAleat=rfListaGlobal[idxAleat];
-    var labelAleat=inconsistenciasLabels[Math.floor(Math.random()*inconsistenciasLabels.length)];
-    rfAleat.inconsistencia=labelAleat;
-  }
+  // inconsistencia já é atribuída deterministicamente via statusRegistro na geração das NFs
   rfFiltrarGestao();
 }
 function rfFiltrarGestao(){
@@ -3864,11 +3859,25 @@ function nfRenderLista(){
   // Adicionar NFs de entrada com CBS e IBS
   if(typeof dataSyncFixed!=='undefined'){
     var nfsEntrada=dataSyncFixed.getNFsEntrada();
+    // Tipos de inconsistências válidas para entrada
+    var _incTiposEnt=['Não conciliado','Valor imposto divergente','Documento inválido','Sem Comprovante'];
     nfsEntrada.forEach(function(nf,idx){
-      // Distribuição determinística por idx (gcd(37,100)=1 → percorre todos 100 valores):
-      // ~5% vencido, ~10% em_risco, ~10% nao_apropriado, ~5% inconsistencia, ~20% apropriado, ~50% utilizado
+      // ── Máquina de estado: dois hashes independentes (gcd(37,100)=gcd(53,100)=1)
       var _p=(idx*37+13)%100;
-      var statusCred=_p<5?'vencido':_p<15?'em_risco':_p<25?'nao_apropriado':_p<30?'inconsistencia':_p<50?'apropriado':'utilizado';
+      var _q=(idx*53+7)%100;
+
+      // Status do Crédito: nao_apropriado(15%) | apropriado(20%) | utilizado(50%) | glosado(15%)
+      var statusCredito=_p<15?'nao_apropriado':_p<35?'apropriado':_p<85?'utilizado':'glosado';
+
+      // Status do Registro (só para não-glosados): inconsistencia|em_risco|a_prescrever|vencido|null
+      var statusRegistro=null;
+      if(statusCredito!=='glosado'){
+        if(_q<5)        statusRegistro='inconsistencia';
+        else if(_q<13)  statusRegistro='em_risco';
+        else if(_q<18&&statusCredito==='nao_apropriado') statusRegistro='a_prescrever';
+        else if(_q<23)  statusRegistro='vencido';
+      }
+      var tipoInconsistencia=statusRegistro==='inconsistencia'?_incTiposEnt[idx%_incTiposEnt.length]:null;
 
       // CBS = 8% do líquido, IBS = 10% do líquido, bruto = líquido + CBS + IBS
       var valorLiquido=Math.floor(nf.valor/1.18);
@@ -3895,14 +3904,17 @@ function nfRenderLista(){
         cbs:cbs,
         ibs:ibs,
         data:nf.data,
-        status:statusCred,
+        status:statusCredito,         // compat legado
+        statusCredito:statusCredito,  // Status do Crédito
+        statusRegistro:statusRegistro,// Status do Registro
+        inconsistencia:tipoInconsistencia,
         contratoId:_ctId,
         metodoPagamento:_metPag,
         chaveDF:gerarChaveDF(_tipoDF_ent,nf.cnpj,nf.numero,nf.data),
         registrosFiscais:[]
       };
 
-      // Registros Fiscais (IBS e CBS) - com todas as informações base da NF
+      // Registros Fiscais (IBS e CBS) com ambos os status
       nfRecord.registrosFiscais.push({
         id:nfGerarIdRegistroFiscal(),
         tipo:'entrada',
@@ -3912,7 +3924,10 @@ function nfRenderLista(){
         entidade:nf.fornecedor,
         cnpj:nf.cnpj,
         valor:ibs,
-        status:statusCred,
+        status:statusCredito,
+        statusCredito:statusCredito,
+        statusRegistro:statusRegistro,
+        inconsistencia:tipoInconsistencia,
         contratoId:_ctId,
         metodoPagamento:_metPag,
         data:nf.data,
@@ -3929,7 +3944,10 @@ function nfRenderLista(){
         entidade:nf.fornecedor,
         cnpj:nf.cnpj,
         valor:cbs,
-        status:statusCred,
+        status:statusCredito,
+        statusCredito:statusCredito,
+        statusRegistro:statusRegistro,
+        inconsistencia:tipoInconsistencia,
         contratoId:_ctId,
         metodoPagamento:_metPag,
         data:nf.data,
