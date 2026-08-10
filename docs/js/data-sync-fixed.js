@@ -4418,34 +4418,40 @@ document.addEventListener('DOMContentLoaded', function() {
           window.nfListaFiltradaGlobal.push(nfRecord);
         });
 
-        // Gerar NFs de saída (100 clientes) — datas 2026 inteiro, montante total = R$ 100M
+        // Gerar NFs de saída (100 clientes) — datas 2026 inteiro, montante total = 15% acima das entradas (~R$575M)
         var _clientesSaida = ['WEG Motores','Mercado Livre','Embraer S.A.','Bosch Ltda','Randon S.A.','Ambev S.A.','Magazine Luiza','Gerdau Aços','Marcopolo S.A.','Natura &Co'];
         var _mesesSaida2026 = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
         var _statusSaida   = ['extinto','extinto','extinto','extinto','extinto','nao_extinto','nao_extinto','nao_extinto','vencido','inconsistencia'];
         var _metodosSaida  = ['RAD','RAD','Compensacao'];
+        // Tipos de DF válidos para saída (Decreto 7.212/2010, LC 214/2025)
+        var _tiposDFSaida  = ['NF-e','NF-e','NF-e','NFC-e','CT-e','CT-e','NFCom','NF3-e','BP-e','MDF-e'];
 
-        // Pré-calcular vliq base com variação pseudo-aleatória, depois escalar para sum(valorTotal)=100M
-        // valorTotal = vliq * 1.18, target sum(valorTotal) = 100M → sum(vliq) = 100M/1.18 ≈ 84.745.763
+        // Pré-calcular vliq base com variação pseudo-aleatória, depois escalar para sum(valorTotal)=575M
+        // Entrada total ≈ R$500M; saída = entrada × 1.15 = R$575M
+        // valorTotal = vliq * (1 + ALIQ_IBS + ALIQ_CBS) = vliq * 1.18
+        // → sum(vliq) = 575M / 1.18 ≈ 487.288.136
         var _vliqBase = [];
         for (var _sj = 1; _sj <= 100; _sj++) {
           var _seed = (_sj * 73856093 ^ _sj * 19349663 ^ _sj * 83492791) >>> 0;
           _vliqBase.push(500000 + (_seed % 800001)); // range 500K–1.3M
         }
         var _sumVliqBase = _vliqBase.reduce(function(s,v){ return s+v; }, 0);
-        var _targetSumVliq = Math.round(100000000 / 1.18);
+        var _targetSumVliq = Math.round(500000000 * 1.15 / 1.18);
         var _scaleSaida = _targetSumVliq / _sumVliqBase;
 
         for (var _si = 1; _si <= 100; _si++) {
           var _vliq   = Math.round(_vliqBase[_si - 1] * _scaleSaida);
-          var _cbs    = Math.floor(_vliq * 0.08);
-          var _ibs    = Math.floor(_vliq * 0.10);
+          var _cbs    = Math.floor(_vliq * ALIQ_CBS);
+          var _ibs    = Math.floor(_vliq * ALIQ_IBS);
           var _vbrut  = _vliq + _cbs + _ibs;
           var _nsNum  = String(_si + 500000).padStart(6, '0');
-          // Data aleatória espalhada por todos os 12 meses de 2026
-          var _mesIdx = (_si * 7 + 3) % 12;
+          // Data: hash multi-semente para distribuição uniforme e aleatória pelos 12 meses
+          var _hDate  = ((_si * 1664525 + 1013904223) ^ (_si * 22695477 + 1)) >>> 0;
+          var _mesIdx = _hDate % 12;
           var _mes    = _mesesSaida2026[_mesIdx];
           var _diasNoMes = [31,28,31,30,31,30,31,31,30,31,30,31][_mesIdx];
-          var _dia    = String(1 + ((_si * 11 + 7) % _diasNoMes)).padStart(2, '0');
+          var _hDia   = ((_si * 6364136223846793005 + 1442695040888963407) ^ _hDate) >>> 0;
+          var _dia    = String(1 + (_hDia % _diasNoMes)).padStart(2, '0');
           var _dataS  = _mes + '-' + _dia;
           var _stS    = _statusSaida[(_si - 1) % _statusSaida.length];
           var _metS   = _stS === 'extinto' ? _metodosSaida[(_si - 1) % _metodosSaida.length] : '—';
@@ -4455,7 +4461,7 @@ document.addEventListener('DOMContentLoaded', function() {
           var _rfIncTiposSai = ['Não conciliado','Valor imposto divergente','Vencido','Sem Comprovante'];
           var _incTipoSai = _stS === 'inconsistencia' ? _rfIncTiposSai[(_si - 1) % _rfIncTiposSai.length] : null;
 
-          var _tipoDFSai = _getTipoDFLoc(_nsNum);
+          var _tipoDFSai = _tiposDFSaida[(_hDate >> 4) % _tiposDFSaida.length];
           var _cnpjSai = '12.345.678/000' + String(_si % 100).padStart(2, '0');
           var _nfS = {
             numero: _nsNum, tipo: 'saida', subTipo: 'nf',
