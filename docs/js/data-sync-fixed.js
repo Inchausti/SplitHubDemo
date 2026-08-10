@@ -3369,6 +3369,7 @@ class DataSyncManagerFixed {
     try { window.renderizarRFsInconsistencias  && window.renderizarRFsInconsistencias();   } catch(e) {}
     try { window.renderizarTop5Inconsistencias && window.renderizarTop5Inconsistencias();  } catch(e) {}
     try { window.renderizarTop10Empresas       && window.renderizarTop10Empresas();        } catch(e) {}
+    try { window.renderizarAgeingCreditos      && window.renderizarAgeingCreditos();       } catch(e) {}
 
     // Conciliação — KPIs de apuração + tabela de DFs
     try { window.atualizarEstatisticasConciliacao && window.atualizarEstatisticasConciliacao(); } catch(e) {}
@@ -3651,6 +3652,83 @@ window.renderizarTop10Empresas = function() {
 };
 
 // ============================================================
+// AGEING DE CRÉDITOS NÃO APROPRIADOS
+// ============================================================
+
+window.renderizarAgeingCreditos = function() {
+  var barsEl = document.getElementById('cred-ageing-bars');
+  if (!barsEl) return;
+
+  var hoje = new Date('2026-08-10'); // data de referência do sistema
+  var faixas = [
+    { label: '0 – 30 dias',    min: 0,   max: 30,  color: '#22C55E', bg: 'rgba(34,197,94,.15)'   },
+    { label: '31 – 90 dias',   min: 31,  max: 90,  color: '#3B82F6', bg: 'rgba(59,130,246,.15)'  },
+    { label: '91 – 180 dias',  min: 91,  max: 180, color: '#F59E0B', bg: 'rgba(245,158,11,.15)'  },
+    { label: '181 – 365 dias', min: 181, max: 365, color: '#F43F5E', bg: 'rgba(244,63,94,.15)'   },
+    { label: '> 365 dias',     min: 366, max: Infinity, color: '#8B5CF6', bg: 'rgba(139,92,246,.15)' }
+  ];
+  var totais = [0, 0, 0, 0, 0];
+  var cnts   = [0, 0, 0, 0, 0];
+
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      var sc = rf.statusCredito || rf.status || '';
+      if (sc !== 'nao_apropriado') return;
+      var dataStr = rf.data || nf.data || '';
+      if (!dataStr) return;
+      var partes = dataStr.split('-');
+      if (partes.length < 3) return;
+      var dataRF = new Date(partes[0], parseInt(partes[1]) - 1, parseInt(partes[2]));
+      var dias = Math.floor((hoje - dataRF) / 86400000);
+      for (var i = 0; i < faixas.length; i++) {
+        if (dias >= faixas[i].min && dias <= faixas[i].max) {
+          totais[i] += rf.valor || 0;
+          cnts[i]++;
+          break;
+        }
+      }
+    });
+  });
+
+  var totalGeral = totais.reduce(function(s, v) { return s + v; }, 0);
+  if (totalGeral === 0) {
+    barsEl.innerHTML = '<div style="text-align:center;color:var(--txt3);font-size:12px;padding:24px 0">Nenhum crédito pendente encontrado.</div>';
+    return;
+  }
+
+  function fmtV(v) {
+    return v >= 1e6 ? 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M'
+         : v >= 1e3 ? 'R$ ' + Math.round(v / 1e3) + 'K'
+         : 'R$ 0';
+  }
+
+  var barsHtml = '';
+  faixas.forEach(function(f, i) {
+    var pct = totalGeral > 0 ? (totais[i] / totalGeral * 100) : 0;
+    var pctStr = pct.toFixed(1).replace('.', ',') + '%';
+    barsHtml += '<div style="display:grid;grid-template-columns:130px 1fr 90px 70px;align-items:center;gap:10px">'
+      + '<div style="font-size:11px;color:var(--txt2);white-space:nowrap">' + f.label + '</div>'
+      + '<div style="background:var(--sidebar);border-radius:4px;height:8px;overflow:hidden">'
+      +   '<div style="height:100%;border-radius:4px;background:' + f.color + ';width:' + pct.toFixed(1) + '%;transition:width .6s ease"></div>'
+      + '</div>'
+      + '<div style="font-size:12px;font-weight:700;font-family:\'IBM Plex Mono\',monospace;color:' + f.color + ';text-align:right;white-space:nowrap">' + fmtV(totais[i]) + '</div>'
+      + '<div style="font-size:11px;color:var(--txt3);text-align:right;white-space:nowrap">' + pctStr + ' · ' + cnts[i] + ' RF</div>'
+      + '</div>';
+  });
+  barsEl.innerHTML = barsHtml;
+
+  // KPIs por faixa
+  faixas.forEach(function(f, i) {
+    var el  = document.getElementById('age-kpi-' + i);
+    var elP = document.getElementById('age-pct-' + i);
+    var pct = totalGeral > 0 ? (totais[i] / totalGeral * 100) : 0;
+    if (el)  el.textContent  = fmtV(totais[i]);
+    if (elP) elP.textContent = pct.toFixed(1).replace('.', ',') + '% · ' + cnts[i] + ' RF';
+  });
+};
+
+// ============================================================
 // GESTÃO DE PAGAMENTOS — filtro global de mês + tabela dinâmica
 // ============================================================
 
@@ -3903,6 +3981,7 @@ window.renderizarTabelaPagamentos = function() {
   if (chkAll) chkAll.checked = false;
 
   window.atualizarKPIsPagamentos();
+  if (window.renderizarEvolucaoAcumuladaCreditos) window.renderizarEvolucaoAcumuladaCreditos();
 };
 
 // ── Seleção múltipla e geração em lote ──────────────────────
@@ -4048,6 +4127,67 @@ window.atualizarKPIsPagamentos = function() {
   setEl('pag-atrasado-sub', cntAtr  + (cntAtr  === 1 && lastAtr  ? ' guia — ' + lastAtr  : ' guias vencidas'));
   setEl('pag-pago',         fmtM(pago));
   setEl('pag-pago-sub',     cntPago + ' guias executadas');
+};
+
+// ============================================================
+// EVOLUÇÃO ACUMULADA DE CRÉDITOS — Apropriados vs Pendentes
+// ============================================================
+
+window.renderizarEvolucaoAcumuladaCreditos = function() {
+  var byMonth = {};
+
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      var mes = (rf.data || nf.data || '').substring(0, 7);
+      if (!mes) return;
+      if (!byMonth[mes]) byMonth[mes] = { aprop: 0, pend: 0 };
+      var v = rf.valor || 0;
+      var sc = rf.statusCredito || rf.status || '';
+      if (sc === 'apropriado' || sc === 'utilizado') byMonth[mes].aprop += v;
+      else if (sc === 'nao_apropriado') byMonth[mes].pend += v;
+    });
+  });
+
+  var meses = Object.keys(byMonth).sort();
+  if (!meses.length) return;
+
+  // Acumular mês a mês
+  var acumAprop = 0, acumPend = 0;
+  var dAprop = [], dPend = [], labels = [];
+  meses.forEach(function(m) {
+    acumAprop += byMonth[m].aprop;
+    acumPend  += byMonth[m].pend;
+    dAprop.push(+(acumAprop / 1e6).toFixed(2));
+    dPend.push(+(acumPend  / 1e6).toFixed(2));
+    labels.push(m.substring(5, 7) + '/' + m.substring(2, 4));
+  });
+
+  // Renderizar gráfico via svgLine (definida em index.html, disponível globalmente)
+  if (typeof svgLine === 'function') {
+    svgLine('cPagEvolAcum', [
+      { data: dAprop, color: '#22C55E', fill: true, dots: true, w: 2.5, label: 'Apropriados' },
+      { data: dPend,  color: '#F59E0B', fill: true, dots: true, w: 2,   label: 'Pendentes', dash: true }
+    ], labels, 200, { min: 0 });
+  }
+
+  // Atualizar totalizadores
+  function fm(v) {
+    var n = v * 1e6;
+    return n >= 1e6 ? 'R$ ' + (n / 1e6).toFixed(1).replace('.', ',') + 'M'
+         : n >= 1e3 ? 'R$ ' + Math.round(n / 1e3) + 'K'
+         : 'R$ ' + Math.round(n);
+  }
+  var totalAprop = acumAprop, totalPend = acumPend;
+  var gap = totalAprop + totalPend > 0 ? Math.round(totalAprop / (totalAprop + totalPend) * 100) : 0;
+  var elA = document.getElementById('pag-evol-aprop');
+  var elP = document.getElementById('pag-evol-pend');
+  var elG = document.getElementById('pag-evol-gap');
+  var elX = document.getElementById('pag-evol-pct');
+  if (elA) elA.textContent = fm(acumAprop / 1e6);
+  if (elP) elP.textContent = fm(acumPend  / 1e6);
+  if (elG) elG.textContent = fm((acumPend) / 1e6);
+  if (elX) elX.textContent = gap + '%';
 };
 
 // ============================================================
@@ -5075,6 +5215,7 @@ window.dashIrParaPagamentosRisco = function() {
   if (sel) sel.value = 'pendente';
   if (window.renderizarTabelaPagamentos) window.renderizarTabelaPagamentos();
   if (window.atualizarKPIsPagamentos) window.atualizarKPIsPagamentos();
+  if (window.renderizarEvolucaoAcumuladaCreditos) window.renderizarEvolucaoAcumuladaCreditos();
 };
 
 window.dashIrParaDebitos = function() {
