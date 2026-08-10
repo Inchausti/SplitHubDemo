@@ -3370,7 +3370,8 @@ class DataSyncManagerFixed {
     try { window.renderizarTop5Inconsistencias && window.renderizarTop5Inconsistencias();  } catch(e) {}
     try { window.renderizarTop10Empresas       && window.renderizarTop10Empresas();        } catch(e) {}
     try { window.renderizarAgeingCreditos      && window.renderizarAgeingCreditos();       } catch(e) {}
-    try { window.renderizarFCT               && window.renderizarFCT();                  } catch(e) {}
+    try { window.renderizarFCT                        && window.renderizarFCT();                         } catch(e) {}
+    try { window.renderizarEvolucaoAcumuladaCreditos  && window.renderizarEvolucaoAcumuladaCreditos();   } catch(e) {}
 
     // Conciliação — KPIs de apuração + tabela de DFs
     try { window.atualizarEstatisticasConciliacao && window.atualizarEstatisticasConciliacao(); } catch(e) {}
@@ -4345,6 +4346,12 @@ window.atualizarKPIsPagamentos = function() {
 // ============================================================
 
 window.renderizarEvolucaoAcumuladaCreditos = function() {
+  // Re-agenda se o container ainda não tiver largura (renderizado antes do layout)
+  var _el = document.getElementById('cPagEvolAcum');
+  if (_el && _el.parentElement && _el.parentElement.offsetWidth < 10) {
+    setTimeout(window.renderizarEvolucaoAcumuladaCreditos, 150);
+    return;
+  }
   var byMonth = {};
 
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
