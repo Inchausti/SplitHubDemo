@@ -4430,14 +4430,13 @@ window.atualizarKPIsPagamentos = function() {
 // ============================================================
 
 window.renderizarEvolucaoAcumuladaCreditos = function() {
-  // Re-agenda se o container ainda não tiver largura (renderizado antes do layout)
   var _el = document.getElementById('cPagEvolAcum');
   if (_el && _el.parentElement && _el.parentElement.offsetWidth < 10) {
     setTimeout(window.renderizarEvolucaoAcumuladaCreditos, 150);
     return;
   }
-  var byMonth = {};
 
+  var byMonth = {};
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
@@ -4454,41 +4453,92 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
   var meses = Object.keys(byMonth).sort();
   if (!meses.length) return;
 
-  // Acumular mês a mês
   var acumAprop = 0, acumPend = 0;
-  var dAprop = [], dPend = [], labels = [];
+  var dAprop = [], dTotal = [], dPend = [], labels = [];
   meses.forEach(function(m) {
     acumAprop += byMonth[m].aprop;
     acumPend  += byMonth[m].pend;
-    dAprop.push(+(acumAprop / 1e6).toFixed(2));
-    dPend.push(+(acumPend  / 1e6).toFixed(2));
+    dAprop.push(acumAprop / 1e6);
+    dTotal.push((acumAprop + acumPend) / 1e6);
+    dPend.push(acumPend / 1e6);
     labels.push(m.substring(5, 7) + '/' + m.substring(2, 4));
   });
 
-  // Renderizar gráfico via svgLine (definida em index.html, disponível globalmente)
-  if (typeof svgLine === 'function') {
-    svgLine('cPagEvolAcum', [
-      { data: dAprop, color: '#22C55E', fill: true, dots: true, w: 2.5, label: 'Apropriados' },
-      { data: dPend,  color: '#F59E0B', fill: true, dots: true, w: 2,   label: 'Pendentes', dash: true }
-    ], labels, 200, { min: 0 });
+  // Stacked-area SVG customizado
+  var el = document.getElementById('cPagEvolAcum');
+  if (!el) return;
+  var H = 200, padT = 14, padB = 26, padL = 8, padR = 8;
+  var W = (el.parentElement && el.parentElement.offsetWidth > 50 ? el.parentElement.offsetWidth : 440);
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+  var n = labels.length;
+  var maxV = Math.max.apply(null, dTotal) || 1;
+
+  function xp(i) { return Math.round(padL + (i / Math.max(n - 1, 1)) * plotW); }
+  function yp(v) { return Math.round(padT + (1 - v / maxV) * plotH); }
+  function fv(v) { return v >= 1 ? v.toFixed(1).replace('.', ',') + 'M' : Math.round(v * 1000) + 'K'; }
+
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:' + H + 'px;display:block">';
+
+  // Grid lines horizontais subtis
+  [0.25, 0.5, 0.75].forEach(function(f) {
+    var gy = Math.round(padT + plotH * (1 - f));
+    s += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="rgba(128,128,128,0.12)" stroke-width="1"/>';
+    s += '<text x="' + (padL + 3) + '" y="' + (gy - 3) + '" fill="#53565A" font-size="9" font-family="Montserrat,sans-serif">' + fv(maxV * f) + '</text>';
+  });
+
+  // Área pendente (topo — âmbar), entre curva total e curva aprop
+  var ptTotal = dTotal.map(function(v, i) { return xp(i) + ',' + yp(v); });
+  var ptAprop = dAprop.map(function(v, i) { return xp(i) + ',' + yp(v); });
+  var pendFill = ptTotal.join(' ') + ' ' + ptAprop.slice().reverse().join(' ');
+  s += '<polygon points="' + pendFill + '" fill="#F59E0B" fill-opacity="0.22" stroke="none"/>';
+
+  // Área apropriada (base — verde)
+  var apropFill = ptAprop.join(' ') + ' ' + xp(n - 1) + ',' + yp(0) + ' ' + xp(0) + ',' + yp(0);
+  s += '<polygon points="' + apropFill + '" fill="#22C55E" fill-opacity="0.28" stroke="none"/>';
+
+  // Linhas de contorno
+  s += '<polyline points="' + ptTotal.join(' ') + '" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="5 3" stroke-linejoin="round" stroke-linecap="round"/>';
+  s += '<polyline points="' + ptAprop.join(' ') + '" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+
+  // Dots e label no ponto final
+  var li = n - 1;
+  s += '<circle cx="' + xp(li) + '" cy="' + yp(dAprop[li]) + '" r="4" fill="#22C55E"/>';
+  s += '<circle cx="' + xp(li) + '" cy="' + yp(dTotal[li]) + '" r="3.5" fill="#F59E0B" opacity="0.9"/>';
+  var lxOff = xp(li) > W * 0.75 ? -6 : 6;
+  var lAnchor = xp(li) > W * 0.75 ? 'end' : 'start';
+  s += '<text x="' + (xp(li) + lxOff) + '" y="' + (yp(dAprop[li]) - 6) + '" text-anchor="' + lAnchor + '" fill="#22C55E" font-size="11" font-weight="700" font-family="Montserrat,sans-serif">' + fv(dAprop[li]) + '</text>';
+
+  // Labels eixo X
+  labels.forEach(function(l, i) {
+    s += '<text x="' + xp(i) + '" y="' + (H - 6) + '" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">' + l + '</text>';
+  });
+
+  // Hover zones
+  var zW = Math.max(16, Math.floor(plotW / (n || 1)));
+  for (var ci = 0; ci < n; ci++) {
+    var tp = [labels[ci], '#22C55E', 'Apropriado Acum.', fv(dAprop[ci]), '#F59E0B', 'Pendente Acum.', fv(dPend[ci])];
+    var enc = tp.join('|').replace(/'/g, '&apos;');
+    s += '<rect x="' + (xp(ci) - Math.floor(zW / 2)) + '" y="' + padT + '" width="' + zW + '" height="' + plotH + '" fill="transparent" style="cursor:crosshair" onmousemove="_svgTipShow(event,\'' + enc + '\')" onmouseleave="_svgTipHide()"/>';
   }
 
-  // Atualizar totalizadores
+  s += '</svg>';
+  el.style.cssText = 'display:block;width:100%';
+  el.innerHTML = s;
+
+  // KPIs
   function fm(v) {
-    var n = v * 1e6;
-    return n >= 1e6 ? 'R$ ' + (n / 1e6).toFixed(1).replace('.', ',') + 'M'
-         : n >= 1e3 ? 'R$ ' + Math.round(n / 1e3) + 'K'
-         : 'R$ ' + Math.round(n);
+    return v >= 1e6 ? 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M'
+         : v >= 1e3 ? 'R$ ' + Math.round(v / 1e3) + 'K'
+         : 'R$ ' + Math.round(v);
   }
-  var totalAprop = acumAprop, totalPend = acumPend;
-  var gap = totalAprop + totalPend > 0 ? Math.round(totalAprop / (totalAprop + totalPend) * 100) : 0;
+  var gap = acumAprop + acumPend > 0 ? Math.round(acumAprop / (acumAprop + acumPend) * 100) : 0;
   var elA = document.getElementById('pag-evol-aprop');
   var elP = document.getElementById('pag-evol-pend');
   var elG = document.getElementById('pag-evol-gap');
   var elX = document.getElementById('pag-evol-pct');
-  if (elA) elA.textContent = fm(acumAprop / 1e6);
-  if (elP) elP.textContent = fm(acumPend  / 1e6);
-  if (elG) elG.textContent = fm((acumPend) / 1e6);
+  if (elA) elA.textContent = fm(acumAprop);
+  if (elP) elP.textContent = fm(acumPend);
+  if (elG) elG.textContent = fm(acumAprop - acumPend);
   if (elX) elX.textContent = gap + '%';
 };
 
