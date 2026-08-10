@@ -65,6 +65,11 @@ function showView(viewName, btnElement, isMobile = false) {
       try { if (window.atualizarDashboard) window.atualizarDashboard(); } catch(e) {}
     }, 50);
   }
+  if (viewName === 'fct') {
+    setTimeout(function() {
+      try { if (window.renderizarFCT) window.renderizarFCT(); } catch(e) {}
+    }, 60);
+  }
 }
 
 // ─── SUBMENU TOGGLE ───

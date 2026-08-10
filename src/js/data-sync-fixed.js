@@ -3764,6 +3764,12 @@ window.renderizarAgeingCreditos = function() {
 window._fctTributo = 'ambos';
 
 window.renderizarFCT = function() {
+  // Re-agenda se os containers ainda não tiverem largura (view oculta)
+  var _chk = document.getElementById('cFCT');
+  if (_chk && _chk.parentElement && _chk.parentElement.offsetWidth < 10) {
+    setTimeout(window.renderizarFCT, 80);
+    return;
+  }
   var tributo = window._fctTributo || 'ambos';
 
   var byMonth = {};
