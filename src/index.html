@@ -934,95 +934,102 @@ tr:last-child td{border-bottom:none}
   <div class="pg-hdr">
     <div>
       <div class="pg-title">Fluxo de Caixa Tributário</div>
-      <div class="pg-sub">Projeção diária de IBS + CBS · Créditos apropriados e condicionados · Junho 2026</div>
+      <div class="pg-sub" id="fct-periodo-sub">IBS + CBS · créditos vs débitos · posição acumulada · Origem fato gerador</div>
     </div>
     <div class="hdr-act">
-      <button class="btn btn-t" onclick="alert('Exportando XLSX…')">↓ XLSX</button>
-      <button class="btn btn-t" onclick="alert('Exportando PDF…')">↓ PDF</button>
+      <div class="stabs fct-tab-tributo" style="margin-bottom:0">
+        <button class="stab active" onclick="fctSetTributo('ambos',this)">IBS + CBS</button>
+        <button class="stab" onclick="fctSetTributo('cbs',this)">CBS</button>
+        <button class="stab" onclick="fctSetTributo('ibs',this)">IBS</button>
+      </div>
     </div>
   </div>
 
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">
-    <div class="stabs fct-tab-tributo" style="margin-bottom:0">
-      <button class="stab active" onclick="fctSetTributo('ambos',this)">IBS + CBS</button>
-      <button class="stab" onclick="fctSetTributo('cbs',this)">CBS</button>
-      <button class="stab" onclick="fctSetTributo('ibs',this)">IBS</button>
-    </div>
-    <div style="width:1px;height:28px;background:var(--border);margin:0 4px"></div>
-    <div class="stabs fct-tab-gran" style="margin-bottom:0">
-      <button class="stab active" onclick="fctSetGranularidade('mes',this)">Mês</button>
-      <button class="stab" onclick="fctSetGranularidade('semana',this)">Semana</button>
-      <button class="stab" onclick="fctSetGranularidade('dia',this)">Dia</button>
-    </div>
-    <div style="flex:1"></div>
-    <select style="background:var(--card);border:1px solid var(--border);color:var(--txt1);border-radius:6px;padding:5px 10px;font-size:12px">
-      <option>Todos os fornecedores</option>
-      <option>Randon S.A.</option>
-      <option>Marcopolo S.A.</option>
-      <option>Bosch Ltda</option>
-      <option>WEG Equipamentos</option>
-      <option>Embraer S.A.</option>
-      <option>Petrobras Dist.</option>
-      <option>Vale S.A.</option>
-    </select>
-  </div>
-
-  <div class="kgrid k5">
-    <div class="kcard" style="border-top-color:var(--blue)">
-      <div class="klbl">Saldo inicial (01/06)</div>
-      <div class="kval" id="fct-k-saldo-ini">R$ 4,2M</div>
-      <div class="ksub">Posição de abertura do mês</div>
-    </div>
+  <!-- KPIs -->
+  <div class="kgrid k5" style="margin-bottom:20px">
     <div class="kcard" style="border-top-color:var(--teal)">
-      <div class="klbl">Crédito apropriado</div>
+      <div class="klbl">Crédito Apropriado <span class="periodo-info" data-tip="Total de créditos IBS+CBS confirmados pela Plataforma Centralizada (statusCredito = apropriado ou utilizado). São os créditos disponíveis para abater débitos de saída.">i</span></div>
       <div class="kval" id="fct-k-cred-conf">—</div>
-      <div class="ksub up">↑ Disponível para abate</div>
+      <div class="ksub" id="fct-k-cred-conf-sub">disponível para abate</div>
     </div>
     <div class="kcard" style="border-top-color:var(--amber)">
-      <div class="klbl">Crédito condicionado</div>
+      <div class="klbl">Crédito Condicionado <span class="periodo-info" data-tip="Créditos ainda não confirmados (statusCredito = nao_apropriado). Dependem do recolhimento do IBS+CBS pelo fornecedor para se tornarem disponíveis. Inclui créditos em risco de vencimento.">i</span></div>
       <div class="kval" id="fct-k-cred-cond">—</div>
-      <div class="ksub">Aguarda liquidação/recolhimento</div>
+      <div class="ksub" id="fct-k-cred-cond-sub">aguarda confirmação Plataforma</div>
     </div>
     <div class="kcard" style="border-top-color:var(--red)">
-      <div class="klbl">Débito bruto projetado</div>
+      <div class="klbl">Débito Bruto <span class="periodo-info" data-tip="Soma total de IBS+CBS apurado em NFs de saída no período — obrigação tributária bruta antes do abatimento com créditos.">i</span></div>
       <div class="kval" id="fct-k-debito">—</div>
-      <div class="ksub">Recolhimento total sem créditos</div>
+      <div class="ksub">recolhimento sem créditos</div>
     </div>
     <div class="kcard" style="border-top-color:var(--green)">
-      <div class="klbl">Recolhimento líquido</div>
+      <div class="klbl">Recolhimento Líquido <span class="periodo-info" data-tip="Débito Bruto menos Crédito Apropriado disponível. Representa o valor efetivo a recolher ao Tesouro. Fórmula: max(0, Débito Bruto − Crédito Apropriado).">i</span></div>
       <div class="kval" id="fct-k-liq">—</div>
-      <div class="ksub down">Após uso de créditos aproveitáveis</div>
+      <div class="ksub" id="fct-k-liq-sub">após uso de créditos</div>
+    </div>
+    <div class="kcard" style="border-top-color:#8B5CF6">
+      <div class="klbl">Posição Líquida <span class="periodo-info" data-tip="Crédito Apropriado menos Débito Bruto. Positivo = saldo credor (a recuperar); Negativo = exposição devedora (a recolher). Indica a saúde do fluxo de caixa tributário no período.">i</span></div>
+      <div class="kval" id="fct-k-posicao">—</div>
+      <div class="ksub" id="fct-k-posicao-sub">crédito − débito</div>
     </div>
   </div>
 
-  <div class="ccrd" style="margin-bottom:24px">
-    <div class="ctitle">Movimentação diária de IBS + CBS — junho 2026</div>
-    <div class="csub">R$ milhões · barras empilhadas por dia · realizado (01/06) + projetado (02–30/06)</div>
-    <div class="cwrap" style="height:240px"><div id="cFCT"></div></div>
+  <!-- Gráfico principal: Crédito vs Débito mensal -->
+  <div class="ccrd" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+      <div class="ctitle" style="margin-bottom:0">Créditos vs Débitos IBS+CBS — mensal</div>
+      <span class="periodo-info" data-tip="Linhas mensais comparando: Crédito Apropriado (entrada confirmada), Débito Bruto (saída apurada) e Recolhimento Líquido (débito após abatimento de créditos). Quando a linha de crédito supera a de débito, o mês é credor — o excedente vira saldo a recuperar.">i</span>
+    </div>
+    <div class="csub">R$ milhões · IBS+CBS · crédito vs débito vs recolhimento líquido · mês a mês</div>
+    <div class="cwrap" style="height:220px"><div id="cFCT"></div></div>
     <div class="leg">
-      <span class="li"><span class="ls" style="background:var(--teal)"></span>Crédito apropriado</span>
-      <span class="li"><span class="ls" style="background:var(--amber)"></span>Crédito condicionado</span>
-      <span class="li"><span class="ls" style="background:var(--red)"></span>Recolhimento líquido</span>
+      <span class="li"><span class="ls" style="background:#49C5B1"></span>Crédito Apropriado</span>
+      <span class="li"><span class="ls" style="background:#F43F5E"></span>Débito Bruto</span>
+      <span class="li"><span class="ls" style="background:#F59E0B"></span>Recolhimento Líquido</span>
     </div>
   </div>
 
+  <!-- Dois gráficos: Saldo acumulado + Créditos condicionados por mês -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+    <div class="ccrd">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+        <div class="ctitle" style="margin-bottom:0">Posição Líquida Acumulada</div>
+        <span class="periodo-info" data-tip="Saldo acumulado mês a mês de (Crédito Apropriado − Débito Bruto). Acima de zero = posição credora (empresa tem mais crédito do que débito e pode recuperar). Abaixo de zero = posição devedora (empresa precisa recolher mais do que recuperou).">i</span>
+      </div>
+      <div class="csub">R$ milhões · crédito − débito acumulado</div>
+      <div class="cwrap" style="height:160px"><div id="cFCTSaldo"></div></div>
+    </div>
+    <div class="ccrd">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+        <div class="ctitle" style="margin-bottom:0">Créditos Pendentes por Mês de Origem</div>
+        <span class="periodo-info" data-tip="Volume de créditos não apropriados (condicionados e em risco) agrupados pelo mês de emissão da NF. Permite identificar em quais meses o crédito ficou represado e priorizar ações de regularização nos períodos com maior concentração.">i</span>
+      </div>
+      <div class="csub">R$ milhões · condicionado vs em risco · por mês de fato gerador</div>
+      <div class="cwrap" style="height:160px"><div id="cFCTVenc"></div></div>
+      <div class="leg">
+        <span class="li"><span class="ls" style="background:#F59E0B"></span>Condicionado</span>
+        <span class="li"><span class="ls" style="background:#F43F5E"></span>Em Risco</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela mensal + ranking fornecedores -->
   <div class="cgrid c21" style="margin-bottom:24px">
     <div class="tcrd">
       <div class="tcrd-hdr">
-        <div class="sechdr"><h2>Fluxo diário por NF</h2><p>Clique em qualquer linha para ver as notas fiscais do dia · Projetado em itálico</p></div>
+        <div class="sechdr"><h2>Fluxo mensal IBS+CBS</h2><p>Créditos vs débitos por mês · posição líquida acumulada</p></div>
       </div>
       <div class="twrap">
         <table>
           <thead>
             <tr>
-              <th>Data</th>
-              <th class="r">Saldo ini.</th>
-              <th class="r">Créd. conf.</th>
-              <th class="r">Créd. cond.</th>
-              <th class="r">Apropr. hoje</th>
-              <th class="r">Débito bruto</th>
-              <th class="r">Recolh. líq.</th>
-              <th class="r">Saldo final</th>
+              <th>Mês</th>
+              <th class="r">Créd. Aprop.</th>
+              <th class="r">Créd. Cond.</th>
+              <th class="r">Em Risco</th>
+              <th class="r">Débito Bruto</th>
+              <th class="r">Recolh. Líq.</th>
+              <th class="r">Posição</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -1031,22 +1038,18 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
     <div class="ccrd" style="height:fit-content">
-      <div class="ctitle">Crédito condicionado por fornecedor</div>
-      <div class="csub">Ranking de risco</div>
-      <div id="fct-risk-list" style="margin-top:16px"></div>
-      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Legenda de risco</div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></span>Liberação em menos de 10 dias</div>
-          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0"></span>Liberação em 10–20 dias</div>
-          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:50%;background:var(--teal);flex-shrink:0"></span>Liberação em mais de 20 dias</div>
-        </div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+        <div class="ctitle" style="margin-bottom:0">Crédito Condicionado por Fornecedor</div>
+        <span class="periodo-info" data-tip="Ranking dos fornecedores com maior volume de créditos ainda não confirmados (statusCredito = nao_apropriado). Os dois primeiros (vermelho) concentram mais risco — priorizá-los para ação junto ao fornecedor ou revisão do split payment.">i</span>
       </div>
+      <div class="csub">Ranking por volume pendente · NFs de entrada</div>
+      <div id="fct-risk-list" style="margin-top:16px"></div>
     </div>
   </div>
 
+  <!-- Alertas -->
   <div class="crd" style="margin-bottom:24px">
-    <div class="sechdr" style="margin-bottom:16px"><h2>Alertas de descasamento de caixa</h2><p>Dias com saldo projetado abaixo do piso de R$ 1,5M · Créditos condicionados com vencimento próximo</p></div>
+    <div class="sechdr" style="margin-bottom:16px"><h2>Alertas de descasamento de caixa</h2><p>Meses com posição devedora · créditos em risco de prescrição</p></div>
     <div class="alist" id="fct-alertas"></div>
   </div>
 

@@ -242,6 +242,8 @@ function creditosLimparFiltro() {
 function fctSetTributo(tipo, btn) {
   document.querySelectorAll('.fct-tab-tributo .stab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  window._fctTributo = tipo;
+  try { window.renderizarFCT && window.renderizarFCT(); } catch(e) {}
 }
 
 function fctSetGranularidade(gran, btn) {
