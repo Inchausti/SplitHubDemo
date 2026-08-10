@@ -3583,69 +3583,96 @@ window.renderizarTop10Empresas = function() {
   var el = document.getElementById('c-top10-empresas');
   if (!el) return;
 
+  // Acumula por fornecedor: total originado + volume pendente (nao_apropriado)
   var mapa = {};
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
-      var _srT = rf.statusRegistro || rf.status;
-      if (_srT !== 'vencido' && _srT !== 'inconsistencia') return;
-      var nome = (rf.entidade || nf.entidade || '—');
-      if (!mapa[nome]) mapa[nome] = { nome: nome, vencido: 0, inconsistencia: 0 };
-      if (_srT === 'vencido')        mapa[nome].vencido       += rf.valor || 0;
-      if (_srT === 'inconsistencia') mapa[nome].inconsistencia += rf.valor || 0;
+      var nome = rf.entidade || nf.entidade || '—';
+      var v    = rf.valor || 0;
+      var sc   = rf.statusCredito || rf.status || '';
+      if (!mapa[nome]) mapa[nome] = { nome: nome, total: 0, pendente: 0 };
+      mapa[nome].total += v;
+      if (sc === 'nao_apropriado') mapa[nome].pendente += v;
     });
   });
 
-  var lista = Object.values(mapa).map(function(e) {
-    return { nome: e.nome.slice(0, 18), total: e.vencido + e.inconsistencia, vencido: e.vencido, inconsistencia: e.inconsistencia };
-  });
+  var lista = Object.values(mapa).filter(function(e) { return e.total > 0; });
 
   if (!lista.length) {
     el.innerHTML = '<div style="text-align:center;color:var(--txt3);font-size:12px;padding:24px 0">Nenhum registro encontrado.</div>';
     return;
   }
 
+  // Score financeiro = % pendente sobre total (0–10)
+  lista.forEach(function(e) {
+    e.pct   = e.total > 0 ? e.pendente / e.total : 0;   // 0..1
+    e.score = Math.round(e.pct * 10 * 10) / 10;         // 0.0..10.0
+  });
+
   lista.sort(function(a, b) { return b.total - a.total; });
-  var top10 = lista.slice(0, 10);
+  var top10  = lista.slice(0, 10);
   var maxVal = top10[0].total;
 
-  var W = 520, barH = 14, gap = 10, padL = 120, padR = 64, padT = 6, padB = 4;
+  function scoreColor(pct) {
+    if (pct < 0.15) return '#22C55E';   // verde  — até 15% pendente
+    if (pct < 0.35) return '#F59E0B';   // âmbar  — 15–35%
+    if (pct < 0.60) return '#F97316';   // laranja — 35–60%
+    return '#F43F5E';                    // vermelho — >60%
+  }
+  function scoreLabel(pct) {
+    if (pct < 0.15) return 'Baixo';
+    if (pct < 0.35) return 'Médio';
+    if (pct < 0.60) return 'Alto';
+    return 'Crítico';
+  }
+  function fmtM(v) { return 'R$ ' + (v / 1e6).toFixed(2).replace('.', ',') + 'M'; }
+
+  var W = 560, barH = 14, gap = 12, padL = 120, padR = 130, padT = 6, padB = 18;
+  var barW = W - padL - padR;
   var totalH = padT + top10.length * (barH + gap) - gap + padB;
 
   var s = '<svg viewBox="0 0 ' + W + ' ' + totalH + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
 
   top10.forEach(function(r, i) {
-    var y = padT + i * (barH + gap);
-    var barWTotal  = Math.max(4, Math.round((r.total        / maxVal) * (W - padL - padR)));
-    var barWVenc   = Math.max(0, Math.round((r.vencido      / maxVal) * (W - padL - padR)));
-    var barWIncons = Math.max(0, Math.round((r.inconsistencia / maxVal) * (W - padL - padR)));
+    var y      = padT + i * (barH + gap);
+    var wTot   = Math.max(4, Math.round(barW));
+    var wAprop = Math.max(0, Math.round((1 - r.pct) * barW * (r.total / maxVal)));
+    var wPend  = Math.max(0, Math.round(r.pct       * barW * (r.total / maxVal)));
+    var wFundo = Math.max(4, Math.round((r.total / maxVal) * barW));
+    var cor    = scoreColor(r.pct);
 
-    // label
-    s += '<text x="' + (padL - 6) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#A7A8AA" font-size="9" font-family="Montserrat,sans-serif">' + r.nome + '</text>';
+    // label fornecedor
+    s += '<text x="' + (padL - 6) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#A7A8AA" font-size="9" font-family="Montserrat,sans-serif">' + r.nome.slice(0, 18) + '</text>';
 
-    // fundo
-    s += '<rect x="' + padL + '" y="' + y + '" width="' + (W - padL - padR) + '" height="' + barH + '" rx="3" fill="rgba(244,63,94,.07)"/>';
+    // trilho de fundo (volume total proporcional ao maior)
+    s += '<rect x="' + padL + '" y="' + y + '" width="' + wFundo + '" height="' + barH + '" rx="3" fill="rgba(167,168,170,.1)"/>';
 
-    // segmento vencido (vermelho)
-    if (barWVenc > 0) {
-      s += '<rect x="' + padL + '" y="' + y + '" width="' + barWVenc + '" height="' + barH + '" rx="3" fill="#F43F5E" opacity=".8"/>';
+    // segmento apropriado (teal)
+    if (wAprop > 0) {
+      s += '<rect x="' + padL + '" y="' + y + '" width="' + wAprop + '" height="' + barH + '" rx="3" fill="#49C5B1" opacity=".75"/>';
     }
-    // segmento inconsistência (âmbar) empilhado
-    if (barWIncons > 0) {
-      var xIncons = padL + barWVenc;
-      s += '<rect x="' + xIncons + '" y="' + y + '" width="' + barWIncons + '" height="' + barH + '" rx="3" fill="#F59E0B" opacity=".8"/>';
+    // segmento pendente (cor do score) — empilhado após apropriado
+    if (wPend > 0) {
+      var xPend = padL + wAprop;
+      s += '<rect x="' + xPend + '" y="' + y + '" width="' + wPend + '" height="' + barH + '" rx="3" fill="' + cor + '" opacity=".85"/>';
     }
 
-    // valor total
-    var valM = (r.total / 1e6).toFixed(2).replace('.', ',');
-    s += '<text x="' + (W - 2) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#A7A8AA" font-size="9" font-weight="600" font-family="Montserrat,sans-serif">R$ ' + valM + 'M</text>';
+    // volume total
+    var xVal = padL + wFundo + 5;
+    s += '<text x="' + xVal + '" y="' + (y + barH / 2 + 4) + '" fill="#A7A8AA" font-size="9" font-weight="600" font-family="Montserrat,sans-serif">' + fmtM(r.total) + '</text>';
+
+    // % pendente + score badge
+    var pctStr = (r.pct * 100).toFixed(1).replace('.', ',') + '%';
+    s += '<text x="' + (W - 2) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="' + cor + '" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">' + pctStr + ' · ' + scoreLabel(r.pct) + '</text>';
   });
 
   // legenda
-  s += '<rect x="' + padL + '" y="' + (totalH - 2) + '" width="10" height="6" rx="1" fill="#F43F5E" opacity=".8"/>';
-  s += '<text x="' + (padL + 13) + '" y="' + (totalH + 2) + '" fill="#A7A8AA" font-size="8" font-family="Montserrat,sans-serif">Vencido</text>';
-  s += '<rect x="' + (padL + 65) + '" y="' + (totalH - 2) + '" width="10" height="6" rx="1" fill="#F59E0B" opacity=".8"/>';
-  s += '<text x="' + (padL + 78) + '" y="' + (totalH + 2) + '" fill="#A7A8AA" font-size="8" font-family="Montserrat,sans-serif">Inconsistência</text>';
+  var ly = totalH - 10;
+  s += '<rect x="' + padL + '" y="' + ly + '" width="10" height="6" rx="1" fill="#49C5B1" opacity=".75"/>';
+  s += '<text x="' + (padL + 13) + '" y="' + (ly + 5) + '" fill="#A7A8AA" font-size="8" font-family="Montserrat,sans-serif">Apropriado/Utilizado</text>';
+  s += '<rect x="' + (padL + 105) + '" y="' + ly + '" width="10" height="6" rx="1" fill="#F59E0B" opacity=".85"/>';
+  s += '<text x="' + (padL + 118) + '" y="' + (ly + 5) + '" fill="#A7A8AA" font-size="8" font-family="Montserrat,sans-serif">Não Apropriado</text>';
 
   s += '</svg>';
   el.innerHTML = s;
