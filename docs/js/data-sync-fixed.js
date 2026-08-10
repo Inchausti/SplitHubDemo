@@ -4525,13 +4525,37 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
   s += '<polyline points="' + ptTotal.join(' ') + '" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="5 3" stroke-linejoin="round" stroke-linecap="round"/>';
   s += '<polyline points="' + ptAprop.join(' ') + '" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
 
-  // Dots e label no ponto final
+  // Delta mês a mês — colchete vertical + label entre as duas curvas
+  var minGapPx = 10; // altura mínima para mostrar label
+  var stepLabel = n > 8 ? 2 : 1; // mostrar label a cada N meses se muitos meses
+  for (var di = 0; di < n; di++) {
+    var yA = yp(dAprop[di]);
+    var yT = yp(dTotal[di]);
+    var gapPx = yA - yT; // distância em pixels entre as duas curvas
+    var cx = xp(di);
+    // Linha vertical pontilhada no centro do gap
+    s += '<line x1="' + cx + '" y1="' + yT + '" x2="' + cx + '" y2="' + yA
+       + '" stroke="#F59E0B" stroke-width="1" stroke-dasharray="2 2" opacity="0.55"/>';
+    // Marcadores nas extremidades do gap
+    s += '<circle cx="' + cx + '" cy="' + yA + '" r="2.5" fill="#22C55E"/>';
+    s += '<circle cx="' + cx + '" cy="' + yT + '" r="2" fill="#F59E0B" opacity="0.85"/>';
+    // Label do delta (só quando gap grande o suficiente e no step configurado)
+    if (gapPx >= minGapPx && di % stepLabel === 0 && dPend[di] > 0) {
+      var midY = Math.round((yA + yT) / 2);
+      var txtX = cx + (cx > W * 0.75 ? -4 : 4);
+      var anchor = cx > W * 0.75 ? 'end' : 'start';
+      s += '<rect x="' + (txtX - (anchor === 'end' ? 26 : 0)) + '" y="' + (midY - 7) + '" width="26" height="10" rx="3" fill="rgba(245,158,11,0.18)"/>';
+      s += '<text x="' + txtX + '" y="' + (midY + 3) + '" text-anchor="' + anchor
+         + '" fill="#F59E0B" font-size="8.5" font-weight="700" font-family="Montserrat,sans-serif">'
+         + fv(dPend[di]) + '</text>';
+    }
+  }
+
+  // Dots e label no ponto final da linha aprop
   var li = n - 1;
-  s += '<circle cx="' + xp(li) + '" cy="' + yp(dAprop[li]) + '" r="4" fill="#22C55E"/>';
-  s += '<circle cx="' + xp(li) + '" cy="' + yp(dTotal[li]) + '" r="3.5" fill="#F59E0B" opacity="0.9"/>';
   var lxOff = xp(li) > W * 0.75 ? -6 : 6;
   var lAnchor = xp(li) > W * 0.75 ? 'end' : 'start';
-  s += '<text x="' + (xp(li) + lxOff) + '" y="' + (yp(dAprop[li]) - 6) + '" text-anchor="' + lAnchor + '" fill="#22C55E" font-size="11" font-weight="700" font-family="Montserrat,sans-serif">' + fv(dAprop[li]) + '</text>';
+  s += '<text x="' + (xp(li) + lxOff) + '" y="' + (yp(dAprop[li]) - 8) + '" text-anchor="' + lAnchor + '" fill="#22C55E" font-size="11" font-weight="700" font-family="Montserrat,sans-serif">' + fv(dAprop[li]) + '</text>';
 
   // Labels eixo X
   labels.forEach(function(l, i) {
