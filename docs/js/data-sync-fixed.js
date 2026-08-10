@@ -1992,6 +1992,46 @@ function _incSvgMensal(el, mapa, W) {
   el.innerHTML = s;
 }
 
+// Reconstrói window.inconsistencias a partir dos RFs com status='inconsistencia' em nfListaFiltradaGlobal.
+// Preserva status 'resolvida' de entradas existentes (alteradas manualmente pelo usuário).
+window._sincronizarInconsistencias = function() {
+  var _rfTipoToInc = {
+    'Vencido':                  'imposto_vencido',
+    'Valor imposto divergente': 'cbs_incorreto',
+    'Não conciliado':           'nf_erro',
+    'Sem Comprovante':          'nf_erro'
+  };
+  var _incTipoSev = { nf_erro:'alta', nf_duplicada:'media', imposto_vencido:'alta', cbs_incorreto:'media' };
+  var existMap = {};
+  (window.inconsistencias || []).forEach(function(e) { existMap[e.nf] = e; });
+  var nova = [];
+  var seq = 1;
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    var rfInc = (nf.registrosFiscais || []).find(function(rf) { return rf.status === 'inconsistencia'; });
+    if (!rfInc) return;
+    var rfTipo   = rfInc.inconsistencia || '';
+    var incTipo  = _rfTipoToInc[rfTipo] || 'nf_erro';
+    var nfLabel  = (nf.tipoDF || 'NF-e') + ' ' + nf.numero;
+    var prev     = existMap[nfLabel];
+    var parts    = (nf.data || '').split('-');
+    var dataFmt  = parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : (nf.data || '');
+    nova.push({
+      id:         prev ? prev.id : 'INC-' + String(seq).padStart(4, '0'),
+      tipo:       incTipo,
+      nf:         nfLabel,
+      forn:       nf.entidade || '',
+      cnpj:       nf.cnpj || '',
+      data:       dataFmt,
+      valorNF:    nf.valorTotal || 0,
+      severidade: _incTipoSev[incTipo] || 'media',
+      status:     prev ? prev.status : 'aberta',
+      detalhe:    rfTipo || 'Inconsistência identificada'
+    });
+    seq++;
+  });
+  if (nova.length > 0) window.inconsistencias = nova;
+};
+
 window.renderizarRFsInconsistencias = function() {
   // 1. Coletar dados globais
   var lista = [];
@@ -3220,22 +3260,38 @@ class DataSyncManagerFixed {
     }
   }
 
-  atualizarDashboard() {
-    if (typeof dashRenderCreditKPIs === 'function') {
-      dashRenderCreditKPIs();
-    }
-    if (typeof pagRenderKPIs === 'function') {
-      pagRenderKPIs();
-    }
-    if (typeof conciliRender === 'function') {
-      conciliRender();
-    }
-  }
-
   sincronizar() {
-    this.atualizarDashboard();
-    // Atualizar KPIs de crédito respeitando filtro de período ativo
+    // Dashboard — KPIs + gráficos
+    try { window.atualizarKPIsDashboard  && window.atualizarKPIsDashboard();  } catch(e) {}
+    try { window.atualizarDashboard      && window.atualizarDashboard();      } catch(e) {}
+    try { window.atualizarInteligencia   && window.atualizarInteligencia();   } catch(e) {}
+
+    // Crédito — tabela já chama atualizarKPIsCreditos + renderizarComposicaoCreditos + atualizarPerdaAcumulada
     try { window.renderizarTabelaCreditos && window.renderizarTabelaCreditos(); } catch(e) {}
+
+    // NFs — listagem conciliação
+    try { window.renderizarListaNFs && window.renderizarListaNFs(); } catch(e) {}
+
+    // Pagamentos — tabela já chama atualizarKPIsPagamentos + renderizarPagamentosMetodo
+    try { window.renderizarTabelaPagamentos && window.renderizarTabelaPagamentos(); } catch(e) {}
+    try { if (typeof pagamentosRenderKPIs   === 'function') pagamentosRenderKPIs();   } catch(e) {}
+    try { if (typeof fornecedoresRenderKPIs === 'function') fornecedoresRenderKPIs(); } catch(e) {}
+
+    // Débitos — tabela já chama atualizarKPIsDebitos + renderizarComposicaoDebitos + renderizarExtincaoMetodo
+    try { window.renderizarTabelaDebitos && window.renderizarTabelaDebitos(); } catch(e) {}
+
+    // Inconsistências — reconstrói array dinâmico, depois renderiza KPIs + dashboard + tabela + RFs
+    try { window._sincronizarInconsistencias && window._sincronizarInconsistencias(); } catch(e) {}
+    try { if (typeof inconsistRenderKPIs       === 'function') inconsistRenderKPIs();       } catch(e) {}
+    try { if (typeof inconsistRenderDashboard  === 'function') inconsistRenderDashboard();  } catch(e) {}
+    try { if (typeof inconsistRenderTabela     === 'function') inconsistRenderTabela();     } catch(e) {}
+    try { window.renderizarRFsInconsistencias  && window.renderizarRFsInconsistencias();   } catch(e) {}
+    try { window.renderizarTop5Inconsistencias && window.renderizarTop5Inconsistencias();  } catch(e) {}
+    try { window.renderizarTop10Empresas       && window.renderizarTop10Empresas();        } catch(e) {}
+
+    // Conciliação — KPIs de apuração + tabela de DFs
+    try { window.atualizarEstatisticasConciliacao && window.atualizarEstatisticasConciliacao(); } catch(e) {}
+    try { if (typeof conciliacaoRenderDFs === 'function') conciliacaoRenderDFs(); } catch(e) {}
   }
 
   // Getter para acessar os créditos
@@ -4245,6 +4301,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window.renderizarListaNFs(); } catch(e) {}
       try { window.injetarFiltrosCreditos(); window.renderizarTabelaCreditos(); } catch(e) {}
       try { window.injetarFiltrosPagamentos(); window.renderizarTabelaPagamentos(); } catch(e) {}
+      try { window._sincronizarInconsistencias(); } catch(e) {}
       try { window.renderizarRFsInconsistencias(); } catch(e) {}
       try { window.renderizarTop5Inconsistencias(); } catch(e) {}
       try { window.renderizarTop10Empresas(); } catch(e) {}
