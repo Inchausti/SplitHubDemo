@@ -169,8 +169,7 @@ tr:last-child td{border-bottom:none}
 /* Tooltip de filtro de período */
 .periodo-wrap{position:relative;display:inline-flex;align-items:center;gap:5px}
 .periodo-info{width:15px;height:15px;border-radius:50%;background:rgba(73,197,177,.15);border:1px solid rgba(73,197,177,.35);color:var(--teal);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:default;flex-shrink:0;line-height:1}
-.periodo-info::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);right:0;background:var(--sidebar);border:1px solid var(--border);border-radius:6px;padding:8px 11px;font-size:11px;color:var(--txt2);white-space:normal;width:220px;line-height:1.55;pointer-events:none;opacity:0;transition:opacity .15s;z-index:200;font-family:inherit;font-weight:400;text-align:left;box-shadow:0 4px 16px rgba(0,0,0,.25)}
-.periodo-info:hover::after{opacity:1}
+/* periodo-info::after removido — tooltip via JS (#tip-float) */
 
 /* ── MOBILE HEADER ── */
 #mob-header{display:none;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--sidebar);border-bottom:2px solid var(--teal);z-index:200}
@@ -5674,5 +5673,44 @@ fctRender();
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=6"></script>
 <script src="js/charts.js"></script>
+
+<!-- Tooltip flutuante global para .periodo-info -->
+<div id="tip-float" style="position:fixed;z-index:9999;background:var(--sidebar);border:1px solid var(--border);border-radius:6px;padding:8px 11px;font-size:11px;color:var(--txt2);white-space:normal;width:240px;max-width:calc(100vw - 24px);line-height:1.55;pointer-events:none;opacity:0;transition:opacity .15s;font-family:inherit;font-weight:400;text-align:left;box-shadow:0 4px 16px rgba(0,0,0,.25)"></div>
+<script>
+(function(){
+  var tip = document.getElementById('tip-float');
+  var GAP = 10, PAD = 12;
+  function show(el) {
+    var txt = el.getAttribute('data-tip');
+    if (!txt) return;
+    tip.textContent = txt;
+    tip.style.opacity = '0';
+    tip.style.display = 'block';
+    var r = el.getBoundingClientRect();
+    var tw = tip.offsetWidth, th = tip.offsetHeight;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    // tenta acima; cai abaixo se não couber
+    var top = r.top - th - GAP;
+    if (top < PAD) top = r.bottom + GAP;
+    // centra horizontalmente no ícone; ajusta se sair da tela
+    var left = r.left + r.width / 2 - tw / 2;
+    if (left < PAD) left = PAD;
+    if (left + tw > vw - PAD) left = vw - PAD - tw;
+    tip.style.top  = top  + 'px';
+    tip.style.left = left + 'px';
+    tip.style.opacity = '1';
+  }
+  function hide() { tip.style.opacity = '0'; }
+  document.addEventListener('mouseover', function(e) {
+    var el = e.target.closest ? e.target.closest('.periodo-info') : null;
+    if (el) show(el); else hide();
+  });
+  document.addEventListener('mouseout', function(e) {
+    var el = e.target.closest ? e.target.closest('.periodo-info') : null;
+    if (el) hide();
+  });
+  document.addEventListener('scroll', hide, true);
+})();
+</script>
 </body>
 </html>
