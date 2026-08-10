@@ -1224,24 +1224,45 @@ window.atualizarDashboard = function() {
   tbody.innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:var(--txt3);padding:20px">Sem transações</td></tr>';
 
   // ── 4. Top 5 Best / Worst fornecedores ──
+  // Score = mesma fórmula do módulo Analytics: good / (good + bad×2) × 100
+  // Rank composto = score ponderado pela representatividade do volume inadimplente
   var byForn = {};
   lista.forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
     var forn = nf.entidade || 'Desconhecido';
-    if (!byForn[forn]) byForn[forn] = { total: 0, pendente: 0 };
+    if (!byForn[forn]) byForn[forn] = { good: 0, bad: 0, total: 0, pendente: 0 };
+    byForn[forn].total += nf.valorTotal || 0;
     (nf.registrosFiscais || []).forEach(function(rf) {
       var v = rf.valor || 0;
       var sc = rf.statusCredito || rf.status || '';
-      byForn[forn].total += v;
+      var sr = rf.statusRegistro || null;
+      if (sc === 'apropriado' || sc === 'utilizado' || sc === 'extinto') byForn[forn].good++;
+      if (sr === 'inconsistencia' || sr === 'vencido' || sr === 'em_risco') byForn[forn].bad++;
       if (sc === 'nao_apropriado') byForn[forn].pendente += v;
     });
   });
+
+  var totalPendenteGlobal = 0;
   var fornArr = Object.keys(byForn).map(function(nome) {
     var d = byForn[nome];
-    var score = d.total > 0 ? d.pendente / d.total * 10 : 0;
-    return { nome: nome, score: score, total: d.total, pendente: d.pendente };
-  }).filter(function(f) { return f.total > 0; });
-  fornArr.sort(function(a, b) { return a.score - b.score; });
+    var denom = d.good + d.bad * 2;
+    var qualScore = denom > 0 ? Math.max(5, Math.min(100, Math.round(d.good / denom * 100))) : 75;
+    totalPendenteGlobal += d.pendente;
+    return { nome: nome, qualScore: qualScore, total: d.total, pendente: d.pendente, good: d.good, bad: d.bad };
+  }).filter(function(f) { return f.total > 0 || f.pendente > 0; });
+
+  // Score composto: combina qualScore (qualidade) com peso do volume inadimplente
+  // composto pior = (100 - qualScore) × sharePendente — quanto pior a qualidade E maior a exposição
+  // composto melhor = qualScore × (1 - sharePendente*0.5) — qualidade alta com baixa exposição
+  fornArr.forEach(function(f) {
+    var sharePend = totalPendenteGlobal > 0 ? f.pendente / totalPendenteGlobal : 0;
+    f.sharePend = sharePend;
+    f.compostoRisco  = (100 - f.qualScore) * (1 + sharePend * 5);
+    f.compostoSaude  = f.qualScore * (1 - sharePend * 0.5);
+  });
+
+  var worst5 = fornArr.slice().sort(function(a, b) { return b.compostoRisco - a.compostoRisco; }).slice(0, 5);
+  var best5  = fornArr.slice().sort(function(a, b) { return b.compostoSaude - a.compostoSaude; }).slice(0, 5);
 
   function renderTop5(elId, arr, isWorst) {
     var el = document.getElementById(elId);
@@ -1250,31 +1271,35 @@ window.atualizarDashboard = function() {
       return v >= 1e6 ? 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M'
            : v >= 1e3 ? 'R$ ' + Math.round(v/1e3) + 'K' : 'R$ ' + v.toFixed(0);
     };
+    var maxPend = Math.max.apply(null, arr.map(function(f) { return f.pendente; })) || 1;
     var html = '';
     arr.forEach(function(f) {
-      var pct = f.total > 0 ? f.pendente / f.total * 100 : 0;
+      var qs = f.qualScore;
+      var barPct = f.pendente / maxPend * 100;
+      var scoreColor = qs >= 80 ? '#22C55E' : qs >= 60 ? '#F59E0B' : '#F43F5E';
       var barColor = isWorst ? '#F43F5E' : '#22C55E';
-      var scoreColor = isWorst
-        ? (f.score > 6 ? '#F43F5E' : f.score > 3.5 ? '#F59E0B' : '#A7A8AA')
-        : '#22C55E';
+      var sharePct = (f.sharePend * 100).toFixed(1);
       html += '<div style="background:var(--bg2);border-radius:6px;padding:8px 10px">'
-        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
-        + '<span style="font-size:12px;font-weight:600;color:var(--txt1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px" title="' + f.nome + '">' + f.nome + '</span>'
-        + '<span style="font-size:12px;font-weight:700;color:' + scoreColor + ';margin-left:8px;flex-shrink:0">' + f.score.toFixed(1) + '</span>'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
+        + '<span style="font-size:12px;font-weight:600;color:var(--txt1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:155px" title="' + f.nome + '">' + f.nome + '</span>'
+        + '<span style="font-size:13px;font-weight:700;color:' + scoreColor + ';margin-left:8px;flex-shrink:0;font-family:\'IBM Plex Mono\',monospace">' + qs + '</span>'
         + '</div>'
-        + '<div style="display:flex;gap:8px;align-items:center">'
+        + '<div style="display:flex;gap:8px;align-items:center;margin-bottom:3px">'
         + '<div style="flex:1;background:var(--border);border-radius:2px;height:4px;overflow:hidden">'
-        + '<div style="width:' + Math.min(100, pct).toFixed(1) + '%;height:100%;background:' + barColor + ';border-radius:2px"></div>'
+        + '<div style="width:' + Math.min(100, barPct).toFixed(1) + '%;height:100%;background:' + barColor + ';border-radius:2px"></div>'
         + '</div>'
-        + '<span style="font-size:10px;color:var(--txt3);flex-shrink:0">' + pct.toFixed(0) + '% pend · ' + fmtV2(f.total) + '</span>'
+        + '<span style="font-size:10px;color:var(--txt3);flex-shrink:0;white-space:nowrap">' + fmtV2(f.pendente) + ' pend</span>'
+        + '</div>'
+        + '<div style="font-size:10px;color:var(--txt3)">'
+        + sharePct + '% do inadimplente total · vol. ' + fmtV2(f.total)
         + '</div>'
         + '</div>';
     });
     el.innerHTML = html || '<div style="font-size:11px;color:var(--txt3)">Sem dados</div>';
   }
 
-  renderTop5('dash-top5-best',  fornArr.slice(0, 5), false);
-  renderTop5('dash-top5-worst', fornArr.slice(-5).reverse(), true);
+  renderTop5('dash-top5-best',  best5,  false);
+  renderTop5('dash-top5-worst', worst5, true);
 };
 
 // Tooltip global para gráficos SVG
