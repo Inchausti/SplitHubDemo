@@ -3941,83 +3941,81 @@ function nfRenderLista(){
     });
   }
 
-  // Adicionar NFs de saída com débitos
-  if(typeof creditos!=='undefined'&&creditos.length>0){
-    var nfsEntrada=typeof dataSyncFixed!=='undefined'?dataSyncFixed.getNFsEntrada():[];
+  // Adicionar NFs de saída — volume total = 15% acima das entradas (~R$575M)
+  // Datas distribuídas por todos os 12 meses via hash determinístico
+  {
     var qtdSaida=100;
     var clientes=['WEG Motores','Mercado Livre','Embraer S.A.','Bosch Ltda','Randon S.A.','Ambev S.A.','Magazine Luiza','Gerdau Aços','Marcopolo S.A.','Natura &Co'];
-    var statusDebitos=['nao_extinto','nao_extinto','extinto','extinto','extinto','extinto'];
+    var statusDebitos=['extinto','extinto','extinto','extinto','extinto','nao_extinto','nao_extinto','nao_extinto','vencido','inconsistencia'];
+    var tiposDFSaida=['NF-e','NF-e','NF-e','NFC-e','CT-e','CT-e','NFCom','NF3-e','BP-e','MDF-e'];
+    var diasNoMes=[31,28,31,30,31,30,31,31,30,31,30,31];
+    var rfIncTiposSai=['Não conciliado','Valor imposto divergente','Vencido','Sem Comprovante'];
+    var metodosSaida=['RAD','RAD','Compensacao'];
+    // Pré-calcular base e escalar para sum(valorTotal)=575M
+    // valorTotal = vliq * 1.18; target sum(vliq) = 575M/1.18 ≈ 487.288.136
+    var _vliqBaseS=[],_seedS;
+    for(var _sj=1;_sj<=100;_sj++){
+      _seedS=((_sj*73856093^_sj*19349663^_sj*83492791)>>>0);
+      _vliqBaseS.push(500000+(_seedS%800001));
+    }
+    var _sumVliqS=_vliqBaseS.reduce(function(s,v){return s+v;},0);
+    var _targetVliqS=Math.round(500000000*1.15/1.18);
+    var _scaleS=_targetVliqS/_sumVliqS;
 
     for(var i=1;i<=qtdSaida;i++){
-      var dia=(i%28)+1;var mes=Math.floor((i-1)/150)%12+1;
-      var valorSaidaLiq=Math.floor(12000+Math.random()*20000)*Math.floor(Math.random()*5+1);
+      var _hD=((i*1664525+1013904223)^(i*22695477+1))>>>0;
+      var mesIdx=_hD%12;
+      var mes=mesIdx+1;
+      var dia=1+((_hD>>4)%diasNoMes[mesIdx]);
+      var valorSaidaLiq=Math.round(_vliqBaseS[i-1]*_scaleS);
       var cbsSaida=Math.floor(valorSaidaLiq*0.08);
       var ibsSaida=Math.floor(valorSaidaLiq*0.10);
       var valorSaidaBruto=valorSaidaLiq+cbsSaida+ibsSaida;
-      var statusDeb=statusDebitos[i%statusDebitos.length];
+      var statusDeb=statusDebitos[(i-1)%statusDebitos.length];
+      var incTipoSai=statusDeb==='inconsistencia'?rfIncTiposSai[(i-1)%rfIncTiposSai.length]:null;
 
       var nfSaidaNum=String(i+500000).padStart(6,'0');
-      var _tipoDF_sai=_getDFTipoParaNF(nfSaidaNum);
-      var _dataSai='2026-'+String(mes).padStart(2,'0')+'-'+String(dia).padStart(2,'0');
+      var _tipoDF_sai=tiposDFSaida[((_hD>>4)%tiposDFSaida.length)];
+      var _mesStr=String(mes).padStart(2,'0');
+      var _diaStr=String(dia).padStart(2,'0');
+      var _dataSai='2026-'+_mesStr+'-'+_diaStr;
       var _cnpjSai='12.345.678/000'+String(i%100).padStart(2,'0');
+      var _metIBS=statusDeb==='extinto'?metodosSaida[(i-1)%metodosSaida.length]:'—';
+      var _metCBS=statusDeb==='extinto'?metodosSaida[i%metodosSaida.length]:'—';
+      var _extDay=String(Math.min(dia+5,diasNoMes[mesIdx])).padStart(2,'0');
+      var _dtExt=statusDeb==='extinto'?(_extDay+'/'+_mesStr+'/2026 09:00'):'—';
+
       var nfSaidaRecord={
-        numero:nfSaidaNum,
-        tipo:'saida',
-        subTipo:'nf',
+        numero:nfSaidaNum,tipo:'saida',subTipo:'nf',
         tipoDF:_tipoDF_sai,
         entidade:clientes[i%clientes.length],
         cnpj:_cnpjSai,
-        valorTotal:valorSaidaBruto,
-        valorLiquido:valorSaidaLiq,
-        cbs:cbsSaida,
-        ibs:ibsSaida,
+        valorTotal:valorSaidaBruto,valorLiquido:valorSaidaLiq,
+        cbs:cbsSaida,ibs:ibsSaida,
         data:_dataSai,
-        status:statusDeb,
-        chaveDF:gerarChaveDF(_tipoDF_sai,_cnpjSai,nfSaidaNum,_dataSai),
+        status:statusDeb==='extinto'?'extinto':'nao_extinto',
+        chaveDF:(typeof gerarChaveDF==='function')?gerarChaveDF(_tipoDF_sai,_cnpjSai,nfSaidaNum,_dataSai):'',
         registrosFiscais:[]
       };
 
-      var _metSaida=['RAD','RAD','Compensacao'];
-      var _metIBS=_metSaida[(i)%_metSaida.length];
-      var _metCBS=_metSaida[(i+1)%_metSaida.length];
-      var _dtExt=statusDeb==='extinto'
-        ? String(Math.min((i%28)+6,28)).padStart(2,'0')+'/0'+String(Math.floor((i-1)/150)%12+1).padStart(1,'0')+'/2026 09:00'
-        :'—';
-
       nfSaidaRecord.registrosFiscais.push({
         id:nfGerarIdRegistroFiscal(),
-        tipo:'saida',
-        subTipo:'fiscal',
-        tipoFiscal:'ibs',
+        tipo:'saida',subTipo:'fiscal',tipoFiscal:'ibs',
         nfVinculada:nfSaidaNum,
-        entidade:clientes[i%clientes.length],
-        cnpj:'12.345.678/000'+String(i%100).padStart(2,'0'),
-        valor:ibsSaida,
-        status:statusDeb,
-        dataExtincao:_dtExt,
-        metodoExtincao:statusDeb==='extinto'?_metIBS:'—',
-        contratoId:null,
-        data:nfSaidaRecord.data,
-        valorTotalNF:valorSaidaBruto,
-        valorLiquidoNF:valorSaidaLiq
+        entidade:clientes[i%clientes.length],cnpj:_cnpjSai,
+        valor:ibsSaida,status:statusDeb,inconsistencia:incTipoSai,
+        dataExtincao:_dtExt,metodoExtincao:_metIBS,contratoId:null,
+        data:_dataSai,valorTotalNF:valorSaidaBruto,valorLiquidoNF:valorSaidaLiq
       });
 
       nfSaidaRecord.registrosFiscais.push({
         id:nfGerarIdRegistroFiscal(),
-        tipo:'saida',
-        subTipo:'fiscal',
-        tipoFiscal:'cbs',
+        tipo:'saida',subTipo:'fiscal',tipoFiscal:'cbs',
         nfVinculada:nfSaidaNum,
-        entidade:clientes[i%clientes.length],
-        cnpj:'12.345.678/000'+String(i%100).padStart(2,'0'),
-        valor:cbsSaida,
-        status:statusDeb,
-        dataExtincao:_dtExt,
-        metodoExtincao:statusDeb==='extinto'?_metCBS:'—',
-        contratoId:null,
-        data:nfSaidaRecord.data,
-        valorTotalNF:valorSaidaBruto,
-        valorLiquidoNF:valorSaidaLiq
+        entidade:clientes[i%clientes.length],cnpj:_cnpjSai,
+        valor:cbsSaida,status:statusDeb,inconsistencia:incTipoSai,
+        dataExtincao:_dtExt,metodoExtincao:_metCBS,contratoId:null,
+        data:_dataSai,valorTotalNF:valorSaidaBruto,valorLiquidoNF:valorSaidaLiq
       });
 
       todosRegistros.push(nfSaidaRecord);

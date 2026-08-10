@@ -4242,9 +4242,9 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
 
 // Instanciar quando o documento está pronto
 document.addEventListener('DOMContentLoaded', function() {
-  // Esperar 3 segundos para garantir que o HTML inline script foi completamente executado
+  // Scripts inline executam antes de DOMContentLoaded — delay zero é suficiente
   setTimeout(function() {
-    console.log('[data-sync-fixed] Iniciando sincronização após 3s delay');
+    console.log('[data-sync-fixed] Iniciando sincronização');
     const dataSyncFixed = new DataSyncManagerFixed();
     window.dataSyncFixed = dataSyncFixed; // Expor globalmente
 
@@ -4589,7 +4589,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
       try { window.atualizarKPIsDashboard && window.atualizarKPIsDashboard(); } catch(e) {}
     }, 500);
-  }, 3000);
+  }, 0);
 });
 
 // ============================================================
