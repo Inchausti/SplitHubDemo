@@ -1222,6 +1222,59 @@ window.atualizarDashboard = function() {
       + '</tr>';
   });
   tbody.innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:var(--txt3);padding:20px">Sem transações</td></tr>';
+
+  // ── 4. Top 5 Best / Worst fornecedores ──
+  var byForn = {};
+  lista.forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    var forn = nf.entidade || 'Desconhecido';
+    if (!byForn[forn]) byForn[forn] = { total: 0, pendente: 0 };
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      var v = rf.valor || 0;
+      var sc = rf.statusCredito || rf.status || '';
+      byForn[forn].total += v;
+      if (sc === 'nao_apropriado') byForn[forn].pendente += v;
+    });
+  });
+  var fornArr = Object.keys(byForn).map(function(nome) {
+    var d = byForn[nome];
+    var score = d.total > 0 ? d.pendente / d.total * 10 : 0;
+    return { nome: nome, score: score, total: d.total, pendente: d.pendente };
+  }).filter(function(f) { return f.total > 0; });
+  fornArr.sort(function(a, b) { return a.score - b.score; });
+
+  function renderTop5(elId, arr, isWorst) {
+    var el = document.getElementById(elId);
+    if (!el) return;
+    var fmtV2 = function(v) {
+      return v >= 1e6 ? 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M'
+           : v >= 1e3 ? 'R$ ' + Math.round(v/1e3) + 'K' : 'R$ ' + v.toFixed(0);
+    };
+    var html = '';
+    arr.forEach(function(f) {
+      var pct = f.total > 0 ? f.pendente / f.total * 100 : 0;
+      var barColor = isWorst ? '#F43F5E' : '#22C55E';
+      var scoreColor = isWorst
+        ? (f.score > 6 ? '#F43F5E' : f.score > 3.5 ? '#F59E0B' : '#A7A8AA')
+        : '#22C55E';
+      html += '<div style="background:var(--bg2);border-radius:6px;padding:8px 10px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+        + '<span style="font-size:12px;font-weight:600;color:var(--txt1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px" title="' + f.nome + '">' + f.nome + '</span>'
+        + '<span style="font-size:12px;font-weight:700;color:' + scoreColor + ';margin-left:8px;flex-shrink:0">' + f.score.toFixed(1) + '</span>'
+        + '</div>'
+        + '<div style="display:flex;gap:8px;align-items:center">'
+        + '<div style="flex:1;background:var(--border);border-radius:2px;height:4px;overflow:hidden">'
+        + '<div style="width:' + Math.min(100, pct).toFixed(1) + '%;height:100%;background:' + barColor + ';border-radius:2px"></div>'
+        + '</div>'
+        + '<span style="font-size:10px;color:var(--txt3);flex-shrink:0">' + pct.toFixed(0) + '% pend · ' + fmtV2(f.total) + '</span>'
+        + '</div>'
+        + '</div>';
+    });
+    el.innerHTML = html || '<div style="font-size:11px;color:var(--txt3)">Sem dados</div>';
+  }
+
+  renderTop5('dash-top5-best',  fornArr.slice(0, 5), false);
+  renderTop5('dash-top5-worst', fornArr.slice(-5).reverse(), true);
 };
 
 // Tooltip global para gráficos SVG
@@ -3777,7 +3830,7 @@ window.renderizarFCT = function() {
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     var mes = (nf.data || '').substring(0, 7);
     if (!mes) return;
-    if (!byMonth[mes]) byMonth[mes] = { cAprop: 0, cCond: 0, cRisco: 0, dBruto: 0 };
+    if (!byMonth[mes]) byMonth[mes] = { cAprop: 0, cCond: 0, cRisco: 0, dBruto: 0, faturamento: 0 };
 
     (nf.registrosFiscais || []).forEach(function(rf) {
       var rfTrib = (rf.tributo || '').toLowerCase();
@@ -3795,6 +3848,7 @@ window.renderizarFCT = function() {
         }
       } else if (nf.tipo === 'saida') {
         byMonth[mes].dBruto += v;
+        byMonth[mes].faturamento += v;
       }
     });
   });
@@ -3861,6 +3915,30 @@ window.renderizarFCT = function() {
       { data: dCCond,  color: '#F59E0B', fill: true, dots: true, w: 2,   label: 'Condicionado' },
       { data: dCRisco, color: '#F43F5E', fill: true, dots: true, w: 1.5, label: 'Em Risco' }
     ], labels, 140, { min: 0 });
+
+    // Alíquota efetiva mensal
+    var dAliq    = meses.map(function(m) {
+      var fat = byMonth[m].faturamento;
+      if (!fat) return 0;
+      return +((Math.max(0, byMonth[m].dBruto - byMonth[m].cAprop) / fat * 100).toFixed(2));
+    });
+    var dNominal = meses.map(function() { return 26.5; });
+    svgLine('cFCTAliq', [
+      { data: dAliq,    color: 'var(--teal)', fill: true,  dots: true, w: 2.5, label: 'Alíquota Efetiva %' },
+      { data: dNominal, color: '#53565A',     fill: false, dots: false, w: 1.5, label: 'Referência 26,5%', dash: true }
+    ], labels, 170, { min: 0 });
+
+    // KPIs alíquota
+    var aliqTotal = 0, aliqN = 0;
+    dAliq.forEach(function(v) { if (v > 0) { aliqTotal += v; aliqN++; } });
+    var aliqMedia = aliqN ? +(aliqTotal / aliqN).toFixed(1) : 0;
+    set('fct-aliq-media', aliqMedia.toFixed(1).replace('.', ',') + '%');
+    var economia = +(26.5 - aliqMedia).toFixed(1);
+    var eEl = document.getElementById('fct-aliq-economia');
+    if (eEl) {
+      eEl.textContent = (economia > 0 ? '−' : '+') + Math.abs(economia).toFixed(1).replace('.', ',') + 'pp vs ref.';
+      eEl.style.color = economia > 0 ? '#22C55E' : '#F43F5E';
+    }
   }
 
   // Tabela mensal
