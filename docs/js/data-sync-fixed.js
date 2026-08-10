@@ -4545,9 +4545,10 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
       var txtX = cx + (cx > W * 0.75 ? -4 : 4);
       var anchor = cx > W * 0.75 ? 'end' : 'start';
       s += '<rect x="' + (txtX - (anchor === 'end' ? 26 : 0)) + '" y="' + (midY - 7) + '" width="26" height="10" rx="3" fill="rgba(245,158,11,0.18)"/>';
+      var deltaPct = dTotal[di] > 0 ? Math.round(dPend[di] / dTotal[di] * 100) : 0;
       s += '<text x="' + txtX + '" y="' + (midY + 3) + '" text-anchor="' + anchor
          + '" fill="#F59E0B" font-size="8.5" font-weight="700" font-family="Montserrat,sans-serif">'
-         + fv(dPend[di]) + '</text>';
+         + deltaPct + '%</text>';
     }
   }
 
