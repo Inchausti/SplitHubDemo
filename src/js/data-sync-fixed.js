@@ -224,16 +224,16 @@ window.renderizarListaNFs = function() {
     var numLabel = _dfT + ' ' + r.numero;
 
     h += '<tr>'
-      + '<td class="mono"><button onclick="window.abrirDetalhesNFporNumero(\'' + r.numero + '\')" style="background:none;border:none;color:#3B82F6;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:11px">' + numLabel + '</button></td>'
-      + '<td>' + tipoBadge + '</td>'
-      + '<td>' + r.entidade + '</td>'
-      + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + r.cnpj + '</td>'
-      + '<td class="r mono" style="font-size:11px">' + ff(r.valorTotal) + '</td>'
-      + '<td class="r mono" style="font-size:11px;color:var(--txt2)">' + ff(r.valorLiquido) + '</td>'
-      + '<td class="r mono" style="font-size:11px;font-weight:600;color:' + (r.cbs > 0 ? '#F59E0B' : 'var(--txt3)') + '">' + ffz(r.cbs) + '</td>'
-      + '<td class="r mono" style="font-size:11px;font-weight:600;color:' + (r.ibs > 0 ? '#3B82F6' : 'var(--txt3)') + '">' + ffz(r.ibs) + '</td>'
-      + '<td>' + statusBadge + '</td>'
-      + '<td style="font-size:12px;color:var(--txt2)">' + dataFormatada + '</td>'
+      + '<td class="mono nowrap"><button onclick="window.abrirDetalhesNFporNumero(\'' + r.numero + '\')" style="background:none;border:none;color:#3B82F6;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:11px">' + numLabel + '</button></td>'
+      + '<td class="nowrap">' + tipoBadge + '</td>'
+      + '<td class="trunc">' + r.entidade + '</td>'
+      + '<td class="mono" style="color:var(--txt2)">' + r.cnpj + '</td>'
+      + '<td class="r mono">' + ff(r.valorTotal) + '</td>'
+      + '<td class="r mono" style="color:var(--txt2)">' + ff(r.valorLiquido) + '</td>'
+      + '<td class="r mono" style="font-weight:600;color:' + (r.cbs > 0 ? '#F59E0B' : 'var(--txt3)') + '">' + ffz(r.cbs) + '</td>'
+      + '<td class="r mono" style="font-weight:600;color:' + (r.ibs > 0 ? '#3B82F6' : 'var(--txt3)') + '">' + ffz(r.ibs) + '</td>'
+      + '<td class="nowrap">' + statusBadge + '</td>'
+      + '<td class="nowrap" style="color:var(--txt2)">' + dataFormatada + '</td>'
       + '<td class="mono" style="font-size:10px;color:var(--txt3)" title="' + chave + ' (' + chave.length + ' dígitos)">' + chaveTrunc + '</td>'
       + '</tr>';
   });
@@ -644,7 +644,7 @@ window.creditosFiltrarMesAno = function() {
   };
   var label = window._filtrosCreditos.mesAno
     ? (mesLabels[window._filtrosCreditos.mesAno] || window._filtrosCreditos.mesAno)
-    : 'Todos os períodos';
+    : 'Origem fato gerador';
   var sub = document.getElementById('cred-periodo-sub');
   if (sub) sub.textContent = 'Posição IBS + CBS · Art. 48 LC 214/2025 · ' + label;
   window.renderizarTabelaCreditos();
@@ -660,7 +660,7 @@ window.creditosLimparFiltrosGrid = function() {
   var selMes = document.getElementById('cred-mes-ano');
   if (selMes) selMes.value = '';
   var sub = document.getElementById('cred-periodo-sub');
-  if (sub) sub.textContent = 'Posição IBS + CBS · Art. 48 LC 214/2025 · Todos os períodos';
+  if (sub) sub.textContent = 'Posição IBS + CBS · Art. 48 LC 214/2025 · Origem fato gerador';
   window._filtrosCreditos = {
     mesAno:'', busca:'', tipoFiscal:'', status:'', contrato:'',
     metodo:'', pagamento:'', dataNFDe:'', dataNFAte:'',
@@ -784,7 +784,7 @@ window.renderizarTabelaCreditos = function() {
       var statusCredBadge = bdg(r.statusCredito || r.status);
       var statusRegBadge  = r.statusRegistro ? bdg(r.statusRegistro) : '';
       var incBadge = r.inconsistencia ? '<br><span style="font-size:10px;color:#F43F5E;font-style:italic">' + r.inconsistencia + '</span>' : '';
-      h += '<tr><td class="mono" style="font-size:11px">' + rfIdLink + '</td><td>' + tipoFiscalBadge + '</td><td>' + nfTipoBadgeCred + '</td><td>' + nfLink + '</td><td>' + r.forn + '</td><td>' + r.data + '</td><td class="r mono">' + ff(r.valorTotal) + '</td><td class="r mono">' + ff(r.valorLiq) + '</td><td class="r mono" style="color:#F59E0B;font-weight:600">' + ffz(r.cbs) + '</td><td class="r mono" style="color:#3B82F6;font-weight:600">' + ffz(r.ibs) + '</td><td class="r mono" style="color:#49C5B1;font-weight:700">' + ff(r.cred) + '</td><td style="font-size:11px">' + pagCell + '</td><td style="white-space:nowrap">' + statusCredBadge + '</td><td style="white-space:nowrap">' + statusRegBadge + incBadge + '</td><td style="white-space:nowrap">' + contratoCell + '</td><td style="white-space:nowrap">' + metodoCell + '</td></tr>';
+      h += '<tr><td class="mono nowrap">' + rfIdLink + '</td><td class="nowrap">' + tipoFiscalBadge + '</td><td class="nowrap">' + nfTipoBadgeCred + '</td><td class="mono nowrap">' + nfLink + '</td><td class="trunc">' + r.forn + '</td><td class="nowrap" style="color:var(--txt2)">' + r.data + '</td><td class="r mono">' + ff(r.valorTotal) + '</td><td class="r mono" style="color:var(--txt2)">' + ff(r.valorLiq) + '</td><td class="r mono" style="color:#F59E0B;font-weight:600">' + ffz(r.cbs) + '</td><td class="r mono" style="color:#3B82F6;font-weight:600">' + ffz(r.ibs) + '</td><td class="r mono" style="color:#49C5B1;font-weight:700">' + ff(r.cred) + '</td><td class="nowrap">' + pagCell + '</td><td class="nowrap">' + statusCredBadge + '</td><td class="nowrap">' + statusRegBadge + incBadge + '</td><td class="nowrap">' + contratoCell + '</td><td class="nowrap">' + metodoCell + '</td></tr>';
     });
   }
 
@@ -950,7 +950,7 @@ window.dashPeriodoAtualizarBotao = function() {
   var sub = document.getElementById('dash-periodo-sub');
   var sel = window._dashMesesSelecionados || [];
   var todos = !sel.length || sel.length >= 12;
-  var label = todos ? 'Todos os períodos' : sel.length === 1 ? (_dashMesesLabels[sel[0]] || sel[0]) : sel.length + ' períodos';
+  var label = todos ? 'Origem fato gerador' : sel.length === 1 ? (_dashMesesLabels[sel[0]] || sel[0]) : sel.length + ' períodos';
   if (btn) btn.textContent = label + ' ▾';
   if (sub) sub.textContent = 'Período: ' + label + ' · Última atualização: 24/04/2026 às 11:47';
 };
@@ -2299,19 +2299,19 @@ window._incRfRenderPagina = function() {
     var acaoBtn = '<button onclick="window._incAbrirAcao(\'' + r.id + '\')" style="background:rgba(139,92,246,.12);color:#8B5CF6;border:1px solid rgba(139,92,246,.3);border-radius:5px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Corrigir →</button>';
     h += '<tr>'
       + incIdCell
-      + '<td>' + etapaBadge + '</td>'
-      + '<td>' + tfBadge + '</td>'
-      + '<td>' + nfBadge + '</td>'
-      + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\'' + r.nfVinc.replace(/^[^\s]+\s*/,'') + '\')">' + r.nfVinc + '</td>'
-      + '<td style="font-size:12px">' + r.forn + '</td>'
-      + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + r.cnpj + '</td>'
-      + '<td class="r mono" style="font-size:11px;font-weight:700;color:' + (r.tf==='IBS'?'#3B82F6':r.tf==='CBS'?'#F59E0B':'var(--txt2)') + '">' + ff(r.valor) + '</td>'
-      + '<td class="r mono" style="font-size:11px">' + ff(r.valorTotal) + '</td>'
-      + '<td class="r mono" style="font-size:11px;color:var(--txt2)">' + ff(r.valorLiq) + '</td>'
-      + '<td>' + stBadge + '</td>'
-      + '<td style="font-size:11px;color:var(--txt2)">' + r.data + '</td>'
-      + '<td>' + incBadge + '</td>'
-      + '<td>' + acaoBtn + '</td>'
+      + '<td class="nowrap">' + etapaBadge + '</td>'
+      + '<td class="nowrap">' + tfBadge + '</td>'
+      + '<td class="nowrap">' + nfBadge + '</td>'
+      + '<td class="mono nowrap" style="color:#3B82F6;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\'' + r.nfVinc.replace(/^[^\s]+\s*/,'') + '\')">' + r.nfVinc + '</td>'
+      + '<td class="trunc">' + r.forn + '</td>'
+      + '<td class="mono" style="color:var(--txt2)">' + r.cnpj + '</td>'
+      + '<td class="r mono" style="font-weight:700;color:' + (r.tf==='IBS'?'#3B82F6':r.tf==='CBS'?'#F59E0B':'var(--txt2)') + '">' + ff(r.valor) + '</td>'
+      + '<td class="r mono">' + ff(r.valorTotal) + '</td>'
+      + '<td class="r mono" style="color:var(--txt2)">' + ff(r.valorLiq) + '</td>'
+      + '<td class="nowrap">' + stBadge + '</td>'
+      + '<td class="nowrap" style="color:var(--txt2)">' + r.data + '</td>'
+      + '<td class="nowrap">' + incBadge + '</td>'
+      + '<td class="nowrap">' + acaoBtn + '</td>'
       + '</tr>';
   });
   if (!pag.length) h = '<tr><td colspan="14" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro com inconsistência encontrado para este filtro.</td></tr>';
@@ -2925,7 +2925,7 @@ window.debitosFiltrarMesAno = function() {
   };
   var label = window._filtrosDebitos.mesAno
     ? (mesLabels[window._filtrosDebitos.mesAno] || window._filtrosDebitos.mesAno)
-    : 'Todos os períodos';
+    : 'Origem fato gerador';
   var sub = document.getElementById('deb-periodo-sub');
   if (sub) sub.textContent = 'Posição IBS + CBS · Art. 153-A LC 214/2025 · ' + label;
   window.renderizarTabelaDebitos();
@@ -2941,7 +2941,7 @@ window.debitosLimparFiltrosGrid = function() {
   var selMes = document.getElementById('deb-mes-ano');
   if (selMes) selMes.value = '';
   var sub = document.getElementById('deb-periodo-sub');
-  if (sub) sub.textContent = 'Posição IBS + CBS · Art. 153-A LC 214/2025 · Todos os períodos';
+  if (sub) sub.textContent = 'Posição IBS + CBS · Art. 153-A LC 214/2025 · Origem fato gerador';
   window._filtrosDebitos = {
     mesAno: '', busca: '', tipoFiscal: '', status: '',
     metodo: '', extincao: '', dataNFDe: '', dataNFAte: '',
@@ -3033,20 +3033,20 @@ window.renderizarTabelaDebitos = function() {
       ? '<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>'
       : '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
     h += '<tr>'
-      + '<td class="mono" style="font-size:11px"><button onclick="window.abrirDetalheRF(\'' + r.rf + '\')" style="background:none;border:none;color:#A7A8AA;cursor:pointer;font-size:11px;font-weight:500;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
-      + '<td>' + tfBadge + '</td>'
-      + '<td>' + nfTipoBadgeDeb + '</td>'
-      + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\'' + r.nf.replace(/^NF-/,'') + '\')">' + r.nf + '</td>'
-      + '<td style="font-size:12px">' + r.cliente + '</td>'
-      + '<td style="font-size:11px;color:var(--txt2)">' + r.data + '</td>'
-      + '<td class="r mono" style="font-size:11px">' + ff(r.valorTotal) + '</td>'
-      + '<td class="r mono" style="font-size:11px;color:var(--txt2)">' + ff(r.valorLiq) + '</td>'
-      + '<td class="r mono" style="font-size:11px;font-weight:600;color:#F59E0B">' + ffz(r.cbs) + '</td>'
-      + '<td class="r mono" style="font-size:11px;font-weight:600;color:#3B82F6">' + ffz(r.ibs) + '</td>'
-      + '<td class="r mono" style="font-size:11px;font-weight:700;color:var(--txt1)">' + ff(r.deb) + '</td>'
-      + '<td style="font-size:11px;color:var(--txt2)">' + r.extincao + '</td>'
-      + '<td>' + stBadge + '</td>'
-      + '<td>' + mBadge + '</td>'
+      + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\'' + r.rf + '\')" style="background:none;border:none;color:#A7A8AA;cursor:pointer;font-size:11px;font-weight:500;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
+      + '<td class="nowrap">' + tfBadge + '</td>'
+      + '<td class="nowrap">' + nfTipoBadgeDeb + '</td>'
+      + '<td class="mono nowrap" style="color:#3B82F6;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\'' + r.nf.replace(/^NF-/,'') + '\')">' + r.nf + '</td>'
+      + '<td class="trunc">' + r.cliente + '</td>'
+      + '<td class="nowrap" style="color:var(--txt2)">' + r.data + '</td>'
+      + '<td class="r mono">' + ff(r.valorTotal) + '</td>'
+      + '<td class="r mono" style="color:var(--txt2)">' + ff(r.valorLiq) + '</td>'
+      + '<td class="r mono" style="font-weight:600;color:#F59E0B">' + ffz(r.cbs) + '</td>'
+      + '<td class="r mono" style="font-weight:600;color:#3B82F6">' + ffz(r.ibs) + '</td>'
+      + '<td class="r mono" style="font-weight:700">' + ff(r.deb) + '</td>'
+      + '<td class="nowrap" style="color:var(--txt2)">' + r.extincao + '</td>'
+      + '<td class="nowrap">' + stBadge + '</td>'
+      + '<td class="nowrap">' + mBadge + '</td>'
       + '</tr>';
   });
 
@@ -3762,7 +3762,7 @@ window.pagamentosFiltrarMesAno = function() {
   };
   var label = window._filtrosPagamentos.mesAno
     ? (mesLabels[window._filtrosPagamentos.mesAno] || window._filtrosPagamentos.mesAno)
-    : 'Todos os períodos';
+    : 'Origem fato gerador';
   var sub = document.getElementById('pag-periodo-sub');
   if (sub) sub.textContent = 'Impostos (DARF/Guia IBS) e fornecedores · ' + label;
   window.renderizarTabelaPagamentos();
@@ -3875,19 +3875,19 @@ window.renderizarTabelaPagamentos = function() {
       : '<span style="color:var(--txt3)">—</span>';
     h += '<tr>'
       + chkCell
-      + '<td class="mono" style="font-size:11px;color:#3B82F6;font-weight:600">' + r.rf + '</td>'
-      + '<td>' + nfCell + '</td>'
-      + '<td><div style="font-weight:500;font-size:13px">' + r.forn + '</div><div style="font-size:11px;color:var(--txt2)">' + r.cnpj + '</div></td>'
-      + '<td>' + tipoBadge + '</td>'
-      + '<td>' + nfTipoBadgePag + '</td>'
-      + '<td>' + metodoBadge + '</td>'
-      + '<td class="r mono" style="font-weight:600">' + ff(r.valor) + '</td>'
-      + '<td style="font-size:11px;color:var(--txt2)">' + r.dataRF + '</td>'
-      + '<td style="font-size:11px">' + (r.status === 'pago'
+      + '<td class="mono nowrap" style="color:#3B82F6;font-weight:600">' + r.rf + '</td>'
+      + '<td class="mono nowrap">' + nfCell + '</td>'
+      + '<td class="trunc"><div style="font-weight:500">' + r.forn + '</div><div style="font-size:10px;color:var(--txt2)">' + r.cnpj + '</div></td>'
+      + '<td class="nowrap">' + tipoBadge + '</td>'
+      + '<td class="nowrap">' + nfTipoBadgePag + '</td>'
+      + '<td class="nowrap">' + metodoBadge + '</td>'
+      + '<td class="r mono" style="font-weight:700">' + ff(r.valor) + '</td>'
+      + '<td class="nowrap" style="color:var(--txt2)">' + r.dataRF + '</td>'
+      + '<td class="nowrap">' + (r.status === 'pago'
           ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pagamento + '</a>'
           : '<span style="color:var(--txt2)">—</span>') + '</td>'
-      + '<td>' + badge + '</td>'
-      + '<td>' + act + '</td>'
+      + '<td class="nowrap">' + badge + '</td>'
+      + '<td class="nowrap">' + act + '</td>'
       + '</tr>';
   });
 
@@ -4354,7 +4354,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var sel = document.getElementById(id);
         if (!sel) return;
         var cur = sel.value;
-        sel.innerHTML = '<option value="">Todos os períodos</option>';
+        sel.innerHTML = '<option value="">Origem fato gerador</option>';
         meses.forEach(function(m) {
           var opt = document.createElement('option');
           opt.value = m;
