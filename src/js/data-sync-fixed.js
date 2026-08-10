@@ -3851,14 +3851,21 @@ window.renderizarFCT = function() {
   var tributo = window._fctTributo || 'ambos';
 
   var byMonth = {};
+  var _nfFatContado = {};
 
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     var mes = (nf.data || '').substring(0, 7);
     if (!mes) return;
-    if (!byMonth[mes]) byMonth[mes] = { cAprop: 0, cCond: 0, cRisco: 0, dBruto: 0, faturamento: 0 };
+    if (!byMonth[mes]) byMonth[mes] = { cAprop: 0, cCond: 0, cRisco: 0, cGlosado: 0, dBruto: 0, faturamento: 0 };
+
+    // Faturamento bruto: soma valorTotal da NF de saída uma vez por NF
+    if (nf.tipo === 'saida' && !_nfFatContado[nf.id || mes + nf.entidade]) {
+      _nfFatContado[nf.id || mes + nf.entidade] = true;
+      byMonth[mes].faturamento += nf.valorTotal || 0;
+    }
 
     (nf.registrosFiscais || []).forEach(function(rf) {
-      var rfTrib = (rf.tributo || '').toLowerCase();
+      var rfTrib = (rf.tributo || rf.tipoFiscal || '').toLowerCase();
       if (tributo !== 'ambos' && rfTrib && rfTrib !== tributo) return;
       var v  = rf.valor || 0;
       var sc = rf.statusCredito || rf.status || '';
@@ -3867,13 +3874,17 @@ window.renderizarFCT = function() {
       if (nf.tipo === 'entrada') {
         if (sc === 'apropriado' || sc === 'utilizado') {
           byMonth[mes].cAprop += v;
+        } else if (sc === 'glosado') {
+          byMonth[mes].cGlosado += v;
         } else if (sc === 'nao_apropriado') {
           if (sr === 'em_risco' || sr === 'a_prescrever' || sr === 'vencido') byMonth[mes].cRisco += v;
           else byMonth[mes].cCond += v;
+        } else if (sr === 'em_risco' || sr === 'a_prescrever' || sr === 'vencido') {
+          // RF com statusRegistro de risco mas statusCredito não-nao_apropriado — conta como risco
+          byMonth[mes].cRisco += v;
         }
       } else if (nf.tipo === 'saida') {
         byMonth[mes].dBruto += v;
-        byMonth[mes].faturamento += v;
       }
     });
   });
@@ -3895,18 +3906,19 @@ window.renderizarFCT = function() {
     if (color) e.style.color = color;
   }
 
-  var totCAprop = 0, totCCond = 0, totCRisco = 0, totD = 0;
+  var totCAprop = 0, totCCond = 0, totCRisco = 0, totCGlosado = 0, totD = 0;
   meses.forEach(function(m) {
-    totCAprop += byMonth[m].cAprop;
-    totCCond  += byMonth[m].cCond;
-    totCRisco += byMonth[m].cRisco;
-    totD      += byMonth[m].dBruto;
+    totCAprop   += byMonth[m].cAprop;
+    totCCond    += byMonth[m].cCond;
+    totCRisco   += byMonth[m].cRisco;
+    totCGlosado += byMonth[m].cGlosado;
+    totD        += byMonth[m].dBruto;
   });
   var recolhLiq = Math.max(0, totD - totCAprop);
   var posicao   = totCAprop - totD;
 
   set('fct-k-cred-conf',  fmM(totCAprop));
-  set('fct-k-cred-cond',  fmM(totCCond + totCRisco));
+  set('fct-k-cred-cond',  fmM(totCCond + totCRisco + totCGlosado));
   set('fct-k-debito',     fmM(totD));
   set('fct-k-liq',        fmM(recolhLiq));
   set('fct-k-posicao',    fmM(posicao), posicao >= 0 ? '#22C55E' : '#F43F5E');
@@ -3917,8 +3929,9 @@ window.renderizarFCT = function() {
   var dAprop  = meses.map(function(m) { return +(byMonth[m].cAprop / 1e6).toFixed(2); });
   var dDebito = meses.map(function(m) { return +(byMonth[m].dBruto / 1e6).toFixed(2); });
   var dLiq    = meses.map(function(m) { return +(Math.max(0, byMonth[m].dBruto - byMonth[m].cAprop) / 1e6).toFixed(2); });
-  var dCCond  = meses.map(function(m) { return +(byMonth[m].cCond / 1e6).toFixed(2); });
-  var dCRisco = meses.map(function(m) { return +(byMonth[m].cRisco / 1e6).toFixed(2); });
+  var dCCond    = meses.map(function(m) { return +(byMonth[m].cCond    / 1e6).toFixed(2); });
+  var dCRisco   = meses.map(function(m) { return +(byMonth[m].cRisco   / 1e6).toFixed(2); });
+  var dCGlosado = meses.map(function(m) { return +(byMonth[m].cGlosado / 1e6).toFixed(2); });
 
   if (typeof svgLine === 'function') {
     // Gráfico principal: crédito × débito × líquido
@@ -3935,10 +3948,11 @@ window.renderizarFCT = function() {
       { data: dAcum, color: acum >= 0 ? '#22C55E' : '#F43F5E', fill: true, dots: true, w: 2.5, label: 'Saldo acumulado' }
     ], labels, 140, {});
 
-    // Créditos pendentes por mês (condicionado + em risco)
+    // Créditos pendentes por mês (condicionado + em risco + glosado)
     svgLine('cFCTVenc', [
-      { data: dCCond,  color: '#F59E0B', fill: true, dots: true, w: 2,   label: 'Condicionado' },
-      { data: dCRisco, color: '#F43F5E', fill: true, dots: true, w: 1.5, label: 'Em Risco' }
+      { data: dCCond,    color: '#F59E0B', fill: true, dots: true, w: 2,   label: 'Condicionado' },
+      { data: dCRisco,   color: '#F43F5E', fill: true, dots: true, w: 1.5, label: 'Em Risco' },
+      { data: dCGlosado, color: '#8B5CF6', fill: true, dots: true, w: 1.5, label: 'Glosado' }
     ], labels, 140, { min: 0 });
 
     // Alíquota efetiva mensal
@@ -3978,14 +3992,17 @@ window.renderizarFCT = function() {
       var statusTxt = pos >= 0
         ? '<span style="color:#22C55E;font-weight:700;font-size:10px">● Credor</span>'
         : '<span style="color:#F43F5E;font-weight:700;font-size:10px">● Devedor</span>';
+      var aliqMes = d.faturamento > 0 ? (Math.max(0, d.dBruto - d.cAprop) / d.faturamento * 100).toFixed(1) + '%' : '—';
       rows += '<tr>'
         + '<td class="nowrap">' + m.substring(5,7) + '/' + m.substring(0,4) + '</td>'
         + '<td class="r mono" style="color:#49C5B1">' + fmM(d.cAprop) + '</td>'
         + '<td class="r mono" style="color:#F59E0B">' + fmM(d.cCond)  + '</td>'
         + '<td class="r mono" style="color:#F43F5E">' + fmM(d.cRisco) + '</td>'
+        + '<td class="r mono" style="color:#8B5CF6">' + fmM(d.cGlosado) + '</td>'
         + '<td class="r mono">' + fmM(d.dBruto) + '</td>'
         + '<td class="r mono" style="color:#F59E0B">' + fmM(liq) + '</td>'
         + '<td class="r mono" style="color:' + posCor + ';font-weight:700">' + fmM(pos) + '</td>'
+        + '<td class="r mono" style="color:var(--teal)">' + aliqMes + '</td>'
         + '<td>' + statusTxt + '</td>'
         + '</tr>';
     });
