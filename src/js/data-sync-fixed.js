@@ -3164,8 +3164,7 @@ class DataSyncManagerFixed {
     this.gerarCreditosDeNFs();
     // Atualizar o array global creditos
     this.atualizarArrayCreditos();
-    // Atualizar o dashboard
-    this.atualizarDashboard();
+    // Dashboard é atualizado após nfListaFiltradaGlobal ser populado em _postProcessarDados()
     console.log('✓ Data Sync Manager inicializado');
     console.log(`  - ${this.nfsEntrada.length} NFs de entrada geradas`);
     console.log(`  - ${this.creditosGerados.length} registros de crédito gerados`);
