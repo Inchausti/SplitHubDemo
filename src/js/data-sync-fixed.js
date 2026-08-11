@@ -36,10 +36,20 @@ var _contratosData = [
   {id:'CT-0010',cnpj:'70.873.979/0001-04',inicio:'2026-01-01',fim:'2026-12-31',rad:false,prazo:'30'}
 ];
 
+function _brToISOLocal(br) {
+  if (!br || br.indexOf('-') !== -1) return br || '';
+  var p = br.split('/');
+  return p.length === 3 ? p[2]+'-'+p[1]+'-'+p[0] : br;
+}
+
 function buscarContrato(cnpj, dataISO) {
-  for (var i = 0; i < _contratosData.length; i++) {
-    var c = _contratosData[i];
-    if (c.cnpj === cnpj && dataISO >= c.inicio && dataISO <= c.fim) return c;
+  // Usa window.contratosGlobal (fonte única) se disponível; fallback para _contratosData
+  var lista = (window.contratosGlobal && window.contratosGlobal.length)
+    ? window.contratosGlobal : _contratosData;
+  for (var i = 0; i < lista.length; i++) {
+    var c = lista[i];
+    var ini = _brToISOLocal(c.inicio), fim = _brToISOLocal(c.fim);
+    if (c.cnpj === cnpj && dataISO >= ini && dataISO <= fim) return c;
   }
   return null;
 }
@@ -373,6 +383,32 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
 
   // ── Montar overlay ──────────────────────────────────────────────────────
   var chaveFormatada = r.chaveDF ? r.chaveDF.replace(/(.{4})(?=.)/g, '$1 ') : '—';
+
+  // Contrato vigente na data da NF
+  var ctrAtivo = window.getContratoAtivo ? window.getContratoAtivo(r.cnpj, r.data) : null;
+  var ctrHtml = '';
+  if (ctrAtivo) {
+    var ctrModelo = ctrAtivo.modelo === 'adquirente'
+      ? '<span style="color:#3B82F6;font-weight:600">Adquirente recolhe</span>'
+      : '<span style="color:var(--teal);font-weight:600">Fornecedor recolhe</span>';
+    var ctrRAD = ctrAtivo.rad
+      ? '<span style="background:rgba(59,130,246,.1);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600;margin-left:4px">RAD</span>' : '';
+    ctrHtml = '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
+      + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Contrato</div>'
+      + '<div style="background:rgba(73,197,177,.06);border:1px solid rgba(73,197,177,.2);border-radius:6px;padding:10px 12px;font-size:11px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+      + '<span style="font-weight:700;color:var(--teal);font-family:monospace">' + ctrAtivo.id + '</span>'
+      + ctrRAD
+      + '</div>'
+      + DR('Vigência', (ctrAtivo.inicio||'—') + ' → ' + (ctrAtivo.fim||'—'))
+      + DR('Prazo pgto.', (ctrAtivo.prazo||'—') + ' dias')
+      + '<div style="margin-top:6px;font-size:10px;color:var(--txt3)">Modelo: ' + ctrModelo + '</div>'
+      + '</div>';
+  } else {
+    ctrHtml = '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
+      + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Contrato</div>'
+      + '<div style="font-size:11px;color:var(--txt3);font-style:italic">Nenhum contrato vigente na data da NF.</div>';
+  }
   var html = '<div id="nf-detalhe-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box" onclick="if(event.target===this)document.getElementById(\'nf-detalhe-overlay\').remove()">'
     + '<div style="background:var(--bg);border:1px solid var(--brd);border-radius:14px;width:900px;max-width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.4)">'
 
@@ -409,6 +445,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
     + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Chave DF</div>'
     + '<div style="font-size:9px;font-family:monospace;color:var(--txt3);word-break:break-all;line-height:1.7;margin-bottom:14px">' + chaveFormatada + '</div>'
+    + ctrHtml
     + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
     + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Registros Fiscais</div>'
     + rfsHtml

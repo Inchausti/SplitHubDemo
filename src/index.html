@@ -36,6 +36,7 @@ body{display:flex;min-height:100vh}
 .sb-co-box .val{font-size:12px;font-weight:600;color:var(--txt1)}
 .sb-co-box .sub{font-size:10px;color:var(--txt3)}
 nav{padding:10px;flex:1;overflow-y:auto}
+.ctr-tip-wrap:hover .ctr-tip{display:block!important}
 .nav-btn{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:transparent;border:none;border-left:2px solid transparent;border-radius:6px;color:var(--txt2);font-size:13px;font-family:inherit;padding:9px 12px;cursor:pointer;margin-bottom:2px}
 .nav-sub-btn{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:transparent;border:none;border-left:2px solid transparent;border-radius:6px;color:var(--txt3);font-size:12px;font-family:inherit;padding:7px 12px 7px 34px;cursor:pointer;margin-bottom:2px}
 .nav-sub-btn:hover{color:var(--txt1)}
@@ -2249,6 +2250,30 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
       <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+          <span style="font-size:11px;color:var(--txt3)">Modelo de operação</span>
+          <span style="position:relative;display:inline-flex" class="ctr-tip-wrap">
+            <span style="width:15px;height:15px;border-radius:50%;background:rgba(73,197,177,.15);border:1px solid rgba(73,197,177,.35);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--teal);cursor:default;line-height:1;flex-shrink:0">?</span>
+            <span class="ctr-tip" style="
+              display:none;position:absolute;left:20px;top:-6px;
+              width:300px;background:var(--sidebar);border:1px solid var(--border);
+              border-radius:8px;padding:12px 14px;z-index:900;
+              box-shadow:0 8px 24px rgba(0,0,0,.25);pointer-events:none">
+              <div style="font-size:11px;font-weight:700;color:var(--txt1);margin-bottom:6px">Modelo de operação do tributo</div>
+              <div style="font-size:11px;color:var(--txt2);line-height:1.6">
+                Define <strong style="color:var(--txt1)">quem é o responsável legal pelo recolhimento</strong> do IBS e CBS perante o Fisco — o fornecedor ou o adquirente.<br><br>
+                <span style="color:var(--teal);font-weight:600">Fornecedor recolhe:</span> modelo padrão. O fornecedor emite a NF com os tributos destacados e efetua o recolhimento. O Split Payment retém e repassa automaticamente o montante ao Fisco no momento da liquidação financeira.<br><br>
+                <span style="color:var(--blue);font-weight:600">Adquirente recolhe:</span> modelo RAD (Recolhimento pelo Adquirente Diferido). A responsabilidade tributária é transferida ao comprador por cláusula contratual. O adquirente retém o valor correspondente ao IBS/CBS e recolhe diretamente — utilizado em operações com substitutos tributários ou acordos específicos entre as partes.
+              </div>
+            </span>
+          </span>
+        </div>
+        <select id="ctr-form-modelo" style="width:100%">
+          <option value="fornecedor">Fornecedor realiza o recolhimento do tributo</option>
+          <option value="adquirente">Adquirente realiza o recolhimento do tributo</option>
+        </select>
+      </div>
+      <div>
         <div style="font-size:11px;color:var(--txt3);margin-bottom:5px">Pagamento via RAD?</div>
         <select id="ctr-form-rad" style="width:100%">
           <option value="nao">Não — Fornecedor</option>
@@ -2256,13 +2281,16 @@ tr:last-child td{border-bottom:none}
         </select>
       </div>
       <div>
-        <div style="font-size:11px;color:var(--txt3);margin-bottom:5px">Prazo de pagamento</div>
-        <select id="ctr-form-prazo" style="width:100%">
-          <option value="30">30 dias</option>
-          <option value="60">60 dias</option>
-          <option value="90">90 dias</option>
-          <option value="120">120 dias</option>
-        </select>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;color:var(--txt3)">Prazo de pagamento</span>
+          <span style="font-size:13px;font-weight:700;color:var(--teal);font-family:monospace;min-width:64px;text-align:right" id="ctr-prazo-label">30 dias</span>
+        </div>
+        <input type="range" id="ctr-form-prazo" min="1" max="360" value="30"
+          oninput="document.getElementById('ctr-prazo-label').textContent=this.value+' dias'"
+          style="width:100%;accent-color:var(--teal);cursor:pointer"/>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--txt3);margin-top:3px">
+          <span>1 dia</span><span>90</span><span>180</span><span>270</span><span>360 dias</span>
+        </div>
       </div>
     </div>
     <div id="ctr-form-msg" style="margin-top:14px;font-size:12px"></div>
@@ -2814,6 +2842,39 @@ var contratos=[
   {id:"CT-0018",cnpj:"70.873.979/0002-85",inicio:"01/03/2026",fim:"28/02/2027",rad:false,prazo:"30"}
 ];
 var contratoSeq=contratos.length;
+
+// ── Artefato global de contratos ─────────────────────────────────────────
+// Expõe o array como window.contratosGlobal para acesso de qualquer módulo.
+// data-sync-fixed.js consome via window.contratosGlobal (ver buscarContrato).
+window.contratosGlobal = contratos;
+
+// Converte "DD/MM/AAAA" → "AAAA-MM-DD" para comparação ISO
+window._brToISO = function(br) {
+  if (!br) return '';
+  if (br.indexOf('-') !== -1) return br; // já é ISO
+  var p = br.split('/');
+  return p.length === 3 ? p[2]+'-'+p[1]+'-'+p[0] : br;
+};
+
+// API pública: retorna o contrato vigente de um CNPJ numa data ISO (ou hoje)
+window.getContratoAtivo = function(cnpj, dataISO) {
+  if (!dataISO) { var d=new Date(); dataISO=d.toISOString().slice(0,10); }
+  var lista = window.contratosGlobal || [];
+  for (var i=0; i<lista.length; i++) {
+    var c = lista[i];
+    if (c.cnpj === cnpj) {
+      var ini = window._brToISO(c.inicio), fim = window._brToISO(c.fim);
+      if (dataISO >= ini && dataISO <= fim) return c;
+    }
+  }
+  return null;
+};
+
+// API pública: todos os contratos de um CNPJ
+window.getContratosPorCnpj = function(cnpj) {
+  return (window.contratosGlobal || []).filter(function(c){ return c.cnpj===cnpj; });
+};
+
 var inconsistencias=[
   {id:"INC-0001",tipo:"nf_erro",nf:"NF-e 00019845",forn:"Bosch Ltda",cnpj:"17.235.322/0001-97",data:"20/04/2026",valorNF:187000,severidade:"alta",status:"aberta",detalhe:"Layout do XML inválido — tag <ICMSTot> ausente"},
   {id:"INC-0002",tipo:"nf_erro",nf:"NF-e 00023190",forn:"WEG Equipamentos",cnpj:"33.514.814/0001-19",data:"22/04/2026",valorNF:94300,severidade:"media",status:"resolvida",detalhe:"Erro de schema XSD na importação"},
@@ -3750,6 +3811,7 @@ function contratosCadastrar(){
   var iniStr=document.getElementById("ctr-form-inicio").value.trim();
   var fimStr=document.getElementById("ctr-form-fim").value.trim();
   var rad=document.getElementById("ctr-form-rad").value==="sim";
+  var modelo=document.getElementById("ctr-form-modelo").value;
   var prazo=document.getElementById("ctr-form-prazo").value;
   if(!cnpj){setMsg("Selecione o CNPJ do fornecedor.","var(--red)");return;}
   var iniD=parseDataBR(iniStr),fimD=parseDataBR(fimStr);
@@ -3762,7 +3824,7 @@ function contratosCadastrar(){
   if(sobrepoe){setMsg("Já existe um contrato para este CNPJ com vigência sobreposta ao período informado.","var(--red)");return;}
   contratoSeq++;
   var novoId="CT-"+String(contratoSeq).padStart(4,"0");
-  contratos.push({id:novoId,cnpj:cnpj,inicio:iniStr,fim:fimStr,rad:rad,prazo:prazo});
+  contratos.push({id:novoId,cnpj:cnpj,inicio:iniStr,fim:fimStr,rad:rad,modelo:modelo,prazo:prazo});
   contratosRenderTabela();
   contratosRenderKPIs();
   setMsg("Contrato "+novoId+" cadastrado com sucesso.","var(--green)");
