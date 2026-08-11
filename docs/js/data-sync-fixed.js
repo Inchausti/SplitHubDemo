@@ -4112,10 +4112,14 @@ window.renderizarFCT = function() {
       return +((Math.max(0, byMonth[m].dBruto - byMonth[m].cAprop) / fat * 100).toFixed(2));
     });
     var dNominal = meses.map(function() { return 26.5; });
+    // Range centrado nos dados: piso 4pp abaixo do menor valor, teto 4pp acima do maior (≥ 26.5)
+    var aliqPositivos = dAliq.filter(function(v){ return v > 0; });
+    var aliqMin = aliqPositivos.length ? Math.max(0, Math.min.apply(null, aliqPositivos) - 4) : 0;
+    var aliqMax = Math.max(26.5, Math.max.apply(null, dAliq)) + 4;
     svgLine('cFCTAliq', [
       { data: dAliq,    color: 'var(--teal)', fill: true,  dots: true, w: 2.5, label: 'Alíquota Efetiva %' },
-      { data: dNominal, color: '#53565A',     fill: false, dots: false, w: 1.5, label: 'Referência 26,5%', dash: true }
-    ], labels, 170, { min: 0 });
+      { data: dNominal, color: 'var(--txt3)', fill: false, dots: false, w: 1.5, label: 'Referência 26,5%', dash: true }
+    ], labels, 170, { min: aliqMin, max: aliqMax });
 
     // KPIs alíquota
     var aliqTotal = 0, aliqN = 0;
