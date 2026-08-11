@@ -254,7 +254,7 @@ window.renderizarListaNFs = function() {
   console.log('[data-sync-fixed] Listagem de NFs renderizada com', lista.length, 'registros');
 };
 
-// Abrir modal de detalhes da NF — implementação global estável
+// Abrir detalhe da NF — overlay completo com histórico consolidado
 window.abrirDetalhesNFporNumero = function(nfNumero) {
   var lista = window.nfListaFiltradaGlobal || [];
   var r = null;
@@ -263,57 +263,169 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   }
   if (!r) return;
 
-  var dataParts = r.data.split('-');
-  var dataFormatada = dataParts[2] + '/' + dataParts[1] + '/' + dataParts[0];
+  var F = window._rfFmt || function(s){ return s; };
+  var A = window._rfAddDays || function(iso, n){ return iso; };
+  var DR = window._rfDetailRow || function(l, v){ return '<div>' + l + ': ' + v + '</div>'; };
+
+  var dataParts = (r.data || '').split('-');
+  var dataFmt = dataParts.length === 3 ? dataParts[2]+'/'+dataParts[1]+'/'+dataParts[0] : (r.data || '—');
   var tipoLabel = r.tipo === 'entrada' ? 'Entrada' : 'Saída';
-  var statusLabels = {
-    'nao_apropriado': 'Não Apropriado', 'apropriado': 'Apropriado',
-    'utilizado': 'Utilizado', 'nao_extinto': 'Não Extinto', 'extinto': 'Extinto'
-  };
+  var tipoColor = r.tipo === 'entrada' ? '#22C55E' : '#3B82F6';
 
-  function setEl(id, val) {
-    var el = document.getElementById(id);
-    if (el) el.textContent = val;
+  // ── Status badge da NF ──────────────────────────────────────────────────
+  var stLabs = { nao_apropriado:'Não Apropriado', apropriado:'Apropriado', utilizado:'Utilizado',
+    nao_extinto:'Não Extinto', extinto:'Extinto' };
+  var stRgbs = { nao_apropriado:'167,168,170', apropriado:'34,197,94', utilizado:'73,197,177',
+    nao_extinto:'167,168,170', extinto:'34,197,94' };
+  var stKey = r.status || 'nao_apropriado';
+  var stLab = stLabs[stKey] || stKey;
+  var stRgb = stRgbs[stKey] || '167,168,170';
+
+  // ── Registros Fiscais ───────────────────────────────────────────────────
+  var rfsCss = { ibs:'#3B82F6', cbs:'#F59E0B' };
+  var rfsHtml = '';
+  (r.registrosFiscais || []).forEach(function(rf) {
+    var tfLbl = rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS';
+    var tfCor = rfsCss[rf.tipoFiscal] || '#A7A8AA';
+    var stRfLab = stLabs[rf.statusCredito || rf.status] || (rf.statusCredito || rf.status || '—');
+    var stRfRgb = stRgbs[rf.statusCredito || rf.status] || '167,168,170';
+    var stRgLab = rf.statusRegistro ? ({ inconsistencia:'Inconsistência', em_risco:'Em risco', vencido:'Vencido', a_prescrever:'A Prescrever' }[rf.statusRegistro] || rf.statusRegistro) : null;
+    var stRgRgb = rf.statusRegistro ? ({ inconsistencia:'244,63,94', em_risco:'245,158,11', vencido:'244,63,94', a_prescrever:'251,146,60' }[rf.statusRegistro] || '167,168,170') : null;
+    rfsHtml += '<div style="background:rgba(59,130,246,.04);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:12px;margin-bottom:10px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+      + '<div style="display:flex;align-items:center;gap:8px">'
+      + '<span style="background:rgba(' + (tfCor==='#3B82F6'?'59,130,246':'245,158,11') + ',.15);color:' + tfCor + ';border:1px solid rgba(' + (tfCor==='#3B82F6'?'59,130,246':'245,158,11') + ',.35);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700">' + tfLbl + '</span>'
+      + '<span style="font-size:11px;font-family:monospace;color:var(--txt2)">' + rf.id + '</span>'
+      + '</div>'
+      + '<button onclick="document.getElementById(\'nf-detalhe-overlay\').remove();window.abrirDetalheRF(\'' + rf.id + '\')" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:4px;color:#3B82F6;cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px">Ver RF →</button>'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">'
+      + '<div style="color:var(--txt3)">Valor: <span style="color:var(--txt1);font-weight:600">' + ff(rf.valor) + '</span></div>'
+      + '<div style="color:var(--txt3)">NF Total: <span style="color:var(--txt1)">' + ff(rf.valorTotalNF || 0) + '</span></div>'
+      + '<div style="display:flex;align-items:center;gap:4px">Status: <span style="background:rgba(' + stRfRgb + ',.12);color:rgba(' + stRfRgb + ',1);border:1px solid rgba(' + stRfRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRfLab + '</span></div>'
+      + (stRgLab ? '<div style="display:flex;align-items:center;gap:4px">RF: <span style="background:rgba(' + stRgRgb + ',.12);color:rgba(' + stRgRgb + ',1);border:1px solid rgba(' + stRgRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRgLab + '</span></div>' : '<div></div>')
+      + '</div>'
+      + '</div>';
+  });
+
+  // ── Timeline NF: agrega eventos de todos os RFs ─────────────────────────
+  var evRgba  = { 'INGESTÃO':'73,197,177', 'VALIDAÇÃO':'34,197,94', 'GERAÇÃO RF':'59,130,246',
+    'INCONSISTÊNCIA':'239,68,68', 'VENCIMENTO':'239,68,68', 'AGUARDANDO':'245,158,11',
+    'APROPRIAÇÃO':'34,197,94', 'PAGAMENTO':'73,197,177', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170' };
+  var evIcons = { 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!',
+    'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■' };
+
+  var allEvents = [];
+  var d0 = r.data || '';
+
+  // Eventos da NF (comuns a todos os RFs)
+  if (d0) {
+    allEvents.push({ data: F(d0), tipo: 'INGESTÃO', modulo: 'Ingestão de DFs', ator: 'SEFAZ',
+      desc: (r.tipoDF || 'NF-e') + ' ' + r.numero + ' recebida e registrada na plataforma SplitHub · emitente: ' + (r.entidade || '—'), cls: 'ok', order: d0 + '_00' });
+    allEvents.push({ data: F(A(d0, 1)), tipo: 'VALIDAÇÃO', modulo: 'Ingestão de DFs', ator: 'SplitHub',
+      desc: 'Schema XML e dados fiscais validados · documento aceito · ' + tipoLabel, cls: 'ok', order: A(d0, 1) + '_01' });
   }
 
-  setEl('nf-detail-numero',        (r.tipoDF || 'DF') + ' ' + r.numero);
-  setEl('nf-detail-tipo',          tipoLabel);
-  setEl('nf-detail-entidade',      r.entidade);
-  setEl('nf-detail-cnpj',          r.cnpj);
-  setEl('nf-detail-valor-total',   ff(r.valorTotal));
-  setEl('nf-detail-valor-liquido', ff(r.valorLiquido));
-  setEl('nf-detail-cbs',           ffz(r.cbs));
-  setEl('nf-detail-ibs',           ffz(r.ibs));
-  setEl('nf-detail-status',        statusLabels[r.status] || r.status);
-  setEl('nf-detail-data',          dataFormatada);
-  var chaveEl = document.getElementById('nf-detail-chave');
-  if (chaveEl) chaveEl.textContent = r.chaveDF ? r.chaveDF.replace(/(.{4})(?=.)/g, '$1 ') : '—';
-
-  var fiscaisHtml = '';
-  if (r.registrosFiscais && r.registrosFiscais.length) {
-    r.registrosFiscais.forEach(function(rf) {
-      var rfLabel = rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS';
-      var rfCor   = rf.tipoFiscal === 'ibs' ? '#3B82F6' : '#F59E0B';
-      var rfStatus = statusLabels[rf.status] || rf.status;
-      fiscaisHtml += '<div style="background:rgba(73,197,177,.06);border:1px solid rgba(73,197,177,.2);border-radius:6px;padding:12px;font-size:11px;margin-bottom:8px">'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-        + '<div style="font-weight:600;color:' + rfCor + '">' + rfLabel + ' • ' + rf.id + '</div>'
-        + '<button onclick="document.getElementById(\'nf-modal\').style.display=\'none\';window.abrirDetalheRF(\'' + rf.id + '\')" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:4px;color:#3B82F6;cursor:pointer;font-size:10px;font-weight:700;padding:2px 8px">Histórico</button>'
-        + '</div>'
-        + '<div style="color:var(--txt2);margin-bottom:6px">Entidade: <span style="color:var(--txt1)">' + rf.entidade + '</span></div>'
-        + '<div style="color:var(--txt2);margin-bottom:6px;font-family:monospace;font-size:10px">CNPJ: ' + rf.cnpj + '</div>'
-        + '<div style="color:var(--txt2);margin-bottom:6px">Valor: <span style="color:var(--txt1);font-weight:600">' + ff(rf.valor) + '</span></div>'
-        + '<div style="color:var(--txt2);margin-bottom:6px">NF Total: <span style="color:var(--txt1)">' + ff(rf.valorTotalNF) + '</span></div>'
-        + '<div style="color:var(--txt2);margin-bottom:6px">NF Líquido: <span style="color:var(--txt1)">' + ff(rf.valorLiquidoNF) + '</span></div>'
-        + '<div style="color:var(--txt2)">Status: <span style="color:var(--txt1);font-weight:600">' + rfStatus + '</span></div>'
-        + '</div>';
+  // Eventos por RF
+  (r.registrosFiscais || []).forEach(function(rf, ri) {
+    if (!window._rfGerarHistorico) return;
+    var evs = window._rfGerarHistorico(rf, r);
+    // Skip the first two (INGESTÃO, VALIDAÇÃO) — já adicionamos no nível NF
+    evs.slice(2).forEach(function(ev) {
+      // Tag com o RF para distinguir IBS x CBS
+      var tfSuffix = rf.tipoFiscal ? ' · ' + rf.tipoFiscal.toUpperCase() : '';
+      allEvents.push({
+        data: ev.data,
+        tipo: ev.tipo,
+        modulo: ev.modulo,
+        ator: ev.ator,
+        desc: ev.desc + (ev.tipo === 'GERAÇÃO RF' || ev.tipo === 'GERAÇÃO RF' ? tfSuffix : ''),
+        cls: ev.cls,
+        order: (ev.data === '—' ? '9999-99' : ev.data) + '_' + (ri * 10 + 5)
+      });
     });
-  }
-  var fiscaisEl = document.getElementById('nf-detail-fiscais');
-  if (fiscaisEl) fiscaisEl.innerHTML = fiscaisHtml;
+  });
 
-  var modal = document.getElementById('nf-modal');
-  if (modal) modal.style.display = 'flex';
+  // Ordenar por data
+  allEvents.sort(function(a, b) { return a.order < b.order ? -1 : a.order > b.order ? 1 : 0; });
+
+  var tlH = '';
+  allEvents.forEach(function(ev, i) {
+    var rgba = evRgba[ev.tipo] || '167,168,170';
+    var isLast = i === allEvents.length - 1;
+    var dotRgba = ev.cls === 'erro' ? '239,68,68' : ev.cls === 'pending' ? '245,158,11' : rgba;
+    var icon = evIcons[ev.tipo] || '◯';
+    tlH += '<div style="display:flex;gap:12px">'
+      + '<div style="display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0">'
+      + '<div style="width:28px;height:28px;border-radius:50%;background:rgba(' + dotRgba + ',.15);border:1.5px solid rgba(' + dotRgba + ',.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba(' + dotRgba + ',1)">' + icon + '</div>'
+      + (!isLast ? '<div style="width:1px;flex:1;background:rgba(128,128,128,.2);margin:3px 0;min-height:20px"></div>' : '')
+      + '</div>'
+      + '<div style="flex:1;padding-bottom:' + (isLast ? '0' : '22') + 'px">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">'
+      + '<span style="background:rgba(' + rgba + ',.12);color:rgba(' + rgba + ',1);border:1px solid rgba(' + rgba + ',.3);border-radius:3px;padding:1px 7px;font-size:9px;font-weight:700;letter-spacing:.07em">' + ev.tipo + '</span>'
+      + '<span style="font-size:10px;color:var(--txt3);font-family:monospace">' + ev.data + '</span>'
+      + '</div>'
+      + '<div style="font-size:12px;color:var(--txt1);line-height:1.55;margin-bottom:3px">' + ev.desc + '</div>'
+      + '<div style="font-size:10px;color:var(--txt2)">' + ev.modulo + ' · ' + ev.ator + '</div>'
+      + '</div>'
+      + '</div>';
+  });
+
+  // ── Montar overlay ──────────────────────────────────────────────────────
+  var chaveFormatada = r.chaveDF ? r.chaveDF.replace(/(.{4})(?=.)/g, '$1 ') : '—';
+  var html = '<div id="nf-detalhe-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box" onclick="if(event.target===this)document.getElementById(\'nf-detalhe-overlay\').remove()">'
+    + '<div style="background:var(--bg);border:1px solid var(--brd);border-radius:14px;width:900px;max-width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.4)">'
+
+    // Header
+    + '<div style="padding:16px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
+    + '<div style="display:flex;align-items:center;gap:12px">'
+    + '<div style="width:34px;height:34px;border-radius:8px;background:rgba(73,197,177,.12);border:1px solid rgba(73,197,177,.25);display:flex;align-items:center;justify-content:center;font-size:16px">🧾</div>'
+    + '<div>'
+    + '<div style="font-size:14px;font-weight:700;color:var(--txt1)">' + (r.tipoDF || 'NF-e') + ' ' + r.numero + '</div>'
+    + '<div style="font-size:11px;color:var(--txt2)">' + (r.entidade || '—') + ' · ' + (r.cnpj || '—') + ' · ' + dataFmt + '</div>'
+    + '</div>'
+    + '</div>'
+    + '<button onclick="document.getElementById(\'nf-detalhe-overlay\').remove()" style="background:none;border:none;cursor:pointer;color:var(--txt2);font-size:20px;padding:4px 8px;border-radius:6px;line-height:1">✕</button>'
+    + '</div>'
+
+    // Body: two columns
+    + '<div style="display:flex;flex:1;overflow:hidden">'
+
+    // Left panel
+    + '<div style="width:300px;flex-shrink:0;border-right:1px solid var(--brd);padding:18px;overflow-y:auto">'
+    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px">Documento Fiscal</div>'
+    + DR('Número', (r.tipoDF || 'NF-e') + ' ' + r.numero)
+    + DR('Tipo', '<span style="color:' + tipoColor + ';font-weight:700">' + tipoLabel + '</span>')
+    + DR('Emitente', r.entidade || '—')
+    + DR('CNPJ', r.cnpj || '—', null, true)
+    + DR('Data', dataFmt)
+    + DR('Status', '<span style="background:rgba(' + stRgb + ',.12);color:rgba(' + stRgb + ',1);border:1px solid rgba(' + stRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLab + '</span>')
+    + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Valores</div>'
+    + DR('Total', ff(r.valorTotal || 0))
+    + DR('Líquido', ff(r.valorLiquido || 0))
+    + DR('CBS', ffz(r.cbs || 0), '#F59E0B')
+    + DR('IBS', ffz(r.ibs || 0), '#3B82F6')
+    + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Chave DF</div>'
+    + '<div style="font-size:9px;font-family:monospace;color:var(--txt3);word-break:break-all;line-height:1.7;margin-bottom:14px">' + chaveFormatada + '</div>'
+    + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Registros Fiscais</div>'
+    + rfsHtml
+    + '</div>'
+
+    // Right panel: timeline
+    + '<div style="flex:1;padding:18px;overflow-y:auto">'
+    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px">Histórico do Ciclo · ' + allEvents.length + ' evento' + (allEvents.length !== 1 ? 's' : '') + '</div>'
+    + (tlH || '<div style="color:var(--txt3);font-size:12px">Nenhum evento disponível.</div>')
+    + '</div>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
+
+  var existing = document.getElementById('nf-detalhe-overlay');
+  if (existing) existing.remove();
+  document.body.insertAdjacentHTML('beforeend', html);
 };
 
 // ── Detalhe RF: índice + histórico do ciclo ────────────────────────────────
