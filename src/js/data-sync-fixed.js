@@ -1351,10 +1351,12 @@ if (typeof svgLine !== 'function') {
     var padT=8,padB=26,padL=8,padR=8;
     var cw=(el.parentElement&&el.parentElement.offsetWidth)||el.offsetWidth||440;
     var W=cw>50?cw:440, plotW=W-padL-padR, plotH=H-padT-padB, n=labels.length;
-    var minV,maxV;
-    if(opts&&opts.min!==undefined){minV=opts.min;maxV=opts.max;}
-    else{var all=[];datasets.forEach(function(d){all=all.concat(d.data);});minV=Math.min.apply(null,all);maxV=Math.max.apply(null,all);}
-    var rng=maxV-minV||1;
+    var allFb=[];datasets.forEach(function(d){allFb=allFb.concat(d.data);});
+    var dMinFb=allFb.length?Math.min.apply(null,allFb):0,dMaxFb=allFb.length?Math.max.apply(null,allFb):1;
+    var minV=(opts&&opts.min!==undefined)?opts.min:dMinFb;
+    var maxV=(opts&&opts.max!==undefined)?opts.max:dMaxFb;
+    if(maxV<=minV)maxV=minV+1;
+    var rng=maxV-minV;
     function xp(i){return Math.round(padL+(i/(n-1||1))*plotW);}
     function yp(v){return Math.round(padT+(1-(v-minV)/rng)*plotH);}
     function fmtTip(v){return v>=1?v.toFixed(2).replace('.',',')+'M':v>=0.001?(v*1000).toFixed(0)+'K':'0,00M';}
@@ -1489,9 +1491,9 @@ window.atualizarInteligencia = function() {
   var dRisco = meses.map(function(m) { return +(byMonth[m].risco / 1e6).toFixed(2); });
   if (typeof svgBar === 'function' && meses.length) {
     svgBar('cAprovMensal', [
-      { data: dAprop, color: '#22C55E' },
-      { data: dPend,  color: '#F59E0B' },
-      { data: dRisco, color: '#F43F5E' }
+      { data: dAprop, color: 'var(--green)',  label: 'Apropriado' },
+      { data: dPend,  color: 'var(--amber)',  label: 'Pendente'   },
+      { data: dRisco, color: 'var(--red)',    label: 'Em Risco'   }
     ], labM, 200);
   }
 
@@ -1516,7 +1518,7 @@ window.atualizarInteligencia = function() {
     var radLabels = radTop.map(function(r){ return r.nome.split(' ')[0]; });
     var rad90  = radTop.map(function(r){ return +(r.vol90  / 1e6).toFixed(2); });
     var rad120 = radTop.map(function(r){ return +(r.vol120 / 1e6).toFixed(2); });
-    if (typeof svgBar === 'function') svgBar('cRadPrazo', [{ data: rad90, color: '#49C5B1' }, { data: rad120, color: '#3B82F6' }], radLabels, 200);
+    if (typeof svgBar === 'function') svgBar('cRadPrazo', [{ data: rad90, color: 'var(--teal)', label: '90d' }, { data: rad120, color: 'var(--blue)', label: '120d' }], radLabels, 200);
     var tbody = document.getElementById('t-rad-prazo');
     if (tbody) {
       var rows = '';
@@ -4086,23 +4088,23 @@ window.renderizarFCT = function() {
   if (typeof svgLine === 'function') {
     // Gráfico principal: crédito × débito × líquido
     svgLine('cFCT', [
-      { data: dAprop,  color: '#49C5B1', fill: true,  dots: false, w: 2,   label: 'Crédito Apropriado' },
-      { data: dDebito, color: '#F43F5E', fill: false,  dots: false, w: 2,   label: 'Débito Bruto', dash: true },
-      { data: dLiq,    color: '#F59E0B', fill: false,  dots: true,  w: 1.5, label: 'Recolhimento Líquido' }
+      { data: dAprop,  color: 'var(--teal)',  fill: true,  dots: false, w: 2,   label: 'Crédito Apropriado' },
+      { data: dDebito, color: 'var(--red)',   fill: false, dots: false, w: 2,   label: 'Débito Bruto', dash: true },
+      { data: dLiq,    color: 'var(--amber)', fill: false, dots: true,  w: 1.5, label: 'Recolhimento Líquido' }
     ], labels, 200, { min: 0 });
 
     // Posição líquida acumulada
     var acum = 0, dAcum = [];
     meses.forEach(function(m) { acum += byMonth[m].cAprop - byMonth[m].dBruto; dAcum.push(+(acum / 1e6).toFixed(2)); });
     svgLine('cFCTSaldo', [
-      { data: dAcum, color: acum >= 0 ? '#22C55E' : '#F43F5E', fill: true, dots: true, w: 2.5, label: 'Saldo acumulado' }
+      { data: dAcum, color: acum >= 0 ? 'var(--green)' : 'var(--red)', fill: true, dots: true, w: 2.5, label: 'Saldo acumulado' }
     ], labels, 140, {});
 
     // Créditos pendentes por mês (condicionado + em risco + glosado)
     svgLine('cFCTVenc', [
-      { data: dCCond,    color: '#F59E0B', fill: true, dots: true, w: 2,   label: 'Condicionado' },
-      { data: dCRisco,   color: '#F43F5E', fill: true, dots: true, w: 1.5, label: 'Em Risco' },
-      { data: dCGlosado, color: '#8B5CF6', fill: true, dots: true, w: 1.5, label: 'Glosado' }
+      { data: dCCond,    color: 'var(--amber)', fill: true, dots: true, w: 2,   label: 'Condicionado' },
+      { data: dCRisco,   color: 'var(--red)',   fill: true, dots: true, w: 1.5, label: 'Em Risco' },
+      { data: dCGlosado, color: '#8B5CF6',      fill: true, dots: true, w: 1.5, label: 'Glosado' }
     ], labels, 140, { min: 0 });
 
     // Alíquota efetiva mensal
