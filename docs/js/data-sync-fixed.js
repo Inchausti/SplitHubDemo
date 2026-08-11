@@ -3601,6 +3601,9 @@ class DataSyncManagerFixed {
     // Conciliação — KPIs de apuração + tabela de DFs
     try { window.atualizarEstatisticasConciliacao && window.atualizarEstatisticasConciliacao(); } catch(e) {}
     try { if (typeof conciliacaoRenderDFs === 'function') conciliacaoRenderDFs(); } catch(e) {}
+
+    // Apuração IBS/CBS — sincroniza apenas se o módulo estiver visível para não re-renderizar desnecessariamente
+    try { if (window.sincronizarApuracao && document.getElementById('view-apuracao') && document.getElementById('view-apuracao').classList.contains('active')) window.sincronizarApuracao(); } catch(e) {}
   }
 
   // Getter para acessar os créditos
@@ -7484,3 +7487,164 @@ window.ragShowSources = function(retrieved) {
     }
   }, 800);
 })();
+
+// ── SINCRONIZAÇÃO DINÂMICA DA APURAÇÃO IBS/CBS ───────────────────────────────
+window.sincronizarApuracao = function() {
+  var lista = window.nfListaFiltradaGlobal || [];
+  if (!lista.length) { if (typeof apurRenderAll === 'function') apurRenderAll(); return; }
+
+  var mesesAbrev = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+  function fmtData(iso) {
+    var p = (iso || '').split('-');
+    return p.length === 3 ? p[2]+'/'+p[1]+'/'+p[0] : (iso || '—');
+  }
+
+  function mesKey(iso) {
+    var p = (iso || '').split('-');
+    if (p.length < 2) return null;
+    var m = parseInt(p[1], 10);
+    return mesesAbrev[m - 1] + '/' + p[0];
+  }
+
+  function mecFromExtincao(ext) {
+    if (!ext) return null;
+    var e = ext.toLowerCase();
+    if (e.indexOf('split') !== -1) return 'split';
+    if (e.indexOf('rad') !== -1) return 'rad';
+    if (e.indexOf('compensa') !== -1 || e.indexOf('crédito') !== -1 || e.indexOf('credito') !== -1) return 'credito';
+    return null;
+  }
+
+  var periodos = {};
+
+  lista.forEach(function(nf) {
+    var k = mesKey(nf.data || '');
+    if (!k) return;
+    if (!periodos[k]) {
+      periodos[k] = {
+        status: 'calculada',
+        ultimaExecucao: null,
+        ibsSaldoInicial: 0,
+        cbsSaldoInicial: 0,
+        creditos: [],
+        debitos: []
+      };
+    }
+    var p = periodos[k];
+    var tipoDF = nf.tipoDF || 'NF-e';
+    var num = nf.numero || '';
+    var doc = tipoDF + ' ' + num;
+    var dataFmt = fmtData(nf.data || '');
+    var entidade = nf.entidade || '—';
+
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      var tri = (rf.tipoFiscal || '').toUpperCase();
+      if (tri !== 'IBS' && tri !== 'CBS') return;
+      var v = rf.valor || 0;
+      var sc = rf.statusCredito || rf.status || '';
+
+      if (nf.tipo === 'entrada') {
+        var isAprop = (sc === 'apropriado' || sc === 'utilizado');
+        var isUtil  = (sc === 'utilizado');
+        var aprop   = isAprop ? v : 0;
+        var util    = isUtil  ? v : 0;
+        p.creditos.push({
+          doc: doc,
+          tributo: tri,
+          data: dataFmt,
+          forn: entidade,
+          total: v,
+          aprop: aprop,
+          naoAprop: v - aprop,
+          util: util,
+          naoUtil: aprop - util,
+          motivo: (v - aprop > 0) ? (rf.motivo || 'Aguardando confirmação na Plataforma Centralizada') : null
+        });
+      } else if (nf.tipo === 'saida') {
+        var extinto = (rf.status === 'extinto') ? v : 0;
+        var naoExt  = v - extinto;
+        var mec     = mecFromExtincao(rf.metodoExtincao);
+        if (!mec && extinto > 0) mec = 'split'; // fallback
+        var splitEvt = null, radEvt = null, credEvt = null;
+        if (mec === 'split' && extinto > 0) {
+          splitEvt = { data: dataFmt, meio: 'PIX', txId: 'SP-' + (nf.data||'').replace(/-/g,'') + '-' + (num||'0000').slice(-4), valor: extinto };
+        } else if (mec === 'rad' && extinto > 0) {
+          radEvt = { adquirente: entidade, cnpj: nf.cnpj || '00.000.000/0001-00', data: dataFmt };
+        } else if (mec === 'credito' && extinto > 0) {
+          credEvt = [];
+        }
+        p.debitos.push({
+          doc: doc,
+          tributo: tri,
+          data: dataFmt,
+          cliente: entidade,
+          total: v,
+          naoExt: naoExt,
+          extinto: extinto,
+          mec: (extinto === 0) ? null : mec,
+          splitEvt: splitEvt,
+          radEvt: radEvt,
+          credEvt: credEvt
+        });
+      }
+    });
+  });
+
+  if (!Object.keys(periodos).length) { if (typeof apurRenderAll === 'function') apurRenderAll(); return; }
+
+  // Ordenar períodos cronologicamente
+  var ordemMes = { jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12 };
+  var keys = Object.keys(periodos).sort(function(a, b) {
+    var pa = a.split('/'), pb = b.split('/');
+    var ya = parseInt(pa[1], 10), yb = parseInt(pb[1], 10);
+    if (ya !== yb) return ya - yb;
+    return (ordemMes[pa[0]] || 0) - (ordemMes[pb[0]] || 0);
+  });
+
+  // Propagar saldo acumulado entre períodos
+  var ibsAcum = 0, cbsAcum = 0;
+  keys.forEach(function(k) {
+    var d = periodos[k];
+    d.ibsSaldoInicial = ibsAcum;
+    d.cbsSaldoInicial = cbsAcum;
+    // Calcular saldo final para próximo período
+    var ibsC = d.creditos.filter(function(c){ return c.tributo === 'IBS'; });
+    var cbsC = d.creditos.filter(function(c){ return c.tributo === 'CBS'; });
+    var ibsD = d.debitos.filter(function(x){ return x.tributo === 'IBS'; });
+    var cbsD = d.debitos.filter(function(x){ return x.tributo === 'CBS'; });
+    var ibsAprop = ibsC.reduce(function(s,c){ return s+c.aprop; }, 0);
+    var cbsAprop = cbsC.reduce(function(s,c){ return s+c.aprop; }, 0);
+    var ibsUtil  = ibsC.reduce(function(s,c){ return s+c.util;  }, 0);
+    var cbsUtil  = cbsC.reduce(function(s,c){ return s+c.util;  }, 0);
+    ibsAcum = ibsAcum + ibsAprop - ibsUtil;
+    cbsAcum = cbsAcum + cbsAprop - cbsUtil;
+  });
+
+  // Substituir apurData global e atualizar selector
+  if (typeof apurData !== 'undefined') {
+    Object.keys(apurData).forEach(function(k){ delete apurData[k]; });
+    keys.forEach(function(k){ apurData[k] = periodos[k]; });
+  } else {
+    window.apurData = periodos;
+  }
+
+  // Atualizar selector de período
+  var sel = document.getElementById('apur-periodo-sel');
+  if (sel) {
+    sel.innerHTML = '';
+    keys.slice().reverse().forEach(function(k) {
+      var opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = k.charAt(0).toUpperCase() + k.slice(1);
+      sel.appendChild(opt);
+    });
+    if (typeof apurPeriodoAtivo !== 'undefined') {
+      var ultimo = keys[keys.length - 1];
+      window.apurPeriodoAtivo = ultimo;
+      sel.value = ultimo;
+    }
+  }
+
+  if (typeof apurRenderAll === 'function') apurRenderAll();
+};
