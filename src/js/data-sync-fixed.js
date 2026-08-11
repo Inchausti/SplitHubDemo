@@ -1133,9 +1133,9 @@ window.atualizarDashboard = function() {
   var rnd = function(v) { return Math.round(v * 100) / 100; };
   if (typeof svgLine === 'function') {
     svgLine('cCreditos', [
-      { data: aprop.map(rnd),   color: '#49C5B1', fill: true, dots: true, label: 'Apropriados' },
-      { data: aApropr.map(rnd), color: '#F59E0B', dash: true,             label: 'A Apropriar'  },
-      { data: emRisco.map(rnd), color: '#F43F5E', dots: true, w: 1.5,    label: 'Em Risco'     }
+      { data: aprop.map(rnd),   color: 'var(--teal)',  fill: true, dots: true, label: 'Apropriados' },
+      { data: aApropr.map(rnd), color: 'var(--amber)', dash: true,             label: 'A Apropriar'  },
+      { data: emRisco.map(rnd), color: 'var(--red)',   dots: true, w: 1.5,    label: 'Em Risco'     }
     ], mesesLabels, 200);
   }
   // atualiza subtítulo
@@ -1166,8 +1166,8 @@ window.atualizarDashboard = function() {
   });
   if (typeof svgBar === 'function') {
     svgBar('cPagamentos', [
-      { data: pagRAD.map(rnd),  color: '#3B82F6', label: 'Via RAD'       },
-      { data: pagForn.map(rnd), color: '#49C5B1', label: 'Via Fornecedor' }
+      { data: pagRAD.map(rnd),  color: 'var(--blue)', label: 'Via RAD'       },
+      { data: pagForn.map(rnd), color: 'var(--teal)', label: 'Via Fornecedor' }
     ], mesesLabels, 200);
   }
   var subPag = document.getElementById('dash-sub-pagamentos');
@@ -1359,7 +1359,7 @@ if (typeof svgLine !== 'function') {
     function yp(v){return Math.round(padT+(1-(v-minV)/rng)*plotH);}
     function fmtTip(v){return v>=1?v.toFixed(2).replace('.',',')+'M':v>=0.001?(v*1000).toFixed(0)+'K':'0,00M';}
     var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block;overflow:visible">';
-    labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
+    labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
     datasets.forEach(function(ds){
       var pts=ds.data.map(function(v,i){return xp(i)+','+yp(v);}).join(' ');
       if(ds.fill){var fp=pts+' '+xp(n-1)+','+(H-padB)+' '+padL+','+(H-padB);s+='<polygon points="'+fp+'" fill="'+ds.color+'" fill-opacity="0.15" stroke="none"/>';}
@@ -1402,7 +1402,7 @@ if (typeof svgBar !== 'function') {
     function xp(i){return Math.round(padL+(i+0.5)*plotW/n);}
     function fmtTip(v){return (v>=1?v.toFixed(2).replace('.',','):v.toFixed(3).replace('.',','))+'M';}
     var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block;overflow:visible">';
-    labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
+    labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
     for(var bi=0;bi<n;bi++){
       var yBase=H-padB;
       var tipParts=[labels[bi]];
@@ -1641,42 +1641,42 @@ window.atualizarInteligencia = function() {
     var qCritX1 = padL,      qCritX2 = xp(70);
     var qCritY1 = ypp(60),   qCritY2 = H - padB;
     s += '<rect x="' + qCritX1 + '" y="' + qCritY1 + '" width="' + (qCritX2 - qCritX1) + '" height="' + (qCritY2 - qCritY1) + '" fill="rgba(244,63,94,0.08)"/>';
-    s += '<text x="' + (qCritX1 + 8) + '" y="' + (qCritY2 - 8) + '" fill="#F43F5E" font-size="10" font-weight="700" font-family="Montserrat,sans-serif" opacity="0.75">⚠ CRÍTICO</text>';
+    s += '<text x="' + (qCritX1 + 8) + '" y="' + (qCritY2 - 8) + '" fill="var(--red)" font-size="10" font-weight="700" font-family="Montserrat,sans-serif" opacity="0.75">⚠ CRÍTICO</text>';
 
     // Quadrante saudável: score ≥ 70 e prazo ≤ 60 — canto SUPERIOR direito
     var qSaudX1 = xp(70),    qSaudX2 = W - padR;
     var qSaudY1 = padT,      qSaudY2 = ypp(60);
     s += '<rect x="' + qSaudX1 + '" y="' + qSaudY1 + '" width="' + (qSaudX2 - qSaudX1) + '" height="' + (qSaudY2 - qSaudY1) + '" fill="rgba(34,197,94,0.07)"/>';
-    s += '<text x="' + (qSaudX2 - 8) + '" y="' + (qSaudY1 + 16) + '" text-anchor="end" fill="#22C55E" font-size="10" font-weight="700" font-family="Montserrat,sans-serif" opacity="0.75">✓ SAUDÁVEL</text>';
+    s += '<text x="' + (qSaudX2 - 8) + '" y="' + (qSaudY1 + 16) + '" text-anchor="end" fill="var(--green)" font-size="10" font-weight="700" font-family="Montserrat,sans-serif" opacity="0.75">✓ SAUDÁVEL</text>';
 
     // Grid linhas verticais (score 20,40,60,70,80,100)
     [20, 40, 60, 80, 100].forEach(function(v) {
       var gx = xp(v);
       s += '<line x1="' + gx + '" y1="' + padT + '" x2="' + gx + '" y2="' + (H - padB) + '" stroke="rgba(128,128,128,0.1)" stroke-width="1"/>';
-      s += '<text x="' + gx + '" y="' + (H - padB + 16) + '" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">' + v + '</text>';
+      s += '<text x="' + gx + '" y="' + (H - padB + 16) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">' + v + '</text>';
     });
 
     // Grid linhas horizontais (prazo 30,60,90,120)
     [30, 60, 90, 120].forEach(function(v) {
       var gy = ypp(v);
       s += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="rgba(128,128,128,0.1)" stroke-width="1"/>';
-      s += '<text x="' + (padL - 6) + '" y="' + (gy + 4) + '" text-anchor="end" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">' + v + 'd</text>';
+      s += '<text x="' + (padL - 6) + '" y="' + (gy + 4) + '" text-anchor="end" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">' + v + 'd</text>';
     });
 
     // Linhas de threshold
     s += '<line x1="' + xp(70) + '" y1="' + padT + '" x2="' + xp(70) + '" y2="' + (H - padB) + '" stroke="rgba(245,158,11,0.65)" stroke-width="1.5" stroke-dasharray="6 4"/>';
-    s += '<text x="' + (xp(70) + 3) + '" y="' + (padT + 10) + '" fill="#F59E0B" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">score 70</text>';
+    s += '<text x="' + (xp(70) + 3) + '" y="' + (padT + 10) + '" fill="var(--amber)" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">score 70</text>';
 
     s += '<line x1="' + padL + '" y1="' + ypp(60) + '" x2="' + (W - padR) + '" y2="' + ypp(60) + '" stroke="rgba(245,158,11,0.65)" stroke-width="1.5" stroke-dasharray="6 4"/>';
-    s += '<text x="' + (W - padR - 3) + '" y="' + (ypp(60) - 4) + '" text-anchor="end" fill="#F59E0B" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">60d</text>';
+    s += '<text x="' + (W - padR - 3) + '" y="' + (ypp(60) - 4) + '" text-anchor="end" fill="var(--amber)" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">60d</text>';
 
     // Eixos
     s += '<line x1="' + padL + '" y1="' + (H - padB) + '" x2="' + (W - padR) + '" y2="' + (H - padB) + '" stroke="rgba(128,128,128,0.2)" stroke-width="1"/>';
     s += '<line x1="' + padL + '" y1="' + padT + '" x2="' + padL + '" y2="' + (H - padB) + '" stroke="rgba(128,128,128,0.2)" stroke-width="1"/>';
 
     // Labels eixos
-    s += '<text x="' + (padL + plotW / 2) + '" y="' + (H - 4) + '" text-anchor="middle" fill="#53565A" font-size="11" font-family="Montserrat,sans-serif">Score de Aproveitamento →</text>';
-    s += '<text transform="rotate(-90,' + (padL - 42) + ',' + (padT + plotH / 2) + ')" x="' + (padL - 42) + '" y="' + (padT + plotH / 2 + 4) + '" text-anchor="middle" fill="#53565A" font-size="11" font-family="Montserrat,sans-serif">Prazo Contratual (dias) ↓</text>';
+    s += '<text x="' + (padL + plotW / 2) + '" y="' + (H - 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="11" font-family="Montserrat,sans-serif">Score de Aproveitamento →</text>';
+    s += '<text transform="rotate(-90,' + (padL - 42) + ',' + (padT + plotH / 2) + ')" x="' + (padL - 42) + '" y="' + (padT + plotH / 2 + 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="11" font-family="Montserrat,sans-serif">Prazo Contratual (dias) ↓</text>';
 
     // Pontos — maiores atrás, dots suavizados com halo + glow
     var fmtV2 = function(v) { return v >= 1e6 ? 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M' : v >= 1e3 ? 'R$ ' + Math.round(v/1e3) + 'K' : 'R$ 0'; };
@@ -1684,7 +1684,7 @@ window.atualizarInteligencia = function() {
       var cx = xp(p.score), cy = ypp(p.prazo), r = rDot(p.vol);
       var critico = p.score < 70 && p.prazo > 60;
       var atencao = p.score < 70 && p.prazo <= 60;
-      var cor = critico ? '#F43F5E' : atencao ? '#F59E0B' : '#22C55E';
+      var cor = critico ? 'var(--red)' : atencao ? 'var(--amber)' : 'var(--green)';
       var filterId = critico ? 'glow-r' : 'glow-g';
       var tipData = [p.nome + ' · prazo ' + p.prazo + 'd', cor, 'Score', p.score + '/100', cor, 'Vol. médio 3m', fmtV2(p.vol).replace('R$ ','')].join('|');
       var enc = tipData.replace(/'/g, '&apos;');
@@ -3691,7 +3691,7 @@ function _svgStackedBar(id, datasets, labels, H) {
     var yg = Math.round(padT + (1 - g / 4) * plotH);
     var val = (maxV * g / 4).toFixed(1);
     s += '<line x1="' + padL + '" y1="' + yg + '" x2="' + (W - padR) + '" y2="' + yg + '" stroke="rgba(167,168,170,.15)" stroke-width="1"/>';
-    s += '<text x="' + (padL - 5) + '" y="' + (yg + 4) + '" text-anchor="end" fill="#53565A" font-size="9" font-family="Montserrat,sans-serif">' + val + '</text>';
+    s += '<text x="' + (padL - 5) + '" y="' + (yg + 4) + '" text-anchor="end" fill="var(--txt3)" font-size="9" font-family="Montserrat,sans-serif">' + val + '</text>';
   }
 
   // Barras empilhadas — cada rect recebe data-* para o tooltip
@@ -3710,7 +3710,7 @@ function _svgStackedBar(id, datasets, labels, H) {
       yBase = bY;
     }
     var total = stacks[i].toFixed(1);
-    s += '<text x="' + xp(i) + '" y="' + (padT + plotH + padB - 4) + '" text-anchor="middle" fill="#53565A" font-size="9" font-family="Montserrat,sans-serif">' + labels[i] + '</text>';
+    s += '<text x="' + xp(i) + '" y="' + (padT + plotH + padB - 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="9" font-family="Montserrat,sans-serif">' + labels[i] + '</text>';
     s += '<text x="' + xp(i) + '" y="' + (yBase - 4) + '" text-anchor="middle" fill="#A7A8AA" font-size="8" font-family="Montserrat,sans-serif">' + total + '</text>';
   }
 
@@ -3798,7 +3798,7 @@ window.renderizarTop5Inconsistencias = function() {
     s += '<text x="' + (padL + barW + 19) + '" y="' + (y + 13) + '" text-anchor="middle" fill="' + cor + '" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">' + r.tipo + '</text>';
 
     // Valor à direita
-    s += '<text x="' + (W - 4) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#F43F5E" font-size="10" font-weight="700" font-family="Montserrat,sans-serif">R$ ' + valM + 'M</text>';
+    s += '<text x="' + (W - 4) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="var(--red)" font-size="10" font-weight="700" font-family="Montserrat,sans-serif">R$ ' + valM + 'M</text>';
   });
 
   s += '</svg>';
@@ -3880,7 +3880,7 @@ window.renderizarTop10Empresas = function() {
 
     // segmento apropriado (teal)
     if (wAprop > 0) {
-      s += '<rect x="' + padL + '" y="' + y + '" width="' + wAprop + '" height="' + barH + '" rx="3" fill="#49C5B1" opacity=".75"/>';
+      s += '<rect x="' + padL + '" y="' + y + '" width="' + wAprop + '" height="' + barH + '" rx="3" fill="var(--teal)" opacity=".75"/>';
     }
     // segmento pendente (cor do score) — empilhado após apropriado
     if (wPend > 0) {
@@ -3899,9 +3899,9 @@ window.renderizarTop10Empresas = function() {
 
   // legenda
   var ly = totalH - 10;
-  s += '<rect x="' + padL + '" y="' + ly + '" width="10" height="6" rx="1" fill="#49C5B1" opacity=".75"/>';
+  s += '<rect x="' + padL + '" y="' + ly + '" width="10" height="6" rx="1" fill="var(--teal)" opacity=".75"/>';
   s += '<text x="' + (padL + 13) + '" y="' + (ly + 5) + '" fill="#A7A8AA" font-size="8" font-family="Montserrat,sans-serif">Apropriado/Utilizado</text>';
-  s += '<rect x="' + (padL + 105) + '" y="' + ly + '" width="10" height="6" rx="1" fill="#F59E0B" opacity=".85"/>';
+  s += '<rect x="' + (padL + 105) + '" y="' + ly + '" width="10" height="6" rx="1" fill="var(--amber)" opacity=".85"/>';
   s += '<text x="' + (padL + 118) + '" y="' + (ly + 5) + '" fill="#A7A8AA" font-size="8" font-family="Montserrat,sans-serif">Não Apropriado</text>';
 
   s += '</svg>';
@@ -4675,22 +4675,22 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
   [0.25, 0.5, 0.75].forEach(function(f) {
     var gy = Math.round(padT + plotH * (1 - f));
     s += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="rgba(128,128,128,0.12)" stroke-width="1"/>';
-    s += '<text x="' + (padL + 3) + '" y="' + (gy - 3) + '" fill="#53565A" font-size="9" font-family="Montserrat,sans-serif">' + fv(maxV * f) + '</text>';
+    s += '<text x="' + (padL + 3) + '" y="' + (gy - 3) + '" fill="var(--txt3)" font-size="9" font-family="Montserrat,sans-serif">' + fv(maxV * f) + '</text>';
   });
 
   // Área pendente (topo — âmbar), entre curva total e curva aprop
   var ptTotal = dTotal.map(function(v, i) { return xp(i) + ',' + yp(v); });
   var ptAprop = dAprop.map(function(v, i) { return xp(i) + ',' + yp(v); });
   var pendFill = ptTotal.join(' ') + ' ' + ptAprop.slice().reverse().join(' ');
-  s += '<polygon points="' + pendFill + '" fill="#F59E0B" fill-opacity="0.22" stroke="none"/>';
+  s += '<polygon points="' + pendFill + '" fill="var(--amber)" fill-opacity="0.22" stroke="none"/>';
 
   // Área apropriada (base — verde)
   var apropFill = ptAprop.join(' ') + ' ' + xp(n - 1) + ',' + yp(0) + ' ' + xp(0) + ',' + yp(0);
-  s += '<polygon points="' + apropFill + '" fill="#22C55E" fill-opacity="0.28" stroke="none"/>';
+  s += '<polygon points="' + apropFill + '" fill="var(--green)" fill-opacity="0.28" stroke="none"/>';
 
   // Linhas de contorno
-  s += '<polyline points="' + ptTotal.join(' ') + '" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="5 3" stroke-linejoin="round" stroke-linecap="round"/>';
-  s += '<polyline points="' + ptAprop.join(' ') + '" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+  s += '<polyline points="' + ptTotal.join(' ') + '" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="5 3" stroke-linejoin="round" stroke-linecap="round"/>';
+  s += '<polyline points="' + ptAprop.join(' ') + '" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
 
   // Delta mês a mês — colchete vertical + label entre as duas curvas
   var minGapPx = 10; // altura mínima para mostrar label
@@ -4702,19 +4702,19 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
     var cx = xp(di);
     // Linha vertical pontilhada no centro do gap
     s += '<line x1="' + cx + '" y1="' + yT + '" x2="' + cx + '" y2="' + yA
-       + '" stroke="#F59E0B" stroke-width="1" stroke-dasharray="2 2" opacity="0.55"/>';
+       + '" stroke="var(--amber)" stroke-width="1" stroke-dasharray="2 2" opacity="0.55"/>';
     // Marcadores nas extremidades do gap
-    s += '<circle cx="' + cx + '" cy="' + yA + '" r="2.5" fill="#22C55E"/>';
-    s += '<circle cx="' + cx + '" cy="' + yT + '" r="2" fill="#F59E0B" opacity="0.85"/>';
+    s += '<circle cx="' + cx + '" cy="' + yA + '" r="2.5" fill="var(--teal)"/>';
+    s += '<circle cx="' + cx + '" cy="' + yT + '" r="2" fill="var(--amber)" opacity="0.85"/>';
     // Label do delta (só quando gap grande o suficiente e no step configurado)
     if (gapPx >= minGapPx && di % stepLabel === 0 && dPend[di] > 0) {
       var midY = Math.round((yA + yT) / 2);
       var txtX = cx + (cx > W * 0.75 ? -4 : 4);
       var anchor = cx > W * 0.75 ? 'end' : 'start';
-      s += '<rect x="' + (txtX - (anchor === 'end' ? 26 : 0)) + '" y="' + (midY - 7) + '" width="26" height="10" rx="3" fill="rgba(245,158,11,0.18)"/>';
+      s += '<rect x="' + (txtX - (anchor === 'end' ? 26 : 0)) + '" y="' + (midY - 7) + '" width="26" height="10" rx="3" fill="var(--amber)" fill-opacity="0.18"/>';
       var deltaPct = dTotal[di] > 0 ? Math.round(dPend[di] / dTotal[di] * 100) : 0;
       s += '<text x="' + txtX + '" y="' + (midY + 3) + '" text-anchor="' + anchor
-         + '" fill="#F59E0B" font-size="8.5" font-weight="700" font-family="Montserrat,sans-serif">'
+         + '" fill="var(--amber)" font-size="8.5" font-weight="700" font-family="Montserrat,sans-serif">'
          + deltaPct + '%</text>';
     }
   }
@@ -4723,11 +4723,11 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
   var li = n - 1;
   var lxOff = xp(li) > W * 0.75 ? -6 : 6;
   var lAnchor = xp(li) > W * 0.75 ? 'end' : 'start';
-  s += '<text x="' + (xp(li) + lxOff) + '" y="' + (yp(dAprop[li]) - 8) + '" text-anchor="' + lAnchor + '" fill="#22C55E" font-size="11" font-weight="700" font-family="Montserrat,sans-serif">' + fv(dAprop[li]) + '</text>';
+  s += '<text x="' + (xp(li) + lxOff) + '" y="' + (yp(dAprop[li]) - 8) + '" text-anchor="' + lAnchor + '" fill="var(--green)" font-size="11" font-weight="700" font-family="Montserrat,sans-serif">' + fv(dAprop[li]) + '</text>';
 
   // Labels eixo X
   labels.forEach(function(l, i) {
-    s += '<text x="' + xp(i) + '" y="' + (H - 6) + '" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">' + l + '</text>';
+    s += '<text x="' + xp(i) + '" y="' + (H - 6) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">' + l + '</text>';
   });
 
   // Hover zones
