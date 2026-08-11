@@ -1557,7 +1557,140 @@ window.atualizarInteligencia = function() {
     sbEl.innerHTML = h || '<div style="color:var(--txt3);font-size:12px;padding:12px 0">Sem dados</div>';
   }
 
-  // ── 5. Projeção de recuperação ───────────────────────────
+  // ── 5. Mapa de Risco: Score × Prazo de pagamento ────────
+  (function() {
+    var el = document.getElementById('cMapaRisco');
+    if (!el) return;
+
+    // Mapa contratoId → prazo
+    var contratos = window._contratosData || [];
+    var contMap = {};
+    contratos.forEach(function(c) { contMap[c.id] = +c.prazo || 0; });
+
+    // Prazo por fornecedor (via contratoId na NF)
+    var fornPrazo = {};
+    lista.forEach(function(nf) {
+      if (!nf.contratoId || fornPrazo[nf.entidade]) return;
+      var p = contMap[nf.contratoId];
+      if (p) fornPrazo[nf.entidade] = p;
+    });
+
+    // Volume médio últimos 3 meses por fornecedor (NFs de entrada)
+    var byMesEnt = {};
+    lista.forEach(function(nf) {
+      if (nf.tipo !== 'entrada') return;
+      var mes = (nf.data || '').substring(0, 7);
+      if (!mes) return;
+      if (!byMesEnt[mes]) byMesEnt[mes] = {};
+      var ent = nf.entidade || '—';
+      byMesEnt[mes][ent] = (byMesEnt[mes][ent] || 0) + (nf.valorTotal || 0);
+    });
+    var ultMeses = Object.keys(byMesEnt).sort().slice(-3);
+    var volMedio = {};
+    Object.keys(fornPrazo).forEach(function(ent) {
+      var soma = 0, cnt = 0;
+      ultMeses.forEach(function(m) { if (byMesEnt[m] && byMesEnt[m][ent]) { soma += byMesEnt[m][ent]; cnt++; } });
+      volMedio[ent] = cnt > 0 ? soma / cnt : 0;
+    });
+
+    // Montar pontos: score de scoreLista + prazo + volMedio
+    var scoreIdx = {};
+    scoreLista.forEach(function(r) { scoreIdx[r.nome] = r.score; });
+    var pontos = Object.keys(fornPrazo).map(function(ent) {
+      return {
+        nome: ent,
+        prazo: fornPrazo[ent],
+        score: scoreIdx[ent] || 75,
+        vol: volMedio[ent] || 0
+      };
+    }).filter(function(p) { return p.prazo > 0; });
+
+    if (!pontos.length) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--txt3);font-size:12px">Sem fornecedores com contrato vinculado</div>'; return; }
+
+    // SVG scatter
+    var H = 320, padT = 24, padB = 50, padL = 54, padR = 24;
+    var W = (el.parentElement && el.parentElement.offsetWidth > 100 ? el.parentElement.offsetWidth : 560);
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+
+    var xMin = 0, xMax = 140;    // prazo dias
+    var yMin = 0, yMax = 100;    // score
+
+    function xp(v) { return Math.round(padL + (v - xMin) / (xMax - xMin) * plotW); }
+    function yp(v) { return Math.round(padT + (1 - (v - yMin) / (yMax - yMin)) * plotH); }
+
+    var maxVol = Math.max.apply(null, pontos.map(function(p) { return p.vol; })) || 1;
+    function rDot(vol) { return Math.round(6 + Math.sqrt(vol / maxVol) * 16); }
+
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:' + H + 'px;display:block">';
+
+    // Quadrante crítico: prazo > 60 e score < 80 — fundo vermelho subtil
+    var qx1 = xp(60), qx2 = xp(xMax);
+    var qy1 = padT, qy2 = yp(80);
+    s += '<rect x="' + qx1 + '" y="' + qy1 + '" width="' + (qx2-qx1) + '" height="' + (qy2-qy1) + '" fill="rgba(244,63,94,0.07)" rx="0"/>';
+    s += '<text x="' + (qx1 + 8) + '" y="' + (qy1 + 16) + '" fill="#F43F5E" font-size="10" font-weight="700" font-family="Montserrat,sans-serif" opacity="0.7">⚠ CRÍTICO</text>';
+
+    // Quadrante saudável: prazo ≤ 60 e score ≥ 80
+    s += '<rect x="' + padL + '" y="' + yp(100) + '" width="' + (xp(60)-padL) + '" height="' + (yp(80)-yp(100)) + '" fill="rgba(34,197,94,0.06)" rx="0"/>';
+    s += '<text x="' + (padL + 6) + '" y="' + (yp(100) + 16) + '" fill="#22C55E" font-size="10" font-weight="700" font-family="Montserrat,sans-serif" opacity="0.7">✓ SAUDÁVEL</text>';
+
+    // Grid linhas horizontais (score 20, 40, 60, 80)
+    [20, 40, 60, 80].forEach(function(v) {
+      var gy = yp(v);
+      s += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="rgba(128,128,128,0.12)" stroke-width="1"/>';
+      s += '<text x="' + (padL - 6) + '" y="' + (gy + 4) + '" text-anchor="end" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">' + v + '</text>';
+    });
+
+    // Linha de threshold score = 80 (tracejada, mais grossa)
+    s += '<line x1="' + padL + '" y1="' + yp(80) + '" x2="' + (W - padR) + '" y2="' + yp(80) + '" stroke="rgba(245,158,11,0.6)" stroke-width="1.5" stroke-dasharray="6 4"/>';
+    s += '<text x="' + (W - padR - 2) + '" y="' + (yp(80) - 4) + '" text-anchor="end" fill="#F59E0B" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">score 80</text>';
+
+    // Linha de threshold prazo = 60d (tracejada)
+    s += '<line x1="' + xp(60) + '" y1="' + padT + '" x2="' + xp(60) + '" y2="' + (H - padB) + '" stroke="rgba(245,158,11,0.6)" stroke-width="1.5" stroke-dasharray="6 4"/>';
+    s += '<text x="' + (xp(60) + 4) + '" y="' + (H - padB + 12) + '" fill="#F59E0B" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">60d</text>';
+
+    // Eixo X — ticks e labels
+    [30, 60, 90, 120].forEach(function(v) {
+      var tx = xp(v);
+      s += '<line x1="' + tx + '" y1="' + (H - padB) + '" x2="' + tx + '" y2="' + (H - padB + 5) + '" stroke="rgba(128,128,128,0.4)" stroke-width="1"/>';
+      s += '<text x="' + tx + '" y="' + (H - padB + 18) + '" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">' + v + 'd</text>';
+    });
+
+    // Labels dos eixos
+    s += '<text x="' + (padL + plotW / 2) + '" y="' + (H - 4) + '" text-anchor="middle" fill="#53565A" font-size="11" font-family="Montserrat,sans-serif">Prazo de Pagamento (dias)</text>';
+    s += '<text transform="rotate(-90,' + (padL - 40) + ',' + (padT + plotH / 2) + ')" x="' + (padL - 40) + '" y="' + (padT + plotH / 2 + 4) + '" text-anchor="middle" fill="#53565A" font-size="11" font-family="Montserrat,sans-serif">Score</text>';
+
+    // Eixo base
+    s += '<line x1="' + padL + '" y1="' + (H - padB) + '" x2="' + (W - padR) + '" y2="' + (H - padB) + '" stroke="rgba(128,128,128,0.25)" stroke-width="1"/>';
+    s += '<line x1="' + padL + '" y1="' + padT + '" x2="' + padL + '" y2="' + (H - padB) + '" stroke="rgba(128,128,128,0.25)" stroke-width="1"/>';
+
+    // Pontos — ordem: maiores atrás
+    pontos.slice().sort(function(a, b) { return b.vol - a.vol; }).forEach(function(p) {
+      var cx = xp(p.prazo), cy = yp(p.score), r = rDot(p.vol);
+      var critico  = p.score < 80 && p.prazo > 60;
+      var atencao  = p.score < 80 && p.prazo <= 60;
+      var cor = critico ? '#F43F5E' : atencao ? '#F59E0B' : '#22C55E';
+      var fmtV2 = function(v) { return v >= 1e6 ? 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M' : v >= 1e3 ? 'R$ ' + Math.round(v/1e3) + 'K' : 'R$ 0'; };
+      var tipData = [p.nome + ' · ' + p.prazo + 'd', cor, 'Score', p.score.toString(), cor, 'Vol. médio 3m', fmtV2(p.vol).replace('R$ ','')].join('|');
+      var enc = tipData.replace(/'/g, '&apos;');
+
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 2) + '" fill="' + cor + '" opacity="0.15"/>';
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + cor + '" opacity="0.82" style="cursor:pointer" onmousemove="_svgTipShow(event,\'' + enc + '\')" onmouseleave="_svgTipHide()"/>';
+
+      // Label: primeira palavra do nome, só se r >= 9
+      if (r >= 9) {
+        var lbl = p.nome.split(' ')[0];
+        var lblY = cy + r + 12;
+        if (lblY > H - padB - 4) lblY = cy - r - 4;
+        s += '<text x="' + cx + '" y="' + lblY + '" text-anchor="middle" fill="' + cor + '" font-size="9" font-weight="600" font-family="Montserrat,sans-serif">' + lbl + '</text>';
+      }
+    });
+
+    s += '</svg>';
+    el.style.cssText = 'display:block;width:100%';
+    el.innerHTML = s;
+  })();
+
+  // ── 6. Projeção de recuperação ───────────────────────────
   var projEl = document.getElementById('intel-projecao');
   if (projEl) {
     var novoPct = totalCred > 0 ? Math.round((apropCred + pendCred) / totalCred * 100) : pct;
