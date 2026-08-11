@@ -1622,11 +1622,10 @@ window.atualizarInteligencia = function() {
     var xMin = 0,  xMax = 105;   // score 0–100
     var yMin = 20, yMax = 130;   // prazo dias (20 a 130, eixo Y invertido: alto = mais crítico)
 
-    // X = score (maior = melhor), Y = prazo (maior = mais exposto → topo)
+    // X = score (maior = melhor), Y = prazo (maior = mais para baixo = zona crítica inferior)
     function xp(score) { return Math.round(padL + (score - xMin) / (xMax - xMin) * plotW); }
-    function yp(prazo) { return Math.round(padT + ((prazo - yMin) / (yMax - yMin)) * plotH); }  // prazo maior = mais para baixo visualmente? não — queremos prazo alto = topo (risco visual)
-    // Prazo alto = topo do gráfico (visualmente perigoso):
-    function ypp(prazo) { return Math.round(padT + (1 - (prazo - yMin) / (yMax - yMin)) * plotH); }
+    // Prazo alto = parte inferior do gráfico (cenário crítico embaixo)
+    function ypp(prazo) { return Math.round(padT + ((prazo - yMin) / (yMax - yMin)) * plotH); }
 
     var maxVol = Math.max.apply(null, pontos.map(function(p) { return p.vol; })) || 1;
     function rDot(vol) { return Math.round(7 + Math.sqrt(vol / maxVol) * 15); }
@@ -1638,17 +1637,17 @@ window.atualizarInteligencia = function() {
        + '<filter id="glow-g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
        + '</defs>';
 
-    // Quadrante crítico: score < 70 e prazo > 60 — canto superior esquerdo
-    var qCritX1 = padL,           qCritX2 = xp(70);
-    var qCritY1 = ypp(yMax - 5),  qCritY2 = ypp(60);
+    // Quadrante crítico: score < 70 e prazo > 60 — canto INFERIOR esquerdo
+    var qCritX1 = padL,      qCritX2 = xp(70);
+    var qCritY1 = ypp(60),   qCritY2 = H - padB;
     s += '<rect x="' + qCritX1 + '" y="' + qCritY1 + '" width="' + (qCritX2 - qCritX1) + '" height="' + (qCritY2 - qCritY1) + '" fill="rgba(244,63,94,0.08)"/>';
-    s += '<text x="' + (qCritX1 + 8) + '" y="' + (qCritY1 + 16) + '" fill="#F43F5E" font-size="10" font-weight="700" font-family="Montserrat,sans-serif" opacity="0.75">⚠ CRÍTICO</text>';
+    s += '<text x="' + (qCritX1 + 8) + '" y="' + (qCritY2 - 8) + '" fill="#F43F5E" font-size="10" font-weight="700" font-family="Montserrat,sans-serif" opacity="0.75">⚠ CRÍTICO</text>';
 
-    // Quadrante saudável: score ≥ 70 e prazo ≤ 60 — canto inferior direito
-    var qSaudX1 = xp(70), qSaudX2 = W - padR;
-    var qSaudY1 = ypp(60), qSaudY2 = ypp(yMin + 5);
+    // Quadrante saudável: score ≥ 70 e prazo ≤ 60 — canto SUPERIOR direito
+    var qSaudX1 = xp(70),    qSaudX2 = W - padR;
+    var qSaudY1 = padT,      qSaudY2 = ypp(60);
     s += '<rect x="' + qSaudX1 + '" y="' + qSaudY1 + '" width="' + (qSaudX2 - qSaudX1) + '" height="' + (qSaudY2 - qSaudY1) + '" fill="rgba(34,197,94,0.07)"/>';
-    s += '<text x="' + (qSaudX2 - 8) + '" y="' + (qSaudY2 - 8) + '" text-anchor="end" fill="#22C55E" font-size="10" font-weight="700" font-family="Montserrat,sans-serif" opacity="0.75">✓ SAUDÁVEL</text>';
+    s += '<text x="' + (qSaudX2 - 8) + '" y="' + (qSaudY1 + 16) + '" text-anchor="end" fill="#22C55E" font-size="10" font-weight="700" font-family="Montserrat,sans-serif" opacity="0.75">✓ SAUDÁVEL</text>';
 
     // Grid linhas verticais (score 20,40,60,70,80,100)
     [20, 40, 60, 80, 100].forEach(function(v) {
@@ -1677,7 +1676,7 @@ window.atualizarInteligencia = function() {
 
     // Labels eixos
     s += '<text x="' + (padL + plotW / 2) + '" y="' + (H - 4) + '" text-anchor="middle" fill="#53565A" font-size="11" font-family="Montserrat,sans-serif">Score de Aproveitamento →</text>';
-    s += '<text transform="rotate(-90,' + (padL - 42) + ',' + (padT + plotH / 2) + ')" x="' + (padL - 42) + '" y="' + (padT + plotH / 2 + 4) + '" text-anchor="middle" fill="#53565A" font-size="11" font-family="Montserrat,sans-serif">↑ Prazo Contratual (dias)</text>';
+    s += '<text transform="rotate(-90,' + (padL - 42) + ',' + (padT + plotH / 2) + ')" x="' + (padL - 42) + '" y="' + (padT + plotH / 2 + 4) + '" text-anchor="middle" fill="#53565A" font-size="11" font-family="Montserrat,sans-serif">Prazo Contratual (dias) ↓</text>';
 
     // Pontos — maiores atrás, dots suavizados com halo + glow
     var fmtV2 = function(v) { return v >= 1e6 ? 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M' : v >= 1e3 ? 'R$ ' + Math.round(v/1e3) + 'K' : 'R$ 0'; };
