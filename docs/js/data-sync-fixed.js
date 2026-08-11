@@ -1142,30 +1142,36 @@ window.atualizarDashboard = function() {
   var subCred = document.getElementById('dash-sub-creditos');
   if (subCred) subCred.textContent = 'R$ milhões · IBS+CBS · Jan–Dez 2026 · NFs de entrada';
 
-  // ── 2. Pagamentos Executados ──
-  var pagCBS = mesesISO.map(function() { return 0; });
-  var pagIBS = mesesISO.map(function() { return 0; });
+  // ── 2. Pagamentos Executados — RAD vs Fornecedor ──
+  var pagRAD  = mesesISO.map(function() { return 0; });
+  var pagForn = mesesISO.map(function() { return 0; });
+
+  // Build contract lookup once
+  var _ctMap2 = {};
+  if (window._contratosData) {
+    window._contratosData.forEach(function(c) { _ctMap2[c.id] = c; });
+  }
 
   lista.forEach(function(nf) {
     (nf.registrosFiscais || []).forEach(function(rf) {
-      // pagamento executado = RF com status que indica liquidação
       if (rf.status !== 'utilizado' && rf.status !== 'apropriado') return;
       var mes = (rf.data || '').substring(0, 7);
       var idx = mesesISO.indexOf(mes);
       if (idx < 0) return;
       var v = (rf.valor || 0) / 1e6;
-      if (rf.tipoFiscal === 'cbs') pagCBS[idx] += v;
-      else                          pagIBS[idx] += v;
+      var ct = _ctMap2[nf.contratoId];
+      if (ct && ct.rad) pagRAD[idx]  += v;
+      else               pagForn[idx] += v;
     });
   });
   if (typeof svgBar === 'function') {
     svgBar('cPagamentos', [
-      { data: pagCBS.map(rnd), color: '#3B82F6', label: 'DARF CBS' },
-      { data: pagIBS.map(rnd), color: '#49C5B1', label: 'Guia IBS'  }
+      { data: pagRAD.map(rnd),  color: '#3B82F6', label: 'Via RAD'       },
+      { data: pagForn.map(rnd), color: '#49C5B1', label: 'Via Fornecedor' }
     ], mesesLabels, 200);
   }
   var subPag = document.getElementById('dash-sub-pagamentos');
-  if (subPag) subPag.textContent = 'R$ milhões · DARF CBS + Guia IBS · Jan–Dez 2026';
+  if (subPag) subPag.textContent = 'R$ milhões · RAD + Fornecedor · Jan–Dez 2026';
 
   // ── 3. Últimas transações ──
   var tbody = document.getElementById('t-recent');
