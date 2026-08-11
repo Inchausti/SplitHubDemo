@@ -1628,7 +1628,7 @@ window.atualizarInteligencia = function() {
     function ypp(prazo) { return Math.round(padT + ((prazo - yMin) / (yMax - yMin)) * plotH); }
 
     var maxVol = Math.max.apply(null, pontos.map(function(p) { return p.vol; })) || 1;
-    function rDot(vol) { return Math.round(7 + Math.sqrt(vol / maxVol) * 15); }
+    function rDot(vol) { return Math.round(4 + Math.sqrt(vol / maxVol) * 8); }
 
     // Defs: filtro blur para glow suave
     var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:' + H + 'px;display:block">';
@@ -1689,19 +1689,17 @@ window.atualizarInteligencia = function() {
       var tipData = [p.nome + ' · prazo ' + p.prazo + 'd', cor, 'Score', p.score + '/100', cor, 'Vol. médio 3m', fmtV2(p.vol).replace('R$ ','')].join('|');
       var enc = tipData.replace(/'/g, '&apos;');
 
-      // Halo externo (glow suave)
-      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 6) + '" fill="' + cor + '" opacity="0.08"/>';
-      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 2) + '" fill="' + cor + '" opacity="0.14"/>';
-      // Dot principal com gradiente de opacidade
-      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + cor + '" opacity="0.72" filter="url(#' + filterId + ')" style="cursor:pointer" onmousemove="_svgTipShow(event,\'' + enc + '\')" onmouseleave="_svgTipHide()"/>';
-      // Highlight interno
-      s += '<circle cx="' + (cx - Math.round(r * 0.28)) + '" cy="' + (cy - Math.round(r * 0.28)) + '" r="' + Math.max(2, Math.round(r * 0.28)) + '" fill="white" opacity="0.22"/>';
+      // Halo externo suave
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 4) + '" fill="' + cor + '" opacity="0.06"/>';
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 1) + '" fill="' + cor + '" opacity="0.12"/>';
+      // Dot principal
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + cor + '" opacity="0.60" filter="url(#' + filterId + ')" style="cursor:pointer" onmousemove="_svgTipShow(event,\'' + enc + '\')" onmouseleave="_svgTipHide()"/>';
 
-      // Label
+      // Label (todos os pontos)
       var lbl = p.nome.split(' ')[0];
-      var lblY = cy + r + 13;
-      if (lblY > H - padB - 2) lblY = cy - r - 5;
-      s += '<text x="' + cx + '" y="' + lblY + '" text-anchor="middle" fill="' + cor + '" font-size="9" font-weight="600" font-family="Montserrat,sans-serif" opacity="0.9">' + lbl + '</text>';
+      var lblY = cy + r + 11;
+      if (lblY > H - padB - 2) lblY = cy - r - 4;
+      s += '<text x="' + cx + '" y="' + lblY + '" text-anchor="middle" fill="' + cor + '" font-size="8" font-weight="600" font-family="Montserrat,sans-serif" opacity="0.85">' + lbl + '</text>';
     });
 
     s += '</svg>';
