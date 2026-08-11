@@ -1348,48 +1348,43 @@ window._svgTipHide = function() {
 if (typeof svgLine !== 'function') {
   window.svgLine = function(id, datasets, labels, H, opts) {
     var el = document.getElementById(id); if (!el) return;
-    var padT=8,padB=26,padL=8,padR=8;
-    var cw=(el.parentElement&&el.parentElement.offsetWidth)||el.offsetWidth||440;
-    var W=cw>50?cw:440, plotW=W-padL-padR, plotH=H-padT-padB, n=labels.length;
+    var padT=16, padB=26, padR=10;
+    var fmtFn=(opts&&opts.fmt)||function(v){var neg=v<0;v=Math.abs(v);var s=v>=1?v.toFixed(1).replace('.',',')+'M':v>=0.001?Math.round(v*1000)+'K':'0';return neg?'−'+s:s;};
     var allFb=[];datasets.forEach(function(d){allFb=allFb.concat(d.data);});
     var dMinFb=allFb.length?Math.min.apply(null,allFb):0,dMaxFb=allFb.length?Math.max.apply(null,allFb):1;
     var minV=(opts&&opts.min!==undefined)?opts.min:dMinFb;
     var maxV=(opts&&opts.max!==undefined)?opts.max:dMaxFb;
     if(maxV<=minV)maxV=minV+1;
     var rng=maxV-minV;
+    var padL=Math.max(36, fmtFn(maxV).length*6+10);
+    var cw=(el.parentElement&&el.parentElement.offsetWidth)||el.offsetWidth||440;
+    var W=cw>50?cw:440, plotW=W-padL-padR, plotH=H-padT-padB, n=labels.length;
     function xp(i){return Math.round(padL+(i/(n-1||1))*plotW);}
-    function yp(v){return Math.round(padT+(1-(v-minV)/rng)*plotH);}
-    function fmtTip(v){return v>=1?v.toFixed(2).replace('.',',')+'M':v>=0.001?(v*1000).toFixed(0)+'K':'0,00M';}
-    var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block;overflow:visible">';
-    labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
+    function yp(v){var c=Math.max(minV,Math.min(maxV,v));return Math.round(padT+(1-(c-minV)/rng)*plotH);}
+    var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block">';
+    s+='<clipPath id="cpfb_'+id+'"><rect x="'+padL+'" y="'+padT+'" width="'+plotW+'" height="'+plotH+'"/></clipPath>';
+    [0.25,0.5,0.75,1].forEach(function(f){
+      var v=minV+rng*f,gy=yp(v);
+      s+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="rgba(128,128,128,0.1)" stroke-width="1"/>';
+      s+='<text x="'+(padL-5)+'" y="'+(gy+3)+'" text-anchor="end" fill="var(--txt3)" font-size="9" font-family="Montserrat,sans-serif">'+fmtFn(v)+'</text>';
+    });
+    if(minV<0&&maxV>0){var gy0=yp(0);s+='<line x1="'+padL+'" y1="'+gy0+'" x2="'+(W-padR)+'" y2="'+gy0+'" stroke="rgba(128,128,128,0.3)" stroke-width="1" stroke-dasharray="3 2"/>';}
     datasets.forEach(function(ds){
       var pts=ds.data.map(function(v,i){return xp(i)+','+yp(v);}).join(' ');
-      if(ds.fill){var fp=pts+' '+xp(n-1)+','+(H-padB)+' '+padL+','+(H-padB);s+='<polygon points="'+fp+'" fill="'+ds.color+'" fill-opacity="0.15" stroke="none"/>';}
+      if(ds.fill){var fp=pts+' '+xp(n-1)+','+yp(minV)+' '+xp(0)+','+yp(minV);s+='<polygon points="'+fp+'" fill="'+ds.color+'" fill-opacity="0.18" stroke="none" clip-path="url(#cpfb_'+id+')"/>';}
       var da=ds.dash?'stroke-dasharray="5 3"':(ds.dash2?'stroke-dasharray="2 4"':'');
-      s+='<polyline points="'+pts+'" fill="none" stroke="'+ds.color+'" stroke-width="'+(ds.w||2)+'" '+da+' stroke-linejoin="round" stroke-linecap="round"/>';
-      if(ds.dots){ds.data.forEach(function(v,i){
-        var cx=xp(i),cy=yp(v);
-        // invisible larger hit circle for easier hover
-        s+='<circle cx="'+cx+'" cy="'+cy+'" r="10" fill="transparent" class="_svgDot" data-i="'+i+'"/>';
-        s+='<circle cx="'+cx+'" cy="'+cy+'" r="3.5" fill="'+ds.color+'" stroke="'+ds.color+'" stroke-width="1.5" pointer-events="none"/>';
-      });}
+      s+='<polyline points="'+pts+'" fill="none" stroke="'+ds.color+'" stroke-width="'+(ds.w||2)+'" '+da+' stroke-linejoin="round" stroke-linecap="round" clip-path="url(#cpfb_'+id+')"/>';
+      if(ds.dots){ds.data.forEach(function(v,i){s+='<circle cx="'+xp(i)+'" cy="'+yp(v)+'" r="3" fill="'+ds.color+'" pointer-events="none" clip-path="url(#cpfb_'+id+')"/>';});}
     });
-    // transparent column zones for tooltip at each x position
+    labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
+    var zW=Math.max(14,Math.floor(plotW/n));
     for(var ci=0;ci<n;ci++){
-      var tipParts=[labels[ci]];
-      datasets.forEach(function(ds){tipParts.push(ds.color,ds.label||'Valor',fmtTip(ds.data[ci]||0));});
-      var tipStr=tipParts.join('|').replace(/"/g,'&quot;');
-      var zoneW=Math.max(14,Math.floor(plotW/n));
-      s+='<rect x="'+(xp(ci)-Math.floor(zoneW/2))+'" y="'+padT+'" width="'+zoneW+'" height="'+plotH+'" fill="transparent" class="_svgZone" data-tip="'+tipStr+'" style="cursor:crosshair"/>';
+      var tp=[labels[ci]];datasets.forEach(function(ds){tp.push(ds.color,ds.label||'Valor',fmtFn(ds.data[ci]||0));});
+      var enc=tp.join('|').replace(/'/g,'&apos;');
+      s+='<rect x="'+(xp(ci)-Math.floor(zW/2))+'" y="'+padT+'" width="'+zW+'" height="'+plotH+'" fill="transparent" style="cursor:crosshair" onmousemove="_svgTipShow(event,\''+enc+'\')" onmouseleave="_svgTipHide()"/>';
     }
     s+='</svg>';
     el.style.cssText='display:block;width:100%'; el.innerHTML=s;
-    // attach tooltip events after DOM insert
-    el.querySelectorAll('._svgZone').forEach(function(z){
-      z.addEventListener('mouseenter',function(e){if(window._svgTipShow)window._svgTipShow(e,z.getAttribute('data-tip'));});
-      z.addEventListener('mousemove', function(e){if(window._svgTipShow)window._svgTipShow(e,z.getAttribute('data-tip'));});
-      z.addEventListener('mouseleave',function(){if(window._svgTipHide)window._svgTipHide();});
-    });
   };
 }
 if (typeof svgBar !== 'function') {
@@ -4121,7 +4116,10 @@ window.renderizarFCT = function() {
     svgLine('cFCTAliq', [
       { data: dAliq,    color: 'var(--teal)', fill: true,  dots: true, w: 2.5, label: 'Alíquota Efetiva %' },
       { data: dNominal, color: 'var(--txt3)', fill: false, dots: false, w: 1.5, label: 'Referência 26,5%', dash: true }
-    ], labels, 170, { min: aliqMin, max: aliqMax });
+    ], labels, 170, {
+      min: aliqMin, max: aliqMax,
+      fmt: function(v) { return (v < 0 ? '−' : '') + Math.abs(v).toFixed(1).replace('.', ',') + '%'; }
+    });
 
     // KPIs alíquota
     var aliqTotal = 0, aliqN = 0;
