@@ -95,7 +95,10 @@ function bdg(status) {
     '#F59E0B': '245,158,11',
     '#F43F5E': '244,63,94',
     '#3B82F6': '59,130,246',
-    '#A7A8AA': '167,168,170'
+    '#A7A8AA': '167,168,170',
+    '#49C5B1': '73,197,177',
+    '#8B5CF6': '139,92,246',
+    '#FB923C': '251,146,60'
   };
   var rgb = rgbMap[cor] || '167,168,170';
   return '<span style="background:rgba(' + rgb + ',.12);color:' + cor + ';border:1px solid rgba(' + rgb + ',.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + text + '</span>';
@@ -3209,9 +3212,10 @@ window.renderizarTabelaDebitos = function() {
           valorTotal: rf.valorTotalNF  || nf.valorTotal   || 0,
           valorLiq:   valorLiq,
           cbs: cbsVal, ibs: ibsVal, deb: debVal,
-          extincao:       rf.dataExtincao   || '—',
-          status:         rf.status         || 'nao_extinto',
-          metodoExtincao: rf.metodoExtincao || '—'
+          extincao:        rf.dataExtincao   || '—',
+          status:          rf.status         || 'nao_extinto',
+          statusRegistro:  rf.statusRegistro || null,
+          metodoExtincao:  rf.metodoExtincao || '—'
         });
       });
     });
@@ -3241,10 +3245,6 @@ window.renderizarTabelaDebitos = function() {
 
   var h = '';
   listaRFs.forEach(function(r) {
-    var stCor  = stHexMap[r.status]  || '#A7A8AA';
-    var stRgb  = stCoresMap[r.status] || '167,168,170';
-    var stLbl  = stLblMap[r.status]  || r.status;
-    var stBadge = '<span style="background:rgba('+stRgb+',.12);color:'+stCor+';border:1px solid rgba('+stRgb+',.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">'+stLbl+'</span>';
     var tfBadge = r.tf === 'IBS'
       ? '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">IBS</span>'
       : '<span style="background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">CBS</span>';
@@ -3253,10 +3253,11 @@ window.renderizarTabelaDebitos = function() {
     var mBadge = (r.metodoExtincao && r.metodoExtincao !== '—')
       ? '<span style="color:'+mCor+';font-weight:600;font-size:11px">'+mLbl+'</span>'
       : '<span style="color:var(--txt3);font-size:11px">—</span>';
-
     var nfTipoBadgeDeb = r.tipoNF === 'entrada'
       ? '<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>'
       : '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>';
+    var stBadge  = bdg(r.status);
+    var stRgBadge = r.statusRegistro ? bdg(r.statusRegistro) : '<span style="color:var(--txt3)">—</span>';
     h += '<tr>'
       + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\'' + r.rf + '\')" style="background:none;border:none;color:#A7A8AA;cursor:pointer;font-size:11px;font-weight:500;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
       + '<td class="nowrap">' + tfBadge + '</td>'
@@ -3271,6 +3272,7 @@ window.renderizarTabelaDebitos = function() {
       + '<td class="r mono" style="font-weight:700">' + ff(r.deb) + '</td>'
       + '<td class="nowrap" style="color:var(--txt2)">' + r.extincao + '</td>'
       + '<td class="nowrap">' + stBadge + '</td>'
+      + '<td class="nowrap">' + stRgBadge + '</td>'
       + '<td class="nowrap">' + mBadge + '</td>'
       + '</tr>';
   });
@@ -4421,10 +4423,7 @@ window.renderizarTabelaPagamentos = function() {
   window._pagImpRows = rows;
   var h = '';
   rows.forEach(function(r, idx) {
-    var stCor  = stHexMap[r.status]  || '#A7A8AA';
-    var stRgb  = stCoresMap[r.status] || '167,168,170';
-    var stLbl  = stLblMap[r.status]  || r.status;
-    var badge  = '<span style="background:rgba('+stRgb+',.12);color:'+stCor+';border:1px solid rgba('+stRgb+',.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">'+stLbl+'</span>';
+    var badge  = bdg(r.status);
     var tipoBadge = r.tipo === 'Guia IBS'
       ? '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Guia IBS</span>'
       : '<span style="background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">DARF CBS</span>';
