@@ -4910,27 +4910,43 @@ function updateSim(){
 
 function svgLine(id,datasets,labels,H,opts){
   var el=document.getElementById(id);if(!el)return;
-  var padT=8,padB=26,padL=8,padR=8;
+  var padT=14,padB=26,padL=42,padR=10;
   var cw=(el.parentElement&&el.parentElement.offsetWidth)||el.offsetWidth||0;
   var W=cw>50?cw:440;
   var plotW=W-padL-padR,plotH=H-padT-padB,n=labels.length;
-  var minV,maxV;
-  if(opts&&opts.min!==undefined){minV=opts.min;maxV=opts.max;}
-  else{var all=[];datasets.forEach(function(d){all=all.concat(d.data);});minV=Math.min.apply(null,all);maxV=Math.max.apply(null,all);}
-  var rng=maxV-minV||1;
+  // Compute range from data first, then apply any overrides
+  var allVals=[];datasets.forEach(function(d){allVals=allVals.concat(d.data);});
+  var dataMin=allVals.length?Math.min.apply(null,allVals):0;
+  var dataMax=allVals.length?Math.max.apply(null,allVals):1;
+  var minV=(opts&&opts.min!==undefined)?opts.min:dataMin;
+  var maxV=(opts&&opts.max!==undefined)?opts.max:dataMax;
+  if(maxV<=minV)maxV=minV+1;
+  var rng=maxV-minV;
   function xp(i){return Math.round(padL+(i/(n-1||1))*plotW);}
-  function yp(v){return Math.round(padT+(1-(v-minV)/rng)*plotH);}
-  function fv(v){return v>=1?v.toFixed(2).replace('.',',')+'M':v>=0.001?Math.round(v*1000)+'K':'0';}
-  var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block;overflow:visible">';
-  labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
+  function yp(v){var clamped=Math.max(minV,Math.min(maxV,v));return Math.round(padT+(1-(clamped-minV)/rng)*plotH);}
+  function fv(v){var neg=v<0;v=Math.abs(v);var s=v>=1?v.toFixed(1).replace('.',',')+'M':v>=0.001?Math.round(v*1000)+'K':'0';return neg?'−'+s:s;}
+  // Grid lines + Y labels (3 ticks)
+  var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block">';
+  // clip path to keep lines inside plot area
+  s+='<clipPath id="cp_'+id+'"><rect x="'+padL+'" y="'+padT+'" width="'+plotW+'" height="'+plotH+'"/></clipPath>';
+  [0.25,0.5,0.75,1].forEach(function(f){
+    var v=minV+rng*f,gy=yp(v);
+    s+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="rgba(128,128,128,0.1)" stroke-width="1"/>';
+    s+='<text x="'+(padL-5)+'" y="'+(gy+3)+'" text-anchor="end" fill="var(--txt3)" font-size="9" font-family="Montserrat,sans-serif">'+fv(v)+'</text>';
+  });
+  // Baseline at y=0 if 0 is in range
+  if(minV<0&&maxV>0){var gy0=yp(0);s+='<line x1="'+padL+'" y1="'+gy0+'" x2="'+(W-padR)+'" y2="'+gy0+'" stroke="rgba(128,128,128,0.3)" stroke-width="1" stroke-dasharray="3 2"/>';}
+  // Series (clipped)
   datasets.forEach(function(ds){
     var pts=ds.data.map(function(v,i){return xp(i)+','+yp(v);}).join(' ');
-    if(ds.fill){var fp=pts+' '+xp(n-1)+','+(H-padB)+' '+padL+','+(H-padB);s+='<polygon points="'+fp+'" fill="'+ds.color+'" fill-opacity="0.15" stroke="none"/>';}
+    if(ds.fill){var fp=pts+' '+xp(n-1)+','+yp(minV)+' '+xp(0)+','+yp(minV);s+='<polygon points="'+fp+'" fill="'+ds.color+'" fill-opacity="0.18" stroke="none" clip-path="url(#cp_'+id+')" />';}
     var da=ds.dash?'stroke-dasharray="5 3"':(ds.dash2?'stroke-dasharray="2 4"':'');
-    s+='<polyline points="'+pts+'" fill="none" stroke="'+ds.color+'" stroke-width="'+(ds.w||2)+'" '+da+' stroke-linejoin="round" stroke-linecap="round"/>';
-    if(ds.dots){ds.data.forEach(function(v,i){s+='<circle cx="'+xp(i)+'" cy="'+yp(v)+'" r="3.5" fill="'+ds.color+'" pointer-events="none"/>';});}
+    s+='<polyline points="'+pts+'" fill="none" stroke="'+ds.color+'" stroke-width="'+(ds.w||2)+'" '+da+' stroke-linejoin="round" stroke-linecap="round" clip-path="url(#cp_'+id+')" />';
+    if(ds.dots){ds.data.forEach(function(v,i){s+='<circle cx="'+xp(i)+'" cy="'+yp(v)+'" r="3" fill="'+ds.color+'" pointer-events="none" clip-path="url(#cp_'+id+')" />';});}
   });
-  // coluna invisível por ponto — tooltip ao passar o mouse
+  // X labels
+  labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
+  // Tooltip zones
   var zW=Math.max(16,Math.floor(plotW/(n||1)));
   for(var ci=0;ci<n;ci++){
     var tp=[labels[ci]];
@@ -4939,37 +4955,45 @@ function svgLine(id,datasets,labels,H,opts){
     s+='<rect x="'+(xp(ci)-Math.floor(zW/2))+'" y="'+padT+'" width="'+zW+'" height="'+plotH+'" fill="transparent" style="cursor:crosshair" onmousemove="_svgTipShow(event,\''+enc+'\')" onmouseleave="_svgTipHide()"/>';
   }
   s+='</svg>';
-  el.style.cssText='display:block;width:100%';
-  el.innerHTML=s;
+  el.style.cssText='display:block;width:100%';el.innerHTML=s;
 }
 
 function svgBar(id,datasets,labels,H){
   var el=document.getElementById(id);if(!el)return;
-  var padT=8,padB=26,padL=8,padR=8;
+  var padT=14,padB=26,padL=42,padR=10;
   var cw=(el.parentElement&&el.parentElement.offsetWidth)||el.offsetWidth||0;
   var W=cw>50?cw:440;
   var plotW=W-padL-padR,plotH=H-padT-padB,n=labels.length;
   var stk=[];for(var i=0;i<n;i++){var sm=0;datasets.forEach(function(d){sm+=d.data[i]||0;});stk.push(sm);}
   var maxV=Math.max.apply(null,stk)||1;
   var bW=Math.floor(plotW/n*0.52);
-  var hasLabels=datasets.some(function(d){return d.label;});
   function xp(i){return Math.round(padL+(i+0.5)*plotW/n);}
   function fv(v){return v>=1?v.toFixed(1).replace('.',',')+'M':Math.round(v*1000)+'K';}
   var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block">';
-  labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="#53565A" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
-  for(var i=0;i<n;i++){var yBase=H-padB;datasets.slice().reverse().forEach(function(ds){var bH=Math.max(1,Math.round((ds.data[i]||0)/maxV*plotH));var x=xp(i)-Math.floor(bW/2);var y=yBase-bH;s+='<rect x="'+x+'" y="'+y+'" width="'+bW+'" height="'+bH+'" fill="'+ds.color+'" rx="2"/>';yBase=y;});}
-  if(hasLabels){
-    for(var i=0;i<n;i++){
-      var tp=[labels[i]];
-      datasets.forEach(function(ds){tp.push(ds.color,ds.label||'',fv(ds.data[i]||0));});
-      var enc=tp.join('|');
-      var ox=xp(i)-Math.floor(bW/2)-4;
-      s+='<rect x="'+ox+'" y="'+padT+'" width="'+(bW+8)+'" height="'+plotH+'" fill="transparent" style="cursor:default" onmousemove="_svgTipShow(event,\''+enc+'\')" onmouseleave="_svgTipHide()"/>';
-    }
+  // Grid
+  [0.25,0.5,0.75,1].forEach(function(f){
+    var gy=Math.round(padT+plotH*(1-f));
+    s+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="rgba(128,128,128,0.1)" stroke-width="1"/>';
+    var lbl=fv(maxV*f);
+    s+='<text x="'+(padL-5)+'" y="'+(gy+3)+'" text-anchor="end" fill="var(--txt3)" font-size="9" font-family="Montserrat,sans-serif">'+lbl+'</text>';
+  });
+  for(var i=0;i<n;i++){
+    var yBase=H-padB;
+    var tp=[labels[i]];
+    datasets.forEach(function(ds){tp.push(ds.color,ds.label||'',fv(ds.data[i]||0));});
+    var enc=tp.join('|').replace(/'/g,'&apos;');
+    datasets.slice().reverse().forEach(function(ds){
+      var bH=Math.max(1,Math.round((ds.data[i]||0)/maxV*plotH));
+      var x=xp(i)-Math.floor(bW/2),y=yBase-bH;
+      s+='<rect x="'+x+'" y="'+y+'" width="'+bW+'" height="'+bH+'" fill="'+ds.color+'" rx="2"/>';
+      yBase=y;
+    });
+    var ox=xp(i)-Math.floor(bW/2)-4;
+    s+='<rect x="'+ox+'" y="'+padT+'" width="'+(bW+8)+'" height="'+plotH+'" fill="transparent" style="cursor:default" onmousemove="_svgTipShow(event,\''+enc+'\')" onmouseleave="_svgTipHide()"/>';
   }
+  labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
   s+='</svg>';
-  el.style.cssText='display:block;width:100%';
-  el.innerHTML=s;
+  el.style.cssText='display:block;width:100%';el.innerHTML=s;
 }
 
 function buildCharts(){
