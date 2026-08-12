@@ -6866,11 +6866,11 @@ window.downloadGuiaDARF = function() {
       var tCor = _tipoCorMap[tipoBase] || '#8A92A3';
       var tipoBadge = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:' + tCor + '22;color:' + tCor + ';border:1px solid ' + tCor + '44;display:inline-block;margin-bottom:2px">' + tipoBase + '</span>';
       var nfNumCell = d.nfNumero
-        ? '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline" onclick="event.stopPropagation();if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + d.nfNumero + '\')">' + d.nfNumero + '</span>'
+        ? tipoBadge + ' <span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline" onclick="event.stopPropagation();if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + d.nfNumero + '\')">' + d.nfNumero + '</span>'
         : '<span style="color:var(--txt3)">—</span>';
       html += '<tr>' +
         '<td>' + nfNumCell + '</td>' +
-        '<td style="font-size:11px;color:var(--txt2)">' + tipoBadge + '<br><span class="mono">' + chaveShort + '</span></td>' +
+        '<td class="mono" style="font-size:11px;color:var(--txt2)">' + chaveShort + '</td>' +
         '<td>' + _tipoLabel(d.tipo) + '</td>' +
         '<td style="font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + d.emitente + '</td>' +
         '<td class="r mono" style="font-size:12px">' + _fmtBRL(d.valor) + '</td>' +
