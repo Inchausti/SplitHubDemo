@@ -873,7 +873,8 @@ window.renderizarTabelaCreditos = function() {
             statusRegistro: rf.statusRegistro || null,
             inconsistencia: rf.inconsistencia || null,
             contratoId: rf.contratoId || nf.contratoId || null,
-            metodoPagamento: rf.metodoPagamento || nf.metodoPagamento || null
+            metodoPagamento: rf.metodoPagamento || nf.metodoPagamento || null,
+            metodoExtincao: rf.metodoExtincao || null
           });
         });
       }
@@ -912,7 +913,7 @@ window.renderizarTabelaCreditos = function() {
   if (contagemEl) contagemEl.textContent = listaRFs.length + ' registro' + (listaRFs.length !== 1 ? 's' : '');
 
   if (!listaRFs.length) {
-    h = '<tr><td colspan="15" style="text-align:center;color:var(--txt3);padding:24px">Nenhum crédito encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="17" style="text-align:center;color:var(--txt3);padding:24px">Nenhum crédito encontrado para este filtro.</td></tr>';
   } else {
     listaRFs.forEach(function(r) {
       var tipoFiscalBadge = '<span style="font-size:11px;font-weight:600;color:' + (r.tipoFiscal === 'IBS' ? '#3B82F6' : '#F59E0B') + '">' + r.tipoFiscal + '</span>';
@@ -936,7 +937,21 @@ window.renderizarTabelaCreditos = function() {
       var statusCredBadge = bdg(r.statusCredito || r.status);
       var statusRegBadge  = r.statusRegistro ? bdg(r.statusRegistro) : '';
       var incBadge = r.inconsistencia ? '<br><span style="font-size:10px;color:#F43F5E;font-style:italic">' + r.inconsistencia + '</span>' : '';
-      h += '<tr><td class="mono nowrap">' + rfIdLink + '</td><td class="nowrap">' + tipoFiscalBadge + '</td><td class="nowrap">' + nfTipoBadgeCred + '</td><td class="mono nowrap">' + nfLink + '</td><td class="trunc">' + r.forn + '</td><td class="nowrap" style="color:var(--txt2)">' + r.data + '</td><td class="r mono">' + ff(r.valorTotal) + '</td><td class="r mono" style="color:var(--txt2)">' + ff(r.valorLiq) + '</td><td class="r mono" style="color:#F59E0B;font-weight:600">' + ffz(r.cbs) + '</td><td class="r mono" style="color:#3B82F6;font-weight:600">' + ffz(r.ibs) + '</td><td class="r mono" style="color:#49C5B1;font-weight:700">' + ff(r.cred) + '</td><td class="nowrap">' + pagCell + '</td><td class="nowrap">' + statusCredBadge + '</td><td class="nowrap">' + statusRegBadge + incBadge + '</td><td class="nowrap">' + contratoCell + '</td><td class="nowrap">' + metodoCell + '</td></tr>';
+      var _metExtMap = {
+        'Split Payment': { cor: '73,197,177',  lbl: 'Split Payment' },
+        'Compensacao':   { cor: '59,130,246',  lbl: 'Compensação'   },
+        'Ressarcimento': { cor: '34,197,94',   lbl: 'Ressarcimento' },
+        'Transferencia': { cor: '139,92,246',  lbl: 'Transferência' }
+      };
+      var sc = r.statusCredito || r.status || '';
+      var metExtCell;
+      if (sc === 'utilizado' && r.metodoExtincao) {
+        var _me = _metExtMap[r.metodoExtincao] || { cor: '167,168,170', lbl: r.metodoExtincao };
+        metExtCell = '<span style="background:rgba(' + _me.cor + ',.12);color:rgba(' + _me.cor + ',1);border:1px solid rgba(' + _me.cor + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + _me.lbl + '</span>';
+      } else {
+        metExtCell = '<span style="color:var(--txt3)">—</span>';
+      }
+      h += '<tr><td class="mono nowrap">' + rfIdLink + '</td><td class="nowrap">' + tipoFiscalBadge + '</td><td class="nowrap">' + nfTipoBadgeCred + '</td><td class="mono nowrap">' + nfLink + '</td><td class="trunc">' + r.forn + '</td><td class="nowrap" style="color:var(--txt2)">' + r.data + '</td><td class="r mono">' + ff(r.valorTotal) + '</td><td class="r mono" style="color:var(--txt2)">' + ff(r.valorLiq) + '</td><td class="r mono" style="color:#F59E0B;font-weight:600">' + ffz(r.cbs) + '</td><td class="r mono" style="color:#3B82F6;font-weight:600">' + ffz(r.ibs) + '</td><td class="r mono" style="color:#49C5B1;font-weight:700">' + ff(r.cred) + '</td><td class="nowrap">' + pagCell + '</td><td class="nowrap">' + statusCredBadge + '</td><td class="nowrap">' + statusRegBadge + incBadge + '</td><td class="nowrap">' + contratoCell + '</td><td class="nowrap">' + metodoCell + '</td><td class="nowrap">' + metExtCell + '</td></tr>';
     });
   }
 
@@ -5366,6 +5381,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
           var statusSemPagBuild = ['nao_apropriado', 'utilizado', 'inconsistencia', 'vencido'];
           var _rfIncTipos = ['Não conciliado','Valor imposto divergente','Vencido','Sem Comprovante'];
+          var _metExtCred = ['Split Payment','Compensacao','Ressarcimento','Transferencia'];
           function gerarRFPag() {
             var tem = Math.random() < 0.6;
             var dat = '—';
@@ -5377,7 +5393,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             var st = tem ? 'apropriado' : statusSemPagBuild[Math.floor(Math.random() * statusSemPagBuild.length)];
             var incT = st === 'inconsistencia' ? _rfIncTipos[Math.floor(Math.random() * _rfIncTipos.length)] : null;
-            return { dataPagamento: dat, rfStatus: st, incTipo: incT };
+            var metExt = (st === 'utilizado') ? _metExtCred[Math.floor(Math.random() * _metExtCred.length)] : null;
+            return { dataPagamento: dat, rfStatus: st, incTipo: incT, metodoExtincao: metExt };
           }
 
           // Criar registro fiscal para IBS
@@ -5392,8 +5409,10 @@ document.addEventListener('DOMContentLoaded', function() {
             cnpj: nf.cnpj,
             valor: ibs,
             status: pagIBS.rfStatus,
+            statusCredito: pagIBS.rfStatus,
             inconsistencia: pagIBS.incTipo,
             dataPagamento: pagIBS.dataPagamento,
+            metodoExtincao: pagIBS.metodoExtincao || null,
             data: dataEfetiva,
             valorTotalNF: valorBruto,
             valorLiquidoNF: valorLiquido,
@@ -5413,8 +5432,10 @@ document.addEventListener('DOMContentLoaded', function() {
             cnpj: nf.cnpj,
             valor: cbs,
             status: pagCBS.rfStatus,
+            statusCredito: pagCBS.rfStatus,
             inconsistencia: pagCBS.incTipo,
             dataPagamento: pagCBS.dataPagamento,
+            metodoExtincao: pagCBS.metodoExtincao || null,
             data: dataEfetiva,
             valorTotalNF: valorBruto,
             valorLiquidoNF: valorLiquido,
