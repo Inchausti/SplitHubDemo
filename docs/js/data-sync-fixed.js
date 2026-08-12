@@ -6877,7 +6877,6 @@ window.downloadGuiaDARF = function() {
         '<td style="font-size:12px">' + _fmtData(d.dataEmissao) + '</td>' +
         '<td style="font-size:11px;color:var(--txt2)">' + d.dataIngestao + '</td>' +
         '<td style="text-align:center">' + _valChip(d.valLayout) + '</td>' +
-        '<td style="text-align:center">' + _valChip(d.valValidade) + '</td>' +
         '<td style="text-align:center">' + _valChip(d.valDados) + '</td>' +
         '<td>' + _statusLabel(d.status) + '</td>' +
         '<td><button class="btn" style="font-size:11px;padding:4px 10px;border-radius:6px" onclick="abrirIngModal(' + d.id + ')">Detalhar</button></td>' +
