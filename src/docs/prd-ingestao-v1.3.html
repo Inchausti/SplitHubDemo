@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Ingestão de DF · SplitHub v1.3</title>
+<style>
+:root{--bg:#F7F8FA;--sur:#FFFFFF;--sur2:#F0F2F6;--brd:#DDE1EA;--txt1:#131720;--txt2:#4A5568;--txt3:#8A92A3;--teal:#0E9E8E;--teal-d:rgba(14,158,142,.1);--blue:#1D5FCC;--blue-d:rgba(29,95,204,.08);--red:#D63A49;--red-d:rgba(214,58,73,.08);--amber:#B97A10;--amber-d:rgba(185,122,16,.08);--green:#1A7940;--green-d:rgba(26,121,64,.08);--mono:#EDF0F5}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0D1117;--sur:#161C25;--sur2:#1E2533;--brd:#262E3F;--txt1:#E4E8EF;--txt2:#8A99B4;--txt3:#4F5B73;--teal:#1FBAAA;--teal-d:rgba(31,186,170,.12);--blue:#4D9FFF;--blue-d:rgba(77,159,255,.1);--red:#F04B5C;--red-d:rgba(240,75,92,.1);--amber:#F59E0B;--amber-d:rgba(245,158,11,.1);--green:#22C55E;--green-d:rgba(34,197,94,.1);--mono:#1A2030}}
+:root[data-theme="dark"]{--bg:#0D1117;--sur:#161C25;--sur2:#1E2533;--brd:#262E3F;--txt1:#E4E8EF;--txt2:#8A99B4;--txt3:#4F5B73;--teal:#1FBAAA;--teal-d:rgba(31,186,170,.12);--blue:#4D9FFF;--blue-d:rgba(77,159,255,.1);--red:#F04B5C;--red-d:rgba(240,75,92,.1);--amber:#F59E0B;--amber-d:rgba(245,158,11,.1);--green:#22C55E;--green-d:rgba(34,197,94,.1);--mono:#1A2030}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt1);font:14px/1.6 'Segoe UI',system-ui,sans-serif;padding:40px 20px 80px}
+.doc{max-width:860px;margin:0 auto}
+.doc-eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);margin-bottom:10px}
+.doc-title{font-size:28px;font-weight:800;color:var(--txt1);line-height:1.15;margin-bottom:8px}
+.doc-sub{font-size:14px;color:var(--txt2);margin-bottom:24px}
+.meta-row{display:flex;flex-wrap:wrap;gap:20px;padding:16px 20px;background:var(--sur2);border:1px solid var(--brd);border-radius:8px;margin-bottom:36px}
+.meta-item{font-size:12px}.meta-label{color:var(--txt3);margin-bottom:2px}.meta-val{color:var(--txt1);font-weight:600}
+.section{margin-bottom:40px}
+.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--brd)}
+.sec-num{font-size:11px;font-weight:700;color:var(--teal);background:var(--teal-d);border-radius:4px;padding:2px 7px}
+.sec-title{font-size:17px;font-weight:700;color:var(--txt1)}
+.card{background:var(--sur);border:1px solid var(--brd);border-radius:8px;padding:18px 20px;margin-bottom:12px}
+.card-title{font-size:13px;font-weight:700;color:var(--txt1);margin-bottom:8px}
+.info-box{border-radius:7px;padding:14px 16px;margin-bottom:14px;font-size:13px;line-height:1.65}
+.info-box.teal{background:var(--teal-d);border:1px solid rgba(31,186,170,.25)}
+.info-box.blue{background:var(--blue-d);border:1px solid rgba(77,159,255,.25)}
+.info-box strong{color:var(--txt1)}
+.tbl-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--brd);margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--sur2);color:var(--txt2);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:10px 14px;text-align:left}
+tbody tr{border-top:1px solid var(--brd)}tbody tr:hover{background:var(--sur2)}
+td{padding:10px 14px;color:var(--txt1);vertical-align:top}td:first-child{font-family:'Consolas',monospace;font-size:12px;color:var(--blue)}
+.chip{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.chip.ok{background:var(--green-d);color:var(--green)}.chip.warn{background:var(--amber-d);color:var(--amber)}.chip.err{background:var(--red-d);color:var(--red)}.chip.info{background:var(--blue-d);color:var(--blue)}.chip.teal{background:var(--teal-d);color:var(--teal)}.chip.spike{background:rgba(139,92,246,.1);color:#7C3AED}
+ul{padding-left:18px;color:var(--txt2);font-size:13px}ul li{margin-bottom:5px;line-height:1.6}li strong{color:var(--txt1)}
+.cl-entry{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--brd)}.cl-entry:last-child{border-bottom:none}
+.cl-ver{font-size:12px;font-weight:700;color:var(--teal);white-space:nowrap;min-width:44px}
+.cl-body{font-size:13px;color:var(--txt2)}.cl-body strong{color:var(--txt1);display:block;margin-bottom:3px}
+code{background:var(--mono);border-radius:3px;padding:1px 5px;font-family:'Consolas',monospace;font-size:12px;color:var(--blue)}
+hr{border:none;border-top:1px solid var(--brd);margin:36px 0}
+.ver-nav{display:flex;align-items:center;gap:8px;margin-bottom:28px;flex-wrap:wrap}
+.ver-nav a{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;text-decoration:none;background:var(--sur2);color:var(--txt2);border:1px solid var(--brd)}
+.ver-nav a.current{background:var(--teal);color:#fff;border-color:var(--teal)}
+.ver-nav a:hover:not(.current){border-color:var(--teal);color:var(--teal)}
+.archived-banner{background:var(--amber-d);border:1px solid rgba(185,122,16,.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--amber);margin-bottom:24px;display:flex;align-items:center;gap:10px}
+</style>
+</head>
+<body>
+<div class="doc">
+  <div class="doc-eyebrow">Product Requirements Document</div>
+  <h1 class="doc-title">Módulo de Ingestão de Documentos Fiscais</h1>
+  <p class="doc-sub">Pipeline de captura, validação e integração de DFs eletrônicos ao ecossistema SplitHub</p>
+
+  <div class="ver-nav">
+    <span style="font-size:11px;color:var(--txt3);font-weight:600">Versões:</span>
+    <a href="prd-ingestao-v1.0.html">v1.0</a>
+    <a href="prd-ingestao-v1.1.html">v1.1</a>
+    <a href="prd-ingestao-v1.2.html">v1.2</a>
+    <a href="prd-ingestao-v1.3.html" class="current">v1.3 (esta)</a>
+    <a href="prd-ingestao-v1.4.html">v1.4 →</a>
+    <a href="prd-ingestao.html" style="margin-left:4px;background:var(--teal-d);color:var(--teal);border-color:var(--teal)">Última versão</a>
+  </div>
+
+  <div class="archived-banner">⚠ Versão arquivada — esta é a v1.3. <a href="prd-ingestao.html" style="color:var(--amber);font-weight:700;margin-left:4px">Ver versão atual →</a></div>
+
+  <div class="meta-row">
+    <div class="meta-item"><div class="meta-label">Versão</div><div class="meta-val">v1.3</div></div>
+    <div class="meta-item"><div class="meta-label">Status</div><div class="meta-val"><span class="chip warn">Arquivado</span></div></div>
+    <div class="meta-item"><div class="meta-label">Data</div><div class="meta-val">Ago/2026</div></div>
+    <div class="meta-item"><div class="meta-label">Módulo</div><div class="meta-val">Admin → Ingestão de DFs</div></div>
+    <div class="meta-item"><div class="meta-label">Base legal</div><div class="meta-val">LC 214/2025 · IN RFB 2.240/2025</div></div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Objetivo e escopo</span></div>
+    <div class="info-box teal">
+      <strong>Objetivo central:</strong> capturar 100% dos Documentos Fiscais eletrônicos emitidos ou recebidos pela Positivo Tecnologia S.A., validá-los contra os padrões SEFAZ/RFB, e integrá-los à base SplitHub para alimentar a Apuração Assistida de IBS/CBS e garantir a apropriação do crédito (Art. 48 LC 214/2025).
+    </div>
+    <div class="card">
+      <div class="card-title">Tipos de DF suportados</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <span class="chip teal">NF-e (mod. 55)</span><span class="chip teal">NFC-e (mod. 65)</span><span class="chip teal">NFS-e</span><span class="chip teal">CT-e (mod. 57)</span><span class="chip teal">NFCom (mod. 62)</span><span class="chip teal">NF3-e (mod. 66)</span><span class="chip teal">NFAg</span><span class="chip teal">NFGás</span><span class="chip teal">MDF-e (mod. 58)</span><span class="chip teal">BP-e (mod. 63)</span><span class="chip teal">NFAv (mod. 2B)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Fontes de ingestão e protocolo SEFAZ</span></div>
+    <div class="info-box blue">
+      <strong>Integração SEFAZ:</strong> a fonte primária de DFs é a SEFAZ Estadual (NF-e/CT-e) e a RFB (NFS-e/NFCom). O SplitHub consome o XML autorizado via <code>nfeDistDFe</code> (NSS). A <strong>chave de acesso</strong> (44 dígitos) é o identificador canônico do DF.
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Fonte</th><th>Protocolo</th><th>Frequência</th><th>Prioridade</th></tr></thead>
+        <tbody>
+          <tr><td>SEFAZ Nacional (NSS)</td><td>nfeDistDFe · REST/SOAP</td><td>Polling 15 min</td><td><span class="chip ok">P1</span></td></tr>
+          <tr><td>SEFAZ Estadual (SP, PR, MG…)</td><td>Webservice SOAP por UF</td><td>Polling 30 min</td><td><span class="chip ok">P1</span></td></tr>
+          <tr><td>ERP / sistema de origem</td><td>API REST · Webhook · SFTP</td><td>Tempo real / batch</td><td><span class="chip ok">P1</span></td></tr>
+          <tr><td>Upload manual (XML/ZIP)</td><td>Interface web · drag-and-drop</td><td>On demand</td><td><span class="chip warn">P3</span></td></tr>
+          <tr><td>Monitor de Manifestação (MDe)</td><td>NF-e Manifestação Destinatário</td><td>Polling 1h</td><td><span class="chip info">P2</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Estrutura da chave de acesso (NF-e / CT-e)</div>
+      <div style="font-family:monospace;font-size:12px;background:var(--mono);border-radius:6px;padding:12px;overflow-x:auto;color:var(--txt1);letter-spacing:.04em">
+        <span style="color:var(--teal)">cUF(2)</span> <span style="color:var(--blue)">AAMM(4)</span> <span style="color:var(--amber)">CNPJ(14)</span> <span style="color:var(--green)">mod(2)</span> <span style="color:var(--txt2)">serie(3) nNF(9) tpEmis(1) cNF(8)</span> <span style="color:var(--red)">cDV(1)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Campos extraídos — mapeamento para conciliação</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Campo SplitHub</th><th>Tag XML</th><th>Descrição</th><th>Uso CAPUR</th></tr></thead>
+        <tbody>
+          <tr><td>chaveDfe</td><td><code>chNFe</code> / <code>chCTe</code></td><td>Chave de acesso 44 dígitos — identificador único do DF</td><td><span class="chip teal">Campo-chave</span></td></tr>
+          <tr><td>niEmitente</td><td><code>emit/CNPJ</code></td><td>CNPJ do emitente (fornecedor). Validado contra RFB.</td><td><span class="chip teal">Conciliado</span></td></tr>
+          <tr><td>niAdquirente</td><td><code>dest/CNPJ</code></td><td>CNPJ do adquirente (Positivo).</td><td><span class="chip teal">Conciliado</span></td></tr>
+          <tr><td>valorCBSTotal</td><td><code>total/ICMSTot/vCBS</code></td><td>CBS destacada na nota.</td><td><span class="chip teal">Conciliado</span></td></tr>
+          <tr><td>pagamentosCBS</td><td>Registro financeiro (TF)</td><td>Comprovante de pagamento CBS.</td><td><span class="chip teal">Conciliado</span></td></tr>
+          <tr><td>situacao</td><td><code>Autorizado</code> / <code>Cancelado</code> / <code>Denegado</code></td><td>DFs cancelados ou denegados não geram RF ativo.</td><td><span class="chip warn">Não conciliado</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Status SEFAZ e ciclo de vida</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Status SEFAZ</th><th>Código</th><th>Ação SplitHub</th><th>Gera RF?</th></tr></thead>
+        <tbody>
+          <tr><td>Autorizado</td><td><code>100</code></td><td>Prossegue para validação e integração</td><td><span class="chip ok">Sim</span></td></tr>
+          <tr><td>Cancelado (CC-e)</td><td><code>101</code></td><td>RF existente marcado como cancelado</td><td><span class="chip warn">RF cancelado</span></td></tr>
+          <tr><td>Denegado</td><td><code>110–205</code></td><td>DF registrado; não gera RF; alerta gerado</td><td><span class="chip err">Não</span></td></tr>
+          <tr><td>Inutilizado</td><td><code>102</code></td><td>Numeração registrada; DF descartado</td><td><span class="chip err">Não</span></td></tr>
+          <tr><td>Duplicado</td><td>chave já existe</td><td>Evento registrado; RF original mantido</td><td><span class="chip err">Não</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr>
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">—</span><span class="sec-title">Changelog</span></div>
+    <div class="cl-entry"><div class="cl-ver">v1.3</div><div class="cl-body"><strong>Ago/2026 · Campos de conciliação e chave de acesso</strong>Mapeamento de campos CAPUR (chaveDfe, niEmitente, niAdquirente, valorCBSTotal, pagamentosCBS). Estrutura chave de acesso 44 dígitos. RF-ING-03 validação CNPJ na RFB. RF-ING-05 cancelamentos SEFAZ.</div></div>
+    <div class="cl-entry"><div class="cl-ver">v1.2</div><div class="cl-body"><strong>Jul/2026 · Tabs Dashboard/Listagem + coluna ID DF</strong>Módulo dividido em Dashboard e Listagem. Coluna ID DF com tipo + número.</div></div>
+    <div class="cl-entry"><div class="cl-ver">v1.1</div><div class="cl-body"><strong>Jun/2026 · Tipos DF e pipeline de validação</strong>Suporte a 11 tipos de DF. Pipeline 5 etapas.</div></div>
+    <div class="cl-entry"><div class="cl-ver">v1.0</div><div class="cl-body"><strong>Mai/2026 · Versão inicial</strong>Ingestão básica via ERP e upload manual.</div></div>
+  </div>
+</div>
+</body>
+</html>
