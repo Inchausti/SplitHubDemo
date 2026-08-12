@@ -321,9 +321,11 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   // ── Timeline NF: agrega eventos de todos os RFs ─────────────────────────
   var evRgba  = { 'INGESTÃO':'73,197,177', 'VALIDAÇÃO':'34,197,94', 'GERAÇÃO RF':'59,130,246',
     'INCONSISTÊNCIA':'239,68,68', 'VENCIMENTO':'239,68,68', 'AGUARDANDO':'245,158,11',
-    'APROPRIAÇÃO':'34,197,94', 'PAGAMENTO':'73,197,177', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246' };
+    'APROPRIAÇÃO':'34,197,94', 'PAGAMENTO':'73,197,177', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246',
+    'CONC APURAÇÃO':'59,130,246', 'CONC FINANCEIRA':'73,197,177' };
   var evIcons = { 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!',
-    'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌' };
+    'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌',
+    'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌' };
 
   var allEvents = [];
   var d0 = r.data || '';
@@ -524,14 +526,21 @@ window._rfGerarHistorico = function(rf, nf) {
   ev.push(mkEv(MK(A(d0,2),'10:00'),     'GERAÇÃO RF',    isSaida ? 'Débitos' : 'Créditos', 'SplitHub',
     'RF ' + rf.id + ' gerado · ' + (rf.tipoFiscal || '').toUpperCase() + ' · alíquota de transição 2026 · Art. 48 LC 214/2025', 'ok'));
 
-  // Evento de conciliação (gerado pelo módulo de Conciliação SplitHub)
-  var _concR = rf._concReg || nf._concReg || null;
-  if (_concR) {
-    var _concCls = _concR.concStatus === 'confirmada' ? 'ok' : _concR.concStatus === 'divergente' ? 'erro' : 'pending';
-    var _concDescStatus = { confirmada: 'Confirmada', divergente: 'Divergente', pendente: 'Pendente' }[_concR.concStatus] || _concR.concStatus;
-    ev.push(mkEv(_concR.concTs, 'CONCILIAÇÃO', 'Conciliação', 'SplitHub',
-      'Operação de conciliação registrada · status: ' + _concDescStatus +
-      ' · ID: ' + _concR.concId + ' · ' + (rf.tipoFiscal || '').toUpperCase(), _concCls));
+  // Conciliação de Apuração — valores fiscais vs. Apuração Assistida Gov
+  var _concRA = rf._concRegApur || nf._concRegApur || null;
+  if (_concRA) {
+    var _clsA = _concRA.concStatus === 'confirmada' ? 'ok' : _concRA.concStatus === 'divergente' ? 'erro' : 'pending';
+    var _lblA = { confirmada:'Confirmada', divergente:'Divergente', pendente:'Pendente' }[_concRA.concStatus] || _concRA.concStatus;
+    ev.push(mkEv(_concRA.concTs, 'CONC APURAÇÃO', 'Conciliação', 'SplitHub',
+      'Conciliação de Apuração · valores calculados × Apuração Assistida Gov · status: ' + _lblA + ' · ' + _concRA.concId + ' · ' + (rf.tipoFiscal || '').toUpperCase(), _clsA));
+  }
+  // Conciliação Financeira — liquidação, segregação IBS/CBS e comprovantes
+  var _concRF = rf._concRegFin || nf._concRegFin || null;
+  if (_concRF) {
+    var _clsF = _concRF.concStatus === 'confirmada' ? 'ok' : _concRF.concStatus === 'divergente' ? 'erro' : 'pending';
+    var _lblF = { confirmada:'Confirmada', divergente:'Divergente', pendente:'Pendente' }[_concRF.concStatus] || _concRF.concStatus;
+    ev.push(mkEv(_concRF.concTs, 'CONC FINANCEIRA', 'Conciliação', 'SplitHub',
+      'Conciliação Financeira · liquidação financeira e segregação IBS/CBS · status: ' + _lblF + ' · ' + _concRF.concId + ' · ' + (rf.tipoFiscal || '').toUpperCase(), _clsF));
   }
 
   var _sc_hist = rf.statusCredito || rf.status || '';
@@ -639,8 +648,8 @@ window.abrirDetalheRF = function(rfId) {
   var stRegLab = rfSR ? (stRegLabs[rfSR] || rfSR) : null;
   var stRegRgb = rfSR ? (stRegRgbs[rfSR] || '167,168,170') : null;
 
-  var evRgba  = { 'INGESTÃO':'73,197,177', 'VALIDAÇÃO':'34,197,94', 'GERAÇÃO RF':'59,130,246', 'INCONSISTÊNCIA':'239,68,68', 'VENCIMENTO':'239,68,68', 'AGUARDANDO':'245,158,11', 'APROPRIAÇÃO':'34,197,94', 'PAGAMENTO':'73,197,177', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246' };
-  var evIcons = { 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌' };
+  var evRgba  = { 'INGESTÃO':'73,197,177', 'VALIDAÇÃO':'34,197,94', 'GERAÇÃO RF':'59,130,246', 'INCONSISTÊNCIA':'239,68,68', 'VENCIMENTO':'239,68,68', 'AGUARDANDO':'245,158,11', 'APROPRIAÇÃO':'34,197,94', 'PAGAMENTO':'73,197,177', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246', 'CONC APURAÇÃO':'59,130,246', 'CONC FINANCEIRA':'73,197,177' };
+  var evIcons = { 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌', 'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌' };
 
   // Ordenar decrescente por timestamp (mais recente primeiro)
   eventos.sort(function(a, b) {
@@ -2121,19 +2130,34 @@ function _concBuildLista(filtroMes) {
         : 'Emitir guia DARF/IBS';
     }
 
-    // ── Registro de conciliação ──────────────────────────────────────────
-    var concStatus = (statusApur === 'confirmado' && statusFin === 'completo') ? 'confirmada'
-      : statusApur === 'divergente' ? 'divergente' : 'pendente';
-    var concSeed2  = _concHash((nf.numero || '') + (nf.cnpj || '') + 'CONC' + idx);
-    var concId     = 'CONC-' + (concSeed2 >>> 0).toString(16).toUpperCase().padStart(8, '0');
-    var concHora   = String(11 + (concSeed2 % 3)).padStart(2,'0') + ':' + String((concSeed2 % 59) + 1).padStart(2,'0');
-    var concTsISO  = dataApur + 'T' + concHora;
-    var concReg = { concId: concId, concTs: concTsISO, concStatus: concStatus };
+    // ── Conciliação de Apuração (valores fiscais calculados vs. Apuração Assistida Gov) ─
+    var apurSeed   = _concHash((nf.numero || '') + (nf.cnpj || '') + 'APUR' + idx);
+    var concIdApur = 'CAPUR-' + (apurSeed >>> 0).toString(16).toUpperCase().padStart(8, '0');
+    var apurHora   = String(9 + (apurSeed % 4)).padStart(2,'0') + ':' + String((apurSeed % 59) + 1).padStart(2,'0');
+    var apurConcStatus = statusApur === 'confirmado' ? 'confirmada' : statusApur === 'divergente' ? 'divergente' : 'pendente';
+    var concRegApur = { concId: concIdApur, concTs: dataApur + 'T' + apurHora, concStatus: apurConcStatus, tipo: 'apuracao' };
+
+    // ── Conciliação Financeira (liquidação, segregação IBS/CBS, comprovantes) ─────────
+    // Ocorre ~15 dias após a apuração — só é gerada quando apuração não está pendente
+    var concRegFin = null;
+    if (statusApur !== 'pendente') {
+      var finSeed    = _concHash((nf.numero || '') + (nf.cnpj || '') + 'FIN' + idx);
+      var concIdFin  = 'CFIN-' + (finSeed >>> 0).toString(16).toUpperCase().padStart(8, '0');
+      var finHora    = String(13 + (finSeed % 4)).padStart(2,'0') + ':' + String((finSeed % 59) + 1).padStart(2,'0');
+      var finConcStatus = statusFin === 'completo' ? 'confirmada' : statusFin === 'inconsistente' ? 'divergente' : 'pendente';
+      var dataFinISO = window._rfAddDays ? window._rfAddDays(dataApur, 15) : dataApur;
+      concRegFin = { concId: concIdFin, concTs: dataFinISO + 'T' + finHora, concStatus: finConcStatus, tipo: 'financeira' };
+    }
 
     // Anexar ao NF e RFs para que _rfGerarHistorico os encontre
-    nf._concReg = concReg;
-    if (ibsRF) ibsRF._concReg = concReg;
-    if (cbsRF) cbsRF._concReg = concReg;
+    nf._concRegApur = concRegApur;
+    nf._concRegFin  = concRegFin;
+    if (ibsRF) { ibsRF._concRegApur = concRegApur; ibsRF._concRegFin = concRegFin; }
+    if (cbsRF) { cbsRF._concRegApur = concRegApur; cbsRF._concRegFin = concRegFin; }
+    // Compat: manter _concReg apontando para o registro mais completo disponível
+    nf._concReg = concRegFin || concRegApur;
+    if (ibsRF) ibsRF._concReg = nf._concReg;
+    if (cbsRF) cbsRF._concReg = nf._concReg;
 
     result.push({
       nf: nf, idx: idx,
@@ -2142,7 +2166,8 @@ function _concBuildLista(filtroMes) {
       ibsRF: ibsRF, cbsRF: cbsRF,
       ibsPago: !!ibsPago, cbsPago: !!cbsPago, ibsInc: ibsInc, cbsInc: cbsInc,
       statusFin: statusFin, comprovante: comprovante, proxAcao: proxAcao,
-      concReg: concReg
+      concRegApur: concRegApur, concRegFin: concRegFin,
+      concReg: concRegFin || concRegApur
     });
   });
   return result;
@@ -2388,13 +2413,18 @@ function _concUnifiedRender() {
       + '<div style="border-top:1px solid var(--border);padding-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
       + rfChip(r.ibsRF, 'IBS')
       + rfChip(r.cbsRF, 'CBS')
-      + (r.concReg ? (function(c){
-          var cCol = c.concStatus==='confirmada'?'34,197,94':c.concStatus==='divergente'?'239,68,68':'245,158,11';
-          var cLbl = {confirmada:'Confirmada',divergente:'Divergente',pendente:'Pendente'}[c.concStatus]||c.concStatus;
-          return '<span style="display:inline-flex;align-items:center;gap:5px;border:1px solid rgba('+cCol+',.3);border-radius:6px;padding:3px 9px;font-size:11px;font-family:monospace;background:rgba('+cCol+',.08);color:rgba('+cCol+',1)" title="Registro de conciliação SplitHub">'
-            + '⇌ ' + c.concId + ' · ' + cLbl + ' · ' + (window._rfFmtTS ? window._rfFmtTS(c.concTs) : c.concTs)
-            + '</span>';
-        })(r.concReg) : '')
+      + (function concChips(ra, rf2) {
+          function chip(c, label) {
+            if (!c) return '';
+            var cCol = c.concStatus==='confirmada'?'34,197,94':c.concStatus==='divergente'?'239,68,68':'245,158,11';
+            var cLbl = {confirmada:'Confirmada',divergente:'Divergente',pendente:'Pendente'}[c.concStatus]||c.concStatus;
+            var ts = window._rfFmtTS ? window._rfFmtTS(c.concTs) : c.concTs;
+            return '<span style="display:inline-flex;align-items:center;gap:5px;border:1px solid rgba('+cCol+',.3);border-radius:6px;padding:3px 9px;font-size:11px;font-family:monospace;background:rgba('+cCol+',.08);color:rgba('+cCol+',1)" title="'+label+'">'
+              + '⇌ <span style="font-size:9px;opacity:.7">'+label+'</span> ' + c.concId + ' · ' + cLbl + ' · ' + ts
+              + '</span>';
+          }
+          return chip(ra, 'Conc. Apuração') + chip(rf2, 'Conc. Financeira');
+        })(r.concRegApur, r.concRegFin)
       + '</div></div>';
     var nfNum = nf.numero || '';
     var verDFBtn = nfNum
@@ -5648,6 +5678,13 @@ document.addEventListener('DOMContentLoaded', function() {
             rf.tipoNF = nf.tipo || 'entrada';
           });
         });
+
+        // Pré-gerar registros de conciliação (apuração + financeira) para todas as DFs
+        // para que fiquem disponíveis em históricos de DF e RF antes de o módulo de
+        // Conciliação ser visitado pelo usuário
+        if (typeof _concBuildLista === 'function') {
+          _concBuildLista('');
+        }
       }
 
       _postProcessarDados();
@@ -6971,10 +7008,12 @@ window.downloadGuiaDARF = function() {
       var evRgba  = { 'INGESTÃO':'73,197,177','VALIDAÇÃO':'34,197,94','GERAÇÃO RF':'59,130,246',
         'INCONSISTÊNCIA':'239,68,68','VENCIMENTO':'239,68,68','AGUARDANDO':'245,158,11',
         'APROPRIAÇÃO':'34,197,94','PAGAMENTO':'73,197,177','UTILIZAÇÃO':'139,92,246',
-        'EXTINÇÃO':'167,168,170','CONCILIAÇÃO':'139,92,246' };
+        'EXTINÇÃO':'167,168,170','CONCILIAÇÃO':'139,92,246',
+        'CONC APURAÇÃO':'59,130,246','CONC FINANCEIRA':'73,197,177' };
       var evIcons = { 'INGESTÃO':'↓','VALIDAÇÃO':'✓','GERAÇÃO RF':'◉','INCONSISTÊNCIA':'!',
         'VENCIMENTO':'✕','AGUARDANDO':'…','APROPRIAÇÃO':'✓','PAGAMENTO':'$','UTILIZAÇÃO':'◆',
-        'EXTINÇÃO':'■','CONCILIAÇÃO':'⇌' };
+        'EXTINÇÃO':'■','CONCILIAÇÃO':'⇌',
+        'CONC APURAÇÃO':'⇌','CONC FINANCEIRA':'⇌' };
 
       var allEvs = [];
 
