@@ -6854,15 +6854,23 @@ window.downloadGuiaDARF = function() {
     var start = (_ingPagina - 1) * _ingPorPagina;
     var slice = _ingFiltrados.slice(start, start + _ingPorPagina);
 
+    var _tipoCorMap = {
+      'NF-e':'#3B82F6','NFC-e':'#6366F1','NFCom':'#10B981','NF3-e':'#14B8A6',
+      'CT-e':'#F59E0B','NFS-e':'#8B5CF6','NFAg':'#22C55E','NFGás':'#0EA5E9',
+      'MDF-e':'#8A92A3','BP-e':'#EC4899'
+    };
     var html = '';
     slice.forEach(function(d) {
-      var chaveShort = d.chave.substring(0, 8) + '…' + d.chave.slice(-8);
+      var chaveShort = d.chave ? (d.chave.substring(0, 8) + '…' + d.chave.slice(-8)) : '—';
+      var tipoBase = d.tipo.replace(' Entrada','').replace(' Saída','');
+      var tCor = _tipoCorMap[tipoBase] || '#8A92A3';
+      var tipoBadge = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:' + tCor + '22;color:' + tCor + ';border:1px solid ' + tCor + '44;display:inline-block;margin-bottom:2px">' + tipoBase + '</span>';
       var nfNumCell = d.nfNumero
         ? '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline" onclick="event.stopPropagation();if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + d.nfNumero + '\')">' + d.nfNumero + '</span>'
         : '<span style="color:var(--txt3)">—</span>';
       html += '<tr>' +
-        '<td class="mono" style="font-size:11px;color:var(--txt2)">' + chaveShort + '</td>' +
         '<td>' + nfNumCell + '</td>' +
+        '<td style="font-size:11px;color:var(--txt2)">' + tipoBadge + '<br><span class="mono">' + chaveShort + '</span></td>' +
         '<td>' + _tipoLabel(d.tipo) + '</td>' +
         '<td style="font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + d.emitente + '</td>' +
         '<td class="r mono" style="font-size:12px">' + _fmtBRL(d.valor) + '</td>' +
