@@ -3102,7 +3102,7 @@ window._kbDrop = function(e, colId) {
 // ── Modal de detalhe do card kanban ──────────────────────────
 var _kbAcoesMap = {
   'Não conciliado': [
-    { label: 'Solicitar Conciliação Manual', icon: '🔄', desc: 'Abre processo de conciliação com a SEFAZ' },
+    { label: 'Solicitar Conciliação Manual', icon: '🔄', desc: 'Abre processo de conciliação manual no SplitHub' },
     { label: 'Comparar com NF Original',     icon: '📄', desc: 'Exibe os dados originais da NF para comparação' },
     { label: 'Enviar para Contabilidade',    icon: '📊', desc: 'Escala para a equipe de contabilidade' }
   ],
@@ -6484,18 +6484,16 @@ window.downloadGuiaDARF = function() {
     var schemaNFe = { tipo: 'Schema XML NF-e 4.0', ok: true, mensagem: 'Estrutura válida conforme XSD 4.0' };
     var campos = { tipo: 'Campos obrigatórios', ok: true, mensagem: 'Todos os campos obrigatórios presentes' };
     var cnpjV = { tipo: 'CNPJ emitente (Receita Federal)', ok: true, mensagem: 'CNPJ ativo e regular' };
-    var aliq = { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: true, mensagem: 'Alíquotas dentro do intervalo regulatório' };
     var dup = { tipo: 'Chave de acesso (unicidade)', ok: true, mensagem: 'Chave de acesso única no banco' };
 
     if (status === 'integrado') {
-      return [schemaNFe, campos, cnpjV, aliq, dup];
+      return [schemaNFe, campos, cnpjV, dup];
     }
     if (status === 'pendente') {
       return [
         schemaNFe,
         campos,
         { tipo: 'CNPJ emitente (Receita Federal)', ok: null, mensagem: 'Aguardando consulta à RF' },
-        { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: null, mensagem: 'Em processamento' },
         dup
       ];
     }
@@ -6507,15 +6505,14 @@ window.downloadGuiaDARF = function() {
         { tipo: 'Schema XML NF-e 4.0', ok: false, mensagem: 'Atributo versão fora do padrão SEFAZ' }
       ];
       var e = erros[Math.floor(rnd() * erros.length)];
-      return [e, campos, cnpjV, aliq, dup];
+      return [e, campos, cnpjV, dup];
     }
     if (status === 'erro_dados') {
       var errosDados = [
         { tipo: 'CNPJ emitente (Receita Federal)', ok: false, mensagem: 'CNPJ 00.000.000/0001-00 não localizado na RF' },
-        { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: false, mensagem: 'Alíquota CBS 8.5% fora do intervalo (0%–7.9%)' }
       ];
       var ed = errosDados[Math.floor(rnd() * errosDados.length)];
-      return [schemaNFe, campos, ed, aliq, dup];
+      return [schemaNFe, campos, ed, dup];
     }
     if (status === 'rejeitado') {
       return [
@@ -6536,7 +6533,7 @@ window.downloadGuiaDARF = function() {
         { tipo: 'Chave de acesso (unicidade)', ok: false, mensagem: 'Chave já existente — documento recebido em ' + _fmtData('2026-0' + (Math.floor(rnd()*6)+1) + '-' + String(Math.floor(rnd()*27)+1).padStart(2,'0')) }
       ];
     }
-    return [schemaNFe, campos, cnpjV, aliq, dup];
+    return [schemaNFe, campos, cnpjV, dup];
   }
 
   function _derivaValidacoes(status, vals) {
@@ -6665,7 +6662,6 @@ window.downloadGuiaDARF = function() {
           { tipo: 'Schema XML NF-e 4.0', ok: false, mensagem: errMsg },
           { tipo: 'Campos obrigatórios', ok: false, mensagem: 'Validação interrompida por falha de layout' },
           { tipo: 'CNPJ emitente (Receita Federal)', ok: null, mensagem: 'Não verificado — layout inválido' },
-          { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: null, mensagem: 'Não verificado — layout inválido' },
           { tipo: 'Chave de acesso (unicidade)', ok: null, mensagem: 'Não verificado — layout inválido' }
         ];
       } else if (status === 'erro_dados') {
@@ -6674,7 +6670,6 @@ window.downloadGuiaDARF = function() {
           { tipo: 'Schema XML NF-e 4.0', ok: true, mensagem: 'Estrutura válida conforme XSD 4.0' },
           { tipo: 'Campos obrigatórios', ok: true, mensagem: 'Todos os campos obrigatórios presentes' },
           { tipo: 'CNPJ emitente (Receita Federal)', ok: i % 3 === 0 ? false : true, mensagem: i % 3 === 0 ? 'CNPJ inativo na Receita Federal' : 'CNPJ ativo e regular' },
-          { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: i % 3 === 2 ? false : true, mensagem: i % 3 === 2 ? errMsg2 : 'Alíquotas dentro do intervalo regulatório' },
           { tipo: 'Chave de acesso (unicidade)', ok: true, mensagem: 'Chave única na base' }
         ];
       } else {
