@@ -321,9 +321,9 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   // ── Timeline NF: agrega eventos de todos os RFs ─────────────────────────
   var evRgba  = { 'INGESTÃO':'73,197,177', 'VALIDAÇÃO':'34,197,94', 'GERAÇÃO RF':'59,130,246',
     'INCONSISTÊNCIA':'239,68,68', 'VENCIMENTO':'239,68,68', 'AGUARDANDO':'245,158,11',
-    'APROPRIAÇÃO':'34,197,94', 'PAGAMENTO':'73,197,177', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170' };
+    'APROPRIAÇÃO':'34,197,94', 'PAGAMENTO':'73,197,177', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246' };
   var evIcons = { 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!',
-    'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■' };
+    'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌' };
 
   var allEvents = [];
   var d0 = r.data || '';
@@ -524,6 +524,16 @@ window._rfGerarHistorico = function(rf, nf) {
   ev.push(mkEv(MK(A(d0,2),'10:00'),     'GERAÇÃO RF',    isSaida ? 'Débitos' : 'Créditos', 'SplitHub',
     'RF ' + rf.id + ' gerado · ' + (rf.tipoFiscal || '').toUpperCase() + ' · alíquota de transição 2026 · Art. 48 LC 214/2025', 'ok'));
 
+  // Evento de conciliação (gerado pelo módulo de Conciliação SplitHub)
+  var _concR = rf._concReg || nf._concReg || null;
+  if (_concR) {
+    var _concCls = _concR.concStatus === 'confirmada' ? 'ok' : _concR.concStatus === 'divergente' ? 'erro' : 'pending';
+    var _concDescStatus = { confirmada: 'Confirmada', divergente: 'Divergente', pendente: 'Pendente' }[_concR.concStatus] || _concR.concStatus;
+    ev.push(mkEv(_concR.concTs, 'CONCILIAÇÃO', 'Conciliação', 'SplitHub',
+      'Operação de conciliação registrada · status: ' + _concDescStatus +
+      ' · ID: ' + _concR.concId + ' · ' + (rf.tipoFiscal || '').toUpperCase(), _concCls));
+  }
+
   var _sc_hist = rf.statusCredito || rf.status || '';
   var _sr_hist = rf.statusRegistro || null;
 
@@ -567,8 +577,30 @@ window._rfGerarHistorico = function(rf, nf) {
       'Guia ' + (rf.tipoFiscal === 'ibs' ? 'IBS' : 'DARF CBS') + ' quitada · ' + ff(rf.valor) + ' · via ' + (rf.metodoPagamento || nf.metodoPagamento || 'Fornecedor'), 'ok'));
   }
   if (_sc_hist === 'utilizado') {
-    ev.push(mkEv(MK(A(d0,20),'14:18'), 'UTILIZAÇÃO',    'Pagamentos',               'SplitHub',
-      'Crédito aplicado como abatimento em débito tributário · método: ' + (rf.metodoExtincao || 'Compensação'), 'ok'));
+    var _utilValor = ff(rf.valor || 0);
+    var _utilDesc = 'Crédito de ' + _utilValor + ' aplicado como abatimento em débito tributário · método: ' + (rf.metodoExtincao || 'Compensação');
+    // Vincular deterministicamente a NFs de saída com base no ID do RF
+    if (rf._dfsSaidaAbatidos && rf._dfsSaidaAbatidos.length) {
+      var _saidaRefs = rf._dfsSaidaAbatidos.map(function(s){ return 'DF ' + s.numero + ' (' + ff(s.valor) + ')'; }).join(', ');
+      _utilDesc += ' · DFs de saída abatidas: ' + _saidaRefs;
+    } else {
+      var _saidaNFs = (window.nfListaFiltradaGlobal || []).filter(function(n){ return n.tipo === 'saida'; });
+      if (_saidaNFs.length > 0) {
+        var _rfSeed = parseInt((rf.id || '').replace(/\D/g,''), 10) || 1;
+        var _sIdx1 = _rfSeed % _saidaNFs.length;
+        var _sIdx2 = (_rfSeed * 7 + 3) % _saidaNFs.length;
+        var _refs = [_saidaNFs[_sIdx1]];
+        if (_sIdx2 !== _sIdx1) _refs.push(_saidaNFs[_sIdx2]);
+        // Fracionar valor abatido entre as saídas selecionadas
+        var _totalAbat = rf.valor || 0;
+        var _saidaStr = _refs.map(function(sn, i) {
+          var frac = _refs.length > 1 ? (i === 0 ? Math.round(_totalAbat * 0.6) : _totalAbat - Math.round(_totalAbat * 0.6)) : _totalAbat;
+          return 'DF ' + sn.numero + ' (' + ff(frac) + ')';
+        }).join(', ');
+        _utilDesc += ' · DFs de saída envolvidas: ' + _saidaStr;
+      }
+    }
+    ev.push(mkEv(MK(A(d0,20),'14:18'), 'UTILIZAÇÃO', 'Pagamentos', 'SplitHub', _utilDesc, 'ok'));
   }
   if (isSaida && rf.dataExtincao && rf.dataExtincao !== '—') {
     var dExtISO = rf.dataExtincao.indexOf('/') !== -1
@@ -607,8 +639,8 @@ window.abrirDetalheRF = function(rfId) {
   var stRegLab = rfSR ? (stRegLabs[rfSR] || rfSR) : null;
   var stRegRgb = rfSR ? (stRegRgbs[rfSR] || '167,168,170') : null;
 
-  var evRgba  = { 'INGESTÃO':'73,197,177', 'VALIDAÇÃO':'34,197,94', 'GERAÇÃO RF':'59,130,246', 'INCONSISTÊNCIA':'239,68,68', 'VENCIMENTO':'239,68,68', 'AGUARDANDO':'245,158,11', 'APROPRIAÇÃO':'34,197,94', 'PAGAMENTO':'73,197,177', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170' };
-  var evIcons = { 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■' };
+  var evRgba  = { 'INGESTÃO':'73,197,177', 'VALIDAÇÃO':'34,197,94', 'GERAÇÃO RF':'59,130,246', 'INCONSISTÊNCIA':'239,68,68', 'VENCIMENTO':'239,68,68', 'AGUARDANDO':'245,158,11', 'APROPRIAÇÃO':'34,197,94', 'PAGAMENTO':'73,197,177', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246' };
+  var evIcons = { 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌' };
 
   // Ordenar decrescente por timestamp (mais recente primeiro)
   eventos.sort(function(a, b) {
@@ -2089,13 +2121,28 @@ function _concBuildLista(filtroMes) {
         : 'Emitir guia DARF/IBS';
     }
 
+    // ── Registro de conciliação ──────────────────────────────────────────
+    var concStatus = (statusApur === 'confirmado' && statusFin === 'completo') ? 'confirmada'
+      : statusApur === 'divergente' ? 'divergente' : 'pendente';
+    var concSeed2  = _concHash((nf.numero || '') + (nf.cnpj || '') + 'CONC' + idx);
+    var concId     = 'CONC-' + (concSeed2 >>> 0).toString(16).toUpperCase().padStart(8, '0');
+    var concHora   = String(11 + (concSeed2 % 3)).padStart(2,'0') + ':' + String((concSeed2 % 59) + 1).padStart(2,'0');
+    var concTsISO  = dataApur + 'T' + concHora;
+    var concReg = { concId: concId, concTs: concTsISO, concStatus: concStatus };
+
+    // Anexar ao NF e RFs para que _rfGerarHistorico os encontre
+    nf._concReg = concReg;
+    if (ibsRF) ibsRF._concReg = concReg;
+    if (cbsRF) cbsRF._concReg = concReg;
+
     result.push({
       nf: nf, idx: idx,
       statusApur: statusApur, protocolo: protocolo,
       valorDF: valorDF, valorGov: valorGov, deltaValor: deltaValor, dataApur: dataApur,
       ibsRF: ibsRF, cbsRF: cbsRF,
       ibsPago: !!ibsPago, cbsPago: !!cbsPago, ibsInc: ibsInc, cbsInc: cbsInc,
-      statusFin: statusFin, comprovante: comprovante, proxAcao: proxAcao
+      statusFin: statusFin, comprovante: comprovante, proxAcao: proxAcao,
+      concReg: concReg
     });
   });
   return result;
@@ -2338,10 +2385,21 @@ function _concUnifiedRender() {
       + stageApur(r)
       + stageFin(r)
       + '</div>'
-      + '<div style="border-top:1px solid var(--border);padding-top:8px;display:flex;gap:8px;flex-wrap:wrap">'
+      + '<div style="border-top:1px solid var(--border);padding-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
       + rfChip(r.ibsRF, 'IBS')
       + rfChip(r.cbsRF, 'CBS')
+      + (r.concReg ? (function(c){
+          var cCol = c.concStatus==='confirmada'?'34,197,94':c.concStatus==='divergente'?'239,68,68':'245,158,11';
+          var cLbl = {confirmada:'Confirmada',divergente:'Divergente',pendente:'Pendente'}[c.concStatus]||c.concStatus;
+          return '<span style="display:inline-flex;align-items:center;gap:5px;border:1px solid rgba('+cCol+',.3);border-radius:6px;padding:3px 9px;font-size:11px;font-family:monospace;background:rgba('+cCol+',.08);color:rgba('+cCol+',1)" title="Registro de conciliação SplitHub">'
+            + '⇌ ' + c.concId + ' · ' + cLbl + ' · ' + (window._rfFmtTS ? window._rfFmtTS(c.concTs) : c.concTs)
+            + '</span>';
+        })(r.concReg) : '')
       + '</div></div>';
+    var nfNum = nf.numero || '';
+    var verDFBtn = nfNum
+      ? '<button onclick="event.stopPropagation();if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + nfNum + '\')" style="background:rgba(73,197,177,.1);border:1px solid rgba(73,197,177,.3);border-radius:5px;color:var(--teal);cursor:pointer;font-size:10px;font-weight:700;padding:3px 9px;white-space:nowrap">Ver DF</button>'
+      : '<span style="color:var(--txt3)">—</span>';
     html += '<tr style="cursor:pointer" onclick="(function(el){var nx=el.nextElementSibling;nx.style.display=nx.style.display===\'none\'?\'table-row\':\'none\';})(this)">'
       + '<td style="font-weight:600;color:var(--txt1);white-space:nowrap"><span style="color:var(--txt3);font-size:10px;margin-right:4px">▶</span>' + nfLabel + '</td>'
       + '<td>' + tipoBadge + '</td>'
@@ -2350,9 +2408,10 @@ function _concUnifiedRender() {
       + '<td class="r" style="font-family:monospace;' + deltaColor + '">' + deltaStr + '</td>'
       + '<td>' + _apurBadge(r.statusApur) + '</td>'
       + '<td>' + _finBadge(r.statusFin) + '</td>'
+      + '<td>' + verDFBtn + '</td>'
       + '</tr>'
       + '<tr style="display:none;background:rgba(73,197,177,.04)">'
-      + '<td colspan="7" style="padding:0">' + detail + '</td></tr>';
+      + '<td colspan="8" style="padding:0">' + detail + '</td></tr>';
   });
   tbody.innerHTML = html;
 }
@@ -6743,8 +6802,12 @@ window.downloadGuiaDARF = function() {
     var html = '';
     slice.forEach(function(d) {
       var chaveShort = d.chave.substring(0, 8) + '…' + d.chave.slice(-8);
+      var nfNumCell = d.nfNumero
+        ? '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline" onclick="event.stopPropagation();if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + d.nfNumero + '\')">' + d.nfNumero + '</span>'
+        : '<span style="color:var(--txt3)">—</span>';
       html += '<tr>' +
         '<td class="mono" style="font-size:11px;color:var(--txt2)">' + chaveShort + '</td>' +
+        '<td>' + nfNumCell + '</td>' +
         '<td>' + _tipoLabel(d.tipo) + '</td>' +
         '<td style="font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + d.emitente + '</td>' +
         '<td class="r mono" style="font-size:12px">' + _fmtBRL(d.valor) + '</td>' +
@@ -6759,7 +6822,7 @@ window.downloadGuiaDARF = function() {
     });
 
     if (!html) {
-      html = '<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:40px">Nenhum documento encontrado para os filtros selecionados.</td></tr>';
+      html = '<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:40px">Nenhum documento encontrado para os filtros selecionados.</td></tr>';
     }
 
     tbody.innerHTML = html;
@@ -6907,9 +6970,11 @@ window.downloadGuiaDARF = function() {
     if (histEl) {
       var evRgba  = { 'INGESTÃO':'73,197,177','VALIDAÇÃO':'34,197,94','GERAÇÃO RF':'59,130,246',
         'INCONSISTÊNCIA':'239,68,68','VENCIMENTO':'239,68,68','AGUARDANDO':'245,158,11',
-        'APROPRIAÇÃO':'34,197,94','PAGAMENTO':'73,197,177','UTILIZAÇÃO':'139,92,246','EXTINÇÃO':'167,168,170' };
+        'APROPRIAÇÃO':'34,197,94','PAGAMENTO':'73,197,177','UTILIZAÇÃO':'139,92,246',
+        'EXTINÇÃO':'167,168,170','CONCILIAÇÃO':'139,92,246' };
       var evIcons = { 'INGESTÃO':'↓','VALIDAÇÃO':'✓','GERAÇÃO RF':'◉','INCONSISTÊNCIA':'!',
-        'VENCIMENTO':'✕','AGUARDANDO':'…','APROPRIAÇÃO':'✓','PAGAMENTO':'$','UTILIZAÇÃO':'◆','EXTINÇÃO':'■' };
+        'VENCIMENTO':'✕','AGUARDANDO':'…','APROPRIAÇÃO':'✓','PAGAMENTO':'$','UTILIZAÇÃO':'◆',
+        'EXTINÇÃO':'■','CONCILIAÇÃO':'⇌' };
 
       var allEvs = [];
 
