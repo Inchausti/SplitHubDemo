@@ -5387,6 +5387,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function _postProcessarDados() {
+      try { window._renderGESelects && window._renderGESelects(); } catch(e) {}
       try { window._enriquecerNFsSaida(); } catch(e) { console.error('[data-sync-fixed] Erro _enriquecerNFsSaida:', e); }
       try {
         // Atribuir cnpjComprador round-robin pelos CNPJs ativos da Positivo
@@ -5877,6 +5878,31 @@ window._aplicarFiltroCnpjEmpresa = function() {
   try { window.renderizarRFsInconsistencias(); } catch(e) {}
   try { window.renderizarTabelaDebitos(); } catch(e) {}
   try { window.atualizarInteligencia(); } catch(e) {}
+};
+
+// ── Filtro Grupo Econômico — aparece no header de cada módulo ──────────────
+
+window._renderGESelects = function() {
+  var opts = '<option value="">Grupo Econômico — Todos</option>';
+  (window._orgCnpjs || []).forEach(function(c) {
+    var label = c.uf + ' · ' + c.tipo + ' · ' + c.cnpj;
+    if (c.status === 'inativo') label += ' (inativo)';
+    opts += '<option value="' + c.id + '">' + label + '</option>';
+  });
+  document.querySelectorAll('.ge-filter').forEach(function(sel) {
+    var cur = sel.value;
+    sel.innerHTML = opts;
+    sel.value = cur;
+  });
+};
+
+window.filtrarGrupoEconomico = function(id) {
+  window._empresasAtivas = id ? [parseInt(id, 10)] : [];
+  // Sincroniza todos os ge-filter selects
+  document.querySelectorAll('.ge-filter').forEach(function(sel) { sel.value = id; });
+  // Sincroniza dropdown dashboard
+  try { window._sbAtualizarLabel(); } catch(e) {}
+  window._aplicarFiltroCnpjEmpresa();
 };
 
 // Repopular filtro dashboard com CNPJs da organização
@@ -6906,10 +6932,14 @@ window.downloadGuiaDARF = function() {
   }
 
   window.ingestaoInit = function() {
+    // Garantir que nfListaFiltradaGlobal está populada
+    if (!(window.nfListaFiltradaGlobal || []).length) {
+      try { if (typeof nfRenderLista === 'function') nfRenderLista(); } catch(e) {}
+    }
     var nfsAtual = (window.nfListaFiltradaGlobal || []).length;
-    if (!_ingIniciado || nfsAtual > 0) {
+    if (!_ingIniciado || nfsAtual > 0 || !_ingDados.length) {
       _ingDados = _gerarDadosDeGlobais();
-      _ingIniciado = true;
+      _ingIniciado = nfsAtual > 0;
     }
     window._ingDadosGlobal = _ingDados;
     _ingFiltrados = _ingDados.slice();
