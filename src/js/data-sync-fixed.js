@@ -6555,7 +6555,7 @@ window.downloadGuiaDARF = function() {
         campos,
         { tipo: 'Assinatura digital (SEFAZ)', ok: false, mensagem: 'Código 228 — Rejeição: assinatura inválida do XML' },
         cnpjV,
-        aliq,
+        { tipo: 'Alíquota CBS/IBS', ok: null, mensagem: 'Não verificado — documento rejeitado' },
         dup
       ];
     }
@@ -6564,7 +6564,7 @@ window.downloadGuiaDARF = function() {
         schemaNFe,
         campos,
         cnpjV,
-        aliq,
+        { tipo: 'Alíquota CBS/IBS', ok: true, mensagem: 'Alíquota válida' },
         { tipo: 'Chave de acesso (unicidade)', ok: false, mensagem: 'Chave já existente — documento recebido em ' + _fmtData('2026-0' + (Math.floor(rnd()*6)+1) + '-' + String(Math.floor(rnd()*27)+1).padStart(2,'0')) }
       ];
     }
