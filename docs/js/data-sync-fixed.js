@@ -4715,7 +4715,7 @@ window.renderizarTabelaPagamentos = function() {
         rfId: rf.id || '',
         rf: rf.id || '—', forn: rf.entidade || nf.entidade || '—',
         cnpj: rf.cnpj || nf.cnpj || '—',
-        nfVinc: rf.nfVinculada || nf.numero || '—',
+        nfVinc: rf.nfVinculada || ((nf.tipoDF ? nf.tipoDF + ' ' : '') + (nf.numero || '')) || '—',
         tipo: tipoCol, tipoNF: nf.tipo || 'entrada', valor: valor,
         dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, status: rfSt,
         metodo: rf.metodoPagamento || nf.metodoPagamento || '—'
