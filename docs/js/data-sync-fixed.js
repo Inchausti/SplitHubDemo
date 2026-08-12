@@ -6483,22 +6483,18 @@ window.downloadGuiaDARF = function() {
   function _validacoesParaStatus(status, rnd) {
     var schemaNFe = { tipo: 'Schema XML NF-e 4.0', ok: true, mensagem: 'Estrutura válida conforme XSD 4.0' };
     var campos = { tipo: 'Campos obrigatórios', ok: true, mensagem: 'Todos os campos obrigatórios presentes' };
-    var cert = { tipo: 'Validade do certificado', ok: true, mensagem: 'Certificado válido até 12/2027' };
     var cnpjV = { tipo: 'CNPJ emitente (Receita Federal)', ok: true, mensagem: 'CNPJ ativo e regular' };
-    var cfopV = { tipo: 'CFOP compatível com operação', ok: true, mensagem: 'CFOP válido para o tipo de operação' };
     var aliq = { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: true, mensagem: 'Alíquotas dentro do intervalo regulatório' };
     var dup = { tipo: 'Chave de acesso (unicidade)', ok: true, mensagem: 'Chave de acesso única no banco' };
 
     if (status === 'integrado') {
-      return [schemaNFe, campos, cert, cnpjV, cfopV, aliq, dup];
+      return [schemaNFe, campos, cnpjV, aliq, dup];
     }
     if (status === 'pendente') {
       return [
         schemaNFe,
         campos,
-        cert,
         { tipo: 'CNPJ emitente (Receita Federal)', ok: null, mensagem: 'Aguardando consulta à RF' },
-        { tipo: 'CFOP compatível com operação', ok: null, mensagem: 'Aguardando validação de dados' },
         { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: null, mensagem: 'Em processamento' },
         dup
       ];
@@ -6511,16 +6507,15 @@ window.downloadGuiaDARF = function() {
         { tipo: 'Schema XML NF-e 4.0', ok: false, mensagem: 'Atributo versão fora do padrão SEFAZ' }
       ];
       var e = erros[Math.floor(rnd() * erros.length)];
-      return [e, campos, cert, cnpjV, cfopV, aliq, dup];
+      return [e, campos, cnpjV, aliq, dup];
     }
     if (status === 'erro_dados') {
       var errosDados = [
         { tipo: 'CNPJ emitente (Receita Federal)', ok: false, mensagem: 'CNPJ 00.000.000/0001-00 não localizado na RF' },
-        { tipo: 'CFOP compatível com operação', ok: false, mensagem: 'CFOP 5101 incompatível com NF-e de entrada' },
         { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: false, mensagem: 'Alíquota CBS 8.5% fora do intervalo (0%–7.9%)' }
       ];
       var ed = errosDados[Math.floor(rnd() * errosDados.length)];
-      return [schemaNFe, campos, cert, ed, cfopV, aliq, dup];
+      return [schemaNFe, campos, ed, aliq, dup];
     }
     if (status === 'rejeitado') {
       return [
@@ -6528,7 +6523,6 @@ window.downloadGuiaDARF = function() {
         campos,
         { tipo: 'Assinatura digital (SEFAZ)', ok: false, mensagem: 'Código 228 — Rejeição: assinatura inválida do XML' },
         cnpjV,
-        cfopV,
         aliq,
         dup
       ];
@@ -6537,14 +6531,12 @@ window.downloadGuiaDARF = function() {
       return [
         schemaNFe,
         campos,
-        cert,
         cnpjV,
-        cfopV,
         aliq,
         { tipo: 'Chave de acesso (unicidade)', ok: false, mensagem: 'Chave já existente — documento recebido em ' + _fmtData('2026-0' + (Math.floor(rnd()*6)+1) + '-' + String(Math.floor(rnd()*27)+1).padStart(2,'0')) }
       ];
     }
-    return [schemaNFe, campos, cert, cnpjV, cfopV, aliq, dup];
+    return [schemaNFe, campos, cnpjV, aliq, dup];
   }
 
   function _derivaValidacoes(status, vals) {
@@ -6672,9 +6664,7 @@ window.downloadGuiaDARF = function() {
         validacoes = [
           { tipo: 'Schema XML NF-e 4.0', ok: false, mensagem: errMsg },
           { tipo: 'Campos obrigatórios', ok: false, mensagem: 'Validação interrompida por falha de layout' },
-          { tipo: 'Validade do certificado', ok: null, mensagem: 'Não verificado — layout inválido' },
           { tipo: 'CNPJ emitente (Receita Federal)', ok: null, mensagem: 'Não verificado — layout inválido' },
-          { tipo: 'CFOP compatível com operação', ok: null, mensagem: 'Não verificado — layout inválido' },
           { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: null, mensagem: 'Não verificado — layout inválido' },
           { tipo: 'Chave de acesso (unicidade)', ok: null, mensagem: 'Não verificado — layout inválido' }
         ];
@@ -6683,9 +6673,7 @@ window.downloadGuiaDARF = function() {
         validacoes = [
           { tipo: 'Schema XML NF-e 4.0', ok: true, mensagem: 'Estrutura válida conforme XSD 4.0' },
           { tipo: 'Campos obrigatórios', ok: true, mensagem: 'Todos os campos obrigatórios presentes' },
-          { tipo: 'Validade do certificado', ok: true, mensagem: 'Certificado válido até 12/2027' },
           { tipo: 'CNPJ emitente (Receita Federal)', ok: i % 3 === 0 ? false : true, mensagem: i % 3 === 0 ? 'CNPJ inativo na Receita Federal' : 'CNPJ ativo e regular' },
-          { tipo: 'CFOP compatível com operação', ok: i % 3 === 1 ? false : true, mensagem: i % 3 === 1 ? errMsg2 : 'CFOP válido para a operação' },
           { tipo: 'Alíquotas IBS/CBS (LC 214/2025)', ok: i % 3 === 2 ? false : true, mensagem: i % 3 === 2 ? errMsg2 : 'Alíquotas dentro do intervalo regulatório' },
           { tipo: 'Chave de acesso (unicidade)', ok: true, mensagem: 'Chave única na base' }
         ];
