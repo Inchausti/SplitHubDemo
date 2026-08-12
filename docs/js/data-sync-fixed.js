@@ -6511,7 +6511,8 @@ window.downloadGuiaDARF = function() {
         valLayout: vDeriv.valLayout,
         valValidade: vDeriv.valValidade,
         valDados: vDeriv.valDados,
-        validacoes: validacoes
+        validacoes: validacoes,
+        nfNumero: nf.numero  // referência para lookup de histórico
       });
     });
 
@@ -6898,6 +6899,98 @@ window.downloadGuiaDARF = function() {
           '</div>';
       });
       valDiv.innerHTML = vhtml;
+    }
+
+    // ── Trilha de auditoria ───────────────────────────────────────────────
+    var histEl    = document.getElementById('ing-modal-historico');
+    var histTitEl = document.getElementById('ing-modal-hist-titulo');
+    if (histEl) {
+      var evRgba  = { 'INGESTÃO':'73,197,177','VALIDAÇÃO':'34,197,94','GERAÇÃO RF':'59,130,246',
+        'INCONSISTÊNCIA':'239,68,68','VENCIMENTO':'239,68,68','AGUARDANDO':'245,158,11',
+        'APROPRIAÇÃO':'34,197,94','PAGAMENTO':'73,197,177','UTILIZAÇÃO':'139,92,246','EXTINÇÃO':'167,168,170' };
+      var evIcons = { 'INGESTÃO':'↓','VALIDAÇÃO':'✓','GERAÇÃO RF':'◉','INCONSISTÊNCIA':'!',
+        'VENCIMENTO':'✕','AGUARDANDO':'…','APROPRIAÇÃO':'✓','PAGAMENTO':'$','UTILIZAÇÃO':'◆','EXTINÇÃO':'■' };
+
+      var allEvs = [];
+
+      // Eventos de ingestão (sempre presentes, independente do status)
+      var MK = window._rfMkTS, FTS = window._rfFmtTS, A = window._rfAddDays;
+      var d0 = d.dataEmissao;
+
+      allEvs.push({ ts: MK(d0,'08:32'), data: FTS(MK(d0,'08:32')),
+        tipo:'INGESTÃO', modulo:'Ingestão de DFs', ator:'SEFAZ',
+        desc: (d.tipo||'NF-e') + ' recebida · chave: ' + d.chave.substring(0,14) + '…' +
+              ' · emitente: ' + d.emitente, cls:'ok' });
+
+      if (d.status === 'integrado') {
+        allEvs.push({ ts: MK(A(d0,1),'09:15'), data: FTS(MK(A(d0,1),'09:15')),
+          tipo:'VALIDAÇÃO', modulo:'Ingestão de DFs', ator:'SplitHub',
+          desc:'Schema XML · dados fiscais · emitente/destinatário — todos aprovados · documento aceito', cls:'ok' });
+      } else {
+        // Eventos de falha por tipo de status
+        var falhaDesc = {
+          erro_layout: 'Falha na validação de layout — estrutura XML inválida · documento rejeitado na triagem',
+          erro_dados:  'Falha na validação de dados — inconsistência fiscal detectada · documento suspenso',
+          rejeitado:   'Documento rejeitado pela SEFAZ · assinatura ou autorização inválida',
+          duplicado:   'Chave DF já existente na base · documento descartado como duplicata',
+          pendente:    'Validações em andamento · aguardando resposta dos serviços de validação'
+        };
+        var falhaTS = MK(A(d0,1), d.status === 'pendente' ? '09:00' : '09:18');
+        allEvs.push({ ts: falhaTS, data: FTS(falhaTS),
+          tipo: (d.status === 'pendente' ? 'AGUARDANDO' : 'INCONSISTÊNCIA'),
+          modulo:'Ingestão de DFs', ator:'SplitHub',
+          desc: falhaDesc[d.status] || 'Status: ' + d.status,
+          cls: d.status === 'pendente' ? 'pending' : 'erro' });
+      }
+
+      // Histórico completo dos RFs (apenas DFs integrados com NF vinculada)
+      if (d.nfNumero && window._rfGerarHistorico) {
+        var nfObj = (window.nfListaFiltradaGlobal || []).find(function(n){ return n.numero === d.nfNumero; });
+        if (nfObj && nfObj.registrosFiscais) {
+          nfObj.registrosFiscais.forEach(function(rf) {
+            var evs = window._rfGerarHistorico(rf, nfObj);
+            // Pular INGESTÃO e VALIDAÇÃO — já adicionados no nível DF
+            evs.slice(2).forEach(function(ev) {
+              var tfSuf = rf.tipoFiscal ? ' · ' + rf.tipoFiscal.toUpperCase() : '';
+              allEvs.push({ ts: ev.ts || '—', data: ev.data,
+                tipo: ev.tipo, modulo: ev.modulo, ator: ev.ator,
+                desc: ev.desc + (ev.tipo === 'GERAÇÃO RF' ? tfSuf : ''), cls: ev.cls });
+            });
+          });
+        }
+      }
+
+      // Ordenar decrescente
+      allEvs.sort(function(a,b){
+        var ta=a.ts||'—',tb=b.ts||'—';
+        if(ta==='—'&&tb==='—')return 0; if(ta==='—')return 1; if(tb==='—')return -1;
+        return ta>tb?-1:ta<tb?1:0;
+      });
+
+      if (histTitEl) histTitEl.textContent = 'Trilha de Auditoria · ' + allEvs.length + ' evento' + (allEvs.length!==1?'s':'');
+
+      var tlH = '';
+      allEvs.forEach(function(ev, i) {
+        var rgba    = evRgba[ev.tipo]  || '167,168,170';
+        var dotRgba = ev.cls==='erro'  ? '239,68,68' : ev.cls==='pending' ? '245,158,11' : rgba;
+        var icon    = evIcons[ev.tipo] || '◯';
+        var isLast  = i === allEvs.length - 1;
+        tlH += '<div style="display:flex;gap:12px">'
+          + '<div style="display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0">'
+          + '<div style="width:28px;height:28px;border-radius:50%;background:rgba('+dotRgba+',.15);border:1.5px solid rgba('+dotRgba+',.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba('+dotRgba+',1)">'+icon+'</div>'
+          + (!isLast ? '<div style="width:1px;flex:1;background:rgba(128,128,128,.2);margin:3px 0;min-height:20px"></div>' : '')
+          + '</div>'
+          + '<div style="flex:1;padding-bottom:'+(isLast?'0':'22')+'px">'
+          + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">'
+          + '<span style="background:rgba('+rgba+',.12);color:rgba('+rgba+',1);border:1px solid rgba('+rgba+',.3);border-radius:3px;padding:1px 7px;font-size:9px;font-weight:700;letter-spacing:.07em">'+ev.tipo+'</span>'
+          + '<span style="font-size:10px;color:var(--txt3);font-family:monospace">'+ev.data+'</span>'
+          + '</div>'
+          + '<div style="font-size:12px;color:var(--txt1);line-height:1.55;margin-bottom:3px">'+ev.desc+'</div>'
+          + '<div style="font-size:10px;color:var(--txt2)">'+ev.modulo+' · '+ev.ator+'</div>'
+          + '</div>'
+          + '</div>';
+      });
+      histEl.innerHTML = tlH || '<div style="color:var(--txt3);font-size:12px;font-style:italic">Nenhum evento disponível.</div>';
     }
 
     var modal = document.getElementById('ing-modal');
