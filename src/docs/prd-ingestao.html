@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRD — Ingestão de DF · SplitHub v1.4</title>
+<title>PRD — Ingestão de DF · SplitHub v1.5</title>
 <style>
 :root {
   --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --brd: #DDE1EA;
@@ -131,11 +131,12 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
     <a href="prd-ingestao-v1.2.html">v1.2</a>
     <a href="prd-ingestao-v1.3.html">v1.3</a>
     <a href="prd-ingestao-v1.4.html">v1.4</a>
-    <a href="prd-ingestao.html" class="current">Última (v1.4)</a>
+    <a href="prd-ingestao-v1.5.html">v1.5</a>
+    <a href="prd-ingestao.html" class="current" style="margin-left:4px">Última versão (esta)</a>
   </div>
 
   <div class="meta-row">
-    <div class="meta-item"><div class="meta-label">Versão</div><div class="meta-val">v1.4</div></div>
+    <div class="meta-item"><div class="meta-label">Versão</div><div class="meta-val">v1.5</div></div>
     <div class="meta-item"><div class="meta-label">Status</div><div class="meta-val"><span class="chip teal">Revisado</span></div></div>
     <div class="meta-item"><div class="meta-label">Data</div><div class="meta-val">Ago/2026</div></div>
     <div class="meta-item"><div class="meta-label">Módulo</div><div class="meta-val">Admin → Ingestão de DFs</div></div>
@@ -221,7 +222,7 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
         <div class="pipe-box" style="border-top:3px solid var(--txt2)">
           <div class="pipe-num" style="color:var(--txt2)">④</div>
           <div class="pipe-lbl">Val. Dados</div>
-          <div class="pipe-sub">CNPJ, CFOP, alíq.</div>
+          <div class="pipe-sub">Integridade + unicidade</div>
         </div>
       </div>
       <div class="pipe-step">
@@ -252,12 +253,8 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
           <tr>
             <td>④ Val. Dados</td>
             <td>
-              CNPJ emitente válido e ativo na Receita Federal (<code>niEmitente</code>) <br>
-              CNPJ destinatário (<code>niAdquirente</code>) pertence ao grupo econômico cadastrado <br>
-              Chave de acesso íntegra (cDV) <br>
-              CFOP compatível com tipo de operação <br>
-              Alíquota CBS dentro do intervalo regulatório (0%–8%) <br>
-              Duplicidade: chave não existente na base
+              Dados do documento íntegros e consistentes com o XML recebido <br>
+              Chave de acesso de 44 dígitos única na plataforma (unicidade de <code>chaveDfe</code>)
             </td>
             <td><span class="chip ok">Dados OK</span></td>
             <td><span class="chip err">Inconsistência de Dados</span> ou <span class="chip warn">Duplicado</span></td>
@@ -394,6 +391,10 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
       <div class="card-title">RF-ING-06 · Importação manual</div>
       <p style="font-size:13px;color:var(--txt2)">Interface de upload (XML/ZIP) com feedback em tempo real: progresso de validação, lista de erros por arquivo, resumo de DFs integrados vs. rejeitados.</p>
     </div>
+    <div class="card">
+      <div class="card-title">RF-ING-07 · Modal de detalhe expandido e visualizador de documento auxiliar</div>
+      <p style="font-size:13px;color:var(--txt2)">O modal de detalhe do DF deve exibir todos os campos relevantes do documento (emitente completo com IE e UF, destinatário, dados da operação, valores discriminados IBS/CBS/Líquido, chave 44 dígitos) e os Registros Fiscais vinculados como cards clicáveis. Um botão com label dinâmico por tipo de DF (<code>Visualizar DANFE</code>, <code>Visualizar DACTE</code>, etc.) abre em nova janela o documento auxiliar gerado pelo SplitHub, pronto para impressão/PDF via <code>window.print()</code>.</p>
+    </div>
   </div>
 
   <!-- 7. Não-funcionais -->
@@ -421,13 +422,37 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
         <li>Filtro Grupo Econômico: filtra por CNPJ do destinatário (niAdquirente)</li>
       </ul>
     </div>
+    </div>
     <div class="card">
       <div class="card-title">Aba Listagem</div>
       <ul>
-        <li>Colunas: Chave DF (44 dígitos truncados), ID DF (tipo + número, ex: <code>NF-e 000001</code>), Tipo DF, Emitente, Valor, Emissão, Ingestão, Validações (Layout / Validade / Dados), Status, Ação</li>
+        <li>Colunas: <strong>ID DF</strong> (tipo + número como link clicável, ex: <code>NF-e 000001</code>, sem quebra de linha), <strong>Chave DF</strong> (44 dígitos truncados), <strong>Tipo DF</strong>, Emitente, Valor, Emissão, Ingestão, <strong>Layout</strong> ⓘ, <strong>Dados</strong> ⓘ, Status, Ação</li>
+        <li>Colunas <strong>Layout</strong> e <strong>Dados</strong> exibem tooltip descritivo ao hover (<code>ⓘ</code>): Layout explica validação XSD + assinatura digital; Dados explica verificação de integridade + unicidade de chave</li>
+        <li>Coluna <strong>Validade</strong> removida — informação absorvida pela Val. Dados</li>
         <li>Filtros: busca por chave/CNPJ, tipo DF, status, data de emissão, resultado de validação</li>
-        <li>Detalhar: modal com campos de conciliação, histórico de eventos, XML bruto (colapsável)</li>
         <li>+ Importar DF: botão de upload manual</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Modal de detalhe do DF</div>
+      <ul>
+        <li><strong>Emitente:</strong> Razão Social, CNPJ, IE (Inscrição Estadual), UF</li>
+        <li><strong>Destinatário:</strong> Razão Social, CNPJ</li>
+        <li><strong>Dados da Operação:</strong> CFOP, Série/Número, Direção (Entrada / Saída), Natureza da Operação</li>
+        <li><strong>Valores:</strong> Valor Total, Valor Líquido, CBS destacada, IBS destacada</li>
+        <li><strong>Chave DF:</strong> exibição completa dos 44 dígitos</li>
+        <li><strong>Registros Fiscais vinculados:</strong> cards clicáveis com ID RF, valor, status e chips IBS/CBS — abre detalhe do RF ao clicar</li>
+        <li><strong>Botão Visualizar documento auxiliar:</strong> label dinâmico por tipo (DANFE para NF-e, DACTE para CT-e, DANFCE para NFC-e, NFS-e para serviços, DANFCOM para NFCom, DANF3e para NF3-e, DAMDFE para MDF-e)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Visualizador de documento auxiliar</div>
+      <p style="font-size:13px;color:var(--txt2);margin-bottom:10px">Ao clicar no botão do modal, o SplitHub abre uma nova janela com o documento auxiliar gerado a partir dos dados do DF. O visualizador:</p>
+      <ul>
+        <li>Gera layout fiel ao padrão SEFAZ: cabeçalho com emitente, natureza da operação, tabela de itens com NCM/quantidade/valor unitário/total, resumo tributário IBS+CBS (LC 214/2025), chave de acesso com representação de código de barras</li>
+        <li>Cada tipo de DF tem layout e cor de identidade próprios (NF-e azul, CT-e ciano, NFS-e violeta, MDF-e cinza…)</li>
+        <li>Dispara <code>window.print()</code> automaticamente para salvar como PDF ou imprimir</li>
+        <li>Contém informações complementares de auditoria: CFOP, data de ingestão no SplitHub, base legal LC 214/2025</li>
       </ul>
     </div>
   </div>
@@ -453,6 +478,13 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
   <hr>
   <div class="section">
     <div class="sec-hdr"><span class="sec-num">—</span><span class="sec-title">Changelog</span></div>
+    <div class="cl-entry">
+      <div class="cl-ver">v1.5</div>
+      <div class="cl-body">
+        <strong>Ago/2026 · Modal expandido, visualizador auxiliar e simplificação da Val. Dados</strong>
+        Val. Dados simplificada: verifica apenas integridade dos dados do documento e unicidade da chave de acesso (44 dígitos) na plataforma — removidas verificações de CNPJ RFB, CFOP e alíquota desta etapa. Coluna "Validade" removida da listagem. Tooltips descritivos (ⓘ) adicionados às colunas Layout e Dados. Coluna ID DF: tipo + número como link unificado sem quebra de linha. Modal de detalhe expandido com emitente completo (IE, UF), destinatário, dados de operação (CFOP, Série, Direção, Natureza), valores discriminados (Líquido, CBS, IBS), chave 44 dígitos e RFs vinculados como cards clicáveis. RF-ING-07 adicionado: visualizador de documento auxiliar (DANFE/DACTE/NFS-e/etc.) gerado na plataforma com layout por tipo, resumo IBS+CBS e impressão direta para PDF.
+      </div>
+    </div>
     <div class="cl-entry">
       <div class="cl-ver">v1.4</div>
       <div class="cl-body">
