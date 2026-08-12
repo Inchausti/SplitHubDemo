@@ -7128,6 +7128,41 @@ window.downloadGuiaDARF = function() {
       histEl.innerHTML = tlH || '<div style="color:var(--txt3);font-size:12px;font-style:italic">Nenhum evento disponível.</div>';
     }
 
+    // ── Registros Fiscais vinculados ──────────────────────────────────────
+    var rfsWrap = document.getElementById('ing-modal-rfs-wrap');
+    var rfsEl   = document.getElementById('ing-modal-rfs');
+    if (rfsEl && d.nfNumero) {
+      var nfRef = (window.nfListaFiltradaGlobal || []).find(function(n) { return n.numero === d.nfNumero; });
+      var rfs   = nfRef && nfRef.registrosFiscais ? nfRef.registrosFiscais : [];
+      if (rfs.length) {
+        var rfsHtml = '';
+        rfs.forEach(function(rf) {
+          var fiscalCor  = rf.tipoFiscal === 'ibs' ? '#3B82F6' : '#F59E0B';
+          var fiscalLabel = (rf.tipoFiscal || '').toUpperCase();
+          var valorFmt   = rf.valor != null ? 'R$ ' + rf.valor.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+          var stMap = { integrado:'Integrado', utilizado:'Utilizado', apropriado:'Apropriado',
+            nao_apropriado:'Não aprop.', vencido:'Vencido', inconsistencia:'Inconsistência',
+            em_risco:'Em risco', extinto:'Extinto', nao_extinto:'Não extinto' };
+          var stLabel = stMap[rf.statusCredito || rf.statusRegistro || rf.status || ''] || (rf.statusCredito || rf.status || '—');
+          rfsHtml += '<div onclick="(function(){var fn=window.abrirDetalheRF||window.rfAbrirDetalhe;if(typeof fn===\'function\')fn(\'' + (rf.id||'') + '\');})()" '
+            + 'style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;cursor:pointer;background:var(--card);transition:border-color .12s" '
+            + 'onmouseover="this.style.borderColor=\'' + fiscalCor + '\'" onmouseout="this.style.borderColor=\'var(--border)\'">'
+            + '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:' + fiscalCor + '22;color:' + fiscalCor + ';border:1px solid ' + fiscalCor + '44;flex-shrink:0">' + fiscalLabel + '</span>'
+            + '<span class="mono" style="font-size:11px;color:var(--blue);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (rf.id || '—') + '</span>'
+            + '<span style="font-size:11px;font-weight:600;color:' + fiscalCor + ';font-family:monospace;flex-shrink:0">' + valorFmt + '</span>'
+            + '<span style="font-size:10px;color:var(--txt3);flex-shrink:0">' + stLabel + '</span>'
+            + '<span style="font-size:14px;color:var(--txt3);flex-shrink:0">›</span>'
+            + '</div>';
+        });
+        rfsEl.innerHTML = rfsHtml;
+        if (rfsWrap) rfsWrap.style.display = 'block';
+      } else {
+        if (rfsWrap) rfsWrap.style.display = 'none';
+      }
+    } else {
+      if (rfsWrap) rfsWrap.style.display = 'none';
+    }
+
     var modal = document.getElementById('ing-modal');
     if (modal) { modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
   };
