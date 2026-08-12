@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Ingestão de DF · SplitHub v1.4</title>
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.6 'Segoe UI', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 860px; margin: 0 auto; }
+
+/* ── Header ── */
+.doc-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+.doc-title { font-size: 28px; font-weight: 800; color: var(--txt1); line-height: 1.15; margin-bottom: 8px; text-wrap: balance; }
+.doc-sub { font-size: 14px; color: var(--txt2); margin-bottom: 24px; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 20px; padding: 16px 20px; background: var(--sur2); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 36px; }
+.meta-item { font-size: 12px; }
+.meta-label { color: var(--txt3); margin-bottom: 2px; }
+.meta-val { color: var(--txt1); font-weight: 600; }
+
+/* ── Sections ── */
+.section { margin-bottom: 40px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+
+/* ── Cards & boxes ── */
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 20px; margin-bottom: 12px; }
+.card-title { font-size: 13px; font-weight: 700; color: var(--txt1); margin-bottom: 8px; }
+.info-box { border-radius: 7px; padding: 14px 16px; margin-bottom: 14px; font-size: 13px; line-height: 1.65; }
+.info-box.teal { background: var(--teal-d); border: 1px solid rgba(31,186,170,.25); }
+.info-box.amber { background: var(--amber-d); border: 1px solid rgba(245,158,11,.25); }
+.info-box.blue { background: var(--blue-d); border: 1px solid rgba(77,159,255,.25); }
+.info-box.red { background: var(--red-d); border: 1px solid rgba(240,75,92,.25); }
+.info-box strong { color: var(--txt1); }
+
+/* ── Pipeline ── */
+.pipeline { display: flex; align-items: flex-start; gap: 0; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; }
+.pipe-step { flex: 1; min-width: 100px; text-align: center; position: relative; }
+.pipe-step + .pipe-step::before { content: "→"; position: absolute; left: -10px; top: 22px; font-size: 16px; color: var(--txt3); }
+.pipe-box { border: 1px solid var(--brd); border-radius: 8px; padding: 12px 8px 10px; background: var(--sur); margin: 0 6px; }
+.pipe-num { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.pipe-lbl { font-size: 11px; font-weight: 700; color: var(--txt1); }
+.pipe-sub { font-size: 10px; color: var(--txt2); margin-top: 2px; line-height: 1.4; }
+
+/* ── Table ── */
+.tbl-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { background: var(--sur2); color: var(--txt2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 10px 14px; text-align: left; }
+tbody tr { border-top: 1px solid var(--brd); }
+tbody tr:hover { background: var(--sur2); }
+td { padding: 10px 14px; color: var(--txt1); vertical-align: top; }
+td:first-child { font-family: 'Consolas', monospace; font-size: 12px; color: var(--blue); }
+.td-req { font-size: 11px; font-weight: 700; }
+
+/* ── Chips ── */
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.err { background: var(--red-d); color: var(--red); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.spike { background: rgba(139,92,246,.1); color: #7C3AED; }
+
+/* ── Lists ── */
+ul, ol { padding-left: 18px; color: var(--txt2); font-size: 13px; }
+ul li, ol li { margin-bottom: 5px; line-height: 1.6; }
+li strong { color: var(--txt1); }
+
+/* ── Changelog ── */
+.cl-entry { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--brd); }
+.cl-entry:last-child { border-bottom: none; }
+.cl-ver { font-size: 12px; font-weight: 700; color: var(--teal); white-space: nowrap; min-width: 44px; }
+.cl-body { font-size: 13px; color: var(--txt2); }
+.cl-body strong { color: var(--txt1); display: block; margin-bottom: 3px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'Consolas', monospace; font-size: 12px; color: var(--blue); }
+
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+</style>
+</head>
+<body>
+
+<div class="doc">
+
+  <!-- Header -->
+  <div class="doc-eyebrow">Product Requirements Document</div>
+  <h1 class="doc-title">Módulo de Ingestão de Documentos Fiscais</h1>
+  <p class="doc-sub">Pipeline de captura, validação e integração de DFs eletrônicos ao ecossistema SplitHub — ERP e upload manual</p>
+
+  <div class="meta-row">
+    <div class="meta-item"><div class="meta-label">Versão</div><div class="meta-val">v1.4</div></div>
+    <div class="meta-item"><div class="meta-label">Status</div><div class="meta-val"><span class="chip teal">Revisado</span></div></div>
+    <div class="meta-item"><div class="meta-label">Data</div><div class="meta-val">Ago/2026</div></div>
+    <div class="meta-item"><div class="meta-label">Módulo</div><div class="meta-val">Admin → Ingestão de DFs</div></div>
+    <div class="meta-item"><div class="meta-label">Base legal</div><div class="meta-val">LC 214/2025 · IN RFB 2.240/2025</div></div>
+  </div>
+
+  <!-- 1. Objetivo -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Objetivo e escopo</span></div>
+    <div class="info-box teal">
+      <strong>Objetivo central:</strong> capturar 100% dos Documentos Fiscais eletrônicos emitidos ou recebidos pela Positivo Tecnologia S.A., validá-los e integrá-los à base SplitHub para alimentar a Apuração Assistida de IBS/CBS e garantir a apropriação do crédito (Art. 48 LC 214/2025).
+    </div>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:14px">A ingestão é a <strong style="color:var(--txt1)">porta de entrada</strong> da jornada fiscal: sem DF ingerido e válido, não há apuração, não há conciliação financeira e não há crédito IBS/CBS. Cada DF gera um <strong style="color:var(--txt1)">Registro Fiscal (RF)</strong> na plataforma.</p>
+    <div class="card">
+      <div class="card-title">Tipos de DF suportados</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <span class="chip teal">NF-e (mod. 55)</span>
+        <span class="chip teal">NFC-e (mod. 65)</span>
+        <span class="chip teal">NFS-e</span>
+        <span class="chip teal">CT-e (mod. 57)</span>
+        <span class="chip teal">NFCom (mod. 62)</span>
+        <span class="chip teal">NF3-e (mod. 66)</span>
+        <span class="chip teal">NFAg</span>
+        <span class="chip teal">NFGás</span>
+        <span class="chip teal">MDF-e (mod. 58)</span>
+        <span class="chip teal">BP-e (mod. 63)</span>
+        <span class="chip teal">NFAv (mod. 2B)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Fontes de Ingestão -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Fontes de ingestão</span></div>
+
+    <div class="tbl-wrap" style="margin-bottom:16px">
+      <table>
+        <thead><tr><th>Fonte</th><th>Protocolo</th><th>Frequência</th><th>Prioridade</th></tr></thead>
+        <tbody>
+          <tr><td>ERP / sistema de origem</td><td>API REST · Webhook · SFTP</td><td>Tempo real / batch</td><td><span class="chip ok">P1</span></td></tr>
+          <tr><td>Upload manual (XML/ZIP)</td><td>Interface web · drag-and-drop</td><td>On demand</td><td><span class="chip warn">P2</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Estrutura da chave de acesso (NF-e / CT-e)</div>
+      <p style="font-size:12px;color:var(--txt2);margin-bottom:10px">44 dígitos, gerada pelo emitente. Usada como <code>chaveDfe</code> — campo-chave na Conciliação de Apuração.</p>
+      <div style="font-family:monospace;font-size:12px;background:var(--mono);border-radius:6px;padding:12px;overflow-x:auto;color:var(--txt1);letter-spacing:.04em">
+        <span style="color:var(--teal)">cUF(2)</span> <span style="color:var(--blue)">AAMM(4)</span> <span style="color:var(--amber)">CNPJ(14)</span> <span style="color:var(--green)">mod(2)</span> <span style="color:var(--txt2)">serie(3) nNF(9) tpEmis(1) cNF(8)</span> <span style="color:var(--red)">cDV(1)</span>
+      </div>
+      <p style="font-size:11px;color:var(--txt3);margin-top:8px">Para NFS-e: chave municipal (formato varia por município/provedor). Para NFCom e NF3-e: estrutura própria conforme ato normativo ANEEL/ANATEL.</p>
+    </div>
+  </div>
+
+  <!-- 3. Pipeline de Validação -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Pipeline de validação</span></div>
+
+    <div class="pipeline">
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--blue)">
+          <div class="pipe-num" style="color:var(--blue)">①</div>
+          <div class="pipe-lbl">Recebimento</div>
+          <div class="pipe-sub">ERP / Upload</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--teal)">
+          <div class="pipe-num" style="color:var(--teal)">②</div>
+          <div class="pipe-lbl">Triagem</div>
+          <div class="pipe-sub">Tipo DF identificado</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--amber)">
+          <div class="pipe-num" style="color:var(--amber)">③</div>
+          <div class="pipe-lbl">Val. Layout</div>
+          <div class="pipe-sub">Schema XML</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--txt2)">
+          <div class="pipe-num" style="color:var(--txt2)">④</div>
+          <div class="pipe-lbl">Val. Dados</div>
+          <div class="pipe-sub">CNPJ, CFOP, alíq.</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--green)">
+          <div class="pipe-num" style="color:var(--green)">⑤</div>
+          <div class="pipe-lbl">Integrado</div>
+          <div class="pipe-sub">RF criado · CAPUR</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Etapa</th><th>Validações</th><th>Resultado positivo</th><th>Resultado negativo</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>② Triagem</td>
+            <td>Modelo identificado (cMod / tag raiz XML), versão do schema</td>
+            <td>Tipo DF identificado</td>
+            <td><span class="chip err">Rejeitado</span> — tipo desconhecido ou schema incompatível</td>
+          </tr>
+          <tr>
+            <td>③ Val. Layout</td>
+            <td>Validação Schema XSD (versão 4.00 para NF-e, 3.00 para CT-e, v1.00 ABRASF para NFS-e). Namespace, encoding UTF-8, tags obrigatórias (<code>&lt;infNFe&gt;</code>, <code>&lt;emit&gt;</code>, <code>&lt;dest&gt;</code>), assinatura digital (xmldsig)</td>
+            <td><span class="chip ok">Layout OK</span></td>
+            <td><span class="chip err">Falha Layout</span> — erro de schema, namespace inválido, charset errado</td>
+          </tr>
+          <tr>
+            <td>④ Val. Dados</td>
+            <td>
+              CNPJ emitente válido e ativo na Receita Federal (<code>niEmitente</code>) <br>
+              CNPJ destinatário (<code>niAdquirente</code>) pertence ao grupo econômico cadastrado <br>
+              Chave de acesso íntegra (cDV) <br>
+              CFOP compatível com tipo de operação <br>
+              Alíquota CBS dentro do intervalo regulatório (0%–8%) <br>
+              Duplicidade: chave não existente na base
+            </td>
+            <td><span class="chip ok">Dados OK</span></td>
+            <td><span class="chip err">Inconsistência de Dados</span> ou <span class="chip warn">Duplicado</span></td>
+          </tr>
+          <tr>
+            <td>⑤ Integração</td>
+            <td>Criação do RF com ID único (<code>RF-XXXXXXXX</code>), extração de <code>chaveDfe</code>, <code>niEmitente</code>, <code>niAdquirente</code>, <code>valorCBSTotal</code>, geração de timestamp de ingestão</td>
+            <td><span class="chip teal">Integrado</span> — RF disponível para Apuração</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 4. Campos extraídos -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Campos extraídos do XML e mapeamento para conciliação</span></div>
+
+    <div class="info-box blue">
+      <strong>Campos de conciliação (Apuração Assistida):</strong> estes campos são extraídos durante a ingestão e usados na Conciliação de Apuração (CAPUR) para confrontar o DF com os dados da Plataforma Centralizada do Comitê Gestor.
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Campo SplitHub</th><th>Tag XML</th><th>Descrição</th><th>Uso CAPUR</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>chaveDfe</td>
+            <td><code>chNFe</code> / <code>chCTe</code></td>
+            <td>Chave de acesso de 44 dígitos — identificador único do DF</td>
+            <td><span class="chip teal">Campo-chave</span></td>
+          </tr>
+          <tr>
+            <td>niEmitente</td>
+            <td><code>emit/CNPJ</code></td>
+            <td>CNPJ do emitente (fornecedor). Validado contra Receita Federal.</td>
+            <td><span class="chip teal">Conciliado</span></td>
+          </tr>
+          <tr>
+            <td>niAdquirente</td>
+            <td><code>dest/CNPJ</code></td>
+            <td>CNPJ do adquirente (Positivo). Deve estar no grupo econômico cadastrado.</td>
+            <td><span class="chip teal">Conciliado</span></td>
+          </tr>
+          <tr>
+            <td>valorCBSTotal</td>
+            <td><code>total/ICMSTot/vCBS</code> (ou <code>vPIS</code> transitório)</td>
+            <td>CBS destacada na nota. Confrontada com o valor apurado pela Plataforma Centralizada.</td>
+            <td><span class="chip teal">Conciliado</span></td>
+          </tr>
+          <tr>
+            <td>pagamentosCBS</td>
+            <td>Registro financeiro vinculado (TF)</td>
+            <td>Comprovante de pagamento CBS (split payment). Avaliado na fase CFIN.</td>
+            <td><span class="chip teal">Conciliado</span></td>
+          </tr>
+          <tr>
+            <td>modeloDfe</td>
+            <td><code>mod</code></td>
+            <td>Código do modelo (55=NF-e, 57=CT-e, 65=NFC-e…)</td>
+            <td><span class="chip warn">Não conciliado</span></td>
+          </tr>
+          <tr>
+            <td>dataApuracao</td>
+            <td><code>ide/dhEmi</code></td>
+            <td>Data de emissão / fato gerador</td>
+            <td><span class="chip spike">Pendente Spike</span></td>
+          </tr>
+          <tr>
+            <td>dataDfeRegistro</td>
+            <td>Timestamp de ingestão SplitHub</td>
+            <td>Data/hora de entrada na plataforma (≠ emissão)</td>
+            <td><span class="chip spike">Pendente Spike</span></td>
+          </tr>
+          <tr>
+            <td>valorCBSExtinto</td>
+            <td>Derivado do RF após conciliação</td>
+            <td>CBS efetivamente extinta (paga e confirmada)</td>
+            <td><span class="chip warn">Não conciliado</span></td>
+          </tr>
+          <tr>
+            <td>situacao</td>
+            <td><code>Ativo</code> / <code>Cancelado</code></td>
+            <td>DFs cancelados são ingeridos mas não geram RF ativo</td>
+            <td><span class="chip warn">Não conciliado</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 5. Status do DF -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Status e ciclo de vida do DF ingerido</span></div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Status</th><th>Ação SplitHub</th><th>Gera RF?</th></tr></thead>
+        <tbody>
+          <tr><td>Ativo</td><td>Prossegue para validação de dados e integração normal</td><td><span class="chip ok">Sim</span></td></tr>
+          <tr><td>Cancelado</td><td>RF existente marcado como cancelado; crédito estornado</td><td><span class="chip warn">RF cancelado</span></td></tr>
+          <tr><td>Duplicado</td><td>Evento registrado; RF original não alterado; alerta gerado</td><td><span class="chip err">Não</span></td></tr>
+          <tr><td>Em processamento</td><td>DF na fila de validação; RF provisório (status <code>pendente</code>)</td><td><span class="chip info">Provisório</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 6. Requisitos funcionais -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Requisitos funcionais</span></div>
+    <div class="card">
+      <div class="card-title">RF-ING-01 · Integração com ERP</div>
+      <p style="font-size:13px;color:var(--txt2)">O SplitHub deve receber DFs do ERP em tempo real via webhook ou em lote via SFTP/API REST. A integração deve garantir idempotência por <code>chaveDfe</code> e confirmar o recebimento para o sistema de origem.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-ING-02 · Validação de schema XSD</div>
+      <p style="font-size:13px;color:var(--txt2)">O XML de cada DF deve ser validado contra o schema XSD oficial da versão correspondente (NF-e 4.00, CT-e 3.00, NFS-e v1.00 ABRASF). Falha de schema resulta em status <code>erro_layout</code>.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-ING-03 · Validação de CNPJ junto à Receita Federal</div>
+      <p style="font-size:13px;color:var(--txt2)">O <code>niEmitente</code> (CNPJ do emitente) deve ser consultado na API da RFB para verificar situação cadastral ativa. CNPJ inapto, suspenso ou cancelado gera alerta <code>erro_dados</code> e bloqueia o crédito IBS/CBS.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-ING-04 · Extração de <code>chaveDfe</code> e campos de conciliação</div>
+      <p style="font-size:13px;color:var(--txt2)">Após aprovação de layout e dados, extrair e persistir: <code>chaveDfe</code>, <code>niEmitente</code>, <code>niAdquirente</code>, <code>valorCBSTotal</code>. Estes campos alimentam diretamente a Conciliação de Apuração (CAPUR).</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-ING-05 · Tratamento de cancelamentos</div>
+      <p style="font-size:13px;color:var(--txt2)">Eventos de cancelamento recebidos do ERP devem atualizar o RF correspondente (via <code>chaveDfe</code>), cancelar qualquer apuração em andamento e gerar evento de auditoria com timestamp do cancelamento.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-ING-06 · Importação manual</div>
+      <p style="font-size:13px;color:var(--txt2)">Interface de upload (XML/ZIP) com feedback em tempo real: progresso de validação, lista de erros por arquivo, resumo de DFs integrados vs. rejeitados.</p>
+    </div>
+  </div>
+
+  <!-- 7. Não-funcionais -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Requisitos não-funcionais</span></div>
+    <ul>
+      <li><strong>Volume:</strong> suportar ≥ 50.000 DFs/mês por CNPJ sem degradação de performance.</li>
+      <li><strong>Latência:</strong> DFs recebidos via ERP integrados em ≤ 5 minutos após recebimento.</li>
+      <li><strong>Idempotência:</strong> re-ingestão de DF com <code>chaveDfe</code> já existente não cria RF duplicado.</li>
+      <li><strong>Rastreabilidade:</strong> cada etapa do pipeline registrada com timestamp e responsável (sistema ou usuário).</li>
+      <li><strong>Segurança:</strong> XMLs armazenados criptografados (AES-256); acesso apenas por roles autorizados.</li>
+      <li><strong>Disponibilidade:</strong> pipeline de ingestão ativo 99,5% do tempo.</li>
+    </ul>
+  </div>
+
+  <!-- 8. Dashboard e Listagem -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Interface — Dashboard e Listagem</span></div>
+    <div class="card">
+      <div class="card-title">Aba Dashboard</div>
+      <ul>
+        <li>KPIs: Total recebidos, Integrados, Em processamento, Com erro, Duplicados, Taxa de sucesso</li>
+        <li>Pipeline visual: 5 estágios com contagem por etapa</li>
+        <li>Gráfico: Volume de ingestão × integrados × erros (últimos 7 dias)</li>
+        <li>Filtro Grupo Econômico: filtra por CNPJ do destinatário (niAdquirente)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Aba Listagem</div>
+      <ul>
+        <li>Colunas: Chave DF (44 dígitos truncados), ID DF (tipo + número, ex: <code>NF-e 000001</code>), Tipo DF, Emitente, Valor, Emissão, Ingestão, Validações (Layout / Validade / Dados), Status, Ação</li>
+        <li>Filtros: busca por chave/CNPJ, tipo DF, status, data de emissão, resultado de validação</li>
+        <li>Detalhar: modal com campos de conciliação, histórico de eventos, XML bruto (colapsável)</li>
+        <li>+ Importar DF: botão de upload manual</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 9. Integrações -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Integrações e dependências</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Sistema</th><th>Direção</th><th>Dados</th></tr></thead>
+        <tbody>
+          <tr><td>ERP (SAP/TOTVS)</td><td>← Entrada</td><td>XMLs de DFs emitidos e recebidos pelo grupo econômico</td></tr>
+          <tr><td>Receita Federal (RFB API)</td><td>← Consulta</td><td>Situação cadastral CNPJ emitente</td></tr>
+          <tr><td>Apuração Assistida (CAPUR)</td><td>→ Saída</td><td>chaveDfe, niEmitente, niAdquirente, valorCBSTotal</td></tr>
+          <tr><td>Conciliação Financeira (CFIN)</td><td>→ Saída</td><td>RF integrado + pagamentosCBS</td></tr>
+          <tr><td>Módulo de Inconsistências</td><td>→ Saída</td><td>DFs com erro_layout, erro_dados, duplicado</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Changelog -->
+  <hr>
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">—</span><span class="sec-title">Changelog</span></div>
+    <div class="cl-entry">
+      <div class="cl-ver">v1.4</div>
+      <div class="cl-body">
+        <strong>Ago/2026 · Escopo de ingestão restrito a ERP e upload manual</strong>
+        Removidas fontes de ingestão via SEFAZ (NSS, UF, MDe, e-mail). Removidos status de documento rejeitado/denegado pela SEFAZ. Status simplificados para Ativo, Cancelado, Duplicado, Em processamento. RF-ING-01 reescrito para integração ERP. RF-ING-05 ajustado para cancelamentos via ERP. Latência e disponibilidade ajustadas ao canal ERP.
+      </div>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-ver">v1.3</div>
+      <div class="cl-body">
+        <strong>Ago/2026 · Campos de conciliação e chave de acesso</strong>
+        Mapeamento de campos CAPUR (chaveDfe, niEmitente, niAdquirente, valorCBSTotal, pagamentosCBS). Estrutura da chave de acesso 44 dígitos. RF-ING-03 (validação CNPJ na RFB). RF-ING-05 (tratamento de cancelamentos).
+      </div>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-ver">v1.2</div>
+      <div class="cl-body">
+        <strong>Jul/2026 · Tabs Dashboard/Listagem + coluna ID DF</strong>
+        Módulo dividido em Dashboard (KPIs + pipeline) e Listagem (tabela paginada). Coluna renomeada de NF para ID DF, exibindo tipo + número (ex: NF-e 000001).
+      </div>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-ver">v1.1</div>
+      <div class="cl-body">
+        <strong>Jun/2026 · Tipos DF e pipeline de validação</strong>
+        Suporte a 11 tipos de DF. Pipeline de 5 etapas com métricas por estágio. Filtros de busca e paginação na listagem.
+      </div>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-ver">v1.0</div>
+      <div class="cl-body">
+        <strong>Mai/2026 · Versão inicial</strong>
+        Ingestão básica via ERP e upload manual. Validação de layout e dados. Integração ao RF e à Apuração Assistida.
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

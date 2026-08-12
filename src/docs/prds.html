@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRDs por Módulo · SplitHub</title>
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.6 'Segoe UI', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 900px; margin: 0 auto; }
+
+/* ── Header ── */
+.doc-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+.doc-title { font-size: 28px; font-weight: 800; color: var(--txt1); line-height: 1.15; margin-bottom: 8px; }
+.doc-sub { font-size: 14px; color: var(--txt2); margin-bottom: 28px; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 20px; padding: 16px 20px; background: var(--sur2); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 40px; }
+.meta-item { font-size: 12px; }
+.meta-label { color: var(--txt3); margin-bottom: 2px; }
+.meta-val { color: var(--txt1); font-weight: 600; }
+
+/* ── Sections ── */
+.section { margin-bottom: 44px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+
+/* ── PRD Grid ── */
+.prd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.prd-card { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 10px; transition: box-shadow .15s, border-color .15s; }
+.prd-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); border-color: var(--teal); }
+.prd-card.draft { opacity: .7; }
+.prd-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.prd-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.prd-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+.prd-name { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.prd-desc { font-size: 12px; color: var(--txt2); line-height: 1.5; flex: 1; }
+.prd-meta { display: flex; gap: 14px; font-size: 11px; color: var(--txt3); border-top: 1px solid var(--brd); padding-top: 10px; margin-top: 2px; }
+.prd-meta span strong { color: var(--txt2); }
+.prd-actions { display: flex; gap: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer; text-decoration: none; border: none; transition: opacity .15s; }
+.btn:hover { opacity: .85; }
+.btn-primary { background: var(--teal); color: #fff; }
+.btn-ghost { background: transparent; color: var(--txt2); border: 1px solid var(--brd); }
+.btn-ghost:hover { border-color: var(--txt2); }
+.btn-disabled { background: var(--sur2); color: var(--txt3); cursor: not-allowed; border: 1px solid var(--brd); }
+.btn-disabled:hover { opacity: 1; }
+
+/* ── Chips ── */
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.err { background: var(--red-d); color: var(--red); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.draft { background: var(--sur2); color: var(--txt3); }
+
+/* ── Changelog ── */
+.cl-entry { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--brd); }
+.cl-entry:last-child { border-bottom: none; }
+.cl-left { display: flex; flex-direction: column; align-items: flex-end; min-width: 90px; gap: 4px; }
+.cl-ver { font-size: 12px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.cl-date { font-size: 11px; color: var(--txt3); white-space: nowrap; }
+.cl-body { font-size: 13px; color: var(--txt2); }
+.cl-body strong { color: var(--txt1); display: block; margin-bottom: 3px; }
+.cl-mod { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: var(--teal-d); color: var(--teal); margin-right: 4px; margin-bottom: 4px; }
+
+hr { border: none; border-top: 1px solid var(--brd); margin: 40px 0; }
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'Consolas', monospace; font-size: 12px; color: var(--blue); }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <!-- Header -->
+  <div class="doc-eyebrow">SplitHub · Produto</div>
+  <h1 class="doc-title">PRDs por Módulo</h1>
+  <p class="doc-sub">Documentos de requisitos de produto organizados por módulo funcional. Acesse, consulte e compartilhe.</p>
+
+  <div class="meta-row">
+    <div class="meta-item"><div class="meta-label">Produto</div><div class="meta-val">SplitHub</div></div>
+    <div class="meta-item"><div class="meta-label">Base legal</div><div class="meta-val">LC 214/2025 · IN RFB 2.240/2025</div></div>
+    <div class="meta-item"><div class="meta-label">Atualizado em</div><div class="meta-val">Ago/2026</div></div>
+    <div class="meta-item"><div class="meta-label">Responsável</div><div class="meta-val">SplitHub Product</div></div>
+  </div>
+
+  <!-- Módulos Admin -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">Admin</span><span class="sec-title">Configuração e ingestão de dados</span></div>
+    <div class="prd-grid">
+
+      <div class="prd-card">
+        <div class="prd-top">
+          <div class="prd-icon" style="background:var(--blue-d)">📥</div>
+          <div class="prd-chips">
+            <span class="chip teal">v1.4</span>
+            <span class="chip ok">Publicado</span>
+          </div>
+        </div>
+        <div class="prd-name">Ingestão de DFs</div>
+        <div class="prd-desc">Pipeline de captura, validação e integração de Documentos Fiscais eletrônicos via ERP e upload manual.</div>
+        <div class="prd-meta">
+          <span><strong>Módulo</strong> Admin</span>
+          <span><strong>Atualizado</strong> Ago/2026</span>
+        </div>
+        <div class="prd-actions">
+          <a class="btn btn-primary" href="prd-ingestao.html">Ver PRD</a>
+          <button class="btn btn-ghost" onclick="copyLink('prd-ingestao.html')">Copiar link</button>
+        </div>
+      </div>
+
+      <div class="prd-card draft">
+        <div class="prd-top">
+          <div class="prd-icon" style="background:var(--sur2)">🏢</div>
+          <div class="prd-chips">
+            <span class="chip draft">Rascunho</span>
+          </div>
+        </div>
+        <div class="prd-name">Grupo Econômico</div>
+        <div class="prd-desc">Cadastro e gestão de CNPJs do grupo econômico, filiais, matrizes e configuração de filtros globais.</div>
+        <div class="prd-meta">
+          <span><strong>Módulo</strong> Admin</span>
+          <span><strong>Atualizado</strong> —</span>
+        </div>
+        <div class="prd-actions">
+          <button class="btn btn-disabled">Em breve</button>
+        </div>
+      </div>
+
+      <div class="prd-card draft">
+        <div class="prd-top">
+          <div class="prd-icon" style="background:var(--sur2)">🔗</div>
+          <div class="prd-chips">
+            <span class="chip draft">Rascunho</span>
+          </div>
+        </div>
+        <div class="prd-name">Contratos</div>
+        <div class="prd-desc">Gestão de contratos como artefato global, vinculados a DFs e créditos IBS/CBS.</div>
+        <div class="prd-meta">
+          <span><strong>Módulo</strong> Admin</span>
+          <span><strong>Atualizado</strong> —</span>
+        </div>
+        <div class="prd-actions">
+          <button class="btn btn-disabled">Em breve</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Módulos Fiscais -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">Fiscal</span><span class="sec-title">Apuração, crédito e débitos</span></div>
+    <div class="prd-grid">
+
+      <div class="prd-card draft">
+        <div class="prd-top">
+          <div class="prd-icon" style="background:var(--teal-d)">⚖️</div>
+          <div class="prd-chips">
+            <span class="chip draft">Rascunho</span>
+          </div>
+        </div>
+        <div class="prd-name">Conciliação</div>
+        <div class="prd-desc">Conciliação de Apuração (CAPUR) e Conciliação Financeira (CFIN) — jornada completa do DF ao crédito apropriado.</div>
+        <div class="prd-meta">
+          <span><strong>Módulo</strong> Conciliação</span>
+          <span><strong>Atualizado</strong> —</span>
+        </div>
+        <div class="prd-actions">
+          <button class="btn btn-disabled">Em breve</button>
+        </div>
+      </div>
+
+      <div class="prd-card draft">
+        <div class="prd-top">
+          <div class="prd-icon" style="background:var(--green-d)">✅</div>
+          <div class="prd-chips">
+            <span class="chip draft">Rascunho</span>
+          </div>
+        </div>
+        <div class="prd-name">Crédito IBS/CBS</div>
+        <div class="prd-desc">Apropriação, utilização e extinção de créditos IBS e CBS — métodos, status e rastreabilidade por RF.</div>
+        <div class="prd-meta">
+          <span><strong>Módulo</strong> Crédito</span>
+          <span><strong>Atualizado</strong> —</span>
+        </div>
+        <div class="prd-actions">
+          <button class="btn btn-disabled">Em breve</button>
+        </div>
+      </div>
+
+      <div class="prd-card draft">
+        <div class="prd-top">
+          <div class="prd-icon" style="background:var(--red-d)">📤</div>
+          <div class="prd-chips">
+            <span class="chip draft">Rascunho</span>
+          </div>
+        </div>
+        <div class="prd-name">Débitos</div>
+        <div class="prd-desc">Apuração e gestão de débitos IBS/CBS em operações de saída — CFOP, CST e base de cálculo.</div>
+        <div class="prd-meta">
+          <span><strong>Módulo</strong> Débitos</span>
+          <span><strong>Atualizado</strong> —</span>
+        </div>
+        <div class="prd-actions">
+          <button class="btn btn-disabled">Em breve</button>
+        </div>
+      </div>
+
+      <div class="prd-card draft">
+        <div class="prd-top">
+          <div class="prd-icon" style="background:var(--amber-d)">💳</div>
+          <div class="prd-chips">
+            <span class="chip draft">Rascunho</span>
+          </div>
+        </div>
+        <div class="prd-name">Pagamentos</div>
+        <div class="prd-desc">Registro e conciliação de pagamentos IBS/CBS — split payment, guias e DARFs.</div>
+        <div class="prd-meta">
+          <span><strong>Módulo</strong> Pagamentos</span>
+          <span><strong>Atualizado</strong> —</span>
+        </div>
+        <div class="prd-actions">
+          <button class="btn btn-disabled">Em breve</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Módulos Análise -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">Análise</span><span class="sec-title">Inteligência e inconsistências</span></div>
+    <div class="prd-grid">
+
+      <div class="prd-card draft">
+        <div class="prd-top">
+          <div class="prd-icon" style="background:var(--blue-d)">📊</div>
+          <div class="prd-chips">
+            <span class="chip draft">Rascunho</span>
+          </div>
+        </div>
+        <div class="prd-name">Dashboard</div>
+        <div class="prd-desc">Visão consolidada de KPIs fiscais — crédito, débito, conciliação e exposição IBS/CBS em tempo real.</div>
+        <div class="prd-meta">
+          <span><strong>Módulo</strong> Dashboard</span>
+          <span><strong>Atualizado</strong> —</span>
+        </div>
+        <div class="prd-actions">
+          <button class="btn btn-disabled">Em breve</button>
+        </div>
+      </div>
+
+      <div class="prd-card draft">
+        <div class="prd-top">
+          <div class="prd-icon" style="background:var(--sur2)">🔍</div>
+          <div class="prd-chips">
+            <span class="chip draft">Rascunho</span>
+          </div>
+        </div>
+        <div class="prd-name">Analytics</div>
+        <div class="prd-desc">Análise de alíquota efetiva, tendências de crédito e simulações de cenários fiscais.</div>
+        <div class="prd-meta">
+          <span><strong>Módulo</strong> Analytics</span>
+          <span><strong>Atualizado</strong> —</span>
+        </div>
+        <div class="prd-actions">
+          <button class="btn btn-disabled">Em breve</button>
+        </div>
+      </div>
+
+      <div class="prd-card draft">
+        <div class="prd-top">
+          <div class="prd-icon" style="background:var(--red-d)">⚠️</div>
+          <div class="prd-chips">
+            <span class="chip draft">Rascunho</span>
+          </div>
+        </div>
+        <div class="prd-name">Inconsistências</div>
+        <div class="prd-desc">Detecção, classificação e resolução de inconsistências fiscais por DF — divergências de apuração e conciliação.</div>
+        <div class="prd-meta">
+          <span><strong>Módulo</strong> Inconsistências</span>
+          <span><strong>Atualizado</strong> —</span>
+        </div>
+        <div class="prd-actions">
+          <button class="btn btn-disabled">Em breve</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Changelog -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">—</span><span class="sec-title">Changelog de PRDs</span></div>
+
+    <div class="cl-entry">
+      <div class="cl-left">
+        <div class="cl-ver">v1.4</div>
+        <div class="cl-date">Ago/2026</div>
+      </div>
+      <div class="cl-body">
+        <strong><span class="cl-mod">Ingestão</span> Escopo restrito a ERP e upload manual</strong>
+        Removidas fontes de ingestão via SEFAZ. Removidos status de documento rejeitado/denegado. Status simplificados: Ativo, Cancelado, Duplicado, Em processamento. RF-ING-01 reescrito para integração ERP.
+      </div>
+    </div>
+
+    <div class="cl-entry">
+      <div class="cl-left">
+        <div class="cl-ver">v1.3</div>
+        <div class="cl-date">Ago/2026</div>
+      </div>
+      <div class="cl-body">
+        <strong><span class="cl-mod">Ingestão</span> Campos de conciliação e chave de acesso</strong>
+        Mapeamento completo de campos CAPUR (<code>chaveDfe</code>, <code>niEmitente</code>, <code>niAdquirente</code>, <code>valorCBSTotal</code>, <code>pagamentosCBS</code>). Estrutura da chave de acesso 44 dígitos. RF-ING-03 validação CNPJ na RFB. RF-ING-05 tratamento de cancelamentos.
+      </div>
+    </div>
+
+    <div class="cl-entry">
+      <div class="cl-left">
+        <div class="cl-ver">v1.2</div>
+        <div class="cl-date">Jul/2026</div>
+      </div>
+      <div class="cl-body">
+        <strong><span class="cl-mod">Ingestão</span> Tabs Dashboard/Listagem + coluna ID DF</strong>
+        Módulo dividido em Dashboard (KPIs + pipeline visual) e Listagem (tabela paginada). Coluna renomeada de NF para ID DF.
+      </div>
+    </div>
+
+    <div class="cl-entry">
+      <div class="cl-left">
+        <div class="cl-ver">v1.1</div>
+        <div class="cl-date">Jun/2026</div>
+      </div>
+      <div class="cl-body">
+        <strong><span class="cl-mod">Ingestão</span> Tipos DF e pipeline de validação</strong>
+        Suporte a 11 tipos de DF. Pipeline de 5 etapas com métricas por estágio. Filtros de busca e paginação na listagem.
+      </div>
+    </div>
+
+    <div class="cl-entry">
+      <div class="cl-left">
+        <div class="cl-ver">v1.0</div>
+        <div class="cl-date">Mai/2026</div>
+      </div>
+      <div class="cl-body">
+        <strong><span class="cl-mod">Ingestão</span> Versão inicial</strong>
+        Ingestão básica via ERP e upload manual. Validação de layout e dados. Integração ao RF e à Apuração Assistida.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+<script>
+function copyLink(path) {
+  var base = window.location.href.replace(/\/[^/]*$/, '/');
+  var url = base + path;
+  navigator.clipboard.writeText(url).then(function() {
+    var btn = event.target;
+    var orig = btn.textContent;
+    btn.textContent = 'Copiado!';
+    setTimeout(function() { btn.textContent = orig; }, 1500);
+  });
+}
+</script>
+</body>
+</html>
