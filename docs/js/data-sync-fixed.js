@@ -6984,20 +6984,58 @@ window.downloadGuiaDARF = function() {
     var d = _ingDados[idx];
     if (!d) return;
 
+    // Guardar referência para o visualizador
+    window._ingModalDadosAtual = d;
+
+    var tipoBase = d.tipo.replace(' Entrada','').replace(' Saída','');
     var badge = document.getElementById('ing-modal-tipo-badge');
     if (badge) badge.textContent = d.tipo;
 
     var chaveEl = document.getElementById('ing-modal-chave');
-    if (chaveEl) chaveEl.textContent = d.chave.substring(0,14) + '…';
+    if (chaveEl) chaveEl.textContent = d.chave ? (d.chave.substring(0,8) + ' ' + d.chave.substring(8,20) + '…') : '—';
 
     function _set(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
-    _set('ing-modal-emit', d.emitente);
-    _set('ing-modal-cnpj', d.cnpj);
+    function _fmtBRL2(v) { return v != null ? 'R$ ' + Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; }
+
+    // Buscar NF completa para campos extras
+    var nfRef = (window.nfListaFiltradaGlobal || []).find(function(n){ return n.numero === d.nfNumero; }) || {};
+
+    // Campos emitente
+    _set('ing-modal-emit', d.emitente || '—');
+    _set('ing-modal-cnpj', d.cnpj || '—');
+    _set('ing-modal-ie', '111.111.111.111'); // mock IE
+    _set('ing-modal-emit-uf', 'São Paulo · SP');   // mock UF emitente
+
+    // Destinatário (empresa do grupo = Positivo Tecnologia como destinatária padrão)
+    var destNome = nfRef.tipo === 'saida' ? (nfRef.entidade || 'Cliente') : 'Positivo Tecnologia S.A.';
+    var destCnpj = nfRef.tipo === 'saida' ? (nfRef.cnpj || '—') : '76.535.764/0001-43';
+    _set('ing-modal-dest', destNome);
+    _set('ing-modal-cnpj-dest', destCnpj);
+
+    // Operação
     _set('ing-modal-emissao', _fmtData(d.dataEmissao));
     _set('ing-modal-ingestao', d.dataIngestao);
-    _set('ing-modal-valor', _fmtBRL(d.valor));
     _set('ing-modal-cfop', d.cfop);
-    _set('ing-modal-chave-full', d.chave);
+    var serieNum = '001 / ' + (d.nfNumero || d.chave.substring(25,34) || '—');
+    _set('ing-modal-serie-num', serieNum);
+    var direcaoLabel = d.tipo.indexOf('Saída') > -1 ? 'Saída (1)' : 'Entrada (0)';
+    _set('ing-modal-direcao', direcaoLabel);
+    var natOpMap = { '5102':'Venda de mercadoria','6102':'Venda de mercad. interestadual','5101':'Venda de produção','1102':'Compra de mercadoria','2102':'Compra interestadual','3102':'Compra do exterior','5152':'Transf. de mercad. remetente','1152':'Transf. de mercad. destinatário' };
+    _set('ing-modal-nat-op', natOpMap[d.cfop] || 'Venda de mercadoria adquirida');
+
+    // Valores
+    _set('ing-modal-valor', _fmtBRL2(d.valor || nfRef.valorTotal));
+    _set('ing-modal-vliq', _fmtBRL2(nfRef.valorLiquido || Math.round((d.valor||0)/1.18)));
+    _set('ing-modal-cbs', _fmtBRL2(nfRef.cbs || Math.round((d.valor||0)/1.18*0.08)));
+    _set('ing-modal-ibs', _fmtBRL2(nfRef.ibs || Math.round((d.valor||0)/1.18*0.10)));
+
+    // Chave
+    _set('ing-modal-chave-full', d.chave || '—');
+
+    // Botão visualizar — label dinâmico por tipo
+    var docAuxLabels = { 'NF-e':'DANFE','NFC-e':'DANFCE','CT-e':'DACTE','NFS-e':'Nota Fiscal de Serviços','NFCom':'DANFCOM','NF3-e':'DANF3e','MDF-e':'DAMDFE','NFAg':'DANFAg','NFGás':'DANFGÁS' };
+    var lblBtn = document.getElementById('ing-modal-btn-visualizar-lbl');
+    if (lblBtn) lblBtn.textContent = 'Visualizar ' + (docAuxLabels[tipoBase] || 'Documento');
 
     var statusBar = document.getElementById('ing-modal-status-bar');
     if (statusBar) {
@@ -7169,6 +7207,161 @@ window.downloadGuiaDARF = function() {
   window.fecharIngModal = function() {
     var modal = document.getElementById('ing-modal');
     if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
+  };
+
+  window._abrirVisualizadorDF = function() {
+    var d = window._ingModalDadosAtual;
+    if (!d) return;
+    var nfRef = (window.nfListaFiltradaGlobal || []).find(function(n){ return n.numero === d.nfNumero; }) || {};
+    var tipoBase = d.tipo.replace(' Entrada','').replace(' Saída','');
+    var isEntrada = d.tipo.indexOf('Entrada') > -1 || d.tipo.indexOf('entrada') > -1;
+    var ff = function(v){ return v != null ? 'R$ ' + Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : 'R$ 0,00'; };
+    var vliq = nfRef.valorLiquido || Math.round((d.valor||0)/1.18);
+    var cbs  = nfRef.cbs || Math.round(vliq*0.08);
+    var ibs  = nfRef.ibs || Math.round(vliq*0.10);
+    var vtotal = d.valor || nfRef.valorTotal || (vliq+cbs+ibs);
+    var dataParts = (d.dataEmissao||'2026-01-01').split('-');
+    var dataFmt = dataParts[2]+'/'+dataParts[1]+'/'+dataParts[0];
+    var chaveFormatada = (d.chave||'').replace(/(.{4})/g,'$1 ').trim();
+    var serieNum = (d.nfNumero || d.chave.substring(25,34) || '000000001');
+    var natOpMap = {'5102':'Venda de mercadoria adquirida ou recebida de terceiros','6102':'Venda de mercadoria adquirida interestadual','5101':'Venda de produção do estabelecimento','1102':'Compra para comercialização','2102':'Compra interestadual para comercialização','3102':'Compra para industrialização - importação'};
+    var natOp = natOpMap[d.cfop] || 'Venda de mercadoria adquirida ou recebida de terceiros';
+    var destNome = nfRef.tipo === 'saida' ? (nfRef.entidade || 'Cliente') : 'Positivo Tecnologia S.A.';
+    var destCnpj = nfRef.tipo === 'saida' ? (nfRef.cnpj || '—') : '76.535.764/0001-43';
+
+    var docLabels = {
+      'NF-e':   { titulo:'DANFE',    sub:'Documento Auxiliar da Nota Fiscal Eletrônica',    cor:'#1a56c4' },
+      'NFC-e':  { titulo:'DANFCE',   sub:'Documento Auxiliar da Nota Fiscal de Consumidor', cor:'#2563eb' },
+      'CT-e':   { titulo:'DACTE',    sub:'Documento Auxiliar do Conhecimento de Transporte',cor:'#0891b2' },
+      'NFS-e':  { titulo:'NFS-e',    sub:'Nota Fiscal de Serviços Eletrônica',              cor:'#6d28d9' },
+      'NFCom':  { titulo:'DANFCOM',  sub:'Documento Auxiliar da Nota Fiscal de Comunicação',cor:'#047857' },
+      'NF3-e':  { titulo:'DANF3e',   sub:'Documento Auxiliar da NF de Energia Elétrica',   cor:'#b45309' },
+      'MDF-e':  { titulo:'DAMDFE',   sub:'Documento Auxiliar do Manifesto de Documentos',   cor:'#475569' },
+      'NFAg':   { titulo:'DANFAg',   sub:'Documento Auxiliar da NF Agropecuária',           cor:'#15803d' }
+    };
+    var dl = docLabels[tipoBase] || { titulo:'DANFE', sub:'Documento Auxiliar da Nota Fiscal Eletrônica', cor:'#1a56c4' };
+
+    // Itens mockados baseados no CFOP e valor
+    var itemDesc = {
+      '5102':'Mercadoria para comercialização','6102':'Mercadoria interestadual','5101':'Produto industrializado',
+      '1102':'Mercadoria adquirida','2102':'Mercadoria interestadual adquirida','3102':'Mercadoria importada',
+      '5152':'Mercadoria em transferência','1152':'Mercadoria recebida em transferência'
+    }[d.cfop] || 'Mercadoria diversa';
+    var nItems = 3;
+    var vUnitBase = Math.round(vliq / nItems);
+    var itensHtml = '';
+    for (var i = 1; i <= nItems; i++) {
+      var vUnit = i < nItems ? vUnitBase : (vliq - vUnitBase*(nItems-1));
+      var qtd = Math.floor(10 + i*7);
+      var ncm = ['8471.30.19','3004.90.99','7308.90.10','8544.49.00','3901.10.10'][i%5];
+      itensHtml += '<tr style="border-bottom:1px solid #e5e7eb">'
+        + '<td style="padding:5px 6px;font-size:11px">' + String(i).padStart(3,'0') + '</td>'
+        + '<td style="padding:5px 6px;font-size:11px">' + ncm + '</td>'
+        + '<td style="padding:5px 6px;font-size:11px">' + itemDesc + ' — lote ' + String(2026000+i) + '</td>'
+        + '<td style="padding:5px 6px;font-size:11px;text-align:center">UN</td>'
+        + '<td style="padding:5px 6px;font-size:11px;text-align:right">' + qtd + '</td>'
+        + '<td style="padding:5px 6px;font-size:11px;text-align:right">R$ ' + (vUnit/qtd).toFixed(2).replace('.',',') + '</td>'
+        + '<td style="padding:5px 6px;font-size:11px;text-align:right">R$ ' + vUnit.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</td>'
+        + '</tr>';
+    }
+
+    var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
+      + '<title>' + dl.titulo + ' – ' + tipoBase + ' ' + serieNum + '</title>'
+      + '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:11px;color:#1f2937;background:#f3f4f6;padding:20px}'
+      + '.page{background:#fff;max-width:900px;margin:0 auto;border:1px solid #d1d5db;padding:0}'
+      + '.hdr{background:' + dl.cor + ';color:#fff;display:flex;align-items:stretch}'
+      + '.hdr-logo{width:160px;padding:14px 16px;border-right:1px solid rgba(255,255,255,.3);display:flex;flex-direction:column;justify-content:center}'
+      + '.hdr-logo .co{font-size:13px;font-weight:700;line-height:1.3}.hdr-logo .cnpj{font-size:10px;opacity:.8;margin-top:4px}'
+      + '.hdr-center{flex:1;padding:12px 16px;text-align:center}'
+      + '.hdr-center .doc{font-size:22px;font-weight:700;letter-spacing:2px}'
+      + '.hdr-center .docsub{font-size:9px;opacity:.85;margin-top:3px;text-transform:uppercase;letter-spacing:.05em}'
+      + '.hdr-right{width:140px;padding:12px 14px;border-left:1px solid rgba(255,255,255,.3);display:flex;flex-direction:column;justify-content:center;align-items:center}'
+      + '.hdr-right .entrada-saida{font-size:11px;font-weight:700;border:2px solid rgba(255,255,255,.6);border-radius:4px;padding:4px 8px;margin-bottom:6px}'
+      + '.hdr-right .nfnum{font-size:11px;font-weight:700}.hdr-right .nflbl{font-size:9px;opacity:.8}'
+      + '.nat-op{background:#f0f4ff;border-bottom:2px solid ' + dl.cor + ';padding:7px 14px;font-size:11px}'
+      + '.nat-op strong{color:' + dl.cor + '}'
+      + '.blk{border:1px solid #d1d5db;margin:10px 10px 0}'
+      + '.blk-hdr{background:#e8edf6;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:4px 8px;color:#374151;border-bottom:1px solid #d1d5db}'
+      + '.blk-body{padding:8px 10px;display:grid;gap:6px}'
+      + '.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}'
+      + '.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}'
+      + '.field{}'
+      + '.field label{display:block;font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}'
+      + '.field span{font-size:11px;color:#111827;font-weight:600}'
+      + 'table{width:100%;border-collapse:collapse}'
+      + 'thead th{background:#e8edf6;padding:5px 6px;font-size:10px;text-align:left;border-bottom:2px solid ' + dl.cor + ';color:#374151}'
+      + '.totals{margin:10px;border:2px solid ' + dl.cor + ';border-radius:4px;overflow:hidden}'
+      + '.totals-hdr{background:' + dl.cor + ';color:#fff;padding:7px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}'
+      + '.totals-body{display:grid;grid-template-columns:repeat(4,1fr);}'
+      + '.tval{padding:10px 12px;text-align:center;border-right:1px solid #d1d5db}'
+      + '.tval:last-child{border-right:none}.tval label{display:block;font-size:9px;color:#6b7280;text-transform:uppercase;margin-bottom:4px}'
+      + '.tval span{font-size:14px;font-weight:700;color:#111827}'
+      + '.tval.highlight span{color:' + dl.cor + '}'
+      + '.chave-box{margin:10px;border:1px solid #d1d5db;border-radius:4px;padding:8px 12px}'
+      + '.chave-box label{font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px}'
+      + '.chave-box .chave{font-family:monospace;font-size:11px;letter-spacing:.12em;word-break:break-all;color:#1f2937}'
+      + '.barcode{height:28px;background:repeating-linear-gradient(90deg,#1f2937 0px,#1f2937 2px,#fff 2px,#fff 4px);margin-top:6px;border-radius:2px}'
+      + '.inf-comp{margin:10px;font-size:10px;color:#374151;line-height:1.6;padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px}'
+      + '.footer{margin:10px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#9ca3af;padding-bottom:10px}'
+      + '@media print{body{background:#fff;padding:0}.page{border:none;max-width:100%}}'
+      + '</style>'
+      + '<script>window.onload=function(){window.print();}<\/script>'
+      + '</head><body>'
+      + '<div class="page">'
+      // HEADER
+      + '<div class="hdr">'
+      + '<div class="hdr-logo"><div class="co">' + (d.emitente||'Emitente') + '</div><div class="cnpj">CNPJ: ' + (d.cnpj||'—') + '</div><div class="cnpj" style="margin-top:2px">IE: 111.111.111.111</div></div>'
+      + '<div class="hdr-center"><div class="doc">' + dl.titulo + '</div><div class="docsub">' + dl.sub + '</div>'
+      + '<div style="margin-top:10px;font-size:10px;opacity:.85">Emitido em ' + dataFmt + ' · CFOP ' + d.cfop + '</div></div>'
+      + '<div class="hdr-right"><div class="entrada-saida">' + (isEntrada ? '0 - ENTRADA' : '1 - SAÍDA') + '</div>'
+      + '<div class="nflbl">Série / Número</div><div class="nfnum">001 / ' + serieNum + '</div></div>'
+      + '</div>'
+      // NATUREZA
+      + '<div class="nat-op"><strong>Natureza da Operação:</strong> ' + natOp + '</div>'
+      // EMITENTE
+      + '<div class="blk"><div class="blk-hdr">Emitente</div><div class="blk-body">'
+      + '<div class="row2">'
+      + '<div class="field"><label>Razão Social / Nome</label><span>' + (d.emitente||'—') + '</span></div>'
+      + '<div class="row2"><div class="field"><label>CNPJ</label><span>' + (d.cnpj||'—') + '</span></div>'
+      + '<div class="field"><label>IE</label><span>111.111.111.111</span></div></div></div>'
+      + '<div class="row3"><div class="field"><label>Município</label><span>São Paulo</span></div>'
+      + '<div class="field"><label>UF</label><span>SP</span></div>'
+      + '<div class="field"><label>CEP</label><span>04795-100</span></div></div></div></div>'
+      // DESTINATÁRIO
+      + '<div class="blk"><div class="blk-hdr">Destinatário / Remetente</div><div class="blk-body">'
+      + '<div class="row2"><div class="field"><label>Razão Social / Nome</label><span>' + destNome + '</span></div>'
+      + '<div class="row2"><div class="field"><label>CNPJ / CPF</label><span>' + destCnpj + '</span></div>'
+      + '<div class="field"><label>Data Emissão</label><span>' + dataFmt + '</span></div></div></div>'
+      + '<div class="row3"><div class="field"><label>Município</label><span>Curitiba</span></div>'
+      + '<div class="field"><label>UF</label><span>PR</span></div>'
+      + '<div class="field"><label>CEP</label><span>81200-240</span></div></div></div></div>'
+      // ITENS
+      + '<div class="blk"><div class="blk-hdr">Dados dos Produtos / Serviços</div>'
+      + '<table><thead><tr><th style="width:40px">#</th><th style="width:80px">NCM</th><th>Descrição</th><th style="width:40px">UN</th><th style="width:55px;text-align:right">Qtd</th><th style="width:80px;text-align:right">V. Unit.</th><th style="width:100px;text-align:right">V. Total</th></tr></thead>'
+      + '<tbody>' + itensHtml + '</tbody></table></div>'
+      // TOTAIS
+      + '<div class="totals"><div class="totals-hdr">Resumo Tributário — IBS / CBS (LC 214/2025)</div>'
+      + '<div class="totals-body">'
+      + '<div class="tval"><label>Valor Líquido</label><span>' + ff(vliq) + '</span></div>'
+      + '<div class="tval"><label>CBS (8%)</label><span style="color:#b45309">' + ff(cbs) + '</span></div>'
+      + '<div class="tval"><label>IBS (10%)</label><span style="color:#1d4ed8">' + ff(ibs) + '</span></div>'
+      + '<div class="tval highlight"><label>Valor Total NF</label><span>' + ff(vtotal) + '</span></div>'
+      + '</div></div>'
+      // CHAVE
+      + '<div class="chave-box"><label>Chave de Acesso (44 dígitos)</label>'
+      + '<div class="chave">' + chaveFormatada + '</div>'
+      + '<div class="barcode"></div></div>'
+      // INF COMPLEMENTAR
+      + '<div class="inf-comp"><strong>Informações Complementares:</strong> Documento fiscal eletrônico emitido conforme LC 214/2025 (IBS/CBS). '
+      + 'CFOP: ' + d.cfop + ' · Natureza: ' + natOp + '. '
+      + 'Ingestão SplitHub em ' + (d.dataIngestao||dataFmt) + '.</div>'
+      // FOOTER
+      + '<div class="footer"><span>Gerado pelo SplitHub — Plataforma IBS/CBS Positivo Tecnologia</span><span>' + dl.titulo + ' · ' + dataFmt + '</span></div>'
+      + '</div>'
+      + '</body></html>';
+
+    var w = window.open('', '_blank', 'width=960,height=760,scrollbars=yes');
+    if (w) { w.document.open(); w.document.write(html); w.document.close(); }
   };
 
   window.ingestaoSimularImportacao = function() {
