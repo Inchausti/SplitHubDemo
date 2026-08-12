@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Classificação de Fato Gerador · SplitHub v1.0</title>
+<style>
+:root{--bg:#F7F8FA;--sur:#FFFFFF;--sur2:#F0F2F6;--brd:#DDE1EA;--txt1:#131720;--txt2:#4A5568;--txt3:#8A92A3;--teal:#0E9E8E;--teal-d:rgba(14,158,142,.1);--blue:#1D5FCC;--blue-d:rgba(29,95,204,.08);--red:#D63A49;--red-d:rgba(214,58,73,.08);--amber:#B97A10;--amber-d:rgba(185,122,16,.08);--green:#1A7940;--green-d:rgba(26,121,64,.08);--purple:#6D28D9;--purple-d:rgba(109,40,217,.08);--mono:#EDF0F5}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0D1117;--sur:#161C25;--sur2:#1E2533;--brd:#262E3F;--txt1:#E4E8EF;--txt2:#8A99B4;--txt3:#4F5B73;--teal:#1FBAAA;--teal-d:rgba(31,186,170,.12);--blue:#4D9FFF;--blue-d:rgba(77,159,255,.1);--red:#F04B5C;--red-d:rgba(240,75,92,.1);--amber:#F59E0B;--amber-d:rgba(245,158,11,.1);--green:#22C55E;--green-d:rgba(34,197,94,.1);--purple:#A78BFA;--purple-d:rgba(167,139,250,.1);--mono:#1A2030}}
+:root[data-theme="dark"]{--bg:#0D1117;--sur:#161C25;--sur2:#1E2533;--brd:#262E3F;--txt1:#E4E8EF;--txt2:#8A99B4;--txt3:#4F5B73;--teal:#1FBAAA;--teal-d:rgba(31,186,170,.12);--blue:#4D9FFF;--blue-d:rgba(77,159,255,.1);--red:#F04B5C;--red-d:rgba(240,75,92,.1);--amber:#F59E0B;--amber-d:rgba(245,158,11,.1);--green:#22C55E;--green-d:rgba(34,197,94,.1);--purple:#A78BFA;--purple-d:rgba(167,139,250,.1);--mono:#1A2030}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt1);font:14px/1.6 'Segoe UI',system-ui,sans-serif;padding:40px 20px 80px}
+.doc{max-width:900px;margin:0 auto}
+.doc-eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);margin-bottom:10px}
+.doc-title{font-size:28px;font-weight:800;color:var(--txt1);line-height:1.15;margin-bottom:8px;text-wrap:balance}
+.doc-sub{font-size:14px;color:var(--txt2);margin-bottom:24px}
+.meta-row{display:flex;flex-wrap:wrap;gap:20px;padding:16px 20px;background:var(--sur2);border:1px solid var(--brd);border-radius:8px;margin-bottom:36px}
+.meta-item{font-size:12px}.meta-label{color:var(--txt3);margin-bottom:2px}.meta-val{color:var(--txt1);font-weight:600}
+.section{margin-bottom:44px}
+.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--brd)}
+.sec-num{font-size:11px;font-weight:700;color:var(--teal);background:var(--teal-d);border-radius:4px;padding:2px 7px}
+.sec-title{font-size:17px;font-weight:700;color:var(--txt1)}
+.card{background:var(--sur);border:1px solid var(--brd);border-radius:8px;padding:18px 20px;margin-bottom:12px}
+.card-title{font-size:13px;font-weight:700;color:var(--txt1);margin-bottom:8px}
+.card-sub{font-size:11px;color:var(--txt3);margin-bottom:10px}
+.info-box{border-radius:7px;padding:14px 16px;margin-bottom:14px;font-size:13px;line-height:1.65}
+.info-box.teal{background:var(--teal-d);border:1px solid rgba(31,186,170,.25)}
+.info-box.blue{background:var(--blue-d);border:1px solid rgba(77,159,255,.25)}
+.info-box.amber{background:var(--amber-d);border:1px solid rgba(245,158,11,.25)}
+.info-box.red{background:var(--red-d);border:1px solid rgba(240,75,92,.25)}
+.info-box.purple{background:var(--purple-d);border:1px solid rgba(109,40,217,.25)}
+.info-box strong{color:var(--txt1)}
+.tbl-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--brd);margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--sur2);color:var(--txt2);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:10px 14px;text-align:left}
+tbody tr{border-top:1px solid var(--brd)}tbody tr:hover{background:var(--sur2)}
+td{padding:10px 14px;color:var(--txt1);vertical-align:top}
+td.mono{font-family:'Consolas',monospace;font-size:12px;color:var(--blue)}
+.chip{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.chip.ok{background:var(--green-d);color:var(--green)}.chip.warn{background:var(--amber-d);color:var(--amber)}.chip.err{background:var(--red-d);color:var(--red)}.chip.info{background:var(--blue-d);color:var(--blue)}.chip.teal{background:var(--teal-d);color:var(--teal)}.chip.purple{background:var(--purple-d);color:var(--purple)}.chip.draft{background:var(--sur2);color:var(--txt3)}
+ul,ol{padding-left:18px;color:var(--txt2);font-size:13px}
+ul li,ol li{margin-bottom:5px;line-height:1.6}li strong{color:var(--txt1)}
+.lei-ref{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:var(--blue-d);color:var(--blue);border:1px solid rgba(29,95,204,.2);white-space:nowrap}
+.pipeline{display:flex;align-items:flex-start;overflow-x:auto;padding-bottom:4px;margin-bottom:20px}
+.pipe-step{flex:1;min-width:90px;text-align:center;position:relative}
+.pipe-step+.pipe-step::before{content:"→";position:absolute;left:-10px;top:20px;font-size:16px;color:var(--txt3)}
+.pipe-box{border:1px solid var(--brd);border-radius:8px;padding:10px 6px 8px;background:var(--sur);margin:0 5px}
+.pipe-num{font-size:20px;font-weight:800;margin-bottom:3px}
+.pipe-lbl{font-size:10px;font-weight:700;color:var(--txt1);line-height:1.3}
+.pipe-sub{font-size:9px;color:var(--txt2);margin-top:2px;line-height:1.4}
+/* Cockpit mockup */
+.cockpit{background:var(--sur);border:1px solid var(--brd);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.cockpit-hdr{background:var(--sur2);border-bottom:1px solid var(--brd);padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.cockpit-hdr-title{font-size:13px;font-weight:700;color:var(--txt1)}
+.cockpit-hdr-sub{font-size:11px;color:var(--txt3)}
+.cockpit-body{padding:0}
+.trigger-row{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--brd);transition:background .1s}
+.trigger-row:last-child{border-bottom:none}
+.trigger-row:hover{background:var(--sur2)}
+.tr-left{flex:1;min-width:0}
+.tr-name{font-size:13px;font-weight:600;color:var(--txt1);margin-bottom:2px}
+.tr-desc{font-size:11px;color:var(--txt3);line-height:1.45}
+.tr-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.tr-regime{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.toggle{width:36px;height:20px;border-radius:20px;position:relative;flex-shrink:0;cursor:pointer}
+.toggle.on{background:var(--teal)}
+.toggle.off{background:var(--brd)}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:2px;transition:left .15s}
+.toggle.on::after{left:18px}.toggle.off::after{left:2px}
+.tr-action{font-size:10px;font-weight:700;padding:3px 10px;border-radius:6px;border:1px solid var(--brd);background:var(--sur2);color:var(--txt2);cursor:pointer;white-space:nowrap}
+.cockpit-footer{padding:12px 18px;background:var(--sur2);border-top:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--txt3)}
+.cockpit-stat{display:flex;gap:20px}
+.cstat{display:flex;flex-direction:column;align-items:center}
+.cstat-val{font-size:16px;font-weight:800;color:var(--txt1)}
+.cstat-lbl{font-size:10px;color:var(--txt3)}
+/* Override panel mockup */
+.override-panel{background:var(--sur);border:1px solid var(--brd);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.override-hdr{background:var(--sur2);border-bottom:1px solid var(--brd);padding:10px 16px;font-size:12px;font-weight:700;color:var(--txt1)}
+.override-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--brd);font-size:12px}
+.override-row:last-child{border-bottom:none}
+.override-cnpj{font-family:'Consolas',monospace;color:var(--blue);font-size:11px;min-width:160px}
+.override-reason{color:var(--txt2);flex:1}
+.override-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.cl-entry{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--brd)}.cl-entry:last-child{border-bottom:none}
+.cl-ver{font-size:12px;font-weight:700;color:var(--teal);white-space:nowrap;min-width:44px}
+.cl-body{font-size:13px;color:var(--txt2)}.cl-body strong{color:var(--txt1);display:block;margin-bottom:3px}
+code{background:var(--mono);border-radius:3px;padding:1px 5px;font-family:'Consolas',monospace;font-size:12px;color:var(--blue)}
+hr{border:none;border-top:1px solid var(--brd);margin:40px 0}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.two-col{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <div class="doc-eyebrow">Product Requirements Document</div>
+  <h1 class="doc-title">Classificação de Fato Gerador de IBS/CBS</h1>
+  <p class="doc-sub">Motor de classificação e cockpit de configuração de gatilhos de Fato Gerador — determinação automática de quais DFs geram obrigação tributária IBS/CBS no ecossistema SplitHub</p>
+
+  <div class="meta-row">
+    <div class="meta-item"><div class="meta-label">Versão</div><div class="meta-val">v1.0</div></div>
+    <div class="meta-item"><div class="meta-label">Status</div><div class="meta-val"><span class="chip teal">Novo</span></div></div>
+    <div class="meta-item"><div class="meta-label">Data</div><div class="meta-val">Ago/2026</div></div>
+    <div class="meta-item"><div class="meta-label">Módulo</div><div class="meta-val">Admin → Classificação de FG</div></div>
+    <div class="meta-item"><div class="meta-label">Depende de</div><div class="meta-val">Ingestão de DFs v1.4+</div></div>
+    <div class="meta-item"><div class="meta-label">Base legal</div><div class="meta-val">LC 214/2025 · NT 2024.001 · NT 2024.002</div></div>
+  </div>
+
+  <!-- 1. Objetivo -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Objetivo e problema</span></div>
+    <div class="info-box teal">
+      <strong>Objetivo central:</strong> classificar automaticamente cada DF ingerido como <strong>com fato gerador</strong> ou <strong>sem fato gerador</strong> de IBS/CBS, com base em regras configuráveis pelo cliente, garantindo que apenas DFs com FG sejam encaminhados à Apuração Assistida da Plataforma Centralizada do Comitê Gestor.
+    </div>
+    <div class="info-box red">
+      <strong>Problema atual:</strong> o SplitHub ingere todos os DFs sem distinguir se possuem fato gerador. DFs sem FG enviados à Apuração Assistida geram <strong>divergências</strong> que bloqueiam a progressão do crédito IBS/CBS. A classificação de FG não pode ser feita apenas pelo CFOP — exige cruzamento de múltiplos campos e contexto da empresa.
+    </div>
+    <p style="font-size:13px;color:var(--txt2)">A classificação de FG é a <strong style="color:var(--txt1)">etapa intermediária crítica</strong> entre a Ingestão e a Apuração Assistida. Sem ela, a apuração opera sobre uma base incorreta e o crédito IBS/CBS fica em risco.</p>
+  </div>
+
+  <!-- 2. Base legal -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Base legal e notas técnicas</span></div>
+
+    <div class="info-box blue">
+      <strong>Referências normativas utilizadas neste PRD:</strong> LC 214/2025 (lei principal do IBS/CBS), NT 2024.001 (adequação do leiaute NF-e à reforma tributária — campos CBS/IBS no XML), NT 2024.002 (CT-e e NFCom com campos IBS/CBS), Ato do Comitê Gestor nº 1/2025 (regras transitórias de apuração).
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Norma</th><th>Artigo / Item</th><th>Regra relevante para FG</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">LC 214/2025 art. 4º</td><td>Caput</td><td>FG ocorre no fornecimento oneroso de bens e serviços — regra geral imutável</td></tr>
+          <tr><td class="mono">LC 214/2025 art. 4º §2º</td><td>§2º, I</td><td>Transferências entre estabelecimentos do mesmo titular <strong>não configuram FG</strong> — salvo contrato intercompany equiparando à venda</td></tr>
+          <tr><td class="mono">LC 214/2025 art. 8º</td><td>I, II, III</td><td>Exportações: FG ocorre, alíquota zero — mantém crédito acumulado; não confundir com ausência de FG</td></tr>
+          <tr><td class="mono">LC 214/2025 art. 15</td><td>§1º, §2º</td><td>Fornecimento contínuo: FG ocorre periodicamente conforme contrato, não na emissão da NF</td></tr>
+          <tr><td class="mono">LC 214/2025 art. 32</td><td>Caput</td><td>Operações imobiliárias: regras próprias de FG — depende de venda, locação ou cessão</td></tr>
+          <tr><td class="mono">LC 214/2025 art. 168</td><td>Caput e ss.</td><td>Regimes diferenciados (financeiro, saúde, combustíveis, agro) — FG e base de cálculo específicos por setor</td></tr>
+          <tr><td class="mono">LC 214/2025 art. 170</td><td>§3º</td><td>Tributação monofásica: FG concentrado no produtor/importador; alíquota zero nos demais elos</td></tr>
+          <tr><td class="mono">NT 2024.001</td><td>Item 4.2</td><td>Campo <code>vCBS</code> e <code>vIBS</code> obrigatórios no XML NF-e quando CBS/IBS incide — ausência indica operação não sujeita</td></tr>
+          <tr><td class="mono">NT 2024.001</td><td>Item 4.5</td><td>Campo <code>indFG</code> (indicador de fato gerador) — valores: 0=não sujeito, 1=sujeito, 2=sujeito com suspensão</td></tr>
+          <tr><td class="mono">NT 2024.002</td><td>Item 3.1</td><td>CT-e e NFCom: mesmo padrão de <code>indFG</code> aplicado ao campo de serviço de transporte e telecom</td></tr>
+          <tr><td class="mono">Ato CG nº 1/2025</td><td>Art. 7º</td><td>Período transitório: contribuinte pode contestar a classificação automática de FG feita pela Plataforma Centralizada em até 30 dias</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 3. Regras de FG -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Mapa de regras de fato gerador</span></div>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:16px">Classificação por tipo de operação, com fundamento legal e campos XML determinantes. O campo <code>indFG</code> (NT 2024.001) é o sinal primário — quando ausente ou ambíguo, o motor aplica as regras abaixo.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Tipo de operação</th><th>FG?</th><th>Crédito?</th><th>Campos determinantes</th><th>Fundamento</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Venda de mercadoria (saída)</td>
+            <td><span class="chip ok">Sim</span></td>
+            <td>Débito gerado</td>
+            <td><code>CFOP 5/6/7.1xx</code> <code>tpNF=1</code> <code>finNFe=1</code></td>
+            <td><span class="lei-ref">LC 214 art. 4º</span></td>
+          </tr>
+          <tr>
+            <td>Compra de mercadoria (entrada)</td>
+            <td><span class="chip ok">Sim</span></td>
+            <td><span class="chip ok">Crédito</span></td>
+            <td><code>CFOP 1/2/3.1xx</code> <code>tpNF=0</code></td>
+            <td><span class="lei-ref">LC 214 art. 4º</span></td>
+          </tr>
+          <tr>
+            <td>Prestação de serviço (NFS-e)</td>
+            <td><span class="chip ok">Sim</span></td>
+            <td>Débito gerado</td>
+            <td>NFS-e com contraprestação</td>
+            <td><span class="lei-ref">LC 214 art. 4º</span></td>
+          </tr>
+          <tr>
+            <td>Serviço tomado (NFS-e entrada)</td>
+            <td><span class="chip ok">Sim</span></td>
+            <td><span class="chip ok">Crédito</span></td>
+            <td>NFS-e de terceiro</td>
+            <td><span class="lei-ref">LC 214 art. 4º</span></td>
+          </tr>
+          <tr>
+            <td>Exportação de bens</td>
+            <td><span class="chip ok">Sim</span></td>
+            <td><span class="chip ok">Crédito acumulado</span></td>
+            <td><code>CFOP 7.xxx</code> <code>idDest=3</code></td>
+            <td><span class="lei-ref">LC 214 art. 8º I</span></td>
+          </tr>
+          <tr>
+            <td>Transferência entre filiais mesma empresa</td>
+            <td><span class="chip err">Não</span></td>
+            <td>—</td>
+            <td><code>CFOP 5/6.152</code> <code>emit.CNPJ ∈ grupo</code> <code>dest.CNPJ ∈ grupo</code></td>
+            <td><span class="lei-ref">LC 214 art. 4º §2º I</span></td>
+          </tr>
+          <tr>
+            <td>Transferência intercompany com contrato equiparando à venda</td>
+            <td><span class="chip warn">Configurável</span></td>
+            <td>Configurável</td>
+            <td>CFOP transferência + contrato cadastrado no SplitHub</td>
+            <td><span class="lei-ref">LC 214 art. 4º §2º</span></td>
+          </tr>
+          <tr>
+            <td>Devolução de venda</td>
+            <td><span class="chip err">Não</span></td>
+            <td>Estorno do FG original</td>
+            <td><code>finNFe=4</code> <code>CFOP 5/6.201</code> <code>CFOP 5/6.202</code></td>
+            <td><span class="lei-ref">LC 214 art. 4º</span></td>
+          </tr>
+          <tr>
+            <td>Remessa para industrialização / conserto</td>
+            <td><span class="chip err">Não</span></td>
+            <td>—</td>
+            <td><code>CFOP 5/6.901</code> <code>5/6.902</code></td>
+            <td><span class="lei-ref">LC 214 art. 4º</span></td>
+          </tr>
+          <tr>
+            <td>Energia elétrica / telecom (monofásico)</td>
+            <td><span class="chip ok">Sim</span></td>
+            <td><span class="chip warn">Limitado</span></td>
+            <td>NFCom / NF3-e <code>mod=62/66</code></td>
+            <td><span class="lei-ref">LC 214 art. 170</span></td>
+          </tr>
+          <tr>
+            <td>Frete (CT-e)</td>
+            <td><span class="chip ok">Sim</span></td>
+            <td><span class="chip ok">Crédito</span></td>
+            <td>CT-e <code>mod=57</code> com contraprestação</td>
+            <td><span class="lei-ref">LC 214 art. 4º</span></td>
+          </tr>
+          <tr>
+            <td>Importação de bens</td>
+            <td><span class="chip ok">Sim</span></td>
+            <td><span class="chip ok">Crédito</span></td>
+            <td>FG no desembaraço — DI + NF de entrada <code>CFOP 3.1xx</code></td>
+            <td><span class="lei-ref">LC 214 art. 4º IV</span></td>
+          </tr>
+          <tr>
+            <td>Fornecimento contínuo (SaaS, manutenção)</td>
+            <td><span class="chip ok">Sim</span></td>
+            <td><span class="chip ok">Crédito</span></td>
+            <td>NFS-e periódica — FG na data do contrato, não na NF</td>
+            <td><span class="lei-ref">LC 214 art. 15</span></td>
+          </tr>
+          <tr>
+            <td>MDF-e (manifesto de transporte)</td>
+            <td><span class="chip err">Não</span></td>
+            <td>—</td>
+            <td><code>mod=58</code> — documento auxiliar, sem obrigação principal</td>
+            <td><span class="lei-ref">—</span></td>
+          </tr>
+          <tr>
+            <td>NF de ajuste / complementar</td>
+            <td><span class="chip warn">Configurável</span></td>
+            <td>Depende</td>
+            <td><code>finNFe=2</code> (complementar) / <code>finNFe=3</code> (ajuste)</td>
+            <td><span class="lei-ref">LC 214 art. 4º</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 4. Pipeline -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Posição no pipeline de ingestão</span></div>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:16px">A classificação de FG é inserida como <strong style="color:var(--txt1)">etapa 3.5</strong> no pipeline existente — após validação de layout e antes da validação de dados.</p>
+    <div class="pipeline">
+      <div class="pipe-step"><div class="pipe-box" style="border-top:3px solid var(--blue)"><div class="pipe-num" style="color:var(--blue)">①</div><div class="pipe-lbl">Recebimento</div><div class="pipe-sub">ERP / Upload</div></div></div>
+      <div class="pipe-step"><div class="pipe-box" style="border-top:3px solid var(--teal)"><div class="pipe-num" style="color:var(--teal)">②</div><div class="pipe-lbl">Triagem</div><div class="pipe-sub">Tipo DF</div></div></div>
+      <div class="pipe-step"><div class="pipe-box" style="border-top:3px solid var(--amber)"><div class="pipe-num" style="color:var(--amber)">③</div><div class="pipe-lbl">Val. Layout</div><div class="pipe-sub">Schema XSD</div></div></div>
+      <div class="pipe-step"><div class="pipe-box" style="border-top:3px solid var(--purple);background:var(--purple-d)"><div class="pipe-num" style="color:var(--purple)">③.5</div><div class="pipe-lbl" style="color:var(--purple)">Class. FG</div><div class="pipe-sub" style="color:var(--purple)">Motor + cockpit</div></div></div>
+      <div class="pipe-step"><div class="pipe-box" style="border-top:3px solid var(--txt2)"><div class="pipe-num" style="color:var(--txt2)">④</div><div class="pipe-lbl">Val. Dados</div><div class="pipe-sub">CNPJ, CFOP</div></div></div>
+      <div class="pipe-step"><div class="pipe-box" style="border-top:3px solid var(--green)"><div class="pipe-num" style="color:var(--green)">⑤</div><div class="pipe-lbl">Integrado</div><div class="pipe-sub">RF + fgStatus</div></div></div>
+    </div>
+    <div class="two-col">
+      <div class="card" style="border-left:3px solid var(--green)">
+        <div class="card-title">Saída: com FG → Apuração Assistida</div>
+        <p style="font-size:12px;color:var(--txt2)"><code>fgStatus = com_fato_gerador</code><br>DF segue para apuração de IBS/CBS. Gera débito (saída) ou crédito (entrada) na Plataforma Centralizada.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--txt3)">
+        <div class="card-title">Saída: sem FG → Rastreabilidade</div>
+        <p style="font-size:12px;color:var(--txt2)"><code>fgStatus = sem_fato_gerador</code><br>DF registrado para auditoria e rastreabilidade. Não entra na apuração. Não gera débito nem crédito.</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--amber)">
+      <div class="card-title">Saída: FG pendente de revisão manual</div>
+      <p style="font-size:12px;color:var(--txt2)"><code>fgStatus = revisao_manual</code> — casos ambíguos onde o motor não consegue determinar automaticamente (ex: NF complementar sem contexto, transferência com contrato não cadastrado). Encaminhados para fila de revisão do usuário com prazo de contestação de 30 dias <span class="lei-ref">Ato CG nº 1/2025 art. 7º</span>.</p>
+    </div>
+  </div>
+
+  <!-- 5. Cockpit -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Cockpit de configuração de fato gerador</span></div>
+
+    <div class="info-box purple">
+      <strong>Propósito do cockpit:</strong> cada empresa tem um contexto diferente — a Positivo Tecnologia tem transferências intercompany, contratos de manutenção contínua e importações. O cockpit permite ao administrador ativar, desativar e configurar cada gatilho de FG conforme a realidade da empresa, sem depender de atualizações do sistema.
+    </div>
+
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:16px">Protótipo da interface de configuração:</p>
+
+    <!-- Cockpit mockup -->
+    <div class="cockpit">
+      <div class="cockpit-hdr">
+        <div>
+          <div class="cockpit-hdr-title">Gatilhos de Fato Gerador</div>
+          <div class="cockpit-hdr-sub">Configure quais operações configuram FG para o seu grupo econômico</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:11px;color:var(--txt3)">Pré-set:</span>
+          <select style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid var(--brd);background:var(--sur);color:var(--txt1);font-family:inherit">
+            <option>Indústria / Manufatura</option>
+            <option>Comércio</option>
+            <option>Serviços</option>
+            <option>Personalizado</option>
+          </select>
+        </div>
+      </div>
+      <div class="cockpit-body">
+
+        <div style="padding:8px 18px;background:var(--sur2);border-bottom:1px solid var(--brd);font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em">Operações de saída — Débitos IBS/CBS</div>
+
+        <div class="trigger-row">
+          <div class="tr-left">
+            <div class="tr-name">Venda de mercadoria</div>
+            <div class="tr-desc">CFOP 5/6/7.1xx — <code>tpNF=1</code> · <code>finNFe=1</code> <span class="lei-ref" style="margin-left:6px">LC 214 art. 4º</span></div>
+          </div>
+          <div class="tr-right">
+            <span class="tr-regime chip ok">Regra geral</span>
+            <div class="toggle on" title="Ativo"></div>
+            <button class="tr-action">Configurar</button>
+          </div>
+        </div>
+
+        <div class="trigger-row">
+          <div class="tr-left">
+            <div class="tr-name">Exportação de bens</div>
+            <div class="tr-desc">CFOP 7.xxx · <code>idDest=3</code> — FG ocorre, alíquota zero, crédito acumulado <span class="lei-ref" style="margin-left:6px">LC 214 art. 8º I</span></div>
+          </div>
+          <div class="tr-right">
+            <span class="tr-regime chip ok">Regra geral</span>
+            <div class="toggle on"></div>
+            <button class="tr-action">Configurar</button>
+          </div>
+        </div>
+
+        <div class="trigger-row">
+          <div class="tr-left">
+            <div class="tr-name">NF complementar / de ajuste</div>
+            <div class="tr-desc"><code>finNFe=2</code> (complementar) e <code>finNFe=3</code> (ajuste) — FG depende do contexto da NF original <span class="lei-ref" style="margin-left:6px">LC 214 art. 4º</span></div>
+          </div>
+          <div class="tr-right">
+            <span class="tr-regime chip warn">Configurável</span>
+            <div class="toggle on"></div>
+            <button class="tr-action" style="border-color:var(--amber);color:var(--amber)">Configurar ▸</button>
+          </div>
+        </div>
+
+        <div style="padding:8px 18px;background:var(--sur2);border-bottom:1px solid var(--brd);border-top:1px solid var(--brd);font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em">Operações de entrada — Créditos IBS/CBS</div>
+
+        <div class="trigger-row">
+          <div class="tr-left">
+            <div class="tr-name">Compra de mercadoria</div>
+            <div class="tr-desc">CFOP 1/2/3.1xx · <code>tpNF=0</code> — gera crédito de IBS/CBS <span class="lei-ref" style="margin-left:6px">LC 214 art. 4º</span></div>
+          </div>
+          <div class="tr-right">
+            <span class="tr-regime chip ok">Regra geral</span>
+            <div class="toggle on"></div>
+            <button class="tr-action">Configurar</button>
+          </div>
+        </div>
+
+        <div class="trigger-row">
+          <div class="tr-left">
+            <div class="tr-name">Serviço tomado (NFS-e)</div>
+            <div class="tr-desc">NFS-e de terceiro com contraprestação — gera crédito <span class="lei-ref" style="margin-left:6px">LC 214 art. 4º</span></div>
+          </div>
+          <div class="tr-right">
+            <span class="tr-regime chip ok">Regra geral</span>
+            <div class="toggle on"></div>
+            <button class="tr-action">Configurar</button>
+          </div>
+        </div>
+
+        <div class="trigger-row">
+          <div class="tr-left">
+            <div class="tr-name">Energia / telecom (monofásico)</div>
+            <div class="tr-desc">NFCom / NF3-e — FG existe, crédito <strong>limitado</strong> por tributação monofásica <span class="lei-ref" style="margin-left:6px">LC 214 art. 170</span></div>
+          </div>
+          <div class="tr-right">
+            <span class="tr-regime chip warn">Monofásico</span>
+            <div class="toggle on"></div>
+            <button class="tr-action" style="border-color:var(--amber);color:var(--amber)">Configurar ▸</button>
+          </div>
+        </div>
+
+        <div class="trigger-row">
+          <div class="tr-left">
+            <div class="tr-name">Importação de bens</div>
+            <div class="tr-desc">FG no desembaraço aduaneiro, não na emissão da NF — CFOP 3.1xx + data DI <span class="lei-ref" style="margin-left:6px">LC 214 art. 4º IV</span></div>
+          </div>
+          <div class="tr-right">
+            <span class="tr-regime chip info">FG desembaraço</span>
+            <div class="toggle on"></div>
+            <button class="tr-action" style="border-color:var(--blue);color:var(--blue)">Configurar ▸</button>
+          </div>
+        </div>
+
+        <div style="padding:8px 18px;background:var(--sur2);border-bottom:1px solid var(--brd);border-top:1px solid var(--brd);font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em">Operações sem fato gerador</div>
+
+        <div class="trigger-row">
+          <div class="tr-left">
+            <div class="tr-name">Transferência entre filiais</div>
+            <div class="tr-desc">CFOP 5/6.152, 5/6.409 — emit e dest no mesmo grupo econômico <span class="lei-ref" style="margin-left:6px">LC 214 art. 4º §2º I</span></div>
+          </div>
+          <div class="tr-right">
+            <span class="tr-regime chip err">Sem FG</span>
+            <div class="toggle off"></div>
+            <button class="tr-action">Configurar</button>
+          </div>
+        </div>
+
+        <div class="trigger-row">
+          <div class="tr-left">
+            <div class="tr-name">Transferência intercompany com contrato</div>
+            <div class="tr-desc">Mesmas CFOPs de transferência mas com contrato intercompany equiparando à venda — configurar por CNPJ <span class="lei-ref" style="margin-left:6px">LC 214 art. 4º §2º</span></div>
+          </div>
+          <div class="tr-right">
+            <span class="tr-regime chip warn">Configurável</span>
+            <div class="toggle off"></div>
+            <button class="tr-action" style="border-color:var(--amber);color:var(--amber)">Configurar ▸</button>
+          </div>
+        </div>
+
+        <div class="trigger-row">
+          <div class="tr-left">
+            <div class="tr-name">Devolução de venda / compra</div>
+            <div class="tr-desc"><code>finNFe=4</code> · CFOP 5/6.201, 5/6.202 — estorno do FG original <span class="lei-ref" style="margin-left:6px">LC 214 art. 4º</span></div>
+          </div>
+          <div class="tr-right">
+            <span class="tr-regime chip err">Sem FG</span>
+            <div class="toggle off"></div>
+            <button class="tr-action">Configurar</button>
+          </div>
+        </div>
+
+        <div class="trigger-row">
+          <div class="tr-left">
+            <div class="tr-name">Remessa para industrialização / conserto</div>
+            <div class="tr-desc">CFOP 5/6.901, 5/6.902 — sem transferência de titularidade</div>
+          </div>
+          <div class="tr-right">
+            <span class="tr-regime chip err">Sem FG</span>
+            <div class="toggle off"></div>
+            <button class="tr-action">Configurar</button>
+          </div>
+        </div>
+
+        <div class="trigger-row">
+          <div class="tr-left">
+            <div class="tr-name">Fornecimento contínuo (SaaS / manutenção)</div>
+            <div class="tr-desc">FG periódico conforme contrato — configurar data de referência do FG (data NF ou data contrato) <span class="lei-ref" style="margin-left:6px">LC 214 art. 15</span></div>
+          </div>
+          <div class="tr-right">
+            <span class="tr-regime chip warn">FG periódico</span>
+            <div class="toggle on"></div>
+            <button class="tr-action" style="border-color:var(--amber);color:var(--amber)">Configurar ▸</button>
+          </div>
+        </div>
+
+      </div>
+      <div class="cockpit-footer">
+        <div class="cockpit-stat">
+          <div class="cstat"><div class="cstat-val" style="color:var(--green)">11</div><div class="cstat-lbl">Com FG</div></div>
+          <div class="cstat"><div class="cstat-val" style="color:var(--txt3)">4</div><div class="cstat-lbl">Sem FG</div></div>
+          <div class="cstat"><div class="cstat-val" style="color:var(--amber)">3</div><div class="cstat-lbl">Configuráveis</div></div>
+        </div>
+        <span>Baseado em 18 gatilhos disponíveis · Última alteração: Ago/2026</span>
+      </div>
+    </div>
+
+    <!-- Override panel -->
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:12px;margin-top:20px"><strong style="color:var(--txt1)">Override por CNPJ:</strong> regra de exceção aplicada a fornecedores ou clientes específicos, sobrepondo a classificação automática do motor.</p>
+    <div class="override-panel">
+      <div class="override-hdr">Overrides por CNPJ — regras de exceção individuais</div>
+      <div class="override-row">
+        <div class="override-cnpj">76.535.764/0001-43</div>
+        <div class="override-reason">Positivo SP — transferências equiparadas à venda por contrato intercompany 2025</div>
+        <span class="override-badge chip warn">Com FG forçado</span>
+      </div>
+      <div class="override-row">
+        <div class="override-cnpj">00.000.000/0001-00</div>
+        <div class="override-reason">Fornecedor de energia — regime monofásico, crédito limitado a 20%</div>
+        <span class="override-badge chip info">Crédito parcial</span>
+      </div>
+      <div class="override-row" style="color:var(--txt3);font-style:italic;font-size:12px">
+        <span>+ Adicionar override por CNPJ</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Requisitos funcionais -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Requisitos funcionais</span></div>
+    <div class="card">
+      <div class="card-title">RF-FG-01 · Motor de classificação automática</div>
+      <p style="font-size:13px;color:var(--txt2)">Para cada DF ingerido, o motor deve avaliar em sequência: (1) campo <code>indFG</code> do XML (NT 2024.001); (2) CFOP + tipo de NF (<code>finNFe</code>, <code>tpNF</code>, <code>idDest</code>); (3) comparação emit/dest com CNPJs do grupo econômico; (4) gatilhos ativados no cockpit; (5) overrides por CNPJ. Resultado persistido como <code>fgStatus</code> no RF.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-FG-02 · Cockpit de configuração de gatilhos</div>
+      <p style="font-size:13px;color:var(--txt2)">Interface administrativa com lista de todos os gatilhos de FG, toggle ativo/inativo por gatilho, modo de configuração avançada (parâmetros adicionais por gatilho), pré-sets por segmento (Indústria, Comércio, Serviços) e histórico de alterações com responsável e timestamp.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-FG-03 · Override por CNPJ</div>
+      <p style="font-size:13px;color:var(--txt2)">Administrador pode cadastrar regra de exceção por CNPJ de emitente ou destinatário, com tipo de override (com FG forçado, sem FG forçado, crédito parcial), justificativa obrigatória e referência ao contrato ou ato normativo que fundamenta a exceção.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-FG-04 · Fila de revisão manual</div>
+      <p style="font-size:13px;color:var(--txt2)">DFs com <code>fgStatus = revisao_manual</code> são enfileirados com prazo de 30 dias (Ato CG nº 1/2025 art. 7º). Interface de revisão exibe: DF, campos determinantes, regra ambígua identificada, botões "Confirmar com FG" / "Confirmar sem FG". Prazo vencido gera alerta de risco.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-FG-05 · Simulação de impacto</div>
+      <p style="font-size:13px;color:var(--txt2)">Antes de salvar uma alteração no cockpit, o sistema deve exibir: "Com essa configuração, X DFs do período atual mudariam de classificação — R$ Y em crédito e R$ Z em débito seriam afetados." Simulação não salva até confirmação explícita do administrador.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-FG-06 · Reclassificação retroativa</div>
+      <p style="font-size:13px;color:var(--txt2)">Quando uma configuração de gatilho é alterada, o sistema deve oferecer reclassificação do histórico de DFs do período selecionado. Reclassificação gera evento de auditoria com timestamp, usuário e delta de crédito/débito afetado.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-FG-07 · Auditoria e rastreabilidade</div>
+      <p style="font-size:13px;color:var(--txt2)">Cada DF deve registrar: regra de FG aplicada, versão do cockpit vigente no momento da classificação, campo XML determinante, fonte da decisão (automático / override / revisão manual). Log imutável para fins de contestação na Plataforma Centralizada.</p>
+    </div>
+  </div>
+
+  <!-- 7. Não funcionais -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Requisitos não-funcionais</span></div>
+    <ul>
+      <li><strong>Performance:</strong> classificação de FG concluída em ≤ 200ms por DF — não deve impactar o throughput do pipeline de ingestão.</li>
+      <li><strong>Determinismo:</strong> mesmos campos XML + mesma configuração de cockpit → sempre o mesmo <code>fgStatus</code>. Classificação deve ser reproduzível.</li>
+      <li><strong>Versionamento:</strong> toda alteração no cockpit cria uma nova versão imutável das regras. DFs classificados antes da alteração mantêm referência à versão vigente.</li>
+      <li><strong>Prazo legal:</strong> DFs com <code>fgStatus = revisao_manual</code> devem gerar alerta 5 dias antes do vencimento do prazo de 30 dias (Ato CG nº 1/2025).</li>
+      <li><strong>Separação de contexto:</strong> configurações do cockpit são por grupo econômico (tenant) — nunca compartilhadas entre clientes.</li>
+    </ul>
+  </div>
+
+  <!-- 8. Integrações -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Integrações e dependências</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Sistema</th><th>Direção</th><th>Dados</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">Ingestão de DFs (v1.4+)</td><td>← Entrada</td><td>DF validado em layout e dados — campos XML para classificação</td></tr>
+          <tr><td class="mono">Contratos (Admin)</td><td>← Consulta</td><td>Contratos intercompany cadastrados — determinam FG em transferências</td></tr>
+          <tr><td class="mono">Grupo Econômico (Admin)</td><td>← Consulta</td><td>CNPJs do grupo — identifica transferências entre filiais</td></tr>
+          <tr><td class="mono">Apuração Assistida</td><td>→ Saída</td><td>Apenas DFs com <code>fgStatus = com_fato_gerador</code></td></tr>
+          <tr><td class="mono">Módulo de Inconsistências</td><td>→ Saída</td><td>DFs em <code>revisao_manual</code> com prazo próximo do vencimento</td></tr>
+          <tr><td class="mono">Auditoria / Log</td><td>→ Saída</td><td>Registro imutável de cada classificação com regra, versão e responsável</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 9. Campos no RF -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Campos adicionados ao Registro Fiscal (RF)</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Campo</th><th>Tipo</th><th>Valores possíveis</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">fgStatus</td><td>enum</td><td><code>com_fato_gerador</code> · <code>sem_fato_gerador</code> · <code>revisao_manual</code></td><td>Resultado da classificação</td></tr>
+          <tr><td class="mono">fgRegraAplicada</td><td>string</td><td>ex: <code>venda_mercadoria</code> · <code>transferencia_filial</code></td><td>Gatilho do cockpit que determinou o resultado</td></tr>
+          <tr><td class="mono">fgCampoXml</td><td>string</td><td>ex: <code>CFOP=5102</code> · <code>finNFe=4</code></td><td>Campo XML determinante da classificação</td></tr>
+          <tr><td class="mono">fgFonte</td><td>enum</td><td><code>automatico</code> · <code>override_cnpj</code> · <code>revisao_manual</code></td><td>Origem da decisão</td></tr>
+          <tr><td class="mono">fgVersaoCockpit</td><td>string</td><td>ex: <code>v3</code></td><td>Versão do cockpit vigente na classificação</td></tr>
+          <tr><td class="mono">fgPrazoRevisao</td><td>date</td><td>ISO 8601</td><td>Prazo de contestação — preenchido apenas quando <code>revisao_manual</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Changelog -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">—</span><span class="sec-title">Changelog</span></div>
+    <div class="cl-entry">
+      <div class="cl-ver">v1.0</div>
+      <div class="cl-body">
+        <strong>Ago/2026 · Versão inicial</strong>
+        Motor de classificação de FG com 18 gatilhos. Cockpit de configuração com pré-sets por segmento, overrides por CNPJ, simulação de impacto e reclassificação retroativa. Fila de revisão manual com prazo Ato CG nº 1/2025. Campos <code>fgStatus</code>, <code>fgRegraAplicada</code> e <code>fgFonte</code> adicionados ao RF. Base legal: LC 214/2025 arts. 4º, 8º, 15, 170 + NT 2024.001/002.
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
