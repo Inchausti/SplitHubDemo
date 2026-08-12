@@ -6906,7 +6906,8 @@ window.downloadGuiaDARF = function() {
   }
 
   window.ingestaoInit = function() {
-    if (!_ingIniciado) {
+    var nfsAtual = (window.nfListaFiltradaGlobal || []).length;
+    if (!_ingIniciado || nfsAtual !== _ingDados.length) {
       _ingDados = _gerarDadosDeGlobais();
       _ingIniciado = true;
     }
