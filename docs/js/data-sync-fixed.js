@@ -329,35 +329,41 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   var d0 = r.data || '';
 
   // Eventos da NF (comuns a todos os RFs)
+  var FTS = window._rfFmtTS, MK = window._rfMkTS;
   if (d0) {
-    allEvents.push({ data: F(d0), tipo: 'INGESTÃO', modulo: 'Ingestão de DFs', ator: 'SEFAZ',
-      desc: (r.tipoDF || 'NF-e') + ' ' + r.numero + ' recebida e registrada na plataforma SplitHub · emitente: ' + (r.entidade || '—'), cls: 'ok', order: d0 + '_00' });
-    allEvents.push({ data: F(A(d0, 1)), tipo: 'VALIDAÇÃO', modulo: 'Ingestão de DFs', ator: 'SplitHub',
-      desc: 'Schema XML e dados fiscais validados · documento aceito · ' + tipoLabel, cls: 'ok', order: A(d0, 1) + '_01' });
+    allEvents.push({ ts: MK(d0,'08:32'), data: FTS(MK(d0,'08:32')), tipo: 'INGESTÃO', modulo: 'Ingestão de DFs', ator: 'SEFAZ',
+      desc: (r.tipoDF || 'NF-e') + ' ' + r.numero + ' recebida e registrada na plataforma SplitHub · emitente: ' + (r.entidade || '—'), cls: 'ok' });
+    allEvents.push({ ts: MK(A(d0,1),'09:15'), data: FTS(MK(A(d0,1),'09:15')), tipo: 'VALIDAÇÃO', modulo: 'Ingestão de DFs', ator: 'SplitHub',
+      desc: 'Schema XML e dados fiscais validados · documento aceito · ' + tipoLabel, cls: 'ok' });
   }
 
   // Eventos por RF
   (r.registrosFiscais || []).forEach(function(rf, ri) {
     if (!window._rfGerarHistorico) return;
     var evs = window._rfGerarHistorico(rf, r);
-    // Skip the first two (INGESTÃO, VALIDAÇÃO) — já adicionamos no nível NF
+    // Skip INGESTÃO e VALIDAÇÃO — já adicionamos no nível NF
     evs.slice(2).forEach(function(ev) {
-      // Tag com o RF para distinguir IBS x CBS
       var tfSuffix = rf.tipoFiscal ? ' · ' + rf.tipoFiscal.toUpperCase() : '';
       allEvents.push({
+        ts: ev.ts || '—',
         data: ev.data,
         tipo: ev.tipo,
         modulo: ev.modulo,
         ator: ev.ator,
-        desc: ev.desc + (ev.tipo === 'GERAÇÃO RF' || ev.tipo === 'GERAÇÃO RF' ? tfSuffix : ''),
-        cls: ev.cls,
-        order: (ev.data === '—' ? '9999-99' : ev.data) + '_' + (ri * 10 + 5)
+        desc: ev.desc + (ev.tipo === 'GERAÇÃO RF' ? tfSuffix : ''),
+        cls: ev.cls
       });
     });
   });
 
-  // Ordenar por data
-  allEvents.sort(function(a, b) { return a.order < b.order ? -1 : a.order > b.order ? 1 : 0; });
+  // Ordenar decrescente por timestamp (mais recente primeiro)
+  allEvents.sort(function(a, b) {
+    var ta = a.ts || '—', tb = b.ts || '—';
+    if (ta === '—' && tb === '—') return 0;
+    if (ta === '—') return 1;
+    if (tb === '—') return -1;
+    return ta > tb ? -1 : ta < tb ? 1 : 0;
+  });
 
   var tlH = '';
   allEvents.forEach(function(ev, i) {
@@ -471,10 +477,25 @@ window._rfAddDays = function(iso, n) {
   var d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n);
   return d.toISOString().substring(0, 10);
 };
+// Formata data ISO → DD/MM/AAAA
 window._rfFmt = function(iso) {
   if (!iso || iso === '—') return '—';
   var p = (iso.split('T')[0] || iso).split('-');
   return p.length === 3 ? p[2]+'/'+p[1]+'/'+p[0] : iso;
+};
+// Formata datetime ISO → DD/MM/AAAA HH:MM (timestamp)
+window._rfFmtTS = function(iso) {
+  if (!iso || iso === '—') return '—';
+  var parts = iso.split('T');
+  var datePart = parts[0].split('-');
+  var timePart = (parts[1] || '').substring(0, 5);
+  if (datePart.length !== 3) return iso;
+  return datePart[2]+'/'+datePart[1]+'/'+datePart[0] + (timePart ? ' ' + timePart : '');
+};
+// Monta ISO datetime: iso date + hh:mm fixo
+window._rfMkTS = function(isoDate, hhmm) {
+  if (!isoDate || isoDate === '—') return '—';
+  return isoDate + 'T' + (hhmm || '00:00');
 };
 window._rfDetailRow = function(label, value, color, mono) {
   return '<div style="margin-bottom:9px">'
@@ -487,63 +508,77 @@ window._rfGerarHistorico = function(rf, nf) {
   var ev = [];
   var d0 = rf.data || nf.data || '';
   if (!d0) return ev;
-  var A = window._rfAddDays, F = window._rfFmt;
+  var A = window._rfAddDays, F = window._rfFmtTS, MK = window._rfMkTS;
   var isSaida = nf.tipo === 'saida';
 
-  ev.push({ data: F(d0),        tipo: 'INGESTÃO',    modulo: 'Ingestão de DFs',  ator: 'SEFAZ',
-    desc: 'Documento ' + (nf.tipoDF || 'NF-e') + ' ' + nf.numero + ' recebido e registrado na plataforma SplitHub', cls: 'ok' });
+  function mkEv(ts, tipo, modulo, ator, desc, cls) {
+    return { ts: ts, data: (ts === '—' ? '—' : F(ts)), tipo: tipo, modulo: modulo, ator: ator, desc: desc, cls: cls };
+  }
 
-  ev.push({ data: F(A(d0,1)),   tipo: 'VALIDAÇÃO',   modulo: 'Ingestão de DFs',  ator: 'SplitHub',
-    desc: 'Schema XML e dados fiscais validados · emitente/destinatário conferidos · documento aceito', cls: 'ok' });
+  ev.push(mkEv(MK(d0,'08:32'),          'INGESTÃO',      'Ingestão de DFs',          'SEFAZ',
+    'Documento ' + (nf.tipoDF || 'NF-e') + ' ' + nf.numero + ' recebido e registrado na plataforma SplitHub', 'ok'));
 
-  ev.push({ data: F(A(d0,2)),   tipo: 'GERAÇÃO RF',  modulo: isSaida ? 'Débitos' : 'Créditos', ator: 'SplitHub',
-    desc: 'RF ' + rf.id + ' gerado · ' + (rf.tipoFiscal || '').toUpperCase() + ' · alíquota de transição 2026 · Art. 48 LC 214/2025', cls: 'ok' });
+  ev.push(mkEv(MK(A(d0,1),'09:15'),     'VALIDAÇÃO',     'Ingestão de DFs',          'SplitHub',
+    'Schema XML e dados fiscais validados · emitente/destinatário conferidos · documento aceito', 'ok'));
+
+  ev.push(mkEv(MK(A(d0,2),'10:00'),     'GERAÇÃO RF',    isSaida ? 'Débitos' : 'Créditos', 'SplitHub',
+    'RF ' + rf.id + ' gerado · ' + (rf.tipoFiscal || '').toUpperCase() + ' · alíquota de transição 2026 · Art. 48 LC 214/2025', 'ok'));
 
   var _sc_hist = rf.statusCredito || rf.status || '';
   var _sr_hist = rf.statusRegistro || null;
+
   if (_sr_hist === 'inconsistencia') {
-    ev.push({ data: F(A(d0,3)), tipo: 'INCONSISTÊNCIA', modulo: 'Inconsistências', ator: 'SplitHub',
-      desc: (rf.inconsistencia || 'Divergência') + ' identificada · registro encaminhado para revisão manual', cls: 'erro' });
+    ev.push(mkEv(MK(A(d0,3),'14:27'),   'INCONSISTÊNCIA','Inconsistências',           'SplitHub',
+      (rf.inconsistencia || 'Divergência') + ' identificada · registro encaminhado para revisão manual', 'erro'));
   }
   if (_sr_hist === 'a_prescrever') {
-    ev.push({ data: F(A(d0,5)), tipo: 'AGUARDANDO', modulo: 'Créditos', ator: 'SplitHub',
-      desc: 'Crédito não apropriado com prazo de 5 anos próximo ao vencimento · ação urgente necessária', cls: 'pending' });
+    ev.push(mkEv(MK(A(d0,5),'09:00'),   'AGUARDANDO',    'Créditos',                 'SplitHub',
+      'Crédito não apropriado com prazo de 5 anos próximo ao vencimento · ação urgente necessária', 'pending'));
   }
   if (_sr_hist === 'em_risco') {
-    ev.push({ data: F(A(d0,5)), tipo: 'AGUARDANDO', modulo: 'Créditos', ator: 'SplitHub',
-      desc: 'Registro sinalizado como em risco · pendência de validação fiscal', cls: 'pending' });
+    ev.push(mkEv(MK(A(d0,5),'09:00'),   'AGUARDANDO',    'Créditos',                 'SplitHub',
+      'Registro sinalizado como em risco · pendência de validação fiscal', 'pending'));
   }
   if (_sr_hist === 'vencido') {
-    ev.push({ data: F(A(d0,30)), tipo: 'VENCIMENTO', modulo: 'Créditos', ator: 'SplitHub',
-      desc: 'Prazo regulamentar de apropriação expirado · RF classificado como vencido', cls: 'erro' });
+    ev.push(mkEv(MK(A(d0,30),'23:59'),  'VENCIMENTO',    'Créditos',                 'SplitHub',
+      'Prazo regulamentar de apropriação expirado · RF classificado como vencido', 'erro'));
   }
   if (_sc_hist === 'nao_apropriado' && !_sr_hist) {
-    ev.push({ data: '—',        tipo: 'AGUARDANDO',  modulo: 'Créditos', ator: 'Comitê Gestor IBS / RFB',
-      desc: 'Aguardando reconhecimento de crédito pelo órgão competente', cls: 'pending' });
+    ev.push(mkEv('—',                   'AGUARDANDO',    'Créditos',                 'Comitê Gestor IBS / RFB',
+      'Aguardando reconhecimento de crédito pelo órgão competente', 'pending'));
   }
   if (_sc_hist === 'glosado') {
-    ev.push({ data: F(A(d0,10)), tipo: 'INCONSISTÊNCIA', modulo: 'Créditos', ator: 'Fisco',
-      desc: 'Crédito glosado pelo Fisco · direito ao crédito negado · requer impugnação', cls: 'erro' });
+    ev.push(mkEv(MK(A(d0,10),'10:45'), 'INCONSISTÊNCIA','Créditos',                  'Fisco',
+      'Crédito glosado pelo Fisco · direito ao crédito negado · requer impugnação', 'erro'));
   }
   if (_sc_hist === 'apropriado' || _sc_hist === 'utilizado' || _sc_hist === 'extinto') {
-    ev.push({ data: F(A(d0,15)), tipo: 'APROPRIAÇÃO', modulo: 'Créditos', ator: 'Comitê Gestor IBS / RFB',
-      desc: 'Crédito de ' + ff(rf.valor) + ' reconhecido e apropriado · ' + (rf.tipoFiscal || '').toUpperCase() + ' · Art. 48 LC 214/2025', cls: 'ok' });
+    ev.push(mkEv(MK(A(d0,15),'11:30'), 'APROPRIAÇÃO',   'Créditos',                 'Comitê Gestor IBS / RFB',
+      'Crédito de ' + ff(rf.valor) + ' reconhecido e apropriado · ' + (rf.tipoFiscal || '').toUpperCase() + ' · Art. 48 LC 214/2025', 'ok'));
   }
   if (rf.dataPagamento && rf.dataPagamento !== '—') {
-    var dpStr = rf.dataPagamento.substring(0, 10);
-    ev.push({ data: F(dpStr),   tipo: 'PAGAMENTO',   modulo: 'Pagamentos', ator: rf.metodoPagamento || nf.metodoPagamento || 'Fornecedor',
-      desc: 'Guia ' + (rf.tipoFiscal === 'ibs' ? 'IBS' : 'DARF CBS') + ' quitada · ' + ff(rf.valor) + ' · via ' + (rf.metodoPagamento || nf.metodoPagamento || 'Fornecedor'), cls: 'ok' });
+    // dataPagamento pode já ter hora (DD/MM/AAAA HH:MM) — extrair e reformat
+    var dpRaw = rf.dataPagamento;
+    var dpISO = dpRaw.indexOf('/') !== -1
+      ? dpRaw.substring(6,10)+'-'+dpRaw.substring(3,5)+'-'+dpRaw.substring(0,2)
+      : dpRaw.substring(0,10);
+    var dpHora = dpRaw.length > 10 ? dpRaw.substring(11,16) : '14:00';
+    var dpTS = dpISO + 'T' + dpHora;
+    ev.push(mkEv(dpTS, 'PAGAMENTO', 'Pagamentos', rf.metodoPagamento || nf.metodoPagamento || 'Fornecedor',
+      'Guia ' + (rf.tipoFiscal === 'ibs' ? 'IBS' : 'DARF CBS') + ' quitada · ' + ff(rf.valor) + ' · via ' + (rf.metodoPagamento || nf.metodoPagamento || 'Fornecedor'), 'ok'));
   }
   if (_sc_hist === 'utilizado') {
-    ev.push({ data: F(A(d0,20)), tipo: 'UTILIZAÇÃO', modulo: 'Pagamentos', ator: 'SplitHub',
-      desc: 'Crédito aplicado como abatimento em débito tributário', cls: 'ok' });
+    ev.push(mkEv(MK(A(d0,20),'14:18'), 'UTILIZAÇÃO',    'Pagamentos',               'SplitHub',
+      'Crédito aplicado como abatimento em débito tributário · método: ' + (rf.metodoExtincao || 'Compensação'), 'ok'));
   }
-  if (isSaida && (rf.dataExtincao && rf.dataExtincao !== '—')) {
-    ev.push({ data: F(rf.dataExtincao), tipo: 'EXTINÇÃO', modulo: 'Débitos', ator: rf.metodoExtincao || 'SplitHub',
-      desc: 'Débito extinto · ciclo tributário encerrado · método: ' + (rf.metodoExtincao || 'Split Payment'), cls: 'ok' });
+  if (isSaida && rf.dataExtincao && rf.dataExtincao !== '—') {
+    var dExtISO = rf.dataExtincao.indexOf('/') !== -1
+      ? rf.dataExtincao.substring(6,10)+'-'+rf.dataExtincao.substring(3,5)+'-'+rf.dataExtincao.substring(0,2)
+      : rf.dataExtincao;
+    ev.push(mkEv(MK(dExtISO,'16:45'),  'EXTINÇÃO',      'Débitos',                  rf.metodoExtincao || 'SplitHub',
+      'Débito extinto · ciclo tributário encerrado · método: ' + (rf.metodoExtincao || 'Split Payment'), 'ok'));
   } else if (rf.status === 'extinto') {
-    ev.push({ data: F(A(d0,25)), tipo: 'EXTINÇÃO',   modulo: isSaida ? 'Débitos' : 'Créditos', ator: 'SplitHub',
-      desc: isSaida ? 'Débito extinto · ciclo tributário encerrado' : 'Crédito integralmente utilizado · ciclo do RF encerrado', cls: 'ok' });
+    ev.push(mkEv(MK(A(d0,25),'16:45'), 'EXTINÇÃO',      isSaida ? 'Débitos' : 'Créditos', 'SplitHub',
+      isSaida ? 'Débito extinto · ciclo tributário encerrado' : 'Crédito integralmente utilizado · ciclo do RF encerrado', 'ok'));
   }
   return ev;
 };
@@ -574,6 +609,15 @@ window.abrirDetalheRF = function(rfId) {
 
   var evRgba  = { 'INGESTÃO':'73,197,177', 'VALIDAÇÃO':'34,197,94', 'GERAÇÃO RF':'59,130,246', 'INCONSISTÊNCIA':'239,68,68', 'VENCIMENTO':'239,68,68', 'AGUARDANDO':'245,158,11', 'APROPRIAÇÃO':'34,197,94', 'PAGAMENTO':'73,197,177', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170' };
   var evIcons = { 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■' };
+
+  // Ordenar decrescente por timestamp (mais recente primeiro)
+  eventos.sort(function(a, b) {
+    var ta = a.ts || '—', tb = b.ts || '—';
+    if (ta === '—' && tb === '—') return 0;
+    if (ta === '—') return 1;
+    if (tb === '—') return -1;
+    return ta > tb ? -1 : ta < tb ? 1 : 0;
+  });
 
   var tlH = '';
   eventos.forEach(function(ev, i) {
