@@ -1217,7 +1217,7 @@ window.dashPeriodoAtualizarBotao = function() {
 };
 
 window.atualizarKPIsDashboard = function() {
-  if (!window._ingDadosGlobal) { try { window.ingestaoInit && window.ingestaoInit(); } catch(e) {} }
+  if (!window._ingDadosGlobal || !window._ingDadosGlobal.length) { try { window.ingestaoInit && window.ingestaoInit(); } catch(e) {} }
   var mesesSel = window._dashMesesSelecionados || [];
   var todosMeses = !mesesSel.length || mesesSel.length >= 12;
   // fallback: primeiro mês selecionado para funções que ainda usam mês único
@@ -6907,7 +6907,7 @@ window.downloadGuiaDARF = function() {
 
   window.ingestaoInit = function() {
     var nfsAtual = (window.nfListaFiltradaGlobal || []).length;
-    if (!_ingIniciado || nfsAtual !== _ingDados.length) {
+    if (!_ingIniciado || nfsAtual > 0) {
       _ingDados = _gerarDadosDeGlobais();
       _ingIniciado = true;
     }
