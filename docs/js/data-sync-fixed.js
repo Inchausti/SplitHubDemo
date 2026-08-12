@@ -582,8 +582,10 @@ window._rfGerarHistorico = function(rf, nf) {
       : dpRaw.substring(0,10);
     var dpHora = dpRaw.length > 10 ? dpRaw.substring(11,16) : '14:00';
     var dpTS = dpISO + 'T' + dpHora;
-    ev.push(mkEv(dpTS, 'PAGAMENTO', 'Pagamentos', rf.metodoPagamento || nf.metodoPagamento || 'Fornecedor',
-      'Guia ' + (rf.tipoFiscal === 'ibs' ? 'IBS' : 'DARF CBS') + ' quitada · ' + ff(rf.valor) + ' · via ' + (rf.metodoPagamento || nf.metodoPagamento || 'Fornecedor'), 'ok'));
+    var _mpEv = rf.metodoPagamento || nf.metodoPagamento || 'Fornecedor';
+    var _evDesc = 'Guia ' + (rf.tipoFiscal === 'ibs' ? 'IBS' : 'DARF CBS') + ' quitada · ' + ff(rf.valor) + ' · via ' + _mpEv
+      + (_mpEv === 'Fornecedor' ? ' · confirmação via Apuração Assistida' : '');
+    ev.push(mkEv(dpTS, 'PAGAMENTO', 'Pagamentos', _mpEv, _evDesc, 'ok'));
   }
   if (_sc_hist === 'utilizado') {
     var _utilValor = ff(rf.valor || 0);
@@ -720,6 +722,13 @@ window.abrirDetalheRF = function(rfId) {
     + DR('Tipo', nf.tipo === 'saida' ? 'Saída' : 'Entrada')
     + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
     + DR('Método Pagamento', rf.metodoPagamento || nf.metodoPagamento || '—')
+    + ((rf.metodoPagamento || nf.metodoPagamento || '') === 'Fornecedor'
+        ? '<div style="background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.22);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;line-height:1.6">'
+          + '<span style="font-weight:700;color:#3B82F6;font-size:11px;text-transform:uppercase;letter-spacing:.06em">Apuração Assistida</span><br>'
+          + '<span style="color:var(--txt2)">Quando o método de pagamento é <strong>Fornecedor</strong>, o valor e a elegibilidade do IBS/CBS são confirmados a partir da <strong>Apuração Assistida</strong>. '
+          + 'O SplitHub acolhe esses dados para validar e registrar o pagamento nesta etapa de conciliação financeira.</span>'
+          + '</div>'
+        : '')
     + (rf.dataPagamento && rf.dataPagamento !== '—' ? DR('Data Pagamento', rf.dataPagamento) : '')
     + (rf.inconsistencia ? DR('Inconsistência', rf.inconsistencia, '#F43F5E') : '')
     + '</div>'
@@ -1013,7 +1022,7 @@ window.renderizarTabelaCreditos = function() {
       var metodoCell = r.metodoPagamento === 'RAD'
         ? '<span style="font-size:11px;font-weight:600;color:#8B5CF6">RAD</span>'
         : r.metodoPagamento === 'Fornecedor'
-          ? '<span style="font-size:11px;font-weight:600;color:#3B82F6">Fornecedor</span>'
+          ? '<span style="font-size:11px;font-weight:600;color:#3B82F6" title="Confirmação via Apuração Assistida">Fornecedor</span>'
           : '<span style="color:var(--txt3)">—</span>';
       var pagCell = r.isPago
         ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pag + '</a>'
