@@ -49,6 +49,12 @@ nav{padding:10px;flex:1;overflow-y:auto}
 .nav-icon{font-size:12px;opacity:.45}
 .nav-btn.active .nav-icon{opacity:1}
 .sb-foot{padding:12px 14px 18px;border-top:2px solid var(--teal)}
+.perfil-row{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.perfil-lbl{font-size:10px;color:var(--txt3);flex:1}
+.perfil-toggle{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.perfil-btn{font-size:10px;font-weight:700;padding:4px 10px;border:none;background:transparent;color:var(--txt3);cursor:pointer;font-family:inherit;transition:background .15s,color .15s}
+.perfil-btn.active{background:var(--teal);color:#fff}
+[data-perfil="cliente"] #subnav-admin-produto{display:none}
 .st-row{display:flex;align-items:center;gap:7px;margin-bottom:7px;font-size:11px;color:var(--txt2)}
 .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .sb-user{display:flex;align-items:center;gap:9px;margin-top:12px}
@@ -450,13 +456,20 @@ tr:last-child td{border-bottom:none}
     <a href="changelog.html" target="_blank" style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:10px;color:var(--txt3);text-decoration:none;padding:4px 0" title="Ver changelog do protótipo">
       <span style="font-size:9px">📋</span>Changelog · v0.13.0
     </a>
+    <div class="perfil-row">
+      <span class="perfil-lbl">Perfil</span>
+      <div class="perfil-toggle">
+        <button class="perfil-btn active" id="perfil-btn-cliente" onclick="setPerfil('cliente')">Cliente</button>
+        <button class="perfil-btn" id="perfil-btn-admin" onclick="setPerfil('admin')">Admin</button>
+      </div>
+    </div>
     <div class="sb-theme-row">
       <span class="sett-lbl" style="color:var(--teal);font-weight:700">Tema</span>
       <button class="theme-btn" onclick="toggleTheme()" title="Alternar modo claro/escuro"><span class="ti-dark">☀</span><span class="ti-light">☾</span></button>
     </div>
     <div class="sb-user" onclick="openSettings()" style="cursor:pointer" title="Abrir configurações">
       <div class="avatar">JS</div>
-      <div><div class="u-name">José da Silva</div><div class="u-role">Administrador</div></div>
+      <div><div class="u-name">José da Silva</div><div class="u-role" id="sb-perfil-label">Cliente</div></div>
     </div>
   </div>
 </div>
@@ -5208,6 +5221,24 @@ function toggleTheme(){
   var cur=document.documentElement.getAttribute('data-theme')||'dark';
   applyTheme(cur==='dark'?'light':'dark',true);
 }
+
+function setPerfil(p){
+  document.body.setAttribute('data-perfil',p);
+  localStorage.setItem('sh-perfil',p);
+  document.getElementById('perfil-btn-cliente').classList.toggle('active',p==='cliente');
+  document.getElementById('perfil-btn-admin').classList.toggle('active',p==='admin');
+  var label=document.getElementById('sb-perfil-label');
+  if(label) label.textContent=p==='admin'?'Admin':'Cliente';
+  // Se estava no sub-módulo Produto e mudou para cliente, voltar para contratos
+  if(p==='cliente'){
+    var sv=document.getElementById('admin-produto');
+    if(sv&&sv.classList.contains('active')) showAdminSub('contratos',document.getElementById('subnav-admin-contratos'));
+  }
+}
+(function(){
+  var saved=localStorage.getItem('sh-perfil')||'cliente';
+  setPerfil(saved);
+}());
 
 // ── Assistente Tributário ────────────────────────────────────────────────────
 var chatHistory=[];
