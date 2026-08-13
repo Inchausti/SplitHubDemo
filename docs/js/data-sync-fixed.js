@@ -6808,6 +6808,25 @@ window.downloadGuiaDARF = function() {
       var nfNumCell = d.nfNumero
         ? '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline;white-space:nowrap" onclick="event.stopPropagation();if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + d.nfNumero + '\')">' + tipoBase + ' ' + d.nfNumero + '</span>'
         : '<span style="color:var(--txt3)">—</span>';
+      // Célula de inconsistência: primeiro item com ok===false
+      var incCell;
+      if (d.status === 'inconsistencia' && d.validacoes && d.validacoes.length) {
+        var falha = null;
+        for (var vi = 0; vi < d.validacoes.length; vi++) {
+          if (d.validacoes[vi].ok === false) { falha = d.validacoes[vi]; break; }
+        }
+        if (falha) {
+          incCell = '<div style="max-width:200px">' +
+            '<div style="font-size:10px;font-weight:700;color:#8B5CF6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + falha.tipo + '</div>' +
+            '<div style="font-size:10px;color:var(--txt3);white-space:normal;line-height:1.3;margin-top:1px">' + falha.mensagem + '</div>' +
+            '</div>';
+        } else {
+          incCell = '<span style="color:var(--txt3);font-size:11px">—</span>';
+        }
+      } else {
+        incCell = '<span style="color:var(--txt3);font-size:11px">—</span>';
+      }
+
       html += '<tr style="white-space:nowrap">' +
         '<td>' + nfNumCell + '</td>' +
         '<td class="mono" style="font-size:11px;color:var(--txt2)">' + chaveShort + '</td>' +
@@ -6819,12 +6838,13 @@ window.downloadGuiaDARF = function() {
         '<td style="text-align:center">' + _valChip(d.valLayout) + '</td>' +
         '<td style="text-align:center">' + _valChip(d.valDados) + '</td>' +
         '<td>' + _statusLabel(d.status) + '</td>' +
+        '<td style="white-space:normal">' + incCell + '</td>' +
         '<td><button class="btn" style="font-size:11px;padding:4px 10px;border-radius:6px" onclick="abrirIngModal(' + d.id + ')">Detalhar</button></td>' +
         '</tr>';
     });
 
     if (!html) {
-      html = '<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:40px">Nenhum documento encontrado para os filtros selecionados.</td></tr>';
+      html = '<tr><td colspan="13" style="text-align:center;color:var(--txt3);padding:40px">Nenhum documento encontrado para os filtros selecionados.</td></tr>';
     }
 
     tbody.innerHTML = html;
