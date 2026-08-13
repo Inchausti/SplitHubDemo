@@ -114,6 +114,8 @@ nav{padding:10px;flex:1;overflow-y:auto}
 #forn-comt-modal{background:var(--sidebar);border:1px solid var(--border);border-radius:14px;width:500px;max-width:96vw;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 16px 48px rgba(0,0,0,.45)}
 /* Comprovante RAD modal */
 #forn-rad-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1200;align-items:center;justify-content:center}
+#forn-df-detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1200;align-items:flex-start;justify-content:center}
+#forn-df-detail-overlay.open{display:flex}
 #forn-rad-overlay.open{display:flex}
 #forn-rad-modal{background:var(--sidebar);border:1px solid var(--border);border-radius:14px;width:480px;max-width:96vw;padding:24px;box-shadow:0 16px 48px rgba(0,0,0,.45)}
 .forn-modal-title{font-size:16px;font-weight:700;color:var(--txt1);margin-bottom:4px}
@@ -558,16 +560,9 @@ tr:last-child td{border-bottom:none}
       <span class="sett-lbl" style="color:var(--teal);font-weight:700">Tema</span>
       <button class="theme-btn" onclick="toggleTheme()" title="Alternar modo claro/escuro"><span class="ti-dark">☀</span><span class="ti-light">☾</span></button>
     </div>
-    <div class="sb-user" style="flex-direction:column;align-items:flex-start;gap:8px;padding:10px 12px">
-      <div style="display:flex;align-items:center;gap:10px;cursor:pointer;width:100%" onclick="openSettings()" title="Abrir configurações">
-        <div class="avatar">JS</div>
-        <div><div class="u-name">José da Silva</div><div class="u-role" id="sb-perfil-label">Cliente</div></div>
-      </div>
-      <div class="perfil-toggle" style="width:100%">
-        <button class="perfil-btn active" id="perfil-btn-cliente" onclick="setPerfil('cliente')" style="flex:1">Cliente</button>
-        <button class="perfil-btn" id="perfil-btn-fornecedor" onclick="abrirSeletorFornecedor()" style="flex:1">Fornecedor</button>
-        <button class="perfil-btn" id="perfil-btn-admin" onclick="setPerfil('admin')" style="flex:1">Admin</button>
-      </div>
+    <div class="sb-user" onclick="openSettings()" style="cursor:pointer" title="Abrir configurações">
+      <div class="avatar">JS</div>
+      <div><div class="u-name">José da Silva</div><div class="u-role" id="sb-perfil-label">Cliente</div></div>
     </div>
   </div>
 </div>
@@ -2808,14 +2803,13 @@ tr:last-child td{border-bottom:none}
 
 <!-- VIEW: FORNECEDOR -->
 <div id="view-fornecedor" class="view">
-  <!-- Banner do fornecedor selecionado -->
+  <!-- Banner -->
   <div class="forn-banner" id="forn-banner">
     <div class="forn-banner-av" id="forn-banner-av">—</div>
     <div class="forn-banner-info">
       <div class="forn-banner-nome" id="forn-banner-nome">—</div>
       <div class="forn-banner-cnpj" id="forn-banner-cnpj">—</div>
     </div>
-    <!-- Score -->
     <div class="forn-score-wrap">
       <div class="forn-score-ring">
         <svg width="52" height="52" viewBox="0 0 52 52">
@@ -2833,18 +2827,31 @@ tr:last-child td{border-bottom:none}
     </div>
   </div>
 
-  <!-- Tabs -->
-  <div class="forn-tabs">
-    <button class="forn-tab active" onclick="fornShowTab('dfs',this)">Documentos Fiscais</button>
-    <button class="forn-tab" onclick="fornShowTab('rfs',this)">Registros Fiscais</button>
-    <button class="forn-tab" onclick="fornShowTab('score',this)">Score &amp; Relacionamento</button>
-    <button class="forn-tab" onclick="fornShowTab('rad',this)">Comprovantes RAD</button>
+  <!-- Sub-nav -->
+  <div class="forn-tabs" id="forn-subnav">
+    <button class="forn-tab active" id="forn-subnav-dashboard" onclick="fornShowSub('dashboard',this)">Dashboard</button>
+    <button class="forn-tab" id="forn-subnav-listagem" onclick="fornShowSub('listagem',this)">Documentos Fiscais</button>
   </div>
 
-  <!-- Tab: DFs -->
-  <div id="forn-tab-dfs" class="forn-tab-content active">
+  <!-- Sub: Dashboard -->
+  <div id="forn-sub-dashboard" class="forn-tab-content active">
+    <div id="forn-dash-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="ccrd">
+        <div class="ctitle">Distribuição por status</div>
+        <div id="forn-dash-status" style="margin-top:14px;display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+      <div class="ccrd">
+        <div class="ctitle">Distribuição por tipo de DF</div>
+        <div id="forn-dash-tipos" style="margin-top:14px;display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sub: Listagem DFs -->
+  <div id="forn-sub-listagem" class="forn-tab-content">
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      <input type="text" id="forn-df-busca" placeholder="Buscar por chave, número ou emitente…" style="flex:1;min-width:200px" oninput="fornFiltrarDFs()">
+      <input type="text" id="forn-df-busca" placeholder="Buscar por chave, número…" style="flex:1;min-width:200px" oninput="fornFiltrarDFs()">
       <select id="forn-df-status" onchange="fornFiltrarDFs()" style="min-width:140px">
         <option value="">Todos os status</option>
         <option value="integrado">Integrado</option>
@@ -2860,68 +2867,19 @@ tr:last-child td{border-bottom:none}
           <thead>
             <tr>
               <th>Número DF</th>
-              <th>Chave DF</th>
               <th>Tipo</th>
               <th>Emissão</th>
               <th>Valor Total</th>
               <th>CBS</th>
               <th>IBS</th>
               <th>Status</th>
-              <th>Ações</th>
+              <th>RFs</th>
             </tr>
           </thead>
           <tbody id="forn-df-tbody"></tbody>
         </table>
       </div>
     </div>
-  </div>
-
-  <!-- Tab: RFs -->
-  <div id="forn-tab-rfs" class="forn-tab-content">
-    <div class="tcrd">
-      <div class="twrap">
-        <table>
-          <thead>
-            <tr>
-              <th>ID RF</th>
-              <th>DF vinculado</th>
-              <th>Tipo</th>
-              <th>Período</th>
-              <th>Valor CBS</th>
-              <th>Valor IBS</th>
-              <th>Status CAPUR</th>
-              <th>Status CFIN</th>
-              <th>Crédito</th>
-            </tr>
-          </thead>
-          <tbody id="forn-rf-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tab: Score -->
-  <div id="forn-tab-score" class="forn-tab-content">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px" id="forn-score-kpis"></div>
-    <div class="ccrd">
-      <div class="ctitle">Critérios de avaliação</div>
-      <div class="csub">Score calculado com base em 5 dimensões de relacionamento com a Positivo Tecnologia</div>
-      <div id="forn-score-criterios" style="margin-top:14px"></div>
-    </div>
-    <div class="ccrd" style="margin-top:14px">
-      <div class="ctitle">Histórico de score</div>
-      <div class="csub">Últimos 6 meses</div>
-      <div id="forn-score-historico" style="display:flex;gap:8px;align-items:flex-end;height:80px;margin-top:14px;border-bottom:1px solid var(--border);padding-bottom:4px"></div>
-      <div id="forn-score-hist-labels" style="display:flex;gap:8px;margin-top:6px"></div>
-    </div>
-  </div>
-
-  <!-- Tab: RAD -->
-  <div id="forn-tab-rad" class="forn-tab-content">
-    <div class="info-box" style="background:rgba(29,95,204,.08);border:1px solid rgba(29,95,204,.2);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--txt2);margin-bottom:16px">
-      <strong style="color:var(--txt1)">RAD — Regime de Adiantamento de Débito:</strong> comprovantes de pagamentos realizados pela Positivo Tecnologia via RAD para este fornecedor. Disponíveis para download em PDF.
-    </div>
-    <div id="forn-rad-list"></div>
   </div>
 </div>
 
@@ -3037,6 +2995,43 @@ tr:last-child td{border-bottom:none}
       <button class="btn-cancel" onclick="fecharModal('forn-rad-overlay')">Fechar</button>
       <button class="btn-confirm" onclick="fornBaixarComprovante()">Baixar PDF</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALHE DF (fornecedor) -->
+<div id="forn-df-detail-overlay" onclick="if(event.target===this)fecharModal('forn-df-detail-overlay')" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1200;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto">
+  <div id="forn-df-detail-modal" style="background:var(--sidebar);border:1px solid var(--border);border-radius:14px;width:820px;max-width:98vw;padding:28px;box-shadow:0 16px 56px rgba(0,0,0,.5)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+      <div>
+        <div class="forn-modal-title" id="forn-df-detail-titulo">Documento Fiscal</div>
+        <div class="forn-modal-sub" id="forn-df-detail-sub">—</div>
+      </div>
+      <button onclick="fecharModal('forn-df-detail-overlay')" style="background:transparent;border:none;color:var(--txt3);font-size:18px;cursor:pointer;padding:4px 8px">✕</button>
+    </div>
+    <!-- Dados do DF -->
+    <div id="forn-df-detail-dados" style="margin-bottom:24px"></div>
+    <!-- RFs vinculados -->
+    <div style="font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Registros Fiscais vinculados</div>
+    <div class="tcrd" style="margin-bottom:24px">
+      <div class="twrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID RF</th>
+              <th>Período</th>
+              <th>Valor CBS</th>
+              <th>Valor IBS</th>
+              <th>Status CAPUR</th>
+              <th>Status CFIN</th>
+              <th>Crédito</th>
+            </tr>
+          </thead>
+          <tbody id="forn-df-detail-rfs"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Ações -->
+    <div id="forn-df-detail-acoes" style="display:flex;gap:10px;flex-wrap:wrap"></div>
   </div>
 </div>
 
@@ -5743,10 +5738,9 @@ function confirmarFornecedor(){
   document.getElementById('forn-sel-overlay').classList.remove('open');
   setPerfil('fornecedor');
   _renderFornecedorBanner();
+  _renderFornDashboard();
   _renderFornDFs();
-  _renderFornRFs();
-  _renderFornScore();
-  _renderFornRAD();
+  fornShowSub('dashboard', document.getElementById('forn-subnav-dashboard'));
 }
 
 function _renderFornecedorBanner(){
@@ -5795,46 +5789,91 @@ function _fornGerarDFs(){
   return dfs;
 }
 
+var _statusChip={
+  integrado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">Integrado</span>',
+  pendente:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(185,122,16,.12);color:var(--amber)">Pendente</span>',
+  erro:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">Erro</span>',
+  liquidado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(29,95,204,.12);color:var(--blue)">Liquidado</span>',
+  contestado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(109,40,217,.12);color:#7C3AED">Contestado</span>'
+};
+
+function _renderFornDashboard(){
+  var dfs=_fornGerarDFs();
+  window._fornDFsCache=dfs;
+  var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
+  var totalValor=dfs.reduce(function(s,d){return s+d.valor;},0);
+  var totalCBS=dfs.reduce(function(s,d){return s+d.cbs;},0);
+  var totalIBS=dfs.reduce(function(s,d){return s+d.ibs;},0);
+  var kpis=document.getElementById('forn-dash-kpis');
+  if(kpis) kpis.innerHTML=[
+    {l:'Total de DFs',v:dfs.length,suf:'documentos',c:'var(--teal)'},
+    {l:'Valor Total',v:ff(totalValor),suf:'no período',c:'var(--txt1)'},
+    {l:'CBS a recolher',v:ff(totalCBS),suf:'split payment',c:'var(--amber)'},
+    {l:'IBS a recolher',v:ff(totalIBS),suf:'split payment',c:'var(--blue)'}
+  ].map(function(k){
+    return '<div class="ccrd" style="border-top:3px solid '+k.c+';margin:0">'+
+      '<div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">'+k.l+'</div>'+
+      '<div style="font-size:22px;font-weight:700;color:'+k.c+';font-family:monospace">'+k.v+'</div>'+
+      '<div style="font-size:11px;color:var(--txt3);margin-top:2px">'+k.suf+'</div>'+
+    '</div>';
+  }).join('');
+  // Status breakdown
+  var byStatus={};
+  dfs.forEach(function(d){byStatus[d.status]=(byStatus[d.status]||0)+1;});
+  var statusEl=document.getElementById('forn-dash-status');
+  var statusLabels={integrado:'Integrado',pendente:'Pendente',erro:'Com erro',liquidado:'Liquidado',contestado:'Contestado'};
+  var statusColors={integrado:'var(--green)',pendente:'var(--amber)',erro:'var(--red)',liquidado:'var(--blue)',contestado:'#7C3AED'};
+  if(statusEl) statusEl.innerHTML=Object.keys(byStatus).map(function(s){
+    var pct=Math.round(byStatus[s]/dfs.length*100);
+    return '<div>'+
+      '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">'+
+        '<span style="color:var(--txt1);font-weight:600">'+(statusLabels[s]||s)+'</span>'+
+        '<span style="color:var(--txt3)">'+byStatus[s]+' ('+pct+'%)</span>'+
+      '</div>'+
+      '<div style="height:6px;background:var(--border);border-radius:4px;overflow:hidden">'+
+        '<div style="height:100%;width:'+pct+'%;background:'+(statusColors[s]||'var(--teal)')+';border-radius:4px"></div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  // Tipo breakdown
+  var byTipo={};
+  dfs.forEach(function(d){byTipo[d.tipo]=(byTipo[d.tipo]||0)+1;});
+  var tipoEl=document.getElementById('forn-dash-tipos');
+  if(tipoEl) tipoEl.innerHTML=Object.keys(byTipo).map(function(t){
+    var pct=Math.round(byTipo[t]/dfs.length*100);
+    return '<div>'+
+      '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">'+
+        '<span style="color:var(--txt1);font-weight:600">'+t+'</span>'+
+        '<span style="color:var(--txt3)">'+byTipo[t]+' ('+pct+'%)</span>'+
+      '</div>'+
+      '<div style="height:6px;background:var(--border);border-radius:4px;overflow:hidden">'+
+        '<div style="height:100%;width:'+pct+'%;background:var(--teal);border-radius:4px"></div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
 function _renderFornDFs(){
-  var tbody = document.getElementById('forn-df-tbody');
-  if(!tbody) return;
-  var dfs = _fornGerarDFs();
-  window._fornDFsCache = dfs;
+  var dfs=_fornGerarDFs();
+  window._fornDFsCache=dfs;
   _renderFornDFRows(dfs);
 }
 
 function _renderFornDFRows(dfs){
-  var tbody = document.getElementById('forn-df-tbody');
+  var tbody=document.getElementById('forn-df-tbody');
   if(!tbody) return;
-  var statusChip={
-    integrado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">Integrado</span>',
-    pendente:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(185,122,16,.12);color:var(--amber)">Pendente</span>',
-    erro:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">Erro</span>',
-    liquidado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(29,95,204,.12);color:var(--blue)">Liquidado</span>',
-    contestado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(109,40,217,.12);color:#7C3AED">Contestado</span>'
-  };
   var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
-  tbody.innerHTML = dfs.map(function(d){
-    var chaveShort=d.chave.substring(0,8)+'…'+d.chave.slice(-4);
-    var nComt=(window._fornDFComentarios[d.id]||[]).length;
-    var comtBadge=nComt?'<span style="font-size:9px;background:var(--teal);color:#0E1210;border-radius:10px;padding:1px 5px;font-weight:700;margin-left:3px">'+nComt+'</span>':'';
-    var radBadge=d.rad?'<span style="font-size:9px;background:rgba(29,95,204,.15);color:var(--blue);border-radius:10px;padding:1px 5px;font-weight:700;margin-left:3px;cursor:pointer" onclick="abrirRADModal(\''+d.id+'\')">RAD</span>':'';
-    var acoes='';
-    if(d.status!=='liquidado'&&d.status!=='contestado'){
-      acoes+='<button onclick="abrirLiquidar(\''+d.id+'\')" style="background:transparent;border:1px solid var(--border);border-radius:5px;color:var(--txt2);font-size:10px;padding:3px 8px;cursor:pointer;font-family:inherit;margin-right:4px" title="Marcar como liquidado">✓ Liquidar</button>';
-      acoes+='<button onclick="abrirContestacao(\''+d.id+'\')" style="background:transparent;border:1px solid var(--red);border-radius:5px;color:var(--red);font-size:10px;padding:3px 8px;cursor:pointer;font-family:inherit;margin-right:4px" title="Abrir contestação">⚑ Contestar</button>';
-    }
-    acoes+='<button onclick="abrirComentarios(\''+d.id+'\')" style="background:transparent;border:1px solid var(--border);border-radius:5px;color:var(--txt2);font-size:10px;padding:3px 8px;cursor:pointer;font-family:inherit" title="Comentários">💬'+comtBadge+'</button>';
-    return '<tr style="white-space:nowrap">'+
-      '<td style="font-size:11px;color:var(--teal);font-weight:600">'+d.numero+radBadge+'</td>'+
-      '<td style="font-family:monospace;font-size:10px;color:var(--txt3)">'+chaveShort+'</td>'+
+  tbody.innerHTML=dfs.map(function(d){
+    var nRFs=_gerarRFsDoDF(d).length;
+    return '<tr style="cursor:pointer" onclick="abrirDetalheDF(\''+d.id+'\')" title="Ver detalhes">'+
+      '<td style="font-size:11px;color:var(--teal);font-weight:600">'+d.numero+'</td>'+
       '<td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--card);border:1px solid var(--border)">'+d.tipo+'</span></td>'+
       '<td style="font-size:12px;color:var(--txt2)">'+d.emissao+'</td>'+
       '<td style="font-size:12px;font-family:monospace">'+ff(d.valor)+'</td>'+
       '<td style="font-size:12px;font-family:monospace;color:var(--amber)">'+ff(d.cbs)+'</td>'+
       '<td style="font-size:12px;font-family:monospace;color:var(--blue)">'+ff(d.ibs)+'</td>'+
-      '<td>'+(statusChip[d.status]||statusChip.pendente)+'</td>'+
-      '<td>'+acoes+'</td>'+
+      '<td>'+(_statusChip[d.status]||_statusChip.pendente)+'</td>'+
+      '<td style="font-size:12px;color:var(--txt2);text-align:center">'+nRFs+'</td>'+
     '</tr>';
   }).join('');
 }
@@ -5851,117 +5890,93 @@ function fornFiltrarDFs(){
   _renderFornDFRows(filtrados);
 }
 
-function _renderFornRFs(){
-  var tbody=document.getElementById('forn-rf-tbody');
-  if(!tbody) return;
-  var f=window._fornAtual;
-  if(!f){tbody.innerHTML='';return;}
-  var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
-  var dfs=_fornGerarDFs();
-  var integrados=dfs.filter(function(d){return d.status==='integrado'||d.status==='liquidado';});
+function _gerarRFsDoDF(d){
   var capur=['Conciliado','Conciliado','Divergente','Pendente'];
   var cfin=['Conciliado','Pendente','—','—'];
-  var credChip={'Conciliado':'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(73,197,177,.12);color:var(--teal)">Liberado</span>',
-    'Pendente':'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(185,122,16,.12);color:var(--amber)">Pendente</span>',
-    'Divergente':'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">Bloqueado</span>',
-    '—':'<span style="color:var(--txt3)">—</span>'};
-  tbody.innerHTML=integrados.map(function(d,i){
-    var c=capur[i%capur.length];
+  var idx=parseInt(d.id.split('-').pop())||0;
+  var nRFs=(idx%3)+1;
+  var rfs=[];
+  for(var i=0;i<nRFs;i++){
+    var c=capur[(idx+i)%capur.length];
     var cf=c==='Conciliado'?cfin[i%cfin.length]:'—';
-    var cred=c==='Conciliado'&&cf==='Conciliado'?'Conciliado':c==='Divergente'?'Divergente':'Pendente';
-    return '<tr style="white-space:nowrap">'+
-      '<td style="font-size:11px;color:var(--teal);font-weight:600">RF-'+f.id+String(10000+i)+'</td>'+
-      '<td style="font-size:11px;color:var(--txt2)">'+d.numero+'</td>'+
-      '<td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--card);border:1px solid var(--border)">'+d.tipo+'</span></td>'+
-      '<td style="font-size:12px;color:var(--txt2)">Abr/2026</td>'+
-      '<td style="font-size:12px;font-family:monospace;color:var(--amber)">'+ff(d.cbs)+'</td>'+
-      '<td style="font-size:12px;font-family:monospace;color:var(--blue)">'+ff(d.ibs)+'</td>'+
-      '<td>'+credChip[c]+'</td>'+
-      '<td>'+credChip[cf]+'</td>'+
-      '<td>'+credChip[cred]+'</td>'+
+    var cred=c==='Conciliado'&&cf==='Conciliado'?'Liberado':c==='Divergente'?'Bloqueado':'Pendente';
+    var f=window._fornAtual;
+    rfs.push({
+      id:'RF-'+(f?f.id:'X')+String(10000+idx*10+i),
+      periodo:'Abr/2026',
+      cbs:Math.round(d.cbs*(0.95+i*0.03)),
+      ibs:Math.round(d.ibs*(0.95+i*0.03)),
+      capur:c, cfin:cf, cred:cred
+    });
+  }
+  return rfs;
+}
+
+function abrirDetalheDF(dfId){
+  var d=(window._fornDFsCache||[]).find(function(x){return x.id===dfId;});
+  if(!d) return;
+  window._fornDFDetalheAtual=d;
+  var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
+  var f=window._fornAtual||{};
+  // Título
+  document.getElementById('forn-df-detail-titulo').textContent=d.numero;
+  document.getElementById('forn-df-detail-sub').textContent=d.tipo+' · Emissão: '+d.emissao+' · '+(_statusChip[d.status]?d.status:'pendente');
+  // Dados
+  var campos=[
+    ['Número',d.numero],['Tipo',d.tipo],['Data de emissão',d.emissao],
+    ['Chave de acesso (44 dígitos)','<span style="font-family:monospace;font-size:11px;word-break:break-all">'+d.chave+'</span>'],
+    ['Emitente (Fornecedor)',f.nome||'—'],['CNPJ Emitente',f.cnpj||'—'],
+    ['Destinatário','Positivo Tecnologia S.A.'],['CNPJ Destinatário','16.557.374/0001-89'],
+    ['Natureza da operação','Venda de mercadoria/serviço'],
+    ['Valor total da operação',ff(d.valor)],
+    ['Base de cálculo CBS',ff(Math.round(d.valor*0.98))],
+    ['CBS retida (split payment)',ff(d.cbs)],
+    ['Base de cálculo IBS',ff(Math.round(d.valor*0.98))],
+    ['IBS retido (split payment)',ff(d.ibs)],
+    ['Valor líquido ao fornecedor',ff(d.valor-d.cbs-d.ibs)],
+    ['Status de integração',(_statusChip[d.status]||d.status)],
+    ['Pago via RAD',d.rad?'Sim':'Não']
+  ];
+  document.getElementById('forn-df-detail-dados').innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px">'+
+    campos.map(function(c){
+      return '<div style="border-bottom:1px solid var(--border);padding-bottom:8px">'+
+        '<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">'+c[0]+'</div>'+
+        '<div style="font-size:13px;color:var(--txt1);font-weight:600">'+c[1]+'</div>'+
+      '</div>';
+    }).join('')+'</div>';
+  // RFs
+  var credChip={'Liberado':'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(73,197,177,.12);color:var(--teal)">Liberado</span>',
+    'Pendente':'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(185,122,16,.12);color:var(--amber)">Pendente</span>',
+    'Bloqueado':'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">Bloqueado</span>',
+    '—':'<span style="color:var(--txt3)">—</span>'};
+  var capurChip={'Conciliado':'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(73,197,177,.12);color:var(--teal)">Conciliado</span>',
+    'Pendente':'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(185,122,16,.12);color:var(--amber)">Pendente</span>',
+    'Divergente':'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">Divergente</span>',
+    '—':'<span style="color:var(--txt3)">—</span>'};
+  var rfs=_gerarRFsDoDF(d);
+  document.getElementById('forn-df-detail-rfs').innerHTML=rfs.map(function(r){
+    return '<tr>'+
+      '<td style="font-size:11px;color:var(--teal);font-weight:600">'+r.id+'</td>'+
+      '<td style="font-size:12px;color:var(--txt2)">'+r.periodo+'</td>'+
+      '<td style="font-size:12px;font-family:monospace;color:var(--amber)">'+ff(r.cbs)+'</td>'+
+      '<td style="font-size:12px;font-family:monospace;color:var(--blue)">'+ff(r.ibs)+'</td>'+
+      '<td>'+(capurChip[r.capur]||capurChip['—'])+'</td>'+
+      '<td>'+(capurChip[r.cfin]||capurChip['—'])+'</td>'+
+      '<td>'+(credChip[r.cred]||credChip['—'])+'</td>'+
     '</tr>';
   }).join('');
-}
-
-function _renderFornScore(){
-  var f=window._fornAtual;
-  if(!f) return;
-  var score=f.score||0;
-  var scoreColor=score>=80?'var(--green)':score>=60?'var(--amber)':'var(--red)';
-  var kat=f.categorizacao||'Categoria A';
-  // KPIs
-  var kpis=document.getElementById('forn-score-kpis');
-  if(kpis) kpis.innerHTML=[
-    {l:'Score Global',v:score,suf:'/ 100',c:scoreColor},
-    {l:'Categoria',v:kat,suf:'',c:'var(--txt1)'},
-    {l:'DFs no período',v:12,suf:'docs',c:'var(--txt1)'}
-  ].map(function(k){
-    return '<div class="kcard" style="border-top-color:'+k.c+'">'+
-      '<div class="klbl">'+k.l+'</div>'+
-      '<div class="kval" style="font-size:22px;color:'+k.c+'">'+k.v+'</div>'+
-      '<div class="ksub">'+k.suf+'</div>'+
-    '</div>';
-  }).join('');
-  // Critérios
-  var crit=document.getElementById('forn-score-criterios');
-  var criterios=[
-    {nome:'Pontualidade de envio',peso:25,val:Math.min(100,score+5)},
-    {nome:'Conformidade fiscal (IBS/CBS)',peso:30,val:Math.min(100,score-3)},
-    {nome:'Volume de operações',peso:20,val:Math.min(100,score+8)},
-    {nome:'Ausência de contestações',peso:15,val:Math.min(100,score-8)},
-    {nome:'Tempo de resposta',peso:10,val:Math.min(100,score+12)}
-  ];
-  if(crit) crit.innerHTML=criterios.map(function(c){
-    var cor=c.val>=80?'var(--green)':c.val>=60?'var(--amber)':'var(--red)';
-    return '<div style="margin-bottom:12px">'+
-      '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">'+
-        '<span style="color:var(--txt1);font-weight:600">'+c.nome+'</span>'+
-        '<span style="color:'+cor+';font-weight:700">'+c.val+'<span style="color:var(--txt3);font-weight:400"> / 100 (peso '+c.peso+'%)</span></span>'+
-      '</div>'+
-      '<div style="height:6px;background:var(--border);border-radius:4px;overflow:hidden">'+
-        '<div style="height:100%;width:'+c.val+'%;background:'+cor+';border-radius:4px;transition:width .4s"></div>'+
-      '</div>'+
-    '</div>';
-  }).join('');
-  // Histórico
-  var hist=document.getElementById('forn-score-historico');
-  var labels=document.getElementById('forn-score-hist-labels');
-  var meses=['Nov','Dez','Jan','Fev','Mar','Abr'];
-  var vals=[score-12,score-8,score-5,score-2,score+1,score].map(function(v){return Math.max(0,Math.min(100,v));});
-  if(hist) hist.innerHTML=vals.map(function(v,i){
-    var cor=v>=80?'var(--green)':v>=60?'var(--amber)':'var(--red)';
-    return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">'+
-      '<span style="font-size:10px;color:'+cor+';font-weight:700">'+v+'</span>'+
-      '<div style="width:100%;background:'+cor+';border-radius:3px 3px 0 0;height:'+(v*0.7)+'px"></div>'+
-    '</div>';
-  }).join('');
-  if(labels) labels.innerHTML=meses.map(function(m){
-    return '<div style="flex:1;text-align:center;font-size:10px;color:var(--txt3)">'+m+'</div>';
-  }).join('');
-}
-
-function _renderFornRAD(){
-  var el=document.getElementById('forn-rad-list');
-  if(!el) return;
-  var f=window._fornAtual;
-  if(!f){el.innerHTML='';return;}
-  var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
-  var rads=[
-    {id:'RAD-001',data:'15/04/2026',valor:48750,nf:'NF-e 001147',desc:'Pagamento antecipado via RAD'},
-    {id:'RAD-002',data:'22/03/2026',valor:132400,nf:'NF-e 001089',desc:'Liquidação RAD — fatura março'},
-    {id:'RAD-003',data:'10/02/2026',valor:67200,nf:'CT-e 000312',desc:'Pagamento RAD — frete entrada'}
-  ];
-  el.innerHTML=rads.map(function(r){
-    return '<div class="rad-card">'+
-      '<div class="rad-icon">📄</div>'+
-      '<div class="rad-info">'+
-        '<div class="rad-val">'+ff(r.valor)+'</div>'+
-        '<div class="rad-meta">'+r.id+' · '+r.nf+' · '+r.data+'</div>'+
-        '<div class="rad-meta" style="margin-top:2px">'+r.desc+'</div>'+
-      '</div>'+
-      '<button class="rad-btn" onclick="abrirRADModal(\''+r.id+'\')">Ver comprovante</button>'+
-    '</div>';
-  }).join('');
+  // Ações
+  var acoes='';
+  if(d.status!=='liquidado'&&d.status!=='contestado'){
+    acoes+='<button onclick="fecharModal(\'forn-df-detail-overlay\');abrirLiquidar(\''+d.id+'\')" style="background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--txt1);font-size:12px;padding:7px 14px;cursor:pointer;font-family:inherit;font-weight:600">✓ Marcar como liquidado</button>';
+    acoes+='<button onclick="fecharModal(\'forn-df-detail-overlay\');abrirContestacao(\''+d.id+'\')" style="background:transparent;border:1px solid var(--red);border-radius:7px;color:var(--red);font-size:12px;padding:7px 14px;cursor:pointer;font-family:inherit;font-weight:600">⚑ Abrir contestação</button>';
+  }
+  var nComt=(window._fornDFComentarios[d.id]||[]).length;
+  acoes+='<button onclick="fecharModal(\'forn-df-detail-overlay\');abrirComentarios(\''+d.id+'\')" style="background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--txt1);font-size:12px;padding:7px 14px;cursor:pointer;font-family:inherit;font-weight:600">💬 Comentários'+(nComt?' ('+nComt+')':'')+'</button>';
+  acoes+='<button onclick="fecharModal(\'forn-df-detail-overlay\')" style="margin-left:auto;background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--txt2);font-size:12px;padding:7px 14px;cursor:pointer;font-family:inherit">Fechar</button>';
+  document.getElementById('forn-df-detail-acoes').innerHTML=acoes;
+  document.getElementById('forn-df-detail-overlay').classList.add('open');
 }
 
 // ── Ações dos DFs ─────────────────────────────────────────────────────────────
@@ -6122,10 +6137,10 @@ function fornBaixarComprovante(){
   if(w){w.document.open();w.document.write(html);w.document.close();}
 }
 
-function fornShowTab(tab, btn){
+function fornShowSub(sub, btn){
   document.querySelectorAll('.forn-tab-content').forEach(function(el){el.classList.remove('active');});
-  document.querySelectorAll('.forn-tab').forEach(function(el){el.classList.remove('active');});
-  var tc=document.getElementById('forn-tab-'+tab);
+  document.querySelectorAll('#forn-subnav .forn-tab').forEach(function(el){el.classList.remove('active');});
+  var tc=document.getElementById('forn-sub-'+sub);
   if(tc) tc.classList.add('active');
   if(btn) btn.classList.add('active');
 }
