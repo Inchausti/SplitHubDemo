@@ -21,7 +21,23 @@ body{display:flex;min-height:100vh}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 #sidebar{width:220px;min-width:220px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:sticky;top:0}
-#main{flex:1;overflow-y:auto;background:var(--bg)}
+#main{flex:1;overflow-y:auto;background:var(--bg);display:flex;flex-direction:column}
+/* ── APP HEADER ── */
+#app-header{flex-shrink:0;display:flex;align-items:center;padding:0 28px;height:52px;background:var(--teal);position:sticky;top:0;z-index:100;gap:0}
+#app-header .ah-title{font-size:13px;font-weight:600;color:rgba(0,0,0,.75);min-width:120px;letter-spacing:.01em}
+#app-header .ah-center{flex:1;display:flex;justify-content:center}
+#app-header .ah-company{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(0,0,0,.15);border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;color:rgba(0,0,0,.8);cursor:pointer;background:rgba(0,0,0,.08);font-family:inherit;transition:background .15s}
+#app-header .ah-company:hover{background:rgba(0,0,0,.14)}
+#app-header .ah-actions{display:flex;align-items:center;gap:8px}
+#app-header .ah-icon-btn{width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.1);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:rgba(0,0,0,.7);position:relative;transition:background .15s}
+#app-header .ah-icon-btn:hover{background:rgba(0,0,0,.18)}
+#app-header .ah-notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#F43F5E;border:1.5px solid var(--teal)}
+#app-header .ah-user{display:flex;align-items:center;gap:8px;padding:4px 8px 4px 4px;border-radius:20px;cursor:pointer;transition:background .15s}
+#app-header .ah-user:hover{background:rgba(0,0,0,.1)}
+#app-header .ah-avatar{width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(0,0,0,.75);border:1.5px solid rgba(0,0,0,.2);flex-shrink:0}
+#app-header .ah-uname{font-size:12px;font-weight:600;color:rgba(0,0,0,.8);line-height:1.25}
+#app-header .ah-urole{font-size:10px;color:rgba(0,0,0,.55);line-height:1.25}
+@media(max-width:768px){#app-header{display:none}}
 .view{display:none;padding:28px}
 .view.active{display:block}
 .sb-logo{padding:18px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;position:relative;overflow:hidden;min-height:60px}
@@ -576,6 +592,21 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <div id="main">
+
+<!-- APP HEADER -->
+<header id="app-header">
+  <span class="ah-title" id="ah-title">Dashboard</span>
+  <div class="ah-center">
+    <button class="ah-company">📊 Instituto de Pesquisas Eldorado ▾</button>
+  </div>
+  <div class="ah-actions">
+    <button class="ah-icon-btn" title="Notificações">🔔<span class="ah-notif-dot"></span></button>
+    <div class="ah-user" onclick="openSettings()" title="Configurações">
+      <div class="ah-avatar">JS</div>
+      <div><div class="ah-uname">José da Silva</div><div class="ah-urole" id="ah-perfil-label">Cliente</div></div>
+    </div>
+  </div>
+</header>
 
 <!-- DASHBOARD -->
 <div id="view-dashboard" class="view active">
@@ -5431,6 +5462,8 @@ function showView(id,btn,fromBottomNav){
   collapseAllNavGroups();
   document.getElementById("view-"+id).classList.add("active");
   btn.classList.add("active");
+  var _ahTitles={dashboard:'Dashboard',pagamentos:'Pagamentos',creditos:'Créditos',debitos:'Débitos',conciliacao:'Conciliação',inteligencia:'Analytics · Inteligência',assistente:'Analytics · Assistente',fct:'Fluxo de Caixa Tributário',apuracao:'Apuração IBS/CBS',contratos:'Admin · Contratos',fornecedores:'Admin · Fornecedores',organizacao:'Admin · Organização',ingestao:'Admin · Ingestão de DFs',automacoes:'Admin · Automações',inconsistencias:'Inconsistências',kanban:'Inconsistências · Kanban',fornecedor:'Portal Fornecedor'};
+  var _ahEl=document.getElementById('ah-title'); if(_ahEl) _ahEl.textContent=_ahTitles[id]||id;
   // sync the other nav
   if(fromBottomNav){
     var sidebtns=document.querySelectorAll(".nav-btn");
