@@ -26,11 +26,11 @@ body{display:flex;min-height:100vh}
 #app-header{flex-shrink:0;display:flex;align-items:center;padding:0 28px;height:52px;background:var(--teal);position:sticky;top:0;z-index:100;gap:0}
 #app-header .ah-title{font-size:13px;font-weight:600;color:rgba(0,0,0,.75);min-width:120px;letter-spacing:.01em}
 #app-header .ah-center{flex:1;display:flex;justify-content:center}
-#app-header select.ge-filter{appearance:none;-webkit-appearance:none;background:rgba(0,0,0,.1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.6)' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 11px center;border:1px solid rgba(0,0,0,.18);border-radius:6px;padding:6px 32px 6px 14px;font-size:12px;font-weight:600;color:rgba(0,0,0,.8);cursor:pointer;font-family:inherit;outline:none;min-width:200px;max-width:320px;transition:background .15s}
-#app-header select.ge-filter:hover{background-color:rgba(0,0,0,.16)}
-#app-header select.ge-filter:focus{outline:none;border-color:rgba(0,0,0,.35);box-shadow:0 0 0 2px rgba(0,0,0,.1)}
-#app-header select.ge-filter option{background:#1A1817;color:#F2F0EF}
-[data-theme="light"] #app-header select.ge-filter option{background:#fff;color:#111}
+#ah-ge-wrap{position:relative}
+#ah-ge-btn{background:rgba(0,0,0,.1);border:1px solid rgba(0,0,0,.18);border-radius:20px;color:rgba(0,0,0,.8);font-size:12px;font-family:inherit;padding:6px 16px;cursor:pointer;font-weight:600;white-space:nowrap;transition:background .15s}
+#ah-ge-btn:hover{background:rgba(0,0,0,.18)}
+#ah-ge-panel{display:none;position:absolute;left:50%;transform:translateX(-50%);top:calc(100% + 8px);width:290px;max-height:340px;background:var(--sidebar);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:400;overflow:hidden;flex-direction:column}
+#ah-ge-panel.open{display:flex}
 #app-header .ah-actions{display:flex;align-items:center;gap:8px}
 #app-header .ah-icon-btn{width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.1);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:rgba(0,0,0,.7);position:relative;transition:background .15s}
 #app-header .ah-icon-btn:hover{background:rgba(0,0,0,.18)}
@@ -600,9 +600,16 @@ tr:last-child td{border-bottom:none}
 <header id="app-header">
   <span class="ah-title" id="ah-title">Dashboard</span>
   <div class="ah-center">
-    <select class="ge-filter" id="ah-ge-select" onchange="window.filtrarGrupoEconomico(this.value)">
-      <option value="">Grupo Econômico — Todos</option>
-    </select>
+    <div id="ah-ge-wrap">
+      <button id="ah-ge-btn" onclick="ahGeToggle(event)">Grupo Econômico ▾</button>
+      <div id="ah-ge-panel" class="cnpj-filter-panel" style="left:50%;transform:translateX(-50%);right:auto">
+        <div class="cnpj-filter-actions">
+          <button onclick="window.sbSelecionarTodos()">Todos</button>
+          <button onclick="window.sbSelecionarTodos()">Limpar</button>
+        </div>
+        <div class="cnpj-filter-list" id="ah-ge-list"></div>
+      </div>
+    </div>
   </div>
   <div class="ah-actions">
     <button class="ah-icon-btn" title="Notificações">🔔<span class="ah-notif-dot"></span></button>
@@ -3824,10 +3831,24 @@ function dashCnpjToggleDropdown(ev){
   var panel=document.getElementById("cnpj-filter-panel");
   if(panel)panel.classList.toggle("open");
 }
+function ahGeToggle(ev){
+  if(ev)ev.stopPropagation();
+  var panel=document.getElementById("ah-ge-panel");
+  if(!panel)return;
+  var isOpen=panel.classList.contains("open");
+  // fecha o dashboard panel se estiver aberto
+  var dp=document.getElementById("cnpj-filter-panel");
+  if(dp)dp.classList.remove("open");
+  panel.classList.toggle("open",!isOpen);
+  if(!isOpen&&window._dashCnpjRenderList)window._dashCnpjRenderList();
+}
 document.addEventListener("click",function(ev){
   var wrap=document.getElementById("cnpj-filter");
   var panel=document.getElementById("cnpj-filter-panel");
   if(wrap&&panel&&!wrap.contains(ev.target))panel.classList.remove("open");
+  var ahWrap=document.getElementById("ah-ge-wrap");
+  var ahPanel=document.getElementById("ah-ge-panel");
+  if(ahWrap&&ahPanel&&!ahWrap.contains(ev.target))ahPanel.classList.remove("open");
 });
 
 function pagamentosRenderKPIs(){

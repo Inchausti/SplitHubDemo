@@ -5735,21 +5735,25 @@ window._sbAtualizarLabel = function() {
   var nameEl = document.getElementById('co-name');
   var subEl  = document.getElementById('co-cnpj-sub');
   var dashBtn = document.getElementById('cnpj-filter-btn');
+  var ahBtn   = document.getElementById('ah-ge-btn');
   if (!ids.length) {
     if (nameEl)  nameEl.textContent  = 'Positivo Tecnologia S.A.';
     if (subEl)   subEl.textContent   = 'Todos os estabelecimentos';
     if (dashBtn) dashBtn.textContent = 'Todos os CNPJs ▾';
+    if (ahBtn)   ahBtn.textContent   = 'Grupo Econômico ▾';
   } else if (ids.length === 1) {
     var c = (window._orgCnpjs || []).filter(function(x) { return x.id === ids[0]; })[0];
     if (c) {
       if (nameEl)  nameEl.textContent  = c.razao;
       if (subEl)   subEl.textContent   = c.cnpj + ' · ' + c.uf + ' · ' + c.tipo;
       if (dashBtn) dashBtn.textContent = c.cnpj + ' ▾';
+      if (ahBtn)   ahBtn.textContent   = c.razao + ' ▾';
     }
   } else {
     if (nameEl)  nameEl.textContent  = 'Positivo Tecnologia S.A.';
     if (subEl)   subEl.textContent   = ids.length + ' estabelecimentos selecionados';
     if (dashBtn) dashBtn.textContent = ids.length + ' CNPJs ▾';
+    if (ahBtn)   ahBtn.textContent   = ids.length + ' CNPJs ▾';
   }
 };
 
@@ -5854,6 +5858,8 @@ window._dashCnpjRenderList = function() {
       + '</div>';
   });
   list.innerHTML = h;
+  var ahList = document.getElementById('ah-ge-list');
+  if (ahList) ahList.innerHTML = h;
 };
 
 window._aplicarFiltroCnpjEmpresa = function() {
