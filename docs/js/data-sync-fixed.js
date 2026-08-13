@@ -6726,7 +6726,8 @@ window.downloadGuiaDARF = function() {
         valLayout: vDeriv.valLayout,
         valValidade: vDeriv.valValidade,
         valDados: vDeriv.valDados,
-        validacoes: validacoes
+        validacoes: validacoes,
+        nfNumero: String(900000 + i + 1).padStart(6, '0')
       });
     }
 
@@ -6817,28 +6818,28 @@ window.downloadGuiaDARF = function() {
     var byDay = {};
     dados.forEach(function(d) {
       var k = d.dataEmissao;
-      if (!byDay[k]) byDay[k] = { rec: 0, ok: 0, err: 0 };
-      byDay[k].rec++;
+      if (!byDay[k]) byDay[k] = { ok: 0, err: 0, pend: 0 };
       if (d.status === 'integrado') byDay[k].ok++;
-      else if (d.status !== 'pendente') byDay[k].err++;
+      else if (d.status === 'pendente') byDay[k].pend++;
+      else byDay[k].err++;
     });
 
     var keys = Object.keys(byDay).sort().slice(-7);
-    var recArr = [], okArr = [], errArr = [];
+    var okArr = [], errArr = [], pendArr = [];
     var labels = [];
     keys.forEach(function(k) {
       var p = k.split('-');
       labels.push(p[2] + '/' + p[1]);
-      recArr.push(byDay[k].rec);
       okArr.push(byDay[k].ok);
       errArr.push(byDay[k].err);
+      pendArr.push(byDay[k].pend);
     });
 
     if (typeof _svgStackedBar === 'function') {
       _svgStackedBar('cIngestao', [
-        { label: 'Recebidos', data: recArr, color: '#3B82F6' },
         { label: 'Integrados', data: okArr, color: '#22C55E' },
-        { label: 'Com erro', data: errArr, color: '#F43F5E' }
+        { label: 'Com erro', data: errArr, color: '#F43F5E' },
+        { label: 'Pendentes', data: pendArr, color: '#F59E0B' }
       ], labels, 148);
     }
   }
