@@ -3218,7 +3218,7 @@ tr:last-child td{border-bottom:none}
       <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Perfil de acesso</div>
       <div class="perfil-toggle" style="width:100%">
         <button class="perfil-btn active" id="sett-perfil-btn-cliente" onclick="setPerfil('cliente')" style="flex:1">Cliente</button>
-        <button class="perfil-btn" id="sett-perfil-btn-fornecedor" onclick="abrirSeletorFornecedor()" style="flex:1">Fornecedor</button>
+        <button class="perfil-btn" id="sett-perfil-btn-fornecedor" onclick="closeSettings();abrirSeletorFornecedor()" style="flex:1">Fornecedor</button>
         <button class="perfil-btn" id="sett-perfil-btn-admin" onclick="setPerfil('admin')" style="flex:1">Admin</button>
       </div>
     </div>
@@ -5627,9 +5627,7 @@ function toggleTheme(){
 function setPerfil(p){
   document.body.setAttribute('data-perfil',p);
   localStorage.setItem('sh-perfil',p);
-  document.getElementById('perfil-btn-cliente').classList.toggle('active',p==='cliente');
-  document.getElementById('perfil-btn-admin').classList.toggle('active',p==='admin');
-  document.getElementById('perfil-btn-fornecedor').classList.toggle('active',p==='fornecedor');
+  // sync settings modal buttons
   ['sett-perfil-btn-cliente','sett-perfil-btn-admin','sett-perfil-btn-fornecedor'].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.classList.toggle('active', id.endsWith(p));
@@ -5639,12 +5637,21 @@ function setPerfil(p){
   var label=document.getElementById('sb-perfil-label');
   if(label) label.textContent=p==='admin'?'Admin':p==='fornecedor'?'Fornecedor':'Cliente';
   var navForn=document.getElementById('nav-fornecedor-btn');
-  if(navForn) navForn.style.display=p==='fornecedor'?'':'none';
+  if(navForn) navForn.style.display=p==='fornecedor'?'flex':'none';
   if(p==='cliente'){
-    var sv=document.getElementById('admin-produto');
-    if(sv&&sv.classList.contains('active')) showAdminSub('contratos',document.getElementById('subnav-admin-contratos'));
+    // volta ao dashboard ao sair do perfil fornecedor/admin
+    var dashBtn=document.querySelector('#sidebar .nav-btn');
+    if(dashBtn) showView('dashboard', dashBtn);
   }
-  if(p==='fornecedor') showView('fornecedor', document.getElementById('nav-fornecedor-btn'));
+  if(p==='admin'){
+    // garante que o nav-admin-btn existe e mostra a view admin
+    var admBtn=document.getElementById('nav-admin-btn');
+    if(admBtn) showAdminSub('contratos', document.getElementById('subnav-admin-contratos'));
+  }
+  if(p==='fornecedor'){
+    var fornBtn=document.getElementById('nav-fornecedor-btn');
+    if(fornBtn) showView('fornecedor', fornBtn);
+  }
 }
 
 // ── Portal Fornecedor ─────────────────────────────────────────────────────────
@@ -5736,11 +5743,13 @@ function confirmarFornecedor(){
   window._fornAtual = window._fornSelEscolhido;
   window._fornSelObrigatorio = false;
   document.getElementById('forn-sel-overlay').classList.remove('open');
-  setPerfil('fornecedor');
+  // renderiza conteúdo antes de exibir a view
   _renderFornecedorBanner();
   _renderFornDashboard();
   _renderFornDFs();
   fornShowSub('dashboard', document.getElementById('forn-subnav-dashboard'));
+  // agora exibe a view (body attribute + showView)
+  setPerfil('fornecedor');
 }
 
 function _renderFornecedorBanner(){
@@ -6006,7 +6015,7 @@ function confirmarLiquidacao(){
   window._fornDFStatus[window._fornLiqDFId]='liquidado';
   fecharModal('forn-liq-overlay');
   _renderFornDFs();
-  _renderFornRFs();
+  _renderFornDashboard();
   _showToast('DF marcado como liquidado com sucesso.');
 }
 
