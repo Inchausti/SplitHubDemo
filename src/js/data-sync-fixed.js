@@ -5838,10 +5838,8 @@ window.sbSelecionarTodos = function() {
   window._aplicarFiltroCnpjEmpresa();
 };
 
-// Renderiza apenas a lista do filtro dashboard (sem abrir/fechar o panel)
+// Renderiza a lista do filtro GE no dashboard e no header
 window._dashCnpjRenderList = function() {
-  var list = document.getElementById('cnpj-filter-list');
-  if (!list) return;
   var ids = window._empresasAtivas || [];
   var allSel = !ids.length;
   var h = '<div onclick="window.sbSelecionarTodos()" class="cnpj-filter-item" style="border-left:2px solid ' + (allSel ? '#49C5B1' : 'transparent') + '">'
@@ -5857,7 +5855,8 @@ window._dashCnpjRenderList = function() {
       + '<span class="cfi-cnpj">' + c.cnpj + (isIn ? ' · Inativo' : '') + '</span></div>'
       + '</div>';
   });
-  list.innerHTML = h;
+  var list = document.getElementById('cnpj-filter-list');
+  if (list) list.innerHTML = h;
   var ahList = document.getElementById('ah-ge-list');
   if (ahList) ahList.innerHTML = h;
 };
