@@ -6469,12 +6469,10 @@ window.downloadGuiaDARF = function() {
   var _tipos = ['NF-e Entrada', 'NF-e Entrada', 'NF-e Entrada', 'NF-e Saída', 'NF-e Saída', 'NFC-e', 'NFCom', 'NF3-e', 'NFS-e', 'CT-e', 'CT-e', 'NFAg', 'NFGás', 'MDF-e', 'BP-e'];
   var _cfops = ['1101', '1102', '1201', '1401', '2101', '5101', '5102', '5201', '6101', '7101'];
   var _statusDist = [
-    'integrado','integrado','integrado','integrado','integrado','integrado','integrado','integrado','integrado',
-    'pendente','pendente',
-    'erro_layout','erro_layout',
-    'erro_dados','erro_dados',
-    'rejeitado',
-    'duplicado'
+    'importado','importado','importado','importado','importado','importado','importado','importado','importado',
+    'importado','importado','importado','importado','importado','importado','importado',
+    'inconsistencia','inconsistencia',
+    'inconsistencia','inconsistencia'
   ];
 
   function _rng(seed) {
@@ -6521,16 +6519,19 @@ window.downloadGuiaDARF = function() {
     var cnpjV = { tipo: 'CNPJ emitente (Receita Federal)', ok: true, mensagem: 'CNPJ ativo e regular' };
     var dup = { tipo: 'Chave de acesso (unicidade)', ok: true, mensagem: 'Chave de acesso única no banco' };
 
-    if (status === 'integrado') {
+    if (status === 'importado') {
       return [schemaNFe, campos, cnpjV, dup];
     }
-    if (status === 'pendente') {
-      return [
-        schemaNFe,
-        campos,
-        { tipo: 'CNPJ emitente (Receita Federal)', ok: null, mensagem: 'Aguardando consulta à RF' },
-        dup
+    if (status === 'inconsistencia') {
+      // Varia o tipo de erro de forma determinística
+      var errTipos = [
+        [{ tipo: 'Schema XML NF-e 4.0', ok: false, mensagem: 'Elemento <infNFe> malformado na linha 47' }, campos, cnpjV, dup],
+        [schemaNFe, campos, { tipo: 'CNPJ emitente (Receita Federal)', ok: false, mensagem: 'CNPJ não localizado na Receita Federal' }, dup],
+        [schemaNFe, { tipo: 'Campos obrigatórios', ok: false, mensagem: 'Campo <CNPJ> ausente em <emit>' }, cnpjV, dup],
+        [schemaNFe, campos, cnpjV, { tipo: 'Chave de acesso (unicidade)', ok: false, mensagem: 'Chave de acesso já existente na plataforma' }],
+        [{ tipo: 'Assinatura digital (SEFAZ)', ok: false, mensagem: 'Código 228 — Rejeição: assinatura inválida do XML' }, campos, cnpjV, dup]
       ];
+      return errTipos[Math.floor(rnd() * errTipos.length)];
     }
     if (status === 'erro_layout') {
       var erros = [
@@ -6585,7 +6586,6 @@ window.downloadGuiaDARF = function() {
         else if (v.ok === false) dados = false;
       }
     });
-    if (status === 'pendente') { validade = null; dados = null; }
     return { valLayout: layout, valValidade: validade, valDados: dados };
   }
 
@@ -6614,8 +6614,8 @@ window.downloadGuiaDARF = function() {
       var dataIngestao = _fmtIngData(nf.data, 1 + Math.floor(rng() * 2), rng);
       var cfop = _cfops[idx % _cfops.length];
       var tipo = _tipoIngDisplay(nf.tipoDF || 'NF-e', nf.tipo || 'entrada');
-      var validacoes = _validacoesParaStatus('integrado', rng);
-      var vDeriv = _derivaValidacoes('integrado', validacoes);
+      var validacoes = _validacoesParaStatus('importado', rng);
+      var vDeriv = _derivaValidacoes('importado', validacoes);
 
       dados.push({
         id: idx,
@@ -6627,7 +6627,7 @@ window.downloadGuiaDARF = function() {
         cfop: cfop,
         dataEmissao: nf.data,
         dataIngestao: dataIngestao,
-        status: 'integrado',
+        status: 'importado',
         valLayout: vDeriv.valLayout,
         valValidade: vDeriv.valValidade,
         valDados: vDeriv.valDados,
@@ -6636,39 +6636,12 @@ window.downloadGuiaDARF = function() {
       });
     });
 
-    // ── Extra 20%: erros determinísticos ──
+    // ── Extra 20%: inconsistências ──
     var extraCount = Math.ceil(nfs.length * 0.20);
-    // Distribuição dos erros: prioriza os tipos mais didáticos
-    var extraStatus = [
-      'erro_layout','erro_layout','erro_layout',
-      'erro_dados','erro_dados','erro_dados',
-      'rejeitado','rejeitado',
-      'duplicado','duplicado',
-      'pendente','pendente',
-      'erro_layout','erro_dados','rejeitado','duplicado',
-      'erro_layout','erro_dados','pendente','duplicado'
-    ];
-    // Mensagens de erro ricas por tipo para variedade
-    var errosLayout = [
-      'Elemento <infNFe> malformado na linha 47',
-      'Namespace inválido: esperado NF-e 4.00, recebido 3.10',
-      'Campo <CNPJ> ausente no grupo <emit>',
-      'Atributo versão fora do padrão SEFAZ (esperado 4.00)',
-      'Tag XML não fechada: <det> na linha 183',
-      'Codificação charset inválida — esperado UTF-8'
-    ];
-    var errosDados = [
-      'CNPJ emitente não localizado na base da Receita Federal',
-      'CFOP 5101 incompatível com NF-e de entrada',
-      'Alíquota CBS 8.5% fora do intervalo regulatório (0%–7.9%)',
-      'Inscrição Estadual inválida para o estado de origem',
-      'NCM 8471.30.19 sem tributação IBS configurada',
-      'Divergência entre valor total e soma dos itens (R$ 0,01)'
-    ];
 
     for (var i = 0; i < extraCount; i++) {
       var rng2 = _rng(20260000 + i * 7331 + 99);
-      var status = extraStatus[i % extraStatus.length];
+      var status = 'inconsistencia';
       var emit = _emitentes[i % _emitentes.length];
       var tipoBaseIdx = i % _tipos.length;
       var tipoBase = _tipos[tipoBaseIdx];
@@ -6689,27 +6662,7 @@ window.downloadGuiaDARF = function() {
         chave = _chave(rng2, emit, dados.length + i, tipoKey);
       }
 
-      // Validações especializadas por tipo de erro
-      var validacoes;
-      if (status === 'erro_layout') {
-        var errMsg = errosLayout[i % errosLayout.length];
-        validacoes = [
-          { tipo: 'Schema XML NF-e 4.0', ok: false, mensagem: errMsg },
-          { tipo: 'Campos obrigatórios', ok: false, mensagem: 'Validação interrompida por falha de layout' },
-          { tipo: 'CNPJ emitente (Receita Federal)', ok: null, mensagem: 'Não verificado — layout inválido' },
-          { tipo: 'Chave de acesso (unicidade)', ok: null, mensagem: 'Não verificado — layout inválido' }
-        ];
-      } else if (status === 'erro_dados') {
-        var errMsg2 = errosDados[i % errosDados.length];
-        validacoes = [
-          { tipo: 'Schema XML NF-e 4.0', ok: true, mensagem: 'Estrutura válida conforme XSD 4.0' },
-          { tipo: 'Campos obrigatórios', ok: true, mensagem: 'Todos os campos obrigatórios presentes' },
-          { tipo: 'CNPJ emitente (Receita Federal)', ok: i % 3 === 0 ? false : true, mensagem: i % 3 === 0 ? 'CNPJ inativo na Receita Federal' : 'CNPJ ativo e regular' },
-          { tipo: 'Chave de acesso (unicidade)', ok: true, mensagem: 'Chave única na base' }
-        ];
-      } else {
-        validacoes = _validacoesParaStatus(status, rng2);
-      }
+      var validacoes = _validacoesParaStatus('inconsistencia', rng2);
       var vDeriv = _derivaValidacoes(status, validacoes);
 
       dados.push({
@@ -6743,14 +6696,9 @@ window.downloadGuiaDARF = function() {
   }
 
   function _statusLabel(s) {
-    var incBg  = 'rgba(139,92,246,.12)'; var incCol = '#8B5CF6'; var incBdr = 'rgba(139,92,246,.25)';
     var m = {
-      integrado:   { lbl: 'Integrado',      bg: 'rgba(34,197,94,.12)',  col: 'var(--green)', bdr: 'rgba(34,197,94,.25)' },
-      pendente:    { lbl: 'Processando',     bg: 'rgba(245,158,11,.12)', col: 'var(--amber)', bdr: 'rgba(245,158,11,.25)' },
-      erro_layout: { lbl: 'Inconsistência',  bg: incBg,  col: incCol,  bdr: incBdr },
-      erro_dados:  { lbl: 'Inconsistência',  bg: incBg,  col: incCol,  bdr: incBdr },
-      rejeitado:   { lbl: 'Inconsistência',  bg: incBg,  col: incCol,  bdr: incBdr },
-      duplicado:   { lbl: 'Inconsistência',  bg: incBg,  col: incCol,  bdr: incBdr }
+      importado:      { lbl: 'Importado',      bg: 'rgba(34,197,94,.12)',   col: 'var(--green)', bdr: 'rgba(34,197,94,.25)' },
+      inconsistencia: { lbl: 'Inconsistência', bg: 'rgba(139,92,246,.12)', col: '#8B5CF6',       bdr: 'rgba(139,92,246,.25)' }
     };
     var c = m[s] || { lbl: s, bg: 'rgba(167,168,170,.12)', col: 'var(--txt2)', bdr: 'rgba(167,168,170,.25)' };
     return '<span style="display:inline-block;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;background:' + c.bg + ';color:' + c.col + ';border:1px solid ' + c.bdr + '">' + c.lbl + '</span>';
@@ -6782,33 +6730,27 @@ window.downloadGuiaDARF = function() {
 
   function _renderKPIs(dados) {
     var total = dados.length;
-    var ok = dados.filter(function(d) { return d.status === 'integrado'; }).length;
-    var pend = dados.filter(function(d) { return d.status === 'pendente'; }).length;
-    var erroLay = dados.filter(function(d) { return d.status === 'erro_layout'; }).length;
-    var erroDat = dados.filter(function(d) { return d.status === 'erro_dados'; }).length;
-    var rej = dados.filter(function(d) { return d.status === 'rejeitado'; }).length;
-    var dup = dados.filter(function(d) { return d.status === 'duplicado'; }).length;
-    var erroTotal = erroLay + erroDat + rej;
+    var ok = dados.filter(function(d) { return d.status === 'importado'; }).length;
+    var inc = dados.filter(function(d) { return d.status === 'inconsistencia'; }).length;
     var taxa = total > 0 ? Math.round((ok / total) * 100) : 0;
 
     function _el(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
 
     _el('ing-total', total);
     _el('ing-ok', ok);
-    _el('ing-pend', pend);
-    _el('ing-erro', erroTotal);
-    _el('ing-dup', dup);
+    _el('ing-erro', inc);
+    _el('ing-dup', 0);
     _el('ing-taxa', taxa + '%');
 
     _el('pipe-ing-receb', total);
-    _el('pipe-ing-triagem', total - rej);
-    _el('pipe-ing-layout', total - rej - erroLay);
-    _el('pipe-ing-dados', total - rej - erroLay - erroDat - dup);
+    _el('pipe-ing-triagem', total);
+    _el('pipe-ing-layout', total);
+    _el('pipe-ing-dados', ok);
     _el('pipe-ing-integ', ok);
-    _el('pipe-ing-err-lay', erroLay);
-    _el('pipe-ing-err-dat', erroDat);
-    _el('pipe-ing-err-dup', dup);
-    _el('pipe-ing-err-rej', rej);
+    _el('pipe-ing-err-lay', inc);
+    _el('pipe-ing-err-dat', 0);
+    _el('pipe-ing-err-dup', 0);
+    _el('pipe-ing-err-rej', 0);
   }
 
   function _renderChart(dados) {
@@ -6818,28 +6760,25 @@ window.downloadGuiaDARF = function() {
     var byDay = {};
     dados.forEach(function(d) {
       var k = d.dataEmissao;
-      if (!byDay[k]) byDay[k] = { ok: 0, err: 0, pend: 0 };
-      if (d.status === 'integrado') byDay[k].ok++;
-      else if (d.status === 'pendente') byDay[k].pend++;
-      else byDay[k].err++;
+      if (!byDay[k]) byDay[k] = { ok: 0, inc: 0 };
+      if (d.status === 'importado') byDay[k].ok++;
+      else byDay[k].inc++;
     });
 
     var keys = Object.keys(byDay).sort().slice(-7);
-    var okArr = [], errArr = [], pendArr = [];
+    var okArr = [], incArr = [];
     var labels = [];
     keys.forEach(function(k) {
       var p = k.split('-');
       labels.push(p[2] + '/' + p[1]);
       okArr.push(byDay[k].ok);
-      errArr.push(byDay[k].err);
-      pendArr.push(byDay[k].pend);
+      incArr.push(byDay[k].inc);
     });
 
     if (typeof _svgStackedBar === 'function') {
       _svgStackedBar('cIngestao', [
-        { label: 'Integrados', data: okArr, color: '#22C55E' },
-        { label: 'Com erro', data: errArr, color: '#F43F5E' },
-        { label: 'Pendentes', data: pendArr, color: '#F59E0B' }
+        { label: 'Importados', data: okArr, color: '#22C55E' },
+        { label: 'Inconsistências', data: incArr, color: '#8B5CF6' }
       ], labels, 148);
     }
   }
@@ -6909,7 +6848,7 @@ window.downloadGuiaDARF = function() {
     }
   }
 
-  var _ingStatusInconsistencia = ['erro_layout','erro_dados','rejeitado','duplicado'];
+  var _ingStatusInconsistencia = ['inconsistencia'];
 
   function _aplicarFiltros() {
     var busca      = (document.getElementById('ing-busca')            || {}).value || '';
