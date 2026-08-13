@@ -6523,13 +6523,14 @@ window.downloadGuiaDARF = function() {
       return [schemaNFe, campos, cnpjV, dup];
     }
     if (status === 'inconsistencia') {
-      // Varia o tipo de erro de forma determinística
       var errTipos = [
-        [{ tipo: 'Schema XML NF-e 4.0', ok: false, mensagem: 'Elemento <infNFe> malformado na linha 47' }, campos, cnpjV, dup],
-        [schemaNFe, campos, { tipo: 'CNPJ emitente (Receita Federal)', ok: false, mensagem: 'CNPJ não localizado na Receita Federal' }, dup],
-        [schemaNFe, { tipo: 'Campos obrigatórios', ok: false, mensagem: 'Campo <CNPJ> ausente em <emit>' }, cnpjV, dup],
-        [schemaNFe, campos, cnpjV, { tipo: 'Chave de acesso (unicidade)', ok: false, mensagem: 'Chave de acesso já existente na plataforma' }],
-        [{ tipo: 'Assinatura digital (SEFAZ)', ok: false, mensagem: 'Código 228 — Rejeição: assinatura inválida do XML' }, campos, cnpjV, dup]
+        [{ tipo: 'Falha de Layout',      categoria: 'layout',      ok: false, mensagem: 'Estrutura XML inválida — elemento obrigatório ausente ou malformado' }, campos, cnpjV, dup],
+        [schemaNFe, campos, { tipo: 'CNPJ Inválido',     categoria: 'dados',       ok: false, mensagem: 'CNPJ do emitente não localizado na Receita Federal' }, dup],
+        [schemaNFe, { tipo: 'Campo Ausente',      categoria: 'layout',      ok: false, mensagem: 'Campo obrigatório ausente no grupo do emitente' }, cnpjV, dup],
+        [schemaNFe, campos, cnpjV, { tipo: 'Duplicidade',         categoria: 'dados',       ok: false, mensagem: 'Chave de acesso já registrada na plataforma' }],
+        [{ tipo: 'Rejeição SEFAZ',       categoria: 'layout',      ok: false, mensagem: 'Código 228 — assinatura digital inválida' }, campos, cnpjV, dup],
+        [schemaNFe, campos, { tipo: 'Alíquota Inválida',   categoria: 'dados',       ok: false, mensagem: 'Alíquota CBS fora do intervalo regulatório (LC 214/2025)' }, dup],
+        [schemaNFe, { tipo: 'Namespace Inválido',   categoria: 'layout',      ok: false, mensagem: 'Versão do schema NF-e incompatível com o padrão SEFAZ' }, cnpjV, dup]
       ];
       return errTipos[Math.floor(rnd() * errTipos.length)];
     }
@@ -6575,15 +6576,19 @@ window.downloadGuiaDARF = function() {
   function _derivaValidacoes(status, vals) {
     var layout = null, validade = null, dados = null;
     vals.forEach(function(v) {
-      if (v.tipo.indexOf('Schema') !== -1 || v.tipo.indexOf('Campos') !== -1 || v.tipo.indexOf('estrutura') !== -1 || v.tipo.indexOf('Assinatura') !== -1) {
+      // Suporta campo categoria explícito (novo) e matching por nome (legado)
+      var cat = v.categoria ||
+        (v.tipo.indexOf('Schema') !== -1 || v.tipo.indexOf('Campos') !== -1 || v.tipo.indexOf('estrutura') !== -1 || v.tipo.indexOf('Assinatura') !== -1 || v.tipo.indexOf('Namespace') !== -1 || v.tipo.indexOf('Layout') !== -1 || v.tipo.indexOf('Ausente') !== -1 || v.tipo.indexOf('Rejeição') !== -1 ? 'layout' :
+        (v.tipo.indexOf('CNPJ') !== -1 || v.tipo.indexOf('CFOP') !== -1 || v.tipo.indexOf('Alíquota') !== -1 || v.tipo.indexOf('unicidade') !== -1 || v.tipo.indexOf('Duplicidade') !== -1 || v.tipo.indexOf('Inválido') !== -1 ? 'dados' : null));
+      if (cat === 'layout') {
         if (layout === null) layout = v.ok;
         else if (v.ok === false) layout = false;
+      } else if (cat === 'dados') {
+        if (dados === null) dados = v.ok;
+        else if (v.ok === false) dados = false;
       } else if (v.tipo.indexOf('certif') !== -1 || v.tipo.indexOf('Validade') !== -1) {
         if (validade === null) validade = v.ok;
         else if (v.ok === false) validade = false;
-      } else if (v.tipo.indexOf('CNPJ') !== -1 || v.tipo.indexOf('CFOP') !== -1 || v.tipo.indexOf('Alíquota') !== -1 || v.tipo.indexOf('unicidade') !== -1) {
-        if (dados === null) dados = v.ok;
-        else if (v.ok === false) dados = false;
       }
     });
     return { valLayout: layout, valValidade: validade, valDados: dados };
@@ -6816,9 +6821,12 @@ window.downloadGuiaDARF = function() {
           if (d.validacoes[vi].ok === false) { falha = d.validacoes[vi]; break; }
         }
         if (falha) {
-          incCell = '<div style="max-width:200px">' +
-            '<div style="font-size:10px;font-weight:700;color:#8B5CF6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + falha.tipo + '</div>' +
-            '<div style="font-size:10px;color:var(--txt3);white-space:normal;line-height:1.3;margin-top:1px">' + falha.mensagem + '</div>' +
+          var catCor = falha.categoria === 'dados' ? '#3B82F6' : '#F59E0B';
+          var catBg  = falha.categoria === 'dados' ? 'rgba(59,130,246,.1)' : 'rgba(245,158,11,.1)';
+          incCell = '<div style="max-width:200px;white-space:normal">' +
+            '<span style="display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;background:' + catBg + ';color:' + catCor + ';margin-bottom:3px;letter-spacing:.03em;text-transform:uppercase">' + (falha.categoria === 'dados' ? 'Dados' : 'Layout') + '</span>' +
+            '<div style="font-size:10px;font-weight:600;color:#8B5CF6;line-height:1.3">' + falha.tipo + '</div>' +
+            '<div style="font-size:10px;color:var(--txt3);line-height:1.3;margin-top:1px">' + falha.mensagem + '</div>' +
             '</div>';
         } else {
           incCell = '<span style="color:var(--txt3);font-size:11px">—</span>';
