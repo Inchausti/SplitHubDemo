@@ -6821,13 +6821,7 @@ window.downloadGuiaDARF = function() {
           if (d.validacoes[vi].ok === false) { falha = d.validacoes[vi]; break; }
         }
         if (falha) {
-          var catCor = falha.categoria === 'dados' ? '#3B82F6' : '#F59E0B';
-          var catBg  = falha.categoria === 'dados' ? 'rgba(59,130,246,.1)' : 'rgba(245,158,11,.1)';
-          incCell = '<div style="max-width:200px;white-space:normal">' +
-            '<span style="display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;background:' + catBg + ';color:' + catCor + ';margin-bottom:3px;letter-spacing:.03em;text-transform:uppercase">' + (falha.categoria === 'dados' ? 'Dados' : 'Layout') + '</span>' +
-            '<div style="font-size:10px;font-weight:600;color:#8B5CF6;line-height:1.3">' + falha.tipo + '</div>' +
-            '<div style="font-size:10px;color:var(--txt3);line-height:1.3;margin-top:1px">' + falha.mensagem + '</div>' +
-            '</div>';
+          incCell = '<span style="font-size:11px;font-weight:600;color:#8B5CF6;white-space:normal">' + falha.tipo + '</span>';
         } else {
           incCell = '<span style="color:var(--txt3);font-size:11px">—</span>';
         }
@@ -7008,17 +7002,43 @@ window.downloadGuiaDARF = function() {
     var statusBar = document.getElementById('ing-modal-status-bar');
     if (statusBar) {
       var sConf = {
-        integrado: { icon: '✓', txt: 'Documento integrado com sucesso — todos os critérios de validação aprovados.', bg: 'rgba(34,197,94,.12)', col: 'var(--green)' },
-        pendente: { icon: '⏳', txt: 'Documento em processamento — validações ainda em andamento.', bg: 'rgba(245,158,11,.12)', col: 'var(--amber)' },
-        erro_layout: { icon: '✗', txt: 'Falha de layout — estrutura XML inválida, documento rejeitado na triagem.', bg: 'rgba(244,63,94,.12)', col: 'var(--red)' },
-        erro_dados: { icon: '✗', txt: 'Falha de dados — inconsistência nos dados fiscais do documento.', bg: 'rgba(244,63,94,.12)', col: 'var(--red)' },
-        rejeitado: { icon: '✗', txt: 'Rejeitado pela SEFAZ — assinatura ou autorização inválida.', bg: 'rgba(244,63,94,.12)', col: 'var(--red)' },
-        duplicado: { icon: '⚠', txt: 'Documento duplicado — chave de acesso já existente na base.', bg: 'rgba(167,168,170,.12)', col: 'var(--txt2)' }
+        importado:      { icon: '✓', txt: 'Documento importado com sucesso — todos os critérios de validação aprovados.', bg: 'rgba(34,197,94,.12)', col: 'var(--green)' },
+        inconsistencia: { icon: '✗', txt: 'Documento com inconsistência — validação falhou, veja o detalhe abaixo.', bg: 'rgba(139,92,246,.12)', col: '#8B5CF6' }
       };
-      var sc = sConf[d.status] || sConf.pendente;
+      var sc = sConf[d.status] || sConf.importado;
       statusBar.style.background = sc.bg;
       statusBar.style.color = sc.col;
       statusBar.innerHTML = '<span style="font-size:18px">' + sc.icon + '</span><span>' + sc.txt + '</span>';
+    }
+
+    // ── Seção de detalhe da inconsistência ────────────────────────────────
+    var incWrap = document.getElementById('ing-modal-inconsist-wrap');
+    var incEl   = document.getElementById('ing-modal-inconsist');
+    if (incWrap && incEl) {
+      if (d.status === 'inconsistencia' && d.validacoes && d.validacoes.length) {
+        var falhaInc = null;
+        for (var fi = 0; fi < d.validacoes.length; fi++) {
+          if (d.validacoes[fi].ok === false) { falhaInc = d.validacoes[fi]; break; }
+        }
+        if (falhaInc) {
+          var catCor2 = falhaInc.categoria === 'dados' ? '#3B82F6' : '#F59E0B';
+          var catBg2  = falhaInc.categoria === 'dados' ? 'rgba(59,130,246,.1)' : 'rgba(245,158,11,.1)';
+          var catBdr2 = falhaInc.categoria === 'dados' ? 'rgba(59,130,246,.25)' : 'rgba(245,158,11,.25)';
+          incEl.innerHTML =
+            '<div style="display:flex;flex-direction:column;gap:8px;padding:12px;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:8px">' +
+              '<div style="display:flex;align-items:center;gap:8px">' +
+                '<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;background:' + catBg2 + ';color:' + catCor2 + ';border:1px solid ' + catBdr2 + ';text-transform:uppercase;letter-spacing:.05em">' + (falhaInc.categoria === 'dados' ? 'Dados' : 'Layout') + '</span>' +
+                '<span style="font-size:12px;font-weight:700;color:#8B5CF6">' + falhaInc.tipo + '</span>' +
+              '</div>' +
+              '<div style="font-size:12px;color:var(--txt1);line-height:1.5">' + falhaInc.mensagem + '</div>' +
+            '</div>';
+          incWrap.style.display = '';
+        } else {
+          incWrap.style.display = 'none';
+        }
+      } else {
+        incWrap.style.display = 'none';
+      }
     }
 
     var valDiv = document.getElementById('ing-modal-validacoes');
@@ -7062,25 +7082,26 @@ window.downloadGuiaDARF = function() {
         desc: (d.tipo||'NF-e') + ' recebida · chave: ' + d.chave.substring(0,14) + '…' +
               ' · emitente: ' + d.emitente, cls:'ok' });
 
-      if (d.status === 'integrado') {
+      if (d.status === 'importado') {
         allEvs.push({ ts: MK(A(d0,1),'09:15'), data: FTS(MK(A(d0,1),'09:15')),
           tipo:'VALIDAÇÃO', modulo:'Ingestão de DFs', ator:'SplitHub',
-          desc:'Schema XML · dados fiscais · emitente/destinatário — todos aprovados · documento aceito', cls:'ok' });
-      } else {
-        // Eventos de falha por tipo de status
-        var falhaDesc = {
-          erro_layout: 'Falha na validação de layout — estrutura XML inválida · documento rejeitado na triagem',
-          erro_dados:  'Falha na validação de dados — inconsistência fiscal detectada · documento suspenso',
-          rejeitado:   'Documento rejeitado pela SEFAZ · assinatura ou autorização inválida',
-          duplicado:   'Chave DF já existente na base · documento descartado como duplicata',
-          pendente:    'Validações em andamento · aguardando resposta dos serviços de validação'
-        };
-        var falhaTS = MK(A(d0,1), d.status === 'pendente' ? '09:00' : '09:18');
-        allEvs.push({ ts: falhaTS, data: FTS(falhaTS),
-          tipo: (d.status === 'pendente' ? 'AGUARDANDO' : 'INCONSISTÊNCIA'),
-          modulo:'Ingestão de DFs', ator:'SplitHub',
-          desc: falhaDesc[d.status] || 'Status: ' + d.status,
-          cls: d.status === 'pendente' ? 'pending' : 'erro' });
+          desc:'Schema XML · dados fiscais · emitente/destinatário — todos aprovados · documento importado', cls:'ok' });
+      } else if (d.status === 'inconsistencia') {
+        var falhaHist = null;
+        if (d.validacoes) {
+          for (var hi = 0; hi < d.validacoes.length; hi++) {
+            if (d.validacoes[hi].ok === false) { falhaHist = d.validacoes[hi]; break; }
+          }
+        }
+        var falhaHistDesc = falhaHist
+          ? 'Inconsistência detectada · Tipo: ' + falhaHist.tipo +
+            ' · Categoria: ' + (falhaHist.categoria === 'dados' ? 'Dados' : 'Layout') +
+            ' · ' + falhaHist.mensagem
+          : 'Inconsistência detectada · documento suspenso para revisão';
+        var falhaHistTS = MK(A(d0,1),'09:18');
+        allEvs.push({ ts: falhaHistTS, data: FTS(falhaHistTS),
+          tipo:'INCONSISTÊNCIA', modulo:'Ingestão de DFs', ator:'SplitHub',
+          desc: falhaHistDesc, cls:'erro' });
       }
 
       // Histórico completo dos RFs (apenas DFs integrados com NF vinculada)
