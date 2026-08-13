@@ -7353,6 +7353,44 @@ window.downloadGuiaDARF = function() {
     if (w) { w.document.open(); w.document.write(html); w.document.close(); }
   };
 
+  // ── Confirmar importação CSV posicional (precisa do closure) ─────────────
+  window.ingUploadConfirmar = function(linhas) {
+    if (!linhas || !linhas.length) return;
+    if (!_ingIniciado) { window.ingestaoInit(); return; }
+    var now = new Date();
+    var mm  = String(now.getMonth()+1).padStart(2,'0');
+    var dd  = String(now.getDate()).padStart(2,'0');
+    var hh  = String(now.getHours()).padStart(2,'0');
+    var mn  = String(now.getMinutes()).padStart(2,'0');
+    var dIngestao = dd + '/' + mm + '/' + now.getFullYear() + ' ' + hh + ':' + mn;
+    linhas.forEach(function(r) {
+      var newId      = _ingDados.length;
+      var rnd2       = _rng(Date.now() % 2147483647 + newId);
+      var validacoes = _validacoesParaStatus('importado', rnd2);
+      var vDeriv     = _derivaValidacoes('importado', validacoes);
+      _ingDados.unshift({
+        id: newId, chave: r.chave, tipo: r.tipoDF, emitente: r.emitente,
+        cnpj: r.cnpj, valor: r.valor, cfop: r.cfop || '1102',
+        dataEmissao: r.dataEmissao, dataIngestao: dIngestao,
+        status: 'importado',
+        valLayout: vDeriv.valLayout, valValidade: vDeriv.valValidade, valDados: vDeriv.valDados,
+        validacoes: validacoes, nfNumero: ''
+      });
+    });
+    _ingDados.forEach(function(d, i) { d.id = i; });
+    window._ingDadosGlobal = _ingDados;
+    _ingFiltrados = _ingDados.slice();
+    _ingPagina = 1;
+    _renderKPIs(_ingDados);
+    _renderTabela();
+    ingUploadFechar();
+    var toast = document.createElement('div');
+    toast.textContent = linhas.length + ' DF' + (linhas.length > 1 ? 's importadas' : ' importada') + ' com sucesso';
+    toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--teal);color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:2000;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+    document.body.appendChild(toast);
+    setTimeout(function(){ toast.remove(); }, 3000);
+  };
+
   window.ingestaoSimularImportacao = function() {
     if (!_ingIniciado) { window.ingestaoInit(); return; }
     var rnd = _rng(Date.now() % 2147483647);
@@ -7400,6 +7438,108 @@ window.downloadGuiaDARF = function() {
   };
 })();
 
+
+// ── Upload CSV Posicional — funções globais ──────────────────────────────
+window._ingUploadLinhas = [];
+
+window.ingUploadAbrir = function() {
+  var modal = document.getElementById('ing-upload-modal');
+  if (!modal) return;
+  document.getElementById('ing-upload-input').value = '';
+  document.getElementById('ing-upload-preview').style.display = 'none';
+  document.getElementById('ing-upload-error').style.display = 'none';
+  document.getElementById('ing-upload-confirmar').style.display = 'none';
+  document.getElementById('ing-upload-erros-badge').style.display = 'none';
+  document.getElementById('ing-upload-dropzone').style.borderColor = '';
+  window._ingUploadLinhas = [];
+  modal.style.display = 'flex';
+};
+
+window.ingUploadFechar = function() {
+  var modal = document.getElementById('ing-upload-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.ingUploadDrop = function(ev) {
+  ev.preventDefault();
+  document.getElementById('ing-upload-dropzone').style.borderColor = '';
+  var f = ev.dataTransfer && ev.dataTransfer.files[0];
+  if (f) ingUploadArquivo(f);
+};
+
+window.ingUploadArquivo = function(file) {
+  if (!file) return;
+  document.getElementById('ing-upload-error').style.display = 'none';
+  document.getElementById('ing-upload-preview').style.display = 'none';
+  document.getElementById('ing-upload-confirmar').style.display = 'none';
+  var reader = new FileReader();
+  reader.onload = function(e) { ingUploadParsear(e.target.result); };
+  reader.readAsText(file, 'UTF-8');
+};
+
+window.ingUploadParsear = function(text) {
+  var linhas = text.split(/\r?\n/).filter(function(l) { return l.trim().length > 0; });
+  var detalhe = [], erros = [];
+  linhas.forEach(function(linha, i) {
+    var tipoReg = linha.charAt(0);
+    if (tipoReg === '1' || tipoReg === '9') return;
+    if (tipoReg !== '2') { erros.push('Linha ' + (i+1) + ': tipo de registro inválido ("' + tipoReg + '")'); return; }
+    if (linha.length < 155) { erros.push('Linha ' + (i+1) + ': tamanho ' + linha.length + ' chars (mínimo 155)'); return; }
+    var chave    = linha.substring(1,   45).trim();
+    var tipoDF   = linha.substring(45,  65).trim() || 'NF-e Entrada';
+    var cnpj     = linha.substring(65,  79).trim();
+    var emitente = linha.substring(79,  129).trim() || 'Emitente não informado';
+    var cfop     = linha.substring(129, 133).trim();
+    var valorStr = linha.substring(133, 147).trim();
+    var dataStr  = linha.substring(147, 155).trim();
+    var valor    = parseFloat(valorStr) / 100;
+    if (isNaN(valor) || valor <= 0) { erros.push('Linha ' + (i+1) + ': valor inválido ("' + valorStr + '")'); return; }
+    if (dataStr.length !== 8) { erros.push('Linha ' + (i+1) + ': data inválida ("' + dataStr + '")'); return; }
+    var dataEmissao = dataStr.substring(0,4) + '-' + dataStr.substring(4,6) + '-' + dataStr.substring(6,8);
+    detalhe.push({ chave: chave, tipoDF: tipoDF, cnpj: cnpj, emitente: emitente, cfop: cfop, valor: valor, dataEmissao: dataEmissao });
+  });
+
+  var errEl = document.getElementById('ing-upload-error');
+  if (detalhe.length === 0) {
+    errEl.textContent = erros.length ? erros.join(' · ') : 'Nenhum registro de detalhe (tipo 2) encontrado no arquivo.';
+    errEl.style.display = '';
+    return;
+  }
+
+  window._ingUploadLinhas = detalhe;
+
+  var tbody = document.getElementById('ing-upload-tbody');
+  var rows = '';
+  detalhe.forEach(function(r, i) {
+    var fmtVal = 'R$ ' + r.valor.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    var fmtDt  = r.dataEmissao.split('-').reverse().join('/');
+    rows += '<tr style="border-bottom:1px solid var(--border)">'
+      + '<td style="padding:7px 12px;color:var(--txt3);font-size:11px">' + (i+1) + '</td>'
+      + '<td style="padding:7px 12px;font-weight:600;font-size:12px">' + r.tipoDF + '</td>'
+      + '<td style="padding:7px 12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">' + r.emitente + '</td>'
+      + '<td style="padding:7px 12px;font-family:monospace;font-size:11px">' + (r.cfop || '—') + '</td>'
+      + '<td style="padding:7px 12px;text-align:right;font-family:monospace;font-size:12px">' + fmtVal + '</td>'
+      + '<td style="padding:7px 12px;font-size:12px">' + fmtDt + '</td>'
+      + '<td style="padding:7px 12px"><span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)">Importado</span></td>'
+      + '</tr>';
+  });
+  tbody.innerHTML = rows;
+
+  document.getElementById('ing-upload-count').textContent = detalhe.length + ' registro' + (detalhe.length !== 1 ? 's' : '') + ' encontrado' + (detalhe.length !== 1 ? 's' : '');
+  document.getElementById('ing-upload-preview').style.display = '';
+
+  var badge = document.getElementById('ing-upload-erros-badge');
+  if (erros.length > 0) {
+    badge.textContent = erros.length + ' linha' + (erros.length > 1 ? 's' : '') + ' com erro ignorada' + (erros.length > 1 ? 's' : '');
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+
+  var btnConf = document.getElementById('ing-upload-confirmar');
+  btnConf.textContent = 'Importar ' + detalhe.length + ' DF' + (detalhe.length > 1 ? 's' : '');
+  btnConf.style.display = '';
+};
 
 // Patch showView para garantir que atualizarInteligencia seja chamada
 // independente da versão do HTML em cache
