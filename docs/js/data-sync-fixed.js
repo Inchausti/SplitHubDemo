@@ -6037,6 +6037,7 @@ window.orgRenderTabela = function() {
       + '<td><span style="background:'+sCorBg+';color:'+sCor+';border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700">' + sLabel + '</span></td>'
       + '<td style="text-align:center;white-space:nowrap">'
       + '<button onclick="window.orgAbrirModal(' + r.id + ')" style="background:none;border:1px solid var(--brd);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--txt2);cursor:pointer;margin-right:6px">✏ Editar</button>'
+      + '<button onclick="window.orgAbrirDet(' + r.id + ')" style="background:none;border:1px solid var(--brd);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--txt2);cursor:pointer;margin-right:6px">⊙ Detalhes</button>'
       + '<button onclick="window.orgExcluir(' + r.id + ')" style="background:none;border:1px solid rgba(244,63,94,.4);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--red);cursor:pointer">✕</button>'
       + '</td>'
       + '</tr>';
@@ -6064,6 +6065,94 @@ window.orgFecharModal = function() {
   window._orgEditId = null;
 };
 
+// ── Auditoria de organização ─────────────────────────────────────────
+if (!window._orgAudit) window._orgAudit = {};
+
+// Seed auditoria para CNPJs pré-carregados
+(function() {
+  var _seedDatas = [
+    '10/01/2025 às 08:30:00','15/02/2025 às 10:15:22','20/03/2025 às 14:42:07',
+    '05/04/2025 às 09:00:55','12/05/2025 às 11:33:40','18/06/2025 às 16:05:18','22/07/2025 às 08:50:30'
+  ];
+  (window._orgCnpjs || []).forEach(function(r, i) {
+    var key = 'org_' + r.id;
+    if (!window._orgAudit[key]) {
+      window._orgAudit[key] = [{
+        acao: 'Cadastro criado',
+        data: _seedDatas[i % _seedDatas.length],
+        usuario: 'Migração inicial',
+        campos: { cnpj: r.cnpj, razao: r.razao, ie: r.ie, uf: r.uf, tipo: r.tipo, status: r.status }
+      }];
+    }
+  });
+})();
+
+window.orgAbrirDet = function(id) {
+  var r = (window._orgCnpjs || []).find(function(x) { return x.id === id; });
+  if (!r) return;
+  var tipoCor = r.tipo === 'Matriz' ? '#8B5CF6' : '#A7A8AA';
+  var sCor = r.status === 'ativo' ? 'var(--teal)' : 'var(--txt3)';
+  var sLabel = r.status === 'ativo' ? 'Ativo' : 'Inativo';
+  document.getElementById('org-det-title').textContent = r.razao;
+  document.getElementById('org-det-sub').textContent = 'CNPJ: ' + r.cnpj;
+  function row(lbl, val) {
+    return '<div style="display:flex;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)">'
+      + '<span style="min-width:160px;font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;line-height:1.6">' + lbl + '</span>'
+      + '<span style="font-size:13px;color:var(--txt1);font-weight:500">' + val + '</span></div>';
+  }
+  var campos = '<div style="margin-bottom:22px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Dados cadastrais</div>'
+    + row('CNPJ', '<span class="mono">' + r.cnpj + '</span>')
+    + row('Razão social', r.razao)
+    + row('Inscrição Estadual', r.ie || '—')
+    + row('UF', r.uf)
+    + row('Tipo', '<span style="background:' + tipoCor + '22;color:' + tipoCor + ';border:1px solid ' + tipoCor + '44;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + r.tipo + '</span>')
+    + row('Status', '<span style="color:' + sCor + ';font-weight:600">' + sLabel + '</span>')
+    + '</div>';
+  var key = 'org_' + r.id;
+  var audit = (window._orgAudit[key] || []);
+  var auditHtml = '<div><div style="font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Histórico de auditoria</div>';
+  if (!audit.length) {
+    auditHtml += '<div style="font-size:12px;color:var(--txt3);padding:16px 0">Nenhum registro de auditoria disponível.</div>';
+  } else {
+    auditHtml += '<div style="display:flex;flex-direction:column;gap:12px">';
+    [].concat(audit).reverse().forEach(function(ev, i, arr) {
+      var icon = ev.acao.indexOf('criado') !== -1 ? '🗂' : '✏️';
+      var camposHtml = '';
+      if (ev.campos && typeof ev.campos === 'object') {
+        Object.keys(ev.campos).forEach(function(k) {
+          var v = ev.campos[k];
+          if (v && typeof v === 'object' && 'de' in v) {
+            camposHtml += '<div style="margin-top:4px;font-size:11px;color:var(--txt3)"><b style="color:var(--txt2)">' + k + ':</b> '
+              + '<span style="text-decoration:line-through;color:var(--red)">' + v.de + '</span>'
+              + ' → <span style="color:var(--teal)">' + v.para + '</span></div>';
+          } else {
+            camposHtml += '<div style="margin-top:4px;font-size:11px;color:var(--txt3)"><b style="color:var(--txt2)">' + k + ':</b> ' + String(v) + '</div>';
+          }
+        });
+      }
+      auditHtml += '<div style="display:flex;gap:12px;align-items:flex-start">'
+        + '<div style="display:flex;flex-direction:column;align-items:center">'
+        + '<div style="width:32px;height:32px;border-radius:50%;background:' + (i===0?'var(--teal)':'var(--bg)') + ';border:2px solid ' + (i===0?'var(--teal)':'var(--border)') + ';display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">' + icon + '</div>'
+        + (i < arr.length - 1 ? '<div style="width:2px;flex:1;min-height:20px;background:var(--border);margin-top:4px"></div>' : '')
+        + '</div>'
+        + '<div style="flex:1;padding-bottom:8px">'
+        + '<div style="font-size:13px;font-weight:600;color:var(--txt1)">' + ev.acao + '</div>'
+        + '<div style="font-size:11px;color:var(--txt3);margin-top:2px">' + ev.data + ' · ' + ev.usuario + '</div>'
+        + camposHtml + '</div></div>';
+    });
+    auditHtml += '</div>';
+  }
+  auditHtml += '</div>';
+  document.getElementById('org-det-body').innerHTML = campos + auditHtml;
+  document.getElementById('org-det-overlay').style.display = 'flex';
+};
+
+window.orgFecharDet = function() {
+  var ov = document.getElementById('org-det-overlay');
+  if (ov) ov.style.display = 'none';
+};
+
 window.orgSalvar = function() {
   var cnpj   = (document.getElementById('org-form-cnpj')||{value:''}).value.trim();
   var razao  = (document.getElementById('org-form-razao')||{value:''}).value.trim();
@@ -6072,12 +6161,30 @@ window.orgSalvar = function() {
   var tipo   = (document.getElementById('org-form-tipo')||{value:'Filial'}).value;
   var status = (document.getElementById('org-form-status')||{value:'ativo'}).value;
   if (!cnpj || !razao) { alert('CNPJ e Razão Social são obrigatórios.'); return; }
+  var agora = new Date();
+  var ts = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  if (!window._orgAudit) window._orgAudit = {};
   var id = window._orgEditId;
   if (id) {
     var idx = (window._orgCnpjs||[]).findIndex(function(x){return x.id===id;});
-    if (idx > -1) window._orgCnpjs[idx] = {id:id, cnpj:cnpj, razao:razao, ie:ie, uf:uf, tipo:tipo, status:status};
+    if (idx > -1) {
+      var old = window._orgCnpjs[idx];
+      var alteracoes = {};
+      if (old.razao !== razao) alteracoes.razao = {de: old.razao, para: razao};
+      if (old.ie !== ie)       alteracoes.ie    = {de: old.ie,    para: ie};
+      if (old.uf !== uf)       alteracoes.uf    = {de: old.uf,    para: uf};
+      if (old.tipo !== tipo)   alteracoes.tipo  = {de: old.tipo,  para: tipo};
+      if (old.status !== status) alteracoes.status = {de: old.status, para: status};
+      window._orgCnpjs[idx] = {id:id, cnpj:cnpj, razao:razao, ie:ie, uf:uf, tipo:tipo, status:status};
+      var key = 'org_' + id;
+      if (!window._orgAudit[key]) window._orgAudit[key] = [];
+      window._orgAudit[key].push({acao:'Cadastro editado', data:ts, usuario:'Usuário atual', campos:alteracoes});
+    }
   } else {
-    window._orgCnpjs.push({id:window._orgNextId++, cnpj:cnpj, razao:razao, ie:ie, uf:uf, tipo:tipo, status:status});
+    var newId = window._orgNextId++;
+    window._orgCnpjs.push({id:newId, cnpj:cnpj, razao:razao, ie:ie, uf:uf, tipo:tipo, status:status});
+    var key2 = 'org_' + newId;
+    window._orgAudit[key2] = [{acao:'Cadastro criado', data:ts, usuario:'Usuário atual', campos:{cnpj:cnpj, razao:razao, ie:ie, uf:uf, tipo:tipo, status:status}}];
   }
   window.orgFecharModal();
   window.orgRenderTabela();

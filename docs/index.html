@@ -705,6 +705,7 @@ tr:last-child td{border-bottom:none}
   <div class="sb-foot">
     <div class="st-row sb-status-row"><span class="dot" style="background:var(--green)"></span>Plataforma Centralizada OK</div>
     <div class="st-row sb-status-row"><span class="dot" style="background:var(--green)"></span>ERP sincronizado</div>
+    <div class="st-row sb-status-row periodo-info" data-tip="Última apuração assistida integrada: 01/05/2026 · Competência mai/2026 · Integração concluída em 01/06/2026 às 10:22 · Status: Calculada"><span class="dot" style="background:var(--teal)"></span>AA sincronizada</div>
     <div class="sb-theme-row">
       <span class="sb-theme-lbl">Tema</span>
       <button class="theme-btn" onclick="toggleTheme()" title="Alternar modo claro/escuro"><span class="ti-dark">☀</span><span class="ti-light">☾</span></button>
@@ -3414,6 +3415,20 @@ tr:last-child td{border-bottom:none}
       <button onclick="window.orgFecharModal()" style="background:none;border:1px solid var(--brd);border-radius:7px;padding:8px 18px;font-size:13px;color:var(--txt2);cursor:pointer;font-family:inherit">Cancelar</button>
       <button onclick="window.orgSalvar()" style="background:var(--teal);border:none;border-radius:7px;padding:8px 20px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">Salvar</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALHES DO CNPJ ORGANIZAÇÃO -->
+<div id="org-det-overlay" onclick="if(event.target===this)window.orgFecharDet()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:600;align-items:center;justify-content:center">
+  <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:14px;width:580px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+    <div style="padding:22px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--sidebar);z-index:2">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--txt1)" id="org-det-title">Detalhes do CNPJ</div>
+        <div style="font-size:12px;color:var(--txt3);margin-top:2px" id="org-det-sub"></div>
+      </div>
+      <button class="sett-close" onclick="window.orgFecharDet()">✕</button>
+    </div>
+    <div id="org-det-body" style="padding:22px 24px"></div>
   </div>
 </div>
 
@@ -7506,6 +7521,58 @@ fctRender();
   var theme=localStorage.getItem('splithub_theme')||'dark';
   applyTheme(theme,false);
 })();
+
+// ── ESC HANDLER CENTRALIZADO ─────────────────────────────────────────
+// Fecha o modal de maior z-index visível ao pressionar ESC.
+// Suporta overlays estáticos (display:flex/block ou classe 'open')
+// e overlays criados dinamicamente (ctr/rf/inc-detalhe-wrapper).
+(function() {
+  var _map = [
+    { id:'fornecedor-modal-overlay',  z:400,  close:function(){ try{adminFornFecharModal();}catch(e){} } },
+    { id:'contrato-modal-overlay',    z:400,  close:function(){ try{contratosFecharModal();}catch(e){} } },
+    { id:'apur-modal-overlay',        z:400,  close:function(){ try{closeApurModal();}catch(e){} } },
+    { id:'apur-concluir-overlay',     z:400,  close:function(){ try{closeApurConcluirModal();}catch(e){} } },
+    { id:'fct-modal-overlay',         z:400,  close:function(){ try{fctCloseDrill();}catch(e){} } },
+    { id:'forn-edit-overlay',         z:500,  close:function(){ try{adminFornFecharEdit();}catch(e){} } },
+    { id:'forn-det-overlay',          z:500,  close:function(){ try{adminFornFecharDet();}catch(e){} } },
+    { id:'org-modal-overlay',         z:500,  close:function(){ try{window.orgFecharModal();}catch(e){} } },
+    { id:'comprovante-modal-overlay', z:500,  close:function(){ try{window.fecharComprovanteRF();}catch(e){} } },
+    { id:'org-det-overlay',           z:600,  close:function(){ try{window.orgFecharDet();}catch(e){} } },
+    { id:'forn-sel-overlay',          z:1200, close:function(){ try{ if(!window._fornSelObrigatorio) fecharSeletorFornecedor(); }catch(e){} } },
+    { id:'forn-liq-overlay',          z:1200, close:function(){ try{fecharModal('forn-liq-overlay');}catch(e){} } },
+    { id:'forn-cont-overlay',         z:1200, close:function(){ try{fecharModal('forn-cont-overlay');}catch(e){} } },
+    { id:'forn-comt-overlay',         z:1200, close:function(){ try{fecharModal('forn-comt-overlay');}catch(e){} } },
+    { id:'forn-rad-overlay',          z:1200, close:function(){ try{fecharModal('forn-rad-overlay');}catch(e){} } },
+    { id:'forn-df-detail-overlay',    z:1200, close:function(){ try{fecharModal('forn-df-detail-overlay');}catch(e){} } },
+    { id:'settings-overlay',          z:1100, close:function(){ try{closeSettings();}catch(e){} } },
+    // overlays dinâmicos (criados/destruídos no DOM)
+    { id:'ctr-detalhe-wrapper',       z:9000, close:function(){ try{contratosFecharDetalhe();}catch(e){} } },
+    { id:'rf-detalhe-wrapper',        z:9000, close:function(){ try{rfFecharDetalhe();}catch(e){} } },
+    { id:'inc-detalhe-wrapper',       z:9000, close:function(){ try{inconsistFecharDetalhe();}catch(e){} } },
+  ];
+
+  function _isVisible(el) {
+    if (!el || !document.body.contains(el)) return false;
+    var d = el.style.display;
+    if (d && d !== 'none') return true;         // display:flex / block
+    if (el.classList && el.classList.contains('open')) return true;  // .open pattern
+    return false;
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape' && e.keyCode !== 27) return;
+    var best = null, bestZ = -1;
+    _map.forEach(function(entry) {
+      var el = document.getElementById(entry.id);
+      if (!_isVisible(el)) return;
+      // use inline z-index if available, otherwise use table value
+      var z = parseInt((el.style.zIndex || entry.z), 10) || entry.z;
+      if (z > bestZ) { bestZ = z; best = entry; }
+    });
+    if (best) { e.preventDefault(); best.close(); }
+  });
+})();
+// ─────────────────────────────────────────────────────────────────────
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.js"></script>
