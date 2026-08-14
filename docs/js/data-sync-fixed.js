@@ -5883,6 +5883,46 @@ window._aplicarFiltroCnpjEmpresa = function() {
   try { window.renderizarRFsInconsistencias(); } catch(e) {}
   try { window.renderizarTabelaDebitos(); } catch(e) {}
   try { window.atualizarInteligencia(); } catch(e) {}
+
+  // — filtra arrays mock (impostos/creditos/inconsistencias) por adqCnpj —
+  try {
+    var _impostosAll = window._impostos_all;
+    var _creditosAll = window._creditos_all;
+    var _inconsistAll = window._inconsistencias_all;
+    if (_impostosAll && _creditosAll && _inconsistAll) {
+      if (!cnpjsSel || !cnpjsSel.length) {
+        window.impostos = _impostosAll.slice();
+        window.creditos = _creditosAll.slice();
+        window.inconsistencias = _inconsistAll.slice();
+      } else {
+        var _flt = function(arr){ return arr.filter(function(r){ return cnpjsSel.indexOf(r.adqCnpj) >= 0; }); };
+        window.impostos = _flt(_impostosAll);
+        window.creditos = _flt(_creditosAll);
+        window.inconsistencias = _flt(_inconsistAll);
+      }
+    }
+  } catch(e) {}
+
+  // — re-renderiza módulo ativo —
+  try {
+    var _av = document.querySelector('.view.active');
+    if (_av) {
+      var _vid = _av.id.replace('view-','');
+      if (_vid === 'pagamentos') {
+        if (window.pagamentosRenderKPIs) pagamentosRenderKPIs();
+        var _h=''; var _imp=window.impostos||[];
+        for(var _i=0;_i<_imp.length;_i++){var _r=_imp[_i];var _act=['pendente','vencendo','atrasado'].indexOf(_r.status)>=0?'<button class="btn btn-t" style="font-size:11px;padding:4px 10px">Pagar via Pix</button>':'<span style="color:var(--txt3)">Concluído</span>';_h+='<tr><td class="mono nowrap" style="color:var(--txt3)">'+_r.id+'</td><td class="mono nowrap" style="color:var(--blue)">'+_r.rf+'</td><td class="trunc"><div style="font-weight:500">'+_r.forn+'</div><div style="font-size:10px;color:var(--txt3)">'+_r.cnpj+'</div></td><td class="nowrap"><span class="tyb">'+_r.tipo+'</span></td><td class="r mono" style="font-weight:600">'+ff(_r.valor)+'</td><td class="nowrap">'+_r.venc+'</td><td class="nowrap">'+bdg(_r.status)+'</td><td class="nowrap">'+_act+'</td></tr>';}
+        var _ti=document.getElementById('t-impostos');if(_ti)_ti.innerHTML=_h;
+      }
+      if (_vid === 'creditos') { if(window.creditosRenderKPIs)creditosRenderKPIs(); if(window.creditosRenderTabela)creditosRenderTabela(); }
+      if (_vid === 'inconsistencias') { try{inconsistRenderDashboard();}catch(e){} try{inconsistRenderTabela();}catch(e){} }
+      if (_vid === 'fornecedores' || _vid === 'admin') { if(window.fornecedoresRenderKPIs)fornecedoresRenderKPIs(); if(window.adminFornRenderKPIs)adminFornRenderKPIs(); if(window.adminFornRenderTable)adminFornRenderTable(); }
+      if (_vid === 'dashboard') { try{buildCharts();}catch(e){} try{dashRenderCreditKPIs();}catch(e){} }
+    }
+  } catch(e) {}
+
+  // — atualiza painel GE do header —
+  try { if(window._dashCnpjRenderList) window._dashCnpjRenderList(); } catch(e) {}
 };
 
 // ── Filtro Grupo Econômico — aparece no header de cada módulo ──────────────

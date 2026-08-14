@@ -5344,60 +5344,18 @@ var _impostos_all=impostos.slice();
 var _creditos_all=creditos.slice();
 var _inconsistencias_all=inconsistencias.slice();
 var _fornecedores_all=fornecedores.slice();
-window._geAdqCnpj='';
 
-window.filtrarGrupoEconomico=function(adqCnpj){
-  window._geAdqCnpj=adqCnpj||'';
-  if(!adqCnpj){
-    impostos=_impostos_all.slice();
-    creditos=_creditos_all.slice();
-    inconsistencias=_inconsistencias_all.slice();
-  } else {
-    var flt=function(arr){return arr.filter(function(r){return r.adqCnpj===adqCnpj;});};
-    impostos=flt(_impostos_all);
-    creditos=flt(_creditos_all);
-    inconsistencias=flt(_inconsistencias_all);
-  }
-  var btn=document.getElementById('ah-ge-btn');
-  if(btn){
-    if(!adqCnpj){btn.textContent='Grupo Econômico ▾';}
-    else{
-      var org=(window._orgCnpjs||[]).find(function(o){return o.cnpj===adqCnpj;});
-      btn.textContent=(org?org.uf+' · '+adqCnpj:'CNPJ')+' ▾';
-    }
-  }
-  var panel=document.getElementById('ah-ge-panel');if(panel)panel.classList.remove('open');
-  dashCnpjSelecionados=[];
-  dashCnpjAtualizarBotao();
-  dashCnpjPopulate();
-  if(window._dashCnpjRenderList)window._dashCnpjRenderList();
-  window._geRefresh();
-};
-window.sbSelecionarTodos=function(){window.filtrarGrupoEconomico('');};
-
-window._geRefresh=function(){
-  var av=document.querySelector('.view.active');if(!av)return;
-  var id=av.id.replace('view-','');
-  if(id==='pagamentos'){
-    pagamentosRenderKPIs();
-    var h='';
-    for(var i=0;i<impostos.length;i++){var r=impostos[i];var act=['pendente','vencendo','atrasado'].indexOf(r.status)>=0?'<button class="btn btn-t" style="font-size:11px;padding:4px 10px">Pagar via Pix</button>':'<span style="color:var(--txt3)">Concluído</span>';h+='<tr><td class="mono nowrap" style="color:var(--txt3)">'+r.id+'</td><td class="mono nowrap" style="color:var(--blue)">'+r.rf+'</td><td class="trunc"><div style="font-weight:500">'+r.forn+'</div><div style="font-size:10px;color:var(--txt3)">'+r.cnpj+'</div></td><td class="nowrap"><span class="tyb">'+r.tipo+'</span></td><td class="r mono" style="font-weight:600">'+ff(r.valor)+'</td><td class="nowrap">'+r.venc+'</td><td class="nowrap">'+bdg(r.status)+'</td><td class="nowrap">'+act+'</td></tr>';}
-    var ti=document.getElementById('t-impostos');if(ti)ti.innerHTML=h;
-  }
-  if(id==='creditos'){creditosRenderKPIs();if(window.creditosRenderTabela)creditosRenderTabela();}
-  if(id==='inconsistencias'){try{inconsistRenderDashboard();}catch(e){}try{inconsistRenderTabela();}catch(e){}}
-  if(id==='admin'||id==='fornecedores'){fornecedoresRenderKPIs();if(window.adminFornRenderKPIs)adminFornRenderKPIs();if(window.adminFornRenderTable)adminFornRenderTable();}
-  if(id==='dashboard'){try{buildCharts();}catch(e){} dashRenderCreditKPIs();}
-};
-
+// filtrarGrupoEconomico é definido em data-sync-fixed.js e usa _empresasAtivas + _aplicarFiltroCnpjEmpresa
+// Aqui apenas expõe o render do painel GE do header
 window._dashCnpjRenderList=function(){
   var list=document.getElementById('ah-ge-list');if(!list)return;
   var orgs=(window._orgCnpjs||[]).filter(function(o){return o.status==='ativo';});
-  var sel=window._geAdqCnpj;
-  var h='<div onclick="window.filtrarGrupoEconomico(\'\')" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:'+(sel===''?'var(--teal)':'var(--txt1)')+';border-bottom:1px solid var(--border);background:'+(sel===''?'rgba(73,197,177,.08)':'transparent')+'">Todos os CNPJs</div>';
+  var ids=window._empresasAtivas||[];
+  var allSel=!ids.length;
+  var h='<div onclick="window.filtrarGrupoEconomico(\'\')" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;color:'+(allSel?'var(--teal)':'var(--txt1)')+';border-bottom:1px solid var(--border);background:'+(allSel?'rgba(73,197,177,.08)':'transparent')+'">Todos os CNPJs</div>';
   orgs.forEach(function(o){
-    var a=sel===o.cnpj;
-    h+='<div onclick="window.filtrarGrupoEconomico(\''+o.cnpj+'\')" style="padding:9px 16px;cursor:pointer;font-size:13px;color:'+(a?'var(--teal)':'var(--txt1)')+';background:'+(a?'rgba(73,197,177,.08)':'transparent')+'" onmouseover="this.style.background=\'rgba(73,197,177,.05)\'" onmouseout="this.style.background=\''+(a?'rgba(73,197,177,.08)':'transparent')+'\'">'
+    var a=ids.indexOf(o.id)!==-1;
+    h+='<div onclick="window.filtrarGrupoEconomico(\''+o.id+'\')" style="padding:9px 16px;cursor:pointer;font-size:13px;color:'+(a?'var(--teal)':'var(--txt1)')+';background:'+(a?'rgba(73,197,177,.08)':'transparent')+'" onmouseover="this.style.background=\'rgba(73,197,177,.05)\'" onmouseout="this.style.background=\''+(a?'rgba(73,197,177,.08)':'transparent')+'\'">'
       +'<div style="font-weight:600">'+o.uf+' · '+o.tipo+'</div>'
       +'<div style="font-size:11px;color:'+(a?'var(--teal)':'var(--txt3)')+'">'+o.cnpj+'</div>'
       +'</div>';
