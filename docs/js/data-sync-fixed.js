@@ -7547,7 +7547,7 @@ window.downloadGuiaDARF = function() {
     ingUploadFechar();
     var toast = document.createElement('div');
     toast.textContent = linhas.length + ' DF' + (linhas.length > 1 ? 's importadas' : ' importada') + ' com sucesso';
-    toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--teal);color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:2000;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+    toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#0B7A6E;color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:2000;box-shadow:0 4px 16px rgba(0,0,0,.2)';
     document.body.appendChild(toast);
     setTimeout(function(){ toast.remove(); }, 3000);
   };
