@@ -2475,7 +2475,7 @@ tr:last-child td{border-bottom:none}
         <div class="sechdr" style="margin-bottom:0"><h2>CNPJs cadastrados</h2><p id="adm-forn-count-sub">0 de 0 fornecedores exibidos</p></div>
         <button class="btn btn-t" onclick="adminFornAbrirModal()" style="flex-shrink:0">+ Novo fornecedor</button>
       </div>
-      <div class="twrap"><table id="tbl-adm-fornecedores"><thead><tr><th>Grupo / CNPJ</th><th>Razão Social</th><th>Tipo</th><th>Status</th><th class="r">Score</th><th>Contrato</th><th>Multi-contratos</th><th class="r">Vol. compras</th><th class="r">Créditos</th><th>Pend.</th></tr></thead><tbody id="t-adm-fornecedores"></tbody></table></div>
+      <div class="twrap"><table id="tbl-adm-fornecedores"><thead><tr><th>Grupo / CNPJ</th><th>Razão Social</th><th>Tipo</th><th>Status</th><th class="r">Score</th><th>Contrato</th><th>Multi-contratos</th><th class="r">Vol. compras</th><th class="r">Créditos</th><th>Pend.</th><th></th></tr></thead><tbody id="t-adm-fornecedores"></tbody></table></div>
     </div>
   </div>
 
@@ -2733,6 +2733,70 @@ tr:last-child td{border-bottom:none}
       <button class="btn" onclick="adminFornFecharModal()">Cancelar</button>
       <button class="btn btn-t" onclick="adminFornCadastrar()">+ Cadastrar fornecedor</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR FORNECEDOR -->
+<div id="forn-edit-overlay" onclick="if(event.target===this)adminFornFecharEdit()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center">
+  <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:14px;padding:24px;width:480px;max-width:94vw;max-height:88vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <span style="font-size:15px;font-weight:700;color:var(--txt1)">Editar fornecedor</span>
+      <button class="sett-close" onclick="adminFornFecharEdit()">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:18px">Atualize os dados cadastrais. O CNPJ não pode ser alterado após o cadastro.</p>
+    <input type="hidden" id="forn-edit-cnpj-orig">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:5px">CNPJ <span style="color:var(--txt3);font-style:italic">(não editável)</span></div>
+        <input type="text" id="forn-edit-cnpj-display" readonly style="width:100%;opacity:.6;cursor:not-allowed"/>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:5px">Razão social</div>
+        <input type="text" id="forn-edit-nome" placeholder="Nome da empresa" style="width:100%"/>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:5px">Status</div>
+        <select id="forn-edit-status" style="width:100%">
+          <option value="ok">Regular</option>
+          <option value="alerta">Alerta</option>
+          <option value="risco">Risco</option>
+        </select>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--txt1);display:flex;align-items:center;gap:6px">
+              Aceita Multi-contratos
+              <span class="periodo-info" data-tip="Quando ativado, este CNPJ pode ter mais de um contrato ativo simultaneamente. Neste caso, toda DF importada deverá obrigatoriamente informar a referência do contrato (campo 'contratoRef') para que o crédito IBS/CBS seja atribuído corretamente. Sem a referência, a DF será rejeitada na ingestão.">i</span>
+            </div>
+            <div style="font-size:11px;color:var(--txt3);margin-top:3px">DFs devem incluir referência do contrato na importação</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0;cursor:pointer">
+            <input type="checkbox" id="forn-edit-multi-contrato" style="opacity:0;width:0;height:0;position:absolute">
+            <span onclick="var c=document.getElementById('forn-edit-multi-contrato');c.checked=!c.checked;this.style.background=c.checked?'var(--teal)':'var(--border)';this.querySelector('span').style.transform=c.checked?'translateX(18px)':'translateX(0)'" id="forn-edit-toggle-track" style="position:absolute;inset:0;background:var(--border);border-radius:24px;transition:background .2s;cursor:pointer"><span style="position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.25)"></span></span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div id="forn-edit-msg" style="margin-top:14px;font-size:12px"></div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px">
+      <button class="btn" onclick="adminFornFecharEdit()">Cancelar</button>
+      <button class="btn btn-t" onclick="adminFornSalvarEdit()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALHES DO FORNECEDOR -->
+<div id="forn-det-overlay" onclick="if(event.target===this)adminFornFecharDet()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center">
+  <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:14px;width:580px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+    <div style="padding:22px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--sidebar);z-index:2">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--txt1)" id="forn-det-title">Detalhes do fornecedor</div>
+        <div style="font-size:12px;color:var(--txt3);margin-top:2px" id="forn-det-sub"></div>
+      </div>
+      <button class="sett-close" onclick="adminFornFecharDet()">✕</button>
+    </div>
+    <div id="forn-det-body" style="padding:22px 24px"></div>
   </div>
 </div>
 
@@ -4066,7 +4130,7 @@ function adminFornRenderTabela(){
 
     // Linha de cabeçalho do grupo
     h+='<tr style="background:rgba(139,92,246,.07);border-top:2px solid rgba(139,92,246,.25)">'
-      +'<td colspan="10" style="padding:10px 14px">'
+      +'<td colspan="11" style="padding:10px 14px">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
       +'<div style="display:flex;align-items:center;gap:10px">'
       +'<span style="background:rgba(139,92,246,.18);color:var(--purple);border:1px solid rgba(139,92,246,.35);border-radius:4px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.06em">GRUPO</span>'
@@ -4099,11 +4163,15 @@ function adminFornRenderTabela(){
         +'<td>'+(f.multiContrato?'<span style="background:rgba(73,197,177,.12);color:var(--teal);border:1px solid rgba(73,197,177,.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Sim — ref. obrigatória</span>':'<span style="color:var(--txt3);font-size:11px">Não</span>')+'</td>'
         +'<td class="r mono">'+fc(f.volume)+'</td>'
         +'<td class="r mono" style="color:var(--teal)">'+fc(f.cred)+'</td>'
-        +'<td><span style="color:'+(f.pend>0?"var(--amber)":"var(--green)")+';font-weight:600">'+f.pend+'</span></td></tr>';
+        +'<td><span style="color:'+(f.pend>0?"var(--amber)":"var(--green)")+';font-weight:600">'+f.pend+'</span></td>'
+        +'<td style="white-space:nowrap"><div style="display:flex;gap:6px">'
+        +'<button onclick="adminFornAbrirEdit(\''+f.cnpj+'\')" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--txt2);cursor:pointer;font-family:inherit" title="Editar cadastro">✎ Editar</button>'
+        +'<button onclick="adminFornAbrirDet(\''+f.cnpj+'\')" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--txt2);cursor:pointer;font-family:inherit" title="Ver detalhes e auditoria">⊙ Detalhes</button>'
+        +'</div></td></tr>';
     });
   });
 
-  if(!lista.length)h='<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhum fornecedor encontrado para este filtro.</td></tr>';
+  if(!lista.length)h='<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhum fornecedor encontrado para este filtro.</td></tr>';
   var tb=document.getElementById("t-adm-fornecedores");
   if(tb)tb.innerHTML=h;
   var sub=document.getElementById("adm-forn-count-sub");
@@ -4147,8 +4215,132 @@ function adminFornCadastrar(){
   fornecedoresRenderKPIs();
   contratosPopulateSelect();
   contratosRenderKPIs();
+  var agora=new Date();
+  var ts=agora.toLocaleDateString('pt-BR')+' às '+agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  if(!window._fornAudit)window._fornAudit={};
+  window._fornAudit[cnpj]=[{acao:'Cadastro criado',data:ts,usuario:'Usuário atual',campos:{nome:nome,status:status,multiContrato:multiContrato}}];
   setMsg("Fornecedor cadastrado com sucesso. Lembre-se de criar um contrato vigente para este CNPJ em Gestão de Contratos.","var(--green)");
   setTimeout(function(){adminFornFecharModal();},1400);
+}
+
+// ── EDITAR FORNECEDOR ────────────────────────────────────────────────
+function adminFornAbrirEdit(cnpj){
+  var f=fornecedores.find(function(x){return x.cnpj===cnpj;});
+  if(!f)return;
+  document.getElementById('forn-edit-cnpj-orig').value=cnpj;
+  document.getElementById('forn-edit-cnpj-display').value=cnpj;
+  document.getElementById('forn-edit-nome').value=f.nome||'';
+  document.getElementById('forn-edit-status').value=f.status||'ok';
+  var mc=document.getElementById('forn-edit-multi-contrato');
+  var tr=document.getElementById('forn-edit-toggle-track');
+  if(mc){mc.checked=!!f.multiContrato;}
+  if(tr){
+    tr.style.background=f.multiContrato?'var(--teal)':'var(--border)';
+    var dot=tr.querySelector('span');
+    if(dot)dot.style.transform=f.multiContrato?'translateX(18px)':'translateX(0)';
+  }
+  var msgEl=document.getElementById('forn-edit-msg');
+  if(msgEl)msgEl.textContent='';
+  document.getElementById('forn-edit-overlay').style.display='flex';
+}
+function adminFornFecharEdit(){
+  document.getElementById('forn-edit-overlay').style.display='none';
+}
+function adminFornSalvarEdit(){
+  var msgEl=document.getElementById('forn-edit-msg');
+  var setMsg=function(txt,cor){if(msgEl){msgEl.textContent=txt;msgEl.style.color=cor;}};
+  var cnpjOrig=document.getElementById('forn-edit-cnpj-orig').value;
+  var novoNome=document.getElementById('forn-edit-nome').value.trim();
+  var novoStatus=document.getElementById('forn-edit-status').value;
+  var novoMC=!!(document.getElementById('forn-edit-multi-contrato')||{}).checked;
+  if(!novoNome){setMsg('Informe a razão social.','var(--red)');return;}
+  var f=fornecedores.find(function(x){return x.cnpj===cnpjOrig;});
+  if(!f){setMsg('Fornecedor não encontrado.','var(--red)');return;}
+  var alteracoes={};
+  if(f.nome!==novoNome)alteracoes.nome={de:f.nome,para:novoNome};
+  if(f.status!==novoStatus)alteracoes.status={de:f.status,para:novoStatus};
+  if(!!f.multiContrato!==novoMC)alteracoes.multiContrato={de:!!f.multiContrato,para:novoMC};
+  f.nome=novoNome; f.status=novoStatus; f.multiContrato=novoMC;
+  var agora=new Date();
+  var ts=agora.toLocaleDateString('pt-BR')+' às '+agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  if(!window._fornAudit)window._fornAudit={};
+  if(!window._fornAudit[cnpjOrig])window._fornAudit[cnpjOrig]=[];
+  window._fornAudit[cnpjOrig].push({acao:'Cadastro editado',data:ts,usuario:'Usuário atual',campos:alteracoes});
+  adminFornRenderKPIs();
+  adminFornRenderTabela();
+  fornecedoresRenderKPIs();
+  setMsg('Alterações salvas com sucesso.','var(--teal)');
+  setTimeout(function(){adminFornFecharEdit();},900);
+}
+
+// ── DETALHES DO FORNECEDOR ───────────────────────────────────────────
+function adminFornAbrirDet(cnpj){
+  var f=fornecedores.find(function(x){return x.cnpj===cnpj;});
+  if(!f)return;
+  var statusLbl={ok:'Regular',alerta:'Alerta',risco:'Risco'};
+  var statusCor={ok:'var(--green)',alerta:'var(--amber)',risco:'var(--red)'};
+  var tipoCor={Matriz:'#8B5CF6',Filial:'#A7A8AA'};
+  var ct=getContratoVigentePorCnpj?getContratoVigentePorCnpj(cnpj):null;
+  var ctLabel=ct?(ct.id+' · '+ct.objeto):'Sem contrato vigente';
+  document.getElementById('forn-det-title').textContent=f.nome;
+  document.getElementById('forn-det-sub').textContent='CNPJ: '+cnpj;
+  function row(lbl,val){return '<div style="display:flex;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)"><span style="min-width:160px;font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;line-height:1.6">'+lbl+'</span><span style="font-size:13px;color:var(--txt1);font-weight:500">'+val+'</span></div>';}
+  var campos='<div style="margin-bottom:22px">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Dados cadastrais</div>'
+    +row('CNPJ','<span class="mono">'+cnpj+'</span>')
+    +row('Razão social',f.nome)
+    +row('Tipo','<span style="background:'+tipoCor[f.tipo]+'22;color:'+tipoCor[f.tipo]+';border:1px solid '+tipoCor[f.tipo]+'44;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">'+f.tipo+'</span>')
+    +row('Status','<span style="color:'+(statusCor[f.status]||'var(--txt2)')+';font-weight:600">'+(statusLbl[f.status]||f.status)+'</span>')
+    +row('Score de conformidade','<span class="mono">'+f.score+'</span>')
+    +row('Multi-contratos',f.multiContrato?'<span style="background:rgba(73,197,177,.12);color:var(--teal);border:1px solid rgba(73,197,177,.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Ativo — ref. obrigatória na DF</span>':'Não')
+    +row('Contrato vigente',ctLabel)
+    +row('Grupo econômico',f.grupoNome||f.grupoId||'—')
+    +row('Volume de compras','<span class="mono">'+fc(f.volume)+'</span>')
+    +row('Créditos IBS/CBS','<span class="mono" style="color:var(--teal)">'+fc(f.cred)+'</span>')
+    +'</div>';
+  var audit=((window._fornAudit||{})[cnpj]||[]);
+  var auditHtml='<div><div style="font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Histórico de auditoria</div>';
+  if(!audit.length){
+    auditHtml+='<div style="font-size:12px;color:var(--txt3);padding:16px 0">Nenhum registro de auditoria disponível para este fornecedor.</div>';
+  } else {
+    auditHtml+='<div style="display:flex;flex-direction:column;gap:12px">';
+    var reverted=[].concat(audit).reverse();
+    reverted.forEach(function(ev,i){
+      var isFirst=i===0;
+      var icon=ev.acao.indexOf('Cadastro criado')!==-1?'🗂':'✏️';
+      var camposHtml='';
+      if(ev.campos&&typeof ev.campos==='object'){
+        Object.keys(ev.campos).forEach(function(k){
+          var v=ev.campos[k];
+          if(v&&typeof v==='object'&&'de' in v){
+            camposHtml+='<div style="margin-top:4px;font-size:11px;color:var(--txt3)"><b style="color:var(--txt2)">'+k+':</b> '
+              +'<span style="text-decoration:line-through;color:var(--red)">'+v.de+'</span>'
+              +' → <span style="color:var(--teal)">'+v.para+'</span></div>';
+          } else {
+            var disp=typeof v==='boolean'?(v?'Sim':'Não'):String(v);
+            camposHtml+='<div style="margin-top:4px;font-size:11px;color:var(--txt3)"><b style="color:var(--txt2)">'+k+':</b> '+disp+'</div>';
+          }
+        });
+      }
+      auditHtml+='<div style="display:flex;gap:12px;align-items:flex-start">'
+        +'<div style="display:flex;flex-direction:column;align-items:center;gap:0">'
+        +'<div style="width:32px;height:32px;border-radius:50%;background:'+(isFirst?'var(--teal)':'var(--bg)')+';border:2px solid '+(isFirst?'var(--teal)':'var(--border)')+';display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">'+icon+'</div>'
+        +(i<reverted.length-1?'<div style="width:2px;flex:1;min-height:20px;background:var(--border);margin-top:4px"></div>':'')
+        +'</div>'
+        +'<div style="flex:1;padding-bottom:8px">'
+        +'<div style="font-size:13px;font-weight:600;color:var(--txt1)">'+ev.acao+'</div>'
+        +'<div style="font-size:11px;color:var(--txt3);margin-top:2px">'+ev.data+' · '+ev.usuario+'</div>'
+        +camposHtml
+        +'</div></div>';
+    });
+    auditHtml+='</div>';
+  }
+  auditHtml+='</div>';
+  document.getElementById('forn-det-body').innerHTML=campos+auditHtml;
+  document.getElementById('forn-det-overlay').style.display='flex';
+}
+function adminFornFecharDet(){
+  document.getElementById('forn-det-overlay').style.display='none';
 }
 
 var INC_TIPOS={
@@ -5488,6 +5680,14 @@ function sincronizarFornecedoresComCreditos(){
 
 function init(){
   sincronizarFornecedoresComCreditos();
+  // Seed auditoria para fornecedores pré-carregados
+  if(!window._fornAudit)window._fornAudit={};
+  var _seedDatas=['15/01/2025 às 09:12:44','22/02/2025 às 14:30:11','03/03/2025 às 08:55:02','10/04/2025 às 11:47:33','05/05/2025 às 16:22:18','18/06/2025 às 10:05:57','29/07/2025 às 13:41:29','08/08/2025 às 09:33:50','14/09/2025 às 15:18:07','02/10/2025 às 11:58:44','19/11/2025 às 10:23:31','07/12/2025 às 08:47:15'];
+  fornecedores.forEach(function(f,i){
+    if(!window._fornAudit[f.cnpj]){
+      window._fornAudit[f.cnpj]=[{acao:'Cadastro criado',data:_seedDatas[i%_seedDatas.length],usuario:'Migração inicial',campos:{nome:f.nome,status:f.status,multiContrato:!!f.multiContrato}}];
+    }
+  });
   // recent
   var h="";
   for(var i=0;i<6;i++){var r=impostos[i];h+='<tr><td class="mono nowrap"><span style="color:var(--txt3)">'+r.id+'</span><br><span style="color:var(--blue)">'+r.rf+'</span></td><td class="trunc"><div style="font-weight:500">'+r.forn+'</div><div style="font-size:10px;color:var(--txt3)">'+r.cnpj+'</div></td><td class="nowrap">'+r.tipo+'</td><td class="r mono">'+ff(r.valor)+'</td><td class="nowrap">'+r.venc+'</td><td class="nowrap">'+bdg(r.status)+'</td></tr>';}
