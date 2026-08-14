@@ -4,6 +4,14 @@
  * Gera R$ 50.000.000 em créditos apropriados (10% de R$ 500M)
  */
 
+// Auxiliar multi-select período — suporta f.mesAnoArr (array) E f.mesAno (string)
+window._matchPeriodo = function(dateStr, f) {
+  var d = dateStr || '';
+  if (f.mesAnoArr && f.mesAnoArr.length) return f.mesAnoArr.some(function(m){ return d.startsWith(m); });
+  if (f.mesAno) return d.startsWith(f.mesAno);
+  return true;
+};
+
 // Função auxiliar de formatação
 function ff(val) {
   if (!val && val !== 0) return '—';
@@ -749,7 +757,7 @@ window.abrirDetalheRF = function(rfId) {
 
 // Estado dos filtros da tabela de créditos
 window._filtrosCreditos = {
-  mesAno: '',
+  mesAno: '', mesAnoArr: [],
   busca: '', tipoFiscal: '', status: '', contrato: '',
   metodo: '', pagamento: '', dataNFDe: '', dataNFAte: '',
   credMin: '', credMax: '', tipoDFe: ''
@@ -880,17 +888,16 @@ window.creditosFiltrarGrid = function() {
 };
 
 window.creditosFiltrarMesAno = function() {
-  var sel = document.getElementById('cred-mes-ano');
-  window._filtrosCreditos.mesAno = sel ? sel.value : '';
+  var arr = (window._periodoSel || {}).cred || [];
+  window._filtrosCreditos.mesAnoArr = arr;
+  window._filtrosCreditos.mesAno = '';
   var mesLabels = {
     '2025-10':'out/2025','2025-11':'nov/2025','2025-12':'dez/2025',
     '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026',
     '2026-05':'mai/2026','2026-06':'jun/2026','2026-07':'jul/2026','2026-08':'ago/2026',
     '2026-09':'set/2026','2026-10':'out/2026','2026-11':'nov/2026','2026-12':'dez/2026'
   };
-  var label = window._filtrosCreditos.mesAno
-    ? (mesLabels[window._filtrosCreditos.mesAno] || window._filtrosCreditos.mesAno)
-    : 'Origem fato gerador';
+  var label = arr.length === 1 ? (mesLabels[arr[0]] || arr[0]) : arr.length > 1 ? arr.length + ' períodos' : 'Origem fato gerador';
   var sub = document.getElementById('cred-periodo-sub');
   if (sub) sub.textContent = 'Posição IBS + CBS · Art. 48 LC 214/2025 · ' + label;
   window.renderizarTabelaCreditos();
@@ -908,10 +915,11 @@ window.creditosLimparFiltrosGrid = function() {
   var sub = document.getElementById('cred-periodo-sub');
   if (sub) sub.textContent = 'Posição IBS + CBS · Art. 48 LC 214/2025 · Origem fato gerador';
   window._filtrosCreditos = {
-    mesAno:'', busca:'', tipoFiscal:'', status:'', contrato:'',
+    mesAno:'', mesAnoArr:[], busca:'', tipoFiscal:'', status:'', contrato:'',
     metodo:'', pagamento:'', dataNFDe:'', dataNFAte:'',
     credMin:'', credMax:'', tipoDFe:''
   };
+  window._periodoSel = window._periodoSel || {}; window._periodoSel.cred = [];
   window.renderizarTabelaCreditos();
   try { window.renderizarComposicaoCreditos(window._composicaoFiltro || ''); } catch(e) {}
   try { window.atualizarPerdaAcumulada(); } catch(e) {}
@@ -982,7 +990,7 @@ window.renderizarTabelaCreditos = function() {
       (f.statusMulti && f.statusMulti.length)) {
     var busca = (f.busca || '').toLowerCase();
     listaRFs = listaRFs.filter(function(r) {
-      if (f.mesAno && !(r.dataNF || '').startsWith(f.mesAno)) return false;
+      if (!window._matchPeriodo(r.dataNF, f)) return false;
       if (busca && !(r.rf.toLowerCase().includes(busca) || r.nf.toLowerCase().includes(busca) || r.forn.toLowerCase().includes(busca))) return false;
       if (f.tipoFiscal && r.tipoFiscal !== f.tipoFiscal) return false;
       if (f.status && (r.statusCredito || r.status) !== f.status) return false;
@@ -1117,11 +1125,11 @@ window.atualizarKPIsCreditos = function(listaRFs) {
 window.atualizarPerdaAcumulada = function() {
   var totalVencido = 0;
   var countRFs = 0;
-  var mesAno = (window._filtrosCreditos || {}).mesAno || '';
+  var _fC = window._filtrosCreditos || {};
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
-      if (mesAno && !(rf.data || '').startsWith(mesAno)) return;
+      if (!window._matchPeriodo(rf.data, _fC)) return;
       if ((rf.statusRegistro || rf.status) === 'vencido') {
         totalVencido += rf.valor || 0;
         countRFs++;
@@ -2078,9 +2086,11 @@ var _apurDist = ['confirmado','confirmado','confirmado','confirmado','confirmado
 function _concBuildLista(filtroMes) {
   var lista = window.nfListaFiltradaGlobal || [];
   var result = [];
+  var concArr = (window._periodoSel || {}).conc || [];
   lista.forEach(function(nf, idx) {
     var dataBase = nf.data || '2026-01-15';
-    if (filtroMes && !dataBase.startsWith(filtroMes)) return;
+    if (concArr.length) { if (!concArr.some(function(m){ return dataBase.startsWith(m); })) return; }
+    else if (filtroMes && !dataBase.startsWith(filtroMes)) return;
 
     var seed = _concHash((nf.numero || '') + (nf.cnpj || '') + idx);
     var statusApur = _apurDist[seed % 10];
@@ -3371,7 +3381,7 @@ window._enriquecerNFsSaida = function() {
 };
 
 window._filtrosDebitos = {
-  mesAno: '', busca: '', tipoFiscal: '', status: '',
+  mesAno: '', mesAnoArr: [], busca: '', tipoFiscal: '', status: '',
   metodo: '', extincao: '', dataNFDe: '', dataNFAte: '',
   debMin: '', debMax: '', tipoDFe: ''
 };
@@ -3449,17 +3459,16 @@ window.debitosFiltrarGrid = function() {
 };
 
 window.debitosFiltrarMesAno = function() {
-  var sel = document.getElementById('deb-mes-ano');
-  window._filtrosDebitos.mesAno = sel ? sel.value : '';
+  var arr = (window._periodoSel || {}).deb || [];
+  window._filtrosDebitos.mesAnoArr = arr;
+  window._filtrosDebitos.mesAno = '';
   var mesLabels = {
     '2025-10':'out/2025','2025-11':'nov/2025','2025-12':'dez/2025',
     '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026',
     '2026-05':'mai/2026','2026-06':'jun/2026','2026-07':'jul/2026','2026-08':'ago/2026',
     '2026-09':'set/2026','2026-10':'out/2026','2026-11':'nov/2026','2026-12':'dez/2026'
   };
-  var label = window._filtrosDebitos.mesAno
-    ? (mesLabels[window._filtrosDebitos.mesAno] || window._filtrosDebitos.mesAno)
-    : 'Origem fato gerador';
+  var label = arr.length === 1 ? (mesLabels[arr[0]] || arr[0]) : arr.length > 1 ? arr.length + ' períodos' : 'Origem fato gerador';
   var sub = document.getElementById('deb-periodo-sub');
   if (sub) sub.textContent = 'Posição IBS + CBS · Art. 153-A LC 214/2025 · ' + label;
   window.renderizarTabelaDebitos();
@@ -3477,10 +3486,11 @@ window.debitosLimparFiltrosGrid = function() {
   var sub = document.getElementById('deb-periodo-sub');
   if (sub) sub.textContent = 'Posição IBS + CBS · Art. 153-A LC 214/2025 · Origem fato gerador';
   window._filtrosDebitos = {
-    mesAno: '', busca: '', tipoFiscal: '', status: '',
+    mesAno: '', mesAnoArr: [], busca: '', tipoFiscal: '', status: '',
     metodo: '', extincao: '', dataNFDe: '', dataNFAte: '',
     debMin: '', debMax: '', tipoDFe: ''
   };
+  window._periodoSel = window._periodoSel || {}; window._periodoSel.deb = [];
   window.renderizarTabelaDebitos();
   try { window.renderizarComposicaoDebitos(window._composicaoDebitosFiltro || ''); } catch(e) {}
   try { window.atualizarPerdaAcumuladaDebitos(); } catch(e) {}
@@ -3528,7 +3538,7 @@ window.renderizarTabelaDebitos = function() {
   }
 
   listaRFs = listaRFs.filter(function(r) {
-    if (f.mesAno    && !r.dataNF.startsWith(f.mesAno)) return false;
+    if (!window._matchPeriodo(r.dataNF, f)) return false;
     if (busca) {
       var s = r.rf.toLowerCase() + r.nf.toLowerCase() + r.cliente.toLowerCase();
       if (!s.includes(busca)) return false;
@@ -3626,11 +3636,11 @@ window.atualizarKPIsDebitos = function(listaRFs) {
 
 window.atualizarPerdaAcumuladaDebitos = function() {
   var totalVencido = 0, countRFs = 0;
-  var mesAno = (window._filtrosDebitos || {}).mesAno || '';
+  var _fD = window._filtrosDebitos || {};
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'saida') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
-      if (mesAno && !(rf.data || '').startsWith(mesAno)) return;
+      if (!window._matchPeriodo(rf.data, _fD)) return;
       if ((rf.statusRegistro || rf.status) === 'vencido') { totalVencido += rf.valor || 0; countRFs++; }
     });
   });
@@ -3668,7 +3678,7 @@ window.renderizarComposicaoDebitos = function(filtroTipo) {
     if (nf.tipo !== 'saida') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
       if (filtro && rf.tipoFiscal !== filtro) return;
-      if (f.mesAno   && !(rf.data||'').startsWith(f.mesAno)) return;
+      if (!window._matchPeriodo(rf.data, f)) return;
       if (busca) {
         var s = (rf.id||'').toLowerCase() + ('nf-'+(rf.nfVinculada||'')).toLowerCase() + (rf.entidade||'').toLowerCase();
         if (!s.includes(busca)) return;
@@ -3726,7 +3736,7 @@ window.renderizarExtincaoMetodo = function() {
     if (nf.tipo !== 'saida') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
       if (!rf.dataExtincao || rf.dataExtincao === '—') return;
-      if (f.mesAno   && !(rf.data||'').startsWith(f.mesAno)) return;
+      if (!window._matchPeriodo(rf.data, f)) return;
       if (busca) {
         var s = (rf.id||'').toLowerCase() + ('nf-'+(rf.nfVinculada||'')).toLowerCase() + (rf.entidade||'').toLowerCase();
         if (!s.includes(busca)) return;
@@ -4535,7 +4545,7 @@ window.renderizarFCT = function() {
 // GESTÃO DE PAGAMENTOS — filtro global de mês + tabela dinâmica
 // ============================================================
 
-window._filtrosPagamentos = { mesAno: '', tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
+window._filtrosPagamentos = { mesAno: '', mesAnoArr: [], tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
 
 window.injetarFiltrosPagamentos = function() {
   if (document.getElementById('filtros-pagamentos-avancado')) return;
@@ -4628,22 +4638,21 @@ window.pagamentosLimparFiltros = function() {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
-  window._filtrosPagamentos = { mesAno: window._filtrosPagamentos.mesAno, tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
+  window._filtrosPagamentos = { mesAno: '', mesAnoArr: (window._filtrosPagamentos.mesAnoArr||[]).slice(), tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
   window.renderizarTabelaPagamentos();
 };
 
 window.pagamentosFiltrarMesAno = function() {
-  var sel = document.getElementById('pag-mes-ano');
-  window._filtrosPagamentos.mesAno = sel ? sel.value : '';
+  var arr = (window._periodoSel || {}).pag || [];
+  window._filtrosPagamentos.mesAnoArr = arr;
+  window._filtrosPagamentos.mesAno = '';
   var mesLabels = {
     '2025-10':'out/2025','2025-11':'nov/2025','2025-12':'dez/2025',
     '2026-01':'jan/2026','2026-02':'fev/2026','2026-03':'mar/2026','2026-04':'abr/2026',
     '2026-05':'mai/2026','2026-06':'jun/2026','2026-07':'jul/2026','2026-08':'ago/2026',
     '2026-09':'set/2026','2026-10':'out/2026','2026-11':'nov/2026','2026-12':'dez/2026'
   };
-  var label = window._filtrosPagamentos.mesAno
-    ? (mesLabels[window._filtrosPagamentos.mesAno] || window._filtrosPagamentos.mesAno)
-    : 'Origem fato gerador';
+  var label = arr.length === 1 ? (mesLabels[arr[0]] || arr[0]) : arr.length > 1 ? arr.length + ' períodos' : 'Origem fato gerador';
   var sub = document.getElementById('pag-periodo-sub');
   if (sub) sub.textContent = 'Impostos (DARF/Guia IBS) e fornecedores · ' + label;
   window.renderizarTabelaPagamentos();
@@ -4663,7 +4672,7 @@ window.renderizarTabelaPagamentos = function() {
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
-      if (f.mesAno && !(rf.data || '').startsWith(f.mesAno)) return;
+      if (!window._matchPeriodo(rf.data, f)) return;
 
       var tipoCol = rf.tipoFiscal === 'ibs' ? 'Guia IBS' : 'DARF CBS';
       if (tipo && tipoCol !== tipo) return;
@@ -4899,7 +4908,7 @@ window.atualizarKPIsPagamentos = function() {
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
-      if (f.mesAno && !(rf.data || '').startsWith(f.mesAno)) return;
+      if (!window._matchPeriodo(rf.data, f)) return;
       var temPag      = rf.dataPagamento && rf.dataPagamento !== '—';
       var sc          = rf.statusCredito || rf.status || '';
       var sr          = rf.statusRegistro || null;
@@ -5202,7 +5211,7 @@ window.renderizarPagamentosMetodo = function() {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
       // Filtros globais
-      if (f.mesAno && !(rf.data || '').startsWith(f.mesAno)) return;
+      if (!window._matchPeriodo(rf.data, f)) return;
       if (busca) {
         var rid = (rf.id || '').toLowerCase(), rn = ('nf-'+(rf.nfVinculada||'')).toLowerCase(), re = (rf.entidade||'').toLowerCase();
         if (!rid.includes(busca) && !rn.includes(busca) && !re.includes(busca)) return;
@@ -5299,7 +5308,7 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
       if (f.metodo   && rf.metodoPagamento !== f.metodo) return;
       if (f.pagamento === 'com' && rf.dataPagamento === '—') return;
       if (f.pagamento === 'sem' && rf.dataPagamento !== '—') return;
-      if (f.mesAno && !(rf.data || '').startsWith(f.mesAno)) return;
+      if (!window._matchPeriodo(rf.data, f)) return;
       if (f.dataNFDe && rf.data < f.dataNFDe) return;
       if (f.dataNFAte && rf.data > f.dataNFAte) return;
       var credVal = rf.valor || 0;
