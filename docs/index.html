@@ -2475,7 +2475,7 @@ tr:last-child td{border-bottom:none}
         <div class="sechdr" style="margin-bottom:0"><h2>CNPJs cadastrados</h2><p id="adm-forn-count-sub">0 de 0 fornecedores exibidos</p></div>
         <button class="btn btn-t" onclick="adminFornAbrirModal()" style="flex-shrink:0">+ Novo fornecedor</button>
       </div>
-      <div class="twrap"><table id="tbl-adm-fornecedores"><thead><tr><th>Grupo / CNPJ</th><th>Razão Social</th><th>Tipo</th><th>Status</th><th class="r">Score</th><th>Contrato</th><th class="r">Vol. compras</th><th class="r">Créditos</th><th>Pend.</th></tr></thead><tbody id="t-adm-fornecedores"></tbody></table></div>
+      <div class="twrap"><table id="tbl-adm-fornecedores"><thead><tr><th>Grupo / CNPJ</th><th>Razão Social</th><th>Tipo</th><th>Status</th><th class="r">Score</th><th>Contrato</th><th>Multi-contratos</th><th class="r">Vol. compras</th><th class="r">Créditos</th><th>Pend.</th></tr></thead><tbody id="t-adm-fornecedores"></tbody></table></div>
     </div>
   </div>
 
@@ -2711,6 +2711,21 @@ tr:last-child td{border-bottom:none}
           <option value="alerta">Alerta</option>
           <option value="risco">Risco</option>
         </select>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--txt1);display:flex;align-items:center;gap:6px">
+              Aceita Multi-contratos
+              <span class="periodo-info" data-tip="Quando ativado, este CNPJ pode ter mais de um contrato ativo simultaneamente. Neste caso, toda DF importada deverá obrigatoriamente informar a referência do contrato (campo 'contratoRef') para que o crédito IBS/CBS seja atribuído corretamente. Sem a referência, a DF será rejeitada na ingestão.">i</span>
+            </div>
+            <div style="font-size:11px;color:var(--txt3);margin-top:3px">DFs devem incluir referência do contrato na importação</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0;cursor:pointer">
+            <input type="checkbox" id="forn-form-multi-contrato" style="opacity:0;width:0;height:0;position:absolute">
+            <span onclick="var c=document.getElementById('forn-form-multi-contrato');c.checked=!c.checked;this.style.background=c.checked?'var(--teal)':'var(--border)';this.querySelector('span').style.transform=c.checked?'translateX(18px)':'translateX(0)'" id="forn-toggle-track" style="position:absolute;inset:0;background:var(--border);border-radius:24px;transition:background .2s;cursor:pointer"><span style="position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.25)"></span></span>
+          </label>
+        </div>
       </div>
     </div>
     <div id="forn-form-msg" style="margin-top:14px;font-size:12px"></div>
@@ -4051,7 +4066,7 @@ function adminFornRenderTabela(){
 
     // Linha de cabeçalho do grupo
     h+='<tr style="background:rgba(139,92,246,.07);border-top:2px solid rgba(139,92,246,.25)">'
-      +'<td colspan="9" style="padding:10px 14px">'
+      +'<td colspan="10" style="padding:10px 14px">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
       +'<div style="display:flex;align-items:center;gap:10px">'
       +'<span style="background:rgba(139,92,246,.18);color:var(--purple);border:1px solid rgba(139,92,246,.35);border-radius:4px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.06em">GRUPO</span>'
@@ -4081,13 +4096,14 @@ function adminFornRenderTabela(){
         +'<td><span style="color:'+(statusCor[f.status]||"var(--txt2)")+';font-weight:600;font-size:12px">'+(statusLbl[f.status]||f.status)+'</span></td>'
         +'<td class="r mono">'+f.score+'</td>'
         +'<td style="white-space:nowrap;font-size:12px">'+ctCell+'</td>'
+        +'<td>'+(f.multiContrato?'<span style="background:rgba(73,197,177,.12);color:var(--teal);border:1px solid rgba(73,197,177,.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Sim — ref. obrigatória</span>':'<span style="color:var(--txt3);font-size:11px">Não</span>')+'</td>'
         +'<td class="r mono">'+fc(f.volume)+'</td>'
         +'<td class="r mono" style="color:var(--teal)">'+fc(f.cred)+'</td>'
         +'<td><span style="color:'+(f.pend>0?"var(--amber)":"var(--green)")+';font-weight:600">'+f.pend+'</span></td></tr>';
     });
   });
 
-  if(!lista.length)h='<tr><td colspan="9" style="text-align:center;color:var(--txt3);padding:24px">Nenhum fornecedor encontrado para este filtro.</td></tr>';
+  if(!lista.length)h='<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhum fornecedor encontrado para este filtro.</td></tr>';
   var tb=document.getElementById("t-adm-fornecedores");
   if(tb)tb.innerHTML=h;
   var sub=document.getElementById("adm-forn-count-sub");
@@ -4110,7 +4126,9 @@ function adminFornFecharModal(){
   if(ov)ov.style.display="none";
   var cnpj=document.getElementById("forn-form-cnpj");var nome=document.getElementById("forn-form-nome");
   var status=document.getElementById("forn-form-status");var msgEl=document.getElementById("forn-form-msg");
+  var mc=document.getElementById("forn-form-multi-contrato");var tr=document.getElementById("forn-toggle-track");
   if(cnpj)cnpj.value="";if(nome)nome.value="";if(status)status.value="ok";if(msgEl)msgEl.textContent="";
+  if(mc){mc.checked=false;}if(tr){tr.style.background="var(--border)";var dot=tr.querySelector("span");if(dot)dot.style.transform="translateX(0)";}
 }
 function adminFornCadastrar(){
   var msgEl=document.getElementById("forn-form-msg");
@@ -4118,11 +4136,12 @@ function adminFornCadastrar(){
   var cnpj=document.getElementById("forn-form-cnpj").value.trim();
   var nome=document.getElementById("forn-form-nome").value.trim();
   var status=document.getElementById("forn-form-status").value;
+  var multiContrato=!!(document.getElementById("forn-form-multi-contrato")||{}).checked;
   if(!nome){setMsg("Informe a razão social do fornecedor.","var(--red)");return;}
   var cnpjRegex=/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
   if(!cnpjRegex.test(cnpj)){setMsg("CNPJ inválido. Use o formato 00.000.000/0000-00.","var(--red)");return;}
   if(fornecedores.some(function(f){return f.cnpj===cnpj;})){setMsg("Já existe um fornecedor cadastrado com este CNPJ.","var(--red)");return;}
-  fornecedores.push({nome:nome,cnpj:cnpj,tipo:"Matriz",grupoId:"g-"+cnpj.replace(/\D/g,"").substring(0,8),grupoNome:nome,cnpjMatriz:null,volume:0,cred:0,status:status,score:100,pagtos:0,pend:0});
+  fornecedores.push({nome:nome,cnpj:cnpj,tipo:"Matriz",grupoId:"g-"+cnpj.replace(/\D/g,"").substring(0,8),grupoNome:nome,cnpjMatriz:null,volume:0,cred:0,status:status,score:100,pagtos:0,pend:0,multiContrato:multiContrato});
   adminFornRenderKPIs();
   adminFornRenderTabela();
   fornecedoresRenderKPIs();
