@@ -7534,24 +7534,37 @@ fctRender();
 // e overlays criados dinamicamente (ctr/rf/inc-detalhe-wrapper).
 (function() {
   var _map = [
+    // z:400
     { id:'fornecedor-modal-overlay',  z:400,  close:function(){ try{adminFornFecharModal();}catch(e){} } },
     { id:'contrato-modal-overlay',    z:400,  close:function(){ try{contratosFecharModal();}catch(e){} } },
     { id:'apur-modal-overlay',        z:400,  close:function(){ try{closeApurModal();}catch(e){} } },
     { id:'apur-concluir-overlay',     z:400,  close:function(){ try{closeApurConcluirModal();}catch(e){} } },
     { id:'fct-modal-overlay',         z:400,  close:function(){ try{fctCloseDrill();}catch(e){} } },
+    // z:500
     { id:'forn-edit-overlay',         z:500,  close:function(){ try{adminFornFecharEdit();}catch(e){} } },
     { id:'forn-det-overlay',          z:500,  close:function(){ try{adminFornFecharDet();}catch(e){} } },
     { id:'org-modal-overlay',         z:500,  close:function(){ try{window.orgFecharModal();}catch(e){} } },
     { id:'comprovante-modal-overlay', z:500,  close:function(){ try{window.fecharComprovanteRF();}catch(e){} } },
+    // z:600
     { id:'org-det-overlay',           z:600,  close:function(){ try{window.orgFecharDet();}catch(e){} } },
+    // z:1000
+    { id:'nf-modal',                  z:1000, close:function(){ try{nfFecharDetalhes();}catch(e){} } },
+    { id:'comprovante-modal',         z:1000, close:function(){ try{document.getElementById('comprovante-modal').style.display='none';}catch(e){} } },
+    // z:1100
+    { id:'ing-modal',                 z:1100, close:function(){ try{fecharIngModal();}catch(e){} } },
+    { id:'darf-modal',                z:1100, close:function(){ try{fecharGuiaDARF();}catch(e){} } },
+    { id:'settings-overlay',          z:1100, close:function(){ try{closeSettings();}catch(e){} } },
+    // z:1200
+    { id:'ing-upload-modal',          z:1200, close:function(){ try{ingUploadFechar();}catch(e){} } },
     { id:'forn-sel-overlay',          z:1200, close:function(){ try{ if(!window._fornSelObrigatorio) fecharSeletorFornecedor(); }catch(e){} } },
     { id:'forn-liq-overlay',          z:1200, close:function(){ try{fecharModal('forn-liq-overlay');}catch(e){} } },
     { id:'forn-cont-overlay',         z:1200, close:function(){ try{fecharModal('forn-cont-overlay');}catch(e){} } },
     { id:'forn-comt-overlay',         z:1200, close:function(){ try{fecharModal('forn-comt-overlay');}catch(e){} } },
     { id:'forn-rad-overlay',          z:1200, close:function(){ try{fecharModal('forn-rad-overlay');}catch(e){} } },
     { id:'forn-df-detail-overlay',    z:1200, close:function(){ try{fecharModal('forn-df-detail-overlay');}catch(e){} } },
-    { id:'settings-overlay',          z:1100, close:function(){ try{closeSettings();}catch(e){} } },
-    // overlays dinâmicos (criados/destruídos no DOM)
+    // z:9000 — dinâmicos: inseridos/removidos do DOM (sem inline display style)
+    { id:'nf-detalhe-overlay',        z:9000, close:function(){ try{var e=document.getElementById('nf-detalhe-overlay');if(e)e.remove();}catch(e){} } },
+    { id:'rf-detalhe-overlay',        z:9000, close:function(){ try{var e=document.getElementById('rf-detalhe-overlay');if(e)e.remove();}catch(e){} } },
     { id:'ctr-detalhe-wrapper',       z:9000, close:function(){ try{contratosFecharDetalhe();}catch(e){} } },
     { id:'rf-detalhe-wrapper',        z:9000, close:function(){ try{rfFecharDetalhe();}catch(e){} } },
     { id:'inc-detalhe-wrapper',       z:9000, close:function(){ try{inconsistFecharDetalhe();}catch(e){} } },
@@ -7560,8 +7573,11 @@ fctRender();
   function _isVisible(el) {
     if (!el || !document.body.contains(el)) return false;
     var d = el.style.display;
-    if (d && d !== 'none') return true;         // display:flex / block
-    if (el.classList && el.classList.contains('open')) return true;  // .open pattern
+    if (d === 'none') return false;
+    if (d && d !== 'none') return true;
+    if (el.classList && el.classList.contains('open')) return true;
+    // Dinâmicos sem inline display: visíveis quando presentes no DOM
+    if (!d) return true;
     return false;
   }
 
