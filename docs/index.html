@@ -691,11 +691,7 @@ tr:last-child td{border-bottom:none}
     <button class="nav-btn" title="Débito" onclick="showView('debitos',this)"><span class="nav-icon">◇</span><span class="nav-label"> Débito</span></button>
     <button class="nav-btn" title="Pagamentos" onclick="showView('pagamentos',this)"><span class="nav-icon">⊟</span><span class="nav-label"> Pagamentos</span></button>
     <button class="nav-btn" title="Conciliação" onclick="showView('conciliacao',this)"><span class="nav-icon">⋈</span><span class="nav-label"> Conciliação</span></button>
-    <button class="nav-btn" id="nav-inconsist-btn" title="Inconsistência" onclick="showInconsistSub('lista',document.getElementById('subnav-inconsist-lista'))"><span class="nav-icon">⚠</span><span class="nav-label"> Inconsistência</span></button>
-    <div class="nav-sub-group" id="nav-sub-group-inconsist">
-      <button class="nav-sub-btn" id="subnav-inconsist-lista" onclick="showInconsistSub('lista',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Inconsistências</span></button>
-      <button class="nav-sub-btn" id="subnav-inconsist-kanban" onclick="showInconsistSub('kanban',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Kanban</span></button>
-    </div>
+    <button class="nav-btn" id="nav-inconsist-btn" title="Inconsistência" onclick="showView('inconsistencias',this)"><span class="nav-icon">⚠</span><span class="nav-label"> Inconsistência</span></button>
     <button class="nav-btn" id="nav-analytics-btn" title="Analytics" onclick="showView('inteligencia',this)"><span class="nav-icon">◆</span><span class="nav-label"> Analytics</span></button>
     <button class="nav-btn" id="nav-admin-btn" title="Configurações" onclick="showAdminSub('organizacao',document.getElementById('subnav-admin-organizacao'))"><span class="nav-icon">⚙</span><span class="nav-label"> Configurações</span></button>
     <div class="nav-sub-group" id="nav-sub-group-admin">
@@ -3126,15 +3122,16 @@ tr:last-child td{border-bottom:none}
 
 <!-- INCONSISTÊNCIAS -->
 <div id="view-inconsistencias" class="view">
+  <div class="analytics-tabs">
+    <button class="atab active" id="itab-visao" onclick="showInconsistTab('visao',this)">Visão Geral</button>
+    <button class="atab" id="itab-kanban" onclick="showInconsistTab('kanban',this)">Kanban</button>
+    <button class="atab" id="itab-listagem" onclick="showInconsistTab('listagem',this)">Listagem</button>
+  </div>
   <div class="pg-hdr">
     <div><div class="pg-title">Inconsistências</div><div class="pg-sub">Ciclo de vida da NF · importação, duplicidade, vencidos e divergências CBS</div></div>
   </div>
   <!-- TAB: LISTA DE INCONSISTÊNCIAS -->
   <div id="inconsistencias-lista" class="sv active">
-    <div class="stabs">
-      <button class="stab active" onclick="showSub('inc','visao',this)">Visão Geral</button>
-      <button class="stab" onclick="showSub('inc','listagem',this);setTimeout(function(){if(window.renderizarRFsInconsistencias)window.renderizarRFsInconsistencias();},0)">Listagem</button>
-    </div>
     <!-- SUB-TAB: VISÃO GERAL -->
     <div id="inc-visao" class="sv active">
       <!-- KPIs -->
@@ -6162,6 +6159,21 @@ function showAnalyticsSub(id,btn){
   if(id==='apuracao') setTimeout(function(){ try{ if(window.sincronizarApuracao) window.sincronizarApuracao(); else apurRenderAll(); }catch(e){} },0);
 }
 
+function showInconsistTab(id,btn){
+  document.querySelectorAll('#view-inconsistencias .atab').forEach(function(b){b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  if(id==='kanban'){
+    document.getElementById('inconsistencias-lista').classList.remove('active');
+    document.getElementById('inconsistencias-kanban').classList.add('active');
+    setTimeout(function(){if(window.renderizarKanbanInconsistencias)window.renderizarKanbanInconsistencias();},0);
+  }else{
+    document.getElementById('inconsistencias-kanban').classList.remove('active');
+    document.getElementById('inconsistencias-lista').classList.add('active');
+    document.querySelectorAll('[id^="inc-"]').forEach(function(v){v.classList.remove('active');});
+    var sv=document.getElementById('inc-'+id);if(sv)sv.classList.add('active');
+    if(id==='listagem')setTimeout(function(){if(window.renderizarRFsInconsistencias)window.renderizarRFsInconsistencias();},0);
+  }
+}
 function showInconsistSub(id,btn){
   var parent=document.getElementById("nav-inconsist-btn");
   showView("inconsistencias",parent);
