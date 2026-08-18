@@ -3615,7 +3615,7 @@ tr:last-child td{border-bottom:none}
       <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:16px">
         <thead>
           <tr style="border-bottom:1px solid var(--border)">
-            <th style="text-align:left;padding:6px 8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);font-weight:600">NF / DF</th>
+            <th style="text-align:left;padding:6px 8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);font-weight:600">DF</th>
             <th style="text-align:left;padding:6px 8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);font-weight:600">Fornecedor</th>
             <th style="text-align:left;padding:6px 8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);font-weight:600">Tipo Fiscal</th>
             <th style="text-align:right;padding:6px 8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);font-weight:600">Valor</th>
@@ -6488,6 +6488,15 @@ function buildCharts(){
     document.getElementById('venc-day-title').textContent = 'DFs a Vencer — ' + label;
     document.getElementById('venc-day-sub').textContent = 'Créditos IBS+CBS não apropriados com data de RF ' + label;
 
+    function _dfLink(tipoDF, numero) {
+      var label = (tipoDF || 'NF-e') + ' ' + (numero || '—');
+      if (!numero) return '<span style="font-family:var(--font-mono);font-size:11px;color:var(--txt2)">' + label + '</span>';
+      return '<button onclick="if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + numero + '\')" '
+        + 'style="background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-mono);font-size:11px;'
+        + 'color:var(--teal);font-weight:600;text-decoration:underline dotted;text-underline-offset:2px;text-align:left">'
+        + label + '</button>';
+    }
+
     // coleta RFs
     var rows = [];
     var total = 0;
@@ -6517,7 +6526,7 @@ function buildCharts(){
         total += s.valor;
         var tcol = s.tipo==='IBS'?'#60A5FA':'#FBB84A';
         h += '<tr style="border-bottom:1px solid var(--border)">'
-          + '<td style="padding:9px 8px;font-family:var(--font-mono);font-size:11px;color:var(--blue)">' + s.nfId + '</td>'
+          + '<td style="padding:9px 8px">' + _dfLink('NF-e', s.nfId) + '</td>'
           + '<td style="padding:9px 8px;color:var(--txt1);font-weight:500">' + s.forn + '</td>'
           + '<td style="padding:9px 8px"><span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:'+tcol+'">'
           + '<span style="width:5px;height:5px;border-radius:50%;background:'+tcol+';display:inline-block"></span>' + s.tipo + '</span></td>'
@@ -6538,7 +6547,7 @@ function buildCharts(){
         var nf = r.nf; var rf = r.rf;
         var tcol = (rf.tipoFiscal||'')==='IBS'?'#60A5FA':'#FBB84A';
         h += '<tr style="border-bottom:1px solid var(--border)">'
-          + '<td style="padding:9px 8px;font-family:var(--font-mono);font-size:11px;color:var(--blue)">' + (nf.id||nf.numero||'—') + '</td>'
+          + '<td style="padding:9px 8px">' + _dfLink(nf.tipoDF, nf.numero) + '</td>'
           + '<td style="padding:9px 8px;color:var(--txt1);font-weight:500">' + (nf.fornecedor||nf.forn||'—') + '</td>'
           + '<td style="padding:9px 8px"><span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:'+tcol+'">'
           + '<span style="width:5px;height:5px;border-radius:50%;background:'+tcol+';display:inline-block"></span>' + (rf.tipoFiscal||'—') + '</span></td>'
