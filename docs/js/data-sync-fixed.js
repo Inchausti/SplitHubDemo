@@ -1448,7 +1448,6 @@ window.atualizarDashboard = function() {
 
   // ── 3. Últimas transações ──
   var tbody = document.getElementById('t-recent');
-  if (!tbody) return;
 
   // Coletar todos os RFs com pagamento ou data recente, ordenar desc
   var rfs = [];
@@ -1490,8 +1489,7 @@ window.atualizarDashboard = function() {
   var rows = '';
   rfs.slice(0, 10).forEach(function(r) {
     var badge = bdg(r.status);
-    var _trc = r.tipo === 'Guia IBS' ? '#60A5FA' : '#FBB84A';
-    var tipoDot = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.06em;color:'+_trc+'"><span style="width:5px;height:5px;border-radius:50%;background:'+_trc+';display:inline-block;flex-shrink:0"></span>'+r.tipo+'</span>';
+    var tipoDot = '<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+r.tipo+'</span>';
     rows += '<tr>'
       + '<td class="mono" style="font-size:11px;color:var(--txt2)">' + r.id + '</td>'
       + '<td style="color:var(--txt2)">' + r.entidade + '</td>'
@@ -1501,7 +1499,7 @@ window.atualizarDashboard = function() {
       + '<td>' + badge + '</td>'
       + '</tr>';
   });
-  tbody.innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:var(--txt3);padding:20px">Sem transações</td></tr>';
+  if (tbody) tbody.innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:var(--txt3);padding:20px">Sem transações</td></tr>';
 
   // ── 4. Top 5 Best / Worst fornecedores ──
   // Score = mesma fórmula do módulo Analytics: good / (good + bad×2) × 100
@@ -2827,10 +2825,7 @@ window._incRfRenderPagina = function() {
   var _etapaCores = { 'Ingestão':['rgba(245,158,11,.12)','#F59E0B'], 'Créditos':['rgba(34,197,94,.12)','#22C55E'], 'Débitos':['rgba(59,130,246,.12)','#3B82F6'], 'Pagamentos':['rgba(239,68,68,.12)','#EF4444'] };
   var h = '';
   pag.forEach(function(r) {
-    var _tfcInc = r.tf === 'IBS' ? '#60A5FA' : r.tf === 'CBS' ? '#FBB84A' : null;
-    var tfBadge = _tfcInc
-      ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.06em;color:'+_tfcInc+'"><span style="width:5px;height:5px;border-radius:50%;background:'+_tfcInc+';display:inline-block;flex-shrink:0"></span>'+r.tf+'</span>'
-      : '<span style="color:var(--txt3);font-size:11px">—</span>';
+    var tfBadge = r.tf ? '<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+r.tf+'</span>' : '<span style="color:var(--txt3);font-size:11px">—</span>';
     var nfBadge = r.tipoNF === 'entrada'
       ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(34,197,94,.28);color:#22C55E;background:transparent">Entrada</span>'
       : r.tipoNF === 'ingestao'
@@ -3649,8 +3644,7 @@ window.renderizarTabelaDebitos = function() {
 
   var h = '';
   listaRFs.forEach(function(r) {
-    var _tfcDeb = r.tf === 'IBS' ? '#60A5FA' : '#FBB84A';
-    var tfBadge = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.06em;color:'+_tfcDeb+'"><span style="width:5px;height:5px;border-radius:50%;background:'+_tfcDeb+';display:inline-block;flex-shrink:0"></span>'+r.tf+'</span>';
+    var tfBadge = '<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+r.tf+'</span>';
     var mCor = metCoresMap[r.metodoExtincao] || 'var(--txt3)';
     var mLbl = metLblMap[r.metodoExtincao]   || r.metodoExtincao;
     var mBadge = (r.metodoExtincao && r.metodoExtincao !== '—')
@@ -4826,8 +4820,7 @@ window.renderizarTabelaPagamentos = function() {
   var h = '';
   rows.forEach(function(r, idx) {
     var badge  = bdg(r.status);
-    var _tfcPag = r.tipo === 'Guia IBS' ? '#60A5FA' : '#FBB84A';
-    var tipoBadge = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.06em;color:'+_tfcPag+'"><span style="width:5px;height:5px;border-radius:50%;background:'+_tfcPag+';display:inline-block;flex-shrink:0"></span>'+r.tipo+'</span>';
+    var tipoBadge = '<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+r.tipo+'</span>';
     var detBtn = '<button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:4px;color:#3B82F6;cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px">Ver</button>';
     var act = r.status !== 'pago'
       ? '<div style="display:flex;gap:4px;align-items:center"><button class="btn btn-t" style="font-size:11px;padding:4px 10px" onclick="window.abrirGuiaDARF('+idx+')">Gerar Guia</button>' + detBtn + '</div>'
@@ -4835,10 +4828,7 @@ window.renderizarTabelaPagamentos = function() {
     var nfTipoBadgePag = r.tipoNF === 'entrada'
       ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(34,197,94,.28);color:#22C55E;background:transparent">Entrada</span>'
       : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(245,158,11,.28);color:#F59E0B;background:transparent">Saída</span>';
-    var _mmc = r.metodo === 'RAD' ? '#60A5FA' : r.metodo === 'Fornecedor' ? '#A78BFA' : null;
-    var metodoBadge = _mmc
-      ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.06em;color:'+_mmc+'"><span style="width:5px;height:5px;border-radius:50%;background:'+_mmc+';display:inline-block;flex-shrink:0"></span>'+r.metodo+'</span>'
-      : '<span style="color:var(--txt3)">—</span>';
+    var metodoBadge = r.metodo ? '<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+r.metodo+'</span>' : '<span style="color:var(--txt3)">—</span>';
     var chkCell = r.status !== 'pago'
       ? '<td style="text-align:center"><input type="checkbox" class="pag-chk" data-idx="'+idx+'" onchange="window.pagAtualizarSelecao()" style="cursor:pointer;width:15px;height:15px"></td>'
       : '<td></td>';
