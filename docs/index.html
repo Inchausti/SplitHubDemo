@@ -1482,29 +1482,31 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       </div>
     </div>
   </div>
-</div>
 
   <!-- ABA: DFs -->
   <div id="cred-dfs" class="sv">
-    <div class="sechdr" style="margin-bottom:14px"><h2>Documentos Fiscais (DFs)</h2></div>
-    <div style="overflow-x:auto">
-      <table class="tbl" id="t-cred-dfs">
-        <thead><tr>
-          <th>DF</th>
-          <th>Fornecedor</th>
-          <th>CNPJ</th>
-          <th>Data</th>
-          <th class="r">Valor Total</th>
-          <th class="r">IBS</th>
-          <th class="r">CBS</th>
-          <th class="r">Crédito</th>
-          <th>Status</th>
-          <th class="r">Qtd. RFs</th>
-        </tr></thead>
-        <tbody id="t-cred-dfs-body"><tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Carregando…</td></tr></tbody>
-      </table>
+    <div class="tcrd">
+      <div class="tcrd-hdr"><div class="sechdr"><h2>Documentos Fiscais</h2><p>NFs de entrada · créditos IBS + CBS por documento</p></div></div>
+      <div class="twrap"><table id="t-cred-dfs"><thead><tr>
+        <th>DF</th>
+        <th>Tipo</th>
+        <th>Fornecedor</th>
+        <th>CNPJ</th>
+        <th>Data</th>
+        <th class="r">Valor Total</th>
+        <th class="r">IBS</th>
+        <th class="r">CBS</th>
+        <th class="r">Crédito</th>
+        <th>Método</th>
+        <th>Status</th>
+        <th class="r">RFs</th>
+      </tr></thead>
+      <tbody id="t-cred-dfs-body"><tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:24px">Carregando…</td></tr></tbody>
+      </table></div>
     </div>
   </div>
+
+</div>
 
 <!-- CONCILIAÇÃO -->
 <div id="view-conciliacao" class="view">
@@ -5807,28 +5809,41 @@ function _credIrListagem(){
 }
 function creditosDFsRender(){
   var nfs=(window.nfListaFiltradaGlobal||[]).filter(function(nf){return nf.tipo==='entrada';});
-  if(!nfs.length){document.getElementById('t-cred-dfs-body').innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Sem DFs no período.</td></tr>';return;}
+  var el=document.getElementById('t-cred-dfs-body');
+  if(!el)return;
+  if(!nfs.length){el.innerHTML='<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:24px">Sem DFs no período.</td></tr>';return;}
   var h='';
   nfs.forEach(function(nf){
     var rfs=nf.registrosFiscais||[];
-    var ibs=0,cbs=0,cred=0;
-    rfs.forEach(function(rf){ibs+=rf.ibs||0;cbs+=rf.cbs||0;cred+=(rf.ibs||0)+(rf.cbs||0);});
-    var stBadge=bdg(nf.status||'pendente');
-    var nfNum=String(nf.numero||nf.id||'—');
+    var ibs=nf.ibs||0, cbs=nf.cbs||0;
+    var cred=ibs+cbs;
+    var nfNum=String(nf.numero||'—');
+    var tipoDF=nf.tipoDF||'NF-e';
+    var entidade=nf.entidade||'—';
+    var cnpj=nf.cnpj||'—';
+    var data=nf.data?nf.data.split('-').reverse().join('/'):'—';
+    var metodo=nf.metodoPagamento||'—';
+    var status=nf.status||'pendente';
+
+    var tipoBadge='<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(59,130,246,.28);color:var(--blue);background:transparent">'+tipoDF+'</span>';
+    var metBadge=metodo!=='—'?'<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+metodo+'</span>':'<span style="color:var(--txt3)">—</span>';
+
     h+='<tr>';
     h+='<td class="mono nowrap" style="color:var(--blue);font-size:11px;cursor:pointer;text-decoration:underline" onclick="abrirDetalhesNFporNumero(\''+nfNum+'\')">NF-'+nfNum+'</td>';
-    h+='<td style="font-size:12px">'+((nf.fornecedor||nf.entidade||'—'))+'</td>';
-    h+='<td class="mono" style="font-size:11px;color:var(--txt2)">'+((nf.cnpj||'—'))+'</td>';
-    h+='<td style="font-size:12px;color:var(--txt2);white-space:nowrap">'+((nf.data||'—'))+'</td>';
-    h+='<td class="r mono" style="font-weight:600">'+ff(nf.valor||0)+'</td>';
+    h+='<td class="nowrap">'+tipoBadge+'</td>';
+    h+='<td class="trunc" style="max-width:160px">'+entidade+'</td>';
+    h+='<td class="mono nowrap" style="font-size:11px;color:var(--txt2)">'+cnpj+'</td>';
+    h+='<td class="nowrap" style="font-size:12px;color:var(--txt2)">'+data+'</td>';
+    h+='<td class="r mono" style="font-weight:600">'+ff(nf.valorTotal||0)+'</td>';
     h+='<td class="r mono" style="color:var(--txt2)">'+ff(ibs)+'</td>';
     h+='<td class="r mono" style="color:var(--txt2)">'+ff(cbs)+'</td>';
     h+='<td class="r mono" style="color:var(--teal);font-weight:700">'+ff(cred)+'</td>';
-    h+='<td>'+stBadge+'</td>';
+    h+='<td class="nowrap">'+metBadge+'</td>';
+    h+='<td class="nowrap">'+bdg(status)+'</td>';
     h+='<td class="r mono" style="color:var(--txt2)">'+rfs.length+'</td>';
     h+='</tr>';
   });
-  document.getElementById('t-cred-dfs-body').innerHTML=h;
+  el.innerHTML=h;
 }
 function creditosVerRegistrosRisco(){
   // Navega para o módulo de créditos
