@@ -119,7 +119,7 @@ function bdg(status) {
     '#FB923C': '251,146,60'
   };
   var rgb = rgbMap[cor] || '167,168,170';
-  return '<span style="background:rgba(' + rgb + ',.12);color:' + cor + ';border:1px solid rgba(' + rgb + ',.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + text + '</span>';
+  return '<span style="background:transparent;color:' + cor + ';border:1px solid rgba(' + rgb + ',.3);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">' + text + '</span>';
 }
 
 // ============================================================
@@ -1018,20 +1018,24 @@ window.renderizarTabelaCreditos = function() {
     h = '<tr><td colspan="17" style="text-align:center;color:var(--txt3);padding:24px">Nenhum crédito encontrado para este filtro.</td></tr>';
   } else {
     listaRFs.forEach(function(r) {
-      var tipoFiscalBadge = '<span style="font-size:11px;font-weight:600;color:' + (r.tipoFiscal === 'IBS' ? '#3B82F6' : '#F59E0B') + '">' + r.tipoFiscal + '</span>';
+      var _tfC = r.tipoFiscal === 'IBS' ? '#60A5FA' : '#FBB84A';
+      var tipoFiscalBadge = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.06em;color:'+_tfC+'">'
+        + '<span style="width:5px;height:5px;border-radius:50%;background:'+_tfC+';display:inline-block;flex-shrink:0"></span>'
+        + r.tipoFiscal + '</span>';
       var nfTipoBadgeCred = r.tipoNF === 'saida'
-        ? '<span style="background:rgba(59,130,246,.12);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>'
-        : '<span style="background:rgba(34,197,94,.12);color:#22C55E;border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>';
+        ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(245,158,11,.28);color:#F59E0B;background:transparent">Saída</span>'
+        : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(34,197,94,.28);color:#22C55E;background:transparent">Entrada</span>';
       var nfNumero = r.nfNumero || r.nf.replace('NF-', '');
       var nfLink = '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline" onclick="window.abrirDetalhesNFporNumero(\'' + nfNumero + '\')">' + r.nf + '</span>';
       var contratoCell = r.contratoId
         ? '<span class="mono" style="font-size:11px;color:#49C5B1;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\'' + r.contratoId + '\')">' + r.contratoId + '</span>'
         : '<span style="color:var(--txt3)">—</span>';
-      var metodoCell = r.metodoPagamento === 'RAD'
-        ? '<span style="font-size:11px;font-weight:600;color:#8B5CF6">RAD</span>'
-        : r.metodoPagamento === 'Fornecedor'
-          ? '<span style="font-size:11px;font-weight:600;color:#3B82F6" title="Confirmação via Apuração Assistida">Fornecedor</span>'
-          : '<span style="color:var(--txt3)">—</span>';
+      var _metC = r.metodoPagamento === 'RAD' ? '#60A5FA' : r.metodoPagamento === 'Fornecedor' ? '#A78BFA' : null;
+      var metodoCell = _metC
+        ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.06em;color:'+_metC+'">'
+          + '<span style="width:5px;height:5px;border-radius:50%;background:'+_metC+';display:inline-block"></span>'
+          + r.metodoPagamento + '</span>'
+        : '<span style="color:var(--txt3)">—</span>';
       var pagCell = r.isPago
         ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pag + '</a>'
         : '<span style="color:var(--txt3)">—</span>';
@@ -1049,11 +1053,11 @@ window.renderizarTabelaCreditos = function() {
       var metExtCell;
       if (sc === 'utilizado' && r.metodoExtincao) {
         var _me = _metExtMap[r.metodoExtincao] || { cor: '167,168,170', lbl: r.metodoExtincao };
-        metExtCell = '<span style="background:rgba(' + _me.cor + ',.12);color:rgba(' + _me.cor + ',1);border:1px solid rgba(' + _me.cor + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + _me.lbl + '</span>';
+        metExtCell = '<span style="background:transparent;color:rgba(' + _me.cor + ',1);border:1px solid rgba(' + _me.cor + ',.3);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">' + _me.lbl + '</span>';
       } else {
         metExtCell = '<span style="color:var(--txt3)">—</span>';
       }
-      h += '<tr><td class="mono nowrap">' + rfIdLink + '</td><td class="nowrap">' + tipoFiscalBadge + '</td><td class="nowrap">' + nfTipoBadgeCred + '</td><td class="mono nowrap">' + nfLink + '</td><td class="trunc">' + r.forn + '</td><td class="nowrap" style="color:var(--txt2)">' + r.data + '</td><td class="r mono">' + ff(r.valorTotal) + '</td><td class="r mono" style="color:var(--txt2)">' + ff(r.valorLiq) + '</td><td class="r mono" style="color:#F59E0B;font-weight:600">' + ffz(r.cbs) + '</td><td class="r mono" style="color:#3B82F6;font-weight:600">' + ffz(r.ibs) + '</td><td class="r mono" style="color:#49C5B1;font-weight:700">' + ff(r.cred) + '</td><td class="nowrap">' + pagCell + '</td><td class="nowrap">' + statusCredBadge + '</td><td class="nowrap">' + statusRegBadge + incBadge + '</td><td class="nowrap">' + contratoCell + '</td><td class="nowrap">' + metodoCell + '</td><td class="nowrap">' + metExtCell + '</td></tr>';
+      h += '<tr><td class="mono nowrap">' + rfIdLink + '</td><td class="nowrap">' + tipoFiscalBadge + '</td><td class="nowrap">' + nfTipoBadgeCred + '</td><td class="mono nowrap">' + nfLink + '</td><td class="trunc">' + r.forn + '</td><td class="nowrap" style="color:var(--txt2)">' + r.data + '</td><td class="r mono">' + ff(r.valorTotal) + '</td><td class="r mono" style="color:var(--txt2)">' + ff(r.valorLiq) + '</td><td class="r mono" style="color:var(--txt2)">' + ffz(r.cbs) + '</td><td class="r mono" style="color:var(--txt2)">' + ffz(r.ibs) + '</td><td class="r mono" style="font-weight:600">' + ff(r.cred) + '</td><td class="nowrap">' + pagCell + '</td><td class="nowrap">' + statusCredBadge + '</td><td class="nowrap">' + statusRegBadge + incBadge + '</td><td class="nowrap">' + contratoCell + '</td><td class="nowrap">' + metodoCell + '</td><td class="nowrap">' + metExtCell + '</td></tr>';
     });
   }
 
