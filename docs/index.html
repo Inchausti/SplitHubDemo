@@ -1223,7 +1223,24 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
   <!-- ABA: Documentos Fiscais -->
   <div id="cred-dfs" class="sv">
     <div class="tcrd">
-      <div class="tcrd-hdr"><div class="sechdr"><h2>Documentos Fiscais</h2><p>NFs de entrada · créditos IBS + CBS por documento</p></div></div>
+      <div class="tcrd-hdr" style="flex-direction:column;align-items:flex-start;gap:10px">
+        <div class="sechdr" style="margin-bottom:0"><h2>Documentos Fiscais</h2><p id="cred-dfs-sub">DFs de entrada · créditos IBS + CBS por documento</p></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-bottom:4px">
+          <input type="text" id="cred-dfs-busca" placeholder="Buscar por NF, fornecedor, CNPJ…" oninput="creditosDFsRender()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none;width:230px"/>
+          <select id="cred-dfs-status" onchange="creditosDFsRender()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
+            <option value="">Status — todos</option>
+            <option value="importado">Importado</option>
+            <option value="inconsistencia">Inconsistência</option>
+            <option value="pendente">Pendente</option>
+          </select>
+          <select id="cred-dfs-tipo" onchange="creditosDFsRender()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
+            <option value="">Tipo DF — todos</option>
+            <option value="NF-e">NF-e</option>
+            <option value="CT-e">CT-e</option>
+            <option value="NFS-e">NFS-e</option>
+          </select>
+        </div>
+      </div>
       <div class="twrap"><table id="t-cred-dfs"><thead><tr>
         <th>DF</th>
         <th>Tipo</th>
@@ -5820,8 +5837,25 @@ function creditosDFsRender(){
   var ingDados=window._ingDadosGlobal||[];
   // Filtra apenas entradas
   var dfs=ingDados.filter(function(d){return d.tipo&&d.tipo.toLowerCase().indexOf('entrada')>=0;});
+  // Aplicar filtros da UI
+  var busca=(document.getElementById('cred-dfs-busca')||{}).value||'';
+  var filtStatus=(document.getElementById('cred-dfs-status')||{}).value||'';
+  var filtTipo=(document.getElementById('cred-dfs-tipo')||{}).value||'';
+  if(busca){
+    var b=busca.toLowerCase();
+    dfs=dfs.filter(function(d){
+      return (d.emitente||'').toLowerCase().indexOf(b)>=0
+          ||(d.cnpj||'').toLowerCase().indexOf(b)>=0
+          ||(d.nfNumero!=null&&String(d.nfNumero).indexOf(b)>=0);
+    });
+  }
+  if(filtStatus){dfs=dfs.filter(function(d){return (d.status||'').toLowerCase()===filtStatus;});}
+  if(filtTipo){dfs=dfs.filter(function(d){return d.tipo&&d.tipo.indexOf(filtTipo)>=0;});}
+  // Atualizar subtítulo com contagem
+  var sub=document.getElementById('cred-dfs-sub');
+  if(sub)sub.textContent=dfs.length+' DF'+(dfs.length!==1?'s':'')+' de entrada';
   if(!dfs.length){
-    el.innerHTML='<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:24px">Sem DFs no período.</td></tr>';
+    el.innerHTML='<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:24px">Nenhum DF encontrado para este filtro.</td></tr>';
     return;
   }
   // Mapa nfNumero → NF para lookup de IBS/CBS/metodo/rfs
