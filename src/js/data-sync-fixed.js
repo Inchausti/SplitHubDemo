@@ -1555,8 +1555,8 @@ window.atualizarDashboard = function() {
     arr.forEach(function(f) {
       var qs = f.qualScore;
       var barPct = f.pendente / maxPend * 100;
-      var scoreColor = qs >= 80 ? '#22C55E' : qs >= 60 ? '#F59E0B' : '#F43F5E';
-      var barColor = isWorst ? '#F43F5E' : '#22C55E';
+      var scoreColor = qs >= 80 ? '#49C5B1' : qs >= 60 ? '#F59E0B' : '#F43F5E';
+      var barColor = isWorst ? '#F43F5E' : '#49C5B1';
       var sharePct = (f.sharePend * 100).toFixed(1);
       html += '<div style="background:var(--bg2);border-radius:6px;padding:8px 10px">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
@@ -5095,7 +5095,7 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
 
   // Área apropriada (base — verde)
   var apropFill = ptAprop.join(' ') + ' ' + xp(n - 1) + ',' + yp(0) + ' ' + xp(0) + ',' + yp(0);
-  s += '<polygon points="' + apropFill + '" fill="var(--green)" fill-opacity="0.28" stroke="none"/>';
+  s += '<polygon points="' + apropFill + '" fill="var(--teal)" fill-opacity="0.22" stroke="none"/>';
 
   // Linhas de contorno
   s += '<polyline points="' + ptTotal.join(' ') + '" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="5 3" stroke-linejoin="round" stroke-linecap="round"/>';
