@@ -3723,8 +3723,9 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
           <tr style="border-bottom:1px solid var(--border)">
             <th style="text-align:left;padding:6px 8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);font-weight:600">DF</th>
             <th style="text-align:left;padding:6px 8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);font-weight:600">Fornecedor</th>
-            <th style="text-align:left;padding:6px 8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);font-weight:600">Tipo Fiscal</th>
-            <th style="text-align:right;padding:6px 8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);font-weight:600">Valor</th>
+            <th style="text-align:right;padding:6px 8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);font-weight:600">Valor DF</th>
+            <th style="text-align:right;padding:6px 8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);font-weight:600">IBS</th>
+            <th style="text-align:right;padding:6px 8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);font-weight:600">CBS</th>
             <th style="text-align:left;padding:6px 8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);font-weight:600">Status</th>
           </tr>
         </thead>
@@ -3734,7 +3735,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     </div>
     <div id="venc-day-footer" style="padding:12px 24px;border-top:1px solid var(--border);display:flex;gap:24px;font-size:12px;flex-shrink:0">
       <span style="color:var(--txt3)">Total a vencer: <span id="venc-day-total" style="color:var(--teal);font-weight:700">—</span></span>
-      <span style="color:var(--txt3)">Registros: <span id="venc-day-count" style="color:var(--txt1);font-weight:600">—</span></span>
+      <span style="color:var(--txt3)">DFs: <span id="venc-day-count" style="color:var(--txt1);font-weight:600">—</span></span>
     </div>
   </div>
 </div>
@@ -6659,47 +6660,63 @@ function buildCharts(){
         + label + '</button>';
     }
 
-    // coleta RFs
-    var rows = [];
+    // coleta DFs (NFs de entrada) com algum RF nao_apropriado na data
+    var dfMap = {};
     var total = 0;
     (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
       if (nf.tipo !== 'entrada') return;
+      var temRfNaData = false;
+      var ibs = 0, cbs = 0, statusNf = 'nao_apropriado';
       (nf.registrosFiscais || []).forEach(function(rf) {
         var sc = rf.statusCredito || rf.status || '';
         if (sc !== 'nao_apropriado') return;
-        if ((rf.data || '').substring(0,10) !== isoDate) return;
-        rows.push({ nf: nf, rf: rf });
-        total += rf.valor || 0;
+        if ((rf.data || '').substring(0,10) === isoDate) temRfNaData = true;
+        if ((rf.tipoFiscal||'').toLowerCase() === 'ibs') ibs += rf.valor || 0;
+        else cbs += rf.valor || 0;
+        statusNf = sc;
       });
+      if (!temRfNaData) return;
+      var key = nf.numero || nf.id || Math.random();
+      if (!dfMap[key]) {
+        dfMap[key] = { nf: nf, ibs: ibs, cbs: cbs, status: statusNf };
+        total += (nf.valorTotal || nf.valor || 0);
+      }
     });
 
-    // fallback: sem dados reais para o dia → usa NFs nao_apropriados reais da lista global
+    var rows = Object.keys(dfMap).map(function(k){ return dfMap[k]; });
+
+    // fallback: sem dados reais para o dia → usa NFs nao_apropriados
     if (!rows.length) {
       (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
         if (rows.length >= 5) return;
         if (nf.tipo !== 'entrada') return;
+        var ibs = 0, cbs = 0, temRf = false;
         (nf.registrosFiscais || []).forEach(function(rf) {
-          if (rows.length >= 5) return;
           var sc = rf.statusCredito || rf.status || '';
           if (sc !== 'nao_apropriado') return;
-          rows.push({ nf: nf, rf: rf });
-          total += rf.valor || 0;
+          temRf = true;
+          if ((rf.tipoFiscal||'').toLowerCase() === 'ibs') ibs += rf.valor || 0;
+          else cbs += rf.valor || 0;
         });
+        if (!temRf) return;
+        rows.push({ nf: nf, ibs: ibs, cbs: cbs, status: 'nao_apropriado' });
+        total += (nf.valorTotal || nf.valor || 0);
       });
     }
+
     var fmt3 = function(v){ return v>=1e6?'R$ '+(v/1e6).toFixed(1).replace('.',',')+'M':v>=1e3?'R$ '+Math.round(v/1e3)+'K':'R$ '+v.toFixed(2); };
     var tbody = document.getElementById('venc-day-tbody');
     var h = '';
     rows.forEach(function(r) {
-      var nf = r.nf; var rf = r.rf;
-      var tcol = (rf.tipoFiscal||'')==='IBS'?'#60A5FA':'#FBB84A';
+      var nf = r.nf;
+      var forn = nf.entidade || nf.fornecedor || nf.forn || '—';
       h += '<tr style="border-bottom:1px solid var(--border)">'
         + '<td style="padding:9px 8px">' + _dfLink(nf.tipoDF, nf.numero) + '</td>'
-        + '<td style="padding:9px 8px;color:var(--txt1);font-weight:500">' + (nf.fornecedor||nf.forn||'—') + '</td>'
-        + '<td style="padding:9px 8px"><span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:'+tcol+'">'
-        + '<span style="width:5px;height:5px;border-radius:50%;background:'+tcol+';display:inline-block"></span>' + (rf.tipoFiscal||'—') + '</span></td>'
-        + '<td style="padding:9px 8px;text-align:right;font-family:var(--font-mono);font-weight:600">' + fmt3(rf.valor||0) + '</td>'
-        + '<td style="padding:9px 8px">' + bdg(rf.statusCredito||rf.status||'nao_apropriado') + '</td>'
+        + '<td style="padding:9px 8px;color:var(--txt1);font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + forn + '</td>'
+        + '<td style="padding:9px 8px;text-align:right;font-family:var(--font-mono);font-weight:600;color:var(--txt2)">' + fmt3(nf.valorTotal||nf.valor||0) + '</td>'
+        + '<td style="padding:9px 8px;text-align:right;font-family:var(--font-mono);font-size:11px;color:#60A5FA">' + fmt3(r.ibs) + '</td>'
+        + '<td style="padding:9px 8px;text-align:right;font-family:var(--font-mono);font-size:11px;color:#FBB84A">' + fmt3(r.cbs) + '</td>'
+        + '<td style="padding:9px 8px">' + bdg(r.status||'nao_apropriado') + '</td>'
         + '</tr>';
     });
     if(tbody) tbody.innerHTML = h;
