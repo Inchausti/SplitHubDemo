@@ -1051,13 +1051,14 @@ window.renderizarTabelaCreditos = function() {
         'Split Payment': { cor: '73,197,177',  lbl: 'Split Payment' },
         'Compensacao':   { cor: '59,130,246',  lbl: 'Compensação'   },
         'Ressarcimento': { cor: '34,197,94',   lbl: 'Ressarcimento' },
-        'Transferencia': { cor: '139,92,246',  lbl: 'Transferência' }
+        'Transferencia': { cor: '139,92,246',  lbl: 'Transferência' },
+        'RAD':           { cor: '245,158,11',  lbl: 'RAD'           }
       };
       var sc = r.statusCredito || r.status || '';
       var metExtCell;
       if (sc === 'utilizado' && r.metodoExtincao) {
         var _me = _metExtMap[r.metodoExtincao] || { cor: '167,168,170', lbl: r.metodoExtincao };
-        metExtCell = '<span style="background:transparent;color:rgba(' + _me.cor + ',1);border:1px solid rgba(' + _me.cor + ',.3);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">' + _me.lbl + '</span>';
+        metExtCell = '<span style="background:rgba(' + _me.cor + ',.12);color:rgba(' + _me.cor + ',1);border:1px solid rgba(' + _me.cor + ',.28);border-radius:3px;padding:2px 7px;font-size:10px;font-weight:700;letter-spacing:.05em">' + _me.lbl + '</span>';
       } else {
         metExtCell = '<span style="color:var(--txt3)">—</span>';
       }
