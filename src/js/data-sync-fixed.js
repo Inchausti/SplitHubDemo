@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Data Sync Manager - Versão Corrigida
  * Sincroniza 500 NFs de entrada com o dashboard
  * Gera R$ 50.000.000 em créditos apropriados (10% de R$ 500M)
@@ -32,16 +32,16 @@ window.nfFecharDetalhes = function() {
 
 // Contratos por CNPJ dos fornecedores reais das NFs geradas
 var _contratosData = [
-  {id:'CT-0001',cnpj:'17.197.585/0001-21',inicio:'2025-08-01',fim:'2026-06-30',rad:false,prazo:'30'},
-  {id:'CT-0002',cnpj:'33.592.510/0001-62',inicio:'2025-10-01',fim:'2026-09-30',rad:true, prazo:'60'},
-  {id:'CT-0003',cnpj:'07.525.847/0001-00',inicio:'2025-07-01',fim:'2026-12-31',rad:false,prazo:'90'},
-  {id:'CT-0004',cnpj:'09.165.051/0001-07',inicio:'2025-11-01',fim:'2026-10-31',rad:true, prazo:'30'},
-  {id:'CT-0005',cnpj:'17.197.757/0001-00',inicio:'2026-01-01',fim:'2026-12-31',rad:false,prazo:'60'},
-  {id:'CT-0006',cnpj:'17.235.322/0001-97',inicio:'2025-09-01',fim:'2026-08-31',rad:false,prazo:'30'},
-  {id:'CT-0007',cnpj:'33.514.814/0001-19',inicio:'2025-12-01',fim:'2026-11-30',rad:true, prazo:'90'},
-  {id:'CT-0008',cnpj:'17.018.477/0001-45',inicio:'2026-01-01',fim:'2026-06-30',rad:false,prazo:'60'},
-  {id:'CT-0009',cnpj:'42.695.633/0001-78',inicio:'2025-06-01',fim:'2026-05-31',rad:true, prazo:'120'},
-  {id:'CT-0010',cnpj:'70.873.979/0001-04',inicio:'2026-01-01',fim:'2026-12-31',rad:false,prazo:'30'}
+  {id:'CT-0001',cnpj:'14.382.976/0001-09',inicio:'2025-08-01',fim:'2026-06-30',rad:false,prazo:'30'},
+  {id:'CT-0002',cnpj:'28.447.821/0001-35',inicio:'2025-10-01',fim:'2026-09-30',rad:true, prazo:'60'},
+  {id:'CT-0003',cnpj:'52.039.781/0001-74',inicio:'2025-07-01',fim:'2026-12-31',rad:false,prazo:'90'},
+  {id:'CT-0004',cnpj:'73.612.590/0001-41',inicio:'2025-11-01',fim:'2026-10-31',rad:true, prazo:'30'},
+  {id:'CT-0005',cnpj:'19.854.203/0001-67',inicio:'2026-01-01',fim:'2026-12-31',rad:false,prazo:'60'},
+  {id:'CT-0006',cnpj:'38.291.045/0001-52',inicio:'2025-09-01',fim:'2026-08-31',rad:false,prazo:'30'},
+  {id:'CT-0007',cnpj:'61.874.320/0001-88',inicio:'2025-12-01',fim:'2026-11-30',rad:true, prazo:'90'},
+  {id:'CT-0008',cnpj:'47.193.825/0001-16',inicio:'2026-01-01',fim:'2026-06-30',rad:false,prazo:'60'},
+  {id:'CT-0009',cnpj:'86.340.217/0001-63',inicio:'2025-06-01',fim:'2026-05-31',rad:true, prazo:'120'},
+  {id:'CT-0010',cnpj:'93.475.862/0001-29',inicio:'2026-01-01',fim:'2026-12-31',rad:false,prazo:'30'}
 ];
 
 function _brToISOLocal(br) {
@@ -3879,16 +3879,16 @@ class DataSyncManagerFixed {
 
   gerarNFsEntrada() {
     const fornecedores = [
-      { nome: 'Vale S.A.', cnpj: '33.592.510/0001-62' },
-      { nome: 'Randon S.A.', cnpj: '17.197.585/0001-21' },
-      { nome: 'Marcopolo S.A.', cnpj: '17.197.757/0001-00' },
-      { nome: 'Bosch Ltda', cnpj: '17.235.322/0001-97' },
-      { nome: 'WEG Equipamentos', cnpj: '33.514.814/0001-19' },
-      { nome: 'Embraer S.A.', cnpj: '07.525.847/0001-00' },
-      { nome: 'Petrobras Dist.', cnpj: '09.165.051/0001-07' },
-      { nome: 'Braskem S.A.', cnpj: '42.695.633/0001-78' },
-      { nome: 'Suzano S.A.', cnpj: '17.018.477/0001-45' },
-      { nome: 'Natura &Co', cnpj: '70.873.979/0001-04' }
+      { nome: 'Ferroplex Mineração S.A.', cnpj: '28.447.821/0001-35' },
+      { nome: 'Sulpar Implementos S.A.', cnpj: '14.382.976/0001-09' },
+      { nome: 'Transcarro S.A.', cnpj: '19.854.203/0001-67' },
+      { nome: 'Tectra Sistemas Ltda', cnpj: '38.291.045/0001-52' },
+      { nome: 'Eletropar Ind. Ltda', cnpj: '61.874.320/0001-88' },
+      { nome: 'Aeroprime Ind. S.A.', cnpj: '52.039.781/0001-74' },
+      { nome: 'Petral Distribuidora Ltda', cnpj: '73.612.590/0001-41' },
+      { nome: 'Polisul Química S.A.', cnpj: '86.340.217/0001-63' },
+      { nome: 'Celupar S.A.', cnpj: '47.193.825/0001-16' },
+      { nome: 'Essenzia Cosméticos S.A.', cnpj: '93.475.862/0001-29' }
     ];
 
     const somaTotal = 500000000; // R$ 500M
@@ -4512,8 +4512,8 @@ window.renderizarFCT = function() {
     });
     var dNominal = meses.map(function() { return 26.5; });
     // Range centrado nos dados: piso 4pp abaixo do menor valor, teto 4pp acima do maior (≥ 26.5)
-    var aliqPositivos = dAliq.filter(function(v){ return v > 0; });
-    var aliqMin = aliqPositivos.length ? Math.max(0, Math.min.apply(null, aliqPositivos) - 4) : 0;
+    var aliqInduspars = dAliq.filter(function(v){ return v > 0; });
+    var aliqMin = aliqInduspars.length ? Math.max(0, Math.min.apply(null, aliqInduspars) - 4) : 0;
     var aliqMax = Math.max(26.5, Math.max.apply(null, dAliq)) + 4;
     svgLine('cFCTAliq', [
       { data: dAliq,    color: 'var(--teal)', fill: true,  dots: true, w: 2.5, label: 'Alíquota Efetiva %' },
@@ -5190,7 +5190,7 @@ window.abrirComprovanteRF = function(rfId) {
   var recBanco = 'Banco do Brasil S.A.';
 
   // --- Pagador (empresa) ---
-  var pagNome  = 'Positivo Soluções em Pagamentos';
+  var pagNome  = 'Induspar Soluções em Pagamentos';
   var pagCNPJ  = '01.123.456/0001-99';
   var pagBanco = 'BTG Pactual S.A.';
   var pagConta = '0001 / 234567-8';
@@ -5474,7 +5474,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window._renderGESelects && window._renderGESelects(); } catch(e) {}
       try { window._enriquecerNFsSaida(); } catch(e) { console.error('[data-sync-fixed] Erro _enriquecerNFsSaida:', e); }
       try {
-        // Atribuir cnpjComprador round-robin pelos CNPJs ativos da Positivo
+        // Atribuir cnpjComprador round-robin pelos CNPJs ativos da Induspar
         var _ativosOrg = (window._orgCnpjs || []).filter(function(c) { return c.status === 'ativo'; });
         if (_ativosOrg.length > 0) {
           (window.nfListaFiltradaGlobal || []).forEach(function(nf, i) {
@@ -5674,7 +5674,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Gerar NFs de saída (100 clientes) — datas 2026 inteiro, montante total = 15% acima das entradas (~R$575M)
-        var _clientesSaida = ['WEG Motores','Mercado Livre','Embraer S.A.','Bosch Ltda','Randon S.A.','Ambev S.A.','Magazine Luiza','Gerdau Aços','Marcopolo S.A.','Natura &Co'];
+        var _clientesSaida = ['Eletropar Motores','MercadoNET S.A.','Aeroprime Ind. S.A.','Tectra Sistemas Ltda','Sulpar Implementos S.A.','Bebpar Bebidas S.A.','Lojamax S.A.','Sidepar Aços S.A.','Transcarro S.A.','Essenzia Cosméticos S.A.'];
         var _mesesSaida2026 = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
         var _statusSaida   = ['extinto','extinto','extinto','extinto','extinto','nao_extinto','nao_extinto','nao_extinto','vencido','inconsistencia'];
         var _metodosSaida  = ['RAD','RAD','Compensacao'];
@@ -5798,7 +5798,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================================
-// GESTÃO ORGANIZAÇÃO — CRUD de CNPJs compradores (Positivo)
+// GESTÃO ORGANIZAÇÃO — CRUD de CNPJs compradores (Induspar)
 // ============================================================
 
 // ── Seletor de Empresa Ativa (Sidebar + Filtro Dashboard) ─────────────────
@@ -5821,7 +5821,7 @@ window._sbAtualizarLabel = function() {
   var dashBtn = document.getElementById('cnpj-filter-btn');
   var ahBtn   = document.getElementById('ah-ge-btn');
   if (!ids.length) {
-    if (nameEl)  nameEl.textContent  = 'Positivo Tecnologia S.A.';
+    if (nameEl)  nameEl.textContent  = 'Induspar Tecnologia S.A.';
     if (subEl)   subEl.textContent   = 'Todos os estabelecimentos';
     if (dashBtn) dashBtn.textContent = 'Todos os CNPJs ▾';
     if (ahBtn)   ahBtn.textContent   = 'Grupo Econômico ▾';
@@ -5834,7 +5834,7 @@ window._sbAtualizarLabel = function() {
       if (ahBtn)   ahBtn.textContent   = c.razao + ' ▾';
     }
   } else {
-    if (nameEl)  nameEl.textContent  = 'Positivo Tecnologia S.A.';
+    if (nameEl)  nameEl.textContent  = 'Induspar Tecnologia S.A.';
     if (subEl)   subEl.textContent   = ids.length + ' estabelecimentos selecionados';
     if (dashBtn) dashBtn.textContent = ids.length + ' CNPJs ▾';
     if (ahBtn)   ahBtn.textContent   = ids.length + ' CNPJs ▾';
@@ -6052,16 +6052,16 @@ window.dashCnpjToggleDropdown = function(event) {
   }
 };
 
-// ── Gestão Organização — CNPJs compradores (Positivo) ──────────────────────
+// ── Gestão Organização — CNPJs compradores (Induspar) ──────────────────────
 
 window._orgCnpjs = [
-  { id:1, cnpj:'81.243.735/0001-48', razao:'Positivo Tecnologia S.A.', ie:'9029-6',     uf:'PR', tipo:'Matriz', status:'ativo'   },
-  { id:2, cnpj:'81.243.735/0002-29', razao:'Positivo Tecnologia S.A.', ie:'9029-6/002', uf:'SP', tipo:'Filial', status:'ativo'   },
-  { id:3, cnpj:'81.243.735/0003-00', razao:'Positivo Tecnologia S.A.', ie:'9029-6/003', uf:'MG', tipo:'Filial', status:'ativo'   },
-  { id:4, cnpj:'81.243.735/0004-81', razao:'Positivo Tecnologia S.A.', ie:'9029-6/004', uf:'SC', tipo:'Filial', status:'inativo' },
-  { id:5, cnpj:'81.243.735/0005-62', razao:'Positivo Tecnologia S.A.', ie:'9029-6/005', uf:'RJ', tipo:'Filial', status:'ativo'   },
-  { id:6, cnpj:'81.243.735/0006-43', razao:'Positivo Tecnologia S.A.', ie:'9029-6/006', uf:'RS', tipo:'Filial', status:'ativo'   },
-  { id:7, cnpj:'81.243.735/0007-24', razao:'Positivo Tecnologia S.A.', ie:'9029-6/007', uf:'BA', tipo:'Filial', status:'ativo'   },
+  { id:1, cnpj:'54.891.237/0001-48', razao:'Induspar Tecnologia S.A.', ie:'9029-6',     uf:'PR', tipo:'Matriz', status:'ativo'   },
+  { id:2, cnpj:'54.891.237/0002-29', razao:'Induspar Tecnologia S.A.', ie:'9029-6/002', uf:'SP', tipo:'Filial', status:'ativo'   },
+  { id:3, cnpj:'54.891.237/0003-00', razao:'Induspar Tecnologia S.A.', ie:'9029-6/003', uf:'MG', tipo:'Filial', status:'ativo'   },
+  { id:4, cnpj:'54.891.237/0004-81', razao:'Induspar Tecnologia S.A.', ie:'9029-6/004', uf:'SC', tipo:'Filial', status:'inativo' },
+  { id:5, cnpj:'54.891.237/0005-62', razao:'Induspar Tecnologia S.A.', ie:'9029-6/005', uf:'RJ', tipo:'Filial', status:'ativo'   },
+  { id:6, cnpj:'54.891.237/0006-43', razao:'Induspar Tecnologia S.A.', ie:'9029-6/006', uf:'RS', tipo:'Filial', status:'ativo'   },
+  { id:7, cnpj:'54.891.237/0007-24', razao:'Induspar Tecnologia S.A.', ie:'9029-6/007', uf:'BA', tipo:'Filial', status:'ativo'   },
 ];
 window._orgNextId = 8;
 window._orgEditId = null;
@@ -6663,7 +6663,7 @@ window.downloadGuiaDARF = function() {
     '<div class="linha">' + linha + '</div>' +
     '<hr><div class="stitle">Pagamento via PIX</div>' +
     '<div class="pix-row"><img src="' + qrImg + '"><div class="pix-payload">' + (window._darfPix || '—') + '</div></div>' +
-    '<div class="footer">Gerado pelo SplitHub &nbsp;&middot;&nbsp; Positivo Tecnologia &nbsp;&middot;&nbsp; IBS/CBS — LC 214/2025 &nbsp;&middot;&nbsp; Documento sem validade fiscal sem autenticação da Receita Federal.</div>' +
+    '<div class="footer">Gerado pelo SplitHub &nbsp;&middot;&nbsp; Induspar Tecnologia &nbsp;&middot;&nbsp; IBS/CBS — LC 214/2025 &nbsp;&middot;&nbsp; Documento sem validade fiscal sem autenticação da Receita Federal.</div>' +
     '</body></html>';
 
   var win = window.open('', '_blank', 'width=740,height=920');
@@ -6685,21 +6685,21 @@ window.downloadGuiaDARF = function() {
   var _ingIniciado = false;
 
   var _emitentes = [
-    { nome: 'Randon S.A.', cnpj: '17.197.585/0001-21' },
-    { nome: 'WEG S.A.', cnpj: '84.429.695/0001-11' },
-    { nome: 'Marcopolo S.A.', cnpj: '88.611.835/0001-29' },
-    { nome: 'Braskem S.A.', cnpj: '42.150.391/0001-70' },
-    { nome: 'Embraer S.A.', cnpj: '07.689.002/0001-89' },
-    { nome: 'Gerdau S.A.', cnpj: '33.611.500/0001-19' },
-    { nome: 'Suzano S.A.', cnpj: '16.404.287/0001-55' },
-    { nome: 'Localiza S.A.', cnpj: '16.670.085/0001-55' },
-    { nome: 'Ambev S.A.', cnpj: '07.526.557/0001-00' },
-    { nome: 'BRF S.A.', cnpj: '01.838.723/0001-27' },
-    { nome: 'Ultrapar S.A.', cnpj: '33.256.439/0001-39' },
-    { nome: 'CVC Corp S.A.', cnpj: '01.972.984/0001-03' },
-    { nome: 'Rumo S.A.', cnpj: '02.387.241/0001-60' },
-    { nome: 'JSL S.A.', cnpj: '52.548.435/0001-79' },
-    { nome: 'Votorantim S.A.', cnpj: '73.406.527/0001-74' }
+    { nome: 'Sulpar Implementos S.A.', cnpj: '14.382.976/0001-09' },
+    { nome: 'Eletropar S.A.', cnpj: '61.874.320/0001-06' },
+    { nome: 'Transcarro S.A.', cnpj: '19.854.203/0001-12' },
+    { nome: 'Polisul Química S.A.', cnpj: '86.340.217/0001-28' },
+    { nome: 'Aeroprime Ind. S.A.', cnpj: '52.039.781/0001-15' },
+    { nome: 'Sidepar S.A.', cnpj: '40.825.163/0001-53' },
+    { nome: 'Celupar S.A.', cnpj: '47.193.825/0001-31' },
+    { nome: 'Movpar Locações S.A.', cnpj: '25.718.346/0001-80' },
+    { nome: 'Bebpar Bebidas S.A.', cnpj: '34.629.580/0001-97' },
+    { nome: 'Agropar Alimentos S.A.', cnpj: '57.480.139/0001-42' },
+    { nome: 'Petrolink S.A.', cnpj: '62.914.073/0001-77' },
+    { nome: 'Viapar Turismo S.A.', cnpj: '71.362.845/0001-24' },
+    { nome: 'Ferropar Logística S.A.', cnpj: '83.097.412/0001-58' },
+    { nome: 'Translogic S.A.', cnpj: '94.156.823/0001-91' },
+    { nome: 'Cimentar Indústrias S.A.', cnpj: '15.283.640/0001-62' }
   ];
 
   var _tipos = ['NF-e Entrada', 'NF-e Entrada', 'NF-e Entrada', 'NF-e Saída', 'NF-e Saída', 'NFC-e', 'NFCom', 'NF3-e', 'NFS-e', 'CT-e', 'CT-e', 'NFAg', 'NFGás', 'MDF-e', 'BP-e'];
@@ -7204,8 +7204,8 @@ window.downloadGuiaDARF = function() {
     _set('ing-modal-ie', '111.111.111.111'); // mock IE
     _set('ing-modal-emit-uf', 'São Paulo · SP');   // mock UF emitente
 
-    // Destinatário (empresa do grupo = Positivo Tecnologia como destinatária padrão)
-    var destNome = nfRef.tipo === 'saida' ? (nfRef.entidade || 'Cliente') : 'Positivo Tecnologia S.A.';
+    // Destinatário (empresa do grupo = Induspar Tecnologia como destinatária padrão)
+    var destNome = nfRef.tipo === 'saida' ? (nfRef.entidade || 'Cliente') : 'Induspar Tecnologia S.A.';
     var destCnpj = nfRef.tipo === 'saida' ? (nfRef.cnpj || '—') : '76.535.764/0001-43';
     _set('ing-modal-dest', destNome);
     _set('ing-modal-cnpj-dest', destCnpj);
@@ -7451,7 +7451,7 @@ window.downloadGuiaDARF = function() {
     var serieNum = (d.nfNumero || d.chave.substring(25,34) || '000000001');
     var natOpMap = {'5102':'Venda de mercadoria adquirida ou recebida de terceiros','6102':'Venda de mercadoria adquirida interestadual','5101':'Venda de produção do estabelecimento','1102':'Compra para comercialização','2102':'Compra interestadual para comercialização','3102':'Compra para industrialização - importação'};
     var natOp = natOpMap[d.cfop] || 'Venda de mercadoria adquirida ou recebida de terceiros';
-    var destNome = nfRef.tipo === 'saida' ? (nfRef.entidade || 'Cliente') : 'Positivo Tecnologia S.A.';
+    var destNome = nfRef.tipo === 'saida' ? (nfRef.entidade || 'Cliente') : 'Induspar Tecnologia S.A.';
     var destCnpj = nfRef.tipo === 'saida' ? (nfRef.cnpj || '—') : '76.535.764/0001-43';
 
     var docLabels = {
@@ -7581,7 +7581,7 @@ window.downloadGuiaDARF = function() {
       + 'CFOP: ' + d.cfop + ' · Natureza: ' + natOp + '. '
       + 'Ingestão SplitHub em ' + (d.dataIngestao||dataFmt) + '.</div>'
       // FOOTER
-      + '<div class="footer"><span>Gerado pelo SplitHub — Plataforma IBS/CBS Positivo Tecnologia</span><span>' + dl.titulo + ' · ' + dataFmt + '</span></div>'
+      + '<div class="footer"><span>Gerado pelo SplitHub — Plataforma IBS/CBS Induspar Tecnologia</span><span>' + dl.titulo + ' · ' + dataFmt + '</span></div>'
       + '</div>'
       + '</body></html>';
 
@@ -7830,8 +7830,8 @@ window._automState = {
     ]
   },
   cobranca: [
-    { id:'COB-001', nome:'Alerta pré-vencimento (7 dias)',  gatilho:'pre', diasGatilho:7,  maxEnvios:2, intervalo:3, canal:'email', assunto:'[Ação necessária] Imposto IBS+CBS vence em {{dias_vencimento}} dias — {{fornecedor}}', corpo:'Prezado(a) {{contato_fornecedor}},\n\nInformamos que o Registro Fiscal {{rf_id}} referente ao imposto {{tipo_fiscal}} no valor de {{valor_rf}} vence em {{data_vencimento}} ({{dias_vencimento}} dias).\n\nPara evitar penalidades, solicite a regularização junto ao seu departamento fiscal.\n\nAtenciosamente,\nEquipe Fiscal · Positivo Tecnologia', ativo:true,  totalEnviados:34, ultimoDisparo:'28/06/2026' },
-    { id:'COB-002', nome:'Cobrança pós-vencimento',         gatilho:'pos', diasGatilho:1,  maxEnvios:4, intervalo:5, canal:'email', assunto:'[URGENTE] Imposto IBS+CBS vencido — RF {{rf_id}} · {{fornecedor}}', corpo:'Prezado(a) {{contato_fornecedor}},\n\nO Registro Fiscal {{rf_id}} ({{tipo_fiscal}} — {{valor_rf}}) encontra-se VENCIDO desde {{data_vencimento}}.\n\nSolicite regularização imediata para evitar glosa do crédito tributário.\n\nAtenciosamente,\nEquipe Fiscal · Positivo Tecnologia', ativo:true,  totalEnviados:19, ultimoDisparo:'30/06/2026' }
+    { id:'COB-001', nome:'Alerta pré-vencimento (7 dias)',  gatilho:'pre', diasGatilho:7,  maxEnvios:2, intervalo:3, canal:'email', assunto:'[Ação necessária] Imposto IBS+CBS vence em {{dias_vencimento}} dias — {{fornecedor}}', corpo:'Prezado(a) {{contato_fornecedor}},\n\nInformamos que o Registro Fiscal {{rf_id}} referente ao imposto {{tipo_fiscal}} no valor de {{valor_rf}} vence em {{data_vencimento}} ({{dias_vencimento}} dias).\n\nPara evitar penalidades, solicite a regularização junto ao seu departamento fiscal.\n\nAtenciosamente,\nEquipe Fiscal · Induspar Tecnologia', ativo:true,  totalEnviados:34, ultimoDisparo:'28/06/2026' },
+    { id:'COB-002', nome:'Cobrança pós-vencimento',         gatilho:'pos', diasGatilho:1,  maxEnvios:4, intervalo:5, canal:'email', assunto:'[URGENTE] Imposto IBS+CBS vencido — RF {{rf_id}} · {{fornecedor}}', corpo:'Prezado(a) {{contato_fornecedor}},\n\nO Registro Fiscal {{rf_id}} ({{tipo_fiscal}} — {{valor_rf}}) encontra-se VENCIDO desde {{data_vencimento}}.\n\nSolicite regularização imediata para evitar glosa do crédito tributário.\n\nAtenciosamente,\nEquipe Fiscal · Induspar Tecnologia', ativo:true,  totalEnviados:19, ultimoDisparo:'30/06/2026' }
   ]
 };
 
