@@ -322,6 +322,8 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       + '<div style="color:var(--txt3)">NF Total: <span style="color:var(--txt1)">' + ff(rf.valorTotalNF || 0) + '</span></div>'
       + '<div style="display:flex;align-items:center;gap:4px">Status: <span style="background:rgba(' + stRfRgb + ',.12);color:rgba(' + stRfRgb + ',1);border:1px solid rgba(' + stRfRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRfLab + '</span></div>'
       + (stRgLab ? '<div style="display:flex;align-items:center;gap:4px">RF: <span style="background:rgba(' + stRgRgb + ',.12);color:rgba(' + stRgRgb + ',1);border:1px solid rgba(' + stRgRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRgLab + '</span></div>' : '<div></div>')
+      + ((rf.statusCredito||rf.status)==='utilizado'&&rf.metodoExtincao ? '<div style="color:var(--txt3)">Extinção: <span style="color:var(--teal);font-weight:600">' + rf.metodoExtincao + '</span></div>' : '')
+      + ((rf.statusCredito||rf.status)==='utilizado'&&rf.dataExtincao ? '<div style="color:var(--txt3)">Data: <span style="color:var(--txt1)">' + rf.dataExtincao + '</span></div>' : '')
       + '</div>'
       + '</div>';
   });
@@ -738,6 +740,8 @@ window.abrirDetalheRF = function(rfId) {
           + '</div>'
         : '')
     + (rf.dataPagamento && rf.dataPagamento !== '—' ? DR('Data Pagamento', rf.dataPagamento) : '')
+    + (rfSt === 'utilizado' && rf.metodoExtincao ? DR('Método Extinção', rf.metodoExtincao, '#49C5B1') : '')
+    + (rfSt === 'utilizado' && rf.dataExtincao ? DR('Data Extinção', rf.dataExtincao) : '')
     + (rf.inconsistencia ? DR('Inconsistência', rf.inconsistencia, '#F43F5E') : '')
     + '</div>'
 

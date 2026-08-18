@@ -1268,9 +1268,10 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
         <th>Método</th>
         <th>Status Ingst.</th>
         <th>Status Crédito</th>
+        <th>Extinção</th>
         <th class="r">RFs</th>
       </tr></thead>
-      <tbody id="t-cred-dfs-body"><tr><td colspan="13" style="text-align:center;color:var(--txt3);padding:24px">Carregando…</td></tr></tbody>
+      <tbody id="t-cred-dfs-body"><tr><td colspan="14" style="text-align:center;color:var(--txt3);padding:24px">Carregando…</td></tr></tbody>
       </table></div>
     </div>
   </div>
@@ -5922,7 +5923,7 @@ function creditosDFsRender(){
   var sub=document.getElementById('cred-dfs-sub');
   if(sub)sub.textContent=dfs.length+' DF'+(dfs.length!==1?'s':'')+' de entrada';
   if(!dfs.length){
-    el.innerHTML='<tr><td colspan="13" style="text-align:center;color:var(--txt3);padding:24px">Nenhum DF encontrado para este filtro.</td></tr>';
+    el.innerHTML='<tr><td colspan="14" style="text-align:center;color:var(--txt3);padding:24px">Nenhum DF encontrado para este filtro.</td></tr>';
     return;
   }
   // Mapa de labels/cores para status de crédito do DF
@@ -5950,6 +5951,11 @@ function creditosDFsRender(){
     var metodo=nfOrig.metodoPagamento||'—';
     var status=d.status||nfOrig.status||'pendente';
     var creditoDF=_dfCreditStatus(rfs);
+    var metExtMap={'Split Payment':'73,197,177','Compensacao':'59,130,246','Ressarcimento':'34,197,94','Transferencia':'139,92,246','RAD':'245,158,11'};
+    var metExtLbl={'Split Payment':'Split Payment','Compensacao':'Compensação','Ressarcimento':'Ressarcimento','Transferencia':'Transferência','RAD':'RAD'};
+    var metExtVal='—';
+    rfs.forEach(function(rf){if(metExtVal==='—'&&(rf.statusCredito||rf.status)==='utilizado'&&rf.metodoExtincao)metExtVal=rf.metodoExtincao;});
+    var metExtBadge=metExtVal!=='—'?'<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:3px;background:rgba('+(metExtMap[metExtVal]||'167,168,170')+',.12);color:rgb('+(metExtMap[metExtVal]||'167,168,170')+');border:1px solid rgba('+(metExtMap[metExtVal]||'167,168,170')+',.28)">'+(metExtLbl[metExtVal]||metExtVal)+'</span>':'<span style="color:var(--txt3)">—</span>';
     var tipoBadge='<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(59,130,246,.28);color:var(--blue);background:transparent">'+tipoDF+'</span>';
     var metBadge=metodo&&metodo!=='—'?'<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+metodo+'</span>':'<span style="color:var(--txt3)">—</span>';
     h+='<tr>';
@@ -5965,6 +5971,7 @@ function creditosDFsRender(){
     h+='<td class="nowrap">'+metBadge+'</td>';
     h+='<td class="nowrap">'+bdg(status)+'</td>';
     h+='<td class="nowrap">'+_csBadge(creditoDF)+'</td>';
+    h+='<td class="nowrap">'+metExtBadge+'</td>';
     h+='<td class="r mono" style="color:var(--txt2)">'+rfs.length+'</td>';
     h+='</tr>';
   });
