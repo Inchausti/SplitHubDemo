@@ -320,6 +320,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .k5{grid-template-columns:repeat(5,1fr)}
 .k6{grid-template-columns:repeat(6,1fr)}
 .k7{grid-template-columns:repeat(7,1fr)}
+.venc-tbtn{background:none;border:1px solid var(--border);border-radius:4px;padding:5px 12px;font-size:11px;color:var(--txt2);cursor:pointer;font-family:inherit;transition:color .15s,border-color .15s,background .15s}
+.venc-tbtn:hover{color:var(--txt1);border-color:var(--txt1)}
+.venc-tbtn.active{background:var(--teal);border-color:var(--teal);color:#0E1210;font-weight:600}
 .kcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;border-top-width:2px}
 .klbl{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
 .kval{font-size:26px;font-weight:700;color:var(--txt1);font-family:var(--font-mono)}
@@ -945,6 +948,22 @@ tr:last-child td{border-bottom:none}
       <div class="leg"><span class="li"><span class="ls" style="background:var(--blue)"></span>Via RAD</span><span class="li"><span class="ls" style="background:var(--teal)"></span>Via Fornecedor</span></div>
     </div>
   </div>
+  <!-- Créditos a Vencer — gráfico diário/semanal/mensal -->
+  <div class="crd" style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <div>
+        <div class="ctitle" style="margin-bottom:2px">Créditos a Vencer</div>
+        <div class="csub">Volume de créditos IBS+CBS não apropriados por data de vencimento</div>
+      </div>
+      <div style="display:flex;gap:4px" id="venc-toggle">
+        <button class="venc-tbtn active" onclick="window.renderVencimentoChart('diario',this)">Diário</button>
+        <button class="venc-tbtn" onclick="window.renderVencimentoChart('semanal',this)">Semanal</button>
+        <button class="venc-tbtn" onclick="window.renderVencimentoChart('mensal',this)">Mensal</button>
+      </div>
+    </div>
+    <div class="cwrap" style="height:200px"><div id="cVencimento"></div></div>
+  </div>
+
   <div class="crd">
     <div class="ai-hdr"><div class="ai-dot"></div><span class="ai-t">Inteligência SplitHub</span><span class="ai-b">IA Ativa</span></div>
     <div class="igrid">
@@ -6321,9 +6340,73 @@ function buildCharts(){
     {data:[3.2,2.1,4.5,2.8,1.9,3.1,2.4],color:'var(--red)',dots:true,w:1.5,label:'Em Risco'}
   ],M,220);
   renderRadPrazoChart();
+  window.renderVencimentoChart('diario', null);
   // Módulo inteligência — sincroniza com dados globais reais
   try { if (window.atualizarInteligencia) window.atualizarInteligencia(); } catch(e) {}
 }
+
+window._vencModo = 'diario';
+window.renderVencimentoChart = function(modo, btn) {
+  window._vencModo = modo;
+  if (btn) {
+    document.querySelectorAll('#venc-toggle .venc-tbtn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+  }
+  // Agrega créditos não apropriados (entrada) por data
+  var map = {};
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      var sc = rf.statusCredito || rf.status || '';
+      if (sc !== 'nao_apropriado' && sc !== 'glosado') return;
+      var d = rf.data || '';
+      if (!d) return;
+      var key;
+      if (modo === 'diario') {
+        key = d.substring(0,10);
+      } else if (modo === 'semanal') {
+        // ISO week bucket: YYYY-Www
+        var dt = new Date(d);
+        var dow = dt.getDay() || 7;
+        dt.setDate(dt.getDate() - dow + 1);
+        key = dt.toISOString().substring(0,10);
+      } else {
+        key = d.substring(0,7);
+      }
+      map[key] = (map[key] || 0) + (rf.valor || 0);
+    });
+  });
+  var keys = Object.keys(map).sort();
+  // Fallback: gera dados sintéticos se não houver dados suficientes
+  if (keys.length < 3) {
+    var base = new Date('2026-04-01');
+    var synth = { labels:[], data:[] };
+    if (modo === 'diario') {
+      var seeds = [0.8,1.2,0.5,1.8,2.3,1.1,0.9,2.8,1.4,0.7,1.9,3.1,1.6,0.4,2.2,1.7,3.4,0.6,1.3,2.0,0.8,1.5,2.7,1.0,0.3,1.8,2.4,1.2,0.9,1.6];
+      for (var i=0;i<30;i++) { var dd=new Date(base); dd.setDate(dd.getDate()+i); synth.labels.push(String(dd.getDate()).padStart(2,'0')+'/'+String(dd.getMonth()+1).padStart(2,'0')); synth.data.push(seeds[i%seeds.length]); }
+    } else if (modo === 'semanal') {
+      var wseeds=[4.8,7.2,5.1,9.3,6.7,11.2,8.4,5.9,10.1,7.3,6.2,8.8];
+      for (var i=0;i<12;i++) { var dd=new Date(base); dd.setDate(dd.getDate()+i*7); synth.labels.push('S'+(i+1)+'/'+String(dd.getMonth()+1).padStart(2,'0')); synth.data.push(wseeds[i%wseeds.length]); }
+    } else {
+      var ms=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      var mseeds=[18.4,21.2,15.8,24.3,19.7,28.1,22.5,17.9,25.4,20.1,16.3,23.6];
+      for (var i=0;i<12;i++) { synth.labels.push(ms[i]+' 26'); synth.data.push(mseeds[i]); }
+    }
+    keys = synth.labels;
+    map = {};
+    synth.labels.forEach(function(k,i){ map[k]=synth.data[i]; });
+  }
+  // Limita pontos por legibilidade
+  var maxPts = modo==='diario'?30:(modo==='semanal'?12:12);
+  if (keys.length > maxPts) keys = keys.slice(keys.length - maxPts);
+  var labels = keys.map(function(k) {
+    if (modo === 'diario') { var p=k.split('-'); return p.length===3?(p[2]+'/'+p[1]):k; }
+    if (modo === 'semanal') { var dt=new Date(k); return String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0'); }
+    var p=k.split('-'); var ms=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']; return ms[parseInt(p[1]||1)-1]||k;
+  });
+  var data = keys.map(function(k){ return map[k] || 0; });
+  svgBar('cVencimento',[{data:data,color:'var(--amber)',label:'A Vencer'}],labels,200);
+};
 
 function analyticsRadPrazoDados(){
   return contratos
