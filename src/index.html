@@ -5808,33 +5808,36 @@ function _credIrListagem(){
   if(tabBtn&&!tabBtn.classList.contains('active'))tabBtn.click();
 }
 function creditosDFsRender(){
-  var nfs=(window.nfListaFiltradaGlobal||[]).filter(function(nf){return nf.tipo==='entrada';});
   var el=document.getElementById('t-cred-dfs-body');
   if(!el)return;
-  if(!nfs.length){el.innerHTML='<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:24px">Sem DFs no período.</td></tr>';return;}
+  var fonte=window.nfListaFiltradaGlobal||window._nfListaCompleta||[];
+  var nfs=fonte.filter(function(nf){return nf.tipo==='entrada';});
+  if(!nfs.length){
+    el.innerHTML='<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:24px">Sem DFs no período.</td></tr>';
+    return;
+  }
   var h='';
   nfs.forEach(function(nf){
     var rfs=nf.registrosFiscais||[];
     var ibs=nf.ibs||0, cbs=nf.cbs||0;
+    if(!ibs&&!cbs){rfs.forEach(function(rf){if(rf.tipoFiscal==='ibs')ibs+=rf.valor||0;else cbs+=rf.valor||0;});}
     var cred=ibs+cbs;
     var nfNum=String(nf.numero||'—');
     var tipoDF=nf.tipoDF||'NF-e';
-    var entidade=nf.entidade||'—';
+    var entidade=nf.entidade||nf.fornecedor||'—';
     var cnpj=nf.cnpj||'—';
-    var data=nf.data?nf.data.split('-').reverse().join('/'):'—';
+    var data=(nf.data||'—').indexOf('-')>0?nf.data.split('-').reverse().join('/'):nf.data||'—';
     var metodo=nf.metodoPagamento||'—';
     var status=nf.status||'pendente';
-
     var tipoBadge='<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(59,130,246,.28);color:var(--blue);background:transparent">'+tipoDF+'</span>';
-    var metBadge=metodo!=='—'?'<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+metodo+'</span>':'<span style="color:var(--txt3)">—</span>';
-
+    var metBadge=metodo&&metodo!=='—'?'<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+metodo+'</span>':'<span style="color:var(--txt3)">—</span>';
     h+='<tr>';
     h+='<td class="mono nowrap" style="color:var(--blue);font-size:11px;cursor:pointer;text-decoration:underline" onclick="abrirDetalhesNFporNumero(\''+nfNum+'\')">NF-'+nfNum+'</td>';
     h+='<td class="nowrap">'+tipoBadge+'</td>';
     h+='<td class="trunc" style="max-width:160px">'+entidade+'</td>';
     h+='<td class="mono nowrap" style="font-size:11px;color:var(--txt2)">'+cnpj+'</td>';
     h+='<td class="nowrap" style="font-size:12px;color:var(--txt2)">'+data+'</td>';
-    h+='<td class="r mono" style="font-weight:600">'+ff(nf.valorTotal||0)+'</td>';
+    h+='<td class="r mono" style="font-weight:600">'+ff(nf.valorTotal||nf.valor||0)+'</td>';
     h+='<td class="r mono" style="color:var(--txt2)">'+ff(ibs)+'</td>';
     h+='<td class="r mono" style="color:var(--txt2)">'+ff(cbs)+'</td>';
     h+='<td class="r mono" style="color:var(--teal);font-weight:700">'+ff(cred)+'</td>';
