@@ -2988,6 +2988,29 @@ var _kbIncCores = {
 };
 
 window._kbRfsData = {};
+window._kanbanResponsavel = {};
+window._kbFilterTipos = new Set();
+window._kbFilterDFs = new Set();
+
+var _kbUsuarios = [
+  { id: 'nenhum', nome: 'Sem responsável', iniciais: '—', cor: '#6B7280' },
+  { id: 'js',     nome: 'José da Silva',   iniciais: 'JS', cor: '#49C5B1' },
+  { id: 'mc',     nome: 'Maria Costa',     iniciais: 'MC', cor: '#3B82F6' },
+  { id: 'rl',     nome: 'Rafael Lima',     iniciais: 'RL', cor: '#7C3AED' },
+  { id: 'af',     nome: 'Ana Ferreira',    iniciais: 'AF', cor: '#D97706' },
+  { id: 'pt',     nome: 'Paulo Torres',    iniciais: 'PT', cor: '#059669' }
+];
+
+window._kbToggleFilter = function(type, value) {
+  var set = type === 'tipo' ? window._kbFilterTipos : window._kbFilterDFs;
+  if (set.has(value)) set.delete(value); else set.add(value);
+  window.renderizarKanbanInconsistencias();
+};
+
+window._kbMudarResponsavel = function(rfId, userId) {
+  window._kanbanResponsavel[rfId] = userId;
+  window.renderizarKanbanInconsistencias();
+};
 
 window.renderizarKanbanInconsistencias = function() {
   var board = document.getElementById('inc-kanban-board');
@@ -3016,6 +3039,45 @@ window.renderizarKanbanInconsistencias = function() {
       }
     });
   });
+
+  // Renderizar filtros
+  var tiposUnicos = [];
+  rfs.forEach(function(r) { if (tiposUnicos.indexOf(r.inconsistencia) < 0) tiposUnicos.push(r.inconsistencia); });
+  tiposUnicos.sort();
+  var filtersEl = document.getElementById('inc-kb-filters');
+  if (filtersEl) {
+    var fHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">'
+      + '<span style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0">Tipo:</span>'
+      + tiposUnicos.map(function(t) {
+          var a = window._kbFilterTipos.has(t);
+          var c = _kbIncCores[t] || '#64748B';
+          return '<button onclick="window._kbToggleFilter(\'tipo\',\'' + t.replace(/'/g,"\\'") + '\')" '
+            + 'style="font-size:10px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid '+(a?c:'var(--brd)')+';background:'+(a?c+'22':'transparent')+';color:'+(a?c:'var(--txt3)')+';cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .15s">'
+            + t + '</button>';
+        }).join('')
+      + '</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px">'
+      + '<span style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0">DF:</span>'
+      + [['entrada','Entrada','#22C55E'],['saida','Saída','#F59E0B']].map(function(df) {
+          var a = window._kbFilterDFs.has(df[0]);
+          return '<button onclick="window._kbToggleFilter(\'df\',\''+df[0]+'\')" '
+            + 'style="font-size:10px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid '+(a?df[2]:'var(--brd)')+';background:'+(a?df[2]+'22':'transparent')+';color:'+(a?df[2]:'var(--txt3)')+';cursor:pointer;font-family:inherit;transition:all .15s">'
+            + df[1] + '</button>';
+        }).join('')
+      + '</div>';
+    filtersEl.innerHTML = fHtml;
+  }
+
+  // Aplicar filtros
+  if (window._kbFilterTipos.size > 0) {
+    rfs = rfs.filter(function(r) { return window._kbFilterTipos.has(r.inconsistencia); });
+  }
+  if (window._kbFilterDFs.size > 0) {
+    rfs = rfs.filter(function(r) {
+      var df = r.tipoNF === 'entrada' ? 'entrada' : 'saida';
+      return window._kbFilterDFs.has(df);
+    });
+  }
 
   // Atualizar badge total
   var badge = document.getElementById('inc-kb-total-badge');
@@ -3050,6 +3112,17 @@ window.renderizarKanbanInconsistencias = function() {
       var nfTipoCor = rf.tipoNF === 'entrada' ? '#22C55E' : '#F59E0B';
       var ftCor = rf.tipoFiscal === 'IBS' ? '#3B82F6' : '#2DD4BF';
       var safeId = rf.id.replace(/'/g,"\\'");
+      var respId = window._kanbanResponsavel[rf.id];
+      var respUser = null;
+      if (respId && respId !== 'nenhum') {
+        for (var ui = 0; ui < _kbUsuarios.length; ui++) { if (_kbUsuarios[ui].id === respId) { respUser = _kbUsuarios[ui]; break; } }
+      }
+      var respFooter = respUser
+        ? '<span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--txt3)">'
+          + '<span style="width:18px;height:18px;border-radius:50%;background:'+respUser.cor+';display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0">'+respUser.iniciais+'</span>'
+          + respUser.nome + '</span>'
+        : '<span style="font-size:10px;color:var(--txt4)">— sem responsável</span>';
+
       cardsHtml += '<div class="kb-card" draggable="true"'
         + ' ondragstart="window._kbDragStart(event,\'' + safeId + '\')"'
         + ' onclick="window.kbAbrirCard(\'' + safeId + '\')"'
@@ -3067,6 +3140,9 @@ window.renderizarKanbanInconsistencias = function() {
         + '<span style="background:' + nfTipoCor + '22;color:' + nfTipoCor + ';border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700">' + (rf.tipoNF === 'entrada' ? 'ENTRADA' : 'SAÍDA') + '</span>'
         + '<span style="background:' + ftCor + '22;color:' + ftCor + ';border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700">' + rf.tipoFiscal + '</span>'
         + '<span style="font-size:10px;color:var(--txt3);margin-left:auto">' + (rf.data ? rf.data.split('T')[0] : '—') + '</span>'
+        + '</div>'
+        + '<div style="display:flex;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--brd)">'
+        + respFooter
         + '</div>'
         + '</div>';
     });
@@ -3227,12 +3303,20 @@ window.kbAbrirCard = function(rfId) {
     +     _kbDetalheItem('Tipo NF', rf.tipoNF === 'entrada' ? 'Entrada' : 'Saída', nfCor, true)
     +     _kbDetalheItem('Data RF', fmtD(rf.data))
     +   '</div>'
-    // Mover de coluna
-    +   '<div style="margin-top:4px">'
-    +     '<div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Estágio atual</div>'
-    +     '<select id="kb-col-select" onchange="window._kbMoverColuna(\''+rfId+'\',this.value)" style="width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--txt1);font-family:inherit;outline:none;cursor:pointer">'
-    +       colOpts
-    +     '</select>'
+    // Mover de coluna + Responsável
+    +   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">'
+    +     '<div>'
+    +       '<div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Estágio atual</div>'
+    +       '<select id="kb-col-select" onchange="window._kbMoverColuna(\''+rfId+'\',this.value)" style="width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--txt1);font-family:inherit;outline:none;cursor:pointer">'
+    +         colOpts
+    +       '</select>'
+    +     '</div>'
+    +     '<div>'
+    +       '<div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Responsável</div>'
+    +       '<select id="kb-resp-select" onchange="window._kbMudarResponsavel(\''+rfId+'\',this.value)" style="width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--txt1);font-family:inherit;outline:none;cursor:pointer">'
+    +         _kbUsuarios.map(function(u){return '<option value="'+u.id+'"'+(u.id===(window._kanbanResponsavel[rfId]||'nenhum')?' selected':'')+'>'+u.nome+'</option>';}).join('')
+    +       '</select>'
+    +     '</div>'
     +   '</div>'
     + '</div>'
     // Ações
