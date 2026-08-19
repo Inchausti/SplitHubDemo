@@ -5220,7 +5220,7 @@ window.renderizarFCT = function() {
 // GESTÃO DE PAGAMENTOS — filtro global de mês + tabela dinâmica
 // ============================================================
 
-window._filtrosPagamentos = { mesAno: '', mesAnoArr: [], tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
+window._filtrosPagamentos = { mesAno: '', mesAnoArr: [], tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '', metodo: '' };
 
 window.injetarFiltrosPagamentos = function() {
   if (document.getElementById('filtros-pagamentos-avancado')) return;
@@ -5274,6 +5274,11 @@ window.injetarFiltrosPagamentos = function() {
     + '<option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option>'
     + '</select></div>'
 
+    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Método</label>'
+    + '<select id="fp-metodo" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
+    + '<option value="">Todos</option><option value="Fornecedor">Fornecedor</option><option value="RAD">RAD</option>'
+    + '</select></div>'
+
     + '</div>'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--brd)">'
     + '<span id="fp-contagem" style="font-size:11px;color:var(--txt2)">— registros</span>'
@@ -5305,15 +5310,16 @@ window.pagamentosFiltrarGrid = function() {
   f.valorMin = (document.getElementById('fp-valor-min') || {}).value || '';
   f.valorMax = (document.getElementById('fp-valor-max') || {}).value || '';
   f.tipoDFe  = (document.getElementById('fp-tipo-dfe')  || {}).value || '';
+  f.metodo   = (document.getElementById('fp-metodo')    || {}).value || '';
   window.renderizarTabelaPagamentos();
 };
 
 window.pagamentosLimparFiltros = function() {
-  ['fp-busca','fp-tipo','fp-status','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max','fp-tipo-dfe'].forEach(function(id) {
+  ['fp-busca','fp-tipo','fp-status','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max','fp-tipo-dfe','fp-metodo'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
-  window._filtrosPagamentos = { mesAno: '', mesAnoArr: (window._filtrosPagamentos.mesAnoArr||[]).slice(), tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
+  window._filtrosPagamentos = { mesAno: '', mesAnoArr: (window._filtrosPagamentos.mesAnoArr||[]).slice(), tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '', metodo: '' };
   window.renderizarTabelaPagamentos();
 };
 
@@ -5373,6 +5379,7 @@ window.renderizarTabelaPagamentos = function() {
       if (f.valorMin !== '' && valor < parseFloat(f.valorMin)) return;
       if (f.valorMax !== '' && valor > parseFloat(f.valorMax)) return;
       if (f.tipoDFe && (rf.tipoNF || nf.tipo || 'entrada') !== f.tipoDFe) return;
+      if (f.metodo  && (rf.metodoPagamento || nf.metodoPagamento || '') !== f.metodo) return;
 
       var dataRFIso = rf.data || '';
       if (f.dataRFDe  && dataRFIso < f.dataRFDe)  return;
