@@ -2747,11 +2747,11 @@ window.creditosIrParaInconsistencias = function() {
     try { if (typeof inconsistRenderTabela === 'function') inconsistRenderTabela(); } catch(e) {}
     try { window.renderizarRFsInconsistencias(); } catch(e) {}
     // Expande o painel de filtros para evidenciar os filtros ativos
-    var filtroCorpo = document.getElementById('inc-rf-filtro-corpo');
-    var toggleIcon  = document.getElementById('inc-rf-toggle-icon');
+    var filtroCorpo = document.getElementById('inc-rf-corpo');
     if (filtroCorpo && filtroCorpo.style.display === 'none') {
       filtroCorpo.style.display = 'block';
-      if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+      var btn = document.getElementById('inc-rf-toggle-btn');
+      if (btn) btn.classList.add('open');
     }
     // Rola até a tabela
     var tabela = document.getElementById('t-inc-rfs');
@@ -3040,14 +3040,7 @@ window.renderizarRFsInconsistencias = function() {
   window.incRfFiltrar();
 };
 
-window.incRfToggleFiltros = function() {
-  var corpo = document.getElementById('inc-rf-filtro-corpo');
-  var icon  = document.getElementById('inc-rf-toggle-icon');
-  if (!corpo) return;
-  var aberto = corpo.style.display !== 'none';
-  corpo.style.display = aberto ? 'none' : 'block';
-  if (icon) icon.style.transform = aberto ? '' : 'rotate(180deg)';
-};
+window.incRfToggleFiltros = function() { window.shToggleFilterPanel('inc-rf'); };
 
 window.incRfFiltrar = function() {
   var busca    = ((document.getElementById('inc-rf-busca')       ||{}).value||'').toLowerCase();
@@ -4206,19 +4199,42 @@ window.debitosDFsRender = function() {
   el.innerHTML=h;
 };
 
-window.debitoDFsToggleFiltros = function() {
-  var corpo = document.getElementById('ddf-corpo');
-  var icon  = document.getElementById('ddf-toggle-icon');
-  if (!corpo) return;
-  var aberto = corpo.style.display !== 'none';
-  corpo.style.display = aberto ? 'none' : 'block';
-  if (icon) icon.style.transform = aberto ? '' : 'rotate(180deg)';
-};
+window.debitoDFsToggleFiltros = function() { window.shToggleFilterPanel('deb-dfs'); };
 
 window.debitoDFsLimparFiltros = function() {
   var ids = ['deb-dfs-busca','deb-dfs-status','deb-dfs-tipo','deb-dfs-metodo'];
   ids.forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
   window.debitosDFsRender();
+};
+
+window.injetarFiltrosDebitosDFs = function() {
+  var anchor = document.getElementById('tbl-debitos-dfs');
+  if (!anchor) return;
+  window.shBuildFilterPanel({
+    wrapperId: 'deb-dfs-wrapper',
+    anchor: anchor.closest('.twrap') || anchor,
+    prefix: 'deb-dfs',
+    searchPlaceholder: 'Buscar por NF, fornecedor, CNPJ…',
+    onFilter: 'debitosDFsRender',
+    onClear: 'debitoDFsLimparFiltros',
+    countId: 'deb-dfs-contagem',
+    fields: [
+      { id:'deb-dfs-status', type:'select', label:'Status', options:[{value:'confirmado',label:'Confirmado'},{value:'pendente',label:'Pendente'},{value:'divergente',label:'Divergente'}] },
+      { id:'deb-dfs-tipo', type:'select', label:'Tipo DF', options:[{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}] },
+      { id:'deb-dfs-metodo', type:'select', label:'Método', options:[{value:'split',label:'Split Payment'},{value:'rad',label:'RAD'},{value:'credito',label:'Créditos'}] }
+    ]
+  });
+};
+
+window.injetarFiltrosInconsistencias = function() {
+  /* Inconsistências usa painel estático em index.html — nada a injetar */
+};
+
+window.creditosDFsLimpar = function() {
+  ['cred-dfs-busca','cred-dfs-status','cred-dfs-tipo','cred-dfs-credito'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  if (typeof creditosDFsRender === 'function') creditosDFsRender();
 };
 
 window.atualizarKPIsDebitos = function(listaRFs) {
@@ -5995,7 +6011,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window.renderizarRFsInconsistencias(); } catch(e) {}
       try { window.renderizarTop5Inconsistencias(); } catch(e) {}
       try { window.renderizarTop10Empresas(); } catch(e) {}
-      try { window.injetarFiltrosDebitos(); window.renderizarTabelaDebitos(); window.renderizarComposicaoDebitos(''); window.renderizarExtincaoMetodo(); window.atualizarPerdaAcumuladaDebitos(); } catch(e) {}
+      try { window.injetarFiltrosDebitos(); window.injetarFiltrosDebitosDFs(); window.renderizarTabelaDebitos(); window.renderizarComposicaoDebitos(''); window.renderizarExtincaoMetodo(); window.atualizarPerdaAcumuladaDebitos(); } catch(e) {}
       try { window.renderizarComposicaoCreditos(''); } catch(e) {}
       try { window.renderizarPagamentosMetodo(); } catch(e) {}
       try { window.atualizarPerdaAcumulada(); } catch(e) {}

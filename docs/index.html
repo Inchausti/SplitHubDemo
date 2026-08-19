@@ -1292,29 +1292,23 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
 
   <!-- ABA: Documentos Fiscais -->
   <div id="cred-dfs" class="sv">
-    <div class="flt">
-      <input type="text" id="cred-dfs-busca" placeholder="Buscar por NF, fornecedor, CNPJ…" oninput="creditosDFsRender()"/>
-      <select id="cred-dfs-status" onchange="creditosDFsRender()">
-        <option value="">Status — todos</option>
-        <option value="importado">Importado</option>
-        <option value="inconsistencia">Inconsistência</option>
-        <option value="pendente">Pendente</option>
-      </select>
-      <select id="cred-dfs-tipo" onchange="creditosDFsRender()">
-        <option value="">Tipo DF — todos</option>
-        <option value="NF-e">NF-e</option>
-        <option value="CT-e">CT-e</option>
-        <option value="NFS-e">NFS-e</option>
-      </select>
-      <select id="cred-dfs-credito" onchange="creditosDFsRender()">
-        <option value="">Status crédito — todos</option>
-        <option value="a_apropriar">A Apropriar</option>
-        <option value="parc_apropriado">Parc. Apropriado</option>
-        <option value="apropriado">Apropriado</option>
-        <option value="parc_utilizado">Parc. Utilizado</option>
-        <option value="utilizado">Utilizado</option>
-        <option value="glosado">Glosado</option>
-      </select>
+    <div class="sh-fp">
+      <div class="sh-fp-bar">
+        <div class="sh-fp-sw"><span class="sh-fp-sw-ico">⌕</span><input type="text" id="cred-dfs-busca" placeholder="Buscar por NF, fornecedor, CNPJ…" oninput="creditosDFsRender()"></div>
+        <button id="cred-dfs-toggle-btn" class="sh-fp-btn" onclick="window.shToggleFilterPanel('cred-dfs')">⧉ Filtros <span class="sh-fp-badge" data-count="0">0</span></button>
+      </div>
+      <div class="sh-fp-panel" id="cred-dfs-corpo" style="display:none">
+        <div class="sh-fp-grid">
+          <div class="sh-fp-field"><label>Status</label><select id="cred-dfs-status" onchange="creditosDFsRender()"><option value="">Todos</option><option value="importado">Importado</option><option value="inconsistencia">Inconsistência</option><option value="pendente">Pendente</option></select></div>
+          <div class="sh-fp-field"><label>Tipo DF</label><select id="cred-dfs-tipo" onchange="creditosDFsRender()"><option value="">Todos</option><option value="NF-e">NF-e</option><option value="CT-e">CT-e</option><option value="NFS-e">NFS-e</option></select></div>
+          <div class="sh-fp-field"><label>Status Crédito</label><select id="cred-dfs-credito" onchange="creditosDFsRender()"><option value="">Todos</option><option value="a_apropriar">A Apropriar</option><option value="parc_apropriado">Parc. Apropriado</option><option value="apropriado">Apropriado</option><option value="parc_utilizado">Parc. Utilizado</option><option value="utilizado">Utilizado</option><option value="glosado">Glosado</option></select></div>
+        </div>
+        <div class="sh-fp-footer">
+          <button class="sh-fp-clear" onclick="window.creditosDFsLimpar()">✕ Limpar filtros</button>
+          <span class="sh-fp-count" id="cred-dfs-contagem"></span>
+          <button class="sh-fp-apply" onclick="creditosDFsRender()">Aplicar</button>
+        </div>
+      </div>
     </div>
     <div class="tcrd">
       <div class="tcrd-hdr"><div class="sechdr"><h2>Documentos Fiscais</h2><p id="cred-dfs-sub">DFs de entrada · créditos IBS + CBS por documento</p></div></div>
@@ -1421,46 +1415,6 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
 
   <!-- ABA: Documentos Fiscais -->
   <div id="deb-dfs" class="sv">
-    <div id="filtros-deb-dfs-panel" style="background:var(--card);border:1px solid var(--brd);border-radius:10px;margin-bottom:16px;overflow:hidden">
-      <button onclick="window.debitoDFsToggleFiltros()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;padding:14px 20px;cursor:pointer;text-align:left">
-        <span style="font-size:12px;font-weight:700;color:var(--txt1);text-transform:uppercase;letter-spacing:.05em">Filtros</span>
-        <span id="ddf-toggle-icon" style="font-size:16px;color:var(--txt2);transition:transform .2s">▾</span>
-      </button>
-      <div id="ddf-corpo" style="padding:0 20px 16px;display:none">
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;align-items:end">
-          <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Busca (NF / Cliente / CNPJ)</label>
-          <input id="deb-dfs-busca" type="text" placeholder="Pesquisar…" oninput="debitosDFsRender()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"/></div>
-          <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Status</label>
-          <select id="deb-dfs-status" onchange="debitosDFsRender()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
-            <option value="">Todos</option>
-            <option value="extinto">Extinto</option>
-            <option value="nao_extinto">Não Extinto</option>
-            <option value="vencido">Vencido</option>
-            <option value="inconsistencia">Inconsistência</option>
-          </select></div>
-          <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo de DF</label>
-          <select id="deb-dfs-tipo" onchange="debitosDFsRender()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
-            <option value="">Todos</option>
-            <option value="NF-e">NF-e</option>
-            <option value="CT-e">CT-e</option>
-            <option value="NFS-e">NFS-e</option>
-          </select></div>
-          <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Método de Extinção</label>
-          <select id="deb-dfs-metodo" onchange="debitosDFsRender()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
-            <option value="">Todos</option>
-            <option value="RAD">RAD</option>
-            <option value="Compensacao">Compensação</option>
-            <option value="Split Payment">Split Payment</option>
-            <option value="Ressarcimento">Ressarcimento</option>
-            <option value="Transferencia">Transferência</option>
-          </select></div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--brd)">
-          <span id="ddf-contagem" style="font-size:11px;color:var(--txt2)"></span>
-          <button onclick="window.debitoDFsLimparFiltros()" style="background:none;border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;color:var(--txt2);cursor:pointer">✕ Limpar filtros</button>
-        </div>
-      </div>
-    </div>
     <div class="tcrd">
       <div class="tcrd-hdr"><div class="sechdr"><h2>Documentos Fiscais · Débitos</h2><p id="deb-dfs-sub">DFs de saída · débitos IBS + CBS por documento</p></div></div>
       <div class="twrap"><table id="t-deb-dfs"><thead><tr>
@@ -1708,28 +1662,22 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
   <div id="conc-lista" class="sv">
   <!-- Filtros + Tabela de Conciliação -->
   <div id="conc-uni">
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin-bottom:16px">
-      <div class="flt">
-        <input type="text" id="uni-busca" placeholder="Buscar por NF, fornecedor, CNPJ, protocolo…" oninput="window.concUnifiedFiltrar&&window.concUnifiedFiltrar()"/>
-        <select id="uni-tipo" onchange="window.concUnifiedFiltrar&&window.concUnifiedFiltrar()">
-          <option value="">Tipo DF — todos</option>
-          <option value="entrada">Entrada (Crédito)</option>
-          <option value="saida">Saída (Débito)</option>
-        </select>
-        <select id="uni-apur" onchange="window.concUnifiedFiltrar&&window.concUnifiedFiltrar()">
-          <option value="">Apuração — todos</option>
-          <option value="confirmado">Conciliado</option>
-          <option value="divergente">Não conciliado</option>
-          <option value="pendente">Pendente</option>
-        </select>
-        <select id="uni-fin" onchange="window.concUnifiedFiltrar&&window.concUnifiedFiltrar()">
-          <option value="">Financeiro — todos</option>
-          <option value="completo">Conciliado</option>
-          <option value="parcial">Parcial</option>
-          <option value="pendente">Pendente</option>
-          <option value="inconsistente">Não conciliado</option>
-        </select>
-        <button class="btn" onclick="window.concUnifiedLimpar&&window.concUnifiedLimpar()">✕ Limpar</button>
+    <div class="sh-fp">
+      <div class="sh-fp-bar">
+        <div class="sh-fp-sw"><span class="sh-fp-sw-ico">⌕</span><input type="text" id="uni-busca" placeholder="Buscar por NF, fornecedor, CNPJ, protocolo…" oninput="window.concUnifiedFiltrar&&window.concUnifiedFiltrar()"></div>
+        <button id="uni-toggle-btn" class="sh-fp-btn" onclick="window.shToggleFilterPanel('uni')">⧉ Filtros <span class="sh-fp-badge" data-count="0">0</span></button>
+      </div>
+      <div class="sh-fp-panel" id="uni-corpo" style="display:none">
+        <div class="sh-fp-grid">
+          <div class="sh-fp-field"><label>Tipo DF</label><select id="uni-tipo" onchange="window.concUnifiedFiltrar&&window.concUnifiedFiltrar()"><option value="">Todos</option><option value="entrada">Entrada (Crédito)</option><option value="saida">Saída (Débito)</option></select></div>
+          <div class="sh-fp-field"><label>Apuração</label><select id="uni-apur" onchange="window.concUnifiedFiltrar&&window.concUnifiedFiltrar()"><option value="">Todos</option><option value="confirmado">Conciliado</option><option value="divergente">Não conciliado</option><option value="pendente">Pendente</option></select></div>
+          <div class="sh-fp-field"><label>Financeiro</label><select id="uni-fin" onchange="window.concUnifiedFiltrar&&window.concUnifiedFiltrar()"><option value="">Todos</option><option value="completo">Conciliado</option><option value="parcial">Parcial</option><option value="pendente">Pendente</option><option value="inconsistente">Não conciliado</option></select></div>
+        </div>
+        <div class="sh-fp-footer">
+          <button class="sh-fp-clear" onclick="window.concUnifiedLimpar&&window.concUnifiedLimpar()">✕ Limpar filtros</button>
+          <span class="sh-fp-count" id="uni-contagem"></span>
+          <button class="sh-fp-apply" onclick="window.concUnifiedFiltrar&&window.concUnifiedFiltrar()">Aplicar</button>
+        </div>
       </div>
     </div>
     <div class="tcrd">
@@ -1757,19 +1705,22 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <div class="tcrd">
       <div class="tcrd-hdr" style="flex-direction:column;align-items:flex-start;gap:10px">
         <div class="sechdr" style="margin-bottom:0"><h2>Gestão de Registros Fiscais</h2><p id="rf-count-sub">0 RFs</p></div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-bottom:4px">
-          <input type="text" id="rf-gestao-busca" placeholder="Buscar RF / NF / Entidade…" oninput="rfFiltrarGestao()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none;width:200px"/>
-          <select id="rf-gestao-tipo-dfe" onchange="rfFiltrarGestao()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
-            <option value="">Tipo de DFe — todos</option>
-            <option value="entrada">Entrada</option>
-            <option value="saida">Saída</option>
-          </select>
-          <select id="rf-gestao-tipo-fiscal" onchange="rfFiltrarGestao()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
-            <option value="">Tipo Fiscal — todos</option>
-            <option value="ibs">IBS</option>
-            <option value="cbs">CBS</option>
-          </select>
-          <button class="btn" onclick="rfLimparFiltrosGestao()">✕ Limpar</button>
+        <div class="sh-fp" style="width:100%">
+          <div class="sh-fp-bar">
+            <div class="sh-fp-sw"><span class="sh-fp-sw-ico">⌕</span><input type="text" id="rf-gestao-busca" placeholder="Buscar RF / NF / Entidade…" oninput="rfFiltrarGestao()"></div>
+            <button id="rf-gestao-toggle-btn" class="sh-fp-btn" onclick="window.shToggleFilterPanel('rf-gestao')">⧉ Filtros <span class="sh-fp-badge" data-count="0">0</span></button>
+          </div>
+          <div class="sh-fp-panel" id="rf-gestao-corpo" style="display:none">
+            <div class="sh-fp-grid">
+              <div class="sh-fp-field"><label>Tipo de DFe</label><select id="rf-gestao-tipo-dfe" onchange="rfFiltrarGestao()"><option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option></select></div>
+              <div class="sh-fp-field"><label>Tipo Fiscal</label><select id="rf-gestao-tipo-fiscal" onchange="rfFiltrarGestao()"><option value="">Todos</option><option value="ibs">IBS</option><option value="cbs">CBS</option></select></div>
+            </div>
+            <div class="sh-fp-footer">
+              <button class="sh-fp-clear" onclick="rfLimparFiltrosGestao()">✕ Limpar filtros</button>
+              <span class="sh-fp-count" id="rf-gestao-contagem"></span>
+              <button class="sh-fp-apply" onclick="rfFiltrarGestao()">Aplicar</button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="twrap"><table><thead><tr><th>ID RF</th><th>Tipo Fiscal</th><th>Tipo de DFe</th><th>NF Vinculada</th><th>Entidade</th><th>CNPJ</th><th class="r">Valor</th><th class="r">NF Total</th><th class="r">NF Líquido</th><th>Status</th><th>Data</th><th>Inconsistência</th></tr></thead>
@@ -2456,12 +2407,23 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <div class="kcard" ><div class="klbl">Utilizado</div><div class="kval" id="ck-util">R$ 28.740,00</div><div class="ksub">Abateu débito do período</div></div>
       <div class="kcard" ><div class="klbl">Não Utilizado</div><div class="kval" id="ck-naoUtil">R$ 30.650,00</div><div class="ksub">Compõe saldo a transportar</div></div>
     </div>
-    <div class="flt">
-      <select id="f-cred-tri" onchange="apurRenderCred()"><option value="">Todos os tributos</option><option value="IBS">IBS</option><option value="CBS">CBS</option></select>
-      <select id="f-cred-estado" onchange="apurRenderCred()"><option value="">Todos os estados</option><option value="apropriado">Apropriado</option><option value="nao_apropriado">Não Apropriado</option><option value="utilizado">Utilizado</option></select>
-      <input type="text" id="f-cred-doc" placeholder="Nº documento…" oninput="apurRenderCred()"/>
-      <button class="btn" onclick="apurRenderCred()">↻ Atualizar</button>
-      <button class="btn" onclick="apurExportarCSV('creditos')">↓ CSV</button>
+    <div class="sh-fp">
+      <div class="sh-fp-bar">
+        <div class="sh-fp-sw"><span class="sh-fp-sw-ico">⌕</span><input type="text" id="f-cred-doc" placeholder="Nº documento…" oninput="apurRenderCred()"></div>
+        <button id="f-cred-toggle-btn" class="sh-fp-btn" onclick="window.shToggleFilterPanel('f-cred')">⧉ Filtros <span class="sh-fp-badge" data-count="0">0</span></button>
+        <button class="btn" onclick="apurExportarCSV('creditos')" style="margin-left:4px">↓ CSV</button>
+      </div>
+      <div class="sh-fp-panel" id="f-cred-corpo" style="display:none">
+        <div class="sh-fp-grid">
+          <div class="sh-fp-field"><label>Tributo</label><select id="f-cred-tri" onchange="apurRenderCred()"><option value="">Todos</option><option value="IBS">IBS</option><option value="CBS">CBS</option></select></div>
+          <div class="sh-fp-field"><label>Estado</label><select id="f-cred-estado" onchange="apurRenderCred()"><option value="">Todos</option><option value="apropriado">Apropriado</option><option value="nao_apropriado">Não Apropriado</option><option value="utilizado">Utilizado</option></select></div>
+        </div>
+        <div class="sh-fp-footer">
+          <button class="sh-fp-clear" onclick="(function(){var t=document.getElementById('f-cred-tri');if(t)t.value='';var e=document.getElementById('f-cred-estado');if(e)e.value='';var d=document.getElementById('f-cred-doc');if(d)d.value='';apurRenderCred();})()">✕ Limpar filtros</button>
+          <span class="sh-fp-count" id="f-cred-contagem"></span>
+          <button class="sh-fp-apply" onclick="apurRenderCred()">Aplicar</button>
+        </div>
+      </div>
     </div>
     <div class="tcrd"><div class="twrap"><table><thead><tr>
       <th>Tributo</th><th>Data Entrada</th><th>Documento Fiscal</th><th>Fornecedor</th>
@@ -2552,13 +2514,24 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <div class="kcard" ><div class="klbl">Extinto — RAD</div><div class="kval" id="dk-rad">R$ 22.740,00</div><div class="ksub">Via adquirente</div></div>
       <div class="kcard" ><div class="klbl">Extinto — Créditos</div><div class="kval" id="dk-cred">R$ 28.740,00</div><div class="ksub">Via créditos tributários</div></div>
     </div>
-    <div class="flt">
-      <select id="f-deb-tri" onchange="apurRenderDeb()"><option value="">Todos os tributos</option><option value="IBS">IBS</option><option value="CBS">CBS</option></select>
-      <select id="f-deb-estado" onchange="apurRenderDeb()"><option value="">Todos os estados</option><option value="nao_extinto">Não Extinto</option><option value="extinto">Extinto</option></select>
-      <select id="f-deb-mec" onchange="apurRenderDeb()"><option value="">Todos os mecanismos</option><option value="split">Split Payment</option><option value="rad">RAD</option><option value="credito">Créditos Tributários</option></select>
-      <input type="text" id="f-deb-doc" placeholder="Nº documento…" oninput="apurRenderDeb()"/>
-      <button class="btn" onclick="apurRenderDeb()">↻ Atualizar</button>
-      <button class="btn" onclick="apurExportarCSV('debitos')">↓ CSV</button>
+    <div class="sh-fp">
+      <div class="sh-fp-bar">
+        <div class="sh-fp-sw"><span class="sh-fp-sw-ico">⌕</span><input type="text" id="f-deb-doc" placeholder="Nº documento…" oninput="apurRenderDeb()"></div>
+        <button id="f-deb-toggle-btn" class="sh-fp-btn" onclick="window.shToggleFilterPanel('f-deb')">⧉ Filtros <span class="sh-fp-badge" data-count="0">0</span></button>
+        <button class="btn" onclick="apurExportarCSV('debitos')" style="margin-left:4px">↓ CSV</button>
+      </div>
+      <div class="sh-fp-panel" id="f-deb-corpo" style="display:none">
+        <div class="sh-fp-grid">
+          <div class="sh-fp-field"><label>Tributo</label><select id="f-deb-tri" onchange="apurRenderDeb()"><option value="">Todos</option><option value="IBS">IBS</option><option value="CBS">CBS</option></select></div>
+          <div class="sh-fp-field"><label>Estado</label><select id="f-deb-estado" onchange="apurRenderDeb()"><option value="">Todos</option><option value="nao_extinto">Não Extinto</option><option value="extinto">Extinto</option></select></div>
+          <div class="sh-fp-field"><label>Mecanismo</label><select id="f-deb-mec" onchange="apurRenderDeb()"><option value="">Todos</option><option value="split">Split Payment</option><option value="rad">RAD</option><option value="credito">Créditos Tributários</option></select></div>
+        </div>
+        <div class="sh-fp-footer">
+          <button class="sh-fp-clear" onclick="(function(){['f-deb-tri','f-deb-estado','f-deb-mec'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});var d=document.getElementById('f-deb-doc');if(d)d.value='';apurRenderDeb();})()">✕ Limpar filtros</button>
+          <span class="sh-fp-count" id="f-deb-contagem"></span>
+          <button class="sh-fp-apply" onclick="apurRenderDeb()">Aplicar</button>
+        </div>
+      </div>
     </div>
     <div class="tcrd"><div class="twrap"><table><thead><tr>
       <th>Tributo</th><th>Data Emissão</th><th>Documento Fiscal</th><th>Cliente</th>
@@ -2640,29 +2613,22 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <div class="kcard" ><div class="klbl">NFs vinculadas a contrato</div><div class="kval" id="ctr-validacao">0/0</div><div class="ksub" id="ctr-validacao-sub">Validando…</div></div>
       <div class="kcard" ><div class="klbl">Volume de NFs — contrato vencido</div><div class="kval" id="ctr-vol-vencido">R$ 0</div><div class="ksub" id="ctr-vol-vencido-sub">0 NFs sob contrato expirado</div></div>
     </div>
-    <div class="crd" style="margin-bottom:24px">
-      <div class="sechdr"><h2>Filtros</h2><p>Filtre os contratos cadastrados por CNPJ/fornecedor, status, método de pagamento ou prazo</p></div>
-      <div class="flt" style="margin-top:14px">
-        <input type="text" id="ctr-busca" placeholder="Buscar por contrato, CNPJ ou fornecedor…" oninput="contratosRenderTabela()"/>
-        <select id="ctr-filtro-status" onchange="contratosRenderTabela()">
-          <option value="">Status — todos</option>
-          <option value="ativo">Ativo</option>
-          <option value="a_iniciar">A iniciar</option>
-          <option value="encerrado">Encerrado</option>
-        </select>
-        <select id="ctr-filtro-mecanismo" onchange="contratosRenderTabela()">
-          <option value="">Método de pagamento — todos</option>
-          <option value="rad">RAD</option>
-          <option value="split">Fornecedor</option>
-        </select>
-        <select id="ctr-filtro-prazo" onchange="contratosRenderTabela()">
-          <option value="">Prazo — todos</option>
-          <option value="30">30 dias</option>
-          <option value="60">60 dias</option>
-          <option value="90">90 dias</option>
-          <option value="120">120 dias</option>
-        </select>
-        <button class="btn" onclick="contratosLimparFiltrosLista()">✕ Limpar filtros</button>
+    <div class="sh-fp" style="margin-bottom:24px">
+      <div class="sh-fp-bar">
+        <div class="sh-fp-sw"><span class="sh-fp-sw-ico">⌕</span><input type="text" id="ctr-busca" placeholder="Buscar por contrato, CNPJ ou fornecedor…" oninput="contratosRenderTabela()"></div>
+        <button id="ctr-toggle-btn" class="sh-fp-btn" onclick="window.shToggleFilterPanel('ctr')">⧉ Filtros <span class="sh-fp-badge" data-count="0">0</span></button>
+      </div>
+      <div class="sh-fp-panel" id="ctr-corpo" style="display:none">
+        <div class="sh-fp-grid">
+          <div class="sh-fp-field"><label>Status</label><select id="ctr-filtro-status" onchange="contratosRenderTabela()"><option value="">Todos</option><option value="ativo">Ativo</option><option value="a_iniciar">A iniciar</option><option value="encerrado">Encerrado</option></select></div>
+          <div class="sh-fp-field"><label>Método de Pagamento</label><select id="ctr-filtro-mecanismo" onchange="contratosRenderTabela()"><option value="">Todos</option><option value="rad">RAD</option><option value="split">Fornecedor</option></select></div>
+          <div class="sh-fp-field"><label>Prazo</label><select id="ctr-filtro-prazo" onchange="contratosRenderTabela()"><option value="">Todos</option><option value="30">30 dias</option><option value="60">60 dias</option><option value="90">90 dias</option><option value="120">120 dias</option></select></div>
+        </div>
+        <div class="sh-fp-footer">
+          <button class="sh-fp-clear" onclick="contratosLimparFiltrosLista()">✕ Limpar filtros</button>
+          <span class="sh-fp-count" id="ctr-contagem"></span>
+          <button class="sh-fp-apply" onclick="contratosRenderTabela()">Aplicar</button>
+        </div>
       </div>
     </div>
     <div class="tcrd">
@@ -2681,40 +2647,23 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <div class="kcard" ><div class="klbl">Em alerta</div><div class="kval" id="adm-forn-alerta">0</div><div class="ksub">Requer atenção</div></div>
       <div class="kcard" ><div class="klbl">Em risco</div><div class="kval" id="adm-forn-risco">0</div><div class="ksub">Score crítico</div></div>
     </div>
-    <div class="crd" style="margin-bottom:24px">
-      <div class="sechdr"><h2>Filtros</h2><p>A listagem abaixo está sincronizada com todos os CNPJs de fornecedores já cadastrados no projeto</p></div>
-      <div class="flt" style="margin-top:14px">
-        <input type="text" id="adm-forn-busca" placeholder="Buscar por CNPJ, razão social ou grupo…" oninput="adminFornRenderTabela()"/>
-        <select id="adm-forn-grupo" onchange="adminFornRenderTabela()">
-          <option value="">Grupo econômico — todos</option>
-          <option value="g-vale">Grupo Vale</option>
-          <option value="g-sulpar">Grupo Sulpar</option>
-          <option value="g-transcarro">Grupo Transcarro</option>
-          <option value="g-tectra">Grupo Tectra</option>
-          <option value="g-eletropar">Grupo Eletropar</option>
-          <option value="g-aeroprime">Grupo Aeroprime</option>
-          <option value="g-petral">Grupo Petral</option>
-          <option value="g-polisul">Grupo Polisul</option>
-          <option value="g-celupar">Grupo Celupar</option>
-          <option value="g-essenzia">Grupo Essenzia</option>
-        </select>
-        <select id="adm-forn-tipo" onchange="adminFornRenderTabela()">
-          <option value="">Tipo — Matriz / Filial</option>
-          <option value="Matriz">Apenas Matrizes</option>
-          <option value="Filial">Apenas Filiais</option>
-        </select>
-        <select id="adm-forn-status" onchange="adminFornRenderTabela()">
-          <option value="">Todos os status</option>
-          <option value="ok">Regular</option>
-          <option value="alerta">Alerta</option>
-          <option value="risco">Risco</option>
-        </select>
-        <select id="adm-forn-contrato" onchange="adminFornRenderTabela()">
-          <option value="">Contrato — todos</option>
-          <option value="ativo">Com contrato ativo</option>
-          <option value="sem_ativo">Sem contrato ativo</option>
-        </select>
-        <button class="btn" onclick="adminFornLimparFiltros()">✕ Limpar filtros</button>
+    <div class="sh-fp" style="margin-bottom:24px">
+      <div class="sh-fp-bar">
+        <div class="sh-fp-sw"><span class="sh-fp-sw-ico">⌕</span><input type="text" id="adm-forn-busca" placeholder="Buscar por CNPJ, razão social ou grupo…" oninput="adminFornRenderTabela()"></div>
+        <button id="adm-forn-toggle-btn" class="sh-fp-btn" onclick="window.shToggleFilterPanel('adm-forn')">⧉ Filtros <span class="sh-fp-badge" data-count="0">0</span></button>
+      </div>
+      <div class="sh-fp-panel" id="adm-forn-corpo" style="display:none">
+        <div class="sh-fp-grid">
+          <div class="sh-fp-field"><label>Grupo Econômico</label><select id="adm-forn-grupo" onchange="adminFornRenderTabela()"><option value="">Todos</option><option value="g-vale">Grupo Vale</option><option value="g-sulpar">Grupo Sulpar</option><option value="g-transcarro">Grupo Transcarro</option><option value="g-tectra">Grupo Tectra</option><option value="g-eletropar">Grupo Eletropar</option><option value="g-aeroprime">Grupo Aeroprime</option><option value="g-petral">Grupo Petral</option><option value="g-polisul">Grupo Polisul</option><option value="g-celupar">Grupo Celupar</option><option value="g-essenzia">Grupo Essenzia</option></select></div>
+          <div class="sh-fp-field"><label>Tipo</label><select id="adm-forn-tipo" onchange="adminFornRenderTabela()"><option value="">Todos</option><option value="Matriz">Apenas Matrizes</option><option value="Filial">Apenas Filiais</option></select></div>
+          <div class="sh-fp-field"><label>Status</label><select id="adm-forn-status" onchange="adminFornRenderTabela()"><option value="">Todos</option><option value="ok">Regular</option><option value="alerta">Alerta</option><option value="risco">Risco</option></select></div>
+          <div class="sh-fp-field"><label>Contrato</label><select id="adm-forn-contrato" onchange="adminFornRenderTabela()"><option value="">Todos</option><option value="ativo">Com contrato ativo</option><option value="sem_ativo">Sem contrato ativo</option></select></div>
+        </div>
+        <div class="sh-fp-footer">
+          <button class="sh-fp-clear" onclick="adminFornLimparFiltros()">✕ Limpar filtros</button>
+          <span class="sh-fp-count" id="adm-forn-contagem"></span>
+          <button class="sh-fp-apply" onclick="adminFornRenderTabela()">Aplicar</button>
+        </div>
       </div>
     </div>
     <div class="tcrd">
@@ -3404,52 +3353,26 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     </div>
     <!-- SUB-TAB: LISTAGEM -->
     <div id="inc-listagem" class="sv">
-      <!-- Filtros colapsáveis -->
-      <div style="background:var(--card);border:1px solid var(--brd);border-radius:10px;overflow:hidden;margin-bottom:16px">
-        <button onclick="window.incRfToggleFiltros()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;padding:14px 20px;cursor:pointer;text-align:left">
-          <span style="font-size:12px;font-weight:700;color:var(--txt1);text-transform:uppercase;letter-spacing:.05em">Filtros — Inconsistências</span>
-          <span id="inc-rf-toggle-icon" style="font-size:16px;color:var(--txt2);transition:transform .2s">▾</span>
-        </button>
-        <div id="inc-rf-filtro-corpo" style="padding:0 20px 16px;display:none">
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;align-items:end">
-            <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Busca (RF / NF / Entidade / CNPJ)</label>
-              <input id="inc-rf-busca" type="text" placeholder="Pesquisar…" oninput="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
-            <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Status</label>
-              <select id="inc-rf-etapa" onchange="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
-                <option value="">Todos</option><option value="aberta">Aberta</option><option value="em_analise">Em Análise</option><option value="aguardando_emitente">Ag. Emitente</option><option value="resolvida">Resolvida</option><option value="glosada">Glosada</option>
-              </select></div>
-            <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo de DFe</label>
-              <select id="inc-rf-tipo-nf" onchange="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
-                <option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option><option value="ingestao">Ingestão</option>
-              </select></div>
-            <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo Fiscal</label>
-              <select id="inc-rf-tipo-fiscal" onchange="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
-                <option value="">Todos</option><option value="ibs">IBS</option><option value="cbs">CBS</option>
-              </select></div>
-            <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo Inconsistência</label>
-              <select id="inc-rf-inc-tipo" onchange="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">
-                <option value="">Todas</option>
-                <option value="Não conciliado">Não conciliado</option>
-                <option value="Valor imposto divergente">Valor imposto divergente</option>
-                <option value="Vencido">Vencido</option>
-                <option value="Sem Comprovante">Sem Comprovante</option>
-                <option value="Falha de Layout">Falha de Layout</option>
-                <option value="Inconsistência de Dados">Inconsistência de Dados</option>
-                <option value="Rejeitado SEFAZ">Rejeitado SEFAZ</option>
-                <option value="Documento Duplicado">Documento Duplicado</option>
-              </select></div>
-            <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data RF — de</label>
-              <input id="inc-rf-data-de" type="date" onchange="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
-            <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data RF — até</label>
-              <input id="inc-rf-data-ate" type="date" onchange="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
-            <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Valor RF — mín (R$)</label>
-              <input id="inc-rf-valor-min" type="number" min="0" placeholder="0" oninput="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
-            <div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Valor RF — máx (R$)</label>
-              <input id="inc-rf-valor-max" type="number" min="0" placeholder="∞" oninput="window.incRfFiltrar()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>
+      <div class="sh-fp">
+        <div class="sh-fp-bar">
+          <div class="sh-fp-sw"><span class="sh-fp-sw-ico">⌕</span><input id="inc-rf-busca" type="text" placeholder="Buscar RF / NF / Entidade / CNPJ…" oninput="window.incRfFiltrar()"></div>
+          <button id="inc-rf-toggle-btn" class="sh-fp-btn" onclick="window.shToggleFilterPanel('inc-rf')">⧉ Filtros <span class="sh-fp-badge" data-count="0">0</span></button>
+        </div>
+        <div class="sh-fp-panel" id="inc-rf-corpo" style="display:none">
+          <div class="sh-fp-grid">
+            <div class="sh-fp-field"><label>Status</label><select id="inc-rf-etapa" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="aberta">Aberta</option><option value="em_analise">Em Análise</option><option value="aguardando_emitente">Ag. Emitente</option><option value="resolvida">Resolvida</option><option value="glosada">Glosada</option></select></div>
+            <div class="sh-fp-field"><label>Tipo de DFe</label><select id="inc-rf-tipo-nf" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option><option value="ingestao">Ingestão</option></select></div>
+            <div class="sh-fp-field"><label>Tipo Fiscal</label><select id="inc-rf-tipo-fiscal" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="ibs">IBS</option><option value="cbs">CBS</option></select></div>
+            <div class="sh-fp-field"><label>Tipo Inconsistência</label><select id="inc-rf-inc-tipo" onchange="window.incRfFiltrar()"><option value="">Todas</option><option value="Não conciliado">Não conciliado</option><option value="Valor imposto divergente">Valor imposto divergente</option><option value="Vencido">Vencido</option><option value="Sem Comprovante">Sem Comprovante</option><option value="Falha de Layout">Falha de Layout</option><option value="Inconsistência de Dados">Inconsistência de Dados</option><option value="Rejeitado SEFAZ">Rejeitado SEFAZ</option><option value="Documento Duplicado">Documento Duplicado</option></select></div>
+            <div class="sh-fp-field"><label>Data RF — de</label><input id="inc-rf-data-de" type="date" onchange="window.incRfFiltrar()"></div>
+            <div class="sh-fp-field"><label>Data RF — até</label><input id="inc-rf-data-ate" type="date" onchange="window.incRfFiltrar()"></div>
+            <div class="sh-fp-field"><label>Valor mín (R$)</label><input id="inc-rf-valor-min" type="number" min="0" placeholder="0" oninput="window.incRfFiltrar()"></div>
+            <div class="sh-fp-field"><label>Valor máx (R$)</label><input id="inc-rf-valor-max" type="number" min="0" placeholder="∞" oninput="window.incRfFiltrar()"></div>
           </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--brd)">
-            <span id="inc-rf-contagem" style="font-size:11px;color:var(--txt2)">— registros</span>
-            <button onclick="window.incRfLimparFiltros()" style="background:none;border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;color:var(--txt2);cursor:pointer">✕ Limpar filtros</button>
+          <div class="sh-fp-footer">
+            <button class="sh-fp-clear" onclick="window.incRfLimparFiltros()">✕ Limpar filtros</button>
+            <span class="sh-fp-count" id="inc-rf-contagem">— registros</span>
+            <button class="sh-fp-apply" onclick="window.incRfFiltrar()">Aplicar</button>
           </div>
         </div>
       </div>
