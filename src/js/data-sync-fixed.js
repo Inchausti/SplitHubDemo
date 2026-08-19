@@ -3727,6 +3727,8 @@ window.debitosDFsRender = function() {
 
   var sub=document.getElementById('deb-dfs-sub');
   if(sub)sub.textContent=nfs.length+' DF'+(nfs.length!==1?'s':'')+' de saída';
+  var cnt=document.getElementById('ddf-contagem');
+  if(cnt)cnt.textContent=nfs.length+' registro'+(nfs.length!==1?'s':'');
 
   if(!nfs.length){
     el.innerHTML='<tr><td colspan="13" style="text-align:center;color:var(--txt3);padding:24px">Nenhum DF encontrado para este filtro.</td></tr>';
@@ -3777,6 +3779,21 @@ window.debitosDFsRender = function() {
     h+='</tr>';
   });
   el.innerHTML=h;
+};
+
+window.debitoDFsToggleFiltros = function() {
+  var corpo = document.getElementById('ddf-corpo');
+  var icon  = document.getElementById('ddf-toggle-icon');
+  if (!corpo) return;
+  var aberto = corpo.style.display !== 'none';
+  corpo.style.display = aberto ? 'none' : 'block';
+  if (icon) icon.style.transform = aberto ? '' : 'rotate(180deg)';
+};
+
+window.debitoDFsLimparFiltros = function() {
+  var ids = ['deb-dfs-busca','deb-dfs-status','deb-dfs-tipo','deb-dfs-metodo'];
+  ids.forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
+  window.debitosDFsRender();
 };
 
 window.atualizarKPIsDebitos = function(listaRFs) {
