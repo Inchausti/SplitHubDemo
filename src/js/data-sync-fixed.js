@@ -7568,12 +7568,12 @@ window.downloadGuiaDARF = function() {
     // Campos emitente
     _set('ing-modal-emit', d.emitente || '—');
     _set('ing-modal-cnpj', d.cnpj || '—');
-    _set('ing-modal-ie', '111.111.111.111'); // mock IE
-    _set('ing-modal-emit-uf', 'São Paulo · SP');   // mock UF emitente
+    _set('ing-modal-ie', d.ie || '111.111.111.111');
+    _set('ing-modal-emit-uf', d.uf ? (d.uf) : 'São Paulo · SP');
 
-    // Destinatário (empresa do grupo = Induspar Tecnologia como destinatária padrão)
-    var destNome = nfRef.tipo === 'saida' ? (nfRef.entidade || 'Cliente') : 'Induspar Tecnologia S.A.';
-    var destCnpj = nfRef.tipo === 'saida' ? (nfRef.cnpj || '—') : '76.535.764/0001-43';
+    // Destinatário
+    var destNome = d.nomeDest || (nfRef.tipo === 'saida' ? (nfRef.entidade || 'Cliente') : 'Induspar Tecnologia S.A.');
+    var destCnpj = d.cnpjDest || (nfRef.tipo === 'saida' ? (nfRef.cnpj || '—') : '76.535.764/0001-43');
     _set('ing-modal-dest', destNome);
     _set('ing-modal-cnpj-dest', destCnpj);
 
@@ -7581,18 +7581,18 @@ window.downloadGuiaDARF = function() {
     _set('ing-modal-emissao', _fmtData(d.dataEmissao));
     _set('ing-modal-ingestao', d.dataIngestao);
     _set('ing-modal-cfop', d.cfop);
-    var serieNum = '001 / ' + (d.nfNumero || d.chave.substring(25,34) || '—');
+    var serieNum = (d.serie || '001') + ' / ' + (d.numero || d.nfNumero || d.chave.substring(25,34) || '—');
     _set('ing-modal-serie-num', serieNum);
     var direcaoLabel = d.tipo.indexOf('Saída') > -1 ? 'Saída (1)' : 'Entrada (0)';
     _set('ing-modal-direcao', direcaoLabel);
     var natOpMap = { '5102':'Venda de mercadoria','6102':'Venda de mercad. interestadual','5101':'Venda de produção','1102':'Compra de mercadoria','2102':'Compra interestadual','3102':'Compra do exterior','5152':'Transf. de mercad. remetente','1152':'Transf. de mercad. destinatário' };
-    _set('ing-modal-nat-op', natOpMap[d.cfop] || 'Venda de mercadoria adquirida');
+    _set('ing-modal-nat-op', d.natOp || natOpMap[d.cfop] || 'Venda de mercadoria adquirida');
 
     // Valores
     _set('ing-modal-valor', _fmtBRL2(d.valor || nfRef.valorTotal));
     _set('ing-modal-vliq', _fmtBRL2(nfRef.valorLiquido || Math.round((d.valor||0)/1.18)));
-    _set('ing-modal-cbs', _fmtBRL2(nfRef.cbs || Math.round((d.valor||0)/1.18*0.08)));
-    _set('ing-modal-ibs', _fmtBRL2(nfRef.ibs || Math.round((d.valor||0)/1.18*0.10)));
+    _set('ing-modal-cbs', _fmtBRL2(d.cbs || nfRef.cbs || Math.round((d.valor||0)/1.18*0.08)));
+    _set('ing-modal-ibs', _fmtBRL2(d.ibs || nfRef.ibs || Math.round((d.valor||0)/1.18*0.10)));
 
     // Chave
     _set('ing-modal-chave-full', d.chave || '—');
@@ -7973,11 +7973,15 @@ window.downloadGuiaDARF = function() {
       var vDeriv     = _derivaValidacoes('importado', validacoes);
       _ingDados.unshift({
         id: newId, chave: r.chave, tipo: r.tipoDF, emitente: r.emitente,
-        cnpj: r.cnpj, valor: r.valor, cfop: r.cfop || '1102',
+        cnpj: r.cnpj, ie: r.ie || '', uf: r.uf || '',
+        cnpjDest: r.cnpjDest || '', nomeDest: r.nomeDest || '',
+        valor: r.valor, ibs: r.ibs || 0, cbs: r.cbs || 0,
+        cfop: r.cfop || '1102', serie: r.serie || '001', numero: r.numero || '',
+        natOp: r.natOp || '',
         dataEmissao: r.dataEmissao, dataIngestao: dIngestao,
         status: 'importado',
         valLayout: vDeriv.valLayout, valValidade: vDeriv.valValidade, valDados: vDeriv.valDados,
-        validacoes: validacoes, nfNumero: ''
+        validacoes: validacoes, nfNumero: r.numero || ''
       });
     });
     _ingDados.forEach(function(d, i) { d.id = i; });
@@ -8042,7 +8046,7 @@ window.downloadGuiaDARF = function() {
 })();
 
 
-// ── Upload CSV Posicional — funções globais ──────────────────────────────
+// ── Upload CSV (semicolon) — funções globais ─────────────────────────────
 window._ingUploadLinhas = [];
 
 window.ingUploadAbrir = function() {
@@ -8083,23 +8087,44 @@ window.ingUploadArquivo = function(file) {
 window.ingUploadParsear = function(text) {
   var linhas = text.split(/\r?\n/).filter(function(l) { return l.trim().length > 0; });
   var detalhe = [], erros = [];
+  // col indices: chave(0) tipo_df(1) cnpj_emit(2) ie_emit(3) uf_emit(4) nome_emit(5)
+  //              cnpj_dest(6) nome_dest(7) cfop(8) serie(9) numero(10) nat_op(11)
+  //              valor_total(12) valor_ibs(13) valor_cbs(14) data_emissao(15)
   linhas.forEach(function(linha, i) {
-    var tipoReg = linha.charAt(0);
-    if (tipoReg === '1' || tipoReg === '9') return;
-    if (tipoReg !== '2') { erros.push('Linha ' + (i+1) + ': tipo de registro inválido ("' + tipoReg + '")'); return; }
-    if (linha.length < 155) { erros.push('Linha ' + (i+1) + ': tamanho ' + linha.length + ' chars (mínimo 155)'); return; }
-    var chave    = linha.substring(1,   45).trim();
-    var tipoDF   = linha.substring(45,  65).trim() || 'NF-e Entrada';
-    var cnpj     = linha.substring(65,  79).trim();
-    var emitente = linha.substring(79,  129).trim() || 'Emitente não informado';
-    var cfop     = linha.substring(129, 133).trim();
-    var valorStr = linha.substring(133, 147).trim();
-    var dataStr  = linha.substring(147, 155).trim();
-    var valor    = parseFloat(valorStr) / 100;
-    if (isNaN(valor) || valor <= 0) { erros.push('Linha ' + (i+1) + ': valor inválido ("' + valorStr + '")'); return; }
-    if (dataStr.length !== 8) { erros.push('Linha ' + (i+1) + ': data inválida ("' + dataStr + '")'); return; }
-    var dataEmissao = dataStr.substring(0,4) + '-' + dataStr.substring(4,6) + '-' + dataStr.substring(6,8);
-    detalhe.push({ chave: chave, tipoDF: tipoDF, cnpj: cnpj, emitente: emitente, cfop: cfop, valor: valor, dataEmissao: dataEmissao });
+    if (i === 0) return; // skip header
+    var cols = linha.split(';');
+    if (cols.length < 13) { erros.push('Linha ' + (i+1) + ': esperado ≥ 13 colunas, encontrado ' + cols.length); return; }
+    var chave        = (cols[0] || '').trim();
+    var tipoDF       = (cols[1] || 'NF-e Entrada').trim();
+    var cnpj         = (cols[2] || '').trim();
+    var ie           = (cols[3] || '').trim();
+    var uf           = (cols[4] || '').trim();
+    var emitente     = (cols[5] || 'Emitente não informado').trim();
+    var cnpjDest     = (cols[6] || '').trim();
+    var nomeDest     = (cols[7] || '').trim();
+    var cfop         = (cols[8] || '').trim();
+    var serie        = (cols[9] || '').trim();
+    var numero       = (cols[10] || '').trim();
+    var natOp        = (cols[11] || '').trim();
+    var valorStr     = (cols[12] || '').trim().replace('.', '').replace(',', '.');
+    var ibsStr       = (cols[13] || '').trim().replace('.', '').replace(',', '.');
+    var cbsStr       = (cols[14] || '').trim().replace('.', '').replace(',', '.');
+    var dataRaw      = (cols[15] || '').trim();
+    var valor = parseFloat(valorStr);
+    if (isNaN(valor) || valor <= 0) { erros.push('Linha ' + (i+1) + ': valor_total inválido ("' + cols[12] + '")'); return; }
+    // data DD/MM/AAAA → AAAA-MM-DD
+    var dataEmissao;
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dataRaw)) {
+      dataEmissao = dataRaw.substring(6,10) + '-' + dataRaw.substring(3,5) + '-' + dataRaw.substring(0,2);
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(dataRaw)) {
+      dataEmissao = dataRaw;
+    } else { erros.push('Linha ' + (i+1) + ': data_emissao inválida ("' + dataRaw + '") — use DD/MM/AAAA'); return; }
+    detalhe.push({
+      chave: chave, tipoDF: tipoDF, cnpj: cnpj, ie: ie, uf: uf, emitente: emitente,
+      cnpjDest: cnpjDest, nomeDest: nomeDest, cfop: cfop, serie: serie, numero: numero,
+      natOp: natOp, valor: valor, ibs: parseFloat(ibsStr) || 0, cbs: parseFloat(cbsStr) || 0,
+      dataEmissao: dataEmissao
+    });
   });
 
   var errEl = document.getElementById('ing-upload-error');

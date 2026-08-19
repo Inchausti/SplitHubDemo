@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRD — Ingestão de DF · SplitHub v1.8</title>
+<title>PRD — Ingestão de DF · SplitHub v1.9</title>
 <style>
 :root {
   --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --brd: #DDE1EA;
@@ -120,20 +120,22 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
     <a href="prd-ingestao-v1.4.html">v1.4</a>
     <a href="prd-ingestao-v1.5.html">v1.5</a>
     <a href="prd-ingestao-v1.6.html">v1.6</a>
-    <a href="prd-ingestao-v1.7.html" class="current">v1.7 (esta)</a>
+    <a href="prd-ingestao-v1.7.html">v1.7</a>
+    <a href="prd-ingestao-v1.8.html">v1.8</a>
+    <a href="prd-ingestao-v1.9.html" class="current">v1.9 (esta)</a>
     <a href="prd-ingestao.html" style="margin-left:4px;background:var(--teal-d);color:var(--teal);border-color:var(--teal)">Última versão</a>
   </div>
 
   <div class="meta-row">
-    <div class="meta-item"><div class="meta-label">Versão</div><div class="meta-val">v1.8</div></div>
+    <div class="meta-item"><div class="meta-label">Versão</div><div class="meta-val">v1.9</div></div>
     <div class="meta-item"><div class="meta-label">Status</div><div class="meta-val"><span class="chip teal">Publicado</span></div></div>
     <div class="meta-item"><div class="meta-label">Data</div><div class="meta-val">19/08/2026</div></div>
     <div class="meta-item"><div class="meta-label">Módulo</div><div class="meta-val">Admin → Ingestão de DFs</div></div>
     <div class="meta-item"><div class="meta-label">Base legal</div><div class="meta-val">LC 214/2025 · IN RFB 2.240/2025</div></div>
   </div>
 
-  <div class="info-box red">
-    <strong>Ajuste de escopo v1.8 (reconciliação com implementação):</strong> Dashboard KPIs corrigidos — app mantém <strong>Com Erro</strong> e <strong>Duplicados</strong> separados; pipeline visual e gráfico marcados como backlog; seção "Detalhe da Inconsistência" no painel esquerdo do modal removida — info apenas na trilha de auditoria.
+  <div class="info-box purple">
+    <strong>Ajuste de escopo v1.8 (reconciliação com implementação):</strong> esta versão alinha o PRD ao estado atual do módulo conforme validação de Ago/2026. (1) Dashboard KPIs corrigidos — app mantém dois KPIs separados: <strong>Com Erro</strong> e <strong>Duplicados</strong>, em vez do KPI unificado "Inconsistências"; (2) Pipeline visual de 5 etapas e gráfico de barras empilhadas marcados como <strong>não implementados</strong> (backlog); (3) Seção "Detalhe da Inconsistência" no painel esquerdo do modal removida — informação está presente apenas no texto do evento da trilha de auditoria.
   </div>
 
   <!-- 1. Objetivo -->
@@ -315,33 +317,32 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
       <p style="font-size:13px;color:var(--txt2)">O XML de cada DF deve ser validado contra o schema XSD oficial da versão correspondente (NF-e 4.00, CT-e 3.00, NFS-e v1.00 ABRASF). Falha de schema resulta em <code>inconsistencia</code> com categoria <strong>Layout</strong>.</p>
     </div>
     <div class="card">
-      <div class="card-title">RF-ING-03 · Validação de CNPJ junto à Receita Federal</div>
-      <p style="font-size:13px;color:var(--txt2)">O <code>niEmitente</code> (CNPJ do emitente) deve ser consultado na API da RFB para verificar situação cadastral ativa. CNPJ inapto, suspenso ou cancelado resulta em <code>inconsistencia</code> com tipo <strong>CNPJ Inválido</strong> (categoria <strong>Dados</strong>), bloqueando o crédito IBS/CBS.</p>
-    </div>
-    <div class="card">
-      <div class="card-title">RF-ING-04 · Extração de campos para conciliação</div>
-      <p style="font-size:13px;color:var(--txt2)">Após status <code>importado</code>, extrair e persistir: <code>chaveDfe</code>, <code>niEmitente</code>, <code>niAdquirente</code>, <code>valorCBSTotal</code>. Estes campos alimentam diretamente a Conciliação de Apuração (CAPUR). O mapeamento completo está documentado no <a href="prd-conciliacao.html" style="color:var(--teal)">PRD de Conciliação</a>.</p>
-    </div>
-    <div class="card">
       <div class="card-title">RF-ING-05 · Tratamento de cancelamentos</div>
       <p style="font-size:13px;color:var(--txt2)">Eventos de cancelamento recebidos do ERP devem atualizar o RF correspondente (via <code>chaveDfe</code>), cancelar qualquer apuração em andamento e gerar evento de auditoria com timestamp do cancelamento.</p>
     </div>
     <div class="card">
-      <div class="card-title">RF-ING-06 · Upload de CSV Posicional <span class="new-badge">v1.7</span></div>
-      <p style="font-size:13px;color:var(--txt2);margin-bottom:12px">O botão <strong>+ Importar DF</strong> abre um modal dedicado ao upload de arquivo CSV posicional (.csv ou .txt). O arquivo segue layout fixo de <strong>200 caracteres por linha</strong> com três tipos de registro (Header, Detalhe, Trailer). A plataforma exibe pré-visualização dos registros parseados antes de confirmar a importação. DFs importados via CSV recebem status <code>importado</code>.</p>
+      <div class="card-title">RF-ING-06 · Upload de CSV (semicolon) <span class="new-badge">v1.9</span></div>
+      <p style="font-size:13px;color:var(--txt2);margin-bottom:12px">O botão <strong>+ Importar DF</strong> abre um modal dedicado ao upload de arquivo <strong>CSV separado por ponto e vírgula (;)</strong> (.csv). A primeira linha é o cabeçalho com os nomes das colunas. Cada linha subsequente representa um DF. A plataforma exibe pré-visualização dos registros parseados antes de confirmar a importação. DFs importados via CSV recebem status <code>importado</code>.</p>
       <div class="tbl-wrap">
-        <table class="pos-table">
-          <thead><tr><th>Campo</th><th>Início</th><th>Fim</th><th>Tam.</th><th>Formato / Observação</th></tr></thead>
+        <table>
+          <thead><tr><th>#</th><th>Coluna</th><th>Formato / Observação</th></tr></thead>
           <tbody>
-            <tr><td>Tipo Registro</td><td>1</td><td>1</td><td>1</td><td>1 = Header · 2 = Detalhe · 9 = Trailer</td></tr>
-            <tr><td>Chave de Acesso</td><td>2</td><td>45</td><td>44</td><td>44 dígitos numéricos · <code>chaveDfe</code></td></tr>
-            <tr><td>Tipo DF</td><td>46</td><td>65</td><td>20</td><td>NF-e Entrada · NFS-e · CT-e etc. · esq. justificado</td></tr>
-            <tr><td>CNPJ Emitente</td><td>66</td><td>79</td><td>14</td><td>14 dígitos numéricos · sem pontuação</td></tr>
-            <tr><td>Nome Emitente</td><td>80</td><td>129</td><td>50</td><td>Razão social · esq. justificado · completar com espaços</td></tr>
-            <tr><td>CFOP</td><td>130</td><td>133</td><td>4</td><td>4 dígitos numéricos · ex: <code>1102</code></td></tr>
-            <tr><td>Valor Total</td><td>134</td><td>147</td><td>14</td><td>Valor em centavos · sem ponto/vírgula · ex: <code>00000001250000</code> = R$ 12.500,00</td></tr>
-            <tr><td>Data de Emissão</td><td>148</td><td>155</td><td>8</td><td>Formato AAAAMMDD · ex: <code>20260813</code></td></tr>
-            <tr><td>Brancos</td><td>156</td><td>200</td><td>45</td><td>Reservado · preencher com espaços em branco</td></tr>
+            <tr><td>1</td><td>chave_acesso</td><td>44 dígitos numéricos · chave NF-e/CT-e</td></tr>
+            <tr><td>2</td><td>tipo_df</td><td>NF-e Entrada · NF-e Saída · NFS-e · CT-e · etc.</td></tr>
+            <tr><td>3</td><td>cnpj_emitente</td><td>14 dígitos numéricos · sem pontuação</td></tr>
+            <tr><td>4</td><td>ie_emitente</td><td>Inscrição Estadual · ISENTO se isento</td></tr>
+            <tr><td>5</td><td>uf_emitente</td><td>Sigla UF · ex: SP · PR · MG</td></tr>
+            <tr><td>6</td><td>nome_emitente</td><td>Razão Social do emitente</td></tr>
+            <tr><td>7</td><td>cnpj_destinatario</td><td>14 dígitos numéricos · sem pontuação</td></tr>
+            <tr><td>8</td><td>nome_destinatario</td><td>Razão Social do destinatário</td></tr>
+            <tr><td>9</td><td>cfop</td><td>4 dígitos numéricos · ex: 1102</td></tr>
+            <tr><td>10</td><td>serie</td><td>Série do documento · ex: 001</td></tr>
+            <tr><td>11</td><td>numero</td><td>Número do documento · ex: 000012345</td></tr>
+            <tr><td>12</td><td>natureza_operacao</td><td>Descrição da natureza da operação</td></tr>
+            <tr><td>13</td><td>valor_total</td><td>Decimal com vírgula · ex: 12500,00</td></tr>
+            <tr><td>14</td><td>valor_ibs</td><td>Decimal com vírgula · ex: 1250,00</td></tr>
+            <tr><td>15</td><td>valor_cbs</td><td>Decimal com vírgula · ex: 1000,00</td></tr>
+            <tr><td>16</td><td>data_emissao</td><td>Formato DD/MM/AAAA · ex: 08/01/2026</td></tr>
           </tbody>
         </table>
       </div>
@@ -359,7 +360,7 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
       <div class="card-title">RF-ING-07 · Modal de detalhe expandido e trilha de auditoria <span class="new-badge">v1.7</span></div>
       <p style="font-size:13px;color:var(--txt2);margin-bottom:8px">O modal de detalhe do DF exibe todos os campos relevantes do documento e inclui as seguintes novidades da v1.7:</p>
       <ul>
-        <li><strong>Seção "Detalhe da Inconsistência"</strong> (visível apenas quando status = <code>inconsistencia</code>): badge de categoria (Dados em azul / Layout em âmbar), tipo da inconsistência em destaque roxo, e mensagem descritiva completa</li>
+        <li><strong>Detalhe da Inconsistência</strong> (quando status = <code>inconsistencia</code>): informação registrada no evento INCONSISTÊNCIA da trilha de auditoria, com tipo, categoria e mensagem — <em>nota: não há seção dedicada no painel esquerdo do modal na implementação atual (backlog)</em></li>
         <li><strong>Status bar do modal</strong> atualizado para os dois novos estados: verde para <code>importado</code>, roxo para <code>inconsistencia</code></li>
         <li><strong>Trilha de auditoria:</strong> evento <strong>INCONSISTÊNCIA</strong> registra tipo, categoria e mensagem completa — ex: <em>"Inconsistência detectada · Tipo: CNPJ Inválido · Categoria: Dados · CNPJ do emitente não localizado na Receita Federal"</em></li>
         <li>Demais seções do modal: emitente completo (Razão Social, CNPJ, IE, UF), destinatário, dados da operação, valores discriminados IBS/CBS/Líquido, chave 44 dígitos, RFs vinculados, botão Visualizar com label dinâmico por tipo de DF</li>
@@ -375,11 +376,11 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
   <div class="section">
     <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Interface — Dashboard, Listagem e Modal</span></div>
     <div class="card">
-      <div class="card-title">Aba Dashboard</div>
+      <div class="card-title">Aba Dashboard <span class="new-badge">v1.8</span></div>
       <ul>
-        <li>KPIs: Total recebidos, <strong>Importados</strong> (verde), <strong>Inconsistências</strong> (roxo), Taxa de sucesso</li>
-        <li>Pipeline visual: 5 estágios com contagem por etapa (Recebido → Triagem → Val. Layout → Val. Dados → Importado)</li>
-        <li>Gráfico de barras empilhadas: Importados (verde) + Inconsistências (roxo) por dia (últimos 7 dias)</li>
+        <li>KPIs: <strong>Total recebidos</strong>, <strong>Importados</strong> (verde), <strong>Com Erro</strong> (vermelho), <strong>Duplicados</strong> (âmbar), Taxa de sucesso — <em>nota: "Com Erro" e "Duplicados" são KPIs separados, em vez do KPI unificado "Inconsistências" planejado em v1.7</em></li>
+        <li>Pipeline visual de 5 etapas implementado: Recebido → Triagem → Val. Layout → Val. Dados → Importado, com legenda de erros por tipo (Erro layout, Erro dados, Duplicados, Rejeitados SEFAZ)</li>
+        <li>Gráfico "Volume de ingestão": barras agrupadas Importados (verde) + Inconsistências (roxo) por dia — últimos 7 dias</li>
         <li>Filtro Grupo Econômico: filtra por CNPJ do destinatário (niAdquirente)</li>
       </ul>
     </div>
@@ -398,7 +399,7 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
       <div class="card-title">Modal de detalhe do DF <span class="new-badge">v1.7</span></div>
       <ul>
         <li><strong>Status bar:</strong> verde/texto afirmativo para <code>importado</code>; roxo/texto de falha para <code>inconsistencia</code></li>
-        <li><strong>Detalhe da Inconsistência</strong> (novo, visível apenas em <code>inconsistencia</code>): badge Dados (azul) ou Layout (âmbar) + tipo em destaque + mensagem completa</li>
+        <li><strong>Detalhe da Inconsistência:</strong> informação presente apenas no evento "INCONSISTÊNCIA" da trilha de auditoria (painel direito) — não há seção dedicada no painel esquerdo na implementação atual</li>
         <li><strong>Emitente:</strong> Razão Social, CNPJ, IE, UF</li>
         <li><strong>Destinatário:</strong> Razão Social, CNPJ</li>
         <li><strong>Dados da Operação:</strong> CFOP, Série/Número, Direção, Natureza da Operação</li>
@@ -414,6 +415,9 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
   <!-- 7. Não-funcionais -->
   <div class="section">
     <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Requisitos não-funcionais</span></div>
+    <div class="info-box amber" style="margin-bottom:16px">
+      <strong>Proposta para discussão:</strong> os requisitos abaixo ainda não foram validados com a equipe técnica e de produto. Estão listados como referência inicial e podem ser ajustados antes da aprovação.
+    </div>
     <ul>
       <li><strong>Volume:</strong> suportar ≥ 50.000 DFs/mês por CNPJ sem degradação de performance.</li>
       <li><strong>Latência:</strong> DFs recebidos via ERP integrados em ≤ 5 minutos após recebimento.</li>
@@ -446,6 +450,20 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
   <hr>
   <div class="section">
     <div class="sec-hdr"><span class="sec-num">—</span><span class="sec-title">Changelog</span></div>
+    <div class="cl-entry">
+      <div class="cl-ver">v1.9</div>
+      <div class="cl-body">
+        <strong>19/08/2026 · Upload CSV separado por ponto e vírgula com todos os campos do DF</strong>
+        RF-ING-06 reescrito: formato de upload migrado de layout posicional (200 chars/linha) para CSV semicolon (;). 16 colunas cobrindo todos os campos do modal: chave_acesso, tipo_df, cnpj_emitente, ie_emitente, uf_emitente, nome_emitente, cnpj_destinatario, nome_destinatario, cfop, serie, numero, natureza_operacao, valor_total, valor_ibs, valor_cbs, data_emissao (DD/MM/AAAA). Primeira linha = cabeçalho obrigatório. Aceita apenas .csv. Modal de detalhe do DF usa campos reais do CSV em vez de valores mockados quando disponíveis.
+      </div>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-ver">v1.8</div>
+      <div class="cl-body">
+        <strong>19/08/2026 · Reconciliação PRD × implementação</strong>
+        Dashboard KPIs ajustados: "Com Erro" e "Duplicados" como KPIs separados (em vez de "Inconsistências" unificado). Seção "Detalhe da Inconsistência" no painel esquerdo do modal removida — informação presente apenas na trilha de auditoria.
+      </div>
+    </div>
     <div class="cl-entry">
       <div class="cl-ver">v1.7</div>
       <div class="cl-body">
