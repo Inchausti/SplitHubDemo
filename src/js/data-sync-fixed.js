@@ -5161,7 +5161,8 @@ window.renderizarTabelaPagamentos = function() {
         rfId: rf.id || '',
         rf: rf.id || '—', forn: rf.entidade || nf.entidade || '—',
         cnpj: rf.cnpj || nf.cnpj || '—',
-        nfVinc: rf.nfVinculada || ((nf.tipoDF ? nf.tipoDF + ' ' : '') + (nf.numero || '')) || '—',
+        nfVinc: (nf.tipoDF || 'NF-e') + ' ' + (nf.numero || '—'),
+        nfNumero: nf.numero || '',
         tipo: tipoCol, tipoNF: nf.tipo || 'entrada', valor: valor,
         dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, status: rfSt,
         metodo: rf.metodoPagamento || nf.metodoPagamento || '—'
@@ -5188,8 +5189,8 @@ window.renderizarTabelaPagamentos = function() {
     var chkCell = r.status !== 'pago'
       ? '<td style="text-align:center"><input type="checkbox" class="pag-chk" data-idx="'+idx+'" onchange="window.pagAtualizarSelecao()" style="cursor:pointer;width:15px;height:15px"></td>'
       : '<td></td>';
-    var nfCell = r.nfVinc !== '—'
-      ? '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline;font-weight:600" onclick="if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + r.nfVinc + '\')">' + r.nfVinc + '</span>'
+    var nfCell = r.nfNumero
+      ? '<span style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline dotted;font-weight:600;white-space:nowrap" onclick="if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + r.nfNumero + '\')">' + r.nfVinc + '</span>'
       : '<span style="color:var(--txt3)">—</span>';
     h += '<tr>'
       + chkCell
