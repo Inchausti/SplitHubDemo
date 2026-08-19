@@ -205,8 +205,10 @@ window.dashRenderDFsApropriar = function() {
         data: dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
         sr: sr
       };
-      // CP: vencimento <= 30 dias (inclui vencidos); LP: vencimento > 30 dias
-      if (venc && venc <= limite30) cpRows.push(row);
+      // Excluir DFs com vencimento no passado
+      if (!venc || venc < hoje) return;
+      // CP: vence hoje ou em até 30 dias; LP: vence em mais de 30 dias
+      if (venc <= limite30) cpRows.push(row);
       else lpRows.push(row);
     });
   });
@@ -1312,8 +1314,10 @@ window.atualizarKPIsCreditos = function(listaRFs) {
     else if (sc === 'nao_apropriado')  {
       naoAprop += v;
       var venc = _vencKPI(r.dataNF);
-      if (venc && venc <= _lim30) naoApropCP += v;
-      else naoApropLP += v;
+      if (venc && venc >= _hoje) {
+        if (venc <= _lim30) naoApropCP += v;
+        else naoApropLP += v;
+      }
     }
     else if (sc === 'glosado')         { glosado  += v; }
     if      (sr === 'em_risco')        { emRisco      += v; }
