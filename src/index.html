@@ -5952,10 +5952,11 @@ function creditosDFsRender(){
     var status=d.status||nfOrig.status||'pendente';
     var creditoDF=_dfCreditStatus(rfs);
     var _dfMetExtMap={'Split Payment':{cor:'73,197,177',lbl:'Split Payment'},'Compensacao':{cor:'59,130,246',lbl:'Compensação'},'Ressarcimento':{cor:'34,197,94',lbl:'Ressarcimento'},'Transferencia':{cor:'139,92,246',lbl:'Transferência'},'RAD':{cor:'245,158,11',lbl:'RAD'}};
-    var metExtVal='—';
-    rfs.forEach(function(rf){if(metExtVal==='—'&&(rf.statusCredito||rf.status)==='utilizado'&&rf.metodoExtincao)metExtVal=rf.metodoExtincao;});
-    var _dfMe=_dfMetExtMap[metExtVal]||{cor:'167,168,170',lbl:metExtVal};
-    var metExtBadge=metExtVal!=='—'?'<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+_dfMe.cor+',.12);color:rgba('+_dfMe.cor+',1);border:1px solid rgba('+_dfMe.cor+',.28)">'+_dfMe.lbl+'</span>':'<span style="color:var(--txt3)">—</span>';
+    var metExtVal=null;
+    rfs.forEach(function(rf){if(!metExtVal&&(rf.statusCredito||rf.status)==='utilizado')metExtVal=rf.metodoExtincao||'Compensacao';});
+    var _dfCreditoUtil=(creditoDF==='utilizado'||creditoDF==='parc_utilizado');
+    var _dfMe=metExtVal?(_dfMetExtMap[metExtVal]||{cor:'73,197,177',lbl:metExtVal}):{cor:'73,197,177',lbl:'Compensação'};
+    var metExtBadge=(_dfCreditoUtil&&metExtVal)?'<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+_dfMe.cor+',.12);color:rgba('+_dfMe.cor+',1);border:1px solid rgba('+_dfMe.cor+',.28)">'+_dfMe.lbl+'</span>':'<span style="color:var(--txt3)">—</span>';
     var tipoBadge='<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(59,130,246,.28);color:var(--blue);background:transparent">'+tipoDF+'</span>';
     var metBadge=metodo&&metodo!=='—'?'<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+metodo+'</span>':'<span style="color:var(--txt3)">—</span>';
     h+='<tr>';

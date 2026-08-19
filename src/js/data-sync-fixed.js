@@ -66,6 +66,7 @@ function buscarContrato(cnpj, dataISO) {
 function bdg(status) {
   var labels = {
     // ── Status do Crédito ──
+    'a_apropriar':   'A Apropriar',
     'nao_apropriado':'Não Apropriado',
     'apropriado':    'Apropriado',
     'utilizado':     'Utilizado',
@@ -88,6 +89,7 @@ function bdg(status) {
     'pago':          'Pago'
   };
   var colors = {
+    'a_apropriar':   '#A7A8AA',
     'nao_apropriado':'#A7A8AA',
     'apropriado':    '#22C55E',
     'utilizado':     '#49C5B1',
@@ -1056,8 +1058,9 @@ window.renderizarTabelaCreditos = function() {
       };
       var sc = r.statusCredito || r.status || '';
       var metExtCell;
-      if (sc === 'utilizado' && r.metodoExtincao) {
-        var _me = _metExtMap[r.metodoExtincao] || { cor: '167,168,170', lbl: r.metodoExtincao };
+      if (sc === 'utilizado') {
+        var _meKey = r.metodoExtincao || 'Compensacao';
+        var _me = _metExtMap[_meKey] || { cor: '73,197,177', lbl: _meKey };
         metExtCell = '<span style="background:rgba(' + _me.cor + ',.12);color:rgba(' + _me.cor + ',1);border:1px solid rgba(' + _me.cor + ',.28);border-radius:3px;padding:2px 7px;font-size:10px;font-weight:700;letter-spacing:.05em">' + _me.lbl + '</span>';
       } else {
         metExtCell = '<span style="color:var(--txt3)">—</span>';
@@ -5611,8 +5614,7 @@ document.addEventListener('DOMContentLoaded', function() {
             registrosFiscais: []
           };
 
-          var statusSemPagBuild = ['nao_apropriado', 'utilizado', 'inconsistencia', 'vencido'];
-          var _rfIncTipos = ['Não conciliado','Valor imposto divergente','Vencido','Sem Comprovante'];
+          var statusSemPagBuild = ['a_apropriar', 'utilizado', 'a_apropriar', 'glosado'];
           var _metExtCred = ['Split Payment','Compensacao','Ressarcimento','Transferencia'];
           function gerarRFPag() {
             var tem = Math.random() < 0.6;
@@ -5624,9 +5626,8 @@ document.addEventListener('DOMContentLoaded', function() {
               dat = d + '/04/2026 ' + h + ':' + m;
             }
             var st = tem ? 'apropriado' : statusSemPagBuild[Math.floor(Math.random() * statusSemPagBuild.length)];
-            var incT = st === 'inconsistencia' ? _rfIncTipos[Math.floor(Math.random() * _rfIncTipos.length)] : null;
             var metExt = (st === 'utilizado') ? _metExtCred[Math.floor(Math.random() * _metExtCred.length)] : null;
-            return { dataPagamento: dat, rfStatus: st, incTipo: incT, metodoExtincao: metExt };
+            return { dataPagamento: dat, rfStatus: st, incTipo: null, metodoExtincao: metExt };
           }
 
           // Criar registro fiscal para IBS
