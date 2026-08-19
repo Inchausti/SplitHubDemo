@@ -162,6 +162,48 @@ window.SH_TABLES = {
       { label: 'Prioridade' },
       { label: 'Data' }
     ]
+  },
+  contratos: {
+    id: 't-contratos',
+    cols: [
+      { label: 'Contrato' },
+      { label: 'CNPJ' },
+      { label: 'Fornecedor' },
+      { label: 'Início' },
+      { label: 'Fim' },
+      { label: 'Método de Pagamento' },
+      { label: 'Prazo pagto.' },
+      { label: 'Status' },
+      { label: 'NFs vinculadas', cls: 'r' }
+    ]
+  },
+  fornecedores: {
+    id: 't-adm-fornecedores',
+    cols: [
+      { label: 'Grupo / CNPJ' },
+      { label: 'Razão Social' },
+      { label: 'Tipo' },
+      { label: 'Status' },
+      { label: 'Score',          cls: 'r' },
+      { label: 'Contrato' },
+      { label: 'Multi-contratos' },
+      { label: 'Vol. compras',   cls: 'r' },
+      { label: 'Créditos',       cls: 'r' },
+      { label: 'Pend.' },
+      { label: '' }
+    ]
+  },
+  organizacao: {
+    id: 't-org-cnpjs',
+    cols: [
+      { label: 'CNPJ' },
+      { label: 'Razão Social' },
+      { label: 'IE' },
+      { label: 'UF' },
+      { label: 'Tipo' },
+      { label: 'Status' },
+      { label: 'Ações', style: 'text-align:center' }
+    ]
   }
 };
 
@@ -5945,7 +5987,7 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
 // Instanciar quando o documento está pronto
 document.addEventListener('DOMContentLoaded', function() {
   // Gerar theads das tabelas principais a partir do config SH_TABLES
-  ['creditos','debitos','inconsistencias','dashDfCp','dashDfLp','pagamentos'].forEach(window.shRenderThead);
+  ['creditos','debitos','inconsistencias','dashDfCp','dashDfLp','pagamentos','contratos','fornecedores','organizacao'].forEach(window.shRenderThead);
 
   // Scripts inline executam antes de DOMContentLoaded — delay zero é suficiente
   setTimeout(function() {
