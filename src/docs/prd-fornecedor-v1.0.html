@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Fornecedor · SplitHub v1.0</title>
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.6 'Segoe UI', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 860px; margin: 0 auto; }
+.doc-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+.doc-title { font-size: 28px; font-weight: 800; color: var(--txt1); line-height: 1.15; margin-bottom: 8px; text-wrap: balance; }
+.doc-sub { font-size: 14px; color: var(--txt2); margin-bottom: 24px; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 20px; padding: 16px 20px; background: var(--sur2); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 36px; }
+.meta-item { font-size: 12px; }
+.meta-label { color: var(--txt3); margin-bottom: 2px; }
+.meta-val { color: var(--txt1); font-weight: 600; }
+.section { margin-bottom: 40px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 20px; margin-bottom: 12px; }
+.card-title { font-size: 13px; font-weight: 700; color: var(--txt1); margin-bottom: 8px; }
+.info-box { border-radius: 7px; padding: 14px 16px; margin-bottom: 14px; font-size: 13px; line-height: 1.65; }
+.info-box.teal { background: var(--teal-d); border: 1px solid rgba(31,186,170,.25); }
+.info-box.amber { background: var(--amber-d); border: 1px solid rgba(245,158,11,.25); }
+.info-box.red { background: var(--red-d); border: 1px solid rgba(240,75,92,.25); }
+.info-box strong { color: var(--txt1); }
+.tbl-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { background: var(--sur2); color: var(--txt2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 10px 14px; text-align: left; }
+tbody tr { border-top: 1px solid var(--brd); }
+tbody tr:hover { background: var(--sur2); }
+td { padding: 10px 14px; color: var(--txt1); vertical-align: top; }
+td:first-child { font-family: 'Consolas', monospace; font-size: 12px; color: var(--blue); }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.err { background: var(--red-d); color: var(--red); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+ul, ol { padding-left: 18px; color: var(--txt2); font-size: 13px; }
+ul li, ol li { margin-bottom: 5px; line-height: 1.6; }
+li strong { color: var(--txt1); }
+.cl-entry { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--brd); }
+.cl-entry:last-child { border-bottom: none; }
+.cl-ver { font-size: 12px; font-weight: 700; color: var(--teal); white-space: nowrap; min-width: 44px; }
+.cl-body { font-size: 13px; color: var(--txt2); }
+.cl-body strong { color: var(--txt1); display: block; margin-bottom: 3px; }
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'Consolas', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+.ver-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+.ver-nav a { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-decoration: none; background: var(--sur2); color: var(--txt2); border: 1px solid var(--brd); }
+.ver-nav a.current { background: var(--teal); color: #fff; border-color: var(--teal); }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <div class="doc-eyebrow">Product Requirements Document</div>
+  <h1 class="doc-title">Módulo de Fornecedor</h1>
+  <p class="doc-sub">Cadastro, qualificação e monitoramento dos CNPJs vendedores (emitentes de NF) — scoring de risco, vínculo contratual e volume de créditos IBS/CBS</p>
+
+  <div class="ver-nav">
+    <span style="font-size:11px;color:var(--txt3);font-weight:600">Versões:</span>
+    <a href="prd-fornecedor-v1.0.html" class="current">v1.0 (esta)</a>
+    <a href="prd-fornecedor.html" style="margin-left:4px;background:var(--teal-d);color:var(--teal);border-color:var(--teal)">Última versão</a>
+  </div>
+
+  <div class="meta-row">
+    <div class="meta-item"><div class="meta-label">Versão</div><div class="meta-val">v1.0</div></div>
+    <div class="meta-item"><div class="meta-label">Status</div><div class="meta-val"><span class="chip teal">Publicado</span></div></div>
+    <div class="meta-item"><div class="meta-label">Data</div><div class="meta-val">19/08/2026</div></div>
+    <div class="meta-item"><div class="meta-label">Módulo</div><div class="meta-val">Configurações → Fornecedor</div></div>
+    <div class="meta-item"><div class="meta-label">Base legal</div><div class="meta-val">LC 214/2025 · IN RFB 2.240/2025</div></div>
+  </div>
+
+  <!-- 1. Objetivo -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Objetivo e escopo</span></div>
+    <div class="info-box teal">
+      <strong>Objetivo central:</strong> qualificar e monitorar os CNPJs emitentes de NFs recebidas pelo grupo econômico (niEmitente nos RFs), identificando riscos fiscais e garantindo que cada fornecedor tenha um contrato vigente associado antes de gerar crédito IBS/CBS.
+    </div>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:14px">O módulo é a fonte de verdade dos <strong style="color:var(--txt1)">CNPJs vendedores</strong>. Diferente do módulo Organização (CNPJs compradores), aqui o foco é risco e vínculo contratual: fornecedores com score crítico ou sem contrato ativo geram alertas que impactam a Apuração Assistida.</p>
+    <div class="card">
+      <div class="card-title">KPIs do painel</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Indicador</th><th>Cor</th><th>Descrição</th></tr></thead>
+          <tbody>
+            <tr><td>CNPJs cadastrados</td><td>—</td><td>Total de fornecedores na base da plataforma</td></tr>
+            <tr><td>Regulares</td><td><span class="chip ok">Verde</span></td><td>Fornecedores com score OK — sem alertas fiscais</td></tr>
+            <tr><td>Em alerta</td><td><span class="chip warn">Âmbar</span></td><td>Fornecedores com score intermediário — requerem atenção</td></tr>
+            <tr><td>Em risco</td><td><span class="chip err">Vermelho</span></td><td>Fornecedores com score crítico — podem gerar glosa de crédito</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Score de risco -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Score de risco fiscal</span></div>
+    <div class="info-box amber">
+      <strong>Critério de scoring:</strong> o score é calculado a partir de indicadores fiscais do CNPJ emitente — situação cadastral na RFB, histórico de inconsistências em DFs recebidos, e presença/ausência de contrato vigente. O intervalo é 0–100; score abaixo de 50 = Alerta; abaixo de 30 = Risco.
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Faixa</th><th>Status</th><th>Impacto na Apuração</th></tr></thead>
+        <tbody>
+          <tr><td>70–100</td><td><span class="chip ok">Regular</span></td><td>Sem restrição — crédito IBS/CBS processado normalmente</td></tr>
+          <tr><td>50–69</td><td><span class="chip warn">Alerta</span></td><td>Crédito processado com flag de revisão recomendada</td></tr>
+          <tr><td>0–49</td><td><span class="chip err">Risco</span></td><td>Crédito suspenso — exige validação manual antes da apuração</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 3. Requisitos funcionais -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Requisitos funcionais</span></div>
+    <div class="card">
+      <div class="card-title">RF-FORN-01 · Listagem de fornecedores</div>
+      <p style="font-size:13px;color:var(--txt2);margin-bottom:8px">Tabela paginada com todos os CNPJs de fornecedores cadastrados. Colunas: Grupo/CNPJ, Razão Social, Tipo (Matriz/Filial), Status (Regular/Alerta/Risco), Score (barra visual), Contrato (chip de status), Multi-contratos (indicador), Volume de compras (R$), Créditos (R$), Pendências (contador).</p>
+      <ul>
+        <li><strong>Filtros:</strong> busca livre por CNPJ/Razão Social/Grupo; filtro por Grupo Econômico; filtro por Tipo (Matriz/Filial); filtro por Status; filtro por situação de Contrato (Com contrato ativo / Sem contrato ativo)</li>
+        <li><strong>Botão "Limpar filtros":</strong> redefine todos os filtros</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-FORN-02 · Cadastro de novo fornecedor</div>
+      <p style="font-size:13px;color:var(--txt2);margin-bottom:8px">O botão <strong>+ Novo fornecedor</strong> abre um modal de cadastro. Campos obrigatórios:</p>
+      <ul>
+        <li>CNPJ (14 dígitos, validado dígito verificador)</li>
+        <li>Razão Social</li>
+        <li>Grupo Econômico (seleção ou criação de novo grupo)</li>
+        <li>Tipo: Matriz ou Filial</li>
+      </ul>
+      <p style="font-size:13px;color:var(--txt2);margin-top:8px">Após cadastro, o score inicial é calculado e o fornecedor aparece na listagem com status Regular (pending validação RFB) ou Alerta/Risco conforme dados disponíveis.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-FORN-03 · Grupos econômicos de fornecedores</div>
+      <p style="font-size:13px;color:var(--txt2)">Fornecedores são organizados em grupos econômicos (ex: Grupo Vale, Grupo Sulpar). O filtro por grupo permite visualizar todos os CNPJs (matrizes e filiais) de um mesmo conglomerado. O score de risco pode ser avaliado no nível do grupo.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-FORN-04 · Vínculo com contratos</div>
+      <p style="font-size:13px;color:var(--txt2)">Cada fornecedor exibe o status do contrato vigente (ativo / a iniciar / encerrado / sem contrato). Fornecedores sem contrato ativo geram flag de risco no score. O vínculo é criado no módulo Contratos — o campo "Contrato" aqui é read-only. O indicador "Multi-contratos" sinaliza CNPJs com mais de um contrato cadastrado.</p>
+    </div>
+  </div>
+
+  <!-- 4. Interface -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Interface — colunas da tabela</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Observação</th></tr></thead>
+        <tbody>
+          <tr><td>Grupo / CNPJ</td><td>Texto + link</td><td>Nome do grupo econômico + CNPJ formatado abaixo</td></tr>
+          <tr><td>Razão Social</td><td>Texto</td><td>Nome empresarial completo</td></tr>
+          <tr><td>Tipo</td><td>Chip</td><td>Matriz (teal) / Filial (azul)</td></tr>
+          <tr><td>Status</td><td>Chip colorido</td><td>Regular (verde) / Alerta (âmbar) / Risco (vermelho)</td></tr>
+          <tr><td>Score</td><td>Número + barra</td><td>0–100; barra visual de preenchimento proporcional</td></tr>
+          <tr><td>Contrato</td><td>Chip</td><td>Ativo (verde) / A iniciar (âmbar) / Encerrado / Sem contrato (vermelho)</td></tr>
+          <tr><td>Multi-contratos</td><td>Badge</td><td>Indica se há mais de 1 contrato cadastrado para o CNPJ</td></tr>
+          <tr><td>Vol. compras</td><td>Monetário</td><td>Soma dos valores de NFs recebidas do fornecedor</td></tr>
+          <tr><td>Créditos</td><td>Monetário</td><td>Total de crédito IBS/CBS gerado via RFs do fornecedor</td></tr>
+          <tr><td>Pend.</td><td>Contador</td><td>NFs com inconsistência pendente de resolução</td></tr>
+          <tr><td>Ações</td><td>Botões</td><td>Detalhar · Editar</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 5. Integrações -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Integrações e dependências</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Módulo</th><th>Direção</th><th>Impacto</th></tr></thead>
+        <tbody>
+          <tr><td>Importação de DFs</td><td>← Alimenta</td><td>Cada NF ingerida cria/atualiza o niEmitente na base de fornecedores</td></tr>
+          <tr><td>Contratos</td><td>← Consome</td><td>Status do contrato vigente exibido por CNPJ; sem contrato = flag de risco</td></tr>
+          <tr><td>Apuração Assistida</td><td>→ Influencia</td><td>Score Risco suspende crédito; Score Alerta gera flag de revisão</td></tr>
+          <tr><td>Conciliação</td><td>→ Influencia</td><td>Fornecedores em risco são sinalizados na conciliação de apuração</td></tr>
+          <tr><td>Receita Federal (RFB API)</td><td>← Consulta</td><td>Situação cadastral do CNPJ emitente — componente do score</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Changelog -->
+  <hr>
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">—</span><span class="sec-title">Changelog</span></div>
+    <div class="cl-entry">
+      <div class="cl-ver">v1.0</div>
+      <div class="cl-body">
+        <strong>19/08/2026 · Versão inicial</strong>
+        Cadastro e monitoramento de CNPJs vendedores. KPIs (Total, Regulares, Em alerta, Em risco). Score de risco fiscal 0–100 com três faixas. Listagem com filtros por CNPJ/Razão Social/Grupo, Grupo Econômico, Tipo, Status e situação de Contrato. Modal de cadastro. Grupos econômicos de fornecedores. Vínculo read-only com módulo Contratos. Integração com Importação de DFs (niEmitente) e Apuração Assistida (flag de risco).
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
