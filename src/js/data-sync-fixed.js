@@ -176,7 +176,7 @@ window.dashRenderDFsApropriar = function() {
   var srRgb   = { em_risco: _hexRgb(PALETTE.amber), vencido: _hexRgb(PALETTE.red), inconsistencia: _hexRgb(PALETTE.red), a_prescrever: _hexRgb(PALETTE.red) };
 
   var hoje = new Date(); hoje.setHours(0,0,0,0);
-  var limite30 = new Date(hoje.getTime() + 30 * 24 * 60 * 60 * 1000);
+  var mesAtual = hoje.getFullYear() * 100 + (hoje.getMonth() + 1); // YYYYMM
 
   // vencimento = último dia do mês seguinte à emissão
   function calcVencimento(dataISO) {
@@ -184,8 +184,6 @@ window.dashRenderDFsApropriar = function() {
     var p = dataISO.split('-');
     if (p.length < 2) return null;
     var y = parseInt(p[0], 10), m = parseInt(p[1], 10);
-    // new Date(y, m+1, 0): day 0 of (m+1) 0-indexed = last day of next month
-    // JS handles m+1 > 12 overflow automatically
     return new Date(y, m + 1, 0);
   }
 
@@ -198,17 +196,19 @@ window.dashRenderDFsApropriar = function() {
       var v    = rf.valor || 0;
       var dp   = (rf.data || '').split('-');
       var venc = calcVencimento(rf.data);
-      var row  = {
+      if (!venc) return;
+      var mesVenc = venc.getFullYear() * 100 + (venc.getMonth() + 1);
+      // Excluir DFs com vencimento em meses anteriores ao atual
+      if (mesVenc < mesAtual) return;
+      var row = {
         nf:   (nf.tipoDF || 'NF-e') + ' ' + (rf.nfVinculada || nf.numero || ''),
         forn: rf.entidade || nf.entidade || '—',
         valor: v,
         data: dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
         sr: sr
       };
-      // Excluir DFs com vencimento no passado
-      if (!venc || venc < hoje) return;
-      // CP: vence hoje ou em até 30 dias; LP: vence em mais de 30 dias
-      if (venc <= limite30) cpRows.push(row);
+      // CP: vencimento no mês atual; LP: vencimento em meses futuros
+      if (mesVenc === mesAtual) cpRows.push(row);
       else lpRows.push(row);
     });
   });
@@ -1298,7 +1298,7 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   var aprop = 0, naoAprop = 0, glosado = 0, emRisco = 0, vencido = 0, util = 0, inconsist = 0, aPrescrever = 0;
   var naoApropCP = 0, naoApropLP = 0;
   var _hoje = new Date(); _hoje.setHours(0,0,0,0);
-  var _lim30 = new Date(_hoje.getTime() + 30 * 24 * 60 * 60 * 1000);
+  var _mesAtual = _hoje.getFullYear() * 100 + (_hoje.getMonth() + 1);
   function _vencKPI(dataISO) {
     if (!dataISO) return null;
     var p = dataISO.split('-');
@@ -1314,9 +1314,11 @@ window.atualizarKPIsCreditos = function(listaRFs) {
     else if (sc === 'nao_apropriado')  {
       naoAprop += v;
       var venc = _vencKPI(r.dataNF);
-      if (venc && venc >= _hoje) {
-        if (venc <= _lim30) naoApropCP += v;
-        else naoApropLP += v;
+      if (venc) {
+        var _mv = venc.getFullYear() * 100 + (venc.getMonth() + 1);
+        if (_mv === _mesAtual) naoApropCP += v;
+        else if (_mv > _mesAtual) naoApropLP += v;
+        // _mv < _mesAtual: vencido, não contabiliza em CP nem LP
       }
     }
     else if (sc === 'glosado')         { glosado  += v; }
