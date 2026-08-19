@@ -15,6 +15,42 @@ var PALETTE = window.PALETTE || {
   gray:     '#888780'
 };
 
+/* ── Status semântico — única fonte de verdade para badges/chips/gráficos ──
+   Alterar PALETTE acima propaga automaticamente para todos os indicadores. */
+var _hexRgb = function(hex) {
+  var h = hex.replace('#','');
+  return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);
+};
+var STATUS = window.STATUS = {
+  ok:    PALETTE.teal,
+  info:  PALETTE.blue,
+  warn:  PALETTE.amber,
+  bad:   PALETTE.red,
+  muted: PALETTE.gray,
+  /* mapas derivados */
+  colors: {
+    'a_apropriar':   PALETTE.gray,
+    'nao_apropriado':PALETTE.amber,
+    'apropriado':    PALETTE.teal,
+    'utilizado':     PALETTE.teal,
+    'glosado':       PALETTE.gray,
+    'inconsistencia':PALETTE.red,
+    'em_risco':      PALETTE.amber,
+    'a_prescrever':  PALETTE.red,
+    'vencido':       PALETTE.red,
+    'extinto':       PALETTE.teal,
+    'nao_extinto':   PALETTE.gray,
+    'confirmado':    PALETTE.teal,
+    'aguardando':    PALETTE.amber,
+    'perdido':       PALETTE.red,
+    'vencendo':      PALETTE.amber,
+    'atrasado':      PALETTE.red,
+    'pendente':      PALETTE.amber,
+    'pago':          PALETTE.teal
+  },
+  rgb: function(hex) { return _hexRgb(hex || PALETTE.gray); }
+};
+
 // Auxiliar multi-select período — suporta f.mesAnoArr (array) E f.mesAno (string)
 window._matchPeriodo = function(dateStr, f) {
   var d = dateStr || '';
@@ -99,39 +135,9 @@ function bdg(status) {
     'pendente':      'Pendente',
     'pago':          'Pago'
   };
-  var colors = {
-    'a_apropriar':   '#A7A8AA',
-    'nao_apropriado':'#A7A8AA',
-    'apropriado':    '#22C55E',
-    'utilizado':     '#49C5B1',
-    'glosado':       '#8B5CF6',
-    'inconsistencia':'#F43F5E',
-    'em_risco':      '#F59E0B',
-    'a_prescrever':  '#FB923C',
-    'vencido':       '#F43F5E',
-    'extinto':       '#22C55E',
-    'nao_extinto':   '#A7A8AA',
-    'confirmado':    '#22C55E',
-    'aguardando':    '#F59E0B',
-    'perdido':       '#F43F5E',
-    'vencendo':      '#F59E0B',
-    'atrasado':      '#F43F5E',
-    'pendente':      '#F59E0B',
-    'pago':          '#22C55E'
-  };
-  var cor = colors[status] || '#A7A8AA';
+  var cor = STATUS.colors[status] || STATUS.muted;
   var text = labels[status] || (status.charAt(0).toUpperCase() + status.slice(1));
-  var rgbMap = {
-    '#22C55E': '34,197,94',
-    '#F59E0B': '245,158,11',
-    '#F43F5E': '244,63,94',
-    '#3B82F6': '59,130,246',
-    '#A7A8AA': '167,168,170',
-    '#49C5B1': '73,197,177',
-    '#8B5CF6': '139,92,246',
-    '#FB923C': '251,146,60'
-  };
-  var rgb = rgbMap[cor] || '167,168,170';
+  var rgb = STATUS.rgb(cor);
   return '<span style="background:transparent;color:' + cor + ';border:1px solid rgba(' + rgb + ',.3);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">' + text + '</span>';
 }
 
@@ -306,14 +312,14 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   // ── Status badge da NF ──────────────────────────────────────────────────
   var stLabs = { nao_apropriado:'Não Apropriado', apropriado:'Apropriado', utilizado:'Utilizado',
     nao_extinto:'Não Extinto', extinto:'Extinto' };
-  var stRgbs = { nao_apropriado:'167,168,170', apropriado:'34,197,94', utilizado:'73,197,177',
-    nao_extinto:'167,168,170', extinto:'34,197,94' };
+  var stRgbs = { nao_apropriado:_hexRgb(PALETTE.amber), apropriado:_hexRgb(PALETTE.teal), utilizado:_hexRgb(PALETTE.teal),
+    nao_extinto:_hexRgb(PALETTE.gray), extinto:_hexRgb(PALETTE.teal) };
   var stKey = r.status || 'nao_apropriado';
   var stLab = stLabs[stKey] || stKey;
   var stRgb = stRgbs[stKey] || '167,168,170';
 
   // ── Registros Fiscais ───────────────────────────────────────────────────
-  var rfsCss = { ibs:'#3B82F6', cbs:'#F59E0B' };
+  var rfsCss = { ibs:PALETTE.blue, cbs:PALETTE.amber };
   var rfsHtml = '';
   (r.registrosFiscais || []).forEach(function(rf) {
     var tfLbl = rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS';
@@ -321,7 +327,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     var stRfLab = stLabs[rf.statusCredito || rf.status] || (rf.statusCredito || rf.status || '—');
     var stRfRgb = stRgbs[rf.statusCredito || rf.status] || '167,168,170';
     var stRgLab = rf.statusRegistro ? ({ inconsistencia:'Inconsistência', em_risco:'Em risco', vencido:'Vencido', a_prescrever:'A Prescrever' }[rf.statusRegistro] || rf.statusRegistro) : null;
-    var stRgRgb = rf.statusRegistro ? ({ inconsistencia:'244,63,94', em_risco:'245,158,11', vencido:'244,63,94', a_prescrever:'251,146,60' }[rf.statusRegistro] || '167,168,170') : null;
+    var stRgRgb = rf.statusRegistro ? ({ inconsistencia:_hexRgb(PALETTE.red), em_risco:_hexRgb(PALETTE.amber), vencido:_hexRgb(PALETTE.red), a_prescrever:_hexRgb(PALETTE.red) }[rf.statusRegistro] || _hexRgb(PALETTE.gray)) : null;
     rfsHtml += '<div style="background:rgba(59,130,246,.04);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:12px;margin-bottom:10px">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
       + '<div style="display:flex;align-items:center;gap:8px">'
@@ -659,13 +665,13 @@ window.abrirDetalheRF = function(rfId) {
   var eventos = window._rfGerarHistorico(rf, nf);
 
   var tfLabel = rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS';
-  var tfColor = rf.tipoFiscal === 'ibs' ? '#3B82F6' : '#F59E0B';
+  var tfColor = rf.tipoFiscal === 'ibs' ? PALETTE.blue : PALETTE.amber;
   // Status do Crédito
   var stCredLabs = { nao_apropriado:'Não Apropriado', apropriado:'Apropriado', utilizado:'Utilizado', glosado:'Glosado' };
-  var stCredRgbs = { nao_apropriado:'167,168,170', apropriado:'34,197,94', utilizado:'73,197,177', glosado:'139,92,246' };
+  var stCredRgbs = { nao_apropriado:_hexRgb(PALETTE.amber), apropriado:_hexRgb(PALETTE.teal), utilizado:_hexRgb(PALETTE.teal), glosado:_hexRgb(PALETTE.gray) };
   // Status do Registro
   var stRegLabs  = { inconsistencia:'Inconsistência', em_risco:'Em risco', a_prescrever:'A Prescrever', vencido:'Vencido' };
-  var stRegRgbs  = { inconsistencia:'244,63,94', em_risco:'245,158,11', a_prescrever:'251,146,60', vencido:'244,63,94' };
+  var stRegRgbs  = { inconsistencia:_hexRgb(PALETTE.red), em_risco:_hexRgb(PALETTE.amber), a_prescrever:_hexRgb(PALETTE.red), vencido:_hexRgb(PALETTE.red) };
   // Saída (status de débito)
   var stDebLabs  = { extinto:'Extinto', nao_extinto:'Não Extinto' };
   var stDebRgbs  = { extinto:'34,197,94', nao_extinto:'167,168,170' };
@@ -2237,10 +2243,7 @@ function _concFmt(v) {
 
 function _concRFDetail(nf, ibsRF, cbsRF) {
   var fmtV = function(v) { return v ? 'R$ ' + (v/1).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; };
-  var stColor = {
-    apropriado:'#22C55E', utilizado:'#49C5B1', extinto:'#22C55E',
-    nao_apropriado:'#F59E0B', vencido:'#F43F5E', inconsistencia:'#F43F5E'
-  };
+  var stColor = STATUS.colors;
   function rfCard(rf, label) {
     if (!rf) return '<div style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:12px 14px;min-width:220px">'
       + '<div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">' + label + '</div>'
@@ -2378,10 +2381,7 @@ function _concUnifiedRender() {
     return;
   }
   var fmtV = function(v) { return v ? 'R$ ' + (v/1).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; };
-  var stColor = {
-    apropriado:'#22C55E', utilizado:'#49C5B1', extinto:'#22C55E',
-    nao_apropriado:'#F59E0B', vencido:'#F43F5E', inconsistencia:'#F43F5E', em_risco:'#F59E0B'
-  };
+  var stColor = STATUS.colors;
   function rfChip(rf, label) {
     if (!rf) return '';
     var rfId = rf.id || '—';
@@ -3322,9 +3322,9 @@ window._incRenderVinculadasHtml = function(incs) {
   if (!incs || !incs.length) {
     return '<div style="font-size:11px;color:var(--txt3);font-style:italic;margin-bottom:4px">Nenhuma inconsistência vinculada.</div>';
   }
-  var stRgbs = { aberta:'165,72,83', em_analise:'170,122,50', aguardando_emitente:'62,108,176', resolvida:'52,168,153', glosada:'105,112,122' };
+  var stRgbs = { aberta:_hexRgb(PALETTE.red), em_analise:_hexRgb(PALETTE.amber), aguardando_emitente:_hexRgb(PALETTE.blue), resolvida:_hexRgb(PALETTE.teal), glosada:_hexRgb(PALETTE.gray) };
   var stLabs = { aberta:'Aberta', em_analise:'Em Análise', aguardando_emitente:'Ag. Emitente', resolvida:'Resolvida', glosada:'Glosada' };
-  var prioRGBs = { critica:'165,72,83', alta:'170,122,50', media:'62,108,176', baixa:'105,112,122' };
+  var prioRGBs = { critica:_hexRgb(PALETTE.red), alta:_hexRgb(PALETTE.amber), media:_hexRgb(PALETTE.blue), baixa:_hexRgb(PALETTE.gray) };
   var prioLbls = { critica:'Crítica', alta:'Alta', media:'Média', baixa:'Baixa' };
   var fv = function(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   return incs.map(function(inc) {
@@ -4111,7 +4111,7 @@ window.renderizarComposicaoDebitos = function(filtroTipo) {
   var mesesLabels = ['Out','Nov','Dez','Jan','Fev','Mar','Abr'];
   var mesesISO    = ['2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04'];
   var statusList  = ['extinto','nao_extinto','vencido','inconsistencia'];
-  var statusCores = {'extinto':'#22C55E','nao_extinto':'#A7A8AA','vencido':'#F59E0B','inconsistencia':'#F43F5E'};
+  var statusCores = {'extinto':PALETTE.teal,'nao_extinto':PALETTE.gray,'vencido':PALETTE.amber,'inconsistencia':PALETTE.red};
   var statusLabels = {'extinto':'Extinto','nao_extinto':'Não Extinto','vencido':'Vencido','inconsistencia':'Inconsistência'};
 
   var agg = {};
@@ -4209,8 +4209,8 @@ window.renderizarExtincaoMetodo = function() {
 
   var round2 = function(v) { return Math.round(v*100)/100; };
   _svgStackedBar('cDebMetodo', [
-    { label:'RAD',         color:'#8B5CF6', data:radPorMes.map(round2)  },
-    { label:'Compensação', color:'#14B8A6', data:compPorMes.map(round2) }
+    { label:'RAD',         color:PALETTE.teal, data:radPorMes.map(round2)  },
+    { label:'Compensação', color:PALETTE.blue, data:compPorMes.map(round2) }
   ], mesesLabels, 200);
 
   var tRad  = radPorMes.reduce(function(a,b){return a+b;},0);
@@ -4685,11 +4685,11 @@ window.renderizarAgeingCreditos = function() {
 
   var hoje = new Date('2026-08-10'); // data de referência do sistema
   var faixas = [
-    { label: '0 – 30 dias',    min: 0,   max: 30,  color: '#22C55E', bg: 'rgba(34,197,94,.15)'   },
-    { label: '31 – 90 dias',   min: 31,  max: 90,  color: '#3B82F6', bg: 'rgba(59,130,246,.15)'  },
-    { label: '91 – 180 dias',  min: 91,  max: 180, color: '#F59E0B', bg: 'rgba(245,158,11,.15)'  },
-    { label: '181 – 365 dias', min: 181, max: 365, color: '#F43F5E', bg: 'rgba(244,63,94,.15)'   },
-    { label: '> 365 dias',     min: 366, max: Infinity, color: '#8B5CF6', bg: 'rgba(139,92,246,.15)' }
+    { label: '0 – 30 dias',    min: 0,   max: 30,  color: PALETTE.teal,  bg: 'rgba(29,158,117,.15)'  },
+    { label: '31 – 90 dias',   min: 31,  max: 90,  color: PALETTE.blue,  bg: 'rgba(24,95,165,.15)'   },
+    { label: '91 – 180 dias',  min: 91,  max: 180, color: PALETTE.amber, bg: 'rgba(186,117,23,.15)'  },
+    { label: '181 – 365 dias', min: 181, max: 365, color: PALETTE.red,   bg: 'rgba(163,45,45,.15)'   },
+    { label: '> 365 dias',     min: 366, max: Infinity, color: PALETTE.gray, bg: 'rgba(136,135,128,.15)' }
   ];
   var totais = [0, 0, 0, 0, 0];
   var cnts   = [0, 0, 0, 0, 0];
@@ -5684,8 +5684,8 @@ window.renderizarPagamentosMetodo = function() {
 
   var round2 = function(v) { return Math.round(v * 100) / 100; };
   var datasets = [
-    { label: 'RAD',        color: '#8B5CF6', data: radPorMes.map(round2)  },
-    { label: 'Fornecedor', color: '#3B82F6', data: fornPorMes.map(round2) }
+    { label: 'RAD',        color: PALETTE.teal, data: radPorMes.map(round2)  },
+    { label: 'Fornecedor', color: PALETTE.blue, data: fornPorMes.map(round2) }
   ];
 
   _svgStackedBar('cPagMetodo', datasets, mesesLabels, 200);
@@ -5715,11 +5715,11 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
 
   var statusList = ['apropriado','utilizado','nao_apropriado','vencido','inconsistencia'];
   var statusCores = {
-    'apropriado':    '#22C55E',
-    'utilizado':     '#3B82F6',
-    'nao_apropriado':'#A7A8AA',
-    'vencido':       '#F59E0B',
-    'inconsistencia':'#F43F5E'
+    'apropriado':    PALETTE.teal,
+    'utilizado':     PALETTE.blue,
+    'nao_apropriado':PALETTE.gray,
+    'vencido':       PALETTE.amber,
+    'inconsistencia':PALETTE.red
   };
 
   // Inicializar acumuladores por mês e status
@@ -7385,8 +7385,8 @@ window.downloadGuiaDARF = function() {
 
     if (typeof _svgStackedBar === 'function') {
       _svgStackedBar('cIngestao', [
-        { label: 'Importados', data: okArr, color: '#22C55E' },
-        { label: 'Inconsistências', data: incArr, color: '#8B5CF6' }
+        { label: 'Importados', data: okArr, color: PALETTE.teal },
+        { label: 'Inconsistências', data: incArr, color: PALETTE.red }
       ], labels, 148);
     }
   }
