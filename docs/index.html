@@ -5895,20 +5895,31 @@ function creditosDFsRender(){
   (window._nfListaCompleta||window.nfListaFiltradaGlobal||[]).forEach(function(nf){
     if(nf.numero!=null)nfMap[String(nf.numero)]=nf;
   });
-  // Função de derivação de status de crédito do DF a partir dos dois RFs
+  // Derivação de status de crédito do DF a partir dos dois RFs (IBS + CBS)
+  // Regras explícitas por prioridade decrescente de avanço no ciclo
   function _dfCreditStatus(rfs){
-    var norm=function(s){return (s==='nao_apropriado')?'a_apropriar':(s||'a_apropriar');};
+    var norm=function(s){
+      if(!s||s==='nao_apropriado')return'a_apropriar';
+      return s;
+    };
     var ibsSt='a_apropriar', cbsSt='a_apropriar';
     rfs.forEach(function(rf){
       var s=norm(rf.statusCredito||rf.status);
       if(rf.tipoFiscal==='ibs')ibsSt=s;
       else if(rf.tipoFiscal==='cbs')cbsSt=s;
     });
+    // Qualquer glosado encerra o ciclo
     if(ibsSt==='glosado'||cbsSt==='glosado')return'glosado';
+    // Ambos utilizados
     if(ibsSt==='utilizado'&&cbsSt==='utilizado')return'utilizado';
-    if((ibsSt==='utilizado'&&cbsSt==='apropriado')||(ibsSt==='apropriado'&&cbsSt==='utilizado'))return'parc_utilizado';
+    // Um utilizado + outro apropriado OU um utilizado + outro a_apropriar → parc_utilizado
+    // (ao menos um RF completou o ciclo)
+    if(ibsSt==='utilizado'||cbsSt==='utilizado')return'parc_utilizado';
+    // Ambos apropriados
     if(ibsSt==='apropriado'&&cbsSt==='apropriado')return'apropriado';
-    if(ibsSt==='apropriado'||cbsSt==='apropriado'||ibsSt==='utilizado'||cbsSt==='utilizado')return'parc_apropriado';
+    // Um apropriado + outro a_apropriar → parc_apropriado
+    if(ibsSt==='apropriado'||cbsSt==='apropriado')return'parc_apropriado';
+    // Ambos a_apropriar
     return'a_apropriar';
   }
   // Filtro de status de crédito (requer nfMap já populado)
