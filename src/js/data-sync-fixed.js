@@ -2717,15 +2717,71 @@ window.renderizarRFsInconsistencias = function() {
 
   window._rfIncGlobal = lista;
 
-  // 2. KPIs
+  // --- Construir _inconsistenciasGlobal (novo modelo) ---
+  var _tipoIncMap = {
+    'Divergência de Valor':'divergencia_valor', 'Valor imposto divergente':'aliquota_divergente',
+    'Não conciliado':'nf_cancelada', 'Vencido':'prazo_expirado',
+    'Sem Comprovante':'split_nao_realizado', 'Falha de Layout':'chave_invalida',
+    'Inconsistência de Dados':'cnpj_divergente', 'Rejeitado SEFAZ':'chave_invalida',
+    'Documento Duplicado':'duplicidade_rf'
+  };
+  var _tipoIncLbl = {
+    'divergencia_valor':'Divergência de valor', 'aliquota_divergente':'Alíquota divergente',
+    'nf_cancelada':'NF cancelada com RF ativo', 'prazo_expirado':'Prazo expirado sem extinção',
+    'split_nao_realizado':'Split Payment não realizado', 'chave_invalida':'Chave de acesso inválida',
+    'cnpj_divergente':'CNPJ divergente', 'duplicidade_rf':'RF duplicado'
+  };
+  var _incStatuses = ['aberta','aberta','em_analise','aguardando_emitente','aberta','resolvida','glosada','aberta','em_analise','aberta'];
+  var _incPrios = function(v){ return v > 500000 ? 'critica' : v > 100000 ? 'alta' : v > 20000 ? 'media' : 'baixa'; };
+  var incGlobal = [];
+  lista.forEach(function(r, i) {
+    var tipo = _tipoIncMap[r.inc || ''] || 'divergencia_valor';
+    var origem = r.tipoNF === 'ingestao' ? 'df' : 'rf';
+    incGlobal.push({
+      id:         'INC-' + String(incGlobal.length + 1).padStart(4,'0'),
+      tipo:       tipo,
+      tipoLabel:  _tipoIncLbl[tipo] || (r.inc || 'Divergência'),
+      dfId:       r.nfVinc || '—',
+      dfNum:      r.nfVinc || '—',
+      rfId:       origem === 'rf' ? r.id : null,
+      tipoFiscal: r.tf || '—',
+      origem:     origem,
+      tipoFluxo:  r.tipoNF === 'ingestao' ? 'entrada' : (r.tipoNF || 'entrada'),
+      status:     _incStatuses[i % _incStatuses.length],
+      prioridade: _incPrios(r.valor),
+      valor:      r.valor,
+      entidade:   r.forn,
+      cnpj:       r.cnpj,
+      dataISO:    r.dataISO,
+      data:       r.data
+    });
+  });
+  window._inconsistenciasGlobal = incGlobal;
+
+  // 2. KPIs ciclo de vida
+  function setEl(id, v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+  var _stCnt = { aberta:0, em_analise:0, aguardando_emitente:0, resolvida:0, glosada:0 };
+  var _volAberto = 0;
+  incGlobal.forEach(function(inc) {
+    _stCnt[inc.status] = (_stCnt[inc.status]||0) + 1;
+    if (inc.status==='aberta'||inc.status==='em_analise'||inc.status==='aguardando_emitente') _volAberto += inc.valor;
+  });
+  setEl('inc-st-aberta',  _stCnt.aberta);
+  setEl('inc-st-aberta-sub', _stCnt.aberta === 1 ? 'aguardando triagem' : 'aguardando triagem');
+  setEl('inc-st-analise', _stCnt.em_analise);
+  setEl('inc-st-aguard',  _stCnt.aguardando_emitente);
+  setEl('inc-st-resol',   _stCnt.resolvida);
+  setEl('inc-st-glosada', _stCnt.glosada);
+  setEl('inc-vol-aberto', _incFmtM(_volAberto));
+  setEl('inc-vol-aberto-sub', (_stCnt.aberta+_stCnt.em_analise+_stCnt.aguardando_emitente) + ' inconsistências abertas');
+
+  // KPIs secundários
   var totalRFs = lista.length;
   var volTotal  = lista.reduce(function(s, r){ return s + r.valor; }, 0);
-  var cntEnt    = lista.filter(function(r){ return r.tipoNF === 'entrada'; }).length;
+  var cntEnt    = lista.filter(function(r){ return r.tipoNF === 'entrada' || r.tipoNF === 'ingestao'; }).length;
   var cntSai    = lista.filter(function(r){ return r.tipoNF === 'saida'; }).length;
-  function setEl(id, v){ var e=document.getElementById(id); if(e) e.textContent=v; }
-  var cntIng    = lista.filter(function(r){ return r.etapa === 'Ingestão'; }).length;
   setEl('inc2-total',  totalRFs);
-  setEl('inc2-total-sub', 'Todas as etapas · ' + cntIng + ' de Ingestão');
+  setEl('inc2-total-sub', incGlobal.length + ' inconsistências · ' + lista.filter(function(r){return r.etapa==='Ingestão';}).length + ' de Ingestão');
   setEl('inc2-volume', _incFmtM(volTotal));
   setEl('inc2-volume-sub', totalRFs > 0 ? 'Média ' + _incFmtM(Math.round(volTotal / totalRFs)) + ' por registro' : 'Soma dos valores');
   setEl('inc2-entrada', cntEnt);
@@ -2784,24 +2840,24 @@ window.incRfFiltrar = function() {
   var tipoNF   = (document.getElementById('inc-rf-tipo-nf')      ||{}).value||'';
   var tipoFisc = (document.getElementById('inc-rf-tipo-fiscal')  ||{}).value||'';
   var incTipo  = (document.getElementById('inc-rf-inc-tipo')     ||{}).value||'';
-  var etapa    = (document.getElementById('inc-rf-etapa')        ||{}).value||'';
+  var status   = (document.getElementById('inc-rf-etapa')        ||{}).value||'';
   var dataDe   = (document.getElementById('inc-rf-data-de')      ||{}).value||'';
   var dataAte  = (document.getElementById('inc-rf-data-ate')     ||{}).value||'';
   var valMin   = (document.getElementById('inc-rf-valor-min')    ||{}).value||'';
   var valMax   = (document.getElementById('inc-rf-valor-max')    ||{}).value||'';
 
-  var lista = (window._rfIncGlobal || []).filter(function(r) {
-    if (tipoNF   && r.tipoNF !== tipoNF)                          return false;
-    if (tipoFisc && r.tf && r.tf !== '—' && r.tf.toLowerCase() !== tipoFisc) return false;
-    if (incTipo  && r.inc !== incTipo)                            return false;
-    if (etapa    && r.etapa !== etapa)                            return false;
-    if (dataDe   && r.dataISO < dataDe)                           return false;
-    if (dataAte  && r.dataISO > dataAte)                          return false;
-    if (valMin !== '' && r.valor < parseFloat(valMin))            return false;
-    if (valMax !== '' && r.valor > parseFloat(valMax))            return false;
+  var lista = (window._inconsistenciasGlobal || []).filter(function(inc) {
+    if (tipoNF   && inc.tipoFluxo !== tipoNF)                                             return false;
+    if (tipoFisc && inc.tipoFiscal && inc.tipoFiscal !== '—' && inc.tipoFiscal.toLowerCase() !== tipoFisc) return false;
+    if (incTipo  && inc.tipo !== incTipo && inc.tipoLabel !== incTipo)                    return false;
+    if (status   && inc.status !== status)                                                return false;
+    if (dataDe   && inc.dataISO < dataDe)                                                 return false;
+    if (dataAte  && inc.dataISO > dataAte)                                                return false;
+    if (valMin !== '' && inc.valor < parseFloat(valMin))                                  return false;
+    if (valMax !== '' && inc.valor > parseFloat(valMax))                                  return false;
     if (busca) {
-      var s = (r.id+r.nfVinc+r.forn+r.cnpj).toLowerCase();
-      if (!s.includes(busca)) return false;
+      var s = (inc.id + inc.dfNum + inc.entidade + inc.cnpj + (inc.rfId||'')).toLowerCase();
+      if (s.indexOf(busca) < 0) return false;
     }
     return true;
   });
@@ -2809,7 +2865,7 @@ window.incRfFiltrar = function() {
   window._rfIncFiltrado = lista;
   window._rfIncPagina = 1;
   var cnt = document.getElementById('inc-rf-contagem');
-  if (cnt) cnt.textContent = lista.length + ' registro' + (lista.length !== 1 ? 's' : '');
+  if (cnt) cnt.textContent = lista.length + ' inconsistência' + (lista.length !== 1 ? 's' : '');
   window._incRfRenderPagina();
 };
 
@@ -2829,49 +2885,54 @@ window._incRfRenderPagina = function() {
   var ini = (pagAtual - 1) * ipp;
   var pag = lista.slice(ini, ini + ipp);
 
-  var stBadge = '<span style="background:rgba(139,92,246,.12);color:#8B5CF6;border:1px solid rgba(139,92,246,.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Inconsistência</span>';
-  var _etapaCores = { 'Ingestão':['rgba(245,158,11,.12)','#F59E0B'], 'Créditos':['rgba(34,197,94,.12)','#22C55E'], 'Débitos':['rgba(59,130,246,.12)','#3B82F6'], 'Pagamentos':['rgba(239,68,68,.12)','#EF4444'] };
+  var _stBadgeCfg = {
+    aberta:               ['244,63,94',  'Aberta'],
+    em_analise:           ['245,158,11', 'Em Análise'],
+    aguardando_emitente:  ['59,130,246', 'Ag. Emitente'],
+    resolvida:            ['34,197,94',  'Resolvida'],
+    glosada:              ['167,168,170','Glosada']
+  };
+  var _prioCfg = {
+    critica: ['244,63,94','CRÍTICA'], alta: ['245,158,11','ALTA'],
+    media:   ['59,130,246','MÉDIA'],  baixa: ['167,168,170','BAIXA']
+  };
+  function _badge(rgb, lbl) {
+    return '<span style="font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:3px;background:rgba('+rgb+',.12);color:rgba('+rgb+',1);border:1px solid rgba('+rgb+',.28)">'+lbl+'</span>';
+  }
   var h = '';
-  pag.forEach(function(r) {
-    var tfBadge = r.tf ? '<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+r.tf+'</span>' : '<span style="color:var(--txt3);font-size:11px">—</span>';
-    var nfBadge = r.tipoNF === 'entrada'
-      ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(34,197,94,.28);color:#22C55E;background:transparent">Entrada</span>'
-      : r.tipoNF === 'ingestao'
-      ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(245,158,11,.28);color:#F59E0B;background:transparent">Ingestão</span>'
-      : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(59,130,246,.28);color:#3B82F6;background:transparent">Saída</span>';
-    var ec = _etapaCores[r.etapa] || ['rgba(167,168,170,.12)','var(--txt2)'];
-    var etapaBadge = '<span style="background:' + ec[0] + ';color:' + ec[1] + ';border:1px solid ' + ec[0].replace('.12','.3') + ';border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + (r.etapa || '—') + '</span>';
-    var incBadge = r.inc
-      ? '<span style="color:' + (_incCores[r.inc]||'#666') + ';font-size:11px;font-weight:600">' + r.inc + '</span>'
-      : '<span style="color:var(--txt3);font-size:11px">—</span>';
-    var incIdCell = r.id.indexOf('ING-') === 0
-      ? '<td class="mono" style="color:#8B5CF6;font-weight:600">' + r.id + '</td>'
-      : '<td class="mono" style="font-weight:600"><button onclick="window.abrirDetalheRF(\'' + r.id + '\')" style="background:none;border:none;color:#8B5CF6;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.id + '</button></td>';
-    var acaoBtn = '<button onclick="window._incAbrirAcao(\'' + r.id + '\')" style="background:rgba(139,92,246,.12);color:#8B5CF6;border:1px solid rgba(139,92,246,.3);border-radius:5px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Corrigir →</button>';
+  pag.forEach(function(inc) {
+    var sc = _stBadgeCfg[inc.status] || ['167,168,170', inc.status];
+    var pc = _prioCfg[inc.prioridade] || ['167,168,170', inc.prioridade];
+    var fluxoBadge = inc.tipoFluxo === 'entrada'
+      ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid rgba(34,197,94,.28);color:rgba(34,197,94,1);background:rgba(34,197,94,.1)">↓ Entrada</span>'
+      : '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid rgba(244,63,94,.28);color:rgba(244,63,94,1);background:rgba(244,63,94,.1)">↑ Saída</span>';
+    var rfCell = inc.rfId
+      ? '<button onclick="window.abrirDetalheRF(\''+inc.rfId+'\')" style="background:none;border:none;color:rgba(26,107,90,1);cursor:pointer;font-size:10px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">'+inc.rfId+' · '+inc.tipoFiscal+'</button>'
+      : '<span style="color:var(--txt3);font-size:11px">— DF direto</span>';
+    var dfNum = inc.dfNum.replace(/^[^\s]+\s*/,'');
+    var dfCell = '<button onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\''+dfNum+'\')" style="background:none;border:none;color:rgba(26,75,140,1);cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">'+inc.dfNum+'</button>';
     h += '<tr>'
-      + incIdCell
-      + '<td class="nowrap">' + etapaBadge + '</td>'
-      + '<td class="nowrap">' + tfBadge + '</td>'
-      + '<td class="nowrap">' + nfBadge + '</td>'
-      + '<td class="mono nowrap" style="color:#3B82F6;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\'' + r.nfVinc.replace(/^[^\s]+\s*/,'') + '\')">' + r.nfVinc + '</td>'
-      + '<td class="trunc">' + r.forn + '</td>'
-      + '<td class="mono" style="color:var(--txt2)">' + r.cnpj + '</td>'
-      + '<td class="r mono" style="font-weight:600;color:var(--txt2)">' + ff(r.valor) + '</td>'
-      + '<td class="r mono">' + ff(r.valorTotal) + '</td>'
-      + '<td class="r mono" style="color:var(--txt2)">' + ff(r.valorLiq) + '</td>'
-      + '<td class="nowrap">' + stBadge + '</td>'
-      + '<td class="nowrap" style="color:var(--txt2)">' + r.data + '</td>'
-      + '<td class="nowrap">' + incBadge + '</td>'
-      + '<td class="nowrap">' + acaoBtn + '</td>'
+      + '<td class="mono nowrap" style="font-size:10px;color:rgba(90,26,140,1);font-weight:700">'+inc.id+'</td>'
+      + '<td class="nowrap">'+dfCell+'</td>'
+      + '<td class="nowrap">'+fluxoBadge+'</td>'
+      + '<td class="nowrap">'+rfCell+'</td>'
+      + '<td class="nowrap" style="font-size:11px;color:var(--txt2)">'+inc.tipoFiscal+'</td>'
+      + '<td class="trunc" style="max-width:150px">'+inc.entidade+'</td>'
+      + '<td class="r mono" style="color:var(--txt2)">'+ff(inc.valor)+'</td>'
+      + '<td style="font-size:11px;color:var(--txt1)">'+inc.tipoLabel+'</td>'
+      + '<td class="nowrap">'+_badge(inc.origem==='df'?'59,130,246':'26,107,90', inc.origem==='df'?'DF':'RF')+'</td>'
+      + '<td class="nowrap">'+_badge(sc[0],sc[1])+'</td>'
+      + '<td class="nowrap">'+_badge(pc[0],pc[1])+'</td>'
+      + '<td class="nowrap" style="font-size:11px;color:var(--txt2)">'+inc.data+'</td>'
       + '</tr>';
   });
-  if (!pag.length) h = '<tr><td colspan="14" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro com inconsistência encontrado para este filtro.</td></tr>';
+  if (!pag.length) h = '<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma inconsistência encontrada para este filtro.</td></tr>';
 
   var tbody = document.getElementById('t-inc-rfs');
   if (tbody) tbody.innerHTML = h;
 
   function setEl(id, v){ var e=document.getElementById(id); if(e) e.textContent=v; }
-  setEl('inc-rf-count-sub', lista.length + ' RF' + (lista.length!==1?'s':'') + ' com inconsistência · entrada e saída');
+  setEl('inc-rf-count-sub', lista.length + ' inconsistência' + (lista.length!==1?'s':'') + ' · entrada e saída');
   setEl('inc-rf-pag-atual', pagAtual);
   setEl('inc-rf-pag-total', totalPag);
 
@@ -3023,151 +3084,115 @@ window.renderizarKanbanInconsistencias = function() {
   var board = document.getElementById('inc-kanban-board');
   if (!board) return;
 
-  // Coletar RFs com inconsistência
-  var rfs = [];
-  var nfs = window.nfListaFiltradaGlobal || [];
-  nfs.forEach(function(nf) {
-    (nf.registrosFiscais || []).forEach(function(rf) {
-      if ((rf.statusRegistro || rf.status) === 'inconsistencia') {
-        var obj = {
-          id: rf.id || ('RF-' + Math.random().toString(36).slice(2,7).toUpperCase()),
-          tipoNF: nf.tipo || 'entrada',
-          tipoFiscal: rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
-          entidade: rf.entidade || nf.entidade || '—',
-          cnpj: rf.cnpj || nf.cnpj || '—',
-          valor: rf.valor || 0,
-          data: rf.data || nf.data || '',
-          nfNumero: nf.numero || '—',
-          nfTipoDF: nf.tipoDF || '—',
-          inconsistencia: rf.inconsistencia || 'Não conciliado'
-        };
-        rfs.push(obj);
-        window._kbRfsData[obj.id] = obj;
-      }
-    });
-  });
+  var incList = window._inconsistenciasGlobal || [];
 
-  // Renderizar filtros
-  var tiposUnicos = [];
-  rfs.forEach(function(r) { if (tiposUnicos.indexOf(r.inconsistencia) < 0) tiposUnicos.push(r.inconsistencia); });
-  tiposUnicos.sort();
+  // Filtros
   var filtersEl = document.getElementById('inc-kb-filters');
+  var _kbFiltroFluxo = window._kbFiltroFluxo || '';
+  var _kbFiltroPrio  = window._kbFiltroPrio  || '';
   if (filtersEl) {
-    var fHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">'
-      + '<span style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0">Tipo:</span>'
-      + tiposUnicos.map(function(t) {
-          var a = window._kbFilterTipos.has(t);
-          var c = _kbIncCores[t] || '#64748B';
-          return '<button onclick="window._kbToggleFilter(\'tipo\',\'' + t.replace(/'/g,"\\'") + '\')" '
-            + 'style="font-size:10px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid '+(a?c:'var(--brd)')+';background:'+(a?c+'22':'transparent')+';color:'+(a?c:'var(--txt3)')+';cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .15s">'
-            + t + '</button>';
+    var fluxoOpts = [['','Todos'],['entrada','↓ Entrada'],['saida','↑ Saída']];
+    var prioOpts  = [['','Todas prioridades'],['critica','Crítica'],['alta','Alta'],['media','Média'],['baixa','Baixa']];
+    filtersEl.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">'
+      + fluxoOpts.map(function(o){
+          var act = _kbFiltroFluxo === o[0];
+          var c = o[0]==='entrada'?'34,197,94':o[0]==='saida'?'244,63,94':'167,168,170';
+          return '<button onclick="window._kbFiltroFluxo=\''+o[0]+'\';window.renderizarKanbanInconsistencias()" '
+            +'style="font-size:10px;font-weight:700;padding:4px 11px;border-radius:20px;border:1px solid rgba('+c+','+(act?'1':'.3')+');background:rgba('+c+','+(act?'.15':'0')+');color:rgba('+c+',1);cursor:pointer;font-family:inherit">'+o[1]+'</button>';
         }).join('')
-      + '</div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px">'
-      + '<span style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0">DF:</span>'
-      + [['entrada','Entrada','#22C55E'],['saida','Saída','#F59E0B']].map(function(df) {
-          var a = window._kbFilterDFs.has(df[0]);
-          return '<button onclick="window._kbToggleFilter(\'df\',\''+df[0]+'\')" '
-            + 'style="font-size:10px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid '+(a?df[2]:'var(--brd)')+';background:'+(a?df[2]+'22':'transparent')+';color:'+(a?df[2]:'var(--txt3)')+';cursor:pointer;font-family:inherit;transition:all .15s">'
-            + df[1] + '</button>';
+      + '&nbsp;&nbsp;'
+      + prioOpts.map(function(o){
+          var act = _kbFiltroPrio === o[0];
+          return '<button onclick="window._kbFiltroPrio=\''+o[0]+'\';window.renderizarKanbanInconsistencias()" '
+            +'style="font-size:10px;font-weight:600;padding:4px 11px;border-radius:20px;border:1px solid var(--brd);background:'+(act?'var(--teal)':'transparent')+';color:'+(act?'#fff':'var(--txt3)')+';cursor:pointer;font-family:inherit">'+o[1]+'</button>';
         }).join('')
       + '</div>';
-    filtersEl.innerHTML = fHtml;
   }
 
   // Aplicar filtros
-  if (window._kbFilterTipos.size > 0) {
-    rfs = rfs.filter(function(r) { return window._kbFilterTipos.has(r.inconsistencia); });
-  }
-  if (window._kbFilterDFs.size > 0) {
-    rfs = rfs.filter(function(r) {
-      var df = r.tipoNF === 'entrada' ? 'entrada' : 'saida';
-      return window._kbFilterDFs.has(df);
-    });
-  }
+  var lista = incList.filter(function(inc) {
+    if (_kbFiltroFluxo && inc.tipoFluxo !== _kbFiltroFluxo) return false;
+    if (_kbFiltroPrio  && inc.prioridade !== _kbFiltroPrio)  return false;
+    return true;
+  });
 
-  // Atualizar badge total
+  // Badge total
   var badge = document.getElementById('inc-kb-total-badge');
-  if (badge) badge.textContent = rfs.length + (rfs.length === 1 ? ' cartão' : ' cartões');
+  if (badge) badge.textContent = lista.length + (lista.length === 1 ? ' inconsistência' : ' inconsistências');
 
-  // Inicializar estado para novos RFs (padrão: identificado)
-  rfs.forEach(function(rf) {
-    if (!window._kanbanState[rf.id]) window._kanbanState[rf.id] = 'identificado';
-  });
+  // Colunas do ciclo de vida
+  var kbCols = [
+    { id:'aberta',              label:'Aberta',         cor:'244,63,94'  },
+    { id:'em_analise',          label:'Em Análise',     cor:'245,158,11' },
+    { id:'aguardando_emitente', label:'Ag. Emitente',   cor:'59,130,246' },
+    { id:'resolvida',           label:'Resolvida',      cor:'34,197,94'  },
+    { id:'glosada',             label:'Glosada',        cor:'167,168,170'}
+  ];
 
-  // Agrupar por coluna
-  var grupos = {};
-  _kbColunas.forEach(function(c) { grupos[c.id] = []; });
-  rfs.forEach(function(rf) {
-    var col = window._kanbanState[rf.id] || 'identificado';
-    if (!grupos[col]) col = 'identificado';
-    grupos[col].push(rf);
-  });
+  var _prioCor = { critica:'244,63,94', alta:'245,158,11', media:'59,130,246', baixa:'167,168,170' };
+  var _prioLbl = { critica:'CRÍTICA', alta:'ALTA', media:'MÉDIA', baixa:'BAIXA' };
 
-  function ff(v) {
-    if (!v && v !== 0) return '—';
-    return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function _kbBadge(rgb, lbl, sm) {
+    var sz = sm ? '9px' : '10px';
+    return '<span style="font-size:'+sz+';font-weight:700;padding:2px 6px;border-radius:3px;background:rgba('+rgb+',.12);color:rgba('+rgb+',1);border:1px solid rgba('+rgb+',.28);letter-spacing:.05em">'+lbl+'</span>';
   }
 
-  // Construir board
+  // Agrupar
+  var grupos = {};
+  kbCols.forEach(function(c){ grupos[c.id] = []; });
+  lista.forEach(function(inc){
+    var st = window._kanbanState[inc.id] || inc.status;
+    if (!grupos[st]) st = 'aberta';
+    grupos[st].push(inc);
+  });
+
   var html = '';
-  _kbColunas.forEach(function(col) {
+  kbCols.forEach(function(col) {
     var cards = grupos[col.id] || [];
     var cardsHtml = '';
-    cards.forEach(function(rf) {
-      var incCor = _kbIncCores[rf.inconsistencia] || '#64748B';
-      var nfTipoCor = rf.tipoNF === 'entrada' ? '#22C55E' : '#F59E0B';
-      var ftCor = rf.tipoFiscal === 'IBS' ? '#3B82F6' : '#2DD4BF';
-      var safeId = rf.id.replace(/'/g,"\\'");
-      var respId = window._kanbanResponsavel[rf.id];
-      var respUser = null;
-      if (respId && respId !== 'nenhum') {
-        for (var ui = 0; ui < _kbUsuarios.length; ui++) { if (_kbUsuarios[ui].id === respId) { respUser = _kbUsuarios[ui]; break; } }
-      }
-      var respFooter = respUser
-        ? '<span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--txt3)">'
-          + '<span style="width:18px;height:18px;border-radius:50%;background:'+respUser.cor+';display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0">'+respUser.iniciais+'</span>'
-          + respUser.nome + '</span>'
-        : '<span style="font-size:10px;color:var(--txt4)">— sem responsável</span>';
-
+    cards.forEach(function(inc) {
+      var safeId = inc.id.replace(/'/g,"\\'");
+      var fluxoRgb = inc.tipoFluxo === 'entrada' ? '34,197,94' : '244,63,94';
+      var fluxoLbl = inc.tipoFluxo === 'entrada' ? '↓ Entrada' : '↑ Saída';
+      var tfRgb    = inc.tipoFiscal === 'IBS' ? '59,130,246' : '245,158,11';
+      var origemRgb = inc.origem === 'df' ? '59,130,246' : '26,107,90';
+      var origemLbl = inc.origem === 'df' ? 'DF' : 'RF';
+      var dfNum = (inc.dfNum||'').replace(/^[^\s]+\s*/,'');
       cardsHtml += '<div class="kb-card" draggable="true"'
-        + ' ondragstart="window._kbDragStart(event,\'' + safeId + '\')"'
-        + ' onclick="window.kbAbrirCard(\'' + safeId + '\')"'
-        + ' style="background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:opacity .15s,transform .15s,box-shadow .15s"'
+        + ' ondragstart="window._kbDragStart(event,\''+safeId+'\')"'
+        + ' onclick="window.kbAbrirCard(\''+safeId+'\')"'
+        + ' style="background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:box-shadow .15s,transform .15s"'
         + ' onmouseenter="this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.22)\';this.style.transform=\'translateY(-2px)\'"'
         + ' onmouseleave="this.style.boxShadow=\'0 1px 4px rgba(0,0,0,.08)\';this.style.transform=\'\'">'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-        + '<span style="font-size:9px;font-family:\'IBM Plex Mono\',monospace;color:var(--txt3);letter-spacing:.05em">' + rf.id + '</span>'
-        + '<span style="background:' + incCor + '22;color:' + incCor + ';border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700;letter-spacing:.03em">' + rf.inconsistencia + '</span>'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+        + '<span style="font-size:9px;font-family:monospace;color:rgba(90,26,140,1);font-weight:700">'+inc.id+'</span>'
+        + _kbBadge(_prioCor[inc.prioridade]||'167,168,170', _prioLbl[inc.prioridade]||inc.prioridade, true)
         + '</div>'
-        + '<div style="font-size:12px;font-weight:600;color:var(--txt1);margin-bottom:6px;line-height:1.3">' + rf.entidade + '</div>'
-        + '<div style="font-size:11px;color:var(--txt2);margin-bottom:8px;font-family:\'IBM Plex Mono\',monospace">' + rf.cnpj + '</div>'
-        + '<div style="font-size:13px;font-weight:700;color:var(--txt1);margin-bottom:8px">' + ff(rf.valor) + '</div>'
-        + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
-        + '<span style="background:' + nfTipoCor + '22;color:' + nfTipoCor + ';border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700">' + (rf.tipoNF === 'entrada' ? 'ENTRADA' : 'SAÍDA') + '</span>'
-        + '<span style="background:' + ftCor + '22;color:' + ftCor + ';border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700">' + rf.tipoFiscal + '</span>'
-        + '<span style="font-size:10px;color:var(--txt3);margin-left:auto">' + (rf.data ? rf.data.split('T')[0] : '—') + '</span>'
-        + '</div>'
-        + '<div style="display:flex;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--brd)">'
-        + respFooter
+        + '<div style="font-size:11px;font-weight:700;color:var(--txt1);margin-bottom:4px;line-height:1.4">'+inc.tipoLabel+'</div>'
+        + '<div style="font-size:10px;color:rgba(26,75,140,1);font-weight:600;margin-bottom:2px;cursor:pointer;text-decoration:underline dotted" onclick="event.stopPropagation();if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\''+dfNum+'\')">📄 '+inc.dfNum+'</div>'
+        + (inc.rfId ? '<div style="font-size:10px;color:rgba(26,107,90,1);margin-bottom:6px">RF: <span style="font-family:monospace">'+inc.rfId+'</span> · '+inc.tipoFiscal+'</div>'
+                    : '<div style="font-size:10px;color:var(--txt3);margin-bottom:6px">inconsistência direta no DF</div>')
+        + '<div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:8px">'+ff(inc.valor)+'</div>'
+        + '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'
+        + _kbBadge(fluxoRgb, fluxoLbl, true)
+        + _kbBadge(origemRgb, origemLbl, true)
+        + '<span style="font-size:10px;color:var(--txt3);margin-left:auto">'+inc.data+'</span>'
         + '</div>'
         + '</div>';
     });
 
     html += '<div style="flex:0 0 230px;min-width:230px">'
-      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 14px;background:var(--card);border:1px solid var(--brd);border-radius:10px;border-top:3px solid ' + col.cor + '">'
-      + '<span style="font-size:14px">' + col.icon + '</span>'
-      + '<span style="font-size:12px;font-weight:700;color:var(--txt1);flex:1">' + col.label + '</span>'
-      + '<span style="background:' + col.cor + '22;color:' + col.cor + ';border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700">' + cards.length + '</span>'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 14px;background:var(--card);border:1px solid var(--brd);border-radius:10px;border-top:3px solid rgba('+col.cor+',1)">'
+      + '<span style="font-size:12px;font-weight:700;color:var(--txt1);flex:1">'+col.label+'</span>'
+      + '<span style="background:rgba('+col.cor+',.12);color:rgba('+col.cor+',1);border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700">'+cards.length+'</span>'
       + '</div>'
-      + '<div id="kb-col-' + col.id + '" data-col="' + col.id + '"'
+      + '<div id="kb-col-'+col.id+'" data-col="'+col.id+'"'
       + ' ondragover="window._kbDragOver(event)"'
       + ' ondragleave="window._kbDragLeave(event)"'
-      + ' ondrop="window._kbDrop(event,\'' + col.id + '\')"'
+      + ' ondrop="window._kbDrop(event,\''+col.id+'\')"'
       + ' style="min-height:400px;padding:4px;border:2px dashed transparent;border-radius:10px;transition:border-color .15s,background .15s">'
       + cardsHtml
-      + '</div>'
-      + '</div>';
+      + '</div></div>';
   });
 
   board.innerHTML = html;
@@ -3195,11 +3220,14 @@ window._kbDragLeave = function(e) {
 
 window._kbDrop = function(e, colId) {
   e.preventDefault();
-  var rfId = e.dataTransfer.getData('text/plain');
-  if (!rfId) return;
-  window._kanbanState[rfId] = colId;
+  var incId = e.dataTransfer.getData('text/plain');
+  if (!incId) return;
+  window._kanbanState[incId] = colId;
   window.renderizarKanbanInconsistencias();
 };
+
+if (!window._kbFiltroFluxo) window._kbFiltroFluxo = '';
+if (!window._kbFiltroPrio)  window._kbFiltroPrio  = '';
 
 // ── Modal de detalhe do card kanban ──────────────────────────
 var _kbAcoesMap = {
