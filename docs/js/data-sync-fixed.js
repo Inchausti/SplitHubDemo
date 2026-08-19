@@ -2892,15 +2892,15 @@ window._incRfRenderPagina = function() {
   var pag = lista.slice(ini, ini + ipp);
 
   var _stBadgeCfg = {
-    aberta:               ['244,63,94',  'Aberta'],
-    em_analise:           ['245,158,11', 'Em Análise'],
-    aguardando_emitente:  ['59,130,246', 'Ag. Emitente'],
-    resolvida:            ['34,197,94',  'Resolvida'],
-    glosada:              ['167,168,170','Glosada']
+    aberta:               ['165,72,83',  'Aberta'],
+    em_analise:           ['170,122,50', 'Em Análise'],
+    aguardando_emitente:  ['62,108,176', 'Ag. Emitente'],
+    resolvida:            ['52,168,153', 'Resolvida'],
+    glosada:              ['105,112,122','Glosada']
   };
   var _prioCfg = {
-    critica: ['244,63,94','CRÍTICA'], alta: ['245,158,11','ALTA'],
-    media:   ['59,130,246','MÉDIA'],  baixa: ['167,168,170','BAIXA']
+    critica: ['165,72,83','CRÍTICA'],  alta: ['170,122,50','ALTA'],
+    media:   ['62,108,176','MÉDIA'],   baixa: ['105,112,122','BAIXA']
   };
   function _badge(rgb, lbl) {
     return '<span style="font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:3px;background:rgba('+rgb+',.12);color:rgba('+rgb+',1);border:1px solid rgba('+rgb+',.28)">'+lbl+'</span>';
@@ -3128,14 +3128,14 @@ window.renderizarKanbanInconsistencias = function() {
 
   // Colunas do ciclo de vida
   var kbCols = [
-    { id:'aberta',              label:'Aberta',         cor:'244,63,94'  },
-    { id:'em_analise',          label:'Em Análise',     cor:'245,158,11' },
-    { id:'aguardando_emitente', label:'Ag. Emitente',   cor:'59,130,246' },
-    { id:'resolvida',           label:'Resolvida',      cor:'34,197,94'  },
-    { id:'glosada',             label:'Glosada',        cor:'167,168,170'}
+    { id:'aberta',              label:'Aberta',         cor:'165,72,83'   },
+    { id:'em_analise',          label:'Em Análise',     cor:'170,122,50'  },
+    { id:'aguardando_emitente', label:'Ag. Emitente',   cor:'62,108,176'  },
+    { id:'resolvida',           label:'Resolvida',      cor:'52,168,153'  },
+    { id:'glosada',             label:'Glosada',        cor:'105,112,122' }
   ];
 
-  var _prioCor = { critica:'244,63,94', alta:'245,158,11', media:'59,130,246', baixa:'167,168,170' };
+  var _prioCor = { critica:'165,72,83', alta:'170,122,50', media:'62,108,176', baixa:'105,112,122' };
   var _prioLbl = { critica:'CRÍTICA', alta:'ALTA', media:'MÉDIA', baixa:'BAIXA' };
 
   function _kbBadge(rgb, lbl, sm) {
@@ -3311,9 +3311,9 @@ window._incRenderVinculadasHtml = function(incs) {
   if (!incs || !incs.length) {
     return '<div style="font-size:11px;color:var(--txt3);font-style:italic;margin-bottom:4px">Nenhuma inconsistência vinculada.</div>';
   }
-  var stRgbs = { aberta:'244,63,94', em_analise:'245,158,11', aguardando_emitente:'59,130,246', resolvida:'34,197,94', glosada:'167,168,170' };
+  var stRgbs = { aberta:'165,72,83', em_analise:'170,122,50', aguardando_emitente:'62,108,176', resolvida:'52,168,153', glosada:'105,112,122' };
   var stLabs = { aberta:'Aberta', em_analise:'Em Análise', aguardando_emitente:'Ag. Emitente', resolvida:'Resolvida', glosada:'Glosada' };
-  var prioRGBs = { critica:'244,63,94', alta:'245,158,11', media:'59,130,246', baixa:'34,197,94' };
+  var prioRGBs = { critica:'165,72,83', alta:'170,122,50', media:'62,108,176', baixa:'105,112,122' };
   var prioLbls = { critica:'Crítica', alta:'Alta', media:'Média', baixa:'Baixa' };
   var fv = function(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   return incs.map(function(inc) {
@@ -3410,11 +3410,11 @@ window.kbAbrirCard = function(incId) {
   var A = window._rfAddDays, F = window._rfFmtTS, MK = window._rfMkTS;
 
   var stCols = [
-    { id:'aberta',              label:'Aberta',       rgb:'244,63,94'   },
-    { id:'em_analise',          label:'Em Análise',   rgb:'245,158,11'  },
-    { id:'aguardando_emitente', label:'Ag. Emitente', rgb:'59,130,246'  },
-    { id:'resolvida',           label:'Resolvida',    rgb:'34,197,94'   },
-    { id:'glosada',             label:'Glosada',      rgb:'167,168,170' }
+    { id:'aberta',              label:'Aberta',       rgb:'165,72,83'   },
+    { id:'em_analise',          label:'Em Análise',   rgb:'170,122,50'  },
+    { id:'aguardando_emitente', label:'Ag. Emitente', rgb:'62,108,176'  },
+    { id:'resolvida',           label:'Resolvida',    rgb:'52,168,153'  },
+    { id:'glosada',             label:'Glosada',      rgb:'105,112,122' }
   ];
 
   var statusAtual = window._kanbanState[incId] || inc.status || 'aberta';
@@ -3428,7 +3428,7 @@ window.kbAbrirCard = function(incId) {
       + '<div style="font-weight:600;font-size:13px;color:'+(rgb?'rgba('+rgb+',1)':'var(--txt1)')+(mono?';font-family:monospace':'')+'">'+(value||'—')+'</div></div>';
   }
 
-  var prioRGB   = { critica:'244,63,94', alta:'245,158,11', media:'59,130,246', baixa:'34,197,94' };
+  var prioRGB   = { critica:'165,72,83', alta:'170,122,50', media:'62,108,176', baixa:'105,112,122' };
   var prioLabel = { critica:'Crítica',   alta:'Alta',        media:'Média',      baixa:'Baixa' };
   var prioRgb   = prioRGB[inc.prioridade]  || '100,116,139';
   var tipoFisCor = inc.tipoFiscal === 'IBS' ? '59,130,246' : '45,212,191';
@@ -3446,7 +3446,7 @@ window.kbAbrirCard = function(incId) {
   function mkEv(ts, tipo, modulo, ator, desc, cls) {
     return { ts: ts, data: (ts === '—' ? '—' : F(ts)), tipo: tipo, modulo: modulo, ator: ator, desc: desc, cls: cls };
   }
-  var incEvRgba  = { 'ABERTURA':'244,63,94', 'VALIDAÇÃO':'34,197,94', 'ATRIBUIÇÃO':'245,158,11', 'NOTIFICAÇÃO':'59,130,246', 'RESOLUÇÃO':'34,197,94', 'GLOSA':'167,168,170' };
+  var incEvRgba  = { 'ABERTURA':'165,72,83', 'VALIDAÇÃO':'52,168,153', 'ATRIBUIÇÃO':'170,122,50', 'NOTIFICAÇÃO':'62,108,176', 'RESOLUÇÃO':'52,168,153', 'GLOSA':'105,112,122' };
   var incEvIcons = { 'ABERTURA':'!', 'VALIDAÇÃO':'✓', 'ATRIBUIÇÃO':'→', 'NOTIFICAÇÃO':'✉', 'RESOLUÇÃO':'✓', 'GLOSA':'✕' };
 
   var eventos = [];
