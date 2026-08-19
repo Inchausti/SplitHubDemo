@@ -4547,6 +4547,7 @@ class DataSyncManagerFixed {
 
     // Crédito — tabela já chama atualizarKPIsCreditos + renderizarComposicaoCreditos + atualizarPerdaAcumulada
     try { window.renderizarTabelaCreditos && window.renderizarTabelaCreditos(); } catch(e) {}
+    try { window.renderVencimentoCalendar && window.renderVencimentoCalendar(); } catch(e) {}
     try { window.dashRenderDFsApropriar && window.dashRenderDFsApropriar(); } catch(e) {}
 
     // NFs — listagem conciliação
