@@ -3176,7 +3176,7 @@ window.renderizarKanbanInconsistencias = function() {
         + '</div>'
         + '<div style="font-size:11px;font-weight:700;color:var(--txt1);margin-bottom:4px;line-height:1.4">'+inc.tipoLabel+'</div>'
         + '<div style="font-size:10px;color:rgba(26,75,140,1);font-weight:600;margin-bottom:2px;cursor:pointer;text-decoration:underline dotted" onclick="event.stopPropagation();if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\''+dfNum+'\')">📄 '+inc.dfNum+'</div>'
-        + (inc.rfId ? '<div style="font-size:10px;color:rgba(26,107,90,1);margin-bottom:6px">RF: <span style="font-family:monospace">'+inc.rfId+'</span> · '+inc.tipoFiscal+'</div>'
+        + (inc.rfId ? '<div style="font-size:10px;color:rgba(26,107,90,1);margin-bottom:6px;cursor:pointer;text-decoration:underline dotted" onclick="event.stopPropagation();if(window.abrirDetalheRF)window.abrirDetalheRF(\''+inc.rfId+'\')">RF: <span style="font-family:monospace">'+inc.rfId+'</span> · '+inc.tipoFiscal+'</div>'
                     : '<div style="font-size:10px;color:var(--txt3);margin-bottom:6px">inconsistência direta no DF</div>')
         + '<div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:8px">'+ff(inc.valor)+'</div>'
         + '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'
@@ -5285,7 +5285,7 @@ window.pagGerarGuiaLote = function() {
   var rows = selecionados.map(function(r) {
     var cor = r.tipo === 'Guia IBS' ? '#3B82F6' : '#F59E0B';
     return '<tr style="border-bottom:1px solid var(--brd)">'
-      + '<td style="padding:8px 12px;font-size:12px;color:#3B82F6;font-weight:600;font-family:monospace">' + r.rf + '</td>'
+      + '<td style="padding:8px 12px;font-size:12px;color:#3B82F6;font-weight:600;font-family:monospace;cursor:pointer;text-decoration:underline dotted" onclick="if(window.abrirDetalheRF)window.abrirDetalheRF(\'' + r.rfId + '\')">' + r.rf + '</td>'
       + '<td style="padding:8px 12px;font-size:12px;color:var(--txt1)">' + r.forn + '</td>'
       + '<td style="padding:8px 12px"><span style="font-size:11px;font-weight:600;color:'+cor+'">' + r.tipo + '</span></td>'
       + '<td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:600;font-family:monospace;color:var(--txt1)">' + fmtV(r.valor) + '</td>'
@@ -6351,7 +6351,7 @@ window._aplicarFiltroCnpjEmpresa = function() {
       if (_vid === 'pagamentos') {
         if (window.pagamentosRenderKPIs) pagamentosRenderKPIs();
         var _h=''; var _imp=window.impostos||[];
-        for(var _i=0;_i<_imp.length;_i++){var _r=_imp[_i];var _act=['pendente','vencendo','atrasado'].indexOf(_r.status)>=0?'<button class="btn btn-t" style="font-size:11px;padding:4px 10px">Pagar via Pix</button>':'<span style="color:var(--txt3)">Concluído</span>';_h+='<tr><td class="mono nowrap" style="color:var(--txt3)">'+_r.id+'</td><td class="mono nowrap" style="color:var(--blue)">'+_r.rf+'</td><td class="trunc"><div style="font-weight:500">'+_r.forn+'</div><div style="font-size:10px;color:var(--txt3)">'+_r.cnpj+'</div></td><td class="nowrap"><span class="tyb">'+_r.tipo+'</span></td><td class="r mono" style="font-weight:600">'+ff(_r.valor)+'</td><td class="nowrap">'+_r.venc+'</td><td class="nowrap">'+bdg(_r.status)+'</td><td class="nowrap">'+_act+'</td></tr>';}
+        for(var _i=0;_i<_imp.length;_i++){var _r=_imp[_i];var _act=['pendente','vencendo','atrasado'].indexOf(_r.status)>=0?'<button class="btn btn-t" style="font-size:11px;padding:4px 10px">Pagar via Pix</button>':'<span style="color:var(--txt3)">Concluído</span>';_h+='<tr><td class="mono nowrap" style="color:var(--txt3)">'+_r.id+'</td><td class="mono nowrap" style="color:var(--blue);cursor:pointer;text-decoration:underline dotted" onclick="if(window.abrirDetalheRF)window.abrirDetalheRF(\''+_r.rfId+'\')">'+_r.rf+'</td><td class="trunc"><div style="font-weight:500">'+_r.forn+'</div><div style="font-size:10px;color:var(--txt3)">'+_r.cnpj+'</div></td><td class="nowrap"><span class="tyb">'+_r.tipo+'</span></td><td class="r mono" style="font-weight:600">'+ff(_r.valor)+'</td><td class="nowrap">'+_r.venc+'</td><td class="nowrap">'+bdg(_r.status)+'</td><td class="nowrap">'+_act+'</td></tr>';}
         var _ti=document.getElementById('t-impostos');if(_ti)_ti.innerHTML=_h;
       }
       if (_vid === 'creditos') { if(window.creditosRenderKPIs)creditosRenderKPIs(); if(window.creditosRenderTabela)creditosRenderTabela(); }
