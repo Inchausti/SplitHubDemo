@@ -969,8 +969,8 @@ window.renderizarTabelaCreditos = function() {
             rf: rf.id,
             tipoFiscal: tipoFiscalLabel,
             tipoNF: rf.tipoNF || nf.tipo || 'entrada',
-            nf: (nf.tipoDF || 'DF') + ' ' + rf.nfVinculada,
-            nfNumero: rf.nfVinculada,
+            nf: (nf.tipoDF || 'NF-e') + ' ' + (rf.nfVinculada || nf.numero || ''),
+            nfNumero: rf.nfVinculada || nf.numero || '',
             forn: rf.entidade,
             cnpj: rf.cnpj,
             dataNF: rf.data,
@@ -1037,7 +1037,7 @@ window.renderizarTabelaCreditos = function() {
       var nfTipoBadgeCred = r.tipoNF === 'saida'
         ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(245,158,11,.28);color:#F59E0B;background:transparent">Saída</span>'
         : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(34,197,94,.28);color:#22C55E;background:transparent">Entrada</span>';
-      var nfNumero = r.nfNumero || r.nf.replace('NF-', '');
+      var nfNumero = r.nfNumero || '';
       var nfLink = '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline" onclick="window.abrirDetalhesNFporNumero(\'' + nfNumero + '\')">' + r.nf + '</span>';
       var contratoCell = r.contratoId
         ? '<span class="mono" style="font-size:11px;color:#49C5B1;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\'' + r.contratoId + '\')">' + r.contratoId + '</span>'
@@ -3858,7 +3858,8 @@ window.renderizarTabelaDebitos = function() {
           rf:   rf.id || '—',
           tf:   rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
           tipoNF: rf.tipoNF || nf.tipo || 'saida',
-          nf:   (nf.tipoDF || 'DF') + ' ' + (rf.nfVinculada || nf.numero || ''),
+          nf:   (nf.tipoDF || 'NF-e') + ' ' + (rf.nfVinculada || nf.numero || ''),
+          nfNumero: rf.nfVinculada || nf.numero || '',
           dataNF: rf.data || '',
           data: dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
           cliente:   rf.entidade || nf.entidade || '—',
@@ -3913,7 +3914,7 @@ window.renderizarTabelaDebitos = function() {
       + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\'' + r.rf + '\')" style="background:none;border:none;color:#3B82F6;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
       + '<td class="nowrap">' + tfBadge + '</td>'
       + '<td class="nowrap">' + nfTipoBadgeDeb + '</td>'
-      + '<td class="mono nowrap" style="color:#3B82F6;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\'' + r.nf.replace(/^NF-/,'') + '\')">' + r.nf + '</td>'
+      + '<td class="mono nowrap" style="color:#3B82F6;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\'' + (r.nfNumero||'') + '\')">' + r.nf + '</td>'
       + '<td class="trunc">' + r.cliente + '</td>'
       + '<td class="nowrap" style="color:var(--txt2)">' + r.data + '</td>'
       + '<td class="r mono">' + ff(r.valorTotal) + '</td>'
@@ -4009,7 +4010,7 @@ window.debitosDFsRender = function() {
     var mRgb=metExt?(_metCor[metExt]||'167,168,170'):null;
     var metBadge=mRgb?'<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+mRgb+',.12);color:rgba('+mRgb+',1);border:1px solid rgba('+mRgb+',.28)">'+(_metLbl[metExt]||metExt)+'</span>':'<span style="color:var(--txt3)">—</span>';
     h+='<tr>';
-    h+='<td class="mono nowrap" style="color:var(--blue);font-size:11px;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\''+nfNum+'\')">NF-'+nfNum+'</td>';
+    h+='<td class="mono nowrap" style="color:var(--blue);font-size:11px;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\''+nfNum+'\')">'+tipoDF+' '+nfNum+'</td>';
     h+='<td class="nowrap">'+tipoBadge+'</td>';
     h+='<td class="trunc" style="max-width:160px">'+(nf.entidade||'—')+'</td>';
     h+='<td class="mono nowrap" style="font-size:11px;color:var(--txt2)">'+(nf.cnpj||'—')+'</td>';
