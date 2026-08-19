@@ -233,11 +233,11 @@ window.renderizarListaNFs = function() {
   var lista = (window.nfListaFiltradaGlobal || []).filter(function(nf) { return nf.tipo === 'entrada'; });
 
   var _dfColorsMap = {
-    'NF-e':   ['59,130,246','#3B82F6'], 'NFC-e':  ['99,102,241','#6366F1'],
+    'NF-e':   ['24,95,165','#185fa5'], 'NFC-e':  ['99,102,241','#6366F1'],
     'NFCom':  ['16,185,129','#10B981'], 'NF3-e':  ['20,184,166','#14B8A6'],
-    'NFS-e':  ['34,197,94','#22C55E'], 'CT-e':   ['245,158,11','#F59E0B'],
+    'NFS-e':  ['29,158,117','#1d9e75'], 'CT-e':   ['186,117,23','#ba7517'],
     'NFAg':   ['132,204,22','#84CC16'],'NFGás':  ['234,179,8','#EAB308'],
-    'MDF-e':  ['168,85,247','#A855F7'],'BP-e':   ['73,197,177','var(--teal)']
+    'MDF-e':  ['168,85,247','#A855F7'],'BP-e':   ['29,158,117','var(--teal)']
   };
 
   var h = '';
@@ -247,11 +247,11 @@ window.renderizarListaNFs = function() {
     var tipoBadge = '<span style="background:rgba(' + _dc[0] + ',.12);color:' + _dc[1] + ';border:1px solid rgba(' + _dc[0] + ',.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + _dfT + '</span>';
 
     var statusMap = {
-      'nao_apropriado': ['244,63,94','#F43F5E','Não Apropriado'],
-      'apropriado':     ['245,158,11','#F59E0B','Apropriado'],
-      'utilizado':      ['34,197,94','#22C55E','Utilizado'],
-      'nao_extinto':    ['244,63,94','#F43F5E','Não Extinto'],
-      'extinto':        ['34,197,94','#22C55E','Extinto']
+      'nao_apropriado': ['244,63,94','#a32d2d','Não Apropriado'],
+      'apropriado':     ['186,117,23','#ba7517','Apropriado'],
+      'utilizado':      ['29,158,117','#1d9e75','Utilizado'],
+      'nao_extinto':    ['244,63,94','#a32d2d','Não Extinto'],
+      'extinto':        ['29,158,117','#1d9e75','Extinto']
     };
     var sm = statusMap[r.status] || ['167,168,170','#A7A8AA', r.status || '—'];
     var statusBadge = '<span style="background:rgba(' + sm[0] + ',.12);color:' + sm[1] + ';border:1px solid rgba(' + sm[0] + ',.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + sm[2] + '</span>';
@@ -264,7 +264,7 @@ window.renderizarListaNFs = function() {
     var numLabel = _dfT + ' ' + r.numero;
 
     h += '<tr>'
-      + '<td class="mono nowrap"><button onclick="window.abrirDetalhesNFporNumero(\'' + r.numero + '\')" style="background:none;border:none;color:#3B82F6;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:11px">' + numLabel + '</button></td>'
+      + '<td class="mono nowrap"><button onclick="window.abrirDetalhesNFporNumero(\'' + r.numero + '\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:11px">' + numLabel + '</button></td>'
       + '<td class="nowrap">' + tipoBadge + '</td>'
       + '<td class="trunc">' + r.entidade + '</td>'
       + '<td class="mono" style="color:var(--txt2)">' + r.cnpj + '</td>'
@@ -307,7 +307,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   var dataParts = (r.data || '').split('-');
   var dataFmt = dataParts.length === 3 ? dataParts[2]+'/'+dataParts[1]+'/'+dataParts[0] : (r.data || '—');
   var tipoLabel = r.tipo === 'entrada' ? 'Entrada' : 'Saída';
-  var tipoColor = r.tipo === 'entrada' ? '#22C55E' : '#3B82F6';
+  var tipoColor = r.tipo === 'entrada' ? '#1d9e75' : '#185fa5';
 
   // ── Status badge da NF ──────────────────────────────────────────────────
   var stLabs = { nao_apropriado:'Não Apropriado', apropriado:'Apropriado', utilizado:'Utilizado',
@@ -328,13 +328,13 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     var stRfRgb = stRgbs[rf.statusCredito || rf.status] || '167,168,170';
     var stRgLab = rf.statusRegistro ? ({ inconsistencia:'Inconsistência', em_risco:'Em risco', vencido:'Vencido', a_prescrever:'A Prescrever' }[rf.statusRegistro] || rf.statusRegistro) : null;
     var stRgRgb = rf.statusRegistro ? ({ inconsistencia:_hexRgb(PALETTE.red), em_risco:_hexRgb(PALETTE.amber), vencido:_hexRgb(PALETTE.red), a_prescrever:_hexRgb(PALETTE.red) }[rf.statusRegistro] || _hexRgb(PALETTE.gray)) : null;
-    rfsHtml += '<div style="background:rgba(59,130,246,.04);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:12px;margin-bottom:10px">'
+    rfsHtml += '<div style="background:rgba(24,95,165,.04);border:1px solid rgba(24,95,165,.15);border-radius:8px;padding:12px;margin-bottom:10px">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
       + '<div style="display:flex;align-items:center;gap:8px">'
-      + '<span style="background:rgba(' + (tfCor==='#3B82F6'?'59,130,246':'245,158,11') + ',.15);color:' + tfCor + ';border:1px solid rgba(' + (tfCor==='#3B82F6'?'59,130,246':'245,158,11') + ',.35);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700">' + tfLbl + '</span>'
+      + '<span style="background:rgba(' + (tfCor==='#185fa5'?'24,95,165':'186,117,23') + ',.15);color:' + tfCor + ';border:1px solid rgba(' + (tfCor==='#185fa5'?'24,95,165':'186,117,23') + ',.35);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700">' + tfLbl + '</span>'
       + '<span style="font-size:11px;font-family:monospace;color:var(--txt2)">' + rf.id + '</span>'
       + '</div>'
-      + '<button onclick="document.getElementById(\'nf-detalhe-overlay\').remove();window.abrirDetalheRF(\'' + rf.id + '\')" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:4px;color:#3B82F6;cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px">Ver RF →</button>'
+      + '<button onclick="document.getElementById(\'nf-detalhe-overlay\').remove();window.abrirDetalheRF(\'' + rf.id + '\')" style="background:rgba(24,95,165,.08);border:1px solid rgba(24,95,165,.2);border-radius:4px;color:#185fa5;cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px">Ver RF →</button>'
       + '</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">'
       + '<div style="color:var(--txt3)">Valor: <span style="color:var(--txt1);font-weight:600">' + ff(rf.valor) + '</span></div>'
@@ -348,10 +348,10 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   });
 
   // ── Timeline NF: agrega eventos de todos os RFs ─────────────────────────
-  var evRgba  = { 'INGESTÃO':'73,197,177', 'VALIDAÇÃO':'34,197,94', 'GERAÇÃO RF':'59,130,246',
-    'INCONSISTÊNCIA':'239,68,68', 'VENCIMENTO':'239,68,68', 'AGUARDANDO':'245,158,11',
-    'APROPRIAÇÃO':'34,197,94', 'PAGAMENTO':'73,197,177', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246',
-    'CONC APURAÇÃO':'59,130,246', 'CONC FINANCEIRA':'73,197,177' };
+  var evRgba  = { 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165',
+    'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23',
+    'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246',
+    'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117' };
   var evIcons = { 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!',
     'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌',
     'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌' };
@@ -400,7 +400,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   allEvents.forEach(function(ev, i) {
     var rgba = evRgba[ev.tipo] || '167,168,170';
     var isLast = i === allEvents.length - 1;
-    var dotRgba = ev.cls === 'erro' ? '239,68,68' : ev.cls === 'pending' ? '245,158,11' : rgba;
+    var dotRgba = ev.cls === 'erro' ? '163,45,45' : ev.cls === 'pending' ? '186,117,23' : rgba;
     var icon = evIcons[ev.tipo] || '◯';
     tlH += '<div style="display:flex;gap:12px">'
       + '<div style="display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0">'
@@ -426,10 +426,10 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   var ctrHtml = '';
   if (ctrAtivo) {
     var ctrModelo = ctrAtivo.modelo === 'adquirente'
-      ? '<span style="color:#3B82F6;font-weight:600">Adquirente recolhe</span>'
+      ? '<span style="color:#185fa5;font-weight:600">Adquirente recolhe</span>'
       : '<span style="color:var(--teal);font-weight:600">Fornecedor recolhe</span>';
     var ctrRAD = ctrAtivo.rad
-      ? '<span style="background:rgba(59,130,246,.1);color:#3B82F6;border:1px solid rgba(59,130,246,.25);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600;margin-left:4px">RAD</span>' : '';
+      ? '<span style="background:rgba(24,95,165,.1);color:#185fa5;border:1px solid rgba(24,95,165,.25);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600;margin-left:4px">RAD</span>' : '';
     ctrHtml = '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
       + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Contrato</div>'
       + '<div style="background:rgba(73,197,177,.06);border:1px solid rgba(73,197,177,.2);border-radius:6px;padding:10px 12px;font-size:11px">'
@@ -446,54 +446,54 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Contrato</div>'
       + '<div style="font-size:11px;color:var(--txt3);font-style:italic">Nenhum contrato vigente na data da NF.</div>';
   }
-  var html = '<div id="nf-detalhe-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box" onclick="if(event.target===this)document.getElementById(\'nf-detalhe-overlay\').remove()">'
-    + '<div style="background:var(--bg);border:1px solid var(--brd);border-radius:14px;width:900px;max-width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.4)">'
+  var html = '<div id="nf-detalhe-overlay" class="moverlay" onclick="if(event.target===this)document.getElementById(\'nf-detalhe-overlay\').remove()">'
+    + '<div class="mbox" style="width:900px">'
 
     // Header
-    + '<div style="padding:16px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
+    + '<div class="mbox-hdr">'
     + '<div style="display:flex;align-items:center;gap:12px">'
-    + '<div style="width:34px;height:34px;border-radius:8px;background:rgba(73,197,177,.12);border:1px solid rgba(73,197,177,.25);display:flex;align-items:center;justify-content:center;font-size:16px">🧾</div>'
+    + '<div class="mbox-icon">🧾</div>'
     + '<div>'
-    + '<div style="font-size:14px;font-weight:700;color:var(--txt1)">' + (r.tipoDF || 'NF-e') + ' ' + r.numero + '</div>'
-    + '<div style="font-size:11px;color:var(--txt2)">' + (r.entidade || '—') + ' · ' + (r.cnpj || '—') + ' · ' + dataFmt + '</div>'
+    + '<div class="mbox-title">' + (r.tipoDF || 'NF-e') + ' ' + r.numero + '</div>'
+    + '<div class="mbox-sub">' + (r.entidade || '—') + ' · ' + (r.cnpj || '—') + ' · ' + dataFmt + '</div>'
     + '</div>'
     + '</div>'
-    + '<button onclick="document.getElementById(\'nf-detalhe-overlay\').remove()" style="background:none;border:none;cursor:pointer;color:var(--txt2);font-size:20px;padding:4px 8px;border-radius:6px;line-height:1">✕</button>'
+    + '<button onclick="document.getElementById(\'nf-detalhe-overlay\').remove()" class="mbox-close">✕</button>'
     + '</div>'
 
     // Body: two columns
     + '<div style="display:flex;flex:1;overflow:hidden">'
 
     // Left panel
-    + '<div style="width:300px;flex-shrink:0;border-right:1px solid var(--brd);padding:18px;overflow-y:auto">'
-    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px">Documento Fiscal</div>'
+    + '<div class="mbox-col" style="width:300px;flex-shrink:0;border-right:1px solid var(--brd)">'
+    + '<div class="mbox-section-label">Documento Fiscal</div>'
     + DR('Número', (r.tipoDF || 'NF-e') + ' ' + r.numero)
     + DR('Tipo', '<span style="color:' + tipoColor + ';font-weight:700">' + tipoLabel + '</span>')
     + DR('Emitente', r.entidade || '—')
     + DR('CNPJ', r.cnpj || '—', null, true)
     + DR('Data', dataFmt)
     + DR('Status', '<span style="background:rgba(' + stRgb + ',.12);color:rgba(' + stRgb + ',1);border:1px solid rgba(' + stRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLab + '</span>')
-    + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
-    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Valores</div>'
+    + '<div class="mbox-divider"></div>'
+    + '<div class="mbox-section-label">Valores</div>'
     + DR('Total', ff(r.valorTotal || 0))
     + DR('Líquido', ff(r.valorLiquido || 0))
-    + DR('CBS', ffz(r.cbs || 0), '#F59E0B')
-    + DR('IBS', ffz(r.ibs || 0), '#3B82F6')
-    + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
-    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Chave DF</div>'
+    + DR('CBS', ffz(r.cbs || 0), 'var(--p-amber)')
+    + DR('IBS', ffz(r.ibs || 0), 'var(--p-blue)')
+    + '<div class="mbox-divider"></div>'
+    + '<div class="mbox-section-label" style="margin-bottom:4px">Chave DF</div>'
     + '<div style="font-size:9px;font-family:monospace;color:var(--txt3);word-break:break-all;line-height:1.7;margin-bottom:14px">' + chaveFormatada + '</div>'
     + ctrHtml
-    + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
-    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Registros Fiscais</div>'
+    + '<div class="mbox-divider"></div>'
+    + '<div class="mbox-section-label">Registros Fiscais</div>'
     + rfsHtml
-    + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
-    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Inconsistências Vinculadas</div>'
+    + '<div class="mbox-divider"></div>'
+    + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
     + window._incRenderVinculadasHtml((window._inconsistenciasGlobal||[]).filter(function(i){ return i.dfNum === r.numero; }))
     + '</div>'
 
     // Right panel: timeline
-    + '<div style="flex:1;padding:18px;overflow-y:auto">'
-    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px">Histórico do Ciclo · ' + allEvents.length + ' evento' + (allEvents.length !== 1 ? 's' : '') + '</div>'
+    + '<div class="mbox-col" style="flex:1">'
+    + '<div class="mbox-section-label">Histórico do Ciclo · ' + allEvents.length + ' evento' + (allEvents.length !== 1 ? 's' : '') + '</div>'
     + (tlH || '<div style="color:var(--txt3);font-size:12px">Nenhum evento disponível.</div>')
     + '</div>'
     + '</div>'
@@ -532,9 +532,10 @@ window._rfMkTS = function(isoDate, hhmm) {
   return isoDate + 'T' + (hhmm || '00:00');
 };
 window._rfDetailRow = function(label, value, color, mono) {
-  return '<div style="margin-bottom:9px">'
-    + '<div style="font-size:10px;color:var(--txt3);margin-bottom:2px">' + label + '</div>'
-    + '<div style="font-size:12px;font-weight:500;color:' + (color || 'var(--txt1)') + ';' + (mono ? 'font-family:monospace;font-size:10px' : '') + '">' + (value || '—') + '</div>'
+  var valStyle = 'font-size:12px;font-weight:500;color:' + (color || 'var(--txt1)') + ';' + (mono ? 'font-family:monospace;font-size:10px' : '');
+  return '<div class="mbox-field">'
+    + '<div class="mbox-field-label">' + label + '</div>'
+    + '<div class="mbox-field-value" style="' + valStyle + '">' + (value || '—') + '</div>'
     + '</div>';
 };
 
@@ -674,7 +675,7 @@ window.abrirDetalheRF = function(rfId) {
   var stRegRgbs  = { inconsistencia:_hexRgb(PALETTE.red), em_risco:_hexRgb(PALETTE.amber), a_prescrever:_hexRgb(PALETTE.red), vencido:_hexRgb(PALETTE.red) };
   // Saída (status de débito)
   var stDebLabs  = { extinto:'Extinto', nao_extinto:'Não Extinto' };
-  var stDebRgbs  = { extinto:'34,197,94', nao_extinto:'167,168,170' };
+  var stDebRgbs  = { extinto:'29,158,117', nao_extinto:'167,168,170' };
   var rfSt  = rf.statusCredito || rf.status || 'nao_apropriado';
   var rfSR  = rf.statusRegistro || null;
   var stLab = stCredLabs[rfSt] || stDebLabs[rfSt] || rfSt;
@@ -682,7 +683,7 @@ window.abrirDetalheRF = function(rfId) {
   var stRegLab = rfSR ? (stRegLabs[rfSR] || rfSR) : null;
   var stRegRgb = rfSR ? (stRegRgbs[rfSR] || '167,168,170') : null;
 
-  var evRgba  = { 'INGESTÃO':'73,197,177', 'VALIDAÇÃO':'34,197,94', 'GERAÇÃO RF':'59,130,246', 'INCONSISTÊNCIA':'239,68,68', 'VENCIMENTO':'239,68,68', 'AGUARDANDO':'245,158,11', 'APROPRIAÇÃO':'34,197,94', 'PAGAMENTO':'73,197,177', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246', 'CONC APURAÇÃO':'59,130,246', 'CONC FINANCEIRA':'73,197,177' };
+  var evRgba  = { 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165', 'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23', 'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246', 'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117' };
   var evIcons = { 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌', 'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌' };
 
   // Ordenar decrescente por timestamp (mais recente primeiro)
@@ -698,7 +699,7 @@ window.abrirDetalheRF = function(rfId) {
   eventos.forEach(function(ev, i) {
     var rgba = evRgba[ev.tipo] || '167,168,170';
     var isLast = i === eventos.length - 1;
-    var dotRgba = ev.cls === 'erro' ? '239,68,68' : ev.cls === 'pending' ? '245,158,11' : rgba;
+    var dotRgba = ev.cls === 'erro' ? '163,45,45' : ev.cls === 'pending' ? '186,117,23' : rgba;
     var icon = evIcons[ev.tipo] || '◯';
     tlH += '<div style="display:flex;gap:12px">'
       + '<div style="display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0">'
@@ -720,59 +721,58 @@ window.abrirDetalheRF = function(rfId) {
   var nfDataFmt = dpNF.length === 3 ? dpNF[2]+'/'+dpNF[1]+'/'+dpNF[0] : (nf.data || '—');
   var DR = window._rfDetailRow;
 
-  var html = '<div id="rf-detalhe-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box" onclick="if(event.target===this)document.getElementById(\'rf-detalhe-overlay\').remove()">'
-    + '<div style="background:var(--bg);border:1px solid var(--brd);border-radius:14px;width:860px;max-width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.4)">'
+  var html = '<div id="rf-detalhe-overlay" class="moverlay" onclick="if(event.target===this)document.getElementById(\'rf-detalhe-overlay\').remove()">'
+    + '<div class="mbox" style="width:860px">'
 
     // Header
-    + '<div style="padding:16px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
+    + '<div class="mbox-hdr">'
     + '<div style="display:flex;align-items:center;gap:12px">'
-    + '<div style="width:34px;height:34px;border-radius:8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);display:flex;align-items:center;justify-content:center;font-size:15px">📋</div>'
-    + '<div><div style="font-size:14px;font-weight:700;color:var(--txt1)">Registro Fiscal · ' + rf.id + '</div>'
-    + '<div style="font-size:11px;color:var(--txt2)">' + (nf.tipoDF || 'NF-e') + ' ' + nf.numero + ' · ' + (nf.entidade || '—') + '</div></div>'
+    + '<div class="mbox-icon blue">📋</div>'
+    + '<div><div class="mbox-title">Registro Fiscal · ' + rf.id + '</div>'
+    + '<div class="mbox-sub">' + (nf.tipoDF || 'NF-e') + ' ' + nf.numero + ' · ' + (nf.entidade || '—') + '</div></div>'
     + '</div>'
-    + '<button onclick="document.getElementById(\'rf-detalhe-overlay\').remove()" style="background:none;border:none;cursor:pointer;color:var(--txt2);font-size:20px;padding:4px 8px;border-radius:6px;line-height:1">✕</button>'
+    + '<button onclick="document.getElementById(\'rf-detalhe-overlay\').remove()" class="mbox-close">✕</button>'
     + '</div>'
 
     // Body
     + '<div style="display:flex;flex:1;overflow:hidden">'
 
     // Left panel: dados do RF
-    + '<div style="width:280px;flex-shrink:0;border-right:1px solid var(--brd);padding:18px;overflow-y:auto">'
-    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px">Dados do Registro</div>'
-    + DR('ID do RF', rf.id, '#3B82F6')
+    + '<div class="mbox-col" style="width:280px;flex-shrink:0;border-right:1px solid var(--brd)">'
+    + '<div class="mbox-section-label">Dados do Registro</div>'
+    + DR('ID do RF', rf.id, 'var(--p-blue)')
     + DR('Tipo Fiscal', '<span style="color:' + tfColor + ';font-weight:700">' + tfLabel + '</span>')
-    + DR('Valor', ff(rf.valor), '#49C5B1')
+    + DR('Valor', ff(rf.valor), 'var(--p-teal)')
     + DR('Status Crédito', '<span style="background:rgba(' + stRgb + ',.12);color:rgba(' + stRgb + ',1);border:1px solid rgba(' + stRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLab + '</span>')
     + (stRegLab ? DR('Status Registro', '<span style="background:rgba(' + stRegRgb + ',.12);color:rgba(' + stRegRgb + ',1);border:1px solid rgba(' + stRegRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stRegLab + '</span>') : '')
-    + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
-    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">Documento Fiscal</div>'
+    + '<div class="mbox-divider"></div>'
+    + '<div class="mbox-section-label">Documento Fiscal</div>'
     + DR('NF Vinculada', (nf.tipoDF || 'DF') + ' ' + nf.numero)
     + DR('Emitente', nf.entidade || '—')
     + DR('CNPJ', nf.cnpj || '—', null, true)
     + DR('Data NF', nfDataFmt)
     + DR('Valor Total NF', ff(rf.valorTotalNF || nf.valorTotal || 0))
     + DR('Tipo', nf.tipo === 'saida' ? 'Saída' : 'Entrada')
-    + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
+    + '<div class="mbox-divider"></div>'
     + DR('Método Pagamento', rf.metodoPagamento || nf.metodoPagamento || '—')
     + ((rf.metodoPagamento || nf.metodoPagamento || '') === 'Fornecedor'
-        ? '<div style="background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.22);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;line-height:1.6">'
-          + '<span style="font-weight:700;color:#3B82F6;font-size:11px;text-transform:uppercase;letter-spacing:.06em">Apuração Assistida</span><br>'
+        ? '<div class="mbox-info-box"><span class="mbox-info-box-label">Apuração Assistida</span>'
           + '<span style="color:var(--txt2)">Quando o método de pagamento é <strong>Fornecedor</strong>, o valor e a elegibilidade do IBS/CBS são confirmados a partir da <strong>Apuração Assistida</strong>. '
           + 'O SplitHub acolhe esses dados para validar e registrar o pagamento nesta etapa de conciliação financeira.</span>'
           + '</div>'
         : '')
     + (rf.dataPagamento && rf.dataPagamento !== '—' ? DR('Data Pagamento', rf.dataPagamento) : '')
-    + (rfSt === 'utilizado' && rf.metodoExtincao ? DR('Método Extinção', rf.metodoExtincao, '#49C5B1') : '')
+    + (rfSt === 'utilizado' && rf.metodoExtincao ? DR('Método Extinção', rf.metodoExtincao, 'var(--p-teal)') : '')
     + (rfSt === 'utilizado' && rf.dataExtincao ? DR('Data Extinção', rf.dataExtincao) : '')
-    + (rf.inconsistencia ? DR('Inconsistência', rf.inconsistencia, '#F43F5E') : '')
-    + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
-    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Inconsistências Vinculadas</div>'
+    + (rf.inconsistencia ? DR('Inconsistência', rf.inconsistencia, 'var(--p-red)') : '')
+    + '<div class="mbox-divider"></div>'
+    + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
     + window._incRenderVinculadasHtml((window._inconsistenciasGlobal||[]).filter(function(i){ return i.rfId === rf.id; }))
     + '</div>'
 
     // Right panel: timeline
-    + '<div style="flex:1;padding:18px;overflow-y:auto">'
-    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px">Histórico do Ciclo · ' + eventos.length + ' evento' + (eventos.length !== 1 ? 's' : '') + '</div>'
+    + '<div class="mbox-col" style="flex:1">'
+    + '<div class="mbox-section-label">Histórico do Ciclo · ' + eventos.length + ' evento' + (eventos.length !== 1 ? 's' : '') + '</div>'
     + tlH
     + '</div>'
     + '</div>'
@@ -1052,12 +1052,12 @@ window.renderizarTabelaCreditos = function() {
         + '<span style="width:5px;height:5px;border-radius:50%;background:'+_tfC+';display:inline-block;flex-shrink:0"></span>'
         + r.tipoFiscal + '</span>';
       var nfTipoBadgeCred = r.tipoNF === 'saida'
-        ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(245,158,11,.28);color:#F59E0B;background:transparent">Saída</span>'
-        : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(34,197,94,.28);color:#22C55E;background:transparent">Entrada</span>';
+        ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(186,117,23,.28);color:#ba7517;background:transparent">Saída</span>'
+        : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(29,158,117,.28);color:#1d9e75;background:transparent">Entrada</span>';
       var nfNumero = r.nfNumero || '';
-      var nfLink = '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline" onclick="window.abrirDetalhesNFporNumero(\'' + nfNumero + '\')">' + r.nf + '</span>';
+      var nfLink = '<span class="mono" style="font-size:11px;color:#185fa5;cursor:pointer;text-decoration:underline" onclick="window.abrirDetalhesNFporNumero(\'' + nfNumero + '\')">' + r.nf + '</span>';
       var contratoCell = r.contratoId
-        ? '<span class="mono" style="font-size:11px;color:#49C5B1;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\'' + r.contratoId + '\')">' + r.contratoId + '</span>'
+        ? '<span class="mono" style="font-size:11px;color:#1d9e75;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\'' + r.contratoId + '\')">' + r.contratoId + '</span>'
         : '<span style="color:var(--txt3)">—</span>';
       var _metC = r.metodoPagamento === 'RAD' ? '#60A5FA' : r.metodoPagamento === 'Fornecedor' ? '#A78BFA' : null;
       var metodoCell = _metC
@@ -1068,22 +1068,22 @@ window.renderizarTabelaCreditos = function() {
       var pagCell = r.isPago
         ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pag + '</a>'
         : '<span style="color:var(--txt3)">—</span>';
-      var rfIdLink = '<button onclick="window.abrirDetalheRF(\'' + r.rfId + '\')" style="background:none;border:none;color:#3B82F6;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button>';
+      var rfIdLink = '<button onclick="window.abrirDetalheRF(\'' + r.rfId + '\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button>';
       var statusCredBadge = bdg(r.statusCredito || r.status);
       var statusRegBadge  = r.statusRegistro ? bdg(r.statusRegistro) : '';
-      var incBadge = r.inconsistencia ? '<br><span style="font-size:10px;color:#F43F5E;font-style:italic">' + r.inconsistencia + '</span>' : '';
+      var incBadge = r.inconsistencia ? '<br><span style="font-size:10px;color:#a32d2d;font-style:italic">' + r.inconsistencia + '</span>' : '';
       var _metExtMap = {
-        'Split Payment': { cor: '73,197,177',  lbl: 'Split Payment' },
-        'Compensacao':   { cor: '59,130,246',  lbl: 'Compensação'   },
-        'Ressarcimento': { cor: '34,197,94',   lbl: 'Ressarcimento' },
+        'Split Payment': { cor: '29,158,117',  lbl: 'Split Payment' },
+        'Compensacao':   { cor: '24,95,165',  lbl: 'Compensação'   },
+        'Ressarcimento': { cor: '29,158,117',   lbl: 'Ressarcimento' },
         'Transferencia': { cor: '139,92,246',  lbl: 'Transferência' },
-        'RAD':           { cor: '245,158,11',  lbl: 'RAD'           }
+        'RAD':           { cor: '186,117,23',  lbl: 'RAD'           }
       };
       var sc = r.statusCredito || r.status || '';
       var metExtCell;
       if (sc === 'utilizado') {
         var _meKey = r.metodoExtincao || 'Compensacao';
-        var _me = _metExtMap[_meKey] || { cor: '73,197,177', lbl: _meKey };
+        var _me = _metExtMap[_meKey] || { cor: '29,158,117', lbl: _meKey };
         metExtCell = '<span style="background:rgba(' + _me.cor + ',.12);color:rgba(' + _me.cor + ',1);border:1px solid rgba(' + _me.cor + ',.28);border-radius:3px;padding:2px 7px;font-size:10px;font-weight:700;letter-spacing:.05em">' + _me.lbl + '</span>';
       } else {
         metExtCell = '<span style="color:var(--txt3)">—</span>';
@@ -1344,8 +1344,8 @@ window.atualizarKPIsDashboard = function() {
   var heroPctStr = heroPct.toFixed(1).replace('.', ',') + '%';
   var heroColor = heroPct >= 75 ? 'var(--teal)' : heroPct >= 50 ? 'var(--amber)' : 'var(--red)';
   var heroBadge = heroPct >= 75 ? 'Saudável' : heroPct >= 50 ? 'Atenção' : 'Crítico';
-  var heroBg    = heroPct >= 75 ? 'rgba(73,197,177,.12)'  : heroPct >= 50 ? 'rgba(245,158,11,.12)' : 'rgba(244,63,94,.12)';
-  var heroBdr   = heroPct >= 75 ? 'rgba(73,197,177,.25)'  : heroPct >= 50 ? 'rgba(245,158,11,.25)' : 'rgba(244,63,94,.25)';
+  var heroBg    = heroPct >= 75 ? 'rgba(73,197,177,.12)'  : heroPct >= 50 ? 'rgba(186,117,23,.12)' : 'rgba(244,63,94,.12)';
+  var heroBdr   = heroPct >= 75 ? 'rgba(73,197,177,.25)'  : heroPct >= 50 ? 'rgba(186,117,23,.25)' : 'rgba(244,63,94,.25)';
   var heroFill  = heroPct >= 75 ? 'linear-gradient(90deg,'+PALETTE.teal+','+PALETTE.tealDark+')' : heroPct >= 50 ? 'var(--amber)' : 'var(--red)';
   setEl('dash-hero-pct',       heroPctStr);
   setEl('dash-hero-total',     fmtM(total));
@@ -1503,13 +1503,13 @@ window.atualizarDashboard = function() {
   });
 
   var statusMap = {
-    apropriado:    { label: 'Apropriado',    c: '#22C55E' },
-    utilizado:     { label: 'Utilizado',     c: '#49C5B1' },
-    extinto:       { label: 'Extinto',       c: '#22C55E' },
-    nao_apropriado:{ label: 'Pendente',      c: '#F59E0B' },
-    em_risco:      { label: 'Em Risco',       c: '#F59E0B' },
-    vencido:       { label: 'Vencido',       c: '#F43F5E' },
-    inconsistencia:{ label: 'Inconsistência',c: '#F43F5E' }
+    apropriado:    { label: 'Apropriado',    c: '#1d9e75' },
+    utilizado:     { label: 'Utilizado',     c: '#1d9e75' },
+    extinto:       { label: 'Extinto',       c: '#1d9e75' },
+    nao_apropriado:{ label: 'Pendente',      c: '#ba7517' },
+    em_risco:      { label: 'Em Risco',       c: '#ba7517' },
+    vencido:       { label: 'Vencido',       c: '#a32d2d' },
+    inconsistencia:{ label: 'Inconsistência',c: '#a32d2d' }
   };
   var fmtV = function(v) {
     if (v >= 1e6) return 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M';
@@ -1855,7 +1855,7 @@ window.atualizarInteligencia = function() {
   if (sbEl) {
     var h = '';
     scoreLista.slice(0, 10).forEach(function(r) {
-      var c = r.score >= 80 ? '#22C55E' : r.score >= 60 ? '#F59E0B' : '#F43F5E';
+      var c = r.score >= 80 ? '#1d9e75' : r.score >= 60 ? '#ba7517' : '#a32d2d';
       var nome = r.nome.length > 18 ? r.nome.substring(0,17) + '…' : r.nome;
       h += '<div class="srow"><span class="sname">' + nome + '</span>'
          + '<div class="strk"><div class="sfil" style="width:' + r.score + '%;background:' + c + '"></div></div>'
@@ -1946,7 +1946,7 @@ window.atualizarInteligencia = function() {
     // Quadrante saudável: score ≥ 70 e prazo ≤ 60 — canto SUPERIOR direito
     var qSaudX1 = xp(70),    qSaudX2 = W - padR;
     var qSaudY1 = padT,      qSaudY2 = ypp(60);
-    s += '<rect x="' + qSaudX1 + '" y="' + qSaudY1 + '" width="' + (qSaudX2 - qSaudX1) + '" height="' + (qSaudY2 - qSaudY1) + '" fill="rgba(34,197,94,0.07)"/>';
+    s += '<rect x="' + qSaudX1 + '" y="' + qSaudY1 + '" width="' + (qSaudX2 - qSaudX1) + '" height="' + (qSaudY2 - qSaudY1) + '" fill="rgba(29,158,117,0.07)"/>';
     s += '<text x="' + (qSaudX2 - 8) + '" y="' + (qSaudY1 + 16) + '" text-anchor="end" fill="var(--green)" font-size="10" font-weight="700" font-family="Montserrat,sans-serif" opacity="0.75">✓ SAUDÁVEL</text>';
 
     // Grid linhas verticais (score 20,40,60,70,80,100)
@@ -1964,10 +1964,10 @@ window.atualizarInteligencia = function() {
     });
 
     // Linhas de threshold
-    s += '<line x1="' + xp(70) + '" y1="' + padT + '" x2="' + xp(70) + '" y2="' + (H - padB) + '" stroke="rgba(245,158,11,0.65)" stroke-width="1.5" stroke-dasharray="6 4"/>';
+    s += '<line x1="' + xp(70) + '" y1="' + padT + '" x2="' + xp(70) + '" y2="' + (H - padB) + '" stroke="rgba(186,117,23,0.65)" stroke-width="1.5" stroke-dasharray="6 4"/>';
     s += '<text x="' + (xp(70) + 3) + '" y="' + (padT + 10) + '" fill="var(--amber)" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">score 70</text>';
 
-    s += '<line x1="' + padL + '" y1="' + ypp(60) + '" x2="' + (W - padR) + '" y2="' + ypp(60) + '" stroke="rgba(245,158,11,0.65)" stroke-width="1.5" stroke-dasharray="6 4"/>';
+    s += '<line x1="' + padL + '" y1="' + ypp(60) + '" x2="' + (W - padR) + '" y2="' + ypp(60) + '" stroke="rgba(186,117,23,0.65)" stroke-width="1.5" stroke-dasharray="6 4"/>';
     s += '<text x="' + (W - padR - 3) + '" y="' + (ypp(60) - 4) + '" text-anchor="end" fill="var(--amber)" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">60d</text>';
 
     // Eixos
@@ -2017,7 +2017,7 @@ window.atualizarInteligencia = function() {
       + '<div style="font-size:11px;color:var(--txt3);margin-bottom:4px">Se todos os créditos pendentes fossem regularizados</div>'
       + '<div style="font-size:22px;font-weight:700;color:'+PALETTE.blue+'">' + fmtM(pendCred) + '</div>'
       + '<div style="font-size:11px;color:var(--txt3);margin-top:4px">adicionais · aproveitamento subiria de <strong style="color:var(--txt1)">'
-      + pct + '%</strong> para <strong style="color:#22C55E">' + novoPct + '%</strong></div>'
+      + pct + '%</strong> para <strong style="color:#1d9e75">' + novoPct + '%</strong></div>'
       + '</div>'
       + '<div style="background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.2);border-radius:10px;padding:14px 18px">'
       + '<div style="font-size:11px;color:var(--txt3);margin-bottom:4px">Crédito em risco de perda definitiva (vencidos + inconsistentes)</div>'
@@ -2061,7 +2061,7 @@ window.atualizarInteligencia = function() {
   });
   Object.keys(incMap).sort(function(a,b){return incMap[b].val-incMap[a].val;}).slice(0,3).forEach(function(ent) {
     var d = incMap[ent];
-    alertas.push({ sev:'ATENÇÃO', color:'var(--amber)', bg:'rgba(245,158,11,.15)',
+    alertas.push({ sev:'ATENÇÃO', color:'var(--amber)', bg:'rgba(186,117,23,.15)',
       msg: ent + ' — ' + d.n + ' inconsistência(s) em RF detectada(s) (' + fmtM(d.val) + '). Regularizar para garantir aproveitamento do crédito.' });
   });
 
@@ -2078,13 +2078,13 @@ window.atualizarInteligencia = function() {
   });
   Object.keys(pendMap).sort(function(a,b){return pendMap[b].val-pendMap[a].val;}).slice(0,2).forEach(function(ent) {
     var d = pendMap[ent];
-    alertas.push({ sev:'ATENÇÃO', color:'var(--amber)', bg:'rgba(245,158,11,.15)',
+    alertas.push({ sev:'ATENÇÃO', color:'var(--amber)', bg:'rgba(186,117,23,.15)',
       msg: ent + ' — ' + d.n + ' RF(s) com crédito não apropriad (' + fmtM(d.val) + '). Emitir guia DARF/IBS para regularizar.' });
   });
 
   // Info: aproveitamento geral
   var nível = pct >= 75 ? 'Índice saudável.' : pct >= 50 ? 'Requer atenção.' : 'Índice crítico — ação necessária.';
-  alertas.push({ sev:'INFO', color:'var(--blue)', bg:'rgba(59,130,246,.15)',
+  alertas.push({ sev:'INFO', color:'var(--blue)', bg:'rgba(24,95,165,.15)',
     msg: 'Aproveitamento geral: ' + pct + '% (' + fmtM(apropCred) + ' de ' + fmtM(totalCred) + '). ' + nível });
 
   // Info: melhor fornecedor
@@ -2262,13 +2262,13 @@ function _concRFDetail(nf, ibsRF, cbsRF) {
       + '</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
       + '<span style="color:var(--txt3)">ID RF</span>'
-      + '<span style="color:#3B82F6;font-family:monospace;font-weight:700' + (canOpen ? ';text-decoration:underline dotted' : '') + '">' + rfId + '</span>'
+      + '<span style="color:#185fa5;font-family:monospace;font-weight:700' + (canOpen ? ';text-decoration:underline dotted' : '') + '">' + rfId + '</span>'
       + '<span style="color:var(--txt3)">Valor</span><span style="color:var(--txt1);font-weight:600">' + fmtV(rf.valor) + '</span>'
       + '<span style="color:var(--txt3)">Data RF</span><span style="color:var(--txt2)">' + (rf.data || '—') + '</span>'
-      + '<span style="color:var(--txt3)">Pagamento</span><span style="color:' + (pago ? '#22C55E' : 'var(--txt3)') + ';font-weight:' + (pago ? '600' : '400') + '">' + (pago ? rf.dataPagamento : 'Pendente') + '</span>'
-      + (rf.inconsistencia ? ('<span style="color:var(--txt3)">Inconsistência</span><span style="color:#F43F5E;font-size:10px">' + rf.inconsistencia + '</span>') : '')
+      + '<span style="color:var(--txt3)">Pagamento</span><span style="color:' + (pago ? '#1d9e75' : 'var(--txt3)') + ';font-weight:' + (pago ? '600' : '400') + '">' + (pago ? rf.dataPagamento : 'Pendente') + '</span>'
+      + (rf.inconsistencia ? ('<span style="color:var(--txt3)">Inconsistência</span><span style="color:#a32d2d;font-size:10px">' + rf.inconsistencia + '</span>') : '')
       + '</div>'
-      + (canOpen ? '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:#3B82F6;font-weight:600">Ver detalhes do RF →</div>' : '')
+      + (canOpen ? '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:#185fa5;font-weight:600">Ver detalhes do RF →</div>' : '')
       + '</div>';
   }
   var nfTotal = 'R$ ' + ((nf.valorTotal||0)/1).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -2298,7 +2298,7 @@ function _rfStatusBadge(rf) {
   var _rfSC = rf.statusCredito || rf.status || '';
   var _rfSR = rf.statusRegistro || null;
   var credColor = {apropriado:'var(--green)',utilizado:'var(--teal)',glosado:'#8B5CF6',nao_apropriado:'var(--amber)'}[_rfSC] || '#555';
-  var regColor  = {em_risco:'#F59E0B',vencido:'var(--red)',inconsistencia:'#F43F5E',a_prescrever:'#FB923C'}[_rfSR] || null;
+  var regColor  = {em_risco:'#ba7517',vencido:'var(--red)',inconsistencia:'#a32d2d',a_prescrever:'#FB923C'}[_rfSR] || null;
   var html = '<span style="background:'+credColor+';color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">'+(_rfSC||'—')+'</span>';
   if (_rfSR) html += ' <span style="background:'+regColor+';color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">'+_rfSR+'</span>';
   return html;
@@ -2387,15 +2387,15 @@ function _concUnifiedRender() {
     var rfId = rf.id || '—';
     var canOpen = rfId !== '—' && window._rfIndex && window._rfIndex[rfId];
     var click = canOpen ? 'onclick="event.stopPropagation();if(window.abrirDetalheRF)window.abrirDetalheRF(\'' + rfId + '\')" style="cursor:pointer"' : '';
-    return '<span ' + click + ' style="display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;font-family:monospace;color:var(--blue);background:rgba(59,130,246,.07)' + (canOpen ? ';cursor:pointer' : '') + '">'
+    return '<span ' + click + ' style="display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;font-family:monospace;color:var(--blue);background:rgba(24,95,165,.07)' + (canOpen ? ';cursor:pointer' : '') + '">'
       + label + ' · ' + rfId + '</span>';
   }
   function stageApur(r) {
     var delta = r.deltaValor;
     var deltaStr = Math.abs(delta) < 1 ? '—' : (delta > 0 ? '+' : '') + _concFmt(delta);
-    var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? '#F59E0B' : '#F43F5E') : 'var(--txt3)';
-    return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid #3B82F6;border-radius:8px;padding:10px 12px;min-width:200px">'
-      + '<div style="font-size:10px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 1 — Conciliação Apuração</div>'
+    var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? '#ba7517' : '#a32d2d') : 'var(--txt3)';
+    return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid #185fa5;border-radius:8px;padding:10px 12px;min-width:200px">'
+      + '<div style="font-size:10px;font-weight:700;color:#185fa5;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 1 — Conciliação Apuração</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
       + '<span style="color:var(--txt3)">Valor DF</span><span style="font-weight:600">' + _concFmt(r.valorDF) + '</span>'
       + '<span style="color:var(--txt3)">Valor Gov</span><span style="font-weight:600">' + _concFmt(r.valorGov) + '</span>'
@@ -2447,7 +2447,7 @@ function _concUnifiedRender() {
     var nfLabel = ((nf.tipoDF || '') + ' ' + (nf.numero || '')).trim() || '—';
     var delta = r.deltaValor;
     var deltaStr = Math.abs(delta) < 1 ? '—' : (delta > 0 ? '+' : '') + _concFmt(delta);
-    var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? 'color:#F59E0B' : 'color:#F43F5E') : 'color:var(--txt3)';
+    var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? 'color:#ba7517' : 'color:#a32d2d') : 'color:var(--txt3)';
     var detail = '<div style="padding:10px 16px 14px">'
       + '<div style="font-size:10px;color:var(--txt3);margin-bottom:10px">Valor total NF: <strong style="color:var(--txt1)">' + fmtV(nf.valorTotal||0) + '</strong>'
       + ' · IBS: <strong style="color:var(--txt1)">' + fmtV(nf.ibs) + '</strong>'
@@ -2463,7 +2463,7 @@ function _concUnifiedRender() {
       + (function concChips(ra, rf2) {
           function chip(c, label) {
             if (!c) return '';
-            var cCol = c.concStatus==='confirmada'?'34,197,94':c.concStatus==='divergente'?'239,68,68':'245,158,11';
+            var cCol = c.concStatus==='confirmada'?'29,158,117':c.concStatus==='divergente'?'163,45,45':'186,117,23';
             var cLbl = {confirmada:'Confirmada',divergente:'Divergente',pendente:'Pendente'}[c.concStatus]||c.concStatus;
             var ts = window._rfFmtTS ? window._rfFmtTS(c.concTs) : c.concTs;
             return '<span style="display:inline-flex;align-items:center;gap:5px;border:1px solid rgba('+cCol+',.3);border-radius:6px;padding:3px 9px;font-size:11px;font-family:monospace;background:rgba('+cCol+',.08);color:rgba('+cCol+',1)" title="'+label+'">'
@@ -2921,7 +2921,7 @@ window._incRfRenderPagina = function() {
     var sc = _stBadgeCfg[inc.status] || ['167,168,170', inc.status];
     var pc = _prioCfg[inc.prioridade] || ['167,168,170', inc.prioridade];
     var fluxoBadge = inc.tipoFluxo === 'entrada'
-      ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid rgba(34,197,94,.28);color:rgba(34,197,94,1);background:rgba(34,197,94,.1)">↓ Entrada</span>'
+      ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid rgba(29,158,117,.28);color:rgba(29,158,117,1);background:rgba(29,158,117,.1)">↓ Entrada</span>'
       : '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid rgba(244,63,94,.28);color:rgba(244,63,94,1);background:rgba(244,63,94,.1)">↑ Saída</span>';
     var rfCell = inc.rfId
       ? '<button onclick="window.abrirDetalheRF(\''+inc.rfId+'\')" style="background:none;border:none;color:rgba(26,107,90,1);cursor:pointer;font-size:10px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">'+inc.rfId+' · '+inc.tipoFiscal+'</button>'
@@ -2937,7 +2937,7 @@ window._incRfRenderPagina = function() {
       + '<td class="trunc" style="max-width:150px">'+inc.entidade+'</td>'
       + '<td class="r mono" style="color:var(--txt2)">'+ff(inc.valor)+'</td>'
       + '<td style="font-size:11px;color:var(--txt1)">'+inc.tipoLabel+'</td>'
-      + '<td class="nowrap">'+_badge(inc.origem==='df'?'59,130,246':'26,107,90', inc.origem==='df'?'DF':'RF')+'</td>'
+      + '<td class="nowrap">'+_badge(inc.origem==='df'?'24,95,165':'26,107,90', inc.origem==='df'?'DF':'RF')+'</td>'
       + '<td class="nowrap">'+_badge(sc[0],sc[1])+'</td>'
       + '<td class="nowrap">'+_badge(pc[0],pc[1])+'</td>'
       + '<td class="nowrap" style="font-size:11px;color:var(--txt2)">'+inc.data+'</td>'
@@ -2961,14 +2961,14 @@ window._incRfRenderPagina = function() {
 
 // Mapa de ações disponíveis por tipo de inconsistência
 var _incAcoesMap = {
-  'Não conciliado':           [{ label: 'Conciliar RF manualmente',          icon: '🔗', cor: '#49C5B1' }, { label: 'Encaminhar para análise fiscal',      icon: '🔍', cor: '#3B82F6' }, { label: 'Notificar fornecedor',               icon: '✉️', cor: '#8B5CF6' }],
-  'Valor imposto divergente': [{ label: 'Corrigir valor do imposto',          icon: '✏️', cor: '#F59E0B' }, { label: 'Solicitar nota de crédito ao fornecedor', icon: '📋', cor: '#3B82F6' }, { label: 'Abrir chamado na SEFAZ',             icon: '🏛️', cor: '#8B5CF6' }],
-  'Vencido':                  [{ label: 'Emitir nova guia de pagamento',      icon: '📄', cor: '#F43F5E' }, { label: 'Solicitar prorrogação de prazo',     icon: '📅', cor: '#F59E0B' }, { label: 'Regularizar junto ao Fisco',         icon: '🏛️', cor: '#8B5CF6' }],
-  'Sem Comprovante':          [{ label: 'Anexar comprovante de pagamento',    icon: '📎', cor: '#49C5B1' }, { label: 'Solicitar comprovante ao fornecedor', icon: '✉️', cor: '#3B82F6' }, { label: 'Reprocessar após anexo',             icon: '🔄', cor: '#22C55E' }],
-  'Falha de Layout':          [{ label: 'Reprocessar documento',              icon: '🔄', cor: '#49C5B1' }, { label: 'Solicitar reenvio ao fornecedor',    icon: '✉️', cor: '#3B82F6' }, { label: 'Corrigir layout e reimportar',       icon: '✏️', cor: '#F59E0B' }],
-  'Inconsistência de Dados':  [{ label: 'Corrigir dados do documento',       icon: '✏️', cor: '#F59E0B' }, { label: 'Revalidar após correção',            icon: '✅', cor: '#22C55E' }, { label: 'Encaminhar para revisão manual',    icon: '🔍', cor: '#3B82F6' }],
-  'Rejeitado SEFAZ':          [{ label: 'Corrigir e reenviar à SEFAZ',       icon: '🏛️', cor: '#F43F5E' }, { label: 'Solicitar manifestação do destinatário', icon: '📋', cor: '#F59E0B' }, { label: 'Cancelar e emitir novo documento',  icon: '❌', cor: '#8B5CF6' }],
-  'Documento Duplicado':      [{ label: 'Anular documento duplicado',         icon: '🗑️', cor: '#F43F5E' }, { label: 'Manter original e descartar',       icon: '✅', cor: '#22C55E' }, { label: 'Encaminhar para auditoria',          icon: '🔍', cor: '#8B5CF6' }]
+  'Não conciliado':           [{ label: 'Conciliar RF manualmente',          icon: '🔗', cor: '#1d9e75' }, { label: 'Encaminhar para análise fiscal',      icon: '🔍', cor: '#185fa5' }, { label: 'Notificar fornecedor',               icon: '✉️', cor: '#8B5CF6' }],
+  'Valor imposto divergente': [{ label: 'Corrigir valor do imposto',          icon: '✏️', cor: '#ba7517' }, { label: 'Solicitar nota de crédito ao fornecedor', icon: '📋', cor: '#185fa5' }, { label: 'Abrir chamado na SEFAZ',             icon: '🏛️', cor: '#8B5CF6' }],
+  'Vencido':                  [{ label: 'Emitir nova guia de pagamento',      icon: '📄', cor: '#a32d2d' }, { label: 'Solicitar prorrogação de prazo',     icon: '📅', cor: '#ba7517' }, { label: 'Regularizar junto ao Fisco',         icon: '🏛️', cor: '#8B5CF6' }],
+  'Sem Comprovante':          [{ label: 'Anexar comprovante de pagamento',    icon: '📎', cor: '#1d9e75' }, { label: 'Solicitar comprovante ao fornecedor', icon: '✉️', cor: '#185fa5' }, { label: 'Reprocessar após anexo',             icon: '🔄', cor: '#1d9e75' }],
+  'Falha de Layout':          [{ label: 'Reprocessar documento',              icon: '🔄', cor: '#1d9e75' }, { label: 'Solicitar reenvio ao fornecedor',    icon: '✉️', cor: '#185fa5' }, { label: 'Corrigir layout e reimportar',       icon: '✏️', cor: '#ba7517' }],
+  'Inconsistência de Dados':  [{ label: 'Corrigir dados do documento',       icon: '✏️', cor: '#ba7517' }, { label: 'Revalidar após correção',            icon: '✅', cor: '#1d9e75' }, { label: 'Encaminhar para revisão manual',    icon: '🔍', cor: '#185fa5' }],
+  'Rejeitado SEFAZ':          [{ label: 'Corrigir e reenviar à SEFAZ',       icon: '🏛️', cor: '#a32d2d' }, { label: 'Solicitar manifestação do destinatário', icon: '📋', cor: '#ba7517' }, { label: 'Cancelar e emitir novo documento',  icon: '❌', cor: '#8B5CF6' }],
+  'Documento Duplicado':      [{ label: 'Anular documento duplicado',         icon: '🗑️', cor: '#a32d2d' }, { label: 'Manter original e descartar',       icon: '✅', cor: '#1d9e75' }, { label: 'Encaminhar para auditoria',          icon: '🔍', cor: '#8B5CF6' }]
 };
 
 window._incAbrirAcao = function(id) {
@@ -2976,7 +2976,7 @@ window._incAbrirAcao = function(id) {
   if (!r) return;
 
   var tipo = r.inc || 'Não conciliado';
-  var acoes = _incAcoesMap[tipo] || [{ label: 'Encaminhar para análise', icon: '🔍', cor: '#3B82F6' }];
+  var acoes = _incAcoesMap[tipo] || [{ label: 'Encaminhar para análise', icon: '🔍', cor: '#185fa5' }];
   var incCor = _incCores[tipo] || '#8B5CF6';
   var fmtV = function(v){ if(v>=1e6) return 'R$ '+(v/1e6).toFixed(2).replace('.',',')+'M'; if(v>=1e3) return 'R$ '+Math.round(v/1e3)+'K'; return 'R$ '+v.toFixed(2).replace('.',','); };
 
@@ -3058,16 +3058,16 @@ window.incRfPaginaAnterior = function() {
 window._kanbanState = {};
 
 var _kbColunas = [
-  { id: 'identificado',   label: 'Identificado',       cor: '#F43F5E', icon: '🔴' },
-  { id: 'analise',        label: 'Em Análise',          cor: '#F59E0B', icon: '🔍' },
-  { id: 'tratamento',     label: 'Em Tratamento',       cor: '#3B82F6', icon: '🔧' },
+  { id: 'identificado',   label: 'Identificado',       cor: '#a32d2d', icon: '🔴' },
+  { id: 'analise',        label: 'Em Análise',          cor: '#ba7517', icon: '🔍' },
+  { id: 'tratamento',     label: 'Em Tratamento',       cor: '#185fa5', icon: '🔧' },
   { id: 'aguardando',     label: 'Aguardando Retorno',  cor: '#8B5CF6', icon: '⏳' },
-  { id: 'resolvido',      label: 'Resolvido',           cor: '#22C55E', icon: '✅' }
+  { id: 'resolvido',      label: 'Resolvido',           cor: '#1d9e75', icon: '✅' }
 ];
 
 var _kbIncCores = {
-  'Não conciliado':          '#F43F5E',
-  'Valor imposto divergente':'#F59E0B',
+  'Não conciliado':          '#a32d2d',
+  'Valor imposto divergente':'#ba7517',
   'Vencido':                 '#EF4444',
   'Sem Comprovante':         '#8B5CF6'
 };
@@ -3079,8 +3079,8 @@ window._kbFilterDFs = new Set();
 
 var _kbUsuarios = [
   { id: 'nenhum', nome: 'Sem responsável', iniciais: '—', cor: '#6B7280' },
-  { id: 'js',     nome: 'José da Silva',   iniciais: 'JS', cor: '#49C5B1' },
-  { id: 'mc',     nome: 'Maria Costa',     iniciais: 'MC', cor: '#3B82F6' },
+  { id: 'js',     nome: 'José da Silva',   iniciais: 'JS', cor: '#1d9e75' },
+  { id: 'mc',     nome: 'Maria Costa',     iniciais: 'MC', cor: '#185fa5' },
   { id: 'rl',     nome: 'Rafael Lima',     iniciais: 'RL', cor: '#7C3AED' },
   { id: 'af',     nome: 'Ana Ferreira',    iniciais: 'AF', cor: '#D97706' },
   { id: 'pt',     nome: 'Paulo Torres',    iniciais: 'PT', cor: '#059669' }
@@ -3113,7 +3113,7 @@ window.renderizarKanbanInconsistencias = function() {
     filtersEl.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">'
       + fluxoOpts.map(function(o){
           var act = _kbFiltroFluxo === o[0];
-          var c = o[0]==='entrada'?'34,197,94':o[0]==='saida'?'244,63,94':'167,168,170';
+          var c = o[0]==='entrada'?'29,158,117':o[0]==='saida'?'244,63,94':'167,168,170';
           return '<button onclick="window._kbFiltroFluxo=\''+o[0]+'\';window.renderizarKanbanInconsistencias()" '
             +'style="font-size:10px;font-weight:700;padding:4px 11px;border-radius:20px;border:1px solid rgba('+c+','+(act?'1':'.3')+');background:rgba('+c+','+(act?'.15':'0')+');color:rgba('+c+',1);cursor:pointer;font-family:inherit">'+o[1]+'</button>';
         }).join('')
@@ -3169,10 +3169,10 @@ window.renderizarKanbanInconsistencias = function() {
     var cardsHtml = '';
     cards.forEach(function(inc) {
       var safeId = inc.id.replace(/'/g,"\\'");
-      var fluxoRgb = inc.tipoFluxo === 'entrada' ? '34,197,94' : '244,63,94';
+      var fluxoRgb = inc.tipoFluxo === 'entrada' ? '29,158,117' : '244,63,94';
       var fluxoLbl = inc.tipoFluxo === 'entrada' ? '↓ Entrada' : '↑ Saída';
-      var tfRgb    = inc.tipoFiscal === 'IBS' ? '59,130,246' : '245,158,11';
-      var origemRgb = inc.origem === 'df' ? '59,130,246' : '26,107,90';
+      var tfRgb    = inc.tipoFiscal === 'IBS' ? '24,95,165' : '186,117,23';
+      var origemRgb = inc.origem === 'df' ? '24,95,165' : '26,107,90';
       var origemLbl = inc.origem === 'df' ? 'DF' : 'RF';
       var dfNum = (inc.dfNum||'').replace(/^[^\s]+\s*/,'');
       cardsHtml += '<div class="kb-card" draggable="true"'
@@ -3442,10 +3442,10 @@ window.kbAbrirCard = function(incId) {
   var prioRGB   = { critica:'165,72,83', alta:'170,122,50', media:'62,108,176', baixa:'105,112,122' };
   var prioLabel = { critica:'Crítica',   alta:'Alta',        media:'Média',      baixa:'Baixa' };
   var prioRgb   = prioRGB[inc.prioridade]  || '100,116,139';
-  var tipoFisCor = inc.tipoFiscal === 'IBS' ? '59,130,246' : '45,212,191';
-  var fluxoCor   = inc.tipoFluxo  === 'entrada' ? '34,197,94' : '245,158,11';
+  var tipoFisCor = inc.tipoFiscal === 'IBS' ? '24,95,165' : '45,212,191';
+  var fluxoCor   = inc.tipoFluxo  === 'entrada' ? '29,158,117' : '186,117,23';
   var fluxoLabel = inc.tipoFluxo  === 'entrada' ? '↓ Entrada' : '↑ Saída';
-  var origemRGB  = inc.origem === 'df' ? '59,130,246' : '45,212,191';
+  var origemRGB  = inc.origem === 'df' ? '24,95,165' : '45,212,191';
   var origemLabel= inc.origem === 'df' ? 'DF direto' : 'Via RF';
 
   var colOpts = stCols.map(function(c) {
@@ -3499,7 +3499,7 @@ window.kbAbrirCard = function(incId) {
   var timelineHtml = '';
   eventos.forEach(function(ev, i) {
     var rgba    = incEvRgba[ev.tipo]  || '167,168,170';
-    var dotRgba = ev.cls === 'erro' ? '239,68,68' : ev.cls === 'pending' ? '245,158,11' : rgba;
+    var dotRgba = ev.cls === 'erro' ? '163,45,45' : ev.cls === 'pending' ? '186,117,23' : rgba;
     var icon    = incEvIcons[ev.tipo] || '◯';
     var isLast  = i === eventos.length - 1;
     timelineHtml += '<div style="display:flex;gap:12px">'
@@ -3559,9 +3559,9 @@ window.kbAbrirCard = function(incId) {
     + '<div style="width:320px;flex-shrink:0;border-right:1px solid var(--brd);padding:18px;overflow-y:auto">'
 
     + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px">Dados da Inconsistência</div>'
-    + DR('DF Vinculado',   '<span style="font-family:monospace;color:rgba(59,130,246,1)">'+inc.dfNum+'</span>')
+    + DR('DF Vinculado',   '<span style="font-family:monospace;color:rgba(24,95,165,1)">'+inc.dfNum+'</span>')
     + DR('RF Vinculado',   inc.rfId ? '<span style="font-family:monospace;color:rgba(45,212,191,1)">'+inc.rfId+'</span>' : '<span style="color:var(--txt3);font-style:italic">DF direto</span>')
-    + DR('Valor',          fmtV(inc.valor), '#F59E0B')
+    + DR('Valor',          fmtV(inc.valor), '#ba7517')
     + DR('Fluxo',          fluxoLabel)
     + DR('Tipo Fiscal',    '<span style="color:rgba('+tipoFisCor+',1);font-weight:700">'+inc.tipoFiscal+'</span>')
     + DR('Origem',         origemLabel)
@@ -3849,8 +3849,8 @@ window.renderizarTabelaDebitos = function() {
   var listaRFs = [];
   var f    = window._filtrosDebitos || {};
   var busca = (f.busca || '').toLowerCase();
-  var stCoresMap  = {'extinto':'34,197,94','nao_extinto':'167,168,170','vencido':'245,158,11','inconsistencia':'244,63,94'};
-  var stHexMap    = {'extinto':'#22C55E','nao_extinto':'#A7A8AA','vencido':'#F59E0B','inconsistencia':'#F43F5E'};
+  var stCoresMap  = {'extinto':'29,158,117','nao_extinto':'167,168,170','vencido':'186,117,23','inconsistencia':'244,63,94'};
+  var stHexMap    = {'extinto':'#1d9e75','nao_extinto':'#A7A8AA','vencido':'#ba7517','inconsistencia':'#a32d2d'};
   var stLblMap    = {'extinto':'Extinto','nao_extinto':'Não Extinto','vencido':'Vencido','inconsistencia':'Inconsistência'};
   var metCoresMap = {'RAD':'#8B5CF6','Compensacao':'#14B8A6'};
   var metLblMap   = {'RAD':'RAD','Compensacao':'Compensação'};
@@ -3917,15 +3917,15 @@ window.renderizarTabelaDebitos = function() {
       ? '<span style="color:'+mCor+';font-weight:600;font-size:11px">'+mLbl+'</span>'
       : '<span style="color:var(--txt3);font-size:11px">—</span>';
     var nfTipoBadgeDeb = r.tipoNF === 'entrada'
-      ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(34,197,94,.28);color:#22C55E;background:transparent">Entrada</span>'
-      : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(245,158,11,.28);color:#F59E0B;background:transparent">Saída</span>';
+      ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(29,158,117,.28);color:#1d9e75;background:transparent">Entrada</span>'
+      : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(186,117,23,.28);color:#ba7517;background:transparent">Saída</span>';
     var stBadge  = bdg(r.status);
     var stRgBadge = r.statusRegistro ? bdg(r.statusRegistro) : '<span style="color:var(--txt3)">—</span>';
     h += '<tr>'
-      + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\'' + r.rf + '\')" style="background:none;border:none;color:#3B82F6;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
+      + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\'' + r.rf + '\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
       + '<td class="nowrap">' + tfBadge + '</td>'
       + '<td class="nowrap">' + nfTipoBadgeDeb + '</td>'
-      + '<td class="mono nowrap" style="color:#3B82F6;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\'' + (r.nfNumero||'') + '\')">' + r.nf + '</td>'
+      + '<td class="mono nowrap" style="color:#185fa5;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\'' + (r.nfNumero||'') + '\')">' + r.nf + '</td>'
       + '<td class="trunc">' + r.cliente + '</td>'
       + '<td class="nowrap" style="color:var(--txt2)">' + r.data + '</td>'
       + '<td class="r mono">' + ff(r.valorTotal) + '</td>'
@@ -3993,9 +3993,9 @@ window.debitosDFsRender = function() {
     return;
   }
 
-  var _metCor={'RAD':'139,92,246','Compensacao':'73,197,177'};
+  var _metCor={'RAD':'139,92,246','Compensacao':'29,158,117'};
   var _metLbl={'RAD':'RAD','Compensacao':'Compensação'};
-  var _stCor={'extinto':'34,197,94','nao_extinto':'167,168,170','vencido':'245,158,11','inconsistencia':'244,63,94'};
+  var _stCor={'extinto':'29,158,117','nao_extinto':'167,168,170','vencido':'186,117,23','inconsistencia':'244,63,94'};
   var _stLbl={'extinto':'Extinto','nao_extinto':'Não Extinto','vencido':'Vencido','inconsistencia':'Inconsistência'};
 
   var h='';
@@ -4017,7 +4017,7 @@ window.debitosDFsRender = function() {
     var valor=nf.valorTotal||0;
     var stRgb=_stCor[dfSt]||'167,168,170';
     var stBadge='<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:3px;background:rgba('+stRgb+',.12);color:rgb('+stRgb+');border:1px solid rgba('+stRgb+',.28)">'+(_stLbl[dfSt]||dfSt)+'</span>';
-    var tipoBadge='<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(245,158,11,.28);color:var(--amber);background:transparent">'+tipoDF+'</span>';
+    var tipoBadge='<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(186,117,23,.28);color:var(--amber);background:transparent">'+tipoDF+'</span>';
     var mRgb=metExt?(_metCor[metExt]||'167,168,170'):null;
     var metBadge=mRgb?'<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+mRgb+',.12);color:rgba('+mRgb+',1);border:1px solid rgba('+mRgb+',.28)">'+(_metLbl[metExt]||metExt)+'</span>':'<span style="color:var(--txt3)">—</span>';
     h+='<tr>';
@@ -4540,14 +4540,14 @@ window.renderizarTop5Inconsistencias = function() {
   var W = 560, barH = 20, gap = 14, padL = 170, padR = 80, padT = 8, padB = 4;
   var totalH = padT + top5.length * (barH + gap) - gap + padB;
 
-  var tipoCor = { IBS: '#3B82F6', CBS: '#F59E0B' };
+  var tipoCor = { IBS: '#185fa5', CBS: '#ba7517' };
 
   var s = '<svg viewBox="0 0 ' + W + ' ' + totalH + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
 
   top5.forEach(function(r, i) {
     var y = padT + i * (barH + gap);
     var barW = Math.max(4, Math.round((r.valor / maxVal) * (W - padL - padR)));
-    var cor = tipoCor[r.tipo] || '#F43F5E';
+    var cor = tipoCor[r.tipo] || '#a32d2d';
     var valM = (r.valor / 1e6).toFixed(2).replace('.', ',');
 
     // Label esquerda: RF ID + fornecedor
@@ -4612,10 +4612,10 @@ window.renderizarTop10Empresas = function() {
   var maxVal = top10[0].total;
 
   function scoreColor(pct) {
-    if (pct < 0.15) return '#22C55E';   // verde  — até 15% pendente
-    if (pct < 0.35) return '#F59E0B';   // âmbar  — 15–35%
+    if (pct < 0.15) return '#1d9e75';   // verde  — até 15% pendente
+    if (pct < 0.35) return '#ba7517';   // âmbar  — 15–35%
     if (pct < 0.60) return '#F97316';   // laranja — 35–60%
-    return '#F43F5E';                    // vermelho — >60%
+    return '#a32d2d';                    // vermelho — >60%
   }
   function scoreLabel(pct) {
     if (pct < 0.15) return 'Baixo';
@@ -4838,7 +4838,7 @@ window.renderizarFCT = function() {
   set('fct-k-cred-cond',  fmM(totCCond + totCRisco + totCGlosado));
   set('fct-k-debito',     fmM(totD));
   set('fct-k-liq',        fmM(recolhLiq));
-  set('fct-k-posicao',    fmM(posicao), posicao >= 0 ? '#22C55E' : '#F43F5E');
+  set('fct-k-posicao',    fmM(posicao), posicao >= 0 ? '#1d9e75' : '#a32d2d');
   set('fct-k-liq-sub',    recolhLiq === 0 ? 'posição credora' : 'após uso de créditos');
   set('fct-k-posicao-sub', posicao >= 0 ? 'posição credora ↑' : 'posição devedora ↓');
 
@@ -4900,7 +4900,7 @@ window.renderizarFCT = function() {
     var eEl = document.getElementById('fct-aliq-economia');
     if (eEl) {
       eEl.textContent = (economia > 0 ? '−' : '+') + Math.abs(economia).toFixed(1).replace('.', ',') + 'pp vs ref.';
-      eEl.style.color = economia > 0 ? '#22C55E' : '#F43F5E';
+      eEl.style.color = economia > 0 ? '#1d9e75' : '#a32d2d';
     }
   }
 
@@ -4912,19 +4912,19 @@ window.renderizarFCT = function() {
       var d   = byMonth[m];
       var liq = Math.max(0, d.dBruto - d.cAprop);
       var pos = d.cAprop - d.dBruto;
-      var posCor = pos >= 0 ? '#22C55E' : '#F43F5E';
+      var posCor = pos >= 0 ? '#1d9e75' : '#a32d2d';
       var statusTxt = pos >= 0
-        ? '<span style="color:#22C55E;font-weight:700;font-size:10px">● Credor</span>'
-        : '<span style="color:#F43F5E;font-weight:700;font-size:10px">● Devedor</span>';
+        ? '<span style="color:#1d9e75;font-weight:700;font-size:10px">● Credor</span>'
+        : '<span style="color:#a32d2d;font-weight:700;font-size:10px">● Devedor</span>';
       var aliqMes = d.faturamento > 0 ? (Math.max(0, d.dBruto - d.cAprop) / d.faturamento * 100).toFixed(1) + '%' : '—';
       rows += '<tr>'
         + '<td class="nowrap">' + m.substring(5,7) + '/' + m.substring(0,4) + '</td>'
-        + '<td class="r mono" style="color:#49C5B1">' + fmM(d.cAprop) + '</td>'
-        + '<td class="r mono" style="color:#F59E0B">' + fmM(d.cCond)  + '</td>'
-        + '<td class="r mono" style="color:#F43F5E">' + fmM(d.cRisco) + '</td>'
+        + '<td class="r mono" style="color:#1d9e75">' + fmM(d.cAprop) + '</td>'
+        + '<td class="r mono" style="color:#ba7517">' + fmM(d.cCond)  + '</td>'
+        + '<td class="r mono" style="color:#a32d2d">' + fmM(d.cRisco) + '</td>'
         + '<td class="r mono" style="color:#8B5CF6">' + fmM(d.cGlosado) + '</td>'
         + '<td class="r mono">' + fmM(d.dBruto) + '</td>'
-        + '<td class="r mono" style="color:#F59E0B">' + fmM(liq) + '</td>'
+        + '<td class="r mono" style="color:#ba7517">' + fmM(liq) + '</td>'
         + '<td class="r mono" style="color:' + posCor + ';font-weight:700">' + fmM(pos) + '</td>'
         + '<td class="r mono" style="color:var(--teal)">' + aliqMes + '</td>'
         + '<td>' + statusTxt + '</td>'
@@ -4956,7 +4956,7 @@ window.renderizarFCT = function() {
     var html = '';
     fornList.forEach(function(e, i) {
       var pct = (e.v / maxFV * 100).toFixed(0);
-      var cor = i < 2 ? '#F43F5E' : i < 4 ? '#F59E0B' : '#49C5B1';
+      var cor = i < 2 ? '#a32d2d' : i < 4 ? '#ba7517' : '#1d9e75';
       html += '<div style="margin-bottom:10px">'
         + '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">'
         + '<span class="trunc" style="color:var(--txt2);display:inline-block;max-width:150px">' + e.nome + '</span>'
@@ -5113,8 +5113,8 @@ window.renderizarTabelaPagamentos = function() {
   var tipo  = f.tipo  || '';
   var stFlt = f.status || '';
 
-  var stCoresMap = { pendente:'73,197,177', vencendo:'245,158,11', atrasado:'244,63,94', pago:'34,197,94' };
-  var stHexMap   = { pendente:'#49C5B1', vencendo:'#F59E0B', atrasado:'#F43F5E', pago:'#22C55E' };
+  var stCoresMap = { pendente:'29,158,117', vencendo:'186,117,23', atrasado:'244,63,94', pago:'29,158,117' };
+  var stHexMap   = { pendente:'#1d9e75', vencendo:'#ba7517', atrasado:'#a32d2d', pago:'#1d9e75' };
   var stLblMap   = { pendente:'Pendente', vencendo:'Em risco', atrasado:'Atrasado', pago:'Pago' };
 
   var rows = [];
@@ -5190,23 +5190,23 @@ window.renderizarTabelaPagamentos = function() {
   rows.forEach(function(r, idx) {
     var badge  = bdg(r.status);
     var tipoBadge = '<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+r.tipo+'</span>';
-    var detBtn = '<button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:4px;color:#3B82F6;cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px">Ver</button>';
+    var detBtn = '<button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:rgba(24,95,165,.08);border:1px solid rgba(24,95,165,.2);border-radius:4px;color:#185fa5;cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px">Ver</button>';
     var act = r.status !== 'pago'
       ? '<div style="display:flex;gap:4px;align-items:center"><button class="btn btn-t" style="font-size:11px;padding:4px 10px" onclick="window.abrirGuiaDARF('+idx+')">Gerar Guia</button>' + detBtn + '</div>'
       : '<div style="display:flex;gap:4px;align-items:center"><span style="font-size:11px;color:var(--txt3)">Concluído</span>' + detBtn + '</div>';
     var nfTipoBadgePag = r.tipoNF === 'entrada'
-      ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(34,197,94,.28);color:#22C55E;background:transparent">Entrada</span>'
-      : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(245,158,11,.28);color:#F59E0B;background:transparent">Saída</span>';
+      ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(29,158,117,.28);color:#1d9e75;background:transparent">Entrada</span>'
+      : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(186,117,23,.28);color:#ba7517;background:transparent">Saída</span>';
     var metodoBadge = r.metodo ? '<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+r.metodo+'</span>' : '<span style="color:var(--txt3)">—</span>';
     var chkCell = r.status !== 'pago'
       ? '<td style="text-align:center"><input type="checkbox" class="pag-chk" data-idx="'+idx+'" onchange="window.pagAtualizarSelecao()" style="cursor:pointer;width:15px;height:15px"></td>'
       : '<td></td>';
     var nfCell = r.nfNumero
-      ? '<span style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline dotted;font-weight:600;white-space:nowrap" onclick="if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + r.nfNumero + '\')">' + r.nfVinc + '</span>'
+      ? '<span style="font-size:11px;color:#185fa5;cursor:pointer;text-decoration:underline dotted;font-weight:600;white-space:nowrap" onclick="if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + r.nfNumero + '\')">' + r.nfVinc + '</span>'
       : '<span style="color:var(--txt3)">—</span>';
     h += '<tr>'
       + chkCell
-      + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:none;border:none;color:#3B82F6;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
+      + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
       + '<td class="mono nowrap">' + nfCell + '</td>'
       + '<td class="trunc"><div style="font-weight:500">' + r.forn + '</div><div style="font-size:10px;color:var(--txt2)">' + r.cnpj + '</div></td>'
       + '<td class="nowrap">' + tipoBadge + '</td>'
@@ -5294,9 +5294,9 @@ window.pagGerarGuiaLote = function() {
 
   var fmtV = function(v) { return 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2}); };
   var rows = selecionados.map(function(r) {
-    var cor = r.tipo === 'Guia IBS' ? '#3B82F6' : '#F59E0B';
+    var cor = r.tipo === 'Guia IBS' ? '#185fa5' : '#ba7517';
     return '<tr style="border-bottom:1px solid var(--brd)">'
-      + '<td style="padding:8px 12px;font-size:12px;color:#3B82F6;font-weight:600;font-family:monospace;cursor:pointer;text-decoration:underline dotted" onclick="if(window.abrirDetalheRF)window.abrirDetalheRF(\'' + r.rfId + '\')">' + r.rf + '</td>'
+      + '<td style="padding:8px 12px;font-size:12px;color:#185fa5;font-weight:600;font-family:monospace;cursor:pointer;text-decoration:underline dotted" onclick="if(window.abrirDetalheRF)window.abrirDetalheRF(\'' + r.rfId + '\')">' + r.rf + '</td>'
       + '<td style="padding:8px 12px;font-size:12px;color:var(--txt1)">' + r.forn + '</td>'
       + '<td style="padding:8px 12px"><span style="font-size:11px;font-weight:600;color:'+cor+'">' + r.tipo + '</span></td>'
       + '<td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:600;font-family:monospace;color:var(--txt1)">' + fmtV(r.valor) + '</td>'
@@ -5498,7 +5498,7 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
   // Hover zones
   var zW = Math.max(16, Math.floor(plotW / (n || 1)));
   for (var ci = 0; ci < n; ci++) {
-    var tp = [labels[ci], '#22C55E', 'Apropriado Acum.', fv(dAprop[ci]), '#F59E0B', 'Pendente Acum.', fv(dPend[ci])];
+    var tp = [labels[ci], '#1d9e75', 'Apropriado Acum.', fv(dAprop[ci]), '#ba7517', 'Pendente Acum.', fv(dPend[ci])];
     var enc = tp.join('|').replace(/'/g, '&apos;');
     s += '<rect x="' + (xp(ci) - Math.floor(zW / 2)) + '" y="' + padT + '" width="' + zW + '" height="' + plotH + '" fill="transparent" style="cursor:crosshair" onmousemove="_svgTipShow(event,\'' + enc + '\')" onmouseleave="_svgTipHide()"/>';
   }
@@ -6213,18 +6213,18 @@ window.sbRenderDropdown = function() {
   if (!lista) return;
   var ids = window._empresasAtivas || [];
   var allSel = !ids.length;
-  var h = '<div onclick="window.sbSelecionarTodos()" style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;background:' + (allSel ? 'rgba(73,197,177,.1)' : 'transparent') + ';border-left:2px solid ' + (allSel ? '#49C5B1' : 'transparent') + '">'
-    + '<span style="font-size:13px;color:#49C5B1;width:16px;text-align:center">' + (allSel ? '✓' : '') + '</span>'
+  var h = '<div onclick="window.sbSelecionarTodos()" style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;background:' + (allSel ? 'rgba(73,197,177,.1)' : 'transparent') + ';border-left:2px solid ' + (allSel ? '#1d9e75' : 'transparent') + '">'
+    + '<span style="font-size:13px;color:#1d9e75;width:16px;text-align:center">' + (allSel ? '✓' : '') + '</span>'
     + '<div style="flex:1"><div style="font-size:12px;font-weight:' + (allSel ? '700' : '500') + ';color:var(--txt1)">Todos os estabelecimentos</div>'
     + '<div style="font-size:10px;color:var(--txt2)">Visão consolidada do grupo econômico</div></div></div>';
 
   (window._orgCnpjs || []).forEach(function(c) {
     var isAt = ids.indexOf(c.id) >= 0;
     var isIn = c.status === 'inativo';
-    var tCor = c.tipo === 'Matriz' ? '#49C5B1' : '#3B82F6';
+    var tCor = c.tipo === 'Matriz' ? '#1d9e75' : '#185fa5';
     var bgItem = isAt ? 'rgba(73,197,177,.12)' : 'transparent';
-    h += '<div onclick="event.stopPropagation();window.sbToggleEmpresaItem(' + c.id + ')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;background:' + bgItem + ';border-left:2px solid ' + (isAt ? '#49C5B1' : 'transparent') + ';opacity:' + (isIn ? '0.5' : '1') + ';transition:background .15s">'
-      + '<span style="font-size:13px;color:#49C5B1;width:16px;text-align:center;flex-shrink:0">' + (isAt ? '✓' : '') + '</span>'
+    h += '<div onclick="event.stopPropagation();window.sbToggleEmpresaItem(' + c.id + ')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;background:' + bgItem + ';border-left:2px solid ' + (isAt ? '#1d9e75' : 'transparent') + ';opacity:' + (isIn ? '0.5' : '1') + ';transition:background .15s">'
+      + '<span style="font-size:13px;color:#1d9e75;width:16px;text-align:center;flex-shrink:0">' + (isAt ? '✓' : '') + '</span>'
       + '<div style="flex:1;min-width:0">'
       + '<div style="font-size:12px;font-weight:' + (isAt ? '700' : '500') + ';color:' + (isIn ? 'var(--txt3)' : 'var(--txt1)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + c.razao + ' <span style="font-size:9px;font-weight:400;color:var(--txt2)">' + c.uf + (isIn ? ' · Inativo' : '') + '</span></div>'
       + '<div style="font-size:10px;color:var(--txt2);font-family:monospace;margin-top:1px">' + c.cnpj + '</div>'
@@ -6293,15 +6293,15 @@ window.sbSelecionarTodos = function() {
 window._dashCnpjRenderList = function() {
   var ids = window._empresasAtivas || [];
   var allSel = !ids.length;
-  var h = '<div onclick="window.sbSelecionarTodos()" class="cnpj-filter-item" style="border-left:2px solid ' + (allSel ? '#49C5B1' : 'transparent') + '">'
-    + '<span style="font-size:13px;color:#49C5B1;width:16px;display:inline-block;text-align:center">' + (allSel ? '✓' : '') + '</span>'
+  var h = '<div onclick="window.sbSelecionarTodos()" class="cnpj-filter-item" style="border-left:2px solid ' + (allSel ? '#1d9e75' : 'transparent') + '">'
+    + '<span style="font-size:13px;color:#1d9e75;width:16px;display:inline-block;text-align:center">' + (allSel ? '✓' : '') + '</span>'
     + '<div><div style="font-weight:' + (allSel ? '700' : '500') + ';color:var(--txt1)">Todos os estabelecimentos</div>'
     + '<span class="cfi-cnpj">Visão consolidada do grupo</span></div></div>';
   (window._orgCnpjs || []).forEach(function(c) {
     var isAt = ids.indexOf(c.id) >= 0;
     var isIn = c.status === 'inativo';
-    h += '<div onclick="event.stopPropagation();window.sbToggleEmpresaItem(' + c.id + ')" class="cnpj-filter-item" style="background:' + (isAt ? 'rgba(73,197,177,.08)' : '') + ';border-left:2px solid ' + (isAt ? '#49C5B1' : 'transparent') + ';opacity:' + (isIn ? '0.5' : '1') + '">'
-      + '<span style="font-size:13px;color:#49C5B1;width:16px;display:inline-block;text-align:center">' + (isAt ? '✓' : '') + '</span>'
+    h += '<div onclick="event.stopPropagation();window.sbToggleEmpresaItem(' + c.id + ')" class="cnpj-filter-item" style="background:' + (isAt ? 'rgba(73,197,177,.08)' : '') + ';border-left:2px solid ' + (isAt ? '#1d9e75' : 'transparent') + ';opacity:' + (isIn ? '0.5' : '1') + '">'
+      + '<span style="font-size:13px;color:#1d9e75;width:16px;display:inline-block;text-align:center">' + (isAt ? '✓' : '') + '</span>'
       + '<div style="flex:1"><div style="font-weight:' + (isAt ? '700' : '500') + ';color:' + (isIn ? 'var(--txt3)' : 'var(--txt1)') + '">' + c.razao + ' <span style="font-size:9px;color:var(--txt2)">' + c.uf + ' · ' + c.tipo + '</span></div>'
       + '<span class="cfi-cnpj">' + c.cnpj + (isIn ? ' · Inativo' : '') + '</span></div>'
       + '</div>';
@@ -6465,8 +6465,8 @@ window.orgRenderTabela = function() {
     return;
   }
   tbody.innerHTML = lista.map(function(r) {
-    var sCor   = r.status === 'ativo' ? '#22C55E' : 'var(--txt3)';
-    var sSrgb  = r.status === 'ativo' ? '34,197,94' : '167,168,170';
+    var sCor   = r.status === 'ativo' ? '#1d9e75' : 'var(--txt3)';
+    var sSrgb  = r.status === 'ativo' ? '29,158,117' : '167,168,170';
     var sLabel = r.status === 'ativo' ? 'Ativo' : 'Inativo';
     var tipoCor = r.tipo === 'Matriz' ? '#60A5FA' : '#A78BFA';
     var tipoSrgb = r.tipo === 'Matriz' ? '96,165,250' : '167,139,250';
@@ -6828,8 +6828,8 @@ window.abrirGuiaDARF = function(idx) {
   var badge = document.getElementById('darf-tipo-badge');
   badge.textContent = isIBS ? 'Guia IBS' : 'DARF CBS';
   badge.style.cssText = isIBS
-    ? 'display:inline-block;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:8px;background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)'
-    : 'display:inline-block;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:8px;background:rgba(245,158,11,.15);color:#F59E0B;border:1px solid rgba(245,158,11,.3)';
+    ? 'display:inline-block;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:8px;background:rgba(24,95,165,.15);color:#185fa5;border:1px solid rgba(24,95,165,.3)'
+    : 'display:inline-block;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:8px;background:rgba(186,117,23,.15);color:#ba7517;border:1px solid rgba(186,117,23,.3)';
 
   document.getElementById('darf-modal-title').textContent = 'Guia de Recolhimento';
   document.getElementById('darf-modal-sub').textContent   = nomeTrib;
@@ -7305,7 +7305,7 @@ window.downloadGuiaDARF = function() {
 
   function _statusLabel(s) {
     var m = {
-      importado:      { lbl: 'Importado',      bg: 'rgba(34,197,94,.12)',   col: 'var(--green)', bdr: 'rgba(34,197,94,.25)' },
+      importado:      { lbl: 'Importado',      bg: 'rgba(29,158,117,.12)',   col: 'var(--green)', bdr: 'rgba(29,158,117,.25)' },
       inconsistencia: { lbl: 'Inconsistência', bg: 'rgba(139,92,246,.12)', col: '#8B5CF6',       bdr: 'rgba(139,92,246,.25)' }
     };
     var c = m[s] || { lbl: s, bg: 'rgba(167,168,170,.12)', col: 'var(--txt2)', bdr: 'rgba(167,168,170,.25)' };
@@ -7314,14 +7314,14 @@ window.downloadGuiaDARF = function() {
 
   function _tipoLabel(tipo) {
     var m = {
-      'NF-e Entrada':['rgba(59,130,246,.12)','#3B82F6'],
+      'NF-e Entrada':['rgba(24,95,165,.12)','#185fa5'],
       'NF-e Saída':  ['rgba(73,197,177,.12)','var(--teal)'],
       'NFC-e Entrada':['rgba(99,102,241,.12)','#6366F1'],
       'NFC-e Saída': ['rgba(99,102,241,.12)','#6366F1'],
       'NFCom':       ['rgba(16,185,129,.12)','#10B981'],
       'NF3-e':       ['rgba(20,184,166,.12)','#14B8A6'],
-      'NFS-e':       ['rgba(34,197,94,.12)','#22C55E'],
-      'CT-e':        ['rgba(245,158,11,.12)','#F59E0B'],
+      'NFS-e':       ['rgba(29,158,117,.12)','#1d9e75'],
+      'CT-e':        ['rgba(186,117,23,.12)','#ba7517'],
       'NFAg':        ['rgba(132,204,22,.12)','#84CC16'],
       'NFGás':       ['rgba(234,179,8,.12)','#EAB308'],
       'MDF-e':       ['rgba(168,85,247,.12)','#A855F7'],
@@ -7403,8 +7403,8 @@ window.downloadGuiaDARF = function() {
     var slice = _ingFiltrados.slice(start, start + _ingPorPagina);
 
     var _tipoCorMap = {
-      'NF-e':'#3B82F6','NFC-e':'#6366F1','NFCom':'#10B981','NF3-e':'#14B8A6',
-      'CT-e':'#F59E0B','NFS-e':'#8B5CF6','NFAg':'#22C55E','NFGás':'#0EA5E9',
+      'NF-e':'#185fa5','NFC-e':'#6366F1','NFCom':'#10B981','NF3-e':'#14B8A6',
+      'CT-e':'#ba7517','NFS-e':'#8B5CF6','NFAg':'#1d9e75','NFGás':'#0EA5E9',
       'MDF-e':'#8A92A3','BP-e':'#EC4899'
     };
     var html = '';
@@ -7414,7 +7414,7 @@ window.downloadGuiaDARF = function() {
       var tCor = _tipoCorMap[tipoBase] || '#8A92A3';
       var tipoBadge = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:' + tCor + '22;color:' + tCor + ';border:1px solid ' + tCor + '44;display:inline-block;margin-bottom:2px">' + tipoBase + '</span>';
       var nfNumCell = d.nfNumero
-        ? '<span class="mono" style="font-size:11px;color:#3B82F6;cursor:pointer;text-decoration:underline;white-space:nowrap" onclick="event.stopPropagation();if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + d.nfNumero + '\')">' + tipoBase + ' ' + d.nfNumero + '</span>'
+        ? '<span class="mono" style="font-size:11px;color:#185fa5;cursor:pointer;text-decoration:underline;white-space:nowrap" onclick="event.stopPropagation();if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + d.nfNumero + '\')">' + tipoBase + ' ' + d.nfNumero + '</span>'
         : '<span style="color:var(--txt3)">—</span>';
       // Célula de inconsistência: primeiro item com ok===false
       var incCell;
@@ -7605,7 +7605,7 @@ window.downloadGuiaDARF = function() {
     var statusBar = document.getElementById('ing-modal-status-bar');
     if (statusBar) {
       var sConf = {
-        importado:      { icon: '✓', txt: 'Documento importado com sucesso — todos os critérios de validação aprovados.', bg: 'rgba(34,197,94,.12)', col: 'var(--green)' },
+        importado:      { icon: '✓', txt: 'Documento importado com sucesso — todos os critérios de validação aprovados.', bg: 'rgba(29,158,117,.12)', col: 'var(--green)' },
         inconsistencia: { icon: '✗', txt: 'Documento com inconsistência — validação falhou, veja o detalhe abaixo.', bg: 'rgba(139,92,246,.12)', col: '#8B5CF6' }
       };
       var sc = sConf[d.status] || sConf.importado;
@@ -7624,9 +7624,9 @@ window.downloadGuiaDARF = function() {
           if (d.validacoes[fi].ok === false) { falhaInc = d.validacoes[fi]; break; }
         }
         if (falhaInc) {
-          var catCor2 = falhaInc.categoria === 'dados' ? '#3B82F6' : '#F59E0B';
-          var catBg2  = falhaInc.categoria === 'dados' ? 'rgba(59,130,246,.1)' : 'rgba(245,158,11,.1)';
-          var catBdr2 = falhaInc.categoria === 'dados' ? 'rgba(59,130,246,.25)' : 'rgba(245,158,11,.25)';
+          var catCor2 = falhaInc.categoria === 'dados' ? '#185fa5' : '#ba7517';
+          var catBg2  = falhaInc.categoria === 'dados' ? 'rgba(24,95,165,.1)' : 'rgba(186,117,23,.1)';
+          var catBdr2 = falhaInc.categoria === 'dados' ? 'rgba(24,95,165,.25)' : 'rgba(186,117,23,.25)';
           incEl.innerHTML =
             '<div style="display:flex;flex-direction:column;gap:8px;padding:12px;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:8px">' +
               '<div style="display:flex;align-items:center;gap:8px">' +
@@ -7650,7 +7650,7 @@ window.downloadGuiaDARF = function() {
       d.validacoes.forEach(function(v) {
         var ico = v.ok === true ? '✓' : (v.ok === false ? '✗' : '⏳');
         var col = v.ok === true ? 'var(--green)' : (v.ok === false ? 'var(--red)' : 'var(--amber)');
-        var bg = v.ok === true ? 'rgba(34,197,94,.06)' : (v.ok === false ? 'rgba(244,63,94,.06)' : 'rgba(245,158,11,.06)');
+        var bg = v.ok === true ? 'rgba(29,158,117,.06)' : (v.ok === false ? 'rgba(244,63,94,.06)' : 'rgba(186,117,23,.06)');
         vhtml += '<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border-radius:7px;border:1px solid var(--border);background:' + bg + '">' +
           '<span style="color:' + col + ';font-weight:700;font-size:16px;line-height:1.2;flex-shrink:0">' + ico + '</span>' +
           '<div><div style="font-size:12px;font-weight:600;color:var(--txt1);margin-bottom:2px">' + v.tipo + '</div>' +
@@ -7664,11 +7664,11 @@ window.downloadGuiaDARF = function() {
     var histEl    = document.getElementById('ing-modal-historico');
     var histTitEl = document.getElementById('ing-modal-hist-titulo');
     if (histEl) {
-      var evRgba  = { 'INGESTÃO':'73,197,177','VALIDAÇÃO':'34,197,94','GERAÇÃO RF':'59,130,246',
-        'INCONSISTÊNCIA':'239,68,68','VENCIMENTO':'239,68,68','AGUARDANDO':'245,158,11',
-        'APROPRIAÇÃO':'34,197,94','PAGAMENTO':'73,197,177','UTILIZAÇÃO':'139,92,246',
+      var evRgba  = { 'INGESTÃO':'29,158,117','VALIDAÇÃO':'29,158,117','GERAÇÃO RF':'24,95,165',
+        'INCONSISTÊNCIA':'163,45,45','VENCIMENTO':'163,45,45','AGUARDANDO':'186,117,23',
+        'APROPRIAÇÃO':'29,158,117','PAGAMENTO':'29,158,117','UTILIZAÇÃO':'139,92,246',
         'EXTINÇÃO':'167,168,170','CONCILIAÇÃO':'139,92,246',
-        'CONC APURAÇÃO':'59,130,246','CONC FINANCEIRA':'73,197,177' };
+        'CONC APURAÇÃO':'24,95,165','CONC FINANCEIRA':'29,158,117' };
       var evIcons = { 'INGESTÃO':'↓','VALIDAÇÃO':'✓','GERAÇÃO RF':'◉','INCONSISTÊNCIA':'!',
         'VENCIMENTO':'✕','AGUARDANDO':'…','APROPRIAÇÃO':'✓','PAGAMENTO':'$','UTILIZAÇÃO':'◆',
         'EXTINÇÃO':'■','CONCILIAÇÃO':'⇌',
@@ -7736,7 +7736,7 @@ window.downloadGuiaDARF = function() {
       var tlH = '';
       allEvs.forEach(function(ev, i) {
         var rgba    = evRgba[ev.tipo]  || '167,168,170';
-        var dotRgba = ev.cls==='erro'  ? '239,68,68' : ev.cls==='pending' ? '245,158,11' : rgba;
+        var dotRgba = ev.cls==='erro'  ? '163,45,45' : ev.cls==='pending' ? '186,117,23' : rgba;
         var icon    = evIcons[ev.tipo] || '◯';
         var isLast  = i === allEvs.length - 1;
         tlH += '<div style="display:flex;gap:12px">'
@@ -7766,7 +7766,7 @@ window.downloadGuiaDARF = function() {
       if (rfs.length) {
         var rfsHtml = '';
         rfs.forEach(function(rf) {
-          var fiscalCor  = rf.tipoFiscal === 'ibs' ? '#3B82F6' : '#F59E0B';
+          var fiscalCor  = rf.tipoFiscal === 'ibs' ? '#185fa5' : '#ba7517';
           var fiscalLabel = (rf.tipoFiscal || '').toUpperCase();
           var valorFmt   = rf.valor != null ? 'R$ ' + rf.valor.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
           var stMap = { integrado:'Integrado', utilizado:'Utilizado', apropriado:'Apropriado',
@@ -8123,7 +8123,7 @@ window.ingUploadParsear = function(text) {
       + '<td style="padding:7px 12px;font-family:monospace;font-size:11px">' + (r.cfop || '—') + '</td>'
       + '<td style="padding:7px 12px;text-align:right;font-family:monospace;font-size:12px">' + fmtVal + '</td>'
       + '<td style="padding:7px 12px;font-size:12px">' + fmtDt + '</td>'
-      + '<td style="padding:7px 12px"><span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)">Importado</span></td>'
+      + '<td style="padding:7px 12px"><span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:rgba(29,158,117,.1);color:var(--green);border:1px solid rgba(29,158,117,.2)">Importado</span></td>'
       + '</tr>';
   });
   tbody.innerHTML = rows;
@@ -8202,7 +8202,7 @@ window._automState = {
   ]
 };
 
-var _automCor = { bg:'var(--bg)', card:'var(--card)', brd:'var(--border)', txt1:'var(--txt1)', txt2:'var(--txt2)', txt3:'var(--txt3)', teal:'#49C5B1', blue:'#3B82F6', green:'#22C55E', red:'#F43F5E', amber:'#F59E0B', purple:'#8B5CF6' };
+var _automCor = { bg:'var(--bg)', card:'var(--card)', brd:'var(--border)', txt1:'var(--txt1)', txt2:'var(--txt2)', txt3:'var(--txt3)', teal:'#1d9e75', blue:'#185fa5', green:'#1d9e75', red:'#a32d2d', amber:'#ba7517', purple:'#8B5CF6' };
 var _ac = _automCor;
 
 var _automModLabels = { creditos:'Créditos', debitos:'Débitos', inconsistencias:'Inconsistências', pagamentos:'Pagamentos', consolidado:'Consolidado (Visão Geral)' };
@@ -8474,7 +8474,7 @@ window._automExcluir = function(tipo, id) {
 
 window._automTestarConexao = function() {
   var toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:28px;right:24px;background:var(--card);border:1px solid rgba(34,197,94,.4);border-left:4px solid #22C55E;border-radius:8px;padding:14px 18px;z-index:10001;font-family:Montserrat,sans-serif;min-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.3)';
+  toast.style.cssText = 'position:fixed;bottom:28px;right:24px;background:var(--card);border:1px solid rgba(29,158,117,.4);border-left:4px solid #1d9e75;border-radius:8px;padding:14px 18px;z-index:10001;font-family:Montserrat,sans-serif;min-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.3)';
   toast.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--txt1);margin-bottom:3px">✅ Conexão bem-sucedida</div><div style="font-size:11px;color:var(--txt2)">ServiceNow · HTTP 200 · latência 142ms</div>';
   document.body.appendChild(toast);
   setTimeout(function(){ if(toast.parentNode) toast.parentNode.removeChild(toast); }, 3500);
@@ -8658,7 +8658,7 @@ function _automOverlay(titulo, campos, onSave) {
     + '<div style="padding:20px">' + campos + '</div>'
     + '<div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border)">'
     + '<button onclick="document.getElementById(\'_automOverlay\').remove()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:9px 18px;color:var(--txt2);font-size:13px;cursor:pointer;font-family:inherit">Cancelar</button>'
-    + '<button onclick="' + onSave + '" style="background:#49C5B1;border:none;border-radius:7px;padding:9px 18px;color:#0a0a0a;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Salvar</button>'
+    + '<button onclick="' + onSave + '" style="background:#1d9e75;border:none;border-radius:7px;padding:9px 18px;color:#0a0a0a;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Salvar</button>'
     + '</div></div></div>';
 }
 
