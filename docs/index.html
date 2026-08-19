@@ -1235,18 +1235,11 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       </div>
     </div>
   </div>
-  <!-- Créditos a Vencer — calendário mensal -->
+  <!-- Créditos a Vencer — visão mensal -->
   <div class="crd" style="margin-bottom:20px">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-      <div>
-        <div class="ctitle" style="margin-bottom:2px">Créditos a Vencer</div>
-        <div class="csub">Volume de créditos IBS+CBS não apropriados por data de vencimento</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <button onclick="window.vencCalNav(-1)" style="background:none;border:1px solid var(--border);border-radius:4px;width:28px;height:28px;font-size:14px;color:var(--txt2);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;line-height:1">‹</button>
-        <span id="venc-cal-label" style="font-size:12px;font-weight:600;color:var(--txt1);min-width:90px;text-align:center">—</span>
-        <button onclick="window.vencCalNav(1)" style="background:none;border:1px solid var(--border);border-radius:4px;width:28px;height:28px;font-size:14px;color:var(--txt2);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;line-height:1">›</button>
-      </div>
+    <div style="margin-bottom:16px">
+      <div class="ctitle" style="margin-bottom:2px">Créditos a Vencer</div>
+      <div class="csub">Volume de créditos IBS+CBS não apropriados por mês de vencimento · clique para detalhar</div>
     </div>
     <div id="cVencimento"></div>
   </div>
@@ -6706,39 +6699,40 @@ function buildCharts(){
   try { if (window.atualizarInteligencia) window.atualizarInteligencia(); } catch(e) {}
 }
 
-// ── Calendário Créditos a Vencer ────────────────────────────────────────────
+// ── Créditos a Vencer — visão mensal ────────────────────────────────────────
 (function(){
-  var _meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  var _dias  = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  // estado: mês corrente = Abril 2026
-  var _ano = 2026, _mes = 3; // 0-indexed
+  var _mesAbrev = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  var _mesNome  = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
   function _fmtVal(v) {
     if (!v) return '—';
-    if (v >= 1) return 'R$ ' + v.toFixed(1).replace('.',',') + 'M';
-    return 'R$ ' + Math.round(v * 1000) + 'K';
+    if (v >= 1e6) return 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M';
+    if (v >= 1e3) return 'R$ ' + Math.round(v/1e3) + 'K';
+    return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   }
 
-  function _calcVenc(dataISO) {
+  function _calcVencMes(dataISO) {
+    // retorna YYYY-MM do mês de vencimento (mês seguinte à emissão)
     if (!dataISO) return null;
     var p = dataISO.split('-');
     if (p.length < 2) return null;
-    var v = new Date(parseInt(p[0],10), parseInt(p[1],10) + 1, 0);
-    var mm = String(v.getMonth()+1).padStart(2,'0');
-    var dd = String(v.getDate()).padStart(2,'0');
-    return v.getFullYear() + '-' + mm + '-' + dd;
+    var y = parseInt(p[0],10), m = parseInt(p[1],10);
+    // vencimento = último dia do mês m+1; mês do vencimento = m+1 (ou 1 do ano seguinte)
+    var vm = m + 1, vy = y;
+    if (vm > 12) { vm = 1; vy++; }
+    return vy + '-' + String(vm).padStart(2,'0');
   }
 
-  function _buildMap() {
+  function _buildMonthMap() {
     var map = {};
     (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
       if (nf.tipo !== 'entrada') return;
       (nf.registrosFiscais || []).forEach(function(rf) {
         var sc = rf.statusCredito || rf.status || '';
         if (sc !== 'nao_apropriado') return;
-        var venc = _calcVenc(rf.data);
-        if (!venc) return;
-        map[venc] = (map[venc] || 0) + (rf.valor || 0);
+        var ym = _calcVencMes(rf.data);
+        if (!ym) return;
+        map[ym] = (map[ym] || 0) + (rf.valor || 0);
       });
     });
     return map;
@@ -6746,71 +6740,55 @@ function buildCharts(){
 
   window.renderVencimentoCalendar = function() {
     var el = document.getElementById('cVencimento');
-    var lbl = document.getElementById('venc-cal-label');
     if (!el) return;
-    if (lbl) lbl.textContent = _meses[_mes] + ' ' + _ano;
 
-    var map = _buildMap();
-    var diasNoMes = new Date(_ano, _mes + 1, 0).getDate();
-    var primeiroDia = new Date(_ano, _mes, 1).getDay(); // 0=Dom
-
-    var prefixo = _ano + '-' + String(_mes+1).padStart(2,'0') + '-';
-
-    // calcula max para escala de cor
-    var maxV = 0;
-    for (var d=1; d<=diasNoMes; d++) {
-      var v = map[prefixo + String(d).padStart(2,'0')] || 0;
-      if (v > maxV) maxV = v;
+    var map = _buildMonthMap();
+    var keys = Object.keys(map).sort();
+    if (!keys.length) {
+      el.innerHTML = '<div style="text-align:center;color:var(--txt3);padding:32px;font-size:13px">Nenhum crédito a vencer</div>';
+      return;
     }
-    if (maxV === 0) maxV = 1;
 
-    // Cabeçalho dias da semana
-    var h = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;user-select:none">';
-    _dias.forEach(function(d) {
-      h += '<div style="text-align:center;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--txt3);padding-bottom:4px">' + d + '</div>';
-    });
-    // células vazias antes do dia 1
-    for (var i=0; i<primeiroDia; i++) {
-      h += '<div></div>';
-    }
-    // dias
-    for (var d=1; d<=diasNoMes; d++) {
-      var key = prefixo + String(d).padStart(2,'0');
-      var v = map[key] || 0;
+    var maxV = keys.reduce(function(mx,k){ return Math.max(mx, map[k]); }, 0);
+    if (!maxV) maxV = 1;
+
+    var hoje = new Date();
+    var mesHojeStr = hoje.getFullYear() + '-' + String(hoje.getMonth()+1).padStart(2,'0');
+
+    var h = '<div style="display:flex;align-items:flex-end;gap:8px;overflow-x:auto;padding-bottom:4px;min-height:130px">';
+    keys.forEach(function(ym) {
+      var v = map[ym] || 0;
       var ratio = v / maxV;
-      var alpha = v > 0 ? (0.12 + ratio * 0.75) : 0;
-      var isHigh = ratio > 0.6;
-      var txtCol = v > 0 ? 'var(--teal)' : 'var(--txt3)';
-      var bg = v > 0 ? 'rgba(73,197,177,' + alpha.toFixed(2) + ')' : 'var(--bg)';
-      var border = v > 0 ? '1px solid rgba(73,197,177,' + Math.min(1, alpha * 1.5).toFixed(2) + ')' : '1px solid var(--border)';
-      var isoKey = prefixo + String(d).padStart(2,'0');
-      var tip = v > 0 ? (_fmtVal(v) + ' · ' + String(d).padStart(2,'0') + '/' + String(_mes+1).padStart(2,'0') + '/' + _ano) : 'Sem vencimento';
-      var clickAttr = v > 0 ? ' onclick="window.vencDayAbrir(\'' + isoKey + '\')" style="' : ' style="';
-      h += '<div title="' + tip + '"' + clickAttr
-        + 'background:' + bg + ';'
-        + 'border:' + border + ';'
-        + 'border-radius:4px;padding:6px 4px 4px;min-height:48px;'
-        + 'display:flex;flex-direction:column;align-items:center;gap:2px;cursor:' + (v>0?'pointer':'default') + '">'
-        + '<span style="font-size:11px;font-weight:600;color:' + txtCol + '">' + d + '</span>'
-        + (v > 0 ? '<span style="font-size:8px;font-weight:700;color:var(--teal);letter-spacing:-.01em;margin-top:2px">' + _fmtVal(v).replace('R$ ','') + '</span>' : '')
+      var barH = Math.max(18, Math.round(ratio * 100));
+      var isCurrent = ym === mesHojeStr;
+      var parts = ym.split('-');
+      var mesIdx = parseInt(parts[1],10) - 1;
+      var label = _mesAbrev[mesIdx] + '/' + parts[0].substring(2);
+      var barColor = isCurrent ? 'var(--teal)' : 'rgba(73,197,177,.45)';
+      var borderColor = isCurrent ? 'rgba(73,197,177,.9)' : 'rgba(73,197,177,.3)';
+      var valFmt = _fmtVal(v);
+      h += '<div onclick="window.vencDayAbrir(\'' + ym + '\')" title="' + valFmt + ' · ' + _mesNome[mesIdx] + ' ' + parts[0] + '"'
+        + ' style="flex:1;min-width:48px;max-width:80px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer">'
+        + '<div style="font-size:9px;font-weight:700;color:var(--teal);white-space:nowrap">' + valFmt.replace('R$ ','') + '</div>'
+        + '<div style="width:100%;height:' + barH + 'px;background:' + barColor + ';border:1px solid ' + borderColor + ';border-radius:4px 4px 0 0;transition:opacity .15s" onmouseover="this.style.opacity=\'.7\'" onmouseout="this.style.opacity=\'1\'"></div>'
+        + '<div style="font-size:10px;font-weight:' + (isCurrent?'700':'500') + ';color:' + (isCurrent?'var(--teal)':'var(--txt2)') + ';white-space:nowrap">' + label + '</div>'
         + '</div>';
-    }
+    });
     h += '</div>';
     el.innerHTML = h;
   };
 
-  window.vencCalNav = function(delta) {
-    _mes += delta;
-    if (_mes > 11) { _mes = 0; _ano++; }
-    if (_mes < 0)  { _mes = 11; _ano--; }
-    window.renderVencimentoCalendar();
-  };
+  // mantém assinatura para compatibilidade (não navega mais)
+  window.vencCalNav = function() {};
 
-  window.vencDayAbrir = function(isoDate) {
+  window.vencDayAbrir = function(ymStr) {
+    // ymStr = 'YYYY-MM'
     var ov = document.getElementById('venc-day-overlay');
     if (!ov) return;
-    var partes = isoDate.split('-');
-    var label = partes[2] + '/' + partes[1] + '/' + partes[0];
+    var partes = ymStr.split('-');
+    var mesIdx = parseInt(partes[1],10) - 1;
+    var mesNomeArr = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    var label = mesNomeArr[mesIdx] + ' ' + partes[0];
     document.getElementById('venc-day-title').textContent = 'DFs a Vencer — ' + label;
     document.getElementById('venc-day-sub').textContent = 'Créditos IBS+CBS não apropriados com vencimento em ' + label;
 
@@ -6823,7 +6801,7 @@ function buildCharts(){
         + label + '</button>';
     }
 
-    // coleta DFs (NFs de entrada) com algum RF nao_apropriado cujo vencimento = isoDate
+    // coleta DFs com algum RF nao_apropriado cujo mês de vencimento = ymStr
     var dfMap = {};
     var total = 0;
     (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
@@ -6833,7 +6811,7 @@ function buildCharts(){
       (nf.registrosFiscais || []).forEach(function(rf) {
         var sc = rf.statusCredito || rf.status || '';
         if (sc !== 'nao_apropriado') return;
-        if (_calcVenc(rf.data) === isoDate) temRfNoVenc = true;
+        if (_calcVencMes(rf.data) === ymStr) temRfNoVenc = true;
         if ((rf.tipoFiscal||'').toLowerCase() === 'ibs') ibs += rf.valor || 0;
         else cbs += rf.valor || 0;
         statusNf = sc;
