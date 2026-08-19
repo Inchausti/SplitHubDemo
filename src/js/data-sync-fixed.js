@@ -1329,7 +1329,7 @@ window.atualizarKPIsDashboard = function() {
   var heroBadge = heroPct >= 75 ? 'Saudável' : heroPct >= 50 ? 'Atenção' : 'Crítico';
   var heroBg    = heroPct >= 75 ? 'rgba(73,197,177,.12)'  : heroPct >= 50 ? 'rgba(245,158,11,.12)' : 'rgba(244,63,94,.12)';
   var heroBdr   = heroPct >= 75 ? 'rgba(73,197,177,.25)'  : heroPct >= 50 ? 'rgba(245,158,11,.25)' : 'rgba(244,63,94,.25)';
-  var heroFill  = heroPct >= 75 ? 'linear-gradient(90deg,var(--teal),#22C55E)' : heroPct >= 50 ? 'var(--amber)' : 'var(--red)';
+  var heroFill  = heroPct >= 75 ? 'linear-gradient(90deg,#1d9e75,#0f6e56)' : heroPct >= 50 ? 'var(--amber)' : 'var(--red)';
   setEl('dash-hero-pct',       heroPctStr);
   setEl('dash-hero-total',     fmtM(total));
   setEl('dash-hero-aprop-val', fmtM(aprop));
@@ -1568,8 +1568,8 @@ window.atualizarDashboard = function() {
     arr.forEach(function(f) {
       var qs = f.qualScore;
       var barPct = f.pendente / maxPend * 100;
-      var scoreColor = qs >= 80 ? '#49C5B1' : qs >= 60 ? '#F59E0B' : '#F43F5E';
-      var barColor = isWorst ? '#F43F5E' : '#49C5B1';
+      var scoreColor = qs >= 80 ? '#1d9e75' : qs >= 60 ? '#ba7517' : '#a32d2d';
+      var barColor = isWorst ? '#a32d2d' : '#1d9e75';
       var sharePct = (f.sharePend * 100).toFixed(1);
       html += '<div style="background:var(--bg2);border-radius:6px;padding:8px 10px">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
@@ -1772,9 +1772,9 @@ window.atualizarInteligencia = function() {
   var dRisco = meses.map(function(m) { return +(byMonth[m].risco / 1e6).toFixed(2); });
   if (typeof svgBar === 'function' && meses.length) {
     svgBar('cAprovMensal', [
-      { data: dAprop, color: 'var(--green)',  label: 'Apropriado' },
-      { data: dPend,  color: 'var(--amber)',  label: 'Pendente'   },
-      { data: dRisco, color: 'var(--red)',    label: 'Em Risco'   }
+      { data: dAprop, color: '#1d9e75', label: 'Apropriado' },
+      { data: dPend,  color: '#ba7517', label: 'Pendente'   },
+      { data: dRisco, color: '#a32d2d', label: 'Em Risco'   }
     ], labM, 200);
   }
 
@@ -1998,7 +1998,7 @@ window.atualizarInteligencia = function() {
       '<div style="display:flex;flex-direction:column;gap:14px">'
       + '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:10px;padding:14px 18px">'
       + '<div style="font-size:11px;color:var(--txt3);margin-bottom:4px">Se todos os créditos pendentes fossem regularizados</div>'
-      + '<div style="font-size:22px;font-weight:700;color:#8B5CF6">' + fmtM(pendCred) + '</div>'
+      + '<div style="font-size:22px;font-weight:700;color:#185fa5">' + fmtM(pendCred) + '</div>'
       + '<div style="font-size:11px;color:var(--txt3);margin-top:4px">adicionais · aproveitamento subiria de <strong style="color:var(--txt1)">'
       + pct + '%</strong> para <strong style="color:#22C55E">' + novoPct + '%</strong></div>'
       + '</div>'
@@ -2560,7 +2560,7 @@ window._rfIncFiltrado = [];
 window._rfIncPagina  = 1;
 window._rfIncIpp     = 25;
 
-var _incCores = { 'Não conciliado':'#F43F5E','Valor imposto divergente':'#F59E0B','Vencido':'#EF4444','Sem Comprovante':'#8B5CF6','Falha de Layout':'#F43F5E','Inconsistência de Dados':'#F59E0B','Rejeitado SEFAZ':'#EF4444','Documento Duplicado':'#A7A8AA' };
+var _incCores = { 'Não conciliado':'#a32d2d','Valor imposto divergente':'#ba7517','Vencido':'#a32d2d','Sem Comprovante':'#185fa5','Falha de Layout':'#a32d2d','Inconsistência de Dados':'#ba7517','Rejeitado SEFAZ':'#a32d2d','Documento Duplicado':'#888780' };
 
 function _incFmtM(v) {
   if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
@@ -2582,7 +2582,7 @@ function _incSvgBar(el, dados, corFn, W, barH, gap, padL, padR) {
     s += '<rect x="' + padL + '" y="' + y + '" width="' + (W - padL - padR) + '" height="' + barH + '" rx="3" fill="rgba(139,92,246,.07)"/>';
     s += '<rect x="' + padL + '" y="' + y + '" width="' + bw + '" height="' + barH + '" rx="3" fill="' + cor + '" opacity=".85"/>';
     var vlbl = d.fmt || _incFmtM(d.v);
-    s += '<text x="' + (W - 2) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#8B5CF6" font-size="10" font-weight="700" font-family="Montserrat,sans-serif">' + vlbl + '</text>';
+    s += '<text x="' + (W - 2) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#185fa5" font-size="10" font-weight="700" font-family="Montserrat,sans-serif">' + vlbl + '</text>';
   });
   s += '</svg>';
   el.innerHTML = s;
@@ -2621,9 +2621,9 @@ function _incSvgMensal(el, mapa, W) {
     var bh = Math.max(4, Math.round((v / maxV) * areaH));
     var x = 10 + i * (barW + 4);
     var y = padT + areaH - bh;
-    s += '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + bh + '" rx="2" fill="#8B5CF6" opacity=".75"/>';
+    s += '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + bh + '" rx="2" fill="#185fa5" opacity=".75"/>';
     s += '<text x="' + (x + barW / 2) + '" y="' + (H - 6) + '" text-anchor="middle" fill="#A7A8AA" font-size="9" font-family="Montserrat,sans-serif">' + m.slice(5) + '</text>';
-    if (v > 0) s += '<text x="' + (x + barW / 2) + '" y="' + (y - 3) + '" text-anchor="middle" fill="#8B5CF6" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">' + v + '</text>';
+    if (v > 0) s += '<text x="' + (x + barW / 2) + '" y="' + (y - 3) + '" text-anchor="middle" fill="#185fa5" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">' + v + '</text>';
   });
   s += '</svg>';
   el.innerHTML = s;
