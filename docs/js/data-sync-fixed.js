@@ -5441,7 +5441,7 @@ window.renderizarTabelaPagamentos = function() {
       + chkCell
       + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
       + '<td class="mono nowrap">' + nfCell + '</td>'
-      + '<td class="trunc"><div style="font-weight:500">' + r.forn + '</div><div style="font-size:10px;color:var(--txt2)">' + r.cnpj + '</div></td>'
+      + '<td class="trunc" style="vertical-align:middle"><div style="font-weight:500">' + r.forn + '</div><div style="font-size:10px;color:var(--txt2)">' + r.cnpj + '</div></td>'
       + '<td class="nowrap">' + tipoBadge + '</td>'
       + '<td class="nowrap">' + nfTipoBadgePag + '</td>'
       + '<td class="nowrap">' + metodoBadge + '</td>'
@@ -5450,8 +5450,8 @@ window.renderizarTabelaPagamentos = function() {
       + '<td class="nowrap">' + (r.status === 'pago'
           ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pagamento + '</a>'
           : '<span style="color:var(--txt2)">—</span>') + '</td>'
-      + '<td class="nowrap">' + badge + '</td>'
-      + '<td class="nowrap">' + act + '</td>'
+      + '<td class="nowrap" style="vertical-align:middle">' + badge + '</td>'
+      + '<td class="nowrap" style="vertical-align:middle;white-space:nowrap">' + act + '</td>'
       + '</tr>';
   });
 
