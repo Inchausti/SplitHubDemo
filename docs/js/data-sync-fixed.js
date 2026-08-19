@@ -469,6 +469,9 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
     + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Registros Fiscais</div>'
     + rfsHtml
+    + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Inconsistências Vinculadas</div>'
+    + window._incRenderVinculadasHtml((window._inconsistenciasGlobal||[]).filter(function(i){ return i.dfNum === r.numero; }))
     + '</div>'
 
     // Right panel: timeline
@@ -745,6 +748,9 @@ window.abrirDetalheRF = function(rfId) {
     + (rfSt === 'utilizado' && rf.metodoExtincao ? DR('Método Extinção', rf.metodoExtincao, '#49C5B1') : '')
     + (rfSt === 'utilizado' && rf.dataExtincao ? DR('Data Extinção', rf.dataExtincao) : '')
     + (rf.inconsistencia ? DR('Inconsistência', rf.inconsistencia, '#F43F5E') : '')
+    + '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Inconsistências Vinculadas</div>'
+    + window._incRenderVinculadasHtml((window._inconsistenciasGlobal||[]).filter(function(i){ return i.rfId === rf.id; }))
     + '</div>'
 
     // Right panel: timeline
@@ -3272,6 +3278,76 @@ var _kbAcoesMap = {
   ]
 };
 
+var _incDescricaoMap = {
+  divergencia_valor:   'O valor registrado no Registro Fiscal diverge do valor declarado no Documento Fiscal vinculado. A diferença pode indicar erro de digitação, atualização de preço não comunicada ou retificação pendente de NF.',
+  aliquota_divergente: 'A alíquota de IBS/CBS aplicada no RF não corresponde à alíquota regulamentar vigente para a operação. Pode resultar em sub ou super recolhimento do imposto.',
+  nf_cancelada:        'O Documento Fiscal foi cancelado na SEFAZ após a geração do Registro Fiscal correspondente. O RF precisa ser encerrado ou substituído para evitar inconsistência no apurado.',
+  prazo_expirado:      'O prazo regulamentar para apropriação do crédito IBS/CBS está vencido ou próximo do vencimento. Ação urgente necessária para evitar a prescrição definitiva do crédito.',
+  split_nao_realizado: 'O Split Payment esperado para esta operação não foi identificado no extrato bancário. O comprovante de recolhimento junto ao banco não foi localizado ou ainda não foi processado.',
+  chave_invalida:      'A chave de acesso do documento fiscal é inválida ou não consta na base de dados da SEFAZ. O documento pode ter sido emitido com erro de digitação ou se tratar de documento inidôneo.',
+  cnpj_divergente:     'O CNPJ do emitente registrado no Registro Fiscal diverge do constante no Documento Fiscal. Pode indicar cessão indevida de crédito tributário ou erro de cadastro no sistema.',
+  duplicidade_rf:      'Foi identificado mais de um Registro Fiscal para o mesmo Documento Fiscal e tipo de imposto. A duplicidade pode causar duplo recolhimento ou aproveitamento indevido de crédito de IBS/CBS.'
+};
+
+window._incComentarios = window._incComentarios || {};
+
+function _incRenderComentarios(incId) {
+  var comments = window._incComentarios[incId] || [];
+  if (!comments.length) {
+    return '<div style="font-size:11px;color:var(--txt3);padding:4px 0 10px">Nenhum comentário ainda.</div>';
+  }
+  return comments.map(function(c) {
+    return '<div style="background:var(--inp);border:1px solid var(--brd);border-radius:7px;padding:9px 12px;margin-bottom:8px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+      + '<span style="font-size:11px;font-weight:700;color:var(--txt1)">'+c.usuario+'</span>'
+      + '<span style="font-size:10px;color:var(--txt3);font-family:monospace">'+c.dataFmt+'</span>'
+      + '</div>'
+      + '<div style="font-size:12px;color:var(--txt2);line-height:1.5">'+c.texto+'</div>'
+      + '</div>';
+  }).join('');
+}
+
+window._incRenderVinculadasHtml = function(incs) {
+  if (!incs || !incs.length) {
+    return '<div style="font-size:11px;color:var(--txt3);font-style:italic;margin-bottom:4px">Nenhuma inconsistência vinculada.</div>';
+  }
+  var stRgbs = { aberta:'244,63,94', em_analise:'245,158,11', aguardando_emitente:'59,130,246', resolvida:'34,197,94', glosada:'167,168,170' };
+  var stLabs = { aberta:'Aberta', em_analise:'Em Análise', aguardando_emitente:'Ag. Emitente', resolvida:'Resolvida', glosada:'Glosada' };
+  var prioRGBs = { critica:'244,63,94', alta:'245,158,11', media:'59,130,246', baixa:'34,197,94' };
+  var prioLbls = { critica:'Crítica', alta:'Alta', media:'Média', baixa:'Baixa' };
+  var fv = function(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  return incs.map(function(inc) {
+    var st     = (window._kanbanState && window._kanbanState[inc.id]) || inc.status || 'aberta';
+    var rgb    = stRgbs[st]  || '167,168,170';
+    var lbl    = stLabs[st]  || st;
+    var prioRgb = prioRGBs[inc.prioridade] || '100,116,139';
+    var prioLbl = prioLbls[inc.prioridade] || '—';
+    return '<div onclick="window.kbAbrirCard(\''+inc.id+'\')" style="cursor:pointer;background:rgba(244,63,94,.04);border:1px solid rgba('+rgb+',.3);border-radius:6px;padding:9px 12px;margin-bottom:7px;transition:border-color .15s" onmouseenter="this.style.borderColor=\'rgba(244,63,94,.6)\'" onmouseleave="this.style.borderColor=\'rgba('+rgb+',.3)\'">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'
+      + '<span style="font-size:10px;font-family:monospace;color:var(--txt3)">'+inc.id+'</span>'
+      + '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba('+rgb+',.12);color:rgba('+rgb+',1);border:1px solid rgba('+rgb+',.28)">'+lbl+'</span>'
+      + '</div>'
+      + '<div style="font-size:12px;font-weight:600;color:var(--txt1);margin-bottom:2px">'+inc.tipoLabel+'</div>'
+      + '<div style="font-size:11px;color:var(--txt3)"><span style="color:rgba('+prioRgb+',1);font-weight:600">'+prioLbl+'</span> · '+fv(inc.valor)+'</div>'
+      + '</div>';
+  }).join('');
+};
+
+window._incAdicionarComentario = function(incId) {
+  var input = document.getElementById('inc-comment-input-'+incId);
+  var texto = input && input.value.trim();
+  if (!texto) return;
+  if (!window._incComentarios[incId]) window._incComentarios[incId] = [];
+  var now = new Date();
+  var pad = function(n) { return n < 10 ? '0'+n : ''+n; };
+  var dataFmt = pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()
+    + ' ' + pad(now.getHours())+':'+pad(now.getMinutes());
+  window._incComentarios[incId].push({ texto: texto, usuario: 'Usuário atual', dataFmt: dataFmt });
+  input.value = '';
+  var listEl = document.getElementById('inc-comments-list-'+incId);
+  if (listEl) listEl.innerHTML = _incRenderComentarios(incId);
+};
+
 var _incAcoesMap = {
   divergencia_valor: [
     { label: 'Solicitar Retificação de NF', icon: '📝', desc: 'Notifica o emitente para corrigir o valor na NF',      nextStatus: 'aguardando_emitente' },
@@ -3431,60 +3507,86 @@ window.kbAbrirCard = function(incId) {
       + '</div>';
   });
 
+  var DR = window._rfDetailRow;
+  var descricao = _incDescricaoMap[inc.tipo] || 'Inconsistência identificada pelo motor de validação SplitHub. Verifique os dados vinculados ao Documento Fiscal e tome as ações necessárias.';
+
   var acoes = _incAcoesMap[inc.tipo] || [
-    { label: 'Enviar para Contabilidade', icon: '📊', desc: 'Escala para revisão pela equipe contábil',   nextStatus: 'em_analise' },
-    { label: 'Marcar como Resolvida',     icon: '✅', desc: 'Move inconsistência para coluna Resolvida',  nextStatus: 'resolvida' }
+    { label: 'Enviar para Contabilidade', icon: '📊', desc: 'Escala para revisão pela equipe contábil',  nextStatus: 'em_analise' },
+    { label: 'Marcar como Resolvida',     icon: '✅', desc: 'Move inconsistência para coluna Resolvida', nextStatus: 'resolvida' }
   ];
   var acoesHtml = acoes.map(function(a, i) {
-    return '<button onclick="window._kbExecutarAcao(\''+incId+'\','+i+')" style="display:flex;align-items:flex-start;gap:10px;width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:12px 14px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s" onmouseenter="this.style.borderColor=\'var(--teal)\'" onmouseleave="this.style.borderColor=\'var(--brd)\'">'
-      + '<span style="font-size:18px;flex-shrink:0;margin-top:1px">'+a.icon+'</span>'
-      + '<div><div style="font-size:13px;font-weight:600;color:var(--txt1);margin-bottom:2px">'+a.label+'</div>'
+    return '<button onclick="window._kbExecutarAcao(\''+incId+'\','+i+')" style="display:flex;align-items:flex-start;gap:9px;width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:9px 12px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s" onmouseenter="this.style.borderColor=\'var(--teal)\'" onmouseleave="this.style.borderColor=\'var(--brd)\'">'
+      + '<span style="font-size:16px;flex-shrink:0;margin-top:1px">'+a.icon+'</span>'
+      + '<div><div style="font-size:12px;font-weight:600;color:var(--txt1);margin-bottom:1px">'+a.label+'</div>'
       + '<div style="font-size:11px;color:var(--txt3)">'+a.desc+'</div></div>'
       + '</button>';
   }).join('');
 
-  modal.innerHTML = '<div style="background:var(--card);border:1px solid var(--brd);border-radius:12px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column">'
+  modal.innerHTML = '<div style="background:var(--card);border:1px solid var(--brd);border-radius:12px;width:100%;max-width:920px;max-height:90vh;display:flex;flex-direction:column">'
 
-    + '<div style="padding:20px 24px 16px;border-bottom:1px solid var(--brd);display:flex;justify-content:space-between;align-items:flex-start;gap:12px">'
-    +   '<div style="flex:1;min-width:0">'
-    +     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
-    +       '<span style="font-size:10px;font-family:monospace;color:var(--txt3)">'+inc.id+'</span>'
-    +       _badge2(prioRgb, (prioLabel[inc.prioridade]||'—').toUpperCase())
-    +       _badge2(stInfo.rgb, stInfo.label.toUpperCase())
+    // ── Header ──────────────────────────────────────────────────────────────
+    + '<div style="padding:16px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
+    +   '<div style="display:flex;align-items:center;gap:12px">'
+    +     '<div style="width:34px;height:34px;border-radius:8px;background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.25);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:rgba(244,63,94,1)">⚠</div>'
+    +     '<div>'
+    +       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap">'
+    +         '<span style="font-size:10px;font-family:monospace;color:var(--txt3)">'+inc.id+'</span>'
+    +         _badge2(prioRgb, (prioLabel[inc.prioridade]||'—').toUpperCase())
+    +         _badge2(stInfo.rgb, stInfo.label.toUpperCase())
+    +       '</div>'
+    +       '<div style="font-size:14px;font-weight:700;color:var(--txt1)">'+inc.tipoLabel+'</div>'
+    +       '<div style="font-size:11px;color:var(--txt2)">'+inc.entidade+' · <span style="font-family:monospace">'+inc.cnpj+'</span></div>'
     +     '</div>'
-    +     '<div style="font-size:16px;font-weight:700;color:var(--txt1)">'+inc.tipoLabel+'</div>'
-    +     '<div style="font-size:12px;color:var(--txt2);margin-top:3px">'+inc.entidade+' · <span style="font-family:monospace">'+inc.cnpj+'</span></div>'
     +   '</div>'
-    +   '<button onclick="document.getElementById(\'kb-card-modal\').style.display=\'none\'" style="background:none;border:none;color:var(--txt2);font-size:24px;cursor:pointer;line-height:1;padding:0;flex-shrink:0">×</button>'
+    +   '<button onclick="document.getElementById(\'kb-card-modal\').style.display=\'none\'" style="background:none;border:none;cursor:pointer;color:var(--txt2);font-size:20px;padding:4px 8px;border-radius:6px;line-height:1">✕</button>'
     + '</div>'
 
-    + '<div style="padding:16px 24px;border-bottom:1px solid var(--brd)">'
-    +   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px 16px;margin-bottom:16px">'
-    +     _item2('DF Vinculado', inc.dfNum, '59,130,246', true)
-    +     _item2('RF Vinculado', inc.rfId || null, '45,212,191', true)
-    +     _item2('Valor', fmtV(inc.valor), '245,158,11')
-    +     _item2('Fluxo', fluxoLabel, fluxoCor)
-    +     _item2('Tipo Fiscal', inc.tipoFiscal, tipoFisCor)
-    +     _item2('Origem', origemLabel, origemRGB)
-    +   '</div>'
-    +   '<div>'
-    +     '<div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Status / Mover coluna</div>'
-    +     '<select id="kb-col-select" onchange="window._kbMoverColuna(\''+incId+'\',this.value)" style="width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--txt1);font-family:inherit;outline:none;cursor:pointer">'
-    +       colOpts
-    +     '</select>'
-    +   '</div>'
+    // ── Body: dois painéis ───────────────────────────────────────────────────
+    + '<div style="display:flex;flex:1;overflow:hidden">'
+
+    // ── Painel esquerdo ──────────────────────────────────────────────────────
+    + '<div style="width:320px;flex-shrink:0;border-right:1px solid var(--brd);padding:18px;overflow-y:auto">'
+
+    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px">Dados da Inconsistência</div>'
+    + DR('DF Vinculado',   '<span style="font-family:monospace;color:rgba(59,130,246,1)">'+inc.dfNum+'</span>')
+    + DR('RF Vinculado',   inc.rfId ? '<span style="font-family:monospace;color:rgba(45,212,191,1)">'+inc.rfId+'</span>' : '<span style="color:var(--txt3);font-style:italic">DF direto</span>')
+    + DR('Valor',          fmtV(inc.valor), '#F59E0B')
+    + DR('Fluxo',          fluxoLabel)
+    + DR('Tipo Fiscal',    '<span style="color:rgba('+tipoFisCor+',1);font-weight:700">'+inc.tipoFiscal+'</span>')
+    + DR('Origem',         origemLabel)
+    + DR('Data Detecção',  fmtD(inc.dataISO))
+
+    + '<div style="height:1px;background:var(--brd);margin:14px 0"></div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Descrição do Problema</div>'
+    + '<div style="font-size:12px;color:var(--txt2);line-height:1.65;background:rgba(244,63,94,.04);border:1px solid rgba(244,63,94,.15);border-radius:8px;padding:12px 14px">'+descricao+'</div>'
+
+    + '<div style="height:1px;background:var(--brd);margin:14px 0"></div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Status / Mover coluna</div>'
+    + '<select id="kb-col-select" onchange="window._kbMoverColuna(\''+incId+'\',this.value)" style="width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--txt1);font-family:inherit;outline:none;cursor:pointer">'
+    +   colOpts
+    + '</select>'
+
+    + '<div style="height:1px;background:var(--brd);margin:14px 0"></div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Ações sugeridas</div>'
+    + '<div style="display:flex;flex-direction:column;gap:7px">'+acoesHtml+'</div>'
+
+    + '<div style="height:1px;background:var(--brd);margin:14px 0"></div>'
+    + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Comentários</div>'
+    + '<div id="inc-comments-list-'+incId+'">'+_incRenderComentarios(incId)+'</div>'
+    + '<div style="margin-top:4px">'
+    +   '<textarea id="inc-comment-input-'+incId+'" placeholder="Adicionar comentário..." style="width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--txt1);font-family:inherit;resize:vertical;min-height:64px;outline:none;box-sizing:border-box"></textarea>'
+    +   '<button onclick="window._incAdicionarComentario(\''+incId+'\')" style="margin-top:6px;width:100%;background:rgba(45,212,191,1);border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">Comentar</button>'
     + '</div>'
 
-    + '<div style="padding:16px 24px;border-bottom:1px solid var(--brd)">'
+    + '</div>'
+
+    // ── Painel direito: histórico ────────────────────────────────────────────
+    + '<div style="flex:1;padding:18px;overflow-y:auto">'
     +   '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px">Histórico do Ciclo · '+eventos.length+' evento'+(eventos.length !== 1 ? 's' : '')+'</div>'
     +   timelineHtml
     + '</div>'
 
-    + '<div style="padding:16px 24px">'
-    +   '<div style="font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Ações sugeridas</div>'
-    +   '<div style="display:flex;flex-direction:column;gap:8px">'+acoesHtml+'</div>'
     + '</div>'
-
     + '</div>';
 
   modal.style.display = 'flex';
