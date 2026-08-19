@@ -109,6 +109,26 @@ window.SH_TABLES = {
       { label: 'Método de Extinção' }
     ]
   },
+  dashDfCp: {
+    id: 'dash-df-cp',
+    cols: [
+      { label: 'DF' },
+      { label: 'Fornecedor' },
+      { label: 'Valor IBS+CBS', cls: 'r' },
+      { label: 'Data NF' },
+      { label: 'Situação' }
+    ]
+  },
+  dashDfLp: {
+    id: 'dash-df-lp',
+    cols: [
+      { label: 'DF' },
+      { label: 'Fornecedor' },
+      { label: 'Valor IBS+CBS', cls: 'r' },
+      { label: 'Data NF' },
+      { label: 'Situação' }
+    ]
+  },
   inconsistencias: {
     id: 't-inc-rfs',
     cols: [
@@ -148,6 +168,55 @@ window.shRenderThead = function(key) {
   });
   thead.appendChild(tr);
   table.insertBefore(thead, table.firstChild);
+};
+
+window.dashRenderDFsApropriar = function() {
+  var cpRows = [], lpRows = [];
+  var riscoCrit = { em_risco: true, vencido: true, inconsistencia: true };
+  var srLabel = { em_risco: 'Em Risco', vencido: 'Vencido', inconsistencia: 'Inconsistência', a_prescrever: 'A Prescrever' };
+  var srRgb   = { em_risco: _hexRgb(PALETTE.amber), vencido: _hexRgb(PALETTE.red), inconsistencia: _hexRgb(PALETTE.red), a_prescrever: _hexRgb(PALETTE.red) };
+
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      var sc = rf.statusCredito || rf.status || '';
+      if (sc !== 'nao_apropriado') return;
+      var sr  = rf.statusRegistro || null;
+      var v   = rf.valor || 0;
+      var dp  = (rf.data || '').split('-');
+      var row = {
+        nf:   (nf.tipoDF || 'NF-e') + ' ' + (rf.nfVinculada || nf.numero || ''),
+        forn: rf.entidade || nf.entidade || '—',
+        valor: v,
+        data: dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
+        sr: sr
+      };
+      if (riscoCrit[sr]) cpRows.push(row);
+      else lpRows.push(row);
+    });
+  });
+
+  function buildRow(r) {
+    var srBadge = r.sr
+      ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;background:rgba('+srRgb[r.sr]+',.12);color:rgba('+srRgb[r.sr]+',1);border:1px solid rgba('+srRgb[r.sr]+',.28)">'+(srLabel[r.sr]||r.sr)+'</span>'
+      : '';
+    return '<tr>'
+      + '<td class="mono nowrap" style="font-size:11px">' + r.nf + '</td>'
+      + '<td class="trunc">' + r.forn + '</td>'
+      + '<td class="r mono">' + ff(r.valor) + '</td>'
+      + '<td class="nowrap" style="color:var(--txt2)">' + r.data + '</td>'
+      + '<td class="nowrap">' + srBadge + '</td>'
+      + '</tr>';
+  }
+
+  var empty = function(msg) { return '<tr><td colspan="5" style="text-align:center;color:var(--txt3);padding:20px">'+msg+'</td></tr>'; };
+  var cpSorted = cpRows.sort(function(a,b){return b.valor-a.valor;}).slice(0,10);
+  var lpSorted = lpRows.sort(function(a,b){return b.valor-a.valor;}).slice(0,10);
+
+  var tbCp = document.getElementById('dash-df-cp');
+  var tbLp = document.getElementById('dash-df-lp');
+  if (tbCp) tbCp.innerHTML = cpSorted.length ? cpSorted.map(buildRow).join('') : empty('Nenhum DF com risco imediato');
+  if (tbLp) tbLp.innerHTML = lpSorted.length ? lpSorted.map(buildRow).join('') : empty('Nenhum DF pendente');
 };
 
 window._matchPeriodo = function(dateStr, f) {
@@ -4439,6 +4508,7 @@ class DataSyncManagerFixed {
 
     // Crédito — tabela já chama atualizarKPIsCreditos + renderizarComposicaoCreditos + atualizarPerdaAcumulada
     try { window.renderizarTabelaCreditos && window.renderizarTabelaCreditos(); } catch(e) {}
+    try { window.dashRenderDFsApropriar && window.dashRenderDFsApropriar(); } catch(e) {}
 
     // NFs — listagem conciliação
     try { window.renderizarListaNFs && window.renderizarListaNFs(); } catch(e) {}
@@ -5901,7 +5971,7 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
 // Instanciar quando o documento está pronto
 document.addEventListener('DOMContentLoaded', function() {
   // Gerar theads das tabelas principais a partir do config SH_TABLES
-  ['creditos','debitos','inconsistencias'].forEach(window.shRenderThead);
+  ['creditos','debitos','inconsistencias','dashDfCp','dashDfLp'].forEach(window.shRenderThead);
 
   // Scripts inline executam antes de DOMContentLoaded — delay zero é suficiente
   setTimeout(function() {
