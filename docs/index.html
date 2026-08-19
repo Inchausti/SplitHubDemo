@@ -6719,6 +6719,16 @@ function buildCharts(){
     return 'R$ ' + Math.round(v * 1000) + 'K';
   }
 
+  function _calcVenc(dataISO) {
+    if (!dataISO) return null;
+    var p = dataISO.split('-');
+    if (p.length < 2) return null;
+    var v = new Date(parseInt(p[0],10), parseInt(p[1],10) + 1, 0);
+    var mm = String(v.getMonth()+1).padStart(2,'0');
+    var dd = String(v.getDate()).padStart(2,'0');
+    return v.getFullYear() + '-' + mm + '-' + dd;
+  }
+
   function _buildMap() {
     var map = {};
     (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
@@ -6726,9 +6736,9 @@ function buildCharts(){
       (nf.registrosFiscais || []).forEach(function(rf) {
         var sc = rf.statusCredito || rf.status || '';
         if (sc !== 'nao_apropriado') return;
-        var d = rf.data || '';
-        if (!d) return;
-        map[d.substring(0,10)] = (map[d.substring(0,10)] || 0) + (rf.valor || 0);
+        var venc = _calcVenc(rf.data);
+        if (!venc) return;
+        map[venc] = (map[venc] || 0) + (rf.valor || 0);
       });
     });
     return map;
@@ -6802,7 +6812,7 @@ function buildCharts(){
     var partes = isoDate.split('-');
     var label = partes[2] + '/' + partes[1] + '/' + partes[0];
     document.getElementById('venc-day-title').textContent = 'DFs a Vencer — ' + label;
-    document.getElementById('venc-day-sub').textContent = 'Créditos IBS+CBS não apropriados com data de RF ' + label;
+    document.getElementById('venc-day-sub').textContent = 'Créditos IBS+CBS não apropriados com vencimento em ' + label;
 
     function _dfLink(tipoDF, numero) {
       var label = (tipoDF || 'NF-e') + ' ' + (numero || '—');
@@ -6813,22 +6823,22 @@ function buildCharts(){
         + label + '</button>';
     }
 
-    // coleta DFs (NFs de entrada) com algum RF nao_apropriado na data
+    // coleta DFs (NFs de entrada) com algum RF nao_apropriado cujo vencimento = isoDate
     var dfMap = {};
     var total = 0;
     (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
       if (nf.tipo !== 'entrada') return;
-      var temRfNaData = false;
+      var temRfNoVenc = false;
       var ibs = 0, cbs = 0, statusNf = 'nao_apropriado';
       (nf.registrosFiscais || []).forEach(function(rf) {
         var sc = rf.statusCredito || rf.status || '';
         if (sc !== 'nao_apropriado') return;
-        if ((rf.data || '').substring(0,10) === isoDate) temRfNaData = true;
+        if (_calcVenc(rf.data) === isoDate) temRfNoVenc = true;
         if ((rf.tipoFiscal||'').toLowerCase() === 'ibs') ibs += rf.valor || 0;
         else cbs += rf.valor || 0;
         statusNf = sc;
       });
-      if (!temRfNaData) return;
+      if (!temRfNoVenc) return;
       var key = nf.numero || nf.id || Math.random();
       if (!dfMap[key]) {
         dfMap[key] = { nf: nf, ibs: ibs, cbs: cbs, status: statusNf };
@@ -6837,25 +6847,6 @@ function buildCharts(){
     });
 
     var rows = Object.keys(dfMap).map(function(k){ return dfMap[k]; });
-
-    // fallback: sem dados reais para o dia → usa NFs nao_apropriados
-    if (!rows.length) {
-      (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
-        if (rows.length >= 5) return;
-        if (nf.tipo !== 'entrada') return;
-        var ibs = 0, cbs = 0, temRf = false;
-        (nf.registrosFiscais || []).forEach(function(rf) {
-          var sc = rf.statusCredito || rf.status || '';
-          if (sc !== 'nao_apropriado') return;
-          temRf = true;
-          if ((rf.tipoFiscal||'').toLowerCase() === 'ibs') ibs += rf.valor || 0;
-          else cbs += rf.valor || 0;
-        });
-        if (!temRf) return;
-        rows.push({ nf: nf, ibs: ibs, cbs: cbs, status: 'nao_apropriado' });
-        total += (nf.valorTotal || nf.valor || 0);
-      });
-    }
 
     var fmt3 = function(v){ return v>=1e6?'R$ '+(v/1e6).toFixed(1).replace('.',',')+'M':v>=1e3?'R$ '+Math.round(v/1e3)+'K':'R$ '+v.toFixed(2); };
     var tbody = document.getElementById('venc-day-tbody');
