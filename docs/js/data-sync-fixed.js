@@ -188,6 +188,56 @@ window.shRenderThead = function(key) {
   table.insertBefore(thead, table.firstChild);
 };
 
+/* ── Global filter panel builder — design C-1 Teal ── */
+window.shBuildFilterPanel = function(cfg) {
+  if (document.getElementById(cfg.wrapperId)) return;
+  if (!cfg.anchor) return;
+
+  function mkField(f) {
+    var inp;
+    if (f.type === 'select') {
+      var opts = '<option value="">Todos</option>' + (f.options || []).map(function(o) {
+        return '<option value="' + o.value + '">' + o.label + '</option>';
+      }).join('');
+      inp = '<select id="' + f.id + '" onchange="window.' + cfg.onFilter + '()">' + opts + '</select>';
+    } else {
+      inp = '<input id="' + f.id + '" type="' + f.type + '"'
+        + (f.placeholder !== undefined ? ' placeholder="' + f.placeholder + '"' : '')
+        + (f.min         !== undefined ? ' min="' + f.min + '"'                 : '')
+        + ' oninput="window.' + cfg.onFilter + '()">';
+    }
+    return '<div class="sh-fp-field"><label>' + f.label + '</label>' + inp + '</div>';
+  }
+
+  var fields = (cfg.fields || []).map(mkField).join('');
+  var h = '<div id="' + cfg.wrapperId + '" class="sh-fp">'
+    + '<div class="sh-fp-bar">'
+    +   '<div class="sh-fp-sw"><span class="sh-fp-sw-ico">⌕</span>'
+    +   '<input id="' + cfg.prefix + '-busca" type="text" placeholder="' + (cfg.searchPlaceholder || 'Pesquisar…') + '" oninput="window.' + cfg.onFilter + '()"></div>'
+    +   '<button id="' + cfg.prefix + '-toggle-btn" class="sh-fp-btn" onclick="window.shToggleFilterPanel(\'' + cfg.prefix + '\')">'
+    +     '⧉ Filtros <span class="sh-fp-badge" id="' + cfg.prefix + '-badge" data-count="0">0</span></button>'
+    + '</div>'
+    + '<div class="sh-fp-panel" id="' + cfg.prefix + '-corpo" style="display:none">'
+    +   '<div class="sh-fp-grid">' + fields + '</div>'
+    +   '<div class="sh-fp-footer">'
+    +     '<button class="sh-fp-clear" onclick="window.' + cfg.onClear + '()">✕ Limpar filtros</button>'
+    +     '<span class="sh-fp-count" id="' + cfg.countId + '">— registros</span>'
+    +     '<button class="sh-fp-apply" onclick="window.' + cfg.onFilter + '()">Aplicar</button>'
+    +   '</div>'
+    + '</div></div>';
+
+  cfg.anchor.insertAdjacentHTML('beforebegin', h);
+};
+
+window.shToggleFilterPanel = function(prefix) {
+  var panel = document.getElementById(prefix + '-corpo');
+  var btn   = document.getElementById(prefix + '-toggle-btn');
+  if (!panel) return;
+  var isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (btn) btn.classList.toggle('open', !isOpen);
+};
+
 window.dashRenderDFsApropriar = function() {
   var cpRows = [], lpRows = [];
   var srLabel = { em_risco: 'Em Risco', vencido: 'Vencido', inconsistencia: 'Inconsistência', a_prescrever: 'A Prescrever' };
@@ -995,111 +1045,34 @@ window._filtrosCreditos = {
 };
 
 window.injetarFiltrosCreditos = function() {
-  if (document.getElementById('filtros-creditos-avancado')) return;
   var tcrd = document.querySelector('#view-creditos .tcrd') || document.querySelector('.tcrd');
   if (!tcrd) return;
-
-  var contratos = _contratosData.map(function(c) {
-    return '<option value="' + c.id + '">' + c.id + '</option>';
-  }).join('');
-
-  var html = '<div id="filtros-creditos-avancado" style="background:var(--card);border:1px solid var(--brd);border-radius:10px;margin-bottom:16px;overflow:hidden">'
-    + '<button onclick="window.creditosToggleFiltros()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;padding:14px 20px;cursor:pointer;text-align:left">'
-    + '<span style="font-size:12px;font-weight:700;color:var(--txt1);text-transform:uppercase;letter-spacing:.05em">Filtros</span>'
-    + '<span id="fc-toggle-icon" style="font-size:16px;color:var(--txt2);transition:transform .2s">▾</span>'
-    + '</button>'
-    + '<div id="fc-corpo" style="padding:0 20px 16px;display:none">'
-    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;align-items:end">'
-
-    // Busca geral
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Busca (RF / NF / Fornecedor)</label>'
-    + '<input id="fc-busca" type="text" placeholder="Pesquisar…" oninput="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-
-    // Tipo Fiscal
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo Fiscal</label>'
-    + '<select id="fc-tipo" onchange="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option><option value="IBS">IBS</option><option value="CBS">CBS</option></select></div>'
-
-    // Status do Crédito
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Status do Crédito</label>'
-    + '<select id="fc-status" onchange="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option>'
-    + '<option value="nao_apropriado">Não Apropriado</option>'
-    + '<option value="apropriado">Apropriado</option>'
-    + '<option value="utilizado">Utilizado</option>'
-    + '<option value="glosado">Glosado</option>'
-    + '</select></div>'
-
-    // Status do Registro
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Status do Registro</label>'
-    + '<select id="fc-status-registro" onchange="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option>'
-    + '<option value="inconsistencia">Inconsistência</option>'
-    + '<option value="em_risco">Em risco</option>'
-    + '<option value="a_prescrever">A Prescrever</option>'
-    + '<option value="vencido">Vencido</option>'
-    + '</select></div>'
-
-    // Contrato
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Contrato</label>'
-    + '<select id="fc-contrato" onchange="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option>' + contratos + '<option value="__sem__">Sem contrato</option>'
-    + '</select></div>'
-
-    // Método de Pagamento
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Método de Pagamento</label>'
-    + '<select id="fc-metodo" onchange="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option><option value="RAD">RAD</option><option value="Fornecedor">Fornecedor</option>'
-    + '</select></div>'
-
-    // Pagamento
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Pagamento</label>'
-    + '<select id="fc-pagamento" onchange="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option><option value="com">Com pagamento</option><option value="sem">Sem pagamento</option>'
-    + '</select></div>'
-
-    // Data NF De
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data NF — de</label>'
-    + '<input id="fc-data-de" type="date" onchange="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-
-    // Data NF Até
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data NF — até</label>'
-    + '<input id="fc-data-ate" type="date" onchange="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-
-    // Crédito mín
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Crédito — mín (R$)</label>'
-    + '<input id="fc-cred-min" type="number" min="0" placeholder="0" oninput="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-
-    // Crédito máx
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Crédito — máx (R$)</label>'
-    + '<input id="fc-cred-max" type="number" min="0" placeholder="∞" oninput="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-
-    // Tipo de DFe
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo de DFe</label>'
-    + '<select id="fc-tipo-dfe" onchange="window.creditosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option>'
-    + '</select></div>'
-
-    + '</div>'
-    // Rodapé: contagem + limpar
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--brd)">'
-    + '<span id="fc-contagem" style="font-size:11px;color:var(--txt2)">200 registros</span>'
-    + '<button onclick="window.creditosLimparFiltrosGrid()" style="background:none;border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;color:var(--txt2);cursor:pointer">✕ Limpar filtros</button>'
-    + '</div>'
-    + '</div>'  // fecha fc-corpo
-    + '</div>';
-
-  tcrd.insertAdjacentHTML('beforebegin', html);
+  var contratos = (_contratosData || []).map(function(c) { return { value: c.id, label: c.id }; });
+  window.shBuildFilterPanel({
+    wrapperId: 'filtros-creditos-avancado',
+    anchor: tcrd,
+    prefix: 'fc',
+    searchPlaceholder: 'Pesquisar RF / NF / Fornecedor…',
+    onFilter: 'creditosFiltrarGrid',
+    onClear: 'creditosLimparFiltrosGrid',
+    countId: 'fc-contagem',
+    fields: [
+      { label: 'Tipo Fiscal',         id: 'fc-tipo',            type: 'select', options: [{value:'IBS',label:'IBS'},{value:'CBS',label:'CBS'}] },
+      { label: 'Status do Crédito',   id: 'fc-status',          type: 'select', options: [{value:'nao_apropriado',label:'Não Apropriado'},{value:'apropriado',label:'Apropriado'},{value:'utilizado',label:'Utilizado'},{value:'glosado',label:'Glosado'}] },
+      { label: 'Status do Registro',  id: 'fc-status-registro', type: 'select', options: [{value:'inconsistencia',label:'Inconsistência'},{value:'em_risco',label:'Em risco'},{value:'a_prescrever',label:'A Prescrever'},{value:'vencido',label:'Vencido'}] },
+      { label: 'Contrato',            id: 'fc-contrato',        type: 'select', options: contratos.concat([{value:'__sem__',label:'Sem contrato'}]) },
+      { label: 'Método de Pagamento', id: 'fc-metodo',          type: 'select', options: [{value:'RAD',label:'RAD'},{value:'Fornecedor',label:'Fornecedor'}] },
+      { label: 'Pagamento',           id: 'fc-pagamento',       type: 'select', options: [{value:'com',label:'Com pagamento'},{value:'sem',label:'Sem pagamento'}] },
+      { label: 'Data NF — de',   id: 'fc-data-de',         type: 'date' },
+      { label: 'Data NF — até', id: 'fc-data-ate',    type: 'date' },
+      { label: 'Crédito — mín (R$)', id: 'fc-cred-min', type: 'number', placeholder: '0', min: 0 },
+      { label: 'Crédito — máx (R$)', id: 'fc-cred-max', type: 'number', placeholder: '∞', min: 0 },
+      { label: 'Tipo de DFe',         id: 'fc-tipo-dfe',        type: 'select', options: [{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}] }
+    ]
+  });
 };
 
-window.creditosToggleFiltros = function() {
-  var corpo = document.getElementById('fc-corpo');
-  var icon  = document.getElementById('fc-toggle-icon');
-  if (!corpo) return;
-  var aberto = corpo.style.display !== 'none';
-  corpo.style.display = aberto ? 'none' : 'block';
-  if (icon) icon.style.transform = aberto ? '' : 'rotate(180deg)';
-};
+window.creditosToggleFiltros = function() { window.shToggleFilterPanel('fc'); };
 
 window.creditosFiltrarGrid = function() {
   var f = window._filtrosCreditos;
@@ -3959,61 +3932,31 @@ window._filtrosDebitos = {
 };
 
 window.injetarFiltrosDebitos = function() {
-  if (document.getElementById('filtros-debitos-avancado')) return;
   var tcrd = document.querySelector('#deb-rfs .tcrd');
   if (!tcrd) return;
-
-  var html = '<div id="filtros-debitos-avancado" style="background:var(--card);border:1px solid var(--brd);border-radius:10px;margin-bottom:16px;overflow:hidden">'
-    + '<button onclick="window.debitosToggleFiltros()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;padding:14px 20px;cursor:pointer;text-align:left">'
-    + '<span style="font-size:12px;font-weight:700;color:var(--txt1);text-transform:uppercase;letter-spacing:.05em">Filtros</span>'
-    + '<span id="fd-toggle-icon" style="font-size:16px;color:var(--txt2);transition:transform .2s">▾</span>'
-    + '</button>'
-    + '<div id="fd-corpo" style="padding:0 20px 16px;display:none">'
-    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;align-items:end">'
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Busca (RF / NF / Cliente)</label>'
-    + '<input id="fd-busca" type="text" placeholder="Pesquisar…" oninput="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo Fiscal</label>'
-    + '<select id="fd-tipo" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option><option value="IBS">IBS</option><option value="CBS">CBS</option></select></div>'
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Status</label>'
-    + '<select id="fd-status" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option><option value="extinto">Extinto</option><option value="nao_extinto">Não Extinto</option>'
-    + '<option value="vencido">Vencido</option><option value="inconsistencia">Inconsistência</option></select></div>'
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Método de Extinção</label>'
-    + '<select id="fd-metodo" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option><option value="RAD">RAD</option><option value="Compensacao">Compensação</option></select></div>'
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Extinção</label>'
-    + '<select id="fd-extincao" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option><option value="com">Com extinção</option><option value="sem">Sem extinção</option></select></div>'
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data NF — de</label>'
-    + '<input id="fd-data-de" type="date" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data NF — até</label>'
-    + '<input id="fd-data-ate" type="date" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Débito — mín (R$)</label>'
-    + '<input id="fd-deb-min" type="number" min="0" placeholder="0" oninput="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Débito — máx (R$)</label>'
-    + '<input id="fd-deb-max" type="number" min="0" placeholder="∞" oninput="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo de DFe</label>'
-    + '<select id="fd-tipo-dfe" onchange="window.debitosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option>'
-    + '</select></div>'
-    + '</div>'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--brd)">'
-    + '<span id="fd-contagem" style="font-size:11px;color:var(--txt2)">200 registros</span>'
-    + '<button onclick="window.debitosLimparFiltrosGrid()" style="background:none;border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;color:var(--txt2);cursor:pointer">✕ Limpar filtros</button>'
-    + '</div></div></div>';
-
-  tcrd.insertAdjacentHTML('beforebegin', html);
+  window.shBuildFilterPanel({
+    wrapperId: 'filtros-debitos-avancado',
+    anchor: tcrd,
+    prefix: 'fd',
+    searchPlaceholder: 'Pesquisar RF / NF / Cliente…',
+    onFilter: 'debitosFiltrarGrid',
+    onClear: 'debitosLimparFiltrosGrid',
+    countId: 'fd-contagem',
+    fields: [
+      { label: 'Tipo Fiscal',       id: 'fd-tipo',     type: 'select', options: [{value:'IBS',label:'IBS'},{value:'CBS',label:'CBS'}] },
+      { label: 'Status',            id: 'fd-status',   type: 'select', options: [{value:'extinto',label:'Extinto'},{value:'nao_extinto',label:'Não Extinto'},{value:'vencido',label:'Vencido'},{value:'inconsistencia',label:'Inconsistência'}] },
+      { label: 'Método de Extinção',id: 'fd-metodo',   type: 'select', options: [{value:'RAD',label:'RAD'},{value:'Compensacao',label:'Compensação'}] },
+      { label: 'Extinção',          id: 'fd-extincao', type: 'select', options: [{value:'com',label:'Com extinção'},{value:'sem',label:'Sem extinção'}] },
+      { label: 'Data NF — de',  id: 'fd-data-de',  type: 'date' },
+      { label: 'Data NF — até', id: 'fd-data-ate', type: 'date' },
+      { label: 'Débito — mín (R$)', id: 'fd-deb-min', type: 'number', placeholder: '0', min: 0 },
+      { label: 'Débito — máx (R$)', id: 'fd-deb-max', type: 'number', placeholder: '∞', min: 0 },
+      { label: 'Tipo de DFe',       id: 'fd-tipo-dfe', type: 'select', options: [{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}] }
+    ]
+  });
 };
 
-window.debitosToggleFiltros = function() {
-  var corpo = document.getElementById('fd-corpo');
-  var icon  = document.getElementById('fd-toggle-icon');
-  if (!corpo) return;
-  var aberto = corpo.style.display !== 'none';
-  corpo.style.display = aberto ? 'none' : 'block';
-  if (icon) icon.style.transform = aberto ? '' : 'rotate(180deg)';
-};
+window.debitosToggleFiltros = function() { window.shToggleFilterPanel('fd'); };
 
 window.debitosFiltrarGrid = function() {
   var f = window._filtrosDebitos;
@@ -5223,81 +5166,31 @@ window.renderizarFCT = function() {
 window._filtrosPagamentos = { mesAno: '', mesAnoArr: [], tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '', metodo: '' };
 
 window.injetarFiltrosPagamentos = function() {
-  if (document.getElementById('filtros-pagamentos-avancado')) return;
   var tcrd = document.querySelector('#pag-imp .tcrd');
   if (!tcrd) return;
-
-  var html = '<div id="filtros-pagamentos-avancado" style="background:var(--card);border:1px solid var(--brd);border-radius:10px;margin-bottom:16px;overflow:hidden">'
-    + '<button onclick="window.pagamentosToggleFiltros()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;padding:14px 20px;cursor:pointer;text-align:left">'
-    + '<span style="font-size:12px;font-weight:700;color:var(--txt1);text-transform:uppercase;letter-spacing:.05em">Filtros</span>'
-    + '<span id="fp-toggle-icon" style="font-size:16px;color:var(--txt2);transition:transform .2s">▾</span>'
-    + '</button>'
-    + '<div id="fp-corpo" style="padding:0 20px 16px;display:none">'
-    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;align-items:end">'
-
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Busca (RF / Fornecedor / CNPJ)</label>'
-    + '<input id="fp-busca" type="text" placeholder="Pesquisar…" oninput="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo</label>'
-    + '<select id="fp-tipo" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option><option value="Guia IBS">Guia IBS</option><option value="DARF CBS">DARF CBS</option>'
-    + '</select></div>'
-
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Status</label>'
-    + '<select id="fp-status" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option>'
-    + '<option value="pago">Pago</option>'
-    + '<option value="pendente">Pendente</option>'
-    + '<option value="atrasado">Atrasado</option>'
-    + '<option value="vencendo">Em risco</option>'
-    + '</select></div>'
-
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Pagamento</label>'
-    + '<select id="fp-pagamento" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option><option value="com">Com pagamento</option><option value="sem">Sem pagamento</option>'
-    + '</select></div>'
-
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data RF — de</label>'
-    + '<input id="fp-data-de" type="date" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Data RF — até</label>'
-    + '<input id="fp-data-ate" type="date" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Valor — mín (R$)</label>'
-    + '<input id="fp-valor-min" type="number" min="0" placeholder="0" oninput="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Valor — máx (R$)</label>'
-    + '<input id="fp-valor-max" type="number" min="0" placeholder="∞" oninput="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none"></div>'
-
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Tipo de DFe</label>'
-    + '<select id="fp-tipo-dfe" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option>'
-    + '</select></div>'
-
-    + '<div><label style="font-size:11px;color:var(--txt2);display:block;margin-bottom:4px">Método</label>'
-    + '<select id="fp-metodo" onchange="window.pagamentosFiltrarGrid()" style="width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);outline:none">'
-    + '<option value="">Todos</option><option value="Fornecedor">Fornecedor</option><option value="RAD">RAD</option>'
-    + '</select></div>'
-
-    + '</div>'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--brd)">'
-    + '<span id="fp-contagem" style="font-size:11px;color:var(--txt2)">— registros</span>'
-    + '<button onclick="window.pagamentosLimparFiltros()" style="background:none;border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;color:var(--txt2);cursor:pointer">✕ Limpar filtros</button>'
-    + '</div>'
-    + '</div>'
-    + '</div>';
-
-  tcrd.insertAdjacentHTML('beforebegin', html);
+  window.shBuildFilterPanel({
+    wrapperId: 'filtros-pagamentos-avancado',
+    anchor: tcrd,
+    prefix: 'fp',
+    searchPlaceholder: 'Pesquisar RF / Fornecedor / CNPJ…',
+    onFilter: 'pagamentosFiltrarGrid',
+    onClear: 'pagamentosLimparFiltros',
+    countId: 'fp-contagem',
+    fields: [
+      { label: 'Tipo',         id: 'fp-tipo',      type: 'select', options: [{value:'Guia IBS',label:'Guia IBS'},{value:'DARF CBS',label:'DARF CBS'}] },
+      { label: 'Status',       id: 'fp-status',    type: 'select', options: [{value:'pago',label:'Pago'},{value:'pendente',label:'Pendente'},{value:'atrasado',label:'Atrasado'},{value:'vencendo',label:'Em risco'}] },
+      { label: 'Pagamento',    id: 'fp-pagamento', type: 'select', options: [{value:'com',label:'Com pagamento'},{value:'sem',label:'Sem pagamento'}] },
+      { label: 'Data RF — de',  id: 'fp-data-de',   type: 'date' },
+      { label: 'Data RF — até', id: 'fp-data-ate',  type: 'date' },
+      { label: 'Valor — mín (R$)', id: 'fp-valor-min', type: 'number', placeholder: '0', min: 0 },
+      { label: 'Valor — máx (R$)', id: 'fp-valor-max', type: 'number', placeholder: '∞', min: 0 },
+      { label: 'Tipo de DFe',  id: 'fp-tipo-dfe',  type: 'select', options: [{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}] },
+      { label: 'Método',       id: 'fp-metodo',    type: 'select', options: [{value:'Fornecedor',label:'Fornecedor'},{value:'RAD',label:'RAD'}] }
+    ]
+  });
 };
 
-window.pagamentosToggleFiltros = function() {
-  var corpo = document.getElementById('fp-corpo');
-  var icon  = document.getElementById('fp-toggle-icon');
-  if (!corpo) return;
-  var aberto = corpo.style.display !== 'none';
-  corpo.style.display = aberto ? 'none' : 'block';
-  if (icon) icon.style.transform = aberto ? '' : 'rotate(180deg)';
-};
+window.pagamentosToggleFiltros = function() { window.shToggleFilterPanel('fp'); };
 
 window.pagamentosFiltrarGrid = function() {
   var f = window._filtrosPagamentos;
