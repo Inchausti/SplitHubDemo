@@ -2799,28 +2799,28 @@ window.renderizarRFsInconsistencias = function() {
   var mapForn = {};
   lista.forEach(function(r){ mapForn[r.forn] = (mapForn[r.forn]||0) + r.valor; });
   var top5Forn = Object.keys(mapForn).map(function(k){return {label:k,v:mapForn[k]};}).sort(function(a,b){return b.v-a.v;}).slice(0,5);
-  _incSvgBar(document.getElementById('c-inc-top5-forn'), top5Forn, function(){return '#8B5CF6';}, 560, 20, 12, 180, 70);
+  _incSvgBar(document.getElementById('c-inc-top5-forn'), top5Forn, function(){return '#1d9e75';}, 560, 20, 12, 180, 70);
 
   // 4. Chart 2 — Por tipo de inconsistência
   var mapTipo = {};
   lista.forEach(function(r){ var k=r.inc||'Sem tipo'; mapTipo[k]=(mapTipo[k]||0)+r.valor; });
-  var tiposDados = Object.keys(mapTipo).map(function(k){return {label:k,v:mapTipo[k],cor:_incCores[k]||'#8B5CF6'};}).sort(function(a,b){return b.v-a.v;});
+  var tiposDados = Object.keys(mapTipo).map(function(k){return {label:k,v:mapTipo[k],cor:_incCores[k]||'#1d9e75'};}).sort(function(a,b){return b.v-a.v;});
   _incSvgBar(document.getElementById('c-inc-tipos'), tiposDados, function(d){return d.cor;}, 560, 20, 12, 180, 70);
 
   // 5. Chart 3 — IBS vs CBS
   var volIBS = lista.filter(function(r){return r.tf==='IBS';}).reduce(function(s,r){return s+r.valor;},0);
   var volCBS = lista.filter(function(r){return r.tf==='CBS';}).reduce(function(s,r){return s+r.valor;},0);
   _incSvgDuo(document.getElementById('c-inc-ibs-cbs'), [
-    {label:'IBS', v:volIBS, cor:'#3B82F6'},
-    {label:'CBS', v:volCBS, cor:'#F59E0B'}
+    {label:'IBS', v:volIBS, cor:'#1d9e75'},
+    {label:'CBS', v:volCBS, cor:'#185fa5'}
   ], 280, 22);
 
   // 6. Chart 4 — Entrada vs Saída
   var volEnt = lista.filter(function(r){return r.tipoNF==='entrada';}).reduce(function(s,r){return s+r.valor;},0);
   var volSai = lista.filter(function(r){return r.tipoNF==='saida';}).reduce(function(s,r){return s+r.valor;},0);
   _incSvgDuo(document.getElementById('c-inc-ent-sai'), [
-    {label:'Entrada', v:volEnt, cor:'#22C55E'},
-    {label:'Saída',   v:volSai, cor:'#3B82F6'}
+    {label:'Entrada', v:volEnt, cor:'#1d9e75'},
+    {label:'Saída',   v:volSai, cor:'#ba7517'}
   ], 280, 22);
 
   // 7. Chart 5 — Evolução mensal (contagem de RFs)
