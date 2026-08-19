@@ -120,7 +120,8 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
     <a href="prd-ingestao-v1.4.html">v1.4</a>
     <a href="prd-ingestao-v1.5.html">v1.5</a>
     <a href="prd-ingestao-v1.6.html">v1.6</a>
-    <a href="prd-ingestao-v1.7.html" class="current">v1.7 (esta)</a>
+    <a href="prd-ingestao-v1.7.html">v1.7</a>
+    <a href="prd-ingestao-v1.8.html" class="current">v1.8 (esta)</a>
     <a href="prd-ingestao.html" style="margin-left:4px;background:var(--teal-d);color:var(--teal);border-color:var(--teal)">Última versão</a>
   </div>
 
@@ -133,7 +134,7 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
   </div>
 
   <div class="info-box red">
-    <strong>Ajuste de escopo v1.8 (reconciliação com implementação):</strong> Dashboard KPIs corrigidos — app mantém <strong>Com Erro</strong> e <strong>Duplicados</strong> separados; pipeline visual e gráfico marcados como backlog; seção "Detalhe da Inconsistência" no painel esquerdo do modal removida — info apenas na trilha de auditoria.
+    <strong>Ajuste de escopo v1.8 (reconciliação com implementação):</strong> esta versão alinha o PRD ao estado atual do módulo conforme validação de Ago/2026. (1) Dashboard KPIs corrigidos — app mantém dois KPIs separados: <strong>Com Erro</strong> e <strong>Duplicados</strong>, em vez do KPI unificado "Inconsistências"; (2) Pipeline visual de 5 etapas e gráfico de barras empilhadas marcados como <strong>não implementados</strong> (backlog); (3) Seção "Detalhe da Inconsistência" no painel esquerdo do modal removida — informação está presente apenas no texto do evento da trilha de auditoria.
   </div>
 
   <!-- 1. Objetivo -->
@@ -315,14 +316,6 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
       <p style="font-size:13px;color:var(--txt2)">O XML de cada DF deve ser validado contra o schema XSD oficial da versão correspondente (NF-e 4.00, CT-e 3.00, NFS-e v1.00 ABRASF). Falha de schema resulta em <code>inconsistencia</code> com categoria <strong>Layout</strong>.</p>
     </div>
     <div class="card">
-      <div class="card-title">RF-ING-03 · Validação de CNPJ junto à Receita Federal</div>
-      <p style="font-size:13px;color:var(--txt2)">O <code>niEmitente</code> (CNPJ do emitente) deve ser consultado na API da RFB para verificar situação cadastral ativa. CNPJ inapto, suspenso ou cancelado resulta em <code>inconsistencia</code> com tipo <strong>CNPJ Inválido</strong> (categoria <strong>Dados</strong>), bloqueando o crédito IBS/CBS.</p>
-    </div>
-    <div class="card">
-      <div class="card-title">RF-ING-04 · Extração de campos para conciliação</div>
-      <p style="font-size:13px;color:var(--txt2)">Após status <code>importado</code>, extrair e persistir: <code>chaveDfe</code>, <code>niEmitente</code>, <code>niAdquirente</code>, <code>valorCBSTotal</code>. Estes campos alimentam diretamente a Conciliação de Apuração (CAPUR). O mapeamento completo está documentado no <a href="prd-conciliacao.html" style="color:var(--teal)">PRD de Conciliação</a>.</p>
-    </div>
-    <div class="card">
       <div class="card-title">RF-ING-05 · Tratamento de cancelamentos</div>
       <p style="font-size:13px;color:var(--txt2)">Eventos de cancelamento recebidos do ERP devem atualizar o RF correspondente (via <code>chaveDfe</code>), cancelar qualquer apuração em andamento e gerar evento de auditoria com timestamp do cancelamento.</p>
     </div>
@@ -359,7 +352,7 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
       <div class="card-title">RF-ING-07 · Modal de detalhe expandido e trilha de auditoria <span class="new-badge">v1.7</span></div>
       <p style="font-size:13px;color:var(--txt2);margin-bottom:8px">O modal de detalhe do DF exibe todos os campos relevantes do documento e inclui as seguintes novidades da v1.7:</p>
       <ul>
-        <li><strong>Seção "Detalhe da Inconsistência"</strong> (visível apenas quando status = <code>inconsistencia</code>): badge de categoria (Dados em azul / Layout em âmbar), tipo da inconsistência em destaque roxo, e mensagem descritiva completa</li>
+        <li><strong>Detalhe da Inconsistência</strong> (quando status = <code>inconsistencia</code>): informação registrada no evento INCONSISTÊNCIA da trilha de auditoria, com tipo, categoria e mensagem — <em>nota: não há seção dedicada no painel esquerdo do modal na implementação atual (backlog)</em></li>
         <li><strong>Status bar do modal</strong> atualizado para os dois novos estados: verde para <code>importado</code>, roxo para <code>inconsistencia</code></li>
         <li><strong>Trilha de auditoria:</strong> evento <strong>INCONSISTÊNCIA</strong> registra tipo, categoria e mensagem completa — ex: <em>"Inconsistência detectada · Tipo: CNPJ Inválido · Categoria: Dados · CNPJ do emitente não localizado na Receita Federal"</em></li>
         <li>Demais seções do modal: emitente completo (Razão Social, CNPJ, IE, UF), destinatário, dados da operação, valores discriminados IBS/CBS/Líquido, chave 44 dígitos, RFs vinculados, botão Visualizar com label dinâmico por tipo de DF</li>
@@ -375,12 +368,12 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
   <div class="section">
     <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Interface — Dashboard, Listagem e Modal</span></div>
     <div class="card">
-      <div class="card-title">Aba Dashboard</div>
+      <div class="card-title">Aba Dashboard <span class="new-badge">v1.8</span></div>
       <ul>
-        <li>KPIs: Total recebidos, <strong>Importados</strong> (verde), <strong>Inconsistências</strong> (roxo), Taxa de sucesso</li>
-        <li>Pipeline visual: 5 estágios com contagem por etapa (Recebido → Triagem → Val. Layout → Val. Dados → Importado)</li>
-        <li>Gráfico de barras empilhadas: Importados (verde) + Inconsistências (roxo) por dia (últimos 7 dias)</li>
+        <li>KPIs implementados: <strong>Total recebidos</strong>, <strong>Importados</strong> (verde), <strong>Com Erro</strong> (vermelho), <strong>Duplicados</strong> (âmbar), Taxa de sucesso — <em>nota: "Com Erro" e "Duplicados" são KPIs separados na implementação atual, em vez do KPI unificado "Inconsistências" planejado em v1.7</em></li>
         <li>Filtro Grupo Econômico: filtra por CNPJ do destinatário (niAdquirente)</li>
+        <li><strong>[Backlog]</strong> Pipeline visual de 5 etapas (Recebido → Triagem → Val. Layout → Val. Dados → Importado): ainda não implementado</li>
+        <li><strong>[Backlog]</strong> Gráfico de barras empilhadas por dia (últimos 7 dias): ainda não implementado</li>
       </ul>
     </div>
     <div class="card">
@@ -398,7 +391,7 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
       <div class="card-title">Modal de detalhe do DF <span class="new-badge">v1.7</span></div>
       <ul>
         <li><strong>Status bar:</strong> verde/texto afirmativo para <code>importado</code>; roxo/texto de falha para <code>inconsistencia</code></li>
-        <li><strong>Detalhe da Inconsistência</strong> (novo, visível apenas em <code>inconsistencia</code>): badge Dados (azul) ou Layout (âmbar) + tipo em destaque + mensagem completa</li>
+        <li><strong>Detalhe da Inconsistência:</strong> informação presente apenas no evento "INCONSISTÊNCIA" da trilha de auditoria (painel direito) — não há seção dedicada no painel esquerdo na implementação atual</li>
         <li><strong>Emitente:</strong> Razão Social, CNPJ, IE, UF</li>
         <li><strong>Destinatário:</strong> Razão Social, CNPJ</li>
         <li><strong>Dados da Operação:</strong> CFOP, Série/Número, Direção, Natureza da Operação</li>
@@ -414,6 +407,9 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
   <!-- 7. Não-funcionais -->
   <div class="section">
     <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Requisitos não-funcionais</span></div>
+    <div class="info-box amber" style="margin-bottom:16px">
+      <strong>Proposta para discussão:</strong> os requisitos abaixo ainda não foram validados com a equipe técnica e de produto. Estão listados como referência inicial e podem ser ajustados antes da aprovação.
+    </div>
     <ul>
       <li><strong>Volume:</strong> suportar ≥ 50.000 DFs/mês por CNPJ sem degradação de performance.</li>
       <li><strong>Latência:</strong> DFs recebidos via ERP integrados em ≤ 5 minutos após recebimento.</li>
@@ -446,6 +442,13 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
   <hr>
   <div class="section">
     <div class="sec-hdr"><span class="sec-num">—</span><span class="sec-title">Changelog</span></div>
+    <div class="cl-entry">
+      <div class="cl-ver">v1.8</div>
+      <div class="cl-body">
+        <strong>Ago/2026 · Reconciliação PRD × implementação</strong>
+        Dashboard KPIs ajustados: "Com Erro" e "Duplicados" como KPIs separados (em vez de "Inconsistências" unificado). Pipeline visual de 5 etapas e gráfico de barras empilhadas marcados como backlog. Seção "Detalhe da Inconsistência" no painel esquerdo do modal removida — informação presente apenas na trilha de auditoria.
+      </div>
+    </div>
     <div class="cl-entry">
       <div class="cl-ver">v1.7</div>
       <div class="cl-body">
