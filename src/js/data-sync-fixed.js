@@ -3479,7 +3479,7 @@ window._filtrosDebitos = {
 
 window.injetarFiltrosDebitos = function() {
   if (document.getElementById('filtros-debitos-avancado')) return;
-  var tcrd = document.querySelector('#view-debitos .tcrd');
+  var tcrd = document.querySelector('#deb-rfs .tcrd');
   if (!tcrd) return;
 
   var html = '<div id="filtros-debitos-avancado" style="background:var(--card);border:1px solid var(--brd);border-radius:10px;margin-bottom:16px;overflow:hidden">'
@@ -3692,6 +3692,91 @@ window.renderizarTabelaDebitos = function() {
   window.atualizarKPIsDebitos(listaRFs);
   try { window.renderizarComposicaoDebitos(window._composicaoDebitosFiltro || ''); } catch(e) {}
   try { window.renderizarExtincaoMetodo(); } catch(e) {}
+};
+
+window.debitosDFsRender = function() {
+  var el = document.getElementById('t-deb-dfs-body');
+  if (!el) return;
+  var nfs = (window.nfListaFiltradaGlobal || []).filter(function(nf){ return nf.tipo === 'saida'; });
+
+  var busca  = ((document.getElementById('deb-dfs-busca')  ||{}).value||'').toLowerCase();
+  var filtSt = (document.getElementById('deb-dfs-status') ||{}).value||'';
+  var filtTp = (document.getElementById('deb-dfs-tipo')   ||{}).value||'';
+  var filtMe = (document.getElementById('deb-dfs-metodo') ||{}).value||'';
+
+  function _dfDebSt(rfs) {
+    var inc=false,vec=false,ext=false,nao=false;
+    rfs.forEach(function(rf){
+      var s=rf.status||'nao_extinto';
+      if(s==='inconsistencia')inc=true;
+      else if(s==='vencido')vec=true;
+      else if(s==='extinto')ext=true;
+      else nao=true;
+    });
+    if(inc)return'inconsistencia';
+    if(vec)return'vencido';
+    if(ext&&!nao)return'extinto';
+    if(ext)return'extinto';
+    return'nao_extinto';
+  }
+
+  if(busca){nfs=nfs.filter(function(nf){var s=(nf.entidade||'')+(nf.cnpj||'')+String(nf.numero||'');return s.toLowerCase().indexOf(busca)>=0;});}
+  if(filtTp){nfs=nfs.filter(function(nf){return (nf.tipoDF||'').indexOf(filtTp)>=0;});}
+  if(filtSt){nfs=nfs.filter(function(nf){return _dfDebSt(nf.registrosFiscais||[])===filtSt;});}
+  if(filtMe){nfs=nfs.filter(function(nf){return (nf.registrosFiscais||[]).some(function(rf){return rf.metodoExtincao===filtMe;});});}
+
+  var sub=document.getElementById('deb-dfs-sub');
+  if(sub)sub.textContent=nfs.length+' DF'+(nfs.length!==1?'s':'')+' de saída';
+
+  if(!nfs.length){
+    el.innerHTML='<tr><td colspan="13" style="text-align:center;color:var(--txt3);padding:24px">Nenhum DF encontrado para este filtro.</td></tr>';
+    return;
+  }
+
+  var _metCor={'RAD':'139,92,246','Compensacao':'73,197,177'};
+  var _metLbl={'RAD':'RAD','Compensacao':'Compensação'};
+  var _stCor={'extinto':'34,197,94','nao_extinto':'167,168,170','vencido':'245,158,11','inconsistencia':'244,63,94'};
+  var _stLbl={'extinto':'Extinto','nao_extinto':'Não Extinto','vencido':'Vencido','inconsistencia':'Inconsistência'};
+
+  var h='';
+  nfs.forEach(function(nf){
+    var rfs=nf.registrosFiscais||[];
+    var ibs=0,cbs=0,metExt=null,dataExt='—';
+    rfs.forEach(function(rf){
+      if(rf.tipoFiscal==='ibs')ibs+=rf.valor||0;
+      else cbs+=rf.valor||0;
+      if(!metExt&&rf.metodoExtincao&&rf.metodoExtincao!=='—')metExt=rf.metodoExtincao;
+      if(dataExt==='—'&&rf.dataExtincao&&rf.dataExtincao!=='—')dataExt=rf.dataExtincao;
+    });
+    var deb=ibs+cbs;
+    var dfSt=_dfDebSt(rfs);
+    var nfNum=String(nf.numero||'—');
+    var tipoDF=nf.tipoDF||'NF-e';
+    var dataRaw=nf.data||'—';
+    var data=dataRaw.indexOf('-')>0?dataRaw.split('-').reverse().join('/'):dataRaw;
+    var valor=nf.valorTotal||0;
+    var stRgb=_stCor[dfSt]||'167,168,170';
+    var stBadge='<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:3px;background:rgba('+stRgb+',.12);color:rgb('+stRgb+');border:1px solid rgba('+stRgb+',.28)">'+(_stLbl[dfSt]||dfSt)+'</span>';
+    var tipoBadge='<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(245,158,11,.28);color:var(--amber);background:transparent">'+tipoDF+'</span>';
+    var mRgb=metExt?(_metCor[metExt]||'167,168,170'):null;
+    var metBadge=mRgb?'<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+mRgb+',.12);color:rgba('+mRgb+',1);border:1px solid rgba('+mRgb+',.28)">'+(_metLbl[metExt]||metExt)+'</span>':'<span style="color:var(--txt3)">—</span>';
+    h+='<tr>';
+    h+='<td class="mono nowrap" style="color:var(--blue);font-size:11px;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\''+nfNum+'\')">NF-'+nfNum+'</td>';
+    h+='<td class="nowrap">'+tipoBadge+'</td>';
+    h+='<td class="trunc" style="max-width:160px">'+(nf.entidade||'—')+'</td>';
+    h+='<td class="mono nowrap" style="font-size:11px;color:var(--txt2)">'+(nf.cnpj||'—')+'</td>';
+    h+='<td class="nowrap" style="font-size:12px;color:var(--txt2)">'+data+'</td>';
+    h+='<td class="r mono" style="font-weight:600">'+ff(valor)+'</td>';
+    h+='<td class="r mono" style="color:var(--txt2)">'+ff(ibs)+'</td>';
+    h+='<td class="r mono" style="color:var(--txt2)">'+ff(cbs)+'</td>';
+    h+='<td class="r mono" style="color:var(--red);font-weight:700">'+ff(deb)+'</td>';
+    h+='<td class="nowrap" style="font-size:11px;color:var(--txt2)">'+dataExt+'</td>';
+    h+='<td class="nowrap">'+stBadge+'</td>';
+    h+='<td class="nowrap">'+metBadge+'</td>';
+    h+='<td class="r mono" style="color:var(--txt2)">'+rfs.length+'</td>';
+    h+='</tr>';
+  });
+  el.innerHTML=h;
 };
 
 window.atualizarKPIsDebitos = function(listaRFs) {

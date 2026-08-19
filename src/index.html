@@ -1295,57 +1295,116 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       </div>
     </div>
   </div>
-  <div class="sechdr" style="margin-bottom:10px"><h2>Débitos</h2><p>IBS + CBS apurados em NFs de saída · extinção via RAD ou compensação de créditos</p></div>
-  <div class="kgrid k5">
-    <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">Total de débitos <span class="periodo-info" data-tip="Soma de todos os RFs de NFs de saída no período. Representa o universo total de débitos IBS+CBS apurados — obrigação tributária gerada pelo fato gerador (emissão da NF de saída). Art. 153-A LC 214/2025.">i</span></div><div class="kval" id="deb-total">—</div><div class="ksub">IBS + CBS · NFs de saída</div></div>
-    <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">Extintos <span class="periodo-info" data-tip="Débitos com extinção confirmada via RAD (split payment) ou compensação de créditos IBS+CBS. A extinção ocorre quando o valor do débito é integralmente quitado e confirmado pela Plataforma Centralizada do Comitê Gestor.">i</span></div><div class="kval" id="deb-extinto">—</div><div class="ksub" id="deb-extinto-sub">— extinção confirmada</div></div>
-    <div class="kcard" style="border-top-color:#A7A8AA"><div class="klbl">Não Extintos <span class="periodo-info" data-tip="Débitos ainda aguardando extinção: pagamento pendente ou compensação não concluída. Incluem débitos a vencer e os que estão em processamento na Plataforma. Requerem ação antes do vencimento para evitar multa e juros.">i</span></div><div class="kval" id="deb-nao-extinto">—</div><div class="ksub" id="deb-nao-extinto-sub">— aguardando extinção</div></div>
-    <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Vencidos <span class="periodo-info" data-tip="Débitos com prazo de extinção expirado sem quitação confirmada (statusRegistro = vencido). Geram multa de 0,33% ao dia (máx. 20%) + SELIC. Devem ser regularizados com acréscimos legais para evitar inscrição em dívida ativa.">i</span></div><div class="kval" id="deb-vencido">—</div><div class="ksub" id="deb-vencido-sub">— prazo de extinção vencido</div></div>
-    <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Inconsistências <span class="periodo-info" data-tip="RFs de saída com divergência entre o débito apurado e o Termo Fiscal (TF) correspondente — ou sem TF. Podem indicar erro na alíquota, base de cálculo ou ausência de split payment. Requerem revisão manual urgente.">i</span></div><div class="kval" id="deb-inconsist">—</div><div class="ksub" id="deb-inconsist-sub">— requer revisão manual</div></div>
-  </div>
-  <div class="sechdr" style="margin-bottom:10px;margin-top:4px"><h2>Exceções</h2><p>Débitos fora do fluxo padrão de extinção</p></div>
-  <div class="kgrid" style="grid-template-columns:repeat(2,1fr)">
-    <div class="kcard" style="border-top-color:var(--blue)"><div class="klbl">Aguardando Extinção <span class="periodo-info" data-tip="Débitos cujo pagamento foi realizado mas ainda aguarda confirmação de extinção pela Plataforma Centralizada. O processamento é assíncrono — a extinção pode demorar até 2 dias úteis após o recolhimento via DARF ou Guia IBS.">i</span></div><div class="kval" id="deb-aguard">—</div><div class="ksub" id="deb-aguard-sub">— recolhimento pendente</div></div>
-    <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Perda acumulada <span class="periodo-info" data-tip="Soma dos débitos vencidos sem extinção confirmada — representa exposição fiscal máxima: multa de 20% + SELIC acumulada + possível inscrição em Dívida Ativa. Cálculo: soma dos valores de RFs de saída com statusRegistro = vencido no período acumulado do ano.">i</span></div><div class="kval" id="deb-perda">—</div><div class="ksub"><span style="display:block;font-size:10px;color:var(--txt3);margin-bottom:4px">Débitos vencidos sem extinção · IBS + CBS</span><span id="deb-perda-sub" style="color:var(--red);font-weight:600"></span></div></div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">
-    <div class="ccrd">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px">
-        <div>
-          <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Composição de débitos</div><span class="periodo-info" data-tip="Barras empilhadas mensais com a composição dos débitos IBS+CBS por status: Extinto (quitado), Não Extinto (pendente), Vencido (prazo expirado) e Inconsistência (divergência). Filtros IBS/CBS isolam o tributo. Permite identificar concentração de inadimplência e sazonalidade na extinção de débitos.">i</span></div>
-          <div class="csub" id="cDebComposicao-sub">R$ milhões · IBS + CBS · por status de RF · mês a mês</div>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <button id="btn-deb-todos" onclick="window.renderizarComposicaoDebitos('')"  style="background:var(--teal);color:#fff;border:1px solid var(--teal);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer">Todos</button>
-          <button id="btn-deb-ibs"   onclick="window.renderizarComposicaoDebitos('ibs')" style="background:transparent;color:var(--txt2);border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer">IBS</button>
-          <button id="btn-deb-cbs"   onclick="window.renderizarComposicaoDebitos('cbs')" style="background:transparent;color:var(--txt2);border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer">CBS</button>
-        </div>
-      </div>
-      <div class="cwrap" style="height:200px"><div id="cDebComposicao"></div></div>
-      <div class="leg">
-        <span class="li"><span class="ls" style="background:var(--green)"></span>Extinto</span>
-        <span class="li"><span class="ls" style="background:var(--gray)"></span>Não Extinto</span>
-        <span class="li"><span class="ls" style="background:var(--amber)"></span>Vencido</span>
-        <span class="li"><span class="ls" style="background:var(--red)"></span>Inconsistência</span>
-      </div>
-    </div>
-    <div class="ccrd">
-      <div style="margin-bottom:4px">
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Método de extinção</div><span class="periodo-info" data-tip="Comparativo mensal entre os dois mecanismos de extinção de débitos: RAD (split payment automático — o adquirente retém e recolhe o IBS+CBS na liquidação financeira da NF) e Compensação (uso de créditos IBS+CBS acumulados para abater o débito). O mix impacta o fluxo de caixa tributário.">i</span></div>
-        <div class="csub" id="cDebMetodo-sub">R$ milhões · RAD vs Compensação · extinções realizadas · mês a mês</div>
-      </div>
-      <div class="cwrap" style="height:200px"><div id="cDebMetodo"></div></div>
-      <div class="leg">
-        <span class="li"><span class="ls" style="background:var(--purple)"></span>RAD</span>
-        <span class="li"><span class="ls" style="background:var(--teal)"></span>Compensação</span>
-      </div>
-    </div>
-  </div>
-  <div class="tcrd">
-    <div class="tcrd-hdr"><div class="sechdr"><h2>Detalhamento por documento fiscal</h2><p>RF × TF × Débito — NFs de saída · IBS + CBS</p></div></div>
-    <div class="twrap"><table><thead><tr><th>RF</th><th>Tipo Fiscal</th><th>Tipo de DFe</th><th>Nota Fiscal</th><th>Cliente</th><th>Data NF</th><th class="r">Valor Total</th><th class="r">Valor Líquido</th><th class="r">CBS</th><th class="r">IBS</th><th class="r">Débito</th><th>Extinção</th><th>Status</th><th>Status RF</th><th>Método de Extinção</th></tr></thead><tbody id="t-debitos"></tbody></table></div>
+
+  <!-- Abas do módulo de Débitos -->
+  <div class="stabs" style="margin-bottom:20px">
+    <button class="stab active" onclick="showSub('deb','visao',this)">Visão Geral</button>
+    <button class="stab" onclick="showSub('deb','rfs',this);window.renderizarTabelaDebitos()">Registros Fiscais</button>
+    <button class="stab" onclick="showSub('deb','dfs',this);window.debitosDFsRender()">Documentos Fiscais</button>
   </div>
 
+  <!-- ABA: Visão Geral -->
+  <div id="deb-visao" class="sv active">
+    <div class="sechdr" style="margin-bottom:10px"><h2>Débitos</h2><p>IBS + CBS apurados em NFs de saída · extinção via RAD ou compensação de créditos</p></div>
+    <div class="kgrid k5">
+      <div class="kcard" style="border-top-color:var(--teal)"><div class="klbl">Total de débitos <span class="periodo-info" data-tip="Soma de todos os RFs de NFs de saída no período. Representa o universo total de débitos IBS+CBS apurados — obrigação tributária gerada pelo fato gerador (emissão da NF de saída). Art. 153-A LC 214/2025.">i</span></div><div class="kval" id="deb-total">—</div><div class="ksub">IBS + CBS · NFs de saída</div></div>
+      <div class="kcard" style="border-top-color:var(--green)"><div class="klbl">Extintos <span class="periodo-info" data-tip="Débitos com extinção confirmada via RAD (split payment) ou compensação de créditos IBS+CBS. A extinção ocorre quando o valor do débito é integralmente quitado e confirmado pela Plataforma Centralizada do Comitê Gestor.">i</span></div><div class="kval" id="deb-extinto">—</div><div class="ksub" id="deb-extinto-sub">— extinção confirmada</div></div>
+      <div class="kcard" style="border-top-color:#A7A8AA"><div class="klbl">Não Extintos <span class="periodo-info" data-tip="Débitos ainda aguardando extinção: pagamento pendente ou compensação não concluída. Incluem débitos a vencer e os que estão em processamento na Plataforma. Requerem ação antes do vencimento para evitar multa e juros.">i</span></div><div class="kval" id="deb-nao-extinto">—</div><div class="ksub" id="deb-nao-extinto-sub">— aguardando extinção</div></div>
+      <div class="kcard" style="border-top-color:var(--amber)"><div class="klbl">Vencidos <span class="periodo-info" data-tip="Débitos com prazo de extinção expirado sem quitação confirmada (statusRegistro = vencido). Geram multa de 0,33% ao dia (máx. 20%) + SELIC. Devem ser regularizados com acréscimos legais para evitar inscrição em dívida ativa.">i</span></div><div class="kval" id="deb-vencido">—</div><div class="ksub" id="deb-vencido-sub">— prazo de extinção vencido</div></div>
+      <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Inconsistências <span class="periodo-info" data-tip="RFs de saída com divergência entre o débito apurado e o Termo Fiscal (TF) correspondente — ou sem TF. Podem indicar erro na alíquota, base de cálculo ou ausência de split payment. Requerem revisão manual urgente.">i</span></div><div class="kval" id="deb-inconsist">—</div><div class="ksub" id="deb-inconsist-sub">— requer revisão manual</div></div>
+    </div>
+    <div class="sechdr" style="margin-bottom:10px;margin-top:4px"><h2>Exceções</h2><p>Débitos fora do fluxo padrão de extinção</p></div>
+    <div class="kgrid" style="grid-template-columns:repeat(2,1fr)">
+      <div class="kcard" style="border-top-color:var(--blue)"><div class="klbl">Aguardando Extinção <span class="periodo-info" data-tip="Débitos cujo pagamento foi realizado mas ainda aguarda confirmação de extinção pela Plataforma Centralizada. O processamento é assíncrono — a extinção pode demorar até 2 dias úteis após o recolhimento via DARF ou Guia IBS.">i</span></div><div class="kval" id="deb-aguard">—</div><div class="ksub" id="deb-aguard-sub">— recolhimento pendente</div></div>
+      <div class="kcard" style="border-top-color:var(--red)"><div class="klbl">Perda acumulada <span class="periodo-info" data-tip="Soma dos débitos vencidos sem extinção confirmada — representa exposição fiscal máxima: multa de 20% + SELIC acumulada + possível inscrição em Dívida Ativa. Cálculo: soma dos valores de RFs de saída com statusRegistro = vencido no período acumulado do ano.">i</span></div><div class="kval" id="deb-perda">—</div><div class="ksub"><span style="display:block;font-size:10px;color:var(--txt3);margin-bottom:4px">Débitos vencidos sem extinção · IBS + CBS</span><span id="deb-perda-sub" style="color:var(--red);font-weight:600"></span></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">
+      <div class="ccrd">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px">
+          <div>
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Composição de débitos</div><span class="periodo-info" data-tip="Barras empilhadas mensais com a composição dos débitos IBS+CBS por status: Extinto (quitado), Não Extinto (pendente), Vencido (prazo expirado) e Inconsistência (divergência). Filtros IBS/CBS isolam o tributo.">i</span></div>
+            <div class="csub" id="cDebComposicao-sub">R$ milhões · IBS + CBS · por status de RF · mês a mês</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button id="btn-deb-todos" onclick="window.renderizarComposicaoDebitos('')"  style="background:var(--teal);color:#fff;border:1px solid var(--teal);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer">Todos</button>
+            <button id="btn-deb-ibs"   onclick="window.renderizarComposicaoDebitos('ibs')" style="background:transparent;color:var(--txt2);border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer">IBS</button>
+            <button id="btn-deb-cbs"   onclick="window.renderizarComposicaoDebitos('cbs')" style="background:transparent;color:var(--txt2);border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer">CBS</button>
+          </div>
+        </div>
+        <div class="cwrap" style="height:200px"><div id="cDebComposicao"></div></div>
+        <div class="leg">
+          <span class="li"><span class="ls" style="background:var(--green)"></span>Extinto</span>
+          <span class="li"><span class="ls" style="background:var(--gray)"></span>Não Extinto</span>
+          <span class="li"><span class="ls" style="background:var(--amber)"></span>Vencido</span>
+          <span class="li"><span class="ls" style="background:var(--red)"></span>Inconsistência</span>
+        </div>
+      </div>
+      <div class="ccrd">
+        <div style="margin-bottom:4px">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Método de extinção</div><span class="periodo-info" data-tip="Comparativo mensal entre os dois mecanismos de extinção de débitos: RAD (split payment automático) e Compensação (uso de créditos IBS+CBS acumulados).">i</span></div>
+          <div class="csub" id="cDebMetodo-sub">R$ milhões · RAD vs Compensação · extinções realizadas · mês a mês</div>
+        </div>
+        <div class="cwrap" style="height:200px"><div id="cDebMetodo"></div></div>
+        <div class="leg">
+          <span class="li"><span class="ls" style="background:var(--purple)"></span>RAD</span>
+          <span class="li"><span class="ls" style="background:var(--teal)"></span>Compensação</span>
+        </div>
+      </div>
+    </div>
+  </div><!-- /deb-visao -->
+
+  <!-- ABA: Registros Fiscais -->
+  <div id="deb-rfs" class="sv">
+    <div class="tcrd">
+      <div class="tcrd-hdr"><div class="sechdr"><h2>Registros Fiscais · Débitos</h2><p>RF × TF × Débito — NFs de saída · IBS + CBS</p></div></div>
+      <div class="twrap"><table><thead><tr><th>RF</th><th>Tipo Fiscal</th><th>Tipo de DFe</th><th>Nota Fiscal</th><th>Cliente</th><th>Data NF</th><th class="r">Valor Total</th><th class="r">Valor Líquido</th><th class="r">CBS</th><th class="r">IBS</th><th class="r">Débito</th><th>Extinção</th><th>Status</th><th>Status RF</th><th>Método de Extinção</th></tr></thead><tbody id="t-debitos"></tbody></table></div>
+    </div>
+  </div><!-- /deb-rfs -->
+
+  <!-- ABA: Documentos Fiscais -->
+  <div id="deb-dfs" class="sv">
+    <div class="flt">
+      <input type="text" id="deb-dfs-busca" placeholder="Buscar por NF, cliente, CNPJ…" oninput="window.debitosDFsRender()"/>
+      <select id="deb-dfs-status" onchange="window.debitosDFsRender()">
+        <option value="">Status — todos</option>
+        <option value="extinto">Extinto</option>
+        <option value="nao_extinto">Não Extinto</option>
+        <option value="vencido">Vencido</option>
+        <option value="inconsistencia">Inconsistência</option>
+      </select>
+      <select id="deb-dfs-tipo" onchange="window.debitosDFsRender()">
+        <option value="">Tipo DF — todos</option>
+        <option value="NF-e">NF-e</option>
+        <option value="CT-e">CT-e</option>
+        <option value="NFS-e">NFS-e</option>
+      </select>
+      <select id="deb-dfs-metodo" onchange="window.debitosDFsRender()">
+        <option value="">Método extinção — todos</option>
+        <option value="RAD">RAD</option>
+        <option value="Compensacao">Compensação</option>
+      </select>
+    </div>
+    <div class="tcrd">
+      <div class="tcrd-hdr"><div class="sechdr"><h2>Documentos Fiscais · Débitos</h2><p id="deb-dfs-sub">DFs de saída · débitos IBS + CBS por documento</p></div></div>
+      <div class="twrap"><table id="t-deb-dfs"><thead><tr>
+        <th>DF</th>
+        <th>Tipo</th>
+        <th>Cliente</th>
+        <th>CNPJ</th>
+        <th>Data</th>
+        <th class="r">Valor Total</th>
+        <th class="r">IBS</th>
+        <th class="r">CBS</th>
+        <th class="r">Débito</th>
+        <th>Data Extinção</th>
+        <th>Status</th>
+        <th>Método Extinção</th>
+        <th class="r">RFs</th>
+      </tr></thead>
+      <tbody id="t-deb-dfs-body"><tr><td colspan="13" style="text-align:center;color:var(--txt3);padding:24px">Carregando…</td></tr></tbody>
+      </table></div>
+    </div>
+  </div><!-- /deb-dfs -->
 
 </div>
 
