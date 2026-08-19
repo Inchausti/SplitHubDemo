@@ -172,26 +172,41 @@ window.shRenderThead = function(key) {
 
 window.dashRenderDFsApropriar = function() {
   var cpRows = [], lpRows = [];
-  var riscoCrit = { em_risco: true, vencido: true, inconsistencia: true };
   var srLabel = { em_risco: 'Em Risco', vencido: 'Vencido', inconsistencia: 'Inconsistência', a_prescrever: 'A Prescrever' };
   var srRgb   = { em_risco: _hexRgb(PALETTE.amber), vencido: _hexRgb(PALETTE.red), inconsistencia: _hexRgb(PALETTE.red), a_prescrever: _hexRgb(PALETTE.red) };
+
+  var hoje = new Date(); hoje.setHours(0,0,0,0);
+  var limite30 = new Date(hoje.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  // vencimento = último dia do mês seguinte à emissão
+  function calcVencimento(dataISO) {
+    if (!dataISO) return null;
+    var p = dataISO.split('-');
+    if (p.length < 2) return null;
+    var y = parseInt(p[0], 10), m = parseInt(p[1], 10);
+    // new Date(y, m+1, 0): day 0 of (m+1) 0-indexed = last day of next month
+    // JS handles m+1 > 12 overflow automatically
+    return new Date(y, m + 1, 0);
+  }
 
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
       var sc = rf.statusCredito || rf.status || '';
       if (sc !== 'nao_apropriado') return;
-      var sr  = rf.statusRegistro || null;
-      var v   = rf.valor || 0;
-      var dp  = (rf.data || '').split('-');
-      var row = {
+      var sr   = rf.statusRegistro || null;
+      var v    = rf.valor || 0;
+      var dp   = (rf.data || '').split('-');
+      var venc = calcVencimento(rf.data);
+      var row  = {
         nf:   (nf.tipoDF || 'NF-e') + ' ' + (rf.nfVinculada || nf.numero || ''),
         forn: rf.entidade || nf.entidade || '—',
         valor: v,
         data: dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
         sr: sr
       };
-      if (riscoCrit[sr]) cpRows.push(row);
+      // CP: vencimento <= 30 dias (inclui vencidos); LP: vencimento > 30 dias
+      if (venc && venc <= limite30) cpRows.push(row);
       else lpRows.push(row);
     });
   });
@@ -1181,7 +1196,7 @@ window.renderizarTabelaCreditos = function() {
 
   // Aplicar filtros
   var f = window._filtrosCreditos || {};
-  if (f.mesAno || f.busca || f.tipoFiscal || f.status || f.contrato || f.metodo ||
+  if (f.mesAno || (f.mesAnoArr && f.mesAnoArr.length) || f.busca || f.tipoFiscal || f.status || f.contrato || f.metodo ||
       f.pagamento || f.dataNFDe || f.dataNFAte || f.credMin || f.credMax || f.tipoDFe ||
       (f.statusMulti && f.statusMulti.length)) {
     var busca = (f.busca || '').toLowerCase();
@@ -1279,13 +1294,27 @@ window.renderizarTabelaCreditos = function() {
 
 window.atualizarKPIsCreditos = function(listaRFs) {
   var aprop = 0, naoAprop = 0, glosado = 0, emRisco = 0, vencido = 0, util = 0, inconsist = 0, aPrescrever = 0;
+  var naoApropCP = 0, naoApropLP = 0;
+  var _hoje = new Date(); _hoje.setHours(0,0,0,0);
+  var _lim30 = new Date(_hoje.getTime() + 30 * 24 * 60 * 60 * 1000);
+  function _vencKPI(dataISO) {
+    if (!dataISO) return null;
+    var p = dataISO.split('-');
+    if (p.length < 2) return null;
+    return new Date(parseInt(p[0], 10), parseInt(p[1], 10) + 1, 0);
+  }
   (listaRFs || []).forEach(function(r) {
     var v  = r.cred || 0;
     var sc = r.statusCredito || r.status || '';
     var sr = r.statusRegistro || null;
     if      (sc === 'apropriado')      { aprop    += v; }
     else if (sc === 'utilizado')       { aprop    += v; util += v; }
-    else if (sc === 'nao_apropriado')  { naoAprop += v; }
+    else if (sc === 'nao_apropriado')  {
+      naoAprop += v;
+      var venc = _vencKPI(r.dataNF);
+      if (venc && venc <= _lim30) naoApropCP += v;
+      else naoApropLP += v;
+    }
     else if (sc === 'glosado')         { glosado  += v; }
     if      (sr === 'em_risco')        { emRisco      += v; }
     if      (sr === 'vencido')         { vencido      += v; }
@@ -1307,6 +1336,10 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   set('cred-aprop-sub',     pct(aprop, totalCred) + ' do total · IBS+CBS apropriados');
   set('cred-nao-aprop',     fmt(naoAprop));
   set('cred-nao-aprop-sub', pct(naoAprop, totalCred) + ' do total · aguardando apropriação');
+  set('cred-nao-aprop-cp',  fmt(naoApropCP));
+  set('cred-nao-aprop-cp-sub', 'Vencimento em até 30 dias');
+  set('cred-nao-aprop-mp',  fmt(naoApropLP));
+  set('cred-nao-aprop-mp-sub', 'Vencimento superior a 30 dias');
   set('cred-util',          fmt(util));
   set('cred-util-sub',      aprop > 0 ? pct(util, aprop) + ' dos apropriados — abateram débito' : '—');
   set('cred-aguard',        fmt(naoAprop));
