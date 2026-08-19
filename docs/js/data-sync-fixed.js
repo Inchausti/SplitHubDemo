@@ -52,6 +52,104 @@ var STATUS = window.STATUS = {
 };
 
 // Auxiliar multi-select período — suporta f.mesAnoArr (array) E f.mesAno (string)
+/* ── Estrutura global de listagens ─────────────────────────────────────────
+   Fonte única de verdade para colunas das tabelas principais.
+   Adicionar coluna = 1 linha no array de cols.
+   shRenderThead(key) gera o <thead> automaticamente a partir do config.      */
+window.SH_TABLES = {
+  creditos: {
+    id: 't-creditos',
+    cols: [
+      { label: 'RF' },
+      { label: 'Tipo Fiscal' },
+      { label: 'Tipo de DFe' },
+      { label: 'Nota Fiscal' },
+      { label: 'Fornecedor' },
+      { label: 'Data NF' },
+      { label: 'Valor Total',        cls: 'r' },
+      { label: 'Valor Líquido',      cls: 'r' },
+      { label: 'CBS',                cls: 'r' },
+      { label: 'IBS',                cls: 'r' },
+      { label: 'Crédito',            cls: 'r' },
+      { label: 'Pagamento' },
+      { label: 'Status Crédito' },
+      { label: 'Status RF' },
+      { label: 'Contrato' },
+      { label: 'Método de Pagamento' },
+      { thHtml: '<span style="display:inline-flex;align-items:center;gap:5px">Método de Extinção'
+          + '<span style="position:relative;display:inline-flex" class="ctr-tip-wrap">'
+          + '<span style="width:14px;height:14px;border-radius:50%;background:rgba(73,197,177,.15);border:1px solid rgba(73,197,177,.35);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--teal);cursor:default;line-height:1;flex-shrink:0">?</span>'
+          + '<span class="ctr-tip" style="display:none;position:absolute;right:0;top:22px;width:340px;background:var(--sidebar);border:1px solid var(--border);border-radius:8px;padding:14px 16px;z-index:9900;box-shadow:0 8px 24px rgba(0,0,0,.28);pointer-events:none;font-weight:400;text-transform:none;letter-spacing:0">'
+          + '<div style="font-size:11px;font-weight:700;color:var(--txt1);margin-bottom:10px">Métodos de extinção do crédito tributário</div>'
+          + '<div style="display:flex;flex-direction:column;gap:9px;font-size:11px;line-height:1.55">'
+          + '<div><span style="display:inline-block;background:rgba(73,197,177,.12);color:var(--teal);border:1px solid rgba(73,197,177,.3);border-radius:3px;padding:1px 7px;font-size:10px;font-weight:700;margin-bottom:3px">Split Payment</span><br><span style="color:var(--txt2)">Extinção automática no momento da liquidação financeira da NF. O sistema financeiro retém e repassa o valor do IBS/CBS diretamente ao Fisco sem ação do contribuinte — mecanismo padrão da LC 214/2025.</span></div>'
+          + '<div><span style="display:inline-block;background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.3);border-radius:3px;padding:1px 7px;font-size:10px;font-weight:700;margin-bottom:3px">Compensação</span><br><span style="color:var(--txt2)">O crédito acumulado é usado para abater débitos de IBS/CBS apurados no período. Realizado na declaração periódica do contribuinte junto ao Comitê Gestor do IBS / Receita Federal.</span></div>'
+          + '<div><span style="display:inline-block;background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.3);border-radius:3px;padding:1px 7px;font-size:10px;font-weight:700;margin-bottom:3px">Ressarcimento</span><br><span style="color:var(--txt2)">Quando os créditos superam os débitos apurados (ex: exportadores, setores com alíquota zero na saída), o saldo é ressarcido em dinheiro pelo Fisco dentro do prazo regulamentado.</span></div>'
+          + '<div><span style="display:inline-block;background:rgba(139,92,246,.12);color:var(--purple);border:1px solid rgba(139,92,246,.3);border-radius:3px;padding:1px 7px;font-size:10px;font-weight:700;margin-bottom:3px">Transferência</span><br><span style="color:var(--txt2)">Cessão do saldo credor para outro contribuinte da cadeia, mediante autorização do Comitê Gestor. Aplicável a setores com acúmulo estrutural de créditos e relação contratual estabelecida.</span></div>'
+          + '</div></span></span></span>' }
+    ]
+  },
+  debitos: {
+    id: 't-debitos',
+    cols: [
+      { label: 'RF' },
+      { label: 'Tipo Fiscal' },
+      { label: 'Tipo de DFe' },
+      { label: 'Nota Fiscal' },
+      { label: 'Cliente' },
+      { label: 'Data NF' },
+      { label: 'Valor Total',    cls: 'r' },
+      { label: 'Valor Líquido', cls: 'r' },
+      { label: 'CBS',           cls: 'r' },
+      { label: 'IBS',           cls: 'r' },
+      { label: 'Débito',        cls: 'r' },
+      { label: 'Extinção' },
+      { label: 'Status' },
+      { label: 'Status RF' },
+      { label: 'Método de Extinção' }
+    ]
+  },
+  inconsistencias: {
+    id: 't-inc-rfs',
+    cols: [
+      { label: 'ID' },
+      { label: 'DF Vinculado' },
+      { label: 'Fluxo' },
+      { label: 'RF Vinculado' },
+      { label: 'Tipo Fiscal' },
+      { label: 'Entidade' },
+      { label: 'Valor',               cls: 'r' },
+      { label: 'Tipo Inconsistência' },
+      { label: 'Origem' },
+      { label: 'Status' },
+      { label: 'Prioridade' },
+      { label: 'Data' }
+    ]
+  }
+};
+
+window.shRenderThead = function(key) {
+  var cfg = window.SH_TABLES[key];
+  if (!cfg) return;
+  var tbody = document.getElementById(cfg.id);
+  if (!tbody) return;
+  var table = tbody.closest('table');
+  if (!table) return;
+  var old = table.querySelector('thead');
+  if (old) old.remove();
+  var thead = document.createElement('thead');
+  var tr = document.createElement('tr');
+  cfg.cols.forEach(function(col) {
+    var th = document.createElement('th');
+    if (col.cls) th.className = col.cls;
+    if (col.thHtml) { th.innerHTML = col.thHtml; }
+    else { th.textContent = col.label; }
+    tr.appendChild(th);
+  });
+  thead.appendChild(tr);
+  table.insertBefore(thead, table.firstChild);
+};
+
 window._matchPeriodo = function(dateStr, f) {
   var d = dateStr || '';
   if (f.mesAnoArr && f.mesAnoArr.length) return f.mesAnoArr.some(function(m){ return d.startsWith(m); });
@@ -5802,6 +5900,9 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
 
 // Instanciar quando o documento está pronto
 document.addEventListener('DOMContentLoaded', function() {
+  // Gerar theads das tabelas principais a partir do config SH_TABLES
+  ['creditos','debitos','inconsistencias'].forEach(window.shRenderThead);
+
   // Scripts inline executam antes de DOMContentLoaded — delay zero é suficiente
   setTimeout(function() {
     console.log('[data-sync-fixed] Iniciando sincronização');
