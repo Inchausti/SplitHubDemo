@@ -3272,9 +3272,48 @@ var _kbAcoesMap = {
   ]
 };
 
-window.kbAbrirCard = function(rfId) {
-  var rf = window._kbRfsData[rfId];
-  if (!rf) return;
+var _incAcoesMap = {
+  divergencia_valor: [
+    { label: 'Solicitar Retificação de NF', icon: '📝', desc: 'Notifica o emitente para corrigir o valor na NF',      nextStatus: 'aguardando_emitente' },
+    { label: 'Recalcular IBS/CBS',          icon: '🔢', desc: 'Recalcula automaticamente os impostos devidos',        nextStatus: 'em_analise' },
+    { label: 'Enviar para Contabilidade',   icon: '📊', desc: 'Escala para revisão pela equipe contábil',             nextStatus: 'em_analise' }
+  ],
+  aliquota_divergente: [
+    { label: 'Recalcular Alíquota IBS/CBS', icon: '🔢', desc: 'Aplica alíquota vigente e gera novo RF',              nextStatus: 'em_analise' },
+    { label: 'Solicitar Retificação',       icon: '📝', desc: 'Notifica o emitente para corrigir a alíquota',        nextStatus: 'aguardando_emitente' }
+  ],
+  nf_cancelada: [
+    { label: 'Verificar Status na SEFAZ',   icon: '🔍', desc: 'Consulta situação atual da NF na SEFAZ',              nextStatus: 'em_analise' },
+    { label: 'Cancelar RF Correspondente',  icon: '🗑️', desc: 'Remove o RF vinculado à NF cancelada',                nextStatus: 'resolvida' },
+    { label: 'Registrar Cancelamento',      icon: '📋', desc: 'Documenta o cancelamento no histórico',               nextStatus: 'resolvida' }
+  ],
+  prazo_expirado: [
+    { label: 'Gerar DARF com Multa',        icon: '💰', desc: 'Calcula multa e juros e gera DARF para pagamento',    nextStatus: 'em_analise' },
+    { label: 'Negociar Parcelamento',       icon: '📅', desc: 'Abre processo de parcelamento do débito',             nextStatus: 'aguardando_emitente' }
+  ],
+  split_nao_realizado: [
+    { label: 'Verificar Split no Banco',    icon: '🏦', desc: 'Consulta o extrato do split payment bancário',        nextStatus: 'em_analise' },
+    { label: 'Solicitar Comprovante',       icon: '📩', desc: 'Notifica o banco para envio do comprovante',          nextStatus: 'aguardando_emitente' }
+  ],
+  chave_invalida: [
+    { label: 'Solicitar Reemissão',         icon: '📝', desc: 'Notifica o emitente para reemitir o documento',      nextStatus: 'aguardando_emitente' },
+    { label: 'Consultar Chave na SEFAZ',    icon: '🔍', desc: 'Verifica validade da chave de acesso',               nextStatus: 'em_analise' }
+  ],
+  cnpj_divergente: [
+    { label: 'Validar CNPJ na Receita',     icon: '🔎', desc: 'Consulta situação do CNPJ na Receita Federal',       nextStatus: 'em_analise' },
+    { label: 'Solicitar Correção',          icon: '📨', desc: 'Notifica o emitente para corrigir o CNPJ',           nextStatus: 'aguardando_emitente' },
+    { label: 'Enviar para Contabilidade',   icon: '📊', desc: 'Escala para revisão pela equipe contábil',           nextStatus: 'em_analise' }
+  ],
+  duplicidade_rf: [
+    { label: 'Cancelar RF Duplicado',       icon: '🗑️', desc: 'Remove o registro fiscal duplicado',                  nextStatus: 'resolvida' },
+    { label: 'Mesclar Registros',           icon: '🔗', desc: 'Une os dois RFs em um único registro',                nextStatus: 'em_analise' },
+    { label: 'Marcar como Aceito',          icon: '✔️', desc: 'Aceita a duplicidade como intencional',              nextStatus: 'resolvida' }
+  ]
+};
+
+window.kbAbrirCard = function(incId) {
+  var inc = (window._inconsistenciasGlobal || []).find(function(i) { return i.id === incId; });
+  if (!inc) return;
 
   var modal = document.getElementById('kb-card-modal');
   if (!modal) {
@@ -3292,79 +3331,132 @@ window.kbAbrirCard = function(rfId) {
     if (!d) return '—';
     var p = d.split('-'); return p.length === 3 ? p[2]+'/'+p[1]+'/'+p[0] : d;
   };
+  var addDays = function(iso, n) {
+    var d = new Date(iso); d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  };
 
-  var incCor = _kbIncCores[rf.inconsistencia] || '#64748B';
-  var ftCor  = rf.tipoFiscal === 'IBS' ? '#3B82F6' : '#2DD4BF';
-  var nfCor  = rf.tipoNF === 'entrada' ? '#22C55E' : '#F59E0B';
-  var colAtual = window._kanbanState[rfId] || 'identificado';
+  var stCols = [
+    { id:'aberta',              label:'Aberta',       rgb:'244,63,94'   },
+    { id:'em_analise',          label:'Em Análise',   rgb:'245,158,11'  },
+    { id:'aguardando_emitente', label:'Ag. Emitente', rgb:'59,130,246'  },
+    { id:'resolvida',           label:'Resolvida',    rgb:'34,197,94'   },
+    { id:'glosada',             label:'Glosada',      rgb:'167,168,170' }
+  ];
 
-  // Opções de coluna
-  var colOpts = _kbColunas.map(function(c) {
-    return '<option value="'+c.id+'"'+(c.id===colAtual?' selected':'')+'>'+c.icon+' '+c.label+'</option>';
+  var statusAtual = window._kanbanState[incId] || inc.status || 'aberta';
+  var stInfo = stCols.find(function(c) { return c.id === statusAtual; }) || stCols[0];
+
+  function _badge2(rgb, lbl) {
+    return '<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:3px;background:rgba('+rgb+',.12);color:rgba('+rgb+',1);border:1px solid rgba('+rgb+',.28)">'+lbl+'</span>';
+  }
+  function _item2(label, value, rgb, mono) {
+    return '<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">'+label+'</div>'
+      + '<div style="font-weight:600;font-size:13px;color:'+(rgb?'rgba('+rgb+',1)':'var(--txt1)')+(mono?';font-family:monospace':'')+'">'+(value||'—')+'</div></div>';
+  }
+
+  var prioRGB   = { critica:'244,63,94', alta:'245,158,11', media:'59,130,246', baixa:'34,197,94' };
+  var prioLabel = { critica:'Crítica',   alta:'Alta',        media:'Média',      baixa:'Baixa' };
+  var prioRgb   = prioRGB[inc.prioridade]  || '100,116,139';
+  var tipoFisCor = inc.tipoFiscal === 'IBS' ? '59,130,246' : '45,212,191';
+  var fluxoCor   = inc.tipoFluxo  === 'entrada' ? '34,197,94' : '245,158,11';
+  var fluxoLabel = inc.tipoFluxo  === 'entrada' ? '↓ Entrada' : '↑ Saída';
+  var origemRGB  = inc.origem === 'df' ? '59,130,246' : '45,212,191';
+  var origemLabel= inc.origem === 'df' ? 'DF direto' : 'Via RF';
+
+  var colOpts = stCols.map(function(c) {
+    return '<option value="'+c.id+'"'+(c.id===statusAtual?' selected':'')+'>'+c.label+'</option>';
   }).join('');
 
-  // Ações contextuais
-  var acoes = _kbAcoesMap[rf.inconsistencia] || [
-    { label: 'Enviar para Contabilidade', icon: '📊', desc: 'Escala para a equipe de contabilidade' },
-    { label: 'Marcar como Resolvido',     icon: '✅', desc: 'Move para a coluna Resolvido' }
+  // Timeline de eventos determinística baseada no status
+  var events = [
+    { date: inc.dataISO, label: 'Inconsistência detectada automaticamente', rgb: '244,63,94' }
+  ];
+  if (statusAtual !== 'aberta') {
+    events.push({ date: addDays(inc.dataISO, 1), label: 'Responsável atribuído · análise iniciada', rgb: '245,158,11' });
+  }
+  if (statusAtual === 'aguardando_emitente' || statusAtual === 'resolvida' || statusAtual === 'glosada') {
+    events.push({ date: addDays(inc.dataISO, 2), label: 'Notificação enviada ao emitente', rgb: '59,130,246' });
+  }
+  if (statusAtual === 'resolvida') {
+    events.push({ date: addDays(inc.dataISO, 4), label: 'Corrigida · RF reprocessado com sucesso', rgb: '34,197,94' });
+  }
+  if (statusAtual === 'glosada') {
+    events.push({ date: addDays(inc.dataISO, 5), label: 'Prazo expirado · crédito glosado', rgb: '167,168,170' });
+  }
+
+  var timelineHtml = events.map(function(ev, idx) {
+    return '<div style="display:flex;gap:12px;align-items:flex-start">'
+      + '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">'
+      +   '<div style="width:10px;height:10px;border-radius:50%;background:rgba('+ev.rgb+',1);margin-top:3px;flex-shrink:0"></div>'
+      +   (idx < events.length-1 ? '<div style="width:2px;flex:1;background:var(--brd);margin-top:4px;min-height:20px"></div>' : '')
+      + '</div>'
+      + '<div style="padding-bottom:14px">'
+      +   '<div style="font-size:12px;font-weight:600;color:var(--txt1)">'+ev.label+'</div>'
+      +   '<div style="font-size:11px;color:var(--txt3);margin-top:2px">'+fmtD(ev.date)+'</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+
+  var acoes = _incAcoesMap[inc.tipo] || [
+    { label: 'Enviar para Contabilidade', icon: '📊', desc: 'Escala para revisão pela equipe contábil',   nextStatus: 'em_analise' },
+    { label: 'Marcar como Resolvida',     icon: '✅', desc: 'Move inconsistência para coluna Resolvida',  nextStatus: 'resolvida' }
   ];
   var acoesHtml = acoes.map(function(a, i) {
-    return '<button onclick="window._kbExecutarAcao(\''+rfId+'\','+i+')" style="display:flex;align-items:flex-start;gap:10px;width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:12px 14px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s" onmouseenter="this.style.borderColor=\'var(--teal)\'" onmouseleave="this.style.borderColor=\'var(--brd)\'">'
+    return '<button onclick="window._kbExecutarAcao(\''+incId+'\','+i+')" style="display:flex;align-items:flex-start;gap:10px;width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:12px 14px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s" onmouseenter="this.style.borderColor=\'var(--teal)\'" onmouseleave="this.style.borderColor=\'var(--brd)\'">'
       + '<span style="font-size:18px;flex-shrink:0;margin-top:1px">'+a.icon+'</span>'
       + '<div><div style="font-size:13px;font-weight:600;color:var(--txt1);margin-bottom:2px">'+a.label+'</div>'
       + '<div style="font-size:11px;color:var(--txt3)">'+a.desc+'</div></div>'
       + '</button>';
   }).join('');
 
-  modal.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column">'
-    // Cabeçalho
-    + '<div style="padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:12px">'
-    +   '<div>'
-    +     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
-    +       '<span style="font-size:10px;font-family:monospace;color:var(--txt3)">'+rf.id+'</span>'
-    +       '<span style="background:'+incCor+'22;color:'+incCor+';border:1px solid '+incCor+'44;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700">'+rf.inconsistencia+'</span>'
+  modal.innerHTML = '<div style="background:var(--card);border:1px solid var(--brd);border-radius:12px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column">'
+
+    + '<div style="padding:20px 24px 16px;border-bottom:1px solid var(--brd);display:flex;justify-content:space-between;align-items:flex-start;gap:12px">'
+    +   '<div style="flex:1;min-width:0">'
+    +     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
+    +       '<span style="font-size:10px;font-family:monospace;color:var(--txt3)">'+inc.id+'</span>'
+    +       _badge2(prioRgb, (prioLabel[inc.prioridade]||'—').toUpperCase())
+    +       _badge2(stInfo.rgb, stInfo.label.toUpperCase())
     +     '</div>'
-    +     '<div style="font-size:17px;font-weight:700;color:var(--txt1)">'+rf.entidade+'</div>'
-    +     '<div style="font-size:12px;color:var(--txt2);font-family:monospace;margin-top:3px">'+rf.cnpj+'</div>'
+    +     '<div style="font-size:16px;font-weight:700;color:var(--txt1)">'+inc.tipoLabel+'</div>'
+    +     '<div style="font-size:12px;color:var(--txt2);margin-top:3px">'+inc.entidade+' · <span style="font-family:monospace">'+inc.cnpj+'</span></div>'
     +   '</div>'
     +   '<button onclick="document.getElementById(\'kb-card-modal\').style.display=\'none\'" style="background:none;border:none;color:var(--txt2);font-size:24px;cursor:pointer;line-height:1;padding:0;flex-shrink:0">×</button>'
     + '</div>'
-    // Detalhes
-    + '<div style="padding:20px 24px;border-bottom:1px solid var(--border)">'
-    +   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;font-size:13px;margin-bottom:16px">'
-    +     _kbDetalheItem('Valor RF', fmtV(rf.valor), 'var(--teal)', true)
-    +     _kbDetalheItem('NF / DF', (rf.nfTipoDF||'NF') + ' ' + rf.nfNumero)
-    +     _kbDetalheItem('Tipo Fiscal', rf.tipoFiscal, ftCor, true)
-    +     _kbDetalheItem('Tipo NF', rf.tipoNF === 'entrada' ? 'Entrada' : 'Saída', nfCor, true)
-    +     _kbDetalheItem('Data RF', fmtD(rf.data))
+
+    + '<div style="padding:16px 24px;border-bottom:1px solid var(--brd)">'
+    +   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px 16px;margin-bottom:16px">'
+    +     _item2('DF Vinculado', inc.dfNum, '59,130,246', true)
+    +     _item2('RF Vinculado', inc.rfId || null, '45,212,191', true)
+    +     _item2('Valor', fmtV(inc.valor), '245,158,11')
+    +     _item2('Fluxo', fluxoLabel, fluxoCor)
+    +     _item2('Tipo Fiscal', inc.tipoFiscal, tipoFisCor)
+    +     _item2('Origem', origemLabel, origemRGB)
     +   '</div>'
-    // Mover de coluna + Responsável
-    +   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">'
-    +     '<div>'
-    +       '<div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Estágio atual</div>'
-    +       '<select id="kb-col-select" onchange="window._kbMoverColuna(\''+rfId+'\',this.value)" style="width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--txt1);font-family:inherit;outline:none;cursor:pointer">'
-    +         colOpts
-    +       '</select>'
-    +     '</div>'
-    +     '<div>'
-    +       '<div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Responsável</div>'
-    +       '<select id="kb-resp-select" onchange="window._kbMudarResponsavel(\''+rfId+'\',this.value)" style="width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--txt1);font-family:inherit;outline:none;cursor:pointer">'
-    +         _kbUsuarios.map(function(u){return '<option value="'+u.id+'"'+(u.id===(window._kanbanResponsavel[rfId]||'nenhum')?' selected':'')+'>'+u.nome+'</option>';}).join('')
-    +       '</select>'
-    +     '</div>'
+    +   '<div>'
+    +     '<div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Status / Mover coluna</div>'
+    +     '<select id="kb-col-select" onchange="window._kbMoverColuna(\''+incId+'\',this.value)" style="width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--txt1);font-family:inherit;outline:none;cursor:pointer">'
+    +       colOpts
+    +     '</select>'
     +   '</div>'
     + '</div>'
-    // Ações
-    + '<div style="padding:20px 24px">'
-    +   '<div style="font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Ações disponíveis</div>'
+
+    + '<div style="padding:16px 24px;border-bottom:1px solid var(--brd)">'
+    +   '<div style="font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Histórico de ações</div>'
+    +   timelineHtml
+    + '</div>'
+
+    + '<div style="padding:16px 24px">'
+    +   '<div style="font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Ações sugeridas</div>'
     +   '<div style="display:flex;flex-direction:column;gap:8px">'+acoesHtml+'</div>'
     + '</div>'
+
     + '</div>';
 
   modal.style.display = 'flex';
-  // salvar ações para execução
   modal._acoes = acoes;
-  modal._rfId  = rfId;
+  modal._incId = incId;
 };
 
 function _kbDetalheItem(label, value, cor, bold) {
@@ -3374,30 +3466,21 @@ function _kbDetalheItem(label, value, cor, bold) {
     + '</div>';
 }
 
-window._kbMoverColuna = function(rfId, colId) {
-  window._kanbanState[rfId] = colId;
+window._kbMoverColuna = function(incId, colId) {
+  window._kanbanState[incId] = colId;
   window.renderizarKanbanInconsistencias();
 };
 
-window._kbExecutarAcao = function(rfId, aIdx) {
+window._kbExecutarAcao = function(incId, aIdx) {
   var modal = document.getElementById('kb-card-modal');
   var acoes = modal && modal._acoes;
   var acao  = acoes && acoes[aIdx];
   if (!acao) return;
 
-  // Se "Marcar como Resolvido" → mover para coluna resolvido
-  if (acao.label.toLowerCase().includes('resolvido') || acao.label.toLowerCase().includes('cancelar') || acao.label.toLowerCase().includes('aceito') || acao.label.toLowerCase().includes('dispensado')) {
-    window._kanbanState[rfId] = 'resolvido';
-  } else if (acao.label.toLowerCase().includes('contabilidade') || acao.label.toLowerCase().includes('retificaç') || acao.label.toLowerCase().includes('solicitar') || acao.label.toLowerCase().includes('reenviar') || acao.label.toLowerCase().includes('notifica')) {
-    window._kanbanState[rfId] = 'aguardando';
-  } else {
-    window._kanbanState[rfId] = 'tratamento';
-  }
+  window._kanbanState[incId] = acao.nextStatus || 'em_analise';
 
-  // Feedback no botão
   var btn = document.querySelectorAll('#kb-card-modal button')[aIdx + 1];
   if (btn) {
-    var orig = btn.innerHTML;
     btn.innerHTML = '<span style="color:var(--teal);font-weight:700;font-size:13px">✓ Ação registrada — card movido</span>';
     btn.disabled = true;
     setTimeout(function() {
