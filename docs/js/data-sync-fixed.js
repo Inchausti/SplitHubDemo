@@ -4,6 +4,17 @@
  * Gera R$ 50.000.000 em créditos apropriados (10% de R$ 500M)
  */
 
+/* ── Paleta global de gráficos — espelho de window.PALETTE em index.html ──
+   Para mudar o tema do app inteiro: edite PALETTE aqui + --p-* no :root do CSS. */
+var PALETTE = window.PALETTE || {
+  teal:     '#1d9e75',
+  tealDark: '#0f6e56',
+  blue:     '#185fa5',
+  amber:    '#ba7517',
+  red:      '#a32d2d',
+  gray:     '#888780'
+};
+
 // Auxiliar multi-select período — suporta f.mesAnoArr (array) E f.mesAno (string)
 window._matchPeriodo = function(dateStr, f) {
   var d = dateStr || '';
@@ -1329,7 +1340,7 @@ window.atualizarKPIsDashboard = function() {
   var heroBadge = heroPct >= 75 ? 'Saudável' : heroPct >= 50 ? 'Atenção' : 'Crítico';
   var heroBg    = heroPct >= 75 ? 'rgba(73,197,177,.12)'  : heroPct >= 50 ? 'rgba(245,158,11,.12)' : 'rgba(244,63,94,.12)';
   var heroBdr   = heroPct >= 75 ? 'rgba(73,197,177,.25)'  : heroPct >= 50 ? 'rgba(245,158,11,.25)' : 'rgba(244,63,94,.25)';
-  var heroFill  = heroPct >= 75 ? 'linear-gradient(90deg,#1d9e75,#0f6e56)' : heroPct >= 50 ? 'var(--amber)' : 'var(--red)';
+  var heroFill  = heroPct >= 75 ? 'linear-gradient(90deg,'+PALETTE.teal+','+PALETTE.tealDark+')' : heroPct >= 50 ? 'var(--amber)' : 'var(--red)';
   setEl('dash-hero-pct',       heroPctStr);
   setEl('dash-hero-total',     fmtM(total));
   setEl('dash-hero-aprop-val', fmtM(aprop));
@@ -1568,8 +1579,8 @@ window.atualizarDashboard = function() {
     arr.forEach(function(f) {
       var qs = f.qualScore;
       var barPct = f.pendente / maxPend * 100;
-      var scoreColor = qs >= 80 ? '#1d9e75' : qs >= 60 ? '#ba7517' : '#a32d2d';
-      var barColor = isWorst ? '#a32d2d' : '#1d9e75';
+      var scoreColor = qs >= 80 ? PALETTE.teal : qs >= 60 ? PALETTE.amber : PALETTE.red;
+      var barColor = isWorst ? PALETTE.red : PALETTE.teal;
       var sharePct = (f.sharePend * 100).toFixed(1);
       html += '<div style="background:var(--bg2);border-radius:6px;padding:8px 10px">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
@@ -1772,9 +1783,9 @@ window.atualizarInteligencia = function() {
   var dRisco = meses.map(function(m) { return +(byMonth[m].risco / 1e6).toFixed(2); });
   if (typeof svgBar === 'function' && meses.length) {
     svgBar('cAprovMensal', [
-      { data: dAprop, color: '#1d9e75', label: 'Apropriado' },
-      { data: dPend,  color: '#ba7517', label: 'Pendente'   },
-      { data: dRisco, color: '#a32d2d', label: 'Em Risco'   }
+      { data: dAprop, color: PALETTE.teal,  label: 'Apropriado' },
+      { data: dPend,  color: PALETTE.amber, label: 'Pendente'   },
+      { data: dRisco, color: PALETTE.red,   label: 'Em Risco'   }
     ], labM, 200);
   }
 
@@ -1998,7 +2009,7 @@ window.atualizarInteligencia = function() {
       '<div style="display:flex;flex-direction:column;gap:14px">'
       + '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:10px;padding:14px 18px">'
       + '<div style="font-size:11px;color:var(--txt3);margin-bottom:4px">Se todos os créditos pendentes fossem regularizados</div>'
-      + '<div style="font-size:22px;font-weight:700;color:#185fa5">' + fmtM(pendCred) + '</div>'
+      + '<div style="font-size:22px;font-weight:700;color:'+PALETTE.blue+'">' + fmtM(pendCred) + '</div>'
       + '<div style="font-size:11px;color:var(--txt3);margin-top:4px">adicionais · aproveitamento subiria de <strong style="color:var(--txt1)">'
       + pct + '%</strong> para <strong style="color:#22C55E">' + novoPct + '%</strong></div>'
       + '</div>'
@@ -2560,7 +2571,7 @@ window._rfIncFiltrado = [];
 window._rfIncPagina  = 1;
 window._rfIncIpp     = 25;
 
-var _incCores = { 'Não conciliado':'#a32d2d','Valor imposto divergente':'#ba7517','Vencido':'#a32d2d','Sem Comprovante':'#185fa5','Falha de Layout':'#a32d2d','Inconsistência de Dados':'#ba7517','Rejeitado SEFAZ':'#a32d2d','Documento Duplicado':'#888780' };
+var _incCores = (function(P){ return { 'Não conciliado':P.red,'Valor imposto divergente':P.amber,'Vencido':P.red,'Sem Comprovante':P.blue,'Falha de Layout':P.red,'Inconsistência de Dados':P.amber,'Rejeitado SEFAZ':P.red,'Documento Duplicado':P.gray }; })(PALETTE);
 
 function _incFmtM(v) {
   if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
@@ -2582,7 +2593,7 @@ function _incSvgBar(el, dados, corFn, W, barH, gap, padL, padR) {
     s += '<rect x="' + padL + '" y="' + y + '" width="' + (W - padL - padR) + '" height="' + barH + '" rx="3" fill="rgba(139,92,246,.07)"/>';
     s += '<rect x="' + padL + '" y="' + y + '" width="' + bw + '" height="' + barH + '" rx="3" fill="' + cor + '" opacity=".85"/>';
     var vlbl = d.fmt || _incFmtM(d.v);
-    s += '<text x="' + (W - 2) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#185fa5" font-size="10" font-weight="700" font-family="Montserrat,sans-serif">' + vlbl + '</text>';
+    s += '<text x="' + (W - 2) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="'+PALETTE.blue+'" font-size="10" font-weight="700" font-family="Montserrat,sans-serif">' + vlbl + '</text>';
   });
   s += '</svg>';
   el.innerHTML = s;
@@ -2621,9 +2632,9 @@ function _incSvgMensal(el, mapa, W) {
     var bh = Math.max(4, Math.round((v / maxV) * areaH));
     var x = 10 + i * (barW + 4);
     var y = padT + areaH - bh;
-    s += '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + bh + '" rx="2" fill="#185fa5" opacity=".75"/>';
+    s += '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + bh + '" rx="2" fill="'+PALETTE.blue+'" opacity=".75"/>';
     s += '<text x="' + (x + barW / 2) + '" y="' + (H - 6) + '" text-anchor="middle" fill="#A7A8AA" font-size="9" font-family="Montserrat,sans-serif">' + m.slice(5) + '</text>';
-    if (v > 0) s += '<text x="' + (x + barW / 2) + '" y="' + (y - 3) + '" text-anchor="middle" fill="#185fa5" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">' + v + '</text>';
+    if (v > 0) s += '<text x="' + (x + barW / 2) + '" y="' + (y - 3) + '" text-anchor="middle" fill="'+PALETTE.blue+'" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">' + v + '</text>';
   });
   s += '</svg>';
   el.innerHTML = s;
@@ -2799,28 +2810,28 @@ window.renderizarRFsInconsistencias = function() {
   var mapForn = {};
   lista.forEach(function(r){ mapForn[r.forn] = (mapForn[r.forn]||0) + r.valor; });
   var top5Forn = Object.keys(mapForn).map(function(k){return {label:k,v:mapForn[k]};}).sort(function(a,b){return b.v-a.v;}).slice(0,5);
-  _incSvgBar(document.getElementById('c-inc-top5-forn'), top5Forn, function(){return '#1d9e75';}, 560, 20, 12, 180, 70);
+  _incSvgBar(document.getElementById('c-inc-top5-forn'), top5Forn, function(){return PALETTE.teal;}, 560, 20, 12, 180, 70);
 
   // 4. Chart 2 — Por tipo de inconsistência
   var mapTipo = {};
   lista.forEach(function(r){ var k=r.inc||'Sem tipo'; mapTipo[k]=(mapTipo[k]||0)+r.valor; });
-  var tiposDados = Object.keys(mapTipo).map(function(k){return {label:k,v:mapTipo[k],cor:_incCores[k]||'#1d9e75'};}).sort(function(a,b){return b.v-a.v;});
+  var tiposDados = Object.keys(mapTipo).map(function(k){return {label:k,v:mapTipo[k],cor:_incCores[k]||PALETTE.teal};}).sort(function(a,b){return b.v-a.v;});
   _incSvgBar(document.getElementById('c-inc-tipos'), tiposDados, function(d){return d.cor;}, 560, 20, 12, 180, 70);
 
   // 5. Chart 3 — IBS vs CBS
   var volIBS = lista.filter(function(r){return r.tf==='IBS';}).reduce(function(s,r){return s+r.valor;},0);
   var volCBS = lista.filter(function(r){return r.tf==='CBS';}).reduce(function(s,r){return s+r.valor;},0);
   _incSvgDuo(document.getElementById('c-inc-ibs-cbs'), [
-    {label:'IBS', v:volIBS, cor:'#1d9e75'},
-    {label:'CBS', v:volCBS, cor:'#185fa5'}
+    {label:'IBS', v:volIBS, cor:PALETTE.teal},
+    {label:'CBS', v:volCBS, cor:PALETTE.blue}
   ], 280, 22);
 
   // 6. Chart 4 — Entrada vs Saída
   var volEnt = lista.filter(function(r){return r.tipoNF==='entrada';}).reduce(function(s,r){return s+r.valor;},0);
   var volSai = lista.filter(function(r){return r.tipoNF==='saida';}).reduce(function(s,r){return s+r.valor;},0);
   _incSvgDuo(document.getElementById('c-inc-ent-sai'), [
-    {label:'Entrada', v:volEnt, cor:'#1d9e75'},
-    {label:'Saída',   v:volSai, cor:'#ba7517'}
+    {label:'Entrada', v:volEnt, cor:PALETTE.teal},
+    {label:'Saída',   v:volSai, cor:PALETTE.amber}
   ], 280, 22);
 
   // 7. Chart 5 — Evolução mensal (contagem de RFs)
