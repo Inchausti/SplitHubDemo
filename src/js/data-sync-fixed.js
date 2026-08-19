@@ -3331,10 +3331,7 @@ window.kbAbrirCard = function(incId) {
     if (!d) return '—';
     var p = d.split('-'); return p.length === 3 ? p[2]+'/'+p[1]+'/'+p[0] : d;
   };
-  var addDays = function(iso, n) {
-    var d = new Date(iso); d.setDate(d.getDate() + n);
-    return d.toISOString().slice(0, 10);
-  };
+  var A = window._rfAddDays, F = window._rfFmtTS, MK = window._rfMkTS;
 
   var stCols = [
     { id:'aberta',              label:'Aberta',       rgb:'244,63,94'   },
@@ -3368,35 +3365,71 @@ window.kbAbrirCard = function(incId) {
     return '<option value="'+c.id+'"'+(c.id===statusAtual?' selected':'')+'>'+c.label+'</option>';
   }).join('');
 
-  // Timeline de eventos determinística baseada no status
-  var events = [
-    { date: inc.dataISO, label: 'Inconsistência detectada automaticamente', rgb: '244,63,94' }
-  ];
+  // ── Timeline no padrão do histórico de DF/RF ─────────────────────────────
+  var d0 = inc.dataISO || '';
+  function mkEv(ts, tipo, modulo, ator, desc, cls) {
+    return { ts: ts, data: (ts === '—' ? '—' : F(ts)), tipo: tipo, modulo: modulo, ator: ator, desc: desc, cls: cls };
+  }
+  var incEvRgba  = { 'ABERTURA':'244,63,94', 'VALIDAÇÃO':'34,197,94', 'ATRIBUIÇÃO':'245,158,11', 'NOTIFICAÇÃO':'59,130,246', 'RESOLUÇÃO':'34,197,94', 'GLOSA':'167,168,170' };
+  var incEvIcons = { 'ABERTURA':'!', 'VALIDAÇÃO':'✓', 'ATRIBUIÇÃO':'→', 'NOTIFICAÇÃO':'✉', 'RESOLUÇÃO':'✓', 'GLOSA':'✕' };
+
+  var eventos = [];
+  eventos.push(mkEv(MK(d0,'08:47'), 'ABERTURA', 'Inconsistências', 'SplitHub',
+    inc.id + ' aberta · ' + inc.tipoLabel + ' vinculada ao ' + inc.dfNum
+    + (inc.rfId ? ' · RF ' + inc.rfId : ' · DF direto')
+    + ' · ' + (inc.tipoFiscal || '').toUpperCase(), 'erro'));
+
+  eventos.push(mkEv(MK(d0,'08:49'), 'VALIDAÇÃO', 'Inconsistências', 'SplitHub',
+    'Dados validados · fluxo '+(inc.tipoFluxo||'—')+' · origem '+(inc.origem === 'df' ? 'DF direto' : 'via RF')
+    + ' · prioridade '+(inc.prioridade||'—'), 'ok'));
+
   if (statusAtual !== 'aberta') {
-    events.push({ date: addDays(inc.dataISO, 1), label: 'Responsável atribuído · análise iniciada', rgb: '245,158,11' });
+    eventos.push(mkEv(MK(A(d0,1),'09:15'), 'ATRIBUIÇÃO', 'Inconsistências', 'SplitHub',
+      'Responsável atribuído · análise iniciada · inconsistência em avaliação', 'pending'));
   }
   if (statusAtual === 'aguardando_emitente' || statusAtual === 'resolvida' || statusAtual === 'glosada') {
-    events.push({ date: addDays(inc.dataISO, 2), label: 'Notificação enviada ao emitente', rgb: '59,130,246' });
+    eventos.push(mkEv(MK(A(d0,2),'10:30'), 'NOTIFICAÇÃO', 'Inconsistências', 'SplitHub',
+      'Emitente '+inc.entidade+' notificado · aguardando retificação ou confirmação', 'pending'));
   }
   if (statusAtual === 'resolvida') {
-    events.push({ date: addDays(inc.dataISO, 4), label: 'Corrigida · RF reprocessado com sucesso', rgb: '34,197,94' });
+    eventos.push(mkEv(MK(A(d0,4),'14:22'), 'RESOLUÇÃO', 'Inconsistências', 'SplitHub',
+      'Inconsistência resolvida · dados corrigidos · RF reprocessado com sucesso · crédito '+(inc.tipoFiscal||'').toUpperCase()+' preservado', 'ok'));
   }
   if (statusAtual === 'glosada') {
-    events.push({ date: addDays(inc.dataISO, 5), label: 'Prazo expirado · crédito glosado', rgb: '167,168,170' });
+    eventos.push(mkEv(MK(A(d0,5),'16:58'), 'GLOSA', 'Créditos', 'Fisco',
+      'Prazo de regularização expirado · crédito glosado · '+(inc.rfId ? 'RF '+inc.rfId : 'DF '+inc.dfNum)+' inelegível', 'erro'));
   }
 
-  var timelineHtml = events.map(function(ev, idx) {
-    return '<div style="display:flex;gap:12px;align-items:flex-start">'
-      + '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">'
-      +   '<div style="width:10px;height:10px;border-radius:50%;background:rgba('+ev.rgb+',1);margin-top:3px;flex-shrink:0"></div>'
-      +   (idx < events.length-1 ? '<div style="width:2px;flex:1;background:var(--brd);margin-top:4px;min-height:20px"></div>' : '')
+  // Ordenar decrescente (mais recente primeiro)
+  eventos.sort(function(a, b) {
+    var ta = a.ts || '—', tb = b.ts || '—';
+    if (ta === '—' && tb === '—') return 0;
+    if (ta === '—') return 1;
+    if (tb === '—') return -1;
+    return ta > tb ? -1 : ta < tb ? 1 : 0;
+  });
+
+  var timelineHtml = '';
+  eventos.forEach(function(ev, i) {
+    var rgba    = incEvRgba[ev.tipo]  || '167,168,170';
+    var dotRgba = ev.cls === 'erro' ? '239,68,68' : ev.cls === 'pending' ? '245,158,11' : rgba;
+    var icon    = incEvIcons[ev.tipo] || '◯';
+    var isLast  = i === eventos.length - 1;
+    timelineHtml += '<div style="display:flex;gap:12px">'
+      + '<div style="display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0">'
+      + '<div style="width:28px;height:28px;border-radius:50%;background:rgba('+dotRgba+',.15);border:1.5px solid rgba('+dotRgba+',.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba('+dotRgba+',1)">'+icon+'</div>'
+      + (!isLast ? '<div style="width:1px;flex:1;background:rgba(128,128,128,.2);margin:3px 0;min-height:20px"></div>' : '')
       + '</div>'
-      + '<div style="padding-bottom:14px">'
-      +   '<div style="font-size:12px;font-weight:600;color:var(--txt1)">'+ev.label+'</div>'
-      +   '<div style="font-size:11px;color:var(--txt3);margin-top:2px">'+fmtD(ev.date)+'</div>'
+      + '<div style="flex:1;padding-bottom:'+(isLast?'0':'22')+'px">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">'
+      + '<span style="background:rgba('+rgba+',.12);color:rgba('+rgba+',1);border:1px solid rgba('+rgba+',.3);border-radius:3px;padding:1px 7px;font-size:9px;font-weight:700;letter-spacing:.07em">'+ev.tipo+'</span>'
+      + '<span style="font-size:10px;color:var(--txt3);font-family:monospace">'+ev.data+'</span>'
+      + '</div>'
+      + '<div style="font-size:12px;color:var(--txt1);line-height:1.55;margin-bottom:3px">'+ev.desc+'</div>'
+      + '<div style="font-size:10px;color:var(--txt2)">'+ev.modulo+' · '+ev.ator+'</div>'
       + '</div>'
       + '</div>';
-  }).join('');
+  });
 
   var acoes = _incAcoesMap[inc.tipo] || [
     { label: 'Enviar para Contabilidade', icon: '📊', desc: 'Escala para revisão pela equipe contábil',   nextStatus: 'em_analise' },
@@ -3443,7 +3476,7 @@ window.kbAbrirCard = function(incId) {
     + '</div>'
 
     + '<div style="padding:16px 24px;border-bottom:1px solid var(--brd)">'
-    +   '<div style="font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Histórico de ações</div>'
+    +   '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px">Histórico do Ciclo · '+eventos.length+' evento'+(eventos.length !== 1 ? 's' : '')+'</div>'
     +   timelineHtml
     + '</div>'
 
