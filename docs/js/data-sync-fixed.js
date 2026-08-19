@@ -129,6 +129,23 @@ window.SH_TABLES = {
       { label: 'Situação' }
     ]
   },
+  pagamentos: {
+    id: 't-impostos',
+    cols: [
+      { thHtml: '<input type="checkbox" id="pag-chk-all" onchange="window.pagToggleAll(this)" title="Selecionar todos pendentes" style="cursor:pointer;width:15px;height:15px">', cls: 'tc', style: 'width:36px;text-align:center' },
+      { label: 'RF' },
+      { label: 'Documento Fiscal' },
+      { label: 'Fornecedor' },
+      { label: 'Tipo Fiscal' },
+      { label: 'Tipo de DFe' },
+      { label: 'Método' },
+      { label: 'Valor',      cls: 'r' },
+      { label: 'Data RF' },
+      { label: 'Pagamento' },
+      { label: 'Status' },
+      { label: 'Ação' }
+    ]
+  },
   inconsistencias: {
     id: 't-inc-rfs',
     cols: [
@@ -162,6 +179,7 @@ window.shRenderThead = function(key) {
   cfg.cols.forEach(function(col) {
     var th = document.createElement('th');
     if (col.cls) th.className = col.cls;
+    if (col.style) th.setAttribute('style', col.style);
     if (col.thHtml) { th.innerHTML = col.thHtml; }
     else { th.textContent = col.label; }
     tr.appendChild(th);
@@ -6011,7 +6029,7 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
 // Instanciar quando o documento está pronto
 document.addEventListener('DOMContentLoaded', function() {
   // Gerar theads das tabelas principais a partir do config SH_TABLES
-  ['creditos','debitos','inconsistencias','dashDfCp','dashDfLp'].forEach(window.shRenderThead);
+  ['creditos','debitos','inconsistencias','dashDfCp','dashDfLp','pagamentos'].forEach(window.shRenderThead);
 
   // Scripts inline executam antes de DOMContentLoaded — delay zero é suficiente
   setTimeout(function() {
