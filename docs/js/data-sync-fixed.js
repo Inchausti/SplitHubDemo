@@ -6108,7 +6108,8 @@ window.renderizarTabelaPagamentos = function() {
         tipo: tipoCol, tipoNF: nf.tipo || 'entrada', valor: valor,
         dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, status: rfSt,
         metodo: rf.metodoPagamento || nf.metodoPagamento || 'RAD',
-        contratoId: rf.contratoId || nf.contratoId || null
+        contratoId: rf.contratoId || nf.contratoId || null,
+        statusFlags: rf.statusFlags || []
       });
     });
   });
@@ -6148,7 +6149,7 @@ window.renderizarTabelaPagamentos = function() {
       + '<td class="nowrap">' + (r.status === 'pago'
           ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pagamento + '</a>'
           : '<span style="color:var(--txt2)">—</span>') + '</td>'
-      + '<td class="nowrap" style="vertical-align:middle">' + badge + '</td>'
+      + '<td style="vertical-align:middle">' + badge + (r.statusFlags.length ? '<div style="margin-top:3px">' + window._statusFlagsBadges({ statusFlags: r.statusFlags }) + '</div>' : '') + '</td>'
       + '<td class="tc" style="vertical-align:middle">' + detBtn + '</td>'
       + '<td class="nowrap" style="vertical-align:middle;white-space:nowrap">' + act + '</td>'
       + '</tr>';
@@ -6777,17 +6778,18 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 
-    // Calcula statusRegistro de cada RF com base em datas e status de crédito.
-    // Roda após todos os dados estarem em nfListaFiltradaGlobal.
+    // Calcula statusFlags (array — todos os flags ativos) e statusRegistro (string — maior severidade).
+    // statusFlags permite múltiplos flags simultâneos (ex: ['em_risco','inconsistencia']).
+    // statusRegistro mantém compatibilidade com todo o código existente que lê um único valor.
+    // Hierarquia de severidade: inconsistencia > vencido > em_risco > a_prescrever
+    var _SR_SEVERITY = { inconsistencia: 4, vencido: 3, em_risco: 2, a_prescrever: 1 };
     function _calcularStatusRegistro() {
       var hoje = new Date(); hoje.setHours(0,0,0,0);
       var MS_DIA = 86400000;
       (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
         (nf.registrosFiscais || []).forEach(function(rf) {
-          // Não sobrescrever flags já definidas pela fonte de dados upstream
-          if (rf.statusRegistro) return;
           var sc = rf.statusCredito || rf.status || '';
-          if (sc === 'apropriado' || sc === 'utilizado' || sc === 'glosado') return;
+          if (sc === 'apropriado' || sc === 'utilizado' || sc === 'glosado') { rf.statusFlags = []; return; }
           var dataStr = rf.data || nf.data || '';
           if (!dataStr) return;
           var p = dataStr.split('-');
@@ -6796,15 +6798,45 @@ document.addEventListener('DOMContentLoaded', function() {
           // Vencimento = último dia do mês seguinte à NF
           var venc = new Date(y, m + 1, 0); venc.setHours(0,0,0,0);
           var diffDias = Math.round((venc - hoje) / MS_DIA);
-          // Prazo de prescrição = 5 anos a partir da data da NF
+          // Prescrição = 5 anos da data da NF
           var prescr = new Date(y + 5, m - 1, parseInt(p[2] || '1', 10));
           var diffPrescr = Math.round((prescr - hoje) / MS_DIA);
-          if (diffDias < 0)        rf.statusRegistro = 'vencido';
-          else if (diffDias <= 10) rf.statusRegistro = 'em_risco';
-          else if (diffPrescr <= 180) rf.statusRegistro = 'a_prescrever';
+
+          // Preservar 'inconsistencia' vindo do upstream; demais flags são recalculados
+          var flags = [];
+          if (rf.statusRegistro === 'inconsistencia' ||
+              (Array.isArray(rf.statusFlags) && rf.statusFlags.indexOf('inconsistencia') !== -1))
+            flags.push('inconsistencia');
+          if (diffDias < 0)           flags.push('vencido');
+          else if (diffDias <= 10)    flags.push('em_risco');
+          if (diffPrescr <= 180)      flags.push('a_prescrever');
+
+          rf.statusFlags = flags;
+          // statusRegistro = flag de maior severidade (compatibilidade com código existente)
+          rf.statusRegistro = flags.reduce(function(best, f) {
+            return (_SR_SEVERITY[f] || 0) > (_SR_SEVERITY[best] || 0) ? f : best;
+          }, flags[0] || null);
         });
       });
     }
+
+    // Helper global: gera badges HTML para todos os flags ativos de um RF
+    window._statusFlagsBadges = function(rf) {
+      var flags = rf.statusFlags || (rf.statusRegistro ? [rf.statusRegistro] : []);
+      if (!flags.length) return '';
+      var cfg = {
+        inconsistencia: { label: 'Inconsistência', rgb: '220,38,38' },
+        vencido:        { label: 'Vencido',         rgb: '220,38,38' },
+        em_risco:       { label: 'Em risco',         rgb: '186,117,23' },
+        a_prescrever:   { label: 'A Prescrever',     rgb: '251,146,60' }
+      };
+      return flags.map(function(f) {
+        var c = cfg[f] || { label: f, rgb: '156,163,175' };
+        return '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;'
+          + 'background:rgba('+c.rgb+',.1);color:rgb('+c.rgb+');border:1px solid rgba('+c.rgb+',.3);'
+          + 'white-space:nowrap;display:inline-block;margin:1px 1px 0 0">' + c.label + '</span>';
+      }).join('');
+    };
 
     function _postProcessarDados() {
       try { window._renderGESelects && window._renderGESelects(); } catch(e) {}
