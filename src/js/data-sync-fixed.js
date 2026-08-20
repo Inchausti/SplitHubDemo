@@ -1736,7 +1736,7 @@ window.atualizarDashboard = function() {
       { data: aprop.map(rnd),   color: 'var(--teal)',  fill: true, dots: true, label: 'Apropriados' },
       { data: aApropr.map(rnd), color: 'var(--amber)', dash: true,             label: 'A Apropriar'  },
       { data: emRisco.map(rnd), color: 'var(--red)',   dots: true, w: 1.5,    label: 'Em Risco'     }
-    ], mesesLabels, 200);
+    ], mesesLabels, 140);
   }
   // atualiza subtítulo
   var subCred = document.getElementById('dash-sub-creditos');
@@ -1768,7 +1768,7 @@ window.atualizarDashboard = function() {
     svgBar('cPagamentos', [
       { data: pagRAD.map(rnd),  color: 'var(--blue)', label: 'Via RAD'       },
       { data: pagForn.map(rnd), color: 'var(--teal)', label: 'Via Fornecedor' }
-    ], mesesLabels, 200);
+    ], mesesLabels, 140);
   }
   var subPag = document.getElementById('dash-sub-pagamentos');
   if (subPag) subPag.textContent = 'R$ milhões · RAD + Fornecedor · Jan–Dez 2026';
@@ -6173,7 +6173,9 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
   // Stacked-area SVG customizado
   var el = document.getElementById('cPagEvolAcum');
   if (!el) return;
-  var H = 200, padT = 14, padB = 26, padL = 8, padR = 8;
+  var H = el.parentElement ? (el.parentElement.offsetHeight || 140) : 140;
+  if (H < 80) H = 140;
+  var padT = 12, padB = 24, padL = 8, padR = 8;
   var W = (el.parentElement && el.parentElement.offsetWidth > 50 ? el.parentElement.offsetWidth : 440);
   var plotW = W - padL - padR, plotH = H - padT - padB;
   var n = labels.length;
