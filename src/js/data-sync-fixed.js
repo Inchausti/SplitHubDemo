@@ -1275,7 +1275,9 @@ window.renderizarTabelaCreditos = function() {
         ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(186,117,23,.28);color:#ba7517;background:transparent">Saída</span>'
         : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(29,158,117,.28);color:#1d9e75;background:transparent">Entrada</span>';
       var nfNumero = r.nfNumero || '';
-      var nfLink = '<span class="mono" style="font-size:11px;color:#185fa5;cursor:pointer;text-decoration:underline" onclick="window.abrirDetalhesNFporNumero(\'' + nfNumero + '\')">' + r.nf + '</span>';
+      var nfLink = nfNumero
+        ? '<span class="mono" style="font-size:11px;color:#185fa5;cursor:pointer;text-decoration:underline" onclick="window.abrirDetalhesNFporNumero(\'' + nfNumero + '\')">' + r.nf + '</span>'
+        : '<span style="color:var(--txt3)">—</span>';
       var contratoCell = r.contratoId
         ? '<span class="mono" style="font-size:11px;color:#1d9e75;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\'' + r.contratoId + '\')">' + r.contratoId + '</span>'
         : '<span style="color:var(--txt3)">—</span>';
