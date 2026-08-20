@@ -590,7 +590,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   var lista = window.nfListaFiltradaGlobal || [];
   var r = null;
   for (var i = 0; i < lista.length; i++) {
-    if (lista[i].numero === nfNumero) { r = lista[i]; break; }
+    if (String(lista[i].numero) === String(nfNumero)) { r = lista[i]; break; }
   }
   if (!r) return;
 
@@ -8077,7 +8077,7 @@ window.downloadGuiaDARF = function() {
     function _fmtBRL2(v) { return v != null ? 'R$ ' + Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; }
 
     // Buscar NF completa para campos extras
-    var nfRef = (window.nfListaFiltradaGlobal || []).find(function(n){ return n.numero === d.nfNumero; }) || {};
+    var nfRef = (window.nfListaFiltradaGlobal || []).find(function(n){ return String(n.numero) === String(d.nfNumero); }) || {};
 
     // Campos emitente
     _set('ing-modal-emit', d.emitente || '—');
@@ -8223,7 +8223,7 @@ window.downloadGuiaDARF = function() {
 
       // Histórico completo dos RFs (apenas DFs integrados com NF vinculada)
       if (d.nfNumero && window._rfGerarHistorico) {
-        var nfObj = (window.nfListaFiltradaGlobal || []).find(function(n){ return n.numero === d.nfNumero; });
+        var nfObj = (window.nfListaFiltradaGlobal || []).find(function(n){ return String(n.numero) === String(d.nfNumero); });
         if (nfObj && nfObj.registrosFiscais) {
           nfObj.registrosFiscais.forEach(function(rf) {
             var evs = window._rfGerarHistorico(rf, nfObj);
@@ -8275,7 +8275,7 @@ window.downloadGuiaDARF = function() {
     var rfsWrap = document.getElementById('ing-modal-rfs-wrap');
     var rfsEl   = document.getElementById('ing-modal-rfs');
     if (rfsEl && d.nfNumero) {
-      var nfRef = (window.nfListaFiltradaGlobal || []).find(function(n) { return n.numero === d.nfNumero; });
+      var nfRef = (window.nfListaFiltradaGlobal || []).find(function(n) { return String(n.numero) === String(d.nfNumero); });
       var rfs   = nfRef && nfRef.registrosFiscais ? nfRef.registrosFiscais : [];
       if (rfs.length) {
         var rfsHtml = '';
@@ -8318,7 +8318,7 @@ window.downloadGuiaDARF = function() {
   window._abrirVisualizadorDF = function() {
     var d = window._ingModalDadosAtual;
     if (!d) return;
-    var nfRef = (window.nfListaFiltradaGlobal || []).find(function(n){ return n.numero === d.nfNumero; }) || {};
+    var nfRef = (window.nfListaFiltradaGlobal || []).find(function(n){ return String(n.numero) === String(d.nfNumero); }) || {};
     var tipoBase = d.tipo.replace(' Entrada','').replace(' Saída','');
     var isEntrada = d.tipo.indexOf('Entrada') > -1 || d.tipo.indexOf('entrada') > -1;
     var ff = function(v){ return v != null ? 'R$ ' + Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : 'R$ 0,00'; };
