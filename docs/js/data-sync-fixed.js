@@ -2986,6 +2986,7 @@ window.renderizarRFsInconsistencias = function() {
           tf: 'IBS', tipoNF: tipoNF, etapa: 'CAPUR',
           nfVinc: dfLabel, forn: nf.entidade || '—', cnpj: nf.cnpj || '—',
           valor: r.ibsRF ? (r.ibsRF.valor || 0) : Math.round((nf.valorTotal || 0) * 0.09),
+          valorTotal: nf.valorTotal || 0, valorLiq: nf.valorLiquido || 0,
           dataISO: nf.data || '', data: dataFmt,
           inc: tipoCI, tipoLabel: _incLblLocal[tipoCI]
         });
@@ -2998,6 +2999,7 @@ window.renderizarRFsInconsistencias = function() {
           tf: 'CBS', tipoNF: tipoNF, etapa: 'CAPUR',
           nfVinc: dfLabel, forn: nf.entidade || '—', cnpj: nf.cnpj || '—',
           valor: r.cbsRF ? (r.cbsRF.valor || 0) : Math.round((nf.valorTotal || 0) * 0.086),
+          valorTotal: nf.valorTotal || 0, valorLiq: nf.valorLiquido || 0,
           dataISO: nf.data || '', data: dataFmt,
           inc: tipoCB, tipoLabel: _incLblLocal[tipoCB]
         });
@@ -3014,6 +3016,7 @@ window.renderizarRFsInconsistencias = function() {
           tf: 'IBS', tipoNF: tipoNF, etapa: 'CFIN',
           nfVinc: dfLabel, forn: nf.entidade || '—', cnpj: nf.cnpj || '—',
           valor: r.ibsRF.valor || 0,
+          valorTotal: nf.valorTotal || 0, valorLiq: nf.valorLiquido || 0,
           dataISO: nf.data || '', data: dataFmt,
           inc: tipoCFI, tipoLabel: _incLblLocal[tipoCFI]
         });
@@ -3026,6 +3029,7 @@ window.renderizarRFsInconsistencias = function() {
           tf: 'CBS', tipoNF: tipoNF, etapa: 'CFIN',
           nfVinc: dfLabel, forn: nf.entidade || '—', cnpj: nf.cnpj || '—',
           valor: r.cbsRF.valor || 0,
+          valorTotal: nf.valorTotal || 0, valorLiq: nf.valorLiquido || 0,
           dataISO: nf.data || '', data: dataFmt,
           inc: tipoCFC, tipoLabel: _incLblLocal[tipoCFC]
         });
@@ -3038,6 +3042,7 @@ window.renderizarRFsInconsistencias = function() {
           tf: '—', tipoNF: tipoNF, etapa: 'CFIN',
           nfVinc: dfLabel, forn: nf.entidade || '—', cnpj: nf.cnpj || '—',
           valor: nf.valorTotal || 0,
+          valorTotal: nf.valorTotal || 0, valorLiq: nf.valorLiquido || 0,
           dataISO: nf.data || '', data: dataFmt,
           inc: 'prazo_expirado', tipoLabel: _incLblLocal['prazo_expirado']
         });
@@ -3052,6 +3057,7 @@ window.renderizarRFsInconsistencias = function() {
     if (ingFalhas.indexOf(d.status) === -1) return;
     var dp = (d.dataEmissao || '').split('-');
     var incKey = _ingStatusToInc[d.status] || 'chave_invalida';
+    var nfObjIng = (window.nfListaFiltradaGlobal || []).find(function(n){ return String(n.numero) === String(d.nfNumero); }) || {};
     lista.push({
       id:        'ING-' + d.id,
       rfId:      null,
@@ -3059,6 +3065,7 @@ window.renderizarRFsInconsistencias = function() {
       nfVinc:    d.tipo + ' ' + (d.chave ? d.chave.slice(0,8) + '…' : '—'),
       forn:      d.emitente || '—', cnpj: d.cnpj || '—',
       valor:     d.valor || 0,
+      valorTotal: nfObjIng.valorTotal || d.valor || 0, valorLiq: nfObjIng.valorLiquido || 0,
       dataISO:   d.dataEmissao || '',
       data:      dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
       inc:       incKey, tipoLabel: _incLblLocal[incKey]
@@ -3126,6 +3133,8 @@ window.renderizarRFsInconsistencias = function() {
       status:     _incStatuses[i % _incStatuses.length],
       prioridade: _incPrios(r.valor),
       valor:      r.valor,
+      valorTotal: r.valorTotal || 0,
+      valorLiq:   r.valorLiq || 0,
       entidade:   r.forn,
       cnpj:       r.cnpj,
       dataISO:    r.dataISO,
@@ -3309,6 +3318,8 @@ window._incRfRenderPagina = function() {
       + '<td class="nowrap">'+rfCell+'</td>'
       + '<td class="nowrap" style="font-size:11px;color:var(--txt2)">'+inc.tipoFiscal+'</td>'
       + '<td class="trunc" style="max-width:150px">'+inc.entidade+'</td>'
+      + '<td class="r mono" style="color:var(--txt2)">'+ff(inc.valorTotal||0)+'</td>'
+      + '<td class="r mono" style="color:var(--txt2)">'+ff(inc.valorLiq||0)+'</td>'
       + '<td class="r mono" style="color:var(--txt2)">'+ff(inc.valor)+'</td>'
       + '<td style="font-size:11px;color:var(--txt1)">'+inc.tipoLabel+'</td>'
       + '<td class="nowrap">'+_badge(inc.origem==='df'?'24,95,165':'26,107,90', inc.origem==='df'?'DF':'RF')+'</td>'
@@ -3317,7 +3328,7 @@ window._incRfRenderPagina = function() {
       + '<td class="nowrap" style="font-size:11px;color:var(--txt2)">'+inc.data+'</td>'
       + '</tr>';
   });
-  if (!pag.length) h = '<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma inconsistência encontrada para este filtro.</td></tr>';
+  if (!pag.length) h = '<tr><td colspan="14" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma inconsistência encontrada para este filtro.</td></tr>';
 
   var tbody = document.getElementById('t-inc-rfs');
   if (tbody) tbody.innerHTML = h;
