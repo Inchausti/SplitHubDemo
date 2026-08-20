@@ -6805,14 +6805,15 @@ document.addEventListener('DOMContentLoaded', function() {
           var prescr = new Date(y + 5, m - 1, parseInt(p[2] || '1', 10));
           var diffPrescr = Math.round((prescr - hoje) / MS_DIA);
 
-          // Preservar 'inconsistencia' vindo do upstream; demais flags são recalculados
+          // Preservar flags vindas do upstream (gerador/importação); computados complementam
+          var _knownFlags = ['inconsistencia', 'em_risco', 'vencido', 'a_prescrever'];
           var flags = [];
-          if (rf.statusRegistro === 'inconsistencia' ||
-              (Array.isArray(rf.statusFlags) && rf.statusFlags.indexOf('inconsistencia') !== -1))
-            flags.push('inconsistencia');
-          if (diffDias < 0)           flags.push('vencido');
-          else if (diffDias <= 10)    flags.push('em_risco');
-          if (diffPrescr <= 180)      flags.push('a_prescrever');
+          var _upSr = rf.statusRegistro;
+          var _upArr = Array.isArray(rf.statusFlags) ? rf.statusFlags : (_upSr ? [_upSr] : []);
+          _upArr.forEach(function(f) { if (_knownFlags.indexOf(f) !== -1 && flags.indexOf(f) === -1) flags.push(f); });
+          if (diffDias < 0 && flags.indexOf('vencido') === -1)        flags.push('vencido');
+          else if (diffDias <= 10 && flags.indexOf('em_risco') === -1) flags.push('em_risco');
+          if (diffPrescr <= 180 && flags.indexOf('a_prescrever') === -1) flags.push('a_prescrever');
 
           rf.statusFlags = flags;
           // statusRegistro = flag de maior severidade (compatibilidade com código existente)
