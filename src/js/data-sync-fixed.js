@@ -1546,17 +1546,19 @@ window.renderizarForecastAproveitamento = function(_retry) {
       else byMonth[mes].pend += v;
     });
   });
-  var mesesReal = Object.keys(byMonth).sort();
-  if (!mesesReal.length) {
+  var todosOsMesesAp = Object.keys(byMonth).sort();
+  if (!todosOsMesesAp.length) {
     if (!_retry || _retry < 10) { setTimeout(function(){ window.renderizarForecastAproveitamento((_retry||0)+1); }, 300); return; }
     return;
   }
+  var cutoffAp = new Date().toISOString().substring(0, 7);
+  var mesesReal = todosOsMesesAp.filter(function(m) { return m <= cutoffAp; });
+  if (!mesesReal.length) mesesReal = todosOsMesesAp.slice(0, Math.ceil(todosOsMesesAp.length / 2));
   var taxas = mesesReal.map(function(m) { var b = byMonth[m]; return b.orig > 0 ? b.aprop / b.orig : 0; });
   var N = mesesReal.length;
   var lastMes = mesesReal[N-1], lastY = parseInt(lastMes.substring(0,4),10), lastM = parseInt(lastMes.substring(5,7),10);
   var mesesFc = [];
-  for (var m2 = lastM+1; m2 <= Math.min(12, lastM+6); m2++) mesesFc.push(lastY + '-' + String(m2).padStart(2,'0'));
-  if (mesesFc.length < 6 && lastM + 6 > 12) { var ny = lastY+1; for (var m3=1; m3 <= (lastM+6-12); m3++) mesesFc.push(ny+'-'+String(m3).padStart(2,'0')); }
+  for (var m2 = lastM+1; m2 <= 12; m2++) mesesFc.push(lastY + '-' + String(m2).padStart(2,'0'));
   // Média móvel progressiva — evita acesso a índices fora dos limites
   var taxasFc = (function() {
     var buf = taxas.slice(), res = [];
@@ -5928,24 +5930,29 @@ window.renderizarFCTForecast = function(_retry) {
     });
   });
 
-  var mesesReal = Object.keys(byMonth).sort();
-  if (!mesesReal.length) {
+  var todosOsMeses = Object.keys(byMonth).sort();
+  if (!todosOsMeses.length) {
     if (!_retry || _retry < 10) { setTimeout(function(){ window.renderizarFCTForecast((_retry||0)+1); }, 300); return; }
     return;
   }
+
+  // Ponto de corte = mês atual — tudo até hoje é "realizado", depois é forecast
+  var cutoff = new Date().toISOString().substring(0, 7);
+  var mesesReal = todosOsMeses.filter(function(m) { return m <= cutoff; });
+  if (!mesesReal.length) mesesReal = todosOsMeses.slice(0, Math.ceil(todosOsMeses.length / 2));
 
   var N_REAL = mesesReal.length;
 
   var credReal = mesesReal.map(function(m) { return Math.round(byMonth[m].cred); });
   var debReal  = mesesReal.map(function(m) { return Math.round(byMonth[m].deb); });
 
-  // Determinar meses futuros até Dez do mesmo ano
-  var lastMes = mesesReal[N_REAL - 1];
-  var lastYear = parseInt(lastMes.substring(0,4),10);
-  var lastM    = parseInt(lastMes.substring(5,7),10);
-  var mesesFc = [];
+  // Forecast = meses após cutoff até Dez do ano do último mês real
+  var lastMes  = mesesReal[N_REAL - 1];
+  var lastYear = parseInt(lastMes.substring(0, 4), 10);
+  var lastM    = parseInt(lastMes.substring(5, 7), 10);
+  var mesesFc  = [];
   for (var m2 = lastM + 1; m2 <= 12; m2++) {
-    mesesFc.push(lastYear + '-' + String(m2).padStart(2,'0'));
+    mesesFc.push(lastYear + '-' + String(m2).padStart(2, '0'));
   }
 
   // Média móvel 3 meses progressiva — usa array acumulado para evitar acesso fora dos limites
