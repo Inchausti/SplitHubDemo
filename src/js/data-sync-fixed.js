@@ -3313,6 +3313,7 @@ var _kbIncCores = {
 
 window._kbRfsData = {};
 window._kanbanResponsavel = {};
+window._kbHistoricoAtribuicao = {};
 window._kbFilterTipos = new Set();
 window._kbFilterDFs = new Set();
 
@@ -3331,8 +3332,66 @@ window._kbToggleFilter = function(type, value) {
   window.renderizarKanbanInconsistencias();
 };
 
-window._kbMudarResponsavel = function(rfId, userId) {
-  window._kanbanResponsavel[rfId] = userId;
+window._kbMudarResponsavel = function(incId, userId) {
+  var anterior = window._kanbanResponsavel[incId] || 'nenhum';
+  if (anterior === userId) return;
+  window._kanbanResponsavel[incId] = userId;
+
+  var usr = _kbUsuarios.find(function(u) { return u.id === userId; }) || _kbUsuarios[0];
+  var ant = _kbUsuarios.find(function(u) { return u.id === anterior; }) || _kbUsuarios[0];
+  var now = new Date();
+  var pad = function(n) { return n < 10 ? '0'+n : ''+n; };
+  var dataFmt = pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()
+    + ' ' + pad(now.getHours())+':'+pad(now.getMinutes());
+  if (!window._kbHistoricoAtribuicao[incId]) window._kbHistoricoAtribuicao[incId] = [];
+  window._kbHistoricoAtribuicao[incId].push({
+    userId: userId,
+    nomeNovo: usr.nome,
+    nomeAnterior: ant.nome,
+    dataFmt: dataFmt,
+    ts: now.toISOString()
+  });
+
+  // Atualiza avatar no modal se estiver aberto
+  var av = document.getElementById('kb-resp-avatar-'+incId);
+  if (av) {
+    av.textContent  = usr.iniciais;
+    av.style.background = usr.cor;
+    av.title = usr.nome;
+  }
+  var lbl = document.getElementById('kb-resp-label-'+incId);
+  if (lbl) lbl.textContent = usr.nome;
+
+  // Adiciona evento na timeline do modal
+  var tl = document.getElementById('kb-timeline-'+incId);
+  if (tl) {
+    var novos = window._kbHistoricoAtribuicao[incId];
+    var entrada = novos[novos.length - 1];
+    var html = '<div style="display:flex;gap:12px;margin-bottom:16px">'
+      + '<div style="display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0">'
+      + '<div style="width:28px;height:28px;border-radius:50%;background:rgba(170,122,50,.15);border:1.5px solid rgba(170,122,50,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba(170,122,50,1)">→</div>'
+      + '</div>'
+      + '<div style="flex:1">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">'
+      + '<span style="background:rgba(170,122,50,.12);color:rgba(170,122,50,1);border:1px solid rgba(170,122,50,.3);border-radius:3px;padding:1px 7px;font-size:9px;font-weight:700;letter-spacing:.07em">ATRIBUIÇÃO</span>'
+      + '<span style="font-size:10px;color:var(--txt3);font-family:monospace">'+entrada.dataFmt+'</span>'
+      + '</div>'
+      + '<div style="font-size:12px;color:var(--txt1);line-height:1.55;margin-bottom:3px">'
+      + (userId === 'nenhum'
+          ? 'Responsável removido · antes: '+entrada.nomeAnterior
+          : 'Atribuído para <strong>'+entrada.nomeNovo+'</strong>'+(anterior !== 'nenhum' ? ' · antes: '+entrada.nomeAnterior : ''))
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--txt2)">Inconsistências · Usuário atual</div>'
+      + '</div></div>';
+    tl.insertAdjacentHTML('afterbegin', html);
+    var cnt = document.getElementById('kb-timeline-count-'+incId);
+    if (cnt) {
+      var n = parseInt(cnt.dataset.count || '0') + 1;
+      cnt.dataset.count = n;
+      cnt.textContent = 'Histórico do Ciclo · '+n+' evento'+(n !== 1 ? 's' : '');
+    }
+  }
+
   window.renderizarKanbanInconsistencias();
 };
 
@@ -3432,7 +3491,13 @@ window.renderizarKanbanInconsistencias = function() {
         + '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'
         + _kbBadge(fluxoRgb, fluxoLbl, true)
         + _kbBadge(origemRgb, origemLbl, true)
-        + '<span style="font-size:10px;color:var(--txt3);margin-left:auto">'+inc.data+'</span>'
+        + (function() {
+            var rid = window._kanbanResponsavel[inc.id] || 'nenhum';
+            if (rid === 'nenhum') return '<span style="font-size:10px;color:var(--txt3);margin-left:auto">'+inc.data+'</span>';
+            var ru = _kbUsuarios.find(function(u) { return u.id === rid; }) || _kbUsuarios[0];
+            return '<span style="font-size:10px;color:var(--txt3);margin-left:auto">'+inc.data+'</span>'
+              + '<div title="'+ru.nome+'" style="width:20px;height:20px;border-radius:50%;background:'+ru.cor+';display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0;margin-left:4px">'+ru.iniciais+'</div>';
+          })()
         + '</div>'
         + '</div>';
     });
@@ -3816,6 +3881,23 @@ window.kbAbrirCard = function(incId) {
     +   colOpts
     + '</select>'
 
+    + (function() {
+        var respAtual = window._kanbanResponsavel[incId] || 'nenhum';
+        var respUser  = _kbUsuarios.find(function(u) { return u.id === respAtual; }) || _kbUsuarios[0];
+        var respOpts  = _kbUsuarios.map(function(u) {
+          return '<option value="'+u.id+'"'+(u.id===respAtual?' selected':'')+'>'+u.nome+'</option>';
+        }).join('');
+        return '<div style="height:1px;background:var(--brd);margin:14px 0"></div>'
+          + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Responsável</div>'
+          + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+          +   '<div id="kb-resp-avatar-'+incId+'" title="'+respUser.nome+'" style="width:28px;height:28px;border-radius:50%;background:'+respUser.cor+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">'+respUser.iniciais+'</div>'
+          +   '<span id="kb-resp-label-'+incId+'" style="font-size:13px;color:var(--txt1);font-weight:500">'+respUser.nome+'</span>'
+          + '</div>'
+          + '<select onchange="window._kbMudarResponsavel(\''+incId+'\',this.value)" style="width:100%;background:var(--inp);border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--txt1);font-family:inherit;outline:none;cursor:pointer">'
+          +   respOpts
+          + '</select>';
+      })()
+
     + '<div style="height:1px;background:var(--brd);margin:14px 0"></div>'
     + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Ações sugeridas</div>'
     + '<div style="display:flex;flex-direction:column;gap:7px">'+acoesHtml+'</div>'
@@ -3832,8 +3914,34 @@ window.kbAbrirCard = function(incId) {
 
     // ── Painel direito: histórico ────────────────────────────────────────────
     + '<div style="flex:1;padding:18px;overflow-y:auto">'
-    +   '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px">Histórico do Ciclo · '+eventos.length+' evento'+(eventos.length !== 1 ? 's' : '')+'</div>'
-    +   timelineHtml
+    +   (function() {
+            var totalEv = eventos.length + (window._kbHistoricoAtribuicao[incId] || []).length;
+            return '<div id="kb-timeline-count-'+incId+'" data-count="'+totalEv+'" style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px">Histórico do Ciclo · '+totalEv+' evento'+(totalEv !== 1 ? 's' : '')+'</div>';
+          })()
+    +   '<div id="kb-timeline-'+incId+'">'
+    +     (function() {
+            var hist = window._kbHistoricoAtribuicao[incId] || [];
+            var histHtml = hist.map(function(h) {
+              return '<div style="display:flex;gap:12px;margin-bottom:16px">'
+                + '<div style="display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0">'
+                + '<div style="width:28px;height:28px;border-radius:50%;background:rgba(170,122,50,.15);border:1.5px solid rgba(170,122,50,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba(170,122,50,1)">→</div>'
+                + '</div>'
+                + '<div style="flex:1">'
+                + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">'
+                + '<span style="background:rgba(170,122,50,.12);color:rgba(170,122,50,1);border:1px solid rgba(170,122,50,.3);border-radius:3px;padding:1px 7px;font-size:9px;font-weight:700;letter-spacing:.07em">ATRIBUIÇÃO</span>'
+                + '<span style="font-size:10px;color:var(--txt3);font-family:monospace">'+h.dataFmt+'</span>'
+                + '</div>'
+                + '<div style="font-size:12px;color:var(--txt1);line-height:1.55;margin-bottom:3px">'
+                + (h.userId === 'nenhum'
+                    ? 'Responsável removido · antes: '+h.nomeAnterior
+                    : 'Atribuído para <strong>'+h.nomeNovo+'</strong> · antes: '+h.nomeAnterior)
+                + '</div>'
+                + '<div style="font-size:10px;color:var(--txt2)">Inconsistências · Usuário atual</div>'
+                + '</div></div>';
+            }).join('');
+            return histHtml + timelineHtml;
+          })()
+    +   '</div>'
     + '</div>'
 
     + '</div>'
