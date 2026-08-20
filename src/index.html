@@ -2324,68 +2324,80 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <div class="pg-title">Inteligência & Insights</div>
       <div class="pg-sub">Visão executiva · CFO & Diretoria · Apropriação de crédito IBS+CBS · Alertas em tempo real · Art. 48 LC 214</div>
     </div>
-    <div class="hdr-act">
+  </div>
+
+  <!-- KPI strip -->
+  <div class="kgrid k4" style="margin-bottom:16px">
+    <div class="kcard">
+      <div class="klbl">Taxa de Aproveitamento</div>
+      <div class="kval" id="intel-aprov-pct" style="color:var(--teal)">—</div>
+      <div class="ksub" id="intel-aprov-val-sub">do crédito IBS+CBS disponível</div>
+    </div>
+    <div class="kcard">
+      <div class="klbl">Já Apropriado</div>
+      <div class="kval" id="intel-aprov-val" style="color:var(--teal)">—</div>
+      <div class="ksub" id="intel-aprov-sub">total confirmado</div>
+    </div>
+    <div class="kcard">
+      <div class="klbl">Crédito Pendente</div>
+      <div class="kval" id="intel-pend-val" style="color:var(--amber)">—</div>
+      <div class="ksub" id="intel-pend-sub">aguardando regularização</div>
+    </div>
+    <div class="kcard">
+      <div class="klbl">Em Risco de Perda</div>
+      <div class="kval" id="intel-risco-val" style="color:var(--red)">—</div>
+      <div class="ksub" id="intel-risco-sub">art. 48 LC 214</div>
     </div>
   </div>
 
-  <!-- Evolução mensal do crédito -->
-  <div class="ccrd" style="margin-bottom:24px">
-    <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Evolução do Crédito Apropriado</div><span class="periodo-info" data-tip="Gráfico de área mensal com três séries: Apropriado (crédito confirmado), Pendente (nao_apropriado) e Vencido/Inc. (statusRegistro crítico). Permite avaliar a tendência de aproveitamento — idealmente a série verde cresce enquanto as demais diminuem. Baseado em RFs de NFs de entrada.">i</span></div>
-    <div class="csub" id="intel-evol-sub">R$ milhões · IBS+CBS · por mês · NFs de entrada</div>
-    <div class="cwrap" style="height:220px"><div id="cAprovMensal"></div></div>
-    <div class="leg">
-      <span class="li"><span class="ls" style="background:var(--p-teal)"></span>Apropriado</span>
-      <span class="li"><span class="ls" style="background:var(--p-amber)"></span>Pendente</span>
-      <span class="li"><span class="ls" style="background:var(--p-red)"></span>Vencido/Inc.</span>
-    </div>
-  </div>
-
-  <!-- Score fornecedores + Projeção recuperação -->
-  <div class="cgrid c11" style="margin-bottom:24px">
-    <div class="ccrd">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
-        <div class="ctitle" style="margin-bottom:0">Score de risco por fornecedor</div>
-        <div class="periodo-wrap" style="position:relative">
-          <span class="periodo-info" data-tip="Fórmula: Score = Vol. Pendente ÷ Vol. Total Originado × 10&#10;&#10;Gatilhos de cor — racional:&#10;• Verde · Baixo (&lt;15%) — fornecedor com alta taxa de apropriação; créditos fluem normalmente, risco fiscal mínimo.&#10;• Âmbar · Médio (15–35%) — volume relevante ainda não apropriado; requer monitoramento para evitar acúmulo.&#10;• Laranja · Alto (35–60%) — mais de um terço do crédito originado está parado; indica falha recorrente de registro ou conciliação.&#10;• Vermelho · Crítico (&gt;60%) — a maior parte do crédito originado não foi aproveitada; risco elevado de perda fiscal e prescrição.&#10;&#10;Ordenação: maior volume total originado. Período: filtro do módulo.">i</span>
-        </div>
+  <!-- Linha 1: Evolução + Mapa de Risco -->
+  <div style="display:flex;gap:16px;margin-bottom:14px;align-items:stretch">
+    <div class="ccrd" style="flex:55;min-width:0">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Evolução do Crédito Apropriado</div><span class="periodo-info" data-tip="Gráfico de área mensal com três séries: Apropriado (crédito confirmado), Pendente (nao_apropriado) e Vencido/Inc. (statusRegistro crítico). Permite avaliar a tendência de aproveitamento — idealmente a série verde cresce enquanto as demais diminuem. Baseado em RFs de NFs de entrada.">i</span></div>
+      <div class="csub">R$ milhões · IBS+CBS · por mês · NFs de entrada</div>
+      <div class="cwrap" style="height:165px"><div id="cAprovMensal"></div></div>
+      <div class="leg" style="margin-top:6px">
+        <span class="li"><span class="ls" style="background:var(--p-teal)"></span>Apropriado</span>
+        <span class="li"><span class="ls" style="background:var(--p-amber)"></span>Pendente</span>
+        <span class="li"><span class="ls" style="background:var(--p-red)"></span>Vencido/Inc.</span>
       </div>
-      <div class="csub">% do volume não apropriado sobre o total originado por fornecedor</div>
-      <div class="sbars" id="score-bars" style="margin-top:12px"></div>
     </div>
-    <div class="ccrd">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Projeção — Recuperação de Crédito</div><span class="periodo-info" data-tip="Estimativa do impacto financeiro caso todos os créditos com statusCredito = nao_apropriado sejam regularizados. O cálculo considera o volume pendente atual menos os créditos em risco de prescrição (statusRegistro = vencido). Serve como referência para priorização de ações de cobrança e conciliação junto aos fornecedores.">i</span></div>
-      <div class="csub">Impacto financeiro projetado se créditos pendentes forem regularizados</div>
-      <div id="intel-projecao" style="margin-top:14px"></div>
-    </div>
-  </div>
-  <!-- Mapa de risco: Score × Prazo de pagamento -->
-  <div class="ccrd" style="margin-bottom:24px">
-    <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
-      <div class="ctitle" style="margin-bottom:0">Mapa de Risco de Fornecedores</div>
-      <span class="periodo-info" data-tip="Dispersão Score × Prazo de Pagamento. Cada ponto representa um fornecedor; o tamanho é proporcional ao volume financeiro médio dos últimos 3 meses. Quadrante crítico (vermelho): Score abaixo de 80 e prazo acima de 60 dias — alta exposição fiscal combinada com prazo longo de liquidação. Quadrante de atenção (âmbar): baixo score, prazo curto. Quadrante seguro (verde): score ≥ 80 independente do prazo.">i</span>
-    </div>
-    <div class="csub">Score de aproveitamento de crédito × prazo contratual de pagamento · área do ponto = volume médio últimos 3 meses</div>
-    <div class="cwrap" style="height:320px"><div id="cMapaRisco"></div></div>
-    <div style="display:flex;gap:20px;margin-top:10px;flex-wrap:wrap">
-      <span class="li"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--red);margin-right:4px"></span>Crítico — score &lt;80 e prazo &gt;60d</span>
-      <span class="li"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--amber);margin-right:4px"></span>Atenção — score &lt;80 e prazo ≤60d</span>
-      <span class="li"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);margin-right:4px"></span>Saudável — score ≥80</span>
+    <div class="ccrd" style="flex:45;min-width:0">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px"><div class="ctitle" style="margin-bottom:0">Mapa de Risco de Fornecedores</div><span class="periodo-info" data-tip="Dispersão Score × Prazo de Pagamento. Cada ponto representa um fornecedor; o tamanho é proporcional ao volume financeiro médio dos últimos 3 meses. Quadrante crítico (vermelho): Score abaixo de 80 e prazo acima de 60 dias — alta exposição fiscal combinada com prazo longo de liquidação. Quadrante de atenção (âmbar): baixo score, prazo curto. Quadrante seguro (verde): score ≥ 80 independente do prazo.">i</span></div>
+      <div class="csub">Score × prazo · área do ponto = volume médio 3 meses</div>
+      <div class="cwrap" style="height:165px"><div id="cMapaRisco"></div></div>
+      <div style="display:flex;gap:14px;margin-top:6px;flex-wrap:wrap">
+        <span class="li" style="font-size:11px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:4px"></span>Crítico</span>
+        <span class="li" style="font-size:11px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);margin-right:4px"></span>Atenção</span>
+        <span class="li" style="font-size:11px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:4px"></span>Saudável</span>
+      </div>
     </div>
   </div>
 
-  <div class="ccrd" style="margin-bottom:24px">
-    <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Volume Financeiro de NFs — Contratos RAD (90/120 dias)</div><span class="periodo-info" data-tip="Ranking de fornecedores com contratos de prazo 90 ou 120 dias que optaram pelo RAD (Regime de Atribuição Diferida). No RAD, o adquirente retém e recolhe o IBS+CBS na liquidação financeira da NF. Contratos mais longos (120d) concentram maior risco de crédito — o prazo entre emissão e liquidação é crítico para a apropriação.">i</span></div><div class="csub">R$ milhões · por fornecedor, considerando apenas contratos com prazo de 90 ou 120 dias e optantes pelo RAD</div>
-    <div class="cwrap" style="height:200px"><div id="cRadPrazo"></div></div>
-    <div class="leg"><span class="li"><span class="ls" style="background:var(--p-teal)"></span>90 dias</span><span class="li"><span class="ls" style="background:var(--p-blue)"></span>120 dias</span></div>
-    <div class="twrap" style="margin-top:16px"><table><thead><tr><th>Fornecedor</th><th>CNPJ</th><th>Contrato</th><th>Prazo</th><th class="r">Volume de NF</th></tr></thead><tbody id="t-rad-prazo"></tbody></table></div>
+  <!-- Linha 2: Score Fornecedores + RAD -->
+  <div style="display:flex;gap:16px;margin-bottom:14px;align-items:stretch">
+    <div class="ccrd" style="flex:42;min-width:0">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Score de risco por fornecedor</div><span class="periodo-info" data-tip="Fórmula: Score = Vol. Pendente ÷ Vol. Total Originado × 10&#10;&#10;Gatilhos de cor — racional:&#10;• Verde · Baixo (&lt;15%) — fornecedor com alta taxa de apropriação; créditos fluem normalmente, risco fiscal mínimo.&#10;• Âmbar · Médio (15–35%) — volume relevante ainda não apropriado; requer monitoramento para evitar acúmulo.&#10;• Laranja · Alto (35–60%) — mais de um terço do crédito originado está parado; indica falha recorrente de registro ou conciliação.&#10;• Vermelho · Crítico (&gt;60%) — a maior parte do crédito originado não foi aproveitada; risco elevado de perda fiscal e prescrição.&#10;&#10;Ordenação: maior volume total originado. Período: filtro do módulo.">i</span></div>
+      <div class="csub">% do volume não apropriado sobre o total originado por fornecedor</div>
+      <div class="sbars" id="score-bars" style="margin-top:10px"></div>
+    </div>
+    <div class="ccrd" style="flex:58;min-width:0">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Volume Financeiro NFs — RAD 90/120 dias</div><span class="periodo-info" data-tip="Ranking de fornecedores com contratos de prazo 90 ou 120 dias que optaram pelo RAD (Regime de Atribuição Diferida). No RAD, o adquirente retém e recolhe o IBS+CBS na liquidação financeira da NF. Contratos mais longos (120d) concentram maior risco de crédito — o prazo entre emissão e liquidação é crítico para a apropriação.">i</span></div>
+      <div class="csub">R$ milhões · por fornecedor · contratos com prazo RAD de 90 ou 120 dias</div>
+      <div class="cwrap" style="height:155px"><div id="cRadPrazo"></div></div>
+      <div class="leg" style="margin-top:6px"><span class="li"><span class="ls" style="background:var(--p-teal)"></span>90 dias</span><span class="li"><span class="ls" style="background:var(--p-blue)"></span>120 dias</span></div>
+    </div>
   </div>
-  <!-- Alertas dinâmicos -->
+
+  <!-- Alertas compactos -->
   <div class="crd">
     <div class="sechdr"><h2>Alertas e anomalias detectadas</h2><p>Gerados dos dados reais de RF · IA monitora vencimentos, inconsistências e divergências de crédito</p></div>
-    <div class="alist" id="intel-alerts">
-      <div style="text-align:center;padding:24px;color:var(--txt3);font-size:12px">Carregando alertas…</div>
+    <div class="alist" id="intel-alerts" style="max-height:200px;overflow-y:auto">
+      <div style="text-align:center;padding:18px;color:var(--txt3);font-size:12px">Carregando alertas…</div>
     </div>
   </div>
+  <!-- mantém intel-projecao oculto para JS não quebrar -->
+  <div id="intel-projecao" style="display:none"></div>
 </div>
 
 <!-- ASSISTENTE TRIBUTÁRIO -->

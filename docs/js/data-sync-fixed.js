@@ -2299,7 +2299,7 @@ window.atualizarInteligencia = function() {
       { data: dAprop, color: PALETTE.teal,  label: 'Apropriado' },
       { data: dPend,  color: PALETTE.amber, label: 'A Apropriar' },
       { data: dRisco, color: PALETTE.red,   label: 'Em Risco'   }
-    ], labM, 200);
+    ], labM, 155);
   }
 
   // ── 3. Volume financeiro NFs — Contratos RAD ────────────
@@ -2323,7 +2323,7 @@ window.atualizarInteligencia = function() {
     var radLabels = radTop.map(function(r){ return r.nome.split(' ')[0]; });
     var rad90  = radTop.map(function(r){ return +(r.vol90  / 1e6).toFixed(2); });
     var rad120 = radTop.map(function(r){ return +(r.vol120 / 1e6).toFixed(2); });
-    if (typeof svgBar === 'function') svgBar('cRadPrazo', [{ data: rad90, color: 'var(--teal)', label: '90d' }, { data: rad120, color: 'var(--blue)', label: '120d' }], radLabels, 200);
+    if (typeof svgBar === 'function') svgBar('cRadPrazo', [{ data: rad90, color: 'var(--teal)', label: '90d' }, { data: rad120, color: 'var(--blue)', label: '120d' }], radLabels, 145);
     var tbody = document.getElementById('t-rad-prazo');
     if (tbody) {
       var rows = '';
@@ -2422,7 +2422,7 @@ window.atualizarInteligencia = function() {
     if (!pontos.length) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--txt3);font-size:12px">Sem fornecedores com contrato vinculado</div>'; return; }
 
     // SVG scatter — X = Score, Y = Prazo (invertido: maior prazo = mais exposto = topo)
-    var H = 320, padT = 28, padB = 46, padL = 54, padR = 28;
+    var H = 200, padT = 22, padB = 38, padL = 50, padR = 20;
     var W = (el.parentElement && el.parentElement.offsetWidth > 100 ? el.parentElement.offsetWidth : 560);
     var plotW = W - padL - padR, plotH = H - padT - padB;
 
