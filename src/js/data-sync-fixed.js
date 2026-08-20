@@ -5635,13 +5635,18 @@ window._renderFcChart = function(canvas, chartStore, opts) {
   });
 };
 
-window.renderizarFCTForecast = function() {
+window.renderizarFCTForecast = function(_retry) {
   var canvas = document.getElementById('fct-fc-canvas');
   var dashCanvas = document.getElementById('dash-fc-canvas');
   if (!canvas && !dashCanvas) return;
   // Se FCT canvas existe mas está oculto, só renderizar no dash
   if (canvas && canvas.parentElement && canvas.parentElement.offsetWidth < 10) {
-    canvas = null; // pular FCT canvas nesta chamada
+    canvas = null;
+  }
+  // Se dash canvas existe mas ainda sem largura, aguardar layout
+  if (dashCanvas && dashCanvas.parentElement && dashCanvas.parentElement.offsetWidth < 10) {
+    if (!_retry || _retry < 5) { setTimeout(function(){ window.renderizarFCTForecast((_retry||0)+1); }, 120); return; }
+    dashCanvas = null;
   }
   if (!canvas && !dashCanvas) return;
 
