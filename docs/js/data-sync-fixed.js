@@ -1451,6 +1451,149 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   set('cred-venc-forn-pct',    vencNaoExt > 0 ? pct(vencForn, vencNaoExt) + ' dos vencidos' : '—');
   set('cred-venc-rad',         fmt(vencRad));
   set('cred-venc-rad-pct',     vencNaoExt > 0 ? pct(vencRad, vencNaoExt) + ' dos vencidos' : '—');
+  setTimeout(function(){ try{window.renderizarCalendarioExtincao && window.renderizarCalendarioExtincao();}catch(e){} }, 0);
+};
+
+window.renderizarCalendarioExtincao = function() {
+  var el = document.getElementById('cred-calendario-extincao');
+  if (!el) return;
+  var hoje = new Date();
+  var byMonth = {};
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if ((rf.statusCredito || '') !== 'nao_apropriado') return;
+      var dataNF = rf.data || nf.data || '';
+      if (!dataNF) return;
+      var d = new Date(dataNF);
+      if (isNaN(d.getTime())) return;
+      var extDate = new Date(d);
+      extDate.setFullYear(extDate.getFullYear() + 5);
+      if (extDate <= hoje) return;
+      var ym = extDate.getFullYear() + '-' + String(extDate.getMonth() + 1).padStart(2, '0');
+      byMonth[ym] = (byMonth[ym] || 0) + (rf.valor || 0);
+    });
+  });
+  var meses = Object.keys(byMonth).sort().slice(0, 18);
+  if (!meses.length) {
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--txt3);font-size:12px">Nenhum crédito com extinção futura identificado no período.</div>';
+    return;
+  }
+  var maxVal = Math.max.apply(null, meses.map(function(m) { return byMonth[m]; }));
+  function fmtV(v) { return v >= 1e6 ? 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M' : 'R$ ' + Math.round(v/1e3) + 'K'; }
+  var W = 700, H = 130, padB = 30, padT = 14;
+  var n = meses.length;
+  var barW = Math.min(32, Math.max(10, Math.floor((W - 16) / n) - 4));
+  var totalBarSpace = n * barW;
+  var spacing = n > 1 ? (W - 16 - totalBarSpace) / (n - 1) : 0;
+  var svgBars = '';
+  meses.forEach(function(m, i) {
+    var v = byMonth[m];
+    var bh = maxVal > 0 ? Math.max(4, Math.round((v / maxVal) * (H - padT - padB))) : 4;
+    var x = 8 + i * (barW + spacing);
+    var y = H - padB - bh;
+    var mDate = new Date(m + '-01');
+    var diffMonths = (mDate - hoje) / (1000 * 60 * 60 * 24 * 30.4);
+    var color = diffMonths < 3 ? 'var(--red)' : diffMonths < 6 ? 'var(--amber)' : 'var(--green)';
+    var lbl = m.substring(5, 7) + '/' + m.substring(2, 4);
+    var valY = y - 4;
+    var valTxt = v >= 1e6 ? (v/1e6).toFixed(1) + 'M' : Math.round(v/1e3) + 'K';
+    svgBars += '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + bh + '" rx="2" fill="' + color + '" opacity=".85"/>';
+    if (bh > 18) svgBars += '<text x="' + (x + barW/2) + '" y="' + valY + '" font-size="7.5" text-anchor="middle" fill="var(--txt2)" font-family="Inter,system-ui,sans-serif">' + valTxt + '</text>';
+    svgBars += '<text x="' + (x + barW/2) + '" y="' + (H - padB + 13) + '" font-size="8" text-anchor="middle" fill="var(--txt3)" font-family="Inter,system-ui,sans-serif">' + lbl + '</text>';
+  });
+  var totalRisco = meses.reduce(function(a, m) { return a + byMonth[m]; }, 0);
+  el.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;display:block" xmlns="http://www.w3.org/2000/svg">' + svgBars + '</svg>' +
+    '<div style="font-size:11px;color:var(--txt3);margin-top:6px;text-align:right">Total em risco de extinção: <strong style="color:var(--txt1)">' + fmtV(totalRisco) + '</strong> · ' + meses.length + ' meses com créditos pendentes</div>';
+};
+
+window.renderizarForecastAproveitamento = function(_retry) {
+  var canvas = document.getElementById('fct-aprov-canvas');
+  if (!canvas) return;
+  if (canvas.parentElement && canvas.parentElement.offsetWidth < 10) {
+    if (!_retry || _retry < 5) { setTimeout(function(){ window.renderizarForecastAproveitamento((_retry||0)+1); }, 150); return; }
+    return;
+  }
+  if (!window.Chart) return;
+  var byMonth = {};
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      var mes = (rf.data || nf.data || '').substring(0, 7);
+      if (!mes) return;
+      if (!byMonth[mes]) byMonth[mes] = { orig: 0, aprop: 0, pend: 0 };
+      var v = rf.valor || 0;
+      byMonth[mes].orig += v;
+      var sc = rf.statusCredito || '';
+      if (sc === 'apropriado' || sc === 'utilizado') byMonth[mes].aprop += v;
+      else byMonth[mes].pend += v;
+    });
+  });
+  var mesesReal = Object.keys(byMonth).sort();
+  if (!mesesReal.length) return;
+  var taxas = mesesReal.map(function(m) { var b = byMonth[m]; return b.orig > 0 ? b.aprop / b.orig : 0; });
+  function movAvg(arr, idx) { var n = Math.min(3, idx); if (!n) return arr[0]||0; var s=0; for(var i=idx-n;i<idx;i++) s+=arr[i]; return s/n; }
+  var N = mesesReal.length;
+  var lastMes = mesesReal[N-1], lastY = parseInt(lastMes.substring(0,4),10), lastM = parseInt(lastMes.substring(5,7),10);
+  var mesesFc = [];
+  for (var m2 = lastM+1; m2 <= Math.min(12, lastM+6); m2++) mesesFc.push(lastY + '-' + String(m2).padStart(2,'0'));
+  if (mesesFc.length < 6 && lastM + 6 > 12) { var ny = lastY+1; for (var m3=1; m3 <= (lastM+6-12); m3++) mesesFc.push(ny+'-'+String(m3).padStart(2,'0')); }
+  var taxasFc = mesesFc.map(function(_, i) { return movAvg(taxas, N+i); });
+  var allMeses = mesesReal.concat(mesesFc);
+  var labels = allMeses.map(function(m) { return m.substring(5,7)+'/'+m.substring(2,4); });
+  var apropData = mesesReal.map(function(m) { return Math.round(byMonth[m].aprop); });
+  var pendData  = mesesReal.map(function(m) { return Math.round(byMonth[m].pend); });
+  var taxaReal = taxas.map(function(t) { return Math.round(t*100); });
+  var taxaFcVis = mesesReal.map(function() { return null; });
+  if (taxaReal.length) taxaFcVis[taxaReal.length-1] = taxaReal[taxaReal.length-1];
+  taxasFc.forEach(function(t) { taxaFcVis.push(Math.round(t*100)); });
+  var apropFull = apropData.concat(mesesFc.map(function() { return null; }));
+  var pendFull  = pendData.concat(mesesFc.map(function() { return null; }));
+  var taxaRealFull = taxaReal.concat(mesesFc.map(function() { return null; }));
+  var isDark = document.documentElement.getAttribute('data-theme')==='dark' || (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches);
+  var gridC = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+  var tickC = isDark ? '#6b7280' : '#9ca3af';
+  if (window._fctAprovChart) { try{window._fctAprovChart.destroy();}catch(e){} window._fctAprovChart=null; }
+  var H = Math.max(180, Math.min(260, canvas.parentElement.offsetWidth * 0.3));
+  canvas.style.height = H + 'px';
+  var splitIdx = N - 1;
+  var forecastBgPlugin = { id:'apBg', beforeDraw: function(chart) {
+    if (!mesesFc.length) return;
+    var ctx2=chart.ctx, xs=chart.scales.x, ys=chart.scales.y;
+    var xSplit = xs.getPixelForValue(splitIdx + 0.5);
+    ctx2.save(); ctx2.fillStyle = isDark?'rgba(96,165,250,.05)':'rgba(24,95,165,.04)';
+    ctx2.fillRect(xSplit, ys.top, xs.right-xSplit, ys.bottom-ys.top);
+    ctx2.strokeStyle = isDark?'rgba(96,165,250,.3)':'rgba(24,95,165,.22)'; ctx2.setLineDash([4,4]); ctx2.lineWidth=1;
+    ctx2.beginPath(); ctx2.moveTo(xSplit,ys.top); ctx2.lineTo(xSplit,ys.bottom); ctx2.stroke();
+    ctx2.setLineDash([]); ctx2.restore();
+  }};
+  window._fctAprovChart = new Chart(canvas, {
+    type: 'bar',
+    data: { labels: labels, datasets: [
+      { label:'Apropr. realizado', data:apropFull, backgroundColor:'rgba(29,158,117,.75)', yAxisID:'y', order:2 },
+      { label:'A Apropriar realizado', data:pendFull, backgroundColor:'rgba(245,158,11,.55)', yAxisID:'y', order:2 },
+      { label:'Taxa apropr.', data:taxaRealFull, type:'line', borderColor:'#1d9e75', backgroundColor:'transparent', borderWidth:2, pointRadius:3, yAxisID:'y2', order:1, tension:.3 },
+      { label:'Taxa forecast', data:taxaFcVis, type:'line', borderColor:'#1d9e75', backgroundColor:'transparent', borderWidth:2, borderDash:[4,3], pointRadius:3, yAxisID:'y2', order:1, tension:.3 }
+    ]},
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,backgroundColor:isDark?'#1c1f2a':'#fff',borderColor:isDark?'#2d3144':'#e4e6ea',borderWidth:1,titleColor:tickC,bodyColor:tickC,callbacks:{label:function(ctx){if(ctx.dataset.yAxisID==='y2')return ctx.dataset.label+': '+(ctx.parsed.y||0)+'%';var v=ctx.parsed.y||0;return ctx.dataset.label+': '+(v>=1e6?'R$ '+(v/1e6).toFixed(1)+'M':'R$ '+Math.round(v/1e3)+'K');}}}},
+      scales:{
+        x:{ticks:{color:tickC,font:{size:10}},grid:{color:gridC}},
+        y:{position:'left',ticks:{color:tickC,font:{size:10},callback:function(v){return v>=1e6?(v/1e6).toFixed(1)+'M':Math.round(v/1e3)+'K';}},grid:{color:gridC}},
+        y2:{position:'right',min:0,max:100,ticks:{color:tickC,font:{size:10},callback:function(v){return v+'%';}},grid:{drawOnChartArea:false}}
+      },
+      stacked:false
+    },
+    plugins:[forecastBgPlugin]
+  });
+  function fmtV(v){return v>=1e6?'R$ '+(v/1e6).toFixed(1).replace('.',',')+'M':'R$ '+Math.round(v/1e3)+'K';}
+  function setEl(id,v,c){var e=document.getElementById(id);if(!e)return;e.textContent=v;if(c)e.style.color=c;}
+  var taxaMedia = taxas.length ? Math.round(taxas.reduce(function(a,b){return a+b;},0)/taxas.length*100) : 0;
+  var totalPend = Object.keys(byMonth).reduce(function(a,m){return a+byMonth[m].pend;},0);
+  var totalOrig = Object.keys(byMonth).reduce(function(a,m){return a+byMonth[m].orig;},0);
+  var perdaAnual = totalOrig > 0 ? totalOrig * (1 - taxaMedia/100) : 0;
+  setEl('fct-aprov-taxa', taxaMedia + '%');
+  setEl('fct-aprov-pendente', fmtV(totalPend));
+  setEl('fct-aprov-perda', fmtV(perdaAnual));
 };
 
 window.atualizarPerdaAcumulada = function() {
