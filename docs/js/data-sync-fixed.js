@@ -856,16 +856,16 @@ window._rfGerarHistorico = function(rf, nf) {
   // Conciliação de Apuração — valores fiscais vs. Apuração Assistida Gov
   var _concRA = rf._concRegApur || nf._concRegApur || null;
   if (_concRA) {
-    var _clsA = _concRA.concStatus === 'confirmada' ? 'ok' : _concRA.concStatus === 'divergente' ? 'erro' : 'pending';
-    var _lblA = { confirmada:'Confirmada', divergente:'Divergente', pendente:'Pendente' }[_concRA.concStatus] || _concRA.concStatus;
+    var _clsA = _concRA.concStatus === 'confirmada' ? 'ok' : _concRA.concStatus === 'inconsistencia' ? 'erro' : 'pending';
+    var _lblA = { confirmada:'Confirmada', inconsistencia:'Inconsistência', pendente:'Pendente' }[_concRA.concStatus] || _concRA.concStatus;
     ev.push(mkEv(_concRA.concTs, 'CONC APURAÇÃO', 'Conciliação', 'SplitHub',
       'Conciliação de Apuração · valores calculados × Apuração Assistida Gov · status: ' + _lblA + ' · ' + _concRA.concId + ' · ' + (rf.tipoFiscal || '').toUpperCase(), _clsA));
   }
   // Conciliação Financeira — liquidação, segregação IBS/CBS e comprovantes
   var _concRF = rf._concRegFin || nf._concRegFin || null;
   if (_concRF) {
-    var _clsF = _concRF.concStatus === 'confirmada' ? 'ok' : _concRF.concStatus === 'divergente' ? 'erro' : 'pending';
-    var _lblF = { confirmada:'Confirmada', divergente:'Divergente', pendente:'Pendente' }[_concRF.concStatus] || _concRF.concStatus;
+    var _clsF = _concRF.concStatus === 'confirmada' ? 'ok' : _concRF.concStatus === 'inconsistencia' ? 'erro' : 'pending';
+    var _lblF = { confirmada:'Confirmada', inconsistencia:'Inconsistência', pendente:'Pendente' }[_concRF.concStatus] || _concRF.concStatus;
     ev.push(mkEv(_concRF.concTs, 'CONC FINANCEIRA', 'Conciliação', 'SplitHub',
       'Conciliação Financeira · liquidação financeira e segregação IBS/CBS · status: ' + _lblF + ' · ' + _concRF.concId + ' · ' + (rf.tipoFiscal || '').toUpperCase(), _clsF));
   }
@@ -2357,9 +2357,9 @@ function _concHash(str) {
   return Math.abs(h);
 }
 
-// capur_status: 'conciliado' | 'divergente' | 'pendente' | 'estornado'
-// cfin_status:  'conciliado' | 'divergente' | 'pendente' | 'estornado'
-var _capurDist = ['conciliado','conciliado','conciliado','conciliado','conciliado','conciliado','conciliado','divergente','divergente','pendente'];
+// capur_status: 'conciliado' | 'inconsistencia' | 'pendente' | 'estornado'
+// cfin_status:  'conciliado' | 'inconsistencia' | 'pendente' | 'estornado'
+var _capurDist = ['conciliado','conciliado','conciliado','conciliado','conciliado','conciliado','conciliado','inconsistencia','inconsistencia','pendente'];
 
 function _concBuildLista(filtroMes) {
   var lista = window.nfListaFiltradaGlobal || [];
@@ -2376,7 +2376,7 @@ function _concBuildLista(filtroMes) {
 
     // Valor total da DF vem direto do registro NF
     var valorDF = nf.valorTotal || 0;
-    var valorGov = capur_status === 'divergente'
+    var valorGov = capur_status === 'inconsistencia'
       ? valorDF * (1 + ((seed % 7) - 3) * 0.003)
       : valorDF;
     var deltaValor = valorGov - valorDF;
@@ -2416,11 +2416,11 @@ function _concBuildLista(filtroMes) {
       var paidCount = (ibsPago ? 1 : 0) + (cbsPago ? 1 : 0);
       var incCount  = (ibsInc  ? 1 : 0) + (cbsInc  ? 1 : 0);
       if (paidCount === 2 && incCount === 0)      cfin_status = 'conciliado';
-      else if (incCount > 0)                      cfin_status = 'divergente';
+      else if (incCount > 0)                      cfin_status = 'inconsistencia';
       else                                        cfin_status = 'pendente';
       comprovante = ibsPago && cbsPago;
-      proxAcao = cfin_status === 'conciliado' ? '—'
-        : cfin_status === 'divergente'        ? 'Resolver inconsistência de pagamento'
+      proxAcao = cfin_status === 'conciliado'    ? '—'
+        : cfin_status === 'inconsistencia'       ? 'Resolver inconsistência de pagamento'
         : 'Aguardar comprovantes IBS + CBS';
     }
 
@@ -2428,7 +2428,7 @@ function _concBuildLista(filtroMes) {
     var apurSeed   = _concHash((nf.numero || '') + (nf.cnpj || '') + 'APUR' + idx);
     var concIdApur = 'CAPUR-' + (apurSeed >>> 0).toString(16).toUpperCase().padStart(8, '0');
     var apurHora   = String(9 + (apurSeed % 4)).padStart(2,'0') + ':' + String((apurSeed % 59) + 1).padStart(2,'0');
-    var apurConcStatus = capur_status === 'conciliado' ? 'confirmada' : capur_status === 'divergente' ? 'divergente' : 'pendente';
+    var apurConcStatus = capur_status === 'conciliado' ? 'confirmada' : capur_status === 'inconsistencia' ? 'inconsistencia' : 'pendente';
     var concRegApur = { concId: concIdApur, concTs: dataApur + 'T' + apurHora, concStatus: apurConcStatus, tipo: 'apuracao' };
 
     // ── Conciliação Financeira (liquidação, segregação IBS/CBS, comprovantes) ─────────
@@ -2438,7 +2438,7 @@ function _concBuildLista(filtroMes) {
       var finSeed    = _concHash((nf.numero || '') + (nf.cnpj || '') + 'FIN' + idx);
       var concIdFin  = 'CFIN-' + (finSeed >>> 0).toString(16).toUpperCase().padStart(8, '0');
       var finHora    = String(13 + (finSeed % 4)).padStart(2,'0') + ':' + String((finSeed % 59) + 1).padStart(2,'0');
-      var finConcStatus = cfin_status === 'conciliado' ? 'confirmada' : cfin_status === 'divergente' ? 'divergente' : 'pendente';
+      var finConcStatus = cfin_status === 'conciliado' ? 'confirmada' : cfin_status === 'inconsistencia' ? 'inconsistencia' : 'pendente';
       var dataFinISO = window._rfAddDays ? window._rfAddDays(dataApur, 15) : dataApur;
       concRegFin = { concId: concIdFin, concTs: dataFinISO + 'T' + finHora, concStatus: finConcStatus, tipo: 'financeira' };
     }
@@ -2525,13 +2525,13 @@ function _concRFDetail(nf, ibsRF, cbsRF) {
 }
 
 function _capurBadge(s) {
-  var map = { conciliado:'var(--green)', divergente:'var(--red)', pendente:'var(--amber)', estornado:'#6B7280' };
-  var lbl = { conciliado:'CAPUR OK', divergente:'Divergência CAPUR', pendente:'Ag. Apuração', estornado:'Estornado' };
+  var map = { conciliado:'var(--green)', inconsistencia:'var(--red)', pendente:'var(--amber)', estornado:'#6B7280' };
+  var lbl = { conciliado:'CAPUR OK', inconsistencia:'Inconsistência CAPUR', pendente:'Ag. Apuração', estornado:'Estornado' };
   return '<span style="background:'+(map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+(lbl[s]||s)+'</span>';
 }
 function _cfinBadge(s) {
-  var map = { conciliado:'var(--green)', divergente:'var(--red)', pendente:'var(--amber)', estornado:'#6B7280' };
-  var lbl = { conciliado:'CFIN OK', divergente:'Divergência CFIN', pendente:'Ag. Comprovantes', estornado:'Estornado' };
+  var map = { conciliado:'var(--green)', inconsistencia:'var(--red)', pendente:'var(--amber)', estornado:'#6B7280' };
+  var lbl = { conciliado:'CFIN OK', inconsistencia:'Inconsistência CFIN', pendente:'Ag. Comprovantes', estornado:'Estornado' };
   return '<span style="background:'+(map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+(lbl[s]||s)+'</span>';
 }
 // Compat — aliases para código legado
@@ -2561,9 +2561,9 @@ window.atualizarEstatisticasConciliacao = function() {
   var credAprop = 0;
   lista.forEach(function(r) {
     if (r.capur_status === 'conciliado') apurConf++;
-    if (r.capur_status === 'divergente') apurDiv++;
-    if (r.cfin_status === 'conciliado')  finComp++;
-    if (r.cfin_status === 'divergente')  finInc++;
+    if (r.capur_status === 'inconsistencia') apurDiv++;
+    if (r.cfin_status === 'conciliado')      finComp++;
+    if (r.cfin_status === 'inconsistencia')  finInc++;
     if (r.cfin_status === 'pendente')    finPend++;
     if (r.capur_status === 'conciliado' && r.cfin_status === 'conciliado') credAprop++;
   });
@@ -2707,8 +2707,8 @@ function _concUnifiedRender() {
       + (function concChips(ra, rf2) {
           function chip(c, label) {
             if (!c) return '';
-            var cCol = c.concStatus==='confirmada'?'29,158,117':c.concStatus==='divergente'?'163,45,45':'186,117,23';
-            var cLbl = {confirmada:'Confirmada',divergente:'Divergente',pendente:'Pendente'}[c.concStatus]||c.concStatus;
+            var cCol = c.concStatus==='confirmada'?'29,158,117':c.concStatus==='inconsistencia'?'163,45,45':'186,117,23';
+            var cLbl = {confirmada:'Confirmada',inconsistencia:'Inconsistência',pendente:'Pendente'}[c.concStatus]||c.concStatus;
             var ts = window._rfFmtTS ? window._rfFmtTS(c.concTs) : c.concTs;
             return '<span style="display:inline-flex;align-items:center;gap:5px;border:1px solid rgba('+cCol+',.3);border-radius:6px;padding:3px 9px;font-size:11px;font-family:monospace;background:rgba('+cCol+',.08);color:rgba('+cCol+',1)" title="'+label+'">'
               + '⇌ <span style="font-size:9px;opacity:.7">'+label+'</span> ' + c.concId + ' · ' + cLbl + ' · ' + ts
