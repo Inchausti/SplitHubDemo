@@ -1546,19 +1546,17 @@ window.renderizarForecastAproveitamento = function(_retry) {
       else byMonth[mes].pend += v;
     });
   });
-  var todosOsMesesAp = Object.keys(byMonth).sort();
-  if (!todosOsMesesAp.length) {
+  var mesesReal = Object.keys(byMonth).sort();
+  if (!mesesReal.length) {
     if (!_retry || _retry < 10) { setTimeout(function(){ window.renderizarForecastAproveitamento((_retry||0)+1); }, 300); return; }
     return;
   }
-  var cutoffAp = new Date().toISOString().substring(0, 7);
-  var mesesReal = todosOsMesesAp.filter(function(m) { return m <= cutoffAp; });
-  if (!mesesReal.length) mesesReal = todosOsMesesAp.slice(0, Math.ceil(todosOsMesesAp.length / 2));
   var taxas = mesesReal.map(function(m) { var b = byMonth[m]; return b.orig > 0 ? b.aprop / b.orig : 0; });
   var N = mesesReal.length;
   var lastMes = mesesReal[N-1], lastY = parseInt(lastMes.substring(0,4),10), lastM = parseInt(lastMes.substring(5,7),10);
   var mesesFc = [];
-  for (var m2 = lastM+1; m2 <= 12; m2++) mesesFc.push(lastY + '-' + String(m2).padStart(2,'0'));
+  for (var m2 = lastM+1; m2 <= Math.min(12, lastM+6); m2++) mesesFc.push(lastY + '-' + String(m2).padStart(2,'0'));
+  if (mesesFc.length < 6 && lastM + 6 > 12) { var ny = lastY+1; for (var m3=1; m3 <= (lastM+6-12); m3++) mesesFc.push(ny+'-'+String(m3).padStart(2,'0')); }
   // Média móvel progressiva — evita acesso a índices fora dos limites
   var taxasFc = (function() {
     var buf = taxas.slice(), res = [];
