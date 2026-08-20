@@ -2348,7 +2348,7 @@ window.atualizarInteligencia = function() {
       var _sc3 = rf.statusCredito || rf.status || '';
       var _sr3 = rf.statusRegistro || null;
       if (finalOk[_sc3]) scoreMap[ent].good++;
-      if (_sr3 === 'inconsistencia' || _sr3 === 'vencido' || _sr3 === 'em_risco') scoreMap[ent].bad++;
+      if (_sr3 === 'vencido') scoreMap[ent].bad++;
     });
   });
   var scoreLista = Object.keys(scoreMap).map(function(ent) {
@@ -2360,14 +2360,20 @@ window.atualizarInteligencia = function() {
   scoreLista.sort(function(a, b) { return b.vol - a.vol; });
   var sbEl = document.getElementById('score-bars');
   if (sbEl) {
-    var h = '';
-    scoreLista.slice(0, 10).forEach(function(r) {
+    function _sRow(r) {
       var c = r.score >= 80 ? '#1d9e75' : r.score >= 60 ? '#ba7517' : '#a32d2d';
       var nome = r.nome.length > 18 ? r.nome.substring(0,17) + '…' : r.nome;
-      h += '<div class="srow"><span class="sname">' + nome + '</span>'
-         + '<div class="strk"><div class="sfil" style="width:' + r.score + '%;background:' + c + '"></div></div>'
-         + '<span class="snum" style="color:' + c + '">' + r.score + '</span></div>';
-    });
+      return '<div class="srow"><span class="sname">' + nome + '</span>'
+           + '<div class="strk"><div class="sfil" style="width:' + r.score + '%;background:' + c + '"></div></div>'
+           + '<span class="snum" style="color:' + c + '">' + r.score + '</span></div>';
+    }
+    var scoreOrdenado = scoreLista.slice().sort(function(a,b){ return b.score - a.score; });
+    var top5 = scoreOrdenado.slice(0, 5);
+    var bot5 = scoreOrdenado.slice(-5).reverse();
+    var h = '<div style="font-size:9.5px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">▲ Top 5 Melhor</div>'
+           + top5.map(_sRow).join('')
+           + '<div style="font-size:9.5px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.07em;margin:10px 0 5px">▼ Top 5 Pior</div>'
+           + bot5.map(_sRow).join('');
     sbEl.innerHTML = h || '<div style="color:var(--txt3);font-size:12px;padding:12px 0">Sem dados</div>';
   }
 
@@ -2594,10 +2600,11 @@ window.atualizarInteligencia = function() {
   alertas.push({ sev:'INFO', color:'var(--blue)', bg:'rgba(24,95,165,.15)',
     msg: 'Aproveitamento geral: ' + pct + '% (' + fmtM(apropCred) + ' de ' + fmtM(totalCred) + '). ' + nível });
 
-  // Info: melhor fornecedor
-  if (scoreLista.length && scoreLista[0].score >= 80) {
+  // Info: melhor fornecedor (top score)
+  var _scoreTop = scoreLista.slice().sort(function(a,b){ return b.score - a.score; })[0];
+  if (_scoreTop && _scoreTop.score >= 80) {
     alertas.push({ sev:'INFO', color:'var(--teal)', bg:'rgba(73,197,177,.15)',
-      msg: scoreLista[0].nome + ' — melhor score de risco (' + scoreLista[0].score + '/100). Histórico de pagamentos consistente, créditos em dia.' });
+      msg: _scoreTop.nome + ' — melhor score de risco (' + _scoreTop.score + '/100). Sem RFs vencidos, créditos em dia.' });
   }
 
   var htmlA = '';
