@@ -1176,75 +1176,111 @@ window.creditosLimparFiltrosGrid = function() {
 // Renderizar tabela de créditos
 window.renderizarTabelaCreditos = function() {
   var h = "";
-  var listaRFs = [];
+  var _stPrio = ['nao_apropriado','glosado','em_risco','vencido','pendente','nao_extinto','apropriado','utilizado'];
+  var _dfColorsMap = {
+    'NF-e':  ['24,95,165','#185fa5'],  'NFC-e': ['99,102,241','#6366F1'],
+    'NFCom': ['16,185,129','#10B981'], 'NF3-e': ['20,184,166','#14B8A6'],
+    'NFS-e': ['29,158,117','#1d9e75'], 'CT-e':  ['186,117,23','#ba7517'],
+    'NFAg':  ['132,204,22','#84CC16'], 'NFGás': ['234,179,8','#EAB308'],
+    'MDF-e': ['168,85,247','#A855F7'], 'BP-e':  ['29,158,117','var(--teal)']
+  };
+  var _metExtMap = {
+    'Split Payment': { cor: '29,158,117',  lbl: 'Split Payment' },
+    'Compensacao':   { cor: '24,95,165',   lbl: 'Compensação'   },
+    'Ressarcimento': { cor: '29,158,117',  lbl: 'Ressarcimento' },
+    'Transferencia': { cor: '139,92,246',  lbl: 'Transferência' },
+    'RAD':           { cor: '186,117,23',  lbl: 'RAD'           }
+  };
 
-  if (window.nfListaFiltradaGlobal && window.nfListaFiltradaGlobal.length > 0) {
-    window.nfListaFiltradaGlobal.forEach(function(nf) {
-      if (nf.tipo === 'entrada' && nf.registrosFiscais && nf.registrosFiscais.length) {
-        nf.registrosFiscais.forEach(function(rf) {
-          var tipoFiscalLabel = rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS';
-          var valorLiq = rf.valorLiquidoNF || 0;
-          // Usar rf.valor (sincronizado com alíquota do imposto) ao invés de recomputar
-          var credVal = rf.valor || 0;
-          var cbsVal = rf.tipoFiscal === 'cbs' ? credVal : 0;
-          var ibsVal = rf.tipoFiscal === 'ibs' ? credVal : 0;
-          var _sc = rf.statusCredito || rf.status || 'nao_apropriado';
-          var _eApropriado = _sc === 'apropriado' || _sc === 'utilizado';
-          var _temPag = rf.dataPagamento && rf.dataPagamento !== '—';
-          var _dp = (rf.data || '').split('-');
-          var _pagVal;
-          if (_temPag) {
-            _pagVal = rf.dataPagamento;
-          } else if (_eApropriado && _dp.length === 3) {
-            _pagVal = String(Math.min(parseInt(_dp[2], 10) + 5, 28)).padStart(2,'0') + '/' + _dp[1] + '/' + _dp[0] + ' 09:00';
-          } else {
-            _pagVal = '—';
-          }
-          listaRFs.push({
-            rfId: rf.id,
-            rf: rf.id,
-            tipoFiscal: tipoFiscalLabel,
-            tipoNF: rf.tipoNF || nf.tipo || 'entrada',
-            nf: (nf.tipoDF || 'NF-e') + ' ' + (rf.nfVinculada || nf.numero || ''),
-            nfNumero: rf.nfVinculada || nf.numero || '',
-            forn: rf.entidade,
-            cnpj: rf.cnpj,
-            dataNF: rf.data,
-            data: rf.data.split('-').reverse().join('/'),
-            valorTotal: rf.valorTotalNF,
-            valorLiq: valorLiq,
-            cbs: cbsVal,
-            ibs: ibsVal,
-            cred: credVal,
-            pag: _pagVal,
-            isPago: _eApropriado || _temPag,
-            status: _sc,
-            statusCredito: _sc,
-            statusRegistro: rf.statusRegistro || null,
-            inconsistencia: rf.inconsistencia || null,
-            contratoId: rf.contratoId || nf.contratoId || null,
-            metodoPagamento: rf.metodoPagamento || nf.metodoPagamento || null,
-            metodoExtincao: rf.metodoExtincao || null
-          });
-        });
-      }
+  // Uma linha por DF (NF de entrada) — agrega RFs
+  var listaDFs = [];
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    var rfs = nf.registrosFiscais || [];
+    if (!rfs.length) return;
+
+    var totalCBS = 0, totalIBS = 0, totalCred = 0;
+    var statusAgr = null;
+    var dataNF = nf.data || '';
+    var forn = nf.entidade || '—';
+    var cnpj = nf.cnpj || '';
+    var contratoId = nf.contratoId || null;
+    var metodoPagamento = nf.metodoPagamento || null;
+    var metodoExtincao = null;
+    var statusRegistro = null;
+    var inconsistencia = null;
+    var dataPag = '—';
+    var isPago = false;
+    var rfIdPrimario = null;
+
+    rfs.forEach(function(rf) {
+      var credVal = rf.valor || 0;
+      if (rf.tipoFiscal === 'cbs') totalCBS += credVal;
+      else if (rf.tipoFiscal === 'ibs') totalIBS += credVal;
+      totalCred += credVal;
+
+      var sc = rf.statusCredito || rf.status || 'nao_apropriado';
+      if (!statusAgr || _stPrio.indexOf(sc) < _stPrio.indexOf(statusAgr)) statusAgr = sc;
+
+      if (!dataNF && rf.data) dataNF = rf.data;
+      if (forn === '—' && rf.entidade) forn = rf.entidade;
+      if (!cnpj && rf.cnpj) cnpj = rf.cnpj;
+      if (!contratoId && rf.contratoId) contratoId = rf.contratoId;
+      if (!metodoPagamento && rf.metodoPagamento) metodoPagamento = rf.metodoPagamento;
+      if (!metodoExtincao && rf.metodoExtincao) metodoExtincao = rf.metodoExtincao;
+      if (!statusRegistro && rf.statusRegistro) statusRegistro = rf.statusRegistro;
+      if (!inconsistencia && rf.inconsistencia) inconsistencia = rf.inconsistencia;
+      if (!rfIdPrimario) rfIdPrimario = rf.id;
+      if (rf.dataPagamento && rf.dataPagamento !== '—') { dataPag = rf.dataPagamento; isPago = true; }
     });
-  }
+
+    statusAgr = statusAgr || 'nao_apropriado';
+    var eApropriado = statusAgr === 'apropriado' || statusAgr === 'utilizado';
+    if (!isPago && eApropriado && dataNF) {
+      var _dp = dataNF.split('-');
+      if (_dp.length === 3) dataPag = String(Math.min(parseInt(_dp[2],10)+5,28)).padStart(2,'0')+'/'+_dp[1]+'/'+_dp[0]+' 09:00';
+    }
+    var dataStr = dataNF ? dataNF.split('-').reverse().join('/') : '—';
+
+    listaDFs.push({
+      nfId: nf.id || '',
+      tipoDF: nf.tipoDF || 'NF-e',
+      nfNumero: nf.numero || '',
+      nf: (nf.tipoDF || 'NF-e') + ' ' + (nf.numero || ''),
+      forn: forn,
+      cnpj: cnpj,
+      dataNF: dataNF,
+      data: dataStr,
+      valorTotal: nf.valorTotal || 0,
+      valorLiq: nf.valorLiquido || 0,
+      cbs: totalCBS,
+      ibs: totalIBS,
+      cred: totalCred,
+      pag: dataPag,
+      isPago: isPago || eApropriado,
+      status: statusAgr,
+      statusCredito: statusAgr,
+      statusRegistro: statusRegistro,
+      inconsistencia: inconsistencia,
+      contratoId: contratoId,
+      metodoPagamento: metodoPagamento,
+      metodoExtincao: metodoExtincao,
+      rfIdPrimario: rfIdPrimario
+    });
+  });
 
   // Aplicar filtros
   var f = window._filtrosCreditos || {};
-  if (f.mesAno || (f.mesAnoArr && f.mesAnoArr.length) || f.busca || f.tipoFiscal || f.status || f.contrato || f.metodo ||
+  if (f.mesAno || (f.mesAnoArr && f.mesAnoArr.length) || f.busca || f.status || f.contrato || f.metodo ||
       f.pagamento || f.dataNFDe || f.dataNFAte || f.credMin || f.credMax || f.tipoDFe ||
       (f.statusMulti && f.statusMulti.length)) {
     var busca = (f.busca || '').toLowerCase();
-    listaRFs = listaRFs.filter(function(r) {
+    listaDFs = listaDFs.filter(function(r) {
       if (!window._matchPeriodo(r.dataNF, f)) return false;
-      if (busca && !(r.rf.toLowerCase().includes(busca) || r.nf.toLowerCase().includes(busca) || r.forn.toLowerCase().includes(busca))) return false;
-      if (f.tipoFiscal && r.tipoFiscal !== f.tipoFiscal) return false;
-      if (f.status && (r.statusCredito || r.status) !== f.status) return false;
-      if (f.statusRegistro && r.statusRegistro !== f.statusRegistro) return false;
-      if (f.statusMulti && f.statusMulti.length && !f.statusMulti.includes(r.statusCredito || r.status)) return false;
-      if (f.tipoDFe && r.tipoNF !== f.tipoDFe) return false;
+      if (busca && !(r.nf.toLowerCase().includes(busca) || r.forn.toLowerCase().includes(busca) || r.cnpj.includes(busca))) return false;
+      if (f.status && r.statusCredito !== f.status) return false;
+      if (f.statusMulti && f.statusMulti.length && !f.statusMulti.includes(r.statusCredito)) return false;
+      if (f.tipoDFe && r.tipoDF !== f.tipoDFe) return false;
       if (f.contrato === '__sem__' && r.contratoId) return false;
       if (f.contrato && f.contrato !== '__sem__' && r.contratoId !== f.contrato) return false;
       if (f.metodo && r.metodoPagamento !== f.metodo) return false;
@@ -1261,69 +1297,78 @@ window.renderizarTabelaCreditos = function() {
 
   // Atualizar contagem
   var contagemEl = document.getElementById('fc-contagem');
-  if (contagemEl) contagemEl.textContent = listaRFs.length + ' registro' + (listaRFs.length !== 1 ? 's' : '');
+  if (contagemEl) contagemEl.textContent = listaDFs.length + ' documento' + (listaDFs.length !== 1 ? 's' : '');
 
-  if (!listaRFs.length) {
-    h = '<tr><td colspan="17" style="text-align:center;color:var(--txt3);padding:24px">Nenhum crédito encontrado para este filtro.</td></tr>';
+  if (!listaDFs.length) {
+    h = '<tr><td colspan="15" style="text-align:center;color:var(--txt3);padding:24px">Nenhum documento fiscal encontrado para este filtro.</td></tr>';
   } else {
-    listaRFs.forEach(function(r) {
-      var _tfC = r.tipoFiscal === 'IBS' ? '#60A5FA' : '#FBB84A';
-      var tipoFiscalBadge = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.06em;color:'+_tfC+'">'
-        + '<span style="width:5px;height:5px;border-radius:50%;background:'+_tfC+';display:inline-block;flex-shrink:0"></span>'
-        + r.tipoFiscal + '</span>';
-      var nfTipoBadgeCred = r.tipoNF === 'saida'
-        ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(186,117,23,.28);color:#ba7517;background:transparent">Saída</span>'
-        : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(29,158,117,.28);color:#1d9e75;background:transparent">Entrada</span>';
-      var nfNumero = r.nfNumero || '';
-      var nfLink = nfNumero
-        ? '<span class="mono" style="font-size:11px;color:#185fa5;cursor:pointer;text-decoration:underline" onclick="window.abrirDetalhesNFporNumero(\'' + nfNumero + '\')">' + r.nf + '</span>'
+    listaDFs.forEach(function(r) {
+      var _dfT = r.tipoDF;
+      var _dc = _dfColorsMap[_dfT] || _dfColorsMap['NF-e'];
+      var tipoBadge = '<span style="background:rgba('+_dc[0]+',.12);color:'+_dc[1]+';border:1px solid rgba('+_dc[0]+',.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">'+_dfT+'</span>';
+
+      var dfLink = r.nfNumero
+        ? '<button onclick="window.abrirDetalhesNFporNumero(\''+r.nfNumero+'\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:11px">'+r.nf+'</button>'
         : '<span style="color:var(--txt3)">—</span>';
+
       var contratoCell = r.contratoId
-        ? '<span class="mono" style="font-size:11px;color:#1d9e75;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\'' + r.contratoId + '\')">' + r.contratoId + '</span>'
+        ? '<span class="mono" style="font-size:11px;color:#1d9e75;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\''+r.contratoId+'\')">'+r.contratoId+'</span>'
         : '<span style="color:var(--txt3)">—</span>';
+
       var _metC = r.metodoPagamento === 'RAD' ? '#60A5FA' : r.metodoPagamento === 'Fornecedor' ? '#A78BFA' : null;
       var metodoCell = _metC
         ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.06em;color:'+_metC+'">'
           + '<span style="width:5px;height:5px;border-radius:50%;background:'+_metC+';display:inline-block"></span>'
           + r.metodoPagamento + '</span>'
         : '<span style="color:var(--txt3)">—</span>';
+
       var pagCell = r.isPago
-        ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pag + '</a>'
+        ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\''+(r.rfIdPrimario||'')+'\') " title="Ver comprovante" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">'+r.pag+'</a>'
         : '<span style="color:var(--txt3)">—</span>';
-      var rfIdLink = '<button onclick="window.abrirDetalheRF(\'' + r.rfId + '\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button>';
-      var statusCredBadge = bdg(r.statusCredito || r.status);
-      var statusRegBadge  = r.statusRegistro ? bdg(r.statusRegistro) : '';
-      var incBadge = r.inconsistencia ? '<br><span style="font-size:10px;color:#a32d2d;font-style:italic">' + r.inconsistencia + '</span>' : '';
-      var _metExtMap = {
-        'Split Payment': { cor: '29,158,117',  lbl: 'Split Payment' },
-        'Compensacao':   { cor: '24,95,165',  lbl: 'Compensação'   },
-        'Ressarcimento': { cor: '29,158,117',   lbl: 'Ressarcimento' },
-        'Transferencia': { cor: '139,92,246',  lbl: 'Transferência' },
-        'RAD':           { cor: '186,117,23',  lbl: 'RAD'           }
-      };
-      var sc = r.statusCredito || r.status || '';
+
+      var statusBadge = bdg(r.statusCredito);
+      var incBadge = r.inconsistencia ? '<br><span style="font-size:10px;color:#a32d2d;font-style:italic">'+r.inconsistencia+'</span>' : '';
+
+      var sc = r.statusCredito || '';
       var metExtCell;
       if (sc === 'utilizado') {
         var _meKey = r.metodoExtincao || 'Compensacao';
         var _me = _metExtMap[_meKey] || { cor: '29,158,117', lbl: _meKey };
-        metExtCell = '<span style="background:rgba(' + _me.cor + ',.12);color:rgba(' + _me.cor + ',1);border:1px solid rgba(' + _me.cor + ',.28);border-radius:3px;padding:2px 7px;font-size:10px;font-weight:700;letter-spacing:.05em">' + _me.lbl + '</span>';
+        metExtCell = '<span style="background:rgba('+_me.cor+',.12);color:rgba('+_me.cor+',1);border:1px solid rgba('+_me.cor+',.28);border-radius:3px;padding:2px 7px;font-size:10px;font-weight:700;letter-spacing:.05em">'+_me.lbl+'</span>';
       } else {
         metExtCell = '<span style="color:var(--txt3)">—</span>';
       }
-      h += '<tr><td class="mono nowrap">' + rfIdLink + '</td><td class="nowrap">' + tipoFiscalBadge + '</td><td class="nowrap">' + nfTipoBadgeCred + '</td><td class="mono nowrap">' + nfLink + '</td><td class="trunc">' + r.forn + '</td><td class="nowrap" style="color:var(--txt2)">' + r.data + '</td><td class="r mono">' + ff(r.valorTotal) + '</td><td class="r mono" style="color:var(--txt2)">' + ff(r.valorLiq) + '</td><td class="r mono" style="color:var(--txt2)">' + ffz(r.cbs) + '</td><td class="r mono" style="color:var(--txt2)">' + ffz(r.ibs) + '</td><td class="r mono" style="font-weight:600">' + ff(r.cred) + '</td><td class="nowrap">' + pagCell + '</td><td class="nowrap">' + statusCredBadge + '</td><td class="nowrap">' + statusRegBadge + incBadge + '</td><td class="nowrap">' + contratoCell + '</td><td class="nowrap">' + metodoCell + '</td><td class="nowrap">' + metExtCell + '</td></tr>';
+
+      h += '<tr>'
+        + '<td class="mono nowrap">' + dfLink + '</td>'
+        + '<td class="nowrap">' + tipoBadge + '</td>'
+        + '<td class="trunc">' + r.forn + '</td>'
+        + '<td class="mono" style="color:var(--txt2)">' + r.cnpj + '</td>'
+        + '<td class="nowrap" style="color:var(--txt2)">' + r.data + '</td>'
+        + '<td class="r mono">' + ff(r.valorTotal) + '</td>'
+        + '<td class="r mono" style="color:var(--txt2)">' + ff(r.valorLiq) + '</td>'
+        + '<td class="r mono" style="color:var(--txt2)">' + ffz(r.cbs) + '</td>'
+        + '<td class="r mono" style="color:var(--txt2)">' + ffz(r.ibs) + '</td>'
+        + '<td class="r mono" style="font-weight:600">' + ff(r.cred) + '</td>'
+        + '<td class="nowrap">' + pagCell + '</td>'
+        + '<td class="nowrap">' + statusBadge + incBadge + '</td>'
+        + '<td class="nowrap">' + contratoCell + '</td>'
+        + '<td class="nowrap">' + metodoCell + '</td>'
+        + '<td class="nowrap">' + metExtCell + '</td>'
+        + '</tr>';
     });
   }
 
   var tabelaEl = document.getElementById("t-creditos");
   if (tabelaEl) {
     tabelaEl.innerHTML = h;
-    console.log('[data-sync-fixed] Tabela de créditos renderizada com', listaRFs.length, 'linhas');
+    console.log('[data-sync-fixed] Tabela de créditos renderizada com', listaDFs.length, 'documentos fiscais');
   } else {
     console.warn('[data-sync-fixed] Elemento #t-creditos não encontrado');
   }
 
   // Atualizar KPIs totalizadores com base na lista filtrada
-  try { window.atualizarKPIsCreditos(listaRFs); } catch(e) {}
+  try { window.atualizarKPIsCreditos(listaDFs); } catch(e) {}
 
   // Atualizar gráfico de composição para refletir os filtros ativos
   try { window.renderizarComposicaoCreditos(window._composicaoFiltro || ''); } catch(e) {}
