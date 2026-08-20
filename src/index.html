@@ -1554,123 +1554,131 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     </div>
   </div>
 
-  <!-- Forecast Fluxo Fiscal -->
-  <div class="tcrd" style="margin-bottom:16px" id="fct-forecast-card">
-    <div class="tcrd-hdr" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-      <div class="sechdr" style="margin-bottom:0"><h2>Forecast de Fluxo Fiscal</h2><p>Crédito vs Débito mês a mês · saldo acumulado · projeção por média móvel</p></div>
-      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-        <span style="font-size:11px;color:var(--txt3);margin-right:4px">Horizonte:</span>
-        <button class="btn" id="fct-fc-h6"  onclick="fctForecastHorizonte(6,this)"  style="padding:4px 11px;font-size:11px;background:var(--blue);color:#fff;border-color:var(--blue)">6m</button>
-        <button class="btn" id="fct-fc-h9"  onclick="fctForecastHorizonte(9,this)"  style="padding:4px 11px;font-size:11px">9m</button>
-        <button class="btn" id="fct-fc-h12" onclick="fctForecastHorizonte(12,this)" style="padding:4px 11px;font-size:11px">12m</button>
-      </div>
-    </div>
-    <!-- KPIs rápidos -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 20px;border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Crédito Realizado</div>
-        <div id="fct-fc-k-cred" style="font-size:16px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums">—</div>
-        <div style="font-size:10px;color:var(--txt3)" id="fct-fc-k-cred-sub">período realizado</div>
-      </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Débito Realizado</div>
-        <div id="fct-fc-k-deb" style="font-size:16px;font-weight:700;color:var(--red);font-variant-numeric:tabular-nums">—</div>
-        <div style="font-size:10px;color:var(--txt3)" id="fct-fc-k-deb-sub">período realizado</div>
-      </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Saldo Atual</div>
-        <div id="fct-fc-k-saldo" style="font-size:16px;font-weight:700;font-variant-numeric:tabular-nums">—</div>
-        <div style="font-size:10px;color:var(--txt3)">posição acumulada</div>
-      </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Saldo Forecast</div>
-        <div id="fct-fc-k-fc" style="font-size:16px;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums">—</div>
-        <div style="font-size:10px;color:var(--txt3)" id="fct-fc-k-fc-sub">projeção</div>
-      </div>
-    </div>
-    <!-- Legenda -->
-    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:10px 20px 0;font-size:11px;color:var(--txt2)">
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(29,158,117,.75);border-radius:2px;display:inline-block"></span>Crédito realizado</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(29,158,117,.3);border:1px solid rgba(29,158,117,.5);border-radius:2px;display:inline-block"></span>Crédito forecast</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(220,38,38,.65);border-radius:2px;display:inline-block"></span>Débito realizado</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(220,38,38,.25);border:1px solid rgba(220,38,38,.5);border-radius:2px;display:inline-block"></span>Débito forecast</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:18px;height:2px;background:#185fa5;display:inline-block;border-radius:1px"></span>Saldo acumulado</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:18px;height:2px;background:repeating-linear-gradient(90deg,#185fa5 0,#185fa5 4px,transparent 4px,transparent 8px);display:inline-block;border-radius:1px"></span>Saldo forecast</span>
-      <span style="margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--blue);background:rgba(24,95,165,.1);border:1px solid rgba(24,95,165,.22);border-radius:4px;padding:2px 8px" id="fct-fc-badge">● Forecast</span>
-    </div>
-    <!-- Canvas -->
-    <div style="padding:10px 16px 14px">
-      <canvas id="fct-fc-canvas" style="width:100%;display:block"></canvas>
-    </div>
-    <!-- Insights -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 20px 16px" id="fct-fc-insights"></div>
-  </div>
+  <!-- Linha 1: Forecasts lado a lado -->
+  <div style="display:flex;gap:14px;margin-bottom:16px;align-items:stretch">
 
-  <!-- Forecast de Aproveitamento de Crédito -->
-  <div class="tcrd" style="margin-bottom:16px" id="fct-aprov-card">
-    <div class="tcrd-hdr" style="justify-content:space-between;align-items:center">
-      <div class="sechdr" style="margin-bottom:0"><h2>Forecast de Aproveitamento de Crédito</h2><p>Taxa de apropriação realizada vs projetada por média móvel · identifica meses com risco de perda</p></div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 20px;border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Taxa Média Realizada</div>
-        <div id="fct-aprov-taxa" style="font-size:16px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums">—</div>
-        <div style="font-size:10px;color:var(--txt3)">% apropr. / originado</div>
+    <!-- Forecast Fluxo Fiscal -->
+    <div class="tcrd" style="flex:1;min-width:0" id="fct-forecast-card">
+      <div class="tcrd-hdr" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div class="sechdr" style="margin-bottom:0"><h2>Forecast de Fluxo Fiscal</h2><p>Crédito vs Débito mês a mês · saldo acumulado · projeção por média móvel</p></div>
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+          <span style="font-size:11px;color:var(--txt3);margin-right:4px">Horizonte:</span>
+          <button class="btn" id="fct-fc-h6"  onclick="fctForecastHorizonte(6,this)"  style="padding:4px 11px;font-size:11px;background:var(--blue);color:#fff;border-color:var(--blue)">6m</button>
+          <button class="btn" id="fct-fc-h9"  onclick="fctForecastHorizonte(9,this)"  style="padding:4px 11px;font-size:11px">9m</button>
+          <button class="btn" id="fct-fc-h12" onclick="fctForecastHorizonte(12,this)" style="padding:4px 11px;font-size:11px">12m</button>
+        </div>
       </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Volume A Apropriar</div>
-        <div id="fct-aprov-pendente" style="font-size:16px;font-weight:700;color:var(--amber);font-variant-numeric:tabular-nums">—</div>
-        <div style="font-size:10px;color:var(--txt3)">acumulado pendente</div>
+      <!-- KPIs rápidos -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 20px;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Crédito Realizado</div>
+          <div id="fct-fc-k-cred" style="font-size:16px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums">—</div>
+          <div style="font-size:10px;color:var(--txt3)" id="fct-fc-k-cred-sub">período realizado</div>
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Débito Realizado</div>
+          <div id="fct-fc-k-deb" style="font-size:16px;font-weight:700;color:var(--red);font-variant-numeric:tabular-nums">—</div>
+          <div style="font-size:10px;color:var(--txt3)" id="fct-fc-k-deb-sub">período realizado</div>
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Saldo Atual</div>
+          <div id="fct-fc-k-saldo" style="font-size:16px;font-weight:700;font-variant-numeric:tabular-nums">—</div>
+          <div style="font-size:10px;color:var(--txt3)">posição acumulada</div>
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Saldo Forecast</div>
+          <div id="fct-fc-k-fc" style="font-size:16px;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums">—</div>
+          <div style="font-size:10px;color:var(--txt3)" id="fct-fc-k-fc-sub">projeção</div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Perda Estimada / Ano</div>
-        <div id="fct-aprov-perda" style="font-size:16px;font-weight:700;color:var(--red);font-variant-numeric:tabular-nums">—</div>
-        <div style="font-size:10px;color:var(--txt3)">base taxa de não apropriação</div>
+      <!-- Legenda -->
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:10px 20px 0;font-size:11px;color:var(--txt2)">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(29,158,117,.75);border-radius:2px;display:inline-block"></span>Crédito realizado</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(29,158,117,.3);border:1px solid rgba(29,158,117,.5);border-radius:2px;display:inline-block"></span>Crédito forecast</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(220,38,38,.65);border-radius:2px;display:inline-block"></span>Débito realizado</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(220,38,38,.25);border:1px solid rgba(220,38,38,.5);border-radius:2px;display:inline-block"></span>Débito forecast</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:18px;height:2px;background:#185fa5;display:inline-block;border-radius:1px"></span>Saldo acumulado</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:18px;height:2px;background:repeating-linear-gradient(90deg,#185fa5 0,#185fa5 4px,transparent 4px,transparent 8px);display:inline-block;border-radius:1px"></span>Saldo forecast</span>
+        <span style="margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--blue);background:rgba(24,95,165,.1);border:1px solid rgba(24,95,165,.22);border-radius:4px;padding:2px 8px" id="fct-fc-badge">● Forecast</span>
+      </div>
+      <!-- Canvas -->
+      <div style="padding:10px 16px 14px">
+        <canvas id="fct-fc-canvas" style="width:100%;display:block"></canvas>
+      </div>
+      <!-- Insights -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 20px 16px" id="fct-fc-insights"></div>
+    </div>
+
+    <!-- Forecast de Aproveitamento de Crédito -->
+    <div class="tcrd" style="flex:1;min-width:0" id="fct-aprov-card">
+      <div class="tcrd-hdr" style="justify-content:space-between;align-items:center">
+        <div class="sechdr" style="margin-bottom:0"><h2>Forecast de Aproveitamento de Crédito</h2><p>Taxa de apropriação realizada vs projetada por média móvel · identifica meses com risco de perda</p></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 20px;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Taxa Média Realizada</div>
+          <div id="fct-aprov-taxa" style="font-size:16px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums">—</div>
+          <div style="font-size:10px;color:var(--txt3)">% apropr. / originado</div>
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Volume A Apropriar</div>
+          <div id="fct-aprov-pendente" style="font-size:16px;font-weight:700;color:var(--amber);font-variant-numeric:tabular-nums">—</div>
+          <div style="font-size:10px;color:var(--txt3)">acumulado pendente</div>
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Perda Estimada / Ano</div>
+          <div id="fct-aprov-perda" style="font-size:16px;font-weight:700;color:var(--red);font-variant-numeric:tabular-nums">—</div>
+          <div style="font-size:10px;color:var(--txt3)">base taxa de não apropriação</div>
+        </div>
+      </div>
+      <div style="padding:12px 16px 14px"><canvas id="fct-aprov-canvas" style="width:100%;display:block"></canvas></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:0 20px 14px;font-size:11px;color:var(--txt2)">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(29,158,117,.75);border-radius:2px;display:inline-block"></span>Apropr. realizado</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(245,158,11,.6);border-radius:2px;display:inline-block"></span>A Apropriar realizado</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:18px;height:2px;background:#1d9e75;display:inline-block;border-radius:1px"></span>Taxa apropr. realizada</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:18px;height:2px;background:repeating-linear-gradient(90deg,#1d9e75 0,#1d9e75 4px,transparent 4px,transparent 8px);display:inline-block;border-radius:1px"></span>Taxa apropr. forecast</span>
       </div>
     </div>
-    <div style="padding:12px 16px 14px"><canvas id="fct-aprov-canvas" style="width:100%;display:block"></canvas></div>
-    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:0 20px 14px;font-size:11px;color:var(--txt2)">
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(29,158,117,.75);border-radius:2px;display:inline-block"></span>Apropr. realizado</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(245,158,11,.6);border-radius:2px;display:inline-block"></span>A Apropriar realizado</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:18px;height:2px;background:#1d9e75;display:inline-block;border-radius:1px"></span>Taxa apropr. realizada</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:18px;height:2px;background:repeating-linear-gradient(90deg,#1d9e75 0,#1d9e75 4px,transparent 4px,transparent 8px);display:inline-block;border-radius:1px"></span>Taxa apropr. forecast</span>
-    </div>
-  </div>
 
-  <!-- Gráfico principal: Crédito vs Débito mensal -->
-  <div class="ccrd" style="margin-bottom:16px">
-    <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
-      <div class="ctitle" style="margin-bottom:0">Crédito Aprop. vs Débito — mensal</div>
-      <span class="periodo-info" data-tip="Linhas mensais comparando: Crédito Apropriado (entrada confirmada pela Plataforma Centralizada), Débito (saída apurada nas NFs de saída) e Recolhimento Líquido (débito após abatimento de créditos). Quando a linha de crédito supera a de débito, o mês é credor — o excedente vira saldo a recuperar.">i</span>
-    </div>
-    <div class="csub">R$ milhões · IBS+CBS · crédito aprop. vs débito vs recolhimento líquido · mês a mês</div>
-    <div class="cwrap" style="height:220px"><div id="cFCT"></div></div>
-    <div class="leg">
-      <span class="li"><span class="ls" style="background:var(--p-teal)"></span>Crédito Aprop.</span>
-      <span class="li"><span class="ls" style="background:var(--p-red)"></span>Débito</span>
-      <span class="li"><span class="ls" style="background:var(--p-amber)"></span>Recolhimento Líquido</span>
-    </div>
-  </div>
+  </div><!-- /linha 1 forecasts -->
 
-  <!-- Alíquota efetiva mensal -->
-  <div class="ccrd" style="margin-bottom:16px">
-    <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
-      <div class="ctitle" style="margin-bottom:0">Alíquota Efetiva IBS+CBS — mensal</div>
-    </div>
-    <div class="csub">% sobre faturamento bruto NFs de saída · recolhimento líquido após créditos · mês a mês</div>
-    <div class="cwrap" style="height:200px"><div id="cFCTAliq"></div></div>
-    <div style="display:flex;gap:24px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap">
-      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Alíquota efetiva média</div><div id="fct-aliq-media" style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:var(--teal)">—</div></div>
-      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Alíquota nominal ref.</div><div style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:var(--txt3)">26,5%</div></div>
-      <div style="margin-left:auto;text-align:right"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Economia vs. nominal</div><div id="fct-aliq-economia" style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:var(--green)">—</div></div>
-    </div>
-    <div class="leg" style="margin-top:10px">
-      <span class="li"><span class="ls" style="background:var(--p-teal)"></span>Alíquota efetiva</span>
-      <span class="li"><span class="ls" style="background:var(--txt3);opacity:.5"></span>Nominal 26,5%</span>
-    </div>
-  </div>
+  <!-- Linha 2: Crédito vs Débito + Alíquota Efetiva lado a lado -->
+  <div style="display:flex;gap:14px;margin-bottom:16px;align-items:stretch">
 
-  <!-- Dois gráficos: Saldo acumulado + Créditos condicionados por mês -->
+    <div class="ccrd" style="flex:55;min-width:0">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+        <div class="ctitle" style="margin-bottom:0">Crédito Aprop. vs Débito — mensal</div>
+        <span class="periodo-info" data-tip="Linhas mensais comparando: Crédito Apropriado (entrada confirmada pela Plataforma Centralizada), Débito (saída apurada nas NFs de saída) e Recolhimento Líquido (débito após abatimento de créditos). Quando a linha de crédito supera a de débito, o mês é credor — o excedente vira saldo a recuperar.">i</span>
+      </div>
+      <div class="csub">R$ milhões · IBS+CBS · crédito aprop. vs débito vs recolhimento líquido · mês a mês</div>
+      <div class="cwrap" style="height:160px"><div id="cFCT"></div></div>
+      <div class="leg">
+        <span class="li"><span class="ls" style="background:var(--p-teal)"></span>Crédito Aprop.</span>
+        <span class="li"><span class="ls" style="background:var(--p-red)"></span>Débito</span>
+        <span class="li"><span class="ls" style="background:var(--p-amber)"></span>Recolhimento Líquido</span>
+      </div>
+    </div>
+
+    <div class="ccrd" style="flex:45;min-width:0">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+        <div class="ctitle" style="margin-bottom:0">Alíquota Efetiva IBS+CBS — mensal</div>
+      </div>
+      <div class="csub">% sobre faturamento bruto NFs de saída · recolhimento líquido após créditos · mês a mês</div>
+      <div class="cwrap" style="height:160px"><div id="cFCTAliq"></div></div>
+      <div style="display:flex;gap:20px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap">
+        <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Alíquota efetiva média</div><div id="fct-aliq-media" style="font-size:16px;font-weight:700;font-family:var(--font-mono);color:var(--teal)">—</div></div>
+        <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Nominal ref.</div><div style="font-size:16px;font-weight:700;font-family:var(--font-mono);color:var(--txt3)">26,5%</div></div>
+        <div style="margin-left:auto;text-align:right"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Economia vs. nominal</div><div id="fct-aliq-economia" style="font-size:16px;font-weight:700;font-family:var(--font-mono);color:var(--green)">—</div></div>
+      </div>
+      <div class="leg" style="margin-top:8px">
+        <span class="li"><span class="ls" style="background:var(--p-teal)"></span>Alíquota efetiva</span>
+        <span class="li"><span class="ls" style="background:var(--txt3);opacity:.5"></span>Nominal 26,5%</span>
+      </div>
+    </div>
+
+  </div><!-- /linha 2 -->
+
+  <!-- Linha 3: Saldo acumulado + Créditos A Apropriar -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
     <div class="ccrd">
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
@@ -1678,7 +1686,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
         <span class="periodo-info" data-tip="Saldo acumulado mês a mês de (Crédito Apropriado − Débito Bruto). Acima de zero = posição credora (empresa tem mais crédito do que débito e pode recuperar). Abaixo de zero = posição devedora (empresa precisa recolher mais do que recuperou).">i</span>
       </div>
       <div class="csub">R$ milhões · crédito − débito acumulado</div>
-      <div class="cwrap" style="height:180px"><div id="cFCTSaldo"></div></div>
+      <div class="cwrap" style="height:160px"><div id="cFCTSaldo"></div></div>
     </div>
     <div class="ccrd">
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
@@ -1686,7 +1694,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
         <span class="periodo-info" data-tip="Volume de créditos não apropriados (A Apropriar e Em Risco) agrupados pelo mês de emissão da NF. Permite identificar em quais meses o crédito ficou represado e priorizar ações de regularização nos períodos com maior concentração.">i</span>
       </div>
       <div class="csub">R$ milhões · A Apropriar vs Em Risco vs Glosado · por mês do fato gerador</div>
-      <div class="cwrap" style="height:180px"><div id="cFCTVenc"></div></div>
+      <div class="cwrap" style="height:160px"><div id="cFCTVenc"></div></div>
       <div class="leg">
         <span class="li"><span class="ls" style="background:var(--p-amber)"></span>A Apropriar</span>
         <span class="li"><span class="ls" style="background:var(--p-red)"></span>Em Risco</span>
@@ -1695,29 +1703,32 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     </div>
   </div>
 
-  <!-- Tabela mensal -->
+  <!-- Tabela mensal — accordion -->
   <div class="tcrd" style="margin-bottom:16px">
-    <div class="tcrd-hdr">
-      <div class="sechdr"><h2>Fluxo Mensal IBS+CBS</h2><p>Crédito Aprop. vs Débito por mês · posição líquida acumulada</p></div>
+    <div class="tcrd-hdr" style="justify-content:space-between;align-items:center">
+      <div class="sechdr" style="margin-bottom:0"><h2>Fluxo Mensal IBS+CBS</h2><p>Crédito Aprop. vs Débito por mês · posição líquida acumulada</p></div>
+      <button class="btn" id="fct-tbl-toggle" onclick="var w=document.getElementById('fct-tbl-wrap');var open=w.style.display!=='none';w.style.display=open?'none':'block';this.textContent=open?'▾ Expandir':'▴ Recolher'" style="flex-shrink:0">▾ Expandir</button>
     </div>
-    <div class="twrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Mês</th>
-            <th class="r">Crédito Aprop.</th>
-            <th class="r">A Apropriar</th>
-            <th class="r">Em Risco</th>
-            <th class="r" style="color:var(--purple)">Glosado</th>
-            <th class="r">Débito</th>
-            <th class="r">Recolhimento Líq.</th>
-            <th class="r">Posição Líquida</th>
-            <th class="r" style="color:var(--teal)">Alíq. Efetiva</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="fct-t-body"></tbody>
-      </table>
+    <div id="fct-tbl-wrap" style="display:none">
+      <div class="twrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th class="r">Crédito Aprop.</th>
+              <th class="r">A Apropriar</th>
+              <th class="r">Em Risco</th>
+              <th class="r" style="color:var(--purple)">Glosado</th>
+              <th class="r">Débito</th>
+              <th class="r">Recolhimento Líq.</th>
+              <th class="r">Posição Líquida</th>
+              <th class="r" style="color:var(--teal)">Alíq. Efetiva</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="fct-t-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -2326,29 +2337,15 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     </div>
   </div>
 
-  <!-- KPI strip -->
-  <div class="kgrid k4" style="margin-bottom:16px">
-    <div class="kcard">
-      <div class="klbl">Taxa de Aproveitamento</div>
-      <div class="kval" id="intel-aprov-pct" style="color:var(--teal)">—</div>
-      <div class="ksub" id="intel-aprov-val-sub">do crédito IBS+CBS disponível</div>
-    </div>
-    <div class="kcard">
-      <div class="klbl">Já Apropriado</div>
-      <div class="kval" id="intel-aprov-val" style="color:var(--teal)">—</div>
-      <div class="ksub" id="intel-aprov-sub">total confirmado</div>
-    </div>
-    <div class="kcard">
-      <div class="klbl">Crédito Pendente</div>
-      <div class="kval" id="intel-pend-val" style="color:var(--amber)">—</div>
-      <div class="ksub" id="intel-pend-sub">aguardando regularização</div>
-    </div>
-    <div class="kcard">
-      <div class="klbl">Em Risco de Perda</div>
-      <div class="kval" id="intel-risco-val" style="color:var(--red)">—</div>
-      <div class="ksub" id="intel-risco-sub">art. 48 LC 214</div>
-    </div>
-  </div>
+  <!-- IDs dos KPIs mantidos ocultos para o JS não quebrar -->
+  <span id="intel-aprov-pct" style="display:none"></span>
+  <span id="intel-aprov-val" style="display:none"></span>
+  <span id="intel-aprov-val-sub" style="display:none"></span>
+  <span id="intel-aprov-sub" style="display:none"></span>
+  <span id="intel-pend-val" style="display:none"></span>
+  <span id="intel-pend-sub" style="display:none"></span>
+  <span id="intel-risco-val" style="display:none"></span>
+  <span id="intel-risco-sub" style="display:none"></span>
 
   <!-- Linha 1: Evolução + Mapa de Risco -->
   <div style="display:flex;gap:16px;margin-bottom:14px;align-items:stretch">
@@ -8517,7 +8514,7 @@ if (window.Chart) {
   Chart.defaults.font.size = 11;
 }
 </script>
-<script src="js/data-sync-fixed.js?v=66"></script>
+<script src="js/data-sync-fixed.js?v=67"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=6"></script>
 <script src="js/charts.js"></script>
