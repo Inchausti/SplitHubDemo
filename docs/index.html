@@ -1592,6 +1592,58 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <div id="fct-risk-list" style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px"></div>
   </div>
 
+  <!-- Forecast Fluxo Fiscal -->
+  <div class="tcrd" style="margin-bottom:16px" id="fct-forecast-card">
+    <div class="tcrd-hdr" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div class="sechdr" style="margin-bottom:0"><h2>Forecast de Fluxo Fiscal</h2><p>Crédito vs Débito mês a mês · saldo acumulado · projeção por média móvel</p></div>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+        <span style="font-size:11px;color:var(--txt3);margin-right:4px">Horizonte:</span>
+        <button class="btn" id="fct-fc-h6"  onclick="fctForecastHorizonte(6,this)"  style="padding:4px 11px;font-size:11px;background:var(--blue);color:#fff;border-color:var(--blue)">6m</button>
+        <button class="btn" id="fct-fc-h9"  onclick="fctForecastHorizonte(9,this)"  style="padding:4px 11px;font-size:11px">9m</button>
+        <button class="btn" id="fct-fc-h12" onclick="fctForecastHorizonte(12,this)" style="padding:4px 11px;font-size:11px">12m</button>
+      </div>
+    </div>
+    <!-- KPIs rápidos -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 20px;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Crédito Realizado</div>
+        <div id="fct-fc-k-cred" style="font-size:16px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums">—</div>
+        <div style="font-size:10px;color:var(--txt3)" id="fct-fc-k-cred-sub">período realizado</div>
+      </div>
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Débito Realizado</div>
+        <div id="fct-fc-k-deb" style="font-size:16px;font-weight:700;color:var(--red);font-variant-numeric:tabular-nums">—</div>
+        <div style="font-size:10px;color:var(--txt3)" id="fct-fc-k-deb-sub">período realizado</div>
+      </div>
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Saldo Atual</div>
+        <div id="fct-fc-k-saldo" style="font-size:16px;font-weight:700;font-variant-numeric:tabular-nums">—</div>
+        <div style="font-size:10px;color:var(--txt3)">posição acumulada</div>
+      </div>
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Saldo Forecast</div>
+        <div id="fct-fc-k-fc" style="font-size:16px;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums">—</div>
+        <div style="font-size:10px;color:var(--txt3)" id="fct-fc-k-fc-sub">projeção</div>
+      </div>
+    </div>
+    <!-- Legenda -->
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:10px 20px 0;font-size:11px;color:var(--txt2)">
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(29,158,117,.75);border-radius:2px;display:inline-block"></span>Crédito realizado</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(29,158,117,.3);border:1px solid rgba(29,158,117,.5);border-radius:2px;display:inline-block"></span>Crédito forecast</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(220,38,38,.65);border-radius:2px;display:inline-block"></span>Débito realizado</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:rgba(220,38,38,.25);border:1px solid rgba(220,38,38,.5);border-radius:2px;display:inline-block"></span>Débito forecast</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:18px;height:2px;background:#185fa5;display:inline-block;border-radius:1px"></span>Saldo acumulado</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:18px;height:2px;background:repeating-linear-gradient(90deg,#185fa5 0,#185fa5 4px,transparent 4px,transparent 8px);display:inline-block;border-radius:1px"></span>Saldo forecast</span>
+      <span style="margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--blue);background:rgba(24,95,165,.1);border:1px solid rgba(24,95,165,.22);border-radius:4px;padding:2px 8px" id="fct-fc-badge">● Forecast</span>
+    </div>
+    <!-- Canvas -->
+    <div style="padding:10px 16px 14px">
+      <canvas id="fct-fc-canvas" style="width:100%;display:block"></canvas>
+    </div>
+    <!-- Insights -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 20px 16px" id="fct-fc-insights"></div>
+  </div>
+
   <!-- Alertas -->
   <div class="crd" style="margin-bottom:24px">
     <div class="sechdr" style="margin-bottom:16px"><h2>Alertas de descasamento de caixa</h2><p>Meses com posição devedora · créditos em risco de prescrição</p></div>
@@ -6465,8 +6517,11 @@ function fctUpdateKPIs(){
 function fctRender(){fctUpdateKPIs();fctRenderChart();fctRenderTable();fctRenderRisco();fctRenderAlertas();}
 function fctSetTributo(t,btn){
   fctEstado.tributo=t;
+  window._fctTributo=t;
   document.querySelectorAll('.fct-tab-tributo button').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');fctRender();
+  try{window.renderizarFCT&&window.renderizarFCT();}catch(e){}
+  try{window.renderizarFCTForecast&&window.renderizarFCTForecast();}catch(e){}
 }
 function fctSetGranularidade(g,btn){
   fctEstado.granularidade=g;

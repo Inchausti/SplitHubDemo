@@ -4899,6 +4899,7 @@ class DataSyncManagerFixed {
     try { window.renderizarTop10Empresas       && window.renderizarTop10Empresas();        } catch(e) {}
     try { window.renderizarAgeingCreditos      && window.renderizarAgeingCreditos();       } catch(e) {}
     try { window.renderizarFCT                        && window.renderizarFCT();                         } catch(e) {}
+    try { window.renderizarFCTForecast                && window.renderizarFCTForecast();                  } catch(e) {}
     try { window.renderizarEvolucaoAcumuladaCreditos  && window.renderizarEvolucaoAcumuladaCreditos();   } catch(e) {}
 
     // Conciliação — KPIs de apuração + tabela de DFs
@@ -5523,6 +5524,222 @@ window.renderizarFCT = function() {
           + '</div>';
       }).join('');
     }
+  }
+};
+
+// ============================================================
+// FCT — FORECAST DE FLUXO FISCAL
+// ============================================================
+
+window._fctForecastChart = null;
+window._fctForecastHorizonte = 6;
+
+window.fctForecastHorizonte = function(n, btn) {
+  window._fctForecastHorizonte = n;
+  ['fct-fc-h6','fct-fc-h9','fct-fc-h12'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.background = ''; el.style.color = ''; el.style.borderColor = '';
+  });
+  if (btn) { btn.style.background = 'var(--blue)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--blue)'; }
+  window.renderizarFCTForecast();
+};
+
+window.renderizarFCTForecast = function() {
+  var canvas = document.getElementById('fct-fc-canvas');
+  if (!canvas) return;
+  if (canvas.parentElement && canvas.parentElement.offsetWidth < 10) {
+    setTimeout(window.renderizarFCTForecast, 100); return;
+  }
+
+  var tributo = window._fctTributo || 'ambos';
+  var byMonth = {};
+
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    var mes = (nf.data || '').substring(0, 7);
+    if (!mes) return;
+    if (!byMonth[mes]) byMonth[mes] = { cred: 0, deb: 0 };
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      var rfTrib = (rf.tributo || rf.tipoFiscal || '').toLowerCase();
+      if (tributo !== 'ambos' && rfTrib && rfTrib !== tributo) return;
+      var v = rf.valor || 0;
+      if (nf.tipo === 'entrada') byMonth[mes].cred += v;
+      else if (nf.tipo === 'saida') byMonth[mes].deb += v;
+    });
+  });
+
+  var mesesReal = Object.keys(byMonth).sort();
+  if (!mesesReal.length) return;
+
+  var N_REAL = mesesReal.length;
+
+  // Média móvel 3 meses para forecast
+  function movAvg3(arr, idx) {
+    var n = Math.min(3, idx);
+    if (n === 0) return arr[0] || 0;
+    var sum = 0;
+    for (var i = idx - n; i < idx; i++) sum += arr[i];
+    return Math.round(sum / n);
+  }
+
+  var credReal = mesesReal.map(function(m) { return Math.round(byMonth[m].cred); });
+  var debReal  = mesesReal.map(function(m) { return Math.round(byMonth[m].deb); });
+
+  // Determinar meses futuros até Dez do mesmo ano
+  var lastMes = mesesReal[N_REAL - 1];
+  var lastYear = parseInt(lastMes.substring(0,4),10);
+  var lastM    = parseInt(lastMes.substring(5,7),10);
+  var mesesFc = [];
+  for (var m2 = lastM + 1; m2 <= 12; m2++) {
+    mesesFc.push(lastYear + '-' + String(m2).padStart(2,'0'));
+  }
+
+  var credFc = mesesFc.map(function(_, i) { return movAvg3(credReal, N_REAL + i); });
+  var debFc  = mesesFc.map(function(_, i) { return movAvg3(debReal,  N_REAL + i); });
+
+  var allMeses = mesesReal.concat(mesesFc);
+  var N_TOTAL  = allMeses.length;
+  var N_FC     = mesesFc.length;
+
+  // KPIs
+  var totCred = credReal.reduce(function(a,b){return a+b;},0);
+  var totDeb  = debReal.reduce(function(a,b){return a+b;},0);
+  var saldoAcum = 0;
+  for (var i2 = 0; i2 < N_REAL; i2++) saldoAcum += credReal[i2] - debReal[i2];
+  var saldoFcFinal = saldoAcum;
+  for (var i3 = 0; i3 < N_FC; i3++) saldoFcFinal += credFc[i3] - debFc[i3];
+
+  function fmM(v) {
+    var neg = v < 0; var a = Math.abs(v);
+    var s = a >= 1e6 ? 'R$ ' + (a/1e6).toFixed(1).replace('.',',') + 'M' : 'R$ ' + Math.round(a/1e3) + 'K';
+    return neg ? '−' + s : s;
+  }
+  function setEl(id, v, c) { var e = document.getElementById(id); if (!e) return; e.textContent = v; if (c) e.style.color = c; }
+
+  var lastRealLabel = (lastM < 10 ? '0'+lastM : lastM) + '/' + lastYear;
+  var decLabel = '12/' + lastYear;
+  setEl('fct-fc-k-cred', fmM(totCred)); setEl('fct-fc-k-cred-sub', 'Jan–' + lastRealLabel);
+  setEl('fct-fc-k-deb',  fmM(totDeb));  setEl('fct-fc-k-deb-sub',  'Jan–' + lastRealLabel);
+  setEl('fct-fc-k-saldo', fmM(saldoAcum), saldoAcum >= 0 ? '#1d9e75' : '#a32d2d');
+  setEl('fct-fc-k-fc', fmM(saldoFcFinal));
+  setEl('fct-fc-k-fc-sub', 'projeção ' + decLabel);
+  setEl('fct-fc-badge', N_FC > 0 ? '● Forecast ' + (mesesFc[0]||'').substring(5,7) + '–' + decLabel : '');
+
+  // Aplicar horizonte
+  var hz = window._fctForecastHorizonte || 6;
+  var showFrom = Math.max(0, N_TOTAL - hz);
+  var visLabels = allMeses.slice(showFrom).map(function(m) { return m.substring(5,7)+'/'+m.substring(2,4); });
+  var visNReal  = Math.max(0, N_REAL - showFrom);
+  var visNFc    = N_FC;
+
+  // Dados para Chart.js
+  function sliceData(arr, offset) { return arr.slice(Math.max(0, offset - showFrom + N_REAL - N_REAL)); } // helper não usado
+  var credRealVis = []; var credFcVis = []; var debRealVis = []; var debFcVis = [];
+  var saldoRealVis = []; var saldoFcVis = [];
+  var acum2 = 0;
+  // Pre-compute saldo up to showFrom
+  for (var ii = 0; ii < showFrom && ii < N_REAL; ii++) acum2 += credReal[ii] - debReal[ii];
+
+  for (var j = showFrom; j < N_TOTAL; j++) {
+    var isReal = j < N_REAL;
+    var fcIdx  = j - N_REAL;
+    var cVal = isReal ? credReal[j] : credFc[fcIdx];
+    var dVal = isReal ? debReal[j]  : debFc[fcIdx];
+    credRealVis.push(isReal ? cVal : null);
+    credFcVis.push(isReal ? null : cVal);
+    debRealVis.push(isReal ? -dVal : null);
+    debFcVis.push(isReal ? null : -dVal);
+    acum2 += cVal - dVal;
+    if (isReal) { saldoRealVis.push(Math.round(acum2)); saldoFcVis.push(null); }
+    else        { saldoRealVis.push(null); saldoFcVis.push(Math.round(acum2)); }
+  }
+  // Overlap: último ponto real = primeiro ponto da linha forecast
+  var overlapIdx = visNReal - 1;
+  if (overlapIdx >= 0 && overlapIdx < saldoFcVis.length) saldoFcVis[overlapIdx] = saldoRealVis[overlapIdx];
+
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    || (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches);
+  var gridC = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+  var tickC = isDark ? '#6b7280' : '#9ca3af';
+  var tooltipBg  = isDark ? '#1c1f2a' : '#ffffff';
+  var tooltipBdr = isDark ? '#2d3144' : '#e4e6ea';
+
+  // Plugin área forecast
+  var forecastPlugin = {
+    id: 'fcBg',
+    beforeDraw: function(chart) {
+      if (visNFc === 0 || visNReal === 0) return;
+      var ctx2 = chart.ctx, xs = chart.scales.x, ys = chart.scales.y;
+      var xSplit = xs.getPixelForValue(visNReal - 0.5);
+      ctx2.save();
+      ctx2.fillStyle = isDark ? 'rgba(96,165,250,.05)' : 'rgba(24,95,165,.04)';
+      ctx2.fillRect(xSplit, ys.top, xs.right - xSplit, ys.bottom - ys.top);
+      ctx2.strokeStyle = isDark ? 'rgba(96,165,250,.3)' : 'rgba(24,95,165,.22)';
+      ctx2.setLineDash([4,4]); ctx2.lineWidth = 1;
+      ctx2.beginPath(); ctx2.moveTo(xSplit, ys.top); ctx2.lineTo(xSplit, ys.bottom); ctx2.stroke();
+      ctx2.setLineDash([]); ctx2.restore();
+    }
+  };
+
+  if (window._fctForecastChart) { window._fctForecastChart.destroy(); window._fctForecastChart = null; }
+
+  var H = Math.max(220, Math.min(300, canvas.parentElement.offsetWidth * 0.33));
+  canvas.style.height = H + 'px';
+
+  window._fctForecastChart = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    plugins: [forecastPlugin],
+    data: {
+      labels: visLabels,
+      datasets: [
+        { label:'Crédito (realizado)', data:credRealVis, backgroundColor:'rgba(29,158,117,.75)', borderRadius:4, borderSkipped:false, stack:'f', order:2 },
+        { label:'Crédito (forecast)',  data:credFcVis,   backgroundColor:'rgba(29,158,117,.3)',  borderRadius:4, borderSkipped:false, borderColor:'rgba(29,158,117,.6)', borderWidth:1.5, stack:'f', order:2 },
+        { label:'Débito (realizado)',  data:debRealVis,  backgroundColor:'rgba(220,38,38,.65)',  borderRadius:4, borderSkipped:false, stack:'f', order:2 },
+        { label:'Débito (forecast)',   data:debFcVis,    backgroundColor:'rgba(220,38,38,.25)',  borderRadius:4, borderSkipped:false, borderColor:'rgba(220,38,38,.5)', borderWidth:1.5, stack:'f', order:2 },
+        { label:'Saldo acumulado', data:saldoRealVis, type:'line', borderColor:'#185fa5', borderWidth:2.5, pointRadius:3, pointBackgroundColor:'#185fa5', tension:0.35, fill:false, order:1, yAxisID:'ySaldo' },
+        { label:'Saldo forecast',  data:saldoFcVis,  type:'line', borderColor:'#185fa5', borderWidth:2, borderDash:[6,4], pointRadius:2.5, pointBackgroundColor:'#185fa5', tension:0.35, fill:false, order:1, yAxisID:'ySaldo' }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{
+          backgroundColor:tooltipBg, borderColor:tooltipBdr, borderWidth:1,
+          titleColor: isDark?'#f1f3f9':'#111827', bodyColor:tickC, padding:10,
+          callbacks:{
+            title:function(items){ var idx=items[0].dataIndex; return visLabels[idx]+(idx>=visNReal?' · Forecast':''); },
+            label:function(item){ var v=item.raw; if(v===null||v===undefined)return null; return '  '+item.dataset.label+': '+fmM(Math.abs(Math.round(v))); }
+          }
+        }
+      },
+      scales:{
+        x:{ stacked:true, grid:{color:gridC}, ticks:{color:tickC,font:{size:10}}, border:{color:gridC} },
+        y:{ stacked:true, position:'left', grid:{color:gridC}, ticks:{ color:tickC, font:{size:10}, callback:function(v){ var a=Math.abs(v); return (v<0?'-':'')+(a>=1e6?'R$'+(a/1e6).toFixed(0)+'M':a>=1e3?'R$'+Math.round(a/1e3)+'K':'0'); }}, border:{color:'transparent'} },
+        ySaldo:{ position:'right', grid:{drawOnChartArea:false}, ticks:{ color:'#185fa5', font:{size:10}, callback:function(v){ var a=Math.abs(v); return (v<0?'−':'')+(a>=1e6?'R$'+(a/1e6).toFixed(1)+'M':a>=1e3?'R$'+Math.round(a/1e3)+'K':'0'); }}, border:{color:'transparent'} }
+      }
+    }
+  });
+
+  // Insights
+  var insEl = document.getElementById('fct-fc-insights');
+  if (insEl) {
+    var saldosMensais = [];
+    for (var k = 0; k < N_REAL; k++) saldosMensais.push(credReal[k] - debReal[k]);
+    var melhorIdx = saldosMensais.indexOf(Math.max.apply(null, saldosMensais));
+    var pioresIdx = saldosMensais.indexOf(Math.min.apply(null, saldosMensais));
+    var credTend = credFc.length ? credFc[credFc.length-1] - credReal[N_REAL-1] : 0;
+    var insData = [
+      { cor:'#1d9e75', titulo:'Melhor mês: '+(mesesReal[melhorIdx]||'').substring(5,7)+'/'+(mesesReal[melhorIdx]||'').substring(0,4), corpo:'Saldo positivo de '+fmM(saldosMensais[melhorIdx])+' — maior diferença crédito/débito no período realizado.' },
+      { cor: credTend>=0?'#1d9e75':'#a32d2d', titulo: credTend>=0?'Tendência de crescimento':'Tendência de queda', corpo:'Crédito projetado para '+(mesesFc[mesesFc.length-1]||'').substring(5,7)+'/'+(mesesFc[mesesFc.length-1]||'').substring(0,4)+': '+fmM(credFc[credFc.length-1]||0)+' (variação '+(credTend>=0?'+':'')+fmM(credTend)+' vs. último mês).' },
+      { cor:'#185fa5', titulo:'Saldo projetado '+(mesesFc.length?'12/'+lastYear:''), corpo:'Acumulado de '+fmM(saldoFcFinal)+' ao final do exercício fiscal, considerando a projeção por média móvel.' }
+    ];
+    insEl.innerHTML = insData.map(function(ins) {
+      return '<div style="border-left:3px solid '+ins.cor+';padding:8px 12px;background:var(--bg2,var(--sidebar));border-radius:0 6px 6px 0;font-size:11px">'
+        + '<div style="font-weight:700;color:'+ins.cor+';margin-bottom:2px;font-size:12px">'+ins.titulo+'</div>'
+        + '<div style="color:var(--txt2);line-height:1.5">'+ins.corpo+'</div></div>';
+    }).join('');
   }
 };
 
