@@ -1939,7 +1939,7 @@ window.atualizarDashboard = function() {
       if (_sr === 'vencido' || _sr === 'em_risco' || _sr === 'a_prescrever' || _sr === 'inconsistencia') emRisco[idx] += v;
     });
   });
-  // Barras empilhadas: Aproveitado / A Apropriar / Em Risco
+  // Barras empilhadas: Apropriado / A Apropriar / Em Risco
   (function() {
     var elC = document.getElementById('cCreditos');
     if (!elC) return;
@@ -1979,7 +1979,7 @@ window.atualizarDashboard = function() {
         base -= bh;
       }
       s += '<text x="' + (bx + bw/2) + '" y="' + (padT+plotH+14) + '" text-anchor="middle" fill="var(--txt3)" font-size="9" font-family="Inter,system-ui,sans-serif">' + mesesLabels[bi].substring(0,3) + '</text>';
-      var tp2 = [mesesLabels[bi],'#1d9e75','Aproveitado',fvC(aprop[bi]),'#4ade80','A Apropriar',fvC(aApropr[bi]),'#f59e0b','Em Risco',fvC(emRisco[bi])].join('|').replace(/'/g,'&apos;');
+      var tp2 = [mesesLabels[bi],'#1d9e75','Apropriado',fvC(aprop[bi]),'#4ade80','A Apropriar',fvC(aApropr[bi]),'#f59e0b','Em Risco',fvC(emRisco[bi])].join('|').replace(/'/g,'&apos;');
       s += '<rect x="' + (bx-3) + '" y="' + padT + '" width="' + (bw+6) + '" height="' + plotH + '" fill="transparent" style="cursor:crosshair" onmousemove="_svgTipShow(event,\'' + tp2 + '\')" onmouseleave="_svgTipHide()"/>';
     }
     s += '</svg>';
