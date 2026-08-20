@@ -136,8 +136,10 @@ window.SH_TABLES = {
       { label: 'RF' },
       { label: 'Documento Fiscal' },
       { label: 'Fornecedor' },
+      { label: 'Contrato' },
       { label: 'Tipo Fiscal' },
       { label: 'Tipo de DFe' },
+      { label: 'Método' },
       { label: 'Valor',      cls: 'r' },
       { label: 'Data RF' },
       { label: 'Pagamento' },
@@ -6104,7 +6106,8 @@ window.renderizarTabelaPagamentos = function() {
         nfNumero: nf.numero || '',
         tipo: tipoCol, tipoNF: nf.tipo || 'entrada', valor: valor,
         dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, status: rfSt,
-        metodo: rf.metodoPagamento || nf.metodoPagamento || '—'
+        metodo: rf.metodoPagamento || nf.metodoPagamento || 'RAD',
+        contratoId: rf.contratoId || nf.contratoId || null
       });
     });
   });
@@ -6135,8 +6138,10 @@ window.renderizarTabelaPagamentos = function() {
       + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
       + '<td class="mono nowrap">' + nfCell + '</td>'
       + '<td class="trunc" style="vertical-align:middle"><div style="font-weight:500">' + r.forn + '</div><div style="font-size:10px;color:var(--txt2)">' + r.cnpj + '</div></td>'
+      + '<td class="nowrap">' + (r.contratoId ? '<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;border:1px solid rgba(24,95,165,.28);color:#185fa5;background:rgba(24,95,165,.06)">' + r.contratoId + '</span>' : '<span style="color:var(--txt3)">—</span>') + '</td>'
       + '<td class="nowrap">' + tipoBadge + '</td>'
       + '<td class="nowrap">' + nfTipoBadgePag + '</td>'
+      + '<td class="nowrap"><span style="font-size:10px;font-weight:700;letter-spacing:.06em;padding:2px 8px;border-radius:3px;border:1px solid rgba(73,197,177,.35);color:var(--teal);background:rgba(73,197,177,.08)">RAD</span></td>'
       + '<td class="r mono" style="font-weight:600">' + ff(r.valor) + '</td>'
       + '<td class="nowrap" style="color:var(--txt2)">' + r.dataRF + '</td>'
       + '<td class="nowrap">' + (r.status === 'pago'
@@ -6148,7 +6153,7 @@ window.renderizarTabelaPagamentos = function() {
   });
 
   if (!rows.length) {
-    h = '<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="13" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;
