@@ -5637,18 +5637,11 @@ window._renderFcChart = function(canvas, chartStore, opts) {
 
 window.renderizarFCTForecast = function(_retry) {
   var canvas = document.getElementById('fct-fc-canvas');
-  var dashCanvas = document.getElementById('dash-fc-canvas');
-  if (!canvas && !dashCanvas) return;
-  // Se FCT canvas existe mas está oculto, só renderizar no dash
-  if (canvas && canvas.parentElement && canvas.parentElement.offsetWidth < 10) {
-    canvas = null;
+  if (!canvas) return;
+  if (canvas.parentElement && canvas.parentElement.offsetWidth < 10) {
+    if (!_retry || _retry < 5) { setTimeout(function(){ window.renderizarFCTForecast((_retry||0)+1); }, 150); return; }
+    return;
   }
-  // Se dash canvas existe mas ainda sem largura, aguardar layout
-  if (dashCanvas && dashCanvas.parentElement && dashCanvas.parentElement.offsetWidth < 10) {
-    if (!_retry || _retry < 5) { setTimeout(function(){ window.renderizarFCTForecast((_retry||0)+1); }, 120); return; }
-    dashCanvas = null;
-  }
-  if (!canvas && !dashCanvas) return;
 
   var tributo = window._fctTributo || 'ambos';
   var byMonth = {};
@@ -5785,12 +5778,6 @@ window.renderizarFCTForecast = function(_retry) {
     var H = Math.max(220, Math.min(300, canvas.parentElement.offsetWidth * 0.33));
     canvas.style.height = H + 'px';
     window._renderFcChart(canvas, '_fctForecastChart', _fcOpts);
-  }
-
-  // Renderizar no dashboard (se visível)
-  var _dashCv = document.getElementById('dash-fc-canvas');
-  if (_dashCv && _dashCv.parentElement && _dashCv.parentElement.offsetWidth > 10) {
-    window._renderFcChart(_dashCv, '_dashFcChart', _fcOpts);
   }
 
   // Insights
