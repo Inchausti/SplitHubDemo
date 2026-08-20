@@ -2357,7 +2357,9 @@ function _concHash(str) {
   return Math.abs(h);
 }
 
-var _apurDist = ['confirmado','confirmado','confirmado','confirmado','confirmado','confirmado','confirmado','divergente','divergente','pendente'];
+// capur_status: 'conciliado' | 'divergente' | 'pendente' | 'estornado'
+// cfin_status:  'conciliado' | 'divergente' | 'pendente' | 'estornado'
+var _capurDist = ['conciliado','conciliado','conciliado','conciliado','conciliado','conciliado','conciliado','divergente','divergente','pendente'];
 
 function _concBuildLista(filtroMes) {
   var lista = window.nfListaFiltradaGlobal || [];
@@ -2369,12 +2371,12 @@ function _concBuildLista(filtroMes) {
     else if (filtroMes && !dataBase.startsWith(filtroMes)) return;
 
     var seed = _concHash((nf.numero || '') + (nf.cnpj || '') + idx);
-    var statusApur = _apurDist[seed % 10];
+    var capur_status = _capurDist[seed % 10];
     var protocolo = 'APU2026-' + String(seed % 999999 + 1).padStart(6, '0');
 
     // Valor total da DF vem direto do registro NF
     var valorDF = nf.valorTotal || 0;
-    var valorGov = statusApur === 'divergente'
+    var valorGov = capur_status === 'divergente'
       ? valorDF * (1 + ((seed % 7) - 3) * 0.003)
       : valorDF;
     var deltaValor = valorGov - valorDF;
@@ -2402,44 +2404,41 @@ function _concBuildLista(filtroMes) {
     var ibsInc = ibsRF && ibsRF.status === 'inconsistencia';
     var cbsInc = cbsRF && cbsRF.status === 'inconsistencia';
 
-    var statusFin;
+    var cfin_status;
     var comprovante = false;
     var proxAcao;
-    if (statusApur === 'pendente') {
-      // Apuração pendente — financeira aguarda resolução
-      statusFin = 'pendente';
-      proxAcao = 'Aguardar conciliação de apuração';
+    if (capur_status === 'pendente') {
+      // CAPUR pendente — CFIN aguarda resolução da apuração
+      cfin_status = 'pendente';
+      proxAcao = 'Aguardar conclusão da CAPUR';
     } else {
-      // Apuração conciliada ou não conciliada — avalia Etapa 2 ao nível de RF
+      // CAPUR conciliada ou divergente — avalia comprovantes IBS + CBS do DF
       var paidCount = (ibsPago ? 1 : 0) + (cbsPago ? 1 : 0);
       var incCount  = (ibsInc  ? 1 : 0) + (cbsInc  ? 1 : 0);
-      if (paidCount === 2 && incCount === 0)      statusFin = 'completo';
-      else if (paidCount >= 1 && incCount >= 1)   statusFin = 'parcial';
-      else if (paidCount === 1 && incCount === 0) statusFin = 'parcial';
-      else if (incCount > 0)                      statusFin = 'inconsistente';
-      else                                        statusFin = 'pendente';
+      if (paidCount === 2 && incCount === 0)      cfin_status = 'conciliado';
+      else if (incCount > 0)                      cfin_status = 'divergente';
+      else                                        cfin_status = 'pendente';
       comprovante = ibsPago && cbsPago;
-      proxAcao = statusFin === 'completo'     ? '—'
-        : statusFin === 'parcial'             ? 'Quitar imposto pendente'
-        : statusFin === 'inconsistente'       ? 'Resolver inconsistência RF'
-        : 'Emitir guia DARF/IBS';
+      proxAcao = cfin_status === 'conciliado' ? '—'
+        : cfin_status === 'divergente'        ? 'Resolver inconsistência de pagamento'
+        : 'Aguardar comprovantes IBS + CBS';
     }
 
     // ── Conciliação de Apuração (valores fiscais calculados vs. Apuração Assistida Gov) ─
     var apurSeed   = _concHash((nf.numero || '') + (nf.cnpj || '') + 'APUR' + idx);
     var concIdApur = 'CAPUR-' + (apurSeed >>> 0).toString(16).toUpperCase().padStart(8, '0');
     var apurHora   = String(9 + (apurSeed % 4)).padStart(2,'0') + ':' + String((apurSeed % 59) + 1).padStart(2,'0');
-    var apurConcStatus = statusApur === 'confirmado' ? 'confirmada' : statusApur === 'divergente' ? 'divergente' : 'pendente';
+    var apurConcStatus = capur_status === 'conciliado' ? 'confirmada' : capur_status === 'divergente' ? 'divergente' : 'pendente';
     var concRegApur = { concId: concIdApur, concTs: dataApur + 'T' + apurHora, concStatus: apurConcStatus, tipo: 'apuracao' };
 
     // ── Conciliação Financeira (liquidação, segregação IBS/CBS, comprovantes) ─────────
     // Ocorre ~15 dias após a apuração — só é gerada quando apuração não está pendente
     var concRegFin = null;
-    if (statusApur !== 'pendente') {
+    if (capur_status !== 'pendente') {
       var finSeed    = _concHash((nf.numero || '') + (nf.cnpj || '') + 'FIN' + idx);
       var concIdFin  = 'CFIN-' + (finSeed >>> 0).toString(16).toUpperCase().padStart(8, '0');
       var finHora    = String(13 + (finSeed % 4)).padStart(2,'0') + ':' + String((finSeed % 59) + 1).padStart(2,'0');
-      var finConcStatus = statusFin === 'completo' ? 'confirmada' : statusFin === 'inconsistente' ? 'divergente' : 'pendente';
+      var finConcStatus = cfin_status === 'conciliado' ? 'confirmada' : cfin_status === 'divergente' ? 'divergente' : 'pendente';
       var dataFinISO = window._rfAddDays ? window._rfAddDays(dataApur, 15) : dataApur;
       concRegFin = { concId: concIdFin, concTs: dataFinISO + 'T' + finHora, concStatus: finConcStatus, tipo: 'financeira' };
     }
@@ -2456,11 +2455,11 @@ function _concBuildLista(filtroMes) {
 
     result.push({
       nf: nf, idx: idx,
-      statusApur: statusApur, protocolo: protocolo,
+      capur_status: capur_status, protocolo: protocolo,
       valorDF: valorDF, valorGov: valorGov, deltaValor: deltaValor, dataApur: dataApur,
       ibsRF: ibsRF, cbsRF: cbsRF,
       ibsPago: !!ibsPago, cbsPago: !!cbsPago, ibsInc: ibsInc, cbsInc: cbsInc,
-      statusFin: statusFin, comprovante: comprovante, proxAcao: proxAcao,
+      cfin_status: cfin_status, comprovante: comprovante, proxAcao: proxAcao,
       concRegApur: concRegApur, concRegFin: concRegFin,
       concReg: concRegFin || concRegApur
     });
@@ -2525,16 +2524,19 @@ function _concRFDetail(nf, ibsRF, cbsRF) {
     + '</div></div>';
 }
 
-function _apurBadge(s) {
-  var map = {confirmado:'var(--green)',divergente:'var(--red)',pendente:'var(--amber)'};
-  var lbl = {confirmado:'Conciliado',divergente:'Não conciliado',pendente:'Pendente'};
+function _capurBadge(s) {
+  var map = { conciliado:'var(--green)', divergente:'var(--red)', pendente:'var(--amber)', estornado:'#6B7280' };
+  var lbl = { conciliado:'CAPUR OK', divergente:'Divergência CAPUR', pendente:'Ag. Apuração', estornado:'Estornado' };
   return '<span style="background:'+(map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+(lbl[s]||s)+'</span>';
 }
-function _finBadge(s) {
-  var map = {completo:'var(--green)',parcial:'var(--blue)',pendente:'var(--amber)',inconsistente:'var(--red)'};
-  var lbl = {completo:'Conciliado',parcial:'Parcial',pendente:'Pendente',inconsistente:'Não conciliado'};
+function _cfinBadge(s) {
+  var map = { conciliado:'var(--green)', divergente:'var(--red)', pendente:'var(--amber)', estornado:'#6B7280' };
+  var lbl = { conciliado:'CFIN OK', divergente:'Divergência CFIN', pendente:'Ag. Comprovantes', estornado:'Estornado' };
   return '<span style="background:'+(map[s]||'#555')+';color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">'+(lbl[s]||s)+'</span>';
 }
+// Compat — aliases para código legado
+var _apurBadge = _capurBadge;
+var _finBadge  = _cfinBadge;
 function _rfStatusBadge(rf) {
   if (!rf) return '<span style="color:var(--txt3);font-size:10px">—</span>';
   var _rfSC = rf.statusCredito || rf.status || '';
@@ -2558,12 +2560,12 @@ window.atualizarEstatisticasConciliacao = function() {
   var finComp = 0, finInc = 0, finPend = 0;
   var credAprop = 0;
   lista.forEach(function(r) {
-    if (r.statusApur === 'confirmado') apurConf++;
-    if (r.statusApur === 'divergente') apurDiv++;
-    if (r.statusFin === 'completo')    finComp++;
-    if (r.statusFin === 'inconsistente') finInc++;
-    if (r.statusFin === 'pendente' || r.statusFin === 'parcial') finPend++;
-    if (r.statusApur === 'confirmado' && r.statusFin === 'completo') credAprop++;
+    if (r.capur_status === 'conciliado') apurConf++;
+    if (r.capur_status === 'divergente') apurDiv++;
+    if (r.cfin_status === 'conciliado')  finComp++;
+    if (r.cfin_status === 'divergente')  finInc++;
+    if (r.cfin_status === 'pendente')    finPend++;
+    if (r.capur_status === 'conciliado' && r.cfin_status === 'conciliado') credAprop++;
   });
 
   var pctApur = totalDFs > 0 ? Math.round(apurConf / totalDFs * 100) : 0;
@@ -2644,11 +2646,11 @@ function _concUnifiedRender() {
       + '<span style="color:var(--txt3)">Δ Valor</span><span style="color:' + deltaColor + ';font-weight:600">' + deltaStr + '</span>'
       + '<span style="color:var(--txt3)">Protocolo</span><span style="font-family:monospace;font-size:10px;color:#8B5CF6">' + r.protocolo + '</span>'
       + '<span style="color:var(--txt3)">Data</span><span>' + r.dataApur + '</span>'
-      + '<span style="color:var(--txt3)">Status</span><span>' + _apurBadge(r.statusApur) + '</span>'
+      + '<span style="color:var(--txt3)">Status</span><span>' + _capurBadge(r.capur_status) + '</span>'
       + '</div></div>';
   }
   function stageFin(r) {
-    var blocked = r.statusFin === 'bloqueado';
+    var blocked = r.capur_status === 'pendente';
     var borderColor = blocked ? '#6B7280' : '#10B981';
     var titleColor  = blocked ? '#6B7280' : '#10B981';
     if (blocked) {
@@ -2725,8 +2727,8 @@ function _concUnifiedRender() {
       + '<td style="color:var(--txt2)">' + (nf.entidade || '—') + '</td>'
       + '<td class="r" style="font-family:monospace">' + _concFmt(r.valorDF) + '</td>'
       + '<td class="r" style="font-family:monospace;' + deltaColor + '">' + deltaStr + '</td>'
-      + '<td>' + _apurBadge(r.statusApur) + '</td>'
-      + '<td>' + _finBadge(r.statusFin) + '</td>'
+      + '<td>' + _capurBadge(r.capur_status) + '</td>'
+      + '<td>' + _cfinBadge(r.cfin_status) + '</td>'
       + '<td>' + verDFBtn + '</td>'
       + '</tr>'
       + '<tr style="display:none;background:rgba(73,197,177,.04)">'
@@ -2744,8 +2746,8 @@ window.concUnifiedFiltrar = function() {
   window._concUniFiltrada = (window._concListaGlobal || []).filter(function(r) {
     var nf = r.nf;
     if (tipo && nf.tipo      !== tipo) return false;
-    if (apur && r.statusApur !== apur) return false;
-    if (fin  && r.statusFin  !== fin)  return false;
+    if (apur && r.capur_status !== apur) return false;
+    if (fin  && r.cfin_status  !== fin)  return false;
     if (busca) {
       var hay = [(nf.numero||''),(nf.entidade||''),(nf.cnpj||''),(nf.tipoDF||''),r.protocolo].join(' ').toLowerCase();
       if (hay.indexOf(busca) === -1) return false;
