@@ -1562,6 +1562,8 @@ window.renderizarForecastAproveitamento = function(_retry) {
   _wrapAprov.style.position = 'relative';
   _wrapAprov.style.height = H + 'px';
   canvas.style.height = H + 'px';
+  canvas.height = H;
+  canvas.width = _wrapAprov.clientWidth || _wrapAprov.offsetWidth || 600;
   var splitIdx = N - 1;
   var forecastBgPlugin = { id:'apBg', beforeDraw: function(chart) {
     if (!mesesFc.length) return;
@@ -5738,6 +5740,11 @@ window._renderFcChart = function(canvas, chartStore, opts) {
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark'
     || (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches);
   if (window[chartStore]) { try{window[chartStore].destroy();}catch(e){} window[chartStore]=null; }
+  // Setar atributo height explicitamente — Chart.js 4.x usa canvas.height (buffer), não style.height
+  var _cH = parseInt(canvas.style.height, 10) || 250;
+  var _cW = canvas.parentElement ? (canvas.parentElement.clientWidth || canvas.parentElement.offsetWidth) : 600;
+  if (_cH > 0) canvas.height = _cH;
+  if (_cW > 0) canvas.width = _cW;
   var o = opts;
   var forecastPlugin = {
     id:'fcBg'+chartStore,
