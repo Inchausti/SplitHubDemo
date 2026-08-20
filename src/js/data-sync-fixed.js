@@ -1994,10 +1994,10 @@ window.atualizarDashboard = function() {
   var pagRAD  = mesesISO.map(function() { return 0; });
   var pagForn = mesesISO.map(function() { return 0; });
 
-  // Build contract lookup once
-  var _ctMap2 = {};
+  // Lookup RAD por CNPJ (independe de nf.contratoId)
+  var _cnpjRadMap = {};
   if (window._contratosData) {
-    window._contratosData.forEach(function(c) { _ctMap2[c.id] = c; });
+    window._contratosData.forEach(function(c) { if (c.cnpj) _cnpjRadMap[c.cnpj] = !!c.rad; });
   }
 
   lista.forEach(function(nf) {
@@ -2007,9 +2007,8 @@ window.atualizarDashboard = function() {
       var idx = mesesISO.indexOf(mes);
       if (idx < 0) return;
       var v = (rf.valor || 0) / 1e6;
-      var ct = _ctMap2[nf.contratoId];
-      if (ct && ct.rad) pagRAD[idx]  += v;
-      else               pagForn[idx] += v;
+      if (_cnpjRadMap[nf.cnpj]) pagRAD[idx] += v;
+      else                       pagForn[idx] += v;
     });
   });
   if (typeof svgBar === 'function') {
@@ -2372,18 +2371,21 @@ window.atualizarInteligencia = function() {
     tblBody.innerHTML = rows || '<tr><td colspan="6" style="text-align:center;padding:12px;color:var(--txt3)">Sem dados</td></tr>';
   }
 
-  // ── 3. Volume financeiro NFs — Contratos RAD ────────────
+  // ── 3. Volume financeiro NFs — Contratos RAD (classifica por CNPJ × contrato real) ──
+  var _cnpjContratoInfo = {};
+  (_contratosData || []).forEach(function(c) {
+    if (c.cnpj) _cnpjContratoInfo[c.cnpj] = { rad: !!c.rad, prazo: +c.prazo || 0 };
+  });
   var radMap = {};
   lista.forEach(function(nf) {
-    var metodoPag = (nf.metodoPagamento || '').toLowerCase();
-    if (metodoPag !== 'rad') return;
+    if (nf.tipo !== 'entrada') return;
+    var info = _cnpjContratoInfo[nf.cnpj];
+    if (!info || !info.rad) return;
     var ent = nf.entidade || '—';
-    if (!radMap[ent]) radMap[ent] = { vol90: 0, vol120: 0, total: 0, nfs: 0 };
+    if (!radMap[ent]) radMap[ent] = { vol90: 0, vol120: 0, total: 0, nfs: 0, prazo: info.prazo };
     var vol = nf.valorTotal || 0;
-    // distribuir entre 90/120 dias deterministicamente pelo hash
-    var h = 0; var s = (nf.numero || ent); for(var ci=0;ci<s.length;ci++) h = ((h<<5)-h+s.charCodeAt(ci))|0;
-    if (Math.abs(h) % 2 === 0) radMap[ent].vol90  += vol;
-    else                        radMap[ent].vol120 += vol;
+    if (info.prazo >= 120) radMap[ent].vol120 += vol;
+    else                   radMap[ent].vol90  += vol;
     radMap[ent].total += vol; radMap[ent].nfs++;
   });
   var radLista = Object.keys(radMap).map(function(e){ return { nome: e, vol90: radMap[e].vol90, vol120: radMap[e].vol120, total: radMap[e].total, nfs: radMap[e].nfs }; });
@@ -2486,7 +2488,7 @@ window.atualizarInteligencia = function() {
     if (!pontos.length) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--txt3);font-size:12px">Sem fornecedores no período</div>'; return; }
 
     // SVG scatter — X = Score (0→100), Y = Prazo (dias, invertido: maior = zona crítica inferior)
-    var H = 280, padT = 22, padB = 40, padL = 50, padR = 24;
+    var H = 280, padT = 22, padB = 40, padL = 46, padR = 36;
     var W = (el.parentElement && el.parentElement.offsetWidth > 100 ? el.parentElement.offsetWidth : 560);
     var plotW = W - padL - padR, plotH = H - padT - padB;
 
@@ -7999,55 +8001,58 @@ window.dashFiltrarMes = function(mes) {
 
 // ── DASHBOARD LINKS → Créditos e Pagamentos ──────────────────────────────
 
+// Helper: encontra nav-btn pelo fragmento de onclick
+function _navBtn(frag) {
+  return document.querySelector('.nav-btn[onclick*="' + frag + '"]')
+      || document.querySelector('.nav-sub-btn[onclick*="' + frag + '"]');
+}
+
 window.dashIrParaCreditos = function() {
-  var btn = document.querySelector('.nav-btn[onclick*="creditos"]');
-  if (typeof showView === 'function') showView('creditos', btn);
-  // Limpar filtros — card mostra visão geral do módulo
-  creditosFiltroStatus = null;
-  creditosFiltroForn   = null;
-  var chip = document.getElementById('creditos-filtro-chip');
-  if (chip) chip.style.display = 'none';
+  var btn = _navBtn('creditos');
+  if (typeof showView === 'function' && btn) showView('creditos', btn);
+  // Filtra: a_apropriar — o que ainda precisa ser apropriado (compõe o gap do totalizador)
+  if (typeof creditosFiltroStatus !== 'undefined') creditosFiltroStatus = 'a_apropriar';
+  if (typeof creditosFiltroForn !== 'undefined')   creditosFiltroForn   = null;
+  var sel = document.getElementById('cred-filtro-status');
+  if (sel) { sel.value = 'a_apropriar'; }
   if (typeof creditosRenderTabela === 'function') creditosRenderTabela();
-  setTimeout(function() {
-    if (typeof _credIrListagem === 'function') _credIrListagem();
-  }, 100);
+  setTimeout(function() { if (typeof _credIrListagem === 'function') _credIrListagem(); }, 120);
 };
 
 window.dashIrParaPagamentosRisco = function() {
-  var btn = document.querySelector('.nav-btn[onclick*="pagamentos"]');
-  if (typeof showView === 'function') showView('pagamentos', btn);
-  // Filtrar por pendente (a vencer / atrasados) — detalhe destacado no card
+  var btn = _navBtn('pagamentos');
+  if (typeof showView === 'function' && btn) showView('pagamentos', btn);
+  // Filtra: pendente (a vencer + atrasados) — o que compõe o card Pagamento
   if (!window._filtrosPagamentos) window._filtrosPagamentos = {};
   window._filtrosPagamentos.status = 'pendente';
   var sel = document.getElementById('pag-filtro-status');
   if (sel) sel.value = 'pendente';
   if (window.renderizarTabelaPagamentos) window.renderizarTabelaPagamentos();
   if (window.atualizarKPIsPagamentos) window.atualizarKPIsPagamentos();
-  if (window.renderizarEvolucaoAcumuladaCreditos) window.renderizarEvolucaoAcumuladaCreditos();
 };
 
 window.dashIrParaDebitos = function() {
-  var btn = document.querySelector('.nav-btn[onclick*="debitos"]');
-  if (typeof showView === 'function') showView('debitos', btn);
-  // Filtrar por vencido — detalhe destacado no card
-  if (!window._filtrosDebitos) window._filtrosDebitos = {};
-  window._filtrosDebitos.status = 'vencido';
+  var btn = _navBtn('debitos');
+  if (typeof showView === 'function' && btn) showView('debitos', btn);
+  // Filtra: todos os débitos (card mostra total) — sem filtro de status
+  if (window._filtrosDebitos) window._filtrosDebitos.status = '';
   var sel = document.getElementById('fd-status');
-  if (sel) sel.value = 'vencido';
+  if (sel) sel.value = '';
   if (window.renderizarTabelaDebitos) window.renderizarTabelaDebitos();
 };
 
 window.dashIrParaConciliacao = function() {
-  var btn = document.querySelector('.nav-btn[onclick*="conciliacao"]');
-  if (typeof showView === 'function') showView('conciliacao', btn);
-  try { if (window.conciliacaoInit) window.conciliacaoInit(); } catch(e) {}
+  var btn = _navBtn('conciliacao');
+  if (typeof showView === 'function' && btn) showView('conciliacao', btn);
+  setTimeout(function() { try { if (window.conciliacaoInit) window.conciliacaoInit(); } catch(e) {} }, 80);
 };
 
 window.dashIrParaInconsistencias = function() {
-  var btn = document.getElementById('nav-inconsist-btn') || document.querySelector('.nav-btn[onclick*="inconsist"]');
-  if (typeof showView === 'function') showView('inconsistencias', btn);
-  try { if (window.ingestaoInit) window.ingestaoInit(); } catch(e) {}
-  try { if (window.renderizarRFsInconsistencias) window.renderizarRFsInconsistencias(); } catch(e) {}
+  var btn = document.getElementById('nav-inconsist-btn') || _navBtn('inconsist');
+  if (typeof showView === 'function' && btn) showView('inconsistencias', btn);
+  setTimeout(function() {
+    try { if (window.renderizarRFsInconsistencias) window.renderizarRFsInconsistencias(); } catch(e) {}
+  }, 80);
 };
 
 /* ── MODAL GUIA DARF/IBS ── */
