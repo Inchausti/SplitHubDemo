@@ -1571,13 +1571,15 @@ window.renderizarForecastAproveitamento = function(_retry) {
   var allMeses = mesesReal.concat(mesesFc);
   var labels = allMeses.map(function(m) { return m.substring(5,7)+'/'+m.substring(2,4); });
   var apropData = mesesReal.map(function(m) { return Math.round(byMonth[m].aprop); });
-  var pendData  = mesesReal.map(function(m) { return Math.round(byMonth[m].pend); });
   var taxaReal = taxas.map(function(t) { return Math.round(t*100); });
   var taxaFcVis = mesesReal.map(function() { return null; });
   if (taxaReal.length) taxaFcVis[taxaReal.length-1] = taxaReal[taxaReal.length-1];
   taxasFc.forEach(function(t) { taxaFcVis.push(Math.round(t*100)); });
+  // Barra forecast: estima aprop usando orig médio dos últimos 3 meses × taxaFc
+  var origRecente = mesesReal.slice(-3).map(function(m){return byMonth[m].orig;});
+  var origMed = origRecente.length ? origRecente.reduce(function(a,b){return a+b;},0)/origRecente.length : 0;
   var apropFull = apropData.concat(mesesFc.map(function() { return null; }));
-  var pendFull  = pendData.concat(mesesFc.map(function() { return null; }));
+  var apropFcFull = mesesReal.map(function() { return null; }).concat(taxasFc.map(function(t){ return Math.round(origMed * t); }));
   var taxaRealFull = taxaReal.concat(mesesFc.map(function() { return null; }));
   var isDark = document.documentElement.getAttribute('data-theme')==='dark' || (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches);
   var gridC = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
@@ -1600,7 +1602,7 @@ window.renderizarForecastAproveitamento = function(_retry) {
     type: 'bar',
     data: { labels: labels, datasets: [
       { label:'Apropr. realizado', data:apropFull, backgroundColor:'rgba(29,158,117,.75)', yAxisID:'y', order:2 },
-      { label:'A Apropriar realizado', data:pendFull, backgroundColor:'rgba(245,158,11,.55)', yAxisID:'y', order:2 },
+      { label:'Apropr. forecast', data:apropFcFull, backgroundColor:'rgba(29,158,117,.3)', borderColor:'rgba(29,158,117,.5)', borderWidth:1, yAxisID:'y', order:2 },
       { label:'Taxa apropr.', data:taxaRealFull, type:'line', borderColor:'#1d9e75', backgroundColor:'transparent', borderWidth:2, pointRadius:3, yAxisID:'y2', order:1, tension:.3 },
       { label:'Taxa forecast', data:taxaFcVis, type:'line', borderColor:'#1d9e75', backgroundColor:'transparent', borderWidth:2, borderDash:[4,3], pointRadius:3, yAxisID:'y2', order:1, tension:.3 }
     ]},
@@ -1617,12 +1619,19 @@ window.renderizarForecastAproveitamento = function(_retry) {
   function fmtV(v){return v>=1e6?'R$ '+(v/1e6).toFixed(1).replace('.',',')+'M':'R$ '+Math.round(v/1e3)+'K';}
   function setEl(id,v,c){var e=document.getElementById(id);if(!e)return;e.textContent=v;if(c)e.style.color=c;}
   var taxaMedia = taxas.length ? Math.round(taxas.reduce(function(a,b){return a+b;},0)/taxas.length*100) : 0;
+  var taxaFcFinalKpi = taxasFc.length ? Math.round(taxasFc[taxasFc.length-1]*100) : taxaMedia;
   var totalPend = Object.keys(byMonth).reduce(function(a,m){return a+byMonth[m].pend;},0);
   var totalOrig = Object.keys(byMonth).reduce(function(a,m){return a+byMonth[m].orig;},0);
   var perdaAnual = totalOrig > 0 ? totalOrig * (1 - taxaMedia/100) : 0;
   setEl('fct-aprov-taxa', taxaMedia + '%');
+  var taxaFcCor = taxaFcFinalKpi >= taxaMedia ? '#1d9e75' : '#a32d2d';
+  setEl('fct-aprov-taxa-fc', taxaFcFinalKpi + '%', taxaFcCor);
+  var fcFirstM = mesesFc.length ? mesesFc[0].substring(5,7)+'/'+String(mesesFc[0]).substring(2,4) : '';
+  var fcLastM  = mesesFc.length ? mesesFc[mesesFc.length-1].substring(5,7)+'/'+String(mesesFc[mesesFc.length-1]).substring(2,4) : '';
+  setEl('fct-aprov-taxa-fc-sub', fcFirstM && fcLastM ? 'projeção '+fcFirstM+'–'+fcLastM : 'projeção');
   setEl('fct-aprov-pendente', fmtV(totalPend));
   setEl('fct-aprov-perda', fmtV(perdaAnual));
+  setEl('fct-aprov-badge', mesesFc.length ? '● Forecast '+fcFirstM+'–'+fcLastM : '');
 
   // Insights aproveitamento
   var insApEl = document.getElementById('fct-aprov-insights');
