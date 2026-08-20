@@ -782,7 +782,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + rfsHtml
     + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
-    + window._incRenderVinculadasHtml((window._inconsistenciasGlobal||[]).filter(function(i){ return i.dfNum === r.numero; }))
+    + window._incRenderVinculadasHtml((window._inconsistenciasGlobal||[]).filter(function(i){ return i.nfNumero === r.numero || i.dfNum === r.numero || i.dfNum === ((r.tipoDF||'NF-e')+' '+r.numero); }))
     + '</div>'
 
     // Right panel: timeline
@@ -2932,54 +2932,121 @@ window._sincronizarInconsistencias = function() {
 };
 
 window.renderizarRFsInconsistencias = function() {
-  // 1. Coletar dados globais
+  // 1. Geração DF-cêntrica — sincronização dinâmica com nfListaFiltradaGlobal
+  // Cada inconsistência vira 1 card; DF é a entidade primária, RF é referência opcional.
   var lista = [];
-  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
-    if (!nf.registrosFiscais) return;
-    var tipoNF = nf.tipo || 'entrada';
-    nf.registrosFiscais.forEach(function(rf) {
-      if ((rf.statusRegistro || rf.status) !== 'inconsistencia') return;
-      var dp = (rf.data || '').split('-');
-      var incTipo = rf.inconsistencia || null;
-      var etapa = incTipo === 'Vencido' ? 'Pagamentos' : (tipoNF === 'saida' ? 'Débitos' : 'Créditos');
-      lista.push({
-        id:        rf.id || '—',
-        tf:        rf.tipoFiscal === 'ibs' ? 'IBS' : 'CBS',
-        tipoNF:    tipoNF,
-        etapa:     etapa,
-        nfVinc:    (nf.tipoDF || 'DF') + ' ' + (rf.nfVinculada || nf.numero || ''),
-        forn:      (rf.entidade || nf.entidade || '—'),
-        cnpj:      rf.cnpj || nf.cnpj || '—',
-        valor:     rf.valor || 0,
-        valorTotal: rf.valorTotalNF || 0,
-        valorLiq:  rf.valorLiquidoNF || 0,
-        dataISO:   rf.data || '',
-        data:      dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
-        inc:       incTipo
-      });
-    });
+  var _capurIbsTipos = ['capur_ibs_divergente', 'capur_ibs_aliquota'];
+  var _capurCbsTipos = ['capur_cbs_divergente', 'capur_cbs_aliquota'];
+  var _cfinIbsTipos  = ['cfin_ibs_split',       'cfin_ibs_valor'];
+  var _cfinCbsTipos  = ['cfin_cbs_split',        'cfin_cbs_valor'];
+  var _incLblLocal = {
+    capur_ibs_divergente:'Valor IBS divergente da apuração', capur_cbs_divergente:'Valor CBS divergente da apuração',
+    capur_ibs_aliquota:'Alíquota IBS incorreta',             capur_cbs_aliquota:'Alíquota CBS incorreta',
+    prazo_expirado:'Prazo de apuração expirado',
+    cfin_ibs_split:'Split IBS não executado',                cfin_cbs_split:'Split CBS não executado',
+    cfin_ibs_valor:'Comprovante IBS divergente',             cfin_cbs_valor:'Comprovante CBS divergente',
+    chave_invalida:'Chave de acesso inválida',               cnpj_divergente:'CNPJ divergente',
+    duplicidade_rf:'RF duplicado'
+  };
+  window._incTipoLbl = _incLblLocal;
+
+  // Usa _concBuildLista para derivar capur_status e cfin_status de cada DF
+  var concLista = _concBuildLista('');
+  concLista.forEach(function(r) {
+    var nf   = r.nf;
+    var seed = _concHash((nf.numero || '') + (nf.cnpj || '') + r.idx);
+    var dp   = (nf.data || '').split('-');
+    var dataFmt = dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—';
+    var tipoNF  = nf.tipo || 'entrada';
+    var dfLabel = (nf.tipoDF || 'NF-e') + ' ' + nf.numero;
+
+    // ── CAPUR inconsistências ──────────────────────────────────────────────
+    if (r.capur_status === 'inconsistencia') {
+      var afeta = seed % 3; // 0=só IBS, 1=só CBS, 2=ambos
+      if (afeta !== 1) {
+        var tipoCI = _capurIbsTipos[seed % _capurIbsTipos.length];
+        lista.push({
+          id: (r.ibsRF ? r.ibsRF.id : nf.numero) + '_CAPUR_IBS',
+          rfId: r.ibsRF ? r.ibsRF.id : null, nfId: nf.numero,
+          tf: 'IBS', tipoNF: tipoNF, etapa: 'CAPUR',
+          nfVinc: dfLabel, forn: nf.entidade || '—', cnpj: nf.cnpj || '—',
+          valor: r.ibsRF ? (r.ibsRF.valor || 0) : Math.round((nf.valorTotal || 0) * 0.09),
+          dataISO: nf.data || '', data: dataFmt,
+          inc: tipoCI, tipoLabel: _incLblLocal[tipoCI]
+        });
+      }
+      if (afeta !== 0) {
+        var tipoCB = _capurCbsTipos[(seed + 1) % _capurCbsTipos.length];
+        lista.push({
+          id: (r.cbsRF ? r.cbsRF.id : nf.numero) + '_CAPUR_CBS',
+          rfId: r.cbsRF ? r.cbsRF.id : null, nfId: nf.numero,
+          tf: 'CBS', tipoNF: tipoNF, etapa: 'CAPUR',
+          nfVinc: dfLabel, forn: nf.entidade || '—', cnpj: nf.cnpj || '—',
+          valor: r.cbsRF ? (r.cbsRF.valor || 0) : Math.round((nf.valorTotal || 0) * 0.086),
+          dataISO: nf.data || '', data: dataFmt,
+          inc: tipoCB, tipoLabel: _incLblLocal[tipoCB]
+        });
+      }
+    }
+
+    // ── CFIN inconsistências ───────────────────────────────────────────────
+    if (r.cfin_status === 'inconsistencia') {
+      if (r.ibsInc && r.ibsRF) {
+        var tipoCFI = _cfinIbsTipos[(seed + 2) % _cfinIbsTipos.length];
+        lista.push({
+          id: r.ibsRF.id + '_CFIN_IBS',
+          rfId: r.ibsRF.id, nfId: nf.numero,
+          tf: 'IBS', tipoNF: tipoNF, etapa: 'CFIN',
+          nfVinc: dfLabel, forn: nf.entidade || '—', cnpj: nf.cnpj || '—',
+          valor: r.ibsRF.valor || 0,
+          dataISO: nf.data || '', data: dataFmt,
+          inc: tipoCFI, tipoLabel: _incLblLocal[tipoCFI]
+        });
+      }
+      if (r.cbsInc && r.cbsRF) {
+        var tipoCFC = _cfinCbsTipos[(seed + 3) % _cfinCbsTipos.length];
+        lista.push({
+          id: r.cbsRF.id + '_CFIN_CBS',
+          rfId: r.cbsRF.id, nfId: nf.numero,
+          tf: 'CBS', tipoNF: tipoNF, etapa: 'CFIN',
+          nfVinc: dfLabel, forn: nf.entidade || '—', cnpj: nf.cnpj || '—',
+          valor: r.cbsRF.valor || 0,
+          dataISO: nf.data || '', data: dataFmt,
+          inc: tipoCFC, tipoLabel: _incLblLocal[tipoCFC]
+        });
+      }
+      // CFIN pendente sem RF inconsistente = prazo expirado no DF
+      if (!r.ibsInc && !r.cbsInc) {
+        lista.push({
+          id: nf.numero + '_CFIN_PRAZO',
+          rfId: null, nfId: nf.numero,
+          tf: '—', tipoNF: tipoNF, etapa: 'CFIN',
+          nfVinc: dfLabel, forn: nf.entidade || '—', cnpj: nf.cnpj || '—',
+          valor: nf.valorTotal || 0,
+          dataISO: nf.data || '', data: dataFmt,
+          inc: 'prazo_expirado', tipoLabel: _incLblLocal['prazo_expirado']
+        });
+      }
+    }
   });
 
-  // 1b. Adicionar inconsistências de Ingestão
-  var _ingStatusToInc = { erro_layout:'Falha de Layout', erro_dados:'Inconsistência de Dados', rejeitado:'Rejeitado SEFAZ', duplicado:'Documento Duplicado' };
+  // 1b. Ingestão — DF direto, sem RF vinculado
+  var _ingStatusToInc = { erro_layout:'chave_invalida', erro_dados:'cnpj_divergente', rejeitado:'chave_invalida', duplicado:'duplicidade_rf' };
   var ingFalhas = ['erro_layout','erro_dados','rejeitado','duplicado'];
   (window._ingDadosGlobal || []).forEach(function(d) {
     if (ingFalhas.indexOf(d.status) === -1) return;
     var dp = (d.dataEmissao || '').split('-');
+    var incKey = _ingStatusToInc[d.status] || 'chave_invalida';
     lista.push({
       id:        'ING-' + d.id,
-      tf:        '—',
-      tipoNF:    'ingestao',
-      etapa:     'Ingestão',
+      rfId:      null,
+      tf:        '—', tipoNF: 'ingestao', etapa: 'Ingestão',
       nfVinc:    d.tipo + ' ' + (d.chave ? d.chave.slice(0,8) + '…' : '—'),
-      forn:      d.emitente || '—',
-      cnpj:      d.cnpj || '—',
+      forn:      d.emitente || '—', cnpj: d.cnpj || '—',
       valor:     d.valor || 0,
-      valorTotal: d.valor || 0,
-      valorLiq:  0,
       dataISO:   d.dataEmissao || '',
       data:      dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
-      inc:       _ingStatusToInc[d.status] || d.status
+      inc:       incKey, tipoLabel: _incLblLocal[incKey]
     });
   });
 
@@ -3028,15 +3095,16 @@ window.renderizarRFsInconsistencias = function() {
   var _incPrios = function(v){ return v > 500000 ? 'critica' : v > 100000 ? 'alta' : v > 20000 ? 'media' : 'baixa'; };
   var incGlobal = [];
   lista.forEach(function(r, i) {
-    var tipo = _tipoIncMap[r.inc || ''] || 'divergencia_valor';
-    var origem = r.tipoNF === 'ingestao' ? 'df' : 'rf';
+    var tipo   = _tipoIncLbl[r.inc] ? r.inc : (_tipoIncMap[r.inc || ''] || r.inc || 'capur_ibs_divergente');
+    var origem = r.rfId ? 'rf' : 'df';
     incGlobal.push({
       id:         'INC-' + String(incGlobal.length + 1).padStart(4,'0'),
       tipo:       tipo,
-      tipoLabel:  _tipoIncLbl[tipo] || (r.inc || 'Divergência'),
+      tipoLabel:  _tipoIncLbl[tipo] || (r.tipoLabel || r.inc || 'Inconsistência'),
       dfId:       r.nfVinc || '—',
       dfNum:      r.nfVinc || '—',
-      rfId:       origem === 'rf' ? r.id : null,
+      nfNumero:   r.nfId   || '',
+      rfId:       r.rfId || null,
       tipoFiscal: r.tf || '—',
       origem:     origem,
       tipoFluxo:  r.tipoNF === 'ingestao' ? 'entrada' : (r.tipoNF || 'entrada'),
@@ -3091,7 +3159,7 @@ window.renderizarRFsInconsistencias = function() {
   // 4. Chart 2 — Por tipo de inconsistência
   var mapTipo = {};
   lista.forEach(function(r){ var k=r.inc||'Sem tipo'; mapTipo[k]=(mapTipo[k]||0)+r.valor; });
-  var tiposDados = Object.keys(mapTipo).map(function(k){return {label:k,v:mapTipo[k],cor:_incCores[k]||PALETTE.teal};}).sort(function(a,b){return b.v-a.v;});
+  var tiposDados = Object.keys(mapTipo).map(function(k){return {label:_tipoIncLbl[k]||k,v:mapTipo[k],cor:_incCores[k]||PALETTE.teal};}).sort(function(a,b){return b.v-a.v;});
   _incSvgBar(document.getElementById('c-inc-tipos'), tiposDados, function(d){return d.cor;}, 560, 20, 12, 180, 70);
 
   // 5. Chart 3 — IBS vs CBS
@@ -3248,9 +3316,10 @@ window._incAbrirAcao = function(id) {
   var r = (window._rfIncGlobal || []).filter(function(x){ return x.id === id; })[0];
   if (!r) return;
 
-  var tipo = r.inc || 'Não conciliado';
-  var acoes = _incAcoesMap[tipo] || [{ label: 'Encaminhar para análise', icon: '🔍', cor: '#185fa5' }];
-  var incCor = _incCores[tipo] || '#8B5CF6';
+  var tipo    = r.inc || 'capur_ibs_divergente';
+  var tipoLbl = (window._incTipoLbl && window._incTipoLbl[tipo]) || r.tipoLabel || tipo;
+  var acoes   = _incAcoesMap[tipo] || [{ label: 'Encaminhar para análise', icon: '🔍', cor: '#185fa5' }];
+  var incCor  = _incCores[tipo] || '#8B5CF6';
   var fmtV = function(v){ if(v>=1e6) return 'R$ '+(v/1e6).toFixed(2).replace('.',',')+'M'; if(v>=1e3) return 'R$ '+Math.round(v/1e3)+'K'; return 'R$ '+v.toFixed(2).replace('.',','); };
 
   var acoesHtml = acoes.map(function(a, i) {
@@ -3270,7 +3339,7 @@ window._incAbrirAcao = function(id) {
     + '<button onclick="window._incFecharAcao()" style="background:none;border:none;color:var(--txt2);font-size:20px;cursor:pointer;line-height:1;padding:4px">✕</button>'
     + '</div>'
     + '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Inconsistência</div><div style="font-size:13px;font-weight:700;color:' + incCor + '">' + tipo + '</div></div>'
+    + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Inconsistência</div><div style="font-size:13px;font-weight:700;color:' + incCor + '">' + tipoLbl + '</div></div>'
     + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Valor RF</div><div style="font-size:13px;font-weight:700;color:var(--txt1)">' + fmtV(r.valor) + '</div></div>'
     + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Etapa</div><div style="font-size:13px;color:var(--txt1)">' + (r.etapa||'—') + '</div></div>'
     + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Data</div><div style="font-size:13px;color:var(--txt1)">' + (r.data||'—') + '</div></div>'
@@ -3294,7 +3363,7 @@ window._incFecharAcao = function() {
 window._incExecutarAcao = function(id, acaoIdx) {
   var r = (window._rfIncGlobal || []).filter(function(x){ return x.id === id; })[0];
   if (!r) return;
-  var tipo = r.inc || 'Não conciliado';
+  var tipo  = r.inc || 'capur_ibs_divergente';
   var acoes = _incAcoesMap[tipo] || [];
   var acao = acoes[acaoIdx] || { label: 'Ação', icon: '✅' };
 
