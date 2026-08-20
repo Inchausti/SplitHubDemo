@@ -385,16 +385,16 @@ window.nfFecharDetalhes = function() {
 
 // Contratos por CNPJ dos fornecedores reais das NFs geradas
 var _contratosData = [
-  {id:'CT-0001',cnpj:'14.382.976/0001-09',inicio:'2025-08-01',fim:'2026-06-30',rad:false,prazo:'30'},
-  {id:'CT-0002',cnpj:'28.447.821/0001-35',inicio:'2025-10-01',fim:'2026-09-30',rad:true, prazo:'60'},
-  {id:'CT-0003',cnpj:'52.039.781/0001-74',inicio:'2025-07-01',fim:'2026-12-31',rad:false,prazo:'90'},
-  {id:'CT-0004',cnpj:'73.612.590/0001-41',inicio:'2025-11-01',fim:'2026-10-31',rad:true, prazo:'30'},
-  {id:'CT-0005',cnpj:'19.854.203/0001-67',inicio:'2026-01-01',fim:'2026-12-31',rad:false,prazo:'60'},
-  {id:'CT-0006',cnpj:'38.291.045/0001-52',inicio:'2025-09-01',fim:'2026-08-31',rad:false,prazo:'30'},
-  {id:'CT-0007',cnpj:'61.874.320/0001-88',inicio:'2025-12-01',fim:'2026-11-30',rad:true, prazo:'90'},
-  {id:'CT-0008',cnpj:'47.193.825/0001-16',inicio:'2026-01-01',fim:'2026-06-30',rad:false,prazo:'60'},
-  {id:'CT-0009',cnpj:'86.340.217/0001-63',inicio:'2025-06-01',fim:'2026-05-31',rad:true, prazo:'120'},
-  {id:'CT-0010',cnpj:'93.475.862/0001-29',inicio:'2026-01-01',fim:'2026-12-31',rad:false,prazo:'30'}
+  {id:'CT-0001',cnpj:'14.382.976/0001-09',inicio:'2025-01-01',fim:'2027-12-31',rad:false,prazo:'30'},
+  {id:'CT-0002',cnpj:'28.447.821/0001-35',inicio:'2025-01-01',fim:'2027-12-31',rad:true, prazo:'60'},
+  {id:'CT-0003',cnpj:'52.039.781/0001-74',inicio:'2025-01-01',fim:'2027-12-31',rad:false,prazo:'90'},
+  {id:'CT-0004',cnpj:'73.612.590/0001-41',inicio:'2025-01-01',fim:'2027-12-31',rad:true, prazo:'30'},
+  {id:'CT-0005',cnpj:'19.854.203/0001-67',inicio:'2025-01-01',fim:'2027-12-31',rad:false,prazo:'60'},
+  {id:'CT-0006',cnpj:'38.291.045/0001-52',inicio:'2025-01-01',fim:'2027-12-31',rad:false,prazo:'45'},
+  {id:'CT-0007',cnpj:'61.874.320/0001-88',inicio:'2025-01-01',fim:'2027-12-31',rad:true, prazo:'90'},
+  {id:'CT-0008',cnpj:'47.193.825/0001-16',inicio:'2025-01-01',fim:'2027-12-31',rad:false,prazo:'60'},
+  {id:'CT-0009',cnpj:'86.340.217/0001-63',inicio:'2025-01-01',fim:'2027-12-31',rad:true, prazo:'120'},
+  {id:'CT-0010',cnpj:'93.475.862/0001-29',inicio:'2025-01-01',fim:'2027-12-31',rad:false,prazo:'30'}
 ];
 
 function _brToISOLocal(br) {
@@ -2452,17 +2452,21 @@ window.atualizarInteligencia = function() {
     var el = document.getElementById('cMapaRisco');
     if (!el) return;
 
-    // Mapa contratoId → prazo
+    // Mapa CNPJ → prazo (direto dos contratos, sem depender de nf.contratoId)
     var contratos = window._contratosData || [];
-    var contMap = {};
-    contratos.forEach(function(c) { contMap[c.id] = +c.prazo || 0; });
+    var cnpjPrazoMap = {};
+    contratos.forEach(function(c) { if (c.cnpj && c.prazo) cnpjPrazoMap[c.cnpj] = +c.prazo; });
 
-    // Prazo por fornecedor via contrato
+    // Prazo por fornecedor: lookup via CNPJ da NF
     var fornPrazo = {};
+    var fornCnpj = {};
     lista.forEach(function(nf) {
-      if (!nf.contratoId || fornPrazo[nf.entidade]) return;
-      var p = contMap[nf.contratoId];
-      if (p) fornPrazo[nf.entidade] = p;
+      var ent = nf.entidade || '—';
+      if (!fornCnpj[ent] && nf.cnpj) fornCnpj[ent] = nf.cnpj;
+    });
+    Object.keys(fornCnpj).forEach(function(ent) {
+      var p = cnpjPrazoMap[fornCnpj[ent]];
+      if (p) fornPrazo[ent] = p;
     });
 
     // Prazo determinístico via hash do nome → valores fixos representativos
