@@ -1558,6 +1558,9 @@ window.renderizarForecastAproveitamento = function(_retry) {
   var tickC = isDark ? '#6b7280' : '#9ca3af';
   if (window._fctAprovChart) { try{window._fctAprovChart.destroy();}catch(e){} window._fctAprovChart=null; }
   var H = Math.max(180, Math.min(260, canvas.parentElement.offsetWidth * 0.3));
+  var _wrapAprov = canvas.parentElement;
+  _wrapAprov.style.position = 'relative';
+  _wrapAprov.style.height = H + 'px';
   canvas.style.height = H + 'px';
   var splitIdx = N - 1;
   var forecastBgPlugin = { id:'apBg', beforeDraw: function(chart) {
@@ -5925,6 +5928,9 @@ window.renderizarFCTForecast = function(_retry) {
 
   if (canvas) {
     var H = Math.max(220, Math.min(300, canvas.parentElement.offsetWidth * 0.33));
+    var wrapper = canvas.parentElement;
+    wrapper.style.position = 'relative';
+    wrapper.style.height = H + 'px';
     canvas.style.height = H + 'px';
     window._renderFcChart(canvas, '_fctForecastChart', _fcOpts);
   }
