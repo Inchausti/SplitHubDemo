@@ -891,7 +891,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--txt3)">Aproveitamento de Crédito IBS+CBS · Indicador Principal</div>
         <div class="periodo-wrap" style="position:relative">
-          <span class="periodo-info" style="flex-shrink:0" data-tip="Mede a proporção do crédito IBS+CBS efetivamente apropriado em relação ao montante total originado no mês de referência (fato gerador). Créditos originados de NFs de entrada cujo pagamento foi confirmado e registrado na Plataforma Centralizada do Comitê Gestor são contabilizados como apropriados. Créditos pendentes, em risco ou com inconsistência reduzem este índice e representam exposição fiscal do contribuinte.">i</span>
+          <span class="periodo-info" style="flex-shrink:0" data-tip="Mede a proporção do crédito IBS+CBS efetivamente apropriado em relação ao montante total originado no mês de referência (fato gerador). Créditos originados de NFs de entrada cujo pagamento foi confirmado e registrado na Plataforma Centralizada do Comitê Gestor são contabilizados como apropriados. Créditos a apropriar, em risco ou com inconsistência reduzem este índice e representam exposição fiscal do contribuinte.">i</span>
         </div>
       </div>
       <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
@@ -2725,7 +2725,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <div class="kgrid k4">
       <div class="kcard" ><div class="klbl">CNPJs da Organização</div><div class="kval" id="org-total">—</div><div class="ksub">Induspar Tecnologia S.A.</div></div>
       <div class="kcard" ><div class="klbl">CNPJs Ativos</div><div class="kval" id="org-ativos">—</div><div class="ksub" id="org-ativos-sub">Habilitados para compra</div></div>
-      <div class="kcard" ><div class="klbl">Matrizes</div><div class="kval" id="org-matrizes">—</div><div class="ksub">CNPJs raiz</div></div>
+      <div class="kcard" ><div class="klbl">Matrizes</div><div class="kval" id="org-matrizes">—</div><div class="ksub">por grupo econômico</div></div>
       <div class="kcard" ><div class="klbl">Filiais</div><div class="kval" id="org-filiais">—</div><div class="ksub">Estabelecimentos vinculados</div></div>
     </div>
     <!-- Busca -->
@@ -5031,8 +5031,9 @@ function contratosAbrirDetalhe(ctId){
   var stBadge=contratoStatusBadge(st);
   var grp='—';
   if(f&&window._gruposEconomicos){
-    var raiz=ct.cnpj.substring(0,10);
-    var g=window._gruposEconomicos.find(function(x){return x.cnpjRaiz===raiz;});
+    // Grupo por grupoId do fornecedor (suporta CNPJs com raízes distintas)
+    var g=f.grupoId?window._gruposEconomicos.find(function(x){return x.id===f.grupoId;}):null;
+    if(!g){var raiz=ct.cnpj.substring(0,10);g=window._gruposEconomicos.find(function(x){return x.cnpjRaiz===raiz;});}
     if(g)grp=g.nome;
   }
   var tipo=(f&&f.tipo)?f.tipo:'—';

@@ -1748,7 +1748,7 @@ window.atualizarDashboard = function() {
     apropriado:    { label: 'Apropriado',    c: '#1d9e75' },
     utilizado:     { label: 'Utilizado',     c: '#1d9e75' },
     extinto:       { label: 'Extinto',       c: '#1d9e75' },
-    nao_apropriado:{ label: 'Pendente',      c: '#ba7517' },
+    nao_apropriado:{ label: 'A Apropriar',    c: '#ba7517' },
     em_risco:      { label: 'Em Risco',       c: '#ba7517' },
     vencido:       { label: 'Vencido',       c: '#a32d2d' },
     inconsistencia:{ label: 'Inconsistência',c: '#a32d2d' }
@@ -2032,7 +2032,7 @@ window.atualizarInteligencia = function() {
   if (typeof svgBar === 'function' && meses.length) {
     svgBar('cAprovMensal', [
       { data: dAprop, color: PALETTE.teal,  label: 'Apropriado' },
-      { data: dPend,  color: PALETTE.amber, label: 'Pendente'   },
+      { data: dPend,  color: PALETTE.amber, label: 'A Apropriar' },
       { data: dRisco, color: PALETTE.red,   label: 'Em Risco'   }
     ], labM, 200);
   }
@@ -3765,7 +3765,7 @@ window._incRenderVinculadasHtml = function(incs) {
     var lbl    = stLabs[st]  || st;
     var prioRgb = prioRGBs[inc.prioridade] || '100,116,139';
     var prioLbl = prioLbls[inc.prioridade] || '—';
-    return '<div onclick="window.kbAbrirCard(\''+inc.id+'\')" style="cursor:pointer;background:rgba(244,63,94,.04);border:1px solid rgba('+rgb+',.3);border-radius:6px;padding:9px 12px;margin-bottom:7px;transition:border-color .15s" onmouseenter="this.style.borderColor=\'rgba(244,63,94,.6)\'" onmouseleave="this.style.borderColor=\'rgba('+rgb+',.3)\'">'
+    return '<div onclick="var _o=document.getElementById(\'nf-detalhe-overlay\');if(_o)_o.remove();var _r=document.getElementById(\'rf-detalhe-overlay\');if(_r)_r.remove();window.kbAbrirCard(\''+inc.id+'\')" style="cursor:pointer;background:rgba(244,63,94,.04);border:1px solid rgba('+rgb+',.3);border-radius:6px;padding:9px 12px;margin-bottom:7px;transition:border-color .15s" onmouseenter="this.style.borderColor=\'rgba(244,63,94,.6)\'" onmouseleave="this.style.borderColor=\'rgba('+rgb+',.3)\'">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'
       + '<span style="font-size:10px;font-family:monospace;color:var(--txt3)">'+inc.id+'</span>'
       + '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba('+rgb+',.12);color:rgba('+rgb+',1);border:1px solid rgba('+rgb+',.28)">'+lbl+'</span>'
@@ -3864,6 +3864,7 @@ window.kbAbrirCard = function(incId) {
     modal.onclick = function(e) { if (e.target === modal) modal.style.display = 'none'; };
     document.body.appendChild(modal);
   }
+  modal.style.display = 'flex';
 
   var fmtV = function(v) {
     return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -5849,7 +5850,7 @@ window.atualizarKPIsPagamentos = function() {
 };
 
 // ============================================================
-// EVOLUÇÃO ACUMULADA DE CRÉDITOS — Apropriados vs Pendentes
+// EVOLUÇÃO ACUMULADA DE CRÉDITOS — Apropriados vs A Apropriar
 // ============================================================
 
 window.renderizarEvolucaoAcumuladaCreditos = function() {
@@ -5964,7 +5965,7 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
   // Hover zones
   var zW = Math.max(16, Math.floor(plotW / (n || 1)));
   for (var ci = 0; ci < n; ci++) {
-    var tp = [labels[ci], '#1d9e75', 'Apropriado Acum.', fv(dAprop[ci]), '#ba7517', 'Pendente Acum.', fv(dPend[ci])];
+    var tp = [labels[ci], '#1d9e75', 'Apropriado Acum.', fv(dAprop[ci]), '#ba7517', 'A Apropriar Acum.', fv(dPend[ci])];
     var enc = tp.join('|').replace(/'/g, '&apos;');
     s += '<rect x="' + (xp(ci) - Math.floor(zW / 2)) + '" y="' + padT + '" width="' + zW + '" height="' + plotH + '" fill="transparent" style="cursor:crosshair" onmousemove="_svgTipShow(event,\'' + enc + '\')" onmouseleave="_svgTipHide()"/>';
   }
@@ -6891,13 +6892,17 @@ window.dashCnpjToggleDropdown = function(event) {
 // ── Gestão Organização — CNPJs compradores (Induspar) ──────────────────────
 
 window._orgCnpjs = [
-  { id:1, cnpj:'54.891.237/0001-48', razao:'Induspar Tecnologia S.A.', ie:'9029-6',     uf:'PR', tipo:'Matriz', status:'ativo'   },
-  { id:2, cnpj:'54.891.237/0002-29', razao:'Induspar Tecnologia S.A.', ie:'9029-6/002', uf:'SP', tipo:'Filial', status:'ativo'   },
-  { id:3, cnpj:'54.891.237/0003-00', razao:'Induspar Tecnologia S.A.', ie:'9029-6/003', uf:'MG', tipo:'Filial', status:'ativo'   },
-  { id:4, cnpj:'54.891.237/0004-81', razao:'Induspar Tecnologia S.A.', ie:'9029-6/004', uf:'SC', tipo:'Filial', status:'inativo' },
-  { id:5, cnpj:'54.891.237/0005-62', razao:'Induspar Tecnologia S.A.', ie:'9029-6/005', uf:'RJ', tipo:'Filial', status:'ativo'   },
-  { id:6, cnpj:'54.891.237/0006-43', razao:'Induspar Tecnologia S.A.', ie:'9029-6/006', uf:'RS', tipo:'Filial', status:'ativo'   },
-  { id:7, cnpj:'54.891.237/0007-24', razao:'Induspar Tecnologia S.A.', ie:'9029-6/007', uf:'BA', tipo:'Filial', status:'ativo'   },
+  // ── Grupo Induspar (raiz 54.891.237) ───────────────────────────────
+  { id:1, cnpj:'54.891.237/0001-48', razao:'Induspar Tecnologia S.A.', ie:'9029-6',     uf:'PR', tipo:'Matriz', status:'ativo',   grupoId:'g-induspar', grupoNome:'Grupo Induspar' },
+  { id:2, cnpj:'54.891.237/0002-29', razao:'Induspar Tecnologia S.A.', ie:'9029-6/002', uf:'SP', tipo:'Filial', status:'ativo',   grupoId:'g-induspar', grupoNome:'Grupo Induspar' },
+  { id:3, cnpj:'54.891.237/0003-00', razao:'Induspar Tecnologia S.A.', ie:'9029-6/003', uf:'MG', tipo:'Filial', status:'ativo',   grupoId:'g-induspar', grupoNome:'Grupo Induspar' },
+  { id:4, cnpj:'54.891.237/0004-81', razao:'Induspar Tecnologia S.A.', ie:'9029-6/004', uf:'SC', tipo:'Filial', status:'inativo', grupoId:'g-induspar', grupoNome:'Grupo Induspar' },
+  { id:5, cnpj:'54.891.237/0005-62', razao:'Induspar Tecnologia S.A.', ie:'9029-6/005', uf:'RJ', tipo:'Filial', status:'ativo',   grupoId:'g-induspar', grupoNome:'Grupo Induspar' },
+  { id:6, cnpj:'54.891.237/0006-43', razao:'Induspar Tecnologia S.A.', ie:'9029-6/006', uf:'RS', tipo:'Filial', status:'ativo',   grupoId:'g-induspar', grupoNome:'Grupo Induspar' },
+  { id:7, cnpj:'54.891.237/0007-24', razao:'Induspar Tecnologia S.A.', ie:'9029-6/007', uf:'BA', tipo:'Filial', status:'ativo',   grupoId:'g-induspar', grupoNome:'Grupo Induspar' },
+  // ── Systec Digital (raiz 67.432.109) — coligada com raiz CNPJ distinta ─
+  { id:8, cnpj:'67.432.109/0001-73', razao:'Systec Digital Ltda.',      ie:'SY-0001',    uf:'SP', tipo:'Matriz', status:'ativo',   grupoId:'g-induspar', grupoNome:'Grupo Induspar' },
+  { id:9, cnpj:'67.432.109/0002-54', razao:'Systec Digital Ltda.',      ie:'SY-0002',    uf:'PR', tipo:'Filial', status:'ativo',   grupoId:'g-induspar', grupoNome:'Grupo Induspar' },
 ];
 window._orgNextId = 8;
 window._orgEditId = null;
@@ -6933,26 +6938,51 @@ window.orgRenderTabela = function() {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--txt3)">Nenhum CNPJ encontrado com os filtros aplicados.</td></tr>';
     return;
   }
-  tbody.innerHTML = lista.map(function(r) {
-    var sCor   = r.status === 'ativo' ? '#1d9e75' : 'var(--txt3)';
-    var sSrgb  = r.status === 'ativo' ? '29,158,117' : '167,168,170';
-    var sLabel = r.status === 'ativo' ? 'Ativo' : 'Inativo';
-    var tipoCor = r.tipo === 'Matriz' ? '#60A5FA' : '#A78BFA';
-    var tipoSrgb = r.tipo === 'Matriz' ? '96,165,250' : '167,139,250';
-    return '<tr>'
-      + '<td class="mono" style="font-size:11px">' + r.cnpj + '</td>'
-      + '<td style="font-size:12px;font-weight:500;color:var(--txt1)">' + r.razao + '</td>'
-      + '<td class="mono" style="font-size:11px">' + r.ie + '</td>'
-      + '<td><span style="font-size:11px;font-weight:700;color:var(--txt2)">' + r.uf + '</span></td>'
-      + '<td><span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba('+tipoSrgb+',.3);color:'+tipoCor+';background:transparent">' + r.tipo + '</span></td>'
-      + '<td><span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba('+sSrgb+',.3);color:'+sCor+';background:transparent">' + sLabel + '</span></td>'
-      + '<td style="text-align:center;white-space:nowrap">'
-      + '<button onclick="window.orgAbrirModal(' + r.id + ')" style="background:none;border:1px solid var(--brd);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--txt2);cursor:pointer;margin-right:6px">✏ Editar</button>'
-      + '<button onclick="window.orgAbrirDet(' + r.id + ')" style="background:none;border:1px solid var(--brd);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--txt2);cursor:pointer;margin-right:6px">⊙ Detalhes</button>'
-      + '<button onclick="window.orgExcluir(' + r.id + ')" style="background:none;border:1px solid rgba(244,63,94,.4);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--red);cursor:pointer">✕</button>'
-      + '</td>'
-      + '</tr>';
-  }).join('');
+  // Agrupar por grupoId (suporta CNPJs com raízes distintas no mesmo grupo)
+  var _orgGruposVis = [];
+  var _orgGrupoMap = {};
+  lista.forEach(function(r) {
+    var gid = r.grupoId || 'sem-grupo';
+    if (!_orgGrupoMap[gid]) { _orgGrupoMap[gid] = []; _orgGruposVis.push(gid); }
+    _orgGrupoMap[gid].push(r);
+  });
+
+  var rows = '';
+  _orgGruposVis.forEach(function(gid) {
+    var membros = _orgGrupoMap[gid];
+    var gnome = membros[0].grupoNome || gid;
+    // Raízes distintas no grupo
+    var raizes = [];
+    membros.forEach(function(m) { var r = m.cnpj.substring(0,10); if (raizes.indexOf(r) < 0) raizes.push(r); });
+    var raizLabel = raizes.length > 1 ? raizes.length + ' raízes CNPJ' : 'raiz ' + raizes[0];
+    rows += '<tr style="background:rgba(96,165,250,.06);border-top:2px solid rgba(96,165,250,.2)">'
+      + '<td colspan="7" style="padding:8px 14px">'
+      + '<div style="display:flex;align-items:center;gap:10px">'
+      + '<span style="background:rgba(96,165,250,.15);color:var(--blue);border:1px solid rgba(96,165,250,.3);border-radius:4px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.06em">GRUPO</span>'
+      + '<span style="font-size:13px;font-weight:700;color:var(--txt1)">'+gnome+'</span>'
+      + '<span style="font-size:11px;color:var(--txt3)">'+membros.length+' CNPJs · '+raizLabel+'</span>'
+      + '</div></td></tr>';
+    membros.forEach(function(r) {
+      var sCor   = r.status === 'ativo' ? '#1d9e75' : 'var(--txt3)';
+      var sSrgb  = r.status === 'ativo' ? '29,158,117' : '167,168,170';
+      var sLabel = r.status === 'ativo' ? 'Ativo' : 'Inativo';
+      var tipoCor = r.tipo === 'Matriz' ? '#60A5FA' : '#A78BFA';
+      var tipoSrgb = r.tipo === 'Matriz' ? '96,165,250' : '167,139,250';
+      rows += '<tr>'
+        + '<td class="mono" style="font-size:11px">' + r.cnpj + '</td>'
+        + '<td style="font-size:12px;font-weight:500;color:var(--txt1)">' + r.razao + '</td>'
+        + '<td class="mono" style="font-size:11px">' + r.ie + '</td>'
+        + '<td><span style="font-size:11px;font-weight:700;color:var(--txt2)">' + r.uf + '</span></td>'
+        + '<td><span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba('+tipoSrgb+',.3);color:'+tipoCor+';background:transparent">' + r.tipo + '</span></td>'
+        + '<td><span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba('+sSrgb+',.3);color:'+sCor+';background:transparent">' + sLabel + '</span></td>'
+        + '<td style="text-align:center;white-space:nowrap">'
+        + '<button onclick="window.orgAbrirModal(' + r.id + ')" style="background:none;border:1px solid var(--brd);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--txt2);cursor:pointer;margin-right:6px">✏ Editar</button>'
+        + '<button onclick="window.orgAbrirDet(' + r.id + ')" style="background:none;border:1px solid var(--brd);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--txt2);cursor:pointer;margin-right:6px">⊙ Detalhes</button>'
+        + '<button onclick="window.orgExcluir(' + r.id + ')" style="background:none;border:1px solid rgba(244,63,94,.4);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--red);cursor:pointer">✕</button>'
+        + '</td></tr>';
+    });
+  });
+  tbody.innerHTML = rows || '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--txt3)">Nenhum CNPJ encontrado.</td></tr>';
 };
 
 window.orgAbrirModal = function(id) {
