@@ -1913,7 +1913,7 @@ window._svgTipShow = function(evt, raw) {
   if (!tip) {
     tip = document.createElement('div');
     tip.id = '_svgTip';
-    tip.style.cssText = 'position:fixed;pointer-events:none;display:none;background:#1a1d23;color:#e8e9ea;font-size:12px;padding:8px 12px;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.5);z-index:9999;white-space:nowrap;font-family:Montserrat,sans-serif;line-height:1.9;border:1px solid rgba(255,255,255,.08)';
+    tip.style.cssText = 'position:fixed;pointer-events:none;display:none;background:#1a1d23;color:#e8e9ea;font-size:12px;padding:8px 12px;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.5);z-index:9999;white-space:nowrap;font-family:Inter,system-ui,sans-serif;line-height:1.9;border:1px solid rgba(255,255,255,.08)';
     document.body.appendChild(tip);
   }
   var parts = raw.split('|');
@@ -1965,7 +1965,7 @@ if (typeof svgLine !== 'function') {
     [0.25,0.5,0.75,1].forEach(function(f){
       var v=minV+rng*f,gy=yp(v);
       s+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="rgba(128,128,128,0.1)" stroke-width="1"/>';
-      s+='<text x="'+(padL-5)+'" y="'+(gy+3)+'" text-anchor="end" fill="var(--txt3)" font-size="9" font-family="Montserrat,sans-serif">'+fmtFn(v)+'</text>';
+      s+='<text x="'+(padL-5)+'" y="'+(gy+3)+'" text-anchor="end" fill="var(--txt3)" font-size="9" font-family="Inter,system-ui,sans-serif">'+fmtFn(v)+'</text>';
     });
     if(minV<0&&maxV>0){var gy0=yp(0);s+='<line x1="'+padL+'" y1="'+gy0+'" x2="'+(W-padR)+'" y2="'+gy0+'" stroke="rgba(128,128,128,0.3)" stroke-width="1" stroke-dasharray="3 2"/>';}
     datasets.forEach(function(ds){
@@ -1975,7 +1975,7 @@ if (typeof svgLine !== 'function') {
       s+='<polyline points="'+pts+'" fill="none" stroke="'+ds.color+'" stroke-width="'+(ds.w||2)+'" '+da+' stroke-linejoin="round" stroke-linecap="round" clip-path="url(#cpfb_'+id+')"/>';
       if(ds.dots){ds.data.forEach(function(v,i){s+='<circle cx="'+xp(i)+'" cy="'+yp(v)+'" r="3" fill="'+ds.color+'" pointer-events="none" clip-path="url(#cpfb_'+id+')"/>';});}
     });
-    labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
+    labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">'+l+'</text>';});
     var zW=Math.max(14,Math.floor(plotW/n));
     for(var ci=0;ci<n;ci++){
       var tp=[labels[ci]];datasets.forEach(function(ds){tp.push(ds.color,ds.label||'Valor',fmtFn(ds.data[ci]||0));});
@@ -1998,7 +1998,7 @@ if (typeof svgBar !== 'function') {
     function xp(i){return Math.round(padL+(i+0.5)*plotW/n);}
     function fmtTip(v){return (v>=1?v.toFixed(2).replace('.',','):v.toFixed(3).replace('.',','))+'M';}
     var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:'+H+'px;display:block;overflow:visible">';
-    labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">'+l+'</text>';});
+    labels.forEach(function(l,i){s+='<text x="'+xp(i)+'" y="'+(H-6)+'" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">'+l+'</text>';});
     for(var bi=0;bi<n;bi++){
       var yBase=H-padB;
       var tipParts=[labels[bi]];
@@ -2237,42 +2237,42 @@ window.atualizarInteligencia = function() {
     var qCritX1 = padL,      qCritX2 = xp(70);
     var qCritY1 = ypp(60),   qCritY2 = H - padB;
     s += '<rect x="' + qCritX1 + '" y="' + qCritY1 + '" width="' + (qCritX2 - qCritX1) + '" height="' + (qCritY2 - qCritY1) + '" fill="rgba(244,63,94,0.08)"/>';
-    s += '<text x="' + (qCritX1 + 8) + '" y="' + (qCritY2 - 8) + '" fill="var(--red)" font-size="10" font-weight="700" font-family="Montserrat,sans-serif" opacity="0.75">⚠ CRÍTICO</text>';
+    s += '<text x="' + (qCritX1 + 8) + '" y="' + (qCritY2 - 8) + '" fill="var(--red)" font-size="10" font-weight="700" font-family="Inter,system-ui,sans-serif" opacity="0.75">⚠ CRÍTICO</text>';
 
     // Quadrante saudável: score ≥ 70 e prazo ≤ 60 — canto SUPERIOR direito
     var qSaudX1 = xp(70),    qSaudX2 = W - padR;
     var qSaudY1 = padT,      qSaudY2 = ypp(60);
     s += '<rect x="' + qSaudX1 + '" y="' + qSaudY1 + '" width="' + (qSaudX2 - qSaudX1) + '" height="' + (qSaudY2 - qSaudY1) + '" fill="rgba(29,158,117,0.07)"/>';
-    s += '<text x="' + (qSaudX2 - 8) + '" y="' + (qSaudY1 + 16) + '" text-anchor="end" fill="var(--green)" font-size="10" font-weight="700" font-family="Montserrat,sans-serif" opacity="0.75">✓ SAUDÁVEL</text>';
+    s += '<text x="' + (qSaudX2 - 8) + '" y="' + (qSaudY1 + 16) + '" text-anchor="end" fill="var(--green)" font-size="10" font-weight="700" font-family="Inter,system-ui,sans-serif" opacity="0.75">✓ SAUDÁVEL</text>';
 
     // Grid linhas verticais (score 20,40,60,70,80,100)
     [20, 40, 60, 80, 100].forEach(function(v) {
       var gx = xp(v);
       s += '<line x1="' + gx + '" y1="' + padT + '" x2="' + gx + '" y2="' + (H - padB) + '" stroke="rgba(128,128,128,0.1)" stroke-width="1"/>';
-      s += '<text x="' + gx + '" y="' + (H - padB + 16) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">' + v + '</text>';
+      s += '<text x="' + gx + '" y="' + (H - padB + 16) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">' + v + '</text>';
     });
 
     // Grid linhas horizontais (prazo 30,60,90,120)
     [30, 60, 90, 120].forEach(function(v) {
       var gy = ypp(v);
       s += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="rgba(128,128,128,0.1)" stroke-width="1"/>';
-      s += '<text x="' + (padL - 6) + '" y="' + (gy + 4) + '" text-anchor="end" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">' + v + 'd</text>';
+      s += '<text x="' + (padL - 6) + '" y="' + (gy + 4) + '" text-anchor="end" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">' + v + 'd</text>';
     });
 
     // Linhas de threshold
     s += '<line x1="' + xp(70) + '" y1="' + padT + '" x2="' + xp(70) + '" y2="' + (H - padB) + '" stroke="rgba(186,117,23,0.65)" stroke-width="1.5" stroke-dasharray="6 4"/>';
-    s += '<text x="' + (xp(70) + 3) + '" y="' + (padT + 10) + '" fill="var(--amber)" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">score 70</text>';
+    s += '<text x="' + (xp(70) + 3) + '" y="' + (padT + 10) + '" fill="var(--amber)" font-size="9" font-weight="700" font-family="Inter,system-ui,sans-serif">score 70</text>';
 
     s += '<line x1="' + padL + '" y1="' + ypp(60) + '" x2="' + (W - padR) + '" y2="' + ypp(60) + '" stroke="rgba(186,117,23,0.65)" stroke-width="1.5" stroke-dasharray="6 4"/>';
-    s += '<text x="' + (W - padR - 3) + '" y="' + (ypp(60) - 4) + '" text-anchor="end" fill="var(--amber)" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">60d</text>';
+    s += '<text x="' + (W - padR - 3) + '" y="' + (ypp(60) - 4) + '" text-anchor="end" fill="var(--amber)" font-size="9" font-weight="700" font-family="Inter,system-ui,sans-serif">60d</text>';
 
     // Eixos
     s += '<line x1="' + padL + '" y1="' + (H - padB) + '" x2="' + (W - padR) + '" y2="' + (H - padB) + '" stroke="rgba(128,128,128,0.2)" stroke-width="1"/>';
     s += '<line x1="' + padL + '" y1="' + padT + '" x2="' + padL + '" y2="' + (H - padB) + '" stroke="rgba(128,128,128,0.2)" stroke-width="1"/>';
 
     // Labels eixos
-    s += '<text x="' + (padL + plotW / 2) + '" y="' + (H - 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="11" font-family="Montserrat,sans-serif">Score de Aproveitamento →</text>';
-    s += '<text transform="rotate(-90,' + (padL - 42) + ',' + (padT + plotH / 2) + ')" x="' + (padL - 42) + '" y="' + (padT + plotH / 2 + 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="11" font-family="Montserrat,sans-serif">Prazo Contratual (dias) ↓</text>';
+    s += '<text x="' + (padL + plotW / 2) + '" y="' + (H - 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="11" font-family="Inter,system-ui,sans-serif">Score de Aproveitamento →</text>';
+    s += '<text transform="rotate(-90,' + (padL - 42) + ',' + (padT + plotH / 2) + ')" x="' + (padL - 42) + '" y="' + (padT + plotH / 2 + 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="11" font-family="Inter,system-ui,sans-serif">Prazo Contratual (dias) ↓</text>';
 
     // Pontos — maiores atrás, dots suavizados com halo + glow
     var fmtV2 = function(v) { return v >= 1e6 ? 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M' : v >= 1e3 ? 'R$ ' + Math.round(v/1e3) + 'K' : 'R$ 0'; };
@@ -2295,7 +2295,7 @@ window.atualizarInteligencia = function() {
       var lbl = p.nome.split(' ')[0];
       var lblY = cy + r + 11;
       if (lblY > H - padB - 2) lblY = cy - r - 4;
-      s += '<text x="' + cx + '" y="' + lblY + '" text-anchor="middle" fill="' + cor + '" font-size="8" font-weight="600" font-family="Montserrat,sans-serif" opacity="0.85">' + lbl + '</text>';
+      s += '<text x="' + cx + '" y="' + lblY + '" text-anchor="middle" fill="' + cor + '" font-size="8" font-weight="600" font-family="Inter,system-ui,sans-serif" opacity="0.85">' + lbl + '</text>';
     });
 
     s += '</svg>';
@@ -2894,11 +2894,11 @@ function _incSvgBar(el, dados, corFn, W, barH, gap, padL, padR) {
     var y = padT + i * (barH + gap);
     var bw = Math.max(4, Math.round((d.v / maxVal) * (W - padL - padR)));
     var cor = typeof corFn === 'function' ? corFn(d) : corFn;
-    s += '<text x="' + (padL - 6) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#A7A8AA" font-size="10" font-family="Montserrat,sans-serif">' + (d.label||'').slice(0,24) + '</text>';
+    s += '<text x="' + (padL - 6) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#A7A8AA" font-size="10" font-family="Inter,system-ui,sans-serif">' + (d.label||'').slice(0,24) + '</text>';
     s += '<rect x="' + padL + '" y="' + y + '" width="' + (W - padL - padR) + '" height="' + barH + '" rx="3" fill="rgba(139,92,246,.07)"/>';
     s += '<rect x="' + padL + '" y="' + y + '" width="' + bw + '" height="' + barH + '" rx="3" fill="' + cor + '" opacity=".85"/>';
     var vlbl = d.fmt || _incFmtM(d.v);
-    s += '<text x="' + (W - 2) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="'+PALETTE.blue+'" font-size="10" font-weight="700" font-family="Montserrat,sans-serif">' + vlbl + '</text>';
+    s += '<text x="' + (W - 2) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="'+PALETTE.blue+'" font-size="10" font-weight="700" font-family="Inter,system-ui,sans-serif">' + vlbl + '</text>';
   });
   s += '</svg>';
   el.innerHTML = s;
@@ -2913,10 +2913,10 @@ function _incSvgDuo(el, items, W, barH) {
   items.forEach(function(d, i) {
     var y = padT + i * (barH + gap);
     var bw = Math.max(4, Math.round((d.v / maxV) * (W - padL - padR)));
-    s += '<text x="' + (padL - 6) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="' + d.cor + '" font-size="11" font-weight="700" font-family="Montserrat,sans-serif">' + d.label + '</text>';
+    s += '<text x="' + (padL - 6) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="' + d.cor + '" font-size="11" font-weight="700" font-family="Inter,system-ui,sans-serif">' + d.label + '</text>';
     s += '<rect x="' + padL + '" y="' + y + '" width="' + (W - padL - padR) + '" height="' + barH + '" rx="3" fill="' + d.cor + '" opacity=".10"/>';
     s += '<rect x="' + padL + '" y="' + y + '" width="' + bw + '" height="' + barH + '" rx="3" fill="' + d.cor + '" opacity=".80"/>';
-    s += '<text x="' + (W - 2) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="' + d.cor + '" font-size="10" font-weight="700" font-family="Montserrat,sans-serif">' + _incFmtM(d.v) + '</text>';
+    s += '<text x="' + (W - 2) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="' + d.cor + '" font-size="10" font-weight="700" font-family="Inter,system-ui,sans-serif">' + _incFmtM(d.v) + '</text>';
   });
   s += '</svg>';
   el.innerHTML = s;
@@ -2938,8 +2938,8 @@ function _incSvgMensal(el, mapa, W) {
     var x = 10 + i * (barW + 4);
     var y = padT + areaH - bh;
     s += '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + bh + '" rx="2" fill="'+PALETTE.blue+'" opacity=".75"/>';
-    s += '<text x="' + (x + barW / 2) + '" y="' + (H - 6) + '" text-anchor="middle" fill="#A7A8AA" font-size="9" font-family="Montserrat,sans-serif">' + m.slice(5) + '</text>';
-    if (v > 0) s += '<text x="' + (x + barW / 2) + '" y="' + (y - 3) + '" text-anchor="middle" fill="'+PALETTE.blue+'" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">' + v + '</text>';
+    s += '<text x="' + (x + barW / 2) + '" y="' + (H - 6) + '" text-anchor="middle" fill="#A7A8AA" font-size="9" font-family="Inter,system-ui,sans-serif">' + m.slice(5) + '</text>';
+    if (v > 0) s += '<text x="' + (x + barW / 2) + '" y="' + (y - 3) + '" text-anchor="middle" fill="'+PALETTE.blue+'" font-size="9" font-weight="700" font-family="Inter,system-ui,sans-serif">' + v + '</text>';
   });
   s += '</svg>';
   el.innerHTML = s;
@@ -3459,7 +3459,7 @@ window._incExecutarAcao = function(id, acaoIdx) {
 
   // Toast de confirmação
   var toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:28px;right:24px;background:#1a1d23;border:1px solid rgba(139,92,246,.4);border-left:4px solid #8B5CF6;border-radius:8px;padding:14px 18px;z-index:10001;font-family:Montserrat,sans-serif;min-width:300px;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:_slideIn .2s ease';
+  toast.style.cssText = 'position:fixed;bottom:28px;right:24px;background:#1a1d23;border:1px solid rgba(139,92,246,.4);border-left:4px solid #8B5CF6;border-radius:8px;padding:14px 18px;z-index:10001;font-family:Inter,system-ui,sans-serif;min-width:300px;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:_slideIn .2s ease';
   toast.innerHTML = '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">' + acao.icon + ' Ação iniciada com sucesso</div>'
     + '<div style="font-size:11px;color:#adb5bd">' + acao.label + ' · ' + r.id + '</div>'
     + '<div style="font-size:11px;color:#8B5CF6;margin-top:6px">Registro encaminhado para acompanhamento</div>';
@@ -4990,7 +4990,7 @@ function _ensureChartTooltip() {
   if (document.getElementById('chart-tooltip')) return;
   var t = document.createElement('div');
   t.id = 'chart-tooltip';
-  t.style.cssText = 'position:fixed;display:none;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;font-family:Montserrat,sans-serif;color:var(--txt1);pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.3);line-height:1.5';
+  t.style.cssText = 'position:fixed;display:none;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;font-family:Inter,system-ui,sans-serif;color:var(--txt1);pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.3);line-height:1.5';
   document.body.appendChild(t);
   document.addEventListener('mousemove', function(e) {
     var tt = document.getElementById('chart-tooltip');
@@ -5034,7 +5034,7 @@ function _svgStackedBar(id, datasets, labels, H) {
     var yg = Math.round(padT + (1 - g / 4) * plotH);
     var val = (maxV * g / 4).toFixed(1);
     s += '<line x1="' + padL + '" y1="' + yg + '" x2="' + (W - padR) + '" y2="' + yg + '" stroke="rgba(167,168,170,.15)" stroke-width="1"/>';
-    s += '<text x="' + (padL - 5) + '" y="' + (yg + 4) + '" text-anchor="end" fill="var(--txt3)" font-size="9" font-family="Montserrat,sans-serif">' + val + '</text>';
+    s += '<text x="' + (padL - 5) + '" y="' + (yg + 4) + '" text-anchor="end" fill="var(--txt3)" font-size="9" font-family="Inter,system-ui,sans-serif">' + val + '</text>';
   }
 
   // Barras empilhadas — cada rect recebe data-* para o tooltip
@@ -5053,8 +5053,8 @@ function _svgStackedBar(id, datasets, labels, H) {
       yBase = bY;
     }
     var total = stacks[i].toFixed(1);
-    s += '<text x="' + xp(i) + '" y="' + (padT + plotH + padB - 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="9" font-family="Montserrat,sans-serif">' + labels[i] + '</text>';
-    s += '<text x="' + xp(i) + '" y="' + (yBase - 4) + '" text-anchor="middle" fill="#A7A8AA" font-size="8" font-family="Montserrat,sans-serif">' + total + '</text>';
+    s += '<text x="' + xp(i) + '" y="' + (padT + plotH + padB - 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="9" font-family="Inter,system-ui,sans-serif">' + labels[i] + '</text>';
+    s += '<text x="' + xp(i) + '" y="' + (yBase - 4) + '" text-anchor="middle" fill="#A7A8AA" font-size="8" font-family="Inter,system-ui,sans-serif">' + total + '</text>';
   }
 
   s += '</svg>';
@@ -5127,7 +5127,7 @@ window.renderizarTop5Inconsistencias = function() {
     var valM = (r.valor / 1e6).toFixed(2).replace('.', ',');
 
     // Label esquerda: RF ID + fornecedor
-    s += '<text x="' + (padL - 8) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#A7A8AA" font-size="10" font-family="Montserrat,sans-serif">'
+    s += '<text x="' + (padL - 8) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#A7A8AA" font-size="10" font-family="Inter,system-ui,sans-serif">'
       + r.id + ' · ' + r.forn + '</text>';
 
     // Barra de fundo
@@ -5138,10 +5138,10 @@ window.renderizarTop5Inconsistencias = function() {
 
     // Badge tipo
     s += '<rect x="' + (padL + barW + 6) + '" y="' + (y + 3) + '" width="26" height="14" rx="3" fill="' + cor + '" opacity=".18"/>';
-    s += '<text x="' + (padL + barW + 19) + '" y="' + (y + 13) + '" text-anchor="middle" fill="' + cor + '" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">' + r.tipo + '</text>';
+    s += '<text x="' + (padL + barW + 19) + '" y="' + (y + 13) + '" text-anchor="middle" fill="' + cor + '" font-size="9" font-weight="700" font-family="Inter,system-ui,sans-serif">' + r.tipo + '</text>';
 
     // Valor à direita
-    s += '<text x="' + (W - 4) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="var(--red)" font-size="10" font-weight="700" font-family="Montserrat,sans-serif">R$ ' + valM + 'M</text>';
+    s += '<text x="' + (W - 4) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="var(--red)" font-size="10" font-weight="700" font-family="Inter,system-ui,sans-serif">R$ ' + valM + 'M</text>';
   });
 
   s += '</svg>';
@@ -5216,7 +5216,7 @@ window.renderizarTop10Empresas = function() {
     var cor    = scoreColor(r.pct);
 
     // label fornecedor
-    s += '<text x="' + (padL - 6) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#A7A8AA" font-size="9" font-family="Montserrat,sans-serif">' + r.nome.slice(0, 18) + '</text>';
+    s += '<text x="' + (padL - 6) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="#A7A8AA" font-size="9" font-family="Inter,system-ui,sans-serif">' + r.nome.slice(0, 18) + '</text>';
 
     // trilho de fundo (volume total proporcional ao maior)
     s += '<rect x="' + padL + '" y="' + y + '" width="' + wFundo + '" height="' + barH + '" rx="3" fill="rgba(167,168,170,.1)"/>';
@@ -5233,19 +5233,19 @@ window.renderizarTop10Empresas = function() {
 
     // volume total
     var xVal = padL + wFundo + 5;
-    s += '<text x="' + xVal + '" y="' + (y + barH / 2 + 4) + '" fill="#A7A8AA" font-size="9" font-weight="600" font-family="Montserrat,sans-serif">' + fmtM(r.total) + '</text>';
+    s += '<text x="' + xVal + '" y="' + (y + barH / 2 + 4) + '" fill="#A7A8AA" font-size="9" font-weight="600" font-family="Inter,system-ui,sans-serif">' + fmtM(r.total) + '</text>';
 
     // % pendente + score badge
     var pctStr = (r.pct * 100).toFixed(1).replace('.', ',') + '%';
-    s += '<text x="' + (W - 2) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="' + cor + '" font-size="9" font-weight="700" font-family="Montserrat,sans-serif">' + pctStr + ' · ' + scoreLabel(r.pct) + '</text>';
+    s += '<text x="' + (W - 2) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" fill="' + cor + '" font-size="9" font-weight="700" font-family="Inter,system-ui,sans-serif">' + pctStr + ' · ' + scoreLabel(r.pct) + '</text>';
   });
 
   // legenda
   var ly = totalH - 10;
   s += '<rect x="' + padL + '" y="' + ly + '" width="10" height="6" rx="1" fill="var(--teal)" opacity=".75"/>';
-  s += '<text x="' + (padL + 13) + '" y="' + (ly + 5) + '" fill="#A7A8AA" font-size="8" font-family="Montserrat,sans-serif">Apropriado/Utilizado</text>';
+  s += '<text x="' + (padL + 13) + '" y="' + (ly + 5) + '" fill="#A7A8AA" font-size="8" font-family="Inter,system-ui,sans-serif">Apropriado/Utilizado</text>';
   s += '<rect x="' + (padL + 105) + '" y="' + ly + '" width="10" height="6" rx="1" fill="var(--amber)" opacity=".85"/>';
-  s += '<text x="' + (padL + 118) + '" y="' + (ly + 5) + '" fill="#A7A8AA" font-size="8" font-family="Montserrat,sans-serif">Não Apropriado</text>';
+  s += '<text x="' + (padL + 118) + '" y="' + (ly + 5) + '" fill="#A7A8AA" font-size="8" font-family="Inter,system-ui,sans-serif">Não Apropriado</text>';
 
   s += '</svg>';
   el.innerHTML = s;
@@ -6218,7 +6218,7 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
   [0.25, 0.5, 0.75].forEach(function(f) {
     var gy = Math.round(padT + plotH * (1 - f));
     s += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="rgba(128,128,128,0.12)" stroke-width="1"/>';
-    s += '<text x="' + (padL + 3) + '" y="' + (gy - 3) + '" fill="var(--txt3)" font-size="9" font-family="Montserrat,sans-serif">' + fv(maxV * f) + '</text>';
+    s += '<text x="' + (padL + 3) + '" y="' + (gy - 3) + '" fill="var(--txt3)" font-size="9" font-family="Inter,system-ui,sans-serif">' + fv(maxV * f) + '</text>';
   });
 
   // Área pendente (topo — âmbar), entre curva total e curva aprop
@@ -6257,7 +6257,7 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
       s += '<rect x="' + (txtX - (anchor === 'end' ? 26 : 0)) + '" y="' + (midY - 7) + '" width="26" height="10" rx="3" fill="var(--amber)" fill-opacity="0.18"/>';
       var deltaPct = dTotal[di] > 0 ? Math.round(dPend[di] / dTotal[di] * 100) : 0;
       s += '<text x="' + txtX + '" y="' + (midY + 3) + '" text-anchor="' + anchor
-         + '" fill="var(--amber)" font-size="8.5" font-weight="700" font-family="Montserrat,sans-serif">'
+         + '" fill="var(--amber)" font-size="8.5" font-weight="700" font-family="Inter,system-ui,sans-serif">'
          + deltaPct + '%</text>';
     }
   }
@@ -6266,11 +6266,11 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
   var li = n - 1;
   var lxOff = xp(li) > W * 0.75 ? -6 : 6;
   var lAnchor = xp(li) > W * 0.75 ? 'end' : 'start';
-  s += '<text x="' + (xp(li) + lxOff) + '" y="' + (yp(dAprop[li]) - 8) + '" text-anchor="' + lAnchor + '" fill="var(--green)" font-size="11" font-weight="700" font-family="Montserrat,sans-serif">' + fv(dAprop[li]) + '</text>';
+  s += '<text x="' + (xp(li) + lxOff) + '" y="' + (yp(dAprop[li]) - 8) + '" text-anchor="' + lAnchor + '" fill="var(--green)" font-size="11" font-weight="700" font-family="Inter,system-ui,sans-serif">' + fv(dAprop[li]) + '</text>';
 
   // Labels eixo X
   labels.forEach(function(l, i) {
-    s += '<text x="' + xp(i) + '" y="' + (H - 6) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Montserrat,sans-serif">' + l + '</text>';
+    s += '<text x="' + xp(i) + '" y="' + (H - 6) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">' + l + '</text>';
   });
 
   // Hover zones
@@ -9252,7 +9252,7 @@ function _automRenderCobranca(root) {
 function _automKpiMini(label, val, cor) {
   return '<div style="background:' + _ac.card + ';border:1px solid ' + _ac.brd + ';border-top:2px solid ' + cor + ';border-radius:8px;padding:14px 16px">'
     + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:6px">' + label + '</div>'
-    + '<div style="font-size:22px;font-weight:700;color:' + cor + ';font-family:\'Montserrat\',sans-serif">' + val + '</div>'
+    + '<div style="font-size:22px;font-weight:700;color:' + cor + ';font-family:inherit">' + val + '</div>'
     + '</div>';
 }
 
@@ -9309,7 +9309,7 @@ window._automExcluir = function(tipo, id) {
 
 window._automTestarConexao = function() {
   var toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:28px;right:24px;background:var(--card);border:1px solid rgba(29,158,117,.4);border-left:4px solid #1d9e75;border-radius:8px;padding:14px 18px;z-index:10001;font-family:Montserrat,sans-serif;min-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.3)';
+  toast.style.cssText = 'position:fixed;bottom:28px;right:24px;background:var(--card);border:1px solid rgba(29,158,117,.4);border-left:4px solid #1d9e75;border-radius:8px;padding:14px 18px;z-index:10001;font-family:Inter,system-ui,sans-serif;min-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.3)';
   toast.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--txt1);margin-bottom:3px">✅ Conexão bem-sucedida</div><div style="font-size:11px;color:var(--txt2)">ServiceNow · HTTP 200 · latência 142ms</div>';
   document.body.appendChild(toast);
   setTimeout(function(){ if(toast.parentNode) toast.parentNode.removeChild(toast); }, 3500);
@@ -9499,7 +9499,7 @@ function _automOverlay(titulo, campos, onSave) {
 
 function _automToast(msg, cor) {
   var t = document.createElement('div');
-  t.style.cssText = 'position:fixed;bottom:28px;right:24px;background:var(--card);border:1px solid ' + cor + '44;border-left:4px solid ' + cor + ';border-radius:8px;padding:12px 18px;z-index:10001;font-family:Montserrat,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3);font-size:13px;font-weight:600;color:var(--txt1)';
+  t.style.cssText = 'position:fixed;bottom:28px;right:24px;background:var(--card);border:1px solid ' + cor + '44;border-left:4px solid ' + cor + ';border-radius:8px;padding:12px 18px;z-index:10001;font-family:Inter,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3);font-size:13px;font-weight:600;color:var(--txt1)';
   t.textContent = '✓  ' + msg;
   document.body.appendChild(t);
   setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3000);
