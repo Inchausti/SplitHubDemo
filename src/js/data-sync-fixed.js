@@ -1623,6 +1623,34 @@ window.renderizarForecastAproveitamento = function(_retry) {
   setEl('fct-aprov-taxa', taxaMedia + '%');
   setEl('fct-aprov-pendente', fmtV(totalPend));
   setEl('fct-aprov-perda', fmtV(perdaAnual));
+
+  // Insights aproveitamento
+  var insApEl = document.getElementById('fct-aprov-insights');
+  if (insApEl && taxas.length) {
+    var melhorTaxaIdx = taxas.indexOf(Math.max.apply(null, taxas));
+    var piorTaxaIdx   = taxas.indexOf(Math.min.apply(null, taxas));
+    var taxaFcFinal   = taxasFc.length ? Math.round(taxasFc[taxasFc.length-1]*100) : taxaMedia;
+    var tendencia     = taxaFcFinal - taxaMedia;
+    var tendCor       = tendencia >= 0 ? '#1d9e75' : '#a32d2d';
+    var tendTxt       = tendencia >= 0 ? '▲ Tendência de melhora' : '▼ Tendência de queda';
+    var perdaCor      = perdaAnual > 0 ? '#a32d2d' : '#1d9e75';
+    var insAp = [
+      { cor: '#1d9e75',
+        titulo: 'Melhor mês: ' + (mesesReal[melhorTaxaIdx]||'').substring(5,7) + '/' + (mesesReal[melhorTaxaIdx]||'').substring(0,4),
+        corpo: 'Taxa de ' + Math.round(taxas[melhorTaxaIdx]*100) + '% — maior apropriação do período; mês de referência para a meta.' },
+      { cor: tendCor,
+        titulo: tendTxt,
+        corpo: 'Taxa média atual ' + taxaMedia + '% → forecast ' + (mesesFc[mesesFc.length-1]||'').substring(5,7) + '/' + (mesesFc[mesesFc.length-1]||'').substring(0,4) + ': ' + taxaFcFinal + '% (variação ' + (tendencia >= 0 ? '+' : '') + tendencia + 'pp).' },
+      { cor: perdaCor,
+        titulo: 'Perda projetada no exercício',
+        corpo: perdaAnual > 0 ? fmtV(perdaAnual) + ' de crédito podem não ser apropriados com a taxa atual. Priorize fornecedores com RFs vencidas.' : 'Nenhuma perda projetada no exercício com a taxa atual de apropriação.' }
+    ];
+    insApEl.innerHTML = insAp.map(function(ins) {
+      return '<div style="border-left:3px solid '+ins.cor+';padding:8px 12px;background:var(--bg2,var(--sidebar));border-radius:0 6px 6px 0;font-size:11px">'
+        + '<div style="font-weight:700;color:'+ins.cor+';margin-bottom:2px;font-size:12px">'+ins.titulo+'</div>'
+        + '<div style="color:var(--txt2);line-height:1.5">'+ins.corpo+'</div></div>';
+    }).join('');
+  }
 };
 
 window.atualizarPerdaAcumulada = function() {
