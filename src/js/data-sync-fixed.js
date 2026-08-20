@@ -147,7 +147,6 @@ window.SH_TABLES = {
       { label: 'Pagamento' },
       { label: 'St. Crédito' },
       { label: 'St. Registro' },
-      { label: 'St. Pagamento' },
       { label: 'Detalhe', cls: 'tc' },
       { label: 'Ação' }
     ]
@@ -6027,7 +6026,7 @@ window.renderizarFCTForecast = function(_retry) {
 // GESTÃO DE PAGAMENTOS — filtro global de mês + tabela dinâmica
 // ============================================================
 
-window._filtrosPagamentos = { mesAno: '', mesAnoArr: [], tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
+window._filtrosPagamentos = { mesAno: '', mesAnoArr: [], tipo: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
 
 window.injetarFiltrosPagamentos = function() {
   var tcrd = document.querySelector('#pag-imp .tcrd');
@@ -6042,7 +6041,6 @@ window.injetarFiltrosPagamentos = function() {
     countId: 'fp-contagem',
     fields: [
       { label: 'Tipo',         id: 'fp-tipo',      type: 'select', options: [{value:'Guia IBS',label:'Guia IBS'},{value:'DARF CBS',label:'DARF CBS'}] },
-      { label: 'Status',       id: 'fp-status',    type: 'select', options: [{value:'pago',label:'Pago'},{value:'pendente',label:'Pendente'},{value:'atrasado',label:'Atrasado'},{value:'vencendo',label:'Em risco'}] },
       { label: 'Pagamento',    id: 'fp-pagamento', type: 'select', options: [{value:'com',label:'Com pagamento'},{value:'sem',label:'Sem pagamento'}] },
       { label: 'Data RF — de',  id: 'fp-data-de',   type: 'date' },
       { label: 'Data RF — até', id: 'fp-data-ate',  type: 'date' },
@@ -6059,7 +6057,6 @@ window.pagamentosFiltrarGrid = function() {
   var f = window._filtrosPagamentos;
   f.busca    = (document.getElementById('fp-busca')     || {}).value || '';
   f.tipo     = (document.getElementById('fp-tipo')      || {}).value || '';
-  f.status   = (document.getElementById('fp-status')    || {}).value || '';
   f.pagamento= (document.getElementById('fp-pagamento') || {}).value || '';
   f.dataRFDe = (document.getElementById('fp-data-de')   || {}).value || '';
   f.dataRFAte= (document.getElementById('fp-data-ate')  || {}).value || '';
@@ -6070,11 +6067,11 @@ window.pagamentosFiltrarGrid = function() {
 };
 
 window.pagamentosLimparFiltros = function() {
-  ['fp-busca','fp-tipo','fp-status','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max','fp-tipo-dfe'].forEach(function(id) {
+  ['fp-busca','fp-tipo','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max','fp-tipo-dfe'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
-  window._filtrosPagamentos = { mesAno: '', mesAnoArr: (window._filtrosPagamentos.mesAnoArr||[]).slice(), tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
+  window._filtrosPagamentos = { mesAno: '', mesAnoArr: (window._filtrosPagamentos.mesAnoArr||[]).slice(), tipo: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
   window.renderizarTabelaPagamentos();
 };
 
@@ -6098,11 +6095,6 @@ window.renderizarTabelaPagamentos = function() {
   var f     = window._filtrosPagamentos;
   var busca = (f.busca || '').toLowerCase();
   var tipo  = f.tipo  || '';
-  var stFlt = f.status || '';
-
-  var stCoresMap = { pendente:'29,158,117', vencendo:'186,117,23', atrasado:'244,63,94', pago:'29,158,117' };
-  var stHexMap   = { pendente:'#1d9e75', vencendo:'#ba7517', atrasado:'#a32d2d', pago:'#1d9e75' };
-  var stLblMap   = { pendente:'Pendente', vencendo:'Em risco', atrasado:'Atrasado', pago:'Pago' };
 
   var rows = [];
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
@@ -6117,20 +6109,12 @@ window.renderizarTabelaPagamentos = function() {
 
       var temPag      = rf.dataPagamento && rf.dataPagamento !== '—';
       var _scP = rf.statusCredito || rf.status || '';
-      var _srP = rf.statusRegistro || null;
       var eApropriado = _scP === 'apropriado' || _scP === 'utilizado';
-      var rfSt;
-      if (temPag || eApropriado)               rfSt = 'pago';
-      else if (_srP === 'vencido')             rfSt = 'atrasado';
-      else if (_srP === 'em_risco')            rfSt = 'vencendo';
-      else if (_srP === 'inconsistencia')      rfSt = 'vencendo';
-      else if (_srP === 'a_prescrever')        rfSt = 'vencendo';
-      else                                     rfSt = 'pendente';
-      if (stFlt && rfSt !== stFlt) return;
+      var pago = temPag || eApropriado;
 
       // filtro pagamento com/sem
-      if (f.pagamento === 'com' && rfSt !== 'pago') return;
-      if (f.pagamento === 'sem' && rfSt === 'pago') return;
+      if (f.pagamento === 'com' && !pago) return;
+      if (f.pagamento === 'sem' && pago) return;
 
       var valor = rf.valor || 0;
       if (f.valorMin !== '' && valor < parseFloat(f.valorMin)) return;
@@ -6165,7 +6149,7 @@ window.renderizarTabelaPagamentos = function() {
         nfVinc: (nf.tipoDF || 'NF-e') + ' ' + (nf.numero || '—'),
         nfNumero: nf.numero || '',
         tipo: tipoCol, tipoNF: nf.tipo || 'entrada', valor: valor,
-        dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, status: rfSt,
+        dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, pago: pago,
         statusCredito: _scP || 'nao_apropriado',
         metodo: rf.metodoPagamento || nf.metodoPagamento || 'RAD',
         contratoId: rf.contratoId || nf.contratoId || null,
@@ -6180,16 +6164,15 @@ window.renderizarTabelaPagamentos = function() {
   window._pagImpRows = rows;
   var h = '';
   rows.forEach(function(r, idx) {
-    var badge  = bdg(r.status);
     var tipoBadge = '<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+r.tipo+'</span>';
     var detBtn = '<button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:rgba(24,95,165,.08);border:1px solid rgba(24,95,165,.2);border-radius:4px;color:#185fa5;cursor:pointer;font-size:10px;font-weight:700;padding:3px 10px">Ver</button>';
-    var act = r.status !== 'pago'
+    var act = !r.pago
       ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="window.abrirGuiaDARF('+idx+')">Gerar Guia</button>'
       : '<span style="font-size:11px;color:var(--txt3)">Concluído</span>';
     var nfTipoBadgePag = r.tipoNF === 'entrada'
       ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(29,158,117,.28);color:#1d9e75;background:transparent">Entrada</span>'
       : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(186,117,23,.28);color:#ba7517;background:transparent">Saída</span>';
-    var chkCell = r.status !== 'pago'
+    var chkCell = !r.pago
       ? '<td style="text-align:center"><input type="checkbox" class="pag-chk" data-idx="'+idx+'" onchange="window.pagAtualizarSelecao()" style="cursor:pointer;width:15px;height:15px"></td>'
       : '<td></td>';
     var nfCell = r.nfNumero
@@ -6211,14 +6194,13 @@ window.renderizarTabelaPagamentos = function() {
           : '<span style="color:var(--txt2)">—</span>') + '</td>'
       + '<td style="vertical-align:middle">' + bdg(r.statusCredito) + '</td>'
       + '<td style="vertical-align:middle">' + (r.statusFlags.length ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.statusFlags[0] }) : '<span style="color:var(--txt3);font-size:11px">—</span>') + '</td>'
-      + '<td style="vertical-align:middle">' + badge + '</td>'
       + '<td class="tc" style="vertical-align:middle">' + detBtn + '</td>'
       + '<td class="nowrap" style="vertical-align:middle;white-space:nowrap">' + act + '</td>'
       + '</tr>';
   });
 
   if (!rows.length) {
-    h = '<tr><td colspan="16" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="15" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;
@@ -6395,10 +6377,14 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
     (nf.registrosFiscais || []).forEach(function(rf) {
       var mes = (rf.data || nf.data || '').substring(0, 7);
       if (!mes) return;
-      if (!byMonth[mes]) byMonth[mes] = { aprop: 0, pend: 0 };
+      if (!byMonth[mes]) byMonth[mes] = { aprop: 0, pend: 0, risco: 0 };
       var v = rf.valor || 0;
       var sc = rf.statusCredito || rf.status || '';
+      var _sr = rf.statusRegistro || '';
+      var _sf = rf.statusFlags || [];
+      var _isRisco = _sr === 'a_prescrever' || _sf.indexOf('a_prescrever') >= 0;
       if (sc === 'apropriado' || sc === 'utilizado') byMonth[mes].aprop += v;
+      else if (_isRisco) byMonth[mes].risco += v;
       else if (sc === 'nao_apropriado') byMonth[mes].pend += v;
     });
   });
@@ -6406,99 +6392,79 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
   var meses = Object.keys(byMonth).sort();
   if (!meses.length) return;
 
-  var acumAprop = 0, acumPend = 0;
-  var dAprop = [], dTotal = [], dPend = [], labels = [];
+  var acumAprop = 0, acumPend = 0, acumRisco = 0;
+  var dAprop = [], dPend = [], dRisco = [], labels = [];
   meses.forEach(function(m) {
     acumAprop += byMonth[m].aprop;
     acumPend  += byMonth[m].pend;
-    dAprop.push(acumAprop / 1e6);
-    dTotal.push((acumAprop + acumPend) / 1e6);
-    dPend.push(acumPend / 1e6);
+    acumRisco += byMonth[m].risco || 0;
+    dAprop.push(byMonth[m].aprop / 1e6);
+    dPend.push(byMonth[m].pend / 1e6);
+    dRisco.push((byMonth[m].risco || 0) / 1e6);
     labels.push(m.substring(5, 7) + '/' + m.substring(2, 4));
   });
 
-  // Stacked-area SVG customizado
+  // Barras empilhadas: Aproveitado (baixo) + A Apropriar (meio) + Em Risco (topo)
   var el = document.getElementById('cPagEvolAcum');
   if (!el) return;
-  var H = el.parentElement ? (el.parentElement.offsetHeight || 140) : 140;
-  if (H < 80) H = 140;
-  var padT = 12, padB = 24, padL = 8, padR = 8;
+  var H = el.parentElement ? (el.parentElement.offsetHeight || 160) : 160;
+  if (H < 80) H = 160;
+  var padT = 20, padB = 28, padL = 44, padR = 8;
   var W = (el.parentElement && el.parentElement.offsetWidth > 50 ? el.parentElement.offsetWidth : 440);
   var plotW = W - padL - padR, plotH = H - padT - padB;
   var n = labels.length;
-  var maxV = Math.max.apply(null, dTotal) || 1;
-
-  function xp(i) { return Math.round(padL + (i / Math.max(n - 1, 1)) * plotW); }
-  function yp(v) { return Math.round(padT + (1 - v / maxV) * plotH); }
   function fv(v) { return v >= 1 ? v.toFixed(1).replace('.', ',') + 'M' : Math.round(v * 1000) + 'K'; }
+
+  var monthTotals = dAprop.map(function(v, i) { return v + dPend[i] + dRisco[i]; });
+  var rawMax = Math.max.apply(null, monthTotals) || 1;
+  var niceMax = Math.ceil(rawMax * 1.18 * 10) / 10;
+  var bw = Math.max(6, Math.floor(plotW / n * 0.58));
 
   var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:' + H + 'px;display:block">';
 
-  // Grid lines horizontais subtis
-  [0.25, 0.5, 0.75].forEach(function(f) {
-    var gy = Math.round(padT + plotH * (1 - f));
-    s += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="rgba(128,128,128,0.12)" stroke-width="1"/>';
-    s += '<text x="' + (padL + 3) + '" y="' + (gy - 3) + '" fill="var(--txt3)" font-size="9" font-family="Inter,system-ui,sans-serif">' + fv(maxV * f) + '</text>';
-  });
-
-  // Área pendente (topo — âmbar), entre curva total e curva aprop
-  var ptTotal = dTotal.map(function(v, i) { return xp(i) + ',' + yp(v); });
-  var ptAprop = dAprop.map(function(v, i) { return xp(i) + ',' + yp(v); });
-  var pendFill = ptTotal.join(' ') + ' ' + ptAprop.slice().reverse().join(' ');
-  s += '<polygon points="' + pendFill + '" fill="var(--amber)" fill-opacity="0.22" stroke="none"/>';
-
-  // Área apropriada (base — verde)
-  var apropFill = ptAprop.join(' ') + ' ' + xp(n - 1) + ',' + yp(0) + ' ' + xp(0) + ',' + yp(0);
-  s += '<polygon points="' + apropFill + '" fill="var(--teal)" fill-opacity="0.22" stroke="none"/>';
-
-  // Linhas de contorno
-  s += '<polyline points="' + ptTotal.join(' ') + '" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="5 3" stroke-linejoin="round" stroke-linecap="round"/>';
-  s += '<polyline points="' + ptAprop.join(' ') + '" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
-
-  // Delta mês a mês — colchete vertical + label entre as duas curvas
-  var minGapPx = 10; // altura mínima para mostrar label
-  var stepLabel = n > 8 ? 2 : 1; // mostrar label a cada N meses se muitos meses
-  for (var di = 0; di < n; di++) {
-    var yA = yp(dAprop[di]);
-    var yT = yp(dTotal[di]);
-    var gapPx = yA - yT; // distância em pixels entre as duas curvas
-    var cx = xp(di);
-    // Linha vertical pontilhada no centro do gap
-    s += '<line x1="' + cx + '" y1="' + yT + '" x2="' + cx + '" y2="' + yA
-       + '" stroke="var(--amber)" stroke-width="1" stroke-dasharray="2 2" opacity="0.55"/>';
-    // Marcadores nas extremidades do gap
-    s += '<circle cx="' + cx + '" cy="' + yA + '" r="2.5" fill="var(--teal)"/>';
-    s += '<circle cx="' + cx + '" cy="' + yT + '" r="2" fill="var(--amber)" opacity="0.85"/>';
-    // Label do delta (só quando gap grande o suficiente e no step configurado)
-    if (gapPx >= minGapPx && di % stepLabel === 0 && dPend[di] > 0) {
-      var midY = Math.round((yA + yT) / 2);
-      var txtX = cx + (cx > W * 0.75 ? -4 : 4);
-      var anchor = cx > W * 0.75 ? 'end' : 'start';
-      s += '<rect x="' + (txtX - (anchor === 'end' ? 26 : 0)) + '" y="' + (midY - 7) + '" width="26" height="10" rx="3" fill="var(--amber)" fill-opacity="0.18"/>';
-      var deltaPct = dTotal[di] > 0 ? Math.round(dPend[di] / dTotal[di] * 100) : 0;
-      s += '<text x="' + txtX + '" y="' + (midY + 3) + '" text-anchor="' + anchor
-         + '" fill="var(--amber)" font-size="8.5" font-weight="700" font-family="Inter,system-ui,sans-serif">'
-         + deltaPct + '%</text>';
-    }
+  // Grid
+  for (var gi = 0; gi <= 4; gi++) {
+    var gv = (gi / 4) * niceMax;
+    var gy = Math.round(padT + plotH - (gv / niceMax) * plotH);
+    s += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (padL + plotW) + '" y2="' + gy + '" stroke="rgba(128,128,128,0.12)" stroke-width="1"/>';
+    s += '<text x="' + (padL - 5) + '" y="' + (gy + 3.5) + '" text-anchor="end" fill="var(--txt3)" font-size="9" font-family="Inter,system-ui,sans-serif">' + (gi > 0 ? fv(gv) : '0') + '</text>';
   }
 
-  // Dots e label no ponto final da linha aprop
-  var li = n - 1;
-  var lxOff = xp(li) > W * 0.75 ? -6 : 6;
-  var lAnchor = xp(li) > W * 0.75 ? 'end' : 'start';
-  s += '<text x="' + (xp(li) + lxOff) + '" y="' + (yp(dAprop[li]) - 8) + '" text-anchor="' + lAnchor + '" fill="var(--green)" font-size="11" font-weight="700" font-family="Inter,system-ui,sans-serif">' + fv(dAprop[li]) + '</text>';
+  var segColors = ['#1d9e75', '#4ade80', '#f59e0b'];
+  for (var bi = 0; bi < n; bi++) {
+    var bx = padL + (bi + 0.5) * (plotW / n) - bw / 2;
+    var segs = [dAprop[bi], dPend[bi], dRisco[bi]];
+    var base = padT + plotH;
 
-  // Labels eixo X
-  labels.forEach(function(l, i) {
-    s += '<text x="' + xp(i) + '" y="' + (H - 6) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">' + l + '</text>';
-  });
+    // find topmost non-zero seg index
+    var topIdx = -1;
+    for (var tj = segs.length - 1; tj >= 0; tj--) {
+      if (segs[tj] > 0) { topIdx = tj; break; }
+    }
 
-  // Hover zones
-  var zW = Math.max(16, Math.floor(plotW / (n || 1)));
-  for (var ci = 0; ci < n; ci++) {
-    var tp = [labels[ci], '#1d9e75', 'Apropriado Acum.', fv(dAprop[ci]), '#ba7517', 'A Apropriar Acum.', fv(dPend[ci])];
-    var enc = tp.join('|').replace(/'/g, '&apos;');
-    s += '<rect x="' + (xp(ci) - Math.floor(zW / 2)) + '" y="' + padT + '" width="' + zW + '" height="' + plotH + '" fill="transparent" style="cursor:crosshair" onmousemove="_svgTipShow(event,\'' + enc + '\')" onmouseleave="_svgTipHide()"/>';
+    for (var sj = 0; sj < segs.length; sj++) {
+      var bh = Math.round((segs[sj] / niceMax) * plotH);
+      if (bh <= 0) continue;
+      var r = (sj === topIdx) ? Math.min(4, bh / 2) : 0;
+      if (r > 0) {
+        s += '<path d="M' + bx + ',' + base + ' L' + (bx + bw) + ',' + base
+          + ' L' + (bx + bw) + ',' + (base - bh + r)
+          + ' Q' + (bx + bw) + ',' + (base - bh) + ' ' + (bx + bw - r) + ',' + (base - bh)
+          + ' L' + (bx + r) + ',' + (base - bh)
+          + ' Q' + bx + ',' + (base - bh) + ' ' + bx + ',' + (base - bh + r) + ' Z"'
+          + ' fill="' + segColors[sj] + '"/>';
+      } else {
+        s += '<rect x="' + bx + '" y="' + (base - bh) + '" width="' + bw + '" height="' + bh + '" fill="' + segColors[sj] + '"/>';
+      }
+      base -= bh;
+    }
+
+    // x label
+    s += '<text x="' + (bx + bw / 2) + '" y="' + (padT + plotH + 16) + '" text-anchor="middle" fill="var(--txt3)" font-size="9.5" font-family="Inter,system-ui,sans-serif">' + labels[bi] + '</text>';
+
+    // hover zone
+    var tp = [labels[bi], '#1d9e75', 'Aproveitado', fv(dAprop[bi]), '#4ade80', 'A Apropriar', fv(dPend[bi]), '#f59e0b', 'Em Risco', fv(dRisco[bi])].join('|').replace(/'/g, '&apos;');
+    s += '<rect x="' + (bx - 4) + '" y="' + padT + '" width="' + (bw + 8) + '" height="' + plotH + '" fill="transparent" style="cursor:crosshair" onmousemove="_svgTipShow(event,\'' + tp + '\')" onmouseleave="_svgTipHide()"/>';
   }
 
   s += '</svg>';
@@ -6643,7 +6609,7 @@ window.abrirComprovanteRF = function(rfId) {
 window.renderizarPagamentosMetodo = function() {
   var mesesLabels = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   var mesesISO    = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
-  var f = window._filtrosCreditos || {};
+  var f = window._filtrosPagamentos || {};
   var busca = (f.busca || '').toLowerCase();
 
   var radPorMes  = [0,0,0,0,0,0,0,0,0,0,0,0];
@@ -6652,23 +6618,28 @@ window.renderizarPagamentosMetodo = function() {
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
-      // Filtros globais
       if (!window._matchPeriodo(rf.data, f)) return;
       if (busca) {
-        var rid = (rf.id || '').toLowerCase(), rn = ('nf-'+(rf.nfVinculada||'')).toLowerCase(), re = (rf.entidade||'').toLowerCase();
-        if (!rid.includes(busca) && !rn.includes(busca) && !re.includes(busca)) return;
+        var rid = (rf.id || '').toLowerCase(), rn = (nf.numero || '').toLowerCase(), re = (nf.entidade || rf.entidade || '').toLowerCase();
+        if (rid.indexOf(busca) < 0 && rn.indexOf(busca) < 0 && re.indexOf(busca) < 0) return;
       }
-      if (f.tipoFiscal && rf.tipoFiscal !== f.tipoFiscal.toLowerCase()) return;
-      if (f.status    && rf.status !== f.status) return;
-      if (f.contrato === '__sem__' && rf.contratoId) return;
-      if (f.contrato && f.contrato !== '__sem__' && rf.contratoId !== f.contrato) return;
-      if (f.metodo   && rf.metodoPagamento !== f.metodo) return;
-      if (f.dataNFDe && rf.data < f.dataNFDe) return;
-      if (f.dataNFAte && rf.data > f.dataNFAte) return;
+      if (f.tipo) {
+        var _tf = f.tipo === 'Guia IBS' ? 'ibs' : (f.tipo === 'DARF CBS' ? 'cbs' : f.tipo.toLowerCase());
+        if (rf.tipoFiscal !== _tf) return;
+      }
+      if (f.tipoDFe && nf.tipo !== f.tipoDFe) return;
+      if (f.dataRFDe  && rf.data < f.dataRFDe)  return;
+      if (f.dataRFAte && rf.data > f.dataRFAte) return;
 
       var credVal = rf.valor || 0;
-      if (f.credMin !== '' && credVal < parseFloat(f.credMin)) return;
-      if (f.credMax !== '' && credVal > parseFloat(f.credMax)) return;
+      if (f.valorMin !== '' && f.valorMin !== undefined && credVal < parseFloat(f.valorMin)) return;
+      if (f.valorMax !== '' && f.valorMax !== undefined && credVal > parseFloat(f.valorMax)) return;
+
+      var temPag = rf.dataPagamento && rf.dataPagamento !== '—';
+      var sc = rf.statusCredito || rf.status || '';
+      var pago = temPag || sc === 'apropriado' || sc === 'utilizado';
+      if (f.pagamento === 'com' && !pago) return;
+      if (f.pagamento === 'sem' && pago) return;
 
       var mes = rf.data ? rf.data.substring(0, 7) : null;
       var idx = mesesISO.indexOf(mes);
