@@ -1528,7 +1528,10 @@ window.renderizarForecastAproveitamento = function(_retry) {
     if (!_retry || _retry < 5) { setTimeout(function(){ window.renderizarForecastAproveitamento((_retry||0)+1); }, 150); return; }
     return;
   }
-  if (!window.Chart) return;
+  if (!window.Chart) {
+    if (!_retry || _retry < 8) { setTimeout(function(){ window.renderizarForecastAproveitamento((_retry||0)+1); }, 200); }
+    return;
+  }
   var byMonth = {};
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
@@ -1549,13 +1552,22 @@ window.renderizarForecastAproveitamento = function(_retry) {
     return;
   }
   var taxas = mesesReal.map(function(m) { var b = byMonth[m]; return b.orig > 0 ? b.aprop / b.orig : 0; });
-  function movAvg(arr, idx) { var n = Math.min(3, idx); if (!n) return arr[0]||0; var s=0; for(var i=idx-n;i<idx;i++) s+=arr[i]; return s/n; }
   var N = mesesReal.length;
   var lastMes = mesesReal[N-1], lastY = parseInt(lastMes.substring(0,4),10), lastM = parseInt(lastMes.substring(5,7),10);
   var mesesFc = [];
   for (var m2 = lastM+1; m2 <= Math.min(12, lastM+6); m2++) mesesFc.push(lastY + '-' + String(m2).padStart(2,'0'));
   if (mesesFc.length < 6 && lastM + 6 > 12) { var ny = lastY+1; for (var m3=1; m3 <= (lastM+6-12); m3++) mesesFc.push(ny+'-'+String(m3).padStart(2,'0')); }
-  var taxasFc = mesesFc.map(function(_, i) { return movAvg(taxas, N+i); });
+  // Média móvel progressiva — evita acesso a índices fora dos limites
+  var taxasFc = (function() {
+    var buf = taxas.slice(), res = [];
+    for (var i = 0; i < mesesFc.length; i++) {
+      var n = Math.min(3, buf.length);
+      if (!n) { res.push(0); buf.push(0); continue; }
+      var s = 0; for (var k = buf.length - n; k < buf.length; k++) s += buf[k];
+      var t = s / n; res.push(t); buf.push(t);
+    }
+    return res;
+  })();
   var allMeses = mesesReal.concat(mesesFc);
   var labels = allMeses.map(function(m) { return m.substring(5,7)+'/'+m.substring(2,4); });
   var apropData = mesesReal.map(function(m) { return Math.round(byMonth[m].aprop); });
@@ -5924,15 +5936,6 @@ window.renderizarFCTForecast = function(_retry) {
 
   var N_REAL = mesesReal.length;
 
-  // Média móvel 3 meses para forecast
-  function movAvg3(arr, idx) {
-    var n = Math.min(3, idx);
-    if (n === 0) return arr[0] || 0;
-    var sum = 0;
-    for (var i = idx - n; i < idx; i++) sum += arr[i];
-    return Math.round(sum / n);
-  }
-
   var credReal = mesesReal.map(function(m) { return Math.round(byMonth[m].cred); });
   var debReal  = mesesReal.map(function(m) { return Math.round(byMonth[m].deb); });
 
@@ -5945,8 +5948,24 @@ window.renderizarFCTForecast = function(_retry) {
     mesesFc.push(lastYear + '-' + String(m2).padStart(2,'0'));
   }
 
-  var credFc = mesesFc.map(function(_, i) { return movAvg3(credReal, N_REAL + i); });
-  var debFc  = mesesFc.map(function(_, i) { return movAvg3(debReal,  N_REAL + i); });
+  // Média móvel 3 meses progressiva — usa array acumulado para evitar acesso fora dos limites
+  function movAvg3progressive(realArr, nFc) {
+    var buf = realArr.slice();
+    var result = [];
+    for (var i = 0; i < nFc; i++) {
+      var n = Math.min(3, buf.length);
+      if (!n) { result.push(0); buf.push(0); continue; }
+      var s = 0;
+      for (var k = buf.length - n; k < buf.length; k++) s += buf[k];
+      var v = Math.round(s / n);
+      result.push(v);
+      buf.push(v);
+    }
+    return result;
+  }
+
+  var credFc = movAvg3progressive(credReal, mesesFc.length);
+  var debFc  = movAvg3progressive(debReal,  mesesFc.length);
 
   var allMeses = mesesReal.concat(mesesFc);
   var N_TOTAL  = allMeses.length;
