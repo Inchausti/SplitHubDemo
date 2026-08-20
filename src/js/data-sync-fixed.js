@@ -2815,7 +2815,14 @@ window._rfIncFiltrado = [];
 window._rfIncPagina  = 1;
 window._rfIncIpp     = 25;
 
-var _incCores = (function(P){ return { 'Não conciliado':P.red,'Valor imposto divergente':P.amber,'Vencido':P.red,'Sem Comprovante':P.blue,'Falha de Layout':P.red,'Inconsistência de Dados':P.amber,'Rejeitado SEFAZ':P.red,'Documento Duplicado':P.gray }; })(PALETTE);
+var _incCores = (function(P){ return {
+  'capur_ibs_divergente':P.red,   'capur_cbs_divergente':P.red,
+  'capur_ibs_aliquota':P.amber,   'capur_cbs_aliquota':P.amber,
+  'prazo_expirado':P.red,
+  'cfin_ibs_split':P.blue,        'cfin_cbs_split':P.blue,
+  'cfin_ibs_valor':P.amber,       'cfin_cbs_valor':P.amber,
+  'chave_invalida':P.red,         'cnpj_divergente':P.amber,         'duplicidade_rf':P.gray
+}; })(PALETTE);
 
 function _incFmtM(v) {
   if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
@@ -2980,17 +2987,42 @@ window.renderizarRFsInconsistencias = function() {
 
   // --- Construir _inconsistenciasGlobal (novo modelo) ---
   var _tipoIncMap = {
-    'Divergência de Valor':'divergencia_valor', 'Valor imposto divergente':'aliquota_divergente',
-    'Não conciliado':'nf_cancelada', 'Vencido':'prazo_expirado',
-    'Sem Comprovante':'split_nao_realizado', 'Falha de Layout':'chave_invalida',
-    'Inconsistência de Dados':'cnpj_divergente', 'Rejeitado SEFAZ':'chave_invalida',
-    'Documento Duplicado':'duplicidade_rf'
+    // CAPUR — por imposto
+    'Valor IBS divergente':        'capur_ibs_divergente',
+    'Valor CBS divergente':        'capur_cbs_divergente',
+    'Alíquota IBS incorreta':      'capur_ibs_aliquota',
+    'Alíquota CBS incorreta':      'capur_cbs_aliquota',
+    'Prazo de apuração expirado':  'prazo_expirado',
+    // CFIN — por imposto
+    'Split IBS não executado':     'cfin_ibs_split',
+    'Split CBS não executado':     'cfin_cbs_split',
+    'Comprovante IBS divergente':  'cfin_ibs_valor',
+    'Comprovante CBS divergente':  'cfin_cbs_valor',
+    // Ingestão
+    'Falha de Layout':             'chave_invalida',
+    'Inconsistência de Dados':     'cnpj_divergente',
+    'Rejeitado SEFAZ':             'chave_invalida',
+    'Documento Duplicado':         'duplicidade_rf',
+    // Legado (compat)
+    'Divergência de Valor':        'capur_ibs_divergente',
+    'Valor imposto divergente':    'capur_ibs_aliquota',
+    'Não conciliado':              'capur_ibs_divergente',
+    'Sem Comprovante':             'cfin_ibs_split',
+    'Vencido':                     'prazo_expirado'
   };
   var _tipoIncLbl = {
-    'divergencia_valor':'Divergência de valor', 'aliquota_divergente':'Alíquota divergente',
-    'nf_cancelada':'NF cancelada com RF ativo', 'prazo_expirado':'Prazo expirado sem extinção',
-    'split_nao_realizado':'Split Payment não realizado', 'chave_invalida':'Chave de acesso inválida',
-    'cnpj_divergente':'CNPJ divergente', 'duplicidade_rf':'RF duplicado'
+    'capur_ibs_divergente': 'Valor IBS divergente da apuração',
+    'capur_cbs_divergente': 'Valor CBS divergente da apuração',
+    'capur_ibs_aliquota':   'Alíquota IBS incorreta',
+    'capur_cbs_aliquota':   'Alíquota CBS incorreta',
+    'prazo_expirado':       'Prazo de apuração expirado',
+    'cfin_ibs_split':       'Split IBS não executado',
+    'cfin_cbs_split':       'Split CBS não executado',
+    'cfin_ibs_valor':       'Comprovante IBS divergente',
+    'cfin_cbs_valor':       'Comprovante CBS divergente',
+    'chave_invalida':       'Chave de acesso inválida',
+    'cnpj_divergente':      'CNPJ divergente',
+    'duplicidade_rf':       'RF duplicado'
   };
   var _incStatuses = ['aberta','aberta','em_analise','aguardando_emitente','aberta','resolvida','glosada','aberta','em_analise','aberta'];
   var _incPrios = function(v){ return v > 500000 ? 'critica' : v > 100000 ? 'alta' : v > 20000 ? 'media' : 'baixa'; };
@@ -3596,14 +3628,21 @@ var _kbAcoesMap = {
 };
 
 var _incDescricaoMap = {
-  divergencia_valor:   'O valor registrado no Registro Fiscal diverge do valor declarado no Documento Fiscal vinculado. A diferença pode indicar erro de digitação, atualização de preço não comunicada ou retificação pendente de NF.',
-  aliquota_divergente: 'A alíquota de IBS/CBS aplicada no RF não corresponde à alíquota regulamentar vigente para a operação. Pode resultar em sub ou super recolhimento do imposto.',
-  nf_cancelada:        'O Documento Fiscal foi cancelado na SEFAZ após a geração do Registro Fiscal correspondente. O RF precisa ser encerrado ou substituído para evitar inconsistência no apurado.',
-  prazo_expirado:      'O prazo regulamentar para apropriação do crédito IBS/CBS está vencido ou próximo do vencimento. Ação urgente necessária para evitar a prescrição definitiva do crédito.',
-  split_nao_realizado: 'O Split Payment esperado para esta operação não foi identificado no extrato bancário. O comprovante de recolhimento junto ao banco não foi localizado ou ainda não foi processado.',
-  chave_invalida:      'A chave de acesso do documento fiscal é inválida ou não consta na base de dados da SEFAZ. O documento pode ter sido emitido com erro de digitação ou se tratar de documento inidôneo.',
-  cnpj_divergente:     'O CNPJ do emitente registrado no Registro Fiscal diverge do constante no Documento Fiscal. Pode indicar cessão indevida de crédito tributário ou erro de cadastro no sistema.',
-  duplicidade_rf:      'Foi identificado mais de um Registro Fiscal para o mesmo Documento Fiscal e tipo de imposto. A duplicidade pode causar duplo recolhimento ou aproveitamento indevido de crédito de IBS/CBS.'
+  // CAPUR
+  capur_ibs_divergente: 'O valor de IBS declarado no Documento Fiscal diverge do valor calculado pela Apuração Assistida da Plataforma Centralizada do CG-IBS. A diferença pode indicar alíquota incorreta, base de cálculo divergente ou retificação de NF pendente.',
+  capur_cbs_divergente: 'O valor de CBS declarado no Documento Fiscal diverge do valor calculado pela Apuração Assistida da RFB. A diferença pode indicar alíquota incorreta, base de cálculo divergente ou retificação de NF pendente.',
+  capur_ibs_aliquota:   'A alíquota de IBS aplicada na operação não corresponde à alíquota regulamentar vigente definida pelo Comitê Gestor do IBS para este tipo de operação e período. O recalculo é necessário para eliminar sub ou super recolhimento.',
+  capur_cbs_aliquota:   'A alíquota de CBS aplicada na operação não corresponde à alíquota regulamentar vigente definida pela RFB para este tipo de operação e período. O recalculo é necessário para eliminar sub ou super recolhimento.',
+  prazo_expirado:       'O prazo regulamentar para apuração e extinção do crédito IBS/CBS está vencido ou próximo do vencimento. Ação urgente necessária para evitar a prescrição e eventual autuação fiscal.',
+  // CFIN
+  cfin_ibs_split:       'O split payment de IBS esperado para esta operação não foi confirmado pela instituição financeira. Nenhum comprovante de recolhimento IBS foi recebido ou processado pela Plataforma Centralizada.',
+  cfin_cbs_split:       'O split payment de CBS esperado para esta operação não foi confirmado pela instituição financeira. Nenhum comprovante de recolhimento CBS foi recebido ou processado pela Plataforma Centralizada.',
+  cfin_ibs_valor:       'O valor do split payment de IBS confirmado pela instituição financeira diverge do valor de IBS apurado pela Plataforma Centralizada. A diferença pode indicar erro no comprovante ou falha na liquidação.',
+  cfin_cbs_valor:       'O valor do split payment de CBS confirmado pela instituição financeira diverge do valor de CBS apurado pela Plataforma Centralizada. A diferença pode indicar erro no comprovante ou falha na liquidação.',
+  // Ingestão
+  chave_invalida:       'A chave de acesso do documento fiscal é inválida ou não consta na base de dados da SEFAZ. O documento pode ter sido emitido com erro de digitação ou se tratar de documento inidôneo.',
+  cnpj_divergente:      'O CNPJ do emitente registrado no Registro Fiscal diverge do constante no Documento Fiscal. Pode indicar cessão indevida de crédito tributário ou erro de cadastro no sistema.',
+  duplicidade_rf:       'Foi identificado mais de um Registro Fiscal para o mesmo Documento Fiscal e tipo de imposto. A duplicidade pode causar duplo recolhimento ou aproveitamento indevido de crédito de IBS/CBS.'
 };
 
 window._incComentarios = window._incComentarios || {};
@@ -3666,41 +3705,63 @@ window._incAdicionarComentario = function(incId) {
 };
 
 var _incAcoesMap = {
-  divergencia_valor: [
-    { label: 'Solicitar Retificação de NF', icon: '📝', desc: 'Notifica o emitente para corrigir o valor na NF',      nextStatus: 'aguardando_emitente' },
-    { label: 'Recalcular IBS/CBS',          icon: '🔢', desc: 'Recalcula automaticamente os impostos devidos',        nextStatus: 'em_analise' },
-    { label: 'Enviar para Contabilidade',   icon: '📊', desc: 'Escala para revisão pela equipe contábil',             nextStatus: 'em_analise' }
+  // CAPUR — valor por imposto
+  capur_ibs_divergente: [
+    { label: 'Recalcular IBS',              icon: '🔢', desc: 'Aplica alíquota IBS vigente e confronta com Apuração Assistida', nextStatus: 'em_analise' },
+    { label: 'Solicitar Retificação de NF', icon: '📝', desc: 'Notifica o emitente para corrigir o valor IBS na NF',           nextStatus: 'aguardando_emitente' },
+    { label: 'Enviar para Contabilidade',   icon: '📊', desc: 'Escala para revisão pela equipe contábil',                       nextStatus: 'em_analise' }
   ],
-  aliquota_divergente: [
-    { label: 'Recalcular Alíquota IBS/CBS', icon: '🔢', desc: 'Aplica alíquota vigente e gera novo RF',              nextStatus: 'em_analise' },
-    { label: 'Solicitar Retificação',       icon: '📝', desc: 'Notifica o emitente para corrigir a alíquota',        nextStatus: 'aguardando_emitente' }
+  capur_cbs_divergente: [
+    { label: 'Recalcular CBS',              icon: '🔢', desc: 'Aplica alíquota CBS vigente e confronta com Apuração Assistida', nextStatus: 'em_analise' },
+    { label: 'Solicitar Retificação de NF', icon: '📝', desc: 'Notifica o emitente para corrigir o valor CBS na NF',           nextStatus: 'aguardando_emitente' },
+    { label: 'Enviar para Contabilidade',   icon: '📊', desc: 'Escala para revisão pela equipe contábil',                       nextStatus: 'em_analise' }
   ],
-  nf_cancelada: [
-    { label: 'Verificar Status na SEFAZ',   icon: '🔍', desc: 'Consulta situação atual da NF na SEFAZ',              nextStatus: 'em_analise' },
-    { label: 'Cancelar RF Correspondente',  icon: '🗑️', desc: 'Remove o RF vinculado à NF cancelada',                nextStatus: 'resolvida' },
-    { label: 'Registrar Cancelamento',      icon: '📋', desc: 'Documenta o cancelamento no histórico',               nextStatus: 'resolvida' }
+  // CAPUR — alíquota por imposto
+  capur_ibs_aliquota: [
+    { label: 'Recalcular Alíquota IBS',     icon: '🔢', desc: 'Aplica alíquota IBS regulamentar vigente para a operação',      nextStatus: 'em_analise' },
+    { label: 'Solicitar Retificação',       icon: '📝', desc: 'Notifica o emitente para corrigir a alíquota IBS aplicada',     nextStatus: 'aguardando_emitente' }
   ],
+  capur_cbs_aliquota: [
+    { label: 'Recalcular Alíquota CBS',     icon: '🔢', desc: 'Aplica alíquota CBS regulamentar vigente para a operação',      nextStatus: 'em_analise' },
+    { label: 'Solicitar Retificação',       icon: '📝', desc: 'Notifica o emitente para corrigir a alíquota CBS aplicada',     nextStatus: 'aguardando_emitente' }
+  ],
+  // Prazo
   prazo_expirado: [
-    { label: 'Gerar DARF com Multa',        icon: '💰', desc: 'Calcula multa e juros e gera DARF para pagamento',    nextStatus: 'em_analise' },
-    { label: 'Negociar Parcelamento',       icon: '📅', desc: 'Abre processo de parcelamento do débito',             nextStatus: 'aguardando_emitente' }
+    { label: 'Gerar DARF com Multa',        icon: '💰', desc: 'Calcula multa e juros e gera DARF para pagamento',              nextStatus: 'em_analise' },
+    { label: 'Negociar Parcelamento',       icon: '📅', desc: 'Abre processo de parcelamento do débito',                        nextStatus: 'aguardando_emitente' }
   ],
-  split_nao_realizado: [
-    { label: 'Verificar Split no Banco',    icon: '🏦', desc: 'Consulta o extrato do split payment bancário',        nextStatus: 'em_analise' },
-    { label: 'Solicitar Comprovante',       icon: '📩', desc: 'Notifica o banco para envio do comprovante',          nextStatus: 'aguardando_emitente' }
+  // CFIN — split por imposto
+  cfin_ibs_split: [
+    { label: 'Verificar Split IBS no Banco',icon: '🏦', desc: 'Consulta extrato do split IBS na instituição financeira',       nextStatus: 'em_analise' },
+    { label: 'Solicitar Comprovante IBS',   icon: '📩', desc: 'Notifica a IF para envio do comprovante de recolhimento IBS',   nextStatus: 'aguardando_emitente' }
   ],
+  cfin_cbs_split: [
+    { label: 'Verificar Split CBS no Banco',icon: '🏦', desc: 'Consulta extrato do split CBS na instituição financeira',       nextStatus: 'em_analise' },
+    { label: 'Solicitar Comprovante CBS',   icon: '📩', desc: 'Notifica a IF para envio do comprovante de recolhimento CBS',   nextStatus: 'aguardando_emitente' }
+  ],
+  // CFIN — valor divergente por imposto
+  cfin_ibs_valor: [
+    { label: 'Conferir Comprovante IBS',    icon: '🔍', desc: 'Confronta valor recolhido IBS com o apurado pela Plataforma',   nextStatus: 'em_analise' },
+    { label: 'Solicitar Estorno IBS',       icon: '↩️', desc: 'Solicita à IF estorno e reemissão do comprovante IBS correto',  nextStatus: 'aguardando_emitente' }
+  ],
+  cfin_cbs_valor: [
+    { label: 'Conferir Comprovante CBS',    icon: '🔍', desc: 'Confronta valor recolhido CBS com o apurado pela Plataforma',   nextStatus: 'em_analise' },
+    { label: 'Solicitar Estorno CBS',       icon: '↩️', desc: 'Solicita à IF estorno e reemissão do comprovante CBS correto',  nextStatus: 'aguardando_emitente' }
+  ],
+  // Ingestão
   chave_invalida: [
-    { label: 'Solicitar Reemissão',         icon: '📝', desc: 'Notifica o emitente para reemitir o documento',      nextStatus: 'aguardando_emitente' },
-    { label: 'Consultar Chave na SEFAZ',    icon: '🔍', desc: 'Verifica validade da chave de acesso',               nextStatus: 'em_analise' }
+    { label: 'Solicitar Reemissão',         icon: '📝', desc: 'Notifica o emitente para reemitir o documento fiscal',          nextStatus: 'aguardando_emitente' },
+    { label: 'Consultar Chave na SEFAZ',    icon: '🔍', desc: 'Verifica validade da chave de acesso na SEFAZ',                 nextStatus: 'em_analise' }
   ],
   cnpj_divergente: [
-    { label: 'Validar CNPJ na Receita',     icon: '🔎', desc: 'Consulta situação do CNPJ na Receita Federal',       nextStatus: 'em_analise' },
-    { label: 'Solicitar Correção',          icon: '📨', desc: 'Notifica o emitente para corrigir o CNPJ',           nextStatus: 'aguardando_emitente' },
-    { label: 'Enviar para Contabilidade',   icon: '📊', desc: 'Escala para revisão pela equipe contábil',           nextStatus: 'em_analise' }
+    { label: 'Validar CNPJ na Receita',     icon: '🔎', desc: 'Consulta situação do CNPJ na Receita Federal',                  nextStatus: 'em_analise' },
+    { label: 'Solicitar Correção',          icon: '📨', desc: 'Notifica o emitente para corrigir o CNPJ',                      nextStatus: 'aguardando_emitente' },
+    { label: 'Enviar para Contabilidade',   icon: '📊', desc: 'Escala para revisão pela equipe contábil',                       nextStatus: 'em_analise' }
   ],
   duplicidade_rf: [
-    { label: 'Cancelar RF Duplicado',       icon: '🗑️', desc: 'Remove o registro fiscal duplicado',                  nextStatus: 'resolvida' },
-    { label: 'Mesclar Registros',           icon: '🔗', desc: 'Une os dois RFs em um único registro',                nextStatus: 'em_analise' },
-    { label: 'Marcar como Aceito',          icon: '✔️', desc: 'Aceita a duplicidade como intencional',              nextStatus: 'resolvida' }
+    { label: 'Cancelar RF Duplicado',       icon: '🗑️', desc: 'Remove o registro fiscal duplicado',                            nextStatus: 'resolvida' },
+    { label: 'Mesclar Registros',           icon: '🔗', desc: 'Une os dois RFs em um único registro',                           nextStatus: 'em_analise' },
+    { label: 'Marcar como Aceito',          icon: '✔️', desc: 'Aceita a duplicidade como intencional',                         nextStatus: 'resolvida' }
   ]
 };
 
@@ -4053,11 +4114,13 @@ window._enriquecerNFsSaida = function() {
     nf.ibs          = ibs;
     nf.valorTotal   = vbrut;
 
-    var _saidaIncTipos = ['Não conciliado','Valor imposto divergente','Vencido','Sem Comprovante'];
+    var _saidaIncTiposIBS = ['Valor IBS divergente','Alíquota IBS incorreta','Prazo de apuração expirado','Split IBS não executado','Comprovante IBS divergente'];
+    var _saidaIncTiposCBS = ['Valor CBS divergente','Alíquota CBS incorreta','Prazo de apuração expirado','Split CBS não executado','Comprovante CBS divergente'];
     (nf.registrosFiscais || []).forEach(function(rf, ri) {
       rf.data           = dataISO;
       rf.status         = stRF;
-      rf.inconsistencia = stRF === 'inconsistencia' ? _saidaIncTipos[(idx + ri) % _saidaIncTipos.length] : null;
+      var _tiposRF = rf.tipoFiscal === 'ibs' ? _saidaIncTiposIBS : _saidaIncTiposCBS;
+      rf.inconsistencia = stRF === 'inconsistencia' ? _tiposRF[(idx) % _tiposRF.length] : null;
       rf.metodoExtincao = metodos[(idx + ri) % metodos.length];
       // Sincronizar valor do RF com alíquota do imposto correspondente
       rf.valor          = rf.tipoFiscal === 'cbs' ? cbs : ibs;
@@ -6399,8 +6462,8 @@ document.addEventListener('DOMContentLoaded', function() {
           var _extDay = String(Math.min(parseInt(_dia) + 5, _diasNoMes)).padStart(2, '0');
           var _mp     = _mes.split('-');
           var _dtExt  = _stS === 'extinto' ? (_extDay + '/' + _mp[1] + '/' + _mp[0] + ' 09:00') : '—';
-          var _rfIncTiposSai = ['Não conciliado','Valor imposto divergente','Vencido','Sem Comprovante'];
-          var _incTipoSai = _stS === 'inconsistencia' ? _rfIncTiposSai[(_si - 1) % _rfIncTiposSai.length] : null;
+          var _rfIncTiposIBS = ['Valor IBS divergente','Alíquota IBS incorreta','Prazo de apuração expirado','Split IBS não executado','Comprovante IBS divergente'];
+          var _rfIncTiposCBS = ['Valor CBS divergente','Alíquota CBS incorreta','Prazo de apuração expirado','Split CBS não executado','Comprovante CBS divergente'];
 
           var _tipoDFSai = _tiposDFSaida[(_hDate >> 4) % _tiposDFSaida.length];
           var _cnpjSai = '12.345.678/000' + String(_si % 100).padStart(2, '0');
@@ -6423,7 +6486,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nfVinculada: _nsNum, entidade: _nfS.entidade, cnpj: _nfS.cnpj,
             valor: _ibs,
             status: _stS,
-            inconsistencia: _incTipoSai,
+            inconsistencia: _stS === 'inconsistencia' ? _rfIncTiposIBS[(_si - 1) % _rfIncTiposIBS.length] : null,
             dataExtincao: _dtExt,
             metodoExtincao: _metS,
             contratoId: null,
@@ -6438,7 +6501,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nfVinculada: _nsNum, entidade: _nfS.entidade, cnpj: _nfS.cnpj,
             valor: _cbs,
             status: _stS,
-            inconsistencia: _incTipoSai,
+            inconsistencia: _stS === 'inconsistencia' ? _rfIncTiposCBS[(_si - 1) % _rfIncTiposCBS.length] : null,
             dataExtincao: _dtExt,
             metodoExtincao: _metS,
             contratoId: null,
