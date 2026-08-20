@@ -782,7 +782,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + rfsHtml
     + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
-    + window._incRenderVinculadasHtml((window._inconsistenciasGlobal||[]).filter(function(i){ return i.nfNumero === r.numero || i.dfNum === r.numero || i.dfNum === ((r.tipoDF||'NF-e')+' '+r.numero); }))
+    + window._incRenderVinculadasHtml(r._inconsistencias && r._inconsistencias.length ? r._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return i.nfNumero === r.numero || i.dfNum === ((r.tipoDF||'NF-e')+' '+r.numero); }))
     + '</div>'
 
     // Right panel: timeline
@@ -1061,7 +1061,7 @@ window.abrirDetalheRF = function(rfId) {
     + (rf.inconsistencia ? DR('Inconsistência', rf.inconsistencia, 'var(--p-red)') : '')
     + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
-    + window._incRenderVinculadasHtml((window._inconsistenciasGlobal||[]).filter(function(i){ return i.rfId === rf.id; }))
+    + window._incRenderVinculadasHtml(rf._inconsistencias && rf._inconsistencias.length ? rf._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return i.rfId === rf.id; }))
     + '</div>'
 
     // Right panel: timeline
@@ -3119,6 +3119,24 @@ window.renderizarRFsInconsistencias = function() {
   });
   window._inconsistenciasGlobal = incGlobal;
 
+  // Back-references: anotar _inconsistencias em cada NF e RF
+  var _nfIdx = {};
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    nf._inconsistencias = [];
+    _nfIdx[nf.numero] = nf;
+    (nf.registrosFiscais || []).forEach(function(rf) { rf._inconsistencias = []; });
+  });
+  incGlobal.forEach(function(inc) {
+    var nf = _nfIdx[inc.nfNumero];
+    if (!nf) return;
+    nf._inconsistencias.push(inc);
+    if (inc.rfId) {
+      (nf.registrosFiscais || []).forEach(function(rf) {
+        if (rf.id === inc.rfId) rf._inconsistencias.push(inc);
+      });
+    }
+  });
+
   // 2. KPIs ciclo de vida
   function setEl(id, v){ var e=document.getElementById(id); if(e) e.textContent=v; }
   var _stCnt = { aberta:0, em_analise:0, aguardando_emitente:0, resolvida:0, glosada:0 };
@@ -3587,8 +3605,8 @@ window.renderizarKanbanInconsistencias = function() {
         + _kbBadge(_prioCor[inc.prioridade]||'167,168,170', _prioLbl[inc.prioridade]||inc.prioridade, true)
         + '</div>'
         + '<div style="font-size:11px;font-weight:700;color:var(--txt1);margin-bottom:4px;line-height:1.4">'+inc.tipoLabel+'</div>'
-        + '<div style="font-size:10px;color:rgba(26,75,140,1);font-weight:600;margin-bottom:2px;cursor:pointer;text-decoration:underline dotted" onclick="event.stopPropagation();if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\''+dfNum+'\')">📄 '+inc.dfNum+'</div>'
-        + (inc.rfId ? '<div style="font-size:10px;color:rgba(26,107,90,1);margin-bottom:6px;cursor:pointer;text-decoration:underline dotted" onclick="event.stopPropagation();if(window.abrirDetalheRF)window.abrirDetalheRF(\''+inc.rfId+'\')">RF: <span style="font-family:monospace">'+inc.rfId+'</span> · '+inc.tipoFiscal+'</div>'
+        + '<div style="font-size:10px;color:var(--txt3);margin-bottom:2px">📄 '+inc.dfNum+'</div>'
+        + (inc.rfId ? '<div style="font-size:10px;color:var(--txt3);margin-bottom:6px">RF: <span style="font-family:monospace">'+inc.rfId+'</span> · '+inc.tipoFiscal+'</div>'
                     : '<div style="font-size:10px;color:var(--txt3);margin-bottom:6px">inconsistência direta no DF</div>')
         + '<div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:8px">'+ff(inc.valor)+'</div>'
         + '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'
@@ -3995,8 +4013,8 @@ window.kbAbrirCard = function(incId) {
     + '<div style="width:320px;flex-shrink:0;border-right:1px solid var(--brd);padding:18px;overflow-y:auto">'
 
     + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px">Dados da Inconsistência</div>'
-    + DR('DF Vinculado',   '<span style="font-family:monospace;color:rgba(24,95,165,1)">'+inc.dfNum+'</span>')
-    + DR('RF Vinculado',   inc.rfId ? '<span style="font-family:monospace;color:rgba(45,212,191,1)">'+inc.rfId+'</span>' : '<span style="color:var(--txt3);font-style:italic">DF direto</span>')
+    + DR('DF Vinculado',   '<span style="display:flex;align-items:center;gap:8px"><span style="font-family:monospace;color:rgba(24,95,165,1)">'+inc.dfNum+'</span>'+(inc.nfNumero?'<button onclick="document.getElementById(\'kb-card-modal\').style.display=\'none\';if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\''+inc.nfNumero+'\')" style="background:rgba(24,95,165,.1);border:1px solid rgba(24,95,165,.3);border-radius:4px;color:rgba(24,95,165,1);cursor:pointer;font-size:10px;font-weight:700;padding:2px 8px">Ver DF</button>':'')+'</span>')
+    + DR('RF Vinculado',   inc.rfId ? '<span style="display:flex;align-items:center;gap:8px"><span style="font-family:monospace;color:rgba(45,212,191,1)">'+inc.rfId+'</span><button onclick="document.getElementById(\'kb-card-modal\').style.display=\'none\';if(window.abrirDetalheRF)window.abrirDetalheRF(\''+inc.rfId+'\')" style="background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.3);border-radius:4px;color:rgba(26,107,90,1);cursor:pointer;font-size:10px;font-weight:700;padding:2px 8px">Ver RF</button></span>' : '<span style="color:var(--txt3);font-style:italic">DF direto</span>')
     + DR('Valor',          fmtV(inc.valor), '#ba7517')
     + DR('Fluxo',          fluxoLabel)
     + DR('Tipo Fiscal',    '<span style="color:rgba('+tipoFisCor+',1);font-weight:700">'+inc.tipoFiscal+'</span>')
