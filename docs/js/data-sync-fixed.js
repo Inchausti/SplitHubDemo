@@ -1530,7 +1530,10 @@ window.renderizarForecastAproveitamento = function(_retry) {
     });
   });
   var mesesReal = Object.keys(byMonth).sort();
-  if (!mesesReal.length) return;
+  if (!mesesReal.length) {
+    if (!_retry || _retry < 10) { setTimeout(function(){ window.renderizarForecastAproveitamento((_retry||0)+1); }, 300); return; }
+    return;
+  }
   var taxas = mesesReal.map(function(m) { var b = byMonth[m]; return b.orig > 0 ? b.aprop / b.orig : 0; });
   function movAvg(arr, idx) { var n = Math.min(3, idx); if (!n) return arr[0]||0; var s=0; for(var i=idx-n;i<idx;i++) s+=arr[i]; return s/n; }
   var N = mesesReal.length;
@@ -5803,7 +5806,10 @@ window.renderizarFCTForecast = function(_retry) {
   });
 
   var mesesReal = Object.keys(byMonth).sort();
-  if (!mesesReal.length) return;
+  if (!mesesReal.length) {
+    if (!_retry || _retry < 10) { setTimeout(function(){ window.renderizarFCTForecast((_retry||0)+1); }, 300); return; }
+    return;
+  }
 
   var N_REAL = mesesReal.length;
 
@@ -6791,6 +6797,8 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window.iniciarPaginacaoUniversal(); } catch(e) {}
       try { window.atualizarDashboard(); } catch(e) {}
       try { window.atualizarInteligencia(); } catch(e) {}
+      try { window.renderizarFCTForecast && window.renderizarFCTForecast(); } catch(e) {}
+      try { window.renderizarForecastAproveitamento && window.renderizarForecastAproveitamento(); } catch(e) {}
     }
 
     // Tentar chamar nfRenderLista se disponível, caso contrário popula nfListaFiltradaGlobal manualmente
