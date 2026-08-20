@@ -6074,6 +6074,9 @@ function creditosDFsRender(){
     var rfs=nfOrig.registrosFiscais||[];
     var ibs=nfOrig.ibs||0, cbs=nfOrig.cbs||0;
     if(!ibs&&!cbs){rfs.forEach(function(rf){if(rf.tipoFiscal==='ibs')ibs+=rf.valor||0;else cbs+=rf.valor||0;});}
+    // Fallback para entradas inconsistência sem NF real (dados derivados do valor do DF)
+    var _isIngExtra = !nfOrig.numero && d.status==='inconsistencia';
+    if(_isIngExtra&&!ibs&&!cbs){ibs=Math.round((d.valor||0)/1.18*0.10);cbs=Math.round((d.valor||0)/1.18*0.086);}
     var cred=ibs+cbs;
     var tipoDF=d.tipo||'NF-e Entrada';
     var entidade=d.emitente||'—';
@@ -6093,9 +6096,12 @@ function creditosDFsRender(){
     var tipoBadge='<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(59,130,246,.28);color:var(--blue);background:transparent">'+tipoDF+'</span>';
     var metBadge=metodo&&metodo!=='—'?'<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+metodo+'</span>':'<span style="color:var(--txt3)">—</span>';
     var _dfTipoLabel = nfOrig.tipoDF || (tipoDF.indexOf('CT-e')>=0?'CT-e':tipoDF.indexOf('NFS')>=0?'NFS-e':'NF-e');
-    var _dfLabel = nfNum !== '—' ? _dfTipoLabel + ' ' + nfNum : '—';
+    var _dfLabel = _isIngExtra ? (tipoDF.replace(' Entrada','').replace(' Saída','') + ' ' + nfNum) : (nfNum !== '—' ? _dfTipoLabel + ' ' + nfNum : '—');
     h+='<tr>';
-    h+='<td class="mono nowrap"><button onclick="abrirDetalhesNFporNumero(\''+nfNum+'\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:11px">'+_dfLabel+'</button></td>';
+    var _dfOnclick = _isIngExtra
+      ? 'window.abrirIngModal('+d.id+')'
+      : 'abrirDetalhesNFporNumero(\''+nfNum+'\')';
+    h+='<td class="mono nowrap"><button onclick="'+_dfOnclick+'" style="background:none;border:none;color:#185fa5;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:11px">'+_dfLabel+'</button></td>';
     h+='<td class="nowrap">'+tipoBadge+'</td>';
     h+='<td class="trunc" style="max-width:160px">'+entidade+'</td>';
     h+='<td class="mono nowrap" style="font-size:11px;color:var(--txt2)">'+cnpj+'</td>';
