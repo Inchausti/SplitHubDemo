@@ -1558,12 +1558,7 @@ window.renderizarForecastAproveitamento = function(_retry) {
   var tickC = isDark ? '#6b7280' : '#9ca3af';
   if (window._fctAprovChart) { try{window._fctAprovChart.destroy();}catch(e){} window._fctAprovChart=null; }
   var H = Math.max(180, Math.min(260, canvas.parentElement.offsetWidth * 0.3));
-  var _wrapAprov = canvas.parentElement;
-  _wrapAprov.style.position = 'relative';
-  _wrapAprov.style.height = H + 'px';
-  canvas.style.height = H + 'px';
-  canvas.height = H;
-  canvas.width = _wrapAprov.clientWidth || _wrapAprov.offsetWidth || 600;
+  window._prepCanvas(canvas, H);
   var splitIdx = N - 1;
   var forecastBgPlugin = { id:'apBg', beforeDraw: function(chart) {
     if (!mesesFc.length) return;
@@ -5735,16 +5730,23 @@ window.fctForecastHorizonte = function(n, btn) {
   window.renderizarFCTForecast();
 };
 
+// Normaliza dimensões do canvas para Chart.js 4.x:
+// Chart.js lê canvas.height/width (buffer), não style.height (CSS).
+// Também garante que o container pai tenha height explícita (necessário com maintainAspectRatio:false).
+window._prepCanvas = function(canvas, H) {
+  var wrap = canvas.parentElement;
+  var W = wrap ? (wrap.clientWidth || wrap.offsetWidth || 600) : 600;
+  if (wrap) { wrap.style.position = 'relative'; wrap.style.height = H + 'px'; }
+  canvas.style.height = H + 'px';
+  canvas.height = H;
+  canvas.width  = W;
+};
+
 window._renderFcChart = function(canvas, chartStore, opts) {
   // shared chart renderer — opts: {visLabels,credRealVis,credFcVis,debRealVis,debFcVis,saldoRealVis,saldoFcVis,visNReal,visNFc,fmM,tooltipBg,tooltipBdr,tickC,gridC}
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark'
     || (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches);
   if (window[chartStore]) { try{window[chartStore].destroy();}catch(e){} window[chartStore]=null; }
-  // Setar atributo height explicitamente — Chart.js 4.x usa canvas.height (buffer), não style.height
-  var _cH = parseInt(canvas.style.height, 10) || 250;
-  var _cW = canvas.parentElement ? (canvas.parentElement.clientWidth || canvas.parentElement.offsetWidth) : 600;
-  if (_cH > 0) canvas.height = _cH;
-  if (_cW > 0) canvas.width = _cW;
   var o = opts;
   var forecastPlugin = {
     id:'fcBg'+chartStore,
@@ -5935,10 +5937,7 @@ window.renderizarFCTForecast = function(_retry) {
 
   if (canvas) {
     var H = Math.max(220, Math.min(300, canvas.parentElement.offsetWidth * 0.33));
-    var wrapper = canvas.parentElement;
-    wrapper.style.position = 'relative';
-    wrapper.style.height = H + 'px';
-    canvas.style.height = H + 'px';
+    window._prepCanvas(canvas, H);
     window._renderFcChart(canvas, '_fctForecastChart', _fcOpts);
   }
 
