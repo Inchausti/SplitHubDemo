@@ -784,7 +784,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <button class="bnav-btn active" onclick="showView('dashboard',this,true)"><span class="bicon">◉</span>Início</button>
     <button class="bnav-btn" onclick="showView('creditos',this,true)"><span class="bicon">◈</span>Crédito</button>
     <button class="bnav-btn" onclick="showView('debitos',this,true)"><span class="bicon">◇</span>Débito</button>
-    <button class="bnav-btn" onclick="showView('pagamentos',this,true)"><span class="bicon">⊟</span>Pagamentos</button>
+    <button class="bnav-btn" onclick="showView('pagamentos',this,true)"><span class="bicon">⊟</span>Pag. RAD</button>
     <button class="bnav-btn" onclick="showView('conciliacao',this,true)"><span class="bicon">⋈</span>Conciliação</button>
   </div>
 </nav>
@@ -1099,8 +1099,8 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
 <div id="view-pagamentos" class="view">
   <div class="pg-hdr">
     <div>
-      <div class="pg-title">Pagamentos</div>
-      <div class="pg-sub" id="pag-periodo-sub">Impostos DARF/Guia IBS · Origem fato gerador</div>
+      <div class="pg-title">Pagamentos RAD</div>
+      <div class="pg-sub" id="pag-periodo-sub">Guias IBS+CBS · Regime de Atribuição Diferida · Origem fato gerador</div>
     </div>
     <div class="hdr-act">
       <div class="periodo-wrap" style="position:relative">
@@ -1115,10 +1115,10 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
   </div>
   <div id="pag-imp" class="sv active">
     <div class="kgrid k4">
-      <div class="kcard" ><div class="klbl">A vencer <span class="periodo-info" data-tip="Soma dos valores de RFs de entrada com statusCredito = nao_apropriado e sem flag de risco/vencimento. Representa guias IBS+CBS que ainda estão dentro do prazo de pagamento.">i</span></div><div class="kval" id="pag-avencer">—</div><div class="ksub" id="pag-avencer-sub">guias pendentes</div></div>
-      <div class="kcard" ><div class="klbl">Com Flag / Inconsistência <span class="periodo-info" data-tip="RFs com flags.inconsistente=true ou flags.vencido=true. Indica créditos com vencimento próximo ou divergência entre o RF e o TF correspondente — requerem ação imediata para evitar perda fiscal.">i</span></div><div class="kval" id="pag-vencendo">—</div><div class="ksub" id="pag-vencendo-sub">requer atenção</div></div>
-      <div class="kcard" ><div class="klbl">Atrasados <span class="periodo-info" data-tip="RFs com statusRegistro = vencido: prazo de apropriação expirou sem confirmação da Plataforma Centralizada. Representam perda fiscal efetiva de IBS+CBS — não há mais como recuperar sem processo administrativo.">i</span></div><div class="kval" id="pag-atrasado">—</div><div class="ksub" id="pag-atrasado-sub">guias vencidas</div></div>
-      <div class="kcard" ><div class="klbl">Pagos<span class="periodo-info" data-tip="Soma dos RFs com statusCredito = apropriado ou utilizado no período. Representa o volume de IBS+CBS efetivamente aproveitado — crédito confirmado pela Plataforma Centralizada do Comitê Gestor.">i</span></div><div class="kval" id="pag-pago">—</div><div class="ksub" id="pag-pago-sub">guias executadas</div></div>
+      <div class="kcard" ><div class="klbl">A vencer <span class="periodo-info" data-tip="Guias IBS+CBS via RAD com statusCredito = nao_apropriado e sem flag de risco. O split payment ainda não foi confirmado pela Plataforma Centralizada — aguardando liquidação bancária.">i</span></div><div class="kval" id="pag-avencer">—</div><div class="ksub" id="pag-avencer-sub">guias RAD pendentes</div></div>
+      <div class="kcard" ><div class="klbl">Com Flag / Inconsistência <span class="periodo-info" data-tip="Guias RAD com vencimento próximo ou divergência entre o RF e o TF correspondente. O split payment não foi confirmado dentro do prazo — risco de perda do crédito IBS+CBS.">i</span></div><div class="kval" id="pag-vencendo">—</div><div class="ksub" id="pag-vencendo-sub">requer atenção</div></div>
+      <div class="kcard" ><div class="klbl">Atrasados <span class="periodo-info" data-tip="Guias RAD com statusRegistro = vencido: o split payment não foi confirmado pela Plataforma Centralizada dentro do prazo de apropriação. Representam perda fiscal efetiva — recuperação requer processo administrativo.">i</span></div><div class="kval" id="pag-atrasado">—</div><div class="ksub" id="pag-atrasado-sub">guias RAD vencidas</div></div>
+      <div class="kcard" ><div class="klbl">Confirmados<span class="periodo-info" data-tip="Guias RAD com split payment confirmado pela Plataforma Centralizada (statusCredito = apropriado ou utilizado). Volume de IBS+CBS efetivamente aproveitado via Regime de Atribuição Diferida.">i</span></div><div class="kval" id="pag-pago">—</div><div class="ksub" id="pag-pago-sub">guias RAD confirmadas</div></div>
     </div>
 
     <!-- Barra de ação em lote -->
@@ -6643,7 +6643,7 @@ function showView(id,btn,fromBottomNav){
   collapseAllNavGroups();
   document.getElementById("view-"+id).classList.add("active");
   btn.classList.add("active");
-  var _ahTitles={dashboard:'Dashboard',pagamentos:'Pagamentos',creditos:'Créditos',debitos:'Débitos',conciliacao:'Conciliação',inteligencia:'Analytics · Inteligência',assistente:'Analytics · Assistente',fct:'Fluxo de Caixa Tributário',apuracao:'Apuração IBS/CBS',contratos:'Admin · Contratos',fornecedores:'Admin · Fornecedores',organizacao:'Admin · Organização',ingestao:'Admin · Importação de DFs',automacoes:'Admin · Automações',inconsistencias:'Inconsistências',kanban:'Inconsistências · Kanban',fornecedor:'Portal Fornecedor'};
+  var _ahTitles={dashboard:'Dashboard',pagamentos:'Pagamentos RAD',creditos:'Créditos',debitos:'Débitos',conciliacao:'Conciliação',inteligencia:'Analytics · Inteligência',assistente:'Analytics · Assistente',fct:'Fluxo de Caixa Tributário',apuracao:'Apuração IBS/CBS',contratos:'Admin · Contratos',fornecedores:'Admin · Fornecedores',organizacao:'Admin · Organização',ingestao:'Admin · Importação de DFs',automacoes:'Admin · Automações',inconsistencias:'Inconsistências',kanban:'Inconsistências · Kanban',fornecedor:'Portal Fornecedor'};
   var _ahEl=document.getElementById('ah-title'); if(_ahEl) _ahEl.textContent=_ahTitles[id]||id;
   // sync the other nav
   if(fromBottomNav){

@@ -138,7 +138,6 @@ window.SH_TABLES = {
       { label: 'Fornecedor' },
       { label: 'Tipo Fiscal' },
       { label: 'Tipo de DFe' },
-      { label: 'Método' },
       { label: 'Valor',      cls: 'r' },
       { label: 'Data RF' },
       { label: 'Pagamento' },
@@ -5966,7 +5965,7 @@ window.renderizarFCTForecast = function(_retry) {
 // GESTÃO DE PAGAMENTOS — filtro global de mês + tabela dinâmica
 // ============================================================
 
-window._filtrosPagamentos = { mesAno: '', mesAnoArr: [], tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '', metodo: '' };
+window._filtrosPagamentos = { mesAno: '', mesAnoArr: [], tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
 
 window.injetarFiltrosPagamentos = function() {
   var tcrd = document.querySelector('#pag-imp .tcrd');
@@ -5987,8 +5986,7 @@ window.injetarFiltrosPagamentos = function() {
       { label: 'Data RF — até', id: 'fp-data-ate',  type: 'date' },
       { label: 'Valor — mín (R$)', id: 'fp-valor-min', type: 'number', placeholder: '0', min: 0 },
       { label: 'Valor — máx (R$)', id: 'fp-valor-max', type: 'number', placeholder: '∞', min: 0 },
-      { label: 'Tipo de DFe',  id: 'fp-tipo-dfe',  type: 'select', options: [{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}] },
-      { label: 'Método',       id: 'fp-metodo',    type: 'select', options: [{value:'Fornecedor',label:'Fornecedor'},{value:'RAD',label:'RAD'}] }
+      { label: 'Tipo de DFe',  id: 'fp-tipo-dfe',  type: 'select', options: [{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}] }
     ]
   });
 };
@@ -6006,16 +6004,15 @@ window.pagamentosFiltrarGrid = function() {
   f.valorMin = (document.getElementById('fp-valor-min') || {}).value || '';
   f.valorMax = (document.getElementById('fp-valor-max') || {}).value || '';
   f.tipoDFe  = (document.getElementById('fp-tipo-dfe')  || {}).value || '';
-  f.metodo   = (document.getElementById('fp-metodo')    || {}).value || '';
   window.renderizarTabelaPagamentos();
 };
 
 window.pagamentosLimparFiltros = function() {
-  ['fp-busca','fp-tipo','fp-status','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max','fp-tipo-dfe','fp-metodo'].forEach(function(id) {
+  ['fp-busca','fp-tipo','fp-status','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max','fp-tipo-dfe'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
-  window._filtrosPagamentos = { mesAno: '', mesAnoArr: (window._filtrosPagamentos.mesAnoArr||[]).slice(), tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '', metodo: '' };
+  window._filtrosPagamentos = { mesAno: '', mesAnoArr: (window._filtrosPagamentos.mesAnoArr||[]).slice(), tipo: '', status: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
   window.renderizarTabelaPagamentos();
 };
 
@@ -6049,6 +6046,8 @@ window.renderizarTabelaPagamentos = function() {
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
+      // Módulo de Pagamentos exibe exclusivamente RFs via RAD
+      if ((rf.metodoPagamento || nf.metodoPagamento || '') !== 'RAD') return;
       if (!window._matchPeriodo(rf.data, f)) return;
 
       var tipoCol = rf.tipoFiscal === 'ibs' ? 'Guia IBS' : 'DARF CBS';
@@ -6075,7 +6074,6 @@ window.renderizarTabelaPagamentos = function() {
       if (f.valorMin !== '' && valor < parseFloat(f.valorMin)) return;
       if (f.valorMax !== '' && valor > parseFloat(f.valorMax)) return;
       if (f.tipoDFe && (rf.tipoNF || nf.tipo || 'entrada') !== f.tipoDFe) return;
-      if (f.metodo  && (rf.metodoPagamento || nf.metodoPagamento || '') !== f.metodo) return;
 
       var dataRFIso = rf.data || '';
       if (f.dataRFDe  && dataRFIso < f.dataRFDe)  return;
@@ -6126,7 +6124,6 @@ window.renderizarTabelaPagamentos = function() {
     var nfTipoBadgePag = r.tipoNF === 'entrada'
       ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(29,158,117,.28);color:#1d9e75;background:transparent">Entrada</span>'
       : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(186,117,23,.28);color:#ba7517;background:transparent">Saída</span>';
-    var metodoBadge = r.metodo ? '<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+r.metodo+'</span>' : '<span style="color:var(--txt3)">—</span>';
     var chkCell = r.status !== 'pago'
       ? '<td style="text-align:center"><input type="checkbox" class="pag-chk" data-idx="'+idx+'" onchange="window.pagAtualizarSelecao()" style="cursor:pointer;width:15px;height:15px"></td>'
       : '<td></td>';
@@ -6140,7 +6137,6 @@ window.renderizarTabelaPagamentos = function() {
       + '<td class="trunc" style="vertical-align:middle"><div style="font-weight:500">' + r.forn + '</div><div style="font-size:10px;color:var(--txt2)">' + r.cnpj + '</div></td>'
       + '<td class="nowrap">' + tipoBadge + '</td>'
       + '<td class="nowrap">' + nfTipoBadgePag + '</td>'
-      + '<td class="nowrap">' + metodoBadge + '</td>'
       + '<td class="r mono" style="font-weight:600">' + ff(r.valor) + '</td>'
       + '<td class="nowrap" style="color:var(--txt2)">' + r.dataRF + '</td>'
       + '<td class="nowrap">' + (r.status === 'pago'
@@ -6152,7 +6148,7 @@ window.renderizarTabelaPagamentos = function() {
   });
 
   if (!rows.length) {
-    h = '<tr><td colspan="12" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;
@@ -6281,6 +6277,7 @@ window.atualizarKPIsPagamentos = function() {
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
+      if ((rf.metodoPagamento || nf.metodoPagamento || '') !== 'RAD') return;
       if (!window._matchPeriodo(rf.data, f)) return;
       var temPag      = rf.dataPagamento && rf.dataPagamento !== '—';
       var sc          = rf.statusCredito || rf.status || '';
