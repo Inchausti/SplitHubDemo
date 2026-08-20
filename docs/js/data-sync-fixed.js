@@ -4169,10 +4169,17 @@ window.debitosDFsRender = function() {
   if (!el) return;
   var nfs = (window.nfListaFiltradaGlobal || []).filter(function(nf){ return nf.tipo === 'saida'; });
 
-  var busca  = ((document.getElementById('deb-dfs-busca')  ||{}).value||'').toLowerCase();
-  var filtSt = (document.getElementById('deb-dfs-status') ||{}).value||'';
-  var filtTp = (document.getElementById('deb-dfs-tipo')   ||{}).value||'';
-  var filtMe = (document.getElementById('deb-dfs-metodo') ||{}).value||'';
+  var busca    = ((document.getElementById('deb-dfs-busca')    ||{}).value||'').toLowerCase();
+  var filtSt   = (document.getElementById('deb-dfs-status')   ||{}).value||'';
+  var filtTp   = (document.getElementById('deb-dfs-tipo')     ||{}).value||'';
+  var filtMe   = (document.getElementById('deb-dfs-metodo')   ||{}).value||'';
+  var filtExt  = (document.getElementById('deb-dfs-extincao') ||{}).value||'';
+  var dataDe   = (document.getElementById('deb-dfs-data-de')  ||{}).value||'';
+  var dataAte  = (document.getElementById('deb-dfs-data-ate') ||{}).value||'';
+  var valMin   = (document.getElementById('deb-dfs-valor-min')||{}).value||'';
+  var valMax   = (document.getElementById('deb-dfs-valor-max')||{}).value||'';
+  var debMin   = (document.getElementById('deb-dfs-deb-min')  ||{}).value||'';
+  var debMax   = (document.getElementById('deb-dfs-deb-max')  ||{}).value||'';
 
   function _dfDebSt(rfs) {
     var inc=false,vec=false,ext=false,nao=false;
@@ -4194,6 +4201,10 @@ window.debitosDFsRender = function() {
   if(filtTp){nfs=nfs.filter(function(nf){return (nf.tipoDF||'').indexOf(filtTp)>=0;});}
   if(filtSt){nfs=nfs.filter(function(nf){return _dfDebSt(nf.registrosFiscais||[])===filtSt;});}
   if(filtMe){nfs=nfs.filter(function(nf){return (nf.registrosFiscais||[]).some(function(rf){return rf.metodoExtincao===filtMe;});});}
+  if(dataDe||dataAte){nfs=nfs.filter(function(nf){var d=nf.data||'';return (!dataDe||d>=dataDe)&&(!dataAte||d<=dataAte);});}
+  if(filtExt){nfs=nfs.filter(function(nf){var hasExt=(nf.registrosFiscais||[]).some(function(rf){return rf.dataExtincao&&rf.dataExtincao!=='—';});if(filtExt==='com')return hasExt;return !hasExt;});}
+  if(valMin!==''||valMax!==''){nfs=nfs.filter(function(nf){var v=nf.valorTotal||0;return (valMin===''||v>=parseFloat(valMin))&&(valMax===''||v<=parseFloat(valMax));});}
+  if(debMin!==''||debMax!==''){nfs=nfs.filter(function(nf){var ibs=0,cbs=0;(nf.registrosFiscais||[]).forEach(function(rf){if(rf.tipoFiscal==='ibs')ibs+=rf.valor||0;else cbs+=rf.valor||0;});var d2=ibs+cbs;return (debMin===''||d2>=parseFloat(debMin))&&(debMax===''||d2<=parseFloat(debMax));});}
 
   var sub=document.getElementById('deb-dfs-sub');
   if(sub)sub.textContent=nfs.length+' DF'+(nfs.length!==1?'s':'')+' de saída';
@@ -4254,8 +4265,9 @@ window.debitosDFsRender = function() {
 window.debitoDFsToggleFiltros = function() { window.shToggleFilterPanel('deb-dfs'); };
 
 window.debitoDFsLimparFiltros = function() {
-  var ids = ['deb-dfs-busca','deb-dfs-status','deb-dfs-tipo','deb-dfs-metodo'];
-  ids.forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
+  ['deb-dfs-busca','deb-dfs-status','deb-dfs-tipo','deb-dfs-metodo','deb-dfs-extincao','deb-dfs-data-de','deb-dfs-data-ate','deb-dfs-valor-min','deb-dfs-valor-max','deb-dfs-deb-min','deb-dfs-deb-max'].forEach(function(id){
+    var el=document.getElementById(id); if(el)el.value='';
+  });
   window.debitosDFsRender();
 };
 
@@ -4283,7 +4295,7 @@ window.injetarFiltrosInconsistencias = function() {
 };
 
 window.creditosDFsLimpar = function() {
-  ['cred-dfs-busca','cred-dfs-status','cred-dfs-tipo','cred-dfs-credito'].forEach(function(id){
+  ['cred-dfs-busca','cred-dfs-status','cred-dfs-tipo','cred-dfs-credito','cred-dfs-metodo','cred-dfs-extincao','cred-dfs-data-de','cred-dfs-data-ate','cred-dfs-valor-min','cred-dfs-valor-max','cred-dfs-cred-min','cred-dfs-cred-max'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
   if (typeof creditosDFsRender === 'function') creditosDFsRender();
