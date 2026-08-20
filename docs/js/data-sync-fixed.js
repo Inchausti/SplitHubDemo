@@ -2457,7 +2457,7 @@ window.atualizarInteligencia = function() {
     var contMap = {};
     contratos.forEach(function(c) { contMap[c.id] = +c.prazo || 0; });
 
-    // Prazo por fornecedor (via contratoId na NF)
+    // Prazo por fornecedor via contrato
     var fornPrazo = {};
     lista.forEach(function(nf) {
       if (!nf.contratoId || fornPrazo[nf.entidade]) return;
@@ -2465,124 +2465,159 @@ window.atualizarInteligencia = function() {
       if (p) fornPrazo[nf.entidade] = p;
     });
 
-    // Volume médio últimos 3 meses por fornecedor (NFs de entrada)
-    var byMesEnt = {};
+    // Prazo estimado via diferença entre data emissão e vencimento da NF
+    var prazoEstimado = {};
     lista.forEach(function(nf) {
-      if (nf.tipo !== 'entrada') return;
-      var mes = (nf.data || '').substring(0, 7);
-      if (!mes) return;
-      if (!byMesEnt[mes]) byMesEnt[mes] = {};
+      if (nf.tipo !== 'entrada' || !nf.data || !nf.vencimento) return;
       var ent = nf.entidade || '—';
-      byMesEnt[mes][ent] = (byMesEnt[mes][ent] || 0) + (nf.valorTotal || 0);
-    });
-    var ultMeses = Object.keys(byMesEnt).sort().slice(-3);
-    var volMedio = {};
-    Object.keys(fornPrazo).forEach(function(ent) {
-      var soma = 0, cnt = 0;
-      ultMeses.forEach(function(m) { if (byMesEnt[m] && byMesEnt[m][ent]) { soma += byMesEnt[m][ent]; cnt++; } });
-      volMedio[ent] = cnt > 0 ? soma / cnt : 0;
+      var diff = Math.round((new Date(nf.vencimento) - new Date(nf.data)) / 86400000);
+      if (diff > 0 && diff < 365) {
+        if (!prazoEstimado[ent]) prazoEstimado[ent] = { soma: 0, cnt: 0 };
+        prazoEstimado[ent].soma += diff;
+        prazoEstimado[ent].cnt++;
+      }
     });
 
-    // Montar pontos: score de scoreLista + prazo + volMedio
-    var scoreIdx = {};
-    scoreLista.forEach(function(r) { scoreIdx[r.nome] = r.score; });
-    var pontos = Object.keys(fornPrazo).map(function(ent) {
-      return {
-        nome: ent,
-        prazo: fornPrazo[ent],
-        score: scoreIdx[ent] || 75,
-        vol: volMedio[ent] || 0
-      };
-    }).filter(function(p) { return p.prazo > 0; });
+    // Volume total por fornecedor (NFs de entrada, de scoreLista)
+    var volForn = {};
+    scoreLista.forEach(function(r) { volForn[r.nome] = r.vol || 0; });
 
-    if (!pontos.length) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--txt3);font-size:12px">Sem fornecedores com contrato vinculado</div>'; return; }
+    // Montar pontos a partir de TODOS os fornecedores do scoreLista
+    var pontos = scoreLista.map(function(r) {
+      var ent = r.nome;
+      var prazo = fornPrazo[ent]
+        || (prazoEstimado[ent] && prazoEstimado[ent].cnt > 0 ? Math.round(prazoEstimado[ent].soma / prazoEstimado[ent].cnt) : 0)
+        || 30;
+      return { nome: ent, prazo: prazo, score: r.score, vol: r.vol || 0 };
+    });
 
-    // SVG scatter — X = Score, Y = Prazo (invertido: maior prazo = mais exposto = topo)
-    var H = 200, padT = 22, padB = 38, padL = 50, padR = 20;
+    if (!pontos.length) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--txt3);font-size:12px">Sem fornecedores no período</div>'; return; }
+
+    // SVG scatter — X = Score (0→100), Y = Prazo (dias, invertido: maior = zona crítica inferior)
+    var H = 280, padT = 22, padB = 40, padL = 50, padR = 24;
     var W = (el.parentElement && el.parentElement.offsetWidth > 100 ? el.parentElement.offsetWidth : 560);
     var plotW = W - padL - padR, plotH = H - padT - padB;
 
-    var xMin = 0,  xMax = 105;   // score 0–100
-    var yMin = 20, yMax = 130;   // prazo dias (20 a 130, eixo Y invertido: alto = mais crítico)
+    var xMin = 0, xMax = 105;
+    var allPrazos = pontos.map(function(p) { return p.prazo; });
+    var yMin = Math.max(5,  Math.min.apply(null, allPrazos) - 10);
+    var yMax = Math.min(180, Math.max.apply(null, allPrazos) + 15);
 
-    // X = score (maior = melhor), Y = prazo (maior = mais para baixo = zona crítica inferior)
-    function xp(score) { return Math.round(padL + (score - xMin) / (xMax - xMin) * plotW); }
-    // Prazo alto = parte inferior do gráfico (cenário crítico embaixo)
-    function ypp(prazo) { return Math.round(padT + ((prazo - yMin) / (yMax - yMin)) * plotH); }
+    function xp(score) { return padL + (score - xMin) / (xMax - xMin) * plotW; }
+    function ypp(prazo) { return padT + ((prazo - yMin) / (yMax - yMin)) * plotH; }
 
     var maxVol = Math.max.apply(null, pontos.map(function(p) { return p.vol; })) || 1;
-    function rDot(vol) { return Math.round(4 + Math.sqrt(vol / maxVol) * 8); }
+    function rDot(vol) { return Math.max(5, Math.round(4 + Math.sqrt(vol / maxVol) * 9)); }
 
-    // Defs: filtro blur para glow suave
+    // Calcular posições iniciais
+    var dots = pontos.map(function(p) {
+      return { p: p, cx: xp(p.score), cy: ypp(p.prazo), r: rDot(p.vol) };
+    });
+
+    // Anti-sobreposição: empurra bolhas que se sobrepõem (10 iterações)
+    var minGap = 2;
+    for (var iter = 0; iter < 10; iter++) {
+      for (var i = 0; i < dots.length; i++) {
+        for (var j = i + 1; j < dots.length; j++) {
+          var dx = dots[j].cx - dots[i].cx;
+          var dy = dots[j].cy - dots[i].cy;
+          var dist = Math.sqrt(dx * dx + dy * dy) || 0.1;
+          var minDist = dots[i].r + dots[j].r + minGap;
+          if (dist < minDist) {
+            var push = (minDist - dist) / 2;
+            var nx = dx / dist, ny = dy / dist;
+            dots[i].cx -= nx * push;
+            dots[i].cy -= ny * push;
+            dots[j].cx += nx * push;
+            dots[j].cy += ny * push;
+          }
+        }
+      }
+    }
+    // Clamp dentro do plotArea
+    dots.forEach(function(d) {
+      d.cx = Math.max(padL + d.r, Math.min(W - padR - d.r, d.cx));
+      d.cy = Math.max(padT + d.r, Math.min(H - padB - d.r, d.cy));
+    });
+
     var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:' + H + 'px;display:block">';
     s += '<defs>'
-       + '<filter id="glow-r" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
-       + '<filter id="glow-g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+       + '<filter id="glow-r" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+       + '<filter id="glow-g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
        + '</defs>';
 
-    // Quadrante crítico: score < 70 e prazo > 60 — canto INFERIOR esquerdo
-    var qCritX1 = padL,      qCritX2 = xp(70);
-    var qCritY1 = ypp(60),   qCritY2 = H - padB;
-    s += '<rect x="' + qCritX1 + '" y="' + qCritY1 + '" width="' + (qCritX2 - qCritX1) + '" height="' + (qCritY2 - qCritY1) + '" fill="rgba(244,63,94,0.08)"/>';
-    s += '<text x="' + (qCritX1 + 8) + '" y="' + (qCritY2 - 8) + '" fill="var(--red)" font-size="10" font-weight="700" font-family="Inter,system-ui,sans-serif" opacity="0.75">⚠ CRÍTICO</text>';
+    // Quadrante crítico: score < 70 e prazo > 60
+    if (yMax > 60 && xMin < 70) {
+      var qCritX1 = padL, qCritX2 = xp(70);
+      var qCritY1 = ypp(60), qCritY2 = H - padB;
+      if (qCritY1 < qCritY2 && qCritX1 < qCritX2) {
+        s += '<rect x="' + qCritX1 + '" y="' + qCritY1 + '" width="' + (qCritX2 - qCritX1) + '" height="' + (qCritY2 - qCritY1) + '" fill="rgba(244,63,94,0.08)"/>';
+        s += '<text x="' + (qCritX1 + 8) + '" y="' + (qCritY2 - 8) + '" fill="var(--red)" font-size="10" font-weight="700" font-family="Inter,system-ui,sans-serif" opacity="0.75">⚠ CRÍTICO</text>';
+      }
+    }
+    // Quadrante saudável: score ≥ 70 e prazo ≤ 60
+    if (yMin < 60 && xMax > 70) {
+      var qSaudX1 = xp(70), qSaudX2 = W - padR;
+      var qSaudY1 = padT, qSaudY2 = ypp(Math.min(60, yMax));
+      if (qSaudY1 < qSaudY2 && qSaudX1 < qSaudX2) {
+        s += '<rect x="' + qSaudX1 + '" y="' + qSaudY1 + '" width="' + (qSaudX2 - qSaudX1) + '" height="' + (qSaudY2 - qSaudY1) + '" fill="rgba(29,158,117,0.07)"/>';
+        s += '<text x="' + (qSaudX2 - 8) + '" y="' + (qSaudY1 + 16) + '" text-anchor="end" fill="var(--green)" font-size="10" font-weight="700" font-family="Inter,system-ui,sans-serif" opacity="0.75">✓ SAUDÁVEL</text>';
+      }
+    }
 
-    // Quadrante saudável: score ≥ 70 e prazo ≤ 60 — canto SUPERIOR direito
-    var qSaudX1 = xp(70),    qSaudX2 = W - padR;
-    var qSaudY1 = padT,      qSaudY2 = ypp(60);
-    s += '<rect x="' + qSaudX1 + '" y="' + qSaudY1 + '" width="' + (qSaudX2 - qSaudX1) + '" height="' + (qSaudY2 - qSaudY1) + '" fill="rgba(29,158,117,0.07)"/>';
-    s += '<text x="' + (qSaudX2 - 8) + '" y="' + (qSaudY1 + 16) + '" text-anchor="end" fill="var(--green)" font-size="10" font-weight="700" font-family="Inter,system-ui,sans-serif" opacity="0.75">✓ SAUDÁVEL</text>';
-
-    // Grid linhas verticais (score 20,40,60,70,80,100)
+    // Grid vertical (score)
     [20, 40, 60, 80, 100].forEach(function(v) {
       var gx = xp(v);
+      if (gx < padL || gx > W - padR) return;
       s += '<line x1="' + gx + '" y1="' + padT + '" x2="' + gx + '" y2="' + (H - padB) + '" stroke="rgba(128,128,128,0.1)" stroke-width="1"/>';
-      s += '<text x="' + gx + '" y="' + (H - padB + 16) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">' + v + '</text>';
+      s += '<text x="' + gx + '" y="' + (H - padB + 14) + '" text-anchor="middle" fill="var(--txt3)" font-size="9" font-family="Inter,system-ui,sans-serif">' + v + '</text>';
     });
 
-    // Grid linhas horizontais (prazo 30,60,90,120)
-    [30, 60, 90, 120].forEach(function(v) {
+    // Grid horizontal (prazo) — ticks dinâmicos
+    var yTicks = [];
+    for (var yt = Math.ceil(yMin / 15) * 15; yt <= yMax; yt += 15) yTicks.push(yt);
+    yTicks.forEach(function(v) {
       var gy = ypp(v);
       s += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="rgba(128,128,128,0.1)" stroke-width="1"/>';
-      s += '<text x="' + (padL - 6) + '" y="' + (gy + 4) + '" text-anchor="end" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">' + v + 'd</text>';
+      s += '<text x="' + (padL - 5) + '" y="' + (gy + 3.5) + '" text-anchor="end" fill="var(--txt3)" font-size="9" font-family="Inter,system-ui,sans-serif">' + v + 'd</text>';
     });
 
-    // Linhas de threshold
-    s += '<line x1="' + xp(70) + '" y1="' + padT + '" x2="' + xp(70) + '" y2="' + (H - padB) + '" stroke="rgba(186,117,23,0.65)" stroke-width="1.5" stroke-dasharray="6 4"/>';
-    s += '<text x="' + (xp(70) + 3) + '" y="' + (padT + 10) + '" fill="var(--amber)" font-size="9" font-weight="700" font-family="Inter,system-ui,sans-serif">score 70</text>';
-
-    s += '<line x1="' + padL + '" y1="' + ypp(60) + '" x2="' + (W - padR) + '" y2="' + ypp(60) + '" stroke="rgba(186,117,23,0.65)" stroke-width="1.5" stroke-dasharray="6 4"/>';
-    s += '<text x="' + (W - padR - 3) + '" y="' + (ypp(60) - 4) + '" text-anchor="end" fill="var(--amber)" font-size="9" font-weight="700" font-family="Inter,system-ui,sans-serif">60d</text>';
+    // Threshold score 70
+    var tx70 = xp(70);
+    s += '<line x1="' + tx70 + '" y1="' + padT + '" x2="' + tx70 + '" y2="' + (H - padB) + '" stroke="rgba(186,117,23,0.6)" stroke-width="1.5" stroke-dasharray="5 4"/>';
+    s += '<text x="' + (tx70 + 3) + '" y="' + (padT + 10) + '" fill="var(--amber)" font-size="8.5" font-weight="700" font-family="Inter,system-ui,sans-serif">70</text>';
+    // Threshold prazo 60d (só se dentro do range)
+    if (yMin < 60 && yMax > 60) {
+      var ty60 = ypp(60);
+      s += '<line x1="' + padL + '" y1="' + ty60 + '" x2="' + (W - padR) + '" y2="' + ty60 + '" stroke="rgba(186,117,23,0.6)" stroke-width="1.5" stroke-dasharray="5 4"/>';
+      s += '<text x="' + (W - padR - 3) + '" y="' + (ty60 - 3) + '" text-anchor="end" fill="var(--amber)" font-size="8.5" font-weight="700" font-family="Inter,system-ui,sans-serif">60d</text>';
+    }
 
     // Eixos
     s += '<line x1="' + padL + '" y1="' + (H - padB) + '" x2="' + (W - padR) + '" y2="' + (H - padB) + '" stroke="rgba(128,128,128,0.2)" stroke-width="1"/>';
     s += '<line x1="' + padL + '" y1="' + padT + '" x2="' + padL + '" y2="' + (H - padB) + '" stroke="rgba(128,128,128,0.2)" stroke-width="1"/>';
+    s += '<text x="' + (padL + plotW / 2) + '" y="' + (H - 6) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">Score de Risco →</text>';
+    s += '<text transform="rotate(-90,' + (padL - 40) + ',' + (padT + plotH / 2) + ')" x="' + (padL - 40) + '" y="' + (padT + plotH / 2 + 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">Prazo (dias) ↓</text>';
 
-    // Labels eixos
-    s += '<text x="' + (padL + plotW / 2) + '" y="' + (H - 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="11" font-family="Inter,system-ui,sans-serif">Score de Aproveitamento →</text>';
-    s += '<text transform="rotate(-90,' + (padL - 42) + ',' + (padT + plotH / 2) + ')" x="' + (padL - 42) + '" y="' + (padT + plotH / 2 + 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="11" font-family="Inter,system-ui,sans-serif">Prazo Contratual (dias) ↓</text>';
-
-    // Pontos — maiores atrás, dots suavizados com halo + glow
+    // Pontos: maiores atrás
     var fmtV2 = function(v) { return v >= 1e6 ? 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M' : v >= 1e3 ? 'R$ ' + Math.round(v/1e3) + 'K' : 'R$ 0'; };
-    pontos.slice().sort(function(a, b) { return b.vol - a.vol; }).forEach(function(p) {
-      var cx = xp(p.score), cy = ypp(p.prazo), r = rDot(p.vol);
+    dots.slice().sort(function(a, b) { return b.r - a.r; }).forEach(function(d) {
+      var p = d.p, cx = d.cx, cy = d.cy, r = d.r;
       var critico = p.score < 70 && p.prazo > 60;
       var atencao = p.score < 70 && p.prazo <= 60;
       var cor = critico ? 'var(--red)' : atencao ? 'var(--amber)' : 'var(--green)';
       var filterId = critico ? 'glow-r' : 'glow-g';
-      var tipData = [p.nome + ' · prazo ' + p.prazo + 'd', cor, 'Score', p.score + '/100', cor, 'Vol. médio 3m', fmtV2(p.vol).replace('R$ ','')].join('|');
+      var tipData = [p.nome + ' · prazo ' + p.prazo + 'd', cor, 'Score', p.score + '/100', cor, 'Vol. total', fmtV2(p.vol).replace('R$ ','')].join('|');
       var enc = tipData.replace(/'/g, '&apos;');
-
-      // Halo externo suave
-      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 4) + '" fill="' + cor + '" opacity="0.06"/>';
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 4) + '" fill="' + cor + '" opacity="0.05"/>';
       s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 1) + '" fill="' + cor + '" opacity="0.12"/>';
-      // Dot principal
       s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + cor + '" opacity="0.60" filter="url(#' + filterId + ')" style="cursor:pointer" onmousemove="_svgTipShow(event,\'' + enc + '\')" onmouseleave="_svgTipHide()"/>';
-
-      // Label (todos os pontos)
-      var lbl = p.nome.split(' ')[0];
-      var lblY = cy + r + 11;
-      if (lblY > H - padB - 2) lblY = cy - r - 4;
-      s += '<text x="' + cx + '" y="' + lblY + '" text-anchor="middle" fill="' + cor + '" font-size="8" font-weight="600" font-family="Inter,system-ui,sans-serif" opacity="0.85">' + lbl + '</text>';
+      // Label: até 2 palavras, máx 14 chars
+      var words = p.nome.split(' ');
+      var lbl = words.length > 1 ? (words[0] + ' ' + words[1]).substring(0, 14) : words[0].substring(0, 14);
+      var lblY = cy + r + 10;
+      if (lblY > H - padB - 2) lblY = cy - r - 3;
+      s += '<text x="' + cx + '" y="' + lblY + '" text-anchor="middle" fill="' + cor + '" font-size="8" font-weight="600" font-family="Inter,system-ui,sans-serif" opacity="0.9">' + lbl + '</text>';
     });
 
     s += '</svg>';
