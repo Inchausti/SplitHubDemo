@@ -5815,30 +5815,63 @@ window.renderizarFCT = function() {
     }
   }
 
-  // Tabela mensal
+  // Tabela mensal — Proposta C: 5 colunas + sparkline de saldo acumulado
   var tbody = document.getElementById('fct-t-body');
   if (tbody) {
-    var rows = '';
+    // Pré-calcula saldo acumulado por mês
+    var cumSaldos = [];
+    var cumAcc = 0;
     meses.forEach(function(m) {
+      var d = byMonth[m];
+      cumAcc += (d.cAprop - d.dBruto);
+      cumSaldos.push(cumAcc);
+    });
+    var cumMin = Math.min.apply(null, cumSaldos);
+    var cumMax = Math.max.apply(null, cumSaldos);
+    var cumRange = (cumMax - cumMin) || 1;
+
+    // Gera sparkline SVG para o mês na posição idx (mostra trajetória do início até idx)
+    function sparkline(idx) {
+      var W = 80, H = 24, pad = 3;
+      var slice = cumSaldos.slice(0, idx + 1);
+      var n = slice.length;
+      if (n < 2) {
+        var sy = pad + (H - 2*pad) * (1 - (slice[0] - cumMin) / cumRange);
+        return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;margin-left:auto">'
+          + '<circle cx="' + (W/2) + '" cy="' + sy.toFixed(1) + '" r="2.5" fill="' + (slice[0] >= 0 ? '#1d9e75' : '#a32d2d') + '"/>'
+          + '</svg>';
+      }
+      var pts = slice.map(function(v, i) {
+        var x = pad + (i / (n - 1)) * (W - 2*pad);
+        var y = pad + (H - 2*pad) * (1 - (v - cumMin) / cumRange);
+        return x.toFixed(1) + ',' + y.toFixed(1);
+      });
+      var lastV = slice[slice.length - 1];
+      var cor = lastV >= 0 ? '#1d9e75' : '#a32d2d';
+      var lastPt = pts[pts.length - 1].split(',');
+      return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;margin-left:auto">'
+        + '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + cor + '" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>'
+        + '<circle cx="' + lastPt[0] + '" cy="' + lastPt[1] + '" r="2.5" fill="' + cor + '"/>'
+        + '</svg>';
+    }
+
+    var rows = '';
+    meses.forEach(function(m, idx) {
       var d   = byMonth[m];
-      var liq = Math.max(0, d.dBruto - d.cAprop);
       var pos = d.cAprop - d.dBruto;
       var posCor = pos >= 0 ? '#1d9e75' : '#a32d2d';
       var statusTxt = pos >= 0
-        ? '<span style="color:#1d9e75;font-weight:700;font-size:10px">● Credor</span>'
-        : '<span style="color:#a32d2d;font-weight:700;font-size:10px">● Devedor</span>';
+        ? '<span style="color:#1d9e75;font-weight:600;font-size:10px">● Credor</span>'
+        : '<span style="color:#a32d2d;font-weight:600;font-size:10px">● Devedor</span>';
       var aliqMes = d.faturamento > 0 ? (Math.max(0, d.dBruto - d.cAprop) / d.faturamento * 100).toFixed(1) + '%' : '—';
       rows += '<tr>'
         + '<td class="nowrap">' + m.substring(5,7) + '/' + m.substring(0,4) + '</td>'
         + '<td class="r mono" style="color:#1d9e75">' + fmM(d.cAprop) + '</td>'
-        + '<td class="r mono" style="color:#ba7517">' + fmM(d.cCond)  + '</td>'
-        + '<td class="r mono" style="color:#a32d2d">' + fmM(d.cRisco) + '</td>'
-        + '<td class="r mono" style="color:#8B5CF6">' + fmM(d.cGlosado) + '</td>'
         + '<td class="r mono">' + fmM(d.dBruto) + '</td>'
-        + '<td class="r mono" style="color:#ba7517">' + fmM(liq) + '</td>'
         + '<td class="r mono" style="color:' + posCor + ';font-weight:700">' + fmM(pos) + '</td>'
         + '<td class="r mono" style="color:var(--teal)">' + aliqMes + '</td>'
         + '<td>' + statusTxt + '</td>'
+        + '<td style="padding:4px 8px">' + sparkline(idx) + '</td>'
         + '</tr>';
     });
     tbody.innerHTML = rows;
