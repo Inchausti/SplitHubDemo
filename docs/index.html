@@ -2439,16 +2439,23 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
   <div class="pg-hdr">
     <div>
       <div class="pg-title">Assistente Tributário</div>
-      <div class="pg-sub">LC 214 · Decreto 12.955/2026 · Notas Técnicas RFB · Respostas baseadas em fontes oficiais</div>
+      <div class="pg-sub">LC 214 · Decreto 12.955/2026 · Diagnóstico guiado por árvore de decisão</div>
     </div>
-    <div class="hdr-act">
-      <button class="btn btn-t" onclick="clearChat()">+ Nova conversa</button>
+    <div class="hdr-act" style="display:flex;gap:8px;align-items:center">
+      <!-- Mode toggle -->
+      <div style="display:flex;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0">
+        <button id="ass-mode-chat" class="btn" onclick="assSetMode('chat')"
+          style="border:none;border-radius:0;padding:6px 14px;font-size:12px;background:var(--teal);color:#0B1513;font-weight:700">Chat Livre</button>
+        <button id="ass-mode-diag" class="btn" onclick="assSetMode('diag')"
+          style="border:none;border-radius:0;padding:6px 14px;font-size:12px;background:transparent;color:var(--txt2);font-weight:600">Diagnóstico Guiado</button>
+      </div>
+      <button class="btn btn-t" id="ass-nova-btn" onclick="clearChat()">+ Nova conversa</button>
     </div>
   </div>
 
   <div class="chat-layout">
-    <!-- Painel de chat -->
-    <div class="chat-panel">
+    <!-- ── Modo Chat Livre ── -->
+    <div id="ass-chat-panel" class="chat-panel">
       <div class="chat-messages" id="chat-messages"></div>
       <div class="chat-input-bar">
         <input type="text" id="chat-input"
@@ -2459,58 +2466,69 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       </div>
     </div>
 
-    <!-- Painel de fontes -->
+    <!-- ── Modo Diagnóstico Guiado ── -->
+    <div id="ass-diag-panel" style="display:none;flex:1;min-width:0;display:none;flex-direction:column;overflow:hidden;background:var(--card);border:1px solid var(--border);border-radius:12px">
+      <!-- Breadcrumb trail -->
+      <div id="diag-breadcrumb" style="padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:45px;background:var(--bg)">
+        <span style="font-size:11px;color:var(--txt3)">Início</span>
+      </div>
+      <!-- Content area -->
+      <div id="diag-content" style="flex:1;overflow-y:auto;padding:24px 28px"></div>
+      <!-- Bottom nav -->
+      <div style="padding:10px 18px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--bg)">
+        <button class="btn" id="diag-back-btn" onclick="diagBack()" style="display:none">← Voltar</button>
+        <button class="btn btn-t" onclick="diagReset()">↺ Reiniciar diagnóstico</button>
+      </div>
+    </div>
+
+    <!-- Painel lateral direito -->
     <div class="sources-panel">
-      <div class="sources-panel-title">
-        <div class="ai-dot"></div>
-        Assistente RAG
-      </div>
-
-      <!-- API Key config -->
-      <div id="rag-key-section" style="margin-bottom:14px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:8px">
-        <div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Anthropic API Key</div>
-        <div id="rag-key-status" style="display:none;font-size:11px;color:var(--teal);margin-bottom:6px">✓ Chave configurada — Claude ativo</div>
-        <div style="display:flex;gap:6px">
-          <input id="rag-key-input" type="password" placeholder="sk-ant-..." autocomplete="off"
-            style="flex:1;min-width:0;background:var(--inp,var(--card));border:1px solid var(--border);border-radius:5px;padding:6px 8px;font-size:11px;color:var(--txt1);font-family:var(--font-mono);outline:none"
-            onkeydown="if(event.key==='Enter')ragSaveKey()"/>
-          <button onclick="ragSaveKey()" style="background:var(--teal);color:#0B1513;border:none;border-radius:5px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Salvar</button>
+      <!-- Chat mode: fontes -->
+      <div id="ass-panel-chat">
+        <div class="sources-panel-title">
+          <div class="ai-dot"></div>
+          Base de Conhecimento
         </div>
-        <div style="font-size:10px;color:var(--txt3);margin-top:6px">Chave fica na sessão — não é armazenada.</div>
+        <div id="rag-retrieved-sources" style="display:none;margin-bottom:14px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:8px"></div>
+        <div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Fontes indexadas</div>
+        <div class="source-item">
+          <div class="source-name">Lei Complementar 214/2025</div>
+          <div class="source-desc">IBS, CBS e IS — lei base da reforma tributária.</div>
+          <a class="source-link" href="https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm" target="_blank" rel="noopener">Acessar →</a>
+        </div>
+        <div class="source-item">
+          <div class="source-name">Decreto 12.955/2026</div>
+          <div class="source-desc">Regulamentação da LC 214 e split payment.</div>
+          <a class="source-link" href="https://www.in.gov.br/web/dou/-/decreto-n-12.955-de-29-de-abril-de-2026-702415229" target="_blank" rel="noopener">Acessar →</a>
+        </div>
+        <div class="source-item pending">
+          <div class="source-name">Notas Técnicas RFB 2025–2026</div>
+          <div class="source-desc">Receita Federal — em indexação</div>
+          <span class="source-tag">Em breve</span>
+        </div>
+        <!-- hidden RAG inputs kept for compatibility -->
+        <div id="rag-key-section" style="display:none">
+          <input id="rag-key-input" type="password" autocomplete="off"/>
+          <div id="rag-key-status" style="display:none"></div>
+        </div>
+        <span id="rag-index-badge" style="display:none"></span>
+        <div class="disclaimer-box">Respostas baseadas em legislação oficial. Não substituem consultoria jurídica.</div>
       </div>
 
-      <!-- Fontes recuperadas pelo RAG -->
-      <div id="rag-retrieved-sources" style="display:none;margin-bottom:14px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:8px"></div>
-
-      <!-- Fontes estáticas indexadas -->
-      <div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Base indexada</div>
-
-      <div class="source-item">
-        <div class="source-name">Dados ao vivo do projeto</div>
-        <div class="source-desc">NFs, RFs, inconsistências e contratos — indexados via BM25 em tempo real.</div>
-        <span id="rag-index-badge" style="font-size:10px;color:var(--teal);font-weight:600">Aguardando dados…</span>
-      </div>
-
-      <div class="source-item">
-        <div class="source-name">Lei Complementar 214/2025</div>
-        <div class="source-desc">IBS, CBS e IS — lei base da reforma tributária.</div>
-        <a class="source-link" href="https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm" target="_blank" rel="noopener">Acessar →</a>
-      </div>
-
-      <div class="source-item">
-        <div class="source-name">Decreto 12.955/2026</div>
-        <div class="source-desc">Regulamentação da LC 214 e split payment.</div>
-        <a class="source-link" href="https://www.in.gov.br/web/dou/-/decreto-n-12.955-de-29-de-abril-de-2026-702415229" target="_blank" rel="noopener">Acessar →</a>
-      </div>
-
-      <div class="source-item pending">
-        <div class="source-name">Notas Técnicas RFB 2025–2026</div>
-        <div class="source-desc">Receita Federal — em indexação</div>
-        <span class="source-tag">Em breve</span>
-      </div>
-
-      <div class="disclaimer-box">
-        As respostas são geradas por IA com base nos dados do projeto e fontes públicas. Não substituem consultoria jurídica.
+      <!-- Diagnóstico mode: fluxos disponíveis -->
+      <div id="ass-panel-diag" style="display:none">
+        <div class="sources-panel-title">
+          <div class="ai-dot" style="background:var(--blue)"></div>
+          Fluxos de Diagnóstico
+        </div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:14px">Selecione um fluxo ou use os botões de escolha no painel principal.</div>
+        <div id="diag-flow-list"></div>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Referências</div>
+          <div class="source-item"><div class="source-name">LC 214/2025</div><a class="source-link" href="https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm" target="_blank" rel="noopener">Acessar →</a></div>
+          <div class="source-item"><div class="source-name">Decreto 12.955/2026</div><a class="source-link" href="https://www.in.gov.br/web/dou/-/decreto-n-12.955-de-29-de-abril-de-2026-702415229" target="_blank" rel="noopener">Acessar →</a></div>
+        </div>
+        <div class="disclaimer-box">Fluxos simulados para fins demonstrativos. Consulte assessoria jurídica para decisões definitivas.</div>
       </div>
     </div>
   </div>
@@ -3533,13 +3551,13 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <!-- Gráficos row 1 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
         <div class="ccrd">
-          <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Top 5 Fornecedores por Volume</div><span class="periodo-info" data-tip="Ranking dos 5 fornecedores com maior volume financeiro de RFs em inconsistência (entrada e saída combinados). Prioriza os fornecedores com maior impacto financeiro nas inconsistências — útil para direcionar ações de regularização pelo maior retorno potencial.">i</span></div>
-          <div class="csub">Volume total de RFs com inconsistência · R$ milhões</div>
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Top 5 Fornecedores por Volume</div><span class="periodo-info" data-tip="Ranking dos 5 fornecedores com maior volume financeiro de DFs (Documentos Fiscais) com inconsistência. Usa o valor total do DF — não do RF — para refletir o impacto real na cadeia fiscal. Cada DF é contado uma vez, independente de quantos RFs tiver.">i</span></div>
+          <div class="csub">Volume total por DF com inconsistência · R$ milhões</div>
           <div id="c-inc-top5-forn" style="min-height:130px"></div>
         </div>
         <div class="ccrd">
-          <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Por Tipo de Inconsistência</div><span class="periodo-info" data-tip="Distribuição do volume financeiro por categoria de inconsistência: RF sem TF (sem Termo Fiscal correspondente), divergência de valor (RF ≠ TF), alíquota incorreta, CNPJ divergente, entre outras. Identifica o tipo de problema mais frequente para priorizar correções sistêmicas.">i</span></div>
-          <div class="csub">Distribuição por categoria · R$ milhões</div>
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Por Tipo de Inconsistência</div><span class="periodo-info" data-tip="Distribuição do volume financeiro dos DFs por categoria de inconsistência. Cada DF é contado uma vez por tipo de problema, usando o valor total do documento fiscal — não do RF individual. Identifica o tipo de problema com maior impacto financeiro.">i</span></div>
+          <div class="csub">Volume por DF · categoria de problema · R$ milhões</div>
           <div id="c-inc-tipos" style="min-height:130px"></div>
         </div>
       </div>
@@ -7810,6 +7828,523 @@ function _showToast(msg){
 }());
 
 // ── Assistente Tributário ────────────────────────────────────────────────────
+
+// ─── DIAGNÓSTICO GUIADO — Árvore de decisão pré-fixada ───────────────────────
+var _diagStack = [];   // histórico de nós visitados
+var _diagCurrent = null;
+
+var DIAG_TREE = {
+  // ── ROOT ──────────────────────────────────────────────────────────────────
+  id: 'root',
+  q: 'Qual situação você quer diagnosticar?',
+  icon: '⚖',
+  opts: [
+    { label: 'Crédito IBS/CBS não apropriado',   next: 'credito' },
+    { label: 'Inconsistência RF × TF',            next: 'inconsistencia' },
+    { label: 'Elegibilidade ao RAD',              next: 'rad' },
+    { label: 'Risco de prescrição de crédito',    next: 'prescricao' },
+    { label: 'Enquadramento no split payment',    next: 'split' }
+  ]
+};
+
+var DIAG_NODES = {
+  // ─── CRÉDITO ──────────────────────────────────────────────────────────────
+  credito: {
+    id: 'credito',
+    q: 'O fornecedor realizou o pagamento do tributo (split payment ou RAD)?',
+    icon: '💳',
+    opts: [
+      { label: 'Sim — pagamento confirmado via TF',       next: 'cred_tf_ok' },
+      { label: 'Não — sem TF gerado',                     next: 'cred_sem_tf' },
+      { label: 'Não sei / TF pendente de verificação',    next: 'cred_verificar' }
+    ]
+  },
+  cred_tf_ok: {
+    id: 'cred_tf_ok',
+    q: 'O crédito está vinculado a uma NF-e de entrada válida e dentro do prazo de 5 anos?',
+    icon: '📄',
+    opts: [
+      { label: 'Sim, NF-e válida e dentro do prazo',      next: 'cred_ok_final' },
+      { label: 'NF-e foi cancelada ou inutilizada',        next: 'cred_nf_cancel' },
+      { label: 'Prazo de 5 anos vencido',                  next: 'cred_prescrito' }
+    ]
+  },
+  cred_ok_final: {
+    id: 'cred_ok_final',
+    terminal: true,
+    tipo: 'ok',
+    titulo: 'Crédito Apropriável',
+    resposta: 'O crédito IBS+CBS **pode ser apropriado**. Todos os requisitos estão satisfeitos:\n\n✅ TF confirmado pela Plataforma Centralizada\n✅ NF-e de entrada válida\n✅ Dentro do prazo de 5 anos\n\n**Ação recomendada:** acesse o módulo **Créditos** e altere o status para "Apropriado". O crédito será consolidado na apuração do período.',
+    legal: 'LC 214/2025, arts. 44–48 · Decreto 12.955/2026, art. 7',
+    acao: { label: 'Ir para Créditos', fn: 'dashIrParaCreditos' }
+  },
+  cred_nf_cancel: {
+    id: 'cred_nf_cancel',
+    terminal: true,
+    tipo: 'erro',
+    titulo: 'NF-e Cancelada — Crédito Vedado',
+    resposta: 'Crédito **não pode ser apropriado**. A NF-e foi cancelada ou inutilizada após a emissão do RF.\n\n❌ NF-e cancelada extingue o fato gerador\n❌ RF vinculado deve ser estornado\n❌ Eventual TF gerado será devolvido ao adquirente\n\n**Ação recomendada:** registre a inconsistência no módulo de Inconsistências e comunique o fornecedor para reemissão se a operação tiver ocorrido.',
+    legal: 'LC 214/2025, art. 48, §3º',
+    acao: { label: 'Ir para Inconsistências', fn: 'dashIrParaInconsistencias' }
+  },
+  cred_prescrito: {
+    id: 'cred_prescrito',
+    terminal: true,
+    tipo: 'erro',
+    titulo: 'Crédito Prescrito',
+    resposta: 'O crédito **prescreveu** — prazo de 5 anos do fato gerador ultrapassado.\n\n❌ Perda definitiva sem recuperação administrativa\n❌ Não é possível requerer ressarcimento\n❌ Crédito deve ser baixado contabilmente\n\n**Ação recomendada:** classifique o RF como "Vencido" no sistema. Para créditos futuros, ative alertas automáticos de prescrição no módulo de Créditos.',
+    legal: 'LC 214/2025, art. 55 · CTN, art. 168'
+  },
+  cred_sem_tf: {
+    id: 'cred_sem_tf',
+    q: 'O fornecedor tem contrato RAD com sua empresa?',
+    icon: '📋',
+    opts: [
+      { label: 'Sim — contrato RAD vigente',                next: 'cred_rad_vigente' },
+      { label: 'Não — operação com split payment padrão',   next: 'cred_split_pend' },
+      { label: 'Não sei',                                   next: 'cred_verificar' }
+    ]
+  },
+  cred_rad_vigente: {
+    id: 'cred_rad_vigente',
+    terminal: true,
+    tipo: 'alerta',
+    titulo: 'RAD — Recolhimento Pendente pelo Adquirente',
+    resposta: 'Há contrato RAD vigente, mas o recolhimento **ainda não foi confirmado**.\n\n⚠ Sua empresa (adquirente) é responsável pelo recolhimento do tributo\n⚠ Sem confirmação do RAD, o crédito não é liberado pela Plataforma\n⚠ Risco de autuação se prazo de recolhimento vencer\n\n**Ação recomendada:** acesse Pagamentos, localize o documento e execute o pagamento RAD antes do vencimento contratual.',
+    legal: 'LC 214/2025, art. 51 · Decreto 12.955/2026, arts. 12–15',
+    acao: { label: 'Ir para Pagamentos', fn: 'dashIrParaPagamentosRisco' }
+  },
+  cred_split_pend: {
+    id: 'cred_split_pend',
+    terminal: true,
+    tipo: 'alerta',
+    titulo: 'Split Payment Pendente — Crédito Bloqueado',
+    resposta: 'O tributo **não foi recolhido** via split payment. O crédito fica bloqueado até a confirmação.\n\n⚠ Fornecedor pode ter pago por outro meio não coberto pelo split\n⚠ Pagamento em espécie ou transferência manual não gera TF automático\n⚠ Crédito permanece como "A Apropriar" até regularização\n\n**Ação recomendada:** solicite ao fornecedor o comprovante de recolhimento manual do IBS+CBS. Se confirmado, registre o TF manualmente na Plataforma CG-IBS.',
+    legal: 'LC 214/2025, arts. 47–50 · Decreto 12.955/2026, art. 5'
+  },
+  cred_verificar: {
+    id: 'cred_verificar',
+    terminal: true,
+    tipo: 'info',
+    titulo: 'Verificar Status na Plataforma CG-IBS',
+    resposta: 'Status do TF **não confirmado** — verificação necessária.\n\nPassos para verificar:\n1. Acesse o módulo de **Conciliação** e localize o RF da NF-e\n2. Verifique se há TF associado (coluna "Status TF")\n3. Se TF = "Pendente", aguarde até 2 dias úteis\n4. Se TF = "Divergente", abra chamado na Plataforma CG-IBS\n5. Se TF ausente após 5 dias, o fornecedor não recolheu — acione RAD ou acorde recolhimento manual',
+    legal: 'Decreto 12.955/2026, arts. 8–11',
+    acao: { label: 'Ir para Conciliação', fn: 'dashIrParaConciliacao' }
+  },
+
+  // ─── INCONSISTÊNCIA RF×TF ─────────────────────────────────────────────────
+  inconsistencia: {
+    id: 'inconsistencia',
+    q: 'Qual o tipo de inconsistência identificada?',
+    icon: '⚠',
+    opts: [
+      { label: 'RF gerado mas TF ausente',            next: 'inc_sem_tf' },
+      { label: 'TF com valor divergente do RF',       next: 'inc_valor_div' },
+      { label: 'RF duplicado (duas NFs para mesmo pagamento)', next: 'inc_dup' },
+      { label: 'NF cancelada mas RF ainda ativo',     next: 'inc_nf_cancel' }
+    ]
+  },
+  inc_sem_tf: {
+    id: 'inc_sem_tf',
+    q: 'A NF-e tem mais de 5 dias úteis de emissão?',
+    icon: '📅',
+    opts: [
+      { label: 'Sim — mais de 5 dias úteis',          next: 'inc_sem_tf_velho' },
+      { label: 'Não — menos de 5 dias úteis',         next: 'inc_sem_tf_novo' }
+    ]
+  },
+  inc_sem_tf_velho: {
+    id: 'inc_sem_tf_velho',
+    terminal: true,
+    tipo: 'erro',
+    titulo: 'Inconsistência Crítica — RF sem TF (Antigo)',
+    resposta: 'RF gerado há mais de 5 dias úteis **sem TF correspondente**. Alta probabilidade de não-recolhimento.\n\n❌ O tributo provavelmente não foi recolhido\n❌ Crédito **não pode ser apropriado** (art. 48, LC 214)\n❌ Risco de glosa em fiscalização\n\n**Ação imediata:**\n1. Notifique o fornecedor formalmente por escrito\n2. Suspenda novos pagamentos a este fornecedor até regularização\n3. Acione cláusula de responsabilidade tributária do contrato\n4. Registre a inconsistência no módulo de Inconsistências com classificação "Crítica"',
+    legal: 'LC 214/2025, art. 48 · Decreto 12.955/2026, art. 19',
+    acao: { label: 'Ir para Inconsistências', fn: 'dashIrParaInconsistencias' }
+  },
+  inc_sem_tf_novo: {
+    id: 'inc_sem_tf_novo',
+    terminal: true,
+    tipo: 'info',
+    titulo: 'TF em Processamento — Aguardar',
+    resposta: 'O TF pode estar em processamento normal pela Plataforma CG-IBS.\n\nℹ Prazo regulamentar para confirmação: até 2 dias úteis após o split\nℹ Em caso de falha técnica, o prazo estende para 5 dias úteis\n\n**Ação:** monitore a conciliação nos próximos 2–3 dias. Se após esse prazo o TF não aparecer, reclassifique para inconsistência crítica.',
+    legal: 'Decreto 12.955/2026, arts. 8–11 e 22 (contingência)'
+  },
+  inc_valor_div: {
+    id: 'inc_valor_div',
+    terminal: true,
+    tipo: 'alerta',
+    titulo: 'Divergência de Valor RF × TF',
+    resposta: 'O TF foi gerado com valor **diferente do RF**. Possíveis causas:\n\n⚠ Alíquota aplicada incorretamente na emissão do RF\n⚠ Desconto ou abatimento não refletido no split\n⚠ Erro de cálculo na instituição financeira\n⚠ Diferença cambial em operações com moeda estrangeira\n\n**Protocolo de regularização:**\n1. Compare os valores: RF (NF-e) × TF (Plataforma CG-IBS)\n2. Se erro foi no RF: emita NF-e complementar ou de ajuste\n3. Se erro foi no split: conteste junto à instituição financeira\n4. Documente a divergência antes de apropriar o crédito (mesmo que parcialmente)',
+    legal: 'LC 214/2025, art. 48, §2º · Decreto 12.955/2026, art. 16'
+  },
+  inc_dup: {
+    id: 'inc_dup',
+    terminal: true,
+    tipo: 'alerta',
+    titulo: 'RF Duplicado — Verificar Crédito em Dobro',
+    resposta: 'Foram detectados dois RFs para o mesmo pagamento — risco de **duplicidade de crédito**.\n\n⚠ Apenas um RF deve ser aproveitado como crédito\n⚠ RF duplicado pode indicar emissão de NF-e duplicada pelo fornecedor\n⚠ Aproveitamento duplo configura infração sujeita a multa\n\n**Ação recomendada:**\n1. Identifique qual NF-e é original e qual é duplicata\n2. Solicite cancelamento da NF-e duplicada pelo fornecedor\n3. Aproveite somente o crédito da NF-e legítima',
+    legal: 'LC 214/2025, art. 48, §4º · Decreto 12.955/2026, art. 20'
+  },
+  inc_nf_cancel: {
+    id: 'inc_nf_cancel',
+    terminal: true,
+    tipo: 'erro',
+    titulo: 'RF Ativo com NF-e Cancelada',
+    resposta: 'A NF-e foi cancelada mas o RF permanece ativo na Plataforma. Isso **impede o encerramento** da inconsistência.\n\n❌ O crédito gerado por esse RF é indevido\n❌ Se o split payment já foi executado, haverá devolução ao adquirente\n❌ Não aproveite esse crédito\n\n**Ação imediata:**\n1. Notifique o fornecedor sobre o cancelamento\n2. Aguarde a Plataforma CG-IBS inativar o RF automaticamente (até 24h)\n3. Se não inativar, abra chamado na Plataforma',
+    legal: 'LC 214/2025, art. 48, §3º · NT RFB 2026-04'
+  },
+
+  // ─── RAD ──────────────────────────────────────────────────────────────────
+  rad: {
+    id: 'rad',
+    q: 'Sua empresa (adquirente) é contribuinte de IBS/CBS?',
+    icon: '🏢',
+    opts: [
+      { label: 'Sim — contribuinte regular de IBS/CBS',    next: 'rad_contrib' },
+      { label: 'Não — consumidor final / não contribuinte', next: 'rad_nao_contrib' }
+    ]
+  },
+  rad_contrib: {
+    id: 'rad_contrib',
+    q: 'A operação é B2B (entre contribuintes)?',
+    icon: '🤝',
+    opts: [
+      { label: 'Sim — ambas as partes são contribuintes',  next: 'rad_b2b' },
+      { label: 'Não — fornecedor é pessoa física',          next: 'rad_pj_pf' }
+    ]
+  },
+  rad_b2b: {
+    id: 'rad_b2b',
+    q: 'O fornecedor pertence a um regime especial ou é ente público?',
+    icon: '🏛',
+    opts: [
+      { label: 'Fornecedor é ente público (União/Estado/Município)', next: 'rad_ente_pub' },
+      { label: 'Fornecedor em regime especial acordado com RFB',     next: 'rad_reg_esp' },
+      { label: 'Nenhum dos anteriores — contrato B2B comum',         next: 'rad_contrato' }
+    ]
+  },
+  rad_ente_pub: {
+    id: 'rad_ente_pub',
+    terminal: true,
+    tipo: 'ok',
+    titulo: 'RAD Obrigatório — Fornecedor Ente Público',
+    resposta: 'Operação com ente público **exige RAD** — split payment padrão não se aplica.\n\n✅ Adquirente deve reter e recolher IBS+CBS\n✅ Prazo de recolhimento: até o 15º dia do mês seguinte ao pagamento\n✅ Comprovante RAD deve ser arquivado por 5 anos\n✅ Crédito só é confirmado após validação do RAD pela Plataforma\n\n**Próximo passo:** configure o contrato como RAD no módulo de Contratos e execute o pagamento pela guia RAD.',
+    legal: 'LC 214/2025, art. 51, II · Decreto 12.955/2026, arts. 12–15',
+    acao: { label: 'Ir para Contratos', fn: null }
+  },
+  rad_reg_esp: {
+    id: 'rad_reg_esp',
+    terminal: true,
+    tipo: 'ok',
+    titulo: 'RAD por Regime Especial',
+    resposta: 'Fornecedor em regime especial acordado com RFB/CG-IBS — RAD aplicável mediante adesão formal.\n\n✅ Ambas as partes devem ter aderido formalmente ao regime\n✅ O regime especial deve constar no cadastro do fornecedor na Plataforma\n✅ Adquirente assume responsabilidade total pelo recolhimento\n\n**Verificar:** certifique-se que o regime especial está ativo e que sua empresa possui a habilitação de adquirente RAD junto à RFB.',
+    legal: 'LC 214/2025, art. 51, I · Decreto 12.955/2026, art. 13'
+  },
+  rad_contrato: {
+    id: 'rad_contrato',
+    terminal: true,
+    tipo: 'info',
+    titulo: 'RAD Opcional — Contrato Bilateral B2B',
+    resposta: 'O RAD pode ser adotado por **opção bilateral** em contratos B2B, mas não é obrigatório.\n\nVantagens do RAD voluntário:\n✅ Maior controle sobre o timing do recolhimento\n✅ Possibilidade de consolidar recolhimentos de vários fornecedores\n✅ Eliminação do risco de não-recolhimento pelo fornecedor\n\nDesvantagem:\n⚠ Adquirente assume total responsabilidade — qualquer atraso gera multa sobre o adquirente\n\n**Recomendação:** adote o RAD para fornecedores estratégicos com alto volume de NFs, mas mantenha split payment para fornecedores esporádicos.',
+    legal: 'LC 214/2025, art. 51, III · Decreto 12.955/2026, art. 14'
+  },
+  rad_pj_pf: {
+    id: 'rad_pj_pf',
+    terminal: true,
+    tipo: 'erro',
+    titulo: 'RAD Inaplicável — Fornecedor Pessoa Física',
+    resposta: 'O RAD **não se aplica** a operações com fornecedores pessoa física não contribuintes.\n\n❌ Pessoa física sem inscrição de contribuinte IBS/CBS não emite RF\n❌ Sem RF, não há TF nem split payment\n❌ A operação pode estar sujeita a retenção de INSS/IR pessoa física\n\n**Ação:** verifique se a contratação deveria ser como PJ ou consulte o departamento jurídico sobre enquadramento.',
+    legal: 'LC 214/2025, art. 10 (contribuintes)'
+  },
+  rad_nao_contrib: {
+    id: 'rad_nao_contrib',
+    terminal: true,
+    tipo: 'info',
+    titulo: 'Consumidor Final — RAD e Split Inaplicáveis',
+    resposta: 'Como consumidor final (não contribuinte), sua empresa **não pode optar pelo RAD** e não gera crédito de IBS/CBS.\n\nO que ocorre:\nℹ O tributo já está embutido no preço pelo fornecedor\nℹ Não há crédito a apropriar nas entradas\nℹ O split payment é executado automaticamente pelo meio de pagamento sem necessidade de ação do comprador\n\n**Importante:** se sua empresa realiza operações que geram saídas tributadas (vende produtos/serviços), ela provavelmente é contribuinte. Revise o cadastro junto à RFB.',
+    legal: 'LC 214/2025, arts. 10–12'
+  },
+
+  // ─── PRESCRIÇÃO ───────────────────────────────────────────────────────────
+  prescricao: {
+    id: 'prescricao',
+    q: 'Qual o status atual do crédito?',
+    icon: '⏰',
+    opts: [
+      { label: 'Crédito "A Apropriar" — TF confirmado mas não utilizado', next: 'presc_a_aprop' },
+      { label: 'Crédito "Em Risco" — RF sem TF, prazo vencendo',          next: 'presc_em_risco' },
+      { label: 'Crédito "Vencido" — já prescrito no sistema',              next: 'presc_vencido' }
+    ]
+  },
+  presc_a_aprop: {
+    id: 'presc_a_aprop',
+    q: 'Há quantos anos o fato gerador ocorreu?',
+    icon: '📅',
+    opts: [
+      { label: 'Menos de 3 anos',       next: 'presc_seguro' },
+      { label: 'Entre 3 e 4 anos',      next: 'presc_atencao' },
+      { label: 'Mais de 4 anos',        next: 'presc_urgente' }
+    ]
+  },
+  presc_seguro: {
+    id: 'presc_seguro',
+    terminal: true,
+    tipo: 'ok',
+    titulo: 'Crédito Seguro — Prescrição Distante',
+    resposta: 'Crédito **dentro do prazo com margem confortável**.\n\n✅ Mais de 2 anos restantes para prescrição\n✅ Pode ser aproveitado normalmente na apuração\n✅ Recomendado apropriar no próximo período de apuração\n\n**Boa prática:** configure alertas automáticos para 12 e 6 meses antes do vencimento.',
+    legal: 'LC 214/2025, art. 55 (prazo de 5 anos)'
+  },
+  presc_atencao: {
+    id: 'presc_atencao',
+    terminal: true,
+    tipo: 'alerta',
+    titulo: 'Atenção — Prescrição em 1 a 2 Anos',
+    resposta: 'Crédito com **janela de aproveitamento se estreitando**.\n\n⚠ Faltam 1 a 2 anos para prescrição\n⚠ Priorize a utilização ou o requerimento de ressarcimento\n\n**Ações recomendadas:**\n1. Inclua o crédito na apuração do trimestre atual\n2. Se crédito acumulado: protocole pedido de ressarcimento junto ao CG-IBS\n3. Ative alerta de vencimento no módulo de Créditos',
+    legal: 'LC 214/2025, arts. 55 e 58 (ressarcimento)'
+  },
+  presc_urgente: {
+    id: 'presc_urgente',
+    terminal: true,
+    tipo: 'erro',
+    titulo: 'URGENTE — Prescrição em Menos de 1 Ano',
+    resposta: 'Crédito em **risco iminente de perda definitiva**.\n\n❌ Menos de 12 meses para o prazo de 5 anos\n❌ Após prescrição: perda definitiva, sem recuperação\n\n**Ação imediata:**\n1. Aproveite o crédito na apuração do período corrente\n2. Se não for possível utilizar: protocole ressarcimento em dinheiro junto ao CG-IBS imediatamente\n3. Documente toda a cadeia: NF-e + RF + TF + histórico de tentativas de aproveitamento\n4. Consulte assessoria tributária — possível ação judicial para suspender a prescrição',
+    legal: 'LC 214/2025, arts. 55 e 58 · CTN, art. 168',
+    acao: { label: 'Ir para Créditos', fn: 'dashIrParaCreditos' }
+  },
+  presc_em_risco: {
+    id: 'presc_em_risco',
+    terminal: true,
+    tipo: 'erro',
+    titulo: 'Crédito "Em Risco" — Dupla Ameaça',
+    resposta: 'Crédito em dupla ameaça: **sem TF confirmado** e **prazo de prescrição vencendo**.\n\n❌ Sem TF: crédito não pode ser apropriado (art. 48)\n❌ Com prescrição chegando: janela para regularização encurtando\n\n**Protocolo de emergência:**\n1. Notifique o fornecedor formalmente — prazo de 5 dias úteis para regularizar\n2. Se fornecedor não regularizar: acione cláusula de indenização do contrato\n3. Abra chamado de contingência na Plataforma CG-IBS\n4. Documente todo o processo para defesa administrativa futura',
+    legal: 'LC 214/2025, arts. 48 e 55 · Decreto 12.955/2026, art. 22',
+    acao: { label: 'Ir para Inconsistências', fn: 'dashIrParaInconsistencias' }
+  },
+  presc_vencido: {
+    id: 'presc_vencido',
+    terminal: true,
+    tipo: 'erro',
+    titulo: 'Crédito Prescrito — Perda Definitiva',
+    resposta: 'Crédito **prescrito** — perda definitiva do direito de aproveitamento.\n\n❌ Prazo de 5 anos encerrado\n❌ Não é possível ressarcimento, aproveitamento ou compensação\n❌ Deve ser baixado contabilmente como perda\n\n**Próximos passos:**\n1. Registre a baixa contábil do crédito prescrito\n2. Avalie responsabilidade interna: por que o crédito não foi aproveitado a tempo?\n3. Implemente processo de monitoramento para evitar recorrência\n4. Consulte se há base para ação regressiva contra fornecedor responsável pelo não-recolhimento',
+    legal: 'LC 214/2025, art. 55 · CTN, arts. 168–169'
+  },
+
+  // ─── SPLIT PAYMENT ────────────────────────────────────────────────────────
+  split: {
+    id: 'split',
+    q: 'Qual o meio de pagamento da operação?',
+    icon: '💸',
+    opts: [
+      { label: 'PIX',                          next: 'split_pix' },
+      { label: 'Cartão de crédito ou débito',  next: 'split_cartao' },
+      { label: 'Boleto bancário',              next: 'split_boleto' },
+      { label: 'TED / DOC / transferência',    next: 'split_ted' },
+      { label: 'Dinheiro em espécie',          next: 'split_especie' }
+    ]
+  },
+  split_pix: {
+    id: 'split_pix',
+    q: 'Em que ano/fase será realizado o pagamento?',
+    icon: '📅',
+    opts: [
+      { label: '2026 — período-teste',              next: 'split_pix_2026' },
+      { label: '2027 — Fase 1 do split obrigatório', next: 'split_pix_2027' },
+      { label: '2028 em diante — Fase 2',           next: 'split_pix_2028' }
+    ]
+  },
+  split_pix_2026: {
+    id: 'split_pix_2026',
+    terminal: true,
+    tipo: 'info',
+    titulo: 'PIX em 2026 — Split Voluntário',
+    resposta: 'Em 2026, o split payment via PIX é **voluntário** (período de testes).\n\nℹ O Banco Central e as instituições financeiras estão adaptando sistemas\nℹ Transações PIX B2B com NF-e vinculada podem executar o split automaticamente\nℹ IBS/CBS com alíquotas reduzidas (período-teste)\n\n**Atenção:** mesmo no período-teste, se o split for executado automaticamente, o TF será gerado e o crédito pode ser apropriado normalmente.',
+    legal: 'LC 214/2025, art. 47 · Decreto 12.955/2026, art. 4 (cronograma)'
+  },
+  split_pix_2027: {
+    id: 'split_pix_2027',
+    terminal: true,
+    tipo: 'alerta',
+    titulo: 'PIX em 2027 — Split Obrigatório Fase 2',
+    resposta: 'Em 2027, o split payment via PIX será **obrigatório** (Fase 2 do Decreto 12.955).\n\n✅ A instituição financeira executa o split automaticamente\n✅ Toda transação PIX vinculada a NF-e gera TF automaticamente\n✅ Crédito IBS/CBS confirmado em até 2 dias úteis\n\n⚠ Se a NF-e não for vinculada corretamente ao PIX, o split pode não ser executado — verifique a integração com seu sistema de gestão.',
+    legal: 'Decreto 12.955/2026, art. 3, II (Fase 2)'
+  },
+  split_pix_2028: {
+    id: 'split_pix_2028',
+    terminal: true,
+    tipo: 'ok',
+    titulo: 'PIX em 2028+ — Split Pleno',
+    resposta: 'A partir de 2028, o split payment via PIX está em **operação plena**.\n\n✅ Todas as transações PIX com NF-e geram split automático\n✅ TF confirmado em tempo real (SLA: 2h para pagamentos daytime)\n✅ Crédito IBS/CBS imediatamente apropriável\n\nO SplitHub monitora em tempo real os TFs e notifica divergências RF×TF automaticamente.',
+    legal: 'Decreto 12.955/2026, art. 3 · LC 214/2025, arts. 47–52'
+  },
+  split_cartao: {
+    id: 'split_cartao',
+    terminal: true,
+    tipo: 'ok',
+    titulo: 'Cartão — Split Obrigatório desde 2027 (Fase 1)',
+    resposta: 'O split payment por **cartão de crédito/débito** é obrigatório desde a Fase 1 (2027).\n\n✅ Adquirente (operadora de cartão) retém automaticamente o tributo\n✅ TF gerado pela adquirente para o CG-IBS\n✅ Prazo de confirmação: até D+1 após a transação\n\nPara operações de 2026 ou anteriores: verifique se a adquirente já operava com split voluntário.',
+    legal: 'Decreto 12.955/2026, art. 3, I (Fase 1)'
+  },
+  split_boleto: {
+    id: 'split_boleto',
+    terminal: true,
+    tipo: 'ok',
+    titulo: 'Boleto — Split Obrigatório desde 2027 (Fase 1)',
+    resposta: 'Boleto bancário com NF-e vinculada executa **split automático** desde a Fase 1 (2027).\n\n✅ Banco liquidante retém o tributo no momento da compensação\n✅ TF enviado à Plataforma CG-IBS em até 1 dia útil\n✅ Crédito confirmado após TF\n\n⚠ Para boletos emitidos sem vínculo de NF-e (boleto livre), o split pode não ser executado — exija boletos com chave NF-e vinculada.',
+    legal: 'Decreto 12.955/2026, art. 3, I e art. 6'
+  },
+  split_ted: {
+    id: 'split_ted',
+    terminal: true,
+    tipo: 'alerta',
+    titulo: 'TED/DOC — Split Apenas a partir de 2029',
+    resposta: 'TED e DOC **não estão incluídos** nas fases 1 e 2 do split obrigatório.\n\nℹ Fase 1 (2027): cartão e boleto\nℹ Fase 2 (2028): PIX e demais meios eletrônicos\nℹ A inclusão de TED/DOC depende de regulamentação adicional do Banco Central\n\n**Enquanto isso:** para pagamentos por TED/DOC, o fornecedor é responsável pelo recolhimento manual. Monitore o RF e verifique se o TF foi gerado por recolhimento espontâneo. Considere adotar RAD para maior controle.',
+    legal: 'Decreto 12.955/2026, arts. 3 e 7 (meios de pagamento)'
+  },
+  split_especie: {
+    id: 'split_especie',
+    terminal: true,
+    tipo: 'erro',
+    titulo: 'Espécie — Split Inaplicável',
+    resposta: 'Pagamento em espécie (dinheiro físico) **não executa split payment**.\n\n❌ Não há intermediário financeiro para executar a retenção\n❌ O fornecedor é integralmente responsável pelo recolhimento do IBS+CBS\n❌ Alto risco de não-recolhimento e perda do crédito\n\n**Recomendações:**\n1. Evite pagamentos em espécie em operações B2B sujeitas a IBS/CBS\n2. Se inevitável: exija comprovante de DARF/Guia IBS pago pelo fornecedor\n3. Considere cláusula contratual de responsabilidade tributária\n4. O crédito só poderá ser apropriado mediante apresentação do comprovante de recolhimento',
+    legal: 'LC 214/2025, art. 47 (meios cobertos) · Decreto 12.955/2026, art. 7'
+  }
+};
+
+var _assMode = 'chat'; // 'chat' | 'diag'
+
+function assSetMode(mode) {
+  _assMode = mode;
+  var chatBtn = document.getElementById('ass-mode-chat');
+  var diagBtn = document.getElementById('ass-mode-diag');
+  var chatPanel = document.getElementById('ass-chat-panel');
+  var diagPanel = document.getElementById('ass-diag-panel');
+  var panelChat = document.getElementById('ass-panel-chat');
+  var panelDiag = document.getElementById('ass-panel-diag');
+  var novaBtn = document.getElementById('ass-nova-btn');
+
+  if (mode === 'chat') {
+    chatBtn.style.background = 'var(--teal)';
+    chatBtn.style.color = '#0B1513';
+    diagBtn.style.background = 'transparent';
+    diagBtn.style.color = 'var(--txt2)';
+    chatPanel.style.display = '';
+    diagPanel.style.display = 'none';
+    panelChat.style.display = '';
+    panelDiag.style.display = 'none';
+    if (novaBtn) novaBtn.textContent = '+ Nova conversa';
+  } else {
+    diagBtn.style.background = 'var(--teal)';
+    diagBtn.style.color = '#0B1513';
+    chatBtn.style.background = 'transparent';
+    chatBtn.style.color = 'var(--txt2)';
+    chatPanel.style.display = 'none';
+    diagPanel.style.display = 'flex';
+    panelChat.style.display = 'none';
+    panelDiag.style.display = '';
+    if (novaBtn) novaBtn.textContent = '↺ Reiniciar';
+    _renderDiagFlowList();
+    if (!_diagCurrent) diagReset();
+  }
+}
+
+function diagReset() {
+  _diagStack = [];
+  _diagCurrent = null;
+  _diagNavigate(DIAG_TREE);
+}
+
+function _renderDiagFlowList() {
+  var el = document.getElementById('diag-flow-list');
+  if (!el) return;
+  var flows = DIAG_TREE.opts;
+  el.innerHTML = flows.map(function(o) {
+    return '<div onclick="diagStartFlow(\'' + o.next + '\')" style="padding:8px 10px;margin-bottom:6px;border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:12px;color:var(--txt1);background:var(--card);transition:border-color .15s" onmouseover="this.style.borderColor=\'var(--teal)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'
+      + o.label + '</div>';
+  }).join('');
+}
+
+function diagStartFlow(nodeId) {
+  _diagStack = [DIAG_TREE];
+  _diagCurrent = DIAG_TREE;
+  var node = DIAG_NODES[nodeId];
+  if (node) _diagNavigate(node);
+}
+
+function _diagNavigate(node) {
+  _diagCurrent = node;
+  _renderDiagBreadcrumb();
+  _renderDiagContent(node);
+  var backBtn = document.getElementById('diag-back-btn');
+  if (backBtn) backBtn.style.display = _diagStack.length > 0 ? '' : 'none';
+}
+
+function diagBack() {
+  if (_diagStack.length === 0) return;
+  var prev = _diagStack.pop();
+  _diagNavigate(prev);
+}
+
+function diagChoose(nodeId) {
+  _diagStack.push(_diagCurrent);
+  var node = DIAG_NODES[nodeId];
+  if (node) _diagNavigate(node);
+}
+
+function _renderDiagBreadcrumb() {
+  var el = document.getElementById('diag-breadcrumb');
+  if (!el) return;
+  var parts = ['<span style="font-size:11px;color:var(--txt3);cursor:pointer" onclick="diagReset()">Início</span>'];
+  _diagStack.forEach(function(n) {
+    parts.push('<span style="font-size:11px;color:var(--txt3)">›</span>');
+    parts.push('<span style="font-size:11px;color:var(--txt3)">' + (n.icon || '') + ' ' + (n.q ? n.q.substring(0, 35) + (n.q.length > 35 ? '…' : '') : '') + '</span>');
+  });
+  if (_diagCurrent && _diagStack.length > 0) {
+    parts.push('<span style="font-size:11px;color:var(--txt3)">›</span>');
+    parts.push('<span style="font-size:11px;color:var(--txt1);font-weight:600">' + (_diagCurrent.icon || '') + ' ' + ((_diagCurrent.q || _diagCurrent.titulo || '').substring(0, 35)) + '</span>');
+  }
+  el.innerHTML = parts.join(' ');
+}
+
+function _renderDiagContent(node) {
+  var el = document.getElementById('diag-content');
+  if (!el) return;
+
+  if (node.terminal) {
+    var tipoCor = { ok: 'var(--teal)', alerta: '#e9a230', erro: 'var(--red)', info: 'var(--blue)' }[node.tipo] || 'var(--txt2)';
+    var tipoLabel = { ok: '✅ Situação Regular', alerta: '⚠ Atenção Necessária', erro: '❌ Problema Crítico', info: 'ℹ Orientação' }[node.tipo] || 'Resultado';
+    var linhas = node.resposta.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+
+    var acaoHtml = '';
+    if (node.acao && node.acao.fn) {
+      acaoHtml = '<button class="btn btn-t" style="margin-top:14px" onclick="if(window.' + node.acao.fn + ')window.' + node.acao.fn + '()">' + node.acao.label + ' →</button>';
+    }
+
+    el.innerHTML = '<div style="background:' + tipoCor + '18;border:1px solid ' + tipoCor + '44;border-radius:10px;padding:18px 20px;margin-bottom:16px">'
+      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:' + tipoCor + ';margin-bottom:8px">' + tipoLabel + '</div>'
+      + '<div style="font-size:15px;font-weight:700;color:var(--txt1);margin-bottom:10px">' + escHtml(node.titulo) + '</div>'
+      + '<div style="font-size:13px;color:var(--txt1);line-height:1.65">' + linhas + '</div>'
+      + (node.legal ? '<div style="margin-top:14px;padding-top:10px;border-top:1px solid ' + tipoCor + '33;font-size:11px;color:var(--txt3)"><span style="font-weight:700;color:var(--txt2)">Base legal:</span> ' + escHtml(node.legal) + '</div>' : '')
+      + acaoHtml
+      + '</div>'
+      + '<button class="btn" style="width:100%;margin-top:4px" onclick="diagReset()">↺ Iniciar novo diagnóstico</button>';
+    return;
+  }
+
+  // Nó de pergunta
+  var optsHtml = node.opts.map(function(o) {
+    return '<button onclick="diagChoose(\'' + o.next + '\')" style="display:block;width:100%;text-align:left;padding:12px 16px;margin-bottom:8px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--txt1);font-size:13px;cursor:pointer;transition:border-color .15s,background .15s" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.background=\'rgba(29,158,117,.06)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'var(--card)\'">'
+      + escHtml(o.label) + '</button>';
+  }).join('');
+
+  el.innerHTML = '<div style="margin-bottom:20px">'
+    + '<div style="font-size:22px;margin-bottom:10px">' + (node.icon || '❓') + '</div>'
+    + '<div style="font-size:15px;font-weight:700;color:var(--txt1);line-height:1.4;margin-bottom:18px">' + escHtml(node.q) + '</div>'
+    + optsHtml
+    + '</div>';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 var chatHistory=[];
 var chatSending=false;
 var CHAT_SUGGESTIONS=[

@@ -3563,15 +3563,26 @@ window.renderizarRFsInconsistencias = function() {
   setEl('inc2-saida', cntSai);
   setEl('inc2-saida-sub', 'Débitos · ' + lista.filter(function(r){return r.tipoNF==='saida'&&r.tf==='IBS';}).length + ' IBS · ' + lista.filter(function(r){return r.tipoNF==='saida'&&r.tf==='CBS';}).length + ' CBS');
 
-  // 3. Chart 1 — Top 5 fornecedores
+  // 3. Chart 1 — Top 5 fornecedores (DF-cêntrico: dedupa por nfId, usa valorTotal do DF)
+  var mapFornDf = {}; // nfId → {forn, valorTotal}
+  lista.forEach(function(r) {
+    if (!mapFornDf[r.nfId]) mapFornDf[r.nfId] = { forn: r.forn, val: r.valorTotal || r.valor };
+  });
   var mapForn = {};
-  lista.forEach(function(r){ mapForn[r.forn] = (mapForn[r.forn]||0) + r.valor; });
+  Object.keys(mapFornDf).forEach(function(k) { var d = mapFornDf[k]; mapForn[d.forn] = (mapForn[d.forn]||0) + d.val; });
   var top5Forn = Object.keys(mapForn).map(function(k){return {label:k,v:mapForn[k]};}).sort(function(a,b){return b.v-a.v;}).slice(0,5);
   _incSvgBar(document.getElementById('c-inc-top5-forn'), top5Forn, function(){return PALETTE.teal;}, 560, 20, 12, 180, 70);
 
-  // 4. Chart 2 — Por tipo de inconsistência
+  // 4. Chart 2 — Por tipo de inconsistência (DF-cêntrico: dedupa por nfId+incTipo, usa valorTotal)
+  var seenDfTipo = {};
   var mapTipo = {};
-  lista.forEach(function(r){ var k=r.inc||'Sem tipo'; mapTipo[k]=(mapTipo[k]||0)+r.valor; });
+  lista.forEach(function(r) {
+    var key = (r.nfId || '') + '|' + (r.inc || '');
+    if (seenDfTipo[key]) return;
+    seenDfTipo[key] = true;
+    var k = r.inc || 'Sem tipo';
+    mapTipo[k] = (mapTipo[k]||0) + (r.valorTotal || r.valor);
+  });
   var tiposDados = Object.keys(mapTipo).map(function(k){return {label:_tipoIncLbl[k]||k,v:mapTipo[k],cor:_incCores[k]||PALETTE.teal};}).sort(function(a,b){return b.v-a.v;});
   _incSvgBar(document.getElementById('c-inc-tipos'), tiposDados, function(d){return d.cor;}, 560, 20, 12, 180, 70);
 
