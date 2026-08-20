@@ -6899,7 +6899,7 @@ document.addEventListener('DOMContentLoaded', function() {
             registrosFiscais: []
           };
 
-          var statusSemPagBuild = ['a_apropriar', 'utilizado', 'a_apropriar', 'glosado'];
+          var statusSemPagBuild = ['nao_apropriado', 'utilizado', 'nao_apropriado', 'glosado'];
           var _metExtCred = ['Split Payment','Compensacao','Ressarcimento','Transferencia'];
           function gerarRFPag() {
             var tem = Math.random() < 0.6;
