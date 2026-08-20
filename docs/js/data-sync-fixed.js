@@ -144,6 +144,7 @@ window.SH_TABLES = {
       { label: 'Data RF' },
       { label: 'Pagamento' },
       { label: 'Status' },
+      { label: 'Detalhe', cls: 'tc' },
       { label: 'Ação' }
     ]
   },
@@ -6120,10 +6121,10 @@ window.renderizarTabelaPagamentos = function() {
   rows.forEach(function(r, idx) {
     var badge  = bdg(r.status);
     var tipoBadge = '<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+r.tipo+'</span>';
-    var detBtn = '<button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:rgba(24,95,165,.08);border:1px solid rgba(24,95,165,.2);border-radius:4px;color:#185fa5;cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px">Ver</button>';
+    var detBtn = '<button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:rgba(24,95,165,.08);border:1px solid rgba(24,95,165,.2);border-radius:4px;color:#185fa5;cursor:pointer;font-size:10px;font-weight:700;padding:3px 10px">Ver</button>';
     var act = r.status !== 'pago'
-      ? '<div style="display:flex;gap:4px;align-items:center"><button class="btn btn-t" style="font-size:11px;padding:4px 10px" onclick="window.abrirGuiaDARF('+idx+')">Gerar Guia</button>' + detBtn + '</div>'
-      : '<div style="display:flex;gap:4px;align-items:center"><span style="font-size:11px;color:var(--txt3)">Concluído</span>' + detBtn + '</div>';
+      ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="window.abrirGuiaDARF('+idx+')">Gerar Guia</button>'
+      : '<span style="font-size:11px;color:var(--txt3)">Concluído</span>';
     var nfTipoBadgePag = r.tipoNF === 'entrada'
       ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(29,158,117,.28);color:#1d9e75;background:transparent">Entrada</span>'
       : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(186,117,23,.28);color:#ba7517;background:transparent">Saída</span>';
@@ -6148,12 +6149,13 @@ window.renderizarTabelaPagamentos = function() {
           ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pagamento + '</a>'
           : '<span style="color:var(--txt2)">—</span>') + '</td>'
       + '<td class="nowrap" style="vertical-align:middle">' + badge + '</td>'
+      + '<td class="tc" style="vertical-align:middle">' + detBtn + '</td>'
       + '<td class="nowrap" style="vertical-align:middle;white-space:nowrap">' + act + '</td>'
       + '</tr>';
   });
 
   if (!rows.length) {
-    h = '<tr><td colspan="13" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="14" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;
@@ -6775,9 +6777,39 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 
+    // Calcula statusRegistro de cada RF com base em datas e status de crédito.
+    // Roda após todos os dados estarem em nfListaFiltradaGlobal.
+    function _calcularStatusRegistro() {
+      var hoje = new Date(); hoje.setHours(0,0,0,0);
+      var MS_DIA = 86400000;
+      (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+        (nf.registrosFiscais || []).forEach(function(rf) {
+          // Não sobrescrever flags já definidas pela fonte de dados upstream
+          if (rf.statusRegistro) return;
+          var sc = rf.statusCredito || rf.status || '';
+          if (sc === 'apropriado' || sc === 'utilizado' || sc === 'glosado') return;
+          var dataStr = rf.data || nf.data || '';
+          if (!dataStr) return;
+          var p = dataStr.split('-');
+          if (p.length < 2) return;
+          var y = parseInt(p[0], 10), m = parseInt(p[1], 10);
+          // Vencimento = último dia do mês seguinte à NF
+          var venc = new Date(y, m + 1, 0); venc.setHours(0,0,0,0);
+          var diffDias = Math.round((venc - hoje) / MS_DIA);
+          // Prazo de prescrição = 5 anos a partir da data da NF
+          var prescr = new Date(y + 5, m - 1, parseInt(p[2] || '1', 10));
+          var diffPrescr = Math.round((prescr - hoje) / MS_DIA);
+          if (diffDias < 0)        rf.statusRegistro = 'vencido';
+          else if (diffDias <= 10) rf.statusRegistro = 'em_risco';
+          else if (diffPrescr <= 180) rf.statusRegistro = 'a_prescrever';
+        });
+      });
+    }
+
     function _postProcessarDados() {
       try { window._renderGESelects && window._renderGESelects(); } catch(e) {}
       try { window._enriquecerNFsSaida(); } catch(e) { console.error('[data-sync-fixed] Erro _enriquecerNFsSaida:', e); }
+      try { _calcularStatusRegistro(); } catch(e) {}
       try {
         // Atribuir cnpjComprador round-robin pelos CNPJs ativos da Induspar
         var _ativosOrg = (window._orgCnpjs || []).filter(function(c) { return c.status === 'ativo'; });
