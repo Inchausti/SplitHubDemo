@@ -145,7 +145,9 @@ window.SH_TABLES = {
       { label: 'Valor',      cls: 'r' },
       { label: 'Data RF' },
       { label: 'Pagamento' },
-      { label: 'Status' },
+      { label: 'St. Crédito' },
+      { label: 'St. Registro' },
+      { label: 'St. Pagamento' },
       { label: 'Detalhe', cls: 'tc' },
       { label: 'Ação' }
     ]
@@ -6164,6 +6166,7 @@ window.renderizarTabelaPagamentos = function() {
         nfNumero: nf.numero || '',
         tipo: tipoCol, tipoNF: nf.tipo || 'entrada', valor: valor,
         dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, status: rfSt,
+        statusCredito: _scP || 'nao_apropriado',
         metodo: rf.metodoPagamento || nf.metodoPagamento || 'RAD',
         contratoId: rf.contratoId || nf.contratoId || null,
         statusFlags: rf.statusFlags || []
@@ -6206,14 +6209,16 @@ window.renderizarTabelaPagamentos = function() {
       + '<td class="nowrap">' + (r.status === 'pago'
           ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pagamento + '</a>'
           : '<span style="color:var(--txt2)">—</span>') + '</td>'
-      + '<td style="vertical-align:middle">' + badge + (r.statusFlags.length ? '<div style="margin-top:3px">' + window._statusFlagsBadges({ statusFlags: r.statusFlags }) + '</div>' : '') + '</td>'
+      + '<td style="vertical-align:middle">' + bdg(r.statusCredito) + '</td>'
+      + '<td style="vertical-align:middle">' + (r.statusFlags.length ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.statusFlags[0] }) : '<span style="color:var(--txt3);font-size:11px">—</span>') + '</td>'
+      + '<td style="vertical-align:middle">' + badge + '</td>'
       + '<td class="tc" style="vertical-align:middle">' + detBtn + '</td>'
       + '<td class="nowrap" style="vertical-align:middle;white-space:nowrap">' + act + '</td>'
       + '</tr>';
   });
 
   if (!rows.length) {
-    h = '<tr><td colspan="14" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="16" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;
