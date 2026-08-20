@@ -5584,12 +5584,66 @@ window.fctForecastHorizonte = function(n, btn) {
   window.renderizarFCTForecast();
 };
 
+window._renderFcChart = function(canvas, chartStore, opts) {
+  // shared chart renderer — opts: {visLabels,credRealVis,credFcVis,debRealVis,debFcVis,saldoRealVis,saldoFcVis,visNReal,visNFc,fmM,tooltipBg,tooltipBdr,tickC,gridC}
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    || (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches);
+  if (window[chartStore]) { try{window[chartStore].destroy();}catch(e){} window[chartStore]=null; }
+  var o = opts;
+  var forecastPlugin = {
+    id:'fcBg'+chartStore,
+    beforeDraw:function(chart){
+      if(o.visNFc===0||o.visNReal===0)return;
+      var ctx2=chart.ctx,xs=chart.scales.x,ys=chart.scales.y;
+      var xSplit=xs.getPixelForValue(o.visNReal-0.5);
+      ctx2.save();ctx2.fillStyle=isDark?'rgba(96,165,250,.05)':'rgba(24,95,165,.04)';
+      ctx2.fillRect(xSplit,ys.top,xs.right-xSplit,ys.bottom-ys.top);
+      ctx2.strokeStyle=isDark?'rgba(96,165,250,.3)':'rgba(24,95,165,.22)';
+      ctx2.setLineDash([4,4]);ctx2.lineWidth=1;
+      ctx2.beginPath();ctx2.moveTo(xSplit,ys.top);ctx2.lineTo(xSplit,ys.bottom);ctx2.stroke();
+      ctx2.setLineDash([]);ctx2.restore();
+    }
+  };
+  window[chartStore] = new Chart(canvas.getContext('2d'), {
+    type:'bar', plugins:[forecastPlugin],
+    data:{ labels:o.visLabels, datasets:[
+      {label:'Crédito (realizado)',data:o.credRealVis,backgroundColor:'rgba(29,158,117,.75)',borderRadius:4,borderSkipped:false,stack:'f',order:2},
+      {label:'Crédito (forecast)', data:o.credFcVis,  backgroundColor:'rgba(29,158,117,.3)', borderRadius:4,borderSkipped:false,borderColor:'rgba(29,158,117,.6)',borderWidth:1.5,stack:'f',order:2},
+      {label:'Débito (realizado)', data:o.debRealVis, backgroundColor:'rgba(220,38,38,.65)', borderRadius:4,borderSkipped:false,stack:'f',order:2},
+      {label:'Débito (forecast)',  data:o.debFcVis,   backgroundColor:'rgba(220,38,38,.25)', borderRadius:4,borderSkipped:false,borderColor:'rgba(220,38,38,.5)',borderWidth:1.5,stack:'f',order:2},
+      {label:'Saldo acumulado',data:o.saldoRealVis,type:'line',borderColor:'#185fa5',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#185fa5',tension:0.35,fill:false,order:1,yAxisID:'ySaldo'},
+      {label:'Saldo forecast', data:o.saldoFcVis, type:'line',borderColor:'#185fa5',borderWidth:2,borderDash:[6,4],pointRadius:2.5,pointBackgroundColor:'#185fa5',tension:0.35,fill:false,order:1,yAxisID:'ySaldo'}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:o.tooltipBg,borderColor:o.tooltipBdr,borderWidth:1,titleColor:isDark?'#f1f3f9':'#111827',bodyColor:o.tickC,padding:10,
+          callbacks:{
+            title:function(items){var idx=items[0].dataIndex;return o.visLabels[idx]+(idx>=o.visNReal?' · Forecast':'');},
+            label:function(item){var v=item.raw;if(v===null||v===undefined)return null;return '  '+item.dataset.label+': '+o.fmM(Math.abs(Math.round(v)));}
+          }
+        }
+      },
+      scales:{
+        x:{stacked:true,grid:{color:o.gridC},ticks:{color:o.tickC,font:{size:10}},border:{color:o.gridC}},
+        y:{stacked:true,position:'left',grid:{color:o.gridC},ticks:{color:o.tickC,font:{size:10},callback:function(v){var a=Math.abs(v);return(v<0?'-':'')+(a>=1e6?'R$'+(a/1e6).toFixed(0)+'M':a>=1e3?'R$'+Math.round(a/1e3)+'K':'0');}},border:{color:'transparent'}},
+        ySaldo:{position:'right',grid:{drawOnChartArea:false},ticks:{color:'#185fa5',font:{size:10},callback:function(v){var a=Math.abs(v);return(v<0?'−':'')+(a>=1e6?'R$'+(a/1e6).toFixed(1)+'M':a>=1e3?'R$'+Math.round(a/1e3)+'K':'0');}},border:{color:'transparent'}}
+      }
+    }
+  });
+};
+
 window.renderizarFCTForecast = function() {
   var canvas = document.getElementById('fct-fc-canvas');
-  if (!canvas) return;
-  if (canvas.parentElement && canvas.parentElement.offsetWidth < 10) {
-    setTimeout(window.renderizarFCTForecast, 100); return;
+  var dashCanvas = document.getElementById('dash-fc-canvas');
+  if (!canvas && !dashCanvas) return;
+  // Se FCT canvas existe mas está oculto, só renderizar no dash
+  if (canvas && canvas.parentElement && canvas.parentElement.offsetWidth < 10) {
+    canvas = null; // pular FCT canvas nesta chamada
   }
+  if (!canvas && !dashCanvas) return;
 
   var tributo = window._fctTributo || 'ambos';
   var byMonth = {};
@@ -5720,46 +5774,19 @@ window.renderizarFCTForecast = function() {
     }
   };
 
-  if (window._fctForecastChart) { window._fctForecastChart.destroy(); window._fctForecastChart = null; }
+  var _fcOpts = { visLabels:visLabels, credRealVis:credRealVis, credFcVis:credFcVis, debRealVis:debRealVis, debFcVis:debFcVis, saldoRealVis:saldoRealVis, saldoFcVis:saldoFcVis, visNReal:visNReal, visNFc:visNFc, fmM:fmM, tooltipBg:tooltipBg, tooltipBdr:tooltipBdr, tickC:tickC, gridC:gridC };
 
-  var H = Math.max(220, Math.min(300, canvas.parentElement.offsetWidth * 0.33));
-  canvas.style.height = H + 'px';
+  if (canvas) {
+    var H = Math.max(220, Math.min(300, canvas.parentElement.offsetWidth * 0.33));
+    canvas.style.height = H + 'px';
+    window._renderFcChart(canvas, '_fctForecastChart', _fcOpts);
+  }
 
-  window._fctForecastChart = new Chart(canvas.getContext('2d'), {
-    type: 'bar',
-    plugins: [forecastPlugin],
-    data: {
-      labels: visLabels,
-      datasets: [
-        { label:'Crédito (realizado)', data:credRealVis, backgroundColor:'rgba(29,158,117,.75)', borderRadius:4, borderSkipped:false, stack:'f', order:2 },
-        { label:'Crédito (forecast)',  data:credFcVis,   backgroundColor:'rgba(29,158,117,.3)',  borderRadius:4, borderSkipped:false, borderColor:'rgba(29,158,117,.6)', borderWidth:1.5, stack:'f', order:2 },
-        { label:'Débito (realizado)',  data:debRealVis,  backgroundColor:'rgba(220,38,38,.65)',  borderRadius:4, borderSkipped:false, stack:'f', order:2 },
-        { label:'Débito (forecast)',   data:debFcVis,    backgroundColor:'rgba(220,38,38,.25)',  borderRadius:4, borderSkipped:false, borderColor:'rgba(220,38,38,.5)', borderWidth:1.5, stack:'f', order:2 },
-        { label:'Saldo acumulado', data:saldoRealVis, type:'line', borderColor:'#185fa5', borderWidth:2.5, pointRadius:3, pointBackgroundColor:'#185fa5', tension:0.35, fill:false, order:1, yAxisID:'ySaldo' },
-        { label:'Saldo forecast',  data:saldoFcVis,  type:'line', borderColor:'#185fa5', borderWidth:2, borderDash:[6,4], pointRadius:2.5, pointBackgroundColor:'#185fa5', tension:0.35, fill:false, order:1, yAxisID:'ySaldo' }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      interaction:{ mode:'index', intersect:false },
-      plugins:{
-        legend:{ display:false },
-        tooltip:{
-          backgroundColor:tooltipBg, borderColor:tooltipBdr, borderWidth:1,
-          titleColor: isDark?'#f1f3f9':'#111827', bodyColor:tickC, padding:10,
-          callbacks:{
-            title:function(items){ var idx=items[0].dataIndex; return visLabels[idx]+(idx>=visNReal?' · Forecast':''); },
-            label:function(item){ var v=item.raw; if(v===null||v===undefined)return null; return '  '+item.dataset.label+': '+fmM(Math.abs(Math.round(v))); }
-          }
-        }
-      },
-      scales:{
-        x:{ stacked:true, grid:{color:gridC}, ticks:{color:tickC,font:{size:10}}, border:{color:gridC} },
-        y:{ stacked:true, position:'left', grid:{color:gridC}, ticks:{ color:tickC, font:{size:10}, callback:function(v){ var a=Math.abs(v); return (v<0?'-':'')+(a>=1e6?'R$'+(a/1e6).toFixed(0)+'M':a>=1e3?'R$'+Math.round(a/1e3)+'K':'0'); }}, border:{color:'transparent'} },
-        ySaldo:{ position:'right', grid:{drawOnChartArea:false}, ticks:{ color:'#185fa5', font:{size:10}, callback:function(v){ var a=Math.abs(v); return (v<0?'−':'')+(a>=1e6?'R$'+(a/1e6).toFixed(1)+'M':a>=1e3?'R$'+Math.round(a/1e3)+'K':'0'); }}, border:{color:'transparent'} }
-      }
-    }
-  });
+  // Renderizar no dashboard (se visível)
+  var _dashCv = document.getElementById('dash-fc-canvas');
+  if (_dashCv && _dashCv.parentElement && _dashCv.parentElement.offsetWidth > 10) {
+    window._renderFcChart(_dashCv, '_dashFcChart', _fcOpts);
+  }
 
   // Insights
   var insEl = document.getElementById('fct-fc-insights');

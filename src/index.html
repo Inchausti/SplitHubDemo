@@ -1007,6 +1007,17 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
   <span id="dash-cred-apropriar" style="display:none"></span>
   <span id="dash-cred-aprop-sub" style="display:none"></span>
   <span id="dash-cred-apropriar-sub" style="display:none"></span>
+  <!-- Forecast de Fluxo Fiscal — dashboard -->
+  <div class="ccrd" style="padding:14px 16px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+      <div>
+        <div class="ctitle" style="margin-bottom:2px;font-size:13px">Forecast de Fluxo Fiscal</div>
+        <div class="csub" style="font-size:11px">Crédito vs Débito realizado · projeção por média móvel até Dez</div>
+      </div>
+      <a href="javascript:void(0)" onclick="showView('fct',document.querySelector('.nav-btn[onclick*=fct]')||document.querySelector('.nav-btn'))" style="font-size:11px;color:var(--teal);font-weight:600;text-decoration:none;white-space:nowrap">Ver detalhes →</a>
+    </div>
+    <div style="height:180px;position:relative"><canvas id="dash-fc-canvas" style="width:100%;height:100%;display:block"></canvas></div>
+  </div>
   <!-- Grid de 3 gráficos compactos -->
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
     <div class="ccrd" style="padding:12px">
@@ -6635,7 +6646,7 @@ function showView(id,btn,fromBottomNav){
     if(map2[id]!==undefined) bbtns[map2[id]].classList.add("active");
     closeSidebar();
   }
-  if(id==='dashboard'||id==='creditos'||id==='inteligencia') setTimeout(function(){ try{buildCharts();}catch(e){} if(id==='inteligencia'&&window.atualizarInteligencia) window.atualizarInteligencia(); },0);
+  if(id==='dashboard'||id==='creditos'||id==='inteligencia') setTimeout(function(){ try{buildCharts();}catch(e){} if(id==='dashboard'){ try{window.renderizarFCTForecast&&window.renderizarFCTForecast();}catch(e){} } if(id==='inteligencia'&&window.atualizarInteligencia) window.atualizarInteligencia(); },50);
   if(id==='fct') setTimeout(fctRenderChart,0);
 }
 
@@ -8502,14 +8513,21 @@ fctRender();
   window.addEventListener('resize', function(){
     clearTimeout(_rzTimer);
     _rzTimer = setTimeout(function(){
+      // Dashboard
       try { window.renderizarDashboard && window.renderizarDashboard(); } catch(e){}
+      // Créditos
       try { window.renderizarEvolucaoAcumuladaCreditos && window.renderizarEvolucaoAcumuladaCreditos(); } catch(e){}
-      try { window.renderizarTabelaCreditos && window.renderizarTabelaCreditos(); } catch(e){}
       try { window.renderizarComposicaoCreditos && window.renderizarComposicaoCreditos(window._composicaoFiltro||''); } catch(e){}
       try { window.renderizarPagamentosMetodo && window.renderizarPagamentosMetodo(); } catch(e){}
+      // Débitos
+      try { window.renderizarDebitos && window.renderizarDebitos(); } catch(e){}
+      // FCT
       try { window.renderizarFCT && window.renderizarFCT(); } catch(e){}
       try { window.renderizarFCTForecast && window.renderizarFCTForecast(); } catch(e){}
-    }, 200);
+      // Conciliação / Analytics
+      try { window.renderizarConciliacao && window.renderizarConciliacao(); } catch(e){}
+      try { window.renderizarAnalytics && window.renderizarAnalytics(); } catch(e){}
+    }, 250);
   });
 })();
 </script>
