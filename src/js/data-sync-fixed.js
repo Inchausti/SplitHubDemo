@@ -1890,15 +1890,54 @@ window.atualizarDashboard = function() {
       if (_sr === 'vencido' || _sr === 'em_risco' || _sr === 'a_prescrever' || _sr === 'inconsistencia') emRisco[idx] += v;
     });
   });
-  var rnd = function(v) { return Math.round(v * 100) / 100; };
-  if (typeof svgLine === 'function') {
-    svgLine('cCreditos', [
-      { data: aprop.map(rnd),   color: 'var(--teal)',  fill: true, dots: true, label: 'Apropriados' },
-      { data: aApropr.map(rnd), color: 'var(--amber)', dash: true,             label: 'A Apropriar'  },
-      { data: emRisco.map(rnd), color: 'var(--red)',   dots: true, w: 1.5,    label: 'Em Risco'     }
-    ], mesesLabels, 140);
-  }
-  // atualiza subtítulo
+  // Barras empilhadas: Aproveitado / A Apropriar / Em Risco
+  (function() {
+    var elC = document.getElementById('cCreditos');
+    if (!elC) return;
+    var H = 130;
+    var padT = 10, padB = 22, padL = 36, padR = 6;
+    var W = (elC.parentElement && elC.parentElement.offsetWidth > 50 ? elC.parentElement.offsetWidth : 420);
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var n = mesesLabels.length;
+    var monthTotals = aprop.map(function(v, i) { return v + aApropr[i] + emRisco[i]; });
+    var rawMax = Math.max.apply(null, monthTotals) || 1;
+    var niceMax = Math.ceil(rawMax * 1.18 * 10) / 10;
+    var bw = Math.max(5, Math.floor(plotW / n * 0.56));
+    function fvC(v) { return v >= 1 ? v.toFixed(1).replace('.', ',') + 'M' : Math.round(v * 1000) + 'K'; }
+    var segColors = ['#1d9e75', '#4ade80', '#f59e0b'];
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:' + H + 'px;display:block">';
+    for (var gi = 0; gi <= 3; gi++) {
+      var gv = (gi / 3) * niceMax;
+      var gy = Math.round(padT + plotH - (gv / niceMax) * plotH);
+      s += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (padL + plotW) + '" y2="' + gy + '" stroke="rgba(128,128,128,0.10)" stroke-width="1"/>';
+      if (gi > 0) s += '<text x="' + (padL - 4) + '" y="' + (gy + 3.5) + '" text-anchor="end" fill="var(--txt3)" font-size="8.5" font-family="Inter,system-ui,sans-serif">' + fvC(gv) + '</text>';
+    }
+    for (var bi = 0; bi < n; bi++) {
+      var bx = padL + (bi + 0.5) * (plotW / n) - bw / 2;
+      var segs = [aprop[bi], aApropr[bi], emRisco[bi]];
+      var base = padT + plotH;
+      var topIdx = -1;
+      for (var tj = segs.length - 1; tj >= 0; tj--) { if (segs[tj] > 0.001) { topIdx = tj; break; } }
+      for (var sj = 0; sj < segs.length; sj++) {
+        var bh = Math.round((segs[sj] / niceMax) * plotH);
+        if (bh <= 0) continue;
+        var r = (sj === topIdx) ? Math.min(4, bh / 2) : 0;
+        if (r > 0) {
+          s += '<path d="M' + bx + ',' + base + ' L' + (bx+bw) + ',' + base + ' L' + (bx+bw) + ',' + (base-bh+r) + ' Q' + (bx+bw) + ',' + (base-bh) + ' ' + (bx+bw-r) + ',' + (base-bh) + ' L' + (bx+r) + ',' + (base-bh) + ' Q' + bx + ',' + (base-bh) + ' ' + bx + ',' + (base-bh+r) + ' Z" fill="' + segColors[sj] + '"/>';
+        } else {
+          s += '<rect x="' + bx + '" y="' + (base-bh) + '" width="' + bw + '" height="' + bh + '" fill="' + segColors[sj] + '"/>';
+        }
+        base -= bh;
+      }
+      s += '<text x="' + (bx + bw/2) + '" y="' + (padT+plotH+14) + '" text-anchor="middle" fill="var(--txt3)" font-size="9" font-family="Inter,system-ui,sans-serif">' + mesesLabels[bi].substring(0,3) + '</text>';
+      var tp2 = [mesesLabels[bi],'#1d9e75','Aproveitado',fvC(aprop[bi]),'#4ade80','A Apropriar',fvC(aApropr[bi]),'#f59e0b','Em Risco',fvC(emRisco[bi])].join('|').replace(/'/g,'&apos;');
+      s += '<rect x="' + (bx-3) + '" y="' + padT + '" width="' + (bw+6) + '" height="' + plotH + '" fill="transparent" style="cursor:crosshair" onmousemove="_svgTipShow(event,\'' + tp2 + '\')" onmouseleave="_svgTipHide()"/>';
+    }
+    s += '</svg>';
+    elC.style.cssText = 'display:block;width:100%';
+    elC.innerHTML = s;
+  })();
+  // atualiza legenda e subtítulo
   var subCred = document.getElementById('dash-sub-creditos');
   if (subCred) subCred.textContent = 'R$ milhões · IBS+CBS · Jan–Dez 2026 · NFs de entrada';
 
@@ -6377,14 +6416,10 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
     (nf.registrosFiscais || []).forEach(function(rf) {
       var mes = (rf.data || nf.data || '').substring(0, 7);
       if (!mes) return;
-      if (!byMonth[mes]) byMonth[mes] = { aprop: 0, pend: 0, risco: 0 };
+      if (!byMonth[mes]) byMonth[mes] = { aprop: 0, pend: 0 };
       var v = rf.valor || 0;
       var sc = rf.statusCredito || rf.status || '';
-      var _sr = rf.statusRegistro || '';
-      var _sf = rf.statusFlags || [];
-      var _isRisco = _sr === 'a_prescrever' || _sf.indexOf('a_prescrever') >= 0;
       if (sc === 'apropriado' || sc === 'utilizado') byMonth[mes].aprop += v;
-      else if (_isRisco) byMonth[mes].risco += v;
       else if (sc === 'nao_apropriado') byMonth[mes].pend += v;
     });
   });
@@ -6392,79 +6427,96 @@ window.renderizarEvolucaoAcumuladaCreditos = function() {
   var meses = Object.keys(byMonth).sort();
   if (!meses.length) return;
 
-  var acumAprop = 0, acumPend = 0, acumRisco = 0;
-  var dAprop = [], dPend = [], dRisco = [], labels = [];
+  var acumAprop = 0, acumPend = 0;
+  var dAprop = [], dTotal = [], dPend = [], labels = [];
   meses.forEach(function(m) {
     acumAprop += byMonth[m].aprop;
     acumPend  += byMonth[m].pend;
-    acumRisco += byMonth[m].risco || 0;
-    dAprop.push(byMonth[m].aprop / 1e6);
-    dPend.push(byMonth[m].pend / 1e6);
-    dRisco.push((byMonth[m].risco || 0) / 1e6);
+    dAprop.push(acumAprop / 1e6);
+    dTotal.push((acumAprop + acumPend) / 1e6);
+    dPend.push(acumPend / 1e6);
     labels.push(m.substring(5, 7) + '/' + m.substring(2, 4));
   });
 
-  // Barras empilhadas: Aproveitado (baixo) + A Apropriar (meio) + Em Risco (topo)
+  // Stacked-area SVG customizado
   var el = document.getElementById('cPagEvolAcum');
   if (!el) return;
-  var H = el.parentElement ? (el.parentElement.offsetHeight || 160) : 160;
-  if (H < 80) H = 160;
-  var padT = 20, padB = 28, padL = 44, padR = 8;
+  var H = el.parentElement ? (el.parentElement.offsetHeight || 140) : 140;
+  if (H < 80) H = 140;
+  var padT = 12, padB = 24, padL = 8, padR = 8;
   var W = (el.parentElement && el.parentElement.offsetWidth > 50 ? el.parentElement.offsetWidth : 440);
   var plotW = W - padL - padR, plotH = H - padT - padB;
   var n = labels.length;
-  function fv(v) { return v >= 1 ? v.toFixed(1).replace('.', ',') + 'M' : Math.round(v * 1000) + 'K'; }
+  var maxV = Math.max.apply(null, dTotal) || 1;
 
-  var monthTotals = dAprop.map(function(v, i) { return v + dPend[i] + dRisco[i]; });
-  var rawMax = Math.max.apply(null, monthTotals) || 1;
-  var niceMax = Math.ceil(rawMax * 1.18 * 10) / 10;
-  var bw = Math.max(6, Math.floor(plotW / n * 0.58));
+  function xp(i) { return Math.round(padL + (i / Math.max(n - 1, 1)) * plotW); }
+  function yp(v) { return Math.round(padT + (1 - v / maxV) * plotH); }
+  function fv(v) { return v >= 1 ? v.toFixed(1).replace('.', ',') + 'M' : Math.round(v * 1000) + 'K'; }
 
   var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:' + H + 'px;display:block">';
 
-  // Grid
-  for (var gi = 0; gi <= 4; gi++) {
-    var gv = (gi / 4) * niceMax;
-    var gy = Math.round(padT + plotH - (gv / niceMax) * plotH);
-    s += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (padL + plotW) + '" y2="' + gy + '" stroke="rgba(128,128,128,0.12)" stroke-width="1"/>';
-    s += '<text x="' + (padL - 5) + '" y="' + (gy + 3.5) + '" text-anchor="end" fill="var(--txt3)" font-size="9" font-family="Inter,system-ui,sans-serif">' + (gi > 0 ? fv(gv) : '0') + '</text>';
+  // Grid lines horizontais subtis
+  [0.25, 0.5, 0.75].forEach(function(f) {
+    var gy = Math.round(padT + plotH * (1 - f));
+    s += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="rgba(128,128,128,0.12)" stroke-width="1"/>';
+    s += '<text x="' + (padL + 3) + '" y="' + (gy - 3) + '" fill="var(--txt3)" font-size="9" font-family="Inter,system-ui,sans-serif">' + fv(maxV * f) + '</text>';
+  });
+
+  // Área pendente (topo — âmbar), entre curva total e curva aprop
+  var ptTotal = dTotal.map(function(v, i) { return xp(i) + ',' + yp(v); });
+  var ptAprop = dAprop.map(function(v, i) { return xp(i) + ',' + yp(v); });
+  var pendFill = ptTotal.join(' ') + ' ' + ptAprop.slice().reverse().join(' ');
+  s += '<polygon points="' + pendFill + '" fill="var(--amber)" fill-opacity="0.22" stroke="none"/>';
+
+  // Área apropriada (base — verde)
+  var apropFill = ptAprop.join(' ') + ' ' + xp(n - 1) + ',' + yp(0) + ' ' + xp(0) + ',' + yp(0);
+  s += '<polygon points="' + apropFill + '" fill="var(--teal)" fill-opacity="0.22" stroke="none"/>';
+
+  // Linhas de contorno
+  s += '<polyline points="' + ptTotal.join(' ') + '" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="5 3" stroke-linejoin="round" stroke-linecap="round"/>';
+  s += '<polyline points="' + ptAprop.join(' ') + '" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+
+  // Delta mês a mês
+  var minGapPx = 10;
+  var stepLabel = n > 8 ? 2 : 1;
+  for (var di = 0; di < n; di++) {
+    var yA = yp(dAprop[di]);
+    var yT = yp(dTotal[di]);
+    var gapPx = yA - yT;
+    var cx = xp(di);
+    s += '<line x1="' + cx + '" y1="' + yT + '" x2="' + cx + '" y2="' + yA
+       + '" stroke="var(--amber)" stroke-width="1" stroke-dasharray="2 2" opacity="0.55"/>';
+    s += '<circle cx="' + cx + '" cy="' + yA + '" r="2.5" fill="var(--teal)"/>';
+    s += '<circle cx="' + cx + '" cy="' + yT + '" r="2" fill="var(--amber)" opacity="0.85"/>';
+    if (gapPx >= minGapPx && di % stepLabel === 0 && dPend[di] > 0) {
+      var midY = Math.round((yA + yT) / 2);
+      var txtX = cx + (cx > W * 0.75 ? -4 : 4);
+      var anchor = cx > W * 0.75 ? 'end' : 'start';
+      s += '<rect x="' + (txtX - (anchor === 'end' ? 26 : 0)) + '" y="' + (midY - 7) + '" width="26" height="10" rx="3" fill="var(--amber)" fill-opacity="0.18"/>';
+      var deltaPct = dTotal[di] > 0 ? Math.round(dPend[di] / dTotal[di] * 100) : 0;
+      s += '<text x="' + txtX + '" y="' + (midY + 3) + '" text-anchor="' + anchor
+         + '" fill="var(--amber)" font-size="8.5" font-weight="700" font-family="Inter,system-ui,sans-serif">'
+         + deltaPct + '%</text>';
+    }
   }
 
-  var segColors = ['#1d9e75', '#4ade80', '#f59e0b'];
-  for (var bi = 0; bi < n; bi++) {
-    var bx = padL + (bi + 0.5) * (plotW / n) - bw / 2;
-    var segs = [dAprop[bi], dPend[bi], dRisco[bi]];
-    var base = padT + plotH;
+  // Label no ponto final
+  var li = n - 1;
+  var lxOff = xp(li) > W * 0.75 ? -6 : 6;
+  var lAnchor = xp(li) > W * 0.75 ? 'end' : 'start';
+  s += '<text x="' + (xp(li) + lxOff) + '" y="' + (yp(dAprop[li]) - 8) + '" text-anchor="' + lAnchor + '" fill="var(--green)" font-size="11" font-weight="700" font-family="Inter,system-ui,sans-serif">' + fv(dAprop[li]) + '</text>';
 
-    // find topmost non-zero seg index
-    var topIdx = -1;
-    for (var tj = segs.length - 1; tj >= 0; tj--) {
-      if (segs[tj] > 0) { topIdx = tj; break; }
-    }
+  // Labels eixo X
+  labels.forEach(function(l, i) {
+    s += '<text x="' + xp(i) + '" y="' + (H - 6) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">' + l + '</text>';
+  });
 
-    for (var sj = 0; sj < segs.length; sj++) {
-      var bh = Math.round((segs[sj] / niceMax) * plotH);
-      if (bh <= 0) continue;
-      var r = (sj === topIdx) ? Math.min(4, bh / 2) : 0;
-      if (r > 0) {
-        s += '<path d="M' + bx + ',' + base + ' L' + (bx + bw) + ',' + base
-          + ' L' + (bx + bw) + ',' + (base - bh + r)
-          + ' Q' + (bx + bw) + ',' + (base - bh) + ' ' + (bx + bw - r) + ',' + (base - bh)
-          + ' L' + (bx + r) + ',' + (base - bh)
-          + ' Q' + bx + ',' + (base - bh) + ' ' + bx + ',' + (base - bh + r) + ' Z"'
-          + ' fill="' + segColors[sj] + '"/>';
-      } else {
-        s += '<rect x="' + bx + '" y="' + (base - bh) + '" width="' + bw + '" height="' + bh + '" fill="' + segColors[sj] + '"/>';
-      }
-      base -= bh;
-    }
-
-    // x label
-    s += '<text x="' + (bx + bw / 2) + '" y="' + (padT + plotH + 16) + '" text-anchor="middle" fill="var(--txt3)" font-size="9.5" font-family="Inter,system-ui,sans-serif">' + labels[bi] + '</text>';
-
-    // hover zone
-    var tp = [labels[bi], '#1d9e75', 'Aproveitado', fv(dAprop[bi]), '#4ade80', 'A Apropriar', fv(dPend[bi]), '#f59e0b', 'Em Risco', fv(dRisco[bi])].join('|').replace(/'/g, '&apos;');
-    s += '<rect x="' + (bx - 4) + '" y="' + padT + '" width="' + (bw + 8) + '" height="' + plotH + '" fill="transparent" style="cursor:crosshair" onmousemove="_svgTipShow(event,\'' + tp + '\')" onmouseleave="_svgTipHide()"/>';
+  // Hover zones
+  var zW = Math.max(16, Math.floor(plotW / (n || 1)));
+  for (var ci = 0; ci < n; ci++) {
+    var tp = [labels[ci], '#1d9e75', 'Apropriado Acum.', fv(dAprop[ci]), '#ba7517', 'A Apropriar Acum.', fv(dPend[ci])];
+    var enc = tp.join('|').replace(/'/g, '&apos;');
+    s += '<rect x="' + (xp(ci) - Math.floor(zW / 2)) + '" y="' + padT + '" width="' + zW + '" height="' + plotH + '" fill="transparent" style="cursor:crosshair" onmousemove="_svgTipShow(event,\'' + enc + '\')" onmouseleave="_svgTipHide()"/>';
   }
 
   s += '</svg>';
