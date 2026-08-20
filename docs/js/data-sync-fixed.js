@@ -1348,8 +1348,11 @@ window.renderizarTabelaCreditos = function() {
 window.atualizarKPIsCreditos = function(listaRFs) {
   var aprop = 0, naoAprop = 0, glosado = 0, emRisco = 0, vencido = 0, util = 0, inconsist = 0, aPrescrever = 0;
   var naoApropCP = 0, naoApropLP = 0;
+  var extinto = 0, extintoCount = 0, extintoUlt = 0;
+  var vencNaoExt = 0, vencForn = 0, vencRad = 0;
   var _hoje = new Date(); _hoje.setHours(0,0,0,0);
   var _mesAtual = _hoje.getFullYear() * 100 + (_hoje.getMonth() + 1);
+  var _5anosAtras = new Date(_hoje); _5anosAtras.setFullYear(_5anosAtras.getFullYear() - 5);
   function _vencKPI(dataISO) {
     if (!dataISO) return null;
     var p = dataISO.split('-');
@@ -1377,6 +1380,23 @@ window.atualizarKPIsCreditos = function(listaRFs) {
     if      (sr === 'vencido')         { vencido      += v; }
     if      (sr === 'inconsistencia')  { inconsist    += v; }
     if      (sr === 'a_prescrever')    { aPrescrever  += v; }
+    // Extintos: statusCredito=extinto OU data NF > 5 anos
+    var _scExt = sc === 'extinto';
+    var _dataNF = r.dataNF || r.data || '';
+    var _dataObj = _dataNF ? new Date(_dataNF) : null;
+    var _prescrito = _dataObj && _dataObj < _5anosAtras;
+    if (_scExt || _prescrito) {
+      extinto += v; extintoCount++;
+      var _ym = _dataObj ? (_dataObj.getFullYear() * 100 + _dataObj.getMonth() + 1) : 0;
+      if (_ym > extintoUlt) extintoUlt = _ym;
+    }
+    // Vencidos não extintos: sr=vencido e não extinto
+    if (sr === 'vencido' && !_scExt && !_prescrito) {
+      vencNaoExt += v;
+      var _met = (r.metodoPagamento || '').toLowerCase();
+      if (_met === 'rad') vencRad += v;
+      else vencForn += v;
+    }
   });
   var total = aprop + naoAprop + glosado;
   var fmt = function(v) {
@@ -1412,6 +1432,25 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   set('cred-perda-sub',     pct(vencido, totalCred) + ' — vencidos sem quitação');
   set('cred-prescrever',    fmt(aPrescrever));
   set('cred-prescrever-sub',pct(aPrescrever, totalCred) + ' — prazo de 5 anos próximo');
+  // Extintos
+  set('cred-extinto',       fmt(extinto));
+  set('cred-extinto-sub',   extintoCount > 0 ? 'Prazo de 5 anos expirado · ' + extintoCount + ' RFs · perda definitiva' : 'Nenhum crédito extinto no período');
+  set('cred-extinto-count', String(extintoCount));
+  set('cred-extinto-pct',   pct(extinto, totalCred));
+  if (extintoUlt > 0) {
+    var _ultAno = Math.floor(extintoUlt / 100), _ultMes = extintoUlt % 100;
+    var _mNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    set('cred-extinto-ult', _mNomes[_ultMes - 1] + '/' + String(_ultAno).slice(-2));
+  } else {
+    set('cred-extinto-ult', '—');
+  }
+  // Vencidos não extintos
+  set('cred-venc-nao-ext',     fmt(vencNaoExt));
+  set('cred-venc-nao-ext-sub', vencNaoExt > 0 ? pct(vencNaoExt, totalCred) + ' do total · recuperáveis · ação necessária' : 'Sem créditos vencidos não extintos');
+  set('cred-venc-forn',        fmt(vencForn));
+  set('cred-venc-forn-pct',    vencNaoExt > 0 ? pct(vencForn, vencNaoExt) + ' dos vencidos' : '—');
+  set('cred-venc-rad',         fmt(vencRad));
+  set('cred-venc-rad-pct',     vencNaoExt > 0 ? pct(vencRad, vencNaoExt) + ' dos vencidos' : '—');
 };
 
 window.atualizarPerdaAcumulada = function() {
