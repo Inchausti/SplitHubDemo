@@ -5196,6 +5196,7 @@ class DataSyncManagerFixed {
     try { window.renderizarAgeingCreditos      && window.renderizarAgeingCreditos();       } catch(e) {}
     try { window.renderizarFCT                        && window.renderizarFCT();                         } catch(e) {}
     try { window.renderizarFCTForecast                && window.renderizarFCTForecast();                  } catch(e) {}
+    try { window.renderizarForecastAproveitamento     && window.renderizarForecastAproveitamento();       } catch(e) {}
     try { window.renderizarEvolucaoAcumuladaCreditos  && window.renderizarEvolucaoAcumuladaCreditos();   } catch(e) {}
 
     // Conciliação — KPIs de apuração + tabela de DFs
@@ -5891,7 +5892,8 @@ window._renderFcChart = function(canvas, chartStore, opts) {
         tooltip:{backgroundColor:o.tooltipBg,borderColor:o.tooltipBdr,borderWidth:1,titleColor:isDark?'#f1f3f9':'#111827',bodyColor:o.tickC,padding:10,
           callbacks:{
             title:function(items){var idx=items[0].dataIndex;return o.visLabels[idx]+(idx>=o.visNReal?' · Forecast':'');},
-            label:function(item){var v=item.raw;if(v===null||v===undefined)return null;return '  '+item.dataset.label+': '+o.fmM(Math.abs(Math.round(v)));}
+            label:function(item){var v=item.raw;if(v===null||v===undefined)return null;var isSaldo=item.dataset.yAxisID==='ySaldo';return '  '+item.dataset.label+': '+(isSaldo?o.fmM(Math.round(v)):o.fmM(Math.abs(Math.round(v))));}
+
           }
         }
       },
@@ -6072,10 +6074,15 @@ window.renderizarFCTForecast = function(_retry) {
     var melhorIdx = saldosMensais.indexOf(Math.max.apply(null, saldosMensais));
     var pioresIdx = saldosMensais.indexOf(Math.min.apply(null, saldosMensais));
     var credTend = credFc.length ? credFc[credFc.length-1] - credReal[N_REAL-1] : 0;
+    var melhorSaldo = saldosMensais[melhorIdx];
+    var melhorCor = melhorSaldo >= 0 ? '#1d9e75' : '#a32d2d';
+    var melhorTitulo = 'Melhor mês: ' + (mesesReal[melhorIdx]||'').substring(5,7) + '/' + (mesesReal[melhorIdx]||'').substring(0,4);
+    var melhorCorpo = (melhorSaldo >= 0 ? 'Saldo positivo de ' : 'Menor déficit mensal: ') + fmM(melhorSaldo) + ' — menor diferença negativa entre crédito e débito no período realizado.';
+    var saldoFcCor = saldoFcFinal >= 0 ? '#1d9e75' : '#a32d2d';
     var insData = [
-      { cor:'#1d9e75', titulo:'Melhor mês: '+(mesesReal[melhorIdx]||'').substring(5,7)+'/'+(mesesReal[melhorIdx]||'').substring(0,4), corpo:'Saldo positivo de '+fmM(saldosMensais[melhorIdx])+' — maior diferença crédito/débito no período realizado.' },
-      { cor: credTend>=0?'#1d9e75':'#a32d2d', titulo: credTend>=0?'Tendência de crescimento':'Tendência de queda', corpo:'Crédito projetado para '+(mesesFc[mesesFc.length-1]||'').substring(5,7)+'/'+(mesesFc[mesesFc.length-1]||'').substring(0,4)+': '+fmM(credFc[credFc.length-1]||0)+' (variação '+(credTend>=0?'+':'')+fmM(credTend)+' vs. último mês).' },
-      { cor:'#185fa5', titulo:'Saldo projetado '+(mesesFc.length?'12/'+lastYear:''), corpo:'Acumulado de '+fmM(saldoFcFinal)+' ao final do exercício fiscal, considerando a projeção por média móvel.' }
+      { cor: melhorCor, titulo: melhorTitulo, corpo: melhorCorpo },
+      { cor: credTend>=0?'#1d9e75':'#a32d2d', titulo: credTend>=0?'Tendência de crescimento':'Tendência de queda', corpo:'Crédito projetado para '+(mesesFc[mesesFc.length-1]||'').substring(5,7)+'/'+(mesesFc[mesesFc.length-1]||'').substring(0,4)+': '+fmM(credFc[credFc.length-1]||0)+' (variação '+(credTend>=0?'+':'')+fmM(credTend)+' vs. último mês realizado).' },
+      { cor: saldoFcCor, titulo:'Saldo projetado '+(mesesFc.length?'12/'+lastYear:''), corpo:'Posição acumulada de '+fmM(saldoFcFinal)+' ao final do exercício fiscal, projeção por média móvel dos últimos 3 meses.' }
     ];
     insEl.innerHTML = insData.map(function(ins) {
       return '<div style="border-left:3px solid '+ins.cor+';padding:8px 12px;background:var(--bg2,var(--sidebar));border-radius:0 6px 6px 0;font-size:11px">'
