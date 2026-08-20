@@ -2120,7 +2120,7 @@ window.atualizarDashboard = function() {
     arr.forEach(function(f) {
       var qs = f.qualScore;
       var barPct = f.pendente / maxPend * 100;
-      var scoreColor = qs >= 80 ? PALETTE.teal : qs >= 60 ? PALETTE.amber : PALETTE.red;
+      var scoreColor = qs >= 70 ? PALETTE.teal : qs >= 50 ? PALETTE.amber : PALETTE.red;
       var barColor = isWorst ? PALETTE.red : PALETTE.teal;
       var sharePct = (f.sharePend * 100).toFixed(1);
       html += '<div style="background:var(--bg2);border-radius:6px;padding:8px 10px">'
@@ -2330,6 +2330,39 @@ window.atualizarInteligencia = function() {
     ], labM, 155);
   }
 
+  // Tabela mensal do ano (todos os meses disponíveis, ordenados)
+  var tblBody = document.getElementById('intel-aprov-tbl-body');
+  if (tblBody) {
+    var anoAtual = new Date().getFullYear() + '';
+    var todosMeses = Object.keys(byMonth).sort();
+    var mesesAno = todosMeses.filter(function(m) { return m.startsWith(anoAtual); });
+    // fallback: se não houver meses do ano atual, usa todos
+    if (!mesesAno.length) mesesAno = todosMeses;
+    var anoLabel = mesesAno.length ? mesesAno[0].substring(0,4) : anoAtual;
+    var anoEl = document.getElementById('intel-aprov-ano');
+    if (anoEl) anoEl.textContent = anoLabel;
+    var nomMes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    function fmtMR(v) { return v >= 1e6 ? 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M' : v >= 1e3 ? 'R$ ' + Math.round(v/1e3) + 'K' : 'R$ 0'; }
+    var rows = '';
+    mesesAno.forEach(function(m, i) {
+      var b = byMonth[m];
+      var tot = b.aprop + b.pend + b.risco;
+      var taxa = tot > 0 ? Math.round(b.aprop / tot * 100) : 0;
+      var taxaCor = taxa >= 70 ? 'var(--teal)' : taxa >= 50 ? 'var(--amber)' : 'var(--red)';
+      var mn = parseInt(m.substring(5,7),10);
+      var rowBg = i % 2 === 0 ? 'background:rgba(128,128,128,.03)' : '';
+      rows += '<tr style="' + rowBg + '">'
+        + '<td style="padding:5px 8px;font-weight:600;color:var(--txt1)">' + nomMes[mn-1] + '/' + m.substring(2,4) + '</td>'
+        + '<td style="padding:5px 8px;text-align:right;color:var(--teal);font-variant-numeric:tabular-nums">' + fmtMR(b.aprop) + '</td>'
+        + '<td style="padding:5px 8px;text-align:right;color:var(--amber);font-variant-numeric:tabular-nums">' + fmtMR(b.pend) + '</td>'
+        + '<td style="padding:5px 8px;text-align:right;color:var(--red);font-variant-numeric:tabular-nums">' + fmtMR(b.risco) + '</td>'
+        + '<td style="padding:5px 8px;text-align:right;color:var(--txt2);font-variant-numeric:tabular-nums">' + fmtMR(tot) + '</td>'
+        + '<td style="padding:5px 8px;text-align:right;font-weight:700;color:' + taxaCor + ';font-variant-numeric:tabular-nums">' + taxa + '%</td>'
+        + '</tr>';
+    });
+    tblBody.innerHTML = rows || '<tr><td colspan="6" style="text-align:center;padding:12px;color:var(--txt3)">Sem dados</td></tr>';
+  }
+
   // ── 3. Volume financeiro NFs — Contratos RAD ────────────
   var radMap = {};
   lista.forEach(function(nf) {
@@ -2389,7 +2422,7 @@ window.atualizarInteligencia = function() {
   var sbEl = document.getElementById('score-bars');
   if (sbEl) {
     function _sRow(r) {
-      var c = r.score >= 80 ? '#1d9e75' : r.score >= 60 ? '#ba7517' : '#a32d2d';
+      var c = r.score >= 70 ? '#1d9e75' : r.score >= 50 ? '#ba7517' : '#a32d2d';
       var nome = r.nome.length > 18 ? r.nome.substring(0,17) + '…' : r.nome;
       return '<div class="srow"><span class="sname">' + nome + '</span>'
            + '<div class="strk"><div class="sfil" style="width:' + r.score + '%;background:' + c + '"></div></div>'
