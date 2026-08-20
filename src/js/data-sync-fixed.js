@@ -62,7 +62,6 @@ window.SH_TABLES = {
     cols: [
       { label: 'RF' },
       { label: 'Tipo Fiscal' },
-      { label: 'Tipo de DFe' },
       { label: 'Nota Fiscal' },
       { label: 'Fornecedor' },
       { label: 'Data NF' },
@@ -317,7 +316,8 @@ window.dashRenderDFsApropriar = function() {
         forn: rf.entidade || nf.entidade || '—',
         valor: v,
         data: dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
-        sr: sr
+        sr: sr,
+        statusFlags: rf.statusFlags || []
       };
       // CP: vencimento no mês atual; LP: vencimento em meses futuros
       if (mesVenc === mesAtual) cpRows.push(row);
@@ -326,9 +326,9 @@ window.dashRenderDFsApropriar = function() {
   });
 
   function buildRow(r) {
-    var srBadge = r.sr
-      ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;background:rgba('+srRgb[r.sr]+',.12);color:rgba('+srRgb[r.sr]+',1);border:1px solid rgba('+srRgb[r.sr]+',.28)">'+(srLabel[r.sr]||r.sr)+'</span>'
-      : '';
+    var srBadge = window._statusFlagsBadges
+      ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.sr })
+      : (r.sr ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;background:rgba('+srRgb[r.sr]+',.12);color:rgba('+srRgb[r.sr]+',1);border:1px solid rgba('+srRgb[r.sr]+',.28)">'+(srLabel[r.sr]||r.sr)+'</span>' : '');
     return '<tr>'
       + '<td class="mono nowrap" style="font-size:11px">' + r.nf + '</td>'
       + '<td class="trunc">' + r.forn + '</td>'
@@ -1227,6 +1227,7 @@ window.renderizarTabelaCreditos = function() {
         status: _sc,
         statusCredito: _sc,
         statusRegistro: rf.statusRegistro || null,
+        statusFlags: rf.statusFlags || [],
         inconsistencia: rf.inconsistencia || null,
         contratoId: rf.contratoId || nf.contratoId || null,
         metodoPagamento: rf.metodoPagamento || nf.metodoPagamento || null,
@@ -1308,12 +1309,12 @@ window.renderizarTabelaCreditos = function() {
         metExtCell = '<span style="color:var(--txt3)">—</span>';
       }
 
+      var statusRFBadge = window._statusFlagsBadges ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.statusRegistro }) : '';
       h += '<tr>'
         + '<td class="mono nowrap">' + rfLink + '</td>'
         + '<td class="nowrap">' + tipoFiscalBadge + '</td>'
         + '<td class="mono nowrap">' + dfLink + '</td>'
         + '<td class="trunc">' + r.forn + '</td>'
-        + '<td class="mono" style="color:var(--txt2)">' + r.cnpj + '</td>'
         + '<td class="nowrap" style="color:var(--txt2)">' + r.data + '</td>'
         + '<td class="r mono">' + ff(r.valorTotal) + '</td>'
         + '<td class="r mono" style="color:var(--txt2)">' + ff(r.valorLiq) + '</td>'
@@ -1322,6 +1323,7 @@ window.renderizarTabelaCreditos = function() {
         + '<td class="r mono" style="font-weight:600">' + ff(r.cred) + '</td>'
         + '<td class="nowrap">' + pagCell + '</td>'
         + '<td class="nowrap">' + statusBadge + incBadge + '</td>'
+        + '<td style="vertical-align:middle">' + statusRFBadge + '</td>'
         + '<td class="nowrap">' + contratoCell + '</td>'
         + '<td class="nowrap">' + metodoCell + '</td>'
         + '<td class="nowrap">' + metExtCell + '</td>'
@@ -4565,6 +4567,7 @@ window.renderizarTabelaDebitos = function() {
           extincao:        rf.dataExtincao   || '—',
           status:          rf.status         || 'nao_extinto',
           statusRegistro:  rf.statusRegistro || null,
+          statusFlags:     rf.statusFlags    || [],
           metodoExtincao:  rf.metodoExtincao || '—'
         });
       });
@@ -4606,7 +4609,7 @@ window.renderizarTabelaDebitos = function() {
       ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(29,158,117,.28);color:#1d9e75;background:transparent">Entrada</span>'
       : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(186,117,23,.28);color:#ba7517;background:transparent">Saída</span>';
     var stBadge  = bdg(r.status);
-    var stRgBadge = r.statusRegistro ? bdg(r.statusRegistro) : '<span style="color:var(--txt3)">—</span>';
+    var stRgBadge = window._statusFlagsBadges ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.statusRegistro }) : (r.statusRegistro ? bdg(r.statusRegistro) : '');
     h += '<tr>'
       + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\'' + r.rf + '\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
       + '<td class="nowrap">' + tfBadge + '</td>'
