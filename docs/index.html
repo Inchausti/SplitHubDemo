@@ -5016,7 +5016,7 @@ function inconsistRenderTabela(){
       +'<td>'+acao+'</td></tr>';
   });
   if(!lista.length)h='<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma inconsistência encontrada para este filtro.</td></tr>';
-  document.getElementById("t-inconsistencias").innerHTML=h;
+  var _tInc=document.getElementById("t-inconsistencias"); if(_tInc) _tInc.innerHTML=h;
   var sub=document.getElementById("inc-count-sub");
   if(sub)sub.textContent=lista.length+" de "+inconsistencias.length+" inconsistências exibidas";
 }
@@ -6419,48 +6419,48 @@ function sincronizarFornecedoresComCreditos(){
 }
 
 function init(){
-  sincronizarFornecedoresComCreditos();
+  try{sincronizarFornecedoresComCreditos();}catch(e){}
   // Seed auditoria para fornecedores pré-carregados
   if(!window._fornAudit)window._fornAudit={};
   var _seedDatas=['15/01/2025 às 09:12:44','22/02/2025 às 14:30:11','03/03/2025 às 08:55:02','10/04/2025 às 11:47:33','05/05/2025 às 16:22:18','18/06/2025 às 10:05:57','29/07/2025 às 13:41:29','08/08/2025 às 09:33:50','14/09/2025 às 15:18:07','02/10/2025 às 11:58:44','19/11/2025 às 10:23:31','07/12/2025 às 08:47:15'];
-  fornecedores.forEach(function(f,i){
+  try{fornecedores.forEach(function(f,i){
     if(!window._fornAudit[f.cnpj]){
       window._fornAudit[f.cnpj]=[{acao:'Cadastro criado',data:_seedDatas[i%_seedDatas.length],usuario:'Migração inicial',campos:{nome:f.nome,status:f.status,multiContrato:!!f.multiContrato}}];
     }
-  });
+  });}catch(e){}
   // recent
-  var h="";
+  try{var h="";
   for(var i=0;i<6;i++){var r=impostos[i];h+='<tr><td class="mono nowrap"><span style="color:var(--txt3)">'+r.id+'</span><br><span style="color:var(--blue)">'+r.rf+'</span></td><td class="trunc"><div style="font-weight:500">'+r.forn+'</div><div style="font-size:10px;color:var(--txt3)">'+r.cnpj+'</div></td><td class="nowrap">'+r.tipo+'</td><td class="r mono">'+ff(r.valor)+'</td><td class="nowrap">'+r.venc+'</td><td class="nowrap">'+bdg(r.status)+'</td></tr>';}
-  var _tRecent=document.getElementById("t-recent"); if(_tRecent) _tRecent.innerHTML=h;
+  var _tRecent=document.getElementById("t-recent"); if(_tRecent) _tRecent.innerHTML=h;}catch(e){}
   // impostos: populado via renderizarTabelaPagamentos no ciclo de sync
   // fornecedores
-  h="";
+  try{var h="";
   for(var i=0;i<fornecedores.length;i++){var r=fornecedores[i];h+='<tr><td class="trunc" style="font-weight:500">'+r.nome+'</td><td class="mono" style="color:var(--txt2)">'+r.cnpj+'</td><td class="r mono">'+fc(r.volume)+'</td><td class="r mono" style="color:var(--teal);font-weight:600">'+fc(r.cred)+'</td><td class="nowrap"><span style="color:var(--txt1)">'+r.pagtos+'</span> <span style="color:var(--txt3)">pagtos</span></td><td class="nowrap"><span style="color:'+(r.pend>0?"#F59E0B":"#22C55E")+';font-weight:600">'+r.pend+'</span></td><td class="nowrap">'+sco(r.score)+'</td><td class="nowrap">'+bdg(r.status)+'</td></tr>';}
-  var _tForn=document.getElementById("t-forn"); if(_tForn) _tForn.innerHTML=h;
+  var _tForn=document.getElementById("t-forn"); if(_tForn) _tForn.innerHTML=h;}catch(e){}
   // score bars
-  var sf=[...fornecedores].sort(function(a,b){return b.score-a.score;});
-  h="";
+  try{var sf=[...fornecedores].sort(function(a,b){return b.score-a.score;});
+  var h="";
   for(var i=0;i<sf.length;i++){var r=sf[i];var c=r.score>=80?"#22C55E":r.score>=60?"#F59E0B":"#F43F5E";h+='<div class="srow"><span class="sname">'+r.nome.split(" ")[0]+'</span><div class="strk"><div class="sfil" style="width:'+r.score+'%;background:'+c+'"></div></div><span class="snum" style="color:'+c+'">'+r.score+'</span></div>';}
-  document.getElementById("score-bars").innerHTML=h;
+  var _sBars=document.getElementById("score-bars"); if(_sBars) _sBars.innerHTML=h;}catch(e){}
   // totalizadores dinâmicos
-  creditosRenderKPIs();
+  try{creditosRenderKPIs();}catch(e){}
   setTimeout(function(){ try{ if(window.atualizarDashboard) window.atualizarDashboard(); }catch(e){} }, 200);
-  dashCnpjPopulate();
-  dashRenderCreditKPIs();
-  pagamentosRenderKPIs();
-  fornecedoresRenderKPIs();
+  try{dashCnpjPopulate();}catch(e){}
+  try{dashRenderCreditKPIs();}catch(e){}
+  try{pagamentosRenderKPIs();}catch(e){}
+  try{fornecedoresRenderKPIs();}catch(e){}
   // módulo admin — gestão de contratos
-  contratosPopulateSelect();
-  contratosRenderTabela();
-  contratosRenderKPIs();
+  try{contratosPopulateSelect();}catch(e){}
+  try{contratosRenderTabela();}catch(e){}
+  try{contratosRenderKPIs();}catch(e){}
   // módulo admin — cadastro de fornecedor
-  adminFornRenderKPIs();
-  adminFornRenderTabela();
+  try{adminFornRenderKPIs();}catch(e){}
+  try{adminFornRenderTabela();}catch(e){}
   // módulo gestão de inconsistências
-  inconsistRenderKPIs();
-  inconsistRenderTabela();
+  try{inconsistRenderKPIs();}catch(e){}
+  try{inconsistRenderTabela();}catch(e){}
   // conciliação — gestão de dfs
-  conciliacaoRenderDFs();
+  try{conciliacaoRenderDFs();}catch(e){}
 }
 
 function fctSaldoFinal(d){
