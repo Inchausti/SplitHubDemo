@@ -3575,22 +3575,46 @@ window.renderizarRFsInconsistencias = function() {
   });
   incGlobal.forEach(function(inc) {
     var nf = _nfIdx[inc.nfNumero];
+    if (!nf) {
+      // DF de ingestão com falha: criar stub NF e injetar em nfListaFiltradaGlobal
+      var ingD = _ingIdx[String(inc.nfNumero)];
+      if (ingD) {
+        var _dp = (ingD.dataEmissao || '').split('-');
+        var _dataFmt = _dp.length === 3 ? _dp[2]+'/'+_dp[1]+'/'+_dp[0] : '—';
+        var _tipoBase = (ingD.tipo || 'NF-e').replace(' Entrada','').replace(' Saída','');
+        var _tipoFluxo = ingD.tipo && ingD.tipo.toLowerCase().indexOf('saída') >= 0 ? 'saida' : 'entrada';
+        nf = {
+          numero:           ingD.nfNumero,
+          tipo:             _tipoFluxo,
+          tipoDF:           _tipoBase,
+          entidade:         ingD.emitente || '—',
+          cnpj:             ingD.cnpj     || '—',
+          chaveDF:          ingD.chave    || '',
+          valorTotal:       ingD.valor    || 0,
+          valorLiquido:     Math.round((ingD.valor || 0) / 1.18),
+          data:             ingD.dataEmissao || '',
+          dataFmt:          _dataFmt,
+          statusImportacao: 'falha',
+          registrosFiscais: [],
+          _inconsistencias: []
+        };
+        window.nfListaFiltradaGlobal = window.nfListaFiltradaGlobal || [];
+        window.nfListaFiltradaGlobal.push(nf);
+        _nfIdx[String(ingD.nfNumero)] = nf;
+        // Atualizar campos do card com dados do stub
+        inc.entidade   = nf.entidade;
+        inc.cnpj       = nf.cnpj;
+        inc.valorTotal = nf.valorTotal;
+        inc.dataISO    = nf.data;
+        inc.data       = _dataFmt;
+      }
+    }
     if (nf) {
       nf._inconsistencias.push(inc);
       if (inc.rfId) {
         (nf.registrosFiscais || []).forEach(function(rf) {
           if (rf.id === inc.rfId) rf._inconsistencias.push(inc);
         });
-      }
-    } else {
-      // DF de ingestão órfão: preencher campos do card com dados do _ingDadosGlobal
-      var ingD = _ingIdx[String(inc.nfNumero)];
-      if (ingD) {
-        if (!inc.entidade || inc.entidade === '—') inc.entidade = ingD.emitente || inc.entidade;
-        if (!inc.cnpj    || inc.cnpj    === '—') inc.cnpj     = ingD.cnpj     || inc.cnpj;
-        if (!inc.valorTotal) inc.valorTotal = ingD.valor || 0;
-        if (!inc.dataISO)    inc.dataISO    = ingD.dataEmissao || '';
-        if (!inc.data)       inc.data       = (function(d){ var p=(d||'').split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:'—'; })(ingD.dataEmissao);
       }
     }
   });
