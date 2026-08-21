@@ -3774,11 +3774,16 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
               <th>Número DF</th>
               <th>Tipo</th>
               <th>Emissão</th>
+              <th>Chave de Acesso</th>
               <th>Valor Total</th>
               <th>CBS</th>
               <th>IBS</th>
+              <th>Total Split</th>
+              <th>Valor Líquido</th>
               <th>Status</th>
-              <th>RFs</th>
+              <th>Status Crédito</th>
+              <th>Status Registro</th>
+              <th>Ação</th>
             </tr>
           </thead>
           <tbody id="forn-df-tbody"></tbody>
@@ -7389,7 +7394,7 @@ function _renderFornecedorBanner(){
   var initials = f.nome.split(' ').slice(0,2).map(function(w){return w[0];}).join('');
   document.getElementById('forn-banner-av').textContent = initials;
   document.getElementById('forn-banner-nome').textContent = f.nome;
-  document.getElementById('forn-banner-cnpj').textContent = 'CNPJ: '+f.cnpj+' · '+f.categorizacao;
+  document.getElementById('forn-banner-cnpj').textContent = 'CNPJ: '+f.cnpj;
   // Score ring
   var score = f.score || 0;
   var circ = 2*Math.PI*21; // 131.9
@@ -7565,17 +7570,49 @@ function _renderFornDFRows(dfs){
   var tbody=document.getElementById('forn-df-tbody');
   if(!tbody) return;
   var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
+  var _credChip={
+    Liberado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">Liberado</span>',
+    Pendente:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(185,122,16,.12);color:var(--amber)">Pendente</span>',
+    Bloqueado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">Bloqueado</span>'
+  };
+  var _capurChip={
+    Conciliado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">Conciliado</span>',
+    Divergente:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">Divergente</span>',
+    Pendente:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(185,122,16,.12);color:var(--amber)">Pendente</span>'
+  };
   tbody.innerHTML=dfs.map(function(d){
-    var nRFs=_gerarRFsDoDF(d).length;
-    return '<tr style="cursor:pointer" onclick="abrirDetalheDF(\''+d.id+'\')" title="Ver detalhes">'+
+    var rfs=_gerarRFsDoDF(d);
+    var split=d.cbs+d.ibs;
+    var liquido=d.valor-split;
+    // Status crédito: pior status entre os RFs
+    var credStatuses=rfs.map(function(r){return r.cred;});
+    var credStatus=credStatuses.indexOf('Bloqueado')>=0?'Bloqueado':credStatuses.indexOf('Pendente')>=0?'Pendente':'Liberado';
+    // Status registro (CAPUR): pior status
+    var capurStatuses=rfs.map(function(r){return r.capur;});
+    var capurStatus=capurStatuses.indexOf('Divergente')>=0?'Divergente':capurStatuses.indexOf('Pendente')>=0?'Pendente':'Conciliado';
+    // Chave truncada
+    var chaveCurta=d.chave.substring(0,12)+'…'+d.chave.slice(-4);
+    return '<tr>'+
       '<td style="font-size:11px;color:var(--teal);font-weight:600">'+d.numero+'</td>'+
       '<td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--card);border:1px solid var(--border)">'+d.tipo+'</span></td>'+
       '<td style="font-size:12px;color:var(--txt2)">'+d.emissao+'</td>'+
+      '<td style="font-size:10px;font-family:var(--font-mono);color:var(--txt3)" title="'+d.chave+'">'+chaveCurta+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono)">'+ff(d.valor)+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--amber)">'+ff(d.cbs)+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--blue)">'+ff(d.ibs)+'</td>'+
+      '<td style="font-size:12px;font-family:var(--font-mono);color:#7C3AED;font-weight:600">'+ff(split)+'</td>'+
+      '<td style="font-size:12px;font-family:var(--font-mono);color:var(--green);font-weight:600">'+ff(liquido)+'</td>'+
       '<td>'+(_statusChip[d.status]||_statusChip.pendente)+'</td>'+
-      '<td style="font-size:12px;color:var(--txt2);text-align:center">'+nRFs+'</td>'+
+      '<td>'+(_credChip[credStatus]||_credChip.Pendente)+'</td>'+
+      '<td>'+(_capurChip[capurStatus]||_capurChip.Pendente)+'</td>'+
+      '<td><div style="display:flex;gap:4px;flex-wrap:nowrap">'+
+        '<button class="btn" style="font-size:10px;padding:3px 8px" onclick="abrirDetalheDF(\''+d.id+'\')" title="Ver detalhes">Ver</button>'+
+        (d.status!=='liquidado'&&d.status!=='contestado'?
+          '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--teal);color:var(--teal)" onclick="abrirLiquidarDF(\''+d.id+'\')" title="Informar liquidação">Liquidar</button>'+
+          '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--red);color:var(--red)" onclick="abrirContestarDF(\''+d.id+'\')" title="Contestar DF">Contestar</button>'
+        :'')+
+        '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--txt3);color:var(--txt3)" onclick="abrirComentarDF(\''+d.id+'\')" title="Comentários'+(d.comentarios?' ('+d.comentarios+')':'')+'">'+(d.comentarios?'💬 '+d.comentarios:'💬')+'</button>'+
+      '</div></td>'+
     '</tr>';
   }).join('');
 }
