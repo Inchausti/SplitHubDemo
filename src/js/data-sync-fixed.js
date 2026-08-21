@@ -3522,26 +3522,30 @@ window.renderizarRFsInconsistencias = function() {
     var _incRf = r.rfId ? (((_incNf.registrosFiscais || [])).find(function(rf){ return rf.id === r.rfId; }) || {}) : {};
     var _incContratoId = _incRf.contratoId || _incNf.contratoId || null;
     incGlobal.push({
-      id:         'INC-' + String(incGlobal.length + 1).padStart(4,'0'),
-      tipo:       tipo,
-      tipoLabel:  _tipoIncLbl[tipo] || (r.tipoLabel || r.inc || 'Inconsistência'),
-      dfId:       r.nfVinc || '—',
-      dfNum:      r.nfVinc || '—',
-      nfNumero:   r.nfId   || '',
-      rfId:       r.rfId || null,
-      tipoFiscal: r.tf || '—',
-      origem:     origem,
-      tipoFluxo:  r.tipoNF === 'ingestao' ? 'entrada' : (r.tipoNF || 'entrada'),
-      status:     _incStatuses[i % _incStatuses.length],
-      prioridade: _incPrios(r.valor),
-      valor:      r.valor,
-      valorTotal: r.valorTotal || 0,
-      valorLiq:   r.valorLiq || 0,
-      entidade:   r.forn,
-      cnpj:       r.cnpj,
-      dataISO:    r.dataISO,
-      data:       r.data,
-      contratoId: _incContratoId
+      id:              'INC-' + String(incGlobal.length + 1).padStart(4,'0'),
+      tipo:            tipo,
+      tipoLabel:       _tipoIncLbl[tipo] || (r.tipoLabel || r.inc || 'Inconsistência'),
+      dfId:            r.nfVinc || '—',
+      dfNum:           r.nfVinc || '—',
+      nfNumero:        r.nfId   || '',
+      rfId:            r.rfId || null,
+      tipoFiscal:      r.tf || '—',
+      origem:          origem,
+      tipoFluxo:       r.tipoNF === 'ingestao' ? 'entrada' : (r.tipoNF || 'entrada'),
+      status:          _incStatuses[i % _incStatuses.length],
+      prioridade:      _incPrios(r.valor),
+      valor:           r.valor,
+      valorTotal:      r.valorTotal || 0,
+      valorLiq:        r.valorLiq || 0,
+      entidade:        r.forn,
+      cnpj:            r.cnpj,
+      dataISO:         r.dataISO,
+      data:            r.data,
+      contratoId:      _incContratoId,
+      statusCredito:   _incRf.statusCredito || _incRf.status || null,
+      statusRegistro:  _incRf.statusRegistro || null,
+      metodoPagamento: _incRf.metodoPagamento || null,
+      metodoExtincao:  _incRf.metodoExtincao || null
     });
   });
   window._inconsistenciasGlobal = incGlobal;
@@ -3665,6 +3669,9 @@ window.incRfFiltrar = function() {
   var prioridade= (document.getElementById('inc-rf-prioridade')    ||{}).value||'';
   var origem    = (document.getElementById('inc-rf-origem')        ||{}).value||'';
   var contrato  = (document.getElementById('inc-rf-contrato')      ||{}).value||'';
+  var statusCred= (document.getElementById('inc-rf-status-cred')   ||{}).value||'';
+  var statusReg = (document.getElementById('inc-rf-status-reg')    ||{}).value||'';
+  var metodo    = (document.getElementById('inc-rf-metodo')        ||{}).value||'';
 
   var lista = (window._inconsistenciasGlobal || []).filter(function(inc) {
     if (tipoNF    && inc.tipoFluxo !== tipoNF)                                             return false;
@@ -3683,6 +3690,9 @@ window.incRfFiltrar = function() {
     if (origem     && inc.origem !== origem)                                               return false;
     if (contrato === '__sem__' && inc.contratoId)                                          return false;
     if (contrato && contrato !== '__sem__' && inc.contratoId !== contrato)                 return false;
+    if (statusCred && inc.statusCredito !== statusCred)                                    return false;
+    if (statusReg  && inc.statusRegistro !== statusReg)                                    return false;
+    if (metodo     && inc.metodoPagamento !== metodo)                                      return false;
     if (busca) {
       var s = (inc.id + inc.dfNum + inc.entidade + inc.cnpj + (inc.rfId||'')).toLowerCase();
       if (s.indexOf(busca) < 0) return false;
@@ -3698,7 +3708,7 @@ window.incRfFiltrar = function() {
 };
 
 window.incRfLimparFiltros = function() {
-  ['inc-rf-busca','inc-rf-tipo-nf','inc-rf-tipo-fiscal','inc-rf-inc-tipo','inc-rf-etapa','inc-rf-data-de','inc-rf-data-ate','inc-rf-valor-min','inc-rf-valor-max','inc-rf-val-total-min','inc-rf-val-total-max','inc-rf-val-liq-min','inc-rf-val-liq-max','inc-rf-prioridade','inc-rf-origem','inc-rf-contrato'].forEach(function(id){
+  ['inc-rf-busca','inc-rf-tipo-nf','inc-rf-tipo-fiscal','inc-rf-inc-tipo','inc-rf-etapa','inc-rf-data-de','inc-rf-data-ate','inc-rf-valor-min','inc-rf-valor-max','inc-rf-val-total-min','inc-rf-val-total-max','inc-rf-val-liq-min','inc-rf-val-liq-max','inc-rf-prioridade','inc-rf-origem','inc-rf-contrato','inc-rf-status-cred','inc-rf-status-reg','inc-rf-metodo'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
   window.incRfFiltrar();
@@ -3742,6 +3752,22 @@ window._incRfRenderPagina = function() {
     var incContratoCell = inc.contratoId
       ? '<span class="mono" style="font-size:11px;color:'+PALETTE.teal+';font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\''+inc.contratoId+'\')">'+inc.contratoId+'</span>'
       : '<span style="color:var(--txt3)">—</span>';
+    var incStCredBadge = inc.statusCredito ? (window._statusFlagsBadges
+      ? window._statusFlagsBadges({ statusFlags: [], statusRegistro: null, statusCredito: inc.statusCredito })
+      : bdg(inc.statusCredito))
+      : '<span style="color:var(--txt3);font-size:11px">—</span>';
+    var incStRegBadge = inc.statusRegistro
+      ? (window._statusFlagsBadges ? window._statusFlagsBadges({ statusFlags: [inc.statusRegistro], statusRegistro: inc.statusRegistro }) : bdg(inc.statusRegistro))
+      : '<span style="color:var(--txt3);font-size:11px">—</span>';
+    var _incMetC = inc.metodoPagamento === 'RAD' ? PALETTE.statusBlue : inc.metodoPagamento === 'Fornecedor' ? PALETTE.purple : null;
+    var incMetodoCell = _incMetC
+      ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:'+_incMetC+'"><span style="width:5px;height:5px;border-radius:50%;background:'+_incMetC+';display:inline-block"></span>'+inc.metodoPagamento+'</span>'
+      : '<span style="color:var(--txt3);font-size:11px">—</span>';
+    var _incMetExtMap = {'Split Payment':'29,158,117','Compensacao':'24,95,165','Ressarcimento':'29,158,117','Transferencia':'139,92,246','RAD':'186,117,23'};
+    var _incMetExtLbl = {'Split Payment':'Split Payment','Compensacao':'Compensação','Ressarcimento':'Ressarcimento','Transferencia':'Transferência','RAD':'RAD'};
+    var incExtincaoCell = inc.metodoExtincao
+      ? '<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+(_incMetExtMap[inc.metodoExtincao]||'29,158,117')+',.12);color:rgba('+(_incMetExtMap[inc.metodoExtincao]||'29,158,117')+',1);border:1px solid rgba('+(_incMetExtMap[inc.metodoExtincao]||'29,158,117')+',.28)">'+(_incMetExtLbl[inc.metodoExtincao]||inc.metodoExtincao)+'</span>'
+      : '<span style="color:var(--txt3);font-size:11px">—</span>';
     h += '<tr>'
       + '<td class="mono nowrap" style="font-size:10px;color:rgba(90,26,140,1);font-weight:700">'+inc.id+'</td>'
       + '<td class="nowrap">'+dfCell+'</td>'
@@ -3758,9 +3784,13 @@ window._incRfRenderPagina = function() {
       + '<td class="nowrap">'+_badge(pc[0],pc[1])+'</td>'
       + '<td class="nowrap">'+incContratoCell+'</td>'
       + '<td class="nowrap" style="font-size:11px;color:var(--txt2)">'+inc.data+'</td>'
+      + '<td style="vertical-align:middle">'+incStCredBadge+'</td>'
+      + '<td style="vertical-align:middle">'+incStRegBadge+'</td>'
+      + '<td class="nowrap">'+incMetodoCell+'</td>'
+      + '<td class="nowrap">'+incExtincaoCell+'</td>'
       + '</tr>';
   });
-  if (!pag.length) h = '<tr><td colspan="15" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma inconsistência encontrada para este filtro.</td></tr>';
+  if (!pag.length) h = '<tr><td colspan="19" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma inconsistência encontrada para este filtro.</td></tr>';
 
   var tbody = document.getElementById('t-inc-rfs');
   if (tbody) tbody.innerHTML = h;
@@ -6473,7 +6503,8 @@ window.renderizarTabelaPagamentos = function() {
         statusCredito: _scP || 'nao_apropriado',
         metodo: rf.metodoPagamento || nf.metodoPagamento || 'RAD',
         contratoId: rf.contratoId || nf.contratoId || null,
-        statusFlags: rf.statusFlags || []
+        statusFlags: rf.statusFlags || [],
+        metodoExtincao: rf.metodoExtincao || null
       });
     });
   });
@@ -6514,13 +6545,14 @@ window.renderizarTabelaPagamentos = function() {
           : '<span style="color:var(--txt2)">—</span>') + '</td>'
       + '<td style="vertical-align:middle">' + bdg(r.statusCredito) + '</td>'
       + '<td style="vertical-align:middle">' + (r.statusFlags.length ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.statusFlags[0] }) : '<span style="color:var(--txt3);font-size:11px">—</span>') + '</td>'
+      + '<td class="nowrap">' + (r.metodoExtincao ? (function(){ var _pMetExtMap={'Split Payment':'29,158,117','Compensacao':'24,95,165','Ressarcimento':'29,158,117','Transferencia':'139,92,246','RAD':'186,117,23'}; var _pMetExtLbl={'Split Payment':'Split Payment','Compensacao':'Compensação','Ressarcimento':'Ressarcimento','Transferencia':'Transferência','RAD':'RAD'}; var _k=r.metodoExtincao; return '<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+(_pMetExtMap[_k]||'29,158,117')+',.12);color:rgba('+(_pMetExtMap[_k]||'29,158,117')+',1);border:1px solid rgba('+(_pMetExtMap[_k]||'29,158,117')+',.28)">'+(_pMetExtLbl[_k]||_k)+'</span>'; })() : '<span style="color:var(--txt3);font-size:11px">—</span>') + '</td>'
       + '<td class="tc" style="vertical-align:middle">' + detBtn + '</td>'
       + '<td class="nowrap" style="vertical-align:middle;white-space:nowrap">' + act + '</td>'
       + '</tr>';
   });
 
   if (!rows.length) {
-    h = '<tr><td colspan="15" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="16" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;

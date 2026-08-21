@@ -1230,7 +1230,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <th>RF</th><th>NF Vinculada</th><th>Fornecedor / CNPJ</th><th>Contrato</th>
       <th>Tipo Fiscal</th><th>Tipo</th><th>Método</th>
       <th class="r">Valor</th><th>Data RF</th><th>Pagamento</th>
-      <th>St. Crédito</th><th>St. Registro</th><th>Detalhe</th><th>Ação</th>
+      <th>St. Crédito</th><th>St. Registro</th><th>Extinção</th><th>Detalhe</th><th>Ação</th>
     </tr></thead><tbody id="t-impostos"></tbody></table></div></div>
   </div>
 </div>
@@ -3720,6 +3720,9 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
             <div class="sh-fp-field"><label>Prioridade</label><select id="inc-rf-prioridade" onchange="window.incRfFiltrar()"><option value="">Todas</option><option value="critica">Crítica</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option></select></div>
             <div class="sh-fp-field"><label>Origem</label><select id="inc-rf-origem" onchange="window.incRfFiltrar()"><option value="">Todas</option><option value="rf">Via RF</option><option value="df">DF direto</option></select></div>
             <div class="sh-fp-field"><label>Contrato</label><select id="inc-rf-contrato" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="__sem__">Sem contrato</option></select></div>
+            <div class="sh-fp-field"><label>St. Crédito</label><select id="inc-rf-status-cred" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="nao_apropriado">Não Apropriado</option><option value="apropriado">Apropriado</option><option value="utilizado">Utilizado</option><option value="glosado">Glosado</option></select></div>
+            <div class="sh-fp-field"><label>St. Registro</label><select id="inc-rf-status-reg" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="inconsistencia">Inconsistência</option><option value="em_risco">Em risco</option><option value="a_prescrever">A Prescrever</option><option value="vencido">Vencido</option></select></div>
+            <div class="sh-fp-field"><label>Método</label><select id="inc-rf-metodo" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="RAD">RAD</option><option value="Fornecedor">Fornecedor</option></select></div>
           </div>
           <div class="sh-fp-footer">
             <button class="sh-fp-clear" onclick="window.incRfLimparFiltros()">✕ Limpar filtros</button>
@@ -3731,7 +3734,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <!-- Tabela INC -->
       <div class="tcrd">
         <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>Inconsistências</h2><p id="inc-rf-count-sub">— inconsistências · vinculadas a DFs · entrada e saída</p></div></div>
-        <div class="twrap"><table><thead><tr><th>ID</th><th>Documento Fiscal</th><th>Fluxo</th><th>RF</th><th>Tipo Fiscal</th><th>Fornecedor</th><th class="r">Valor Total</th><th class="r">Valor Líq.</th><th class="r">Crédito</th><th>Inconsistência</th><th>Origem</th><th>Status</th><th>Prioridade</th><th>Data</th></tr></thead><tbody id="t-inc-rfs"></tbody></table></div>
+        <div class="twrap"><table><thead><tr><th>ID</th><th>Documento Fiscal</th><th>Fluxo</th><th>RF</th><th>Tipo Fiscal</th><th>Fornecedor</th><th class="r">Valor Total</th><th class="r">Valor Líq.</th><th class="r">Crédito</th><th>Inconsistência</th><th>Origem</th><th>Status</th><th>Prioridade</th><th>Contrato</th><th>Data</th><th>St. Crédito</th><th>St. Registro</th><th>Método</th><th>Extinção</th></tr></thead><tbody id="t-inc-rfs"></tbody></table></div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--border)">
           <button class="btn" id="inc-rf-btn-prev" onclick="window.incRfPaginaAnterior()" style="opacity:0.5;cursor:not-allowed" disabled>← Anterior</button>
           <div style="display:flex;align-items:center;gap:12px">
@@ -4149,12 +4152,12 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
             <thead>
               <tr>
                 <th>ID RF</th>
-                <th>Período</th>
-                <th>Valor CBS</th>
-                <th>Valor IBS</th>
-                <th>Status CAPUR</th>
-                <th>Status CFIN</th>
-                <th>Crédito</th>
+                <th>Tipo Fiscal</th>
+                <th>Data</th>
+                <th class="r">Valor</th>
+                <th>Método</th>
+                <th>St. Crédito</th>
+                <th>St. Registro</th>
               </tr>
             </thead>
             <tbody id="forn-df-detail-rfs"></tbody>
@@ -8188,12 +8191,22 @@ function _gerarRFsDoDF(d){
     var cf=c==='Conciliado'?cfin[i%cfin.length]:'—';
     var cred=c==='Conciliado'&&cf==='Conciliado'?'Liberado':c==='Divergente'?'Bloqueado':'Pendente';
     var f=window._fornAtual;
+    var _rfCbs=Math.round(d.cbs*(0.95+i*0.03));
+    var _rfIbs=Math.round(d.ibs*(0.95+i*0.03));
+    var _rfTipoFiscal=i%2===0?'CBS':'IBS';
+    var _rfStatusCred=cred==='Liberado'?'apropriado':cred==='Bloqueado'?'glosado':'nao_apropriado';
+    var _rfStatusReg=c==='Divergente'?'inconsistencia':cf==='Pendente'?'em_risco':null;
     rfs.push({
       id:'RF-'+(f?f.id:'X')+String(10000+idx*10+i),
       periodo:'Abr/2026',
-      cbs:Math.round(d.cbs*(0.95+i*0.03)),
-      ibs:Math.round(d.ibs*(0.95+i*0.03)),
-      capur:c, cfin:cf, cred:cred
+      cbs:_rfCbs,
+      ibs:_rfIbs,
+      capur:c, cfin:cf, cred:cred,
+      tipoFiscal:_rfTipoFiscal,
+      valor:_rfCbs+_rfIbs,
+      metodo:'RAD',
+      statusCredito:_rfStatusCred,
+      statusRegistro:_rfStatusReg
     });
   }
   return rfs;
@@ -8242,15 +8255,18 @@ function abrirDetalheDF(dfId){
     'Divergente':'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">Divergente</span>',
     '—':'<span style="color:var(--txt3)">—</span>'};
   var rfs=_gerarRFsDoDF(d);
+  var _dfRfStCredMap={nao_apropriado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(167,168,170,.12);color:var(--txt2)">Não Apropriado</span>',apropriado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">Apropriado</span>',utilizado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,107,90,.12);color:var(--teal)">Utilizado</span>',glosado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">Glosado</span>'};
+  var _dfRfStRegMap={inconsistencia:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">Inconsistência</span>',em_risco:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(185,122,16,.12);color:var(--amber)">Em risco</span>',a_prescrever:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(186,117,23,.12);color:var(--amber)">A Prescrever</span>',vencido:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(165,45,57,.12);color:var(--red)">Vencido</span>'};
   document.getElementById('forn-df-detail-rfs').innerHTML=rfs.map(function(r){
+    var tfColor=r.tipoFiscal==='CBS'?'var(--amber)':'var(--blue)';
     return '<tr>'+
       '<td style="font-size:11px;color:var(--teal);font-weight:600">'+r.id+'</td>'+
+      '<td><span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:'+tfColor+'">'+r.tipoFiscal+'</span></td>'+
       '<td style="font-size:12px;color:var(--txt2)">'+r.periodo+'</td>'+
-      '<td style="font-size:12px;font-family:var(--font-mono);color:var(--amber)">'+ff(r.cbs)+'</td>'+
-      '<td style="font-size:12px;font-family:var(--font-mono);color:var(--blue)">'+ff(r.ibs)+'</td>'+
-      '<td>'+(capurChip[r.capur]||capurChip['—'])+'</td>'+
-      '<td>'+(capurChip[r.cfin]||capurChip['—'])+'</td>'+
-      '<td>'+(credChip[r.cred]||credChip['—'])+'</td>'+
+      '<td style="font-size:12px;font-family:var(--font-mono);font-weight:600;text-align:right">'+ff(r.valor)+'</td>'+
+      '<td><span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:20px;background:rgba(var(--teal-alt-rgb),.08);color:var(--teal);border:1px solid rgba(var(--teal-alt-rgb),.25)">RAD</span></td>'+
+      '<td>'+(_dfRfStCredMap[r.statusCredito]||'<span style="color:var(--txt3)">—</span>')+'</td>'+
+      '<td>'+(_dfRfStRegMap[r.statusRegistro]||'<span style="color:var(--txt3)">—</span>')+'</td>'+
     '</tr>';
   }).join('');
   // Ações
