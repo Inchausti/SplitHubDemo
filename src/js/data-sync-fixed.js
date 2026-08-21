@@ -798,7 +798,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + rfsHtml
     + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
-    + window._incRenderVinculadasHtml(r._inconsistencias && r._inconsistencias.length ? r._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return i.nfNumero === r.numero || i.dfNum === ((r.tipoDF||'NF-e')+' '+r.numero); }))
+    + window._incRenderVinculadasHtml(r._inconsistencias && r._inconsistencias.length ? r._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return String(i.nfNumero) === String(r.numero) || i.dfNum === ((r.tipoDF||'NF-e')+' '+r.numero); }))
     + '</div>'
 
     // Right panel: timeline
@@ -1074,10 +1074,9 @@ window.abrirDetalheRF = function(rfId) {
     + (rf.dataPagamento && rf.dataPagamento !== '—' ? DR('Data Pagamento', rf.dataPagamento) : '')
     + (rfSt === 'utilizado' && rf.metodoExtincao ? DR('Método Extinção', rf.metodoExtincao, 'var(--p-teal)') : '')
     + (rfSt === 'utilizado' && rf.dataExtincao ? DR('Data Extinção', rf.dataExtincao) : '')
-    + (rf.inconsistencia ? DR('Inconsistência', rf.inconsistencia, 'var(--p-red)') : '')
     + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
-    + window._incRenderVinculadasHtml(rf._inconsistencias && rf._inconsistencias.length ? rf._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return i.rfId === rf.id; }))
+    + window._incRenderVinculadasHtml(rf._inconsistencias && rf._inconsistencias.length ? rf._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return i.rfId === rf.id || (i.nfNumero && String(i.nfNumero) === String((window._rfIndex&&window._rfIndex[rf.id]||{}).nf&&(window._rfIndex[rf.id].nf.numero))); }))
     + '</div>'
 
     // Right panel: timeline
@@ -3281,27 +3280,31 @@ window._sincronizarInconsistencias = function() {
   var nova = [];
   var seq = 1;
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
-    var rfInc = (nf.registrosFiscais || []).find(function(rf) { return (rf.statusRegistro || rf.status) === 'inconsistencia'; });
-    if (!rfInc) return;
-    var rfTipo   = rfInc.inconsistencia || '';
-    var incTipo  = _rfTipoToInc[rfTipo] || 'nf_erro';
-    var nfLabel  = (nf.tipoDF || 'NF-e') + ' ' + nf.numero;
-    var prev     = existMap[nfLabel];
-    var parts    = (nf.data || '').split('-');
-    var dataFmt  = parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : (nf.data || '');
-    nova.push({
-      id:         prev ? prev.id : 'INC-' + String(seq).padStart(4, '0'),
-      tipo:       incTipo,
-      nf:         nfLabel,
-      forn:       nf.entidade || '',
-      cnpj:       nf.cnpj || '',
-      data:       dataFmt,
-      valorNF:    nf.valorTotal || 0,
-      severidade: _incTipoSev[incTipo] || 'media',
-      status:     prev ? prev.status : 'aberta',
-      detalhe:    rfTipo || 'Inconsistência identificada'
+    var rfsInc = (nf.registrosFiscais || []).filter(function(rf) { return (rf.statusRegistro || rf.status) === 'inconsistencia'; });
+    if (!rfsInc.length) return;
+    var nfLabel = (nf.tipoDF || 'NF-e') + ' ' + nf.numero;
+    var parts   = (nf.data || '').split('-');
+    var dataFmt = parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : (nf.data || '');
+    rfsInc.forEach(function(rfInc) {
+      var rfTipo  = rfInc.inconsistencia || '';
+      var incTipo = _rfTipoToInc[rfTipo] || 'nf_erro';
+      var cardKey = nfLabel + '_' + (rfInc.id || seq);
+      var prev    = existMap[cardKey] || existMap[nfLabel];
+      nova.push({
+        id:         prev ? prev.id : 'INC-' + String(seq).padStart(4, '0'),
+        tipo:       incTipo,
+        nf:         nfLabel,
+        rfId:       rfInc.id || null,
+        forn:       nf.entidade || '',
+        cnpj:       nf.cnpj || '',
+        data:       dataFmt,
+        valorNF:    nf.valorTotal || 0,
+        severidade: _incTipoSev[incTipo] || 'media',
+        status:     prev ? prev.status : 'aberta',
+        detalhe:    rfTipo || 'Inconsistência identificada'
+      });
+      seq++;
     });
-    seq++;
   });
   if (nova.length > 0) window.inconsistencias = nova;
 };
@@ -3421,6 +3424,7 @@ window.renderizarRFsInconsistencias = function() {
     lista.push({
       id:        'ING-' + d.id,
       rfId:      null,
+      nfId:      d.nfNumero || null,
       tf:        '—', tipoNF: 'ingestao', etapa: 'Ingestão',
       nfVinc:    d.tipo + ' ' + (d.chave ? d.chave.slice(0,8) + '…' : '—'),
       forn:      d.emitente || '—', cnpj: d.cnpj || '—',
