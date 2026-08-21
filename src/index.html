@@ -4813,20 +4813,27 @@ function creditosRenderKPIs(){
 var dashCnpjSelecionados=[]; // vazio = todos os CNPJs
 function dashRenderCreditKPIs(){
   var filtro=dashCnpjSelecionados;
-  var lista=creditos;
-  if(filtro.length){
-    // expand selected CNPJs to full grupo so filiais aggregate correctly
-    var gids={};
-    var allForn=window._fornecedores_all||fornecedores;
-    allForn.filter(function(f){return filtro.indexOf(f.cnpj)!==-1;}).forEach(function(f){gids[f.grupoId]=true;});
-    var nomes=allForn.filter(function(f){return gids[f.grupoId];}).map(function(f){return f.nome;});
-    lista=creditos.filter(function(r){return nomes.indexOf(r.forn)!==-1;});
-  }
   var aprop=0,aguard=0,risco=0;
-  lista.forEach(function(r){
-    if(r.status==="confirmado")aprop+=r.cred;
-    else if(r.status==="aguardando")aguard+=r.cred;
-    else if(r.status==="em_risco")risco+=r.cred;
+  var allForn=window._fornecedores_all||fornecedores;
+  var nomesPermitidos=null;
+  if(filtro.length){
+    var gids={};
+    allForn.filter(function(f){return filtro.indexOf(f.cnpj)!==-1;}).forEach(function(f){gids[f.grupoId]=true;});
+    nomesPermitidos=allForn.filter(function(f){return gids[f.grupoId];}).map(function(f){return f.nome;});
+  }
+  (window.nfListaFiltradaGlobal||[]).forEach(function(nf){
+    if(nf.tipo!=='entrada')return;
+    if(nomesPermitidos&&nomesPermitidos.indexOf(nf.entidade)===-1)return;
+    (nf.registrosFiscais||[]).forEach(function(rf){
+      var v=rf.valor||0;
+      var sc=rf.statusCredito||rf.status||'';
+      var sr=rf.statusRegistro||null;
+      if(sc==='apropriado'||sc==='utilizado')aprop+=v;
+      else if(sc==='nao_apropriado'){
+        if(sr==='vencido'||sr==='em_risco'||sr==='a_prescrever'||sr==='inconsistencia')risco+=v;
+        else aguard+=v;
+      }
+    });
   });
   var set=function(id,val){var el=document.getElementById(id);if(el)el.textContent=val;};
   set("dash-cred-aprop",fmM(aprop));
@@ -6073,18 +6080,23 @@ function nfRenderLista(){
       var ibsSaida=Math.floor(valorSaidaLiq*0.10);
       var valorSaidaBruto=valorSaidaLiq+cbsSaida+ibsSaida;
       var statusDeb=statusDebitos[(i-1)%statusDebitos.length];
-      var incTipoSai=statusDeb==='inconsistencia'?rfIncTiposSai[(i-1)%rfIncTiposSai.length]:null;
-
       var nfSaidaNum=String(i+500000).padStart(6,'0');
       var _tipoDF_sai=tiposDFSaida[((_hD>>4)%tiposDFSaida.length)];
       var _mesStr=String(mes).padStart(2,'0');
       var _diaStr=String(dia).padStart(2,'0');
       var _dataSai='2026-'+_mesStr+'-'+_diaStr;
       var _cnpjSai='12.345.678/000'+String(i%100).padStart(2,'0');
-      var _metIBS=statusDeb==='extinto'?metodosSaida[(i-1)%metodosSaida.length]:'—';
-      var _metCBS=statusDeb==='extinto'?metodosSaida[i%metodosSaida.length]:'—';
+      // Métodos atribuídos também a inconsistências (para derivar tipo de inconsistência)
+      var _metIBS=(statusDeb==='extinto'||statusDeb==='inconsistencia')?metodosSaida[(i-1)%metodosSaida.length]:'—';
+      var _metCBS=(statusDeb==='extinto'||statusDeb==='inconsistencia')?metodosSaida[i%metodosSaida.length]:'—';
       var _extDay=String(Math.min(dia+5,diasNoMes[mesIdx])).padStart(2,'0');
       var _dtExt=statusDeb==='extinto'?(_extDay+'/'+_mesStr+'/2026 09:00'):'—';
+      // dataPagamento: apenas extinto via RAD (split payment realizado)
+      var _dpIBS=(statusDeb==='extinto'&&_metIBS==='RAD')?_dtExt:undefined;
+      var _dpCBS=(statusDeb==='extinto'&&_metCBS==='RAD')?_dtExt:undefined;
+      // Tipo de inconsistência: RAD sem comprovante → 'Sem Comprovante'; outros → ciclo existente
+      var incTipoSaiIBS=statusDeb==='inconsistencia'?(_metIBS==='RAD'?'Sem Comprovante':rfIncTiposSai[(i-1)%rfIncTiposSai.length]):null;
+      var incTipoSaiCBS=statusDeb==='inconsistencia'?(_metCBS==='RAD'?'Sem Comprovante':rfIncTiposSai[i%rfIncTiposSai.length]):null;
 
       var nfSaidaRecord={
         numero:nfSaidaNum,tipo:'saida',subTipo:'nf',
@@ -6104,8 +6116,8 @@ function nfRenderLista(){
         tipo:'saida',subTipo:'fiscal',tipoFiscal:'ibs',
         nfVinculada:nfSaidaNum,
         entidade:clientes[i%clientes.length],cnpj:_cnpjSai,
-        valor:ibsSaida,status:statusDeb,inconsistencia:incTipoSai,
-        dataExtincao:_dtExt,metodoExtincao:_metIBS,contratoId:null,
+        valor:ibsSaida,status:statusDeb,inconsistencia:incTipoSaiIBS,
+        dataExtincao:_dtExt,metodoExtincao:_metIBS,dataPagamento:_dpIBS,contratoId:null,
         data:_dataSai,valorTotalNF:valorSaidaBruto,valorLiquidoNF:valorSaidaLiq
       });
 
@@ -6114,8 +6126,8 @@ function nfRenderLista(){
         tipo:'saida',subTipo:'fiscal',tipoFiscal:'cbs',
         nfVinculada:nfSaidaNum,
         entidade:clientes[i%clientes.length],cnpj:_cnpjSai,
-        valor:cbsSaida,status:statusDeb,inconsistencia:incTipoSai,
-        dataExtincao:_dtExt,metodoExtincao:_metCBS,contratoId:null,
+        valor:cbsSaida,status:statusDeb,inconsistencia:incTipoSaiCBS,
+        dataExtincao:_dtExt,metodoExtincao:_metCBS,dataPagamento:_dpCBS,contratoId:null,
         data:_dataSai,valorTotalNF:valorSaidaBruto,valorLiquidoNF:valorSaidaLiq
       });
 
@@ -7233,24 +7245,10 @@ function svgBar(id,datasets,labels,H){
 }
 
 function buildCharts(){
-  var M=['Out','Nov','Dez','Jan','Fev','Mar','Abr'];
-  svgLine('cCreditos',[
-    {data:[38.4,42.7,39.1,51.2,48.9,55.6,52.3],color:PALETTE.teal,fill:true,dots:true,label:'Apropriados'},
-    {data:[12.1,9.8,14.3,11.2,8.7,13.4,10.9],color:PALETTE.amber,dash:true,label:'A Apropriar'},
-    {data:[3.2,2.1,4.5,2.8,1.9,3.1,2.4],color:PALETTE.red,dots:true,w:1.5,label:'A Vencer · Curto Prazo'}
-  ],M,200);
-  svgBar('cPagamentos',[
-    {data:[18.2,19.8,17.4,22.1,21.3,24.6,23.8],color:PALETTE.teal,label:'Via RAD'},
-    {data:[12.7,13.1,11.9,15.4,14.8,17.2,16.9],color:PALETTE.blue,label:'Via Fornecedor'}
-  ],M,200);
-  svgLine('cComposicao',[
-    {data:[38.4,42.7,39.1,51.2,48.9,55.6,52.3],color:PALETTE.teal,fill:true,dots:true,label:'Apropriados'},
-    {data:[12.1,9.8,14.3,11.2,8.7,13.4,10.9],color:PALETTE.blue,dash:true,label:'Condicionado'},
-    {data:[3.2,2.1,4.5,2.8,1.9,3.1,2.4],color:PALETTE.red,dots:true,w:1.5,label:'Em Risco'}
-  ],M,220);
+  // Gráficos derivados de nfListaFiltradaGlobal via atualizarDashboard
+  try { if (window.atualizarDashboard) window.atualizarDashboard(); } catch(e) {}
   renderRadPrazoChart();
   window.renderVencimentoCalendar();
-  // Módulo inteligência — sincroniza com dados globais reais
   try { if (window.atualizarInteligencia) window.atualizarInteligencia(); } catch(e) {}
 }
 
