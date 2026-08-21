@@ -176,9 +176,18 @@ nav{padding:10px;flex:1;overflow-y:auto}
 .perfil-btn:hover:not(.active){background:rgba(255,255,255,.1);color:rgba(255,255,255,.8)}
 .perfil-btn.active{background:#fff;color:#0B2920;box-shadow:0 1px 4px rgba(0,0,0,.3)}
 [data-perfil="cliente"] #subnav-admin-produto{display:none}
-[data-perfil="fornecedor"] #nav-analytics-btn,[data-perfil="fornecedor"] #nav-sub-group-analytics,
-[data-perfil="fornecedor"] #nav-admin-btn,[data-perfil="fornecedor"] #nav-sub-group-admin,
-[data-perfil="fornecedor"] #nav-inconsist-btn,[data-perfil="fornecedor"] #nav-sub-group-inconsist{display:none}
+[data-perfil="fornecedor"] #nav-dashboard-btn,
+[data-perfil="fornecedor"] #nav-creditos-btn,
+[data-perfil="fornecedor"] #nav-debitos-btn,
+[data-perfil="fornecedor"] #nav-pagamentos-btn,
+[data-perfil="fornecedor"] #nav-conciliacao-btn,
+[data-perfil="fornecedor"] #nav-inconsist-btn,
+[data-perfil="fornecedor"] #nav-sub-group-inconsist,
+[data-perfil="fornecedor"] #nav-analytics-btn,
+[data-perfil="fornecedor"] #nav-sub-group-analytics,
+[data-perfil="fornecedor"] #nav-admin-btn,
+[data-perfil="fornecedor"] #nav-sub-group-admin{display:none}
+[data-perfil="fornecedor"] #nav-fornecedor-btn{display:flex!important}
 /* ── Modal fornecedor seletor ── */
 #forn-sel-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1200;align-items:center;justify-content:center}
 #forn-sel-overlay.open{display:flex}
@@ -804,12 +813,12 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     </svg>
   </div>
   <nav>
-    <button class="nav-btn active" title="Início" onclick="showView('dashboard',this)"><span class="nav-icon">◉</span><span class="nav-label"> Início</span></button>
+    <button class="nav-btn active" id="nav-dashboard-btn" title="Início" onclick="showView('dashboard',this)"><span class="nav-icon">◉</span><span class="nav-label"> Início</span></button>
     <button class="nav-btn" id="nav-fornecedor-btn" title="Portal Fornecedor" onclick="showView('fornecedor',this)" style="display:none"><span class="nav-icon">🏭</span><span class="nav-label"> Portal Fornecedor</span></button>
-    <button class="nav-btn" title="Crédito" onclick="showView('creditos',this)"><span class="nav-icon">◈</span><span class="nav-label"> Crédito</span></button>
-    <button class="nav-btn" title="Débito" onclick="showView('debitos',this)"><span class="nav-icon">◇</span><span class="nav-label"> Débito</span></button>
-    <button class="nav-btn" title="Pagamentos" onclick="showView('pagamentos',this)"><span class="nav-icon">⊟</span><span class="nav-label"> Pagamentos</span></button>
-    <button class="nav-btn" title="Conciliação" onclick="showView('conciliacao',this)"><span class="nav-icon">⋈</span><span class="nav-label"> Conciliação</span></button>
+    <button class="nav-btn" id="nav-creditos-btn" title="Crédito" onclick="showView('creditos',this)"><span class="nav-icon">◈</span><span class="nav-label"> Crédito</span></button>
+    <button class="nav-btn" id="nav-debitos-btn" title="Débito" onclick="showView('debitos',this)"><span class="nav-icon">◇</span><span class="nav-label"> Débito</span></button>
+    <button class="nav-btn" id="nav-pagamentos-btn" title="Pagamentos" onclick="showView('pagamentos',this)"><span class="nav-icon">⊟</span><span class="nav-label"> Pagamentos</span></button>
+    <button class="nav-btn" id="nav-conciliacao-btn" title="Conciliação" onclick="showView('conciliacao',this)"><span class="nav-icon">⋈</span><span class="nav-label"> Conciliação</span></button>
     <button class="nav-btn" id="nav-inconsist-btn" title="Inconsistência" onclick="showView('inconsistencias',this)"><span class="nav-icon">⚠</span><span class="nav-label"> Inconsistência</span></button>
     <button class="nav-btn" id="nav-analytics-btn" title="Analytics" onclick="showView('inteligencia',this)"><span class="nav-icon">◆</span><span class="nav-label"> Analytics</span></button>
     <button class="nav-btn" id="nav-admin-btn" title="Configurações" onclick="showAdminSub('organizacao',document.getElementById('subnav-admin-organizacao'))"><span class="nav-icon">⚙</span><span class="nav-label"> Configurações</span></button>
@@ -3645,16 +3654,19 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
 
 <!-- VIEW: FORNECEDOR -->
 <div id="view-fornecedor" class="view">
-  <!-- Banner -->
-  <div class="forn-banner" id="forn-banner">
-    <div class="forn-banner-av" id="forn-banner-av">—</div>
-    <div class="forn-banner-info">
-      <div class="forn-banner-nome" id="forn-banner-nome">—</div>
-      <div class="forn-banner-cnpj" id="forn-banner-cnpj">—</div>
+  <!-- Cabeçalho padrão pg-hdr -->
+  <div class="pg-hdr" id="forn-banner">
+    <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0">
+      <div class="forn-banner-av" id="forn-banner-av" style="width:42px;height:42px;border-radius:10px;background:rgba(29,158,117,.15);border:1px solid rgba(29,158,117,.25);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--teal);flex-shrink:0">—</div>
+      <div>
+        <div class="pg-title" id="forn-banner-nome" style="margin-bottom:2px">—</div>
+        <div class="pg-sub"><span class="mono" id="forn-banner-cnpj">—</span> · Portal do Fornecedor</div>
+      </div>
     </div>
-    <div class="forn-score-wrap">
+    <!-- Score donut integrado ao cabeçalho -->
+    <div class="forn-score-wrap" style="display:flex;align-items:center;gap:10px;flex-shrink:0">
       <div class="forn-score-ring">
-        <svg width="52" height="52" viewBox="0 0 52 52">
+        <svg width="48" height="48" viewBox="0 0 52 52">
           <circle cx="26" cy="26" r="21" fill="none" stroke="var(--border)" stroke-width="5"/>
           <circle cx="26" cy="26" r="21" fill="none" stroke="var(--teal)" stroke-width="5"
             stroke-linecap="round" id="forn-score-arc"
@@ -3662,54 +3674,56 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
         </svg>
         <div class="forn-score-val" id="forn-score-val">—</div>
       </div>
-      <div style="font-size:11px;color:var(--txt3)">Score<br>junto à Induspar</div>
+      <div style="font-size:11px;color:var(--txt3);line-height:1.4">Score<br><span style="color:var(--txt2);font-weight:600">de Risco</span></div>
     </div>
-    <div class="forn-banner-actions">
-      <button class="btn" onclick="abrirSeletorFornecedor()" style="font-size:11px;padding:6px 12px">Trocar fornecedor</button>
+    <div class="hdr-act">
+      <button class="btn" onclick="abrirSeletorFornecedor()">Trocar fornecedor</button>
     </div>
   </div>
 
-  <!-- Sub-nav -->
-  <div class="forn-tabs" id="forn-subnav">
-    <button class="forn-tab active" id="forn-subnav-dashboard" onclick="fornShowSub('dashboard',this)">Dashboard</button>
-    <button class="forn-tab" id="forn-subnav-listagem" onclick="fornShowSub('listagem',this)">Portal do Fornecedor</button>
+  <!-- Sub-nav padrão stabs -->
+  <div class="stabs" id="forn-subnav" style="margin-bottom:20px">
+    <button class="stab active" id="forn-subnav-dashboard" onclick="fornShowSub('dashboard',this)">Dashboard</button>
+    <button class="stab" id="forn-subnav-listagem" onclick="fornShowSub('listagem',this)">Documentos Fiscais</button>
   </div>
 
   <!-- Sub: Dashboard -->
   <div id="forn-sub-dashboard" class="forn-tab-content active">
     <!-- Cabeçalho de contexto -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;padding-bottom:16px;border-bottom:1px solid var(--border)">
       <div>
-        <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Relação bilateral</div>
-        <div style="font-size:14px;font-weight:700;color:var(--txt1)" id="forn-dash-relacao-titulo">— × Induspar Tecnologia S.A.</div>
-        <div style="font-size:11px;color:var(--txt3);margin-top:2px">Documentos Fiscais emitidos pelo fornecedor para o adquirente · Período: Abr/2026</div>
+        <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Relação Bilateral</div>
+        <div style="font-size:15px;font-weight:700;color:var(--txt1);margin-bottom:3px" id="forn-dash-relacao-titulo">— × Induspar Tecnologia S.A.</div>
+        <div style="font-size:12px;color:var(--txt3)">Documentos Fiscais emitidos pelo fornecedor para o adquirente · Período: Abr/2026</div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(73,197,177,.1);border:1px solid rgba(73,197,177,.25);color:var(--teal)">CNPJ adquirente: 16.557.374/0001-89</span>
-      </div>
+      <span style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;background:rgba(29,158,117,.1);border:1px solid rgba(29,158,117,.25);color:var(--teal);white-space:nowrap">CNPJ adquirente: 16.557.374/0001-89</span>
     </div>
     <!-- KPIs -->
-    <div id="forn-dash-kpis" class="forn-kpi-grid"></div>
+    <div id="forn-dash-kpis" class="kgrid" style="margin-bottom:16px"></div>
     <!-- Gráficos linha 1: status + tipo -->
     <div class="forn-dash-charts">
       <div class="ccrd">
         <div class="ctitle">Status dos DFs emitidos</div>
-        <div id="forn-dash-status" style="margin-top:12px;display:flex;flex-direction:column;gap:0"></div>
+        <div class="csub">Distribuição por situação do documento</div>
+        <div id="forn-dash-status" style="margin-top:14px;display:flex;flex-direction:column;gap:0"></div>
       </div>
       <div class="ccrd">
         <div class="ctitle">Tipo de documento fiscal</div>
-        <div id="forn-dash-tipos" style="margin-top:12px;display:flex;flex-direction:column;gap:0"></div>
+        <div class="csub">NF-e, CT-e, NFS-e, NFC-e</div>
+        <div id="forn-dash-tipos" style="margin-top:14px;display:flex;flex-direction:column;gap:0"></div>
       </div>
     </div>
     <!-- Gráficos linha 2: split payment CBS/IBS + conciliação -->
     <div class="forn-dash-charts">
       <div class="ccrd">
-        <div class="ctitle">Split payment retido (CBS × IBS)</div>
-        <div id="forn-dash-split" style="margin-top:12px"></div>
+        <div class="ctitle">Split payment retido</div>
+        <div class="csub">CBS × IBS · valores em R$</div>
+        <div id="forn-dash-split" style="margin-top:14px"></div>
       </div>
       <div class="ccrd">
-        <div class="ctitle">Status de conciliação dos RFs</div>
-        <div id="forn-dash-conc" style="margin-top:12px;display:flex;flex-direction:column;gap:0"></div>
+        <div class="ctitle">Conciliação dos RFs</div>
+        <div class="csub">Status por Registro Fiscal vinculado</div>
+        <div id="forn-dash-conc" style="margin-top:14px;display:flex;flex-direction:column;gap:0"></div>
       </div>
     </div>
   </div>
@@ -3792,8 +3806,8 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       </div>
     </div>
     <div class="forn-modal-foot">
-      <button class="btn-cancel" onclick="fecharModal('forn-liq-overlay')">Cancelar</button>
-      <button class="btn-confirm" onclick="confirmarLiquidacao()">Confirmar liquidação</button>
+      <button class="btn" onclick="fecharModal('forn-liq-overlay')">Cancelar</button>
+      <button class="btn btn-t" onclick="confirmarLiquidacao()">Confirmar liquidação</button>
     </div>
   </div>
 </div>
@@ -3833,8 +3847,8 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       </div>
     </div>
     <div class="forn-modal-foot">
-      <button class="btn-cancel" onclick="fecharModal('forn-cont-overlay')">Cancelar</button>
-      <button class="btn-danger" onclick="confirmarContestacao()">Enviar contestação</button>
+      <button class="btn" onclick="fecharModal('forn-cont-overlay')">Cancelar</button>
+      <button class="btn" style="background:var(--red);border-color:var(--red);color:#fff" onclick="confirmarContestacao()">Enviar contestação</button>
     </div>
   </div>
 </div>
@@ -3851,8 +3865,8 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <textarea id="forn-comt-novo" placeholder="Escreva um comentário para a equipe da Induspar Tecnologia…" rows="3"></textarea>
     </div>
     <div class="forn-modal-foot">
-      <button class="btn-cancel" onclick="fecharModal('forn-comt-overlay')">Fechar</button>
-      <button class="btn-confirm" onclick="enviarComentario()">Enviar comentário</button>
+      <button class="btn" onclick="fecharModal('forn-comt-overlay')">Fechar</button>
+      <button class="btn btn-t" onclick="enviarComentario()">Enviar comentário</button>
     </div>
   </div>
 </div>
@@ -7423,10 +7437,10 @@ function _renderFornDashboard(){
     {l:'Total split payment',v:ff(totalSplit),suf:'retido pela inst. financeira',c:'#7C3AED'},
     {l:'Valor líquido ao fornecedor',v:ff(totalValor-totalSplit),suf:'após retenção split',c:'var(--green)'}
   ].map(function(k){
-    return '<div class="ccrd" style="border-top:3px solid '+k.c+';margin:0">'+
-      '<div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">'+k.l+'</div>'+
-      '<div style="font-size:18px;font-weight:800;color:'+k.c+';font-family:var(--font-mono);word-break:break-word">'+k.v+'</div>'+
-      '<div style="font-size:10px;color:var(--txt3);margin-top:3px">'+k.suf+'</div>'+
+    return '<div class="kcard" style="border-top:2px solid '+k.c+'">'+
+      '<div class="klbl">'+k.l+'</div>'+
+      '<div class="kval" style="color:'+k.c+';font-size:18px">'+k.v+'</div>'+
+      '<div class="ksub">'+k.suf+'</div>'+
     '</div>';
   }).join('');
 
