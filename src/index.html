@@ -3786,24 +3786,32 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
         <option value="contestado">Contestado</option>
       </select>
     </div>
+    <!-- Barra de ações em lote -->
+    <div id="forn-df-sel-bar" style="display:none;align-items:center;gap:10px;padding:8px 14px;background:rgba(73,197,177,.08);border:1px solid rgba(73,197,177,.25);border-radius:7px;margin-bottom:10px">
+      <span id="forn-df-sel-count" style="font-size:12px;font-weight:600;color:var(--teal)"></span>
+      <div style="flex:1"></div>
+      <button class="btn" style="font-size:11px;padding:4px 10px" onclick="fornDFAcaoLote('exportar')">Exportar CSV</button>
+      <button class="btn" style="font-size:11px;padding:4px 10px" onclick="fornDFAcaoLote('chat')">Chat</button>
+      <button class="btn" style="font-size:11px;padding:4px 10px;border-color:var(--txt3);color:var(--txt3)" onclick="fornDFSelLimpar()">Limpar seleção</button>
+    </div>
     <div class="tcrd">
       <div class="twrap">
         <table>
           <thead>
             <tr>
+              <th style="width:32px"><input type="checkbox" id="forn-df-sel-all" onchange="fornDFSelAll(this.checked)" title="Selecionar todos"></th>
               <th>Número DF</th>
               <th>Tipo</th>
               <th>Emissão</th>
-              <th>Chave de Acesso</th>
               <th>Valor Total</th>
               <th>CBS</th>
               <th>IBS</th>
               <th>Total Split</th>
               <th>Valor Líquido</th>
               <th>Status</th>
-              <th>Status Crédito</th>
-              <th>Status Registro</th>
-              <th>Ação</th>
+              <th>Crédito</th>
+              <th>Registro</th>
+              <th style="width:120px">Ações</th>
             </tr>
           </thead>
           <tbody id="forn-df-tbody"></tbody>
@@ -7941,12 +7949,12 @@ function _renderFornDFRows(dfs){
     var capurStatuses=rfs.map(function(r){return r.capur;});
     var capurStatus=capurStatuses.indexOf('Divergente')>=0?'Divergente':capurStatuses.indexOf('Pendente')>=0?'Pendente':'Conciliado';
     // Chave truncada
-    var chaveCurta=d.chave.substring(0,12)+'…'+d.chave.slice(-4);
+    var contestStatus=window._fornContestacoes&&window._fornContestacoes[d.id]?window._fornContestacoes[d.id].status:null;
     return '<tr>'+
-      '<td style="font-size:11px;color:var(--teal);font-weight:600">'+d.numero+'</td>'+
+      '<td style="width:32px"><input type="checkbox" class="forn-df-sel" data-id="'+d.id+'" onchange="fornDFSelChange()"></td>'+
+      '<td style="font-size:11px;color:var(--teal);font-weight:600;white-space:nowrap" title="Chave: '+d.chave+'">'+d.numero+'</td>'+
       '<td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--card);border:1px solid var(--border)">'+d.tipo+'</span></td>'+
       '<td style="font-size:12px;color:var(--txt2)">'+d.emissao+'</td>'+
-      '<td style="font-size:10px;font-family:var(--font-mono);color:var(--txt3)" title="'+d.chave+'">'+chaveCurta+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono)">'+ff(d.valor)+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--amber)">'+ff(d.cbs)+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--blue)">'+ff(d.ibs)+'</td>'+
@@ -7955,19 +7963,60 @@ function _renderFornDFRows(dfs){
       '<td>'+(_statusChip[d.status]||_statusChip.pendente)+'</td>'+
       '<td>'+(_credChip[credStatus]||_credChip.Pendente)+'</td>'+
       '<td>'+(_capurChip[capurStatus]||_capurChip.Pendente)+'</td>'+
-      '<td><div style="display:flex;gap:4px;flex-wrap:nowrap;align-items:center">'+
-        '<button class="btn" style="font-size:10px;padding:3px 8px" onclick="abrirDetalheDF(\''+d.id+'\')" title="Ver detalhes">Ver</button>'+
-        (d.rad?'<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--teal);color:var(--teal)" onclick="abrirRADModal(\''+d.id+'\')" title="Comprovantes de pagamento IBS e CBS">Comprovantes</button>':'')+
-        (d.vencido&&d.status!=='contestado'?
-          '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--red);color:var(--red)" onclick="abrirContestacao(\''+d.id+'\')" title="Abrir ou acompanhar contestação">Contestar</button>'
-        :'')+
-        (d.status==='contestado'?
-          '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--amber);color:var(--amber)" onclick="abrirContestacao(\''+d.id+'\')" title="Acompanhar contestação">Contestação</button>'
-        :'')+
-        '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--txt3);color:var(--txt3)" onclick="abrirComentarios(\''+d.id+'\')" title="Chat com adquirente'+(d.comentarios?' ('+d.comentarios+')':'')+'">'+(d.comentarios?'💬 '+d.comentarios:'💬')+'</button>'+
+      '<td><div style="display:flex;gap:3px;flex-wrap:nowrap;align-items:center">'+
+        '<button class="btn" style="font-size:10px;padding:3px 8px" onclick="abrirDetalheDF(\''+d.id+'\')" title="Ver detalhes do DF">Ver</button>'+
+        (d.rad?'<button class="btn" style="font-size:10px;padding:3px 7px;border-color:var(--teal);color:var(--teal)" onclick="abrirRADModal(\''+d.id+'\')" title="Comprovantes PIX IBS+CBS">PIX</button>':'')+
+        (d.vencido&&d.status!=='contestado'&&!contestStatus?'<button class="btn" style="font-size:10px;padding:3px 7px;border-color:var(--red);color:var(--red)" onclick="abrirContestacao(\''+d.id+'\')" title="Contestar DF vencido">Contestar</button>':'')+
+        (d.status==='contestado'||contestStatus?'<button class="btn" style="font-size:10px;padding:3px 7px;border-color:var(--amber);color:var(--amber)" onclick="abrirContestacao(\''+d.id+'\')" title="Acompanhar contestação" >⚑</button>':'')+
+        '<button class="btn" style="font-size:10px;padding:3px 7px;border-color:var(--txt3);color:var(--txt3)" onclick="abrirComentarios(\''+d.id+'\')" title="Chat com adquirente'+(d.comentarios?' ('+d.comentarios+')':'')+'">'+(d.comentarios?'💬'+d.comentarios:'💬')+'</button>'+
       '</div></td>'+
     '</tr>';
   }).join('');
+}
+
+// Seleção de DFs
+window._fornDFSelecionados = [];
+function fornDFSelAll(checked){
+  var cbs=document.querySelectorAll('.forn-df-sel');
+  window._fornDFSelecionados=[];
+  cbs.forEach(function(cb){ cb.checked=checked; if(checked) window._fornDFSelecionados.push(cb.dataset.id); });
+  fornDFAtualizarBarraSel();
+}
+function fornDFSelChange(){
+  window._fornDFSelecionados=[];
+  document.querySelectorAll('.forn-df-sel:checked').forEach(function(cb){ window._fornDFSelecionados.push(cb.dataset.id); });
+  var all=document.getElementById('forn-df-sel-all');
+  var total=document.querySelectorAll('.forn-df-sel').length;
+  if(all) all.checked=window._fornDFSelecionados.length===total&&total>0;
+  fornDFAtualizarBarraSel();
+}
+function fornDFAtualizarBarraSel(){
+  var bar=document.getElementById('forn-df-sel-bar');
+  if(!bar) return;
+  var n=window._fornDFSelecionados.length;
+  if(n){
+    bar.style.display='flex';
+    document.getElementById('forn-df-sel-count').textContent=n+' DF'+(n>1?'s':'')+' selecionado'+(n>1?'s':'');
+  } else {
+    bar.style.display='none';
+  }
+}
+function fornDFSelLimpar(){
+  window._fornDFSelecionados=[];
+  document.querySelectorAll('.forn-df-sel').forEach(function(cb){cb.checked=false;});
+  var all=document.getElementById('forn-df-sel-all');
+  if(all) all.checked=false;
+  fornDFAtualizarBarraSel();
+}
+function fornDFAcaoLote(acao){
+  var sel=window._fornDFSelecionados||[];
+  if(!sel.length) return;
+  if(acao==='chat'){
+    abrirComentarios(sel[0]);
+  } else if(acao==='exportar'){
+    _showToast(sel.length+' DF(s) exportados para CSV.');
+  }
+  fornDFSelLimpar();
 }
 
 function fornFiltrarDFs(){
@@ -8060,9 +8109,11 @@ function abrirDetalheDF(dfId){
   }).join('');
   // Ações
   var acoes='';
-  if(d.status!=='liquidado'&&d.status!=='contestado'){
-    acoes+='<button onclick="fecharModal(\'forn-df-detail-overlay\');abrirLiquidar(\''+d.id+'\')" style="background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--txt1);font-size:12px;padding:7px 14px;cursor:pointer;font-family:inherit;font-weight:600">✓ Marcar como liquidado</button>';
+  if(d.vencido&&d.status!=='contestado'){
     acoes+='<button onclick="fecharModal(\'forn-df-detail-overlay\');abrirContestacao(\''+d.id+'\')" style="background:transparent;border:1px solid var(--red);border-radius:7px;color:var(--red);font-size:12px;padding:7px 14px;cursor:pointer;font-family:inherit;font-weight:600">⚑ Abrir contestação</button>';
+  }
+  if(d.status==='contestado'){
+    acoes+='<button onclick="fecharModal(\'forn-df-detail-overlay\');abrirContestacao(\''+d.id+'\')" style="background:transparent;border:1px solid var(--amber);border-radius:7px;color:var(--amber);font-size:12px;padding:7px 14px;cursor:pointer;font-family:inherit;font-weight:600">⚑ Acompanhar contestação</button>';
   }
   var nComt=(window._fornDFComentarios[d.id]||[]).length;
   acoes+='<button onclick="fecharModal(\'forn-df-detail-overlay\');abrirComentarios(\''+d.id+'\')" style="background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--txt1);font-size:12px;padding:7px 14px;cursor:pointer;font-family:inherit;font-weight:600">💬 Comentários'+(nComt?' ('+nComt+')':'')+'</button>';
@@ -8254,38 +8305,51 @@ function enviarComentario(){
 }
 
 function abrirRADModal(dfId){
-  var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
   var dfs=window._fornDFsCache||[];
   var df=dfs.find(function(d){return d.id===dfId;});
   if(!df) return;
-  var protocolo=function(seed){return 'RAD'+String(Math.abs(seed*13337)%900000+100000);};
-  var s=df.id.charCodeAt(df.id.length-1)||7;
+
+  // Extrai numero puro da NF (ex: 'NF-e 000010' → '000010' ou '10')
+  var numPuro=(df.numero||'').replace(/^[^\d]*/,'').trim().replace(/^0+/,'');
+  var cnpjForn=window._fornAtual?window._fornAtual.cnpj:'';
+
+  // Busca guias nos pagamentos globais
+  var pagRows=window._pagImpRows||[];
+  var guiaCBS=pagRows.find(function(p){ return p.tipo==='Guia CBS'&&(p.cnpj===cnpjForn)&&(parseInt(p.nfNumero,10)===parseInt(numPuro,10)||p.nfNumero===df.numero.replace(/^\S+\s+/,'')); });
+  var guiaIBS=pagRows.find(function(p){ return p.tipo==='Guia IBS'&&(p.cnpj===cnpjForn)&&(parseInt(p.nfNumero,10)===parseInt(numPuro,10)||p.nfNumero===df.numero.replace(/^\S+\s+/,'')); });
+
   var r={
-    nf:df.numero, data:df.emissao,
-    valorTotal:df.valor, valorCBS:df.cbs, valorIBS:df.ibs,
-    bancoCBS:'Banco do Brasil', agCBS:'0001-1', contaCBS:'12345-6', protCBS:protocolo(s+1),
-    bancoIBS:'Bradesco',       agIBS:'1234-5', contaIBS:'98765-4', protIBS:protocolo(s+2)
+    nf: df.numero, data: df.emissao,
+    guiaCBS: guiaCBS, guiaIBS: guiaIBS,
+    valorCBS: df.cbs, valorIBS: df.ibs
   };
   window._fornRadAtual=r;
   document.getElementById('forn-rad-modal-sub').textContent=r.nf+' · Emissão: '+r.data;
   document.getElementById('forn-rad-modal-body').innerHTML=
-    _radCard('CBS','var(--blue)',r.valorCBS,r.bancoCBS,r.agCBS,r.contaCBS,r.protCBS,r.data)+
-    _radCard('IBS','var(--teal)',r.valorIBS,r.bancoIBS,r.agIBS,r.contaIBS,r.protIBS,r.data);
+    _radCardPix('CBS','var(--blue)',guiaCBS,df.cbs)+
+    _radCardPix('IBS','var(--teal)',guiaIBS,df.ibs);
   document.getElementById('forn-rad-overlay').classList.add('open');
 }
-function _radCard(tributo,cor,valor,banco,ag,conta,prot,data){
+function _radCardPix(tributo,cor,guia,valorFallback){
   var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
+  var valor=guia?guia.valor:valorFallback;
+  var dataPag=guia&&guia.pagamento&&guia.pagamento!=='—'?guia.pagamento:'—';
+  var pago=guia&&guia.pago;
+  var rfId=guia?guia.rfId:'—';
+  var statusTxt=pago?'<span style="color:var(--green);font-weight:700">Pago via PIX · confirmado</span>':
+    '<span style="color:var(--amber);font-weight:700">Aguardando pagamento</span>';
   return '<div style="border:1px solid var(--border);border-radius:8px;padding:14px;border-top:3px solid '+cor+'">'+
     '<div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:'+cor+';text-transform:uppercase;margin-bottom:10px">Comprovante '+tributo+'</div>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+
       _radRow('Tributo',tributo)+
       _radRow('Valor recolhido',ff(valor))+
-      _radRow('Banco (adquirente)',banco)+
-      _radRow('Agência / Conta',ag+' / '+conta)+
-      _radRow('Protocolo',prot)+
-      _radRow('Data recolhimento',data)+
+      _radRow('Registro Fiscal',rfId)+
+      _radRow('Data / Hora PIX',dataPag)+
+      (guia&&guia.contratoId?_radRow('Contrato',guia.contratoId):'<div></div>')+
+      _radRow('Status',statusTxt)+
     '</div>'+
-    '<div style="margin-top:10px;font-size:11px;padding:6px 10px;border-radius:5px;background:rgba(26,121,64,.1);color:var(--green);font-weight:600">Pago e confirmado pela Plataforma Centralizada</div>'+
+    (pago?'<div style="font-size:11px;padding:6px 10px;border-radius:5px;background:rgba(26,121,64,.1);color:var(--green);font-weight:600">Recolhimento confirmado pela Plataforma Centralizada do Comitê Gestor</div>':
+      '<div style="font-size:11px;padding:6px 10px;border-radius:5px;background:rgba(185,122,16,.1);color:var(--amber);font-weight:600">Aguardando confirmação de pagamento</div>')+
   '</div>';
 }
 function _radRow(l,v){
