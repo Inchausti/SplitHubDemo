@@ -574,7 +574,7 @@ window.renderizarListaNFs = function() {
     var numLabel = _dfT + ' ' + r.numero;
 
     h += '<tr>'
-      + '<td class="mono nowrap"><button onclick="window.abrirDetalhesNFporNumero(\'' + r.numero + '\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:11px">' + numLabel + '</button></td>'
+      + '<td class="mono nowrap"><button onclick="window.abrirDetalhesNFporNumero(\'' + r.numero + '\')" style="background:none;border:none;color:'+PALETTE.blue+';cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:11px">' + numLabel + '</button></td>'
       + '<td class="nowrap">' + tipoBadge + '</td>'
       + '<td class="trunc">' + r.entidade + '</td>'
       + '<td class="mono" style="color:var(--txt2)">' + r.cnpj + '</td>'
@@ -617,7 +617,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   var dataParts = (r.data || '').split('-');
   var dataFmt = dataParts.length === 3 ? dataParts[2]+'/'+dataParts[1]+'/'+dataParts[0] : (r.data || '—');
   var tipoLabel = r.tipo === 'entrada' ? 'Entrada' : 'Saída';
-  var tipoColor = r.tipo === 'entrada' ? '#1d9e75' : '#185fa5';
+  var tipoColor = r.tipo === 'entrada' ? PALETTE.teal : PALETTE.blue;
 
   // ── Status badge da NF ──────────────────────────────────────────────────
   var stLabs = { nao_apropriado:'Não Apropriado', apropriado:'Apropriado', utilizado:'Utilizado',
@@ -644,7 +644,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       + '<span style="background:rgba(' + (tfCor==='#185fa5'?'24,95,165':'186,117,23') + ',.15);color:' + tfCor + ';border:1px solid rgba(' + (tfCor==='#185fa5'?'24,95,165':'186,117,23') + ',.35);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700">' + tfLbl + '</span>'
       + '<span style="font-size:11px;font-family:monospace;color:var(--txt2)">' + rf.id + '</span>'
       + '</div>'
-      + '<button onclick="document.getElementById(\'nf-detalhe-overlay\').remove();window.abrirDetalheRF(\'' + rf.id + '\')" style="background:rgba(var(--blue-rgb),.08);border:1px solid rgba(var(--blue-rgb),.2);border-radius:4px;color:#185fa5;cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px">Ver RF →</button>'
+      + '<button onclick="document.getElementById(\'nf-detalhe-overlay\').remove();window.abrirDetalheRF(\'' + rf.id + '\')" style="background:rgba(var(--blue-rgb),.08);border:1px solid rgba(var(--blue-rgb),.2);border-radius:4px;color:'+PALETTE.blue+';cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px">Ver RF →</button>'
       + '</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">'
       + '<div style="color:var(--txt3)">Valor: <span style="color:var(--txt1);font-weight:600">' + ff(rf.valor) + '</span></div>'
@@ -736,10 +736,10 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   var ctrHtml = '';
   if (ctrAtivo) {
     var ctrModelo = ctrAtivo.modelo === 'adquirente'
-      ? '<span style="color:#185fa5;font-weight:600">Adquirente recolhe</span>'
+      ? '<span style="color:'+PALETTE.blue+';font-weight:600">Adquirente recolhe</span>'
       : '<span style="color:var(--teal);font-weight:600">Fornecedor recolhe</span>';
     var ctrRAD = ctrAtivo.rad
-      ? '<span style="background:rgba(var(--blue-rgb),.1);color:#185fa5;border:1px solid rgba(var(--blue-rgb),.25);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600;margin-left:4px">RAD</span>' : '';
+      ? '<span style="background:rgba(var(--blue-rgb),.1);color:'+PALETTE.blue+';border:1px solid rgba(var(--blue-rgb),.25);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600;margin-left:4px">RAD</span>' : '';
     ctrHtml = '<div style="height:1px;background:var(--brd);margin:12px 0"></div>'
       + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Contrato</div>'
       + '<div style="background:rgba(var(--teal-alt-rgb),.06);border:1px solid rgba(var(--teal-alt-rgb),.2);border-radius:6px;padding:10px 12px;font-size:11px">'
@@ -1284,22 +1284,22 @@ window.renderizarTabelaCreditos = function() {
     h = '<tr><td colspan="16" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro fiscal encontrado para este filtro.</td></tr>';
   } else {
     listaRFs.forEach(function(r) {
-      var _tfC = r.tipoFiscal === 'IBS' ? '#60A5FA' : '#FBB84A';
+      var _tfC = r.tipoFiscal === 'IBS' ? PALETTE.statusBlue : PALETTE.statusAmber;
       var tipoFiscalBadge = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.06em;color:'+_tfC+'">'
         + '<span style="width:5px;height:5px;border-radius:50%;background:'+_tfC+';display:inline-block;flex-shrink:0"></span>'
         + r.tipoFiscal + '</span>';
 
-      var rfLink = '<button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">'+r.rf+'</button>';
+      var rfLink = '<button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:none;border:none;color:'+PALETTE.blue+';cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">'+r.rf+'</button>';
 
       var dfLink = r.nfNumero
-        ? '<button onclick="window.abrirDetalhesNFporNumero(\''+r.nfNumero+'\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:11px">'+r.nf+'</button>'
+        ? '<button onclick="window.abrirDetalhesNFporNumero(\''+r.nfNumero+'\')" style="background:none;border:none;color:'+PALETTE.blue+';cursor:pointer;font-weight:600;padding:0;text-decoration:underline;font-family:inherit;font-size:11px">'+r.nf+'</button>'
         : '<span style="color:var(--txt3)">—</span>';
 
       var contratoCell = r.contratoId
-        ? '<span class="mono" style="font-size:11px;color:#1d9e75;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\''+r.contratoId+'\')">'+r.contratoId+'</span>'
+        ? '<span class="mono" style="font-size:11px;color:'+PALETTE.teal+';font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\''+r.contratoId+'\')">'+r.contratoId+'</span>'
         : '<span style="color:var(--txt3)">—</span>';
 
-      var _metC = r.metodoPagamento === 'RAD' ? '#60A5FA' : r.metodoPagamento === 'Fornecedor' ? '#A78BFA' : null;
+      var _metC = r.metodoPagamento === 'RAD' ? PALETTE.statusBlue : r.metodoPagamento === 'Fornecedor' ? PALETTE.purple : null;
       var metodoCell = _metC
         ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.06em;color:'+_metC+'">'
           + '<span style="width:5px;height:5px;border-radius:50%;background:'+_metC+';display:inline-block"></span>'
@@ -1311,7 +1311,7 @@ window.renderizarTabelaCreditos = function() {
         : '<span style="color:var(--txt3)">—</span>';
 
       var statusBadge = bdg(r.statusCredito);
-      var incBadge = r.inconsistencia ? '<br><span style="font-size:10px;color:#a32d2d;font-style:italic">'+r.inconsistencia+'</span>' : '';
+      var incBadge = r.inconsistencia ? '<br><span style="font-size:10px;color:'+PALETTE.red+';font-style:italic">'+r.inconsistencia+'</span>' : '';
 
       var sc = r.statusCredito || '';
       var metExtCell;
@@ -1628,7 +1628,7 @@ window.renderizarForecastAproveitamento = function(_retry) {
   var totalOrig = Object.keys(byMonth).reduce(function(a,m){return a+byMonth[m].orig;},0);
   var perdaAnual = totalOrig > 0 ? totalOrig * (1 - taxaMedia/100) : 0;
   setEl('fct-aprov-taxa', taxaMedia + '%');
-  var taxaFcCor = taxaFcFinalKpi >= taxaMedia ? '#1d9e75' : '#a32d2d';
+  var taxaFcCor = taxaFcFinalKpi >= taxaMedia ? PALETTE.teal : PALETTE.red;
   setEl('fct-aprov-taxa-fc', taxaFcFinalKpi + '%', taxaFcCor);
   var fcFirstM = mesesFc.length ? mesesFc[0].substring(5,7)+'/'+String(mesesFc[0]).substring(2,4) : '';
   var fcLastM  = mesesFc.length ? mesesFc[mesesFc.length-1].substring(5,7)+'/'+String(mesesFc[mesesFc.length-1]).substring(2,4) : '';
@@ -1644,11 +1644,11 @@ window.renderizarForecastAproveitamento = function(_retry) {
     var piorTaxaIdx   = taxas.indexOf(Math.min.apply(null, taxas));
     var taxaFcFinal   = taxasFc.length ? Math.round(taxasFc[taxasFc.length-1]*100) : taxaMedia;
     var tendencia     = taxaFcFinal - taxaMedia;
-    var tendCor       = tendencia >= 0 ? '#1d9e75' : '#a32d2d';
+    var tendCor       = tendencia >= 0 ? PALETTE.teal : PALETTE.red;
     var tendTxt       = tendencia >= 0 ? '▲ Tendência de melhora' : '▼ Tendência de queda';
-    var perdaCor      = perdaAnual > 0 ? '#a32d2d' : '#1d9e75';
+    var perdaCor      = perdaAnual > 0 ? PALETTE.red : PALETTE.teal;
     var insAp = [
-      { cor: '#1d9e75',
+      { cor: PALETTE.teal,
         titulo: 'Melhor mês: ' + (mesesReal[melhorTaxaIdx]||'').substring(5,7) + '/' + (mesesReal[melhorTaxaIdx]||'').substring(0,4),
         corpo: 'Taxa de ' + Math.round(taxas[melhorTaxaIdx]*100) + '% — maior apropriação do período; mês de referência para a meta.' },
       { cor: tendCor,
@@ -1957,7 +1957,7 @@ window.atualizarDashboard = function() {
     var niceMax = Math.ceil(rawMax * 1.18 * 10) / 10;
     var bw = Math.max(5, Math.floor(plotW / n * 0.56));
     function fvC(v) { return v >= 1 ? v.toFixed(1).replace('.', ',') + 'M' : Math.round(v * 1000) + 'K'; }
-    var segColors = ['#1d9e75', '#4ade80', '#f59e0b'];
+    var segColors = [PALETTE.teal, PALETTE.greenLight, PALETTE.statusAmber];
     var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:' + H + 'px;display:block">';
     for (var gi = 0; gi <= 3; gi++) {
       var gv = (gi / 3) * niceMax;
@@ -1983,7 +1983,7 @@ window.atualizarDashboard = function() {
         base -= bh;
       }
       s += '<text x="' + (bx + bw/2) + '" y="' + (padT+plotH+14) + '" text-anchor="middle" fill="var(--txt3)" font-size="9" font-family="Inter,system-ui,sans-serif">' + mesesLabels[bi].substring(0,3) + '</text>';
-      var tp2 = [mesesLabels[bi],'#1d9e75','Apropriado',fvC(aprop[bi]),'#4ade80','A Apropriar',fvC(aApropr[bi]),'#f59e0b','Em Risco',fvC(emRisco[bi])].join('|').replace(/'/g,'&apos;');
+      var tp2 = [mesesLabels[bi],PALETTE.teal,'Apropriado',fvC(aprop[bi]),PALETTE.greenLight,'A Apropriar',fvC(aApropr[bi]),PALETTE.statusAmber,'Em Risco',fvC(emRisco[bi])].join('|').replace(/'/g,'&apos;');
       s += '<rect x="' + (bx-3) + '" y="' + padT + '" width="' + (bw+6) + '" height="' + plotH + '" fill="transparent" style="cursor:crosshair" onmousemove="_svgTipShow(event,\'' + tp2 + '\')" onmouseleave="_svgTipHide()"/>';
     }
     s += '</svg>';
@@ -2168,14 +2168,14 @@ window._svgTipShow = function(evt, raw) {
     document.body.appendChild(tip);
   }
   var parts = raw.split('|');
-  var html = '<div style="font-weight:700;color:#fff;margin-bottom:4px;font-size:13px">' + parts[0] + '</div>';
+  var html = '<div style="font-weight:700;color:var(--tooltip-txt);margin-bottom:4px;font-size:13px">' + parts[0] + '</div>';
   for (var i = 1; i + 2 < parts.length; i += 3) {
     var cor = parts[i], nome = parts[i+1], rawVal = parts[i+2];
     var val = (rawVal === '' || isNaN(+rawVal) || rawVal.indexOf('/') !== -1) ? rawVal : 'R$ ' + rawVal;
     html += '<div style="display:flex;align-items:center;gap:6px">'
       + '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;flex-shrink:0;background:' + cor + '"></span>'
-      + '<span style="color:#adb5bd">' + nome + '</span>'
-      + '<span style="font-weight:600;color:#fff;margin-left:auto;padding-left:16px">' + val + '</span>'
+      + '<span style="color:'+PALETTE.statusGray+'">' + nome + '</span>'
+      + '<span style="font-weight:600;color:var(--tooltip-txt);margin-left:auto;padding-left:16px">' + val + '</span>'
       + '</div>';
   }
   tip.innerHTML = html;
@@ -2878,13 +2878,13 @@ function _concRFDetail(nf, ibsRF, cbsRF) {
       + '</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
       + '<span style="color:var(--txt3)">ID RF</span>'
-      + '<span style="color:#185fa5;font-family:monospace;font-weight:700' + (canOpen ? ';text-decoration:underline dotted' : '') + '">' + rfId + '</span>'
+      + '<span style="color:'+PALETTE.blue+';font-family:monospace;font-weight:700' + (canOpen ? ';text-decoration:underline dotted' : '') + '">' + rfId + '</span>'
       + '<span style="color:var(--txt3)">Valor</span><span style="color:var(--txt1);font-weight:600">' + fmtV(rf.valor) + '</span>'
       + '<span style="color:var(--txt3)">Data RF</span><span style="color:var(--txt2)">' + (rf.data || '—') + '</span>'
       + '<span style="color:var(--txt3)">Pagamento</span><span style="color:' + (pago ? '#1d9e75' : 'var(--txt3)') + ';font-weight:' + (pago ? '600' : '400') + '">' + (pago ? rf.dataPagamento : 'Pendente') + '</span>'
-      + (rf.inconsistencia ? ('<span style="color:var(--txt3)">Inconsistência</span><span style="color:#a32d2d;font-size:10px">' + rf.inconsistencia + '</span>') : '')
+      + (rf.inconsistencia ? ('<span style="color:var(--txt3)">Inconsistência</span><span style="color:'+PALETTE.red+';font-size:10px">' + rf.inconsistencia + '</span>') : '')
       + '</div>'
-      + (canOpen ? '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:#185fa5;font-weight:600">Ver detalhes do RF →</div>' : '')
+      + (canOpen ? '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:'+PALETTE.blue+';font-weight:600">Ver detalhes do RF →</div>' : '')
       + '</div>';
   }
   var nfTotal = 'R$ ' + ((nf.valorTotal||0)/1).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -3014,7 +3014,7 @@ function _concUnifiedRender() {
     var deltaStr = Math.abs(delta) < 1 ? '—' : (delta > 0 ? '+' : '') + _concFmt(delta);
     var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? '#ba7517' : '#a32d2d') : 'var(--txt3)';
     return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid #185fa5;border-radius:8px;padding:10px 12px;min-width:200px">'
-      + '<div style="font-size:10px;font-weight:700;color:#185fa5;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 1 — Conciliação Apuração</div>'
+      + '<div style="font-size:10px;font-weight:700;color:'+PALETTE.blue+';text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 1 — Conciliação Apuração</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
       + '<span style="color:var(--txt3)">Valor DF</span><span style="font-weight:600">' + _concFmt(r.valorDF) + '</span>'
       + '<span style="color:var(--txt3)">Valor Gov</span><span style="font-weight:600">' + _concFmt(r.valorGov) + '</span>'
@@ -3693,7 +3693,7 @@ window._incRfRenderPagina = function() {
     var dfNum = inc.dfNum.replace(/^[^\s]+\s*/,'');
     var dfCell = '<button onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\''+dfNum+'\')" style="background:none;border:none;color:rgba(26,75,140,1);cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">'+inc.dfNum+'</button>';
     var incContratoCell = inc.contratoId
-      ? '<span class="mono" style="font-size:11px;color:#1d9e75;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\''+inc.contratoId+'\')">'+inc.contratoId+'</span>'
+      ? '<span class="mono" style="font-size:11px;color:'+PALETTE.teal+';font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\''+inc.contratoId+'\')">'+inc.contratoId+'</span>'
       : '<span style="color:var(--txt3)">—</span>';
     h += '<tr>'
       + '<td class="mono nowrap" style="font-size:10px;color:rgba(90,26,140,1);font-weight:700">'+inc.id+'</td>'
@@ -3805,10 +3805,10 @@ window._incExecutarAcao = function(id, acaoIdx) {
 
   // Toast de confirmação
   var toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:28px;right:24px;background:#1a1d23;border:1px solid rgba(var(--org-matriz-rgb),.4);border-left:4px solid #8B5CF6;border-radius:8px;padding:14px 18px;z-index:10001;font-family:Inter,system-ui,sans-serif;min-width:300px;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:_slideIn .2s ease';
-  toast.innerHTML = '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">' + acao.icon + ' Ação iniciada com sucesso</div>'
-    + '<div style="font-size:11px;color:#adb5bd">' + acao.label + ' · ' + r.id + '</div>'
-    + '<div style="font-size:11px;color:#8B5CF6;margin-top:6px">Registro encaminhado para acompanhamento</div>';
+  toast.style.cssText = 'position:fixed;bottom:28px;right:24px;background:var(--tooltip-bg);border:1px solid rgba(var(--org-matriz-rgb),.4);border-left:4px solid '+PALETTE.purple+';border-radius:8px;padding:14px 18px;z-index:10001;font-family:Inter,system-ui,sans-serif;min-width:300px;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:_slideIn .2s ease';
+  toast.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--txt1);margin-bottom:4px">' + acao.icon + ' Ação iniciada com sucesso</div>'
+    + '<div style="font-size:11px;color:'+PALETTE.statusGray+'">' + acao.label + ' · ' + r.id + '</div>'
+    + '<div style="font-size:11px;color:'+PALETTE.purple+';margin-top:6px">Registro encaminhado para acompanhamento</div>';
   document.body.appendChild(toast);
   setTimeout(function(){ if(toast.parentNode) toast.parentNode.removeChild(toast); }, 4000);
 };
@@ -4808,18 +4808,18 @@ window.renderizarTabelaDebitos = function() {
       ? '<span style="color:'+mCor+';font-weight:600;font-size:11px">'+mLbl+'</span>'
       : '<span style="color:var(--txt3);font-size:11px">—</span>';
     var nfTipoBadgeDeb = r.tipoNF === 'entrada'
-      ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--teal-rgb),.28);color:#1d9e75;background:transparent">Entrada</span>'
-      : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--amber-rgb),.28);color:#ba7517;background:transparent">Saída</span>';
+      ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--teal-rgb),.28);color:'+PALETTE.teal+';background:transparent">Entrada</span>'
+      : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--amber-rgb),.28);color:'+PALETTE.amber+';background:transparent">Saída</span>';
     var stBadge  = bdg(r.status);
     var stRgBadge = window._statusFlagsBadges ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.statusRegistro }) : (r.statusRegistro ? bdg(r.statusRegistro) : '');
     var contratoDebCell = r.contratoId
-      ? '<span class="mono" style="font-size:11px;color:#1d9e75;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\''+r.contratoId+'\')">'+r.contratoId+'</span>'
+      ? '<span class="mono" style="font-size:11px;color:'+PALETTE.teal+';font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\''+r.contratoId+'\')">'+r.contratoId+'</span>'
       : '<span style="color:var(--txt3)">—</span>';
     h += '<tr>'
-      + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\'' + r.rf + '\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
+      + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\'' + r.rf + '\')" style="background:none;border:none;color:'+PALETTE.blue+';cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
       + '<td class="nowrap">' + tfBadge + '</td>'
       + '<td class="nowrap">' + nfTipoBadgeDeb + '</td>'
-      + '<td class="mono nowrap" style="color:#185fa5;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\'' + (r.nfNumero||'') + '\')">' + r.nf + '</td>'
+      + '<td class="mono nowrap" style="color:'+PALETTE.blue+';font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\'' + (r.nfNumero||'') + '\')">' + r.nf + '</td>'
       + '<td class="trunc">' + r.cliente + '</td>'
       + '<td class="nowrap" style="color:var(--txt2)">' + r.data + '</td>'
       + '<td class="r mono">' + ff(r.valorTotal) + '</td>'
@@ -4935,7 +4935,7 @@ window.debitosDFsRender = function() {
     var srFlagsBadge = window._statusFlagsBadges ? window._statusFlagsBadges({statusFlags:worstFlags,statusRegistro:worstSR}) : '';
     var contratoId = nf.contratoId || (rfs.length ? (rfs[0].contratoId||null) : null);
     var contratoCell = contratoId
-      ? '<span class="mono" style="font-size:11px;color:#1d9e75;font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\''+contratoId+'\')">'+contratoId+'</span>'
+      ? '<span class="mono" style="font-size:11px;color:'+PALETTE.teal+';font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\''+contratoId+'\')">'+contratoId+'</span>'
       : '<span style="color:var(--txt3)">—</span>';
     h+='<tr>';
     h+='<td class="mono nowrap" style="color:var(--blue);font-size:11px;cursor:pointer;text-decoration:underline" onclick="if(window.abrirDetalhesNFporNumero)abrirDetalhesNFporNumero(\''+nfNum+'\')">'+tipoDF+' '+nfNum+'</td>';
@@ -5903,8 +5903,8 @@ window.renderizarFCT = function() {
       var pos = d.cAprop - d.dBruto;
       var posCor = pos >= 0 ? '#1d9e75' : '#a32d2d';
       var statusTxt = pos >= 0
-        ? '<span style="color:#1d9e75;font-weight:600;font-size:10px">● Credor</span>'
-        : '<span style="color:#a32d2d;font-weight:600;font-size:10px">● Devedor</span>';
+        ? '<span style="color:'+PALETTE.teal+';font-weight:600;font-size:10px">● Credor</span>'
+        : '<span style="color:'+PALETTE.red+';font-weight:600;font-size:10px">● Devedor</span>';
       var aliqMes = d.faturamento > 0 ? (Math.max(0, d.dBruto - d.cAprop) / d.faturamento * 100).toFixed(1) + '%' : '—';
       rows += '<tr>'
         + '<td class="nowrap">' + m.substring(5,7) + '/' + m.substring(0,4) + '</td>'
@@ -6389,25 +6389,25 @@ window.renderizarTabelaPagamentos = function() {
   var h = '';
   rows.forEach(function(r, idx) {
     var tipoBadge = '<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+r.tipo+'</span>';
-    var detBtn = '<button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:rgba(var(--blue-rgb),.08);border:1px solid rgba(var(--blue-rgb),.2);border-radius:4px;color:#185fa5;cursor:pointer;font-size:10px;font-weight:700;padding:3px 10px">Ver</button>';
+    var detBtn = '<button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:rgba(var(--blue-rgb),.08);border:1px solid rgba(var(--blue-rgb),.2);border-radius:4px;color:'+PALETTE.blue+';cursor:pointer;font-size:10px;font-weight:700;padding:3px 10px">Ver</button>';
     var act = !r.pago
       ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="window.abrirGuiaDARF('+idx+')">Gerar Guia</button>'
       : '<span style="font-size:11px;color:var(--txt3)">Concluído</span>';
     var nfTipoBadgePag = r.tipoNF === 'entrada'
-      ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--teal-rgb),.28);color:#1d9e75;background:transparent">Entrada</span>'
-      : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--amber-rgb),.28);color:#ba7517;background:transparent">Saída</span>';
+      ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--teal-rgb),.28);color:'+PALETTE.teal+';background:transparent">Entrada</span>'
+      : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--amber-rgb),.28);color:'+PALETTE.amber+';background:transparent">Saída</span>';
     var chkCell = !r.pago
       ? '<td style="text-align:center"><input type="checkbox" class="pag-chk" data-idx="'+idx+'" onchange="window.pagAtualizarSelecao()" style="cursor:pointer;width:15px;height:15px"></td>'
       : '<td></td>';
     var nfCell = r.nfNumero
-      ? '<span style="font-size:11px;color:#185fa5;cursor:pointer;text-decoration:underline dotted;font-weight:600;white-space:nowrap" onclick="if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + r.nfNumero + '\')">' + r.nfVinc + '</span>'
+      ? '<span style="font-size:11px;color:'+PALETTE.blue+';cursor:pointer;text-decoration:underline dotted;font-weight:600;white-space:nowrap" onclick="if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + r.nfNumero + '\')">' + r.nfVinc + '</span>'
       : '<span style="color:var(--txt3)">—</span>';
     h += '<tr>'
       + chkCell
-      + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:none;border:none;color:#185fa5;cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
+      + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:none;border:none;color:'+PALETTE.blue+';cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
       + '<td class="mono nowrap">' + nfCell + '</td>'
       + '<td class="trunc" style="vertical-align:middle"><div style="font-weight:500">' + r.forn + '</div><div style="font-size:10px;color:var(--txt2)">' + r.cnpj + '</div></td>'
-      + '<td class="nowrap">' + (r.contratoId ? '<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--blue-rgb),.28);color:#185fa5;background:rgba(var(--blue-rgb),.06)">' + r.contratoId + '</span>' : '<span style="color:var(--txt3)">—</span>') + '</td>'
+      + '<td class="nowrap">' + (r.contratoId ? '<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--blue-rgb),.28);color:'+PALETTE.blue+';background:rgba(var(--blue-rgb),.06)">' + r.contratoId + '</span>' : '<span style="color:var(--txt3)">—</span>') + '</td>'
       + '<td class="nowrap">' + tipoBadge + '</td>'
       + '<td class="nowrap">' + nfTipoBadgePag + '</td>'
       + '<td class="nowrap"><span style="font-size:10px;font-weight:700;letter-spacing:.06em;padding:2px 8px;border-radius:3px;border:1px solid rgba(var(--teal-alt-rgb),.35);color:var(--teal);background:rgba(var(--teal-alt-rgb),.08)">RAD</span></td>'
@@ -6497,7 +6497,7 @@ window.pagGerarGuiaLote = function() {
   var rows = selecionados.map(function(r) {
     var cor = r.tipo === 'Guia IBS' ? '#185fa5' : '#ba7517';
     return '<tr style="border-bottom:1px solid var(--brd)">'
-      + '<td style="padding:8px 12px;font-size:12px;color:#185fa5;font-weight:600;font-family:monospace;cursor:pointer;text-decoration:underline dotted" onclick="if(window.abrirDetalheRF)window.abrirDetalheRF(\'' + r.rfId + '\')">' + r.rf + '</td>'
+      + '<td style="padding:8px 12px;font-size:12px;color:'+PALETTE.blue+';font-weight:600;font-family:monospace;cursor:pointer;text-decoration:underline dotted" onclick="if(window.abrirDetalheRF)window.abrirDetalheRF(\'' + r.rfId + '\')">' + r.rf + '</td>'
       + '<td style="padding:8px 12px;font-size:12px;color:var(--txt1)">' + r.forn + '</td>'
       + '<td style="padding:8px 12px"><span style="font-size:11px;font-weight:600;color:'+cor+'">' + r.tipo + '</span></td>'
       + '<td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:600;font-family:monospace;color:var(--txt1)">' + fmtV(r.valor) + '</td>'
@@ -7487,7 +7487,7 @@ window.sbRenderDropdown = function() {
   var ids = window._empresasAtivas || [];
   var allSel = !ids.length;
   var h = '<div onclick="window.sbSelecionarTodos()" style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;background:' + (allSel ? 'rgba(var(--teal-alt-rgb),.1)' : 'transparent') + ';border-left:2px solid ' + (allSel ? '#1d9e75' : 'transparent') + '">'
-    + '<span style="font-size:13px;color:#1d9e75;width:16px;text-align:center">' + (allSel ? '✓' : '') + '</span>'
+    + '<span style="font-size:13px;color:'+PALETTE.teal+';width:16px;text-align:center">' + (allSel ? '✓' : '') + '</span>'
     + '<div style="flex:1"><div style="font-size:12px;font-weight:' + (allSel ? '700' : '500') + ';color:var(--txt1)">Todos os estabelecimentos</div>'
     + '<div style="font-size:10px;color:var(--txt2)">Visão consolidada do grupo econômico</div></div></div>';
 
@@ -7497,7 +7497,7 @@ window.sbRenderDropdown = function() {
     var tCor = c.tipo === 'Matriz' ? '#1d9e75' : '#185fa5';
     var bgItem = isAt ? 'rgba(var(--teal-alt-rgb),.12)' : 'transparent';
     h += '<div onclick="event.stopPropagation();window.sbToggleEmpresaItem(' + c.id + ')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;background:' + bgItem + ';border-left:2px solid ' + (isAt ? '#1d9e75' : 'transparent') + ';opacity:' + (isIn ? '0.5' : '1') + ';transition:background .15s">'
-      + '<span style="font-size:13px;color:#1d9e75;width:16px;text-align:center;flex-shrink:0">' + (isAt ? '✓' : '') + '</span>'
+      + '<span style="font-size:13px;color:'+PALETTE.teal+';width:16px;text-align:center;flex-shrink:0">' + (isAt ? '✓' : '') + '</span>'
       + '<div style="flex:1;min-width:0">'
       + '<div style="font-size:12px;font-weight:' + (isAt ? '700' : '500') + ';color:' + (isIn ? 'var(--txt3)' : 'var(--txt1)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + c.razao + ' <span style="font-size:9px;font-weight:400;color:var(--txt2)">' + c.uf + (isIn ? ' · Inativo' : '') + '</span></div>'
       + '<div style="font-size:10px;color:var(--txt2);font-family:monospace;margin-top:1px">' + c.cnpj + '</div>'
@@ -7567,14 +7567,14 @@ window._dashCnpjRenderList = function() {
   var ids = window._empresasAtivas || [];
   var allSel = !ids.length;
   var h = '<div onclick="window.sbSelecionarTodos()" class="cnpj-filter-item" style="border-left:2px solid ' + (allSel ? '#1d9e75' : 'transparent') + '">'
-    + '<span style="font-size:13px;color:#1d9e75;width:16px;display:inline-block;text-align:center">' + (allSel ? '✓' : '') + '</span>'
+    + '<span style="font-size:13px;color:'+PALETTE.teal+';width:16px;display:inline-block;text-align:center">' + (allSel ? '✓' : '') + '</span>'
     + '<div><div style="font-weight:' + (allSel ? '700' : '500') + ';color:var(--txt1)">Todos os estabelecimentos</div>'
     + '<span class="cfi-cnpj">Visão consolidada do grupo</span></div></div>';
   (window._orgCnpjs || []).forEach(function(c) {
     var isAt = ids.indexOf(c.id) >= 0;
     var isIn = c.status === 'inativo';
     h += '<div onclick="event.stopPropagation();window.sbToggleEmpresaItem(' + c.id + ')" class="cnpj-filter-item" style="background:' + (isAt ? 'rgba(var(--teal-alt-rgb),.08)' : '') + ';border-left:2px solid ' + (isAt ? '#1d9e75' : 'transparent') + ';opacity:' + (isIn ? '0.5' : '1') + '">'
-      + '<span style="font-size:13px;color:#1d9e75;width:16px;display:inline-block;text-align:center">' + (isAt ? '✓' : '') + '</span>'
+      + '<span style="font-size:13px;color:'+PALETTE.teal+';width:16px;display:inline-block;text-align:center">' + (isAt ? '✓' : '') + '</span>'
       + '<div style="flex:1"><div style="font-weight:' + (isAt ? '700' : '500') + ';color:' + (isIn ? 'var(--txt3)' : 'var(--txt1)') + '">' + c.razao + ' <span style="font-size:9px;color:var(--txt2)">' + c.uf + ' · ' + c.tipo + '</span></div>'
       + '<span class="cfi-cnpj">' + c.cnpj + (isIn ? ' · Inativo' : '') + '</span></div>'
       + '</div>';
@@ -8133,8 +8133,8 @@ window.abrirGuiaDARF = function(idx) {
   var badge = document.getElementById('darf-tipo-badge');
   badge.textContent = isIBS ? 'Guia IBS' : 'DARF CBS';
   badge.style.cssText = isIBS
-    ? 'display:inline-block;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:8px;background:rgba(var(--blue-rgb),.15);color:#185fa5;border:1px solid rgba(var(--blue-rgb),.3)'
-    : 'display:inline-block;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:8px;background:rgba(var(--amber-rgb),.15);color:#ba7517;border:1px solid rgba(var(--amber-rgb),.3)';
+    ? 'display:inline-block;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:8px;background:rgba(var(--blue-rgb),.15);color:'+PALETTE.blue+';border:1px solid rgba(var(--blue-rgb),.3)'
+    : 'display:inline-block;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:8px;background:rgba(var(--amber-rgb),.15);color:'+PALETTE.amber+';border:1px solid rgba(var(--amber-rgb),.3)';
 
   document.getElementById('darf-modal-title').textContent = 'Guia de Recolhimento';
   document.getElementById('darf-modal-sub').textContent   = nomeTrib;
@@ -8719,7 +8719,7 @@ window.downloadGuiaDARF = function() {
       var tCor = _tipoCorMap[tipoBase] || '#8A92A3';
       var tipoBadge = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:' + tCor + '22;color:' + tCor + ';border:1px solid ' + tCor + '44;display:inline-block;margin-bottom:2px">' + tipoBase + '</span>';
       var nfNumCell = d.nfNumero
-        ? '<span class="mono" style="font-size:11px;color:#185fa5;cursor:pointer;text-decoration:underline;white-space:nowrap" onclick="event.stopPropagation();if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + d.nfNumero + '\')">' + tipoBase + ' ' + d.nfNumero + '</span>'
+        ? '<span class="mono" style="font-size:11px;color:'+PALETTE.blue+';cursor:pointer;text-decoration:underline;white-space:nowrap" onclick="event.stopPropagation();if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + d.nfNumero + '\')">' + tipoBase + ' ' + d.nfNumero + '</span>'
         : '<span style="color:var(--txt3)">—</span>';
       // Célula de inconsistência: primeiro item com ok===false
       var incCell;
@@ -8729,7 +8729,7 @@ window.downloadGuiaDARF = function() {
           if (d.validacoes[vi].ok === false) { falha = d.validacoes[vi]; break; }
         }
         if (falha) {
-          incCell = '<span style="font-size:11px;font-weight:600;color:#8B5CF6;white-space:normal">' + falha.tipo + '</span>';
+          incCell = '<span style="font-size:11px;font-weight:600;color:'+PALETTE.purple+';white-space:normal">' + falha.tipo + '</span>';
         } else {
           incCell = '<span style="color:var(--txt3);font-size:11px">—</span>';
         }
