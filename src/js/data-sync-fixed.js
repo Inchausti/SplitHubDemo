@@ -1316,7 +1316,7 @@ window.renderizarTabelaCreditos = function() {
   if (contagemEl) contagemEl.textContent = listaRFs.length + ' registro' + (listaRFs.length !== 1 ? 's' : '');
 
   if (!listaRFs.length) {
-    h = '<tr><td colspan="16" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro fiscal encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="17" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro fiscal encontrado para este filtro.</td></tr>';
   } else {
     listaRFs.forEach(function(r) {
       var _tfC = r.tipoFiscal === 'IBS' ? PALETTE.statusBlue : PALETTE.statusAmber;
@@ -1364,6 +1364,9 @@ window.renderizarTabelaCreditos = function() {
       }
 
       var statusRFBadge = window._statusFlagsBadges ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.statusRegistro }) : '';
+      var rfIncTypesBadge = (r._inconsistencias && r._inconsistencias.length)
+        ? r._inconsistencias.map(function(i){ return '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(220,38,38,.08);color:rgb(220,38,38);border:1px solid rgba(220,38,38,.25);white-space:nowrap;display:inline-block;margin:1px 1px 0 0">'+(i.tipoLabel||i.tipo||'—')+'</span>'; }).join('')
+        : '<span style="color:var(--txt3)">—</span>';
       h += '<tr>'
         + '<td class="mono nowrap">' + rfLink + '</td>'
         + '<td class="nowrap">' + tipoFiscalBadge + '</td>'
@@ -1378,6 +1381,7 @@ window.renderizarTabelaCreditos = function() {
         + '<td class="nowrap">' + pagCell + '</td>'
         + '<td class="nowrap">' + statusBadge + incBadge + '</td>'
         + '<td style="vertical-align:middle">' + statusRFBadge + '</td>'
+        + '<td style="vertical-align:middle">' + rfIncTypesBadge + '</td>'
         + '<td class="nowrap">' + contratoCell + '</td>'
         + '<td class="nowrap">' + metodoCell + '</td>'
         + '<td class="nowrap">' + metExtCell + '</td>'
@@ -4909,7 +4913,8 @@ window.renderizarTabelaDebitos = function() {
           statusRegistro:  rf.statusRegistro || null,
           statusFlags:     rf.statusFlags    || [],
           metodoExtincao:  rf.metodoExtincao || '—',
-          contratoId:      rf.contratoId || nf.contratoId || null
+          contratoId:      rf.contratoId || nf.contratoId || null,
+          _inconsistencias: rf._inconsistencias || []
         });
       });
     });
@@ -4961,6 +4966,9 @@ window.renderizarTabelaDebitos = function() {
       : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--amber-rgb),.28);color:'+PALETTE.amber+';background:transparent">Saída</span>';
     var stBadge  = bdg(r.status);
     var stRgBadge = window._statusFlagsBadges ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.statusRegistro }) : (r.statusRegistro ? bdg(r.statusRegistro) : '');
+    var rfIncTypesBadgeDeb = (r._inconsistencias && r._inconsistencias.length)
+      ? r._inconsistencias.map(function(i){ return '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(220,38,38,.08);color:rgb(220,38,38);border:1px solid rgba(220,38,38,.25);white-space:nowrap;display:inline-block;margin:1px 1px 0 0">'+(i.tipoLabel||i.tipo||'—')+'</span>'; }).join('')
+      : '<span style="color:var(--txt3)">—</span>';
     var contratoDebCell = r.contratoId
       ? '<span class="mono" style="font-size:11px;color:'+PALETTE.teal+';font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\''+r.contratoId+'\')">'+r.contratoId+'</span>'
       : '<span style="color:var(--txt3)">—</span>';
@@ -4979,13 +4987,14 @@ window.renderizarTabelaDebitos = function() {
       + '<td class="nowrap" style="color:var(--txt2)">' + r.extincao + '</td>'
       + '<td class="nowrap">' + stBadge + '</td>'
       + '<td style="vertical-align:middle">' + stRgBadge + '</td>'
+      + '<td style="vertical-align:middle">' + rfIncTypesBadgeDeb + '</td>'
       + '<td class="nowrap">' + contratoDebCell + '</td>'
       + '<td class="nowrap">' + mBadge + '</td>'
       + '</tr>';
   });
 
   if (!listaRFs.length) {
-    h = '<tr><td colspan="16" style="text-align:center;color:var(--txt3);padding:24px">Nenhum RF de débito encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="17" style="text-align:center;color:var(--txt3);padding:24px">Nenhum RF de débito encontrado para este filtro.</td></tr>';
   }
 
   var tbody = document.getElementById('t-debitos');
@@ -5036,11 +5045,9 @@ window.debitosDFsRender = function() {
     return'nao_extinto';
   }
 
-  var filtStRF=(document.getElementById('deb-dfs-status-rf')||{}).value||'';
   if(busca){nfs=nfs.filter(function(nf){var s=(nf.entidade||'')+(nf.cnpj||'')+String(nf.numero||'');return s.toLowerCase().indexOf(busca)>=0;});}
   if(filtTp){nfs=nfs.filter(function(nf){return (nf.tipoDF||'').indexOf(filtTp)>=0;});}
   if(filtSt){nfs=nfs.filter(function(nf){return _dfDebSt(nf.registrosFiscais||[])===filtSt;});}
-  if(filtStRF){nfs=nfs.filter(function(nf){return (nf.registrosFiscais||[]).some(function(rf){return (rf.statusRegistro===filtStRF)||(rf.statusFlags&&rf.statusFlags.indexOf(filtStRF)!==-1);});});}
   if(filtMe){nfs=nfs.filter(function(nf){return (nf.registrosFiscais||[]).some(function(rf){return rf.metodoExtincao===filtMe;});});}
   if(dataDe||dataAte){nfs=nfs.filter(function(nf){var d=nf.data||'';return (!dataDe||d>=dataDe)&&(!dataAte||d<=dataAte);});}
   if(filtExt){nfs=nfs.filter(function(nf){var hasExt=(nf.registrosFiscais||[]).some(function(rf){return rf.dataExtincao&&rf.dataExtincao!=='—';});if(filtExt==='com')return hasExt;return !hasExt;});}
@@ -5092,6 +5099,10 @@ window.debitosDFsRender = function() {
     var mRgb=metExt?(_metCor[metExt]||'167,168,170'):null;
     var metBadge=mRgb?'<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+mRgb+',.12);color:rgba('+mRgb+',1);border:1px solid rgba('+mRgb+',.28)">'+(_metLbl[metExt]||metExt)+'</span>':'<span style="color:var(--txt3)">—</span>';
     var srFlagsBadge = window._statusFlagsBadges ? window._statusFlagsBadges({statusFlags:worstFlags,statusRegistro:worstSR}) : '';
+    var _nfIncs = nf._inconsistencias || [];
+    var incTypesBadge = _nfIncs.length
+      ? _nfIncs.map(function(i){return '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(220,38,38,.08);color:rgb(220,38,38);border:1px solid rgba(220,38,38,.25);white-space:nowrap;display:inline-block;margin:1px 1px 0 0">'+(i.tipoLabel||i.tipo||'—')+'</span>';}).join('')
+      : '<span style="color:var(--txt3)">—</span>';
     var contratoId = nf.contratoId || (rfs.length ? (rfs[0].contratoId||null) : null);
     var contratoCell = contratoId
       ? '<span class="mono" style="font-size:11px;color:'+PALETTE.teal+';font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\''+contratoId+'\')">'+contratoId+'</span>'
@@ -5108,7 +5119,7 @@ window.debitosDFsRender = function() {
     h+='<td class="r mono" style="color:var(--red);font-weight:700">'+ff(deb)+'</td>';
     h+='<td class="nowrap" style="font-size:11px;color:var(--txt2)">'+dataExt+'</td>';
     h+='<td class="nowrap">'+stBadge+'</td>';
-    h+='<td style="vertical-align:middle">'+srFlagsBadge+'</td>';
+    h+='<td style="vertical-align:middle">'+incTypesBadge+'</td>';
     h+='<td class="nowrap">'+contratoCell+'</td>';
     h+='<td class="nowrap">'+metBadge+'</td>';
     h+='<td class="r mono" style="color:var(--txt2)">'+rfs.length+'</td>';
@@ -5120,7 +5131,7 @@ window.debitosDFsRender = function() {
 window.debitoDFsToggleFiltros = function() { window.shToggleFilterPanel('deb-dfs'); };
 
 window.debitoDFsLimparFiltros = function() {
-  ['deb-dfs-busca','deb-dfs-status','deb-dfs-status-rf','deb-dfs-tipo','deb-dfs-metodo','deb-dfs-extincao','deb-dfs-data-de','deb-dfs-data-ate','deb-dfs-valor-min','deb-dfs-valor-max','deb-dfs-deb-min','deb-dfs-deb-max','deb-dfs-ibs-min','deb-dfs-ibs-max','deb-dfs-cbs-min','deb-dfs-cbs-max','deb-dfs-contrato'].forEach(function(id){
+  ['deb-dfs-busca','deb-dfs-status','deb-dfs-tipo','deb-dfs-metodo','deb-dfs-extincao','deb-dfs-data-de','deb-dfs-data-ate','deb-dfs-valor-min','deb-dfs-valor-max','deb-dfs-deb-min','deb-dfs-deb-max','deb-dfs-ibs-min','deb-dfs-ibs-max','deb-dfs-cbs-min','deb-dfs-cbs-max','deb-dfs-contrato'].forEach(function(id){
     var el=document.getElementById(id); if(el)el.value='';
   });
   window.debitosDFsRender();
@@ -5150,7 +5161,7 @@ window.injetarFiltrosInconsistencias = function() {
 };
 
 window.creditosDFsLimpar = function() {
-  ['cred-dfs-busca','cred-dfs-status','cred-dfs-tipo','cred-dfs-credito','cred-dfs-status-rf','cred-dfs-metodo','cred-dfs-extincao','cred-dfs-data-de','cred-dfs-data-ate','cred-dfs-valor-min','cred-dfs-valor-max','cred-dfs-cred-min','cred-dfs-cred-max','cred-dfs-ibs-min','cred-dfs-ibs-max','cred-dfs-cbs-min','cred-dfs-cbs-max','cred-dfs-contrato'].forEach(function(id){
+  ['cred-dfs-busca','cred-dfs-status','cred-dfs-tipo','cred-dfs-credito','cred-dfs-metodo','cred-dfs-extincao','cred-dfs-data-de','cred-dfs-data-ate','cred-dfs-valor-min','cred-dfs-valor-max','cred-dfs-cred-min','cred-dfs-cred-max','cred-dfs-ibs-min','cred-dfs-ibs-max','cred-dfs-cbs-min','cred-dfs-cbs-max','cred-dfs-contrato'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
   if (typeof creditosDFsRender === 'function') creditosDFsRender();
@@ -6550,7 +6561,8 @@ window.renderizarTabelaPagamentos = function() {
         metodo: rf.metodoPagamento || nf.metodoPagamento || 'RAD',
         contratoId: rf.contratoId || nf.contratoId || null,
         statusFlags: rf.statusFlags || [],
-        metodoExtincao: rf.metodoExtincao || null
+        metodoExtincao: rf.metodoExtincao || null,
+        _inconsistencias: rf._inconsistencias || []
       });
     });
   });
@@ -6591,6 +6603,7 @@ window.renderizarTabelaPagamentos = function() {
           : '<span style="color:var(--txt2)">—</span>') + '</td>'
       + '<td style="vertical-align:middle">' + bdg(r.statusCredito) + '</td>'
       + '<td style="vertical-align:middle">' + (r.statusFlags.length ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.statusFlags[0] }) : '<span style="color:var(--txt3);font-size:11px">—</span>') + '</td>'
+      + '<td style="vertical-align:middle">' + ((r._inconsistencias && r._inconsistencias.length) ? r._inconsistencias.map(function(i){ return '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(220,38,38,.08);color:rgb(220,38,38);border:1px solid rgba(220,38,38,.25);white-space:nowrap;display:inline-block;margin:1px 1px 0 0">'+(i.tipoLabel||i.tipo||'—')+'</span>'; }).join('') : '<span style="color:var(--txt3)">—</span>') + '</td>'
       + '<td class="nowrap">' + (r.metodoExtincao ? (function(){ var _pMetExtMap={'Split Payment':'29,158,117','Compensacao':'24,95,165','Ressarcimento':'29,158,117','Transferencia':'139,92,246','RAD':'186,117,23'}; var _pMetExtLbl={'Split Payment':'Split Payment','Compensacao':'Compensação','Ressarcimento':'Ressarcimento','Transferencia':'Transferência','RAD':'RAD'}; var _k=r.metodoExtincao; return '<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+(_pMetExtMap[_k]||'29,158,117')+',.12);color:rgba('+(_pMetExtMap[_k]||'29,158,117')+',1);border:1px solid rgba('+(_pMetExtMap[_k]||'29,158,117')+',.28)">'+(_pMetExtLbl[_k]||_k)+'</span>'; })() : '<span style="color:var(--txt3);font-size:11px">—</span>') + '</td>'
       + '<td class="tc" style="vertical-align:middle">' + detBtn + '</td>'
       + '<td class="nowrap" style="vertical-align:middle;white-space:nowrap">' + act + '</td>'
@@ -6598,7 +6611,7 @@ window.renderizarTabelaPagamentos = function() {
   });
 
   if (!rows.length) {
-    h = '<tr><td colspan="16" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="17" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;
