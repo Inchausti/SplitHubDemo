@@ -3702,7 +3702,14 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <div style="font-size:11px;color:var(--txt3);line-height:1.4">Score<br><span style="color:var(--txt2);font-weight:600">de Risco</span></div>
     </div>
     <div class="hdr-act" style="gap:8px">
-      <select id="forn-periodo-sel" onchange="fornSetPeriodo(this.value)" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);font-family:inherit;cursor:pointer;outline:none">
+      <div class="periodo-wrap" style="position:relative">
+        <button id="forn-periodo-ms-btn" onclick="window.periodoMsOpen('forn',event)" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;color:var(--txt1);font-family:inherit;cursor:pointer;outline:none;white-space:nowrap">Fato gerador ▾</button>
+        <div id="forn-periodo-ms-panel" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;min-width:170px;z-index:300;box-shadow:0 4px 20px rgba(0,0,0,.35)">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:8px"><input type="checkbox" id="forn-periodo-ms-all" checked onchange="window.periodoMsAll('forn',this.checked)"> Todos os períodos</label>
+          <div id="forn-periodo-ms-list"></div>
+        </div>
+      </div>
+      <!-- legado: opções removidas --><select id="forn-periodo-sel" style="display:none">
         <option value="01/2026">Jan 2026</option>
         <option value="02/2026">Fev 2026</option>
         <option value="03/2026">Mar 2026</option>
@@ -6508,7 +6515,7 @@ window._dashCnpjRenderList=function(){
 // ──────────────────────────────────────────────────────────────────────
 
 // ── PERIODO MULTI-SELECT — widget compartilhado para todos os módulos ──
-window._periodoSel = { pag:[], cred:[], deb:[], conc:[] };
+window._periodoSel = { pag:[], cred:[], deb:[], conc:[], forn:[] };
 
 var _PM_MESES = [
   ['2025-10','Out 2025'],['2025-11','Nov 2025'],['2025-12','Dez 2025'],
@@ -6522,7 +6529,8 @@ var _PM_ON_APPLY = {
   pag:  function(){ try{ window.pagamentosFiltrarMesAno(); }catch(e){} },
   cred: function(){ try{ window.creditosFiltrarMesAno();   }catch(e){} },
   deb:  function(){ try{ window.debitosFiltrarMesAno();    }catch(e){} },
-  conc: function(){ try{ window.conciliacaoFiltrarMes && window.conciliacaoFiltrarMes(); }catch(e){} }
+  conc: function(){ try{ window.conciliacaoFiltrarMes && window.conciliacaoFiltrarMes(); }catch(e){} },
+  forn: function(){ try{ _renderFornDashboard(); _renderFornDFs(); }catch(e){} }
 };
 
 window.periodoMsInit = function(modId) {
@@ -6547,7 +6555,7 @@ window.periodoMsOpen = function(modId, event) {
   if (!panel) return;
   var isOpen = panel.style.display !== 'none';
   // close all other panels
-  ['pag','cred','deb','conc'].forEach(function(id) {
+  ['pag','cred','deb','conc','forn'].forEach(function(id) {
     var p = document.getElementById(id+'-periodo-ms-panel');
     if (p) p.style.display = 'none';
   });
@@ -6586,7 +6594,7 @@ window._pmAtualizarBtn = function(modId) {
 };
 
 document.addEventListener('click', function(ev) {
-  ['pag','cred','deb','conc'].forEach(function(id) {
+  ['pag','cred','deb','conc','forn'].forEach(function(id) {
     var p = document.getElementById(id+'-periodo-ms-panel');
     if (p && p.style.display !== 'none') {
       if (!p.contains(ev.target) && ev.target.id !== id+'-periodo-ms-btn') {
@@ -7676,6 +7684,12 @@ function _renderFornecedorBanner(){
   document.getElementById('forn-score-val').textContent = score;
 }
 
+function _fornPeriodosAtivos(){
+  var sel = window._periodoSel['forn'] || [];
+  if(!sel.length) return [['04','2026']]; // default: Abr/2026
+  return sel.map(function(v){ var p=v.split('-'); return [p[1],p[0]]; });
+}
+
 function _fornGerarDFs(){
   var f = window._fornAtual;
   if(!f) return [];
@@ -7683,35 +7697,38 @@ function _fornGerarDFs(){
   var statuses=['integrado','integrado','integrado','pendente','erro','integrado'];
   var dfs=[];
   var seed=f.id.charCodeAt(2)||1;
-  var p=window._fornPeriodo||{mes:'04',ano:'2026'};
-  // DF é vencido se o prazo de pagamento (25 dias após emissão) já passou
-  // "hoje" no contexto do demo = Ago/2026 = mes 8
-  var mesAtual=8; var mesComp=parseInt(p.mes,10);
-  var anoAtual=2026; var anoComp=parseInt(p.ano,10);
-  var compPassado=(anoComp<anoAtual)||(anoComp===anoAtual&&mesComp<mesAtual-1);
-  for(var i=0;i<12;i++){
-    var tipo=tipos[(i+seed)%tipos.length];
-    var num=String(1000+i*seed%900+1).padStart(6,'0');
-    var val=Math.round((15000+i*seed*317)%350000+8000);
-    var cbs=Math.round(val*0.088);
-    var ibs=Math.round(val*0.100);
-    var dia=String(1+(i*7)%28).padStart(2,'0');
-    var overrideStatus = window._fornDFStatus['DF-'+f.id+'-'+i] || null;
-    var status = overrideStatus || statuses[i%statuses.length];
-    var vencido = compPassado && (status==='pendente'||status==='erro');
-    dfs.push({
-      id:'DF-'+f.id+'-'+i,
-      tipo:tipo,
-      numero:tipo+' '+num,
-      chave:'35260'+f.cnpj.replace(/\D/g,'').substring(0,8)+(String(i*1337).padStart(16,'0')),
-      emissao:dia+'/'+p.mes+'/'+p.ano,
-      valor:val, cbs:cbs, ibs:ibs,
-      status: status,
-      vencido: vencido,
-      rad: i%4===0,
-      comentarios: (window._fornDFComentarios['DF-'+f.id+'-'+i]||[]).length
-    });
-  }
+  var mesAtual=8; var anoAtual=2026;
+  var periodos = _fornPeriodosAtivos();
+  periodos.forEach(function(par,pi){
+    var mes=par[0], ano=par[1];
+    var mesComp=parseInt(mes,10); var anoComp=parseInt(ano,10);
+    var compPassado=(anoComp<anoAtual)||(anoComp===anoAtual&&mesComp<mesAtual-1);
+    for(var i=0;i<12;i++){
+      var idx = pi*12+i;
+      var tipo=tipos[(idx+seed)%tipos.length];
+      var num=String(1000+idx*seed%900+1).padStart(6,'0');
+      var val=Math.round((15000+idx*seed*317)%350000+8000);
+      var cbs=Math.round(val*0.088);
+      var ibs=Math.round(val*0.100);
+      var dia=String(1+(i*7)%28).padStart(2,'0');
+      var dfId='DF-'+f.id+'-'+ano+mes+'-'+i;
+      var overrideStatus = window._fornDFStatus[dfId] || null;
+      var status = overrideStatus || statuses[i%statuses.length];
+      var vencido = compPassado && (status==='pendente'||status==='erro');
+      dfs.push({
+        id:dfId,
+        tipo:tipo,
+        numero:tipo+' '+num,
+        chave:'35260'+f.cnpj.replace(/\D/g,'').substring(0,8)+(String(idx*1337).padStart(16,'0')),
+        emissao:dia+'/'+mes+'/'+ano,
+        valor:val, cbs:cbs, ibs:ibs,
+        status: status,
+        vencido: vencido,
+        rad: idx%4===0,
+        comentarios: (window._fornDFComentarios[dfId]||[]).length
+      });
+    }
+  });
   return dfs;
 }
 
