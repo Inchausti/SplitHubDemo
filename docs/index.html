@@ -5917,16 +5917,6 @@ function nfRenderLista(){
       // Status do Crédito: nao_apropriado(15%) | apropriado(20%) | utilizado(50%) | glosado(15%)
       var statusCredito=_p<15?'nao_apropriado':_p<35?'apropriado':_p<85?'utilizado':'glosado';
 
-      // Status do Registro (só para não-glosados): inconsistencia|em_risco|a_prescrever|vencido|null
-      var statusRegistro=null;
-      if(statusCredito!=='glosado'){
-        if(_q<5)        statusRegistro='inconsistencia';
-        else if(_q<13)  statusRegistro='em_risco';
-        else if(_q<18&&statusCredito==='nao_apropriado') statusRegistro='a_prescrever';
-        else if(_q<23)  statusRegistro='vencido';
-      }
-      var tipoInconsistencia=statusRegistro==='inconsistencia'?_incTiposEnt[idx%_incTiposEnt.length]:null;
-
       // CBS = 8% do líquido, IBS = 10% do líquido, bruto = líquido + CBS + IBS
       var valorLiquido=Math.floor(nf.valor/1.18);
       var cbs=Math.floor(valorLiquido*0.08);
@@ -5937,6 +5927,37 @@ function nfRenderLista(){
       var _ct=(typeof buscarContrato==='function')?buscarContrato(nf.cnpj,nf.data):null;
       var _ctId=_ct?_ct.id:null;
       var _metPag=_ct?(_ct.rad?'RAD':'Fornecedor'):'Fornecedor';
+
+      // ── Regras de negócio para statusRegistro, inconsistência e dataPagamento ──
+      // RAD nao_apropriado → sem comprovante → inconsistência 'Sem Comprovante' obrigatória
+      // RAD apropriado/utilizado → comprovante presente → dataPagamento definido
+      // Fornecedor → pagou diretamente; flags por hash determinístico
+      // glosado → nenhuma flag temporal
+      var statusRegistro=null;
+      var tipoInconsistencia=null;
+      var dataPagamento=null;
+      var metodoExtincao=statusCredito==='utilizado'?'Compensacao':null;
+
+      if(statusCredito==='glosado'){
+        // RFB recusou o crédito — sem flags temporais
+      } else if(_metPag==='RAD'&&statusCredito==='nao_apropriado'){
+        // Adquirente RAD não pagou ainda = sem comprovante = inconsistência obrigatória
+        statusRegistro='inconsistencia';
+        tipoInconsistencia='Sem Comprovante';
+      } else if(_metPag==='RAD'&&(statusCredito==='apropriado'||statusCredito==='utilizado')){
+        // Adquirente RAD pagou = comprovante atrelado; data determinística (data RF + 3 dias)
+        var _dpP=(nf.data||'').split('-');
+        var _diaP=Math.min((parseInt(_dpP[2]||'1',10)+3),28);
+        dataPagamento=(_dpP[1]||'01')+'/'+String(_diaP).padStart(2,'0')+'/'+(_dpP[0]||'2026')+' 09:00';
+        // inconsistências de dados (não comprovante) com baixa probabilidade
+        if(_q<3){statusRegistro='inconsistencia';tipoInconsistencia=_incTiposEnt[idx%3];}
+      } else {
+        // Fornecedor pagou diretamente — flags temporais por hash
+        if(_q<5){statusRegistro='inconsistencia';tipoInconsistencia=_incTiposEnt[idx%_incTiposEnt.length];}
+        else if(_q<13)statusRegistro='em_risco';
+        else if(_q<18&&statusCredito==='nao_apropriado')statusRegistro='a_prescrever';
+        else if(_q<23)statusRegistro='vencido';
+      }
 
       // Registro NF de Entrada
       var _tipoDF_ent=_getDFTipoParaNF(nf.numero);
@@ -5952,17 +5973,18 @@ function nfRenderLista(){
         cbs:cbs,
         ibs:ibs,
         data:nf.data,
-        status:statusCredito,         // compat legado
-        statusCredito:statusCredito,  // Status do Crédito
-        statusRegistro:statusRegistro,// Status do Registro
+        status:statusCredito,
+        statusCredito:statusCredito,
+        statusRegistro:statusRegistro,
         inconsistencia:tipoInconsistencia,
         contratoId:_ctId,
         metodoPagamento:_metPag,
+        metodoExtincao:metodoExtincao,
         chaveDF:gerarChaveDF(_tipoDF_ent,nf.cnpj,nf.numero,nf.data),
         registrosFiscais:[]
       };
 
-      // Registros Fiscais (IBS e CBS) com ambos os status
+      // Registros Fiscais — obrigatório 1 IBS + 1 CBS por DF; herdam status do pai
       nfRecord.registrosFiscais.push({
         id:nfGerarIdRegistroFiscal(),
         tipo:'entrada',
@@ -5978,6 +6000,8 @@ function nfRenderLista(){
         inconsistencia:tipoInconsistencia,
         contratoId:_ctId,
         metodoPagamento:_metPag,
+        metodoExtincao:metodoExtincao,
+        dataPagamento:dataPagamento,
         data:nf.data,
         valorTotalNF:valorBruto,
         valorLiquidoNF:valorLiquido
@@ -5998,6 +6022,8 @@ function nfRenderLista(){
         inconsistencia:tipoInconsistencia,
         contratoId:_ctId,
         metodoPagamento:_metPag,
+        metodoExtincao:metodoExtincao,
+        dataPagamento:dataPagamento,
         data:nf.data,
         valorTotalNF:valorBruto,
         valorLiquidoNF:valorLiquido
