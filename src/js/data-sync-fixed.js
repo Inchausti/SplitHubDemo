@@ -3568,14 +3568,30 @@ window.renderizarRFsInconsistencias = function() {
     _nfIdx[nf.numero] = nf;
     (nf.registrosFiscais || []).forEach(function(rf) { rf._inconsistencias = []; });
   });
+  // Índice de DFs de ingestão órfãos (status inconsistencia, sem NF em nfListaFiltradaGlobal)
+  var _ingIdx = {};
+  (window._ingDadosGlobal || []).forEach(function(d) {
+    if (d.nfNumero) _ingIdx[String(d.nfNumero)] = d;
+  });
   incGlobal.forEach(function(inc) {
     var nf = _nfIdx[inc.nfNumero];
-    if (!nf) return;
-    nf._inconsistencias.push(inc);
-    if (inc.rfId) {
-      (nf.registrosFiscais || []).forEach(function(rf) {
-        if (rf.id === inc.rfId) rf._inconsistencias.push(inc);
-      });
+    if (nf) {
+      nf._inconsistencias.push(inc);
+      if (inc.rfId) {
+        (nf.registrosFiscais || []).forEach(function(rf) {
+          if (rf.id === inc.rfId) rf._inconsistencias.push(inc);
+        });
+      }
+    } else {
+      // DF de ingestão órfão: preencher campos do card com dados do _ingDadosGlobal
+      var ingD = _ingIdx[String(inc.nfNumero)];
+      if (ingD) {
+        if (!inc.entidade || inc.entidade === '—') inc.entidade = ingD.emitente || inc.entidade;
+        if (!inc.cnpj    || inc.cnpj    === '—') inc.cnpj     = ingD.cnpj     || inc.cnpj;
+        if (!inc.valorTotal) inc.valorTotal = ingD.valor || 0;
+        if (!inc.dataISO)    inc.dataISO    = ingD.dataEmissao || '';
+        if (!inc.data)       inc.data       = (function(d){ var p=(d||'').split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:'—'; })(ingD.dataEmissao);
+      }
     }
   });
 
