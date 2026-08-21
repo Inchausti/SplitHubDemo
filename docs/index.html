@@ -3701,7 +3701,17 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       </div>
       <div style="font-size:11px;color:var(--txt3);line-height:1.4">Score<br><span style="color:var(--txt2);font-weight:600">de Risco</span></div>
     </div>
-    <div class="hdr-act">
+    <div class="hdr-act" style="gap:8px">
+      <select id="forn-periodo-sel" onchange="fornSetPeriodo(this.value)" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--txt1);font-family:inherit;cursor:pointer;outline:none">
+        <option value="01/2026">Jan 2026</option>
+        <option value="02/2026">Fev 2026</option>
+        <option value="03/2026">Mar 2026</option>
+        <option value="04/2026" selected>Abr 2026</option>
+        <option value="05/2026">Mai 2026</option>
+        <option value="06/2026">Jun 2026</option>
+        <option value="07/2026">Jul 2026</option>
+        <option value="08/2026">Ago 2026</option>
+      </select>
       <button class="btn" onclick="abrirSeletorFornecedor()">Trocar fornecedor</button>
     </div>
   </div>
@@ -3710,6 +3720,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
   <div class="stabs" id="forn-subnav" style="margin-bottom:20px">
     <button class="stab active" id="forn-subnav-dashboard" onclick="fornShowSub('dashboard',this)">Dashboard</button>
     <button class="stab" id="forn-subnav-listagem" onclick="fornShowSub('listagem',this)">Documentos Fiscais</button>
+    <button class="stab" id="forn-subnav-organizacao" onclick="fornShowSub('organizacao',this)">Organização</button>
   </div>
 
   <!-- Sub: Dashboard -->
@@ -3788,6 +3799,77 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
           </thead>
           <tbody id="forn-df-tbody"></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sub: Organização -->
+  <div id="forn-sub-organizacao" class="forn-tab-content">
+    <!-- Dados Matriz -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="ccrd" style="padding:16px 18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div>
+            <div class="ctitle" style="font-size:13px;margin-bottom:2px">Dados Cadastrais</div>
+            <div class="csub">Dados Matriz · Compartilhados com o perfil cliente</div>
+          </div>
+          <button class="btn" id="forn-org-edit-btn" onclick="fornOrgToggleEdit()">Editar</button>
+        </div>
+        <div id="forn-org-view">
+          <div style="display:flex;flex-direction:column;gap:8px" id="forn-org-campos"></div>
+        </div>
+        <div id="forn-org-edit" style="display:none">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="forn-field"><label>Razão Social</label><input type="text" id="forn-org-razao" placeholder="Razão Social"></div>
+            <div class="forn-field"><label>Nome Fantasia</label><input type="text" id="forn-org-fantasia" placeholder="Nome Fantasia"></div>
+            <div class="forn-field"><label>CNPJ</label><input type="text" id="forn-org-cnpj" placeholder="00.000.000/0000-00" readonly style="opacity:.6;cursor:default"></div>
+            <div class="forn-field"><label>Inscrição Estadual</label><input type="text" id="forn-org-ie" placeholder="Inscrição Estadual"></div>
+            <div class="forn-field"><label>Endereço</label><input type="text" id="forn-org-end" placeholder="Rua, Nº, Complemento"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div class="forn-field"><label>Cidade</label><input type="text" id="forn-org-cidade" placeholder="Cidade"></div>
+              <div class="forn-field"><label>UF</label><input type="text" id="forn-org-uf" placeholder="UF" maxlength="2"></div>
+            </div>
+            <div class="forn-field"><label>E-mail fiscal</label><input type="email" id="forn-org-email" placeholder="fiscal@empresa.com.br"></div>
+            <div class="forn-field"><label>Telefone</label><input type="text" id="forn-org-tel" placeholder="(00) 0000-0000"></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+              <button class="btn" onclick="fornOrgCancelar()">Cancelar</button>
+              <button class="btn btn-t" onclick="fornOrgSalvar()">Salvar alterações</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ccrd" style="padding:16px 18px">
+        <div class="ctitle" style="font-size:13px;margin-bottom:2px">Contatos e Responsáveis</div>
+        <div class="csub" style="margin-bottom:14px">Representante fiscal e contatos operacionais</div>
+        <div style="display:flex;flex-direction:column;gap:10px" id="forn-org-contatos"></div>
+      </div>
+    </div>
+
+    <!-- Contratos bilaterais -->
+    <div class="ccrd" style="padding:16px 18px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div class="ctitle" style="font-size:13px;margin-bottom:2px">Contratos da Relação Bilateral</div>
+          <div class="csub" id="forn-org-contr-sub">Contratos entre o fornecedor e Induspar Tecnologia S.A.</div>
+        </div>
+      </div>
+      <div class="tcrd" style="margin-bottom:0">
+        <div class="twrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Contrato</th>
+                <th>Tipo</th>
+                <th>Vigência Início</th>
+                <th>Vigência Fim</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Modalidade Split</th>
+              </tr>
+            </thead>
+            <tbody id="forn-org-contratos-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -7296,20 +7378,163 @@ window._fornAtual = null;
 window._fornSelObrigatorio = false;
 window._fornDFComentarios = {}; // dfId -> [{autor,texto,ts}]
 window._fornDFStatus = {};      // dfId -> 'liquidado'|'contestado'|null
+window._fornPeriodo = {mes:'04',ano:'2026'};
+
+function fornSetPeriodo(val){
+  var parts=val.split('/');
+  window._fornPeriodo={mes:parts[0],ano:parts[1]};
+  _renderFornDashboard();
+  _renderFornDFs();
+}
+
+// ── Organização ──────────────────────────────────────────────────────────────
+
+// Dados Matriz compartilhados (chave = CNPJ)
+window._orgData = {};
+
+function _fornOrgGetData(f){
+  if(!f) return {};
+  if(!window._orgData[f.cnpj]){
+    window._orgData[f.cnpj]={
+      razao: f.nome,
+      fantasia: f.nome.split(' ')[0],
+      cnpj: f.cnpj,
+      ie: '123.456.789.012',
+      endereco: 'Av. Industrial, 1.500 · Bloco B',
+      cidade: 'São Paulo',
+      uf: 'SP',
+      email: 'fiscal@'+f.nome.toLowerCase().replace(/\s+/g,'')+'.com.br',
+      tel: '(11) 3000-'+String(1000+parseInt(f.id.replace(/\D/g,''))*37).slice(0,4)
+    };
+  }
+  return window._orgData[f.cnpj];
+}
+
+function _renderFornOrg(){
+  var f=window._fornAtual;
+  if(!f) return;
+  var d=_fornOrgGetData(f);
+
+  // Campos visualização
+  var camposEl=document.getElementById('forn-org-campos');
+  if(camposEl){
+    var rows=[
+      ['Razão Social',d.razao],
+      ['Nome Fantasia',d.fantasia],
+      ['CNPJ','<span class="mono">'+d.cnpj+'</span>'],
+      ['Inscrição Estadual',d.ie||'—'],
+      ['Endereço',d.endereco],
+      ['Cidade / UF',d.cidade+' · '+d.uf],
+      ['E-mail fiscal',d.email||'—'],
+      ['Telefone',d.tel||'—']
+    ];
+    camposEl.innerHTML=rows.map(function(r){
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">'+
+        '<span style="font-size:11px;color:var(--txt3)">'+r[0]+'</span>'+
+        '<span style="font-size:12px;color:var(--txt1);font-weight:500;text-align:right">'+r[1]+'</span>'+
+      '</div>';
+    }).join('');
+  }
+
+  // Preenche form de edição
+  ['razao','fantasia','cnpj','ie','end','cidade','uf','email','tel'].forEach(function(k){
+    var el=document.getElementById('forn-org-'+k);
+    var key=k==='end'?'endereco':k;
+    if(el) el.value=d[key]||'';
+  });
+
+  // Contatos mock
+  var contatosEl=document.getElementById('forn-org-contatos');
+  if(contatosEl){
+    var contatos=[
+      {cargo:'Representante Fiscal',nome:'Carlos Mendes',email:'c.mendes@'+d.fantasia.toLowerCase()+'.com.br',tel:'(11) 9'+String(8000+parseInt(f.id.replace(/\D/g,''))*13).slice(0,4)+'-'+String(5678+parseInt(f.id.replace(/\D/g,''))*7).slice(0,4)},
+      {cargo:'Responsável Financeiro',nome:'Ana Lucia Santos',email:'financeiro@'+d.fantasia.toLowerCase()+'.com.br',tel:'(11) 3000-0001'},
+      {cargo:'Contato Operacional',nome:'Roberto Ferreira',email:'operacoes@'+d.fantasia.toLowerCase()+'.com.br',tel:'(11) 3000-0002'}
+    ];
+    contatosEl.innerHTML=contatos.map(function(c){
+      return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px">'+
+        '<div style="font-size:9px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">'+c.cargo+'</div>'+
+        '<div style="font-size:13px;font-weight:600;color:var(--txt1);margin-bottom:3px">'+c.nome+'</div>'+
+        '<div style="font-size:11px;color:var(--txt3)">'+c.email+' · '+c.tel+'</div>'+
+      '</div>';
+    }).join('');
+  }
+
+  // Contratos bilaterais
+  var suEl=document.getElementById('forn-org-contr-sub');
+  if(suEl) suEl.textContent='Contratos entre '+f.nome+' e Induspar Tecnologia S.A.';
+  var seed=f.id.charCodeAt(2)||1;
+  var tiposContr=['Fornecimento','Serviço','Locação','Manutenção'];
+  var modalidades=['Split Total','Split Parcial','Sem Split'];
+  var statContr=['vigente','vigente','encerrado','vigente'];
+  var tbody=document.getElementById('forn-org-contratos-tbody');
+  if(!tbody) return;
+  var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
+  var _scChip={vigente:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">Vigente</span>',encerrado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(100,100,100,.15);color:var(--txt3)">Encerrado</span>'};
+  tbody.innerHTML=[0,1,2,3].map(function(i){
+    var val=Math.round((80000+i*seed*4711)%900000+50000);
+    var ano1=2024+(i%2);
+    var ano2=ano1+1+(i%2);
+    return '<tr>'+
+      '<td style="font-size:11px;font-family:var(--font-mono);color:var(--teal)">CTR-'+String(2024+i).slice(-2)+String(100+seed+i*7).slice(-3)+'</td>'+
+      '<td style="font-size:12px">'+tiposContr[(i+seed)%tiposContr.length]+'</td>'+
+      '<td style="font-size:12px;color:var(--txt2)">01/01/'+ano1+'</td>'+
+      '<td style="font-size:12px;color:var(--txt2)">31/12/'+ano2+'</td>'+
+      '<td style="font-size:12px;font-family:var(--font-mono)">'+ff(val)+'</td>'+
+      '<td>'+(_scChip[statContr[i%statContr.length]]||_scChip.vigente)+'</td>'+
+      '<td style="font-size:11px;color:var(--txt2)">'+modalidades[(i+seed)%modalidades.length]+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+function fornOrgToggleEdit(){
+  var v=document.getElementById('forn-org-view');
+  var e=document.getElementById('forn-org-edit');
+  var btn=document.getElementById('forn-org-edit-btn');
+  var show=e.style.display==='none';
+  v.style.display=show?'none':'';
+  e.style.display=show?'':'none';
+  btn.textContent=show?'Cancelar':'Editar';
+}
+
+function fornOrgCancelar(){
+  document.getElementById('forn-org-view').style.display='';
+  document.getElementById('forn-org-edit').style.display='none';
+  document.getElementById('forn-org-edit-btn').textContent='Editar';
+}
+
+function fornOrgSalvar(){
+  var f=window._fornAtual;
+  if(!f) return;
+  var d=_fornOrgGetData(f);
+  d.razao=document.getElementById('forn-org-razao').value.trim()||d.razao;
+  d.fantasia=document.getElementById('forn-org-fantasia').value.trim()||d.fantasia;
+  d.ie=document.getElementById('forn-org-ie').value.trim();
+  d.endereco=document.getElementById('forn-org-end').value.trim();
+  d.cidade=document.getElementById('forn-org-cidade').value.trim();
+  d.uf=document.getElementById('forn-org-uf').value.trim();
+  d.email=document.getElementById('forn-org-email').value.trim();
+  d.tel=document.getElementById('forn-org-tel').value.trim();
+  // Reflete no nome do fornecedor se razão social mudou
+  if(d.razao) { f.nome=d.razao; _renderFornecedorBanner(); }
+  fornOrgCancelar();
+  _renderFornOrg();
+  _showToast('Dados salvos · Refletidos em todos os perfis');
+}
 
 var _FORNECEDORES_MOCK = [];
 (function(){
   try {
     // Usa dados do fornecedores.json se disponível, senão mock inline
     var raw = [
-      {id:'F-001',nome:'Ferroplex Mineração S.A.',cnpj:'28.447.821/0001-35',score:88,categorizacao:'Premium'},
-      {id:'F-002',nome:'Sulpar Implementos S.A.',cnpj:'14.382.976/0001-09',score:82,categorizacao:'Premium'},
-      {id:'F-003',nome:'Transcarro S.A.',cnpj:'19.854.203/0001-67',score:78,categorizacao:'Premium'},
-      {id:'F-004',nome:'Tectra Sistemas Ltda',cnpj:'38.291.045/0001-52',score:74,categorizacao:'Categoria A'},
-      {id:'F-005',nome:'Eletropar Ind. Ltda',cnpj:'61.874.320/0001-88',score:65,categorizacao:'Categoria A'},
-      {id:'F-006',nome:'Aeroprime Ind. S.A.',cnpj:'52.039.781/0001-15',score:91,categorizacao:'Premium'},
-      {id:'F-007',nome:'Sidepar S.A.',cnpj:'40.825.163/0001-53',score:70,categorizacao:'Categoria A'},
-      {id:'F-008',nome:'Totvs S.A.',cnpj:'53.113.791/0001-22',score:85,categorizacao:'Premium'}
+      {id:'F-001',nome:'Ferroplex Mineração S.A.',cnpj:'28.447.821/0001-35',score:88,grupo:'Grupo Ferroplex'},
+      {id:'F-002',nome:'Sulpar Implementos S.A.',cnpj:'14.382.976/0001-09',score:82,grupo:'Grupo Sulpar'},
+      {id:'F-003',nome:'Transcarro S.A.',cnpj:'19.854.203/0001-67',score:78,grupo:'Transcarro Holding'},
+      {id:'F-004',nome:'Tectra Sistemas Ltda',cnpj:'38.291.045/0001-52',score:74,grupo:'Tectra Holding'},
+      {id:'F-005',nome:'Eletropar Ind. Ltda',cnpj:'61.874.320/0001-88',score:65,grupo:'Grupo Eletropar'},
+      {id:'F-006',nome:'Aeroprime Ind. S.A.',cnpj:'52.039.781/0001-15',score:91,grupo:'Aeroprime Holding'},
+      {id:'F-007',nome:'Sidepar S.A.',cnpj:'40.825.163/0001-53',score:70,grupo:'Grupo Sidepar'},
+      {id:'F-008',nome:'Totvs S.A.',cnpj:'53.113.791/0001-22',score:85,grupo:'Grupo Totvs'}
     ];
     _FORNECEDORES_MOCK = raw;
   } catch(e){}
@@ -7383,6 +7608,7 @@ function confirmarFornecedor(){
   _renderFornecedorBanner();
   _renderFornDashboard();
   _renderFornDFs();
+  _renderFornOrg();
   fornShowSub('dashboard', document.getElementById('forn-subnav-dashboard'));
   // agora exibe a view (body attribute + showView)
   setPerfil('fornecedor');
@@ -7395,6 +7621,9 @@ function _renderFornecedorBanner(){
   document.getElementById('forn-banner-av').textContent = initials;
   document.getElementById('forn-banner-nome').textContent = f.nome;
   document.getElementById('forn-banner-cnpj').textContent = 'CNPJ: '+f.cnpj;
+  // Atualiza o seletor de Grupo Econômico no header para refletir o fornecedor
+  var geBtn=document.getElementById('ah-ge-btn');
+  if(geBtn) geBtn.textContent=(f.grupo||f.nome)+' ▾';
   // Score ring
   var score = f.score || 0;
   var circ = 2*Math.PI*21; // 131.9
@@ -7411,6 +7640,12 @@ function _fornGerarDFs(){
   var statuses=['integrado','integrado','integrado','pendente','erro','integrado'];
   var dfs=[];
   var seed=f.id.charCodeAt(2)||1;
+  var p=window._fornPeriodo||{mes:'04',ano:'2026'};
+  // DF é vencido se o prazo de pagamento (25 dias após emissão) já passou
+  // "hoje" no contexto do demo = Ago/2026 = mes 8
+  var mesAtual=8; var mesComp=parseInt(p.mes,10);
+  var anoAtual=2026; var anoComp=parseInt(p.ano,10);
+  var compPassado=(anoComp<anoAtual)||(anoComp===anoAtual&&mesComp<mesAtual-1);
   for(var i=0;i<12;i++){
     var tipo=tipos[(i+seed)%tipos.length];
     var num=String(1000+i*seed%900+1).padStart(6,'0');
@@ -7419,15 +7654,18 @@ function _fornGerarDFs(){
     var ibs=Math.round(val*0.100);
     var dia=String(1+(i*7)%28).padStart(2,'0');
     var overrideStatus = window._fornDFStatus['DF-'+f.id+'-'+i] || null;
+    var status = overrideStatus || statuses[i%statuses.length];
+    var vencido = compPassado && (status==='pendente'||status==='erro');
     dfs.push({
       id:'DF-'+f.id+'-'+i,
       tipo:tipo,
       numero:tipo+' '+num,
       chave:'35260'+f.cnpj.replace(/\D/g,'').substring(0,8)+(String(i*1337).padStart(16,'0')),
-      emissao:dia+'/04/2026',
+      emissao:dia+'/'+p.mes+'/'+p.ano,
       valor:val, cbs:cbs, ibs:ibs,
-      status: overrideStatus || statuses[i%statuses.length],
-      rad: i%4===0, // pago via RAD
+      status: status,
+      vencido: vencido,
+      rad: i%4===0,
       comentarios: (window._fornDFComentarios['DF-'+f.id+'-'+i]||[]).length
     });
   }
@@ -7605,11 +7843,14 @@ function _renderFornDFRows(dfs){
       '<td>'+(_statusChip[d.status]||_statusChip.pendente)+'</td>'+
       '<td>'+(_credChip[credStatus]||_credChip.Pendente)+'</td>'+
       '<td>'+(_capurChip[capurStatus]||_capurChip.Pendente)+'</td>'+
-      '<td><div style="display:flex;gap:4px;flex-wrap:nowrap">'+
+      '<td><div style="display:flex;gap:4px;flex-wrap:nowrap;align-items:center">'+
         '<button class="btn" style="font-size:10px;padding:3px 8px" onclick="abrirDetalheDF(\''+d.id+'\')" title="Ver detalhes">Ver</button>'+
+        (d.rad?'<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--teal);color:var(--teal)" onclick="abrirRADModal(\''+d.id+'\')" title="Baixar comprovante RAD">📄 RAD</button>':'')+
         (d.status!=='liquidado'&&d.status!=='contestado'?
-          '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--teal);color:var(--teal)" onclick="abrirLiquidarDF(\''+d.id+'\')" title="Informar liquidação">Liquidar</button>'+
-          '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--red);color:var(--red)" onclick="abrirContestarDF(\''+d.id+'\')" title="Contestar DF">Contestar</button>'
+          '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--teal);color:var(--teal)" onclick="abrirLiquidarDF(\''+d.id+'\')" title="Informar liquidação">Liquidar</button>'
+        :'')+
+        (d.vencido&&d.status!=='liquidado'&&d.status!=='contestado'?
+          '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--red);color:var(--red)" onclick="abrirContestarDF(\''+d.id+'\')" title="Contestar DF vencido">Contestar</button>'
         :'')+
         '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--txt3);color:var(--txt3)" onclick="abrirComentarDF(\''+d.id+'\')" title="Comentários'+(d.comentarios?' ('+d.comentarios+')':'')+'">'+(d.comentarios?'💬 '+d.comentarios:'💬')+'</button>'+
       '</div></td>'+
@@ -7878,10 +8119,11 @@ function fornBaixarComprovante(){
 
 function fornShowSub(sub, btn){
   document.querySelectorAll('.forn-tab-content').forEach(function(el){el.classList.remove('active');});
-  document.querySelectorAll('#forn-subnav .forn-tab').forEach(function(el){el.classList.remove('active');});
+  document.querySelectorAll('#forn-subnav .stab').forEach(function(el){el.classList.remove('active');});
   var tc=document.getElementById('forn-sub-'+sub);
   if(tc) tc.classList.add('active');
   if(btn) btn.classList.add('active');
+  if(sub==='organizacao') _renderFornOrg();
 }
 
 function fecharModal(id){
