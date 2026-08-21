@@ -899,7 +899,7 @@ window._rfGerarHistorico = function(rf, nf) {
 
   if (_sr_hist === 'inconsistencia') {
     ev.push(mkEv(MK(A(d0,3),'14:27'),   'INCONSISTÊNCIA','Inconsistências',           'SplitHub',
-      (rf.inconsistencia || 'Divergência') + ' identificada · registro encaminhado para revisão manual', 'erro'));
+      ((rf._inconsistencias && rf._inconsistencias.length ? rf._inconsistencias.map(function(i){return i.tipoLabel||i.tipo||'Divergência';}).join(' · ') : rf.inconsistencia || 'Divergência')) + ' identificada · registro encaminhado para revisão manual', 'erro'));
   }
   if (_sr_hist === 'a_prescrever') {
     ev.push(mkEv(MK(A(d0,5),'09:00'),   'AGUARDANDO',    'Créditos',                 'SplitHub',
@@ -1268,6 +1268,7 @@ window.renderizarTabelaCreditos = function() {
         statusRegistro: rf.statusRegistro || null,
         statusFlags: rf.statusFlags || [],
         inconsistencia: rf.inconsistencia || null,
+        _inconsistencias: rf._inconsistencias || [],
         contratoId: rf.contratoId || nf.contratoId || null,
         metodoPagamento: rf.metodoPagamento || nf.metodoPagamento || null,
         metodoExtincao: rf.metodoExtincao || null
@@ -1345,7 +1346,12 @@ window.renderizarTabelaCreditos = function() {
         : '<span style="color:var(--txt3)">—</span>';
 
       var statusBadge = bdg(r.statusCredito);
-      var incBadge = r.inconsistencia ? '<br><span style="font-size:10px;color:'+PALETTE.red+';font-style:italic">'+r.inconsistencia+'</span>' : '';
+      var _incLabels = (r._inconsistencias && r._inconsistencias.length)
+        ? r._inconsistencias.map(function(i){ return i.tipoLabel || i.tipo || 'Inconsistência'; })
+        : (r.inconsistencia ? [r.inconsistencia] : []);
+      var incBadge = _incLabels.length
+        ? '<br>' + _incLabels.map(function(lbl){ return '<span style="display:inline-block;font-size:10px;color:'+PALETTE.red+';font-style:italic;margin-right:4px">'+lbl+'</span>'; }).join('')
+        : '';
 
       var sc = r.statusCredito || '';
       var metExtCell;
@@ -2916,7 +2922,7 @@ function _concRFDetail(nf, ibsRF, cbsRF) {
       + '<span style="color:var(--txt3)">Valor</span><span style="color:var(--txt1);font-weight:600">' + fmtV(rf.valor) + '</span>'
       + '<span style="color:var(--txt3)">Data RF</span><span style="color:var(--txt2)">' + (rf.data || '—') + '</span>'
       + '<span style="color:var(--txt3)">Pagamento</span><span style="color:' + (pago ? '#1d9e75' : 'var(--txt3)') + ';font-weight:' + (pago ? '600' : '400') + '">' + (pago ? rf.dataPagamento : 'Pendente') + '</span>'
-      + (rf.inconsistencia ? ('<span style="color:var(--txt3)">Inconsistência</span><span style="color:'+PALETTE.red+';font-size:10px">' + rf.inconsistencia + '</span>') : '')
+      + ((rf._inconsistencias && rf._inconsistencias.length) ? ('<span style="color:var(--txt3)">Inconsistências</span><span style="color:'+PALETTE.red+';font-size:10px">' + rf._inconsistencias.map(function(i){return i.tipoLabel||i.tipo||'Divergência';}).join(' · ') + '</span>') : rf.inconsistencia ? ('<span style="color:var(--txt3)">Inconsistência</span><span style="color:'+PALETTE.red+';font-size:10px">'+rf.inconsistencia+'</span>') : '')
       + '</div>'
       + (canOpen ? '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:'+PALETTE.blue+';font-weight:600">Ver detalhes do RF →</div>' : '')
       + '</div>';
