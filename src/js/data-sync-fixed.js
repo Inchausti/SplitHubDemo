@@ -7061,6 +7061,7 @@ document.addEventListener('DOMContentLoaded', function() {
       var hoje = new Date(); hoje.setHours(0,0,0,0);
       var MS_DIA = 86400000;
       (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+        if (nf.tipo !== 'entrada') return; // flags temporais só se aplicam a créditos (entrada)
         (nf.registrosFiscais || []).forEach(function(rf) {
           var sc = rf.statusCredito || rf.status || '';
           if (sc === 'apropriado' || sc === 'utilizado' || sc === 'glosado') { rf.statusFlags = []; return; }
