@@ -241,10 +241,6 @@ nav{padding:10px;flex:1;overflow-y:auto}
 .forn-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
 @media(max-width:900px){.forn-kpi-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.forn-kpi-grid{grid-template-columns:1fr}}
-/* Liquidar modal */
-#forn-liq-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1200;align-items:center;justify-content:center}
-#forn-liq-overlay.open{display:flex}
-#forn-liq-modal{background:var(--sidebar);border:1px solid var(--border);border-top:3px solid var(--teal);border-radius:10px;width:500px;max-width:96vw;max-height:90vh;overflow-y:auto;padding:20px 22px 22px;box-shadow:0 4px 24px rgba(0,0,0,.12),0 0 0 1px rgba(13,158,142,.10)}
 /* Contestação modal */
 #forn-cont-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1200;align-items:center;justify-content:center}
 #forn-cont-overlay.open{display:flex}
@@ -304,16 +300,22 @@ nav{padding:10px;flex:1;overflow-y:auto}
 .forn-modal-foot .btn-confirm:hover{background:#086058;border-color:#086058}
 .forn-modal-foot .btn-danger{background:var(--red);border-color:var(--red);color:#fff}
 .forn-modal-foot .btn-danger:hover{filter:brightness(.9)}
-/* Comentários thread */
-.comt-thread{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px;max-height:280px;overflow-y:auto}
-.comt-item{padding:12px 14px;border-bottom:1px solid var(--border);font-size:12px}
-.comt-item:last-child{border-bottom:none}
-.comt-item-hdr{display:flex;align-items:center;gap:8px;margin-bottom:5px}
-.comt-av{width:22px;height:22px;border-radius:50%;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.comt-av.forn{background:rgba(73,197,177,.15);color:var(--teal)}
-.comt-av.adq{background:rgba(29,95,204,.15);color:var(--blue)}
-.comt-nome{font-weight:700;color:var(--txt1);font-size:11px}
-.comt-ts{font-size:10px;color:var(--txt3)}
+/* Chat de comentários — bolhas */
+.chat-msg{display:flex;flex-direction:column;max-width:82%}
+.chat-msg.forn{align-self:flex-end;align-items:flex-end}
+.chat-msg.adq{align-self:flex-start;align-items:flex-start}
+.chat-bubble{padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.45;word-break:break-word}
+.chat-msg.forn .chat-bubble{background:rgba(73,197,177,.15);border:1px solid rgba(73,197,177,.25);color:var(--txt1);border-bottom-right-radius:3px}
+.chat-msg.adq .chat-bubble{background:var(--card);border:1px solid var(--border);color:var(--txt1);border-bottom-left-radius:3px}
+.chat-meta{font-size:10px;color:var(--txt3);margin-top:3px;padding:0 3px}
+/* Timeline contestação */
+.cont-evt{display:flex;gap:12px;padding-bottom:16px;position:relative}
+.cont-evt:not(:last-child):before{content:'';position:absolute;left:14px;top:28px;bottom:0;width:1px;background:var(--border)}
+.cont-evt-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;z-index:1;position:relative}
+.cont-evt-body{flex:1;padding-top:4px}
+.cont-evt-title{font-size:12px;font-weight:700;color:var(--txt1);margin-bottom:2px}
+.cont-evt-desc{font-size:12px;color:var(--txt2);line-height:1.45}
+.cont-evt-ts{font-size:10px;color:var(--txt3);margin-top:3px}
 .comt-text{color:var(--txt2);line-height:1.5}
 /* Comprovante RAD card */
 .rad-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
@@ -3907,104 +3909,102 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
   </div>
 </div>
 
-<!-- MODAL: LIQUIDAR DF -->
-<div id="forn-liq-overlay" onclick="if(event.target===this)fecharModal('forn-liq-overlay')">
-  <div id="forn-liq-modal">
-    <span class="modal-eyebrow">Crédito · Extinção</span>
-    <div class="forn-modal-title">Marcar DF como Liquidado</div>
-    <div class="forn-modal-sub" id="forn-liq-sub">NF-e 000001 · R$ 0,00</div>
-    <div class="forn-field">
-      <label>Justificativa <span style="color:var(--red)">*</span></label>
-      <textarea id="forn-liq-just" placeholder="Descreva o motivo da liquidação (pagamento realizado, compensação, etc.)…" rows="4"></textarea>
-    </div>
-    <div class="forn-field">
-      <label>Data de liquidação <span style="color:var(--red)">*</span></label>
-      <input type="text" id="forn-liq-data" placeholder="DD/MM/AAAA">
-    </div>
-    <div class="forn-field">
-      <label>Comprovante (PDF ou imagem)</label>
-      <div class="forn-upload-box" onclick="document.getElementById('forn-liq-file').click()">
-        <div style="font-size:24px">📎</div>
-        <div class="forn-upload-lbl" id="forn-liq-file-lbl">Clique para anexar comprovante (PDF, PNG, JPG)</div>
-        <input type="file" id="forn-liq-file" accept=".pdf,.png,.jpg,.jpeg" onchange="fornLiqFileChange()">
-      </div>
-    </div>
-    <div class="forn-modal-foot">
-      <button class="btn" onclick="fecharModal('forn-liq-overlay')">Cancelar</button>
-      <button class="btn btn-t" onclick="confirmarLiquidacao()">Confirmar liquidação</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: CONTESTAÇÃO -->
+<!-- MODAL: CONTESTAÇÃO (fluxo abertura → análise → aceite) -->
 <div id="forn-cont-overlay" onclick="if(event.target===this)fecharModal('forn-cont-overlay')">
-  <div id="forn-cont-modal">
-    <span class="modal-eyebrow">Crédito · Auditoria</span>
-    <div class="forn-modal-title">Abrir Contestação</div>
-    <div class="forn-modal-sub" id="forn-cont-sub">NF-e 000001 · R$ 0,00</div>
-    <div class="forn-field">
-      <label>Tipo de divergência <span style="color:var(--red)">*</span></label>
-      <select id="forn-cont-tipo">
-        <option value="">Selecione…</option>
-        <option value="valor">Valor incorreto</option>
-        <option value="aliquota">Alíquota IBS/CBS divergente</option>
-        <option value="duplicidade">Duplicidade de cobrança</option>
-        <option value="cancelamento">DF já cancelado</option>
-        <option value="pagamento">Pagamento já realizado</option>
-        <option value="outro">Outro</option>
-      </select>
-    </div>
-    <div class="forn-field">
-      <label>Descrição da divergência <span style="color:var(--red)">*</span></label>
-      <textarea id="forn-cont-desc" placeholder="Descreva em detalhes a divergência identificada e qual seria o valor ou situação correta…" rows="5"></textarea>
-    </div>
-    <div class="forn-field">
-      <label>Valor contestado (R$)</label>
-      <input type="text" id="forn-cont-valor" placeholder="Ex: 1.234,56">
-    </div>
-    <div class="forn-field">
-      <label>Evidência (PDF ou imagem)</label>
-      <div class="forn-upload-box" onclick="document.getElementById('forn-cont-file').click()">
-        <div style="font-size:24px">📎</div>
-        <div class="forn-upload-lbl" id="forn-cont-file-lbl">Clique para anexar evidência</div>
-        <input type="file" id="forn-cont-file" accept=".pdf,.png,.jpg,.jpeg" onchange="fornContFileChange()">
+  <div id="forn-cont-modal" style="width:560px">
+    <span class="modal-eyebrow">Crédito · Contestação</span>
+    <div class="forn-modal-title" id="forn-cont-titulo">Abrir Contestação</div>
+    <div class="forn-modal-sub" id="forn-cont-sub">—</div>
+    <!-- Etapa: formulário de abertura -->
+    <div id="forn-cont-form">
+      <div class="forn-field">
+        <label>Tipo de divergência <span style="color:var(--red)">*</span></label>
+        <select id="forn-cont-tipo">
+          <option value="">Selecione…</option>
+          <option value="valor">Valor incorreto</option>
+          <option value="aliquota">Alíquota IBS/CBS divergente</option>
+          <option value="duplicidade">Duplicidade de cobrança</option>
+          <option value="cancelamento">DF já cancelado</option>
+          <option value="nao_liquidado">Impostos não recolhidos pelo adquirente</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="forn-field">
+        <label>Descrição da divergência <span style="color:var(--red)">*</span></label>
+        <textarea id="forn-cont-desc" placeholder="Descreva em detalhes a divergência identificada e qual seria o valor ou situação correta…" rows="4"></textarea>
+      </div>
+      <div class="forn-field">
+        <label>Valor contestado (R$)</label>
+        <input type="text" id="forn-cont-valor" placeholder="Ex: 1.234,56">
+      </div>
+      <div class="forn-field">
+        <label>Evidência (PDF ou imagem)</label>
+        <div class="forn-upload-box" onclick="document.getElementById('forn-cont-file').click()">
+          <div style="font-size:24px">📎</div>
+          <div class="forn-upload-lbl" id="forn-cont-file-lbl">Clique para anexar evidência</div>
+          <input type="file" id="forn-cont-file" accept=".pdf,.png,.jpg,.jpeg" onchange="fornContFileChange()">
+        </div>
+      </div>
+      <div class="forn-modal-foot">
+        <button class="btn" onclick="fecharModal('forn-cont-overlay')">Cancelar</button>
+        <button class="btn" style="background:var(--red);border-color:var(--red);color:#fff" onclick="confirmarContestacao()">Abrir contestação</button>
       </div>
     </div>
-    <div class="forn-modal-foot">
-      <button class="btn" onclick="fecharModal('forn-cont-overlay')">Cancelar</button>
-      <button class="btn" style="background:var(--red);border-color:var(--red);color:#fff" onclick="confirmarContestacao()">Enviar contestação</button>
+    <!-- Etapa: acompanhamento / histórico de fluxo -->
+    <div id="forn-cont-historico" style="display:none">
+      <div id="forn-cont-status-banner" style="border-radius:7px;padding:10px 14px;margin-bottom:16px;font-size:12px;font-weight:600"></div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:10px">Histórico da contestação</div>
+      <div id="forn-cont-timeline" style="display:flex;flex-direction:column;gap:0;margin-bottom:20px"></div>
+      <!-- Resposta do adquirente pendente de aceite -->
+      <div id="forn-cont-aceite-box" style="display:none;border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--p-teal);margin-bottom:8px">Resposta do adquirente</div>
+        <div id="forn-cont-aceite-msg" style="font-size:13px;color:var(--txt2);margin-bottom:14px;line-height:1.5"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-t" onclick="fornContAceitar()">Aceitar resolução</button>
+          <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="fornContRecusar()">Recusar e escalar</button>
+        </div>
+      </div>
+      <div class="forn-modal-foot">
+        <button class="btn" onclick="fecharModal('forn-cont-overlay')">Fechar</button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL: COMENTÁRIOS -->
+<!-- MODAL: CHAT COMENTÁRIOS -->
 <div id="forn-comt-overlay" onclick="if(event.target===this)fecharModal('forn-comt-overlay')">
-  <div id="forn-comt-modal">
-    <span class="modal-eyebrow">Crédito · Comunicação</span>
-    <div class="forn-modal-title">Comentários do DF</div>
-    <div class="forn-modal-sub" id="forn-comt-sub">NF-e 000001</div>
-    <div class="comt-thread" id="forn-comt-thread"></div>
-    <div class="forn-field">
-      <label>Novo comentário</label>
-      <textarea id="forn-comt-novo" placeholder="Escreva um comentário para a equipe da Induspar Tecnologia…" rows="3"></textarea>
+  <div id="forn-comt-modal" style="width:520px;padding:0;display:flex;flex-direction:column;max-height:85vh">
+    <!-- Header -->
+    <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <span class="modal-eyebrow">Chat · Adquirente</span>
+      <div class="forn-modal-title" style="margin-bottom:2px">Comunicação do DF</div>
+      <div class="forn-modal-sub" id="forn-comt-sub" style="margin:0">—</div>
     </div>
-    <div class="forn-modal-foot">
-      <button class="btn" onclick="fecharModal('forn-comt-overlay')">Fechar</button>
-      <button class="btn btn-t" onclick="enviarComentario()">Enviar comentário</button>
+    <!-- Thread de chat -->
+    <div id="forn-comt-thread" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;min-height:200px"></div>
+    <!-- Input fixo no rodapé -->
+    <div style="padding:12px 20px 16px;border-top:1px solid var(--border);flex-shrink:0">
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <textarea id="forn-comt-novo" placeholder="Mensagem para a Induspar Tecnologia…" rows="2" style="flex:1;resize:none;background:var(--inp,var(--sidebar));border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--txt1);font-family:inherit;outline:none" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarComentario();}"></textarea>
+        <button class="btn btn-t" style="padding:8px 14px;height:fit-content" onclick="enviarComentario()">Enviar</button>
+      </div>
+      <div style="font-size:10px;color:var(--txt3);margin-top:5px">Enter para enviar · Shift+Enter para nova linha</div>
     </div>
   </div>
 </div>
 
-<!-- MODAL: COMPROVANTE RAD -->
+<!-- MODAL: COMPROVANTES RAD (CBS + IBS) -->
 <div id="forn-rad-overlay" onclick="if(event.target===this)fecharModal('forn-rad-overlay')">
-  <div id="forn-rad-modal">
-    <span class="modal-eyebrow">Split Payment · RAD</span>
-    <div class="forn-modal-title">Comprovante de Pagamento RAD</div>
+  <div id="forn-rad-modal" style="width:620px">
+    <span class="modal-eyebrow">Split Payment · RAD · Adquirente</span>
+    <div class="forn-modal-title">Comprovantes de Pagamento</div>
     <div class="forn-modal-sub" id="forn-rad-modal-sub">—</div>
-    <div id="forn-rad-modal-body" style="margin-bottom:20px"></div>
+    <div style="font-size:11px;color:var(--txt3);margin-bottom:14px;line-height:1.5">Comprovantes emitidos pelo adquirente (Induspar Tecnologia S.A.) referentes ao recolhimento dos tributos IBS e CBS via Regime de Atribuição Diferida (RAD), conforme art. 148 LC 214/2025.</div>
+    <div id="forn-rad-modal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px"></div>
     <div class="forn-modal-foot">
-      <button class="btn-cancel" onclick="fecharModal('forn-rad-overlay')">Fechar</button>
-      <button class="btn-confirm" onclick="fornBaixarComprovante()">Baixar PDF</button>
+      <button class="btn" onclick="fecharModal('forn-rad-overlay')">Fechar</button>
+      <button class="btn btn-t" onclick="fornBaixarComprovante('cbs')">Baixar CBS</button>
+      <button class="btn btn-t" onclick="fornBaixarComprovante('ibs')">Baixar IBS</button>
     </div>
   </div>
 </div>
@@ -7502,29 +7502,41 @@ function _renderFornOrg(){
     }).join('');
   }
 
-  // Contratos bilaterais (por CNPJ da unidade selecionada)
+  // Contratos bilaterais — filtrados do registro global por CNPJ da unidade
   var suEl=document.getElementById('forn-org-contr-sub');
   if(suEl) suEl.textContent='Contratos entre '+u.cnpj+' ('+u.nome+') e Induspar Tecnologia S.A. · '+u.tipo;
-  var seed=(u.cnpj.charCodeAt(0)||1)+(u.cnpj.charCodeAt(9)||1);
-  var tiposContr=['Fornecimento','Serviço','Locação','Manutenção'];
-  var modalidades=['Split Total','Split Parcial','Sem Split'];
-  var statContr=['vigente','vigente','encerrado','vigente'];
   var tbody=document.getElementById('forn-org-contratos-tbody');
   if(!tbody) return;
-  var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
+  var cnpjBase=u.cnpj.replace(/\D/g,'').substring(0,8); // raiz CNPJ (8 dígitos)
+  var ctrsFiltrados=(typeof contratos!=='undefined'?contratos:[]).filter(function(c){
+    return (c.cnpj||'').replace(/\D/g,'').substring(0,8)===cnpjBase;
+  });
+  if(!ctrsFiltrados.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--txt3);font-size:12px;padding:16px">Nenhum contrato cadastrado para este CNPJ.</td></tr>';
+    return;
+  }
+  var today=new Date();
+  var _statusContrato=function(c){
+    if(!c.fim) return 'vigente';
+    var parts=c.fim.split('/');
+    var fim=new Date(parts[2],parseInt(parts[1])-1,parseInt(parts[0]));
+    return fim>=today?'vigente':'encerrado';
+  };
   var _scChip={vigente:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">Vigente</span>',encerrado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(100,100,100,.15);color:var(--txt3)">Encerrado</span>'};
-  tbody.innerHTML=[0,1,2,3].map(function(i){
-    var val=Math.round((80000+i*seed*4711)%900000+50000);
-    var ano1=2024+(i%2);
-    var ano2=ano1+1+(i%2);
+  var tiposContr=['Fornecimento','Serviço','Locação','Manutenção'];
+  var ff=function(v){return v?'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—';};
+  tbody.innerHTML=ctrsFiltrados.map(function(c,i){
+    var st=_statusContrato(c);
+    var tipo=c.tipo||tiposContr[i%tiposContr.length];
+    var modalidade=c.rad?'Split Total':'Sem Split';
     return '<tr>'+
-      '<td style="font-size:11px;font-family:var(--font-mono);color:var(--teal)">CTR-'+String(2024+i).slice(-2)+String(100+seed+i*7).slice(-3)+'</td>'+
-      '<td style="font-size:12px">'+tiposContr[(i+seed)%tiposContr.length]+'</td>'+
-      '<td style="font-size:12px;color:var(--txt2)">01/01/'+ano1+'</td>'+
-      '<td style="font-size:12px;color:var(--txt2)">31/12/'+ano2+'</td>'+
-      '<td style="font-size:12px;font-family:var(--font-mono)">'+ff(val)+'</td>'+
-      '<td>'+(_scChip[statContr[i%statContr.length]]||_scChip.vigente)+'</td>'+
-      '<td style="font-size:11px;color:var(--txt2)">'+modalidades[(i+seed)%modalidades.length]+'</td>'+
+      '<td style="font-size:11px;font-family:var(--font-mono);color:var(--teal)">'+c.id+'</td>'+
+      '<td style="font-size:12px">'+tipo+'</td>'+
+      '<td style="font-size:12px;color:var(--txt2)">'+c.inicio+'</td>'+
+      '<td style="font-size:12px;color:var(--txt2)">'+c.fim+'</td>'+
+      '<td style="font-size:12px;font-family:var(--font-mono)">'+ff(c.valor)+'</td>'+
+      '<td>'+_scChip[st]+'</td>'+
+      '<td style="font-size:11px;color:var(--txt2)">'+modalidade+(c.rad?' · RAD':'')+' · Prazo '+c.prazo+'d'+'</td>'+
     '</tr>';
   }).join('');
 }
@@ -7905,14 +7917,14 @@ function _renderFornDFRows(dfs){
       '<td>'+(_capurChip[capurStatus]||_capurChip.Pendente)+'</td>'+
       '<td><div style="display:flex;gap:4px;flex-wrap:nowrap;align-items:center">'+
         '<button class="btn" style="font-size:10px;padding:3px 8px" onclick="abrirDetalheDF(\''+d.id+'\')" title="Ver detalhes">Ver</button>'+
-        (d.rad?'<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--teal);color:var(--teal)" onclick="abrirRADModal(\''+d.id+'\')" title="Baixar comprovante RAD">📄 RAD</button>':'')+
-        (d.status!=='liquidado'&&d.status!=='contestado'?
-          '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--teal);color:var(--teal)" onclick="abrirLiquidarDF(\''+d.id+'\')" title="Informar liquidação">Liquidar</button>'
+        (d.rad?'<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--teal);color:var(--teal)" onclick="abrirRADModal(\''+d.id+'\')" title="Comprovantes de pagamento IBS e CBS">Comprovantes</button>':'')+
+        (d.vencido&&d.status!=='contestado'?
+          '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--red);color:var(--red)" onclick="abrirContestacao(\''+d.id+'\')" title="Abrir ou acompanhar contestação">Contestar</button>'
         :'')+
-        (d.vencido&&d.status!=='liquidado'&&d.status!=='contestado'?
-          '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--red);color:var(--red)" onclick="abrirContestarDF(\''+d.id+'\')" title="Contestar DF vencido">Contestar</button>'
+        (d.status==='contestado'?
+          '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--amber);color:var(--amber)" onclick="abrirContestacao(\''+d.id+'\')" title="Acompanhar contestação">Contestação</button>'
         :'')+
-        '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--txt3);color:var(--txt3)" onclick="abrirComentarDF(\''+d.id+'\')" title="Comentários'+(d.comentarios?' ('+d.comentarios+')':'')+'">'+(d.comentarios?'💬 '+d.comentarios:'💬')+'</button>'+
+        '<button class="btn" style="font-size:10px;padding:3px 8px;border-color:var(--txt3);color:var(--txt3)" onclick="abrirComentarios(\''+d.id+'\')" title="Chat com adquirente'+(d.comentarios?' ('+d.comentarios+')':'')+'">'+(d.comentarios?'💬 '+d.comentarios:'💬')+'</button>'+
       '</div></td>'+
     '</tr>';
   }).join('');
@@ -8026,38 +8038,72 @@ function _dfLabel(id){
   return d?d.numero+' · R$ '+Number(d.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}):'DF';
 }
 
-function abrirLiquidar(dfId){
-  window._fornLiqDFId=dfId;
-  document.getElementById('forn-liq-sub').textContent=_dfLabel(dfId);
-  document.getElementById('forn-liq-just').value='';
-  document.getElementById('forn-liq-data').value='';
-  document.getElementById('forn-liq-file-lbl').textContent='Clique para anexar comprovante (PDF, PNG, JPG)';
-  document.getElementById('forn-liq-overlay').classList.add('open');
-}
-function fornLiqFileChange(){
-  var f=document.getElementById('forn-liq-file').files[0];
-  document.getElementById('forn-liq-file-lbl').textContent=f?'Anexo: '+f.name:'Clique para anexar comprovante';
-}
-function confirmarLiquidacao(){
-  var just=document.getElementById('forn-liq-just').value.trim();
-  var data=document.getElementById('forn-liq-data').value.trim();
-  if(!just){alert('Informe a justificativa.');return;}
-  if(!data){alert('Informe a data de liquidação.');return;}
-  window._fornDFStatus[window._fornLiqDFId]='liquidado';
-  fecharModal('forn-liq-overlay');
-  _renderFornDFs();
-  _renderFornDashboard();
-  _showToast('DF marcado como liquidado com sucesso.');
-}
+
+// Estado de contestações: { dfId: { status, historico:[{tipo,autor,texto,ts}] } }
+window._fornContestacoes = window._fornContestacoes || {};
 
 function abrirContestacao(dfId){
   window._fornContDFId=dfId;
-  document.getElementById('forn-cont-sub').textContent=_dfLabel(dfId);
-  document.getElementById('forn-cont-tipo').value='';
-  document.getElementById('forn-cont-desc').value='';
-  document.getElementById('forn-cont-valor').value='';
-  document.getElementById('forn-cont-file-lbl').textContent='Clique para anexar evidência';
+  var d=(window._fornDFsCache||[]).find(function(x){return x.id===dfId;});
+  document.getElementById('forn-cont-sub').textContent=d?(d.numero+' · '+d.emissao):'DF';
+  var cont=window._fornContestacoes[dfId];
+  if(cont){
+    // exibe histórico
+    document.getElementById('forn-cont-titulo').textContent='Contestação';
+    document.getElementById('forn-cont-form').style.display='none';
+    document.getElementById('forn-cont-historico').style.display='block';
+    _renderContHistorico(dfId);
+  } else {
+    // formulário de abertura
+    document.getElementById('forn-cont-titulo').textContent='Abrir Contestação';
+    document.getElementById('forn-cont-form').style.display='block';
+    document.getElementById('forn-cont-historico').style.display='none';
+    document.getElementById('forn-cont-tipo').value='';
+    document.getElementById('forn-cont-desc').value='';
+    document.getElementById('forn-cont-valor').value='';
+    document.getElementById('forn-cont-file-lbl').textContent='Clique para anexar evidência';
+  }
   document.getElementById('forn-cont-overlay').classList.add('open');
+}
+function _renderContHistorico(dfId){
+  var cont=window._fornContestacoes[dfId];
+  if(!cont) return;
+  var statusCfg={
+    em_analise:{label:'Em análise pelo adquirente',bg:'rgba(59,130,246,.12)',color:'var(--blue)'},
+    respondida:{label:'Resposta do adquirente disponível',bg:'rgba(245,158,11,.12)',color:'var(--amber)'},
+    aceita:{label:'Contestação aceita — resolvida',bg:'rgba(26,121,64,.12)',color:'var(--green)'},
+    recusada:{label:'Escalada para mediação',bg:'rgba(214,58,73,.12)',color:'var(--red)'}
+  };
+  var sc=statusCfg[cont.status]||statusCfg.em_analise;
+  var banner=document.getElementById('forn-cont-status-banner');
+  banner.style.background=sc.bg;
+  banner.style.color=sc.color;
+  banner.style.border='1px solid '+sc.color.replace('var(--','').replace(')','');
+  banner.textContent=sc.label;
+  // timeline
+  var tl=document.getElementById('forn-cont-timeline');
+  tl.innerHTML=(cont.historico||[]).map(function(ev,i){
+    var dotBg=ev.tipo==='abertura'?'rgba(214,58,73,.15)':ev.tipo==='resposta'?'rgba(59,130,246,.15)':'rgba(26,121,64,.15)';
+    var dotColor=ev.tipo==='abertura'?'var(--red)':ev.tipo==='resposta'?'var(--blue)':'var(--green)';
+    var icon=ev.tipo==='abertura'?'!':ev.tipo==='resposta'?'R':'✓';
+    return '<div class="cont-evt">'+
+      '<div class="cont-evt-dot" style="background:'+dotBg+';color:'+dotColor+'">'+icon+'</div>'+
+      '<div class="cont-evt-body">'+
+        '<div class="cont-evt-title">'+ev.titulo+'</div>'+
+        '<div class="cont-evt-desc">'+ev.texto+'</div>'+
+        '<div class="cont-evt-ts">'+ev.ts+' · '+ev.autor+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  // box de aceite
+  var aceiteBox=document.getElementById('forn-cont-aceite-box');
+  if(cont.status==='respondida'){
+    aceiteBox.style.display='block';
+    var resposta=cont.historico.find(function(e){return e.tipo==='resposta';});
+    document.getElementById('forn-cont-aceite-msg').textContent=resposta?resposta.texto:'Aguardando resposta.';
+  } else {
+    aceiteBox.style.display='none';
+  }
 }
 function fornContFileChange(){
   var f=document.getElementById('forn-cont-file').files[0];
@@ -8068,17 +8114,66 @@ function confirmarContestacao(){
   var desc=document.getElementById('forn-cont-desc').value.trim();
   if(!tipo){alert('Selecione o tipo de divergência.');return;}
   if(!desc){alert('Descreva a divergência.');return;}
-  window._fornDFStatus[window._fornContDFId]='contestado';
+  var dfId=window._fornContDFId;
+  var now=new Date();
+  var ts=String(now.getDate()).padStart(2,'0')+'/'+(String(now.getMonth()+1).padStart(2,'0'))+'/'+now.getFullYear()+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  var tipoLabel={'valor':'Valor incorreto','aliquota':'Alíquota IBS/CBS divergente','duplicidade':'Duplicidade de cobrança','cancelamento':'DF já cancelado','nao_liquidado':'Impostos não recolhidos','outro':'Outro'}[tipo]||tipo;
+  window._fornContestacoes[dfId]={
+    status:'em_analise',
+    historico:[
+      {tipo:'abertura',titulo:'Contestação aberta',texto:'Tipo: '+tipoLabel+'. '+desc+(document.getElementById('forn-cont-valor').value?' Valor contestado: R$ '+document.getElementById('forn-cont-valor').value+'.':''),ts:ts,autor:window._fornAtual?window._fornAtual.nome:'Fornecedor'}
+    ]
+  };
+  window._fornDFStatus[dfId]='contestado';
   fecharModal('forn-cont-overlay');
   _renderFornDFs();
   _showToast('Contestação enviada à equipe Induspar Tecnologia.');
+  // simula resposta do adquirente após 3s
+  setTimeout(function(){
+    var c=window._fornContestacoes[dfId];
+    if(c&&c.status==='em_analise'){
+      c.status='respondida';
+      c.historico.push({tipo:'resposta',titulo:'Resposta do adquirente',texto:'Analisamos a contestação e identificamos divergência parcial. Propomos o ajuste do valor de IBS para R$ '+String(Math.round(Math.random()*5000+1000))+ ',00, corrigindo a alíquota aplicada. Confirme o aceite para encerrarmos a contestação.',ts:_nowTs(),autor:'Induspar Tecnologia S.A.'});
+      _showToast('Adquirente respondeu à contestação. Acesse Contestação para revisar.');
+    }
+  },3000);
+}
+function _nowTs(){
+  var now=new Date();
+  return String(now.getDate()).padStart(2,'0')+'/'+(String(now.getMonth()+1).padStart(2,'0'))+'/'+now.getFullYear()+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+}
+function fornContAceitar(){
+  var dfId=window._fornContDFId;
+  var c=window._fornContestacoes[dfId];
+  if(!c) return;
+  c.status='aceita';
+  c.historico.push({tipo:'aceite',titulo:'Resolução aceita pelo fornecedor',texto:'Fornecedor aceitou a proposta de ajuste do adquirente. Contestação encerrada.',ts:_nowTs(),autor:window._fornAtual?window._fornAtual.nome:'Fornecedor'});
+  window._fornDFStatus[dfId]='integrado';
+  _renderFornDFs();
+  _renderContHistorico(dfId);
+  _showToast('Contestação encerrada. DF atualizado.');
+}
+function fornContRecusar(){
+  var dfId=window._fornContDFId;
+  var c=window._fornContestacoes[dfId];
+  if(!c) return;
+  c.status='recusada';
+  c.historico.push({tipo:'aceite',titulo:'Escalada para mediação',texto:'Fornecedor recusou a proposta do adquirente. Caso encaminhado para mediação perante o Comitê Gestor do IBS.',ts:_nowTs(),autor:window._fornAtual?window._fornAtual.nome:'Fornecedor'});
+  _renderContHistorico(dfId);
+  _showToast('Caso escalado para mediação.');
 }
 
 function abrirComentarios(dfId){
   window._fornComtDFId=dfId;
   var d=(window._fornDFsCache||[]).find(function(x){return x.id===dfId;});
-  document.getElementById('forn-comt-sub').textContent=d?d.numero:'DF';
+  document.getElementById('forn-comt-sub').textContent=d?(d.numero+' · '+d.emissao):'DF';
   document.getElementById('forn-comt-novo').value='';
+  // seed histórico mock se vazio
+  if(!window._fornDFComentarios[dfId]){
+    window._fornDFComentarios[dfId]=[
+      {forn:false,autor:'Induspar Tecnologia S.A.',texto:'Olá! Este canal está disponível para comunicação sobre o documento fiscal. Entre em contato caso tenha dúvidas sobre o status do recolhimento IBS/CBS.',ts:'08/04/2026 09:14'}
+    ];
+  }
   _renderComtThread(dfId);
   document.getElementById('forn-comt-overlay').classList.add('open');
 }
@@ -8087,17 +8182,17 @@ function _renderComtThread(dfId){
   if(!el) return;
   var comts=window._fornDFComentarios[dfId]||[];
   if(!comts.length){
-    el.innerHTML='<div style="padding:20px;text-align:center;color:var(--txt3);font-size:13px">Nenhum comentário ainda.</div>';
+    el.innerHTML='<div style="text-align:center;color:var(--txt3);font-size:12px;padding:24px 0">Nenhuma mensagem ainda.<br>Inicie a comunicação com a equipe do adquirente.</div>';
+    el.scrollTop=0;
     return;
   }
   el.innerHTML=comts.map(function(c){
-    return '<div class="comt-item">'+
-      '<div class="comt-item-hdr">'+
-        '<div class="comt-av '+(c.forn?'forn':'adq')+'">'+(c.forn?'F':'P')+'</div>'+
-        '<span class="comt-nome">'+c.autor+'</span>'+
-        '<span class="comt-ts">'+c.ts+'</span>'+
-      '</div>'+
-      '<div class="comt-text">'+c.texto+'</div>'+
+    var lado=c.forn?'forn':'adq';
+    var nome=c.forn?(window._fornAtual?window._fornAtual.nome:'Fornecedor'):'Induspar Tecnologia S.A.';
+    return '<div class="chat-msg '+lado+'">'+
+      '<div style="font-size:10px;color:var(--txt3);margin-bottom:3px;padding:0 3px">'+nome+'</div>'+
+      '<div class="chat-bubble">'+c.texto+'</div>'+
+      '<div class="chat-meta">'+c.ts+'</div>'+
     '</div>';
   }).join('');
   el.scrollTop=el.scrollHeight;
@@ -8108,7 +8203,7 @@ function enviarComentario(){
   var dfId=window._fornComtDFId;
   if(!window._fornDFComentarios[dfId]) window._fornDFComentarios[dfId]=[];
   var now=new Date();
-  var ts=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  var ts=String(now.getDate()).padStart(2,'0')+'/'+(String(now.getMonth()+1).padStart(2,'0'))+'/'+now.getFullYear()+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   var f=window._fornAtual;
   window._fornDFComentarios[dfId].push({
     forn:true,autor:f?f.nome:'Fornecedor',texto:txt,ts:ts
@@ -8118,60 +8213,66 @@ function enviarComentario(){
   _renderFornDFs(); // atualiza badge de comentários
 }
 
-function abrirRADModal(radId){
+function abrirRADModal(dfId){
   var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
-  var rads={
-    'RAD-001':{data:'15/04/2026',valor:48750,nf:'NF-e 001147',banco:'Banco do Brasil',ag:'0001-1',conta:'12345-6'},
-    'RAD-002':{data:'22/03/2026',valor:132400,nf:'NF-e 001089',banco:'Bradesco',ag:'1234-5',conta:'98765-4'},
-    'RAD-003':{data:'10/02/2026',valor:67200,nf:'CT-e 000312',banco:'Itaú',ag:'4321-0',conta:'11111-1'}
+  var dfs=window._fornDFsCache||[];
+  var df=dfs.find(function(d){return d.id===dfId;});
+  if(!df) return;
+  var protocolo=function(seed){return 'RAD'+String(Math.abs(seed*13337)%900000+100000);};
+  var s=df.id.charCodeAt(df.id.length-1)||7;
+  var r={
+    nf:df.numero, data:df.emissao,
+    valorTotal:df.valor, valorCBS:df.cbs, valorIBS:df.ibs,
+    bancoCBS:'Banco do Brasil', agCBS:'0001-1', contaCBS:'12345-6', protCBS:protocolo(s+1),
+    bancoIBS:'Bradesco',       agIBS:'1234-5', contaIBS:'98765-4', protIBS:protocolo(s+2)
   };
-  // também trata DFs RAD da tabela
-  var r=rads[radId];
-  if(!r){
-    var dfs=window._fornDFsCache||[];
-    var df=dfs.find(function(d){return d.id===radId;});
-    if(df) r={data:df.emissao,valor:df.valor,nf:df.numero,banco:'Banco do Brasil',ag:'0001-1',conta:'12345-6'};
-  }
-  if(!r) return;
   window._fornRadAtual=r;
-  document.getElementById('forn-rad-modal-sub').textContent=r.nf+' · '+r.data;
+  document.getElementById('forn-rad-modal-sub').textContent=r.nf+' · Emissão: '+r.data;
   document.getElementById('forn-rad-modal-body').innerHTML=
-    '<div class="rad-card" style="flex-direction:column;align-items:flex-start;gap:10px">'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%">'+
-        _radRow('Valor pago',ff(r.valor))+
-        _radRow('Data pagamento',r.data)+
-        _radRow('Documento fiscal',r.nf)+
-        _radRow('Banco',r.banco)+
-        _radRow('Agência',r.ag)+
-        _radRow('Conta',r.conta)+
-        _radRow('Tipo','RAD — Regime de Adiantamento de Débito')+
-        _radRow('Status','<span style="color:var(--green);font-weight:700">Pago e confirmado</span>')+
-      '</div>'+
-    '</div>';
+    _radCard('CBS','var(--blue)',r.valorCBS,r.bancoCBS,r.agCBS,r.contaCBS,r.protCBS,r.data)+
+    _radCard('IBS','var(--teal)',r.valorIBS,r.bancoIBS,r.agIBS,r.contaIBS,r.protIBS,r.data);
   document.getElementById('forn-rad-overlay').classList.add('open');
+}
+function _radCard(tributo,cor,valor,banco,ag,conta,prot,data){
+  var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
+  return '<div style="border:1px solid var(--border);border-radius:8px;padding:14px;border-top:3px solid '+cor+'">'+
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:'+cor+';text-transform:uppercase;margin-bottom:10px">Comprovante '+tributo+'</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+      _radRow('Tributo',tributo)+
+      _radRow('Valor recolhido',ff(valor))+
+      _radRow('Banco (adquirente)',banco)+
+      _radRow('Agência / Conta',ag+' / '+conta)+
+      _radRow('Protocolo',prot)+
+      _radRow('Data recolhimento',data)+
+    '</div>'+
+    '<div style="margin-top:10px;font-size:11px;padding:6px 10px;border-radius:5px;background:rgba(26,121,64,.1);color:var(--green);font-weight:600">Pago e confirmado pela Plataforma Centralizada</div>'+
+  '</div>';
 }
 function _radRow(l,v){
   return '<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">'+l+'</div>'+
-    '<div style="font-size:13px;color:var(--txt1);font-weight:600">'+v+'</div></div>';
+    '<div style="font-size:12px;color:var(--txt1);font-weight:600">'+v+'</div></div>';
 }
-function fornBaixarComprovante(){
+function fornBaixarComprovante(tipo){
   var r=window._fornRadAtual;
   if(!r) return;
   var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Comprovante RAD</title>'+
-    '<style>body{font-family:Arial,sans-serif;padding:40px;color:#111}h2{color:#0E9E8E}table{border-collapse:collapse;width:100%}td{padding:8px 12px;border:1px solid #ddd;font-size:13px}th{background:#f5f5f5;padding:8px 12px;border:1px solid #ddd;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em}</style>'+
+  var t=tipo==='ibs'?{nome:'IBS',valor:r.valorIBS,banco:r.bancoIBS,ag:r.agIBS,conta:r.contaIBS,prot:r.protIBS}:{nome:'CBS',valor:r.valorCBS,banco:r.bancoCBS,ag:r.agCBS,conta:r.contaCBS,prot:r.protCBS};
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Comprovante RAD '+t.nome+'</title>'+
+    '<style>body{font-family:Arial,sans-serif;padding:40px;color:#111}h2{color:#0E9E8E}h3{color:#444;font-size:14px}table{border-collapse:collapse;width:100%}td{padding:8px 12px;border:1px solid #ddd;font-size:13px}th{background:#f5f5f5;padding:8px 12px;border:1px solid #ddd;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em}.ok{color:#0E9E8E;font-weight:700}</style>'+
     '<script>window.onload=function(){window.print();}<\/script>'+
     '</head><body>'+
-    '<h2>SplitHub — Comprovante de Pagamento RAD</h2>'+
-    '<p style="color:#666;font-size:13px">Regime de Adiantamento de Débito · Induspar Tecnologia S.A.</p>'+
+    '<h2>SplitHub — Comprovante RAD · '+t.nome+'</h2>'+
+    '<p style="color:#666;font-size:13px">Recolhimento de '+t.nome+' pelo adquirente (Regime de Atribuição Diferida · RAD) · Induspar Tecnologia S.A.</p>'+
     '<table><tr><th>Campo</th><th>Valor</th></tr>'+
+    '<tr><td>Tributo</td><td>'+t.nome+'</td></tr>'+
     '<tr><td>Documento Fiscal</td><td>'+r.nf+'</td></tr>'+
-    '<tr><td>Valor Pago</td><td>'+ff(r.valor)+'</td></tr>'+
-    '<tr><td>Data de Pagamento</td><td>'+r.data+'</td></tr>'+
-    '<tr><td>Banco</td><td>'+r.banco+'</td></tr>'+
-    '<tr><td>Agência</td><td>'+r.ag+'</td></tr>'+
-    '<tr><td>Conta</td><td>'+r.conta+'</td></tr>'+
-    '<tr><td>Status</td><td>Pago e confirmado</td></tr>'+
+    '<tr><td>Valor Recolhido</td><td>'+ff(t.valor)+'</td></tr>'+
+    '<tr><td>Data de Recolhimento</td><td>'+r.data+'</td></tr>'+
+    '<tr><td>Banco</td><td>'+t.banco+'</td></tr>'+
+    '<tr><td>Agência</td><td>'+t.ag+'</td></tr>'+
+    '<tr><td>Conta</td><td>'+t.conta+'</td></tr>'+
+    '<tr><td>Protocolo</td><td>'+t.prot+'</td></tr>'+
+    '<tr><td>Status</td><td class="ok">Pago e confirmado pela Plataforma Centralizada</td></tr>'+
     '</table></body></html>';
   var w=window.open('','_blank','width=700,height:600');
   if(w){w.document.open();w.document.write(html);w.document.close();}
