@@ -7696,51 +7696,91 @@ function _renderFornecedorBanner(){
   document.getElementById('forn-score-val').textContent = score;
 }
 
-function _fornPeriodosAtivos(){
-  var sel = window._periodoSel['forn'] || [];
-  if(!sel.length) return [['04','2026']]; // default: Abr/2026
-  return sel.map(function(v){ var p=v.split('-'); return [p[1],p[0]]; });
-}
-
 function _fornGerarDFs(){
   var f = window._fornAtual;
   if(!f) return [];
+  var global = window._nfListaCompleta || [];
+  if(!global.length) return _fornGerarDFsMock(f); // fallback mock se global vazio
+
+  // CNPJs do grupo do fornecedor (raíz 8 dígitos de cada unidade)
+  var unidades = f.unidades || [{cnpj:f.cnpj}];
+  var cnpjsSet = {};
+  unidades.forEach(function(u){ cnpjsSet[(u.cnpj||'').replace(/\D/g,'')] = true; });
+
+  // Filtro de período via seletor multi
+  var sel = window._periodoSel['forn'] || [];
+  var periodosFiltro = sel.map(function(v){ return v; }); // ['2026-04', '2026-05', ...]
+
+  var hoje = new Date(2026, 7, 20); // "hoje" do demo = Ago/2026
+  var dfs = [];
+  global.forEach(function(nf, idx){
+    // só NFs de entrada do adquirente emitidas por este fornecedor
+    if(nf.tipo !== 'entrada') return;
+    var nfCnpj = (nf.cnpj||'').replace(/\D/g,'');
+    if(!cnpjsSet[nfCnpj]) return;
+
+    // filtro de período
+    if(periodosFiltro.length){
+      var anoMes = (nf.data||'').substring(0,7); // '2026-04'
+      if(periodosFiltro.indexOf(anoMes) === -1) return;
+    }
+
+    // monta ID estável
+    var dfId = 'NF-'+nf.cnpj.replace(/\D/g,'')+'-'+nf.numero;
+
+    // status do sistema (override local tem prioridade)
+    var overrideStatus = window._fornDFStatus[dfId] || null;
+    var status;
+    if(overrideStatus){
+      status = overrideStatus;
+    } else {
+      var sc = nf.statusCredito || '';
+      var sr = nf.statusRegistro || '';
+      if(sc === 'apropriado' || sc === 'utilizado') status = 'integrado';
+      else if(sr === 'vencido') status = 'erro';
+      else status = 'pendente';
+    }
+
+    // vencido: statusRegistro = vencido e não integrado nem contestado
+    var vencido = (nf.statusRegistro === 'vencido') && status !== 'integrado' && status !== 'contestado';
+
+    // emissão: converte '2026-04-01' → '01/04/2026'
+    var emissao = '—';
+    if(nf.data){ var p=nf.data.split('-'); emissao=p[2]+'/'+p[1]+'/'+p[0]; }
+
+    dfs.push({
+      id: dfId,
+      tipo: nf.tipoDF || 'NF-e',
+      numero: (nf.tipoDF||'NF-e')+' '+String(nf.numero||idx).padStart(6,'0'),
+      chave: nf.chaveDF || '',
+      emissao: emissao,
+      valor: nf.valorTotal || 0,
+      cbs: nf.cbs || 0,
+      ibs: nf.ibs || 0,
+      status: status,
+      statusCredito: nf.statusCredito,
+      statusRegistro: nf.statusRegistro,
+      vencido: vencido,
+      rad: nf.metodoPagamento === 'RAD',
+      comentarios: (window._fornDFComentarios[dfId]||[]).length
+    });
+  });
+  return dfs;
+}
+
+// Fallback mock (usado apenas se _nfListaCompleta estiver vazio)
+function _fornGerarDFsMock(f){
   var tipos=['NF-e','CT-e','NFS-e','NFC-e'];
   var statuses=['integrado','integrado','integrado','pendente','erro','integrado'];
-  var dfs=[];
-  var seed=f.id.charCodeAt(2)||1;
-  var mesAtual=8; var anoAtual=2026;
-  var periodos = _fornPeriodosAtivos();
-  periodos.forEach(function(par,pi){
-    var mes=par[0], ano=par[1];
-    var mesComp=parseInt(mes,10); var anoComp=parseInt(ano,10);
-    var compPassado=(anoComp<anoAtual)||(anoComp===anoAtual&&mesComp<mesAtual-1);
-    for(var i=0;i<12;i++){
-      var idx = pi*12+i;
-      var tipo=tipos[(idx+seed)%tipos.length];
-      var num=String(1000+idx*seed%900+1).padStart(6,'0');
-      var val=Math.round((15000+idx*seed*317)%350000+8000);
-      var cbs=Math.round(val*0.088);
-      var ibs=Math.round(val*0.100);
-      var dia=String(1+(i*7)%28).padStart(2,'0');
-      var dfId='DF-'+f.id+'-'+ano+mes+'-'+i;
-      var overrideStatus = window._fornDFStatus[dfId] || null;
-      var status = overrideStatus || statuses[i%statuses.length];
-      var vencido = compPassado && (status==='pendente'||status==='erro');
-      dfs.push({
-        id:dfId,
-        tipo:tipo,
-        numero:tipo+' '+num,
-        chave:'35260'+f.cnpj.replace(/\D/g,'').substring(0,8)+(String(idx*1337).padStart(16,'0')),
-        emissao:dia+'/'+mes+'/'+ano,
-        valor:val, cbs:cbs, ibs:ibs,
-        status: status,
-        vencido: vencido,
-        rad: idx%4===0,
-        comentarios: (window._fornDFComentarios[dfId]||[]).length
-      });
-    }
-  });
+  var dfs=[]; var seed=f.id.charCodeAt(2)||1;
+  for(var i=0;i<12;i++){
+    var dfId='DF-'+f.id+'-202604-'+i;
+    var tipo=tipos[(i+seed)%tipos.length];
+    var num=String(1000+i*seed%900+1).padStart(6,'0');
+    var val=Math.round((15000+i*seed*317)%350000+8000);
+    var status=window._fornDFStatus[dfId]||statuses[i%statuses.length];
+    dfs.push({id:dfId,tipo:tipo,numero:tipo+' '+num,chave:'35260'+f.cnpj.replace(/\D/g,'').substring(0,8)+(String(i*1337).padStart(16,'0')),emissao:String(1+(i*7)%28).padStart(2,'0')+'/04/2026',valor:val,cbs:Math.round(val*.088),ibs:Math.round(val*.100),status:status,vencido:false,rad:i%4===0,comentarios:(window._fornDFComentarios[dfId]||[]).length});
+  }
   return dfs;
 }
 
