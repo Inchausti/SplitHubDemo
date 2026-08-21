@@ -3805,7 +3805,12 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
 
   <!-- Sub: Organização -->
   <div id="forn-sub-organizacao" class="forn-tab-content">
-    <!-- Dados Matriz -->
+    <!-- Seletor de unidade (Matriz/Filiais) -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:.07em">Unidade</span>
+      <div id="forn-org-unidades" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+    <!-- Dados Unidade -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
       <div class="ccrd" style="padding:16px 18px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -7392,28 +7397,57 @@ function fornSetPeriodo(val){
 // Dados Matriz compartilhados (chave = CNPJ)
 window._orgData = {};
 
-function _fornOrgGetData(f){
-  if(!f) return {};
-  if(!window._orgData[f.cnpj]){
-    window._orgData[f.cnpj]={
-      razao: f.nome,
-      fantasia: f.nome.split(' ')[0],
-      cnpj: f.cnpj,
-      ie: '123.456.789.012',
-      endereco: 'Av. Industrial, 1.500 · Bloco B',
-      cidade: 'São Paulo',
-      uf: 'SP',
-      email: 'fiscal@'+f.nome.toLowerCase().replace(/\s+/g,'')+'.com.br',
-      tel: '(11) 3000-'+String(1000+parseInt(f.id.replace(/\D/g,''))*37).slice(0,4)
+window._fornOrgUnidadeIdx = 0; // índice da unidade selecionada
+
+function _renderFornOrgUnidades(){
+  var f=window._fornAtual;
+  if(!f) return;
+  var unidades=f.unidades||[{tipo:'Matriz',nome:f.nome,cnpj:f.cnpj,uf:'SP'}];
+  var el=document.getElementById('forn-org-unidades');
+  if(!el) return;
+  el.innerHTML=unidades.map(function(u,i){
+    var ativo=i===window._fornOrgUnidadeIdx;
+    var tipo=u.tipo==='Matriz'?'<span style="font-size:9px;font-weight:700;padding:1px 5px;background:rgba(29,158,117,.15);color:var(--teal);border-radius:3px;margin-right:4px">MTZ</span>':'<span style="font-size:9px;font-weight:700;padding:1px 5px;background:var(--border);color:var(--txt3);border-radius:3px;margin-right:4px">FIL</span>';
+    return '<button onclick="fornOrgSelectUnidade('+i+')" style="background:'+(ativo?'var(--teal)':'var(--card)')+';color:'+(ativo?'#fff':'var(--txt1)')+';border:1px solid '+(ativo?'var(--teal)':'var(--border)')+';border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">'+tipo+u.uf+' · '+u.cnpj+'</button>';
+  }).join('');
+}
+
+function fornOrgSelectUnidade(idx){
+  window._fornOrgUnidadeIdx=idx;
+  _renderFornOrgUnidades();
+  _renderFornOrg();
+}
+
+function _fornOrgUnidadeAtual(){
+  var f=window._fornAtual;
+  if(!f) return f;
+  var unidades=f.unidades||[{tipo:'Matriz',nome:f.nome,cnpj:f.cnpj,uf:'SP'}];
+  return unidades[window._fornOrgUnidadeIdx]||unidades[0];
+}
+
+function _fornOrgGetDataForCnpj(cnpj, nome){
+  if(!window._orgData[cnpj]){
+    window._orgData[cnpj]={
+      razao: nome||cnpj,
+      fantasia: (nome||cnpj).split(' ')[0],
+      cnpj: cnpj,
+      ie: '123.456.789.'+String(Math.abs(cnpj.charCodeAt(0)*37)%999).padStart(3,'0'),
+      endereco: 'Av. Industrial, 1.500 · Bloco '+String.fromCharCode(65+(cnpj.charCodeAt(0)%8)),
+      cidade: ['São Paulo','Belo Horizonte','Porto Alegre','Curitiba','Rio de Janeiro','Fortaleza','Manaus','Brasília'][cnpj.charCodeAt(0)%8],
+      uf: ['SP','MG','RS','PR','RJ','CE','AM','DF'][cnpj.charCodeAt(0)%8],
+      email: 'fiscal@'+nome.toLowerCase().replace(/[\s\.]/g,'').replace(/[^a-z0-9]/g,'')+'.com.br',
+      tel: '('+String(11+(cnpj.charCodeAt(0)%89)).padStart(2,'0')+') 3000-'+String(1000+(cnpj.charCodeAt(2)*37)%9000).slice(0,4)
     };
   }
-  return window._orgData[f.cnpj];
+  return window._orgData[cnpj];
 }
 
 function _renderFornOrg(){
   var f=window._fornAtual;
   if(!f) return;
-  var d=_fornOrgGetData(f);
+  _renderFornOrgUnidades();
+  var u=_fornOrgUnidadeAtual();
+  var d=_fornOrgGetDataForCnpj(u.cnpj, u.nome);
 
   // Campos visualização
   var camposEl=document.getElementById('forn-org-campos');
@@ -7460,10 +7494,10 @@ function _renderFornOrg(){
     }).join('');
   }
 
-  // Contratos bilaterais
+  // Contratos bilaterais (por CNPJ da unidade selecionada)
   var suEl=document.getElementById('forn-org-contr-sub');
-  if(suEl) suEl.textContent='Contratos entre '+f.nome+' e Induspar Tecnologia S.A.';
-  var seed=f.id.charCodeAt(2)||1;
+  if(suEl) suEl.textContent='Contratos entre '+u.cnpj+' ('+u.nome+') e Induspar Tecnologia S.A. · '+u.tipo;
+  var seed=(u.cnpj.charCodeAt(0)||1)+(u.cnpj.charCodeAt(9)||1);
   var tiposContr=['Fornecimento','Serviço','Locação','Manutenção'];
   var modalidades=['Split Total','Split Parcial','Sem Split'];
   var statContr=['vigente','vigente','encerrado','vigente'];
@@ -7506,7 +7540,8 @@ function fornOrgCancelar(){
 function fornOrgSalvar(){
   var f=window._fornAtual;
   if(!f) return;
-  var d=_fornOrgGetData(f);
+  var u=_fornOrgUnidadeAtual();
+  var d=_fornOrgGetDataForCnpj(u.cnpj, u.nome);
   d.razao=document.getElementById('forn-org-razao').value.trim()||d.razao;
   d.fantasia=document.getElementById('forn-org-fantasia').value.trim()||d.fantasia;
   d.ie=document.getElementById('forn-org-ie').value.trim();
@@ -7527,14 +7562,22 @@ var _FORNECEDORES_MOCK = [];
   try {
     // Usa dados do fornecedores.json se disponível, senão mock inline
     var raw = [
-      {id:'F-001',nome:'Ferroplex Mineração S.A.',cnpj:'28.447.821/0001-35',score:88,grupo:'Grupo Ferroplex'},
-      {id:'F-002',nome:'Sulpar Implementos S.A.',cnpj:'14.382.976/0001-09',score:82,grupo:'Grupo Sulpar'},
-      {id:'F-003',nome:'Transcarro S.A.',cnpj:'19.854.203/0001-67',score:78,grupo:'Transcarro Holding'},
-      {id:'F-004',nome:'Tectra Sistemas Ltda',cnpj:'38.291.045/0001-52',score:74,grupo:'Tectra Holding'},
-      {id:'F-005',nome:'Eletropar Ind. Ltda',cnpj:'61.874.320/0001-88',score:65,grupo:'Grupo Eletropar'},
-      {id:'F-006',nome:'Aeroprime Ind. S.A.',cnpj:'52.039.781/0001-15',score:91,grupo:'Aeroprime Holding'},
-      {id:'F-007',nome:'Sidepar S.A.',cnpj:'40.825.163/0001-53',score:70,grupo:'Grupo Sidepar'},
-      {id:'F-008',nome:'Totvs S.A.',cnpj:'53.113.791/0001-22',score:85,grupo:'Grupo Totvs'}
+      {id:'F-001',nome:'Ferroplex Mineração S.A.',cnpj:'28.447.821/0001-35',score:88,grupo:'Grupo Ferroplex',
+        unidades:[{tipo:'Matriz',nome:'Ferroplex Mineração S.A.',cnpj:'28.447.821/0001-35',uf:'SP'},{tipo:'Filial',nome:'Ferroplex Mineração — Filial MG',cnpj:'28.447.821/0002-16',uf:'MG'},{tipo:'Filial',nome:'Ferroplex Mineração — Filial RS',cnpj:'28.447.821/0003-97',uf:'RS'}]},
+      {id:'F-002',nome:'Sulpar Implementos S.A.',cnpj:'14.382.976/0001-09',score:82,grupo:'Grupo Sulpar',
+        unidades:[{tipo:'Matriz',nome:'Sulpar Implementos S.A.',cnpj:'14.382.976/0001-09',uf:'PR'},{tipo:'Filial',nome:'Sulpar Implementos — Filial SC',cnpj:'14.382.976/0002-80',uf:'SC'}]},
+      {id:'F-003',nome:'Transcarro S.A.',cnpj:'19.854.203/0001-67',score:78,grupo:'Transcarro Holding',
+        unidades:[{tipo:'Matriz',nome:'Transcarro S.A.',cnpj:'19.854.203/0001-67',uf:'RJ'}]},
+      {id:'F-004',nome:'Tectra Sistemas Ltda',cnpj:'38.291.045/0001-52',score:74,grupo:'Tectra Holding',
+        unidades:[{tipo:'Matriz',nome:'Tectra Sistemas Ltda',cnpj:'38.291.045/0001-52',uf:'SP'},{tipo:'Filial',nome:'Tectra Sistemas — Filial DF',cnpj:'38.291.045/0002-33',uf:'DF'}]},
+      {id:'F-005',nome:'Eletropar Ind. Ltda',cnpj:'61.874.320/0001-88',score:65,grupo:'Grupo Eletropar',
+        unidades:[{tipo:'Matriz',nome:'Eletropar Ind. Ltda',cnpj:'61.874.320/0001-88',uf:'SP'}]},
+      {id:'F-006',nome:'Aeroprime Ind. S.A.',cnpj:'52.039.781/0001-15',score:91,grupo:'Aeroprime Holding',
+        unidades:[{tipo:'Matriz',nome:'Aeroprime Ind. S.A.',cnpj:'52.039.781/0001-15',uf:'SP'},{tipo:'Filial',nome:'Aeroprime — Filial CE',cnpj:'52.039.781/0002-96',uf:'CE'},{tipo:'Filial',nome:'Aeroprime — Filial AM',cnpj:'52.039.781/0003-77',uf:'AM'}]},
+      {id:'F-007',nome:'Sidepar S.A.',cnpj:'40.825.163/0001-53',score:70,grupo:'Grupo Sidepar',
+        unidades:[{tipo:'Matriz',nome:'Sidepar S.A.',cnpj:'40.825.163/0001-53',uf:'PR'}]},
+      {id:'F-008',nome:'Totvs S.A.',cnpj:'53.113.791/0001-22',score:85,grupo:'Grupo Totvs',
+        unidades:[{tipo:'Matriz',nome:'Totvs S.A.',cnpj:'53.113.791/0001-22',uf:'SP'},{tipo:'Filial',nome:'Totvs — Filial RJ',cnpj:'53.113.791/0002-03',uf:'RJ'},{tipo:'Filial',nome:'Totvs — Filial MG',cnpj:'53.113.791/0003-84',uf:'MG'}]}
     ];
     _FORNECEDORES_MOCK = raw;
   } catch(e){}
