@@ -5751,6 +5751,8 @@ window.renderizarFCT = function() {
 
   var meses = Object.keys(byMonth).sort();
   if (!meses.length) return;
+  var cutoffFCT = new Date().toISOString().substring(0, 7);
+  var mesesReal = meses.filter(function(m) { return m <= cutoffFCT; });
 
   function fmM(v) {
     var neg = v < 0; v = Math.abs(v);
@@ -5801,12 +5803,16 @@ window.renderizarFCT = function() {
       { data: dLiq,    color: 'var(--amber)', fill: false, dots: true,  w: 1.5, label: 'Recolhimento Líquido' }
     ], labels, 200, { min: 0 });
 
-    // Posição líquida acumulada
-    var acum = 0, dAcum = [];
-    meses.forEach(function(m) { acum += byMonth[m].cAprop - byMonth[m].dBruto; dAcum.push(+(acum / 1e6).toFixed(2)); });
+    // Posição líquida acumulada — apenas meses realizados (≤ cutoff) para alinhar com Forecast Saldo Atual
+    var acum = 0, dAcum = [], labelsReal = [];
+    mesesReal.forEach(function(m) {
+      acum += byMonth[m].cAprop - byMonth[m].dBruto;
+      dAcum.push(+(acum / 1e6).toFixed(2));
+      labelsReal.push(m.substring(5,7) + '/' + m.substring(2,4));
+    });
     svgLine('cFCTSaldo', [
       { data: dAcum, color: acum >= 0 ? 'var(--green)' : 'var(--red)', fill: true, dots: true, w: 2.5, label: 'Saldo acumulado' }
-    ], labels, 140, {});
+    ], labelsReal, 140, {});
 
     // Créditos pendentes por mês (condicionado + em risco + glosado)
     svgLine('cFCTVenc', [
@@ -6067,8 +6073,10 @@ window.renderizarFCTForecast = function(_retry) {
       var rfTrib = (rf.tributo || rf.tipoFiscal || '').toLowerCase();
       if (tributo !== 'ambos' && rfTrib && rfTrib !== tributo) return;
       var v = rf.valor || 0;
-      if (nf.tipo === 'entrada') byMonth[mes].cred += v;
-      else if (nf.tipo === 'saida') byMonth[mes].deb += v;
+      if (nf.tipo === 'entrada') {
+        var sc = rf.statusCredito || rf.status || '';
+        if (sc === 'apropriado' || sc === 'utilizado') byMonth[mes].cred += v;
+      } else if (nf.tipo === 'saida') byMonth[mes].deb += v;
     });
   });
 
