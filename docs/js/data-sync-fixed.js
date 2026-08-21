@@ -295,6 +295,9 @@ window.shToggleFilterPanel = function(prefix) {
 window.dashRenderDFsApropriar = function() {
   var cpRows = [], lpRows = [];
   var srLabel = { em_risco: 'Em Risco', vencido: 'Vencido', inconsistencia: 'Inconsistência', a_prescrever: 'A Prescrever' };
+  var _dashBusca    = ((document.getElementById('dash-df-busca')      ||{}).value||'').toLowerCase();
+  var _dashStatusRF = (document.getElementById('dash-df-status-rf')   ||{}).value||'';
+  var _dashTipoF    = (document.getElementById('dash-df-tipo-fiscal') ||{}).value||'';
   var srRgb   = { em_risco: _hexRgb(PALETTE.amber), vencido: _hexRgb(PALETTE.red), inconsistencia: _hexRgb(PALETTE.red), a_prescrever: _hexRgb(PALETTE.red) };
 
   var hoje = new Date(); hoje.setHours(0,0,0,0);
@@ -315,6 +318,8 @@ window.dashRenderDFsApropriar = function() {
       var sc = rf.statusCredito || rf.status || '';
       if (sc !== 'nao_apropriado') return;
       var sr   = rf.statusRegistro || null;
+      if (_dashStatusRF && sr !== _dashStatusRF) return;
+      if (_dashTipoF && (rf.tipoFiscal || '') !== _dashTipoF) return;
       var v    = rf.valor || 0;
       var dp   = (nf.data || rf.data || '').split('-');
       var venc = calcVencimento(nf.data || rf.data);
@@ -323,9 +328,12 @@ window.dashRenderDFsApropriar = function() {
       // Excluir DFs com vencimento em meses anteriores ao atual
       if (mesVenc < mesAtual) return;
       var _vencStr = venc ? (String(venc.getDate()).padStart(2,'0') + '/' + String(venc.getMonth()+1).padStart(2,'0') + '/' + venc.getFullYear()) : '—';
+      var _dashNfLabel = (nf.tipoDF || 'NF-e') + ' ' + (rf.nfVinculada || nf.numero || '');
+      var _dashForn    = rf.entidade || nf.entidade || '—';
+      if (_dashBusca && !(_dashNfLabel.toLowerCase().includes(_dashBusca) || _dashForn.toLowerCase().includes(_dashBusca))) return;
       var row = {
-        nf:   (nf.tipoDF || 'NF-e') + ' ' + (rf.nfVinculada || nf.numero || ''),
-        forn: rf.entidade || nf.entidade || '—',
+        nf:   _dashNfLabel,
+        forn: _dashForn,
         valor: v,
         data: dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
         venc: _vencStr,
@@ -1098,7 +1106,8 @@ window._filtrosCreditos = {
   mesAno: '', mesAnoArr: [],
   busca: '', tipoFiscal: '', status: '', contrato: '',
   metodo: '', pagamento: '', dataNFDe: '', dataNFAte: '',
-  credMin: '', credMax: '', tipoDFe: '', metodoExtincao: ''
+  credMin: '', credMax: '', tipoDFe: '', metodoExtincao: '',
+  valMin: '', valMax: '', vlMin: '', vlMax: '', cbsMin: '', cbsMax: '', ibsMin: '', ibsMax: ''
 };
 
 window.injetarFiltrosCreditos = function() {
@@ -1125,7 +1134,15 @@ window.injetarFiltrosCreditos = function() {
       { label: 'Crédito — mín (R$)', id: 'fc-cred-min', type: 'number', placeholder: '0', min: 0 },
       { label: 'Crédito — máx (R$)', id: 'fc-cred-max', type: 'number', placeholder: '∞', min: 0 },
       { label: 'Tipo de DFe',         id: 'fc-tipo-dfe',        type: 'select', options: [{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}] },
-      { label: 'Método Extinção',      id: 'fc-metodo-extincao', type: 'select', options: [{value:'Split Payment',label:'Split Payment'},{value:'Compensacao',label:'Compensação'},{value:'Ressarcimento',label:'Ressarcimento'},{value:'Transferencia',label:'Transferência'},{value:'RAD',label:'RAD'}] }
+      { label: 'Método Extinção',      id: 'fc-metodo-extincao', type: 'select', options: [{value:'Split Payment',label:'Split Payment'},{value:'Compensacao',label:'Compensação'},{value:'Ressarcimento',label:'Ressarcimento'},{value:'Transferencia',label:'Transferência'},{value:'RAD',label:'RAD'}] },
+      { label: 'Valor Total — mín (R$)',  id: 'fc-val-min', type: 'number', placeholder: '0', min: 0 },
+      { label: 'Valor Total — máx (R$)',  id: 'fc-val-max', type: 'number', placeholder: '∞', min: 0 },
+      { label: 'Valor Líquido — mín (R$)',id: 'fc-vl-min',  type: 'number', placeholder: '0', min: 0 },
+      { label: 'Valor Líquido — máx (R$)',id: 'fc-vl-max',  type: 'number', placeholder: '∞', min: 0 },
+      { label: 'CBS — mín (R$)',          id: 'fc-cbs-min', type: 'number', placeholder: '0', min: 0 },
+      { label: 'CBS — máx (R$)',          id: 'fc-cbs-max', type: 'number', placeholder: '∞', min: 0 },
+      { label: 'IBS — mín (R$)',          id: 'fc-ibs-min', type: 'number', placeholder: '0', min: 0 },
+      { label: 'IBS — máx (R$)',          id: 'fc-ibs-max', type: 'number', placeholder: '∞', min: 0 }
     ]
   });
 };
@@ -1147,6 +1164,14 @@ window.creditosFiltrarGrid = function() {
   f.credMax       = (document.getElementById('fc-cred-max')         || {}).value || '';
   f.tipoDFe       = (document.getElementById('fc-tipo-dfe')         || {}).value || '';
   f.metodoExtincao= (document.getElementById('fc-metodo-extincao')  || {}).value || '';
+  f.valMin  = (document.getElementById('fc-val-min') || {}).value || '';
+  f.valMax  = (document.getElementById('fc-val-max') || {}).value || '';
+  f.vlMin   = (document.getElementById('fc-vl-min')  || {}).value || '';
+  f.vlMax   = (document.getElementById('fc-vl-max')  || {}).value || '';
+  f.cbsMin  = (document.getElementById('fc-cbs-min') || {}).value || '';
+  f.cbsMax  = (document.getElementById('fc-cbs-max') || {}).value || '';
+  f.ibsMin  = (document.getElementById('fc-ibs-min') || {}).value || '';
+  f.ibsMax  = (document.getElementById('fc-ibs-max') || {}).value || '';
   window.renderizarTabelaCreditos();
 };
 
@@ -1169,7 +1194,7 @@ window.creditosFiltrarMesAno = function() {
 };
 
 window.creditosLimparFiltrosGrid = function() {
-  ['fc-busca','fc-tipo','fc-status','fc-status-registro','fc-contrato','fc-metodo','fc-pagamento','fc-data-de','fc-data-ate','fc-cred-min','fc-cred-max','fc-tipo-dfe','fc-metodo-extincao'].forEach(function(id) {
+  ['fc-busca','fc-tipo','fc-status','fc-status-registro','fc-contrato','fc-metodo','fc-pagamento','fc-data-de','fc-data-ate','fc-cred-min','fc-cred-max','fc-tipo-dfe','fc-metodo-extincao','fc-val-min','fc-val-max','fc-vl-min','fc-vl-max','fc-cbs-min','fc-cbs-max','fc-ibs-min','fc-ibs-max'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -1180,7 +1205,8 @@ window.creditosLimparFiltrosGrid = function() {
   window._filtrosCreditos = {
     mesAno:'', mesAnoArr:[], busca:'', tipoFiscal:'', status:'', contrato:'',
     metodo:'', pagamento:'', dataNFDe:'', dataNFAte:'',
-    credMin:'', credMax:'', tipoDFe:'', metodoExtincao:''
+    credMin:'', credMax:'', tipoDFe:'', metodoExtincao:'',
+    valMin:'', valMax:'', vlMin:'', vlMax:'', cbsMin:'', cbsMax:'', ibsMin:'', ibsMax:''
   };
   window._periodoSel = window._periodoSel || {}; window._periodoSel.cred = [];
   window.renderizarTabelaCreditos();
@@ -1253,6 +1279,7 @@ window.renderizarTabelaCreditos = function() {
   var f = window._filtrosCreditos || {};
   if (f.mesAno || (f.mesAnoArr && f.mesAnoArr.length) || f.busca || f.tipoFiscal || f.status || f.contrato || f.metodo ||
       f.pagamento || f.dataNFDe || f.dataNFAte || f.credMin || f.credMax || f.tipoDFe ||
+      f.valMin || f.valMax || f.vlMin || f.vlMax || f.cbsMin || f.cbsMax || f.ibsMin || f.ibsMax ||
       (f.statusMulti && f.statusMulti.length)) {
     var busca = (f.busca || '').toLowerCase();
     listaRFs = listaRFs.filter(function(r) {
@@ -1271,6 +1298,14 @@ window.renderizarTabelaCreditos = function() {
       if (f.credMin !== '' && r.cred < parseFloat(f.credMin)) return false;
       if (f.credMax !== '' && r.cred > parseFloat(f.credMax)) return false;
       if (f.metodoExtincao && r.metodoExtincao !== f.metodoExtincao) return false;
+      if (f.valMin !== '' && !isNaN(parseFloat(f.valMin)) && r.valorTotal < parseFloat(f.valMin)) return false;
+      if (f.valMax !== '' && !isNaN(parseFloat(f.valMax)) && r.valorTotal > parseFloat(f.valMax)) return false;
+      if (f.vlMin  !== '' && !isNaN(parseFloat(f.vlMin))  && r.valorLiq   < parseFloat(f.vlMin))  return false;
+      if (f.vlMax  !== '' && !isNaN(parseFloat(f.vlMax))  && r.valorLiq   > parseFloat(f.vlMax))  return false;
+      if (f.cbsMin !== '' && !isNaN(parseFloat(f.cbsMin)) && r.cbs        < parseFloat(f.cbsMin)) return false;
+      if (f.cbsMax !== '' && !isNaN(parseFloat(f.cbsMax)) && r.cbs        > parseFloat(f.cbsMax)) return false;
+      if (f.ibsMin !== '' && !isNaN(parseFloat(f.ibsMin)) && r.ibs        < parseFloat(f.ibsMin)) return false;
+      if (f.ibsMax !== '' && !isNaN(parseFloat(f.ibsMax)) && r.ibs        > parseFloat(f.ibsMax)) return false;
       return true;
     });
   }
@@ -3621,11 +3656,15 @@ window.incRfFiltrar = function() {
   var status   = (document.getElementById('inc-rf-etapa')        ||{}).value||'';
   var dataDe   = (document.getElementById('inc-rf-data-de')      ||{}).value||'';
   var dataAte  = (document.getElementById('inc-rf-data-ate')     ||{}).value||'';
-  var valMin    = (document.getElementById('inc-rf-valor-min')   ||{}).value||'';
-  var valMax    = (document.getElementById('inc-rf-valor-max')   ||{}).value||'';
-  var prioridade= (document.getElementById('inc-rf-prioridade')  ||{}).value||'';
-  var origem    = (document.getElementById('inc-rf-origem')      ||{}).value||'';
-  var contrato  = (document.getElementById('inc-rf-contrato')    ||{}).value||'';
+  var valMin    = (document.getElementById('inc-rf-valor-min')     ||{}).value||'';
+  var valMax    = (document.getElementById('inc-rf-valor-max')     ||{}).value||'';
+  var valTotMin = (document.getElementById('inc-rf-val-total-min') ||{}).value||'';
+  var valTotMax = (document.getElementById('inc-rf-val-total-max') ||{}).value||'';
+  var valLiqMin = (document.getElementById('inc-rf-val-liq-min')   ||{}).value||'';
+  var valLiqMax = (document.getElementById('inc-rf-val-liq-max')   ||{}).value||'';
+  var prioridade= (document.getElementById('inc-rf-prioridade')    ||{}).value||'';
+  var origem    = (document.getElementById('inc-rf-origem')        ||{}).value||'';
+  var contrato  = (document.getElementById('inc-rf-contrato')      ||{}).value||'';
 
   var lista = (window._inconsistenciasGlobal || []).filter(function(inc) {
     if (tipoNF    && inc.tipoFluxo !== tipoNF)                                             return false;
@@ -3634,9 +3673,13 @@ window.incRfFiltrar = function() {
     if (status    && inc.status !== status)                                                return false;
     if (dataDe    && inc.dataISO < dataDe)                                                 return false;
     if (dataAte   && inc.dataISO > dataAte)                                                return false;
-    if (valMin !== '' && inc.valor < parseFloat(valMin))                                   return false;
-    if (valMax !== '' && inc.valor > parseFloat(valMax))                                   return false;
-    if (prioridade && inc.prioridade !== prioridade)                                       return false;
+    if (valMin !== '' && inc.valor < parseFloat(valMin))                                       return false;
+    if (valMax !== '' && inc.valor > parseFloat(valMax))                                       return false;
+    if (valTotMin !== '' && !isNaN(parseFloat(valTotMin)) && (inc.valorTotal||0) < parseFloat(valTotMin)) return false;
+    if (valTotMax !== '' && !isNaN(parseFloat(valTotMax)) && (inc.valorTotal||0) > parseFloat(valTotMax)) return false;
+    if (valLiqMin !== '' && !isNaN(parseFloat(valLiqMin)) && (inc.valorLiq||0)   < parseFloat(valLiqMin)) return false;
+    if (valLiqMax !== '' && !isNaN(parseFloat(valLiqMax)) && (inc.valorLiq||0)   > parseFloat(valLiqMax)) return false;
+    if (prioridade && inc.prioridade !== prioridade)                                           return false;
     if (origem     && inc.origem !== origem)                                               return false;
     if (contrato === '__sem__' && inc.contratoId)                                          return false;
     if (contrato && contrato !== '__sem__' && inc.contratoId !== contrato)                 return false;
@@ -3655,7 +3698,7 @@ window.incRfFiltrar = function() {
 };
 
 window.incRfLimparFiltros = function() {
-  ['inc-rf-busca','inc-rf-tipo-nf','inc-rf-tipo-fiscal','inc-rf-inc-tipo','inc-rf-etapa','inc-rf-data-de','inc-rf-data-ate','inc-rf-valor-min','inc-rf-valor-max','inc-rf-prioridade','inc-rf-origem','inc-rf-contrato'].forEach(function(id){
+  ['inc-rf-busca','inc-rf-tipo-nf','inc-rf-tipo-fiscal','inc-rf-inc-tipo','inc-rf-etapa','inc-rf-data-de','inc-rf-data-ate','inc-rf-valor-min','inc-rf-valor-max','inc-rf-val-total-min','inc-rf-val-total-max','inc-rf-val-liq-min','inc-rf-val-liq-max','inc-rf-prioridade','inc-rf-origem','inc-rf-contrato'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
   window.incRfFiltrar();
@@ -4646,7 +4689,8 @@ window._enriquecerNFsSaida = function() {
 window._filtrosDebitos = {
   mesAno: '', mesAnoArr: [], busca: '', tipoFiscal: '', status: '',
   metodo: '', extincao: '', dataNFDe: '', dataNFAte: '',
-  debMin: '', debMax: '', tipoDFe: '', statusRegistro: ''
+  debMin: '', debMax: '', tipoDFe: '', statusRegistro: '',
+  valMin: '', valMax: '', vlMin: '', vlMax: '', cbsMin: '', cbsMax: '', ibsMin: '', ibsMax: ''
 };
 
 window.injetarFiltrosDebitos = function() {
@@ -4672,7 +4716,15 @@ window.injetarFiltrosDebitos = function() {
       { label: 'Data NF — até',     id: 'fd-data-ate',   type: 'date' },
       { label: 'Débito — mín (R$)', id: 'fd-deb-min',    type: 'number', placeholder: '0', min: 0 },
       { label: 'Débito — máx (R$)', id: 'fd-deb-max',    type: 'number', placeholder: '∞', min: 0 },
-      { label: 'Tipo de DFe',       id: 'fd-tipo-dfe',   type: 'select', options: [{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}] }
+      { label: 'Tipo de DFe',       id: 'fd-tipo-dfe',   type: 'select', options: [{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}] },
+      { label: 'Valor Total — mín (R$)',   id: 'fd-val-min', type: 'number', placeholder: '0', min: 0 },
+      { label: 'Valor Total — máx (R$)',   id: 'fd-val-max', type: 'number', placeholder: '∞', min: 0 },
+      { label: 'Valor Líquido — mín (R$)', id: 'fd-vl-min',  type: 'number', placeholder: '0', min: 0 },
+      { label: 'Valor Líquido — máx (R$)', id: 'fd-vl-max',  type: 'number', placeholder: '∞', min: 0 },
+      { label: 'CBS — mín (R$)',           id: 'fd-cbs-min', type: 'number', placeholder: '0', min: 0 },
+      { label: 'CBS — máx (R$)',           id: 'fd-cbs-max', type: 'number', placeholder: '∞', min: 0 },
+      { label: 'IBS — mín (R$)',           id: 'fd-ibs-min', type: 'number', placeholder: '0', min: 0 },
+      { label: 'IBS — máx (R$)',           id: 'fd-ibs-max', type: 'number', placeholder: '∞', min: 0 }
     ]
   });
 };
@@ -4693,6 +4745,14 @@ window.debitosFiltrarGrid = function() {
   f.debMin         = (document.getElementById('fd-deb-min')    || {}).value || '';
   f.debMax         = (document.getElementById('fd-deb-max')    || {}).value || '';
   f.tipoDFe        = (document.getElementById('fd-tipo-dfe')   || {}).value || '';
+  f.valMin  = (document.getElementById('fd-val-min') || {}).value || '';
+  f.valMax  = (document.getElementById('fd-val-max') || {}).value || '';
+  f.vlMin   = (document.getElementById('fd-vl-min')  || {}).value || '';
+  f.vlMax   = (document.getElementById('fd-vl-max')  || {}).value || '';
+  f.cbsMin  = (document.getElementById('fd-cbs-min') || {}).value || '';
+  f.cbsMax  = (document.getElementById('fd-cbs-max') || {}).value || '';
+  f.ibsMin  = (document.getElementById('fd-ibs-min') || {}).value || '';
+  f.ibsMax  = (document.getElementById('fd-ibs-max') || {}).value || '';
   window.renderizarTabelaDebitos();
 };
 
@@ -4716,7 +4776,7 @@ window.debitosFiltrarMesAno = function() {
 };
 
 window.debitosLimparFiltrosGrid = function() {
-  ['fd-busca','fd-tipo','fd-status','fd-status-reg','fd-contrato','fd-metodo','fd-extincao','fd-data-de','fd-data-ate','fd-deb-min','fd-deb-max','fd-tipo-dfe'].forEach(function(id) {
+  ['fd-busca','fd-tipo','fd-status','fd-status-reg','fd-contrato','fd-metodo','fd-extincao','fd-data-de','fd-data-ate','fd-deb-min','fd-deb-max','fd-tipo-dfe','fd-val-min','fd-val-max','fd-vl-min','fd-vl-max','fd-cbs-min','fd-cbs-max','fd-ibs-min','fd-ibs-max'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.value = '';
   });
   var selMes = document.getElementById('deb-mes-ano');
@@ -4726,7 +4786,8 @@ window.debitosLimparFiltrosGrid = function() {
   window._filtrosDebitos = {
     mesAno: '', mesAnoArr: [], busca: '', tipoFiscal: '', status: '',
     statusRegistro: '', contrato: '', metodo: '', extincao: '',
-    dataNFDe: '', dataNFAte: '', debMin: '', debMax: '', tipoDFe: ''
+    dataNFDe: '', dataNFAte: '', debMin: '', debMax: '', tipoDFe: '',
+    valMin: '', valMax: '', vlMin: '', vlMax: '', cbsMin: '', cbsMax: '', ibsMin: '', ibsMax: ''
   };
   window._periodoSel = window._periodoSel || {}; window._periodoSel.deb = [];
   window.renderizarTabelaDebitos();
@@ -4797,6 +4858,14 @@ window.renderizarTabelaDebitos = function() {
     if (f.debMin !== '' && r.deb < parseFloat(f.debMin)) return false;
     if (f.debMax !== '' && r.deb > parseFloat(f.debMax)) return false;
     if (f.statusRegistro && r.statusRegistro !== f.statusRegistro) return false;
+    if (f.valMin !== '' && !isNaN(parseFloat(f.valMin)) && r.valorTotal < parseFloat(f.valMin)) return false;
+    if (f.valMax !== '' && !isNaN(parseFloat(f.valMax)) && r.valorTotal > parseFloat(f.valMax)) return false;
+    if (f.vlMin  !== '' && !isNaN(parseFloat(f.vlMin))  && r.valorLiq   < parseFloat(f.vlMin))  return false;
+    if (f.vlMax  !== '' && !isNaN(parseFloat(f.vlMax))  && r.valorLiq   > parseFloat(f.vlMax))  return false;
+    if (f.cbsMin !== '' && !isNaN(parseFloat(f.cbsMin)) && r.cbs        < parseFloat(f.cbsMin)) return false;
+    if (f.cbsMax !== '' && !isNaN(parseFloat(f.cbsMax)) && r.cbs        > parseFloat(f.cbsMax)) return false;
+    if (f.ibsMin !== '' && !isNaN(parseFloat(f.ibsMin)) && r.ibs        < parseFloat(f.ibsMin)) return false;
+    if (f.ibsMax !== '' && !isNaN(parseFloat(f.ibsMax)) && r.ibs        > parseFloat(f.ibsMax)) return false;
     return true;
   });
 
@@ -4865,8 +4934,15 @@ window.debitosDFsRender = function() {
   var dataAte  = (document.getElementById('deb-dfs-data-ate') ||{}).value||'';
   var valMin   = (document.getElementById('deb-dfs-valor-min')||{}).value||'';
   var valMax   = (document.getElementById('deb-dfs-valor-max')||{}).value||'';
-  var debMin   = (document.getElementById('deb-dfs-deb-min')  ||{}).value||'';
-  var debMax   = (document.getElementById('deb-dfs-deb-max')  ||{}).value||'';
+  var debMin   = (document.getElementById('deb-dfs-deb-min')    ||{}).value||'';
+  var debMax   = (document.getElementById('deb-dfs-deb-max')    ||{}).value||'';
+  var ibsMin   = (document.getElementById('deb-dfs-ibs-min')    ||{}).value||'';
+  var ibsMax   = (document.getElementById('deb-dfs-ibs-max')    ||{}).value||'';
+  var cbsMin   = (document.getElementById('deb-dfs-cbs-min')    ||{}).value||'';
+  var cbsMax   = (document.getElementById('deb-dfs-cbs-max')    ||{}).value||'';
+  var filtCont = (document.getElementById('deb-dfs-contrato')   ||{}).value||'';
+  // Preencher select de contratos dinamicamente (só na primeira vez)
+  (function(){var sel=document.getElementById('deb-dfs-contrato');if(!sel||sel.options.length>2)return;var ids=[];(_contratosData||[]).forEach(function(c){if(ids.indexOf(c.id)<0)ids.push(c.id);});ids.sort().forEach(function(id){var o=document.createElement('option');o.value=id;o.textContent=id;sel.appendChild(o);});})();
 
   function _dfDebSt(rfs) {
     var inc=false,vec=false,ext=false,nao=false;
@@ -4894,6 +4970,9 @@ window.debitosDFsRender = function() {
   if(filtExt){nfs=nfs.filter(function(nf){var hasExt=(nf.registrosFiscais||[]).some(function(rf){return rf.dataExtincao&&rf.dataExtincao!=='—';});if(filtExt==='com')return hasExt;return !hasExt;});}
   if(valMin!==''||valMax!==''){nfs=nfs.filter(function(nf){var v=nf.valorTotal||0;return (valMin===''||v>=parseFloat(valMin))&&(valMax===''||v<=parseFloat(valMax));});}
   if(debMin!==''||debMax!==''){nfs=nfs.filter(function(nf){var ibs=0,cbs=0;(nf.registrosFiscais||[]).forEach(function(rf){if(rf.tipoFiscal==='ibs')ibs+=rf.valor||0;else cbs+=rf.valor||0;});var d2=ibs+cbs;return (debMin===''||d2>=parseFloat(debMin))&&(debMax===''||d2<=parseFloat(debMax));});}
+  if(ibsMin!==''||ibsMax!==''){nfs=nfs.filter(function(nf){var ibs=0;(nf.registrosFiscais||[]).forEach(function(rf){if(rf.tipoFiscal==='ibs')ibs+=rf.valor||0;});return (ibsMin===''||isNaN(parseFloat(ibsMin))||ibs>=parseFloat(ibsMin))&&(ibsMax===''||isNaN(parseFloat(ibsMax))||ibs<=parseFloat(ibsMax));});}
+  if(cbsMin!==''||cbsMax!==''){nfs=nfs.filter(function(nf){var cbs=0;(nf.registrosFiscais||[]).forEach(function(rf){if(rf.tipoFiscal==='cbs')cbs+=rf.valor||0;});return (cbsMin===''||isNaN(parseFloat(cbsMin))||cbs>=parseFloat(cbsMin))&&(cbsMax===''||isNaN(parseFloat(cbsMax))||cbs<=parseFloat(cbsMax));});}
+  if(filtCont){nfs=nfs.filter(function(nf){var cId=nf.contratoId||(nf.registrosFiscais&&nf.registrosFiscais[0]?nf.registrosFiscais[0].contratoId:null)||null;if(filtCont==='__sem__')return !cId;return cId===filtCont;});}
 
   var sub=document.getElementById('deb-dfs-sub');
   if(sub)sub.textContent=nfs.length+' DF'+(nfs.length!==1?'s':'')+' de saída';
@@ -4965,7 +5044,7 @@ window.debitosDFsRender = function() {
 window.debitoDFsToggleFiltros = function() { window.shToggleFilterPanel('deb-dfs'); };
 
 window.debitoDFsLimparFiltros = function() {
-  ['deb-dfs-busca','deb-dfs-status','deb-dfs-status-rf','deb-dfs-tipo','deb-dfs-metodo','deb-dfs-extincao','deb-dfs-data-de','deb-dfs-data-ate','deb-dfs-valor-min','deb-dfs-valor-max','deb-dfs-deb-min','deb-dfs-deb-max'].forEach(function(id){
+  ['deb-dfs-busca','deb-dfs-status','deb-dfs-status-rf','deb-dfs-tipo','deb-dfs-metodo','deb-dfs-extincao','deb-dfs-data-de','deb-dfs-data-ate','deb-dfs-valor-min','deb-dfs-valor-max','deb-dfs-deb-min','deb-dfs-deb-max','deb-dfs-ibs-min','deb-dfs-ibs-max','deb-dfs-cbs-min','deb-dfs-cbs-max','deb-dfs-contrato'].forEach(function(id){
     var el=document.getElementById(id); if(el)el.value='';
   });
   window.debitosDFsRender();
@@ -4995,7 +5074,7 @@ window.injetarFiltrosInconsistencias = function() {
 };
 
 window.creditosDFsLimpar = function() {
-  ['cred-dfs-busca','cred-dfs-status','cred-dfs-tipo','cred-dfs-credito','cred-dfs-status-rf','cred-dfs-metodo','cred-dfs-extincao','cred-dfs-data-de','cred-dfs-data-ate','cred-dfs-valor-min','cred-dfs-valor-max','cred-dfs-cred-min','cred-dfs-cred-max'].forEach(function(id){
+  ['cred-dfs-busca','cred-dfs-status','cred-dfs-tipo','cred-dfs-credito','cred-dfs-status-rf','cred-dfs-metodo','cred-dfs-extincao','cred-dfs-data-de','cred-dfs-data-ate','cred-dfs-valor-min','cred-dfs-valor-max','cred-dfs-cred-min','cred-dfs-cred-max','cred-dfs-ibs-min','cred-dfs-ibs-max','cred-dfs-cbs-min','cred-dfs-cbs-max','cred-dfs-contrato'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
   if (typeof creditosDFsRender === 'function') creditosDFsRender();
@@ -6254,11 +6333,12 @@ window.renderizarFCTForecast = function(_retry) {
 // GESTÃO DE PAGAMENTOS — filtro global de mês + tabela dinâmica
 // ============================================================
 
-window._filtrosPagamentos = { mesAno: '', mesAnoArr: [], tipo: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
+window._filtrosPagamentos = { mesAno: '', mesAnoArr: [], tipo: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '', contrato: '', statusCred: '', statusReg: '' };
 
 window.injetarFiltrosPagamentos = function() {
   var tcrd = document.querySelector('#pag-imp .tcrd');
   if (!tcrd) return;
+  var contratos = (_contratosData || []).map(function(c) { return { value: c.id, label: c.id }; });
   window.shBuildFilterPanel({
     wrapperId: 'filtros-pagamentos-avancado',
     anchor: tcrd,
@@ -6274,7 +6354,10 @@ window.injetarFiltrosPagamentos = function() {
       { label: 'Data RF — até', id: 'fp-data-ate',  type: 'date' },
       { label: 'Valor — mín (R$)', id: 'fp-valor-min', type: 'number', placeholder: '0', min: 0 },
       { label: 'Valor — máx (R$)', id: 'fp-valor-max', type: 'number', placeholder: '∞', min: 0 },
-      { label: 'Tipo de DFe',  id: 'fp-tipo-dfe',  type: 'select', options: [{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}] }
+      { label: 'Tipo de DFe',  id: 'fp-tipo-dfe',  type: 'select', options: [{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}] },
+      { label: 'Contrato',     id: 'fp-contrato',  type: 'select', options: contratos.concat([{value:'__sem__',label:'Sem contrato'}]) },
+      { label: 'Status Crédito', id: 'fp-status-cred', type: 'select', options: [{value:'nao_apropriado',label:'Não Apropriado'},{value:'apropriado',label:'Apropriado'},{value:'utilizado',label:'Utilizado'},{value:'glosado',label:'Glosado'}] },
+      { label: 'Status Registro',id: 'fp-status-reg',  type: 'select', options: [{value:'inconsistencia',label:'Inconsistência'},{value:'em_risco',label:'Em risco'},{value:'vencido',label:'Vencido'},{value:'a_prescrever',label:'A Prescrever'}] }
     ]
   });
 };
@@ -6290,16 +6373,19 @@ window.pagamentosFiltrarGrid = function() {
   f.dataRFAte= (document.getElementById('fp-data-ate')  || {}).value || '';
   f.valorMin = (document.getElementById('fp-valor-min') || {}).value || '';
   f.valorMax = (document.getElementById('fp-valor-max') || {}).value || '';
-  f.tipoDFe  = (document.getElementById('fp-tipo-dfe')  || {}).value || '';
+  f.tipoDFe   = (document.getElementById('fp-tipo-dfe')    || {}).value || '';
+  f.contrato  = (document.getElementById('fp-contrato')    || {}).value || '';
+  f.statusCred= (document.getElementById('fp-status-cred') || {}).value || '';
+  f.statusReg = (document.getElementById('fp-status-reg')  || {}).value || '';
   window.renderizarTabelaPagamentos();
 };
 
 window.pagamentosLimparFiltros = function() {
-  ['fp-busca','fp-tipo','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max','fp-tipo-dfe'].forEach(function(id) {
+  ['fp-busca','fp-tipo','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max','fp-tipo-dfe','fp-contrato','fp-status-cred','fp-status-reg'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
-  window._filtrosPagamentos = { mesAno: '', mesAnoArr: (window._filtrosPagamentos.mesAnoArr||[]).slice(), tipo: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '' };
+  window._filtrosPagamentos = { mesAno: '', mesAnoArr: (window._filtrosPagamentos.mesAnoArr||[]).slice(), tipo: '', busca: '', valorMin: '', valorMax: '', dataRFDe: '', dataRFAte: '', pagamento: '', tipoDFe: '', contrato: '', statusCred: '', statusReg: '' };
   window.renderizarTabelaPagamentos();
 };
 
@@ -6348,6 +6434,12 @@ window.renderizarTabelaPagamentos = function() {
       if (f.valorMin !== '' && valor < parseFloat(f.valorMin)) return;
       if (f.valorMax !== '' && valor > parseFloat(f.valorMax)) return;
       if (f.tipoDFe && (rf.tipoNF || nf.tipo || 'entrada') !== f.tipoDFe) return;
+      var _pContratoId = rf.contratoId || nf.contratoId || null;
+      if (f.contrato === '__sem__' && _pContratoId) return;
+      if (f.contrato && f.contrato !== '__sem__' && _pContratoId !== f.contrato) return;
+      if (f.statusCred && _scP !== f.statusCred) return;
+      var _pSreg = rf.statusRegistro || null;
+      if (f.statusReg && _pSreg !== f.statusReg) return;
 
       var dataRFIso = rf.data || '';
       if (f.dataRFDe  && dataRFIso < f.dataRFDe)  return;
