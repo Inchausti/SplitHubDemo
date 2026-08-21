@@ -1250,8 +1250,8 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <div class="kcard" ><div class="klbl">Utilizados <span class="periodo-info" data-tip="RFs com statusCredito = utilizado: créditos já apropriados usados para abater débitos IBS+CBS de NFs de saída via compensação ou split payment. % calculado sobre o total de apropriados.">i</span></div><div class="kval" id="cred-util">R$ 38,9M</div><div class="ksub" id="cred-util-sub">74,4% dos apropriados — abateram débito</div></div>
     <div class="kcard" ><div class="klbl">Inconsistências <span class="periodo-info" data-tip="RFs com statusRegistro = inconsistencia: divergência entre o Registro Fiscal (RF) e o Termo Fiscal (TF) ou ausência de TF. Impedem a apropriação do crédito e requerem revisão.">i</span></div><div class="kval" id="cred-inconsist">—</div><div class="ksub"><span id="cred-inconsist-sub">RFs com inconsistência · requer revisão</span><br/><a href="javascript:void(0)" onclick="window.creditosIrParaInconsistencias()" style="color:var(--red);font-weight:600;text-decoration:none;font-size:11px">Ver RFs com inconsistência →</a></div></div>
   </div>
-  <!-- Extinção e Vencidos não extintos -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+  <!-- Row 2: Extintos + Vencidos NE + Ageing (3 colunas — Proposta B) -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
     <div class="kcard" style="display:block;padding:14px 16px">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
         <div class="klbl" style="margin:0">Créditos Extintos <span class="periodo-info" data-tip="Créditos IBS+CBS cujo prazo de apropriação de 5 anos expirou (art. 48 LC 214/2025). Estes créditos estão prescritos e não podem mais ser utilizados. Valor definitivamente perdido.">i</span></div>
@@ -1293,80 +1293,77 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
         </div>
       </div>
     </div>
-  </div>
-  <!-- Calendário de Extinção de Créditos -->
-  <div class="ccrd" style="margin-bottom:14px">
-    <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
-      <div class="ctitle" style="margin-bottom:0">Calendário de Extinção de Créditos</div>
-      <span class="periodo-info" data-tip="Projeção de créditos A Apropriar que chegarão ao prazo de prescrição de 5 anos (art. 48 LC 214/2025), agrupados pelo mês de extinção. Permite antecipar picos de risco e priorizar cobranças antes da perda definitiva. Créditos extintos (&lt; hoje) não aparecem aqui — veja o totalizador 'Créditos Extintos' acima.">i</span>
-    </div>
-    <div class="csub">Volume de créditos A Apropriar por mês de prescrição (5 anos da NF) · cores por urgência · ação preventiva</div>
-    <div id="cred-calendario-extincao" style="margin-top:12px;min-height:120px"></div>
-    <div class="leg" style="margin-top:8px">
-      <span class="li"><span class="ls" style="background:var(--green)"></span>&gt;6 meses</span>
-      <span class="li"><span class="ls" style="background:var(--amber)"></span>3–6 meses</span>
-      <span class="li"><span class="ls" style="background:var(--red)"></span>&lt;3 meses</span>
-    </div>
-  </div>
-
-  <!-- Ageing de Créditos A Apropriar -->
-  <div class="ccrd" style="margin-bottom:14px">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-      <div>
-        <div class="ctitle">Ageing de Créditos A Apropriar</div>
-        <div class="csub">Concentração de créditos IBS+CBS ainda não apropriados por faixa de antiguidade · art. 48 LC 214/2025 — prazo máximo de 5 anos</div>
+    <div class="ccrd">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+        <div>
+          <div class="ctitle">Ageing de Créditos A Apropriar</div>
+          <div class="csub">Concentração de créditos IBS+CBS ainda não apropriados por faixa de antiguidade · art. 48 LC 214/2025 — prazo máximo de 5 anos</div>
+        </div>
+        <div class="periodo-wrap" style="position:relative;align-self:flex-start;margin-top:2px">
+          <span class="periodo-info" data-tip="Ageing (envelhecimento) mostra há quanto tempo os créditos estão pendentes sem apropriação. Créditos acima de 4 anos têm risco de prescrição conforme art. 48 da LC 214/2025. Quanto maior a concentração nas faixas &gt;180 dias, maior a exposição fiscal.">i</span>
+        </div>
       </div>
-      <div class="periodo-wrap" style="position:relative;align-self:flex-start;margin-top:2px">
-        <span class="periodo-info" data-tip="Ageing (envelhecimento) mostra há quanto tempo os créditos estão pendentes sem apropriação. Créditos acima de 4 anos têm risco de prescrição conforme art. 48 da LC 214/2025. Quanto maior a concentração nas faixas &gt;180 dias, maior a exposição fiscal.">i</span>
-      </div>
-    </div>
-    <div id="cred-ageing-content">
-      <!-- Barras de faixas -->
-      <div id="cred-ageing-bars" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px"></div>
-      <!-- KPIs de ageing -->
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding-top:14px;border-top:1px solid var(--border)">
-        <div style="text-align:center">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:4px">0 – 30 dias</div>
-          <div id="age-kpi-0" style="font-size:15px;font-weight:700;font-family:var(--font-mono);color:var(--green)">—</div>
-          <div id="age-pct-0" style="font-size:10px;color:var(--txt3);margin-top:2px">—</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:4px">31 – 90 dias</div>
-          <div id="age-kpi-1" style="font-size:15px;font-weight:700;font-family:var(--font-mono);color:var(--blue)">—</div>
-          <div id="age-pct-1" style="font-size:10px;color:var(--txt3);margin-top:2px">—</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:4px">91 – 180 dias</div>
-          <div id="age-kpi-2" style="font-size:15px;font-weight:700;font-family:var(--font-mono);color:var(--amber)">—</div>
-          <div id="age-pct-2" style="font-size:10px;color:var(--txt3);margin-top:2px">—</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:4px">181 – 365 dias</div>
-          <div id="age-kpi-3" style="font-size:15px;font-weight:700;font-family:var(--font-mono);color:var(--red)">—</div>
-          <div id="age-pct-3" style="font-size:10px;color:var(--txt3);margin-top:2px">—</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:4px">&gt; 365 dias</div>
-          <div id="age-kpi-4" style="font-size:15px;font-weight:700;font-family:var(--font-mono);color:var(--purple)">—</div>
-          <div id="age-pct-4" style="font-size:10px;color:var(--txt3);margin-top:2px">—</div>
+      <div id="cred-ageing-content">
+        <!-- Barras de faixas -->
+        <div id="cred-ageing-bars" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px"></div>
+        <!-- KPIs de ageing -->
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="text-align:center">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:4px">0 – 30 dias</div>
+            <div id="age-kpi-0" style="font-size:15px;font-weight:700;font-family:var(--font-mono);color:var(--green)">—</div>
+            <div id="age-pct-0" style="font-size:10px;color:var(--txt3);margin-top:2px">—</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:4px">31 – 90 dias</div>
+            <div id="age-kpi-1" style="font-size:15px;font-weight:700;font-family:var(--font-mono);color:var(--blue)">—</div>
+            <div id="age-pct-1" style="font-size:10px;color:var(--txt3);margin-top:2px">—</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:4px">91 – 180 dias</div>
+            <div id="age-kpi-2" style="font-size:15px;font-weight:700;font-family:var(--font-mono);color:var(--amber)">—</div>
+            <div id="age-pct-2" style="font-size:10px;color:var(--txt3);margin-top:2px">—</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:4px">181 – 365 dias</div>
+            <div id="age-kpi-3" style="font-size:15px;font-weight:700;font-family:var(--font-mono);color:var(--red)">—</div>
+            <div id="age-pct-3" style="font-size:10px;color:var(--txt3);margin-top:2px">—</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:4px">&gt; 365 dias</div>
+            <div id="age-kpi-4" style="font-size:15px;font-weight:700;font-family:var(--font-mono);color:var(--purple)">—</div>
+            <div id="age-pct-4" style="font-size:10px;color:var(--txt3);margin-top:2px">—</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Row 3: Calendário de Extinção + Créditos a Vencer (2 colunas — visualizações temporais) -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
     <div class="ccrd">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Top 5 · RF com Inconsistência por Volume</div><span class="periodo-info" data-tip="Ranking dos 5 Registros Fiscais de entrada com maior valor que possuem statusRegistro = inconsistencia. Uma inconsistência ocorre quando há divergência entre o RF e o TF (Termo Fiscal) correspondente ou ausência de TF — impedindo a apropriação do crédito IBS+CBS.">i</span></div>
-      <div class="csub" style="margin-bottom:12px">RFs de entrada com status Inconsistência · por valor · R$ milhões</div>
-      <div id="c-top5-inconsist" style="min-height:140px"></div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+        <div class="ctitle" style="margin-bottom:0">Calendário de Extinção de Créditos</div>
+        <span class="periodo-info" data-tip="Projeção de créditos A Apropriar que chegarão ao prazo de prescrição de 5 anos (art. 48 LC 214/2025), agrupados pelo mês de extinção. Permite antecipar picos de risco e priorizar cobranças antes da perda definitiva. Créditos extintos (&lt; hoje) não aparecem aqui — veja o totalizador 'Créditos Extintos' acima.">i</span>
+      </div>
+      <div class="csub">Volume de créditos A Apropriar por mês de prescrição (5 anos da NF) · cores por urgência · ação preventiva</div>
+      <div id="cred-calendario-extincao" style="margin-top:12px;min-height:120px"></div>
+      <div class="leg" style="margin-top:8px">
+        <span class="li"><span class="ls" style="background:var(--green)"></span>&gt;6 meses</span>
+        <span class="li"><span class="ls" style="background:var(--amber)"></span>3–6 meses</span>
+        <span class="li"><span class="ls" style="background:var(--red)"></span>&lt;3 meses</span>
+      </div>
     </div>
     <div class="ccrd">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Top 10 · Empresas com Créditos a Vencer / Vencidos</div><span class="periodo-info" data-tip="Ranking dos 10 fornecedores com maior volume total de NFs de entrada. A barra é segmentada: teal = créditos já apropriados/utilizados; cor do score = volume ainda pendente (não apropriado). A coluna direita exibe o % pendente e a classificação de risco — quanto maior o percentual não apropriado, maior o risco de perda fiscal.">i</span></div>
-      <div class="csub" style="margin-bottom:12px">Fornecedores com RFs Vencido ou Inconsistência · volume total · R$ milhões</div>
-      <div id="c-top10-empresas" style="min-height:140px"></div>
+      <div style="margin-bottom:16px">
+        <div class="ctitle" style="margin-bottom:2px">Créditos a Vencer</div>
+        <div class="csub">Volume de créditos IBS+CBS não apropriados por mês de vencimento · clique para detalhar</div>
+      </div>
+      <div id="cVencimento"></div>
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">
+
+  <!-- Row 4: Composição + Método de Pagamento (2fr 1fr) -->
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
     <div class="ccrd">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px">
         <div>
@@ -1400,13 +1397,19 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       </div>
     </div>
   </div>
-  <!-- Créditos a Vencer — visão mensal -->
-  <div class="crd" style="margin-bottom:20px">
-    <div style="margin-bottom:16px">
-      <div class="ctitle" style="margin-bottom:2px">Créditos a Vencer</div>
-      <div class="csub">Volume de créditos IBS+CBS não apropriados por mês de vencimento · clique para detalhar</div>
+
+  <!-- Row 5: Top 5 + Top 10 (2 colunas — rankings) -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">
+    <div class="ccrd">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Top 5 · RF com Inconsistência por Volume</div><span class="periodo-info" data-tip="Ranking dos 5 Registros Fiscais de entrada com maior valor que possuem statusRegistro = inconsistencia. Uma inconsistência ocorre quando há divergência entre o RF e o TF (Termo Fiscal) correspondente ou ausência de TF — impedindo a apropriação do crédito IBS+CBS.">i</span></div>
+      <div class="csub" style="margin-bottom:12px">RFs de entrada com status Inconsistência · por valor · R$ milhões</div>
+      <div id="c-top5-inconsist" style="min-height:140px"></div>
     </div>
-    <div id="cVencimento"></div>
+    <div class="ccrd">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Top 10 · Empresas com Créditos a Vencer / Vencidos</div><span class="periodo-info" data-tip="Ranking dos 10 fornecedores com maior volume total de NFs de entrada. A barra é segmentada: teal = créditos já apropriados/utilizados; cor do score = volume ainda pendente (não apropriado). A coluna direita exibe o % pendente e a classificação de risco — quanto maior o percentual não apropriado, maior o risco de perda fiscal.">i</span></div>
+      <div class="csub" style="margin-bottom:12px">Fornecedores com RFs Vencido ou Inconsistência · volume total · R$ milhões</div>
+      <div id="c-top10-empresas" style="min-height:140px"></div>
+    </div>
   </div>
   </div><!-- /cred-visao -->
 
