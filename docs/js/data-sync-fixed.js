@@ -306,7 +306,7 @@ window.dashRenderDFsApropriar = function() {
     var p = dataISO.split('-');
     if (p.length < 2) return null;
     var y = parseInt(p[0], 10), m = parseInt(p[1], 10);
-    return new Date(y, m + 1, 0);
+    return new Date(y, m, 0); // m é 1-based; m em 0-based = mês seguinte; dia 0 = último dia desse mês
   }
 
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
@@ -316,8 +316,8 @@ window.dashRenderDFsApropriar = function() {
       if (sc !== 'nao_apropriado') return;
       var sr   = rf.statusRegistro || null;
       var v    = rf.valor || 0;
-      var dp   = (rf.data || '').split('-');
-      var venc = calcVencimento(rf.data);
+      var dp   = (nf.data || rf.data || '').split('-');
+      var venc = calcVencimento(nf.data || rf.data);
       if (!venc) return;
       var mesVenc = venc.getFullYear() * 100 + (venc.getMonth() + 1);
       // Excluir DFs com vencimento em meses anteriores ao atual
@@ -5630,7 +5630,7 @@ window.renderizarAgeingCreditos = function() {
   var barsEl = document.getElementById('cred-ageing-bars');
   if (!barsEl) return;
 
-  var hoje = new Date('2026-08-10'); // data de referência do sistema
+  var hoje = new Date(); hoje.setHours(0,0,0,0);
   var faixas = [
     { label: '0 – 30 dias',    min: 0,   max: 30,  color: PALETTE.teal,  bg: 'rgba(var(--teal-rgb),.15)'  },
     { label: '31 – 90 dias',   min: 31,  max: 90,  color: PALETTE.blue,  bg: 'rgba(var(--blue-rgb),.15)'   },
@@ -5646,7 +5646,7 @@ window.renderizarAgeingCreditos = function() {
     (nf.registrosFiscais || []).forEach(function(rf) {
       var sc = rf.statusCredito || rf.status || '';
       if (sc !== 'nao_apropriado') return;
-      var dataStr = rf.data || nf.data || '';
+      var dataStr = nf.data || rf.data || '';
       if (!dataStr) return;
       var partes = dataStr.split('-');
       if (partes.length < 3) return;
@@ -7060,15 +7060,16 @@ document.addEventListener('DOMContentLoaded', function() {
         (nf.registrosFiscais || []).forEach(function(rf) {
           var sc = rf.statusCredito || rf.status || '';
           if (sc === 'apropriado' || sc === 'utilizado' || sc === 'glosado') { rf.statusFlags = []; return; }
-          var dataStr = rf.data || nf.data || '';
+          // Fato gerador: data de emissão do DF (nf.data), fallback para rf.data
+          var dataStr = nf.data || rf.data || '';
           if (!dataStr) return;
           var p = dataStr.split('-');
           if (p.length < 2) return;
           var y = parseInt(p[0], 10), m = parseInt(p[1], 10);
-          // Vencimento = último dia do mês seguinte à NF
-          var venc = new Date(y, m + 1, 0); venc.setHours(0,0,0,0);
+          // Vencimento = último dia do mês seguinte à emissão (mês 0-based: m já é 1-based, +1 e dia 0 = último dia do mês m)
+          var venc = new Date(y, m, 0); venc.setHours(0,0,0,0);
           var diffDias = Math.round((venc - hoje) / MS_DIA);
-          // Prescrição = 5 anos da data da NF
+          // Prescrição = 5 anos da data de emissão (m é 1-based; m-1 = 0-based correto)
           var prescr = new Date(y + 5, m - 1, parseInt(p[2] || '1', 10));
           var diffPrescr = Math.round((prescr - hoje) / MS_DIA);
 
