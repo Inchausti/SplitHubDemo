@@ -1,0 +1,719 @@
+<title>SplitHub Design System</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ── Design System Tokens ──────────────────────────────────── */
+:root {
+  --primary:           #00685D;
+  --primary-container: #008376;
+  --on-primary:        #FFFFFF;
+  --on-primary-cont:   #F4FFFB;
+  --secondary:         #136800;
+  --secondary-cont:    #238700;
+  --tertiary:          #296283;
+  --tertiary-cont:     #457B9D;
+  --error:             #B22127;
+  --error-cont:        #D43C3C;
+  --on-error:          #FFFFFF;
+  --alert:             #FFAD3A;
+  --alert-cont:        #FFE086;
+  --success:           #45AA4E;
+  --success-cont:      #A4D397;
+
+  /* Semantic surfaces */
+  --bg:      #F5FBFB;
+  --surface: #FCF8F8;
+  --sidebar-bg: #FFFFFF;
+  --border:  #D0E4E2;
+  --brd2:    #E8F0EF;
+
+  /* Text */
+  --txt1: #171D1B;
+  --txt2: #333436;
+  --txt3: #989898;
+  --txt-on-primary: #FFFFFF;
+
+  /* Fonts */
+  --ff: 'Inter', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', 'Courier New', monospace;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,104,93,.07), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,104,93,.10), 0 2px 4px rgba(0,0,0,.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --primary:           #64D9C8;
+    --primary-container: #19A292;
+    --on-primary:        #003731;
+    --on-primary-cont:   #002C28;
+    --secondary:         #7ADD5F;
+    --secondary-cont:    #44A42D;
+    --tertiary:          #98CDF2;
+    --tertiary-cont:     #457B9D;
+    --error:             #FFB3AE;
+    --error-cont:        #FB5855;
+    --alert:             #FFAD3A;
+    --alert-cont:        #7A4E00;
+    --success:           #7ADD5F;
+    --success-cont:      #44A42D;
+
+    --bg:       #0F1413;
+    --surface:  #141313;
+    --sidebar-bg: #1A1D1C;
+    --border:   #2A3533;
+    --brd2:     #1F2826;
+
+    --txt1: #DEE4E1;
+    --txt2: #B8C4C1;
+    --txt3: #6E7D7A;
+  }
+}
+:root[data-theme="dark"] {
+  --primary:           #64D9C8;
+  --primary-container: #19A292;
+  --on-primary:        #003731;
+  --secondary:         #7ADD5F;
+  --secondary-cont:    #44A42D;
+  --tertiary:          #98CDF2;
+  --tertiary-cont:     #457B9D;
+  --error:             #FFB3AE;
+  --error-cont:        #FB5855;
+  --alert:             #FFAD3A;
+  --success:           #7ADD5F;
+  --success-cont:      #44A42D;
+  --bg:       #0F1413;
+  --surface:  #141313;
+  --sidebar-bg: #1A1D1C;
+  --border:   #2A3533;
+  --brd2:     #1F2826;
+  --txt1: #DEE4E1;
+  --txt2: #B8C4C1;
+  --txt3: #6E7D7A;
+}
+
+/* ── Reset & Base ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--ff);
+  background: var(--bg);
+  color: var(--txt1);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Shell layout ──────────────────────────────────────────── */
+.shell { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── Sidebar ───────────────────────────────────────────────── */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.sidebar-logo {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--brd2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-mark {
+  width: 30px; height: 30px;
+  background: var(--primary);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--on-primary);
+  font-weight: 800; font-size: 14px; letter-spacing: -.5px;
+  flex-shrink: 0;
+}
+.logo-text { font-weight: 700; font-size: 15px; color: var(--txt1); letter-spacing: -.02em; }
+.logo-sub  { font-size: 9px; color: var(--txt3); letter-spacing: .04em; text-transform: uppercase; }
+
+.nav-section { padding: 10px 10px 4px; }
+.nav-label {
+  font-size: 9px; font-weight: 700; color: var(--txt3);
+  text-transform: uppercase; letter-spacing: .1em;
+  padding: 0 10px; margin-bottom: 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 12px; border-radius: 8px; cursor: pointer;
+  color: var(--txt2); font-size: 12px; font-weight: 500;
+  transition: background .12s, color .12s;
+  position: relative;
+}
+.nav-item:hover { background: color-mix(in srgb, var(--primary) 8%, transparent); color: var(--txt1); }
+.nav-item.active {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+  font-weight: 600;
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute; left: 0; top: 20%; bottom: 20%;
+  width: 3px; border-radius: 0 3px 3px 0;
+  background: var(--primary);
+}
+.nav-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--error-cont);
+  color: var(--on-error);
+  font-size: 9px; font-weight: 700;
+  padding: 1px 5px; border-radius: 10px;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 12px;
+  border-top: 1px solid var(--brd2);
+}
+.user-chip {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: 8px; cursor: pointer;
+}
+.user-chip:hover { background: var(--brd2); }
+.user-av {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--primary-container);
+  color: var(--on-primary-cont);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.user-name { font-size: 11px; font-weight: 600; color: var(--txt1); }
+.user-role { font-size: 10px; color: var(--txt3); }
+
+/* ── Main content ──────────────────────────────────────────── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Top bar */
+.topbar {
+  height: 52px; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 12px;
+  background: var(--surface);
+}
+.topbar-breadcrumb {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--txt3);
+}
+.topbar-breadcrumb .curr { color: var(--txt1); font-weight: 600; }
+.topbar-sep { color: var(--border); }
+.topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.topbar-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 7px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--txt2); font-size: 11px; font-weight: 500;
+  cursor: pointer; font-family: var(--ff);
+}
+.topbar-btn:hover { border-color: var(--primary); color: var(--primary); }
+.topbar-btn.primary-btn {
+  background: var(--primary); border-color: var(--primary);
+  color: var(--on-primary); font-weight: 600;
+}
+.topbar-btn.primary-btn:hover { background: var(--primary-container); border-color: var(--primary-container); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+/* Content area */
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+
+/* Page header */
+.pg-hdr { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px; }
+.pg-title { font-size: 20px; font-weight: 700; color: var(--primary); letter-spacing: -.02em; margin-bottom: 3px; }
+.pg-sub { font-size: 12px; color: var(--txt3); }
+.period-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 14px;
+  font-size: 11px; color: var(--txt2); cursor: pointer;
+  font-family: var(--ff); font-weight: 500;
+}
+
+/* Sub-tabs */
+.stabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; gap: 0; }
+.stab {
+  background: transparent; border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--txt3); font-size: 12px; font-family: var(--ff);
+  padding: 9px 18px; cursor: pointer; font-weight: 500;
+  margin-bottom: -1px;
+}
+.stab.active { border-bottom-color: var(--primary); color: var(--primary); font-weight: 600; }
+.stab:hover:not(.active) { color: var(--txt2); }
+
+/* KPI grid */
+.kgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+.kcard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .15s;
+}
+.kcard:hover { box-shadow: var(--shadow-md); }
+.kcard-top { height: 3px; }
+.klbl { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--txt3); font-weight: 600; padding: 12px 14px 2px; }
+.kval { font-size: 22px; font-weight: 700; font-family: var(--mono); padding: 2px 14px 4px; font-variant-numeric: tabular-nums; }
+.ksub { font-size: 10px; color: var(--txt3); padding: 0 14px 12px; display: flex; align-items: center; gap: 4px; }
+.kdelta { font-size: 10px; font-weight: 600; }
+.kdelta.up { color: var(--success); }
+.kdelta.dn { color: var(--error); }
+
+/* Charts row */
+.charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 18px; }
+.chart-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow-sm);
+}
+.chart-title { font-size: 13px; font-weight: 700; color: var(--txt1); margin-bottom: 2px; }
+.chart-sub   { font-size: 11px; color: var(--txt3); margin-bottom: 14px; }
+
+/* Inline SVG bar chart */
+.bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 100px; }
+.bar-group { flex: 1; display: flex; align-items: flex-end; gap: 2px; }
+.bar {
+  flex: 1; border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  transition: opacity .15s;
+}
+.bar:hover { opacity: .8; }
+.bar-label { font-size: 9px; color: var(--txt3); text-align: center; margin-top: 5px; }
+
+/* Donut */
+.donut-wrap { display: flex; align-items: center; gap: 16px; }
+.donut-legend { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.dleg-item { display: flex; align-items: center; gap: 7px; font-size: 11px; }
+.dleg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dleg-val { margin-left: auto; font-family: var(--mono); font-weight: 600; font-size: 11px; }
+
+/* Table card */
+.tcrd { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-sm); }
+.tcrd-hdr {
+  padding: 14px 18px 12px; border-bottom: 1px solid var(--brd2);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.tcrd-title { font-size: 13px; font-weight: 700; color: var(--txt1); }
+.tcrd-sub { font-size: 11px; color: var(--txt3); }
+.twrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead th {
+  padding: 9px 14px; text-align: left;
+  font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--txt3); border-bottom: 1px solid var(--brd2);
+  background: color-mix(in srgb, var(--primary) 4%, transparent);
+}
+tbody tr { border-bottom: 1px solid var(--brd2); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: color-mix(in srgb, var(--primary) 4%, transparent); }
+tbody td { padding: 9px 14px; color: var(--txt2); }
+td.mono { font-family: var(--mono); font-size: 11px; }
+td.r { text-align: right; }
+
+/* Status pills */
+.pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: 10px; font-weight: 600; letter-spacing: .03em;
+  white-space: nowrap;
+}
+.pill-success { background: color-mix(in srgb, var(--success) 15%, transparent); color: var(--success); border: 1px solid color-mix(in srgb, var(--success) 30%, transparent); }
+.pill-error   { background: color-mix(in srgb, var(--error)   15%, transparent); color: var(--error);   border: 1px solid color-mix(in srgb, var(--error)   30%, transparent); }
+.pill-alert   { background: color-mix(in srgb, var(--alert)   20%, transparent); color: color-mix(in srgb, var(--alert) 80%, var(--txt1)); border: 1px solid color-mix(in srgb, var(--alert) 35%, transparent); }
+.pill-primary { background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent); }
+.pill-tertiary{ background: color-mix(in srgb, var(--tertiary) 12%, transparent); color: var(--tertiary); border: 1px solid color-mix(in srgb, var(--tertiary) 25%, transparent); }
+.pill-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+/* Theme toggle */
+.theme-toggle {
+  position: fixed; top: 14px; right: 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px; font-size: 11px;
+  color: var(--txt3); cursor: pointer; z-index: 999; font-family: var(--ff);
+}
+.theme-toggle:hover { color: var(--primary); border-color: var(--primary); }
+
+/* Color swatch bar */
+.swatch-bar {
+  display: flex; gap: 6px; padding: 0 0 18px; align-items: center; flex-wrap: wrap;
+}
+.swatch {
+  width: 28px; height: 28px; border-radius: 7px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  position: relative; cursor: default;
+}
+.swatch-label {
+  position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%);
+  font-size: 8px; color: var(--txt3); white-space: nowrap; font-family: var(--mono);
+}
+
+/* Alert strip */
+.alert-strip {
+  background: color-mix(in srgb, var(--alert) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--alert) 35%, transparent);
+  border-left: 3px solid var(--alert);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px;
+}
+.alert-strip .icon { font-size: 15px; }
+.alert-strip strong { font-weight: 700; color: var(--txt1); }
+.alert-strip span { color: var(--txt2); }
+
+/* Responsive */
+@media (max-width: 900px) { .kgrid { grid-template-columns: repeat(2, 1fr); } .charts-row { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .sidebar { display: none; } .kgrid { grid-template-columns: 1fr 1fr; } }
+</style>
+
+<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')">☀ / ◑</button>
+
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">SH</div>
+      <div>
+        <div class="logo-text">SplitHub</div>
+        <div class="logo-sub">LC 214/2025</div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Principal</div>
+      <div class="nav-item active"><span class="nav-icon">◎</span>Início</div>
+      <div class="nav-item"><span class="nav-icon">↑↓</span>Crédito</div>
+      <div class="nav-item"><span class="nav-icon">↓</span>Débito</div>
+      <div class="nav-item"><span class="nav-icon">≡</span>Pag. RAD</div>
+      <div class="nav-item"><span class="nav-icon">⊗</span>Conciliação</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Análise</div>
+      <div class="nav-item"><span class="nav-icon">△</span>Inconsistência <span class="nav-badge">3</span></div>
+      <div class="nav-item"><span class="nav-icon">∿</span>Analytics</div>
+      <div class="nav-item"><span class="nav-icon">⧖</span>Forecast</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Admin</div>
+      <div class="nav-item"><span class="nav-icon">⚙</span>Configurações</div>
+      <div class="nav-item"><span class="nav-icon">⊞</span>Organização</div>
+      <div class="nav-item"><span class="nav-icon">⊡</span>Fornecedor</div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="user-chip">
+        <div class="user-av">VV</div>
+        <div>
+          <div class="user-name">Vitor Vieira</div>
+          <div class="user-role">Induspar Tecnologia</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-breadcrumb">
+        <span>SplitHub</span>
+        <span class="topbar-sep">›</span>
+        <span class="curr">Dashboard de Crédito</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-left:20px">
+        <div class="status-dot"></div>
+        <span style="font-size:11px;color:var(--txt3)">Plataforma centralizada OK</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="topbar-btn">Abr 2026 ▾</button>
+        <button class="topbar-btn">IBS + CBS ▾</button>
+        <button class="topbar-btn primary-btn">+ Importar DFs</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Palette preview strip -->
+      <div style="margin-bottom:24px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:10px">Design System · Paleta de Cores SplitHub</div>
+        <div class="swatch-bar">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+            <div class="swatch" style="background:#00685D"></div>
+            <div style="font-size:9px;color:var(--txt3);font-family:var(--mono)">Primary</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+            <div class="swatch" style="background:#008376"></div>
+            <div style="font-size:9px;color:var(--txt3);font-family:var(--mono)">P.Container</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+            <div class="swatch" style="background:#35961F"></div>
+            <div style="font-size:9px;color:var(--txt3);font-family:var(--mono)">Secondary</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+            <div class="swatch" style="background:#457B9D"></div>
+            <div style="font-size:9px;color:var(--txt3);font-family:var(--mono)">Tertiary</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+            <div class="swatch" style="background:#D93F3F"></div>
+            <div style="font-size:9px;color:var(--txt3);font-family:var(--mono)">Error</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+            <div class="swatch" style="background:#FFAD3A"></div>
+            <div style="font-size:9px;color:var(--txt3);font-family:var(--mono)">Alert</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+            <div class="swatch" style="background:#45AA4E"></div>
+            <div style="font-size:9px;color:var(--txt3);font-family:var(--mono)">Sucess</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:18px;margin-left:8px">
+            <div class="swatch" style="background:#333436;border:1px solid var(--border)"></div>
+            <div style="font-size:9px;color:var(--txt3);font-family:var(--mono)">Txt Primary</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+            <div class="swatch" style="background:#989898;border:1px solid var(--border)"></div>
+            <div style="font-size:9px;color:var(--txt3);font-family:var(--mono)">Txt Secondary</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page header -->
+      <div class="pg-hdr">
+        <div>
+          <div class="pg-title">Crédito IBS · CBS</div>
+          <div class="pg-sub">Apuração de créditos tributários · Período: Abr 2026 · CNPJ 16.557.374/0001-89</div>
+        </div>
+        <button class="period-btn">Abr 2026 ▾</button>
+      </div>
+
+      <!-- Alert strip -->
+      <div class="alert-strip">
+        <span class="icon">⚠</span>
+        <div><strong>3 inconsistências detectadas</strong> <span>— Créditos condicionados com risco de prescrição nos fornecedores Ferroplex e Klabin.</span></div>
+        <button style="margin-left:auto;background:var(--alert);border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;color:#fff;cursor:pointer;font-family:var(--ff)">Ver alertas</button>
+      </div>
+
+      <!-- Sub-tabs -->
+      <div class="stabs">
+        <button class="stab active">Resumo</button>
+        <button class="stab">Crédito Apropriado</button>
+        <button class="stab">Crédito Condicionado</button>
+        <button class="stab">Em Risco</button>
+        <button class="stab">Glosa</button>
+      </div>
+
+      <!-- KPI cards -->
+      <div class="kgrid">
+        <div class="kcard">
+          <div class="kcard-top" style="background:var(--primary)"></div>
+          <div class="klbl">Crédito Apropriado</div>
+          <div class="kval" style="color:var(--primary)">R$ 3,2M</div>
+          <div class="ksub"><span class="kdelta up">↑ 12%</span> vs mês anterior</div>
+        </div>
+        <div class="kcard">
+          <div class="kcard-top" style="background:var(--alert)"></div>
+          <div class="klbl">Crédito Condicionado</div>
+          <div class="kval" style="color:color-mix(in srgb, var(--alert) 85%, var(--txt1))">R$ 1,8M</div>
+          <div class="ksub"><span class="kdelta dn">↓ 5%</span> pendente de liberação</div>
+        </div>
+        <div class="kcard">
+          <div class="kcard-top" style="background:var(--error)"></div>
+          <div class="klbl">Em Risco / Vencido</div>
+          <div class="kval" style="color:var(--error)">R$ 420K</div>
+          <div class="ksub"><span class="kdelta dn">↑ 3</span> documentos críticos</div>
+        </div>
+        <div class="kcard">
+          <div class="kcard-top" style="background:var(--tertiary)"></div>
+          <div class="klbl">Débito Bruto</div>
+          <div class="kval" style="color:var(--tertiary)">R$ 4,7M</div>
+          <div class="ksub">Recolhimento líquido <strong>R$ 1,5M</strong></div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div class="charts-row">
+        <!-- Bar chart -->
+        <div class="chart-card">
+          <div class="chart-title">Fluxo Mensal IBS + CBS</div>
+          <div class="chart-sub">Crédito apropriado vs Débito bruto · Jan–Abr 2026</div>
+          <div class="bar-chart">
+            <div style="flex:1">
+              <div style="display:flex;align-items:flex-end;gap:3px;height:90px">
+                <div class="bar" style="background:var(--primary);height:55%;flex:1" title="Crédito Jan"></div>
+                <div class="bar" style="background:color-mix(in srgb,var(--error) 70%,transparent);height:72%;flex:1" title="Débito Jan"></div>
+              </div>
+              <div class="bar-label">Jan</div>
+            </div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:flex-end;gap:3px;height:90px">
+                <div class="bar" style="background:var(--primary);height:62%;flex:1"></div>
+                <div class="bar" style="background:color-mix(in srgb,var(--error) 70%,transparent);height:80%;flex:1"></div>
+              </div>
+              <div class="bar-label">Fev</div>
+            </div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:flex-end;gap:3px;height:90px">
+                <div class="bar" style="background:var(--primary);height:71%;flex:1"></div>
+                <div class="bar" style="background:color-mix(in srgb,var(--error) 70%,transparent);height:88%;flex:1"></div>
+              </div>
+              <div class="bar-label">Mar</div>
+            </div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:flex-end;gap:3px;height:90px">
+                <div class="bar" style="background:var(--primary);height:68%;flex:1"></div>
+                <div class="bar" style="background:color-mix(in srgb,var(--error) 70%,transparent);height:100%;flex:1"></div>
+              </div>
+              <div class="bar-label">Abr</div>
+            </div>
+            <div style="flex:1;opacity:.5">
+              <div style="display:flex;align-items:flex-end;gap:3px;height:90px">
+                <div class="bar" style="background:color-mix(in srgb,var(--primary) 50%,transparent);height:65%;flex:1;border:1px dashed var(--primary)"></div>
+                <div class="bar" style="background:color-mix(in srgb,var(--error) 35%,transparent);height:95%;flex:1;border:1px dashed var(--error)"></div>
+              </div>
+              <div class="bar-label">Mai ↝</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:14px;padding-top:10px;border-top:1px solid var(--brd2)">
+            <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--txt3)"><span style="width:10px;height:3px;background:var(--primary);border-radius:2px;display:inline-block"></span>Crédito Aprop.</span>
+            <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--txt3)"><span style="width:10px;height:3px;background:color-mix(in srgb,var(--error) 70%,transparent);border-radius:2px;display:inline-block"></span>Débito</span>
+            <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--txt3)"><span style="width:10px;height:3px;border:1px dashed var(--primary);display:inline-block"></span>Forecast</span>
+          </div>
+        </div>
+
+        <!-- Donut -->
+        <div class="chart-card">
+          <div class="chart-title">Composição dos Créditos</div>
+          <div class="chart-sub">Distribuição por status · Abr 2026</div>
+          <div class="donut-wrap">
+            <svg width="100" height="100" viewBox="0 0 36 36" style="flex-shrink:0">
+              <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--brd2)" stroke-width="3.5"/>
+              <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--primary)" stroke-width="3.5"
+                stroke-dasharray="58 42" stroke-dashoffset="25" stroke-linecap="round"/>
+              <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--alert)" stroke-width="3.5"
+                stroke-dasharray="27 73" stroke-dashoffset="-33" stroke-linecap="round"/>
+              <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--error)" stroke-width="3.5"
+                stroke-dasharray="8 92" stroke-dashoffset="-60" stroke-linecap="round"/>
+              <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--tertiary)" stroke-width="3.5"
+                stroke-dasharray="7 93" stroke-dashoffset="-68" stroke-linecap="round"/>
+              <text x="18" y="19" text-anchor="middle" fill="var(--txt1)" font-size="4.5" font-family="Inter,sans-serif" font-weight="700">58%</text>
+              <text x="18" y="23" text-anchor="middle" fill="var(--txt3)" font-size="2.8" font-family="Inter,sans-serif">aprop.</text>
+            </svg>
+            <div class="donut-legend">
+              <div class="dleg-item">
+                <div class="dleg-dot" style="background:var(--primary)"></div>
+                <span style="color:var(--txt2)">Apropriado</span>
+                <span class="dleg-val" style="color:var(--primary)">58%</span>
+              </div>
+              <div class="dleg-item">
+                <div class="dleg-dot" style="background:var(--alert)"></div>
+                <span style="color:var(--txt2)">Condicionado</span>
+                <span class="dleg-val" style="color:color-mix(in srgb,var(--alert) 80%,var(--txt1))">27%</span>
+              </div>
+              <div class="dleg-item">
+                <div class="dleg-dot" style="background:var(--error)"></div>
+                <span style="color:var(--txt2)">Em risco</span>
+                <span class="dleg-val" style="color:var(--error)">8%</span>
+              </div>
+              <div class="dleg-item">
+                <div class="dleg-dot" style="background:var(--tertiary)"></div>
+                <span style="color:var(--txt2)">Glosado</span>
+                <span class="dleg-val" style="color:var(--tertiary)">7%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="tcrd">
+        <div class="tcrd-hdr">
+          <div>
+            <div class="tcrd-title">Documentos Fiscais · Créditos</div>
+            <div class="tcrd-sub">NFs de entrada com RFs vinculados · Abr 2026</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="topbar-btn">Filtrar</button>
+            <button class="topbar-btn">Exportar CSV</button>
+          </div>
+        </div>
+        <div class="twrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Número NF</th>
+                <th>Fornecedor</th>
+                <th class="r">Valor Total</th>
+                <th class="r">CBS</th>
+                <th class="r">IBS</th>
+                <th>Método</th>
+                <th>Status Crédito</th>
+                <th>Status Registro</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">NF-e 000042</td>
+                <td>Ferroplex Mineração S.A.</td>
+                <td class="r mono">R$ 148.200</td>
+                <td class="r mono" style="color:var(--primary)">R$ 10.374</td>
+                <td class="r mono" style="color:var(--tertiary)">R$ 8.892</td>
+                <td><span class="pill pill-tertiary">RAD</span></td>
+                <td><span class="pill pill-success"><span class="pill-dot"></span>Apropriado</span></td>
+                <td><span class="pill pill-success">Regular</span></td>
+              </tr>
+              <tr>
+                <td class="mono">NF-e 000038</td>
+                <td>Klabin S.A.</td>
+                <td class="r mono">R$ 92.500</td>
+                <td class="r mono" style="color:var(--primary)">R$ 6.475</td>
+                <td class="r mono" style="color:var(--tertiary)">R$ 5.550</td>
+                <td><span class="pill pill-primary">Split</span></td>
+                <td><span class="pill pill-alert"><span class="pill-dot"></span>Condicionado</span></td>
+                <td><span class="pill pill-alert">A Vencer</span></td>
+              </tr>
+              <tr>
+                <td class="mono">NF-e 000031</td>
+                <td>Suzano Papel e Celulose</td>
+                <td class="r mono">R$ 220.000</td>
+                <td class="r mono" style="color:var(--primary)">R$ 15.400</td>
+                <td class="r mono" style="color:var(--tertiary)">R$ 13.200</td>
+                <td><span class="pill pill-tertiary">RAD</span></td>
+                <td><span class="pill pill-success"><span class="pill-dot"></span>Utilizado</span></td>
+                <td><span class="pill pill-success">Regular</span></td>
+              </tr>
+              <tr>
+                <td class="mono">NF-e 000027</td>
+                <td>Braskem S.A.</td>
+                <td class="r mono">R$ 67.300</td>
+                <td class="r mono" style="color:var(--primary)">R$ 4.711</td>
+                <td class="r mono" style="color:var(--tertiary)">R$ 4.038</td>
+                <td><span class="pill pill-primary">Split</span></td>
+                <td><span class="pill pill-error"><span class="pill-dot"></span>Em Risco</span></td>
+                <td><span class="pill pill-error">Vencendo</span></td>
+              </tr>
+              <tr>
+                <td class="mono">NF-e 000019</td>
+                <td>Vale S.A.</td>
+                <td class="r mono">R$ 310.000</td>
+                <td class="r mono" style="color:var(--primary)">R$ 21.700</td>
+                <td class="r mono" style="color:var(--tertiary)">R$ 18.600</td>
+                <td><span class="pill pill-tertiary">RAD</span></td>
+                <td><span class="pill pill-success"><span class="pill-dot"></span>Apropriado</span></td>
+                <td><span class="pill pill-success">Regular</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /shell -->

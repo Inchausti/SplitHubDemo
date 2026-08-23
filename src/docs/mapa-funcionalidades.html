@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de Funcionalidades · SplitHub</title>
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6D28D9; --purple-d: rgba(109,40,217,.08);
+  --cyan: #0891B2; --cyan-d: rgba(8,145,178,.08);
+  --orange: #C2410C; --orange-d: rgba(194,65,12,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --cyan: #22D3EE; --cyan-d: rgba(34,211,238,.1);
+    --orange: #FB923C; --orange-d: rgba(251,146,60,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --cyan: #22D3EE; --cyan-d: rgba(34,211,238,.1);
+  --orange: #FB923C; --orange-d: rgba(251,146,60,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.6 'Segoe UI', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 960px; margin: 0 auto; }
+
+.doc-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+.doc-title { font-size: 28px; font-weight: 800; color: var(--txt1); line-height: 1.15; margin-bottom: 8px; }
+.doc-sub { font-size: 14px; color: var(--txt2); margin-bottom: 28px; line-height: 1.6; max-width: 680px; }
+
+.meta-row { display: flex; flex-wrap: wrap; gap: 20px; padding: 16px 20px; background: var(--sur2); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 36px; }
+.meta-item { font-size: 12px; }
+.meta-label { color: var(--txt3); margin-bottom: 2px; }
+.meta-val { color: var(--txt1); font-weight: 600; }
+
+/* ver-nav */
+.ver-nav { display: flex; gap: 8px; margin-bottom: 20px; align-items: center; }
+.ver-nav-label { font-size: 11px; font-weight: 700; color: var(--txt3); text-transform: uppercase; letter-spacing: .07em; margin-right: 4px; }
+.ver-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; text-decoration: none; border: 1px solid var(--brd); color: var(--txt2); background: var(--sur); transition: border-color .12s; }
+.ver-btn:hover { border-color: var(--teal); color: var(--teal); }
+.ver-btn.active { background: var(--teal-d); border-color: var(--teal); color: var(--teal); }
+
+/* legenda de tipos */
+.legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; padding: 12px 16px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; align-items: center; }
+.legend-label { font-size: 11px; font-weight: 700; color: var(--txt3); text-transform: uppercase; letter-spacing: .07em; margin-right: 4px; }
+.lt { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 4px; }
+.lt-l  { background: var(--blue-d);   color: var(--blue);   }
+.lt-a  { background: var(--green-d);  color: var(--green);  }
+.lt-r  { background: var(--red-d);    color: var(--red);    }
+.lt-g  { background: var(--purple-d); color: var(--purple); }
+.lt-c  { background: var(--amber-d);  color: var(--amber);  }
+.lt-p  { background: var(--teal-d);   color: var(--teal);   }
+
+/* módulos */
+.mod-section { margin-bottom: 28px; border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; }
+.mod-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px;
+  border-left: 4px solid var(--mc);
+  background: var(--ml);
+}
+.mod-icon { font-size: 18px; }
+.mod-info { flex: 1; }
+.mod-name { font-size: 15px; font-weight: 800; color: var(--md); line-height: 1.2; }
+.mod-scope { font-size: 11px; color: var(--md); opacity: .7; margin-top: 2px; }
+.mod-count {
+  font-size: 11px; font-weight: 700;
+  background: var(--sur);
+  color: var(--md);
+  border: 1px solid var(--mc);
+  padding: 3px 10px; border-radius: 20px;
+  white-space: nowrap;
+  opacity: .8;
+}
+
+/* chips de funcionalidades */
+.feat-grid {
+  padding: 14px 16px;
+  display: flex; flex-wrap: wrap; gap: 8px;
+  background: var(--sur);
+  border-top: 1px solid var(--brd);
+}
+.feat-chip {
+  display: flex; align-items: stretch;
+  border: 1px solid var(--brd);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--sur2);
+  transition: border-color .12s, box-shadow .12s;
+}
+.feat-chip:hover { border-color: var(--mc); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.feat-chip-body {
+  padding: 6px 10px;
+  font-size: 12px; font-weight: 500; color: var(--txt1);
+  line-height: 1.3;
+}
+.feat-chip-type {
+  display: flex; align-items: center;
+  padding: 0 8px;
+  font-size: 10px; font-weight: 700;
+  border-left: 1px solid var(--brd);
+  white-space: nowrap;
+}
+/* type colors per chip */
+.fct-l .feat-chip-type { background: var(--blue-d);   color: var(--blue);   }
+.fct-a .feat-chip-type { background: var(--green-d);  color: var(--green);  }
+.fct-r .feat-chip-type { background: var(--red-d);    color: var(--red);    }
+.fct-g .feat-chip-type { background: var(--purple-d); color: var(--purple); }
+.fct-c .feat-chip-type { background: var(--amber-d);  color: var(--amber);  }
+.fct-p .feat-chip-type { background: var(--teal-d);   color: var(--teal);   }
+
+/* seção agrupadora */
+.group-hdr { margin: 32px 0 14px; }
+.group-hdr-inner { display: flex; align-items: center; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--brd); }
+.group-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; }
+.group-title { font-size: 15px; font-weight: 700; color: var(--txt1); }
+
+.back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--teal); text-decoration: none; margin-bottom: 20px; }
+.back-link:hover { text-decoration: underline; }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <a class="back-link" href="prds.html">← Hub de PRDs</a>
+
+  <div class="doc-eyebrow">SplitHub · Produto</div>
+  <h1 class="doc-title">Mapa de Funcionalidades</h1>
+  <p class="doc-sub">Visão consolidada de todas as funcionalidades do SplitHub organizadas por módulo. Cada chip representa uma funcionalidade entregue, classificada por tipo de capacidade.</p>
+
+  <div class="meta-row">
+    <div class="meta-item"><div class="meta-label">Produto</div><div class="meta-val">SplitHub</div></div>
+    <div class="meta-item"><div class="meta-label">Módulos</div><div class="meta-val">13 módulos</div></div>
+    <div class="meta-item"><div class="meta-label">Funcionalidades</div><div class="meta-val" id="totalFeat">—</div></div>
+    <div class="meta-item"><div class="meta-label">Base legal</div><div class="meta-val">LC 214/2025</div></div>
+    <div class="meta-item"><div class="meta-label">Atualizado em</div><div class="meta-val">Ago/2026</div></div>
+  </div>
+
+  <div class="ver-nav">
+    <span class="ver-nav-label">Versão:</span>
+    <a class="ver-btn active" href="mapa-funcionalidades.html">🗺️ Resumida (chips)</a>
+    <a class="ver-btn" href="mapa-funcionalidades-detalhado.html">📋 Detalhada (com descrições)</a>
+  </div>
+
+  <div class="legend">
+    <span class="legend-label">Tipos:</span>
+    <span class="lt lt-l">Listagem</span>
+    <span class="lt lt-a">Ação</span>
+    <span class="lt lt-r">Risco / Inconsistência</span>
+    <span class="lt lt-g">Analítico</span>
+    <span class="lt lt-c">Configuração</span>
+    <span class="lt lt-p">Transversal</span>
+  </div>
+
+  <div id="root"></div>
+
+</div>
+<script>
+var TYPE_LABEL = { l:'Listagem', a:'Ação', r:'Risco/Inc.', g:'Analítico', c:'Config.', p:'Transversal' };
+var TYPE_CLASS = { l:'fct-l', a:'fct-a', r:'fct-r', g:'fct-g', c:'fct-c', p:'fct-p' };
+
+var GROUPS = [
+  {
+    num:'Operacional', title:'Gestão e operação fiscal',
+    mods:[0,1,2,3,4,5]
+  },
+  {
+    num:'Analítico', title:'Inteligência e planejamento',
+    mods:[6,7]
+  },
+  {
+    num:'Gestão', title:'Cadastros e organização',
+    mods:[8,9,10]
+  },
+  {
+    num:'Portais', title:'Acesso externo e infraestrutura',
+    mods:[11,12]
+  }
+];
+
+var MODS = [
+  /* 0 */ {
+    icon:'📊', name:'Dashboard', scope:'Cliente · Analítico',
+    mc:'#0E9E8E', ml:'rgba(14,158,142,.08)', md:'#065F46',
+    feats:[
+      {n:'KPIs de crédito em tempo real',            t:'g'},
+      {n:'Gráfico Evolução de Créditos',             t:'g'},
+      {n:'Forecast FCT em destaque',                 t:'g'},
+      {n:'Cockpit compacto — 3 colunas',             t:'g'},
+      {n:'Filtro Grupo Econômico global',            t:'p'},
+      {n:'Seletor de período multi-select',          t:'p'},
+    ]
+  },
+  /* 1 */ {
+    icon:'💳', name:'Créditos IBS/CBS', scope:'Cliente · Operacional + Analítico',
+    mc:'#1D5FCC', ml:'rgba(29,95,204,.07)', md:'#1E3A8A',
+    feats:[
+      {n:'Listagem DFs de entrada — RF Core 10 colunas', t:'l'},
+      {n:'Filtros avançados em todas as colunas',    t:'l'},
+      {n:'Coluna Inconsistências por DF',            t:'r'},
+      {n:'Classificação CP / LP / Vencidos',         t:'l'},
+      {n:'Calendário heatmap de vencimentos',        t:'g'},
+      {n:'Badge de método de extinção (4 métodos)',  t:'l'},
+      {n:'Gráficos extintos / vencidos / ageing',   t:'g'},
+      {n:'Top 5 e Top 10 fornecedores',              t:'g'},
+      {n:'Composição e método de extinção',          t:'g'},
+    ]
+  },
+  /* 2 */ {
+    icon:'🔻', name:'Débitos IBS/CBS', scope:'Cliente · Operacional',
+    mc:'#6D28D9', ml:'rgba(109,40,217,.07)', md:'#4C1D95',
+    feats:[
+      {n:'Listagem DFs de saída',                    t:'l'},
+      {n:'IBS e CBS separados por coluna',           t:'l'},
+      {n:'Status extinção por prioridade entre RFs', t:'r'},
+      {n:'3 abas: Visão Geral · RFs · DFs',          t:'l'},
+      {n:'Coluna Inconsistências por DF',            t:'r'},
+      {n:'Filtros multi-seleção',                    t:'l'},
+    ]
+  },
+  /* 3 */ {
+    icon:'💰', name:'Pagamentos RAD', scope:'Cliente · Operacional',
+    mc:'#B97A10', ml:'rgba(185,122,16,.07)', md:'#78350F',
+    feats:[
+      {n:'Listagem de guias RAD',                    t:'l'},
+      {n:'St. Crédito · St. Registro · St. Pagamento independentes', t:'l'},
+      {n:'Upload de comprovante PIX/RAD',            t:'a'},
+      {n:'Filtros em Pagamentos Executados',         t:'l'},
+    ]
+  },
+  /* 4 */ {
+    icon:'⚠️', name:'Inconsistências', scope:'Cliente · Operacional + Gestão',
+    mc:'#D63A49', ml:'rgba(214,58,73,.07)', md:'#7F1D1D',
+    feats:[
+      {n:'Cards DF-cêntricos (rfId opcional)',       t:'r'},
+      {n:'Múltiplas inconsistências por DF',         t:'r'},
+      {n:'Taxonomia CAPUR IBS/CBS por imposto',      t:'r'},
+      {n:'Taxonomia CFIN IBS/CBS por imposto',       t:'r'},
+      {n:'Kanban: Aberta → Resolvida / Glosada',     t:'a'},
+      {n:'Atribuição de responsável',                t:'a'},
+      {n:'Histórico de alterações',                  t:'a'},
+      {n:'Diagnóstico guiado — árvore de decisão',   t:'a'},
+      {n:'Filtros multiselect por tipo e DF',        t:'l'},
+    ]
+  },
+  /* 5 */ {
+    icon:'📥', name:'Ingestão de DFs', scope:'Cliente · Operacional',
+    mc:'#1D5FCC', ml:'rgba(29,95,204,.07)', md:'#1E3A8A',
+    feats:[
+      {n:'Upload CSV posicional (NF-e · CT-e · NFS-e)', t:'a'},
+      {n:'Suporte a Entrada e Saída',                t:'a'},
+      {n:'Pré-visualização antes de confirmar',      t:'a'},
+      {n:'Validação binária: Importado / Inconsistência', t:'r'},
+      {n:'Stub DF para documentos rejeitados',       t:'r'},
+      {n:'Card de inconsistência automático',        t:'r'},
+    ]
+  },
+  /* 6 */ {
+    icon:'📈', name:'FCT — Fluxo de Caixa Tributário', scope:'Cliente · Analítico',
+    mc:'#0891B2', ml:'rgba(8,145,178,.07)', md:'#164E63',
+    feats:[
+      {n:'Forecast de Fluxo Fiscal',                 t:'g'},
+      {n:'Média móvel progressiva',                  t:'g'},
+      {n:'Corte realizado / projeção na data atual', t:'g'},
+      {n:'Forecast de Aproveitamento de Crédito',    t:'g'},
+      {n:'Insights: melhor mês · tendência · perda projetada', t:'g'},
+      {n:'Tabela mensal de aproveitamento',          t:'g'},
+      {n:'Retry automático de renderização',         t:'p'},
+    ]
+  },
+  /* 7 */ {
+    icon:'🧠', name:'Inteligência', scope:'Cliente · Analítico',
+    mc:'#6D28D9', ml:'rgba(109,40,217,.07)', md:'#3B0764',
+    feats:[
+      {n:'Score de risco por fornecedor (0–100)',    t:'g'},
+      {n:'Critério: créditos em risco ÷ total',      t:'g'},
+      {n:'Score ≥ 70 → badge verde (baixo risco)',   t:'g'},
+      {n:'Ranking Top 5 Melhores e Top 5 Piores',   t:'g'},
+      {n:'Mapa de bolhas risco × volume',            t:'g'},
+      {n:'Tabela mensal de crédito por fornecedor',  t:'g'},
+    ]
+  },
+  /* 8 */ {
+    icon:'📄', name:'Contratos', scope:'Cliente · Gestão',
+    mc:'#C2410C', ml:'rgba(194,65,12,.07)', md:'#7C2D12',
+    feats:[
+      {n:'Modelo RAD — adquirente recolhe o tributo', t:'c'},
+      {n:'Modelo Fornecedor — fornecedor recolhe',   t:'c'},
+      {n:'Multi-contratos por fornecedor',           t:'c'},
+      {n:'Vínculo contrato → obrigações de comprovante', t:'c'},
+      {n:'Listagem com filtros padronizados',        t:'l'},
+    ]
+  },
+  /* 9 */ {
+    icon:'🏪', name:'Fornecedores', scope:'Cliente · Gestão',
+    mc:'#1A7940', ml:'rgba(26,121,64,.07)', md:'#14532D',
+    feats:[
+      {n:'Cadastro com razão social anonimizada',    t:'c'},
+      {n:'CNPJ formatado XX.XXX.XXX/XXXX-XX',       t:'c'},
+      {n:'Edição com trilha de auditoria',           t:'a'},
+      {n:'Multi-contratos no cadastro',              t:'c'},
+      {n:'Score de conformidade no cadastro',        t:'g'},
+    ]
+  },
+  /* 10 */ {
+    icon:'🏢', name:'Organização', scope:'Cliente · Gestão',
+    mc:'#B97A10', ml:'rgba(185,122,16,.07)', md:'#713F12',
+    feats:[
+      {n:'Hierarquia CNPJ: Matriz + Filiais',        t:'l'},
+      {n:'Status de conformidade por entidade',      t:'g'},
+      {n:'Apuração Assistida na sidebar',            t:'l'},
+      {n:'Filtro Grupo Econômico — sincroniza tudo', t:'p'},
+      {n:'Auditoria de alterações cadastrais',       t:'a'},
+    ]
+  },
+  /* 11 */ {
+    icon:'🤝', name:'Portal Fornecedor', scope:'Fornecedor · Portal externo',
+    mc:'#0E9E8E', ml:'rgba(14,158,142,.08)', md:'#042F2E',
+    feats:[
+      {n:'DFs filtrados pelo CNPJ próprio',          t:'l'},
+      {n:'IBS e CBS separados por RF',               t:'l'},
+      {n:'Grupo econômico: Matriz + Filiais',        t:'l'},
+      {n:'Envio de comprovante RAD/PIX',             t:'a'},
+      {n:'Contestação de DFs vencidos',              t:'a'},
+      {n:'Chat com adquirente',                      t:'a'},
+      {n:'Score de conformidade próprio',            t:'g'},
+      {n:'Período multi-select',                     t:'p'},
+      {n:'Contratos globais visíveis',               t:'l'},
+    ]
+  },
+  /* 12 */ {
+    icon:'🔐', name:'Auth · Design System', scope:'Transversal',
+    mc:'#4A5568', ml:'rgba(74,85,104,.07)', md:'#1E293B',
+    feats:[
+      {n:'Tela de login',                            t:'a'},
+      {n:'Perfis: Cliente e Fornecedor',             t:'c'},
+      {n:'Troca de perfil in-session',               t:'a'},
+      {n:'Tokens CSS globais + PALETTE JS',          t:'p'},
+      {n:'Sidebar teal colapsável + localStorage',   t:'p'},
+      {n:'Tema claro/escuro automático',             t:'p'},
+      {n:'shBuildFilterPanel — filtros padronizados',t:'p'},
+      {n:'RF Core — 10 colunas uniformes',           t:'p'},
+      {n:'ESC fecha qualquer modal',                 t:'p'},
+    ]
+  },
+];
+
+function buildPage() {
+  var root = document.getElementById('root');
+  var total = 0;
+  MODS.forEach(function(m){ total += m.feats.length; });
+  document.getElementById('totalFeat').textContent = total + ' funcionalidades';
+
+  GROUPS.forEach(function(g) {
+    var ghdr = document.createElement('div');
+    ghdr.className = 'group-hdr';
+    ghdr.innerHTML = '<div class="group-hdr-inner"><span class="group-num">'+g.num+'</span><span class="group-title">'+g.title+'</span></div>';
+    root.appendChild(ghdr);
+
+    g.mods.forEach(function(idx) {
+      var m = MODS[idx];
+      var sec = document.createElement('div');
+      sec.className = 'mod-section';
+
+      // head
+      var head = document.createElement('div');
+      head.className = 'mod-head';
+      head.style.cssText = '--mc:'+m.mc+';--ml:'+m.ml+';--md:'+m.md+';border-left-color:'+m.mc+';background:'+m.ml+';';
+      head.innerHTML =
+        '<span class="mod-icon">'+m.icon+'</span>' +
+        '<div class="mod-info">' +
+          '<div class="mod-name" style="color:'+m.md+'">'+m.name+'</div>' +
+          '<div class="mod-scope" style="color:'+m.md+'">'+m.scope+'</div>' +
+        '</div>' +
+        '<span class="mod-count" style="color:'+m.md+';border-color:'+m.mc+'">'+m.feats.length+' funcionalidades</span>';
+      sec.appendChild(head);
+
+      // chips
+      var grid = document.createElement('div');
+      grid.className = 'feat-grid';
+      m.feats.forEach(function(f) {
+        var chip = document.createElement('div');
+        chip.className = 'feat-chip ' + TYPE_CLASS[f.t];
+        chip.style.setProperty('--mc', m.mc);
+        chip.innerHTML =
+          '<div class="feat-chip-body">'+f.n+'</div>' +
+          '<div class="feat-chip-type">'+TYPE_LABEL[f.t]+'</div>';
+        grid.appendChild(chip);
+      });
+      sec.appendChild(grid);
+      root.appendChild(sec);
+    });
+  });
+}
+
+buildPage();
+</script>
+</body>
+</html>
