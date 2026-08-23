@@ -5222,8 +5222,8 @@ window._composicaoDebitosFiltro = '';
 window.renderizarComposicaoDebitos = function(filtroTipo) {
   if (filtroTipo !== undefined) window._composicaoDebitosFiltro = filtroTipo;
   var filtro = window._composicaoDebitosFiltro || '';
-  var mesesLabels = ['Out','Nov','Dez','Jan','Fev','Mar','Abr'];
-  var mesesISO    = ['2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04'];
+  var mesesLabels = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var mesesISO    = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
   var statusList  = ['extinto','nao_extinto','vencido','inconsistencia'];
   var statusCores = {'extinto':PALETTE.teal,'nao_extinto':PALETTE.gray,'vencido':PALETTE.amber,'inconsistencia':PALETTE.red};
   var statusLabels = {'extinto':'Extinto','nao_extinto':'Não Extinto','vencido':'Vencido','inconsistencia':'Inconsistência'};
@@ -5288,12 +5288,12 @@ window.renderizarComposicaoDebitos = function(filtroTipo) {
 };
 
 window.renderizarExtincaoMetodo = function() {
-  var mesesLabels = ['Out','Nov','Dez','Jan','Fev','Mar','Abr'];
-  var mesesISO    = ['2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04'];
+  var mesesLabels = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var mesesISO    = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
   var f    = window._filtrosDebitos || {};
   var busca = (f.busca || '').toLowerCase();
-  var radPorMes  = [0,0,0,0,0,0,0];
-  var compPorMes = [0,0,0,0,0,0,0];
+  var radPorMes  = [0,0,0,0,0,0,0,0,0,0,0,0];
+  var compPorMes = [0,0,0,0,0,0,0,0,0,0,0,0];
 
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'saida') return;
