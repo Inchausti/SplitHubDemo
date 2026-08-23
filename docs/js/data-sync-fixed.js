@@ -3461,6 +3461,39 @@ window.renderizarRFsInconsistencias = function() {
     }
   });
 
+  // 1c. Entrada RFs com inconsistência não cobertos por CAPUR/CFIN
+  var _entIncToKey = {
+    'Sem Comprovante':          function(tf){ return tf === 'cbs' ? 'cfin_cbs_split'       : 'cfin_ibs_split'; },
+    'Não conciliado':           function()  { return 'capur_ibs_divergente'; },
+    'Valor imposto divergente': function(tf){ return tf === 'cbs' ? 'capur_cbs_aliquota'   : 'capur_ibs_aliquota'; },
+    'Documento inválido':       function()  { return 'chave_invalida'; }
+  };
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
+    var dp = (nf.data || '').split('-');
+    var dataFmt = dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—';
+    var dfLabel = (nf.tipoDF || 'NF-e') + ' ' + nf.numero;
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      if ((rf.statusRegistro || rf.status) !== 'inconsistencia') return;
+      if (lista.some(function(e) { return e.rfId === rf.id; })) return;
+      var incStr = rf.inconsistencia || nf.inconsistencia || 'Sem Comprovante';
+      var tf = (rf.tipoFiscal || '').toLowerCase();
+      var incFn = _entIncToKey[incStr];
+      var incKey = incFn ? incFn(tf) : (tf === 'cbs' ? 'cfin_cbs_split' : 'cfin_ibs_split');
+      lista.push({
+        id: rf.id + '_ENT',
+        rfId: rf.id, nfId: nf.numero,
+        tf: tf ? tf.toUpperCase() : '—',
+        tipoNF: 'entrada', etapa: 'CFIN',
+        nfVinc: dfLabel, forn: nf.entidade || '—', cnpj: nf.cnpj || '—',
+        valor: rf.valor || 0,
+        valorTotal: nf.valorTotal || 0, valorLiq: nf.valorLiquido || 0,
+        dataISO: nf.data || '', data: dataFmt,
+        inc: incKey, tipoLabel: _incLblLocal[incKey] || incStr
+      });
+    });
+  });
+
   // 1b. Ingestão — DF direto, sem RF vinculado
   var _ingStatusToInc = { erro_layout:'chave_invalida', erro_dados:'cnpj_divergente', rejeitado:'chave_invalida', duplicado:'duplicidade_rf' };
   var ingFalhas = ['erro_layout','erro_dados','rejeitado','duplicado'];
