@@ -9735,7 +9735,7 @@ window.ingUploadParsear = function(text) {
 // ============================================================
 
 window._automState = {
-  abaAtiva: 'relatorios',
+  abaAtiva: null,
   relatorios: [
     { id:'REL-001', nome:'Créditos IBS+CBS — Mensal', modulo:'creditos', destinatarios:['fiscal@positivo.com','controladoria@positivo.com'], recorrencia:'mensal', diaHora:'1 · 08:00', formato:'PDF', ativo:true,  ultimoEnvio:'01/06/2026', proximoEnvio:'01/07/2026' },
     { id:'REL-002', nome:'Inconsistências — Semanal',  modulo:'inconsistencias', destinatarios:['compliance@positivo.com'], recorrencia:'semanal', diaHora:'Segunda · 07:00', formato:'Excel', ativo:true,  ultimoEnvio:'24/06/2026', proximoEnvio:'01/07/2026' },
@@ -10320,29 +10320,99 @@ function _automKpiMini(label, val, cor) {
 window.automInit = function() {
   var sv = document.getElementById('admin-automacoes');
   if (!sv) return;
-  var aba = window._automState.abaAtiva;
-
-  // Header + tabs
-  var tabsCfg = [
-    { id:'relatorios', label:'📧  Relatórios Agendados' },
-    { id:'itsm',       label:'🔗  Integração ITSM'     },
-    { id:'cobranca',   label:'🔔  Régua de Cobrança'   }
-  ];
-
-  var tabsHtml = tabsCfg.map(function(t) {
-    var active = t.id === aba;
-    return '<button onclick="window._automSetAba(\'' + t.id + '\')" style="padding:9px 18px;font-size:13px;font-weight:' + (active ? '700' : '500') + ';color:' + (active ? _ac.teal : _ac.txt2) + ';background:' + (active ? 'rgba(var(--teal-alt-rgb),.08)' : 'transparent') + ';border:none;border-bottom:2px solid ' + (active ? _ac.teal : 'transparent') + ';cursor:pointer;font-family:inherit;white-space:nowrap;transition:color .15s">' + t.label + '</button>';
-  }).join('');
-
   var root = document.getElementById('autom-root');
   if (!root) return;
-  root.innerHTML = '<div style="border-bottom:1px solid ' + _ac.brd + ';margin-bottom:24px;display:flex;gap:4px">' + tabsHtml + '</div>'
-    + '<div id="autom-content"></div>';
 
-  var content = document.getElementById('autom-content');
-  if (aba === 'relatorios') _automRenderRelatorios(content);
-  else if (aba === 'itsm')   _automRenderITSM(content);
-  else                       _automRenderCobranca(content);
+  var aba = window._automState.abaAtiva;
+  var ac  = _ac;
+
+  if (!aba) {
+    // ── Tela de seleção de módulo ────────────────────────────────
+    var rels   = window._automState.relatorios || [];
+    var relAtv = rels.filter(function(r){ return r.ativo; }).length;
+    var cobras = window._automState.cobranca   || [];
+    var cobAtv = cobras.filter(function(r){ return r.ativo; }).length;
+    var cobDisp= cobras.reduce(function(s,r){ return s + (r.totalEnviados||0); }, 0);
+    var cobEmCob= cobras.reduce(function(s){ return s + 3; }, 0); // proxy
+    var itsmEv = (window._automState.itsm && window._automState.itsm.eventos) ? window._automState.itsm.eventos : [];
+    var itsmAtv= itsmEv.filter(function(e){ return e.ativo; }).length;
+
+    function modRow(id, emoji, title, desc, stripeCol, badge, badgeCls, kpis) {
+      var kHtml = kpis.map(function(k){
+        return '<div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;border-left:1px solid ' + ac.brd + '">'
+          + '<div style="font-size:18px;font-weight:700;font-family:var(--font-mono);line-height:1;color:' + k.col + '">' + k.val + '</div>'
+          + '<div style="font-size:9px;color:' + ac.txt3 + ';text-transform:uppercase;letter-spacing:.06em">' + k.lbl + '</div>'
+          + '</div>';
+      }).join('');
+
+      return '<div onclick="window._automSetAba(\'' + id + '\')" style="background:' + ac.card + ';border:1px solid ' + ac.brd + ';border-radius:10px;display:grid;grid-template-columns:4px auto 1fr auto auto;align-items:center;gap:0;cursor:pointer;overflow:hidden;margin-bottom:10px;transition:border-color .18s,box-shadow .18s" '
+        + 'onmouseenter="this.style.borderColor=\'' + stripeCol + '\';this.style.boxShadow=\'0 4px 18px rgba(0,0,0,.28)\'" '
+        + 'onmouseleave="this.style.borderColor=\'' + ac.brd + '\';this.style.boxShadow=\'\'">'
+        + '<div style="background:' + stripeCol + ';align-self:stretch;width:4px"></div>'
+        + '<div style="width:48px;height:48px;border-radius:10px;background:' + stripeCol + '1a;display:flex;align-items:center;justify-content:center;font-size:22px;margin:16px 14px 16px 18px;flex-shrink:0">' + emoji + '</div>'
+        + '<div style="padding:14px 0;min-width:0">'
+        + '<div style="font-size:14px;font-weight:700;color:' + ac.txt1 + ';margin-bottom:3px">' + title + '</div>'
+        + '<div style="font-size:11px;color:' + ac.txt3 + ';margin-bottom:7px">' + desc + '</div>'
+        + '<span style="background:' + stripeCol + '1f;color:' + stripeCol + ';border:1px solid ' + stripeCol + '40;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700">' + badge + '</span>'
+        + '</div>'
+        + '<div style="display:flex;gap:0;padding:0 24px 0 16px">' + kHtml + '</div>'
+        + '<div style="padding-right:22px;color:' + stripeCol + ';font-size:20px;font-weight:300;flex-shrink:0">›</div>'
+        + '</div>';
+    }
+
+    root.innerHTML = '<div style="margin-bottom:22px">'
+      + '<div style="font-size:17px;font-weight:800;color:' + ac.txt1 + ';margin-bottom:4px">Automações</div>'
+      + '<div style="font-size:12px;color:' + ac.txt3 + '">Selecione um módulo para gerenciar</div>'
+      + '</div>'
+      + modRow('relatorios','📧','Relatórios Agendados','Envio automático de relatórios tributários por e-mail em PDF ou Excel',
+          ac.amber, relAtv + ' de ' + rels.length + ' ativos', '',
+          [
+            { val: relAtv,            col: '#22C55E', lbl: 'Ativos'       },
+            { val: rels.length,       col: ac.txt1,   lbl: 'Total'        },
+            { val: 'amanhã',          col: '#F59E0B', lbl: 'Próximo envio'}
+          ])
+      + modRow('itsm','🔗','Integração ITSM','Abertura automática de tickets no ServiceNow a partir de eventos fiscais críticos',
+          ac.blue, '● Online · 142ms', '',
+          [
+            { val: '●',              col: '#22C55E', lbl: 'Status'        },
+            { val: 38,               col: ac.txt1,   lbl: 'Tickets/mês'  },
+            { val: itsmAtv,          col: ac.txt1,   lbl: 'Gatilhos atv.'  }
+          ])
+      + modRow('cobranca','🔔','Régua de Cobrança','Fluxo automatizado de alertas de vencimento por e-mail, WhatsApp e ITSM',
+          ac.teal, cobAtv + ' de ' + cobras.length + ' réguas ativas', '',
+          [
+            { val: cobAtv,           col: ac.teal,   lbl: 'Réguas ativas' },
+            { val: cobDisp || 142,   col: ac.txt1,   lbl: 'Disparos/mês' },
+            { val: 17,               col: '#F59E0B', lbl: 'Em cobrança'  }
+          ]);
+
+  } else {
+    // ── Dentro do módulo selecionado ────────────────────────────
+    var modCfg = {
+      relatorios: { emoji:'📧', title:'Relatórios Agendados', col: ac.amber },
+      itsm:       { emoji:'🔗', title:'Integração ITSM',      col: ac.blue  },
+      cobranca:   { emoji:'🔔', title:'Régua de Cobrança',    col: ac.teal  }
+    };
+    var cfg = modCfg[aba] || modCfg.cobranca;
+
+    root.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px">'
+      + '<button onclick="window._automVoltarSelector()" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:' + ac.txt3 + ';background:none;border:1px solid ' + ac.brd + ';border-radius:20px;padding:5px 14px;cursor:pointer;font-family:inherit;transition:color .15s" '
+      + 'onmouseenter="this.style.color=\'' + ac.txt2 + '\'" onmouseleave="this.style.color=\'' + ac.txt3 + '\'">← Automações</button>'
+      + '<div style="width:4px;height:28px;border-radius:2px;background:' + cfg.col + ';flex-shrink:0"></div>'
+      + '<div style="font-size:16px;font-weight:800;color:' + ac.txt1 + '">' + cfg.emoji + ' ' + cfg.title + '</div>'
+      + '</div>'
+      + '<div id="autom-content"></div>';
+
+    var content = document.getElementById('autom-content');
+    if (aba === 'relatorios')  _automRenderRelatorios(content);
+    else if (aba === 'itsm')   _automRenderITSM(content);
+    else                       _automRenderCobranca(content);
+  }
+};
+
+window._automVoltarSelector = function() {
+  window._automState.abaAtiva = null;
+  window.automInit();
 };
 
 window._automSetAba = function(id) {
