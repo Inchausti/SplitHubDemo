@@ -140,17 +140,19 @@ window.SH_TABLES = {
     cols: [
       { thHtml: '<input type="checkbox" id="pag-chk-all" onchange="window.pagToggleAll(this)" title="Selecionar todos pendentes" style="cursor:pointer;width:15px;height:15px">', cls: 'tc', style: 'width:36px;text-align:center' },
       { label: 'RF' },
-      { label: 'Documento Fiscal' },
-      { label: 'Fornecedor' },
+      { label: 'NF Vinculada' },
+      { label: 'Fornecedor / CNPJ' },
       { label: 'Contrato' },
       { label: 'Tipo Fiscal' },
-      { label: 'Tipo de DFe' },
+      { label: 'Tipo' },
       { label: 'Método' },
       { label: 'Valor',      cls: 'r' },
       { label: 'Data RF' },
       { label: 'Pagamento' },
       { label: 'St. Crédito' },
       { label: 'St. Registro' },
+      { label: 'Inconsistências' },
+      { label: 'Extinção' },
       { label: 'Detalhe', cls: 'tc' },
       { label: 'Ação' }
     ]
@@ -7824,9 +7826,6 @@ window._aplicarFiltroCnpjEmpresa = function() {
       var _vid = _av.id.replace('view-','');
       if (_vid === 'pagamentos') {
         if (window.pagamentosRenderKPIs) pagamentosRenderKPIs();
-        var _h=''; var _imp=window.impostos||[];
-        for(var _i=0;_i<_imp.length;_i++){var _r=_imp[_i];var _act=['pendente','vencendo','atrasado'].indexOf(_r.status)>=0?'<button class="btn btn-t" style="font-size:11px;padding:4px 10px">Pagar via Pix</button>':'<span style="color:var(--txt3)">Concluído</span>';_h+='<tr><td class="mono nowrap" style="color:var(--txt3)">'+_r.id+'</td><td class="mono nowrap" style="color:var(--blue);cursor:pointer;text-decoration:underline dotted" onclick="if(window.abrirDetalheRF)window.abrirDetalheRF(\''+_r.rfId+'\')">'+_r.rf+'</td><td class="trunc"><div style="font-weight:500">'+_r.forn+'</div><div style="font-size:10px;color:var(--txt3)">'+_r.cnpj+'</div></td><td class="nowrap"><span class="tyb">'+_r.tipo+'</span></td><td class="r mono" style="font-weight:600">'+ff(_r.valor)+'</td><td class="nowrap">'+_r.venc+'</td><td class="nowrap">'+bdg(_r.status)+'</td><td class="nowrap">'+_act+'</td></tr>';}
-        var _ti=document.getElementById('t-impostos');if(_ti)_ti.innerHTML=_h;
       }
       if (_vid === 'creditos') { if(window.creditosRenderKPIs)creditosRenderKPIs(); if(window.creditosRenderTabela)creditosRenderTabela(); }
       if (_vid === 'inconsistencias') { try{inconsistRenderDashboard();}catch(e){} try{inconsistRenderTabela();}catch(e){} }
