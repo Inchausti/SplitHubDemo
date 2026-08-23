@@ -6609,7 +6609,12 @@ window.renderizarTabelaPagamentos = function() {
           : (r.pagamento && r.pagamento !== '—' ? '<span style="color:var(--txt2)">' + r.pagamento + '</span>' : '<span style="color:var(--txt3)">—</span>')) + '</td>'
       + '<td style="vertical-align:middle">' + bdg(r.statusCredito) + '</td>'
       + '<td style="vertical-align:middle">' + (r.statusFlags.length ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.statusFlags[0] }) : '<span style="color:var(--txt3);font-size:11px">—</span>') + '</td>'
-      + '<td style="vertical-align:middle">' + ((r._inconsistencias && r._inconsistencias.length) ? r._inconsistencias.map(function(i){ return '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(220,38,38,.08);color:rgb(220,38,38);border:1px solid rgba(220,38,38,.25);white-space:nowrap;display:inline-block;margin:1px 1px 0 0">'+(i.tipoLabel||i.tipo||'—')+'</span>'; }).join('') : '<span style="color:var(--txt3)">—</span>') + '</td>'
+      + '<td style="vertical-align:middle">' + (function(){
+          var _incBadge = function(label){ return '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(220,38,38,.08);color:rgb(220,38,38);border:1px solid rgba(220,38,38,.25);white-space:nowrap;display:inline-block;margin:1px 1px 0 0">'+label+'</span>'; };
+          if (r._inconsistencias && r._inconsistencias.length) return r._inconsistencias.map(function(i){ return _incBadge(i.tipoLabel||i.tipo||'Inconsistência'); }).join('');
+          if (r.statusFlags && r.statusFlags.indexOf('inconsistencia') >= 0) return _incBadge('Inconsistência');
+          return '<span style="color:var(--txt3)">—</span>';
+        })() + '</td>'
       + '<td class="nowrap">' + (r.metodoExtincao ? (function(){ var _pMetExtMap={'Split Payment':'29,158,117','Compensacao':'24,95,165','Ressarcimento':'29,158,117','Transferencia':'139,92,246','RAD':'186,117,23'}; var _pMetExtLbl={'Split Payment':'Split Payment','Compensacao':'Compensação','Ressarcimento':'Ressarcimento','Transferencia':'Transferência','RAD':'RAD'}; var _k=r.metodoExtincao; return '<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+(_pMetExtMap[_k]||'29,158,117')+',.12);color:rgba('+(_pMetExtMap[_k]||'29,158,117')+',1);border:1px solid rgba('+(_pMetExtMap[_k]||'29,158,117')+',.28)">'+(_pMetExtLbl[_k]||_k)+'</span>'; })() : '<span style="color:var(--txt3);font-size:11px">—</span>') + '</td>'
       + '<td class="tc" style="vertical-align:middle">' + detBtn + '</td>'
       + '<td class="nowrap" style="vertical-align:middle;white-space:nowrap">' + act + '</td>'
