@@ -9761,8 +9761,54 @@ window._automState = {
     ]
   },
   cobranca: [
-    { id:'COB-001', nome:'Alerta pré-vencimento (7 dias)',  gatilho:'pre', diasGatilho:7,  maxEnvios:2, intervalo:3, canal:'email', assunto:'[Ação necessária] Imposto IBS+CBS vence em {{dias_vencimento}} dias — {{fornecedor}}', corpo:'Prezado(a) {{contato_fornecedor}},\n\nInformamos que o Registro Fiscal {{rf_id}} referente ao imposto {{tipo_fiscal}} no valor de {{valor_rf}} vence em {{data_vencimento}} ({{dias_vencimento}} dias).\n\nPara evitar penalidades, solicite a regularização junto ao seu departamento fiscal.\n\nAtenciosamente,\nEquipe Fiscal · Induspar Tecnologia', ativo:true,  totalEnviados:34, ultimoDisparo:'28/06/2026' },
-    { id:'COB-002', nome:'Cobrança pós-vencimento',         gatilho:'pos', diasGatilho:1,  maxEnvios:4, intervalo:5, canal:'email', assunto:'[URGENTE] Imposto IBS+CBS vencido — RF {{rf_id}} · {{fornecedor}}', corpo:'Prezado(a) {{contato_fornecedor}},\n\nO Registro Fiscal {{rf_id}} ({{tipo_fiscal}} — {{valor_rf}}) encontra-se VENCIDO desde {{data_vencimento}}.\n\nSolicite regularização imediata para evitar glosa do crédito tributário.\n\nAtenciosamente,\nEquipe Fiscal · Induspar Tecnologia', ativo:true,  totalEnviados:19, ultimoDisparo:'30/06/2026' }
+    {
+      id:'COB-001', nome:'Alerta pré-vencimento IBS+CBS', gatilho:'pre', diasGatilho:7,
+      maxEnvios:3, intervalo:3, canal:'email', ativo:true, totalEnviados:34, ultimoDisparo:'28/06/2026',
+      assunto:'[Ação necessária] Imposto IBS+CBS vence em {{dias_vencimento}} dias — {{fornecedor}}',
+      corpo:'Prezado(a) {{contato_fornecedor}},\n\nInformamos que o Registro Fiscal {{rf_id}} referente ao imposto {{tipo_fiscal}} no valor de {{valor_rf}} vence em {{data_vencimento}} ({{dias_vencimento}} dias).\n\nPara evitar penalidades, solicite a regularização junto ao seu departamento fiscal.\n\nAtenciosamente,\nEquipe Fiscal · Induspar Tecnologia',
+      etapas:[
+        { dia:'D-7', cor:'#ba7517', label:'1º Aviso — 7 dias antes do vencimento', sub:'Assunto: [Ação necessária] Imposto IBS+CBS vence em {{dias_vencimento}} dias — {{fornecedor}}', tags:['✉️ E-mail','{{fornecedor}} {{rf_id}} {{valor_rf}}'] },
+        { dia:'D-3', cor:'#ba7517', label:'2º Aviso — 3 dias antes (se não pago)', sub:'Assunto: [Urgente] Vencimento em 3 dias — {{fornecedor}}', tags:['✉️ E-mail','Condição: não pago'] },
+        { dia:'D+0', cor:'#F43F5E', label:'3º Aviso — No vencimento (último envio)', sub:'Notificação de prazo encerrado · Aciona régua pós-vencimento automaticamente', tags:['✉️ E-mail','Escala para pós'] }
+      ],
+      disparos:[
+        { forn:'Sulpar Implementos S.A.',  rf:'RF-00000055', tipo:'CBS · R$ 18.450',  etapa:'D-3 · 2º envio', data:'25/06/2026 09:14', status:'Aberto'    },
+        { forn:'Petral Distribuidora',     rf:'RF-00000195', tipo:'IBS · R$ 9.670',   etapa:'D-7 · 1º envio', data:'23/06/2026 08:00', status:'Entregue'   },
+        { forn:'Eletropar Ind. Ltda',      rf:'RF-00000071', tipo:'IBS · R$ 12.100',  etapa:'D-3 · 2º envio', data:'25/06/2026 09:14', status:'Aberto'    },
+        { forn:'Celupar S.A.',             rf:'RF-00000180', tipo:'CBS · R$ 7.390',   etapa:'D-7 · 1º envio', data:'22/06/2026 08:00', status:'Bounce'    },
+        { forn:'Ferroplex Mineração',      rf:'RF-00000031', tipo:'IBS · R$ 24.830',  etapa:'D+0 · 3º envio', data:'18/06/2026 08:00', status:'Entregue'  },
+        { forn:'Aeroprime Ind. S.A.',      rf:'RF-00000056', tipo:'CBS · R$ 15.200',  etapa:'D-7 · 1º envio', data:'16/06/2026 08:00', status:'Entregue'  }
+      ],
+      auditLog:[
+        { icon:'✏️', cor:'#1d9e75', acao:'Máx. de envios alterado: 2 → 3',       meta:'José da Silva · 14/06/2026 às 10:32', detalhe:'Motivo: "aumentar recall antes do vencimento"' },
+        { icon:'⚙️', cor:'#ba7517', acao:'Template de e-mail atualizado',        meta:'Maria Costa · 02/06/2026 às 14:08',  detalhe:'Assunto e variáveis revisados — aprovação jurídica em 01/06/2026' },
+        { icon:'▶️', cor:'#22C55E', acao:'Régua ativada',                        meta:'José da Silva · 01/04/2026 às 09:00', detalhe:'' },
+        { icon:'➕', cor:'#3B82F6', acao:'Régua criada — COB-001',               meta:'José da Silva · 28/03/2026 às 16:45', detalhe:'Gatilho: D-7 · Canal: e-mail · Máx. 2 envios · Intervalo: 3 dias' }
+      ]
+    },
+    {
+      id:'COB-002', nome:'Cobrança pós-vencimento', gatilho:'pos', diasGatilho:3,
+      maxEnvios:5, intervalo:5, canal:'email', ativo:true, totalEnviados:19, ultimoDisparo:'30/06/2026',
+      assunto:'[Mora fiscal] RF {{rf_id}} vencido há {{dias_vencimento}} dias — ação imediata necessária',
+      corpo:'Prezado(a) {{contato_fornecedor}},\n\nO Registro Fiscal {{rf_id}} ({{tipo_fiscal}} — {{valor_rf}}) encontra-se em mora desde {{data_vencimento}}. O crédito está em risco de glosa.\n\nSolicite regularização imediata.\n\nAtenciosamente,\nEquipe Fiscal · Induspar Tecnologia',
+      etapas:[
+        { dia:'D+3',  cor:'#F43F5E', label:'1ª Cobrança formal — mora de 3 dias', sub:'Notifica crédito em risco de glosa por não recolhimento', tags:['✉️ E-mail'] },
+        { dia:'D+7',  cor:'#F43F5E', label:'2ª Escalada gerencial — 7 dias',      sub:'Cópia para gerente do fornecedor + área jurídica Induspar', tags:['✉️ E-mail','Escalada'] },
+        { dia:'D+14', cor:'#8B5CF6', label:'Ticket ITSM automático — 14 dias',    sub:'Abertura no ServiceNow para tratativa formal e rastreamento jurídico', tags:['🔗 ServiceNow','Máx. 5 envios'] }
+      ],
+      disparos:[
+        { forn:'Transcarro S.A.',       rf:'RF-00000072', tipo:'IBS+CBS · R$ 41.200', etapa:'D+15 · ITSM',    data:'13/06/2026 08:00', status:'#INC-0042' },
+        { forn:'Ferroplex Mineração',   rf:'RF-00000031', tipo:'IBS · R$ 24.830',     etapa:'D+8 · 3º envio', data:'20/06/2026 08:00', status:'Aberto'    },
+        { forn:'Ferroplex Mineração',   rf:'RF-00000031', tipo:'IBS · R$ 24.830',     etapa:'D+3 · 1º envio', data:'15/06/2026 08:00', status:'Entregue'  },
+        { forn:'Transcarro S.A.',       rf:'RF-00000072', tipo:'IBS+CBS · R$ 41.200', etapa:'D+7 · Escalada', data:'05/06/2026 08:00', status:'Entregue'  }
+      ],
+      auditLog:[
+        { icon:'🔗', cor:'#8B5CF6', acao:'Integração ITSM adicionada (etapa D+14)',   meta:'José da Silva · 20/05/2026 às 11:15', detalhe:'ServiceNow · Prioridade: Alta · Categoria: Fiscal/Tributário' },
+        { icon:'▶️', cor:'#22C55E', acao:'Régua ativada após aprovação da Diretoria', meta:'Maria Costa · 15/04/2026 às 09:00',   detalhe:'' },
+        { icon:'⚙️', cor:'#ba7517', acao:'Intervalo alterado: 3 dias → 5 dias',       meta:'Maria Costa · 12/04/2026 às 15:22',   detalhe:'Motivo: evitar percepção de spam antes da aprovação do fluxo de escalada' },
+        { icon:'➕', cor:'#3B82F6', acao:'Régua criada — COB-002',                    meta:'Maria Costa · 10/04/2026 às 14:30',   detalhe:'Gatilho: D+3 · Canal: e-mail · Máx. 5 envios · Intervalo inicial: 3 dias' }
+      ]
+    }
   ]
 };
 
@@ -9775,8 +9821,7 @@ var _automModCores  = { creditos:_ac.teal, debitos:_ac.blue, inconsistencias:_ac
 function _automFmt(v) { return v >= 1e6 ? 'R$ '+(v/1e6).toFixed(1).replace('.',',')+'M' : v >= 1e3 ? 'R$ '+Math.round(v/1e3)+'K' : 'R$ '+v; }
 
 function _automBadge(txt, cor, bg) {
-  bg = bg || cor.replace('#','').length === 6 ? cor + '22' : 'rgba(99,99,99,.15)';
-  return '<span style="background:' + cor + '22;color:' + cor + ';border:1px solid ' + cor + '44;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + txt + '</span>';
+  return '<span style="background:' + cor + '1f;color:' + cor + ';border:1px solid ' + cor + '40;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:.02em">' + txt + '</span>';
 }
 
 function _automToggle(tipo, id, field) {
@@ -9916,72 +9961,357 @@ function _automFieldCard(label, val, cor, badge, mono) {
 
 function _automRenderCobranca(root) {
   var regras = window._automState.cobranca;
-  var h = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">'
-    + '<div><div style="font-size:15px;font-weight:700;color:' + _ac.txt1 + '">Régua de Cobrança</div>'
-    + '<div style="font-size:12px;color:' + _ac.txt2 + ';margin-top:2px">Envio automático de alertas aos fornecedores com impostos próximos ao vencimento ou vencidos</div></div>'
-    + '<button onclick="window._automAbrirModalCob()" style="background:' + _ac.amber + ';color:#0a0a0a;border:none;border-radius:7px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ Nova Régua</button>'
-    + '</div>';
-
-  // Estatísticas rápidas
   var totalEnv = regras.reduce(function(s,r){ return s+r.totalEnviados; }, 0);
   var ativas = regras.filter(function(r){ return r.ativo; }).length;
-  h += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">'
-    + _automKpiMini('Réguas ativas', ativas + '/' + regras.length, _ac.amber)
-    + _automKpiMini('Alertas enviados (total)', totalEnv.toString(), _ac.blue)
-    + _automKpiMini('Fornecedores em cobrança', '6', _ac.red)
+
+  var totalITSM0 = regras.reduce(function(s,r){ return s+(r.disparos||[]).filter(function(d){ return d.status.indexOf('INC')>=0; }).length; }, 0);
+
+  var h = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">'
+    + '<div><div style="font-size:15px;font-weight:700;color:' + _ac.txt1 + '">Régua de Cobrança</div>'
+    + '<div style="font-size:12px;color:' + _ac.txt2 + ';margin-top:2px">Fluxo visual de disparos por vencimento — configure etapas e acompanhe o histórico</div></div>'
+    + '<button onclick="window._automAbrirModalCob()" style="background:#0B7A6E;color:#fff;border:none;border-radius:20px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ Nova Régua</button>'
+    + '</div>';
+
+  h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">'
+    + _automKpiMini('Réguas ativas', ativas + '/' + regras.length, _ac.teal)
+    + _automKpiMini('Alertas enviados', totalEnv.toString(), _ac.blue)
+    + _automKpiMini('Em cobrança agora', '6 forn.', _ac.red)
+    + _automKpiMini('Tickets ITSM', totalITSM0 ? totalITSM0.toString() : '0', _ac.blue)
     + '</div>';
 
   if (!regras.length) {
     h += '<div style="text-align:center;padding:48px;color:' + _ac.txt3 + ';font-size:13px">Nenhuma régua configurada.</div>';
-  } else {
-    h += '<div style="display:flex;flex-direction:column;gap:14px">';
-    regras.forEach(function(r) {
-      var gatCor = r.gatilho === 'pre' ? _ac.amber : _ac.red;
-      var gatLbl = r.gatilho === 'pre' ? r.diasGatilho + ' dias antes do vencimento' : 'Vencido há ' + r.diasGatilho + '+ dias';
-      h += '<div style="background:' + _ac.card + ';border:1px solid ' + _ac.brd + ';border-left:3px solid ' + gatCor + ';border-radius:8px;padding:16px 18px">'
-        + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px">'
-        + '<div>'
-        + '<div style="font-size:13px;font-weight:700;color:' + _ac.txt1 + ';margin-bottom:6px">' + r.nome + '</div>'
-        + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
-        + _automBadge(gatLbl, gatCor)
-        + _automBadge('Máx. ' + r.maxEnvios + ' envio' + (r.maxEnvios > 1 ? 's' : ''), _ac.blue)
-        + _automBadge('A cada ' + r.intervalo + ' dias', _ac.purple)
-        + _automBadge(r.canal === 'email' ? '✉️ E-mail' : r.canal, _ac.txt2)
-        + (r.ativo ? _automBadge('Ativa', _ac.green) : _automBadge('Inativa', _ac.txt3))
-        + '</div>'
-        + '</div>'
-        + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">'
-        + '<label style="display:flex;align-items:center;gap:7px;cursor:pointer">'
-        + '<span style="font-size:11px;color:' + _ac.txt2 + '">' + (r.ativo ? 'Ativa' : 'Inativa') + '</span>'
-        + '<div onclick="window._automToggle(\'cobranca\',\'' + r.id + '\',\'ativo\')" style="width:36px;height:20px;border-radius:10px;background:' + (r.ativo ? _ac.teal : _ac.brd) + ';position:relative;cursor:pointer;transition:background .2s">'
-        + '<div style="position:absolute;top:3px;left:' + (r.ativo ? '18' : '3') + 'px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s"></div></div>'
-        + '</label>'
-        + '<div style="display:flex;gap:6px">'
-        + '<button onclick="window._automAbrirModalCob(\'' + r.id + '\')" style="background:none;border:1px solid ' + _ac.brd + ';border-radius:5px;padding:4px 10px;font-size:11px;color:' + _ac.txt2 + ';cursor:pointer;font-family:inherit">Editar</button>'
-        + '<button onclick="window._automExcluir(\'cobranca\',\'' + r.id + '\')" style="background:none;border:1px solid rgba(var(--status-red-rgb),.3);border-radius:5px;padding:4px 10px;font-size:11px;color:' + _ac.red + ';cursor:pointer;font-family:inherit">Excluir</button>'
-        + '</div>'
-        + '</div>'
-        + '</div>'
-        // Template preview
-        + '<div style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:10px">'
-        + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:6px">Template de e-mail</div>'
-        + '<div style="font-size:11px;font-weight:600;color:' + _ac.txt1 + ';margin-bottom:4px">Assunto: ' + r.assunto + '</div>'
-        + '<div style="font-size:11px;color:' + _ac.txt2 + ';white-space:pre-line;line-height:1.6;max-height:80px;overflow:hidden">' + r.corpo.substring(0, 200) + (r.corpo.length > 200 ? '…' : '') + '</div>'
-        + '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">'
-        + ['{{fornecedor}}','{{rf_id}}','{{tipo_fiscal}}','{{valor_rf}}','{{data_vencimento}}','{{dias_vencimento}}','{{contato_fornecedor}}'].map(function(v){ return '<code style="background:rgba(var(--teal-alt-rgb),.1);color:' + _ac.teal + ';border-radius:3px;padding:1px 5px;font-size:10px">' + v + '</code>'; }).join('')
-        + '</div></div>'
-        + '<div style="font-size:11px;color:' + _ac.txt3 + '">Último disparo: ' + r.ultimoDisparo + ' · Total enviados: ' + r.totalEnviados + ' · ID: ' + r.id + '</div>'
-        + '</div>';
-    });
-    h += '</div>';
+    root.innerHTML = h;
+    return;
   }
+
+  var _statusCor = function(s) {
+    if (s === 'Entregue') return 'var(--status-green)';
+    if (s === 'Aberto')   return 'var(--status-blue)';
+    if (s === 'Bounce')   return 'var(--status-red)';
+    if (s.indexOf('INC') === 0 || s.indexOf('#INC') === 0) return _ac.blue;
+    return _ac.txt3;
+  };
+
+  // ── Analytics — linha 1: disparos + funil ─────────────────────────────────
+  var totalDisp = regras.reduce(function(s,r){ return s+(r.disparos||[]).length; }, 0);
+  var totalBounce = regras.reduce(function(s,r){ return s+(r.disparos||[]).filter(function(d){ return d.status==='Bounce'; }).length; }, 0);
+  var totalITSM = regras.reduce(function(s,r){ return s+(r.disparos||[]).filter(function(d){ return d.status.indexOf('INC')>=0; }).length; }, 0);
+  var totalEntregue = regras.reduce(function(s,r){ return s+(r.disparos||[]).filter(function(d){ return d.status==='Entregue'; }).length; }, 0);
+  var totalAberto = regras.reduce(function(s,r){ return s+(r.disparos||[]).filter(function(d){ return d.status==='Aberto'; }).length; }, 0);
+
+  // bar chart — mock semanal (4 semanas)
+  var semanas = [{l:'28/07',pre:7,pos:3},{l:'04/08',pre:9,pos:4},{l:'11/08',pre:8,pos:5},{l:'18/08',pre:10,pos:7}];
+  var barMax = Math.max.apply(null, semanas.map(function(w){ return w.pre+w.pos; }));
+  var barH = 72;
+  var barsHtml = '<div style="display:flex;gap:5px;align-items:flex-end;height:' + barH + 'px">';
+  semanas.forEach(function(w) {
+    var ph = Math.round((w.pre/barMax)*barH), rh = Math.round((w.pos/barMax)*barH);
+    barsHtml += '<div style="display:flex;flex-direction:column;gap:1px;flex:1;align-items:stretch;justify-content:flex-end">'
+      + '<div style="height:' + rh + 'px;border-radius:2px 2px 0 0;background:' + _ac.red + ';opacity:.8"></div>'
+      + '<div style="height:' + ph + 'px;border-radius:2px 2px 0 0;background:' + _ac.amber + '"></div>'
+      + '<div style="font-size:8px;color:' + _ac.txt3 + ';text-align:center;margin-top:4px">' + w.l + '</div>'
+      + '</div>';
+  });
+  barsHtml += '</div>';
+
+  var entregaPct = totalDisp ? Math.round((totalEntregue/totalDisp)*100) : 0;
+
+  // funil
+  var _flBar = function(lbl, val, tot, bg, cor) {
+    var w = tot ? Math.max(2, Math.round((val/tot)*100)) : 2;
+    return '<div style="display:flex;align-items:center;gap:0;margin-bottom:5px">'
+      + '<div style="font-size:10px;color:' + _ac.txt2 + ';width:86px;text-align:right;padding-right:10px;flex-shrink:0">' + lbl + '</div>'
+      + '<div style="flex:1"><div style="height:22px;border-radius:3px;display:flex;align-items:center;padding:0 7px;font-size:10px;font-weight:600;font-family:var(--font-mono);min-width:22px;width:' + w + '%;background:' + bg + ';color:' + cor + '">' + val + '</div></div>'
+      + '<div style="width:28px;text-align:right;font-size:10px;color:' + _ac.txt3 + ';font-family:var(--font-mono)">' + val + '</div>'
+      + '</div>';
+  };
+
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">';
+
+  // card disparos
+  h += '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">'
+    + '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:space-between">'
+    + '<span style="font-size:12px;font-weight:700;color:' + _ac.txt1 + '">Disparos por semana</span>'
+    + '<div style="display:flex;gap:10px">'
+    + '<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:' + _ac.txt3 + '"><span style="width:7px;height:7px;background:' + _ac.amber + ';border-radius:1px;display:inline-block"></span>Pré</span>'
+    + '<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:' + _ac.txt3 + '"><span style="width:7px;height:7px;background:' + _ac.red + ';border-radius:1px;display:inline-block"></span>Pós</span>'
+    + '</div></div>'
+    + '<div style="padding:14px">'
+    + barsHtml
+    + '<div style="display:flex;justify-content:space-between;font-size:10px;color:' + _ac.txt3 + ';margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">'
+    + '<span>Total: <strong style="color:' + _ac.txt1 + ';font-family:var(--font-mono)">' + totalEnv + '</strong></span>'
+    + '<span>Entrega: <strong style="color:var(--status-green);font-family:var(--font-mono)">' + entregaPct + '%</strong></span>'
+    + '<span>Bounce: <strong style="color:var(--status-red);font-family:var(--font-mono)">' + totalBounce + '</strong></span>'
+    + '<span>ITSM: <strong style="color:' + _ac.blue + ';font-family:var(--font-mono)">' + totalITSM + '</strong></span>'
+    + '</div></div></div>';
+
+  // card funil
+  h += '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">'
+    + '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:space-between">'
+    + '<span style="font-size:12px;font-weight:700;color:' + _ac.txt1 + '">Funil de cobrança</span>'
+    + _automBadge('28 dias', _ac.txt3)
+    + '</div>'
+    + '<div style="padding:14px">'
+    + _flBar('Enviados',  totalDisp,     totalDisp, _ac.blue+'1f', _ac.blue)
+    + _flBar('Entregues', totalEntregue, totalDisp, _ac.green+'18', _ac.green)
+    + _flBar('Abertos',   totalAberto,   totalDisp, _ac.blue+'12', _ac.blue)
+    + _flBar('Bounce',    totalBounce,   totalDisp, _ac.red+'18', _ac.red)
+    + _flBar('ITSM',      totalITSM,     totalDisp, _ac.blue+'18', _ac.blue)
+    + '<div style="margin-top:6px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:' + _ac.txt3 + '">'
+    + 'Abertura: <strong style="color:' + _ac.blue + ';font-family:var(--font-mono)">' + (totalDisp ? Math.round((totalAberto/totalDisp)*100) : 0) + '%</strong>'
+    + ' · Sem ITSM: <strong style="color:var(--status-green);font-family:var(--font-mono)">' + (totalDisp ? Math.round(((totalDisp-totalITSM)/totalDisp)*100) : 100) + '%</strong>'
+    + '</div></div></div>';
+
+  h += '</div>'; // grid linha 1
+
+  // ── Analytics — linha 2: performance + fornecedores + risco ───────────────
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr 220px;gap:12px;margin-bottom:18px">';
+
+  // performance por régua
+  var perfHtml = '';
+  regras.forEach(function(r, i) {
+    var gatCor = r.gatilho === 'pre' ? _ac.amber : _ac.red;
+    var disp = r.disparos || [];
+    var ent = disp.filter(function(d){ return d.status==='Entregue'; }).length;
+    var ab  = disp.filter(function(d){ return d.status==='Aberto'; }).length;
+    var bn  = disp.filter(function(d){ return d.status==='Bounce'; }).length;
+    var its = disp.filter(function(d){ return d.status.indexOf('INC')>=0; }).length;
+    var entPct = disp.length ? Math.round((ent/disp.length)*100) : 0;
+    var abPct  = disp.length ? Math.round((ab/disp.length)*100) : 0;
+    var barW   = totalEnv ? Math.round((r.totalEnviados/totalEnv)*100) : 0;
+    perfHtml += (i > 0 ? '<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">' : '<div>');
+    perfHtml += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
+      + '<span style="width:8px;height:8px;border-radius:50%;background:' + gatCor + ';flex-shrink:0"></span>'
+      + '<span style="font-size:11px;font-weight:600;color:' + _ac.txt1 + '">' + r.nome + '</span>'
+      + _automBadge(r.id, _ac.txt3)
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:6px">'
+      + '<div style="text-align:center"><div style="font-size:9px;color:' + _ac.txt3 + ';text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Enviados</div><div style="font-size:13px;font-weight:600;font-family:var(--font-mono);color:' + gatCor + '">' + r.totalEnviados + '</div></div>'
+      + '<div style="text-align:center"><div style="font-size:9px;color:' + _ac.txt3 + ';text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Entrega</div><div style="font-size:13px;font-weight:600;font-family:var(--font-mono);color:var(--status-green)">' + entPct + '%</div></div>'
+      + '<div style="text-align:center"><div style="font-size:9px;color:' + _ac.txt3 + ';text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Abertura</div><div style="font-size:13px;font-weight:600;font-family:var(--font-mono);color:' + _ac.blue + '">' + abPct + '%</div></div>'
+      + '<div style="text-align:center"><div style="font-size:9px;color:' + _ac.txt3 + ';text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">' + (its ? 'ITSM' : 'Bounce') + '</div><div style="font-size:13px;font-weight:600;font-family:var(--font-mono);color:' + (its ? _ac.blue : _ac.red) + '">' + (its || bn) + '</div></div>'
+      + '</div>'
+      + '<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.06);overflow:hidden"><div style="height:100%;border-radius:2px;width:' + barW + '%;background:' + gatCor + '"></div></div>'
+      + '</div>';
+  });
+  h += '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">'
+    + '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)">'
+    + '<span style="font-size:12px;font-weight:700;color:' + _ac.txt1 + '">Performance por régua</span></div>'
+    + '<div style="padding:14px">' + perfHtml + '</div></div>';
+
+  // fornecedores mock
+  var _fornItem = function(dot, name, rf, tipo, etapa, val, pct, cor, extra) {
+    return '<div style="padding:9px 12px;border-bottom:1px solid var(--border)">'
+      + '<div style="display:flex;gap:6px;align-items:center;margin-bottom:1px">'
+      + '<span style="width:6px;height:6px;border-radius:50%;background:' + dot + ';flex-shrink:0"></span>'
+      + '<div style="font-size:11px;font-weight:600;color:' + _ac.txt1 + '">' + name + '</div>'
+      + (extra || '')
+      + '</div>'
+      + '<div style="font-size:9px;color:' + _ac.txt3 + ';font-family:var(--font-mono);margin-bottom:3px">' + rf + ' · ' + tipo + ' · ' + etapa + '</div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">'
+      + '<div style="font-size:12px;font-weight:600;font-family:var(--font-mono);color:' + cor + '">' + val + '</div>'
+      + '<div style="font-size:9px;color:' + _ac.txt3 + '">' + pct + '</div></div>'
+      + '<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:3px"><div style="height:100%;border-radius:2px;background:' + cor + '"></div></div>'
+      + '</div>';
+  };
+  h += '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">'
+    + '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:space-between">'
+    + '<span style="font-size:12px;font-weight:700;color:' + _ac.txt1 + '">Em cobrança agora</span>'
+    + _automBadge('6', _ac.red)
+    + '</div>'
+    + _fornItem(_ac.blue,  'Transcarro S.A.',    'RF-00000072', 'IBS+CBS', 'D+15', 'R$ 41.200', '100%', _ac.blue,  '<span style="margin-left:auto">' + _automBadge('#INC-0042', _ac.blue) + '</span>')
+    + _fornItem(_ac.red,   'Ferroplex Mineração','RF-00000031', 'IBS',     'D+8',  'R$ 24.830', '60%',  _ac.red,   '<span style="margin-left:auto;font-size:9px;color:' + _ac.red + '">D+13→ITSM</span>')
+    + _fornItem(_ac.amber, 'Sulpar Implementos', 'RF-00000055', 'CBS',     'D-3',  'R$ 18.450', '33%',  _ac.amber, '')
+    + _fornItem(_ac.amber, 'Eletropar Ind.',     'RF-00000071', 'IBS',     'D-3',  'R$ 12.100', '33%',  _ac.amber, '')
+    + _fornItem(_ac.amber, 'Petral Distribuidora','RF-00000195','IBS',     'D-7',  'R$ 9.670',  '15%',  _ac.amber, '')
+    + _fornItem(_ac.txt3,  'Celupar S.A.',       'RF-00000180', 'CBS',     'D-7',  'R$ 7.390',  '5%',   _ac.txt3,  '<span style="margin-left:auto;font-size:9px;color:' + _ac.red + '">⚠ Bounce</span>')
+    + '</div>';
+
+  // valor em risco
+  var _riskBar = function(lbl, val, pct, cor) {
+    return '<div style="margin-bottom:10px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px">'
+      + '<span style="color:' + cor + '">' + lbl + '</span>'
+      + '<span style="color:' + _ac.txt1 + ';font-weight:600;font-family:var(--font-mono)">' + val + '</span></div>'
+      + '<div style="height:5px;border-radius:2px;background:rgba(255,255,255,.06);overflow:hidden"><div style="height:100%;border-radius:2px;width:' + pct + '%;background:' + cor + '"></div></div>'
+      + '</div>';
+  };
+  h += '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">'
+    + '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)">'
+    + '<span style="font-size:12px;font-weight:700;color:' + _ac.txt1 + '">Valor em risco</span></div>'
+    + '<div style="padding:12px 14px">'
+    + _riskBar('Pré-vencimento',     'R$ 28.120', 21, _ac.amber)
+    + _riskBar('Vencido 1–14 dias',  'R$ 66.030', 49, _ac.red)
+    + _riskBar('Vencido 15d+ (ITSM)','R$ 41.200', 30, _ac.blue)
+    + '<div style="padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:baseline">'
+    + '<span style="font-size:11px;color:' + _ac.txt3 + '">Total em risco</span>'
+    + '<span style="font-size:15px;font-weight:600;font-family:var(--font-mono);color:' + _ac.txt1 + '">R$ 135.350</span>'
+    + '</div></div></div>';
+
+  h += '</div>'; // grid linha 2
+
+  // ── Réguas configuradas (colapsáveis) ──────────────────────────────────────
+  h += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:' + _ac.txt3 + ';display:flex;align-items:center;gap:8px;margin-bottom:12px">'
+    + 'Réguas configuradas'
+    + '<div style="flex:1;height:1px;background:var(--border)"></div>'
+    + '</div>';
+
+  h += '<div style="display:flex;flex-direction:column;gap:10px">';
+
+  regras.forEach(function(r) {
+    var gatCor = r.gatilho === 'pre' ? _ac.amber : _ac.red;
+    var gatLbl = r.gatilho === 'pre' ? 'Pré-vencimento · D-' + r.diasGatilho : 'Pós-vencimento · D+' + r.diasGatilho;
+    var etapas = r.etapas || [];
+    var disparos = r.disparos || [];
+    var log = r.auditLog || [];
+    var auditState = window._automAuditState && window._automAuditState[r.id] || 'disparos';
+    var isOpen = window._automCollapseState && window._automCollapseState[r.id];
+    var dispCount = disparos.length;
+    var bounceCount = disparos.filter(function(d){ return d.status === 'Bounce'; }).length;
+    var itsmCount = disparos.filter(function(d){ return d.status.indexOf('INC') >= 0; }).length;
+    var entCount = disparos.filter(function(d){ return d.status === 'Entregue'; }).length;
+    var entPct = dispCount ? Math.round((entCount/dispCount)*100) : 0;
+
+    h += '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.12)">';
+
+    // header clicável para colapso
+    h += '<div onclick="window._automToggleCard(\'' + r.id + '\')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none" onmouseenter="this.style.background=\'rgba(255,255,255,.03)\'" onmouseleave="this.style.background=\'\'">'
+      + '<div onclick="event.stopPropagation();window._automToggle(\'cobranca\',\'' + r.id + '\',\'ativo\')" style="width:32px;height:18px;border-radius:9px;background:' + (r.ativo ? _ac.teal : 'var(--border)') + ';position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">'
+      + '<div style="position:absolute;top:3px;left:' + (r.ativo ? '14' : '3') + 'px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .2s"></div></div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:13px;font-weight:700;color:' + _ac.txt1 + '">' + r.nome + '</div>'
+      + '<div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">'
+      + '<span style="font-size:10px;color:' + _ac.txt3 + ';font-family:var(--font-mono)">' + r.id + '</span>'
+      + _automBadge(gatLbl, gatCor)
+      + _automBadge('E-mail · ' + etapas.length + ' etapas · máx. ' + r.maxEnvios + ' envios', _ac.txt3)
+      + '<span style="margin-left:auto">' + _automBadge(r.totalEnviados + ' disparos · ' + entPct + '% entrega', _ac.green) + '</span>'
+      + (itsmCount ? _automBadge(itsmCount + ' ITSM ativo', _ac.blue) : '')
+      + '</div></div>'
+      + '<div style="display:flex;gap:6px;align-items:center" onclick="event.stopPropagation()">'
+      + '<button onclick="window._automAbrirModalCob(\'' + r.id + '\')" style="background:none;border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--txt2);cursor:pointer;font-family:inherit">Editar</button>'
+      + '<button onclick="window._automExcluir(\'cobranca\',\'' + r.id + '\')" style="background:none;border:1px solid ' + _ac.red + '4d;border-radius:20px;padding:4px 12px;font-size:11px;color:' + _ac.red + ';cursor:pointer;font-family:inherit">Excluir</button>'
+      + '</div>'
+      + '<span style="font-size:11px;color:' + _ac.txt3 + ';transition:transform .2s;display:inline-block;transform:rotate(' + (isOpen ? '180' : '0') + 'deg)">▼</span>'
+      + '</div>';
+
+    if (isOpen) {
+      // mini-stats
+      h += '<div style="display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">';
+      [['Enviados', r.totalEnviados, _ac.blue], ['Entrega', entPct+'%', 'var(--status-green)'], ['Abertura', dispCount?Math.round((disparos.filter(function(d){return d.status==='Aberto';}).length/dispCount)*100)+'%':'-', _ac.blue], ['Bounce', bounceCount, _ac.red], ['Último disparo', r.ultimoDisparo, _ac.txt2]].forEach(function(s, si, sa) {
+        h += '<div style="flex:1;padding:9px 14px;border-right:' + (si<sa.length-1?'1px solid var(--border)':'none') + ';text-align:center">'
+          + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:3px">' + s[0] + '</div>'
+          + '<div style="font-size:13px;font-weight:600;font-family:var(--font-mono);color:' + s[2] + '">' + s[1] + '</div>'
+          + '</div>';
+      });
+      h += '</div>';
+
+      // sequence horizontal
+      h += '<div style="padding:16px 18px;display:flex;align-items:flex-start;gap:0;overflow-x:auto">';
+      etapas.forEach(function(et, i) {
+        var isLast = i === etapas.length - 1;
+        h += '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:148px">'
+          + '<div style="width:32px;height:32px;border-radius:50%;border:2px solid ' + et.cor + ';color:' + et.cor + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:var(--font-mono);background:var(--card)">' + et.dia + '</div>'
+          + '<div style="margin-top:8px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:8px 10px;width:136px;text-align:center">'
+          + '<div style="font-size:11px;font-weight:600;color:' + _ac.txt1 + ';margin-bottom:2px;line-height:1.3">' + et.label + '</div>'
+          + '<div style="font-size:9px;color:' + _ac.txt3 + ';line-height:1.4">' + et.sub + '</div>'
+          + '<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center;margin-top:5px">'
+          + et.tags.map(function(t){ return '<span style="font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(255,255,255,.06);color:' + _ac.txt2 + ';border:1px solid var(--border)">' + t + '</span>'; }).join('')
+          + '</div></div></div>'
+          + (!isLast ? '<div style="display:flex;align-items:center;flex:1;min-width:10px;margin-top:16px"><div style="flex:1;height:1px;background:var(--border)"></div><div style="font-size:9px;color:' + _ac.txt3 + '">›</div><div style="flex:1;height:1px;background:var(--border)"></div></div>' : '');
+      });
+      h += '<div style="display:flex;align-items:center;flex:0;margin-top:16px"><div style="width:12px;height:1px;background:var(--border)"></div></div>';
+      h += '<div onclick="window._automAbrirModalCob(\'' + r.id + '\')" style="border:1px dashed var(--border);border-radius:20px;padding:4px 12px;font-size:11px;color:' + _ac.txt3 + ';cursor:pointer;background:none;margin-top:16px;flex-shrink:0;transition:border-color .15s,color .15s" onmouseenter="this.style.borderColor=\'var(--teal-alt)\';this.style.color=\'var(--teal-alt)\'" onmouseleave="this.style.borderColor=\'\';this.style.color=\'\'">'
+        + '+ Adicionar etapa</div>';
+      h += '</div>';
+
+      // tabs audit
+      h += '<div style="border-top:1px solid var(--border)">'
+        + '<div style="padding:8px 18px;background:rgba(0,0,0,.12);display:flex;align-items:center;justify-content:space-between">'
+        + '<div style="display:flex">'
+        + ['disparos','log'].map(function(tab) {
+            var lbl = tab === 'disparos' ? 'Disparos (' + dispCount + ')' : 'Log de alterações';
+            var active = auditState === tab;
+            return '<button onclick="window._automAuditTab(\'' + r.id + '\',\'' + tab + '\')" style="padding:6px 14px;font-size:11px;font-weight:' + (active?'700':'500') + ';color:' + (active?_ac.teal:'var(--txt3)') + ';background:transparent;border:none;border-bottom:2px solid ' + (active?_ac.teal:'transparent') + ';cursor:pointer;font-family:inherit">' + lbl + '</button>';
+          }).join('')
+        + '</div>'
+        + '<div style="display:flex;gap:6px">'
+        + _automBadge(dispCount + ' env.', _ac.green)
+        + (bounceCount ? _automBadge(bounceCount + ' bounce', _ac.red) : '')
+        + (itsmCount ? _automBadge(itsmCount + ' ITSM', _ac.blue) : '')
+        + '</div></div>';
+
+      h += '<div style="padding:14px 18px">';
+      if (auditState === 'disparos') {
+        if (!disparos.length) {
+          h += '<div style="text-align:center;padding:24px;color:var(--txt3);font-size:12px">Nenhum disparo registrado.</div>';
+        } else {
+          h += '<div class="twrap"><table style="width:100%;border-collapse:collapse;font-size:10px">'
+            + '<thead><tr>'
+            + '<th style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);padding:0 8px 8px 0;text-align:left;font-weight:600;white-space:nowrap">Fornecedor / RF</th>'
+            + '<th style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);padding:0 8px 8px 0;text-align:left;font-weight:600">Tipo · Valor</th>'
+            + '<th style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);padding:0 8px 8px 0;text-align:left;font-weight:600;white-space:nowrap">Etapa</th>'
+            + '<th style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);padding:0 8px 8px 0;text-align:left;font-weight:600;white-space:nowrap">Enviado em</th>'
+            + '<th style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);padding:0 0 8px 0;text-align:left;font-weight:600">Status</th>'
+            + '</tr></thead><tbody>';
+          disparos.forEach(function(d) {
+            var sc = _statusCor(d.status);
+            h += '<tr>'
+              + '<td style="padding:7px 8px 7px 0;border-top:1px solid var(--border);color:var(--txt1);font-weight:500;vertical-align:top">' + d.forn + '<br><span style="font-size:9px;color:var(--txt3);font-family:var(--font-mono)">' + d.rf + '</span></td>'
+              + '<td style="padding:7px 8px 7px 0;border-top:1px solid var(--border);color:var(--txt2);font-family:var(--font-mono);font-size:11px">' + d.tipo + '</td>'
+              + '<td style="padding:7px 8px 7px 0;border-top:1px solid var(--border)">' + _automBadge(d.etapa, gatCor) + '</td>'
+              + '<td style="padding:7px 8px 7px 0;border-top:1px solid var(--border);color:var(--txt3);white-space:nowrap">' + d.data + '</td>'
+              + '<td style="padding:7px 0 7px 0;border-top:1px solid var(--border)">' + _automBadge(d.status, sc) + '</td>'
+              + '</tr>';
+          });
+          h += '</tbody></table></div>';
+        }
+      } else {
+        if (!log.length) {
+          h += '<div style="text-align:center;padding:24px;color:var(--txt3);font-size:12px">Nenhuma alteração registrada.</div>';
+        } else {
+          h += '<div style="display:flex;flex-direction:column;gap:0">';
+          log.forEach(function(entry, i) {
+            h += '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:' + (i < log.length-1 ? '1px solid var(--border)' : 'none') + '">'
+              + '<div style="width:26px;height:26px;border-radius:50%;background:' + entry.cor + '22;color:' + entry.cor + ';display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">' + entry.icon + '</div>'
+              + '<div style="flex:1">'
+              + '<div style="font-size:11px;font-weight:600;color:var(--txt1);margin-bottom:2px">' + entry.acao + '</div>'
+              + '<div style="font-size:10px;color:var(--txt3)">' + entry.meta + '</div>'
+              + (entry.detalhe ? '<div style="font-size:10px;color:var(--txt2);margin-top:4px;background:rgba(0,0,0,.18);border-radius:4px;padding:4px 8px;line-height:1.5">' + entry.detalhe + '</div>' : '')
+              + '</div></div>';
+          });
+          h += '</div>';
+        }
+      }
+      h += '</div></div>'; // audit-content + audit-section
+    }
+
+    h += '</div>'; // card
+  });
+
+  h += '</div>'; // lista réguas
   root.innerHTML = h;
 }
 
+window._automAuditState = {};
+window._automCollapseState = {};
+
+window._automAuditTab = function(regId, tab) {
+  window._automAuditState[regId] = tab;
+  var content = document.getElementById('autom-content');
+  if (content) _automRenderCobranca(content);
+};
+
+window._automToggleCard = function(regId) {
+  window._automCollapseState[regId] = !window._automCollapseState[regId];
+  var content = document.getElementById('autom-content');
+  if (content) _automRenderCobranca(content);
+};
+
 function _automKpiMini(label, val, cor) {
-  return '<div style="background:' + _ac.card + ';border:1px solid ' + _ac.brd + ';border-top:2px solid ' + cor + ';border-radius:8px;padding:14px 16px">'
-    + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:6px">' + label + '</div>'
-    + '<div style="font-size:22px;font-weight:700;color:' + cor + ';font-family:inherit">' + val + '</div>'
+  return '<div style="background:' + _ac.card + ';border:1px solid ' + _ac.brd + ';border-radius:10px;padding:0;overflow:hidden">'
+    + '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:' + _ac.txt3 + ';padding:7px 14px 6px;background:rgba(255,255,255,.04);border-bottom:1px solid ' + _ac.brd + '">' + label + '</div>'
+    + '<div style="font-size:22px;font-weight:600;color:' + cor + ';font-family:var(--font-mono);padding:10px 14px 12px">' + val + '</div>'
     + '</div>';
 }
 
