@@ -6578,13 +6578,16 @@ window.renderizarTabelaPagamentos = function() {
   rows.forEach(function(r, idx) {
     var tipoBadge = '<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+r.tipo+'</span>';
     var detBtn = '<button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:rgba(var(--blue-rgb),.08);border:1px solid rgba(var(--blue-rgb),.2);border-radius:4px;color:'+PALETTE.blue+';cursor:pointer;font-size:10px;font-weight:700;padding:3px 10px">Ver</button>';
-    var act = !r.pago
-      ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="window.abrirGuiaDARF('+idx+')">Gerar Guia</button>'
-      : '<span style="font-size:11px;color:var(--txt3)">Concluído</span>';
+    var isGlosado = r.statusCredito === 'glosado';
+    var act = isGlosado
+      ? '<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:3px;background:rgba(220,38,38,.08);color:rgb(220,38,38);border:1px solid rgba(220,38,38,.25)">Glosado</span>'
+      : !r.pago
+        ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="window.abrirGuiaDARF('+idx+')">Gerar Guia</button>'
+        : '<span style="font-size:11px;color:var(--txt3)">Concluído</span>';
     var nfTipoBadgePag = r.tipoNF === 'entrada'
       ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--teal-rgb),.28);color:'+PALETTE.teal+';background:transparent">Entrada</span>'
       : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--amber-rgb),.28);color:'+PALETTE.amber+';background:transparent">Saída</span>';
-    var chkCell = !r.pago
+    var chkCell = (!r.pago && !isGlosado)
       ? '<td style="text-align:center"><input type="checkbox" class="pag-chk" data-idx="'+idx+'" onchange="window.pagAtualizarSelecao()" style="cursor:pointer;width:15px;height:15px"></td>'
       : '<td></td>';
     var nfCell = r.nfNumero
@@ -6601,9 +6604,9 @@ window.renderizarTabelaPagamentos = function() {
       + '<td class="nowrap"><span style="font-size:10px;font-weight:700;letter-spacing:.06em;padding:2px 8px;border-radius:3px;border:1px solid rgba(var(--teal-alt-rgb),.35);color:var(--teal);background:rgba(var(--teal-alt-rgb),.08)">RAD</span></td>'
       + '<td class="r mono" style="font-weight:600">' + ff(r.valor) + '</td>'
       + '<td class="nowrap" style="color:var(--txt2)">' + r.dataRF + '</td>'
-      + '<td class="nowrap">' + (r.status === 'pago'
+      + '<td class="nowrap">' + (r.pago && r.pagamento && r.pagamento !== '—'
           ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pagamento + '</a>'
-          : '<span style="color:var(--txt2)">—</span>') + '</td>'
+          : (r.pagamento && r.pagamento !== '—' ? '<span style="color:var(--txt2)">' + r.pagamento + '</span>' : '<span style="color:var(--txt3)">—</span>')) + '</td>'
       + '<td style="vertical-align:middle">' + bdg(r.statusCredito) + '</td>'
       + '<td style="vertical-align:middle">' + (r.statusFlags.length ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.statusFlags[0] }) : '<span style="color:var(--txt3);font-size:11px">—</span>') + '</td>'
       + '<td style="vertical-align:middle">' + ((r._inconsistencias && r._inconsistencias.length) ? r._inconsistencias.map(function(i){ return '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(220,38,38,.08);color:rgb(220,38,38);border:1px solid rgba(220,38,38,.25);white-space:nowrap;display:inline-block;margin:1px 1px 0 0">'+(i.tipoLabel||i.tipo||'—')+'</span>'; }).join('') : '<span style="color:var(--txt3)">—</span>') + '</td>'
