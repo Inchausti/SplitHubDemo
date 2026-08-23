@@ -10472,65 +10472,276 @@ window._automSalvarITSM = function() {
   _automToast('Configuração ITSM salva', _ac.green);
 };
 
+// ── Wizard Nova / Editar Régua — 3 passos ───────────────────────
+window._automWizState = {};
+
 window._automAbrirModalCob = function(id) {
-  var r = id ? (window._automState.cobranca.filter(function(x){ return x.id === id; })[0]) : null;
-  var titulo = r ? 'Editar Régua de Cobrança' : 'Nova Régua de Cobrança';
-  var v = r || { nome:'', gatilho:'pre', diasGatilho:7, maxEnvios:3, intervalo:3, canal:'email', assunto:'', corpo:'', ativo:true };
-  var html = _automOverlay(titulo,
-    _automCampo('Nome da régua', '<input id="am-cob-nome" value="' + (v.nome||'') + '" style="' + _automInputStyle() + '">')
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    + _automCampo('Gatilho',
-      '<select id="am-cob-gat" style="' + _automInputStyle() + '">'
-      + [{v:'pre',l:'Antes do vencimento'},{v:'pos',l:'Após o vencimento'}].map(function(g){ return '<option value="' + g.v + '"' + (v.gatilho===g.v?' selected':'') + '>' + g.l + '</option>'; }).join('')
-      + '</select>')
-    + _automCampo('Dias do gatilho', '<input id="am-cob-dias" type="number" min="1" max="90" value="' + (v.diasGatilho||7) + '" style="' + _automInputStyle() + '">')
-    + '</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">'
-    + _automCampo('Máx. de envios', '<input id="am-cob-max" type="number" min="1" max="10" value="' + (v.maxEnvios||3) + '" style="' + _automInputStyle() + '">')
-    + _automCampo('Intervalo (dias)', '<input id="am-cob-int" type="number" min="1" max="30" value="' + (v.intervalo||3) + '" style="' + _automInputStyle() + '">')
-    + _automCampo('Canal',
-      '<select id="am-cob-canal" style="' + _automInputStyle() + '">'
-      + [{v:'email',l:'✉️ E-mail'},{v:'whatsapp',l:'💬 WhatsApp'},{v:'ambos',l:'✉️+💬 Ambos'}].map(function(c){ return '<option value="' + c.v + '"' + (v.canal===c.v?' selected':'') + '>' + c.l + '</option>'; }).join('')
-      + '</select>')
-    + '</div>'
-    + _automCampo('Assunto do e-mail', '<input id="am-cob-ass" value="' + (v.assunto||'') + '" placeholder="[Ação necessária] Imposto {{tipo_fiscal}} vence em {{dias_vencimento}} dias" style="' + _automInputStyle() + '">')
-    + _automCampo('Corpo do e-mail',
-      '<textarea id="am-cob-corpo" rows="6" style="' + _automInputStyle() + 'resize:vertical;font-family:monospace;font-size:11px">' + (v.corpo||'') + '</textarea>')
-    + '<div style="background:rgba(var(--teal-alt-rgb),.06);border:1px solid rgba(var(--teal-alt-rgb),.2);border-radius:6px;padding:10px 12px;font-size:11px;color:' + _ac.txt2 + '">Variáveis: '
-    + ['{{fornecedor}}','{{rf_id}}','{{tipo_fiscal}}','{{valor_rf}}','{{data_vencimento}}','{{dias_vencimento}}','{{contato_fornecedor}}'].map(function(v){ return '<code style="color:' + _ac.teal + '">' + v + '</code>'; }).join(' ')
-    + '</div>',
-    'window._automSalvarCob(\'' + (id||'') + '\')'
-  );
-  document.getElementById('_automOverlay') && document.getElementById('_automOverlay').remove();
-  document.body.insertAdjacentHTML('beforeend', html);
+  var r = id ? (window._automState.cobranca.find(function(x){ return x.id === id; })) : null;
+  window._automWizState = {
+    id: id || null, step: 1,
+    nome: r ? r.nome : '',
+    gatilho: r ? r.gatilho : 'pre',
+    diasGatilho: r ? r.diasGatilho : 7,
+    maxEnvios: r ? r.maxEnvios : 3,
+    intervalo: r ? r.intervalo : 3,
+    canal: r ? r.canal : 'email',
+    ativo: r ? r.ativo : true,
+    etapas: r && r.etapas && r.etapas.length
+      ? JSON.parse(JSON.stringify(r.etapas))
+      : [{ dia:'D-7', canal:'email', condicao:'sempre', assunto:'Imposto vence em {{dias_vencimento}} dias — {{fornecedor}}' }],
+    expanded: [0]
+  };
+  var ex = document.getElementById('_automOverlay');
+  if (ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = '_automOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.onclick = function(e){ if (e.target === ov) ov.remove(); };
+  document.body.appendChild(ov);
+  _automWizRender();
 };
 
-window._automSalvarCob = function(id) {
-  var nome = document.getElementById('am-cob-nome').value.trim();
-  if (!nome) { alert('Nome é obrigatório.'); return; }
+function _automWizCollect() {
+  var ws = window._automWizState;
+  if (ws.step === 1) {
+    var n = document.getElementById('wiz-nome'); if (n) ws.nome = n.value;
+    var g = document.getElementById('wiz-gat');  if (g) ws.gatilho = g.value;
+    var d = document.getElementById('wiz-dias'); if (d) ws.diasGatilho = parseInt(d.value) || 7;
+    var m = document.getElementById('wiz-max');  if (m) ws.maxEnvios  = parseInt(m.value) || 3;
+    var i = document.getElementById('wiz-int');  if (i) ws.intervalo  = parseInt(i.value) || 3;
+    var c = document.getElementById('wiz-canal');if (c) ws.canal = c.value;
+    var a = document.getElementById('wiz-ativo');if (a) ws.ativo = a.checked;
+  } else if (ws.step === 2) {
+    ws.etapas.forEach(function(et, idx) {
+      var dEl = document.getElementById('wet-dia-'  + idx); if (dEl)  et.dia      = dEl.value;
+      var cEl = document.getElementById('wet-canal-'+ idx); if (cEl)  et.canal    = cEl.value;
+      var oEl = document.getElementById('wet-cond-' + idx); if (oEl)  et.condicao = oEl.value;
+      var aEl = document.getElementById('wet-ass-'  + idx); if (aEl)  et.assunto  = aEl.value;
+    });
+  }
+}
+
+window._automWizStep = function(n) {
+  _automWizCollect();
+  var ws = window._automWizState;
+  if (n === 2 && !ws.nome.trim()) { alert('Informe o nome da régua.'); return; }
+  ws.step = n;
+  _automWizRender();
+};
+
+window._automWizAddEtapa = function() {
+  _automWizCollect();
+  var ws = window._automWizState;
+  var idx = ws.etapas.length;
+  ws.etapas.push({ dia:'D-0', canal:'email', condicao:'sempre', assunto:'' });
+  ws.expanded.push(idx);
+  _automWizRender();
+};
+
+window._automWizRemEtapa = function(idx) {
+  _automWizCollect();
+  var ws = window._automWizState;
+  ws.etapas.splice(idx, 1);
+  ws.expanded = ws.expanded.filter(function(i){ return i !== idx; }).map(function(i){ return i > idx ? i - 1 : i; });
+  _automWizRender();
+};
+
+window._automWizToggleEt = function(idx) {
+  _automWizCollect();
+  var ws = window._automWizState;
+  var pos = ws.expanded.indexOf(idx);
+  if (pos >= 0) ws.expanded.splice(pos, 1); else ws.expanded.push(idx);
+  _automWizRender();
+};
+
+window._automSalvarCob = function() {
+  _automWizCollect();
+  var ws = window._automWizState;
+  if (!ws.nome.trim()) { alert('Nome é obrigatório.'); return; }
+  var r = ws.id ? (window._automState.cobranca.find(function(x){ return x.id === ws.id; })) : null;
   var obj = {
-    id:           id || 'COB-' + String(Date.now()).slice(-3),
-    nome:         nome,
-    gatilho:      document.getElementById('am-cob-gat').value,
-    diasGatilho:  parseInt(document.getElementById('am-cob-dias').value) || 7,
-    maxEnvios:    parseInt(document.getElementById('am-cob-max').value) || 3,
-    intervalo:    parseInt(document.getElementById('am-cob-int').value) || 3,
-    canal:        document.getElementById('am-cob-canal').value,
-    assunto:      document.getElementById('am-cob-ass').value,
-    corpo:        document.getElementById('am-cob-corpo').value,
-    ativo:        true, totalEnviados: r ? r.totalEnviados : 0, ultimoDisparo: r ? r.ultimoDisparo : '—'
+    id: ws.id || 'COB-' + String(Date.now()).slice(-3),
+    nome: ws.nome, gatilho: ws.gatilho, diasGatilho: ws.diasGatilho,
+    maxEnvios: ws.maxEnvios, intervalo: ws.intervalo, canal: ws.canal,
+    ativo: ws.ativo, etapas: ws.etapas,
+    totalEnviados: r ? r.totalEnviados : 0,
+    ultimoDisparo: r ? r.ultimoDisparo : '—',
+    disparos: r ? r.disparos : [],
+    auditLog: r ? r.auditLog : []
   };
-  var r = id ? (window._automState.cobranca.filter(function(x){ return x.id === id; })[0]) : null;
-  if (id) {
-    var idx = window._automState.cobranca.findIndex(function(x){ return x.id === id; });
+  if (ws.id) {
+    var idx = window._automState.cobranca.findIndex(function(x){ return x.id === ws.id; });
     if (idx >= 0) window._automState.cobranca[idx] = obj;
   } else {
     window._automState.cobranca.push(obj);
   }
-  document.getElementById('_automOverlay').remove();
+  var ov = document.getElementById('_automOverlay');
+  if (ov) ov.remove();
   window.automInit();
   _automToast('Régua de cobrança salva', _ac.green);
 };
+
+function _automWizDotCor(dia) {
+  var n = parseInt((dia || '').replace('D','').replace('+',''));
+  if (isNaN(n)) return _ac.amber;
+  return n < 0 ? _ac.amber : (n === 0 ? _ac.red : _ac.blue);
+}
+
+function _automWizRender() {
+  var ov = document.getElementById('_automOverlay');
+  if (!ov) return;
+  var ws = window._automWizState;
+  var ac = _ac;
+  var IS = 'width:100%;background:rgba(255,255,255,.05);border:1px solid ' + ac.brd + ';border-radius:6px;padding:8px 10px;color:' + ac.txt1 + ';font-size:12px;font-family:inherit;box-sizing:border-box;outline:none';
+
+  function spill(n, lbl) {
+    var done = ws.step > n, active = ws.step === n;
+    var col = done ? ac.green : (active ? ac.teal : ac.txt3);
+    return '<div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:' + (active ? '700' : '500') + ';color:' + col + '">'
+      + '<div style="width:20px;height:20px;border-radius:50%;border:1.5px solid ' + col + ';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;' + (done ? 'background:' + col + ';color:#fff;' : '') + '">' + (done ? '✓' : n) + '</div>'
+      + lbl + '</div>';
+  }
+  var stepBar = '<div style="display:flex;align-items:center;padding:0 20px;height:44px;border-bottom:1px solid ' + ac.brd + ';background:rgba(0,0,0,.1)">'
+    + spill(1, 'Configuração')
+    + '<div style="flex:1;height:1px;background:' + ac.brd + ';margin:0 8px"></div>'
+    + spill(2, 'Etapas')
+    + '<div style="flex:1;height:1px;background:' + ac.brd + ';margin:0 8px"></div>'
+    + spill(3, 'Revisão') + '</div>';
+
+  var body = '', footer = '';
+
+  if (ws.step === 1) {
+    var gatOs = [{v:'pre',l:'Pré-vencimento (D-N)'},{v:'pos',l:'Pós-vencimento (D+N)'}]
+      .map(function(g){ return '<option value="' + g.v + '"' + (ws.gatilho === g.v ? ' selected' : '') + '>' + g.l + '</option>'; }).join('');
+    var canOs = [{v:'email',l:'✉ E-mail'},{v:'itsm',l:'🔗 ITSM'},{v:'whatsapp',l:'📱 WhatsApp'}]
+      .map(function(c){ return '<option value="' + c.v + '"' + (ws.canal === c.v ? ' selected' : '') + '>' + c.l + '</option>'; }).join('');
+    var togBg = ws.ativo ? ac.teal : ac.brd;
+    var togL  = ws.ativo ? '17' : '3';
+
+    body = '<div style="font-size:13px;font-weight:700;color:' + ac.txt1 + ';margin-bottom:3px">Configuração da régua</div>'
+      + '<div style="font-size:11px;color:' + ac.txt3 + ';margin-bottom:16px">Defina o nome, gatilho e parâmetros gerais.</div>'
+      + _automCampo('Nome da régua', '<input id="wiz-nome" value="' + ws.nome.replace(/"/g,'&quot;') + '" placeholder="Ex.: Alerta pré-vencimento IBS+CBS" style="' + IS + '">')
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+      + _automCampo('Tipo de gatilho', '<select id="wiz-gat" style="' + IS + '">' + gatOs + '</select>')
+      + _automCampo('Dias do gatilho', '<input id="wiz-dias" type="number" min="1" max="90" value="' + ws.diasGatilho + '" style="' + IS + ';font-family:var(--font-mono)">')
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">'
+      + _automCampo('Máx. envios por RF', '<input id="wiz-max" type="number" min="1" max="10" value="' + ws.maxEnvios + '" style="' + IS + ';font-family:var(--font-mono)">')
+      + _automCampo('Intervalo (dias)',    '<input id="wiz-int" type="number" min="1" max="30" value="' + ws.intervalo  + '" style="' + IS + ';font-family:var(--font-mono)">')
+      + _automCampo('Canal padrão', '<select id="wiz-canal" style="' + IS + '">' + canOs + '</select>')
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:10px;margin-top:4px">'
+      + '<label style="position:relative;width:32px;height:18px;display:inline-block;cursor:pointer">'
+      + '<input id="wiz-ativo" type="checkbox" ' + (ws.ativo ? 'checked' : '') + ' style="opacity:0;width:0;height:0;position:absolute">'
+      + '<div style="position:absolute;inset:0;border-radius:9px;background:' + togBg + ';transition:background .2s"></div>'
+      + '<div style="position:absolute;top:3px;left:' + togL + 'px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .2s;pointer-events:none"></div></label>'
+      + '<span style="font-size:12px;color:' + ac.txt2 + '">Ativar régua ao salvar</span></div>';
+
+    footer = '<button onclick="document.getElementById(\'_automOverlay\').remove()" style="background:none;border:1px solid ' + ac.brd + ';border-radius:20px;padding:7px 18px;color:' + ac.txt2 + ';font-size:12px;cursor:pointer;font-family:inherit">Cancelar</button>'
+      + '<button onclick="window._automWizStep(2)" style="background:var(--teal-btn);border:none;border-radius:20px;padding:7px 18px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Continuar → Etapas</button>';
+
+  } else if (ws.step === 2) {
+    var canOs2 = [{v:'email',l:'✉ E-mail'},{v:'itsm',l:'🔗 ITSM'},{v:'whatsapp',l:'📱 WhatsApp'}];
+    var condOs = [{v:'sempre',l:'Sempre'},{v:'nao_pago',l:'Somente se não pago'},{v:'sem_resp',l:'Sem resposta'}];
+
+    var etapasH = ws.etapas.map(function(et, idx) {
+      var open   = ws.expanded.indexOf(idx) >= 0;
+      var dotCol = _automWizDotCor(et.dia);
+      var cOs = canOs2.map(function(c){ return '<option value="' + c.v + '"' + (et.canal === c.v ? ' selected' : '') + '>' + c.l + '</option>'; }).join('');
+      var oOs = condOs.map(function(c){ return '<option value="' + c.v + '"' + (et.condicao === c.v ? ' selected' : '') + '>' + c.l + '</option>'; }).join('');
+      var canalLbl = et.canal === 'itsm' ? 'ITSM' : (et.canal === 'whatsapp' ? 'WhatsApp' : 'E-mail');
+
+      var bodyH = open
+        ? '<div style="padding:12px;border-top:1px solid ' + ac.brd + '">'
+          + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:0">'
+          + _automCampo('Dia', '<input id="wet-dia-' + idx + '" value="' + et.dia + '" style="' + IS + ';font-family:var(--font-mono);font-size:11px" placeholder="D-7">')
+          + _automCampo('Canal', '<select id="wet-canal-' + idx + '" style="' + IS + ';font-size:11px">' + cOs + '</select>')
+          + _automCampo('Condição', '<select id="wet-cond-' + idx + '" style="' + IS + ';font-size:11px">' + oOs + '</select>')
+          + '</div>'
+          + _automCampo('Assunto', '<input id="wet-ass-' + idx + '" value="' + et.assunto.replace(/"/g,'&quot;') + '" style="' + IS + ';font-size:11px" placeholder="Assunto do e-mail ou título do ticket">')
+          + '</div>'
+        : '';
+
+      return '<div style="background:rgba(255,255,255,.03);border:1px solid ' + ac.brd + ';border-radius:8px;overflow:hidden;margin-bottom:8px">'
+        + '<div onclick="window._automWizToggleEt(' + idx + ')" style="display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer">'
+        + '<span style="color:' + ac.txt3 + ';font-size:12px;opacity:.5;cursor:grab">⠿</span>'
+        + '<div style="width:26px;height:26px;border-radius:50%;border:2px solid ' + dotCol + ';color:' + dotCol + ';display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;font-family:var(--font-mono);flex-shrink:0">' + et.dia + '</div>'
+        + '<div style="flex:1;font-size:11px;font-weight:600;color:' + ac.txt1 + '">' + (idx + 1) + 'ª Etapa — ' + et.dia + '</div>'
+        + '<span style="font-size:9px;color:' + ac.txt2 + ';background:rgba(255,255,255,.06);border-radius:3px;padding:2px 7px">' + canalLbl + '</span>'
+        + (ws.etapas.length > 1 ? '<button onclick="event.stopPropagation();window._automWizRemEtapa(' + idx + ')" style="background:none;border:none;cursor:pointer;color:' + ac.red + ';font-size:14px;padding:2px 6px;line-height:1">✕</button>' : '')
+        + '<span style="font-size:9px;color:' + ac.txt3 + '">' + (open ? '▲' : '▼') + '</span>'
+        + '</div>' + bodyH + '</div>';
+    }).join('');
+
+    body = '<div style="font-size:13px;font-weight:700;color:' + ac.txt1 + ';margin-bottom:3px">Monte as etapas da régua</div>'
+      + '<div style="font-size:11px;color:' + ac.txt3 + ';margin-bottom:14px">Cada etapa é um disparo da sequência. Adicione quantas precisar.</div>'
+      + etapasH
+      + '<button onclick="window._automWizAddEtapa()" style="width:100%;margin-top:2px;border:1px dashed ' + ac.brd + ';border-radius:8px;padding:8px;text-align:center;font-size:11px;color:' + ac.txt3 + ';cursor:pointer;background:none;font-family:inherit">+ Adicionar etapa</button>'
+      + '<div style="margin-top:12px;padding:8px 12px;background:rgba(255,255,255,.03);border:1px solid ' + ac.brd + ';border-radius:6px;font-size:10px;color:' + ac.txt3 + '">Variáveis: '
+      + ['{{fornecedor}}','{{rf_id}}','{{valor_rf}}','{{dias_vencimento}}','{{cnpj}}'].map(function(v){ return '<code style="color:' + ac.teal + ';font-family:var(--font-mono)">' + v + '</code>'; }).join(' ')
+      + '</div>';
+
+    footer = '<button onclick="window._automWizStep(1)" style="background:none;border:1px solid ' + ac.brd + ';border-radius:20px;padding:7px 18px;color:' + ac.txt2 + ';font-size:12px;cursor:pointer;font-family:inherit">← Voltar</button>'
+      + '<button onclick="window._automWizStep(3)" style="background:var(--teal-btn);border:none;border-radius:20px;padding:7px 18px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Continuar → Revisão</button>';
+
+  } else {
+    var gatLbl  = ws.gatilho === 'pre' ? 'Pré-vencimento' : 'Pós-vencimento';
+    var canLbl  = ws.canal === 'itsm' ? 'ITSM' : (ws.canal === 'whatsapp' ? 'WhatsApp' : 'E-mail');
+    function DRow(l, v) {
+      return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 0;border-bottom:1px solid ' + ac.brd + '">'
+        + '<span style="color:' + ac.txt3 + '">' + l + '</span><span style="color:' + ac.txt1 + ';font-weight:600">' + v + '</span></div>';
+    }
+
+    var seqH = ws.etapas.map(function(et, idx) {
+      var col    = _automWizDotCor(et.dia);
+      var isLast = idx === ws.etapas.length - 1;
+      var cLbl   = et.canal === 'itsm' ? 'ITSM' : (et.canal === 'whatsapp' ? 'WhatsApp' : 'E-mail');
+      var coLbl  = et.condicao === 'sempre' ? 'sempre' : (et.condicao === 'nao_pago' ? 'se não pago' : 'sem resposta');
+      return '<div style="display:flex;gap:10px">'
+        + '<div style="display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0">'
+        + '<div style="width:28px;height:28px;border-radius:50%;border:2px solid ' + col + ';color:' + col + ';display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;font-family:var(--font-mono)">' + et.dia + '</div>'
+        + (isLast ? '' : '<div style="width:2px;flex:1;min-height:10px;margin:3px 0;background:' + col + '44"></div>')
+        + '</div>'
+        + '<div style="flex:1;padding-bottom:' + (isLast ? '0' : '10') + 'px">'
+        + '<div style="font-size:11px;font-weight:600;color:' + ac.txt1 + ';margin-bottom:1px">' + (idx+1) + 'ª Etapa · ' + et.dia + '</div>'
+        + '<div style="font-size:10px;color:' + ac.txt3 + '">' + cLbl + ' · ' + coLbl + '</div>'
+        + (et.assunto ? '<div style="font-size:10px;color:' + ac.txt2 + ';font-style:italic;margin-top:3px;background:rgba(255,255,255,.04);border:1px solid ' + ac.brd + ';border-radius:4px;padding:4px 8px">"' + et.assunto + '"</div>' : '')
+        + '</div></div>';
+    }).join('');
+
+    var atvBg  = ws.ativo ? 'rgba(29,158,117,.12)' : 'rgba(255,255,255,.05)';
+    var atvCol = ws.ativo ? ac.teal : ac.txt3;
+    var atvBrd = ws.ativo ? ac.teal + '40' : ac.brd;
+
+    body = '<div style="font-size:13px;font-weight:700;color:' + ac.txt1 + ';margin-bottom:3px">Revisão antes de salvar</div>'
+      + '<div style="font-size:11px;color:' + ac.txt3 + ';margin-bottom:14px">Confirme os dados antes de ativar a régua.</div>'
+      + '<div style="background:rgba(255,255,255,.03);border:1px solid ' + ac.brd + ';border-radius:8px;padding:12px 14px;margin-bottom:16px">'
+      + DRow('Nome', ws.nome)
+      + DRow('Gatilho', gatLbl + ' · D' + (ws.gatilho === 'pre' ? '-' : '+') + ws.diasGatilho)
+      + DRow('Canal', canLbl)
+      + DRow('Máx. envios', ws.maxEnvios + ' envios · intervalo ' + ws.intervalo + ' dias')
+      + DRow('Etapas', ws.etapas.length + ' etapa(s) configurada(s)')
+      + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 0">'
+      + '<span style="color:' + ac.txt3 + '">Status ao salvar</span>'
+      + '<span style="background:' + atvBg + ';color:' + atvCol + ';border:1px solid ' + atvBrd + ';border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700">' + (ws.ativo ? 'Ativa' : 'Inativa') + '</span>'
+      + '</div></div>'
+      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:' + ac.txt3 + ';margin-bottom:10px">Sequência de etapas</div>'
+      + seqH;
+
+    footer = '<button onclick="window._automWizStep(2)" style="background:none;border:1px solid ' + ac.brd + ';border-radius:20px;padding:7px 18px;color:' + ac.txt2 + ';font-size:12px;cursor:pointer;font-family:inherit">← Editar etapas</button>'
+      + '<button onclick="window._automSalvarCob()" style="background:var(--teal-btn);border:none;border-radius:20px;padding:7px 18px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✓ Salvar régua</button>';
+  }
+
+  ov.innerHTML = '<div style="background:var(--bg);border:1px solid ' + ac.brd + ';border-radius:12px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.6);display:flex;flex-direction:column">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid ' + ac.brd + ';position:sticky;top:0;background:var(--bg);z-index:1">'
+    + '<div style="font-size:15px;font-weight:700;color:' + ac.txt1 + '">' + (ws.id ? 'Editar Régua de Cobrança' : 'Nova Régua de Cobrança') + '</div>'
+    + '<button onclick="document.getElementById(\'_automOverlay\').remove()" style="background:none;border:none;color:' + ac.txt2 + ';font-size:20px;cursor:pointer;line-height:1;padding:4px">✕</button>'
+    + '</div>'
+    + stepBar
+    + '<div style="padding:20px;flex:1">' + body + '</div>'
+    + '<div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid ' + ac.brd + ';position:sticky;bottom:0;background:var(--bg)">'
+    + footer + '</div></div>';
+}
 
 // ── Helpers de UI ───────────────────────────────────────────────
 
