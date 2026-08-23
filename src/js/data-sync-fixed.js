@@ -9960,18 +9960,34 @@ function _automFieldCard(label, val, cor, badge, mono) {
 }
 
 function _automRenderCobranca(root) {
+  var aba = window._automCobAba || 'dashboard';
   var regras = window._automState.cobranca;
   var totalEnv = regras.reduce(function(s,r){ return s+r.totalEnviados; }, 0);
   var ativas = regras.filter(function(r){ return r.ativo; }).length;
 
   var totalITSM0 = regras.reduce(function(s,r){ return s+(r.disparos||[]).filter(function(d){ return d.status.indexOf('INC')>=0; }).length; }, 0);
 
-  var h = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">'
-    + '<div><div style="font-size:15px;font-weight:700;color:' + _ac.txt1 + '">Régua de Cobrança</div>'
-    + '<div style="font-size:12px;color:' + _ac.txt2 + ';margin-top:2px">Fluxo visual de disparos por vencimento — configure etapas e acompanhe o histórico</div></div>'
-    + '<button onclick="window._automAbrirModalCob()" style="background:#0B7A6E;color:#fff;border:none;border-radius:20px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ Nova Régua</button>'
+  // ── Barra de abas ────────────────────────────────────────────
+  var h = '<div style="border-bottom:1px solid ' + _ac.brd + ';margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">'
+    + '<div style="display:flex">'
+    + ['dashboard','reguas'].map(function(id) {
+        var labels = { dashboard:'Dashboard', reguas:'Réguas configuradas' };
+        var active = aba === id;
+        return '<button onclick="window._automSetCobAba(\'' + id + '\')" style="padding:9px 18px;font-size:12px;font-weight:' + (active?'700':'500') + ';color:' + (active?_ac.teal:_ac.txt2) + ';background:transparent;border:none;border-bottom:2px solid ' + (active?_ac.teal:'transparent') + ';cursor:pointer;font-family:inherit;white-space:nowrap;transition:color .15s">' + labels[id] + '</button>';
+      }).join('')
+    + '</div>'
+    + (aba === 'reguas' ? '<button onclick="window._automAbrirModalCob()" style="background:var(--teal-btn);color:#fff;border:none;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">+ Nova Régua</button>' : '')
     + '</div>';
 
+  var _statusCor = function(s) {
+    if (s === 'Entregue') return 'var(--status-green)';
+    if (s === 'Aberto')   return 'var(--status-blue)';
+    if (s === 'Bounce')   return 'var(--status-red)';
+    if (s.indexOf('INC') === 0 || s.indexOf('#INC') === 0) return _ac.blue;
+    return _ac.txt3;
+  };
+
+  if (aba === 'dashboard') {
   h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">'
     + _automKpiMini('Réguas ativas', ativas + '/' + regras.length, _ac.teal)
     + _automKpiMini('Alertas enviados', totalEnv.toString(), _ac.blue)
@@ -9984,14 +10000,6 @@ function _automRenderCobranca(root) {
     root.innerHTML = h;
     return;
   }
-
-  var _statusCor = function(s) {
-    if (s === 'Entregue') return 'var(--status-green)';
-    if (s === 'Aberto')   return 'var(--status-blue)';
-    if (s === 'Bounce')   return 'var(--status-red)';
-    if (s.indexOf('INC') === 0 || s.indexOf('#INC') === 0) return _ac.blue;
-    return _ac.txt3;
-  };
 
   // ── Analytics — linha 1: disparos + funil ─────────────────────────────────
   var totalDisp = regras.reduce(function(s,r){ return s+(r.disparos||[]).length; }, 0);
@@ -10150,10 +10158,16 @@ function _automRenderCobranca(root) {
     + '</div></div></div>';
 
   h += '</div>'; // grid linha 2
+  } else {
+  // ── Aba Réguas ───────────────────────────────────────────────
+  if (!regras.length) {
+    h += '<div style="text-align:center;padding:48px;color:' + _ac.txt3 + ';font-size:13px">Nenhuma régua configurada. Clique em "+ Nova Régua" para começar.</div>';
+    root.innerHTML = h;
+    return;
+  }
 
-  // ── Réguas configuradas (colapsáveis) ──────────────────────────────────────
   h += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:' + _ac.txt3 + ';display:flex;align-items:center;gap:8px;margin-bottom:12px">'
-    + 'Réguas configuradas'
+    + regras.length + (regras.length === 1 ? ' régua' : ' réguas') + ' · ' + ativas + ' ativas'
     + '<div style="flex:1;height:1px;background:var(--border)"></div>'
     + '</div>';
 
@@ -10290,8 +10304,16 @@ function _automRenderCobranca(root) {
   });
 
   h += '</div>'; // lista réguas
+  } // end else (aba réguas)
   root.innerHTML = h;
 }
+
+window._automCobAba = 'dashboard';
+window._automSetCobAba = function(id) {
+  window._automCobAba = id;
+  var content = document.getElementById('autom-content');
+  if (content) _automRenderCobranca(content);
+};
 
 window._automAuditState = {};
 window._automCollapseState = {};
