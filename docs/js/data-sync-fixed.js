@@ -6617,7 +6617,7 @@ window.renderizarTabelaPagamentos = function() {
     var detBtn = '<button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:rgba(var(--blue-rgb),.08);border:1px solid rgba(var(--blue-rgb),.2);border-radius:4px;color:'+PALETTE.blue+';cursor:pointer;font-size:10px;font-weight:700;padding:3px 10px">Ver</button>';
     var isGlosado = r.statusCredito === 'glosado';
     var act = isGlosado
-      ? '<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:3px;background:rgba(220,38,38,.08);color:rgb(220,38,38);border:1px solid rgba(220,38,38,.25)">Glosado</span>'
+      ? '<span style="font-size:11px;color:var(--txt3)">Glosado</span>'
       : !r.pago
         ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="window.abrirGuiaDARF('+idx+')">Gerar Guia</button>'
         : '<span style="font-size:11px;color:var(--txt3)">Concluído</span>';
