@@ -5957,14 +5957,15 @@ function nfRenderLista(){
         var _dpP=(nf.data||'').split('-');
         var _diaP=Math.min((parseInt(_dpP[2]||'1',10)+3),28);
         dataPagamento=(_dpP[1]||'01')+'/'+String(_diaP).padStart(2,'0')+'/'+(_dpP[0]||'2026')+' 09:00';
-        // inconsistências de dados (não comprovante) com baixa probabilidade
-        if(_q<3){statusRegistro='inconsistencia';tipoInconsistencia=_incTiposEnt[idx%3];}
+        // crédito já apropriado/utilizado: sem inconsistência (comprovante validado neste estágio)
       } else {
-        // Fornecedor pagou diretamente — flags temporais por hash
-        if(_q<5){statusRegistro='inconsistencia';tipoInconsistencia=_incTiposEnt[idx%_incTiposEnt.length];}
-        else if(_q<13)statusRegistro='em_risco';
-        else if(_q<18&&statusCredito==='nao_apropriado')statusRegistro='a_prescrever';
-        else if(_q<23)statusRegistro='vencido';
+        // Fornecedor pagou diretamente — flags temporais apenas para nao_apropriado
+        if(statusCredito==='nao_apropriado'){
+          if(_q<5){statusRegistro='inconsistencia';tipoInconsistencia=_incTiposEnt[idx%_incTiposEnt.length];}
+          else if(_q<13)statusRegistro='em_risco';
+          else if(_q<18)statusRegistro='a_prescrever';
+          else if(_q<23)statusRegistro='vencido';
+        }
       }
 
       // Registro NF de Entrada
@@ -9815,7 +9816,7 @@ if (window.Chart) {
   Chart.defaults.font.size = 11;
 }
 </script>
-<script src="js/data-sync-fixed.js?v=83"></script>
+<script src="js/data-sync-fixed.js?v=84"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=6"></script>
 <script src="js/charts.js"></script>

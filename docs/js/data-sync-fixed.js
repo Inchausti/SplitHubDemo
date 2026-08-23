@@ -3328,7 +3328,8 @@ window._sincronizarInconsistencias = function() {
   var nova = [];
   var seq = 1;
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
-    var rfsInc = (nf.registrosFiscais || []).filter(function(rf) { return (rf.statusRegistro || rf.status) === 'inconsistencia'; });
+    var _scSupr = function(sc){ return sc === 'apropriado' || sc === 'utilizado' || sc === 'glosado'; };
+    var rfsInc = (nf.registrosFiscais || []).filter(function(rf) { return (rf.statusRegistro || rf.status) === 'inconsistencia' && !_scSupr(rf.statusCredito || ''); });
     if (!rfsInc.length) return;
     var nfLabel = (nf.tipoDF || 'NF-e') + ' ' + nf.numero;
     var parts   = (nf.data || '').split('-');
@@ -3378,6 +3379,7 @@ window.renderizarRFsInconsistencias = function() {
 
   // Usa _concBuildLista para derivar capur_status e cfin_status de cada DF
   var concLista = _concBuildLista('');
+  var _rfScSuprimido = function(rf) { var sc = rf && (rf.statusCredito || rf.status || ''); return sc === 'apropriado' || sc === 'utilizado' || sc === 'glosado'; };
   concLista.forEach(function(r) {
     var nf   = r.nf;
     var seed = _concHash((nf.numero || '') + (nf.cnpj || '') + r.idx);
@@ -3389,7 +3391,7 @@ window.renderizarRFsInconsistencias = function() {
     // ── CAPUR inconsistências ──────────────────────────────────────────────
     if (r.capur_status === 'inconsistencia') {
       var afeta = seed % 3; // 0=só IBS, 1=só CBS, 2=ambos
-      if (afeta !== 1) {
+      if (afeta !== 1 && !_rfScSuprimido(r.ibsRF)) {
         var tipoCI = _capurIbsTipos[seed % _capurIbsTipos.length];
         lista.push({
           id: (r.ibsRF ? r.ibsRF.id : nf.numero) + '_CAPUR_IBS',
@@ -3402,7 +3404,7 @@ window.renderizarRFsInconsistencias = function() {
           inc: tipoCI, tipoLabel: _incLblLocal[tipoCI]
         });
       }
-      if (afeta !== 0) {
+      if (afeta !== 0 && !_rfScSuprimido(r.cbsRF)) {
         var tipoCB = _capurCbsTipos[(seed + 1) % _capurCbsTipos.length];
         lista.push({
           id: (r.cbsRF ? r.cbsRF.id : nf.numero) + '_CAPUR_CBS',
@@ -3419,7 +3421,7 @@ window.renderizarRFsInconsistencias = function() {
 
     // ── CFIN inconsistências ───────────────────────────────────────────────
     if (r.cfin_status === 'inconsistencia') {
-      if (r.ibsInc && r.ibsRF) {
+      if (r.ibsInc && r.ibsRF && !_rfScSuprimido(r.ibsRF)) {
         var tipoCFI = _cfinIbsTipos[(seed + 2) % _cfinIbsTipos.length];
         lista.push({
           id: r.ibsRF.id + '_CFIN_IBS',
@@ -3432,7 +3434,7 @@ window.renderizarRFsInconsistencias = function() {
           inc: tipoCFI, tipoLabel: _incLblLocal[tipoCFI]
         });
       }
-      if (r.cbsInc && r.cbsRF) {
+      if (r.cbsInc && r.cbsRF && !_rfScSuprimido(r.cbsRF)) {
         var tipoCFC = _cfinCbsTipos[(seed + 3) % _cfinCbsTipos.length];
         lista.push({
           id: r.cbsRF.id + '_CFIN_CBS',
@@ -3475,6 +3477,8 @@ window.renderizarRFsInconsistencias = function() {
     var dfLabel = (nf.tipoDF || 'NF-e') + ' ' + nf.numero;
     (nf.registrosFiscais || []).forEach(function(rf) {
       if ((rf.statusRegistro || rf.status) !== 'inconsistencia') return;
+      var _sc = rf.statusCredito || rf.status || '';
+      if (_sc === 'apropriado' || _sc === 'utilizado' || _sc === 'glosado') return;
       if (lista.some(function(e) { return e.rfId === rf.id; })) return;
       var incStr = rf.inconsistencia || nf.inconsistencia || 'Sem Comprovante';
       var tf = (rf.tipoFiscal || '').toLowerCase();
@@ -7291,7 +7295,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (nf.tipo !== 'entrada') return; // flags temporais só se aplicam a créditos (entrada)
         (nf.registrosFiscais || []).forEach(function(rf) {
           var sc = rf.statusCredito || rf.status || '';
-          if (sc === 'apropriado' || sc === 'utilizado' || sc === 'glosado') { rf.statusFlags = []; return; }
+          if (sc === 'apropriado' || sc === 'utilizado' || sc === 'glosado') { rf.statusFlags = []; rf.statusRegistro = null; return; }
           // Fato gerador: data de emissão do DF (nf.data), fallback para rf.data
           var dataStr = nf.data || rf.data || '';
           if (!dataStr) return;
