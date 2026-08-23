@@ -7830,7 +7830,7 @@ window._aplicarFiltroCnpjEmpresa = function() {
       if (_vid === 'creditos') { if(window.creditosRenderKPIs)creditosRenderKPIs(); if(window.creditosRenderTabela)creditosRenderTabela(); }
       if (_vid === 'inconsistencias') { try{inconsistRenderDashboard();}catch(e){} try{inconsistRenderTabela();}catch(e){} }
       if (_vid === 'fornecedores' || _vid === 'admin') { if(window.fornecedoresRenderKPIs)fornecedoresRenderKPIs(); if(window.adminFornRenderKPIs)adminFornRenderKPIs(); if(window.adminFornRenderTable)adminFornRenderTable(); }
-      if (_vid === 'dashboard') { try{buildCharts();}catch(e){} try{dashRenderCreditKPIs();}catch(e){} }
+      if (_vid === 'dashboard') { try{buildCharts();}catch(e){} try{dashRenderCreditKPIs();}catch(e){} try{window.atualizarDashboard();}catch(e){} }
     }
   } catch(e) {}
 
