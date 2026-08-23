@@ -10367,10 +10367,9 @@ window.automInit = function() {
           + '</div>';
       }).join('');
 
-      return '<div onclick="window._automSetAba(\'' + id + '\')" style="background:' + ac.card + ';border:1px solid ' + ac.brd + ';border-radius:10px;display:grid;grid-template-columns:4px auto 1fr auto auto;align-items:center;gap:0;cursor:pointer;overflow:hidden;margin-bottom:10px;transition:border-color .18s,box-shadow .18s" '
+      return '<div onclick="window._automSetAba(\'' + id + '\')" style="background:' + ac.card + ';border:1px solid ' + ac.brd + ';border-radius:10px;display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:0;cursor:pointer;overflow:hidden;margin-bottom:10px;transition:border-color .18s,box-shadow .18s" '
         + 'onmouseenter="this.style.borderColor=\'' + stripeCol + '\';this.style.boxShadow=\'0 4px 18px rgba(0,0,0,.28)\'" '
         + 'onmouseleave="this.style.borderColor=\'' + ac.brd + '\';this.style.boxShadow=\'\'">'
-        + '<div style="background:' + stripeCol + ';align-self:stretch;width:4px"></div>'
         + '<div style="width:48px;height:48px;border-radius:10px;background:' + stripeCol + '1a;display:flex;align-items:center;justify-content:center;font-size:22px;margin:16px 14px 16px 18px;flex-shrink:0">' + emoji + '</div>'
         + '<div style="padding:14px 0;min-width:0">'
         + '<div style="font-size:14px;font-weight:700;color:' + ac.txt1 + ';margin-bottom:3px">' + title + '</div>'
