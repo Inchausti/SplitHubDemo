@@ -9853,7 +9853,7 @@ function _automRenderRelatorios(root) {
       var modCor = _automModCores[r.modulo] || _ac.txt2;
       var modLbl = _automModLabels[r.modulo] || r.modulo;
       var recBadge = { diaria:'Diária', semanal:'Semanal', quinzenal:'Quinzenal', mensal:'Mensal' }[r.recorrencia] || r.recorrencia;
-      h += '<div style="background:' + _ac.card + ';border:1px solid ' + _ac.brd + ';border-left:3px solid ' + modCor + ';border-radius:8px;padding:16px 18px">'
+      h += '<div style="background:' + _ac.card + ';border:1px solid ' + _ac.brd + ';border-radius:8px;padding:16px 18px">'
         + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">'
         + '<div style="flex:1">'
         + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
@@ -10419,7 +10419,6 @@ window.automInit = function() {
     root.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px">'
       + '<button onclick="window._automVoltarSelector()" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:' + ac.txt3 + ';background:none;border:1px solid ' + ac.brd + ';border-radius:20px;padding:5px 14px;cursor:pointer;font-family:inherit;transition:color .15s" '
       + 'onmouseenter="this.style.color=\'' + ac.txt2 + '\'" onmouseleave="this.style.color=\'' + ac.txt3 + '\'">← Automações</button>'
-      + '<div style="width:4px;height:28px;border-radius:2px;background:' + cfg.col + ';flex-shrink:0"></div>'
       + '<div style="font-size:16px;font-weight:800;color:' + ac.txt1 + '">' + cfg.emoji + ' ' + cfg.title + '</div>'
       + '</div>'
       + '<div id="autom-content"></div>';
