@@ -1651,8 +1651,8 @@ window.renderizarForecastAproveitamento = function(_retry) {
   window._fctAprovChart = new Chart(canvas, {
     type: 'bar',
     data: { labels: labels, datasets: [
-      { label:'Apropr. realizado', data:apropFull, backgroundColor:'rgba(var(--teal-rgb),.75)', borderWidth:0, yAxisID:'y', order:2 },
-      { label:'Apropr. forecast', data:apropFcFull, backgroundColor:'rgba(var(--teal-rgb),.3)', borderColor:'rgba(var(--teal-rgb),.5)', borderWidth:1, yAxisID:'y', order:2 },
+      { label:'Apropr. realizado', data:apropFull, backgroundColor:'rgba(29,158,117,.75)', borderWidth:0, yAxisID:'y', order:2 },
+      { label:'Apropr. forecast', data:apropFcFull, backgroundColor:'rgba(29,158,117,.3)', borderColor:'rgba(29,158,117,.5)', borderWidth:1, yAxisID:'y', order:2 },
       { label:'Taxa apropr.', data:taxaRealFull, type:'line', borderColor:PALETTE.teal, backgroundColor:'transparent', borderWidth:2, pointRadius:3, yAxisID:'y2', order:1, tension:.3 },
       { label:'Taxa forecast', data:taxaFcVis, type:'line', borderColor:PALETTE.teal, backgroundColor:'transparent', borderWidth:2, borderDash:[4,3], pointRadius:3, yAxisID:'y2', order:1, tension:.3 }
     ]},
@@ -6244,8 +6244,8 @@ window._renderFcChart = function(canvas, chartStore, opts) {
   window[chartStore] = new Chart(canvas.getContext('2d'), {
     type:'bar', plugins:[forecastPlugin],
     data:{ labels:o.visLabels, datasets:[
-      {label:'Crédito (realizado)',data:o.credRealVis,backgroundColor:'rgba(var(--teal-rgb),.75)',borderRadius:4,borderSkipped:false,borderWidth:0,stack:'f',order:2},
-      {label:'Crédito (forecast)', data:o.credFcVis,  backgroundColor:'rgba(var(--teal-rgb),.3)', borderRadius:4,borderSkipped:false,borderColor:'rgba(var(--teal-rgb),.6)',borderWidth:1.5,stack:'f',order:2},
+      {label:'Crédito (realizado)',data:o.credRealVis,backgroundColor:'rgba(29,158,117,.75)',borderRadius:4,borderSkipped:false,borderWidth:0,stack:'f',order:2},
+      {label:'Crédito (forecast)', data:o.credFcVis,  backgroundColor:'rgba(29,158,117,.3)', borderRadius:4,borderSkipped:false,borderColor:'rgba(29,158,117,.6)',borderWidth:1.5,stack:'f',order:2},
       {label:'Débito (realizado)', data:o.debRealVis, backgroundColor:'rgba(220,38,38,.65)', borderRadius:4,borderSkipped:false,borderWidth:0,stack:'f',order:2},
       {label:'Débito (forecast)',  data:o.debFcVis,   backgroundColor:'rgba(220,38,38,.25)', borderRadius:4,borderSkipped:false,borderColor:'rgba(220,38,38,.5)',borderWidth:1.5,stack:'f',order:2},
       {label:'Saldo acumulado',data:o.saldoRealVis,type:'line',borderColor:'#185fa5',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#185fa5',tension:0.35,fill:false,order:1,yAxisID:'ySaldo'},
