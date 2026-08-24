@@ -1498,7 +1498,7 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   set('cred-prescrever-sub',pct(aPrescrever, totalCred) + ' — prazo de 5 anos próximo');
   // Extintos
   set('cred-extinto',       fmt(extinto));
-  set('cred-extinto-sub',   extintoCount > 0 ? 'Prazo de 5 anos expirado · ' + extintoCount + ' RFs · perda definitiva' : 'Nenhum crédito extinto no período');
+  set('cred-extinto-sub',   extintoCount > 0 ? 'Prazo de 5 anos expirado · ' + extintoCount + ' RFs · perda definitiva' : 'Nenhum crédito prescrito no período');
   set('cred-extinto-count', String(extintoCount));
   set('cred-extinto-pct',   pct(extinto, totalCred));
   if (extintoUlt > 0) {
@@ -1510,7 +1510,7 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   }
   // Vencidos não extintos
   set('cred-venc-nao-ext',     fmt(vencNaoExt));
-  set('cred-venc-nao-ext-sub', vencNaoExt > 0 ? pct(vencNaoExt, totalCred) + ' do total · recuperáveis · ação necessária' : 'Sem créditos vencidos não extintos');
+  set('cred-venc-nao-ext-sub', vencNaoExt > 0 ? pct(vencNaoExt, totalCred) + ' do total · recuperáveis · ação necessária' : 'Sem créditos vencidos não prescritos');
   set('cred-venc-forn',        fmt(vencForn));
   set('cred-venc-forn-pct',    vencNaoExt > 0 ? pct(vencForn, vencNaoExt) + ' dos vencidos' : '—');
   set('cred-venc-rad',         fmt(vencRad));
