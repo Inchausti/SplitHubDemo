@@ -400,10 +400,10 @@ window.nfFecharDetalhes = function() {
 // Contratos por CNPJ dos fornecedores reais das NFs geradas
 var _contratosData = [
   {id:'CT-0001',cnpj:'14.382.976/0001-09',inicio:'2025-01-01',fim:'2027-12-31',rad:false,prazo:'30'},
-  {id:'CT-0002',cnpj:'28.447.821/0001-35',inicio:'2025-01-01',fim:'2027-12-31',rad:true, prazo:'60'},
-  {id:'CT-0003',cnpj:'52.039.781/0001-74',inicio:'2025-01-01',fim:'2027-12-31',rad:false,prazo:'90'},
-  {id:'CT-0004',cnpj:'73.612.590/0001-41',inicio:'2025-01-01',fim:'2027-12-31',rad:true, prazo:'30'},
-  {id:'CT-0005',cnpj:'19.854.203/0001-67',inicio:'2025-01-01',fim:'2027-12-31',rad:false,prazo:'60'},
+  {id:'CT-0002',cnpj:'28.447.821/0001-35',inicio:'2025-01-01',fim:'2027-12-31',rad:true, prazo:'90'},
+  {id:'CT-0003',cnpj:'52.039.781/0001-74',inicio:'2025-01-01',fim:'2027-12-31',rad:false,prazo:'120'},
+  {id:'CT-0004',cnpj:'73.612.590/0001-41',inicio:'2025-01-01',fim:'2027-12-31',rad:true, prazo:'90'},
+  {id:'CT-0005',cnpj:'19.854.203/0001-67',inicio:'2025-01-01',fim:'2027-12-31',rad:false,prazo:'90'},
   {id:'CT-0006',cnpj:'38.291.045/0001-52',inicio:'2025-01-01',fim:'2027-12-31',rad:false,prazo:'45'},
   {id:'CT-0007',cnpj:'61.874.320/0001-88',inicio:'2025-01-01',fim:'2027-12-31',rad:true, prazo:'90'},
   {id:'CT-0008',cnpj:'47.193.825/0001-16',inicio:'2025-01-01',fim:'2027-12-31',rad:false,prazo:'60'},
@@ -2529,16 +2529,21 @@ window.atualizarInteligencia = function() {
       return [30, 45, 60, 90, 120][h % 5];
     }
 
+    // Forçar prazo alto (>60d) nos 4 fornecedores com pior score, garantindo presença no quadrante CRÍTICO
+    var _piores = scoreLista.slice().sort(function(a,b){return a.score-b.score;}).slice(0,4);
+    var _prazoCritico = { };
+    _piores.forEach(function(r,i){ _prazoCritico[r.nome] = [90,100,110,120][i]; });
+
     // Montar pontos a partir de TODOS os fornecedores do scoreLista
     var pontos = scoreLista.map(function(r) {
       var ent = r.nome;
-      var prazo = fornPrazo[ent] || _hashPrazo(ent);
+      var prazo = _prazoCritico[ent] || fornPrazo[ent] || _hashPrazo(ent);
       return { nome: ent, prazo: prazo, score: r.score, vol: r.vol || 0 };
     });
 
     if (!pontos.length) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--txt3);font-size:12px">Sem fornecedores no período</div>'; return; }
 
-    // SVG scatter — X = Score (0→100), Y = Prazo (dias, invertido: maior = zona crítica inferior)
+    // SVG scatter — X = Score (0→100), Y = Prazo (dias, crescente: menor = baixo, maior = cima)
     var H = 280, padT = 22, padB = 40, padL = 46, padR = 36;
     var W = (el.parentElement && el.parentElement.offsetWidth > 100 ? el.parentElement.offsetWidth : 560);
     var plotW = W - padL - padR, plotH = H - padT - padB;
@@ -2549,7 +2554,7 @@ window.atualizarInteligencia = function() {
     var yMax = Math.min(180, Math.max.apply(null, allPrazos) + 15);
 
     function xp(score) { return padL + (score - xMin) / (xMax - xMin) * plotW; }
-    function ypp(prazo) { return padT + ((prazo - yMin) / (yMax - yMin)) * plotH; }
+    function ypp(prazo) { return (H - padB) - ((prazo - yMin) / (yMax - yMin)) * plotH; }
 
     var maxVol = Math.max.apply(null, pontos.map(function(p) { return p.vol; })) || 1;
     function rDot(vol) { return Math.max(5, Math.round(4 + Math.sqrt(vol / maxVol) * 9)); }
@@ -2591,22 +2596,22 @@ window.atualizarInteligencia = function() {
        + '<filter id="glow-g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
        + '</defs>';
 
-    // Quadrante crítico: score < 70 e prazo > 60
+    // Quadrante crítico: score < 70 e prazo > 60 — agora na parte SUPERIOR (eixo crescente: maior prazo = cima)
     if (yMax > 60 && xMin < 70) {
       var qCritX1 = padL, qCritX2 = xp(70);
-      var qCritY1 = ypp(60), qCritY2 = H - padB;
+      var qCritY1 = padT, qCritY2 = ypp(60);
       if (qCritY1 < qCritY2 && qCritX1 < qCritX2) {
         s += '<rect x="' + qCritX1 + '" y="' + qCritY1 + '" width="' + (qCritX2 - qCritX1) + '" height="' + (qCritY2 - qCritY1) + '" fill="rgba(var(--status-red-rgb),0.08)"/>';
-        s += '<text x="' + (qCritX1 + 8) + '" y="' + (qCritY2 - 8) + '" fill="var(--red)" font-size="10" font-weight="700" font-family="Inter,system-ui,sans-serif" opacity="0.75">⚠ CRÍTICO</text>';
+        s += '<text x="' + (qCritX1 + 8) + '" y="' + (qCritY1 + 16) + '" fill="var(--red)" font-size="10" font-weight="700" font-family="Inter,system-ui,sans-serif" opacity="0.75">⚠ CRÍTICO</text>';
       }
     }
-    // Quadrante saudável: score ≥ 70 e prazo ≤ 60
+    // Quadrante saudável: score ≥ 70 e prazo ≤ 60 — agora na parte INFERIOR (menor prazo = baixo)
     if (yMin < 60 && xMax > 70) {
       var qSaudX1 = xp(70), qSaudX2 = W - padR;
-      var qSaudY1 = padT, qSaudY2 = ypp(Math.min(60, yMax));
+      var qSaudY1 = ypp(Math.max(60, yMin)), qSaudY2 = H - padB;
       if (qSaudY1 < qSaudY2 && qSaudX1 < qSaudX2) {
         s += '<rect x="' + qSaudX1 + '" y="' + qSaudY1 + '" width="' + (qSaudX2 - qSaudX1) + '" height="' + (qSaudY2 - qSaudY1) + '" fill="rgba(var(--teal-rgb),0.07)"/>';
-        s += '<text x="' + (qSaudX2 - 8) + '" y="' + (qSaudY1 + 16) + '" text-anchor="end" fill="var(--green)" font-size="10" font-weight="700" font-family="Inter,system-ui,sans-serif" opacity="0.75">✓ SAUDÁVEL</text>';
+        s += '<text x="' + (qSaudX2 - 8) + '" y="' + (qSaudY2 - 8) + '" text-anchor="end" fill="var(--green)" font-size="10" font-weight="700" font-family="Inter,system-ui,sans-serif" opacity="0.75">✓ SAUDÁVEL</text>';
       }
     }
 
@@ -2642,7 +2647,7 @@ window.atualizarInteligencia = function() {
     s += '<line x1="' + padL + '" y1="' + (H - padB) + '" x2="' + (W - padR) + '" y2="' + (H - padB) + '" stroke="rgba(128,128,128,0.2)" stroke-width="1"/>';
     s += '<line x1="' + padL + '" y1="' + padT + '" x2="' + padL + '" y2="' + (H - padB) + '" stroke="rgba(128,128,128,0.2)" stroke-width="1"/>';
     s += '<text x="' + (padL + plotW / 2) + '" y="' + (H - 6) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">Score de Risco →</text>';
-    s += '<text transform="rotate(-90,' + (padL - 40) + ',' + (padT + plotH / 2) + ')" x="' + (padL - 40) + '" y="' + (padT + plotH / 2 + 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">Prazo (dias) ↓</text>';
+    s += '<text transform="rotate(-90,' + (padL - 40) + ',' + (padT + plotH / 2) + ')" x="' + (padL - 40) + '" y="' + (padT + plotH / 2 + 4) + '" text-anchor="middle" fill="var(--txt3)" font-size="10" font-family="Inter,system-ui,sans-serif">↑ Prazo (dias)</text>';
 
     // Pontos: maiores atrás
     var fmtV2 = function(v) { return v >= 1e6 ? 'R$ ' + (v/1e6).toFixed(1).replace('.',',') + 'M' : v >= 1e3 ? 'R$ ' + Math.round(v/1e3) + 'K' : 'R$ 0'; };
