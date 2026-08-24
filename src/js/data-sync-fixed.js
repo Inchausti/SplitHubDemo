@@ -1643,9 +1643,9 @@ window.renderizarForecastAproveitamento = function(_retry) {
     if (!mesesFc.length) return;
     var ctx2=chart.ctx, xs=chart.scales.x, ys=chart.scales.y;
     var xSplit = xs.getPixelForValue(splitIdx + 0.5);
-    ctx2.save(); ctx2.fillStyle = isDark?'rgba(96,165,250,.05)':'rgba(var(--blue-rgb),.04)';
+    ctx2.save(); ctx2.fillStyle = isDark?'rgba(96,165,250,.05)':'rgba(24,95,165,.04)';
     ctx2.fillRect(xSplit, ys.top, xs.right-xSplit, ys.bottom-ys.top);
-    ctx2.strokeStyle = isDark?'rgba(96,165,250,.3)':'rgba(var(--blue-rgb),.22)'; ctx2.setLineDash([4,4]); ctx2.lineWidth=1;
+    ctx2.strokeStyle = isDark?'rgba(96,165,250,.3)':'rgba(24,95,165,.22)'; ctx2.setLineDash([4,4]); ctx2.lineWidth=1;
     ctx2.beginPath(); ctx2.moveTo(xSplit,ys.top); ctx2.lineTo(xSplit,ys.bottom); ctx2.stroke();
     ctx2.setLineDash([]); ctx2.restore();
   }};
@@ -6234,9 +6234,9 @@ window._renderFcChart = function(canvas, chartStore, opts) {
       if(o.visNFc===0||o.visNReal===0)return;
       var ctx2=chart.ctx,xs=chart.scales.x,ys=chart.scales.y;
       var xSplit=xs.getPixelForValue(o.visNReal-0.5);
-      ctx2.save();ctx2.fillStyle=isDark?'rgba(96,165,250,.05)':'rgba(var(--blue-rgb),.04)';
+      ctx2.save();ctx2.fillStyle=isDark?'rgba(96,165,250,.05)':'rgba(24,95,165,.04)';
       ctx2.fillRect(xSplit,ys.top,xs.right-xSplit,ys.bottom-ys.top);
-      ctx2.strokeStyle=isDark?'rgba(96,165,250,.3)':'rgba(var(--blue-rgb),.22)';
+      ctx2.strokeStyle=isDark?'rgba(96,165,250,.3)':'rgba(24,95,165,.22)';
       ctx2.setLineDash([4,4]);ctx2.lineWidth=1;
       ctx2.beginPath();ctx2.moveTo(xSplit,ys.top);ctx2.lineTo(xSplit,ys.bottom);ctx2.stroke();
       ctx2.setLineDash([]);ctx2.restore();
