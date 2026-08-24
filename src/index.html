@@ -5516,7 +5516,8 @@ function contratosAbrirDetalhe(ctId){
     +'</div>'
     +'<div style="padding:16px 24px;display:flex;gap:10px;border-top:1px solid '+c.brd+';margin-top:8px">'
     +(st==='ativo'?'<button onclick="contratosFecharDetalhe()" style="flex:1;padding:10px;background:none;border:1px solid '+c.red+';color:'+c.red+';border-radius:8px;cursor:pointer;font-size:13px;font-weight:500">Encerrar contrato</button>':'')
-    +'<button onclick="contratosFecharDetalhe()" style="flex:1;padding:10px;background:'+c.teal+';border:none;color:var(--on-primary-dark);border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">Fechar</button>'
+    +'<button onclick="contratosFecharDetalhe();contratosAbrirEditar(\''+ct.id+'\')" style="flex:1;padding:10px;background:none;border:1px solid '+c.brd+';color:'+c.txt1+';border-radius:8px;cursor:pointer;font-size:13px;font-weight:500">✏ Editar</button>'
+    +'<button onclick="contratosFecharDetalhe()" style="flex:1;padding:10px;background:'+c.teal+';border:none;color:#fff;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">Fechar</button>'
     +'</div>'
     +'</div></div>';
   var el=document.createElement('div');
@@ -5527,6 +5528,59 @@ function contratosAbrirDetalhe(ctId){
 function contratosFecharDetalhe(){
   var el=document.getElementById('ctr-detalhe-wrapper');
   if(el)el.remove();
+}
+function contratosAbrirEditar(ctId){
+  var ct=contratos.find(function(c){return c.id===ctId;});
+  if(!ct)return;
+  var f=fornecedores.find(function(x){return x.cnpj===ct.cnpj;});
+  var _cs=getComputedStyle(document.documentElement),_cv=function(n){return _cs.getPropertyValue(n).trim()};
+  var c={bg:_cv('--bg'),card:_cv('--card'),brd:_cv('--border'),txt1:_cv('--txt1'),txt2:_cv('--txt2'),txt3:_cv('--txt3'),teal:_cv('--teal'),blue:_cv('--blue'),red:_cv('--red')};
+  var IS='width:100%;background:'+c.bg+';border:1px solid '+c.brd+';border-radius:6px;padding:9px 12px;color:'+c.txt1+';font-size:13px;font-family:inherit;box-sizing:border-box;outline:none';
+  function fld(lbl,inp){return '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:600;color:'+c.txt2+';margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">'+lbl+'</label>'+inp+'</div>';}
+  var prazoOpts=[30,45,60,90,120].map(function(p){return '<option value="'+p+'"'+(+ct.prazo===p?' selected':'')+'>'+p+' dias</option>';}).join('');
+  var modeloOpts=[['split','Split Payment'],['adquirente','RAD — Adquirente']].map(function(m){return '<option value="'+m[0]+'"'+(ct.modelo===m[0]||(m[0]==='adquirente'&&ct.rad&&!ct.modelo)?'  selected':'')+'>'+ m[1]+'</option>';}).join('');
+  var html='<div id="ctr-edit-overlay" onclick="if(event.target===this)document.getElementById(\'ctr-edit-overlay\').remove()" style="position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px">'
+    +'<div style="background:'+c.card+';border:1px solid '+c.brd+';border-radius:12px;width:480px;max-width:94vw;max-height:88vh;overflow-y:auto">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid '+c.brd+'">'
+    +'<div><div style="color:'+c.blue+';font-size:11px;font-family:var(--font-mono);margin-bottom:3px">'+ct.id+'</div>'
+    +'<div style="color:'+c.txt1+';font-size:16px;font-weight:600">Editar Contrato</div></div>'
+    +'<button onclick="document.getElementById(\'ctr-edit-overlay\').remove()" style="background:none;border:none;color:'+c.txt2+';font-size:22px;cursor:pointer;padding:4px">✕</button></div>'
+    +'<div style="padding:20px 24px">'
+    +'<div style="padding:10px 14px;background:rgba(0,0,0,.06);border-radius:6px;margin-bottom:18px;font-size:12px;color:'+c.txt2+'">'
+    +'Fornecedor: <strong style="color:'+c.txt1+'">'+(f?f.nome:ct.cnpj)+'</strong>'
+    +'&nbsp;·&nbsp;<span style="font-family:var(--font-mono)">'+ct.cnpj+'</span></div>'
+    +fld('Início da vigência','<input id="cedit-inicio" value="'+ct.inicio+'" placeholder="DD/MM/AAAA" style="'+IS+'">')
+    +fld('Fim da vigência','<input id="cedit-fim" value="'+ct.fim+'" placeholder="DD/MM/AAAA" style="'+IS+'">')
+    +fld('Prazo de pagamento','<select id="cedit-prazo" style="'+IS+'">'+prazoOpts+'</select>')
+    +fld('Modelo de pagamento','<select id="cedit-modelo" style="'+IS+'">'+modeloOpts+'</select>')
+    +'<div id="cedit-msg" style="font-size:12px;min-height:18px;margin-bottom:4px"></div>'
+    +'</div>'
+    +'<div style="display:flex;gap:10px;padding:16px 24px;border-top:1px solid '+c.brd+'">'
+    +'<button onclick="document.getElementById(\'ctr-edit-overlay\').remove()" style="flex:1;padding:10px;background:none;border:1px solid '+c.brd+';color:'+c.txt2+';border-radius:8px;cursor:pointer;font-size:13px">Cancelar</button>'
+    +'<button onclick="contratosSalvarEdicao(\''+ct.id+'\')" style="flex:1;padding:10px;background:'+c.teal+';border:none;color:#fff;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">Salvar alterações</button>'
+    +'</div>'
+    +'</div></div>';
+  var wrap=document.createElement('div');wrap.innerHTML=html;document.body.appendChild(wrap.firstChild);
+}
+function contratosSalvarEdicao(ctId){
+  var ct=contratos.find(function(c){return c.id===ctId;});
+  if(!ct)return;
+  var msgEl=document.getElementById('cedit-msg');
+  var setMsg=function(txt,cor){if(msgEl){msgEl.textContent=txt;msgEl.style.color=cor;}};
+  var iniStr=(document.getElementById('cedit-inicio')||{}).value||'';
+  var fimStr=(document.getElementById('cedit-fim')||{}).value||'';
+  var prazo=(document.getElementById('cedit-prazo')||{}).value||ct.prazo;
+  var modelo=(document.getElementById('cedit-modelo')||{}).value||ct.modelo;
+  var iniD=parseDataBR(iniStr),fimD=parseDataBR(fimStr);
+  if(!iniD||!fimD){setMsg('Informe as datas no formato DD/MM/AAAA.','var(--red)');return;}
+  if(fimD<=iniD){setMsg('A data de fim deve ser posterior à de início.','var(--red)');return;}
+  ct.inicio=iniStr;ct.fim=fimStr;ct.prazo=prazo;ct.modelo=modelo;ct.rad=(modelo==='adquirente');
+  // Sincronizar _contratosData pelo CNPJ
+  var cd=(_contratosData||[]).find(function(x){return x.cnpj===ct.cnpj;});
+  if(cd){cd.prazo=prazo;cd.rad=(modelo==='adquirente');}
+  contratosRenderTabela();contratosRenderKPIs();
+  setMsg('Contrato salvo com sucesso.','var(--green)');
+  setTimeout(function(){var ov=document.getElementById('ctr-edit-overlay');if(ov)ov.remove();},800);
 }
 
 function rfAbrirDetalhe(rfId){

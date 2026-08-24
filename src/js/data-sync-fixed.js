@@ -1434,9 +1434,10 @@ window.atualizarKPIsCreditos = function(listaRFs) {
       var venc = _vencKPI(r.dataNF);
       if (venc) {
         var _mv = venc.getFullYear() * 100 + (venc.getMonth() + 1);
-        if (_mv === _mesAtual) naoApropCP += v;
-        else if (_mv > _mesAtual) naoApropLP += v;
-        // _mv < _mesAtual: vencido, não contabiliza em CP nem LP
+        if (_mv <= _mesAtual) naoApropCP += v; // vencido ou vence este mês → CP (urgente)
+        else naoApropLP += v;                  // vencimento futuro → LP
+      } else {
+        naoApropCP += v; // sem data → urgente (CP)
       }
     }
     else if (sc === 'glosado')         { glosado  += v; }
@@ -1478,9 +1479,9 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   set('cred-nao-aprop',     fmt(naoAprop));
   set('cred-nao-aprop-sub', pct(naoAprop, totalCred) + ' do total · aguardando apropriação');
   set('cred-nao-aprop-cp',  fmt(naoApropCP));
-  set('cred-nao-aprop-cp-sub', 'Vencimento em até 30 dias');
+  set('cred-nao-aprop-cp-sub', pct(naoApropCP, naoAprop) + ' do A Apropriar · vencido ou vence este mês');
   set('cred-nao-aprop-mp',  fmt(naoApropLP));
-  set('cred-nao-aprop-mp-sub', 'Vencimento superior a 30 dias');
+  set('cred-nao-aprop-mp-sub', pct(naoApropLP, naoAprop) + ' do A Apropriar · vencimento futuro');
   set('cred-util',          fmt(util));
   set('cred-util-sub',      aprop > 0 ? pct(util, aprop) + ' dos apropriados — abateram débito' : '—');
   set('cred-aguard',        fmt(naoAprop));
