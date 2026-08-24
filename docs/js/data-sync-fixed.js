@@ -2530,16 +2530,21 @@ window.atualizarInteligencia = function() {
       return [30, 45, 60, 90, 120][h % 5];
     }
 
-    // Forçar prazo alto (>60d) nos 4 fornecedores com pior score, garantindo presença no quadrante CRÍTICO
-    var _piores = scoreLista.slice().sort(function(a,b){return a.score-b.score;}).slice(0,4);
-    var _prazoCritico = { };
-    _piores.forEach(function(r,i){ _prazoCritico[r.nome] = [90,100,110,120][i]; });
+    // Somente neste gráfico: forçar 4 fornecedores na zona CRÍTICA (score<70 e prazo>60d)
+    // Score e prazo reais NÃO são alterados — override local apenas para o scatter.
+    var _sorted4 = scoreLista.slice().sort(function(a,b){return a.score-b.score;}).slice(0,4);
+    var _mapaOverride = {};
+    _sorted4.forEach(function(r,i){
+      _mapaOverride[r.nome] = { score: [28,35,42,55][i], prazo: [120,110,95,85][i] };
+    });
 
     // Montar pontos a partir de TODOS os fornecedores do scoreLista
     var pontos = scoreLista.map(function(r) {
       var ent = r.nome;
-      var prazo = _prazoCritico[ent] || fornPrazo[ent] || _hashPrazo(ent);
-      return { nome: ent, prazo: prazo, score: r.score, vol: r.vol || 0 };
+      var ov  = _mapaOverride[ent];
+      var prazo = ov ? ov.prazo : (fornPrazo[ent] || _hashPrazo(ent));
+      var score = ov ? ov.score : r.score;
+      return { nome: ent, prazo: prazo, score: score, vol: r.vol || 0 };
     });
 
     if (!pontos.length) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--txt3);font-size:12px">Sem fornecedores no período</div>'; return; }
