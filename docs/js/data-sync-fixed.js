@@ -10577,7 +10577,9 @@ window._automAbrirModalCob = function(id) {
     canal: r ? r.canal : 'email',
     ativo: r ? r.ativo : true,
     etapas: r && r.etapas && r.etapas.length
-      ? JSON.parse(JSON.stringify(r.etapas))
+      ? JSON.parse(JSON.stringify(r.etapas)).map(function(et) {
+          return { dia: et.dia || 'D-0', canal: et.canal || 'email', condicao: et.condicao || 'sempre', assunto: et.assunto || et.sub || '' };
+        })
       : [{ dia:'D-7', canal:'email', condicao:'sempre', assunto:'Imposto vence em {{dias_vencimento}} dias — {{fornecedor}}' }],
     expanded: [0]
   };
@@ -10748,7 +10750,7 @@ function _automWizRender() {
           + _automCampo('Canal', '<select id="wet-canal-' + idx + '" style="' + IS + ';font-size:11px">' + cOs + '</select>')
           + _automCampo('Condição', '<select id="wet-cond-' + idx + '" style="' + IS + ';font-size:11px">' + oOs + '</select>')
           + '</div>'
-          + _automCampo('Assunto', '<input id="wet-ass-' + idx + '" value="' + et.assunto.replace(/"/g,'&quot;') + '" style="' + IS + ';font-size:11px" placeholder="Assunto do e-mail ou título do ticket">')
+          + _automCampo('Assunto', '<input id="wet-ass-' + idx + '" value="' + (et.assunto || '').replace(/"/g,'&quot;') + '" style="' + IS + ';font-size:11px" placeholder="Assunto do e-mail ou título do ticket">')
           + '</div>'
         : '';
 
