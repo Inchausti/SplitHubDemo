@@ -6283,27 +6283,31 @@ window._renderFcChart = function(canvas, chartStore, opts) {
   });
 };
 
-// Mesma fórmula do Analytics (renderizarFCT): média mensal de dBruto/faturamento × 100
-// filtrada pelo período selecionado no Hero
+// Mesma fórmula do Analytics (renderizarFCT linha 6057):
+// média mensal de max(0, dBruto - cAprop) / faturamento × 100, filtrada pelo período selecionado
 window.computeAliqEfetivaKPIs = function() {
   var mesesSel = window._dashMesesSelecionados || [];
   var byMonth = {};
   var _nfFatContado = {};
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
-    if (nf.tipo !== 'saida') return;
     var mes = (nf.data || '').substring(0, 7);
     if (!mes) return;
     if (mesesSel.length && mesesSel.indexOf(mes) < 0) return;
-    if (!byMonth[mes]) byMonth[mes] = { dBruto: 0, faturamento: 0 };
-    if (!_nfFatContado[nf.id || mes + nf.entidade]) {
+    if (!byMonth[mes]) byMonth[mes] = { cAprop: 0, dBruto: 0, faturamento: 0 };
+    if (nf.tipo === 'saida' && !_nfFatContado[nf.id || mes + nf.entidade]) {
       _nfFatContado[nf.id || mes + nf.entidade] = true;
       byMonth[mes].faturamento += nf.valorTotal || 0;
     }
-    (nf.registrosFiscais || []).forEach(function(rf) { byMonth[mes].dBruto += rf.valor || 0; });
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      var sc = rf.statusCredito || rf.status || '';
+      if (nf.tipo === 'entrada' && (sc === 'apropriado' || sc === 'utilizado')) byMonth[mes].cAprop += rf.valor || 0;
+      if (nf.tipo === 'saida') byMonth[mes].dBruto += rf.valor || 0;
+    });
   });
   var dAliq = Object.keys(byMonth).sort().map(function(m) {
     var d = byMonth[m];
-    return d.faturamento > 0 ? +(d.dBruto / d.faturamento * 100).toFixed(2) : 0;
+    if (!d.faturamento) return 0;
+    return +(Math.max(0, d.dBruto - d.cAprop) / d.faturamento * 100).toFixed(2);
   });
   var aliqTotal = 0, aliqN = 0;
   dAliq.forEach(function(v) { if (v > 0) { aliqTotal += v; aliqN++; } });
