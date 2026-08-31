@@ -370,10 +370,13 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
   <div class="section">
     <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Flags de risco — máquina de estados statusFlags</span></div>
     <div class="info-box amber">
-      <strong>Regra de aplicação:</strong> flags são avaliadas <em>apenas</em> em RFs de entrada (<code>tipoNF: 'entrada'</code>). RFs de saída nunca recebem flags. <strong>Regra de supressão:</strong> RFs com <code>statusCredito</code> = <code>apropriado</code>, <code>utilizado</code> ou <code>glosado</code> têm <code>statusFlags: []</code> — as flags são zeradas ao sair do estado <code>nao_apropriado</code>.
+      <strong>Regra de aplicação:</strong> flags são avaliadas <em>apenas</em> em RFs de entrada (<code>tipoNF: 'entrada'</code>). RFs de saída nunca recebem flags. <strong>Regra de supressão de flags temporais</strong> (<code>vencido</code>, <code>em_risco</code>, <code>a_prescrever</code>): zeradas quando <code>statusCredito</code> transita para <code>apropriado</code>, <code>utilizado</code> ou <code>glosado</code>. A flag <code>inconsistencia</code> segue regra própria — veja abaixo.
     </div>
     <div class="info-box blue">
       <strong>statusFlags é cumulativo:</strong> um RF pode ter múltiplas flags ativas simultaneamente (ex.: <code>['em_risco', 'inconsistencia']</code>). O campo <code>statusRegistro</code> armazena a flag de maior severidade para compatibilidade com listagens.
+    </div>
+    <div class="info-box purple">
+      <strong>inconsistencia — regra de ciclo de vida:</strong> a flag <code>inconsistencia</code> <em>não bloqueia automaticamente</em> a apropriação nem a utilização do crédito. Ela sinaliza uma pendência que pode ou não interromper o fluxo. O ciclo de vida do RF (<code>statusCredito</code>) pode avançar normalmente a partir do <strong>feedback da apuração assistida</strong> — se a apuração confirmar o recolhimento, o crédito transita para <code>apropriado</code> mesmo com a inconsistência ativa. A flag é resolvida (removida) quando a pendência é regularizada pelo usuário ou pela apuração assistida, não necessariamente quando o crédito é apropriado.
     </div>
 
     <div style="padding: 4px 0">
@@ -381,7 +384,7 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
         <span class="flag-sev" style="background:var(--red-d);color:var(--red)">Sev 4 · Crítico</span>
         <div class="flag-content">
           <div class="flag-name">inconsistencia</div>
-          <div class="flag-desc">Card de inconsistência vinculado ao RF (ex.: RAD sem comprovante de pagamento, CAPUR divergente). Bloqueia utilização do crédito até resolução. Exige ação ativa do usuário.</div>
+          <div class="flag-desc">Card de inconsistência vinculado ao RF — evidencia uma pendência a ser regularizada (ex.: RAD sem comprovante, CAPUR divergente, divergência na apuração assistida). <strong>Não bloqueia automaticamente a apropriação nem a utilização do crédito</strong> — a pendência pode ou não interromper o fluxo, conforme a natureza e o feedback da apuração assistida. O ciclo de vida do RF segue normalmente; a inconsistência é um alerta de risco que exige ação ativa do usuário para regularização.</div>
         </div>
       </div>
       <div class="flag-row">
@@ -437,7 +440,7 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
         <ul>
           <li><strong>Gatilho de apropriação:</strong> comprovante de pagamento RAD vinculado ao RF pelo usuário (ou importado via API)</li>
           <li><strong>Comprovante:</strong> DAT do adquirente referenciando a chave do DF</li>
-          <li><strong>Risco:</strong> ausência de comprovante → flag <code>inconsistencia</code> → crédito bloqueado</li>
+          <li><strong>Risco:</strong> ausência de comprovante → flag <code>inconsistencia</code> → pendência sinalizada (crédito não bloqueado automaticamente; regularização necessária)</li>
           <li><strong>Vantagem:</strong> crédito imediato, sem risco de glosa por inadimplência do fornecedor</li>
           <li><strong>Neutralidade:</strong> adquirente retém o valor → recolhe → credita. Resultado fiscal neutro no período.</li>
         </ul>
@@ -475,8 +478,8 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
           <tr>
             <td>RAD — sem comprovante</td>
             <td>RAD</td>
-            <td>Flag <code>inconsistencia</code> gerada automaticamente</td>
-            <td><span class="chip err">nao_apropriado + flag</span></td>
+            <td>Flag <code>inconsistencia</code> gerada — pendência sinalizada; ciclo de vida do RF não é interrompido automaticamente</td>
+            <td><span class="chip warn">nao_apropriado + flag</span></td>
           </tr>
           <tr>
             <td>Glosa pelo CG-IBS/RFB</td>
@@ -692,7 +695,7 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
           </tr>
           <tr>
             <td>RF-CRED-13</td>
-            <td>RFs com <code>statusFlags</code> contendo <code>inconsistencia</code> devem ter a ação de utilização bloqueada até resolução do card de inconsistência.</td>
+            <td>RFs com <code>statusFlags</code> contendo <code>inconsistencia</code> devem exibir alerta visual destacado na listagem e no detalhe do RF. A inconsistência <strong>não bloqueia automaticamente</strong> a apropriação nem a utilização — sinaliza uma pendência que pode ou não interromper o fluxo conforme o retorno da apuração assistida. O sistema deve indicar claramente ao usuário a natureza da pendência e a ação recomendada.</td>
             <td><span class="chip err">P0</span></td>
           </tr>
           <tr>
@@ -762,7 +765,7 @@ hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
           </tr>
           <tr>
             <td>RAD sem comprovante vinculado</td>
-            <td>Card de inconsistência <code>inconsistencia</code> criado. RF bloqueado para utilização até comprovante ser anexado e validado.</td>
+            <td>Flag <code>inconsistencia</code> criada. Pendência sinalizada — o fluxo do crédito continua; usuário deve regularizar o comprovante. O ciclo de vida pode avançar se a apuração assistida validar o recolhimento por outro meio.</td>
           </tr>
           <tr>
             <td>Glosa parcial pelo CG-IBS</td>
