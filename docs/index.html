@@ -7992,6 +7992,7 @@ function _fornGerarDFs(){
       vencido: vencido,
       rad: nf.metodoPagamento === 'RAD',
       contratoId: ctId,
+      rfs: nf.registrosFiscais || [],
       comentarios: (window._fornDFComentarios[dfId]||[]).length
     });
   });
@@ -8260,6 +8261,30 @@ function fornFiltrarDFs(){
 }
 
 function _gerarRFsDoDF(d){
+  // Usa RFs reais da NF quando disponíveis
+  if(d.rfs && d.rfs.length){
+    return d.rfs.map(function(r){
+      var sc = r.statusCredito || r.status || 'nao_apropriado';
+      var sr = r.statusRegistro || null;
+      // mapeia statusRegistro → capur (usado pelo dashboard de conciliação)
+      var capur = sr==='inconsistencia'?'Divergente':sr?'Pendente':'Conciliado';
+      var cred = (sc==='apropriado'||sc==='utilizado')?'Liberado':sc==='glosado'?'Bloqueado':'Pendente';
+      return {
+        id: r.id,
+        periodo: (r.data||d.emissao||'').substring(0,7),
+        valor: r.valor || 0,
+        tipoFiscal: (r.tipoFiscal||'').toUpperCase(),
+        metodo: d.rad ? 'RAD' : 'Fornecedor',
+        statusCredito: sc,
+        statusRegistro: sr,
+        inconsistencia: r.inconsistencia || null,
+        capur: capur,
+        cfin: capur==='Conciliado'?'Conciliado':'—',
+        cred: cred
+      };
+    });
+  }
+  // Fallback sintético (DFs mock sem NF vinculada)
   var capur=['Conciliado','Conciliado','Divergente','Pendente'];
   var cfin=['Conciliado','Pendente','—','—'];
   var idx=parseInt(d.id.split('-').pop())||0;
@@ -8278,8 +8303,7 @@ function _gerarRFsDoDF(d){
     rfs.push({
       id:'RF-'+(f?f.id:'X')+String(10000+idx*10+i),
       periodo:'Abr/2026',
-      cbs:_rfCbs,
-      ibs:_rfIbs,
+      cbs:_rfCbs, ibs:_rfIbs,
       capur:c, cfin:cf, cred:cred,
       tipoFiscal:_rfTipoFiscal,
       valor:_rfCbs+_rfIbs,
