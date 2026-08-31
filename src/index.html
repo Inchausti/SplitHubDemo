@@ -3912,8 +3912,9 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
               <th>Valor Total</th>
               <th>CBS</th>
               <th>IBS</th>
-              <th>Total Split</th>
+              <th>IBS+CBS Apurado</th>
               <th>Valor Líquido</th>
+              <th>Contrato</th>
               <th>Status Crédito</th>
               <th>Status Registro</th>
               <th style="width:120px">Ações</th>
@@ -7970,6 +7971,12 @@ function _fornGerarDFs(){
     var emissao = '—';
     if(nf.data){ var p=nf.data.split('-'); emissao=p[2]+'/'+p[1]+'/'+p[0]; }
 
+    // contrato vinculado: da NF ou busca pelo CNPJ
+    var ctId = nf.contratoId || null;
+    if(!ctId){
+      var ct = (typeof buscarContrato === 'function') ? buscarContrato(nf.cnpj, nf.data) : null;
+      ctId = ct ? ct.id : null;
+    }
     dfs.push({
       id: dfId,
       tipo: nf.tipoDF || 'NF-e',
@@ -7984,6 +7991,7 @@ function _fornGerarDFs(){
       statusRegistro: nf.statusRegistro,
       vencido: vencido,
       rad: nf.metodoPagamento === 'RAD',
+      contratoId: ctId,
       comentarios: (window._fornDFComentarios[dfId]||[]).length
     });
   });
@@ -8180,6 +8188,7 @@ function _renderFornDFRows(dfs){
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--blue)">'+ff(d.ibs)+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--violet);font-weight:600">'+ff(split)+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--green);font-weight:600">'+ff(liquido)+'</td>'+
+      '<td>'+(d.contratoId?'<span style="font-size:11px;font-weight:600;color:var(--teal);cursor:pointer;text-decoration:underline dotted" onclick="contratosAbrirDetalhe(\''+d.contratoId+'\')" title="Ver contrato '+d.contratoId+'">'+d.contratoId+'</span>':'<span style="color:var(--txt3);font-size:11px">—</span>')+'</td>'+
       '<td>'+(_statusCredChip[credStatus]||_statusCredChip.nao_apropriado)+'</td>'+
       '<td>'+(statusReg?(_statusRegChip[statusReg]||statusReg):'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">ok</span>')+'</td>'+
       '<td><div style="display:flex;gap:3px;flex-wrap:nowrap;align-items:center">'+
