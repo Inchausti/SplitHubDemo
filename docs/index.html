@@ -3914,9 +3914,8 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
               <th>IBS</th>
               <th>Total Split</th>
               <th>Valor Líquido</th>
-              <th>Status</th>
               <th>Crédito</th>
-              <th>Registro</th>
+              <th>Status Registro</th>
               <th style="width:120px">Ações</th>
             </tr>
           </thead>
@@ -8148,10 +8147,11 @@ function _renderFornDFRows(dfs){
     Pendente:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(185,122,16,.12);color:var(--amber)">Pendente</span>',
     Bloqueado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">Bloqueado</span>'
   };
-  var _capurChip={
-    Conciliado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">Conciliado</span>',
-    Divergente:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">Divergente</span>',
-    Pendente:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(185,122,16,.12);color:var(--amber)">Pendente</span>'
+  var _statusRegChip={
+    inconsistencia:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(109,40,217,.12);color:var(--violet)">inconsistencia</span>',
+    em_risco:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(185,122,16,.12);color:var(--amber)">em_risco</span>',
+    a_prescrever:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">a_prescrever</span>',
+    vencido:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.15);color:var(--red);font-style:italic">vencido</span>'
   };
   tbody.innerHTML=dfs.map(function(d){
     var rfs=_gerarRFsDoDF(d);
@@ -8160,9 +8160,11 @@ function _renderFornDFRows(dfs){
     // Status crédito: pior status entre os RFs
     var credStatuses=rfs.map(function(r){return r.cred;});
     var credStatus=credStatuses.indexOf('Bloqueado')>=0?'Bloqueado':credStatuses.indexOf('Pendente')>=0?'Pendente':'Liberado';
-    // Status registro (CAPUR): pior status
-    var capurStatuses=rfs.map(function(r){return r.capur;});
-    var capurStatus=capurStatuses.indexOf('Divergente')>=0?'Divergente':capurStatuses.indexOf('Pendente')>=0?'Pendente':'Conciliado';
+    // Status registro: pior statusRegistro entre os RFs
+    var srPriority=['vencido','a_prescrever','em_risco','inconsistencia'];
+    var srStatuses=rfs.map(function(r){return r.statusRegistro;}).filter(Boolean);
+    var statusReg=null;
+    for(var _i=0;_i<srPriority.length;_i++){if(srStatuses.indexOf(srPriority[_i])>=0){statusReg=srPriority[_i];break;}}
     // Chave truncada
     var contestStatus=window._fornContestacoes&&window._fornContestacoes[d.id]?window._fornContestacoes[d.id].status:null;
     return '<tr>'+
@@ -8175,9 +8177,8 @@ function _renderFornDFRows(dfs){
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--blue)">'+ff(d.ibs)+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--violet);font-weight:600">'+ff(split)+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--green);font-weight:600">'+ff(liquido)+'</td>'+
-      '<td>'+(_statusChip[d.status]||_statusChip.pendente)+'</td>'+
       '<td>'+(_credChip[credStatus]||_credChip.Pendente)+'</td>'+
-      '<td>'+(_capurChip[capurStatus]||_capurChip.Pendente)+'</td>'+
+      '<td>'+(statusReg?(_statusRegChip[statusReg]||statusReg):'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">ok</span>')+'</td>'+
       '<td><div style="display:flex;gap:3px;flex-wrap:nowrap;align-items:center">'+
         '<button class="btn" style="font-size:10px;padding:3px 8px" onclick="abrirDetalheDF(\''+d.id+'\')" title="Ver detalhes do DF">Ver</button>'+
         (d.rad?'<button class="btn" style="font-size:10px;padding:3px 7px;border-color:var(--teal);color:var(--teal)" onclick="abrirRADModal(\''+d.id+'\')" title="Comprovantes PIX IBS+CBS">PIX</button>':'')+
