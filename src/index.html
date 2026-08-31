@@ -3914,7 +3914,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
               <th>IBS</th>
               <th>Total Split</th>
               <th>Valor Líquido</th>
-              <th>Crédito</th>
+              <th>Status Crédito</th>
               <th>Status Registro</th>
               <th style="width:120px">Ações</th>
             </tr>
@@ -8142,10 +8142,11 @@ function _renderFornDFRows(dfs){
   var tbody=document.getElementById('forn-df-tbody');
   if(!tbody) return;
   var ff=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
-  var _credChip={
-    Liberado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">Liberado</span>',
-    Pendente:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(185,122,16,.12);color:var(--amber)">Pendente</span>',
-    Bloqueado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">Bloqueado</span>'
+  var _statusCredChip={
+    apropriado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">apropriado</span>',
+    utilizado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.2);color:var(--green);font-style:italic">utilizado</span>',
+    nao_apropriado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(185,122,16,.12);color:var(--amber)">nao_apropriado</span>',
+    glosado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(214,58,73,.12);color:var(--red)">glosado</span>'
   };
   var _statusRegChip={
     inconsistencia:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(109,40,217,.12);color:var(--violet)">inconsistencia</span>',
@@ -8157,9 +8158,11 @@ function _renderFornDFRows(dfs){
     var rfs=_gerarRFsDoDF(d);
     var split=d.cbs+d.ibs;
     var liquido=d.valor-split;
-    // Status crédito: pior status entre os RFs
-    var credStatuses=rfs.map(function(r){return r.cred;});
-    var credStatus=credStatuses.indexOf('Bloqueado')>=0?'Bloqueado':credStatuses.indexOf('Pendente')>=0?'Pendente':'Liberado';
+    // Status crédito: pior statusCredito entre os RFs
+    var scPriority=['glosado','nao_apropriado','utilizado','apropriado'];
+    var scStatuses=rfs.map(function(r){return r.statusCredito;}).filter(Boolean);
+    var credStatus='nao_apropriado';
+    for(var _j=0;_j<scPriority.length;_j++){if(scStatuses.indexOf(scPriority[_j])>=0){credStatus=scPriority[_j];break;}}
     // Status registro: pior statusRegistro entre os RFs
     var srPriority=['vencido','a_prescrever','em_risco','inconsistencia'];
     var srStatuses=rfs.map(function(r){return r.statusRegistro;}).filter(Boolean);
@@ -8169,7 +8172,7 @@ function _renderFornDFRows(dfs){
     var contestStatus=window._fornContestacoes&&window._fornContestacoes[d.id]?window._fornContestacoes[d.id].status:null;
     return '<tr>'+
       '<td style="width:32px"><input type="checkbox" class="forn-df-sel" data-id="'+d.id+'" onchange="fornDFSelChange()"></td>'+
-      '<td style="font-size:11px;color:var(--teal);font-weight:600;white-space:nowrap" title="Chave: '+d.chave+'">'+d.numero+'</td>'+
+      '<td style="font-size:11px;color:var(--teal);font-weight:600;white-space:nowrap;cursor:pointer;text-decoration:underline dotted" title="Ver detalhes do DF · Chave: '+d.chave+'" onclick="abrirDetalheDF(\''+d.id+'\')">'+d.numero+'</td>'+
       '<td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--card);border:1px solid var(--border)">'+d.tipo+'</span></td>'+
       '<td style="font-size:12px;color:var(--txt2)">'+d.emissao+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono)">'+ff(d.valor)+'</td>'+
@@ -8177,7 +8180,7 @@ function _renderFornDFRows(dfs){
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--blue)">'+ff(d.ibs)+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--violet);font-weight:600">'+ff(split)+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--green);font-weight:600">'+ff(liquido)+'</td>'+
-      '<td>'+(_credChip[credStatus]||_credChip.Pendente)+'</td>'+
+      '<td>'+(_statusCredChip[credStatus]||_statusCredChip.nao_apropriado)+'</td>'+
       '<td>'+(statusReg?(_statusRegChip[statusReg]||statusReg):'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">ok</span>')+'</td>'+
       '<td><div style="display:flex;gap:3px;flex-wrap:nowrap;align-items:center">'+
         '<button class="btn" style="font-size:10px;padding:3px 8px" onclick="abrirDetalheDF(\''+d.id+'\')" title="Ver detalhes do DF">Ver</button>'+
