@@ -1803,6 +1803,7 @@ window.dashPeriodoAplicar = function() {
   window.dashPeriodoAtualizarBotao();
   try { window.atualizarKPIsDashboard(); } catch(e) {}
   try { window.atualizarDashboard(); } catch(e) {}
+  try { window.computeAliqEfetivaKPIs && window.computeAliqEfetivaKPIs(); } catch(e) {}
 };
 
 window.dashPeriodoAtualizarBotao = function() {
@@ -1952,6 +1953,7 @@ window.atualizarKPIsDashboard = function() {
   setEl('dash-inc-cred',  incCred.toLocaleString('pt-BR'));
   setEl('dash-inc-deb',   incDeb.toLocaleString('pt-BR'));
   setEl('dash-inc-pag',   incPag.toLocaleString('pt-BR'));
+  try { window.computeAliqEfetivaKPIs && window.computeAliqEfetivaKPIs(); } catch(e) {}
 };
 
 // ============================================================
@@ -5501,6 +5503,7 @@ class DataSyncManagerFixed {
     // Dashboard — KPIs + gráficos
     try { window.atualizarKPIsDashboard  && window.atualizarKPIsDashboard();  } catch(e) {}
     try { window.atualizarDashboard      && window.atualizarDashboard();      } catch(e) {}
+    try { window.computeAliqEfetivaKPIs  && window.computeAliqEfetivaKPIs();  } catch(e) {}
     try { window.atualizarInteligencia   && window.atualizarInteligencia();   } catch(e) {}
 
     // Crédito — tabela já chama atualizarKPIsCreditos + renderizarComposicaoCreditos + atualizarPerdaAcumulada
@@ -6280,35 +6283,28 @@ window._renderFcChart = function(canvas, chartStore, opts) {
   });
 };
 
-// Computa KPIs de Alíquota Efetiva sem depender do canvas (pode rodar com view oculta)
+// Computa KPI de Alíquota Efetiva do período selecionado (sem depender do canvas FCT)
 window.computeAliqEfetivaKPIs = function() {
-  var byMonth = {};
+  var mesesSel = window._dashMesesSelecionados || [];
+  var totFat = 0, totDebito = 0;
   var _nfFatContado = {};
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'saida') return;
     var mes = (nf.data || '').substring(0, 7);
     if (!mes) return;
-    if (!byMonth[mes]) byMonth[mes] = { dBruto: 0, faturamento: 0 };
-    if (nf.tipo === 'saida' && !_nfFatContado[nf.id || mes + nf.entidade]) {
+    if (mesesSel.length && mesesSel.indexOf(mes) < 0) return;
+    if (!_nfFatContado[nf.id || mes + nf.entidade]) {
       _nfFatContado[nf.id || mes + nf.entidade] = true;
-      byMonth[mes].faturamento += nf.valorTotal || 0;
+      totFat += nf.valorTotal || 0;
     }
-    if (nf.tipo === 'saida') {
-      (nf.registrosFiscais || []).forEach(function(rf) {
-        byMonth[mes].dBruto += rf.valor || 0;
-      });
-    }
+    (nf.registrosFiscais || []).forEach(function(rf) {
+      totDebito += rf.valor || 0;
+    });
   });
-  var meses = Object.keys(byMonth).sort();
-  var dAliq = meses.map(function(m) {
-    var d = byMonth[m];
-    return d.faturamento > 0 ? +(d.dBruto / d.faturamento * 100).toFixed(2) : 0;
-  });
-  var aliqTotal = 0, aliqN = 0;
-  dAliq.forEach(function(v) { if (v > 0) { aliqTotal += v; aliqN++; } });
-  var aliqMedia = aliqN ? +(aliqTotal / aliqN).toFixed(1) : 0;
+  var aliqEfetiva = totFat > 0 ? +(totDebito / totFat * 100) : 0;
   var mEl = document.getElementById('fct-aliq-media');
-  if (mEl) mEl.textContent = aliqMedia.toFixed(1).replace('.', ',') + '%';
-  var economia = +(26.5 - aliqMedia).toFixed(1);
+  if (mEl) mEl.textContent = aliqEfetiva.toFixed(1).replace('.', ',') + '%';
+  var economia = +(26.5 - aliqEfetiva).toFixed(1);
   var eEl = document.getElementById('fct-aliq-economia');
   if (eEl) {
     eEl.textContent = (economia > 0 ? '−' : '+') + Math.abs(economia).toFixed(1).replace('.', ',') + 'pp';
@@ -7886,6 +7882,7 @@ window._aplicarFiltroCnpjEmpresa = function() {
   try { window._rfIndex = {}; (window.nfListaFiltradaGlobal||[]).forEach(function(nf){ (nf.registrosFiscais||[]).forEach(function(rf){ window._rfIndex[rf.id]={rf:rf,nf:nf}; }); }); } catch(e) {}
   try { window.atualizarDashboard(); } catch(e) {}
   try { window.atualizarKPIsDashboard(); } catch(e) {}
+  try { window.computeAliqEfetivaKPIs && window.computeAliqEfetivaKPIs(); } catch(e) {}
   try { window.renderizarListaNFs(); } catch(e) {}
   try { window.renderizarTabelaCreditos(); } catch(e) {}
   try { window.renderizarTabelaPagamentos(); } catch(e) {}
