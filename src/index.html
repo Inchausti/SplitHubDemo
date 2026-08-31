@@ -792,6 +792,18 @@ window.PALETTE = {
   if(sessionStorage.getItem('sh_auth')==='1'){
     document.getElementById('lp-screen').style.display='none';
   }
+  // Restaura fornecedor selecionado após refresh
+  var _savedFornId = sessionStorage.getItem('sh_forn_id');
+  if(_savedFornId){
+    document.addEventListener('DOMContentLoaded', function(){
+      setTimeout(function(){
+        if(typeof fornSelEscolher==='function' && typeof confirmarFornecedor==='function'){
+          fornSelEscolher(_savedFornId);
+          confirmarFornecedor();
+        }
+      }, 600);
+    });
+  }
 })();
 function lpCheck(){
   var u=document.getElementById('lp-user').value.trim();
@@ -3992,7 +4004,8 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
                 <th>Vigência Fim</th>
                 <th>Valor</th>
                 <th>Status</th>
-                <th>Modalidade Split</th>
+                <th>Pagamento</th>
+                <th>Unidade</th>
               </tr>
             </thead>
             <tbody id="forn-org-contratos-tbody"></tbody>
@@ -7725,43 +7738,59 @@ function _renderFornOrg(){
     }).join('');
   }
 
-  // Contratos bilaterais — filtrados do registro global por CNPJ da unidade
+  // Contratos — todos os CNPJs da organização agrupados
   var suEl=document.getElementById('forn-org-contr-sub');
-  if(suEl) suEl.textContent='Contratos entre '+u.cnpj+' ('+u.nome+') e Induspar Tecnologia S.A. · '+u.tipo;
+  if(suEl) suEl.textContent='Contratos de todas as unidades de '+f.nome+' com Induspar Tecnologia S.A.';
   var tbody=document.getElementById('forn-org-contratos-tbody');
   if(!tbody) return;
-  var cnpjBase=u.cnpj.replace(/\D/g,'').substring(0,8); // raiz CNPJ (8 dígitos)
-  var ctrsFiltrados=(typeof contratos!=='undefined'?contratos:[]).filter(function(c){
-    return (c.cnpj||'').replace(/\D/g,'').substring(0,8)===cnpjBase;
-  });
-  if(!ctrsFiltrados.length){
-    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--txt3);font-size:12px;padding:16px">Nenhum contrato cadastrado para este CNPJ.</td></tr>';
-    return;
-  }
+  var todasUnidades=(f.unidades||[{cnpj:f.cnpj,nome:f.nome,tipo:'Matriz'}]);
   var today=new Date();
   var _statusContrato=function(c){
     if(!c.fim) return 'vigente';
-    var parts=c.fim.split('/');
-    var fim=new Date(parts[2],parseInt(parts[1])-1,parseInt(parts[0]));
+    var dt=c.fim.includes('-')?c.fim.split('-'):c.fim.split('/').reverse();
+    var fim=new Date(dt[0],parseInt(dt[1])-1,parseInt(dt[2]));
     return fim>=today?'vigente':'encerrado';
   };
-  var _scChip={vigente:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">Vigente</span>',encerrado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(100,100,100,.15);color:var(--txt3)">Encerrado</span>'};
+  var _scChip={
+    vigente:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">Vigente</span>',
+    encerrado:'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(100,100,100,.15);color:var(--txt3)">Encerrado</span>'
+  };
   var tiposContr=['Fornecimento','Serviço','Locação','Manutenção'];
   var ff=function(v){return v?'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—';};
-  tbody.innerHTML=ctrsFiltrados.map(function(c,i){
-    var st=_statusContrato(c);
-    var tipo=c.tipo||tiposContr[i%tiposContr.length];
-    var modalidade=c.rad?'Split Total':'Sem Split';
-    return '<tr>'+
-      '<td style="font-size:11px;font-family:var(--font-mono);color:var(--teal)">'+c.id+'</td>'+
-      '<td style="font-size:12px">'+tipo+'</td>'+
-      '<td style="font-size:12px;color:var(--txt2)">'+c.inicio+'</td>'+
-      '<td style="font-size:12px;color:var(--txt2)">'+c.fim+'</td>'+
-      '<td style="font-size:12px;font-family:var(--font-mono)">'+ff(c.valor)+'</td>'+
-      '<td>'+_scChip[st]+'</td>'+
-      '<td style="font-size:11px;color:var(--txt2)">'+modalidade+(c.rad?' · RAD':'')+' · Prazo '+c.prazo+'d'+'</td>'+
-    '</tr>';
-  }).join('');
+  var todosContratos=typeof contratos!=='undefined'?contratos:[];
+  var html='';
+  todasUnidades.forEach(function(un){
+    var cnpjBase=un.cnpj.replace(/\D/g,'').substring(0,8);
+    var ctrs=todosContratos.filter(function(c){
+      return (c.cnpj||'').replace(/\D/g,'').substring(0,8)===cnpjBase;
+    });
+    // cabeçalho agrupador por unidade
+    html+='<tr><td colspan="8" style="padding:10px 8px 4px;background:var(--bg);border-top:2px solid var(--border)">'+
+      '<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--teal)">'+un.tipo+'</span>'+
+      '<span style="font-size:11px;color:var(--txt2);margin-left:8px">'+un.nome+'</span>'+
+      '<span style="font-size:10px;color:var(--txt3);margin-left:8px;font-family:var(--font-mono)">'+un.cnpj+'</span>'+
+    '</td></tr>';
+    if(!ctrs.length){
+      html+='<tr><td colspan="8" style="text-align:center;color:var(--txt3);font-size:11px;padding:8px 16px;font-style:italic">Nenhum contrato cadastrado</td></tr>';
+    } else {
+      ctrs.forEach(function(c,i){
+        var st=_statusContrato(c);
+        var tipo=c.tipo||tiposContr[i%tiposContr.length];
+        var modalidade=c.rad?'RAD':'Fornecedor';
+        html+='<tr>'+
+          '<td style="font-size:11px;font-family:var(--font-mono);color:var(--teal);cursor:pointer;text-decoration:underline dotted" onclick="contratosAbrirDetalhe(\''+c.id+'\')" title="Ver detalhes do contrato">'+c.id+'</td>'+
+          '<td style="font-size:12px">'+tipo+'</td>'+
+          '<td style="font-size:12px;color:var(--txt2)">'+c.inicio+'</td>'+
+          '<td style="font-size:12px;color:var(--txt2)">'+c.fim+'</td>'+
+          '<td style="font-size:12px;font-family:var(--font-mono)">'+ff(c.valor)+'</td>'+
+          '<td>'+_scChip[st]+'</td>'+
+          '<td style="font-size:11px;color:var(--txt2)">'+modalidade+' · Prazo '+c.prazo+'d'+'</td>'+
+          '<td style="font-size:10px;color:var(--txt3)">'+un.tipo+'</td>'+
+        '</tr>';
+      });
+    }
+  });
+  tbody.innerHTML=html||'<tr><td colspan="8" style="text-align:center;color:var(--txt3);font-size:12px;padding:16px">Nenhum contrato cadastrado.</td></tr>';
 }
 
 function fornOrgToggleEdit(){
@@ -7888,6 +7917,7 @@ function _atualizarBtnConfirmar(){
 function confirmarFornecedor(){
   if(!window._fornSelEscolhido) return;
   window._fornAtual = window._fornSelEscolhido;
+  sessionStorage.setItem('sh_forn_id', window._fornAtual.id);
   window._fornSelObrigatorio = false;
   document.getElementById('forn-sel-overlay').classList.remove('open');
   // renderiza conteúdo antes de exibir a view
