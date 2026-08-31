@@ -5529,6 +5529,7 @@ class DataSyncManagerFixed {
     try { window.renderizarTop10Empresas       && window.renderizarTop10Empresas();        } catch(e) {}
     try { window.renderizarAgeingCreditos      && window.renderizarAgeingCreditos();       } catch(e) {}
     try { window.renderizarFCT                        && window.renderizarFCT();                         } catch(e) {}
+    try { window.computeAliqEfetivaKPIs               && window.computeAliqEfetivaKPIs();                } catch(e) {}
     try { window.renderizarFCTForecast                && window.renderizarFCTForecast();                  } catch(e) {}
     try { window.renderizarForecastAproveitamento     && window.renderizarForecastAproveitamento();       } catch(e) {}
     try { window.renderizarEvolucaoAcumuladaCreditos  && window.renderizarEvolucaoAcumuladaCreditos();   } catch(e) {}
@@ -6277,6 +6278,42 @@ window._renderFcChart = function(canvas, chartStore, opts) {
       }
     }
   });
+};
+
+// Computa KPIs de Alíquota Efetiva sem depender do canvas (pode rodar com view oculta)
+window.computeAliqEfetivaKPIs = function() {
+  var byMonth = {};
+  var _nfFatContado = {};
+  (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    var mes = (nf.data || '').substring(0, 7);
+    if (!mes) return;
+    if (!byMonth[mes]) byMonth[mes] = { dBruto: 0, faturamento: 0 };
+    if (nf.tipo === 'saida' && !_nfFatContado[nf.id || mes + nf.entidade]) {
+      _nfFatContado[nf.id || mes + nf.entidade] = true;
+      byMonth[mes].faturamento += nf.valorTotal || 0;
+    }
+    if (nf.tipo === 'saida') {
+      (nf.registrosFiscais || []).forEach(function(rf) {
+        byMonth[mes].dBruto += rf.valor || 0;
+      });
+    }
+  });
+  var meses = Object.keys(byMonth).sort();
+  var dAliq = meses.map(function(m) {
+    var d = byMonth[m];
+    return d.faturamento > 0 ? +(d.dBruto / d.faturamento * 100).toFixed(2) : 0;
+  });
+  var aliqTotal = 0, aliqN = 0;
+  dAliq.forEach(function(v) { if (v > 0) { aliqTotal += v; aliqN++; } });
+  var aliqMedia = aliqN ? +(aliqTotal / aliqN).toFixed(1) : 0;
+  var mEl = document.getElementById('fct-aliq-media');
+  if (mEl) mEl.textContent = aliqMedia.toFixed(1).replace('.', ',') + '%';
+  var economia = +(26.5 - aliqMedia).toFixed(1);
+  var eEl = document.getElementById('fct-aliq-economia');
+  if (eEl) {
+    eEl.textContent = (economia > 0 ? '−' : '+') + Math.abs(economia).toFixed(1).replace('.', ',') + 'pp';
+    eEl.style.color = economia > 0 ? 'var(--green)' : '#a32d2d';
+  }
 };
 
 window.renderizarFCTForecast = function(_retry) {
