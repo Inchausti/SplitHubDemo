@@ -6073,13 +6073,17 @@ window.renderizarFCT = function() {
     var aliqTotal = 0, aliqN = 0;
     dAliq.forEach(function(v) { if (v > 0) { aliqTotal += v; aliqN++; } });
     var aliqMedia = aliqN ? +(aliqTotal / aliqN).toFixed(1) : 0;
-    set('fct-aliq-media', aliqMedia.toFixed(1).replace('.', ',') + '%');
+    var _aliqMediaStr = aliqMedia.toFixed(1).replace('.', ',') + '%';
+    set('fct-aliq-media', _aliqMediaStr);
+    var _aliqChartM = document.getElementById('fct-aliq-media-chart');
+    if (_aliqChartM) _aliqChartM.textContent = _aliqMediaStr;
     var economia = +(26.5 - aliqMedia).toFixed(1);
+    var _econStr = (economia > 0 ? '−' : '+') + Math.abs(economia).toFixed(1).replace('.', ',') + 'pp vs ref.';
+    var _econColor = economia > 0 ? '#1d9e75' : '#a32d2d';
     var eEl = document.getElementById('fct-aliq-economia');
-    if (eEl) {
-      eEl.textContent = (economia > 0 ? '−' : '+') + Math.abs(economia).toFixed(1).replace('.', ',') + 'pp vs ref.';
-      eEl.style.color = economia > 0 ? '#1d9e75' : '#a32d2d';
-    }
+    if (eEl) { eEl.textContent = _econStr; eEl.style.color = _econColor; }
+    var eEl2 = document.getElementById('fct-aliq-economia-chart');
+    if (eEl2) { eEl2.textContent = _econStr; eEl2.style.color = _econColor; }
   }
 
   // Tabela mensal — Proposta C: 5 colunas + sparkline de saldo acumulado
@@ -6312,14 +6316,18 @@ window.computeAliqEfetivaKPIs = function() {
   var aliqTotal = 0, aliqN = 0;
   dAliq.forEach(function(v) { if (v > 0) { aliqTotal += v; aliqN++; } });
   var aliqMedia = aliqN ? +(aliqTotal / aliqN).toFixed(1) : 0;
+  var _mStr = aliqMedia.toFixed(1).replace('.', ',') + '%';
   var mEl = document.getElementById('fct-aliq-media');
-  if (mEl) mEl.textContent = aliqMedia.toFixed(1).replace('.', ',') + '%';
+  if (mEl) mEl.textContent = _mStr;
+  var mEl2 = document.getElementById('fct-aliq-media-chart');
+  if (mEl2) mEl2.textContent = _mStr;
   var economia = +(26.5 - aliqMedia).toFixed(1);
+  var _eStr = (economia > 0 ? '−' : '+') + Math.abs(economia).toFixed(1).replace('.', ',') + 'pp vs ref.';
+  var _eColor = economia > 0 ? '#1d9e75' : '#a32d2d';
   var eEl = document.getElementById('fct-aliq-economia');
-  if (eEl) {
-    eEl.textContent = (economia > 0 ? '−' : '+') + Math.abs(economia).toFixed(1).replace('.', ',') + 'pp vs ref.';
-    eEl.style.color = economia > 0 ? '#1d9e75' : '#a32d2d';
-  }
+  if (eEl) { eEl.textContent = _eStr; eEl.style.color = _eColor; }
+  var eEl2 = document.getElementById('fct-aliq-economia-chart');
+  if (eEl2) { eEl2.textContent = _eStr; eEl2.style.color = _eColor; }
 };
 
 window.renderizarFCTForecast = function(_retry) {
