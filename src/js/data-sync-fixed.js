@@ -5178,7 +5178,10 @@ window.debitosDFsRender = function() {
     h+='<td class="r mono" style="color:var(--txt2)">'+rfs.length+'</td>';
     h+='</tr>';
   });
+  // Expose data for ShColMgr CSV export
+  window._debDFsLista=nfs.map(function(nf){var rfs2=nf.registrosFiscais||[];var ibs2=0,cbs2=0;rfs2.forEach(function(rf){if(rf.tipoFiscal==='ibs')ibs2+=rf.valor||0;else cbs2+=rf.valor||0;});return{numero:(nf.tipoDF||'')+' '+(nf.numero||''),tipoDF:nf.tipoDF||'',entidade:nf.entidade||'',cnpj:nf.cnpj||'',data:nf.data||'',valorTotal:nf.valorTotal||0,ibs:ibs2,cbs:cbs2,debito:ibs2+cbs2,status:'',inconsistencia:'',metodo:''};});
   el.innerHTML=h;
+  if(window.ShColMgr&&ShColMgr.afterRender)try{ShColMgr.afterRender('deb-dfs');}catch(e){}
 };
 
 window.debitoDFsToggleFiltros = function() { window.shToggleFilterPanel('deb-dfs'); };
@@ -8083,6 +8086,9 @@ window.orgRenderTabela = function() {
     });
   });
   tbody.innerHTML = rows || '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--txt3)">Nenhum CNPJ encontrado.</td></tr>';
+  // Expose data for ShColMgr CSV export
+  window._orgCnpjsLista=lista.map(function(r){return{cnpj:r.cnpj,nome:r.razao,ie:r.ie,uf:r.uf,tipo:r.tipo,status:r.status};});
+  if(window.ShColMgr&&ShColMgr.afterRender)try{ShColMgr.afterRender('admin-org');}catch(e){}
 };
 
 window.orgAbrirModal = function(id) {
