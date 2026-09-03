@@ -5109,6 +5109,7 @@ window.debitosDFsRender = function() {
   if(ibsMin!==''||ibsMax!==''){nfs=nfs.filter(function(nf){var ibs=0;(nf.registrosFiscais||[]).forEach(function(rf){if(rf.tipoFiscal==='ibs')ibs+=rf.valor||0;});return (ibsMin===''||isNaN(parseFloat(ibsMin))||ibs>=parseFloat(ibsMin))&&(ibsMax===''||isNaN(parseFloat(ibsMax))||ibs<=parseFloat(ibsMax));});}
   if(cbsMin!==''||cbsMax!==''){nfs=nfs.filter(function(nf){var cbs=0;(nf.registrosFiscais||[]).forEach(function(rf){if(rf.tipoFiscal==='cbs')cbs+=rf.valor||0;});return (cbsMin===''||isNaN(parseFloat(cbsMin))||cbs>=parseFloat(cbsMin))&&(cbsMax===''||isNaN(parseFloat(cbsMax))||cbs<=parseFloat(cbsMax));});}
   if(filtCont){nfs=nfs.filter(function(nf){var cId=nf.contratoId||(nf.registrosFiscais&&nf.registrosFiscais[0]?nf.registrosFiscais[0].contratoId:null)||null;if(filtCont==='__sem__')return !cId;return cId===filtCont;});}
+  if(window.ShColMgr&&ShColMgr.sortRows)nfs=ShColMgr.sortRows('deb-dfs',nfs);
 
   var sub=document.getElementById('deb-dfs-sub');
   if(sub)sub.textContent=nfs.length+' DF'+(nfs.length!==1?'s':'')+' de saída';
@@ -8023,6 +8024,7 @@ window.orgRenderTabela = function() {
     if (filtStatus && r.status !== filtStatus) return false;
     return true;
   });
+  if(window.ShColMgr&&ShColMgr.sortRows)lista=ShColMgr.sortRows('admin-org',lista);
 
   var ativos = (window._orgCnpjs||[]).filter(function(r){return r.status==='ativo';}).length;
   var matrizes = (window._orgCnpjs||[]).filter(function(r){return r.tipo==='Matriz';}).length;
@@ -9008,7 +9010,8 @@ window.downloadGuiaDARF = function() {
     if (_ingPagina > totalPags) _ingPagina = totalPags;
 
     var start = (_ingPagina - 1) * _ingPorPagina;
-    var slice = _ingFiltrados.slice(start, start + _ingPorPagina);
+    var _sortedFiltrados=(window.ShColMgr&&ShColMgr.sortRows)?ShColMgr.sortRows('admin-ingestao',_ingFiltrados.slice()):_ingFiltrados;
+    var slice=_sortedFiltrados.slice(start,start+_ingPorPagina);
 
     var _tipoCorMap = {
       'NF-e':'#185fa5','NFC-e':'#6366F1','NFCom':'#10B981','NF3-e':'#14B8A6',
@@ -9061,6 +9064,9 @@ window.downloadGuiaDARF = function() {
     }
 
     tbody.innerHTML = html;
+    window._ingestaoLista=_ingFiltrados.map(function(d){return{numero:d.nfNumero!=null?String(d.nfNumero):'—',chaveDF:d.chave||'',tipoDF:d.tipo||'',emitente:d.emitente||'',valor:d.valor||0,data:d.dataEmissao||'',dataIngestao:d.dataIngestao||'',statusLayout:d.valLayout||'',statusDados:d.valDados||'',status:d.status||'',inconsistencia:''};});
+    window._ingestaoPageRows=slice.map(function(d){return{numero:d.nfNumero!=null?String(d.nfNumero):'—',chaveDF:d.chave||'',tipoDF:d.tipo||'',emitente:d.emitente||'',valor:d.valor||0,data:d.dataEmissao||'',dataIngestao:d.dataIngestao||'',statusLayout:d.valLayout||'',statusDados:d.valDados||'',status:d.status||'',inconsistencia:''};});
+    if(window.ShColMgr&&ShColMgr.afterRender)try{ShColMgr.afterRender('admin-ingestao');}catch(e){}
 
     document.getElementById('ing-pag-atual').textContent = _ingPagina;
     document.getElementById('ing-pag-total').textContent = totalPags;

@@ -5002,6 +5002,7 @@ function adminFornRenderTabela(){
     if(pendFiltro==="sem"&&f.pend>0)return false;
     return true;
   });
+  if(window.ShColMgr&&ShColMgr.sortRows)lista=ShColMgr.sortRows('admin-fornecedores',lista);
 
   var statusLbl={ok:"Regular",alerta:"Alerta",risco:"Risco"};
   var statusCor={ok:"var(--green)",alerta:"var(--amber)",risco:"var(--red)"};
@@ -5355,6 +5356,7 @@ function inconsistRenderTabela(){
     if(sevFiltro&&i.severidade!==sevFiltro)return false;
     return true;
   });
+  if(window.ShColMgr&&ShColMgr.sortRows)lista=ShColMgr.sortRows('inc-rfs',lista);
   var h="";
   lista.forEach(function(i){
     var acao=i.status==="aberta"
@@ -5487,6 +5489,7 @@ function contratosRenderTabela(){
     if(fimAte&&fim2&&fim2>fimAte)return false;
     return true;
   });
+  if(window.ShColMgr&&ShColMgr.sortRows)lista=ShColMgr.sortRows('admin-contratos',lista);
   lista.forEach(function(ct){
     var f=fornecedores.find(function(x){return x.cnpj===ct.cnpj;});
     var nf=contratosContarNFs(ct.cnpj);
@@ -5816,6 +5819,7 @@ function conciliacaoRenderDFs(){
     if(incFiltro==="sem"&&inc)return false;
     return true;
   });
+  if(window.ShColMgr&&ShColMgr.sortRows)lista=ShColMgr.sortRows('conc-uni',lista);
   var h="";
   lista.forEach(function(r){
     var f=fornecedores.find(function(x){return x.nome===r.forn;});
@@ -5906,6 +5910,7 @@ function rfLimparFiltrosGestao(){
 }
 function rfRenderPagina(){
   var lista=rfListaFiltradaGestao&&rfListaFiltradaGestao.length>0?rfListaFiltradaGestao:rfListaGlobal;
+  if(window.ShColMgr&&ShColMgr.sortRows)lista=ShColMgr.sortRows('conc-rfs',lista);
   var totalPaginas=Math.ceil(lista.length/rfItensPorPagina)||1;
   if(rfPaginaAtual>totalPaginas)rfPaginaAtual=totalPaginas;
   if(rfPaginaAtual<1)rfPaginaAtual=1;
@@ -6529,6 +6534,7 @@ function creditosRenderTabela(){
   var lista=listaRFs.length>0?listaRFs:creditos;
   if(creditosFiltroStatus){lista=lista.filter(function(r){return r.status===creditosFiltroStatus;});}
   if(creditosFiltroForn){lista=lista.filter(function(r){return r.forn===creditosFiltroForn;});}
+  if(window.ShColMgr&&ShColMgr.sortRows)lista=ShColMgr.sortRows('cred-rfs',lista);
   if(!lista.length){h='<tr><td colspan="15" style="text-align:center;color:var(--txt3);padding:24px">Nenhum crédito encontrado para este filtro.</td></tr>';}
   for(var i=0;i<lista.length;i++){var r=lista[i];var pc=r.pag==="—"?"#53565A":(r.status==="perdido"||r.status==="em_risco")?"#F43F5E":"#22C55E";var ct=getContratoPorForn(r.forn);var ctIdCell=ct?'<span class="mono" style="color:var(--blue);font-size:11px;cursor:pointer;text-decoration:underline" onclick="contratosAbrirDetalhe(\''+ct.id+'\')">'+ct.id+'</span>':'<span style="background:rgba(var(--status-red-rgb),.12);color:var(--red);border:1px solid rgba(var(--status-red-rgb),.25);border-radius:4px;padding:2px 7px;font-size:11px">Sem contrato</span>';var ctMethodCell=ct?contratoMecanismoBadge(ct.rad):'—';var tipoFiscalBadge='<span style="font-size:11px;font-weight:600;color:var(--txt1)">'+r.tipoFiscal+'</span>';var nfTipoBadgeCred=r.tipoNF==='Saída'?'<span style="background:rgba(var(--status-blue-rgb),.12);color:var(--blue);border:1px solid rgba(var(--status-blue-rgb),.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Saída</span>':'<span style="background:rgba(var(--status-green-rgb),.12);color:var(--green);border:1px solid rgba(var(--status-green-rgb),.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">Entrada</span>';var nfNumero=r.nfNumero||'';var pagCell=r.pag!=='—'?'<span style="cursor:pointer;text-decoration:underline" onclick="abrirComprovanteSimples(\''+r.pag+'\',\''+r.rf+'\','+r.cred+',\''+r.forn+'\')">'+r.pag+'</span>':r.pag;h+='<tr><td class="mono" style="color:var(--blue);font-size:11px;cursor:pointer;text-decoration:underline" onclick="window.abrirDetalheRF?window.abrirDetalheRF(\''+r.rf+'\'):rfAbrirDetalhe(\''+r.rf+'\')">'+r.rf+'</td><td>'+tipoFiscalBadge+'</td><td>'+nfTipoBadgeCred+'</td><td class="mono" style="font-size:11px;color:var(--blue);cursor:pointer;text-decoration:underline" onclick="abrirDetalhesNFporNumero(\''+nfNumero+'\')">'+r.nf+'</td><td>'+r.forn+'</td><td>'+r.data+'</td><td class="r mono">'+ff(r.valorTotal)+'</td><td class="r mono">'+ff(r.valorLiq)+'</td><td class="r mono" style="color:var(--amber);font-weight:600">'+ff(r.cbs)+'</td><td class="r mono" style="color:var(--blue);font-weight:600">'+ff(r.ibs)+'</td><td class="r mono" style="color:var(--teal);font-weight:700">'+ff(r.cred)+'</td><td style="font-size:11px;color:'+pc+'">'+pagCell+'</td><td>'+bdg(r.status)+'</td><td style="white-space:nowrap">'+ctIdCell+'</td><td style="white-space:nowrap">'+ctMethodCell+'</td></tr>';}
   // Expose for CSV
@@ -6638,6 +6644,7 @@ function creditosDFsRender(){
   if(filtIbsMin!==''||filtIbsMax!==''){dfs=dfs.filter(function(d){var nfO=nfMap[d.nfNumero!=null?String(d.nfNumero):'—']||{};var ibs=0;(nfO.registrosFiscais||[]).forEach(function(rf){if(rf.tipoFiscal==='ibs')ibs+=rf.valor||0;});return (filtIbsMin===''||isNaN(parseFloat(filtIbsMin))||ibs>=parseFloat(filtIbsMin))&&(filtIbsMax===''||isNaN(parseFloat(filtIbsMax))||ibs<=parseFloat(filtIbsMax));});}
   if(filtCbsMin!==''||filtCbsMax!==''){dfs=dfs.filter(function(d){var nfO=nfMap[d.nfNumero!=null?String(d.nfNumero):'—']||{};var cbs=0;(nfO.registrosFiscais||[]).forEach(function(rf){if(rf.tipoFiscal==='cbs')cbs+=rf.valor||0;});return (filtCbsMin===''||isNaN(parseFloat(filtCbsMin))||cbs>=parseFloat(filtCbsMin))&&(filtCbsMax===''||isNaN(parseFloat(filtCbsMax))||cbs<=parseFloat(filtCbsMax));});}
   if(filtContrato){dfs=dfs.filter(function(d){var nfO=nfMap[d.nfNumero!=null?String(d.nfNumero):'—']||{};var rfs=nfO.registrosFiscais||[];var cId=nfO.contratoId||(rfs[0]?rfs[0].contratoId:null)||null;if(filtContrato==='__sem__')return !cId;return cId===filtContrato;});}
+  if(window.ShColMgr&&ShColMgr.sortRows)dfs=ShColMgr.sortRows('cred-dfs',dfs);
   // Preencher select de contratos dinamicamente
   (function(){var sel=document.getElementById('cred-dfs-contrato');if(!sel||sel.options.length>2)return;var ids=[];(window._contratosData||[]).forEach(function(c){if(ids.indexOf(c.id)<0)ids.push(c.id);});ids.sort().forEach(function(id){var o=document.createElement('option');o.value=id;o.textContent=id;sel.appendChild(o);});})();
   // Atualizar subtítulo com contagem
@@ -10264,6 +10271,7 @@ if (window.Chart) {
     ShColMgr.register('admin-ingestao',{
       tbodyId:'t-ingestao', theadId:'thead-t-ingestao',
       toolbarSel:'#ing-toolbar',
+      reRenderFn:function(){try{window.ingestaoFiltrar();}catch(e){}},
       allRowsFn:function(){return window._ingestaoLista||[];},
       pageRowsFn:function(){return window._ingestaoPageRows||window._ingestaoLista||[];},
       cols:[
@@ -10366,6 +10374,7 @@ if (window.Chart) {
     ShColMgr.register('forn-org-contratos',{
       tbodyId:'forn-org-contratos-tbody', theadId:'forn-org-contratos-thead',
       toolbarSel:'#forn-org-contratos-toolbar',
+      reRenderFn:function(){try{_renderFornOrg();}catch(e){}},
       allRowsFn:function(){return window._fornOrgContratosLista||[];},
       pageRowsFn:function(){return window._fornOrgContratosLista||[];},
       cols:[
