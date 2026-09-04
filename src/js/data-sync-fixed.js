@@ -1129,7 +1129,7 @@ window.injetarFiltrosCreditos = function() {
       { label: 'Status do Crédito',   id: 'fc-status',          type: 'select', options: [{value:'nao_apropriado',label:'Não Apropriado'},{value:'apropriado',label:'Apropriado'},{value:'utilizado',label:'Utilizado'},{value:'glosado',label:'Glosado'}] },
       { label: 'Status do Registro',  id: 'fc-status-registro', type: 'select', options: [{value:'inconsistencia',label:'Inconsistência'},{value:'em_risco',label:'Em risco'},{value:'a_prescrever',label:'A Prescrever'},{value:'vencido',label:'Vencido'}] },
       { label: 'Contrato',            id: 'fc-contrato',        type: 'select', options: contratos.concat([{value:'__sem__',label:'Sem contrato'}]) },
-      { label: 'Método de Pagamento', id: 'fc-metodo',          type: 'select', options: [{value:'RAD',label:'RAD'},{value:'Fornecedor',label:'Fornecedor'}] },
+      { label: 'Método de Pagamento', id: 'fc-metodo',          type: 'select', options: [{value:'Split Payment',label:'Split Payment'},{value:'RAD',label:'RAD'},{value:'Fornecedor',label:'Fornecedor'}] },
       { label: 'Pagamento',           id: 'fc-pagamento',       type: 'select', options: [{value:'com',label:'Com pagamento'},{value:'sem',label:'Sem pagamento'}] },
       { label: 'Data NF — de',   id: 'fc-data-de',         type: 'date' },
       { label: 'Data NF — até', id: 'fc-data-ate',    type: 'date' },
@@ -1336,7 +1336,7 @@ window.renderizarTabelaCreditos = function() {
         ? '<span class="mono" style="font-size:11px;color:'+PALETTE.teal+';font-weight:600;cursor:pointer;text-decoration:underline" onclick="if(window.contratosAbrirDetalhe)contratosAbrirDetalhe(\''+r.contratoId+'\')">'+r.contratoId+'</span>'
         : '<span style="color:var(--txt3)">—</span>';
 
-      var _metC = r.metodoPagamento === 'RAD' ? PALETTE.statusBlue : r.metodoPagamento === 'Fornecedor' ? PALETTE.purple : null;
+      var _metC = r.metodoPagamento === 'RAD' ? PALETTE.statusBlue : r.metodoPagamento === 'Fornecedor' ? PALETTE.purple : r.metodoPagamento === 'Split Payment' ? PALETTE.teal : null;
       var metodoCell = _metC
         ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.06em;color:'+_metC+'">'
           + '<span style="width:5px;height:5px;border-radius:50%;background:'+_metC+';display:inline-block"></span>'
@@ -3862,7 +3862,7 @@ window._incRfRenderPagina = function() {
     var incStRegBadge = inc.statusRegistro
       ? (window._statusFlagsBadges ? window._statusFlagsBadges({ statusFlags: [inc.statusRegistro], statusRegistro: inc.statusRegistro }) : bdg(inc.statusRegistro))
       : '<span style="color:var(--txt3);font-size:11px">—</span>';
-    var _incMetC = inc.metodoPagamento === 'RAD' ? PALETTE.statusBlue : inc.metodoPagamento === 'Fornecedor' ? PALETTE.purple : null;
+    var _incMetC = inc.metodoPagamento === 'RAD' ? PALETTE.statusBlue : inc.metodoPagamento === 'Fornecedor' ? PALETTE.purple : inc.metodoPagamento === 'Split Payment' ? PALETTE.teal : null;
     var incMetodoCell = _incMetC
       ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:'+_incMetC+'"><span style="width:5px;height:5px;border-radius:50%;background:'+_incMetC+';display:inline-block"></span>'+inc.metodoPagamento+'</span>'
       : '<span style="color:var(--txt3);font-size:11px">—</span>';
@@ -7526,10 +7526,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
           var contrato = buscarContrato(nf.cnpj, dataEfetiva);
           var contratoId = contrato ? contrato.id : null;
-          var rad = contrato && contrato.rad !== undefined
-            ? contrato.rad
-            : (Math.random() < 0.5);
-          var metodoPagamento = rad ? 'RAD' : 'Fornecedor';
+          // Método de pagamento herdado do contrato — três valores possíveis.
+          // Sem contrato vigente na data, aplica-se o mecanismo padrão da
+          // LC 214/2025: Split Payment.
+          var _metCt = contrato
+            ? (typeof contratoMetodo === 'function'
+                ? contratoMetodo(contrato)
+                : (contrato.metodo || (contrato.rad ? 'rad' : 'fornecedor')))
+            : 'split';
+          var metodoPagamento = { split: 'Split Payment', rad: 'RAD', fornecedor: 'Fornecedor' }[_metCt] || 'Fornecedor';
+          var rad = (_metCt === 'rad');
 
           var _tipoDFEnt = _getTipoDFLoc(nf.numero);
           var nfRecord = {
