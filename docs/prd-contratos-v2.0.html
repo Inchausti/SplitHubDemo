@@ -176,16 +176,16 @@ a.xref:hover { border-bottom-style: solid; }
 
   <div class="eyebrow">PRD · Configurações → Contratos</div>
   <h1>Contratos — Governança do Recolhimento</h1>
-  <p class="subtitle">Camada de configuração que determina, por CNPJ fornecedor, <strong>quem recolhe o IBS e a CBS</strong> — por Split Payment, RAD ou pelo próprio fornecedor — e em que prazo o pagamento ocorre. É a decisão contratual que governa o comportamento dos módulos de Pagamentos e Crédito, e a regra que exige contrato vigente para toda nota fiscal recebida.</p>
+  <p class="subtitle">Camada de configuração que determina, por CNPJ fornecedor, <strong>quem recolhe o IBS e a CBS</strong> — o fornecedor ou o adquirente via RAD — e em que prazo o pagamento ocorre. É a decisão contratual que governa o comportamento dos módulos de Pagamentos e Crédito, e a regra que exige contrato vigente para toda nota fiscal recebida.</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.1</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.0</span></div>
     <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Configurações → Contratos</span></div>
     <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-contratos</span></div>
     <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025</span></div>
     <div class="meta-pill" style="margin-left:auto">
-      <span class="chip ok">Publicado</span>&nbsp;<span class="chip purple">v2.1</span>
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip purple">v2.0</span>
     </div>
   </div>
 
@@ -193,7 +193,7 @@ a.xref:hover { border-bottom-style: solid; }
     <div class="toc-title">Índice</div>
     <ul class="toc-list">
       <li><a href="#s01"><span class="toc-num">01</span> Contexto e posicionamento</a></li>
-      <li><a href="#s02"><span class="toc-num">02</span> Métodos de pagamento</a></li>
+      <li><a href="#s02"><span class="toc-num">02</span> Modelo de operação do tributo</a></li>
       <li><a href="#s03"><span class="toc-num">03</span> Modelo de dados</a></li>
       <li><a href="#s04"><span class="toc-num">04</span> Máquina de estados</a></li>
       <li><a href="#s05"><span class="toc-num">05</span> Resolução de contrato vigente</a></li>
@@ -293,91 +293,50 @@ guias RAD                      apropriação
 
   <!-- ══ 02 ══ -->
   <div class="section" id="s02">
-    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Métodos de pagamento</span></div>
-    <p class="sec-sub">O campo mais consequente do contrato. Define quem é o responsável pelo recolhimento do IBS e da CBS perante o Fisco. A interface documenta os três métodos num tooltip de 300px no formulário de cadastro — documentação embutida no ponto de decisão.</p>
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Modelo de operação do tributo</span></div>
+    <p class="sec-sub">O campo mais consequente do contrato. A interface documenta os dois modelos num tooltip de 300px no formulário de cadastro — documentação embutida no ponto de decisão.</p>
 
     <div class="table-wrap">
       <table>
-        <thead><tr><th></th><th>Split Payment</th><th>RAD</th><th>Fornecedor</th></tr></thead>
+        <thead><tr><th></th><th>Fornecedor recolhe</th><th>Adquirente recolhe (RAD)</th></tr></thead>
         <tbody>
           <tr>
-            <td><strong>Valor de <code>metodo</code></strong></td>
-            <td><code>'split'</code></td>
-            <td><code>'rad'</code></td>
-            <td><code>'fornecedor'</code></td>
+            <td><strong>Valor de <code>rad</code></strong></td>
+            <td><code>false</code></td>
+            <td><code>true</code></td>
           </tr>
           <tr>
-            <td><strong>Método no RF</strong></td>
-            <td><code>Split Payment</code></td>
-            <td><code>RAD</code></td>
-            <td><code>Fornecedor</code></td>
+            <td><strong>Valor de <code>modelo</code></strong></td>
+            <td><code>'split'</code></td>
+            <td><code>'adquirente'</code></td>
           </tr>
           <tr>
             <td><strong>Responsável legal</strong></td>
-            <td>Fornecedor, com retenção na origem</td>
-            <td>Adquirente, por cláusula contratual</td>
             <td>Fornecedor emitente</td>
+            <td>Adquirente, por cláusula contratual</td>
           </tr>
           <tr>
             <td><strong>Mecânica</strong></td>
-            <td>O prestador de serviço de pagamento separa o IBS/CBS na liquidação financeira e repassa direto ao Fisco. O fornecedor recebe apenas o líquido.</td>
-            <td>A responsabilidade é transferida ao comprador. Ele gera a guia e recolhe diretamente.</td>
-            <td>O emitente destaca os tributos na NF e recolhe por conta própria, sem retenção automática.</td>
+            <td>Fornecedor emite a NF com tributos destacados e recolhe. O split payment retém e repassa o montante ao Fisco na liquidação financeira.</td>
+            <td>A responsabilidade tributária é transferida ao comprador. O adquirente retém o valor de IBS/CBS e recolhe diretamente.</td>
           </tr>
           <tr>
             <td><strong>Quando se usa</strong></td>
-            <td>Mecanismo padrão da LC 214/2025</td>
-            <td>Substitutos tributários ou acordos específicos entre as partes</td>
-            <td>Operações fora do arranjo de pagamento com retenção</td>
+            <td>Modelo padrão</td>
+            <td>Operações com substitutos tributários ou acordos específicos entre as partes</td>
           </tr>
           <tr>
             <td><strong>Efeito no SplitHub</strong></td>
-            <td>RF não entra no módulo de Pagamentos; apropriação segue a liquidação</td>
+            <td>RF não aparece no módulo de Pagamentos; apropriação depende do fornecedor</td>
             <td>RF entra no módulo de Pagamentos; a empresa gera guia e paga</td>
-            <td>RF não entra em Pagamentos; apropriação depende do fornecedor</td>
-          </tr>
-          <tr>
-            <td><strong>Cor na interface</strong></td>
-            <td><span class="swatch"><span class="sw" style="background:#0E9E8E"></span>Teal</span></td>
-            <td><span class="swatch"><span class="sw" style="background:#1D5FCC"></span>Azul</span></td>
-            <td><span class="swatch"><span class="sw" style="background:#B97A10"></span>Âmbar</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h3>2.1 Gradiente de risco entre os três métodos</h3>
-    <p>A escolha do método não é administrativa — ela determina <strong>de quem depende</strong> a confirmação do crédito do adquirente, e portanto onde mora o risco.</p>
-
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Método</th><th>Depende de</th><th>Natureza do risco</th><th>Incidência de flags no protótipo</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><strong>Split Payment</strong></td>
-            <td>Arranjo de pagamento</td>
-            <td>Residual — divergência de valor retido ou falha de repasse. O tributo sai automaticamente, então não há inadimplência possível.</td>
-            <td><strong>~6%</strong> · sem estado <code>vencido</code></td>
-          </tr>
-          <tr>
-            <td><strong>RAD</strong></td>
-            <td>Da própria empresa</td>
-            <td>Execução interna — se não gerar e pagar a guia, perde o crédito por inação própria.</td>
-            <td>Inconsistência obrigatória enquanto não pago</td>
-          </tr>
-          <tr>
-            <td><strong>Fornecedor</strong></td>
-            <td>De terceiro</td>
-            <td>Contraparte — a empresa não controla o recolhimento e pode perder o crédito por inadimplência alheia.</td>
-            <td><strong>~23%</strong> · inclui <code>vencido</code></td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <div class="callout warn">
-      <div class="ct">A troca que cada método representa</div>
-      <p><strong>Split Payment</strong> elimina o risco de inadimplência ao custo de não controlar o fluxo — o valor sai na liquidação, sem escolha. <strong>Fornecedor</strong> preserva o fluxo de caixa integral mas expõe a empresa ao comportamento de terceiro. <strong>RAD</strong> troca risco de contraparte por risco de execução: a empresa passa a controlar a confirmação do próprio crédito, e assume em troca carga operacional — é o único método que gera trabalho recorrente no módulo de Pagamentos.</p>
+      <div class="ct">Assimetria de risco entre os modelos</div>
+      <p>Sob <strong>Fornecedor</strong>, a empresa depende de terceiro para confirmar o próprio crédito — risco externo, mitigável por seleção de fornecedor. Sob <strong>RAD</strong>, a empresa controla a confirmação, mas assume carga operacional: se não gerar e pagar a guia, perde o crédito por inação própria. Escolher RAD troca risco de contraparte por risco de execução.</p>
     </div>
 
     <h3>2.1 Prazo de pagamento</h3>
@@ -400,30 +359,19 @@ guias RAD                      apropriação
 
     <h3>3.1 Objeto <code>contrato</code></h3>
     <div class="code-block"><code>{
-  <span class="v">id</span>:        <span class="s">"CT-0001"</span>,            <span class="c">// CT- + 4 dígitos, zero-padded</span>
-  <span class="v">cnpj</span>:      <span class="s">"28.447.821/0001-35"</span>, <span class="c">// CNPJ do fornecedor, formatado</span>
-  <span class="v">inicio</span>:    <span class="s">"01/01/2026"</span>,         <span class="c">// DD/MM/AAAA — string, não Date</span>
-  <span class="v">fim</span>:       <span class="s">"31/12/2026"</span>,         <span class="c">// DD/MM/AAAA</span>
-  <span class="v">metodo</span>:    <span class="s">"split" | "rad" | "fornecedor"</span>,
-  <span class="v">prazo</span>:     <span class="s">"30"</span>,                 <span class="c">// string; 1 a 360 dias</span>
-  <span class="v">historico</span>: [ <span class="c">/* eventos do ciclo de vida — seção 3.4 */</span> ],
-
-  <span class="v">rad</span>:       <span class="k">true</span>                  <span class="c">// legado, derivado de metodo === 'rad'</span>
+  <span class="v">id</span>:     <span class="s">"CT-0001"</span>,           <span class="c">// CT- + 4 dígitos, zero-padded</span>
+  <span class="v">cnpj</span>:   <span class="s">"28.447.821/0001-35"</span>,<span class="c">// CNPJ do fornecedor, formatado</span>
+  <span class="v">inicio</span>: <span class="s">"01/01/2026"</span>,        <span class="c">// DD/MM/AAAA — string, não Date</span>
+  <span class="v">fim</span>:    <span class="s">"31/12/2026"</span>,        <span class="c">// DD/MM/AAAA</span>
+  <span class="v">rad</span>:    <span class="k">true</span>,                <span class="c">// true = adquirente recolhe</span>
+  <span class="v">prazo</span>:  <span class="s">"30"</span>,                <span class="c">// string, não número</span>
+  <span class="v">modelo</span>: <span class="s">"adquirente"</span>          <span class="c">// 'split' | 'adquirente' — opcional</span>
 }</code></div>
 
-    <div class="callout info">
-      <div class="ct">Migração do modelo booleano</div>
-      <p>Até a v2.0 o método era um booleano <code>rad</code>, que só comportava dois valores. Com três métodos, o campo passou a ser <code>metodo</code>. O booleano permanece gravado e sincronizado porque o gerador de registros fiscais ainda o consome, mas não é mais a fonte de verdade.</p>
-      <p><code>contratoMetodo(ct)</code> resolve o método com precedência e cobre os dados legados:</p>
+    <div class="callout warn">
+      <div class="ct">Redundância entre <code>rad</code> e <code>modelo</code></div>
+      <p>Os dois campos codificam a mesma informação. <code>rad</code> é booleano e existe em todos os registros; <code>modelo</code> é string e só aparece nos criados ou editados pela interface. A sincronização é feita manualmente na gravação (<code>ct.rad = (modelo === 'adquirente')</code>), e a leitura em <code>contratosAbrirEditar</code> precisa de um fallback que cobre o caso de <code>modelo</code> ausente com <code>rad</code> verdadeiro. Fonte única de verdade eliminaria a classe inteira de inconsistência.</p>
     </div>
-
-    <div class="code-block"><code><span class="k">function</span> <span class="v">contratoMetodo</span>(ct) {
-  <span class="k">if</span> (ct.metodo) <span class="k">return</span> ct.metodo;                 <span class="c">// v2.1 em diante</span>
-  <span class="k">if</span> (ct.modelo === <span class="s">"adquirente"</span>) <span class="k">return</span> <span class="s">"rad"</span>;   <span class="c">// campo intermediário</span>
-  <span class="k">if</span> (ct.modelo === <span class="s">"split"</span>)      <span class="k">return</span> <span class="s">"split"</span>;
-  <span class="k">return</span> ct.rad ? <span class="s">"rad"</span> : <span class="s">"fornecedor"</span>;          <span class="c">// booleano original</span>
-}</code></div>
-    <p>Contratos anteriores com <code>rad: false</code> migram para <code>fornecedor</code>, não para <code>split</code> — é o comportamento que a interface exibia antes da mudança, então nenhum contrato existente muda de significado.</p>
 
     <h3>3.2 Estrutura normalizada <code>_contratosData</code></h3>
     <p>Projeção gerada a cada render, consumida pelo ShColMgr e pelos filtros de contrato de outros módulos.</p>
@@ -434,15 +382,15 @@ guias RAD                      apropriação
   <span class="v">status</span>: <span class="k">string</span>,            <span class="c">// derivado por contratoStatus()</span>
   <span class="v">inicio</span>: <span class="k">string</span>,
   <span class="v">fim</span>: <span class="k">string</span>,
-  <span class="v">rad</span>: <span class="s">'Split Payment' | 'RAD' | 'Fornecedor'</span>, <span class="c">// rótulo do método</span>
+  <span class="v">rad</span>: <span class="s">'RAD' | 'Split Payment'</span>, <span class="c">// rótulo, não booleano</span>
   <span class="v">prazo</span>: <span class="k">string</span>,
   <span class="v">nfsVinculadas</span>: <span class="k">number</span>       <span class="c">// contagem calculada</span>
 }</code></div>
-    <p>A chave mantém o nome histórico <code>rad</code>, mas carrega o <strong>rótulo do método</strong> — não um booleano. A exportação CSV mostra <code>"Split Payment"</code>, <code>"RAD"</code> ou <code>"Fornecedor"</code>, exatamente o texto exibido na tabela.</p>
+    <p>O campo <code>rad</code> muda de tipo na projeção: booleano no objeto de origem, rótulo textual aqui. A exportação CSV, portanto, mostra <code>"RAD"</code> ou <code>"Split Payment"</code>, não <code>true</code>/<code>false</code>.</p>
 
-    <div class="callout ok">
-      <div class="ct">Rótulo unificado na v2.1</div>
-      <p>Até a v2.0 o mesmo método aparecia como <code>Fornecedor</code> na tela e <code>Split Payment</code> na exportação. Agora um único catálogo, <code>CONTRATO_METODOS</code>, fornece rótulo, cor e valor do RF — tela e CSV mostram o mesmo texto.</p>
+    <div class="callout info">
+      <div class="ct">Divergência de rótulo</div>
+      <p>A projeção usa <code>'Split Payment'</code> enquanto a interface exibe <code>'Fornecedor'</code> (via <code>contratoMecanismoBadge</code>) e o filtro usa o valor <code>'split'</code>. Três vocabulários para o mesmo conceito. A exportação CSV mostra rótulo diferente do que o usuário vê na tela.</p>
     </div>
 
     <h3>3.3 Datas como texto</h3>
@@ -459,53 +407,6 @@ guias RAD                      apropriação
     </div>
     <p>A dupla conversão é necessária porque os filtros usam <code>&lt;input type="date"&gt;</code>, que produz ISO, enquanto o dado nasce em formato brasileiro. Armazenar em ISO e formatar na exibição eliminaria uma das rotas.</p>
   </div>
-
-    <h3>3.4 Histórico do ciclo de vida</h3>
-    <p>Cada contrato carrega um array <code>historico</code> com os eventos que o alteraram. É o registro de auditoria do módulo.</p>
-    <div class="code-block"><code>{
-  <span class="v">ts</span>:         <span class="s">"2026-04-24T20:30:00"</span>,   <span class="c">// ISO local</span>
-  <span class="v">tipo</span>:       <span class="s">"criacao" | "edicao" | "encerramento" | "reativacao"</span>,
-  <span class="v">usuario</span>:    <span class="s">"José da Silva"</span>,
-  <span class="v">alteracoes</span>: [                          <span class="c">// diff em linguagem de negócio</span>
-    { <span class="v">campo</span>: <span class="s">"Prazo de pagamento"</span>,  <span class="v">de</span>: <span class="s">"90 dias"</span>,       <span class="v">para</span>: <span class="s">"45 dias"</span> },
-    { <span class="v">campo</span>: <span class="s">"Método de pagamento"</span>, <span class="v">de</span>: <span class="s">"Split Payment"</span>, <span class="v">para</span>: <span class="s">"RAD"</span> }
-  ],
-  <span class="v">obs</span>:        <span class="s">""</span>                          <span class="c">// contexto livre do evento</span>
-}</code></div>
-
-    <h4>Tipos de evento</h4>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Tipo</th><th>Ícone</th><th>Quando</th><th>Conteúdo do diff</th></tr></thead>
-        <tbody>
-          <tr><td><code>criacao</code></td><td><strong style="color:var(--green)">+</strong></td><td>Cadastro do contrato</td><td>Os quatro campos, de <code>—</code> para o valor inicial</td></tr>
-          <tr><td><code>edicao</code></td><td><strong style="color:var(--blue)">✎</strong></td><td>Alteração de vigência, prazo ou método</td><td>Somente os campos efetivamente alterados</td></tr>
-          <tr><td><code>encerramento</code></td><td><strong style="color:var(--red)">■</strong></td><td>Encerramento antecipado</td><td>Fim da vigência, do valor anterior para a data corrente</td></tr>
-          <tr><td><code>reativacao</code></td><td><strong style="color:var(--amber)">↻</strong></td><td>Reabertura de vigência encerrada</td><td>Previsto no catálogo; sem gatilho na interface atual</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h4>Semeadura de contratos legados</h4>
-    <p>Contratos da carga inicial não têm histórico. Em vez de inventar autoria, <code>contratoHistorico(ct)</code> semeia sob demanda um evento de criação marcado como <strong>"Carga inicial"</strong>, ancorado na data de início da vigência:</p>
-    <div class="code-block"><code><span class="k">function</span> <span class="v">contratoHistorico</span>(ct) {
-  <span class="k">if</span> (!ct.historico) {
-    ct.historico = [{
-      ts: <span class="c">/* início da vigência, à meia-noite */</span>,
-      tipo: <span class="s">"criacao"</span>,
-      usuario: <span class="s">"Carga inicial"</span>,
-      alteracoes: [],
-      obs: <span class="s">"Contrato existente na base ao início do registro de auditoria."</span>
-    }];
-  }
-  <span class="k">return</span> ct.historico;
-}</code></div>
-    <p>A semeadura é idempotente — chamadas seguintes devolvem o array existente sem recriar o evento.</p>
-
-    <div class="callout info">
-      <div class="ct">Ancoragem temporal no protótipo</div>
-      <p>Os timestamps usam <code>contratoAgoraISO()</code>, que combina a <strong>data</strong> de <code>HOJE_REF</code> (24/04/2026, a referência fixa do protótipo) com a <strong>hora real</strong> do relógio. Isso mantém os eventos coerentes com o calendário da demonstração sem congelar o horário, deixando a ordem cronológica legível numa sessão de uso. Em produção, a referência deve ser o relógio do servidor.</p>
-    </div>
 
   <!-- ══ 04 ══ -->
   <div class="section" id="s04">
@@ -694,9 +595,9 @@ guias RAD                      apropriação
           <li><strong>Fechar</strong> — botão primário teal</li>
         </ul>
 
-        <div class="callout ok">
-          <div class="ct">Encerramento implementado na v2.1</div>
-          <p>Até a v2.0 o botão apenas fechava o modal. Agora abre um diálogo de confirmação que declara o impacto — nova data de fim, método que deixa de valer, e quantas notas já vinculadas permanecem inalteradas — e, ao confirmar, ajusta a vigência e grava um evento de auditoria. Ver <strong>F-05</strong>.</p>
+        <div class="callout red">
+          <div class="ct">"Encerrar contrato" não encerra nada</div>
+          <p>O botão executa apenas <code>contratosFecharDetalhe()</code> — fecha o modal sem alterar a vigência nem registrar o encerramento. É um controle que promete uma ação irreversível e não a realiza. Ver <a class="xref" href="#s08">Defeitos identificados</a>.</p>
         </div>
 
         <h4>Ciclo de vida</h4>
@@ -768,8 +669,8 @@ guias RAD                      apropriação
               <tr><td>CNPJ / Fornecedor</td><td><span class="chip gray">Não</span></td><td>Somente leitura</td></tr>
               <tr><td>Início da vigência</td><td><span class="chip ok">Sim</span></td><td>Texto <code>DD/MM/AAAA</code></td></tr>
               <tr><td>Fim da vigência</td><td><span class="chip ok">Sim</span></td><td>Texto <code>DD/MM/AAAA</code></td></tr>
-              <tr><td>Prazo de pagamento</td><td><span class="chip ok">Sim</span></td><td><strong>Slider de 1 a 360 dias</strong> — idêntico ao do cadastro</td></tr>
-              <tr><td>Método de pagamento</td><td><span class="chip ok">Sim</span></td><td>Split Payment · RAD · Fornecedor</td></tr>
+              <tr><td>Prazo de pagamento</td><td><span class="chip ok">Sim</span></td><td>30 · <strong>45</strong> · 60 · 90 · 120 dias</td></tr>
+              <tr><td>Modelo de pagamento</td><td><span class="chip ok">Sim</span></td><td>Split Payment · RAD — Adquirente</td></tr>
             </tbody>
           </table>
         </div>
@@ -793,110 +694,19 @@ ct.rad = (modelo === <span class="s">'adquirente'</span>);   <span class="c">// 
 <span class="k">var</span> cd = _contratosData.find(x =&gt; x.cnpj === ct.cnpj);
 <span class="k">if</span> (cd) { cd.prazo = prazo; cd.rad = (modelo === <span class="s">'adquirente'</span>); }</code></div>
 
-        <h4>Gravação na v2.1</h4>
-        <div class="code-block"><code><span class="c">// Mesma validação de sobreposição do cadastro, ignorando o próprio contrato</span>
-<span class="k">if</span> (contratoVigenciaSobrepoe(ct.cnpj, iniD, fimD, ct.id)) {
-  <span class="k">return</span> <span class="s">"A nova vigência se sobrepõe a outro contrato deste CNPJ."</span>;
-}
-
-<span class="c">// Diff antes de gravar — nada muda, nada é registrado</span>
-<span class="k">var</span> alteracoes = contratoDiff(antes, depois);
-<span class="k">if</span> (!alteracoes.length) <span class="k">return</span> <span class="s">"Nenhuma alteração a salvar."</span>;
-
-ct.inicio = iniStr; ct.fim = fimStr; ct.prazo = prazo; ct.metodo = modelo;
-ct.rad = (modelo === <span class="s">'rad'</span>);   <span class="c">// compat com o gerador de RFs</span>
-contratoRegistrarEvento(ct, <span class="s">'edicao'</span>, alteracoes, <span class="s">''</span>);
-
-<span class="c">// _contratosData é reconstruído pelo render — sem sincronização manual</span>
-contratosRenderTabela(); contratosRenderKPIs();</code></div>
-
-        <div class="callout ok">
-          <div class="ct">Três correções da v2.1</div>
-          <p><strong>Sobreposição validada.</strong> A regra que o cadastro aplicava passou a valer também na edição, por uma função compartilhada que exclui o próprio contrato da comparação. A invariante de contrato vigente único volta a se sustentar.</p>
-          <p><strong>Sincronização manual removida.</strong> Buscava em <code>_contratosData</code> por CNPJ (não por id) e propagava dois dos cinco campos. Como o render reconstrói a projeção logo em seguida, a sincronização era incorreta e redundante.</p>
-          <p><strong>Edição sem efeito é recusada.</strong> Salvar sem alterar nada avisa em vez de gravar um evento de auditoria vazio.</p>
+        <div class="callout warn">
+          <div class="ct">Duas fragilidades na gravação</div>
+          <p><strong>Sem validação de sobreposição.</strong> A edição pode estender a vigência para cima de outro contrato do mesmo CNPJ — exatamente o que o cadastro impede. A invariante de contrato ativo único não se sustenta pela edição.</p>
+          <p><strong>Sincronização por CNPJ.</strong> <code>_contratosData.find(x =&gt; x.cnpj === ct.cnpj)</code> localiza o primeiro registro daquele CNPJ, que pode não ser o contrato editado. Além disso, a projeção sincronizada não recebe as novas datas nem o status recalculado — só <code>prazo</code> e <code>rad</code>.</p>
         </div>
         <p>Confirmação verde e fechamento após 800ms.</p>
       </div>
     </div>
 
     <!-- F06 -->
-    <!-- F06 -->
     <div class="feat">
       <div class="feat-hdr">
         <span class="feat-id">F-06</span>
-        <span class="feat-name">Encerramento antecipado de contrato</span>
-        <span class="feat-loc">contratosEncerrar(ctId)</span>
-      </div>
-      <div class="feat-body">
-        <p>Oferecido apenas para contratos <code>ativo</code>. Abre um diálogo de confirmação que declara o impacto antes de executar — nenhuma ação destrutiva ocorre sem revisão.</p>
-
-        <h4>Conteúdo da confirmação</h4>
-        <ul class="plain">
-          <li><strong>Fim da vigência</strong> — do valor atual para a data corrente</li>
-          <li><strong>Método que deixa de valer</strong> — nomeado explicitamente, já que é o parâmetro que governa os módulos downstream</li>
-          <li><strong>CNPJ ficará sem contrato vigente</strong> — novas notas entram como descobertas</li>
-          <li><strong>Notas já vinculadas</strong> — contagem, com a garantia de que permanecem inalteradas</li>
-          <li><strong>Autoria</strong> — quem ficará registrado no histórico</li>
-        </ul>
-
-        <h4>Semântica da data de encerramento</h4>
-        <p>O encerramento define <code>fim</code> como a data corrente. Como a vigência é um intervalo <strong>fechado</strong> (RN-CTR-04), o contrato permanece válido até o fim daquele dia e expira a partir do seguinte. O texto do diálogo declara isso — encerrar hoje não invalida retroativamente notas emitidas hoje.</p>
-
-        <div class="callout info">
-          <div class="ct">Consequência para o status</div>
-          <p>Logo após confirmar, o contrato ainda aparece como <code>ativo</code>, porque a data de referência é igual ao fim da vigência. A transição para <code>encerrado</code> ocorre sozinha no dia seguinte, sem nova escrita — comportamento coerente com a máquina de status derivado da seção 4.</p>
-        </div>
-
-        <h4>Registro em auditoria</h4>
-        <div class="code-block"><code>contratoRegistrarEvento(ct, <span class="s">'encerramento'</span>,
-  [{ campo: <span class="s">'Fim da vigência'</span>, de: fimAnterior, para: hojeStr }],
-  <span class="s">'Encerramento antecipado solicitado na interface.'</span>);</code></div>
-      </div>
-    </div>
-
-    <!-- F07 -->
-    <div class="feat">
-      <div class="feat-hdr">
-        <span class="feat-id">F-07</span>
-        <span class="feat-name">Timeline de histórico e auditoria</span>
-        <span class="feat-loc">contratoHistoricoHtml(ct, c)</span>
-      </div>
-      <div class="feat-body">
-        <p>Seção do modal de detalhe que apresenta o ciclo de vida completo do contrato, do evento mais recente ao mais antigo.</p>
-
-        <h4>Anatomia de cada entrada</h4>
-        <ul class="plain">
-          <li><strong>Marcador circular</strong> de 22px com ícone e cor do tipo de evento, ligado ao próximo por uma linha vertical</li>
-          <li><strong>Rótulo do evento</strong> à esquerda e <strong>data/hora</strong> monoespaçada à direita, no formato <em>24/04/2026 às 20:30</em></li>
-          <li><strong>Autor</strong> abaixo do rótulo</li>
-          <li><strong>Diff</strong> — uma linha por campo alterado, com o valor anterior riscado e o novo em destaque</li>
-          <li><strong>Observação</strong> em itálico, quando o evento carrega contexto</li>
-        </ul>
-
-        <h4>Exemplo renderizado</h4>
-        <div class="code-block"><code><span class="c">HISTÓRICO E AUDITORIA                          2 eventos</span>
-
-<span class="v">✎</span>  <span class="k">Contrato editado</span>                    24/04/2026 às 20:30
-   José da Silva
-   Prazo de pagamento:   <span class="c">90 dias</span> → <span class="n">45 dias</span>
-   Método de pagamento:  <span class="c">Split Payment</span> → <span class="n">RAD</span>
-
-<span class="v">+</span>  <span class="k">Contrato criado</span>                     01/04/2026 às 00:00
-   Carga inicial
-   <span class="c">Contrato existente na base ao início do registro de auditoria.</span></code></div>
-
-        <h4>Por que o diff é em linguagem de negócio</h4>
-        <p><code>contratoDiff()</code> não compara campos brutos: aplica o formatador de cada campo antes de registrar. O histórico mostra <em>"Split Payment → RAD"</em>, não <code>"split" → "rad"</code>; <em>"90 dias → 45 dias"</em>, não <code>"90" → "45"</code>. O registro de auditoria é lido por quem opera o contrato, não por quem mantém o código.</p>
-
-        <h4>Contagem</h4>
-        <p>O cabeçalho da seção exibe a quantidade de eventos com pluralização correta, dando noção imediata de quanto o contrato foi mexido.</p>
-      </div>
-    </div>
-
-    <div class="feat">
-      <div class="feat-hdr">
-        <span class="feat-id">F-08</span>
         <span class="feat-name">Validação de cobertura contratual</span>
         <span class="feat-loc">contratosValidarNFs() · contratosVolumeVencido()</span>
       </div>
@@ -925,7 +735,7 @@ impostos.forEach(r =&gt; { total++; <span class="k">if</span> (getContratoPorFor
     <!-- F07 -->
     <div class="feat">
       <div class="feat-hdr">
-        <span class="feat-id">F-09</span>
+        <span class="feat-id">F-07</span>
         <span class="feat-name">Contagem de NFs vinculadas</span>
         <span class="feat-loc">contratosContarNFs(cnpj)</span>
       </div>
@@ -945,7 +755,7 @@ impostos.forEach(r =&gt; { total++; <span class="k">if</span> (getContratoPorFor
     <!-- F08 -->
     <div class="feat">
       <div class="feat-hdr">
-        <span class="feat-id">F-10</span>
+        <span class="feat-id">F-08</span>
         <span class="feat-name">Gestão de colunas — ShColMgr</span>
         <span class="feat-loc">register('admin-contratos')</span>
       </div>
@@ -977,7 +787,7 @@ impostos.forEach(r =&gt; { total++; <span class="k">if</span> (getContratoPorFor
     <!-- F09 -->
     <div class="feat">
       <div class="feat-hdr">
-        <span class="feat-id">F-11</span>
+        <span class="feat-id">F-09</span>
         <span class="feat-name">Contratos no Portal do Fornecedor</span>
         <span class="feat-loc">#forn-org-contratos-tbody</span>
       </div>
@@ -1039,36 +849,19 @@ impostos.forEach(r =&gt; { total++; <span class="k">if</span> (getContratoPorFor
     <div class="kpi-spec">
       <div class="kpi-hdr">
         <span class="kpi-id">K-03</span>
-        <span class="kpi-name">Método de pagamento</span>
-        <span class="kpi-type">Card composto · breakdown dos três métodos</span>
+        <span class="kpi-name">Via RAD</span>
+        <span class="kpi-type">Contagem por modelo de operação</span>
       </div>
       <div class="kpi-body">
         <div class="spec-grid">
-          <div class="spec-k">Valor principal</div><div class="spec-v"><code>#ctr-rad</code> — contagem de contratos via RAD</div>
-          <div class="spec-k">Subtítulo</div><div class="spec-v"><code>#ctr-rad-sub</code> — <em>"via RAD — Recolhimento pelo Adquirente"</em></div>
-          <div class="spec-k">Rodapé</div><div class="spec-v"><code>#ctr-met-split</code> · <code>#ctr-met-rad</code> · <code>#ctr-met-forn</code></div>
-          <div class="spec-k">Cores</div><div class="spec-v"><span class="swatch"><span class="sw" style="background:#0E9E8E"></span>Split</span><span class="swatch"><span class="sw" style="background:#1D5FCC"></span>RAD</span><span class="swatch"><span class="sw" style="background:#B97A10"></span>Fornecedor</span></div>
+          <div class="spec-k">Elemento</div><div class="spec-v"><code>#ctr-rad</code></div>
+          <div class="spec-k">Fórmula</div><div class="spec-v"><code>contratos.filter(c =&gt; c.rad).length</code></div>
+          <div class="spec-k">Subtítulo</div><div class="spec-v"><code>#ctr-rad-sub</code> — <em>"Recolhimento pelo Adquirente"</em></div>
           <div class="spec-k">Recorte</div><div class="spec-v">Todos os contratos, <strong>inclusive encerrados</strong></div>
         </div>
-
-        <h4>Cálculo</h4>
-        <div class="code-block"><code><span class="k">var</span> porMetodo = { split: <span class="n">0</span>, rad: <span class="n">0</span>, fornecedor: <span class="n">0</span> };
-contratos.forEach(<span class="k">function</span>(c) {
-  <span class="k">var</span> m = contratoMetodo(c);
-  <span class="k">if</span> (porMetodo[m] !== <span class="k">undefined</span>) porMetodo[m]++;
-});</code></div>
-        <p>A resolução passa por <code>contratoMetodo()</code>, então contratos legados sem o campo <code>metodo</code> são classificados corretamente pelo booleano.</p>
-
-        <h4>Por que o RAD ocupa o valor principal</h4>
-        <p>Dos três métodos, apenas o RAD <strong>gera trabalho recorrente</strong> para a empresa — cada contrato RAD significa notas cujas guias alguém precisa emitir e pagar no módulo de Pagamentos. Split Payment e Fornecedor não produzem tarefa operacional interna. O número em destaque é, portanto, o dimensionamento de carga; o rodapé dá a composição completa.</p>
-
-        <h4>Leitura analítica</h4>
-        <p>A distribuição entre os três métodos é o perfil de risco da carteira de fornecedores. Concentração em <strong>Split Payment</strong> indica exposição baixa — o tributo sai automaticamente. Concentração em <strong>Fornecedor</strong> transfere o risco para terceiros e deve ser lida junto com o KPI de inadimplência no módulo de Crédito. Crescimento do <strong>RAD</strong> exige acompanhar a capacidade operacional: assumir a responsabilidade sem executá-la é a única forma de perder crédito por mérito próprio.</p>
-
-        <div class="callout warn">
-          <div class="ct">Recorte inclui encerrados</div>
-          <p>O contador não filtra por status, então contratos encerrados continuam somando. Para dimensionar carga operacional corrente, o número correto seria a interseção com <code>ativo</code> — ver <a class="xref" href="#s09">RF-CTR-064</a>.</p>
-        </div>
+        <h4>Leitura</h4>
+        <p>Mede a exposição operacional da empresa. Cada contrato RAD é um fornecedor cujas notas exigirão geração e pagamento de guia pelo próprio adquirente. O crescimento deste número deve ser acompanhado por capacidade operacional no módulo de Pagamentos — sob pena de perda de crédito por inação.</p>
+        <p>Como não filtra por status, contratos RAD encerrados continuam somando. Para dimensionar carga operacional corrente, o número correto seria a interseção com <code>ativo</code>.</p>
       </div>
     </div>
 
@@ -1148,25 +941,7 @@ contratos.forEach(<span class="k">function</span>(c) {
   <!-- ══ 08 ══ -->
   <div class="section" id="s08">
     <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Defeitos identificados</span></div>
-    <p class="sec-sub">Problemas confirmados por leitura do código. Cinco foram corrigidos na v2.1; cinco permanecem abertos. Ordenados por severidade.</p>
-
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>ID</th><th>Defeito</th><th>Severidade</th><th>Situação</th></tr></thead>
-        <tbody>
-          <tr><td class="rid">DEF-01</td><td>Ordenação por coluna aplica a chave errada</td><td>Alta</td><td><span class="chip red">Aberto</span></td></tr>
-          <tr><td class="rid">DEF-02</td><td>Rótulo de prazo derivado de mapa fechado</td><td>Alta</td><td><span class="chip ok">Corrigido v2.1</span></td></tr>
-          <tr><td class="rid">DEF-03</td><td>Volume vencido ignora a coleção de impostos</td><td>Média</td><td><span class="chip red">Aberto</span></td></tr>
-          <tr><td class="rid">DEF-04</td><td>"Encerrar contrato" não executava encerramento</td><td>Média</td><td><span class="chip ok">Corrigido v2.1</span></td></tr>
-          <tr><td class="rid">DEF-05</td><td>Edição sem validação de sobreposição</td><td>Média</td><td><span class="chip ok">Corrigido v2.1</span></td></tr>
-          <tr><td class="rid">DEF-06</td><td>Sincronização da projeção parcial e por chave errada</td><td>Média</td><td><span class="chip ok">Corrigido v2.1</span></td></tr>
-          <tr><td class="rid">DEF-07</td><td>Agregações do detalhe comparam CNPJ com razão social</td><td>Média</td><td><span class="chip red">Aberto</span></td></tr>
-          <tr><td class="rid">DEF-08</td><td>Três expansões diferentes de RAD na interface</td><td>Baixa</td><td><span class="chip warn">Parcial</span></td></tr>
-          <tr><td class="rid">DEF-09</td><td>Vocabulário inconsistente para o método</td><td>Baixa</td><td><span class="chip ok">Corrigido v2.1</span></td></tr>
-          <tr><td class="rid">DEF-10</td><td>Datas de vigência sem máscara ou seletor</td><td>Baixa</td><td><span class="chip red">Aberto</span></td></tr>
-        </tbody>
-      </table>
-    </div>
+    <p class="sec-sub">Problemas confirmados por leitura do código, com impacto e correção proposta. Ordenados por severidade.</p>
 
     <!-- DEF-01 -->
     <div class="feat">
@@ -1217,7 +992,7 @@ contratos.forEach(<span class="k">function</span>(c) {
       <div class="feat-hdr">
         <span class="feat-id">DEF-02</span>
         <span class="feat-name">Prazo de 45 dias é exibido como 30</span>
-        <span class="feat-loc">severidade alta · CORRIGIDO v2.1</span>
+        <span class="feat-loc">severidade alta</span>
       </div>
       <div class="feat-body">
         <p>O formulário de edição oferece 45 dias entre as opções. O mapa de rótulos não contempla esse valor:</p>
@@ -1252,7 +1027,7 @@ contratos.forEach(<span class="k">function</span>(c) {
       <div class="feat-hdr">
         <span class="feat-id">DEF-04</span>
         <span class="feat-name">"Encerrar contrato" não executa encerramento</span>
-        <span class="feat-loc">severidade média · CORRIGIDO v2.1</span>
+        <span class="feat-loc">severidade média</span>
       </div>
       <div class="feat-body">
         <p>No modal de detalhe, o botão exibido para contratos ativos tem como ação <code>contratosFecharDetalhe()</code> — a mesma do botão "Fechar". Nenhuma alteração de vigência, nenhum registro de encerramento, nenhuma confirmação.</p>
@@ -1267,7 +1042,7 @@ contratos.forEach(<span class="k">function</span>(c) {
       <div class="feat-hdr">
         <span class="feat-id">DEF-05</span>
         <span class="feat-name">Edição não valida sobreposição de vigência</span>
-        <span class="feat-loc">severidade média · CORRIGIDO v2.1</span>
+        <span class="feat-loc">severidade média</span>
       </div>
       <div class="feat-body">
         <p>O cadastro rejeita vigências sobrepostas para o mesmo CNPJ. A edição altera as datas sem qualquer verificação — permitindo criar exatamente o estado que o cadastro impede.</p>
@@ -1282,7 +1057,7 @@ contratos.forEach(<span class="k">function</span>(c) {
       <div class="feat-hdr">
         <span class="feat-id">DEF-06</span>
         <span class="feat-name">Sincronização da projeção é parcial e por chave errada</span>
-        <span class="feat-loc">severidade média · CORRIGIDO v2.1</span>
+        <span class="feat-loc">severidade média</span>
       </div>
       <div class="feat-body">
         <p>Após salvar, a edição sincroniza <code>_contratosData</code> assim:</p>
@@ -1344,7 +1119,7 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
       <div class="feat-hdr">
         <span class="feat-id">DEF-09</span>
         <span class="feat-name">Vocabulário inconsistente para o modelo de operação</span>
-        <span class="feat-loc">severidade baixa · CORRIGIDO v2.1</span>
+        <span class="feat-loc">severidade baixa</span>
       </div>
       <div class="feat-body">
         <p>O mesmo conceito aparece com quatro representações:</p>
@@ -1392,7 +1167,7 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
         <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
         <tbody>
           <tr><td class="rid">RF-CTR-001</td><td>O contrato deve registrar CNPJ, vigência, modelo de operação e prazo de pagamento.</td><td>Todos os campos persistidos e recuperáveis.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CTR-002</td><td>O método de pagamento deve ser um enum de <strong>três valores</strong> — <code>split</code>, <code>rad</code>, <code>fornecedor</code> — com fonte única de verdade.</td><td>Os três métodos persistem e são recuperáveis; <code>contratoMetodo()</code> resolve dados legados sem ambiguidade.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CTR-002</td><td>O modelo de operação deve ter <strong>fonte única de verdade</strong>, eliminando a redundância entre <code>rad</code> e <code>modelo</code>.</td><td>Um único campo; nenhuma sincronização manual necessária.</td><td>M</td></tr>
           <tr><td class="rid">RF-CTR-003</td><td>O status deve ser derivado da vigência a cada leitura, produzindo ativo, a_iniciar, encerrado ou invalido.</td><td>Contrato muda de estado com a passagem do tempo, sem escrita.</td><td>M</td></tr>
           <tr><td class="rid">RF-CTR-004</td><td>O intervalo de vigência deve ser fechado — ativo nas datas de início e fim.</td><td>Contrato de 01/01 a 31/12 está ativo em ambas as datas.</td><td>M</td></tr>
           <tr><td class="rid">RF-CTR-005</td><td>Datas não interpretáveis devem produzir o estado <code>invalido</code>, sem exceção.</td><td>Contrato com data corrompida aparece com badge "Datas inválidas".</td><td>M</td></tr>
@@ -1498,42 +1273,6 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
     </div>
   </div>
 
-    <h3>9.8 Métodos de pagamento</h3>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
-        <tbody>
-          <tr><td class="rid">RF-CTR-080</td><td>O sistema deve oferecer os três métodos — Split Payment, RAD e Fornecedor — em cadastro, edição e filtro.</td><td>As três opções presentes nos três contextos, com rótulos idênticos.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CTR-081</td><td>O método do contrato deve determinar o <code>metodoPagamento</code> do RF gerado, com os três valores.</td><td>Contrato <code>split</code> produz RF <code>Split Payment</code>; idem para os demais.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CTR-082</td><td>Contratos legados sem o campo <code>metodo</code> devem ser resolvidos sem ambiguidade.</td><td><code>rad:true</code> → RAD; <code>rad:false</code> → Fornecedor; nenhum contrato existente muda de significado.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CTR-083</td><td>Sem contrato vigente na data da nota, aplica-se o mecanismo padrão da LC 214/2025.</td><td>NF descoberta recebe <code>Split Payment</code>, não um método sorteado.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CTR-084</td><td>Cada método deve ter cor distinta e consistente em toda a interface.</td><td>Três cores diferentes, derivadas de tokens; nenhuma colisão entre métodos.</td><td>S</td></tr>
-          <tr><td class="rid">RF-CTR-085</td><td>O perfil de risco aplicado ao RF deve refletir o método.</td><td>Split Payment não gera estado <code>vencido</code>; Fornecedor tem incidência de flags maior que Split.</td><td>S</td></tr>
-          <tr><td class="rid">RF-CTR-086</td><td>O KPI de método deve exibir o breakdown dos três valores.</td><td>Soma dos três é igual ao total de contratos cadastrados.</td><td>S</td></tr>
-          <tr><td class="rid">RF-CTR-087</td><td>O tooltip do formulário deve documentar os três métodos e quem recolhe em cada um.</td><td>As três descrições presentes no ponto de decisão.</td><td>S</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h3>9.9 Histórico e auditoria</h3>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
-        <tbody>
-          <tr><td class="rid">RF-CTR-090</td><td>Criação, edição e encerramento devem gerar evento no histórico do contrato.</td><td>As três ações produzem entrada; nenhuma altera o contrato sem registrar.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CTR-091</td><td>Cada evento deve registrar timestamp, tipo, autor e observação.</td><td>Os quatro campos preenchidos em todo evento.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CTR-092</td><td>Eventos de alteração devem registrar o diff campo a campo, com valor anterior e novo.</td><td>Alterar prazo e método gera duas linhas de diff, cada uma com <em>de</em> e <em>para</em>.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CTR-093</td><td>O diff deve usar linguagem de negócio, não valores brutos.</td><td>Exibe <em>"Split Payment → RAD"</em>, não <code>"split" → "rad"</code>.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CTR-094</td><td>Salvar sem alteração não deve gerar evento.</td><td>Submeter o formulário sem mudanças avisa e não grava.</td><td>S</td></tr>
-          <tr><td class="rid">RF-CTR-095</td><td>Contratos sem histórico devem receber evento de criação semeado, com autoria honesta.</td><td>Marcado como origem de carga, ancorado no início da vigência; nunca atribuído a um usuário.</td><td>S</td></tr>
-          <tr><td class="rid">RF-CTR-096</td><td>A semeadura do histórico deve ser idempotente.</td><td>Abrir o detalhe várias vezes não duplica o evento de criação.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CTR-097</td><td>A timeline deve exibir os eventos do mais recente ao mais antigo, com ícone e cor por tipo.</td><td>Ordem decrescente; quatro tipos visualmente distinguíveis.</td><td>S</td></tr>
-          <tr><td class="rid">RF-CTR-098</td><td>O histórico deve ser imutável — eventos não podem ser editados nem removidos pela interface.</td><td>Nenhum controle de edição ou exclusão de evento.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CTR-099</td><td>O histórico deve persistir junto ao contrato e sobreviver a recarregamentos.</td><td>Em produção, gravado no backend; não pode viver apenas em memória.</td><td>M</td></tr>
-        </tbody>
-      </table>
-    </div>
-
   <!-- ══ 10 ══ -->
   <div class="section" id="s10">
     <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Regras de negócio</span></div>
@@ -1547,7 +1286,7 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
           <tr><td class="rid">RN-CTR-04</td><td><strong>Vigência fechada</strong></td><td>Data igual ao início ou ao fim</td><td>Contrato está ativo</td></tr>
           <tr><td class="rid">RN-CTR-05</td><td><strong>Fim posterior ao início</strong></td><td>Cadastro e edição</td><td><code>fim ≤ inicio</code> é rejeitado</td></tr>
           <tr><td class="rid">RN-CTR-06</td><td><strong>Datas inválidas isolam o contrato</strong></td><td>Data não interpretável</td><td>Estado <code>invalido</code>; não participa da resolução de vigência</td></tr>
-          <tr><td class="rid">RN-CTR-07</td><td><strong>Método define o do RF</strong></td><td>Geração do registro fiscal</td><td><code>split</code>→<code>Split Payment</code>, <code>rad</code>→<code>RAD</code>, <code>fornecedor</code>→<code>Fornecedor</code></td></tr>
+          <tr><td class="rid">RN-CTR-07</td><td><strong>Modelo define o método do RF</strong></td><td>Geração do registro fiscal</td><td><code>rad = true</code> produz <code>metodoPagamento = 'RAD'</code></td></tr>
           <tr><td class="rid">RN-CTR-08</td><td><strong>CNPJ imutável</strong></td><td>Edição</td><td>Trocar de fornecedor exige novo contrato</td></tr>
           <tr><td class="rid">RN-CTR-09</td><td><strong>Fornecedor previamente cadastrado</strong></td><td>Cadastro</td><td>Só CNPJs da base de fornecedores podem receber contrato</td></tr>
           <tr><td class="rid">RN-CTR-10</td><td><strong>Encerramento só de ativo</strong></td><td>Status ≠ ativo</td><td>Ação não é oferecida</td></tr>
@@ -1555,13 +1294,7 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
           <tr><td class="rid">RN-CTR-12</td><td><strong>Meta binária de cobertura</strong></td><td>Cobertura &lt; 100%</td><td>Sinalização vermelha; não há faixa intermediária</td></tr>
           <tr><td class="rid">RN-CTR-13</td><td><strong>Volume vencido cobre todas as notas</strong></td><td>Cálculo do KPI de volume</td><td>Percorre créditos e impostos</td></tr>
           <tr><td class="rid">RN-CTR-14</td><td><strong>Grupo econômico com fallback</strong></td><td><code>grupoId</code> ausente</td><td>Resolve pela raiz do CNPJ (10 caracteres)</td></tr>
-          <tr><td class="rid">RN-CTR-15</td><td><strong>Prazo entre 1 e 360 dias</strong></td><td>Cadastro e edição</td><td>Qualquer inteiro na faixa; rótulo derivado do valor</td></tr>
-          <tr><td class="rid">RN-CTR-16</td><td><strong>Padrão sem contrato</strong></td><td>NF sem contrato vigente na data</td><td>Aplica-se Split Payment, mecanismo padrão da LC 214/2025</td></tr>
-          <tr><td class="rid">RN-CTR-17</td><td><strong>Risco por método</strong></td><td>Geração de flags no RF</td><td>Split Payment não gera <code>vencido</code>; Fornecedor tem maior incidência que Split</td></tr>
-          <tr><td class="rid">RN-CTR-18</td><td><strong>Toda alteração é registrada</strong></td><td>Criação, edição ou encerramento</td><td>Evento no histórico com autor, momento e diff</td></tr>
-          <tr><td class="rid">RN-CTR-19</td><td><strong>Histórico imutável</strong></td><td>Sempre</td><td>Eventos não podem ser editados nem removidos</td></tr>
-          <tr><td class="rid">RN-CTR-20</td><td><strong>Alteração vazia não gera evento</strong></td><td>Submissão sem mudança</td><td>Recusada com aviso; histórico preservado</td></tr>
-          <tr><td class="rid">RN-CTR-21</td><td><strong>Autoria honesta na semeadura</strong></td><td>Contrato sem histórico</td><td>Evento de criação marcado como carga, nunca atribuído a usuário</td></tr>
+          <tr><td class="rid">RN-CTR-15</td><td><strong>Prazo restrito à lista</strong></td><td>Cadastro e edição</td><td>Apenas valores da lista canônica são aceitos</td></tr>
         </tbody>
       </table>
     </div>
@@ -1654,12 +1387,9 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
         <tbody>
           <tr><td><strong>Contrato de fornecimento</strong></td><td>Registro que vincula um CNPJ fornecedor a um período de vigência, um modelo de recolhimento e um prazo de pagamento.</td></tr>
           <tr><td><strong>Vigência</strong></td><td>Intervalo fechado entre início e fim durante o qual o contrato governa as notas do CNPJ.</td></tr>
-          <tr><td><strong>Método de pagamento</strong></td><td>Define quem recolhe o IBS/CBS do contrato. Três valores: Split Payment, RAD e Fornecedor.</td></tr>
+          <tr><td><strong>Modelo de operação</strong></td><td>Define quem é o responsável legal pelo recolhimento do IBS/CBS: fornecedor ou adquirente.</td></tr>
           <tr><td><strong>RAD</strong></td><td>Recolhimento pelo Adquirente — opção de o comprador assumir o pagamento dos tributos do documento fiscal, transferida por cláusula contratual.</td></tr>
-          <tr><td><strong>Split Payment</strong></td><td>Retenção automática de IBS/CBS na liquidação financeira, com repasse direto ao Fisco pelo prestador de serviço de pagamento. Mecanismo padrão da LC 214/2025.</td></tr>
-          <tr><td><strong>Histórico do contrato</strong></td><td>Sequência imutável de eventos que alteraram o contrato — criação, edição, encerramento — com autor, momento e diff.</td></tr>
-          <tr><td><strong>Diff de auditoria</strong></td><td>Registro campo a campo do que mudou, com valor anterior e novo, formatado em linguagem de negócio.</td></tr>
-          <tr><td><strong>Semeadura de histórico</strong></td><td>Criação sob demanda do evento inicial para contratos anteriores ao registro de auditoria, marcado como carga em vez de atribuído a um usuário.</td></tr>
+          <tr><td><strong>Split Payment</strong></td><td>Retenção automática de IBS/CBS na liquidação financeira, com repasse direto ao Fisco. Modelo padrão, em que o fornecedor é o responsável.</td></tr>
           <tr><td><strong>Prazo de pagamento</strong></td><td>Intervalo em dias entre a emissão da nota e a liquidação. Governa o fluxo de caixa.</td></tr>
           <tr><td><strong>Cobertura contratual</strong></td><td>Proporção de notas fiscais cujo fornecedor possui contrato vigente na data de emissão. Meta de 100%.</td></tr>
           <tr><td><strong>Volume sob contrato vencido</strong></td><td>Soma financeira das notas emitidas quando o contrato do fornecedor já havia expirado.</td></tr>
@@ -1678,18 +1408,6 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
   <div class="section" id="s14">
     <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
     <div class="ver-row">
-      <div class="ver-num">v2.1</div>
-      <div class="ver-desc">
-        <strong>Três métodos de pagamento e registro de auditoria.</strong> O método deixa de ser um booleano e passa a enum de três valores — <strong>Split Payment, RAD e Fornecedor</strong> —, com catálogo único de rótulo, cor e valor do RF, e resolução que migra dados legados sem mudar o significado de nenhum contrato existente. A propagação até o <code>metodoPagamento</code> do RF foi corrigida: o ponto real de atribuição ainda usava o booleano e nunca produzia Split Payment. Sem contrato vigente, aplica-se o mecanismo padrão da LC 214/2025 em vez de sorteio. Cada método ganhou perfil de risco próprio.
-        <br><br>
-        Acrescenta <strong>histórico e auditoria do ciclo de vida</strong>: cada contrato mantém eventos tipados (criação, edição, encerramento, reativação) com autor, momento e diff campo a campo em linguagem de negócio, apresentados numa timeline no modal de detalhe. Contratos legados recebem evento de criação semeado com autoria honesta.
-        <br><br>
-        <strong>Cinco defeitos corrigidos:</strong> DEF-02 (rótulo de prazo — mais grave que o documentado, pois o cadastro usa slider de 1 a 360 dias e quase todo valor era exibido como "30 dias"; a edição ainda descartava o valor gravado num select de 5 opções), DEF-04 (encerramento agora executa, com confirmação que declara o impacto), DEF-05 (sobreposição validada também na edição), DEF-06 (sincronização manual incorreta removida) e DEF-09 (rótulo unificado entre tela e CSV). Permanecem abertos DEF-01, 03, 07 e 10.
-        <br><br>
-        Novos: 2 funcionalidades (F-06 encerramento, F-07 timeline), 18 requisitos funcionais em 2 grupos, 6 regras de negócio e 3 termos de glossário. Total: <strong>62 requisitos funcionais</strong>, 21 regras de negócio.
-      </div>
-    </div>
-    <div class="ver-row">
       <div class="ver-num">v2.0</div>
       <div class="ver-desc">
         <strong>Reescrita completa a partir do protótipo implementado.</strong> Acrescenta: contexto do contrato como camada de governança que determina quem recolhe o tributo, com a assimetria de risco entre os dois modelos; modelo de dados incluindo a redundância <code>rad</code>/<code>modelo</code> e as três rotas de conversão de data; máquina de <strong>status derivado</strong>, recalculado a cada leitura; cadeia de resolução de contrato vigente e o fallback que mascara ausência de vigência; 9 funcionalidades detalhadas; especificação dos <strong>5 KPIs</strong> e do sistema de badges — registrando que o módulo não possui gráficos e por que isso é adequado; <strong>10 defeitos identificados</strong> com impacto e correção, incluindo ordenação por coluna errada, prazo de 45 dias exibido como 30, botão de encerramento inoperante e agregações que comparam CNPJ com razão social; <strong>44 requisitos funcionais</strong> em 7 grupos; 15 regras de negócio; 14 requisitos não funcionais; glossário de 14 termos.
@@ -1704,7 +1422,7 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
   <hr>
   <div style="font-size:11px;color:var(--txt3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
     <span>SplitHub · PRD · Configurações → Contratos</span>
-    <span>v2.1 · Set/2026 · Base: LC 214/2025</span>
+    <span>v2.0 · Set/2026 · Base: LC 214/2025</span>
   </div>
 
 </div>
