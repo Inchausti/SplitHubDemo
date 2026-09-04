@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duplicata Escritural — Validação RAD · SplitHub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1); --teal-l: rgba(14,158,142,.06);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08); --amber-m: rgba(185,122,16,.18);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --mono: #EDF0F5;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12); --teal-l: rgba(31,186,170,.06);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1); --amber-m: rgba(245,158,11,.2);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --mono: #1A2030;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.2); --shadow-md: 0 4px 12px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12); --teal-l: rgba(31,186,170,.06);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1); --amber-m: rgba(245,158,11,.2);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --mono: #1A2030;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.2); --shadow-md: 0 4px 12px rgba(0,0,0,.25);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 860px; margin: 0 auto; }
+
+/* ── Back link ── */
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--teal); }
+
+/* ── Header ── */
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.eyebrow-sep { color: var(--txt3); font-weight: 400; }
+h1 { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 28px; max-width: 600px; }
+
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 40px; align-items: center; box-shadow: var(--shadow-sm); }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.ref { background: var(--purple-d); color: var(--purple); }
+
+/* ── Sections ── */
+.section { margin-bottom: 44px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; }
+.sec-title { font-size: 16px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; }
+
+/* ── Callouts ── */
+.callout { border-radius: 8px; padding: 14px 18px; margin: 16px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .callout-title { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .callout-title { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .callout-title { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .callout-title { color: var(--red); }
+.callout-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p { font-size: 13px; color: var(--txt2); }
+.callout p strong { color: var(--txt1); }
+
+/* ── Tables ── */
+.table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 10px 14px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+
+/* ── Decision tree ── */
+.decision-tree { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 24px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--txt2); line-height: 2; box-shadow: var(--shadow-sm); overflow-x: auto; }
+.dt-root { color: var(--teal); font-weight: 700; font-size: 13px; }
+.dt-q { color: var(--txt1); font-weight: 600; }
+.dt-yes { color: var(--green); font-weight: 600; }
+.dt-no { color: var(--red); font-weight: 500; }
+.dt-action-ok { color: var(--green); }
+.dt-action-block { color: var(--red); font-weight: 600; }
+.dt-note { color: var(--txt3); font-style: italic; }
+
+/* ── Flow steps ── */
+.flow { display: flex; flex-direction: column; gap: 0; margin: 16px 0; }
+.flow-step { display: flex; gap: 16px; align-items: flex-start; }
+.flow-step:not(:last-child) .flow-line { flex: 1; }
+.flow-left { display: flex; flex-direction: column; align-items: center; width: 36px; flex-shrink: 0; }
+.flow-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0; }
+.flow-dot.teal { background: var(--teal-d); color: var(--teal); }
+.flow-dot.blue { background: var(--blue-d); color: var(--blue); }
+.flow-dot.amber { background: var(--amber-d); color: var(--amber); }
+.flow-connector { width: 2px; background: var(--brd); flex: 1; min-height: 20px; margin: 4px 0; }
+.flow-body { padding: 6px 0 24px; flex: 1; }
+.flow-title { font-size: 13px; font-weight: 700; color: var(--txt1); margin-bottom: 5px; }
+.flow-desc { font-size: 12.5px; color: var(--txt2); }
+.flow-desc code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+
+/* ── Risk scenario ── */
+.scenario { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); margin: 16px 0; }
+.scenario-header { padding: 14px 18px; background: var(--red-d); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 8px; }
+.scenario-header span { font-size: 12px; font-weight: 700; color: var(--red); }
+.scenario-body { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.scenario-row { display: flex; align-items: flex-start; gap: 10px; }
+.scenario-actor { width: 100px; flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--txt3); text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.scenario-action { flex: 1; font-size: 12.5px; color: var(--txt2); }
+.scenario-action strong { color: var(--txt1); }
+.scenario-action .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; margin-left: 6px; }
+.badge-ok { background: var(--green-d); color: var(--green); }
+.badge-err { background: var(--red-d); color: var(--red); }
+
+/* ── Code block ── */
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; margin: 12px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--txt1); white-space: pre; display: block; line-height: 1.7; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+
+/* ── Two-col ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+@media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+.info-card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px; box-shadow: var(--shadow-sm); }
+.info-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.info-card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.info-card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.info-card li::before { content: "·"; color: var(--teal); font-weight: 900; flex-shrink: 0; }
+
+/* ── Inline code ── */
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+
+/* ── Glossary ── */
+.gloss { display: flex; flex-direction: column; gap: 0; }
+.gloss-row { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.gloss-row:last-child { border-bottom: none; }
+.gloss-term { font-size: 12px; font-weight: 700; color: var(--txt1); min-width: 180px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.gloss-def { font-size: 12.5px; color: var(--txt2); }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <a class="back" href="prds.html">← Hub de PRDs</a>
+
+  <div class="eyebrow">
+    <span>Referência</span>
+    <span class="eyebrow-sep">·</span>
+    <span>Pagamento &amp; Crédito</span>
+  </div>
+  <h1>Duplicata Escritural — Validação pré-RAD</h1>
+  <p class="subtitle">Como confirmar se um Documento Fiscal foi escriturado como duplicata escritural antes de processar o pagamento via RAD, evitando liquidação indevida ao fornecedor.</p>
+
+  <div class="meta-bar">
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+    <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
+    <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025 · Lei 13.775/2018</span></div>
+    <div class="meta-pill" style="margin-left:auto">
+      <span class="chip ok">Publicado</span>
+      &nbsp;<span class="chip ref">Referência · Pagamento</span>
+    </div>
+  </div>
+
+  <!-- 1. Contexto Regulatório -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Contexto regulatório</span></div>
+    <p class="sec-sub">Dois regimes legais distintos operam sobre o mesmo Documento Fiscal de forma independente.</p>
+
+    <div class="two-col">
+      <div class="info-card">
+        <div class="info-card-title">Lei 13.775/2018 — Duplicata Escritural</div>
+        <ul>
+          <li>Duplicata em formato eletrônico, sem emissão de papel</li>
+          <li>Registrada obrigatoriamente em <strong>Registradora de Recebíveis</strong> habilitada pelo Banco Central (CERC, CIP, CRA, B3)</li>
+          <li>Representa o valor <strong>bruto</strong> da NF — toda a fatura</li>
+          <li>Pode ser cedida a terceiros (bancos, FIDCs, factoring)</li>
+          <li>Titular da duplicata tem direito de receber o valor integral registrado</li>
+        </ul>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">LC 214/2025 — IBS + CBS (Split Payment)</div>
+        <ul>
+          <li>IBS e CBS são interceptados no momento do pagamento</li>
+          <li>Plataforma Centralizada CG-IBS/RFB processa CAPUR e CFIN</li>
+          <li>Fornecedor recebe apenas o valor <strong>líquido</strong> (bruto − IBS − CBS)</li>
+          <li>RAD: modalidade em que o adquirente paga integral ao fornecedor, que recolhe o tributo separadamente</li>
+          <li><code>statusCredito</code> rastreia o ciclo do RF na plataforma</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-title">Conflito entre os dois regimes</div>
+      <p>Quando o fornecedor <strong>escritura e cede a duplicata</strong>, o <em>titular do crédito financeiro</em> é o cessionário (banco, FIDC), não o fornecedor. Se o adquirente processa RAD sem validar esse estado, paga o valor líquido ao fornecedor — que pode não ter mais direito sobre ele — gerando risco de cobrança dupla e litígio.</p>
+    </div>
+  </div>
+
+  <!-- 2. O que é escrituração -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O que é a escrituração de duplicata escritural</span></div>
+
+    <p class="sec-sub">Escriturar = registrar a duplicata numa Registradora de Recebíveis credenciada pelo Banco Central. Diferente de emitir a NF-e.</p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-left">
+          <div class="flow-dot teal">1</div>
+          <div class="flow-connector"></div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-title">Emissão da NF-e</div>
+          <div class="flow-desc">Fornecedor emite a NF-e com bloco <code>&lt;cobr&gt;&lt;dup&gt;</code> preenchido — sinaliza intenção de cobrar via duplicata. Este passo não escritura ainda; apenas declara a intenção na NF.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-left">
+          <div class="flow-dot teal">2</div>
+          <div class="flow-connector"></div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-title">Escrituração na Registradora de Recebíveis</div>
+          <div class="flow-desc">Fornecedor (ou sua instituição financeira) registra a duplicata na RR escolhida (CERC, CIP, CRA, B3). A RR valida a existência da NF-e e confirma o registro. A partir daqui, a duplicata é um ativo financeiro rastreável pela chave de acesso da NF-e.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-left">
+          <div class="flow-dot blue">3</div>
+          <div class="flow-connector"></div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-title">Cessão a terceiro (opcional)</div>
+          <div class="flow-desc">O fornecedor pode ceder a duplicata a um banco, FIDC ou factoring. A RR registra o novo titular (<code>titularAtual</code>). O cessionário paga ao fornecedor antecipado e passa a ser o credor do adquirente.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-left">
+          <div class="flow-dot amber">4</div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-title">Liquidação no vencimento</div>
+          <div class="flow-desc">Adquirente paga o valor registrado na RR. Se duplicata cedida: liquidação vai para o cessionário. IBS/CBS são interceptados pelo split payment em qualquer caso. Se RAD: adquirente paga integral ao titular da duplicata; titular recolhe o tributo.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Fluxo de validação -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Fluxo de validação pré-pagamento RAD</span></div>
+    <p class="sec-sub">Três camadas de verificação, em ordem de custo crescente e de certeza crescente.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Camada</th>
+            <th>Fonte</th>
+            <th>O que verifica</th>
+            <th>Limitação</th>
+            <th>Certeza</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1</strong></td>
+            <td><strong>XML da NF-e</strong></td>
+            <td>Chave de acesso / SEFAZ</td>
+            <td>Bloco <code>&lt;cobr&gt;&lt;dup&gt;</code> presente</td>
+            <td>Intenção declarada, não prova escrituração efetiva</td>
+            <td><span class="chip warn">Sinal inicial</span></td>
+          </tr>
+          <tr>
+            <td><strong>2</strong></td>
+            <td><strong>Registradora de Recebíveis</strong></td>
+            <td>CERC / CIP / CRA / B3 via PSP</td>
+            <td>Duplicata registrada e titular atual (CNPJ)</td>
+            <td>Consulta via banco intermédio; depende do PSP ter integração</td>
+            <td><span class="chip ok">Definitiva</span></td>
+          </tr>
+          <tr>
+            <td><strong>3</strong></td>
+            <td><strong>CAPUR — Plataforma Centralizada</strong></td>
+            <td>CG-IBS / RFB</td>
+            <td><code>statusCredito</code> do RF e flag de bloqueio RAD</td>
+            <td>Foco no crédito tributário, não no crédito financeiro</td>
+            <td><span class="chip info">Complementar</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-title">Camada 2 é a fonte definitiva</div>
+      <p>A <strong>Registradora de Recebíveis</strong> é a única fonte que prova a escrituração efetiva e identifica o titular atual. A NF-e apenas sinaliza intenção. O CAPUR controla o crédito tributário, não a titularidade financeira.</p>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--txt1);margin:24px 0 8px">Campo <code>&lt;dup&gt;</code> no XML da NF-e</h3>
+    <p style="font-size:12.5px;color:var(--txt2);margin-bottom:10px">Verificar antes mesmo de consultar a RR. Se ausente, o fornecedor não declarou intenção de cobrar via duplicata — RAD pode prosseguir normalmente.</p>
+    <div class="code-block"><code><span class="c">&lt;!-- Bloco cobr dentro do XML da NF-e --&gt;</span>
+<span class="k">&lt;cobr&gt;</span>
+  <span class="k">&lt;fat&gt;</span>
+    <span class="v">&lt;nFat&gt;</span>001<span class="v">&lt;/nFat&gt;</span>
+    <span class="v">&lt;vOrig&gt;</span>10000.00<span class="v">&lt;/vOrig&gt;</span>
+    <span class="v">&lt;vLiq&gt;</span>10000.00<span class="v">&lt;/vLiq&gt;</span>
+  <span class="k">&lt;/fat&gt;</span>
+  <span class="k">&lt;dup&gt;</span>
+    <span class="v">&lt;nDup&gt;</span>001<span class="v">&lt;/nDup&gt;</span>
+    <span class="v">&lt;dVenc&gt;</span>2026-10-15<span class="v">&lt;/dVenc&gt;</span>
+    <span class="v">&lt;vDup&gt;</span>10000.00<span class="v">&lt;/vDup&gt;</span>
+  <span class="k">&lt;/dup&gt;</span>
+<span class="k">&lt;/cobr&gt;</span>
+<span class="c">&lt;!-- &lt;dup&gt; presente = fornecedor sinalizou cobrança via duplicata --&gt;</span></code></div>
+  </div>
+
+  <!-- 4. Regra de decisão -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Regra de decisão pré-pagamento RAD</span></div>
+
+    <div class="decision-tree">
+<span class="dt-root">Para cada DF programado para pagamento via RAD</span>
+│
+├─ <span class="dt-q">NF-e tem &lt;dup&gt; no XML?</span>
+│   └─ <span class="dt-no">NÃO</span> → <span class="dt-action-ok">RAD normal</span> <span class="dt-note">(fornecedor não declarou cobrança via duplicata)</span>
+│
+└─ <span class="dt-no">SIM</span> → <span class="dt-q">Consultar RR pelo PSP/banco</span>
+    │
+    ├─ <span class="dt-q">Duplicata registrada na RR?</span>
+    │   └─ <span class="dt-no">NÃO</span> → <span class="dt-action-ok">RAD normal</span> <span class="dt-note">(XML &lt;dup&gt; presente mas não escriturou; intenção não executada)</span>
+    │
+    └─ <span class="dt-no">SIM, está registrada</span>
+        │
+        ├─ <span class="dt-q">CNPJ titular == CNPJ do fornecedor?</span>
+        │   └─ <span class="dt-yes">SIM</span> → <span class="dt-action-ok">RAD normal</span> <span class="dt-note">(escriturou mas não cedeu; ele mesmo é o credor)</span>
+        │
+        └─ <span class="dt-no">NÃO</span> <span class="dt-note">(titular é terceiro — banco, FIDC, factoring)</span>
+            └─ <span class="dt-action-block">⛔ BLOQUEAR RAD ao fornecedor</span>
+               <span class="dt-note">  Liquidar para o CNPJ titular da duplicata</span>
+               <span class="dt-note">  IBS/CBS → fisco via split payment</span>
+               <span class="dt-note">  Valor líquido → cessionário (titular da RR)</span>
+               <span class="dt-note">  Notificar área fiscal / operações</span>
+    </div>
+  </div>
+
+  <!-- 5. Cenário de risco -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Cenário de risco — pagamento duplo</span></div>
+
+    <div class="scenario">
+      <div class="scenario-header">
+        <span>⚠ Cenário: RAD processado sem validação de escrituração</span>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-row">
+          <div class="scenario-actor">Fornecedor</div>
+          <div class="scenario-action">Emite NF-e R$ 10.000 (IBS+CBS = R$ 1.800). Inclui bloco <code>&lt;dup&gt;</code> no XML.</div>
+        </div>
+        <div class="scenario-row">
+          <div class="scenario-actor">Fornecedor</div>
+          <div class="scenario-action">Escritura a duplicata na CERC. Cede ao <strong>Banco X</strong> por R$ 9.700 (antecipação com deságio). Banco X passa a ser o titular na RR.</div>
+        </div>
+        <div class="scenario-row">
+          <div class="scenario-actor">Adquirente</div>
+          <div class="scenario-action">SplitHub processa RAD <strong>sem consultar a RR</strong>. Envia R$ 1.800 ao fisco <span class="badge badge-ok">✓ correto</span> e R$ 8.200 ao fornecedor. <span class="badge badge-err">✗ ERRADO</span></div>
+        </div>
+        <div class="scenario-row">
+          <div class="scenario-actor">Banco X</div>
+          <div class="scenario-action">Aciona o adquirente por R$ 8.200 que lhe é devido como titular da duplicata. <strong>O adquirente pagou duas vezes o mesmo valor.</strong></div>
+        </div>
+        <div class="scenario-row">
+          <div class="scenario-actor">Fornecedor</div>
+          <div class="scenario-action">Recebeu R$ 8.200 sem ter direito (já tinha antecipado com o Banco X). Potencial ação de locupletamento indevido.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout red">
+      <div class="callout-title">Exposição financeira</div>
+      <p>O adquirente fica exposto ao <strong>valor líquido da NF</strong> (bruto − IBS/CBS) quando processa RAD sem verificar se há cessionário registrado na RR. Nas operações de grande volume, a acumulação desses erros pode representar exposição material.</p>
+    </div>
+  </div>
+
+  <!-- 6. APIs / sistemas -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Sistemas e APIs de consulta</span></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Sistema</th>
+            <th>Operador</th>
+            <th>Acesso</th>
+            <th>Dado retornado</th>
+            <th>Referência de busca</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>CERC</strong></td>
+            <td>CERC S.A.</td>
+            <td>Via PSP/banco do adquirente</td>
+            <td>Status de registro, <code>titularCNPJ</code>, vencimento, valor</td>
+            <td>Chave NF-e (44 dígitos) ou CNPJ fornecedor + vencimento</td>
+          </tr>
+          <tr>
+            <td><strong>CIP</strong></td>
+            <td>CIP S.A.</td>
+            <td>Via banco liquidante</td>
+            <td>Idem CERC</td>
+            <td>Chave NF-e</td>
+          </tr>
+          <tr>
+            <td><strong>CRA</strong></td>
+            <td>CRA</td>
+            <td>Setor do agronegócio — via banco</td>
+            <td>Idem CERC</td>
+            <td>Chave NF-e / CPR</td>
+          </tr>
+          <tr>
+            <td><strong>B3</strong></td>
+            <td>B3</td>
+            <td>Via banco ou acesso direto</td>
+            <td>Idem CERC</td>
+            <td>Chave NF-e</td>
+          </tr>
+          <tr>
+            <td><strong>Plataforma CG-IBS</strong></td>
+            <td>CG-IBS / RFB</td>
+            <td>CAPUR / CFIN — credenciado</td>
+            <td><code>statusCredito</code>, <code>statusFlags</code>, flag de bloqueio RAD</td>
+            <td>Chave NF-e, CNPJ emitente+destinatário</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-title">Intermediação pelo PSP</div>
+      <p>O adquirente não consulta a RR diretamente. A consulta é feita pelo <strong>PSP do adquirente</strong> (banco ou instituição de pagamento) antes de autorizar a liquidação. O SplitHub deve acionar esse fluxo via API do PSP antes de marcar o DF como "apto para RAD".</p>
+    </div>
+  </div>
+
+  <!-- 7. Modelo de dados SplitHub -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Modelo de dados — impacto no SplitHub</span></div>
+    <p class="sec-sub">Campos e regras de negócio a adicionar no objeto DF para suportar a validação.</p>
+
+    <h3 style="font-size:13px;font-weight:700;color:var(--txt1);margin-bottom:8px">Campos novos no DF</h3>
+    <div class="code-block"><code><span class="c">// Extensão do objeto DocumentoFiscal</span>
+{
+  <span class="c">// --- Duplicata Escritural ---</span>
+  <span class="v">temDuplicataXML</span>: <span class="k">boolean</span>,       <span class="c">// &lt;dup&gt; presente no XML da NF-e</span>
+  <span class="v">escrituradaDuplicata</span>: <span class="k">boolean</span>,    <span class="c">// confirmado na Registradora de Recebíveis</span>
+  <span class="v">registradora</span>: <span class="s">"CERC" | "CIP" | "CRA" | "B3" | null</span>,
+  <span class="v">titularDuplicata</span>: <span class="k">string</span> | <span class="k">null</span>,   <span class="c">// CNPJ do titular atual na RR</span>
+  <span class="v">titularNome</span>: <span class="k">string</span> | <span class="k">null</span>,        <span class="c">// razão social do titular</span>
+  <span class="v">vencimentoDuplicata</span>: <span class="k">string</span> | <span class="k">null</span>, <span class="c">// ISO date — vencimento registrado na RR</span>
+  <span class="v">valorDuplicata</span>: <span class="k">number</span> | <span class="k">null</span>,    <span class="c">// valor bruto registrado (deve = vBrutoNF)</span>
+
+  <span class="c">// --- Flag de bloqueio RAD ---</span>
+  <span class="v">bloqueioRAD</span>: <span class="k">boolean</span>,             <span class="c">// true quando titular ≠ CNPJ fornecedor</span>
+  <span class="v">motivoBloqueioRAD</span>: <span class="k">string</span> | <span class="k">null</span>,  <span class="c">// "duplicata_cedida" | "rr_indisponivel"</span>
+}</code></div>
+
+    <h3 style="font-size:13px;font-weight:700;color:var(--txt1);margin:20px 0 8px">Regra de negócio — bloqueio de RAD</h3>
+    <div class="code-block"><code><span class="k">function</span> <span class="v">podeProcessarRAD</span>(df) {
+  <span class="c">// Sem &lt;dup&gt; no XML: livre para RAD</span>
+  <span class="k">if</span> (!df.temDuplicataXML) <span class="k">return</span> { ok: <span class="k">true</span> };
+
+  <span class="c">// &lt;dup&gt; presente mas não escriturada: livre (intenção não executada)</span>
+  <span class="k">if</span> (!df.escrituradaDuplicata) <span class="k">return</span> { ok: <span class="k">true</span> };
+
+  <span class="c">// Escriturada e titular == próprio fornecedor: livre</span>
+  <span class="k">if</span> (df.titularDuplicata === df.fornecedor.cnpj) <span class="k">return</span> { ok: <span class="k">true</span> };
+
+  <span class="c">// Titular é terceiro: bloquear RAD ao fornecedor</span>
+  <span class="k">return</span> {
+    ok: <span class="k">false</span>,
+    motivo: <span class="s">"duplicata_cedida"</span>,
+    liquidarPara: df.titularDuplicata,
+    liquidarNome: df.titularNome,
+  };
+}</code></div>
+
+    <div class="callout ok">
+      <div class="callout-title">Integração sugerida</div>
+      <p>A consulta à RR deve ocorrer <strong>antes da geração do arquivo de pagamento RAD</strong>, não no momento do upload do DF. Sugestão: job noturno que verifica todos os DFs com status <code>a_pagar_rad</code> e <code>temDuplicataXML = true</code>, consultando o PSP e atualizando <code>escrituradaDuplicata</code>, <code>titularDuplicata</code> e <code>bloqueioRAD</code>.</p>
+    </div>
+  </div>
+
+  <!-- 8. Glossário -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Glossário</span></div>
+    <div class="gloss">
+      <div class="gloss-row">
+        <div class="gloss-term">Duplicata Escritural</div>
+        <div class="gloss-def">Duplicata em formato eletrônico (Lei 13.775/2018). Representa o crédito financeiro sobre o valor bruto de uma NF. Não é o mesmo que crédito tributário IBS/CBS.</div>
+      </div>
+      <div class="gloss-row">
+        <div class="gloss-term">Registradora (RR)</div>
+        <div class="gloss-def">Entidade habilitada pelo Banco Central para registrar e custodiar duplicatas escriturais. CERC, CIP, CRA e B3 são as registradoras ativas. A escrituração só é válida após registro na RR.</div>
+      </div>
+      <div class="gloss-row">
+        <div class="gloss-term">Cessão de Duplicata</div>
+        <div class="gloss-def">Transferência da titularidade da duplicata escritural a terceiro. Diferente de cessão de crédito tributário (IBS/CBS). O cessionário passa a ter direito de receber o valor da NF do adquirente.</div>
+      </div>
+      <div class="gloss-row">
+        <div class="gloss-term">RAD</div>
+        <div class="gloss-def">Regime de Antecipação de Débito — modalidade de pagamento em que o adquirente repassa o valor integral ao fornecedor (ou ao titular da duplicata), que fica responsável pelo recolhimento do IBS/CBS. Oposto ao split payment automático.</div>
+      </div>
+      <div class="gloss-row">
+        <div class="gloss-term">Split Payment</div>
+        <div class="gloss-def">Mecanismo da LC 214/2025 onde o PSP intercepta automaticamente a parcela IBS/CBS no momento do pagamento e a remete diretamente à Plataforma Centralizada CG-IBS/RFB, sem que o fornecedor receba esses valores.</div>
+      </div>
+      <div class="gloss-row">
+        <div class="gloss-term">CAPUR</div>
+        <div class="gloss-def">Conciliação de Apuração — processo na Plataforma Centralizada CG-IBS/RFB que consolida os débitos e créditos de IBS/CBS por período de apuração, resultando no RF (Resultado Fiscal) do destinatário.</div>
+      </div>
+      <div class="gloss-row">
+        <div class="gloss-term">CFIN</div>
+        <div class="gloss-def">Conciliação Financeira — processo que concilia os valores financeiros efetivamente pagos e interceptados pelo split payment com o CAPUR, validando a apropriação dos créditos.</div>
+      </div>
+      <div class="gloss-row">
+        <div class="gloss-term">titularDuplicata</div>
+        <div class="gloss-def">CNPJ do titular atual da duplicata na RR. Pode ser o próprio fornecedor (não cedeu) ou um terceiro (cedeu). O adquirente deve liquidar para este CNPJ, não necessariamente para o fornecedor emissor da NF.</div>
+      </div>
+      <div class="gloss-row">
+        <div class="gloss-term">bloqueioRAD</div>
+        <div class="gloss-def">Flag de controle no SplitHub. <code>true</code> quando a duplicata está escriturada e cedida a terceiro — indica que o pagamento RAD ao fornecedor deve ser bloqueado e redirecionado ao titular registrado na RR.</div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+  <div style="font-size:11px;color:var(--txt3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <span>SplitHub · Referência · Pagamento &amp; Crédito</span>
+    <span>v1.0 · Set/2026 · Base: LC 214/2025, Lei 13.775/2018</span>
+  </div>
+
+</div>
+</body>
+</html>

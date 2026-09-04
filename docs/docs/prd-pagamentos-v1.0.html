@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Pagamentos · SplitHub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 900px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--teal); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+h1 { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 640px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 36px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.ref { background: var(--purple-d); color: var(--purple); }
+.section { margin-bottom: 44px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; }
+.sec-title { font-size: 16px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.6; }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p, .callout ul { font-size: 13px; color: var(--txt2); }
+.callout ul { padding-left: 16px; display: flex; flex-direction: column; gap: 4px; }
+.callout p strong, .callout li strong { color: var(--txt1); }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 580px) { .two-col { grid-template-columns: 1fr; } }
+.three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 14px 0; }
+@media (max-width: 700px) { .three-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+.flow { display: flex; flex-direction: column; gap: 0; margin: 14px 0; }
+.flow-step { display: flex; gap: 14px; align-items: flex-start; }
+.flow-left { display: flex; flex-direction: column; align-items: center; width: 32px; flex-shrink: 0; }
+.flow-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+.fd-amber { background: var(--amber-d); color: var(--amber); }
+.fd-teal { background: var(--teal-d); color: var(--teal); }
+.fd-blue { background: var(--blue-d); color: var(--blue); }
+.fd-red { background: var(--red-d); color: var(--red); }
+.fd-green { background: var(--green-d); color: var(--green); }
+.flow-connector { width: 2px; background: var(--brd); flex: 1; min-height: 18px; margin: 3px 0; }
+.flow-body { padding: 4px 0 22px; flex: 1; }
+.flow-title { font-size: 13px; font-weight: 700; color: var(--txt1); margin-bottom: 4px; }
+.flow-desc { font-size: 12.5px; color: var(--txt2); }
+.flow-desc code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.state-grid { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 180px; flex-shrink: 0; }
+.state-name.amber { color: var(--amber); }
+.state-name.blue { color: var(--blue); }
+.state-name.teal { color: var(--teal); }
+.state-name.green { color: var(--green); }
+.state-name.red { color: var(--red); }
+.state-name.txt3 { color: var(--txt3); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+.state-trans { font-size: 11px; color: var(--txt3); font-style: italic; min-width: 140px; text-align: right; flex-shrink: 0; }
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--txt1); white-space: pre; display: block; line-height: 1.7; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+.ver-hist { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+.ver-row { display: flex; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <a class="back" href="prds.html">← Hub de PRDs</a>
+
+  <div class="eyebrow">PRD · Pagamentos</div>
+  <h1>Pagamentos — Split Payment e RAD</h1>
+  <p class="subtitle">Ciclo completo de liquidação de IBS/CBS: regime de split payment automático via PSP e regime de antecipação de débito (RAD), com validação de duplicata escritural e integração à Plataforma Centralizada CG-IBS/RFB.</p>
+
+  <div class="meta-bar">
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+    <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Fiscal → Pagamentos</span></div>
+    <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
+    <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025 · Lei 13.775/2018</span></div>
+    <div class="meta-pill" style="margin-left:auto">
+      <span class="chip ok">Publicado</span>
+      &nbsp;<span class="chip teal">v1.0</span>
+    </div>
+  </div>
+
+  <!-- 1. Escopo -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Escopo do módulo</span></div>
+    <p class="sec-sub">O módulo Pagamentos é responsável por registrar, orquestrar e rastrear todos os pagamentos de IBS e CBS gerados a partir dos DFs ingeridos — independentemente do regime de recolhimento.</p>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Inclui</div>
+        <ul>
+          <li>Determinação do regime de pagamento por DF (Split Payment vs RAD)</li>
+          <li>Validação de duplicata escritural antes de processar RAD</li>
+          <li>Registro do evento de pagamento (data, valor, regime, PSP)</li>
+          <li>Rastreamento de status do pagamento por DF</li>
+          <li>Geração de dados para conciliação CFIN</li>
+          <li>Alerta de pagamento bloqueado (duplicata cedida)</li>
+          <li>Relatório de pagamentos por período, CNPJ e regime</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Não inclui (out of scope)</div>
+        <ul>
+          <li>Apuração do valor de IBS/CBS (responsabilidade do módulo Crédito/Débito)</li>
+          <li>Conciliação CAPUR/CFIN (módulo Conciliação)</li>
+          <li>Emissão de DARF ou guia de recolhimento</li>
+          <li>Integração direta com o PSP (via BFF — intermediado)</li>
+          <li>Gestão de duplicatas escriturais (módulo do fornecedor)</li>
+          <li>Reembolso de IBS/CBS ao exportador</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Regimes de pagamento -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Regimes de pagamento</span></div>
+    <p class="sec-sub">LC 214/2025 define dois regimes de recolhimento de IBS/CBS. O SplitHub suporta ambos e determina o regime por DF com base nas regras abaixo.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Regime</th>
+            <th>Mecanismo</th>
+            <th>Quem recolhe</th>
+            <th>Fluxo de caixa do fornecedor</th>
+            <th>Gatilho no SplitHub</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Split Payment</strong></td>
+            <td>PSP intercepta IBS/CBS no momento do pagamento e remete à Plataforma CG-IBS/RFB diretamente</td>
+            <td>PSP (automático)</td>
+            <td>Recebe apenas valor líquido (bruto − IBS − CBS)</td>
+            <td>Default para todos os DFs. Requer PSP habilitado.</td>
+          </tr>
+          <tr>
+            <td><strong>RAD</strong> (Regime de Antecipação de Débito)</td>
+            <td>Adquirente paga valor integral ao fornecedor/titular; fornecedor recolhe IBS/CBS separadamente</td>
+            <td>Fornecedor (ou titular da duplicata)</td>
+            <td>Recebe valor bruto; responsável pelo recolhimento</td>
+            <td>Quando PSP não está habilitado para split payment ou fornecedor opera em RAD contratual.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">Atenção — RAD e duplicata escritural cedida</div>
+      <p>Antes de processar pagamento via RAD, o SplitHub deve validar se o DF tem duplicata escriturada e cedida a terceiro. Se cedida, o valor líquido deve ser liquidado ao <strong>titular da duplicata</strong> (cessionário), não ao fornecedor. Veja <a href="duplicata-escritural-rad-validacao.html" style="color:var(--blue)">Referência: Validação pré-RAD</a>.</p>
+    </div>
+  </div>
+
+  <!-- 3. Fluxo Split Payment -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Fluxo — Split Payment</span></div>
+    <p class="sec-sub">Regime padrão. O PSP executa a interceptação de IBS/CBS automaticamente, sem ação do adquirente além do pagamento normal.</p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-left"><div class="flow-dot fd-blue">1</div><div class="flow-connector"></div></div>
+        <div class="flow-body">
+          <div class="flow-title">DF ingerido e validado</div>
+          <div class="flow-desc">Documento Fiscal com status <code>a_apropriar</code> no ciclo de crédito. Valores de IBS e CBS calculados pelo motor de FG com base no tipo de DF, CFOP e alíquota.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-left"><div class="flow-dot fd-amber">2</div><div class="flow-connector"></div></div>
+        <div class="flow-body">
+          <div class="flow-title">Adquirente inicia pagamento normal ao fornecedor</div>
+          <div class="flow-desc">Pagamento enviado via PSP habilitado para split payment. O PSP consulta a Plataforma CG-IBS/RFB para obter os valores de IBS/CBS do DF (via chave de acesso).</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-left"><div class="flow-dot fd-teal">3</div><div class="flow-connector"></div></div>
+        <div class="flow-body">
+          <div class="flow-title">PSP intercepta IBS + CBS</div>
+          <div class="flow-desc">O PSP redireciona automaticamente o valor de IBS para a conta do CG-IBS e o valor de CBS para a conta da RFB. Fornecedor recebe: <code>valorBruto − IBS − CBS</code>.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-left"><div class="flow-dot fd-teal">4</div><div class="flow-connector"></div></div>
+        <div class="flow-body">
+          <div class="flow-title">CG-IBS/RFB confirma recebimento</div>
+          <div class="flow-desc">Plataforma Centralizada registra o pagamento. Gera evento que alimenta o CFIN (Conciliação Financeira). O <code>statusCredito</code> do RF avança para <code>parc_apropriado</code> ou <code>apropriado</code>.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-left"><div class="flow-dot fd-green">5</div></div>
+        <div class="flow-body">
+          <div class="flow-title">SplitHub registra evento de pagamento</div>
+          <div class="flow-desc">Pagamento gravado com: data, regime <code>split_payment</code>, valor IBS, valor CBS, PSP, hash da transação. Status do DF atualizado para <code>pago_split</code>. Dados disponíveis para CFIN.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Fluxo RAD -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Fluxo — RAD (Regime de Antecipação de Débito)</span></div>
+    <p class="sec-sub">Regime alternativo. O adquirente paga o bruto; o responsável pelo recolhimento (fornecedor ou titular da duplicata) recolhe IBS/CBS.</p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-left"><div class="flow-dot fd-blue">1</div><div class="flow-connector"></div></div>
+        <div class="flow-body">
+          <div class="flow-title">DF marcado para RAD</div>
+          <div class="flow-desc">PSP não habilitado para split payment, ou contrato com fornecedor prevê RAD. SplitHub roteia DF para o fluxo RAD.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-left"><div class="flow-dot fd-amber">2</div><div class="flow-connector"></div></div>
+        <div class="flow-body">
+          <div class="flow-title">Validação de duplicata escritural</div>
+          <div class="flow-desc">SplitHub verifica via PSP/banco se há duplicata registrada na RR para este DF. Resultado determina o destinatário do pagamento líquido. Ver regra de decisão completa em <a href="duplicata-escritural-rad-validacao.html" style="color:var(--blue)">Validação pré-RAD</a>.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-left"><div class="flow-dot fd-amber">3</div><div class="flow-connector"></div></div>
+        <div class="flow-body">
+          <div class="flow-title">Determinação do destinatário</div>
+          <div class="flow-desc">
+            Se <code>bloqueioRAD = false</code>: destinatário = fornecedor (CNPJ emissor da NF).<br>
+            Se <code>bloqueioRAD = true</code>: destinatário = <code>titularDuplicata</code> (CNPJ do cessionário na RR). Área operacional é notificada.
+          </div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-left"><div class="flow-dot fd-teal">4</div><div class="flow-connector"></div></div>
+        <div class="flow-body">
+          <div class="flow-title">Adquirente paga valor bruto ao destinatário</div>
+          <div class="flow-desc">Pagamento do valor integral da NF ao destinatário definido. IBS/CBS incluídos — responsabilidade de recolhimento é do destinatário.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-left"><div class="flow-dot fd-green">5</div></div>
+        <div class="flow-body">
+          <div class="flow-title">SplitHub registra evento RAD</div>
+          <div class="flow-desc">Pagamento gravado com: data, regime <code>rad</code>, <code>destinatario</code>, <code>valorBruto</code>, <code>valorIBS</code>, <code>valorCBS</code>, data esperada de recolhimento. Status do DF atualizado para <code>pago_rad_pendente</code>. Aguarda confirmação de recolhimento.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <div class="ct">Confirmação de recolhimento RAD</div>
+      <p>Após pagamento RAD, o SplitHub monitora o <code>statusCredito</code> do RF via CAPUR. Quando a Plataforma CG-IBS/RFB confirma o recolhimento pelo fornecedor, o status avança de <code>pago_rad_pendente</code> para <code>pago_rad_confirmado</code>. Se não confirmado em até 5 dias úteis após o vencimento, flag <code>rad_em_atraso</code> é disparada.</p>
+    </div>
+  </div>
+
+  <!-- 5. Estados do pagamento -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Estados do pagamento por DF</span></div>
+    <p class="sec-sub">Máquina de estados que rastreia o ciclo de vida do pagamento de IBS/CBS de cada Documento Fiscal.</p>
+
+    <div class="state-grid">
+      <div class="state-row">
+        <div class="state-name txt3">pendente</div>
+        <div class="state-desc">DF ingerido e validado, ainda não há evento de pagamento registrado.</div>
+        <div class="state-trans">→ em_validacao</div>
+      </div>
+      <div class="state-row">
+        <div class="state-name amber">em_validacao</div>
+        <div class="state-desc">Verificação de regime (split/RAD) e consulta de duplicata escritural em andamento.</div>
+        <div class="state-trans">→ apto_split | apto_rad | bloqueado_rad</div>
+      </div>
+      <div class="state-row">
+        <div class="state-name blue">apto_split</div>
+        <div class="state-desc">DF validado para split payment. Aguardando execução pelo adquirente via PSP.</div>
+        <div class="state-trans">→ pago_split</div>
+      </div>
+      <div class="state-row">
+        <div class="state-name blue">apto_rad</div>
+        <div class="state-desc">DF validado para RAD. Destinatário definido (fornecedor ou cessionário). Aguardando pagamento.</div>
+        <div class="state-trans">→ pago_rad_pendente</div>
+      </div>
+      <div class="state-row">
+        <div class="state-name red">bloqueado_rad</div>
+        <div class="state-desc">Duplicata cedida a terceiro. RAD bloqueado para o fornecedor. Requer ação manual para redirecionar ao cessionário.</div>
+        <div class="state-trans">→ apto_rad (após confirmação)</div>
+      </div>
+      <div class="state-row">
+        <div class="state-name teal">pago_split</div>
+        <div class="state-desc">IBS/CBS interceptados pelo PSP e remetidos à Plataforma CG-IBS/RFB. Pagamento concluído.</div>
+        <div class="state-trans">terminal (→ CFIN)</div>
+      </div>
+      <div class="state-row">
+        <div class="state-name amber">pago_rad_pendente</div>
+        <div class="state-desc">Valor bruto pago ao destinatário. Aguardando confirmação de recolhimento de IBS/CBS pelo fornecedor via CAPUR.</div>
+        <div class="state-trans">→ pago_rad_confirmado | rad_em_atraso</div>
+      </div>
+      <div class="state-row">
+        <div class="state-name green">pago_rad_confirmado</div>
+        <div class="state-desc">Recolhimento de IBS/CBS confirmado pela Plataforma CG-IBS/RFB. Ciclo encerrado.</div>
+        <div class="state-trans">terminal (→ CFIN)</div>
+      </div>
+      <div class="state-row">
+        <div class="state-name red">rad_em_atraso</div>
+        <div class="state-desc">Prazo de recolhimento vencido sem confirmação. Risco de glosa do crédito IBS/CBS do adquirente.</div>
+        <div class="state-trans">→ pago_rad_confirmado | glosado</div>
+      </div>
+      <div class="state-row">
+        <div class="state-name red">glosado</div>
+        <div class="state-desc">Crédito IBS/CBS glosado pela Plataforma CG-IBS/RFB por não recolhimento. Status final negativo.</div>
+        <div class="state-trans">terminal</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Modelo de dados -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Modelo de dados</span></div>
+    <p class="sec-sub">Entidades e campos que compõem o registro de pagamento.</p>
+
+    <h3 style="font-size:13px;font-weight:700;color:var(--txt1);margin:0 0 8px">EventoPagamento</h3>
+    <div class="code-block"><code><span class="k">interface</span> <span class="v">EventoPagamento</span> {
+  <span class="c">// Identificação</span>
+  <span class="v">id</span>: <span class="k">string</span>;               <span class="c">// UUID do evento</span>
+  <span class="v">chaveDF</span>: <span class="k">string</span>;          <span class="c">// chave de acesso 44 dígitos</span>
+  <span class="v">cnpjEmitente</span>: <span class="k">string</span>;    <span class="c">// CNPJ do fornecedor emissor</span>
+  <span class="v">cnpjDestinatario</span>: <span class="k">string</span>; <span class="c">// CNPJ da empresa adquirente</span>
+
+  <span class="c">// Regime e destino</span>
+  <span class="v">regime</span>: <span class="s">"split_payment" | "rad"</span>;
+  <span class="v">destinatarioPagamento</span>: <span class="k">string</span>; <span class="c">// CNPJ; pode ser cessionário se RAD cedido</span>
+  <span class="v">destinatarioNome</span>: <span class="k">string</span>;
+
+  <span class="c">// Valores</span>
+  <span class="v">valorBruto</span>: <span class="k">number</span>;       <span class="c">// valor total da NF</span>
+  <span class="v">valorIBS</span>: <span class="k">number</span>;         <span class="c">// IBS calculado</span>
+  <span class="v">valorCBS</span>: <span class="k">number</span>;         <span class="c">// CBS calculado</span>
+  <span class="v">valorLiquido</span>: <span class="k">number</span>;     <span class="c">// valorBruto − valorIBS − valorCBS</span>
+
+  <span class="c">// Execução</span>
+  <span class="v">dataPagamento</span>: <span class="k">string</span>;    <span class="c">// ISO date — data do pagamento ao destinatário</span>
+  <span class="v">dataRecolhimento</span>?: <span class="k">string</span>; <span class="c">// RAD: data de recolhimento ao fisco</span>
+  <span class="v">psp</span>: <span class="k">string</span>;               <span class="c">// identificador do PSP utilizado</span>
+  <span class="v">hashTransacao</span>?: <span class="k">string</span>;   <span class="c">// hash da transação no PSP</span>
+
+  <span class="c">// Status</span>
+  <span class="v">status</span>: <span class="k">StatusPagamento</span>;   <span class="c">// máquina de estados (seção 05)</span>
+  <span class="v">statusAt</span>: <span class="k">string</span>;          <span class="c">// ISO datetime da última atualização</span>
+
+  <span class="c">// Duplicata (RAD)</span>
+  <span class="v">bloqueioRAD</span>?: <span class="k">boolean</span>;
+  <span class="v">titularDuplicata</span>?: <span class="k">string</span>; <span class="c">// CNPJ do cessionário</span>
+  <span class="v">registradora</span>?: <span class="k">string</span>;    <span class="c">// CERC | CIP | CRA | B3</span>
+}</code></div>
+
+    <h3 style="font-size:13px;font-weight:700;color:var(--txt1);margin:20px 0 8px">Extensão do DF (campos de pagamento)</h3>
+    <div class="code-block"><code><span class="c">// Campos adicionados ao DocumentoFiscal para suporte a pagamentos</span>
+{
+  <span class="v">statusPagamento</span>: <span class="k">StatusPagamento</span>,  <span class="c">// estado atual</span>
+  <span class="v">regimePagamento</span>: <span class="s">"split_payment" | "rad" | null</span>,
+  <span class="v">eventoPagamentoId</span>: <span class="k">string</span> | <span class="k">null</span>,   <span class="c">// FK para EventoPagamento</span>
+
+  <span class="c">// Duplicata escritural (ver Referência · Validação pré-RAD)</span>
+  <span class="v">temDuplicataXML</span>: <span class="k">boolean</span>,
+  <span class="v">escrituradaDuplicata</span>: <span class="k">boolean</span>,
+  <span class="v">bloqueioRAD</span>: <span class="k">boolean</span>,
+  <span class="v">titularDuplicata</span>: <span class="k">string</span> | <span class="k">null</span>,
+  <span class="v">registradora</span>: <span class="k">string</span> | <span class="k">null</span>,
+}</code></div>
+  </div>
+
+  <!-- 7. Regras de negócio -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Regras de negócio</span></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Regra</th>
+            <th>Condição</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>RN-01</td>
+            <td><strong>Regime padrão</strong></td>
+            <td>PSP habilitado para split payment</td>
+            <td>Rotear para <code>apto_split</code></td>
+          </tr>
+          <tr>
+            <td>RN-02</td>
+            <td><strong>RAD por ausência de PSP</strong></td>
+            <td>PSP não habilitado</td>
+            <td>Rotear para fluxo RAD</td>
+          </tr>
+          <tr>
+            <td>RN-03</td>
+            <td><strong>Validação obrigatória pré-RAD</strong></td>
+            <td>Qualquer DF no fluxo RAD com <code>temDuplicataXML = true</code></td>
+            <td>Consultar RR via PSP antes de liberar pagamento</td>
+          </tr>
+          <tr>
+            <td>RN-04</td>
+            <td><strong>Bloqueio RAD — duplicata cedida</strong></td>
+            <td><code>escrituradaDuplicata = true</code> e <code>titularDuplicata ≠ cnpjEmitente</code></td>
+            <td>Status <code>bloqueado_rad</code>. Notificar operações. Liquidar ao titular da RR.</td>
+          </tr>
+          <tr>
+            <td>RN-05</td>
+            <td><strong>Alerta RAD em atraso</strong></td>
+            <td><code>pago_rad_pendente</code> sem confirmação em 5 dias úteis</td>
+            <td>Disparar flag <code>rad_em_atraso</code>. Alertar gestor fiscal.</td>
+          </tr>
+          <tr>
+            <td>RN-06</td>
+            <td><strong>Glosa por não recolhimento</strong></td>
+            <td>CAPUR retorna glosa do RF após prazo RAD</td>
+            <td>Status <code>glosado</code>. Ajustar <code>statusCredito</code> do RF para <code>glosado</code>.</td>
+          </tr>
+          <tr>
+            <td>RN-07</td>
+            <td><strong>Idempotência</strong></td>
+            <td>Mesmo DF submetido mais de uma vez</td>
+            <td>Verificar <code>eventoPagamentoId</code> — rejeitar duplicata de evento.</td>
+          </tr>
+          <tr>
+            <td>RN-08</td>
+            <td><strong>Imutabilidade de evento</strong></td>
+            <td>Evento em <code>pago_split</code> ou <code>pago_rad_confirmado</code></td>
+            <td>Nenhum campo pode ser alterado. Reversões geram novo evento com referência ao original.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 8. Integrações -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Integrações</span></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Sistema</th>
+            <th>Direção</th>
+            <th>Dado trocado</th>
+            <th>Gatilho</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>PSP do adquirente</strong></td>
+            <td>SplitHub → PSP</td>
+            <td>Instrução de pagamento: chave DF, valor, regime, destinatário</td>
+            <td>Liberação de DF para split payment</td>
+          </tr>
+          <tr>
+            <td><strong>Plataforma CG-IBS/RFB</strong></td>
+            <td>Entrada (webhook / polling)</td>
+            <td>Confirmação de interceptação split; confirmação de recolhimento RAD; glosa</td>
+            <td>PSP confirma liquidação; prazo RAD atingido</td>
+          </tr>
+          <tr>
+            <td><strong>Registradora de Recebíveis (via PSP)</strong></td>
+            <td>SplitHub → PSP → RR</td>
+            <td>Consulta: chave DF → titular duplicata, status escrituração</td>
+            <td>DF com <code>temDuplicataXML = true</code> no fluxo RAD</td>
+          </tr>
+          <tr>
+            <td><strong>Módulo Conciliação (CFIN)</strong></td>
+            <td>SplitHub → Conciliação</td>
+            <td>Eventos de pagamento com valores IBS/CBS, data e PSP</td>
+            <td>Status terminal atingido (<code>pago_split</code> ou <code>pago_rad_confirmado</code>)</td>
+          </tr>
+          <tr>
+            <td><strong>Módulo Crédito</strong></td>
+            <td>Bidirecional</td>
+            <td>Leitura de <code>statusCredito</code> do RF; atualização após glosa</td>
+            <td>Confirmação ou glosa de recolhimento RAD</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 9. Tela — listagem de pagamentos -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Interface — listagem de pagamentos</span></div>
+    <p class="sec-sub">Visão operacional dos eventos de pagamento, filtráveis por período, regime, status e CNPJ fornecedor.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Coluna</th>
+            <th>Dado</th>
+            <th>Ordenável</th>
+            <th>Observação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Chave DF</strong></td><td>44 dígitos (truncado)</td><td>Sim</td><td>Link para detalhe do DF</td></tr>
+          <tr><td><strong>Fornecedor</strong></td><td>Razão social + CNPJ</td><td>Sim</td><td>Filtro rápido</td></tr>
+          <tr><td><strong>Regime</strong></td><td>Split Payment / RAD</td><td>Sim</td><td>Chip colorido</td></tr>
+          <tr><td><strong>Status</strong></td><td><code>statusPagamento</code></td><td>Sim</td><td>Chip com cor semântica</td></tr>
+          <tr><td><strong>Valor IBS</strong></td><td>R$ formatado</td><td>Sim</td><td>Coluna numérica alinhada à direita</td></tr>
+          <tr><td><strong>Valor CBS</strong></td><td>R$ formatado</td><td>Sim</td><td>Coluna numérica alinhada à direita</td></tr>
+          <tr><td><strong>Data pagamento</strong></td><td>DD/MM/AAAA</td><td>Sim</td><td>Data do evento de pagamento</td></tr>
+          <tr><td><strong>Destinatário</strong></td><td>CNPJ do destinatário efetivo</td><td>Não</td><td>Diferente do fornecedor se duplicata cedida</td></tr>
+          <tr><td><strong>Alerta</strong></td><td>Ícone se bloqueado ou em atraso</td><td>Não</td><td>Ação rápida para tratar</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="font-size:12.5px;color:var(--txt2);margin-top:10px">Suporte a <strong>ShColMgr</strong> (drag-reorder, toggle de colunas, sort, export CSV). Paginação padrão de 50 registros por página.</p>
+  </div>
+
+  <!-- 10. Histórico de versões -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Histórico de versões</span></div>
+    <div class="ver-hist">
+      <div class="ver-row">
+        <div class="ver-num">v1.0</div>
+        <div class="ver-desc">Versão inicial do PRD. Define escopo, regimes split payment e RAD, máquina de estados, modelo de dados, regras de negócio e integrações. Inclui validação de duplicata escritural pré-RAD (LC 214/2025 + Lei 13.775/2018).</div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+  <div style="font-size:11px;color:var(--txt3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <span>SplitHub · PRD · Fiscal → Pagamentos</span>
+    <span>v1.0 · Set/2026 · Base: LC 214/2025, Lei 13.775/2018</span>
+  </div>
+
+</div>
+</body>
+</html>
