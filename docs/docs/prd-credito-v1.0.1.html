@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Crédito IBS/CBS · SplitHub v1.0</title>
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6D28D9; --purple-d: rgba(109,40,217,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.6 'Segoe UI', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 860px; margin: 0 auto; }
+.doc-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+.doc-title { font-size: 28px; font-weight: 800; color: var(--txt1); line-height: 1.15; margin-bottom: 8px; text-wrap: balance; }
+.doc-sub { font-size: 14px; color: var(--txt2); margin-bottom: 24px; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 20px; padding: 16px 20px; background: var(--sur2); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 36px; }
+.meta-item { font-size: 12px; }
+.meta-label { color: var(--txt3); margin-bottom: 2px; }
+.meta-val { color: var(--txt1); font-weight: 600; }
+.section { margin-bottom: 40px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 20px; margin-bottom: 12px; }
+.card-title { font-size: 13px; font-weight: 700; color: var(--txt1); margin-bottom: 8px; }
+.info-box { border-radius: 7px; padding: 14px 16px; margin-bottom: 14px; font-size: 13px; line-height: 1.65; }
+.info-box.teal { background: var(--teal-d); border: 1px solid rgba(14,158,142,.25); }
+.info-box.amber { background: var(--amber-d); border: 1px solid rgba(185,122,16,.25); }
+.info-box.blue { background: var(--blue-d); border: 1px solid rgba(29,95,204,.2); }
+.info-box.red { background: var(--red-d); border: 1px solid rgba(214,58,73,.2); }
+.info-box.purple { background: var(--purple-d); border: 1px solid rgba(109,40,217,.2); }
+.info-box.green { background: var(--green-d); border: 1px solid rgba(26,121,64,.2); }
+.info-box strong { color: var(--txt1); }
+.pipeline { display: flex; align-items: flex-start; gap: 0; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; }
+.pipe-step { flex: 1; min-width: 100px; text-align: center; position: relative; }
+.pipe-step + .pipe-step::before { content: "→"; position: absolute; left: -10px; top: 22px; font-size: 16px; color: var(--txt3); }
+.pipe-box { border: 1px solid var(--brd); border-radius: 8px; padding: 12px 8px 10px; background: var(--sur); margin: 0 6px; }
+.pipe-num { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.pipe-lbl { font-size: 11px; font-weight: 700; color: var(--txt1); }
+.pipe-sub { font-size: 10px; color: var(--txt2); margin-top: 2px; line-height: 1.4; }
+.tbl-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--brd); margin-bottom: 16px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { background: var(--sur2); color: var(--txt2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 10px 14px; text-align: left; }
+tbody tr { border-top: 1px solid var(--brd); }
+tbody tr:hover { background: var(--sur2); }
+td { padding: 10px 14px; color: var(--txt1); vertical-align: top; }
+td:first-child { font-family: 'Consolas', monospace; font-size: 12px; color: var(--blue); }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.err { background: var(--red-d); color: var(--red); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.purple { background: var(--purple-d); color: var(--purple); }
+.chip.gray { background: var(--sur2); color: var(--txt3); }
+ul, ol { padding-left: 18px; color: var(--txt2); font-size: 13px; }
+ul li, ol li { margin-bottom: 5px; line-height: 1.6; }
+li strong { color: var(--txt1); }
+.cl-entry { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--brd); }
+.cl-entry:last-child { border-bottom: none; }
+.cl-ver { font-size: 12px; font-weight: 700; color: var(--teal); white-space: nowrap; min-width: 44px; }
+.cl-body { font-size: 13px; color: var(--txt2); }
+.cl-body strong { color: var(--txt1); display: block; margin-bottom: 3px; }
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'Consolas', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+.ver-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+.ver-nav a { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-decoration: none; background: var(--sur2); color: var(--txt2); border: 1px solid var(--brd); }
+.ver-nav a.current { background: var(--teal); color: #fff; border-color: var(--teal); }
+.ver-nav a:hover:not(.current) { border-color: var(--teal); color: var(--teal); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media (max-width: 600px) { .two-col, .three-col { grid-template-columns: 1fr; } }
+.badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+.fsm-wrap { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.fsm-node { border: 1px solid var(--brd); border-radius: 8px; padding: 12px 16px; background: var(--sur); flex: 1; min-width: 160px; }
+.fsm-node-title { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+.fsm-node-desc { font-size: 11.5px; color: var(--txt2); line-height: 1.5; }
+.flag-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--brd); }
+.flag-row:last-child { border-bottom: none; }
+.flag-sev { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
+.flag-content { flex: 1; }
+.flag-name { font-size: 12.5px; font-weight: 700; color: var(--txt1); font-family: 'Consolas', monospace; }
+.flag-desc { font-size: 12px; color: var(--txt2); }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <div class="doc-eyebrow">Product Requirements Document</div>
+  <h1 class="doc-title">Módulo de Crédito IBS/CBS</h1>
+  <p class="doc-sub">Ciclo de vida completo do crédito tributário do adquirente — das origens no Registro Fiscal até a apropriação, utilização para abate de débitos, glosa e prescrição</p>
+
+  <div class="ver-nav">
+    <span style="font-size:11px;color:var(--txt3);font-weight:600">Versões:</span>
+    <a href="prd-credito-v1.0.html" class="current">v1.0 (esta)</a>
+    <a href="prd-credito.html" style="margin-left:4px;background:var(--teal-d);color:var(--teal);border-color:var(--teal)">Última versão</a>
+  </div>
+
+  <div class="meta-row">
+    <div class="meta-item"><div class="meta-label">Versão</div><div class="meta-val">v1.0</div></div>
+    <div class="meta-item"><div class="meta-label">Status</div><div class="meta-val"><span class="chip teal">Publicado</span></div></div>
+    <div class="meta-item"><div class="meta-label">Data</div><div class="meta-val">Ago/2026</div></div>
+    <div class="meta-item"><div class="meta-label">Módulo</div><div class="meta-val">Fiscal → Crédito</div></div>
+    <div class="meta-item"><div class="meta-label">Base legal central</div><div class="meta-val">LC 214/2025 · arts. 47, 48, 50, 57, 59 · Decreto 12.955/26</div></div>
+    <div class="meta-item"><div class="meta-label">Depende de</div><div class="meta-val">
+      <a href="prd-ingestao.html" style="color:var(--teal)">PRD Ingestão</a> ·
+      <a href="prd-conciliacao.html" style="color:var(--teal)">PRD Conciliação</a>
+    </div></div>
+  </div>
+
+  <!-- 01. Objetivo -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Objetivo e conceito central</span></div>
+    <div class="info-box teal">
+      <strong>Conceito central — o Registro Fiscal é a unidade de crédito:</strong> cada Documento Fiscal gera obrigatoriamente dois Registros Fiscais (RF) — um para IBS e um para CBS. O RF representa o ciclo de vida de <em>somente um</em> dos impostos de um DF. O módulo de Crédito gerencia o estado e o rastreamento desses RFs desde o nascimento (<code>nao_apropriado</code>) até a extinção por utilização (<code>utilizado</code>) ou recusa (<code>glosado</code>).
+    </div>
+    <div class="info-box blue">
+      <strong>O crédito não é automático — depende de recolhimento:</strong> o direito ao crédito nasce com o Fato Gerador (art. 47 LC 214/2025), mas o crédito só torna-se <em>utilizável</em> após a confirmação do recolhimento do tributo — seja pelo Fornecedor via PCONT (DAT processada pela RFB/CG-IBS) ou pelo Adquirente via RAD com comprovante vinculado. Sem essa confirmação o RF permanece <code>nao_apropriado</code> e gera flag de risco.
+    </div>
+    <div class="info-box green">
+      <strong>Escopo do módulo:</strong> (1) listagem e filtros de RFs por status, tipo de imposto, fornecedor, período e flag; (2) visão individual do RF com rastreabilidade ao DF pai; (3) gestão da apropriação — confirmação de PCONT ou vinculação de comprovante RAD; (4) registro de utilização (abate de créditos contra débitos); (5) monitoramento de flags de risco (vencimento, prescrição); (6) rastreamento de glosas.
+    </div>
+    <div class="two-col">
+      <div class="card" style="border-top:3px solid var(--amber)">
+        <div class="card-title" style="color:var(--amber)">O que este módulo NÃO faz</div>
+        <ul>
+          <li>Não realiza a apuração assistida (responsabilidade do CG-IBS/RFB)</li>
+          <li>Não emite DAT ou guias de recolhimento (PCONT)</li>
+          <li>Não substitui a EFD-IBS/SPED</li>
+          <li>Não gera o RF — ele nasce na Conciliação após CAPUR+CFIN positivos</li>
+          <li>Não decide glosa — recebe a decisão do CG-IBS/RFB via evento</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:3px solid var(--teal)">
+        <div class="card-title" style="color:var(--teal)">Valor entregue ao usuário</div>
+        <ul>
+          <li>Visibilidade em tempo real do estoque de crédito IBS+CBS disponível</li>
+          <li>Alertas proativos antes do vencimento e da prescrição</li>
+          <li>Rastreabilidade completa: DF → RF → PCONT/RAD → utilização</li>
+          <li>Identificação imediata de glosas e créditos em risco</li>
+          <li>Base de dados para o módulo de Débitos e apuração de saldo</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02. Base Legal -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Base legal e referências normativas</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Dispositivo</th><th>Tema</th><th>Relevância para o módulo de Crédito</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>LC 214/2025 · art. 47</td>
+            <td>Direito ao crédito de IBS/CBS</td>
+            <td>Fundamento do crédito não-cumulativo pleno. Todo IBS+CBS pago em etapas anteriores é recuperável pelo adquirente B2B, salvo vedações do art. 48. Define o nascimento do direito ao crédito com o Fato Gerador.</td>
+          </tr>
+          <tr>
+            <td>LC 214/2025 · art. 47, §2º</td>
+            <td>Proporcionalidade do crédito</td>
+            <td>Quando o contribuinte realiza operações mistas (tributadas + isentas), o crédito é proporcional à razão saídas tributadas / total saídas. Impacta o cálculo do valor utilizável de cada RF.</td>
+          </tr>
+          <tr>
+            <td>LC 214/2025 · art. 48</td>
+            <td>Vedações ao crédito</td>
+            <td>Lista as situações em que o crédito é vedado: uso pessoal, fruição de empregados, operações isentas/imunes, ativo não vinculado à atividade. RF gerado nessas condições deve ser bloqueado para utilização.</td>
+          </tr>
+          <tr>
+            <td>LC 214/2025 · art. 50</td>
+            <td>Momento da escrituração do crédito</td>
+            <td>O crédito pode ser escriturado no período do FG ou em período posterior, dentro do prazo decadencial. Fundamenta a possibilidade de apropriação de RFs extemporâneos.</td>
+          </tr>
+          <tr>
+            <td>LC 214/2025 · art. 57</td>
+            <td>Recolhimento pelo fornecedor (PCONT)</td>
+            <td>Fornecedor é responsável primário. DAT processada = comprovante PCONT = condição para <code>statusCredito: apropriado</code> no RF do adquirente.</td>
+          </tr>
+          <tr>
+            <td>LC 214/2025 · art. 59</td>
+            <td>RAD — Recolhimento pelo Adquirente Designado</td>
+            <td>Adquirente retém IBS+CBS do pagamento ao fornecedor e recolhe via DAT própria. Gera comprovante RAD que substitui o PCONT do fornecedor como condição para <code>apropriado</code>.</td>
+          </tr>
+          <tr>
+            <td>Decreto 12.955/26 · art. 46</td>
+            <td>Apuração assistida CBS (RCBS)</td>
+            <td>Regula o fluxo da apuração assistida que produz os dados de PCONT consultados pelo SplitHub. Silêncio do contribuinte = aceite tácito = crédito tributário constituído automaticamente.</td>
+          </tr>
+          <tr>
+            <td>LC 214/2025 · art. 48, §único</td>
+            <td>Prazo de utilização do crédito</td>
+            <td>Crédito não utilizado prescreve em 5 anos contados da data de emissão do DF pai. Flag <code>a_prescrever</code> é acionada dentro da janela de alerta configurável.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 03. Estrutura do RF -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Estrutura do Registro Fiscal (RF)</span></div>
+    <div class="info-box purple">
+      <strong>Regra de ouro:</strong> todo DF processado com sucesso na Conciliação gera <strong>exatamente 2 RFs</strong> — um <code>tipoFiscal: ibs</code> e um <code>tipoFiscal: cbs</code>. RFs de entrada (DFs de compra) geram crédito para o adquirente. RFs de saída (DFs emitidos pelo próprio CNPJ) geram débito — esses são gerenciados pelo módulo de Débitos, não de Créditos.
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>string</td><td>Identificador único do RF</td></tr>
+          <tr><td>tipoFiscal</td><td><code>'ibs' | 'cbs'</code></td><td>Imposto que este RF representa. Um DF sempre tem um RF IBS e um RF CBS</td></tr>
+          <tr><td>valor</td><td>number</td><td><strong>Sempre o valor do tributo</strong> (nunca valor da NF ou valor líquido)</td></tr>
+          <tr><td>valorTotalNF</td><td>number</td><td>Valor bruto do DF pai — referência para proporcionalidade</td></tr>
+          <tr><td>valorLiquidoNF</td><td>number</td><td>Valor líquido do DF pai — referência</td></tr>
+          <tr><td>data</td><td>date</td><td>Data do RF = data de emissão do DF pai (base para todos os prazos)</td></tr>
+          <tr><td>tipoNF</td><td><code>'entrada' | 'saida'</code></td><td>Entrada = crédito do adquirente. Saída = débito (fora do escopo deste módulo)</td></tr>
+          <tr><td>nfVinculada</td><td>string</td><td>Chave de acesso (44 dígitos) ou número do DF pai</td></tr>
+          <tr><td>entidade / cnpj</td><td>string</td><td>CNPJ do adquirente (nosso cliente) a quem o crédito pertence</td></tr>
+          <tr><td>statusCredito</td><td>enum</td><td>Estado atual no ciclo de vida: <code>nao_apropriado</code> / <code>apropriado</code> / <code>utilizado</code> / <code>glosado</code></td></tr>
+          <tr><td>statusFlags</td><td>array</td><td>Flags de risco ativas: <code>inconsistencia</code> / <code>vencido</code> / <code>em_risco</code> / <code>a_prescrever</code></td></tr>
+          <tr><td>statusRegistro</td><td>string</td><td>Flag de maior severidade (campo de compatibilidade — preferir <code>statusFlags</code>)</td></tr>
+          <tr><td>metodoPagamento</td><td><code>'Fornecedor' | 'RAD'</code></td><td>Como o tributo foi ou será recolhido</td></tr>
+          <tr><td>metodoExtincao</td><td><code>'Compensacao' | 'RAD'</code></td><td>Como o crédito foi extinto na utilização</td></tr>
+          <tr><td>dataPagamento</td><td>date</td><td>Data do recolhimento confirmado</td></tr>
+          <tr><td>dataExtincao</td><td>date</td><td>Data de utilização/glosa do crédito</td></tr>
+          <tr><td>contratoId</td><td>string</td><td>Contrato de fornecimento vinculado (define o método de pagamento RAD vs. Fornecedor)</td></tr>
+          <tr><td>_inconsistencias</td><td>array</td><td>Cards de inconsistência vinculados a este RF</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 04. Ciclo de Vida -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Ciclo de vida do crédito — máquina de estados statusCredito</span></div>
+    <div class="info-box teal">
+      <strong>Sequência obrigatória:</strong> o RF sempre começa em <code>nao_apropriado</code>. A transição para <code>apropriado</code> exige confirmação de recolhimento. A transição para <code>utilizado</code> exige ato explícito de abatimento contra débito. A glosa pode ocorrer em qualquer ponto do ciclo.
+    </div>
+
+    <div class="pipeline">
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--amber)">
+          <div class="pipe-num" style="color:var(--amber)">①</div>
+          <div class="pipe-lbl">Originado</div>
+          <div class="pipe-sub">nao_apropriado</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--teal)">
+          <div class="pipe-num" style="color:var(--teal)">②</div>
+          <div class="pipe-lbl">Apropriável</div>
+          <div class="pipe-sub">FG constituído</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--blue)">
+          <div class="pipe-num" style="color:var(--blue)">③</div>
+          <div class="pipe-lbl">Apropriado</div>
+          <div class="pipe-sub">Recolhimento OK</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--green)">
+          <div class="pipe-num" style="color:var(--green)">④</div>
+          <div class="pipe-lbl">Utilizado</div>
+          <div class="pipe-sub">Abate de débito</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--red)">
+          <div class="pipe-num" style="color:var(--red)">✕</div>
+          <div class="pipe-lbl">Glosado</div>
+          <div class="pipe-sub">Recusa CG-IBS/RFB</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fsm-wrap">
+      <div class="fsm-node" style="border-top:3px solid var(--amber)">
+        <div class="fsm-node-title" style="color:var(--amber)">nao_apropriado</div>
+        <div class="fsm-node-desc">RF gerado após Conciliação (CAPUR+CFIN positivos). Crédito existe mas recolhimento ainda não confirmado. Recebe flags de risco conforme prazo. Bloqueado para utilização.</div>
+      </div>
+      <div class="fsm-node" style="border-top:3px solid var(--blue)">
+        <div class="fsm-node-title" style="color:var(--blue)">apropriado</div>
+        <div class="fsm-node-desc">Recolhimento confirmado: Fornecedor pagou via PCONT (DAT processada) <em>ou</em> Adquirente RAD pagou com comprovante vinculado. Crédito disponível para utilização. Flags de risco suprimidas.</div>
+      </div>
+      <div class="fsm-node" style="border-top:3px solid var(--green)">
+        <div class="fsm-node-title" style="color:var(--green)">utilizado</div>
+        <div class="fsm-node-desc">Crédito aplicado para abater débito de DF de saída. Ato registrado em auditoria bilateral (no RF de crédito e no RF de débito). Status terminal — não reverte exceto via estorno de utilização.</div>
+      </div>
+      <div class="fsm-node" style="border-top:3px solid var(--red)">
+        <div class="fsm-node-title" style="color:var(--red)">glosado</div>
+        <div class="fsm-node-desc">CG-IBS ou RFB recusa o crédito (decisão fiscal external). Pode ocorrer em qualquer etapa do ciclo. Status terminal. Gera card de inconsistência de alta severidade. Exige contestação administrativa.</div>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Transição</th><th>Gatilho</th><th>Pré-condição</th><th>Efeito colateral</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>→ nao_apropriado</td>
+            <td>Conciliação CAPUR+CFIN positiva no DF pai</td>
+            <td>DF com <code>status: importado</code> e conciliação concluída</td>
+            <td>RF criado com <code>tipoFiscal</code>, <code>valor</code>, <code>data</code> e <code>metodoPagamento</code> herdados do contrato</td>
+          </tr>
+          <tr>
+            <td>nao_apropriado → apropriado</td>
+            <td>PCONT: DAT do Fornecedor processada pela RFB/CG-IBS; RAD: comprovante de pagamento vinculado pelo usuário</td>
+            <td>RF em <code>nao_apropriado</code> com CFIN pendente resolvida</td>
+            <td>Flags de risco suprimidas. Crédito disponível para utilização. Atualiza KPI de estoque de crédito disponível</td>
+          </tr>
+          <tr>
+            <td>apropriado → utilizado</td>
+            <td>Ato de utilização explícito pelo usuário: seleção de RF(s) de crédito + RF(s) de débito</td>
+            <td>RF em <code>apropriado</code>; RF de débito correspondente em estado utilizável</td>
+            <td>Ambos os RFs (crédito e débito) têm <code>statusCredito</code> → <code>utilizado</code>; auditoria bilateral registrada; <code>dataExtincao</code> preenchida</td>
+          </tr>
+          <tr>
+            <td>qualquer → glosado</td>
+            <td>Evento de glosa recebido do CG-IBS/RFB via API ou importação manual</td>
+            <td>RF em qualquer estado exceto <code>utilizado</code></td>
+            <td>Card de inconsistência gerado. KPI de estoque deduzido. Notificação ao usuário responsável</td>
+          </tr>
+          <tr>
+            <td>utilizado → nao_apropriado</td>
+            <td>Estorno de utilização (cancelamento do ato de abatimento)</td>
+            <td>RF em <code>utilizado</code> com estorno autorizado</td>
+            <td>Auditoria de estorno registrada em ambos os RFs; flags reavaliadas com base na data atual</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 05. Flags de Risco -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Flags de risco — máquina de estados statusFlags</span></div>
+    <div class="info-box amber">
+      <strong>Regra de aplicação:</strong> flags são avaliadas <em>apenas</em> em RFs de entrada (<code>tipoNF: 'entrada'</code>). RFs de saída nunca recebem flags. <strong>Regra de supressão de flags temporais</strong> (<code>vencido</code>, <code>em_risco</code>, <code>a_prescrever</code>): zeradas quando <code>statusCredito</code> transita para <code>apropriado</code>, <code>utilizado</code> ou <code>glosado</code>. A flag <code>inconsistencia</code> segue regra própria — veja abaixo.
+    </div>
+    <div class="info-box blue">
+      <strong>statusFlags é cumulativo:</strong> um RF pode ter múltiplas flags ativas simultaneamente (ex.: <code>['em_risco', 'inconsistencia']</code>). O campo <code>statusRegistro</code> armazena a flag de maior severidade para compatibilidade com listagens.
+    </div>
+    <div class="info-box purple">
+      <strong>inconsistencia — regra de ciclo de vida:</strong> a flag <code>inconsistencia</code> <em>não bloqueia automaticamente</em> a apropriação nem a utilização do crédito. Ela sinaliza uma pendência que pode ou não interromper o fluxo. O ciclo de vida do RF (<code>statusCredito</code>) pode avançar normalmente a partir do <strong>feedback da apuração assistida</strong> — se a apuração confirmar o recolhimento, o crédito transita para <code>apropriado</code> mesmo com a inconsistência ativa. A flag é resolvida (removida) quando a pendência é regularizada pelo usuário ou pela apuração assistida, não necessariamente quando o crédito é apropriado.
+    </div>
+
+    <div style="padding: 4px 0">
+      <div class="flag-row">
+        <span class="flag-sev" style="background:var(--red-d);color:var(--red)">Sev 4 · Crítico</span>
+        <div class="flag-content">
+          <div class="flag-name">inconsistencia</div>
+          <div class="flag-desc">Card de inconsistência vinculado ao RF — evidencia uma pendência a ser regularizada (ex.: RAD sem comprovante, CAPUR divergente, divergência na apuração assistida). <strong>Não bloqueia automaticamente a apropriação nem a utilização do crédito</strong> — a pendência pode ou não interromper o fluxo, conforme a natureza e o feedback da apuração assistida. O ciclo de vida do RF segue normalmente; a inconsistência é um alerta de risco que exige ação ativa do usuário para regularização.</div>
+        </div>
+      </div>
+      <div class="flag-row">
+        <span class="flag-sev" style="background:var(--red-d);color:var(--red)">Sev 3 · Alto</span>
+        <div class="flag-content">
+          <div class="flag-name">vencido</div>
+          <div class="flag-desc">RF passou do prazo de vencimento: <strong>último dia do mês seguinte à emissão do DF pai</strong>. Crédito não bloqueado, mas fornecedor está em atraso — risco de glosa aumenta. Ação recomendada: iniciar RAD ou cobrança ao fornecedor.</div>
+        </div>
+      </div>
+      <div class="flag-row">
+        <span class="flag-sev" style="background:var(--amber-d);color:var(--amber)">Sev 2 · Médio</span>
+        <div class="flag-content">
+          <div class="flag-name">em_risco</div>
+          <div class="flag-desc">RF dentro da janela de <strong>30 dias antes do vencimento</strong>. Alerta preventivo: pagamento do fornecedor pendente e prazo se aproximando. Ação recomendada: verificar status de pagamento com o fornecedor.</div>
+        </div>
+      </div>
+      <div class="flag-row">
+        <span class="flag-sev" style="background:var(--blue-d);color:var(--blue)">Sev 1 · Baixo</span>
+        <div class="flag-content">
+          <div class="flag-name">a_prescrever</div>
+          <div class="flag-desc">RF dentro da janela de <strong>alerta de prescrição</strong> (configurável; padrão: 180 dias antes dos 5 anos da emissão do DF). Crédito em risco de extinção por prescrição se não utilizado. Ação recomendada: priorizar utilização deste crédito.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box red" style="margin-top:16px">
+      <strong>Cálculo base de todos os prazos:</strong> <code>nf.data</code> (data de emissão do DF pai). Vencimento = último dia do mês seguinte a <code>nf.data</code>. Prescrição = <code>new Date(ano+5, mês-1, dia)</code>. Janela <code>em_risco</code> = vencimento - 30 dias. Janela <code>a_prescrever</code> = prescrição - N dias (configurável).
+    </div>
+  </div>
+
+  <!-- 06. Métodos de Apropriação -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Métodos de apropriação — Fornecedor vs. RAD</span></div>
+    <div class="info-box purple">
+      <strong>Definido no Contrato:</strong> o método de recolhimento é estabelecido no módulo de Contratos, vinculado ao CNPJ do fornecedor. Não é uma decisão feita no módulo de Crédito — o RF herda o <code>metodoPagamento</code> do contrato no momento da criação.
+    </div>
+
+    <div class="two-col">
+      <div class="card" style="border-top:3px solid var(--blue)">
+        <div class="card-title" style="color:var(--blue)">Modelo Fornecedor (PCONT)</div>
+        <p style="font-size:13px;color:var(--txt2);margin-bottom:10px">O fornecedor apura e recolhe IBS+CBS via DAT. O adquirente acompanha o status do recolhimento via API do CG-IBS/RFB.</p>
+        <ul>
+          <li><strong>Gatilho de apropriação:</strong> DAT do fornecedor processada e confirmada</li>
+          <li><strong>Comprovante:</strong> RF da apuração assistida com status pago</li>
+          <li><strong>Risco:</strong> inadimplência do fornecedor → crédito permanece <code>nao_apropriado</code> → acumula flags → risco de glosa</li>
+          <li><strong>Ação do adquirente:</strong> monitorar prazo; acionar RAD se fornecedor não pagar</li>
+          <li><strong>Descasamento temporal:</strong> crédito só apropriado após DAT processada — pode ser dias após a emissão do DF</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:3px solid var(--teal)">
+        <div class="card-title" style="color:var(--teal)">Modelo RAD — Recolhimento pelo Adquirente</div>
+        <p style="font-size:13px;color:var(--txt2);margin-bottom:10px">Adquirente retém IBS+CBS do pagamento ao fornecedor e recolhe via DAT própria, gerando crédito simultâneo e autorreferenciado.</p>
+        <ul>
+          <li><strong>Gatilho de apropriação:</strong> comprovante de pagamento RAD vinculado ao RF pelo usuário (ou importado via API)</li>
+          <li><strong>Comprovante:</strong> DAT do adquirente referenciando a chave do DF</li>
+          <li><strong>Risco:</strong> ausência de comprovante → flag <code>inconsistencia</code> → pendência sinalizada (crédito não bloqueado automaticamente; regularização necessária)</li>
+          <li><strong>Vantagem:</strong> crédito imediato, sem risco de glosa por inadimplência do fornecedor</li>
+          <li><strong>Neutralidade:</strong> adquirente retém o valor → recolhe → credita. Resultado fiscal neutro no período.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tbl-wrap" style="margin-top:8px">
+      <table>
+        <thead><tr><th>Cenário</th><th>metodoPagamento</th><th>Ação no módulo Crédito</th><th>statusCredito resultante</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Fornecedor pagou — PCONT confirmada</td>
+            <td>Fornecedor</td>
+            <td>Sistema consulta CG-IBS/RFB e atualiza automaticamente</td>
+            <td><span class="chip ok">apropriado</span></td>
+          </tr>
+          <tr>
+            <td>Fornecedor não pagou — prazo OK</td>
+            <td>Fornecedor</td>
+            <td>Flag <code>em_risco</code> → alerta ao usuário</td>
+            <td><span class="chip warn">nao_apropriado</span></td>
+          </tr>
+          <tr>
+            <td>Fornecedor não pagou — vencido</td>
+            <td>Fornecedor</td>
+            <td>Flag <code>vencido</code> → usuário aciona RAD ou cobrança</td>
+            <td><span class="chip warn">nao_apropriado</span></td>
+          </tr>
+          <tr>
+            <td>RAD — comprovante vinculado</td>
+            <td>RAD</td>
+            <td>Usuário anexa comprovante → sistema valida → RF atualizado</td>
+            <td><span class="chip ok">apropriado</span></td>
+          </tr>
+          <tr>
+            <td>RAD — sem comprovante</td>
+            <td>RAD</td>
+            <td>Flag <code>inconsistencia</code> gerada — pendência sinalizada; ciclo de vida do RF não é interrompido automaticamente</td>
+            <td><span class="chip warn">nao_apropriado + flag</span></td>
+          </tr>
+          <tr>
+            <td>Glosa pelo CG-IBS/RFB</td>
+            <td>qualquer</td>
+            <td>Evento de glosa recebido — card de inconsistência criado</td>
+            <td><span class="chip err">glosado</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 07. Utilização -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Utilização de créditos — abate contra débitos</span></div>
+    <div class="info-box teal">
+      <strong>O que é utilização:</strong> ato de abater um ou mais RFs de crédito (<code>tipoNF: 'entrada'</code>) contra um ou mais RFs de débito (<code>tipoNF: 'saida'</code>) do mesmo tipo de imposto (IBS com IBS, CBS com CBS). Resulta na extinção parcial ou total dos RFs envolvidos e no registro bilateral de auditoria.
+    </div>
+
+    <div class="pipeline">
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--blue)">
+          <div class="pipe-num" style="color:var(--blue)">①</div>
+          <div class="pipe-lbl">Seleção</div>
+          <div class="pipe-sub">RFs crédito + débito</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--amber)">
+          <div class="pipe-num" style="color:var(--amber)">②</div>
+          <div class="pipe-lbl">Validação</div>
+          <div class="pipe-sub">Tipo + status + saldo</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--teal)">
+          <div class="pipe-num" style="color:var(--teal)">③</div>
+          <div class="pipe-lbl">Cálculo</div>
+          <div class="pipe-sub">Saldo proporcional</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--green)">
+          <div class="pipe-num" style="color:var(--green)">④</div>
+          <div class="pipe-lbl">Extinção</div>
+          <div class="pipe-sub">statusCredito: utilizado</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--purple)">
+          <div class="pipe-num" style="color:var(--purple)">⑤</div>
+          <div class="pipe-lbl">Auditoria</div>
+          <div class="pipe-sub">Registro bilateral</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Regra</th><th>Detalhe</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Homogeneidade de imposto</td>
+            <td>RF IBS só pode ser utilizado contra RF IBS de débito. RF CBS só contra RF CBS. Cruzamento de impostos é vedado.</td>
+          </tr>
+          <tr>
+            <td>Status de entrada</td>
+            <td>Apenas RFs com <code>statusCredito: apropriado</code> podem ser selecionados como crédito. Débitos devem estar em estado utilizável (não glosados, não já utilizados).</td>
+          </tr>
+          <tr>
+            <td>Proporcionalidade (art. 47, §2º)</td>
+            <td>Se o CNPJ possui operações mistas, o valor utilizável do RF é <code>valor × (saídas tributadas / total saídas do período)</code>. O valor proporcional é exibido e calculado antes da confirmação.</td>
+          </tr>
+          <tr>
+            <td>Auditoria bilateral</td>
+            <td>O ato de utilização é registrado na auditoria do RF de crédito <em>e</em> do RF de débito: timestamp, usuário, IDs dos RFs da contraparte, valor abatido.</td>
+          </tr>
+          <tr>
+            <td>Utilização parcial</td>
+            <td>Um RF pode ser utilizado parcialmente — o saldo remanescente permanece <code>apropriado</code> até nova utilização ou prescrição.</td>
+          </tr>
+          <tr>
+            <td>Estorno de utilização</td>
+            <td>Possível mediante autorização. Reverte ambos os RFs para <code>nao_apropriado</code> (crédito) e estado anterior (débito). Auditoria de estorno registrada bilateralmente.</td>
+          </tr>
+          <tr>
+            <td>CNPJ</td>
+            <td>Crédito e débito devem pertencer ao mesmo CNPJ. Compensação entre CNPJs de grupo econômico não é suportada nesta versão.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 08. Tela de Créditos -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Tela de Créditos — listagem e filtros</span></div>
+
+    <div class="two-col" style="margin-bottom:20px">
+      <div class="card" style="border-top:3px solid var(--teal)">
+        <div class="card-title">KPIs do painel (topo da tela)</div>
+        <ul>
+          <li><strong>Estoque disponível:</strong> soma de <code>valor</code> dos RFs <code>apropriado</code> no período filtrado</li>
+          <li><strong>A apropriar:</strong> soma de RFs <code>nao_apropriado</code> sem flag crítica</li>
+          <li><strong>Em risco:</strong> soma de RFs com flags <code>vencido</code> ou <code>em_risco</code></li>
+          <li><strong>Glosados no período:</strong> contagem e valor de RFs <code>glosado</code></li>
+          <li><strong>Utilizados no período:</strong> valor total de RFs transitados para <code>utilizado</code></li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:3px solid var(--blue)">
+        <div class="card-title">Filtros disponíveis</div>
+        <ul>
+          <li><strong>Status do crédito:</strong> nao_apropriado / apropriado / utilizado / glosado</li>
+          <li><strong>Tipo de imposto:</strong> IBS / CBS / ambos</li>
+          <li><strong>Flag de risco:</strong> inconsistencia / vencido / em_risco / a_prescrever</li>
+          <li><strong>Método de pagamento:</strong> Fornecedor / RAD</li>
+          <li><strong>Fornecedor (CNPJ):</strong> busca por nome ou CNPJ</li>
+          <li><strong>Período:</strong> data de emissão do DF pai (mês/ano)</li>
+          <li><strong>CNPJ do adquirente:</strong> filtro global da plataforma</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Coluna na listagem</th><th>Fonte</th><th>Comportamento</th></tr></thead>
+        <tbody>
+          <tr><td>ID DF</td><td><code>nfVinculada</code></td><td>Link para o detalhe do DF pai no módulo de Ingestão</td></tr>
+          <tr><td>Fornecedor</td><td>CNPJ + razão social do emitente do DF</td><td>Clicável — abre ficha do fornecedor</td></tr>
+          <tr><td>Tipo</td><td><code>tipoFiscal</code></td><td>Chip IBS (teal) / CBS (blue)</td></tr>
+          <tr><td>Valor</td><td><code>valor</code></td><td>Formatado em R$, alinhado à direita, tabular-nums</td></tr>
+          <tr><td>Emissão</td><td><code>data</code></td><td>Data do DF pai — base para cálculo de prazos</td></tr>
+          <tr><td>Vencimento</td><td>Calculado: último dia do mês seguinte a <code>data</code></td><td>Em vermelho se vencido, âmbar se dentro de 30 dias</td></tr>
+          <tr><td>Status crédito</td><td><code>statusCredito</code></td><td>Chip colorido com tooltip explicativo</td></tr>
+          <tr><td>Flags</td><td><code>statusFlags</code></td><td>Chips de flag ordenados por severidade; máx 3 visíveis + "+N"</td></tr>
+          <tr><td>Método</td><td><code>metodoPagamento</code></td><td>Fornecedor / RAD</td></tr>
+          <tr><td>Ações</td><td>—</td><td>Ver detalhe · Vincular comprovante · Iniciar utilização</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-box blue">
+      <strong>Detalhe do RF:</strong> ao clicar em um RF, abre painel lateral (drawer) com: dados completos do RF, link para o DF pai, histórico de status (timeline de transições), comprovante de pagamento (PCONT ou RAD), cards de inconsistência vinculados, histórico de auditoria de utilizações.
+    </div>
+  </div>
+
+  <!-- 09. Requisitos Funcionais -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Requisitos funcionais</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Prioridade</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>RF-CRED-01</td>
+            <td>O sistema deve listar todos os RFs de entrada do CNPJ filtrado, com paginação e ordenação por vencimento, valor e status.</td>
+            <td><span class="chip err">P0</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-02</td>
+            <td>A listagem deve exibir KPIs de estoque disponível, a apropriar, em risco e glosado atualizados em tempo real conforme os filtros aplicados.</td>
+            <td><span class="chip err">P0</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-03</td>
+            <td>O sistema deve calcular e exibir as flags de risco (<code>inconsistencia</code>, <code>vencido</code>, <code>em_risco</code>, <code>a_prescrever</code>) automaticamente com base na data atual vs. <code>nf.data</code>.</td>
+            <td><span class="chip err">P0</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-04</td>
+            <td>RFs com <code>statusCredito: apropriado</code>, <code>utilizado</code> ou <code>glosado</code> não devem exibir flags de risco (<code>statusFlags: []</code>).</td>
+            <td><span class="chip err">P0</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-05</td>
+            <td>O usuário deve poder vincular manualmente um comprovante RAD a um RF com <code>metodoPagamento: RAD</code> e status <code>nao_apropriado</code>, fazendo a transição para <code>apropriado</code>.</td>
+            <td><span class="chip err">P0</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-06</td>
+            <td>O sistema deve consultar automaticamente o status de recolhimento do Fornecedor via API CG-IBS/RFB e atualizar RFs PCONT para <code>apropriado</code> quando DAT confirmada.</td>
+            <td><span class="chip warn">P1</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-07</td>
+            <td>O usuário deve poder selecionar um ou mais RFs <code>apropriado</code> (crédito) e um ou mais RFs de débito para iniciar o fluxo de utilização, com validação de homogeneidade de imposto e saldo.</td>
+            <td><span class="chip warn">P1</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-08</td>
+            <td>O ato de utilização deve registrar auditoria bilateral: no RF de crédito e no RF de débito — com timestamp, usuário, IDs da contraparte e valor abatido.</td>
+            <td><span class="chip warn">P1</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-09</td>
+            <td>O sistema deve suportar utilização parcial de RFs, mantendo o saldo remanescente em <code>apropriado</code> com valor atualizado.</td>
+            <td><span class="chip warn">P1</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-10</td>
+            <td>Glosas recebidas via evento externo (CG-IBS/RFB) devem transitar o RF para <code>glosado</code> e gerar automaticamente card de inconsistência de severidade alta.</td>
+            <td><span class="chip err">P0</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-11</td>
+            <td>O detalhe do RF deve exibir a timeline completa de transições de status com timestamp e usuário responsável por cada transição manual.</td>
+            <td><span class="chip warn">P1</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-12</td>
+            <td>O sistema deve calcular e exibir o valor proporcional utilizável do RF quando o CNPJ possui operações mistas (art. 47, §2º), antes de confirmar a utilização.</td>
+            <td><span class="chip info">P2</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-13</td>
+            <td>RFs com <code>statusFlags</code> contendo <code>inconsistencia</code> devem exibir alerta visual destacado na listagem e no detalhe do RF. A inconsistência <strong>não bloqueia automaticamente</strong> a apropriação nem a utilização — sinaliza uma pendência que pode ou não interromper o fluxo conforme o retorno da apuração assistida. O sistema deve indicar claramente ao usuário a natureza da pendência e a ação recomendada.</td>
+            <td><span class="chip err">P0</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-14</td>
+            <td>O módulo deve exportar a listagem de RFs filtrada em CSV com todos os campos relevantes para conciliação contábil.</td>
+            <td><span class="chip info">P2</span></td>
+          </tr>
+          <tr>
+            <td>RF-CRED-15</td>
+            <td>Estorno de utilização deve ser suportado mediante confirmação explícita do usuário, com auditoria bilateral e reavaliação automática de flags.</td>
+            <td><span class="chip info">P2</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 10. Integrações -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Integrações e dependências</span></div>
+    <div class="three-col">
+      <div class="card">
+        <div class="card-title">← Ingestão</div>
+        <p style="font-size:12px;color:var(--txt2)">Fornece o DF pai com <code>status: importado</code> e os campos tributários (<code>valorIBSTotal</code>, <code>valorCBSTotal</code>, <code>chaveDfe</code>). Pré-requisito para criação do RF.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">← Conciliação</div>
+        <p style="font-size:12px;color:var(--txt2)">CAPUR+CFIN positivos são o gatilho de criação do RF. O RF nasce com <code>nao_apropriado</code> após a Conciliação confirmar que os valores estão corretos e o recolhimento foi iniciado.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">← Contratos</div>
+        <p style="font-size:12px;color:var(--txt2)">Define o <code>metodoPagamento</code> (Fornecedor ou RAD) herdado pelo RF. Sem contrato vigente para o fornecedor na data do DF, o módulo de Crédito exibe alerta de configuração pendente.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">→ Inconsistências</div>
+        <p style="font-size:12px;color:var(--txt2)">Cria cards de inconsistência para: RAD sem comprovante, glosas recebidas, RFs vencidos sem ação. Os cards são gerenciados no módulo de Inconsistências e vinculados ao RF via <code>_inconsistencias</code>.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">→ Débitos</div>
+        <p style="font-size:12px;color:var(--txt2)">RFs de débito (saída) são gerenciados pelo módulo de Débitos. O módulo de Crédito consome a listagem de RFs de débito disponíveis para utilização na tela de abatimento.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">↔ CG-IBS / RFB</div>
+        <p style="font-size:12px;color:var(--txt2)">API de apuração assistida (<code>consumo.tributos.gov.br</code>) consultada para confirmar status de PCONT. Eventos de glosa recebidos via webhook ou polling periódico.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. Cenários e Exceções -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Cenários de exceção e casos de borda</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Cenário</th><th>Comportamento esperado</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>DF cancelado após RF criado</td>
+            <td>RF herda cancelamento do DF pai → transita para estado cancelado (não é <code>glosado</code>). Crédito estornado. Card de informação criado.</td>
+          </tr>
+          <tr>
+            <td>NF-e de devolução parcial recebida</td>
+            <td>RF original reduzido proporcionalmente pelo valor devolvido. Novo RF negativo gerado para o valor de devolução. Auditoria de ajuste registrada.</td>
+          </tr>
+          <tr>
+            <td>Fornecedor não paga após vencimento</td>
+            <td>Flag <code>vencido</code> acionada. Sistema sugere abertura de RAD retroativo para apropriar o crédito sem depender do fornecedor inadimplente.</td>
+          </tr>
+          <tr>
+            <td>RAD sem comprovante vinculado</td>
+            <td>Flag <code>inconsistencia</code> criada. Pendência sinalizada — o fluxo do crédito continua; usuário deve regularizar o comprovante. O ciclo de vida pode avançar se a apuração assistida validar o recolhimento por outro meio.</td>
+          </tr>
+          <tr>
+            <td>Glosa parcial pelo CG-IBS</td>
+            <td>RF dividido: parte glosada (<code>glosado</code>) e parte remanescente (<code>apropriado</code>). Card de inconsistência com valor glosado e motivo.</td>
+          </tr>
+          <tr>
+            <td>Crédito de DF com múltiplos itens (CFOPs mistos)</td>
+            <td>O RF reflete o valor total do imposto do DF. A proporcionalidade por item (art. 47 §2º) é calculada no momento da utilização, não no momento da criação do RF.</td>
+          </tr>
+          <tr>
+            <td>RF a_prescrever não utilizado</td>
+            <td>Alerta proativo ao usuário responsável. Após a data de prescrição, RF transita para <code>prescrito</code> (estado terminal, similar a <code>glosado</code>). Crédito perdido sem possibilidade de recuperação.</td>
+          </tr>
+          <tr>
+            <td>Mudança de método de pagamento no contrato</td>
+            <td>RFs já criados mantêm o método original. Novos RFs (de DFs emitidos após a data de vigência do novo contrato) herdam o novo método.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Changelog -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">—</span><span class="sec-title">Changelog</span></div>
+    <div class="cl-entry">
+      <div class="cl-ver">v1.0</div>
+      <div class="cl-body">
+        <strong>Versão inicial do PRD de Crédito IBS/CBS</strong>
+        Ciclo de vida completo do RF (nao_apropriado → apropriado → utilizado / glosado). Máquinas de estado statusCredito e statusFlags. Modelos Fornecedor (PCONT) e RAD. Fluxo de utilização com auditoria bilateral. Cenários de exceção: cancelamento, devolução parcial, glosa parcial, prescrição. 15 requisitos funcionais com prioridade P0/P1/P2.
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
