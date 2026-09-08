@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jornadas de Usuário · SplitHub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 980px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--blue); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--blue); margin-bottom: 10px; }
+h1 { font-size: 28px; font-weight: 800; line-height: 1.18; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 700px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.purple { background: var(--purple-d); color: var(--purple); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--blue); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 48px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--blue); background: var(--blue-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 26px 0 8px; }
+h4 { font-size: 12px; font-weight: 700; color: var(--txt2); margin: 18px 0 7px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--blue); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.jid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+td.tc { text-align: center; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--blue); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+.code-block code .r { color: var(--red); }
+
+/* ── Ficha de jornada ── */
+.jor { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 18px 0; overflow: hidden; }
+.jor-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.jor-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 4px; flex-shrink: 0; }
+.jor-name { font-size: 14.5px; font-weight: 700; color: var(--txt1); }
+.jor-cad { font-size: 10.5px; font-weight: 700; color: var(--txt3); margin-left: auto; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.jor-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-bottom: 1px solid var(--brd); background: var(--sur2); }
+@media (max-width: 700px) { .jor-meta { grid-template-columns: 1fr; } }
+.jor-meta > div { padding: 11px 18px; border-right: 1px solid var(--brd); }
+.jor-meta > div:last-child { border-right: none; }
+.jm-k { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 3px; }
+.jm-v { font-size: 12px; color: var(--txt1); font-weight: 500; line-height: 1.45; }
+.jor-body { padding: 6px 18px 16px; }
+
+.step { display: flex; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--brd); }
+.step:last-child { border-bottom: none; }
+.step-n { width: 24px; height: 24px; border-radius: 50%; background: var(--blue-d); color: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+.step-main { flex: 1; min-width: 0; }
+.step-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 5px; }
+.step-acao { font-size: 13px; font-weight: 600; color: var(--txt1); }
+.step-onde { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--sur2); color: var(--txt2); border: 1px solid var(--brd); white-space: nowrap; flex-shrink: 0; }
+.step-lay { display: grid; grid-template-columns: 78px 1fr; gap: 3px 10px; font-size: 11.5px; margin-top: 6px; }
+@media (max-width: 560px) { .step-lay { grid-template-columns: 1fr; gap: 1px; } }
+.sl-k { color: var(--txt3); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; padding-top: 1px; }
+.sl-v { color: var(--txt2); }
+.sl-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--blue); }
+.sl-risco { color: var(--amber); }
+.sl-inst { color: var(--teal); }
+.step-dec { margin-top: 7px; padding: 8px 12px; background: var(--purple-d); border-left: 2px solid var(--purple); border-radius: 0 5px 5px 0; font-size: 11.5px; color: var(--txt2); }
+.step-dec strong { color: var(--purple); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 2px; }
+
+/* cores por natureza de jornada */
+.nat-setup   { background: var(--purple-d); color: var(--purple); }
+.nat-ciclo   { background: var(--teal-d);   color: var(--teal); }
+.nat-excecao { background: var(--red-d);    color: var(--red); }
+.nat-risco   { background: var(--amber-d);  color: var(--amber); }
+.nat-report  { background: var(--blue-d);   color: var(--blue); }
+.nat-ext     { background: var(--gray-d);   color: var(--gray); }
+
+.leg { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 0 4px; }
+.leg-i { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--txt2); }
+.leg-s { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--blue); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <a class="back" href="prds.html">← Hub de PRDs</a>
+
+  <div class="eyebrow">Proposta · Experiência</div>
+  <h1>Jornadas de Usuário do SplitHub</h1>
+  <p class="subtitle">Identificação das nove jornadas que a plataforma atende e proposta de um modelo de apresentação adequado ao domínio — onde as jornadas não são funis de descoberta, mas <strong>ciclos operacionais recorrentes</strong> ancorados no calendário fiscal.</p>
+
+  <div class="meta-bar">
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+    <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta · Experiência</span></div>
+    <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
+    <div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">Protótipo implementado</span></div>
+    <div class="meta-pill" style="margin-left:auto"><span class="chip info">Para discussão</span></div>
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Índice</div>
+    <ul class="toc-list">
+      <li><a href="#s01"><span class="toc-num">01</span> Por que jornadas aqui não são funis</a></li>
+      <li><a href="#s02"><span class="toc-num">02</span> Personas identificadas</a></li>
+      <li><a href="#s03"><span class="toc-num">03</span> As nove jornadas — mapa geral</a></li>
+      <li><a href="#s04"><span class="toc-num">04</span> O modelo de apresentação</a></li>
+      <li><a href="#s05"><span class="toc-num">05</span> Jornadas de configuração</a></li>
+      <li><a href="#s06"><span class="toc-num">06</span> Jornadas de ciclo operacional</a></li>
+      <li><a href="#s07"><span class="toc-num">07</span> Jornadas de exceção e risco</a></li>
+      <li><a href="#s08"><span class="toc-num">08</span> Jornadas de saída e externa</a></li>
+      <li><a href="#s09"><span class="toc-num">09</span> Encadeamento entre jornadas</a></li>
+      <li><a href="#s10"><span class="toc-num">10</span> Matriz jornada × módulo</a></li>
+      <li><a href="#s11"><span class="toc-num">11</span> Como usar este material</a></li>
+    </ul>
+  </div>
+
+  <!-- ══ 01 ══ -->
+  <div class="section" id="s01">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Por que jornadas aqui não são funis</span></div>
+
+    <p>O mapa de jornada clássico — descoberta, consideração, decisão, com uma faixa de emoções ao longo do percurso — foi desenhado para produtos onde o usuário <strong>escolhe</strong> avançar e pode desistir. Não é o caso aqui.</p>
+
+    <p>No SplitHub, o usuário não decide se vai conciliar o mês: o calendário fiscal decide por ele. A nota fiscal chega quer ele queira ou não. O prazo de apropriação corre sozinho. A pergunta relevante não é <em>"o que o usuário sente nesta etapa?"</em>, e sim <em>"o que acontece com o crédito se ele não agir a tempo?"</em>.</p>
+
+    <div class="callout info">
+      <div class="ct">Três características que mudam o desenho</div>
+      <p><strong>São ciclos, não percursos.</strong> A maior parte das jornadas se repete em cadência fixa — diária, quinzenal, mensal. O usuário não conclui a jornada; ele a percorre de novo no período seguinte.</p>
+      <p><strong>O estado do dado é protagonista.</strong> Cada etapa move um registro fiscal por uma máquina de estados. Uma jornada que não mostra <code>statusCredito</code> mudando não descreve o que de fato aconteceu.</p>
+      <p><strong>O risco é assimétrico e datado.</strong> Não agir tem custo mensurável, com prazo: crédito vence, prescreve ou é glosado. O eixo emocional importa menos que o eixo de exposição.</p>
+    </div>
+
+    <p>A proposta, portanto, substitui o eixo de emoção por três camadas que o domínio exige: <strong>estado do dado</strong>, <strong>risco de inação</strong> e <strong>instrumento de observação</strong> — o KPI ou gráfico que diz ao usuário que aquela etapa precisa de atenção.</p>
+  </div>
+
+  <!-- ══ 02 ══ -->
+  <div class="section" id="s02">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Personas identificadas</span></div>
+    <p class="sec-sub">Derivadas dos perfis de acesso do protótipo e dos destinatários configurados nas automações de relatório — não de suposição.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Persona</th><th>Evidência no protótipo</th><th>Pergunta que traz à plataforma</th><th>Cadência de uso</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Analista fiscal</strong></td>
+            <td>Destinatário de <code>REL-001</code> (Créditos, mensal)</td>
+            <td>"O que preciso resolver hoje para não perder crédito?"</td>
+            <td>Diária</td>
+          </tr>
+          <tr>
+            <td><strong>Analista de tesouraria</strong></td>
+            <td>Destinatário de <code>REL-003</code> (Pagamentos, quinzenal)</td>
+            <td>"Quais guias RAD tenho que gerar e pagar?"</td>
+            <td>Diária / por lote</td>
+          </tr>
+          <tr>
+            <td><strong>Compliance</strong></td>
+            <td>Destinatário de <code>REL-002</code> (Inconsistências, semanal)</td>
+            <td>"Onde há divergência entre o que declarei e o que o Fisco viu?"</td>
+            <td>Semanal</td>
+          </tr>
+          <tr>
+            <td><strong>Controladoria</strong></td>
+            <td>Destinatário de <code>REL-001</code></td>
+            <td>"Quanto crédito está reconhecido e quanto está em risco?"</td>
+            <td>Mensal</td>
+          </tr>
+          <tr>
+            <td><strong>CFO / gestor fiscal</strong></td>
+            <td>Destinatário de <code>REL-003</code>; consumidor do Dashboard</td>
+            <td>"Estamos aproveitando o crédito a que temos direito?"</td>
+            <td>Mensal / trimestral</td>
+          </tr>
+          <tr>
+            <td><strong>Administrador</strong></td>
+            <td>Acesso a Configurações (organização, usuários, contratos, ingestão)</td>
+            <td>"A plataforma está configurada para refletir nossos acordos?"</td>
+            <td>Eventual</td>
+          </tr>
+          <tr>
+            <td><strong>Fornecedor</strong></td>
+            <td>Perfil <code>fornecedor</code> com navegação própria e restrita</td>
+            <td>"Qual minha situação com este cliente?"</td>
+            <td>Eventual</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">O perfil Fornecedor é outro produto</div>
+      <p>O protótipo restringe a navegação do perfil <code>fornecedor</code>, ocultando Dashboard, Crédito, Débito, Pagamentos, Conciliação e Inconsistências. Ele vê o Portal do Fornecedor e pouco mais. Isso não é uma variação de permissão — é <strong>uma segunda audiência, com objetivo oposto</strong>: o adquirente quer garantir seu crédito; o fornecedor quer entender o que o adquirente está fazendo com as notas dele. Tratá-los no mesmo mapa de jornada confundiria os dois produtos.</p>
+    </div>
+  </div>
+
+  <!-- ══ 03 ══ -->
+  <div class="section" id="s03">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">As nove jornadas — mapa geral</span></div>
+    <p class="sec-sub">Agrupadas por natureza, não por módulo. A natureza determina como a jornada deve ser apresentada, medida e priorizada em roadmap.</p>
+
+    <div class="leg">
+      <span class="leg-i"><span class="leg-s" style="background:#6B3FA0"></span>Configuração — uma vez</span>
+      <span class="leg-i"><span class="leg-s" style="background:#0E9E8E"></span>Ciclo operacional — recorrente</span>
+      <span class="leg-i"><span class="leg-s" style="background:#D63A49"></span>Exceção — disparada por evento</span>
+      <span class="leg-i"><span class="leg-s" style="background:#B97A10"></span>Gestão de risco — periódica</span>
+      <span class="leg-i"><span class="leg-s" style="background:#1D5FCC"></span>Saída — periódica</span>
+      <span class="leg-i"><span class="leg-s" style="background:#6B7280"></span>Externa — outra audiência</span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Jornada</th><th>Natureza</th><th>Persona principal</th><th>Cadência</th><th>Métrica de sucesso</th></tr></thead>
+        <tbody>
+          <tr><td class="jid">J-01</td><td><strong>Implantação da plataforma</strong></td><td><span class="chip purple">Configuração</span></td><td>Administrador</td><td>Uma vez</td><td>100% dos CNPJs com contrato vigente</td></tr>
+          <tr><td class="jid">J-02</td><td><strong>Ingestão e validação de DFs</strong></td><td><span class="chip teal">Ciclo</span></td><td>Analista fiscal</td><td>Diária</td><td>% de DFs importados sem inconsistência</td></tr>
+          <tr><td class="jid">J-03</td><td><strong>Operação de pagamentos RAD</strong></td><td><span class="chip teal">Ciclo</span></td><td>Tesouraria</td><td>Diária / lote</td><td>Zero guias RAD vencidas</td></tr>
+          <tr><td class="jid">J-04</td><td><strong>Conciliação e apropriação</strong></td><td><span class="chip teal">Ciclo</span></td><td>Analista fiscal</td><td>Mensal</td><td>% apropriado sobre originado</td></tr>
+          <tr><td class="jid">J-05</td><td><strong>Tratamento de inconsistências</strong></td><td><span class="chip red">Exceção</span></td><td>Compliance</td><td>Contínua</td><td>Tempo de resolução; valor travado</td></tr>
+          <tr><td class="jid">J-06</td><td><strong>Prevenção de perda por prazo</strong></td><td><span class="chip warn">Risco</span></td><td>Gestor fiscal</td><td>Mensal</td><td>Valor prescrito no período (meta: zero)</td></tr>
+          <tr><td class="jid">J-07</td><td><strong>Governança contratual</strong></td><td><span class="chip warn">Risco</span></td><td>Administrador</td><td>Eventual + revisão</td><td>Volume sob contrato vencido</td></tr>
+          <tr><td class="jid">J-08</td><td><strong>Prestação de contas</strong></td><td><span class="chip info">Saída</span></td><td>CFO / controladoria</td><td>Mensal</td><td>Índice de aproveitamento</td></tr>
+          <tr><td class="jid">J-09</td><td><strong>Consulta do fornecedor</strong></td><td><span class="chip gray">Externa</span></td><td>Fornecedor</td><td>Eventual</td><td>Redução de contatos manuais</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <div class="ct">Uma jornada domina as demais</div>
+      <p><strong>J-04, conciliação e apropriação, é o eixo do produto.</strong> J-01 existe para que ela funcione; J-02 e J-03 a alimentam; J-05 e J-06 tratam o que ela deixa passar; J-08 reporta o resultado dela. Uma proposta de jornadas que trate as nove como pares perde essa hierarquia — e com ela a capacidade de priorizar.</p>
+    </div>
+  </div>
+
+  <!-- ══ 04 ══ -->
+  <div class="section" id="s04">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O modelo de apresentação</span></div>
+    <p class="sec-sub">Cada jornada é apresentada como uma <strong>ficha</strong> de duas partes: um cabeçalho que a enquadra e uma sequência de etapas com quatro camadas.</p>
+
+    <h3>4.1 Cabeçalho — enquadramento em cinco campos</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Campo</th><th>Responde</th><th>Por que está no cabeçalho</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Persona</strong></td><td>Quem percorre</td><td>Define vocabulário e nível de detalhe da interface</td></tr>
+          <tr><td><strong>Cadência</strong></td><td>Com que frequência se repete</td><td>Jornada diária tolera menos atrito que jornada anual</td></tr>
+          <tr><td><strong>Gatilho</strong></td><td>O que a inicia</td><td>Distingue jornada que o usuário escolhe de jornada que o calendário impõe</td></tr>
+          <tr><td><strong>Resultado</strong></td><td>Qual o estado final desejado</td><td>Sem isso não há como saber se a jornada foi bem-sucedida</td></tr>
+          <tr><td><strong>Métrica</strong></td><td>Como medir o sucesso</td><td>Liga a jornada a um número que a plataforma já calcula</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>4.2 Etapas — quatro camadas por passo</h3>
+    <p>Cada etapa carrega quatro linhas fixas. É a substituição do eixo emocional do mapa clássico por camadas que este domínio exige.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Camada</th><th>Conteúdo</th><th>Para que serve</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Onde</strong></td>
+            <td>Módulo e tela onde a ação ocorre</td>
+            <td>Torna a jornada verificável contra o produto: se não há tela, a etapa é aspiracional</td>
+          </tr>
+          <tr>
+            <td><strong>Estado</strong></td>
+            <td>Como o dado muda — <code>statusCredito</code>, <code>statusRegistro</code>, campos gravados</td>
+            <td>É o registro objetivo de que a etapa aconteceu, independente do que o usuário percebeu</td>
+          </tr>
+          <tr>
+            <td><strong>Risco</strong></td>
+            <td>O que dá errado se a etapa falhar ou não ocorrer</td>
+            <td>Substitui a "dor" do mapa clássico por exposição concreta e datada</td>
+          </tr>
+          <tr>
+            <td><strong>Instrumento</strong></td>
+            <td>KPI, gráfico ou alerta que sinaliza a necessidade daquela etapa</td>
+            <td>Conecta jornada a instrumentação — e revela etapas sem observabilidade</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Quando a etapa bifurca, acrescenta-se um bloco de <strong>decisão</strong> nomeando a condição e os dois caminhos.</p>
+
+    <h3>4.3 Anatomia visual</h3>
+    <div class="code-block"><code><span class="n">┌────────────────────────────────────────────────────────────┐</span>
+<span class="n">│</span> <span class="v">J-0X</span>  <span class="k">Nome da jornada</span>                    CADÊNCIA <span class="n">│</span>
+<span class="n">├──────────────────┬──────────────────┬──────────────────────┤</span>
+<span class="n">│</span> PERSONA          <span class="n">│</span> GATILHO          <span class="n">│</span> RESULTADO / MÉTRICA  <span class="n">│</span>
+<span class="n">├──────────────────┴──────────────────┴──────────────────────┤</span>
+<span class="n">│</span>                                                            <span class="n">│</span>
+<span class="n">│</span>  <span class="v">(1)</span> Ação executada pelo usuário        <span class="c">[ Módulo ]</span>    <span class="n">│</span>
+<span class="n">│</span>      <span class="c">ESTADO</span>       o que muda no dado                     <span class="n">│</span>
+<span class="n">│</span>      <span class="n">RISCO</span>        o que se perde se falhar               <span class="n">│</span>
+<span class="n">│</span>      <span class="v">INSTRUMENTO</span>  KPI que sinaliza                       <span class="n">│</span>
+<span class="n">│</span>                                                            <span class="n">│</span>
+<span class="n">│</span>      <span class="k">DECISÃO</span>  condição → caminho A | caminho B          <span class="n">│</span>
+<span class="n">│</span>                                                            <span class="n">│</span>
+<span class="n">│</span>  <span class="v">(2)</span> ...                                                <span class="n">│</span>
+<span class="n">└────────────────────────────────────────────────────────────┘</span></code></div>
+
+    <h3>4.4 Três artefatos complementares</h3>
+    <p>A ficha descreve uma jornada isolada. Duas visões adicionais mostram o sistema:</p>
+    <ul class="plain">
+      <li><strong>Mapa de encadeamento</strong> (seção 09) — como uma jornada entrega à seguinte e quais interrompem as demais. Revela dependências que a ficha isolada esconde.</li>
+      <li><strong>Matriz jornada × módulo</strong> (seção 10) — quais módulos servem quais jornadas. Módulo que não aparece em nenhuma jornada é candidato a revisão; jornada com etapa sem módulo é lacuna de produto.</li>
+      <li><strong>Cadência consolidada</strong> — a leitura por frequência responde "como é o dia, a semana e o mês de cada persona", que é a pergunta de quem desenha a navegação.</li>
+    </ul>
+
+    <div class="callout ok">
+      <div class="ct">O que este modelo entrega que o mapa clássico não entrega</div>
+      <p>Cada jornada fica <strong>verificável</strong> — toda etapa aponta para uma tela existente e uma transição de estado observável. E fica <strong>priorizável</strong>: risco e métrica em cada etapa permitem ordenar investimento por exposição fiscal, não por percepção.</p>
+    </div>
+  </div>
+
+  <!-- ══ 05 ══ -->
+  <div class="section" id="s05">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Jornadas de configuração</span></div>
+
+    <div class="jor">
+      <div class="jor-hdr">
+        <span class="jor-id nat-setup">J-01</span>
+        <span class="jor-name">Implantação da plataforma</span>
+        <span class="jor-cad">Uma vez · semanas</span>
+      </div>
+      <div class="jor-meta">
+        <div><div class="jm-k">Persona</div><div class="jm-v">Administrador, com apoio do fiscal</div></div>
+        <div><div class="jm-k">Gatilho</div><div class="jm-v">Contratação da plataforma</div></div>
+        <div><div class="jm-k">Resultado · Métrica</div><div class="jm-v">Plataforma apta a receber DFs · <strong>100% dos CNPJs com contrato vigente</strong></div></div>
+      </div>
+      <div class="jor-body">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Cadastrar CNPJs compradores da organização</span><span class="step-onde">Config → Organização</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Matrizes e filiais criadas, com UF e situação</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">CNPJ ausente faz a NF chegar sem destinatário reconhecido</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">KPIs de CNPJs ativos, matrizes e filiais</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Cadastrar fornecedores e agrupá-los por grupo econômico</span><span class="step-onde">Config → Fornecedor</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">CNPJs vendedores com <code>grupoId</code>, tipo e score inicial</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Sem agrupamento, o risco por grupo econômico fica invisível</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">KPIs de regulares, alerta e risco</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Firmar contrato por CNPJ, definindo o método de recolhimento</span><span class="step-onde">Config → Contratos</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Contrato com vigência, método (<code>split</code>&nbsp;/&nbsp;<code>rad</code>&nbsp;/&nbsp;<code>fornecedor</code>) e prazo; evento de criação no histórico</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">CNPJ sem contrato gera RF sem governança de recolhimento</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">KPI de cobertura — semáforo binário, meta 100%</span>
+            </div>
+            <div class="step-dec">
+              <strong>Decisão estruturante</strong>
+              O método escolhido aqui determina se as notas daquele CNPJ vão gerar trabalho recorrente em J-03. Split Payment e Fornecedor não geram; <strong>RAD gera</strong>.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">4</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Configurar a entrada de documentos fiscais</span><span class="step-onde">Config → Importação de DFs</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Integração com ERP ou carga por CSV posicional habilitada</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Sem ingestão não há dado; a plataforma fica vazia</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Contagem de DFs importados por origem</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">5</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Convidar usuários e configurar relatórios recorrentes</span><span class="step-onde">Config → Usuários · Automações</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Perfis atribuídos; automações com destinatário, formato e recorrência</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Sem automação, a plataforma só informa quem entra nela</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Lista de automações ativas e próximo envio</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">A ordem das etapas é uma dependência real</div>
+      <p>Contrato exige fornecedor cadastrado, que exige organização definida. Ingerir DFs antes de firmar contratos produz notas sem cobertura contratual — que aparecem imediatamente no KPI de cobertura em vermelho. A sequência não é preferência de desenho; é restrição do modelo de dados.</p>
+    </div>
+  </div>
+
+  <!-- ══ 06 ══ -->
+  <div class="section" id="s06">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Jornadas de ciclo operacional</span></div>
+    <p class="sec-sub">As três jornadas que se repetem em cadência fixa e movem o crédito da origem à confirmação.</p>
+
+    <!-- J-02 -->
+    <div class="jor">
+      <div class="jor-hdr">
+        <span class="jor-id nat-ciclo">J-02</span>
+        <span class="jor-name">Ingestão e validação de documentos fiscais</span>
+        <span class="jor-cad">Diária · contínua</span>
+      </div>
+      <div class="jor-meta">
+        <div><div class="jm-k">Persona</div><div class="jm-v">Analista fiscal</div></div>
+        <div><div class="jm-k">Gatilho</div><div class="jm-v">Chegada de DF por ERP ou carga manual</div></div>
+        <div><div class="jm-k">Resultado · Métrica</div><div class="jm-v">RFs criados e classificados · <strong>% de DFs sem inconsistência</strong></div></div>
+      </div>
+      <div class="jor-body">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">DF entra por integração ou upload CSV</span><span class="step-onde">Config → Importação de DFs</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Documento registrado com <code>dataIngestao</code></span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">DF não ingerido é crédito que nunca existirá no sistema</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Listagem de DFs com status de importação</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Validação de layout e de dados</span><span class="step-onde">Importação de DFs</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v"><code>valLayout</code> e <code>valDados</code> resolvidos; status vira <em>importado</em> ou <em>inconsistência</em></span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Dado inválido contamina toda a cadeia a jusante</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Filtro por status de importação</span>
+            </div>
+            <div class="step-dec">
+              <strong>Decisão</strong>
+              Inconsistência de importação → desvia para <strong>J-05</strong>. Documento válido → segue.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Motor de fato gerador cria os registros fiscais</span><span class="step-onde">Automático · sem tela</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Um RF por tributo (IBS e CBS), com <code>statusCredito = nao_apropriado</code></span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Classificação errada de fato gerador produz crédito de valor incorreto</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Aba Documentos Fiscais do módulo Crédito</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">4</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">RF herda o método de pagamento do contrato do CNPJ</span><span class="step-onde">Automático · resolve contrato</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v"><code>metodoPagamento</code> = Split Payment, RAD ou Fornecedor</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Sem contrato vigente aplica-se o padrão, e a nota entra descoberta</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">KPI de cobertura contratual (J-07)</span>
+            </div>
+            <div class="step-dec">
+              <strong>Bifurcação de destino</strong>
+              Método <code>RAD</code> → a nota entra na fila de <strong>J-03</strong>. Demais métodos → segue direto para <strong>J-04</strong>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- J-03 -->
+    <div class="jor">
+      <div class="jor-hdr">
+        <span class="jor-id nat-ciclo">J-03</span>
+        <span class="jor-name">Operação de pagamentos RAD</span>
+        <span class="jor-cad">Diária ou por lote</span>
+      </div>
+      <div class="jor-meta">
+        <div><div class="jm-k">Persona</div><div class="jm-v">Analista de tesouraria</div></div>
+        <div><div class="jm-k">Gatilho</div><div class="jm-v">Existência de guias a vencer no período</div></div>
+        <div><div class="jm-k">Resultado · Métrica</div><div class="jm-v">Tributo recolhido e comprovado · <strong>zero guias RAD vencidas</strong></div></div>
+      </div>
+      <div class="jor-body">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Abrir o módulo e ler a posição das guias</span><span class="step-onde">Pagamentos</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura — nenhum dado muda</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Guia atrasada é perda fiscal já em curso</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Quatro KPIs: a vencer · com flag · atrasados · confirmados</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Recortar por período de fato gerador e filtros</span><span class="step-onde">Pagamentos · filtros</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura — recorte da lista</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Recorte por data errada fecha a competência incorretamente</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Contador de registros; subtítulo com o período ativo</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Selecionar guias pendentes e gerar em lote</span><span class="step-onde">Pagamentos · barra de lote</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Documentos emitidos: Guia IBS (6912) ou DARF CBS (5952), com linha digitável e BR Code</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Guia não gerada é crédito que não se confirma por inação própria</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Barra com contagem e soma dos selecionados</span>
+            </div>
+            <div class="step-dec">
+              <strong>Bloqueio</strong>
+              Guias <code>glosado</code> ou já pagas não são selecionáveis — a restrição é estrutural, não validação posterior.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">4</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Executar o pagamento e registrar o comprovante</span><span class="step-onde">Pagamentos · comprovante</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v"><code>dataPagamento</code> gravada; comprovante com E2EId e autenticação bancária</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Pagamento sem comprovante vira inconsistência na conciliação</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Coluna Pagamento vira link para o comprovante</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout red">
+      <div class="ct">Lacuna identificada em J-03</div>
+      <p>Falta uma etapa entre selecionar e pagar: <strong>verificar se o fornecedor já escriturou a duplicata</strong>. Se ele escriturou e cedeu a terceiro, pagar via RAD ao fornecedor gera exposição a pagamento duplo. O fluxo de validação está descrito em <a class="xref" href="duplicata-escritural-rad-validacao.html">Duplicata Escritural — Validação pré-RAD</a>, mas ainda não existe no produto. É a lacuna de maior severidade financeira identificada neste mapeamento.</p>
+    </div>
+
+    <!-- J-04 -->
+    <div class="jor">
+      <div class="jor-hdr">
+        <span class="jor-id nat-ciclo">J-04</span>
+        <span class="jor-name">Conciliação e apropriação do crédito</span>
+        <span class="jor-cad">Mensal · fechamento</span>
+      </div>
+      <div class="jor-meta">
+        <div><div class="jm-k">Persona</div><div class="jm-v">Analista fiscal · controladoria</div></div>
+        <div><div class="jm-k">Gatilho</div><div class="jm-v">Virada do período de apuração</div></div>
+        <div><div class="jm-k">Resultado · Métrica</div><div class="jm-v">Crédito confirmado ou glosado · <strong>% apropriado sobre originado</strong></div></div>
+      </div>
+      <div class="jor-body">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Confrontar registros fiscais com os termos do Fisco</span><span class="step-onde">Conciliação · CAPUR</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">RF × TF confrontados na Plataforma Centralizada CG-IBS/RFB</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Divergência não tratada impede a apropriação</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Listagem de RFs com status de conciliação</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Conciliar os valores financeiros efetivamente liquidados</span><span class="step-onde">Conciliação · CFIN</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Pagamentos e retenções batidos contra o resultado do CAPUR</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Diferença financeira não explicada bloqueia o fechamento</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Painel de conciliação</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Crédito avança de estado</span><span class="step-onde">Automático → reflete em Crédito</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v"><code>nao_apropriado</code> → <code>apropriado</code> ou <code>glosado</code></span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Glosa é perda sem recuperação pela interface</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">KPIs Apropriados e A Apropriar; gráfico de composição</span>
+            </div>
+            <div class="step-dec">
+              <strong>Decisão</strong>
+              <code>glosado</code> → encerra sem crédito. <code>apropriado</code> → disponível para abater débito.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">4</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Utilizar o crédito contra débitos de saída</span><span class="step-onde">Débito</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v"><code>apropriado</code> → <code>utilizado</code>; <code>metodoExtincao</code> registrado</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Crédito apropriado e não utilizado é caixa parado</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">KPI Utilizados — percentual sobre os apropriados</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 07 ══ -->
+  <div class="section" id="s07">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Jornadas de exceção e risco</span></div>
+
+    <!-- J-05 -->
+    <div class="jor">
+      <div class="jor-hdr">
+        <span class="jor-id nat-excecao">J-05</span>
+        <span class="jor-name">Tratamento de inconsistências</span>
+        <span class="jor-cad">Contínua · por evento</span>
+      </div>
+      <div class="jor-meta">
+        <div><div class="jm-k">Persona</div><div class="jm-v">Compliance · analista fiscal</div></div>
+        <div><div class="jm-k">Gatilho</div><div class="jm-v">Divergência detectada, ou relatório semanal <code>REL-002</code></div></div>
+        <div><div class="jm-k">Resultado · Métrica</div><div class="jm-v">Crédito destravado · <strong>tempo de resolução e valor travado</strong></div></div>
+      </div>
+      <div class="jor-body">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Detectar — por KPI, ranking ou relatório recebido</span><span class="step-onde">Crédito · Inconsistência</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v"><code>statusRegistro = inconsistencia</code></span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Inconsistência não vista trava crédito silenciosamente</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">KPI de inconsistências; <strong>Top 5 por volume</strong></span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Priorizar pelo valor travado, não pela quantidade</span><span class="step-onde">Crédito · Top 5</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Tratar por ordem de chegada desperdiça esforço em casos pequenos</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Ranking dos 5 RFs de maior valor com divergência</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Diagnosticar o tipo de divergência</span><span class="step-onde">Inconsistência · detalhe do RF</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Tipo identificado — ausência de termo, divergência de valor, falta de comprovante</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Diagnóstico errado leva à ação errada e ao retrabalho</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Badges de tipo na coluna Inconsistências</span>
+            </div>
+            <div class="step-dec">
+              <strong>Roteamento por causa</strong>
+              Dado interno errado → corrigir e reingerir (<strong>J-02</strong>). Falha de recolhimento do fornecedor → cobrança externa. Guia RAD não paga → volta a <strong>J-03</strong>.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">4</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Agir e acompanhar até a baixa</span><span class="step-onde">Módulo de destino</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Flag removida; RF volta ao fluxo normal de <strong>J-04</strong></span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Sem acompanhamento, a inconsistência envelhece até prescrever</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Ageing de créditos a apropriar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">Esta jornada interrompe as demais</div>
+      <p>J-05 não tem lugar fixo na sequência — ela é disparada de dentro de J-02, J-03 ou J-04 e devolve o registro ao ponto de origem. Representá-la como etapa linear de outra jornada esconderia essa natureza de interrupção, que é justamente o que a torna difícil de operar.</p>
+    </div>
+
+    <!-- J-06 -->
+    <div class="jor">
+      <div class="jor-hdr">
+        <span class="jor-id nat-risco">J-06</span>
+        <span class="jor-name">Prevenção de perda por decurso de prazo</span>
+        <span class="jor-cad">Mensal · preventiva</span>
+      </div>
+      <div class="jor-meta">
+        <div><div class="jm-k">Persona</div><div class="jm-v">Gestor fiscal</div></div>
+        <div><div class="jm-k">Gatilho</div><div class="jm-v">Revisão periódica de posição</div></div>
+        <div><div class="jm-k">Resultado · Métrica</div><div class="jm-v">Crédito recuperado antes do prazo · <strong>valor prescrito no período (meta: zero)</strong></div></div>
+      </div>
+      <div class="jor-body">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Ler a distribuição por antiguidade</span><span class="step-onde">Crédito · Ageing</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Cauda pesada acima de 180 dias sinaliza crédito que não se realizará</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Ageing em cinco faixas, com valor, percentual e contagem</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Separar o urgente do monitorável</span><span class="step-onde">Crédito · KPIs CP e LP</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura — partição do saldo pendente por vencimento</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Tratar CP e LP com a mesma urgência dilui o esforço</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">A Apropriar CP e LP, com link direto para a listagem filtrada</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Antecipar picos de prescrição</span><span class="step-onde">Crédito · Calendário de Prescrição</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura — projeção de até 18 meses</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Barra vermelha é última janela de ação; depois a perda é definitiva</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Calendário com semáforo por urgência</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">4</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Priorizar cobrança por fornecedor</span><span class="step-onde">Crédito · Top 10 Empresas</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Ação externa — cobrança ao fornecedor</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Sem priorização por volume, o esforço não acompanha a exposição</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Barra segmentada com score de pendência</span>
+            </div>
+            <div class="step-dec">
+              <strong>Leitura combinada</strong>
+              Barra longa com alta proporção pendente = <strong>risco material concentrado</strong>. É o único quadrante que justifica escalonamento.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">5</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Registrar o que virou perda definitiva</span><span class="step-onde">Crédito · Créditos Prescritos</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Crédito prescrito, por status explícito ou decurso de cinco anos</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Perda contábil a reconhecer; não há reversão</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Card com valor, contagem, percentual e mês mais recente</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- J-07 -->
+    <div class="jor">
+      <div class="jor-hdr">
+        <span class="jor-id nat-risco">J-07</span>
+        <span class="jor-name">Governança contratual</span>
+        <span class="jor-cad">Eventual + revisão periódica</span>
+      </div>
+      <div class="jor-meta">
+        <div><div class="jm-k">Persona</div><div class="jm-v">Administrador · jurídico</div></div>
+        <div><div class="jm-k">Gatilho</div><div class="jm-v">Novo fornecedor, renegociação, ou vigência próxima do fim</div></div>
+        <div><div class="jm-k">Resultado · Métrica</div><div class="jm-v">Cobertura contratual mantida · <strong>volume de NFs sob contrato vencido</strong></div></div>
+      </div>
+      <div class="jor-body">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Verificar cobertura e exposição</span><span class="step-onde">Config → Contratos · KPIs</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Nota sob contrato expirado não tem base contratual para o método aplicado</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Cobertura (semáforo binário) e volume sob contrato vencido</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Cadastrar, renovar ou alterar o método</span><span class="step-onde">Contratos · formulário</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Vigência e método gravados; evento no histórico com diff campo a campo</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Vigência sobreposta quebra a resolução de contrato vigente</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Validação de sobreposição em cadastro e edição</span>
+            </div>
+            <div class="step-dec">
+              <strong>Consequência a jusante</strong>
+              Alterar o método muda o comportamento de <strong>todas</strong> as notas futuras daquele CNPJ — inclusive se elas passam ou não a exigir J-03.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Auditar o que mudou e quem mudou</span><span class="step-onde">Contratos · timeline do detalhe</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura do histórico imutável de eventos</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Alteração sem rastro impede reconstruir a base contratual de um período</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Timeline com autor, momento e diff em linguagem de negócio</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">4</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Encerrar contrato quando a relação termina</span><span class="step-onde">Contratos · encerramento</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Vigência ajustada; evento de encerramento registrado</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">CNPJ fica sem contrato vigente — novas notas entram descobertas</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Confirmação que declara o impacto antes de executar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 08 ══ -->
+  <div class="section" id="s08">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Jornadas de saída e externa</span></div>
+
+    <!-- J-08 -->
+    <div class="jor">
+      <div class="jor-hdr">
+        <span class="jor-id nat-report">J-08</span>
+        <span class="jor-name">Prestação de contas e decisão</span>
+        <span class="jor-cad">Mensal · trimestral</span>
+      </div>
+      <div class="jor-meta">
+        <div><div class="jm-k">Persona</div><div class="jm-v">CFO · controladoria</div></div>
+        <div><div class="jm-k">Gatilho</div><div class="jm-v">Fechamento do período ou envio automático</div></div>
+        <div><div class="jm-k">Resultado · Métrica</div><div class="jm-v">Posição fiscal comunicada · <strong>índice de aproveitamento</strong></div></div>
+      </div>
+      <div class="jor-body">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Ler a posição consolidada</span><span class="step-onde">Início · Dashboard</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura, com recorte opcional por grupo econômico</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Decisão sobre número desatualizado ou mal recortado</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Apropriado, a apropriar e em risco; evolução acumulada</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Investigar tendência e composição</span><span class="step-onde">Crédito · Analytics</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Ver o total sem a composição esconde deterioração de uma faixa</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Composição por status mês a mês, com filtro IBS/CBS</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Correlacionar método de recolhimento com perda</span><span class="step-onde">Crédito · Método de pagamento</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Mix de método inadequado ao perfil da carteira</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Método de pagamento ao lado da composição — leitura conjunta</span>
+            </div>
+            <div class="step-dec">
+              <strong>Decisão de política</strong>
+              Alta concentração RAD com atraso crescente indica capacidade operacional insuficiente — retorna a <strong>J-07</strong> para renegociar método.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">4</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Distribuir — exportação ou envio automático</span><span class="step-onde">Config → Automações · export CSV</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Relatório enviado aos destinatários na recorrência configurada</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Sem automação, só se informa quem entra na plataforma</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Automações com último e próximo envio</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- J-09 -->
+    <div class="jor">
+      <div class="jor-hdr">
+        <span class="jor-id nat-ext">J-09</span>
+        <span class="jor-name">Consulta do fornecedor</span>
+        <span class="jor-cad">Eventual · audiência externa</span>
+      </div>
+      <div class="jor-meta">
+        <div><div class="jm-k">Persona</div><div class="jm-v">Fornecedor (perfil restrito)</div></div>
+        <div><div class="jm-k">Gatilho</div><div class="jm-v">Dúvida sobre pagamento, contrato ou situação de notas</div></div>
+        <div><div class="jm-k">Resultado · Métrica</div><div class="jm-v">Dúvida resolvida sem contato · <strong>redução de contatos manuais</strong></div></div>
+      </div>
+      <div class="jor-body">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Acessar o portal com navegação restrita</span><span class="step-onde">Portal Fornecedor</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura — sem acesso a Crédito, Débito, Pagamentos, Conciliação</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Exposição indevida de posição fiscal do adquirente</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Restrição por perfil no próprio menu</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Consultar os contratos que o vinculam</span><span class="step-onde">Portal · Contratos</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura — vigência, método e unidade</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Desalinhamento sobre quem recolhe o tributo</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Tabela de contratos do fornecedor</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-main">
+            <div class="step-top"><span class="step-acao">Acompanhar seus documentos e comprovantes</span><span class="step-onde">Portal · unidades e DFs</span></div>
+            <div class="step-lay">
+              <span class="sl-k">Estado</span><span class="sl-v">Leitura</span>
+              <span class="sl-k">Risco</span><span class="sl-v sl-risco">Sem visibilidade, cada dúvida vira contato manual com o adquirente</span>
+              <span class="sl-k">Instrumento</span><span class="sl-v sl-inst">Listagem por unidade</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <div class="ct">J-09 é a jornada menos desenvolvida</div>
+      <p>É também a de maior potencial não explorado: boa parte do atrito em J-05 e J-06 nasce de fornecedor que não sabe que precisa recolher, ou não sabe que sua nota está com divergência. Um portal que <strong>notifica ativamente</strong> o fornecedor converteria trabalho de cobrança do adquirente em autosserviço. Hoje o portal é passivo — só responde a quem entra.</p>
+    </div>
+  </div>
+
+  <!-- ══ 09 ══ -->
+  <div class="section" id="s09">
+    <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Encadeamento entre jornadas</span></div>
+    <p class="sec-sub">A ficha isolada descreve uma jornada; este mapa mostra como elas se alimentam e se interrompem.</p>
+
+    <div class="code-block"><code>       <span class="v">J-01</span> Implantação
+              │  <span class="c">habilita</span>
+              ▼
+       <span class="v">J-02</span> Ingestão e validação  ◄─────────┐
+              │                            <span class="c">│ correção</span>
+       método do contrato                  <span class="c">│</span>
+        ┌─────┴─────┐                      <span class="c">│</span>
+        │           │                      <span class="c">│</span>
+      <span class="n">RAD</span>      split / fornecedor            <span class="c">│</span>
+        │           │                      <span class="c">│</span>
+        ▼           │                      <span class="c">│</span>
+   <span class="v">J-03</span> Pagto RAD│                      <span class="c">│</span>
+        │           │                      <span class="c">│</span>
+        └─────┬─────┘                      <span class="c">│</span>
+              ▼                            <span class="c">│</span>
+       <span class="v">J-04</span> Conciliação ──────────────────┤
+              │                            <span class="c">│</span>
+       ┌──────┴───────┐              <span class="r">J-05</span> Inconsistências
+       │              │              <span class="c">(interrompe J-02, J-03, J-04</span>
+   <span class="n">apropriado</span>      <span class="r">glosado</span>           <span class="c"> e devolve ao ponto de origem)</span>
+       │              │
+       ▼              ▼
+   utilizado       perda
+       │
+       ├──────────────────────► <span class="n">J-06</span> Prevenção de perda
+       │                              <span class="c">(monitora o que não se apropriou)</span>
+       │
+       └──────────────────────► <span class="v">J-08</span> Prestação de contas
+                                      <span class="c">│</span>
+                                      <span class="c">└──► decisão de política ──► J-07</span>
+
+   <span class="v">J-07</span> Governança contratual ──► altera o método ──► volta a <span class="v">J-02</span>
+   <span class="c">J-09</span> Portal do fornecedor  ──► audiência externa, paralela</code></div>
+
+    <h3>9.1 Três relações que o mapa revela</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Relação</th><th>Jornadas</th><th>Implicação de produto</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Bifurcação por configuração</strong></td>
+            <td>J-07 → J-02 → J-03</td>
+            <td>Uma decisão contratual determina se haverá trabalho operacional recorrente. O custo de J-03 é consequência de J-07, não do volume de notas.</td>
+          </tr>
+          <tr>
+            <td><strong>Interrupção sem lugar fixo</strong></td>
+            <td>J-05 sobre J-02, J-03 e J-04</td>
+            <td>Precisa de entrada a partir de qualquer módulo e de retorno ao ponto de origem. Tratá-la como tela isolada força o usuário a reconstruir o contexto.</td>
+          </tr>
+          <tr>
+            <td><strong>Realimentação por evidência</strong></td>
+            <td>J-08 → J-07</td>
+            <td>O relatório não é ponto final: quando mostra que um método está falhando, deve levar de volta à renegociação. Hoje esse caminho é mental, não é oferecido pela interface.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>9.2 Cadência consolidada por persona</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Quando</th><th>Quem</th><th>Faz o quê</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Todo dia</strong></td><td>Analista fiscal</td><td>Confere ingestão (J-02) e trata o que caiu em inconsistência (J-05)</td></tr>
+          <tr><td><strong>Todo dia / por lote</strong></td><td>Tesouraria</td><td>Verifica guias a vencer e gera pagamentos (J-03)</td></tr>
+          <tr><td><strong>Toda semana</strong></td><td>Compliance</td><td>Recebe <code>REL-002</code> e prioriza divergências por valor (J-05)</td></tr>
+          <tr><td><strong>Todo mês</strong></td><td>Analista fiscal · controladoria</td><td>Fecha a conciliação (J-04); revisa ageing e prescrição (J-06)</td></tr>
+          <tr><td><strong>Todo mês</strong></td><td>CFO</td><td>Lê a posição consolidada e decide política (J-08)</td></tr>
+          <tr><td><strong>Trimestral</strong></td><td>Administrador · jurídico</td><td>Revisa vigências e renova contratos (J-07)</td></tr>
+          <tr><td><strong>Eventual</strong></td><td>Fornecedor</td><td>Consulta sua situação (J-09)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 10 ══ -->
+  <div class="section" id="s10">
+    <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Matriz jornada × módulo</span></div>
+    <p class="sec-sub">Cobertura do produto pelas jornadas. Revela módulos subaproveitados e etapas sem suporte.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Módulo</th><th class="tc">J-01</th><th class="tc">J-02</th><th class="tc">J-03</th><th class="tc">J-04</th><th class="tc">J-05</th><th class="tc">J-06</th><th class="tc">J-07</th><th class="tc">J-08</th><th class="tc">J-09</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Início (Dashboard)</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">○</td><td class="tc">○</td><td class="tc">—</td><td class="tc"><strong>●</strong></td><td class="tc">—</td></tr>
+          <tr><td><strong>Crédito</strong></td><td class="tc">—</td><td class="tc">○</td><td class="tc">—</td><td class="tc"><strong>●</strong></td><td class="tc"><strong>●</strong></td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc"><strong>●</strong></td><td class="tc">—</td></tr>
+          <tr><td><strong>Débito</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">○</td><td class="tc">—</td></tr>
+          <tr><td><strong>Pagamentos</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc"><strong>●</strong></td><td class="tc">○</td><td class="tc">○</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td></tr>
+          <tr><td><strong>Conciliação</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc"><strong>●</strong></td><td class="tc">○</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td></tr>
+          <tr><td><strong>Inconsistência</strong></td><td class="tc">—</td><td class="tc">○</td><td class="tc">—</td><td class="tc">—</td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td></tr>
+          <tr><td><strong>Analytics</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">○</td><td class="tc">—</td><td class="tc"><strong>●</strong></td><td class="tc">—</td></tr>
+          <tr><td><strong>Config → Organização</strong></td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td></tr>
+          <tr><td><strong>Config → Fornecedor</strong></td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">○</td><td class="tc">○</td><td class="tc">○</td><td class="tc">—</td><td class="tc">—</td></tr>
+          <tr><td><strong>Config → Contratos</strong></td><td class="tc"><strong>●</strong></td><td class="tc">○</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">○</td></tr>
+          <tr><td><strong>Config → Importação</strong></td><td class="tc"><strong>●</strong></td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">○</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td></tr>
+          <tr><td><strong>Config → Automações</strong></td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">○</td><td class="tc">—</td><td class="tc">—</td><td class="tc"><strong>●</strong></td><td class="tc">—</td></tr>
+          <tr><td><strong>Config → Usuários</strong></td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td></tr>
+          <tr><td><strong>Portal Fornecedor</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc"><strong>●</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11.5px;color:var(--txt3)"><strong>●</strong> módulo central da jornada &nbsp;·&nbsp; <strong>○</strong> participação secundária &nbsp;·&nbsp; <strong>—</strong> não participa</p>
+
+    <h3>10.1 O que a matriz revela</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Achado</th><th>Leitura</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Crédito aparece em 5 das 9 jornadas</strong></td>
+            <td>Confirma o módulo como núcleo do produto. Justifica a densidade da sua Visão Geral — sete gráficos servindo a quatro jornadas distintas.</td>
+          </tr>
+          <tr>
+            <td><strong>Pagamentos serve a uma jornada só</strong></td>
+            <td>Coerente com o recorte exclusivo de RAD. O módulo existe porque uma decisão contratual (J-07) criou a necessidade.</td>
+          </tr>
+          <tr>
+            <td><strong>Débito quase não aparece</strong></td>
+            <td>Participa só do consumo do crédito. Ou a modelagem de débitos está subaproveitada, ou o produto é deliberadamente centrado na entrada — vale explicitar a escolha.</td>
+          </tr>
+          <tr>
+            <td><strong>Portal Fornecedor é ilha</strong></td>
+            <td>Não se conecta a nenhuma jornada interna. Enquanto for passivo, permanece assim.</td>
+          </tr>
+          <tr>
+            <td><strong>Nenhum módulo cobre a validação de duplicata</strong></td>
+            <td>A etapa que J-03 deveria ter entre selecionar e pagar não tem módulo. É lacuna, não simplificação.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 11 ══ -->
+  <div class="section" id="s11">
+    <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Como usar este material</span></div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Para produto</div>
+        <ul>
+          <li>Priorizar por <strong>risco de inação</strong>, não por quantidade de telas: a lacuna de J-03 tem severidade financeira maior que qualquer melhoria de usabilidade listada</li>
+          <li>Usar a matriz para questionar módulos que não sustentam jornada</li>
+          <li>Cada etapa sem instrumento é uma decisão que o usuário toma às cegas</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Para desenho de interface</div>
+        <ul>
+          <li>Cadência define tolerância a atrito — jornada diária precisa de menos cliques que jornada trimestral</li>
+          <li>J-05 exige entrada e retorno de qualquer módulo, não uma tela isolada</li>
+          <li>A camada <em>Instrumento</em> é o inventário de sinais que a navegação precisa expor</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>11.1 Perguntas em aberto para a discussão</h3>
+    <ul class="plain">
+      <li><strong>O módulo de Débito é escopo secundário por decisão ou por não ter sido desenvolvido?</strong> A resposta muda se J-04 termina na apropriação ou na utilização.</li>
+      <li><strong>O Portal do Fornecedor deve notificar ativamente?</strong> Converteria cobrança do adquirente em autosserviço, mas cria um produto com ciclo próprio.</li>
+      <li><strong>Quem é dono de J-06?</strong> Preventiva por natureza, tende a não ter responsável — e é a jornada cuja falha produz perda definitiva.</li>
+      <li><strong>A validação de duplicata escritural entra em J-03 nesta versão?</strong> É a decisão de maior impacto financeiro deste mapeamento.</li>
+    </ul>
+
+    <h3>11.2 Próximo passo sugerido</h3>
+    <p>Validar as nove jornadas e o modelo com um representante de cada persona — especialmente tesouraria (J-03) e compliance (J-05), que são as mais operacionais e as que menos aparecem nos PRDs escritos até aqui. Com o modelo confirmado, cada ficha vira critério de aceite para o módulo correspondente.</p>
+  </div>
+
+  <hr>
+  <div style="font-size:11px;color:var(--txt3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <span>SplitHub · Proposta · Jornadas de Usuário</span>
+    <span>v1.0 · Set/2026 · Base: protótipo implementado</span>
+  </div>
+
+</div>
+</body>
+</html>
