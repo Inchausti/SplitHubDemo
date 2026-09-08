@@ -132,6 +132,12 @@ function showAdminSub(id, btnElement) {
   if (id === 'organizacao') {
     setTimeout(function() { if (window.orgRenderTabela) window.orgRenderTabela(); }, 0);
   }
+  if (id === 'exec-rad') {
+    setTimeout(function() { if (window.radInit) window.radInit(); }, 0);
+  }
+  if (id === 'integracoes') {
+    setTimeout(function() { if (window.radIntgInit) window.radIntgInit(); }, 0);
+  }
   if (id === 'ingestao') {
     setTimeout(function() { if (window.ingestaoInit) window.ingestaoInit(); }, 0);
   }

@@ -883,6 +883,8 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <button class="nav-sub-btn" id="subnav-admin-ingestao" onclick="showAdminSub('ingestao',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Importação de DFs</span></button>
       <button class="nav-sub-btn" id="subnav-admin-fornecedores" onclick="showAdminSub('fornecedores',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Fornecedor</span></button>
       <button class="nav-sub-btn" id="subnav-admin-contratos" onclick="showAdminSub('contratos',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Contratos</span></button>
+      <button class="nav-sub-btn" id="subnav-admin-exec-rad" onclick="showAdminSub('exec-rad',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Execução RAD</span></button>
+      <button class="nav-sub-btn" id="subnav-admin-integracoes" onclick="showAdminSub('integracoes',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Integrações</span></button>
       <button class="nav-sub-btn" id="subnav-admin-automacoes" onclick="showAdminSub('automacoes',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Automações</span></button>
     </div>
     <div class="sb-collapse-wrap">
@@ -1234,6 +1236,11 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       </div>
     </div>
   </div>
+  <div class="stabs" style="margin-bottom:18px">
+    <button class="stab active" onclick="showSub('pag','imp',this)">Guias RAD</button>
+    <button class="stab" onclick="showSub('pag','exec',this);radExecRender()">Execução Programada</button>
+  </div>
+
   <div id="pag-imp" class="sv active">
     <div class="kgrid k4">
       <div class="kcard" ><div class="klbl">A vencer <span class="periodo-info" data-tip="Guias IBS+CBS via RAD com statusCredito = nao_apropriado e sem flag de risco. O split payment ainda não foi confirmado pela Plataforma Centralizada — aguardando liquidação bancária.">i</span></div><div class="kval" id="pag-avencer">—</div><div class="ksub" id="pag-avencer-sub">guias RAD pendentes</div></div>
@@ -1261,6 +1268,47 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <th class="r">Valor</th><th>Data RF</th><th>Pagamento</th>
       <th>St. Crédito</th><th>St. Registro</th><th>Inconsistências</th><th>Extinção</th><th>Detalhe</th><th>Ação</th>
     </tr></thead><tbody id="t-impostos"></tbody></table></div></div>
+  </div>
+
+  <!-- ════════ T-04 · Execução Programada ════════ -->
+  <div id="pag-exec" class="sv">
+    <div class="stabs" style="margin-bottom:18px">
+      <button class="stab active" onclick="radExecTab('proxima',this)">Próxima execução</button>
+      <button class="stab" onclick="radExecTab('aprovacao',this)">Aguardando aprovação</button>
+      <button class="stab" onclick="radExecTab('historico',this)">Histórico e falhas</button>
+    </div>
+
+    <div id="rad-exec-proxima" class="sv active">
+      <div class="sechdr" style="margin-bottom:14px">
+        <h2>O que será gerado</h2>
+        <p>Previsibilidade é o que sustenta a confiança no motor — a tesouraria vê o lote antes de ele virar guia.</p>
+      </div>
+      <div id="rad-exec-proxima-lista"></div>
+    </div>
+
+    <div id="rad-exec-aprovacao" class="sv">
+      <div class="sechdr" style="margin-bottom:14px">
+        <h2>Fila de decisão</h2>
+        <p>Lotes acima da alçada e notas retidas por bloqueio de duplicata — problemas distintos, com donos distintos.</p>
+      </div>
+      <div id="rad-exec-aprov-lista"></div>
+    </div>
+
+    <div id="rad-exec-historico" class="sv">
+      <div class="tcrd" style="margin-bottom:20px">
+        <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>Execuções realizadas</h2><p>Quantas guias saíram, quantas o ERP recebeu e quantas a Receita confirmou.</p></div></div>
+        <div class="twrap"><table><thead><tr>
+          <th>Data</th><th>Estabelecimento</th><th>Política</th><th class="r">Guias</th>
+          <th class="r">Valor</th><th class="r">Entregues</th><th class="r">Confirmadas</th>
+        </tr></thead><tbody id="t-rad-execucoes"></tbody></table></div>
+      </div>
+
+      <div class="sechdr" style="margin-bottom:12px">
+        <h2>Guias com erro de geração</h2>
+        <p>A API responde <code>return_code</code> por guia — e dois dos três valores possíveis são erro. Cada grupo roteia para o módulo que resolve.</p>
+      </div>
+      <div id="rad-exec-erros"></div>
+    </div>
   </div>
 </div>
 
@@ -3028,6 +3076,101 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
         <div style="display:flex;align-items:center;gap:6px"><div id="ctr-toolbar" style="display:flex;align-items:center;gap:6px"></div><button class="btn btn-t" onclick="contratosAbrirModal()" style="flex-shrink:0">+ Novo contrato</button></div>
       </div>
       <div class="twrap"><table><thead id="thead-t-contratos"></thead><tbody id="t-contratos"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ════════ T-01 · Política de Execução RAD ════════ -->
+  <div id="admin-exec-rad" class="sv">
+    <div class="kgrid k4">
+      <div class="kcard"><div class="klbl">CNPJs com automação <span class="periodo-info" data-tip="CNPJs compradores com política ativa em modo assistido ou automático, sobre o total de estabelecimentos da organização.">i</span></div><div class="kval" id="rad-kpi-ativos">—</div><div class="ksub">com política ativa</div></div>
+      <div class="kcard"><div class="klbl">Guias na próxima janela <span class="periodo-info" data-tip="Quantidade de guias que as políticas ativas produziriam na próxima execução, com o valor somado.">i</span></div><div class="kval" id="rad-kpi-guias">—</div><div class="ksub" id="rad-kpi-guias-sub">—</div></div>
+      <div class="kcard"><div class="klbl">Aguardando aprovação <span class="periodo-info" data-tip="Lotes que excedem a alçada configurada ou estão em modo assistido, retidos até decisão humana.">i</span></div><div class="kval" id="rad-kpi-aprovacao">—</div><div class="ksub" id="rad-kpi-aprovacao-sub">—</div></div>
+      <div class="kcard"><div class="klbl">Falhas de integração <span class="periodo-info" data-tip="Entregas de webhook que falharam somadas aos comprovantes rejeitados. Falha aqui significa que uma das pontas acha que o pagamento seguiu e a outra não registrou.">i</span></div><div class="kval" id="rad-kpi-falhas">—</div><div class="ksub" id="rad-kpi-falhas-sub">—</div></div>
+    </div>
+
+    <div class="sh-fp" style="margin-bottom:20px">
+      <div class="sh-fp-bar">
+        <div class="sh-fp-sw"><span class="sh-fp-sw-ico">⌕</span><input type="text" id="rad-busca" placeholder="Buscar por CNPJ, razão social ou UF…" oninput="radPoliticasRenderTabela()"></div>
+        <button class="sh-fp-btn" onclick="window.shToggleFilterPanel('rad-pol')">⧉ Filtros</button>
+      </div>
+      <div class="sh-fp-panel" id="rad-pol-corpo" style="display:none">
+        <div class="sh-fp-grid">
+          <div class="sh-fp-field"><label>Modo</label><select id="rad-filtro-modo" onchange="radPoliticasRenderTabela()"><option value="">Todos</option><option value="manual">Manual</option><option value="assistido">Assistido</option><option value="automatico">Automático</option></select></div>
+          <div class="sh-fp-field"><label>Integração</label><select id="rad-filtro-integracao" onchange="radPoliticasRenderTabela()"><option value="">Todas</option></select></div>
+        </div>
+        <div class="sh-fp-footer">
+          <button class="sh-fp-clear" onclick="radLimparFiltros()">✕ Limpar filtros</button>
+          <span class="sh-fp-count" id="rad-contagem"></span>
+          <button class="sh-fp-apply" onclick="radPoliticasRenderTabela()">Aplicar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="rad-lote-bar" style="display:none;background:rgba(var(--teal-alt-rgb),.08);border:1px solid rgba(var(--teal-alt-rgb),.3);border-radius:10px;padding:11px 18px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <span id="rad-lote-info" style="font-size:13px;font-weight:600;color:var(--txt1)">0 selecionados</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn" style="font-size:12px;padding:6px 14px" onclick="radAlterarAtivacaoLote(false)">Pausar automação</button>
+        <button class="btn btn-t" style="font-size:12px;padding:6px 14px" onclick="radAlterarAtivacaoLote(true)">Ativar automação</button>
+      </div>
+    </div>
+
+    <div class="tcrd">
+      <div class="tcrd-hdr" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div class="sechdr" style="margin-bottom:0"><h2>Política de execução por CNPJ comprador</h2><p>O contrato define <em>quem</em> recolhe, por CNPJ fornecedor. A política define <em>quando e como</em> a empresa executa, por CNPJ comprador.</p></div>
+        <div id="rad-politicas-toolbar" style="display:flex;align-items:center;gap:6px"></div>
+      </div>
+      <div class="twrap"><table><thead id="thead-t-rad-politicas"><tr>
+        <th style="width:34px;text-align:center"><input type="checkbox" onchange="radToggleTodos(this)" style="cursor:pointer;width:14px;height:14px"></th>
+        <th>CNPJ</th><th>Estabelecimento</th><th>Modo</th><th>Janela</th><th>Antec.</th>
+        <th class="r">Alçada</th><th>Integração</th><th>Última execução</th><th>Situação</th>
+      </tr></thead><tbody id="t-rad-politicas"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ════════ T-03 · Integrações ════════ -->
+  <div id="admin-integracoes" class="sv">
+    <div class="sechdr" style="margin-bottom:14px">
+      <h2>Integrações de saída</h2>
+      <p>Até aqui o produto só tinha integração de <em>entrada</em> — a importação de DFs. Estas conexões levam as guias geradas ao ERP e recebem de volta o comprovante de pagamento.</p>
+    </div>
+
+    <div class="stabs" style="margin-bottom:18px">
+      <button class="stab active" onclick="radIntgTab('conexoes',this)">Conexões</button>
+      <button class="stab" onclick="radIntgTab('entregas',this)">Log de entregas</button>
+      <button class="stab" onclick="radIntgTab('comprovantes',this)">Comprovantes recebidos</button>
+    </div>
+
+    <div id="rad-intg-conexoes" class="sv active">
+      <div id="rad-conexoes-lista"></div>
+    </div>
+
+    <div id="rad-intg-entregas" class="sv">
+      <div id="rad-entregas-alerta" style="display:none;align-items:center;gap:10px;background:rgba(var(--status-red-rgb),.08);border:1px solid rgba(var(--status-red-rgb),.25);border-radius:9px;padding:11px 16px;margin-bottom:14px">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></span>
+        <span id="rad-entregas-alerta-txt" style="font-size:12.5px;color:var(--txt2)"></span>
+      </div>
+      <div class="sh-fp" style="margin-bottom:16px"><div class="sh-fp-bar">
+        <div class="sh-fp-field" style="max-width:200px"><label>Status</label><select id="rad-entregas-status" onchange="radEntregasRender()"><option value="">Todos</option><option value="entregue">Entregue</option><option value="pendente">Pendente</option><option value="falha">Falha</option></select></div>
+      </div></div>
+      <div class="tcrd"><div class="twrap"><table><thead><tr>
+        <th>Entrega</th><th>Integração</th><th>Evento</th><th>dfe_key</th><th class="r">Tent.</th><th>HTTP</th><th>Status</th><th>Última tentativa</th><th></th>
+      </tr></thead><tbody id="t-rad-entregas"></tbody></table></div></div>
+    </div>
+
+    <div id="rad-intg-comprovantes" class="sv">
+      <div id="rad-comp-alerta" style="display:none;align-items:center;gap:10px;background:rgba(var(--status-red-rgb),.08);border:1px solid rgba(var(--status-red-rgb),.25);border-radius:9px;padding:11px 16px;margin-bottom:14px">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></span>
+        <span id="rad-comp-alerta-txt" style="font-size:12.5px;color:var(--txt2)"></span>
+      </div>
+      <div class="sh-fp" style="margin-bottom:16px"><div class="sh-fp-bar">
+        <div class="sh-fp-field" style="max-width:200px"><label>Status</label><select id="rad-comp-status" onchange="radComprovantesRender()"><option value="">Todos</option><option value="confirmed">Aceitos</option><option value="rejeitado">Rejeitados</option></select></div>
+      </div></div>
+      <div class="tcrd">
+        <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>POST /v1/rad/proofs</h2><p>Chamadas recebidas do ERP registrando o pagamento das guias.</p></div></div>
+        <div class="twrap"><table><thead><tr>
+          <th>Comprovante</th><th>darf_id</th><th>Meio</th><th class="r">Valor</th><th>Origem</th><th>Recebido em</th><th>Resultado</th><th>Motivo</th>
+        </tr></thead><tbody id="t-rad-comprovantes"></tbody></table></div>
+      </div>
     </div>
   </div>
 
@@ -7459,6 +7602,8 @@ function showAdminSub(id,btn){
   var sv=document.getElementById("admin-"+id);
   if(sv)sv.classList.add("active");
   if(id==="ingestao") setTimeout(ingestaoInit,0);
+  if(id==="exec-rad")    setTimeout(function(){try{radInit();}catch(e){}},0);
+  if(id==="integracoes") setTimeout(function(){try{radIntgInit();}catch(e){}},0);
   closeSidebar();
 }
 
@@ -10268,7 +10413,7 @@ if (window.Chart) {
 </script>
 <script src="js/data-sync-fixed.js?v=91"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
-<script src="js/main.js?v=6"></script>
+<script src="js/main.js?v=7"></script>
 <script src="js/charts.js"></script>
 
 <!-- Tooltip flutuante global para .periodo-info -->
@@ -10342,6 +10487,8 @@ if (window.Chart) {
 })();
 </script>
 <script src="js/col-mgr.js"></script>
+<script src="js/exec-rad.js?v=1"></script>
+<script src="js/exec-rad-2.js?v=1"></script>
 <script>
 // ── ShColMgr: registrações de todas as tabelas ──────────────────────────────
 (function(){
