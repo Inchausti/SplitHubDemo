@@ -235,7 +235,8 @@ a.xref:hover { border-bottom-style: solid; }
 
     <div class="callout info">
       <div class="ct">A proposta é menor do que parecia</div>
-      <p>Metade do problema — o protocolo de integração — já está resolvida no papel. A proposta se concentra na <strong>camada de política e supervisão</strong>, mais a implementação do transporte já especificado. Nenhum contrato de API precisa ser inventado.</p>
+      <p>Metade do problema — o protocolo de integração — já está resolvida no papel. A proposta se concentra na <strong>camada de política</strong>, mais a implementação do transporte já especificado. Nenhum contrato de API precisa ser inventado.</p>
+      <p>E o alvo é explícito: <strong>configurada a política, o fluxo corre sem ação assistida</strong>. As réguas de pagamento já estão no ERP; o SplitHub gera e entrega.</p>
     </div>
   </div>
 
@@ -342,6 +343,46 @@ a.xref:hover { border-bottom-style: solid; }
   <span class="v">ativo</span>:           <span class="k">true</span>,
   <span class="v">historico</span>:       [ <span class="c">/* auditoria, padrão de Contratos */</span> ]
 }</code></div>
+
+    <h4>Os três modos</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Modo</th><th>O motor faz</th><th>O humano faz</th><th>Quando usar</th></tr></thead>
+        <tbody>
+          <tr style="background:var(--teal-d)">
+            <td><strong>Automático</strong> <span class="chip teal">recomendado</span></td>
+            <td>Gera na janela e emite o webhook ao ERP</td>
+            <td>Só exceções: erro de geração e falha de entrega</td>
+            <td><strong>Estado pretendido.</strong> Configurou, roda sozinho</td>
+          </tr>
+          <tr>
+            <td><strong>Assistido</strong></td>
+            <td>Monta o lote na janela e aguarda</td>
+            <td>Aprova a cada janela</td>
+            <td>Transitório — conferir o recorte nos primeiros ciclos</td>
+          </tr>
+          <tr>
+            <td><strong>Manual</strong></td>
+            <td>Nada</td>
+            <td>Tudo: filtrar, selecionar, gerar</td>
+            <td>Comportamento anterior à automação</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout ok">
+      <div class="ct">Por que o automático é o destino, e não o topo de uma escada</div>
+      <p>As <strong>réguas de pagamento já vivem no ERP</strong>. O papel do SplitHub é gerar a guia e entregá-la; quem decide quando pagar, com que antecedência e sob qual aprovação é o ERP, segundo regras que a empresa já mantém lá.</p>
+      <p>Um portão humano no meio <strong>duplicaria um controle que já existe do outro lado</strong> — e no ponto errado, porque quem aprovaria no SplitHub não enxerga o fluxo de caixa que o ERP enxerga. Por isso o modo automático não é o fim de uma escada de maturidade: é o desenho pretendido desde a configuração.</p>
+      <p>O modo <em>assistido</em> permanece disponível como passo transitório, útil para conferir o recorte nos primeiros ciclos. Mas repor manualmente uma decisão que o ERP já toma não é um estado a se manter.</p>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">A alçada é opcional e, nesta versão, está mockada</div>
+      <p>O <strong>modo</strong> já define quanta decisão humana existe. A <strong>alçada</strong> é uma camada adicional, para quem quiser que o automático pare acima de um teto de valor — não é o padrão e vem desativada.</p>
+      <p>Nesta versão ela está <strong>mockada</strong>: a fila é montada e exibida, mas aprovar não dispara emissão real de webhook. Serve para validar o desenho antes de investir na mecânica de aprovação.</p>
+    </div>
 
     <h3>3.2 Integração</h3>
     <div class="code-block"><code>{
@@ -803,27 +844,27 @@ Aguardando aprovação        ·   Falhas de entrega (7 dias)</code></div>
         <tbody>
           <tr>
             <td><strong>1</strong></td>
-            <td>Política e motor em modo <em>assistido</em></td>
-            <td>T-01, T-02, T-04 §1 e §2</td>
-            <td>O motor garimpa e monta o lote; o humano aprova e gera. Ganho imediato sem delegar decisão.</td>
+            <td>Política, motor e integração — modo automático</td>
+            <td>T-01, T-02, T-03, T-04 §1</td>
+            <td>O ciclo fechado: configurou, gera na janela e entrega ao ERP sozinho. É o estado pretendido, não um degrau.</td>
           </tr>
           <tr>
             <td><strong>2</strong></td>
-            <td>Integração e emissão de webhook</td>
-            <td>T-03, T-05, T-06</td>
-            <td>Guia gerada chega ao ERP sozinha. Fecha o elo de saída.</td>
+            <td>Visibilidade da guia e do transporte</td>
+            <td>T-05, T-06</td>
+            <td>Origem, número real, estado da entrega e erro na listagem. Sem isso a automação roda às cegas.</td>
           </tr>
           <tr>
             <td><strong>3</strong></td>
             <td>Endpoint de comprovante e rastreio</td>
             <td>T-03 aba 3, T-07</td>
-            <td>O ERP registra o pagamento; o rastreamento da Receita aparece no produto.</td>
+            <td>O ERP registra o pagamento; o rastreamento da Receita fecha o elo com a conciliação.</td>
           </tr>
           <tr>
             <td><strong>4</strong></td>
-            <td>Modo <em>automático</em>; alçada como opção</td>
-            <td>T-04 §3, T-08</td>
-            <td>Operação sem intervenção dentro dos limites. Só após ciclos assistidos sem divergência.</td>
+            <td>Tratamento de exceção e alçada opcional</td>
+            <td>T-04 §2 e §3, T-08</td>
+            <td>Fila de erro por <code>return_code</code>, reprocessamento, e a alçada para quem quiser um teto.</td>
           </tr>
         </tbody>
       </table>

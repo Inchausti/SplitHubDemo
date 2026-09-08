@@ -18,13 +18,18 @@
   // CATÁLOGOS
   // ══════════════════════════════════════════════════════════
 
+  /* Automático é o estado pretendido, não o fim de uma escada de
+     maturidade. As réguas de pagamento já vivem no ERP: o SplitHub gera
+     a guia e entrega, e o ERP decide quando pagar segundo as próprias
+     regras. Um portão humano no meio duplicaria esse controle. */
   var MODOS = [
-    { v: 'manual', label: 'Manual', cor: 'var(--txt3)', rgb: 'var(--status-gray-rgb)',
-      desc: 'O motor não age. Toda guia depende de seleção e geração manual na aba Guias RAD.' },
-    { v: 'assistido', label: 'Assistido', cor: 'var(--blue)', rgb: 'var(--blue-rgb)',
-      desc: 'O motor monta o lote na janela e notifica. A geração só ocorre após aprovação humana.' },
     { v: 'automatico', label: 'Automático', cor: 'var(--teal)', rgb: 'var(--teal-rgb)',
-      desc: 'O motor gera, aprova dentro da alçada e emite o webhook. O humano trata apenas exceções.' }
+      recomendado: true,
+      desc: 'Configurou, roda sozinho. O motor gera as guias na janela e emite o webhook ao ERP, que aplica as próprias réguas de pagamento. O humano só entra nas exceções: erro de geração ou falha de entrega.' },
+    { v: 'assistido', label: 'Assistido', cor: 'var(--blue)', rgb: 'var(--blue-rgb)',
+      desc: 'Transitório. O motor monta o lote e aguarda aprovação a cada janela. Serve para conferir o recorte nos primeiros ciclos — não é destino, porque repõe manualmente uma decisão que o ERP já toma.' },
+    { v: 'manual', label: 'Manual', cor: 'var(--txt3)', rgb: 'var(--status-gray-rgb)',
+      desc: 'O motor não age. Toda guia depende de seleção e geração na aba Guias RAD — o comportamento anterior à automação.' }
   ];
   function modoCfg(v) { return MODOS.find(function (m) { return m.v === v; }) || MODOS[0]; }
 
@@ -85,13 +90,13 @@
       alcadaAtiva: true, limiteAutoAprovacao: 50000, aprovadores: ['tesouraria@induspar.com'],
       integracaoId: 'INT-0001', ativo: true, ultimaExecucao: '05/09/2026 06:00',
       historico: [] },
-    { id: 'POL-0002', cnpjComprador: '54.891.237/0002-29', modo: 'assistido',
+    { id: 'POL-0002', cnpjComprador: '54.891.237/0002-29', modo: 'automatico',
       diasExecucao: [1, 15], horaExecucao: '07:00', antecedencia: 7,
       valorMinimo: 500, excluirFlags: ['glosado'],
       alcadaAtiva: false, limiteAutoAprovacao: 20000, aprovadores: ['tesouraria@induspar.com', 'cfo@induspar.com'],
       integracaoId: 'INT-0002', ativo: true, ultimaExecucao: '01/09/2026 07:00',
       historico: [] },
-    { id: 'POL-0003', cnpjComprador: '54.891.237/0003-00', modo: 'assistido',
+    { id: 'POL-0003', cnpjComprador: '54.891.237/0003-00', modo: 'assistido',  // em validação inicial
       diasExecucao: [10], horaExecucao: '08:00', antecedencia: 3,
       valorMinimo: 0, excluirFlags: ['glosado'],
       alcadaAtiva: false, limiteAutoAprovacao: 15000, aprovadores: ['fiscal@induspar.com'],
@@ -524,7 +529,7 @@
     var novo = !pol;
     if (novo) {
       pol = { id: 'POL-' + String((window._radPoliticas || []).length + 1).padStart(4, '0'),
-        cnpjComprador: cnpj, modo: 'manual', diasExecucao: [5], horaExecucao: '06:00',
+        cnpjComprador: cnpj, modo: 'automatico', diasExecucao: [5], horaExecucao: '06:00',
         antecedencia: 5, valorMinimo: 0, excluirFlags: ['glosado'],
         alcadaAtiva: false, limiteAutoAprovacao: 20000, aprovadores: [], integracaoId: null, ativo: false,
         ultimaExecucao: '—', historico: [] };
@@ -557,7 +562,10 @@
         '<div style="display:flex;align-items:center;gap:8px">' +
         '<input type="radio" name="rad-modo" value="' + m.v + '"' + (sel ? ' checked' : '') +
           ' onchange="radEditorModoMudou(this.value)" style="cursor:pointer">' +
-        '<span style="font-size:12.5px;font-weight:700;color:' + m.cor + '">' + m.label + '</span></div>' +
+        '<span style="font-size:12.5px;font-weight:700;color:' + m.cor + '">' + m.label + '</span>' +
+        (m.recomendado ? '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;' +
+          'letter-spacing:.04em;background:rgba(var(--teal-rgb),.15);color:var(--teal)">RECOMENDADO</span>' : '') +
+        '</div>' +
         '<div style="font-size:11px;color:' + c.txt2 + ';margin-top:4px;line-height:1.5;padding-left:22px">' + m.desc + '</div>' +
         '</label>';
     }).join('');
@@ -703,9 +711,12 @@
       prev.style.color = 'var(--red)';
     } else {
       var lote = montarLote(p);
+      var _destino = p.modo === 'automatico'
+        ? (lote.excedeAlcada ? '' : ' e seguiria direto ao ERP, sem intervenção')
+        : ' e aguardaria aprovação a cada janela';
       prev.innerHTML = 'Executa <strong>dias ' + p.diasExecucao.join(', ') + '</strong> às ' + p.horaExecucao +
         ', incluindo guias que vencem em até ' + p.antecedencia + ' dias.<br>' +
-        'Hoje isso produziria <strong>' + lote.qtd + ' guia(s)</strong> somando <strong>' + fmtBRL(lote.total) + '</strong>' +
+        'Hoje isso produziria <strong>' + lote.qtd + ' guia(s)</strong> somando <strong>' + fmtBRL(lote.total) + '</strong>' + _destino +
         (lote.excedeAlcada ? ' — <span style="color:var(--amber);font-weight:600">acima da alçada, iria para aprovação</span>'
                            : (p.alcadaAtiva ? ' — dentro da alçada' : '')) +
         (lote.bloqueados.length ? '<br><span style="color:var(--amber)">' + lote.bloqueados.length +

@@ -490,7 +490,9 @@
     }
 
     wrap.innerHTML = h || '<div style="text-align:center;color:var(--txt3);padding:28px;font-size:13px">' +
-      'Nada aguardando aprovação. Lotes dentro da alçada seguem sozinhos.</div>';
+      'Nada aguardando decisão — que é o estado esperado.<br>' +
+      '<span style="font-size:12px">Com as políticas em modo automático, as guias seguem ao ERP sozinhas. ' +
+      'As réguas de pagamento são aplicadas lá.</span></div>';
   }
 
   window.radAprovarLote = function (i) {
