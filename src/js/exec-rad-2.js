@@ -379,12 +379,15 @@
     var bloq = l.bloqueados.length
       ? '<div style="margin-top:12px;padding:10px 13px;background:rgba(var(--status-red-rgb),.07);' +
         'border:1px solid rgba(var(--status-red-rgb),.2);border-radius:7px">' +
-        '<div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:6px">' +
-        l.bloqueados.length + ' nota(s) retida(s) por bloqueio de duplicata</div>' +
+        '<div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:6px">' +
+        l.bloqueados.length + ' nota(s) retida(s) por flag de exclusão</div>' +
         '<div style="font-size:11px;color:var(--txt2);line-height:1.55">' +
-        l.bloqueados.map(function (b) { return b.rfId + ' · ' + b.forn + ' · ' + fmtBRL(b.valor); }).join('<br>') +
+        l.bloqueados.map(function (b) {
+          return b.rfId + ' · ' + b.forn + ' · ' + fmtBRL(b.valor) +
+            (b.motivoBloqueio ? ' <span style="color:var(--txt3)">— ' + b.motivoBloqueio + '</span>' : '');
+        }).join('<br>') +
         '</div><div style="font-size:10.5px;color:var(--txt3);margin-top:7px;font-style:italic">' +
-        'A liquidação deve ir ao titular da duplicata na registradora, não ao fornecedor.</div></div>'
+        'Retidas pela política. Tratar a causa devolve a nota ao pool para a próxima janela.</div></div>'
       : '';
 
     box.innerHTML = '<div class="twrap" style="max-height:280px;overflow:auto"><table>' +
@@ -438,8 +441,14 @@
     var h = '';
 
     if (aguard.length) {
-      h += '<div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;' +
-        'letter-spacing:.07em;margin-bottom:10px">Acima da alçada — ' + aguard.length + '</div>';
+      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">' +
+        '<span style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em">' +
+        'Acima da alçada — ' + aguard.length + '</span>' +
+        '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;letter-spacing:.04em;' +
+        'background:rgba(var(--status-amber-rgb),.14);color:var(--amber)">OPCIONAL · MOCK</span></div>' +
+        '<div style="font-size:11px;color:var(--txt3);margin-bottom:10px;line-height:1.5">' +
+        'A alçada é uma configuração opcional, desativada por padrão. Nesta versão a fila é montada e exibida, ' +
+        'mas aprovar não dispara emissão real de webhook.</div>';
       h += aguard.map(function (l, i) {
         var org = orgPorCnpj(l.cnpj);
         var pol = (window._radPoliticas || []).find(function (p) { return p.id === l.politicaId; });
@@ -460,21 +469,22 @@
 
     if (comBloqueio.length) {
       h += '<div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;' +
-        'letter-spacing:.07em;margin:18px 0 10px">Retidas por bloqueio de duplicata</div>';
+        'letter-spacing:.07em;margin:18px 0 10px">Retidas por flag de exclusão</div>';
       h += comBloqueio.map(function (l) {
         var org = orgPorCnpj(l.cnpj);
-        return '<div style="background:var(--card);border:1px solid rgba(var(--status-red-rgb),.3);border-left:3px solid var(--red);' +
+        return '<div style="background:var(--card);border:1px solid rgba(var(--status-amber-rgb),.3);border-left:3px solid var(--amber);' +
           'border-radius:8px;padding:14px 16px;margin-bottom:10px">' +
           '<div style="font-size:13px;font-weight:700;color:var(--txt1)">' + (org ? org.razao + ' — ' + org.uf : l.cnpj) + '</div>' +
           '<div style="font-size:11px;color:var(--txt2);margin-top:5px">' + l.bloqueados.length +
-            ' nota(s) retida(s) — duplicata cedida a terceiro</div>' +
+            ' nota(s) fora do lote pelos critérios da política</div>' +
           '<div style="font-size:11px;color:var(--txt2);margin-top:7px;line-height:1.6">' +
             l.bloqueados.map(function (b) {
               return '<span style="font-family:var(--font-mono);color:var(--blue)">' + b.rfId + '</span> · ' +
-                b.forn + ' · ' + fmtBRL(b.valor);
+                b.forn + ' · ' + fmtBRL(b.valor) +
+                (b.motivoBloqueio ? ' <span style="color:var(--txt3)">— ' + b.motivoBloqueio + '</span>' : '');
             }).join('<br>') + '</div>' +
           '<div style="font-size:10.5px;color:var(--txt3);margin-top:8px;font-style:italic">' +
-            'Pagar ao fornecedor gera exposição a pagamento duplo. A liquidação deve ir ao titular na registradora.</div>' +
+            'Resolver a causa no módulo correspondente devolve a nota ao pool.</div>' +
           '</div>';
       }).join('');
     }

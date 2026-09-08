@@ -81,20 +81,20 @@
   window._radPoliticas = [
     { id: 'POL-0001', cnpjComprador: '54.891.237/0001-48', modo: 'automatico',
       diasExecucao: [5, 20], horaExecucao: '06:00', antecedencia: 5,
-      valorMinimo: 0, excluirFlags: ['glosado', 'bloqueio_duplicata'],
-      limiteAutoAprovacao: 50000, aprovadores: ['tesouraria@induspar.com'],
+      valorMinimo: 0, excluirFlags: ['glosado'],
+      alcadaAtiva: true, limiteAutoAprovacao: 50000, aprovadores: ['tesouraria@induspar.com'],
       integracaoId: 'INT-0001', ativo: true, ultimaExecucao: '05/09/2026 06:00',
       historico: [] },
     { id: 'POL-0002', cnpjComprador: '54.891.237/0002-29', modo: 'assistido',
       diasExecucao: [1, 15], horaExecucao: '07:00', antecedencia: 7,
-      valorMinimo: 500, excluirFlags: ['glosado', 'bloqueio_duplicata'],
-      limiteAutoAprovacao: 20000, aprovadores: ['tesouraria@induspar.com', 'cfo@induspar.com'],
+      valorMinimo: 500, excluirFlags: ['glosado'],
+      alcadaAtiva: false, limiteAutoAprovacao: 20000, aprovadores: ['tesouraria@induspar.com', 'cfo@induspar.com'],
       integracaoId: 'INT-0002', ativo: true, ultimaExecucao: '01/09/2026 07:00',
       historico: [] },
     { id: 'POL-0003', cnpjComprador: '54.891.237/0003-00', modo: 'assistido',
       diasExecucao: [10], horaExecucao: '08:00', antecedencia: 3,
-      valorMinimo: 0, excluirFlags: ['glosado', 'bloqueio_duplicata'],
-      limiteAutoAprovacao: 15000, aprovadores: ['fiscal@induspar.com'],
+      valorMinimo: 0, excluirFlags: ['glosado'],
+      alcadaAtiva: false, limiteAutoAprovacao: 15000, aprovadores: ['fiscal@induspar.com'],
       integracaoId: 'INT-0003', ativo: false, ultimaExecucao: '—',
       historico: [] }
   ];
@@ -188,9 +188,20 @@
   // MOTOR — seleção de RFs elegíveis
   // ══════════════════════════════════════════════════════════
 
-  /* Aplica os critérios da política sobre os RFs RAD do CNPJ comprador.
-     Espelha os passos 2 e 3 do fluxo proposto: filtra por método, prazo,
-     valor e flags — incluindo o bloqueio de duplicata da Lacuna 1. */
+  // Rótulos das flags que retêm uma nota fora do lote
+  var FLAG_LABEL = {
+    glosado:        'Crédito glosado pelo Fisco',
+    vencido:        'Prazo de apropriação vencido',
+    inconsistencia: 'Inconsistência entre RF e TF',
+    em_risco:       'Registro sinalizado em risco'
+  };
+  window.RAD_FLAG_LABEL = FLAG_LABEL;
+
+
+  /* Aplica os critérios da política sobre os RFs RAD do CNPJ comprador:
+     filtra por método, prazo, valor e flags de exclusão. As notas que
+     batem numa flag são separadas em vez de descartadas — a política
+     retém, e a fila de decisão mostra o porquê. */
   function selecionarElegiveis(pol) {
     if (!pol) return [];
     var out = [];
@@ -208,14 +219,15 @@
         if (v < (pol.valorMinimo || 0)) return;
 
         var flags = (rf.statusFlags || []).concat(rf.statusCredito === 'glosado' ? ['glosado'] : []);
-        var bloqueado = (pol.excluirFlags || []).some(function (f) { return flags.indexOf(f) >= 0; });
+        var atingidas = (pol.excluirFlags || []).filter(function (f) { return flags.indexOf(f) >= 0; });
+        var bloqueado = atingidas.length > 0;
 
         out.push({
           rfId: rf.id, dfeKey: rf.chaveDF || nf.chave || '',
           nfNumero: nf.numero, forn: rf.entidade || nf.entidade || '—',
           tipoFiscal: rf.tipoFiscal === 'ibs' ? 'Guia IBS' : 'DARF CBS',
           valor: v, dataRF: rf.data || '', bloqueado: bloqueado,
-          motivoBloqueio: bloqueado ? 'Duplicata cedida a terceiro' : null
+          motivoBloqueio: bloqueado ? FLAG_LABEL[atingidas[0]] || atingidas[0] : null
         });
       });
     });
@@ -231,7 +243,8 @@
     var incluidos = eleg.filter(function (r) { return !r.bloqueado; });
     var bloqueados = eleg.filter(function (r) { return r.bloqueado; });
     var total = incluidos.reduce(function (s, r) { return s + r.valor; }, 0);
-    var excedeAlcada = total > (pol.limiteAutoAprovacao || 0);
+    // Alçada é opcional: desativada, o lote não é retido por valor.
+    var excedeAlcada = !!pol.alcadaAtiva && total > (pol.limiteAutoAprovacao || 0);
     return {
       politicaId: pol.id, cnpj: pol.cnpjComprador,
       incluidos: incluidos, bloqueados: bloqueados,
@@ -451,7 +464,8 @@
       { k: 'horaExecucao', label: 'Hora', fmt: function (v) { return v; } },
       { k: 'antecedencia', label: 'Antecedência', fmt: function (v) { return v + ' dias'; } },
       { k: 'valorMinimo', label: 'Valor mínimo', fmt: fmtBRL },
-      { k: 'limiteAutoAprovacao', label: 'Alçada', fmt: fmtBRL },
+      { k: 'alcadaAtiva', label: 'Alçada', fmt: function (v) { return v ? 'ativa' : 'desativada'; } },
+      { k: 'limiteAutoAprovacao', label: 'Limite da alçada', fmt: fmtBRL },
       { k: 'integracaoId', label: 'Integração', fmt: function (v) { var i = integracaoPorId(v); return i ? i.nome : 'Somente plataforma'; } }
     ];
     var out = [];
@@ -511,8 +525,8 @@
     if (novo) {
       pol = { id: 'POL-' + String((window._radPoliticas || []).length + 1).padStart(4, '0'),
         cnpjComprador: cnpj, modo: 'manual', diasExecucao: [5], horaExecucao: '06:00',
-        antecedencia: 5, valorMinimo: 0, excluirFlags: ['glosado', 'bloqueio_duplicata'],
-        limiteAutoAprovacao: 20000, aprovadores: [], integracaoId: null, ativo: false,
+        antecedencia: 5, valorMinimo: 0, excluirFlags: ['glosado'],
+        alcadaAtiva: false, limiteAutoAprovacao: 20000, aprovadores: [], integracaoId: null, ativo: false,
         ultimaExecucao: '—', historico: [] };
     }
     window._radPolEditando = pol;
@@ -591,19 +605,31 @@
       bloco('Critérios de inclusão',
         campo('Valor mínimo por guia', '<input id="rad-ed-vmin" type="number" min="0" value="' + pol.valorMinimo + '" style="' + IS + '">',
           'guias abaixo deste valor acumulam para a próxima janela') +
-        '<div style="display:flex;flex-direction:column;gap:7px;margin-top:4px">' +
-        '<label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:' + c.txt2 + '">' +
-        '<input type="checkbox" checked disabled style="margin-top:2px"> ' +
-        '<span>Excluir <code style="font-size:11px">bloqueio_duplicata</code> — obrigatório enquanto a validação de duplicata escritural estiver ativa</span></label>' +
-        '<label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:' + c.txt2 + '">' +
-        '<input type="checkbox" id="rad-ed-glosado" ' + (pol.excluirFlags.indexOf('glosado') >= 0 ? 'checked' : '') +
-        ' style="margin-top:2px"> <span>Excluir crédito <code style="font-size:11px">glosado</code></span></label>' +
+        '<div style="font-size:11px;color:' + c.txt3 + ';margin:2px 0 7px">Notas com estas flags ficam de fora do lote e aparecem na fila de decisão</div>' +
+        '<div style="display:flex;flex-direction:column;gap:7px">' +
+        ['glosado', 'vencido', 'inconsistencia'].map(function (f) {
+          return '<label style="display:flex;align-items:center;gap:8px;font-size:12px;color:' + c.txt2 + '">' +
+            '<input type="checkbox" class="rad-ed-flag" value="' + f + '"' +
+            (pol.excluirFlags.indexOf(f) >= 0 ? ' checked' : '') + '> ' +
+            '<span>' + (FLAG_LABEL[f] || f) + ' <code style="font-size:10.5px">' + f + '</code></span></label>';
+        }).join('') +
         '</div>') +
-      bloco('Alçada de aprovação',
+      bloco('Alçada de aprovação <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;' +
+        'background:rgba(var(--status-amber-rgb),.14);color:' + c.txt2 + ';margin-left:6px;letter-spacing:.04em">OPCIONAL · MOCK</span>',
+        '<label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:' + c.txt2 + ';margin-bottom:10px;cursor:pointer">' +
+        '<input type="checkbox" id="rad-ed-alcada-ativa"' + (pol.alcadaAtiva ? ' checked' : '') +
+        ' onchange="radToggleAlcada(this.checked)" style="margin-top:2px"> ' +
+        '<span>Reter lotes acima de um valor para aprovação humana</span></label>' +
+        '<div style="font-size:11px;color:' + c.txt3 + ';line-height:1.55;margin-bottom:12px">' +
+        'O modo já define quanta decisão humana existe — assistido aprova todo lote, automático não aprova nenhum. ' +
+        'A alçada é um segundo controle, por valor, para quem quer que o automático pare acima de um teto.</div>' +
+        '<div id="rad-ed-alcada-campos" style="display:' + (pol.alcadaAtiva ? 'block' : 'none') + '">' +
         campo('Limite de auto-aprovação', '<input id="rad-ed-alcada" type="number" min="0" value="' + pol.limiteAutoAprovacao + '" style="' + IS + '">',
           'lotes acima deste valor vão para a fila de aprovação') +
         campo('Aprovadores', '<input id="rad-ed-aprov" value="' + (pol.aprovadores || []).join(', ') + '" placeholder="email@empresa.com" style="' + IS + '">',
-          'separados por vírgula')) +
+          'separados por vírgula') +
+        '<div style="font-size:11px;color:' + c.txt3 + ';font-style:italic">Mockado nesta versão: a fila é montada e exibida, mas aprovar não dispara emissão real.</div>' +
+        '</div>') +
       bloco('Destino',
         campo('Integração', '<select id="rad-ed-intg" onchange="radEditorPrevia()" style="' + IS + '">' + intgOpts + '</select>') +
         '<div id="rad-ed-saude" style="font-size:11.5px;color:' + c.txt2 + '"></div>') +
@@ -664,6 +690,7 @@
     p.horaExecucao = (el('rad-ed-hora') || {}).value || p.horaExecucao;
     p.antecedencia = parseInt((el('rad-ed-antec') || {}).value, 10) || 0;
     p.valorMinimo = parseFloat((el('rad-ed-vmin') || {}).value) || 0;
+    p.alcadaAtiva = !!(el('rad-ed-alcada-ativa') || {}).checked;
     p.limiteAutoAprovacao = parseFloat((el('rad-ed-alcada') || {}).value) || 0;
     p.integracaoId = (el('rad-ed-intg') || {}).value || null;
 
@@ -679,9 +706,10 @@
       prev.innerHTML = 'Executa <strong>dias ' + p.diasExecucao.join(', ') + '</strong> às ' + p.horaExecucao +
         ', incluindo guias que vencem em até ' + p.antecedencia + ' dias.<br>' +
         'Hoje isso produziria <strong>' + lote.qtd + ' guia(s)</strong> somando <strong>' + fmtBRL(lote.total) + '</strong>' +
-        (lote.excedeAlcada ? ' — <span style="color:var(--amber);font-weight:600">acima da alçada, iria para aprovação</span>' : '') +
-        (lote.bloqueados.length ? '<br><span style="color:var(--red)">' + lote.bloqueados.length +
-          ' retida(s) por bloqueio de duplicata</span>' : '');
+        (lote.excedeAlcada ? ' — <span style="color:var(--amber);font-weight:600">acima da alçada, iria para aprovação</span>'
+                           : (p.alcadaAtiva ? ' — dentro da alçada' : '')) +
+        (lote.bloqueados.length ? '<br><span style="color:var(--amber)">' + lote.bloqueados.length +
+          ' retida(s) por flag de exclusão</span>' : '');
       prev.style.color = 'var(--teal)';
     }
 
@@ -698,6 +726,12 @@
     }
   };
 
+  window.radToggleAlcada = function (on) {
+    var box = el('rad-ed-alcada-campos');
+    if (box) box.style.display = on ? 'block' : 'none';
+    radEditorPrevia();
+  };
+
   window.radSalvarPolitica = function () {
     var p = window._radPolEditando; if (!p) return;
     var msg = el('rad-ed-msg');
@@ -707,16 +741,15 @@
     if (p.modo !== 'manual' && !p.diasExecucao.length) {
       return setMsg('Informe ao menos um dia de execução.', 'var(--red)');
     }
-    if (p.modo === 'automatico' && !(p.limiteAutoAprovacao > 0)) {
-      return setMsg('Modo automático exige limite de auto-aprovação maior que zero.', 'var(--red)');
+    if (p.alcadaAtiva && !(p.limiteAutoAprovacao > 0)) {
+      return setMsg('Com alçada ativa, informe um limite maior que zero.', 'var(--red)');
     }
     if (p.modo !== 'manual' && !p.integracaoId) {
       setMsg('Atenção: sem integração, as guias ficam só na plataforma.', 'var(--amber)');
     }
 
-    var flags = ['bloqueio_duplicata'];
-    if ((el('rad-ed-glosado') || {}).checked) flags.push('glosado');
-    p.excluirFlags = flags;
+    p.excluirFlags = [].slice.call(document.querySelectorAll('.rad-ed-flag:checked'))
+      .map(function (c) { return c.value; });
     p.aprovadores = ((el('rad-ed-aprov') || {}).value || '').split(',')
       .map(function (s) { return s.trim(); }).filter(Boolean);
     p.ativo = p.modo !== 'manual';
