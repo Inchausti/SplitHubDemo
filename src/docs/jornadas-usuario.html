@@ -187,13 +187,13 @@ a.xref:hover { border-bottom-style: solid; }
 
   <a class="back" href="prds.html">← Hub de PRDs</a>
 
-  <div class="eyebrow">Proposta · Experiência</div>
+  <div class="eyebrow">Referência · Experiência</div>
   <h1>Jornadas de Usuário do SplitHub</h1>
-  <p class="subtitle">Identificação das nove jornadas que a plataforma atende e proposta de um modelo de apresentação adequado ao domínio — onde as jornadas não são funis de descoberta, mas <strong>ciclos operacionais recorrentes</strong> ancorados no calendário fiscal.</p>
+  <p class="subtitle">Identificação das nove jornadas que a plataforma atende e o modelo de apresentação adequado ao domínio — onde as jornadas não são funis de descoberta, mas <strong>ciclos operacionais recorrentes</strong> ancorados no calendário fiscal.</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.1</span></div>
-    <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta · Experiência</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.0</span></div>
+    <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Referência · Experiência</span></div>
     <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
     <div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">Protótipo implementado</span></div>
     <div class="meta-pill" style="margin-left:auto"><span class="chip info">Para discussão</span></div>
@@ -213,7 +213,7 @@ a.xref:hover { border-bottom-style: solid; }
       <li><a href="#s09"><span class="toc-num">09</span> Encadeamento entre jornadas</a></li>
       <li><a href="#s10"><span class="toc-num">10</span> Matriz jornada × módulo</a></li>
       <li><a href="#s11"><span class="toc-num">11</span> Como usar este material</a></li>
-      <li><a href="#s12"><span class="toc-num">12</span> Proposta — execução automática de RAD</a></li>
+      <li><a href="#s12"><span class="toc-num">12</span> Execução automática de RAD — entregue</a></li>
     </ul>
   </div>
 
@@ -642,16 +642,30 @@ a.xref:hover { border-bottom-style: solid; }
       <p>Falta uma etapa entre selecionar e pagar: <strong>verificar se o fornecedor já escriturou a duplicata</strong>. Se ele escriturou e cedeu a terceiro, pagar via RAD ao fornecedor gera exposição a pagamento duplo. O fluxo de validação está descrito em <a class="xref" href="duplicata-escritural-rad-validacao.html">Duplicata Escritural — Validação pré-RAD</a>, mas ainda não existe no produto.</p>
     </div>
 
-    <div class="callout red">
-      <div class="ct">Lacuna 2 em J-03 — execução inteiramente manual</div>
-      <p>As quatro etapas acima exigem <strong>ação humana em todas as ocorrências</strong>. Não há como a empresa definir, por CNPJ comprador, uma política de execução — datas e prazos padrão — que gere as guias automaticamente e as envie ao ERP por API.</p>
-      <p>Isso torna J-03 a única jornada de ciclo cuja carga cresce <strong>linearmente com o volume</strong>: dobrar o número de notas RAD dobra o trabalho de tesouraria. E é justamente a jornada onde a inação custa o crédito por mérito próprio — o risco de execução que o método RAD introduz, conforme a seção 2.1 do <a class="xref" href="prd-contratos.html">PRD de Contratos</a>.</p>
-      <p>A proposta de suprimento está na <a class="xref" href="#s12">seção 12</a>.</p>
+    <div class="callout ok">
+      <div class="ct">Lacuna 2 em J-03 — <span style="text-decoration:line-through;opacity:.55">execução inteiramente manual</span> · <strong>fechada</strong></div>
+      <p>Até Set/2026, as quatro etapas acima exigiam <strong>ação humana em todas as ocorrências</strong>, o
+      que fazia de J-03 a única jornada de ciclo cuja carga crescia <strong>linearmente com o volume</strong>.</p>
+      <p>O módulo de <a class="xref" href="prd-execucao-rad.html">Execução RAD</a> fechou a lacuna. A empresa
+      declara <strong>políticas de execução</strong> — quantas quiser — e cada uma define o que cobre, quando
+      roda e quanta decisão humana existe. Configurada a política em modo automático, o motor gera as guias na
+      janela e as entrega ao ERP por webhook, <strong>sem ação assistida</strong>.</p>
+      <p>A jornada <strong>mudou de natureza</strong>: deixou de ser execução e passou a ser tratamento de
+      exceção. No fluxo normal ninguém precisa entrar; a tesouraria entra em erro de geração
+      (<code>return_code</code>) e em falha de entrega ao ERP. A carga passou a crescer com as exceções, não
+      com o volume.</p>
+      <p>O que a jornada ganhou está detalhado na <a class="xref" href="#s12">seção 12</a>, e o módulo, no
+      <a class="xref" href="prd-execucao-rad.html">PRD de Execução RAD</a>.</p>
     </div>
 
     <div class="callout warn">
-      <div class="ct">As duas lacunas se multiplicam</div>
-      <p>Automatizar a geração de guias <strong>sem</strong> a validação de duplicata não elimina o risco de pagamento duplo — <em>multiplica</em> sua frequência, porque remove o único ponto onde hoje um humano poderia notar a anomalia. A ordem de implementação importa: a validação da Lacuna 1 precisa existir <strong>antes</strong> ou <strong>junto</strong> da automação da Lacuna 2, nunca depois.</p>
+      <div class="ct">A lacuna 1 continua aberta — e agora pesa mais</div>
+      <p>Com a execução automatizada, a validação de duplicata escritural deixou de ter um humano no caminho
+      que pudesse notá-la. Antes, quem selecionava as guias tinha, ao menos em tese, a chance de checar; agora
+      o motor gera e entrega sem essa parada.</p>
+      <p>A validação <strong>não entrou</strong> no escopo da automação, por decisão explícita. O fluxo está
+      descrito em <a class="xref" href="duplicata-escritural-rad-validacao.html">Duplicata Escritural —
+      Validação pré-RAD</a> e continua sem existir no produto.</p>
     </div>
 
     <!-- J-04 -->
@@ -1160,8 +1174,8 @@ a.xref:hover { border-bottom-style: solid; }
           <tr><td><strong>Config → Automações</strong></td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">○</td><td class="tc">—</td><td class="tc">—</td><td class="tc"><strong>●</strong></td><td class="tc">—</td></tr>
           <tr><td><strong>Config → Usuários</strong></td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td></tr>
           <tr><td><strong>Portal Fornecedor</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc"><strong>●</strong></td></tr>
-          <tr style="background:var(--blue-d)"><td><strong>Config → Execução RAD</strong> <span class="chip ok">proposto</span></td><td class="tc">●</td><td class="tc">—</td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">○</td><td class="tc">○</td><td class="tc">—</td></tr>
-          <tr style="background:var(--blue-d)"><td><strong>Config → Integrações</strong> <span class="chip ok">proposto</span></td><td class="tc">●</td><td class="tc">○</td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td></tr>
+          <tr style="background:var(--blue-d)"><td><strong>Config → Execução RAD</strong> <span class="chip ok">novo</span></td><td class="tc">●</td><td class="tc">—</td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">○</td><td class="tc">○</td><td class="tc">—</td></tr>
+          <tr style="background:var(--blue-d)"><td><strong>Config → Integrações</strong> <span class="chip ok">novo</span></td><td class="tc">●</td><td class="tc">○</td><td class="tc"><strong>●</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td></tr>
         </tbody>
       </table>
     </div>
@@ -1236,7 +1250,7 @@ a.xref:hover { border-bottom-style: solid; }
 
   <!-- ══ 12 ══ -->
   <div class="section" id="s12">
-    <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Proposta — execução automática de RAD</span></div>
+    <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Execução automática de RAD — o que foi entregue</span></div>
     <p class="sec-sub">Suprimento da Lacuna 2 de J-03: política de execução por CNPJ comprador, geração automática de guias e envio ao ERP por API.</p>
 
     <h3>12.1 O eixo que falta no modelo de dados</h3>
@@ -1266,10 +1280,22 @@ a.xref:hover { border-bottom-style: solid; }
 
     <div class="callout info">
       <div class="ct">Por que a chave é o CNPJ comprador</div>
-      <p>Calendário de pagamento, alçada de aprovação e integração com ERP são atributos do <strong>estabelecimento que paga</strong>, não do fornecedor que recebe. Uma organização com filiais em UFs distintas pode ter ERPs, centros de custo e rotinas de tesouraria diferentes por estabelecimento. Ancorar a política no fornecedor obrigaria a repetir a mesma regra em dezenas de contratos.</p>
+      <p>Calendário de pagamento, critérios de inclusão e integração com ERP são atributos do <strong>estabelecimento que paga</strong>, não do fornecedor que recebe. Uma organização com filiais em UFs distintas pode ter ERPs, centros de custo e rotinas de tesouraria diferentes por estabelecimento. Ancorar a política no fornecedor obrigaria a repetir a mesma regra em dezenas de contratos.</p>
     </div>
 
     <h3>12.2 Modelo da política de execução</h3>
+
+    <div class="callout info">
+      <div class="ct">O modelo entregue foi além do proposto</div>
+      <p>A proposta original amarrava a política ao <strong>CNPJ comprador</strong>, um para um. O modelo
+      quebra em dois casos reais: um contrato de insumo com prazo próprio, que atravessa várias filiais; e a
+      separação entre grão fino e alto valor, que não respeita fronteira de estabelecimento.</p>
+      <p>Na implementação, a política virou a entidade — a organização cria quantas quiser — e declara um
+      <strong>modelo de orquestração</strong>: por CNPJ, por contrato, ou por faixa de valor sobre uma de
+      quatro bases (guia CBS/IBS, imposto total do DF, valor da nota, valor líquido). Ver o
+      <a class="xref" href="prd-execucao-rad.html">PRD de Execução RAD</a>.</p>
+    </div>
+
     <div class="code-block"><code><span class="c">// Uma política por CNPJ comprador da organização</span>
 {
   <span class="v">cnpjComprador</span>:   <span class="s">"01.123.456/0001-99"</span>,
@@ -1303,34 +1329,43 @@ a.xref:hover { border-bottom-style: solid; }
       <table>
         <thead><tr><th>Modo</th><th>O motor faz</th><th>O humano faz</th><th>Quando usar</th></tr></thead>
         <tbody>
-          <tr>
-            <td><strong>Manual</strong></td>
-            <td>Nada — comportamento atual</td>
-            <td>Tudo: filtrar, selecionar, gerar, enviar</td>
-            <td>Baixo volume; período de validação da política</td>
+          <tr style="background:var(--teal-d)">
+            <td><strong>Automático</strong> <span class="chip teal">recomendado</span></td>
+            <td>Gera na janela e emite o webhook ao ERP</td>
+            <td>Só exceções: erro de geração e falha de entrega</td>
+            <td><strong>Estado pretendido.</strong> Configurou, roda sozinho</td>
           </tr>
           <tr>
             <td><strong>Assistido</strong></td>
-            <td>Monta a proposta de lote na janela e notifica</td>
-            <td>Revisa e aprova; o envio é automático após aprovar</td>
-            <td>Adoção inicial — mantém o humano no circuito sem o trabalho de garimpo</td>
+            <td>Monta o lote na janela e aguarda</td>
+            <td>Aprova a cada janela</td>
+            <td>Transitório — conferir o recorte nos primeiros ciclos</td>
           </tr>
           <tr>
-            <td><strong>Automático</strong></td>
-            <td>Gera, aprova dentro da alçada e envia ao ERP</td>
-            <td>Só trata exceções: acima da alçada, bloqueios e falhas</td>
-            <td>Volume alto com política estabilizada</td>
+            <td><strong>Manual</strong></td>
+            <td>Nada</td>
+            <td>Tudo: filtrar, selecionar, gerar</td>
+            <td>Comportamento anterior à automação</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <div class="callout ok">
-      <div class="ct">O modo assistido é o degrau que viabiliza a adoção</div>
-      <p>Ir de manual para automático de uma vez exige confiança que ninguém tem antes de ver o motor acertar. O modo assistido entrega o ganho principal — o sistema garimpa e monta o lote — mantendo a decisão humana. Depois de alguns ciclos sem divergência, a migração para automático é uma mudança de configuração, não um salto de fé.</p>
+      <div class="ct">Por que o automático é o destino, e não o topo de uma escada</div>
+      <p>As <strong>réguas de pagamento já vivem no ERP</strong>. O papel do SplitHub é gerar a guia e
+      entregá-la; quem decide quando pagar, com que antecedência e sob qual aprovação é o ERP, segundo regras
+      que a empresa já mantém lá.</p>
+      <p>Um portão humano no meio duplicaria um controle que já existe do outro lado — e no ponto errado,
+      porque quem aprovaria no SplitHub não enxerga o fluxo de caixa que o ERP enxerga. Por isso o modo
+      automático não é o topo de uma escada de maturidade: é o desenho pretendido desde a configuração.</p>
+      <p>O modo <em>assistido</em> permanece disponível como passo transitório, útil para conferir o recorte
+      nos primeiros ciclos. Foi por essa razão, também, que a <strong>alçada de aprovação por valor não
+      entrou</strong>: o modo já responde quanta decisão humana existe, e a alçada seria um segundo controle
+      sobre o mesmo eixo.</p>
     </div>
 
-    <h3>12.3 Novos menus propostos</h3>
+    <h3>12.3 Os menus criados</h3>
 
     <div class="table-wrap">
       <table>
@@ -1339,7 +1374,7 @@ a.xref:hover { border-bottom-style: solid; }
           <tr>
             <td><strong>Config → Execução RAD</strong></td>
             <td><span class="chip ok">Novo</span></td>
-            <td>Política por CNPJ comprador: modo, janela, antecedência, alçada, destino</td>
+            <td>Política com modelo de orquestração — por CNPJ, por contrato ou por faixa de valor —, modo, janela, antecedência, critérios de inclusão e destino</td>
             <td>Administrador · tesouraria</td>
           </tr>
           <tr>
@@ -1365,7 +1400,7 @@ a.xref:hover { border-bottom-style: solid; }
     </div>
 
     <h4>Por que Execução RAD não cabe em Automações</h4>
-    <p>O menu <em>Automações</em> existe e trata de <strong>relatórios recorrentes</strong> — envio de informação. A execução de RAD movimenta dinheiro, tem alçada de aprovação e integração transacional. Misturar as duas coisas sob o mesmo rótulo faria uma configuração de envio de PDF conviver com uma que autoriza pagamento — com o mesmo peso visual e o mesmo nível de permissão. São domínios de risco diferentes e merecem menus diferentes.</p>
+    <p>O menu <em>Automações</em> existe e trata de <strong>relatórios recorrentes</strong> — envio de informação. A execução de RAD movimenta dinheiro e depende de integração transacional com o ERP. Misturar as duas coisas sob o mesmo rótulo faria uma configuração de envio de PDF conviver com uma que autoriza pagamento — com o mesmo peso visual e o mesmo nível de permissão. São domínios de risco diferentes e merecem menus diferentes.</p>
 
     <h4>Config → Execução RAD — estrutura da tela</h4>
     <div class="code-block"><code><span class="k">KPIs</span>   CNPJs com automação ativa   ·   Guias geradas no mês
@@ -1381,11 +1416,11 @@ a.xref:hover { border-bottom-style: solid; }
     <h4>Pagamentos → Execução Programada — três seções</h4>
     <ul class="plain">
       <li><strong>Próxima execução</strong> — o que será gerado, por qual política, em que data. Torna o motor previsível: a tesouraria vê o que vem antes de acontecer.</li>
-      <li><strong>Aguardando aprovação</strong> — lotes acima da alçada ou com bloqueio. É a fila de trabalho humana no modo automático.</li>
+      <li><strong>Aguardando aprovação</strong> — lotes de políticas em modo assistido, e notas retidas por flag de exclusão. É a fila de trabalho humana — vazia quando todas as políticas estão em modo automático.</li>
       <li><strong>Histórico de execuções</strong> — o que rodou, quantas guias, valor, protocolo do ERP, e o que falhou com opção de reprocessar.</li>
     </ul>
 
-    <h3>12.4 Fluxo automático proposto</h3>
+    <h3>12.4 O fluxo automático</h3>
     <div class="code-block"><code><span class="v">1.</span> <span class="k">Motor avalia a janela</span>                        <span class="c">diariamente, por CNPJ</span>
    Política ativa? · Hoje é dia de execução? · Hora atingida?
         │
@@ -1407,9 +1442,9 @@ a.xref:hover { border-bottom-style: solid; }
    Agrupa por CNPJ comprador + data de execução
         │
         ▼
-<span class="v">5.</span> <span class="k">Aplica a alçada</span>
-   valor &lt;= limite  → aprovado automaticamente
-   valor &gt;  limite  → fila de aprovação, notifica aprovadores
+<span class="v">5.</span> <span class="k">Decide pelo modo</span>
+   automático → segue direto ao ERP, sem intervenção
+   assistido  → fila de aprovação da janela
         │
         ▼
 <span class="v">6.</span> <span class="k">Envia ao ERP por API</span>
@@ -1429,7 +1464,7 @@ a.xref:hover { border-bottom-style: solid; }
         <tbody>
           <tr><td><code>programado</code></td><td>Lote montado, aguardando a janela</td><td><code>gerado</code></td></tr>
           <tr><td><code>gerado</code></td><td>Guias emitidas</td><td><code>aguardando_aprovacao</code> ou <code>aprovado</code></td></tr>
-          <tr><td><code>aguardando_aprovacao</code></td><td>Acima da alçada</td><td><code>aprovado</code> ou <code>recusado</code></td></tr>
+          <tr><td><code>aguardando_aprovacao</code></td><td>Modo assistido</td><td><code>aprovado</code> ou <code>recusado</code></td></tr>
           <tr><td><code>bloqueado</code></td><td>Duplicata cedida ou flag impeditiva</td><td>Tratativa manual</td></tr>
           <tr><td><code>enviado</code></td><td>Recebido pelo ERP, com protocolo</td><td><code>confirmado</code></td></tr>
           <tr><td><code>falha_envio</code></td><td>API indisponível ou payload recusado</td><td>Retry ou fila de exceção</td></tr>
@@ -1441,7 +1476,7 @@ a.xref:hover { border-bottom-style: solid; }
     <h3>12.5 Riscos que a automação introduz</h3>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Risco</th><th>Consequência</th><th>Salvaguarda proposta</th></tr></thead>
+        <thead><tr><th>Risco</th><th>Consequência</th><th>Salvaguarda implementada</th></tr></thead>
         <tbody>
           <tr>
             <td><strong>Pagamento duplo por duplicata cedida</strong></td>
@@ -1492,11 +1527,11 @@ a.xref:hover { border-bottom-style: solid; }
         </ul>
       </div>
       <div class="card">
-        <div class="card-title">Proposto — supervisão</div>
+        <div class="card-title">Hoje — tratamento de exceção</div>
         <ul>
           <li>Conferir a fila da próxima execução</li>
-          <li>Aprovar o que excede a alçada</li>
-          <li>Tratar bloqueios de duplicata</li>
+          <li>Aprovar a janela das políticas assistidas</li>
+          <li>Tratar erro de geração e falha de entrega</li>
           <li>Reprocessar falhas de envio</li>
           <li><strong>Carga cresce com as exceções</strong></li>
         </ul>
@@ -1511,50 +1546,58 @@ a.xref:hover { border-bottom-style: solid; }
       <li><strong>Zero guias vencidas</strong> — mantida, agora como consequência e não como esforço</li>
     </ul>
 
-    <h3>12.7 Sequência de implementação sugerida</h3>
+    <h3>12.7 O que ficou de fora</h3>
+
+    <p>Três coisas foram deliberadamente deixadas de lado na entrega, e continuam abertas:</p>
+
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Etapa</th><th>Entrega</th><th>Por que nesta ordem</th></tr></thead>
+        <thead><tr><th>Item</th><th>Por quê</th><th>Onde volta</th></tr></thead>
         <tbody>
           <tr>
-            <td><strong>1</strong></td>
-            <td>Validação de duplicata escritural (Lacuna 1)</td>
-            <td>Sem ela, automatizar multiplica a exposição a pagamento duplo</td>
+            <td><strong>Validação de duplicata escritural</strong></td>
+            <td>Decisão explícita de escopo. Com a execução automatizada, deixou de haver um humano no
+            caminho que pudesse notar a cessão da duplicata a terceiro.</td>
+            <td>Lacuna 1 de J-03, ainda aberta</td>
           </tr>
           <tr>
-            <td><strong>2</strong></td>
-            <td>Config → Execução RAD, apenas modo <em>assistido</em></td>
-            <td>Entrega o ganho de garimpo mantendo o humano no circuito</td>
+            <td><strong>Alçada de aprovação por valor</strong></td>
+            <td>Seria um segundo controle sobre o eixo que o modo já governa — e duplicaria uma decisão que
+            o ERP toma com informação melhor.</td>
+            <td>Descartada, não adiada</td>
           </tr>
           <tr>
-            <td><strong>3</strong></td>
-            <td>Config → Integrações e envio ao ERP</td>
-            <td>Fecha o ciclo; até aqui o lote aprovado ainda sai manualmente</td>
-          </tr>
-          <tr>
-            <td><strong>4</strong></td>
-            <td>Modo <em>automático</em> com alçada</td>
-            <td>Só depois de ciclos assistidos sem divergência</td>
-          </tr>
-          <tr>
-            <td><strong>5</strong></td>
-            <td>Aba Execução Programada completa</td>
-            <td>A supervisão vira a tela principal quando a automação é a regra</td>
+            <td><strong>Verificação de assinatura dos webhooks</strong></td>
+            <td>A API publicada não define o mecanismo. Sem ele, qualquer origem que descubra a URL do ERP
+            pode forjar um evento.</td>
+            <td>Lacuna da API, em <a class="xref" href="prd-integracoes.html">Integrações</a></td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <div class="callout warn">
-      <div class="ct">A etapa 1 não é negociável</div>
-      <p>É tentador começar pela automação, que tem valor percebido imediato. Mas a validação de duplicata é o único controle que impede pagar a quem não tem mais direito de receber — e a automação, por definição, remove o humano que hoje poderia notar. Inverter a ordem entrega velocidade sobre um risco que escala junto.</p>
+      <div class="ct">A pergunta que a automação transferiu, não resolveu</div>
+      <p>J-03 deixou de crescer com o volume, mas passou a depender de uma integração de saída estar de pé.
+      Guia gerada e webhook não entregue é crédito que se perde sem que nenhuma tela de Pagamentos mostre
+      problema — é por isso que o módulo de Integrações ganhou health check e histórico de incidentes na
+      mesma entrega.</p>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">A ordem recomendada foi invertida na prática</div>
+      <p>A recomendação original era começar pela validação de duplicata: é o único controle que impede pagar
+      a quem não tem mais direito de receber, e a automação, por definição, remove o humano que poderia notar.</p>
+      <p>A entrega veio na ordem inversa — a automação entrou, a validação não. É uma escolha registrada, não
+      um esquecimento, e o risco que ela aceita está descrito na lacuna 1 de
+      <a class="xref" href="#j03">J-03</a>.</p>
     </div>
   </div>
 
   <hr>
   <div style="font-size:11px;color:var(--txt3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-    <span>SplitHub · Proposta · Jornadas de Usuário</span>
-    <span>v1.1 · Set/2026 · Base: protótipo implementado</span>
+    <span>SplitHub · Referência · Jornadas de Usuário</span>
+    <span>v2.0 · Set/2026 · Base: protótipo implementado</span>
   </div>
 
 </div>
