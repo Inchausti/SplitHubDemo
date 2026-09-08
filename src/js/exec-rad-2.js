@@ -28,13 +28,14 @@
   // ══════════════════════════════════════════════════════════
 
   window.radIntgTab = function (tab, btn) {
-    ['conexoes', 'entregas', 'comprovantes'].forEach(function (t) {
+    ['conexoes', 'gestao', 'entregas', 'comprovantes'].forEach(function (t) {
       var v = el('rad-intg-' + t); if (v) v.classList.toggle('active', t === tab);
     });
     if (btn) {
       btn.closest('.stabs').querySelectorAll('.stab').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
     }
+    if (tab === 'gestao' && window.intgGestaoRender) window.intgGestaoRender();
     if (tab === 'entregas') window.radEntregasRender();
     if (tab === 'comprovantes') window.radComprovantesRender();
   };

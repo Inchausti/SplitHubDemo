@@ -553,7 +553,7 @@ a.xref:hover { border-bottom-style: solid; }
   <!-- ══ 04 ══ -->
   <div class="section" id="s04">
     <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Resumo das telas</span></div>
-    <p class="sec-sub">Dez telas: seis novas e quatro alteradas.</p>
+    <p class="sec-sub">Onze telas: sete novas e quatro alteradas.</p>
 
     <div class="table-wrap">
       <table>
@@ -569,11 +569,12 @@ a.xref:hover { border-bottom-style: solid; }
           <tr><td class="tid">T-08</td><td><strong>Organização</strong> — CNPJs</td><td><span class="chip warn">Alterada</span></td><td>Config → Organização</td><td class="tc">2</td><td>Administrador</td></tr>
           <tr><td class="tid">T-09</td><td><strong>Assistente de nova conexão</strong> — 3 passos</td><td><span class="chip ok">Nova</span></td><td>Config → Integrações → Nova conexão</td><td class="tc">8</td><td>Administrador · TI</td></tr>
           <tr><td class="tid">T-10</td><td><strong>Credenciais emitidas</strong> — exibição única</td><td><span class="chip ok">Nova</span></td><td>fim de T-09 e da rotação</td><td class="tc">6</td><td>Administrador · TI</td></tr>
+          <tr><td class="tid">T-11</td><td><strong>Gestão e saúde</strong> — health check e incidentes</td><td><span class="chip ok">Nova</span></td><td>Config → Integrações → aba 2</td><td class="tc">9</td><td>TI · operação</td></tr>
         </tbody>
       </table>
     </div>
 
-    <p style="font-size:12.5px;color:var(--txt3)"><strong>Total: 72 funcionalidades</strong> — 55 em telas novas, 17 em alterações.</p>
+    <p style="font-size:12.5px;color:var(--txt3)"><strong>Total: 81 funcionalidades</strong> — 64 em telas novas, 17 em alterações.</p>
   </div>
 
   <!-- ══ 05 ══ -->
@@ -667,7 +668,8 @@ Aguardando aprovação        ·   Falhas de integração</code></div>
       </div>
       <div class="tela-body">
         <p>A tela cobre os <strong>seis contextos</strong> da API documentada, nas duas direções — não
-        só a saída do RAD. Três abas.</p>
+        só a saída do RAD. Quatro abas: as conexões, a gestão da saúde delas (<strong>T-11</strong>), o log
+        de entregas e os comprovantes recebidos.</p>
 
         <div class="callout info">
           <div class="ct">A ingestão de DFs não tinha onde emitir a chave</div>
@@ -793,6 +795,51 @@ Aguardando aprovação        ·   Falhas de integração</code></div>
           <p>O segredo modelado aqui pressupõe um header <code>X-SplitHub-Signature: t=&lt;unix&gt;,v1=&lt;hmac_sha256&gt;</code>
           sobre <code>&lt;timestamp&gt; + "." + &lt;corpo bruto&gt;</code>. A tela marca isso como proposto justamente
           para que a decisão seja tomada, não herdada de uma tela de protótipo.</p>
+        </div>
+      </div>
+    </div>
+    <!-- T-11 -->
+    <div class="tela">
+      <div class="tela-hdr">
+        <span class="tela-id t-nova">T-11</span>
+        <span class="tela-name">Gestão e saúde das integrações</span>
+        <span class="tela-path">Config → Integrações → Gestão e saúde</span>
+      </div>
+      <div class="tela-body">
+        <p>As outras abas respondem <em>o que está configurado</em> e <em>o que passou por aqui</em>.
+        Esta responde a pergunta operacional: as conexões estão de pé agora, e o que já quebrou.</p>
+
+        <div class="callout warn">
+          <div class="ct">Só metade das conexões pode ser sondada</div>
+          <p>Numa conexão de <strong>saída</strong> o SplitHub é quem chama: basta emitir um evento de
+          teste e medir a resposta. Numa conexão de <strong>entrada</strong> não há o que sondar — quem
+          inicia a chamada é o ERP.</p>
+          <p>Ali a saúde é observada pelo tráfego recebido, e há um estado que a sonda ativa nunca produz:
+          <strong>ausência de tráfego</strong>. Silêncio não é diagnóstico. Uma integração ociosa e uma
+          integração morta chegam idênticas ao painel, e distinguir as duas exigiria um heartbeat do lado
+          do ERP — que a API publicada não define.</p>
+        </div>
+
+        <h4>KPIs</h4>
+        <div class="code-block"><code>Conexões operacionais   ·   Incidentes abertos
+MTTR                    ·   Disponibilidade 30d</code></div>
+
+        <h4>Funcionalidades</h4>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Classificar cada conexão por estado</div><div class="func-d"><strong>Operacional</strong> acima de 98% de sucesso, <strong>degradado</strong> entre 90% e 98%, <strong>fora do ar</strong> abaixo disso, e <strong>sem tráfego</strong> quando não há o que medir. Os números derivam das mesmas métricas exibidas na aba de conexões — duas telas discordando sobre o mesmo endpoint é pior que nenhuma das duas.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Exibir disponibilidade em três janelas</div><div class="func-d">24 horas, 7 e 30 dias, com barra proporcional. Uma queda recente e uma degradação crônica pedem respostas diferentes, e só a comparação entre janelas separa as duas.</div></div></div>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Exibir latência p50 e p95</div><div class="func-d">Medida na sonda para conexões de saída, no tráfego recebido para as de entrada. O p95 é o que antecipa retentativa: um endpoint que responde bem na mediana e mal na cauda já produz falha.</div></div></div>
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Executar health check sob demanda</div><div class="func-d">Por conexão ou em todas as ativas de uma vez. Na saída, emite o evento de teste e mostra o código HTTP e o tempo. Na entrada, valida a credencial e devolve escopos, volume e taxa de rejeição.</div></div></div>
+        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Filtrar o painel por estado</div><div class="func-d">Em incidente, a pergunta é “o que está fora do ar”, não “como está tudo”.</div></div></div>
+        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Listar o histórico de incidentes</div><div class="func-d">Identificador, ocorrência, severidade, causa, início, duração, impacto e estado. A duração de um incidente em curso conta até agora, não até o fechamento.</div></div></div>
+        <div class="func"><div class="func-n">7</div><div class="func-b"><div class="func-t">Classificar a causa</div><div class="func-d"><code>timeout</code>, <code>http_5xx</code>, <code>credencial</code>, <code>payload</code>, <code>indisponibilidade</code> e <code>silencio</code>. A causa é o que permite ver padrão em vez de uma sequência de eventos isolados.</div></div></div>
+        <div class="func"><div class="func-n">8</div><div class="func-b"><div class="func-t">Quantificar o impacto</div><div class="func-d">Guias afetadas e valor, para incidentes de saída; chamadas rejeitadas, para os de entrada. Sem número, todo incidente parece igualmente grave.</div></div></div>
+        <div class="func"><div class="func-n">9</div><div class="func-b"><div class="func-t">Abrir a linha do tempo do incidente</div><div class="func-d">Detecção, alerta, diagnóstico, notas e resolução, cada um com momento e autor do evento. Um incidente em curso leva ao log de entregas, onde o reenvio é feito.</div></div></div>
+
+        <div class="callout info">
+          <div class="ct">O incidente de credencial é o que a rotação existe para evitar</div>
+          <p>No histórico, <code>INC-0002</code> registra um segredo rotacionado sem atualização no ERP:
+          a janela de sobreposição de 24 horas venceu antes da troca do outro lado, e os comprovantes
+          passaram a voltar <code>401</code>. É o caso concreto que justifica o aviso em <strong>T-10</strong>.</p>
         </div>
       </div>
     </div>
