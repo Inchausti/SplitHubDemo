@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Integrações · SplitHub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <a class="back" href="prds.html">← Hub de PRDs</a>
+
+  <div class="eyebrow">PRD · Configurações → Integrações</div>
+  <h1>Integrações — Conexões, credenciais e saúde</h1>
+  <p class="subtitle">Onde a organização declara como o SplitHub e o ERP conversam, nas duas direções. Cobre os <strong>seis contextos</strong> da API publicada, a emissão de credenciais, o transporte dos eventos e a saúde operacional de cada conexão.</p>
+
+  <div class="meta-bar">
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+    <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Admin → Integrações</span></div>
+    <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
+    <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-integracoes</span></div>
+    <div class="meta-pill"><span class="meta-label">API</span>&nbsp;<span class="meta-val">split-hubhq.github.io/docs</span></div>
+    <div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">api.splithub.com.br</span></div>
+    <div class="meta-pill" style="margin-left:auto">
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v1.0</span>
+    </div>
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Índice</div>
+    <ul class="toc-list">
+      <li><a href="#s01"><span class="toc-num">01</span> Contexto e posicionamento</a></li>
+      <li><a href="#s02"><span class="toc-num">02</span> Jornadas de usuário atendidas</a></li>
+      <li><a href="#s03"><span class="toc-num">03</span> Catálogo de contextos</a></li>
+      <li><a href="#s04"><span class="toc-num">04</span> Modelo de dados</a></li>
+      <li><a href="#s05"><span class="toc-num">05</span> Máquinas de estado</a></li>
+      <li><a href="#s06"><span class="toc-num">06</span> Arquitetura da tela</a></li>
+      <li><a href="#s07"><span class="toc-num">07</span> Funcionalidades detalhadas</a></li>
+      <li><a href="#s08"><span class="toc-num">08</span> Indicadores (KPIs)</a></li>
+      <li><a href="#s09"><span class="toc-num">09</span> Requisitos funcionais</a></li>
+      <li><a href="#s10"><span class="toc-num">10</span> Regras de negócio</a></li>
+      <li><a href="#s11"><span class="toc-num">11</span> Requisitos não funcionais</a></li>
+      <li><a href="#s12"><span class="toc-num">12</span> Segurança e lacunas da API</a></li>
+      <li><a href="#s13"><span class="toc-num">13</span> Glossário</a></li>
+      <li><a href="#s14"><span class="toc-num">14</span> Histórico de versões</a></li>
+    </ul>
+  </div>
+
+  <!-- ══ 01 ══ -->
+  <div class="section" id="s01">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Contexto e posicionamento</span></div>
+    <h3>1.1 O problema que o módulo resolve</h3>
+    <p>O produto tinha uma única conexão modelada: o webhook que leva a guia de RAD ao ERP. A API publicada,
+    porém, tem seis contextos, e <strong>três deles são de entrada</strong> — quem chama é o ERP.</p>
+
+    <div class="callout warn">
+      <div class="ct">A ingestão de DFs não tinha onde emitir a chave</div>
+      <p>É a porta de entrada de todo o produto: sem DF importado, não há crédito, não há guia, não há conciliação. E a página de autenticação da API declara que o processo de geração das credenciais <strong>não é especificado</strong>.</p>
+      <p>Na prática, cada cliente era integrado por um caminho manual, fora do produto. Este módulo fecha esse vão: o catálogo diz o que existe, o assistente emite a credencial e a aba de gestão mostra se está de pé.</p>
+    </div>
+
+    <h3>1.2 As duas direções</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Direção</th><th>Quem chama</th><th>Credencial</th><th>Contextos</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Entrada</strong></td><td>O ERP chama a API do SplitHub</td><td><code>client_id</code> + <code>client_secret</code>, trocados por um JWT em <code>POST /v1/auth/login</code></td><td>Ingestão de DFs · Fornecedores · Contratos</td></tr>
+          <tr><td><strong>Saída</strong></td><td>O SplitHub chama o endpoint do ERP</td><td>URL do endpoint + segredo que assina os eventos</td><td>Garantia de crédito · Automações</td></tr>
+          <tr><td><strong>Bidirecional</strong></td><td>Os dois sentidos no mesmo par</td><td>As duas credenciais</td><td>RAD ↔ ERP</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <div class="ct">A conexão bidirecional carrega duas credenciais, e elas não se substituem</div>
+      <p>A de API autentica o <strong>ERP chamando o SplitHub</strong> em <code>POST /v1/rad/proofs</code>. A de assinatura protege o que o <strong>SplitHub envia ao ERP</strong>.</p>
+      <p>Rotacionar uma não afeta a outra, e o painel oferece as duas rotações separadas — trocar as duas de uma vez obrigaria a duas mudanças simultâneas do outro lado.</p>
+    </div>
+
+    <h3>1.3 Relação com os demais módulos</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Módulo</th><th>Relação</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Ingestão</strong></td><td>A conexão <code>ingestao_dfs</code> é o canal por onde os documentos chegam.</td></tr>
+          <tr><td><strong>Execução RAD</strong></td><td>A política aponta para uma conexão <code>rad_erp</code>, que entrega a guia.</td></tr>
+          <tr><td><strong>Pagamentos</strong></td><td>A coluna <em>Entrega</em> da listagem de Guias RAD reflete o estado do webhook.</td></tr>
+          <tr><td><strong>Crédito</strong></td><td>Os webhooks de <code>credito.status_alterado</code> e <code>debito.status_alterado</code> avisam o ERP a cada mudança no ciclo de vida.</td></tr>
+          <tr><td><strong>Contratos</strong> e <strong>Fornecedor</strong></td><td>Podem ser mantidos a partir do ERP pelas conexões de mesmo nome.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 02 ══ -->
+  <div class="section" id="s02">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Jornadas de usuário atendidas</span></div>
+    <p class="sec-sub">Quais das nove jornadas do produto atravessam este módulo, e com que papel.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Jornada</th><th>Nome</th><th>Papel do módulo</th><th>O que acontece aqui</th></tr></thead>
+        <tbody>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j01" style="color:var(--blue);text-decoration:none">J-01</a></td><td><strong>Implantação da plataforma</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Configuração · Administrador</div></td><td><span class="chip ok">Palco principal</span></td><td>Emitir as credenciais e configurar as conexões é o passo que torna a plataforma apta a receber DFs. Sem isso, a implantação não termina.</td></tr>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j02" style="color:var(--blue);text-decoration:none">J-02</a></td><td><strong>Ingestão e validação de DFs</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Ciclo · Analista fiscal</div></td><td><span class="chip info">Etapa da jornada</span></td><td>A conexão <code>ingestao_dfs</code> é o canal por onde os documentos entram. Falha aqui é falha de ingestão, e aparece no histórico de incidentes antes de aparecer como DF faltante.</td></tr>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j03" style="color:var(--blue);text-decoration:none">J-03</a></td><td><strong>Operação de pagamentos RAD</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Ciclo · Tesouraria</div></td><td><span class="chip info">Etapa da jornada</span></td><td>A guia gerada só chega ao ERP por uma conexão <code>rad_erp</code>. O log de entregas e o reenvio são o tratamento de exceção da jornada.</td></tr>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j04" style="color:var(--blue);text-decoration:none">J-04</a></td><td><strong>Conciliação e apropriação</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Ciclo · Analista fiscal</div></td><td><span class="chip gray">Fornece dado</span></td><td>Os comprovantes recebidos alimentam a conciliação: é por eles que o SplitHub sabe que a guia foi paga.</td></tr>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j05" style="color:var(--blue);text-decoration:none">J-05</a></td><td><strong>Tratamento de inconsistências</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Exceção · Compliance</div></td><td><span class="chip info">Etapa da jornada</span></td><td>Payload rejeitado por grupo <code>ibs_cbs</code> ausente vira incidente aqui antes de virar inconsistência lá.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout info">
+      <div class="ct">J-01 é a jornada que este módulo carrega</div>
+      <p>As demais atravessam o módulo como transporte. J-01 acontece dentro dele: é aqui que a implantação para, ou avança.</p>
+    </div>
+    <p style="font-size:12.5px;color:var(--txt3)">Mapa completo das nove jornadas, com passos, pontos de fricção e lacunas: <a href="jornadas-usuario.html" style="color:var(--blue)">Jornadas do usuário ↗</a></p>
+
+  </div>
+
+  <!-- ══ 03 ══ -->
+  <div class="section" id="s03">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Catálogo de contextos</span></div>
+    <p class="sec-sub">O tipo da conexão vem deste catálogo, derivado da documentação publicada. É ele que decide o que a plataforma pede na criação e o que emite ao final.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tipo</th><th>Direção</th><th>Contexto</th><th>Endpoints e eventos</th><th>Escopos</th><th>Doc</th></tr></thead>
+        <tbody>
+          <tr><td><code>ingestao_dfs</code></td><td>Entrada</td><td>Ingestão de documentos fiscais</td><td><code>POST /v1/documentos-fiscais</code> · <code>/batch</code> · <code>GET</code> · <code>PATCH</code> · <code>DELETE</code></td><td><code>dfs:write</code> <code>dfs:read</code> <code>dfs:manage</code></td><td><a href="https://split-hubhq.github.io/docs/ingestao-dfs.html" target="_blank" rel="noopener" style="color:var(--blue)">ref ↗</a></td></tr>
+          <tr><td><code>fornecedores</code></td><td>Entrada</td><td>Base de fornecedores</td><td><code>POST</code> · <code>GET</code> · <code>PATCH /v1/fornecedores</code></td><td><code>fornecedores:write</code> <code>fornecedores:read</code></td><td><a href="https://split-hubhq.github.io/docs/fornecedores.html" target="_blank" rel="noopener" style="color:var(--blue)">ref ↗</a></td></tr>
+          <tr><td><code>contratos</code></td><td>Entrada</td><td>Contratos entre CNPJs</td><td><code>POST</code> · <code>GET</code> · <code>PATCH /v1/contratos</code></td><td><code>contratos:write</code> <code>contratos:read</code></td><td><a href="https://split-hubhq.github.io/docs/contratos.html" target="_blank" rel="noopener" style="color:var(--blue)">ref ↗</a></td></tr>
+          <tr><td><code>rad_erp</code></td><td>Bidirecional</td><td>RAD ↔ ERP</td><td><code>POST /v1/rad/proofs</code> + eventos <code>rad.darf_recebida</code>, <code>rad.proof_received</code></td><td><code>rad:proofs</code></td><td><a href="https://split-hubhq.github.io/docs/rad.html" target="_blank" rel="noopener" style="color:var(--blue)">ref ↗</a></td></tr>
+          <tr><td><code>garantia_credito</code></td><td>Saída</td><td>Garantia de crédito</td><td>eventos <code>credito.status_alterado</code>, <code>debito.status_alterado</code></td><td>—</td><td><a href="https://split-hubhq.github.io/docs/garantia-credito.html" target="_blank" rel="noopener" style="color:var(--blue)">ref ↗</a></td></tr>
+          <tr><td><code>automacoes</code></td><td>Saída</td><td>Automações</td><td><code>POST /v1/webhooks/automacoes</code> · eventos <code>automation.executed</code>, <code>automation.failed</code></td><td>—</td><td><a href="https://split-hubhq.github.io/docs/automacoes.html" target="_blank" rel="noopener" style="color:var(--blue)">ref ↗</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>3.1 Ingestão de DFs — o que a documentação define</h3>
+    <ul class="plain">
+      <li>14 tipos de DF-e aceitos: NF-e, NFC-e, CT-e, CT-e OS, BP-e, MDF-e, GTV-e, NFCom, NF3-e, NFAg, NFGás, NF-e ABI, NFS-e e NFS-e Via</li>
+      <li>XML assinado ou JSON equivalente aos grupos da NF-e 4.0</li>
+      <li>Grupo <code>items[].tax.ibs_cbs</code> <strong>obrigatório desde 01/01/2026</strong>, com CST, código de classificação, base de cálculo, IBS estadual e municipal e CBS</li>
+      <li>Lote de até <strong>500 documentos</strong>; acima disso retorna <code>400</code></li>
+      <li>Processamento assíncrono: <code>202 Accepted</code> → <code>pending</code> → <code>processing</code> → <code>completed</code> | <code>error</code></li>
+      <li>Documento <code>completed</code> não pode ser alterado — só <code>pending</code> ou <code>error</code> aceitam <code>PATCH</code></li>
+    </ul>
+
+    <h3>3.2 Autenticação</h3>
+    <div class="code-block"><code><span class="c">// 1. troca as credenciais por um JWT</span>
+POST https://api.splithub.com.br/v1/auth/login
+{ <span class="v">client_id</span>: <span class="s">"shc_live_..."</span>, <span class="v">client_secret</span>: <span class="s">"shs_live_..."</span> }
+→ { <span class="v">access_token</span>, <span class="v">expires_in</span>: <span class="n">3600</span>, <span class="v">token_type</span>: <span class="s">"Bearer"</span> }
+
+<span class="c">// 2. usa o token nas chamadas; expirado retorna 401</span>
+Authorization: Bearer {access_token}</code></div>
+
+  </div>
+
+  <!-- ══ 04 ══ -->
+  <div class="section" id="s04">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Modelo de dados</span></div>
+    <h3>4.1 Conexão</h3>
+    <div class="code-block"><code>{
+  <span class="v">id</span>:           <span class="s">"INT-0001"</span>,
+  <span class="v">tipo</span>:         <span class="s">"ingestao_dfs" | "fornecedores" | "contratos"</span>
+                <span class="s">| "rad_erp" | "garantia_credito" | "automacoes"</span>,
+  <span class="v">nome</span>:         <span class="s">"ERP Protheus — Matriz"</span>,
+  <span class="v">ambiente</span>:     <span class="s">"producao" | "sandbox"</span>,   <span class="c">// prefixo live_ ou test_</span>
+
+  <span class="c">// Entrada — o ERP chama a API do SplitHub</span>
+  <span class="v">clientId</span>:     <span class="s">"shc_live_a71f39c2d840be15702c"</span>,
+  <span class="v">token</span>:        <span class="s">"shs_live_2e9c••••••••••••41ab"</span>,  <span class="c">// só o hash é guardado</span>
+  <span class="v">escopos</span>:      [<span class="s">"dfs:write"</span>, <span class="s">"dfs:read"</span>],
+
+  <span class="c">// Saída — o SplitHub chama o endpoint do ERP</span>
+  <span class="v">webhookUrl</span>:   <span class="s">"https://erp.cliente.com/hooks/splithub"</span>,
+  <span class="v">tokenWebhook</span>: <span class="s">"whsec_live_8d22••••••••••••06ce"</span>,
+  <span class="v">eventos</span>:      [<span class="s">"rad.darf_recebida"</span>, <span class="s">"rad.proof_received"</span>],
+
+  <span class="v">cnpjs</span>:        [<span class="s">"01.123.456/0001-99"</span>],   <span class="c">// vazio = toda a organização</span>
+  <span class="v">ativo</span>:        <span class="k">true</span>,
+  <span class="v">criadoEm</span>:     <span class="s">"02/07/2026"</span>,
+  <span class="v">criadoPor</span>:    <span class="s">"Marina Costa"</span>,
+  <span class="v">entregas</span>:     <span class="n">142</span>,  <span class="v">falhas</span>:   <span class="n">3</span>,     <span class="c">// métricas de saída</span>
+  <span class="v">chamadas</span>:     <span class="n">18447</span>, <span class="v">errosApi</span>: <span class="n">63</span>     <span class="c">// métricas de entrada</span>
+}</code></div>
+
+    <h3>4.2 Incidente</h3>
+    <div class="code-block"><code>{
+  <span class="v">id</span>:           <span class="s">"INC-0004"</span>,
+  <span class="v">integracaoId</span>: <span class="s">"INT-0002"</span>,
+  <span class="v">severidade</span>:   <span class="s">"critica" | "alta" | "media"</span>,
+  <span class="v">causa</span>:        <span class="s">"timeout" | "http_5xx" | "credencial"</span>
+                <span class="s">| "payload" | "indisponibilidade" | "silencio"</span>,
+  <span class="v">titulo</span>:       <span class="s">"Entregas ao SAP SP falhando de forma intermitente"</span>,
+  <span class="v">inicio</span>:       <span class="s">"06/09/2026 04:12"</span>,
+  <span class="v">fim</span>:          <span class="k">null</span>,                  <span class="c">// null = em curso</span>
+  <span class="v">estado</span>:       <span class="s">"aberto" | "mitigado" | "resolvido"</span>,
+  <span class="v">impacto</span>:      { <span class="v">guias</span>: <span class="n">11</span>, <span class="v">valor</span>: <span class="n">486300</span>, <span class="v">chamadas</span>: <span class="n">0</span> },
+  <span class="v">eventos</span>:      [{ <span class="v">ts</span>, <span class="v">tipo</span>: <span class="s">"deteccao" | "alerta" | "diagnostico" | "nota" | "resolucao"</span>, <span class="v">texto</span> }],
+  <span class="v">resolucao</span>:    <span class="s">"..."</span> | <span class="k">null</span>
+}</code></div>
+
+    <h3>4.3 Formato das credenciais</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Credencial</th><th>Formato</th><th>Visibilidade</th></tr></thead>
+        <tbody>
+          <tr><td><code>client_id</code></td><td><code>shc_{live|test}_</code> + 24 caracteres</td><td>Não é segredo; sempre legível</td></tr>
+          <tr><td><code>client_secret</code></td><td><code>shs_{live|test}_</code> + 40 caracteres</td><td><strong>Exibido uma única vez</strong>; depois, só os quatro últimos</td></tr>
+          <tr><td><em>signing secret</em></td><td><code>whsec_{live|test}_</code> + 32 caracteres</td><td>Mesma regra do anterior</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 05 ══ -->
+  <div class="section" id="s05">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Máquinas de estado</span></div>
+    <h3>5.1 Estado de saúde da conexão</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Estado</th><th>Condição</th><th>Leitura</th></tr></thead>
+        <tbody>
+          <tr><td><span class="chip ok">Operacional</span></td><td>taxa de sucesso ≥ 98%</td><td>Nada a fazer</td></tr>
+          <tr><td><span class="chip warn">Degradado</span></td><td>90% ≤ taxa &lt; 98%</td><td>Já produz retentativa; investigar</td></tr>
+          <tr><td><span class="chip red">Fora do ar</span></td><td>taxa &lt; 90%</td><td>A integração está quebrada na prática</td></tr>
+          <tr><td><span class="chip gray">Sem tráfego</span></td><td>nenhum evento ou chamada, ou conexão desativada</td><td><strong>Não é diagnóstico</strong> — é a falta de um</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">Silêncio não distingue ociosa de morta</div>
+      <p>Numa conexão de saída o SplitHub sonda: emite um evento de teste e mede a resposta. Numa de entrada não há o que sondar — quem inicia a chamada é o ERP.</p>
+      <p>Ali a saúde é observada pelo tráfego recebido, e uma integração ociosa e uma integração morta chegam idênticas ao painel. Distinguir exigiria um <em>heartbeat</em> do lado do ERP, que a API publicada não define. Ver seção 12.</p>
+    </div>
+
+    <h3>5.2 Estado do incidente</h3>
+    <div class="state-grid">
+      <div class="state-row"><span class="state-name sn-amber">aberto</span>
+        <span class="state-desc">Detectado e ainda sem contenção. A duração conta até agora.</span></div>
+      <div class="state-row"><span class="state-name sn-purple">mitigado</span>
+        <span class="state-desc">Impacto contido, causa ainda não eliminada.</span></div>
+      <div class="state-row"><span class="state-name sn-green">resolvido</span>
+        <span class="state-desc">Causa eliminada, com o texto da resolução registrado.</span></div>
+    </div>
+
+    <h3>5.3 Estado da entrega</h3>
+    <div class="state-grid">
+      <div class="state-row"><span class="state-name sn-green">entregue</span>
+        <span class="state-desc">O ERP respondeu <code>200 OK</code>.</span></div>
+      <div class="state-row"><span class="state-name sn-amber">pendente</span>
+        <span class="state-desc">Em retentativa. A API não define teto de tentativas.</span></div>
+      <div class="state-row"><span class="state-name sn-purple">falha</span>
+        <span class="state-desc">Tentativas esgotadas. A guia existe aqui e não existe lá.</span></div>
+    </div>
+
+  </div>
+
+  <!-- ══ 06 ══ -->
+  <div class="section" id="s06">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Arquitetura da tela</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Aba</th><th>Responde</th><th>Elementos</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Conexões</strong></td><td>O que está configurado</td><td>Contadores por direção, cartão por conexão com credenciais mascaradas, escopos, eventos e escopo por CNPJ</td></tr>
+          <tr><td><strong>Gestão e saúde</strong></td><td>Está de pé agora, e o que já quebrou</td><td>KPIs, painel de health check por conexão e histórico de incidentes</td></tr>
+          <tr><td><strong>Log de entregas</strong></td><td>O que saiu daqui</td><td>Entrega, evento, <code>dfe_key</code>, tentativas, HTTP, com inspeção do payload e reenvio</td></tr>
+          <tr><td><strong>Comprovantes recebidos</strong></td><td>O que o ERP registrou</td><td>Chamadas a <code>POST /v1/rad/proofs</code>, com <code>darf_id</code>, meio, valor e resultado</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>6.1 O assistente de nova conexão</h3>
+    <div class="code-block"><code><span class="n">1.</span> Tipo de conexão   <span class="c">// catálogo agrupado por direção, com endpoints e eventos à vista</span>
+<span class="n">2.</span> Configuração      <span class="c">// nome, ambiente, escopos ou URL+eventos, escopo por CNPJ</span>
+<span class="n">3.</span> Credenciais       <span class="c">// exibição única, com o curl da primeira chamada</span></code></div>
+    <p>O passo 3 é reaproveitado pela rotação de segredo, sem os passos anteriores.</p>
+
+  </div>
+
+  <!-- ══ 07 ══ -->
+  <div class="section" id="s07">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Funcionalidades detalhadas</span></div>
+    <p class="sec-sub">Dezesseis funcionalidades distribuídas em quatro abas e no assistente de criação.</p>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-01</span>
+        <span class="feat-name">Listar conexões agrupadas por direção</span>
+        <span class="feat-loc">#rad-conexoes-lista</span>
+      </div>
+      <div class="feat-body">
+        <p>Três contadores no topo — entrada, saída e bidirecional — e um cartão por conexão. O cartão
+        mostra o que a direção exige: as de entrada trazem <code>client_id</code>, escopos e taxa de aceite
+        das chamadas; as de saída trazem a URL, os eventos e a taxa de entrega.</p>
+        <p>Filtros por tipo, direção e ambiente. O ambiente separa produção de sandbox — a chave carrega o
+        prefixo, e uma conexão de teste não deveria se confundir com a que gera crédito de verdade.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-02</span>
+        <span class="feat-name">Escolher o tipo no catálogo</span>
+        <span class="feat-loc">drawer · passo 1</span>
+      </div>
+      <div class="feat-body">
+        <p>Cada tipo traz o resumo do que a integração faz e uma prévia dos endpoints e eventos —
+        <code>POST /v1/documentos-fiscais</code>, <code>rad.darf_recebida</code>,
+        <code>credito.status_alterado</code>. Quem configura reconhece o contexto pelo que vai chamar.</p>
+        <p>O agrupamento por direção também explica a credencial que cada uma gera, antes de o usuário
+        escolher.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-03</span>
+        <span class="feat-name">Mostrar o que a documentação define</span>
+        <span class="feat-loc">drawer · passo 2</span>
+      </div>
+      <div class="feat-body">
+        <p>Um bloco fixo com as regras do contexto escolhido. Na ingestão de DFs: os 14 tipos aceitos, o
+        grupo <code>items[].tax.ibs_cbs</code> obrigatório desde 01/01/2026, o lote de até 500 documentos e
+        o processamento assíncrono. Mais o link para a referência completa.</p>
+        <p>Sem isso, a configuração acontece com a documentação aberta em outra aba — e é aí que o
+        mapeamento sai errado.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-04</span>
+        <span class="feat-name">Configurar escopos, destino e alcance</span>
+        <span class="feat-loc">drawer · passo 2</span>
+      </div>
+      <div class="feat-body">
+        <h4>Entrada — escopos</h4>
+        <p>Cada escopo declara o que o JWT poderá fazer. Na ingestão: <code>dfs:write</code> (envio
+        individual e em lote), <code>dfs:read</code> (consulta de status) e <code>dfs:manage</code>
+        (<code>PATCH</code> e <code>DELETE</code>).</p>
+        <p>Os dois primeiros vêm marcados — o fluxo é assíncrono, ler o status é parte dele. O destrutivo
+        exige escolha explícita. Chamada fora do escopo retorna <code>403</code>.</p>
+        <h4>Saída — URL e eventos</h4>
+        <p>HTTPS obrigatório, e a lista de eventos do tipo com a descrição de cada payload. O endpoint
+        precisa responder <code>200 OK</code> — sem isso, o SplitHub reenvia.</p>
+        <h4>Alcance por CNPJ</h4>
+        <p>Marcação múltipla; nenhum marcado significa toda a organização. Uma credencial de filial não
+        deveria conseguir enviar documento de outra.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-05</span>
+        <span class="feat-name">Emitir credenciais com exibição única</span>
+        <span class="feat-loc">drawer · passo 3</span>
+      </div>
+      <div class="feat-body">
+        <p>O segredo aparece em claro <strong>uma única vez</strong>, com aviso explícito de que a
+        plataforma guarda apenas o hash e de que, fechando a tela, o painel passa a mostrar só os quatro
+        últimos caracteres.</p>
+        <ul class="plain">
+          <li>Botão de cópia por campo, com confirmação visual</li>
+          <li><code>client_id</code> fica sempre legível; o <code>client_secret</code> é destacado como o que não volta</li>
+          <li>A conexão bidirecional entrega as duas credenciais, rotuladas pelo sentido que cada uma protege</li>
+          <li>Resumo da conexão: tipo, ambiente, destino, escopos, eventos e alcance</li>
+        </ul>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-06</span>
+        <span class="feat-name">Montar o exemplo da primeira chamada</span>
+        <span class="feat-loc">drawer · passo 3</span>
+      </div>
+      <div class="feat-body">
+        <p>Para entrada, o <code>curl</code> do <code>POST /v1/auth/login</code> com os valores reais,
+        seguido da chamada autenticada com <code>Authorization: Bearer $ACCESS_TOKEN</code>. Para saída, o
+        cálculo do HMAC do header de assinatura.</p>
+        <p>Reduz a distância entre emitir a chave e ver a integração funcionar — que é onde as implantações
+        param.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-07</span>
+        <span class="feat-name">Rotacionar o segredo com janela de sobreposição</span>
+        <span class="feat-loc">cartão da conexão</span>
+      </div>
+      <div class="feat-body">
+        <p>Gera um novo e mostra na mesma tela de exibição única. O anterior segue válido por
+        <strong>24 horas</strong>, para dar janela de troca sem derrubar a integração.</p>
+        <p>Na conexão bidirecional são duas rotações separadas, porque as credenciais servem a sentidos
+        diferentes.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-08</span>
+        <span class="feat-name">Testar conexão</span>
+        <span class="feat-loc">cartão da conexão</span>
+      </div>
+      <div class="feat-body">
+        <p>Só para quem recebe chamada do SplitHub. Dispara um evento de teste com payload fictício e
+        mostra a resposta HTTP. Valida a URL antes de a política de execução depender dela.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-09</span>
+        <span class="feat-name">Ver políticas vinculadas e desativar com aviso</span>
+        <span class="feat-loc">cartão da conexão</span>
+      </div>
+      <div class="feat-body">
+        <p>Quais políticas de execução entregam por esta conexão, com a cobertura de cada uma. Desativar
+        uma conexão em uso pede confirmação nomeando quantas políticas ativas dependem dela.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-10</span>
+        <span class="feat-name">Classificar a saúde de cada conexão</span>
+        <span class="feat-loc">#rad-intg-gestao</span>
+      </div>
+      <div class="feat-body">
+        <p>Estado, disponibilidade em 24h, 7 e 30 dias com barra proporcional, e latência p50/p95.
+        Os números derivam das mesmas métricas exibidas na aba de conexões.</p>
+        <p>Uma queda recente e uma degradação crônica pedem respostas diferentes, e só a comparação entre
+        janelas separa as duas. O p95 é o que antecipa retentativa: um endpoint que responde bem na mediana
+        e mal na cauda já produz falha.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-11</span>
+        <span class="feat-name">Executar health check sob demanda</span>
+        <span class="feat-loc">#rad-intg-gestao</span>
+      </div>
+      <div class="feat-body">
+        <p>Por conexão ou em todas as ativas de uma vez. Na saída, emite o evento de teste e mostra o
+        código HTTP e o tempo. Na entrada, valida a credencial e devolve escopos, volume e taxa de
+        rejeição — porque não há o que sondar.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-12</span>
+        <span class="feat-name">Registrar o histórico de incidentes</span>
+        <span class="feat-loc">#rad-intg-gestao</span>
+      </div>
+      <div class="feat-body">
+        <p>Identificador, ocorrência, severidade, causa classificada, início, duração, impacto e estado.
+        A duração de um incidente em curso conta até agora, não até o fechamento.</p>
+        <h4>Causas</h4>
+        <p style="font-size:12.5px"><code>timeout</code> · <code>http_5xx</code> ·
+        <code>credencial</code> · <code>payload</code> · <code>indisponibilidade</code> ·
+        <code>silencio</code></p>
+        <p>A causa é o que permite ver padrão em vez de uma sequência de eventos isolados.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-13</span>
+        <span class="feat-name">Abrir a linha do tempo do incidente</span>
+        <span class="feat-loc">drawer</span>
+      </div>
+      <div class="feat-body">
+        <p>Detecção, alerta, diagnóstico, notas e resolução, cada um com momento. Um incidente em curso
+        leva ao log de entregas, onde o reenvio é feito.</p>
+        <p>O impacto vem quantificado: guias afetadas e valor, para incidentes de saída; chamadas
+        rejeitadas, para os de entrada. Sem número, todo incidente parece igualmente grave.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-14</span>
+        <span class="feat-name">Listar e inspecionar entregas</span>
+        <span class="feat-loc">#rad-intg-entregas</span>
+      </div>
+      <div class="feat-body">
+        <p>Evento, <code>dfe_key</code>, tentativas, status HTTP e momento da última tentativa, com filtro
+        por estado. Cada entrega abre o <strong>JSON exato transmitido</strong> — sem isso, depurar
+        divergência com o ERP vira troca de e-mails.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-15</span>
+        <span class="feat-name">Reenviar entrega</span>
+        <span class="feat-loc">#rad-intg-entregas</span>
+      </div>
+      <div class="feat-body">
+        <p>Reprocessa individualmente ou em lote. A especificação diz que o SplitHub reenvia até receber
+        <code>200 OK</code>, mas não define o teto de tentativas — o reenvio manual cobre o caso em que a
+        automática desiste.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-16</span>
+        <span class="feat-name">Listar comprovantes recebidos e isolar rejeitados</span>
+        <span class="feat-loc">#rad-intg-comprovantes</span>
+      </div>
+      <div class="feat-body">
+        <p>Chamadas a <code>POST /v1/rad/proofs</code> com <code>darf_id</code>, meio de pagamento, valor,
+        origem e resultado. As rejeitadas aparecem apartadas, com o motivo — <code>darf_id</code>
+        desconhecido, campo obrigatório ausente ou token inválido.</p>
+    <div class="callout warn">
+      <div class="ct">É a divergência mais silenciosa do produto</div>
+      <p>Sem esta visão, o ERP acha que pagou e o SplitHub não registrou. O crédito se perde sem que nenhuma tela mostre problema.</p>
+    </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ 08 ══ -->
+  <div class="section" id="s08">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Indicadores (KPIs)</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>KPI</th><th>Fórmula</th><th>O que decide</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Conexões operacionais</strong></td><td>ativas com estado operacional sobre o total de ativas</td><td>Se há integração quebrada agora</td></tr>
+          <tr><td><strong>Incidentes abertos</strong></td><td>incidentes com estado diferente de resolvido</td><td>O que exige ação nesta hora</td></tr>
+          <tr><td><strong>MTTR</strong></td><td>média da duração dos incidentes resolvidos</td><td>Quanto a operação leva para recuperar uma integração — não quanto ela quebra</td></tr>
+          <tr><td><strong>Disponibilidade 30d</strong></td><td>média da taxa de sucesso de 30 dias entre as ativas</td><td>A tendência, por cima do ruído do dia</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Os contadores por direção, na aba de conexões, respondem outra pergunta: quanto do produto já está
+    integrado em cada sentido. Uma organização com três conexões de saída e nenhuma de entrada tem a
+    ingestão fora do produto.</p>
+
+  </div>
+
+  <!-- ══ 09 ══ -->
+  <div class="section" id="s09">
+    <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Requisitos funcionais</span></div>
+    <p class="sec-sub">Prioridade: <strong>M</strong> (must — bloqueia release), <strong>S</strong> (should), <strong>C</strong> (could).</p>
+    <h3>9.1 Catálogo e criação</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-INT-001</td><td>O sistema deve oferecer os seis tipos de conexão do catálogo, agrupados por direção.</td><td>O passo 1 do assistente lista entrada, bidirecional e saída, com os tipos de cada uma.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-002</td><td>O tipo escolhido deve determinar os campos pedidos e as credenciais emitidas.</td><td>Tipo de entrada não pede URL; tipo de saída não pede escopos.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-003</td><td>Cada tipo deve exibir endpoints e eventos antes da escolha.</td><td>Os chips do passo 1 mostram os caminhos reais da API.</td><td>S</td></tr>
+          <tr><td class="rid">RF-INT-004</td><td>A conexão deve declarar ambiente de produção ou sandbox.</td><td>O prefixo da credencial muda entre <code>live</code> e <code>test</code>.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-005</td><td>A conexão deve poder ser restringida a um subconjunto de CNPJs.</td><td>Nenhum marcado vale para toda a organização; marcados restringem.</td><td>M</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.2 Credenciais</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-INT-006</td><td>Conexões de entrada devem receber <code>client_id</code> e <code>client_secret</code>.</td><td>Ambos são gerados e exibidos no passo 3.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-007</td><td>Conexões de saída devem receber um segredo de assinatura.</td><td>O <code>whsec_</code> é gerado e exibido.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-008</td><td>Conexões bidirecionais devem receber as duas credenciais, rotuladas pelo sentido.</td><td>O passo 3 mostra <code>client_secret</code> e <em>signing secret</em>, cada um com sua explicação.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-009</td><td>O segredo deve ser exibido uma única vez, com aviso explícito.</td><td>Fechada a tela, o painel mostra só os quatro últimos caracteres.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-010</td><td>A plataforma deve guardar apenas o hash do segredo.</td><td>Nenhuma tela recupera o valor em claro depois da emissão.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-011</td><td>A rotação deve manter o segredo anterior válido por 24 horas.</td><td>A tela de rotação informa a janela.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-012</td><td>Na conexão bidirecional, as rotações devem ser independentes.</td><td>Rotacionar o <code>client_secret</code> não altera o de assinatura.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-013</td><td>O passo 3 deve montar o exemplo da primeira chamada com os valores reais.</td><td>O <code>curl</code> do login e da chamada autenticada, ou o cálculo do HMAC.</td><td>S</td></tr>
+          <tr><td class="rid">RF-INT-014</td><td>Escopos destrutivos não devem vir marcados por padrão.</td><td><code>dfs:manage</code> exige marcação explícita.</td><td>M</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.3 Validação</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-INT-015</td><td>A URL do webhook deve exigir esquema HTTPS.</td><td>URL <code>http://</code> bloqueia o salvamento.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-016</td><td>A conexão de saída deve exigir ao menos um evento.</td><td>Salvar sem evento é bloqueado.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-017</td><td>A conexão de entrada deve exigir ao menos um escopo.</td><td>Salvar sem escopo é bloqueado.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-018</td><td>O nome da conexão deve ser obrigatório.</td><td>Salvar sem nome é bloqueado.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-019</td><td>Desativar conexão usada por política ativa deve pedir confirmação nomeando o impacto.</td><td>O aviso diz quantas políticas param de entregar.</td><td>M</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.4 Health check</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-INT-020</td><td>O sistema deve classificar cada conexão ativa em operacional, degradado, fora do ar ou sem tráfego.</td><td>Os limiares são 98% e 90% de taxa de sucesso.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-021</td><td>A classificação deve usar as mesmas métricas exibidas na aba de conexões.</td><td>A taxa mostrada nos dois lugares é idêntica.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-022</td><td>O health check ativo deve existir apenas para conexões de saída e bidirecionais.</td><td>Conexão de entrada oferece “Verificar credencial”, não “Executar health check”.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-023</td><td>Para conexões de entrada, a verificação deve reportar escopos, volume e taxa de rejeição.</td><td>O resultado traz os três, ou declara ausência de tráfego.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-024</td><td>Ausência de tráfego deve ser reportada como falta de diagnóstico, não como falha.</td><td>A mensagem diz que não há como distinguir integração ociosa de morta.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-025</td><td>O painel deve exibir disponibilidade em 24h, 7 e 30 dias.</td><td>Três janelas com barra proporcional.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-026</td><td>O painel deve exibir latência p50 e p95, indicando a fonte da medição.</td><td>Sonda para saída, tráfego recebido para entrada.</td><td>S</td></tr>
+          <tr><td class="rid">RF-INT-027</td><td>Deve ser possível disparar o health check em todas as conexões ativas de uma vez.</td><td>A ação informa em quantas foi disparado.</td><td>S</td></tr>
+          <tr><td class="rid">RF-INT-028</td><td>O painel deve poder ser filtrado por estado.</td><td>Filtrar por “fora do ar” mostra só essas.</td><td>S</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.5 Incidentes</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-INT-029</td><td>O histórico deve registrar incidentes com severidade, causa, início, fim, estado e impacto.</td><td>Todos os campos aparecem na listagem.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-030</td><td>A duração de incidente em curso deve contar até o momento presente.</td><td>Um incidente aberto há dois dias exibe “2d 1h”, não zero.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-031</td><td>A causa deve vir de um conjunto fechado de seis valores.</td><td>A listagem permite agrupar por causa.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-032</td><td>O impacto deve ser quantificado em guias e valor, ou em chamadas rejeitadas.</td><td>Incidente de saída mostra guias; de entrada, chamadas.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-033</td><td>O detalhe deve exibir a linha do tempo com detecção, alerta, diagnóstico, notas e resolução.</td><td>Cada evento com momento e texto.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-034</td><td>Incidente em curso deve oferecer atalho para o log de entregas.</td><td>O link leva à aba com o reenvio.</td><td>S</td></tr>
+          <tr><td class="rid">RF-INT-035</td><td>O histórico deve poder ser filtrado entre em curso e resolvidos.</td><td>Dois filtros disponíveis.</td><td>S</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.6 Transporte</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-INT-036</td><td>O log de entregas deve permitir inspecionar o payload exato transmitido.</td><td>O JSON abre na própria tela.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-037</td><td>Deve ser possível reenviar entrega individualmente ou em lote.</td><td>O reenvio atualiza o estado e as métricas da conexão.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-038</td><td>A aba de comprovantes deve listar as chamadas a <code>POST /v1/rad/proofs</code>.</td><td><code>darf_id</code>, meio, valor, origem e resultado.</td><td>M</td></tr>
+          <tr><td class="rid">RF-INT-039</td><td>Comprovantes rejeitados devem aparecer isolados, com o motivo.</td><td>Filtro dedicado e alerta no topo quando houver.</td><td>M</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 10 ══ -->
+  <div class="section" id="s10">
+    <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Regras de negócio</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Regra</th><th>Razão</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RN-INT-01</td><td>O tipo da conexão vem do catálogo e não pode ser alterado depois da criação.</td><td>Trocar o tipo mudaria a credencial emitida e o contrato do endpoint.</td></tr>
+          <tr><td class="rid">RN-INT-02</td><td>Segredo é exibido uma única vez; a plataforma guarda apenas o hash.</td><td>Segredo recuperável é segredo compartilhado.</td></tr>
+          <tr><td class="rid">RN-INT-03</td><td>Rotação mantém o valor anterior aceito por 24 horas.</td><td>Sem janela, rotacionar é derrubar a integração — foi o que causou o INC-0002.</td></tr>
+          <tr><td class="rid">RN-INT-04</td><td>Credenciais de sandbox usam prefixo <code>test</code>, de produção <code>live</code>.</td><td>O prefixo é a última defesa contra usar a chave errada.</td></tr>
+          <tr><td class="rid">RN-INT-05</td><td>Chamada fora do escopo declarado retorna <code>403</code>.</td><td>O escopo só vale se for aplicado.</td></tr>
+          <tr><td class="rid">RN-INT-06</td><td>Conexão sem CNPJ marcado vale para toda a organização.</td><td>É o padrão menos surpreendente para quem tem um único estabelecimento.</td></tr>
+          <tr><td class="rid">RN-INT-07</td><td>Só conexões de saída e bidirecionais podem ser sondadas.</td><td>Numa de entrada, quem inicia a chamada é o ERP.</td></tr>
+          <tr><td class="rid">RN-INT-08</td><td>Ausência de tráfego não é estado de falha.</td><td>Integração ociosa e morta chegam idênticas ao painel.</td></tr>
+          <tr><td class="rid">RN-INT-09</td><td>A saúde exibida na gestão deriva das mesmas métricas da aba de conexões.</td><td>Duas telas discordando sobre o mesmo endpoint é pior que nenhuma das duas.</td></tr>
+          <tr><td class="rid">RN-INT-10</td><td>Desativar conexão em uso por política ativa exige confirmação nomeando o impacto.</td><td>A desativação interrompe a entrega das guias daquelas políticas.</td></tr>
+          <tr><td class="rid">RN-INT-11</td><td>O endpoint do cliente precisa responder <code>200 OK</code>; sem isso o evento é reenviado.</td><td>É o que a documentação de webhooks define.</td></tr>
+          <tr><td class="rid">RN-INT-12</td><td>Comprovante rejeitado nunca é descartado silenciosamente.</td><td>O ERP acharia que pagou e o SplitHub não teria registro.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 11 ══ -->
+  <div class="section" id="s11">
+    <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Requisitos não funcionais</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RNF-INT-01</td><td>Nenhum segredo em claro deve persistir no cliente após o fechamento da tela de emissão.</td><td>Inspeção do estado não encontra o valor.</td></tr>
+          <tr><td class="rid">RNF-INT-02</td><td>A listagem de conexões e o painel de saúde devem renderizar em menos de 200 ms para 50 conexões.</td><td>Medido no render das abas.</td></tr>
+          <tr><td class="rid">RNF-INT-03</td><td>O payload de uma entrega deve ser recuperável para reprocessamento.</td><td>O JSON transmitido fica associado à entrega.</td></tr>
+          <tr><td class="rid">RNF-INT-04</td><td>Cores de estado devem vir de tokens do design system, nunca de literais.</td><td>Auditoria dos arquivos do módulo não encontra hex nem rgba literal.</td></tr>
+          <tr><td class="rid">RNF-INT-05</td><td>A URL e as credenciais devem quebrar linha sem estourar o cartão.</td><td><code>word-break</code> aplicado; o corpo da página não rola lateralmente.</td></tr>
+          <tr><td class="rid">RNF-INT-06</td><td>O catálogo deve ser dado, não código espalhado.</td><td>Adicionar um sétimo contexto é acrescentar uma entrada, não editar telas.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 12 ══ -->
+  <div class="section" id="s12">
+    <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Segurança e lacunas da API</span></div>
+    <p class="sec-sub">O que a documentação publicada ainda não define, e o que este módulo propõe.</p>
+    <p>Levantadas na leitura da documentação publicada. Precisam de definição antes da implementação
+    real — o protótipo modela o comportamento pretendido e marca cada uma como proposta.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Lacuna</th><th>Impacto</th><th>Proposta modelada</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Emissão de credencial não especificada</strong></td><td>A página de autenticação descreve como usar <code>client_id</code> e <code>client_secret</code>, mas declara que o processo de geração não é especificado. Cada cliente acaba integrado por um caminho manual, fora do produto.</td><td>Assistente com exibição única, escopos por contexto e janela de sobreposição na rotação</td></tr>
+          <tr><td><strong>Sem verificação de assinatura</strong></td><td>O ERP não tem como provar que o webhook veio do SplitHub — qualquer origem que descubra a URL pode forjar uma guia.</td><td>Header <code>X-SplitHub-Signature: t=&lt;unix&gt;,v1=&lt;hmac_sha256&gt;</code> sobre <code>&lt;t&gt; + "." + &lt;corpo bruto&gt;</code>, com segredo por conexão</td></tr>
+          <tr><td><strong>Política de retry não definida</strong></td><td>A spec diz que reenvia até receber <code>200 OK</code>, sem intervalo nem teto.</td><td>Backoff e número máximo definidos e expostos no log</td></tr>
+          <tr><td><strong>Sem códigos de erro HTTP</strong></td><td>Só o <code>201 Created</code> está documentado em <code>/v1/rad/proofs</code>. O ERP não distingue token inválido de <code>darf_id</code> inexistente.</td><td>Documentar 400, 401, 404, 409 e 422 com corpo de erro padronizado</td></tr>
+          <tr><td><strong>Idempotência não especificada</strong></td><td>Reenvio de comprovante pode duplicar registro.</td><td>Header <code>Idempotency-Key</code>, com repetição tratada como <code>200</code></td></tr>
+          <tr><td><strong>Sem ambiente de testes</strong></td><td>Não há sandbox documentado, e validar uma integração exige dado real.</td><td>O ambiente é modelado no produto pelo prefixo da credencial</td></tr>
+          <tr><td><strong>Sem heartbeat de entrada</strong></td><td>Integração de entrada silenciosa não se distingue de morta.</td><td>Endpoint de heartbeat, ou janela esperada de tráfego declarada na conexão</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 13 ══ -->
+  <div class="section" id="s13">
+    <div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Glossário</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Termo</th><th>Definição</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Conexão</strong></td><td>Um par configurado entre o SplitHub e um sistema externo, de um dos seis contextos.</td></tr>
+          <tr><td><strong>Contexto</strong></td><td>Cada área da API publicada — ingestão, fornecedores, contratos, RAD, garantia de crédito e automações.</td></tr>
+          <tr><td><strong>Direção</strong></td><td>Quem inicia a chamada: entrada (o ERP), saída (o SplitHub) ou ambas.</td></tr>
+          <tr><td><strong><code>client_id</code> / <code>client_secret</code></strong></td><td>Credenciais trocadas por um JWT em <code>POST /v1/auth/login</code>.</td></tr>
+          <tr><td><strong>Signing secret</strong></td><td>Segredo com que o SplitHub assina os eventos que envia.</td></tr>
+          <tr><td><strong>Escopo</strong></td><td>Permissão declarada na credencial; chamada fora dele retorna <code>403</code>.</td></tr>
+          <tr><td><strong>Health check</strong></td><td>Sonda ativa que emite um evento de teste e mede a resposta.</td></tr>
+          <tr><td><strong>Incidente</strong></td><td>Período em que uma conexão operou fora do esperado, com causa, impacto e resolução.</td></tr>
+          <tr><td><strong>MTTR</strong></td><td>Tempo médio entre a detecção e a resolução dos incidentes.</td></tr>
+          <tr><td><strong>Entrega</strong></td><td>Uma tentativa de envio de evento ao endpoint do cliente.</td></tr>
+          <tr><td><strong>Comprovante</strong></td><td>Registro que o ERP faz em <code>POST /v1/rad/proofs</code> informando o pagamento da guia.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 14 ══ -->
+  <div class="section" id="s14">
+    <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
+    <div class="ver-row">
+      <span class="ver-num">v1.0</span>
+      <span class="ver-desc"><strong>08/09/2026</strong> — Primeira versão. Documenta o módulo que
+      generalizou Integrações dos webhooks de RAD para os seis contextos da API publicada, nas duas
+      direções. Cobre o catálogo, o assistente de nova conexão em três passos, a emissão de credencial com
+      exibição única, a rotação com janela de sobreposição, o painel de health check com a assimetria entre
+      sonda ativa e observação passiva, o histórico de incidentes com linha do tempo, o log de entregas e os
+      comprovantes recebidos. 16 funcionalidades, 39 requisitos funcionais, 12 regras de negócio, 6 RNFs e
+      7 lacunas da API mapeadas.</span>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

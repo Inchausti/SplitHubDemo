@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Execução RAD · SplitHub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <a class="back" href="prds.html">← Hub de PRDs</a>
+
+  <div class="eyebrow">PRD · Configurações → Execução RAD</div>
+  <h1>Execução RAD — Políticas e automação do recolhimento</h1>
+  <p class="subtitle">Configura <strong>o que, quando e como</strong> a empresa gera as guias de IBS e CBS dos Registros Fiscais sob RAD — <strong>Recolhimento pelo Adquirente</strong> — e as entrega ao ERP sem ação assistida. O contrato define <em>quem</em> recolhe, por CNPJ fornecedor; a política define a régua de execução do lado do comprador.</p>
+
+  <div class="meta-bar">
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+    <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Admin → Execução RAD</span></div>
+    <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
+    <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-exec-rad</span></div>
+    <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025</span></div>
+    <div class="meta-pill"><span class="meta-label">API</span>&nbsp;<span class="meta-val">rad.html</span></div>
+    <div class="meta-pill" style="margin-left:auto">
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v1.0</span>
+    </div>
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Índice</div>
+    <ul class="toc-list">
+      <li><a href="#s01"><span class="toc-num">01</span> Contexto e posicionamento</a></li>
+      <li><a href="#s02"><span class="toc-num">02</span> Jornadas de usuário atendidas</a></li>
+      <li><a href="#s03"><span class="toc-num">03</span> Escopo e recorte do módulo</a></li>
+      <li><a href="#s04"><span class="toc-num">04</span> Modelo de dados</a></li>
+      <li><a href="#s05"><span class="toc-num">05</span> Máquinas de estado</a></li>
+      <li><a href="#s06"><span class="toc-num">06</span> Arquitetura da tela</a></li>
+      <li><a href="#s07"><span class="toc-num">07</span> Funcionalidades detalhadas</a></li>
+      <li><a href="#s08"><span class="toc-num">08</span> Indicadores (KPIs)</a></li>
+      <li><a href="#s09"><span class="toc-num">09</span> Requisitos funcionais</a></li>
+      <li><a href="#s10"><span class="toc-num">10</span> Regras de negócio</a></li>
+      <li><a href="#s11"><span class="toc-num">11</span> Requisitos não funcionais</a></li>
+      <li><a href="#s12"><span class="toc-num">12</span> Integrações e dependências</a></li>
+      <li><a href="#s13"><span class="toc-num">13</span> Glossário</a></li>
+      <li><a href="#s14"><span class="toc-num">14</span> Histórico de versões</a></li>
+    </ul>
+  </div>
+
+  <!-- ══ 01 ══ -->
+  <div class="section" id="s01">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Contexto e posicionamento</span></div>
+    <h3>1.1 O problema que o módulo resolve</h3>
+    <p>Gerar uma guia de RAD era inteiramente manual: alguém abria a listagem de Guias RAD, filtrava por
+    vencimento, selecionava as notas e clicava em gerar. A carga crescia linearmente com o volume, e o
+    esquecimento de uma janela custava crédito — a guia vence, o registro prescreve, o IBS/CBS não é
+    aproveitado.</p>
+
+    <p>É o desdobramento da <strong>lacuna 2 da jornada J-03</strong>: a empresa consegue definir, por CNPJ
+    comprador, datas e prazos padrão para a execução, tornando a geração automática e entregando o
+    resultado ao ERP por API. O que faltava era onde declarar essa régua.</p>
+
+    <div class="callout info">
+      <div class="ct">O destino é a operação sem ação assistida</div>
+      <p>As <strong>réguas de pagamento já vivem no ERP</strong>. O papel do SplitHub é gerar a guia e entregá-la; quem decide quando pagar, com que antecedência e sob qual aprovação é o ERP, segundo regras que a empresa já mantém lá.</p>
+      <p>Um portão humano no meio duplicaria um controle que já existe do outro lado — e no ponto errado, porque quem aprovaria no SplitHub não enxerga o fluxo de caixa que o ERP enxerga. O modo automático não é o topo de uma escada de maturidade: é o desenho pretendido desde a configuração.</p>
+    </div>
+
+    <h3>1.2 Os dois eixos independentes</h3>
+    <p>A política declara duas coisas que costumam ser confundidas, e que aqui são ortogonais:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Eixo</th><th>Responde</th><th>Valores</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Modelo de orquestração</strong></td><td>O que a política cobre</td><td><code>cnpj</code> · <code>contrato</code> · <code>valor</code></td></tr>
+          <tr><td><strong>Modo</strong></td><td>Quanta decisão humana existe</td><td><code>automatico</code> · <code>assistido</code> · <code>manual</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Uma política pode cobrir três CNPJs em modo automático e outra um único contrato em modo assistido.
+    As duas escolhas não se condicionam.</p>
+
+    <h3>1.3 Por que não é uma política por CNPJ</h3>
+    <p>A primeira versão da proposta amarrava a política ao CNPJ comprador, um para um. O modelo quebra em
+    dois casos reais: um contrato de insumo com prazo próprio, que atravessa várias filiais; e a separação
+    entre grão fino e alto valor, que não respeita fronteira de estabelecimento.</p>
+    <p>A política passou a ser a entidade, e a organização cria quantas quiser.</p>
+
+    <h3>1.4 Relação com os demais módulos</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Módulo</th><th>Relação</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Contratos</strong></td><td>Define o método de pagamento por CNPJ fornecedor. Só RFs cujo método resolve para <code>RAD</code> entram no universo da política. Contratos de método RAD também podem ser o próprio recorte, na orquestração por contrato.</td></tr>
+          <tr><td><strong>Pagamentos</strong></td><td>A aba <em>Execução Programada</em> é a face operacional deste módulo: mostra o que cada política produzirá, a fila de decisão e o histórico.</td></tr>
+          <tr><td><strong>Integrações</strong></td><td>A política aponta para uma conexão do tipo <code>rad_erp</code>, que leva a guia ao ERP. Sem conexão, a guia é gerada e fica só na plataforma.</td></tr>
+          <tr><td><strong>Crédito</strong></td><td>A guia paga e confirmada é o que permite a apropriação do IBS/CBS. A política é, no fim, um mecanismo de proteção do crédito.</td></tr>
+          <tr><td><strong>Organização</strong></td><td>Fornece os CNPJs compradores que a orquestração por CNPJ seleciona.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 02 ══ -->
+  <div class="section" id="s02">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Jornadas de usuário atendidas</span></div>
+    <p class="sec-sub">Quais das nove jornadas do produto atravessam este módulo, e com que papel.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Jornada</th><th>Nome</th><th>Papel do módulo</th><th>O que acontece aqui</th></tr></thead>
+        <tbody>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j03" style="color:var(--blue);text-decoration:none">J-03</a></td><td><strong>Operação de pagamentos RAD</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Ciclo · Tesouraria</div></td><td><span class="chip ok">Palco principal</span></td><td>A jornada inteira muda de natureza aqui. Configurada a política, deixa de ser execução e passa a ser tratamento de exceção: no fluxo normal, ninguém precisa entrar.</td></tr>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j01" style="color:var(--blue);text-decoration:none">J-01</a></td><td><strong>Implantação da plataforma</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Configuração · Administrador</div></td><td><span class="chip info">Etapa da jornada</span></td><td>Criar a primeira política é passo da implantação — sem ela, todo CNPJ opera em modo manual.</td></tr>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j06" style="color:var(--blue);text-decoration:none">J-06</a></td><td><strong>Prevenção de perda por prazo</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Risco · Gestor fiscal</div></td><td><span class="chip info">Etapa da jornada</span></td><td>A antecedência da janela é o que impede a guia de vencer. A política é o controle preventivo de perda por prazo.</td></tr>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j07" style="color:var(--blue);text-decoration:none">J-07</a></td><td><strong>Governança contratual</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Risco · Administrador</div></td><td><span class="chip gray">Fornece dado</span></td><td>A orquestração por contrato faz a governança contratual repercutir na execução: contrato vencido ou trocado de método muda o que a política alcança.</td></tr>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j04" style="color:var(--blue);text-decoration:none">J-04</a></td><td><strong>Conciliação e apropriação</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Ciclo · Analista fiscal</div></td><td><span class="chip gray">Fornece dado</span></td><td>A guia gerada e paga é a condição para a apropriação do crédito conciliada em J-04.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout info">
+      <div class="ct">J-03 era a única jornada de ciclo cuja carga crescia com o volume</div>
+      <p>As demais crescem com exceções. A política de execução é o que aproxima J-03 das outras: a partir dela, o que ocupa a tesouraria são os erros de geração e as falhas de entrega, não o garimpo das notas a vencer.</p>
+    </div>
+    <p style="font-size:12.5px;color:var(--txt3)">Mapa completo das nove jornadas, com passos, pontos de fricção e lacunas: <a href="jornadas-usuario.html" style="color:var(--blue)">Jornadas do usuário ↗</a></p>
+
+  </div>
+
+  <!-- ══ 03 ══ -->
+  <div class="section" id="s03">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Escopo e recorte do módulo</span></div>
+    <h3>3.1 O que está dentro</h3>
+    <ul class="plain">
+      <li>Criação, edição, ativação e pausa de políticas, sem limite de quantidade</li>
+      <li>Os três modelos de orquestração e as quatro bases de comparação por valor</li>
+      <li>Janela de execução: dias do mês, hora e antecedência sobre o vencimento</li>
+      <li>Critérios de inclusão: valor mínimo por guia e flags que retêm a nota</li>
+      <li>Detecção de cobertura repetida, dentro e entre modelos</li>
+      <li>Simulação da próxima execução antes de salvar</li>
+      <li>Auditoria: criação, edição com diff campo a campo, ativação, pausa e execução antecipada</li>
+      <li>Vínculo com a conexão de saída que entrega a guia</li>
+    </ul>
+
+    <h3>3.2 O que está fora</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fora do escopo</th><th>Onde vive</th></tr></thead>
+        <tbody>
+          <tr><td>Geração manual de guia individual ou em lote</td><td>Pagamentos → Guias RAD</td></tr>
+          <tr><td>Log de entregas e reenvio de webhook</td><td>Integrações → Log de entregas</td></tr>
+          <tr><td>Registro do comprovante de pagamento</td><td>Integrações → Comprovantes recebidos</td></tr>
+          <tr><td>Validação do recolhimento junto à Receita</td><td>Conciliação financeira</td></tr>
+          <tr><td>Definição do método de pagamento por fornecedor</td><td>Contratos</td></tr>
+          <tr><td><strong>Alçada de aprovação por valor</strong></td><td>Removida do produto — ver 3.3</td></tr>
+          <tr><td><strong>Duplicata escritural</strong></td><td>Fora desta entrega por decisão de escopo</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">Por que a alçada saiu</div>
+      <p>O <strong>modo</strong> já responde quanta decisão humana existe: assistido aprova todo lote, automático não aprova nenhum. A alçada era um segundo controle sobre o mesmo eixo.</p>
+      <p>E, com as réguas de pagamento vivendo no ERP, duplicava um controle que já existe do outro lado. A fila de decisão continua, alimentada exclusivamente pelo modo assistido.</p>
+    </div>
+
+    <h3>3.4 Universo de seleção</h3>
+    <p>Um Registro Fiscal só é candidato quando satisfaz, cumulativamente:</p>
+    <div class="code-block"><code>nf.tipo === <span class="s">'entrada'</span>
+rf.metodoPagamento || nf.metodoPagamento === <span class="s">'RAD'</span>
+!pago                                              <span class="c">// sem dataPagamento e statusCredito fora de apropriado|utilizado</span>
+dentroDaCobertura(politica, nf, rf)                <span class="c">// o modelo de orquestração</span>
+valor &gt;= politica.valorMinimo                       <span class="c">// ignorado quando orquestracao = valor</span></code></div>
+
+  </div>
+
+  <!-- ══ 04 ══ -->
+  <div class="section" id="s04">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Modelo de dados</span></div>
+    <h3>4.1 Política de execução</h3>
+    <div class="code-block"><code>{
+  <span class="v">id</span>:            <span class="s">"POL-0001"</span>,
+  <span class="v">nome</span>:          <span class="s">"Matriz e filial SP"</span>,
+
+  <span class="c">// ── Modelo de orquestração — o critério de cobertura ──</span>
+  <span class="v">orquestracao</span>:  <span class="s">"cnpj" | "contrato" | "valor"</span>,
+  <span class="v">cnpjs</span>:         [<span class="s">"54.891.237/0001-48"</span>, ...],
+  <span class="v">contratos</span>:     [<span class="s">"CT-0011"</span>, ...],
+  <span class="v">baseValor</span>:     <span class="s">"cbs_ibs" | "imposto_total" | "nota" | "liquido"</span>,
+  <span class="v">faixaMin</span>:      <span class="n">470000</span>,
+  <span class="v">faixaMax</span>:      <span class="k">null</span>,            <span class="c">// null = sem teto</span>
+
+  <span class="c">// ── Modo — quanta decisão humana existe ──</span>
+  <span class="v">modo</span>:          <span class="s">"automatico" | "assistido" | "manual"</span>,
+
+  <span class="c">// ── Janela ──</span>
+  <span class="v">diasExecucao</span>:  [<span class="n">5</span>, <span class="n">20</span>],
+  <span class="v">horaExecucao</span>:  <span class="s">"06:00"</span>,
+  <span class="v">antecedencia</span>:  <span class="n">5</span>,                <span class="c">// dias antes do vencimento</span>
+
+  <span class="c">// ── Critérios de inclusão ──</span>
+  <span class="v">valorMinimo</span>:   <span class="n">0</span>,
+  <span class="v">excluirFlags</span>:  [<span class="s">"glosado"</span>, <span class="s">"vencido"</span>, <span class="s">"inconsistencia"</span>],
+
+  <span class="c">// ── Destino ──</span>
+  <span class="v">integracaoId</span>:  <span class="s">"INT-0001"</span> | <span class="k">null</span>,   <span class="c">// null = só plataforma</span>
+
+  <span class="v">ativo</span>:         <span class="k">true</span>,
+  <span class="v">ultimaExecucao</span>: <span class="s">"05/09/2026 06:00"</span>,
+  <span class="v">historico</span>:     [ <span class="c">/* auditoria, mesmo padrão de Contratos */</span> ]
+}</code></div>
+
+    <h3>4.2 Os três modelos de orquestração</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Modelo</th><th>Cobre</th><th>Campo</th><th>Quando usar</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Por CNPJ</strong></td><td>Todo RF de método RAD dos CNPJs compradores selecionados</td><td><code>cnpjs[]</code></td><td>A régua é do estabelecimento — filiais que fecham no mesmo dia, matriz com calendário próprio</td></tr>
+          <tr><td><strong>Por contrato</strong></td><td>Todo RF dos contratos de método RAD selecionados, em qualquer CNPJ</td><td><code>contratos[]</code></td><td>A régua é do acordo — um contrato de insumo com prazo diferente do resto</td></tr>
+          <tr><td><strong>Por valor</strong></td><td>As guias cujo valor cai na faixa, sobre a base escolhida</td><td><code>baseValor</code>, <code>faixaMin</code>, <code>faixaMax</code></td><td>Separar grão fino de alto valor — guias grandes com mais antecedência</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>4.3 A base de comparação da faixa</h3>
+    <p>Dizer “acima de R$ 400 mil” não basta: R$ 400 mil de nota e R$ 400 mil de guia descrevem conjuntos
+    completamente diferentes. A política declara sobre o que a faixa incide.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th><code>baseValor</code></th><th>Compara</th><th>Origem do dado</th></tr></thead>
+        <tbody>
+          <tr><td><code>cbs_ibs</code> <span class="chip teal">padrão</span></td><td>Valor CBS/IBS do DF — o valor do próprio registro fiscal, que vira a guia</td><td><code>rf.valor</code></td></tr>
+          <tr><td><code>imposto_total</code></td><td>IBS + CBS do documento inteiro, antes de virar duas guias</td><td><code>nf.ibs + nf.cbs</code></td></tr>
+          <tr><td><code>nota</code></td><td>Valor total do documento fiscal</td><td><code>rf.valorTotalNF</code></td></tr>
+          <tr><td><code>liquido</code></td><td>Valor da nota descontados os tributos — o que circula para o fornecedor</td><td><code>rf.valorLiquidoNF</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Faixas sobre bases diferentes <strong>não conflitam</strong>, porque não são comparáveis. A validação
+    de sobreposição só compara faixas da mesma base.</p>
+
+    <h3>4.4 Lote da execução</h3>
+    <div class="code-block"><code>{
+  <span class="v">politicaId</span>:   <span class="s">"POL-0001"</span>,
+  <span class="v">politicaNome</span>: <span class="s">"Matriz e filial SP"</span>,
+  <span class="v">orquestracao</span>: <span class="s">"cnpj"</span>,
+  <span class="v">cobertura</span>:    <span class="s">"2 CNPJs · Induspar Tecnologia S.A. — PR +1"</span>,
+  <span class="v">cnpjs</span>:        [ <span class="c">/* CNPJs efetivamente presentes no lote */</span> ],
+  <span class="v">incluidos</span>:    [ <span class="c">/* RFs que seguem */</span> ],
+  <span class="v">bloqueados</span>:   [ <span class="c">/* RFs retidos por flag, com o motivo */</span> ],
+  <span class="v">qtd</span>:          <span class="n">4</span>,
+  <span class="v">total</span>:        <span class="n">1516086.00</span>,
+  <span class="v">status</span>:       <span class="s">"programado" | "aguardando_aprovacao" | "bloqueado"</span>
+}</code></div>
+    <p>O lote é <strong>derivado, não persistido</strong>: recalculado a cada render a partir da política e
+    do universo de RFs. É o que garante que a simulação do editor e a fila de Pagamentos nunca divirjam.</p>
+
+    <h3>4.5 Evento de auditoria</h3>
+    <div class="code-block"><code>{
+  <span class="v">ts</span>:         <span class="s">"2026-09-08T14:51:45"</span>,
+  <span class="v">tipo</span>:       <span class="s">"criacao" | "edicao" | "ativacao" | "pausa" | "execucao"</span>,
+  <span class="v">usuario</span>:    <span class="s">"José da Silva"</span>,
+  <span class="v">alteracoes</span>: [{ <span class="v">campo</span>: <span class="s">"Cobertura"</span>, <span class="v">de</span>: <span class="s">"1 CNPJ"</span>, <span class="v">para</span>: <span class="s">"2 CNPJs"</span> }],
+  <span class="v">obs</span>:        <span class="s">""</span>
+}</code></div>
+
+  </div>
+
+  <!-- ══ 05 ══ -->
+  <div class="section" id="s05">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Máquinas de estado</span></div>
+    <h3>5.1 Modo da política</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Modo</th><th>O motor faz</th><th>O humano faz</th><th>Quando usar</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Automático</strong> <span class="chip teal">recomendado</span></td><td>Gera na janela e emite o webhook ao ERP</td><td>Só exceções: erro de geração e falha de entrega</td><td><strong>Estado pretendido.</strong> Configurou, roda sozinho</td></tr>
+          <tr><td><strong>Assistido</strong></td><td>Monta o lote na janela e aguarda</td><td>Aprova a cada janela</td><td>Transitório — conferir o recorte nos primeiros ciclos</td></tr>
+          <tr><td><strong>Manual</strong></td><td>Nada</td><td>Tudo: filtrar, selecionar, gerar</td><td>Comportamento anterior à automação</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Salvar em modo manual mantém a política inativa: <code>ativo = (modo !== 'manual')</code>.</p>
+
+    <h3>5.2 Status do lote</h3>
+    <div class="code-block"><code>bloqueados.length &amp;&amp; !incluidos.length  → <span class="s">"bloqueado"</span>
+modo === <span class="s">"assistido"</span>                    → <span class="s">"aguardando_aprovacao"</span>
+caso contrário                          → <span class="s">"programado"</span></code></div>
+
+    <div class="state-grid">
+      <div class="state-row"><span class="state-name sn-green">programado</span>
+        <span class="state-desc">Segue na janela e o webhook é emitido sem intervenção.</span></div>
+      <div class="state-row"><span class="state-name sn-amber">aguardando_aprovacao</span>
+        <span class="state-desc">Política em modo assistido. Fica na fila de decisão até a aprovação da janela.</span></div>
+      <div class="state-row"><span class="state-name sn-purple">bloqueado</span>
+        <span class="state-desc">Todas as notas do recorte bateram numa flag. Nada a gerar até a causa ser tratada.</span></div>
+    </div>
+
+    <h3>5.3 Flags que retêm a nota</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Flag</th><th>Significado</th><th>Onde se resolve</th></tr></thead>
+        <tbody>
+          <tr><td><code>glosado</code></td><td>Crédito glosado pelo Fisco</td><td>Crédito</td></tr>
+          <tr><td><code>vencido</code></td><td>Prazo de apropriação vencido</td><td>Crédito</td></tr>
+          <tr><td><code>inconsistencia</code></td><td>Divergência entre o RF e o TF correspondente</td><td>Inconsistências</td></tr>
+          <tr><td><code>em_risco</code></td><td>Registro sinalizado em risco</td><td>Crédito</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>A nota retida <strong>não é descartada</strong>: aparece apartada na fila de decisão, com o motivo.
+    Resolver a causa no módulo de origem a devolve ao pool para a próxima janela.</p>
+
+  </div>
+
+  <!-- ══ 06 ══ -->
+  <div class="section" id="s06">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Arquitetura da tela</span></div>
+    <p>O módulo ocupa uma view de configuração e empresta uma aba a Pagamentos.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tela</th><th>Caminho</th><th>Papel</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Políticas de execução</strong></td><td><code>#admin-exec-rad</code></td><td>Lista as políticas, mede sobreposição e abre o editor</td></tr>
+          <tr><td><strong>Editor de política</strong></td><td>drawer sobre <code>#admin-exec-rad</code></td><td>Seis blocos e o histórico de alterações</td></tr>
+          <tr><td><strong>Execução Programada</strong></td><td><code>#pag-exec</code></td><td>Face operacional: próxima execução, fila de decisão, histórico e falhas</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>6.1 Colunas da listagem</h3>
+    <p style="font-size:12.5px">Política · Orquestração · Cobertura · Modo · Janela · Antecedência ·
+    Integração · Última execução · Situação</p>
+    <p>A coluna <strong>Cobertura</strong> resolve em texto o que cada modelo alcança —
+    <em>“2 CNPJs · Induspar — PR +1”</em>, <em>“1 contrato · CT-0011”</em>,
+    <em>“guia CBS/IBS acima de R$ 470.000,00”</em>. É a única forma de comparar políticas de modelos
+    diferentes na mesma lista.</p>
+
+    <h3>6.2 Blocos do editor</h3>
+    <div class="code-block"><code><span class="n">1.</span> Identificação        <span class="c">// nome da política</span>
+<span class="n">2.</span> Modelo de orquestração  <span class="c">// três cartões + o seletor de cobertura correspondente</span>
+<span class="n">3.</span> Modo de operação     <span class="c">// três cartões</span>
+<span class="n">4.</span> Janela de execução   <span class="c">// dias, hora, antecedência + prévia</span>
+<span class="n">5.</span> Critérios de inclusão <span class="c">// valor mínimo + flags</span>
+<span class="n">6.</span> Destino              <span class="c">// conexão rad_erp + saúde da conexão</span>
+   Histórico de alterações</code></div>
+
+  </div>
+
+  <!-- ══ 07 ══ -->
+  <div class="section" id="s07">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Funcionalidades detalhadas</span></div>
+    <p class="sec-sub">Quinze funcionalidades. Cada bloco descreve comportamento, elementos de interface e pontos de integração.</p>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-01</span>
+        <span class="feat-name">Listar as políticas com sua cobertura</span>
+        <span class="feat-loc">#t-rad-politicas</span>
+      </div>
+      <div class="feat-body">
+        <p>Uma linha por política, com nome, modelo de orquestração, o que a política alcança em texto,
+        modo, janela, antecedência, conexão de destino, última execução e situação.</p>
+        <p>Cada linha traz também quantas guias a política produziria na próxima janela, calculado ao vivo
+        pelo motor — a listagem não é um cadastro estático, é uma previsão.</p>
+        <h4>Filtros</h4>
+        <ul class="plain">
+          <li>Orquestração, modo e integração vinculada</li>
+          <li>Busca livre sobre nome, ID, CNPJ e número de contrato — o usuário procura pelo que conhece,
+          não pelo que a política chama de si mesma</li>
+        </ul>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-02</span>
+        <span class="feat-name">Alertar sobreposição entre políticas ativas</span>
+        <span class="feat-loc">#rad-sobreposicao</span>
+      </div>
+      <div class="feat-body">
+        <p>A listagem calcula quais RFs são reivindicados por mais de uma política ativa e nomeia o par.</p>
+    <div class="callout warn">
+      <div class="ct">É o único ponto onde a colisão entre modelos aparece</div>
+      <p>Dentro do mesmo modelo a duplicidade é determinística e barrada na configuração. Entre modelos diferentes — uma política por CNPJ e outra por valor — só existe sobre notas concretas, e não há como decidir no momento do salvamento.</p>
+      <p>Sem o aviso, a mesma guia sai duas vezes e a segunda volta do ERP como <code>DFE_NAO_ENCONTRADO</code>.</p>
+    </div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-03</span>
+        <span class="feat-name">Criar e editar política</span>
+        <span class="feat-loc">drawer</span>
+      </div>
+      <div class="feat-body">
+        <p>Clique na linha abre o editor com a política; <em>Nova política</em> abre em branco, com
+        orquestração por CNPJ como padrão e modo automático pré-selecionado.</p>
+        <h4>O editor trabalha sobre uma cópia</h4>
+        <p>Cancelar precisa desfazer. A versão anterior escrevia direto na política a cada tecla, e sair sem
+        salvar deixava as alterações valendo. A cópia também é o que permite gravar no histórico o diff
+        campo a campo, em vez de um evento vazio.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-04</span>
+        <span class="feat-name">Escolher o modelo de orquestração</span>
+        <span class="feat-loc">#rad-ed-cobertura</span>
+      </div>
+      <div class="feat-body">
+        <p>Três cartões, cada um explicando o que a política passa a cobrir e quando o modelo se aplica.
+        Trocar o modelo redesenha só o seletor de cobertura; o que estava marcado no modelo anterior fica
+        guardado na política e volta se o usuário voltar.</p>
+        <h4>Seletor por modelo</h4>
+        <ul class="plain">
+          <li><strong>Por CNPJ</strong> — lista de estabelecimentos com marcação múltipla. Os já usados por
+          outra política aparecem desabilitados, nomeando a dona</li>
+          <li><strong>Por contrato</strong> — só contratos de método RAD, com fornecedor, vigência e prazo
+          à vista; os já usados também desabilitados</li>
+          <li><strong>Por valor</strong> — a base de comparação, mínimo e máximo, com o máximo vazio
+          significando “acima de”, e a lista das outras faixas configuradas sobre a mesma base</li>
+        </ul>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-05</span>
+        <span class="feat-name">Definir a janela de execução</span>
+        <span class="feat-loc">#rad-ed-previa</span>
+      </div>
+      <div class="feat-body">
+        <p>Dias do mês em seleção múltipla, hora e antecedência em dias sobre o vencimento.</p>
+        <h4>Prévia textual</h4>
+        <div class="code-block"><code>Executa <span class="s">dias 5, 20</span> às <span class="s">06:00</span>, incluindo guias que vencem em até <span class="n">5</span> dias.
+Hoje isso produziria <span class="n">4</span> guia(s) somando <span class="n">R$ 1.516.086,00</span> e seguiria direto ao ERP, sem intervenção.</code></div>
+        <p>A prévia é recalculada a cada alteração de qualquer campo. Sem ela, o usuário configura no escuro
+        e descobre o efeito na próxima janela — quando já virou dinheiro.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-06</span>
+        <span class="feat-name">Definir critérios de inclusão</span>
+        <span class="feat-loc">#rad-ed-vmin-wrap</span>
+      </div>
+      <div class="feat-body">
+        <p>Valor mínimo por guia — <strong>oculto quando a orquestração já é por valor</strong>, onde a
+        faixa é o próprio piso — e as flags que retêm a nota fora do lote.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-07</span>
+        <span class="feat-name">Vincular a conexão de destino</span>
+        <span class="feat-loc">#rad-ed-intg</span>
+      </div>
+      <div class="feat-body">
+        <p>Só conexões de tipo <code>rad_erp</code> aparecem: as de entrada não têm endpoint de destino e
+        as de outros contextos não emitem estes eventos. Sem o filtro, a política ofereceria destinos
+        inválidos.</p>
+        <p>Abaixo do seletor, a saúde da conexão escolhida — taxa de entrega, volume e se está ativa.
+        A opção <em>somente plataforma</em> gera sem emitir webhook.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-08</span>
+        <span class="feat-name">Validar antes de salvar</span>
+        <span class="feat-loc">#rad-ed-msg</span>
+      </div>
+      <div class="feat-body">
+        <ul class="plain">
+          <li>Nome obrigatório</li>
+          <li>Ao menos um CNPJ, ou um contrato, conforme o modelo</li>
+          <li>Na faixa de valor, máximo maior que mínimo quando informado</li>
+          <li><strong>Cobertura já usada por outra política do mesmo modelo</strong> barra o salvamento e
+          nomeia a dona</li>
+          <li>Ao menos um dia de execução, exceto em modo manual</li>
+        </ul>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-09</span>
+        <span class="feat-name">Registrar o histórico de alterações</span>
+        <span class="feat-loc">drawer · timeline</span>
+      </div>
+      <div class="feat-body">
+        <p>Timeline com autor, momento e diff campo a campo — mesmo padrão implementado em Contratos.
+        O diff cobre nome, orquestração, CNPJs, contratos, base e faixa, além de modo, janela, antecedência,
+        valor mínimo e integração.</p>
+        <p>Numa criação, o próprio evento é o começo do histórico; o marcador de “carga inicial” só existe
+        para política que já existia quando a auditoria passou a ser registrada.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-10</span>
+        <span class="feat-name">Ativar e pausar em massa</span>
+        <span class="feat-loc">#rad-lote-bar</span>
+      </div>
+      <div class="feat-body">
+        <p>Seleção múltipla de políticas, com ativação e pausa em lote — útil em fechamento contábil ou
+        incidente de integração. Cada mudança entra no histórico da política afetada.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-11</span>
+        <span class="feat-name">Medir a cobertura das políticas</span>
+        <span class="feat-loc">#rad-exec-proxima-lista</span>
+      </div>
+      <div class="feat-body">
+        <p>Percentual das guias RAD pendentes sob alguma política ativa, quantas ficam de fora, o valor
+        correspondente e em quais estabelecimentos estão.</p>
+    <div class="callout warn">
+      <div class="ct">A listagem por política escondeu o que fica de fora</div>
+      <p>Quando cada CNPJ tinha a própria política, a ausência de cobertura era visível de graça: o estabelecimento aparecia na lista marcado como sem política. Com recorte por contrato ou por faixa de valor, uma guia pode não ser alcançada por nenhuma política <em>sem que nada indique isso em lugar algum</em>.</p>
+      <p>A barra de cobertura recupera esse número, e é o primeiro elemento da aba Execução Programada.</p>
+    </div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-12</span>
+        <span class="feat-name">Mostrar o lote antes de acontecer</span>
+        <span class="feat-loc">#rad-exec-proxima</span>
+      </div>
+      <div class="feat-body">
+        <p>Por política: badges de orquestração e modo, a cobertura em texto, a próxima janela, a
+        quantidade de guias e o valor total. Expandir abre a tabela das guias — RF, fornecedor,
+        <strong>CNPJ comprador</strong>, <strong>contrato</strong>, tipo fiscal, valor e data.</p>
+        <p>As duas colunas do meio são necessárias porque, com orquestração por contrato ou por valor, um
+        lote reúne estabelecimentos diferentes.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-13</span>
+        <span class="feat-name">Antecipar execução e excluir nota do lote</span>
+        <span class="feat-loc">#rad-exec-proxima</span>
+      </div>
+      <div class="feat-body">
+        <p>Rodar a janela agora, fora do calendário — para fechamento antecipado ou recuperação de janela
+        perdida. E retirar um RF específico do próximo lote, com o evento registrado na política.</p>
+        <p>São escapes que evitam desligar a política inteira por causa de uma nota.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-14</span>
+        <span class="feat-name">Listar as guias represadas por aprovação</span>
+        <span class="feat-loc">#rad-exec-aprov-lista</span>
+      </div>
+      <div class="feat-body">
+        <p>Só políticas em <strong>modo assistido</strong> chegam aqui: o modo é o único eixo que retém
+        lote. Cada lote abre a tabela das guias retidas, ordenada por valor decrescente, com o peso de cada
+        uma no total.</p>
+        <p>Acima da tabela, a concentração: quantos CNPJs, quantos contratos e qual é a maior guia.
+        <strong>Aberta por padrão</strong> — quem precisa decidir sobre um lote precisa ver o que está
+        dentro dele; esconder atrás de um clique transforma a aprovação em ato de fé.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-15</span>
+        <span class="feat-name">Separar retenções por flag</span>
+        <span class="feat-loc">#rad-exec-aprov-lista</span>
+      </div>
+      <div class="feat-body">
+        <p>Notas retidas pelos critérios da política aparecem apartadas dos lotes que aguardam aprovação.
+        São problemas distintos, com donos distintos: um exige aprovar a janela, o outro exige resolver a
+        causa no módulo correspondente.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ 08 ══ -->
+  <div class="section" id="s08">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Indicadores (KPIs)</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>KPI</th><th>Fórmula</th><th>Cor</th><th>O que decide</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Políticas ativas</strong></td><td>políticas com <code>ativo && modo !== manual</code> sobre o total</td><td>neutra</td><td>Se a automação está de fato ligada</td></tr>
+          <tr><td><em>subtítulo</em></td><td>CNPJs sem <strong>nenhuma</strong> guia coberta</td><td>âmbar quando &gt; 0</td><td>Recupera a leitura que a listagem por CNPJ dava de graça</td></tr>
+          <tr><td><strong>Guias na próxima janela</strong></td><td>soma de <code>qtd</code> dos lotes ativos, com o valor</td><td>teal</td><td>Dimensiona o que está prestes a sair</td></tr>
+          <tr><td><strong>Aguardando aprovação</strong></td><td>lotes com status <code>aguardando_aprovacao</code></td><td>âmbar</td><td>Quanto está retido por decisão humana</td></tr>
+          <tr><td><strong>Falhas de integração</strong></td><td>entregas com falha + comprovantes rejeitados</td><td>vermelho quando &gt; 0</td><td>O estado mais grave: uma ponta acha que pagou e a outra não registrou</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <div class="ct">A barra de cobertura é o indicador que faltava</div>
+      <p>Os quatro KPIs medem o que as políticas <em>fazem</em>. A barra de cobertura, em Execução Programada, mede o que elas <strong>não alcançam</strong> — e é essa a pergunta que decide se vale criar mais uma.</p>
+    </div>
+
+  </div>
+
+  <!-- ══ 09 ══ -->
+  <div class="section" id="s09">
+    <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Requisitos funcionais</span></div>
+    <p class="sec-sub">Prioridade: <strong>M</strong> (must — bloqueia release), <strong>S</strong> (should), <strong>C</strong> (could).</p>
+    <h3>9.1 Política — criação e cobertura</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-EXR-001</td><td>O sistema deve permitir criar quantas políticas de execução a organização precisar, sem limite.</td><td>Criar quatro políticas e todas aparecem na listagem, cada uma com o próprio lote calculado.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-002</td><td>Toda política deve ter nome não vazio.</td><td>Salvar sem nome é bloqueado com mensagem explícita.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-003</td><td>A política deve declarar um modelo de orquestração entre <code>cnpj</code>, <code>contrato</code> e <code>valor</code>.</td><td>Política nova nasce com <code>cnpj</code>; trocar o modelo redesenha o seletor de cobertura.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-004</td><td>Trocar o modelo de orquestração deve preservar a seleção do modelo anterior na política.</td><td>Marcar dois CNPJs, trocar para contrato e voltar para CNPJ devolve os dois marcados.</td><td>S</td></tr>
+          <tr><td class="rid">RF-EXR-005</td><td>Na orquestração por CNPJ, a política deve exigir ao menos um CNPJ.</td><td>Salvar sem CNPJ é bloqueado.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-006</td><td>Na orquestração por contrato, o seletor deve listar exclusivamente contratos de método <code>rad</code>.</td><td>Contratos de método split ou fornecedor não aparecem.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-007</td><td>Na orquestração por valor, a política deve declarar a base de comparação.</td><td>O seletor oferece as quatro bases e a escolhida é gravada em <code>baseValor</code>.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-008</td><td>O campo máximo da faixa vazio deve significar “sem teto”.</td><td>Faixa 470000 / vazio inclui uma guia de R$ 900.000,00.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-009</td><td>O máximo, quando informado, deve ser maior que o mínimo.</td><td>Máximo igual ou menor bloqueia o salvamento.</td><td>M</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.2 Motor de seleção</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-EXR-010</td><td>O motor deve considerar apenas RFs de método RAD, de documento de entrada e ainda não pagos.</td><td>RFs de split, de saída ou já apropriados nunca entram no lote.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-011</td><td>Na orquestração por CNPJ, o motor deve incluir apenas RFs cujo <code>nf.cnpjComprador</code> esteja na lista da política.</td><td>Uma política com um CNPJ produz lote só com notas daquele estabelecimento.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-012</td><td>Na orquestração por contrato, o motor deve incluir apenas RFs cujo <code>contratoId</code> esteja na lista.</td><td>Notas sem contrato vinculado ficam fora.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-013</td><td>Na orquestração por valor, o motor deve comparar o valor da base declarada contra a faixa.</td><td>Trocar de <code>cbs_ibs</code> para <code>nota</code> muda o conjunto selecionado.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-014</td><td>O valor mínimo por guia deve ser ignorado quando a orquestração for por valor.</td><td>O campo some do editor e não participa da seleção.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-015</td><td>RFs que batem numa flag de exclusão devem ser separados, não descartados.</td><td>O lote traz <code>incluidos</code> e <code>bloqueados</code>, cada bloqueado com o motivo.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-016</td><td>O lote deve ser recalculado a cada render, nunca persistido.</td><td>Alterar a política e reabrir a fila mostra o novo recorte sem passo de sincronização.</td><td>M</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.3 Conflito e sobreposição</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-EXR-017</td><td>Duas políticas do mesmo modelo não podem cobrir o mesmo CNPJ ou o mesmo contrato.</td><td>Salvar com cobertura repetida é bloqueado, nomeando a política dona.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-018</td><td>Duas políticas por valor sobre a mesma base não podem ter faixas que se cruzam.</td><td>Faixa 300k–500k e 400k–600k sobre <code>cbs_ibs</code> não coexistem.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-019</td><td>Faixas sobre bases diferentes não devem conflitar entre si.</td><td>Faixa sobre <code>nota</code> e faixa sobre <code>cbs_ibs</code> com os mesmos números coexistem.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-020</td><td>O sistema deve medir a sobreposição real de RFs entre políticas ativas e exibi-la na listagem.</td><td>Duas políticas de modelos diferentes reivindicando o mesmo RF produzem alerta nomeando o par.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-021</td><td>O CNPJ ou contrato já usado por outra política deve aparecer desabilitado no seletor.</td><td>A opção fica esmaecida e nomeia a política dona.</td><td>S</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.4 Modo e fila de decisão</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-EXR-022</td><td>O modo <code>automatico</code> deve gerar e emitir o webhook sem qualquer aprovação.</td><td>O lote nasce com status <code>programado</code>.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-023</td><td>O modo <code>assistido</code> deve reter o lote até a aprovação da janela.</td><td>Status <code>aguardando_aprovacao</code> e o lote aparece na fila de decisão.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-024</td><td>O modo <code>manual</code> deve manter a política inativa.</td><td>Salvar em manual grava <code>ativo = false</code> e o motor não age.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-025</td><td>Política nova deve nascer em modo automático.</td><td>Abrir o editor em branco traz automático pré-selecionado e marcado como recomendado.</td><td>S</td></tr>
+          <tr><td class="rid">RF-EXR-026</td><td>A fila de decisão deve listar as guias represadas de cada lote, aberta por padrão.</td><td>A tabela mostra RF, fornecedor, CNPJ comprador, contrato, tipo, valor, data e o peso no lote.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-027</td><td>A listagem de guias represadas deve vir ordenada por valor decrescente.</td><td>A primeira linha é a maior guia do lote.</td><td>S</td></tr>
+          <tr><td class="rid">RF-EXR-028</td><td>A fila deve exibir a concentração do lote: CNPJs, contratos e maior guia.</td><td>Um lote de 4 guias em 1 CNPJ e 2 contratos informa exatamente isso.</td><td>S</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.5 Janela e simulação</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-EXR-029</td><td>A janela deve aceitar múltiplos dias do mês, hora e antecedência em dias.</td><td>Dias 5 e 20 às 06:00 com antecedência 5 são gravados e refletidos na prévia.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-030</td><td>Política ativa não manual deve ter ao menos um dia de execução.</td><td>Salvar sem dia é bloqueado.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-031</td><td>A prévia deve simular a próxima execução em quantidade e valor, a cada alteração de campo.</td><td>Mudar a antecedência recalcula a prévia imediatamente.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-032</td><td>A prévia deve dizer o destino conforme o modo.</td><td>Automático informa que seguiria direto ao ERP; assistido, que aguardaria aprovação.</td><td>S</td></tr>
+          <tr><td class="rid">RF-EXR-033</td><td>Deve ser possível antecipar a execução de um lote fora do calendário.</td><td>A ação pede confirmação, registra evento na política e atualiza a última execução.</td><td>S</td></tr>
+          <tr><td class="rid">RF-EXR-034</td><td>Deve ser possível excluir um RF específico do próximo lote.</td><td>O RF sai do lote e o evento fica registrado.</td><td>C</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.6 Destino</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-EXR-035</td><td>O seletor de destino deve oferecer apenas conexões de tipo <code>rad_erp</code>.</td><td>Conexões de ingestão de DFs ou garantia de crédito não aparecem.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-036</td><td>O editor deve exibir a saúde da conexão escolhida.</td><td>Taxa de entrega, volume, falhas e aviso quando a conexão está inativa.</td><td>S</td></tr>
+          <tr><td class="rid">RF-EXR-037</td><td>A política sem conexão deve gerar a guia e mantê-la só na plataforma.</td><td>A opção “somente plataforma” não emite webhook e a prévia diz isso.</td><td>M</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.7 Auditoria</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-EXR-038</td><td>O editor deve operar sobre uma cópia da política.</td><td>Alterar campos e cancelar não muda nada na política real.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-039</td><td>Toda alteração salva deve gerar evento de auditoria com diff campo a campo.</td><td>Mudar o nome grava um evento com de/para do campo Nome.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-040</td><td>O diff deve cobrir nome, orquestração, cobertura, base, faixa, modo, janela, antecedência, valor mínimo e integração.</td><td>Cada campo alterado aparece nomeado no evento.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-041</td><td>A criação deve iniciar o histórico com o próprio evento, sem marcador de carga inicial.</td><td>Política nova tem exatamente um evento após salvar.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-042</td><td>Ativação e pausa, individuais ou em lote, devem gerar evento.</td><td>Pausar três políticas grava três eventos.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-043</td><td>A listagem deve permitir ativar e pausar em massa.</td><td>Seleção múltipla com barra de ação e confirmação do resultado.</td><td>S</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.8 Execução Programada</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-EXR-044</td><td>A aba Execução Programada deve exibir a cobertura das políticas sobre o universo pendente.</td><td>Percentual, quantidade fora, valor e os estabelecimentos em que estão.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-045</td><td>O detalhe do lote deve mostrar CNPJ comprador e contrato de cada guia.</td><td>Um lote de orquestração por contrato exibe guias de estabelecimentos diferentes, identificados.</td><td>M</td></tr>
+          <tr><td class="rid">RF-EXR-046</td><td>O histórico de execuções deve identificar a política pelo nome, não pelo CNPJ.</td><td>A coluna traz o nome e o ID da política.</td><td>M</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 10 ══ -->
+  <div class="section" id="s10">
+    <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Regras de negócio</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Regra</th><th>Razão</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RN-EXR-01</td><td>Só RF de método RAD entra no universo da política.</td><td>Split Payment e Fornecedor não geram guia de recolhimento pelo adquirente.</td></tr>
+          <tr><td class="rid">RN-EXR-02</td><td>RF já pago ou apropriado nunca entra no lote.</td><td>Gerar guia para o que já foi recolhido produz cobrança em duplicidade.</td></tr>
+          <tr><td class="rid">RN-EXR-03</td><td>Um CNPJ só pode estar em uma política por CNPJ.</td><td>Em duas, a mesma guia sairia duas vezes.</td></tr>
+          <tr><td class="rid">RN-EXR-04</td><td>Um contrato só pode estar em uma política por contrato.</td><td>Mesma razão da anterior.</td></tr>
+          <tr><td class="rid">RN-EXR-05</td><td>Faixas de valor sobre a mesma base não podem se cruzar.</td><td>A interseção geraria a mesma guia em dois lotes.</td></tr>
+          <tr><td class="rid">RN-EXR-06</td><td>Faixas sobre bases diferentes não são comparáveis e não conflitam na configuração.</td><td>R$ 400 mil de nota e R$ 400 mil de guia descrevem conjuntos distintos.</td></tr>
+          <tr><td class="rid">RN-EXR-07</td><td>A sobreposição entre modelos diferentes é medida sobre RFs concretos, não impedida.</td><td>Não há como decidir no salvamento; a listagem mede e nomeia o par.</td></tr>
+          <tr><td class="rid">RN-EXR-08</td><td>Modo manual implica política inativa.</td><td>Manual é a ausência de automação, não uma automação desligada por engano.</td></tr>
+          <tr><td class="rid">RN-EXR-09</td><td>Nota retida por flag é separada, com o motivo, e volta ao pool quando a causa é resolvida.</td><td>Descartar esconderia crédito em risco.</td></tr>
+          <tr><td class="rid">RN-EXR-10</td><td>O valor mínimo não se aplica quando a orquestração é por valor.</td><td>A faixa já é o piso; dois pisos seriam ambíguos.</td></tr>
+          <tr><td class="rid">RN-EXR-11</td><td>Só conexões <code>rad_erp</code> podem ser destino de uma política.</td><td>As de entrada não têm endpoint; as de outros contextos não emitem estes eventos.</td></tr>
+          <tr><td class="rid">RN-EXR-12</td><td>Política sem conexão gera a guia e a mantém na plataforma.</td><td>A geração tem valor mesmo sem integração — o que não se pode é fingir que entregou.</td></tr>
+          <tr><td class="rid">RN-EXR-13</td><td>Cancelar a edição não altera a política.</td><td>Editor que persiste sem salvar torna qualquer exploração destrutiva.</td></tr>
+          <tr><td class="rid">RN-EXR-14</td><td>Toda alteração de política é auditada com autor, momento e diff.</td><td>A régua de execução move dinheiro; mudança sem rastro é indefensável.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 11 ══ -->
+  <div class="section" id="s11">
+    <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Requisitos não funcionais</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RNF-EXR-01</td><td>O lote de todas as políticas ativas deve ser calculado em menos de 300 ms para 5 mil RFs.</td><td>Medido no render da listagem e da aba Execução Programada.</td></tr>
+          <tr><td class="rid">RNF-EXR-02</td><td>O índice RF → política deve ser construído sob demanda e invalidado a cada mudança de política.</td><td>Sem ele, responder “qual política cobre este RF” por linha de tabela custaria uma varredura completa por linha.</td></tr>
+          <tr><td class="rid">RNF-EXR-03</td><td>A listagem e a fila devem derivar do mesmo motor de seleção.</td><td>Duas telas discordando sobre o mesmo lote é pior que nenhuma das duas.</td></tr>
+          <tr><td class="rid">RNF-EXR-04</td><td>Nenhum valor monetário deve ser recalculado a partir de texto formatado.</td><td>A formatação é sempre a última etapa.</td></tr>
+          <tr><td class="rid">RNF-EXR-05</td><td>Cores de estado devem vir de tokens do design system, nunca de literais.</td><td>Auditoria dos arquivos do módulo não encontra hex nem rgba literal.</td></tr>
+          <tr><td class="rid">RNF-EXR-06</td><td>A tabela de políticas deve manter legibilidade em viewport de 1280 px, com rolagem horizontal própria.</td><td>O corpo da página nunca rola lateralmente.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 12 ══ -->
+  <div class="section" id="s12">
+    <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Integrações e dependências</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Dependência</th><th>Direção</th><th>O que troca</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Contratos</strong></td><td>consome</td><td>Método de pagamento por CNPJ fornecedor e a lista de contratos RAD para o seletor.</td></tr>
+          <tr><td><strong>Organização</strong></td><td>consome</td><td>CNPJs compradores ativos.</td></tr>
+          <tr><td><strong>Ingestão</strong></td><td>consome</td><td>Os RFs e seus valores, datas, flags e vínculo contratual.</td></tr>
+          <tr><td><strong>Integrações</strong></td><td>usa</td><td>A conexão <code>rad_erp</code> que emite <code>rad.darf_recebida</code> e recebe o comprovante.</td></tr>
+          <tr><td><strong>Pagamentos</strong></td><td>fornece</td><td>Os lotes que a aba Execução Programada exibe e a origem da guia na listagem.</td></tr>
+          <tr><td><strong>Crédito</strong></td><td>fornece</td><td>A guia paga, que habilita a apropriação.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>12.1 Contrato de saída</h3>
+    <div class="code-block"><code><span class="c">// Emitido pelo SplitHub à conexão vinculada, por guia gerada</span>
+POST {webhookUrl}
+{
+  <span class="v">event</span>:      <span class="s">"rad.darf_recebida"</span>,
+  <span class="v">created_at</span>: <span class="s">"2026-09-08T06:00:12Z"</span>,
+  <span class="v">data</span>: {
+    <span class="v">dfe_key</span>:      <span class="s">"3526..."</span>,
+    <span class="v">darf_id</span>:      <span class="s">"darf_a71f39"</span>,
+    <span class="v">return_code</span>:  <span class="s">"DARF_GERADO" | "DFE_NAO_ENCONTRADO" | "VALOR_PARCIAL_SUPERIOR_DFE"</span>,
+    <span class="v">guide_number</span>: <span class="s">"6912..."</span>,   <span class="c">// IBS 6912 · CBS 5952</span>
+    <span class="v">due_date</span>:     <span class="s">"2026-09-21"</span>
+  }
+}</code></div>
+    <p>Dois dos três <code>return_code</code> são erro. A fila de erro de geração fica em
+    Pagamentos → Execução Programada → Histórico e falhas.</p>
+
+  </div>
+
+  <!-- ══ 13 ══ -->
+  <div class="section" id="s13">
+    <div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Glossário</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Termo</th><th>Definição</th></tr></thead>
+        <tbody>
+          <tr><td><strong>RAD</strong></td><td>Recolhimento pelo Adquirente. A opção de o comprador assumir o pagamento do IBS e CBS de um documento fiscal.</td></tr>
+          <tr><td><strong>Política de execução</strong></td><td>Régua que declara o que a automação cobre, quando roda e quanta decisão humana existe.</td></tr>
+          <tr><td><strong>Modelo de orquestração</strong></td><td>O critério de cobertura: por CNPJ, por contrato ou por faixa de valor.</td></tr>
+          <tr><td><strong>Base de valor</strong></td><td>Sobre qual grandeza a faixa incide: guia CBS/IBS, imposto total do DF, valor da nota ou valor líquido.</td></tr>
+          <tr><td><strong>Modo</strong></td><td>Quanta decisão humana a política exige: automático, assistido ou manual.</td></tr>
+          <tr><td><strong>Lote</strong></td><td>Conjunto derivado de RFs que uma política produziria na próxima janela.</td></tr>
+          <tr><td><strong>Janela</strong></td><td>Dias do mês e hora em que o motor executa.</td></tr>
+          <tr><td><strong>Antecedência</strong></td><td>Quantos dias antes do vencimento a guia é incluída.</td></tr>
+          <tr><td><strong>Cobertura</strong></td><td>O que uma política alcança, expresso em texto.</td></tr>
+          <tr><td><strong>Sobreposição</strong></td><td>RF reivindicado por mais de uma política ativa.</td></tr>
+          <tr><td><strong>Flag de exclusão</strong></td><td>Marcador que retém a nota fora do lote sem descartá-la.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 14 ══ -->
+  <div class="section" id="s14">
+    <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
+    <div class="ver-row">
+      <span class="ver-num">v1.0</span>
+      <span class="ver-desc"><strong>08/09/2026</strong> — Primeira versão. Documenta o módulo criado para
+      fechar a lacuna 2 da jornada J-03: políticas de execução com modelo de orquestração por CNPJ, por
+      contrato ou por faixa de valor sobre quatro bases; três modos de operação; motor de seleção; detecção
+      de sobreposição; simulação; auditoria com diff; e a aba Execução Programada em Pagamentos, com barra
+      de cobertura e listagem das guias represadas. 15 funcionalidades, 46 requisitos funcionais, 14 regras
+      de negócio e 6 RNFs.</span>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>
