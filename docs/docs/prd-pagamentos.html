@@ -343,7 +343,8 @@ a.xref:hover { border-bottom-style: solid; }
           <li>Filtro multi-período por origem de fato gerador</li>
           <li>4 KPIs de posição consolidada</li>
           <li>Painel de 11 filtros avançados</li>
-          <li>Tabela de 19 colunas com gestão via ShColMgr, em duas abas</li>
+          <li>Tabela de 19 colunas com gestão via ShColMgr</li>
+          <li>Aba <strong>Execução Programada</strong> — a operação das políticas de execução; a configuração delas fica em <a class="xref" href="prd-execucao-rad.html">Execução RAD</a></li>
           <li>Seleção múltipla com barra de ação em lote</li>
           <li>Geração de Guia IBS (cód. 6912) e DARF CBS (cód. 5952)</li>
           <li>Linha digitável e QR Code PIX (BR Code)</li>
@@ -536,7 +537,7 @@ a.xref:hover { border-bottom-style: solid; }
   <!-- ══ 05 ══ -->
   <div class="section" id="s05">
     <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Funcionalidades detalhadas</span></div>
-    <p class="sec-sub">Dez funcionalidades compõem o módulo. Cada bloco descreve comportamento, elementos de interface, estados e pontos de integração.</p>
+    <p class="sec-sub">Onze funcionalidades compõem o módulo, em duas abas. Cada bloco descreve comportamento, elementos de interface, estados e pontos de integração.</p>
 
     <!-- F01 -->
     <div class="feat">
@@ -1030,6 +1031,75 @@ e2eId = <span class="s">'E'</span> + ispb + dtPart + rndPart;</code></div>
 
         <h4>Restrição por perfil</h4>
         <p>O seletor <code>[data-perfil="fornecedor"] #nav-pagamentos-btn</code> oculta o módulo para o perfil Fornecedor — pagamentos RAD são operação exclusiva do adquirente.</p>
+      </div>
+    </div>
+
+    <!-- F11 -->
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-11</span>
+        <span class="feat-name">Aba Execução Programada</span>
+        <span class="feat-loc">#pag-exec</span>
+      </div>
+      <div class="feat-body">
+        <p>Segunda aba do módulo, ao lado de <em>Guias RAD</em>. É a face operacional das políticas de
+        execução: mostra o que o motor produzirá, o que aguarda decisão e o que já saiu.</p>
+
+        <div class="callout info">
+          <div class="ct">A aba mora aqui; o motor, não</div>
+          <p>Esta seção documenta <strong>o que a aba apresenta e o que o operador faz nela</strong>.
+          A política que alimenta os lotes — modelo de orquestração, modos, critérios, janela e auditoria —
+          é documentada no PRD de <a class="xref" href="prd-execucao-rad.html">Execução RAD</a>.</p>
+          <p>A separação segue a do produto: a configuração vive em Configurações, a operação vive em
+          Pagamentos.</p>
+        </div>
+
+        <h4>Seção 1 — Próxima execução</h4>
+        <ul class="plain">
+          <li><strong>Barra de cobertura</strong> — percentual das guias RAD pendentes sob alguma política
+          ativa, quantas ficam de fora, o valor e em quais estabelecimentos estão. Recupera a leitura que a
+          listagem por CNPJ dava de graça e que a listagem por política perderia</li>
+          <li><strong>Um cartão por política ativa</strong> — nome, badges de orquestração e modo, a
+          cobertura em texto, a próxima janela, quantidade de guias e valor total</li>
+          <li><strong>Expandir para as guias do lote</strong> — RF, fornecedor, <strong>CNPJ comprador</strong>,
+          <strong>contrato</strong>, tipo fiscal, valor e data. As duas colunas do meio existem porque, com
+          orquestração por contrato ou por valor, um lote reúne estabelecimentos diferentes</li>
+          <li><strong>Antecipar execução</strong> — roda a janela agora, fora do calendário</li>
+          <li><strong>Excluir nota do lote</strong> — retira um RF específico, com o evento registrado na
+          política</li>
+        </ul>
+
+        <h4>Seção 2 — Fila de decisão</h4>
+        <ul class="plain">
+          <li><strong>Lotes aguardando aprovação</strong> — só políticas em modo assistido chegam aqui.
+          O modo é o único eixo que retém lote; a alçada por valor foi removida do produto</li>
+          <li><strong>Guias represadas, listadas</strong> — tabela ordenada por valor decrescente, com o
+          peso de cada guia no total do lote, aberta por padrão. Acima dela, a concentração: quantos CNPJs,
+          quantos contratos e qual é a maior guia</li>
+          <li><strong>Aprovar ou recusar</strong> — aprovar dispara a emissão; recusar devolve as notas ao
+          pool para a próxima janela</li>
+          <li><strong>Retenções por flag, apartadas</strong> — notas retidas pelos critérios da política
+          aparecem separadas dos lotes que aguardam aprovação. São problemas distintos, com donos distintos:
+          um exige aprovar a janela, o outro exige resolver a causa no módulo de origem</li>
+        </ul>
+
+        <h4>Seção 3 — Histórico e falhas</h4>
+        <ul class="plain">
+          <li><strong>Execuções realizadas</strong> — data, política, guias geradas, valor, quantas
+          entregues ao ERP e quantas confirmadas pela Receita</li>
+          <li><strong>Fila de erro de geração</strong> — guias que voltaram <code>DFE_NAO_ENCONTRADO</code>
+          ou <code>VALOR_PARCIAL_SUPERIOR_DFE</code>, agrupadas por causa. Dois dos três
+          <code>return_code</code> da API são erro</li>
+          <li><strong>Reprocessar lote com falha de entrega</strong> — atalho para o reenvio em
+          <a class="xref" href="prd-integracoes.html">Integrações → Log de entregas</a></li>
+        </ul>
+
+        <div class="callout warn">
+          <div class="ct">Falha silenciosa é o risco mais grave da automação</div>
+          <p>Guia gerada, webhook não entregue, ninguém percebe — e o crédito se perde sem que nenhuma tela
+          mostre problema. A seção 3 e a coluna <strong>Entrega</strong> da listagem existem para tornar esse
+          estado visível, e o KPI de falhas para torná-lo <em>ativo</em>, não apenas consultável.</p>
+        </div>
       </div>
     </div>
   </div>
