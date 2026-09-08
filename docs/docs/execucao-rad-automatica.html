@@ -317,10 +317,62 @@ a.xref:hover { border-bottom-style: solid; }
   <div class="section" id="s03">
     <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Modelo de dados</span></div>
 
-    <h3>3.1 Política de execução — por CNPJ comprador</h3>
+    <h3>3.1 Política de execução</h3>
+
+    <p>A política é a entidade, e a organização cria quantas quiser. Cada uma declara
+    um <strong>modelo de orquestração</strong>, que é o critério de cobertura — o que a
+    política alcança — e um <strong>modo</strong>, que diz quanta decisão humana existe.
+    Os dois eixos são independentes.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Modelo</th><th>Cobre</th><th>Campo</th><th>Quando usar</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Por CNPJ</strong></td>
+            <td>Todo RF de método RAD dos CNPJs compradores selecionados</td>
+            <td><code>cnpjs[]</code></td>
+            <td>A régua é do estabelecimento — filiais que fecham no mesmo dia, matriz com calendário próprio</td>
+          </tr>
+          <tr>
+            <td><strong>Por contrato</strong></td>
+            <td>Todo RF dos contratos de método RAD selecionados, em qualquer CNPJ comprador</td>
+            <td><code>contratos[]</code></td>
+            <td>A régua é do acordo — um contrato de insumo com prazo diferente do resto</td>
+          </tr>
+          <tr>
+            <td><strong>Por valor de imposto</strong></td>
+            <td>As guias cujo valor de imposto cai na faixa</td>
+            <td><code>faixaMin</code>, <code>faixaMax</code></td>
+            <td>Separar grão fino de alto valor — guias grandes com mais antecedência</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">Cobertura repetida gera a guia duas vezes</div>
+      <p>Dentro do mesmo modelo, a duplicidade é barrada na configuração: o mesmo CNPJ ou
+      o mesmo contrato em duas políticas, ou faixas de valor que se cruzam, impedem o
+      salvamento.</p>
+      <p><strong>Entre modelos diferentes não dá para barrar</strong> — uma política por CNPJ
+      e outra por valor só colidem no resultado. A listagem então mede a sobreposição real
+      de RFs entre as políticas ativas e avisa, nomeando o par. Sem ajuste, a segunda guia
+      volta do ERP como <code>DFE_NAO_ENCONTRADO</code>.</p>
+    </div>
+
     <div class="code-block"><code>{
   <span class="v">id</span>:              <span class="s">"POL-0001"</span>,
-  <span class="v">cnpjComprador</span>:   <span class="s">"01.123.456/0001-99"</span>,
+  <span class="v">nome</span>:            <span class="s">"Matriz e filial SP"</span>,
+
+  <span class="c">// Modelo de orquestração — o critério de cobertura</span>
+  <span class="v">orquestracao</span>:    <span class="s">"cnpj" | "contrato" | "valor"</span>,
+  <span class="v">cnpjs</span>:           [<span class="s">"01.123.456/0001-99"</span>, ...],   <span class="c">// orquestracao = "cnpj"</span>
+  <span class="v">contratos</span>:       [<span class="s">"CT-0011"</span>, ...],               <span class="c">// orquestracao = "contrato"</span>
+  <span class="v">faixaMin</span>:        <span class="n">470000</span>,                     <span class="c">// orquestracao = "valor"</span>
+  <span class="v">faixaMax</span>:        <span class="k">null</span>,                       <span class="c">// null = sem teto</span>
+
+  <span class="c">// Modo — quanta decisão humana existe</span>
   <span class="v">modo</span>:            <span class="s">"manual" | "assistido" | "automatico"</span>,
 
   <span class="c">// Quando o motor roda</span>
@@ -328,8 +380,8 @@ a.xref:hover { border-bottom-style: solid; }
   <span class="v">horaExecucao</span>:    <span class="s">"06:00"</span>,
   <span class="v">antecedencia</span>:    <span class="n">5</span>,          <span class="c">// dias antes do due_date</span>
 
-  <span class="c">// O que entra no lote</span>
-  <span class="v">valorMinimo</span>:     <span class="n">0</span>,
+  <span class="c">// O que entra no lote, dentro da cobertura</span>
+  <span class="v">valorMinimo</span>:     <span class="n">0</span>,        <span class="c">// ignorado quando orquestracao = "valor"</span>
   <span class="v">excluirFlags</span>:    [<span class="s">"glosado"</span>, <span class="s">"vencido"</span>],
 
   <span class="c">// Alçada — opcional. Desativada, o lote segue direto após a geração.</span>

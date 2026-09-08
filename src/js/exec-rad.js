@@ -52,6 +52,24 @@
     confirmado:           { label: 'Confirmado',   cor: 'var(--green)' }
   };
 
+  /* Modelos de orquestração — o critério de cobertura da política. */
+  var ORQUESTRACOES = [
+    { v: 'cnpj', label: 'Por CNPJ', cor: 'var(--teal)', rgb: 'var(--teal-rgb)',
+      desc: 'A política cobre um ou mais CNPJs compradores. Todo RF de método RAD desses estabelecimentos entra na janela.',
+      hint: 'Use quando a régua é do estabelecimento — filiais que fecham no mesmo dia, ou uma matriz com calendário próprio.' },
+    { v: 'contrato', label: 'Por contrato', cor: 'var(--blue)', rgb: 'var(--blue-rgb)',
+      desc: 'A política cobre um ou mais contratos de método RAD, independentemente do CNPJ comprador.',
+      hint: 'Use quando a régua é do fornecedor ou do acordo — um contrato de insumo com prazo diferente do resto.' },
+    { v: 'valor', label: 'Por valor de imposto', cor: 'var(--amber)', rgb: 'var(--amber-rgb)',
+      desc: 'A política cobre as guias cujo valor de imposto cai dentro de uma faixa.',
+      hint: 'Use para separar o grão fino do alto valor: guias grandes com mais antecedência, pequenas em lote.' }
+  ];
+  function orqCfg(v) {
+    return ORQUESTRACOES.filter(function (o) { return o.v === v; })[0] || ORQUESTRACOES[0];
+  }
+  window.RAD_ORQUESTRACOES = ORQUESTRACOES;
+  window.radOrqCfg = orqCfg;
+
   window.RAD_MODOS = MODOS;
   window.RAD_RETURN_CODES = RETURN_CODES;
   window.RAD_EXEC_STATUS = EXEC_STATUS;
@@ -80,23 +98,48 @@
       ativo: false, ultimaEntrega: '—', entregas: 0, falhas: 0 }
   ];
 
-  // T-01/T-02 — Política de execução por CNPJ comprador.
-  // Eixo ortogonal ao contrato: contrato define QUEM recolhe (por CNPJ
-  // fornecedor); a política define QUANDO e COMO a empresa executa.
+  /* T-01/T-02 — Política de execução RAD.
+
+     A política é a entidade, não o CNPJ: a organização cria quantas
+     quiser. Cada uma declara um MODELO DE ORQUESTRAÇÃO, que é o
+     critério de cobertura — o que a política alcança:
+
+       cnpj      um ou mais CNPJs compradores
+       contrato  um ou mais contratos de método RAD
+       valor     uma faixa de valor de imposto por guia
+
+     Isso é ortogonal ao MODO (automático, assistido, manual), que diz
+     quanta decisão humana existe, e ao contrato, que define QUEM recolhe.
+
+     Duas políticas ativas podem acabar reivindicando a mesma nota — em
+     modelos diferentes, sobretudo. A guia sairia duplicada, e a segunda
+     voltaria do ERP como erro. Por isso há detecção de sobreposição. */
   window._radPoliticas = [
-    { id: 'POL-0001', cnpjComprador: '54.891.237/0001-48', modo: 'automatico',
+    { id: 'POL-0001', nome: 'Matriz e filial SP', orquestracao: 'cnpj',
+      cnpjs: ['54.891.237/0001-48', '54.891.237/0002-29'], contratos: [],
+      faixaMin: 0, faixaMax: null,
+      modo: 'automatico',
       diasExecucao: [5, 20], horaExecucao: '06:00', antecedencia: 5,
       valorMinimo: 0, excluirFlags: ['glosado'],
       alcadaAtiva: true, limiteAutoAprovacao: 50000, aprovadores: ['tesouraria@induspar.com'],
       integracaoId: 'INT-0001', ativo: true, ultimaExecucao: '05/09/2026 06:00',
       historico: [] },
-    { id: 'POL-0002', cnpjComprador: '54.891.237/0002-29', modo: 'automatico',
+    { id: 'POL-0002', nome: 'Contrato de insumo CT-0011', orquestracao: 'contrato',
+      cnpjs: [], contratos: ['CT-0011'],
+      faixaMin: 0, faixaMax: null,
+      modo: 'automatico',
       diasExecucao: [1, 15], horaExecucao: '07:00', antecedencia: 7,
-      valorMinimo: 500, excluirFlags: ['glosado'],
+      valorMinimo: 0, excluirFlags: ['glosado'],
       alcadaAtiva: false, limiteAutoAprovacao: 20000, aprovadores: ['tesouraria@induspar.com', 'cfo@induspar.com'],
       integracaoId: 'INT-0002', ativo: true, ultimaExecucao: '01/09/2026 07:00',
       historico: [] },
-    { id: 'POL-0003', cnpjComprador: '54.891.237/0003-00', modo: 'assistido',  // em validação inicial
+    /* Pausada de propósito: a faixa cruza notas que POL-0001 e POL-0002
+       já cobrem. Ativá-la faz a listagem acusar a sobreposição — que é
+       exatamente o caso que a detecção entre modelos existe para pegar. */
+    { id: 'POL-0003', nome: 'Guias de alto valor', orquestracao: 'valor',
+      cnpjs: [], contratos: [],
+      faixaMin: 470000, faixaMax: null,
+      modo: 'assistido',
       diasExecucao: [10], horaExecucao: '08:00', antecedencia: 3,
       valorMinimo: 0, excluirFlags: ['glosado'],
       alcadaAtiva: false, limiteAutoAprovacao: 15000, aprovadores: ['fiscal@induspar.com'],
@@ -157,10 +200,107 @@
   function orgPorCnpj(cnpj) {
     return (window._orgCnpjs || []).find(function (o) { return o.cnpj === cnpj; }) || null;
   }
+  function politicaPorId(id) {
+    return (window._radPoliticas || []).find(function (p) { return p.id === id; }) || null;
+  }
+  window.radPoliticaPorId = politicaPorId;
+
+  /* Só responde para a orquestração por CNPJ. Nas outras, a cobertura
+     não é do estabelecimento, e dizer que um CNPJ "tem política" seria
+     mentira — ele pode ter parte das notas cobertas e parte não. */
   function politicaPorCnpj(cnpj) {
-    return (window._radPoliticas || []).find(function (p) { return p.cnpjComprador === cnpj; }) || null;
+    return (window._radPoliticas || []).find(function (p) {
+      return p.orquestracao === 'cnpj' && (p.cnpjs || []).indexOf(cnpj) >= 0;
+    }) || null;
   }
   window.radPoliticaPorCnpj = politicaPorCnpj;
+
+  // Contratos que a política pode recortar: só os de método RAD.
+  function contratosRad() {
+    return (window.contratosGlobal || []).filter(function (c) {
+      return (c.metodo || (c.rad ? 'rad' : '')) === 'rad';
+    });
+  }
+  window.radContratosRad = contratosRad;
+
+  function fmtFaixa(p) {
+    var min = p.faixaMin || 0, max = p.faixaMax;
+    if (!min && !max) return 'qualquer valor';
+    if (!max) return 'acima de ' + fmtBRL(min);
+    if (!min) return 'at\u00e9 ' + fmtBRL(max);
+    return fmtBRL(min) + ' a ' + fmtBRL(max);
+  }
+  window.radFmtFaixa = fmtFaixa;
+
+  // O que a política cobre, em uma linha, conforme a orquestração.
+  function coberturaTexto(p) {
+    if (p.orquestracao === 'contrato') {
+      var n = (p.contratos || []).length;
+      return n ? n + ' contrato' + (n > 1 ? 's' : '') + ' \u00b7 ' + p.contratos.join(', ') : 'nenhum contrato';
+    }
+    if (p.orquestracao === 'valor') return fmtFaixa(p);
+    var q = (p.cnpjs || []).length;
+    if (!q) return 'nenhum CNPJ';
+    var o = orgPorCnpj(p.cnpjs[0]);
+    var primeiro = o ? o.razao + ' \u2014 ' + o.uf : p.cnpjs[0];
+    return q === 1 ? primeiro : q + ' CNPJs \u00b7 ' + primeiro + ' +' + (q - 1);
+  }
+  window.radCoberturaTexto = coberturaTexto;
+
+  /* Conflito dentro do mesmo modelo: o mesmo CNPJ ou o mesmo contrato em
+     duas políticas, ou faixas de valor que se cruzam. Barra o salvamento
+     — é duplicidade certa, não um risco. */
+  function conflitoCobertura(p, ignorarId) {
+    var out = [];
+    (window._radPoliticas || []).forEach(function (o) {
+      if (o.id === ignorarId || o.orquestracao !== p.orquestracao) return;
+      if (p.orquestracao === 'cnpj') {
+        (p.cnpjs || []).forEach(function (c) {
+          if ((o.cnpjs || []).indexOf(c) >= 0) out.push({ politica: o, item: c });
+        });
+      } else if (p.orquestracao === 'contrato') {
+        (p.contratos || []).forEach(function (c) {
+          if ((o.contratos || []).indexOf(c) >= 0) out.push({ politica: o, item: c });
+        });
+      } else {
+        var aMin = p.faixaMin || 0, aMax = p.faixaMax === null || p.faixaMax === undefined ? Infinity : p.faixaMax;
+        var bMin = o.faixaMin || 0, bMax = o.faixaMax === null || o.faixaMax === undefined ? Infinity : o.faixaMax;
+        if (aMin <= bMax && bMin <= aMax) out.push({ politica: o, item: fmtFaixa(o) });
+      }
+    });
+    return out;
+  }
+  window.radConflitoCobertura = conflitoCobertura;
+
+  /* Sobreposição entre modelos diferentes só aparece no resultado: uma
+     política por CNPJ e outra por valor podem reivindicar o mesmo RF.
+     Não dá para barrar na configuração, então é medida e exibida. */
+  function sobreposicaoRFs() {
+    var dono = {}, dupes = {};
+    (window._radPoliticas || [])
+      .filter(function (p) { return p.ativo && p.modo !== 'manual'; })
+      .forEach(function (p) {
+        selecionarElegiveis(p).forEach(function (r) {
+          if (dono[r.rfId] && dono[r.rfId] !== p.id) {
+            dupes[r.rfId] = dupes[r.rfId] || [dono[r.rfId]];
+            if (dupes[r.rfId].indexOf(p.id) < 0) dupes[r.rfId].push(p.id);
+          } else if (!dono[r.rfId]) dono[r.rfId] = p.id;
+        });
+      });
+    return Object.keys(dupes).map(function (k) { return { rfId: k, politicas: dupes[k] }; });
+  }
+  window.radSobreposicaoRFs = sobreposicaoRFs;
+
+  function cnpjsSemCobertura() {
+    var cobertos = {};
+    (window._radPoliticas || [])
+      .filter(function (p) { return p.ativo && p.modo !== 'manual'; })
+      .forEach(function (p) {
+        selecionarElegiveis(p).forEach(function (r) { cobertos[r.cnpjComprador] = true; });
+      });
+    return (window._orgCnpjs || []).filter(function (o) { return !cobertos[o.cnpj]; });
+  }
+  window.radCnpjsSemCobertura = cnpjsSemCobertura;
 
   function integracaoPorId(id) {
     return (window._radIntegracoes || []).find(function (i) { return i.id === id; }) || null;
@@ -181,6 +321,10 @@
   }
 
   // Saúde da integração pela taxa de entrega
+  /* Conexões anteriores ao catálogo não têm tipo; todas eram RAD↔ERP. */
+  function ehConexaoRad(i) { return !i.tipo || i.tipo === 'rad_erp'; }
+  window.radEhConexaoRad = ehConexaoRad;
+
   function saudeIntegracao(intg) {
     if (!intg || !intg.entregas) return { pct: null, cor: 'var(--txt3)', label: 'sem tráfego' };
     var pct = (intg.entregas - intg.falhas) / intg.entregas;
@@ -203,10 +347,26 @@
   window.RAD_FLAG_LABEL = FLAG_LABEL;
 
 
-  /* Aplica os critérios da política sobre os RFs RAD do CNPJ comprador:
-     filtra por método, prazo, valor e flags de exclusão. As notas que
-     batem numa flag são separadas em vez de descartadas — a política
-     retém, e a fila de decisão mostra o porquê. */
+  /* Decide se o RF cai na cobertura da política, conforme o modelo de
+     orquestração. É o único ponto que conhece os três modelos — o resto
+     do motor trabalha sobre o resultado. */
+  function dentroDaCobertura(pol, nf, rf, valor) {
+    if (pol.orquestracao === 'contrato') {
+      var ct = rf.contratoId || nf.contratoId || null;
+      return !!ct && (pol.contratos || []).indexOf(ct) >= 0;
+    }
+    if (pol.orquestracao === 'valor') {
+      var min = pol.faixaMin || 0;
+      var max = pol.faixaMax === null || pol.faixaMax === undefined ? Infinity : pol.faixaMax;
+      return valor >= min && valor <= max;
+    }
+    return (pol.cnpjs || []).indexOf(nf.cnpjComprador) >= 0;
+  }
+
+  /* Aplica os critérios da política sobre os RFs de método RAD: primeiro
+     a cobertura do modelo de orquestração, depois valor mínimo e flags de
+     exclusão. As notas que batem numa flag são separadas em vez de
+     descartadas — a política retém, e a fila de decisão mostra o porquê. */
   function selecionarElegiveis(pol) {
     if (!pol) return [];
     var out = [];
@@ -221,7 +381,9 @@
         if (pago) return;
 
         var v = rf.valor || 0;
-        if (v < (pol.valorMinimo || 0)) return;
+        if (!dentroDaCobertura(pol, nf, rf, v)) return;
+        // Na orquestração por valor a faixa já é o piso; aqui seria redundante.
+        if (pol.orquestracao !== 'valor' && v < (pol.valorMinimo || 0)) return;
 
         var flags = (rf.statusFlags || []).concat(rf.statusCredito === 'glosado' ? ['glosado'] : []);
         var atingidas = (pol.excluirFlags || []).filter(function (f) { return flags.indexOf(f) >= 0; });
@@ -229,6 +391,8 @@
 
         out.push({
           rfId: rf.id, dfeKey: rf.chaveDF || nf.chave || '',
+          cnpjComprador: nf.cnpjComprador || '',
+          contratoId: rf.contratoId || nf.contratoId || null,
           nfNumero: nf.numero, forn: rf.entidade || nf.entidade || '—',
           tipoFiscal: rf.tipoFiscal === 'ibs' ? 'Guia IBS' : 'DARF CBS',
           valor: v, dataRF: rf.data || '', bloqueado: bloqueado,
@@ -251,7 +415,10 @@
     // Alçada é opcional: desativada, o lote não é retido por valor.
     var excedeAlcada = !!pol.alcadaAtiva && total > (pol.limiteAutoAprovacao || 0);
     return {
-      politicaId: pol.id, cnpj: pol.cnpjComprador,
+      politicaId: pol.id, politicaNome: pol.nome || pol.id,
+      orquestracao: pol.orquestracao, cobertura: coberturaTexto(pol),
+      cnpjs: incluidos.concat(bloqueados).map(function (r) { return r.cnpjComprador; })
+        .filter(function (c, i, a) { return c && a.indexOf(c) === i; }),
       incluidos: incluidos, bloqueados: bloqueados,
       qtd: incluidos.length, total: total,
       excedeAlcada: excedeAlcada,
@@ -276,7 +443,15 @@
   window.radPoliticasRenderKPIs = function () {
     var pols = window._radPoliticas || [];
     var ativas = pols.filter(function (p) { return p.ativo && p.modo !== 'manual'; });
-    setTxt('rad-kpi-ativos', ativas.length + '/' + (window._orgCnpjs || []).length);
+    setTxt('rad-kpi-ativos', ativas.length + '/' + pols.length);
+    var descobertos = cnpjsSemCobertura().length;
+    var subAtivos = el('rad-kpi-ativos-sub');
+    if (subAtivos) {
+      subAtivos.textContent = descobertos
+        ? descobertos + ' CNPJ(s) sem nenhuma guia coberta'
+        : 'todos os CNPJs com guia coberta';
+      subAtivos.style.color = descobertos ? 'var(--amber)' : 'var(--txt2)';
+    }
 
     var lotes = lotesDeTodasPoliticas();
     var guias = lotes.reduce(function (s, l) { return s + l.qtd; }, 0);
@@ -302,78 +477,98 @@
     if (!tbody) return;
 
     var fModo = (el('rad-filtro-modo') || {}).value || '';
+    var fOrq = (el('rad-filtro-orq') || {}).value || '';
     var fIntg = (el('rad-filtro-integracao') || {}).value || '';
     var busca = ((el('rad-busca') || {}).value || '').trim().toLowerCase();
 
-    var linhas = (window._orgCnpjs || []).map(function (o) {
-      var p = politicaPorCnpj(o.cnpj);
-      return { org: o, pol: p, modo: p ? p.modo : 'manual' };
-    }).filter(function (r) {
-      if (fModo && r.modo !== fModo) return false;
-      if (fIntg && (!r.pol || r.pol.integracaoId !== fIntg)) return false;
+    var todas = window._radPoliticas || [];
+    var linhas = todas.filter(function (p) {
+      if (fModo && p.modo !== fModo) return false;
+      if (fOrq && p.orquestracao !== fOrq) return false;
+      if (fIntg && p.integracaoId !== fIntg) return false;
       if (busca) {
-        var alvo = (r.org.cnpj + ' ' + r.org.razao + ' ' + r.org.uf).toLowerCase();
+        var alvo = (p.id + ' ' + (p.nome || '') + ' ' + coberturaTexto(p) + ' ' +
+                    (p.cnpjs || []).join(' ') + ' ' + (p.contratos || []).join(' ')).toLowerCase();
         if (alvo.indexOf(busca) === -1) return false;
       }
       return true;
     });
 
     if (window.ShColMgr && ShColMgr.sortRows) {
-      // projeção plana para o gerenciador de colunas
-      window._radPoliticasLista = linhas.map(function (r) {
-        var intg = r.pol ? integracaoPorId(r.pol.integracaoId) : null;
+      window._radPoliticasLista = linhas.map(function (p) {
+        var intg = integracaoPorId(p.integracaoId);
         return {
-          cnpj: r.org.cnpj, estabelecimento: r.org.razao + ' — ' + r.org.uf,
-          modo: modoCfg(r.modo).label,
-          janela: r.pol ? janelaTexto(r.pol) : '—',
-          antecedencia: r.pol ? r.pol.antecedencia + ' dias' : '—',
-          alcada: r.pol ? fmtBRL(r.pol.limiteAutoAprovacao) : '—',
+          politica: p.nome || p.id, orquestracao: orqCfg(p.orquestracao).label,
+          cobertura: coberturaTexto(p), modo: modoCfg(p.modo).label,
+          janela: janelaTexto(p), antecedencia: p.antecedencia + ' dias',
+          alcada: p.alcadaAtiva ? fmtBRL(p.limiteAutoAprovacao) : 'sem alçada',
           integracao: intg ? intg.nome : '—',
-          ultimaExecucao: r.pol ? r.pol.ultimaExecucao : '—',
-          situacao: r.pol && r.pol.ativo ? 'Ativa' : r.pol ? 'Pausada' : 'Sem política'
+          ultimaExecucao: p.ultimaExecucao,
+          situacao: p.ativo ? 'Ativa' : 'Pausada'
         };
       });
     }
 
     var h = '';
-    linhas.forEach(function (r) {
-      var p = r.pol, m = modoCfg(r.modo);
-      var intg = p ? integracaoPorId(p.integracaoId) : null;
+    linhas.forEach(function (p) {
+      var m = modoCfg(p.modo), o = orqCfg(p.orquestracao);
+      var intg = integracaoPorId(p.integracaoId);
       var saude = saudeIntegracao(intg);
       var pontoSaude = intg
         ? '<span title="Taxa de entrega ' + saude.label + '" style="display:inline-block;width:7px;height:7px;' +
           'border-radius:50%;background:' + saude.cor + ';margin-right:6px;flex-shrink:0"></span>'
         : '';
-      var situacao = !p ? badge('Sem política', 'var(--txt3)', 'var(--status-gray-rgb)')
-                   : p.ativo ? badge('Ativa', 'var(--green)', 'var(--status-green-rgb)')
-                   : badge('Pausada', 'var(--amber)', 'var(--status-amber-rgb)');
+      var situacao = p.ativo ? badge('Ativa', 'var(--green)', 'var(--status-green-rgb)')
+                             : badge('Pausada', 'var(--amber)', 'var(--status-amber-rgb)');
+      var lote = p.ativo && p.modo !== 'manual' ? montarLote(p) : null;
 
-      h += '<tr onclick="radAbrirEditor(\'' + r.org.cnpj + '\')" style="cursor:pointer">' +
-        '<td style="text-align:center"><input type="checkbox" class="rad-pol-chk" data-cnpj="' + r.org.cnpj +
+      h += '<tr onclick="radAbrirEditor(\'' + p.id + '\')" style="cursor:pointer">' +
+        '<td style="text-align:center"><input type="checkbox" class="rad-pol-chk" data-pol="' + p.id +
           '" onclick="event.stopPropagation()" onchange="radAtualizarSelecao()" style="cursor:pointer;width:14px;height:14px"></td>' +
-        '<td class="mono" style="font-size:11px">' + r.org.cnpj + '</td>' +
-        '<td><div style="font-weight:500">' + r.org.razao + '</div>' +
-          '<div style="font-size:10px;color:var(--txt2)">' + r.org.uf + ' · ' + r.org.tipo + '</div></td>' +
+        '<td><div style="font-weight:600">' + (p.nome || p.id) + '</div>' +
+          '<div style="font-size:10px;color:var(--txt3);font-family:var(--font-mono)">' + p.id +
+          (lote ? ' · ' + lote.qtd + ' guia(s) na próxima janela' : '') + '</div></td>' +
+        '<td>' + badge(o.label, o.cor, o.rgb) + '</td>' +
+        '<td style="font-size:11.5px;color:var(--txt2);max-width:230px">' + coberturaTexto(p) + '</td>' +
         '<td>' + badge(m.label, m.cor, m.rgb) + '</td>' +
-        '<td style="font-size:12px;white-space:nowrap">' + (p ? janelaTexto(p) : '—') + '</td>' +
-        '<td style="font-size:12px;white-space:nowrap">' + (p ? 'D-' + p.antecedencia : '—') + '</td>' +
-        '<td class="r mono" style="font-size:11px">' + (p ? fmtBRL(p.limiteAutoAprovacao) : '—') + '</td>' +
+        '<td style="font-size:12px;white-space:nowrap">' + janelaTexto(p) + '</td>' +
+        '<td style="font-size:12px;white-space:nowrap">D-' + p.antecedencia + '</td>' +
+        '<td class="r mono" style="font-size:11px">' +
+          (p.alcadaAtiva ? fmtBRL(p.limiteAutoAprovacao) : '<span style="color:var(--txt3)">—</span>') + '</td>' +
         '<td style="font-size:11px"><span style="display:inline-flex;align-items:center">' + pontoSaude +
           (intg ? intg.nome : '<span style="color:var(--txt3)">—</span>') + '</span></td>' +
-        '<td style="font-size:11px;color:var(--txt2);white-space:nowrap">' + (p ? p.ultimaExecucao : '—') + '</td>' +
+        '<td style="font-size:11px;color:var(--txt2);white-space:nowrap">' + p.ultimaExecucao + '</td>' +
         '<td>' + situacao + '</td></tr>';
     });
 
     if (!linhas.length) {
-      h = '<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">' +
-          'Nenhum CNPJ encontrado para este filtro.</td></tr>';
+      h = '<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">' +
+          (todas.length ? 'Nenhuma política encontrada para este filtro.'
+                        : 'Nenhuma política criada. Comece por <strong>Nova política</strong>.') + '</td></tr>';
     }
     tbody.innerHTML = h;
 
     var cnt = el('rad-contagem');
-    if (cnt) cnt.textContent = linhas.length + ' de ' + (window._orgCnpjs || []).length + ' CNPJs';
+    if (cnt) cnt.textContent = linhas.length + ' de ' + todas.length + ' políticas';
+    radAlertaSobreposicao();
     if (window.ShColMgr && ShColMgr.afterRender) { try { ShColMgr.afterRender('rad-politicas'); } catch (e) {} }
     window.radAtualizarSelecao();
+  };
+
+  /* Duas políticas ativas reivindicando o mesmo RF geram a guia duas
+     vezes. Entre modelos diferentes isso só aparece no resultado, então
+     a listagem mede e avisa em vez de fingir que não acontece. */
+  window.radAlertaSobreposicao = function () {
+    var box = el('rad-sobreposicao'); if (!box) return;
+    var dupes = sobreposicaoRFs();
+    if (!dupes.length) { box.style.display = 'none'; return; }
+    var pares = {};
+    dupes.forEach(function (d) { pares[d.politicas.slice().sort().join(' + ')] = true; });
+    box.style.display = 'flex';
+    el('rad-sobreposicao-txt').innerHTML =
+      '<strong>' + dupes.length + ' guia(s) reivindicada(s) por mais de uma política ativa</strong> — ' +
+      Object.keys(pares).join(', ') + '. ' +
+      'Sem ajuste, a mesma guia sai duas vezes e a segunda volta do ERP como erro.';
   };
 
   window.radAtualizarSelecao = function () {
@@ -382,7 +577,7 @@
     if (!bar) return;
     if (chks.length) {
       bar.style.display = 'flex';
-      setTxt('rad-lote-info', chks.length + ' CNPJ' + (chks.length > 1 ? 's' : '') + ' selecionado' + (chks.length > 1 ? 's' : ''));
+      setTxt('rad-lote-info', chks.length + ' política' + (chks.length > 1 ? 's' : '') + ' selecionada' + (chks.length > 1 ? 's' : ''));
     } else { bar.style.display = 'none'; }
   };
 
@@ -393,11 +588,11 @@
 
   // Ativação e pausa em massa — útil em fechamento ou incidente
   window.radAlterarAtivacaoLote = function (ativar) {
-    var cnpjs = [].slice.call(document.querySelectorAll('.rad-pol-chk:checked'))
-      .map(function (c) { return c.getAttribute('data-cnpj'); });
+    var ids = [].slice.call(document.querySelectorAll('.rad-pol-chk:checked'))
+      .map(function (c) { return c.getAttribute('data-pol'); });
     var n = 0;
-    cnpjs.forEach(function (cnpj) {
-      var p = politicaPorCnpj(cnpj);
+    ids.forEach(function (id) {
+      var p = politicaPorId(id);
       if (p && p.ativo !== ativar) {
         p.ativo = ativar;
         radRegistrarEvento(p, ativar ? 'ativacao' : 'pausa', [], 'Alteração em lote pela listagem.');
@@ -411,7 +606,7 @@
   };
 
   window.radLimparFiltros = function () {
-    ['rad-busca', 'rad-filtro-modo', 'rad-filtro-integracao'].forEach(function (id) {
+    ['rad-busca', 'rad-filtro-modo', 'rad-filtro-orq', 'rad-filtro-integracao'].forEach(function (id) {
       var e = el(id); if (e) e.value = '';
     });
     window.radPoliticasRenderTabela();
@@ -454,7 +649,10 @@
     return pol.historico;
   }
   function radRegistrarEvento(pol, tipo, alteracoes, obs) {
-    radHistorico(pol).push({
+    /* O placeholder de "carga inicial" só faz sentido para política que já
+       existia. Numa criação, o próprio evento é o começo do histórico. */
+    var h = tipo === 'criacao' ? (pol.historico || (pol.historico = [])) : radHistorico(pol);
+    h.push({
       ts: agoraISO(), tipo: tipo,
       usuario: window.CONTRATO_USUARIO_ATUAL || 'José da Silva',
       alteracoes: alteracoes || [], obs: obs || ''
@@ -464,6 +662,12 @@
 
   function radDiff(antes, depois) {
     var campos = [
+      { k: 'nome', label: 'Nome', fmt: function (v) { return v || '—'; } },
+      { k: 'orquestracao', label: 'Orquestração', fmt: function (v) { return orqCfg(v).label; } },
+      { k: 'cnpjs', label: 'CNPJs cobertos', fmt: function (v) { return (v || []).join(', ') || '—'; } },
+      { k: 'contratos', label: 'Contratos cobertos', fmt: function (v) { return (v || []).join(', ') || '—'; } },
+      { k: 'faixaMin', label: 'Faixa — mínimo', fmt: fmtBRL },
+      { k: 'faixaMax', label: 'Faixa — máximo', fmt: function (v) { return v === null || v === undefined ? 'sem teto' : fmtBRL(v); } },
       { k: 'modo', label: 'Modo', fmt: function (v) { return modoCfg(v).label; } },
       { k: 'diasExecucao', label: 'Dias de execução', fmt: function (v) { return (v || []).join(', '); } },
       { k: 'horaExecucao', label: 'Hora', fmt: function (v) { return v; } },
@@ -522,20 +726,100 @@
   // T-02 — Editor de política (drawer)
   // ══════════════════════════════════════════════════════════
 
-  window.radAbrirEditor = function (cnpj) {
-    var org = orgPorCnpj(cnpj);
-    if (!org) return;
-    var pol = politicaPorCnpj(cnpj);
+
+  /* O seletor de cobertura muda com o modelo de orquestração, então vive
+     fora da montagem do editor — trocar o modelo redesenha só este bloco. */
+  function coberturaEditorHtml(pol) {
+    var caixa = 'max-height:190px;overflow-y:auto;border:1px solid var(--border);border-radius:7px;padding:8px 10px;background:var(--bg)';
+    var inp = 'width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 11px;color:var(--txt1);font-size:13px;font-family:inherit;box-sizing:border-box;outline:none';
+    var nota = 'font-size:10.5px;color:var(--txt3);margin-top:6px;line-height:1.5';
+
+    if (pol.orquestracao === 'contrato') {
+      var cts = contratosRad();
+      if (!cts.length) {
+        return '<div style="font-size:12px;color:var(--amber)">Nenhum contrato de método RAD na base. ' +
+          'Cadastre o contrato antes de orquestrar por contrato.</div>';
+      }
+      return '<div style="' + caixa + '">' + cts.map(function (ct) {
+        var on = (pol.contratos || []).indexOf(ct.id) >= 0;
+        var dono = (window._radPoliticas || []).filter(function (o) {
+          return o.id !== pol.id && o.orquestracao === 'contrato' && (o.contratos || []).indexOf(ct.id) >= 0;
+        })[0];
+        return '<label style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;' +
+          (dono ? 'opacity:.5;cursor:not-allowed' : 'cursor:pointer') + '">' +
+          '<input type="checkbox"' + (on ? ' checked' : '') + (dono ? ' disabled' : '') +
+          ' onchange="radEdCobertura(\'contratos\',\'' + ct.id + '\',this.checked)" style="margin-top:3px">' +
+          '<span><span style="font-family:var(--font-mono);font-size:11.5px;color:var(--blue)">' + ct.id + '</span> ' +
+          '<span style="font-size:11.5px;color:var(--txt1)">fornecedor ' + ct.cnpj + '</span>' +
+          '<div style="font-size:10.5px;color:var(--txt3)">vigência ' + ct.inicio + ' a ' + ct.fim +
+          ' · prazo ' + ct.prazo + ' dias' +
+          (dono ? ' · <span style="color:var(--amber)">já em ' + dono.id + '</span>' : '') +
+          '</div></span></label>';
+      }).join('') + '</div>' +
+      '<div style="' + nota + '">Todo RF de método RAD destes contratos entra na janela, seja qual for o CNPJ comprador.</div>';
+    }
+
+    if (pol.orquestracao === 'valor') {
+      var outras = (window._radPoliticas || []).filter(function (o) {
+        return o.id !== pol.id && o.orquestracao === 'valor';
+      });
+      return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+        '<div><label style="display:block;font-size:11px;font-weight:600;color:var(--txt2);margin-bottom:5px">' +
+        'Valor mínimo</label>' +
+        '<input id="rad-ed-faixa-min" type="number" min="0" step="1000" value="' + (pol.faixaMin || 0) +
+        '" oninput="radEditorPrevia()" style="' + inp + '"></div>' +
+        '<div><label style="display:block;font-size:11px;font-weight:600;color:var(--txt2);margin-bottom:5px">' +
+        'Valor máximo</label>' +
+        '<input id="rad-ed-faixa-max" type="number" min="0" step="1000" placeholder="sem teto" value="' +
+        (pol.faixaMax === null || pol.faixaMax === undefined ? '' : pol.faixaMax) +
+        '" oninput="radEditorPrevia()" style="' + inp + '"></div></div>' +
+        '<div style="' + nota + '">Valor do imposto da guia, não o valor da nota. Deixe o máximo vazio para “acima de”.' +
+        (outras.length ? '<br>Outras faixas já configuradas: ' + outras.map(function (o) {
+          return o.id + ' (' + fmtFaixa(o) + ')';
+        }).join(', ') + '. Faixas que se cruzam não podem coexistir.' : '') + '</div>';
+    }
+
+    var orgs = window._orgCnpjs || [];
+    if (!orgs.length) return '<div style="font-size:12px;color:var(--txt3)">Nenhum CNPJ carregado.</div>';
+    return '<div style="' + caixa + '">' + orgs.map(function (o) {
+      var on = (pol.cnpjs || []).indexOf(o.cnpj) >= 0;
+      var dono = (window._radPoliticas || []).filter(function (x) {
+        return x.id !== pol.id && x.orquestracao === 'cnpj' && (x.cnpjs || []).indexOf(o.cnpj) >= 0;
+      })[0];
+      return '<label style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;' +
+        (dono ? 'opacity:.5;cursor:not-allowed' : 'cursor:pointer') + '">' +
+        '<input type="checkbox"' + (on ? ' checked' : '') + (dono ? ' disabled' : '') +
+        ' onchange="radEdCobertura(\'cnpjs\',\'' + o.cnpj + '\',this.checked)" style="margin-top:3px">' +
+        '<span><span style="font-size:11.5px;color:var(--txt1)">' + o.razao + '</span>' +
+        '<div style="font-size:10.5px;color:var(--txt3);font-family:var(--font-mono)">' + o.cnpj + ' · ' + o.uf +
+        (dono ? ' · <span style="color:var(--amber);font-family:var(--font-body)">já em ' + dono.id + '</span>' : '') +
+        '</div></span></label>';
+    }).join('') + '</div>' +
+    '<div style="' + nota + '">Um CNPJ só pode estar em uma política por CNPJ — em duas, a mesma guia sairia duplicada.</div>';
+  }
+
+  /* Aceita o id da política, um CNPJ (atalho vindo da Organização) ou
+     nada, para criar do zero. */
+  window.radAbrirEditor = function (ref) {
+    var pol = ref ? (politicaPorId(ref) || politicaPorCnpj(ref)) : null;
     var novo = !pol;
     if (novo) {
+      var ehCnpj = ref && /\d{2}\.\d{3}\.\d{3}\//.test(ref);
       pol = { id: 'POL-' + String((window._radPoliticas || []).length + 1).padStart(4, '0'),
-        cnpjComprador: cnpj, modo: 'automatico', diasExecucao: [5], horaExecucao: '06:00',
+        nome: '', orquestracao: 'cnpj',
+        cnpjs: ehCnpj ? [ref] : [], contratos: [], faixaMin: 0, faixaMax: null,
+        modo: 'automatico', diasExecucao: [5], horaExecucao: '06:00',
         antecedencia: 5, valorMinimo: 0, excluirFlags: ['glosado'],
         alcadaAtiva: false, limiteAutoAprovacao: 20000, aprovadores: [], integracaoId: null, ativo: false,
         ultimaExecucao: '—', historico: [] };
     }
-    window._radPolEditando = pol;
+    /* O editor trabalha sobre uma cópia. Antes ele mutava a política real
+       a cada tecla, e cancelar não desfazia nada — agora só o salvamento
+       escreve de volta, e a cópia ainda serve de base para o diff. */
+    window._radPolOriginal = novo ? null : pol;
+    window._radPolEditando = novo ? pol : JSON.parse(JSON.stringify(pol));
     window._radPolNova = novo;
+    pol = window._radPolEditando;
 
     var cs = getComputedStyle(document.documentElement), cv = function (n) { return cs.getPropertyValue(n).trim(); };
     var c = { bg: cv('--bg'), card: cv('--card'), brd: cv('--border'), txt1: cv('--txt1'),
@@ -553,6 +837,22 @@
         '<label style="display:block;font-size:11px;font-weight:600;color:' + c.txt2 + ';margin-bottom:5px">' + lbl + '</label>' +
         inp + (hint ? '<div style="font-size:10.5px;color:' + c.txt3 + ';margin-top:4px">' + hint + '</div>' : '') + '</div>';
     }
+
+    /* Orquestração — o critério de cobertura. Ortogonal ao modo: um
+       diz O QUE a política alcança, o outro QUANTA decisão humana existe. */
+    var orqHtml = ORQUESTRACOES.map(function (o) {
+      var sel = pol.orquestracao === o.v;
+      return '<label class="rad-orq-card" data-orq="' + o.v + '" ' +
+        'style="display:block;padding:10px 12px;border-radius:7px;cursor:pointer;margin-bottom:7px;' +
+        'border:1px solid ' + (sel ? o.cor : c.brd) + ';background:' + (sel ? 'rgba(' + o.rgb + ',.08)' : 'transparent') + '">' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+        '<input type="radio" name="rad-orq" value="' + o.v + '"' + (sel ? ' checked' : '') +
+          ' onchange="radEditorOrq(this.value)" style="cursor:pointer">' +
+        '<span style="font-size:12.5px;font-weight:700;color:' + o.cor + '">' + o.label + '</span></div>' +
+        '<div style="font-size:11px;color:' + c.txt2 + ';margin-top:4px;line-height:1.5;padding-left:22px">' + o.desc + '</div>' +
+        '<div style="font-size:10.5px;color:' + c.txt3 + ';margin-top:3px;line-height:1.45;padding-left:22px">' + o.hint + '</div>' +
+        '</label>';
+    }).join('');
 
     // Modo — cartões clicáveis, cada um explicando o que delega
     var modosHtml = MODOS.map(function (m) {
@@ -579,8 +879,11 @@
           ';color:' + (on ? c.teal : c.txt2) + '">' + d + '</button>';
       }).join('') + '</div>';
 
+    /* Só conexões do tipo rad_erp entregam guia: as de entrada não têm
+       endpoint de destino, e as de outros contextos não emitem estes
+       eventos. Sem o filtro, a política ofereceria destinos inválidos. */
     var intgOpts = '<option value="">Somente plataforma — não emite webhook</option>' +
-      (window._radIntegracoes || []).map(function (i) {
+      (window._radIntegracoes || []).filter(ehConexaoRad).map(function (i) {
         return '<option value="' + i.id + '"' + (pol.integracaoId === i.id ? ' selected' : '') + '>' +
           i.nome + (i.ativo ? '' : ' (inativa)') + '</option>';
       }).join('');
@@ -594,12 +897,21 @@
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
       '<div><div style="color:' + c.blue + ';font-size:11px;font-family:var(--font-mono);margin-bottom:3px">' + pol.id +
         (novo ? ' · nova' : '') + '</div>' +
-      '<div style="color:' + c.txt1 + ';font-size:16px;font-weight:700">' + org.razao + '</div>' +
-      '<div style="color:' + c.txt3 + ';font-size:11px;font-family:var(--font-mono);margin-top:2px">' + org.cnpj + ' · ' + org.uf + '</div></div>' +
+      '<div id="rad-ed-titulo" style="color:' + c.txt1 + ';font-size:16px;font-weight:700">' +
+        (pol.nome || 'Nova política') + '</div>' +
+      '<div id="rad-ed-cobertura-resumo" style="color:' + c.txt3 + ';font-size:11px;margin-top:2px">' +
+        coberturaTexto(pol) + '</div></div>' +
       '<button onclick="radFecharEditor()" style="background:none;border:none;color:' + c.txt2 + ';font-size:22px;cursor:pointer;padding:0 4px">✕</button>' +
       '</div></div>' +
 
       '<div style="padding:20px 24px;flex:1">' +
+      bloco('Identificação',
+        campo('Nome da política',
+          '<input id="rad-ed-nome" value="' + (pol.nome || '') + '" placeholder="Matriz e filiais PR" ' +
+          'oninput="radEditorNome(this.value)" style="' + IS + '">',
+          'aparece na listagem, na fila de execução e no histórico')) +
+      bloco('Modelo de orquestração', orqHtml +
+        '<div id="rad-ed-cobertura" style="margin-top:12px">' + coberturaEditorHtml(pol) + '</div>') +
       bloco('Modo de operação', modosHtml) +
       bloco('Janela de execução',
         campo('Dias do mês', diasHtml) +
@@ -611,8 +923,9 @@
         '<div id="rad-ed-previa" style="font-size:11.5px;color:' + c.teal + ';background:rgba(var(--teal-rgb),.08);' +
         'border:1px solid rgba(var(--teal-rgb),.2);border-radius:6px;padding:9px 12px;line-height:1.5"></div>') +
       bloco('Critérios de inclusão',
+        '<div id="rad-ed-vmin-wrap" style="display:' + (pol.orquestracao === 'valor' ? 'none' : 'block') + '">' +
         campo('Valor mínimo por guia', '<input id="rad-ed-vmin" type="number" min="0" value="' + pol.valorMinimo + '" style="' + IS + '">',
-          'guias abaixo deste valor acumulam para a próxima janela') +
+          'guias abaixo deste valor acumulam para a próxima janela') + '</div>' +
         '<div style="font-size:11px;color:' + c.txt3 + ';margin:2px 0 7px">Notas com estas flags ficam de fora do lote e aparecem na fila de decisão</div>' +
         '<div style="display:flex;flex-direction:column;gap:7px">' +
         ['glosado', 'vencido', 'inconsistencia'].map(function (f) {
@@ -664,6 +977,43 @@
     document.body.style.overflow = '';
   };
 
+  window.radEditorNome = function (v) {
+    var p = window._radPolEditando; if (!p) return;
+    p.nome = v;
+    var t = el('rad-ed-titulo');
+    if (t) t.textContent = v || 'Nova política';
+  };
+
+  /* Trocar o modelo redesenha só o seletor de cobertura. O que estava
+     marcado no modelo anterior fica guardado na política — volta se o
+     usuário voltar —, mas só o do modelo corrente decide a seleção. */
+  window.radEditorOrq = function (v) {
+    var p = window._radPolEditando; if (!p) return;
+    p.orquestracao = v;
+    document.querySelectorAll('#rad-editor-overlay .rad-orq-card').forEach(function (l) {
+      var o = orqCfg(l.getAttribute('data-orq')), on = o.v === v;
+      l.style.borderColor = on ? o.cor : 'var(--border)';
+      l.style.background = on ? 'rgba(' + o.rgb + ',.08)' : 'transparent';
+      // O rádio também é acertado aqui, para a chamada direta não divergir do clique.
+      var r = l.querySelector('input[name="rad-orq"]');
+      if (r) r.checked = on;
+    });
+    var box = el('rad-ed-cobertura');
+    if (box) box.innerHTML = coberturaEditorHtml(p);
+    var vm = el('rad-ed-vmin-wrap');
+    if (vm) vm.style.display = v === 'valor' ? 'none' : 'block';
+    radEditorPrevia();
+  };
+
+  window.radEdCobertura = function (campo, valor, on) {
+    var p = window._radPolEditando; if (!p) return;
+    var a = p[campo] || (p[campo] = []);
+    var i = a.indexOf(valor);
+    if (on && i < 0) a.push(valor);
+    if (!on && i >= 0) a.splice(i, 1);
+    radEditorPrevia();
+  };
+
   window.radEditorModoMudou = function (v) {
     var p = window._radPolEditando; if (p) p.modo = v;
     document.querySelectorAll('#rad-editor-overlay label').forEach(function (l) {
@@ -698,14 +1048,30 @@
     p.horaExecucao = (el('rad-ed-hora') || {}).value || p.horaExecucao;
     p.antecedencia = parseInt((el('rad-ed-antec') || {}).value, 10) || 0;
     p.valorMinimo = parseFloat((el('rad-ed-vmin') || {}).value) || 0;
+    if (p.orquestracao === 'valor') {
+      p.faixaMin = parseFloat((el('rad-ed-faixa-min') || {}).value) || 0;
+      var _max = (el('rad-ed-faixa-max') || {}).value;
+      p.faixaMax = _max === '' || _max === undefined ? null : parseFloat(_max);
+    }
+    var _res = el('rad-ed-cobertura-resumo');
+    if (_res) _res.textContent = coberturaTexto(p);
     p.alcadaAtiva = !!(el('rad-ed-alcada-ativa') || {}).checked;
     p.limiteAutoAprovacao = parseFloat((el('rad-ed-alcada') || {}).value) || 0;
     p.integracaoId = (el('rad-ed-intg') || {}).value || null;
 
+    var _vazia = p.orquestracao === 'cnpj' ? !(p.cnpjs || []).length
+               : p.orquestracao === 'contrato' ? !(p.contratos || []).length
+               : false;
+
     if (p.modo === 'manual') {
-      prev.innerHTML = 'Modo manual: o motor não gera nada. As guias deste CNPJ continuam ' +
-        'dependendo de seleção na aba <strong>Guias RAD</strong>.';
+      prev.innerHTML = 'Modo manual: o motor não gera nada. As guias cobertas por esta política ' +
+        'continuam dependendo de seleção na aba <strong>Guias RAD</strong>.';
       prev.style.color = 'var(--txt2)';
+    } else if (_vazia) {
+      prev.innerHTML = p.orquestracao === 'cnpj'
+        ? 'Selecione ao menos um CNPJ para a política cobrir.'
+        : 'Selecione ao menos um contrato para a política cobrir.';
+      prev.style.color = 'var(--red)';
     } else if (!p.diasExecucao.length) {
       prev.innerHTML = 'Selecione ao menos um dia de execução.';
       prev.style.color = 'var(--red)';
@@ -749,6 +1115,28 @@
     var setMsg = function (t, cor) { if (msg) { msg.textContent = t; msg.style.color = cor; } };
 
     radEditorPrevia();
+    if (!(p.nome || '').trim()) {
+      return setMsg('Informe um nome para a política.', 'var(--red)');
+    }
+    if (p.orquestracao === 'cnpj' && !(p.cnpjs || []).length) {
+      return setMsg('Orquestração por CNPJ: selecione ao menos um CNPJ.', 'var(--red)');
+    }
+    if (p.orquestracao === 'contrato' && !(p.contratos || []).length) {
+      return setMsg('Orquestração por contrato: selecione ao menos um contrato.', 'var(--red)');
+    }
+    if (p.orquestracao === 'valor') {
+      if (p.faixaMax !== null && p.faixaMax !== undefined && p.faixaMax <= (p.faixaMin || 0)) {
+        return setMsg('O valor máximo precisa ser maior que o mínimo.', 'var(--red)');
+      }
+    }
+    /* Cobertura repetida dentro do mesmo modelo é duplicidade certa, não
+       um risco: a mesma guia sairia duas vezes. Barra o salvamento. */
+    var conflitos = conflitoCobertura(p, window._radPolNova ? null : p.id);
+    if (conflitos.length) {
+      var c0 = conflitos[0];
+      return setMsg('Cobertura já usada por ' + c0.politica.id + ' (' + (c0.politica.nome || '') + '): ' +
+        c0.item + '.', 'var(--red)');
+    }
     if (p.modo !== 'manual' && !p.diasExecucao.length) {
       return setMsg('Informe ao menos um dia de execução.', 'var(--red)');
     }
@@ -765,16 +1153,22 @@
       .map(function (s) { return s.trim(); }).filter(Boolean);
     p.ativo = p.modo !== 'manual';
 
-    var existente = politicaPorCnpj(p.cnpjComprador);
-    if (window._radPolNova && !existente) {
+    p.nome = (p.nome || '').trim();
+    if (window._radPolNova) {
       radRegistrarEvento(p, 'criacao', [
+        { campo: 'Orquestração', de: '—', para: orqCfg(p.orquestracao).label },
+        { campo: 'Cobertura', de: '—', para: coberturaTexto(p) },
         { campo: 'Modo', de: '—', para: modoCfg(p.modo).label },
-        { campo: 'Janela', de: '—', para: janelaTexto(p) },
-        { campo: 'Alçada', de: '—', para: fmtBRL(p.limiteAutoAprovacao) }
-      ], 'Política criada para o CNPJ ' + p.cnpjComprador + '.');
+        { campo: 'Janela', de: '—', para: janelaTexto(p) }
+      ], 'Política criada com orquestração ' + orqCfg(p.orquestracao).label.toLowerCase() + '.');
       window._radPoliticas.push(p);
+      window._radPolNova = false;
     } else {
-      radRegistrarEvento(p, 'edicao', [], '');
+      var orig = window._radPolOriginal;
+      var alteracoes = radDiff(orig, p);
+      Object.keys(p).forEach(function (k) { if (k !== 'historico') orig[k] = p[k]; });
+      radRegistrarEvento(orig, 'edicao', alteracoes, alteracoes.length ? '' : 'Salvo sem alteração de parâmetro.');
+      p = orig;
     }
 
     window.radFecharEditor();
@@ -817,7 +1211,7 @@
     }
     var selIntg = el('rad-filtro-integracao');
     if (selIntg && selIntg.options.length <= 1) {
-      (window._radIntegracoes || []).forEach(function (i) {
+      (window._radIntegracoes || []).filter(ehConexaoRad).forEach(function (i) {
         var o = document.createElement('option');
         o.value = i.id; o.textContent = i.nome;
         selIntg.appendChild(o);

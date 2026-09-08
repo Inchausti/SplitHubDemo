@@ -39,106 +39,11 @@
     if (tab === 'comprovantes') window.radComprovantesRender();
   };
 
-  // ── Aba 1: conexões ──
-  window.radConexoesRender = function () {
-    var wrap = el('rad-conexoes-lista');
-    if (!wrap) return;
-    var h = (window._radIntegracoes || []).map(function (i) {
-      var s = window.radSaudeIntegracao(i);
-      var vinculadas = (window._radPoliticas || []).filter(function (p) { return p.integracaoId === i.id; });
-      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:12px">' +
-        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">' +
-        '<div style="flex:1;min-width:220px">' +
-        '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">' +
-        '<span style="font-size:14px;font-weight:700;color:var(--txt1)">' + i.nome + '</span>' +
-        (i.ativo ? badge('Ativa', 'var(--green)', 'var(--status-green-rgb)')
-                 : badge('Inativa', 'var(--txt3)', 'var(--status-gray-rgb)')) +
-        '</div>' +
-        '<div style="font-size:11px;color:var(--txt2);font-family:var(--font-mono);margin-top:5px;word-break:break-all">' +
-          i.webhookUrl + '</div>' +
-        '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;font-size:11px;color:var(--txt3)">' +
-        '<span>Token <span style="font-family:var(--font-mono);color:var(--txt2)">' + i.token + '</span></span>' +
-        '<span>criado em ' + i.tokenCriadoEm + '</span></div>' +
-        '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">' +
-          i.eventos.map(function (e) {
-            return '<span style="font-size:10px;font-family:var(--font-mono);padding:2px 7px;border-radius:4px;' +
-              'background:rgba(var(--blue-rgb),.1);color:var(--blue);border:1px solid rgba(var(--blue-rgb),.22)">' + e + '</span>';
-          }).join('') + '</div>' +
-        '</div>' +
-        '<div style="text-align:right;min-width:130px">' +
-        '<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em">Taxa de entrega</div>' +
-        '<div style="font-size:19px;font-weight:800;color:' + s.cor + ';margin-top:2px">' + s.label + '</div>' +
-        '<div style="font-size:10.5px;color:var(--txt3);margin-top:2px">' + i.entregas + ' envios · ' + i.falhas + ' falhas</div>' +
-        '<div style="font-size:10.5px;color:var(--txt3);margin-top:4px">Última: ' + i.ultimaEntrega + '</div>' +
-        '</div></div>' +
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">' +
-        '<button class="btn" style="font-size:11px;padding:5px 12px" onclick="radTestarConexao(\'' + i.id + '\')">Testar conexão</button>' +
-        '<button class="btn" style="font-size:11px;padding:5px 12px" onclick="radRotacionarToken(\'' + i.id + '\')">Rotacionar token</button>' +
-        '<button class="btn" style="font-size:11px;padding:5px 12px" onclick="radVerVinculados(\'' + i.id + '\')">CNPJs vinculados (' + vinculadas.length + ')</button>' +
-        '<button class="btn" style="font-size:11px;padding:5px 12px;margin-left:auto" onclick="radToggleIntegracao(\'' + i.id + '\')">' +
-          (i.ativo ? 'Desativar' : 'Ativar') + '</button>' +
-        '</div>' +
-        '<div id="rad-teste-' + i.id + '" style="display:none;margin-top:10px;font-size:11.5px;padding:9px 12px;border-radius:6px"></div>' +
-        '</div>';
-    }).join('');
-    wrap.innerHTML = h || '<div style="text-align:center;color:var(--txt3);padding:24px">Nenhuma conexão cadastrada.</div>';
-  };
-
-  /* Testar conexão — valida a URL antes de a política depender dela.
-     Sem sandbox documentado na API, o teste usa dfe_key fictícia. */
-  window.radTestarConexao = function (id) {
-    var i = intgPorId(id); if (!i) return;
-    var box = el('rad-teste-' + id); if (!box) return;
-    box.style.display = 'block';
-    box.style.background = 'rgba(var(--blue-rgb),.08)';
-    box.style.border = '1px solid rgba(var(--blue-rgb),.22)';
-    box.style.color = 'var(--txt2)';
-    box.innerHTML = 'Enviando evento de teste para <span style="font-family:var(--font-mono)">' + i.webhookUrl + '</span>…';
-    setTimeout(function () {
-      var ok = i.ativo && i.falhas / (i.entregas || 1) < 0.15;
-      box.style.background = ok ? 'rgba(var(--status-green-rgb),.08)' : 'rgba(var(--status-red-rgb),.08)';
-      box.style.border = '1px solid rgba(' + (ok ? 'var(--status-green-rgb)' : 'var(--status-red-rgb)') + ',.25)';
-      box.style.color = ok ? 'var(--green)' : 'var(--red)';
-      box.innerHTML = ok
-        ? '<strong>200 OK</strong> — evento <span style="font-family:var(--font-mono)">rad.darf_recebida</span> ' +
-          'aceito com <span style="font-family:var(--font-mono)">dfe_key</span> fictícia. Conexão apta.'
-        : '<strong>504 Gateway Timeout</strong> — o endpoint não respondeu. ' +
-          'Verifique a URL e se o ERP aceita POST sem autenticação de origem.';
-    }, 700);
-  };
-
-  window.radRotacionarToken = function (id) {
-    var i = intgPorId(id); if (!i) return;
-    var novo = 'sk_live_' + Math.random().toString(36).slice(2, 6) + '••••••••••••' + Math.random().toString(36).slice(2, 6);
-    i.token = novo;
-    var ref = window.HOJE_REF || new Date();
-    var p = function (n) { return String(n).padStart(2, '0'); };
-    i.tokenCriadoEm = p(ref.getDate()) + '/' + p(ref.getMonth() + 1) + '/' + ref.getFullYear();
-    window.radConexoesRender();
-    window.radToast('Token rotacionado. O anterior segue válido por 24h.');
-  };
-
-  window.radToggleIntegracao = function (id) {
-    var i = intgPorId(id); if (!i) return;
-    var vinc = (window._radPoliticas || []).filter(function (p) { return p.integracaoId === id && p.ativo; });
-    if (i.ativo && vinc.length) {
-      if (!confirm('Esta conexão é usada por ' + vinc.length + ' política(s) ativa(s). ' +
-                   'Desativar interrompe a entrega das guias desses CNPJs. Continuar?')) return;
-    }
-    i.ativo = !i.ativo;
-    window.radConexoesRender();
-    window.radToast('Conexão ' + (i.ativo ? 'ativada' : 'desativada') + '.');
-  };
-
-  window.radVerVinculados = function (id) {
-    var vinc = (window._radPoliticas || []).filter(function (p) { return p.integracaoId === id; });
-    if (!vinc.length) return window.radToast('Nenhuma política usa esta conexão.');
-    var nomes = vinc.map(function (p) {
-      var o = orgPorCnpj(p.cnpjComprador);
-      return (o ? o.razao + ' — ' + o.uf : p.cnpjComprador) + ' (' + window.radModoCfg(p.modo).label + ')';
-    }).join('\n');
-    alert('CNPJs vinculados a esta conexão:\n\n' + nomes);
-  };
+  /* ── Aba 1: conexões ──
+     radConexoesRender, radTestarConexao, radToggleIntegracao e
+     radVerVinculados vivem em js/integracoes.js, que generalizou a
+     aba para os seis contextos da API e para a emissão de
+     credenciais. radRotacionarToken virou intgRotacionar. */
 
   // ── Aba 2: log de entregas ──
   window.radEntregasRender = function () {
@@ -330,15 +235,16 @@
 
     wrap.innerHTML = programados.map(function (l, idx) {
       var pol = (window._radPoliticas || []).find(function (p) { return p.id === l.politicaId; });
-      var org = orgPorCnpj(l.cnpj);
       var m = window.radModoCfg(pol.modo);
+      var o = window.radOrqCfg(pol.orquestracao);
       return '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:15px 18px;margin-bottom:12px">' +
         '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">' +
         '<div style="flex:1;min-width:200px">' +
         '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">' +
-        '<span style="font-size:13.5px;font-weight:700;color:var(--txt1)">' + (org ? org.razao + ' — ' + org.uf : l.cnpj) + '</span>' +
-        badge(m.label, m.cor, m.rgb) + '</div>' +
-        '<div style="font-size:11px;color:var(--txt3);font-family:var(--font-mono);margin-top:3px">' + l.cnpj + ' · ' + pol.id + '</div>' +
+        '<span style="font-size:13.5px;font-weight:700;color:var(--txt1)">' + l.politicaNome + '</span>' +
+        badge(m.label, m.cor, m.rgb) + badge(o.label, o.cor, o.rgb) + '</div>' +
+        '<div style="font-size:11px;color:var(--txt3);margin-top:3px">' +
+          '<span style="font-family:var(--font-mono)">' + pol.id + '</span> · ' + l.cobertura + '</div>' +
         '<div style="font-size:11.5px;color:var(--txt2);margin-top:7px">Próxima janela: <strong style="color:var(--txt1)">dias ' +
           pol.diasExecucao.join(', ') + ' às ' + pol.horaExecucao + '</strong> · guias que vencem em até ' + pol.antecedencia + ' dias</div>' +
         '</div>' +
@@ -450,12 +356,11 @@
         'A alçada é uma configuração opcional, desativada por padrão. Nesta versão a fila é montada e exibida, ' +
         'mas aprovar não dispara emissão real de webhook.</div>';
       h += aguard.map(function (l, i) {
-        var org = orgPorCnpj(l.cnpj);
         var pol = (window._radPoliticas || []).find(function (p) { return p.id === l.politicaId; });
         return '<div style="background:var(--card);border:1px solid rgba(var(--status-amber-rgb),.3);border-left:3px solid var(--amber);' +
           'border-radius:8px;padding:14px 16px;margin-bottom:10px">' +
           '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">' +
-          '<div><div style="font-size:13px;font-weight:700;color:var(--txt1)">' + (org ? org.razao + ' — ' + org.uf : l.cnpj) + '</div>' +
+          '<div><div style="font-size:13px;font-weight:700;color:var(--txt1)">' + l.politicaNome + '</div>' +
           '<div style="font-size:11px;color:var(--txt2);margin-top:4px">' + l.qtd + ' guia(s) · <strong style="color:var(--txt1)">' +
             fmtBRL(l.total) + '</strong> · alçada ' + fmtBRL(pol.limiteAutoAprovacao) + '</div>' +
           '<div style="font-size:10.5px;color:var(--amber);margin-top:4px">Na fila há 2 dias · aprovadores: ' +
@@ -471,10 +376,9 @@
       h += '<div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;' +
         'letter-spacing:.07em;margin:18px 0 10px">Retidas por flag de exclusão</div>';
       h += comBloqueio.map(function (l) {
-        var org = orgPorCnpj(l.cnpj);
         return '<div style="background:var(--card);border:1px solid rgba(var(--status-amber-rgb),.3);border-left:3px solid var(--amber);' +
           'border-radius:8px;padding:14px 16px;margin-bottom:10px">' +
-          '<div style="font-size:13px;font-weight:700;color:var(--txt1)">' + (org ? org.razao + ' — ' + org.uf : l.cnpj) + '</div>' +
+          '<div style="font-size:13px;font-weight:700;color:var(--txt1)">' + l.politicaNome + '</div>' +
           '<div style="font-size:11px;color:var(--txt2);margin-top:5px">' + l.bloqueados.length +
             ' nota(s) fora do lote pelos critérios da política</div>' +
           '<div style="font-size:11px;color:var(--txt2);margin-top:7px;line-height:1.6">' +
@@ -521,16 +425,16 @@
     var tbody = el('t-rad-execucoes');
     if (tbody) {
       var hist = [
-        { data: '05/09/2026 06:00', cnpj: '54.891.237/0001-48', pol: 'POL-0001', guias: 14, valor: 186400.00, entregues: 14, confirmados: 12 },
-        { data: '01/09/2026 07:00', cnpj: '54.891.237/0002-29', pol: 'POL-0002', guias: 6,  valor: 48200.00,  entregues: 5,  confirmados: 5 },
-        { data: '20/08/2026 06:00', cnpj: '54.891.237/0001-48', pol: 'POL-0001', guias: 11, valor: 142900.00, entregues: 11, confirmados: 11 }
+        { data: '05/09/2026 06:00', pol: 'POL-0001', guias: 14, valor: 186400.00, entregues: 14, confirmados: 12 },
+        { data: '01/09/2026 07:00', pol: 'POL-0002', guias: 6,  valor: 48200.00,  entregues: 5,  confirmados: 5 },
+        { data: '20/08/2026 06:00', pol: 'POL-0001', guias: 11, valor: 142900.00, entregues: 11, confirmados: 11 }
       ];
       tbody.innerHTML = hist.map(function (h) {
-        var org = orgPorCnpj(h.cnpj);
+        var p = (window._radPoliticas || []).find(function (x) { return x.id === h.pol; });
         var pendentes = h.entregues - h.confirmados;
         return '<tr>' +
           '<td style="font-size:11px;white-space:nowrap">' + h.data + '</td>' +
-          '<td style="font-size:11px">' + (org ? org.razao + ' — ' + org.uf : h.cnpj) + '</td>' +
+          '<td style="font-size:11px">' + (p ? (p.nome || p.id) : h.pol) + '</td>' +
           '<td class="mono" style="font-size:11px;color:var(--blue)">' + h.pol + '</td>' +
           '<td class="r mono" style="font-size:11px">' + h.guias + '</td>' +
           '<td class="r mono" style="font-size:11px;font-weight:600">' + fmtBRL(h.valor) + '</td>' +
@@ -580,7 +484,7 @@
   };
 
   window.radIntgInit = function () {
-    window.radConexoesRender();
+    if (window.intgInit) window.intgInit(); else window.radConexoesRender();
     window.radEntregasRender();
     window.radComprovantesRender();
   };

@@ -1298,7 +1298,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <div class="tcrd" style="margin-bottom:20px">
         <div class="tcrd-hdr"><div class="sechdr" style="margin-bottom:0"><h2>Execuções realizadas</h2><p>Quantas guias saíram, quantas o ERP recebeu e quantas a Receita confirmou.</p></div></div>
         <div class="twrap"><table><thead><tr>
-          <th>Data</th><th>Estabelecimento</th><th>Política</th><th class="r">Guias</th>
+          <th>Data</th><th>Política</th><th>ID</th><th class="r">Guias</th>
           <th class="r">Valor</th><th class="r">Entregues</th><th class="r">Confirmadas</th>
         </tr></thead><tbody id="t-rad-execucoes"></tbody></table></div>
       </div>
@@ -3082,7 +3082,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
   <!-- ════════ T-01 · Política de Execução RAD ════════ -->
   <div id="admin-exec-rad" class="sv">
     <div class="kgrid k4">
-      <div class="kcard"><div class="klbl">CNPJs com automação <span class="periodo-info" data-tip="CNPJs compradores com política ativa em modo assistido ou automático, sobre o total de estabelecimentos da organização.">i</span></div><div class="kval" id="rad-kpi-ativos">—</div><div class="ksub">com política ativa</div></div>
+      <div class="kcard"><div class="klbl">Políticas ativas <span class="periodo-info" data-tip="Políticas em modo assistido ou automático, sobre o total criado. Cada política declara um modelo de orquestração — por CNPJ, por contrato ou por faixa de valor — e o motor executa cada uma na própria janela.">i</span></div><div class="kval" id="rad-kpi-ativos">—</div><div class="ksub" id="rad-kpi-ativos-sub">—</div></div>
       <div class="kcard"><div class="klbl">Guias na próxima janela <span class="periodo-info" data-tip="Quantidade de guias que as políticas ativas produziriam na próxima execução, com o valor somado.">i</span></div><div class="kval" id="rad-kpi-guias">—</div><div class="ksub" id="rad-kpi-guias-sub">—</div></div>
       <div class="kcard"><div class="klbl">Aguardando aprovação <span class="periodo-info" data-tip="Lotes que excedem a alçada configurada ou estão em modo assistido, retidos até decisão humana.">i</span></div><div class="kval" id="rad-kpi-aprovacao">—</div><div class="ksub" id="rad-kpi-aprovacao-sub">—</div></div>
       <div class="kcard"><div class="klbl">Falhas de integração <span class="periodo-info" data-tip="Entregas de webhook que falharam somadas aos comprovantes rejeitados. Falha aqui significa que uma das pontas acha que o pagamento seguiu e a outra não registrou.">i</span></div><div class="kval" id="rad-kpi-falhas">—</div><div class="ksub" id="rad-kpi-falhas-sub">—</div></div>
@@ -3090,11 +3090,12 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
 
     <div class="sh-fp" style="margin-bottom:20px">
       <div class="sh-fp-bar">
-        <div class="sh-fp-sw"><span class="sh-fp-sw-ico">⌕</span><input type="text" id="rad-busca" placeholder="Buscar por CNPJ, razão social ou UF…" oninput="radPoliticasRenderTabela()"></div>
+        <div class="sh-fp-sw"><span class="sh-fp-sw-ico">⌕</span><input type="text" id="rad-busca" placeholder="Buscar por nome da política, CNPJ ou contrato…" oninput="radPoliticasRenderTabela()"></div>
         <button class="sh-fp-btn" onclick="window.shToggleFilterPanel('rad-pol')">⧉ Filtros</button>
       </div>
       <div class="sh-fp-panel" id="rad-pol-corpo" style="display:none">
         <div class="sh-fp-grid">
+          <div class="sh-fp-field"><label>Orquestração</label><select id="rad-filtro-orq" onchange="radPoliticasRenderTabela()"><option value="">Todas</option><option value="cnpj">Por CNPJ</option><option value="contrato">Por contrato</option><option value="valor">Por valor de imposto</option></select></div>
           <div class="sh-fp-field"><label>Modo</label><select id="rad-filtro-modo" onchange="radPoliticasRenderTabela()"><option value="">Todos</option><option value="manual">Manual</option><option value="assistido">Assistido</option><option value="automatico">Automático</option></select></div>
           <div class="sh-fp-field"><label>Integração</label><select id="rad-filtro-integracao" onchange="radPoliticasRenderTabela()"><option value="">Todas</option></select></div>
         </div>
@@ -3104,6 +3105,11 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
           <button class="sh-fp-apply" onclick="radPoliticasRenderTabela()">Aplicar</button>
         </div>
       </div>
+    </div>
+
+    <div id="rad-sobreposicao" style="display:none;align-items:center;gap:10px;background:rgba(var(--status-amber-rgb),.08);border:1px solid rgba(var(--status-amber-rgb),.28);border-radius:9px;padding:11px 16px;margin-bottom:12px">
+      <span style="width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0"></span>
+      <span id="rad-sobreposicao-txt" style="font-size:12.5px;color:var(--txt2)"></span>
     </div>
 
     <div id="rad-lote-bar" style="display:none;background:rgba(var(--teal-alt-rgb),.08);border:1px solid rgba(var(--teal-alt-rgb),.3);border-radius:10px;padding:11px 18px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
@@ -3116,12 +3122,14 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
 
     <div class="tcrd">
       <div class="tcrd-hdr" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-        <div class="sechdr" style="margin-bottom:0"><h2>Política de execução por CNPJ comprador</h2><p>O contrato define <em>quem</em> recolhe, por CNPJ fornecedor. A política define <em>quando e como</em> a empresa executa, por CNPJ comprador.</p></div>
-        <div id="rad-politicas-toolbar" style="display:flex;align-items:center;gap:6px"></div>
+        <div class="sechdr" style="margin-bottom:0"><h2>Políticas de execução</h2><p>O contrato define <em>quem</em> recolhe, por CNPJ fornecedor. A política define <em>o que, quando e como</em> a empresa executa: o modelo de orquestração diz o que ela cobre — CNPJs, contratos ou uma faixa de valor —, e o modo diz quanta decisão humana existe.</p></div>
+        <div id="rad-politicas-toolbar" style="display:flex;align-items:center;gap:6px">
+          <button class="btn primary" style="font-size:12px;padding:6px 14px;white-space:nowrap" onclick="radAbrirEditor()">+ Nova política</button>
+        </div>
       </div>
       <div class="twrap"><table><thead id="thead-t-rad-politicas"><tr>
         <th style="width:34px;text-align:center"><input type="checkbox" onchange="radToggleTodos(this)" style="cursor:pointer;width:14px;height:14px"></th>
-        <th>CNPJ</th><th>Estabelecimento</th><th>Modo</th><th>Janela</th><th>Antec.</th>
+        <th>Política</th><th>Orquestração</th><th>Cobertura</th><th>Modo</th><th>Janela</th><th>Antec.</th>
         <th class="r">Alçada</th><th>Integração</th><th>Última execução</th><th>Situação</th>
       </tr></thead><tbody id="t-rad-politicas"></tbody></table></div>
     </div>
@@ -3129,9 +3137,12 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
 
   <!-- ════════ T-03 · Integrações ════════ -->
   <div id="admin-integracoes" class="sv">
-    <div class="sechdr" style="margin-bottom:14px">
-      <h2>Integrações de saída</h2>
-      <p>Até aqui o produto só tinha integração de <em>entrada</em> — a importação de DFs. Estas conexões levam as guias geradas ao ERP e recebem de volta o comprovante de pagamento.</p>
+    <div class="sechdr" style="margin-bottom:14px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:280px">
+        <h2>Integrações</h2>
+        <p>Uma conexão por contexto da API. As de <em>entrada</em> — ingestão de DFs, fornecedores, contratos — recebem uma credencial que o ERP troca por um JWT; as de <em>saída</em> recebem a URL do endpoint e o segredo que assina os eventos.</p>
+      </div>
+      <button class="btn primary" style="white-space:nowrap" onclick="intgNova()">+ Nova conexão</button>
     </div>
 
     <div class="stabs" style="margin-bottom:18px">
@@ -3141,6 +3152,11 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     </div>
 
     <div id="rad-intg-conexoes" class="sv active">
+      <div class="sh-fp" style="margin-bottom:16px"><div class="sh-fp-bar">
+        <div class="sh-fp-field" style="max-width:230px"><label>Tipo</label><select id="intg-f-tipo" onchange="intgFiltrar()"><option value="">Todos</option></select></div>
+        <div class="sh-fp-field" style="max-width:180px"><label>Direção</label><select id="intg-f-direcao" onchange="intgFiltrar()"><option value="">Todas</option><option value="entrada">Entrada</option><option value="saida">Saída</option><option value="ambas">Bidirecional</option></select></div>
+        <div class="sh-fp-field" style="max-width:180px"><label>Ambiente</label><select id="intg-f-ambiente" onchange="intgFiltrar()"><option value="">Todos</option><option value="producao">Produção</option><option value="sandbox">Sandbox</option></select></div>
+      </div></div>
       <div id="rad-conexoes-lista"></div>
     </div>
 
@@ -10487,9 +10503,10 @@ if (window.Chart) {
 })();
 </script>
 <script src="js/col-mgr.js"></script>
-<script src="js/exec-rad.js?v=3"></script>
-<script src="js/exec-rad-2.js?v=3"></script>
+<script src="js/exec-rad.js?v=8"></script>
+<script src="js/exec-rad-2.js?v=5"></script>
 <script src="js/exec-rad-3.js?v=2"></script>
+<script src="js/integracoes.js?v=2"></script>
 <script>
 // ── ShColMgr: registrações de todas as tabelas ──────────────────────────────
 (function(){
