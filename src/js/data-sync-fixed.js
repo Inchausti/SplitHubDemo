@@ -153,6 +153,10 @@ window.SH_TABLES = {
       { label: 'St. Registro' },
       { label: 'Inconsistências' },
       { label: 'Extinção' },
+      { label: 'Origem' },
+      { label: 'Nº da guia' },
+      { label: 'Entrega' },
+      { label: 'RFB' },
       { label: 'Detalhe', cls: 'tc' },
       { label: 'Ação' }
     ]
@@ -216,6 +220,7 @@ window.SH_TABLES = {
       { label: 'UF' },
       { label: 'Tipo' },
       { label: 'Status' },
+      { label: 'Execução RAD' },
       { label: 'Ações', style: 'text-align:center' }
     ]
   }
@@ -6550,7 +6555,10 @@ window.injetarFiltrosPagamentos = function() {
       { label: 'Tipo de DFe',  id: 'fp-tipo-dfe',  type: 'select', options: [{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}] },
       { label: 'Contrato',     id: 'fp-contrato',  type: 'select', options: contratos.concat([{value:'__sem__',label:'Sem contrato'}]) },
       { label: 'Status Crédito', id: 'fp-status-cred', type: 'select', options: [{value:'nao_apropriado',label:'Não Apropriado'},{value:'apropriado',label:'Apropriado'},{value:'utilizado',label:'Utilizado'},{value:'glosado',label:'Glosado'}] },
-      { label: 'Status Registro',id: 'fp-status-reg',  type: 'select', options: [{value:'inconsistencia',label:'Inconsistência'},{value:'em_risco',label:'Em risco'},{value:'vencido',label:'Vencido'},{value:'a_prescrever',label:'A Prescrever'}] }
+      { label: 'Status Registro',id: 'fp-status-reg',  type: 'select', options: [{value:'inconsistencia',label:'Inconsistência'},{value:'em_risco',label:'Em risco'},{value:'vencido',label:'Vencido'},{value:'a_prescrever',label:'A Prescrever'}] },
+      { label: 'Origem da guia',  id: 'fp-origem',  type: 'select', options: [{value:'automatica',label:'Automática'},{value:'manual',label:'Manual'}] },
+      { label: 'Entrega ao ERP',  id: 'fp-entrega', type: 'select', options: [{value:'entregue',label:'Entregue'},{value:'pendente',label:'Pendente'},{value:'falha',label:'Falha'}] },
+      { label: 'Retorno da guia', id: 'fp-retorno', type: 'select', options: [{value:'DARF_GERADO',label:'Gerada'},{value:'DFE_NAO_ENCONTRADO',label:'DF não encontrado'},{value:'VALOR_PARCIAL_SUPERIOR_DFE',label:'Valor parcial superior'}] }
     ]
   });
 };
@@ -6574,7 +6582,7 @@ window.pagamentosFiltrarGrid = function() {
 };
 
 window.pagamentosLimparFiltros = function() {
-  ['fp-busca','fp-tipo','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max','fp-tipo-dfe','fp-contrato','fp-status-cred','fp-status-reg'].forEach(function(id) {
+  ['fp-busca','fp-tipo','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max','fp-tipo-dfe','fp-contrato','fp-status-cred','fp-status-reg','fp-origem','fp-entrega','fp-retorno'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -6676,6 +6684,17 @@ window.renderizarTabelaPagamentos = function() {
   var cnt = document.getElementById('fp-contagem');
   if (cnt) cnt.textContent = rows.length + ' registro' + (rows.length !== 1 ? 's' : '');
 
+  // Enriquece com os campos que a API de RAD devolve (T-05/T-06/T-07)
+  if (window.radEnriquecerRF) rows.forEach(window.radEnriquecerRF);
+
+  // Filtros de origem, entrega e return_code
+  var _fOrigem  = (document.getElementById('fp-origem')  || {}).value || '';
+  var _fEntrega = (document.getElementById('fp-entrega') || {}).value || '';
+  var _fRetorno = (document.getElementById('fp-retorno') || {}).value || '';
+  if (_fOrigem)  rows = rows.filter(function(r) { return r.origemGeracao === _fOrigem; });
+  if (_fEntrega) rows = rows.filter(function(r) { return r.entregaStatus === _fEntrega; });
+  if (_fRetorno) rows = rows.filter(function(r) { return r.returnCode === _fRetorno; });
+
   window._pagImpRows = rows;
   var h = '';
   rows.forEach(function(r, idx) {
@@ -6685,7 +6704,9 @@ window.renderizarTabelaPagamentos = function() {
     var act = isGlosado
       ? '<span style="font-size:11px;color:var(--txt3)">Glosado</span>'
       : !r.pago
-        ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="window.abrirGuiaDARF('+idx+')">Gerar Guia</button>'
+        ? (r.returnCode && r.returnCode !== 'DARF_GERADO'
+            ? '<button class="btn" style="font-size:11px;padding:4px 10px;white-space:nowrap;color:var(--red);border-color:rgba(var(--status-red-rgb),.35)" onclick="window.radAbrirGuiaErro(window._pagImpRows['+idx+'])">Ver erro</button>'
+            : '<button class="btn btn-t" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="window.abrirGuiaDARF('+idx+')">Gerar Guia</button>')
         : '<span style="font-size:11px;color:var(--txt3)">Concluído</span>';
     var nfTipoBadgePag = r.tipoNF === 'entrada'
       ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--teal-rgb),.28);color:'+PALETTE.teal+';background:transparent">Entrada</span>'
@@ -6696,7 +6717,9 @@ window.renderizarTabelaPagamentos = function() {
     var nfCell = r.nfNumero
       ? '<span style="font-size:11px;color:'+PALETTE.blue+';cursor:pointer;text-decoration:underline dotted;font-weight:600;white-space:nowrap" onclick="if(window.abrirDetalhesNFporNumero)window.abrirDetalhesNFporNumero(\'' + r.nfNumero + '\')">' + r.nfVinc + '</span>'
       : '<span style="color:var(--txt3)">—</span>';
-    h += '<tr>'
+    var _faixaAuto = r.origemGeracao === 'automatica'
+      ? ' style="box-shadow:inset 3px 0 0 rgba(var(--teal-rgb),.45)"' : '';
+    h += '<tr' + _faixaAuto + '>'
       + chkCell
       + '<td class="mono nowrap"><button onclick="window.abrirDetalheRF(\''+r.rfId+'\')" style="background:none;border:none;color:'+PALETTE.blue+';cursor:pointer;font-size:11px;font-weight:600;padding:0;text-decoration:underline dotted;font-family:monospace">' + r.rf + '</button></td>'
       + '<td class="mono nowrap">' + nfCell + '</td>'
@@ -6719,13 +6742,17 @@ window.renderizarTabelaPagamentos = function() {
           return '<span style="color:var(--txt3)">—</span>';
         })() + '</td>'
       + '<td class="nowrap">' + (r.metodoExtincao ? (function(){ var _pMetExtMap={'Split Payment':'29,158,117','Compensacao':'24,95,165','Ressarcimento':'29,158,117','Transferencia':'139,92,246','RAD':'186,117,23'}; var _pMetExtLbl={'Split Payment':'Split Payment','Compensacao':'Compensação','Ressarcimento':'Ressarcimento','Transferencia':'Transferência','RAD':'RAD'}; var _k=r.metodoExtincao; return '<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+(_pMetExtMap[_k]||'29,158,117')+',.12);color:rgba('+(_pMetExtMap[_k]||'29,158,117')+',1);border:1px solid rgba('+(_pMetExtMap[_k]||'29,158,117')+',.28)">'+(_pMetExtLbl[_k]||_k)+'</span>'; })() : '<span style="color:var(--txt3);font-size:11px">—</span>') + '</td>'
+      + '<td class="nowrap">' + (window.radCelulaOrigem ? window.radCelulaOrigem(r) : '—') + '</td>'
+      + '<td class="nowrap">' + (window.radCelulaGuia ? window.radCelulaGuia(r) : '—') + '</td>'
+      + '<td class="nowrap">' + (window.radCelulaEntrega ? window.radCelulaEntrega(r) : '—') + '</td>'
+      + '<td class="nowrap">' + (window.radCelulaRfb ? window.radCelulaRfb(r) : '—') + '</td>'
       + '<td class="tc" style="vertical-align:middle">' + detBtn + '</td>'
       + '<td class="nowrap" style="vertical-align:middle;white-space:nowrap">' + act + '</td>'
       + '</tr>';
   });
 
   if (!rows.length) {
-    h = '<tr><td colspan="17" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="21" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;
@@ -7040,6 +7067,10 @@ window.imprimirComprovanteRF = function() {
 };
 
 window.abrirComprovanteRF = function(rfId) {
+  // T-07 — anexa o rastreamento da Receita ao comprovante, quando houver
+  window._radRfComprovante = (window._pagImpRows || []).find(function(x) { return x.rfId === rfId; }) || null;
+  if (window._radRfComprovante && window.radEnriquecerRF) window.radEnriquecerRF(window._radRfComprovante);
+
   // Localizar o RF e sua NF em nfListaFiltradaGlobal
   var rfEncontrado = null, nfEncontrada = null;
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
@@ -7135,6 +7166,26 @@ window.abrirComprovanteRF = function(rfId) {
 
   setEl('cmp-e2e',  e2eId);
   setEl('cmp-auth', auth);
+
+  // T-07 — rastreamento na Receita e meio de pagamento informado pelo ERP.
+  // O modal original assume PIX; o bloco abaixo reflete o que veio na API.
+  var _rr = window._radRfComprovante;
+  var _host = document.getElementById('cmp-e2e');
+  _host = _host ? _host.closest('div').parentElement : null;
+  var _box = document.getElementById('cmp-rfb-box');
+  if (_host && !_box) {
+    _box = document.createElement('div');
+    _box.id = 'cmp-rfb-box';
+    _host.appendChild(_box);
+  }
+  if (_box) {
+    _box.innerHTML = (_rr && window.radBlocoRastreamento) ? window.radBlocoRastreamento(_rr) : '';
+  }
+  // Rótulo do meio: boleto tem outro conjunto de campos que PIX
+  var _lbl = document.getElementById('cmp-tipo-label');
+  if (_lbl && _rr && _rr.tipoPagamentoComprovante === 'boleto') {
+    _lbl.textContent = tipoLabel + ' · pago por boleto — informado pelo ERP';
+  }
 
   // Exibir modal
   var ov = document.getElementById('comprovante-modal-overlay');
@@ -8046,7 +8097,7 @@ window.orgRenderTabela = function() {
   var tbody = document.getElementById('t-org-cnpjs');
   if (!tbody) return;
   if (!lista.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--txt3)">Nenhum CNPJ encontrado com os filtros aplicados.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--txt3)">Nenhum CNPJ encontrado com os filtros aplicados.</td></tr>';
     return;
   }
   // Agrupar por grupoId (suporta CNPJs com raízes distintas no mesmo grupo)
@@ -8067,7 +8118,7 @@ window.orgRenderTabela = function() {
     membros.forEach(function(m) { var r = m.cnpj.substring(0,10); if (raizes.indexOf(r) < 0) raizes.push(r); });
     var raizLabel = raizes.length > 1 ? raizes.length + ' raízes CNPJ' : 'raiz ' + raizes[0];
     rows += '<tr style="background:rgba(96,165,250,.06);border-top:2px solid rgba(96,165,250,.2)">'
-      + '<td colspan="7" style="padding:8px 14px">'
+      + '<td colspan="8" style="padding:8px 14px">'
       + '<div style="display:flex;align-items:center;gap:10px">'
       + '<span style="background:rgba(96,165,250,.15);color:var(--blue);border:1px solid rgba(96,165,250,.3);border-radius:4px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.06em">GRUPO</span>'
       + '<span style="font-size:13px;font-weight:700;color:var(--txt1)">'+gnome+'</span>'
@@ -8086,6 +8137,7 @@ window.orgRenderTabela = function() {
         + '<td><span style="font-size:11px;font-weight:700;color:var(--txt2)">' + r.uf + '</span></td>'
         + '<td><span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba('+tipoSrgb+',.3);color:'+tipoCor+';background:transparent">' + r.tipo + '</span></td>'
         + '<td><span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba('+sSrgb+',.3);color:'+sCor+';background:transparent">' + sLabel + '</span></td>'
+        + '<td class="nowrap">' + (window.radCelulaPoliticaOrg ? window.radCelulaPoliticaOrg(r.cnpj) : '—') + '</td>'
         + '<td style="text-align:center;white-space:nowrap">'
         + '<button onclick="window.orgAbrirModal(' + r.id + ')" style="background:none;border:1px solid var(--brd);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--txt2);cursor:pointer;margin-right:6px">✏ Editar</button>'
         + '<button onclick="window.orgAbrirDet(' + r.id + ')" style="background:none;border:1px solid var(--brd);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--txt2);cursor:pointer;margin-right:6px">⊙ Detalhes</button>'
@@ -8093,7 +8145,7 @@ window.orgRenderTabela = function() {
         + '</td></tr>';
     });
   });
-  tbody.innerHTML = rows || '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--txt3)">Nenhum CNPJ encontrado.</td></tr>';
+  tbody.innerHTML = rows || '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--txt3)">Nenhum CNPJ encontrado.</td></tr>';
   // Expose data for ShColMgr CSV export
   window._orgCnpjsLista=lista.map(function(r){return{cnpj:r.cnpj,nome:r.razao,ie:r.ie,uf:r.uf,tipo:r.tipo,status:r.status};});
   if(window.ShColMgr&&ShColMgr.afterRender)try{ShColMgr.afterRender('admin-org');}catch(e){}
@@ -8441,6 +8493,12 @@ window.abrirGuiaDARF = function(idx) {
     (isIBS ? '62070904IBS' : '62080804DARF') +
     '6304' + Math.floor(rng()*0xFFFF).toString(16).toUpperCase().padStart(4,'0');
 
+  // T-06 — quando os campos da API estão presentes, eles substituem
+  // os valores gerados localmente. Guia com erro nem chega aqui.
+  if (window.radEnriquecerRF) window.radEnriquecerRF(r);
+  if (r.guideNumber) docNum = r.guideNumber;
+  if (r.dueDateBR)   vencimento = r.dueDateBR;
+
   var badge = document.getElementById('darf-tipo-badge');
   badge.textContent = isIBS ? 'Guia IBS' : 'DARF CBS';
   badge.style.cssText = isIBS
@@ -8458,6 +8516,19 @@ window.abrirGuiaDARF = function(idx) {
   document.getElementById('darf-vencimento').textContent  = vencimento;
   document.getElementById('darf-valor-imp').textContent   = _darfFmt(r.valor);
   document.getElementById('darf-total').textContent       = _darfFmt(r.valor);
+  // Composição do valor, PDF oficial e estado da entrega ao ERP
+  var _apiBox = document.getElementById('darf-api-box');
+  if (!_apiBox) {
+    var _tot = document.getElementById('darf-total');
+    var _host = _tot ? _tot.closest('div').parentElement : null;
+    if (_host) {
+      _apiBox = document.createElement('div');
+      _apiBox.id = 'darf-api-box';
+      _host.appendChild(_apiBox);
+    }
+  }
+  if (_apiBox && window.radBlocoGuiaApi) _apiBox.innerHTML = window.radBlocoGuiaApi(r);
+
   document.getElementById('darf-linha-digitavel').textContent = linha;
   document.getElementById('darf-pix-payload').textContent = pixPayload;
 
