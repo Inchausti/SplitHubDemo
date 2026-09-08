@@ -148,16 +148,17 @@
       modo: 'automatico',
       diasExecucao: [5, 20], horaExecucao: '06:00', antecedencia: 5,
       valorMinimo: 0, excluirFlags: ['glosado'],
-      alcadaAtiva: true, limiteAutoAprovacao: 50000, aprovadores: ['tesouraria@induspar.com'],
       integracaoId: 'INT-0001', ativo: true, ultimaExecucao: '05/09/2026 06:00',
       historico: [] },
+    /* Assistido de propósito: contrato recém-integrado, nos primeiros
+       ciclos de conferência do recorte. É o único caso que ainda leva um
+       lote à fila de decisão, agora que a alçada saiu. */
     { id: 'POL-0002', nome: 'Contrato de insumo CT-0011', orquestracao: 'contrato',
       cnpjs: [], contratos: ['CT-0011'],
       faixaMin: 0, faixaMax: null,
-      modo: 'automatico',
+      modo: 'assistido',
       diasExecucao: [1, 15], horaExecucao: '07:00', antecedencia: 7,
       valorMinimo: 0, excluirFlags: ['glosado'],
-      alcadaAtiva: false, limiteAutoAprovacao: 20000, aprovadores: ['tesouraria@induspar.com', 'cfo@induspar.com'],
       integracaoId: 'INT-0002', ativo: true, ultimaExecucao: '01/09/2026 07:00',
       historico: [] },
     /* Pausada de propósito: a faixa cruza notas que POL-0001 e POL-0002
@@ -169,7 +170,6 @@
       modo: 'assistido',
       diasExecucao: [10], horaExecucao: '08:00', antecedencia: 3,
       valorMinimo: 0, excluirFlags: ['glosado'],
-      alcadaAtiva: false, limiteAutoAprovacao: 15000, aprovadores: ['fiscal@induspar.com'],
       integracaoId: 'INT-0003', ativo: false, ultimaExecucao: '—',
       historico: [] }
   ];
@@ -477,15 +477,14 @@
   window.radSelecionarElegiveis = selecionarElegiveis;
 
   /* Monta o lote da próxima execução, separando o que segue do que é
-     retido. A separação é o que permite T-04 §2 tratar bloqueio e
-     alçada como filas distintas, com donos distintos. */
+     retido. A separação é o que permite T-04 §2 tratar o lote que aguarda
+     decisão e as notas retidas como filas distintas, com donos distintos:
+     uma pede aprovação, a outra pede resolver a causa. */
   function montarLote(pol) {
     var eleg = selecionarElegiveis(pol);
     var incluidos = eleg.filter(function (r) { return !r.bloqueado; });
     var bloqueados = eleg.filter(function (r) { return r.bloqueado; });
     var total = incluidos.reduce(function (s, r) { return s + r.valor; }, 0);
-    // Alçada é opcional: desativada, o lote não é retido por valor.
-    var excedeAlcada = !!pol.alcadaAtiva && total > (pol.limiteAutoAprovacao || 0);
     return {
       politicaId: pol.id, politicaNome: pol.nome || pol.id,
       orquestracao: pol.orquestracao, cobertura: coberturaTexto(pol),
@@ -493,9 +492,8 @@
         .filter(function (c, i, a) { return c && a.indexOf(c) === i; }),
       incluidos: incluidos, bloqueados: bloqueados,
       qtd: incluidos.length, total: total,
-      excedeAlcada: excedeAlcada,
       status: bloqueados.length && !incluidos.length ? 'bloqueado'
-            : excedeAlcada || pol.modo === 'assistido' ? 'aguardando_aprovacao'
+            : pol.modo === 'assistido' ? 'aguardando_aprovacao'
             : 'programado'
     };
   }
@@ -573,7 +571,6 @@
           politica: p.nome || p.id, orquestracao: orqCfg(p.orquestracao).label,
           cobertura: coberturaTexto(p), modo: modoCfg(p.modo).label,
           janela: janelaTexto(p), antecedencia: p.antecedencia + ' dias',
-          alcada: p.alcadaAtiva ? fmtBRL(p.limiteAutoAprovacao) : 'sem alçada',
           integracao: intg ? intg.nome : '—',
           ultimaExecucao: p.ultimaExecucao,
           situacao: p.ativo ? 'Ativa' : 'Pausada'
@@ -605,8 +602,6 @@
         '<td>' + badge(m.label, m.cor, m.rgb) + '</td>' +
         '<td style="font-size:12px;white-space:nowrap">' + janelaTexto(p) + '</td>' +
         '<td style="font-size:12px;white-space:nowrap">D-' + p.antecedencia + '</td>' +
-        '<td class="r mono" style="font-size:11px">' +
-          (p.alcadaAtiva ? fmtBRL(p.limiteAutoAprovacao) : '<span style="color:var(--txt3)">—</span>') + '</td>' +
         '<td style="font-size:11px"><span style="display:inline-flex;align-items:center">' + pontoSaude +
           (intg ? intg.nome : '<span style="color:var(--txt3)">—</span>') + '</span></td>' +
         '<td style="font-size:11px;color:var(--txt2);white-space:nowrap">' + p.ultimaExecucao + '</td>' +
@@ -614,7 +609,7 @@
     });
 
     if (!linhas.length) {
-      h = '<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">' +
+      h = '<tr><td colspan="10" style="text-align:center;color:var(--txt3);padding:24px">' +
           (todas.length ? 'Nenhuma política encontrada para este filtro.'
                         : 'Nenhuma política criada. Comece por <strong>Nova política</strong>.') + '</td></tr>';
     }
@@ -747,8 +742,6 @@
       { k: 'horaExecucao', label: 'Hora', fmt: function (v) { return v; } },
       { k: 'antecedencia', label: 'Antecedência', fmt: function (v) { return v + ' dias'; } },
       { k: 'valorMinimo', label: 'Valor mínimo', fmt: fmtBRL },
-      { k: 'alcadaAtiva', label: 'Alçada', fmt: function (v) { return v ? 'ativa' : 'desativada'; } },
-      { k: 'limiteAutoAprovacao', label: 'Limite da alçada', fmt: fmtBRL },
       { k: 'integracaoId', label: 'Integração', fmt: function (v) { var i = integracaoPorId(v); return i ? i.nome : 'Somente plataforma'; } }
     ];
     var out = [];
@@ -896,7 +889,7 @@
         baseValor: 'cbs_ibs', faixaMin: 0, faixaMax: null,
         modo: 'automatico', diasExecucao: [5], horaExecucao: '06:00',
         antecedencia: 5, valorMinimo: 0, excluirFlags: ['glosado'],
-        alcadaAtiva: false, limiteAutoAprovacao: 20000, aprovadores: [], integracaoId: null, ativo: false,
+        integracaoId: null, ativo: false,
         ultimaExecucao: '—', historico: [] };
     }
     /* O editor trabalha sobre uma cópia. Antes ele mutava a política real
@@ -1021,22 +1014,6 @@
             '<span>' + (FLAG_LABEL[f] || f) + ' <code style="font-size:10.5px">' + f + '</code></span></label>';
         }).join('') +
         '</div>') +
-      bloco('Alçada de aprovação <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;' +
-        'background:rgba(var(--status-amber-rgb),.14);color:' + c.txt2 + ';margin-left:6px;letter-spacing:.04em">OPCIONAL · MOCK</span>',
-        '<label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:' + c.txt2 + ';margin-bottom:10px;cursor:pointer">' +
-        '<input type="checkbox" id="rad-ed-alcada-ativa"' + (pol.alcadaAtiva ? ' checked' : '') +
-        ' onchange="radToggleAlcada(this.checked)" style="margin-top:2px"> ' +
-        '<span>Reter lotes acima de um valor para aprovação humana</span></label>' +
-        '<div style="font-size:11px;color:' + c.txt3 + ';line-height:1.55;margin-bottom:12px">' +
-        'O modo já define quanta decisão humana existe — assistido aprova todo lote, automático não aprova nenhum. ' +
-        'A alçada é um segundo controle, por valor, para quem quer que o automático pare acima de um teto.</div>' +
-        '<div id="rad-ed-alcada-campos" style="display:' + (pol.alcadaAtiva ? 'block' : 'none') + '">' +
-        campo('Limite de auto-aprovação', '<input id="rad-ed-alcada" type="number" min="0" value="' + pol.limiteAutoAprovacao + '" style="' + IS + '">',
-          'lotes acima deste valor vão para a fila de aprovação') +
-        campo('Aprovadores', '<input id="rad-ed-aprov" value="' + (pol.aprovadores || []).join(', ') + '" placeholder="email@empresa.com" style="' + IS + '">',
-          'separados por vírgula') +
-        '<div style="font-size:11px;color:' + c.txt3 + ';font-style:italic">Mockado nesta versão: a fila é montada e exibida, mas aprovar não dispara emissão real.</div>' +
-        '</div>') +
       bloco('Destino',
         campo('Integração', '<select id="rad-ed-intg" onchange="radEditorPrevia()" style="' + IS + '">' + intgOpts + '</select>') +
         '<div id="rad-ed-saude" style="font-size:11.5px;color:' + c.txt2 + '"></div>') +
@@ -1150,8 +1127,6 @@
     }
     var _res = el('rad-ed-cobertura-resumo');
     if (_res) _res.textContent = coberturaTexto(p);
-    p.alcadaAtiva = !!(el('rad-ed-alcada-ativa') || {}).checked;
-    p.limiteAutoAprovacao = parseFloat((el('rad-ed-alcada') || {}).value) || 0;
     p.integracaoId = (el('rad-ed-intg') || {}).value || null;
 
     var _vazia = p.orquestracao === 'cnpj' ? !(p.cnpjs || []).length
@@ -1173,13 +1148,11 @@
     } else {
       var lote = montarLote(p);
       var _destino = p.modo === 'automatico'
-        ? (lote.excedeAlcada ? '' : ' e seguiria direto ao ERP, sem intervenção')
+        ? ' e seguiria direto ao ERP, sem intervenção'
         : ' e aguardaria aprovação a cada janela';
       prev.innerHTML = 'Executa <strong>dias ' + p.diasExecucao.join(', ') + '</strong> às ' + p.horaExecucao +
         ', incluindo guias que vencem em até ' + p.antecedencia + ' dias.<br>' +
         'Hoje isso produziria <strong>' + lote.qtd + ' guia(s)</strong> somando <strong>' + fmtBRL(lote.total) + '</strong>' + _destino +
-        (lote.excedeAlcada ? ' — <span style="color:var(--amber);font-weight:600">acima da alçada, iria para aprovação</span>'
-                           : (p.alcadaAtiva ? ' — dentro da alçada' : '')) +
         (lote.bloqueados.length ? '<br><span style="color:var(--amber)">' + lote.bloqueados.length +
           ' retida(s) por flag de exclusão</span>' : '');
       prev.style.color = 'var(--teal)';
@@ -1196,12 +1169,6 @@
           i.entregas + ' envios, ' + i.falhas + ' falhas' + (i.ativo ? '' : ' · <span style="color:var(--amber)">conexão inativa</span>');
       }
     }
-  };
-
-  window.radToggleAlcada = function (on) {
-    var box = el('rad-ed-alcada-campos');
-    if (box) box.style.display = on ? 'block' : 'none';
-    radEditorPrevia();
   };
 
   window.radSalvarPolitica = function () {
@@ -1235,17 +1202,12 @@
     if (p.modo !== 'manual' && !p.diasExecucao.length) {
       return setMsg('Informe ao menos um dia de execução.', 'var(--red)');
     }
-    if (p.alcadaAtiva && !(p.limiteAutoAprovacao > 0)) {
-      return setMsg('Com alçada ativa, informe um limite maior que zero.', 'var(--red)');
-    }
     if (p.modo !== 'manual' && !p.integracaoId) {
       setMsg('Atenção: sem integração, as guias ficam só na plataforma.', 'var(--amber)');
     }
 
     p.excluirFlags = [].slice.call(document.querySelectorAll('.rad-ed-flag:checked'))
       .map(function (c) { return c.value; });
-    p.aprovadores = ((el('rad-ed-aprov') || {}).value || '').split(',')
-      .map(function (s) { return s.trim(); }).filter(Boolean);
     p.ativo = p.modo !== 'manual';
 
     p.nome = (p.nome || '').trim();

@@ -321,9 +321,9 @@
         '<div style="font-size:12px;font-weight:600;color:var(--txt1)">' + fmtCompacto(l.total) + '</div>' +
         (l.bloqueados.length ? '<div style="font-size:10.5px;color:var(--red);margin-top:4px">' + l.bloqueados.length + ' retida(s)</div>' : '') +
         '</div></div>' +
-        (l.excedeAlcada ? '<div style="margin-top:10px;padding:8px 12px;background:rgba(var(--status-amber-rgb),.08);' +
+        (l.status === 'aguardando_aprovacao' ? '<div style="margin-top:10px;padding:8px 12px;background:rgba(var(--status-amber-rgb),.08);' +
           'border-left:2px solid var(--amber);border-radius:0 5px 5px 0;font-size:11.5px;color:var(--txt2)">' +
-          'Excede a alçada de ' + fmtBRL(pol.limiteAutoAprovacao) + ' — irá para a fila de aprovação.</div>' : '') +
+          'Política em modo assistido — o lote aguarda aprovação a cada janela.</div>' : '') +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:11px;border-top:1px solid var(--border)">' +
         '<button class="btn" style="font-size:11px;padding:5px 12px" onclick="radExecExpandir(' + idx + ')">Ver as ' + l.qtd + ' nota(s)</button>' +
         '<button class="btn btn-t" style="font-size:11px;padding:5px 12px" onclick="radExecAntecipar(' + idx + ')">Antecipar execução</button>' +
@@ -383,7 +383,9 @@
     var pol = (window._radPoliticas || []).find(function (p) { return p.id === l.politicaId; });
     if (!confirm('Executar a janela agora, fora do calendário?\n\n' +
                  l.qtd + ' guia(s) · ' + fmtBRL(l.total) +
-                 (l.excedeAlcada ? '\n\nO lote excede a alçada e irá para aprovação.' : '\n\nDentro da alçada: será gerado e enviado.'))) return;
+                 (l.status === 'aguardando_aprovacao'
+                   ? '\n\nPolítica em modo assistido: o lote irá para aprovação.'
+                   : '\n\nSerá gerado e enviado ao ERP.'))) return;
     if (pol) {
       window.radRegistrarEvento(pol, 'execucao',
         [{ campo: 'Guias', de: '—', para: l.qtd + ' · ' + fmtBRL(l.total) }],
@@ -394,7 +396,7 @@
       pol.ultimaExecucao = p(ref.getDate()) + '/' + p(ref.getMonth() + 1) + '/' + ref.getFullYear() +
         ' ' + p(ag.getHours()) + ':' + p(ag.getMinutes());
     }
-    window.radToast(l.excedeAlcada
+    window.radToast(l.status === 'aguardando_aprovacao'
       ? l.qtd + ' guia(s) geradas — aguardando aprovação.'
       : l.qtd + ' guia(s) geradas e enviadas ao ERP.');
     window.radExecRender();
@@ -455,12 +457,10 @@
     if (aguard.length) {
       h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">' +
         '<span style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em">' +
-        'Acima da alçada — ' + aguard.length + '</span>' +
-        '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;letter-spacing:.04em;' +
-        'background:rgba(var(--status-amber-rgb),.14);color:var(--amber)">OPCIONAL · MOCK</span></div>' +
+        'Aguardando aprovação — ' + aguard.length + '</span></div>' +
         '<div style="font-size:11px;color:var(--txt3);margin-bottom:10px;line-height:1.5">' +
-        'A alçada é uma configuração opcional, desativada por padrão. Nesta versão a fila é montada e exibida, ' +
-        'mas aprovar não dispara emissão real de webhook.</div>';
+        'Lotes de políticas em <strong>modo assistido</strong>, que exige aprovação a cada janela. ' +
+        'Em modo automático a guia segue ao ERP sozinha — as réguas de pagamento são aplicadas lá.</div>';
       h += aguard.map(function (l, i) {
         var pol = (window._radPoliticas || []).find(function (p) { return p.id === l.politicaId; });
         return '<div style="background:var(--card);border:1px solid rgba(var(--status-amber-rgb),.3);border-left:3px solid var(--amber);' +
@@ -468,9 +468,9 @@
           '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">' +
           '<div><div style="font-size:13px;font-weight:700;color:var(--txt1)">' + l.politicaNome + '</div>' +
           '<div style="font-size:11px;color:var(--txt2);margin-top:4px">' + l.qtd + ' guia(s) · <strong style="color:var(--txt1)">' +
-            fmtBRL(l.total) + '</strong> · alçada ' + fmtBRL(pol.limiteAutoAprovacao) + '</div>' +
-          '<div style="font-size:10.5px;color:var(--amber);margin-top:4px">Na fila há 2 dias · aprovadores: ' +
-            (pol.aprovadores.join(', ') || 'nenhum configurado') + '</div></div>' +
+            fmtBRL(l.total) + '</strong> · ' + l.cobertura + '</div>' +
+          '<div style="font-size:10.5px;color:var(--amber);margin-top:4px">Na fila há 2 dias · janela dias ' +
+            pol.diasExecucao.join(', ') + ' às ' + pol.horaExecucao + '</div></div>' +
           '<div style="display:flex;gap:8px;align-items:flex-start">' +
           '<button class="btn" style="font-size:11px;padding:5px 12px" onclick="radRecusarLote(' + i + ')">Recusar</button>' +
           '<button class="btn btn-t" style="font-size:11px;padding:5px 14px" onclick="radAprovarLote(' + i + ')">Aprovar e enviar</button>' +
