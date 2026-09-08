@@ -202,6 +202,35 @@
   // T-04 — EXECUÇÃO PROGRAMADA
   // ══════════════════════════════════════════════════════════
 
+  function nomeCnpj(cnpj) {
+    var o = orgPorCnpj(cnpj);
+    return o ? o.razao + ' — ' + o.uf : (cnpj || '—');
+  }
+  function curtoCnpj(cnpj) {
+    var o = orgPorCnpj(cnpj);
+    return o ? o.uf + ' · ' + (cnpj || '').slice(-7) : (cnpj || '—');
+  }
+
+  /* Linha da guia, usada tanto no detalhe do lote quanto na fila de
+     aprovação. Traz CNPJ e contrato porque o lote deixou de ser de um
+     estabelecimento só. */
+  function linhaGuia(r, acao) {
+    return '<tr>' +
+      '<td class="mono" style="font-size:10.5px;color:var(--blue)">' + r.rfId + '</td>' +
+      '<td style="font-size:11px">' + r.forn + '</td>' +
+      '<td style="font-size:10.5px;color:var(--txt2);white-space:nowrap">' + curtoCnpj(r.cnpjComprador) + '</td>' +
+      '<td class="mono" style="font-size:10.5px;color:var(--txt2)">' + (r.contratoId || '—') + '</td>' +
+      '<td style="font-size:11px">' + r.tipoFiscal + '</td>' +
+      '<td class="r mono" style="font-size:11px">' + fmtBRL(r.valor) + '</td>' +
+      '<td style="font-size:11px;color:var(--txt2);white-space:nowrap">' + r.dataRF + '</td>' +
+      (acao ? '<td>' + acao + '</td>' : '') +
+      '</tr>';
+  }
+  function cabecalhoGuias(comAcao) {
+    return '<thead><tr><th>RF</th><th>Fornecedor</th><th>CNPJ comprador</th><th>Contrato</th>' +
+      '<th>Tipo</th><th class="r">Valor</th><th>Data RF</th>' + (comAcao ? '<th></th>' : '') + '</tr></thead>';
+  }
+
   window.radExecTab = function (tab, btn) {
     ['proxima', 'aprovacao', 'historico'].forEach(function (t) {
       var v = el('rad-exec-' + t); if (v) v.classList.toggle('active', t === tab);
@@ -220,20 +249,58 @@
     radExecHistoricoRender();
   };
 
+  /* Quanto do universo de guias RAD pendentes está sob alguma política.
+     É a pergunta que a listagem por política deixou de responder sozinha. */
+  function barraCobertura(lotes) {
+    var fora = window.radRFsDescobertos ? window.radRFsDescobertos() : [];
+    var cobertas = lotes.reduce(function (a, l) { return a + l.qtd + l.bloqueados.length; }, 0);
+    var total = cobertas + fora.length;
+    var pct = total ? Math.round((cobertas / total) * 100) : 100;
+    var valorFora = fora.reduce(function (a, r) { return a + r.valor; }, 0);
+    var cor = pct >= 95 ? 'var(--green)' : pct >= 70 ? 'var(--amber)' : 'var(--red)';
+
+    var porCnpj = {};
+    fora.forEach(function (r) { porCnpj[r.cnpjComprador] = (porCnpj[r.cnpjComprador] || 0) + 1; });
+    var lista = Object.keys(porCnpj).map(function (c) {
+      return nomeCnpj(c) + ' (' + porCnpj[c] + ')';
+    }).join(' · ');
+
+    return '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;' +
+      'padding:14px 18px;margin-bottom:16px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">' +
+      '<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em">' +
+      'Cobertura das políticas</div>' +
+      '<div style="font-size:12.5px;color:var(--txt2);margin-top:4px">' +
+      '<strong style="color:' + cor + ';font-size:16px">' + pct + '%</strong> das guias RAD pendentes ' +
+      'estão sob alguma política ativa — ' + cobertas + ' de ' + total + '</div></div>' +
+      '<div style="text-align:right">' +
+      '<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em">Fora de política</div>' +
+      '<div style="font-size:19px;font-weight:800;color:' + (fora.length ? 'var(--amber)' : 'var(--green)') +
+      ';margin-top:2px">' + fora.length + '</div>' +
+      '<div style="font-size:10.5px;color:var(--txt3)">' + fmtCompacto(valorFora) + '</div></div></div>' +
+      (fora.length
+        ? '<div style="margin-top:11px;padding-top:11px;border-top:1px solid var(--border);' +
+          'font-size:11px;color:var(--txt2);line-height:1.55">' +
+          'Continuam dependendo de geração manual na aba <strong>Guias RAD</strong>: ' + lista + '.</div>'
+        : '') +
+      '</div>';
+  }
+
   // ── Seção 1: próxima execução ──
   function radExecProximaRender(lotes) {
     var wrap = el('rad-exec-proxima-lista'); if (!wrap) return;
     var programados = lotes.filter(function (l) { return l.status === 'programado' || l.status === 'aguardando_aprovacao'; });
 
     if (!programados.length) {
-      wrap.innerHTML = '<div style="text-align:center;color:var(--txt3);padding:28px;font-size:13px">' +
+      wrap.innerHTML = barraCobertura(lotes) +
+        '<div style="text-align:center;color:var(--txt3);padding:28px;font-size:13px">' +
         'Nenhuma execução programada. Ative uma política em <a href="javascript:void(0)" ' +
         'onclick="showAdminSub(\'exec-rad\',document.getElementById(\'subnav-admin-exec-rad\'))" ' +
         'style="color:var(--teal)">Configurações → Execução RAD</a>.</div>';
       return;
     }
 
-    wrap.innerHTML = programados.map(function (l, idx) {
+    wrap.innerHTML = barraCobertura(lotes) + programados.map(function (l, idx) {
       var pol = (window._radPoliticas || []).find(function (p) { return p.id === l.politicaId; });
       var m = window.radModoCfg(pol.modo);
       var o = window.radOrqCfg(pol.orquestracao);
@@ -274,12 +341,8 @@
     box.style.display = 'block';
 
     var linhas = l.incluidos.map(function (r, i) {
-      return '<tr><td class="mono" style="font-size:10.5px;color:var(--blue)">' + r.rfId + '</td>' +
-        '<td style="font-size:11px">' + r.forn + '</td>' +
-        '<td style="font-size:11px">' + r.tipoFiscal + '</td>' +
-        '<td class="r mono" style="font-size:11px">' + fmtBRL(r.valor) + '</td>' +
-        '<td style="font-size:11px;color:var(--txt2)">' + r.dataRF + '</td>' +
-        '<td><button class="btn" style="font-size:10px;padding:2px 8px" onclick="radExcluirDoLote(' + idx + ',' + i + ')">Excluir</button></td></tr>';
+      return linhaGuia(r, '<button class="btn" style="font-size:10px;padding:2px 8px" ' +
+        'onclick="radExcluirDoLote(' + idx + ',' + i + ')">Excluir</button>');
     }).join('');
 
     var bloq = l.bloqueados.length
@@ -297,8 +360,8 @@
       : '';
 
     box.innerHTML = '<div class="twrap" style="max-height:280px;overflow:auto"><table>' +
-      '<thead><tr><th>RF</th><th>Fornecedor</th><th>Tipo</th><th class="r">Valor</th><th>Data RF</th><th></th></tr></thead>' +
-      '<tbody>' + (linhas || '<tr><td colspan="6" style="text-align:center;color:var(--txt3);padding:16px">Nenhuma nota elegível.</td></tr>') +
+      cabecalhoGuias(true) +
+      '<tbody>' + (linhas || '<tr><td colspan="8" style="text-align:center;color:var(--txt3);padding:16px">Nenhuma nota elegível.</td></tr>') +
       '</tbody></table></div>' + bloq;
   };
 
@@ -338,6 +401,49 @@
     if (window.radPoliticasRenderKPIs) window.radPoliticasRenderKPIs();
   };
 
+  /* As guias represadas, abertas por padrão. Quem precisa decidir sobre
+     um lote precisa ver o que está dentro dele — esconder atrás de um
+     clique transforma a aprovação em ato de fé. */
+  function guiasRepresadas(l, i) {
+    if (!l.incluidos.length) return '';
+
+    // Concentração por CNPJ e por contrato: um lote heterogêneo merece
+    // mais atenção do aprovador do que um lote de um fornecedor só.
+    var porCnpj = {}, porCt = {}, maior = l.incluidos[0];
+    l.incluidos.forEach(function (r) {
+      porCnpj[r.cnpjComprador] = (porCnpj[r.cnpjComprador] || 0) + r.valor;
+      porCt[r.contratoId || '—'] = (porCt[r.contratoId || '—'] || 0) + r.valor;
+      if (r.valor > maior.valor) maior = r;
+    });
+    var nCnpj = Object.keys(porCnpj).length, nCt = Object.keys(porCt).length;
+
+    var linhas = l.incluidos
+      .slice().sort(function (a, b) { return b.valor - a.valor; })
+      .map(function (r) {
+        var pctLote = l.total ? (r.valor / l.total) * 100 : 0;
+        return linhaGuia(r,
+          '<span style="font-size:10px;color:var(--txt3);font-family:var(--font-mono)">' +
+          pctLote.toFixed(1).replace('.', ',') + '%</span>');
+      }).join('');
+
+    return '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:9px">' +
+      '<span style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em">' +
+      'Guias represadas — ' + l.incluidos.length + '</span>' +
+      '<span style="font-size:10.5px;color:var(--txt3)">' +
+      nCnpj + ' CNPJ' + (nCnpj > 1 ? 's' : '') + ' · ' + nCt + ' contrato' + (nCt > 1 ? 's' : '') +
+      ' · maior guia ' + fmtBRL(maior.valor) + ' (' + maior.rfId + ')</span></div>' +
+      '<div class="twrap" style="max-height:300px;overflow:auto"><table>' +
+      cabecalhoGuias(true).replace('<th></th>', '<th class="r">% do lote</th>') +
+      '<tbody>' + linhas + '</tbody></table></div>' +
+      (l.bloqueados.length
+        ? '<div style="font-size:10.5px;color:var(--txt3);margin-top:8px">' +
+          'Outras ' + l.bloqueados.length + ' nota(s) desta política estão retidas por flag de exclusão e ' +
+          '<strong>não</strong> entram nesta aprovação — aparecem abaixo.</div>'
+        : '') +
+      '</div>';
+  }
+
   // ── Seção 2: aguardando aprovação ──
   function radExecAprovacaoRender(lotes) {
     var wrap = el('rad-exec-aprov-lista'); if (!wrap) return;
@@ -368,7 +474,9 @@
           '<div style="display:flex;gap:8px;align-items:flex-start">' +
           '<button class="btn" style="font-size:11px;padding:5px 12px" onclick="radRecusarLote(' + i + ')">Recusar</button>' +
           '<button class="btn btn-t" style="font-size:11px;padding:5px 14px" onclick="radAprovarLote(' + i + ')">Aprovar e enviar</button>' +
-          '</div></div></div>';
+          '</div></div>' +
+          guiasRepresadas(l, i) +
+          '</div>';
       }).join('');
     }
 

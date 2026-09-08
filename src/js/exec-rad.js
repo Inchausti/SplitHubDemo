@@ -64,6 +64,33 @@
       desc: 'A política cobre as guias cujo valor de imposto cai dentro de uma faixa.',
       hint: 'Use para separar o grão fino do alto valor: guias grandes com mais antecedência, pequenas em lote.' }
   ];
+  /* Sobre qual valor a faixa incide. O RF guarda o valor da própria guia;
+     os totais da nota vêm espelhados nele (valorTotalNF, valorLiquidoNF) e,
+     na falta, do DF. */
+  var BASES_VALOR = [
+    { v: 'cbs_ibs', label: 'Valor CBS/IBS do DF',
+      curto: 'guia CBS/IBS',
+      desc: 'O valor do próprio registro fiscal — o que vira a guia. É a leitura mais direta: a faixa fala do que será pago.',
+      calc: function (nf, rf) { return rf.valor || 0; } },
+    { v: 'imposto_total', label: 'Valor total de imposto',
+      curto: 'imposto total do DF',
+      desc: 'IBS + CBS do documento inteiro. Um DF gera duas guias; esta base olha a soma antes da divisão.',
+      calc: function (nf, rf) { return (nf.ibs || 0) + (nf.cbs || 0); } },
+    { v: 'nota', label: 'Valor da nota',
+      curto: 'valor da nota',
+      desc: 'O valor total do documento fiscal. Use quando a régua é comercial — notas grandes tratadas com mais antecedência.',
+      calc: function (nf, rf) { return rf.valorTotalNF || nf.valorTotal || 0; } },
+    { v: 'liquido', label: 'Valor líquido',
+      curto: 'valor líquido',
+      desc: 'O valor da nota descontados os tributos. É o que efetivamente circula para o fornecedor.',
+      calc: function (nf, rf) { return rf.valorLiquidoNF || nf.valorLiquido || 0; } }
+  ];
+  function baseCfg(v) {
+    return BASES_VALOR.filter(function (b) { return b.v === v; })[0] || BASES_VALOR[0];
+  }
+  window.RAD_BASES_VALOR = BASES_VALOR;
+  window.radBaseCfg = baseCfg;
+
   function orqCfg(v) {
     return ORQUESTRACOES.filter(function (o) { return o.v === v; })[0] || ORQUESTRACOES[0];
   }
@@ -138,7 +165,7 @@
        exatamente o caso que a detecção entre modelos existe para pegar. */
     { id: 'POL-0003', nome: 'Guias de alto valor', orquestracao: 'valor',
       cnpjs: [], contratos: [],
-      faixaMin: 470000, faixaMax: null,
+      baseValor: 'cbs_ibs', faixaMin: 470000, faixaMax: null,
       modo: 'assistido',
       diasExecucao: [10], horaExecucao: '08:00', antecedencia: 3,
       valorMinimo: 0, excluirFlags: ['glosado'],
@@ -225,10 +252,11 @@
 
   function fmtFaixa(p) {
     var min = p.faixaMin || 0, max = p.faixaMax;
-    if (!min && !max) return 'qualquer valor';
-    if (!max) return 'acima de ' + fmtBRL(min);
-    if (!min) return 'at\u00e9 ' + fmtBRL(max);
-    return fmtBRL(min) + ' a ' + fmtBRL(max);
+    var base = ' de ' + baseCfg(p.baseValor).curto;
+    if (!min && !max) return 'qualquer' + base;
+    if (!max) return base.replace(' de ', '') + ' acima de ' + fmtBRL(min);
+    if (!min) return base.replace(' de ', '') + ' at\u00e9 ' + fmtBRL(max);
+    return base.replace(' de ', '') + ' de ' + fmtBRL(min) + ' a ' + fmtBRL(max);
   }
   window.radFmtFaixa = fmtFaixa;
 
@@ -263,6 +291,9 @@
           if ((o.contratos || []).indexOf(c) >= 0) out.push({ politica: o, item: c });
         });
       } else {
+        // Faixas sobre bases diferentes não são comparáveis: R$ 400 mil de
+        // guia e R$ 400 mil de nota não descrevem o mesmo conjunto.
+        if ((o.baseValor || 'cbs_ibs') !== (p.baseValor || 'cbs_ibs')) return;
         var aMin = p.faixaMin || 0, aMax = p.faixaMax === null || p.faixaMax === undefined ? Infinity : p.faixaMax;
         var bMin = o.faixaMin || 0, bMax = o.faixaMax === null || o.faixaMax === undefined ? Infinity : o.faixaMax;
         if (aMin <= bMax && bMin <= aMax) out.push({ politica: o, item: fmtFaixa(o) });
@@ -290,6 +321,45 @@
     return Object.keys(dupes).map(function (k) { return { rfId: k, politicas: dupes[k] }; });
   }
   window.radSobreposicaoRFs = sobreposicaoRFs;
+
+  /* Qual política reivindica cada RF. O índice é construído sob demanda
+     e invalidado a cada mudança de política — sem ele, responder isso por
+     linha de tabela custaria uma varredura completa por linha. */
+  var _idxPolRF = null;
+  function indicePoliticaPorRF() {
+    if (_idxPolRF) return _idxPolRF;
+    var idx = {};
+    (window._radPoliticas || [])
+      .filter(function (p) { return p.ativo && p.modo !== 'manual'; })
+      .forEach(function (p) {
+        selecionarElegiveis(p).forEach(function (r) {
+          if (!idx[r.rfId]) idx[r.rfId] = p.id;
+        });
+      });
+    return (_idxPolRF = idx);
+  }
+  function invalidarIndice() { _idxPolRF = null; }
+  window.radInvalidarIndicePolitica = invalidarIndice;
+  window.radPoliticaDoRF = function (rfId) { return indicePoliticaPorRF()[rfId] || null; };
+
+  /* Guias RAD pendentes que nenhuma política ativa alcança. Continuam
+     dependendo de geração manual, e é o número que some quando a
+     listagem deixa de ser por CNPJ. */
+  window.radRFsDescobertos = function () {
+    var idx = indicePoliticaPorRF(), fora = [];
+    (window.nfListaFiltradaGlobal || []).forEach(function (nf) {
+      if (nf.tipo !== 'entrada') return;
+      (nf.registrosFiscais || []).forEach(function (rf) {
+        if ((rf.metodoPagamento || nf.metodoPagamento || '') !== 'RAD') return;
+        var pago = (rf.dataPagamento && rf.dataPagamento !== '—') ||
+                   rf.statusCredito === 'apropriado' || rf.statusCredito === 'utilizado';
+        if (pago || idx[rf.id]) return;
+        fora.push({ rfId: rf.id, valor: rf.valor || 0, cnpjComprador: nf.cnpjComprador || '',
+                    forn: rf.entidade || nf.entidade || '—' });
+      });
+    });
+    return fora;
+  };
 
   function cnpjsSemCobertura() {
     var cobertos = {};
@@ -358,7 +428,8 @@
     if (pol.orquestracao === 'valor') {
       var min = pol.faixaMin || 0;
       var max = pol.faixaMax === null || pol.faixaMax === undefined ? Infinity : pol.faixaMax;
-      return valor >= min && valor <= max;
+      var base = baseCfg(pol.baseValor).calc(nf, rf);
+      return base >= min && base <= max;
     }
     return (pol.cnpjs || []).indexOf(nf.cnpjComprador) >= 0;
   }
@@ -393,6 +464,7 @@
           rfId: rf.id, dfeKey: rf.chaveDF || nf.chave || '',
           cnpjComprador: nf.cnpjComprador || '',
           contratoId: rf.contratoId || nf.contratoId || null,
+          statusCredito: rf.statusCredito || '',
           nfNumero: nf.numero, forn: rf.entidade || nf.entidade || '—',
           tipoFiscal: rf.tipoFiscal === 'ibs' ? 'Guia IBS' : 'DARF CBS',
           valor: v, dataRF: rf.data || '', bloqueado: bloqueado,
@@ -599,6 +671,7 @@
         n++;
       }
     });
+    invalidarIndice();
     document.querySelectorAll('.rad-pol-chk').forEach(function (c) { c.checked = false; });
     window.radPoliticasRenderTabela();
     window.radPoliticasRenderKPIs();
@@ -666,6 +739,7 @@
       { k: 'orquestracao', label: 'Orquestração', fmt: function (v) { return orqCfg(v).label; } },
       { k: 'cnpjs', label: 'CNPJs cobertos', fmt: function (v) { return (v || []).join(', ') || '—'; } },
       { k: 'contratos', label: 'Contratos cobertos', fmt: function (v) { return (v || []).join(', ') || '—'; } },
+      { k: 'baseValor', label: 'Valor comparado', fmt: function (v) { return baseCfg(v).label; } },
       { k: 'faixaMin', label: 'Faixa — mínimo', fmt: fmtBRL },
       { k: 'faixaMax', label: 'Faixa — máximo', fmt: function (v) { return v === null || v === undefined ? 'sem teto' : fmtBRL(v); } },
       { k: 'modo', label: 'Modo', fmt: function (v) { return modoCfg(v).label; } },
@@ -760,10 +834,21 @@
     }
 
     if (pol.orquestracao === 'valor') {
+      var baseAtual = baseCfg(pol.baseValor);
       var outras = (window._radPoliticas || []).filter(function (o) {
-        return o.id !== pol.id && o.orquestracao === 'valor';
+        return o.id !== pol.id && o.orquestracao === 'valor' &&
+               (o.baseValor || 'cbs_ibs') === baseAtual.v;
       });
-      return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+      var baseSel = '<div style="margin-bottom:12px">' +
+        '<label style="display:block;font-size:11px;font-weight:600;color:var(--txt2);margin-bottom:5px">' +
+        'Valor comparado</label>' +
+        '<select id="rad-ed-base" onchange="radEditorBase(this.value)" style="' + inp + '">' +
+        BASES_VALOR.map(function (b) {
+          return '<option value="' + b.v + '"' + (b.v === baseAtual.v ? ' selected' : '') + '>' + b.label + '</option>';
+        }).join('') + '</select>' +
+        '<div style="font-size:10.5px;color:var(--txt3);margin-top:5px;line-height:1.5">' + baseAtual.desc + '</div></div>';
+      return baseSel +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
         '<div><label style="display:block;font-size:11px;font-weight:600;color:var(--txt2);margin-bottom:5px">' +
         'Valor mínimo</label>' +
         '<input id="rad-ed-faixa-min" type="number" min="0" step="1000" value="' + (pol.faixaMin || 0) +
@@ -773,10 +858,10 @@
         '<input id="rad-ed-faixa-max" type="number" min="0" step="1000" placeholder="sem teto" value="' +
         (pol.faixaMax === null || pol.faixaMax === undefined ? '' : pol.faixaMax) +
         '" oninput="radEditorPrevia()" style="' + inp + '"></div></div>' +
-        '<div style="' + nota + '">Valor do imposto da guia, não o valor da nota. Deixe o máximo vazio para “acima de”.' +
-        (outras.length ? '<br>Outras faixas já configuradas: ' + outras.map(function (o) {
+        '<div style="' + nota + '">Deixe o máximo vazio para “acima de”.' +
+        (outras.length ? '<br>Outras faixas sobre ' + baseAtual.curto + ': ' + outras.map(function (o) {
           return o.id + ' (' + fmtFaixa(o) + ')';
-        }).join(', ') + '. Faixas que se cruzam não podem coexistir.' : '') + '</div>';
+        }).join(', ') + '. Faixas que se cruzam sobre a mesma base não podem coexistir.' : '') + '</div>';
     }
 
     var orgs = window._orgCnpjs || [];
@@ -807,7 +892,8 @@
       var ehCnpj = ref && /\d{2}\.\d{3}\.\d{3}\//.test(ref);
       pol = { id: 'POL-' + String((window._radPoliticas || []).length + 1).padStart(4, '0'),
         nome: '', orquestracao: 'cnpj',
-        cnpjs: ehCnpj ? [ref] : [], contratos: [], faixaMin: 0, faixaMax: null,
+        cnpjs: ehCnpj ? [ref] : [], contratos: [],
+        baseValor: 'cbs_ibs', faixaMin: 0, faixaMax: null,
         modo: 'automatico', diasExecucao: [5], horaExecucao: '06:00',
         antecedencia: 5, valorMinimo: 0, excluirFlags: ['glosado'],
         alcadaAtiva: false, limiteAutoAprovacao: 20000, aprovadores: [], integracaoId: null, ativo: false,
@@ -1005,6 +1091,14 @@
     radEditorPrevia();
   };
 
+  window.radEditorBase = function (v) {
+    var p = window._radPolEditando; if (!p) return;
+    p.baseValor = v;
+    var box = el('rad-ed-cobertura');
+    if (box) box.innerHTML = coberturaEditorHtml(p);
+    radEditorPrevia();
+  };
+
   window.radEdCobertura = function (campo, valor, on) {
     var p = window._radPolEditando; if (!p) return;
     var a = p[campo] || (p[campo] = []);
@@ -1049,6 +1143,7 @@
     p.antecedencia = parseInt((el('rad-ed-antec') || {}).value, 10) || 0;
     p.valorMinimo = parseFloat((el('rad-ed-vmin') || {}).value) || 0;
     if (p.orquestracao === 'valor') {
+      p.baseValor = (el('rad-ed-base') || {}).value || p.baseValor || 'cbs_ibs';
       p.faixaMin = parseFloat((el('rad-ed-faixa-min') || {}).value) || 0;
       var _max = (el('rad-ed-faixa-max') || {}).value;
       p.faixaMax = _max === '' || _max === undefined ? null : parseFloat(_max);
@@ -1171,6 +1266,7 @@
       p = orig;
     }
 
+    invalidarIndice();
     window.radFecharEditor();
     window.radPoliticasRenderTabela();
     window.radPoliticasRenderKPIs();

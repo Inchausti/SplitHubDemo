@@ -341,14 +341,42 @@ a.xref:hover { border-bottom-style: solid; }
             <td>A régua é do acordo — um contrato de insumo com prazo diferente do resto</td>
           </tr>
           <tr>
-            <td><strong>Por valor de imposto</strong></td>
-            <td>As guias cujo valor de imposto cai na faixa</td>
-            <td><code>faixaMin</code>, <code>faixaMax</code></td>
+            <td><strong>Por valor</strong></td>
+            <td>As guias cujo valor cai na faixa, sobre a base escolhida</td>
+            <td><code>baseValor</code>, <code>faixaMin</code>, <code>faixaMax</code></td>
             <td>Separar grão fino de alto valor — guias grandes com mais antecedência</td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <h4>A base de comparação da faixa</h4>
+
+    <p>Dizer “acima de R$ 400 mil” não basta: R$ 400 mil de nota e R$ 400 mil de guia descrevem
+    conjuntos completamente diferentes. A política declara sobre o que a faixa incide.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th><code>baseValor</code></th><th>Compara</th><th>De onde vem</th></tr></thead>
+        <tbody>
+          <tr><td><code>cbs_ibs</code> <span class="chip teal">padrão</span></td>
+            <td>Valor CBS/IBS do DF — o valor do próprio registro fiscal, que vira a guia</td>
+            <td><code>rf.valor</code></td></tr>
+          <tr><td><code>imposto_total</code></td>
+            <td>IBS + CBS do documento inteiro, antes de virar duas guias</td>
+            <td><code>nf.ibs + nf.cbs</code></td></tr>
+          <tr><td><code>nota</code></td>
+            <td>Valor total do documento fiscal</td>
+            <td><code>rf.valorTotalNF</code></td></tr>
+          <tr><td><code>liquido</code></td>
+            <td>Valor da nota descontados os tributos — o que circula para o fornecedor</td>
+            <td><code>rf.valorLiquidoNF</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="font-size:12.5px;color:var(--txt3)">Duas faixas sobre bases diferentes não conflitam,
+    porque não são comparáveis. A validação de sobreposição só compara faixas da mesma base.</p>
 
     <div class="callout warn">
       <div class="ct">Cobertura repetida gera a guia duas vezes</div>
@@ -369,6 +397,7 @@ a.xref:hover { border-bottom-style: solid; }
   <span class="v">orquestracao</span>:    <span class="s">"cnpj" | "contrato" | "valor"</span>,
   <span class="v">cnpjs</span>:           [<span class="s">"01.123.456/0001-99"</span>, ...],   <span class="c">// orquestracao = "cnpj"</span>
   <span class="v">contratos</span>:       [<span class="s">"CT-0011"</span>, ...],               <span class="c">// orquestracao = "contrato"</span>
+  <span class="v">baseValor</span>:       <span class="s">"cbs_ibs" | "imposto_total" | "nota" | "liquido"</span>,
   <span class="v">faixaMin</span>:        <span class="n">470000</span>,                     <span class="c">// orquestracao = "valor"</span>
   <span class="v">faixaMax</span>:        <span class="k">null</span>,                       <span class="c">// null = sem teto</span>
 
@@ -436,16 +465,58 @@ a.xref:hover { border-bottom-style: solid; }
       <p>Nesta versão ela está <strong>mockada</strong>: a fila é montada e exibida, mas aprovar não dispara emissão real de webhook. Serve para validar o desenho antes de investir na mecânica de aprovação.</p>
     </div>
 
-    <h3>3.2 Integração</h3>
+    <h3>3.2 Conexão de integração</h3>
+
+    <p>A conexão deixou de ser só o webhook do RAD. O <code>tipo</code> vem de um catálogo
+    derivado da documentação publicada, e é ele que decide o que a plataforma pede na
+    criação e o que emite ao final.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tipo</th><th>Direção</th><th>Credencial</th><th>Doc</th></tr></thead>
+        <tbody>
+          <tr><td><code>ingestao_dfs</code></td><td>Entrada</td><td>client_id + client_secret</td><td><code>ingestao-dfs.html</code></td></tr>
+          <tr><td><code>fornecedores</code></td><td>Entrada</td><td>client_id + client_secret</td><td><code>fornecedores.html</code></td></tr>
+          <tr><td><code>contratos</code></td><td>Entrada</td><td>client_id + client_secret</td><td><code>contratos.html</code></td></tr>
+          <tr><td><code>rad_erp</code></td><td>Bidirecional</td><td>as duas</td><td><code>rad.html</code></td></tr>
+          <tr><td><code>garantia_credito</code></td><td>Saída</td><td>signing secret</td><td><code>garantia-credito.html</code></td></tr>
+          <tr><td><code>automacoes</code></td><td>Saída</td><td>signing secret</td><td><code>automacoes.html</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">A conexão bidirecional carrega duas credenciais, e elas não se substituem</div>
+      <p>A de API autentica o <strong>ERP chamando o SplitHub</strong> em <code>POST /v1/rad/proofs</code>.
+      A de assinatura protege o que o <strong>SplitHub envia ao ERP</strong>. Rotacionar uma não
+      afeta a outra, e o painel oferece as duas rotações separadas — trocar as duas de uma vez
+      obrigaria a duas mudanças simultâneas do outro lado.</p>
+    </div>
+
     <div class="code-block"><code>{
   <span class="v">id</span>:           <span class="s">"INT-0001"</span>,
+  <span class="v">tipo</span>:         <span class="s">"ingestao_dfs" | "fornecedores" | "contratos"</span>
+                <span class="s">| "rad_erp" | "garantia_credito" | "automacoes"</span>,
   <span class="v">nome</span>:         <span class="s">"ERP Protheus — Matriz"</span>,
+  <span class="v">ambiente</span>:     <span class="s">"producao" | "sandbox"</span>,   <span class="c">// prefixo live_ ou test_</span>
+
+  <span class="c">// Entrada — o ERP chama a API do SplitHub</span>
+  <span class="v">clientId</span>:     <span class="s">"shc_live_a71f39c2d840be15702c"</span>,
+  <span class="v">token</span>:        <span class="s">"shs_live_2e9c••••••••••••41ab"</span>,  <span class="c">// só o hash é guardado</span>
+  <span class="v">escopos</span>:      [<span class="s">"dfs:write"</span>, <span class="s">"dfs:read"</span>],
+
+  <span class="c">// Saída — o SplitHub chama o endpoint do ERP</span>
   <span class="v">webhookUrl</span>:   <span class="s">"https://erp.cliente.com/hooks/splithub"</span>,
-  <span class="v">token</span>:        <span class="s">"••••••••"</span>,      <span class="c">// Bearer p/ POST /v1/rad/proofs</span>
+  <span class="v">tokenWebhook</span>: <span class="s">"whsec_live_8d22••••••••••••06ce"</span>,
   <span class="v">eventos</span>:      [<span class="s">"rad.darf_recebida"</span>, <span class="s">"rad.proof_received"</span>],
+
+  <span class="v">cnpjs</span>:        [<span class="s">"01.123.456/0001-99"</span>],   <span class="c">// vazio = toda a organização</span>
   <span class="v">ativo</span>:        <span class="k">true</span>,
+  <span class="v">criadoEm</span>:     <span class="s">"02/07/2026"</span>,
+  <span class="v">criadoPor</span>:    <span class="s">"Marina Costa"</span>,
   <span class="v">ultimaEntrega</span>: <span class="s">"2026-09-08T06:00:12Z"</span>,
-  <span class="v">taxaSucesso</span>:  <span class="n">0.98</span>
+  <span class="v">entregas</span>:     <span class="n">142</span>,  <span class="v">falhas</span>: <span class="n">3</span>,     <span class="c">// métricas de saída</span>
+  <span class="v">chamadas</span>:     <span class="n">18447</span>, <span class="v">errosApi</span>: <span class="n">63</span>  <span class="c">// métricas de entrada</span>
 }</code></div>
 
     <h3>3.3 Entrega de webhook</h3>
@@ -493,25 +564,27 @@ a.xref:hover { border-bottom-style: solid; }
   <!-- ══ 04 ══ -->
   <div class="section" id="s04">
     <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Resumo das telas</span></div>
-    <p class="sec-sub">Oito telas: quatro novas e quatro alteradas.</p>
+    <p class="sec-sub">Dez telas: seis novas e quatro alteradas.</p>
 
     <div class="table-wrap">
       <table>
         <thead><tr><th>#</th><th>Tela</th><th>Situação</th><th>Caminho</th><th>Funções</th><th>Persona</th></tr></thead>
         <tbody>
-          <tr><td class="tid">T-01</td><td><strong>Política de Execução RAD</strong> — lista</td><td><span class="chip ok">Nova</span></td><td>Config → Execução RAD</td><td class="tc">6</td><td>Administrador</td></tr>
-          <tr><td class="tid">T-02</td><td><strong>Editor de política</strong> — drawer</td><td><span class="chip ok">Nova</span></td><td>Config → Execução RAD</td><td class="tc">7</td><td>Administrador · tesouraria</td></tr>
-          <tr><td class="tid">T-03</td><td><strong>Integrações</strong> — 3 abas</td><td><span class="chip ok">Nova</span></td><td>Config → Integrações</td><td class="tc">9</td><td>Administrador · TI</td></tr>
-          <tr><td class="tid">T-04</td><td><strong>Execução Programada</strong> — 3 seções</td><td><span class="chip ok">Nova</span></td><td>Pagamentos → aba nova</td><td class="tc">11</td><td>Tesouraria</td></tr>
+          <tr><td class="tid">T-01</td><td><strong>Políticas de execução</strong> — lista</td><td><span class="chip ok">Nova</span></td><td>Config → Execução RAD</td><td class="tc">7</td><td>Administrador</td></tr>
+          <tr><td class="tid">T-02</td><td><strong>Editor de política</strong> — drawer</td><td><span class="chip ok">Nova</span></td><td>Config → Execução RAD</td><td class="tc">9</td><td>Administrador · tesouraria</td></tr>
+          <tr><td class="tid">T-03</td><td><strong>Integrações</strong> — 3 abas</td><td><span class="chip ok">Nova</span></td><td>Config → Integrações</td><td class="tc">11</td><td>Administrador · TI</td></tr>
+          <tr><td class="tid">T-04</td><td><strong>Execução Programada</strong> — 3 seções</td><td><span class="chip ok">Nova</span></td><td>Pagamentos → aba nova</td><td class="tc">13</td><td>Tesouraria</td></tr>
           <tr><td class="tid">T-05</td><td><strong>Guias RAD</strong> — listagem</td><td><span class="chip warn">Alterada</span></td><td>Pagamentos → aba atual</td><td class="tc">6</td><td>Tesouraria</td></tr>
           <tr><td class="tid">T-06</td><td><strong>Modal de guia</strong></td><td><span class="chip warn">Alterada</span></td><td>Pagamentos → Gerar Guia</td><td class="tc">5</td><td>Tesouraria</td></tr>
           <tr><td class="tid">T-07</td><td><strong>Modal de comprovante</strong></td><td><span class="chip warn">Alterada</span></td><td>Pagamentos → coluna Pagamento</td><td class="tc">4</td><td>Tesouraria · fiscal</td></tr>
           <tr><td class="tid">T-08</td><td><strong>Organização</strong> — CNPJs</td><td><span class="chip warn">Alterada</span></td><td>Config → Organização</td><td class="tc">2</td><td>Administrador</td></tr>
+          <tr><td class="tid">T-09</td><td><strong>Assistente de nova conexão</strong> — 3 passos</td><td><span class="chip ok">Nova</span></td><td>Config → Integrações → Nova conexão</td><td class="tc">8</td><td>Administrador · TI</td></tr>
+          <tr><td class="tid">T-10</td><td><strong>Credenciais emitidas</strong> — exibição única</td><td><span class="chip ok">Nova</span></td><td>fim de T-09 e da rotação</td><td class="tc">6</td><td>Administrador · TI</td></tr>
         </tbody>
       </table>
     </div>
 
-    <p style="font-size:12.5px;color:var(--txt3)"><strong>Total: 50 funcionalidades</strong> — 33 em telas novas, 17 em alterações.</p>
+    <p style="font-size:12.5px;color:var(--txt3)"><strong>Total: 68 funcionalidades</strong> — 51 em telas novas, 17 em alterações.</p>
   </div>
 
   <!-- ══ 05 ══ -->
@@ -522,26 +595,32 @@ a.xref:hover { border-bottom-style: solid; }
     <div class="tela">
       <div class="tela-hdr">
         <span class="tela-id t-nova">T-01</span>
-        <span class="tela-name">Política de Execução RAD — lista</span>
+        <span class="tela-name">Políticas de execução — lista</span>
         <span class="tela-path">Config → Execução RAD</span>
       </div>
       <div class="tela-body">
-        <p>Uma linha por CNPJ comprador da organização. Todo CNPJ aparece, mesmo sem política — a ausência é informação.</p>
+        <p>Uma linha por política. A organização cria quantas quiser, e cada uma declara o
+        próprio modelo de orquestração — o que ela cobre — e o próprio modo.</p>
 
         <h4>KPIs</h4>
-        <div class="code-block"><code>CNPJs com automação ativa   ·   Guias geradas no mês
-Aguardando aprovação        ·   Falhas de entrega (7 dias)</code></div>
+        <div class="code-block"><code>Políticas ativas            ·   Guias na próxima janela
+Aguardando aprovação        ·   Falhas de integração</code></div>
+
+        <p style="font-size:12.5px">O KPI de políticas ativas traz, como subtítulo, quantos CNPJs
+        da organização não têm <strong>nenhuma</strong> guia coberta. É a leitura que a listagem por
+        CNPJ dava de graça e que a listagem por política perderia.</p>
 
         <h4>Colunas</h4>
-        <p style="font-size:12.5px">CNPJ · Estabelecimento · Modo · Janela · Antecedência · Alçada · Integração · Última execução · Situação</p>
+        <p style="font-size:12.5px">Política · Orquestração · Cobertura · Modo · Janela · Antecedência · Alçada · Integração · Última execução · Situação</p>
 
         <h4>Funcionalidades</h4>
-        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Listar CNPJs com sua política</div><div class="func-d">Inclui CNPJs sem política, marcados como <em>Manual — sem automação</em>. Herda ShColMgr para reordenar, ocultar colunas, ordenar e exportar.</div></div></div>
-        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Filtrar por modo, integração e situação</div><div class="func-d">Modo (manual/assistido/automático), integração vinculada, e situação da última execução (ok, com falha, nunca executada).</div></div></div>
-        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Badge de modo com cor semântica</div><div class="func-d">Manual cinza, assistido azul, automático teal. A cor comunica quanto da operação está sob controle do motor.</div></div></div>
-        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Indicador de saúde da integração</div><div class="func-d">Ponto colorido por CNPJ conforme a taxa de sucesso de entrega — verde acima de 95%, âmbar entre 80 e 95%, vermelho abaixo.</div></div></div>
-        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Abrir editor de política</div><div class="func-d">Clique na linha abre <strong>T-02</strong>. CNPJ sem política abre o editor em branco.</div></div></div>
-        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Ativar e desativar em massa</div><div class="func-d">Seleção múltipla para pausar a automação de vários CNPJs — útil em fechamento contábil ou incidente de integração.</div></div></div>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Listar as políticas com sua cobertura</div><div class="func-d">Cada linha traz o nome, o modelo de orquestração, o que a política alcança em texto (<em>“2 CNPJs · Induspar — PR +1”</em>, <em>“1 contrato · CT-0011”</em>, <em>“acima de R$ 470.000,00”</em>) e quantas guias produziria na próxima janela.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Filtrar por orquestração, modo e integração</div><div class="func-d">A busca cobre nome, ID, CNPJ e número de contrato — o usuário procura pelo que conhece, não pelo que a política chama de si mesma.</div></div></div>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Badges de orquestração e de modo, com cores distintas</div><div class="func-d">Orquestração em teal (CNPJ), azul (contrato) e âmbar (valor); modo em cinza, azul e teal. São dois eixos independentes, e a leitura precisa separá-los à primeira vista.</div></div></div>
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Indicador de saúde da integração</div><div class="func-d">Ponto colorido conforme a taxa de entrega da conexão vinculada — verde acima de 95%, âmbar entre 80 e 95%, vermelho abaixo.</div></div></div>
+        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Alertar sobreposição entre políticas ativas</div><div class="func-d">A listagem calcula quais RFs são reivindicados por mais de uma política ativa e nomeia o par. É o único ponto onde a colisão <strong>entre modelos diferentes</strong> se torna visível — na configuração ela não existe. Sem o aviso, a mesma guia sai duas vezes e a segunda volta do ERP como erro.</div></div></div>
+        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Abrir o editor, ou criar do zero</div><div class="func-d">Clique na linha abre <strong>T-02</strong> com a política; <em>Nova política</em> abre em branco, com orquestração por CNPJ como padrão.</div></div></div>
+        <div class="func"><div class="func-n">7</div><div class="func-b"><div class="func-t">Ativar e pausar em massa</div><div class="func-d">Seleção múltipla de políticas — útil em fechamento contábil ou incidente de integração. Cada mudança entra no histórico da política afetada.</div></div></div>
       </div>
     </div>
 
@@ -553,16 +632,36 @@ Aguardando aprovação        ·   Falhas de entrega (7 dias)</code></div>
         <span class="tela-path">Config → Execução RAD → linha</span>
       </div>
       <div class="tela-body">
-        <p>Painel lateral com a política do CNPJ, agrupada em quatro blocos e um histórico.</p>
+        <p>Painel lateral, agrupado em seis blocos e um histórico. Os dois primeiros são a
+        mudança: a política ganha nome próprio e declara o que cobre antes de dizer como executa.</p>
+
+        <div class="callout info">
+          <div class="ct">O editor trabalha sobre uma cópia</div>
+          <p>Cancelar precisa desfazer. A versão anterior escrevia direto na política a cada tecla,
+          e sair sem salvar deixava as alterações valendo. A cópia também é o que permite gravar
+          no histórico o diff campo a campo, em vez de um evento vazio.</p>
+        </div>
 
         <h4>Funcionalidades</h4>
-        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Selecionar o modo</div><div class="func-d">Três opções com descrição do que cada uma delega ao motor. Trocar de modo é a decisão central da tela.</div></div></div>
-        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Definir a janela de execução</div><div class="func-d">Dias do mês (múltipla seleção 1–31), hora e antecedência em dias sobre o <code>due_date</code>. Prévia textual: <em>"executa dias 5 e 20 às 06:00, gerando guias que vencem em até 5 dias"</em>.</div></div></div>
-        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Definir critérios de inclusão</div><div class="func-d">Valor mínimo por guia e flags que retêm a nota fora do lote — <code>glosado</code>, <code>vencido</code>, <code>inconsistencia</code>. A nota retida não é descartada: aparece na fila de decisão com o motivo.</div></div></div>
-        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Definir a alçada <span class="chip warn">opcional</span></div><div class="func-d">Segundo controle, por valor, além do que o modo já estabelece. <strong>Desativada por padrão:</strong> o modo assistido já exige aprovação de todo lote, e o automático já delega tudo. A alçada serve a quem quer que o automático pare acima de um teto. <em>Mockada nesta versão</em> — a fila é montada, mas a aprovação não dispara emissão real.</div></div></div>
-        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Vincular a integração</div><div class="func-d">Seleciona uma conexão de <strong>T-03</strong>, ou <em>somente plataforma</em> (gera sem emitir webhook). Mostra a saúde da conexão escolhida.</div></div></div>
-        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Simular a próxima execução</div><div class="func-d">Antes de salvar, calcula quantas guias e que valor a política produziria hoje. Torna a configuração verificável em vez de teórica.</div></div></div>
-        <div class="func"><div class="func-n">7</div><div class="func-b"><div class="func-t">Histórico de alterações</div><div class="func-d">Timeline com autor, momento e diff campo a campo — mesmo padrão implementado em Contratos. Mudança de alçada precisa ser auditável.</div></div></div>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Nomear a política</div><div class="func-d">O nome aparece na listagem, na fila de execução programada e no histórico. Com várias políticas por organização, <code>POL-0004</code> não identifica nada para quem opera.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Escolher o modelo de orquestração</div><div class="func-d">Três cartões — por CNPJ, por contrato, por valor de imposto — cada um explicando o que a política passa a cobrir e quando o modelo se aplica. Trocar o modelo redesenha só o seletor de cobertura; o que estava marcado no modelo anterior fica guardado e volta se o usuário voltar.</div></div></div>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Selecionar a cobertura, conforme o modelo</div><div class="func-d"><strong>Por CNPJ:</strong> lista de estabelecimentos com marcação múltipla; os já usados por outra política aparecem desabilitados, nomeando a dona. <strong>Por contrato:</strong> só os contratos de método RAD, com vigência e prazo à vista. <strong>Por valor:</strong> a base de comparação — guia CBS/IBS, imposto total do DF, valor da nota ou valor líquido —, mínimo e máximo, com o máximo vazio significando “acima de”, e a lista das outras faixas já configuradas sobre a mesma base.</div></div></div>
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Selecionar o modo</div><div class="func-d">Três opções com descrição do que cada uma delega ao motor. Ortogonal à orquestração: um diz o que a política alcança, o outro quanta decisão humana existe.</div></div></div>
+        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Definir a janela de execução</div><div class="func-d">Dias do mês (múltipla seleção 1–31), hora e antecedência em dias sobre o <code>due_date</code>. Prévia textual: <em>"executa dias 5 e 20 às 06:00, gerando guias que vencem em até 5 dias"</em>.</div></div></div>
+        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Definir critérios de inclusão</div><div class="func-d">Valor mínimo por guia — oculto quando a orquestração já é por valor, onde a faixa é o próprio piso — e flags que retêm a nota fora do lote — <code>glosado</code>, <code>vencido</code>, <code>inconsistencia</code>. A nota retida não é descartada: aparece na fila de decisão com o motivo.</div></div></div>
+        <div class="func"><div class="func-n">7</div><div class="func-b"><div class="func-t">Definir a alçada <span class="chip warn">opcional</span></div><div class="func-d">Segundo controle, por valor, além do que o modo já estabelece. <strong>Desativada por padrão:</strong> o modo assistido já exige aprovação de todo lote, e o automático já delega tudo. A alçada serve a quem quer que o automático pare acima de um teto. <em>Mockada nesta versão</em> — a fila é montada, mas a aprovação não dispara emissão real.</div></div></div>
+        <div class="func"><div class="func-n">8</div><div class="func-b"><div class="func-t">Vincular a integração</div><div class="func-d">Só conexões de tipo <code>rad_erp</code> aparecem: as de entrada não têm endpoint de destino e as de outros contextos não emitem estes eventos. Seleciona uma conexão de <strong>T-03</strong>, ou <em>somente plataforma</em> (gera sem emitir webhook). Mostra a saúde da conexão escolhida.</div></div></div>
+        <div class="func"><div class="func-n">9</div><div class="func-b"><div class="func-t">Simular a próxima execução</div><div class="func-d">Antes de salvar, calcula quantas guias e que valor a política produziria hoje. Torna a configuração verificável em vez de teórica.</div></div></div>
+        <div class="func"><div class="func-n">10</div><div class="func-b"><div class="func-t">Histórico de alterações</div><div class="func-d">Timeline com autor, momento e diff campo a campo — mesmo padrão implementado em Contratos. O diff cobre nome, orquestração, cobertura e faixa, além dos parâmetros de execução.</div></div></div>
+
+        <div class="callout warn">
+          <div class="ct">Cobertura repetida barra o salvamento</div>
+          <p>Dentro do mesmo modelo, a duplicidade é determinística: o mesmo CNPJ ou o mesmo contrato
+          em duas políticas, ou faixas de valor que se cruzam. O editor recusa e nomeia a política dona.</p>
+          <p>Entre modelos diferentes não há como decidir na configuração — uma política por CNPJ e
+          outra por valor só colidem sobre notas concretas. Esse caso fica com a detecção de
+          sobreposição de <strong>T-01</strong>.</p>
+        </div>
 
         <div class="callout warn">
           <div class="ct">A simulação é o que torna a adoção segura</div>
@@ -575,26 +674,37 @@ Aguardando aprovação        ·   Falhas de entrega (7 dias)</code></div>
     <div class="tela">
       <div class="tela-hdr">
         <span class="tela-id t-nova">T-03</span>
-        <span class="tela-name">Integrações — conexões, credenciais e entregas</span>
+        <span class="tela-name">Integrações — catálogo, credenciais e entregas</span>
         <span class="tela-path">Config → Integrações</span>
       </div>
       <div class="tela-body">
-        <p>Hoje o produto só tem integração de <strong>entrada</strong> (importação de DFs). Esta tela cria a camada de saída. Três abas.</p>
+        <p>A tela cobre os <strong>seis contextos</strong> da API documentada, nas duas direções — não
+        só a saída do RAD. Três abas.</p>
+
+        <div class="callout info">
+          <div class="ct">A ingestão de DFs não tinha onde emitir a chave</div>
+          <p>É a porta de entrada de todo o produto, e a página de autenticação declara que o
+          processo de geração das credenciais <strong>não é especificado</strong>. O catálogo e o
+          assistente de <strong>T-09</strong> preenchem exatamente esse vão.</p>
+        </div>
 
         <h4>Aba 1 — Conexões</h4>
-        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Cadastrar conexão</div><div class="func-d">Nome, <code>webhookUrl</code> de destino e eventos assinados (<code>rad.darf_recebida</code>, <code>rad.proof_received</code>).</div></div></div>
-        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Gerar e rotacionar o Bearer token</div><div class="func-d">Token que o ERP usa em <code>POST /v1/rad/proofs</code>. Exibido uma única vez na geração; depois só mascarado. Rotação mantém o anterior válido por um período de sobreposição.</div></div></div>
-        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Testar conexão</div><div class="func-d">Dispara um evento de teste com <code>dfe_key</code> fictícia e mostra a resposta HTTP recebida. Valida a URL antes de a política depender dela.</div></div></div>
-        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Ver CNPJs vinculados</div><div class="func-d">Quais políticas usam esta conexão. Impede desativar uma integração em uso sem aviso.</div></div></div>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Listar as conexões agrupadas por direção</div><div class="func-d">Três contadores no topo — entrada, saída e bidirecional — e um cartão por conexão. O cartão mostra o que a direção exige: as de entrada trazem <code>client_id</code>, escopos e taxa de aceite das chamadas; as de saída trazem a URL, os eventos e a taxa de entrega.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Filtrar por tipo, direção e ambiente</div><div class="func-d">O ambiente separa <em>produção</em> de <em>sandbox</em> — a chave carrega o prefixo, e uma conexão de teste não deveria se confundir com a que gera crédito de verdade.</div></div></div>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Criar conexão</div><div class="func-d">Abre <strong>T-09</strong>. O tipo escolhido lá determina o que a plataforma pede e o que emite.</div></div></div>
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Rotacionar o segredo</div><div class="func-d">Gera um novo e mostra em <strong>T-10</strong>. O anterior segue válido por 24 horas, para dar janela de troca sem derrubar a integração. Na conexão bidirecional são <strong>duas rotações separadas</strong>, porque as credenciais servem a sentidos diferentes.</div></div></div>
+        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Testar conexão</div><div class="func-d">Só para quem recebe chamada do SplitHub. Dispara um evento de teste com payload fictício e mostra a resposta HTTP. Valida a URL antes de a política depender dela.</div></div></div>
+        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Ver políticas vinculadas</div><div class="func-d">Quais políticas de execução entregam por esta conexão, com a cobertura de cada uma. Impede desativar uma integração em uso sem aviso.</div></div></div>
+        <div class="func"><div class="func-n">7</div><div class="func-b"><div class="func-t">Abrir a referência do contexto</div><div class="func-d">Link direto para a página da documentação correspondente ao tipo. Quem configura precisa do contrato da API à mão, não de uma busca.</div></div></div>
 
         <h4>Aba 2 — Log de entregas</h4>
-        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Listar entregas</div><div class="func-d">Evento, <code>dfe_key</code>, tentativas, status HTTP, momento da última tentativa. Filtro por status e período.</div></div></div>
-        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Inspecionar o payload enviado</div><div class="func-d">JSON exato transmitido. Sem isso, depurar divergência com o ERP vira troca de e-mails.</div></div></div>
-        <div class="func"><div class="func-n">7</div><div class="func-b"><div class="func-t">Reenviar entrega</div><div class="func-d">Reprocessa individualmente ou em lote. A especificação diz que o SplitHub reenvia até receber <code>200 OK</code>, mas não define o teto de tentativas — o reenvio manual cobre o caso em que a automática desiste.</div></div></div>
+        <div class="func"><div class="func-n">8</div><div class="func-b"><div class="func-t">Listar entregas</div><div class="func-d">Evento, <code>dfe_key</code>, tentativas, status HTTP, momento da última tentativa. Filtro por status e período.</div></div></div>
+        <div class="func"><div class="func-n">9</div><div class="func-b"><div class="func-t">Inspecionar o payload enviado</div><div class="func-d">JSON exato transmitido. Sem isso, depurar divergência com o ERP vira troca de e-mails.</div></div></div>
+        <div class="func"><div class="func-n">10</div><div class="func-b"><div class="func-t">Reenviar entrega</div><div class="func-d">Reprocessa individualmente ou em lote. A especificação diz que o SplitHub reenvia até receber <code>200 OK</code>, mas não define o teto de tentativas — o reenvio manual cobre o caso em que a automática desiste.</div></div></div>
 
         <h4>Aba 3 — Comprovantes recebidos</h4>
-        <div class="func"><div class="func-n">8</div><div class="func-b"><div class="func-t">Listar chamadas ao endpoint de comprovante</div><div class="func-d">Recebimentos de <code>POST /v1/rad/proofs</code> com <code>darf_id</code>, <code>tipo_pagamento</code>, valor e resultado. É o espelho de entrada da integração.</div></div></div>
-        <div class="func"><div class="func-n">9</div><div class="func-b"><div class="func-t">Isolar comprovantes rejeitados</div><div class="func-d">Chamadas que falharam por <code>darf_id</code> desconhecido, campo obrigatório ausente ou token inválido — com o motivo. Sem esta visão, o ERP acha que pagou e o SplitHub não registrou.</div></div></div>
+        <div class="func"><div class="func-n">11</div><div class="func-b"><div class="func-t">Listar chamadas ao endpoint de comprovante</div><div class="func-d">Recebimentos de <code>POST /v1/rad/proofs</code> com <code>darf_id</code>, <code>tipo_pagamento</code>, valor e resultado. É o espelho de entrada da integração.</div></div></div>
+        <div class="func"><div class="func-n">12</div><div class="func-b"><div class="func-t">Isolar comprovantes rejeitados</div><div class="func-d">Chamadas que falharam por <code>darf_id</code> desconhecido, campo obrigatório ausente ou token inválido — com o motivo. Sem esta visão, o ERP acha que pagou e o SplitHub não registrou.</div></div></div>
 
         <div class="callout red">
           <div class="ct">Falha silenciosa é o risco mais grave da automação</div>
@@ -613,22 +723,89 @@ Aguardando aprovação        ·   Falhas de entrega (7 dias)</code></div>
       <div class="tela-body">
         <p>A tela de supervisão. É aqui que J-03 deixa de ser execução e passa a ser exceção. Três seções.</p>
 
+        <div class="callout warn">
+          <div class="ct">A listagem por política escondeu o que fica de fora</div>
+          <p>Quando cada CNPJ tinha a própria política, a ausência de cobertura era visível de graça:
+          o estabelecimento aparecia na lista marcado como sem política. Com políticas que recortam
+          por contrato ou por faixa de valor, uma guia pode não ser alcançada por nenhuma delas <em>sem
+          que nada indique isso em lugar algum</em>.</p>
+          <p>A barra de cobertura recupera esse número, e é o primeiro elemento da tela.</p>
+        </div>
+
         <h4>Seção 1 — Próxima execução</h4>
-        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Mostrar o que será gerado, antes de acontecer</div><div class="func-d">Por CNPJ e política: data da próxima janela, quantidade de guias, valor total. Previsibilidade é o que sustenta a confiança no motor.</div></div></div>
-        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Expandir para as notas do lote</div><div class="func-d">Quais RFs entram, com valor e vencimento. Permite conferir antes, não depois.</div></div></div>
-        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Antecipar execução</div><div class="func-d">Rodar a janela agora, fora do calendário. Para fechamento antecipado ou recuperação de janela perdida.</div></div></div>
-        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Excluir nota do próximo lote</div><div class="func-d">Retira um RF específico com justificativa registrada. Escape sem precisar desligar a política inteira.</div></div></div>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Medir a cobertura das políticas</div><div class="func-d">Percentual das guias RAD pendentes sob alguma política ativa, quantas ficam de fora, o valor correspondente e em quais estabelecimentos elas estão. Essas continuam dependendo de geração manual — e o número torna a decisão de criar política um fato, não uma intuição.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Mostrar o lote de cada política, antes de acontecer</div><div class="func-d">Nome da política, badges de orquestração e modo, a cobertura em texto, a próxima janela, a quantidade de guias e o valor total.</div></div></div>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Expandir para as guias do lote</div><div class="func-d">RF, fornecedor, <strong>CNPJ comprador</strong>, <strong>contrato</strong>, tipo fiscal, valor e data. As duas colunas do meio são novas e necessárias: com orquestração por contrato ou por valor, um lote reúne estabelecimentos diferentes, e sem elas o operador não sabe de onde veio cada guia.</div></div></div>
+
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Antecipar execução</div><div class="func-d">Rodar a janela agora, fora do calendário. Para fechamento antecipado ou recuperação de janela perdida.</div></div></div>
+        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Excluir nota do próximo lote</div><div class="func-d">Retira um RF específico com justificativa registrada. Escape sem precisar desligar a política inteira.</div></div></div>
 
         <h4>Seção 2 — Aguardando aprovação</h4>
-        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Listar lotes acima da alçada</div><div class="func-d">Com CNPJ, valor, quantidade de guias e há quanto tempo aguardam. O tempo em fila é métrica da jornada.</div></div></div>
-        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Aprovar ou recusar com justificativa</div><div class="func-d">Aprovação dispara a emissão do webhook. Recusa devolve as notas ao pool, disponíveis na próxima janela.</div></div></div>
-        <div class="func"><div class="func-n">7</div><div class="func-b"><div class="func-t">Separar retenções por flag</div><div class="func-d">Notas retidas pelos critérios da política aparecem apartadas dos lotes que só excedem alçada — são problemas distintos, com donos distintos: uma exige decisão de valor, a outra exige resolver a causa no módulo correspondente.</div></div></div>
-        <div class="func"><div class="func-n">8</div><div class="func-b"><div class="func-t">Alertar aprovadores</div><div class="func-d">Notificação aos e-mails da política quando um lote entra na fila e quando envelhece além do limite configurado.</div></div></div>
+        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Listar os lotes acima da alçada</div><div class="func-d">Política, valor, quantidade de guias, o teto configurado, os aprovadores e há quanto tempo aguardam.</div></div></div>
+        <div class="func"><div class="func-n">7</div><div class="func-b"><div class="func-t">Listar as guias represadas, com detalhe</div><div class="func-d">Cada lote abre a tabela das guias retidas — RF, fornecedor, CNPJ comprador, contrato, tipo fiscal, valor, data e o peso de cada uma no total do lote —, ordenada por valor decrescente. Acima da tabela, a concentração: quantos CNPJs, quantos contratos e qual é a maior guia. <strong>Aberta por padrão:</strong> quem precisa decidir sobre um lote precisa ver o que está dentro dele; esconder atrás de um clique transforma a aprovação em ato de fé.</div></div></div>
+        <div class="func"><div class="func-n">8</div><div class="func-b"><div class="func-t">Aprovar ou recusar com justificativa</div><div class="func-d">Aprovação dispara a emissão do webhook. Recusa devolve as notas ao pool, disponíveis na próxima janela.</div></div></div>
+        <div class="func"><div class="func-n">9</div><div class="func-b"><div class="func-t">Separar retenções por flag</div><div class="func-d">Notas retidas pelos critérios da política aparecem apartadas dos lotes que só excedem alçada — são problemas distintos, com donos distintos: uma exige decisão de valor, a outra exige resolver a causa no módulo correspondente.</div></div></div>
+        <div class="func"><div class="func-n">10</div><div class="func-b"><div class="func-t">Alertar aprovadores</div><div class="func-d">Notificação aos e-mails da política quando um lote entra na fila e quando envelhece além do limite configurado.</div></div></div>
 
         <h4>Seção 3 — Histórico e falhas</h4>
-        <div class="func"><div class="func-n">9</div><div class="func-b"><div class="func-t">Listar execuções realizadas</div><div class="func-d">Data, CNPJ, política, guias geradas, valor, quantas entregues ao ERP e quantas confirmadas pela Receita.</div></div></div>
-        <div class="func"><div class="func-n">10</div><div class="func-b"><div class="func-t">Fila de <code>return_code</code> com erro</div><div class="func-d">Guias que voltaram <code>DFE_NAO_ENCONTRADO</code> ou <code>VALOR_PARCIAL_SUPERIOR_DFE</code>, agrupadas por causa. Cada grupo roteia para o módulo que resolve — ingestão ou apuração.</div></div></div>
-        <div class="func"><div class="func-n">11</div><div class="func-b"><div class="func-t">Reprocessar lote com falha de entrega</div><div class="func-d">Atalho para o reenvio de <strong>T-03</strong>, filtrado pelo lote em questão.</div></div></div>
+        <div class="func"><div class="func-n">11</div><div class="func-b"><div class="func-t">Listar execuções realizadas</div><div class="func-d">Data, política, guias geradas, valor, quantas entregues ao ERP e quantas confirmadas pela Receita.</div></div></div>
+        <div class="func"><div class="func-n">12</div><div class="func-b"><div class="func-t">Fila de <code>return_code</code> com erro</div><div class="func-d">Guias que voltaram <code>DFE_NAO_ENCONTRADO</code> ou <code>VALOR_PARCIAL_SUPERIOR_DFE</code>, agrupadas por causa. Cada grupo roteia para o módulo que resolve — ingestão ou apuração.</div></div></div>
+        <div class="func"><div class="func-n">13</div><div class="func-b"><div class="func-t">Reprocessar lote com falha de entrega</div><div class="func-d">Atalho para o reenvio de <strong>T-03</strong>, filtrado pelo lote em questão.</div></div></div>
+      </div>
+    </div>
+    <!-- T-09 -->
+    <div class="tela">
+      <div class="tela-hdr">
+        <span class="tela-id t-nova">T-09</span>
+        <span class="tela-name">Assistente de nova conexão</span>
+        <span class="tela-path">Config → Integrações → Nova conexão</span>
+      </div>
+      <div class="tela-body">
+        <p>Drawer em três passos. O primeiro é uma escolha de contexto, não de campos: o tipo
+        selecionado determina tudo o que vem depois.</p>
+
+        <h4>Passo 1 — Tipo de conexão</h4>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Apresentar o catálogo agrupado por direção</div><div class="func-d">Cada tipo traz o resumo do que a integração faz e uma prévia dos endpoints e eventos — <code>POST /v1/documentos-fiscais</code>, <code>rad.darf_recebida</code>, <code>credito.status_alterado</code>. Quem configura reconhece o contexto pelo que vai chamar.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Explicar a credencial que cada direção gera</div><div class="func-d">Entrada gera <code>client_id</code> e <code>client_secret</code>, trocados por um JWT em <code>POST /v1/auth/login</code>. Saída pede a URL e gera o segredo de assinatura. Bidirecional gera as duas.</div></div></div>
+
+        <h4>Passo 2 — Configuração</h4>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Mostrar o que a documentação define para aquele tipo</div><div class="func-d">Um bloco fixo com as regras do contexto — na ingestão de DFs, os 14 tipos de DF-e aceitos, o grupo <code>items[].tax.ibs_cbs</code> obrigatório desde 01/01/2026, o lote de até 500 documentos e o processamento assíncrono. Mais o link para a referência completa.</div></div></div>
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Nomear e escolher o ambiente</div><div class="func-d">Produção ou sandbox, com a consequência dita em vez de subentendida: o prefixo da chave muda, e no sandbox os documentos não geram crédito nem guia real.</div></div></div>
+        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Selecionar escopos <span class="chip warn">entrada</span></div><div class="func-d">Cada escopo declara o que o JWT poderá fazer. Na ingestão: <code>dfs:write</code> (envio individual e em lote), <code>dfs:read</code> (consulta de status) e <code>dfs:manage</code> (PATCH e DELETE). Os dois primeiros vêm marcados — o fluxo é assíncrono, ler o status é parte dele; o destrutivo exige escolha explícita. Chamada fora do escopo retorna <code>403</code>.</div></div></div>
+        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Informar URL e eventos <span class="chip warn">saída</span></div><div class="func-d">HTTPS obrigatório, e a lista de eventos do tipo com a descrição de cada payload. O endpoint precisa responder <code>200 OK</code> — sem isso o SplitHub reenvia.</div></div></div>
+        <div class="func"><div class="func-n">7</div><div class="func-b"><div class="func-t">Delimitar por CNPJ</div><div class="func-d">Marcação múltipla; nenhum marcado significa toda a organização. Uma credencial de filial não deveria conseguir enviar documento de outra.</div></div></div>
+        <div class="func"><div class="func-n">8</div><div class="func-b"><div class="func-t">Validar antes de emitir</div><div class="func-d">Nome obrigatório, URL com esquema HTTPS, ao menos um evento e ao menos um escopo. Credencial emitida com configuração incompleta vira chave órfã.</div></div></div>
+      </div>
+    </div>
+
+    <!-- T-10 -->
+    <div class="tela">
+      <div class="tela-hdr">
+        <span class="tela-id t-nova">T-10</span>
+        <span class="tela-name">Credenciais emitidas — exibição única</span>
+        <span class="tela-path">fim de T-09 e de cada rotação</span>
+      </div>
+      <div class="tela-body">
+        <p>O passo 3 do assistente, reaproveitado pela rotação. É a única vez que o segredo aparece
+        em claro, então a tela precisa fazer o usuário agir agora.</p>
+
+        <h4>Funcionalidades</h4>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Exibir o segredo em claro, uma única vez</div><div class="func-d">Com aviso explícito de que a plataforma guarda apenas o hash e de que, fechando a tela, o painel passa a mostrar só os quatro últimos caracteres. Perder o valor significa rotacionar.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Copiar cada credencial</div><div class="func-d">Botão por campo, com confirmação visual. <code>client_id</code> não é segredo e fica sempre legível; o <code>client_secret</code> é destacado como o que não volta.</div></div></div>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Entregar as duas credenciais da conexão bidirecional</div><div class="func-d">A de API e a de assinatura, rotuladas pelo sentido que cada uma protege. Entregar as duas sem dizer para que servem é o caminho para o time do ERP usar a errada.</div></div></div>
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Montar o exemplo da primeira chamada</div><div class="func-d">Para entrada, o <code>curl</code> do <code>POST /v1/auth/login</code> com os valores reais, seguido da chamada autenticada com <code>Authorization: Bearer $ACCESS_TOKEN</code>. Para saída, o cálculo do HMAC do header de assinatura. Reduz a distância entre emitir a chave e ver a integração funcionar.</div></div></div>
+        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Resumir a conexão criada</div><div class="func-d">Tipo, ambiente, destino, escopos, eventos e alcance por CNPJ. A conferência final antes de o segredo sumir.</div></div></div>
+        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Marcar a janela de sobreposição na rotação</div><div class="func-d">Quando a tela vem de uma rotação, informa que o segredo anterior continua aceito por 24 horas. Sem essa janela, rotacionar é derrubar a integração.</div></div></div>
+
+        <div class="callout red">
+          <div class="ct">A assinatura de webhook é proposta, não documentada</div>
+          <p>A documentação de webhooks do SplitHub não define verificação de assinatura. Sem ela,
+          qualquer origem que descubra a URL do ERP pode forjar um evento <code>rad.darf_recebida</code>
+          — e o ERP não tem como distinguir.</p>
+          <p>O segredo modelado aqui pressupõe um header <code>X-SplitHub-Signature: t=&lt;unix&gt;,v1=&lt;hmac_sha256&gt;</code>
+          sobre <code>&lt;timestamp&gt; + "." + &lt;corpo bruto&gt;</code>. A tela marca isso como proposto justamente
+          para que a decisão seja tomada, não herdada de uma tela de protótipo.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -865,6 +1042,11 @@ Aguardando aprovação        ·   Falhas de entrega (7 dias)</code></div>
             <td><strong>Idempotência não especificada</strong></td>
             <td>Sem chave de idempotência, reenvio de comprovante pode duplicar registro.</td>
             <td>Aceitar header <code>Idempotency-Key</code>; tratar repetição como <code>200</code> com o recurso existente</td>
+          </tr>
+          <tr>
+            <td><strong>Emissão de credencial não especificada</strong></td>
+            <td>A página de autenticação descreve como usar <code>client_id</code> e <code>client_secret</code>, mas declara que o processo de geração dessas credenciais não é especificado. Sem isso, cada cliente é integrado por um caminho manual, fora do produto.</td>
+            <td>Endpoint de emissão e revogação por escopo; exibição única do segredo; janela de sobreposição na rotação — o desenho modelado em <strong>T-09</strong> e <strong>T-10</strong></td>
           </tr>
           <tr>
             <td><strong>Sem verificação de assinatura</strong></td>

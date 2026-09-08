@@ -84,12 +84,13 @@
       ? 'https://api.splithub.com.br/v1/darf/' + r.darfId + '.pdf' : null;
     r.pixKey = isIBS ? '50873548000108' : '00394460005753';
 
-    // Origem: RFs de CNPJ com política ativa contam como automáticos
-    var pol = window.radPoliticaPorCnpj
-      ? window.radPoliticaPorCnpj('54.891.237/0001-48') : null;
-    r.origemGeracao = (pol && pol.ativo && pol.modo !== 'manual' && q % 3 !== 0)
-      ? 'automatica' : 'manual';
-    r.politicaId = r.origemGeracao === 'automatica' && pol ? pol.id : null;
+    /* Origem: a guia é automática quando alguma política ativa cobre o RF.
+       Antes isso era decidido por um CNPJ fixo no código, o que deixou de
+       fazer sentido quando a cobertura passou a poder ser por contrato ou
+       por faixa de valor. */
+    var polId = window.radPoliticaDoRF ? window.radPoliticaDoRF(r.rfId) : null;
+    r.politicaId = polId;
+    r.origemGeracao = polId ? 'automatica' : 'manual';
 
     // Estado da entrega do webhook ao ERP
     if (rc !== 'DARF_GERADO') {
