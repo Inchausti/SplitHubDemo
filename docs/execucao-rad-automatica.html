@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Execução Automática de RAD · SplitHub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 980px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 28px; font-weight: 800; line-height: 1.18; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 700px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.purple { background: var(--purple-d); color: var(--purple); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 48px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 26px 0 8px; }
+h4 { font-size: 12px; font-weight: 700; color: var(--txt2); margin: 18px 0 7px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.tid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); white-space: nowrap; }
+td.tc { text-align: center; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+.code-block code .r { color: var(--red); }
+
+/* ── Ficha de tela ── */
+.tela { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 18px 0; overflow: hidden; }
+.tela-hdr { padding: 13px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tela-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 4px; flex-shrink: 0; }
+.t-nova { background: var(--green-d); color: var(--green); }
+.t-alt { background: var(--amber-d); color: var(--amber); }
+.tela-name { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.tela-path { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; white-space: nowrap; }
+.tela-body { padding: 16px 18px; }
+.tela-body > *:last-child { margin-bottom: 0; }
+
+.func { display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--brd); }
+.func:last-child { border-bottom: none; }
+.func-n { width: 22px; height: 22px; border-radius: 5px; background: var(--sur2); color: var(--txt2); display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 800; flex-shrink: 0; margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+.func-b { flex: 1; min-width: 0; }
+.func-t { font-size: 13px; font-weight: 600; color: var(--txt1); margin-bottom: 3px; }
+.func-d { font-size: 12.5px; color: var(--txt2); }
+.func-d code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <a class="back" href="prds.html">← Hub de PRDs</a>
+
+  <div class="eyebrow">Proposta · Fiscal → Pagamentos</div>
+  <h1>Execução Automática de RAD</h1>
+  <p class="subtitle">Suprimento da <strong>Lacuna 2 de J-03</strong>: hoje toda guia de RAD exige ação humana, e a carga cresce linearmente com o volume. Esta proposta define política de execução por CNPJ comprador, motor de geração automática e integração com o ERP — alinhada à <a class="xref" href="https://split-hubhq.github.io/docs/rad.html">API de integração RAD</a> já documentada.</p>
+
+  <div class="meta-bar">
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+    <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Fiscal → Pagamentos</span></div>
+    <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">08/09/2026</span></div>
+    <div class="meta-pill"><span class="meta-label">Telas</span>&nbsp;<span class="meta-val">4 novas · 4 alteradas</span></div>
+    <div class="meta-pill" style="margin-left:auto"><span class="chip info">Para discussão</span></div>
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Índice</div>
+    <ul class="toc-list">
+      <li><a href="#s01"><span class="toc-num">01</span> A lacuna e o que a API já resolve</a></li>
+      <li><a href="#s02"><span class="toc-num">02</span> O modelo de integração documentado</a></li>
+      <li><a href="#s03"><span class="toc-num">03</span> Modelo de dados</a></li>
+      <li><a href="#s04"><span class="toc-num">04</span> Resumo das telas</a></li>
+      <li><a href="#s05"><span class="toc-num">05</span> Telas novas — detalhamento</a></li>
+      <li><a href="#s06"><span class="toc-num">06</span> Telas alteradas — detalhamento</a></li>
+      <li><a href="#s07"><span class="toc-num">07</span> Fluxo ponta a ponta</a></li>
+      <li><a href="#s08"><span class="toc-num">08</span> Tratamento de falha</a></li>
+      <li><a href="#s09"><span class="toc-num">09</span> Lacunas da própria API</a></li>
+      <li><a href="#s10"><span class="toc-num">10</span> Faseamento</a></li>
+    </ul>
+  </div>
+
+  <!-- ══ 01 ══ -->
+  <div class="section" id="s01">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">A lacuna e o que a API já resolve</span></div>
+
+    <p>A jornada J-03 tem quatro etapas e <strong>todas exigem ação humana</strong>: abrir o módulo, filtrar por período, selecionar e gerar em lote, pagar e registrar o comprovante. É a única jornada de ciclo cuja carga cresce linearmente com o volume — dobrar as notas RAD dobra o trabalho de tesouraria.</p>
+
+    <p>A boa notícia: <strong>a integração já está especificada</strong>. A API de RAD documenta o transporte entre SplitHub e ERP. O que falta não é o protocolo — é a camada de decisão que dispara o protocolo sem um humano no meio.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Peça</th><th>Situação</th><th>O que falta</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Transporte SplitHub → ERP</strong></td>
+            <td><span class="chip ok">Especificado</span> webhook <code>rad.darf_recebida</code></td>
+            <td>Emissão a partir do produto</td>
+          </tr>
+          <tr>
+            <td><strong>Transporte ERP → SplitHub</strong></td>
+            <td><span class="chip ok">Especificado</span> <code>POST /v1/rad/proofs</code></td>
+            <td>Endpoint publicado e tela de acompanhamento</td>
+          </tr>
+          <tr>
+            <td><strong>Confirmação e rastreio</strong></td>
+            <td><span class="chip ok">Especificado</span> webhook <code>rad.proof_received</code></td>
+            <td>Persistir <code>rastreamento_rfb</code> e exibir</td>
+          </tr>
+          <tr>
+            <td><strong>Política de execução</strong></td>
+            <td><span class="chip red">Não existe</span></td>
+            <td>Quando gerar, para quais notas, com que alçada</td>
+          </tr>
+          <tr>
+            <td><strong>Motor de geração</strong></td>
+            <td><span class="chip red">Não existe</span></td>
+            <td>Avaliar janela, montar lote, disparar</td>
+          </tr>
+          <tr>
+            <td><strong>Supervisão</strong></td>
+            <td><span class="chip red">Não existe</span></td>
+            <td>Fila, aprovações, falhas de entrega</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <div class="ct">A proposta é menor do que parecia</div>
+      <p>Metade do problema — o protocolo de integração — já está resolvida no papel. A proposta se concentra na <strong>camada de política</strong>, mais a implementação do transporte já especificado. Nenhum contrato de API precisa ser inventado.</p>
+      <p>E o alvo é explícito: <strong>configurada a política, o fluxo corre sem ação assistida</strong>. As réguas de pagamento já estão no ERP; o SplitHub gera e entrega.</p>
+    </div>
+  </div>
+
+  <!-- ══ 02 ══ -->
+  <div class="section" id="s02">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O modelo de integração documentado</span></div>
+    <p class="sec-sub">Ler a especificação corrigiu uma premissa: o SplitHub não chama a API do ERP. É o contrário.</p>
+
+    <div class="callout warn">
+      <div class="ct">Correção de premissa</div>
+      <p>A proposta preliminar na seção 12 do documento de <a class="xref" href="jornadas-usuario.html">Jornadas</a> assumia que o SplitHub faria uma chamada REST de saída ao ERP. A especificação define outro desenho: <strong>o SplitHub emite webhooks</strong> para uma URL configurada pelo cliente, e <strong>o ERP chama o SplitHub</strong> para registrar o comprovante. Esta proposta segue o modelo documentado.</p>
+    </div>
+
+    <h3>2.1 Os três eventos</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Evento / rota</th><th>Direção</th><th>Quando</th><th>Carga principal</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>1</strong></td>
+            <td><code>rad.darf_recebida</code><br><span style="font-size:11px;color:var(--txt3)">webhook POST</span></td>
+            <td>SplitHub → ERP</td>
+            <td>Guias de CBS/IBS geradas</td>
+            <td><code>cbs_guide</code> e <code>ibs_guide</code> com <code>guide_number</code>, <code>due_date</code>, <code>pix_key</code>, <code>barcode</code>, <code>pdf_link</code>, valores; mais <code>fiscal_operation</code> e <code>credit_status_change</code></td>
+          </tr>
+          <tr>
+            <td><strong>2</strong></td>
+            <td><code>POST /v1/rad/proofs</code><br><span style="font-size:11px;color:var(--txt3)">REST, Bearer token</span></td>
+            <td>ERP → SplitHub</td>
+            <td>Pagamento executado</td>
+            <td><code>darf_id</code>, <code>tipo_pagamento</code> (<code>pix</code> ou <code>boleto</code>) e o bloco correspondente</td>
+          </tr>
+          <tr>
+            <td><strong>3</strong></td>
+            <td><code>rad.proof_received</code><br><span style="font-size:11px;color:var(--txt3)">webhook POST</span></td>
+            <td>SplitHub → ERP</td>
+            <td>Comprovante processado</td>
+            <td><code>status</code> (<code>success</code>/<code>pending</code>/<code>failed</code>), <code>darf</code>, <code>pagamento</code> e <code>rastreamento_rfb</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>2.2 Dois campos que o protótipo não modela</h3>
+
+    <h4>return_code — a geração pode falhar</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Valor</th><th>Significado</th><th>Tratamento proposto</th></tr></thead>
+        <tbody>
+          <tr><td><code>DARF_GERADO</code></td><td>Guia emitida com sucesso</td><td>Segue para entrega ao ERP</td></tr>
+          <tr><td><code>DFE_NAO_ENCONTRADO</code></td><td>Documento fiscal não localizado</td><td>Retira do lote; fila de exceção; provável problema de ingestão (J-02)</td></tr>
+          <tr><td><code>VALOR_PARCIAL_SUPERIOR_DFE</code></td><td>Valor parcial excede o do documento</td><td>Retira do lote; fila de exceção; revisar apuração</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Hoje o protótipo gera a guia localmente e sempre com sucesso — não há caminho de falha. Com a integração real, <strong>duas em cada três respostas possíveis são erro</strong>, e precisam de tela.</p>
+
+    <h4>rastreamento_rfb — a confirmação do Fisco</h4>
+    <p>O evento <code>rad.proof_received</code> traz <code>protocolo_pagamento</code>, <code>status_rdoc</code> e <code>data_confirmacao_rfb</code>. É a prova de que o recolhimento chegou à Receita — informação que hoje não existe em lugar nenhum do produto e que fecha o elo com a conciliação (J-04).</p>
+
+    <h3>2.3 PIX e boleto são simétricos</h3>
+    <p>O endpoint de comprovante aceita os dois meios, com blocos distintos. O protótipo já exibe as duas abas no modal de guia — código de barras e PIX —, então a interface está alinhada. O que muda é que os identificadores passam a vir do ERP em vez de serem gerados localmente:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>PIX</th><th>Boleto</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>end_to_end_id</code>, <code>txid</code>, <code>chave_pix</code>, <code>valor</code>, <code>timestamp</code></td>
+            <td><code>nosso_numero</code>, <code>codigo_barras</code> (44), <code>linha_digitavel</code> (48), <code>banco</code>, <code>agencia</code>, <code>conta</code>, <code>valor_pago</code>, <code>data_pagamento</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 03 ══ -->
+  <div class="section" id="s03">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Modelo de dados</span></div>
+
+    <h3>3.1 Política de execução — por CNPJ comprador</h3>
+    <div class="code-block"><code>{
+  <span class="v">id</span>:              <span class="s">"POL-0001"</span>,
+  <span class="v">cnpjComprador</span>:   <span class="s">"01.123.456/0001-99"</span>,
+  <span class="v">modo</span>:            <span class="s">"manual" | "assistido" | "automatico"</span>,
+
+  <span class="c">// Quando o motor roda</span>
+  <span class="v">diasExecucao</span>:    [<span class="n">5</span>, <span class="n">20</span>],
+  <span class="v">horaExecucao</span>:    <span class="s">"06:00"</span>,
+  <span class="v">antecedencia</span>:    <span class="n">5</span>,          <span class="c">// dias antes do due_date</span>
+
+  <span class="c">// O que entra no lote</span>
+  <span class="v">valorMinimo</span>:     <span class="n">0</span>,
+  <span class="v">excluirFlags</span>:    [<span class="s">"glosado"</span>, <span class="s">"vencido"</span>],
+
+  <span class="c">// Alçada — opcional. Desativada, o lote segue direto após a geração.</span>
+  <span class="v">alcadaAtiva</span>:         <span class="k">false</span>,
+  <span class="v">limiteAutoAprovacao</span>: <span class="n">50000</span>,
+  <span class="v">aprovadores</span>:        [<span class="s">"tesouraria@..."</span>],
+
+  <span class="c">// Destino</span>
+  <span class="v">integracaoId</span>:    <span class="s">"INT-0001"</span> | <span class="k">null</span>,   <span class="c">// null = só plataforma</span>
+
+  <span class="v">ativo</span>:           <span class="k">true</span>,
+  <span class="v">historico</span>:       [ <span class="c">/* auditoria, padrão de Contratos */</span> ]
+}</code></div>
+
+    <h4>Os três modos</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Modo</th><th>O motor faz</th><th>O humano faz</th><th>Quando usar</th></tr></thead>
+        <tbody>
+          <tr style="background:var(--teal-d)">
+            <td><strong>Automático</strong> <span class="chip teal">recomendado</span></td>
+            <td>Gera na janela e emite o webhook ao ERP</td>
+            <td>Só exceções: erro de geração e falha de entrega</td>
+            <td><strong>Estado pretendido.</strong> Configurou, roda sozinho</td>
+          </tr>
+          <tr>
+            <td><strong>Assistido</strong></td>
+            <td>Monta o lote na janela e aguarda</td>
+            <td>Aprova a cada janela</td>
+            <td>Transitório — conferir o recorte nos primeiros ciclos</td>
+          </tr>
+          <tr>
+            <td><strong>Manual</strong></td>
+            <td>Nada</td>
+            <td>Tudo: filtrar, selecionar, gerar</td>
+            <td>Comportamento anterior à automação</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout ok">
+      <div class="ct">Por que o automático é o destino, e não o topo de uma escada</div>
+      <p>As <strong>réguas de pagamento já vivem no ERP</strong>. O papel do SplitHub é gerar a guia e entregá-la; quem decide quando pagar, com que antecedência e sob qual aprovação é o ERP, segundo regras que a empresa já mantém lá.</p>
+      <p>Um portão humano no meio <strong>duplicaria um controle que já existe do outro lado</strong> — e no ponto errado, porque quem aprovaria no SplitHub não enxerga o fluxo de caixa que o ERP enxerga. Por isso o modo automático não é o fim de uma escada de maturidade: é o desenho pretendido desde a configuração.</p>
+      <p>O modo <em>assistido</em> permanece disponível como passo transitório, útil para conferir o recorte nos primeiros ciclos. Mas repor manualmente uma decisão que o ERP já toma não é um estado a se manter.</p>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">A alçada é opcional e, nesta versão, está mockada</div>
+      <p>O <strong>modo</strong> já define quanta decisão humana existe. A <strong>alçada</strong> é uma camada adicional, para quem quiser que o automático pare acima de um teto de valor — não é o padrão e vem desativada.</p>
+      <p>Nesta versão ela está <strong>mockada</strong>: a fila é montada e exibida, mas aprovar não dispara emissão real de webhook. Serve para validar o desenho antes de investir na mecânica de aprovação.</p>
+    </div>
+
+    <h3>3.2 Integração</h3>
+    <div class="code-block"><code>{
+  <span class="v">id</span>:           <span class="s">"INT-0001"</span>,
+  <span class="v">nome</span>:         <span class="s">"ERP Protheus — Matriz"</span>,
+  <span class="v">webhookUrl</span>:   <span class="s">"https://erp.cliente.com/hooks/splithub"</span>,
+  <span class="v">token</span>:        <span class="s">"••••••••"</span>,      <span class="c">// Bearer p/ POST /v1/rad/proofs</span>
+  <span class="v">eventos</span>:      [<span class="s">"rad.darf_recebida"</span>, <span class="s">"rad.proof_received"</span>],
+  <span class="v">ativo</span>:        <span class="k">true</span>,
+  <span class="v">ultimaEntrega</span>: <span class="s">"2026-09-08T06:00:12Z"</span>,
+  <span class="v">taxaSucesso</span>:  <span class="n">0.98</span>
+}</code></div>
+
+    <h3>3.3 Entrega de webhook</h3>
+    <div class="code-block"><code>{
+  <span class="v">id</span>:            <span class="s">"DLV-00042"</span>,
+  <span class="v">integracaoId</span>:  <span class="s">"INT-0001"</span>,
+  <span class="v">evento</span>:        <span class="s">"rad.darf_recebida"</span>,
+  <span class="v">dfeKey</span>:        <span class="s">"3526..."</span>,       <span class="c">// 44 dígitos</span>
+  <span class="v">tentativas</span>:    <span class="n">3</span>,
+  <span class="v">httpStatus</span>:    <span class="n">200</span> | <span class="k">null</span>,
+  <span class="v">status</span>:        <span class="s">"entregue" | "pendente" | "falha"</span>,
+  <span class="v">ultimaTentativa</span>: <span class="s">"2026-09-08T06:02:31Z"</span>,
+  <span class="v">payload</span>:       { <span class="c">/* corpo enviado, para reprocessamento */</span> }
+}</code></div>
+
+    <h3>3.4 Extensão do registro fiscal</h3>
+    <div class="code-block"><code><span class="c">// Campos vindos da API, hoje inexistentes</span>
+{
+  <span class="v">darfId</span>:        <span class="k">string</span>,   <span class="c">// darf_id — chave do comprovante</span>
+  <span class="v">guideNumber</span>:   <span class="k">string</span>,
+  <span class="v">returnCode</span>:    <span class="s">"DARF_GERADO" | "DFE_NAO_ENCONTRADO" | "VALOR_PARCIAL_SUPERIOR_DFE"</span>,
+  <span class="v">dueDate</span>:       <span class="k">string</span>,   <span class="c">// YYYY-MM-DD, vem da API</span>
+  <span class="v">pdfLink</span>:       <span class="k">string</span>,
+
+  <span class="c">// Valores detalhados — hoje só há o total</span>
+  <span class="v">principalValue</span>, <span class="v">penaltyValue</span>, <span class="v">interestValue</span>, <span class="v">totalValue</span>: <span class="k">number</span>,
+
+  <span class="c">// Origem e transporte</span>
+  <span class="v">origemGeracao</span>: <span class="s">"manual" | "automatica"</span>,
+  <span class="v">politicaId</span>:    <span class="k">string</span> | <span class="k">null</span>,
+  <span class="v">entregaId</span>:     <span class="k">string</span> | <span class="k">null</span>,
+
+  <span class="c">// Rastreamento na Receita</span>
+  <span class="v">protocoloRfb</span>:  <span class="k">string</span>,
+  <span class="v">statusRdoc</span>:    <span class="k">string</span>,
+  <span class="v">dataConfirmacaoRfb</span>: <span class="k">string</span>
+}</code></div>
+
+    <div class="callout info">
+      <div class="ct">Multa e juros são novidade</div>
+      <p>A API separa <code>principal_value</code>, <code>penalty_value</code> e <code>interest_value</code>. O protótipo trata a guia como valor único. Guia paga em atraso passa a ter composição visível — informação relevante para a jornada de prevenção de perda (J-06), que hoje só vê o principal.</p>
+    </div>
+  </div>
+
+  <!-- ══ 04 ══ -->
+  <div class="section" id="s04">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Resumo das telas</span></div>
+    <p class="sec-sub">Oito telas: quatro novas e quatro alteradas.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Tela</th><th>Situação</th><th>Caminho</th><th>Funções</th><th>Persona</th></tr></thead>
+        <tbody>
+          <tr><td class="tid">T-01</td><td><strong>Política de Execução RAD</strong> — lista</td><td><span class="chip ok">Nova</span></td><td>Config → Execução RAD</td><td class="tc">6</td><td>Administrador</td></tr>
+          <tr><td class="tid">T-02</td><td><strong>Editor de política</strong> — drawer</td><td><span class="chip ok">Nova</span></td><td>Config → Execução RAD</td><td class="tc">7</td><td>Administrador · tesouraria</td></tr>
+          <tr><td class="tid">T-03</td><td><strong>Integrações</strong> — 3 abas</td><td><span class="chip ok">Nova</span></td><td>Config → Integrações</td><td class="tc">9</td><td>Administrador · TI</td></tr>
+          <tr><td class="tid">T-04</td><td><strong>Execução Programada</strong> — 3 seções</td><td><span class="chip ok">Nova</span></td><td>Pagamentos → aba nova</td><td class="tc">11</td><td>Tesouraria</td></tr>
+          <tr><td class="tid">T-05</td><td><strong>Guias RAD</strong> — listagem</td><td><span class="chip warn">Alterada</span></td><td>Pagamentos → aba atual</td><td class="tc">6</td><td>Tesouraria</td></tr>
+          <tr><td class="tid">T-06</td><td><strong>Modal de guia</strong></td><td><span class="chip warn">Alterada</span></td><td>Pagamentos → Gerar Guia</td><td class="tc">5</td><td>Tesouraria</td></tr>
+          <tr><td class="tid">T-07</td><td><strong>Modal de comprovante</strong></td><td><span class="chip warn">Alterada</span></td><td>Pagamentos → coluna Pagamento</td><td class="tc">4</td><td>Tesouraria · fiscal</td></tr>
+          <tr><td class="tid">T-08</td><td><strong>Organização</strong> — CNPJs</td><td><span class="chip warn">Alterada</span></td><td>Config → Organização</td><td class="tc">2</td><td>Administrador</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="font-size:12.5px;color:var(--txt3)"><strong>Total: 50 funcionalidades</strong> — 33 em telas novas, 17 em alterações.</p>
+  </div>
+
+  <!-- ══ 05 ══ -->
+  <div class="section" id="s05">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Telas novas — detalhamento</span></div>
+
+    <!-- T-01 -->
+    <div class="tela">
+      <div class="tela-hdr">
+        <span class="tela-id t-nova">T-01</span>
+        <span class="tela-name">Política de Execução RAD — lista</span>
+        <span class="tela-path">Config → Execução RAD</span>
+      </div>
+      <div class="tela-body">
+        <p>Uma linha por CNPJ comprador da organização. Todo CNPJ aparece, mesmo sem política — a ausência é informação.</p>
+
+        <h4>KPIs</h4>
+        <div class="code-block"><code>CNPJs com automação ativa   ·   Guias geradas no mês
+Aguardando aprovação        ·   Falhas de entrega (7 dias)</code></div>
+
+        <h4>Colunas</h4>
+        <p style="font-size:12.5px">CNPJ · Estabelecimento · Modo · Janela · Antecedência · Alçada · Integração · Última execução · Situação</p>
+
+        <h4>Funcionalidades</h4>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Listar CNPJs com sua política</div><div class="func-d">Inclui CNPJs sem política, marcados como <em>Manual — sem automação</em>. Herda ShColMgr para reordenar, ocultar colunas, ordenar e exportar.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Filtrar por modo, integração e situação</div><div class="func-d">Modo (manual/assistido/automático), integração vinculada, e situação da última execução (ok, com falha, nunca executada).</div></div></div>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Badge de modo com cor semântica</div><div class="func-d">Manual cinza, assistido azul, automático teal. A cor comunica quanto da operação está sob controle do motor.</div></div></div>
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Indicador de saúde da integração</div><div class="func-d">Ponto colorido por CNPJ conforme a taxa de sucesso de entrega — verde acima de 95%, âmbar entre 80 e 95%, vermelho abaixo.</div></div></div>
+        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Abrir editor de política</div><div class="func-d">Clique na linha abre <strong>T-02</strong>. CNPJ sem política abre o editor em branco.</div></div></div>
+        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Ativar e desativar em massa</div><div class="func-d">Seleção múltipla para pausar a automação de vários CNPJs — útil em fechamento contábil ou incidente de integração.</div></div></div>
+      </div>
+    </div>
+
+    <!-- T-02 -->
+    <div class="tela">
+      <div class="tela-hdr">
+        <span class="tela-id t-nova">T-02</span>
+        <span class="tela-name">Editor de política — drawer</span>
+        <span class="tela-path">Config → Execução RAD → linha</span>
+      </div>
+      <div class="tela-body">
+        <p>Painel lateral com a política do CNPJ, agrupada em quatro blocos e um histórico.</p>
+
+        <h4>Funcionalidades</h4>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Selecionar o modo</div><div class="func-d">Três opções com descrição do que cada uma delega ao motor. Trocar de modo é a decisão central da tela.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Definir a janela de execução</div><div class="func-d">Dias do mês (múltipla seleção 1–31), hora e antecedência em dias sobre o <code>due_date</code>. Prévia textual: <em>"executa dias 5 e 20 às 06:00, gerando guias que vencem em até 5 dias"</em>.</div></div></div>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Definir critérios de inclusão</div><div class="func-d">Valor mínimo por guia e flags que retêm a nota fora do lote — <code>glosado</code>, <code>vencido</code>, <code>inconsistencia</code>. A nota retida não é descartada: aparece na fila de decisão com o motivo.</div></div></div>
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Definir a alçada <span class="chip warn">opcional</span></div><div class="func-d">Segundo controle, por valor, além do que o modo já estabelece. <strong>Desativada por padrão:</strong> o modo assistido já exige aprovação de todo lote, e o automático já delega tudo. A alçada serve a quem quer que o automático pare acima de um teto. <em>Mockada nesta versão</em> — a fila é montada, mas a aprovação não dispara emissão real.</div></div></div>
+        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Vincular a integração</div><div class="func-d">Seleciona uma conexão de <strong>T-03</strong>, ou <em>somente plataforma</em> (gera sem emitir webhook). Mostra a saúde da conexão escolhida.</div></div></div>
+        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Simular a próxima execução</div><div class="func-d">Antes de salvar, calcula quantas guias e que valor a política produziria hoje. Torna a configuração verificável em vez de teórica.</div></div></div>
+        <div class="func"><div class="func-n">7</div><div class="func-b"><div class="func-t">Histórico de alterações</div><div class="func-d">Timeline com autor, momento e diff campo a campo — mesmo padrão implementado em Contratos. Mudança de alçada precisa ser auditável.</div></div></div>
+
+        <div class="callout warn">
+          <div class="ct">A simulação é o que torna a adoção segura</div>
+          <p>Sem ela, o usuário configura no escuro e descobre o efeito na próxima janela — quando já virou dinheiro. A prévia converte a política de promessa em número conferível.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- T-03 -->
+    <div class="tela">
+      <div class="tela-hdr">
+        <span class="tela-id t-nova">T-03</span>
+        <span class="tela-name">Integrações — conexões, credenciais e entregas</span>
+        <span class="tela-path">Config → Integrações</span>
+      </div>
+      <div class="tela-body">
+        <p>Hoje o produto só tem integração de <strong>entrada</strong> (importação de DFs). Esta tela cria a camada de saída. Três abas.</p>
+
+        <h4>Aba 1 — Conexões</h4>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Cadastrar conexão</div><div class="func-d">Nome, <code>webhookUrl</code> de destino e eventos assinados (<code>rad.darf_recebida</code>, <code>rad.proof_received</code>).</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Gerar e rotacionar o Bearer token</div><div class="func-d">Token que o ERP usa em <code>POST /v1/rad/proofs</code>. Exibido uma única vez na geração; depois só mascarado. Rotação mantém o anterior válido por um período de sobreposição.</div></div></div>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Testar conexão</div><div class="func-d">Dispara um evento de teste com <code>dfe_key</code> fictícia e mostra a resposta HTTP recebida. Valida a URL antes de a política depender dela.</div></div></div>
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Ver CNPJs vinculados</div><div class="func-d">Quais políticas usam esta conexão. Impede desativar uma integração em uso sem aviso.</div></div></div>
+
+        <h4>Aba 2 — Log de entregas</h4>
+        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Listar entregas</div><div class="func-d">Evento, <code>dfe_key</code>, tentativas, status HTTP, momento da última tentativa. Filtro por status e período.</div></div></div>
+        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Inspecionar o payload enviado</div><div class="func-d">JSON exato transmitido. Sem isso, depurar divergência com o ERP vira troca de e-mails.</div></div></div>
+        <div class="func"><div class="func-n">7</div><div class="func-b"><div class="func-t">Reenviar entrega</div><div class="func-d">Reprocessa individualmente ou em lote. A especificação diz que o SplitHub reenvia até receber <code>200 OK</code>, mas não define o teto de tentativas — o reenvio manual cobre o caso em que a automática desiste.</div></div></div>
+
+        <h4>Aba 3 — Comprovantes recebidos</h4>
+        <div class="func"><div class="func-n">8</div><div class="func-b"><div class="func-t">Listar chamadas ao endpoint de comprovante</div><div class="func-d">Recebimentos de <code>POST /v1/rad/proofs</code> com <code>darf_id</code>, <code>tipo_pagamento</code>, valor e resultado. É o espelho de entrada da integração.</div></div></div>
+        <div class="func"><div class="func-n">9</div><div class="func-b"><div class="func-t">Isolar comprovantes rejeitados</div><div class="func-d">Chamadas que falharam por <code>darf_id</code> desconhecido, campo obrigatório ausente ou token inválido — com o motivo. Sem esta visão, o ERP acha que pagou e o SplitHub não registrou.</div></div></div>
+
+        <div class="callout red">
+          <div class="ct">Falha silenciosa é o risco mais grave da automação</div>
+          <p>Guia gerada, webhook não entregue, ninguém percebe — e o crédito se perde sem que nenhuma tela mostre problema. As abas 2 e 3 existem para tornar esse estado visível, e o KPI de falhas em T-01 para torná-lo <strong>ativo</strong>, não apenas consultável.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- T-04 -->
+    <div class="tela">
+      <div class="tela-hdr">
+        <span class="tela-id t-nova">T-04</span>
+        <span class="tela-name">Execução Programada</span>
+        <span class="tela-path">Pagamentos → nova aba</span>
+      </div>
+      <div class="tela-body">
+        <p>A tela de supervisão. É aqui que J-03 deixa de ser execução e passa a ser exceção. Três seções.</p>
+
+        <h4>Seção 1 — Próxima execução</h4>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Mostrar o que será gerado, antes de acontecer</div><div class="func-d">Por CNPJ e política: data da próxima janela, quantidade de guias, valor total. Previsibilidade é o que sustenta a confiança no motor.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Expandir para as notas do lote</div><div class="func-d">Quais RFs entram, com valor e vencimento. Permite conferir antes, não depois.</div></div></div>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Antecipar execução</div><div class="func-d">Rodar a janela agora, fora do calendário. Para fechamento antecipado ou recuperação de janela perdida.</div></div></div>
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Excluir nota do próximo lote</div><div class="func-d">Retira um RF específico com justificativa registrada. Escape sem precisar desligar a política inteira.</div></div></div>
+
+        <h4>Seção 2 — Aguardando aprovação</h4>
+        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Listar lotes acima da alçada</div><div class="func-d">Com CNPJ, valor, quantidade de guias e há quanto tempo aguardam. O tempo em fila é métrica da jornada.</div></div></div>
+        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Aprovar ou recusar com justificativa</div><div class="func-d">Aprovação dispara a emissão do webhook. Recusa devolve as notas ao pool, disponíveis na próxima janela.</div></div></div>
+        <div class="func"><div class="func-n">7</div><div class="func-b"><div class="func-t">Separar retenções por flag</div><div class="func-d">Notas retidas pelos critérios da política aparecem apartadas dos lotes que só excedem alçada — são problemas distintos, com donos distintos: uma exige decisão de valor, a outra exige resolver a causa no módulo correspondente.</div></div></div>
+        <div class="func"><div class="func-n">8</div><div class="func-b"><div class="func-t">Alertar aprovadores</div><div class="func-d">Notificação aos e-mails da política quando um lote entra na fila e quando envelhece além do limite configurado.</div></div></div>
+
+        <h4>Seção 3 — Histórico e falhas</h4>
+        <div class="func"><div class="func-n">9</div><div class="func-b"><div class="func-t">Listar execuções realizadas</div><div class="func-d">Data, CNPJ, política, guias geradas, valor, quantas entregues ao ERP e quantas confirmadas pela Receita.</div></div></div>
+        <div class="func"><div class="func-n">10</div><div class="func-b"><div class="func-t">Fila de <code>return_code</code> com erro</div><div class="func-d">Guias que voltaram <code>DFE_NAO_ENCONTRADO</code> ou <code>VALOR_PARCIAL_SUPERIOR_DFE</code>, agrupadas por causa. Cada grupo roteia para o módulo que resolve — ingestão ou apuração.</div></div></div>
+        <div class="func"><div class="func-n">11</div><div class="func-b"><div class="func-t">Reprocessar lote com falha de entrega</div><div class="func-d">Atalho para o reenvio de <strong>T-03</strong>, filtrado pelo lote em questão.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 06 ══ -->
+  <div class="section" id="s06">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Telas alteradas — detalhamento</span></div>
+
+    <!-- T-05 -->
+    <div class="tela">
+      <div class="tela-hdr">
+        <span class="tela-id t-alt">T-05</span>
+        <span class="tela-name">Guias RAD — listagem</span>
+        <span class="tela-path">Pagamentos → aba atual</span>
+      </div>
+      <div class="tela-body">
+        <p>A tela de hoje passa a ser a visão de detalhe e de operação manual. Mantém as 17 colunas e ganha quatro.</p>
+
+        <h4>Colunas novas</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Coluna</th><th>Origem</th><th>Conteúdo</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Origem</strong></td><td><code>origemGeracao</code></td><td>Badge Manual ou Automática, com link para a política</td></tr>
+              <tr><td><strong>Nº da guia</strong></td><td><code>guide_number</code></td><td>Número real emitido; hoje é gerado localmente</td></tr>
+              <tr><td><strong>Entrega</strong></td><td><code>status</code> da entrega</td><td>Entregue, pendente ou falha, com tentativas</td></tr>
+              <tr><td><strong>RFB</strong></td><td><code>status_rdoc</code></td><td>Confirmação da Receita, com o protocolo em tooltip</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>Funcionalidades</h4>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Filtrar por origem</div><div class="func-d">Isola o que foi gerado pelo motor do que passou por mão humana — leitura direta da taxa de automação.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Filtrar por status de entrega</div><div class="func-d">Encontrar guias emitidas que não chegaram ao ERP, que é o estado perigoso.</div></div></div>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Filtrar por <code>return_code</code></div><div class="func-d">Separar sucesso dos dois casos de erro.</div></div></div>
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Marcar linhas de origem automática</div><div class="func-d">Faixa lateral sutil distinguindo do manual, sem competir com os badges de status.</div></div></div>
+        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Ajustar os KPIs ao novo fluxo</div><div class="func-d">"A vencer" passa a distinguir o que já está programado do que não tem política — são situações diferentes com a mesma aparência hoje.</div></div></div>
+        <div class="func"><div class="func-n">6</div><div class="func-b"><div class="func-t">Preservar a operação manual</div><div class="func-d">Seleção em lote e geração continuam disponíveis. CNPJ em modo manual, exceção e recuperação de falha dependem delas.</div></div></div>
+      </div>
+    </div>
+
+    <!-- T-06 -->
+    <div class="tela">
+      <div class="tela-hdr">
+        <span class="tela-id t-alt">T-06</span>
+        <span class="tela-name">Modal de guia</span>
+        <span class="tela-path">Pagamentos → Gerar Guia</span>
+      </div>
+      <div class="tela-body">
+        <p>Hoje todo o conteúdo é gerado localmente por seed determinística. Passa a exibir o que a API retornou.</p>
+
+        <h4>Funcionalidades</h4>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Exibir dados reais da guia</div><div class="func-d"><code>guide_number</code>, <code>due_date</code>, <code>pix_key</code> e <code>barcode</code> vindos da API, substituindo os gerados localmente.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Decompor o valor</div><div class="func-d">Principal, multa, juros e total em linhas separadas. Guia em atraso passa a mostrar quanto do valor é penalidade.</div></div></div>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Abrir o PDF oficial</div><div class="func-d">Link para <code>pdf_link</code>. O documento oficial deixa de ser reconstruído na interface.</div></div></div>
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Tratar <code>return_code</code> de erro</div><div class="func-d">Guia com erro não abre o modal normal: exibe o motivo e a ação sugerida, sem código de barras nem PIX que não existem.</div></div></div>
+        <div class="func"><div class="func-n">5</div><div class="func-b"><div class="func-t">Mostrar o estado da entrega</div><div class="func-d">Faixa indicando se o ERP já recebeu, com atalho para reenviar.</div></div></div>
+      </div>
+    </div>
+
+    <!-- T-07 -->
+    <div class="tela">
+      <div class="tela-hdr">
+        <span class="tela-id t-alt">T-07</span>
+        <span class="tela-name">Modal de comprovante</span>
+        <span class="tela-path">Pagamentos → coluna Pagamento</span>
+      </div>
+      <div class="tela-body">
+        <p>Hoje o comprovante é sintético — E2EId e autenticação derivados do <code>rfId</code>. Passa a exibir o que o ERP enviou.</p>
+
+        <h4>Funcionalidades</h4>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Exibir o comprovante recebido</div><div class="func-d">PIX: <code>end_to_end_id</code>, <code>txid</code>, <code>chave_pix</code>, valor e timestamp. Boleto: <code>nosso_numero</code>, <code>codigo_barras</code>, <code>linha_digitavel</code>, banco, agência e conta.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Adaptar o layout ao meio</div><div class="func-d">O modal atual assume PIX. Boleto tem outro conjunto de campos e precisa de tratamento próprio.</div></div></div>
+        <div class="func"><div class="func-n">3</div><div class="func-b"><div class="func-t">Exibir o rastreamento na Receita</div><div class="func-d">Bloco com <code>protocolo_pagamento</code>, <code>status_rdoc</code> e <code>data_confirmacao_rfb</code> — a prova de que o recolhimento chegou ao Fisco, hoje inexistente no produto.</div></div></div>
+        <div class="func"><div class="func-n">4</div><div class="func-b"><div class="func-t">Sinalizar comprovante pendente ou falho</div><div class="func-d">O <code>status</code> do evento admite <code>pending</code> e <code>failed</code>. Hoje o modal só sabe representar sucesso.</div></div></div>
+      </div>
+    </div>
+
+    <!-- T-08 -->
+    <div class="tela">
+      <div class="tela-hdr">
+        <span class="tela-id t-alt">T-08</span>
+        <span class="tela-name">Organização — CNPJs</span>
+        <span class="tela-path">Config → Organização</span>
+      </div>
+      <div class="tela-body">
+        <p>Alteração mínima, mas necessária: o CNPJ comprador passa a ter uma política associada, e a Organização é onde ele é cadastrado.</p>
+
+        <h4>Funcionalidades</h4>
+        <div class="func"><div class="func-n">1</div><div class="func-b"><div class="func-t">Coluna Execução RAD</div><div class="func-d">Modo vigente por CNPJ, com link para <strong>T-02</strong>. Evita descobrir na tela de política que metade dos estabelecimentos nunca foi configurada.</div></div></div>
+        <div class="func"><div class="func-n">2</div><div class="func-b"><div class="func-t">Sugerir política ao cadastrar CNPJ</div><div class="func-d">Novo estabelecimento oferece criar a política logo após o cadastro, herdando os parâmetros de outro CNPJ como ponto de partida.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 07 ══ -->
+  <div class="section" id="s07">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Fluxo ponta a ponta</span></div>
+
+    <div class="code-block"><code><span class="v">1.</span> <span class="k">Motor avalia a janela</span>                              <span class="c">T-01 / T-02</span>
+   Para cada CNPJ com política ativa:
+     hoje ∈ diasExecucao?  ·  hora atingida?
+        │
+        ▼
+<span class="v">2.</span> <span class="k">Seleciona RFs elegíveis</span>
+   metodoPagamento = RAD
+   due_date &lt;= hoje + antecedencia
+   valor &gt;= valorMinimo
+   sem flags de excluirFlags
+        │
+        ▼
+<span class="v">3.</span> <span class="k">Solicita geração das guias</span>
+   Retorno por guia: return_code
+     DARF_GERADO ──────────────► segue
+     DFE_NAO_ENCONTRADO ───────► fila de erro                <span class="c">T-04 §3</span>
+     VALOR_PARCIAL_SUPERIOR ───► fila de erro                <span class="c">T-04 §3</span>
+        │
+        ▼
+<span class="v">4.</span> <span class="k">Aplica a alçada</span>  <span class="c">(opcional)</span>
+   alçada desativada            → segue direto
+   total &lt;= limiteAutoAprovacao → aprovado
+   total &gt;  limiteAutoAprovacao → fila de aprovação          <span class="c">T-04 §2</span>
+        │
+        ▼
+<span class="v">5.</span> <span class="k">Emite webhook</span>  <span class="v">rad.darf_recebida</span>                    <span class="c">T-03</span>
+   POST para webhookUrl da integração vinculada
+   Espera 200 OK · reenvia se não receber
+   Falha persistente → fila de reprocessamento               <span class="c">T-03 aba 2</span>
+        │
+        ▼
+<span class="v">6.</span> <span class="k">ERP executa o pagamento</span>                            <span class="c">fora do SplitHub</span>
+        │
+        ▼
+<span class="v">7.</span> <span class="k">ERP registra o comprovante</span>
+   POST /v1/rad/proofs  ·  Bearer token                      <span class="c">T-03 aba 3</span>
+   darf_id + tipo_pagamento + bloco pix ou boleto
+   → 201 Created
+        │
+        ▼
+<span class="v">8.</span> <span class="k">Confirma e rastreia</span>  <span class="v">rad.proof_received</span>
+   status: success | pending | failed
+   rastreamento_rfb: protocolo · status_rdoc · confirmação   <span class="c">T-07</span>
+        │
+        ▼
+<span class="v">9.</span> <span class="k">RF segue para conciliação</span>                          <span class="c">J-04</span>
+    dataPagamento gravada · crédito caminha para apropriado</code></div>
+
+    <div class="callout ok">
+      <div class="ct">O humano aparece em três pontos, não em todos</div>
+      <p>Aprovação acima da alçada (passo 5), tratamento de bloqueio e erro (passos 3 e 4) e recuperação de falha de entrega (passo 6). Os demais rodam sozinhos. É a diferença entre carga proporcional ao volume e carga proporcional às exceções.</p>
+    </div>
+  </div>
+
+  <!-- ══ 08 ══ -->
+  <div class="section" id="s08">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Tratamento de falha</span></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Falha</th><th>Onde aparece</th><th>Ação</th><th>Se ignorada</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Nota retida por flag</strong></td>
+            <td>T-04 §2, apartado</td>
+            <td>Resolver a causa no módulo correspondente</td>
+            <td>A guia nunca é gerada; o crédito não se confirma</td>
+          </tr>
+          <tr>
+            <td><code>DFE_NAO_ENCONTRADO</code></td>
+            <td>T-04 §3</td>
+            <td>Revisar ingestão do DF (J-02)</td>
+            <td>Guia nunca emitida; crédito não se confirma</td>
+          </tr>
+          <tr>
+            <td><code>VALOR_PARCIAL_SUPERIOR_DFE</code></td>
+            <td>T-04 §3</td>
+            <td>Revisar apuração do RF</td>
+            <td>Idem</td>
+          </tr>
+          <tr>
+            <td><strong>Webhook não entregue</strong></td>
+            <td>T-03 aba 2 · KPI em T-01</td>
+            <td>Reenviar; verificar a URL</td>
+            <td>ERP não sabe que há guia a pagar — crédito perdido em silêncio</td>
+          </tr>
+          <tr>
+            <td><strong>Comprovante rejeitado</strong></td>
+            <td>T-03 aba 3</td>
+            <td>Corrigir <code>darf_id</code> ou token no ERP</td>
+            <td>ERP acha que pagou; SplitHub não registrou</td>
+          </tr>
+          <tr>
+            <td><strong>Lote parado na fila</strong></td>
+            <td>T-04 §2, com tempo em fila</td>
+            <td>Aprovar ou recusar; alertar</td>
+            <td>Vence enquanto aguarda decisão</td>
+          </tr>
+          <tr>
+            <td><code>status: failed</code> no comprovante</td>
+            <td>T-07 · T-05 coluna RFB</td>
+            <td>Reexecutar o pagamento</td>
+            <td>Marcado como pago sem ter sido</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout red">
+      <div class="ct">Duas falhas produzem falso positivo</div>
+      <p>Webhook não entregue e comprovante rejeitado são as mais perigosas porque <strong>nenhum dos dois lados percebe sozinho</strong>: o SplitHub gerou a guia, o ERP não recebeu; ou o ERP pagou, o SplitHub não soube. As duas telas de log existem para tornar essa divergência detectável — e o KPI de falhas em T-01 para torná-la visível sem ninguém procurar.</p>
+    </div>
+  </div>
+
+  <!-- ══ 09 ══ -->
+  <div class="section" id="s09">
+    <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Lacunas da própria API</span></div>
+    <p class="sec-sub">Pontos não cobertos pela especificação que precisam de definição antes da implementação.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Lacuna</th><th>Impacto</th><th>Sugestão</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Política de retry não definida</strong></td>
+            <td>A spec diz que reenvia até receber <code>200 OK</code>, sem intervalo nem teto. Sem teto, uma URL errada gera reenvio indefinido; com teto não documentado, não se sabe quando desistiu.</td>
+            <td>Definir backoff e número máximo; expor o teto na tela de log</td>
+          </tr>
+          <tr>
+            <td><strong>Sem códigos de erro HTTP</strong></td>
+            <td>Só o <code>201 Created</code> está documentado. O ERP não sabe distinguir token inválido de <code>darf_id</code> inexistente.</td>
+            <td>Documentar 400, 401, 404, 409 e 422 com corpo de erro padronizado</td>
+          </tr>
+          <tr>
+            <td><strong>Idempotência não especificada</strong></td>
+            <td>Sem chave de idempotência, reenvio de comprovante pode duplicar registro.</td>
+            <td>Aceitar header <code>Idempotency-Key</code>; tratar repetição como <code>200</code> com o recurso existente</td>
+          </tr>
+          <tr>
+            <td><strong>Sem verificação de assinatura</strong></td>
+            <td>O ERP não tem como provar que o webhook veio do SplitHub — qualquer um que conheça a URL pode forjar uma guia.</td>
+            <td>Assinatura HMAC no header, com segredo por integração</td>
+          </tr>
+          <tr>
+            <td><strong>Sem ambiente de testes</strong></td>
+            <td>Homologar a integração exigiria usar dados reais.</td>
+            <td>Sandbox com <code>dfe_key</code> fictícias — a função <em>testar conexão</em> de T-03 depende disso</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">A assinatura é pré-requisito, não melhoria</div>
+      <p>Um webhook não autenticado que informa guias a pagar é um vetor de fraude: basta conhecer a URL para induzir o ERP a pagar uma guia forjada. Enquanto não houver assinatura, o modo automático não deveria ser liberado para clientes com o ERP exposto na internet.</p>
+    </div>
+  </div>
+
+  <!-- ══ 10 ══ -->
+  <div class="section" id="s10">
+    <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Faseamento</span></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fase</th><th>Entrega</th><th>Telas</th><th>Resultado</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>1</strong></td>
+            <td>Política, motor e integração — modo automático</td>
+            <td>T-01, T-02, T-03, T-04 §1</td>
+            <td>O ciclo fechado: configurou, gera na janela e entrega ao ERP sozinho. É o estado pretendido, não um degrau.</td>
+          </tr>
+          <tr>
+            <td><strong>2</strong></td>
+            <td>Visibilidade da guia e do transporte</td>
+            <td>T-05, T-06</td>
+            <td>Origem, número real, estado da entrega e erro na listagem. Sem isso a automação roda às cegas.</td>
+          </tr>
+          <tr>
+            <td><strong>3</strong></td>
+            <td>Endpoint de comprovante e rastreio</td>
+            <td>T-03 aba 3, T-07</td>
+            <td>O ERP registra o pagamento; o rastreamento da Receita fecha o elo com a conciliação.</td>
+          </tr>
+          <tr>
+            <td><strong>4</strong></td>
+            <td>Tratamento de exceção e alçada opcional</td>
+            <td>T-04 §2 e §3, T-08</td>
+            <td>Fila de erro por <code>return_code</code>, reprocessamento, e a alçada para quem quiser um teto.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>10.1 O que muda em J-03</h3>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Hoje — execução</div>
+        <ul>
+          <li>4 etapas, todas manuais</li>
+          <li>Carga cresce com o volume</li>
+          <li>Métrica: zero guias vencidas, por disciplina</li>
+          <li>Nenhuma visibilidade após gerar a guia</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Proposto — supervisão</div>
+        <ul>
+          <li>3 pontos de intervenção humana</li>
+          <li>Carga cresce com as exceções</li>
+          <li>Métricas: taxa de automação, sucesso de entrega, tempo em fila</li>
+          <li>Rastreio até a confirmação da Receita</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>10.2 Perguntas que dimensionam o esforço</h3>
+    <ul class="plain">
+      <li><strong>Quantas guias RAD por mês, por CNPJ comprador?</strong> Define se o modo assistido já resolve ou se o automático é necessário.</li>
+      <li><strong>Qual ERP e ele consome webhook?</strong> A especificação assume que sim. ERP que só aceita arquivo exige um modo de destino adicional.</li>
+      <li><strong>Quem aprova acima da alçada, e em que prazo?</strong> Define o limite padrão e o alerta de envelhecimento.</li>
+      <li><strong>A API já está implementada ou é contrato a construir?</strong> Muda a fase 2 de integração para desenvolvimento dos dois lados.</li>
+    </ul>
+  </div>
+
+  <hr>
+  <div style="font-size:11px;color:var(--txt3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <span>SplitHub · Proposta · Execução Automática de RAD</span>
+    <span>v1.0 · 08/09/2026 · Base: API de integração RAD</span>
+  </div>
+
+</div>
+</body>
+</html>
