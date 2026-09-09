@@ -130,25 +130,25 @@ window.SH_TABLES = {
   pagamentos: {
     id: 't-impostos',
     cols: [
-      { thHtml: '<input type="checkbox" id="pag-chk-all" onchange="window.pagToggleAll(this)" title="Selecionar todos pendentes" style="cursor:pointer;width:15px;height:15px">', cls: 'tc', style: 'width:36px;text-align:center' },
-      { label: 'RF', tip: 'Registro Fiscal sob RAD. É a unidade que vira uma guia de recolhimento.' },
-      { label: 'NF Vinculada', tip: 'Documento fiscal de origem. Clique abre o detalhe do DF.' },
-      { label: 'Fornecedor / CNPJ', tip: 'Emitente do documento e seu CNPJ. No RAD, quem recolhe é o comprador, não ele.' },
-      { label: 'Contrato', tip: 'Contrato que define o método RAD para este fornecedor. Clique abre o contrato.' },
-      { label: 'Tipo Fiscal', tip: 'Qual tributo esta guia recolhe: <strong>IBS</strong> (guia 6912) ou <strong>CBS</strong> (DARF 5952).' },
-      { label: 'Tipo', tip: 'Modelo do documento fiscal de origem.' },
-      { label: 'Método', tip: 'Constante <code>RAD</code> nesta listagem — Recolhimento pelo Adquirente. Split Payment e Fornecedor não geram guia aqui.' },
-      { label: 'Valor', tip: 'Valor do tributo a recolher nesta guia.',      cls: 'r' },
-      { label: 'Data RF', tip: 'Data de emissão do documento, que marca o fato gerador.' },
-      { label: 'Pagamento', tip: 'Data e hora do recolhimento. Se pago, o link abre o comprovante.' },
-      { label: 'St. Crédito', tip: 'Onde o crédito está: não apropriado, apropriado, utilizado ou glosado. Só o pagamento da guia permite avançar.' },
-      { label: 'St. Registro', tip: 'Sinalizações de risco sobre o registro — em risco, a prescrever, inconsistência ou vencido.' },
-      { label: 'Inconsistências', tip: 'Divergências apuradas entre o registro fiscal e o documento fiscal correspondente. Nota com inconsistência é retida fora dos lotes automáticos.' },
-      { label: 'Extinção', tip: 'Como o crédito tributário foi extinto, quando já foi.' },
-      { label: 'Origem', tip: 'Se a guia foi produzida por uma <strong>política de execução ativa</strong> (AUTO) ou por seleção manual nesta tela (MANUAL). A faixa teal na linha marca as automáticas.' },
-      { label: 'Entrega', tip: 'Estado do webhook <code>rad.darf_recebida</code>, que leva a guia gerada ao ERP. <strong>Entregue</strong> — o ERP respondeu 200 OK. <strong>Pendente</strong> — em retentativa. <strong>Falha</strong> — as tentativas se esgotaram e a guia existe aqui e não existe lá. O reenvio fica em Configurações &rarr; Integrações &rarr; Log de entregas.' },
-      { label: 'Detalhe', tip: 'Abre o registro fiscal completo, com a decomposição do valor e o rastreamento na Receita.', cls: 'tc' },
-      { label: 'Ação', tip: 'O que é possível fazer agora: gerar a guia, ver o comprovante, ou nada — quando o crédito está glosado.' }
+      { key: '_sel', thHtml: '<input type="checkbox" id="pag-chk-all" onchange="window.pagToggleAll(this)" title="Selecionar todos pendentes" style="cursor:pointer;width:15px;height:15px">', cls: 'tc', style: 'width:36px;text-align:center' },
+      { key: 'rf', label: 'RF', tip: 'Registro Fiscal sob RAD. É a unidade que vira uma guia de recolhimento.' },
+      { key: 'nfVinc', label: 'NF Vinculada', tip: 'Documento fiscal de origem. Clique abre o detalhe do DF.' },
+      { key: 'forn', label: 'Fornecedor / CNPJ', tip: 'Emitente do documento e seu CNPJ. No RAD, quem recolhe é o comprador, não ele.' },
+      { key: 'contratoId', label: 'Contrato', tip: 'Contrato que define o método RAD para este fornecedor. Clique abre o contrato.' },
+      { key: 'tipo', label: 'Tipo Fiscal', tip: 'Qual tributo esta guia recolhe: <strong>IBS</strong> (guia 6912) ou <strong>CBS</strong> (DARF 5952).' },
+      { key: 'tipoNF', label: 'Tipo', tip: 'Modelo do documento fiscal de origem.' },
+      { key: 'metodo', label: 'Método', tip: 'Constante <code>RAD</code> nesta listagem — Recolhimento pelo Adquirente. Split Payment e Fornecedor não geram guia aqui.' },
+      { key: 'valor', label: 'Valor', tip: 'Valor do tributo a recolher nesta guia.',      cls: 'r' },
+      { key: 'dataRFIso', label: 'Data RF', tip: 'Data de emissão do documento, que marca o fato gerador.' },
+      { key: 'pagamento', label: 'Pagamento', tip: 'Data e hora do recolhimento. Se pago, o link abre o comprovante.' },
+      { key: 'statusCredito', label: 'St. Crédito', tip: 'Onde o crédito está: não apropriado, apropriado, utilizado ou glosado. Só o pagamento da guia permite avançar.' },
+      { key: 'statusFlags', label: 'St. Registro', tip: 'Sinalizações de risco sobre o registro — em risco, a prescrever, inconsistência ou vencido.' },
+      { key: '_inconsistencias', label: 'Inconsistências', tip: 'Divergências apuradas entre o registro fiscal e o documento fiscal correspondente. Nota com inconsistência é retida fora dos lotes automáticos.' },
+      { key: 'metodoExtincao', label: 'Extinção', tip: 'Como o crédito tributário foi extinto, quando já foi.' },
+      { key: 'origemGeracao', label: 'Origem', tip: 'Se a guia foi produzida por uma <strong>política de execução ativa</strong> (AUTO) ou por seleção manual nesta tela (MANUAL). A faixa teal na linha marca as automáticas.' },
+      { key: 'entregaStatus', label: 'Entrega', tip: 'Estado do webhook <code>rad.darf_recebida</code>, que leva a guia gerada ao ERP. <strong>Entregue</strong> — o ERP respondeu 200 OK. <strong>Pendente</strong> — em retentativa. <strong>Falha</strong> — as tentativas se esgotaram e a guia existe aqui e não existe lá. O reenvio fica em Configurações &rarr; Integrações &rarr; Log de entregas.' },
+      { key: '_detalhe', label: 'Detalhe', tip: 'Abre o registro fiscal completo, com a decomposição do valor e o rastreamento na Receita.', cls: 'tc' },
+      { key: '_acao', label: 'Ação', tip: 'O que é possível fazer agora: gerar a guia, ver o comprovante, ou nada — quando o crédito está glosado.' }
     ]
   },
   inconsistencias: {
@@ -251,12 +251,27 @@ window.shRenderThead = function(key) {
   var table = tbody.closest('table');
   if (!table) return;
   var old = table.querySelector('thead');
+  // Preserva o id: o ShColMgr localiza o cabecalho por ele para pendurar
+  // ordenacao e arrasto. Sem isso, trocar o <thead> aqui matava em
+  // silencio o gerenciador de colunas da listagem inteira.
+  //
+  // So expoe o id quando o catalogo declara chaves. Sem chave o ShColMgr
+  // casaria <th> por posicao contra a lista de colunas visiveis, e os
+  // catalogos que ainda nao tem chave estao com a ordem divergente da
+  // do registro -- ligar isso amarraria a ordenacao ao campo errado.
+  var temChaves = cfg.cols.some(function(c) { return !!c.key; });
+  var theadId = (old && old.id) || (temChaves ? 'thead-' + cfg.id : '');
   if (old) old.remove();
   var thead = document.createElement('thead');
+  if (theadId) thead.id = theadId;
   var tr = document.createElement('tr');
   var _meio = cfg.cols.length / 2;
   cfg.cols.forEach(function(col, _i) {
     var th = document.createElement('th');
+    // A chave amarra o <th> a coluna do catalogo. Sem ela o ShColMgr
+    // casa por posicao contra a lista de colunas VISIVEIS, e qualquer
+    // coluna oculta desloca a ordenacao para o campo errado.
+    if (col.key) th.setAttribute('data-col-key', col.key);
     if (col.cls) th.className = col.cls;
     if (col.style) th.setAttribute('style', col.style);
     if (col.thHtml) { th.innerHTML = col.thHtml; }
@@ -680,7 +695,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       + '</div>'
       + '<button onclick="document.getElementById(\'nf-detalhe-overlay\').remove();window.abrirDetalheRF(\'' + rf.id + '\')" style="background:rgba(var(--blue-rgb),.08);border:1px solid rgba(var(--blue-rgb),.2);border-radius:4px;color:'+PALETTE.blue+';cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px">Ver RF →</button>'
       + '</div>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">'
+      + '<div class="shg2" style="gap:6px;font-size:11px">'
       + '<div style="color:var(--txt3)">Valor: <span style="color:var(--txt1);font-weight:600">' + ff(rf.valor) + '</span></div>'
       + '<div style="color:var(--txt3)">NF Total: <span style="color:var(--txt1)">' + ff(rf.valorTotalNF || 0) + '</span></div>'
       + '<div style="display:flex;align-items:center;gap:4px">Status: <span style="background:rgba(' + stRfRgb + ',.12);color:rgba(' + stRfRgb + ',1);border:1px solid rgba(' + stRfRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRfLab + '</span></div>'
@@ -2960,7 +2975,7 @@ function _concRFDetail(nf, ibsRF, cbsRF) {
       + '<span style="font-size:10px;font-weight:700;color:' + sc + ';text-transform:uppercase;letter-spacing:.07em">' + label + '</span>'
       + '<span style="background:' + sc + ';color:#fff;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700">' + (rf.statusCredito || rf.status || '—') + '</span>'
       + '</div>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
+      + '<div class="shg2" style="gap:4px 12px;font-size:11px">'
       + '<span style="color:var(--txt3)">ID RF</span>'
       + '<span style="color:'+PALETTE.blue+';font-family:monospace;font-weight:700' + (canOpen ? ';text-decoration:underline dotted' : '') + '">' + rfId + '</span>'
       + '<span style="color:var(--txt3)">Valor</span><span style="color:var(--txt1);font-weight:600">' + fmtV(rf.valor) + '</span>'
@@ -3099,7 +3114,7 @@ function _concUnifiedRender() {
     var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? '#ba7517' : '#a32d2d') : 'var(--txt3)';
     return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid #185fa5;border-radius:8px;padding:10px 12px;min-width:200px">'
       + '<div style="font-size:10px;font-weight:700;color:'+PALETTE.blue+';text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 1 — Conciliação Apuração</div>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
+      + '<div class="shg2" style="gap:4px 12px;font-size:11px">'
       + '<span style="color:var(--txt3)">Valor DF</span><span style="font-weight:600">' + _concFmt(r.valorDF) + '</span>'
       + '<span style="color:var(--txt3)">Valor Gov</span><span style="font-weight:600">' + _concFmt(r.valorGov) + '</span>'
       + '<span style="color:var(--txt3)">Δ Valor</span><span style="color:' + deltaColor + ';font-weight:600">' + deltaStr + '</span>'
@@ -3132,7 +3147,7 @@ function _concUnifiedRender() {
     var compr = r.comprovante ? '<span style="color:var(--green);font-weight:600">✓ Recebido</span>' : '<span style="color:var(--txt3)">Aguardando</span>';
     return '<div style="flex:1;border:1px solid var(--border);border-left:3px solid ' + borderColor + ';border-radius:8px;padding:10px 12px;min-width:200px">'
       + '<div style="font-size:10px;font-weight:700;color:' + titleColor + ';text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Etapa 2 — Conciliação Financeira</div>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">'
+      + '<div class="shg2" style="gap:4px 12px;font-size:11px">'
       + '<span style="color:var(--txt3)">IBS</span><span style="font-weight:600">' + ibsVal + '</span>'
       + '<span style="color:var(--txt3)">Status IBS</span><span><span style="background:' + ibsSc + ';color:#fff;font-size:9px;padding:2px 6px;border-radius:8px">' + ibsSt + '</span></span>'
       + '<span style="color:var(--txt3)">CBS</span><span style="font-weight:600">' + cbsVal + '</span>'
@@ -3971,7 +3986,7 @@ window._incAbrirAcao = function(id) {
     + '<div style="font-size:12px;color:var(--txt2);margin-top:2px">' + r.id + ' · ' + (r.forn||'—') + '</div></div>'
     + '<button onclick="window._incFecharAcao()" style="background:none;border:none;color:var(--txt2);font-size:20px;cursor:pointer;line-height:1;padding:4px">✕</button>'
     + '</div>'
-    + '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + '<div class="shg2" style="padding:16px 20px;border-bottom:1px solid var(--border);gap:12px">'
     + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Inconsistência</div><div style="font-size:13px;font-weight:700;color:' + incCor + '">' + tipoLbl + '</div></div>'
     + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Valor RF</div><div style="font-size:13px;font-weight:700;color:var(--txt1)">' + fmtV(r.valor) + '</div></div>'
     + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Etapa</div><div style="font-size:13px;color:var(--txt1)">' + (r.etapa||'—') + '</div></div>'
@@ -5931,7 +5946,7 @@ window.renderizarAgeingCreditos = function() {
   faixas.forEach(function(f, i) {
     var pct = totalGeral > 0 ? (totais[i] / totalGeral * 100) : 0;
     var pctStr = pct.toFixed(1).replace('.', ',') + '%';
-    barsHtml += '<div style="display:grid;grid-template-columns:130px 1fr 90px 70px;align-items:center;gap:10px">'
+    barsHtml += '<div class="shgr" style="--shgr:130px 1fr 90px 70px;--shgr-sm:74px 1fr 58px 44px;align-items:center;gap:10px">'
       + '<div style="font-size:11px;color:var(--txt2);white-space:nowrap">' + f.label + '</div>'
       + '<div style="background:var(--sidebar);border-radius:4px;height:8px;overflow:hidden">'
       +   '<div style="height:100%;border-radius:4px;background:' + f.color + ';width:' + pct.toFixed(1) + '%;transition:width .6s ease"></div>'
@@ -6714,6 +6729,8 @@ window.renderizarTabelaPagamentos = function() {
   if (_fEntrega) rows = rows.filter(function(r) { return r.entregaStatus === _fEntrega; });
   if (_fRetorno) rows = rows.filter(function(r) { return r.returnCode === _fRetorno; });
 
+  if (window.ShColMgr && ShColMgr.sortRows) rows = ShColMgr.sortRows('pag-rfs', rows);
+
   window._pagImpRows = rows;
   var h = '';
   rows.forEach(function(r, idx) {
@@ -6773,6 +6790,12 @@ window.renderizarTabelaPagamentos = function() {
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;
+
+  var _pagSub = document.getElementById('pag-count-sub');
+  if (_pagSub) _pagSub.textContent = rows.length + ' registro' + (rows.length !== 1 ? 's' : '')
+    + ' sob Recolhimento pelo Adquirente';
+  if (window.shRenderThead) window.shRenderThead('pagamentos');
+  if (window.ShColMgr && ShColMgr.afterRender) { try { ShColMgr.afterRender('pag-rfs'); } catch (e) {} }
 
   // reset seleção ao re-renderizar
   window.pagAtualizarSelecao();
@@ -10032,7 +10055,7 @@ function _automRenderRelatorios(root) {
         + _automBadge(r.formato, _ac.txt2)
         + (r.ativo ? _automBadge('Ativo', _ac.green) : _automBadge('Inativo', _ac.txt3))
         + '</div>'
-        + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">'
+        + '<div class="shg3" style="gap:10px;margin-bottom:10px">'
         + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:3px">Destinatários</div><div style="font-size:12px;color:' + _ac.txt2 + '">' + r.destinatarios.join(', ') + '</div></div>'
         + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:3px">Agendamento</div><div style="font-size:12px;color:' + _ac.txt2 + '">' + r.diaHora + '</div></div>'
         + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:' + _ac.txt3 + ';margin-bottom:3px">Próximo envio</div><div style="font-size:12px;color:' + _ac.txt1 + ';font-weight:600">' + r.proximoEnvio + '</div></div>'
@@ -10069,13 +10092,13 @@ function _automRenderITSM(root) {
     + '</div>';
 
   // Config panel
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">';
+  h += '<div class="shg2" style="gap:14px;margin-bottom:20px">';
   h += _automFieldCard('Sistema ITSM', cfg.sistema, sisCor, true);
   h += _automFieldCard('URL Base da API', cfg.urlBase, _ac.blue, false, true);
   h += _automFieldCard('Autenticação', cfg.authTipo === 'bearer' ? 'Bearer Token' : cfg.authTipo, _ac.txt2);
   h += _automFieldCard('Credencial', cfg.token, _ac.txt3);
   h += _automFieldCard('Título do Ticket', cfg.camposTitulo, _ac.txt2, false, true);
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+  h += '<div class="shg2" style="gap:8px">'
     + _automFieldCard('Prioridade padrão', {1:'1 – Crítica',2:'2 – Alta',3:'3 – Média',4:'4 – Baixa'}[cfg.camposPrioridade]||cfg.camposPrioridade, _ac.amber)
     + _automFieldCard('Categoria', cfg.camposCategoria, _ac.teal)
     + '</div>';
@@ -10157,7 +10180,7 @@ function _automRenderCobranca(root) {
   };
 
   if (aba === 'dashboard') {
-  h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">'
+  h += '<div class="shg4" style="gap:10px;margin-bottom:14px">'
     + _automKpiMini('Réguas ativas', ativas + '/' + regras.length, _ac.teal)
     + _automKpiMini('Alertas enviados', totalEnv.toString(), _ac.blue)
     + _automKpiMini('Em cobrança agora', '6 forn.', _ac.red)
@@ -10204,7 +10227,7 @@ function _automRenderCobranca(root) {
       + '</div>';
   };
 
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">';
+  h += '<div class="shg2" style="gap:12px;margin-bottom:14px">';
 
   // card disparos
   h += '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">'
@@ -10243,7 +10266,7 @@ function _automRenderCobranca(root) {
   h += '</div>'; // grid linha 1
 
   // ── Analytics — linha 2: performance + fornecedores + risco ───────────────
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr 220px;gap:12px;margin-bottom:18px">';
+  h += '<div class="shgc" style="--shgc:1fr 1fr 220px;gap:12px;margin-bottom:18px">';
 
   // performance por régua
   var perfHtml = '';
@@ -10263,7 +10286,7 @@ function _automRenderCobranca(root) {
       + '<span style="font-size:11px;font-weight:600;color:' + _ac.txt1 + '">' + r.nome + '</span>'
       + _automBadge(r.id, _ac.txt3)
       + '</div>'
-      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:6px">'
+      + '<div class="shg4" style="gap:4px;margin-bottom:6px">'
       + '<div style="text-align:center"><div style="font-size:9px;color:' + _ac.txt3 + ';text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Enviados</div><div style="font-size:13px;font-weight:600;font-family:var(--font-mono);color:' + gatCor + '">' + r.totalEnviados + '</div></div>'
       + '<div style="text-align:center"><div style="font-size:9px;color:' + _ac.txt3 + ';text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Entrega</div><div style="font-size:13px;font-weight:600;font-family:var(--font-mono);color:var(--status-green)">' + entPct + '%</div></div>'
       + '<div style="text-align:center"><div style="font-size:9px;color:' + _ac.txt3 + ';text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Abertura</div><div style="font-size:13px;font-weight:600;font-family:var(--font-mono);color:' + _ac.blue + '">' + abPct + '%</div></div>'
@@ -10536,7 +10559,7 @@ window.automInit = function() {
           + '</div>';
       }).join('');
 
-      return '<div onclick="window._automSetAba(\'' + id + '\')" style="background:' + ac.card + ';border:1px solid ' + ac.brd + ';border-radius:10px;display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:0;cursor:pointer;overflow:hidden;margin-bottom:10px;transition:border-color .18s,box-shadow .18s" '
+      return '<div class="shgr" onclick="window._automSetAba(\'' + id + '\')" style="--shgr:auto 1fr auto auto;background:' + ac.card + ';border:1px solid ' + ac.brd + ';border-radius:10px;align-items:center;gap:0;cursor:pointer;overflow:hidden;margin-bottom:10px;transition:border-color .18s,box-shadow .18s" '
         + 'onmouseenter="this.style.borderColor=\'' + stripeCol + '\';this.style.boxShadow=\'0 4px 18px rgba(0,0,0,.28)\'" '
         + 'onmouseleave="this.style.borderColor=\'' + ac.brd + '\';this.style.boxShadow=\'\'">'
         + '<div style="width:48px;height:48px;border-radius:10px;background:' + stripeCol + '1a;display:flex;align-items:center;justify-content:center;font-size:22px;margin:16px 14px 16px 18px;flex-shrink:0">' + emoji + '</div>'
@@ -10646,7 +10669,7 @@ window._automAbrirModalRel = function(id) {
       + ['creditos','debitos','inconsistencias','pagamentos','consolidado'].map(function(m){ return '<option value="' + m + '"' + (v.modulo===m?' selected':'') + '>' + (_automModLabels[m]||m) + '</option>'; }).join('')
       + '</select>')
     + _automCampo('Destinatários (e-mails, separados por vírgula)', '<input id="am-dest" value="' + (v.destinatarios||[]).join(', ') + '" placeholder="email@empresa.com, outro@empresa.com" style="' + _automInputStyle() + '">')
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + '<div class="shg2" style="gap:12px">'
     + _automCampo('Recorrência',
       '<select id="am-rec" style="' + _automInputStyle() + '">'
       + ['diaria','semanal','quinzenal','mensal'].map(function(x){ return '<option value="' + x + '"' + (v.recorrencia===x?' selected':'') + '>' + {diaria:'Diária',semanal:'Semanal',quinzenal:'Quinzenal',mensal:'Mensal'}[x] + '</option>'; }).join('')
@@ -10702,7 +10725,7 @@ window._automAbrirModalITSM = function() {
       + '</select>')
     + _automCampo('Token / Credencial', '<input id="am-itsm-tok" type="password" value="" placeholder="Cole o token ou credencial aqui" style="' + _automInputStyle() + '">')
     + _automCampo('Template do título do ticket', '<input id="am-itsm-tit" value="' + cfg.camposTitulo + '" style="' + _automInputStyle() + '">')
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + '<div class="shg2" style="gap:12px">'
     + _automCampo('Prioridade padrão',
       '<select id="am-itsm-prio" style="' + _automInputStyle() + '">'
       + [{v:'1',l:'1 – Crítica'},{v:'2',l:'2 – Alta'},{v:'3',l:'3 – Média'},{v:'4',l:'4 – Baixa'}].map(function(p){ return '<option value="' + p.v + '"' + (cfg.camposPrioridade===p.v?' selected':'') + '>' + p.l + '</option>'; }).join('')
@@ -10882,11 +10905,11 @@ function _automWizRender() {
     body = '<div style="font-size:13px;font-weight:700;color:' + ac.txt1 + ';margin-bottom:3px">Configuração da régua</div>'
       + '<div style="font-size:11px;color:' + ac.txt3 + ';margin-bottom:16px">Defina o nome, gatilho e parâmetros gerais.</div>'
       + _automCampo('Nome da régua', '<input id="wiz-nome" value="' + ws.nome.replace(/"/g,'&quot;') + '" placeholder="Ex.: Alerta pré-vencimento IBS+CBS" style="' + IS + '">')
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+      + '<div class="shg2" style="gap:12px">'
       + _automCampo('Tipo de gatilho', '<select id="wiz-gat" style="' + IS + '">' + gatOs + '</select>')
       + _automCampo('Dias do gatilho', '<input id="wiz-dias" type="number" min="1" max="90" value="' + ws.diasGatilho + '" style="' + IS + ';font-family:var(--font-mono)">')
       + '</div>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">'
+      + '<div class="shg3" style="gap:12px">'
       + _automCampo('Máx. envios por RF', '<input id="wiz-max" type="number" min="1" max="10" value="' + ws.maxEnvios + '" style="' + IS + ';font-family:var(--font-mono)">')
       + _automCampo('Intervalo (dias)',    '<input id="wiz-int" type="number" min="1" max="30" value="' + ws.intervalo  + '" style="' + IS + ';font-family:var(--font-mono)">')
       + _automCampo('Canal padrão', '<select id="wiz-canal" style="' + IS + '">' + canOs + '</select>')
@@ -10914,7 +10937,7 @@ function _automWizRender() {
 
       var bodyH = open
         ? '<div style="padding:12px;border-top:1px solid ' + ac.brd + '">'
-          + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:0">'
+          + '<div class="shg3" style="gap:10px;margin-bottom:0">'
           + _automCampo('Dia', '<input id="wet-dia-' + idx + '" value="' + et.dia + '" style="' + IS + ';font-family:var(--font-mono);font-size:11px" placeholder="D-7">')
           + _automCampo('Canal', '<select id="wet-canal-' + idx + '" style="' + IS + ';font-size:11px">' + cOs + '</select>')
           + _automCampo('Condição', '<select id="wet-cond-' + idx + '" style="' + IS + ';font-size:11px">' + oOs + '</select>')

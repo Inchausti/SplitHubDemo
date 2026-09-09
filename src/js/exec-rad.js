@@ -841,7 +841,7 @@
         }).join('') + '</select>' +
         '<div style="font-size:10.5px;color:var(--txt3);margin-top:5px;line-height:1.5">' + baseAtual.desc + '</div></div>';
       return baseSel +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+        '<div class="shg2" style="gap:12px">' +
         '<div><label style="display:block;font-size:11px;font-weight:600;color:var(--txt2);margin-bottom:5px">' +
         'Valor mínimo</label>' +
         '<input id="rad-ed-faixa-min" type="number" min="0" step="1000" value="' + (pol.faixaMin || 0) +
@@ -994,7 +994,7 @@
       bloco('Modo de operação', modosHtml) +
       bloco('Janela de execução',
         campo('Dias do mês', diasHtml) +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+        '<div class="shg2" style="gap:12px">' +
         campo('Hora', '<input id="rad-ed-hora" value="' + pol.horaExecucao + '" style="' + IS + '">') +
         campo('Antecedência', '<input id="rad-ed-antec" type="number" min="0" max="60" value="' + pol.antecedencia + '" style="' + IS + '">',
           'dias antes do vencimento') +

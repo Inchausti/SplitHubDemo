@@ -114,6 +114,20 @@ body{background:var(--bg);color:var(--txt1);font:14px/1.6 'Segoe UI',system-ui,s
 
 .back-link{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--teal);text-decoration:none;margin-bottom:20px;}
 .back-link:hover{text-decoration:underline;}
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
 </style>
 </head>
 <body>
@@ -196,7 +210,7 @@ var MODS = [
        d:'Créditos a apropriar classificados por prazo até o vencimento: Curto Prazo (≤30 dias do último dia do mês seguinte à emissão), Longo Prazo (>30 dias) e Vencidos (prazo expirado). DFs vencidos excluídos das categorias CP/LP.'},
       {n:'Calendário heatmap de vencimentos',t:'g',
        d:'Visualização mensal navegável com intensidade de cor (tons teal) proporcional ao volume de créditos vencendo em cada dia. Clique em qualquer dia abre modal com a listagem dos DFs cujo vencimento cai naquela data.'},
-      {n:'Badge de método de extinção',t:'l',
+      {n:'Badge de método de extinção (4 métodos)',t:'l',
        d:'Ícone colorido por método nas colunas Extinção de DFs e RFs: Split Payment (azul), Compensação (verde), Ressarcimento (âmbar) e Transferência (roxo). Visível também no modal de detalhe NF e na timeline do RF.'},
       {n:'Gráficos extintos / vencidos / ageing',t:'g',
        d:'Três gráficos analíticos no painel de créditos a apropriar: distribuição por status de extinção, volume de vencidos por mês e curva de ageing (dias desde a emissão).'},
@@ -212,9 +226,11 @@ var MODS = [
     feats:[
       {n:'Listagem DFs de saída',t:'l',
        d:'Documentos fiscais de saída com IBS e CBS apresentados em colunas separadas de valor, permitindo análise individual por imposto.'},
+      {n:'IBS e CBS separados por coluna',t:'l',
+       d:'Cada documento de saída mostra IBS e CBS em colunas próprias, e não um total somado. Os dois têm competência e destinação diferentes.'},
       {n:'Status extinção por prioridade entre RFs',t:'r',
        d:'Status do DF derivado dos dois RFs (IBS e CBS) com regra de prioridade explícita: inconsistência > vencido > extinto > pendente. Um DF só é considerado extinto quando ambos os RFs estão extintos.'},
-      {n:'3 abas independentes',t:'l',
+      {n:'3 abas: Visão Geral · RFs · DFs',t:'l',
        d:'Visão Geral (gráficos e KPIs de débito), Registros Fiscais (granularidade por RF/imposto) e Documentos Fiscais (visão agregada por DF). Filtros independentes em cada aba.'},
       {n:'Coluna Inconsistências por DF',t:'r',
        d:'Pills com tipo de inconsistência vinculada ao DF de saída. Mesma lógica da listagem de créditos — todas as inconsistências ativas exibidas em conjunto.'},
@@ -248,6 +264,8 @@ var MODS = [
        d:'Roda a janela agora, fora do calendário, para fechamento antecipado ou recuperação de janela perdida. Registra evento na política.'},
       {n:'Fila de erro de geração',t:'r',
        d:'Guias que voltaram com código de erro da API, agrupadas por causa. Dois dos três códigos de retorno possíveis são erro.'},
+      {n:'Gestão de colunas e exportação CSV',t:'a',
+       d:'Escolha, reordenação e ordenação das dezenove colunas da listagem, com exportação em CSV da página ou do conjunto inteiro. A preferência fica salva no navegador.'},
     ]
   },
   /* 4 */ {
@@ -258,9 +276,9 @@ var MODS = [
        d:'Toda inconsistência tem vínculo obrigatório ao DF de origem. O campo rfId é opcional: nulo para inconsistências geradas antes da criação dos RFs (falhas de ingestão); preenchido quando a inconsistência é específica de um RF já criado (pós-apuração ou pós-conciliação financeira).'},
       {n:'Múltiplas inconsistências por DF',t:'r',
        d:'Um mesmo DF pode acumular inconsistências geradas em etapas distintas do ciclo de vida (ex: divergência de valor IBS na apuração E comprovante CBS ausente na conciliação). Todas exibidas simultaneamente como pills nas listagens.'},
-      {n:'Taxonomia CAPUR por imposto',t:'r',
+      {n:'Taxonomia CAPUR IBS/CBS por imposto',t:'r',
        d:'Inconsistências de apuração identificadas individualmente por imposto: capur_ibs_valor (valor divergente), capur_ibs_aliquota (alíquota divergente), capur_cbs_valor, capur_cbs_aliquota. IBS e CBS apurados de forma independente.'},
-      {n:'Taxonomia CFIN por imposto',t:'r',
+      {n:'Taxonomia CFIN IBS/CBS por imposto',t:'r',
        d:'Inconsistências financeiras identificadas por imposto: cfin_ibs_split (split não executado), cfin_ibs_comprovante (comprovante divergente), cfin_cbs_split, cfin_cbs_comprovante. Inclui "Sem Comprovante" para contratos RAD sem anexo.'},
       {n:'Kanban: Aberta → Resolvida / Glosada',t:'a',
        d:'Quadro kanban com colunas: Aberta, Em Análise, Aguardando Emitente, Resolvida e Glosada. Cards movidos entre colunas registram data e usuário da transição.'},
@@ -302,11 +320,11 @@ var MODS = [
        d:'Projeção de entradas tributárias (créditos IBS+CBS) e saídas (débitos e pagamentos) com média móvel progressiva calculada sobre os dados históricos disponíveis.'},
       {n:'Média móvel progressiva',t:'g',
        d:'A média é calculada sobre os N meses históricos disponíveis, crescendo progressivamente à medida que mais dados são acumulados — sem período mínimo fixo.'},
-      {n:'Corte realizado / projeção',t:'g',
+      {n:'Corte realizado / projeção na data atual',t:'g',
        d:'Linha vertical posicionada na data atual separa visualmente os dados históricos realizados (traço sólido) das projeções futuras (traço pontilhado), em ambos os forecasts.'},
       {n:'Forecast de Aproveitamento de Crédito',t:'g',
        d:'Projeção de quando os créditos a apropriar serão efetivamente utilizados para extinção de débitos, com base no ritmo histórico de aproveitamento do adquirente.'},
-      {n:'Insights automáticos',t:'g',
+      {n:'Insights: melhor mês · tendência · perda projetada',t:'g',
        d:'Três insights calculados automaticamente: melhor mês histórico (maior volume de créditos), tendência (crescente/estável/queda com percentual) e perda projetada por não-aproveitamento de créditos disponíveis.'},
       {n:'Tabela mensal de aproveitamento',t:'g',
        d:'Tabela com colunas: Período, Créditos Gerados (IBS+CBS), Créditos Aproveitados e Percentual de Utilização — para cada mês do histórico disponível.'},
@@ -320,6 +338,8 @@ var MODS = [
     feats:[
       {n:'Score de risco por fornecedor (0–100)',t:'g',
        d:'Pontuação de conformidade fiscal calculada por fornecedor com base no critério: volume de créditos em risco (flags vencido/em_risco/inconsistência) dividido pelo total de créditos gerados. Resultado convertido em escala 0–100.'},
+      {n:'Critério: créditos em risco ÷ total',t:'g',
+       d:'O score sai da razão entre o crédito em risco e o crédito total originado pelo fornecedor — proporção, não valor absoluto, para não punir volume.'},
       {n:'Score ≥ 70 → badge verde (baixo risco)',t:'g',
        d:'Fornecedores com score ≥ 70 recebem badge verde indicando baixo risco fiscal. Entre 40 e 69: âmbar (risco médio). Abaixo de 40: vermelho (alto risco).'},
       {n:'Ranking Top 5 Melhores e Top 5 Piores',t:'g',

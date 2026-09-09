@@ -37,7 +37,9 @@
       'th[data-sortable]{cursor:pointer;}',
       'th.sh-th-drag-over{background:var(--blue-bg,#dbeafe)!important;outline:2px dashed var(--blue,#0969da);outline-offset:-2px;}',
       'th.sh-th-dragging{opacity:.4;}',
-      '.sh-cm-controls{display:flex;gap:6px;align-items:center;flex-shrink:0;position:relative;}',
+      // quebra em vez de estourar o cabecalho do cartao em tela estreita
+      '.sh-cm-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;position:relative;}',
+      '@media(max-width:640px){.sh-cm-panel{width:min(280px,calc(100vw - 32px));max-width:none;}}',
     ].join('\n');
     document.head.appendChild(style);
   })();
@@ -223,7 +225,14 @@
     var s = r.state;
 
     ths.forEach(function(th, i) {
-      var col = visCols[i];
+      // Cabeçalho gerado por shRenderThead traz a chave no próprio th e
+      // renderiza TODAS as colunas do catálogo. Casar por posição contra
+      // as visíveis, nesse caso, desloca a ordenação para o campo errado
+      // assim que uma coluna é ocultada.
+      var declarada = th.getAttribute('data-col-key');
+      var col = declarada
+        ? s.cols.find(function(c) { return c.key === declarada; })
+        : visCols[i];
       if (!col) return;
       th.setAttribute('data-col-key', col.key);
       th.setAttribute('data-sortable', '1');
@@ -259,9 +268,10 @@
       if (!col.fixed) {
         th.setAttribute('draggable', 'true');
         th._shDragIdx = i;
+        th._shDragKey = col.key;
         if (!th._shDragBound) {
           th.addEventListener('dragstart', function(e) {
-            _dragSrcTh = { id: th._shColId, idx: th._shDragIdx };
+            _dragSrcTh = { id: th._shColId, idx: th._shDragIdx, key: th._shDragKey };
             th.classList.add('sh-th-dragging');
             e.dataTransfer.effectAllowed = 'move';
           });
@@ -276,16 +286,13 @@
             e.preventDefault();
             th.classList.remove('sh-th-drag-over');
             if (!_dragSrcTh || _dragSrcTh.id !== th._shColId) return;
-            var fromIdx = _dragSrcTh.idx;
-            var toIdx = th._shDragIdx;
-            if (fromIdx === toIdx) return;
+            if (_dragSrcTh.key === th._shDragKey) return;
             var reg = _reg[th._shColId]; if (!reg) return;
-            var vc = ShColMgr.visCols(th._shColId);
-            var fromCol = vc[fromIdx], toCol = vc[toIdx];
-            if (!fromCol || !toCol) return;
             var arr = reg.state.cols;
-            var fi = arr.findIndex(function(c) { return c.key === fromCol.key; });
-            var ti = arr.findIndex(function(c) { return c.key === toCol.key; });
+            // Resolve pela chave, não pela posição: o cabeçalho gerado
+            // por catálogo tem mais th do que colunas visíveis.
+            var fi = arr.findIndex(function(c) { return c.key === _dragSrcTh.key; });
+            var ti = arr.findIndex(function(c) { return c.key === th._shDragKey; });
             if (fi < 0 || ti < 0) return;
             var item = arr.splice(fi, 1)[0];
             arr.splice(ti, 0, item);
