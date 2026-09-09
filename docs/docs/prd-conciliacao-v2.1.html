@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Conciliação IBS/CBS · SplitHub v2.1</title>
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6D28D9; --purple-d: rgba(109,40,217,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.6 'Segoe UI', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 860px; margin: 0 auto; }
+.doc-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+.doc-title { font-size: 28px; font-weight: 800; color: var(--txt1); line-height: 1.15; margin-bottom: 8px; text-wrap: balance; }
+.doc-sub { font-size: 14px; color: var(--txt2); margin-bottom: 24px; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 20px; padding: 16px 20px; background: var(--sur2); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 36px; }
+.meta-item { font-size: 12px; }
+.meta-label { color: var(--txt3); margin-bottom: 2px; }
+.meta-val { color: var(--txt1); font-weight: 600; }
+.section { margin-bottom: 40px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 20px; margin-bottom: 12px; }
+.card-title { font-size: 13px; font-weight: 700; color: var(--txt1); margin-bottom: 8px; }
+.info-box { border-radius: 7px; padding: 14px 16px; margin-bottom: 14px; font-size: 13px; line-height: 1.65; }
+.info-box.teal { background: var(--teal-d); border: 1px solid rgba(31,186,170,.25); }
+.info-box.amber { background: var(--amber-d); border: 1px solid rgba(245,158,11,.25); }
+.info-box.blue { background: var(--blue-d); border: 1px solid rgba(77,159,255,.25); }
+.info-box.red { background: var(--red-d); border: 1px solid rgba(240,75,92,.25); }
+.info-box.purple { background: var(--purple-d); border: 1px solid rgba(109,40,217,.2); }
+.info-box.green { background: var(--green-d); border: 1px solid rgba(34,197,94,.25); }
+.info-box strong { color: var(--txt1); }
+.pipeline { display: flex; align-items: flex-start; gap: 0; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; }
+.pipe-step { flex: 1; min-width: 100px; text-align: center; position: relative; }
+.pipe-step + .pipe-step::before { content: "→"; position: absolute; left: -10px; top: 22px; font-size: 16px; color: var(--txt3); }
+.pipe-box { border: 1px solid var(--brd); border-radius: 8px; padding: 12px 8px 10px; background: var(--sur); margin: 0 6px; }
+.pipe-num { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.pipe-lbl { font-size: 11px; font-weight: 700; color: var(--txt1); }
+.pipe-sub { font-size: 10px; color: var(--txt2); margin-top: 2px; line-height: 1.4; }
+.tbl-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--brd); margin-bottom: 16px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { background: var(--sur2); color: var(--txt2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 10px 14px; text-align: left; }
+tbody tr { border-top: 1px solid var(--brd); }
+tbody tr:hover { background: var(--sur2); }
+td { padding: 10px 14px; color: var(--txt1); vertical-align: top; }
+td:first-child { font-family: 'Consolas', monospace; font-size: 12px; color: var(--blue); }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.err { background: var(--red-d); color: var(--red); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.purple { background: var(--purple-d); color: var(--purple); }
+.chip.gray { background: var(--sur2); color: var(--txt3); }
+ul, ol { padding-left: 18px; color: var(--txt2); font-size: 13px; }
+ul li, ol li { margin-bottom: 5px; line-height: 1.6; }
+li strong { color: var(--txt1); }
+.cl-entry { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--brd); }
+.cl-entry:last-child { border-bottom: none; }
+.cl-ver { font-size: 12px; font-weight: 700; color: var(--teal); white-space: nowrap; min-width: 44px; }
+.cl-body { font-size: 13px; color: var(--txt2); }
+.cl-body strong { color: var(--txt1); display: block; margin-bottom: 3px; }
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'Consolas', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+.ver-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+.ver-nav a { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-decoration: none; background: var(--sur2); color: var(--txt2); border: 1px solid var(--brd); }
+.ver-nav a.current { background: var(--teal); color: #fff; border-color: var(--teal); }
+.ver-nav a:hover:not(.current) { border-color: var(--teal); color: var(--teal); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media (max-width: 600px) { .two-col, .three-col { grid-template-columns: 1fr; } }
+.badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+</style>
+</head>
+<body>
+
+<div class="doc">
+
+  <div class="doc-eyebrow">Product Requirements Document</div>
+  <h1 class="doc-title">Módulo de Conciliação IBS/CBS</h1>
+  <p class="doc-sub">Confronto entre os DFs escriturados na base do SplitHub e os valores apurados pela Apuração Assistida (CG-IBS / RFB) — confirmação do pagamento do tributo pelo fornecedor ou pelo adquirente via RAD, como condição ao crédito IBS/CBS</p>
+
+  <div class="ver-nav">
+    <span style="font-size:11px;color:var(--txt3);font-weight:600">Versões:</span>
+    <a href="prd-conciliacao-v1.0.html">v1.0</a>
+    <a href="prd-conciliacao-v2.0.html" class="current">v2.0 (esta)</a>
+    <a href="prd-conciliacao.html" style="margin-left:4px;background:var(--teal-d);color:var(--teal);border-color:var(--teal)">Última versão</a>
+  </div>
+
+  <div class="meta-row">
+    <div class="meta-item"><div class="meta-label">Versão</div><div class="meta-val">v2.1</div></div>
+    <div class="meta-item"><div class="meta-label">Status</div><div class="meta-val"><span class="chip teal">Publicado</span></div></div>
+    <div class="meta-item"><div class="meta-label">Data</div><div class="meta-val">Ago/2026</div></div>
+    <div class="meta-item"><div class="meta-label">Módulo</div><div class="meta-val">Admin → Conciliação</div></div>
+    <div class="meta-item"><div class="meta-label">Base legal central</div><div class="meta-val">CF/88 Art. 156-A e 195 · LC 214/2025 Arts. 21, 22, 48, 57, 59, 109</div></div>
+    <div class="meta-item"><div class="meta-label">Depende de</div><div class="meta-val"><a href="prd-ingestao.html" style="color:var(--teal)">PRD Ingestão</a></div></div>
+  </div>
+
+  <!-- 1. Objetivo -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Objetivo e conceito central</span></div>
+    <div class="info-box teal">
+      <strong>Conceito central — confronto SplitHub vs. Apuração Assistida:</strong> o SplitHub escritura os Documentos Fiscais (DFs) importados pelos adquirentes. A Plataforma Centralizada (CG-IBS para IBS / RFB para CBS) opera o sistema de Apuração Assistida, registrando os valores apurados de cada DF pelo emitente. A conciliação confronta estas duas bases para confirmar que o tributo foi corretamente apurado e pago — condição para que o adquirente exerça o direito ao crédito previsto nos Arts. 156-A e 195 da CF/88 e regulamentado no Art. 48 da LC 214/2025.
+    </div>
+    <div class="info-box green">
+      <strong>Formas de pagamento do tributo:</strong> o IBS/CBS pode ser pago (a) pelo <strong>fornecedor</strong>, diretamente à Plataforma Centralizada no ato da emissão e liquidação do DF (Art. 57 LC 214/2025), ou (b) pelo <strong>adquirente via RAD</strong> (Recolhimento por Auto-Declaração, Art. 59 LC 214/2025), quando o adquirente recolhe o tributo em nome próprio. Em ambos os casos, a conciliação confronta a base SplitHub com a Apuração Assistida para confirmar o pagamento. <strong>A conciliação não é sobre o mecanismo de pagamento em si, mas sobre a confirmação de que o tributo foi pago e os valores estão corretos.</strong>
+    </div>
+    <div class="info-box blue">
+      <strong>Unidade de conciliação: o DF.</strong> A conciliação ocorre sempre ao nível do Documento Fiscal. Os Registros Fiscais (RF IBS e RF CBS) são comprovantes de pagamento vinculados ao DF — mas o confronto, os status e os cards de inconsistência são sempre vinculados ao DF. Um RF pode ou não existir dependendo do status de importação e da forma de pagamento (RAD não gera RF).
+    </div>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:16px">A conciliação é composta por dois processos em sequência após a importação bem-sucedida do DF:</p>
+    <div class="two-col">
+      <div class="card" style="border-top:3px solid var(--blue)">
+        <div class="card-title" style="color:var(--blue)">CAPUR — Conciliação de Apuração</div>
+        <p style="font-size:13px;color:var(--txt2)">Confronta os valores de IBS e CBS declarados no DF com os valores apurados pela Plataforma Centralizada (CG-IBS para IBS / RFB para CBS). Identifica divergências de valor, alíquota e base de cálculo ao nível do DF.</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--green)">
+        <div class="card-title" style="color:var(--green)">CFIN — Conciliação Financeira</div>
+        <p style="font-size:13px;color:var(--txt2)">Confirma que o pagamento de IBS/CBS foi realizado — seja pelo fornecedor (Art. 57 LC 214/2025) ou pelo adquirente via RAD (Art. 59 LC 214/2025). Os comprovantes de pagamento chegam como Registros Fiscais (RF IBS e RF CBS) ou comprovantes RAD vinculados ao DF. Sem CFIN positiva, o aproveitamento do crédito (Art. 48) fica bloqueado mesmo com CAPUR OK.</p>
+      </div>
+    </div>
+    <div class="info-box blue" style="margin-top:14px">
+      <strong>Pré-requisito:</strong> um DF só entra no pipeline de conciliação após status <span style="font-family:monospace;font-size:11px;background:rgba(77,159,255,.15);padding:1px 5px;border-radius:3px">importado</span>. DFs com erro de layout, dados inconsistentes, rejeitados pela SEFAZ ou duplicados não geram RFs e não são conciliados — apenas geram cards de inconsistência de Ingestão.
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-title">Jornadas de usuário atendidas</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Jornada</th><th>Nome</th><th>Papel do módulo</th><th>O que acontece aqui</th></tr></thead>
+        <tbody>
+          <tr><td><a href="jornadas-usuario.html#j04" style="color:var(--blue);text-decoration:none;font-weight:700">J-04</a></td><td><strong>Conciliação e apropriação</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Ciclo · Analista fiscal</div></td><td><span class="chip ok">Palco principal</span></td><td>Conciliar o registrado com o pago e apropriar o crédito é a jornada, e ela acontece aqui.</td></tr>
+          <tr><td><a href="jornadas-usuario.html#j05" style="color:var(--blue);text-decoration:none;font-weight:700">J-05</a></td><td><strong>Tratamento de inconsistências</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Exceção · Compliance</div></td><td><span class="chip info">Etapa da jornada</span></td><td>O que não concilia vira inconsistência e sai desta jornada para a de exceção.</td></tr>
+          <tr><td><a href="jornadas-usuario.html#j08" style="color:var(--blue);text-decoration:none;font-weight:700">J-08</a></td><td><strong>Prestação de contas</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Saída · CFO / controladoria</div></td><td><span class="chip gray">Fornece dado</span></td><td>O índice de aproveitamento reportado ao CFO sai desta conciliação.</td></tr>
+          <tr><td><a href="jornadas-usuario.html#j03" style="color:var(--blue);text-decoration:none;font-weight:700">J-03</a></td><td><strong>Operação de pagamentos RAD</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Ciclo · Tesouraria</div></td><td><span class="chip gray">Fornece dado</span></td><td>O comprovante da guia RAD é uma das entradas da conciliação financeira.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="info-box teal">
+      <strong>J-04 é o eixo do produto</strong> J-01 existe para que ela funcione; J-02 e J-03 a alimentam; J-05 e J-06 tratam o que ela deixa passar; J-08 reporta o resultado dela.
+    </div>
+    <p style="font-size:12.5px;color:var(--txt3)">Mapa completo das nove jornadas, com passos, pontos de fricção e lacunas: <a href="jornadas-usuario.html" style="color:var(--blue)">Jornadas do usuário ↗</a></p>
+    </div>
+  </div>
+
+  <!-- 2. Base legal -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Base legal e referências normativas</span></div>
+    <div class="info-box amber">
+      <strong>Distinção constitucional vs. infraconstitucional:</strong> os Arts. 156-A e 195 são dispositivos da CF/88 (EC 132/2023). A LC 214/2025 os regulamenta. O SplitHub confronta a base própria (DFs escriturados pelo adquirente) com a Apuração Assistida operada pelo CG-IBS e RFB — obrigação fundamentada nos Arts. 21, 22 e 109 da LC 214/2025. A CFIN confirma o pagamento do tributo pelo fornecedor (Art. 57) ou pelo adquirente via RAD (Art. 59), condição para o crédito do Art. 48.
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Dispositivo</th><th>Tema</th><th>Relevância para a conciliação</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>CF/88 · Art. 156-A<br><small style="color:var(--txt3)">(EC 132/2023)</small></td>
+            <td>IBS — Imposto sobre Bens e Serviços</td>
+            <td>Confere ao CG-IBS autoridade para operar a Plataforma Centralizada e o sistema de Apuração Assistida para IBS — a base oficial confrontada pelo SplitHub na CAPUR.</td>
+          </tr>
+          <tr>
+            <td>CF/88 · Art. 195, §15<br><small style="color:var(--txt3)">(EC 132/2023)</small></td>
+            <td>CBS — Contribuição sobre Bens e Serviços</td>
+            <td>Confere à RFB autoridade para operar o sistema de Apuração Assistida para CBS — a base oficial confrontada pelo SplitHub na CAPUR CBS.</td>
+          </tr>
+          <tr>
+            <td>LC 214/2025 · Art. 21</td>
+            <td>Plataforma de Gestão do IBS — CG-IBS</td>
+            <td>Fundamenta a existência da Plataforma Centralizada CG-IBS como referência normativa da CAPUR IBS. Os valores apurados nela são a fonte de verdade para o confronto SplitHub vs. CG-IBS.</td>
+          </tr>
+          <tr>
+            <td>LC 214/2025 · Art. 22</td>
+            <td>Sistema de apuração CBS — RFB</td>
+            <td>Equivalente ao Art. 21 para CBS. O sistema da RFB é a fonte de verdade para a CAPUR CBS.</td>
+          </tr>
+          <tr>
+            <td>LC 214/2025 · Art. 48</td>
+            <td>Crédito de IBS/CBS do adquirente</td>
+            <td>O direito ao crédito nasce quando o tributo é efetivamente pago (pelo fornecedor ou via RAD). CAPUR e CFIN verificam essa condição; sem ambas positivas, o crédito não pode ser aproveitado.</td>
+          </tr>
+          <tr>
+            <td>LC 214/2025 · Art. 57</td>
+            <td>Responsabilidade pelo recolhimento — fornecedor</td>
+            <td>Define o fornecedor como responsável primário pelo recolhimento do IBS/CBS. Comprovante RF é o artefato que confirma esse pagamento na CFIN.</td>
+          </tr>
+          <tr>
+            <td>LC 214/2025 · Art. 59</td>
+            <td>Recolhimento por Auto-Declaração (RAD) — adquirente</td>
+            <td>Permite ao adquirente recolher o IBS/CBS em nome próprio quando o fornecedor não o fez. Comprovante RAD é aceito pela CFIN como forma válida de quitação do tributo.</td>
+          </tr>
+          <tr>
+            <td>LC 214/2025 · Art. 109</td>
+            <td>Obrigação acessória de escrituração e intercâmbio de dados</td>
+            <td>Impõe ao adquirente a escrituração dos DFs e o intercâmbio com CG-IBS/RFB. O módulo de conciliação automatiza esse confronto, executando a obrigação do Art. 109.</td>
+          </tr>
+          <tr>
+            <td>NT 2024.001 / 2024.002</td>
+            <td>Layout NF-e para IBS/CBS</td>
+            <td>Define os campos XML (<code>vCBS</code>, <code>vIBS</code>, <code>vTribSN</code>) extraídos durante a importação e usados como input da CAPUR.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 3. Status de conciliação -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Status de conciliação do DF</span></div>
+    <div class="info-box purple">
+      <strong>Dois eixos independentes por DF:</strong> cada DF possui <code>capur_status</code> e <code>cfin_status</code> como campos independentes. O <code>cfin_status</code> só é avaliado quando <code>capur_status</code> não for <code>pendente</code>. Ambos seguem o mesmo enum de quatro valores.
+    </div>
+
+    <div class="tbl-wrap" style="margin-bottom:20px">
+      <table>
+        <thead><tr><th>Valor</th><th>Significado CAPUR</th><th>Significado CFIN</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>conciliado</code></td>
+            <td>Valores DF ≡ Apuração Assistida (dentro da tolerância ± R$ 0,01)</td>
+            <td>Ambos comprovantes IBS e CBS recebidos e dentro da tolerância</td>
+          </tr>
+          <tr>
+            <td><code>inconsistencia</code></td>
+            <td>Divergência entre DF e Apuração Assistida — gera cards de inconsistência</td>
+            <td>Pagamento do tributo não confirmado (comprovante ausente, valor divergente) — gera cards</td>
+          </tr>
+          <tr>
+            <td><code>pendente</code></td>
+            <td>DF ainda não processado pela Plataforma Centralizada; aguarda resposta</td>
+            <td>Aguarda CAPUR ou comprovantes IBS/CBS não recebidos ainda</td>
+          </tr>
+          <tr>
+            <td><code>estornado</code></td>
+            <td>DF cancelado após conciliação — CAPUR revertida</td>
+            <td>Pagamento do tributo estornado após cancelamento do DF</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Situação do DF</th><th>capur_status</th><th>cfin_status</th><th>Crédito IBS/CBS</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Aguardando Apuração Assistida</td>
+            <td><span class="chip warn">pendente</span></td>
+            <td><span class="chip gray">—</span></td>
+            <td><span class="chip err">Bloqueado</span></td>
+          </tr>
+          <tr>
+            <td>CAPUR OK · Aguardando comprovantes</td>
+            <td><span class="chip ok">conciliado</span></td>
+            <td><span class="chip warn">pendente</span></td>
+            <td><span class="chip warn">Parcial</span></td>
+          </tr>
+          <tr>
+            <td>Totalmente conciliado</td>
+            <td><span class="chip ok">conciliado</span></td>
+            <td><span class="chip ok">conciliado</span></td>
+            <td><span class="chip teal">Liberado</span></td>
+          </tr>
+          <tr>
+            <td>Inconsistência CAPUR</td>
+            <td><span class="chip err">inconsistencia</span></td>
+            <td><span class="chip gray">—</span></td>
+            <td><span class="chip err">Bloqueado</span></td>
+          </tr>
+          <tr>
+            <td>Inconsistência CFIN</td>
+            <td><span class="chip ok">conciliado</span></td>
+            <td><span class="chip err">inconsistencia</span></td>
+            <td><span class="chip err">Bloqueado</span></td>
+          </tr>
+          <tr>
+            <td>Cancelado após conciliação</td>
+            <td><span class="chip warn">estornado</span></td>
+            <td><span class="chip warn">estornado</span></td>
+            <td><span class="chip err">Estornado</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 4. Pipeline CAPUR -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Pipeline CAPUR — Conciliação de Apuração</span></div>
+    <div class="info-box purple">
+      <strong>O que é CAPUR:</strong> confronta os valores de IBS e CBS declarados no DF com os valores apurados e registrados pela Apuração Assistida (Plataforma Centralizada do CG-IBS para IBS / RFB para CBS). Uma CAPUR positiva confirma que os valores tributários do DF estão corretos e alinhados com a apuração oficial.
+    </div>
+
+    <div class="pipeline">
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--teal)">
+          <div class="pipe-num" style="color:var(--teal)">①</div>
+          <div class="pipe-lbl">DF Importado</div>
+          <div class="pipe-sub">Ingestão OK</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--blue)">
+          <div class="pipe-num" style="color:var(--blue)">②</div>
+          <div class="pipe-lbl">Consulta CG</div>
+          <div class="pipe-sub">Apuração Assistida</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--amber)">
+          <div class="pipe-num" style="color:var(--amber)">③</div>
+          <div class="pipe-lbl">Confronto</div>
+          <div class="pipe-sub">IBS/CBS DF vs CG</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--red)">
+          <div class="pipe-num" style="color:var(--red)">④</div>
+          <div class="pipe-lbl">Análise Diverg.</div>
+          <div class="pipe-sub">Tolerância ± 0,01</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--green)">
+          <div class="pipe-num" style="color:var(--green)">⑤</div>
+          <div class="pipe-lbl">CAPUR OK</div>
+          <div class="pipe-sub">Avança p/ CFIN</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Etapa</th><th>Ação</th><th>Resultado positivo</th><th>Resultado negativo</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>② Consulta CG</td>
+            <td>SplitHub consulta a Apuração Assistida via API usando <code>chaveDfe</code> + <code>niEmitente</code></td>
+            <td>Registro localizado com valores apurados de IBS e CBS</td>
+            <td><span class="chip warn">pendente</span> — DF ainda não processado pela Plataforma; aguarda reprocessamento</td>
+          </tr>
+          <tr>
+            <td>③ Confronto</td>
+            <td>Compara <code>valorCBSTotal</code> e <code>valorIBSTotal</code> do DF com os valores retornados pela Apuração Assistida</td>
+            <td>Valores dentro da tolerância (± R$ 0,01)</td>
+            <td><span class="chip err">inconsistencia</span> — diferença acima da tolerância → gera card CAPUR IBS ou CBS</td>
+          </tr>
+          <tr>
+            <td>④ Análise</td>
+            <td>Classifica a inconsistência: valor divergente ou alíquota incorreta — por imposto (IBS ou CBS separadamente)</td>
+            <td>Inconsistência classificada e card gerado no Módulo de Inconsistências</td>
+            <td>Card enviado para Kanban — 1 card por tipo por DF</td>
+          </tr>
+          <tr>
+            <td>⑤ CAPUR OK</td>
+            <td>DF marcado com <code>capur_status: conciliado</code>; processo avança para CFIN</td>
+            <td><span class="chip ok">conciliado</span> — DF avança para Conciliação Financeira</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 5. Pipeline CFIN -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Pipeline CFIN — Conciliação Financeira</span></div>
+    <div class="info-box green">
+      <strong>CFIN: confirmação do pagamento do tributo.</strong> Após CAPUR positiva, a CFIN confirma que o IBS e CBS do DF foram efetivamente recolhidos — seja pelo <strong>fornecedor</strong> (Art. 57 LC 214/2025, comprovante RF) seja pelo <strong>adquirente via RAD</strong> (Art. 59 LC 214/2025, comprovante RAD). O confronto ocorre sempre contra a Apuração Assistida como referência. Sem CFIN positiva, o crédito do Art. 48 não pode ser aproveitado pelo adquirente mesmo com CAPUR ok.
+    </div>
+
+    <div class="pipeline">
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--green)">
+          <div class="pipe-num" style="color:var(--green)">①</div>
+          <div class="pipe-lbl">CAPUR OK</div>
+          <div class="pipe-sub">Pré-requisito</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--blue)">
+          <div class="pipe-num" style="color:var(--blue)">②</div>
+          <div class="pipe-lbl">Rec. Comprov.</div>
+          <div class="pipe-sub">RF IBS + RF CBS</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--amber)">
+          <div class="pipe-num" style="color:var(--amber)">③</div>
+          <div class="pipe-lbl">Confronto</div>
+          <div class="pipe-sub">Comprov. vs apurado</div>
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-box" style="border-top:3px solid var(--teal)">
+          <div class="pipe-num" style="color:var(--teal)">④</div>
+          <div class="pipe-lbl">Extinção</div>
+          <div class="pipe-sub">Crédito liberado</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Etapa</th><th>Ação</th><th>Resultado positivo</th><th>Resultado negativo</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>② Recebimento Comprovantes</td>
+            <td>SplitHub recebe o RF IBS e o RF CBS da IF com os valores retidos no split payment. RF vinculado ao DF via <code>chaveDfe</code>.</td>
+            <td>RF IBS e RF CBS localizados e vinculados ao DF</td>
+            <td><span class="chip warn">pendente</span> — split payment ainda não processado pela IF</td>
+          </tr>
+          <tr>
+            <td>③ Confronto</td>
+            <td>Compara valor do RF IBS com IBS apurado; compara valor do RF CBS com CBS apurado</td>
+            <td>Comprovantes coincidem com o apurado (± R$ 0,01)</td>
+            <td><span class="chip err">inconsistencia</span> — split insuficiente, excedente ou não realizado → card por imposto</td>
+          </tr>
+          <tr>
+            <td>④ Extinção do crédito</td>
+            <td>DF marcado com <code>cfin_status: conciliado</code>; crédito IBS/CBS disponível para aproveitamento</td>
+            <td><span class="chip teal">conciliado</span> — crédito liberado (Art. 156-A/195 CF + Art. 48 LC 214/2025)</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 6. Taxonomia de inconsistências -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Taxonomia de inconsistências — 14 tipos</span></div>
+    <div class="info-box teal">
+      <strong>Arquitetura de cards:</strong> cada inconsistência gera <strong>1 card</strong> no Módulo de Inconsistências. O card é sempre vinculado ao <strong>DF</strong> (entidade primária). A referência ao RF ou RAD é opcional. Um DF pode gerar múltiplos cards — até <strong>6 tipos CAPUR</strong> (valor IBS/CBS, alíquota IBS/CBS, CST IBS/CBS) + cards CFIN + cards de ingestão.
+    </div>
+
+    <p style="font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">Inconsistências CAPUR — divergência DF vs. Apuração Assistida</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Tipo (chave)</th><th>Label</th><th>RF vinculado</th><th>Causa</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>capur_ibs_divergente</td>
+            <td>Valor IBS divergente da apuração</td>
+            <td>RF IBS (opcional)</td>
+            <td>Valor de IBS declarado no DF difere do apurado pela Plataforma Centralizada CG-IBS</td>
+          </tr>
+          <tr>
+            <td>capur_cbs_divergente</td>
+            <td>Valor CBS divergente da apuração</td>
+            <td>RF CBS (opcional)</td>
+            <td>Valor de CBS declarado no DF difere do apurado pela RFB</td>
+          </tr>
+          <tr>
+            <td>capur_ibs_aliquota</td>
+            <td>Alíquota IBS incorreta</td>
+            <td>RF IBS (opcional)</td>
+            <td><code>pIBS</code> declarado (por item) diverge da alíquota regulamentar retornada pela Apuração Assistida para o NCM/operação. Derivação: <code>pIBS_efetivo = valorIBSTotal / baseCalculoIBS</code> quando campo por item indisponível.</td>
+          </tr>
+          <tr>
+            <td>capur_cbs_aliquota</td>
+            <td>Alíquota CBS incorreta</td>
+            <td>RF CBS (opcional)</td>
+            <td><code>pCBS</code> declarado (por item) diverge da alíquota regulamentar retornada pela Apuração Assistida para o NCM/operação.</td>
+          </tr>
+          <tr>
+            <td>capur_ibs_cst</td>
+            <td>CST IBS incorreto</td>
+            <td>RF IBS (opcional)</td>
+            <td><code>CST_IBS</code> declarado pelo emitente diverge do CST apurado pela Plataforma Centralizada — enquadramento tributário incorreto (ex: operação tributada lançada como isenta ou vice-versa).</td>
+          </tr>
+          <tr>
+            <td>capur_cbs_cst</td>
+            <td>CST CBS incorreto</td>
+            <td>RF CBS (opcional)</td>
+            <td><code>CST_CBS</code> declarado pelo emitente diverge do CST apurado — impacta diretamente o direito ao crédito do adquirente (Art. 48 LC 214/2025).</td>
+          </tr>
+          <tr>
+            <td>prazo_expirado</td>
+            <td>Prazo de apuração expirado</td>
+            <td>Nenhum (DF direto)</td>
+            <td>DF ultrapassou o prazo de apuração sem CFIN positiva — risco de prescrição (Art. 48 LC 214/2025)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="font-size:13px;font-weight:700;color:var(--txt2);margin:16px 0 10px;text-transform:uppercase;letter-spacing:.05em">Inconsistências CFIN — divergência comprovantes vs. Apuração Assistida</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Tipo (chave)</th><th>Label</th><th>RF vinculado</th><th>Causa</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>cfin_ibs_split</td>
+            <td>Split IBS não executado</td>
+            <td>RF IBS</td>
+            <td>Comprovante de recolhimento IBS não recebido ou não vinculado ao DF</td>
+          </tr>
+          <tr>
+            <td>cfin_cbs_split</td>
+            <td>Split CBS não executado</td>
+            <td>RF CBS</td>
+            <td>Comprovante de recolhimento CBS não recebido ou não vinculado ao DF</td>
+          </tr>
+          <tr>
+            <td>cfin_ibs_valor</td>
+            <td>Comprovante IBS divergente</td>
+            <td>RF IBS</td>
+            <td>Valor recolhido IBS (RF) difere do apurado pela Plataforma Centralizada CG-IBS</td>
+          </tr>
+          <tr>
+            <td>cfin_cbs_valor</td>
+            <td>Comprovante CBS divergente</td>
+            <td>RF CBS</td>
+            <td>Valor recolhido CBS (RF) difere do apurado pela RFB</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="font-size:13px;font-weight:700;color:var(--txt2);margin:16px 0 10px;text-transform:uppercase;letter-spacing:.05em">Inconsistências de Ingestão — DF sem RF vinculado</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Tipo (chave)</th><th>Label</th><th>RF vinculado</th><th>Causa</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>chave_invalida</td>
+            <td>Chave de acesso inválida</td>
+            <td>Nenhum</td>
+            <td>Chave de acesso do DF inválida ou rejeitada pela SEFAZ</td>
+          </tr>
+          <tr>
+            <td>cnpj_divergente</td>
+            <td>CNPJ divergente</td>
+            <td>Nenhum</td>
+            <td>CNPJ do emitente ou destinatário não confere com o cadastro</td>
+          </tr>
+          <tr>
+            <td>duplicidade_rf</td>
+            <td>RF duplicado</td>
+            <td>Nenhum</td>
+            <td>DF já importado anteriormente; tentativa de importação duplicada</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 7. Campos de conciliação -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Campos do DF e RF para conciliação</span></div>
+    <div class="info-box blue">
+      <strong>Origem:</strong> campos extraídos do XML durante a importação e persistidos no DF. A CAPUR confronta três dimensões do DF contra a Apuração Assistida: <strong>valor total</strong> (<code>vIBS</code>/<code>vCBS</code>), <strong>alíquota efetiva</strong> (<code>pIBS</code>/<code>pCBS</code>) e <strong>enquadramento tributário</strong> (<code>CST_IBS</code>/<code>CST_CBS</code>). Cada dimensão pode gerar um tipo de inconsistência distinto.
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Campo</th><th>Entidade</th><th>Tag XML / Origem</th><th>Fase</th><th>O que confronta</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>chaveDfe</td>
+            <td>DF</td>
+            <td><code>chNFe</code> / <code>chCTe</code></td>
+            <td><span class="chip teal">CAPUR + CFIN</span></td>
+            <td>Chave de localização do DF na Apuração Assistida</td>
+          </tr>
+          <tr>
+            <td>niEmitente</td>
+            <td>DF</td>
+            <td><code>emit/CNPJ</code></td>
+            <td><span class="chip info">CAPUR</span></td>
+            <td>Identificação do contribuinte na Apuração Assistida</td>
+          </tr>
+          <tr>
+            <td>niAdquirente</td>
+            <td>DF</td>
+            <td><code>dest/CNPJ</code></td>
+            <td><span class="chip info">CAPUR</span></td>
+            <td>Validação do destinatário elegível ao crédito</td>
+          </tr>
+          <tr>
+            <td>valorCBSTotal</td>
+            <td>DF</td>
+            <td><code>total/IBSCBSTot/vCBS</code></td>
+            <td><span class="chip info">CAPUR</span></td>
+            <td>Valor CBS total declarado × valor CBS apurado → <code>capur_cbs_divergente</code></td>
+          </tr>
+          <tr>
+            <td>valorIBSTotal</td>
+            <td>DF</td>
+            <td><code>total/IBSCBSTot/vIBS</code></td>
+            <td><span class="chip info">CAPUR</span></td>
+            <td>Valor IBS total declarado × valor IBS apurado → <code>capur_ibs_divergente</code></td>
+          </tr>
+          <tr>
+            <td>baseCalculoCBS</td>
+            <td>DF</td>
+            <td><code>total/IBSCBSTot/vBCCBS</code></td>
+            <td><span class="chip info">CAPUR</span></td>
+            <td>Base de cálculo CBS — usada para derivar alíquota efetiva no confronto</td>
+          </tr>
+          <tr>
+            <td>baseCalculoIBS</td>
+            <td>DF</td>
+            <td><code>total/IBSCBSTot/vBCIBS</code></td>
+            <td><span class="chip info">CAPUR</span></td>
+            <td>Base de cálculo IBS — usada para derivar alíquota efetiva no confronto</td>
+          </tr>
+          <tr>
+            <td>pCBS (por item)</td>
+            <td>DF</td>
+            <td><code>det/imposto/CBS/pCBS</code></td>
+            <td><span class="chip info">CAPUR</span></td>
+            <td>Alíquota CBS declarada pelo emitente × alíquota CBS regulamentar para NCM/operação → <code>capur_cbs_aliquota</code></td>
+          </tr>
+          <tr>
+            <td>pIBS (por item)</td>
+            <td>DF</td>
+            <td><code>det/imposto/IBS/pIBS</code></td>
+            <td><span class="chip info">CAPUR</span></td>
+            <td>Alíquota IBS declarada pelo emitente × alíquota IBS regulamentar → <code>capur_ibs_aliquota</code></td>
+          </tr>
+          <tr>
+            <td>CST_CBS (por item)</td>
+            <td>DF</td>
+            <td><code>det/imposto/CBS/CST</code></td>
+            <td><span class="chip info">CAPUR</span></td>
+            <td>Código de Situação Tributária CBS × CST apurado — enquadramento incorreto gera <code>capur_cbs_cst</code></td>
+          </tr>
+          <tr>
+            <td>CST_IBS (por item)</td>
+            <td>DF</td>
+            <td><code>det/imposto/IBS/CST</code></td>
+            <td><span class="chip info">CAPUR</span></td>
+            <td>Código de Situação Tributária IBS × CST apurado — enquadramento incorreto gera <code>capur_ibs_cst</code></td>
+          </tr>
+          <tr>
+            <td>dataApuracao</td>
+            <td>DF</td>
+            <td><code>ide/dhEmi</code></td>
+            <td><span class="chip teal">CAPUR + CFIN</span></td>
+            <td>Período de apuração e prazo de expiração</td>
+          </tr>
+          <tr>
+            <td>capur_status</td>
+            <td>DF</td>
+            <td>Calculado pelo SplitHub</td>
+            <td><span class="chip info">CAPUR</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>cfin_status</td>
+            <td>DF</td>
+            <td>Calculado pelo SplitHub</td>
+            <td><span class="chip ok">CFIN</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>tipoFiscal (IBS/CBS)</td>
+            <td>RF / RAD</td>
+            <td>Derivado do tipo de comprovante</td>
+            <td><span class="chip ok">CFIN</span></td>
+            <td>Valor recolhido × valor apurado</td>
+          </tr>
+          <tr>
+            <td>valorRecolhido</td>
+            <td>RF / RAD</td>
+            <td>Comprovante de pagamento do tributo</td>
+            <td><span class="chip ok">CFIN</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>_inconsistencias[ ]</td>
+            <td>DF e RF</td>
+            <td>Array de cards vinculados — back-reference calculada dinamicamente</td>
+            <td><span class="chip teal">CAPUR + CFIN</span></td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 8. Requisitos funcionais -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Requisitos funcionais</span></div>
+    <div class="card">
+      <div class="card-title">RF-CON-01 · Consulta automática à Apuração Assistida</div>
+      <p style="font-size:13px;color:var(--txt2)">Para cada DF com status <code>importado</code>, o SplitHub consulta automaticamente a Apuração Assistida (CG-IBS/RFB) via <code>chaveDfe</code> + <code>niEmitente</code> para obter os valores apurados de IBS e CBS. Frequência: imediata após importação; reprocessamento a cada 6h enquanto <code>capur_status = pendente</code>.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-CON-02 · Confronto CAPUR em três dimensões — valor, alíquota e CST</div>
+      <p style="font-size:13px;color:var(--txt2);margin-bottom:10px">A CAPUR confronta o DF contra a Apuração Assistida em três dimensões independentes, para IBS e CBS separadamente. Qualquer divergência gera <code>capur_status = inconsistencia</code> e um card por tipo:</p>
+      <ul style="font-size:13px;color:var(--txt2);padding-left:18px;margin-bottom:8px">
+        <li><strong>Valor total</strong> — compara <code>valorIBSTotal</code> / <code>valorCBSTotal</code> do DF com <code>vIBS</code> / <code>vCBS</code> apurados. Tolerância ± R$ 0,01. Divergência → <code>capur_ibs_divergente</code> / <code>capur_cbs_divergente</code>.</li>
+        <li><strong>Alíquota efetiva</strong> — compara <code>pIBS</code> / <code>pCBS</code> declarados pelo emitente (por item) com a alíquota regulamentar para o NCM/operação retornada pela Apuração Assistida. Divergência → <code>capur_ibs_aliquota</code> / <code>capur_cbs_aliquota</code>. A alíquota efetiva do DF é calculada como <code>valorIBSTotal / baseCalculoIBS</code> quando não disponível por item.</li>
+        <li><strong>CST — Código de Situação Tributária</strong> — compara <code>CST_IBS</code> / <code>CST_CBS</code> declarados por item com o CST apurado pela Plataforma Centralizada. Enquadramento incorreto (ex: operação tributada lançada como isenta) → <code>capur_ibs_cst</code> / <code>capur_cbs_cst</code>.</li>
+      </ul>
+      <p style="font-size:12px;color:var(--txt3)">Prioridade de classificação: um DF pode ter inconsistências em mais de uma dimensão; cada dimensão gera um card independente. O <code>capur_status</code> do DF reflete o conjunto — basta uma inconsistência em qualquer dimensão para <code>inconsistencia</code>.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-CON-03 · Recebimento e vinculação dos Registros Fiscais (RF IBS + RF CBS)</div>
+      <p style="font-size:13px;color:var(--txt2)">O SplitHub recebe o RF IBS e o RF CBS (comprovantes de split payment) da IF, vincula-os ao DF via <code>chaveDfe</code> e persiste os valores de recolhimento para a fase CFIN. Cada DF gera exatamente dois RFs: um para IBS e um para CBS.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-CON-04 · Confronto CFIN por RF e geração de cards por imposto</div>
+      <p style="font-size:13px;color:var(--txt2)">Após CAPUR positiva, o sistema confronta o valor do RF IBS com o IBS apurado e o RF CBS com o CBS apurado (separadamente). Em caso negativo, gera <code>cfin_status = inconsistencia</code> e cards por tipo: <code>cfin_ibs_split</code>, <code>cfin_cbs_split</code>, <code>cfin_ibs_valor</code> ou <code>cfin_cbs_valor</code>. Em caso positivo, registra <code>cfin_status = conciliado</code> e libera crédito.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-CON-05 · Geração dinâmica e sincronizada de cards de inconsistência</div>
+      <p style="font-size:13px;color:var(--txt2)">Cada inconsistência gera exatamente 1 card. Cards são sempre vinculados ao DF (entidade primária); a referência ao RF é opcional. A geração de cards é sincronizada dinamicamente com <code>nfListaFiltradaGlobal</code> via <code>_concBuildLista</code> — qualquer alteração nos dados (filtros, períodos) reflete imediatamente nos cards. O DF e RF recebem back-references (<code>_inconsistencias[]</code>) após cada geração.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-CON-06 · Ciclo de vida do card de inconsistência (Kanban)</div>
+      <p style="font-size:13px;color:var(--txt2)">Cada card percorre o ciclo de vida: <code>aberta → em_analise → aguardando_emitente → resolvida | glosada</code>. O card exibe o DF como entidade primária, o RF como referência secundária (quando existir), o tipo de inconsistência, valor, prioridade e responsável. Clique no card abre o modal de detalhe — DF e RF são clicáveis apenas dentro do modal.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-CON-07 · Estorno por cancelamento de DF</div>
+      <p style="font-size:13px;color:var(--txt2)">Quando um DF já conciliado for cancelado, o SplitHub atualiza <code>capur_status = estornado</code> e <code>cfin_status = estornado</code>, estorna o crédito IBS/CBS e inicia o processo de devolução do split payment junto à IF.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">RF-CON-08 · Dashboard unificado CAPUR + CFIN por período de apuração</div>
+      <p style="font-size:13px;color:var(--txt2)">Interface com visão consolidada por período: KPIs de capur_status e cfin_status, volume financeiro por status, gráfico de evolução mensal, filtros por CAPUR/CFIN/fluxo/tipo. Listagem paginada de DFs com drill-down para modais de DF e RF.</p>
+    </div>
+  </div>
+
+  <!-- 9. Interface -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Interface — Módulos e componentes</span></div>
+    <div class="card">
+      <div class="card-title">Aba Dashboard de Conciliação</div>
+      <ul>
+        <li><strong>KPIs CAPUR:</strong> Total DFs · Conciliados · Inconsistência · Ag. Apuração · Estornados</li>
+        <li><strong>KPIs CFIN:</strong> Total CAPUR OK · Crédito liberado (R$) · Ag. Comprovantes · Inconsistências CFIN</li>
+        <li><strong>Gráficos:</strong> distribuição por capur_status e cfin_status; evolução mensal; IBS vs CBS</li>
+        <li><strong>Filtros:</strong> período de apuração, CNPJ do adquirente, tipo de DF, capur_status, cfin_status</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Listagem de DFs conciliados</div>
+      <ul>
+        <li>Colunas: <strong>DF</strong> (link modal), Emitente, Valor IBS, Valor CBS, CAPUR, CFIN, Crédito, Data, Protocolo</li>
+        <li>Filtros: capur_status, cfin_status, tipo de DF, período, valor mínimo</li>
+        <li>Drill-down: clique abre modal do DF com timeline completa de conciliação</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Módulo de Inconsistências — Listagem e Kanban</div>
+      <ul>
+        <li><strong>Listagem:</strong> 1 linha por card de inconsistência; colunas ID INC, DF vinculado, RF vinculado, tipo fiscal, tipo de inconsistência, valor, status, prioridade</li>
+        <li><strong>Kanban:</strong> colunas por ciclo de vida (Aberta / Em Análise / Ag. Emitente / Resolvida / Glosada); card mostra DF e RF como texto simples — clicáveis apenas no modal</li>
+        <li><strong>Modal do card:</strong> detalhe completo com botões "Ver DF" e "Ver RF"; ações sugeridas por tipo; responsável; comentários; timeline de eventos</li>
+        <li><strong>Filtros Kanban:</strong> fluxo (entrada/saída), prioridade, tipo de inconsistência</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Modal de detalhe do DF</div>
+      <ul>
+        <li>Seção "Inconsistências Vinculadas": lista todos os cards INC vinculados ao DF via <code>_inconsistencias[]</code></li>
+        <li>Timeline de conciliação: eventos CAPUR e CFIN com timestamp, protocolo, status</li>
+        <li>Valores: DF declarado vs. Apuração Assistida; comprovantes IBS e CBS</li>
+      </ul>
+    </div>
+      <div class="card" style="margin-top:16px">
+      <div class="card-title">Mapa de implementação</div>
+      <p style="font-size:12.5px;color:var(--txt2);margin-bottom:12px">Todo elemento acionável da view, com o identificador que o implementa. A tabela é gerada a partir da própria tela: um controle novo sem descrição não passa na geração, e é assim que este PRD se mantém conferível contra o código.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Identificador</th><th>Tipo</th><th>O que faz</th></tr></thead>
+        <tbody>
+          <tr><td><code>periodoMsAll</code></td><td>ação</td><td>Marca ou desmarca todos os períodos de uma vez.</td></tr>
+          <tr><td><code>periodoMsOpen</code></td><td>ação</td><td>Abre o seletor de múltiplos períodos no cabeçalho da view.</td></tr>
+          <tr><td><code>rfFiltrarGestao</code></td><td>ação</td><td>Aplica os filtros da listagem de registros fiscais e repagina o resultado.</td></tr>
+          <tr><td><code>rfLimparFiltrosGestao</code></td><td>ação</td><td>Zera todos os filtros da listagem e volta à primeira página.</td></tr>
+          <tr><td><code>rfPaginaAnterior</code></td><td>ação</td><td>Navega para a página anterior da listagem paginada.</td></tr>
+          <tr><td><code>rfProximaPagina</code></td><td>ação</td><td>Navega para a próxima página da listagem paginada.</td></tr>
+          <tr><td><code>shToggleFilterPanel</code></td><td>ação</td><td>Abre e fecha o painel de filtros avançados da listagem.</td></tr>
+          <tr><td><code>conc-periodo-ms-all</code></td><td>campo</td><td>Marca ou desmarca todos os períodos do seletor da view de Conciliação.</td></tr>
+          <tr><td><code>rf-gestao-busca</code></td><td>campo</td><td>Busca livre por RF, documento fiscal ou entidade.</td></tr>
+          <tr><td><code>rf-gestao-data-ate</code></td><td>campo</td><td>Fim da faixa de data do registro.</td></tr>
+          <tr><td><code>rf-gestao-data-de</code></td><td>campo</td><td>Início da faixa de data do registro.</td></tr>
+          <tr><td><code>rf-gestao-inconsistencia</code></td><td>campo</td><td>Filtra pelo tipo de inconsistência apurada.</td></tr>
+          <tr><td><code>rf-gestao-status</code></td><td>campo</td><td>Filtra pelo status de conciliação do registro.</td></tr>
+          <tr><td><code>rf-gestao-tipo-dfe</code></td><td>campo</td><td>Filtra pelo modelo do documento fiscal de origem.</td></tr>
+          <tr><td><code>rf-gestao-tipo-fiscal</code></td><td>campo</td><td>Filtra pelo tributo do registro: IBS ou CBS.</td></tr>
+          <tr><td><code>rf-gestao-valor-max</code></td><td>campo</td><td>Valor máximo do registro fiscal.</td></tr>
+          <tr><td><code>rf-gestao-valor-min</code></td><td>campo</td><td>Valor mínimo do registro fiscal.</td></tr>
+          <tr><td><code>uni-apur</code></td><td>campo</td><td>Filtra o painel unificado pelo estado da conciliação de apuração.</td></tr>
+          <tr><td><code>uni-busca</code></td><td>campo</td><td>Busca livre no painel unificado do dashboard de conciliação.</td></tr>
+          <tr><td><code>uni-fin</code></td><td>campo</td><td>Filtra o painel unificado pelo estado da conciliação financeira.</td></tr>
+          <tr><td><code>uni-tipo</code></td><td>campo</td><td>Filtra o painel unificado pelo tipo de documento.</td></tr>
+        </tbody>
+      </table>
+    </div>
+      <p style="font-size:11.5px;color:var(--txt3);margin-top:10px">Controles compartilhados por todas as listagens — gerenciamento de colunas, ordenação, exportação CSV e tooltip de cabeçalho — vêm do <code>ShColMgr</code> e do catálogo <code>SH_TABLES</code>, e não se repetem aqui.</p>
+    </div></div>
+
+  <!-- 10. Não-funcionais -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Requisitos não-funcionais</span></div>
+    <ul>
+      <li><strong>SLA CAPUR:</strong> 95% dos DFs com CAPUR concluída em até 2h após importação; 100% em até 72h.</li>
+      <li><strong>SLA CFIN:</strong> RF vinculado e CFIN concluída em até 24h após recebimento do comprovante de split payment.</li>
+      <li><strong>Sincronização dinâmica:</strong> cards de inconsistência são sempre derivados em tempo real a partir dos dados de conciliação; não há estado duplicado ou fora de sincronia.</li>
+      <li><strong>Rastreabilidade completa:</strong> cada etapa registrada com timestamp, protocolo, valores antes e depois. Back-reference <code>_inconsistencias[]</code> em cada DF e RF.</li>
+      <li><strong>Idempotência:</strong> reprocessamento de CAPUR ou CFIN para o mesmo DF não duplica registros nem créditos.</li>
+      <li><strong>Tolerância a falhas da Plataforma:</strong> indisponibilidade da Apuração Assistida não bloqueia outras operações; DFs ficam com <code>capur_status = pendente</code> e são reprocessados automaticamente.</li>
+      <li><strong>Segurança:</strong> apenas roles <code>fiscal</code> e <code>admin</code> podem forçar reprocessamento ou fechar cards manualmente.</li>
+      <li><strong>ESC global:</strong> todos os modais da aplicação respondem ao ESC com fechamento; comportamento registrado no mapa global de modais.</li>
+    </ul>
+  </div>
+
+  <!-- 11. Integrações -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Integrações e dependências</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Sistema</th><th>Direção</th><th>Dados</th></tr></thead>
+        <tbody>
+          <tr><td>Módulo de Ingestão (SplitHub)</td><td>← Entrada</td><td>DF importado com chaveDfe, niEmitente, niAdquirente, valorCBSTotal, valorIBSTotal, dataApuracao</td></tr>
+          <tr><td>Apuração Assistida CG-IBS / RFB</td><td>↔ Consulta</td><td>Valores apurados de IBS e CBS por chaveDfe; base da CAPUR</td></tr>
+          <tr><td>Instituição Financeira (IF)</td><td>← Entrada</td><td>RF IBS e RF CBS com valores de split payment por chaveDfe; base da CFIN</td></tr>
+          <tr><td>Módulo de Inconsistências</td><td>→ Saída</td><td>Cards (1 por tipo por DF) para triagem e tratamento fiscal no Kanban</td></tr>
+          <tr><td>Módulo de Apuração Assistida</td><td>→ Saída</td><td>DFs com cfin_status = conciliado para composição do saldo de créditos do período</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Changelog -->
+  <hr>
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-num">—</span><span class="sec-title">Changelog</span></div>
+    <div class="cl-entry">
+      <div class="cl-ver">v2.1</div>
+      <div class="cl-body"><strong>08/09/2026</strong> — Acrescenta a seção de <strong>jornadas de usuário atendidas</strong> (J-04, J-05, J-08, J-03) e registra que a validação do recolhimento junto ao Fisco é deste módulo — a coluna RFB saiu de Pagamentos por essa razão.</div>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-ver">v2.0</div>
+      <div class="cl-body">
+        <strong>Ago/2026 · Revisão completa — alinhamento com implementação atual</strong>
+        Corrigida base legal: Art. 156-A e 195 são da CF/88 (EC 132/2023), não da LC 214/2025. Corrigido Art. 48: crédito é gerado no momento do recolhimento via split payment; CAPUR/CFIN validam, não geram o crédito. Conciliação reposicionada ao nível do DF (não RF). Novo vocabulário de status: capur_status e cfin_status com enum conciliado|inconsistencia|pendente|estornado. Taxonomia de 12 tipos de inconsistência documentada por chave canônica. Arquitetura de cards: 1 card por tipo por DF, DF como entidade primária, RF como referência opcional. Sincronização dinâmica via _concBuildLista documentada. Back-references _inconsistencias[] em DF e RF. ESC global adicionado como requisito não-funcional. RF-CON-05 e RF-CON-06 atualizados; RF-CON-01 a RF-CON-04 revisados.
+      </div>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-ver">v1.0</div>
+      <div class="cl-body">
+        <strong>Ago/2026 · Versão inicial</strong>
+        Documentação completa de CAPUR e CFIN: pipelines, status (divergente), tipos de inconsistência genéricos, 8 requisitos funcionais (RF-CON-01 a RF-CON-08). Unidade de conciliação incorretamente identificada como RF.
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

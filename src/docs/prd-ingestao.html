@@ -1,24 +1,26 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRD — Ingestão de DF · SplitHub v1.10</title>
+<title>PRD — Ingestão de DFs · SplitHub v2.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 :root {
-  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --brd: #DDE1EA;
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
   --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
   --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
   --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
   --red: #D63A49; --red-d: rgba(214,58,73,.08);
   --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
   --green: #1A7940; --green-d: rgba(26,121,64,.08);
-  --purple: #6D28D9; --purple-d: rgba(109,40,217,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
   --mono: #EDF0F5;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
     --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
     --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
     --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
@@ -26,11 +28,12 @@
     --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
     --green: #22C55E; --green-d: rgba(34,197,94,.1);
     --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
     --mono: #1A2030;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --brd: #262E3F;
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
   --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
   --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
   --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
@@ -38,511 +41,812 @@
   --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
   --green: #22C55E; --green-d: rgba(34,197,94,.1);
   --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
   --mono: #1A2030;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--txt1); font: 14px/1.6 'Segoe UI', system-ui, sans-serif; padding: 40px 20px 80px; }
-.doc { max-width: 860px; margin: 0 auto; }
-.doc-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
-.doc-title { font-size: 28px; font-weight: 800; color: var(--txt1); line-height: 1.15; margin-bottom: 8px; text-wrap: balance; }
-.doc-sub { font-size: 14px; color: var(--txt2); margin-bottom: 24px; }
-.meta-row { display: flex; flex-wrap: wrap; gap: 20px; padding: 16px 20px; background: var(--sur2); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 36px; }
-.meta-item { font-size: 12px; }
-.meta-label { color: var(--txt3); margin-bottom: 2px; }
-.meta-val { color: var(--txt1); font-weight: 600; }
-.section { margin-bottom: 40px; }
-.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--brd); }
-.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; }
-.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
-.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 20px; margin-bottom: 12px; }
-.card-title { font-size: 13px; font-weight: 700; color: var(--txt1); margin-bottom: 8px; }
-.info-box { border-radius: 7px; padding: 14px 16px; margin-bottom: 14px; font-size: 13px; line-height: 1.65; }
-.info-box.teal { background: var(--teal-d); border: 1px solid rgba(31,186,170,.25); }
-.info-box.amber { background: var(--amber-d); border: 1px solid rgba(245,158,11,.25); }
-.info-box.blue { background: var(--blue-d); border: 1px solid rgba(77,159,255,.25); }
-.info-box.red { background: var(--red-d); border: 1px solid rgba(240,75,92,.25); }
-.info-box.purple { background: var(--purple-d); border: 1px solid rgba(109,40,217,.2); }
-.info-box strong { color: var(--txt1); }
-.new-badge { display: inline-block; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 3px; background: var(--teal-d); color: var(--teal); border: 1px solid rgba(31,186,170,.3); text-transform: uppercase; letter-spacing: .06em; vertical-align: middle; margin-left: 6px; }
-.pipeline { display: flex; align-items: flex-start; gap: 0; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; }
-.pipe-step { flex: 1; min-width: 100px; text-align: center; position: relative; }
-.pipe-step + .pipe-step::before { content: "→"; position: absolute; left: -10px; top: 22px; font-size: 16px; color: var(--txt3); }
-.pipe-box { border: 1px solid var(--brd); border-radius: 8px; padding: 12px 8px 10px; background: var(--sur); margin: 0 6px; }
-.pipe-num { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
-.pipe-lbl { font-size: 11px; font-weight: 700; color: var(--txt1); }
-.pipe-sub { font-size: 10px; color: var(--txt2); margin-top: 2px; line-height: 1.4; }
-.tbl-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--brd); }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-thead th { background: var(--sur2); color: var(--txt2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 10px 14px; text-align: left; }
-tbody tr { border-top: 1px solid var(--brd); }
-tbody tr:hover { background: var(--sur2); }
-td { padding: 10px 14px; color: var(--txt1); vertical-align: top; }
-td:first-child { font-family: 'Consolas', monospace; font-size: 12px; color: var(--blue); }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
 .chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
 .chip.ok { background: var(--green-d); color: var(--green); }
 .chip.warn { background: var(--amber-d); color: var(--amber); }
-.chip.err { background: var(--red-d); color: var(--red); }
 .chip.info { background: var(--blue-d); color: var(--blue); }
 .chip.teal { background: var(--teal-d); color: var(--teal); }
-.chip.purple { background: var(--purple-d); color: var(--purple); }
-ul, ol { padding-left: 18px; color: var(--txt2); font-size: 13px; }
-ul li, ol li { margin-bottom: 5px; line-height: 1.6; }
-li strong { color: var(--txt1); }
-.cl-entry { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--brd); }
-.cl-entry:last-child { border-bottom: none; }
-.cl-ver { font-size: 12px; font-weight: 700; color: var(--teal); white-space: nowrap; min-width: 44px; }
-.cl-body { font-size: 13px; color: var(--txt2); }
-.cl-body strong { color: var(--txt1); display: block; margin-bottom: 3px; }
-code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'Consolas', monospace; font-size: 12px; color: var(--blue); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
 hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
-.ver-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
-.ver-nav a { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-decoration: none; background: var(--sur2); color: var(--txt2); border: 1px solid var(--brd); }
-.ver-nav a.current { background: var(--teal); color: #fff; border-color: var(--teal); }
-.ver-nav a:hover:not(.current) { border-color: var(--teal); color: var(--teal); }
-/* Layout posicional */
-.pos-table td:first-child { font-family: 'Consolas', monospace; font-size: 11px; color: var(--txt1); font-weight: 600; }
-.pos-table td:nth-child(2), .pos-table td:nth-child(3), .pos-table td:nth-child(4) { text-align: center; font-family: monospace; font-size: 12px; color: var(--blue); }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
 </style>
 </head>
 <body>
 <div class="doc">
 
-  <div class="doc-eyebrow">Product Requirements Document</div>
-  <h1 class="doc-title">Módulo de Ingestão de Documentos Fiscais</h1>
-  <p class="doc-sub">Pipeline de captura, validação e integração de DFs eletrônicos ao ecossistema SplitHub — ERP, upload manual e CSV posicional</p>
+  <a class="back" href="prds.html">← Hub de PRDs</a>
 
-  <div class="ver-nav">
-    <span style="font-size:11px;color:var(--txt3);font-weight:600">Versões:</span>
-    <a href="prd-ingestao-v1.0.html">v1.0</a>
-    <a href="prd-ingestao-v1.1.html">v1.1</a>
-    <a href="prd-ingestao-v1.2.html">v1.2</a>
-    <a href="prd-ingestao-v1.3.html">v1.3</a>
-    <a href="prd-ingestao-v1.4.html">v1.4</a>
-    <a href="prd-ingestao-v1.5.html">v1.5</a>
-    <a href="prd-ingestao-v1.6.html">v1.6</a>
-    <a href="prd-ingestao-v1.7.html">v1.7</a>
-    <a href="prd-ingestao-v1.8.html">v1.8</a>
-    <a href="prd-ingestao-v1.9.html" class="current">v1.9 (esta)</a>
-    <a href="prd-ingestao.html" style="margin-left:4px;background:var(--teal-d);color:var(--teal);border-color:var(--teal)">Última versão</a>
-  </div>
+  <div class="eyebrow">PRD · Configurações → Importação de DFs</div>
+  <h1>Ingestão — A porta de entrada do produto</h1>
+  <p class="subtitle">Captura os documentos fiscais eletrônicos emitidos e recebidos pelo grupo, valida-os e os transforma em <strong>Registros Fiscais</strong>. Sem DF ingerido e válido não há apuração, não há conciliação e não há crédito de IBS/CBS.</p>
 
-  <div class="meta-row">
-    <div class="meta-item"><div class="meta-label">Versão</div><div class="meta-val">v1.10</div></div>
-    <div class="meta-item"><div class="meta-label">Status</div><div class="meta-val"><span class="chip teal">Publicado</span></div></div>
-    <div class="meta-item"><div class="meta-label">Data</div><div class="meta-val">19/08/2026</div></div>
-    <div class="meta-item"><div class="meta-label">Módulo</div><div class="meta-val">Admin → Ingestão de DFs</div></div>
-    <div class="meta-item"><div class="meta-label">Base legal</div><div class="meta-val">LC 214/2025 · IN RFB 2.240/2025</div></div>
-  </div>
-
-  <div class="info-box purple">
-    <strong>Ajuste de escopo v1.8 (reconciliação com implementação):</strong> esta versão alinha o PRD ao estado atual do módulo conforme validação de Ago/2026. (1) Dashboard KPIs corrigidos — app mantém dois KPIs separados: <strong>Com Erro</strong> e <strong>Duplicados</strong>, em vez do KPI unificado "Inconsistências"; (2) Pipeline visual de 5 etapas e gráfico de barras empilhadas marcados como <strong>não implementados</strong> (backlog); (3) Seção "Detalhe da Inconsistência" no painel esquerdo do modal removida — informação está presente apenas no texto do evento da trilha de auditoria.
-  </div>
-
-  <!-- 1. Objetivo -->
-  <div class="section">
-    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Objetivo e escopo</span></div>
-    <div class="info-box teal">
-      <strong>Objetivo central:</strong> capturar 100% dos Documentos Fiscais eletrônicos emitidos ou recebidos pela Positivo Tecnologia S.A., validá-los e integrá-los à base SplitHub para alimentar a Apuração Assistida de IBS/CBS e garantir a apropriação do crédito (Art. 48 LC 214/2025).
-    </div>
-    <p style="font-size:13px;color:var(--txt2);margin-bottom:14px">A ingestão é a <strong style="color:var(--txt1)">porta de entrada</strong> da jornada fiscal: sem DF ingerido e válido, não há apuração, não há conciliação financeira e não há crédito IBS/CBS. Cada DF gera um <strong style="color:var(--txt1)">Registro Fiscal (RF)</strong> na plataforma.</p>
-    <div class="card">
-      <div class="card-title">Tipos de DF suportados</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">
-        <span class="chip teal">NF-e (mod. 55)</span>
-        <span class="chip teal">NFC-e (mod. 65)</span>
-        <span class="chip teal">NFS-e</span>
-        <span class="chip teal">CT-e (mod. 57)</span>
-        <span class="chip teal">NFCom (mod. 62)</span>
-        <span class="chip teal">NF3-e (mod. 66)</span>
-        <span class="chip teal">NFAg</span>
-        <span class="chip teal">NFGás</span>
-        <span class="chip teal">MDF-e (mod. 58)</span>
-        <span class="chip teal">BP-e (mod. 63)</span>
-        <span class="chip teal">NFAv (mod. 2B)</span>
-      </div>
-    </div>
-    <div class="card" style="margin-top:16px">
-      <div class="card-title">Jornadas de usuário atendidas</div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Jornada</th><th>Nome</th><th>Papel do módulo</th><th>O que acontece aqui</th></tr></thead>
-        <tbody>
-          <tr><td><a href="jornadas-usuario.html#j02" style="color:var(--blue);text-decoration:none;font-weight:700">J-02</a></td><td><strong>Ingestão e validação de DFs</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Ciclo · Analista fiscal</div></td><td><span class="chip ok">Palco principal</span></td><td>A jornada é o módulo. Importar, validar e transformar o DF em Registro Fiscal acontece inteiramente aqui.</td></tr>
-          <tr><td><a href="jornadas-usuario.html#j01" style="color:var(--blue);text-decoration:none;font-weight:700">J-01</a></td><td><strong>Implantação da plataforma</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Configuração · Administrador</div></td><td><span class="chip info">Etapa da jornada</span></td><td>A primeira carga de DFs é o que comprova que a implantação funcionou.</td></tr>
-          <tr><td><a href="jornadas-usuario.html#j05" style="color:var(--blue);text-decoration:none;font-weight:700">J-05</a></td><td><strong>Tratamento de inconsistências</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Exceção · Compliance</div></td><td><span class="chip info">Etapa da jornada</span></td><td>Documento com divergência não segue: desvia para o tratamento de inconsistências.</td></tr>
-          <tr><td><a href="jornadas-usuario.html#j04" style="color:var(--blue);text-decoration:none;font-weight:700">J-04</a></td><td><strong>Conciliação e apropriação</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Ciclo · Analista fiscal</div></td><td><span class="chip gray">Fornece dado</span></td><td>A conciliação trabalha sobre os RFs que este módulo criou.</td></tr>
-          <tr><td><a href="jornadas-usuario.html#j03" style="color:var(--blue);text-decoration:none;font-weight:700">J-03</a></td><td><strong>Operação de pagamentos RAD</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Ciclo · Tesouraria</div></td><td><span class="chip gray">Fornece dado</span></td><td>O método do contrato aplicado na ingestão decide se a nota entra na fila de RAD.</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="info-box teal">
-      <strong>J-02 alimenta tudo o que vem depois</strong> Sem DF ingerido e válido não há apuração, não há conciliação e não há crédito. É a jornada com o maior efeito cascata do produto.
-    </div>
-    <p style="font-size:12.5px;color:var(--txt3)">Mapa completo das nove jornadas, com passos, pontos de fricção e lacunas: <a href="jornadas-usuario.html" style="color:var(--blue)">Jornadas do usuário ↗</a></p>
+  <div class="meta-bar">
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.0</span></div>
+    <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Admin → Importação de DFs</span></div>
+    <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
+    <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-ingestao</span></div>
+    <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025 · Art. 48</span></div>
+    <div class="meta-pill"><span class="meta-label">Norma</span>&nbsp;<span class="meta-val">IN RFB 2.240/2025</span></div>
+    <div class="meta-pill" style="margin-left:auto">
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v2.0</span>
     </div>
   </div>
 
-  <!-- 2. Fontes de Ingestão -->
-  <div class="section">
-    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Fontes de ingestão</span></div>
-    <div class="tbl-wrap" style="margin-bottom:16px">
-      <table>
-        <thead><tr><th>Fonte</th><th>Protocolo</th><th>Frequência</th><th>Prioridade</th></tr></thead>
-        <tbody>
-          <tr><td>ERP / sistema de origem</td><td>API REST · Webhook · SFTP</td><td>Tempo real / batch</td><td><span class="chip ok">P1</span></td></tr>
-          <tr><td>Upload manual (XML/ZIP)</td><td>Interface web · drag-and-drop</td><td>On demand</td><td><span class="chip warn">P2</span></td></tr>
-          <tr><td>CSV Posicional <span class="new-badge">v1.7</span></td><td>Upload de arquivo .csv / .txt · 200 chars/linha</td><td>On demand</td><td><span class="chip warn">P2</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="card">
-      <div class="card-title">Estrutura da chave de acesso (NF-e / CT-e)</div>
-      <p style="font-size:12px;color:var(--txt2);margin-bottom:10px">44 dígitos, gerada pelo emitente. Usada como <code>chaveDfe</code> — campo-chave na Conciliação de Apuração. Ver detalhamento no <a href="prd-conciliacao.html" style="color:var(--teal)">PRD de Conciliação</a>.</p>
-      <div style="font-family:monospace;font-size:12px;background:var(--mono);border-radius:6px;padding:12px;overflow-x:auto;color:var(--txt1);letter-spacing:.04em">
-        <span style="color:var(--teal)">cUF(2)</span> <span style="color:var(--blue)">AAMM(4)</span> <span style="color:var(--amber)">CNPJ(14)</span> <span style="color:var(--green)">mod(2)</span> <span style="color:var(--txt2)">serie(3) nNF(9) tpEmis(1) cNF(8)</span> <span style="color:var(--red)">cDV(1)</span>
-      </div>
-      <p style="font-size:11px;color:var(--txt3);margin-top:8px">Para NFS-e: chave municipal (formato varia por município/provedor). Para NFCom e NF3-e: estrutura própria conforme ato normativo ANEEL/ANATEL.</p>
-    </div>
-  </div>
-
-  <!-- 3. Pipeline de Validação -->
-  <div class="section">
-    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Pipeline de validação</span></div>
-    <div class="pipeline">
-      <div class="pipe-step">
-        <div class="pipe-box" style="border-top:3px solid var(--blue)">
-          <div class="pipe-num" style="color:var(--blue)">①</div>
-          <div class="pipe-lbl">Recebimento</div>
-          <div class="pipe-sub">ERP / Upload / CSV</div>
-        </div>
-      </div>
-      <div class="pipe-step">
-        <div class="pipe-box" style="border-top:3px solid var(--teal)">
-          <div class="pipe-num" style="color:var(--teal)">②</div>
-          <div class="pipe-lbl">Triagem</div>
-          <div class="pipe-sub">Tipo DF identificado</div>
-        </div>
-      </div>
-      <div class="pipe-step">
-        <div class="pipe-box" style="border-top:3px solid var(--amber)">
-          <div class="pipe-num" style="color:var(--amber)">③</div>
-          <div class="pipe-lbl">Val. Layout</div>
-          <div class="pipe-sub">Schema XML</div>
-        </div>
-      </div>
-      <div class="pipe-step">
-        <div class="pipe-box" style="border-top:3px solid var(--txt2)">
-          <div class="pipe-num" style="color:var(--txt2)">④</div>
-          <div class="pipe-lbl">Val. Dados</div>
-          <div class="pipe-sub">Integridade + unicidade</div>
-        </div>
-      </div>
-      <div class="pipe-step">
-        <div class="pipe-box" style="border-top:3px solid var(--green)">
-          <div class="pipe-num" style="color:var(--green)">⑤</div>
-          <div class="pipe-lbl">Importado</div>
-          <div class="pipe-sub">RF criado · CAPUR</div>
-        </div>
-      </div>
-    </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Etapa</th><th>Validações</th><th>Resultado positivo</th><th>Resultado negativo</th></tr></thead>
-        <tbody>
-          <tr>
-            <td>② Triagem</td>
-            <td>Modelo identificado (cMod / tag raiz XML), versão do schema</td>
-            <td>Tipo DF identificado</td>
-            <td><span class="chip err">Inconsistência</span> — tipo desconhecido ou schema incompatível</td>
-          </tr>
-          <tr>
-            <td>③ Val. Layout</td>
-            <td>Validação Schema XSD (versão 4.00 para NF-e, 3.00 para CT-e, v1.00 ABRASF para NFS-e). Namespace, encoding UTF-8, tags obrigatórias (<code>&lt;infNFe&gt;</code>, <code>&lt;emit&gt;</code>, <code>&lt;dest&gt;</code>), assinatura digital (xmldsig)</td>
-            <td><span class="chip ok">Layout OK</span></td>
-            <td><span class="chip err">Inconsistência · Layout</span> — schema, namespace, charset, assinatura</td>
-          </tr>
-          <tr>
-            <td>④ Val. Dados</td>
-            <td>Dados do documento íntegros e consistentes com o XML recebido. Chave de acesso de 44 dígitos única na plataforma (unicidade de <code>chaveDfe</code>). CNPJ emitente ativo na RFB. Alíquotas coerentes com CST declarado.</td>
-            <td><span class="chip ok">Dados OK</span></td>
-            <td><span class="chip err">Inconsistência · Dados</span> — CNPJ inválido, chave duplicada, alíquota incoerente</td>
-          </tr>
-          <tr>
-            <td>⑤ Integração</td>
-            <td>Criação do RF com ID único (<code>RF-XXXXXXXX</code>), extração de <code>chaveDfe</code>, <code>niEmitente</code>, <code>niAdquirente</code>, <code>valorCBSTotal</code>, geração de timestamp de ingestão</td>
-            <td><span class="chip teal">Importado</span> — RF disponível para Apuração</td>
-            <td>—</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- 4. Status Importação (v1.7: simplificado) -->
-  <div class="section">
-    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Status Importação — máquina de estados <span class="new-badge">v1.7</span></span></div>
-    <div class="info-box amber">
-      <strong>Simplificação v1.7:</strong> a máquina de status foi colapsada de seis estados (integrado, pendente, erro_layout, erro_dados, rejeitado, duplicado) para <strong>dois estados finais</strong>. O campo passou a se chamar <strong>Status Importação</strong> em toda a interface.
-    </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Status Importação</th><th>Cor</th><th>Significado</th><th>Gera RF?</th><th>Próximo passo</th></tr></thead>
-        <tbody>
-          <tr>
-            <td>importado</td>
-            <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22C55E;margin-right:6px"></span>Verde</td>
-            <td>Todas as validações aprovadas — layout, dados e unicidade de chave</td>
-            <td><span class="chip ok">Sim</span></td>
-            <td>RF criado · segue para Apuração e Conciliação</td>
-          </tr>
-          <tr>
-            <td>inconsistencia</td>
-            <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#8B5CF6;margin-right:6px"></span>Roxo</td>
-            <td>Pelo menos uma validação reprovada — layout ou dados. Detalhe visível na coluna Inconsistência e no modal</td>
-            <td><span class="chip err">Não</span></td>
-            <td>Revisar no modal · corrigir na origem · reimportar</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="card" style="margin-top:14px">
-      <div class="card-title">Tipos de inconsistência</div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr><th>Tipo</th><th>Categoria</th><th>Cor</th><th>Descrição</th></tr></thead>
-          <tbody>
-            <tr><td>Falha de Layout</td><td><span class="chip warn">Layout</span></td><td>Âmbar</td><td>Estrutura XML inválida — elemento obrigatório ausente ou malformado</td></tr>
-            <tr><td>Campo Ausente</td><td><span class="chip warn">Layout</span></td><td>Âmbar</td><td>Campo obrigatório ausente no grupo do emitente ou destinatário</td></tr>
-            <tr><td>Namespace Inválido</td><td><span class="chip warn">Layout</span></td><td>Âmbar</td><td>Versão do schema NF-e incompatível com o padrão SEFAZ</td></tr>
-            <tr><td>Rejeição SEFAZ</td><td><span class="chip warn">Layout</span></td><td>Âmbar</td><td>Assinatura digital inválida (código de rejeição SEFAZ)</td></tr>
-            <tr><td>CNPJ Inválido</td><td><span class="chip info">Dados</span></td><td>Azul</td><td>CNPJ do emitente não localizado na Receita Federal</td></tr>
-            <tr><td>Alíquota Inválida</td><td><span class="chip info">Dados</span></td><td>Azul</td><td>Alíquota CBS/IBS fora do intervalo regulatório (LC 214/2025)</td></tr>
-            <tr><td>Duplicidade</td><td><span class="chip info">Dados</span></td><td>Azul</td><td>Chave de acesso já registrada na plataforma</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- 5. Requisitos funcionais -->
-  <div class="section">
-    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Requisitos funcionais</span></div>
-    <div class="card">
-      <div class="card-title">RF-ING-01 · Integração com ERP</div>
-      <p style="font-size:13px;color:var(--txt2)">O SplitHub deve receber DFs do ERP em tempo real via webhook ou em lote via SFTP/API REST. A integração deve garantir idempotência por <code>chaveDfe</code> e confirmar o recebimento para o sistema de origem.</p>
-    </div>
-    <div class="card">
-      <div class="card-title">RF-ING-02 · Validação de schema XSD</div>
-      <p style="font-size:13px;color:var(--txt2)">O XML de cada DF deve ser validado contra o schema XSD oficial da versão correspondente (NF-e 4.00, CT-e 3.00, NFS-e v1.00 ABRASF). Falha de schema resulta em <code>inconsistencia</code> com categoria <strong>Layout</strong>.</p>
-    </div>
-    <div class="card">
-      <div class="card-title">RF-ING-05 · Tratamento de cancelamentos</div>
-      <p style="font-size:13px;color:var(--txt2)">Eventos de cancelamento recebidos do ERP devem atualizar o RF correspondente (via <code>chaveDfe</code>), cancelar qualquer apuração em andamento e gerar evento de auditoria com timestamp do cancelamento.</p>
-    </div>
-    <div class="card">
-      <div class="card-title">RF-ING-06 · Upload de CSV (semicolon) <span class="new-badge">v1.9</span></div>
-      <p style="font-size:13px;color:var(--txt2);margin-bottom:12px">O botão <strong>+ Importar DF</strong> abre um modal dedicado ao upload de arquivo <strong>CSV separado por ponto e vírgula (;)</strong> (.csv). A primeira linha é o cabeçalho com os nomes das colunas. Cada linha subsequente representa um DF. A plataforma exibe pré-visualização dos registros parseados antes de confirmar a importação. DFs importados via CSV recebem status <code>importado</code>.</p>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr><th>#</th><th>Coluna</th><th>Formato / Observação</th></tr></thead>
-          <tbody>
-            <tr><td>1</td><td>chave_acesso</td><td>44 dígitos numéricos · chave NF-e/CT-e</td></tr>
-            <tr><td>2</td><td>tipo_df</td><td>NF-e Entrada · NF-e Saída · NFS-e · CT-e · etc.</td></tr>
-            <tr><td>3</td><td>cnpj_emitente</td><td>14 dígitos numéricos · sem pontuação</td></tr>
-            <tr><td>4</td><td>ie_emitente</td><td>Inscrição Estadual · ISENTO se isento</td></tr>
-            <tr><td>5</td><td>uf_emitente</td><td>Sigla UF · ex: SP · PR · MG</td></tr>
-            <tr><td>6</td><td>nome_emitente</td><td>Razão Social do emitente</td></tr>
-            <tr><td>7</td><td>cnpj_destinatario</td><td>14 dígitos numéricos · sem pontuação</td></tr>
-            <tr><td>8</td><td>nome_destinatario</td><td>Razão Social do destinatário</td></tr>
-            <tr><td>9</td><td>cfop</td><td>4 dígitos numéricos · ex: 1102</td></tr>
-            <tr><td>10</td><td>serie</td><td>Série do documento · ex: 001</td></tr>
-            <tr><td>11</td><td>numero</td><td>Número do documento · ex: 000012345</td></tr>
-            <tr><td>12</td><td>natureza_operacao</td><td>Descrição da natureza da operação</td></tr>
-            <tr><td>13</td><td>valor_total</td><td>Decimal com vírgula · ex: 12500,00</td></tr>
-            <tr><td>14</td><td>valor_ibs</td><td>Decimal com vírgula · ex: 1250,00</td></tr>
-            <tr><td>15</td><td>valor_cbs</td><td>Decimal com vírgula · ex: 1000,00</td></tr>
-            <tr><td>16</td><td>data_emissao</td><td>Formato DD/MM/AAAA · ex: 08/01/2026</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div style="margin-top:12px;font-size:12px;color:var(--txt2);line-height:1.6">
-        <strong style="color:var(--txt1)">Comportamento do modal:</strong><br>
-        • <strong>Área de drop:</strong> arrastar arquivo ou clicar para selecionar (.csv / .txt)<br>
-        • <strong>Layout de referência:</strong> tabela expansível com campos, posições e exemplos<br>
-        • <strong>Parser:</strong> ignora linhas tipo 1 e 9; valida tamanho mínimo (155 chars); converte valor de centavos; formata data AAAAMMDD → AAAA-MM-DD<br>
-        • <strong>Pré-visualização:</strong> tabela com todos os registros parseados (Tipo DF, Emitente, CFOP, Valor, Emissão, Status esperado) antes de confirmar<br>
-        • <strong>Linhas com erro:</strong> contadas e ignoradas com badge de aviso; importação prossegue com registros válidos<br>
-        • <strong>Confirmação:</strong> injeta DFs na listagem com status <code>importado</code>, atualiza KPIs e exibe toast de sucesso
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">RF-ING-07 · Modal de detalhe expandido e trilha de auditoria <span class="new-badge">v1.7</span></div>
-      <p style="font-size:13px;color:var(--txt2);margin-bottom:8px">O modal de detalhe do DF exibe todos os campos relevantes do documento e inclui as seguintes novidades da v1.7:</p>
-      <ul>
-        <li><strong>Detalhe da Inconsistência</strong> (quando status = <code>inconsistencia</code>): informação registrada no evento INCONSISTÊNCIA da trilha de auditoria, com tipo, categoria e mensagem — <em>nota: não há seção dedicada no painel esquerdo do modal na implementação atual (backlog)</em></li>
-        <li><strong>Status bar do modal</strong> atualizado para os dois novos estados: verde para <code>importado</code>, roxo para <code>inconsistencia</code></li>
-        <li><strong>Trilha de auditoria:</strong> evento <strong>INCONSISTÊNCIA</strong> registra tipo, categoria e mensagem completa — ex: <em>"Inconsistência detectada · Tipo: CNPJ Inválido · Categoria: Dados · CNPJ do emitente não localizado na Receita Federal"</em></li>
-        <li>Demais seções do modal: emitente completo (Razão Social, CNPJ, IE, UF), destinatário, dados da operação, valores discriminados IBS/CBS/Líquido, chave 44 dígitos, RFs vinculados, botão Visualizar com label dinâmico por tipo de DF</li>
-      </ul>
-    </div>
-    <div class="card">
-      <div class="card-title">RF-ING-08 · Visualizador de documento auxiliar</div>
-      <p style="font-size:13px;color:var(--txt2)">Nova janela com layout fiel ao padrão SEFAZ: cabeçalho emitente, natureza da operação, tabela de itens (NCM, quantidade, valor unitário/total), resumo IBS+CBS (LC 214/2025), chave 44 dígitos. Label dinâmico por tipo: DANFE, DACTE, DANFCE, NFS-e, DANFCOM, DANF3e, DAMDFE. Dispara <code>window.print()</code> automaticamente.</p>
-    </div>
-  </div>
-
-  <!-- 6. Interface -->
-  <div class="section">
-    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Interface — Dashboard, Listagem e Modal</span></div>
-    <div class="card">
-      <div class="card-title">Aba Dashboard <span class="new-badge">v1.8</span></div>
-      <ul>
-        <li>KPIs: <strong>Total recebidos</strong>, <strong>Importados</strong> (verde), <strong>Com Erro</strong> (vermelho), <strong>Duplicados</strong> (âmbar), Taxa de sucesso — <em>nota: "Com Erro" e "Duplicados" são KPIs separados, em vez do KPI unificado "Inconsistências" planejado em v1.7</em></li>
-        <li>Pipeline visual de 5 etapas implementado: Recebido → Triagem → Val. Layout → Val. Dados → Importado, com legenda de erros por tipo (Erro layout, Erro dados, Duplicados, Rejeitados SEFAZ)</li>
-        <li>Gráfico "Volume de ingestão": barras agrupadas Importados (verde) + Inconsistências (roxo) por dia — últimos 7 dias</li>
-        <li>Filtro Grupo Econômico: filtra por CNPJ do destinatário (niAdquirente)</li>
-      </ul>
-    </div>
-    <div class="card">
-      <div class="card-title">Aba Listagem <span class="new-badge">v1.7</span></div>
-      <ul>
-        <li>Colunas: <strong>ID DF</strong> (tipo + número clicável), <strong>Chave DF</strong> (44 dígitos truncados), <strong>Tipo DF</strong>, Emitente, Valor, Emissão, Ingestão, <strong>Layout ⓘ</strong>, <strong>Dados ⓘ</strong>, <strong>Status Importação</strong>, <strong>Inconsistência</strong> <span class="new-badge">v1.7</span>, Ação</li>
-        <li><strong>Coluna Inconsistência:</strong> exibe apenas o tipo da falha em texto roxo (ex: "CNPJ Inválido") — sem badge de categoria e sem mensagem; vazio para DFs com status <code>importado</code></li>
-        <li><strong>Status Importação:</strong> chip verde (<code>Importado</code>) ou roxo (<code>Inconsistência</code>) — apenas dois estados possíveis</li>
-        <li><strong>Legenda de validação:</strong> ✓ Aprovado (verde) · ✗ Falha (vermelho) — removido ⏳ Pendente</li>
-        <li>Filtros: busca por chave/CNPJ, tipo DF, status importação (Importado / Inconsistência), data de emissão, resultado de validação</li>
-        <li><strong>+ Importar DF:</strong> abre modal de upload de CSV posicional (RF-ING-06)</li>
-      </ul>
-    </div>
-    <div class="card">
-      <div class="card-title">Modal de detalhe do DF <span class="new-badge">v1.7</span></div>
-      <ul>
-        <li><strong>Status bar:</strong> verde/texto afirmativo para <code>importado</code>; roxo/texto de falha para <code>inconsistencia</code></li>
-        <li><strong>Detalhe da Inconsistência:</strong> informação presente apenas no evento "INCONSISTÊNCIA" da trilha de auditoria (painel direito) — não há seção dedicada no painel esquerdo na implementação atual</li>
-        <li><strong>Emitente:</strong> Razão Social, CNPJ, IE, UF</li>
-        <li><strong>Destinatário:</strong> Razão Social, CNPJ</li>
-        <li><strong>Dados da Operação:</strong> CFOP, Série/Número, Direção, Natureza da Operação</li>
-        <li><strong>Valores:</strong> Valor Total, Valor Líquido, CBS, IBS</li>
-        <li><strong>Chave DF:</strong> 44 dígitos completos</li>
-        <li><strong>Resultado das Validações:</strong> lista com ✓ / ✗ e mensagem por item</li>
-        <li><strong>Registros Fiscais vinculados:</strong> cards clicáveis (apenas para DFs <code>importado</code>)</li>
-        <li><strong>Trilha de auditoria</strong> (painel direito): eventos INGESTÃO → VALIDAÇÃO ou INCONSISTÊNCIA com tipo, categoria e mensagem no evento de falha</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- 7. Não-funcionais -->
-  <div class="section">
-    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Requisitos não-funcionais</span></div>
-    <div class="info-box amber" style="margin-bottom:16px">
-      <strong>Proposta para discussão:</strong> os requisitos abaixo ainda não foram validados com a equipe técnica e de produto. Estão listados como referência inicial e podem ser ajustados antes da aprovação.
-    </div>
-    <ul>
-      <li><strong>Volume:</strong> suportar ≥ 50.000 DFs/mês por CNPJ sem degradação de performance.</li>
-      <li><strong>Latência:</strong> DFs recebidos via ERP integrados em ≤ 5 minutos após recebimento.</li>
-      <li><strong>CSV Posicional:</strong> arquivo de até 10.000 linhas parseado e pré-visualizado em ≤ 3 segundos no browser.</li>
-      <li><strong>Idempotência:</strong> re-ingestão de DF com <code>chaveDfe</code> já existente não cria RF duplicado; gera <code>inconsistencia</code> do tipo Duplicidade.</li>
-      <li><strong>Rastreabilidade:</strong> cada etapa do pipeline registrada com timestamp e responsável (sistema ou usuário).</li>
-      <li><strong>Segurança:</strong> XMLs armazenados criptografados (AES-256); acesso apenas por roles autorizados.</li>
-      <li><strong>Disponibilidade:</strong> pipeline de ingestão ativo 99,5% do tempo.</li>
+  <div class="toc">
+    <div class="toc-title">Índice</div>
+    <ul class="toc-list">
+      <li><a href="#s01"><span class="toc-num">01</span> Contexto e posicionamento</a></li>
+      <li><a href="#s02"><span class="toc-num">02</span> Jornadas de usuário atendidas</a></li>
+      <li><a href="#s03"><span class="toc-num">03</span> Escopo e recorte do módulo</a></li>
+      <li><a href="#s04"><span class="toc-num">04</span> Modelo de dados</a></li>
+      <li><a href="#s05"><span class="toc-num">05</span> Pipeline e máquinas de estado</a></li>
+      <li><a href="#s06"><span class="toc-num">06</span> Arquitetura da tela</a></li>
+      <li><a href="#s07"><span class="toc-num">07</span> Funcionalidades detalhadas</a></li>
+      <li><a href="#s08"><span class="toc-num">08</span> Indicadores (KPIs)</a></li>
+      <li><a href="#s09"><span class="toc-num">09</span> Requisitos funcionais</a></li>
+      <li><a href="#s10"><span class="toc-num">10</span> Regras de negócio</a></li>
+      <li><a href="#s11"><span class="toc-num">11</span> Requisitos não funcionais</a></li>
+      <li><a href="#s12"><span class="toc-num">12</span> Defeitos e divergências</a></li>
+      <li><a href="#s13"><span class="toc-num">13</span> Integrações e dependências</a></li>
+      <li><a href="#s14"><span class="toc-num">14</span> Glossário</a></li>
+      <li><a href="#s15"><span class="toc-num">15</span> Histórico de versões</a></li>
     </ul>
   </div>
 
-  <!-- 8. Integrações -->
-  <div class="section">
-    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Integrações e dependências</span></div>
-    <div class="tbl-wrap">
+  <!-- ══ 01 ══ -->
+  <div class="section" id="s01">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Contexto e posicionamento</span></div>
+    <h3>1.1 O problema que o módulo resolve</h3>
+    <p>Todo valor que a plataforma calcula tem origem num documento fiscal. O crédito de IBS/CBS não é
+    inferido: ele é lido de um DF que precisa existir na base, íntegro e único.</p>
+    <p>O módulo é o funil por onde tudo passa — e por isso é também o ponto onde uma falha se propaga mais
+    longe. Documento não ingerido é crédito que nunca existiu; documento ingerido em duplicidade é crédito
+    contado duas vezes.</p>
+
+    <div class="callout info">
+      <div class="ct">O maior efeito cascata do produto</div>
+      <p>J-01 existe para que a ingestão funcione. J-04 trabalha sobre o que ela cria. J-03 só recebe a nota porque o método do contrato foi aplicado aqui. J-05 trata exatamente o que ela recusou.</p>
+      <p>Nenhum outro módulo tem esse alcance, e nenhum outro falha tão silenciosamente: um DF que não chegou não aparece em lugar nenhum como ausência.</p>
+    </div>
+
+    <h3>1.2 De documento fiscal a registro fiscal</h3>
+    <p>A ingestão não guarda o documento: ela o <strong>decompõe</strong>. Cada DF gera Registros Fiscais —
+    tipicamente dois, um de IBS e um de CBS — e é o RF, não o documento, que percorre o resto da
+    plataforma.</p>
+    <div class="code-block"><code>DF (NF-e, chave de 44 dígitos)
+ │
+ ├─ RF · IBS   → crédito estadual e municipal
+ └─ RF · CBS   → crédito federal
+       │
+       ├─ método do contrato vigente na data de emissão
+       │    RAD        → entra na fila de <a class="xref" href="prd-pagamentos.html">Pagamentos</a>
+       │    Split      → retido na liquidação
+       │    Fornecedor → recolhido pelo emitente
+       │
+       └─ conciliação e apropriação</code></div>
+
+    <h3>1.3 Relação com os demais módulos</h3>
+    <div class="table-wrap">
       <table>
-        <thead><tr><th>Sistema</th><th>Direção</th><th>Dados</th></tr></thead>
+        <thead><tr><th>Módulo</th><th>Relação</th></tr></thead>
         <tbody>
-          <tr><td>ERP (SAP/TOTVS)</td><td>← Entrada</td><td>XMLs de DFs emitidos e recebidos pelo grupo econômico</td></tr>
-          <tr><td>Receita Federal (RFB API)</td><td>← Consulta</td><td>Situação cadastral CNPJ emitente · valida <code>inconsistencia</code> tipo CNPJ Inválido</td></tr>
-          <tr><td>Conciliação de Apuração (CAPUR)</td><td>→ Saída</td><td>RF com status <code>importado</code> · campos chaveDfe, niEmitente, niAdquirente, valorCBSTotal — ver <a href="prd-conciliacao.html" style="color:var(--teal)">PRD de Conciliação</a></td></tr>
-          <tr><td>Conciliação Financeira (CFIN)</td><td>→ Saída</td><td>RF <code>importado</code> + pagamentosCBS — ver <a href="prd-conciliacao.html" style="color:var(--teal)">PRD de Conciliação</a></td></tr>
-          <tr><td>Módulo de Inconsistências</td><td>→ Saída</td><td>DFs com status <code>inconsistencia</code> — tipo e categoria da falha encaminhados para revisão</td></tr>
+          <tr><td><strong>Organização</strong></td><td>Fornece os CNPJs contra os quais o destinatário é reconhecido. CNPJ ausente ou inativo impede a associação ao grupo.</td></tr>
+          <tr><td><strong>Fornecedor</strong></td><td>Fornece o cadastro do emitente e sua qualificação de risco.</td></tr>
+          <tr><td><strong>Contratos</strong></td><td>Define o método de pagamento aplicado ao RF, conforme o contrato vigente na data de emissão.</td></tr>
+          <tr><td><strong>Conciliação</strong></td><td>Trabalha sobre os RFs criados aqui, confrontando apuração e liquidação.</td></tr>
+          <tr><td><strong>Inconsistências</strong></td><td>Recebe o que a validação recusou.</td></tr>
+          <tr><td><strong>Integrações</strong></td><td>A conexão <code>ingestao_dfs</code> é o canal de entrada por API — o caminho que substitui o upload manual.</td></tr>
         </tbody>
       </table>
     </div>
+
   </div>
 
-  <!-- Changelog -->
-  <hr>
-  <div class="section">
-    <div class="sec-hdr"><span class="sec-num">—</span><span class="sec-title">Changelog</span></div>
-    <div class="cl-entry">
-      <div class="cl-ver">v1.10</div>
-      <div class="cl-body"><strong>08/09/2026</strong> — Acrescenta a seção de <strong>jornadas de usuário atendidas</strong>, situando o módulo em J-02, J-01, J-05, J-04 e J-03. Documenta que a ingestão passa a ter um canal declarado: a conexão <code>ingestao_dfs</code> do módulo de <a class="xref" href="prd-integracoes.html">Integrações</a>, com credencial emitida no produto — antes, o processo de geração da chave não existia em tela.</div>
+  <!-- ══ 02 ══ -->
+  <div class="section" id="s02">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Jornadas de usuário atendidas</span></div>
+    <p class="sec-sub">Quais das nove jornadas do produto atravessam este módulo, e com que papel.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Jornada</th><th>Nome</th><th>Papel do módulo</th><th>O que acontece aqui</th></tr></thead>
+        <tbody>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j02" style="color:var(--blue);text-decoration:none">J-02</a></td><td><strong>Ingestão e validação de DFs</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Ciclo · Analista fiscal</div></td><td><span class="chip ok">Palco principal</span></td><td>A jornada é o módulo. Importar, validar e transformar o DF em Registro Fiscal acontece inteiramente aqui.</td></tr>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j01" style="color:var(--blue);text-decoration:none">J-01</a></td><td><strong>Implantação da plataforma</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Configuração · Administrador</div></td><td><span class="chip info">Etapa da jornada</span></td><td>A primeira carga de DFs é o que comprova que a implantação funcionou — e hoje ela tem um canal declarado, com credencial emitida no produto.</td></tr>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j05" style="color:var(--blue);text-decoration:none">J-05</a></td><td><strong>Tratamento de inconsistências</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Exceção · Compliance</div></td><td><span class="chip info">Etapa da jornada</span></td><td>Documento com divergência não segue: desvia para o tratamento de inconsistências.</td></tr>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j04" style="color:var(--blue);text-decoration:none">J-04</a></td><td><strong>Conciliação e apropriação</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Ciclo · Analista fiscal</div></td><td><span class="chip gray">Fornece dado</span></td><td>A conciliação trabalha sobre os RFs que este módulo criou.</td></tr>
+          <tr><td class="rid"><a href="jornadas-usuario.html#j03" style="color:var(--blue);text-decoration:none">J-03</a></td><td><strong>Operação de pagamentos RAD</strong><div style="font-size:11px;color:var(--txt3);margin-top:2px">Ciclo · Tesouraria</div></td><td><span class="chip gray">Fornece dado</span></td><td>O método do contrato aplicado na ingestão decide se a nota entra na fila de RAD.</td></tr>
+        </tbody>
+      </table>
     </div>
-    <div class="cl-entry">
-      <div class="cl-ver">v1.9</div>
-      <div class="cl-body">
-        <strong>19/08/2026 · Upload CSV separado por ponto e vírgula com todos os campos do DF</strong>
-        RF-ING-06 reescrito: formato de upload migrado de layout posicional (200 chars/linha) para CSV semicolon (;). 16 colunas cobrindo todos os campos do modal: chave_acesso, tipo_df, cnpj_emitente, ie_emitente, uf_emitente, nome_emitente, cnpj_destinatario, nome_destinatario, cfop, serie, numero, natureza_operacao, valor_total, valor_ibs, valor_cbs, data_emissao (DD/MM/AAAA). Primeira linha = cabeçalho obrigatório. Aceita apenas .csv. Modal de detalhe do DF usa campos reais do CSV em vez de valores mockados quando disponíveis.
+    <div class="callout info">
+      <div class="ct">J-02 alimenta tudo o que vem depois</div>
+      <p>Sem DF ingerido e válido não há apuração, não há conciliação e não há crédito. É a jornada com o maior efeito cascata do produto.</p>
+    </div>
+    <p style="font-size:12.5px;color:var(--txt3)">Mapa completo das nove jornadas, com passos, pontos de fricção e lacunas: <a href="jornadas-usuario.html" style="color:var(--blue)">Jornadas do usuário ↗</a></p>
+
+  </div>
+
+  <!-- ══ 03 ══ -->
+  <div class="section" id="s03">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Escopo e recorte do módulo</span></div>
+    <h3>3.1 Fontes de ingestão</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fonte</th><th>Protocolo</th><th>Cadência</th><th>Situação</th></tr></thead>
+        <tbody>
+          <tr><td><strong>ERP / sistema de origem</strong></td><td><code>POST /v1/documentos-fiscais</code> e <code>/batch</code>, com credencial emitida em <a class="xref" href="prd-integracoes.html">Integrações</a></td><td>Tempo real ou lote de até 500 documentos</td><td><span class="chip ok">Canal declarado</span></td></tr>
+          <tr><td><strong>Upload manual CSV</strong></td><td>Arquivo <code>.csv</code> ou <code>.txt</code> separado por ponto e vírgula, com 16 colunas posicionais</td><td>Sob demanda</td><td><span class="chip ok">Implementado</span></td></tr>
+          <tr><td><strong>Upload de XML / ZIP</strong></td><td>Interface web, arrastar e soltar</td><td>Sob demanda</td><td><span class="chip warn">Não implementado</span></td></tr>
+          <tr><td><strong>SFTP</strong></td><td>Diretório monitorado</td><td>Lote</td><td><span class="chip warn">Não implementado</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout ok">
+      <div class="ct">A emissão de credencial fechou o vão da ingestão por API</div>
+      <p>O contrato da API sempre existiu no papel, mas o processo de <strong>geração das credenciais não era especificado</strong> — cada cliente era integrado por um caminho manual, fora do produto.</p>
+      <p>O módulo de <a class="xref" href="prd-integracoes.html">Integrações</a> passou a emitir <code>client_id</code> e <code>client_secret</code> com escopos <code>dfs:write</code> e <code>dfs:read</code>, e a mostrar o <code>curl</code> da primeira chamada. É o canal que torna o upload manual uma exceção, não a regra.</p>
+    </div>
+
+    <h3>3.2 Tipos de documento</h3>
+    <p>A API publicada aceita <strong>14 modelos</strong> de DF-e: NF-e, NFC-e, CT-e, CT-e OS, BP-e, MDF-e,
+    GTV-e, NFCom, NF3-e, NFAg, NFGás, NF-e ABI, NFS-e e NFS-e Via.</p>
+
+    <h3>3.3 A chave de acesso</h3>
+    <div class="code-block"><code>cUF(2) AAMM(4) CNPJ(14) mod(2) serie(3) nNF(9) tpEmis(1) cNF(8) cDV(1)
+└──────────────────────── 44 dígitos ────────────────────────┘</code></div>
+    <p>É a identidade do documento e a chave de unicidade da plataforma. Para NFS-e a chave é municipal, com
+    formato variável por provedor; NFCom e NF3-e têm estrutura própria conforme ato normativo setorial.</p>
+
+    <h3>3.4 O que está fora</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fora do escopo</th><th>Onde vive</th></tr></thead>
+        <tbody>
+          <tr><td>Tratamento das inconsistências recusadas</td><td>Inconsistências</td></tr>
+          <tr><td>Conciliação entre apuração e liquidação</td><td><a class="xref" href="prd-conciliacao.html">Conciliação</a></td></tr>
+          <tr><td>Definição do método de pagamento</td><td><a class="xref" href="prd-contratos.html">Contratos</a></td></tr>
+          <tr><td>Emissão das credenciais de API</td><td><a class="xref" href="prd-integracoes.html">Integrações</a></td></tr>
+          <tr><td>Consulta de eventos na SEFAZ</td><td>Não implementado</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 04 ══ -->
+  <div class="section" id="s04">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Modelo de dados</span></div>
+    <h3>4.1 Documento ingerido</h3>
+    <div class="code-block"><code>{
+  <span class="v">id</span>:          <span class="n">0</span>,
+  <span class="v">chave</span>:       <span class="s">"3526..."</span>,           <span class="c">// 44 dígitos</span>
+  <span class="v">tipo</span>:        <span class="s">"NF-e Entrada" | "NF-e Saída" | ...</span>,
+
+  <span class="c">// Emitente</span>
+  <span class="v">emitente</span>:    <span class="s">"Ferroplex Mineração S.A."</span>,
+  <span class="v">cnpj</span>:        <span class="s">"28.447.821/0001-35"</span>,
+  <span class="v">ie</span>:          <span class="s">"9029-6"</span>,
+  <span class="v">uf</span>:          <span class="s">"PR"</span>,
+
+  <span class="c">// Destinatário</span>
+  <span class="v">cnpjDest</span>:    <span class="s">"54.891.237/0001-48"</span>,
+  <span class="v">nomeDest</span>:    <span class="s">"Induspar Tecnologia S.A."</span>,
+
+  <span class="c">// Identificação e valores</span>
+  <span class="v">cfop</span>:        <span class="s">"1102"</span>,
+  <span class="v">serie</span>:       <span class="s">"001"</span>,
+  <span class="v">numero</span>:      <span class="s">"12345"</span>,
+  <span class="v">natOp</span>:       <span class="s">"Compra para industrialização"</span>,
+  <span class="v">valor</span>:       <span class="n">5132777.00</span>,
+  <span class="v">ibs</span>:         <span class="n">434981.00</span>,
+  <span class="v">cbs</span>:         <span class="n">347984.00</span>,
+
+  <span class="v">dataEmissao</span>: <span class="s">"2026-09-08"</span>,   <span class="c">// fato gerador</span>
+  <span class="v">dataIngestao</span>: <span class="s">"08/09/2026 14:51"</span>,
+
+  <span class="v">status</span>:      <span class="s">"importado" | "inconsistencia"</span>,
+  <span class="v">validacoes</span>:  [ <span class="c">/* quatro verificações — ver 5.2 */</span> ],
+  <span class="v">valLayout</span>:   <span class="k">true</span>,
+  <span class="v">valValidade</span>: <span class="k">true</span>,
+  <span class="v">valDados</span>:    <span class="k">true</span>
+}</code></div>
+
+    <h3>4.2 Layout do CSV posicional</h3>
+    <p>Dezesseis colunas separadas por ponto e vírgula, a primeira linha ignorada como cabeçalho. Linhas com
+    menos de 13 colunas são recusadas com o número da linha.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Coluna</th><th>Obrigatória</th><th>Observação</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td><code>chave</code></td><td>sim</td><td>Chave de acesso</td></tr>
+          <tr><td>1</td><td><code>tipo_df</code></td><td>não</td><td>Padrão <em>NF-e Entrada</em></td></tr>
+          <tr><td>2–5</td><td><code>cnpj_emit</code>, <code>ie_emit</code>, <code>uf_emit</code>, <code>nome_emit</code></td><td>não</td><td>Nome padrão <em>Emitente não informado</em></td></tr>
+          <tr><td>6–7</td><td><code>cnpj_dest</code>, <code>nome_dest</code></td><td>não</td><td>—</td></tr>
+          <tr><td>8–11</td><td><code>cfop</code>, <code>serie</code>, <code>numero</code>, <code>nat_op</code></td><td>não</td><td>CFOP padrão <code>1102</code>, série <code>001</code></td></tr>
+          <tr><td>12</td><td><code>valor_total</code></td><td><strong>sim</strong></td><td>Deve ser numérico e maior que zero</td></tr>
+          <tr><td>13–14</td><td><code>valor_ibs</code>, <code>valor_cbs</code></td><td>não</td><td>Zero quando ausente</td></tr>
+          <tr><td>15</td><td><code>data_emissao</code></td><td>não</td><td>Aceita <code>DD/MM/AAAA</code> ou <code>AAAA-MM-DD</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>A conversão numérica remove o separador de milhar e troca a vírgula decimal por ponto — o formato
+    brasileiro é o esperado no arquivo.</p>
+
+  </div>
+
+  <!-- ══ 05 ══ -->
+  <div class="section" id="s05">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Pipeline e máquinas de estado</span></div>
+    <h3>5.1 O pipeline em cinco etapas</h3>
+    <div class="code-block"><code>① Recebimento     ERP · Upload · CSV
+      │
+② Triagem         modelo identificado pelo cMod ou pela tag raiz do XML
+      │
+③ Val. Layout     schema XSD, namespace, encoding, tags obrigatórias, assinatura
+      │
+④ Val. Dados      integridade dos campos, unicidade da chave, CNPJ na Receita
+      │
+⑤ Importado       Registro Fiscal criado · segue para a apuração</code></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Etapa</th><th>Verifica</th><th>Recusa por</th></tr></thead>
+        <tbody>
+          <tr><td><strong>② Triagem</strong></td><td>Modelo do documento e versão do schema</td><td>Tipo desconhecido ou schema incompatível</td></tr>
+          <tr><td><strong>③ Layout</strong></td><td>XSD 4.00 para NF-e, 3.00 para CT-e, ABRASF 1.00 para NFS-e; namespace, UTF-8, tags <code>&lt;infNFe&gt;</code>, <code>&lt;emit&gt;</code>, <code>&lt;dest&gt;</code>, assinatura xmldsig</td><td>Falha de schema, namespace, charset ou assinatura</td></tr>
+          <tr><td><strong>④ Dados</strong></td><td>Chave de 44 dígitos única na plataforma, CNPJ do emitente ativo na Receita, campos obrigatórios presentes</td><td>Duplicidade, CNPJ inexistente, campo ausente, alíquota inválida</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">O pipeline descreve a ingestão por API, não o upload CSV — ver DEF-01</div>
+      <p>O upload manual valida apenas o que o parser consegue ver: contagem de colunas, valor numérico maior que zero e formato da data. Depois disso, <strong>todo documento carregado é marcado como <code>importado</code></strong>, com as quatro verificações artificialmente bem-sucedidas.</p>
+      <p>Chave de 44 dígitos, unicidade e situação do CNPJ não são verificadas no upload. Carregar duas vezes o mesmo arquivo cria documentos duplicados sem nenhum aviso.</p>
+    </div>
+
+    <h3>5.2 As quatro verificações registradas</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Verificação</th><th>Categoria</th><th>O que atesta</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Schema XML</strong></td><td>layout</td><td>Estrutura válida conforme o XSD do modelo</td></tr>
+          <tr><td><strong>Campos obrigatórios</strong></td><td>layout</td><td>Todos os campos exigidos presentes</td></tr>
+          <tr><td><strong>CNPJ emitente</strong></td><td>dados</td><td>CNPJ ativo e regular na Receita Federal</td></tr>
+          <tr><td><strong>Chave de acesso</strong></td><td>dados</td><td>Chave única na plataforma</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Cada documento carrega as quatro, com resultado e mensagem. É essa lista que o modal de detalhe
+    apresenta, e dela derivam os três indicadores de coluna <code>valLayout</code>,
+    <code>valValidade</code> e <code>valDados</code>.</p>
+
+    <h3>5.3 Status do documento</h3>
+    <div class="state-grid">
+      <div class="state-row"><span class="state-name sn-green">importado</span>
+        <span class="state-desc">As quatro verificações passaram. O Registro Fiscal foi criado e segue para a apuração.</span></div>
+      <div class="state-row"><span class="state-name sn-purple">inconsistencia</span>
+        <span class="state-desc">Ao menos uma verificação falhou. O documento fica retido e a ocorrência vai para o módulo de Inconsistências.</span></div>
+    </div>
+    <div class="callout info">
+      <div class="ct">Dois estados, não cinco</div>
+      <p>A v1.5 simplificou deliberadamente a máquina: o que importa operacionalmente é se o documento entrou ou não. As etapas do pipeline continuam existindo como <em>diagnóstico</em> — dizem <strong>onde</strong> falhou —, mas não como estados persistidos.</p>
+    </div>
+
+  </div>
+
+  <!-- ══ 06 ══ -->
+  <div class="section" id="s06">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Arquitetura da tela</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Elemento</th><th>Identificador</th><th>Papel</th></tr></thead>
+        <tbody>
+          <tr><td>Painel de KPIs</td><td><code>#ing-total</code>, <code>-ok</code>, <code>-erro</code>, <code>-dup</code>, <code>-taxa</code></td><td>Cinco números sobre a carga</td></tr>
+          <tr><td>Aba <strong>Dashboard</strong></td><td>pipeline e gráfico</td><td>Onde os documentos param</td></tr>
+          <tr><td>Aba <strong>Listagem</strong></td><td><code>#t-ingestao</code></td><td>Um documento por linha, paginado</td></tr>
+          <tr><td>Busca e filtros</td><td><code>#ing-busca</code> + cinco campos</td><td>Recorte por tipo, status, validação e faixa de data</td></tr>
+          <tr><td>Modal de upload</td><td><code>ingUploadAbrir</code></td><td>Arrastar e soltar ou seleção de arquivo</td></tr>
+          <tr><td>Modal de detalhe</td><td><code>abrirIngModal</code></td><td>Documento completo, verificações e trilha de auditoria</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>6.1 Colunas da listagem</h3>
+    <p style="font-size:12.5px">ID · Chave de acesso · Tipo · Emitente · CNPJ · Valor · IBS · CBS ·
+    Data de emissão · Data de ingestão · Layout · Validade · Dados · Status · Detalhe</p>
+
+  </div>
+
+  <!-- ══ 07 ══ -->
+  <div class="section" id="s07">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Funcionalidades detalhadas</span></div>
+    <p class="sec-sub">Sete funcionalidades compõem o módulo.</p>
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-01</span>
+        <span class="feat-name">Listar documentos ingeridos, com paginação</span>
+        <span class="feat-loc">#t-ingestao</span>
+      </div>
+      <div class="feat-body">
+        <p>Um documento por linha, com identificação, valores, datas, o resultado das três categorias de
+        validação e o status. A listagem é paginada, com navegação para a página anterior e a próxima.</p>
+        <p>A paginação é reposicionada na primeira página sempre que um filtro muda — sem isso, filtrar
+        estando na página 7 devolveria uma tela vazia.</p>
       </div>
     </div>
-    <div class="cl-entry">
-      <div class="cl-ver">v1.8</div>
-      <div class="cl-body">
-        <strong>19/08/2026 · Reconciliação PRD × implementação</strong>
-        Dashboard KPIs ajustados: "Com Erro" e "Duplicados" como KPIs separados (em vez de "Inconsistências" unificado). Seção "Detalhe da Inconsistência" no painel esquerdo do modal removida — informação presente apenas na trilha de auditoria.
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-02</span>
+        <span class="feat-name">Buscar e filtrar</span>
+        <span class="feat-loc">#ing-busca</span>
+      </div>
+      <div class="feat-body">
+        <p>Busca livre combinada com cinco recortes: tipo de documento, status, resultado de validação e
+        faixa de data de emissão (de/até).</p>
+        <p>O botão de limpar zera os seis campos de uma vez e devolve a listagem completa — operação que
+        importa quando o recorte acumulado deixa de ser óbvio.</p>
       </div>
     </div>
-    <div class="cl-entry">
-      <div class="cl-ver">v1.7</div>
-      <div class="cl-body">
-        <strong>Ago/2026 · Status simplificado · coluna Inconsistência · upload CSV posicional</strong>
-        Máquina de status colapsada de 6 para 2 estados: <code>importado</code> e <code>inconsistencia</code>. Campo renomeado para "Status Importação". Legenda de validação: apenas ✓ Aprovado e ✗ Falha. Nova coluna "Inconsistência" na listagem com o tipo da falha em texto. Modal expandido com seção "Detalhe da Inconsistência" (badge categoria + tipo + mensagem). Trilha de auditoria: evento INCONSISTÊNCIA registra tipo, categoria e mensagem. Botão "+ Importar DF" migrado para modal de upload de CSV posicional (200 chars/linha, layout com 9 campos, parser com pré-visualização e confirmação, toast de sucesso). RF-ING-06 reescrito. RF-ING-07 atualizado. Seção 04 reescrita com tabela de estados e tipos de inconsistência.
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-03</span>
+        <span class="feat-name">Importar por upload de CSV</span>
+        <span class="feat-loc">ingUploadAbrir</span>
+      </div>
+      <div class="feat-body">
+        <p>Modal com área de arrastar e soltar, ou seleção de arquivo. O conteúdo é lido no navegador,
+        analisado linha a linha e apresentado em pré-visualização antes de confirmar.</p>
+        <h4>O que o parser recusa</h4>
+        <ul class="plain">
+          <li>Linha com menos de 13 colunas — reportada com o número da linha e a contagem encontrada</li>
+          <li><code>valor_total</code> não numérico ou menor ou igual a zero — reportado com o valor original</li>
+        </ul>
+        <p>As demais colunas têm padrão e não bloqueiam. A data aceita os dois formatos usuais e é
+        normalizada para <code>AAAA-MM-DD</code>.</p>
+    <div class="callout warn">
+      <div class="ct">A pré-visualização é o único controle antes da carga — ver DEF-01</div>
+      <p>Confirmado o upload, os documentos entram como <code>importado</code> sem passar pelo pipeline. Não há verificação de chave, de unicidade nem de CNPJ.</p>
+    </div>
       </div>
     </div>
-    <div class="cl-entry">
-      <div class="cl-ver">v1.6</div>
-      <div class="cl-body">
-        <strong>Ago/2026 · Seção de campos de conciliação migrada para PRD de Conciliação</strong>
-        A seção 04 "Campos extraídos do XML e mapeamento para conciliação" foi removida e movida para o PRD de Conciliação v1.0. RF-ING-04 atualizado para referenciar o PRD de Conciliação.
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-04</span>
+        <span class="feat-name">Confirmar a carga</span>
+        <span class="feat-loc">ingUploadConfirmar</span>
+      </div>
+      <div class="feat-body">
+        <p>Os documentos são inseridos <strong>no topo</strong> da base, os identificadores são
+        reindexados, os KPIs e a listagem são redesenhados, e um aviso confirma quantos entraram.</p>
+        <p>A data de ingestão é carimbada no momento da confirmação, com precisão de minuto — é ela que
+        separa <em>quando o fato gerador ocorreu</em> de <em>quando o documento chegou</em>.</p>
       </div>
     </div>
-    <div class="cl-entry">
-      <div class="cl-ver">v1.5</div>
-      <div class="cl-body">
-        <strong>Ago/2026 · Modal expandido, visualizador auxiliar e simplificação da Val. Dados</strong>
-        Val. Dados simplificada (integridade + unicidade de chave). Coluna "Validade" removida. Tooltips ⓘ nas colunas Layout e Dados. Modal expandido. RF-ING-07: visualizador de documento auxiliar com impressão PDF.
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-05</span>
+        <span class="feat-name">Abrir o detalhe do documento</span>
+        <span class="feat-loc">abrirIngModal</span>
+      </div>
+      <div class="feat-body">
+        <p>Modal com o documento completo: chave, identificação, emitente e destinatário, valores
+        decompostos em IBS e CBS, e as quatro verificações com resultado e mensagem.</p>
+        <p>Para o documento recusado, é a mensagem da verificação que diz <strong>o que</strong> falhou —
+        estrutura XML, CNPJ não localizado, campo ausente, duplicidade, rejeição da SEFAZ ou alíquota
+        inválida.</p>
       </div>
     </div>
-    <div class="cl-entry">
-      <div class="cl-ver">v1.4</div>
-      <div class="cl-body">
-        <strong>Ago/2026 · Escopo restrito a ERP e upload manual</strong>
-        Removidas fontes SEFAZ. Status simplificados. RF-ING-01 e RF-ING-05 ajustados para canal ERP.
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-06</span>
+        <span class="feat-name">Apresentar o pipeline no dashboard</span>
+        <span class="feat-loc">aba Dashboard</span>
+      </div>
+      <div class="feat-body">
+        <p>As cinco etapas com a contagem de documentos em cada uma, e as recusas separadas por categoria:
+        layout, dados, duplicidade e rejeição.</p>
+    <div class="callout warn">
+      <div class="ct">Três dos quatro contadores de recusa são fixos em zero — ver DEF-02</div>
+      <p>Apenas o contador de falha de layout recebe valor. Erro de dados, duplicidade e rejeição exibem zero independentemente da base, o que faz o pipeline sugerir que só existe um tipo de falha.</p>
+    </div>
       </div>
     </div>
-    <div class="cl-entry">
-      <div class="cl-ver">v1.3</div>
-      <div class="cl-body">
-        <strong>Ago/2026 · Campos de conciliação e chave de acesso</strong>
-        Mapeamento de campos CAPUR. Estrutura da chave 44 dígitos. RF-ING-03 e RF-ING-05.
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-07</span>
+        <span class="feat-name">Consolidar os KPIs da carga</span>
+        <span class="feat-loc">_renderKPIs</span>
+      </div>
+      <div class="feat-body">
+        <p>Cinco indicadores recalculados a cada carga e a cada render. A taxa de sucesso é a razão entre
+        importados e total, arredondada — o número que responde “a carga foi boa?” antes de qualquer
+        detalhe.</p>
       </div>
     </div>
-    <div class="cl-entry">
-      <div class="cl-ver">v1.2</div>
-      <div class="cl-body">
-        <strong>Jul/2026 · Tabs Dashboard/Listagem + coluna ID DF</strong>
-        Dashboard + Listagem separados. Coluna ID DF: tipo + número.
-      </div>
+    <h3>Mapa de implementação</h3>
+    <p>Todo elemento acionável da view, com o identificador que o implementa.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Identificador</th><th>Tipo</th><th>O que faz</th></tr></thead>
+        <tbody>
+          <tr><td><code>ingUploadAbrir</code></td><td>ação</td><td>Abre o modal de importação por arquivo.</td></tr>
+          <tr><td><code>ingestaoFiltrar</code></td><td>ação</td><td>Aplica busca e filtros e volta à primeira página.</td></tr>
+          <tr><td><code>ingestaoLimparFiltros</code></td><td>ação</td><td>Zera os seis campos de filtro e devolve a listagem completa.</td></tr>
+          <tr><td><code>ingestaoPaginaAnterior</code></td><td>ação</td><td>Navega para a página anterior da listagem.</td></tr>
+          <tr><td><code>ingestaoProximaPagina</code></td><td>ação</td><td>Navega para a próxima página da listagem.</td></tr>
+          <tr><td><code>ing-busca</code></td><td>campo</td><td>Busca livre por chave, emitente, CNPJ ou número.</td></tr>
+          <tr><td><code>ing-filtro-data-ate</code></td><td>campo</td><td>Fim da faixa de data de emissão.</td></tr>
+          <tr><td><code>ing-filtro-data-de</code></td><td>campo</td><td>Início da faixa de data de emissão.</td></tr>
+          <tr><td><code>ing-filtro-status</code></td><td>campo</td><td>Filtra entre importados e inconsistências.</td></tr>
+          <tr><td><code>ing-filtro-tipo</code></td><td>campo</td><td>Filtra pelo modelo do documento fiscal.</td></tr>
+          <tr><td><code>ing-filtro-val</code></td><td>campo</td><td>Filtra pelo resultado da validação — layout, validade ou dados.</td></tr>
+        </tbody>
+      </table>
     </div>
-    <div class="cl-entry">
-      <div class="cl-ver">v1.1</div>
-      <div class="cl-body">
-        <strong>Jun/2026 · Tipos DF e pipeline de validação</strong>
-        11 tipos de DF. Pipeline de 5 etapas. Filtros e paginação.
-      </div>
+    <p style="font-size:12px;color:var(--txt3)">O modal de upload e o de detalhe são abertos a partir da listagem e do botão de importar; suas funções internas (<code>ingUploadArquivo</code>, <code>ingUploadParsear</code>, <code>ingUploadConfirmar</code>, <code>abrirIngModal</code>) não aparecem no inventário da view.</p>
+
+  </div>
+
+  <!-- ══ 08 ══ -->
+  <div class="section" id="s08">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Indicadores (KPIs)</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>KPI</th><th>Identificador</th><th>Fórmula</th><th>O que decide</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Total recebidos</strong></td><td><code>#ing-total</code></td><td>contagem de documentos na base</td><td>O tamanho da carga</td></tr>
+          <tr><td><strong>Importados</strong></td><td><code>#ing-ok</code></td><td><code>status === "importado"</code></td><td>Quanto virou crédito potencial</td></tr>
+          <tr><td><strong>Com erro</strong></td><td><code>#ing-erro</code></td><td><code>status === "inconsistencia"</code></td><td>Quanto ficou retido e precisa de tratamento</td></tr>
+          <tr><td><strong>Duplicados</strong></td><td><code>#ing-dup</code></td><td><span class="chip red">fixo em zero</span> — ver DEF-03</td><td>Nada, hoje. Deveria isolar a chave repetida</td></tr>
+          <tr><td><strong>Taxa de sucesso</strong></td><td><code>#ing-taxa</code></td><td>importados ÷ total, arredondado</td><td>Se a carga foi boa, antes de qualquer detalhe</td></tr>
+        </tbody>
+      </table>
     </div>
-    <div class="cl-entry">
-      <div class="cl-ver">v1.0</div>
-      <div class="cl-body">
-        <strong>Mai/2026 · Versão inicial</strong>
-        Ingestão básica via ERP e upload manual. Validação de layout e dados. Integração ao RF e à Apuração Assistida.
-      </div>
+
+    <div class="callout warn">
+      <div class="ct">O KPI de duplicados nunca contou nada</div>
+      <p>O valor é atribuído literalmente como zero, e não deriva da base. Como o upload também não verifica unicidade, o produto <strong>não tem hoje nenhum mecanismo</strong> que detecte chave repetida — e crédito contado duas vezes é o erro mais caro que a ingestão pode produzir.</p>
     </div>
+
+  </div>
+
+  <!-- ══ 09 ══ -->
+  <div class="section" id="s09">
+    <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Requisitos funcionais</span></div>
+    <p class="sec-sub">Prioridade: <strong>M</strong> (must), <strong>S</strong> (should), <strong>C</strong> (could).</p>
+    <h3>9.1 Entrada de documentos</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-ING-001</td><td>O sistema deve aceitar documentos por API, com credencial emitida em Integrações.</td><td><code>POST /v1/documentos-fiscais</code> autenticado com escopo <code>dfs:write</code> cria o documento.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-002</td><td>O lote por API deve aceitar até 500 documentos por requisição.</td><td>Acima disso, retorna <code>400</code> orientando a divisão.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-003</td><td>O processamento por API deve ser assíncrono, com estado consultável.</td><td><code>202 Accepted</code> devolve o id; <code>GET</code> informa pending, processing, completed ou error.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-004</td><td>O upload manual deve aceitar arquivo separado por ponto e vírgula, com 16 colunas posicionais.</td><td>A primeira linha é ignorada como cabeçalho.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-005</td><td>O parser deve recusar linha com menos de 13 colunas, informando o número da linha.</td><td>A mensagem traz a linha e a contagem encontrada.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-006</td><td>O parser deve recusar <code>valor_total</code> não numérico ou não positivo.</td><td>A mensagem traz o valor original recebido.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-007</td><td>A data de emissão deve aceitar <code>DD/MM/AAAA</code> e <code>AAAA-MM-DD</code>.</td><td>Os dois formatos são normalizados para o padrão ISO.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-008</td><td>O upload deve apresentar pré-visualização antes de confirmar.</td><td>As linhas válidas e os erros aparecem antes da carga.</td><td>M</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.2 Validação e criação do RF</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-ING-009</td><td>Todo documento deve passar pelas quatro verificações antes de ser marcado importado.</td><td>Schema, campos obrigatórios, CNPJ do emitente e unicidade da chave. <em>Hoje o upload marca importado sem verificar — DEF-01.</em></td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-010</td><td>A chave de acesso deve ser única na plataforma.</td><td>Documento com chave já registrada é recusado como duplicidade. <em>Hoje não é verificado — DEF-01.</em></td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-011</td><td>A chave de acesso deve ter 44 dígitos, com dígito verificador válido.</td><td>Chave malformada é recusada. <em>Hoje não é validada no upload — DEF-04.</em></td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-012</td><td>O documento recusado deve registrar qual verificação falhou e por quê.</td><td>O modal de detalhe mostra a verificação, a categoria e a mensagem.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-013</td><td>O documento recusado não deve gerar Registro Fiscal.</td><td>Nenhum RF aparece na apuração para documento em inconsistência.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-014</td><td>A ingestão deve associar o documento ao CNPJ comprador cadastrado em Organização.</td><td>Destinatário não cadastrado ou inativo impede a associação ao grupo.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-015</td><td>A ingestão deve aplicar o método do contrato vigente na data de emissão.</td><td>O RF nasce com o método correto, e só o RAD entra na fila de Pagamentos.</td><td>M</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.3 Listagem</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-ING-016</td><td>A listagem deve ser paginada, com navegação para anterior e próxima.</td><td>A navegação respeita o total de páginas do recorte corrente.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-017</td><td>Alterar qualquer filtro deve devolver a listagem à primeira página.</td><td>Filtrar da página 7 não produz tela vazia.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-018</td><td>A busca deve cobrir chave, emitente, CNPJ e número do documento.</td><td>Buscar por trecho da chave retorna o documento.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-019</td><td>Os filtros de tipo, status, validação e faixa de data devem ser combináveis.</td><td>Aplicados juntos, produzem a interseção.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-020</td><td>O botão de limpar deve zerar todos os campos de filtro.</td><td>Os seis voltam ao estado neutro numa ação.</td><td>M</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>9.4 Indicadores</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-ING-021</td><td>Os cinco KPIs devem ser recalculados a cada carga e a cada render.</td><td>Importar altera imediatamente total, importados e taxa.</td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-022</td><td>O KPI de duplicados deve contar documentos com chave repetida.</td><td>A contagem reflete a base. <em>Hoje é fixo em zero — DEF-03.</em></td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-023</td><td>O pipeline deve exibir a contagem em cada etapa e as recusas por categoria.</td><td>Layout, dados, duplicidade e rejeição. <em>Hoje três são fixos em zero — DEF-02.</em></td><td>M</td></tr>
+          <tr><td class="rid">RF-ING-024</td><td>A data de ingestão deve ser distinta da data de emissão.</td><td>A listagem mostra as duas; a apuração usa a de emissão, o operacional usa a de ingestão.</td><td>M</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 10 ══ -->
+  <div class="section" id="s10">
+    <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Regras de negócio</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Regra</th><th>Razão</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RN-ING-01</td><td>A chave de acesso é a identidade do documento e não se repete na plataforma.</td><td>Chave repetida é crédito contado duas vezes — o erro mais caro que a ingestão pode produzir.</td></tr>
+          <tr><td class="rid">RN-ING-02</td><td>Documento com qualquer verificação reprovada não gera Registro Fiscal.</td><td>Crédito que nasce de documento inválido é crédito que o Fisco glosa.</td></tr>
+          <tr><td class="rid">RN-ING-03</td><td>A data de emissão é o fato gerador; a data de ingestão é operacional.</td><td>A apuração se orienta pela primeira; misturar as duas fecha a competência errada.</td></tr>
+          <tr><td class="rid">RN-ING-04</td><td>O método de pagamento aplicado ao RF vem do contrato vigente na data de emissão.</td><td>É o contrato daquele momento que define quem recolhe, não o vigente hoje.</td></tr>
+          <tr><td class="rid">RN-ING-05</td><td>Documento cujo destinatário não está cadastrado e ativo não é associado ao grupo.</td><td>Sem vínculo, o crédito existe no papel e não na plataforma.</td></tr>
+          <tr><td class="rid">RN-ING-06</td><td>Cada DF gera tipicamente dois Registros Fiscais, um de IBS e um de CBS.</td><td>Os dois tributos têm competências e ciclos distintos.</td></tr>
+          <tr><td class="rid">RN-ING-07</td><td>A recusa é informativa, nunca silenciosa: registra qual verificação falhou e por quê.</td><td>Documento recusado sem motivo não pode ser corrigido.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 11 ══ -->
+  <div class="section" id="s11">
+    <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Requisitos não funcionais</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RNF-ING-01</td><td>A leitura e análise do CSV devem ocorrer no navegador, sem envio do arquivo antes da confirmação.</td><td>Nenhuma requisição de rede acontece na pré-visualização.</td></tr>
+          <tr><td class="rid">RNF-ING-02</td><td>A listagem deve permanecer responsiva com 50 mil documentos, via paginação.</td><td>A troca de página não recalcula a base inteira.</td></tr>
+          <tr><td class="rid">RNF-ING-03</td><td>A conversão numérica deve tratar o formato brasileiro — ponto de milhar, vírgula decimal.</td><td><code>1.234,56</code> vira <code>1234.56</code>.</td></tr>
+          <tr><td class="rid">RNF-ING-04</td><td>Cores de status e validação devem vir de tokens do design system.</td><td>Nenhum hex ou rgba literal no módulo.</td></tr>
+          <tr><td class="rid">RNF-ING-05</td><td>A chave de 44 dígitos não deve estourar a coluna.</td><td>Usa fonte monoespaçada com truncamento, e o corpo da página não rola lateralmente.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 12 ══ -->
+  <div class="section" id="s12">
+    <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Defeitos e divergências</span></div>
+    <p class="sec-sub">Levantados na leitura do protótipo. Um PRD que descreve só o que funciona não serve para planejar.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Descrição</th><th>Impacto</th><th>Situação</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">DEF-01</td><td>O upload manual marca todo documento carregado como <code>importado</code>, com as quatro verificações artificialmente bem-sucedidas. O pipeline não roda sobre o CSV.</td><td>Chave, unicidade e situação do CNPJ não são verificadas. <strong>Carregar duas vezes o mesmo arquivo cria documentos duplicados sem aviso</strong> — e duplicidade é crédito contado em dobro.</td><td><span class="chip red">Aberto</span></td></tr>
+          <tr><td class="rid">DEF-02</td><td>Três dos quatro contadores de recusa do pipeline são atribuídos literalmente como zero: erro de dados, duplicidade e rejeição.</td><td>O dashboard sugere que só existe um tipo de falha, e esconde as outras três categorias que o próprio modelo de validação prevê.</td><td><span class="chip red">Aberto</span></td></tr>
+          <tr><td class="rid">DEF-03</td><td>O KPI <em>Duplicados</em> é fixo em zero.</td><td>Um dos cinco indicadores da tela nunca informou nada. Combinado ao DEF-01, o produto não tem hoje nenhum mecanismo que detecte chave repetida.</td><td><span class="chip red">Aberto</span></td></tr>
+          <tr><td class="rid">DEF-04</td><td>A chave de acesso não é validada quanto a formato nem dígito verificador no upload.</td><td>Chave malformada entra e nunca casa com o documento real na conciliação.</td><td><span class="chip warn">Conhecido</span></td></tr>
+          <tr><td class="rid">DEF-05</td><td>Upload de XML e ZIP não existe, embora seja a fonte natural do documento assinado.</td><td>O CSV posicional carrega dados <em>sobre</em> o documento, não o documento — e a validação de schema e assinatura, que o pipeline descreve, não tem sobre o que operar.</td><td><span class="chip warn">Divergência</span></td></tr>
+          <tr><td class="rid">DEF-06</td><td>O gráfico de barras empilhadas do dashboard permanece no backlog desde a v1.8.</td><td>Registrado como não implementado no próprio PRD anterior.</td><td><span class="chip warn">Conhecido</span></td></tr>
+          <tr><td class="rid">DEF-07</td><td>Não há trilha de auditoria de quem importou o quê.</td><td>A data de ingestão é registrada, o autor não. Numa carga divergente, não há a quem perguntar.</td><td><span class="chip warn">Conhecido</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 13 ══ -->
+  <div class="section" id="s13">
+    <div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Integrações e dependências</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Dependência</th><th>Direção</th><th>O que troca</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Integrações</strong></td><td>consome</td><td>A conexão <code>ingestao_dfs</code> e sua credencial. Ver <a class="xref" href="prd-integracoes.html">Integrações</a>.</td></tr>
+          <tr><td><strong>Organização</strong></td><td>consome</td><td>Os CNPJs contra os quais o destinatário é reconhecido.</td></tr>
+          <tr><td><strong>Fornecedor</strong></td><td>consome</td><td>O cadastro do emitente.</td></tr>
+          <tr><td><strong>Contratos</strong></td><td>consome</td><td>O contrato vigente na data de emissão, que define o método.</td></tr>
+          <tr><td><strong>Conciliação</strong></td><td>fornece</td><td>Os Registros Fiscais e a chave de acesso.</td></tr>
+          <tr><td><strong>Inconsistências</strong></td><td>fornece</td><td>Os documentos recusados, com a verificação que falhou.</td></tr>
+          <tr><td><strong>Crédito</strong></td><td>fornece</td><td>O IBS e o CBS decompostos de cada documento.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>13.1 Contrato de entrada</h3>
+    <div class="code-block"><code>POST https://api.splithub.com.br/v1/documentos-fiscais
+Authorization: Bearer {access_token}     <span class="c">// escopo dfs:write</span>
+
+{
+  <span class="v">type</span>: <span class="s">"nfe"</span>, <span class="v">model</span>: <span class="s">"55"</span>, <span class="v">access_key</span>: <span class="s">"3526..."</span>,
+  <span class="v">identification</span>: { <span class="c">/* número, série, emissão */</span> },
+  <span class="v">emission</span>:       { <span class="c">/* CNPJ, razão social, UF do emitente */</span> },
+  <span class="v">destination</span>:    { <span class="c">/* CNPJ, nome, UF do destinatário */</span> },
+  <span class="v">items</span>: [{ <span class="v">tax</span>: { <span class="v">ibs_cbs</span>: { <span class="c">/* CST, classificação, base, IBS, CBS */</span> } } }],
+  <span class="v">total</span>:          { <span class="c">/* consolidado, com totais de IBS e CBS */</span> },
+  <span class="v">contract_id</span>:    <span class="s">"CT-0011"</span>          <span class="c">// opcional</span>
+}
+→ <span class="n">202</span> Accepted · { id, status: <span class="s">"processing"</span> }</code></div>
+    <p>O grupo <code>items[].tax.ibs_cbs</code> é <strong>obrigatório desde 01/01/2026</strong>. Documento
+    já <code>completed</code> não aceita alteração — só <code>pending</code> ou <code>error</code> admitem
+    <code>PATCH</code>.</p>
+
+  </div>
+
+  <!-- ══ 14 ══ -->
+  <div class="section" id="s14">
+    <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Glossário</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Termo</th><th>Definição</th></tr></thead>
+        <tbody>
+          <tr><td><strong>DF-e</strong></td><td>Documento Fiscal eletrônico. A plataforma aceita 14 modelos.</td></tr>
+          <tr><td><strong>Registro Fiscal (RF)</strong></td><td>Unidade derivada do DF, uma por tributo. É o que percorre o resto da plataforma.</td></tr>
+          <tr><td><strong>Chave de acesso</strong></td><td>Identificador de 44 dígitos gerado pelo emitente. Chave de unicidade da plataforma.</td></tr>
+          <tr><td><strong>Pipeline</strong></td><td>As cinco etapas entre o recebimento e a criação do RF.</td></tr>
+          <tr><td><strong>Triagem</strong></td><td>Identificação do modelo e da versão do schema.</td></tr>
+          <tr><td><strong>Validação de layout</strong></td><td>Conformidade com o XSD, namespace, encoding e assinatura.</td></tr>
+          <tr><td><strong>Validação de dados</strong></td><td>Integridade dos campos, unicidade da chave e situação do CNPJ.</td></tr>
+          <tr><td><strong>Data de emissão</strong></td><td>Momento do fato gerador do IBS/CBS.</td></tr>
+          <tr><td><strong>Data de ingestão</strong></td><td>Momento em que o documento chegou à plataforma.</td></tr>
+          <tr><td><strong>Inconsistência</strong></td><td>Documento que reprovou em ao menos uma verificação.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ 15 ══ -->
+  <div class="section" id="s15">
+    <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Histórico de versões</span></div>
+    <div class="ver-row">
+      <span class="ver-num">v2.0</span>
+      <span class="ver-desc"><strong>08/09/2026</strong> — Reescrita a partir do protótipo, no método dos
+      PRDs de Crédito e Contratos. Acrescenta contexto e posicionamento, a decomposição de DF em RF, o layout
+      completo do CSV posicional, o contrato de entrada da API, <strong>7 funcionalidades detalhadas</strong>,
+      especificação dos 5 KPIs, <strong>24 requisitos funcionais</strong>, 7 regras de negócio, 5 RNFs,
+      <strong>7 defeitos e divergências</strong> e glossário. Registra que a ingestão por API passou a ter
+      credencial emitida dentro do produto, e que <strong>o upload manual não executa o pipeline</strong>:
+      todo documento carregado entra como importado, sem verificação de unicidade.</span>
+    </div>
+    <div class="ver-row">
+      <span class="ver-num">v1.10</span>
+      <span class="ver-desc"><strong>08/09/2026</strong> — Jornadas de usuário e mapa de implementação.
+      Arquivada em <a class="xref" href="prd-ingestao-v1.10.html">prd-ingestao-v1.10.html</a>.</span>
+    </div>
+    <div class="ver-row">
+      <span class="ver-num">v1.9</span>
+      <span class="ver-desc"><strong>19/08/2026</strong> — Upload de DF via CSV com todos os campos.
+      Arquivada em <a class="xref" href="prd-ingestao-v1.9.html">prd-ingestao-v1.9.html</a>.</span>
+    </div>
+    <div class="ver-row">
+      <span class="ver-num">v1.0 – v1.8</span>
+      <span class="ver-desc"><strong>Ago/2026</strong> — Evolução incremental: tipos de DF, pipeline de
+      validação, tabs, campos de conciliação, escopo restrito, máquina de status simplificada, CSV
+      posicional, coluna de inconsistência e statusFlags simultâneos. Todas arquivadas e acessíveis pelo
+      hub.</span>
+    </div>
+
   </div>
 
 </div>
