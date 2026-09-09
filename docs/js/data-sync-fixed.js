@@ -77,6 +77,7 @@ window.SH_TABLES = {
       { label: 'Pagamento', tip: 'Data em que o tributo foi recolhido. Sem data, o crédito ainda não pode ser apropriado.' },
       { label: 'Status Crédito', tip: 'Onde o crédito está no ciclo: <strong>não apropriado</strong>, <strong>apropriado</strong>, <strong>utilizado</strong> ou <strong>glosado</strong>.' },
       { label: 'Status RF', tip: 'Sinalizações de risco sobre o registro — em risco, a prescrever, inconsistência ou vencido. É ortogonal ao status do crédito: um registro apropriado ainda pode carregar flag.' },
+      { label: 'Inconsistências', tip: 'Divergências apuradas neste registro — alíquota, base de cálculo, CST ou valor. Registro com inconsistência fica retido e não avança na conciliação.' },
       { label: 'Contrato', tip: 'Contrato vigente entre comprador e fornecedor na data de emissão. É ele que define o método de pagamento.' },
       { label: 'Método de Pagamento', tip: 'Quem recolhe o tributo: <strong>Split Payment</strong> (retido na liquidação), <strong>RAD</strong> (o adquirente recolhe) ou <strong>Fornecedor</strong> (o emitente recolhe).' },
       { label: 'Método de Extinção', tip: 'Como o crédito tributário foi extinto: pagamento em guia, compensação com débito próprio, split payment retido na liquidação, ou glosa pelo Fisco. Vazio significa crédito ainda não extinto.' }
@@ -99,6 +100,7 @@ window.SH_TABLES = {
       { label: 'Extinção', tip: 'Data em que o débito foi extinto. Vazio significa débito em aberto.' },
       { label: 'Status', tip: 'Situação do débito: em aberto, extinto ou em atraso.' },
       { label: 'Status RF', tip: 'Sinalizações de risco sobre o registro, ortogonais ao status do débito.' },
+      { label: 'Inconsistências', tip: 'Divergências apuradas neste registro — alíquota, base de cálculo, CST ou valor. Registro com inconsistência fica retido e não avança na conciliação.' },
       { label: 'Contrato', tip: 'Contrato vigente com o cliente na data de emissão.' },
       { label: 'Método de Extinção', tip: 'Como o débito foi extinto: pagamento, compensação com crédito, ou split payment retido na liquidação.' }
     ]
@@ -166,7 +168,11 @@ window.SH_TABLES = {
       { label: 'Status', tip: 'Se a ocorrência está aberta, em tratamento ou resolvida.' },
       { label: 'Prioridade', tip: 'Severidade atribuída, combinando valor em risco e proximidade do prazo.' },
       { label: 'Contrato', tip: 'Contrato vigente na data da operação.' },
-      { label: 'Data', tip: 'Data de emissão do documento em que a divergência ocorreu.' }
+      { label: 'Data', tip: 'Data de emissão do documento em que a divergência ocorreu.' },
+      { label: 'St. Crédito', tip: 'Estado do crédito do registro afetado: não apropriado, apropriado, utilizado ou glosado.' },
+      { label: 'St. Registro', tip: 'Sinalizações de risco sobre o registro — em risco, a prescrever, vencido. Uma divergência aberta costuma vir acompanhada de flag de prazo.' },
+      { label: 'Método', tip: 'Método de pagamento definido no contrato: Split Payment, RAD ou Fornecedor. Determina quem precisa agir para resolver a divergência.' },
+      { label: 'Extinção', tip: 'Como o crédito tributário foi extinto, quando já foi. Vazio significa que a divergência ainda bloqueia o aproveitamento.' }
     ]
   },
   contratos: {
