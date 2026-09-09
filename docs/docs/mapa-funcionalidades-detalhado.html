@@ -127,10 +127,10 @@ body{background:var(--bg);color:var(--txt1);font:14px/1.6 'Segoe UI',system-ui,s
 
   <div class="meta-row">
     <div class="meta-item"><div class="meta-label">Produto</div><div class="meta-val">SplitHub</div></div>
-    <div class="meta-item"><div class="meta-label">Módulos</div><div class="meta-val">13 módulos</div></div>
+    <div class="meta-item"><div class="meta-label">Módulos</div><div class="meta-val">15 módulos</div></div>
     <div class="meta-item"><div class="meta-label">Funcionalidades</div><div class="meta-val" id="totalFeat">—</div></div>
     <div class="meta-item"><div class="meta-label">Base legal</div><div class="meta-val">LC 214/2025</div></div>
-    <div class="meta-item"><div class="meta-label">Atualizado em</div><div class="meta-val">Ago/2026</div></div>
+    <div class="meta-item"><div class="meta-label">Atualizado em</div><div class="meta-val">Set/2026</div></div>
   </div>
 
   <div class="ver-nav">
@@ -159,7 +159,7 @@ var TYPE_CLASS = {l:'ft-l',a:'ft-a',r:'ft-r',g:'ft-g',c:'ft-c',p:'ft-p'};
 var GROUPS = [
   {num:'Operacional',title:'Gestão e operação fiscal',mods:[0,1,2,3,4,5]},
   {num:'Analítico',title:'Inteligência e planejamento',mods:[6,7]},
-  {num:'Gestão',title:'Cadastros e organização',mods:[8,9,10]},
+  {num:'Gestão',title:'Cadastros e organização',mods:[8,9,10,13,14]},
   {num:'Portais',title:'Acesso externo e infraestrutura',mods:[11,12]},
 ];
 
@@ -234,6 +234,20 @@ var MODS = [
        d:'Envio de comprovante de pagamento por RF — vinculado ao contrato RAD. O upload desbloqueia a marcação do RF como "Apropriado" e elimina a inconsistência "Sem Comprovante" quando presente.'},
       {n:'Filtros em Pagamentos Executados',t:'l',
        d:'Busca por entidade, status de pagamento, data de vencimento e valor nas guias já processadas.'},
+      {n:'Aba Execução Programada',t:'l',
+       d:'A face operacional das políticas: o que o motor produzirá, o que aguarda decisão e o que já saiu. Três seções — próxima execução, fila de decisão, histórico e falhas.'},
+      {n:'Barra de cobertura das políticas',t:'g',
+       d:'Percentual das guias RAD pendentes sob alguma política ativa, quantas ficam de fora e em quais estabelecimentos. Recupera a leitura que a listagem por CNPJ dava de graça.'},
+      {n:'Listagem das guias represadas',t:'l',
+       d:'Cada lote em espera abre a tabela das guias retidas, ordenada por valor, com o peso de cada uma no total e a concentração por CNPJ e contrato. Aberta por padrão.'},
+      {n:'Coluna Origem — automática ou manual',t:'l',
+       d:'Indica se a guia veio de uma política ativa ou de seleção manual, com faixa na linha. A determinação vem de um índice registro-para-política invalidado a cada mudança.'},
+      {n:'Coluna Entrega ao ERP',t:'r',
+       d:'Estado do webhook que leva a guia ao ERP: entregue, pendente ou falha. Guia gerada e não entregue é crédito que se perde sem que nenhuma outra tela mostre problema.'},
+      {n:'Antecipação de execução',t:'a',
+       d:'Roda a janela agora, fora do calendário, para fechamento antecipado ou recuperação de janela perdida. Registra evento na política.'},
+      {n:'Fila de erro de geração',t:'r',
+       d:'Guias que voltaram com código de erro da API, agrupadas por causa. Dois dos três códigos de retorno possíveis são erro.'},
     ]
   },
   /* 4 */ {
@@ -276,6 +290,8 @@ var MODS = [
        d:'DFs com falha de ingestão são injetados em nfListaFiltradaGlobal como registros stub com statusImportacao:"falha", tornando-os visíveis nas listagens de Créditos com todos os dados disponíveis (entidade, CNPJ, valor, data).'},
       {n:'Card de inconsistência automático',t:'r',
        d:'Para cada DF rejeitado, um card de inconsistência é criado e vinculado ao stub DF via nf._inconsistencias[]. Tipos: falha de layout (CSV malformado), CNPJ inválido (não encontrado na RFB) ou documento duplicado.'},
+      {n:'Ingestão por API com credencial própria',t:'c',
+       d:'A conexão de ingestão passa a ter credencial emitida dentro do produto, com escopos de escrita e leitura. É o canal que torna o upload manual uma exceção.'},
     ]
   },
   /* 6 */ {
@@ -328,6 +344,8 @@ var MODS = [
        d:'O modelo do contrato determina automaticamente quais validações de comprovante são aplicadas nos RFs daquele fornecedor — elimina necessidade de configuração manual por RF.'},
       {n:'Listagem com filtros padronizados',t:'l',
        d:'Tabela de contratos com filtros shBuildFilterPanel por modelo (RAD/Fornecedor), status de vigência e fornecedor vinculado.'},
+      {n:'Contrato como recorte de política RAD',t:'c',
+       d:'Contratos de método RAD podem ser o critério de cobertura de uma política de execução, na orquestração por contrato.'},
     ]
   },
   /* 9 */ {
@@ -408,6 +426,82 @@ var MODS = [
        d:'Conjunto padronizado de colunas presente em todas as listagens de RF do sistema: ID RF, Tipo Fiscal, DF Vinculado, Entidade, Data, Valor, Status do Crédito, Status de Registro, Método de Pagamento e Extinção. Filtros obrigatórios em todas as colunas.'},
       {n:'ESC fecha qualquer modal',t:'p',
        d:'Atalho de teclado global — qualquer overlay aberto no sistema (modais de detalhe NF, RF, inconsistência, fornecedor, contrato) responde ao ESC e fecha sem ação adicional do usuário.'},
+      {n:'Tooltip de coluna como padrão de projeto',t:'p',
+       d:'Toda coluna declarada no catálogo de tabelas ganha explicação no cabeçalho, aplicada sempre do mesmo jeito. 104 colunas documentadas nas nove listagens; coluna nova só é publicada se souber se explicar.'},
+    ]
+  },
+  /* 13 */ {
+    icon:'⚙️',name:'Execução RAD',scope:'Cliente · Configuração',
+    mc:'#0E9E8E',ml:'rgba(14,158,142,.08)',md:'#065F46',
+    feats:[
+      {n:'Políticas de execução sem limite de quantidade',t:'c',
+       d:'A organização cria quantas políticas precisar. Cada uma declara o que cobre, quando roda e quanta decisão humana existe — substituindo a relação um-para-um com o CNPJ comprador.'},
+      {n:'Orquestração por CNPJ',t:'c',
+       d:'A política cobre um ou mais CNPJs compradores. Todo registro fiscal de método RAD desses estabelecimentos entra na janela. Use quando a régua é do estabelecimento.'},
+      {n:'Orquestração por contrato',t:'c',
+       d:'A política cobre um ou mais contratos de método RAD, em qualquer CNPJ comprador. Use quando a régua é do acordo — um contrato de insumo com prazo próprio.'},
+      {n:'Orquestração por faixa de valor',t:'c',
+       d:'A política cobre as guias cujo valor cai numa faixa. Separa grão fino de alto valor sem respeitar fronteira de estabelecimento.'},
+      {n:'Quatro bases de comparação da faixa',t:'c',
+       d:'A faixa incide sobre o valor da guia CBS/IBS, o imposto total do documento, o valor da nota ou o valor líquido. R$ 400 mil de nota e R$ 400 mil de guia descrevem conjuntos diferentes.'},
+      {n:'Três modos de operação',t:'c',
+       d:'Automático gera e entrega sem intervenção — é o estado pretendido. Assistido aguarda aprovação a cada janela, como passo transitório. Manual não age.'},
+      {n:'Janela de execução configurável',t:'c',
+       d:'Dias do mês em seleção múltipla, hora e antecedência em dias sobre o vencimento da guia.'},
+      {n:'Critérios de inclusão por valor e flag',t:'c',
+       d:'Valor mínimo por guia e as flags que retêm a nota fora do lote — glosado, vencido, inconsistência. A nota retida não é descartada: aparece na fila com o motivo.'},
+      {n:'Simulação da próxima execução',t:'g',
+       d:'Antes de salvar, calcula quantas guias e que valor a política produziria hoje, e para onde elas iriam. Converte a política de promessa em número conferível.'},
+      {n:'Detecção de cobertura repetida',t:'r',
+       d:'Mesmo CNPJ ou mesmo contrato em duas políticas, ou faixas que se cruzam sobre a mesma base, barram o salvamento nomeando a política dona.'},
+      {n:'Alerta de sobreposição entre modelos',t:'r',
+       d:'Entre modelos diferentes a colisão só existe sobre notas concretas. A listagem mede quais registros são reivindicados por mais de uma política ativa e nomeia o par.'},
+      {n:'Listagem de políticas com lote ao vivo',t:'l',
+       d:'Uma linha por política, com orquestração, cobertura em texto, modo, janela e quantas guias produziria na próxima janela — calculado no render.'},
+      {n:'Ativação e pausa em massa',t:'a',
+       d:'Seleção múltipla de políticas, útil em fechamento contábil ou incidente de integração. Cada mudança entra no histórico da política.'},
+      {n:'Auditoria com diff campo a campo',t:'p',
+       d:'Criação, edição, ativação, pausa e execução antecipada, com autor, momento e o de/para de cada campo alterado. O editor trabalha sobre cópia: cancelar desfaz.'},
+      {n:'Vínculo com a conexão de destino',t:'c',
+       d:'Só conexões do tipo RAD ↔ ERP aparecem no seletor, com a saúde da conexão à vista. Sem conexão, a guia é gerada e fica na plataforma.'},
+    ]
+  },
+  /* 14 */ {
+    icon:'🔌',name:'Integrações',scope:'Cliente · Configuração',
+    mc:'#1D5FCC',ml:'rgba(29,95,204,.08)',md:'#1E3A8A',
+    feats:[
+      {n:'Catálogo dos seis contextos da API',t:'c',
+       d:'Ingestão de DFs, fornecedores, contratos, RAD ↔ ERP, garantia de crédito e automações — cada um com endpoints, eventos, escopos e limites derivados da documentação publicada.'},
+      {n:'Conexões nas duas direções',t:'c',
+       d:'Entrada, quando o ERP chama a API do SplitHub; saída, quando o SplitHub chama o endpoint do ERP; e bidirecional, no caso do RAD.'},
+      {n:'Assistente de nova conexão em três passos',t:'a',
+       d:'Tipo, configuração e credenciais. O tipo escolhido determina o que a plataforma pede e o que emite ao final.'},
+      {n:'Emissão de credencial de API',t:'a',
+       d:'client_id e client_secret, trocados por um JWT. Fecha o vão que a documentação de autenticação declarava não especificar — antes, cada cliente era integrado fora do produto.'},
+      {n:'Exibição única do segredo',t:'r',
+       d:'O valor aparece em claro uma só vez; a plataforma guarda apenas o hash. Fechada a tela, o painel mostra os quatro últimos caracteres.'},
+      {n:'Escopos por contexto',t:'c',
+       d:'Cada escopo declara o que o JWT poderá fazer. Os destrutivos não vêm marcados por padrão; chamada fora do escopo retorna 403.'},
+      {n:'Rotação com janela de sobreposição',t:'a',
+       d:'O segredo anterior segue válido por 24 horas, para dar janela de troca sem derrubar a integração. Na conexão bidirecional, as duas rotações são independentes.'},
+      {n:'Exemplo da primeira chamada',t:'p',
+       d:'O curl do login e da chamada autenticada, montado com os valores reais — ou o cálculo do HMAC do header de assinatura, no caso das conexões de saída.'},
+      {n:'Alcance por CNPJ',t:'c',
+       d:'A conexão pode ser restringida a um subconjunto de estabelecimentos. Uma credencial de filial não deveria enviar documento de outra.'},
+      {n:'Health check por conexão',t:'g',
+       d:'Estado operacional, degradado, fora do ar ou sem tráfego, com disponibilidade em 24h, 7 e 30 dias e latência p50/p95.'},
+      {n:'Sonda ativa e observação passiva',t:'g',
+       d:'Conexão de saída é sondada com evento de teste. Conexão de entrada não tem o que sondar — quem chama é o ERP —, e ali a leitura vem do tráfego recebido.'},
+      {n:'Histórico de incidentes',t:'r',
+       d:'Severidade, causa classificada, duração, impacto quantificado e linha do tempo com detecção, alerta, diagnóstico e resolução.'},
+      {n:'Log de entregas com inspeção de payload',t:'l',
+       d:'Evento, chave do documento, tentativas e status HTTP, com o JSON exato transmitido. Sem isso, depurar divergência com o ERP vira troca de e-mails.'},
+      {n:'Reenvio de entrega',t:'a',
+       d:'Individual ou em lote. A especificação diz que o SplitHub reenvia até receber 200 OK, mas não define o teto — o reenvio manual cobre o caso em que a automática desiste.'},
+      {n:'Comprovantes recebidos do ERP',t:'l',
+       d:'Chamadas ao endpoint de comprovante, com identificador da guia, meio, valor e resultado. As rejeitadas aparecem isoladas, com o motivo.'},
+      {n:'Teste de conexão',t:'a',
+       d:'Dispara um evento de teste com payload fictício e mostra a resposta HTTP. Valida a URL antes de a política de execução depender dela.'},
     ]
   },
 ];
