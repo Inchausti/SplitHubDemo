@@ -181,6 +181,11 @@ img, svg { max-width: 100%; height: auto; }
 @media (max-width: 640px) {
   .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
 }
+
+.nid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+       color: var(--purple); background: var(--purple-d); border-radius: 3px;
+       padding: 1px 6px; white-space: nowrap; }
+@media (max-width: 640px) { .nid { white-space: normal; } }
 </style>
 </head>
 <body>
@@ -199,7 +204,7 @@ img, svg { max-width: 100%; height: auto; }
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-contratos</span></div>
     <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025</span></div>
     <div class="meta-pill" style="margin-left:auto">
-      <span class="chip ok">Publicado</span>&nbsp;<span class="chip purple">v2.3</span>
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip purple">v2.4</span>
     </div>
   </div>
 
@@ -540,6 +545,23 @@ guias RAD                      apropriação
     <div class="callout info">
       <div class="ct">Ancoragem temporal no protótipo</div>
       <p>Os timestamps usam <code>contratoAgoraISO()</code>, que combina a <strong>data</strong> de <code>HOJE_REF</code> (24/04/2026, a referência fixa do protótipo) com a <strong>hora real</strong> do relógio. Isso mantém os eventos coerentes com o calendário da demonstração sem congelar o horário, deixando a ordem cronológica legível numa sessão de uso. Em produção, a referência deve ser o relógio do servidor.</p>
+    </div>
+
+    <div class="callout red">
+      <div class="ct">Split Payment saiu do catálogo de métodos — 10/09/2026</div>
+      <p>O <strong>Split Payment deixou de ser método de pagamento selecionável</strong>. A ferramenta existe para
+      o que exige ação do comprador — o <strong>RAD</strong> — ou monitoramento do fornecedor. No split payment o
+      PSP segrega sozinho na liquidação financeira <span class="nid">Dec. 12.955/2026, art. 31, I</span> e não há
+      o que gerir: contrato com esse método produzia registro que a ferramenta não sabe operar.</p>
+      <p>O catálogo <code>CONTRATO_METODOS</code> passa a ter <strong>dois valores</strong>: <code>rad</code> e
+      <code>fornecedor</code>. Os 12 contratos que estavam em <code>split</code> foram migrados para
+      <code>fornecedor</code>, e o método padrão de um documento sem contrato vigente também. A função
+      <code>contratoMetodo()</code> continua entendendo o valor legado <code>"split"</code> e o resolve como
+      <code>fornecedor</code>, para não quebrar dado antigo.</p>
+      <p><strong>Onde o Split Payment permanece:</strong> como <em>modalidade de extinção do débito</em>
+      <span class="nid">LC 214/2025, art. 27, III</span>, no lado da saída — nosso cliente paga e o PSP dele
+      segrega. É outro eixo, que a ferramenta <em>observa</em> e não opera. Os filtros de <em>Método de
+      Extinção</em> e a análise de extinção de débitos seguem oferecendo o valor.</p>
     </div>
 
   <!-- ══ 04 ══ -->
@@ -1734,7 +1756,11 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
   <!-- ══ 14 ══ -->
   <div class="section" id="s14">
     <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
-        <div class="ver-row">
+            <div class="ver-row">
+      <div class="ver-num">v2.4</div>
+      <div class="ver-desc"><strong>10/09/2026</strong> — <strong>Split Payment sai do catálogo de métodos.</strong> A ferramenta gere o que exige ação do comprador (RAD) ou monitoramento do fornecedor; no split payment o PSP segrega sozinho e não há o que operar. <code>CONTRATO_METODOS</code> fica com dois valores, os 12 contratos em <code>split</code> migram para <code>fornecedor</code>, e a opção sai do cadastro e dos filtros. O valor legado continua sendo entendido e resolvido como fornecedor. Permanece como <em>modalidade de extinção</em> do débito <span class="nid">art. 27, III</span>, que é outro eixo.</div>
+    </div>
+<div class="ver-row">
       <div class="ver-num">v2.3</div>
       <div class="ver-desc"><strong>09/09/2026</strong> — Correção: ordenar por <strong>Fornecedor</strong>, <strong>Status</strong> ou <strong>NFs vinculadas</strong> não fazia nada. A ordenação recebia a lista crua de contratos, onde esses campos não existem — só eram calculados depois, ao montar a projeção. A projeção passa a ser montada antes da ordenação, e a mesma lista serve a tela e a exportação. Ela também muda de nome, para <code>window._contratosLista</code>: <code>_contratosData</code> colide com o array-semente declarado em <code>data-sync-fixed.js</code>, que sobrescrevia a projeção e fazia o CSV exportar a semente. O rótulo do método sai de <code>rad</code> — que volta a ser a bandeira booleana lida pelo render — e passa a <code>metodoPagamento</code>.</div>
     </div>
@@ -1769,7 +1795,7 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
   <hr>
   <div style="font-size:11px;color:var(--txt3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
     <span>SplitHub · PRD · Configurações → Contratos</span>
-    <span>v2.3 · Set/2026 · Base: LC 214/2025</span>
+    <span>v2.4 · Set/2026 · Base: LC 214/2025</span>
   </div>
 
 </div>
