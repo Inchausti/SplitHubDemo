@@ -6519,6 +6519,103 @@ function gerarChaveDF(tipoDF,cnpj,numero,data){
 }
 function formatarChaveDF(c){if(!c)return'—';return c.replace(/(.{4})(?=.)/g,'$1 ');}
 function gerarChaveNFe(cnpj,numero,data){return gerarChaveDF('NF-e',cnpj,numero,data);}
+
+/* ══ Prazo de utilização do crédito — arts. 47 e 54 ═══════════════════════
+   Dois momentos encadeados, e confundi-los é o erro comum:
+
+   1. APROPRIAÇÃO — só ocorre quando o débito do fornecedor é extinto, por
+      qualquer das modalidades do art. 27 da LC 214/2025. Antes disso não há
+      crédito, e nenhum prazo corre. <LC 214/2025, art. 47>
+
+   2. PRAZO DE UTILIZAÇÃO — 5 anos, contados do PRIMEIRO DIA DO PERÍODO
+      SUBSEQUENTE ao de apuração em que ocorreu a apropriação. Não conta da
+      emissão da NF, nem do fato gerador. <LC 214/2025, art. 54>
+      Espelhado em Dec. 12.955/2026 e Res. CGIBS 6/2026, ambos no art. 54.
+
+   O período de apuração do IBS/CBS é mensal, então "período subsequente" é
+   o primeiro dia do mês seguinte ao da apropriação. */
+window.shDataApropriacao = function(o){
+  if (!o) return null;
+  var sc = o.statusCredito || o.status;
+  // Lado do débito (saída): a extinção do NOSSO débito é o evento que dispara
+  // a apropriação do crédito pelo ADQUIRENTE. A data é a mesma; quem detém o
+  // crédito é que é o outro lado da operação.
+  var eSaida = o.tipo === 'saida';
+  if (eSaida) {
+    if (sc !== 'extinto') return null;
+  } else if (sc !== 'apropriado' && sc !== 'utilizado') {
+    return null;   // art. 47: sem extinção do débito não há apropriação
+  }
+  // A extinção é o que dispara a apropriação; dataPagamento é o registro dela
+  var d = o.dataExtincao || o.dataPagamento || null;
+  if (d) {
+    var m = String(d).match(/^(\d{2})\/(\d{2})\/(\d{4})/);   // dd/mm/aaaa [hh:mm]
+    if (m) return m[3] + '-' + m[2] + '-' + m[1];
+    if (/^\d{4}-\d{2}-\d{2}/.test(d)) return String(d).slice(0,10);
+  }
+  // Extinção por compensação <art. 27, I> não carrega data no protótipo.
+  // O débito existe e foi extinto — logo houve apropriação e o prazo corre.
+  // Deriva do documento fiscal e marca como estimada, para a tela poder
+  // distinguir do que veio da plataforma.
+  if (/^\d{4}-\d{2}-\d{2}/.test(String(o.data || ''))) {
+    o._apropEstimada = true;
+    return String(o.data).slice(0,10);
+  }
+  return null;
+};
+
+window.shPrevExtincaoCredito = function(dataApropISO){
+  if (!dataApropISO) return null;
+  var p = String(dataApropISO).slice(0,10).split('-');
+  if (p.length !== 3) return null;
+  var ano = parseInt(p[0],10), mes = parseInt(p[1],10);
+  // primeiro dia do período subsequente…
+  mes += 1; if (mes > 12) { mes = 1; ano += 1; }
+  // …mais 5 anos
+  return (ano + 5) + '-' + String(mes).padStart(2,'0') + '-01';
+};
+
+/* Anexa os dois campos a um RF ou DF. Idempotente. */
+window.shAplicarPrazoCredito = function(o){
+  if (!o) return o;
+  o._apropEstimada   = false;
+  o.dataApropriacao  = window.shDataApropriacao(o);
+  o.dataPrevExtincao = window.shPrevExtincaoCredito(o.dataApropriacao);
+  return o;
+};
+
+/* Célula das duas datas. `prev` desenha a previsão de extinção com a
+   proximidade do prazo em cor: vermelho quando já passou, âmbar no último
+   ano. Sem apropriação não há prazo correndo — art. 54 conta da
+   apropriação, não da emissão. */
+window.shCelulaApropriacao = function(o){
+  if (!o || !o.dataApropriacao) {
+    return '<span style="color:var(--txt3)" title="Sem extinção do débito não há apropriação — LC 214/2025, art. 47">—</span>';
+  }
+  var p = o.dataApropriacao.split('-');
+  var t = p[2] + '/' + p[1] + '/' + p[0];
+  if (o._apropEstimada) {
+    return '<span title="Extinção por compensação — data derivada do documento fiscal">' + t +
+           ' <span style="color:var(--txt3);font-size:9px">est.</span></span>';
+  }
+  return t;
+};
+
+window.shCelulaPrevExtincao = function(o){
+  if (!o || !o.dataPrevExtincao) {
+    return '<span style="color:var(--txt3)" title="O prazo do art. 54 só começa a correr com a apropriação">—</span>';
+  }
+  var p = o.dataPrevExtincao.split('-');
+  var t = p[2] + '/' + p[1] + '/' + p[0];
+  var alvo = new Date(o.dataPrevExtincao + 'T00:00:00');
+  var hoje = new Date(); hoje.setHours(0,0,0,0);
+  var dias = Math.round((alvo - hoje) / 86400000);
+  var cor = dias < 0 ? 'var(--red)' : (dias <= 365 ? 'var(--amber)' : 'var(--txt2)');
+  var tit = dias < 0 ? 'Prazo do art. 54 expirado — crédito não utilizável'
+                     : (dias <= 365 ? 'Menos de um ano para o fim do prazo do art. 54'
+                                    : 'Prazo de 5 anos — LC 214/2025, art. 54');
+  return '<span style="color:' + cor + '" title="' + tit + '">' + t + '</span>';
+};
 function nfRenderLista(){
   var buscaEl=document.getElementById("nf-busca");
   var tipoEl=document.getElementById("nf-filtro-tipo");
@@ -6623,8 +6720,10 @@ function nfRenderLista(){
         metodoPagamento:_metPag,
         metodoExtincao:metodoExtincao,
         chaveDF:gerarChaveDF(_tipoDF_ent,nf.cnpj,nf.numero,nf.data),
+        dataPagamento:dataPagamento,
         registrosFiscais:[]
       };
+      window.shAplicarPrazoCredito(nfRecord);
 
       // Registros Fiscais — obrigatório 1 IBS + 1 CBS por DF; herdam status do pai
       nfRecord.registrosFiscais.push({
@@ -6648,6 +6747,7 @@ function nfRenderLista(){
         valorTotalNF:valorBruto,
         valorLiquidoNF:valorLiquido
       });
+      window.shAplicarPrazoCredito(nfRecord.registrosFiscais[nfRecord.registrosFiscais.length-1]);
 
       nfRecord.registrosFiscais.push({
         id:nfGerarIdRegistroFiscal(),
@@ -6670,6 +6770,7 @@ function nfRenderLista(){
         valorTotalNF:valorBruto,
         valorLiquidoNF:valorLiquido
       });
+      window.shAplicarPrazoCredito(nfRecord.registrosFiscais[nfRecord.registrosFiscais.length-1]);
 
       todosRegistros.push(nfRecord);
     });
@@ -6743,8 +6844,10 @@ function nfRenderLista(){
         data:_dataSai,
         status:statusDeb==='extinto'?'extinto':'nao_extinto',
         chaveDF:(typeof gerarChaveDF==='function')?gerarChaveDF(_tipoDF_sai,_cnpjSai,nfSaidaNum,_dataSai):'',
+        dataExtincao:_dtExt,
         registrosFiscais:[]
       };
+      window.shAplicarPrazoCredito(nfSaidaRecord);
 
       nfSaidaRecord.registrosFiscais.push({
         id:nfGerarIdRegistroFiscal(),
@@ -6755,6 +6858,7 @@ function nfRenderLista(){
         dataExtincao:_dtExt,metodoExtincao:_metIBS,dataPagamento:_dpIBS,contratoId:null,
         data:_dataSai,valorTotalNF:valorSaidaBruto,valorLiquidoNF:valorSaidaLiq
       });
+      window.shAplicarPrazoCredito(nfSaidaRecord.registrosFiscais[nfSaidaRecord.registrosFiscais.length-1]);
 
       nfSaidaRecord.registrosFiscais.push({
         id:nfGerarIdRegistroFiscal(),
@@ -6765,6 +6869,7 @@ function nfRenderLista(){
         dataExtincao:_dtExt,metodoExtincao:_metCBS,dataPagamento:_dpCBS,contratoId:null,
         data:_dataSai,valorTotalNF:valorSaidaBruto,valorLiquidoNF:valorSaidaLiq
       });
+      window.shAplicarPrazoCredito(nfSaidaRecord.registrosFiscais[nfSaidaRecord.registrosFiscais.length-1]);
 
       todosRegistros.push(nfSaidaRecord);
     }
@@ -10529,7 +10634,7 @@ if (window.Chart) {
   Chart.defaults.font.size = 11;
 }
 </script>
-<script src="js/data-sync-fixed.js?v=103"></script>
+<script src="js/data-sync-fixed.js?v=106"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=7"></script>
 <script src="js/charts.js?v=2"></script>
@@ -10672,6 +10777,8 @@ if (window.Chart) {
         {key:'contratoId',     label:'Contrato',           fixed:false, visible:true,  type:'str'},
         {key:'metodoPagamento',label:'Método de Pagamento',fixed:false, visible:true,  type:'str'},
         {key:'metodoExtincao', label:'Método de Extinção', fixed:false, visible:true,  type:'str'},
+        {key:'dataApropriacao', label:'Apropriação',        fixed:false, visible:true,  type:'date'},
+        {key:'dataPrevExtincao',label:'Prev. extinção',     fixed:false, visible:true,  type:'date'},
       ]
     });
 
@@ -10756,6 +10863,8 @@ if (window.Chart) {
         {key:'statusFlags',    label:'St. Registro',     fixed:false, visible:true,  type:'str'},
         {key:'_inconsistencias',label:'Inconsistências', fixed:false, visible:true,  type:'str'},
         {key:'metodoExtincao', label:'Extinção',         fixed:false, visible:true,  type:'str'},
+        {key:'dataApropriacao', label:'Apropriação',      fixed:false, visible:true,  type:'date'},
+        {key:'dataPrevExtincao',label:'Prev. extinção',   fixed:false, visible:true,  type:'date'},
         {key:'origemGeracao',  label:'Origem',           fixed:false, visible:true,  type:'str'},
         {key:'entregaStatus',  label:'Entrega',          fixed:false, visible:true,  type:'str'},
         {key:'_detalhe',       label:'Detalhe',          fixed:true,  visible:false, type:'str'},
@@ -10796,6 +10905,8 @@ if (window.Chart) {
         {key:'statusRegistro',label:'St. Registro',       fixed:false,visible:true,  type:'str'},
         {key:'metodoPagamento',label:'Método',            fixed:false,visible:true,  type:'str'},
         {key:'metodoExtincao',label:'Extinção',           fixed:false,visible:true,  type:'str'},
+        {key:'dataApropriacao',label:'Apropriação',        fixed:false,visible:true,  type:'date'},
+        {key:'dataPrevExtincao',label:'Prev. extinção',    fixed:false,visible:true,  type:'date'},
       ]
     });
 

@@ -80,7 +80,9 @@ window.SH_TABLES = {
       { key: '_inconsistencias', label: 'Inconsistências', tip: 'Divergências apuradas neste registro — alíquota, base de cálculo, CST ou valor. Registro com inconsistência fica retido e não avança na conciliação.' },
       { key: 'contratoId', label: 'Contrato', tip: 'Contrato vigente entre comprador e fornecedor na data de emissão. É ele que define o método de pagamento.' },
       { key: 'metodoPagamento', label: 'Método de Pagamento', tip: 'Quem recolhe o tributo: <strong>Split Payment</strong> (retido na liquidação), <strong>RAD</strong> (o adquirente recolhe) ou <strong>Fornecedor</strong> (o emitente recolhe).' },
-      { key: 'metodoExtincao', label: 'Método de Extinção', tip: 'Como o crédito tributário foi extinto: pagamento em guia, compensação com débito próprio, split payment retido na liquidação, ou glosa pelo Fisco. Vazio significa crédito ainda não extinto.' }
+      { key: 'metodoExtincao', label: 'Método de Extinção', tip: 'Como o crédito tributário foi extinto: pagamento em guia, compensação com débito próprio, split payment retido na liquidação, ou glosa pelo Fisco. Vazio significa crédito ainda não extinto.' },
+      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data em que o débito do fornecedor foi extinto e o crédito passou a ser apropriável. É o marco inicial do prazo de 5 anos — não a emissão da NF. Sem extinção do débito não há apropriação (LC 214/2025, art. 47). <strong>est.</strong> marca data derivada, quando a extinção foi por compensação.' },
+      { key: 'dataPrevExtincao', label: 'Prev. extinção', tip: 'Data em que o direito de utilizar o crédito se extingue: 5 anos contados do primeiro dia do período de apuração seguinte ao da apropriação (LC 214/2025, art. 54). Âmbar no último ano, vermelho depois de vencido. Sem apropriação, nenhum prazo corre.' },
     ]
   },
   debitos: {
@@ -102,7 +104,9 @@ window.SH_TABLES = {
       { label: 'Status RF', tip: 'Sinalizações de risco sobre o registro, ortogonais ao status do débito.' },
       { label: 'Inconsistências', tip: 'Divergências apuradas neste registro — alíquota, base de cálculo, CST ou valor. Registro com inconsistência fica retido e não avança na conciliação.' },
       { label: 'Contrato', tip: 'Contrato vigente com o cliente na data de emissão.' },
-      { label: 'Método de Extinção', tip: 'Como o débito foi extinto: pagamento, compensação com crédito, ou split payment retido na liquidação.' }
+      { label: 'Método de Extinção', tip: 'Como o débito foi extinto: pagamento, compensação com crédito, ou split payment retido na liquidação.' },
+      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data em que o débito do fornecedor foi extinto e o crédito passou a ser apropriável. É o marco inicial do prazo de 5 anos — não a emissão da NF. Sem extinção do débito não há apropriação (LC 214/2025, art. 47). <strong>est.</strong> marca data derivada, quando a extinção foi por compensação.' },
+      { key: 'dataPrevExtincao', label: 'Prev. extinção', tip: 'Data em que o direito de utilizar o crédito se extingue: 5 anos contados do primeiro dia do período de apuração seguinte ao da apropriação (LC 214/2025, art. 54). Âmbar no último ano, vermelho depois de vencido. Sem apropriação, nenhum prazo corre.' },
     ]
   },
   dashDfCp: {
@@ -113,7 +117,9 @@ window.SH_TABLES = {
       { label: 'Valor IBS+CBS', tip: 'Crédito em jogo neste documento, somando os dois tributos.', cls: 'r' },
       { label: 'Data NF', tip: 'Data de emissão — início da contagem do prazo de apropriação.' },
       { label: 'Vencimento', tip: 'Prazo-limite para apropriar o crédito. Passado ele, a recuperação exige processo administrativo.' },
-      { label: 'Situação', tip: 'Quão perto do vencimento o crédito está, e se já carrega alguma flag de risco.' }
+      { label: 'Situação', tip: 'Quão perto do vencimento o crédito está, e se já carrega alguma flag de risco.' },
+      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data em que o débito do fornecedor foi extinto e o crédito passou a ser apropriável. É o marco inicial do prazo de 5 anos — não a emissão da NF. Sem extinção do débito não há apropriação (LC 214/2025, art. 47). <strong>est.</strong> marca data derivada, quando a extinção foi por compensação.' },
+      { key: 'dataPrevExtincao', label: 'Prev. extinção', tip: 'Data em que o direito de utilizar o crédito se extingue: 5 anos contados do primeiro dia do período de apuração seguinte ao da apropriação (LC 214/2025, art. 54). Âmbar no último ano, vermelho depois de vencido. Sem apropriação, nenhum prazo corre.' },
     ]
   },
   dashDfLp: {
@@ -124,7 +130,9 @@ window.SH_TABLES = {
       { label: 'Valor IBS+CBS', tip: 'Crédito em jogo neste documento, somando os dois tributos.', cls: 'r' },
       { label: 'Data NF', tip: 'Data de emissão — início da contagem do prazo de apropriação.' },
       { label: 'Vencimento', tip: 'Prazo-limite para apropriar o crédito.' },
-      { label: 'Situação', tip: 'Quão perto do vencimento o crédito está, e se já carrega alguma flag de risco.' }
+      { label: 'Situação', tip: 'Quão perto do vencimento o crédito está, e se já carrega alguma flag de risco.' },
+      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data em que o débito do fornecedor foi extinto e o crédito passou a ser apropriável. É o marco inicial do prazo de 5 anos — não a emissão da NF. Sem extinção do débito não há apropriação (LC 214/2025, art. 47). <strong>est.</strong> marca data derivada, quando a extinção foi por compensação.' },
+      { key: 'dataPrevExtincao', label: 'Prev. extinção', tip: 'Data em que o direito de utilizar o crédito se extingue: 5 anos contados do primeiro dia do período de apuração seguinte ao da apropriação (LC 214/2025, art. 54). Âmbar no último ano, vermelho depois de vencido. Sem apropriação, nenhum prazo corre.' },
     ]
   },
   pagamentos: {
@@ -145,6 +153,8 @@ window.SH_TABLES = {
       { key: 'statusFlags', label: 'St. Registro', tip: 'Sinalizações de risco sobre o registro — em risco, a prescrever, inconsistência ou vencido.' },
       { key: '_inconsistencias', label: 'Inconsistências', tip: 'Divergências apuradas entre o registro fiscal e o documento fiscal correspondente. Nota com inconsistência é retida fora dos lotes automáticos.' },
       { key: 'metodoExtincao', label: 'Extinção', tip: 'Como o crédito tributário foi extinto, quando já foi.' },
+      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data em que o débito do fornecedor foi extinto e o crédito passou a ser apropriável. É o marco inicial do prazo de 5 anos — não a emissão da NF. Sem extinção do débito não há apropriação (LC 214/2025, art. 47). <strong>est.</strong> marca data derivada, quando a extinção foi por compensação.' },
+      { key: 'dataPrevExtincao', label: 'Prev. extinção', tip: 'Data em que o direito de utilizar o crédito se extingue: 5 anos contados do primeiro dia do período de apuração seguinte ao da apropriação (LC 214/2025, art. 54). Âmbar no último ano, vermelho depois de vencido. Sem apropriação, nenhum prazo corre.' },
       { key: 'origemGeracao', label: 'Origem', tip: 'Se a guia foi produzida por uma <strong>política de execução ativa</strong> (AUTO) ou por seleção manual nesta tela (MANUAL). A faixa teal na linha marca as automáticas.' },
       { key: 'entregaStatus', label: 'Entrega', tip: 'Estado do webhook <code>rad.darf_recebida</code>, que leva a guia gerada ao ERP. <strong>Entregue</strong> — o ERP respondeu 200 OK. <strong>Pendente</strong> — em retentativa. <strong>Falha</strong> — as tentativas se esgotaram e a guia existe aqui e não existe lá. O reenvio fica em Configurações &rarr; Integrações &rarr; Log de entregas.' },
       { key: '_detalhe', label: 'Detalhe', tip: 'Abre o registro fiscal completo, com a decomposição do valor e o rastreamento na Receita.', cls: 'tc' },
@@ -172,7 +182,9 @@ window.SH_TABLES = {
       { key: 'statusCredito', label: 'St. Crédito', tip: 'Estado do crédito do registro afetado: não apropriado, apropriado, utilizado ou glosado.' },
       { key: 'statusRegistro', label: 'St. Registro', tip: 'Sinalizações de risco sobre o registro — em risco, a prescrever, vencido. Uma divergência aberta costuma vir acompanhada de flag de prazo.' },
       { key: 'metodoPagamento', label: 'Método', tip: 'Método de pagamento definido no contrato: Split Payment, RAD ou Fornecedor. Determina quem precisa agir para resolver a divergência.' },
-      { key: 'metodoExtincao', label: 'Extinção', tip: 'Como o crédito tributário foi extinto, quando já foi. Vazio significa que a divergência ainda bloqueia o aproveitamento.' }
+      { key: 'metodoExtincao', label: 'Extinção', tip: 'Como o crédito tributário foi extinto, quando já foi. Vazio significa que a divergência ainda bloqueia o aproveitamento.' },
+      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data em que o débito do fornecedor foi extinto e o crédito passou a ser apropriável. É o marco inicial do prazo de 5 anos — não a emissão da NF. Sem extinção do débito não há apropriação (LC 214/2025, art. 47). <strong>est.</strong> marca data derivada, quando a extinção foi por compensação.' },
+      { key: 'dataPrevExtincao', label: 'Prev. extinção', tip: 'Data em que o direito de utilizar o crédito se extingue: 5 anos contados do primeiro dia do período de apuração seguinte ao da apropriação (LC 214/2025, art. 54). Âmbar no último ano, vermelho depois de vencido. Sem apropriação, nenhum prazo corre.' },
     ]
   },
   contratos: {
@@ -385,7 +397,10 @@ window.dashRenderDFsApropriar = function() {
         data: dp.length === 3 ? dp[2]+'/'+dp[1]+'/'+dp[0] : '—',
         venc: _vencStr,
         sr: sr,
-        statusFlags: rf.statusFlags || []
+        statusFlags: rf.statusFlags || [],
+        dataApropriacao:  rf.dataApropriacao || null,
+        dataPrevExtincao: rf.dataPrevExtincao || null,
+        _apropEstimada:   !!rf._apropEstimada
       };
       // CP: vencimento no mês atual; LP: vencimento em meses futuros
       if (mesVenc === mesAtual) cpRows.push(row);
@@ -404,10 +419,12 @@ window.dashRenderDFsApropriar = function() {
       + '<td class="nowrap" style="color:var(--txt2)">' + r.data + '</td>'
       + '<td class="nowrap" style="color:var(--txt2)">' + r.venc + '</td>'
       + '<td class="nowrap">' + srBadge + '</td>'
+      + '<td class="nowrap">' + (window.shCelulaApropriacao ? window.shCelulaApropriacao(r) : '&mdash;') + '</td>'
+      + '<td class="nowrap">' + (window.shCelulaPrevExtincao ? window.shCelulaPrevExtincao(r) : '&mdash;') + '</td>'
       + '</tr>';
   }
 
-  var empty = function(msg) { return '<tr><td colspan="5" style="text-align:center;color:var(--txt3);padding:20px">'+msg+'</td></tr>'; };
+  var empty = function(msg) { return '<tr><td colspan="8" style="text-align:center;color:var(--txt3);padding:20px">'+msg+'</td></tr>'; };
   var cpSorted = cpRows.sort(function(a,b){return b.valor-a.valor;}).slice(0,10);
   var lpSorted = lpRows.sort(function(a,b){return b.valor-a.valor;}).slice(0,10);
 
@@ -708,6 +725,8 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       + (stRgLab ? '<div style="display:flex;align-items:center;gap:4px">RF: <span style="background:rgba(' + stRgRgb + ',.12);color:rgba(' + stRgRgb + ',1);border:1px solid rgba(' + stRgRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRgLab + '</span></div>' : '<div></div>')
       + ((rf.statusCredito||rf.status)==='utilizado'&&rf.metodoExtincao ? '<div style="color:var(--txt3)">Extinção: <span style="color:var(--teal);font-weight:600">' + rf.metodoExtincao + '</span></div>' : '')
       + ((rf.statusCredito||rf.status)==='utilizado'&&rf.dataExtincao ? '<div style="color:var(--txt3)">Data: <span style="color:var(--txt1)">' + rf.dataExtincao + '</span></div>' : '')
+      + '<div style="color:var(--txt3)" title="Marco inicial do prazo de 5 anos — LC 214/2025, arts. 47 e 54">Apropriação: <span style="color:var(--txt1)">' + (window.shCelulaApropriacao ? window.shCelulaApropriacao(rf) : '&mdash;') + '</span></div>'
+      + '<div style="color:var(--txt3)" title="Extinção do direito de utilização — LC 214/2025, art. 54">Prev. extinção: ' + (window.shCelulaPrevExtincao ? window.shCelulaPrevExtincao(rf) : '&mdash;') + '</div>'
       + '</div>'
       + '</div>';
   });
@@ -1130,6 +1149,15 @@ window.abrirDetalheRF = function(rfId) {
     + (rfSt === 'utilizado' && rf.metodoExtincao ? DR('Método Extinção', rf.metodoExtincao, 'var(--p-teal)') : '')
     + (rfSt === 'utilizado' && rf.dataExtincao ? DR('Data Extinção', rf.dataExtincao) : '')
     + '<div class="mbox-divider"></div>'
+    + '<div class="mbox-section-label">Prazo de Utilização do Crédito</div>'
+    + DR('Data de Apropriação', window.shCelulaApropriacao ? window.shCelulaApropriacao(rf) : '—')
+    + DR('Previsão de Extinção', window.shCelulaPrevExtincao ? window.shCelulaPrevExtincao(rf) : '—')
+    + '<div class="mbox-info-box"><span class="mbox-info-box-label">Como o prazo é contado</span>'
+    + '<span style="color:var(--txt2)">A apropriação só ocorre quando o débito do fornecedor é extinto '
+    + '(<strong>LC 214/2025, art. 47</strong>). A partir dela, o direito de utilizar o crédito dura '
+    + '<strong>5 anos</strong>, contados do primeiro dia do período de apuração seguinte '
+    + '(<strong>art. 54</strong>) — não da emissão do documento fiscal.</span></div>'
+    + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
     + window._incRenderVinculadasHtml(rf._inconsistencias && rf._inconsistencias.length ? rf._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return i.rfId === rf.id || (i.nfNumero && String(i.nfNumero) === String((window._rfIndex&&window._rfIndex[rf.id]||{}).nf&&(window._rfIndex[rf.id].nf.numero))); }))
     + '</div>'
@@ -1318,7 +1346,10 @@ window.renderizarTabelaCreditos = function() {
         _inconsistencias: rf._inconsistencias || [],
         contratoId: rf.contratoId || nf.contratoId || null,
         metodoPagamento: rf.metodoPagamento || nf.metodoPagamento || null,
-        metodoExtincao: rf.metodoExtincao || null
+        metodoExtincao: rf.metodoExtincao || null,
+        dataApropriacao: rf.dataApropriacao || null,
+        dataPrevExtincao: rf.dataPrevExtincao || null,
+        _apropEstimada: !!rf._apropEstimada
       });
     });
   });
@@ -1368,7 +1399,7 @@ window.renderizarTabelaCreditos = function() {
   window._credRfsLista = listaRFs;
 
   if (!listaRFs.length) {
-    h = '<tr><td colspan="17" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro fiscal encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="19" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro fiscal encontrado para este filtro.</td></tr>';
   } else {
     listaRFs.forEach(function(r) {
       var _tfC = r.tipoFiscal === 'IBS' ? PALETTE.statusBlue : PALETTE.statusAmber;
@@ -1437,6 +1468,8 @@ window.renderizarTabelaCreditos = function() {
         + '<td class="nowrap">' + contratoCell + '</td>'
         + '<td class="nowrap">' + metodoCell + '</td>'
         + '<td class="nowrap">' + metExtCell + '</td>'
+        + '<td class="nowrap">' + (window.shCelulaApropriacao ? window.shCelulaApropriacao(r) : '&mdash;') + '</td>'
+        + '<td class="nowrap">' + (window.shCelulaPrevExtincao ? window.shCelulaPrevExtincao(r) : '&mdash;') + '</td>'
         + '</tr>';
     });
   }
@@ -1470,7 +1503,6 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   var vencNaoExt = 0, vencForn = 0, vencRad = 0;
   var _hoje = new Date(); _hoje.setHours(0,0,0,0);
   var _mesAtual = _hoje.getFullYear() * 100 + (_hoje.getMonth() + 1);
-  var _5anosAtras = new Date(_hoje); _5anosAtras.setFullYear(_5anosAtras.getFullYear() - 5);
   function _vencKPI(dataISO) {
     if (!dataISO) return null;
     var p = dataISO.split('-');
@@ -1499,18 +1531,20 @@ window.atualizarKPIsCreditos = function(listaRFs) {
     if      (sr === 'vencido')         { vencido      += v; }
     if      (sr === 'inconsistencia')  { inconsist    += v; }
     if      (sr === 'a_prescrever')    { aPrescrever  += v; }
-    // Extintos: statusCredito=extinto OU data NF > 5 anos
-    var _scExt = sc === 'extinto';
-    var _dataNF = r.dataNF || r.data || '';
-    var _dataObj = _dataNF ? new Date(_dataNF) : null;
-    var _prescrito = _dataObj && _dataObj < _5anosAtras;
-    if (_scExt || _prescrito) {
+    // Prescritos: prazo do art. 54 vencido. Conta da APROPRIACAO -- nao da
+    // emissao da NF -- porque e a apropriacao que inicia o prazo, e ela
+    // depende da extincao do debito <art. 47>. Sem apropriacao nao ha
+    // credito, e nenhum prazo corre: o que se perde ali e de outra natureza.
+    var _prev = r.dataPrevExtincao || null;
+    var _prescrito = _prev && new Date(_prev + 'T00:00:00') < _hoje;
+    var _dataObj = _prev ? new Date(_prev + 'T00:00:00') : null;
+    if (_prescrito) {
       extinto += v; extintoCount++;
       var _ym = _dataObj ? (_dataObj.getFullYear() * 100 + _dataObj.getMonth() + 1) : 0;
       if (_ym > extintoUlt) extintoUlt = _ym;
     }
-    // Vencidos não extintos: sr=vencido e não extinto
-    if (sr === 'vencido' && !_scExt && !_prescrito) {
+    // Vencidos não prescritos: sr=vencido e prazo do art. 54 ainda aberto
+    if (sr === 'vencido' && !_prescrito) {
       vencNaoExt += v;
       var _met = (r.metodoPagamento || '').toLowerCase();
       if (_met === 'rad') vencRad += v;
@@ -1553,7 +1587,7 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   set('cred-prescrever-sub',pct(aPrescrever, totalCred) + ' — prazo de 5 anos próximo');
   // Extintos
   set('cred-extinto',       fmt(extinto));
-  set('cred-extinto-sub',   extintoCount > 0 ? 'Prazo de 5 anos expirado · ' + extintoCount + ' RFs · perda definitiva' : 'Nenhum crédito prescrito no período');
+  set('cred-extinto-sub',   extintoCount > 0 ? 'Prazo do art. 54 expirado · ' + extintoCount + ' RFs · perda definitiva' : 'Nenhum crédito com prazo expirado');
   set('cred-extinto-count', String(extintoCount));
   set('cred-extinto-pct',   pct(extinto, totalCred));
   if (extintoUlt > 0) {
@@ -3662,7 +3696,10 @@ window.renderizarRFsInconsistencias = function() {
       statusCredito:   _incRf.statusCredito || _incRf.status || null,
       statusRegistro:  _incRf.statusRegistro || null,
       metodoPagamento: _incRf.metodoPagamento || null,
-      metodoExtincao:  _incRf.metodoExtincao || null
+      metodoExtincao:  _incRf.metodoExtincao || null,
+      dataApropriacao:  _incRf.dataApropriacao || null,
+      dataPrevExtincao: _incRf.dataPrevExtincao || null,
+      _apropEstimada:   !!_incRf._apropEstimada
     });
   });
   window._inconsistenciasGlobal = incGlobal;
@@ -3950,9 +3987,11 @@ window._incRfRenderPagina = function() {
       + '<td style="vertical-align:middle">'+incStRegBadge+'</td>'
       + '<td class="nowrap">'+incMetodoCell+'</td>'
       + '<td class="nowrap">'+incExtincaoCell+'</td>'
+      + '<td class="nowrap">' + (window.shCelulaApropriacao ? window.shCelulaApropriacao(inc) : '&mdash;') + '</td>'
+      + '<td class="nowrap">' + (window.shCelulaPrevExtincao ? window.shCelulaPrevExtincao(inc) : '&mdash;') + '</td>'
       + '</tr>';
   });
-  if (!pag.length) h = '<tr><td colspan="19" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma inconsistência encontrada para este filtro.</td></tr>';
+  if (!pag.length) h = '<tr><td colspan="21" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma inconsistência encontrada para este filtro.</td></tr>';
 
   var tbody = document.getElementById('t-inc-rfs');
   if (tbody) tbody.innerHTML = h;
@@ -5030,7 +5069,10 @@ window.renderizarTabelaDebitos = function() {
           statusFlags:     rf.statusFlags    || [],
           metodoExtincao:  rf.metodoExtincao || '—',
           contratoId:      rf.contratoId || nf.contratoId || null,
-          _inconsistencias: rf._inconsistencias || []
+          _inconsistencias: rf._inconsistencias || [],
+          dataApropriacao:  rf.dataApropriacao || null,
+          dataPrevExtincao: rf.dataPrevExtincao || null,
+          _apropEstimada:   !!rf._apropEstimada
         });
       });
     });
@@ -5106,11 +5148,13 @@ window.renderizarTabelaDebitos = function() {
       + '<td style="vertical-align:middle">' + rfIncTypesBadgeDeb + '</td>'
       + '<td class="nowrap">' + contratoDebCell + '</td>'
       + '<td class="nowrap">' + mBadge + '</td>'
+      + '<td class="nowrap">' + (window.shCelulaApropriacao ? window.shCelulaApropriacao(r) : '&mdash;') + '</td>'
+      + '<td class="nowrap">' + (window.shCelulaPrevExtincao ? window.shCelulaPrevExtincao(r) : '&mdash;') + '</td>'
       + '</tr>';
   });
 
   if (!listaRFs.length) {
-    h = '<tr><td colspan="17" style="text-align:center;color:var(--txt3);padding:24px">Nenhum RF de débito encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="19" style="text-align:center;color:var(--txt3);padding:24px">Nenhum RF de débito encontrado para este filtro.</td></tr>';
   }
 
   var tbody = document.getElementById('t-debitos');
@@ -6734,7 +6778,10 @@ window.renderizarTabelaPagamentos = function() {
         contratoId: rf.contratoId || nf.contratoId || null,
         statusFlags: rf.statusFlags || [],
         metodoExtincao: rf.metodoExtincao || null,
-        _inconsistencias: rf._inconsistencias || []
+        _inconsistencias: rf._inconsistencias || [],
+        dataApropriacao: rf.dataApropriacao || null,
+        dataPrevExtincao: rf.dataPrevExtincao || null,
+        _apropEstimada: !!rf._apropEstimada,
       });
     });
   });
@@ -6802,6 +6849,8 @@ window.renderizarTabelaPagamentos = function() {
           return '<span style="color:var(--txt3)">—</span>';
         })() + '</td>'
       + '<td class="nowrap">' + (r.metodoExtincao ? (function(){ var _pMetExtMap={'Split Payment':'29,158,117','Compensacao':'24,95,165','Ressarcimento':'29,158,117','Transferencia':'139,92,246','RAD':'186,117,23'}; var _pMetExtLbl={'Split Payment':'Split Payment','Compensacao':'Compensação','Ressarcimento':'Ressarcimento','Transferencia':'Transferência','RAD':'RAD'}; var _k=r.metodoExtincao; return '<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+(_pMetExtMap[_k]||'29,158,117')+',.12);color:rgba('+(_pMetExtMap[_k]||'29,158,117')+',1);border:1px solid rgba('+(_pMetExtMap[_k]||'29,158,117')+',.28)">'+(_pMetExtLbl[_k]||_k)+'</span>'; })() : '<span style="color:var(--txt3);font-size:11px">—</span>') + '</td>'
+      + '<td class="nowrap">' + (window.shCelulaApropriacao ? window.shCelulaApropriacao(r) : '&mdash;') + '</td>'
+      + '<td class="nowrap">' + (window.shCelulaPrevExtincao ? window.shCelulaPrevExtincao(r) : '&mdash;') + '</td>'
       + '<td class="nowrap">' + (window.radCelulaOrigem ? window.radCelulaOrigem(r) : '—') + '</td>'
       + '<td class="nowrap">' + (window.radCelulaEntrega ? window.radCelulaEntrega(r) : '—') + '</td>'
       + '<td class="tc" style="vertical-align:middle">' + detBtn + '</td>'
@@ -6810,7 +6859,7 @@ window.renderizarTabelaPagamentos = function() {
   });
 
   if (!rows.length) {
-    h = '<tr><td colspan="21" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
+    h = '<tr><td colspan="23" style="text-align:center;color:var(--txt3);padding:24px">Nenhum pagamento RAD encontrado para este filtro.</td></tr>';
   }
   var tbody = document.getElementById('t-impostos');
   if (tbody) tbody.innerHTML = h;
