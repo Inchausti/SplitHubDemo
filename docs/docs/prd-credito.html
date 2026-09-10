@@ -202,7 +202,7 @@ img, svg { max-width: 100%; height: auto; }
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-creditos</span></div>
     <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025, art. 47–48</span></div>
     <div class="meta-pill" style="margin-left:auto">
-      <span class="chip ok">Publicado</span>&nbsp;<span class="chip teal">v2.3</span>
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip teal">v2.4</span>
     </div>
   </div>
 
@@ -449,60 +449,84 @@ img, svg { max-width: 100%; height: auto; }
     </div>
   </div>
 
-    <h3>Prazo de utilização do crédito</h3>
-    <p>Dois campos derivados, aplicados na origem — no DF e em cada RF — para que toda projeção os herde em vez
-    de recalcular:</p>
-    <div class="code-block"><code>{
-  <span class="v">dataApropriacao</span>: <span class="k">string</span> | <span class="k">null</span>,   <span class="c">// ISO. Data da extinção do débito — marco inicial</span>
-  <span class="v">dataPrevExtincao</span>: <span class="k">string</span> | <span class="k">null</span>,  <span class="c">// ISO. 1º dia do período seguinte + 5 anos</span>
-  <span class="v">_apropEstimada</span>: <span class="k">boolean</span>          <span class="c">// true quando a data foi derivada (compensação)</span>
-}</code></div>
+    <h3>Ciclo do crédito — três datas distintas</h3>
+    <p>Confundi-las foi o erro da primeira versão desta implementação. São eventos diferentes, com fundamentos
+    diferentes:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Campo</th><th>O que é</th><th>Quando ocorre</th><th>Dispositivo</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>dataApropriacao</code></td>
+            <td>Data do <strong>recolhimento</strong> que extinguiu o débito e fez o crédito nascer</td>
+            <td><strong>Split Payment</strong>: na liquidação financeira da nota &middot; <strong>RAD</strong>: no
+            pagamento da guia pelo adquirente &middot; <strong>Fornecedor</strong>: no vencimento do tributo</td>
+            <td><span class="nid">LC 214/2025, art. 47</span> <span class="nid">art. 27</span>
+            <span class="nid">Dec. 12.955/2026, art. 31, I</span></td>
+          </tr>
+          <tr>
+            <td><code>dataExtincaoCredito</code></td>
+            <td>Data em que o <strong>crédito</strong> foi consumido — compensado, ressarcido ou transferido</td>
+            <td>Ao ser utilizado. Anda com <code>metodoExtincao</code></td>
+            <td><span class="nid">art. 27, I</span> <span class="nid">art. 39</span></td>
+          </tr>
+          <tr>
+            <td><code>dataPrevExtincao</code></td>
+            <td>Data em que o <strong>direito de utilizar</strong> o crédito se extingue por decurso</td>
+            <td>5 anos do primeiro dia do período de apuração seguinte ao da apropriação</td>
+            <td><span class="nid">LC 214/2025, art. 54</span> <span class="nid">Res. CGIBS 6/2026, art. 54</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <div class="callout info">
-      <div class="ct">A regra em uma frase</div>
-      <p><strong>Sem extinção do débito não há apropriação, e sem apropriação nenhum prazo corre.</strong>
-      A apropriação depende da extinção por qualquer das modalidades do <span class="nid">art. 27</span>
-      <span class="nid">LC 214/2025, art. 47</span>. A partir dela, o direito de utilizar o crédito dura 5 anos,
-      contados do primeiro dia do período de apuração seguinte <span class="nid">art. 54</span>. Espelhado no
-      <span class="nid">Dec. 12.955/2026, art. 54</span> e na <span class="nid">Res. CGIBS 6/2026, art. 54</span>.</p>
-      <p>Em fusão, cisão ou incorporação os créditos passam à sucessora e <strong>a data original da apropriação
-      é preservada</strong> para a contagem — o relógio não reinicia
-      <span class="nid">Res. CGIBS 6/2026, art. 55, par. único</span>.</p>
+      <div class="ct">Cada modalidade recolhe num momento diferente</div>
+      <p>É o ponto que a primeira versão errou. Não existe um prazo único entre a emissão e o recolhimento: a
+      norma amarra cada modalidade a um evento próprio. O <strong>Split Payment</strong> segrega
+      <em>na data da liquidação financeira da transação de pagamento</em>
+      <span class="nid">Dec. 12.955/2026, art. 31, I</span> — logo, no prazo comercial do contrato. O
+      <strong>RAD</strong> extingue quando o adquirente paga a guia, e o sistema usa o próprio registro do
+      pagamento, para que as duas datas nunca divirjam. O <strong>Fornecedor</strong> recolhe como contribuinte,
+      no <em>vencimento do tributo</em> — último dia do mês seguinte ao da emissão —, que não se confunde com o
+      prazo comercial da nota.</p>
     </div>
 
     <div class="callout warn">
       <div class="ct">O comprador não controla o marco inicial</div>
       <p>Quem dispara a apropriação é a extinção do débito <em>do fornecedor</em>. O comprador só controla esse
       momento quando assume o recolhimento pelo RAD — que é exatamente o que o módulo de
-      <a class="xref" href="prd-pagamentos.html">Pagamentos RAD</a> operacionaliza. É mais um ângulo pelo qual o
-      RAD deixa de ser alternativa de pagamento e vira instrumento de controle de prazo.</p>
+      <a class="xref" href="prd-pagamentos.html">Pagamentos RAD</a> operacionaliza.</p>
+      <p>Em fusão, cisão ou incorporação os créditos passam à sucessora e <strong>a data original da apropriação
+      é preservada</strong> para a contagem — o relógio não reinicia
+      <span class="nid">Res. CGIBS 6/2026, art. 55, par. único</span>.</p>
     </div>
 
-    <h3>Colunas de prazo nas listagens</h3>
-    <p>Duas colunas novas, presentes em toda listagem e todo detalhamento de DF ou RF:</p>
+    <h3>Colunas do ciclo nas listagens</h3>
+    <p>Três colunas, presentes em toda listagem e todo detalhamento de DF ou RF:</p>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Coluna</th><th>O que mostra</th><th>Quando fica vazia</th></tr></thead>
         <tbody>
-          <tr>
-            <td><strong>Apropriação</strong></td>
-            <td>Data em que o débito foi extinto e o crédito passou a ser apropriável. <code>est.</code> marca
-            data derivada, quando a extinção foi por compensação.</td>
-            <td>Enquanto o débito não é extinto — <code>não apropriado</code> e <code>glosado</code></td>
-          </tr>
-          <tr>
-            <td><strong>Prev. extinção</strong></td>
-            <td>Data em que o direito de utilizar o crédito se extingue. <span style="color:var(--amber);font-weight:700">Âmbar</span>
-            no último ano, <span style="color:var(--red);font-weight:700">vermelho</span> depois de vencida.</td>
-            <td>Sem apropriação, nenhum prazo corre</td>
-          </tr>
+          <tr><td><strong>Apropriação</strong></td>
+              <td>Data do recolhimento que fez o crédito nascer</td>
+              <td>Enquanto não há recolhimento — <code>não apropriado</code> e <code>glosado</code></td></tr>
+          <tr><td><strong>Data Extinção</strong></td>
+              <td>Data em que o crédito foi consumido</td>
+              <td>Enquanto o crédito está apropriado e disponível</td></tr>
+          <tr><td><strong>Limite art. 54</strong></td>
+              <td>Fim do prazo de 5 anos. <span style="color:var(--amber);font-weight:700">Âmbar</span> no último
+              ano, <span style="color:var(--red);font-weight:700">vermelho</span> depois de vencido. Crédito já
+              extinto não corre esse risco e sai em cinza</td>
+              <td>Sem apropriação, nenhum prazo corre</td></tr>
         </tbody>
       </table>
     </div>
-    <p>Aparecem em Créditos, Débitos, Pagamentos RAD, Inconsistências e nas listagens de DF a apropriar do
-    dashboard; no detalhe do RF, como seção própria com a base legal; e no detalhe do DF, em cada cartão de RF.
-    Nos débitos a data é a mesma, com outro titular: a extinção do nosso débito é o que dispara a apropriação
-    pelo <em>adquirente</em>.</p>
+    <p>Aparecem em <strong>Créditos, Débitos, Pagamentos RAD, Inconsistências</strong>, nas listagens de DF de
+    Créditos e Débitos e nas de DF a apropriar do dashboard; no detalhe do RF, como seção <em>Ciclo do Crédito</em>
+    com a base legal; e no detalhe do DF, em cada cartão de RF. Na listagem de DFs de débito entra apenas
+    <strong>Apropriação (adquirente)</strong> — a coluna <em>Data Extinção</em> já existia ali, e é a mesma data
+    lida do outro lado da operação.</p>
 
   <!-- ══ 04 ══ -->
   <div class="section" id="s04">
@@ -1645,12 +1669,13 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
           </tr>
           <tr>
             <td class="rid">DEF-03</td>
-            <td>A extinção por <strong>compensação</strong> <span class="nid">art. 27, I</span> não carrega data
-            no protótipo.</td>
-            <td>O débito foi extinto, logo houve apropriação e o prazo corre — mas não há marco registrado. A data
-            é derivada do documento fiscal e marcada <code>est.</code> na célula, para não passar por dado vindo da
-            plataforma. Numa implementação real, o marco vem do evento de extinção.</td>
-            <td><span class="chip warn">Contornado</span></td>
+            <td>A primeira correção derivou a data de apropriação de um <strong>prazo único</strong> a partir da
+            emissão, igual para as três modalidades, e caiu na data de emissão quando não havia registro de
+            pagamento.</td>
+            <td>Continuava sendo, na prática, a data do documento — o mesmo erro do DEF-01 com outra roupa. A norma
+            amarra cada modalidade a um evento próprio: liquidação financeira, pagamento da guia ou vencimento do
+            tributo. Corrigido em <code>shDataRecolhimento</code>.</td>
+            <td><span class="chip ok">Corrigido</span></td>
           </tr>
         </tbody>
       </table>
@@ -1691,7 +1716,11 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
   <!-- ══ 14 ══ -->
   <div class="section" id="s14">
     <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Histórico de versões</span></div>
-            <div class="ver-row">
+                <div class="ver-row">
+      <div class="ver-num">v2.4</div>
+      <div class="ver-desc"><strong>10/09/2026</strong> — <strong>Correção da correção.</strong> A v2.3 acertou o diagnóstico e errou a modelagem: derivou a data de apropriação de um prazo único a partir da emissão, igual para as três modalidades, e caía na data do documento quando não havia registro de pagamento — o mesmo erro do DEF-01 com outra roupa.<br><br>A norma amarra cada modalidade a um evento próprio: <strong>Split Payment</strong> segrega na liquidação financeira da nota <span class="nid">Dec. 12.955/2026, art. 31, I</span>, <strong>RAD</strong> extingue no pagamento da guia <span class="nid">art. 36</span>, e <strong>Fornecedor</strong> recolhe no vencimento do tributo <span class="nid">art. 27, II</span>. Entra <code>shDataRecolhimento</code> com essa distinção, e o RAD passa a ler o próprio registro do pagamento.<br><br>O modelo separa as <strong>três datas do ciclo</strong> que a v2.3 mantinha em duas: <code>dataApropriacao</code> (recolhimento), <code>dataExtincaoCredito</code> (consumo do crédito) e <code>dataPrevExtincao</code> (limite do art. 54, renomeado na tela para <em>Limite art. 54</em>).</div>
+    </div>
+<div class="ver-row">
       <div class="ver-num">v2.3</div>
       <div class="ver-desc"><strong>10/09/2026</strong> — Entra a seção <strong>13 · Defeitos e divergências</strong>, com o defeito de fundo do módulo: o KPI de prescrição contava os 5 anos da <strong>emissão da NF</strong>, e não da <strong>apropriação</strong>. O <span class="nid">art. 54 da LC 214/2025</span> conta do primeiro dia do período seguinte ao da apropriação, que por sua vez só existe depois de extinto o débito do fornecedor <span class="nid">art. 47</span> — contar da emissão encurtava o prazo em todo o intervalo entre emitir e extinguir. O mesmo KPI somava débito extinto (que <em>libera</em> o crédito) a crédito prescrito (que o perde), sob o rótulo “perda definitiva”.<br><br>O modelo de dados ganha <code>dataApropriacao</code>, <code>dataPrevExtincao</code> e <code>_apropEstimada</code>, aplicados na origem — no DF e em cada RF — e as listagens ganham as colunas <strong>Apropriação</strong> e <strong>Prev. extinção</strong>, com a previsão colorindo por proximidade do prazo. O detalhe do RF ganha seção própria com a base legal.</div>
     </div>
@@ -1722,7 +1751,7 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
   <hr>
   <div style="font-size:11px;color:var(--txt3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
     <span>SplitHub · PRD · Fiscal → Crédito</span>
-    <span>v2.3 · Set/2026 · Base: LC 214/2025, art. 47–48</span>
+    <span>v2.4 · Set/2026 · Base: LC 214/2025, art. 47–48</span>
   </div>
 
 </div>
