@@ -5343,7 +5343,7 @@ function adminFornRenderTabela(){
   });
 
   if(!lista.length)h='<tr><td colspan="11" style="text-align:center;color:var(--txt3);padding:24px">Nenhum fornecedor encontrado para este filtro.</td></tr>';
-  window._adminFornLista=lista.map(function(f){var ct=getContratoVigentePorCnpj(f.cnpj);return{cnpj:f.cnpj,nome:f.nome,tipo:f.tipo,status:f.status,score:f.score,contrato:ct?ct.id:'—',volume:f.volume,creditos:f.cred,pendencias:f.pend};});
+  window._adminFornLista=lista.map(function(f){var ct=getContratoVigentePorCnpj(f.cnpj);return{cnpj:f.cnpj,nome:f.nome,tipo:f.tipo,status:f.status,score:f.score,contrato:ct?ct.id:'—',multiContrato:!!f.multiContrato,volume:f.volume,creditos:f.cred,pendencias:f.pend};});
   var tb=document.getElementById("t-adm-fornecedores");
   if(tb)tb.innerHTML=h;
   if(window.ShColMgr&&ShColMgr.afterRender)ShColMgr.afterRender('admin-fornecedores');
@@ -5871,6 +5871,18 @@ function contratosRenderTabela(){
     if(fimAte&&fim2&&fim2>fimAte)return false;
     return true;
   });
+  // Colunas derivadas entram ANTES da ordenacao. rad fica intocado: o
+  // laco de render le ct.rad; o rotulo vai em metodoPagamento.
+  lista=lista.map(function(ct){
+    var f=fornecedores.find(function(x){return x.cnpj===ct.cnpj;});
+    var aug={};
+    for(var k in ct)aug[k]=ct[k];
+    aug.fornecedor=f?f.nome:'—';
+    aug.status=contratoStatus(ct);
+    aug.metodoPagamento=contratoMetodoLabel(ct);
+    aug.nfsVinculadas=contratosContarNFs(ct.cnpj);
+    return aug;
+  });
   if(window.ShColMgr&&ShColMgr.sortRows)lista=ShColMgr.sortRows('admin-contratos',lista);
   lista.forEach(function(ct){
     var f=fornecedores.find(function(x){return x.cnpj===ct.cnpj;});
@@ -5886,7 +5898,7 @@ function contratosRenderTabela(){
       +'<td class="r mono">'+nf+'</td></tr>';
   });
   if(!lista.length)h='<tr><td colspan="9" style="text-align:center;color:var(--txt3);padding:24px">Nenhum contrato encontrado para este filtro.</td></tr>';
-  window._contratosData=lista.map(function(ct){var f=fornecedores.find(function(x){return x.cnpj===ct.cnpj;});return{id:ct.id,cnpj:ct.cnpj,fornecedor:f?f.nome:'—',status:contratoStatus(ct),inicio:ct.inicio,fim:ct.fim,rad:contratoMetodoLabel(ct),prazo:ct.prazo,nfsVinculadas:contratosContarNFs(ct.cnpj)};});
+  window._contratosLista=lista;
   document.getElementById("t-contratos").innerHTML=h;
   if(window.ShColMgr&&ShColMgr.afterRender)ShColMgr.afterRender('admin-contratos');
   var sub=document.getElementById("ctr-count-sub");
@@ -6568,7 +6580,8 @@ function nfRenderLista(){
         // Adquirente RAD pagou = comprovante atrelado; data determinística (data RF + 3 dias)
         var _dpP=(nf.data||'').split('-');
         var _diaP=Math.min((parseInt(_dpP[2]||'1',10)+3),28);
-        dataPagamento=(_dpP[1]||'01')+'/'+String(_diaP).padStart(2,'0')+'/'+(_dpP[0]||'2026')+' 09:00';
+        // dd/mm/aaaa — nf.data vem ISO (aaaa-mm-dd), então o dia é o índice 2
+        dataPagamento=String(_diaP).padStart(2,'0')+'/'+(_dpP[1]||'01')+'/'+(_dpP[0]||'2026')+' 09:00';
         // crédito já apropriado/utilizado: sem inconsistência (comprovante validado neste estágio)
       } else if(_metPag==='Split Payment'){
         // Retenção automática pelo PSP na liquidação — o tributo não depende
@@ -10516,7 +10529,7 @@ if (window.Chart) {
   Chart.defaults.font.size = 11;
 }
 </script>
-<script src="js/data-sync-fixed.js?v=99"></script>
+<script src="js/data-sync-fixed.js?v=103"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=7"></script>
 <script src="js/charts.js?v=2"></script>
@@ -10591,7 +10604,7 @@ if (window.Chart) {
   });
 })();
 </script>
-<script src="js/col-mgr.js?v=2"></script>
+<script src="js/col-mgr.js?v=4"></script>
 <script src="js/exec-rad.js?v=11"></script>
 <script src="js/exec-rad-2.js?v=8"></script>
 <script src="js/exec-rad-3.js?v=3"></script>
@@ -10630,26 +10643,35 @@ if (window.Chart) {
     ShColMgr.register('cred-rfs',{
       tbodyId:'t-creditos', theadId:'thead-t-creditos',
       toolbarSel:'#cred-rfs-toolbar',
-      allRowsFn:function(){return window._creditosListaFiltrada||[];},
-      pageRowsFn:function(){return window._creditosListaFiltrada||[];},
-      reRenderFn:function(){try{creditosRenderTabela();}catch(e){}},
+      // A lista viva vem de renderizarTabelaCreditos. _creditosListaFiltrada
+      // e do renderizador legado creditosRenderTabela, que emite 15 colunas
+      // contra um cabecalho de 17 -- ver DEF no PRD de Credito.
+      allRowsFn:function(){return window._credRfsLista||[];},
+      pageRowsFn:function(){return window._credRfsLista||[];},
+      reRenderFn:function(){try{window.renderizarTabelaCreditos();}catch(e){}},
+      csvCellFn:function(row,col){
+        if(col.key==='statusFlags')      return (row.statusFlags||[]).join(', ');
+        if(col.key==='_inconsistencias') return (row._inconsistencias||[]).length;
+        return null;
+      },
       cols:[
-        {key:'id',         label:'RF',           fixed:true,  visible:true,  type:'str'},
-        {key:'tipoFiscal', label:'Tipo Fiscal',   fixed:false, visible:true,  type:'str'},
-        {key:'nfNumero',   label:'Documento Fiscal',fixed:false,visible:true, type:'str'},
-        {key:'entidade',   label:'Fornecedor',    fixed:false, visible:true,  type:'str'},
-        {key:'data',       label:'Data',          fixed:false, visible:true,  type:'date'},
-        {key:'valorTotal', label:'Valor Total',   fixed:false, visible:false, type:'num'},
-        {key:'valorLiq',   label:'Valor Líq.',    fixed:false, visible:false, type:'num'},
-        {key:'cbs',        label:'CBS',           fixed:false, visible:true,  type:'num'},
-        {key:'ibs',        label:'IBS',           fixed:false, visible:true,  type:'num'},
-        {key:'valor',      label:'Crédito',       fixed:false, visible:true,  type:'num'},
-        {key:'metodoPagamento',label:'Pagamento', fixed:false, visible:true,  type:'str'},
-        {key:'statusCredito',  label:'Status',    fixed:false, visible:true,  type:'str'},
-        {key:'statusRegistro', label:'St. Registro',fixed:false,visible:false,type:'str'},
-        {key:'inconsistencia', label:'Inconsistências',fixed:false,visible:false,type:'str'},
-        {key:'contratoId', label:'Contrato',      fixed:false, visible:false, type:'str'},
-        {key:'metodoExtincao',label:'Extinção',   fixed:false, visible:false, type:'str'},
+        {key:'rf',             label:'RF',                 fixed:true,  visible:true,  type:'str'},
+        {key:'tipoFiscal',     label:'Tipo Fiscal',        fixed:false, visible:true,  type:'str'},
+        {key:'nf',             label:'Nota Fiscal',        fixed:false, visible:true,  type:'str'},
+        {key:'forn',           label:'Fornecedor',         fixed:false, visible:true,  type:'str'},
+        {key:'dataNF',         label:'Data NF',            fixed:false, visible:true,  type:'date'},
+        {key:'valorTotal',     label:'Valor Total',        fixed:false, visible:true,  type:'num'},
+        {key:'valorLiq',       label:'Valor Líquido',      fixed:false, visible:true,  type:'num'},
+        {key:'cbs',            label:'CBS',                fixed:false, visible:true,  type:'num'},
+        {key:'ibs',            label:'IBS',                fixed:false, visible:true,  type:'num'},
+        {key:'cred',           label:'Crédito',            fixed:false, visible:true,  type:'num'},
+        {key:'pag',            label:'Pagamento',          fixed:false, visible:true,  type:'str'},
+        {key:'statusCredito',  label:'Status Crédito',     fixed:false, visible:true,  type:'str'},
+        {key:'statusFlags',    label:'Status RF',          fixed:false, visible:true,  type:'str'},
+        {key:'_inconsistencias',label:'Inconsistências',   fixed:false, visible:true,  type:'str'},
+        {key:'contratoId',     label:'Contrato',           fixed:false, visible:true,  type:'str'},
+        {key:'metodoPagamento',label:'Método de Pagamento',fixed:false, visible:true,  type:'str'},
+        {key:'metodoExtincao', label:'Método de Extinção', fixed:false, visible:true,  type:'str'},
       ]
     });
 
@@ -10745,29 +10767,35 @@ if (window.Chart) {
     ShColMgr.register('inc-rfs',{
       tbodyId:'t-inc-rfs', theadId:'thead-t-inc-rfs',
       toolbarSel:'#inc-rfs-toolbar',
-      allRowsFn:function(){return window._incRfsLista||[];},
-      pageRowsFn:function(){return window._incRfsPageRows||window._incRfsLista||[];},
-      reRenderFn:function(){try{inconsistRenderTabela();}catch(e){}},
+      // _incRfsLista e a lista legada, com metade dos campos em branco.
+      // A viva e _rfIncFiltrado, paginada por _incRfRenderPagina.
+      allRowsFn:function(){return window._rfIncFiltrado||[];},
+      pageRowsFn:function(){
+        var l=window._rfIncFiltrado||[], ipp=window._rfIncIpp||l.length;
+        var p=window._rfIncPagina||1;
+        return l.slice((p-1)*ipp,(p-1)*ipp+ipp);
+      },
+      reRenderFn:function(){try{window._incRfRenderPagina();}catch(e){}},
       cols:[
-        {key:'id',          label:'ID',             fixed:true, visible:true,  type:'str'},
-        {key:'nfNumero',    label:'Documento Fiscal',fixed:false,visible:true, type:'str'},
-        {key:'fluxo',       label:'Fluxo',          fixed:false,visible:true,  type:'str'},
-        {key:'rfId',        label:'RF',             fixed:false,visible:false, type:'str'},
-        {key:'tipoFiscal',  label:'Tipo Fiscal',    fixed:false,visible:true,  type:'str'},
-        {key:'entidade',    label:'Fornecedor',     fixed:false,visible:true,  type:'str'},
-        {key:'valorTotal',  label:'Valor Total',    fixed:false,visible:false, type:'num'},
-        {key:'valorLiq',    label:'Valor Líq.',     fixed:false,visible:false, type:'num'},
-        {key:'credito',     label:'Crédito',        fixed:false,visible:true,  type:'num'},
-        {key:'inconsistencia',label:'Inconsistência',fixed:false,visible:true, type:'str'},
-        {key:'origem',      label:'Origem',         fixed:false,visible:false, type:'str'},
-        {key:'status',      label:'Status',         fixed:false,visible:true,  type:'str'},
-        {key:'prioridade',  label:'Prioridade',     fixed:false,visible:true,  type:'str'},
-        {key:'contratoId',  label:'Contrato',       fixed:false,visible:false, type:'str'},
-        {key:'data',        label:'Data',           fixed:false,visible:true,  type:'date'},
-        {key:'statusCredito',label:'St. Crédito',   fixed:false,visible:false, type:'str'},
-        {key:'statusRegistro',label:'St. Registro', fixed:false,visible:false, type:'str'},
-        {key:'metodoPagamento',label:'Método',      fixed:false,visible:false, type:'str'},
-        {key:'metodoExtincao',label:'Extinção',     fixed:false,visible:false, type:'str'},
+        {key:'id',            label:'ID',                 fixed:true, visible:true,  type:'str'},
+        {key:'dfNum',         label:'DF Vinculado',       fixed:false,visible:true,  type:'str'},
+        {key:'tipoFluxo',     label:'Fluxo',              fixed:false,visible:true,  type:'str'},
+        {key:'rfId',          label:'RF Vinculado',       fixed:false,visible:true,  type:'str'},
+        {key:'tipoFiscal',    label:'Tipo Fiscal',        fixed:false,visible:true,  type:'str'},
+        {key:'entidade',      label:'Entidade',           fixed:false,visible:true,  type:'str'},
+        {key:'valorTotal',    label:'Valor Total',        fixed:false,visible:true,  type:'num'},
+        {key:'valorLiq',      label:'Valor Líquido',      fixed:false,visible:true,  type:'num'},
+        {key:'valor',         label:'Valor RF',           fixed:false,visible:true,  type:'num'},
+        {key:'tipoLabel',     label:'Tipo Inconsistência',fixed:false,visible:true,  type:'str'},
+        {key:'origem',        label:'Origem',             fixed:false,visible:true,  type:'str'},
+        {key:'status',        label:'Status',             fixed:false,visible:true,  type:'str'},
+        {key:'prioridade',    label:'Prioridade',         fixed:false,visible:true,  type:'str'},
+        {key:'contratoId',    label:'Contrato',           fixed:false,visible:true,  type:'str'},
+        {key:'dataISO',       label:'Data',               fixed:false,visible:true,  type:'date'},
+        {key:'statusCredito', label:'St. Crédito',        fixed:false,visible:true,  type:'str'},
+        {key:'statusRegistro',label:'St. Registro',       fixed:false,visible:true,  type:'str'},
+        {key:'metodoPagamento',label:'Método',            fixed:false,visible:true,  type:'str'},
+        {key:'metodoExtincao',label:'Extinção',           fixed:false,visible:true,  type:'str'},
       ]
     });
 
@@ -10775,19 +10803,19 @@ if (window.Chart) {
     ShColMgr.register('admin-contratos',{
       tbodyId:'t-contratos', theadId:'thead-t-contratos',
       toolbarSel:'#ctr-toolbar',
-      allRowsFn:function(){return window._contratosData||[];},
-      pageRowsFn:function(){return window._contratosData||[];},
+      allRowsFn:function(){return window._contratosLista||[];},
+      pageRowsFn:function(){return window._contratosLista||[];},
       reRenderFn:function(){try{contratosRenderTabela();}catch(e){}},
       cols:[
-        {key:'id',         label:'Contrato',       fixed:true, visible:true, type:'str'},
-        {key:'cnpj',       label:'CNPJ',           fixed:false,visible:true, type:'str'},
-        {key:'fornecedor', label:'Fornecedor',      fixed:false,visible:true, type:'str'},
-        {key:'status',     label:'Status',         fixed:false,visible:true, type:'str'},
-        {key:'inicio',     label:'Início',         fixed:false,visible:true, type:'date'},
-        {key:'fim',        label:'Fim',            fixed:false,visible:true, type:'date'},
-        {key:'rad',        label:'Mecanismo',      fixed:false,visible:true, type:'str'},
-        {key:'prazo',      label:'Prazo',          fixed:false,visible:false,type:'num'},
-        {key:'nfsVinculadas',label:'NFs vinculadas',fixed:false,visible:false,type:'num'},
+        {key:'id',           label:'Contrato',           fixed:true, visible:true, type:'str'},
+        {key:'cnpj',         label:'CNPJ',               fixed:false,visible:true, type:'str'},
+        {key:'fornecedor',   label:'Fornecedor',         fixed:false,visible:true, type:'str'},
+        {key:'inicio',       label:'Início',             fixed:false,visible:true, type:'date'},
+        {key:'fim',          label:'Fim',                fixed:false,visible:true, type:'date'},
+        {key:'metodoPagamento',label:'Método de Pagamento',fixed:false,visible:true, type:'str'},
+        {key:'prazo',        label:'Prazo pagto.',       fixed:false,visible:true, type:'num'},
+        {key:'status',       label:'Status',             fixed:false,visible:true, type:'str'},
+        {key:'nfsVinculadas',label:'NFs vinculadas',     fixed:false,visible:true, type:'num'},
       ]
     });
 
@@ -10798,16 +10826,22 @@ if (window.Chart) {
       allRowsFn:function(){return window._adminFornLista||[];},
       pageRowsFn:function(){return window._adminFornLista||[];},
       reRenderFn:function(){try{adminFornRenderTabela();}catch(e){}},
+      csvCellFn:function(row,col){
+        if(col.key==='multiContrato') return row.multiContrato ? 'Sim' : 'Não';
+        return null;
+      },
       cols:[
-        {key:'cnpj',        label:'CNPJ',          fixed:true, visible:true, type:'str'},
-        {key:'nome',        label:'Razão Social',   fixed:false,visible:true, type:'str'},
-        {key:'tipo',        label:'Tipo',           fixed:false,visible:true, type:'str'},
-        {key:'status',      label:'Status',         fixed:false,visible:true, type:'str'},
-        {key:'score',       label:'Score',          fixed:false,visible:false,type:'num'},
-        {key:'contrato',    label:'Contrato vigente',fixed:false,visible:true, type:'str'},
-        {key:'volume',      label:'Volume',         fixed:false,visible:true, type:'num'},
-        {key:'creditos',    label:'Créditos',       fixed:false,visible:false,type:'num'},
-        {key:'pendencias',  label:'Pendências',     fixed:false,visible:true, type:'num'},
+        {key:'cnpj',         label:'Grupo / CNPJ',   fixed:true, visible:true, type:'str'},
+        {key:'nome',         label:'Razão Social',   fixed:false,visible:true, type:'str'},
+        {key:'tipo',         label:'Tipo',           fixed:false,visible:true, type:'str'},
+        {key:'status',       label:'Status',         fixed:false,visible:true, type:'str'},
+        {key:'score',        label:'Score',          fixed:false,visible:true, type:'num'},
+        {key:'contrato',     label:'Contrato',       fixed:false,visible:true, type:'str'},
+        {key:'multiContrato',label:'Multi-contratos',fixed:false,visible:true, type:'str'},
+        {key:'volume',       label:'Vol. compras',   fixed:false,visible:true, type:'num'},
+        {key:'creditos',     label:'Créditos',       fixed:false,visible:true, type:'num'},
+        {key:'pendencias',   label:'Pend.',          fixed:false,visible:true, type:'num'},
+        {key:'_detalhe',     label:'Detalhe',        fixed:true, visible:false,type:'str'},
       ]
     });
 
@@ -10819,12 +10853,14 @@ if (window.Chart) {
       pageRowsFn:function(){return window._orgCnpjsLista||[];},
       reRenderFn:function(){try{window.orgRenderTabela();}catch(e){}},
       cols:[
-        {key:'cnpj',  label:'CNPJ',         fixed:true, visible:true, type:'str'},
-        {key:'nome',  label:'Razão Social',  fixed:false,visible:true, type:'str'},
-        {key:'ie',    label:'IE',           fixed:false,visible:false,type:'str'},
-        {key:'uf',    label:'UF',           fixed:false,visible:true, type:'str'},
-        {key:'tipo',  label:'Tipo',         fixed:false,visible:true, type:'str'},
-        {key:'status',label:'Status',       fixed:false,visible:true, type:'str'},
+        {key:'cnpj',        label:'CNPJ',         fixed:true, visible:true, type:'str'},
+        {key:'nome',        label:'Razão Social', fixed:false,visible:true, type:'str'},
+        {key:'ie',          label:'IE',           fixed:false,visible:true, type:'str'},
+        {key:'uf',          label:'UF',           fixed:false,visible:true, type:'str'},
+        {key:'tipo',        label:'Tipo',         fixed:false,visible:true, type:'str'},
+        {key:'status',      label:'Status',       fixed:false,visible:true, type:'str'},
+        {key:'radPolitica', label:'Execução RAD', fixed:false,visible:true, type:'str'},
+        {key:'_acoes',      label:'Ações',        fixed:true, visible:false,type:'str'},
       ]
     });
 

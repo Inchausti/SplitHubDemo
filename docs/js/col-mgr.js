@@ -311,6 +311,19 @@
     });
   };
 
+  // Reaplica o gerenciador a partir do id do <thead>. shRenderThead
+  // substitui o cabecalho inteiro e leva junto os atributos de ordenacao
+  // e arrasto; quem regenera o cabecalho chama isto para reinstala-los,
+  // sem precisar saber qual registro corresponde aquela tabela.
+  ShColMgr.afterRenderByThead = function(theadId) {
+    if (!theadId) return;
+    Object.keys(_reg).forEach(function(id) {
+      if (_reg[id].config.theadId === theadId) {
+        try { ShColMgr.afterRender(id); } catch(e) {}
+      }
+    });
+  };
+
   ShColMgr.reset = function(id) {
     var r = _reg[id]; if (!r) return;
     try { localStorage.removeItem('sh_cm_' + id); } catch(e) {}

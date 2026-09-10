@@ -64,23 +64,23 @@ window.SH_TABLES = {
   creditos: {
     id: 't-creditos',
     cols: [
-      { label: 'RF', tip: 'Registro Fiscal — a unidade de crédito. Cada documento fiscal de entrada gera dois: um de IBS e um de CBS.' },
-      { label: 'Tipo Fiscal', tip: 'Qual tributo este registro carrega: <strong>IBS</strong> (estadual e municipal) ou <strong>CBS</strong> (federal).' },
-      { label: 'Nota Fiscal', tip: 'Número do documento fiscal que originou o registro. Clique abre o detalhe do DF.' },
-      { label: 'Fornecedor', tip: 'Emitente do documento. É quem recolhe, salvo quando o contrato define método RAD.' },
-      { label: 'Data NF', tip: 'Data de emissão do documento — o momento do fato gerador do IBS/CBS, e o marco de contagem dos prazos.' },
-      { label: 'Valor Total', tip: 'Valor bruto do documento fiscal, tributos incluídos.',        cls: 'r' },
-      { label: 'Valor Líquido', tip: 'Valor do documento descontados os tributos — o que efetivamente circula para o fornecedor.',      cls: 'r' },
-      { label: 'CBS', tip: 'Contribuição sobre Bens e Serviços, de competência federal.',                cls: 'r' },
-      { label: 'IBS', tip: 'Imposto sobre Bens e Serviços, de competência estadual e municipal.',                cls: 'r' },
-      { label: 'Crédito', tip: 'Valor de IBS+CBS passível de apropriação por este registro.',            cls: 'r' },
-      { label: 'Pagamento', tip: 'Data em que o tributo foi recolhido. Sem data, o crédito ainda não pode ser apropriado.' },
-      { label: 'Status Crédito', tip: 'Onde o crédito está no ciclo: <strong>não apropriado</strong>, <strong>apropriado</strong>, <strong>utilizado</strong> ou <strong>glosado</strong>.' },
-      { label: 'Status RF', tip: 'Sinalizações de risco sobre o registro — em risco, a prescrever, inconsistência ou vencido. É ortogonal ao status do crédito: um registro apropriado ainda pode carregar flag.' },
-      { label: 'Inconsistências', tip: 'Divergências apuradas neste registro — alíquota, base de cálculo, CST ou valor. Registro com inconsistência fica retido e não avança na conciliação.' },
-      { label: 'Contrato', tip: 'Contrato vigente entre comprador e fornecedor na data de emissão. É ele que define o método de pagamento.' },
-      { label: 'Método de Pagamento', tip: 'Quem recolhe o tributo: <strong>Split Payment</strong> (retido na liquidação), <strong>RAD</strong> (o adquirente recolhe) ou <strong>Fornecedor</strong> (o emitente recolhe).' },
-      { label: 'Método de Extinção', tip: 'Como o crédito tributário foi extinto: pagamento em guia, compensação com débito próprio, split payment retido na liquidação, ou glosa pelo Fisco. Vazio significa crédito ainda não extinto.' }
+      { key: 'rf', label: 'RF', tip: 'Registro Fiscal — a unidade de crédito. Cada documento fiscal de entrada gera dois: um de IBS e um de CBS.' },
+      { key: 'tipoFiscal', label: 'Tipo Fiscal', tip: 'Qual tributo este registro carrega: <strong>IBS</strong> (estadual e municipal) ou <strong>CBS</strong> (federal).' },
+      { key: 'nf', label: 'Nota Fiscal', tip: 'Número do documento fiscal que originou o registro. Clique abre o detalhe do DF.' },
+      { key: 'forn', label: 'Fornecedor', tip: 'Emitente do documento. É quem recolhe, salvo quando o contrato define método RAD.' },
+      { key: 'dataNF', label: 'Data NF', tip: 'Data de emissão do documento — o momento do fato gerador do IBS/CBS, e o marco de contagem dos prazos.' },
+      { key: 'valorTotal', label: 'Valor Total', tip: 'Valor bruto do documento fiscal, tributos incluídos.',        cls: 'r' },
+      { key: 'valorLiq', label: 'Valor Líquido', tip: 'Valor do documento descontados os tributos — o que efetivamente circula para o fornecedor.',      cls: 'r' },
+      { key: 'cbs', label: 'CBS', tip: 'Contribuição sobre Bens e Serviços, de competência federal.',                cls: 'r' },
+      { key: 'ibs', label: 'IBS', tip: 'Imposto sobre Bens e Serviços, de competência estadual e municipal.',                cls: 'r' },
+      { key: 'cred', label: 'Crédito', tip: 'Valor de IBS+CBS passível de apropriação por este registro.',            cls: 'r' },
+      { key: 'pag', label: 'Pagamento', tip: 'Data em que o tributo foi recolhido. Sem data, o crédito ainda não pode ser apropriado.' },
+      { key: 'statusCredito', label: 'Status Crédito', tip: 'Onde o crédito está no ciclo: <strong>não apropriado</strong>, <strong>apropriado</strong>, <strong>utilizado</strong> ou <strong>glosado</strong>.' },
+      { key: 'statusFlags', label: 'Status RF', tip: 'Sinalizações de risco sobre o registro — em risco, a prescrever, inconsistência ou vencido. É ortogonal ao status do crédito: um registro apropriado ainda pode carregar flag.' },
+      { key: '_inconsistencias', label: 'Inconsistências', tip: 'Divergências apuradas neste registro — alíquota, base de cálculo, CST ou valor. Registro com inconsistência fica retido e não avança na conciliação.' },
+      { key: 'contratoId', label: 'Contrato', tip: 'Contrato vigente entre comprador e fornecedor na data de emissão. É ele que define o método de pagamento.' },
+      { key: 'metodoPagamento', label: 'Método de Pagamento', tip: 'Quem recolhe o tributo: <strong>Split Payment</strong> (retido na liquidação), <strong>RAD</strong> (o adquirente recolhe) ou <strong>Fornecedor</strong> (o emitente recolhe).' },
+      { key: 'metodoExtincao', label: 'Método de Extinção', tip: 'Como o crédito tributário foi extinto: pagamento em guia, compensação com débito próprio, split payment retido na liquidação, ou glosa pelo Fisco. Vazio significa crédito ainda não extinto.' }
     ]
   },
   debitos: {
@@ -154,68 +154,68 @@ window.SH_TABLES = {
   inconsistencias: {
     id: 't-inc-rfs',
     cols: [
-      { label: 'ID', tip: 'Identificador da ocorrência de inconsistência.' },
-      { label: 'DF Vinculado', tip: 'Documento fiscal em que a divergência foi apurada.' },
-      { label: 'Fluxo', tip: 'Se a inconsistência está numa operação de entrada (crédito) ou de saída (débito).' },
-      { label: 'RF Vinculado', tip: 'Registro fiscal afetado, quando a divergência é de um tributo específico.' },
-      { label: 'Tipo Fiscal', tip: 'Qual tributo está divergente: IBS ou CBS.' },
-      { label: 'Entidade', tip: 'Fornecedor ou cliente da operação.' },
-      { label: 'Valor Total', tip: 'Valor bruto do documento em que a divergência aparece.',         cls: 'r' },
-      { label: 'Valor Líquido', tip: 'Valor do documento descontados os tributos.',       cls: 'r' },
-      { label: 'Valor RF', tip: 'Valor do registro fiscal afetado — o montante efetivamente em risco.',            cls: 'r' },
-      { label: 'Tipo Inconsistência', tip: 'A natureza da divergência: alíquota, base de cálculo, valor declarado versus apurado, cadastro ou prazo.' },
-      { label: 'Origem', tip: 'Onde a divergência foi detectada: na ingestão, na apuração assistida ou na conciliação.' },
-      { label: 'Status', tip: 'Se a ocorrência está aberta, em tratamento ou resolvida.' },
-      { label: 'Prioridade', tip: 'Severidade atribuída, combinando valor em risco e proximidade do prazo.' },
-      { label: 'Contrato', tip: 'Contrato vigente na data da operação.' },
-      { label: 'Data', tip: 'Data de emissão do documento em que a divergência ocorreu.' },
-      { label: 'St. Crédito', tip: 'Estado do crédito do registro afetado: não apropriado, apropriado, utilizado ou glosado.' },
-      { label: 'St. Registro', tip: 'Sinalizações de risco sobre o registro — em risco, a prescrever, vencido. Uma divergência aberta costuma vir acompanhada de flag de prazo.' },
-      { label: 'Método', tip: 'Método de pagamento definido no contrato: Split Payment, RAD ou Fornecedor. Determina quem precisa agir para resolver a divergência.' },
-      { label: 'Extinção', tip: 'Como o crédito tributário foi extinto, quando já foi. Vazio significa que a divergência ainda bloqueia o aproveitamento.' }
+      { key: 'id', label: 'ID', tip: 'Identificador da ocorrência de inconsistência.' },
+      { key: 'dfNum', label: 'DF Vinculado', tip: 'Documento fiscal em que a divergência foi apurada.' },
+      { key: 'tipoFluxo', label: 'Fluxo', tip: 'Se a inconsistência está numa operação de entrada (crédito) ou de saída (débito).' },
+      { key: 'rfId', label: 'RF Vinculado', tip: 'Registro fiscal afetado, quando a divergência é de um tributo específico.' },
+      { key: 'tipoFiscal', label: 'Tipo Fiscal', tip: 'Qual tributo está divergente: IBS ou CBS.' },
+      { key: 'entidade', label: 'Entidade', tip: 'Fornecedor ou cliente da operação.' },
+      { key: 'valorTotal', label: 'Valor Total', tip: 'Valor bruto do documento em que a divergência aparece.',         cls: 'r' },
+      { key: 'valorLiq', label: 'Valor Líquido', tip: 'Valor do documento descontados os tributos.',       cls: 'r' },
+      { key: 'valor', label: 'Valor RF', tip: 'Valor do registro fiscal afetado — o montante efetivamente em risco.',            cls: 'r' },
+      { key: 'tipoLabel', label: 'Tipo Inconsistência', tip: 'A natureza da divergência: alíquota, base de cálculo, valor declarado versus apurado, cadastro ou prazo.' },
+      { key: 'origem', label: 'Origem', tip: 'Onde a divergência foi detectada: na ingestão, na apuração assistida ou na conciliação.' },
+      { key: 'status', label: 'Status', tip: 'Se a ocorrência está aberta, em tratamento ou resolvida.' },
+      { key: 'prioridade', label: 'Prioridade', tip: 'Severidade atribuída, combinando valor em risco e proximidade do prazo.' },
+      { key: 'contratoId', label: 'Contrato', tip: 'Contrato vigente na data da operação.' },
+      { key: 'dataISO', label: 'Data', tip: 'Data de emissão do documento em que a divergência ocorreu.' },
+      { key: 'statusCredito', label: 'St. Crédito', tip: 'Estado do crédito do registro afetado: não apropriado, apropriado, utilizado ou glosado.' },
+      { key: 'statusRegistro', label: 'St. Registro', tip: 'Sinalizações de risco sobre o registro — em risco, a prescrever, vencido. Uma divergência aberta costuma vir acompanhada de flag de prazo.' },
+      { key: 'metodoPagamento', label: 'Método', tip: 'Método de pagamento definido no contrato: Split Payment, RAD ou Fornecedor. Determina quem precisa agir para resolver a divergência.' },
+      { key: 'metodoExtincao', label: 'Extinção', tip: 'Como o crédito tributário foi extinto, quando já foi. Vazio significa que a divergência ainda bloqueia o aproveitamento.' }
     ]
   },
   contratos: {
     id: 't-contratos',
     cols: [
-      { label: 'Contrato', tip: 'Identificador do contrato. Clique abre o detalhe, com histórico e auditoria.' },
-      { label: 'CNPJ', tip: 'CNPJ do fornecedor contratado.' },
-      { label: 'Fornecedor', tip: 'Razão social do fornecedor.' },
-      { label: 'Início', tip: 'Primeiro dia de vigência. Documento emitido antes desta data não é coberto.' },
-      { label: 'Fim', tip: 'Último dia de vigência. Volume circulando após o fim é o risco central da governança contratual.' },
-      { label: 'Método de Pagamento', tip: 'Quem recolhe o tributo dos documentos deste fornecedor: <strong>Split Payment</strong>, <strong>RAD</strong> ou <strong>Fornecedor</strong>.' },
-      { label: 'Prazo pagto.', tip: 'Prazo em dias entre a emissão do documento e a liquidação financeira.' },
-      { label: 'Status', tip: 'Situação derivada da vigência: vigente, a vencer, vencido ou futuro. Não é um campo armazenado — é calculado contra a data corrente.' },
-      { label: 'NFs vinculadas', tip: 'Quantos documentos fiscais foram emitidos sob este contrato.', cls: 'r' }
+      { key: 'id', label: 'Contrato', tip: 'Identificador do contrato. Clique abre o detalhe, com histórico e auditoria.' },
+      { key: 'cnpj', label: 'CNPJ', tip: 'CNPJ do fornecedor contratado.' },
+      { key: 'fornecedor', label: 'Fornecedor', tip: 'Razão social do fornecedor.' },
+      { key: 'inicio', label: 'Início', tip: 'Primeiro dia de vigência. Documento emitido antes desta data não é coberto.' },
+      { key: 'fim', label: 'Fim', tip: 'Último dia de vigência. Volume circulando após o fim é o risco central da governança contratual.' },
+      { key: 'metodoPagamento', label: 'Método de Pagamento', tip: 'Quem recolhe o tributo dos documentos deste fornecedor: <strong>Split Payment</strong>, <strong>RAD</strong> ou <strong>Fornecedor</strong>.' },
+      { key: 'prazo', label: 'Prazo pagto.', tip: 'Prazo em dias entre a emissão do documento e a liquidação financeira.' },
+      { key: 'status', label: 'Status', tip: 'Situação derivada da vigência: vigente, a vencer, vencido ou futuro. Não é um campo armazenado — é calculado contra a data corrente.' },
+      { key: 'nfsVinculadas', label: 'NFs vinculadas', tip: 'Quantos documentos fiscais foram emitidos sob este contrato.', cls: 'r' }
     ]
   },
   fornecedores: {
     id: 't-adm-fornecedores',
     cols: [
-      { label: 'Grupo / CNPJ', tip: 'Grupo econômico a que o fornecedor pertence e seu CNPJ.' },
-      { label: 'Razão Social', tip: 'Nome empresarial do fornecedor.' },
-      { label: 'Tipo', tip: 'Se o estabelecimento é matriz ou filial.' },
-      { label: 'Status', tip: 'Situação do fornecedor na base: regular, em alerta ou em risco.' },
-      { label: 'Score', tip: 'Nota de risco combinando volume, pontualidade de recolhimento e histórico de inconsistências.',          cls: 'r' },
-      { label: 'Contrato', tip: 'Se há contrato vigente com este fornecedor. Sem contrato, o método de pagamento não está definido.' },
-      { label: 'Multi-contratos', tip: 'Se o fornecedor tem mais de um contrato ativo, o que exige atenção na vinculação por data.' },
-      { label: 'Vol. compras', tip: 'Volume financeiro comprado deste fornecedor no período.',   cls: 'r' },
-      { label: 'Créditos', tip: 'Crédito de IBS+CBS originado nas operações com este fornecedor.',       cls: 'r' },
-      { label: 'Pend.', tip: 'Pendências abertas — inconsistências, recolhimentos em atraso ou cadastro incompleto.' },
-      { label: 'Detalhe', tip: 'Abre a ficha do fornecedor, com contratos, documentos e pendências.' }
+      { key: 'cnpj', label: 'Grupo / CNPJ', tip: 'Grupo econômico a que o fornecedor pertence e seu CNPJ.' },
+      { key: 'nome', label: 'Razão Social', tip: 'Nome empresarial do fornecedor.' },
+      { key: 'tipo', label: 'Tipo', tip: 'Se o estabelecimento é matriz ou filial.' },
+      { key: 'status', label: 'Status', tip: 'Situação do fornecedor na base: regular, em alerta ou em risco.' },
+      { key: 'score', label: 'Score', tip: 'Nota de risco combinando volume, pontualidade de recolhimento e histórico de inconsistências.',          cls: 'r' },
+      { key: 'contrato', label: 'Contrato', tip: 'Se há contrato vigente com este fornecedor. Sem contrato, o método de pagamento não está definido.' },
+      { key: 'multiContrato', label: 'Multi-contratos', tip: 'Se o fornecedor tem mais de um contrato ativo, o que exige atenção na vinculação por data.' },
+      { key: 'volume', label: 'Vol. compras', tip: 'Volume financeiro comprado deste fornecedor no período.',   cls: 'r' },
+      { key: 'creditos', label: 'Créditos', tip: 'Crédito de IBS+CBS originado nas operações com este fornecedor.',       cls: 'r' },
+      { key: 'pendencias', label: 'Pend.', tip: 'Pendências abertas — inconsistências, recolhimentos em atraso ou cadastro incompleto.' },
+      { key: '_detalhe', label: 'Detalhe', tip: 'Abre a ficha do fornecedor, com contratos, documentos e pendências.' }
     ]
   },
   organizacao: {
     id: 't-org-cnpjs',
     cols: [
-      { label: 'CNPJ', tip: 'CNPJ do estabelecimento da organização.' },
-      { label: 'Razão Social', tip: 'Nome empresarial do estabelecimento.' },
-      { label: 'IE', tip: 'Inscrição Estadual, quando aplicável.' },
-      { label: 'UF', tip: 'Unidade federativa do estabelecimento.' },
-      { label: 'Tipo', tip: 'Se é matriz ou filial.' },
-      { label: 'Status', tip: 'Se o estabelecimento está ativo na plataforma.' },
-      { label: 'Execução RAD', tip: 'Se este CNPJ está coberto por uma política de execução por CNPJ, e em que modo. Cobertura por contrato ou por faixa de valor não aparece aqui — nesses modelos o CNPJ não é o critério.' },
-      { label: 'Ações', tip: 'Editar o estabelecimento ou configurar sua política de execução.', style: 'text-align:center' }
+      { key: 'cnpj', label: 'CNPJ', tip: 'CNPJ do estabelecimento da organização.' },
+      { key: 'nome', label: 'Razão Social', tip: 'Nome empresarial do estabelecimento.' },
+      { key: 'ie', label: 'IE', tip: 'Inscrição Estadual, quando aplicável.' },
+      { key: 'uf', label: 'UF', tip: 'Unidade federativa do estabelecimento.' },
+      { key: 'tipo', label: 'Tipo', tip: 'Se é matriz ou filial.' },
+      { key: 'status', label: 'Status', tip: 'Se o estabelecimento está ativo na plataforma.' },
+      { key: 'radPolitica', label: 'Execução RAD', tip: 'Se este CNPJ está coberto por uma política de execução por CNPJ, e em que modo. Cobertura por contrato ou por faixa de valor não aparece aqui — nesses modelos o CNPJ não é o critério.' },
+      { key: '_acoes', label: 'Ações', tip: 'Editar o estabelecimento ou configurar sua política de execução.', style: 'text-align:center' }
     ]
   }
 };
@@ -281,6 +281,12 @@ window.shRenderThead = function(key) {
   });
   thead.appendChild(tr);
   table.insertBefore(thead, table.firstChild);
+  // O cabecalho novo nasce sem ordenacao nem arrasto. Reinstala aqui, em
+  // vez de depender da ordem em que cada renderizador chama afterRender --
+  // no boot, shRenderThead roda depois deles e apagava tudo.
+  if (window.ShColMgr && ShColMgr.afterRenderByThead) {
+    ShColMgr.afterRenderByThead(theadId);
+  }
 };
 
 /* ── Global filter panel builder — design C-1 Teal ── */
@@ -1356,6 +1362,11 @@ window.renderizarTabelaCreditos = function() {
   var contagemEl = document.getElementById('fc-contagem');
   if (contagemEl) contagemEl.textContent = listaRFs.length + ' registro' + (listaRFs.length !== 1 ? 's' : '');
 
+  // Ordenacao do gerenciador de colunas, e a lista viva que ele exporta.
+  // _creditosListaFiltrada e do renderizador legado, com outros 14 campos.
+  if (window.ShColMgr && ShColMgr.sortRows) listaRFs = ShColMgr.sortRows('cred-rfs', listaRFs);
+  window._credRfsLista = listaRFs;
+
   if (!listaRFs.length) {
     h = '<tr><td colspan="17" style="text-align:center;color:var(--txt3);padding:24px">Nenhum registro fiscal encontrado para este filtro.</td></tr>';
   } else {
@@ -1433,6 +1444,10 @@ window.renderizarTabelaCreditos = function() {
   var tabelaEl = document.getElementById("t-creditos");
   if (tabelaEl) {
     tabelaEl.innerHTML = h;
+    window.shRenderThead && window.shRenderThead('creditos');
+    if (window.ShColMgr && ShColMgr.afterRender) {
+      try { ShColMgr.afterRender('cred-rfs'); } catch (e) {}
+    }
     console.log('[data-sync-fixed] Tabela de créditos renderizada com', listaRFs.length, 'registros fiscais');
   } else {
     console.warn('[data-sync-fixed] Elemento #t-creditos não encontrado');
@@ -3857,6 +3872,11 @@ window.incRfLimparFiltros = function() {
 };
 
 window._incRfRenderPagina = function() {
+  // Ordena a lista inteira antes de paginar: ordenar so a pagina daria
+  // uma ordem que muda de significado a cada troca de pagina.
+  if (window.ShColMgr && ShColMgr.sortRows && window._rfIncFiltrado) {
+    window._rfIncFiltrado = ShColMgr.sortRows('inc-rfs', window._rfIncFiltrado);
+  }
   var lista     = window._rfIncFiltrado || [];
   var ipp       = window._rfIncIpp;
   var pagAtual  = window._rfIncPagina;
@@ -3936,6 +3956,10 @@ window._incRfRenderPagina = function() {
 
   var tbody = document.getElementById('t-inc-rfs');
   if (tbody) tbody.innerHTML = h;
+  window.shRenderThead && window.shRenderThead('inconsistencias');
+  if (window.ShColMgr && ShColMgr.afterRender) {
+    try { ShColMgr.afterRender('inc-rfs'); } catch (e) {}
+  }
 
   function setEl(id, v){ var e=document.getElementById(id); if(e) e.textContent=v; }
   setEl('inc-rf-count-sub', lista.length + ' inconsistência' + (lista.length!==1?'s':'') + ' · entrada e saída');
@@ -8187,7 +8211,7 @@ window.orgRenderTabela = function() {
   });
   tbody.innerHTML = rows || '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--txt3)">Nenhum CNPJ encontrado.</td></tr>';
   // Expose data for ShColMgr CSV export
-  window._orgCnpjsLista=lista.map(function(r){return{cnpj:r.cnpj,nome:r.razao,ie:r.ie,uf:r.uf,tipo:r.tipo,status:r.status};});
+  window._orgCnpjsLista=lista.map(function(r){var _p=window.radPoliticaPorCnpj?window.radPoliticaPorCnpj(r.cnpj):null;return{cnpj:r.cnpj,nome:r.razao,ie:r.ie,uf:r.uf,tipo:r.tipo,status:r.status,radPolitica:_p?_p.nome:'Configurar'};});
   if(window.ShColMgr&&ShColMgr.afterRender)try{ShColMgr.afterRender('admin-org');}catch(e){}
 };
 

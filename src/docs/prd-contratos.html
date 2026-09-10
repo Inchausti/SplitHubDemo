@@ -199,7 +199,7 @@ img, svg { max-width: 100%; height: auto; }
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-contratos</span></div>
     <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025</span></div>
     <div class="meta-pill" style="margin-left:auto">
-      <span class="chip ok">Publicado</span>&nbsp;<span class="chip purple">v2.1</span>
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip purple">v2.3</span>
     </div>
   </div>
 
@@ -465,11 +465,15 @@ guias RAD                      apropriação
   <span class="v">status</span>: <span class="k">string</span>,            <span class="c">// derivado por contratoStatus()</span>
   <span class="v">inicio</span>: <span class="k">string</span>,
   <span class="v">fim</span>: <span class="k">string</span>,
-  <span class="v">rad</span>: <span class="s">'Split Payment' | 'RAD' | 'Fornecedor'</span>, <span class="c">// rótulo do método</span>
+  <span class="v">rad</span>: <span class="k">boolean</span>,           <span class="c">// bandeira crua do contrato</span>
+  <span class="v">metodoPagamento</span>: <span class="s">'Split Payment' | 'RAD' | 'Fornecedor'</span>, <span class="c">// rótulo</span>
   <span class="v">prazo</span>: <span class="k">string</span>,
   <span class="v">nfsVinculadas</span>: <span class="k">number</span>       <span class="c">// contagem calculada</span>
 }</code></div>
-    <p>A chave mantém o nome histórico <code>rad</code>, mas carrega o <strong>rótulo do método</strong> — não um booleano. A exportação CSV mostra <code>"Split Payment"</code>, <code>"RAD"</code> ou <code>"Fornecedor"</code>, exatamente o texto exibido na tabela.</p>
+    <p>A projeção vive em <code>window._contratosLista</code> e é montada <strong>antes</strong> da ordenação —
+    sem isso, ordenar por Fornecedor, Status ou NFs vinculadas não fazia nada, porque esses campos só
+    existiam depois. <code>rad</code> segue sendo a bandeira booleana que o laço de render lê;
+    o rótulo do método vai em <code>metodoPagamento</code>, e é ele que a exportação CSV usa.</p>
 
     <div class="callout ok">
       <div class="ct">Rótulo unificado na v2.1</div>
@@ -1730,7 +1734,11 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
   <!-- ══ 14 ══ -->
   <div class="section" id="s14">
     <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
-    <div class="ver-row">
+        <div class="ver-row">
+      <div class="ver-num">v2.3</div>
+      <div class="ver-desc"><strong>09/09/2026</strong> — Correção: ordenar por <strong>Fornecedor</strong>, <strong>Status</strong> ou <strong>NFs vinculadas</strong> não fazia nada. A ordenação recebia a lista crua de contratos, onde esses campos não existem — só eram calculados depois, ao montar a projeção. A projeção passa a ser montada antes da ordenação, e a mesma lista serve a tela e a exportação. Ela também muda de nome, para <code>window._contratosLista</code>: <code>_contratosData</code> colide com o array-semente declarado em <code>data-sync-fixed.js</code>, que sobrescrevia a projeção e fazia o CSV exportar a semente. O rótulo do método sai de <code>rad</code> — que volta a ser a bandeira booleana lida pelo render — e passa a <code>metodoPagamento</code>.</div>
+    </div>
+<div class="ver-row">
       <div class="ver-num">v2.2</div>
       <div class="ver-desc"><strong>08/09/2026</strong> — Acrescenta a seção de <strong>jornadas de usuário atendidas</strong> (J-07, J-01, J-03, J-02) e documenta que contratos de método <code>RAD</code> podem ser o recorte de uma política de <a class="xref" href="prd-execucao-rad.html">Execução RAD</a>, na orquestração por contrato.</div>
     </div>
@@ -1761,7 +1769,7 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
   <hr>
   <div style="font-size:11px;color:var(--txt3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
     <span>SplitHub · PRD · Configurações → Contratos</span>
-    <span>v2.2 · Set/2026 · Base: LC 214/2025</span>
+    <span>v2.3 · Set/2026 · Base: LC 214/2025</span>
   </div>
 
 </div>
