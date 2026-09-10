@@ -198,7 +198,7 @@ img, svg { max-width: 100%; height: auto; }
   <p class="subtitle">Camada de configuração que determina, por CNPJ fornecedor, <strong>quem recolhe o IBS e a CBS</strong> — por Split Payment, RAD ou pelo próprio fornecedor — e em que prazo o pagamento ocorre. É a decisão contratual que governa o comportamento dos módulos de Pagamentos e Crédito, e a regra que exige contrato vigente para toda nota fiscal recebida.</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.2</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.5</span></div>
     <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Configurações → Contratos</span></div>
     <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-contratos</span></div>
@@ -547,21 +547,25 @@ guias RAD                      apropriação
       <p>Os timestamps usam <code>contratoAgoraISO()</code>, que combina a <strong>data</strong> de <code>HOJE_REF</code> (24/04/2026, a referência fixa do protótipo) com a <strong>hora real</strong> do relógio. Isso mantém os eventos coerentes com o calendário da demonstração sem congelar o horário, deixando a ordem cronológica legível numa sessão de uso. Em produção, a referência deve ser o relógio do servidor.</p>
     </div>
 
-    <div class="callout red">
-      <div class="ct">Split Payment saiu do catálogo de métodos — 10/09/2026</div>
-      <p>O <strong>Split Payment deixou de ser método de pagamento selecionável</strong>. A ferramenta existe para
-      o que exige ação do comprador — o <strong>RAD</strong> — ou monitoramento do fornecedor. No split payment o
-      PSP segrega sozinho na liquidação financeira <span class="nid">Dec. 12.955/2026, art. 31, I</span> e não há
-      o que gerir: contrato com esse método produzia registro que a ferramenta não sabe operar.</p>
-      <p>O catálogo <code>CONTRATO_METODOS</code> passa a ter <strong>dois valores</strong>: <code>rad</code> e
-      <code>fornecedor</code>. Os 12 contratos que estavam em <code>split</code> foram migrados para
-      <code>fornecedor</code>, e o método padrão de um documento sem contrato vigente também. A função
-      <code>contratoMetodo()</code> continua entendendo o valor legado <code>"split"</code> e o resolve como
-      <code>fornecedor</code>, para não quebrar dado antigo.</p>
-      <p><strong>Onde o Split Payment permanece:</strong> como <em>modalidade de extinção do débito</em>
-      <span class="nid">LC 214/2025, art. 27, III</span>, no lado da saída — nosso cliente paga e o PSP dele
-      segrega. É outro eixo, que a ferramenta <em>observa</em> e não opera. Os filtros de <em>Método de
-      Extinção</em> e a análise de extinção de débitos seguem oferecendo o valor.</p>
+    <div class="callout ok">
+      <div class="ct">Split Payment volta ao catálogo de métodos — 10/09/2026</div>
+      <p>A retirada do <strong>Split Payment</strong> foi revertida. O argumento que a motivou — a ferramenta gere o
+      que exige ação do comprador — descrevia o <em>trabalho operacional</em>, não o <em>alcance da informação</em>:
+      no split payment o PSP segrega sozinho <span class="nid">Dec. 12.955/2026, art. 31, I</span>, mas o crédito
+      nasce igual, tem data de apropriação própria, corre o mesmo prazo do <span class="nid">art. 54</span> e pode
+      ser glosado. Reclassificar esses documentos como <code>fornecedor</code> não removia trabalho: apagava a
+      distinção entre um crédito cuja extinção é automática e outro que depende de terceiro pagar.</p>
+      <p>O catálogo <code>CONTRATO_METODOS</code> volta aos <strong>três valores</strong>, e
+      <code>contratoMetodo()</code> volta a resolver <code>"split"</code> como <code>split</code>. Três contratos
+      operam pelo método — <strong>CT-0003</strong> (prazo 90), <strong>CT-0006</strong> (30) e
+      <strong>CT-0010</strong> (60), escolhidos por terem documentos na base e prazos distintos, que é o que
+      exercita o cálculo da apropriação.</p>
+      <p><strong>O método padrão sem contrato vigente segue Fornecedor</strong>, e não voltou a Split Payment.
+      Sem cláusula que atribua o recolhimento a outra parte, quem recolhe é o emitente; presumir a retenção
+      automática seria inventar um acordo que não existe. É a hipótese conservadora e a de maior exposição.</p>
+      <p>Split Payment continua também como <em>modalidade de extinção do débito</em>
+      <span class="nid">LC 214/2025, art. 27, III</span>, no lado da saída — dois eixos distintos que agora
+      coexistem sem se confundir.</p>
     </div>
 
   <!-- ══ 04 ══ -->
@@ -1757,6 +1761,10 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
   <div class="section" id="s14">
     <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
             <div class="ver-row">
+      <div class="ver-num">v2.5</div>
+      <div class="ver-desc"><strong>10/09/2026</strong> — <strong>Split Payment volta ao catálogo de métodos.</strong> A v2.4 confundiu ausência de trabalho operacional com ausência de informação: no split payment o crédito nasce igual, tem apropriação própria e corre o mesmo prazo do <span class="nid">art. 54</span>. <code>CONTRATO_METODOS</code> volta a três valores, três contratos passam a operar pelo método — CT-0003, CT-0006 e CT-0010, com prazos 90, 30 e 60 —, e a opção retorna ao cadastro e aos filtros. O padrão sem contrato vigente <em>permanece</em> Fornecedor. Dois gráficos que agrupavam por dois métodos passam a três: o de <em>Método de pagamento</em>, em Créditos, e o de <em>Pagamentos Executados</em>, no Dashboard — este último agrupava pelo booleano <code>rad</code> do contrato, ignorando a vigência.</div>
+    </div>
+<div class="ver-row">
       <div class="ver-num">v2.4</div>
       <div class="ver-desc"><strong>10/09/2026</strong> — <strong>Split Payment sai do catálogo de métodos.</strong> A ferramenta gere o que exige ação do comprador (RAD) ou monitoramento do fornecedor; no split payment o PSP segrega sozinho e não há o que operar. <code>CONTRATO_METODOS</code> fica com dois valores, os 12 contratos em <code>split</code> migram para <code>fornecedor</code>, e a opção sai do cadastro e dos filtros. O valor legado continua sendo entendido e resolvido como fornecedor. Permanece como <em>modalidade de extinção</em> do débito <span class="nid">art. 27, III</span>, que é outro eixo.</div>
     </div>

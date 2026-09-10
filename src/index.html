@@ -1212,11 +1212,11 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <div class="ccrd" style="padding:14px 16px">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
         <div class="ctitle" style="margin-bottom:0;font-size:13px">Pagamentos Executados</div>
-        <span class="periodo-info" data-tip="Barras empilhadas com volume mensal de pagamentos: Via RAD (recolhimento pelo adquirente) e Via Fornecedor (pagamento direto). Apenas pagamentos efetivamente executados.">i</span>
+        <span class="periodo-info" data-tip="Barras empilhadas com volume mensal de pagamentos por modalidade de recolhimento: Via RAD (o adquirente recolhe), Via Fornecedor (o emitente recolhe) e Via Split Payment (o PSP segrega na liquidação). Agrupado pelo método do registro fiscal, herdado do contrato vigente na data do documento. Apenas pagamentos efetivamente executados.">i</span>
       </div>
-      <div class="csub" id="dash-sub-pagamentos" style="margin-bottom:8px">RAD + Fornecedor · Jan–Dez 2026 · R$M</div>
+      <div class="csub" id="dash-sub-pagamentos" style="margin-bottom:8px">RAD + Fornecedor + Split · Jan–Dez 2026 · R$M</div>
       <div class="cwrap" style="height:130px"><div id="cPagamentos"></div></div>
-      <div class="leg" style="margin-top:6px"><span class="li"><span class="ls" style="background:var(--p-teal)"></span>Via RAD</span><span class="li"><span class="ls" style="background:var(--p-blue)"></span>Via Fornecedor</span></div>
+      <div class="leg" style="margin-top:6px"><span class="li"><span class="ls" style="background:var(--blue)"></span>Via RAD</span><span class="li"><span class="ls" style="background:var(--amber)"></span>Via Fornecedor</span><span class="li"><span class="ls" style="background:var(--teal)"></span>Via Split Payment</span></div>
     </div>
   </div>
 
@@ -1455,21 +1455,25 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     </div>
     <div class="kcard" style="display:block;padding:14px 16px">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-        <div class="klbl" style="margin:0">Vencidos Não Prescritos <span class="periodo-info" data-tip="Créditos com prazo de pagamento expirado (statusRegistro = vencido) porém ainda dentro do prazo de prescrição de 5 anos. Ainda podem ser recuperados, mas requerem ação imediata. Breakdown por método de pagamento: Fornecedor (pagamento direto pelo emissor) vs RAD (Recolhimento pelo Adquirente).">i</span></div>
+        <div class="klbl" style="margin:0">Vencidos Não Prescritos <span class="periodo-info" data-tip="Créditos com prazo de pagamento expirado (statusRegistro = vencido) porém ainda dentro do prazo de prescrição de 5 anos. Ainda podem ser recuperados, mas requerem ação imediata. Breakdown por método de pagamento: Fornecedor (o emitente recolhe), RAD (Recolhimento pelo Adquirente) e Split Payment (o PSP segrega na liquidação). Vencido em Split significa segregação não confirmada — é outra investigação, e por isso aparece separado.">i</span></div>
       </div>
       <div class="kval" id="cred-venc-nao-ext" style="font-size:22px">—</div>
       <div class="ksub" id="cred-venc-nao-ext-sub">Recuperáveis · ação necessária</div>
-      <div style="display:flex;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-        <div style="flex:1">
+      <div class="shrow" style="--shrow-gap:10px;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <div style="flex:1;min-width:88px">
           <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Método Fornecedor</div>
           <div id="cred-venc-forn" style="font-size:14px;font-weight:700;color:var(--amber)">—</div>
           <div id="cred-venc-forn-pct" style="font-size:10px;color:var(--txt3)">—</div>
         </div>
-        <div style="width:1px;background:var(--border)"></div>
-        <div style="flex:1">
+        <div style="flex:1;min-width:88px">
           <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Método RAD</div>
           <div id="cred-venc-rad" style="font-size:14px;font-weight:700;color:var(--blue)">—</div>
           <div id="cred-venc-rad-pct" style="font-size:10px;color:var(--txt3)">—</div>
+        </div>
+        <div style="flex:1;min-width:88px">
+          <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Método Split</div>
+          <div id="cred-venc-split" style="font-size:14px;font-weight:700;color:var(--teal)">—</div>
+          <div id="cred-venc-split-pct" style="font-size:10px;color:var(--txt3)">—</div>
         </div>
       </div>
     </div>
@@ -1567,13 +1571,14 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     </div>
     <div class="ccrd">
       <div style="margin-bottom:4px">
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Método de pagamento</div><span class="periodo-info" data-tip="Gráfico de barras comparando mensalmente o volume pago via RAD (Recolhimento pelo Adquirente) versus Fornecedor (pagamento direto pelo emissor da NF). O mix entre RAD e Fornecedor impacta o fluxo de crédito e o timing de apropriação.">i</span></div>
-        <div class="csub" id="cPagMetodo-sub">R$ milhões · RAD vs Fornecedor · pagamentos realizados · mês a mês</div>
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px"><div class="ctitle" style="margin-bottom:0">Método de pagamento</div><span class="periodo-info" data-tip="Barras empilhadas com o volume mensal por modalidade de recolhimento: RAD (o adquirente recolhe), Fornecedor (o emitente recolhe) e Split Payment (o PSP segrega na liquidação). O mix define o timing da apropriação — no Split a data é a da liquidação financeira, no RAD a do pagamento da guia, no Fornecedor a do vencimento do tributo.">i</span></div>
+        <div class="csub" id="cPagMetodo-sub">R$ milhões · RAD · Fornecedor · Split Payment · pagamentos realizados · mês a mês</div>
       </div>
       <div class="cwrap" style="height:200px"><div id="cPagMetodo"></div></div>
       <div class="leg">
-        <span class="li"><span class="ls" style="background:var(--p-blue)"></span>RAD</span>
-        <span class="li"><span class="ls" style="background:var(--blue)"></span>Fornecedor</span>
+        <span class="li"><span class="ls" style="background:var(--blue)"></span>RAD</span>
+        <span class="li"><span class="ls" style="background:var(--amber)"></span>Fornecedor</span>
+        <span class="li"><span class="ls" style="background:var(--teal)"></span>Split Payment</span>
       </div>
     </div>
   </div>
@@ -1623,7 +1628,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
           <div class="sh-fp-field"><label>Status Importação</label><select id="cred-dfs-status" onchange="creditosDFsRender()"><option value="">Todos</option><option value="importado">Importado</option><option value="inconsistencia">Inconsistência</option><option value="pendente">Pendente</option></select></div>
           <div class="sh-fp-field"><label>Tipo DF</label><select id="cred-dfs-tipo" onchange="creditosDFsRender()"><option value="">Todos</option><option value="NF-e">NF-e</option><option value="CT-e">CT-e</option><option value="NFS-e">NFS-e</option></select></div>
           <div class="sh-fp-field"><label>Status Crédito</label><select id="cred-dfs-credito" onchange="creditosDFsRender()"><option value="">Todos</option><option value="a_apropriar">A Apropriar</option><option value="parc_apropriado">Parc. Apropriado</option><option value="apropriado">Apropriado</option><option value="parc_utilizado">Parc. Utilizado</option><option value="utilizado">Utilizado</option><option value="glosado">Glosado</option></select></div>
-          <div class="sh-fp-field"><label>Método de Pagamento</label><select id="cred-dfs-metodo" onchange="creditosDFsRender()"><option value="">Todos</option><option value="RAD">RAD</option><option value="Fornecedor">Fornecedor</option></select></div>
+          <div class="sh-fp-field"><label>Método de Pagamento</label><select id="cred-dfs-metodo" onchange="creditosDFsRender()"><option value="">Todos</option><option value="Split Payment">Split Payment</option><option value="RAD">RAD</option><option value="Fornecedor">Fornecedor</option></select></div>
           <div class="sh-fp-field"><label>Extinção</label><select id="cred-dfs-extincao" onchange="creditosDFsRender()"><option value="">Todos</option><option value="com">Com extinção</option><option value="sem">Sem extinção</option></select></div>
           <div class="sh-fp-field"><label>Data — de</label><input id="cred-dfs-data-de" type="date" onchange="creditosDFsRender()"></div>
           <div class="sh-fp-field"><label>Data — até</label><input id="cred-dfs-data-ate" type="date" onchange="creditosDFsRender()"></div>
@@ -3141,7 +3146,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <div class="sh-fp-panel" id="ctr-corpo" style="display:none">
         <div class="sh-fp-grid">
           <div class="sh-fp-field"><label>Status</label><select id="ctr-filtro-status" onchange="contratosRenderTabela()"><option value="">Todos</option><option value="ativo">Ativo</option><option value="a_iniciar">A iniciar</option><option value="encerrado">Encerrado</option></select></div>
-          <div class="sh-fp-field"><label>Método de Pagamento</label><select id="ctr-filtro-mecanismo" onchange="contratosRenderTabela()"><option value="">Todos</option><option value="rad">RAD</option><option value="fornecedor">Fornecedor</option></select></div>
+          <div class="sh-fp-field"><label>Método de Pagamento</label><select id="ctr-filtro-mecanismo" onchange="contratosRenderTabela()"><option value="">Todos</option><option value="split">Split Payment</option><option value="rad">RAD</option><option value="fornecedor">Fornecedor</option></select></div>
           <div class="sh-fp-field"><label>Prazo</label><select id="ctr-filtro-prazo" onchange="contratosRenderTabela()"><option value="">Todos</option><option value="30">30 dias</option><option value="60">60 dias</option><option value="90">90 dias</option><option value="120">120 dias</option></select></div>
           <div class="sh-fp-field"><label>Início — de</label><input id="ctr-inicio-de" type="date" onchange="contratosRenderTabela()"></div>
           <div class="sh-fp-field"><label>Início — até</label><input id="ctr-inicio-ate" type="date" onchange="contratosRenderTabela()"></div>
@@ -3797,6 +3802,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
               <div style="font-size:11px;font-weight:700;color:var(--txt1);margin-bottom:6px">Modelo de operação do tributo</div>
               <div style="font-size:11px;color:var(--txt2);line-height:1.6">
                 Define <strong style="color:var(--txt1)">quem é o responsável pelo recolhimento</strong> do IBS e CBS perante o Fisco.<br><br>
+                <span style="color:var(--green);font-weight:600">Split Payment:</span> mecanismo padrão da LC 214/2025. O prestador de serviço de pagamento separa o IBS/CBS no momento da liquidação financeira e repassa direto ao Fisco — o fornecedor recebe apenas o valor líquido.<br><br>
                 <span style="color:var(--blue);font-weight:600">RAD:</span> Recolhimento pelo Adquirente. A responsabilidade é transferida ao comprador por cláusula contratual — ele gera a guia e recolhe diretamente. Usado em operações com substitutos tributários ou acordos específicos.<br><br>
                 <span style="color:var(--purple);font-weight:600">Fornecedor:</span> o emitente destaca os tributos na NF e recolhe por conta própria, sem retenção automática na liquidação.
               </div>
@@ -3804,6 +3810,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
           </span>
         </div>
         <select id="ctr-form-modelo" style="width:100%">
+          <option value="split">Split Payment — retenção automática na liquidação</option>
           <option value="rad">RAD — Recolhimento pelo Adquirente</option>
           <option value="fornecedor">Fornecedor realiza o recolhimento do tributo</option>
         </select>
@@ -4017,7 +4024,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
             <div class="sh-fp-field"><label>Contrato</label><select id="inc-rf-contrato" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="__sem__">Sem contrato</option></select></div>
             <div class="sh-fp-field"><label>St. Crédito</label><select id="inc-rf-status-cred" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="nao_apropriado">Não Apropriado</option><option value="apropriado">Apropriado</option><option value="utilizado">Utilizado</option><option value="glosado">Glosado</option></select></div>
             <div class="sh-fp-field"><label>St. Registro</label><select id="inc-rf-status-reg" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="inconsistencia">Inconsistência</option><option value="em_risco">Em risco</option><option value="a_prescrever">A Prescrever</option><option value="vencido">Vencido</option></select></div>
-            <div class="sh-fp-field"><label>Método</label><select id="inc-rf-metodo" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="RAD">RAD</option><option value="Fornecedor">Fornecedor</option></select></div>
+            <div class="sh-fp-field"><label>Método</label><select id="inc-rf-metodo" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="Split Payment">Split Payment</option><option value="RAD">RAD</option><option value="Fornecedor">Fornecedor</option></select></div>
           </div>
           <div class="sh-fp-footer">
             <button class="sh-fp-clear" onclick="window.incRfLimparFiltros()">✕ Limpar filtros</button>
@@ -4797,18 +4804,18 @@ var contratos=[
   {id:"CT-0001",metodo:"rad",cnpj:"28.447.821/0001-35",inicio:"01/01/2026",fim:"31/12/2026",rad:true ,prazo:"30"},
   {id:"CT-0002",metodo:"fornecedor",cnpj:"33.592.510/0002-43",inicio:"01/03/2026",fim:"28/02/2027",rad:false,prazo:"60"},
   // ── Randon (14.382.976) ──
-  {id:"CT-0003",metodo:"fornecedor",cnpj:"14.382.976/0001-09",inicio:"01/09/2025",fim:"31/08/2026",rad:false,prazo:"90"},
+  {id:"CT-0003",metodo:"split"     ,cnpj:"14.382.976/0001-09",inicio:"01/09/2025",fim:"31/08/2026",rad:false,prazo:"90"},
   {id:"CT-0004",metodo:"fornecedor",cnpj:"14.382.976/0002-02",inicio:"01/04/2026",fim:"31/03/2027",rad:false,prazo:"90"},
   // ── Marcopolo (19.854.203) ──
   {id:"CT-0005",metodo:"fornecedor",cnpj:"19.854.203/0001-67",inicio:"10/04/2026",fim:"09/04/2027",rad:false,prazo:"60"},
   // ── Bosch (38.291.045) ──
-  {id:"CT-0006",metodo:"fornecedor",cnpj:"38.291.045/0001-52",inicio:"01/01/2026",fim:"31/12/2026",rad:false,prazo:"30"},
+  {id:"CT-0006",metodo:"split"     ,cnpj:"38.291.045/0001-52",inicio:"01/01/2026",fim:"31/12/2026",rad:false,prazo:"30"},
   {id:"CT-0007",metodo:"fornecedor",cnpj:"38.291.045/0002-78",inicio:"01/02/2026",fim:"31/01/2027",rad:false,prazo:"30"},
   // ── WEG (61.874.320) ──
   {id:"CT-0008",metodo:"fornecedor",cnpj:"61.874.320/0001-88",inicio:"01/02/2026",fim:"31/01/2027",rad:false,prazo:"30"},
   {id:"CT-0009",metodo:"fornecedor",cnpj:"61.874.320/0002-00",inicio:"01/05/2026",fim:"30/04/2027",rad:false,prazo:"45"},
   // ── Embraer (52.039.781) ──
-  {id:"CT-0010",metodo:"fornecedor",cnpj:"52.039.781/0001-74",inicio:"01/03/2026",fim:"31/12/2026",rad:false,prazo:"60"},
+  {id:"CT-0010",metodo:"split"     ,cnpj:"52.039.781/0001-74",inicio:"01/03/2026",fim:"31/12/2026",rad:false,prazo:"60"},
   // ── Petrobras (73.612.590) ──
   {id:"CT-0011",metodo:"rad",cnpj:"73.612.590/0001-41",inicio:"01/01/2026",fim:"31/12/2026",rad:true ,prazo:"120"},
   {id:"CT-0012",metodo:"rad",cnpj:"73.612.590/0002-80",inicio:"01/04/2026",fim:"31/03/2027",rad:true ,prazo:"120"},
@@ -4957,11 +4964,11 @@ var fctDados=[
 
 var fctNFsExemplo={
   '01/06':[
-    {nf:'NF-e 00091234',forn:'Tectra Sistemas Ltda',      modalidade:'Fornecedor'   ,valorNF:2840000,credCBS:284000,credIBS:170000,datApropr:'01/06/2026',status:'confirmado'  },
+    {nf:'NF-e 00091234',forn:'Tectra Sistemas Ltda',      modalidade:'Split Payment',valorNF:2840000,credCBS:284000,credIBS:170000,datApropr:'01/06/2026',status:'confirmado'  },
     {nf:'NF-e 00091235',forn:'Ferroplex Mineração S.A.',        modalidade:'RAD',          valorNF:1850000,credCBS:0,      credIBS:0,      datApropr:'05/06/2026',status:'condicionado'},
   ],
   '05/06':[
-    {nf:'NF-e 00091289',forn:'Aeroprime Ind. S.A.',     modalidade:'Fornecedor'   ,valorNF:3480000,credCBS:348000,credIBS:209000,datApropr:'05/06/2026',status:'confirmado'  },
+    {nf:'NF-e 00091289',forn:'Aeroprime Ind. S.A.',     modalidade:'Split Payment',valorNF:3480000,credCBS:348000,credIBS:209000,datApropr:'05/06/2026',status:'confirmado'  },
     {nf:'NF-e 00091290',forn:'Sulpar Implementos S.A.',      modalidade:'Apuração',     valorNF:2100000,credCBS:0,      credIBS:0,      datApropr:'30/06/2026',status:'condicionado'},
     {nf:'NF-e 00091291',forn:'Transcarro S.A.',   modalidade:'RAD',          valorNF:1580000,credCBS:0,      credIBS:0,      datApropr:'12/06/2026',status:'condicionado'},
   ],
@@ -5695,16 +5702,16 @@ function contratoStatusBadge(status){
 // Split = teal (retenção automática, risco baixo)
 // RAD   = azul (adquirente controla, risco de execução própria)
 // Fornecedor = âmbar (depende de terceiro, maior risco de inadimplência)
-/* Split Payment não é método operável nesta ferramenta: o PSP segrega
-   sozinho na liquidação financeira e não há ação do comprador para
-   gerir. Contratos com esse método foram migrados para Fornecedor, e a
-   opção saiu do cadastro. contratoMetodo() ainda entende o valor legado
-   "split" e o resolve como fornecedor, para não quebrar dado antigo. */
+/* Fornecedor fica em primeiro na lista porque contratoMetodoCfg() usa
+   CONTRATO_METODOS[0] como fallback de valor desconhecido, e depender de
+   terceiro é a hipótese conservadora. A ordem não define a do <select>. */
 var CONTRATO_METODOS=[
   {v:"fornecedor",label:"Fornecedor",    rf:"Fornecedor",    rgb:"var(--amber-rgb)", cor:"var(--amber)",
    desc:"O fornecedor recolhe o IBS/CBS por conta própria. O comprador monitora se o recolhimento ocorreu — sem ele, não há extinção do débito e o crédito não se apropria (LC 214/2025, art. 47)."},
   {v:"rad",       label:"RAD",           rf:"RAD",           rgb:"var(--blue-rgb)",  cor:"var(--blue)",
    desc:"Recolhimento pelo Adquirente. O comprador assume o pagamento dos tributos do documento fiscal, gera a guia e recolhe diretamente."},
+  {v:"split",     label:"Split Payment", rf:"Split Payment", rgb:"var(--teal-rgb)",  cor:"var(--teal)",
+   desc:"Retenção automática na liquidação financeira. O PSP separa o IBS/CBS e repassa direto ao Fisco — o fornecedor recebe apenas o líquido. Mecanismo padrão da LC 214/2025, arts. 31 a 35."},
 ];
 function contratoMetodoCfg(v){
   return CONTRATO_METODOS.find(function(m){return m.v===v;})||CONTRATO_METODOS[0];
@@ -5714,7 +5721,7 @@ function contratoMetodoCfg(v){
 function contratoMetodo(ct){
   if(ct.metodo)return ct.metodo;
   if(ct.modelo==="adquirente")return "rad";
-  if(ct.modelo==="split")return "fornecedor";   // split saiu do produto
+  if(ct.modelo==="split")return "split";
   return ct.rad?"rad":"fornecedor";
 }
 function contratoMetodoLabel(ct){return contratoMetodoCfg(contratoMetodo(ct)).label;}
@@ -6681,8 +6688,10 @@ function nfRenderLista(){
       // Contrato e método de pagamento vinculados ao CNPJ/data
       var _ct=(typeof buscarContrato==='function')?buscarContrato(nf.cnpj,nf.data):null;
       var _ctId=_ct?_ct.id:null;
-      // Método herdado do contrato — três valores. Sem contrato vigente,
-      // aplica-se o mecanismo padrão da LC 214/2025: Split Payment.
+      // Método herdado do contrato — três valores. Sem contrato vigente não
+      // há cláusula que atribua o recolhimento a ninguém além do emitente,
+      // então o padrão é Fornecedor: o método de maior exposição, e o único
+      // que a ferramenta pode assumir sem inventar um acordo que não existe.
       var _metPag=_ct?contratoMetodoRF(_ct):'Fornecedor';
 
       // ── Regras de negócio para statusRegistro, inconsistência e dataPagamento ──
@@ -6705,6 +6714,15 @@ function nfRenderLista(){
       } else if(_metPag==='RAD'&&(statusCredito==='apropriado'||statusCredito==='utilizado')){
         // Comprovante atrelado, sem inconsistência. A data do recolhimento
         // é calculada em bloco único mais abaixo, para todas as modalidades.
+      } else if(_metPag==='Split Payment'){
+        // O PSP segrega na liquidação e repassa direto ao Fisco: o tributo
+        // não depende de ação do fornecedor nem do adquirente. Risco residual
+        // é divergência de valor retido ou falha de repasse — por isso não
+        // existe 'vencido' aqui: o valor já saiu da liquidação.
+        if(statusCredito==='nao_apropriado'){
+          if(_q<2){statusRegistro='inconsistencia';tipoInconsistencia=_incTiposEnt[idx%_incTiposEnt.length];}
+          else if(_q<6)statusRegistro='em_risco';
+        }
       } else {
         // Fornecedor recolhe por conta própria — maior exposição a inadimplência
         if(statusCredito==='nao_apropriado'){
@@ -10679,7 +10697,7 @@ if (window.Chart) {
   Chart.defaults.font.size = 11;
 }
 </script>
-<script src="js/data-sync-fixed.js?v=116"></script>
+<script src="js/data-sync-fixed.js?v=117"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=7"></script>
 <script src="js/charts.js?v=2"></script>

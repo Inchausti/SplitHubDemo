@@ -79,9 +79,9 @@ window.SH_TABLES = {
       { key: 'statusFlags', label: 'Status RF', tip: 'Sinalizações de risco sobre o registro — em risco, a prescrever, inconsistência ou vencido. É ortogonal ao status do crédito: um registro apropriado ainda pode carregar flag.' },
       { key: '_inconsistencias', label: 'Inconsistências', tip: 'Divergências apuradas neste registro — alíquota, base de cálculo, CST ou valor. Registro com inconsistência fica retido e não avança na conciliação.' },
       { key: 'contratoId', label: 'Contrato', tip: 'Contrato vigente entre comprador e fornecedor na data de emissão. É ele que define o método de pagamento.' },
-      { key: 'metodoPagamento', label: 'Método de Pagamento', tip: 'Quem recolhe o tributo: <strong>RAD</strong> (o adquirente recolhe) ou <strong>Fornecedor</strong> (o emitente recolhe). Herdado do contrato vigente.' },
+      { key: 'metodoPagamento', label: 'Método de Pagamento', tip: 'Quem recolhe o tributo: <strong>Split Payment</strong> (retido na liquidação), <strong>RAD</strong> (o adquirente recolhe) ou <strong>Fornecedor</strong> (o emitente recolhe). Herdado do contrato vigente.' },
       { key: 'metodoExtincao', label: 'Método de Extinção', tip: 'Como o crédito tributário foi extinto: pagamento em guia, compensação com débito próprio, split payment retido na liquidação, ou glosa pelo Fisco. Vazio significa crédito ainda não extinto.' },
-      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data do <strong>recolhimento</strong> que extinguiu o débito e fez o crédito nascer (LC 214/2025, art. 47). O momento depende da modalidade: <strong>RAD</strong>, na data em que o adquirente paga a guia; <strong>Fornecedor</strong>, no vencimento do tributo. Vazia enquanto não há recolhimento.' },
+      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data do <strong>recolhimento</strong> que extinguiu o débito e fez o crédito nascer (LC 214/2025, art. 47). O momento depende da modalidade: <strong>Split Payment</strong>, na liquidação financeira da nota; <strong>RAD</strong>, na data em que o adquirente paga a guia; <strong>Fornecedor</strong>, no vencimento do tributo. Vazia enquanto não há recolhimento.' },
       { key: 'dataExtincaoCredito', label: 'Data Extinção', tip: 'Data em que o <strong>crédito</strong> foi consumido — compensado, ressarcido ou transferido. Anda com a coluna Método de Extinção. Vazia enquanto o crédito está apropriado e disponível.' },
       { key: 'dataPrevExtincao', label: 'Limite art. 54', tip: 'Data em que o direito de utilizar o crédito se extingue por decurso: 5 anos contados do primeiro dia do período de apuração seguinte ao da apropriação (LC 214/2025, art. 54). Âmbar no último ano, vermelho depois de vencido. Crédito já extinto não corre esse risco.' },
     ]
@@ -106,7 +106,7 @@ window.SH_TABLES = {
       { label: 'Inconsistências', tip: 'Divergências apuradas neste registro — alíquota, base de cálculo, CST ou valor. Registro com inconsistência fica retido e não avança na conciliação.' },
       { label: 'Contrato', tip: 'Contrato vigente com o cliente na data de emissão.' },
       { label: 'Método de Extinção', tip: 'Como o débito foi extinto: pagamento, compensação com crédito, ou split payment retido na liquidação.' },
-      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data do <strong>recolhimento</strong> que extinguiu o débito e fez o crédito nascer (LC 214/2025, art. 47). O momento depende da modalidade: <strong>RAD</strong>, na data em que o adquirente paga a guia; <strong>Fornecedor</strong>, no vencimento do tributo. Vazia enquanto não há recolhimento.' },
+      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data do <strong>recolhimento</strong> que extinguiu o débito e fez o crédito nascer (LC 214/2025, art. 47). O momento depende da modalidade: <strong>Split Payment</strong>, na liquidação financeira da nota; <strong>RAD</strong>, na data em que o adquirente paga a guia; <strong>Fornecedor</strong>, no vencimento do tributo. Vazia enquanto não há recolhimento.' },
       { key: 'dataExtincaoCredito', label: 'Data Extinção', tip: 'Data em que o <strong>crédito</strong> foi consumido — compensado, ressarcido ou transferido. Anda com a coluna Método de Extinção. Vazia enquanto o crédito está apropriado e disponível.' },
       { key: 'dataPrevExtincao', label: 'Limite art. 54', tip: 'Data em que o direito de utilizar o crédito se extingue por decurso: 5 anos contados do primeiro dia do período de apuração seguinte ao da apropriação (LC 214/2025, art. 54). Âmbar no último ano, vermelho depois de vencido. Crédito já extinto não corre esse risco.' },
     ]
@@ -120,7 +120,7 @@ window.SH_TABLES = {
       { label: 'Data NF', tip: 'Data de emissão — início da contagem do prazo de apropriação.' },
       { label: 'Vencimento', tip: 'Prazo-limite para apropriar o crédito. Passado ele, a recuperação exige processo administrativo.' },
       { label: 'Situação', tip: 'Quão perto do vencimento o crédito está, e se já carrega alguma flag de risco.' },
-      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data do <strong>recolhimento</strong> que extinguiu o débito e fez o crédito nascer (LC 214/2025, art. 47). O momento depende da modalidade: <strong>RAD</strong>, na data em que o adquirente paga a guia; <strong>Fornecedor</strong>, no vencimento do tributo. Vazia enquanto não há recolhimento.' },
+      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data do <strong>recolhimento</strong> que extinguiu o débito e fez o crédito nascer (LC 214/2025, art. 47). O momento depende da modalidade: <strong>Split Payment</strong>, na liquidação financeira da nota; <strong>RAD</strong>, na data em que o adquirente paga a guia; <strong>Fornecedor</strong>, no vencimento do tributo. Vazia enquanto não há recolhimento.' },
       { key: 'dataExtincaoCredito', label: 'Data Extinção', tip: 'Data em que o <strong>crédito</strong> foi consumido — compensado, ressarcido ou transferido. Anda com a coluna Método de Extinção. Vazia enquanto o crédito está apropriado e disponível.' },
       { key: 'dataPrevExtincao', label: 'Limite art. 54', tip: 'Data em que o direito de utilizar o crédito se extingue por decurso: 5 anos contados do primeiro dia do período de apuração seguinte ao da apropriação (LC 214/2025, art. 54). Âmbar no último ano, vermelho depois de vencido. Crédito já extinto não corre esse risco.' },
     ]
@@ -134,7 +134,7 @@ window.SH_TABLES = {
       { label: 'Data NF', tip: 'Data de emissão — início da contagem do prazo de apropriação.' },
       { label: 'Vencimento', tip: 'Prazo-limite para apropriar o crédito.' },
       { label: 'Situação', tip: 'Quão perto do vencimento o crédito está, e se já carrega alguma flag de risco.' },
-      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data do <strong>recolhimento</strong> que extinguiu o débito e fez o crédito nascer (LC 214/2025, art. 47). O momento depende da modalidade: <strong>RAD</strong>, na data em que o adquirente paga a guia; <strong>Fornecedor</strong>, no vencimento do tributo. Vazia enquanto não há recolhimento.' },
+      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data do <strong>recolhimento</strong> que extinguiu o débito e fez o crédito nascer (LC 214/2025, art. 47). O momento depende da modalidade: <strong>Split Payment</strong>, na liquidação financeira da nota; <strong>RAD</strong>, na data em que o adquirente paga a guia; <strong>Fornecedor</strong>, no vencimento do tributo. Vazia enquanto não há recolhimento.' },
       { key: 'dataExtincaoCredito', label: 'Data Extinção', tip: 'Data em que o <strong>crédito</strong> foi consumido — compensado, ressarcido ou transferido. Anda com a coluna Método de Extinção. Vazia enquanto o crédito está apropriado e disponível.' },
       { key: 'dataPrevExtincao', label: 'Limite art. 54', tip: 'Data em que o direito de utilizar o crédito se extingue por decurso: 5 anos contados do primeiro dia do período de apuração seguinte ao da apropriação (LC 214/2025, art. 54). Âmbar no último ano, vermelho depois de vencido. Crédito já extinto não corre esse risco.' },
     ]
@@ -149,7 +149,7 @@ window.SH_TABLES = {
       { key: 'contratoId', label: 'Contrato', tip: 'Contrato que define o método RAD para este fornecedor. Clique abre o contrato.' },
       { key: 'tipo', label: 'Tipo Fiscal', tip: 'Qual tributo esta guia recolhe: <strong>IBS</strong> (guia 6912) ou <strong>CBS</strong> (DARF 5952).' },
       { key: 'tipoNF', label: 'Tipo', tip: 'Modelo do documento fiscal de origem.' },
-      { key: 'metodo', label: 'Método', tip: 'Constante <code>RAD</code> nesta listagem — Recolhimento pelo Adquirente. O método Fornecedor não gera guia aqui.' },
+      { key: 'metodo', label: 'Método', tip: 'Constante <code>RAD</code> nesta listagem — Recolhimento pelo Adquirente. Split Payment e Fornecedor não geram guia aqui.' },
       { key: 'valor', label: 'Valor', tip: 'Valor do tributo a recolher nesta guia.',      cls: 'r' },
       { key: 'dataRFIso', label: 'Data RF', tip: 'Data de emissão do documento, que marca o fato gerador.' },
       { key: 'pagamento', label: 'Pagamento', tip: 'Data e hora do recolhimento. Se pago, o link abre o comprovante.' },
@@ -157,7 +157,7 @@ window.SH_TABLES = {
       { key: 'statusFlags', label: 'St. Registro', tip: 'Sinalizações de risco sobre o registro — em risco, a prescrever, inconsistência ou vencido.' },
       { key: '_inconsistencias', label: 'Inconsistências', tip: 'Divergências apuradas entre o registro fiscal e o documento fiscal correspondente. Nota com inconsistência é retida fora dos lotes automáticos.' },
       { key: 'metodoExtincao', label: 'Extinção', tip: 'Como o crédito tributário foi extinto, quando já foi.' },
-      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data do <strong>recolhimento</strong> que extinguiu o débito e fez o crédito nascer (LC 214/2025, art. 47). O momento depende da modalidade: <strong>RAD</strong>, na data em que o adquirente paga a guia; <strong>Fornecedor</strong>, no vencimento do tributo. Vazia enquanto não há recolhimento.' },
+      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data do <strong>recolhimento</strong> que extinguiu o débito e fez o crédito nascer (LC 214/2025, art. 47). O momento depende da modalidade: <strong>Split Payment</strong>, na liquidação financeira da nota; <strong>RAD</strong>, na data em que o adquirente paga a guia; <strong>Fornecedor</strong>, no vencimento do tributo. Vazia enquanto não há recolhimento.' },
       { key: 'dataExtincaoCredito', label: 'Data Extinção', tip: 'Data em que o <strong>crédito</strong> foi consumido — compensado, ressarcido ou transferido. Anda com a coluna Método de Extinção. Vazia enquanto o crédito está apropriado e disponível.' },
       { key: 'dataPrevExtincao', label: 'Limite art. 54', tip: 'Data em que o direito de utilizar o crédito se extingue por decurso: 5 anos contados do primeiro dia do período de apuração seguinte ao da apropriação (LC 214/2025, art. 54). Âmbar no último ano, vermelho depois de vencido. Crédito já extinto não corre esse risco.' },
       { key: 'origemGeracao', label: 'Origem', tip: 'Se a guia foi produzida por uma <strong>política de execução ativa</strong> (AUTO) ou por seleção manual nesta tela (MANUAL). A faixa teal na linha marca as automáticas.' },
@@ -186,9 +186,9 @@ window.SH_TABLES = {
       { key: 'dataISO', label: 'Data', tip: 'Data de emissão do documento em que a divergência ocorreu.' },
       { key: 'statusCredito', label: 'St. Crédito', tip: 'Estado do crédito do registro afetado: não apropriado, apropriado, utilizado ou glosado.' },
       { key: 'statusRegistro', label: 'St. Registro', tip: 'Sinalizações de risco sobre o registro — em risco, a prescrever, vencido. Uma divergência aberta costuma vir acompanhada de flag de prazo.' },
-      { key: 'metodoPagamento', label: 'Método', tip: 'Método de pagamento definido no contrato: RAD ou Fornecedor. Determina quem precisa agir para resolver a divergência.' },
+      { key: 'metodoPagamento', label: 'Método', tip: 'Método de pagamento definido no contrato: Split Payment, RAD ou Fornecedor. Determina quem precisa agir para resolver a divergência.' },
       { key: 'metodoExtincao', label: 'Extinção', tip: 'Como o crédito tributário foi extinto, quando já foi. Vazio significa que a divergência ainda bloqueia o aproveitamento.' },
-      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data do <strong>recolhimento</strong> que extinguiu o débito e fez o crédito nascer (LC 214/2025, art. 47). O momento depende da modalidade: <strong>RAD</strong>, na data em que o adquirente paga a guia; <strong>Fornecedor</strong>, no vencimento do tributo. Vazia enquanto não há recolhimento.' },
+      { key: 'dataApropriacao', label: 'Apropriação', tip: 'Data do <strong>recolhimento</strong> que extinguiu o débito e fez o crédito nascer (LC 214/2025, art. 47). O momento depende da modalidade: <strong>Split Payment</strong>, na liquidação financeira da nota; <strong>RAD</strong>, na data em que o adquirente paga a guia; <strong>Fornecedor</strong>, no vencimento do tributo. Vazia enquanto não há recolhimento.' },
       { key: 'dataExtincaoCredito', label: 'Data Extinção', tip: 'Data em que o <strong>crédito</strong> foi consumido — compensado, ressarcido ou transferido. Anda com a coluna Método de Extinção. Vazia enquanto o crédito está apropriado e disponível.' },
       { key: 'dataPrevExtincao', label: 'Limite art. 54', tip: 'Data em que o direito de utilizar o crédito se extingue por decurso: 5 anos contados do primeiro dia do período de apuração seguinte ao da apropriação (LC 214/2025, art. 54). Âmbar no último ano, vermelho depois de vencido. Crédito já extinto não corre esse risco.' },
     ]
@@ -201,7 +201,7 @@ window.SH_TABLES = {
       { key: 'fornecedor', label: 'Fornecedor', tip: 'Razão social do fornecedor.' },
       { key: 'inicio', label: 'Início', tip: 'Primeiro dia de vigência. Documento emitido antes desta data não é coberto.' },
       { key: 'fim', label: 'Fim', tip: 'Último dia de vigência. Volume circulando após o fim é o risco central da governança contratual.' },
-      { key: 'metodoPagamento', label: 'Método de Pagamento', tip: 'Quem recolhe o tributo dos documentos deste fornecedor: <strong>RAD</strong> ou <strong>Fornecedor</strong>.' },
+      { key: 'metodoPagamento', label: 'Método de Pagamento', tip: 'Quem recolhe o tributo dos documentos deste fornecedor: <strong>Split Payment</strong>, <strong>RAD</strong> ou <strong>Fornecedor</strong>.' },
       { key: 'prazo', label: 'Prazo pagto.', tip: 'Prazo em dias entre a emissão do documento e a liquidação financeira.' },
       { key: 'status', label: 'Status', tip: 'Situação derivada da vigência: vigente, a vencer, vencido ou futuro. Não é um campo armazenado — é calculado contra a data corrente.' },
       { key: 'nfsVinculadas', label: 'NFs vinculadas', tip: 'Quantos documentos fiscais foram emitidos sob este contrato.', cls: 'r' }
@@ -1508,7 +1508,7 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   var aprop = 0, naoAprop = 0, glosado = 0, emRisco = 0, vencido = 0, util = 0, inconsist = 0, aPrescrever = 0;
   var naoApropCP = 0, naoApropLP = 0;
   var extinto = 0, extintoCount = 0, extintoUlt = 0;
-  var vencNaoExt = 0, vencForn = 0, vencRad = 0;
+  var vencNaoExt = 0, vencForn = 0, vencRad = 0, vencSplit = 0;
   var _hoje = new Date(); _hoje.setHours(0,0,0,0);
   var _mesAtual = _hoje.getFullYear() * 100 + (_hoje.getMonth() + 1);
   function _vencKPI(dataISO) {
@@ -1554,9 +1554,15 @@ window.atualizarKPIsCreditos = function(listaRFs) {
     // Vencidos não prescritos: sr=vencido e prazo do art. 54 ainda aberto
     if (sr === 'vencido' && !_prescrito) {
       vencNaoExt += v;
+      // Três divisões. O seed não marca 'vencido' em Split Payment, mas
+      // _calcularStatusRegistro() marca depois, só pela data — e ali a
+      // modalidade não entra na conta. Split vencido significa segregação
+      // não confirmada na liquidação, que é outra investigação: sem esta
+      // divisão o volume era rotulado como método Fornecedor.
       var _met = (r.metodoPagamento || '').toLowerCase();
-      if (_met === 'rad') vencRad += v;
-      else vencForn += v;
+      if      (_met === 'rad')           vencRad   += v;
+      else if (_met === 'split payment') vencSplit += v;
+      else                               vencForn  += v;
     }
   });
   var total = aprop + naoAprop + glosado;
@@ -1612,6 +1618,8 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   set('cred-venc-forn-pct',    vencNaoExt > 0 ? pct(vencForn, vencNaoExt) + ' dos vencidos' : '—');
   set('cred-venc-rad',         fmt(vencRad));
   set('cred-venc-rad-pct',     vencNaoExt > 0 ? pct(vencRad, vencNaoExt) + ' dos vencidos' : '—');
+  set('cred-venc-split',       fmt(vencSplit));
+  set('cred-venc-split-pct',   vencNaoExt > 0 ? pct(vencSplit, vencNaoExt) + ' dos vencidos' : '—');
   setTimeout(function(){ try{window.renderizarCalendarioExtincao && window.renderizarCalendarioExtincao();}catch(e){} }, 0);
 };
 
@@ -2140,15 +2148,14 @@ window.atualizarDashboard = function() {
   var subCred = document.getElementById('dash-sub-creditos');
   if (subCred) subCred.textContent = 'R$ milhões · IBS+CBS · Jan–Dez 2026 · NFs de entrada';
 
-  // ── 2. Pagamentos Executados — RAD vs Fornecedor ──
-  var pagRAD  = mesesISO.map(function() { return 0; });
-  var pagForn = mesesISO.map(function() { return 0; });
-
-  // Lookup RAD por CNPJ (independe de nf.contratoId)
-  var _cnpjRadMap = {};
-  if (window._contratosData) {
-    window._contratosData.forEach(function(c) { if (c.cnpj) _cnpjRadMap[c.cnpj] = !!c.rad; });
-  }
+  // ── 2. Pagamentos Executados — RAD, Fornecedor e Split Payment ──
+  // Agrupa por rf.metodoPagamento, que é o método herdado do contrato
+  // vigente na data do documento. O booleano `rad` do contrato, usado
+  // antes, só distinguia RAD de "não-RAD" e jogava Split Payment junto
+  // com Fornecedor — além de ignorar a vigência, olhando só o CNPJ.
+  var pagRAD   = mesesISO.map(function() { return 0; });
+  var pagForn  = mesesISO.map(function() { return 0; });
+  var pagSplit = mesesISO.map(function() { return 0; });
 
   lista.forEach(function(nf) {
     (nf.registrosFiscais || []).forEach(function(rf) {
@@ -2157,18 +2164,20 @@ window.atualizarDashboard = function() {
       var idx = mesesISO.indexOf(mes);
       if (idx < 0) return;
       var v = (rf.valor || 0) / 1e6;
-      if (_cnpjRadMap[nf.cnpj]) pagRAD[idx] += v;
-      else                       pagForn[idx] += v;
+      if      (rf.metodoPagamento === 'RAD')           pagRAD[idx]   += v;
+      else if (rf.metodoPagamento === 'Split Payment') pagSplit[idx] += v;
+      else                                             pagForn[idx]  += v;
     });
   });
   if (typeof svgBar === 'function') {
     svgBar('cPagamentos', [
-      { data: pagRAD.map(rnd),  color: 'var(--blue)', label: 'Via RAD'       },
-      { data: pagForn.map(rnd), color: 'var(--teal)', label: 'Via Fornecedor' }
+      { data: pagRAD.map(rnd),   color: 'var(--blue)',  label: 'Via RAD'        },
+      { data: pagForn.map(rnd),  color: 'var(--amber)', label: 'Via Fornecedor' },
+      { data: pagSplit.map(rnd), color: 'var(--teal)',  label: 'Via Split Payment' }
     ], mesesLabels, 140);
   }
   var subPag = document.getElementById('dash-sub-pagamentos');
-  if (subPag) subPag.textContent = 'R$ milhões · RAD + Fornecedor · Jan–Dez 2026';
+  if (subPag) subPag.textContent = 'R$ milhões · RAD + Fornecedor + Split · Jan–Dez 2026';
 
   // ── 3. Últimas transações ──
   var tbody = document.getElementById('t-recent');
@@ -7319,8 +7328,9 @@ window.renderizarPagamentosMetodo = function() {
   var f = window._filtrosPagamentos || {};
   var busca = (f.busca || '').toLowerCase();
 
-  var radPorMes  = [0,0,0,0,0,0,0,0,0,0,0,0];
-  var fornPorMes = [0,0,0,0,0,0,0,0,0,0,0,0];
+  var radPorMes   = [0,0,0,0,0,0,0,0,0,0,0,0];
+  var fornPorMes  = [0,0,0,0,0,0,0,0,0,0,0,0];
+  var splitPorMes = [0,0,0,0,0,0,0,0,0,0,0,0];
 
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
@@ -7352,30 +7362,40 @@ window.renderizarPagamentosMetodo = function() {
       var idx = mesesISO.indexOf(mes);
       if (idx < 0) return;
 
+      // Três modalidades. Antes o gráfico era binário — tudo que não fosse
+      // RAD entrava em Fornecedor, e o volume de Split Payment aparecia
+      // somado a ele, escondendo a modalidade em que o comprador não age.
       var valM = Math.round(credVal / 1e6 * 1000) / 1000;
-      if (rf.metodoPagamento === 'RAD') radPorMes[idx]  += valM;
-      else                               fornPorMes[idx] += valM;
+      if      (rf.metodoPagamento === 'RAD')           radPorMes[idx]   += valM;
+      else if (rf.metodoPagamento === 'Split Payment') splitPorMes[idx] += valM;
+      else                                             fornPorMes[idx]  += valM;
     });
   });
 
   var round2 = function(v) { return Math.round(v * 100) / 100; };
+  // Cores iguais às de CONTRATO_METODOS: RAD azul, Fornecedor âmbar,
+  // Split teal. Antes o renderizador e a legenda estática divergiam.
   var datasets = [
-    { label: 'RAD',        color: PALETTE.teal, data: radPorMes.map(round2)  },
-    { label: 'Fornecedor', color: PALETTE.blue, data: fornPorMes.map(round2) }
+    { label: 'RAD',           color: PALETTE.blue,  data: radPorMes.map(round2)   },
+    { label: 'Fornecedor',    color: PALETTE.amber, data: fornPorMes.map(round2)  },
+    { label: 'Split Payment', color: PALETTE.teal,  data: splitPorMes.map(round2) }
   ];
 
   _svgStackedBar('cPagMetodo', datasets, mesesLabels, 200);
 
   // Subtítulo dinâmico com proporção total
-  var totalRad  = radPorMes.reduce(function(a,b){return a+b;},0);
-  var totalForn = fornPorMes.reduce(function(a,b){return a+b;},0);
-  var total = totalRad + totalForn;
+  var totalRad   = radPorMes.reduce(function(a,b){return a+b;},0);
+  var totalForn  = fornPorMes.reduce(function(a,b){return a+b;},0);
+  var totalSplit = splitPorMes.reduce(function(a,b){return a+b;},0);
+  var total = totalRad + totalForn + totalSplit;
   var sub = document.getElementById('cPagMetodo-sub');
   if (sub) {
     if (total > 0) {
-      sub.textContent = 'R$ milhões · RAD ' + (totalRad/total*100).toFixed(0) + '% · Fornecedor ' + (totalForn/total*100).toFixed(0) + '% · créditos IBS+CBS';
+      sub.textContent = 'R$ milhões · RAD ' + (totalRad/total*100).toFixed(0)
+        + '% · Fornecedor ' + (totalForn/total*100).toFixed(0)
+        + '% · Split ' + (totalSplit/total*100).toFixed(0) + '% · créditos IBS+CBS';
     } else {
-      sub.textContent = 'R$ milhões · RAD vs Fornecedor · créditos IBS+CBS · mês a mês';
+      sub.textContent = 'R$ milhões · RAD · Fornecedor · Split Payment · créditos IBS+CBS · mês a mês';
     }
   }
 };
