@@ -179,6 +179,11 @@ img, svg { max-width: 100%; height: auto; }
 @media (max-width: 640px) {
   .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
 }
+
+.nid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+       color: var(--purple); background: var(--purple-d); border-radius: 3px;
+       padding: 1px 6px; white-space: nowrap; }
+@media (max-width: 640px) { .nid { white-space: normal; } }
 </style>
 </head>
 <body>
@@ -197,7 +202,7 @@ img, svg { max-width: 100%; height: auto; }
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-creditos</span></div>
     <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025, art. 47–48</span></div>
     <div class="meta-pill" style="margin-left:auto">
-      <span class="chip ok">Publicado</span>&nbsp;<span class="chip teal">v2.2</span>
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip teal">v2.3</span>
     </div>
   </div>
 
@@ -216,8 +221,9 @@ img, svg { max-width: 100%; height: auto; }
       <li><a href="#s10"><span class="toc-num">10</span> Regras de negócio</a></li>
       <li><a href="#s11"><span class="toc-num">11</span> Requisitos não funcionais</a></li>
       <li><a href="#s12"><span class="toc-num">12</span> Integrações e dependências</a></li>
-      <li><a href="#s13"><span class="toc-num">13</span> Glossário</a></li>
-      <li><a href="#s14"><span class="toc-num">14</span> Histórico de versões</a></li>
+      <li><a href="#sdef"><span class="toc-num">13</span> Defeitos e divergências</a></li>
+      <li><a href="#s13"><span class="toc-num">14</span> Glossário</a></li>
+      <li><a href="#s14"><span class="toc-num">15</span> Histórico de versões</a></li>
     </ul>
   </div>
 
@@ -442,6 +448,61 @@ img, svg { max-width: 100%; height: auto; }
       </table>
     </div>
   </div>
+
+    <h3>Prazo de utilização do crédito</h3>
+    <p>Dois campos derivados, aplicados na origem — no DF e em cada RF — para que toda projeção os herde em vez
+    de recalcular:</p>
+    <div class="code-block"><code>{
+  <span class="v">dataApropriacao</span>: <span class="k">string</span> | <span class="k">null</span>,   <span class="c">// ISO. Data da extinção do débito — marco inicial</span>
+  <span class="v">dataPrevExtincao</span>: <span class="k">string</span> | <span class="k">null</span>,  <span class="c">// ISO. 1º dia do período seguinte + 5 anos</span>
+  <span class="v">_apropEstimada</span>: <span class="k">boolean</span>          <span class="c">// true quando a data foi derivada (compensação)</span>
+}</code></div>
+
+    <div class="callout info">
+      <div class="ct">A regra em uma frase</div>
+      <p><strong>Sem extinção do débito não há apropriação, e sem apropriação nenhum prazo corre.</strong>
+      A apropriação depende da extinção por qualquer das modalidades do <span class="nid">art. 27</span>
+      <span class="nid">LC 214/2025, art. 47</span>. A partir dela, o direito de utilizar o crédito dura 5 anos,
+      contados do primeiro dia do período de apuração seguinte <span class="nid">art. 54</span>. Espelhado no
+      <span class="nid">Dec. 12.955/2026, art. 54</span> e na <span class="nid">Res. CGIBS 6/2026, art. 54</span>.</p>
+      <p>Em fusão, cisão ou incorporação os créditos passam à sucessora e <strong>a data original da apropriação
+      é preservada</strong> para a contagem — o relógio não reinicia
+      <span class="nid">Res. CGIBS 6/2026, art. 55, par. único</span>.</p>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">O comprador não controla o marco inicial</div>
+      <p>Quem dispara a apropriação é a extinção do débito <em>do fornecedor</em>. O comprador só controla esse
+      momento quando assume o recolhimento pelo RAD — que é exatamente o que o módulo de
+      <a class="xref" href="prd-pagamentos.html">Pagamentos RAD</a> operacionaliza. É mais um ângulo pelo qual o
+      RAD deixa de ser alternativa de pagamento e vira instrumento de controle de prazo.</p>
+    </div>
+
+    <h3>Colunas de prazo nas listagens</h3>
+    <p>Duas colunas novas, presentes em toda listagem e todo detalhamento de DF ou RF:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Coluna</th><th>O que mostra</th><th>Quando fica vazia</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Apropriação</strong></td>
+            <td>Data em que o débito foi extinto e o crédito passou a ser apropriável. <code>est.</code> marca
+            data derivada, quando a extinção foi por compensação.</td>
+            <td>Enquanto o débito não é extinto — <code>não apropriado</code> e <code>glosado</code></td>
+          </tr>
+          <tr>
+            <td><strong>Prev. extinção</strong></td>
+            <td>Data em que o direito de utilizar o crédito se extingue. <span style="color:var(--amber);font-weight:700">Âmbar</span>
+            no último ano, <span style="color:var(--red);font-weight:700">vermelho</span> depois de vencida.</td>
+            <td>Sem apropriação, nenhum prazo corre</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Aparecem em Créditos, Débitos, Pagamentos RAD, Inconsistências e nas listagens de DF a apropriar do
+    dashboard; no detalhe do RF, como seção própria com a base legal; e no detalhe do DF, em cada cartão de RF.
+    Nos débitos a data é a mesma, com outro titular: a extinção do nosso débito é o que dispara a apropriação
+    pelo <em>adquirente</em>.</p>
 
   <!-- ══ 04 ══ -->
   <div class="section" id="s04">
@@ -1554,10 +1615,52 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
       </table>
     </div>
   </div>
+  <!-- ══ Defeitos ══ -->
+  <div class="section" id="sdef">
+    <div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Defeitos e divergências</span></div>
+    <p class="sec-sub">Levantados no confronto entre o protótipo e o texto dos regulamentos.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Descrição</th><th>Impacto</th><th>Situação</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="rid">DEF-01</td>
+            <td>O KPI <em>“Prazo de 5 anos expirado — perda definitiva”</em> contava a prescrição a partir da
+            <strong>data de emissão da NF</strong>: <code>_prescrito = dataNF &lt; hoje − 5 anos</code>.</td>
+            <td>O <strong>art. 54 da LC 214/2025</strong> conta 5 anos do primeiro dia do período de apuração
+            <em>seguinte</em> ao da <strong>apropriação</strong> — e a apropriação só existe depois de extinto o
+            débito do fornecedor <strong>(art. 47)</strong>. Contar da emissão encurta o prazo em todo o intervalo
+            entre emitir e extinguir. Num RF extinto 17 meses após a emissão, o app declarava perdido crédito com
+            quase um ano e meio de vida.</td>
+            <td><span class="chip ok">Corrigido</span></td>
+          </tr>
+          <tr>
+            <td class="rid">DEF-02</td>
+            <td>O mesmo KPI somava <code>statusCredito === 'extinto'</code> ao crédito prescrito, sob o rótulo
+            “perda definitiva”.</td>
+            <td>São estados <strong>opostos</strong>: débito extinto é o evento que <em>libera</em> o crédito;
+            prescrição é a perda dele. O ramo era inerte — <code>statusCredito</code> nunca assume
+            <code>'extinto'</code> na carteira de créditos —, mas a regra estava errada.</td>
+            <td><span class="chip ok">Corrigido</span></td>
+          </tr>
+          <tr>
+            <td class="rid">DEF-03</td>
+            <td>A extinção por <strong>compensação</strong> <span class="nid">art. 27, I</span> não carrega data
+            no protótipo.</td>
+            <td>O débito foi extinto, logo houve apropriação e o prazo corre — mas não há marco registrado. A data
+            é derivada do documento fiscal e marcada <code>est.</code> na célula, para não passar por dado vindo da
+            plataforma. Numa implementação real, o marco vem do evento de extinção.</td>
+            <td><span class="chip warn">Contornado</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 
   <!-- ══ 13 ══ -->
   <div class="section" id="s13">
-    <div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Glossário</span></div>
+    <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Glossário</span></div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Termo</th><th>Definição</th></tr></thead>
@@ -1587,8 +1690,12 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
 
   <!-- ══ 14 ══ -->
   <div class="section" id="s14">
-    <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
-        <div class="ver-row">
+    <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Histórico de versões</span></div>
+            <div class="ver-row">
+      <div class="ver-num">v2.3</div>
+      <div class="ver-desc"><strong>10/09/2026</strong> — Entra a seção <strong>13 · Defeitos e divergências</strong>, com o defeito de fundo do módulo: o KPI de prescrição contava os 5 anos da <strong>emissão da NF</strong>, e não da <strong>apropriação</strong>. O <span class="nid">art. 54 da LC 214/2025</span> conta do primeiro dia do período seguinte ao da apropriação, que por sua vez só existe depois de extinto o débito do fornecedor <span class="nid">art. 47</span> — contar da emissão encurtava o prazo em todo o intervalo entre emitir e extinguir. O mesmo KPI somava débito extinto (que <em>libera</em> o crédito) a crédito prescrito (que o perde), sob o rótulo “perda definitiva”.<br><br>O modelo de dados ganha <code>dataApropriacao</code>, <code>dataPrevExtincao</code> e <code>_apropEstimada</code>, aplicados na origem — no DF e em cada RF — e as listagens ganham as colunas <strong>Apropriação</strong> e <strong>Prev. extinção</strong>, com a previsão colorindo por proximidade do prazo. O detalhe do RF ganha seção própria com a base legal.</div>
+    </div>
+<div class="ver-row">
       <div class="ver-num">v2.2</div>
       <div class="ver-desc"><strong>09/09/2026</strong> — Correção: o gerenciador de colunas da listagem de RFs existia na barra mas estava inerte. Duas causas. O <code>&lt;thead&gt;</code> gerado pelo catálogo perdia o <code>id</code> que o gerenciador usa para se instalar, e o registro apontava para <code>creditosRenderTabela</code> — o renderizador legado, de 15 colunas — e para a lista dele, cujos campos não são os do objeto vivo. Passa a apontar para <code>renderizarTabelaCreditos</code> e a <code>window._credRfsLista</code>, com as dezessete chaves conferidas contra a célula que cada coluna exibe.</div>
     </div>
@@ -1615,7 +1722,7 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
   <hr>
   <div style="font-size:11px;color:var(--txt3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
     <span>SplitHub · PRD · Fiscal → Crédito</span>
-    <span>v2.2 · Set/2026 · Base: LC 214/2025, art. 47–48</span>
+    <span>v2.3 · Set/2026 · Base: LC 214/2025, art. 47–48</span>
   </div>
 
 </div>
