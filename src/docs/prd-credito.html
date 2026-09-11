@@ -202,7 +202,7 @@ img, svg { max-width: 100%; height: auto; }
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-creditos</span></div>
     <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025, art. 47–48</span></div>
     <div class="meta-pill" style="margin-left:auto">
-      <span class="chip ok">Publicado</span>&nbsp;<span class="chip teal">v2.7.2</span>
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip teal">v2.7.3</span>
     </div>
   </div>
 
@@ -423,7 +423,11 @@ img, svg { max-width: 100%; height: auto; }
           <tr><td><code>statusCredito</code></td><td>enum (4)</td><td>Ciclo do crédito — ver seção 4.1</td></tr>
           <tr><td><code>statusRegistro</code></td><td>enum (4) | null</td><td>Sinalização de risco — ver seção 4.3</td></tr>
           <tr><td><code>statusFlags</code></td><td>string[]</td><td>Flags acumuladas de risco</td></tr>
-          <tr><td><code>metodoPagamento</code></td><td><code>'RAD' | 'Fornecedor'</code></td><td>Quem recolhe; usado no breakdown de vencidos</td></tr>
+          <tr><td><code>metodoPagamento</code></td><td><code>'RAD' | 'Fornecedor' | 'Split Payment'</code></td><td>Quem recolhe — valor <strong>efetivo</strong>, lido por listagens, filtros, KPIs, gráficos e pelo módulo de Pagamentos</td></tr>
+          <tr><td><code>metodoPagamentoContrato</code></td><td>string | ausente</td><td>Método definido no contrato, preservado quando o recolhimento é assumido — ver F-08</td></tr>
+          <tr><td><code>metodoPagamentoOrigem</code></td><td><code>'contrato' | 'alteracao_manual'</code> | ausente</td><td>De onde vem o método efetivo; ausente equivale a <code>'contrato'</code></td></tr>
+          <tr><td><code>conversaoRAD</code></td><td>object | ausente</td><td>Registro da ação: <code>id</code>, <code>em</code>, <code>por</code>, <code>perfil</code>, <code>motivo</code>, <code>justificativa</code>, <code>declaracoes</code>, <code>guiaGeradaEm</code>, <code>revertidaEm</code>, <code>revertidaPor</code>. Presente também na DF</td></tr>
+          <tr><td><code>_eventos</code></td><td>object[]</td><td>Histórico gravado das ações do operador, somado aos eventos derivados do estado. Presente também na DF</td></tr>
           <tr><td><code>metodoExtincao</code></td><td>string | null</td><td>Como o débito foi extinto — 5 valores possíveis</td></tr>
           <tr><td><code>dataPagamento</code></td><td>string | <code>'—'</code></td><td>Data do recolhimento</td></tr>
           <tr><td><code>contratoId</code></td><td>string | null</td><td>Vínculo contratual</td></tr>
@@ -1604,6 +1608,26 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
         </tbody>
       </table>
     </div>
+
+    <h3>9.7 Assumir recolhimento via RAD</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
+        <tbody>
+          <tr><td class="rid">RF-CRE-063</td><td>A ação <em>Assumir recolhimento</em> só fica habilitada para DF de entrada, com método Fornecedor, importada e com os dois RFs em <code>nao_apropriado</code>.</td><td>Nos demais casos o botão fica oculto ou desabilitado, conforme a tabela da F-08.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-064</td><td>Quando desabilitado, o botão deve expor o motivo.</td><td>Motivo no <em>tooltip</em> da listagem e, por extenso, no detalhe da DF.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-065</td><td>Inconsistência de valor de imposto ou documento inválido deve bloquear a ação; flags de prazo e conciliação pendente só geram aviso.</td><td>DF vencida continua habilitada, com aviso no modal.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-066</td><td>A confirmação deve exigir as duas declarações, o motivo e justificativa com pelo menos 10 caracteres.</td><td>Faltando qualquer um, a ação não executa.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-067</td><td>O botão de confirmar nunca deve ficar desabilitado: o rodapé lista as pendências, e o clique com pendência destaca os campos e leva o foco ao primeiro.</td><td><em>“Falta: …”</em> atualizado a cada mudança; justificativa com contador.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-068</td><td>A elegibilidade deve ser conferida de novo no momento da confirmação.</td><td>Se um RF foi apropriado com o modal aberto, a ação é recusada e o motivo aparece.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-069</td><td>Ao confirmar, DF e RFs devem passar a <code>metodoPagamento = 'RAD'</code>, com origem <code>alteracao_manual</code> e o método do contrato preservado. O contrato não muda.</td><td>Os dois RFs aparecem em Pagamentos RAD sem recarregar a página.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-070</td><td>A ação deve registrar um evento na DF e um em cada RF, com autor, data, motivo e método anterior.</td><td>Um evento na DF e um por RF; a timeline da DF mostra a ação uma vez só.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-071</td><td><em>Devolver ao fornecedor</em> deve ser permitido enquanto nenhuma guia foi gerada ou paga, com justificativa e evento no histórico.</td><td>Depois de gerar a guia, a opção fica desabilitada com o motivo.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-072</td><td>A ação deve sobreviver ao recarregamento da página.</td><td>O log é reaplicado a cada geração da base; reaplicar de novo não altera nada.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-073</td><td>A aba Documentos Fiscais deve oferecer o filtro <em>Origem do método</em>, e as colunas Método de Créditos e Pagamentos devem marcar o documento como <strong>alterado</strong>.</td><td>Filtrar por <em>Recolhimento assumido</em> retorna só as DFs convertidas.</td><td>S</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- ══ 10 ══ -->
@@ -1629,6 +1653,11 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
           <tr><td class="rid">RN-CRE-14</td><td><strong>Score de fornecedor</strong></td><td>Sempre</td><td><code>pendente / total × 10</code>; maior score, pior situação</td></tr>
           <tr><td class="rid">RN-CRE-15</td><td><strong>Propagação de filtros</strong></td><td>Alteração em qualquer filtro do grid</td><td>Recalcula KPIs, composição e método de pagamento</td></tr>
           <tr><td class="rid">RN-CRE-16</td><td><strong>Filtro de CNPJ por grupo</strong></td><td>Seleção de CNPJ no dashboard</td><td>Inclui todos os CNPJs do mesmo <code>grupoId</code></td></tr>
+          <tr><td class="rid">RN-CRE-17</td><td><strong>Método efetivo × método do contrato</strong></td><td>Recolhimento assumido</td><td><code>metodoPagamento</code> passa a RAD e é o que todo consumidor lê; <code>metodoPagamentoContrato</code> guarda o original</td></tr>
+          <tr><td class="rid">RN-CRE-18</td><td><strong>Só débito não extinto</strong></td><td>Algum RF apropriado ou utilizado</td><td>Ação indisponível: o valor pago só quita débito não extinto, e o excedente vai ao fornecedor <span class="nid">art. 36, § 3º</span></td></tr>
+          <tr><td class="rid">RN-CRE-19</td><td><strong>Split Payment não se converte</strong></td><td><code>metodoPagamento = 'Split Payment'</code></td><td>Ação oculta: o art. 36 exige instrumento que não permita a segregação</td></tr>
+          <tr><td class="rid">RN-CRE-20</td><td><strong>Guia fecha a reversão</strong></td><td><code>guiaGeradaEm</code> preenchido ou RF pago</td><td><em>Devolver ao fornecedor</em> indisponível</td></tr>
+          <tr><td class="rid">RN-CRE-21</td><td><strong>Conversão não cria inconsistência</strong></td><td>Recolhimento assumido</td><td>Não gera <em>Sem comprovante</em>: o RF está aguardando guia, não em falta</td></tr>
         </tbody>
       </table>
     </div>
@@ -1794,6 +1823,10 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
   <div class="section" id="s14">
     <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Histórico de versões</span></div>
                     <div class="ver-row">
+      <div class="ver-num">v2.7.3</div>
+      <div class="ver-desc"><strong>11/09/2026</strong> — A F-08 passa a constar fora da seção de funcionalidades. O modelo de dados (3.2) ganha <code>metodoPagamentoContrato</code>, <code>metodoPagamentoOrigem</code>, <code>conversaoRAD</code> e <code>_eventos</code>, e o tipo de <code>metodoPagamento</code> volta a listar Split Payment. Entram os requisitos <strong>RF-CRE-063 a RF-CRE-073</strong> (seção 9.7) e as regras <strong>RN-CRE-17 a RN-CRE-21</strong>.</div>
+    </div>
+    <div class="ver-row">
       <div class="ver-num">v2.7.2</div>
       <div class="ver-desc"><strong>11/09/2026</strong> — <strong>Correção na F-08: botão de confirmar sem explicação.</strong> Com as duas declarações marcadas e o motivo escolhido, o botão continuava desabilitado, porque a justificativa exigia pelo menos 10 caracteres e nada na tela dizia isso. O botão passa a ficar sempre clicável; o rodapé lista as pendências a cada mudança, o clique com pendência destaca os campos e leva o foco ao primeiro, e a justificativa ganha contador. Vale também para o modal de devolução ao fornecedor.</div>
     </div>

@@ -194,7 +194,7 @@ img, svg { max-width: 100%; height: auto; }
   <p class="subtitle">Configura <strong>o que, quando e como</strong> a empresa gera as guias de IBS e CBS dos Registros Fiscais sob RAD — <strong>Recolhimento pelo Adquirente</strong> — e as entrega ao ERP sem ação assistida. O contrato define <em>quem</em> recolhe, por CNPJ fornecedor; a política define a régua de execução do lado do comprador.</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.1</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
     <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Admin → Execução RAD</span></div>
     <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-exec-rad</span></div>
@@ -350,7 +350,6 @@ rf.metodoPagamento || nf.metodoPagamento === <span class="s">'RAD'</span>
 !pago                                              <span class="c">// sem dataPagamento e statusCredito fora de apropriado|utilizado</span>
 dentroDaCobertura(politica, nf, rf)                <span class="c">// o modelo de orquestração</span>
 valor &gt;= politica.valorMinimo                       <span class="c">// ignorado quando orquestracao = valor</span></code></div>
-    <p>O RAD pode ter duas origens: o contrato, ou a decisão do operador de assumir o recolhimento de uma DF em Créditos (F-08 do <a class="xref" href="prd-credito.html">PRD de Crédito</a>). O motor não distingue as duas, porque <code>metodoPagamento</code> é o valor efetivo: um RF convertido entra no universo da política no mesmo instante, e sai dele se o recolhimento for devolvido ao fornecedor. Na fila, o registro aparece com a marca <strong>alterado</strong>.</p>
 
   </div>
 
@@ -834,7 +833,6 @@ Hoje isso produziria <span class="n">4</span> guia(s) somando <span class="n">R$
           <tr><td class="rid">RF-EXR-014</td><td>O valor mínimo por guia deve ser ignorado quando a orquestração for por valor.</td><td>O campo some do editor e não participa da seleção.</td><td>M</td></tr>
           <tr><td class="rid">RF-EXR-015</td><td>RFs que batem numa flag de exclusão devem ser separados, não descartados.</td><td>O lote traz <code>incluidos</code> e <code>bloqueados</code>, cada bloqueado com o motivo.</td><td>M</td></tr>
           <tr><td class="rid">RF-EXR-016</td><td>O lote deve ser recalculado a cada render, nunca persistido.</td><td>Alterar a política e reabrir a fila mostra o novo recorte sem passo de sincronização.</td><td>M</td></tr>
-          <tr><td class="rid">RF-EXR-047</td><td>RFs com recolhimento assumido em Créditos devem entrar no universo da política como qualquer RF de método RAD.</td><td>Assumir o recolhimento de uma DF coberta por política ativa faz os dois RFs aparecerem no lote sem passo de sincronização; devolver ao fornecedor os retira.</td><td>M</td></tr>
         </tbody>
       </table>
     </div>
@@ -940,7 +938,6 @@ Hoje isso produziria <span class="n">4</span> guia(s) somando <span class="n">R$
           <tr><td class="rid">RN-EXR-12</td><td>Política sem conexão gera a guia e a mantém na plataforma.</td><td>A geração tem valor mesmo sem integração — o que não se pode é fingir que entregou.</td></tr>
           <tr><td class="rid">RN-EXR-13</td><td>Cancelar a edição não altera a política.</td><td>Editor que persiste sem salvar torna qualquer exploração destrutiva.</td></tr>
           <tr><td class="rid">RN-EXR-14</td><td>Toda alteração de política é auditada com autor, momento e diff.</td><td>A régua de execução move dinheiro; mudança sem rastro é indefensável.</td></tr>
-          <tr><td class="rid">RN-EXR-15</td><td>RF com recolhimento assumido entra no universo igual a um RAD de contrato.</td><td>O operador já decidiu pagar; exigir nova configuração da política criaria uma guia que ninguém gera. Gerar a guia registra a data e impede devolver o recolhimento ao fornecedor.</td></tr>
         </tbody>
       </table>
     </div>
@@ -1029,10 +1026,6 @@ POST {webhookUrl}
   <!-- ══ 14 ══ -->
   <div class="section" id="s14">
     <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
-    <div class="ver-row">
-      <span class="ver-num">v1.1</span>
-      <span class="ver-desc"><strong>11/09/2026</strong> — O universo de seleção passa a receber RFs de duas origens: RAD de contrato e recolhimento assumido pelo operador em Créditos (F-08 do PRD de Crédito). O motor não muda — lê o método efetivo —, mas o comportamento sim: um RF convertido entra no lote de uma política ativa no mesmo instante. Entram <strong>RF-EXR-047</strong> e <strong>RN-EXR-15</strong>.</span>
-    </div>
     <div class="ver-row">
       <span class="ver-num">v1.0</span>
       <span class="ver-desc"><strong>08/09/2026</strong> — Primeira versão. Documenta o módulo criado para
