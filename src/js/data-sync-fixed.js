@@ -1080,12 +1080,6 @@ window._rfGerarHistorico = function(rf, nf) {
     acordo:       'Acordo comercial pontual',
     outro:        'Outro'
   };
-  var INSTRUMENTOS = {
-    ted_pix:       'TED ou PIX sem segregação',
-    boleto:        'Boleto sem segregação',
-    transferencia: 'Transferência entre contas',
-    outro:         'Outro instrumento sem segregação'
-  };
   // Inconsistências que tornam o valor a recolher, ou o próprio crédito, não
   // confiável bloqueiam a ação. As de conciliação só geram aviso.
   var INC_BLOQUEIO = { capur_ibs_aliquota: 1, capur_cbs_aliquota: 1, cbs_incorreto: 1, chave_invalida: 1 };
@@ -1230,7 +1224,7 @@ window._rfGerarHistorico = function(rf, nf) {
       // cada registro guarda a própria cópia: a guia é gerada por tributo
       o.conversaoRAD = {
         id: acao.id, em: acao.em, por: acao.por, perfil: acao.perfil,
-        motivo: acao.motivo, justificativa: acao.justificativa, instrumento: acao.instrumento,
+        motivo: acao.motivo, justificativa: acao.justificativa,
         declaracoes: acao.declaracoes, guiaGeradaEm: null, revertidaEm: null, revertidaPor: null, revertidaId: null
       };
     });
@@ -1391,7 +1385,7 @@ window._rfGerarHistorico = function(rf, nf) {
     if (c && o.metodoPagamentoOrigem === 'alteracao_manual') {
       return caixa('--amber-rgb', 'Recolhimento assumido · RAD',
         'Em <strong>' + fmtTS(c.em) + '</strong> por ' + esc(c.por) + ' · contrato: <strong>' + esc(o.metodoPagamentoContrato || 'Fornecedor') + '</strong><br>'
-        + 'Motivo: ' + esc(MOTIVOS[c.motivo] || c.motivo) + ' · instrumento: ' + esc(INSTRUMENTOS[c.instrumento] || c.instrumento) + '<br>'
+        + 'Motivo: ' + esc(MOTIVOS[c.motivo] || c.motivo) + '<br>'
         + '<em>' + esc(c.justificativa) + '</em>'
         + (c.guiaGeradaEm ? '<br>Guia gerada em ' + fmtTS(c.guiaGeradaEm) : ''));
     }
@@ -1467,14 +1461,9 @@ window._rfGerarHistorico = function(rf, nf) {
       + el.avisos.map(function (a) { return caixa('--amber-rgb', 'Atenção', esc(a)); }).join('')
       + '<div class="mbox-divider"></div>'
       + '<div class="mbox-section-label">Declarações</div>'
-      + dec('rad-f-dec-regime', 'Somos contribuintes do IBS e da CBS no <strong>regime regular</strong>.')
       + dec('rad-f-dec-split', 'O pagamento ao fornecedor usará instrumento que <strong>não permite a segregação</strong> do tributo.')
       + dec('rad-f-dec-liquido', 'O fornecedor receberá o <strong>valor líquido</strong>, sem o IBS e a CBS deste documento.')
-      + dec('rad-f-dec-dup', 'A duplicata deste documento <strong>não foi cedida</strong> a banco, FIDC ou factoring.')
-      + '<div class="shg2" style="gap:12px;margin-top:6px">'
-      +   '<div class="sh-fp-field"><label for="rad-f-instrumento">Instrumento de pagamento</label><select id="rad-f-instrumento" onchange="window.shRADValidar()">' + opcoes(INSTRUMENTOS) + '</select></div>'
-      +   '<div class="sh-fp-field"><label for="rad-f-motivo">Motivo</label><select id="rad-f-motivo" onchange="window.shRADValidar()">' + opcoes(MOTIVOS) + '</select></div>'
-      + '</div>'
+      + '<div class="sh-fp-field" style="margin-top:6px"><label for="rad-f-motivo">Motivo</label><select id="rad-f-motivo" onchange="window.shRADValidar()">' + opcoes(MOTIVOS) + '</select></div>'
       + '<div class="sh-fp-field" style="margin-top:12px"><label for="rad-f-just">Justificativa</label>'
       +   campoTexto('rad-f-just', 'window.shRADValidar()', 'Por que o recolhimento está sendo assumido') + '</div>'
       + caixa('--status-red-rgb', 'Pagamento em duplicidade',
@@ -1488,10 +1477,10 @@ window._rfGerarHistorico = function(rf, nf) {
   };
 
   window.shRADValidar = function () {
-    var declarou = ['rad-f-dec-regime', 'rad-f-dec-split', 'rad-f-dec-liquido', 'rad-f-dec-dup'].every(function (id) {
+    var declarou = ['rad-f-dec-split', 'rad-f-dec-liquido'].every(function (id) {
       var e = document.getElementById(id); return !!(e && e.checked);
     });
-    return habilitar('rad-f-ok', declarou && !!valor('rad-f-instrumento') && !!valor('rad-f-motivo') && valor('rad-f-just').trim().length >= 10);
+    return habilitar('rad-f-ok', declarou && !!valor('rad-f-motivo') && valor('rad-f-just').trim().length >= 10);
   };
 
   window.shRADConfirmarAssumir = function (nfNumero) {
@@ -1510,8 +1499,8 @@ window._rfGerarHistorico = function(rf, nf) {
     var acao = {
       id: 'rad' + Date.now().toString(36), tipo: 'assumir', nfNumero: String(nfs[0].numero), cnpj: nfs[0].cnpj || '',
       em: agoraISO(), por: a.por, perfil: a.perfil,
-      motivo: valor('rad-f-motivo'), instrumento: valor('rad-f-instrumento'), justificativa: valor('rad-f-just').trim(),
-      declaracoes: { regimeRegular: true, semSegregacao: true, pagamentoLiquido: true, duplicataNaoCedida: true }
+      motivo: valor('rad-f-motivo'), justificativa: valor('rad-f-just').trim(),
+      declaracoes: { semSegregacao: true, pagamentoLiquido: true }
     };
     var log = lerLog(); log.push(acao); gravarLog(log);
     nfs.forEach(function (nf) { aplicarAssumir(nf, acao); });
@@ -1537,10 +1526,8 @@ window._rfGerarHistorico = function(rf, nf) {
           'O método volta a <strong>' + esc(met) + '</strong>, definido no contrato, e o documento sai de Pagamentos RAD. '
           + 'O fornecedor volta a ser o responsável pelo recolhimento — avise-o.')
       + '<div class="shg2" style="gap:0 16px;margin-top:10px">'
-      +   DR('Assumido em', fmtTS(c.em))
-      +   DR('Por', esc(c.por || '—'))
+      +   DR('Assumido em', fmtTS(c.em) + ' · ' + esc(c.por || '—'))
       +   DR('Motivo', esc(MOTIVOS[c.motivo] || c.motivo || '—'))
-      +   DR('Instrumento', esc(INSTRUMENTOS[c.instrumento] || c.instrumento || '—'))
       + '</div>'
       + '<div class="sh-fp-field" style="margin-top:8px"><label for="rad-r-just">Justificativa</label>'
       +   campoTexto('rad-r-just', 'window.shRADValidarReverter()', 'Por que o recolhimento volta ao fornecedor') + '</div>'

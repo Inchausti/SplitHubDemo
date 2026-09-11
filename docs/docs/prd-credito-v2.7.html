@@ -202,7 +202,7 @@ img, svg { max-width: 100%; height: auto; }
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-creditos</span></div>
     <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025, art. 47–48</span></div>
     <div class="meta-pill" style="margin-left:auto">
-      <span class="chip ok">Publicado</span>&nbsp;<span class="chip teal">v2.7.1</span>
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip teal">v2.7</span>
     </div>
   </div>
 
@@ -956,14 +956,14 @@ window.renderizarPagamentosMetodo();</code></div>
         <p>Desabilitado, o botão mostra o motivo no <em>tooltip</em>. Como o celular não tem <em>tooltip</em>, o detalhe da DF repete o motivo por extenso.</p>
 
         <h4>Confirmação</h4>
-        <p>O modal traz o resumo — fornecedor, contrato, método do contrato, IBS, CBS, total e vencimento —, <strong>duas declarações obrigatórias</strong> (instrumento de pagamento sem segregação e pagamento do valor líquido ao fornecedor), o motivo e uma justificativa de pelo menos 10 caracteres, além do aviso de pagamento em duplicidade. A elegibilidade é <strong>conferida de novo ao confirmar</strong>: se o fornecedor recolheu enquanto a tela estava aberta, a ação é recusada.</p>
+        <p>O modal traz o resumo — fornecedor, contrato, método do contrato, IBS, CBS, total e vencimento —, <strong>quatro declarações obrigatórias</strong> (regime regular, instrumento sem segregação, pagamento do valor líquido ao fornecedor, duplicata não cedida), o instrumento de pagamento, o motivo e uma justificativa de pelo menos 10 caracteres, além do aviso de pagamento em duplicidade. A elegibilidade é <strong>conferida de novo ao confirmar</strong>: se o fornecedor recolheu enquanto a tela estava aberta, a ação é recusada.</p>
 
         <h4>Modelo de dados</h4>
         <div class="code-block"><code><span class="c">// na DF e em cada RF</span>
 <span class="v">metodoPagamento</span>:         <span class="s">'RAD'</span>,               <span class="c">// valor efetivo — os consumidores seguem lendo este campo</span>
 <span class="v">metodoPagamentoContrato</span>: <span class="s">'Fornecedor'</span>,        <span class="c">// o que o contrato define; nunca muda</span>
 <span class="v">metodoPagamentoOrigem</span>:   <span class="s">'alteracao_manual'</span>,  <span class="c">// | 'contrato'</span>
-<span class="v">conversaoRAD</span>: { <span class="v">id</span>, <span class="v">em</span>, <span class="v">por</span>, <span class="v">perfil</span>, <span class="v">motivo</span>, <span class="v">justificativa</span>,
+<span class="v">conversaoRAD</span>: { <span class="v">id</span>, <span class="v">em</span>, <span class="v">por</span>, <span class="v">perfil</span>, <span class="v">motivo</span>, <span class="v">justificativa</span>, <span class="v">instrumento</span>,
                 <span class="v">declaracoes</span>, <span class="v">guiaGeradaEm</span>, <span class="v">revertidaEm</span>, <span class="v">revertidaPor</span> },
 <span class="v">_eventos</span>: [ ... ]   <span class="c">// histórico gravado</span></code></div>
         <p>Manter <code>metodoPagamento</code> como valor efetivo é o que faz Pagamentos, as políticas de execução automática, gráficos, KPIs e filtros enxergarem a DF convertida <strong>sem nenhuma alteração</strong>.</p>
@@ -1793,10 +1793,6 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
   <div class="section" id="s14">
     <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Histórico de versões</span></div>
                     <div class="ver-row">
-      <div class="ver-num">v2.7.1</div>
-      <div class="ver-desc"><strong>11/09/2026</strong> — Confirmação da <strong>F-08</strong> simplificada. Saem as declarações de regime regular e de duplicata não cedida, e sai a seleção do instrumento de pagamento. Ficam duas declarações — instrumento sem segregação e pagamento do valor líquido ao fornecedor —, o motivo e a justificativa.<br><br>Com a declaração de duplicata fora, a regra de bloqueio da seção 07 do documento de Duplicata não tem mais nenhuma verificação no fluxo de assumir o recolhimento.</div>
-    </div>
-    <div class="ver-row">
       <div class="ver-num">v2.7</div>
       <div class="ver-desc"><strong>11/09/2026</strong> — <strong>Nova funcionalidade F-08: assumir recolhimento via RAD.</strong> Numa DF com método Fornecedor e os dois tributos não apropriados, o operador assume o pagamento: o método vira RAD, o contrato continua como está e a DF entra em Pagamentos RAD. A base é o <span class="nid">art. 36</span> — opção do adquirente por operação, sob duas condições que viram declaração obrigatória: regime regular e instrumento de pagamento sem segregação.<br><br>O histórico da DF e do RF, que até aqui era recalculado a partir do estado, ganha um log gravado de ações. Como o protótipo não persiste dado de negócio, cada ação vai para o <code>localStorage</code> e é reaplicada a cada geração da base. De quebra, a exportação CSV da aba Documentos Fiscais — que saía com IBS, CBS, crédito e método vazios — passa a trazer os valores reais.</div>
     </div>
