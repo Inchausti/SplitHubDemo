@@ -202,7 +202,7 @@ img, svg { max-width: 100%; height: auto; }
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-creditos</span></div>
     <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025, art. 47–48</span></div>
     <div class="meta-pill" style="margin-left:auto">
-      <span class="chip ok">Publicado</span>&nbsp;<span class="chip teal">v2.6</span>
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip teal">v2.7</span>
     </div>
   </div>
 
@@ -928,6 +928,79 @@ window.renderizarPagamentosMetodo();</code></div>
         <p>No dashboard, "em risco" agrega as quatro sinalizações num único número; no módulo de Crédito elas aparecem separadas. É simplificação deliberada para leitura rápida.</p>
       </div>
     </div>
+    <!-- F08 -->
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-08</span>
+        <span class="feat-name">Assumir recolhimento via RAD</span>
+        <span class="feat-loc">#t-cred-dfs · coluna Ações · detalhe do DF</span>
+      </div>
+      <div class="feat-body">
+        <p>Numa DF de entrada com método <strong>Fornecedor</strong>, o operador assume o pagamento do IBS e da CBS. O método passa a RAD, a ação fica registrada no histórico da DF e dos dois RFs, e o documento entra em Pagamentos RAD. A base legal é a opção do adquirente por operação <span class="nid">Res. CGIBS 6/2026, art. 36</span> <span class="nid">LC 214/2025, art. 36</span>.</p>
+
+        <h4>Quando o botão fica habilitado</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Situação da DF</th><th>Botão</th><th>Por quê</th></tr></thead>
+            <tbody>
+              <tr><td><strong>A Apropriar</strong> — IBS e CBS não apropriados · método Fornecedor · importada</td><td><span class="chip ok">Habilitado</span></td><td>Nenhum débito extinto: todo valor pago quita débito <span class="nid">§ 3º, I</span></td></tr>
+              <tr><td>Parc. Apropriado</td><td><span class="chip warn">Desabilitado</span></td><td>O fornecedor já recolheu um tributo. Pagar os dois gera excedente, transferido a ele <span class="nid">§ 3º, II</span></td></tr>
+              <tr><td>Apropriado · Parc. Utilizado · Utilizado · Glosado</td><td><span class="chip gray">Oculto</span></td><td>Não há débito a quitar, ou o crédito foi recusado</td></tr>
+              <tr><td>Método Split Payment, ou RAD definido em contrato</td><td><span class="chip gray">Oculto</span></td><td>O split segrega na liquidação; o art. 36 exige instrumento <strong>sem</strong> segregação</td></tr>
+              <tr><td>Sem os dois RFs, ou importação pendente / com inconsistência</td><td><span class="chip warn">Desabilitado</span></td><td>Documento ainda não validado</td></tr>
+              <tr><td>Inconsistência de valor de imposto ou documento inválido</td><td><span class="chip warn">Desabilitado</span></td><td>O valor a recolher, ou o próprio crédito, não é confiável</td></tr>
+              <tr><td>Vencido · A prescrever · Em risco · Não conciliado · Sem comprovante</td><td><span class="chip ok">Habilitado</span></td><td>Nenhuma flag bloqueia sozinha. Vencido, a prescrever e conciliação pendente geram aviso no modal</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Desabilitado, o botão mostra o motivo no <em>tooltip</em>. Como o celular não tem <em>tooltip</em>, o detalhe da DF repete o motivo por extenso.</p>
+
+        <h4>Confirmação</h4>
+        <p>O modal traz o resumo — fornecedor, contrato, método do contrato, IBS, CBS, total e vencimento —, <strong>quatro declarações obrigatórias</strong> (regime regular, instrumento sem segregação, pagamento do valor líquido ao fornecedor, duplicata não cedida), o instrumento de pagamento, o motivo e uma justificativa de pelo menos 10 caracteres, além do aviso de pagamento em duplicidade. A elegibilidade é <strong>conferida de novo ao confirmar</strong>: se o fornecedor recolheu enquanto a tela estava aberta, a ação é recusada.</p>
+
+        <h4>Modelo de dados</h4>
+        <div class="code-block"><code><span class="c">// na DF e em cada RF</span>
+<span class="v">metodoPagamento</span>:         <span class="s">'RAD'</span>,               <span class="c">// valor efetivo — os consumidores seguem lendo este campo</span>
+<span class="v">metodoPagamentoContrato</span>: <span class="s">'Fornecedor'</span>,        <span class="c">// o que o contrato define; nunca muda</span>
+<span class="v">metodoPagamentoOrigem</span>:   <span class="s">'alteracao_manual'</span>,  <span class="c">// | 'contrato'</span>
+<span class="v">conversaoRAD</span>: { <span class="v">id</span>, <span class="v">em</span>, <span class="v">por</span>, <span class="v">perfil</span>, <span class="v">motivo</span>, <span class="v">justificativa</span>, <span class="v">instrumento</span>,
+                <span class="v">declaracoes</span>, <span class="v">guiaGeradaEm</span>, <span class="v">revertidaEm</span>, <span class="v">revertidaPor</span> },
+<span class="v">_eventos</span>: [ ... ]   <span class="c">// histórico gravado</span></code></div>
+        <p>Manter <code>metodoPagamento</code> como valor efetivo é o que faz Pagamentos, as políticas de execução automática, gráficos, KPIs e filtros enxergarem a DF convertida <strong>sem nenhuma alteração</strong>.</p>
+
+        <h4>Histórico</h4>
+        <p>O histórico da DF e do RF era recalculado a partir do estado atual e não tinha onde registrar uma ação. Entra o log <code>_eventos</code>, somente de acréscimo, com os eventos <strong>RAD ASSUMIDO</strong> e <strong>RAD REVERTIDO</strong>. A timeline da DF agrega a dos RFs, então o evento espelhado em cada RF é marcado e a ação aparece <strong>uma vez só</strong> na DF.</p>
+
+        <h4>Reversão</h4>
+        <p><em>Devolver ao fornecedor</em> volta o método ao do contrato e tira a DF de Pagamentos RAD. É permitido enquanto nenhuma guia foi paga ou gerada: gerar a guia de um RF convertido registra <code>guiaGeradaEm</code> e fecha a reversão. Exige justificativa, e também vai para o histórico.</p>
+
+        <div class="callout warn">
+          <div class="ct">Persistência no protótipo</div>
+          <p>O protótipo não persiste dado de negócio. Cada ação vai para o log <code>sh_acoes_rad_v1</code> no <code>localStorage</code> e é <strong>reaplicada a cada geração da base</strong>, de forma idempotente. Duas limitações: a ação vale só naquele navegador, e o autor registrado é o usuário do login do protótipo — sem autenticação real, o histórico não prova quem agiu.</p>
+        </div>
+
+        <h4>Onde a mudança aparece</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Local</th><th>Efeito</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Créditos · Documentos Fiscais</strong></td><td>Coluna <em>Ações</em>, filtro <em>Origem do método</em>, marca <strong>alterado</strong> na coluna Método. O CSV traz a origem no próprio valor do método</td></tr>
+              <tr><td><strong>Créditos · Registros Fiscais</strong></td><td>Marca <strong>alterado</strong> na coluna Método</td></tr>
+              <tr><td><strong>Detalhe da DF</strong></td><td>Botão no cabeçalho, bloco <em>Recolhimento assumido</em> e evento na timeline</td></tr>
+              <tr><td><strong>Detalhe do RF</strong></td><td>Marca, bloco e evento na timeline</td></tr>
+              <tr><td><strong>Pagamentos RAD</strong></td><td>A DF e os RFs entram sozinhos, com a marca <strong>alterado</strong>. KPIs e políticas automáticas os alcançam</td></tr>
+              <tr><td><strong>Contratos</strong></td><td>O contrato não muda. O detalhe mostra <em>DFs com RAD assumido</em></td></tr>
+              <tr><td><strong>Portal do Fornecedor</strong></td><td>Aviso <em>Recolhimento assumido pelo adquirente · não recolher</em></td></tr>
+              <tr><td><strong>Gráficos e card Vencidos Não Prescritos</strong></td><td>O valor migra da série Fornecedor para RAD</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout info">
+          <div class="ct">O que não acontece</div>
+          <p><strong>Nada é enviado ao governo</strong>: pelo <span class="nid">§ 2º do art. 36</span>, o RAD só existe de fato quando a guia é paga. E a conversão <strong>não cria</strong> a inconsistência <em>Sem comprovante</em> que o seed atribui a RAD não apropriado — um RF recém-convertido está aguardando guia, não em falta.</p>
+        </div>
+      </div>
+    </div>
       <h3>Mapa de implementação</h3>
     <p>Todo elemento acionável da view, com o identificador que o implementa. A tabela é gerada a partir da própria tela: um controle novo sem descrição não passa na geração, e é assim que este PRD se mantém conferível contra o código.</p>
     <div class="table-wrap">
@@ -943,6 +1016,8 @@ window.renderizarPagamentosMetodo();</code></div>
           <tr><td><code>periodoMsAll</code></td><td>ação</td><td>Marca ou desmarca todos os períodos de uma vez.</td></tr>
           <tr><td><code>periodoMsOpen</code></td><td>ação</td><td>Abre o seletor de múltiplos períodos no cabeçalho da view.</td></tr>
           <tr><td><code>renderizarComposicaoCreditos</code></td><td>ação</td><td>Redesenha o gráfico de composição do crédito conforme o recorte ativo.</td></tr>
+          <tr><td><code>shRADAbrirAssumir</code></td><td>ação</td><td>Abre a confirmação para assumir o recolhimento do IBS e da CBS de uma DF via RAD.</td></tr>
+          <tr><td><code>shRADAbrirReverter</code></td><td>ação</td><td>Abre a confirmação para devolver ao fornecedor um recolhimento assumido.</td></tr>
           <tr><td><code>shToggleFilterPanel</code></td><td>ação</td><td>Abre e fecha o painel de filtros avançados da listagem.</td></tr>
           <tr><td><code>cred-dfs-busca</code></td><td>campo</td><td>Busca livre por número de DF, fornecedor ou CNPJ.</td></tr>
           <tr><td><code>cred-dfs-cbs-max</code></td><td>campo</td><td>Valor máximo de CBS no documento.</td></tr>
@@ -957,6 +1032,7 @@ window.renderizarPagamentosMetodo();</code></div>
           <tr><td><code>cred-dfs-ibs-max</code></td><td>campo</td><td>Valor máximo de IBS no documento.</td></tr>
           <tr><td><code>cred-dfs-ibs-min</code></td><td>campo</td><td>Valor mínimo de IBS no documento.</td></tr>
           <tr><td><code>cred-dfs-metodo</code></td><td>campo</td><td>Filtra pelo método de pagamento definido no contrato.</td></tr>
+          <tr><td><code>cred-dfs-origem</code></td><td>campo</td><td>Filtra os documentos pela origem do método de pagamento: definido no contrato ou recolhimento assumido.</td></tr>
           <tr><td><code>cred-dfs-status</code></td><td>campo</td><td>Filtra pelo status do documento.</td></tr>
           <tr><td><code>cred-dfs-tipo</code></td><td>campo</td><td>Filtra pelo modelo do documento fiscal.</td></tr>
           <tr><td><code>cred-dfs-valor-max</code></td><td>campo</td><td>Valor máximo do documento fiscal.</td></tr>
@@ -1717,6 +1793,10 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
   <div class="section" id="s14">
     <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Histórico de versões</span></div>
                     <div class="ver-row">
+      <div class="ver-num">v2.7</div>
+      <div class="ver-desc"><strong>11/09/2026</strong> — <strong>Nova funcionalidade F-08: assumir recolhimento via RAD.</strong> Numa DF com método Fornecedor e os dois tributos não apropriados, o operador assume o pagamento: o método vira RAD, o contrato continua como está e a DF entra em Pagamentos RAD. A base é o <span class="nid">art. 36</span> — opção do adquirente por operação, sob duas condições que viram declaração obrigatória: regime regular e instrumento de pagamento sem segregação.<br><br>O histórico da DF e do RF, que até aqui era recalculado a partir do estado, ganha um log gravado de ações. Como o protótipo não persiste dado de negócio, cada ação vai para o <code>localStorage</code> e é reaplicada a cada geração da base. De quebra, a exportação CSV da aba Documentos Fiscais — que saía com IBS, CBS, crédito e método vazios — passa a trazer os valores reais.</div>
+    </div>
+    <div class="ver-row">
       <div class="ver-num">v2.6</div>
       <div class="ver-desc"><strong>10/09/2026</strong> — <strong>Split Payment volta como método de pagamento.</strong> As modalidades voltam a ser três, e a data de apropriação volta a ter três marcos: liquidação financeira da nota <span class="nid">Dec. 12.955/2026, art. 31, I</span>, pagamento da guia <span class="nid">art. 36</span> ou vencimento do tributo <span class="nid">art. 27, II</span>. Três contratos operam pelo método, com prazos 90, 30 e 60 — <strong>48 RFs</strong> de entrada, ou 24% do volume de crédito.<br><br>Duas reverberações que a retirada tinha escondido. O gráfico <em>Método de pagamento</em> agrupava em dois baldes e somava o Split ao Fornecedor; agora são três séries. E o card <em>Vencidos Não Prescritos</em> dividia o valor entre Fornecedor e RAD, jogando o Split no primeiro: <strong>33,7% do que ele rotulava como “método Fornecedor” era Split Payment</strong>. Vencido em Split significa segregação não confirmada na liquidação — outra investigação, com outro responsável —, e agora tem divisão própria.</div>
     </div>

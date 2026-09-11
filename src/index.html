@@ -1629,6 +1629,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
           <div class="sh-fp-field"><label>Tipo DF</label><select id="cred-dfs-tipo" onchange="creditosDFsRender()"><option value="">Todos</option><option value="NF-e">NF-e</option><option value="CT-e">CT-e</option><option value="NFS-e">NFS-e</option></select></div>
           <div class="sh-fp-field"><label>Status Crédito</label><select id="cred-dfs-credito" onchange="creditosDFsRender()"><option value="">Todos</option><option value="a_apropriar">A Apropriar</option><option value="parc_apropriado">Parc. Apropriado</option><option value="apropriado">Apropriado</option><option value="parc_utilizado">Parc. Utilizado</option><option value="utilizado">Utilizado</option><option value="glosado">Glosado</option></select></div>
           <div class="sh-fp-field"><label>Método de Pagamento</label><select id="cred-dfs-metodo" onchange="creditosDFsRender()"><option value="">Todos</option><option value="Split Payment">Split Payment</option><option value="RAD">RAD</option><option value="Fornecedor">Fornecedor</option></select></div>
+          <div class="sh-fp-field"><label>Origem do método</label><select id="cred-dfs-origem" onchange="creditosDFsRender()"><option value="">Todas</option><option value="contrato">Definido no contrato</option><option value="alteracao_manual">Recolhimento assumido</option></select></div>
           <div class="sh-fp-field"><label>Extinção</label><select id="cred-dfs-extincao" onchange="creditosDFsRender()"><option value="">Todos</option><option value="com">Com extinção</option><option value="sem">Sem extinção</option></select></div>
           <div class="sh-fp-field"><label>Data — de</label><input id="cred-dfs-data-de" type="date" onchange="creditosDFsRender()"></div>
           <div class="sh-fp-field"><label>Data — até</label><input id="cred-dfs-data-ate" type="date" onchange="creditosDFsRender()"></div>
@@ -1670,8 +1671,9 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
         <th title="Data do recolhimento que extinguiu o débito e fez o crédito nascer — LC 214/2025, art. 47">Apropriação</th>
         <th title="Data em que o crédito foi consumido">Data Extinção</th>
         <th class="r">RFs</th>
+        <th title="Assumir o recolhimento via RAD, ou devolvê-lo ao fornecedor">Ações</th>
       </tr></thead>
-      <tbody id="t-cred-dfs-body"><tr><td colspan="16" style="text-align:center;color:var(--txt3);padding:24px">Carregando…</td></tr></tbody>
+      <tbody id="t-cred-dfs-body"><tr><td colspan="19" style="text-align:center;color:var(--txt3);padding:24px">Carregando…</td></tr></tbody>
       </table></div>
     </div>
   </div>
@@ -5957,6 +5959,7 @@ function contratosAbrirDetalhe(ctId){
     +row('Método de Pagamento',contratoMetodoBadge(ct))
     +row('Prazo pagamento',contratoPrazoBadge(ct.prazo))
     +row('NFs vinculadas','<span style="font-family:var(--font-mono)">'+nfCount+'</span>')
+    +row('DFs com RAD assumido','<span style="font-family:var(--font-mono)">'+(function(){var n=0;(window._nfListaCompleta||[]).forEach(function(nf){var cid=nf.contratoId||((nf.registrosFiscais||[])[0]||{}).contratoId;if(nf.metodoPagamentoOrigem==='alteracao_manual'&&cid===ct.id)n++;});return n;})()+'</span>')
     +row('Volume NFs','<span style="font-family:var(--font-mono)">'+fmM(volTot)+'</span>')
     +row('Créditos IBS+CBS','<span style="font-family:var(--font-mono);color:'+c.teal+'">'+fmM(credTot)+'</span>')
     +'</div>'
@@ -6948,6 +6951,8 @@ function nfRenderLista(){
     return true;
   });
 
+  // Reaplica as ações do operador (ex.: recolhimento assumido via RAD) sobre a base recém-gerada
+  if(window.shRADAplicarLog){try{window.shRADAplicarLog(todosRegistros);}catch(e){console.error('[RAD] reaplicação do log',e);}}
   nfTotalGlobal=todosRegistros.length;
   nfPaginaAtual=1;
   nfRenderPagina();
@@ -7330,6 +7335,8 @@ function creditosDFsRender(){
   }
   // Filtros pós-nfMap (precisam de lookup nfOrig)
   if(filtMetodo){dfs=dfs.filter(function(d){var nfO=nfMap[d.nfNumero!=null?String(d.nfNumero):'—']||{};return (nfO.metodoPagamento||'')===filtMetodo;});}
+  var filtOrigem=(document.getElementById('cred-dfs-origem')||{}).value||'';
+  if(filtOrigem){dfs=dfs.filter(function(d){var nfO=nfMap[d.nfNumero!=null?String(d.nfNumero):'—']||{};return (nfO.metodoPagamentoOrigem||'contrato')===filtOrigem;});}
   if(filtExtincao){dfs=dfs.filter(function(d){var nfO=nfMap[d.nfNumero!=null?String(d.nfNumero):'—']||{};var rfs=nfO.registrosFiscais||[];var hasExt=rfs.some(function(rf){return rf.metodoExtincao&&rf.metodoExtincao!=='—';});if(filtExtincao==='com')return hasExt;return !hasExt;});}
   if(filtCredMin!==''||filtCredMax!==''){dfs=dfs.filter(function(d){var nfO=nfMap[d.nfNumero!=null?String(d.nfNumero):'—']||{};var ibs=nfO.ibs||0,cbs=nfO.cbs||0;if(!ibs&&!cbs)(nfO.registrosFiscais||[]).forEach(function(rf){if(rf.tipoFiscal==='ibs')ibs+=rf.valor||0;else cbs+=rf.valor||0;});var cr=ibs+cbs;return (filtCredMin===''||cr>=parseFloat(filtCredMin))&&(filtCredMax===''||cr<=parseFloat(filtCredMax));});}
   var filtIbsMin=(document.getElementById('cred-dfs-ibs-min')||{}).value||'';
@@ -7348,7 +7355,7 @@ function creditosDFsRender(){
   if(sub)sub.textContent=dfs.length+' DF'+(dfs.length!==1?'s':'')+' de entrada';
   var _cntDfs=document.getElementById('cred-dfs-contagem');if(_cntDfs)_cntDfs.textContent=dfs.length+' registros';
   if(!dfs.length){
-    el.innerHTML='<tr><td colspan="18" style="text-align:center;color:var(--txt3);padding:24px">Nenhum DF encontrado para este filtro.</td></tr>';
+    el.innerHTML='<tr><td colspan="19" style="text-align:center;color:var(--txt3);padding:24px">Nenhum DF encontrado para este filtro.</td></tr>';
     return;
   }
   // Mapa de labels/cores para status de crédito do DF
@@ -7386,7 +7393,7 @@ function creditosDFsRender(){
     var _dfMe=metExtVal?(_dfMetExtMap[metExtVal]||{cor:'73,197,177',lbl:metExtVal}):{cor:'73,197,177',lbl:'Compensação'};
     var metExtBadge=(_dfCreditoUtil&&metExtVal)?'<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+_dfMe.cor+',.12);color:rgba('+_dfMe.cor+',1);border:1px solid rgba('+_dfMe.cor+',.28)">'+_dfMe.lbl+'</span>':'<span style="color:var(--txt3)">—</span>';
     var tipoBadge='<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--status-blue-rgb),.28);color:var(--blue);background:transparent">'+tipoDF+'</span>';
-    var metBadge=metodo&&metodo!=='—'?'<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+metodo+'</span>':'<span style="color:var(--txt3)">—</span>';
+    var metBadge=metodo&&metodo!=='—'?'<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--txt1)">'+metodo+'</span>'+(window.shRADSufixoMetodo?window.shRADSufixoMetodo(nfOrig):''):'<span style="color:var(--txt3)">—</span>';
     var _dfTipoLabel = nfOrig.tipoDF || (tipoDF.indexOf('CT-e')>=0?'CT-e':tipoDF.indexOf('NFS')>=0?'NFS-e':'NF-e');
     var _dfLabel = _isIngExtra ? (tipoDF.replace(' Entrada','').replace(' Saída','') + ' ' + nfNum) : (nfNum !== '—' ? _dfTipoLabel + ' ' + nfNum : '—');
     h+='<tr>';
@@ -7426,10 +7433,17 @@ function creditosDFsRender(){
     h+='<td class="nowrap">'+(window.shCelulaApropriacao?window.shCelulaApropriacao(nfOrig):'&mdash;')+'</td>';
     h+='<td class="nowrap">'+(window.shCelulaExtincaoCredito?window.shCelulaExtincaoCredito(nfOrig):'&mdash;')+'</td>';
     h+='<td class="r mono" style="color:var(--txt2)">'+rfs.length+'</td>';
+    h+='<td class="nowrap">'+(window.shRADCelulaAcao?window.shRADCelulaAcao(nfOrig,String(status).toLowerCase()):'<span style="color:var(--txt3)">—</span>')+'</td>';
     h+='</tr>';
   });
   // Expose normalized data for ShColMgr CSV/sort
-  window._credDFsLista=(window._ingDadosGlobal||[]).filter(function(d){return d.tipo&&d.tipo.toLowerCase().indexOf('entrada')>=0;}).map(function(d){return{numero:d.nfNumero!=null?String(d.nfNumero):'—',tipoDF:d.tipo||'NF-e',entidade:d.emitente||'—',cnpj:d.cnpj||'—',data:d.dataEmissao||'',valorTotal:d.valor||0,ibs:0,cbs:0,credito:0,metodoPagamento:'',status:d.status||'',statusCredito:'',inconsistencia:'',contratoId:'',metodoExtincao:''};});
+  window._credDFsLista=(window._ingDadosGlobal||[]).filter(function(d){return d.tipo&&d.tipo.toLowerCase().indexOf('entrada')>=0;}).map(function(d){
+    var num=d.nfNumero!=null?String(d.nfNumero):'—';var nfO=nfMap[num]||{};var rfsO=nfO.registrosFiscais||[];
+    var ibsO=0,cbsO=0;rfsO.forEach(function(rf){if(rf.tipoFiscal==='ibs')ibsO+=rf.valor||0;else cbsO+=rf.valor||0;});
+    var metO=nfO.metodoPagamento||'';
+    if(metO&&nfO.metodoPagamentoOrigem==='alteracao_manual')metO+=' (assumido pelo adquirente; contrato: '+(nfO.metodoPagamentoContrato||'Fornecedor')+')';
+    return{numero:num,tipoDF:d.tipo||'NF-e',entidade:d.emitente||'—',cnpj:d.cnpj||'—',data:d.dataEmissao||'',valorTotal:d.valor||nfO.valorTotal||0,ibs:ibsO,cbs:cbsO,credito:ibsO+cbsO,metodoPagamento:metO,status:d.status||'',statusCredito:rfsO.length?_dfCreditStatus(rfsO):'',inconsistencia:(nfO._inconsistencias||[]).map(function(x){return x.tipoLabel||x.tipo||'';}).join(', '),contratoId:nfO.contratoId||(rfsO[0]?rfsO[0].contratoId:'')||'',metodoExtincao:'',dataApropriacao:nfO.dataApropriacao||'',dataExtincaoCredito:nfO.dataExtincaoCredito||''};
+  });
   el.innerHTML=h;
   if(window.ShColMgr&&ShColMgr.afterRender)ShColMgr.afterRender('cred-dfs');
 }
@@ -8746,6 +8760,8 @@ function _fornGerarDFs(){
       statusRegistro: nf.statusRegistro,
       vencido: vencido,
       rad: nf.metodoPagamento === 'RAD',
+      radAssumido: nf.metodoPagamentoOrigem === 'alteracao_manual',
+      radAssumidoEm: nf.conversaoRAD ? nf.conversaoRAD.em : null,
       contratoId: ctId,
       rfs: nf.registrosFiscais || [],
       comentarios: (window._fornDFComentarios[dfId]||[]).length
@@ -8954,7 +8970,7 @@ function _renderFornDFRows(dfs){
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--violet);font-weight:600">'+ff(split)+'</td>'+
       '<td style="font-size:12px;font-family:var(--font-mono);color:var(--green);font-weight:600">'+ff(liquido)+'</td>'+
       '<td>'+(d.contratoId?'<span style="font-size:11px;font-weight:600;color:var(--teal);cursor:pointer;text-decoration:underline dotted" onclick="contratosAbrirDetalhe(\''+d.contratoId+'\')" title="Ver contrato '+d.contratoId+'">'+d.contratoId+'</span>':'<span style="color:var(--txt3);font-size:11px">—</span>')+'</td>'+
-      '<td>'+(_statusCredChip[credStatus]||_statusCredChip.nao_apropriado)+'</td>'+
+      '<td>'+(_statusCredChip[credStatus]||_statusCredChip.nao_apropriado)+(d.radAssumido?'<div title="O adquirente assumiu o recolhimento do IBS e da CBS deste documento. Se o fornecedor também recolher, o excedente é transferido de volta a ele (LC 214/2025, art. 36, § 3º)." style="margin-top:4px;font-size:10px;font-weight:700;color:var(--amber);white-space:nowrap">Recolhimento assumido pelo adquirente · não recolher</div>':'')+'</td>'+
       '<td>'+(statusReg?(_statusRegChip[statusReg]||statusReg):'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(26,121,64,.12);color:var(--green)">ok</span>')+'</td>'+
       '<td><div style="display:flex;gap:3px;flex-wrap:nowrap;align-items:center">'+
         '<button class="btn" style="font-size:10px;padding:3px 8px" onclick="abrirDetalheDF(\''+d.id+'\')" title="Ver detalhes do DF">Ver</button>'+
@@ -10697,7 +10713,7 @@ if (window.Chart) {
   Chart.defaults.font.size = 11;
 }
 </script>
-<script src="js/data-sync-fixed.js?v=117"></script>
+<script src="js/data-sync-fixed.js?v=118"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=7"></script>
 <script src="js/charts.js?v=2"></script>

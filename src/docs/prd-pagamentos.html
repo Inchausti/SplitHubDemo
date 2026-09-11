@@ -407,7 +407,7 @@ img, svg { max-width: 100%; height: auto; }
           <tr><td><code>tipoFiscal</code></td><td><code>'ibs' | 'cbs'</code></td><td>Motor de FG</td><td>Determina Guia IBS vs DARF CBS e o código de receita</td></tr>
           <tr><td><code>valor</code></td><td>number</td><td>Motor de FG</td><td>Valor do tributo; base dos KPIs e do total em lote</td></tr>
           <tr><td><code>data</code></td><td>ISO date</td><td>Emissão do DF</td><td>Origem do fato gerador; base do filtro de período</td></tr>
-          <tr><td><code>metodoPagamento</code></td><td><code>'RAD' | 'Split Payment' | 'Fornecedor'</code></td><td>Contrato / fornecedor</td><td><strong>Filtro de recorte</strong> — só RAD entra</td></tr>
+          <tr><td><code>metodoPagamento</code></td><td><code>'RAD' | 'Split Payment' | 'Fornecedor'</code></td><td>Contrato / fornecedor</td><td><strong>Filtro de recorte</strong> — só RAD entra, venha do contrato ou de recolhimento assumido em Créditos (<code>metodoPagamentoOrigem</code>)</td></tr>
           <tr><td><code>dataPagamento</code></td><td>string · <code>DD/MM/AAAA HH:mm</code></td><td>Registro de pagamento</td><td>Marca guia como paga; abre comprovante</td></tr>
           <tr><td><code>statusCredito</code></td><td>enum (5)</td><td>Conciliação</td><td>Badge na tabela; determina ação disponível</td></tr>
           <tr><td><code>statusRegistro</code></td><td>enum (4) | null</td><td>Motor de risco</td><td>Bucketing dos KPIs; badge de risco</td></tr>
@@ -2049,6 +2049,10 @@ meses.forEach(<span class="k">function</span>(m) {
   <div class="section" id="s12">
     <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Histórico de versões</span></div>
                 <div class="ver-row">
+      <div class="ver-num">v2.7</div>
+      <div class="ver-desc"><strong>11/09/2026</strong> — <strong>Nova porta de entrada: DFs com recolhimento assumido.</strong> Além dos contratos RAD, entram na listagem os documentos em que o operador assumiu o recolhimento a partir de Créditos — ver F-08 do <a href="prd-credito.html" style="color:var(--blue)">PRD de Crédito</a>. O filtro de recorte não mudou, continua <code>metodoPagamento === 'RAD'</code>, e a coluna Método ganha a marca <strong>alterado</strong>. As políticas de execução automática alcançam esses RFs como qualquer outro RAD. Gerar a guia de um RF convertido registra a data e impede devolver o recolhimento ao fornecedor.</div>
+    </div>
+    <div class="ver-row">
       <div class="ver-num">v2.6</div>
       <div class="ver-desc"><strong>10/09/2026</strong> — <strong>Split Payment volta ao catálogo de métodos</strong> — ver PRD de <a href="prd-contratos.html" style="color:var(--blue)">Contratos</a>. Nada muda no recorte deste módulo: a listagem continua sendo <em>só RAD</em>, porque só o RAD gera guia para emitir e pagar. O que muda é o filtro <code>metodoPagamento</code>, que volta a ter os três valores, e a fronteira do módulo, que volta a ser explícita: Split Payment e Fornecedor existem, são visíveis em Créditos, e não produzem tarefa aqui.</div>
     </div>

@@ -149,7 +149,7 @@ window.SH_TABLES = {
       { key: 'contratoId', label: 'Contrato', tip: 'Contrato que define o método RAD para este fornecedor. Clique abre o contrato.' },
       { key: 'tipo', label: 'Tipo Fiscal', tip: 'Qual tributo esta guia recolhe: <strong>IBS</strong> (guia 6912) ou <strong>CBS</strong> (DARF 5952).' },
       { key: 'tipoNF', label: 'Tipo', tip: 'Modelo do documento fiscal de origem.' },
-      { key: 'metodo', label: 'Método', tip: 'Constante <code>RAD</code> nesta listagem — Recolhimento pelo Adquirente. Split Payment e Fornecedor não geram guia aqui.' },
+      { key: 'metodo', label: 'Método', tip: 'Constante <code>RAD</code> nesta listagem — Recolhimento pelo Adquirente. Split Payment e Fornecedor não geram guia aqui. A marca <strong>alterado</strong> indica documento em que o adquirente assumiu o recolhimento, fora do método do contrato.' },
       { key: 'valor', label: 'Valor', tip: 'Valor do tributo a recolher nesta guia.',      cls: 'r' },
       { key: 'dataRFIso', label: 'Data RF', tip: 'Data de emissão do documento, que marca o fato gerador.' },
       { key: 'pagamento', label: 'Pagamento', tip: 'Data e hora do recolhimento. Se pago, o link abre o comprovante.' },
@@ -740,11 +740,11 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   });
 
   // ── Timeline NF: agrega eventos de todos os RFs ─────────────────────────
-  var evRgba  = { 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165',
+  var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165',
     'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23',
     'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246',
     'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117' };
-  var evIcons = { 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!',
+  var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!',
     'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌',
     'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌' };
 
@@ -766,6 +766,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     var evs = window._rfGerarHistorico(rf, r);
     // Skip INGESTÃO e VALIDAÇÃO — já adicionamos no nível NF
     evs.slice(2).forEach(function(ev) {
+      if (ev.dfEvento) return;   // espelho de ação da DF: entra uma vez só, pelos eventos da própria DF
       var tfSuffix = rf.tipoFiscal ? ' · ' + rf.tipoFiscal.toUpperCase() : '';
       allEvents.push({
         ts: ev.ts || '—',
@@ -778,6 +779,9 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       });
     });
   });
+
+  // Ações registradas no nível da DF
+  (r._eventos || []).forEach(function(ev) { allEvents.push(ev); });
 
   // Ordenar decrescente por timestamp (mais recente primeiro)
   allEvents.sort(function(a, b) {
@@ -842,15 +846,18 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + '<div class="mbox" style="width:900px">'
 
     // Header
-    + '<div class="mbox-hdr">'
-    + '<div style="display:flex;align-items:center;gap:12px">'
+    + '<div class="mbox-hdr" style="flex-wrap:wrap">'
+    + '<div style="display:flex;align-items:center;gap:12px;min-width:0">'
     + '<div class="mbox-icon">🧾</div>'
     + '<div>'
     + '<div class="mbox-title">' + (r.tipoDF || 'NF-e') + ' ' + r.numero + '</div>'
     + '<div class="mbox-sub">' + (r.entidade || '—') + ' · ' + (r.cnpj || '—') + ' · ' + dataFmt + '</div>'
     + '</div>'
     + '</div>'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0">'
+    + (window.shRADBotaoDetalhe ? window.shRADBotaoDetalhe(r) : '')
     + '<button onclick="document.getElementById(\'nf-detalhe-overlay\').remove()" class="mbox-close">✕</button>'
+    + '</div>'
     + '</div>'
 
     // Body: two columns
@@ -875,6 +882,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + '<div class="mbox-section-label" style="margin-bottom:4px">Chave DF</div>'
     + '<div style="font-size:9px;font-family:monospace;color:var(--txt3);word-break:break-all;line-height:1.7;margin-bottom:14px">' + chaveFormatada + '</div>'
     + ctrHtml
+    + (window.shRADBlocoMetodo ? window.shRADBlocoMetodo(r) : '')
     + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Registros Fiscais</div>'
     + rfsHtml
@@ -1048,8 +1056,533 @@ window._rfGerarHistorico = function(rf, nf) {
     ev.push(mkEv(MK(A(d0,25),'16:45'), 'EXTINÇÃO',      isSaida ? 'Débitos' : 'Créditos', 'SplitHub',
       isSaida ? 'Débito extinto · ciclo tributário encerrado' : 'Crédito integralmente utilizado · ciclo do RF encerrado', 'ok'));
   }
+  // Ações registradas pelo operador — ex.: recolhimento assumido via RAD
+  (rf._eventos || []).forEach(function(e) { ev.push(e); });
   return ev;
 };
+
+/* ══ Recolhimento assumido via RAD ═══════════════════════════════════════
+   Numa DF de entrada com método Fornecedor, o operador assume o pagamento
+   do IBS e da CBS (Res. CGIBS 6/2026, art. 36 = LC 214/2025, art. 36).
+   metodoPagamento continua sendo o valor EFETIVO: Pagamentos, políticas de
+   execução, gráficos e filtros já leem esse campo e passam a enxergar a DF
+   sem mudança nenhuma. O método do contrato fica em metodoPagamentoContrato.
+   O protótipo não persiste dado de negócio: cada ação vai para um log no
+   localStorage e é reaplicada sempre que a base é gerada (nfRenderLista).
+   Nada é enviado ao governo — pelo § 2º do art. 36, o RAD só existe de fato
+   quando a guia é paga. */
+(function () {
+  var CHAVE = 'sh_acoes_rad_v1';
+  var MOTIVOS = {
+    inadimplente: 'Fornecedor inadimplente',
+    prazo:        'Prazo do tributo em risco',
+    sem_prova:    'Sem prova do recolhimento pelo fornecedor',
+    acordo:       'Acordo comercial pontual',
+    outro:        'Outro'
+  };
+  var INSTRUMENTOS = {
+    ted_pix:       'TED ou PIX sem segregação',
+    boleto:        'Boleto sem segregação',
+    transferencia: 'Transferência entre contas',
+    outro:         'Outro instrumento sem segregação'
+  };
+  // Inconsistências que tornam o valor a recolher, ou o próprio crédito, não
+  // confiável bloqueiam a ação. As de conciliação só geram aviso.
+  var INC_BLOQUEIO = { capur_ibs_aliquota: 1, capur_cbs_aliquota: 1, cbs_incorreto: 1, chave_invalida: 1 };
+  var INC_BLOQUEIO_TXT = ['Valor imposto divergente', 'Documento inválido'];
+  var INC_AVISO = { capur_ibs_divergente: 1, nf_erro: 1 };
+
+  function lerLog() { try { return JSON.parse(localStorage.getItem(CHAVE) || '[]') || []; } catch (e) { return []; } }
+  function gravarLog(log) { try { localStorage.setItem(CHAVE, JSON.stringify(log)); } catch (e) {} }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function agoraISO() {
+    var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  function fmtTS(iso) { return iso ? (window._rfFmtTS ? window._rfFmtTS(iso) : iso) : '—'; }
+  function valor(id) { var e = document.getElementById(id); return e ? String(e.value || '') : ''; }
+  function fechar(id) { var e = document.getElementById(id); if (e) e.remove(); }
+  function numSeguro(nf) { return String(nf.numero).replace(/[^\w-]/g, ''); }
+  function caixa(rgbVar, titulo, corpo) {
+    return '<div class="mbox-info-box" style="background:rgba(var(' + rgbVar + '),.07);border-color:rgba(var(' + rgbVar + '),.28)">'
+      + '<span class="mbox-info-box-label">' + titulo + '</span><span style="color:var(--txt2)">' + corpo + '</span></div>';
+  }
+  // Sem autenticação real, o autor registrado é o usuário do login do protótipo.
+  function ator() {
+    var p = 'cliente';
+    try { p = localStorage.getItem('sh-perfil') || 'cliente'; } catch (e) {}
+    return { por: 'Admin', perfil: p };
+  }
+
+  // A mesma DF pode existir como objetos distintos em listas diferentes,
+  // quando a base é gerada de novo depois do boot. A ação vale para todos.
+  function alvos(nfNumero, extra) {
+    var out = [];
+    [extra || [], window.nfListaFiltradaGlobal || [], window._nfListaCompleta || []].forEach(function (lista) {
+      lista.forEach(function (nf) {
+        if (nf && nf.tipo === 'entrada' && String(nf.numero) === String(nfNumero) && out.indexOf(nf) < 0) out.push(nf);
+      });
+    });
+    return out;
+  }
+  function statusImportacao(nfNumero) {
+    var d = (window._ingDadosGlobal || []).find(function (x) {
+      return String(x.nfNumero) === String(nfNumero) && x.tipo && x.tipo.toLowerCase().indexOf('entrada') >= 0;
+    });
+    return d ? String(d.status || '').toLowerCase() : 'importado';
+  }
+  function statusDoRF(rf) { return rf.statusCredito || rf.status || 'nao_apropriado'; }
+  function pago(rf) {
+    var s = statusDoRF(rf);
+    return s === 'apropriado' || s === 'utilizado' || !!(rf.dataPagamento && rf.dataPagamento !== '—');
+  }
+
+  /* Elegibilidade da ação para uma DF: { visivel, ok, reverter, motivo, avisos[] }.
+     visivel=false esconde o botão; visivel sem ok mostra desabilitado, com o motivo. */
+  window.shRADElegibilidade = function (nf, stImport) {
+    var R = { visivel: false, ok: false, reverter: false, motivo: '', avisos: [] };
+    if (!nf || nf.tipo !== 'entrada' || !nf.numero) return R;
+    var rfs = nf.registrosFiscais || [];
+    var met = nf.metodoPagamento || (rfs[0] && rfs[0].metodoPagamento) || '';
+
+    if (met === 'RAD') {
+      if (nf.metodoPagamentoOrigem !== 'alteracao_manual') return R;   // RAD de contrato: nada a fazer
+      R.visivel = true; R.reverter = true;
+      if (rfs.some(pago)) R.motivo = 'A guia já foi paga — o recolhimento não pode mais voltar ao fornecedor.';
+      else if (rfs.some(function (rf) { return rf.conversaoRAD && rf.conversaoRAD.guiaGeradaEm; }))
+        R.motivo = 'A guia já foi gerada — o recolhimento não pode mais voltar ao fornecedor.';
+      else R.ok = true;
+      return R;
+    }
+    // Split Payment: o instrumento segrega o tributo, e o art. 36 exige o contrário
+    if (met !== 'Fornecedor') return R;
+
+    var st = {};
+    rfs.forEach(function (rf) { st[rf.tipoFiscal] = statusDoRF(rf); });
+    var estados = [st.ibs, st.cbs];
+    if (estados.indexOf('glosado') >= 0) return R;                      // pagar não recupera crédito glosado
+    var apropriados = estados.filter(function (s) { return s === 'apropriado' || s === 'utilizado'; }).length;
+    if (apropriados === 2) return R;                                    // não há débito a quitar
+    R.visivel = true;
+
+    if (!st.ibs || !st.cbs) { R.motivo = 'O documento não tem os dois registros fiscais (IBS e CBS).'; return R; }
+    var imp = stImport || statusImportacao(nf.numero);
+    if (imp === 'pendente' || imp === 'inconsistencia') { R.motivo = 'O documento ainda não foi validado na importação.'; return R; }
+    if (apropriados === 1) {
+      var qual = (st.ibs === 'apropriado' || st.ibs === 'utilizado') ? 'IBS' : 'CBS';
+      R.motivo = 'O fornecedor já recolheu o ' + qual + ' — assumir agora geraria pagamento em duplicidade (art. 36, § 3º, II).';
+      return R;
+    }
+    if (rfs.some(pago)) { R.motivo = 'Já existe pagamento registrado para este documento.'; return R; }
+
+    var bloqueio = null, conciliacao = false;
+    rfs.forEach(function (rf) {
+      var itens = (rf._inconsistencias || []).map(function (i) { return { k: i.inc || i.tipo || '', l: i.tipoLabel || '' }; });
+      if (rf.inconsistencia) itens.push({ k: '', l: String(rf.inconsistencia) });
+      itens.forEach(function (t) {
+        if (INC_BLOQUEIO[t.k] || INC_BLOQUEIO_TXT.some(function (x) { return t.l.indexOf(x) >= 0; })) bloqueio = bloqueio || (t.l || t.k);
+        if (INC_AVISO[t.k] || t.l.indexOf('Não conciliado') >= 0) conciliacao = true;
+      });
+    });
+    if (bloqueio) {
+      R.motivo = 'Resolva a inconsistência “' + bloqueio + '” antes: com ela, o valor a recolher ou o próprio crédito não são confiáveis.';
+      return R;
+    }
+
+    var flags = [];
+    rfs.forEach(function (rf) {
+      (rf.statusFlags || (rf.statusRegistro ? [rf.statusRegistro] : [])).forEach(function (f) { if (flags.indexOf(f) < 0) flags.push(f); });
+    });
+    if (flags.indexOf('vencido') >= 0) R.avisos.push('O vencimento do tributo já passou: o recolhimento pode ter acréscimos moratórios.');
+    if (flags.indexOf('a_prescrever') >= 0) R.avisos.push('O crédito está perto do prazo de prescrição.');
+    if (conciliacao) R.avisos.push('A conciliação do documento está pendente — isso não altera o valor do tributo.');
+    R.ok = true;
+    return R;
+  };
+
+  // ── Aplicação das ações ──────────────────────────────────────────────
+  function evento(acao, nivel, tipo, desc, cls) {
+    // dfEvento marca o evento do RF que espelha uma ação da DF: a timeline
+    // da DF agrega os RFs e mostraria a mesma ação duas vezes.
+    return { id: acao.id + ':' + nivel, ts: acao.em, data: fmtTS(acao.em), tipo: tipo, modulo: 'Créditos',
+             ator: acao.por, desc: desc, cls: cls || 'ok', dfEvento: nivel !== 'df' };
+  }
+  function registrar(obj, ev) {
+    obj._eventos = obj._eventos || [];
+    if (!obj._eventos.some(function (e) { return e.id === ev.id; })) obj._eventos.push(ev);
+  }
+  function tributo(rf) { return String(rf.tipoFiscal || '').toUpperCase(); }
+
+  function aplicarAssumir(nf, acao) {
+    if (nf.conversaoRAD && nf.conversaoRAD.id === acao.id) return false;
+    var rfs = nf.registrosFiscais || [];
+    var metContrato = nf.metodoPagamentoContrato || nf.metodoPagamento || 'Fornecedor';
+    var ctr = nf.contratoId || (rfs[0] && rfs[0].contratoId) || null;
+    var motivo = MOTIVOS[acao.motivo] || acao.motivo;
+    [nf].concat(rfs).forEach(function (o) {
+      o.metodoPagamentoContrato = o.metodoPagamentoContrato || metContrato;
+      o.metodoPagamento = 'RAD';
+      o.metodoPagamentoOrigem = 'alteracao_manual';
+      // cada registro guarda a própria cópia: a guia é gerada por tributo
+      o.conversaoRAD = {
+        id: acao.id, em: acao.em, por: acao.por, perfil: acao.perfil,
+        motivo: acao.motivo, justificativa: acao.justificativa, instrumento: acao.instrumento,
+        declaracoes: acao.declaracoes, guiaGeradaEm: null, revertidaEm: null, revertidaPor: null, revertidaId: null
+      };
+    });
+    var total = rfs.reduce(function (s, rf) { return s + (rf.valor || 0); }, 0);
+    registrar(nf, evento(acao, 'df', 'RAD ASSUMIDO',
+      'Recolhimento assumido pelo adquirente · método ' + metContrato + ' → RAD · '
+      + (ctr ? 'contrato ' + ctr + ' mantém ' + metContrato : 'sem contrato vigente')
+      + ' · IBS + CBS ' + ff(total) + ' · motivo: ' + motivo + ' · incluído em Pagamentos RAD'));
+    rfs.forEach(function (rf) {
+      registrar(rf, evento(acao, 'rf-' + rf.id, 'RAD ASSUMIDO',
+        'Método de pagamento alterado: ' + metContrato + ' → RAD · ' + tributo(rf) + ' · ' + ff(rf.valor || 0)
+        + ' · incluído em Pagamentos RAD · motivo: ' + motivo));
+    });
+    return true;
+  }
+
+  function aplicarReverter(nf, acao) {
+    var c = nf.conversaoRAD;
+    if (!c || c.id !== acao.conversaoId || c.revertidaId === acao.id) return false;
+    var rfs = nf.registrosFiscais || [];
+    var met = nf.metodoPagamentoContrato || 'Fornecedor';
+    [nf].concat(rfs).forEach(function (o) {
+      o.metodoPagamento = o.metodoPagamentoContrato || met;
+      o.metodoPagamentoOrigem = 'contrato';
+      if (o.conversaoRAD) { o.conversaoRAD.revertidaEm = acao.em; o.conversaoRAD.revertidaPor = acao.por; o.conversaoRAD.revertidaId = acao.id; }
+    });
+    registrar(nf, evento(acao, 'df', 'RAD REVERTIDO',
+      'Recolhimento devolvido ao fornecedor · método RAD → ' + met + ' · removido de Pagamentos RAD · justificativa: ' + acao.justificativa, 'pending'));
+    rfs.forEach(function (rf) {
+      registrar(rf, evento(acao, 'rf-' + rf.id, 'RAD REVERTIDO',
+        'Método de pagamento alterado: RAD → ' + met + ' · ' + tributo(rf) + ' · removido de Pagamentos RAD', 'pending'));
+    });
+    return true;
+  }
+
+  function aplicarGuia(acao, extra) {
+    var mudou = false;
+    alvos(acao.nfNumero, extra).forEach(function (nf) {
+      (nf.registrosFiscais || []).forEach(function (rf) {
+        var c = rf.conversaoRAD;
+        if (rf.id === acao.rfId && c && c.id === acao.conversaoId && !c.revertidaId && !c.guiaGeradaEm) { c.guiaGeradaEm = acao.em; mudou = true; }
+      });
+    });
+    return mudou;
+  }
+
+  /* Reaplica o log sobre a base recém-gerada. Idempotente: cada ação tem id,
+     e aplicar de novo o que já está aplicado não muda nada. */
+  window.shRADAplicarLog = function (extra) {
+    var log = lerLog();
+    if (!log.length) return 0;
+    var n = 0;
+    log.forEach(function (acao) {
+      if (acao.tipo === 'guia') { if (aplicarGuia(acao, extra)) n++; return; }
+      alvos(acao.nfNumero, extra).forEach(function (nf) {
+        if (acao.cnpj && nf.cnpj && acao.cnpj !== nf.cnpj) return;
+        if (acao.tipo === 'assumir') {
+          if (nf.conversaoRAD && nf.conversaoRAD.id === acao.id) return;
+          var el = window.shRADElegibilidade(nf, 'importado');
+          if (el.ok && !el.reverter && aplicarAssumir(nf, acao)) n++;
+        } else if (acao.tipo === 'reverter') {
+          if (aplicarReverter(nf, acao)) n++;
+        }
+      });
+    });
+    if (n && window.radInvalidarIndicePolitica) { try { window.radInvalidarIndicePolitica(); } catch (e) {} }
+    return n;
+  };
+
+  // Gerar a guia de um RF convertido fecha a porta da reversão.
+  window.shRADRegistrarGuia = function (rfId) {
+    var achou = null;
+    [window.nfListaFiltradaGlobal || [], window._nfListaCompleta || []].forEach(function (lista) {
+      lista.forEach(function (nf) {
+        (nf.registrosFiscais || []).forEach(function (rf) { if (!achou && rf.id === rfId) achou = { nf: nf, rf: rf }; });
+      });
+    });
+    if (!achou) return;
+    var c = achou.rf.conversaoRAD;
+    if (achou.rf.metodoPagamentoOrigem !== 'alteracao_manual' || !c || c.guiaGeradaEm) return;
+    var acao = { id: 'radg' + Date.now().toString(36), tipo: 'guia', rfId: rfId, nfNumero: String(achou.nf.numero), conversaoId: c.id, em: agoraISO() };
+    var log = lerLog(); log.push(acao); gravarLog(log);
+    aplicarGuia(acao);
+  };
+
+  function reRenderizar() {
+    if (window.radInvalidarIndicePolitica) { try { window.radInvalidarIndicePolitica(); } catch (e) {} }
+    [
+      function () { if (typeof creditosDFsRender === 'function') creditosDFsRender(); },
+      function () { window.renderizarTabelaCreditos(); },
+      function () { window.renderizarTabelaPagamentos(); },
+      function () { window.renderizarPagamentosMetodo(); },
+      function () { window.renderizarRFsInconsistencias(); },
+      function () { window.atualizarKPIsDashboard(); },
+      function () { window.atualizarDashboard(); }
+    ].forEach(function (fn) { try { fn(); } catch (e) {} });
+  }
+
+  function toast(msg, tipo, link) {
+    fechar('rad-toast');
+    var t = document.createElement('div');
+    t.id = 'rad-toast';
+    t.setAttribute('role', 'status');
+    var cor = tipo === 'erro' ? 'var(--red)' : 'var(--teal)';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9600;display:flex;align-items:center;gap:12px;flex-wrap:wrap;'
+      + 'width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:var(--bg);color:var(--txt1);border:1px solid var(--brd);'
+      + 'border-left:3px solid ' + cor + ';border-radius:8px;padding:10px 14px;font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+    t.innerHTML = '<span style="min-width:0">' + esc(msg) + '</span>'
+      + (link ? '<button class="btn btn-t" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="' + link.onclick + '">' + esc(link.rotulo) + '</button>' : '');
+    document.body.appendChild(t);
+    setTimeout(function () { if (t.parentNode) t.remove(); }, link ? 7000 : 4500);
+  }
+
+  function posAcao(nf, msg, link) {
+    var dfAberto = !!document.getElementById('nf-detalhe-overlay');
+    reRenderizar();
+    if (dfAberto && window.abrirDetalhesNFporNumero) { fechar('nf-detalhe-overlay'); window.abrirDetalhesNFporNumero(nf.numero); }
+    toast(msg, 'ok', link);
+  }
+
+  // ── Interface ────────────────────────────────────────────────────────
+  window.shRADSufixoMetodo = function (o) {
+    if (!o || o.metodoPagamentoOrigem !== 'alteracao_manual') return '';
+    var c = o.conversaoRAD || {};
+    return ' <span title="' + esc('Recolhimento assumido pelo adquirente em ' + fmtTS(c.em) + ' · contrato: ' + (o.metodoPagamentoContrato || 'Fornecedor')) + '"'
+      + ' style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:1px 5px;border-radius:3px;white-space:nowrap;'
+      + 'color:var(--amber);background:rgba(var(--amber-rgb),.1);border:1px solid rgba(var(--amber-rgb),.3)">alterado</span>';
+  };
+
+  function botao(nf, el, compacto) {
+    var rotulo = el.reverter ? 'Devolver ao fornecedor' : 'Assumir recolhimento';
+    var fn = el.reverter ? 'shRADAbrirReverter' : 'shRADAbrirAssumir';
+    var dica = el.ok
+      ? (el.reverter ? 'O método volta ao do contrato e o documento sai de Pagamentos RAD' : 'Assumir o pagamento do IBS e da CBS deste documento via RAD')
+      : el.motivo;
+    var cls = el.reverter ? 'btn' : 'btn btn-t';
+    var st = (compacto ? 'font-size:10px;padding:3px 8px' : 'font-size:11px;padding:5px 10px') + ';white-space:nowrap';
+    if (!el.ok) {
+      // botão desabilitado não dispara eventos: o motivo fica no invólucro
+      return '<span title="' + esc(dica) + '" style="display:inline-block;cursor:not-allowed">'
+        + '<button class="' + cls + '" disabled aria-disabled="true" style="' + st + ';opacity:.45;pointer-events:none">' + rotulo + '</button></span>';
+    }
+    return '<button class="' + cls + '" title="' + esc(dica) + '" style="' + st + '" onclick="event.stopPropagation();window.' + fn + '(\'' + numSeguro(nf) + '\')">' + rotulo + '</button>';
+  }
+
+  window.shRADCelulaAcao = function (nf, stImport) {
+    var el = window.shRADElegibilidade(nf, stImport);
+    return el.visivel ? botao(nf, el, true) : '<span style="color:var(--txt3)">—</span>';
+  };
+  window.shRADBotaoDetalhe = function (nf) {
+    var el = window.shRADElegibilidade(nf);
+    return el.visivel ? botao(nf, el, false) : '';
+  };
+
+  window.shRADBlocoMetodo = function (o) {
+    if (!o) return '';
+    var c = o.conversaoRAD;
+    if (c && o.metodoPagamentoOrigem === 'alteracao_manual') {
+      return caixa('--amber-rgb', 'Recolhimento assumido · RAD',
+        'Em <strong>' + fmtTS(c.em) + '</strong> por ' + esc(c.por) + ' · contrato: <strong>' + esc(o.metodoPagamentoContrato || 'Fornecedor') + '</strong><br>'
+        + 'Motivo: ' + esc(MOTIVOS[c.motivo] || c.motivo) + ' · instrumento: ' + esc(INSTRUMENTOS[c.instrumento] || c.instrumento) + '<br>'
+        + '<em>' + esc(c.justificativa) + '</em>'
+        + (c.guiaGeradaEm ? '<br>Guia gerada em ' + fmtTS(c.guiaGeradaEm) : ''));
+    }
+    if (c && c.revertidaEm) {
+      return caixa('--blue-rgb', 'Recolhimento devolvido ao fornecedor',
+        'Assumido em ' + fmtTS(c.em) + ' e devolvido em <strong>' + fmtTS(c.revertidaEm) + '</strong> por ' + esc(c.revertidaPor) + '.');
+    }
+    // no celular não há tooltip: o motivo do bloqueio aparece por extenso
+    if (o.registrosFiscais) {
+      var el = window.shRADElegibilidade(o);
+      if (el.visivel && !el.ok && !el.reverter) return caixa('--blue-rgb', 'Assumir recolhimento indisponível', esc(el.motivo));
+    }
+    return '';
+  };
+
+  function cabecalho(id, icone, titulo, sub) {
+    return '<div class="mbox-hdr"><div style="display:flex;align-items:center;gap:12px;min-width:0">'
+      + '<div class="mbox-icon blue">' + icone + '</div><div style="min-width:0">'
+      + '<div class="mbox-title" id="' + id + '-titulo">' + titulo + '</div><div class="mbox-sub">' + esc(sub) + '</div></div></div>'
+      + '<button class="mbox-close" aria-label="Fechar" onclick="document.getElementById(\'' + id + '\').remove()">✕</button></div>';
+  }
+  function rodape(id, legenda, botaoId, rotulo, cls, onclick) {
+    return '<div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 18px;border-top:1px solid var(--brd);flex-shrink:0">'
+      + '<span style="font-size:10px;color:var(--txt3);margin-right:auto">' + legenda + '</span>'
+      + '<button class="btn" onclick="document.getElementById(\'' + id + '\').remove()">Cancelar</button>'
+      + '<button class="' + cls + '" id="' + botaoId + '" disabled style="opacity:.45;cursor:not-allowed" onclick="' + onclick + '">' + rotulo + '</button></div>';
+  }
+  function campoTexto(id, validador, placeholder) {
+    return '<textarea id="' + id + '" rows="3" oninput="' + validador + '" placeholder="' + placeholder + '"'
+      + ' style="width:100%;box-sizing:border-box;resize:vertical;font:inherit;font-size:12px;color:var(--txt1);background:var(--bg);border:1px solid var(--brd);border-radius:6px;padding:8px 10px"></textarea>'
+      + '<div style="font-size:10px;color:var(--txt3);margin-top:3px">Mínimo de 10 caracteres. Fica registrada no histórico do documento.</div>';
+  }
+  function habilitar(botaoId, ok) {
+    var b = document.getElementById(botaoId);
+    if (b) { b.disabled = !ok; b.style.opacity = ok ? '1' : '.45'; b.style.cursor = ok ? 'pointer' : 'not-allowed'; }
+    return ok;
+  }
+
+  window.shRADAbrirAssumir = function (nfNumero) {
+    var nf = alvos(nfNumero)[0];
+    if (!nf) return;
+    var el = window.shRADElegibilidade(nf);
+    if (!el.ok || el.reverter) { toast(el.motivo || 'Este documento não permite assumir o recolhimento.', 'erro'); return; }
+    var rfs = nf.registrosFiscais || [];
+    var ibs = 0, cbs = 0;
+    rfs.forEach(function (rf) { if (rf.tipoFiscal === 'ibs') ibs += rf.valor || 0; else if (rf.tipoFiscal === 'cbs') cbs += rf.valor || 0; });
+    var ctr = nf.contratoId || (rfs[0] && rfs[0].contratoId) || null;
+    var venc = window.shVencimentoTributo ? window.shVencimentoTributo(nf.data) : null;
+    var DR = window._rfDetailRow;
+    var dec = function (id, txt) {
+      return '<label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--txt1);line-height:1.5;cursor:pointer;margin-bottom:8px">'
+        + '<input type="checkbox" id="' + id + '" onchange="window.shRADValidar()" style="margin-top:3px;flex-shrink:0;width:15px;height:15px">'
+        + '<span style="min-width:0">' + txt + '</span></label>';
+    };
+    var opcoes = function (mapa) {
+      return '<option value="">Selecione…</option>' + Object.keys(mapa).map(function (k) { return '<option value="' + k + '">' + esc(mapa[k]) + '</option>'; }).join('');
+    };
+    var id = 'rad-assumir-overlay';
+    var html = '<div id="' + id + '" class="moverlay" onclick="if(event.target===this)this.remove()">'
+      + '<div class="mbox" style="width:640px" role="dialog" aria-modal="true" aria-labelledby="' + id + '-titulo">'
+      + cabecalho(id, '⇄', 'Assumir recolhimento via RAD', (nf.tipoDF || 'NF-e') + ' ' + nf.numero + ' · ' + (nf.entidade || '—'))
+      + '<div class="mbox-col" style="flex:1;min-height:0">'
+      + '<div class="shg2" style="gap:0 16px">'
+      +   DR('Fornecedor', esc(nf.entidade || '—'))
+      +   DR('CNPJ', esc(nf.cnpj || '—'), null, true)
+      +   DR('Contrato', ctr ? esc(ctr) : 'Sem contrato vigente')
+      +   DR('Método do contrato', esc(nf.metodoPagamento || 'Fornecedor'))
+      +   DR('IBS', ff(ibs), 'var(--p-blue)')
+      +   DR('CBS', ff(cbs), 'var(--p-amber)')
+      +   DR('Total a recolher', '<strong>' + ff(ibs + cbs) + '</strong>', 'var(--p-teal)')
+      +   DR('Vencimento do tributo', venc ? fmtTS(venc) : '—')
+      + '</div>'
+      + el.avisos.map(function (a) { return caixa('--amber-rgb', 'Atenção', esc(a)); }).join('')
+      + '<div class="mbox-divider"></div>'
+      + '<div class="mbox-section-label">Declarações</div>'
+      + dec('rad-f-dec-regime', 'Somos contribuintes do IBS e da CBS no <strong>regime regular</strong>.')
+      + dec('rad-f-dec-split', 'O pagamento ao fornecedor usará instrumento que <strong>não permite a segregação</strong> do tributo.')
+      + dec('rad-f-dec-liquido', 'O fornecedor receberá o <strong>valor líquido</strong>, sem o IBS e a CBS deste documento.')
+      + dec('rad-f-dec-dup', 'A duplicata deste documento <strong>não foi cedida</strong> a banco, FIDC ou factoring.')
+      + '<div class="shg2" style="gap:12px;margin-top:6px">'
+      +   '<div class="sh-fp-field"><label for="rad-f-instrumento">Instrumento de pagamento</label><select id="rad-f-instrumento" onchange="window.shRADValidar()">' + opcoes(INSTRUMENTOS) + '</select></div>'
+      +   '<div class="sh-fp-field"><label for="rad-f-motivo">Motivo</label><select id="rad-f-motivo" onchange="window.shRADValidar()">' + opcoes(MOTIVOS) + '</select></div>'
+      + '</div>'
+      + '<div class="sh-fp-field" style="margin-top:12px"><label for="rad-f-just">Justificativa</label>'
+      +   campoTexto('rad-f-just', 'window.shRADValidar()', 'Por que o recolhimento está sendo assumido') + '</div>'
+      + caixa('--status-red-rgb', 'Pagamento em duplicidade',
+          'Se o fornecedor também recolher, o valor pago por nós quita só o débito ainda não extinto, e o excedente é '
+          + '<strong>transferido ao fornecedor</strong> em até 3 dias úteis (Res. CGIBS 6/2026, art. 36, § 3º). Avise-o de que o recolhimento foi assumido.')
+      + '</div>'
+      + rodape(id, 'LC 214/2025, art. 36', 'rad-f-ok', 'Assumir recolhimento', 'btn btn-t', 'window.shRADConfirmarAssumir(\'' + numSeguro(nf) + '\')')
+      + '</div></div>';
+    fechar(id);
+    document.body.insertAdjacentHTML('beforeend', html);
+  };
+
+  window.shRADValidar = function () {
+    var declarou = ['rad-f-dec-regime', 'rad-f-dec-split', 'rad-f-dec-liquido', 'rad-f-dec-dup'].every(function (id) {
+      var e = document.getElementById(id); return !!(e && e.checked);
+    });
+    return habilitar('rad-f-ok', declarou && !!valor('rad-f-instrumento') && !!valor('rad-f-motivo') && valor('rad-f-just').trim().length >= 10);
+  };
+
+  window.shRADConfirmarAssumir = function (nfNumero) {
+    if (!window.shRADValidar()) return;
+    var nfs = alvos(nfNumero);
+    if (!nfs.length) return;
+    // revalida no clique: o fornecedor pode ter recolhido depois de a tela abrir
+    var el = window.shRADElegibilidade(nfs[0]);
+    if (!el.ok || el.reverter) {
+      fechar('rad-assumir-overlay');
+      reRenderizar();
+      toast(el.motivo || 'O documento deixou de permitir assumir o recolhimento.', 'erro');
+      return;
+    }
+    var a = ator();
+    var acao = {
+      id: 'rad' + Date.now().toString(36), tipo: 'assumir', nfNumero: String(nfs[0].numero), cnpj: nfs[0].cnpj || '',
+      em: agoraISO(), por: a.por, perfil: a.perfil,
+      motivo: valor('rad-f-motivo'), instrumento: valor('rad-f-instrumento'), justificativa: valor('rad-f-just').trim(),
+      declaracoes: { regimeRegular: true, semSegregacao: true, pagamentoLiquido: true, duplicataNaoCedida: true }
+    };
+    var log = lerLog(); log.push(acao); gravarLog(log);
+    nfs.forEach(function (nf) { aplicarAssumir(nf, acao); });
+    fechar('rad-assumir-overlay');
+    posAcao(nfs[0], 'Recolhimento assumido · ' + (nfs[0].tipoDF || 'NF-e') + ' ' + nfs[0].numero + ' enviado para Pagamentos RAD',
+      { rotulo: 'Abrir em Pagamentos', onclick: 'window.shRADIrPagamentos()' });
+  };
+
+  window.shRADAbrirReverter = function (nfNumero) {
+    var nf = alvos(nfNumero)[0];
+    if (!nf) return;
+    var el = window.shRADElegibilidade(nf);
+    if (!el.ok || !el.reverter) { toast(el.motivo || 'O recolhimento deste documento não pode voltar ao fornecedor.', 'erro'); return; }
+    var c = nf.conversaoRAD || {};
+    var DR = window._rfDetailRow;
+    var met = nf.metodoPagamentoContrato || 'Fornecedor';
+    var id = 'rad-reverter-overlay';
+    var html = '<div id="' + id + '" class="moverlay" onclick="if(event.target===this)this.remove()">'
+      + '<div class="mbox" style="width:540px" role="dialog" aria-modal="true" aria-labelledby="' + id + '-titulo">'
+      + cabecalho(id, '↺', 'Devolver recolhimento ao fornecedor', (nf.tipoDF || 'NF-e') + ' ' + nf.numero + ' · ' + (nf.entidade || '—'))
+      + '<div class="mbox-col" style="flex:1;min-height:0">'
+      + caixa('--amber-rgb', 'O que acontece',
+          'O método volta a <strong>' + esc(met) + '</strong>, definido no contrato, e o documento sai de Pagamentos RAD. '
+          + 'O fornecedor volta a ser o responsável pelo recolhimento — avise-o.')
+      + '<div class="shg2" style="gap:0 16px;margin-top:10px">'
+      +   DR('Assumido em', fmtTS(c.em))
+      +   DR('Por', esc(c.por || '—'))
+      +   DR('Motivo', esc(MOTIVOS[c.motivo] || c.motivo || '—'))
+      +   DR('Instrumento', esc(INSTRUMENTOS[c.instrumento] || c.instrumento || '—'))
+      + '</div>'
+      + '<div class="sh-fp-field" style="margin-top:8px"><label for="rad-r-just">Justificativa</label>'
+      +   campoTexto('rad-r-just', 'window.shRADValidarReverter()', 'Por que o recolhimento volta ao fornecedor') + '</div>'
+      + '</div>'
+      + rodape(id, 'Permitido enquanto a guia não foi gerada', 'rad-r-ok', 'Devolver ao fornecedor', 'btn', 'window.shRADConfirmarReverter(\'' + numSeguro(nf) + '\')')
+      + '</div></div>';
+    fechar(id);
+    document.body.insertAdjacentHTML('beforeend', html);
+  };
+
+  window.shRADValidarReverter = function () {
+    return habilitar('rad-r-ok', valor('rad-r-just').trim().length >= 10);
+  };
+
+  window.shRADConfirmarReverter = function (nfNumero) {
+    if (!window.shRADValidarReverter()) return;
+    var nfs = alvos(nfNumero);
+    if (!nfs.length) return;
+    var el = window.shRADElegibilidade(nfs[0]);
+    if (!el.ok || !el.reverter) {
+      fechar('rad-reverter-overlay');
+      reRenderizar();
+      toast(el.motivo || 'O recolhimento deste documento não pode mais voltar ao fornecedor.', 'erro');
+      return;
+    }
+    var a = ator();
+    var acao = {
+      id: 'radr' + Date.now().toString(36), tipo: 'reverter', nfNumero: String(nfs[0].numero), cnpj: nfs[0].cnpj || '',
+      conversaoId: nfs[0].conversaoRAD.id, em: agoraISO(), por: a.por, perfil: a.perfil,
+      justificativa: valor('rad-r-just').trim()
+    };
+    var log = lerLog(); log.push(acao); gravarLog(log);
+    nfs.forEach(function (nf) { aplicarReverter(nf, acao); });
+    fechar('rad-reverter-overlay');
+    posAcao(nfs[0], 'Recolhimento devolvido ao fornecedor · ' + (nfs[0].tipoDF || 'NF-e') + ' ' + nfs[0].numero + ' removido de Pagamentos RAD');
+  };
+
+  window.shRADIrPagamentos = function () {
+    ['rad-toast', 'nf-detalhe-overlay'].forEach(fechar);
+    if (typeof showView === 'function') showView('pagamentos', document.getElementById('nav-pagamentos-btn'));
+  };
+})();
 
 window.abrirDetalheRF = function(rfId) {
   var entry = (window._rfIndex || {})[rfId];
@@ -1075,8 +1608,8 @@ window.abrirDetalheRF = function(rfId) {
   var stRegLab = rfSR ? (stRegLabs[rfSR] || rfSR) : null;
   var stRegRgb = rfSR ? (stRegRgbs[rfSR] || '167,168,170') : null;
 
-  var evRgba  = { 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165', 'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23', 'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246', 'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117' };
-  var evIcons = { 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌', 'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌' };
+  var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165', 'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23', 'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246', 'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117' };
+  var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌', 'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌' };
 
   // Ordenar decrescente por timestamp (mais recente primeiro)
   eventos.sort(function(a, b) {
@@ -1146,7 +1679,8 @@ window.abrirDetalheRF = function(rfId) {
     + DR('Valor Total NF', ff(rf.valorTotalNF || nf.valorTotal || 0))
     + DR('Tipo', nf.tipo === 'saida' ? 'Saída' : 'Entrada')
     + '<div class="mbox-divider"></div>'
-    + DR('Método Pagamento', rf.metodoPagamento || nf.metodoPagamento || '—')
+    + DR('Método Pagamento', (rf.metodoPagamento || nf.metodoPagamento || '—') + (window.shRADSufixoMetodo ? window.shRADSufixoMetodo(rf) : ''))
+    + (window.shRADBlocoMetodo ? window.shRADBlocoMetodo(rf) : '')
     + ((rf.metodoPagamento || nf.metodoPagamento || '') === 'Fornecedor'
         ? '<div class="mbox-info-box"><span class="mbox-info-box-label">Apuração Assistida</span>'
           + '<span style="color:var(--txt2)">Quando o método de pagamento é <strong>Fornecedor</strong>, o valor e a elegibilidade do IBS/CBS são confirmados a partir da <strong>Apuração Assistida</strong>. '
@@ -1353,6 +1887,9 @@ window.renderizarTabelaCreditos = function() {
         _inconsistencias: rf._inconsistencias || [],
         contratoId: rf.contratoId || nf.contratoId || null,
         metodoPagamento: rf.metodoPagamento || nf.metodoPagamento || null,
+        metodoPagamentoOrigem: rf.metodoPagamentoOrigem || nf.metodoPagamentoOrigem || null,
+        metodoPagamentoContrato: rf.metodoPagamentoContrato || null,
+        conversaoRAD: rf.conversaoRAD || null,
         metodoExtincao: rf.metodoExtincao || null,
         dataApropriacao: rf.dataApropriacao || null,
         dataPrevExtincao: rf.dataPrevExtincao || null,
@@ -1428,7 +1965,7 @@ window.renderizarTabelaCreditos = function() {
       var metodoCell = _metC
         ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.06em;color:'+_metC+'">'
           + '<span style="width:5px;height:5px;border-radius:50%;background:'+_metC+';display:inline-block"></span>'
-          + r.metodoPagamento + '</span>'
+          + r.metodoPagamento + '</span>' + (window.shRADSufixoMetodo ? window.shRADSufixoMetodo(r) : '')
         : '<span style="color:var(--txt3)">—</span>';
 
       var pagCell = r.isPago
@@ -5345,7 +5882,7 @@ window.injetarFiltrosInconsistencias = function() {
 };
 
 window.creditosDFsLimpar = function() {
-  ['cred-dfs-busca','cred-dfs-status','cred-dfs-tipo','cred-dfs-credito','cred-dfs-metodo','cred-dfs-extincao','cred-dfs-data-de','cred-dfs-data-ate','cred-dfs-valor-min','cred-dfs-valor-max','cred-dfs-cred-min','cred-dfs-cred-max','cred-dfs-ibs-min','cred-dfs-ibs-max','cred-dfs-cbs-min','cred-dfs-cbs-max','cred-dfs-contrato'].forEach(function(id){
+  ['cred-dfs-busca','cred-dfs-status','cred-dfs-tipo','cred-dfs-credito','cred-dfs-metodo','cred-dfs-origem','cred-dfs-extincao','cred-dfs-data-de','cred-dfs-data-ate','cred-dfs-valor-min','cred-dfs-valor-max','cred-dfs-cred-min','cred-dfs-cred-max','cred-dfs-ibs-min','cred-dfs-ibs-max','cred-dfs-cbs-min','cred-dfs-cbs-max','cred-dfs-contrato'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
   if (typeof creditosDFsRender === 'function') creditosDFsRender();
@@ -6788,6 +7325,9 @@ window.renderizarTabelaPagamentos = function() {
         dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, pago: pago,
         statusCredito: _scP || 'nao_apropriado',
         metodo: rf.metodoPagamento || nf.metodoPagamento || 'RAD',
+        metodoPagamentoOrigem: rf.metodoPagamentoOrigem || nf.metodoPagamentoOrigem || null,
+        metodoPagamentoContrato: rf.metodoPagamentoContrato || null,
+        conversaoRAD: rf.conversaoRAD || null,
         contratoId: rf.contratoId || nf.contratoId || null,
         statusFlags: rf.statusFlags || [],
         metodoExtincao: rf.metodoExtincao || null,
@@ -6847,7 +7387,7 @@ window.renderizarTabelaPagamentos = function() {
       + '<td class="nowrap">' + (r.contratoId ? '<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--blue-rgb),.28);color:'+PALETTE.blue+';background:rgba(var(--blue-rgb),.06)">' + r.contratoId + '</span>' : '<span style="color:var(--txt3)">—</span>') + '</td>'
       + '<td class="nowrap">' + tipoBadge + '</td>'
       + '<td class="nowrap">' + nfTipoBadgePag + '</td>'
-      + '<td class="nowrap"><span style="font-size:10px;font-weight:700;letter-spacing:.06em;padding:2px 8px;border-radius:3px;border:1px solid rgba(var(--teal-alt-rgb),.35);color:var(--teal);background:rgba(var(--teal-alt-rgb),.08)">RAD</span></td>'
+      + '<td class="nowrap"><span style="font-size:10px;font-weight:700;letter-spacing:.06em;padding:2px 8px;border-radius:3px;border:1px solid rgba(var(--teal-alt-rgb),.35);color:var(--teal);background:rgba(var(--teal-alt-rgb),.08)">RAD</span>' + (window.shRADSufixoMetodo ? window.shRADSufixoMetodo(r) : '') + '</td>'
       + '<td class="r mono" style="font-weight:600">' + ff(r.valor) + '</td>'
       + '<td class="nowrap" style="color:var(--txt2)">' + r.dataRF + '</td>'
       + '<td class="nowrap">' + (r.pago && r.pagamento && r.pagamento !== '—'
@@ -7615,6 +8155,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         window._nfListaCompleta = (window.nfListaFiltradaGlobal || []).slice();
       } catch(e) {}
+      // Ações do operador sobre a base — idempotente; nfRenderLista já as aplica
+      try { window.shRADAplicarLog && window.shRADAplicarLog(); } catch(e) {}
       try {
         window._rfIndex = {};
         (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
@@ -8596,6 +9138,7 @@ function _darfFmt(v) {
 window.abrirGuiaDARF = function(idx) {
   var r = (window._pagImpRows || [])[idx];
   if (!r) return;
+  if (window.shRADRegistrarGuia) window.shRADRegistrarGuia(r.rfId);
 
   var isIBS    = r.tipo === 'Guia IBS';
   var codRec   = isIBS ? '6912' : '5952';
@@ -9493,12 +10036,12 @@ window.downloadGuiaDARF = function() {
     var histEl    = document.getElementById('ing-modal-historico');
     var histTitEl = document.getElementById('ing-modal-hist-titulo');
     if (histEl) {
-      var evRgba  = { 'INGESTÃO':'29,158,117','VALIDAÇÃO':'29,158,117','GERAÇÃO RF':'24,95,165',
+      var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117','VALIDAÇÃO':'29,158,117','GERAÇÃO RF':'24,95,165',
         'INCONSISTÊNCIA':'163,45,45','VENCIMENTO':'163,45,45','AGUARDANDO':'186,117,23',
         'APROPRIAÇÃO':'29,158,117','PAGAMENTO':'29,158,117','UTILIZAÇÃO':'139,92,246',
         'EXTINÇÃO':'167,168,170','CONCILIAÇÃO':'139,92,246',
         'CONC APURAÇÃO':'24,95,165','CONC FINANCEIRA':'29,158,117' };
-      var evIcons = { 'INGESTÃO':'↓','VALIDAÇÃO':'✓','GERAÇÃO RF':'◉','INCONSISTÊNCIA':'!',
+      var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓','VALIDAÇÃO':'✓','GERAÇÃO RF':'◉','INCONSISTÊNCIA':'!',
         'VENCIMENTO':'✕','AGUARDANDO':'…','APROPRIAÇÃO':'✓','PAGAMENTO':'$','UTILIZAÇÃO':'◆',
         'EXTINÇÃO':'■','CONCILIAÇÃO':'⇌',
         'CONC APURAÇÃO':'⇌','CONC FINANCEIRA':'⇌' };

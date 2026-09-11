@@ -198,7 +198,7 @@ img, svg { max-width: 100%; height: auto; }
   <p class="subtitle">Camada de configuração que determina, por CNPJ fornecedor, <strong>quem recolhe o IBS e a CBS</strong> — por Split Payment, RAD ou pelo próprio fornecedor — e em que prazo o pagamento ocorre. É a decisão contratual que governa o comportamento dos módulos de Pagamentos e Crédito, e a regra que exige contrato vigente para toda nota fiscal recebida.</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.5</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.6</span></div>
     <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Configurações → Contratos</span></div>
     <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-contratos</span></div>
@@ -1587,7 +1587,7 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
         <thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri</th></tr></thead>
         <tbody>
           <tr><td class="rid">RF-CTR-080</td><td>O sistema deve oferecer os três métodos — Split Payment, RAD e Fornecedor — em cadastro, edição e filtro.</td><td>As três opções presentes nos três contextos, com rótulos idênticos.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CTR-081</td><td>O método do contrato deve determinar o <code>metodoPagamento</code> do RF gerado, com os três valores.</td><td>Contrato <code>split</code> produz RF <code>Split Payment</code>; idem para os demais.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CTR-081</td><td>O método do contrato deve determinar o <code>metodoPagamento</code> do RF gerado, com os três valores. <strong>Exceção:</strong> o operador pode assumir o recolhimento de uma DF específica (F-08 do PRD de Crédito); o contrato não muda, e o método original fica em <code>metodoPagamentoContrato</code>.</td><td>Contrato <code>split</code> produz RF <code>Split Payment</code>; idem para os demais.</td><td>M</td></tr>
           <tr><td class="rid">RF-CTR-082</td><td>Contratos legados sem o campo <code>metodo</code> devem ser resolvidos sem ambiguidade.</td><td><code>rad:true</code> → RAD; <code>rad:false</code> → Fornecedor; nenhum contrato existente muda de significado.</td><td>M</td></tr>
           <tr><td class="rid">RF-CTR-083</td><td>Sem contrato vigente na data da nota, aplica-se o mecanismo padrão da LC 214/2025.</td><td>NF descoberta recebe <code>Split Payment</code>, não um método sorteado.</td><td>M</td></tr>
           <tr><td class="rid">RF-CTR-084</td><td>Cada método deve ter cor distinta e consistente em toda a interface.</td><td>Três cores diferentes, derivadas de tokens; nenhuma colisão entre métodos.</td><td>S</td></tr>
@@ -1761,6 +1761,10 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
   <div class="section" id="s14">
     <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
             <div class="ver-row">
+      <div class="ver-num">v2.6</div>
+      <div class="ver-desc"><strong>11/09/2026</strong> — <strong>Exceção à RF-CTR-081.</strong> O método do contrato deixa de ser absoluto por documento: em Créditos, o operador pode assumir o recolhimento de uma DF com método Fornecedor — ver F-08 do <a href="prd-credito.html" style="color:var(--blue)">PRD de Crédito</a>. O contrato não é alterado; o método original fica preservado em <code>metodoPagamentoContrato</code>, e o detalhe do contrato passa a mostrar quantas DFs saíram dele. Muitas conversões no mesmo contrato são sinal de que ele deveria ser RAD.</div>
+    </div>
+<div class="ver-row">
       <div class="ver-num">v2.5</div>
       <div class="ver-desc"><strong>10/09/2026</strong> — <strong>Split Payment volta ao catálogo de métodos.</strong> A v2.4 confundiu ausência de trabalho operacional com ausência de informação: no split payment o crédito nasce igual, tem apropriação própria e corre o mesmo prazo do <span class="nid">art. 54</span>. <code>CONTRATO_METODOS</code> volta a três valores, três contratos passam a operar pelo método — CT-0003, CT-0006 e CT-0010, com prazos 90, 30 e 60 —, e a opção retorna ao cadastro e aos filtros. O padrão sem contrato vigente <em>permanece</em> Fornecedor. Dois gráficos que agrupavam por dois métodos passam a três: o de <em>Método de pagamento</em>, em Créditos, e o de <em>Pagamentos Executados</em>, no Dashboard — este último agrupava pelo booleano <code>rad</code> do contrato, ignorando a vigência.</div>
     </div>
