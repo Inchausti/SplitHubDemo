@@ -1407,21 +1407,51 @@ window._rfGerarHistorico = function(rf, nf) {
       + '<div class="mbox-title" id="' + id + '-titulo">' + titulo + '</div><div class="mbox-sub">' + esc(sub) + '</div></div></div>'
       + '<button class="mbox-close" aria-label="Fechar" onclick="document.getElementById(\'' + id + '\').remove()">✕</button></div>';
   }
+  var MIN_JUST = 10;
   function rodape(id, legenda, botaoId, rotulo, cls, onclick) {
     return '<div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 18px;border-top:1px solid var(--brd);flex-shrink:0">'
-      + '<span style="font-size:10px;color:var(--txt3);margin-right:auto">' + legenda + '</span>'
+      + '<span id="' + botaoId + '-status" role="status" aria-live="polite" style="font-size:11px;color:var(--txt3);margin-right:auto;min-width:0">' + legenda + '</span>'
       + '<button class="btn" onclick="document.getElementById(\'' + id + '\').remove()">Cancelar</button>'
-      + '<button class="' + cls + '" id="' + botaoId + '" disabled style="opacity:.45;cursor:not-allowed" onclick="' + onclick + '">' + rotulo + '</button></div>';
+      + '<button class="' + cls + '" id="' + botaoId + '" onclick="' + onclick + '">' + rotulo + '</button></div>';
   }
   function campoTexto(id, validador, placeholder) {
     return '<textarea id="' + id + '" rows="3" oninput="' + validador + '" placeholder="' + placeholder + '"'
       + ' style="width:100%;box-sizing:border-box;resize:vertical;font:inherit;font-size:12px;color:var(--txt1);background:var(--bg);border:1px solid var(--brd);border-radius:6px;padding:8px 10px"></textarea>'
-      + '<div style="font-size:10px;color:var(--txt3);margin-top:3px">Mínimo de 10 caracteres. Fica registrada no histórico do documento.</div>';
+      + '<div id="' + id + '-contador" style="font-size:10px;color:var(--txt3);margin-top:3px">0 de ' + MIN_JUST + ' caracteres mínimos · fica registrada no histórico do documento</div>';
   }
-  function habilitar(botaoId, ok) {
+  /* O botão de confirmar nunca fica desabilitado: desabilitado, ele não diz
+     o que falta, e o operador conclui que a ação está quebrada. A linha de
+     status do rodapé lista as pendências a cada mudança; depois de um clique
+     com pendência, os campos que faltam ficam destacados e o foco vai para o
+     primeiro. */
+  function conferir(botaoId, itens, focar) {
     var b = document.getElementById(botaoId);
-    if (b) { b.disabled = !ok; b.style.opacity = ok ? '1' : '.45'; b.style.cursor = ok ? 'pointer' : 'not-allowed'; }
-    return ok;
+    if (b && focar) b.setAttribute('data-tentou', '1');
+    var destacar = !!(b && b.getAttribute('data-tentou'));
+    var falta = itens.filter(function (it) { return !it.ok; });
+    itens.forEach(function (it) {
+      var alvo = document.getElementById(it.id);
+      if (!alvo) return;
+      var marca = destacar && !it.ok;
+      if (it.check) { var l = alvo.closest('label'); if (l) l.style.color = marca ? 'var(--red)' : 'var(--txt1)'; }
+      else alvo.style.borderColor = marca ? 'var(--red)' : 'var(--brd)';
+    });
+    var st = document.getElementById(botaoId + '-status');
+    if (st) {
+      st.style.color = !falta.length ? 'var(--teal)' : destacar ? 'var(--red)' : 'var(--txt3)';
+      st.textContent = falta.length ? 'Falta: ' + falta.map(function (it) { return it.rotulo; }).join(' · ') : 'Tudo preenchido';
+    }
+    if (focar && falta.length) { var p = document.getElementById(falta[0].id); if (p) p.focus(); }
+    return !falta.length;
+  }
+  function contarJustificativa(id) {
+    var n = valor(id).trim().length;
+    var c = document.getElementById(id + '-contador');
+    if (c) {
+      c.textContent = (n >= MIN_JUST ? n + ' caracteres' : n + ' de ' + MIN_JUST + ' caracteres mínimos') + ' · fica registrada no histórico do documento';
+      c.style.color = n >= MIN_JUST ? 'var(--txt3)' : 'var(--amber)';
+    }
+    return n;
   }
 
   window.shRADAbrirAssumir = function (nfNumero) {
@@ -1474,17 +1504,22 @@ window._rfGerarHistorico = function(rf, nf) {
       + '</div></div>';
     fechar(id);
     document.body.insertAdjacentHTML('beforeend', html);
+    window.shRADValidar();
   };
 
-  window.shRADValidar = function () {
-    var declarou = ['rad-f-dec-split', 'rad-f-dec-liquido'].every(function (id) {
-      var e = document.getElementById(id); return !!(e && e.checked);
-    });
-    return habilitar('rad-f-ok', declarou && !!valor('rad-f-motivo') && valor('rad-f-just').trim().length >= 10);
+  window.shRADValidar = function (tentativa) {
+    var marcada = function (id) { var e = document.getElementById(id); return !!(e && e.checked); };
+    var n = contarJustificativa('rad-f-just');
+    return conferir('rad-f-ok', [
+      { id: 'rad-f-dec-split',   check: true, ok: marcada('rad-f-dec-split'),   rotulo: 'declaração de instrumento' },
+      { id: 'rad-f-dec-liquido', check: true, ok: marcada('rad-f-dec-liquido'), rotulo: 'declaração de valor líquido' },
+      { id: 'rad-f-motivo',      ok: !!valor('rad-f-motivo'),                   rotulo: 'motivo' },
+      { id: 'rad-f-just',        ok: n >= MIN_JUST,                             rotulo: 'justificativa (' + n + ' de ' + MIN_JUST + ' caracteres)' }
+    ], !!tentativa);
   };
 
   window.shRADConfirmarAssumir = function (nfNumero) {
-    if (!window.shRADValidar()) return;
+    if (!window.shRADValidar(true)) return;
     var nfs = alvos(nfNumero);
     if (!nfs.length) return;
     // revalida no clique: o fornecedor pode ter recolhido depois de a tela abrir
@@ -1536,14 +1571,18 @@ window._rfGerarHistorico = function(rf, nf) {
       + '</div></div>';
     fechar(id);
     document.body.insertAdjacentHTML('beforeend', html);
+    window.shRADValidarReverter();
   };
 
-  window.shRADValidarReverter = function () {
-    return habilitar('rad-r-ok', valor('rad-r-just').trim().length >= 10);
+  window.shRADValidarReverter = function (tentativa) {
+    var n = contarJustificativa('rad-r-just');
+    return conferir('rad-r-ok', [
+      { id: 'rad-r-just', ok: n >= MIN_JUST, rotulo: 'justificativa (' + n + ' de ' + MIN_JUST + ' caracteres)' }
+    ], !!tentativa);
   };
 
   window.shRADConfirmarReverter = function (nfNumero) {
-    if (!window.shRADValidarReverter()) return;
+    if (!window.shRADValidarReverter(true)) return;
     var nfs = alvos(nfNumero);
     if (!nfs.length) return;
     var el = window.shRADElegibilidade(nfs[0]);
