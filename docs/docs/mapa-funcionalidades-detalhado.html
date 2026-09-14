@@ -141,7 +141,7 @@ img, svg { max-width: 100%; height: auto; }
 
   <div class="meta-row">
     <div class="meta-item"><div class="meta-label">Produto</div><div class="meta-val">SplitHub</div></div>
-    <div class="meta-item"><div class="meta-label">Módulos</div><div class="meta-val">15 módulos</div></div>
+    <div class="meta-item"><div class="meta-label">Módulos</div><div class="meta-val">20 módulos</div></div>
     <div class="meta-item"><div class="meta-label">Funcionalidades</div><div class="meta-val" id="totalFeat">—</div></div>
     <div class="meta-item"><div class="meta-label">Base legal</div><div class="meta-val">LC 214/2025</div></div>
     <div class="meta-item"><div class="meta-label">Atualizado em</div><div class="meta-val">Set/2026</div></div>
@@ -171,9 +171,9 @@ var TYPE_LABEL = {l:'Listagem',a:'Ação',r:'Risco/Inc.',g:'Analítico',c:'Confi
 var TYPE_CLASS = {l:'ft-l',a:'ft-a',r:'ft-r',g:'ft-g',c:'ft-c',p:'ft-p'};
 
 var GROUPS = [
-  {num:'Operacional',title:'Gestão e operação fiscal',mods:[0,1,2,3,4,5]},
-  {num:'Analítico',title:'Inteligência e planejamento',mods:[6,7]},
-  {num:'Gestão',title:'Cadastros e organização',mods:[8,9,10,13,14]},
+  {num:'Operacional',title:'Gestão e operação fiscal',mods:[0,1,2,3,4,5,15,16]},
+  {num:'Analítico',title:'Inteligência e planejamento',mods:[6,7,17]},
+  {num:'Gestão',title:'Cadastros e organização',mods:[8,9,10,13,14,18,19]},
   {num:'Portais',title:'Acesso externo e infraestrutura',mods:[11,12]},
 ];
 
@@ -222,6 +222,12 @@ var MODS = [
        d:'Três datas em cada RF e DF: o recolhimento que fez o crédito nascer, o consumo do crédito, e o limite de 5 anos do art. 54. Cada modalidade de recolhimento tem seu próprio marco.'},
       {n:'Assumir recolhimento via RAD',t:'a',
        d:'Numa DF com método Fornecedor e os dois tributos ainda não apropriados, o operador assume o pagamento do IBS e da CBS: o método vira RAD, a ação fica no histórico da DF e dos RFs, e o documento entra em Pagamentos RAD. Existe para garantir o crédito quando o fornecedor não recolhe (LC 214/2025, art. 36).'},
+      {n:'Visão por documento fiscal na aba DFs',t:'l',
+       d:'Aba que lista os documentos fiscais de entrada em vez dos registros, com IBS, CBS, crédito do documento, método de pagamento e as ações disponíveis. A decisão de assumir o recolhimento é por documento, não por registro.'},
+      {n:'Reverter o recolhimento assumido',t:'a',
+       d:'Enquanto nenhuma guia tiver sido gerada, o operador desfaz a conversão e o documento volta ao método do contrato. A reversão fica no histórico do documento e dos registros, com motivo obrigatório.'},
+      {n:'Filtro por origem do método de pagamento',t:'l',
+       d:'Separa os documentos cujo método veio do contrato daqueles em que o adquirente assumiu o recolhimento. Sem esse recorte, a conversão manual desaparece dentro do total de RAD.'},
     ]
   },
   /* 2 */ {
@@ -270,6 +276,8 @@ var MODS = [
        d:'Guias que voltaram com código de erro da API, agrupadas por causa. Dois dos três códigos de retorno possíveis são erro.'},
       {n:'Gestão de colunas e exportação CSV',t:'a',
        d:'Escolha, reordenação e ordenação das dezenove colunas da listagem, com exportação em CSV da página ou do conjunto inteiro. A preferência fica salva no navegador.'},
+      {n:'Guias de recolhimento assumido',t:'l',
+       d:'Documentos convertidos manualmente para RAD entram na fila de pagamento marcados como tal, com a data da conversão e o método que o contrato previa. Permite separar o que o contrato determinou do que o operador decidiu.'},
     ]
   },
   /* 4 */ {
@@ -370,6 +378,8 @@ var MODS = [
        d:'Tabela de contratos com filtros shBuildFilterPanel por modelo (RAD/Fornecedor), status de vigência e fornecedor vinculado.'},
       {n:'Contrato como recorte de política RAD',t:'c',
        d:'Contratos de método RAD podem ser o critério de cobertura de uma política de execução, na orquestração por contrato.'},
+      {n:'Modelo Split Payment — retenção na liquidação',t:'c',
+       d:'Terceiro método de pagamento do contrato: o IBS e a CBS são segregados no próprio instrumento de pagamento e recolhidos na liquidação. Documentos em Split Payment não admitem recolhimento assumido, porque o instrumento já separa o tributo (art. 36, caput).'},
     ]
   },
   /* 9 */ {
@@ -426,6 +436,8 @@ var MODS = [
        d:'Mesmo componente de seleção de meses individuais do portal cliente. Propaga o filtro de período por todos os módulos do portal do fornecedor.'},
       {n:'Contratos globais visíveis',t:'l',
        d:'Lista dos contratos vigentes entre o fornecedor e o adquirente, com modelo (RAD/Fornecedor), vigência e condições relevantes para o ciclo de crédito.'},
+      {n:'Aviso de recolhimento assumido pelo adquirente',t:'r',
+       d:'Quando o adquirente assume o recolhimento de um documento, o fornecedor vê o aviso de não recolher. Se recolher assim mesmo, o excedente volta a ele em até três dias úteis, mas o caixa já saiu duas vezes.'},
     ]
   },
   /* 12 */ {
@@ -452,6 +464,8 @@ var MODS = [
        d:'Atalho de teclado global — qualquer overlay aberto no sistema (modais de detalhe NF, RF, inconsistência, fornecedor, contrato) responde ao ESC e fecha sem ação adicional do usuário.'},
       {n:'Tooltip de coluna como padrão de projeto',t:'p',
        d:'Toda coluna declarada no catálogo de tabelas ganha explicação no cabeçalho, aplicada sempre do mesmo jeito. 104 colunas documentadas nas nove listagens; coluna nova só é publicada se souber se explicar.'},
+      {n:'Documentação de produto dentro da aplicação',t:'p',
+       d:'Hub de PRDs, mapa de funcionalidades e changelog acessíveis pela própria aplicação, sem depender de link externo. Quem opera e quem especifica leem a mesma versão.'},
     ]
   },
   /* 13 */ {
@@ -526,6 +540,106 @@ var MODS = [
        d:'Chamadas ao endpoint de comprovante, com identificador da guia, meio, valor e resultado. As rejeitadas aparecem isoladas, com o motivo.'},
       {n:'Teste de conexão',t:'a',
        d:'Dispara um evento de teste com payload fictício e mostra a resposta HTTP. Valida a URL antes de a política de execução depender dela.'},
+    ]
+  },
+  /* 15 */ {
+    icon:'⋈',name:'Conciliação',scope:'Cliente · Operacional',
+    mc:'#0891B2',ml:'rgba(8,145,178,.07)',md:'#164E63',
+    feats:[
+      {n:'Painel unificado da jornada do documento',t:'g',
+       d:'Cinco marcos por documento — ingestão, confirmação do governo, IBS pago, CBS pago e crédito apropriado — com o volume parado em cada um. Mostra onde a jornada trava antes de o crédito estar garantido.'},
+      {n:'Confronto com a Apuração Assistida',t:'r',
+       d:'Compara o que o SplitHub apurou com o que a Apuração Assistida devolveu, documento a documento. Divergência vira inconsistência CAPUR, por tributo.'},
+      {n:'Conciliação financeira pelos comprovantes',t:'r',
+       d:'Confere o valor recolhido contra o valor devido usando os comprovantes recebidos. Divergência vira inconsistência CFIN, por tributo.'},
+      {n:'Sequenciamento das duas conciliações',t:'r',
+       d:'A conciliação financeira só é avaliada depois de a apuração fechar. Conciliar pagamento contra um valor que o governo ainda não confirmou produz divergência falsa.'},
+      {n:'Próxima ação sugerida por documento',t:'a',
+       d:'Cada documento carrega a ação que destrava a jornada: cobrar comprovante, abrir inconsistência, reprocessar a apuração ou apropriar o crédito.'},
+      {n:'Listagem de registros com oito filtros',t:'l',
+       d:'Registros fiscais filtrados por tipo de documento, estado CAPUR, estado CFIN, tributo, entidade, período, valor e fornecedor.'},
+      {n:'Propagação do resultado para documento e registros',t:'r',
+       d:'O resultado da conciliação de cada registro sobe para o documento pela regra de pior estado, e o documento só fica conciliado quando IBS e CBS fecham.'},
+      {n:'Recorte por múltiplos períodos',t:'p',
+       d:'Seleção de várias competências ao mesmo tempo, porque divergência de apuração costuma aparecer na virada do mês.'},
+    ]
+  },
+  /* 16 */ {
+    icon:'🧮',name:'Apuração IBS/CBS',scope:'Cliente · Operacional',
+    mc:'#1A7940',ml:'rgba(26,121,64,.07)',md:'#14532D',
+    feats:[
+      {n:'Resumo por tributo na competência',t:'l',
+       d:'Saldo inicial, créditos apropriados, créditos utilizados, débitos, débitos extintos e tributo a pagar, com IBS e CBS em linhas próprias.'},
+      {n:'Posição detalhada de créditos e débitos',t:'g',
+       d:'Abre o resumo em créditos a apropriar, apropriados e utilizados, e em débitos extintos e em aberto, com o percentual de cada faixa.'},
+      {n:'Cálculo da competência',t:'a',
+       d:'Recalcula a apuração a partir dos documentos e registros do período, registrando data e hora da última execução.'},
+      {n:'Conclusão e reabertura da apuração',t:'a',
+       d:'Fecha a competência para congelar a posição, e permite reabrir quando um documento retardatário ou uma conciliação muda o resultado.'},
+      {n:'Abas Resumo, Créditos e Débitos',t:'l',
+       d:'Três recortes da mesma competência: o consolidado por tributo, a composição do crédito e a composição do débito.'},
+      {n:'Navegação entre competências',t:'l',
+       d:'Troca de período com o estado da apuração visível — calculada, concluída ou reaberta.'},
+      {n:'Exportação da apuração',t:'a',
+       d:'Gera o arquivo da posição apurada para conferência fora do sistema e para anexar ao fechamento contábil.'},
+    ]
+  },
+  /* 17 */ {
+    icon:'💬',name:'Assistente Tributário',scope:'Cliente · Analítico',
+    mc:'#6D28D9',ml:'rgba(109,40,217,.07)',md:'#3B0764',
+    feats:[
+      {n:'Chat livre sobre a legislação',t:'a',
+       d:'Pergunta aberta sobre IBS, CBS e split payment respondida a partir das fontes indexadas, com a referência do dispositivo.'},
+      {n:'Diagnóstico guiado por árvore de decisão',t:'a',
+       d:'Fluxo de perguntas fechadas que leva o operador até o enquadramento do caso, sem depender de ele saber formular a pergunta certa.'},
+      {n:'Fontes indexadas com link para a norma',t:'l',
+       d:'LC 214/2025 e Decreto 12.955/2026 indexados e acessíveis, com as notas técnicas da RFB em indexação.'},
+      {n:'Histórico de conversas',t:'l',
+       d:'Conversas anteriores preservadas na lateral, para retomar um diagnóstico sem refazer o caminho.'},
+    ]
+  },
+  /* 18 */ {
+    icon:'🤖',name:'Automações',scope:'Cliente · Configuração',
+    mc:'#C2410C',ml:'rgba(194,65,12,.07)',md:'#7C2D12',
+    feats:[
+      {n:'Relatórios agendados por módulo',t:'c',
+       d:'Envio recorrente de crédito, débito, inconsistências, pagamentos ou consolidado, com destinatários, recorrência, dia e hora e formato.'},
+      {n:'Ativação, edição e exclusão de agendamento',t:'a',
+       d:'Liga e desliga um relatório sem perder a configuração, e mostra último e próximo envio.'},
+      {n:'Integração ITSM por evento',t:'c',
+       d:'Quatro eventos do produto — nova inconsistência, status alterado, registro próximo do vencimento e conciliação parada — abrem chamado no sistema de ITSM, cada um ligável em separado.'},
+      {n:'Mapeamento dos campos do chamado',t:'c',
+       d:'Título, prioridade e categoria montados por template com variáveis do registro, para o chamado chegar tratável do outro lado.'},
+      {n:'Histórico de chamados abertos',t:'l',
+       d:'Evento, registro, status HTTP e número do chamado de cada envio, inclusive os que falharam.'},
+      {n:'Régua de cobrança pré-vencimento',t:'c',
+       d:'Sequência de avisos antes do vencimento, com gatilho em dias, número máximo de envios e intervalo entre eles.'},
+      {n:'Régua de cobrança pós-vencimento',t:'c',
+       d:'Sequência de cobranças depois do vencimento, com escalada gerencial e abertura de chamado quando a mora persiste.'},
+      {n:'Etapas da régua com canal e condição',t:'c',
+       d:'Cada etapa define o dia relativo ao vencimento, o canal e a condição de disparo, e pode escalar para a régua seguinte.'},
+      {n:'Template de mensagem com variáveis',t:'c',
+       d:'Assunto e corpo com fornecedor, registro, tributo, valor, vencimento e dias de atraso preenchidos no envio.'},
+      {n:'Disparos por fornecedor e etapa',t:'l',
+       d:'Histórico do que foi enviado, para quem, em que etapa e com que resultado — entregue, aberto, devolvido ou convertido em chamado.'},
+      {n:'Auditoria da régua com motivo',t:'p',
+       d:'Criação, ativação e cada alteração de parâmetro ficam registradas com autor, data e justificativa.'},
+    ]
+  },
+  /* 19 */ {
+    icon:'👥',name:'Usuários e Acessos',scope:'Cliente · Gestão',
+    mc:'#4A5568',ml:'rgba(74,85,104,.07)',md:'#1E293B',
+    feats:[
+      {n:'Listagem de membros da organização',t:'l',
+       d:'Usuário, e-mail, perfil, último acesso e situação, com o total de ativos, administradores, convites pendentes e inativos.'},
+      {n:'Perfis de acesso',t:'c',
+       d:'Administrador, Analista Fiscal, Controller e Auditor, cada um com o alcance declarado por módulo e a permissão de agir ou só ler.'},
+      {n:'Convite de usuário',t:'a',
+       d:'Convida por e-mail com o perfil já definido, e reenvia o convite que não foi aceito.'},
+      {n:'Revogação e reativação de acesso',t:'a',
+       d:'Corta o acesso sem apagar o usuário, preservando a trilha do que ele fez, e devolve o acesso quando necessário.'},
+      {n:'Abas por situação do acesso',t:'l',
+       d:'Todos, ativos, pendentes e inativos, para achar rápido quem está sem acesso ou com convite parado.'},
     ]
   },
 ];
