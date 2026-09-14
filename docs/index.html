@@ -3318,7 +3318,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <div class="tcrd">
       <div class="tcrd-hdr" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
         <div class="sechdr" style="margin-bottom:0"><h2>CNPJs cadastrados</h2><p id="adm-forn-count-sub">0 de 0 fornecedores exibidos</p></div>
-        <div style="display:flex;align-items:center;gap:6px"><div id="adm-forn-toolbar" style="display:flex;align-items:center;gap:6px"></div><button class="btn btn-t" onclick="adminFornAbrirModal()" style="flex-shrink:0">+ Novo fornecedor</button></div>
+        <div style="display:flex;align-items:center;gap:6px"><div id="adm-forn-toolbar" style="display:flex;align-items:center;gap:6px"></div><button class="btn" onclick="acfAbrirHistorico()" style="flex-shrink:0" title="Histórico de importações">🗂 Lotes</button><button class="btn" onclick="acfAbrirImport('cadastro')" style="flex-shrink:0">⇥ Importar</button><button class="btn btn-t" onclick="adminFornAbrirModal()" style="flex-shrink:0">+ Novo fornecedor</button></div>
       </div>
       <div class="twrap"><table id="tbl-adm-fornecedores"><thead id="thead-t-adm-fornecedores"></thead><tbody id="t-adm-fornecedores"></tbody></table></div>
     </div>
@@ -3599,6 +3599,22 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="crd" style="margin-top:20px">
+      <div class="sechdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div><h2>Acessos de fornecedores</h2><p>Quem, de fora da organização, enxerga os dados hoje. O acesso é por pessoa e CNPJ: a mesma pessoa pode atender vários fornecedores, com acessos independentes.</p></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0">
+        <input id="acf-busca" type="text" oninput="acfRenderPainel()" placeholder="Buscar pessoa, e-mail ou fornecedor"
+          style="flex:1;min-width:200px;box-sizing:border-box;font:inherit;font-size:12px;color:var(--txt1);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px">
+        <select id="acf-filtro-sit" onchange="acfRenderPainel()" style="font:inherit;font-size:12px;padding:7px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--txt1)">
+          <option value="">Todas as situações</option>
+          <option value="ativo">Ativos</option>
+          <option value="revogado">Revogados</option>
+        </select>
+      </div>
+      <div id="acf-painel"></div>
     </div>
   </div>
 
@@ -4712,10 +4728,17 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <div><div class="sett-uname">José da Silva</div><div class="sett-urole" id="sett-perfil-label">Cliente</div></div>
     </div>
     <div style="padding:0 20px 16px">
-      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Perfil de acesso</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <span style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em">Perfil de acesso</span>
+        <span id="sett-perfil-demo"></span>
+      </div>
       <div class="perfil-toggle" style="width:100%">
         <button class="perfil-btn active" id="sett-perfil-btn-cliente" onclick="setPerfil('cliente')" style="flex:1;text-align:center">Cliente</button>
         <button class="perfil-btn" id="sett-perfil-btn-fornecedor" onclick="closeSettings();abrirSeletorFornecedor()" style="flex:1;text-align:center">Fornecedor</button>
+      </div>
+      <div style="font-size:10.5px;color:var(--txt3);line-height:1.5;margin-top:8px">
+        A troca de perfil existe para <strong>demonstrar o produto</strong>. Num ambiente real, o fornecedor entra
+        pelo portal com convite e senha própria — ver Fornecedor › Acessos.
       </div>
     </div>
     <div class="sett-row">
@@ -5519,11 +5542,46 @@ function adminFornAbrirDet(cnpj){
     auditHtml+='</div>';
   }
   auditHtml+='</div>';
-  document.getElementById('forn-det-body').innerHTML=campos+auditHtml;
+  // Abas do detalhe: Dados · Acessos · Histórico. Acessos vem do módulo de
+  // acesso do fornecedor (acesso-fornecedor.js); sem ele, o detalhe segue
+  // mostrando dados e auditoria como antes.
+  var temAcessos = typeof window.acfAbaAcessos === 'function';
+  if (temAcessos) {
+    var abaBtn=function(k,rot,ativo){
+      return '<button onclick="fornDetAba(\''+k+'\',\''+cnpj+'\')" id="forn-det-tab-'+k+'" style="background:none;border:none;'
+        +'border-bottom:2px solid '+(ativo?'var(--teal)':'transparent')+';color:'+(ativo?'var(--teal)':'var(--txt3)')+';'
+        +'font-weight:'+(ativo?'700':'500')+';font-size:12.5px;padding:8px 2px;margin-right:18px;cursor:pointer;font-family:inherit">'+rot+'</button>';
+    };
+    document.getElementById('forn-det-body').innerHTML=
+      '<div style="border-bottom:1px solid var(--border);margin-bottom:18px">'
+      +abaBtn('dados','Dados',true)+abaBtn('acessos','Acessos',false)+abaBtn('historico','Histórico',false)+'</div>'
+      +'<div id="forn-det-pane-dados">'+campos+'</div>'
+      +'<div id="acf-aba-acessos" style="display:none"></div>'
+      +'<div id="forn-det-pane-historico" style="display:none">'+auditHtml+'</div>';
+    window._fornDetAuditHtml=auditHtml;
+  } else {
+    document.getElementById('forn-det-body').innerHTML=campos+auditHtml;
+  }
   document.getElementById('forn-det-overlay').style.display='flex';
 }
 function adminFornFecharDet(){
   document.getElementById('forn-det-overlay').style.display='none';
+}
+function fornDetAba(k,cnpj){
+  var panes={dados:'forn-det-pane-dados',acessos:'acf-aba-acessos',historico:'forn-det-pane-historico'};
+  Object.keys(panes).forEach(function(key){
+    var p=document.getElementById(panes[key]);
+    if(p)p.style.display=key===k?'block':'none';
+    var b=document.getElementById('forn-det-tab-'+key);
+    if(b){
+      b.style.borderBottomColor=key===k?'var(--teal)':'transparent';
+      b.style.color=key===k?'var(--teal)':'var(--txt3)';
+      b.style.fontWeight=key===k?'700':'500';
+    }
+  });
+  if(k==='acessos'&&window.acfAbaAcessos){
+    document.getElementById('acf-aba-acessos').innerHTML=window.acfAbaAcessos(cnpj);
+  }
 }
 
 var INC_TIPOS={
@@ -10794,6 +10852,7 @@ if (window.Chart) {
 <script src="js/exec-rad-3.js?v=3"></script>
 <script src="js/integracoes.js?v=3"></script>
 <script src="js/integracoes-gestao.js?v=2"></script>
+<script src="js/acesso-fornecedor.js?v=2"></script>
 <script>
 // ── ShColMgr: registrações de todas as tabelas ──────────────────────────────
 (function(){
