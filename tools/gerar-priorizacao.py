@@ -48,14 +48,14 @@ FAIXAS = {
     8:  ['M0','M0','M0','M0','M0','M1','M0'],
     9:  ['M0','M0','M1','M0','M2','M0','M0','M0','M0','M0','M0','M0'],
     10: ['M0','M2','M0','M0','M1'],
-    11: ['M0']*12,
+    11: ['M0','M0','M1','M1','M1','M1','M1','M0','M1','M1','M0','M1'],
     12: ['M0','M0','M0','M0','M0','M0','M0','M0','M0','X','X','M0'],
     13: ['M0','M1','M1','M1','M1','M1','M0','M0','M1','M1','M1','M0','M1','M1','M1'],
     14: ['M1']*16,
     15: ['M0','M0','M0','M0','M1','M0','M0','M1'],
     16: ['M0','M1','M0','M0','M0','M0','M1'],
     17: ['M2']*4,
-    18: ['M1']*11,
+    18: ['M1','M1','M1','M1','M1','M0','M0','M0','M0','M0','M0'],
     19: ['M1','M1','M1','M1','M1','M0'],
 }
 
@@ -72,14 +72,14 @@ NOTA = {
     8:  u'Os três métodos de pagamento são pré-requisito: sem saber quem recolhe, não há cadeia. O contrato como recorte de política acompanha Execução RAD.',
     9:  u'Deixou de ser só cadastro: ganhou a gestão de acesso do fornecedor e a importação em massa, implementadas em 14/09. Score de conformidade e trilha de auditoria seguem depois.',
     10: u'Hierarquia e filtro de grupo econômico atravessam todas as telas — sem eles, nenhum número fecha.',
-    11: u'Sobe inteiro ao M0 por decisão de 14/09, com ordem de construção interna (P1, P2, P3) — ver seção 05. O acesso por convite e os dois papéis já estão implementados.',
+    11: u'Recortado em 14/09: entram o painel inicial, a listagem dos documentos contra o comprador, os comprovantes de pagamento e o acesso por convite. O resto do portal — inclusive o que já está implementado — fica para depois. Ver seção 05.',
     12: u'Login, perfis e o sistema de design, mais o selo de modo demonstração da troca de perfil. O SSO corporativo continua sendo a única funcionalidade do MVP que não existe em parte alguma.',
     13: u'O corte mais duro: 4 de 15. O MVP precisa conseguir gerar a guia, não otimizar quando gerá-la. O vínculo com a conexão de destino volta ao M1: sem tela de conexões, não há o que vincular.',
     14: u'<strong>Nenhuma</strong> das 16 no M0, por revisão de 14/09: no primeiro momento a configuração é por variável de ambiente, e não por tela. As quatro integrações externas a desenvolver seguem em M0 — ver seção 06.',
     15: u'A prova de que o recolhimento aconteceu. Sem conciliação, o crédito é uma afirmação sem lastro.',
     16: u'A apuração é onde o crédito vira número exigível. Entra o ciclo calcular–concluir–reabrir.',
     17: u'Depende de base legal indexada e de confiança que um piloto ainda não tem.',
-    18: u'Automação pressupõe operação estável. Antes disso, automatiza-se o erro.',
+    18: u'A <strong>régua de cobrança</strong> entra no M0 por decisão de 14/09: cobrança não feita é crédito perdido. Relatórios agendados e ITSM ficam em M1 — esses automatizam trabalho, não protegem crédito.',
     19: u'Multiusuário interno é consequência de adoção. A exceção é o painel de acessos externos, que entrou no M0 junto com o acesso do fornecedor.',
 }
 
@@ -88,7 +88,7 @@ ROTULO = {'M0': 'M0', 'M1': 'M1', 'M2': 'M2', 'X': 'Fora'}
 
 # ordem de construcao dentro do M0, onde o modulo e grande demais para entrar de uma vez
 PRIO = {
-    11: ['P1', 'P1', 'P2', 'P1', 'P3', 'P3', 'P3', 'P2', 'P2', 'P1', 'P1', 'P1'],
+
 }
 PRIO_NOTA = {
     'P1': u'Núcleo — sem isto o portal não tem razão de existir',
@@ -98,6 +98,22 @@ PRIO_NOTA = {
 
 # funcionalidades que NAO existem no produto e entram na priorizacao mesmo assim
 NOVAS = {
+    18: [
+        (u'Motor de execução das automações', 'c', 'M0', None,
+         u'O que faz a régua disparar: avaliação diária dos registros contra as etapas, respeito ao teto de envios e '
+         u'ao intervalo, e registro do disparo. Não existe hoje — o módulo desenha automações e não executa nenhuma.'),
+        (u'Envio de e-mail transacional', 'c', 'M0', None,
+         u'Provedor de envio, com registro de entrega e devolução. Serve à régua e também ao convite do fornecedor, '
+         u'que hoje é simulado na tela. Sem ele, régua ativa é régua que não cobra ninguém.'),
+    ],
+    11: [
+        (u'Painel inicial do fornecedor', 'g', 'M0', None,
+         u'O que ele deve, o que já foi recolhido e o que vence a seguir, em quatro números. É a tela que responde '
+         u'“preciso fazer alguma coisa hoje?” antes de qualquer listagem.'),
+        (u'Comprovantes de pagamento disponíveis ao fornecedor', 'l', 'M0', None,
+         u'Quando o adquirente recolhe — por RAD ou por recolhimento assumido —, o comprovante fica disponível ao '
+         u'fornecedor no próprio documento. Hoje o fluxo existe só na direção contrária: o fornecedor envia o dele.'),
+    ],
     14: [
         (u'Integração com a Receita Federal — CBS', 'c', 'M0', 'P1',
          u'Apuração assistida da CBS na Plataforma da RFB: autenticação, solicitação e retirada do resultado '
@@ -223,7 +239,7 @@ A(u'<p class="subtitle">As %d funcionalidades do produto distribuídas em quatro
   u'a partir de um único critério: a cadeia mínima que faz um crédito nascer, ser garantido e ser apropriado.</p>' % DO_MAPA)
 
 A(u'<div class="meta-bar">'
-  u'<div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">v1.7</span></div>'
+  u'<div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">v1.9</span></div>'
   u'<div class="meta-pill"><span class="meta-label">Status</span><span class="chip ok">Aprovada · em implementação</span></div>'
   u'<div class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">Mapa de Funcionalidades v2.1</span></div>'
   u'<div class="meta-pill"><span class="meta-label">Escopo</span><span class="meta-val">%d do mapa + %d novas · 20 módulos</span></div>'
@@ -317,13 +333,21 @@ A(u'<tr><td><strong>Módulo de Integrações fora do M0</strong></td>'
   u'<td>As 16 funcionalidades de gestão — catálogo, conexões, credenciais, escopos, log de entregas — vão para M1</td>'
   u'<td>No primeiro momento a configuração é por <strong>variável de ambiente</strong>. O vínculo da política de '
   u'execução com a conexão de destino volta ao M1 junto: sem tela de conexões, não há o que vincular</td></tr>')
-A(u'<tr><td><strong>Portal do Fornecedor</strong></td><td>10 funcionalidades, com ordem interna na seção 05</td>'
-  u'<td>Primeira superfície do produto exposta a quem não é do time — e a razão da decisão sobre acesso externo</td></tr>')
+A(u'<tr><td><strong>Portal do Fornecedor — <em>recortado</em></strong></td>'
+  u'<td>Quatro entregas: acesso por convite, painel inicial, listagem dos documentos contra o comprador e '
+  u'comprovantes de pagamento. As outras oito vão para M1 — ver seção 05</td>'
+  u'<td>Primeira superfície do produto exposta a quem não é do time. No MVP o fornecedor <em>se informa</em>; '
+  u'agir pelo portal — comprovante, contestação, chat — fica para depois</td></tr>')
 A(u'<tr><td><strong>SSO corporativo</strong></td><td>Funcionalidade nova, que não existe no produto</td>'
   u'<td>Substitui a senha de acesso hoje escrita no código, e encerra a iniciativa pausada em 11/09</td></tr>')
 A(u'<tr><td><strong>Fornecedor entra por convite</strong></td><td>Segunda funcionalidade nova, no núcleo do portal</td>'
   u'<td>Convite por e-mail com senha própria, redefinição e revogação — mais barato que link assinado ou federação</td></tr>')
 A(u'</tbody></table></div>')
+A(u'<div class="callout warn"><div class="callout-title">A decisão da régua é a única que exige software novo de '
+  u'infraestrutura</div>'
+  u'<p>Todas as outras recortam o que já existe. A régua em M0 exige <strong>motor de execução</strong> e '
+  u'<strong>envio de e-mail</strong> — duas peças que o produto nunca teve, e que nenhum outro item do MVP obriga a '
+  u'construir. Em compensação, o e-mail resolve junto o convite do fornecedor, hoje simulado na tela.</p></div>')
 A(u'<p class="sec-sub" style="margin-top:22px">Com elas resolvidas, resta <strong>um</strong> corte duro:</p>')
 A(u'<div class="info-card"><div class="info-card-title">Execução RAD — 5 de 15 no M0</div><ul>'
   u'<li>É o módulo mais completo do protótipo e o que menos prova a tese.</li>'
@@ -339,34 +363,50 @@ A(u'</div>')
 # 05 portal
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Dentro do Portal do Fornecedor</span></div>')
-A(u'<p class="sec-sub">O portal entra inteiro no M0, mas as dez funcionalidades não têm o mesmo peso. A ordem abaixo é de '
-  u'construção, não de corte: se o prazo apertar, é o P3 que escorrega — e o portal continua cumprindo sua função sem ele.</p>')
+A(u'<p class="sec-sub">O portal entrou inteiro no M0 em 14/09 e foi <strong>recortado no mesmo dia</strong>. '
+  u'O MVP entrega o mínimo para o fornecedor se informar sozinho: saber o que deve, ver os documentos contra o '
+  u'comprador e ter os comprovantes de pagamento à mão. O resto — inclusive o que já está implementado — espera.</p>')
+
 _, pnome, pfs, pf, pc, pp = por_mod[11]
-for faixa in ('P1', 'P2', 'P3'):
-    itens = [(n, t) for ((n, t, _nv), pr) in zip(pfs, pp) if pr == faixa]
-    A(u'<div class="mod">')
-    A(u'<div class="mod-hdr"><span class="mod-name">%s</span><span class="chip %s">%s</span>'
-      u'<span class="mod-count">%d de %d</span></div>'
-      % (PRIO_NOTA[faixa], 'teal' if faixa == 'P1' else ('info' if faixa == 'P2' else 'ref'), faixa, len(itens), len(pfs)))
-    A(u'<div class="mod-note">%s</div>' % {
-        'P1': u'O fornecedor precisa ver o que deve, saber quando o adquirente já assumiu o recolhimento, e ter por onde '
-              u'mandar o comprovante. Sem estes quatro, o portal é uma tela que não muda nada na operação — e o '
-              u'<strong>aviso de recolhimento assumido</strong> é o item de maior valor financeiro do módulo: sem ele, '
-              u'o fornecedor recolhe um tributo que o adquirente já recolheu, e os dois caixas saem.',
-        'P2': u'O que faz o fornecedor entender o que está vendo: a hierarquia do grupo, os contratos que dizem quem '
-              u'recolhe, e o recorte de período. Sem isto ele vê números certos e tira conclusões erradas.',
-        'P3': u'Canal de conversa e reputação. Melhora a relação, mas nenhuma parte da cadeia do crédito trava sem eles — '
-              u'contestação e chat podem, no MVP, continuar acontecendo por e-mail.',
-    }[faixa])
-    A(u'<ul class="mod-list">')
-    for n, t in itens:
-        A(u'<li class="is-m0"><span class="fx">%s</span><span class="nm">%s</span></li>' % (chip('M0'), n))
-    A(u'</ul></div>')
+_m0 = [(n, nv) for ((n, t, nv), fx) in zip(pfs, pf) if fx == 'M0']
+_dep = [(n, nv) for ((n, t, nv), fx) in zip(pfs, pf) if fx != 'M0']
+
+A(u'<div class="mod">')
+A(u'<div class="mod-hdr"><span class="mod-name">O que entra no MVP</span>%s'
+  u'<span class="mod-count">%d de %d</span></div>' % (chip('M0'), len(_m0), len(pfs)))
+A(u'<div class="mod-note">O fornecedor entra com credencial própria, abre um painel que responde “preciso fazer '
+  u'alguma coisa hoje?”, vê seus documentos contra o comprador e encontra ali o comprovante do que já foi '
+  u'recolhido. Nada mais.</div>')
+A(u'<ul class="mod-list">')
+for n, nv in _m0:
+    A(u'<li class="is-m0"><span class="fx">%s</span><span class="nm">%s%s</span></li>'
+      % (chip('M0'), n, u' <span class="chip warn">Novo</span>' if nv else u''))
+A(u'</ul></div>')
+
+A(u'<div class="mod">')
+A(u'<div class="mod-hdr"><span class="mod-name">Adiado</span>%s'
+  u'<span class="mod-count">%d de %d</span></div>' % (chip('M1'), len(_dep), len(pfs)))
+A(u'<div class="mod-note">Tudo o que faz o fornecedor <em>agir</em> pelo portal — enviar comprovante, contestar, '
+  u'conversar — e o que faz ele entender contexto: grupo econômico, contratos, score. Sem ação, os dois papéis '
+  u'deixam de ter o que distinguir, e por isso acompanham.</div>')
+A(u'<ul class="mod-list">')
+for n, nv in _dep:
+    A(u'<li><span class="fx">%s</span><span class="nm">%s</span></li>' % (chip('M1'), n))
+A(u'</ul></div>')
+
+A(u'<div class="callout red"><div class="callout-title">O que o recorte deixa de fora, e custa dinheiro</div>'
+  u'<p>O <strong>aviso de recolhimento assumido</strong> saiu do M0. É a marca que diz ao fornecedor '
+  u'<em>não recolha — o adquirente já recolheu este documento</em>. Sem ela, o fornecedor recolhe de novo: '
+  u'o excedente volta a ele em até três dias úteis (LC 214/2025, art. 36, § 3º, II), mas o caixa saiu duas vezes, '
+  u'e a conversa sobra para o adquirente.</p>'
+  u'<p style="margin-top:8px">Ela vive <strong>dentro da listagem que entra no M0</strong> — é uma marca na linha do '
+  u'documento, não uma tela nova. Trazer de volta custa pouco, e essa é a razão de o corte estar registrado aqui '
+  u'em vez de passar em silêncio.</p></div>')
 A(u'<div class="callout ok"><div class="callout-title">Como o fornecedor entra — decidido em 14/09</div>'
   u'<p><strong>Convite por e-mail com senha própria.</strong> O SSO resolve o acesso do lado do cliente; o fornecedor '
   u'externo entra por convite, define sua própria senha, e o adquirente revoga quando o contrato termina. '
-  u'Nada disso existe hoje — o portal é alcançado por uma troca de perfil dentro da mesma sessão —, por isso '
-  u'<em>Convite e acesso do fornecedor externo</em> entra como funcionalidade nova, no núcleo do portal.</p></div>')
+  u'Já está implementado, e permanece no M0: sem ele, nenhuma das outras três entregas do portal alcança quem '
+  u'deveria usá-las.</p></div>')
 A(u'</div>')
 
 # 06 contextos da API
@@ -435,8 +475,20 @@ DEC = [
      u'<strong>Decidido em 14/09/2026.</strong> Receita Federal (CBS), Comitê Gestor (IBS), RAD e Databricks para '
      u'comprovantes. Nenhuma existe hoje. As duas primeiras são o que transforma a conciliação em confronto de '
      u'verdade — e trazem ao MVP uma data que o time não controla.'),
-    ('ok', u'D4 · Portal do Fornecedor no M0',
-     u'<strong>Decidido em 14/09/2026.</strong> Entra inteiro, com ordem de construção P1/P2/P3 na seção 05.'),
+    ('ok', u'D4 · Portal do Fornecedor no M0 — <em>recortado</em>',
+     u'<strong>Decidido em 14/09/2026, recortado no mesmo dia.</strong> O M0 fica com quatro entregas: acesso por '
+     u'convite, painel inicial, listagem dos documentos contra o comprador e disponibilização dos comprovantes de '
+     u'pagamento. As outras oito — envio de comprovante, contestação, chat, score, grupo econômico, contratos, '
+     u'papéis e o aviso de recolhimento assumido — vão para M1.'),
+    ('ok', u'D15 · Régua de cobrança no M0',
+     u'<strong>Decidido em 14/09/2026.</strong> As seis funcionalidades de régua — pré e pós-vencimento, etapas, '
+     u'template, disparos e auditoria — entram no MVP; relatórios agendados e integração ITSM ficam em M1. '
+     u'A decisão arrasta dois itens que <strong>não existem</strong>: o motor de execução e o envio de e-mail '
+     u'transacional. Sem os dois, régua ativa é régua que não cobra ninguém.'),
+    ('ok', u'D14 · O fornecedor se informa antes de agir',
+     u'<strong>Decidido em 14/09/2026.</strong> O portal do MVP é de leitura: o fornecedor vê o que deve e encontra o '
+     u'comprovante do que foi recolhido. Toda ação dele pelo portal fica para o M1 — e, até lá, continua acontecendo '
+     u'por e-mail, como acontece hoje.'),
     ('ok', u'D6 · SSO corporativo no M0',
      u'<strong>Decidido em 14/09/2026.</strong> Funcionalidade nova, não presente no mapa nem no produto. '
      u'Substitui a senha de acesso que hoje está no código, e torna desnecessária a iniciativa pausada em 11/09.'),
@@ -474,6 +526,16 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v1.9</div><div class="ver-desc">'
+  u'14/09/2026 — <strong>Régua de cobrança entra no M0.</strong> Seis funcionalidades do módulo de Automações; '
+  u'relatórios agendados e ITSM permanecem em M1. A decisão traz junto dois itens novos, ambos inexistentes: '
+  u'o <em>motor de execução</em> — sem ele o módulo só desenha automações — e o <em>envio de e-mail transacional</em>, '
+  u'que passa a atender também o convite do fornecedor. M0 passa de 94 para %d.</div></div>' % tot['M0'])
+A(u'<div class="ver-row"><div class="ver-num">v1.8</div><div class="ver-desc">'
+  u'14/09/2026 — <strong>Portal do Fornecedor recortado.</strong> O M0 fica com quatro entregas: acesso por convite, '
+  u'<em>painel inicial</em> e <em>comprovantes de pagamento disponíveis ao fornecedor</em> — as duas novas, que não '
+  u'existem hoje — e a listagem dos documentos contra o comprador. As outras oito vão para M1, inclusive o aviso de '
+  u'recolhimento assumido, cujo custo está declarado na seção 05. M0 passa de 100 para %d.</div></div>' % tot['M0'])
 A(u'<div class="ver-row"><div class="ver-num">v1.7</div><div class="ver-desc">'
   u'14/09/2026 — <strong>O módulo de Integrações sai do M0</strong>: no primeiro momento a configuração é por '
   u'variável de ambiente, e as 16 funcionalidades de gestão vão para M1, junto com o vínculo da política de execução '
