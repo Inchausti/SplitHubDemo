@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Automações · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">PRD · Configurações → Automações</div>
+<h1>Automações — O que deveria acontecer sem ninguém lembrar</h1>
+<p class="subtitle">Relatórios recorrentes, chamados abertos por evento e réguas de cobrança ligadas ao vencimento. O módulo desenha as três coisas com precisão — e não executa nenhuma delas.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Configurações → Automações</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
+<div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-automacoes</span></div>
+<div class="meta-pill"><span class="meta-label">Faixa MVP</span>&nbsp;<span class="meta-val">M1 — 11 funcionalidades</span></div>
+<div class="meta-pill"><span class="meta-label">LC 214/2025</span>&nbsp;<span class="meta-val">Art. 47</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v1.0</span></div>
+</div>
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Contexto e posicionamento</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Jornadas de usuário atendidas</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Escopo e recorte do módulo</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Modelo de dados</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Máquinas de estado</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Arquitetura da tela</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Funcionalidades detalhadas</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Indicadores</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Requisitos funcionais</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Regras de negócio</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Requisitos não funcionais</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Defeitos e divergências</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Proposta em aberto — ação de RAD na régua</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> Integrações e dependências</a></li>
+<li><a href="#s15"><span class="toc-num">15</span> Glossário</a></li>
+<li><a href="#s16"><span class="toc-num">16</span> Histórico de versões</a></li>
+</ul></div>
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Contexto e posicionamento</span></div>
+<h3>1.1 O que o módulo tira do operador</h3><p>Os módulos operacionais dizem o que está errado. Alguém precisa <strong>agir sobre isso repetidamente</strong>: mandar o relatório todo dia 1º, cobrar o fornecedor sete dias antes do vencimento, abrir chamado quando uma inconsistência aparece. Automações é onde essas repetições passam a acontecer sem ninguém lembrar delas.</p><h3>1.2 As três frentes</h3><div class="table-wrap"><table><thead><tr><th>Frente</th><th>O que evita</th><th>Quem consome</th></tr></thead><tbody><tr><td><strong>Relatórios agendados</strong></td><td>Exportar e enviar manualmente todo mês</td><td>Fiscal, controladoria, tesouraria, CFO</td></tr><tr><td><strong>Integração ITSM</strong></td><td>Copiar inconsistência para o sistema de chamados à mão</td><td>Quem opera o processo de tratamento</td></tr><tr><td><strong>Régua de cobrança</strong></td><td>Cobrar fornecedor por e-mail, um a um</td><td>Fornecedores, com escalada interna</td></tr></tbody></table></div><h3>1.3 Por que a régua é a mais importante das três</h3><p>Relatório atrasado é incômodo. Chamado não aberto é retrabalho. <strong>Cobrança não feita é crédito perdido</strong>: quando o fornecedor não recolhe e ninguém o lembra, o prazo do <span class="nid">art. 47</span> corre até o crédito virar perda definitiva.</p><div class="callout warn"><div class="ct">O módulo desenha automações, mas não as executa</div><p>Nenhuma das três frentes tem motor: o que a tela mostra como enviado, disparado ou aberto é conteúdo de semeadura, e nada acontece sozinho. É a divergência estruturante deste PRD — ver <span class="rid">DEF-01</span>. Tudo o que vem abaixo descreve a configuração, que existe; a execução, que não existe, está declarada em cada lugar onde falta.</p></div>
+</div>
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Jornadas de usuário atendidas</span></div>
+<div class="table-wrap"><table><thead><tr><th>Jornada</th><th>O que o módulo entrega</th><th>Cobertura</th></tr></thead><tbody><tr><td><strong>J-06</strong> · Receber a posição do período sem pedir</td><td>Relatório recorrente por módulo, destinatários e formato</td><td><span class="chip warn">Parcial</span> — configura o envio; não envia</td></tr><tr><td><strong>J-03</strong> · Cobrar o fornecedor antes de o crédito vencer</td><td>Régua pré-vencimento com etapas, canal e condição</td><td><span class="chip warn">Parcial</span> — desenha a régua; não dispara</td></tr><tr><td><strong>J-03</strong> · Escalar a cobrança quando a mora persiste</td><td>Régua pós-vencimento com escalada gerencial e abertura de chamado</td><td><span class="chip warn">Parcial</span> — mesma limitação</td></tr><tr><td><strong>J-07</strong> · Levar a inconsistência ao processo de tratamento</td><td>Quatro eventos ligáveis, com mapeamento de campos do chamado</td><td><span class="chip warn">Parcial</span> — o histórico é semeado</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Escopo e recorte do módulo</span></div>
+<h3>3.1 O que entra</h3><p>A <strong>configuração</strong> das três frentes: o que dispara, para quem, com que frequência, com que texto e sob que condição. Mais o histórico do que foi disparado, e a auditoria de quem mudou a configuração.</p><h3>3.2 O que não entra</h3><div class="table-wrap"><table><thead><tr><th>Fora do módulo</th><th>Onde vive</th></tr></thead><tbody><tr><td>A decisão sobre o documento</td><td>Crédito, Pagamentos, Inconsistências — a automação notifica, não resolve</td></tr><tr><td>O conteúdo do relatório</td><td>Cada módulo produz seus próprios dados; aqui se agenda o envio</td></tr><tr><td>O ticket em si</td><td>Sistema de ITSM do cliente; aqui se define o que é enviado</td></tr><tr><td>Mudança de método de pagamento</td><td>Crédito (F-08). <em>Há proposta de trazer isso para a régua — ver seção 12.</em></td></tr></tbody></table></div><div class="callout info"><div class="ct">A automação notifica; ela não decide</div><p>Esta é a fronteira que o módulo respeita hoje, e a razão de ele ser inofensivo: nenhuma régua altera documento, método ou valor. A proposta de ação de RAD na régua mudaria isso — e é por isso que ela está em aberto, e não implementada.</p></div>
+</div>
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Modelo de dados</span></div>
+<p>Tudo vive em <code>window._automState</code>, em memória, com três coleções independentes.</p><h3>4.1 Relatório agendado</h3><div class="table-wrap"><table><thead><tr><th>Campo</th><th>Conteúdo</th></tr></thead><tbody><tr><td><code>modulo</code></td><td>crédito, débito, inconsistências, pagamentos ou consolidado</td></tr><tr><td><code>destinatarios[]</code></td><td>Lista de e-mails</td></tr><tr><td><code>recorrencia</code> · <code>diaHora</code></td><td>Mensal, semanal ou quinzenal, com dia e hora</td></tr><tr><td><code>formato</code></td><td>PDF ou Excel</td></tr><tr><td><code>ativo</code></td><td>Liga e desliga sem perder a configuração</td></tr><tr><td><code>ultimoEnvio</code> · <code>proximoEnvio</code></td><td>Datas exibidas no cartão — <em>semeadas, não calculadas</em></td></tr></tbody></table></div><h3>4.2 Integração ITSM</h3><div class="table-wrap"><table><thead><tr><th>Campo</th><th>Conteúdo</th></tr></thead><tbody><tr><td><code>sistema</code> · <code>urlBase</code> · <code>authTipo</code></td><td>Destino e forma de autenticação</td></tr><tr><td><code>eventos[]</code></td><td>Quatro gatilhos, cada um com <code>ativo</code>, último evento e total enviado</td></tr><tr><td><code>camposTitulo</code> · <code>camposPrioridade</code> · <code>camposCategoria</code></td><td>Modelo do chamado, com variáveis do registro</td></tr><tr><td><code>historico[]</code></td><td>Envios com status HTTP e número do chamado</td></tr></tbody></table></div><h3>4.3 Régua de cobrança</h3><div class="table-wrap"><table><thead><tr><th>Campo</th><th>Conteúdo</th></tr></thead><tbody><tr><td><code>gatilho</code> · <code>diasGatilho</code></td><td><code>pre</code> ou <code>pos</code>, e a distância em dias do vencimento</td></tr><tr><td><code>maxEnvios</code> · <code>intervalo</code></td><td>Teto de mensagens e espaçamento entre elas</td></tr><tr><td><code>canal</code></td><td>E-mail, ITSM ou WhatsApp</td></tr><tr><td><code>assunto</code> · <code>corpo</code></td><td>Template com variáveis do registro e do fornecedor</td></tr><tr><td><code>etapas[]</code></td><td>Dia relativo, canal, condição e assunto de cada etapa</td></tr><tr><td><code>disparos[]</code></td><td>O que foi enviado, para quem, em que etapa e com que resultado</td></tr><tr><td><code>auditLog[]</code></td><td>Criação, ativação e alterações, com autor e justificativa</td></tr></tbody></table></div><h3>4.4 Variáveis disponíveis no template</h3><p><code>{{fornecedor}}</code>, <code>{{contato_fornecedor}}</code>, <code>{{rf_id}}</code>, <code>{{tipo_fiscal}}</code>, <code>{{valor_rf}}</code>, <code>{{data_vencimento}}</code> e <code>{{dias_vencimento}}</code>.</p>
+</div>
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Máquinas de estado</span></div>
+<h3>5.1 Estados de uma régua</h3><div class="table-wrap"><table><thead><tr><th>Estado</th><th>Significado</th><th>Sai daqui</th></tr></thead><tbody><tr><td><strong>Rascunho</strong></td><td>Criada no assistente, ainda não ativada</td><td>Ativa, ao ser ligada</td></tr><tr><td><strong>Ativa</strong></td><td>Deveria disparar conforme as etapas</td><td>Pausada, a qualquer momento</td></tr><tr><td><strong>Pausada</strong></td><td>Configuração preservada, sem disparo</td><td>Ativa, ao religar</td></tr></tbody></table></div><h3>5.2 Estados de um disparo</h3><div class="table-wrap"><table><thead><tr><th>Estado</th><th>Significado</th></tr></thead><tbody><tr><td><strong>Entregue</strong></td><td>A mensagem chegou ao destinatário</td></tr><tr><td><strong>Aberto</strong></td><td>O destinatário abriu — sinal de que a cobrança foi vista</td></tr><tr><td><strong>Bounce</strong></td><td>Endereço inválido: o fornecedor não está sendo cobrado, e ninguém sabe</td></tr><tr><td><strong>Chamado</strong></td><td>Convertido em ticket, quando a etapa é de ITSM</td></tr></tbody></table></div><div class="callout warn"><div class="ct">Bounce é o estado que mais importa e o que menos aparece</div><p>Uma régua com vários bounces está cobrando o vazio. Hoje o estado existe na listagem de disparos, mas nenhum indicador o destaca, e nada avisa o operador. Ver <span class="rid">DEF-05</span>.</p></div>
+</div>
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Arquitetura da tela</span></div>
+<p>Uma view, <code>#admin-automacoes</code>, com corpo renderizado em <code>#autom-root</code> e três abas independentes. Cada aba tem seu próprio cartão de resumo, sempre visível, e abre o detalhe da frente escolhida.</p><div class="table-wrap"><table><thead><tr><th>Aba</th><th>Resumo no topo</th><th>Detalhe</th></tr></thead><tbody><tr><td><strong>Relatórios Agendados</strong></td><td>Ativos · Total · Próximo envio</td><td>Um cartão por relatório, com módulo, destinatários, recorrência, formato e datas</td></tr><tr><td><strong>Integração ITSM</strong></td><td>Status · Chamados por mês · Gatilhos ativos</td><td>Conexão, quatro eventos ligáveis, modelo de campos e histórico de envios</td></tr><tr><td><strong>Régua de Cobrança</strong></td><td>Réguas ativas · Disparos por mês · Em cobrança</td><td>Uma régua por bloco, com etapas em linha do tempo, disparos e auditoria</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Funcionalidades detalhadas</span></div>
+<div class="feat"><div class="feat-hdr"><span class="feat-id">F-01</span><span class="feat-name">Agendar relatório por módulo</span><span class="feat-loc">Relatórios</span></div><div class="feat-body"><p>Escolha do módulo, destinatários, recorrência (mensal, semanal ou quinzenal), dia e hora, e formato (PDF ou Excel). Cada relatório exibe último e próximo envio.</p><div class="callout warn"><div class="ct">As datas são semeadas</div><p><code>ultimoEnvio</code> e <code>proximoEnvio</code> vêm do estado inicial e não são calculados a partir da recorrência. Mudar a recorrência não muda a data exibida.</p></div></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-02</span><span class="feat-name">Ligar, desligar e excluir agendamento</span><span class="feat-loc">Relatórios</span></div><div class="feat-body"><p>O desligamento preserva a configuração — um relatório suspenso por dois meses volta como estava. A exclusão remove o agendamento da lista.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-03</span><span class="feat-name">Configurar a conexão com o ITSM</span><span class="feat-loc">ITSM</span></div><div class="feat-body"><p>Sistema, URL base, tipo de autenticação e token. O token é exibido mascarado.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-04</span><span class="feat-name">Escolher quais eventos abrem chamado</span><span class="feat-loc">ITSM</span></div><div class="feat-body"><p>Quatro gatilhos, ligáveis em separado: nova inconsistência, status de registro alterado, registro a sete dias do vencimento e conciliação parada há mais de trinta dias. Cada um mostra o último evento e o total já enviado.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-05</span><span class="feat-name">Montar o chamado por template</span><span class="feat-loc">ITSM</span></div><div class="feat-body"><p>Título, prioridade e categoria com variáveis do registro, para o chamado chegar tratável do outro lado em vez de exigir tradução manual.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-06</span><span class="feat-name">Acompanhar o histórico de envios ao ITSM</span><span class="feat-loc">ITSM</span></div><div class="feat-body"><p>Data, evento, registro, status HTTP e número do chamado. As falhas aparecem com o código — um <code>422</code> sem número de chamado é uma inconsistência que não chegou ao processo.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-07</span><span class="feat-name">Criar régua de cobrança pelo assistente</span><span class="feat-loc">Régua</span></div><div class="feat-body"><p>Assistente em dois passos: dados da régua — nome, gatilho (antes ou depois do vencimento), dias, máximo de envios, intervalo, canal e ativação — e depois as etapas.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-08</span><span class="feat-name">Desenhar as etapas da régua</span><span class="feat-loc">Régua</span></div><div class="feat-body"><p>Cada etapa define o dia relativo ao vencimento (D-7, D+3…), o canal, a condição de disparo (sempre, se não pago, se sem resposta) e o assunto. As etapas aparecem como linha do tempo, com a cor mudando conforme o dia seja anterior, igual ou posterior ao vencimento.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-09</span><span class="feat-name">Escrever a mensagem com variáveis</span><span class="feat-loc">Régua</span></div><div class="feat-body"><p>Assunto e corpo com fornecedor, contato, registro, tributo, valor, vencimento e dias de atraso, preenchidos no envio.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-10</span><span class="feat-name">Escalar de uma régua para outra</span><span class="feat-loc">Régua</span></div><div class="feat-body"><p>A última etapa da régua pré-vencimento aciona a régua pós-vencimento. É o que transforma duas réguas independentes num fluxo só.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-11</span><span class="feat-name">Acompanhar os disparos por fornecedor</span><span class="feat-loc">Régua</span></div><div class="feat-body"><p>Fornecedor, registro, tributo e valor, etapa, data e resultado — entregue, aberto, bounce ou chamado.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-12</span><span class="feat-name">Auditar a régua</span><span class="feat-loc">Régua</span></div><div class="feat-body"><p>Criação, ativação e cada alteração de parâmetro, com autor, data e justificativa. É o que permite explicar meses depois por que o intervalo passou de três para cinco dias.</p><div class="callout warn"><div class="ct">A trilha existe no conteúdo semeado, e não é alimentada</div><p>Régua criada ou editada pelo assistente nasce com <code>auditLog</code> vazio, e continua vazio a cada alteração. Ver <span class="rid">DEF-03</span>.</p></div></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-13</span><span class="feat-name">Ativar, pausar e excluir régua</span><span class="feat-loc">Régua</span></div><div class="feat-body"><p>Ligar e desligar sem perder o desenho das etapas; excluir remove a régua da lista.</p></div></div>
+</div>
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Indicadores</span></div>
+<div class="table-wrap"><table><thead><tr><th>Indicador</th><th>Aba</th><th>Fonte</th></tr></thead><tbody><tr><td>Relatórios ativos e total</td><td>Relatórios</td><td>Contagem da coleção</td></tr><tr><td>Próximo envio</td><td>Relatórios</td><td>Campo semeado do primeiro relatório ativo</td></tr><tr><td>Status da integração</td><td>ITSM</td><td>Flag <code>configurado</code></td></tr><tr><td>Chamados por mês</td><td>ITSM</td><td>Soma dos totais por evento — <em>semeada</em></td></tr><tr><td>Gatilhos ativos</td><td>ITSM</td><td>Contagem dos eventos ligados</td></tr><tr><td>Réguas ativas</td><td>Régua</td><td>Contagem da coleção</td></tr><tr><td>Disparos por mês</td><td>Régua</td><td>Soma de <code>totalEnviados</code> — <em>semeada</em></td></tr><tr><td>Em cobrança</td><td>Régua</td><td>Contagem de disparos abertos</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Requisitos funcionais</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri.</th></tr></thead><tbody><tr><td><span class="rid">RF-AUT-001</span></td><td>O relatório deve ser configurável por módulo, destinatários, recorrência, dia, hora e formato.</td><td>Os seis campos existem e ficam salvos.</td><td>M</td></tr><tr><td><span class="rid">RF-AUT-002</span></td><td>Desligar um relatório deve preservar sua configuração.</td><td>Religar devolve destinatários e recorrência anteriores.</td><td>M</td></tr><tr><td><span class="rid">RF-AUT-003</span></td><td>As datas de último e próximo envio devem derivar da recorrência.</td><td>Mudar de mensal para semanal muda a próxima data. <em>Não atendido — DEF-02.</em></td><td>M</td></tr><tr><td><span class="rid">RF-AUT-004</span></td><td>O relatório agendado deve ser efetivamente enviado no horário definido.</td><td><em>Não atendido — DEF-01.</em></td><td>M</td></tr><tr><td><span class="rid">RF-AUT-005</span></td><td>O token do ITSM não pode ser exibido em texto claro.</td><td>A tela mostra o valor mascarado.</td><td>M</td></tr><tr><td><span class="rid">RF-AUT-006</span></td><td>Cada evento de ITSM deve poder ser ligado e desligado isoladamente.</td><td>Desligar um não afeta os outros três.</td><td>M</td></tr><tr><td><span class="rid">RF-AUT-007</span></td><td>O chamado deve ser montado por template com variáveis do registro.</td><td>Título, prioridade e categoria aceitam variáveis.</td><td>M</td></tr><tr><td><span class="rid">RF-AUT-008</span></td><td>O histórico de ITSM deve registrar o status HTTP e o número do chamado.</td><td>Falhas aparecem com o código e sem número.</td><td>M</td></tr><tr><td><span class="rid">RF-AUT-009</span></td><td>A régua deve exigir nome antes de avançar para as etapas.</td><td>Sem nome, o assistente não passa do primeiro passo.</td><td>M</td></tr><tr><td><span class="rid">RF-AUT-010</span></td><td>A validação deve seguir o padrão do produto, e não usar diálogo do navegador.</td><td><em>Não atendido — DEF-04.</em></td><td>S</td></tr><tr><td><span class="rid">RF-AUT-011</span></td><td>Cada etapa deve definir dia relativo, canal, condição e assunto.</td><td>Os quatro campos existem por etapa.</td><td>M</td></tr><tr><td><span class="rid">RF-AUT-012</span></td><td>A linha do tempo deve distinguir etapas antes, no e depois do vencimento.</td><td>A cor do marcador muda conforme o sinal do dia.</td><td>S</td></tr><tr><td><span class="rid">RF-AUT-013</span></td><td>A régua deve respeitar o teto de envios e o intervalo configurados.</td><td><em>Não verificável — DEF-01.</em></td><td>M</td></tr><tr><td><span class="rid">RF-AUT-014</span></td><td>Criar ou alterar uma régua deve gerar evento de auditoria.</td><td><em>Não atendido — DEF-03.</em></td><td>M</td></tr><tr><td><span class="rid">RF-AUT-015</span></td><td>Os disparos devem registrar fornecedor, registro, etapa, data e resultado.</td><td>A listagem traz as cinco informações.</td><td>M</td></tr><tr><td><span class="rid">RF-AUT-016</span></td><td>Bounce deve ser destacado como falha de cobrança.</td><td><em>Não atendido — DEF-05.</em></td><td>S</td></tr><tr><td><span class="rid">RF-AUT-017</span></td><td>Nenhuma automação pode alterar documento, método de pagamento ou valor.</td><td>O módulo só notifica. <em>Atendido hoje; a proposta da seção 12 mudaria isto.</em></td><td>M</td></tr><tr><td><span class="rid">RF-AUT-018</span></td><td>A configuração deve sobreviver ao recarregamento.</td><td><em>Não atendido — DEF-06.</em></td><td>M</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Regras de negócio</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Regra</th><th>Onde vive</th></tr></thead><tbody><tr><td><span class="rid">RN-AUT-01</span></td><td>Automação notifica; nunca decide. Nenhuma régua altera documento, método ou valor.</td><td>Fronteira do módulo</td></tr><tr><td><span class="rid">RN-AUT-02</span></td><td>Desligar preserva a configuração; excluir a descarta. São ações diferentes, de propósito.</td><td><code>_automToggle</code> e <code>_automExcluir</code></td></tr><tr><td><span class="rid">RN-AUT-03</span></td><td>Gatilho <code>pre</code> conta dias antes do vencimento; <code>pos</code>, depois.</td><td>Assistente de régua</td></tr><tr><td><span class="rid">RN-AUT-04</span></td><td>A última etapa da régua pré-vencimento escala para a pós-vencimento.</td><td>Etapa D+0 da COB-001</td></tr><tr><td><span class="rid">RN-AUT-05</span></td><td>O teto de envios vale por registro, não por fornecedor.</td><td>Campo <code>maxEnvios</code></td></tr><tr><td><span class="rid">RN-AUT-06</span></td><td>Condição de etapa filtra o disparo: sempre, se não pago, ou se sem resposta.</td><td>Campo <code>condicao</code></td></tr><tr><td><span class="rid">RN-AUT-07</span></td><td>Alteração de parâmetro exige justificativa na trilha.</td><td>Conteúdo de <code>auditLog</code> — não aplicado pelo produto</td></tr><tr><td><span class="rid">RN-AUT-08</span></td><td>Cobrar fornecedor é ato externo: o texto sai em nome da organização e chega a terceiro.</td><td>Razão de a alteração de template pedir aprovação, como consta na trilha da COB-001</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Requisitos não funcionais</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Requisito</th><th>Critério</th></tr></thead><tbody><tr><td><span class="rid">RNF-AUT-01</span></td><td>Trocar de aba não pode perder o que foi digitado no assistente.</td><td>O estado do assistente é coletado antes de cada passo.</td></tr><tr><td><span class="rid">RNF-AUT-02</span></td><td>A view deve funcionar em 375 px.</td><td>Cartões empilham; a linha do tempo das etapas rola no próprio contêiner.</td></tr><tr><td><span class="rid">RNF-AUT-03</span></td><td>Cores devem vir dos tokens do tema.</td><td><code>_automCor</code> referencia variáveis, com exceções de paleta declaradas.</td></tr><tr><td><span class="rid">RNF-AUT-04</span></td><td>Nenhum e-mail de fornecedor pode aparecer em log de console.</td><td>Sem impressão de destinatário.</td></tr><tr><td><span class="rid">RNF-AUT-05</span></td><td>Um envio que falha não pode interromper os demais da mesma régua.</td><td>Exigência do motor, quando existir.</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Defeitos e divergências</span></div>
+<p>Levantados na leitura do código em 14/09/2026.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>O que acontece</th><th>Impacto</th><th>Situação</th></tr></thead><tbody><tr><td><span class="rid">DEF-01</span></td><td>Não existe motor de execução. Nenhum relatório é enviado, nenhuma régua dispara, nenhum chamado é aberto.</td><td>É a divergência que define o módulo: ele desenha automações que não acontecem. Os dois <code>setInterval</code> do produto servem à sincronização de dados e ao índice de busca — nenhum deles executa automação.</td><td><span class="chip red">Aberto</span></td></tr><tr><td><span class="rid">DEF-02</span></td><td>Último e próximo envio são campos semeados, não calculados a partir da recorrência.</td><td>Mudar a recorrência não muda a data exibida, e o cartão afirma um calendário que não existe.</td><td><span class="chip red">Aberto</span></td></tr><tr><td><span class="rid">DEF-03</span></td><td>Régua criada ou editada nasce com trilha de auditoria vazia, e segue vazia a cada alteração.</td><td>As réguas semeadas têm trilha rica — com autor, data e justificativa —, o que faz parecer que o produto registra. Não registra.</td><td><span class="chip red">Aberto</span></td></tr><tr><td><span class="rid">DEF-04</span></td><td>A validação do assistente usa <code>alert()</code> do navegador.</td><td>Foge do padrão do produto, que lista pendências no rodapé e destaca o campo faltante. Também bloqueia a interface e não é acessível.</td><td><span class="chip red">Aberto</span></td></tr><tr><td><span class="rid">DEF-05</span></td><td>Bounce aparece na listagem de disparos, mas nenhum indicador o destaca.</td><td>Uma régua cobrando endereços inválidos parece ativa e saudável. É a falha de cobrança mais silenciosa que existe.</td><td><span class="chip red">Aberto</span></td></tr><tr><td><span class="rid">DEF-06</span></td><td>Toda a configuração vive em memória.</td><td>Recarregar devolve tudo ao seed: a régua criada some. Comum ao protótipo, mas aqui apaga trabalho de configuração, não dados derivados.</td><td><span class="chip warn">Consciente</span></td></tr><tr><td><span class="rid">DEF-07</span></td><td>O canal WhatsApp aparece como opção de etapa sem qualquer integração por trás.</td><td>Oferece um canal que não existe nem em configuração — diferente do e-mail e do ITSM, que ao menos têm destino declarado.</td><td><span class="chip red">Aberto</span></td></tr></tbody></table></div>
+</div>
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Proposta em aberto — ação de RAD na régua</span></div>
+<p>Há uma proposta, apresentada em 11/09/2026 e ainda <strong>não decidida</strong>, de criar uma ação de régua que, para o documento em cobrança, assuma a geração do RAD — convertendo o método de pagamento automaticamente quando a cobrança não surtir efeito.</p><div class="callout warn"><div class="ct">Ela quebra a fronteira da RN-AUT-01</div><p>Hoje o módulo é inofensivo porque só notifica. Uma régua que converte método de pagamento passa a <strong>mover dinheiro sem ninguém olhar</strong>: o adquirente recolhe no lugar do fornecedor por decisão de uma configuração feita semanas antes.</p></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Decisão pendente</th><th>Recomendação</th></tr></thead><tbody><tr><td><strong>D1</strong></td><td>Modo padrão da etapa: automático ou com aprovação?</td><td><em>Com aprovação</em> — cai numa fila para alguém liberar</td></tr><tr><td><strong>D2</strong></td><td>Permitir a ação antes do vencimento?</td><td><em>Não</em> — o fornecedor ainda está no prazo, e o risco de pagamento duplo cresce</td></tr><tr><td><strong>D3</strong></td><td>Teto de valor obrigatório?</td><td><em>Sim</em>, por documento e por dia</td></tr><tr><td><strong>D4</strong></td><td>Como o motor roda?</td><td>Uma passada no carregamento e um botão <em>Executar agora</em></td></tr><tr><td><strong>D5</strong></td><td>Criar este PRD junto?</td><td><span class="chip ok">Resolvido</span> — é este documento</td></tr></tbody></table></div><p>Há ainda um risco que nenhuma dessas decisões resolve: a condição legal do <span class="nid">art. 36</span> é sobre o <strong>instrumento com que o financeiro paga o fornecedor</strong>, e a régua não controla isso. Sem integração com contas a pagar, a autorização configurada na régua é uma promessa de que o pagamento sairá pelo líquido.</p>
+</div>
+<div class="section" id="s14">
+<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Integrações e dependências</span></div>
+<div class="table-wrap"><table><thead><tr><th>Depende de</th><th>Para quê</th></tr></thead><tbody><tr><td><strong>Crédito · Débito · Inconsistências · Pagamentos</strong></td><td>Origem dos dados dos relatórios e dos eventos de gatilho</td></tr><tr><td><strong>Fornecedores</strong></td><td>Contato e identificação de quem é cobrado</td></tr><tr><td><strong>Conciliação</strong></td><td>Evento de conciliação parada há mais de trinta dias</td></tr><tr><td><strong>Integrações</strong></td><td>Contexto <em>Automações</em> da API, com <code>automation.executed</code> e <code>automation.failed</code> — M1</td></tr><tr><td><strong>Sistema de ITSM do cliente</strong></td><td>Destino dos chamados; hoje só configurado</td></tr><tr><td><strong>Provedor de e-mail</strong></td><td>Não existe. Nem para relatório, nem para cobrança</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s15">
+<div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Glossário</span></div>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>Definição</th></tr></thead><tbody><tr><td><strong>Régua de cobrança</strong></td><td>Sequência de mensagens ligada ao vencimento de um registro fiscal.</td></tr><tr><td><strong>Etapa</strong></td><td>Um ponto da régua: dia relativo, canal, condição e mensagem.</td></tr><tr><td><strong>Gatilho</strong></td><td>O que inicia a contagem: antes (<code>pre</code>) ou depois (<code>pos</code>) do vencimento.</td></tr><tr><td><strong>Escalada</strong></td><td>Passagem de uma régua para a seguinte, ou de e-mail para chamado.</td></tr><tr><td><strong>Disparo</strong></td><td>Uma mensagem efetivamente enviada a um fornecedor por uma etapa.</td></tr><tr><td><strong>Bounce</strong></td><td>Mensagem devolvida por endereço inválido — cobrança que não chegou.</td></tr><tr><td><strong>ITSM</strong></td><td>Sistema de gestão de chamados do cliente, onde o tratamento acontece.</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s16">
+<div class="sec-hdr"><span class="sec-num">16</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">14/09/2026 — Primeira versão. O módulo estava no produto e fora do mapa de funcionalidades até 14/09/2026, e nunca teve PRD. Documenta treze funcionalidades, dezoito requisitos, oito regras e sete defeitos — entre eles a ausência de motor de execução (DEF-01), que atravessa as três frentes, e a trilha de auditoria que existe no conteúdo semeado e não é alimentada pelo produto (DEF-03). Registra a proposta de ação de RAD na régua, com quatro decisões ainda pendentes.</div></div>
+</div>
+</div>
+</body>
+</html>
