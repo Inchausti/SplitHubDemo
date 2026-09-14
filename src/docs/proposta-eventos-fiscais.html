@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta — Gestão de eventos fiscais · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Plataforma → Eventos fiscais</div>
+<h1>Gestão de eventos fiscais</h1>
+<p class="subtitle">Hoje o SplitHub deduz o estado do crédito a partir do documento. Com eventos fiscais ele passa a observar o que foi declarado no ambiente nacional — e descobre que o ciclo do crédito tem três fases, não duas. Esta proposta mapeia o que isso muda no protótipo inteiro.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta de impacto</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">14/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">Fato Gerador por DF · jan/2027</span></div>
+<div class="meta-pill"><span class="meta-label">Módulos afetados</span>&nbsp;<span class="meta-val">12 de 20</span></div>
+<div class="meta-pill"><span class="meta-label">Funcionalidades novas</span>&nbsp;<span class="meta-val">15</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Proposta · aguardando aprovação</span>&nbsp;<span class="chip teal">v1.0</span></div>
+</div>
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> O gap</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> A taxonomia dos eventos</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> O que o silêncio custa</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> A cobertura por documento fiscal</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> A ingestão pelo DW</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Modelo de dados</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Módulos afetados</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Funcionalidades existentes afetadas</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Funcionalidades novas</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Impacto na priorização</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Riscos</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Decisões a tomar</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Histórico de versões</a></li>
+</ul></div>
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O gap</span></div>
+<h3>1.1 O protótipo já tem eventos — e nenhum deles é fiscal</h3><p>A linha do tempo do documento mostra quinze tipos de evento: ingestão, validação, geração do registro, inconsistência, vencimento, apropriação, pagamento, utilização, extinção, conciliação, recolhimento assumido, reversão. Todos são <strong>eventos do produto</strong> — derivados do estado interno, escritos pelo próprio SplitHub, sem autoridade fora dele.</p><p>Evento fiscal é outra espécie: <strong>ato registrado no ambiente nacional</strong>, com autor, momento e efeito jurídico próprios, que existe quer o SplitHub saiba dele ou não.</p><div class="table-wrap"><table><thead><tr><th></th><th>Evento do produto (hoje)</th><th>Evento fiscal (a incluir)</th></tr></thead><tbody><tr><td>Quem escreve</td><td>O SplitHub</td><td>Emitente, destinatário, SEFAZ, RFB, CG-IBS ou o sistema de pagamento</td></tr><tr><td>Onde vive</td><td>Memória da sessão</td><td>Ambiente nacional e o DW do cliente</td></tr><tr><td>Efeito</td><td>Explicar a tela</td><td>Originar, tornar apropriável, apropriar ou extinguir o crédito</td></tr><tr><td>Se divergir do outro</td><td>Nada acontece</td><td>O evento fiscal prevalece — sempre</td></tr></tbody></table></div><h3>1.2 A descoberta que reorganiza o resto</h3><p>A documentação de fato gerador define o ciclo do crédito em <strong>três fases</strong>, e não em duas. O protótipo só conhece as pontas:</p><div class="table-wrap"><table><thead><tr><th>Fase</th><th>O que a constitui</th><th>No protótipo hoje</th></tr></thead><tbody><tr><td><strong>① Originado</strong></td><td>DF autorizado e aceite do destinatário. O registro nasce, e o crédito existe mas não pode ser usado</td><td><code>nao_apropriado</code></td></tr><tr><td><strong>② Apropriável</strong></td><td>Fato gerador constituído — a saída do bem, a conclusão do serviço, o encerramento do ciclo. O crédito fica disponível na conta do adquirente</td><td><span class="chip red">Não existe</span></td></tr><tr><td><strong>③ Apropriado</strong></td><td>Recolhimento efetivado: DAT do fornecedor processada, ou guia RAD paga com comprovante vinculado</td><td><code>apropriado</code></td></tr></tbody></table></div><div class="callout warn"><div class="ct">A fase do meio é a que o produto inteiro presume</div><p>Sem <em>apropriável</em>, o SplitHub trata como “a apropriar” tanto o crédito cujo fato gerador já ocorreu — e que está pronto — quanto o que ainda depende de um evento que pode nunca vir: a mercadoria que não saiu, o serviço que não terminou, o MDF-e que não foi encerrado. Os dois aparecem na mesma coluna, com o mesmo prazo e a mesma cor.</p><p>É também a fase que muda por tipo de documento: numa NF-e o fato gerador é a saída física; num CT-e, o encerramento do MDF-e no destino; numa NFS-e contínua, o fim do período de competência; num DC-e, a entrega confirmada pelo rastreamento.</p></div>
+</div>
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">A taxonomia dos eventos</span></div>
+<p>A documentação cataloga <strong>58 eventos distintos</strong> em onze documentos fiscais, cada um com efeito declarado sobre o crédito. Eles se organizam em sete funções — e é por função, não por código, que o produto deve tratá-los.</p><div class="table-wrap"><table><thead><tr><th>Função</th><th>Exemplos de código</th><th>Efeito no crédito</th></tr></thead><tbody><tr><td><strong>Autorização</strong></td><td><code>cStat 100</code>, <code>nfseAutorizada</code>, <code>cStat 06000</code></td><td>Origina o crédito — fase ①</td></tr><tr><td><strong>Manifestação do destinatário</strong></td><td><code>210200</code> ciência · <code>210210</code> confirmação · <code>210220</code> desconhecimento · <code>210240</code> não realizada</td><td>Confirmação torna apropriável; desconhecimento e não realizada põem o crédito em risco de glosa</td></tr><tr><td><strong>Fato gerador</strong></td><td><code>110170</code> registro de saída · <code>MDF-e encerrado</code> · <code>objetoEntregue</code> · <code>fechamentoCiclo</code> · <code>embarqueConfirmado</code></td><td>Constitui a fase ② — o crédito fica apropriável</td></tr><tr><td><strong>Cancelamento</strong></td><td><code>110111</code> NF-e · <code>110115</code> BP-e · <code>nfseCancelada</code> · <code>cStat 07000</code></td><td>Reverte o fato gerador; crédito extinto, e o já escriturado precisa ser estornado</td></tr><tr><td><strong>Substituição e correção</strong></td><td><code>110180</code> CT-e substituto · <code>nfseSubstituida</code> · <code>NF3-e retificadora</code> · <code>110110</code> carta de correção</td><td>Substituição troca um crédito por outro; carta de correção <strong>não</strong> altera o fato gerador</td></tr><tr><td><strong>Rejeição e denegação</strong></td><td><code>cStat 110</code> denegação · <code>301/302</code> rejeição · <code>rpsVencido</code></td><td>Crédito não se origina; documento denegado não pode sequer ser cancelado</td></tr><tr><td><strong>Contingência</strong></td><td><code>110140</code> EPEC · contingência offline · autorização retroativa</td><td>Crédito pendente até a autorização retroativa — estado que o produto não tem</td></tr></tbody></table></div><div class="callout info"><div class="ct">Duas regras bastam para o desenho todo</div><p><strong>Evento fiscal é imutável e cumulativo.</strong> Nenhum é editado ou apagado; um posterior pode anular o efeito de um anterior, e os dois permanecem. É o que permite reconstruir por que o crédito estava num estado em qualquer data passada — exatamente o que o estado derivado de hoje não permite.</p><p><strong>O efeito depende da função, não do código.</strong> Códigos mudam de versão para versão da norma; funções não. O mapa código → função precisa ser dado versionado, e não constante no código.</p></div>
+</div>
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">O que o silêncio custa</span></div>
+<p>A documentação registra um risco que hoje não existe em nenhuma tela do produto:</p><div class="callout red"><div class="ct">Sem manifestação, há aceite tácito</div><p>O Fisco constitui o fato gerador com base nos documentos que <strong>ele</strong> enxerga. A apuração assistida é disponibilizada até o <strong>dia 15 do mês seguinte</strong> — dia 20 para obrigados à DeRE — e o contribuinte tem até o <strong>último dia útil do mês subsequente</strong> para ajustar. Passado o prazo, o crédito tributário se constitui automaticamente (Decreto 12.955/2026, art. 46, § 7º).</p><p>Documento cancelado fora do prazo, MDF-e não encerrado, campo do XML incorreto, NFS-e com competência errada: todos produzem, na visão do Fisco, um fato gerador que pode não corresponder à operação real. A janela de correção é a única oportunidade sem processo administrativo.</p></div><p>Isso transforma uma funcionalidade aparentemente menor — <em>acompanhar a janela de correção</em> — no item de maior valor desta proposta. Não adianta o produto saber que há divergência se souber depois do dia em que ela deixou de ser corrigível.</p><div class="table-wrap"><table><thead><tr><th>Marco</th><th>Quando</th><th>O que o produto precisa fazer</th></tr></thead><tbody><tr><td>Apuração assistida publicada</td><td>Até o dia 15 do mês seguinte (20 na DeRE)</td><td>Puxar, confrontar e abrir divergência no mesmo dia</td></tr><tr><td>Janela de correção aberta</td><td>Do dia 15 ao último dia útil do mês subsequente</td><td>Contagem regressiva visível, por documento e por competência</td></tr><tr><td>Janela fechada</td><td>Último dia útil do mês subsequente</td><td>O que não foi tratado vira aceite tácito — e passa a exigir processo</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">A cobertura por documento fiscal</span></div>
+<p>A documentação cobre <strong>onze</strong> documentos fiscais previstos para janeiro de 2027. O protótipo conhece sete, e mesmo esses só como rótulo — nenhum deles tem gatilho de fato gerador próprio.</p><div class="table-wrap"><table><thead><tr><th>Documento</th><th>O que constitui o fato gerador</th><th>No protótipo</th></tr></thead><tbody><tr><td><strong>NF-e</strong> (55)</td><td>Saída física da mercadoria</td><td><span class="chip ok">Conhece o tipo</span></td></tr><tr><td><strong>NFS-e</strong></td><td>Conclusão do serviço, ou fim do período de competência</td><td><span class="chip ok">Conhece o tipo</span></td></tr><tr><td><strong>CT-e</strong> (57)</td><td>Encerramento do MDF-e no destino</td><td><span class="chip ok">Conhece o tipo</span></td></tr><tr><td><strong>NFC-e</strong> (65)</td><td>Saída no ponto de venda — B2C, sem crédito</td><td><span class="chip ok">Conhece o tipo</span></td></tr><tr><td><strong>NF3-e</strong> (66)</td><td>Fechamento do ciclo de medição</td><td><span class="chip ok">Conhece o tipo</span></td></tr><tr><td><strong>BP-e</strong> (63)</td><td>Conclusão da viagem — e <em>no-show</em> impede o fato gerador</td><td><span class="chip ok">Conhece o tipo</span></td></tr><tr><td><strong>NFCom</strong> (21/22)</td><td>Pós-pago: fim do período. Pré-pago: recarga ativada</td><td><span class="chip ok">Conhece o tipo</span></td></tr><tr><td><strong>CF-e SAT</strong></td><td>Saída no balcão — B2C, sem crédito</td><td><span class="chip warn">Ausente</span></td></tr><tr><td><strong>NFA-e</strong></td><td>Saída do produto rural — pode gerar crédito <em>presumido</em></td><td><span class="chip warn">Ausente</span></td></tr><tr><td><strong>CT-e OS</strong> (67)</td><td>Conclusão do serviço auxiliar, sem MDF-e</td><td><span class="chip warn">Ausente</span></td></tr><tr><td><strong>DC-e</strong></td><td>Entrega confirmada pelo rastreamento</td><td><span class="chip warn">Ausente</span></td></tr></tbody></table></div><div class="callout warn"><div class="ct">Três casos que quebram a regra geral do produto</div><p><strong>B2C não gera crédito.</strong> NFC-e, CF-e e BP-e com CPF não produzem crédito para o adquirente — o produto não tem essa distinção e trataria todos como geradores.</p><p><strong>Crédito presumido.</strong> No regime do produtor rural, o adquirente credita o presumido, e não o valor destacado no documento. O cálculo atual usaria o destacado.</p><p><strong>Fato gerador que retroage.</strong> No NF3-e e no NFCom pós-pago, o fato gerador retroage ao início do período. A contagem de prazo por data de emissão, que o produto usa, erra a competência.</p></div>
+</div>
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">A ingestão pelo DW</span></div>
+<p>Os eventos não chegam por upload. Chegam ao <strong>data warehouse do cliente</strong> — o mesmo Databricks já previsto para os comprovantes — e de lá ao SplitHub. É atividade de desenvolvimento própria, não uma variação da ingestão existente.</p><div class="table-wrap"><table><thead><tr><th>Etapa</th><th>O que acontece</th><th>Por que não é a ingestão atual</th></tr></thead><tbody><tr><td><strong>Coleta</strong></td><td>O DW recebe os eventos do ambiente nacional, em volume e continuamente</td><td>A ingestão atual é por arquivo e por ação humana; esta é contínua e sem operador</td></tr><tr><td><strong>Normalização</strong></td><td>Código, data, chave e ator viram o modelo interno de evento</td><td>Exige o mapa código → função, versionado junto com a norma</td></tr><tr><td><strong>Correlação</strong></td><td>Cada evento é ligado ao documento e ao registro pela chave de acesso</td><td>O evento pode chegar <em>antes</em> do documento — e precisa esperar por ele</td></tr><tr><td><strong>Aplicação</strong></td><td>O evento move a fase do crédito, ou registra a divergência</td><td>É onde o produto deixa de deduzir e passa a observar</td></tr><tr><td><strong>Reprocessamento</strong></td><td>Eventos reprocessados não podem duplicar efeito</td><td>Idempotência por identificador de evento é requisito de aceite, não otimização</td></tr></tbody></table></div><div class="callout warn"><div class="ct">O evento órfão define a qualidade da implementação</div><p>Um cancelamento que chega antes do documento não pode ser descartado nem aplicado a nada: fica <strong>pendente de correlação</strong> e é reavaliado quando o documento entra. Descartá-lo produz o pior defeito possível — crédito apropriado sobre documento cancelado, sem rastro de que houve aviso.</p></div>
+</div>
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Modelo de dados</span></div>
+<h3>6.1 Entidade nova</h3><div class="table-wrap"><table><thead><tr><th>Campo</th><th>Conteúdo</th></tr></thead><tbody><tr><td><code>id</code></td><td>Identificador do evento na origem — chave de idempotência</td></tr><tr><td><code>codigo</code></td><td>Código conforme a norma: <code>tpEvento</code>, <code>cStat</code> ou o nome do evento de plataforma</td></tr><tr><td><code>funcao</code></td><td>Autorização, manifestação, fato gerador, cancelamento, substituição, rejeição ou contingência</td></tr><tr><td><code>chaveAcesso</code></td><td>Documento a que o evento se refere</td></tr><tr><td><code>rfId</code></td><td>Registro fiscal, quando o evento for por tributo</td></tr><tr><td><code>autor</code></td><td>Emitente, destinatário, SEFAZ, RFB, CG-IBS ou sistema de pagamento</td></tr><tr><td><code>ocorridoEm</code> · <code>recebidoEm</code></td><td>Quando aconteceu e quando chegou — nunca são a mesma coisa</td></tr><tr><td><code>efeito</code></td><td>Origina, torna apropriável, apropria, reverte, substitui ou nenhum</td></tr><tr><td><code>payload</code></td><td>O evento cru, preservado para auditoria e reprocessamento</td></tr><tr><td><code>estado</code></td><td><code>aplicado</code>, <code>pendente_correlacao</code>, <code>divergente</code> ou <code>ignorado</code></td></tr></tbody></table></div><h3>6.2 O que muda no que já existe</h3><div class="table-wrap"><table><thead><tr><th>Onde</th><th>Mudança</th></tr></thead><tbody><tr><td><code>statusCredito</code></td><td>Ganha <strong><code>apropriavel</code></strong> entre <code>nao_apropriado</code> e <code>apropriado</code> — a fase ② que falta</td></tr><tr><td>Registro fiscal</td><td>Ganha <code>origemEstado</code>: <em>deduzido</em> ou <em>observado</em></td></tr><tr><td>Registro fiscal</td><td>Ganha <code>fgConstituidoEm</code> — a data do evento de fato gerador, distinta da data de emissão</td></tr><tr><td>Documento fiscal</td><td>Ganha a coleção de eventos e o indicador de último evento aplicado</td></tr><tr><td>Documento fiscal</td><td>Ganha <code>geraCredito</code>: B2C com CPF não gera, e isso precisa ser dado, não inferência</td></tr><tr><td>Linha do tempo</td><td>Passa a mesclar as duas espécies, distinguindo-as visualmente</td></tr><tr><td>Inconsistências</td><td>Ganha a família de divergência entre evento fiscal e estado interno</td></tr></tbody></table></div><div class="callout info"><div class="ct">O campo que mais muda o produto é o menor deles</div><p><code>origemEstado</code> cabe numa coluna e muda a leitura de todas as telas: passa a existir diferença entre “o crédito está apropriado” e “alguém declarou que o crédito foi apropriado”.</p></div>
+</div>
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Módulos afetados</span></div>
+<p>Doze dos vinte módulos mudam. Cinco de forma estrutural.</p><div class="table-wrap"><table><thead><tr><th>Módulo</th><th>O que muda</th><th>Peso</th></tr></thead><tbody><tr><td><strong>Crédito IBS/CBS</strong></td><td>A máquina de estados ganha a fase <em>apropriável</em>. Apropriação, estorno e cancelamento passam a vir de evento. O prazo passa a contar do fato gerador, e não da emissão — hoje conta da emissão para crédito não apropriado, o que erra em todo documento de fato gerador retroativo ou diferido.</td><td><span class="chip warn">Estrutural</span></td></tr><tr><td><strong>Ingestão de DFs</strong></td><td>Segunda porta de entrada, contínua, pelo DW; fila de eventos pendentes de correlação; reprocessamento idempotente; e o mapa código → função versionado.</td><td><span class="chip warn">Estrutural</span></td></tr><tr><td><strong>Conciliação</strong></td><td>Muda de natureza: hoje compara o que o SplitHub escriturou contra um resultado que ele mesmo gerou. Com eventos, a CAPUR deixa de ser simulação por hash.</td><td><span class="chip warn">Estrutural</span></td></tr><tr><td><strong>Inconsistências</strong></td><td>Família nova: divergência entre evento fiscal e estado interno. É a que mais volume gera nos primeiros meses, porque expõe de uma vez todo o passivo de dedução errada.</td><td><span class="chip warn">Estrutural</span></td></tr><tr><td><strong>Apuração IBS/CBS</strong></td><td>Ganha a janela de correção como objeto de primeira classe: prazo, contagem regressiva e o que acontece quando ela fecha. Fechar competência com evento pendente vira decisão consciente.</td><td><span class="chip warn">Estrutural</span></td></tr><tr><td><strong>Débitos IBS/CBS</strong></td><td>Extinção confirmada por evento, e não pelo campo <code>status</code> da base.</td><td><span class="chip info">Médio</span></td></tr><tr><td><strong>Pagamentos RAD</strong></td><td>Recolhimento ganha confirmação externa. O recolhimento assumido passa a ser confrontável com o que o fornecedor de fato recolheu — o caso de pagamento em duplicidade deixa de depender de aviso.</td><td><span class="chip info">Médio</span></td></tr><tr><td><strong>Automações</strong></td><td>Evento vira gatilho de régua: desconhecimento da operação, cancelamento e prazo da janela de correção são exatamente os casos que ninguém pode descobrir tarde.</td><td><span class="chip info">Médio</span></td></tr><tr><td><strong>Integrações</strong></td><td>Contexto novo de eventos, na entrada pelo DW e na emissão dos eventos que o próprio adquirente declara — a manifestação do destinatário é obrigação dele, não do fornecedor.</td><td><span class="chip info">Médio</span></td></tr><tr><td><strong>Portal do Fornecedor</strong></td><td>O fornecedor passa a ver os eventos do próprio documento, e a saber por que o crédito foi recusado.</td><td><span class="chip ok">Baixo</span></td></tr><tr><td><strong>Início</strong></td><td>Indicador novo: quanto do crédito está apoiado em evento e quanto ainda é dedução.</td><td><span class="chip ok">Baixo</span></td></tr><tr><td><strong>Analytics</strong></td><td>Latência entre ocorrência e recebimento vira métrica de saúde da integração.</td><td><span class="chip ok">Baixo</span></td></tr></tbody></table></div>
+</div>
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Funcionalidades existentes afetadas</span></div>
+<p>Dezoito funcionalidades do mapa passam a significar outra coisa. Não é ajuste de tela.</p><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Módulo</th><th>O que muda nela</th></tr></thead><tbody><tr><td>Listagem DFs de entrada — RF Core</td><td>Crédito</td><td>Ganha fase, origem do estado e último evento aplicado</td></tr><tr><td>Ciclo do crédito: apropriação, extinção e prazo</td><td>Crédito</td><td>Os marcos passam a ser observados; entra a data do fato gerador</td></tr><tr><td>Classificação CP / LP / Vencidos</td><td>Crédito</td><td>O prazo passa a contar do fato gerador — hoje conta da emissão</td></tr><tr><td>Coluna Inconsistências por DF</td><td>Crédito · Débito</td><td>Passa a exibir divergência de evento</td></tr><tr><td>Assumir recolhimento via RAD</td><td>Crédito</td><td>Evento de recolhimento do fornecedor passa a bloquear ou alertar a conversão</td></tr><tr><td>Badge de método de extinção</td><td>Crédito</td><td>A extinção passa a ter evento por trás, e não só o campo</td></tr><tr><td>Confronto com a Apuração Assistida</td><td>Conciliação</td><td>Deixa de ser simulação por hash</td></tr><tr><td>Conciliação financeira pelos comprovantes</td><td>Conciliação</td><td>Ganha o evento de recolhimento como terceira fonte</td></tr><tr><td>Sequenciamento das duas conciliações</td><td>Conciliação</td><td>Passa a considerar a precedência do evento fiscal</td></tr><tr><td>Taxonomia CAPUR / CFIN</td><td>Inconsistências</td><td>Ganha a família de divergência de evento</td></tr><tr><td>Kanban: Aberta → Resolvida / Glosada</td><td>Inconsistências</td><td>Resolver divergência exige ato fiscal, não só marcação</td></tr><tr><td>Validação binária: Importado / Inconsistência</td><td>Ingestão</td><td>Ganha um terceiro destino: aguardando correlação</td></tr><tr><td>Upload CSV posicional (NF-e · CT-e · NFS-e)</td><td>Ingestão</td><td>Precisa cobrir os quatro tipos ausentes, e o indicador de B2C</td></tr><tr><td>Cálculo da competência</td><td>Apuração</td><td>Passa a respeitar o fato gerador retroativo do NF3-e e do NFCom</td></tr><tr><td>Conclusão e reabertura da apuração</td><td>Apuração</td><td>Ganha o vínculo com a janela de correção</td></tr><tr><td>Listagem de guias RAD</td><td>Pagamentos</td><td>Ganha confirmação externa do recolhimento</td></tr><tr><td>Régua de cobrança pré e pós-vencimento</td><td>Automações</td><td>Evento vira condição de etapa — não cobrar quem já recolheu</td></tr><tr><td>KPIs de crédito em tempo real</td><td>Início</td><td>Passam a distinguir crédito observado de crédito deduzido</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Funcionalidades novas</span></div>
+<div class="feat"><div class="feat-hdr"><span class="feat-id">E-01</span><span class="feat-name">Ingerir eventos fiscais pelo DW</span><span class="feat-loc">Ingestão</span></div><div class="feat-body"><p>Consumo contínuo a partir do Databricks, com normalização e idempotência por identificador de evento. É a atividade de maior peso desta proposta.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-02</span><span class="feat-name">Correlacionar evento a documento e registro</span><span class="feat-loc">Ingestão</span></div><div class="feat-body"><p>Ligação pela chave de acesso, com fila própria para o que chega antes do documento. O evento espera; não é descartado.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-03</span><span class="feat-name">Manter o mapa de código para função</span><span class="feat-loc">Ingestão</span></div><div class="feat-body"><p>Tabela versionada com data de vigência, traduzindo <code>tpEvento</code>, <code>cStat</code> e eventos de plataforma para as sete funções. Código sem tradução vira pendência visível, nunca silêncio.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-04</span><span class="feat-name">Constituir a fase apropriável</span><span class="feat-loc">Crédito</span></div><div class="feat-body"><p>O estado do crédito ganha a fase ②, movida pelo evento de fato gerador — que varia por documento: saída física, encerramento do MDF-e, fim do ciclo, entrega confirmada, embarque.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-05</span><span class="feat-name">Contar o prazo a partir do fato gerador</span><span class="feat-loc">Crédito</span></div><div class="feat-body"><p>O prazo do art. 48 passa a correr do fato gerador constituído, e não da emissão. Corrige de uma vez os documentos de fato gerador retroativo e os de fato gerador diferido.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-06</span><span class="feat-name">Aplicar manifestação do destinatário</span><span class="feat-loc">Crédito</span></div><div class="feat-body"><p>Ciência, confirmação, desconhecimento e operação não realizada passam a alterar o estado e o risco do crédito — e o desconhecimento passa a abrir inconsistência automaticamente.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-07</span><span class="feat-name">Exibir a linha do tempo fiscal</span><span class="feat-loc">Crédito · Portal</span></div><div class="feat-body"><p>As duas espécies de evento na mesma linha do tempo, visualmente distintas: o que o produto fez e o que foi declarado no ambiente nacional.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-08</span><span class="feat-name">Declarar a origem do estado</span><span class="feat-loc">Crédito · Início</span></div><div class="feat-body"><p>Coluna e indicador: quanto do crédito está apoiado em evento e quanto ainda é dedução.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-09</span><span class="feat-name">Abrir divergência entre evento e estado</span><span class="feat-loc">Inconsistências</span></div><div class="feat-body"><p>Família nova, com o evento de um lado, o estado deduzido do outro, e a diferença nomeada.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-10</span><span class="feat-name">Acompanhar a janela de correção</span><span class="feat-loc">Apuração</span></div><div class="feat-body"><p>Data de publicação da apuração assistida, prazo final de ajuste e contagem regressiva por competência e por documento. É a funcionalidade de maior valor da proposta: fora da janela, a correção deixa de ser administrativa.</p><div class="callout red"><div class="ct">Por que ela vale mais que as outras</div><p>Sem manifestação dentro do prazo há <strong>aceite tácito</strong>, e o crédito tributário se constitui automaticamente. Um produto que descobre a divergência depois do último dia útil do mês subsequente descobriu tarde demais.</p></div></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-11</span><span class="feat-name">Tratar documento sem direito a crédito</span><span class="feat-loc">Ingestão · Crédito</span></div><div class="feat-body"><p>NFC-e, CF-e e BP-e com CPF não geram crédito ao adquirente. Passa a ser dado do documento, e não inferência — hoje todos seriam tratados como geradores.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-12</span><span class="feat-name">Listar eventos pendentes de correlação</span><span class="feat-loc">Ingestão</span></div><div class="feat-body"><p>Fila visível, com idade e motivo. Fila que ninguém vê é fila que cresce.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-13</span><span class="feat-name">Reprocessar eventos sem duplicar efeito</span><span class="feat-loc">Ingestão</span></div><div class="feat-body"><p>Reprocessamento por período ou por documento, idempotente por construção.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-14</span><span class="feat-name">Usar evento como condição de régua</span><span class="feat-loc">Automações</span></div><div class="feat-body"><p>Não cobrar quem já recolheu; escalar quem teve desconhecimento; alertar antes de a janela fechar.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">E-15</span><span class="feat-name">Medir a latência da integração</span><span class="feat-loc">Analytics</span></div><div class="feat-body"><p>Distância entre ocorrência e recebimento, por tipo de evento. Diz se o produto observa o presente ou o passado.</p></div></div>
+</div>
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Impacto na priorização</span></div>
+<p>Quinze funcionalidades novas. A recomendação é <strong>não levar as quinze ao M0</strong>: o núcleo que torna o crédito observável são sete.</p><div class="table-wrap"><table><thead><tr><th>Faixa</th><th>Itens</th><th>Por quê</th></tr></thead><tbody><tr><td><span class="chip ok">M0</span></td><td>E-01, E-02, E-03, E-04, E-07, E-09, E-10</td><td>Ingestão, correlação, tradução, a fase que falta, visibilidade, divergência e a janela de correção. Sem esses sete, o evento entra e não muda nada — ou muda tarde</td></tr><tr><td><span class="chip info">M1</span></td><td>E-05, E-06, E-08, E-11, E-12, E-13, E-14</td><td>Precisão do prazo, manifestação, origem declarada, B2C, fila, reprocessamento e régua reativa</td></tr><tr><td><span class="chip ref">M2</span></td><td>E-15</td><td>Métrica de saúde, útil quando já há histórico</td></tr></tbody></table></div><p>Com os sete do núcleo, o M0 passaria de <strong>102 para 109</strong>, sobre 207 considerados.</p><div class="callout warn"><div class="ct">O efeito colateral sobre o MVP já aprovado</div><p>A integração com a Receita e com o Comitê Gestor já está no M0, e a ingestão de eventos pelo DW seria a terceira fonte externa no mesmo período — <strong>três integrações simultâneas</strong>, duas fora do controle do time.</p><p>A recomendação é sequenciar, e começar pelo DW: ele depende só do cliente, e é ele que alimenta o confronto que as outras duas depois confirmam.</p></div>
+</div>
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Riscos</span></div>
+<div class="table-wrap"><table><thead><tr><th>Risco</th><th>Consequência</th><th>Mitigação</th></tr></thead><tbody><tr><td><strong>Descobrir a divergência fora da janela</strong></td><td>Aceite tácito: o crédito tributário se constitui e a correção passa a exigir processo administrativo</td><td>E-10 no M0, com contagem regressiva e alerta antes do fechamento</td></tr><tr><td><strong>Evento chega antes do documento</strong></td><td>Crédito apropriado sobre documento cancelado, sem rastro de que houve aviso</td><td>Fila de correlação (E-02, E-12); nunca descartar</td></tr><tr><td><strong>O catálogo da norma muda</strong></td><td>Código novo ou eliminado sem aviso</td><td>Mapa versionado (E-03) e pendência visível para código desconhecido</td></tr><tr><td><strong>O passivo de dedução errada aparece de uma vez</strong></td><td>Volume de divergências grande o bastante para paralisar a operação no primeiro processamento</td><td>Primeira carga em modo observação, sem alterar estado, para dimensionar antes de aplicar</td></tr><tr><td><strong>Reprocessamento duplica efeito</strong></td><td>Crédito apropriado duas vezes, ou estornado indevidamente</td><td>Idempotência por identificador como requisito de aceite (E-13)</td></tr><tr><td><strong>Latência do DW</strong></td><td>O produto observa o passado e decide como se fosse o presente</td><td>Medição (E-15) e exibição da data de recebimento ao lado da de ocorrência</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Decisões a tomar</span></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Decisão</th><th>Recomendação</th></tr></thead><tbody><tr><td><strong>D1</strong></td><td>A fase <em>apropriável</em> entra na máquina de estados do crédito?</td><td><strong>Sim.</strong> É o que separa o crédito pronto do que depende de evento que pode não vir</td></tr><tr><td><strong>D2</strong></td><td>Os sete do núcleo entram no M0?</td><td><strong>Sim</strong> — abaixo disso, o evento entra e não muda nada</td></tr><tr><td><strong>D3</strong></td><td>A primeira carga roda em modo observação, sem alterar estado?</td><td><strong>Sim.</strong> É o que permite medir o passivo antes de ele virar operação</td></tr><tr><td><strong>D4</strong></td><td>Evento fiscal prevalece sobre estado deduzido, sempre?</td><td><strong>Sim</strong>, com a divergência registrada — o produto nunca sobrescreve em silêncio</td></tr><tr><td><strong>D5</strong></td><td>As três integrações externas entram juntas no MVP?</td><td><strong>Não.</strong> Eventos pelo DW primeiro: depende só do cliente e sustenta as outras duas</td></tr><tr><td><strong>D6</strong></td><td>Os quatro documentos fiscais ausentes entram agora?</td><td><strong>Só CT-e OS e DC-e</strong> se o piloto tiver logística ou marketplace. CF-e e NFA-e podem esperar</td></tr><tr><td><strong>D7</strong></td><td>Fechar apuração com evento pendente é bloqueio ou aceite?</td><td><strong>Aceite consciente</strong> no M0; bloqueio quando a fila estiver sob controle</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">14/09/2026 — Primeira proposta, escrita sobre a documentação <em>Fato Gerador por Documento Fiscal</em> (SplitHub, jan/2027): 58 eventos catalogados em onze documentos fiscais, o ciclo do crédito em três fases e a janela de correção do Decreto 12.955/2026. Doze módulos afetados, dezoito funcionalidades que mudam de significado, quinze novas e sete decisões. A ingestão pelo DW é tratada como atividade própria.</div></div>
+</div>
+</div>
+</body>
+</html>
