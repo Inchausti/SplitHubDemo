@@ -198,7 +198,7 @@ img, svg { max-width: 100%; height: auto; }
   <p class="subtitle">Camada de configuração que determina, por CNPJ fornecedor, <strong>quem recolhe o IBS e a CBS</strong> — por Split Payment, RAD ou pelo próprio fornecedor — e em que prazo o pagamento ocorre. É a decisão contratual que governa o comportamento dos módulos de Pagamentos e Crédito, e a regra que exige contrato vigente para toda nota fiscal recebida.</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.6</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.7</span></div>
     <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Configurações → Contratos</span></div>
     <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-contratos</span></div>
@@ -1613,6 +1613,8 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
           <tr><td class="rid">RF-CTR-097</td><td>A timeline deve exibir os eventos do mais recente ao mais antigo, com ícone e cor por tipo.</td><td>Ordem decrescente; quatro tipos visualmente distinguíveis.</td><td>S</td></tr>
           <tr><td class="rid">RF-CTR-098</td><td>O histórico deve ser imutável — eventos não podem ser editados nem removidos pela interface.</td><td>Nenhum controle de edição ou exclusão de evento.</td><td>M</td></tr>
           <tr><td class="rid">RF-CTR-099</td><td>O histórico deve persistir junto ao contrato e sobreviver a recarregamentos.</td><td>Em produção, gravado no backend; não pode viver apenas em memória.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CTR-100</td><td>O encerramento de um contrato deve pôr em revisão os acessos do fornecedor ao portal.</td><td>Encerrado o contrato, os acessos vinculados àquele fornecedor aparecem na aba <em>Acessos</em> como pendentes de revisão — ver <a href="prd-fornecedor.html" style="color:var(--blue)">PRD de Fornecedor</a>, F-12.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CTR-101</td><td>O contrato deve registrar a data em que os acessos vinculados devem ser revistos.</td><td>Campo <code>encerraAcessoEm</code>, derivado do fim da vigência.</td><td>S</td></tr>
         </tbody>
       </table>
     </div>
@@ -1645,6 +1647,7 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
           <tr><td class="rid">RN-CTR-19</td><td><strong>Histórico imutável</strong></td><td>Sempre</td><td>Eventos não podem ser editados nem removidos</td></tr>
           <tr><td class="rid">RN-CTR-20</td><td><strong>Alteração vazia não gera evento</strong></td><td>Submissão sem mudança</td><td>Recusada com aviso; histórico preservado</td></tr>
           <tr><td class="rid">RN-CTR-21</td><td><strong>Autoria honesta na semeadura</strong></td><td>Contrato sem histórico</td><td>Evento de criação marcado como carga, nunca atribuído a usuário</td></tr>
+          <tr><td class="rid">RN-CTR-22</td><td><strong>Acesso ao portal não sobrevive ao contrato</strong></td><td>Contrato encerrado com acesso ativo</td><td>Os acessos daquele fornecedor entram em revisão obrigatória. Contrato encerrado é a causa mais comum de acesso externo esquecido — e o acesso continua enxergando documentos enquanto ninguém o revoga</td></tr>
         </tbody>
       </table>
     </div>
@@ -1761,6 +1764,15 @@ impostos.forEach(r =&gt; { <span class="k">if</span> (r.forn === ct.cnpj) volTot
   <div class="section" id="s14">
     <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
             <div class="ver-row">
+      <div class="ver-num">v2.7</div>
+      <div class="ver-desc"><strong>14/09/2026</strong> — <strong>O contrato passa a governar também o acesso ao portal.</strong>
+      Com o acesso do fornecedor por convite (<a href="prd-fornecedor.html" style="color:var(--blue)">PRD de Fornecedor</a>, F-09 a F-12),
+      encerrar um contrato deixa de ser um ato apenas fiscal: os acessos daquele fornecedor entram em revisão obrigatória
+      (<span class="rid">RN-CTR-22</span>, <span class="rid">RF-CTR-100</span> e <span class="rid">RF-CTR-101</span>).
+      Contrato encerrado com acesso ativo é a forma mais comum de alguém de fora continuar enxergando documentos
+      depois de a relação acabar.</div>
+    </div>
+<div class="ver-row">
       <div class="ver-num">v2.6</div>
       <div class="ver-desc"><strong>11/09/2026</strong> — <strong>Exceção à RF-CTR-081.</strong> O método do contrato deixa de ser absoluto por documento: em Créditos, o operador pode assumir o recolhimento de uma DF com método Fornecedor — ver F-08 do <a href="prd-credito.html" style="color:var(--blue)">PRD de Crédito</a>. O contrato não é alterado; o método original fica preservado em <code>metodoPagamentoContrato</code>, e o detalhe do contrato passa a mostrar quantas DFs saíram dele. Muitas conversões no mesmo contrato são sinal de que ele deveria ser RAD.</div>
     </div>

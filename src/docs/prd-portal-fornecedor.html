@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Portal do Fornecedor · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">PRD · Portal → Fornecedor</div>
+<h1>Portal do Fornecedor — O único módulo usado por quem é de fora</h1>
+<p class="subtitle">O que o fornecedor vê do adquirente, e o que pode fazer a respeito: documentos do próprio CNPJ, envio de comprovante, contestação, e o aviso de que o recolhimento já foi assumido — antes de ele recolher de novo.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Portal → Fornecedor</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
+<div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-fornecedor</span></div>
+<div class="meta-pill"><span class="meta-label">Faixa MVP</span>&nbsp;<span class="meta-val">M0 — 12 funcionalidades</span></div>
+<div class="meta-pill"><span class="meta-label">LC 214/2025</span>&nbsp;<span class="meta-val">Art. 36, § 3º</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v1.0</span></div>
+</div>
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Contexto e posicionamento</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Jornadas de usuário atendidas</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Escopo e recorte do módulo</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Modelo de dados</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Arquitetura da tela</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Funcionalidades detalhadas</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Requisitos funcionais</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Regras de negócio</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Requisitos não funcionais</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Defeitos e divergências</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Integrações e dependências</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Glossário</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Histórico de versões</a></li>
+</ul></div>
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Contexto e posicionamento</span></div>
+<h3>1.1 O outro lado da cadeia</h3><p>Todo o resto do SplitHub olha o crédito da perspectiva do adquirente. O Portal olha da perspectiva de quem emitiu a nota — e é o único módulo do produto usado por alguém <strong>de fora da organização</strong> que contratou o sistema.</p><p>Ele existe porque metade dos problemas de crédito não se resolve dentro de casa: o comprovante está com o fornecedor, a divergência precisa ser contestada por ele, e o aviso de que o adquirente assumiu o recolhimento só serve se chegar até ele antes de recolher de novo.</p><h3>1.2 O que o portal substitui</h3><div class="table-wrap"><table><thead><tr><th>Sem portal</th><th>Com portal</th></tr></thead><tbody><tr><td>Comprovante por e-mail, anexado a uma thread</td><td>Envio na própria guia, vinculado ao documento</td></tr><tr><td>Divergência discutida por telefone</td><td>Contestação registrada, com trilha</td></tr><tr><td>Cobrança manual, fornecedor a fornecedor</td><td>O fornecedor vê o que deve, quando vence e o que já foi pago</td></tr><tr><td>Aviso de recolhimento assumido por mensagem avulsa</td><td>Aviso na tela do documento, antes de ele recolher</td></tr></tbody></table></div><div class="callout warn"><div class="ct">Até 14/09/2026 o portal não tinha porta de entrada</div><p>Ele era alcançado por <strong>troca de perfil dentro da sessão do operador</strong>: não havia credencial de fornecedor nem fronteira entre as duas visões. O acesso por convite, entregue em 14/09, é o que torna o portal utilizável por quem ele foi desenhado para atender.</p></div>
+</div>
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Jornadas de usuário atendidas</span></div>
+<div class="table-wrap"><table><thead><tr><th>Jornada</th><th>O que o módulo entrega</th><th>Cobertura</th></tr></thead><tbody><tr><td><strong>J-11</strong> · O fornecedor acompanha o que deve</td><td>Documentos filtrados pelo CNPJ dele, com IBS e CBS por registro e recorte de período</td><td><span class="chip ok">Completa</span></td></tr><tr><td><strong>J-12</strong> · O fornecedor comprova o recolhimento</td><td>Envio de comprovante RAD/PIX na própria guia</td><td><span class="chip ok">Completa</span></td></tr><tr><td><strong>J-13</strong> · O fornecedor discorda de um documento</td><td>Contestação de documentos vencidos e chat com o adquirente</td><td><span class="chip warn">Parcial</span> — a contestação não tem fluxo de resposta formal</td></tr><tr><td><strong>J-08</strong> · O adquirente evita o pagamento em dobro</td><td>Aviso de recolhimento assumido no documento convertido para RAD</td><td><span class="chip ok">Completa</span></td></tr></tbody></table></div>
+</div>
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Escopo e recorte do módulo</span></div>
+<h3>3.1 A regra que define o módulo</h3><div class="callout info"><div class="ct">Alcance</div><p>Um acesso de fornecedor enxerga <strong>apenas os documentos dos CNPJs a que está vinculado</strong>. Não é filtro de tela: é a fronteira do módulo. Tudo o mais aqui depende de essa regra estar certa.</p></div><h3>3.2 O que entra</h3><p>Leitura dos documentos do próprio CNPJ e do grupo econômico dele, envio de comprovante, contestação, chat, score próprio e os contratos vigentes com o adquirente.</p><h3>3.3 O que não entra</h3><div class="table-wrap"><table><thead><tr><th>Fora do portal</th><th>Onde vive</th></tr></thead><tbody><tr><td>Cadastro do próprio fornecedor</td><td>Módulo Fornecedor, do lado do adquirente</td></tr><tr><td>Concessão e revogação de acesso</td><td>Módulo Fornecedor, aba Acessos — quem decide quem vê é o adquirente</td></tr><tr><td>Geração de guia</td><td>Pagamentos RAD</td></tr><tr><td>Qualquer visão de outro fornecedor</td><td>Não existe, por desenho</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Modelo de dados</span></div>
+<h3>4.1 O que o portal lê</h3><p>Os mesmos documentos e registros do lado do adquirente, recortados pelo alcance do acesso. O portal não tem base própria de documentos.</p><h3>4.2 O que o acesso carrega</h3><div class="table-wrap"><table><thead><tr><th>Campo</th><th>Uso</th></tr></thead><tbody><tr><td><code>fornecedorCnpj</code></td><td>O fornecedor a que o acesso pertence</td></tr><tr><td><code>cnpjs[]</code></td><td>Os CNPJs que este acesso alcança — matriz e filiais do grupo</td></tr><tr><td><code>papel</code></td><td><code>responsavel</code> ou <code>leitura</code></td></tr><tr><td><code>estado</code></td><td><code>ativo</code>, <code>bloqueado</code> ou <code>revogado</code></td></tr><tr><td><code>ultimoAcesso</code></td><td>Alimenta o indicador de acesso sem uso, do lado do adquirente</td></tr></tbody></table></div><div class="callout warn"><div class="ct">O alcance acompanha o grupo econômico</div><p>Alterada a hierarquia do fornecedor — na tela ou por importação —, os acessos passam a alcançar os CNPJs do novo grupo. É por isso que a conferência da importação declara quantos acessos mudam de alcance antes de gravar.</p></div>
+</div>
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Arquitetura da tela</span></div>
+<div class="table-wrap"><table><thead><tr><th>Bloco</th><th>Conteúdo</th></tr></thead><tbody><tr><td><strong>Entrada</strong></td><td>Login com e-mail e senha próprios; aceite de convite e redefinição em rotas públicas</td></tr><tr><td><strong>Documentos</strong></td><td>Documentos do CNPJ, com IBS e CBS por registro e o aviso de recolhimento assumido</td></tr><tr><td><strong>Grupo econômico</strong></td><td>Matriz e filiais que o acesso alcança</td></tr><tr><td><strong>Ações</strong></td><td>Envio de comprovante, contestação e chat — só para o papel Responsável</td></tr><tr><td><strong>Contexto</strong></td><td>Contratos vigentes, score próprio e seletor de período</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Funcionalidades detalhadas</span></div>
+<div class="feat"><div class="feat-hdr"><span class="feat-id">F-01</span><span class="feat-name">Listar os documentos do próprio CNPJ</span><span class="feat-loc">Portal</span></div><div class="feat-body"><p>Documentos fiscais emitidos pelo fornecedor para o adquirente, com valor, data, situação e vencimento. A filtragem pelo alcance do acesso é a regra que sustenta o módulo.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-02</span><span class="feat-name">Separar IBS e CBS por registro</span><span class="feat-loc">Portal</span></div><div class="feat-body"><p>Cada documento mostra os dois tributos em linhas próprias. Um pode estar recolhido e o outro não.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-03</span><span class="feat-name">Enxergar o grupo econômico</span><span class="feat-loc">Portal</span></div><div class="feat-body"><p>Matriz e filiais que o acesso alcança, para quem responde por mais de um CNPJ do mesmo grupo.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-04</span><span class="feat-name">Enviar comprovante de recolhimento</span><span class="feat-loc">Portal</span></div><div class="feat-body"><p>Comprovante RAD ou PIX anexado à guia, e não a uma thread de e-mail. É o que alimenta a conciliação financeira do lado do adquirente.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-05</span><span class="feat-name">Contestar documento vencido</span><span class="feat-loc">Portal</span></div><div class="feat-body"><p>Registro formal de discordância sobre documento com prazo vencido, com trilha.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-06</span><span class="feat-name">Conversar com o adquirente</span><span class="feat-loc">Portal</span></div><div class="feat-body"><p>Canal de mensagens vinculado ao fornecedor, para o que não cabe em contestação.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-07</span><span class="feat-name">Ver o próprio score de conformidade</span><span class="feat-loc">Portal</span></div><div class="feat-body"><p>A mesma pontuação que o adquirente vê. Transparência aqui é o que torna a conversa de renovação objetiva.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-08</span><span class="feat-name">Recortar por período</span><span class="feat-loc">Portal</span></div><div class="feat-body"><p>Seleção de várias competências, porque a cobrança costuma tratar de meses fechados.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-09</span><span class="feat-name">Consultar os contratos vigentes</span><span class="feat-loc">Portal</span></div><div class="feat-body"><p>Contratos entre o fornecedor e o adquirente, com modelo — RAD, Fornecedor ou Split Payment — vigência e condições. É o documento que diz quem recolhe.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-10</span><span class="feat-name">Ver o aviso de recolhimento assumido</span><span class="feat-loc">Portal</span></div><div class="feat-body"><p>Quando o adquirente assume o recolhimento de um documento, o fornecedor vê <em>não recolher</em> na linha do documento.</p><div class="callout warn"><div class="ct">O aviso é dinheiro</div><p>Se o fornecedor recolher assim mesmo, o excedente volta a ele em até três dias úteis (LC 214/2025, art. 36, § 3º, II) — mas o caixa já saiu duas vezes. É o item de maior valor financeiro do módulo.</p></div></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-11</span><span class="feat-name">Entrar com credencial própria</span><span class="feat-loc">Entrada</span></div><div class="feat-body"><p>Convite por e-mail com validade de sete dias e uso único; a senha é definida pelo próprio fornecedor no aceite. Link inválido, usado e expirado mostram a mesma mensagem, e o erro de login nunca diz se o e-mail existe — as duas coisas por desenho.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-12</span><span class="feat-name">Agir conforme o papel</span><span class="feat-loc">Portal</span></div><div class="feat-body"><p><strong>Responsável</strong> envia comprovante, contesta e usa o chat. <strong>Leitura</strong> vê o mesmo conteúdo e não age. É a única distinção que muda o risco do acesso externo.</p></div></div>
+</div>
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Requisitos funcionais</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri.</th></tr></thead><tbody><tr><td><span class="rid">RF-POR-001</span></td><td>Toda consulta do portal deve ser filtrada pelos CNPJs do acesso.</td><td>Requisição forjada com outro CNPJ não retorna documento.</td><td>M</td></tr><tr><td><span class="rid">RF-POR-002</span></td><td>O fornecedor deve ver IBS e CBS em registros separados.</td><td>Nenhuma tela soma os dois tributos numa linha só.</td><td>M</td></tr><tr><td><span class="rid">RF-POR-003</span></td><td>O acesso deve alcançar matriz e filiais conforme o grupo econômico vigente.</td><td>Alterada a hierarquia, o alcance acompanha.</td><td>M</td></tr><tr><td><span class="rid">RF-POR-004</span></td><td>O comprovante deve ser anexado à guia, e não ao fornecedor.</td><td>O anexo aparece no documento correspondente, dos dois lados.</td><td>M</td></tr><tr><td><span class="rid">RF-POR-005</span></td><td>A contestação deve ficar registrada com trilha.</td><td>Autor, data e conteúdo permanecem após a resolução.</td><td>M</td></tr><tr><td><span class="rid">RF-POR-006</span></td><td>O papel Leitura não deve executar nenhuma ação.</td><td>Comprovante, contestação e chat indisponíveis — na tela e no servidor.</td><td>M</td></tr><tr><td><span class="rid">RF-POR-007</span></td><td>O aviso de recolhimento assumido deve aparecer no documento convertido.</td><td>A linha exibe <em>não recolher</em> com a referência ao art. 36.</td><td>M</td></tr><tr><td><span class="rid">RF-POR-008</span></td><td>O login deve usar credencial própria do fornecedor.</td><td>E-mail e senha definidos por ele no aceite do convite.</td><td>M</td></tr><tr><td><span class="rid">RF-POR-009</span></td><td>Mensagens de erro não devem revelar se um e-mail tem acesso.</td><td>Login e redefinição respondem igual para cadastrado e não cadastrado.</td><td>M</td></tr><tr><td><span class="rid">RF-POR-010</span></td><td>A revogação deve encerrar as sessões abertas do titular.</td><td>A sessão cai na requisição seguinte.</td><td>M</td></tr><tr><td><span class="rid">RF-POR-011</span></td><td>O portal deve preservar o recorte de período entre as telas.</td><td>Trocar de aba não perde a competência escolhida.</td><td>S</td></tr><tr><td><span class="rid">RF-POR-012</span></td><td>O acesso alcançado por troca de perfil deve estar identificado como demonstração.</td><td>A interface exibe o selo de modo demonstração. <em>Ver DEF-01.</em></td><td>M</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Regras de negócio</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Regra</th><th>Onde vive</th></tr></thead><tbody><tr><td><span class="rid">RN-POR-01</span></td><td>Um acesso enxerga apenas documentos dos CNPJs a que está vinculado. A filtragem é do servidor, nunca da tela.</td><td>Regra de ouro do módulo</td></tr><tr><td><span class="rid">RN-POR-02</span></td><td>O vínculo é pessoa × CNPJ: a mesma pessoa pode atender vários fornecedores, com acessos independentes.</td><td>Modelo de <code>acessoFornecedor</code></td></tr><tr><td><span class="rid">RN-POR-03</span></td><td>Quem concede e revoga acesso é o adquirente, nunca o fornecedor.</td><td>Aba Acessos, no módulo Fornecedor</td></tr><tr><td><span class="rid">RN-POR-04</span></td><td>Papel Leitura não executa ação com efeito.</td><td>F-12</td></tr><tr><td><span class="rid">RN-POR-05</span></td><td>O aviso de recolhimento assumido existe para evitar pagamento em duplicidade.</td><td>LC 214/2025, art. 36, § 3º, II</td></tr><tr><td><span class="rid">RN-POR-06</span></td><td>O portal não expõe nenhum dado de outro fornecedor, em nenhuma circunstância.</td><td>Decorre da RN-POR-01</td></tr><tr><td><span class="rid">RN-POR-07</span></td><td>A troca de perfil em sessão é recurso de demonstração, e sai do produto antes da primeira instalação real.</td><td>Selo de modo demonstração</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Requisitos não funcionais</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Requisito</th><th>Critério</th></tr></thead><tbody><tr><td><span class="rid">RNF-POR-01</span></td><td>O portal deve ser utilizável em 375 px — o fornecedor costuma abri-lo no telefone.</td><td>Sem rolagem horizontal; tabelas rolam no próprio contêiner.</td></tr><tr><td><span class="rid">RNF-POR-02</span></td><td>Nenhuma tela pode expor identificador interno do adquirente.</td><td>Sem ids de política, lote ou usuário interno.</td></tr><tr><td><span class="rid">RNF-POR-03</span></td><td>A sessão do fornecedor deve expirar por inatividade.</td><td>Expiração declarada e aplicada.</td></tr><tr><td><span class="rid">RNF-POR-04</span></td><td>As telas públicas devem funcionar sem sessão ativa.</td><td>Aceite, login e redefinição abrem sem autenticação prévia.</td></tr><tr><td><span class="rid">RNF-POR-05</span></td><td>Cores e tipografia seguem os tokens do tema, nos dois modos.</td><td>Sem valor hexadecimal literal em código novo.</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Defeitos e divergências</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>O que acontece</th><th>Impacto</th><th>Situação</th></tr></thead><tbody><tr><td><span class="rid">DEF-01</span></td><td>A troca de perfil em sessão continua permitindo que o operador do adquirente veja o portal como se fosse o fornecedor.</td><td>Numa instalação real, é acesso indevido a dados de terceiro sem trilha. Mantida deliberadamente como recurso de demonstração, com selo na interface; sai antes da primeira instalação com dados reais.</td><td><span class="chip warn">Consciente</span></td></tr><tr><td><span class="rid">DEF-02</span></td><td>A filtragem por CNPJ é feita no cliente, porque o protótipo não tem servidor.</td><td>A regra que sustenta o módulo não é aplicável como está: numa implementação real ela precisa viver no servidor, ou não há fronteira alguma.</td><td><span class="chip red">Aberto</span></td></tr><tr><td><span class="rid">DEF-03</span></td><td>Sessões e credenciais vivem em memória.</td><td>Recarregar devolve o estado ao seed. Aqui pesa mais que nos outros módulos: é credencial de terceiro.</td><td><span class="chip warn">Consciente</span></td></tr><tr><td><span class="rid">DEF-04</span></td><td>A contestação registra a discordância, mas não tem fluxo de resposta formal do adquirente.</td><td>O fornecedor contesta e fica sem saber o que aconteceu, a menos que alguém responda pelo chat.</td><td><span class="chip red">Aberto</span></td></tr><tr><td><span class="rid">DEF-05</span></td><td>Não há segundo fator de autenticação.</td><td>Senha compartilhada dentro do fornecedor é indetectável. Deliberadamente fora do MVP — acrescenta um canal a manter.</td><td><span class="chip warn">Consciente</span></td></tr></tbody></table></div>
+</div>
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Integrações e dependências</span></div>
+<div class="table-wrap"><table><thead><tr><th>Depende de</th><th>Para quê</th></tr></thead><tbody><tr><td><strong>Fornecedor</strong></td><td>Concessão, revogação e alcance do acesso; o cadastro é o dono da relação</td></tr><tr><td><strong>Crédito</strong></td><td>Documentos, registros e o aviso de recolhimento assumido</td></tr><tr><td><strong>Pagamentos RAD</strong></td><td>Guias a que os comprovantes se vinculam</td></tr><tr><td><strong>Contratos</strong></td><td>Contratos vigentes exibidos ao fornecedor, e a data de revisão de acesso</td></tr><tr><td><strong>Conciliação</strong></td><td>Consome os comprovantes enviados pelo portal</td></tr><tr><td><strong>Auth · Design System</strong></td><td>Login próprio, sessão e as três telas públicas</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Glossário</span></div>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>Definição</th></tr></thead><tbody><tr><td><strong>Acesso</strong></td><td>Vínculo entre uma pessoa e os CNPJs de um fornecedor, criado pelo aceite de um convite.</td></tr><tr><td><strong>Convite</strong></td><td>Autorização temporária, de uso único, para criar um acesso.</td></tr><tr><td><strong>Responsável</strong></td><td>Papel que permite enviar comprovante, contestar e conversar.</td></tr><tr><td><strong>Leitura</strong></td><td>Papel que vê o mesmo conteúdo e não executa ações.</td></tr><tr><td><strong>Recolhimento assumido</strong></td><td>Documento em que o adquirente passou a recolher o tributo no lugar do fornecedor.</td></tr><tr><td><strong>Alcance</strong></td><td>Conjunto de CNPJs que um acesso enxerga.</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">14/09/2026 — Primeira versão. O módulo existia desde o começo do produto e nunca teve PRD. Documenta doze funcionalidades, doze requisitos funcionais, sete regras de negócio e cinco defeitos — entre eles a filtragem por CNPJ feita no cliente (DEF-02), que numa implementação real precisa viver no servidor, e a troca de perfil mantida como recurso de demonstração (DEF-01).</div></div>
+</div>
+</div>
+</body>
+</html>
