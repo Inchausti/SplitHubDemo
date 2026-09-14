@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Priorização para o MVP · SplitHub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1); --teal-l: rgba(14,158,142,.06);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08); --amber-m: rgba(185,122,16,.18);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --mono: #EDF0F5;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12); --teal-l: rgba(31,186,170,.06);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1); --amber-m: rgba(245,158,11,.2);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --mono: #1A2030;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.2); --shadow-md: 0 4px 12px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12); --teal-l: rgba(31,186,170,.06);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1); --amber-m: rgba(245,158,11,.2);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --mono: #1A2030;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.2); --shadow-md: 0 4px 12px rgba(0,0,0,.25);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 860px; margin: 0 auto; }
+
+/* ── Back link ── */
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--teal); }
+
+/* ── Header ── */
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.eyebrow-sep { color: var(--txt3); font-weight: 400; }
+h1 { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 28px; max-width: 600px; }
+
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 40px; align-items: center; box-shadow: var(--shadow-sm); }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.ref { background: var(--purple-d); color: var(--purple); }
+
+/* ── Sections ── */
+.section { margin-bottom: 44px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; }
+.sec-title { font-size: 16px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; }
+
+/* ── Callouts ── */
+.callout { border-radius: 8px; padding: 14px 18px; margin: 16px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .callout-title { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .callout-title { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .callout-title { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .callout-title { color: var(--red); }
+.callout-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p { font-size: 13px; color: var(--txt2); }
+.callout p strong { color: var(--txt1); }
+
+/* ── Tables ── */
+.table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 10px 14px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+
+/* ── Decision tree ── */
+.decision-tree { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 24px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--txt2); line-height: 2; box-shadow: var(--shadow-sm); overflow-x: auto; }
+.dt-root { color: var(--teal); font-weight: 700; font-size: 13px; }
+.dt-q { color: var(--txt1); font-weight: 600; }
+.dt-yes { color: var(--green); font-weight: 600; }
+.dt-no { color: var(--red); font-weight: 500; }
+.dt-action-ok { color: var(--green); }
+.dt-action-block { color: var(--red); font-weight: 600; }
+.dt-note { color: var(--txt3); font-style: italic; }
+
+/* ── Flow steps ── */
+.flow { display: flex; flex-direction: column; gap: 0; margin: 16px 0; }
+.flow-step { display: flex; gap: 16px; align-items: flex-start; }
+.flow-step:not(:last-child) .flow-line { flex: 1; }
+.flow-left { display: flex; flex-direction: column; align-items: center; width: 36px; flex-shrink: 0; }
+.flow-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0; }
+.flow-dot.teal { background: var(--teal-d); color: var(--teal); }
+.flow-dot.blue { background: var(--blue-d); color: var(--blue); }
+.flow-dot.amber { background: var(--amber-d); color: var(--amber); }
+.flow-connector { width: 2px; background: var(--brd); flex: 1; min-height: 20px; margin: 4px 0; }
+.flow-body { padding: 6px 0 24px; flex: 1; }
+.flow-title { font-size: 13px; font-weight: 700; color: var(--txt1); margin-bottom: 5px; }
+.flow-desc { font-size: 12.5px; color: var(--txt2); }
+.flow-desc code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+
+/* ── Risk scenario ── */
+.scenario { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); margin: 16px 0; }
+.scenario-header { padding: 14px 18px; background: var(--red-d); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 8px; }
+.scenario-header span { font-size: 12px; font-weight: 700; color: var(--red); }
+.scenario-body { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.scenario-row { display: flex; align-items: flex-start; gap: 10px; }
+.scenario-actor { width: 100px; flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--txt3); text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.scenario-action { flex: 1; font-size: 12.5px; color: var(--txt2); }
+.scenario-action strong { color: var(--txt1); }
+.scenario-action .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; margin-left: 6px; }
+.badge-ok { background: var(--green-d); color: var(--green); }
+.badge-err { background: var(--red-d); color: var(--red); }
+
+/* ── Code block ── */
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; margin: 12px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--txt1); white-space: pre; display: block; line-height: 1.7; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+
+/* ── Two-col ── */
+.two-col { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; margin: 16px 0; }
+.two-col > * { min-width: 0; }
+.info-card li { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 820px) { .two-col { grid-template-columns: minmax(0,1fr); } }
+.info-card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px; box-shadow: var(--shadow-sm); }
+.info-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.info-card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.info-card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.info-card li::before { content: "·"; color: var(--teal); font-weight: 900; flex-shrink: 0; }
+
+/* ── Inline code ── */
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+
+/* ── Glossary ── */
+.gloss { display: flex; flex-direction: column; gap: 0; }
+.gloss-row { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.gloss-row:last-child { border-bottom: none; }
+.gloss-term { font-size: 12px; font-weight: 700; color: var(--txt1); min-width: 180px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.gloss-def { font-size: 12.5px; color: var(--txt2); min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .gloss-row { flex-direction: column; gap: 5px; }
+  .gloss-term { min-width: 0; }
+  .nid { white-space: normal; }
+}
+
+/* ── Dispositivo normativo citado ── */
+.nid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+       color: var(--purple); background: var(--purple-d); border-radius: 3px;
+       padding: 1px 6px; white-space: nowrap; }
+.src-note { font-size: 11px; color: var(--txt3); font-style: italic; margin-top: 8px; }
+
+/* ── Histórico de versões ── */
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
+           color: var(--teal); min-width: 52px; flex-shrink: 0; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); line-height: 1.6; }
+@media (max-width: 640px) { .ver-row { flex-direction: column; gap: 4px; } }
+
+/* ── Duas trilhas do RAD ── */
+.rail { display: grid; gap: 12px; grid-template-columns: minmax(0,1fr); margin: 14px 0; }
+@media (min-width: 721px) { .rail { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.rail-card { border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; background: var(--sur); }
+.rail-card.tax { border-left: 3px solid var(--purple); }
+.rail-card.com { border-left: 3px solid var(--blue); }
+.rail-title { font-size: 12px; font-weight: 700; color: var(--txt1); margin-bottom: 6px; }
+.rail-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700;
+            color: var(--txt1); margin: 6px 0; }
+.rail-desc { font-size: 11.5px; color: var(--txt2); line-height: 1.55; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+/* ── Barra de faixas ── */
+.faixa-bar { display: flex; height: 34px; border-radius: 8px; overflow: hidden; border: 1px solid var(--brd); margin: 18px 0 10px; }
+.faixa-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--sur); }
+.seg-m0 { background: var(--teal); }
+.seg-m1 { background: var(--blue); }
+.seg-m2 { background: var(--purple); }
+.seg-x  { background: var(--txt3); }
+.faixa-key { display: flex; flex-wrap: wrap; gap: 16px; font-size: 11.5px; color: var(--txt2); }
+.faixa-key span b { color: var(--txt1); }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; }
+
+/* ── Módulo ── */
+.mod { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 14px 0; box-shadow: var(--shadow-sm); overflow: hidden; }
+.mod-hdr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.mod-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.mod-count { font-size: 11px; color: var(--txt3); font-weight: 600; margin-left: auto; white-space: nowrap; }
+.mod-note { padding: 12px 18px 4px; font-size: 12.5px; color: var(--txt2); }
+.mod-list { list-style: none; padding: 8px 18px 16px; display: flex; flex-direction: column; gap: 0; }
+.mod-list li { display: flex; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--brd); font-size: 12.5px; color: var(--txt2); min-width: 0; }
+.mod-list li:last-child { border-bottom: none; }
+.mod-list .fx { flex-shrink: 0; width: 42px; }
+.mod-list .nm { min-width: 0; overflow-wrap: anywhere; }
+.mod-list li.is-m0 .nm { color: var(--txt1); font-weight: 600; }
+
+/* ── Decisão ── */
+.dec { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--brd); align-items: flex-start; }
+.dec:last-child { border-bottom: none; }
+.dec-num { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 800; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 8px; flex-shrink: 0; }
+.dec-body { min-width: 0; }
+.dec-q { font-size: 13px; font-weight: 700; color: var(--txt1); margin-bottom: 4px; }
+.dec-r { font-size: 12.5px; color: var(--txt2); }
+.dec-r em { color: var(--teal); font-style: normal; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="doc">
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">SplitHub <span class="eyebrow-sep">·</span> Produto <span class="eyebrow-sep">·</span> Proposta</div>
+<h1>Priorização para o MVP</h1>
+<p class="subtitle">As 172 funcionalidades do produto distribuídas em quatro faixas de entrega, a partir de um único critério: a cadeia mínima que faz um crédito nascer, ser garantido e ser apropriado.</p>
+<div class="meta-bar"><div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">v1.0</span></div><div class="meta-pill"><span class="meta-label">Status</span><span class="chip warn">Aguardando aprovação</span></div><div class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">Mapa de Funcionalidades v2.1</span></div><div class="meta-pill"><span class="meta-label">Escopo</span><span class="meta-val">172 funcionalidades · 20 módulos</span></div><div class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">14/09/2026</span></div></div>
+<div class="section">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O critério</span></div>
+<p class="sec-sub">Um corte por módulo não serve. Quase todo módulo tem uma parte essencial e uma parte de conforto — Crédito tem a listagem que sustenta a operação e quatro gráficos que a explicam; Execução RAD tem a geração da guia e onze funcionalidades que decidem <em>quando</em> gerá-la. Cortar por módulo levaria as duas coisas juntas, nos dois sentidos.</p>
+<p class="sec-sub">O critério é a <strong>cadeia mínima do crédito</strong>. Uma funcionalidade entra no MVP se a cadeia não se fecha sem ela:</p>
+<div class="flow">
+<div class="flow-step"><div class="flow-left"><div class="flow-dot teal">1</div><div class="flow-connector"></div></div><div class="flow-body"><div class="flow-title">O documento entra</div><div class="flow-desc">Sem ingestão não há o que apurar. Documento rejeitado vira stub e inconsistência — não desaparece.</div></div></div>
+<div class="flow-step"><div class="flow-left"><div class="flow-dot teal">2</div><div class="flow-connector"></div></div><div class="flow-body"><div class="flow-title">O método de pagamento é conhecido</div><div class="flow-desc">RAD, Fornecedor ou Split Payment. É o contrato que diz quem recolhe, e disso depende todo o resto.</div></div></div>
+<div class="flow-step"><div class="flow-left"><div class="flow-dot blue">3</div><div class="flow-connector"></div></div><div class="flow-body"><div class="flow-title">O tributo é recolhido</div><div class="flow-desc">Pela via que couber: a guia gerada pela política, ou o recolhimento assumido pelo adquirente quando o fornecedor não recolhe.</div></div></div>
+<div class="flow-step"><div class="flow-left"><div class="flow-dot blue">4</div><div class="flow-connector"></div></div><div class="flow-body"><div class="flow-title">O recolhimento é confirmado</div><div class="flow-desc">Conciliação contra a Apuração Assistida e contra o comprovante. Sem isso o crédito é afirmação sem lastro.</div></div></div>
+<div class="flow-step"><div class="flow-left"><div class="flow-dot amber">5</div><div class="flow-connector"></div></div><div class="flow-body"><div class="flow-title">O crédito é apropriado</div><div class="flow-desc">A apuração da competência transforma o crédito confirmado em número exigível.</div></div></div>
+<div class="flow-step"><div class="flow-left"><div class="flow-dot amber">6</div></div><div class="flow-body"><div class="flow-title">O que falhou vira tratável</div><div class="flow-desc">Toda quebra da cadeia aparece como inconsistência com dono, estado e histórico.</div></div></div>
+</div>
+<div class="callout info"><div class="callout-title">Consequência do critério</div><p>Analytics, FCT e Inteligência ficam fora do MVP <strong>mesmo estando prontos</strong>. Eles explicam o crédito; não o garantem. Prontidão não é argumento de prioridade.</p></div>
+</div>
+<div class="section">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">As quatro faixas</span></div>
+<div class="faixa-bar">
+<div class="faixa-seg seg-m0" style="width:41%">M0</div>
+<div class="faixa-seg seg-m1" style="width:42%">M1</div>
+<div class="faixa-seg seg-m2" style="width:15%">M2</div>
+<div class="faixa-seg seg-x" style="width:1%"></div>
+</div>
+<div class="table-wrap"><table><thead><tr><th>Faixa</th><th>Funcs.</th><th>%</th><th>O que é</th></tr></thead><tbody>
+<tr><td><span class="chip teal">M0</span> <strong>MVP</strong></td><td><strong>71</strong></td><td>41%</td><td>A cadeia do crédito, ponta a ponta, para uma operação e um time pequeno.</td></tr>
+<tr><td><span class="chip info">M1</span> <strong>Escala</strong></td><td><strong>73</strong></td><td>42%</td><td>O que tira o operador do meio: orquestração, ERP, portal do fornecedor, automações, multiusuário.</td></tr>
+<tr><td><span class="chip ref">M2</span> <strong>Inteligência</strong></td><td><strong>26</strong></td><td>15%</td><td>Projeção, score e assistente — valor construído sobre a base que o M0 e o M1 produzem.</td></tr>
+<tr><td><span class="chip warn">Fora</span> <strong>Sem faixa</strong></td><td><strong>2</strong></td><td>1%</td><td>Qualidade de engenharia transversal. Entra junto com o que precisa dela, não como item de escopo.</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="callout-title">O que o equilíbrio entre M0 e M1 revela</div><p>M0 e M1 têm <strong>o mesmo tamanho</strong>. Não é coincidência: metade do que está construído hoje serve para operar em escala — orquestração, integrações, automações, portal — e pressupõe uma operação estável que ainda não existe. O protótipo foi construído de fora para dentro.</p></div>
+</div>
+<div class="section">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Funcionalidade a funcionalidade</span></div>
+<p class="sec-sub">Os 20 módulos na ordem do Mapa de Funcionalidades. Em destaque, o que entra no M0.</p>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Dashboard</span><span class="chip teal">M0</span><span class="mod-count">M0 3 · M2 3 · 6 no total</span></div>
+<div class="mod-note">Só o que responde “onde está meu crédito hoje”. Forecast e cockpit dependem de série histórica que o piloto ainda não tem.</div>
+<ul class="mod-list">
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">KPIs de crédito em tempo real</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Gráfico Evolução de Créditos</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Forecast FCT em destaque</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Cockpit compacto — 3 colunas</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Filtro Grupo Econômico global</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Seletor de período multi-select</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Créditos IBS/CBS</span><span class="chip teal">M0</span><span class="mod-count">M0 10 · M2 4 · 14 no total</span></div>
+<div class="mod-note">O módulo que a tese defende entra quase inteiro. Ficam fora os quatro gráficos analíticos — eles explicam o crédito, não o garantem.</div>
+<ul class="mod-list">
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Listagem DFs de entrada — RF Core 10 colunas</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Filtros avançados em todas as colunas</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Coluna Inconsistências por DF</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Classificação CP / LP / Vencidos</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Calendário heatmap de vencimentos</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Badge de método de extinção (4 métodos)</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Gráficos extintos / vencidos / ageing</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Top 5 e Top 10 fornecedores</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Composição e método de extinção</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Ciclo do crédito: apropriação, extinção e prazo</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Assumir recolhimento via RAD</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Visão por documento fiscal na aba DFs</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Reverter o recolhimento assumido</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Filtro por origem do método de pagamento</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Débitos IBS/CBS</span><span class="chip teal">M0</span><span class="mod-count">M0 3 · M1 3 · 6 no total</span></div>
+<div class="mod-note">Débito entra só para a apuração fechar. O produto se vende pelo crédito.</div>
+<ul class="mod-list">
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Listagem DFs de saída</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">IBS e CBS separados por coluna</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Status extinção por prioridade entre RFs</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">3 abas: Visão Geral · RFs · DFs</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Coluna Inconsistências por DF</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Filtros multi-seleção</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Pagamentos RAD</span><span class="chip teal">M0</span><span class="mod-count">M0 7 · M1 6 · 13 no total</span></div>
+<div class="mod-note">Entra a guia, o comprovante e o rastro dos três status. Fica fora tudo que depende de execução programada.</div>
+<ul class="mod-list">
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Listagem de guias RAD</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">St. Crédito · St. Registro · St. Pagamento independentes</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Upload de comprovante PIX/RAD</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Filtros em Pagamentos Executados</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Aba Execução Programada</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Barra de cobertura das políticas</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Listagem das guias represadas</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Coluna Origem — automática ou manual</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Coluna Entrega ao ERP</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Antecipação de execução</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Fila de erro de geração</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Gestão de colunas e exportação CSV</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Guias de recolhimento assumido</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Inconsistências</span><span class="chip teal">M0</span><span class="mod-count">M0 7 · M1 2 · 9 no total</span></div>
+<div class="mod-note">A inconsistência é o que impede o crédito de morrer em silêncio. Fica fora só o que distribui trabalho entre pessoas.</div>
+<ul class="mod-list">
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Cards DF-cêntricos (rfId opcional)</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Múltiplas inconsistências por DF</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Taxonomia CAPUR IBS/CBS por imposto</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Taxonomia CFIN IBS/CBS por imposto</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Kanban: Aberta → Resolvida / Glosada</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Atribuição de responsável</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Histórico de alterações</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Diagnóstico guiado — árvore de decisão</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Filtros multiselect por tipo e DF</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Ingestão de DFs</span><span class="chip teal">M0</span><span class="mod-count">M0 6 · M1 1 · 7 no total</span></div>
+<div class="mod-note">A porta de entrada inteira, menos a API — no MVP o arquivo basta.</div>
+<ul class="mod-list">
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Upload CSV posicional (NF-e · CT-e · NFS-e)</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Suporte a Entrada e Saída</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Pré-visualização antes de confirmar</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Validação binária: Importado / Inconsistência</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Stub DF para documentos rejeitados</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Card de inconsistência automático</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Ingestão por API com credencial própria</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">FCT — Fluxo de Caixa Tributário</span><span class="mod-count">M2 7 · 7 no total</span></div>
+<div class="mod-note">Projeção pressupõe base real acumulada. Não existe piloto que comece por aqui.</div>
+<ul class="mod-list">
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Forecast de Fluxo Fiscal</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Média móvel progressiva</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Corte realizado / projeção na data atual</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Forecast de Aproveitamento de Crédito</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Insights: melhor mês · tendência · perda projetada</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Tabela mensal de aproveitamento</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Retry automático de renderização</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Inteligência</span><span class="mod-count">M2 6 · 6 no total</span></div>
+<div class="mod-note">Score de fornecedor é argumento de renovação, não de adoção.</div>
+<ul class="mod-list">
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Score de risco por fornecedor (0–100)</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Critério: créditos em risco ÷ total</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Score ≥ 70 → badge verde (baixo risco)</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Ranking Top 5 Melhores e Top 5 Piores</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Mapa de bolhas risco × volume</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Tabela mensal de crédito por fornecedor</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Contratos</span><span class="chip teal">M0</span><span class="mod-count">M0 6 · M1 1 · 7 no total</span></div>
+<div class="mod-note">Os três métodos de pagamento são pré-requisito: sem saber quem recolhe, não há cadeia. O contrato como recorte de política acompanha Execução RAD.</div>
+<ul class="mod-list">
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Modelo RAD — adquirente recolhe o tributo</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Modelo Fornecedor — fornecedor recolhe</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Multi-contratos por fornecedor</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Vínculo contrato → obrigações de comprovante</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Listagem com filtros padronizados</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Contrato como recorte de política RAD</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Modelo Split Payment — retenção na liquidação</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Fornecedores</span><span class="chip teal">M0</span><span class="mod-count">M0 3 · M1 1 · M2 1 · 5 no total</span></div>
+<div class="mod-note">Cadastro mínimo. Score de conformidade e trilha de auditoria vêm depois.</div>
+<ul class="mod-list">
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Cadastro com razão social anonimizada</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">CNPJ formatado XX.XXX.XXX/XXXX-XX</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Edição com trilha de auditoria</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Multi-contratos no cadastro</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Score de conformidade no cadastro</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Organização</span><span class="chip teal">M0</span><span class="mod-count">M0 3 · M1 1 · M2 1 · 5 no total</span></div>
+<div class="mod-note">Hierarquia e filtro de grupo econômico atravessam todas as telas — sem eles, nenhum número fecha.</div>
+<ul class="mod-list">
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Hierarquia CNPJ: Matriz + Filiais</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Status de conformidade por entidade</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Apuração Assistida na sidebar</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Filtro Grupo Econômico — sincroniza tudo</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Auditoria de alterações cadastrais</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Portal Fornecedor</span><span class="mod-count">M1 10 · 10 no total</span></div>
+<div class="mod-note">O maior candidato a subir. Fica em M1 porque exige um segundo perfil de acesso real, e o perfil hoje é uma chave de sessão.</div>
+<ul class="mod-list">
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">DFs filtrados pelo CNPJ próprio</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">IBS e CBS separados por RF</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Grupo econômico: Matriz + Filiais</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Envio de comprovante RAD/PIX</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Contestação de DFs vencidos</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Chat com adquirente</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Score de conformidade próprio</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Período multi-select</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Contratos globais visíveis</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Aviso de recolhimento assumido pelo adquirente</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Auth · Design System</span><span class="chip teal">M0</span><span class="mod-count">M0 8 · M1 1 · Fora 2 · 11 no total</span></div>
+<div class="mod-note">Login, perfis e o sistema de design. Sem os padrões transversais, cada tela nova custa o dobro.</div>
+<ul class="mod-list">
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Tela de login</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Perfis: Cliente e Fornecedor</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Troca de perfil in-session</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Tokens CSS globais + PALETTE JS</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Sidebar teal colapsável + localStorage</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Tema claro/escuro automático</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">shBuildFilterPanel — filtros padronizados</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">RF Core — 10 colunas uniformes</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">ESC fecha qualquer modal</span></li>
+<li class=""><span class="fx"><span class="chip warn">Fora</span></span><span class="nm">Tooltip de coluna como padrão de projeto</span></li>
+<li class=""><span class="fx"><span class="chip warn">Fora</span></span><span class="nm">Documentação de produto dentro da aplicação</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Execução RAD</span><span class="chip teal">M0</span><span class="mod-count">M0 4 · M1 11 · 15 no total</span></div>
+<div class="mod-note">O corte mais duro: 4 de 15. O MVP precisa conseguir gerar a guia, não otimizar quando gerá-la.</div>
+<ul class="mod-list">
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Políticas de execução sem limite de quantidade</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Orquestração por CNPJ</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Orquestração por contrato</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Orquestração por faixa de valor</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Quatro bases de comparação da faixa</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Três modos de operação</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Janela de execução configurável</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Critérios de inclusão por valor e flag</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Simulação da próxima execução</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Detecção de cobertura repetida</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Alerta de sobreposição entre modelos</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Listagem de políticas com lote ao vivo</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Ativação e pausa em massa</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Auditoria com diff campo a campo</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Vínculo com a conexão de destino</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Integrações</span><span class="mod-count">M1 16 · 16 no total</span></div>
+<div class="mod-note">Fica inteiro em M1. No MVP o comprovante entra por upload manual — e essa é a premissa mais frágil da proposta.</div>
+<ul class="mod-list">
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Catálogo dos seis contextos da API</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Conexões nas duas direções</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Assistente de nova conexão em três passos</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Emissão de credencial de API</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Exibição única do segredo</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Escopos por contexto</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Rotação com janela de sobreposição</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Exemplo da primeira chamada</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Alcance por CNPJ</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Health check por conexão</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Sonda ativa e observação passiva</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Histórico de incidentes</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Log de entregas com inspeção de payload</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Reenvio de entrega</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Comprovantes recebidos do ERP</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Teste de conexão</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Conciliação</span><span class="chip teal">M0</span><span class="mod-count">M0 6 · M1 2 · 8 no total</span></div>
+<div class="mod-note">A prova de que o recolhimento aconteceu. Sem conciliação, o crédito é uma afirmação sem lastro.</div>
+<ul class="mod-list">
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Painel unificado da jornada do documento</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Confronto com a Apuração Assistida</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Conciliação financeira pelos comprovantes</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Sequenciamento das duas conciliações</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Próxima ação sugerida por documento</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Listagem de registros com oito filtros</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Propagação do resultado para documento e registros</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Recorte por múltiplos períodos</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Apuração IBS/CBS</span><span class="chip teal">M0</span><span class="mod-count">M0 5 · M1 2 · 7 no total</span></div>
+<div class="mod-note">A apuração é onde o crédito vira número exigível. Entra o ciclo calcular–concluir–reabrir.</div>
+<ul class="mod-list">
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Resumo por tributo na competência</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Posição detalhada de créditos e débitos</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Cálculo da competência</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Conclusão e reabertura da apuração</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Abas Resumo, Créditos e Débitos</span></li>
+<li class="is-m0"><span class="fx"><span class="chip teal">M0</span></span><span class="nm">Navegação entre competências</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Exportação da apuração</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Assistente Tributário</span><span class="mod-count">M2 4 · 4 no total</span></div>
+<div class="mod-note">Depende de base legal indexada e de confiança que um piloto ainda não tem.</div>
+<ul class="mod-list">
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Chat livre sobre a legislação</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Diagnóstico guiado por árvore de decisão</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Fontes indexadas com link para a norma</span></li>
+<li class=""><span class="fx"><span class="chip ref">M2</span></span><span class="nm">Histórico de conversas</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Automações</span><span class="mod-count">M1 11 · 11 no total</span></div>
+<div class="mod-note">Automação pressupõe operação estável. Antes disso, automatiza-se o erro.</div>
+<ul class="mod-list">
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Relatórios agendados por módulo</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Ativação, edição e exclusão de agendamento</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Integração ITSM por evento</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Mapeamento dos campos do chamado</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Histórico de chamados abertos</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Régua de cobrança pré-vencimento</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Régua de cobrança pós-vencimento</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Etapas da régua com canal e condição</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Template de mensagem com variáveis</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Disparos por fornecedor e etapa</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Auditoria da régua com motivo</span></li>
+</ul></div>
+<div class="mod">
+<div class="mod-hdr"><span class="mod-name">Usuários e Acessos</span><span class="mod-count">M1 5 · 5 no total</span></div>
+<div class="mod-note">Multiusuário é consequência de adoção. O piloto começa com um time pequeno e conhecido.</div>
+<ul class="mod-list">
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Listagem de membros da organização</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Perfis de acesso</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Convite de usuário</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Revogação e reativação de acesso</span></li>
+<li class=""><span class="fx"><span class="chip info">M1</span></span><span class="nm">Abas por situação do acesso</span></li>
+</ul></div>
+</div>
+<div class="section">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Os dois cortes que doem</span></div>
+<div class="two-col">
+<div class="info-card"><div class="info-card-title">Execução RAD — 4 de 15 no M0</div><ul><li>É o módulo mais completo do protótipo e o que menos prova a tese.</li><li>Entram: a política de execução, a janela, os critérios de inclusão e a listagem com o lote ao vivo.</li><li>Ficam fora: orquestração por CNPJ, por contrato e por faixa de valor, as quatro bases de comparação, a simulação e os alertas de sobreposição.</li><li>Racional: o MVP precisa <strong>conseguir gerar a guia</strong>, não decidir com precisão quando gerá-la.</li></ul></div>
+<div class="info-card"><div class="info-card-title">Integrações — 0 de 16 no M0</div><ul><li>No MVP, o comprovante do ERP entra por <strong>upload manual</strong>.</li><li>É a premissa mais frágil desta proposta: depende de o piloto aceitar operar assim.</li><li>Se não aceitar, sobem seis funcionalidades para o M0 — conexões, credencial, escopos, log de entregas, comprovantes do ERP e teste de conexão.</li><li>Custo de subir: o MVP cresce ~8% e ganha uma dependência de calendário de terceiro.</li></ul></div>
+</div>
+<p class="sec-sub">O terceiro candidato é o <strong>Portal do Fornecedor</strong>. Ele é o que evita a cobrança por e-mail e, se o piloto tiver muitos fornecedores em método Fornecedor, seu valor no M0 é alto. Fica em M1 porque exige um segundo perfil de acesso funcionando de verdade — e hoje a troca de perfil é uma chave na sessão, não autenticação.</p>
+</div>
+<div class="section">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O que o MVP exige e não está no mapa</span></div>
+<p class="sec-sub">Isto não é priorização, é pré-requisito. Nenhuma das 71 funcionalidades do M0 sobrevive a um piloto sem estes cinco itens — e nenhum aparece no mapa, porque o mapa lista funcionalidades, não fundação.</p>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Pré-requisito</th><th>Situação hoje</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td><strong>Persistência</strong></td><td>Nada é salvo. A base inteira é seed em memória, regerada a cada carregamento; o recolhimento assumido só sobrevive porque é reaplicado por log de eventos. Um piloto com um único usuário real precisa de banco.</td></tr>
+<tr><td><strong>2</strong></td><td><strong>Autenticação</strong></td><td>A senha está no código e a iniciativa de escondê-la está pausada desde 11/09/2026. Perfis são uma chave de sessão, não controle de acesso.</td></tr>
+<tr><td><strong>3</strong></td><td><strong>Apuração Assistida</strong></td><td>A conciliação CAPUR depende da API do IBS, ainda <em>em construção</em> (MOC v1.00, jul/2026). O MVP precisa decidir entre arquivo diferencial manual ou esperar a API.</td></tr>
+<tr><td><strong>4</strong></td><td><strong>Motor de automações</strong></td><td>As réguas não têm execução: os disparos são fixos no código e a régua criada não persiste. Relevante para o M1, e a ação de RAD na régua depende disto.</td></tr>
+<tr><td><strong>5</strong></td><td><strong>Juros e multa</strong></td><td>Simulados por sorteio, por decisão de 11/09/2026. Num MVP que gera guia de verdade, o cálculo do art. 27, §§ 2º a 4º passa a ser obrigatório.</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="callout-title">Leitura de quem escreveu a proposta</div><p>Estes cinco pesam mais do que as 101 funcionalidades diferidas. Um MVP de 71 funcionalidades sobre fundação de protótipo <strong>não é um MVP</strong> — é a mesma demonstração com menos telas.</p></div>
+</div>
+<div class="section">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Decisões a aprovar</span></div>
+<div class="dec"><div class="dec-num">D1</div><div class="dec-body"><div class="dec-q">O critério é a cadeia do crédito, e não módulos inteiros?</div><div class="dec-r">Recomendação: <em>aprovar</em>. É o que permite cortar dentro de um módulo pronto sem perder a tese.</div></div></div>
+<div class="dec"><div class="dec-num">D2</div><div class="dec-body"><div class="dec-q">Execução RAD reduzida a 4 de 15 no M0?</div><div class="dec-r">Recomendação: <em>aprovar</em>. Se o piloto tiver volume alto de documentos por dia, revisar — a orquestração vira necessidade operacional, não conforto.</div></div></div>
+<div class="dec"><div class="dec-num">D3</div><div class="dec-body"><div class="dec-q">Integrações fora do M0, com comprovante por upload manual?</div><div class="dec-r">Recomendação: <em>aprovar</em>, salvo se o piloto exigir ERP desde o primeiro dia.</div></div></div>
+<div class="dec"><div class="dec-num">D4</div><div class="dec-body"><div class="dec-q">Portal do Fornecedor em M1?</div><div class="dec-r">Recomendação: <em>aprovar</em>, e revisar assim que a autenticação real existir.</div></div></div>
+<div class="dec"><div class="dec-num">D5</div><div class="dec-body"><div class="dec-q">Os cinco pré-requisitos entram como escopo do MVP, antes das funcionalidades?</div><div class="dec-r">Recomendação: <em>aprovar</em>. É a decisão que separa um MVP de uma demonstração.</div></div></div>
+<div class="callout ok"><div class="callout-title">Depois da aprovação</div><p>A faixa de cada funcionalidade passa a constar no próprio <strong>Mapa de Funcionalidades</strong>, ao lado do tipo — para que a priorização e o inventário não voltem a divergir, como aconteceu com os cinco módulos que ficaram fora do mapa até setembro de 2026.</p></div>
+</div>
+<div class="section">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">14/09/2026 — Primeira proposta, sobre o Mapa de Funcionalidades v2.1 (172 funcionalidades, 20 módulos). Quatro faixas, atribuição item a item, cinco pré-requisitos de fundação e cinco decisões em aberto.</div></div>
+</div>
+</div>
+</body>
+</html>
