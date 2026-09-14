@@ -50,8 +50,8 @@ FAIXAS = {
     10: ['M0','M2','M0','M0','M1'],
     11: ['M0']*12,
     12: ['M0','M0','M0','M0','M0','M0','M0','M0','M0','X','X','M0'],
-    13: ['M0','M1','M1','M1','M1','M1','M0','M0','M1','M1','M1','M0','M1','M1','M0'],
-    14: ['M0','M0','M0','M0','M0','M0','M1','M0','M0','M1','M1','M1','M0','M0','M0','M0'],
+    13: ['M0','M1','M1','M1','M1','M1','M0','M0','M1','M1','M1','M0','M1','M1','M1'],
+    14: ['M1']*16,
     15: ['M0','M0','M0','M0','M1','M0','M0','M1'],
     16: ['M0','M1','M0','M0','M0','M0','M1'],
     17: ['M2']*4,
@@ -74,8 +74,8 @@ NOTA = {
     10: u'Hierarquia e filtro de grupo econômico atravessam todas as telas — sem eles, nenhum número fecha.',
     11: u'Sobe inteiro ao M0 por decisão de 14/09, com ordem de construção interna (P1, P2, P3) — ver seção 05. O acesso por convite e os dois papéis já estão implementados.',
     12: u'Login, perfis e o sistema de design, mais o selo de modo demonstração da troca de perfil. O SSO corporativo continua sendo a única funcionalidade do MVP que não existe em parte alguma.',
-    13: u'O corte mais duro: 5 de 15. O MVP precisa conseguir gerar a guia, não otimizar quando gerá-la. O vínculo com a conexão de destino sobe junto com a API.',
-    14: u'Sobe ao M0 por decisão de 14/09: 12 de 16, servindo três dos seis contextos da API — ver seção 06. Ficam em M1 a rotação de credencial e a observabilidade.',
+    13: u'O corte mais duro: 4 de 15. O MVP precisa conseguir gerar a guia, não otimizar quando gerá-la. O vínculo com a conexão de destino volta ao M1: sem tela de conexões, não há o que vincular.',
+    14: u'<strong>Nenhuma</strong> das 16 no M0, por revisão de 14/09: no primeiro momento a configuração é por variável de ambiente, e não por tela. As quatro integrações externas a desenvolver seguem em M0 — ver seção 06.',
     15: u'A prova de que o recolhimento aconteceu. Sem conciliação, o crédito é uma afirmação sem lastro.',
     16: u'A apuração é onde o crédito vira número exigível. Entra o ciclo calcular–concluir–reabrir.',
     17: u'Depende de base legal indexada e de confiança que um piloto ainda não tem.',
@@ -98,6 +98,20 @@ PRIO_NOTA = {
 
 # funcionalidades que NAO existem no produto e entram na priorizacao mesmo assim
 NOVAS = {
+    14: [
+        (u'Integração com a Receita Federal — CBS', 'c', 'M0', 'P1',
+         u'Apuração assistida da CBS na Plataforma da RFB: autenticação, solicitação e retirada do resultado '
+         u'apurado por período. É a metade federal do confronto que hoje a conciliação simula.'),
+        (u'Integração com o Comitê Gestor — IBS', 'c', 'M0', 'P1',
+         u'Apuração assistida do IBS no CG-IBS: credencial própria, recebimento por webhook e arquivo diferencial, '
+         u'com a conta corrente fiscal por operação. É a outra metade do confronto.'),
+        (u'Integração RAD', 'a', 'M0', 'P1',
+         u'Geração e liquidação da guia de recolhimento pelo adquirente junto ao órgão arrecadador, com retorno do '
+         u'pagamento. Hoje a guia é produzida dentro do produto e o comprovante volta à mão.'),
+        (u'Integração Databricks para comprovantes', 'c', 'M0', 'P2',
+         u'Ingestão de comprovantes de recolhimento a partir do lakehouse do cliente, em vez de upload arquivo a '
+         u'arquivo. É o que alimenta a conciliação financeira em volume.'),
+    ],
     12: [(u'Login via SSO corporativo', 'a', 'M0', 'P1',
           u'Entrada pelo provedor de identidade da empresa (SAML 2.0 ou OIDC), com provisionamento e revogação '
           u'vindos de lá. Não existe no produto: hoje o acesso é uma senha no código.')],
@@ -209,7 +223,7 @@ A(u'<p class="subtitle">As %d funcionalidades do produto distribuídas em quatro
   u'a partir de um único critério: a cadeia mínima que faz um crédito nascer, ser garantido e ser apropriado.</p>' % DO_MAPA)
 
 A(u'<div class="meta-bar">'
-  u'<div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">v1.5</span></div>'
+  u'<div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">v1.7</span></div>'
   u'<div class="meta-pill"><span class="meta-label">Status</span><span class="chip ok">Aprovada · em implementação</span></div>'
   u'<div class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">Mapa de Funcionalidades v2.1</span></div>'
   u'<div class="meta-pill"><span class="meta-label">Escopo</span><span class="meta-val">%d do mapa + %d novas · 20 módulos</span></div>'
@@ -295,10 +309,14 @@ A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O que foi decidido, e o corte que resta</span></div>')
 A(u'<p class="sec-sub">Quatro decisões já foram tomadas em 14/09/2026 e estão refletidas na atribuição acima.</p>')
 A(u'<div class="table-wrap"><table><thead><tr><th>Decisão</th><th>Efeito no M0</th><th>O que vem junto</th></tr></thead><tbody>')
-A(u'<tr><td><strong>API em três contextos</strong></td><td>Ingestão de DFs, RAD ↔ ERP e garantia de crédito — '
-  u'12 de 16 funcionalidades de plataforma, mais ingestão por API, entrega ao ERP e vínculo da política com a conexão</td>'
+A(u'<tr><td><strong>API em três contextos</strong></td><td>Ingestão de DFs, RAD ↔ ERP e garantia de crédito, '
+  u'mais ingestão por API e entrega ao ERP</td>'
   u'<td>O comprovante deixa de depender de upload manual, e o prazo do piloto passa a incluir o calendário do time '
   u'de ERP do cliente</td></tr>')
+A(u'<tr><td><strong>Módulo de Integrações fora do M0</strong></td>'
+  u'<td>As 16 funcionalidades de gestão — catálogo, conexões, credenciais, escopos, log de entregas — vão para M1</td>'
+  u'<td>No primeiro momento a configuração é por <strong>variável de ambiente</strong>. O vínculo da política de '
+  u'execução com a conexão de destino volta ao M1 junto: sem tela de conexões, não há o que vincular</td></tr>')
 A(u'<tr><td><strong>Portal do Fornecedor</strong></td><td>10 funcionalidades, com ordem interna na seção 05</td>'
   u'<td>Primeira superfície do produto exposta a quem não é do time — e a razão da decisão sobre acesso externo</td></tr>')
 A(u'<tr><td><strong>SSO corporativo</strong></td><td>Funcionalidade nova, que não existe no produto</td>'
@@ -356,6 +374,14 @@ A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Dentro das Integrações</span></div>')
 A(u'<p class="sec-sub">A API tem seis contextos. A decisão de 14/09 coloca <strong>três</strong> no M0 — os que movem '
   u'documento, dinheiro e crédito. Os outros três são cadastro e notificação, e a tela dá conta deles no volume de um piloto.</p>')
+A(u'<div class="callout info"><div class="callout-title">Contexto é capacidade; módulo é tela</div>'
+  u'<p>Os três contextos do M0 dizem <strong>o que trafega</strong>. O módulo de Integrações — as 16 '
+  u'funcionalidades de catálogo, conexão, credencial, escopo e log — é <strong>como se administra isso pela '
+  u'interface</strong>, e ficou em M1: no primeiro momento a configuração é por variável de ambiente.</p>'
+  u'<p style="margin-top:8px">O que isso custa: sem tela, conexão nova exige deploy; a credencial é rotacionada por '
+  u'quem tem acesso ao ambiente; e o <em>log de entregas com inspeção de payload</em> — que estava no M0 justamente '
+  u'para a conversa com o time de ERP não virar troca de e-mails — sai junto. Depurar divergência no piloto passa a '
+  u'depender do log do servidor.</p></div>')
 A(u'<div class="table-wrap"><table><thead><tr><th>Faixa</th><th>Contexto</th><th>Direção</th><th>O que trafega</th></tr></thead><tbody>')
 for nome, dire, fx, desc in CONTEXTOS:
     A(u'<tr><td>%s</td><td><strong>%s</strong></td><td>%s</td><td>%s</td></tr>' % (chip(fx), nome, dire, desc))
@@ -364,6 +390,31 @@ A(u'<p class="sec-sub" style="margin-top:18px">As doze funcionalidades de plataf
   u'direções, assistente de nova conexão, emissão de credencial, exibição única do segredo, escopos, alcance por CNPJ, '
   u'exemplo da primeira chamada, log de entregas com payload, reenvio, comprovantes do ERP e teste de conexão — servem '
   u'os três contextos. Elas não se multiplicam por contexto: o que o M1 adiciona é escopo, não infraestrutura.</p>')
+A(u'<h3>6.1 As integrações externas, a desenvolver</h3>')
+A(u'<p>Os seis contextos acima são a API <em>do SplitHub</em> — como o ERP do cliente conversa com o produto. '
+  u'Falta o outro lado: como o produto conversa com quem está fora dele. Quatro integrações, nenhuma existente hoje, '
+  u'todas em <strong>M0</strong> por decisão de 14/09.</p>')
+A(u'<div class="table-wrap"><table><thead><tr><th>Faixa</th><th>Integração</th><th>Com quem</th>'
+  u'<th>O que destrava</th></tr></thead><tbody>')
+for nome, quem, o_que in [
+    (u'Receita Federal — CBS', u'Plataforma da RFB',
+     u'A apuração assistida da CBS. Sem ela, a conciliação CAPUR do lado federal continua sendo simulação.'),
+    (u'Comitê Gestor — IBS', u'CG-IBS',
+     u'A apuração assistida do IBS, com webhook, arquivo diferencial e a conta corrente fiscal por operação.'),
+    (u'RAD', u'Órgão arrecadador',
+     u'Gerar e liquidar a guia de verdade, com retorno do pagamento. Hoje a guia nasce dentro do produto e o comprovante volta à mão.'),
+    (u'Databricks', u'Lakehouse do cliente',
+     u'Comprovantes em volume, em vez de upload arquivo a arquivo. É o que faz a conciliação financeira escalar.'),
+]:
+    A(u'<tr><td>%s</td><td><strong>%s</strong></td><td>%s</td><td>%s</td></tr>' % (chip('M0'), nome, quem, o_que))
+A(u'</tbody></table></div>')
+A(u'<div class="callout red"><div class="callout-title">As duas primeiras mudam o que o produto pode afirmar</div>'
+  u'<p>Enquanto a apuração assistida não chega da Receita e do Comitê Gestor, a conciliação compara o que o '
+  u'SplitHub escriturou contra <strong>um resultado que ele mesmo gerou</strong>. O confronto só vira confronto '
+  u'quando a outra leitura vem de fora — e é o confronto que sustenta a garantia do crédito.</p>'
+  u'<p style="margin-top:8px">São também as duas que não dependem só do time: a API do IBS estava '
+  u'<em>em construção</em> na última publicação consultada. O M0 passa a ter uma data que ninguém aqui controla.</p></div>')
+
 A(u'<div class="callout warn"><div class="callout-title">A dependência que isto cria</div>'
   u'<p>Os três contextos do M0 são justamente os que precisam de alguém do outro lado: o ERP do cliente tem que enviar '
   u'documento, receber guia, devolver comprovante e consumir o evento de crédito. <strong>O prazo do MVP passa a incluir '
@@ -375,10 +426,15 @@ A(u'</div>')
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Decisões</span></div>')
 DEC = [
-    ('ok', u'D3 · API no M0, em três contextos',
-     u'<strong>Decidido em 14/09/2026.</strong> Ingestão de DFs, RAD ↔ ERP (guia e comprovantes) e garantia de crédito '
-     u'(ciclo de vida do evento). Fornecedores, contratos e automações ficam em M1. Integrações sobe com 12 de 16 '
-     u'funcionalidades de plataforma; acompanham a ingestão por API, a entrega ao ERP e o vínculo da política com a conexão.'),
+    ('ok', u'D3 · API no M0, em três contextos — <em>revista</em>',
+     u'<strong>Decidido em 14/09/2026, revisto no mesmo dia.</strong> Os três contextos continuam no M0: ingestão de '
+     u'DFs, RAD ↔ ERP e garantia de crédito. Mas o <strong>módulo de Integrações sai do M0</strong>: no primeiro '
+     u'momento a configuração é por variável de ambiente, e as 16 funcionalidades de gestão — catálogo, conexões, '
+     u'credenciais, escopos, rotação, log de entregas — ficam para o M1, junto com o vínculo da política com a conexão.'),
+    ('ok', u'D13 · As quatro integrações externas entram no M0',
+     u'<strong>Decidido em 14/09/2026.</strong> Receita Federal (CBS), Comitê Gestor (IBS), RAD e Databricks para '
+     u'comprovantes. Nenhuma existe hoje. As duas primeiras são o que transforma a conciliação em confronto de '
+     u'verdade — e trazem ao MVP uma data que o time não controla.'),
     ('ok', u'D4 · Portal do Fornecedor no M0',
      u'<strong>Decidido em 14/09/2026.</strong> Entra inteiro, com ordem de construção P1/P2/P3 na seção 05.'),
     ('ok', u'D6 · SSO corporativo no M0',
@@ -418,6 +474,16 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v1.7</div><div class="ver-desc">'
+  u'14/09/2026 — <strong>O módulo de Integrações sai do M0</strong>: no primeiro momento a configuração é por '
+  u'variável de ambiente, e as 16 funcionalidades de gestão vão para M1, junto com o vínculo da política de execução '
+  u'com a conexão de destino. Os três contextos da API e as quatro integrações externas <em>permanecem</em> no M0 — '
+  u'contexto é capacidade, módulo é tela. M0 passa de 113 para %d.</div></div>' % tot['M0'])
+A(u'<div class="ver-row"><div class="ver-num">v1.6</div><div class="ver-desc">'
+  u'14/09/2026 — Entram quatro <strong>integrações externas a desenvolver</strong>, todas em M0: Receita Federal '
+  u'(CBS), Comitê Gestor (IBS), RAD e Databricks para comprovantes. Nenhuma existe hoje. As duas primeiras são o '
+  u'que transforma a conciliação em confronto de verdade — e trazem ao MVP uma data que o time não controla. '
+  u'M0 passa de 109 para %d; as funcionalidades fora do mapa, de 1 para %d.</div></div>' % (tot['M0'], NOVAS_N))
 A(u'<div class="ver-row"><div class="ver-num">v1.5</div><div class="ver-desc">'
   u'14/09/2026 — O acesso do fornecedor por convite e a importação em massa por CSV foram <strong>implementados</strong>. '
   u'As onze funcionalidades deixam de ser previsão e entram no mapa, que vai de 172 para 183. '
