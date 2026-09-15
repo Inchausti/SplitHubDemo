@@ -19,6 +19,11 @@ import re
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
+XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
+
+VERSAO = u'v2.0'
+DATA = u'15/09/2026'
+BASE_MAPA = u'Mapa de Funcionalidades v2.1'
 
 
 def carregar_mapa():
@@ -33,7 +38,19 @@ def carregar_mapa():
     return out
 
 
+def carregar_grupos():
+    """Le GROUPS do mapa: {indice do modulo: nome do grupo}."""
+    s = io.open(BASE + 'mapa-funcionalidades.html', encoding='utf-8').read()
+    bloco = s[s.index('var GROUPS'):s.index('var MODS')]
+    out = {}
+    for nome, mods in re.findall(r"num:'([^']+)'.*?mods:\[([\d,\s]+)\]", bloco, re.S):
+        for m in mods.split(','):
+            out[int(m)] = nome
+    return out
+
+
 MODS = carregar_mapa()
+GRUPO_DE = carregar_grupos()
 
 # faixa por modulo: lista com a faixa de cada funcionalidade, na ordem do mapa
 FAIXAS = {
@@ -216,6 +233,17 @@ EXTRA = u"""
 .mod-list .nm { min-width: 0; overflow-wrap: anywhere; }
 .mod-list li.is-m0 .nm { color: var(--txt1); font-weight: 600; }
 
+/* ── Download da planilha ── */
+.dl-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: var(--sur); background: var(--teal); border-radius: 20px; padding: 5px 13px; text-decoration: none; white-space: nowrap; }
+.dl-pill:hover { filter: brightness(1.08); }
+.dl-card { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; background: var(--sur); border: 1px solid var(--teal); border-radius: 10px; padding: 18px; margin: 18px 0 4px; box-shadow: var(--shadow-sm); }
+.dl-card .dl-body { flex: 1 1 320px; min-width: 0; }
+.dl-card .dl-title { font-size: 13.5px; font-weight: 700; color: var(--txt1); margin-bottom: 5px; }
+.dl-card .dl-desc { font-size: 12.5px; color: var(--txt2); }
+.dl-big { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--sur); background: var(--teal); border-radius: 8px; padding: 11px 20px; text-decoration: none; white-space: nowrap; }
+.dl-big:hover { filter: brightness(1.08); }
+.dl-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 0; margin-top: 12px; }
+
 /* ── Decisão ── */
 .dec { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--brd); align-items: flex-start; }
 .dec:last-child { border-bottom: none; }
@@ -239,12 +267,13 @@ A(u'<p class="subtitle">As %d funcionalidades do produto distribuídas em quatro
   u'a partir de um único critério: a cadeia mínima que faz um crédito nascer, ser garantido e ser apropriado.</p>' % DO_MAPA)
 
 A(u'<div class="meta-bar">'
-  u'<div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">v1.9</span></div>'
+  u'<div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">%s</span></div>'
   u'<div class="meta-pill"><span class="meta-label">Status</span><span class="chip ok">Aprovada · em implementação</span></div>'
-  u'<div class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">Mapa de Funcionalidades v2.1</span></div>'
+  u'<div class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">%s</span></div>'
   u'<div class="meta-pill"><span class="meta-label">Escopo</span><span class="meta-val">%d do mapa + %d novas · 20 módulos</span></div>'
-  u'<div class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">14/09/2026</span></div>'
-  u'</div>' % (DO_MAPA, NOVAS_N))
+  u'<div class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">%s</span></div>'
+  u'<div class="meta-pill" style="margin-left:auto"><a class="dl-pill" href="%s" download>↓ Planilha de revisão</a></div>'
+  u'</div>' % (VERSAO, BASE_MAPA, DO_MAPA, NOVAS_N, DATA, XLSX))
 
 # 01 criterio
 A(u'<div class="section">')
@@ -318,6 +347,30 @@ for bi, nome, fs, f, c, p in por_mod:
         A(u'<li class="%s"><span class="fx">%s</span>%s<span class="nm">%s%s</span></li>'
           % ('is-m0' if fx == 'M0' else '', chip(fx), pr, n, nv))
     A(u'</ul></div>')
+
+# exportacao para revisao
+A(u'<div class="dl-card">'
+  u'<div class="dl-body">'
+  u'<div class="dl-title">Revisar esta lista numa planilha</div>'
+  u'<div class="dl-desc">A página é para ler; a planilha é para revisar. Cada uma das <strong>%d</strong> '
+  u'funcionalidades vira uma linha, com a faixa proposta ao lado de três colunas em branco — '
+  u'<em>faixa revisada</em>, <em>concorda?</em> e <em>comentário</em>. Sai da mesma execução que gera esta página, '
+  u'então nunca descreve uma priorização diferente da que está acima.</div>'
+  u'</div>'
+  u'<a class="dl-big" href="%s" download>↓ Baixar .xlsx</a>'
+  u'</div>' % (TOTAL, XLSX))
+A(u'<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Aba</th><th>O que traz</th></tr></thead><tbody>'
+  u'<tr><td><strong>Priorização</strong></td><td>Uma linha por funcionalidade: grupo, módulo, nome, tipo, origem '
+  u'(do mapa ou nova), faixa proposta e ordem de construção. Filtro em todas as colunas e cabeçalho fixo; '
+  u'as colunas de revisão têm lista de valores, para a resposta voltar padronizada</td></tr>'
+  u'<tr><td><strong>Resumo</strong></td><td>Os 20 módulos com a contagem por faixa e a justificativa do corte — '
+  u'a mesma que aparece acima, em texto puro</td></tr>'
+  u'<tr><td><strong>Como revisar</strong></td><td>O critério, as quatro faixas, o que escrever em cada coluna, e '
+  u'a ficha desta fotografia: versão, data e escopo</td></tr>'
+  u'</tbody></table></div>')
+A(u'<p class="sec-sub" style="margin-top:10px">A planilha é <strong>entrada</strong> da revisão, nunca fonte da '
+  u'verdade: o que voltar preenchido é aplicado em <code>tools/gerar-priorizacao.py</code>, que regenera a página '
+  u'e a própria planilha.</p>')
 A(u'</div>')
 
 # 04 cortes que doem
@@ -526,6 +579,11 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.0</div><div class="ver-desc">'
+  u'15/09/2026 — <strong>A priorização passa a ser exportável para revisão.</strong> A mesma execução que gera esta '
+  u'página grava <code>priorizacao-mvp.xlsx</code>: uma linha por funcionalidade, com a faixa proposta ao lado das '
+  u'colunas em branco que o revisor preenche, mais o resumo por módulo e as instruções. Nenhuma faixa mudou — o que '
+  u'muda é que revisar deixa de exigir transcrever a página à mão.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v1.9</div><div class="ver-desc">'
   u'14/09/2026 — <strong>Régua de cobrança entra no M0.</strong> Seis funcionalidades do módulo de Automações; '
   u'relatórios agendados e ITSM permanecem em M1. A decisão traz junto dois itens novos, ambos inexistentes: '
@@ -576,3 +634,24 @@ A(u'</div>\n</body>\n</html>\n')
 io.open(DEST, 'w', encoding='utf-8', newline='').write(head + u'\n'.join(B))
 print('gerado', DEST)
 print('M0=%d M1=%d M2=%d X=%d total=%d' % (tot['M0'], tot['M1'], tot['M2'], tot['X'], TOTAL))
+
+# ── planilha de revisao ────────────────────────────────────────────────────
+# A pagina e para ler; a planilha e para revisar. As duas saem da mesma fonte
+# na mesma execucao, para nao existir versao da priorizacao que so uma conheca.
+try:
+    import priorizacao_xlsx
+except ImportError:
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    try:
+        import priorizacao_xlsx
+    except ImportError as e:
+        priorizacao_xlsx = None
+        print('AVISO: planilha nao gerada (%s). Instale com: pip install openpyxl' % e)
+
+if priorizacao_xlsx:
+    n = priorizacao_xlsx.gerar(
+        BASE + XLSX, por_mod, NOTA, GRUPO_DE,
+        {'tot': tot, 'total': TOTAL, 'do_mapa': DO_MAPA, 'novas': NOVAS_N,
+         'mods': len(MODS), 'versao': VERSAO, 'data': DATA, 'base': BASE_MAPA})
+    print('gerado', BASE + XLSX, '-', n, 'linhas')
