@@ -21,7 +21,7 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.0'
+VERSAO = u'v2.1'
 DATA = u'15/09/2026'
 BASE_MAPA = u'Mapa de Funcionalidades v2.1'
 
@@ -76,28 +76,95 @@ FAIXAS = {
     19: ['M1','M1','M1','M1','M1','M0'],
 }
 
+# ── revisoes de faixa ──────────────────────────────────────────────────────
+# FAIXAS acima e a atribuicao original; aqui ficam as revisoes feitas depois,
+# por quem revisou. A faixa anterior nao e declarada: e lida de FAIXAS na hora
+# de aplicar, para o registro nunca divergir do que estava valendo.
+# (modulo, trecho do nome da funcionalidade, nova faixa)
+REVISOES = [
+    (u'Revisão de priorização', u'Toshio', u'15/09/2026', [
+        (u'Créditos IBS/CBS', u'Top 5 e Top 10 fornecedores', 'M0'),
+        (u'Pagamentos RAD', u'Gestão de colunas e exportação CSV', 'M1'),
+        (u'Pagamentos RAD', u'Aba Execução Programada', 'M0'),
+        (u'Inconsistências', u'Filtros multiselect por tipo e DF', 'M1'),
+        (u'Inconsistências', u'Atribuição de responsável', 'M0'),
+        (u'Inteligência', u'Score de risco por fornecedor', 'M0'),
+        (u'Inteligência', u'Critério: créditos em risco', 'M0'),
+        (u'Inteligência', u'badge verde', 'M0'),
+        (u'Inteligência', u'Ranking Top 5 Melhores e Top 5 Piores', 'M0'),
+        (u'Inteligência', u'Mapa de bolhas risco', 'M0'),
+        (u'Contratos', u'Modelo Split Payment', 'M2'),
+        (u'Fornecedores', u'Revogação com motivo e trilha', 'M1'),
+        (u'Fornecedores', u'Pré-visualização e relatório da importação', 'M1'),
+        (u'Portal Fornecedor', u'Envio de comprovante RAD/PIX', 'M0'),
+        (u'Execução RAD', u'Orquestração por CNPJ', 'M0'),
+        (u'Execução RAD', u'Orquestração por contrato', 'M0'),
+        (u'Execução RAD', u'Auditoria com diff campo a campo', 'M0'),
+        (u'Integrações', u'Catálogo dos seis contextos da API', 'M0'),
+        (u'Integrações', u'Comprovantes recebidos do ERP', 'M0'),
+        (u'Conciliação', u'Próxima ação sugerida por documento', 'M0'),
+        (u'Conciliação', u'Recorte por múltiplos períodos', 'M0'),
+        (u'Automações', u'Integração ITSM por evento', 'M2'),
+        (u'Usuários e Acessos', u'Painel de acessos externos', 'M0'),
+    ]),
+]
+
+
+def _norm(t):
+    import unicodedata
+    t = unicodedata.normalize('NFKD', t.lower())
+    t = u''.join(c for c in t if not unicodedata.combining(c))
+    return re.sub(r'[^a-z0-9]+', ' ', t).strip()
+
+
+def aplicar_revisoes():
+    """Aplica REVISOES sobre FAIXAS. Devolve (faixas, historico).
+
+    Falha quando o nome nao casa com exatamente uma funcionalidade do modulo:
+    nome que mudou no mapa tem de ser corrigido aqui, nao ignorado em silencio.
+    """
+    fx = {bi: list(v) for bi, v in FAIXAS.items()}
+    hist = []
+    for titulo, autor, data, itens in REVISOES:
+        for mod, trecho, para in itens:
+            alvo = [m for m in MODS if _norm(m[1]) == _norm(mod)]
+            assert len(alvo) == 1, (u'modulo da revisao nao resolvido', mod, len(alvo))
+            bi, nome, fs = alvo[0]
+            hits = [i for i, (n, _t) in enumerate(fs) if _norm(trecho) in _norm(n)]
+            assert len(hits) == 1, (u'funcionalidade da revisao nao resolvida', nome, trecho, len(hits))
+            i = hits[0]
+            de = fx[bi][i]
+            fx[bi][i] = para
+            hist.append({'bi': bi, 'i': i, 'modulo': nome, 'func': fs[i][0],
+                         'de': de, 'para': para, 'autor': autor, 'data': data, 'titulo': titulo})
+    return fx, hist
+
+
+FAIXAS_REV, REV_HIST = aplicar_revisoes()
+REV_INDEX = {(h['bi'], h['i']): h for h in REV_HIST}
+
 # justificativa do corte, por modulo
 NOTA = {
     0:  u'Só o que responde “onde está meu crédito hoje”. Forecast e cockpit dependem de série histórica que o piloto ainda não tem.',
-    1:  u'O módulo que a tese defende entra quase inteiro. Ficam fora os quatro gráficos analíticos — eles explicam o crédito, não o garantem.',
+    1:  u'O módulo que a tese defende entra quase inteiro: 11 de 14. Ficam fora três gráficos analíticos — eles explicam o crédito, não o garantem. O Top 5 e Top 10 de fornecedores subiu na revisão de 15/09: saber de quem cobrar primeiro é operação, não análise.',
     2:  u'Débito entra só para a apuração fechar. O produto se vende pelo crédito.',
-    3:  u'Entra a guia, o comprovante e o rastro dos três status. A entrega ao ERP passa ao M0 junto com a API. Fica fora o que depende de execução programada.',
-    4:  u'A inconsistência é o que impede o crédito de morrer em silêncio. Fica fora só o que distribui trabalho entre pessoas.',
+    3:  u'Entra a guia, o comprovante e o rastro dos três status. A entrega ao ERP passa ao M0 junto com a API. Na revisão de 15/09 a <strong>aba Execução Programada</strong> entrou e a gestão de colunas saiu: o piloto precisa ver o que está agendado, não configurar a própria grade.',
+    4:  u'A inconsistência é o que impede o crédito de morrer em silêncio. Na revisão de 15/09 a <strong>atribuição de responsável</strong> entrou — inconsistência sem dono não é tratada — e os filtros multiselect saíram.',
     5:  u'A porta de entrada inteira, inclusive por API: com a decisão de 14/09, o documento entra por arquivo ou por integração desde o primeiro dia.',
     6:  u'Projeção pressupõe base real acumulada. Não existe piloto que comece por aqui.',
-    7:  u'Score de fornecedor é argumento de renovação, não de adoção.',
-    8:  u'Os três métodos de pagamento são pré-requisito: sem saber quem recolhe, não há cadeia. O contrato como recorte de política acompanha Execução RAD.',
-    9:  u'Deixou de ser só cadastro: ganhou a gestão de acesso do fornecedor e a importação em massa, implementadas em 14/09. Score de conformidade e trilha de auditoria seguem depois.',
+    7:  u'<strong>Reclassificado em 15/09:</strong> 5 de 6 no M0. O score, o critério, o badge, o ranking e o mapa de bolhas deixam de ser argumento de renovação e passam a ser o que diz <em>de quem cobrar primeiro</em>. Só a evolução histórica do score fica para depois — ela exige série que o piloto ainda não tem.',
+    8:  u'Dois dos três métodos são pré-requisito: sem saber quem recolhe, não há cadeia. Na revisão de 15/09 o <strong>Split Payment</strong> foi para M2 — o piloto cobre RAD e Fornecedor. O contrato como recorte de política acompanha Execução RAD.',
+    9:  u'Deixou de ser só cadastro: ganhou a gestão de acesso do fornecedor e a importação em massa, implementadas em 14/09. Na revisão de 15/09 saíram a revogação com motivo e a pré-visualização da importação — são refinamentos do fluxo, não o fluxo. Score de conformidade e trilha de auditoria seguem depois.',
     10: u'Hierarquia e filtro de grupo econômico atravessam todas as telas — sem eles, nenhum número fecha.',
-    11: u'Recortado em 14/09: entram o painel inicial, a listagem dos documentos contra o comprador, os comprovantes de pagamento e o acesso por convite. O resto do portal — inclusive o que já está implementado — fica para depois. Ver seção 05.',
+    11: u'Recortado em 14/09 e ampliado em 15/09: entram o painel inicial, a listagem dos documentos contra o comprador, os comprovantes de pagamento, o acesso por convite e — pela revisão — o <strong>envio de comprovante RAD/PIX</strong>. O fornecedor deixa de só se informar e passa a responder. Ver seção 06.',
     12: u'Login, perfis e o sistema de design, mais o selo de modo demonstração da troca de perfil. O SSO corporativo continua sendo a única funcionalidade do MVP que não existe em parte alguma.',
-    13: u'O corte mais duro: 4 de 15. O MVP precisa conseguir gerar a guia, não otimizar quando gerá-la. O vínculo com a conexão de destino volta ao M1: sem tela de conexões, não há o que vincular.',
-    14: u'<strong>Nenhuma</strong> das 16 no M0, por revisão de 14/09: no primeiro momento a configuração é por variável de ambiente, e não por tela. As quatro integrações externas a desenvolver seguem em M0 — ver seção 06.',
-    15: u'A prova de que o recolhimento aconteceu. Sem conciliação, o crédito é uma afirmação sem lastro.',
+    13: u'O corte mais duro, afrouxado em 15/09: de 4 para 7 de 15. Entram a orquestração por CNPJ, por contrato e a auditoria com diff campo a campo — decidir <em>de quem</em> gerar a guia passa a ser do MVP; decidir <em>quando</em>, por faixa de valor e base de comparação, continua fora.',
+    14: u'Duas das 16 no M0, pelas revisões de 14 e 15/09: o <strong>catálogo dos contextos</strong> e os <strong>comprovantes recebidos do ERP</strong>. O resto da gestão — conexões, credenciais, escopos, log — fica em M1, com a configuração por variável de ambiente. As quatro integrações externas a desenvolver seguem em M0 — ver seção 07.',
+    15: u'A prova de que o recolhimento aconteceu. Sem conciliação, o crédito é uma afirmação sem lastro. Com a revisão de 15/09 o módulo entra <strong>inteiro</strong>: a próxima ação sugerida e o recorte por múltiplos períodos completam o que faltava.',
     16: u'A apuração é onde o crédito vira número exigível. Entra o ciclo calcular–concluir–reabrir.',
     17: u'Depende de base legal indexada e de confiança que um piloto ainda não tem.',
-    18: u'A <strong>régua de cobrança</strong> entra no M0 por decisão de 14/09: cobrança não feita é crédito perdido. Relatórios agendados e ITSM ficam em M1 — esses automatizam trabalho, não protegem crédito.',
-    19: u'Multiusuário interno é consequência de adoção. A exceção é o painel de acessos externos, que entrou no M0 junto com o acesso do fornecedor.',
+    18: u'A <strong>régua de cobrança</strong> entra no M0 por decisão de 14/09: cobrança não feita é crédito perdido. Relatórios agendados ficam em M1 e a integração ITSM desceu a M2 em 15/09 — abrir chamado é rotina de time grande, não do piloto.',
+    19: u'Multiusuário interno é consequência de adoção. A exceção é o painel de acessos externos, que entrou no M0 junto com o acesso do fornecedor — e foi confirmado na revisão de 15/09.',
 }
 
 CORES = {'M0': 'teal', 'M1': 'info', 'M2': 'ref', 'X': 'warn'}
@@ -174,7 +241,7 @@ tot = {'M0': 0, 'M1': 0, 'M2': 0, 'X': 0}
 NOVAS_N = 0
 por_mod = []
 for bi, nome, fs in MODS:
-    f = list(FAIXAS[bi])
+    f = list(FAIXAS_REV[bi])
     assert len(f) == len(fs), (bi, nome, len(f), len(fs))
     fs = [(n, t, False) for (n, t) in fs]
     p = list(PRIO.get(bi, []))
@@ -189,6 +256,14 @@ for bi, nome, fs in MODS:
         c[x] += 1
         tot[x] += 1
     por_mod.append((bi, nome, fs, f, c, p))
+TOT_ORIG = {'M0': 0, 'M1': 0, 'M2': 0, 'X': 0}
+for bi in FAIXAS:
+    for x in FAIXAS[bi]:
+        TOT_ORIG[x] += 1
+for bi, itens in NOVAS.items():
+    for (_n, _t, fxn, _p, _d) in itens:
+        TOT_ORIG[fxn] += 1
+
 TOTAL = sum(tot.values())
 DO_MAPA = TOTAL - NOVAS_N
 
@@ -232,6 +307,15 @@ EXTRA = u"""
 .mod-list .pr { flex-shrink: 0; width: 24px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; color: var(--txt3); }
 .mod-list .nm { min-width: 0; overflow-wrap: anywhere; }
 .mod-list li.is-m0 .nm { color: var(--txt1); font-weight: 600; }
+
+/* ── Revisão de faixa ── */
+.rev-tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 1px 6px; margin-left: 6px; white-space: nowrap; vertical-align: 1px; }
+.rev-aut { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--txt2); background: var(--sur2); border: 1px solid var(--brd); border-radius: 20px; padding: 4px 12px; }
+.rev-aut b { color: var(--txt1); }
+.rev-de { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--txt3); }
+.rev-para { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+.sobe { color: var(--teal); }
+.desce { color: var(--purple); }
 
 /* ── Download da planilha ── */
 .dl-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: var(--sur); background: var(--teal); border-radius: 20px; padding: 5px 13px; text-decoration: none; white-space: nowrap; }
@@ -344,8 +428,14 @@ for bi, nome, fs, f, c, p in por_mod:
     for i, ((n, t, novo), fx) in enumerate(zip(fs, f)):
         pr = u'<span class="pr">%s</span>' % p[i] if p else u''
         nv = u' <span class="chip warn">Novo</span>' if novo else u''
-        A(u'<li class="%s"><span class="fx">%s</span>%s<span class="nm">%s%s</span></li>'
-          % ('is-m0' if fx == 'M0' else '', chip(fx), pr, n, nv))
+        h = REV_INDEX.get((bi, i))
+        rv = u''
+        if h and h['de'] != h['para']:
+            rv = (u' <span class="rev-tag" title="%s → %s · %s · %s">%s → %s</span>'
+                  % (h['de'], ROTULO[h['para']], h['autor'], h['data'],
+                     ROTULO[h['de']], ROTULO[h['para']]))
+        A(u'<li class="%s"><span class="fx">%s</span>%s<span class="nm">%s%s%s</span></li>'
+          % ('is-m0' if fx == 'M0' else '', chip(fx), pr, n, nv, rv))
     A(u'</ul></div>')
 
 # exportacao para revisao
@@ -373,9 +463,54 @@ A(u'<p class="sec-sub" style="margin-top:10px">A planilha é <strong>entrada</st
   u'e a própria planilha.</p>')
 A(u'</div>')
 
-# 04 cortes que doem
+# 04 revisoes de faixa
 A(u'<div class="section">')
-A(u'<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O que foi decidido, e o corte que resta</span></div>')
+A(u'<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Revisões de faixa</span></div>')
+A(u'<p class="sec-sub">A atribuição da seção 03 é a original. Toda mudança posterior fica registrada aqui — '
+  u'de onde saiu, para onde foi, por quem e quando —, e é aplicada pelo gerador sobre a atribuição original. '
+  u'Nenhuma faixa é reescrita em silêncio.</p>')
+for titulo, autor, data, _itens in REVISOES:
+    hs = [h for h in REV_HIST if h['autor'] == autor and h['data'] == data]
+    mudou = [h for h in hs if h['de'] != h['para']]
+    confirmou = [h for h in hs if h['de'] == h['para']]
+    entrou = len([h for h in mudou if h['para'] == 'M0'])
+    saiu = len([h for h in mudou if h['de'] == 'M0'])
+    A(u'<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0 10px">'
+      u'<span class="rev-aut">Revisto por <b>%s</b></span>'
+      u'<span class="rev-aut">%s</span>'
+      u'<span class="rev-aut">%s · %s</span>'
+      u'<span class="rev-aut">M0 <span class="rev-de">%d</span> → <span class="rev-para sobe">%d</span></span>'
+      u'</div>' % (autor, data,
+                   u'%d mudança%s' % (len(mudou), u's' if len(mudou) != 1 else u''),
+                   u'%d confirmação%s' % (len(confirmou), u'ões' if len(confirmou) != 1 else u''),
+                   TOT_ORIG['M0'], tot['M0']))
+    A(u'<div class="table-wrap"><table><thead><tr><th>Módulo</th><th>Funcionalidade</th><th>De</th><th>Para</th>'
+      u'<th>Revisor</th></tr></thead><tbody>')
+    for h in hs:
+        if h['de'] == h['para']:
+            mov = u'<span class="rev-para" style="color:var(--txt3)">mantida</span>'
+        else:
+            sobe = ('M0', 'M1', 'M2', 'X').index(h['para']) < ('M0', 'M1', 'M2', 'X').index(h['de'])
+            mov = u'<span class="rev-para %s">%s</span>' % ('sobe' if sobe else 'desce', ROTULO[h['para']])
+        A(u'<tr><td>%s</td><td>%s</td><td><span class="rev-de">%s</span></td><td>%s</td><td>%s · %s</td></tr>'
+          % (h['modulo'], h['func'], ROTULO[h['de']], mov, h['autor'], h['data']))
+    A(u'</tbody></table></div>')
+    A(u'<p class="sec-sub" style="margin-top:10px">Saldo da revisão: <strong>%d</strong> funcionalidades entraram no '
+      u'M0 e <strong>%d</strong> saíram. O MVP passa de %d para <strong>%d</strong> funcionalidades — '
+      u'%d%% do produto.</p>' % (entrou, saiu, TOT_ORIG['M0'], tot['M0'], pct(tot['M0'])))
+A(u'<div class="callout warn"><div class="callout-title">O que esta revisão muda no critério</div>'
+  u'<p>O corte original dizia que <strong>Inteligência explica o crédito e não o garante</strong>, e por isso ficava '
+  u'fora. Com o score de risco, o ranking e o mapa de bolhas no M0, o MVP passa a incluir a leitura de risco por '
+  u'fornecedor — que é o que diz <em>de quem cobrar primeiro</em>. É uma extensão legítima do critério, e vale '
+  u'registrá-la: não é mais só a cadeia mínima, é a cadeia mínima <strong>mais a priorização da cobrança</strong>.</p>'
+  u'<p style="margin-top:8px">Na direção contrária, <strong>Split Payment</strong> sai do M0 e vai para M2: dos três '
+  u'métodos de recolhimento, o piloto passa a cobrir RAD e Fornecedor. É a mudança de maior efeito sobre a seção 01 — '
+  u'a cadeia deixa de conhecer os três métodos desde o primeiro dia.</p></div>')
+A(u'</div>')
+
+# 05 cortes que doem
+A(u'<div class="section">')
+A(u'<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O que foi decidido, e o corte que resta</span></div>')
 A(u'<p class="sec-sub">Quatro decisões já foram tomadas em 14/09/2026 e estão refletidas na atribuição acima.</p>')
 A(u'<div class="table-wrap"><table><thead><tr><th>Decisão</th><th>Efeito no M0</th><th>O que vem junto</th></tr></thead><tbody>')
 A(u'<tr><td><strong>API em três contextos</strong></td><td>Ingestão de DFs, RAD ↔ ERP e garantia de crédito, '
@@ -383,14 +518,13 @@ A(u'<tr><td><strong>API em três contextos</strong></td><td>Ingestão de DFs, RA
   u'<td>O comprovante deixa de depender de upload manual, e o prazo do piloto passa a incluir o calendário do time '
   u'de ERP do cliente</td></tr>')
 A(u'<tr><td><strong>Módulo de Integrações fora do M0</strong></td>'
-  u'<td>As 16 funcionalidades de gestão — catálogo, conexões, credenciais, escopos, log de entregas — vão para M1</td>'
+  u'<td>Catorze das 16 funcionalidades de gestão — conexões, credenciais, escopos, log de entregas — vão para M1. O catálogo dos contextos e os comprovantes recebidos do ERP voltaram ao M0 em 15/09</td>'
   u'<td>No primeiro momento a configuração é por <strong>variável de ambiente</strong>. O vínculo da política de '
   u'execução com a conexão de destino volta ao M1 junto: sem tela de conexões, não há o que vincular</td></tr>')
 A(u'<tr><td><strong>Portal do Fornecedor — <em>recortado</em></strong></td>'
   u'<td>Quatro entregas: acesso por convite, painel inicial, listagem dos documentos contra o comprador e '
-  u'comprovantes de pagamento. As outras oito vão para M1 — ver seção 05</td>'
-  u'<td>Primeira superfície do produto exposta a quem não é do time. No MVP o fornecedor <em>se informa</em>; '
-  u'agir pelo portal — comprovante, contestação, chat — fica para depois</td></tr>')
+  u'comprovantes de pagamento. As outras oito vão para M1 — ver seção 06</td>'
+  u'<td>Primeira superfície do produto exposta a quem não é do time. Com a revisão de 15/09 o fornecedor também <em>responde</em>: o envio de comprovante RAD/PIX entrou. Contestação e chat seguem para depois</td></tr>')
 A(u'<tr><td><strong>SSO corporativo</strong></td><td>Funcionalidade nova, que não existe no produto</td>'
   u'<td>Substitui a senha de acesso hoje escrita no código, e encerra a iniciativa pausada em 11/09</td></tr>')
 A(u'<tr><td><strong>Fornecedor entra por convite</strong></td><td>Segunda funcionalidade nova, no núcleo do portal</td>'
@@ -402,23 +536,24 @@ A(u'<div class="callout warn"><div class="callout-title">A decisão da régua é
   u'<strong>envio de e-mail</strong> — duas peças que o produto nunca teve, e que nenhum outro item do MVP obriga a '
   u'construir. Em compensação, o e-mail resolve junto o convite do fornecedor, hoje simulado na tela.</p></div>')
 A(u'<p class="sec-sub" style="margin-top:22px">Com elas resolvidas, resta <strong>um</strong> corte duro:</p>')
-A(u'<div class="info-card"><div class="info-card-title">Execução RAD — 5 de 15 no M0</div><ul>'
+A(u'<div class="info-card"><div class="info-card-title">Execução RAD — 7 de 15 no M0, depois da revisão de 15/09</div><ul>'
   u'<li>É o módulo mais completo do protótipo e o que menos prova a tese.</li>'
-  u'<li>Entram: a política de execução, a janela, os critérios de inclusão, a listagem com o lote ao vivo e o vínculo '
-  u'com a conexão de destino.</li>'
-  u'<li>Ficam fora: orquestração por CNPJ, por contrato e por faixa de valor, as quatro bases de comparação, '
-  u'a simulação e os alertas de sobreposição.</li>'
-  u'<li>Racional: o MVP precisa <strong>conseguir gerar a guia</strong>, não decidir com precisão quando gerá-la.</li>'
+  u'<li>Entram: a política de execução, a janela, os critérios de inclusão, a listagem com o lote ao vivo, e — pela '
+  u'revisão de 15/09 — a orquestração por CNPJ, a orquestração por contrato e a auditoria com diff campo a campo.</li>'
+  u'<li>Ficam fora: a orquestração por faixa de valor, as quatro bases de comparação, a simulação e os alertas '
+  u'de sobreposição.</li>'
+  u'<li>Racional revisto: o MVP precisa saber <strong>de quem</strong> gerar a guia — por isso a orquestração por '
+  u'CNPJ e por contrato subiu. Decidir <em>quando</em>, com precisão, continua fora.</li>'
   u'<li>Revisar se o piloto tiver volume alto de documentos por dia — aí a orquestração vira necessidade operacional.</li>'
   u'</ul></div>')
 A(u'</div>')
 
 # 05 portal
 A(u'<div class="section">')
-A(u'<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Dentro do Portal do Fornecedor</span></div>')
+A(u'<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Dentro do Portal do Fornecedor</span></div>')
 A(u'<p class="sec-sub">O portal entrou inteiro no M0 em 14/09 e foi <strong>recortado no mesmo dia</strong>. '
-  u'O MVP entrega o mínimo para o fornecedor se informar sozinho: saber o que deve, ver os documentos contra o '
-  u'comprador e ter os comprovantes de pagamento à mão. O resto — inclusive o que já está implementado — espera.</p>')
+  u'O MVP entrega o mínimo para o fornecedor se virar sozinho: saber o que deve, ver os documentos contra o '
+  u'comprador, ter os comprovantes à mão e — pela revisão de 15/09 — enviar o próprio comprovante. O resto espera.</p>')
 
 _, pnome, pfs, pf, pc, pp = por_mod[11]
 _m0 = [(n, nv) for ((n, t, nv), fx) in zip(pfs, pf) if fx == 'M0']
@@ -428,8 +563,8 @@ A(u'<div class="mod">')
 A(u'<div class="mod-hdr"><span class="mod-name">O que entra no MVP</span>%s'
   u'<span class="mod-count">%d de %d</span></div>' % (chip('M0'), len(_m0), len(pfs)))
 A(u'<div class="mod-note">O fornecedor entra com credencial própria, abre um painel que responde “preciso fazer '
-  u'alguma coisa hoje?”, vê seus documentos contra o comprador e encontra ali o comprovante do que já foi '
-  u'recolhido. Nada mais.</div>')
+  u'alguma coisa hoje?”, vê seus documentos contra o comprador, encontra o comprovante do que já foi recolhido '
+  u'e envia o seu quando recolheu. É a única ação que o portal aceita no MVP.</div>')
 A(u'<ul class="mod-list">')
 for n, nv in _m0:
     A(u'<li class="is-m0"><span class="fx">%s</span><span class="nm">%s%s</span></li>'
@@ -439,9 +574,8 @@ A(u'</ul></div>')
 A(u'<div class="mod">')
 A(u'<div class="mod-hdr"><span class="mod-name">Adiado</span>%s'
   u'<span class="mod-count">%d de %d</span></div>' % (chip('M1'), len(_dep), len(pfs)))
-A(u'<div class="mod-note">Tudo o que faz o fornecedor <em>agir</em> pelo portal — enviar comprovante, contestar, '
-  u'conversar — e o que faz ele entender contexto: grupo econômico, contratos, score. Sem ação, os dois papéis '
-  u'deixam de ter o que distinguir, e por isso acompanham.</div>')
+A(u'O que faz o fornecedor <em>discutir</em> pelo portal — contestar, conversar — e o que faz ele entender '
+  u'contexto: grupo econômico, contratos, score. Enviar comprovante saiu desta lista em 15/09.</div>')
 A(u'<ul class="mod-list">')
 for n, nv in _dep:
     A(u'<li><span class="fx">%s</span><span class="nm">%s</span></li>' % (chip('M1'), n))
@@ -464,13 +598,15 @@ A(u'</div>')
 
 # 06 contextos da API
 A(u'<div class="section">')
-A(u'<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Dentro das Integrações</span></div>')
+A(u'<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Dentro das Integrações</span></div>')
 A(u'<p class="sec-sub">A API tem seis contextos. A decisão de 14/09 coloca <strong>três</strong> no M0 — os que movem '
   u'documento, dinheiro e crédito. Os outros três são cadastro e notificação, e a tela dá conta deles no volume de um piloto.</p>')
 A(u'<div class="callout info"><div class="callout-title">Contexto é capacidade; módulo é tela</div>'
   u'<p>Os três contextos do M0 dizem <strong>o que trafega</strong>. O módulo de Integrações — as 16 '
   u'funcionalidades de catálogo, conexão, credencial, escopo e log — é <strong>como se administra isso pela '
-  u'interface</strong>, e ficou em M1: no primeiro momento a configuração é por variável de ambiente.</p>'
+  u'interface</strong>, e ficou em M1, com a configuração por variável de ambiente. Duas voltaram ao M0 em '
+  u'15/09: o <em>catálogo dos contextos</em>, que é a documentação viva que o time de ERP consulta, e os '
+  u'<em>comprovantes recebidos do ERP</em>.</p>'
   u'<p style="margin-top:8px">O que isso custa: sem tela, conexão nova exige deploy; a credencial é rotacionada por '
   u'quem tem acesso ao ambiente; e o <em>log de entregas com inspeção de payload</em> — que estava no M0 justamente '
   u'para a conversa com o time de ERP não virar troca de e-mails — sai junto. Depurar divergência no piloto passa a '
@@ -479,10 +615,11 @@ A(u'<div class="table-wrap"><table><thead><tr><th>Faixa</th><th>Contexto</th><th
 for nome, dire, fx, desc in CONTEXTOS:
     A(u'<tr><td>%s</td><td><strong>%s</strong></td><td>%s</td><td>%s</td></tr>' % (chip(fx), nome, dire, desc))
 A(u'</tbody></table></div>')
-A(u'<p class="sec-sub" style="margin-top:18px">As doze funcionalidades de plataforma que sobem ao M0 — conexões nas duas '
-  u'direções, assistente de nova conexão, emissão de credencial, exibição única do segredo, escopos, alcance por CNPJ, '
-  u'exemplo da primeira chamada, log de entregas com payload, reenvio, comprovantes do ERP e teste de conexão — servem '
-  u'os três contextos. Elas não se multiplicam por contexto: o que o M1 adiciona é escopo, não infraestrutura.</p>')
+A(u'<p class="sec-sub" style="margin-top:18px">As funcionalidades de plataforma — conexões nas duas direções, '
+  u'assistente de nova conexão, emissão de credencial, exibição única do segredo, escopos, alcance por CNPJ, '
+  u'exemplo da primeira chamada, log de entregas com payload, reenvio e teste de conexão — servem os três '
+  u'contextos e ficam em M1. Elas não se multiplicam por contexto: o que o M1 adiciona é escopo, não '
+  u'infraestrutura.</p>')
 A(u'<h3>6.1 As integrações externas, a desenvolver</h3>')
 A(u'<p>Os seis contextos acima são a API <em>do SplitHub</em> — como o ERP do cliente conversa com o produto. '
   u'Falta o outro lado: como o produto conversa com quem está fora dele. Quatro integrações, nenhuma existente hoje, '
@@ -511,13 +648,14 @@ A(u'<div class="callout red"><div class="callout-title">As duas primeiras mudam 
 A(u'<div class="callout warn"><div class="callout-title">A dependência que isto cria</div>'
   u'<p>Os três contextos do M0 são justamente os que precisam de alguém do outro lado: o ERP do cliente tem que enviar '
   u'documento, receber guia, devolver comprovante e consumir o evento de crédito. <strong>O prazo do MVP passa a incluir '
-  u'o calendário de um time que não é o seu</strong> — e o log de entregas com inspeção de payload, no M0, existe '
-  u'exatamente para que a conversa com esse time não vire troca de e-mails.</p></div>')
+  u'o calendário de um time que não é o seu</strong> — e a ferramenta que tornaria essa conversa suportável, o '
+  u'log de entregas com inspeção de payload, está em M1. No MVP, depurar divergência depende do log do '
+  u'servidor.</p></div>')
 A(u'</div>')
 
 # 07 decisoes
 A(u'<div class="section">')
-A(u'<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Decisões</span></div>')
+A(u'<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Decisões</span></div>')
 DEC = [
     ('ok', u'D3 · API no M0, em três contextos — <em>revista</em>',
      u'<strong>Decidido em 14/09/2026, revisto no mesmo dia.</strong> Os três contextos continuam no M0: ingestão de '
@@ -578,7 +716,15 @@ A(u'</div>')
 
 # 07 historico
 A(u'<div class="section">')
-A(u'<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.1</div><div class="ver-desc">'
+  u'15/09/2026 — <strong>Revisão de faixa por Toshio:</strong> 22 mudanças e 1 confirmação, registradas uma a '
+  u'uma na seção 04, com a faixa anterior ao lado da nova. O M0 passa de 102 para %d. As entradas de maior '
+  u'efeito: <em>Inteligência</em> quase inteira (5 de 6), a orquestração de <em>Execução RAD</em> por CNPJ e por '
+  u'contrato, <em>Conciliação</em> completa, e o envio de comprovante pelo portal. A saída de maior efeito: '
+  u'<em>Split Payment</em> vai para M2, e o piloto passa a cobrir dois dos três métodos de recolhimento. '
+  u'O gerador passa a aplicar as revisões sobre a atribuição original em vez de reescrevê-la, para que a faixa '
+  u'anterior, o autor e a data sobrevivam à próxima revisão.</div></div>' % tot['M0'])
 A(u'<div class="ver-row"><div class="ver-num">v2.0</div><div class="ver-desc">'
   u'15/09/2026 — <strong>A priorização passa a ser exportável para revisão.</strong> A mesma execução que gera esta '
   u'página grava <code>priorizacao-mvp.xlsx</code>: uma linha por funcionalidade, com a faixa proposta ao lado das '
@@ -588,29 +734,29 @@ A(u'<div class="ver-row"><div class="ver-num">v1.9</div><div class="ver-desc">'
   u'14/09/2026 — <strong>Régua de cobrança entra no M0.</strong> Seis funcionalidades do módulo de Automações; '
   u'relatórios agendados e ITSM permanecem em M1. A decisão traz junto dois itens novos, ambos inexistentes: '
   u'o <em>motor de execução</em> — sem ele o módulo só desenha automações — e o <em>envio de e-mail transacional</em>, '
-  u'que passa a atender também o convite do fornecedor. M0 passa de 94 para %d.</div></div>' % tot['M0'])
+  u'que passa a atender também o convite do fornecedor. M0 passa de 94 para 102.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v1.8</div><div class="ver-desc">'
   u'14/09/2026 — <strong>Portal do Fornecedor recortado.</strong> O M0 fica com quatro entregas: acesso por convite, '
   u'<em>painel inicial</em> e <em>comprovantes de pagamento disponíveis ao fornecedor</em> — as duas novas, que não '
   u'existem hoje — e a listagem dos documentos contra o comprador. As outras oito vão para M1, inclusive o aviso de '
-  u'recolhimento assumido, cujo custo está declarado na seção 05. M0 passa de 100 para %d.</div></div>' % tot['M0'])
+  u'recolhimento assumido, cujo custo está declarado na seção 06. M0 passa de 100 para 94.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v1.7</div><div class="ver-desc">'
   u'14/09/2026 — <strong>O módulo de Integrações sai do M0</strong>: no primeiro momento a configuração é por '
   u'variável de ambiente, e as 16 funcionalidades de gestão vão para M1, junto com o vínculo da política de execução '
   u'com a conexão de destino. Os três contextos da API e as quatro integrações externas <em>permanecem</em> no M0 — '
-  u'contexto é capacidade, módulo é tela. M0 passa de 113 para %d.</div></div>' % tot['M0'])
+  u'contexto é capacidade, módulo é tela. M0 passa de 113 para 100.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v1.6</div><div class="ver-desc">'
   u'14/09/2026 — Entram quatro <strong>integrações externas a desenvolver</strong>, todas em M0: Receita Federal '
   u'(CBS), Comitê Gestor (IBS), RAD e Databricks para comprovantes. Nenhuma existe hoje. As duas primeiras são o '
   u'que transforma a conciliação em confronto de verdade — e trazem ao MVP uma data que o time não controla. '
-  u'M0 passa de 109 para %d; as funcionalidades fora do mapa, de 1 para %d.</div></div>' % (tot['M0'], NOVAS_N))
+  u'M0 passa de 109 para 113; as funcionalidades fora do mapa, de 1 para 5.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v1.5</div><div class="ver-desc">'
   u'14/09/2026 — O acesso do fornecedor por convite e a importação em massa por CSV foram <strong>implementados</strong>. '
   u'As onze funcionalidades deixam de ser previsão e entram no mapa, que vai de 172 para 183. '
-  u'M0 passa de 99 para %d; das funcionalidades fora do mapa resta apenas o SSO corporativo.</div></div>' % tot['M0'])
+  u'M0 passa de 99 para 109; das funcionalidades fora do mapa resta apenas o SSO corporativo.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v1.4</div><div class="ver-desc">'
   u'14/09/2026 — <strong>Proposta aprovada.</strong> D1 (o critério é a cadeia do crédito) e D2 (Execução RAD em 5 de 15) '
-  u'aprovadas, fechando as seis decisões da proposta. Escopo do MVP definido em %d funcionalidades.</div></div>' % tot['M0'])
+  u'aprovadas, fechando as seis decisões da proposta. Escopo do MVP definido em 99 funcionalidades.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v1.3</div><div class="ver-desc">'
   u'14/09/2026 — Removida a seção de pré-requisitos de fundação (persistência, autenticação, Apuração Assistida, '
   u'motor de automações e cálculo de juros e multa), e com ela a decisão D5, que existia só para aprová-los. '
@@ -618,12 +764,11 @@ A(u'<div class="ver-row"><div class="ver-num">v1.3</div><div class="ver-desc">'
 A(u'<div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc">'
   u'14/09/2026 — A API no M0 passa a ter escopo declarado: três dos seis contextos (ingestão de DFs, RAD ↔ ERP e '
   u'garantia de crédito). D7 decidida — o fornecedor entra por convite com senha própria, o que acrescenta a segunda '
-  u'funcionalidade nova. M0 em %d de %d.</div></div>' % (tot['M0'], TOTAL))
+  u'funcionalidade nova. M0 em 99 de 173.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc">'
   u'14/09/2026 — Três decisões tomadas: <strong>API</strong>, <strong>Portal do Fornecedor</strong> e <strong>SSO</strong> '
-  u'no M0. O MVP passa de 71 para %d funcionalidades. Acrescenta a ordem de construção interna do portal (P1/P2/P3), '
-  u'o SSO como funcionalidade nova fora do mapa, e a decisão D7 sobre o acesso do fornecedor externo.</div></div>'
-  % tot['M0'])
+  u'no M0. O MVP passa de 71 para 98 funcionalidades. Acrescenta a ordem de construção interna do portal (P1/P2/P3), '
+  u'o SSO como funcionalidade nova fora do mapa, e a decisão D7 sobre o acesso do fornecedor externo.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">'
   u'14/09/2026 — Primeira proposta, sobre o Mapa de Funcionalidades v2.1 (172 funcionalidades, 20 módulos). '
   u'Quatro faixas, atribuição item a item, cinco pré-requisitos de fundação e cinco decisões em aberto.</div></div>')
@@ -653,5 +798,6 @@ if priorizacao_xlsx:
     n = priorizacao_xlsx.gerar(
         BASE + XLSX, por_mod, NOTA, GRUPO_DE,
         {'tot': tot, 'total': TOTAL, 'do_mapa': DO_MAPA, 'novas': NOVAS_N,
-         'mods': len(MODS), 'versao': VERSAO, 'data': DATA, 'base': BASE_MAPA})
+         'mods': len(MODS), 'versao': VERSAO, 'data': DATA, 'base': BASE_MAPA},
+        REV_INDEX, REV_HIST)
     print('gerado', BASE + XLSX, '-', n, 'linhas')

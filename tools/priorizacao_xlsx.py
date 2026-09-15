@@ -27,10 +27,12 @@ TIPO = {'l': u'Listagem', 'a': u'Ação', 'r': u'Risco/Inc.',
 
 COLS = [
     (u'#', 6), (u'Grupo', 14), (u'Módulo', 22), (u'Funcionalidade', 58), (u'Tipo', 14),
-    (u'Origem', 10), (u'Faixa proposta', 14), (u'Prioridade', 11),
+    (u'Origem', 10), (u'Faixa atual', 12), (u'Faixa anterior', 13), (u'Revisto por', 18),
+    (u'Prioridade', 11),
     (u'Faixa revisada', 15), (u'Concorda?', 11), (u'Comentário do revisor', 52),
 ]
-REVISAO = (9, 10, 11)  # colunas que o revisor preenche
+FAIXA_COL = 7
+REVISAO = (11, 12, 13)  # colunas que o revisor preenche
 
 borda = Border(bottom=Side(style='thin', color=LINHA))
 
@@ -45,8 +47,10 @@ def _cabecalho(ws, cols):
     ws.row_dimensions[1].height = 26
 
 
-def gerar(dest, por_mod, nota, grupo_de, meta):
+def gerar(dest, por_mod, nota, grupo_de, meta, rev_index=None, rev_hist=None):
     """por_mod: [(bi, nome, [(func, tipo, nova)], [faixa], contagem, [prio])]"""
+    rev_index = rev_index or {}
+    rev_hist = rev_hist or []
     wb = Workbook()
 
     # ── aba 1: uma linha por funcionalidade ────────────────────────────────
@@ -61,21 +65,27 @@ def gerar(dest, por_mod, nota, grupo_de, meta):
             ln += 1
             n += 1
             pr = prios[i] if prios and i < len(prios) and prios[i] else u''
+            h = rev_index.get((bi, i))
+            anterior = ROTULO[h['de']] if h and h['de'] != h['para'] else u''
+            quem = u'%s · %s' % (h['autor'], h['data']) if h else u''
             valores = [n, grupo_de.get(bi, u''), nome, func, TIPO.get(tipo, tipo),
-                       u'Nova' if nova else u'Mapa', ROTULO[fx], pr, u'', u'', u'']
+                       u'Nova' if nova else u'Mapa', ROTULO[fx], anterior, quem, pr,
+                       u'', u'', u'']
             for j, v in enumerate(valores, 1):
                 c = ws.cell(row=ln, column=j, value=v)
                 c.font = Font(size=10)
                 c.border = borda
-                c.alignment = Alignment(vertical='top', wrap_text=(j in (4, 11)))
+                c.alignment = Alignment(vertical='top', wrap_text=(j in (4, 13)))
                 if j in REVISAO:
                     c.fill = PatternFill('solid', fgColor='FFFDF5')
-            f = ws.cell(row=ln, column=7)
+            f = ws.cell(row=ln, column=FAIXA_COL)
             f.font = Font(size=10, bold=True, color=COR_FAIXA[fx])
             f.fill = PatternFill('solid', fgColor=FUNDO_FAIXA[fx])
             f.alignment = Alignment(horizontal='center', vertical='top')
             if nova:
                 ws.cell(row=ln, column=6).font = Font(size=10, bold=True, color='B97A10')
+            if anterior:
+                ws.cell(row=ln, column=8).font = Font(size=10, bold=True, color='B97A10')
 
     ws.freeze_panes = 'D2'
     ws.auto_filter.ref = 'A1:%s%d' % (get_column_letter(len(COLS)), ln)
@@ -85,13 +95,13 @@ def gerar(dest, por_mod, nota, grupo_de, meta):
     dv_faixa.promptTitle = u'Faixa revisada'
     dv_faixa.prompt = u'Preencha apenas quando discordar da faixa proposta.'
     ws.add_data_validation(dv_faixa)
-    dv_faixa.add('I2:I%d' % ln)
+    dv_faixa.add('K2:K%d' % ln)
 
     dv_sn = DataValidation(type='list', formula1=u'"Sim,Não"', allow_blank=True)
     dv_sn.promptTitle = u'Concorda com a faixa proposta?'
     dv_sn.prompt = u'Deixe em branco o que ainda não revisou.'
     ws.add_data_validation(dv_sn)
-    dv_sn.add('J2:J%d' % ln)
+    dv_sn.add('L2:L%d' % ln)
 
     # ── aba 2: resumo por módulo ───────────────────────────────────────────
     r = wb.create_sheet(u'Resumo')
@@ -114,6 +124,33 @@ def gerar(dest, por_mod, nota, grupo_de, meta):
         r.cell(row=lr, column=j, value=meta['tot'][k]).font = Font(bold=True, size=10)
     r.cell(row=lr, column=7, value=meta['total']).font = Font(bold=True, size=10)
     r.freeze_panes = 'C2'
+
+    # ── aba 3: historico de revisoes ───────────────────────────────────────
+    if rev_hist:
+        h = wb.create_sheet(u'Revisões')
+        _cabecalho(h, [(u'Revisão', 24), (u'Revisor', 14), (u'Data', 12), (u'Módulo', 22),
+                       (u'Funcionalidade', 52), (u'De', 8), (u'Para', 8), (u'Movimento', 14)])
+        lh = 1
+        ordem = ('M0', 'M1', 'M2', 'X')
+        for it in rev_hist:
+            lh += 1
+            if it['de'] == it['para']:
+                mov, cor = u'mantida', CINZA
+            elif ordem.index(it['para']) < ordem.index(it['de']):
+                mov, cor = u'antecipada', TEAL
+            else:
+                mov, cor = u'adiada', ROXO
+            vals = [it['titulo'], it['autor'], it['data'], it['modulo'], it['func'],
+                    ROTULO[it['de']], ROTULO[it['para']], mov]
+            for j, v in enumerate(vals, 1):
+                c = h.cell(row=lh, column=j, value=v)
+                c.font = Font(size=10)
+                c.border = borda
+                c.alignment = Alignment(vertical='top', wrap_text=(j == 5))
+            h.cell(row=lh, column=7).font = Font(size=10, bold=True, color=COR_FAIXA[it['para']])
+            h.cell(row=lh, column=8).font = Font(size=10, bold=True, color=cor)
+        h.freeze_panes = 'D2'
+        h.auto_filter.ref = 'A1:H%d' % lh
 
     # ── aba 3: como revisar ────────────────────────────────────────────────
     g = wb.create_sheet(u'Como revisar')
@@ -157,6 +194,8 @@ def gerar(dest, por_mod, nota, grupo_de, meta):
         (u'Origem', u'"Mapa" está no Mapa de Funcionalidades. "Nova" ainda não existe no produto e entra na '
                     u'priorização mesmo assim.'),
         (u'Prioridade', u'Ordem de construção dentro do M0, onde o módulo é grande demais para entrar de uma vez.'),
+        (u'Faixa anterior', u'Preenchida quando a faixa já foi revisada uma vez. A coluna ao lado diz quem revisou e '
+                            u'quando; o registro completo está na aba Revisões.'),
     ])
     lg = bloco(lg, u'Depois de revisar', [
         (u'', u'Devolva a planilha preenchida. As faixas revisadas voltam para tools/gerar-priorizacao.py, '
@@ -174,7 +213,7 @@ def gerar(dest, por_mod, nota, grupo_de, meta):
                                  % (meta['tot']['M0'], meta['tot']['M1'], meta['tot']['M2'], meta['tot']['X'])),
     ])
 
-    for aba in (ws, r, g):
+    for aba in [x for x in wb.worksheets]:
         aba.sheet_view.showGridLines = False
 
     wb.save(dest)
