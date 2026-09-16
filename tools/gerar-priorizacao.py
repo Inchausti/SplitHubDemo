@@ -21,9 +21,12 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.2'
-DATA = u'15/09/2026'
+VERSAO = u'v2.3'
+DATA = u'16/09/2026'
 BASE_MAPA = u'Mapa de Funcionalidades v2.1'
+
+# a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
+URL_DOCS = 'https://split-hubhq.github.io/app/docs/'
 
 
 def carregar_mapa():
@@ -49,8 +52,79 @@ def carregar_grupos():
     return out
 
 
+def carregar_detalhe():
+    """Le o Mapa detalhado: {(modulo, i): {'n', 't', 'd', 'p'}}.
+
+    O detalhado e a fonte da descricao e do vinculo com o PRD. O resumido continua
+    sendo a fonte da lista; os dois precisam concordar item a item, e a geracao
+    falha quando nao concordam."""
+    s = io.open(BASE + 'mapa-funcionalidades-detalhado.html', encoding='utf-8').read()
+    pat = re.compile(r"\{n:'((?:[^'\\]|\\.)*)',\s*t:'(\w)'(?:,\s*d:'((?:[^'\\]|\\.)*)')?"
+                     r"(?:,\s*p:'((?:[^'\\]|\\.)*)')?\}")
+    out = {}
+    for bi, b in enumerate(re.split(r"/\* \d+ \*/ \{", s)[1:]):
+        for i, m in enumerate(pat.finditer(b)):
+            out[(bi, i)] = {'n': m.group(1).replace("\\'", "'"), 't': m.group(2),
+                            'd': (m.group(3) or '').replace("\\'", "'"), 'p': m.group(4)}
+    return out
+
+
 MODS = carregar_mapa()
 GRUPO_DE = carregar_grupos()
+DETALHE = carregar_detalhe()
+
+# o resumido e o detalhado precisam listar as mesmas funcionalidades, na mesma ordem
+for bi, nome, fs in MODS:
+    for i, (n, t) in enumerate(fs):
+        d = DETALHE.get((bi, i))
+        assert d and d['n'] == n, (u'mapa resumido e detalhado divergem', nome, i, n, d and d['n'])
+        assert d['d'], (u'funcionalidade sem descricao no mapa detalhado', nome, n)
+        assert d['p'], (u'funcionalidade sem vinculo com o PRD no mapa detalhado', nome, n)
+assert len(DETALHE) == sum(len(fs) for _, _, fs in MODS), u'o detalhado tem funcionalidade que o resumido nao tem'
+
+_PRD_CACHE = {}
+
+
+def prd_info(arq):
+    """Titulo, blocos F e secoes de um PRD, para montar e conferir o link."""
+    if arq not in _PRD_CACHE:
+        caminho = BASE + arq
+        assert os.path.exists(caminho), (u'PRD inexistente no vinculo', arq)
+        s = io.open(caminho, encoding='utf-8').read()
+        titulo = re.search(r'<title>PRD — ([^·<]+)', s)
+        blocos = {}
+        for m in re.finditer(r'<div class="feat" id="([^"]+)"[^>]*>\s*<div class="feat-hdr">\s*'
+                             r'<span class="feat-id">([^<]+)</span>\s*<span class="feat-name">(.*?)</span>', s, re.S):
+            blocos[m.group(1)] = (m.group(2).strip(), re.sub(r'<[^>]+>', '', m.group(3)).strip())
+        secoes = {m.group(1): re.sub(r'<[^>]+>', '', m.group(2)).strip()
+                  for m in re.finditer(r'id="(s\d+)".*?sec-title">([^<]+)', s, re.S)}
+        _PRD_CACHE[arq] = {'titulo': titulo.group(1).strip() if titulo else arq, 'blocos': blocos, 'secoes': secoes}
+    return _PRD_CACHE[arq]
+
+
+def resolver_vinculo(p):
+    """Interpreta o campo p do mapa. Link que nao leva a lugar nenhum derruba a geracao.
+
+    Devolve {'nivel', 'href', 'rotulo', 'fid', 'destino'}:
+      bloco   prd-x.html#f-04   secao   prd-x.html#s08   externo  https://...
+      lacuna  !prd-x.html       sem     -"""
+    if p == '-':
+        return {'nivel': 'sem', 'href': None, 'rotulo': u'Sem PRD', 'fid': u'', 'destino': u''}
+    if p.startswith('http'):
+        return {'nivel': 'externo', 'href': p, 'rotulo': u'PRD do módulo, publicado à parte', 'fid': u'', 'destino': u''}
+    if p.startswith('!'):
+        info = prd_info(p[1:])
+        return {'nivel': 'lacuna', 'href': p[1:], 'rotulo': u'Não descrita no PRD de ' + info['titulo'],
+                'fid': u'', 'destino': u''}
+    arq, anc = p.split('#', 1)
+    info = prd_info(arq)
+    if anc in info['blocos']:
+        fid, fnome = info['blocos'][anc]
+        return {'nivel': 'bloco', 'href': p, 'rotulo': u'PRD de ' + info['titulo'], 'fid': fid, 'destino': fnome}
+    if anc in info['secoes']:
+        return {'nivel': 'secao', 'href': p, 'rotulo': u'PRD de ' + info['titulo'],
+                'fid': u'Seção ' + anc[1:], 'destino': info['secoes'][anc]}
+    raise AssertionError((u'ancora inexistente no PRD', p))
 
 # faixa por modulo: lista com a faixa de cada funcionalidade, na ordem do mapa
 FAIXAS = {
@@ -217,6 +291,9 @@ NOVAS = {
           u'vindos de lá. Não existe no produto: hoje o acesso é uma senha no código.')],
 }
 
+# vinculo com o PRD das funcionalidades que ainda nao existem: nenhuma esta especificada
+NOVAS_PRD = {}
+
 # contextos da API (src/js/integracoes.js), com a faixa de cada um
 CONTEXTOS = [
     (u'Ingestão de documentos fiscais', u'entrada', 'M0',
@@ -240,12 +317,16 @@ CONTEXTOS = [
 tot = {'M0': 0, 'M1': 0, 'M2': 0, 'X': 0}
 NOVAS_N = 0
 por_mod = []
+INFO = {}   # (modulo, i) -> tipo, descricao e vinculo resolvido
+for (bi, i), d in DETALHE.items():
+    INFO[(bi, i)] = {'t': d['t'], 'd': d['d'], 'v': resolver_vinculo(d['p'])}
 for bi, nome, fs in MODS:
     f = list(FAIXAS_REV[bi])
     assert len(f) == len(fs), (bi, nome, len(f), len(fs))
     fs = [(n, t, False) for (n, t) in fs]
     p = list(PRIO.get(bi, []))
-    for (n, t, fx, pr, d) in NOVAS.get(bi, []):
+    for k, (n, t, fx, pr, d) in enumerate(NOVAS.get(bi, [])):
+        INFO[(bi, len(fs))] = {'t': t, 'd': d, 'v': resolver_vinculo(NOVAS_PRD.get(n, '-'))}
         fs.append((n, t, True))
         f.append(fx)
         if p:
@@ -270,6 +351,48 @@ DO_MAPA = TOTAL - NOVAS_N
 
 def pct(n):
     return int(round(100.0 * n / TOTAL))
+
+
+TIPO_ROTULO = {'l': u'Listagem', 'a': u'Ação', 'r': u'Risco/Inc.', 'g': u'Analítico', 'c': u'Configuração',
+               'p': u'Transversal'}
+
+
+def linha_expansivel(bi, i, n, novo, fx, pr=u''):
+    """D1/D2: a linha fechada e a de sempre; aberta, traz o porque e a historia da faixa."""
+    info = INFO[(bi, i)]
+    h = REV_INDEX.get((bi, i))
+    rv = u''
+    if h and h['de'] != h['para']:
+        rv = (u' <span class="rev-tag" title="%s → %s · %s · %s">%s → %s</span>'
+              % (ROTULO[h['de']], ROTULO[h['para']], h['autor'], h['data'], ROTULO[h['de']], ROTULO[h['para']]))
+    nv = u' <span class="chip warn">Novo</span>' if novo else u''
+    if h and h['de'] != h['para']:
+        faixa = u'%s → %s · %s · %s' % (ROTULO[h['de']], ROTULO[h['para']], h['autor'], h['data'])
+    elif h:
+        faixa = u'%s, confirmada · %s · %s' % (ROTULO[fx], h['autor'], h['data'])
+    else:
+        faixa = u'%s desde a proposta original' % ROTULO[fx]
+    meta = [u'<span><b>Tipo</b> %s</span>' % TIPO_ROTULO.get(info['t'], info['t']),
+            u'<span><b>Origem</b> %s</span>' % (u'Nova — ainda não existe no produto' if novo else u'Mapa'),
+            u'<span><b>Faixa</b> %s</span>' % faixa]
+    if pr:
+        meta.append(u'<span><b>Ordem de construção</b> %s</span>' % pr)
+    v = info['v']
+    if v['nivel'] in ('bloco', 'secao'):
+        lk = (u'<a class="prd-link" href="%s" target="_blank" rel="noopener">Descrição completa no %s '
+              u'<span class="fid">%s</span> %s ↗</a>' % (v['href'], v['rotulo'], v['fid'], v['destino']))
+    elif v['nivel'] == 'externo':
+        lk = u'<a class="prd-link" href="%s" target="_blank" rel="noopener">%s ↗</a>' % (v['href'], v['rotulo'])
+    elif v['nivel'] == 'lacuna':
+        lk = u'<span class="prd-sem">%s — <a href="%s" target="_blank" rel="noopener">abrir o PRD ↗</a></span>' % (
+            v['rotulo'], v['href'])
+    else:
+        lk = u'<span class="prd-sem">%s</span>' % (u'Sem PRD — ainda não especificada' if novo else u'Sem PRD')
+    prs = u'<span class="pr">%s</span>' % pr if pr else u''
+    return (u'<li><details class="fd%s"><summary><span class="chev" aria-hidden="true">▶</span>'
+            u'<span class="fx">%s</span>%s<span class="nm">%s%s%s</span></summary>'
+            u'<div class="fd-body"><div class="fd-desc">%s</div><div class="fd-meta">%s</div>%s</div></details></li>'
+            % (' is-m0' if fx == 'M0' else '', chip(fx), prs, n, nv, rv, info['d'], u''.join(meta), lk))
 
 
 def chip(faixa):
@@ -307,6 +430,36 @@ EXTRA = u"""
 .mod-list .pr { flex-shrink: 0; width: 24px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; color: var(--txt3); }
 .mod-list .nm { min-width: 0; overflow-wrap: anywhere; }
 .mod-list li.is-m0 .nm { color: var(--txt1); font-weight: 600; }
+
+/* ── Linha expansível ── */
+.fx-list { list-style: none; margin: 0; padding: 4px 18px 14px; }
+.fx-list > li { border-bottom: 1px solid var(--brd); }
+.fx-list > li:last-child { border-bottom: none; }
+.fd > summary { list-style: none; display: flex; gap: 10px; align-items: baseline; padding: 7px 0; cursor: pointer; font-size: 12.5px; color: var(--txt2); min-width: 0; }
+.fd > summary::-webkit-details-marker { display: none; }
+.fd > summary:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; border-radius: 4px; }
+.fd > summary .chev { flex-shrink: 0; width: 12px; color: var(--txt3); font-size: 10px; transition: transform .15s; }
+.fd[open] > summary .chev { transform: rotate(90deg); color: var(--teal); }
+.fd > summary .fx { flex-shrink: 0; width: 42px; }
+.fd > summary .pr { flex-shrink: 0; width: 24px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; color: var(--txt3); }
+.fd > summary .nm { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.fd.is-m0 > summary .nm { color: var(--txt1); font-weight: 600; }
+.fd > summary:hover .nm { color: var(--teal); }
+.fd-body { margin: 0 0 12px 64px; padding: 10px 14px; background: var(--sur2); border-left: 2px solid var(--teal); border-radius: 0 6px 6px 0; font-size: 12.5px; color: var(--txt2); }
+.fd-desc { color: var(--txt1); line-height: 1.55; }
+.fd-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; font-size: 11px; color: var(--txt3); }
+.fd-meta b { color: var(--txt2); font-weight: 600; }
+.prd-link { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin-top: 9px; font-size: 11.5px; font-weight: 600; color: var(--teal); text-decoration: none; border-bottom: 1px dotted var(--teal); }
+.prd-link:hover { border-bottom-style: solid; }
+.prd-link .fid { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; }
+.prd-sem { display: inline-block; margin-top: 9px; font-size: 11.5px; font-weight: 600; color: var(--amber); }
+.prd-sem a { color: var(--amber); }
+.mod-tools { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 18px 0; }
+.mini-btn { font-size: 11px; font-weight: 600; color: var(--teal); background: none; border: 1px solid var(--brd); border-radius: 20px; padding: 3px 11px; cursor: pointer; }
+.mini-btn:hover { border-color: var(--teal); }
+.mini-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+@media (max-width: 600px) { .fd-body { margin-left: 0; } }
+@media (prefers-reduced-motion: reduce) { .fd > summary .chev { transition: none; } }
 
 /* ── Revisão de faixa ── */
 .rev-tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 1px 6px; margin-left: 6px; white-space: nowrap; vertical-align: 1px; }
@@ -417,26 +570,25 @@ A(u'</div>')
 # 03 modulo a modulo
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Funcionalidade a funcionalidade</span></div>')
-A(u'<p class="sec-sub">Os 20 módulos na ordem do Mapa de Funcionalidades. Em destaque, o que entra no M0.</p>')
+A(u'<p class="sec-sub">Os 20 módulos na ordem do Mapa de Funcionalidades. Em destaque, o que entra no M0. '
+  u'Clique numa funcionalidade para ver o que ela faz, a história da faixa e o link para a descrição completa no PRD '
+  u'do módulo.</p>')
+A(u'<div class="mod-tools" style="padding:4px 0 0"><button class="mini-btn" type="button" data-expandir="sec03" data-abrir="1">'
+  u'Expandir todas as %d</button><button class="mini-btn" type="button" data-expandir="sec03" data-abrir="0">Recolher todas</button></div>' % TOTAL)
+A(u'<div id="sec03">')
 for bi, nome, fs, f, c, p in por_mod:
     resumo = u' · '.join(u'%s %d' % (ROTULO[k], c[k]) for k in ('M0', 'M1', 'M2', 'X') if c[k])
     A(u'<div class="mod">')
     A(u'<div class="mod-hdr"><span class="mod-name">%s</span>%s<span class="mod-count">%s · %d no total</span></div>'
       % (nome, chip('M0') if c['M0'] else u'', resumo, len(fs)))
     A(u'<div class="mod-note">%s</div>' % NOTA[bi])
-    A(u'<ul class="mod-list">')
+    A(u'<div class="mod-tools"><button class="mini-btn" type="button" data-expandir="mod-%d" data-abrir="1">Expandir todas</button>'
+      u'<button class="mini-btn" type="button" data-expandir="mod-%d" data-abrir="0">Recolher</button></div>' % (bi, bi))
+    A(u'<ul class="fx-list" id="mod-%d">' % bi)
     for i, ((n, t, novo), fx) in enumerate(zip(fs, f)):
-        pr = u'<span class="pr">%s</span>' % p[i] if p else u''
-        nv = u' <span class="chip warn">Novo</span>' if novo else u''
-        h = REV_INDEX.get((bi, i))
-        rv = u''
-        if h and h['de'] != h['para']:
-            rv = (u' <span class="rev-tag" title="%s → %s · %s · %s">%s → %s</span>'
-                  % (h['de'], ROTULO[h['para']], h['autor'], h['data'],
-                     ROTULO[h['de']], ROTULO[h['para']]))
-        A(u'<li class="%s"><span class="fx">%s</span>%s<span class="nm">%s%s%s</span></li>'
-          % ('is-m0' if fx == 'M0' else '', chip(fx), pr, n, nv, rv))
+        A(linha_expansivel(bi, i, n, novo, fx, p[i] if p and i < len(p) and p[i] else u''))
     A(u'</ul></div>')
+A(u'</div>')
 
 # exportacao para revisao
 A(u'<div class="dl-card">'
@@ -556,8 +708,8 @@ A(u'<p class="sec-sub">O portal entrou inteiro no M0 em 14/09 e foi <strong>reco
   u'comprador, ter os comprovantes à mão e — pela revisão de 15/09 — enviar o próprio comprovante. O resto espera.</p>')
 
 _, pnome, pfs, pf, pc, pp = por_mod[11]
-_m0 = [(n, nv) for ((n, t, nv), fx) in zip(pfs, pf) if fx == 'M0']
-_dep = [(n, nv) for ((n, t, nv), fx) in zip(pfs, pf) if fx != 'M0']
+_m0 = [(i, n, nv, fx) for i, ((n, t, nv), fx) in enumerate(zip(pfs, pf)) if fx == 'M0']
+_dep = [(i, n, nv, fx) for i, ((n, t, nv), fx) in enumerate(zip(pfs, pf)) if fx != 'M0']
 
 A(u'<div class="mod">')
 A(u'<div class="mod-hdr"><span class="mod-name">O que entra no MVP</span>%s'
@@ -565,20 +717,19 @@ A(u'<div class="mod-hdr"><span class="mod-name">O que entra no MVP</span>%s'
 A(u'<div class="mod-note">O fornecedor entra com credencial própria, abre um painel que responde “preciso fazer '
   u'alguma coisa hoje?”, vê seus documentos contra o comprador, encontra o comprovante do que já foi recolhido '
   u'e envia o seu quando recolheu. É a única ação que o portal aceita no MVP.</div>')
-A(u'<ul class="mod-list">')
-for n, nv in _m0:
-    A(u'<li class="is-m0"><span class="fx">%s</span><span class="nm">%s%s</span></li>'
-      % (chip('M0'), n, u' <span class="chip warn">Novo</span>' if nv else u''))
+A(u'<ul class="fx-list">')
+for i, n, nv, fx in _m0:
+    A(linha_expansivel(11, i, n, nv, fx))
 A(u'</ul></div>')
 
 A(u'<div class="mod">')
 A(u'<div class="mod-hdr"><span class="mod-name">Adiado</span>%s'
   u'<span class="mod-count">%d de %d</span></div>' % (chip('M1'), len(_dep), len(pfs)))
-A(u'O que faz o fornecedor <em>discutir</em> pelo portal — contestar, conversar — e o que faz ele entender '
+A(u'<div class="mod-note">O que faz o fornecedor <em>discutir</em> pelo portal — contestar, conversar — e o que faz ele entender '
   u'contexto: grupo econômico, contratos, score. Enviar comprovante saiu desta lista em 15/09.</div>')
-A(u'<ul class="mod-list">')
-for n, nv in _dep:
-    A(u'<li><span class="fx">%s</span><span class="nm">%s</span></li>' % (chip('M1'), n))
+A(u'<ul class="fx-list">')
+for i, n, nv, fx in _dep:
+    A(linha_expansivel(11, i, n, nv, fx))
 A(u'</ul></div>')
 
 A(u'<div class="callout red"><div class="callout-title">O que o recorte deixa de fora, e custa dinheiro</div>'
@@ -717,6 +868,12 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.3</div><div class="ver-desc">'
+  u'16/09/2026 — <strong>Cada funcionalidade abre a própria descrição.</strong> Clicar na linha mostra o que ela '
+  u'faz, o tipo, a origem, a história da faixa, a ordem de construção e o link para a descrição completa no PRD do '
+  u'módulo — com botões para expandir um módulo ou a página inteira. Os vínculos foram conferidos um a um no texto '
+  u'dos PRDs e ficam registrados no Mapa detalhado; o gerador falha se algum levar a uma âncora que não existe. '
+  u'Onde não há PRD, a linha diz <em>sem PRD</em>. A planilha ganha as colunas Descrição e PRD.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v2.2</div><div class="ver-desc">'
   u'15/09/2026 — Entra o <strong>aviso ao fornecedor do recolhimento</strong> (Pagamentos RAD), em <strong>M0</strong>: '
   u'paga a guia, o fornecedor recebe o comprovante e o recado que impede o pagamento em duplicidade. É a contrapartida '
@@ -779,7 +936,21 @@ A(u'<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">'
   u'Quatro faixas, atribuição item a item, cinco pré-requisitos de fundação e cinco decisões em aberto.</div></div>')
 A(u'</div>')
 
-A(u'</div>\n</body>\n</html>\n')
+A(u'''</div>
+<script>
+/* Expandir e recolher. As linhas abrem e fecham sem script; ele so move varias de uma vez. */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-expandir]');
+  if (!b) return;
+  var alvo = document.getElementById(b.getAttribute('data-expandir'));
+  if (!alvo) return;
+  var abrir = b.getAttribute('data-abrir') === '1';
+  alvo.querySelectorAll('details.fd').forEach(function (d) { d.open = abrir; });
+});
+</script>
+</body>
+</html>
+''')
 
 io.open(DEST, 'w', encoding='utf-8', newline='').write(head + u'\n'.join(B))
 print('gerado', DEST)
@@ -804,5 +975,5 @@ if priorizacao_xlsx:
         BASE + XLSX, por_mod, NOTA, GRUPO_DE,
         {'tot': tot, 'total': TOTAL, 'do_mapa': DO_MAPA, 'novas': NOVAS_N,
          'mods': len(MODS), 'versao': VERSAO, 'data': DATA, 'base': BASE_MAPA},
-        REV_INDEX, REV_HIST)
+        REV_INDEX, REV_HIST, INFO, URL_DOCS)
     print('gerado', BASE + XLSX, '-', n, 'linhas')

@@ -26,13 +26,16 @@ TIPO = {'l': u'Listagem', 'a': u'Ação', 'r': u'Risco/Inc.',
         'g': u'Analítico', 'c': u'Configuração', 'p': u'Transversal'}
 
 COLS = [
-    (u'#', 6), (u'Grupo', 14), (u'Módulo', 22), (u'Funcionalidade', 58), (u'Tipo', 14),
-    (u'Origem', 10), (u'Faixa atual', 12), (u'Faixa anterior', 13), (u'Revisto por', 18),
+    (u'#', 6), (u'Grupo', 14), (u'Módulo', 22), (u'Funcionalidade', 44), (u'Descrição', 70), (u'PRD', 40),
+    (u'Tipo', 14), (u'Origem', 10), (u'Faixa atual', 12), (u'Faixa anterior', 13), (u'Revisto por', 18),
     (u'Prioridade', 11),
     (u'Faixa revisada', 15), (u'Concorda?', 11), (u'Comentário do revisor', 52),
 ]
-FAIXA_COL = 7
-REVISAO = (11, 12, 13)  # colunas que o revisor preenche
+# posicao das colunas pelo nome: acrescentar coluna nao desloca regra nenhuma
+COL = dict((nome, i) for i, (nome, _l) in enumerate(COLS, 1))
+FAIXA_COL = COL[u'Faixa atual']
+REVISAO = (COL[u'Faixa revisada'], COL[u'Concorda?'], COL[u'Comentário do revisor'])
+QUEBRA = (COL[u'Funcionalidade'], COL[u'Descrição'], COL[u'PRD'], COL[u'Comentário do revisor'])
 
 borda = Border(bottom=Side(style='thin', color=LINHA))
 
@@ -47,10 +50,21 @@ def _cabecalho(ws, cols):
     ws.row_dimensions[1].height = 26
 
 
-def gerar(dest, por_mod, nota, grupo_de, meta, rev_index=None, rev_hist=None):
-    """por_mod: [(bi, nome, [(func, tipo, nova)], [faixa], contagem, [prio])]"""
+def _prd_texto(v):
+    """Rotulo da coluna PRD: o mesmo que a pagina mostra, em texto puro."""
+    if v['nivel'] in ('bloco', 'secao'):
+        return u'%s · %s %s' % (v['rotulo'], v['fid'], v['destino'])
+    if v['nivel'] == 'sem':
+        return u'Sem PRD'
+    return v['rotulo']
+
+
+def gerar(dest, por_mod, nota, grupo_de, meta, rev_index=None, rev_hist=None, info=None, url_docs=u''):
+    """por_mod: [(bi, nome, [(func, tipo, nova)], [faixa], contagem, [prio])]
+    info: {(bi, i): {'t', 'd', 'v'}} com a descricao e o vinculo resolvido com o PRD."""
     rev_index = rev_index or {}
     rev_hist = rev_hist or []
+    info = info or {}
     wb = Workbook()
 
     # ── aba 1: uma linha por funcionalidade ────────────────────────────────
@@ -68,24 +82,33 @@ def gerar(dest, por_mod, nota, grupo_de, meta, rev_index=None, rev_hist=None):
             h = rev_index.get((bi, i))
             anterior = ROTULO[h['de']] if h and h['de'] != h['para'] else u''
             quem = u'%s · %s' % (h['autor'], h['data']) if h else u''
-            valores = [n, grupo_de.get(bi, u''), nome, func, TIPO.get(tipo, tipo),
-                       u'Nova' if nova else u'Mapa', ROTULO[fx], anterior, quem, pr,
+            it = info.get((bi, i), {})
+            vinc = it.get('v') or {'nivel': 'sem', 'rotulo': u'Sem PRD', 'href': None}
+            valores = [n, grupo_de.get(bi, u''), nome, func, it.get('d', u''), _prd_texto(vinc),
+                       TIPO.get(tipo, tipo), u'Nova' if nova else u'Mapa', ROTULO[fx], anterior, quem, pr,
                        u'', u'', u'']
             for j, v in enumerate(valores, 1):
                 c = ws.cell(row=ln, column=j, value=v)
                 c.font = Font(size=10)
                 c.border = borda
-                c.alignment = Alignment(vertical='top', wrap_text=(j in (4, 13)))
+                c.alignment = Alignment(vertical='top', wrap_text=(j in QUEBRA))
                 if j in REVISAO:
                     c.fill = PatternFill('solid', fgColor='FFFDF5')
+            cp = ws.cell(row=ln, column=COL[u'PRD'])
+            if vinc.get('href'):
+                href = vinc['href']
+                cp.hyperlink = href if href.startswith('http') else url_docs + href
+                cp.font = Font(size=10, color=TEAL, underline='single')
+            elif vinc['nivel'] == 'sem':
+                cp.font = Font(size=10, bold=True, color='B97A10')
             f = ws.cell(row=ln, column=FAIXA_COL)
             f.font = Font(size=10, bold=True, color=COR_FAIXA[fx])
             f.fill = PatternFill('solid', fgColor=FUNDO_FAIXA[fx])
             f.alignment = Alignment(horizontal='center', vertical='top')
             if nova:
-                ws.cell(row=ln, column=6).font = Font(size=10, bold=True, color='B97A10')
+                ws.cell(row=ln, column=COL[u'Origem']).font = Font(size=10, bold=True, color='B97A10')
             if anterior:
-                ws.cell(row=ln, column=8).font = Font(size=10, bold=True, color='B97A10')
+                ws.cell(row=ln, column=COL[u'Faixa anterior']).font = Font(size=10, bold=True, color='B97A10')
 
     ws.freeze_panes = 'D2'
     ws.auto_filter.ref = 'A1:%s%d' % (get_column_letter(len(COLS)), ln)
@@ -95,13 +118,13 @@ def gerar(dest, por_mod, nota, grupo_de, meta, rev_index=None, rev_hist=None):
     dv_faixa.promptTitle = u'Faixa revisada'
     dv_faixa.prompt = u'Preencha apenas quando discordar da faixa proposta.'
     ws.add_data_validation(dv_faixa)
-    dv_faixa.add('K2:K%d' % ln)
+    dv_faixa.add('%s2:%s%d' % (get_column_letter(REVISAO[0]), get_column_letter(REVISAO[0]), ln))
 
     dv_sn = DataValidation(type='list', formula1=u'"Sim,Não"', allow_blank=True)
     dv_sn.promptTitle = u'Concorda com a faixa proposta?'
     dv_sn.prompt = u'Deixe em branco o que ainda não revisou.'
     ws.add_data_validation(dv_sn)
-    dv_sn.add('L2:L%d' % ln)
+    dv_sn.add('%s2:%s%d' % (get_column_letter(REVISAO[1]), get_column_letter(REVISAO[1]), ln))
 
     # ── aba 2: resumo por módulo ───────────────────────────────────────────
     r = wb.create_sheet(u'Resumo')
@@ -194,6 +217,9 @@ def gerar(dest, por_mod, nota, grupo_de, meta, rev_index=None, rev_hist=None):
         (u'Origem', u'"Mapa" está no Mapa de Funcionalidades. "Nova" ainda não existe no produto e entra na '
                     u'priorização mesmo assim.'),
         (u'Prioridade', u'Ordem de construção dentro do M0, onde o módulo é grande demais para entrar de uma vez.'),
+        (u'Descrição', u'O que a funcionalidade faz e por que existe, como está no Mapa de Funcionalidades detalhado.'),
+        (u'PRD', u'Link para a descrição completa no PRD do módulo. "Sem PRD" quando o módulo não tem um; '
+                 u'"Não descrita no PRD" quando o PRD existe e ainda não fala dela.'),
         (u'Faixa anterior', u'Preenchida quando a faixa já foi revisada uma vez. A coluna ao lado diz quem revisou e '
                             u'quando; o registro completo está na aba Revisões.'),
     ])
