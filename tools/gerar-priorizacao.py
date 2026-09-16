@@ -21,7 +21,7 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.1'
+VERSAO = u'v2.2'
 DATA = u'15/09/2026'
 BASE_MAPA = u'Mapa de Funcionalidades v2.1'
 
@@ -57,7 +57,7 @@ FAIXAS = {
     0:  ['M0','M2','M2','M2','M0','M0'],
     1:  ['M0','M0','M0','M0','M2','M0','M2','M2','M2','M0','M0','M0','M0','M0'],
     2:  ['M0','M0','M1','M1','M0','M1'],
-    3:  ['M0','M0','M0','M0','M1','M1','M1','M0','M0','M1','M1','M0','M0'],
+    3:  ['M0','M0','M0','M0','M1','M1','M1','M0','M0','M1','M1','M0','M0','M0'],
     4:  ['M0','M0','M0','M0','M0','M1','M0','M1','M0'],
     5:  ['M0','M0','M0','M0','M0','M0','M0'],
     6:  ['M2']*7,
@@ -148,7 +148,7 @@ NOTA = {
     0:  u'Só o que responde “onde está meu crédito hoje”. Forecast e cockpit dependem de série histórica que o piloto ainda não tem.',
     1:  u'O módulo que a tese defende entra quase inteiro: 11 de 14. Ficam fora três gráficos analíticos — eles explicam o crédito, não o garantem. O Top 5 e Top 10 de fornecedores subiu na revisão de 15/09: saber de quem cobrar primeiro é operação, não análise.',
     2:  u'Débito entra só para a apuração fechar. O produto se vende pelo crédito.',
-    3:  u'Entra a guia, o comprovante e o rastro dos três status. A entrega ao ERP passa ao M0 junto com a API. Na revisão de 15/09 a <strong>aba Execução Programada</strong> entrou e a gestão de colunas saiu: o piloto precisa ver o que está agendado, não configurar a própria grade.',
+    3:  u'Entra a guia, o comprovante e o rastro dos três status. A entrega ao ERP passa ao M0 junto com a API. Na revisão de 15/09 a <strong>aba Execução Programada</strong> entrou e a gestão de colunas saiu: o piloto precisa ver o que está agendado, não configurar a própria grade. Entra também o <strong>aviso ao fornecedor</strong> do recolhimento — sem ele o fornecedor paga o mesmo tributo de novo.',
     4:  u'A inconsistência é o que impede o crédito de morrer em silêncio. Na revisão de 15/09 a <strong>atribuição de responsável</strong> entrou — inconsistência sem dono não é tratada — e os filtros multiselect saíram.',
     5:  u'A porta de entrada inteira, inclusive por API: com a decisão de 14/09, o documento entra por arquivo ou por integração desde o primeiro dia.',
     6:  u'Projeção pressupõe base real acumulada. Não existe piloto que comece por aqui.',
@@ -717,6 +717,11 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.2</div><div class="ver-desc">'
+  u'15/09/2026 — Entra o <strong>aviso ao fornecedor do recolhimento</strong> (Pagamentos RAD), em <strong>M0</strong>: '
+  u'paga a guia, o fornecedor recebe o comprovante e o recado que impede o pagamento em duplicidade. É a contrapartida '
+  u'do que o recorte do portal tinha deixado de fora, e chega por e-mail em vez de exigir que ele entre no portal. '
+  u'O mapa vai de 183 para 184 funcionalidades; o M0, de 113 para %d.</div></div>' % tot['M0'])
 A(u'<div class="ver-row"><div class="ver-num">v2.1</div><div class="ver-desc">'
   u'15/09/2026 — <strong>Revisão de faixa por Toshio:</strong> 22 mudanças e 1 confirmação, registradas uma a '
   u'uma na seção 04, com a faixa anterior ao lado da nova. O M0 passa de 102 para %d. As entradas de maior '

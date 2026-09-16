@@ -1019,6 +1019,10 @@ window._rfGerarHistorico = function(rf, nf) {
     var _evDesc = 'Guia ' + (rf.tipoFiscal === 'ibs' ? 'IBS' : 'DARF CBS') + ' quitada · ' + ff(rf.valor) + ' · via ' + _mpEv
       + (_mpEv === 'Fornecedor' ? ' · confirmação via Apuração Assistida' : '');
     ev.push(mkEv(dpTS, 'PAGAMENTO', 'Pagamentos', _mpEv, _evDesc, 'ok'));
+    // Paga a guia RAD, o fornecedor é avisado para não recolher de novo.
+    var _aviso = window.shAvisoRAD ? window.shAvisoRAD(rf, nf) : null;
+    if (_aviso) ev.push(mkEv(_aviso.ts, 'AVISO AO FORNECEDOR', 'Pagamentos',
+      'SplitHub · automático', _aviso.desc, 'ok'));
   }
   if (_sc_hist === 'utilizado') {
     var _utilValor = ff(rf.valor || 0);
@@ -7418,6 +7422,13 @@ window.renderizarTabelaPagamentos = function() {
       + '<td class="nowrap" style="color:var(--txt2)">' + r.dataRF + '</td>'
       + '<td class="nowrap">' + (r.pago && r.pagamento && r.pagamento !== '—'
           ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pagamento + '</a>'
+            + (function () {
+                // envio automático: sem tela própria, só a marca e o histórico da DF
+                var a = window.shAvisoRAD ? window.shAvisoRAD({ metodoPagamento: 'RAD', dataPagamento: r.pagamento,
+                  entidade: r.forn, tipoFiscal: r.tipo === 'Guia IBS' ? 'ibs' : 'cbs' }) : null;
+                return a ? '<span title="Fornecedor avisado em ' + a.fmt + ' — ' + a.para
+                  + '" style="margin-left:6px;font-size:11px;color:var(--txt3);cursor:default">✉</span>' : '';
+              })()
           : (r.pagamento && r.pagamento !== '—' ? '<span style="color:var(--txt2)">' + r.pagamento + '</span>' : '<span style="color:var(--txt3)">—</span>')) + '</td>'
       + '<td style="vertical-align:middle">' + bdg(r.statusCredito) + '</td>'
       + '<td style="vertical-align:middle">' + (r.statusFlags.length ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.statusFlags[0] }) : '<span style="color:var(--txt3);font-size:11px">—</span>') + '</td>'
@@ -12104,3 +12115,57 @@ window.sincronizarApuracao = function() {
 
   if (typeof apurRenderAll === 'function') apurRenderAll();
 };
+
+/* ══ Aviso ao fornecedor quando o adquirente recolhe ══════════════════════
+   Paga a guia RAD, o fornecedor precisa saber que o tributo do documento
+   dele já foi recolhido — senão recolhe de novo. O excedente volta a ele
+   (LC 214/2025, art. 36, § 3º, II), mas o caixa saiu duas vezes e a
+   conversa sobra para o adquirente.
+   O envio é automático e não tem tela própria: o que fica visível é o
+   registro no histórico do documento e a marca na linha do pagamento.
+   Um aviso por guia — a guia é por tributo, e cada uma tem o seu
+   comprovante. Consolidar as duas do mesmo documento num só e-mail está
+   registrado como decisão em aberto no PRD de Pagamentos. */
+(function () {
+  var ATRASO_MIN = 12;   // a fila de envio processa em minutos, não na hora
+
+  function emailFiscal(nome) {
+    var slug = String(nome || '').toLowerCase()
+      .replace(/[\s\.]/g, '').replace(/[^a-z0-9]/g, '');
+    return slug ? 'fiscal@' + slug + '.com.br' : null;
+  }
+
+  function dois(n) { return (n < 10 ? '0' : '') + n; }
+
+  window.shAvisoRAD = function (rf, nf) {
+    nf = nf || {};
+    rf = rf || {};
+    if ((rf.metodoPagamento || nf.metodoPagamento || '') !== 'RAD') return null;
+    var dp = rf.dataPagamento || rf.pagamento;
+    if (!dp || dp === '—') return null;
+
+    var iso = dp.indexOf('/') !== -1
+      ? dp.substring(6, 10) + '-' + dp.substring(3, 5) + '-' + dp.substring(0, 2)
+      : dp.substring(0, 10);
+    var hora = dp.length > 10 ? dp.substring(11, 16) : '14:00';
+    var d = new Date(iso + 'T' + hora + ':00');
+    if (isNaN(d.getTime())) return null;
+    d.setMinutes(d.getMinutes() + ATRASO_MIN);
+
+    var para = emailFiscal(rf.entidade || nf.entidade || rf.forn);
+    if (!para) return null;
+
+    var tributo = String(rf.tipoFiscal || '').toLowerCase() === 'ibs' ? 'IBS' : 'CBS';
+    var tsISO = d.getFullYear() + '-' + dois(d.getMonth() + 1) + '-' + dois(d.getDate())
+              + 'T' + dois(d.getHours()) + ':' + dois(d.getMinutes());
+    var fmt = dois(d.getDate()) + '/' + dois(d.getMonth() + 1) + '/' + d.getFullYear()
+            + ' ' + dois(d.getHours()) + ':' + dois(d.getMinutes());
+
+    return {
+      para: para, ts: tsISO, fmt: fmt, tributo: tributo,
+      assunto: 'Recolhimento do ' + tributo + ' efetuado pelo adquirente — não recolha novamente',
+      desc: 'E-mail enviado a ' + para + ' · o adquirente recolheu o ' + tributo
+          + ' desta DF via RAD · guia paga em ' + dp + ' · comprovante anexado'
+    };
+  };
+})();

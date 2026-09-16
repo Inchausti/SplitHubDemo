@@ -199,13 +199,13 @@ img, svg { max-width: 100%; height: auto; }
   <p class="subtitle">Gestão operacional das guias de recolhimento de IBS e CBS para Registros Fiscais sob RAD — <strong>Recolhimento pelo Adquirente</strong>, a opção do comprador de assumir o pagamento dos tributos de um documento fiscal no regime da reforma tributária. Cobre monitoramento de vencimento, geração de guias individuais e em lote, comprovação de pagamento e rastreamento do ciclo de apropriação do crédito.</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.1</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.8</span></div>
     <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Fiscal → Pagamentos</span></div>
     <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-pagamentos</span></div>
     <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025</span></div>
     <div class="meta-pill" style="margin-left:auto">
-      <span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v2.5</span>
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v2.8</span>
     </div>
   </div>
 
@@ -1191,6 +1191,56 @@ e2eId = <span class="s">'E'</span> + ispb + dtPart + rndPart;</code></div>
       </table>
     </div>
     <p style="font-size:12px;color:var(--txt3)">Controles compartilhados por todas as listagens — gerenciamento de colunas, ordenação, exportação CSV e tooltip de cabeçalho — vêm do <code>ShColMgr</code> e do catálogo <code>SH_TABLES</code>, e não se repetem aqui.</p>
+    <!-- F13 -->
+    <div class="feat">
+      <div class="feat-hdr">
+        <span class="feat-id">F-13</span>
+        <span class="feat-name">Aviso ao fornecedor do recolhimento pelo adquirente</span>
+        <span class="feat-loc">background · #t-impostos · histórico da DF</span>
+      </div>
+      <div class="feat-body">
+        <p>Paga a guia RAD, o fornecedor precisa saber que o tributo do documento dele já foi
+        recolhido. O SplitHub envia um e-mail ao contato fiscal do fornecedor dizendo exatamente
+        isso — <em>o adquirente recolheu o IBS desta DF; não recolha novamente</em> — com o
+        comprovante anexado.</p>
+
+        <div class="callout red">
+          <div class="callout-title">O que o aviso evita</div>
+          <p>Sem ele, o fornecedor recolhe de novo. O excedente volta a ele em até três dias úteis
+          (LC 214/2025, art. 36, § 3º, II), mas <strong>o caixa saiu duas vezes</strong> e a conversa
+          sobra para o adquirente — que foi quem mudou o método sem avisar.</p>
+        </div>
+
+        <p><strong>É uma funcionalidade de background.</strong> Não tem tela, botão nem configuração
+        própria. O que fica visível são dois registros:</p>
+        <ul class="plain">
+          <li><strong>No histórico do ciclo da DF</strong> — evento <code>AVISO AO FORNECEDOR</code>,
+          logo depois do evento de pagamento, com destinatário, tributo, valor e a data em que a guia
+          foi quitada. É onde a pergunta “avisamos?” se responde</li>
+          <li><strong>Na listagem de Guias RAD</strong> — marca ✉ ao lado da data de pagamento, com
+          destinatário e horário do envio no <em>tooltip</em>. Sem coluna nova: a listagem já tem
+          dezenove</li>
+        </ul>
+
+        <p><strong>Um aviso por guia.</strong> A guia é por tributo e cada uma tem o seu comprovante,
+        então um documento com IBS e CBS pagos gera dois avisos. O disparo acontece cerca de doze
+        minutos depois do registro do pagamento — a fila processa em minutos, não na hora, e o
+        atraso aparece no horário registrado.</p>
+
+        <div class="callout warn">
+          <div class="callout-title">Depende de uma peça que ainda não existe</div>
+          <p>O <strong>envio de e-mail transacional</strong> está no M0 da priorização, trazido pela
+          régua de cobrança, e não existe no produto — nem provedor, nem registro de entrega e
+          devolução. No protótipo o envio é registrado como se tivesse acontecido. Sem essa peça,
+          esta funcionalidade escreve histórico e não envia nada.</p>
+        </div>
+
+        <p><strong>Em aberto:</strong> consolidar as duas guias do mesmo documento num único e-mail
+        quando são pagas no mesmo dia; reenvio manual a partir da listagem; e opt-out por fornecedor,
+        para quem já recebe o aviso por outro canal.</p>
+      </div>
+    </div>
+
 </div>
 
   <!-- ══ 06 ══ -->
@@ -1725,6 +1775,42 @@ meses.forEach(<span class="k">function</span>(m) {
             <td>Com perfil fornecedor ativo, o item de navegação não é exibido.</td>
             <td>M</td>
           </tr>
+          <tr>
+            <td class="rid">RF-PAG-076</td>
+            <td>Ao registrar o pagamento de uma guia RAD, o sistema deve enviar e-mail ao contato fiscal do fornecedor informando que o adquirente recolheu o tributo.</td>
+            <td>Guia paga gera exatamente um envio; guia não paga não gera nenhum.</td>
+            <td>M</td>
+          </tr>
+          <tr>
+            <td class="rid">RF-PAG-077</td>
+            <td>O e-mail deve conter o tributo, o documento fiscal, o valor recolhido, a data do pagamento e o comprovante.</td>
+            <td>Os cinco itens aparecem na mensagem, e o comprovante abre.</td>
+            <td>M</td>
+          </tr>
+          <tr>
+            <td class="rid">RF-PAG-078</td>
+            <td>O envio deve ser registrado no histórico do ciclo do documento como evento próprio, com destinatário e horário.</td>
+            <td>O evento aparece na linha do tempo logo após o pagamento, com o e-mail de destino visível.</td>
+            <td>M</td>
+          </tr>
+          <tr>
+            <td class="rid">RF-PAG-079</td>
+            <td>A listagem de Guias RAD deve marcar a linha cujo aviso foi enviado, com destinatário e horário acessíveis sem abrir o documento.</td>
+            <td>A marca aparece ao lado da data de pagamento e o tooltip traz e-mail e horário.</td>
+            <td>S</td>
+          </tr>
+          <tr>
+            <td class="rid">RF-PAG-080</td>
+            <td>O envio deve ser assíncrono: não exige ação do operador nem bloqueia o registro do pagamento.</td>
+            <td>O pagamento é registrado e a tela responde antes de o envio concluir.</td>
+            <td>M</td>
+          </tr>
+          <tr>
+            <td class="rid">RF-PAG-081</td>
+            <td>Falha de envio deve ser registrada e reprocessável, sem alterar o estado do pagamento.</td>
+            <td>Com o provedor indisponível, a guia continua paga e a falha fica visível para reenvio.</td>
+            <td>S</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1827,6 +1913,18 @@ meses.forEach(<span class="k">function</span>(m) {
             <td><strong>Visibilidade por perfil</strong></td>
             <td>Perfil ativo = Fornecedor</td>
             <td>Módulo oculto — RAD é operação do adquirente</td>
+          </tr>
+          <tr>
+            <td class="rid">RN-PAG-16</td>
+            <td><strong>Gatilho do aviso ao fornecedor</strong></td>
+            <td>Guia RAD com data de pagamento registrada</td>
+            <td>Um aviso por guia, cerca de doze minutos depois — a guia é por tributo, e cada uma tem o seu comprovante</td>
+          </tr>
+          <tr>
+            <td class="rid">RN-PAG-17</td>
+            <td><strong>Método diferente de RAD não avisa</strong></td>
+            <td><code>metodoPagamento</code> ≠ RAD</td>
+            <td>Sem aviso — no método Fornecedor quem recolhe é o próprio destinatário do e-mail, e no Split Payment a retenção é do PSP</td>
           </tr>
         </tbody>
       </table>
@@ -2049,6 +2147,16 @@ meses.forEach(<span class="k">function</span>(m) {
   <div class="section" id="s12">
     <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Histórico de versões</span></div>
                 <div class="ver-row">
+      <div class="ver-num">v2.8</div>
+      <div class="ver-desc"><strong>15/09/2026</strong> — <strong>F-13: aviso ao fornecedor do recolhimento pelo adquirente.</strong>
+      Paga a guia RAD, o SplitHub envia e-mail ao contato fiscal do fornecedor com o comprovante e o recado que evita o
+      pagamento em duplicidade. É funcionalidade de background — sem tela própria: o que fica visível é o evento
+      <code>AVISO AO FORNECEDOR</code> no histórico do ciclo do documento e a marca ✉ na listagem de Guias RAD.
+      Entram <span class="rid">RF-PAG-076</span> a <span class="rid">RF-PAG-081</span> e as regras
+      <span class="rid">RN-PAG-16</span> e <span class="rid">RN-PAG-17</span>. Depende do envio de e-mail transacional,
+      que está no M0 da priorização e ainda não existe no produto.</div>
+    </div>
+    <div class="ver-row">
       <div class="ver-num">v2.7</div>
       <div class="ver-desc"><strong>11/09/2026</strong> — <strong>Nova porta de entrada: DFs com recolhimento assumido.</strong> Além dos contratos RAD, entram na listagem os documentos em que o operador assumiu o recolhimento a partir de Créditos — ver F-08 do <a href="prd-credito.html" style="color:var(--blue)">PRD de Crédito</a>. O filtro de recorte não mudou, continua <code>metodoPagamento === 'RAD'</code>, e a coluna Método ganha a marca <strong>alterado</strong>. As políticas de execução automática alcançam esses RFs como qualquer outro RAD. Gerar a guia de um RF convertido registra a data e impede devolver o recolhimento ao fornecedor.</div>
     </div>
