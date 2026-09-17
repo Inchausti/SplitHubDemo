@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Núcleo do MVP · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+
+.big { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 14px 0; }
+.big-c { border: 1px solid var(--brd); border-radius: 12px; padding: 14px 16px; background: var(--sur); }
+.big-n { font-size: 30px; font-weight: 800; color: var(--txt1); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.big-l { font-size: 12px; color: var(--txt2); margin-top: 4px; }
+.big-c.nuc { border-color: var(--teal); background: var(--teal-d); }
+.big-c.nuc .big-n { color: var(--teal); }
+.bar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; margin: 6px 0 4px; background: var(--sur2); }
+.bar span { display: block; height: 100%; }
+.bar .b1 { background: var(--teal); }
+.bar .b2 { background: var(--txt3); opacity: .35; }
+.bar-l { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--txt3); font-variant-numeric: tabular-nums; }
+.chain { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0; margin: 14px 0; }
+.ch { position: relative; padding: 10px 16px 10px 12px; border: 1px solid var(--brd); border-right: 0; background: var(--sur); }
+.ch:first-child { border-radius: 10px 0 0 10px; }
+.ch:last-child { border-right: 1px solid var(--brd); border-radius: 0 10px 10px 0; }
+.ch::after { content: '›'; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: var(--txt3); font-weight: 700; }
+.ch:last-child::after { content: ''; }
+.ch-n { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; color: var(--teal); }
+.ch-t { font-size: 12.5px; font-weight: 700; color: var(--txt1); }
+.ch-c { font-size: 11px; color: var(--txt3); }
+@media (max-width: 760px) {
+  .chain { grid-template-columns: minmax(0, 1fr); }
+  .ch, .ch:first-child, .ch:last-child { border: 1px solid var(--brd); border-radius: 0; margin-top: -1px; }
+  .ch::after { content: ''; }
+}
+.elo { margin: 18px 0 8px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.elo-n { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; color: var(--sur); background: var(--teal); border-radius: 6px; padding: 2px 7px; }
+.elo-t { font-size: 15px; font-weight: 700; color: var(--txt1); }
+.elo-s { font-size: 12.5px; color: var(--txt3); }
+.elo-q { margin-left: auto; font-size: 12px; color: var(--txt3); font-variant-numeric: tabular-nums; }
+.fn { font-weight: 700; color: var(--txt1); }
+.md { font-size: 11px; color: var(--txt3); display: block; margin-top: 1px; }
+.lk { font-size: 11px; color: var(--blue); text-decoration: none; white-space: nowrap; }
+.mot { margin: 10px 0; border: 1px solid var(--brd); border-radius: 10px; background: var(--sur); }
+.mot summary { cursor: pointer; padding: 10px 14px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; list-style: none; }
+.mot summary::-webkit-details-marker { display: none; }
+.mot summary::before { content: '▸'; color: var(--txt3); }
+.mot[open] summary::before { content: '▾'; }
+.mot-t { font-weight: 700; color: var(--txt1); font-size: 13.5px; }
+.mot-q { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; color: var(--txt2); background: var(--sur2); border-radius: 5px; padding: 1px 6px; }
+.mot-d { flex-basis: 100%; font-size: 12px; color: var(--txt3); margin-left: 18px; }
+.mot .table-wrap { margin: 0 14px 12px; }
+.mot summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Priorização → M0</div>
+<h1>Núcleo do MVP</h1>
+<p class="subtitle">O M0 tem mais funcionalidades do que o time consegue entregar. Este é o recorte mínimo que mantém o fluxo core de pé — do documento que entra ao crédito que abate o débito, nos dois caminhos do recolhimento.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta de priorização</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">17/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">M0 hoje</span>&nbsp;<span class="meta-val">114</span></div>
+<div class="meta-pill"><span class="meta-label">Núcleo</span>&nbsp;<span class="meta-val">32</span></div>
+<div class="meta-pill"><span class="meta-label">Ressalvas</span>&nbsp;<span class="meta-val">8</span></div>
+<div class="meta-pill"><span class="meta-label">Decisões</span>&nbsp;<span class="meta-val">6</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip warn">v1.0</span></div>
+</div>
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> O problema e o critério</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Em números</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> O núcleo, elo a elo</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> O que o núcleo entrega</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Cortes com ressalva</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> O que sai do núcleo</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Decisões para aprovar</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Histórico de versões</a></li>
+</ul></div>
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O problema e o critério</span></div>
+<p>O M0 da <a href="priorizacao-mvp.html" style="color:var(--blue)">priorização</a> tem <strong>114 funcionalidades</strong> — mais do que o time consegue entregar. Esta proposta separa, dentro do M0, o <strong>núcleo</strong>: o mínimo sem o qual o fluxo core deixa de funcionar.</p><div class="chain"><div class="ch"><div class="ch-n">1</div><div class="ch-t">Entrada</div><div class="ch-c">DF vira RFs</div></div><div class="ch"><div class="ch-n">2</div><div class="ch-t">Crédito</div><div class="ch-c">estado e prazo</div></div><div class="ch"><div class="ch-n">3</div><div class="ch-t">Quem recolhe</div><div class="ch-c">contrato</div></div><div class="ch"><div class="ch-n">4</div><div class="ch-t">RAD</div><div class="ch-c">guia e comprovante</div></div><div class="ch"><div class="ch-n">5</div><div class="ch-t">Fisco confirma</div><div class="ch-c">CBS · IBS</div></div><div class="ch"><div class="ch-n">6</div><div class="ch-t">Inconsistência</div><div class="ch-c">destrava</div></div><div class="ch"><div class="ch-n">7</div><div class="ch-t">Apuração</div><div class="ch-c">crédito abate débito</div></div></div><div class="callout info"><div class="ct">A pergunta aplicada a cada item</div><p><strong>Sem esta funcionalidade, o crédito de um documento deixa de chegar a apropriado, ou deixa de ser usado?</strong> Se sim, é núcleo. Se o fluxo continua — mais lento, mais manual, com menos visão —, sai do núcleo e continua M0.</p></div><p>O fluxo é o mesmo do <a href="proposta-ciclo-vida.html" style="color:var(--blue)">ciclo de vida do produto</a>, e vale para os dois caminhos: quando o fornecedor recolhe e quando o adquirente recolhe pelo RAD.</p>
+</div>
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Em números</span></div>
+<div class="big"><div class="big-c"><div class="big-n">114</div><div class="big-l">funcionalidades no M0 hoje</div></div><div class="big-c nuc"><div class="big-n">32</div><div class="big-l">no núcleo — 28% do M0</div></div><div class="big-c"><div class="big-n">82</div><div class="big-l">saem do núcleo e continuam M0</div></div><div class="big-c"><div class="big-n">7</div><div class="big-l">elos do fluxo cobertos, mais a base</div></div></div><div class="bar" role="img" aria-label="32 de 114 no núcleo"><span class="b1" style="width:28.1%"></span><span class="b2" style="width:71.9%"></span></div><div class="bar-l"><span>núcleo · 32</span><span>restante do M0 · 82</span></div><div class="table-wrap"><table><thead><tr><th>Motivo da saída</th><th>Itens</th></tr></thead><tbody><tr><td><strong>Automação do que o núcleo faz à mão</strong></td><td>10</td></tr><tr><td><strong>Relacionamento com o fornecedor</strong></td><td>22</td></tr><tr><td><strong>Análise e visão gerencial</strong></td><td>7</td></tr><tr><td><strong>Conveniência de operação</strong></td><td>23</td></tr><tr><td><strong>Exceção ao fluxo principal</strong></td><td>10</td></tr><tr><td><strong>Padrão de construção, não funcionalidade</strong></td><td>7</td></tr><tr><td><strong>Recurso de demonstração</strong></td><td>3</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">O núcleo, elo a elo</span></div>
+<p>32 funcionalidades, na ordem em que o documento percorre o fluxo.</p><div class="elo"><span class="elo-n">1</span><span class="elo-t">Entrada</span><span class="elo-s">o documento chega e vira dois registros</span><span class="elo-q">4</span></div><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Por que não pode sair</th></tr></thead><tbody><tr><td><span class="fn">Ingestão por API com credencial própria</span><span class="md">Ingestão de DFs</span></td><td>Único canal de entrada do núcleo: o ERP envia os documentos e o produto não depende de arquivo manual. <a class="lk" href="prd-ingestao.html#s13">PRD ↗</a></td></tr><tr><td><span class="fn">Suporte a Entrada e Saída</span><span class="md">Ingestão de DFs</span></td><td>Sem saída não há débito, e sem débito não há apuração nem uso do crédito. <a class="lk" href="prd-ingestao.html#s04">PRD ↗</a></td></tr><tr><td><span class="fn">Validação binária: Importado / Inconsistência</span><span class="md">Ingestão de DFs</span></td><td>Decide se o documento entra ou fica retido — é o que impede crédito sobre documento inválido. <a class="lk" href="prd-ingestao.html#f-03">PRD ↗</a></td></tr><tr><td><span class="fn">Card de inconsistência automático</span><span class="md">Ingestão de DFs</span></td><td>Documento recusado sem card é documento que some sem ninguém saber. <a class="lk" href="prd-ingestao.html#s05">PRD ↗</a></td></tr></tbody></table></div><div class="elo"><span class="elo-n">2</span><span class="elo-t">Registro e crédito</span><span class="elo-s">ver o crédito e o prazo de cada tributo</span><span class="elo-q">5</span></div><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Por que não pode sair</th></tr></thead><tbody><tr><td><span class="fn">Listagem DFs de entrada — RF Core 10 colunas</span><span class="md">Créditos IBS/CBS</span></td><td>A tela onde o crédito existe: um RF por tributo, com valor, status e método. <a class="lk" href="prd-credito.html#f-02">PRD ↗</a></td></tr><tr><td><span class="fn">St. Crédito · St. Registro · St. Pagamento independentes</span><span class="md">Pagamentos RAD</span></td><td>O modelo de estados — crédito, registro e pagamento — que todo o resto lê. <a class="lk" href="prd-pagamentos.html#s04">PRD ↗</a></td></tr><tr><td><span class="fn">Ciclo do crédito: apropriação, extinção e prazo</span><span class="md">Créditos IBS/CBS</span></td><td>As três datas que dizem quando o crédito nasce, é consumido e prescreve. <a class="lk" href="prd-credito.html#s04">PRD ↗</a></td></tr><tr><td><span class="fn">Classificação CP / LP / Vencidos</span><span class="md">Créditos IBS/CBS</span></td><td>Separa o que vence em 30 dias: é o alerta mínimo contra perda de crédito, inclusive no caminho do fornecedor. <a class="lk" href="prd-credito.html#s05">PRD ↗</a></td></tr><tr><td><span class="fn">Listagem DFs de saída</span><span class="md">Débitos IBS/CBS</span></td><td>Os débitos que o crédito vai abater, com IBS e CBS em colunas próprias. <a class="lk" href="prd-debito.html#f-01">PRD ↗</a></td></tr></tbody></table></div><div class="elo"><span class="elo-n">3</span><span class="elo-t">Quem recolhe</span><span class="elo-s">o contrato decide o caminho</span><span class="elo-q">2</span></div><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Por que não pode sair</th></tr></thead><tbody><tr><td><span class="fn">Modelo RAD — adquirente recolhe o tributo</span><span class="md">Contratos</span></td><td>Sem o modelo RAD, o produto não sabe que precisa gerar guia. <a class="lk" href="prd-contratos.html#s02">PRD ↗</a></td></tr><tr><td><span class="fn">Modelo Fornecedor — fornecedor recolhe</span><span class="md">Contratos</span></td><td>Sem o modelo Fornecedor, o produto não sabe que precisa apenas acompanhar. <a class="lk" href="prd-contratos.html#s02">PRD ↗</a></td></tr></tbody></table></div><div class="elo"><span class="elo-n">4</span><span class="elo-t">Recolhimento pelo adquirente</span><span class="elo-s">RAD manual, de ponta a ponta</span><span class="elo-q">4</span></div><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Por que não pode sair</th></tr></thead><tbody><tr><td><span class="fn">Listagem de guias RAD</span><span class="md">Pagamentos RAD</span></td><td>A fila do que precisa ser pago, com vencimento e status. <a class="lk" href="prd-pagamentos.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">Integração RAD</span><span class="md">Integrações</span></td><td>Gera a guia por tributo e recebe o retorno do pagamento — sem ela, o RAD é só uma tela.</td></tr><tr><td><span class="fn">Coluna Entrega ao ERP</span><span class="md">Pagamentos RAD</span></td><td>A guia chega ao ERP, onde a tesouraria paga. Guia não entregue é crédito perdido em silêncio. <a class="lk" href="prd-pagamentos.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">Upload de comprovante PIX/RAD</span><span class="md">Pagamentos RAD</span></td><td>O comprovante é o que libera a apropriação no RAD. <a class="lk" href="prd-pagamentos.html#f-09">PRD ↗</a></td></tr></tbody></table></div><div class="elo"><span class="elo-n">5</span><span class="elo-t">Confirmação pelo Fisco</span><span class="elo-s">CBS na Receita, IBS no Comitê Gestor</span><span class="elo-q">7</span></div><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Por que não pode sair</th></tr></thead><tbody><tr><td><span class="fn">Integração com a Receita Federal — CBS</span><span class="md">Integrações</span></td><td>A metade federal da confirmação: sem ela, nenhum crédito de CBS é confirmado.</td></tr><tr><td><span class="fn">Integração com o Comitê Gestor — IBS</span><span class="md">Integrações</span></td><td>A metade do IBS: sem ela, nenhum crédito de IBS é confirmado.</td></tr><tr><td><span class="fn">Confronto com a Apuração Assistida</span><span class="md">Conciliação</span></td><td>Confronto do documento com a apuração do Fisco — CAPUR, por tributo. <a class="lk" href="prd-conciliacao.html#f-01">PRD ↗</a></td></tr><tr><td><span class="fn">Conciliação financeira pelos comprovantes</span><span class="md">Conciliação</span></td><td>Confronto do valor pago com o devido — CFIN, por tributo. <a class="lk" href="prd-conciliacao.html#f-02">PRD ↗</a></td></tr><tr><td><span class="fn">Sequenciamento das duas conciliações</span><span class="md">Conciliação</span></td><td>Regra de ordem: pagamento só é conciliado contra valor já confirmado. <a class="lk" href="prd-conciliacao.html#f-03">PRD ↗</a></td></tr><tr><td><span class="fn">Propagação do resultado para documento e registros</span><span class="md">Conciliação</span></td><td>Leva o resultado ao RF e ao DF — é aqui que o crédito vira apropriado. <a class="lk" href="prd-conciliacao.html#f-07">PRD ↗</a></td></tr><tr><td><span class="fn">Listagem de registros com oito filtros</span><span class="md">Conciliação</span></td><td>A lista de trabalho da conciliação. Sem ela, a divergência existe e ninguém a encontra. <a class="lk" href="prd-conciliacao.html#f-06">PRD ↗</a></td></tr></tbody></table></div><div class="elo"><span class="elo-n">6</span><span class="elo-t">Inconsistências</span><span class="elo-s">o que trava o crédito, e como destravar</span><span class="elo-q">4</span></div><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Por que não pode sair</th></tr></thead><tbody><tr><td><span class="fn">Cards DF-cêntricos (rfId opcional)</span><span class="md">Inconsistências</span></td><td>Toda falha vira card ligado ao documento — inclusive as de antes do RF existir.</td></tr><tr><td><span class="fn">Taxonomia CAPUR IBS/CBS por imposto</span><span class="md">Inconsistências</span></td><td>Os tipos de divergência de apuração, por tributo.</td></tr><tr><td><span class="fn">Taxonomia CFIN IBS/CBS por imposto</span><span class="md">Inconsistências</span></td><td>Os tipos de divergência financeira, por tributo.</td></tr><tr><td><span class="fn">Kanban: Aberta → Resolvida / Glosada</span><span class="md">Inconsistências</span></td><td>O ciclo mínimo de tratamento: aberta, em análise, resolvida ou glosada.</td></tr></tbody></table></div><div class="elo"><span class="elo-n">7</span><span class="elo-t">Apuração e uso</span><span class="elo-s">o crédito abate o débito</span><span class="elo-q">3</span></div><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Por que não pode sair</th></tr></thead><tbody><tr><td><span class="fn">Resumo por tributo na competência</span><span class="md">Apuração IBS/CBS</span></td><td>Créditos contra débitos, por tributo, com o tributo a pagar ou o saldo.</td></tr><tr><td><span class="fn">Cálculo da competência</span><span class="md">Apuração IBS/CBS</span></td><td>O cálculo da competência a partir dos documentos e registros.</td></tr><tr><td><span class="fn">Conclusão e reabertura da apuração</span><span class="md">Apuração IBS/CBS</span></td><td>Fechar a competência congela a posição; reabrir absorve o documento que chegou tarde.</td></tr></tbody></table></div><div class="elo"><span class="elo-n">base</span><span class="elo-t">Base</span><span class="elo-s">o mínimo para operar</span><span class="elo-q">3</span></div><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Por que não pode sair</th></tr></thead><tbody><tr><td><span class="fn">Tela de login</span><span class="md">Auth · Design System</span></td><td>Acesso autenticado.</td></tr><tr><td><span class="fn">Seletor de período multi-select</span><span class="md">Dashboard</span></td><td>O recorte de período que todas as telas do núcleo usam. <a class="lk" href="prd-inicio.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">KPIs de crédito em tempo real</span><span class="md">Dashboard</span></td><td>O aproveitamento do crédito visível — o indicador central do produto. <a class="lk" href="prd-inicio.html#f-02">PRD ↗</a></td></tr></tbody></table></div>
+</div>
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O que o núcleo entrega</span></div>
+<div class="table-wrap"><table><thead><tr><th>Caminho</th><th>Do começo ao fim, com o núcleo</th></tr></thead><tbody><tr><td><strong>Adquirente recolhe (RAD)</strong></td><td>O ERP envia a nota → dois RFs → o contrato marca RAD → a guia é gerada e entregue ao ERP → a tesouraria paga → o comprovante é anexado → a Receita e o Comitê Gestor confirmam → CAPUR e CFIN fecham → o crédito fica apropriado → a apuração abate o débito.</td></tr><tr><td><strong>Fornecedor recolhe</strong></td><td>O ERP envia a nota → dois RFs → o contrato marca Fornecedor → o crédito aparece a apropriar, com prazo → a Receita e o Comitê Gestor confirmam → a conciliação apropria, ou a inconsistência mostra o que falta → a apuração abate o débito.</td></tr><tr><td><strong>O que fica manual</strong></td><td>Gerar guias em lote, cobrar fornecedor, avisar o fornecedor do RAD pago, assumir recolhimento de fornecedor inadimplente e analisar risco por fornecedor.</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Cortes com ressalva</span></div>
+<p>Saem do núcleo, mas com risco conhecido. Cada um tem a condição em que deveria voltar.</p><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Risco de deixar fora</th><th>Mitigação e gatilho de volta</th></tr></thead><tbody><tr><td><span class="fn">Aviso ao fornecedor do recolhimento</span><span class="md">Pagamentos RAD</span></td><td>Sem o aviso, o fornecedor não sabe que o adquirente pagou e pode recolher de novo — pagamento em duplicidade, recuperável só por restituição.</td><td>Mitigar por comunicação fora do produto no início; voltar ao núcleo se o piloto tiver muitos contratos RAD.</td></tr><tr><td><span class="fn">Upload CSV posicional (NF-e · CT-e · NFS-e)</span><span class="md">Ingestão de DFs</span></td><td>Se a API do ERP atrasar, o núcleo fica sem porta de entrada.</td><td>Manter o upload CSV como plano B, pronto para entrar se a integração não sair no prazo.</td></tr><tr><td><span class="fn">Multi-contratos por fornecedor</span><span class="md">Contratos</span></td><td>Fornecedor com dois modelos ao mesmo tempo (parte RAD, parte Fornecedor) fica com o método errado em uma das partes.</td><td>Confirmar no piloto se esse caso existe; se existir, volta ao núcleo.</td></tr><tr><td><span class="fn">Régua de cobrança pré-vencimento</span><span class="md">Automações</span></td><td>No caminho do fornecedor, sem régua ninguém é cobrado automaticamente antes do vencimento.</td><td>A classificação CP/LP/Vencidos fica no núcleo e mostra o que vence; a cobrança é feita pela equipe, fora do produto.</td></tr><tr><td><span class="fn">Aba Execução Programada</span><span class="md">Pagamentos RAD</span></td><td>Sem execução programada, cada guia RAD é gerada à mão.</td><td>Aceitável no volume de piloto; é a primeira automação a voltar quando o volume crescer.</td></tr><tr><td><span class="fn">Filtro Grupo Econômico global</span><span class="md">Dashboard</span></td><td>Sem filtro de grupo econômico, quem opera vários CNPJs vê tudo junto.</td><td>Se o piloto tiver mais de um CNPJ comprador, volta ao núcleo.</td></tr><tr><td><span class="fn">Login via SSO corporativo</span><span class="md">Auth · Design System</span></td><td>Acesso por credencial própria em vez do provedor da empresa.</td><td>Validar com segurança da informação se é aceitável no piloto.</td></tr><tr><td><span class="fn">Assumir recolhimento via RAD</span><span class="md">Créditos IBS/CBS</span></td><td>Sem assumir o recolhimento, fornecedor inadimplente não tem saída dentro do produto.</td><td>A guia pode ser paga por fora e o comprovante anexado; a funcionalidade volta logo depois do núcleo.</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">O que sai do núcleo</span></div>
+<p>Os 82 itens restantes, agrupados pelo motivo. Nenhum sai do M0: continuam na fila logo depois do núcleo.</p><details class="mot"><summary><span class="mot-t">Automação do que o núcleo faz à mão</span><span class="mot-q">10</span><span class="mot-d">O fluxo funciona sem elas; ficam mais lentas as operações de volume.</span></summary><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Módulo</th><th>PRD</th></tr></thead><tbody><tr><td><span class="fn">Aba Execução Programada</span></td><td>Pagamentos RAD</td><td><a class="lk" href="prd-pagamentos.html#f-11">PRD ↗</a></td></tr><tr><td><span class="fn">Políticas de execução sem limite de quantidade</span></td><td>Execução RAD</td><td><a class="lk" href="prd-execucao-rad.html#f-03">PRD ↗</a></td></tr><tr><td><span class="fn">Orquestração por CNPJ</span></td><td>Execução RAD</td><td><a class="lk" href="prd-execucao-rad.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">Orquestração por contrato</span></td><td>Execução RAD</td><td><a class="lk" href="prd-execucao-rad.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">Janela de execução configurável</span></td><td>Execução RAD</td><td><a class="lk" href="prd-execucao-rad.html#f-05">PRD ↗</a></td></tr><tr><td><span class="fn">Critérios de inclusão por valor e flag</span></td><td>Execução RAD</td><td><a class="lk" href="prd-execucao-rad.html#f-06">PRD ↗</a></td></tr><tr><td><span class="fn">Listagem de políticas com lote ao vivo</span></td><td>Execução RAD</td><td><a class="lk" href="prd-execucao-rad.html#f-01">PRD ↗</a></td></tr><tr><td><span class="fn">Auditoria com diff campo a campo</span></td><td>Execução RAD</td><td><a class="lk" href="prd-execucao-rad.html#f-09">PRD ↗</a></td></tr><tr><td><span class="fn">Comprovantes recebidos do ERP</span></td><td>Integrações</td><td><a class="lk" href="prd-integracoes.html#f-16">PRD ↗</a></td></tr><tr><td><span class="fn">Integração Databricks para comprovantes</span></td><td>Integrações</td><td>—</td></tr></tbody></table></div></details><details class="mot"><summary><span class="mot-t">Relacionamento com o fornecedor</span><span class="mot-q">22</span><span class="mot-d">Portal, convites, cobrança e avisos. O caminho do fornecedor segue acompanhado pelas flags e pela conciliação.</span></summary><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Módulo</th><th>PRD</th></tr></thead><tbody><tr><td><span class="fn">Aviso ao fornecedor do recolhimento</span></td><td>Pagamentos RAD</td><td><a class="lk" href="prd-pagamentos.html#f-13">PRD ↗</a></td></tr><tr><td><span class="fn">Aba Acessos no cadastro</span></td><td>Fornecedores</td><td><a class="lk" href="prd-fornecedor.html#f-09">PRD ↗</a></td></tr><tr><td><span class="fn">Convite, reenvio e cancelamento</span></td><td>Fornecedores</td><td><a class="lk" href="prd-fornecedor.html#f-10">PRD ↗</a></td></tr><tr><td><span class="fn">Importação de fornecedores e grupos por CSV</span></td><td>Fornecedores</td><td><a class="lk" href="prd-fornecedor.html#f-13">PRD ↗</a></td></tr><tr><td><span class="fn">Importação de status e de convites em massa</span></td><td>Fornecedores</td><td><a class="lk" href="prd-fornecedor.html#f-15">PRD ↗</a></td></tr><tr><td><span class="fn">Histórico de lotes de importação</span></td><td>Fornecedores</td><td><a class="lk" href="prd-fornecedor.html#f-17">PRD ↗</a></td></tr><tr><td><span class="fn">DFs filtrados pelo CNPJ próprio</span></td><td>Portal Fornecedor</td><td><a class="lk" href="prd-portal-fornecedor.html#f-01">PRD ↗</a></td></tr><tr><td><span class="fn">IBS e CBS separados por RF</span></td><td>Portal Fornecedor</td><td><a class="lk" href="prd-portal-fornecedor.html#f-02">PRD ↗</a></td></tr><tr><td><span class="fn">Envio de comprovante RAD/PIX</span></td><td>Portal Fornecedor</td><td><a class="lk" href="prd-portal-fornecedor.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">Período multi-select</span></td><td>Portal Fornecedor</td><td><a class="lk" href="prd-portal-fornecedor.html#f-08">PRD ↗</a></td></tr><tr><td><span class="fn">Convite e acesso por senha própria</span></td><td>Portal Fornecedor</td><td><a class="lk" href="prd-portal-fornecedor.html#f-11">PRD ↗</a></td></tr><tr><td><span class="fn">Painel inicial do fornecedor</span></td><td>Portal Fornecedor</td><td>—</td></tr><tr><td><span class="fn">Comprovantes de pagamento disponíveis ao fornecedor</span></td><td>Portal Fornecedor</td><td>—</td></tr><tr><td><span class="fn">Régua de cobrança pré-vencimento</span></td><td>Automações</td><td><a class="lk" href="prd-automacoes.html#f-07">PRD ↗</a></td></tr><tr><td><span class="fn">Régua de cobrança pós-vencimento</span></td><td>Automações</td><td><a class="lk" href="prd-automacoes.html#f-07">PRD ↗</a></td></tr><tr><td><span class="fn">Etapas da régua com canal e condição</span></td><td>Automações</td><td><a class="lk" href="prd-automacoes.html#f-08">PRD ↗</a></td></tr><tr><td><span class="fn">Template de mensagem com variáveis</span></td><td>Automações</td><td><a class="lk" href="prd-automacoes.html#f-09">PRD ↗</a></td></tr><tr><td><span class="fn">Disparos por fornecedor e etapa</span></td><td>Automações</td><td><a class="lk" href="prd-automacoes.html#f-11">PRD ↗</a></td></tr><tr><td><span class="fn">Auditoria da régua com motivo</span></td><td>Automações</td><td><a class="lk" href="prd-automacoes.html#f-12">PRD ↗</a></td></tr><tr><td><span class="fn">Motor de execução das automações</span></td><td>Automações</td><td>—</td></tr><tr><td><span class="fn">Envio de e-mail transacional</span></td><td>Automações</td><td>—</td></tr><tr><td><span class="fn">Painel de acessos externos</span></td><td>Usuários e Acessos</td><td>—</td></tr></tbody></table></div></details><details class="mot"><summary><span class="mot-t">Análise e visão gerencial</span><span class="mot-q">7</span><span class="mot-d">Rankings, scores e painéis. Não mudam o estado de nenhum crédito.</span></summary><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Módulo</th><th>PRD</th></tr></thead><tbody><tr><td><span class="fn">Top 5 e Top 10 fornecedores</span></td><td>Créditos IBS/CBS</td><td><a class="lk" href="prd-credito.html#s08">PRD ↗</a></td></tr><tr><td><span class="fn">Score de risco por fornecedor (0–100)</span></td><td>Inteligência</td><td><a class="lk" href="prd-analytics.html#f-03">PRD ↗</a></td></tr><tr><td><span class="fn">Critério: créditos em risco ÷ total</span></td><td>Inteligência</td><td><a class="lk" href="prd-analytics.html#f-03">PRD ↗</a></td></tr><tr><td><span class="fn">Score ≥ 70 → badge verde (baixo risco)</span></td><td>Inteligência</td><td><a class="lk" href="prd-analytics.html#f-03">PRD ↗</a></td></tr><tr><td><span class="fn">Ranking Top 5 Melhores e Top 5 Piores</span></td><td>Inteligência</td><td><a class="lk" href="prd-analytics.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">Mapa de bolhas risco × volume</span></td><td>Inteligência</td><td><a class="lk" href="prd-analytics.html">PRD ↗</a></td></tr><tr><td><span class="fn">Painel unificado da jornada do documento</span></td><td>Conciliação</td><td><a class="lk" href="prd-conciliacao.html#f-05">PRD ↗</a></td></tr></tbody></table></div></details><details class="mot"><summary><span class="mot-t">Conveniência de operação</span><span class="mot-q">23</span><span class="mot-d">Filtros extras, colunas, histórico e prévias. O núcleo tem a versão mínima de cada tela.</span></summary><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Módulo</th><th>PRD</th></tr></thead><tbody><tr><td><span class="fn">Filtros avançados em todas as colunas</span></td><td>Créditos IBS/CBS</td><td><a class="lk" href="prd-credito.html#f-03">PRD ↗</a></td></tr><tr><td><span class="fn">Coluna Inconsistências por DF</span></td><td>Créditos IBS/CBS</td><td><a class="lk" href="prd-credito.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">Badge de método de extinção (4 métodos)</span></td><td>Créditos IBS/CBS</td><td><a class="lk" href="prd-credito.html#f-02">PRD ↗</a></td></tr><tr><td><span class="fn">Visão por documento fiscal na aba DFs</span></td><td>Créditos IBS/CBS</td><td><a class="lk" href="prd-credito.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">Filtro por origem do método de pagamento</span></td><td>Créditos IBS/CBS</td><td><a class="lk" href="prd-credito.html#f-08">PRD ↗</a></td></tr><tr><td><span class="fn">IBS e CBS separados por coluna</span></td><td>Débitos IBS/CBS</td><td><a class="lk" href="prd-debito.html#f-02">PRD ↗</a></td></tr><tr><td><span class="fn">Coluna Inconsistências por DF</span></td><td>Débitos IBS/CBS</td><td><a class="lk" href="prd-debito.html#f-01">PRD ↗</a></td></tr><tr><td><span class="fn">Filtros em Pagamentos Executados</span></td><td>Pagamentos RAD</td><td><a class="lk" href="prd-pagamentos.html#f-03">PRD ↗</a></td></tr><tr><td><span class="fn">Coluna Origem — automática ou manual</span></td><td>Pagamentos RAD</td><td><a class="lk" href="prd-pagamentos.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">Múltiplas inconsistências por DF</span></td><td>Inconsistências</td><td>—</td></tr><tr><td><span class="fn">Atribuição de responsável</span></td><td>Inconsistências</td><td>—</td></tr><tr><td><span class="fn">Histórico de alterações</span></td><td>Inconsistências</td><td>—</td></tr><tr><td><span class="fn">Upload CSV posicional (NF-e · CT-e · NFS-e)</span></td><td>Ingestão de DFs</td><td><a class="lk" href="prd-ingestao.html#f-03">PRD ↗</a></td></tr><tr><td><span class="fn">Pré-visualização antes de confirmar</span></td><td>Ingestão de DFs</td><td><a class="lk" href="prd-ingestao.html#f-03">PRD ↗</a></td></tr><tr><td><span class="fn">Stub DF para documentos rejeitados</span></td><td>Ingestão de DFs</td><td><a class="lk" href="prd-ingestao.html">PRD ↗</a></td></tr><tr><td><span class="fn">Vínculo contrato → obrigações de comprovante</span></td><td>Contratos</td><td><a class="lk" href="prd-contratos.html">PRD ↗</a></td></tr><tr><td><span class="fn">Listagem com filtros padronizados</span></td><td>Contratos</td><td><a class="lk" href="prd-contratos.html#f-01">PRD ↗</a></td></tr><tr><td><span class="fn">Apuração Assistida na sidebar</span></td><td>Organização</td><td><a class="lk" href="prd-organizacao.html">PRD ↗</a></td></tr><tr><td><span class="fn">Catálogo dos seis contextos da API</span></td><td>Integrações</td><td><a class="lk" href="prd-integracoes.html#f-02">PRD ↗</a></td></tr><tr><td><span class="fn">Próxima ação sugerida por documento</span></td><td>Conciliação</td><td><a class="lk" href="prd-conciliacao.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">Recorte por múltiplos períodos</span></td><td>Conciliação</td><td><a class="lk" href="prd-conciliacao.html#f-08">PRD ↗</a></td></tr><tr><td><span class="fn">Abas Resumo, Créditos e Débitos</span></td><td>Apuração IBS/CBS</td><td>—</td></tr><tr><td><span class="fn">Navegação entre competências</span></td><td>Apuração IBS/CBS</td><td>—</td></tr></tbody></table></div></details><details class="mot"><summary><span class="mot-t">Exceção ao fluxo principal</span><span class="mot-q">10</span><span class="mot-d">Casos reais, mas fora do caminho feliz: assumir e reverter RAD, multi-contratos, grupo econômico.</span></summary><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Módulo</th><th>PRD</th></tr></thead><tbody><tr><td><span class="fn">Filtro Grupo Econômico global</span></td><td>Dashboard</td><td><a class="lk" href="prd-inicio.html#f-05">PRD ↗</a></td></tr><tr><td><span class="fn">Assumir recolhimento via RAD</span></td><td>Créditos IBS/CBS</td><td><a class="lk" href="prd-credito.html#f-08">PRD ↗</a></td></tr><tr><td><span class="fn">Reverter o recolhimento assumido</span></td><td>Créditos IBS/CBS</td><td><a class="lk" href="prd-credito.html#f-08">PRD ↗</a></td></tr><tr><td><span class="fn">Guias de recolhimento assumido</span></td><td>Pagamentos RAD</td><td><a class="lk" href="prd-pagamentos.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">Multi-contratos por fornecedor</span></td><td>Contratos</td><td><a class="lk" href="prd-contratos.html#s05">PRD ↗</a></td></tr><tr><td><span class="fn">Multi-contratos no cadastro</span></td><td>Fornecedores</td><td><a class="lk" href="prd-fornecedor.html#f-05">PRD ↗</a></td></tr><tr><td><span class="fn">Hierarquia CNPJ: Matriz + Filiais</span></td><td>Organização</td><td><a class="lk" href="prd-organizacao.html#f-01">PRD ↗</a></td></tr><tr><td><span class="fn">Filtro Grupo Econômico — sincroniza tudo</span></td><td>Organização</td><td><a class="lk" href="prd-organizacao.html#f-01">PRD ↗</a></td></tr><tr><td><span class="fn">Perfis: Cliente e Fornecedor</span></td><td>Auth · Design System</td><td>—</td></tr><tr><td><span class="fn">Login via SSO corporativo</span></td><td>Auth · Design System</td><td>—</td></tr></tbody></table></div></details><details class="mot"><summary><span class="mot-t">Padrão de construção, não funcionalidade</span><span class="mot-q">7</span><span class="mot-d">Tokens, tema, atalhos e componentes. Entram como padrão de código em qualquer tela, sem contar como item.</span></summary><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Módulo</th><th>PRD</th></tr></thead><tbody><tr><td><span class="fn">CNPJ formatado XX.XXX.XXX/XXXX-XX</span></td><td>Fornecedores</td><td><a class="lk" href="prd-fornecedor.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">Tokens CSS globais + PALETTE JS</span></td><td>Auth · Design System</td><td>—</td></tr><tr><td><span class="fn">Sidebar teal colapsável + localStorage</span></td><td>Auth · Design System</td><td>—</td></tr><tr><td><span class="fn">Tema claro/escuro automático</span></td><td>Auth · Design System</td><td>—</td></tr><tr><td><span class="fn">shBuildFilterPanel — filtros padronizados</span></td><td>Auth · Design System</td><td>—</td></tr><tr><td><span class="fn">RF Core — 10 colunas uniformes</span></td><td>Auth · Design System</td><td>—</td></tr><tr><td><span class="fn">ESC fecha qualquer modal</span></td><td>Auth · Design System</td><td>—</td></tr></tbody></table></div></details><details class="mot"><summary><span class="mot-t">Recurso de demonstração</span><span class="mot-q">3</span><span class="mot-d">Existe para o protótipo e não vai para o produto.</span></summary><div class="table-wrap"><table><thead><tr><th>Funcionalidade</th><th>Módulo</th><th>PRD</th></tr></thead><tbody><tr><td><span class="fn">Cadastro com razão social anonimizada</span></td><td>Fornecedores</td><td><a class="lk" href="prd-fornecedor.html#f-04">PRD ↗</a></td></tr><tr><td><span class="fn">Troca de perfil in-session</span></td><td>Auth · Design System</td><td>—</td></tr><tr><td><span class="fn">Selo de modo demonstração</span></td><td>Auth · Design System</td><td>—</td></tr></tbody></table></div></details>
+</div>
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Decisões para aprovar</span></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Decisão</th><th>Recomendação</th></tr></thead><tbody><tr><td><strong>D-01</strong></td><td>Criar o núcleo como recorte dentro do M0?</td><td><strong>Sim</strong> — marcado na priorização e na planilha, sem criar faixa nova: o restante continua M0</td></tr><tr><td><strong>D-02</strong></td><td>Canal de entrada do núcleo: API do ERP ou upload CSV?</td><td><strong>API</strong>, com o CSV como plano B se a integração atrasar</td></tr><tr><td><strong>D-03</strong></td><td>RAD manual no núcleo, sem políticas de execução?</td><td><strong>Sim</strong> — no volume do piloto, gerar a guia à mão é viável</td></tr><tr><td><strong>D-04</strong></td><td>Aviso ao fornecedor do RAD pago fora do núcleo?</td><td><strong>Sim, com ressalva</strong> — é o corte de maior risco; foi marcado M0 recentemente e a decisão é sua</td></tr><tr><td><strong>D-05</strong></td><td>Um contrato por fornecedor no núcleo?</td><td><strong>Sim</strong>, se o piloto confirmar que não há fornecedor com dois modelos</td></tr><tr><td><strong>D-06</strong></td><td>Padrões de construção (tokens, tema, filtros padronizados, atalhos) contam como item?</td><td><strong>Não</strong> — viram critério de pronto de qualquer tela</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">17/09/2026 — Primeira versão: 32 funcionalidades no núcleo a partir das 114 do M0, organizadas pelos sete elos do fluxo core, com os 82 cortes agrupados por motivo e oito ressalvas.</div></div>
+</div>
+</div>
+</body>
+</html>
