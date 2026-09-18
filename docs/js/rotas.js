@@ -45,7 +45,12 @@
     'inconsistencias/listagem': function () { view('inconsistencias'); clicar('[onclick^="showInconsistTab(\'listagem\'"]'); },
     'inconsistencias/kanban':   function () { view('inconsistencias'); clicar('[onclick^="showInconsistTab(\'kanban\'"]'); },
     'portal-fornecedor':        function () { var b = document.getElementById('nav-fornecedor-btn'); if (b && window.showView) window.showView('fornecedor', b); },
-    'analytics':                function () { view('inteligencia'); }
+    'analytics':                function () { view('inteligencia'); },
+    'ressarcimento':            function () { if (window.shRes) window.shRes.abrir('CBS', 'saldo'); },
+    'ressarcimento/ibs':        function () { if (window.shRes) window.shRes.abrir('IBS', 'saldo'); },
+    'ressarcimento/intencoes':  function () { if (window.shRes) window.shRes.abrir(null, 'intencoes'); },
+    'ressarcimento/pedidos':    function () { if (window.shRes) window.shRes.abrir(null, 'pedidos'); },
+    'ressarcimento/recebimentos': function () { if (window.shRes) window.shRes.abrir(null, 'recebimentos'); }
   };
 
   function ler() {

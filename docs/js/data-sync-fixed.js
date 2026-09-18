@@ -1785,6 +1785,7 @@ window.injetarFiltrosCreditos = function() {
       { label: 'Crédito — máx (R$)', id: 'fc-cred-max', type: 'number', placeholder: '∞', min: 0 },
       { label: 'Tipo de DFe',         id: 'fc-tipo-dfe',        type: 'select', options: [{value:'entrada',label:'Entrada'},{value:'saida',label:'Saída'}] },
       { label: 'Método Extinção',      id: 'fc-metodo-extincao', type: 'select', options: [{value:'Split Payment',label:'Split Payment'},{value:'Compensacao',label:'Compensação'},{value:'Ressarcimento',label:'Ressarcimento'},{value:'Transferencia',label:'Transferência'},{value:'RAD',label:'RAD'}] },
+      { label: 'Ressarcimento',        id: 'fc-ressarc',         type: 'select', options: [{value:'reservado',label:'Reservado (intenção)'},{value:'em_pedido',label:'Em pedido'},{value:'ressarcido',label:'Ressarcido'},{value:'__nenhum__',label:'Sem marca'}] },
       { label: 'Valor Total — mín (R$)',  id: 'fc-val-min', type: 'number', placeholder: '0', min: 0 },
       { label: 'Valor Total — máx (R$)',  id: 'fc-val-max', type: 'number', placeholder: '∞', min: 0 },
       { label: 'Valor Líquido — mín (R$)',id: 'fc-vl-min',  type: 'number', placeholder: '0', min: 0 },
@@ -1814,6 +1815,7 @@ window.creditosFiltrarGrid = function() {
   f.credMax       = (document.getElementById('fc-cred-max')         || {}).value || '';
   f.tipoDFe       = (document.getElementById('fc-tipo-dfe')         || {}).value || '';
   f.metodoExtincao= (document.getElementById('fc-metodo-extincao')  || {}).value || '';
+  f.ressarc       = (document.getElementById('fc-ressarc')          || {}).value || '';
   f.valMin  = (document.getElementById('fc-val-min') || {}).value || '';
   f.valMax  = (document.getElementById('fc-val-max') || {}).value || '';
   f.vlMin   = (document.getElementById('fc-vl-min')  || {}).value || '';
@@ -1844,7 +1846,7 @@ window.creditosFiltrarMesAno = function() {
 };
 
 window.creditosLimparFiltrosGrid = function() {
-  ['fc-busca','fc-tipo','fc-status','fc-status-registro','fc-contrato','fc-metodo','fc-pagamento','fc-data-de','fc-data-ate','fc-cred-min','fc-cred-max','fc-tipo-dfe','fc-metodo-extincao','fc-val-min','fc-val-max','fc-vl-min','fc-vl-max','fc-cbs-min','fc-cbs-max','fc-ibs-min','fc-ibs-max'].forEach(function(id) {
+  ['fc-busca','fc-tipo','fc-status','fc-status-registro','fc-contrato','fc-metodo','fc-pagamento','fc-data-de','fc-data-ate','fc-cred-min','fc-cred-max','fc-tipo-dfe','fc-metodo-extincao','fc-ressarc','fc-val-min','fc-val-max','fc-vl-min','fc-vl-max','fc-cbs-min','fc-cbs-max','fc-ibs-min','fc-ibs-max'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -1951,6 +1953,7 @@ window.renderizarTabelaCreditos = function() {
       if (f.credMin !== '' && r.cred < parseFloat(f.credMin)) return false;
       if (f.credMax !== '' && r.cred > parseFloat(f.credMax)) return false;
       if (f.metodoExtincao && r.metodoExtincao !== f.metodoExtincao) return false;
+      if (f.ressarc) { var _rk = (window.shRes && window.shRes.marcaKey) ? window.shRes.marcaKey(r.rfId) : ''; if (f.ressarc === '__nenhum__' ? !!_rk : _rk !== f.ressarc) return false; }
       if (f.valMin !== '' && !isNaN(parseFloat(f.valMin)) && r.valorTotal < parseFloat(f.valMin)) return false;
       if (f.valMax !== '' && !isNaN(parseFloat(f.valMax)) && r.valorTotal > parseFloat(f.valMax)) return false;
       if (f.vlMin  !== '' && !isNaN(parseFloat(f.vlMin))  && r.valorLiq   < parseFloat(f.vlMin))  return false;
@@ -2002,7 +2005,7 @@ window.renderizarTabelaCreditos = function() {
         ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\''+r.rfId+'\')" title="Ver comprovante" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">'+r.pag+'</a>'
         : '<span style="color:var(--txt3)">—</span>';
 
-      var statusBadge = bdg(r.statusCredito);
+      var statusBadge = bdg(r.statusCredito) + (window.shRes && window.shRes.marcaHtml ? window.shRes.marcaHtml(r.rfId) : '');
       var _incLabels = (r._inconsistencias && r._inconsistencias.length)
         ? r._inconsistencias.map(function(i){ return i.tipoLabel || i.tipo || 'Inconsistência'; })
         : (r.inconsistencia ? [r.inconsistencia] : []);
@@ -4286,6 +4289,7 @@ window.renderizarRFsInconsistencias = function() {
       dataExtincaoCredito: _incRf.dataExtincaoCredito || null
     });
   });
+  try { if (window.shRes && window.shRes.inconsistencias) window.shRes.inconsistencias(incGlobal); } catch (e) {}
   window._inconsistenciasGlobal = incGlobal;
 
   // Popular select de contratos no filtro de inconsistências
@@ -8181,6 +8185,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function _postProcessarDados() {
       try { window._renderGESelects && window._renderGESelects(); } catch(e) {}
       try { window._enriquecerNFsSaida(); } catch(e) { console.error('[data-sync-fixed] Erro _enriquecerNFsSaida:', e); }
+      // Ressarcimento: intenções, pedidos e pagamentos aplicados aos RFs antes de
+      // qualquer indicador — só o pagamento muda o statusCredito (js/ressarcimento.js)
+      try { window.shRes && window.shRes.aplicarNaBase && window.shRes.aplicarNaBase(); } catch(e) {}
       try { _calcularStatusRegistro(); } catch(e) {}
       try {
         // Atribuir cnpjComprador round-robin pelos CNPJs ativos da Induspar
@@ -8326,7 +8333,9 @@ document.addEventListener('DOMContentLoaded', function() {
           };
 
           var statusSemPagBuild = ['nao_apropriado', 'utilizado', 'nao_apropriado', 'glosado'];
-          var _metExtCred = ['Split Payment','Compensacao','Ressarcimento','Transferencia'];
+          // 'Ressarcimento' não é sorteado: só o pagamento de um pedido no módulo
+          // Ressarcimento grava esse método de extinção (js/ressarcimento.js).
+          var _metExtCred = ['Split Payment','Compensacao','Transferencia'];
           function gerarRFPag() {
             var tem = Math.random() < 0.6;
             var dat = '—';
@@ -10609,7 +10618,8 @@ window._automState = {
   relatorios: [
     { id:'REL-001', nome:'Créditos IBS+CBS — Mensal', modulo:'creditos', destinatarios:['fiscal@positivo.com','controladoria@positivo.com'], recorrencia:'mensal', diaHora:'1 · 08:00', formato:'PDF', ativo:true,  ultimoEnvio:'01/06/2026', proximoEnvio:'01/07/2026' },
     { id:'REL-002', nome:'Inconsistências — Semanal',  modulo:'inconsistencias', destinatarios:['compliance@positivo.com'], recorrencia:'semanal', diaHora:'Segunda · 07:00', formato:'Excel', ativo:true,  ultimoEnvio:'24/06/2026', proximoEnvio:'01/07/2026' },
-    { id:'REL-003', nome:'Pagamentos Executados — Quinzenal', modulo:'pagamentos', destinatarios:['tesouraria@positivo.com','cfo@positivo.com'], recorrencia:'quinzenal', diaHora:'1 e 15 · 09:00', formato:'PDF', ativo:false, ultimoEnvio:'15/06/2026', proximoEnvio:'— (inativo)' }
+    { id:'REL-003', nome:'Pagamentos Executados — Quinzenal', modulo:'pagamentos', destinatarios:['tesouraria@positivo.com','cfo@positivo.com'], recorrencia:'quinzenal', diaHora:'1 e 15 · 09:00', formato:'PDF', ativo:false, ultimoEnvio:'15/06/2026', proximoEnvio:'— (inativo)' },
+    { id:'REL-004', nome:'Ressarcimento CBS e IBS — prazos e recebimentos (Mensal)', modulo:'ressarcimento', destinatarios:['fiscal@positivo.com','tesouraria@positivo.com'], recorrencia:'mensal', diaHora:'1 · 08:30', formato:'PDF', ativo:true,  ultimoEnvio:'01/09/2026', proximoEnvio:'01/10/2026' }
   ],
   itsm: {
     configurado: true, sistema:'ServiceNow', urlBase:'https://positivo.service-now.com/api/now/table/', authTipo:'bearer',
@@ -10618,7 +10628,11 @@ window._automState = {
       { id:'nova_inconsistencia',  label:'Nova inconsistência detectada',     ativo:true,  ultimoEvento:'30/06/2026 14:22', totalEnviados:47 },
       { id:'status_alterado',      label:'Status de RF alterado',             ativo:true,  ultimoEvento:'30/06/2026 10:05', totalEnviados:218 },
       { id:'rf_vencido',           label:'RF próximo ao vencimento (7 dias)', ativo:true,  ultimoEvento:'29/06/2026 08:00', totalEnviados:12 },
-      { id:'conciliacao_pendente', label:'Conciliação pendente há 30+ dias',  ativo:false, ultimoEvento:'—',               totalEnviados:0 }
+      { id:'conciliacao_pendente', label:'Conciliação pendente há 30+ dias',  ativo:false, ultimoEvento:'—',               totalEnviados:0 },
+      { id:'res_prazo_intencao',   label:'Ressarcimento · intenção vence no último dia útil do período (5 dias)', ativo:true, ultimoEvento:'25/08/2026 08:00', totalEnviados:4 },
+      { id:'res_prazo_pedido',     label:'Ressarcimento · pedido vence no último dia útil do mês seguinte (5 dias)', ativo:true, ultimoEvento:'24/09/2026 08:00', totalEnviados:3 },
+      { id:'res_fim_analise',      label:'Ressarcimento · fim da análise do Fisco sem manifestação', ativo:true, ultimoEvento:'—', totalEnviados:0 },
+      { id:'res_pagamento_silencio', label:'Ressarcimento · pagamento por silêncio vence em 15 dias', ativo:true, ultimoEvento:'—', totalEnviados:0 }
     ],
     camposTitulo:'[SplitHub] {{tipo}} — RF {{rf_id}} · {{fornecedor}}',
     camposPrioridade:'2',
@@ -10685,7 +10699,7 @@ window._automState = {
 var _automCor = { bg:'var(--bg)', card:'var(--card)', brd:'var(--border)', txt1:'var(--txt1)', txt2:'var(--txt2)', txt3:'var(--txt3)', teal:'#1d9e75', blue:'#185fa5', green:'#1d9e75', red:'#a32d2d', amber:'#ba7517', purple:'#8B5CF6' };
 var _ac = _automCor;
 
-var _automModLabels = { creditos:'Créditos', debitos:'Débitos', inconsistencias:'Inconsistências', pagamentos:'Pagamentos', consolidado:'Consolidado (Visão Geral)' };
+var _automModLabels = { creditos:'Créditos', debitos:'Débitos', inconsistencias:'Inconsistências', pagamentos:'Pagamentos', ressarcimento:'Ressarcimento', consolidado:'Consolidado (Visão Geral)' };
 var _automModCores  = { creditos:_ac.teal, debitos:_ac.blue, inconsistencias:_ac.red, pagamentos:_ac.green, consolidado:_ac.purple };
 
 function _automFmt(v) { return v >= 1e6 ? 'R$ '+(v/1e6).toFixed(1).replace('.',',')+'M' : v >= 1e3 ? 'R$ '+Math.round(v/1e3)+'K' : 'R$ '+v; }
@@ -11792,6 +11806,7 @@ window.ragBuildIndex = function() {
   [
     { id:'kb-split',     src:'LC 214/2025 arts. 47–52',           text:'split payment mecanismo retenção automática tributo IBS CBS instituição financeira PIX cartão boleto recolhimento transferência fiscal TF comprador fornecedor pagamento automático' },
     { id:'kb-aliquota',  src:'LC 214/2025 arts. 54–89',           text:'alíquota CBS 8.8% IBS 0.1% imposto seletivo IS percentual taxa reforma tributária 2026 2033 cálculo base' },
+    { id:'kb-ressarcimento', src:'LC 214/2025 arts. 39, 40, 53 e 54; Decreto 12.955/2026 arts. 39, 42 e 465; Resolução CGIBS 6/2026 arts. 466 e 486', text:'ressarcimento ressarcir saldo credor saldo a recuperar intenção pedido PER/DCOMP protocolo comitê gestor receita federal análise 30 60 180 dias silêncio 15 dias selic matriz fiscalização 360 dias indeferido deferido parcial cancelamento 2026 não ressarcível' },
     { id:'kb-credito',   src:'LC 214/2025 arts. 44–55',           text:'crédito tributário apropriar apropriação não-cumulatividade glosa perda crédito fornecedor pagamento confirmado plataforma centralizada ressarcimento em risco vencido inconsistência' },
     { id:'kb-rad',       src:'LC 214/2025 art. 51; Decreto 12.955 arts. 12–15', text:'RAD recolhimento pelo adquirente substituto ente público regime especial B2B adquirente retém recolhe fornecedor' },
     { id:'kb-cronograma',src:'LC 214/2025 arts. 348–421',         text:'cronograma implementação transição 2026 2027 2028 2033 split payment obrigatório fase PIS COFINS ISS ICMS extinção prazo vigência quando' },
@@ -12014,8 +12029,11 @@ window.sincronizarApuracao = function() {
       if (nf.tipo === 'entrada') {
         var isAprop = (sc === 'apropriado' || sc === 'utilizado');
         var isUtil  = (sc === 'utilizado');
+        // Crédito extinto por ressarcimento não abateu débito: fica fora de 'util'
+        // e sai do saldo no período do pedido (shRes.saidaPeriodo)
+        var isRes   = isUtil && rf.metodoExtincao === 'Ressarcimento';
         var aprop   = isAprop ? v : 0;
-        var util    = isUtil  ? v : 0;
+        var util    = (isUtil && !isRes) ? v : 0;
         p.creditos.push({
           doc: doc,
           tributo: tri,
@@ -12026,6 +12044,7 @@ window.sincronizarApuracao = function() {
           naoAprop: v - aprop,
           util: util,
           naoUtil: aprop - util,
+          ressarc: isRes ? v : 0,
           motivo: (v - aprop > 0) ? (rf.motivo || 'Aguardando confirmação na Plataforma Centralizada') : null
         });
       } else if (nf.tipo === 'saida') {
@@ -12084,8 +12103,9 @@ window.sincronizarApuracao = function() {
     var cbsAprop = cbsC.reduce(function(s,c){ return s+c.aprop; }, 0);
     var ibsUtil  = ibsC.reduce(function(s,c){ return s+c.util;  }, 0);
     var cbsUtil  = cbsC.reduce(function(s,c){ return s+c.util;  }, 0);
-    ibsAcum = ibsAcum + ibsAprop - ibsUtil;
-    cbsAcum = cbsAcum + cbsAprop - cbsUtil;
+    var _saida = function (t) { try { return (window.shRes && window.shRes.saidaPeriodo) ? window.shRes.saidaPeriodo(t, k) : 0; } catch (e) { return 0; } };
+    ibsAcum = ibsAcum + ibsAprop - ibsUtil - _saida('IBS');
+    cbsAcum = cbsAcum + cbsAprop - cbsUtil - _saida('CBS');
   });
 
   // Substituir apurData global e atualizar selector

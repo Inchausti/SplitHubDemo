@@ -21,9 +21,9 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.3'
-DATA = u'16/09/2026'
-BASE_MAPA = u'Mapa de Funcionalidades v2.1'
+VERSAO = u'v2.4'
+DATA = u'18/09/2026'
+BASE_MAPA = u'Mapa de Funcionalidades v2.3'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
 URL_DOCS = 'https://split-hubhq.github.io/app/docs/'
@@ -148,6 +148,8 @@ FAIXAS = {
     17: ['M2']*4,
     18: ['M1','M1','M1','M1','M1','M0','M0','M0','M0','M0','M0'],
     19: ['M1','M1','M1','M1','M1','M0'],
+    # Ressarcimento — fora do M0 por decisão de 18/09/2026 (D16)
+    20: ['M1','M2','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1','M1','M1','M1'],
 }
 
 # ── revisoes de faixa ──────────────────────────────────────────────────────
@@ -238,6 +240,7 @@ NOTA = {
     16: u'A apuração é onde o crédito vira número exigível. Entra o ciclo calcular–concluir–reabrir.',
     17: u'Depende de base legal indexada e de confiança que um piloto ainda não tem.',
     18: u'A <strong>régua de cobrança</strong> entra no M0 por decisão de 14/09: cobrança não feita é crédito perdido. Relatórios agendados ficam em M1 e a integração ITSM desceu a M2 em 15/09 — abrir chamado é rotina de time grande, não do piloto.',
+    20: u'<strong>Fora do M0 por decisão de 18/09/2026.</strong> A cadeia do crédito fecha na apropriação; o ressarcimento é o passo seguinte — transformar o saldo que sobrou em dinheiro. E o primeiro pedido real só existe em 2027: saldos de 2026 não são ressarcíveis. Treze funcionalidades em M1, o ciclo que tira o analista da planilha — saldo, intenção, pedido, decisão, recebimento, prazos, conferência e impedimentos. Duas em M2: o comparativo compensar × ressarcir e a previsão de caixa, que explicam a decisão em vez de executá-la. Implementado no protótipo em simulação 2026.',
     19: u'Multiusuário interno é consequência de adoção. A exceção é o painel de acessos externos, que entrou no M0 junto com o acesso do fornecedor — e foi confirmado na revisão de 15/09.',
 }
 
@@ -808,6 +811,10 @@ A(u'</div>')
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Decisões</span></div>')
 DEC = [
+    ('ok', u'D16 · Ressarcimento fora do M0',
+     u'<strong>Decidido em 18/09/2026.</strong> O módulo foi implementado no protótipo, em simulação 2026, e entra no mapa com '
+     u'15 funcionalidades — nenhuma no M0: 13 em M1 e 2 em M2. Substitui a sugestão da proposta, que levava 8 ao M0. '
+     u'O M0 não muda de tamanho.'),
     ('ok', u'D3 · API no M0, em três contextos — <em>revista</em>',
      u'<strong>Decidido em 14/09/2026, revisto no mesmo dia.</strong> Os três contextos continuam no M0: ingestão de '
      u'DFs, RAD ↔ ERP e garantia de crédito. Mas o <strong>módulo de Integrações sai do M0</strong>: no primeiro '
@@ -868,6 +875,9 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.4</div><div class="ver-desc">'
+  u'18/09/2026 — Entra o módulo <strong>Ressarcimento</strong>, implementado no protótipo em simulação 2026: 15 funcionalidades, '
+  u'<strong>nenhuma no M0</strong> (D16) — 13 em M1 e 2 em M2. O M0 não muda. Base: Mapa de Funcionalidades v2.3.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v2.3</div><div class="ver-desc">'
   u'16/09/2026 — <strong>Cada funcionalidade abre a própria descrição.</strong> Clicar na linha mostra o que ela '
   u'faz, o tipo, a origem, a história da faixa, a ordem de construção e o link para a descrição completa no PRD do '

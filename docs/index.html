@@ -226,6 +226,7 @@ nav{padding:10px;flex:1;overflow-y:auto}
 [data-perfil="fornecedor"] #nav-pagamentos-btn,
 [data-perfil="fornecedor"] #nav-conciliacao-btn,
 [data-perfil="fornecedor"] #nav-inconsist-btn,
+[data-perfil="fornecedor"] #nav-ressarcimento-btn,
 [data-perfil="fornecedor"] #nav-sub-group-inconsist,
 [data-perfil="fornecedor"] #nav-analytics-btn,
 [data-perfil="fornecedor"] #nav-sub-group-analytics,
@@ -952,6 +953,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <button class="nav-btn" id="nav-debitos-btn" title="Débito" onclick="showView('debitos',this)"><span class="nav-icon">◇</span><span class="nav-label"> Débito</span></button>
     <button class="nav-btn" id="nav-pagamentos-btn" title="Pagamentos" onclick="showView('pagamentos',this)"><span class="nav-icon">⊟</span><span class="nav-label"> Pagamentos</span></button>
     <button class="nav-btn" id="nav-conciliacao-btn" title="Conciliação" onclick="showView('conciliacao',this)"><span class="nav-icon">⋈</span><span class="nav-label"> Conciliação</span></button>
+    <button class="nav-btn" id="nav-ressarcimento-btn" title="Ressarcimento" onclick="showView('ressarcimento',this)"><span class="nav-icon">↺</span><span class="nav-label"> Ressarcimento</span></button>
     <button class="nav-btn" id="nav-inconsist-btn" title="Inconsistência" onclick="showView('inconsistencias',this)"><span class="nav-icon">⚠</span><span class="nav-label"> Inconsistência</span></button>
     <button class="nav-btn" id="nav-analytics-btn" title="Analytics" onclick="showView('inteligencia',this)"><span class="nav-icon">◆</span><span class="nav-label"> Analytics</span></button>
     <button class="nav-btn" id="nav-admin-btn" title="Configurações" onclick="showAdminSub('organizacao',document.getElementById('subnav-admin-organizacao'))"><span class="nav-icon">⚙</span><span class="nav-label"> Configurações</span></button>
@@ -1943,7 +1945,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <div class="ccrd" style="flex:55;min-width:0">
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
         <div class="ctitle" style="margin-bottom:0">Crédito Aprop. vs Débito — mensal</div>
-        <span class="periodo-info" data-tip="Linhas mensais comparando: Crédito Apropriado (entrada confirmada pela Plataforma Centralizada), Débito (saída apurada nas NFs de saída) e Recolhimento Líquido (débito após abatimento de créditos). Quando a linha de crédito supera a de débito, o mês é credor — o excedente vira saldo a recuperar.">i</span>
+        <span class="periodo-info" data-tip="Linhas mensais comparando: Crédito Apropriado (entrada confirmada pela Plataforma Centralizada), Débito (saída apurada nas NFs de saída) e Recolhimento Líquido (débito após abatimento de créditos). Quando a linha de crédito supera a de débito, o mês é credor — o excedente vira saldo a recuperar, que compensa débitos dos meses seguintes ou é pedido em dinheiro no módulo Ressarcimento, por tributo.">i</span>
       </div>
       <div class="csub">R$ milhões · IBS+CBS · crédito aprop. vs débito vs recolhimento líquido · mês a mês</div>
       <div class="cwrap" style="height:160px"><div id="cFCT"></div></div>
@@ -2616,6 +2618,9 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
 <div id="darf-print-area" style="display:none"></div>
 
 <!-- INTELIGÊNCIA -->
+<!-- RESSARCIMENTO — novo módulo (renderizado por js/ressarcimento.js) -->
+<div id="view-ressarcimento" class="view"></div>
+
 <div id="view-inteligencia" class="view">
   <div class="analytics-tabs">
     <button class="atab atab-int active" onclick="showAnalyticsTab('inteligencia')">Inteligência</button>
@@ -3658,7 +3663,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
               <span style="font-size:22px">📋</span>
               <div>
                 <div style="font-size:13px;font-weight:700;color:var(--txt1)">Changelog do Protótipo</div>
-                <div style="font-size:11px;color:var(--txt3)">v0.13.0 · atual</div>
+                <div style="font-size:11px;color:var(--txt3)">v0.20.0 · atual</div>
               </div>
             </div>
             <p style="font-size:12px;color:var(--txt2);line-height:1.55">Histórico completo de alterações do protótipo — novas funcionalidades, correções e evoluções por versão.</p>
@@ -7915,7 +7920,7 @@ function showView(id,btn,fromBottomNav){
   collapseAllNavGroups();
   document.getElementById("view-"+id).classList.add("active");
   btn.classList.add("active");
-  var _ahTitles={dashboard:'Dashboard',pagamentos:'Pagamentos RAD',creditos:'Créditos',debitos:'Débitos',conciliacao:'Conciliação',inteligencia:'Analytics · Inteligência',assistente:'Analytics · Assistente',fct:'Fluxo de Caixa Tributário',apuracao:'Apuração IBS/CBS',contratos:'Admin · Contratos',fornecedores:'Admin · Fornecedores',organizacao:'Admin · Organização',ingestao:'Admin · Importação de DFs',automacoes:'Admin · Automações',inconsistencias:'Inconsistências',kanban:'Inconsistências · Kanban',fornecedor:'Portal Fornecedor'};
+  var _ahTitles={dashboard:'Dashboard',pagamentos:'Pagamentos RAD',creditos:'Créditos',debitos:'Débitos',conciliacao:'Conciliação',inteligencia:'Analytics · Inteligência',assistente:'Analytics · Assistente',fct:'Fluxo de Caixa Tributário',apuracao:'Apuração IBS/CBS',ressarcimento:'Ressarcimento',contratos:'Admin · Contratos',fornecedores:'Admin · Fornecedores',organizacao:'Admin · Organização',ingestao:'Admin · Importação de DFs',automacoes:'Admin · Automações',inconsistencias:'Inconsistências',kanban:'Inconsistências · Kanban',fornecedor:'Portal Fornecedor'};
   var _ahEl=document.getElementById('ah-title'); if(_ahEl) _ahEl.textContent=_ahTitles[id]||id;
   // sync the other nav
   if(fromBottomNav){
@@ -9786,16 +9791,16 @@ var DIAG_NODES = {
     terminal: true,
     tipo: 'alerta',
     titulo: 'Atenção — Prescrição em 1 a 2 Anos',
-    resposta: 'Crédito com **janela de aproveitamento se estreitando**.\n\n⚠ Faltam 1 a 2 anos para prescrição\n⚠ Priorize a utilização ou o requerimento de ressarcimento\n\n**Ações recomendadas:**\n1. Inclua o crédito na apuração do trimestre atual\n2. Se crédito acumulado: protocole pedido de ressarcimento junto ao CG-IBS\n3. Ative alerta de vencimento no módulo de Créditos',
-    legal: 'LC 214/2025, arts. 55 e 58 (ressarcimento)'
+    resposta: 'Crédito com **janela de aproveitamento se estreitando**.\n\n⚠ Faltam 1 a 2 anos para prescrição\n⚠ Priorize a utilização ou o requerimento de ressarcimento\n\n**Ações recomendadas:**\n1. Inclua o crédito na apuração do trimestre atual\n2. Se crédito acumulado: declare a intenção e faça o pedido no módulo Ressarcimento — CBS na Receita Federal, IBS no Comitê Gestor\n3. Ative alerta de vencimento no módulo de Créditos',
+    legal: 'LC 214/2025, arts. 39, 40 e 54 (ressarcimento e validade do crédito)'
   },
   presc_urgente: {
     id: 'presc_urgente',
     terminal: true,
     tipo: 'erro',
     titulo: 'URGENTE — Prescrição em Menos de 1 Ano',
-    resposta: 'Crédito em **risco iminente de perda definitiva**.\n\n❌ Menos de 12 meses para o prazo de 5 anos\n❌ Após prescrição: perda definitiva, sem recuperação\n\n**Ação imediata:**\n1. Aproveite o crédito na apuração do período corrente\n2. Se não for possível utilizar: protocole ressarcimento em dinheiro junto ao CG-IBS imediatamente\n3. Documente toda a cadeia: NF-e + RF + TF + histórico de tentativas de aproveitamento\n4. Consulte assessoria tributária — possível ação judicial para suspender a prescrição',
-    legal: 'LC 214/2025, arts. 55 e 58 · CTN, art. 168',
+    resposta: 'Crédito em **risco iminente de perda definitiva**.\n\n❌ Menos de 12 meses para o prazo de 5 anos\n❌ Após prescrição: perda definitiva, sem recuperação\n\n**Ação imediata:**\n1. Aproveite o crédito na apuração do período corrente\n2. Se não for possível utilizar: peça o ressarcimento no módulo Ressarcimento — CBS na Receita Federal, IBS no Comitê Gestor, em pedidos separados\n3. Documente toda a cadeia: NF-e + RF + TF + histórico de tentativas de aproveitamento\n4. Consulte assessoria tributária — possível ação judicial para suspender a prescrição',
+    legal: 'LC 214/2025, arts. 39, 40 e 54 · CTN, art. 168',
     acao: { label: 'Ir para Créditos', fn: 'dashIrParaCreditos' }
   },
   presc_em_risco: {
@@ -10159,6 +10164,8 @@ var CHAT_KB=[
    r:'O cronograma da Reforma Tributária é gradual:\n\n**2026** — Início da vigência do IBS e CBS com alíquotas reduzidas (período-teste)\n**2027** — Split payment obrigatório: Fase 1 (cartão de crédito/débito, boleto bancário)\n**2028** — Split payment: Fase 2 (PIX e todos os meios eletrônicos)\n**2029–2032** — Alíquotas IBS/CBS sobem progressivamente; PIS/COFINS/ISS/ICMS reduzem na mesma proporção\n**2033** — Extinção definitiva do PIS, COFINS, ISS e ICMS; IBS e CBS em patamar pleno\n\n**Base legal:** arts. 348–421 da LC 214/2025 e arts. 1–5 do Decreto 12.955/2026.'},
   {k:['marketplace','plataforma digital','e-commerce','ecommerce','intermediário','responsabilidade solidária'],
    r:'Em **marketplaces e plataformas digitais**, o IBS e a CBS incidem sobre as operações intermediadas com regras específicas:\n\n- O marketplace é **responsável solidário** pelo recolhimento quando o vendedor não o fizer (art. 38, LC 214)\n- Para split payment via marketplace, o adquirente do serviço de pagamento executa a retenção automaticamente\n- O **RAD** pode ser aplicado quando o marketplace atua como adquirente da operação\n- Plataformas estrangeiras sem estabelecimento no Brasil têm obrigações de cadastro junto à RFB\n\n**Base legal:** arts. 38–42 da LC 214/2025 e art. 9 do Decreto 12.955/2026.'},
+  {k:['ressarcimento','ressarcir','saldo credor','per/dcomp','perdcomp','intenção de ressarcimento','saldo a recuperar'],
+   r:'O **ressarcimento** devolve em dinheiro o saldo a recuperar do período — e é feito **por tributo**, em dois pedidos distintos:\n\n- **CBS:** pedido à Receita Federal, pelo PER/DCOMP\n- **IBS:** pedido ao Comitê Gestor do IBS\n\n**Etapas:** intenção opcional até o último dia útil do período (trava o saldo para não compensar o mês seguinte) → pedido até o último dia útil do mês seguinte, na matriz → análise em 30, 60 ou 180 dias → sem resposta no prazo, pagamento em 15 dias → correção pela Selic.\n\n**Não ressarcíveis:** saldos de 2026 e créditos com vedação expressa. No protótipo, a regra de 2026 está desligada para simulação.\n\nAcompanhe tudo no módulo **Ressarcimento**.\n\n**Base legal:** LC 214/2025, arts. 39, 40, 53 e 54; Decreto 12.955/2026, arts. 39, 42 e 465; Resolução CGIBS 6/2026, arts. 466 e 486.'},
   {k:['crédito','credito','apropriar','apropriação','não-cumulatividade','nao-cumulatividade','glosa','perda de crédito'],
    r:'O regime de **créditos do IBS e CBS** segue a não-cumulatividade plena:\n\n**Quando o crédito é gerado:** na entrada do bem ou serviço\n**Condição para apropriação:** o fornecedor deve ter liquidado o tributo via split payment ou recolhimento direto (confirmado pela Plataforma Centralizada)\n**Crédito não utilizado:** transportado automaticamente para o período seguinte\n**Ressarcimento:** empresas com crédito acumulado podem requerer devolução em dinheiro\n\n**Atenção — Risco de glosa:** se o fornecedor não pagar o tributo e não houver TF confirmado, o crédito **não é apropriável** (art. 48, LC 214). O split payment elimina esse risco ao garantir o pagamento automático.\n\n**Base legal:** arts. 44–55 da LC 214/2025.'},
   {k:['rad','recolhimento pelo adquirente','adquirente responsável','substituto'],
@@ -10379,6 +10386,7 @@ function apurBdgMec(mec){
 }
 
 function apurBdgCred(r){
+  if(r.ressarc>0)return'<span style="background:rgba(var(--status-green-rgb),.12);color:var(--green);border:1px solid rgba(var(--status-green-rgb),.25);border-radius:4px;padding:2px 7px;font-size:11px" title="Extinto por ressarcimento — não abateu débito">Ressarcido</span>';
   if(r.util>0)return'<span style="background:rgba(var(--status-green-rgb),.12);color:var(--green);border:1px solid rgba(var(--status-green-rgb),.25);border-radius:4px;padding:2px 7px;font-size:11px">Utilizado</span>';
   if(r.aprop>0)return'<span style="background:rgba(var(--teal-alt-rgb),.12);color:var(--teal);border:1px solid rgba(var(--teal-alt-rgb),.25);border-radius:4px;padding:2px 7px;font-size:11px">Apropriado</span>';
   return'<span style="background:rgba(var(--status-amber-rgb),.12);color:var(--amber);border:1px solid rgba(var(--status-amber-rgb),.25);border-radius:4px;padding:2px 7px;font-size:11px">Não Apropriado</span>';
@@ -10772,8 +10780,9 @@ if (window.Chart) {
   Chart.defaults.font.size = 11;
 }
 </script>
-<script src="js/data-sync-fixed.js?v=121"></script>
-<script src="js/rotas.js?v=1"></script>
+<script src="js/ressarcimento.js?v=8"></script>
+<script src="js/data-sync-fixed.js?v=123"></script>
+<script src="js/rotas.js?v=2"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=7"></script>
 <script src="js/charts.js?v=2"></script>
