@@ -240,7 +240,8 @@
     if (document.getElementById('mt-css')) return;
     var s = document.createElement('style'); s.id = 'mt-css';
     s.textContent = [
-      '.mt-previa{position:fixed;top:10px;right:14px;z-index:1500;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--purple);border-radius:20px;padding:4px 10px;box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none}',
+      '@media (max-width:768px){.mt-previa{bottom:74px!important}}',
+      '.mt-previa{position:fixed;bottom:14px;right:14px;z-index:1500;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--purple);border-radius:20px;padding:4px 10px;box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none}',
       '.mt-aviso{border:1px dashed var(--purple);background:color-mix(in srgb,var(--purple) 7%,transparent);border-radius:10px;padding:11px 14px;margin-bottom:16px;font-size:12px;color:var(--txt2);line-height:1.55}',
       '.mt-aviso b{color:var(--txt1)}',
       '.mt-op{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px}',
