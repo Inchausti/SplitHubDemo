@@ -700,10 +700,17 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
 
   // ── Status badge da NF ──────────────────────────────────────────────────
   var stLabs = { nao_apropriado:'Não Apropriado', apropriado:'Apropriado', utilizado:'Utilizado',
-    nao_extinto:'Não Extinto', extinto:'Extinto' };
+    parc_utilizado:'Parcialmente utilizado', nao_extinto:'Não Extinto', extinto:'Extinto' };
   var stRgbs = { nao_apropriado:_hexRgb(PALETTE.amber), apropriado:_hexRgb(PALETTE.teal), utilizado:_hexRgb(PALETTE.teal),
-    nao_extinto:_hexRgb(PALETTE.gray), extinto:_hexRgb(PALETTE.teal) };
+    parc_utilizado:_hexRgb(PALETTE.teal), nao_extinto:_hexRgb(PALETTE.gray), extinto:_hexRgb(PALETTE.teal) };
   var stKey = r.status || 'nao_apropriado';
+  // O DF aceita estado parcial: com o ressarcimento, um RF pode ser extinto e o
+  // outro seguir apropriado. O selo segue os RFs, como a listagem de DFs.
+  if (r.tipo === 'entrada' && (r.registrosFiscais || []).length) {
+    var _stsRF = r.registrosFiscais.map(function(x){ return x.statusCredito || x.status; });
+    if (_stsRF.every(function(x){ return x === 'utilizado'; })) stKey = 'utilizado';
+    else if (_stsRF.some(function(x){ return x === 'utilizado'; })) stKey = 'parc_utilizado';
+  }
   var stLab = stLabs[stKey] || stKey;
   var stRgb = stRgbs[stKey] || '167,168,170';
 
@@ -730,7 +737,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       + '<div style="color:var(--txt3)">NF Total: <span style="color:var(--txt1)">' + ff(rf.valorTotalNF || 0) + '</span></div>'
       + '<div style="display:flex;align-items:center;gap:4px">Status: <span style="background:rgba(' + stRfRgb + ',.12);color:rgba(' + stRfRgb + ',1);border:1px solid rgba(' + stRfRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRfLab + '</span></div>'
       + (stRgLab ? '<div style="display:flex;align-items:center;gap:4px">RF: <span style="background:rgba(' + stRgRgb + ',.12);color:rgba(' + stRgRgb + ',1);border:1px solid rgba(' + stRgRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRgLab + '</span></div>' : '<div></div>')
-      + ((rf.statusCredito||rf.status)==='utilizado'&&rf.metodoExtincao ? '<div style="color:var(--txt3)">Extinção: <span style="color:var(--teal);font-weight:600">' + rf.metodoExtincao + '</span></div>' : '')
+      + ((rf.statusCredito||rf.status)==='utilizado'&&rf.metodoExtincao ? '<div style="color:var(--txt3)">Extinção: <span style="color:var(--teal);font-weight:600">' + ({Compensacao:'Compensação',Transferencia:'Transferência'}[rf.metodoExtincao] || rf.metodoExtincao) + (rf.ressarcimento && rf.ressarcimento.marca === 'ressarcido' ? ' · ' + rf.ressarcimento.ref : '') + '</span></div>' : '')
       + ((rf.statusCredito||rf.status)==='utilizado'&&rf.dataExtincao ? '<div style="color:var(--txt3)">Data: <span style="color:var(--txt1)">' + rf.dataExtincao + '</span></div>' : '')
       + '<div style="color:var(--txt3)" title="Data do recolhimento que extinguiu o débito — LC 214/2025, art. 47">Apropriação: <span style="color:var(--txt1)">' + (window.shCelulaApropriacao ? window.shCelulaApropriacao(rf) : '&mdash;') + '</span></div>'
       + '<div style="color:var(--txt3)" title="Data em que o crédito foi consumido">Extinção: ' + (window.shCelulaExtincaoCredito ? window.shCelulaExtincaoCredito(rf) : '&mdash;') + '</div>'
@@ -743,10 +750,10 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165',
     'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23',
     'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246',
-    'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117' };
+    'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160' };
   var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!',
     'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌',
-    'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌' };
+    'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺' };
 
   var allEvents = [];
   var d0 = r.data || '';
@@ -939,6 +946,31 @@ window._rfDetailRow = function(label, value, color, mono) {
     + '</div>';
 };
 
+/* Débitos de saída do mesmo tributo extintos por compensação, na apuração
+   do mês em que o crédito foi usado (ou no mais próximo). Determinístico:
+   o mesmo RF aponta sempre para as mesmas DFs. */
+window._rfDebitosCompensados = function(rf, mesUso) {
+  var tf = rf.tipoFiscal, cand = [];
+  (window._nfListaCompleta || window.nfListaFiltradaGlobal || []).forEach(function(n) {
+    if (n.tipo !== 'saida') return;
+    (n.registrosFiscais || []).forEach(function(d) {
+      if (d.tipoFiscal !== tf || d.metodoExtincao !== 'Compensacao') return;
+      cand.push({ numero: n.numero, mes: (n.data || '').slice(0, 7), valor: d.valor || 0 });
+    });
+  });
+  if (!cand.length) return [];
+  function dist(m) { var a = m.split('-'), b = mesUso.split('-'); return Math.abs((+a[0] * 12 + +a[1]) - (+b[0] * 12 + +b[1])); }
+  var melhor = Math.min.apply(null, cand.map(function(c){ return dist(c.mes); }));
+  var doMes = cand.filter(function(c){ return dist(c.mes) === melhor; }).sort(function(a, b){ return a.numero < b.numero ? -1 : 1; });
+  var seed = parseInt(String(rf.id || '').replace(/\D/g, ''), 10) || 1;
+  var ini = seed % doMes.length, resto = rf.valor || 0, out = [];
+  for (var k = 0; k < doMes.length && out.length < 3 && resto > 0.005; k++) {
+    var c = doMes[(ini + k) % doMes.length], v = Math.min(resto, c.valor);
+    out.push({ numero: c.numero, valor: v }); resto -= v;
+  }
+  return out;
+};
+
 window._rfGerarHistorico = function(rf, nf) {
   var ev = [];
   var d0 = rf.data || nf.data || '';
@@ -1003,8 +1035,12 @@ window._rfGerarHistorico = function(rf, nf) {
     ev.push(mkEv(MK(A(d0,10),'10:45'), 'INCONSISTÊNCIA','Créditos',                  'Fisco',
       'Crédito glosado pelo Fisco · direito ao crédito negado · requer impugnação', 'erro'));
   }
+  // Apropriação: data do recolhimento que extinguiu o débito do fornecedor
+  // (LC 214/2025, art. 47) — o mesmo dado das colunas de Crédito, e sempre
+  // depois do registro do pagamento, que tem hora 09:00.
+  var _dtAprop = rf.dataApropriacao ? String(rf.dataApropriacao).slice(0, 10) : A(d0, 15);
   if (_sc_hist === 'apropriado' || _sc_hist === 'utilizado' || _sc_hist === 'extinto') {
-    ev.push(mkEv(MK(A(d0,15),'11:30'), 'APROPRIAÇÃO',   'Créditos',                 'Comitê Gestor IBS / RFB',
+    ev.push(mkEv(MK(_dtAprop,'11:30'), 'APROPRIAÇÃO',   'Créditos',                 'Comitê Gestor IBS / RFB',
       'Crédito de ' + ff(rf.valor) + ' reconhecido e apropriado · ' + (rf.tipoFiscal || '').toUpperCase() + ' · Art. 48 LC 214/2025', 'ok'));
   }
   if (rf.dataPagamento && rf.dataPagamento !== '—') {
@@ -1024,38 +1060,39 @@ window._rfGerarHistorico = function(rf, nf) {
     if (_aviso) ev.push(mkEv(_aviso.ts, 'AVISO AO FORNECEDOR', 'Pagamentos',
       'SplitHub · automático', _aviso.desc, 'ok'));
   }
-  if (_sc_hist === 'utilizado') {
-    var _utilValor = ff(rf.valor || 0);
-    var _utilDesc = 'Crédito de ' + _utilValor + ' aplicado como abatimento em débito tributário · método: ' + (rf.metodoExtincao || 'Compensação');
-    // Vincular deterministicamente a NFs de saída com base no ID do RF
+  // Ressarcimento: reserva, pedido, decisão e extinção vêm do módulo, com as
+  // datas de cada ato. Crédito ressarcido não abate débito — não há DF de saída.
+  var _resEvs = (!isSaida && window.shRes && window.shRes.historicoRF) ? window.shRes.historicoRF(rf) : [];
+  _resEvs.forEach(function(e) { ev.push(e); });
+
+  if (_sc_hist === 'utilizado' && rf.metodoExtincao !== 'Ressarcimento') {
+    // Compensação: crédito abate débito do MESMO tributo, na ordem do art. 53
+    // da LC 214/2025, na apuração em que o crédito foi extinto.
+    var _tri = (rf.tipoFiscal || '').toUpperCase();
+    var _dtUso = rf.dataExtincaoCredito ? String(rf.dataExtincaoCredito).slice(0, 10) : A(_dtAprop, 30);
+    if (_dtUso < _dtAprop) _dtUso = A(_dtAprop, 1);
+    var _mesUso = _dtUso.slice(0, 7);
+    var _MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    var _mesLbl = _MES[parseInt(_mesUso.slice(5, 7), 10) - 1] + '/' + _mesUso.slice(0, 4);
+    var _utilDesc = 'Crédito de ' + ff(rf.valor || 0) + ' de ' + _tri + ' compensado com débito de ' + _tri
+      + ' da apuração de ' + _mesLbl + ' · método: Compensação · ordem do art. 53 da LC 214/2025';
+    var _refs = window._rfDebitosCompensados ? window._rfDebitosCompensados(rf, _mesUso) : [];
     if (rf._dfsSaidaAbatidos && rf._dfsSaidaAbatidos.length) {
-      var _saidaRefs = rf._dfsSaidaAbatidos.map(function(s){ return 'DF ' + s.numero + ' (' + ff(s.valor) + ')'; }).join(', ');
-      _utilDesc += ' · DFs de saída abatidas: ' + _saidaRefs;
-    } else {
-      var _saidaNFs = (window.nfListaFiltradaGlobal || []).filter(function(n){ return n.tipo === 'saida'; });
-      if (_saidaNFs.length > 0) {
-        var _rfSeed = parseInt((rf.id || '').replace(/\D/g,''), 10) || 1;
-        var _sIdx1 = _rfSeed % _saidaNFs.length;
-        var _sIdx2 = (_rfSeed * 7 + 3) % _saidaNFs.length;
-        var _refs = [_saidaNFs[_sIdx1]];
-        if (_sIdx2 !== _sIdx1) _refs.push(_saidaNFs[_sIdx2]);
-        // Fracionar valor abatido entre as saídas selecionadas
-        var _totalAbat = rf.valor || 0;
-        var _saidaStr = _refs.map(function(sn, i) {
-          var frac = _refs.length > 1 ? (i === 0 ? Math.round(_totalAbat * 0.6) : _totalAbat - Math.round(_totalAbat * 0.6)) : _totalAbat;
-          return 'DF ' + sn.numero + ' (' + ff(frac) + ')';
-        }).join(', ');
-        _utilDesc += ' · DFs de saída envolvidas: ' + _saidaStr;
-      }
+      _utilDesc += ' · DFs de saída abatidas: ' + rf._dfsSaidaAbatidos.map(function(x){ return 'DF ' + x.numero + ' (' + ff(x.valor) + ')'; }).join(', ');
+    } else if (_refs.length) {
+      _utilDesc += ' · DFs de saída abatidas: ' + _refs.map(function(x){ return 'DF ' + x.numero + ' (' + ff(x.valor) + ')'; }).join(', ');
+      var _cob = _refs.reduce(function(t, x){ return t + x.valor; }, 0);
+      if ((rf.valor || 0) - _cob > 0.005) _utilDesc += ' · ' + ff((rf.valor || 0) - _cob) + ' sem DF de saída vinculada na base';
     }
-    ev.push(mkEv(MK(A(d0,20),'14:18'), 'UTILIZAÇÃO', 'Pagamentos', 'SplitHub', _utilDesc, 'ok'));
+    ev.push(mkEv(MK(_dtUso,'14:18'), 'UTILIZAÇÃO', 'Apuração', 'SplitHub', _utilDesc, 'ok'));
   }
   if (isSaida && rf.dataExtincao && rf.dataExtincao !== '—') {
     var dExtISO = rf.dataExtincao.indexOf('/') !== -1
       ? rf.dataExtincao.substring(6,10)+'-'+rf.dataExtincao.substring(3,5)+'-'+rf.dataExtincao.substring(0,2)
       : rf.dataExtincao;
-    ev.push(mkEv(MK(dExtISO,'16:45'),  'EXTINÇÃO',      'Débitos',                  rf.metodoExtincao || 'SplitHub',
-      'Débito extinto · ciclo tributário encerrado · método: ' + (rf.metodoExtincao || 'Split Payment'), 'ok'));
+    var _metDebLbl = { Compensacao: 'Compensação com créditos do mesmo tributo', RAD: 'RAD', 'Split Payment': 'Split Payment' }[rf.metodoExtincao] || rf.metodoExtincao || 'Split Payment';
+    ev.push(mkEv(MK(dExtISO,'16:45'),  'EXTINÇÃO',      'Débitos',                  rf.metodoExtincao === 'Compensacao' ? 'SplitHub' : (rf.metodoExtincao || 'SplitHub'),
+      'Débito de ' + (rf.tipoFiscal || '').toUpperCase() + ' extinto · ciclo tributário encerrado · método: ' + _metDebLbl, 'ok'));
   } else if (rf.status === 'extinto') {
     ev.push(mkEv(MK(A(d0,25),'16:45'), 'EXTINÇÃO',      isSaida ? 'Débitos' : 'Créditos', 'SplitHub',
       isSaida ? 'Débito extinto · ciclo tributário encerrado' : 'Crédito integralmente utilizado · ciclo do RF encerrado', 'ok'));
@@ -1638,8 +1675,8 @@ window.abrirDetalheRF = function(rfId) {
   var stRegLab = rfSR ? (stRegLabs[rfSR] || rfSR) : null;
   var stRegRgb = rfSR ? (stRegRgbs[rfSR] || '167,168,170') : null;
 
-  var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165', 'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23', 'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246', 'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117' };
-  var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌', 'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌' };
+  var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165', 'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23', 'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246', 'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160' };
+  var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌', 'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺' };
 
   // Ordenar decrescente por timestamp (mais recente primeiro)
   eventos.sort(function(a, b) {
@@ -2076,6 +2113,7 @@ window.renderizarTabelaCreditos = function() {
 
 window.atualizarKPIsCreditos = function(listaRFs) {
   var aprop = 0, naoAprop = 0, glosado = 0, emRisco = 0, vencido = 0, util = 0, inconsist = 0, aPrescrever = 0;
+  var utilRes = 0; // ressarcido: extinto sem abater débito
   var naoApropCP = 0, naoApropLP = 0;
   var extinto = 0, extintoCount = 0, extintoUlt = 0;
   var vencNaoExt = 0, vencForn = 0, vencRad = 0, vencSplit = 0;
@@ -2092,7 +2130,7 @@ window.atualizarKPIsCreditos = function(listaRFs) {
     var sc = r.statusCredito || r.status || '';
     var sr = r.statusRegistro || null;
     if      (sc === 'apropriado')      { aprop    += v; }
-    else if (sc === 'utilizado')       { aprop    += v; util += v; }
+    else if (sc === 'utilizado')       { aprop    += v; util += v; if (r.metodoExtincao === 'Ressarcimento') utilRes += v; }
     else if (sc === 'nao_apropriado')  {
       naoAprop += v;
       var venc = _vencKPI(r.dataNF);
@@ -2143,8 +2181,11 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   };
   var pct = function(v, base) { return base > 0 ? (v / base * 100).toFixed(1).replace('.', ',') + '%' : '0,0%'; };
   var set = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
-  var totalCred = aprop + naoAprop; // glosado excluído do aproveitável
+  // Total Originado = todos os RFs de entrada, inclusive glosados — a mesma base
+  // do Início e a definição da ajuda do card. Antes o glosado ficava de fora.
+  var totalCred = aprop + naoAprop + glosado;
   set('cred-total',         fmt(totalCred));
+  set('cred-total-sub',     'IBS + CBS · inclui ' + fmt(glosado) + ' glosados pelo Fisco');
   // Status do Crédito
   set('cred-aprop',         fmt(aprop));
   set('cred-aprop-sub',     pct(aprop, totalCred) + ' do total · IBS+CBS apropriados');
@@ -2155,7 +2196,7 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   set('cred-nao-aprop-mp',  fmt(naoApropLP));
   set('cred-nao-aprop-mp-sub', pct(naoApropLP, naoAprop) + ' do A Apropriar · vencimento futuro');
   set('cred-util',          fmt(util));
-  set('cred-util-sub',      aprop > 0 ? pct(util, aprop) + ' dos apropriados — abateram débito' : '—');
+  set('cred-util-sub',      aprop > 0 ? pct(util, aprop) + ' dos apropriados · compensados ' + fmt(util - utilRes) + ' · ressarcidos ' + fmt(utilRes) : '—');
   set('cred-aguard',        fmt(naoAprop));
   set('cred-aguard-sub',    pct(naoAprop, totalCred) + ' — apropriação pendente');
   set('cred-glosado',       fmt(glosado));
@@ -2528,7 +2569,7 @@ window.atualizarKPIsDashboard = function() {
       if (nf.tipo === 'entrada') {
         total += v;
         if (sc === 'apropriado' || sc === 'utilizado') aprop += v;
-        if (sc === 'nao_apropriado' || sc === 'glosado') bad += v;
+        if (sc === 'nao_apropriado') bad += v;   // glosado não aguarda apropriação — mesma regra do Crédito
         if (sr === 'vencido' || sr === 'em_risco' || sr === 'a_prescrever') risco += v;
         // Pagamentos
         var eAprop = sc === 'apropriado' || sc === 'utilizado';
@@ -3491,8 +3532,9 @@ function _concBuildLista(filtroMes) {
       : valorDF;
     var deltaValor = valorGov - valorDF;
 
-    var apurDia = String((seed % 28) + 1).padStart(2, '0');
-    var dataApur = dataBase.substring(0, 7) + '-' + apurDia;
+    // CAPUR depois da geração dos RFs (entrada + 2 dias): antes, o dia era
+    // sorteado no mês e podia cair antes do próprio documento.
+    var dataApur = window._rfAddDays ? window._rfAddDays(dataBase, 3 + (seed % 8)) : dataBase;
 
     // RF IBS e CBS a partir dos registrosFiscais globais
     var ibsRF = null, cbsRF = null;
@@ -3550,6 +3592,9 @@ function _concBuildLista(filtroMes) {
       var finHora    = String(13 + (finSeed % 4)).padStart(2,'0') + ':' + String((finSeed % 59) + 1).padStart(2,'0');
       var finConcStatus = cfin_status === 'conciliado' ? 'confirmada' : cfin_status === 'inconsistencia' ? 'inconsistencia' : 'pendente';
       var dataFinISO = window._rfAddDays ? window._rfAddDays(dataApur, 15) : dataApur;
+      // A conciliação financeira confronta a liquidação: nunca antes do pagamento
+      var _pagISO = function(x) { var d = x && x.dataPagamento; if (!d || d === '—') return null; var mm = String(d).match(/^(\d{2})\/(\d{2})\/(\d{4})/); return mm ? mm[3] + '-' + mm[2] + '-' + mm[1] : String(d).slice(0, 10); };
+      [_pagISO(ibsRF), _pagISO(cbsRF)].forEach(function(p) { if (p && p >= dataFinISO && window._rfAddDays) dataFinISO = window._rfAddDays(p, 1); });
       concRegFin = { concId: concIdFin, concTs: dataFinISO + 'T' + finHora, concStatus: finConcStatus, tipo: 'financeira' };
     }
 
@@ -5498,14 +5543,25 @@ window._enriquecerNFsSaida = function() {
       rf.valorLiquidoNF = vliq;
       rf.tipoNF         = 'saida';
       if (stRF === 'extinto') {
-        var extDay    = Math.min(dia + 5, maxDia);
-        var extDayStr = extDay < 10 ? '0' + extDay : '' + extDay;
-        var mp = mes.split('-');
-        rf.dataExtincao = extDayStr + '/' + mp[1] + '/' + mp[0] + ' 09:00';
+        // Extinção 5 dias após a emissão, virando o mês quando preciso — travar
+        // no último dia do mês fazia o débito aparecer extinto antes de o RF
+        // existir no histórico (mesma regra do gerador em index.html).
+        var _dtExtISO = window.shSomaDias ? window.shSomaDias(dataISO, 5) : null;
+        if (_dtExtISO && window.shFmtDataHora) {
+          rf.dataExtincao = window.shFmtDataHora(_dtExtISO);
+        } else {
+          var extDay    = Math.min(dia + 5, maxDia);
+          var extDayStr = extDay < 10 ? '0' + extDay : '' + extDay;
+          var mp = mes.split('-');
+          rf.dataExtincao = extDayStr + '/' + mp[1] + '/' + mp[0] + ' 09:00';
+        }
       } else {
         rf.dataExtincao = '—';
       }
     });
+    // A data de extinção do DF acompanha a dos RFs, recalculada com a emissão
+    var _rf0 = (nf.registrosFiscais || [])[0];
+    nf.dataExtincao = (stRF === 'extinto' && _rf0) ? _rf0.dataExtincao : '—';
     idx++;
   });
 };
@@ -7990,13 +8046,18 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
   var mesesLabels = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   var mesesISO    = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
 
-  var statusList = ['apropriado','utilizado','nao_apropriado','vencido','inconsistencia'];
+  // Só RFs de ENTRADA (crédito). Antes o gráfico somava também os RFs de saída
+  // e as séries Vencido e Inconsistência vinham, na prática, de débitos.
+  // Utilizado se abre em compensado (abateu débito) e ressarcido (virou dinheiro).
+  var statusList = ['apropriado','compensado','ressarcido','nao_apropriado','vencido','inconsistencia','glosado'];
   var statusCores = {
     'apropriado':    PALETTE.teal,
-    'utilizado':     PALETTE.blue,
+    'compensado':    PALETTE.blue,
+    'ressarcido':    PALETTE.purple,
     'nao_apropriado':PALETTE.gray,
     'vencido':       PALETTE.amber,
-    'inconsistencia':PALETTE.red
+    'inconsistencia':PALETTE.red,
+    'glosado':       PALETTE.statusGray
   };
 
   // Inicializar acumuladores por mês e status
@@ -8011,6 +8072,7 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
   var busca = (f.busca || '').toLowerCase();
 
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
+    if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
       // Filtro de tipo (botões do próprio gráfico)
       if (filtro && rf.tipoFiscal !== filtro) return;
@@ -8038,13 +8100,17 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
 
       var mes = rf.data ? rf.data.substring(0, 7) : null;
       if (!mes || !agg[mes]) return;
-      var st = rf.status || 'nao_apropriado';
+      var sc = rf.statusCredito || rf.status || 'nao_apropriado', sr = rf.statusRegistro || null, st;
+      if (sc === 'utilizado') st = rf.metodoExtincao === 'Ressarcimento' ? 'ressarcido' : 'compensado';
+      else if (sc === 'nao_apropriado' && (sr === 'vencido' || sr === 'inconsistencia')) st = sr;
+      else st = sc;
+      if (!(st in agg[mes])) return;
       agg[mes][st] = (agg[mes][st] || 0) + (rf.valor || 0);
     });
   });
 
   // Converter para milhões, montar datasets (ordem: topo→base = apropriado→inconsistencia)
-  var statusLabels = { 'apropriado':'Apropriado', 'utilizado':'Utilizado', 'nao_apropriado':'Não Apropriado', 'vencido':'Vencido', 'inconsistencia':'Inconsistência' };
+  var statusLabels = { 'apropriado':'Apropriado', 'compensado':'Utilizado · compensado', 'ressarcido':'Utilizado · ressarcido', 'nao_apropriado':'Não Apropriado', 'vencido':'Vencido', 'inconsistencia':'Inconsistência', 'glosado':'Glosado' };
   var datasets = statusList.map(function(st) {
     return {
       label: statusLabels[st] || st,
@@ -10086,11 +10152,11 @@ window.downloadGuiaDARF = function() {
         'INCONSISTÊNCIA':'163,45,45','VENCIMENTO':'163,45,45','AGUARDANDO':'186,117,23',
         'APROPRIAÇÃO':'29,158,117','PAGAMENTO':'29,158,117','UTILIZAÇÃO':'139,92,246',
         'EXTINÇÃO':'167,168,170','CONCILIAÇÃO':'139,92,246',
-        'CONC APURAÇÃO':'24,95,165','CONC FINANCEIRA':'29,158,117' };
+        'CONC APURAÇÃO':'24,95,165','CONC FINANCEIRA':'29,158,117','RESSARCIMENTO':'107,63,160' };
       var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓','VALIDAÇÃO':'✓','GERAÇÃO RF':'◉','INCONSISTÊNCIA':'!',
         'VENCIMENTO':'✕','AGUARDANDO':'…','APROPRIAÇÃO':'✓','PAGAMENTO':'$','UTILIZAÇÃO':'◆',
         'EXTINÇÃO':'■','CONCILIAÇÃO':'⇌',
-        'CONC APURAÇÃO':'⇌','CONC FINANCEIRA':'⇌' };
+        'CONC APURAÇÃO':'⇌','CONC FINANCEIRA':'⇌','RESSARCIMENTO':'↺' };
 
       var allEvs = [];
 
