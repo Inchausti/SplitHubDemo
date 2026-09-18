@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta — Segunda organização credora · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+
+.cmp3 td:first-child { font-weight:700; color:var(--txt1); }
+.ok3 { color: var(--green); font-weight:700; }
+.no3 { color: var(--red); font-weight:700; }
+.mid3 { color: var(--amber); font-weight:700; }
+.orgcards { display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:10px; }
+.orgc { border:1px solid var(--brd); border-radius:10px; padding:12px; background:var(--sur2); font-size:12px; color:var(--txt2); }
+.orgc.on { border-color: var(--teal); box-shadow: 0 0 0 1px var(--teal) inset; }
+.orgc b { color: var(--txt1); font-size:13px; display:block; margin-bottom:2px; }
+.pill { display:inline-block; font-size:10px; font-weight:800; border-radius:20px; padding:1px 8px; margin-top:6px; }
+.pill.cr { color: var(--green); background: rgba(34,197,94,.12); }
+.pill.dv { color: var(--amber); background: rgba(245,158,11,.12); }
+.hdrchip { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--brd); border-radius:20px; padding:4px 10px; font-size:12px; color:var(--txt1); background:var(--sur2); }
+.dd { border:1px solid var(--brd); border-radius:8px; background:var(--sur); margin-top:6px; max-width:320px; font-size:12px; }
+.dd div { padding:8px 12px; border-bottom:1px solid var(--brd); color:var(--txt2); }
+.dd div:last-child { border-bottom:none; }
+.dd div.on { color: var(--teal); font-weight:700; }
+code { overflow-wrap:anywhere; }
+
+/* ── mockups ── */
+.tela { margin: 26px 0 8px; }
+.tela-hdr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin-bottom: 8px; }
+.tela-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; color: var(--sur); background: var(--teal); border-radius: 4px; padding: 1px 7px; }
+.tela-nome { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.tela-cobre { font-size: 11px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; }
+.mk { border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; background: var(--bg); box-shadow: var(--shadow-sm); }
+.mk-bar { display: flex; align-items: center; gap: 6px; padding: 7px 12px; background: var(--sur2); border-bottom: 1px solid var(--brd); font-size: 10.5px; color: var(--txt3); }
+.mk-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); }
+.mk-bar .mk-url { margin-left: 8px; font-family: 'JetBrains Mono', monospace; }
+.mk-bar .mk-ilus { margin-left: auto; font-weight: 700; color: var(--amber); }
+.mk-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.mk-title { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.mk-title h5 { margin: 0; font-size: 15px; color: var(--txt1); }
+.mk-title .mk-sub { font-size: 11.5px; color: var(--txt3); }
+.mk-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.mk-kpi { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.mk-kpi .l { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); }
+.mk-kpi .v { font-size: 18px; font-weight: 800; color: var(--txt1); font-variant-numeric: tabular-nums; margin-top: 3px; }
+.mk-kpi .s { font-size: 11px; color: var(--txt2); margin-top: 2px; }
+.mk-kpi.hl { border-color: var(--teal); }
+.mk-cal { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0; border: 1px solid var(--brd); border-radius: 8px; overflow: hidden; background: var(--sur); }
+.mk-cal > div { padding: 9px 12px; border-right: 1px solid var(--brd); font-size: 11.5px; color: var(--txt2); }
+.mk-cal > div:last-child { border-right: none; }
+.mk-cal b { display: block; color: var(--txt1); font-size: 12px; }
+.mk-cal .urg b { color: var(--red); }
+.mk-cal .ok b { color: var(--teal); }
+.mk-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--brd); }
+.mk-tab { font-size: 12px; font-weight: 600; color: var(--txt3); padding: 7px 12px; border-bottom: 2px solid transparent; }
+.mk-tab.on { color: var(--teal); border-bottom-color: var(--teal); }
+.mk-tab .n { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var(--sur2); border-radius: 10px; padding: 0 6px; margin-left: 4px; }
+.mk-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mk-in { font-size: 11.5px; color: var(--txt3); background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; padding: 5px 10px; }
+.mk-btn { font-size: 11.5px; font-weight: 700; border-radius: 6px; padding: 5px 12px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); white-space: nowrap; }
+.mk-btn.p { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+.mk-btn.d { color: var(--red); border-color: var(--red); }
+.mk-btn.ml { margin-left: auto; }
+.mk-tw { overflow-x: auto; border: 1px solid var(--brd); border-radius: 8px; background: var(--sur); }
+.mk-t { width: 100%; border-collapse: collapse; font-size: 11.5px; min-width: 680px; }
+.mk-t th { text-align: left; font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); padding: 7px 9px; border-bottom: 1px solid var(--brd); background: var(--sur2); white-space: nowrap; }
+.mk-t td { padding: 7px 9px; border-bottom: 1px solid var(--brd); color: var(--txt2); white-space: nowrap; }
+.mk-t tr:last-child td { border-bottom: none; }
+.mk-t .r { text-align: right; font-variant-numeric: tabular-nums; }
+.mk-t .m { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; }
+.mk-t tr.sel td { background: var(--teal-d); }
+.mk-t .strong { color: var(--txt1); font-weight: 700; }
+.st { display: inline-block; font-size: 9.5px; font-weight: 700; border-radius: 10px; padding: 1px 8px; white-space: nowrap; }
+.st.teal { background: var(--teal-d); color: var(--teal); }
+.st.blue { background: var(--blue-d); color: var(--blue); }
+.st.amber { background: var(--amber-d); color: var(--amber); }
+.st.red { background: var(--red-d); color: var(--red); }
+.st.green { background: var(--green-d); color: var(--green); }
+.st.gray { background: var(--sur2); color: var(--txt3); }
+.cd { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; }
+.cd.red { color: var(--red); } .cd.amber { color: var(--amber); } .cd.ok { color: var(--teal); }
+.mk-split { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 760px) { .mk-split { grid-template-columns: minmax(0, 1fr); } }
+.mk-card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.mk-card h6 { margin: 0 0 8px; font-size: 12.5px; color: var(--txt1); }
+.mk-cmp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.mk-cmp > div { border: 1px solid var(--brd); border-radius: 6px; padding: 9px 10px; font-size: 11.5px; color: var(--txt2); }
+.mk-cmp > div.esc { border-color: var(--teal); background: var(--teal-d); }
+.mk-cmp b { display: block; font-size: 12px; color: var(--txt1); margin-bottom: 4px; }
+.mk-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; font-size: 11.5px; color: var(--txt2); }
+.mk-row span:last-child { font-variant-numeric: tabular-nums; color: var(--txt1); font-weight: 600; white-space: nowrap; }
+.mk-row.tot { border-top: 1px solid var(--brd); margin-top: 4px; padding-top: 6px; font-weight: 700; }
+.mk-modal-wrap { background: rgba(15,23,42,.35); padding: 18px; display: flex; justify-content: center; }
+.mk-modal { width: 100%; max-width: 560px; background: var(--sur); border: 1px solid var(--brd); border-top: 3px solid var(--teal); border-radius: 10px; box-shadow: var(--shadow-sm); }
+.mk-modal.warn { border-top-color: var(--amber); }
+.mk-mh { padding: 12px 16px; border-bottom: 1px solid var(--brd); }
+.mk-mh .ey { font-size: 9.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); }
+.mk-mh .t { font-size: 14px; font-weight: 700; color: var(--txt1); margin-top: 2px; }
+.mk-mb { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; font-size: 12px; color: var(--txt2); }
+.mk-mf { padding: 10px 16px; border-top: 1px solid var(--brd); display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.mk-field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); margin-bottom: 3px; }
+.mk-field .inp { border: 1px solid var(--brd); border-radius: 6px; padding: 6px 10px; background: var(--bg); color: var(--txt1); font-size: 12px; }
+.mk-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.mk-alert { border-left: 3px solid var(--amber); background: var(--amber-d); padding: 8px 10px; border-radius: 0 6px 6px 0; font-size: 11.5px; color: var(--txt1); }
+.mk-alert.red { border-left-color: var(--red); background: var(--red-d); }
+.mk-alert.ok { border-left-color: var(--teal); background: var(--teal-d); }
+.mk-chk { display: flex; gap: 8px; align-items: flex-start; font-size: 11.5px; }
+.mk-chk i { flex-shrink: 0; width: 13px; height: 13px; border: 1.5px solid var(--teal); border-radius: 3px; margin-top: 1px; background: var(--teal); }
+.mk-steps { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; }
+.mk-steps span { padding: 3px 10px; border-radius: 12px; background: var(--sur2); color: var(--txt3); font-weight: 600; }
+.mk-steps span.on { background: var(--teal); color: var(--sur); }
+.mk-steps span.done { background: var(--teal-d); color: var(--teal); }
+.mk-tl { display: flex; flex-direction: column; gap: 0; }
+.mk-tl > div { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 10px; padding-bottom: 10px; position: relative; }
+.mk-tl > div::before { content: ''; position: absolute; left: 5px; top: 12px; bottom: 0; width: 1px; background: var(--brd); }
+.mk-tl > div:last-child::before { display: none; }
+.mk-tl i { width: 11px; height: 11px; border-radius: 50%; background: var(--teal); margin-top: 2px; }
+.mk-tl i.pend { background: var(--sur); border: 2px solid var(--amber); }
+.mk-tl b { color: var(--txt1); font-size: 12px; }
+.mk-tl small { display: block; color: var(--txt3); font-size: 10.5px; }
+.mk-bars { display: flex; flex-direction: column; gap: 6px; }
+.mk-bars > div { display: grid; grid-template-columns: 58px minmax(0, 1fr) 96px; gap: 8px; align-items: center; font-size: 11px; color: var(--txt2); }
+.mk-bars .trk { height: 10px; background: var(--sur2); border-radius: 5px; overflow: hidden; display: flex; }
+.mk-bars .trk em { display: block; height: 100%; background: var(--teal); }
+.mk-bars .trk em.est { background: var(--teal-d); border-left: 1px dashed var(--teal); }
+.mk-bars .val { text-align: right; font-variant-numeric: tabular-nums; color: var(--txt1); font-weight: 600; }
+.obs { margin-top: 8px; }
+.obs li { margin: 3px 0; }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Plataforma → Organizações</div>
+<h1>Segunda organização — base credora</h1>
+<p class="subtitle">Em vez de mexer na base da Induspar, uma organização nova que já nasce gerando mais crédito que débito, com crédito e débito casados pela ordem do art. 53, e um lugar para trocar de organização.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">18/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Esforço</span>&nbsp;<span class="meta-val">1,5–2×</span></div>
+<div class="meta-pill"><span class="meta-label">Telas</span>&nbsp;<span class="meta-val">2</span></div>
+<div class="meta-pill"><span class="meta-label">Decisões</span>&nbsp;<span class="meta-val">9</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip warn">v1.0</span></div>
+</div>
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> A resposta curta</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> A nova organização</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Compensação correta por construção</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Onde trocar de organização</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> O que muda no protótipo</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Esforço e fases</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Riscos</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Decisões para aprovar</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Histórico de versões</a></li>
+</ul></div>
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">A resposta curta</span></div>
+<p><strong>Sim, é mais simples e mais seguro</strong> para o objetivo de demonstrar o ressarcimento em conformidade — desde que a nova base já nasça com crédito e débito casados pela ordem do art. 53. A Induspar fica como está, e os roteiros de demonstração dela não mudam.</p><p>O que <strong>não</strong> resolve: a base da Induspar continua sem seguir o art. 53. Ela precisa, no mínimo, de um aviso na tela; a correção de verdade é a opção B da <a href="proposta-motor-art53.html" style="color:var(--blue)">análise do motor de compensação</a>, que pode vir depois reaproveitando o gerador da nova organização.</p><div class="table-wrap"><table><thead><tr><th></th><th>Opção B — motor na Induspar</th><th>Nova organização credora</th><th>Nova organização + aviso na Induspar</th></tr></thead><tbody><tr><td>Esforço</td><td><span class="no3">2,5 a 3×</span> o módulo de Ressarcimento</td><td><span class="mid3">1,5 a 2×</span></td><td><span class="mid3">1,5 a 2×</span> + pouco</td></tr><tr><td>Números da Induspar</td><td><span class="no3">Mudam todos</span></td><td><span class="ok3">Intactos</span></td><td><span class="ok3">Intactos</span></td></tr><tr><td>Roteiros de demonstração</td><td><span class="no3">Revistos</span></td><td><span class="ok3">Mantidos</span>; ganha um roteiro novo</td><td><span class="ok3">Mantidos</span></td></tr><tr><td>Ressarcimento legítimo</td><td><span class="ok3">Sim</span>, em alguns meses</td><td><span class="ok3">Sim</span>, recorrente</td><td><span class="ok3">Sim</span></td></tr><tr><td>Induspar em conformidade com o art. 53</td><td><span class="ok3">Sim</span></td><td><span class="no3">Não</span></td><td><span class="mid3">Sinalizada</span></td></tr><tr><td>Risco técnico</td><td>Médio</td><td>Baixo a médio</td><td>Baixo a médio</td></tr><tr><td>Custo permanente</td><td>Uma base</td><td><span class="mid3">Duas bases</span> para manter</td><td><span class="mid3">Duas bases</span></td></tr></tbody></table></div><div class="callout ok"><div class="ct">Recomendação</div><p>Criar a segunda organização com a compensação correta por construção, pôr o aviso do art. 53 na Induspar e deixar a opção B para depois — ela passa a custar menos, porque reaproveita o gerador e a conferência automática desta proposta.</p></div>
+</div>
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">A nova organização</span></div>
+<p>Empresa fictícia, com CNPJs fictícios. O perfil é o do caso real de saldo credor: exportadora que investe.</p><div class="table-wrap"><table><thead><tr><th>Atributo</th><th>Proposta</th></tr></thead><tbody><tr><td><strong>Nome</strong></td><td>Vértice Agroexportadora S.A. — grupo com matriz e duas filiais</td></tr><tr><td><strong>Atividade</strong></td><td>Exportação de grãos e café, com beneficiamento e armazenagem próprios</td></tr><tr><td><strong>Vendas</strong></td><td>Cerca de 70% ao exterior — imunes, com manutenção dos créditos (LC 214/2025) — e 30% no mercado interno, liquidadas por Split Payment</td></tr><tr><td><strong>Compras</strong></td><td>Insumos, frete, energia e serviços portuários, com fornecedores em Split, RAD e recolhimento próprio</td></tr><tr><td><strong>Investimento</strong></td><td>Silos, secadores e máquinas no ativo imobilizado, concentrados em alguns meses</td></tr><tr><td><strong>Resultado fiscal</strong></td><td>Saldo credor recorrente em CBS e IBS; meses devedores quando a safra vende no mercado interno</td></tr><tr><td><strong>Prazo de ressarcimento</strong></td><td>60 dias pelo art. 40 — ativo imobilizado (I) e pedido dentro da média de saldo credor (II)</td></tr><tr><td><strong>Volume</strong></td><td>Da ordem da Induspar — cerca de 200 DFs por ano — para os gráficos serem comparáveis</td></tr></tbody></table></div><div class="table-wrap"><table><thead><tr><th>Tributo</th><th>Meses credores (proposta)</th><th>Por quê</th></tr></thead><tbody><tr><td>CBS</td><td>8 a 9 de 12</td><td>Exportação e imobilizado; poucos débitos internos</td></tr><tr><td>IBS</td><td>6 a 7 de 12</td><td>Mercado interno maior na entressafra</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Compensação correta por construção</span></div>
+<p>A nova base não sorteia o que foi compensado. O gerador aplica, mês a mês e por tributo, a ordem do art. 53:</p><div class="table-wrap"><table><thead><tr><th>#</th><th>Passo</th><th>Resultado nos RFs</th></tr></thead><tbody><tr><td>1</td><td>Débitos do mês: vendas internas; exportação não gera débito</td><td>RFs de saída</td></tr><tr><td>2</td><td>O Split Payment e o RAD extinguem parte dos débitos</td><td>Débito extinto por Split ou RAD</td></tr><tr><td>3</td><td>Os créditos apropriados até o fim do mês abatem o restante, do mais antigo para o mais novo</td><td>Crédito <em>utilizado · compensação</em>; débito <em>extinto por compensação</em>, com o vínculo entre os dois</td></tr><tr><td>4</td><td>Sobrou débito: vira saldo a recolher</td><td>Débito não extinto, com guia</td></tr><tr><td>5</td><td>Sobrou crédito: vira saldo credor, que o módulo de Ressarcimento usa</td><td>Crédito <em>apropriado</em>, livre para intenção e pedido</td></tr></tbody></table></div><p>Resultado: crédito compensado = débito extinto por compensação, em todo mês e tributo, e nunca crédito parado com débito em aberto. Essas duas regras entram na conferência automática que hoje roda 27 indicadores e 400 históricos (<a href="ressarcimento-validacao-hubs.html" style="color:var(--blue)">validação dos hubs</a>).</p>
+</div>
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Onde trocar de organização</span></div>
+<div class="tela"><div class="tela-hdr"><span class="tela-id">T-01</span><span class="tela-nome">Configurações · Organização</span><span class="tela-cobre">Troca de organização</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · configurações</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-body"><div class="mk-title">Organização</div><div style="font-size:12px;color:var(--txt3);margin-bottom:10px">Cada organização tem a própria base, cadastros e histórico. A troca recarrega a aplicação.</div><div class="orgcards"><div class="orgc on"><b>Induspar Tecnologia S.A.</b>Indústria de tecnologia · 9 CNPJs<br><span class="pill dv">Posição devedora</span> <span class="pill dv">art. 53 · aviso</span></div><div class="orgc"><b>Vértice Agroexportadora S.A.</b>Exportadora · 3 CNPJs<br><span class="pill cr">Saldo credor recorrente</span></div></div><div class="mk-tools" style="margin-top:12px"><span class="mk-btn">Cancelar</span><span class="mk-btn p">Entrar na Vértice</span></div></div></div><ul class="plain obs"><li>Fica no painel que já existe ao clicar no avatar, ao lado do perfil de acesso e do tema.</li><li>O selo diz o perfil da base, para quem demonstra saber o que vai encontrar.</li></ul></div><div class="tela"><div class="tela-hdr"><span class="tela-id">T-02</span><span class="tela-nome">Cabeçalho · organização ativa</span><span class="tela-cobre">Troca rápida</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · início</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-body"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="hdrchip">🏢 Vértice Agroexportadora S.A. ▾</span><span class="hdrchip">Grupo Econômico ▾</span></div><div class="dd"><div class="on">✓ Vértice Agroexportadora S.A.</div><div>Induspar Tecnologia S.A.</div><div>Gerenciar organizações…</div></div></div></div><ul class="plain obs"><li>O nome da organização ativa fica sempre à vista no cabeçalho — evita demonstrar números de uma achando que é a outra.</li><li>O filtro de Grupo Econômico continua valendo dentro da organização.</li></ul></div><div class="table-wrap"><table><thead><tr><th>Regra</th><th>Como fica</th></tr></thead><tbody><tr><td><strong>Troca por recarga</strong></td><td>A troca grava a organização na sessão e recarrega a aplicação. A base é gerada do zero, sem estado de uma vazar para a outra</td></tr><tr><td><strong>O que se mantém</strong></td><td>Usuário, perfil de acesso, tema e colunas das listagens</td></tr><tr><td><strong>O que é por organização</strong></td><td>Base, cadastros, ações do operador (como o recolhimento assumido), nome editado e pedidos de ressarcimento</td></tr><tr><td><strong>Link direto</strong></td><td><code>index.html?org=vertice#/ressarcimento</code> abre a organização e a tela</td></tr><tr><td><strong>Perfil Fornecedor</strong></td><td>O portal mostra os fornecedores da organização ativa</td></tr><tr><td><strong>Padrão</strong></td><td>Sem escolha, entra na Induspar — nada muda para quem já usa o protótipo</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O que muda no protótipo</span></div>
+<div class="table-wrap"><table><thead><tr><th>Área</th><th>Mudança</th><th>Esforço</th></tr></thead><tbody><tr><td><strong>Registro de organizações</strong></td><td>Lista com identidade, CNPJs, perfil fiscal e parâmetros do gerador de cada organização</td><td>Baixo</td></tr><tr><td><strong>Seletor e troca</strong></td><td>Configurações e cabeçalho; troca por recarga; <code>?org=</code> nas rotas</td><td>Baixo</td></tr><tr><td><strong>Gerador da base</strong></td><td>Gerador parametrizado pelo perfil da organização, com a compensação do art. 53 por construção; a Induspar segue com os parâmetros de hoje</td><td>Alto</td></tr><tr><td><strong>Cadastros da nova organização</strong></td><td>Fornecedores, clientes, contratos, CNPJs, usuários, políticas RAD, conexões, automações e importação de exemplo</td><td>Médio</td></tr><tr><td><strong>Identidade</strong></td><td>54 menções fixas a “Induspar” e 7 e-mails de exemplo no código passam a vir da organização ativa</td><td>Médio</td></tr><tr><td><strong>Persistência</strong></td><td>Ações do operador e nome da empresa gravados por organização</td><td>Baixo</td></tr><tr><td><strong>Gráficos e listagens</strong></td><td>Recalculam sozinhos. Exceção: a extinção de débitos por método ganha a série Split Payment, que a Induspar não tem hoje</td><td>Baixo</td></tr><tr><td><strong>Ressarcimento</strong></td><td>Na Vértice, parte do saldo credor legítimo do gerador; na Induspar, segue a simulação atual</td><td>Baixo</td></tr><tr><td><strong>Aviso na Induspar</strong></td><td>Faixa na Apuração e no Ressarcimento: a base não segue a ordem do art. 53</td><td>Baixo</td></tr><tr><td><strong>Conferência automática</strong></td><td>Roda nas duas organizações, com as duas regras novas do art. 53</td><td>Baixo</td></tr><tr><td><strong>Documentação</strong></td><td>PRD de Organização (seção multi-organização), roteiro de demonstração da Vértice, validação, mapa e priorização</td><td>Médio</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Esforço e fases</span></div>
+<p>Na mesma medida da <a href="proposta-motor-art53.html" style="color:var(--blue)">análise do motor de compensação</a>: o módulo de Ressarcimento com as duas auditorias é uma unidade. Esta proposta fica entre <strong>1,5 e 2 unidades</strong>, contra 2,5 a 3 da opção B.</p><div class="table-wrap"><table><thead><tr><th>Fase</th><th>Entrega</th><th>Parte do esforço</th><th>Ponto de aprovação</th></tr></thead><tbody><tr><td>1 · Infraestrutura</td><td>Registro, seletor, troca por recarga, persistência por organização — só com a Induspar, nada muda na tela</td><td>25%</td><td>—</td></tr><tr><td>2 · Gerador e base da Vértice</td><td>Gerador parametrizado, compensação por construção, cadastros da Vértice</td><td>40%</td><td>Base da Vértice revista</td></tr><tr><td>3 · Identidade e ajustes</td><td>Menções fixas, série Split no gráfico de débitos, aviso na Induspar</td><td>15%</td><td>—</td></tr><tr><td>4 · Conferência</td><td>Auditoria de indicadores, gráficos e históricos nas duas organizações</td><td>10%</td><td>Resultado da auditoria</td></tr><tr><td>5 · Documentação</td><td>PRD de Organização, roteiro da Vértice, validação, mapa, priorização</td><td>10%</td><td>Publicação</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Riscos</span></div>
+<div class="table-wrap"><table><thead><tr><th>Risco</th><th>Probabilidade</th><th>Impacto</th><th>Mitigação</th></tr></thead><tbody><tr><td>Menção fixa a “Induspar” aparecendo na Vértice</td><td>Média</td><td>Médio</td><td>Varredura das 54 menções e teste de texto nas duas organizações</td></tr><tr><td>Estado de uma organização vazando para a outra</td><td>Baixa</td><td>Alto</td><td>Troca por recarga; persistência com o nome da organização na chave</td></tr><tr><td>Duas bases para manter — toda funcionalidade nova precisa funcionar nas duas</td><td>Certa</td><td>Médio</td><td>A conferência automática roda nas duas a cada entrega</td></tr><tr><td>Induspar segue sem o art. 53</td><td>Certa</td><td>Médio</td><td>Aviso na tela; opção B depois, com o gerador reaproveitado</td></tr><tr><td>Confundir as organizações numa demonstração</td><td>Baixa</td><td>Médio</td><td>Nome no cabeçalho e selo do perfil</td></tr><tr><td>Documentos com números de uma só organização</td><td>Média</td><td>Baixo</td><td>PRDs dizem de qual organização é o exemplo</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Decisões para aprovar</span></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Decisão</th><th>Recomendação</th></tr></thead><tbody><tr><td>D-01</td><td>Criar a segunda organização, credora</td><td><strong>Sim</strong></td></tr><tr><td>D-02</td><td>Perfil: exportadora que investe em imobilizado</td><td><strong>Sim</strong></td></tr><tr><td>D-03</td><td>Nome fictício — Vértice Agroexportadora S.A.</td><td><strong>Sim</strong>, ou outro nome fictício</td></tr><tr><td>D-04</td><td>Troca por recarga, não “a quente”</td><td><strong>Sim</strong> — mais simples e sem vazamento de estado</td></tr><tr><td>D-05</td><td>Onde trocar: Configurações e cabeçalho</td><td><strong>Os dois</strong></td></tr><tr><td>D-06</td><td>Ano da base da Vértice</td><td><strong>2026</strong>, como a Induspar, com a simulação; 2027 só quando a Induspar for junto</td></tr><tr><td>D-07</td><td>Aviso do art. 53 na Induspar até a opção B</td><td><strong>Sim</strong></td></tr><tr><td>D-08</td><td>Faixa na priorização: troca de organização e segunda base</td><td><strong>M1</strong> — o M0 não muda</td></tr><tr><td>D-09</td><td>Opção B na Induspar depois, reaproveitando o gerador</td><td><strong>Sim</strong>, como proposta separada</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">18/09/2026 — Primeira versão: segunda organização com base credora, compensação por construção, troca de organização, comparação com a opção B, esforço, riscos e decisões.</div></div>
+</div>
+</div>
+</body>
+</html>
