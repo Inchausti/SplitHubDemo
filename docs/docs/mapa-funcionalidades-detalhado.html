@@ -200,6 +200,9 @@ var MODS = [
       {n:'Seletor de período multi-select',t:'p',
        d:'Componente de seleção de meses individuais (ex: Jan, Fev, Mar/2026) substituindo inputs de intervalo de datas. Propagação global via _aplicarFiltroPeriodo.',
        p:'prd-inicio.html#f-04'},
+      {n:'Card de saldo credor e ressarcimento',t:'g',
+       d:'No Início, CBS e IBS lado a lado — disponível, reservado, em pedido, recebido no ano e próximo prazo —, sem somar os tributos. Leva ao módulo de Ressarcimento.',
+       p:'prd-ressarcimento.html#s09'},
     ]
   },
   /* 1 */ {
@@ -222,7 +225,7 @@ var MODS = [
        d:'Visualização mensal navegável com intensidade de cor (tons teal) proporcional ao volume de créditos vencendo em cada dia. Clique em qualquer dia abre modal com a listagem dos DFs cujo vencimento cai naquela data.',
        p:'prd-credito.html#s08'},
       {n:'Badge de método de extinção (4 métodos)',t:'l',
-       d:'Ícone colorido por método nas colunas Extinção de DFs e RFs: Split Payment (azul), Compensação (verde), Ressarcimento (âmbar) e Transferência (roxo). Visível também no modal de detalhe NF e na timeline do RF.',
+       d:'Ícone colorido por método nas colunas Extinção de DFs e RFs: Split Payment, Compensação, Ressarcimento e Transferência. Ressarcimento só aparece com o pagamento de um pedido de ressarcimento. Visível também no modal do DF e no histórico do RF.',
        p:'prd-credito.html#f-02'},
       {n:'Gráficos extintos / vencidos / ageing',t:'g',
        d:'Três gráficos analíticos no painel de créditos a apropriar: distribuição por status de extinção, volume de vencidos por mês e curva de ageing (dias desde a emissão).',
@@ -231,7 +234,7 @@ var MODS = [
        d:'Rankings de fornecedores por volume de crédito IBS+CBS no período selecionado, exibidos em grid lado a lado para comparação imediata.',
        p:'prd-credito.html#s08'},
       {n:'Composição e método de extinção',t:'g',
-       d:'Gráfico de distribuição percentual dos créditos por método de extinção utilizado (Split Payment, Compensação, Ressarcimento, Transferência).',
+       d:'Composição mensal dos créditos de entrada por situação: apropriado, utilizado por compensação, utilizado por ressarcimento, não apropriado, vencido, inconsistência e glosado.',
        p:'prd-credito.html#s08'},
       {n:'Ciclo do crédito: apropriação, extinção e prazo',t:'r',
        d:'Três datas em cada RF e DF: o recolhimento que fez o crédito nascer, o consumo do crédito, e o limite de 5 anos do art. 54. Cada modalidade de recolhimento tem seu próprio marco.',
@@ -248,6 +251,9 @@ var MODS = [
       {n:'Filtro por origem do método de pagamento',t:'l',
        d:'Separa os documentos cujo método veio do contrato daqueles em que o adquirente assumiu o recolhimento. Sem esse recorte, a conversão manual desaparece dentro do total de RAD.',
        p:'prd-credito.html#f-08'},
+      {n:'Ressarcimento no ciclo do crédito',t:'g',
+       d:'Painel por tributo com o crédito apropriado livre, reservado pela intenção, em pedido, compensado e ressarcido, e marcas e filtro nos RFs. Mostra que o crédito também vira dinheiro, não só abate débito.',
+       p:'prd-ressarcimento.html#s09'},
     ]
   },
   /* 2 */ {
@@ -272,6 +278,9 @@ var MODS = [
       {n:'Filtros multi-seleção',t:'l',
        d:'Filtros de status, tipo de DF, entidade, data e valor com suporte a seleção múltipla de opções por campo.',
        p:'prd-debito.html#f-05'},
+      {n:'Aviso da trava da intenção de ressarcimento',t:'r',
+       d:'Com intenção declarada, os créditos reservados não compensam débitos do mês seguinte do mesmo tributo, e os débitos não extintos seguem para recolhimento. O aviso explica por que a guia apareceu.',
+       p:'prd-ressarcimento.html#s09'},
     ]
   },
   /* 3 */ {
@@ -353,6 +362,9 @@ var MODS = [
       {n:'Filtros multiselect por tipo e DF',t:'l',
        d:'Filtros combinados por tipo de inconsistência (taxonomia CAPUR/CFIN) e DF de origem, com suporte a seleção múltipla.',
        p:'-'},
+      {n:'Família Ressarcimento de inconsistências',t:'r',
+       d:'Saldo divergente da Receita, impedimento do IBS, deferimento parcial e pagamento divergente viram chamados no kanban e na listagem, com o pedido ou o RF de origem.',
+       p:'prd-ressarcimento.html#s09'},
     ]
   },
   /* 5 */ {
@@ -521,6 +533,9 @@ var MODS = [
       {n:'Auditoria de alterações cadastrais',t:'a',
        d:'Histórico de mudanças na organização (razão social, CNPJs, responsáveis) com registro de usuário, data e campo alterado.',
        p:'prd-organizacao.html#f-05'},
+      {n:'Enquadramento por órgão para o ressarcimento',t:'c',
+       d:'Programa de conformidade e prazo de análise na Receita e no Comitê Gestor, pedido centralizado na matriz e impedimentos do IBS registrados. Define o prazo de cada pedido.',
+       p:'prd-ressarcimento.html#s09'},
     ]
   },
   /* 11 */ {
@@ -747,7 +762,7 @@ var MODS = [
     mc:'#1A7940',ml:'rgba(26,121,64,.07)',md:'#14532D',
     feats:[
       {n:'Resumo por tributo na competência',t:'l',
-       d:'Saldo inicial, créditos apropriados, créditos utilizados, débitos, débitos extintos e tributo a pagar, com IBS e CBS em linhas próprias.',
+       d:'Saldo inicial, créditos apropriados, créditos utilizados em compensação, débitos, débitos extintos e tributo a pagar, com IBS e CBS em linhas próprias. Crédito ressarcido não conta como utilizado.',
        p:'-'},
       {n:'Posição detalhada de créditos e débitos',t:'g',
        d:'Abre o resumo em créditos a apropriar, apropriados e utilizados, e em débitos extintos e em aberto, com o percentual de cada faixa.',
@@ -767,6 +782,9 @@ var MODS = [
       {n:'Exportação da apuração',t:'a',
        d:'Gera o arquivo da posição apurada para conferência fora do sistema e para anexar ao fechamento contábil.',
        p:'-'},
+      {n:'Saída para ressarcimento no transporte do saldo',t:'a',
+       d:'O saldo que vai para intenção ou pedido não é transportado para compensação, e o crédito ressarcido fica fora dos utilizados — não abate tributo a pagar.',
+       p:'prd-ressarcimento.html#s09'},
     ]
   },
   /* 17 */ {

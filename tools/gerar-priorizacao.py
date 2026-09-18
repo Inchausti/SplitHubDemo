@@ -21,9 +21,9 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.4'
+VERSAO = u'v2.5'
 DATA = u'18/09/2026'
-BASE_MAPA = u'Mapa de Funcionalidades v2.3'
+BASE_MAPA = u'Mapa de Funcionalidades v2.4'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
 URL_DOCS = 'https://split-hubhq.github.io/app/docs/'
@@ -128,23 +128,23 @@ def resolver_vinculo(p):
 
 # faixa por modulo: lista com a faixa de cada funcionalidade, na ordem do mapa
 FAIXAS = {
-    0:  ['M0','M2','M2','M2','M0','M0'],
-    1:  ['M0','M0','M0','M0','M2','M0','M2','M2','M2','M0','M0','M0','M0','M0'],
-    2:  ['M0','M0','M1','M1','M0','M1'],
+    0: ['M0','M2','M2','M2','M0','M0','M1'],
+    1: ['M0','M0','M0','M0','M2','M0','M2','M2','M2','M0','M0','M0','M0','M0','M1'],
+    2: ['M0','M0','M1','M1','M0','M1','M1'],
     3:  ['M0','M0','M0','M0','M1','M1','M1','M0','M0','M1','M1','M0','M0','M0'],
-    4:  ['M0','M0','M0','M0','M0','M1','M0','M1','M0'],
+    4: ['M0','M0','M0','M0','M0','M1','M0','M1','M0','M1'],
     5:  ['M0','M0','M0','M0','M0','M0','M0'],
     6:  ['M2']*7,
     7:  ['M2']*6,
     8:  ['M0','M0','M0','M0','M0','M1','M0'],
     9:  ['M0','M0','M1','M0','M2','M0','M0','M0','M0','M0','M0','M0'],
-    10: ['M0','M2','M0','M0','M1'],
+    10: ['M0','M2','M0','M0','M1','M1'],
     11: ['M0','M0','M1','M1','M1','M1','M1','M0','M1','M1','M0','M1'],
     12: ['M0','M0','M0','M0','M0','M0','M0','M0','M0','X','X','M0'],
     13: ['M0','M1','M1','M1','M1','M1','M0','M0','M1','M1','M1','M0','M1','M1','M1'],
     14: ['M1']*16,
     15: ['M0','M0','M0','M0','M1','M0','M0','M1'],
-    16: ['M0','M1','M0','M0','M0','M0','M1'],
+    16: ['M0','M1','M0','M0','M0','M0','M1','M1'],
     17: ['M2']*4,
     18: ['M1','M1','M1','M1','M1','M0','M0','M0','M0','M0','M0'],
     19: ['M1','M1','M1','M1','M1','M0'],
@@ -221,23 +221,23 @@ REV_INDEX = {(h['bi'], h['i']): h for h in REV_HIST}
 
 # justificativa do corte, por modulo
 NOTA = {
-    0:  u'Só o que responde “onde está meu crédito hoje”. Forecast e cockpit dependem de série histórica que o piloto ainda não tem.',
-    1:  u'O módulo que a tese defende entra quase inteiro: 11 de 14. Ficam fora três gráficos analíticos — eles explicam o crédito, não o garantem. O Top 5 e Top 10 de fornecedores subiu na revisão de 15/09: saber de quem cobrar primeiro é operação, não análise.',
-    2:  u'Débito entra só para a apuração fechar. O produto se vende pelo crédito.',
+    0:  u'Só o que responde “onde está meu crédito hoje”. Forecast e cockpit dependem de série histórica que o piloto ainda não tem. O <strong>card de saldo credor e ressarcimento</strong> entra em M1 (D17).',
+    1:  u'O módulo que a tese defende entra quase inteiro: 11 de 14. Ficam fora três gráficos analíticos — eles explicam o crédito, não o garantem. O Top 5 e Top 10 de fornecedores subiu na revisão de 15/09: saber de quem cobrar primeiro é operação, não análise. O painel <strong>Ressarcimento no ciclo do crédito</strong> entra em M1 (D17): o M0 do módulo não muda.',
+    2:  u'Débito entra só para a apuração fechar. O produto se vende pelo crédito. O aviso da trava da intenção de ressarcimento entra em M1 (D17).',
     3:  u'Entra a guia, o comprovante e o rastro dos três status. A entrega ao ERP passa ao M0 junto com a API. Na revisão de 15/09 a <strong>aba Execução Programada</strong> entrou e a gestão de colunas saiu: o piloto precisa ver o que está agendado, não configurar a própria grade. Entra também o <strong>aviso ao fornecedor</strong> do recolhimento — sem ele o fornecedor paga o mesmo tributo de novo.',
-    4:  u'A inconsistência é o que impede o crédito de morrer em silêncio. Na revisão de 15/09 a <strong>atribuição de responsável</strong> entrou — inconsistência sem dono não é tratada — e os filtros multiselect saíram.',
+    4:  u'A inconsistência é o que impede o crédito de morrer em silêncio. Na revisão de 15/09 a <strong>atribuição de responsável</strong> entrou — inconsistência sem dono não é tratada — e os filtros multiselect saíram. A família Ressarcimento de inconsistências entra em M1 (D17).',
     5:  u'A porta de entrada inteira, inclusive por API: com a decisão de 14/09, o documento entra por arquivo ou por integração desde o primeiro dia.',
     6:  u'Projeção pressupõe base real acumulada. Não existe piloto que comece por aqui.',
     7:  u'<strong>Reclassificado em 15/09:</strong> 5 de 6 no M0. O score, o critério, o badge, o ranking e o mapa de bolhas deixam de ser argumento de renovação e passam a ser o que diz <em>de quem cobrar primeiro</em>. Só a evolução histórica do score fica para depois — ela exige série que o piloto ainda não tem.',
     8:  u'Dois dos três métodos são pré-requisito: sem saber quem recolhe, não há cadeia. Na revisão de 15/09 o <strong>Split Payment</strong> foi para M2 — o piloto cobre RAD e Fornecedor. O contrato como recorte de política acompanha Execução RAD.',
     9:  u'Deixou de ser só cadastro: ganhou a gestão de acesso do fornecedor e a importação em massa, implementadas em 14/09. Na revisão de 15/09 saíram a revogação com motivo e a pré-visualização da importação — são refinamentos do fluxo, não o fluxo. Score de conformidade e trilha de auditoria seguem depois.',
-    10: u'Hierarquia e filtro de grupo econômico atravessam todas as telas — sem eles, nenhum número fecha.',
+    10: u'Hierarquia e filtro de grupo econômico atravessam todas as telas — sem eles, nenhum número fecha. O enquadramento por órgão para o ressarcimento entra em M1 (D17).',
     11: u'Recortado em 14/09 e ampliado em 15/09: entram o painel inicial, a listagem dos documentos contra o comprador, os comprovantes de pagamento, o acesso por convite e — pela revisão — o <strong>envio de comprovante RAD/PIX</strong>. O fornecedor deixa de só se informar e passa a responder. Ver seção 06.',
     12: u'Login, perfis e o sistema de design, mais o selo de modo demonstração da troca de perfil. O SSO corporativo continua sendo a única funcionalidade do MVP que não existe em parte alguma.',
     13: u'O corte mais duro, afrouxado em 15/09: de 4 para 7 de 15. Entram a orquestração por CNPJ, por contrato e a auditoria com diff campo a campo — decidir <em>de quem</em> gerar a guia passa a ser do MVP; decidir <em>quando</em>, por faixa de valor e base de comparação, continua fora.',
     14: u'Duas das 16 no M0, pelas revisões de 14 e 15/09: o <strong>catálogo dos contextos</strong> e os <strong>comprovantes recebidos do ERP</strong>. O resto da gestão — conexões, credenciais, escopos, log — fica em M1, com a configuração por variável de ambiente. As quatro integrações externas a desenvolver seguem em M0 — ver seção 07.',
     15: u'A prova de que o recolhimento aconteceu. Sem conciliação, o crédito é uma afirmação sem lastro. Com a revisão de 15/09 o módulo entra <strong>inteiro</strong>: a próxima ação sugerida e o recorte por múltiplos períodos completam o que faltava.',
-    16: u'A apuração é onde o crédito vira número exigível. Entra o ciclo calcular–concluir–reabrir.',
+    16: u'A apuração é onde o crédito vira número exigível. Entra o ciclo calcular–concluir–reabrir. A saída para ressarcimento no transporte do saldo entra em M1 (D17); o ciclo do M0 não muda.',
     17: u'Depende de base legal indexada e de confiança que um piloto ainda não tem.',
     18: u'A <strong>régua de cobrança</strong> entra no M0 por decisão de 14/09: cobrança não feita é crédito perdido. Relatórios agendados ficam em M1 e a integração ITSM desceu a M2 em 15/09 — abrir chamado é rotina de time grande, não do piloto.',
     20: u'<strong>Fora do M0 por decisão de 18/09/2026.</strong> A cadeia do crédito fecha na apropriação; o ressarcimento é o passo seguinte — transformar o saldo que sobrou em dinheiro. E o primeiro pedido real só existe em 2027: saldos de 2026 não são ressarcíveis. Treze funcionalidades em M1, o ciclo que tira o analista da planilha — saldo, intenção, pedido, decisão, recebimento, prazos, conferência e impedimentos. Duas em M2: o comparativo compensar × ressarcir e a previsão de caixa, que explicam a decisão em vez de executá-la. Implementado no protótipo em simulação 2026.',
@@ -811,6 +811,14 @@ A(u'</div>')
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Decisões</span></div>')
 DEC = [
+    ('ok', u'D17 · Ressarcimento de M1 em diante — o M0 não muda',
+     u'<strong>Decidido em 18/09/2026.</strong> Tudo o que o ressarcimento trouxe aos outros módulos entra em M1: o card do Início, '
+     u'o painel do Crédito, o aviso do Débito, a família de inconsistências, o enquadramento na Organização e a saída para '
+     u'ressarcimento na Apuração. O próprio módulo segue com 13 em M1 e 2 em M2. O M0 continua em 114.'),
+    ('?', u'D18 · Motor de compensação pela ordem do art. 53',
+     u'<strong>Em aberto.</strong> Na base, o crédito dado como compensado e o débito dado como extinto por compensação não se '
+     u'casam, e sobra crédito parado com débito do mesmo tributo em aberto. O motor casaria os dois lados por tributo e período. '
+     u'Se aprovado, entra em M1 ou depois — o M0 não muda. Ver a validação dos hubs, v1.1.'),
     ('ok', u'D16 · Ressarcimento fora do M0',
      u'<strong>Decidido em 18/09/2026.</strong> O módulo foi implementado no protótipo, em simulação 2026, e entra no mapa com '
      u'15 funcionalidades — nenhuma no M0: 13 em M1 e 2 em M2. Substitui a sugestão da proposta, que levava 8 ao M0. '
@@ -875,6 +883,11 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.5</div><div class="ver-desc">'
+  u'18/09/2026 — Entram <strong>seis itens de ressarcimento nos outros módulos</strong>, todos em <strong>M1</strong> (D17): card do '
+  u'Início, painel do Crédito, aviso do Débito, família de inconsistências, enquadramento na Organização e saída para ressarcimento '
+  u'na Apuração. <strong>O M0 não muda.</strong> Descrições do método de extinção, da composição de créditos e do resumo da '
+  u'apuração corrigidas pela auditoria. Nova decisão em aberto: motor de compensação do art. 53 (D18). Base: Mapa v2.4.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v2.4</div><div class="ver-desc">'
   u'18/09/2026 — Entra o módulo <strong>Ressarcimento</strong>, implementado no protótipo em simulação 2026: 15 funcionalidades, '
   u'<strong>nenhuma no M0</strong> (D16) — 13 em M1 e 2 em M2. O M0 não muda. Base: Mapa de Funcionalidades v2.3.</div></div>')
