@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta — Motor de compensação (art. 53) · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+
+.imp { display:inline-block; font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; border-radius:3px; padding:1px 6px; white-space:nowrap; }
+.imp.c { color: var(--red); background: var(--red-d); }
+.imp.n { color: var(--purple, #6B3FA0); background: rgba(107,63,160,.12); }
+.imp.r { color: var(--teal); background: var(--teal-d); }
+.imp.s { color: var(--txt3); background: var(--sur2); }
+.big { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin:14px 0; }
+.big > div { border:1px solid var(--brd); border-radius:10px; padding:12px 14px; background:var(--sur); }
+.big .n { font-size:26px; font-weight:800; color:var(--txt1); font-family:'JetBrains Mono',monospace; line-height:1.1; }
+.big .l { font-size:12px; color:var(--txt2); margin-top:4px; }
+.bar { display:flex; align-items:center; gap:8px; }
+.bar i { display:block; height:8px; border-radius:4px; background:var(--teal); }
+code { overflow-wrap:anywhere; }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Apuração → Motor de compensação</div>
+<h1>Motor de compensação — impacto e custo</h1>
+<p class="subtitle">O que a opção B muda em toda a aplicação — dados mestres, indicadores, gráficos, listagens, detalhes, históricos e inconsistências —, quanto custa e quais riscos traz.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Análise de impacto</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">18/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Telas</span>&nbsp;<span class="meta-val">14</span></div>
+<div class="meta-pill"><span class="meta-label">Funções</span>&nbsp;<span class="meta-val">74</span></div>
+<div class="meta-pill"><span class="meta-label">Código novo</span>&nbsp;<span class="meta-val">30</span></div>
+<div class="meta-pill"><span class="meta-label">Esforço</span>&nbsp;<span class="meta-val">2,5–3×</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip warn">v1.0</span></div>
+</div>
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Resumo</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> O que muda nos dados mestres</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Impacto por tela</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Gráficos — normalização</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Listagens</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Inconsistências</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Detalhes, históricos e exportações</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Documentação</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Esforço</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Riscos</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Decisões para aprovar</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Como foi medido</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Histórico de versões</a></li>
+</ul></div>
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Resumo</span></div>
+<p>A opção B — motor de compensação pela ordem do art. 53 da LC 214/2025, com a base rebalanceada para ter meses credores legítimos — <strong>atinge a aplicação inteira</strong>. Ela muda os dados mestres de DFs e RFs, e todo indicador, gráfico, listagem, detalhe, histórico e inconsistência que lê esses dados passa a mostrar outros números.</p><div class="big"><div><div class="n">14</div><div class="l">telas afetadas</div></div><div><div class="n">74</div><div class="l">funções que leem os dados mestres</div></div><div><div class="n">30</div><div class="l">precisam de código novo</div></div><div><div class="n">25</div><div class="l">gráficos e rankings — 9 com mudança de código</div></div><div><div class="n">23</div><div class="l">listagens — 9 com mudança de código</div></div><div><div class="n">≈ 2,5–3×</div><div class="l">o esforço do módulo de Ressarcimento</div></div></div><div class="callout warn"><div class="ct">Recomendação</div><p>Seguir com a opção B em três fases, com a chave <code>SH_MOTOR_ART53</code> para ligar e desligar o motor e comparar antes e depois, parando para aprovação ao fim de cada fase. O risco técnico é médio e controlável; o risco certo é que todos os números do protótipo mudam, com efeito em roteiros de demonstração e nos documentos que citam valores.</p></div><p>Contexto do achado na <a href="ressarcimento-validacao-hubs.html" style="color:var(--blue)">validação dos hubs (v1.1)</a>: o crédito dado como compensado e o débito dado como extinto por compensação são sorteados de forma independente e não se casam, e sobra crédito parado com débito do mesmo tributo em aberto.</p>
+</div>
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O que muda nos dados mestres</span></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Mudança</th><th>Campos de DF e RF que mudam</th><th>Obrigatória</th></tr></thead><tbody><tr><td>1</td><td><strong>Base estável</strong> — sem sorteio a cada carga</td><td>Valores e status de todos os RFs de entrada mudam uma vez e passam a ser os mesmos a cada carga</td><td>Sim</td></tr><tr><td>2</td><td><strong>Split Payment nas vendas</strong> — hoje nenhum débito é extinto por split</td><td><code>metodoExtincao</code>, <code>status</code> e <code>dataExtincao</code> dos RFs de saída</td><td>Sim</td></tr><tr><td>3</td><td><strong>Motor do art. 53</strong> — crédito abate débito do mesmo tributo, por período</td><td><code>statusCredito</code>, <code>metodoExtincao</code> e <code>dataExtincaoCredito</code> dos créditos; <code>status</code> e <code>metodoExtincao</code> dos débitos; vínculo crédito ↔ débito (novo)</td><td>Sim</td></tr><tr><td>4</td><td><strong>Período pela apropriação</strong> (art. 47) em vez da emissão</td><td>Mês em que o crédito entra na apuração</td><td>Decisão</td></tr><tr><td>5</td><td><strong>Uso parcial</strong> de um RF de crédito</td><td><code>valorCompensado</code> e <code>saldoRF</code> (novos)</td><td>Decisão</td></tr><tr><td>—</td><td>O que o motor <strong>não toca</strong></td><td>RFs não apropriados, glosados, com inconsistência ou vencidos — preserva os cenários de demonstração</td><td>—</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Impacto por tela</span></div>
+<p>As 14 telas que leem os dados mestres de DF e RF. Importação, Contratos, Fornecedores, Organização, Integrações e Usuários não leem status de crédito ou débito e ficam de fora.</p><div class="table-wrap"><table><thead><tr><th>Tela</th><th>Indicadores</th><th>Gráficos</th><th>Listagens</th><th>Detalhe, histórico e outros</th><th>Esforço</th></tr></thead><tbody><tr><td>Início</td><td>Total, A apropriar, risco, a recolher e saldo credor</td><td>2 — evolução de créditos; pagamentos por método</td><td>DFs a apropriar (CP/LP)</td><td>Card de ressarcimento</td><td>Médio</td></tr><tr><td>Crédito</td><td>Apropriados, Utilizados (compensado/ressarcido), CP/LP, prescritos</td><td>5 — composição, ageing, calendários, perda</td><td>RFs e DFs: colunas de valor compensado e saldo; filtro</td><td>Painel de ressarcimento; histórico do RF</td><td>Alto</td></tr><tr><td>Débito</td><td>Total, extinto por split, por compensação, a recolher</td><td>2 — composição; extinção por método (série Split)</td><td>RFs e DFs: método Split e créditos usados</td><td>Histórico do débito com os créditos que o abateram</td><td>Alto</td></tr><tr><td>Pagamentos</td><td>Pagos, pendentes, atrasados</td><td>3 — por método, evolução acumulada</td><td>RFs de pagamento</td><td>—</td><td>Baixo</td></tr><tr><td>Conciliação</td><td>Estatísticas CAPUR/CFIN</td><td>—</td><td>Unificada e por RF</td><td>Faixa de conferência</td><td>Baixo</td></tr><tr><td>Inconsistências</td><td>KPIs, Top 5</td><td>1 — por tipo (tipos novos)</td><td>Listagem e kanban</td><td>Tipos novos do motor; família Ressarcimento</td><td>Médio</td></tr><tr><td>Apuração</td><td>Resumo por tributo; créditos e débitos</td><td>—</td><td>Créditos e débitos da competência</td><td>Passa a ler o motor</td><td>Alto</td></tr><tr><td>Ressarcimento</td><td>KPIs por tributo</td><td>—</td><td>4 abas</td><td>Saldo credor do motor; pedidos só em meses credores</td><td>Médio</td></tr><tr><td>Analytics · FCT</td><td>Crédito, débito, líquido, posição</td><td>6 — FCT, saldo, vencimentos, alíquota, forecasts</td><td>—</td><td>Recolhimento líquido e saldo pelo motor</td><td>Alto</td></tr><tr><td>Analytics · Inteligência</td><td>Score, ranking</td><td>3 — aproveitamento, RAD por prazo, mapa de risco</td><td>—</td><td>—</td><td>Baixo</td></tr><tr><td>Detalhe do DF e do RF</td><td>—</td><td>—</td><td>—</td><td>Status parcial, valor compensado, débitos abatidos, histórico</td><td>Médio</td></tr><tr><td>Portal do Fornecedor</td><td>Painel do fornecedor</td><td>—</td><td>DFs do fornecedor</td><td>—</td><td>Baixo</td></tr><tr><td>Execução RAD</td><td>—</td><td>—</td><td>RFs descobertos</td><td>Não toca não apropriados — sem mudança de regra</td><td>Baixo</td></tr><tr><td>Automações e Assistente</td><td>—</td><td>—</td><td>Régua de cobrança</td><td>Textos e base de conhecimento</td><td>Baixo</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Gráficos — normalização</span></div>
+<p>25 gráficos e rankings. Os marcados <em>recalcula</em> só mudam de valor, sem mudança de código, e entram na conferência automática. Os marcados <em>muda código</em> precisam de fórmula, série ou legenda nova.</p><div class="table-wrap"><table><thead><tr><th>Gráfico</th><th>Elemento</th><th>O que muda</th><th>Tipo</th></tr></thead><tbody><tr><td>Crédito · Composição de créditos</td><td><code>cComposicao</code></td><td>Utilizado compensado passa a ser o do motor; série de uso parcial se houver</td><td><span class="imp c">muda código</span></td></tr><tr><td>Crédito · Ageing dos créditos a apropriar</td><td><code>cred-ageing-bars</code></td><td>Com uso parcial, o saldo remanescente entra na faixa de idade</td><td><span class="imp c">muda código</span></td></tr><tr><td>Crédito · Calendário de vencimentos</td><td><code>cVencimento</code></td><td>Valores mudam com a base estável</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Crédito · Calendário de prescrição</td><td><code>cred-calendario-extincao</code></td><td>Só não apropriados — valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Débito · Composição por status</td><td><code>cDebComposicao</code></td><td>Extinto e não extinto passam a vir do split e do motor</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Débito · Extinção por método</td><td><code>cDebMetodo</code></td><td>Série nova <strong>Split Payment</strong>, cor e legenda; compensação pelo motor</td><td><span class="imp c">muda código</span></td></tr><tr><td>Início · Evolução de créditos</td><td><code>cCreditos</code></td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Início · Pagamentos por mês e método</td><td><code>cPagamentos</code></td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Pagamentos · Por método de pagamento</td><td><code>cPagMetodo</code></td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Pagamentos · Evolução acumulada</td><td><code>cPagEvolAcum</code></td><td>Acumulado apropriado × compensado passa a ler o motor</td><td><span class="imp c">muda código</span></td></tr><tr><td>FCT · Crédito × débito × líquido</td><td><code>cFCT</code></td><td>Recolhimento líquido = débito − split/RAD − compensação do motor</td><td><span class="imp c">muda código</span></td></tr><tr><td>FCT · Saldo acumulado</td><td><code>cFCTSaldo</code></td><td>Saldo credor e devedor do motor, por mês</td><td><span class="imp c">muda código</span></td></tr><tr><td>FCT · Créditos pendentes</td><td><code>cFCTVenc</code></td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>FCT · Alíquota efetiva</td><td><code>cFCTAliq</code></td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>FCT · Economia e média da alíquota</td><td><code>fct-aliq-*</code></td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>FCT · Forecast de aproveitamento</td><td><code>forecast</code></td><td>Projeção de compensação passa a seguir o motor</td><td><span class="imp c">muda código</span></td></tr><tr><td>FCT · Forecast do fluxo</td><td><code>forecast</code></td><td>Entra o saldo credor e o recebimento esperado de ressarcimento</td><td><span class="imp c">muda código</span></td></tr><tr><td>Inteligência · Aproveitamento mensal</td><td><code>cAprovMensal</code></td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Inteligência · RAD por prazo</td><td><code>cRadPrazo</code></td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Inteligência · Mapa de risco</td><td><code>cMapaRisco</code></td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Rankings · Top 5 inconsistências e Top 10 empresas</td><td>—</td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Inconsistências · Por tipo</td><td><code>cIncTipo</code></td><td>Tipos novos do motor e da família Ressarcimento, com cores</td><td><span class="imp c">muda código</span></td></tr><tr><td>Importação · Volume ingerido</td><td><code>cIngestao</code></td><td>Não lê status de crédito ou débito</td><td><span class="imp s">sem impacto</span></td></tr></tbody></table></div><div class="callout info"><div class="ct">Regra de normalização</div><p>Todo gráfico que fala de crédito lê só RFs de entrada; todo gráfico que fala de débito, só de saída; CBS e IBS separados quando o gráfico permite; e o mesmo número tem o mesmo valor em qualquer tela que o mostre. Estas regras entram na conferência automática da fase 2.</p></div>
+</div>
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Listagens</span></div>
+<p>23 listagens, contando cada aba e o kanban. 9 mudam de código — Crédito (RFs e DFs), Débito (RFs e DFs), Apuração (créditos e débitos), Inconsistências (listagem e kanban) e Ressarcimento.</p><div class="table-wrap"><table><thead><tr><th>Listagem</th><th>Elemento</th><th>O que muda</th><th>Tipo</th></tr></thead><tbody><tr><td>Crédito · RFs</td><td><code>cred-rfs</code></td><td>Colunas <em>Valor compensado</em> e <em>Saldo do RF</em>; filtro por situação de compensação; exportação</td><td><span class="imp c">muda código</span></td></tr><tr><td>Crédito · DFs</td><td><code>cred-dfs</code></td><td>Status do DF com uso parcial</td><td><span class="imp c">muda código</span></td></tr><tr><td>Débito · RFs e DFs</td><td><code>deb-dfs</code></td><td>Método <em>Split Payment</em>; créditos que abateram o débito; filtro</td><td><span class="imp c">muda código</span></td></tr><tr><td>Apuração · Créditos e Débitos</td><td><code>apur-cred</code> · <code>apur-deb</code></td><td>Compensado, a recolher e saldo pelo motor; exportação</td><td><span class="imp c">muda código</span></td></tr><tr><td>Inconsistências · Listagem e kanban</td><td><code>inc-rfs</code></td><td>Tipos novos, cores e rótulos</td><td><span class="imp c">muda código</span></td></tr><tr><td>Ressarcimento · 4 abas</td><td>—</td><td>Saldo e pedidos a partir do motor</td><td><span class="imp c">muda código</span></td></tr><tr><td>Início · DFs a apropriar (CP e LP)</td><td><code>dashDfCp</code> · <code>dashDfLp</code></td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Pagamentos · RFs</td><td><code>pag-rfs</code></td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Conciliação · Unificada e RFs</td><td><code>conc-uni</code> · <code>conc-rfs</code></td><td>Pago = apropriado ou utilizado — regra mantida</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Portal do Fornecedor · DFs</td><td><code>forn-dfs</code></td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Gestão de RFs</td><td>—</td><td>Valores mudam com a base</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Execução RAD · RFs descobertos</td><td>—</td><td>Só não apropriados — sem mudança de regra</td><td><span class="imp r">recalcula</span></td></tr><tr><td>Cadastros (contratos, fornecedores, organização, importação, políticas RAD)</td><td><code>admin-*</code></td><td>Não leem status de crédito ou débito</td><td><span class="imp s">sem impacto</span></td></tr></tbody></table></div>
+</div>
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Inconsistências</span></div>
+<div class="table-wrap"><table><thead><tr><th>Grupo</th><th>Efeito da opção B</th><th>Tipo</th></tr></thead><tbody><tr><td><strong>Tipos de hoje</strong> — vencido, em risco, a prescrever, divergência de apuração, split não executado, comprovante, chave, duplicidade</td><td>Regras mantidas; o motor não toca RFs com inconsistência. As contagens mudam uma vez, pela base estável</td><td><span class="imp r">recalcula</span></td></tr><tr><td><strong>Split não executado</strong></td><td>Passa a ter débitos que de fato deveriam ser extintos por split — o cenário fica realista</td><td><span class="imp r">recalcula</span></td></tr><tr><td><strong>Saldo a recolher vencido</strong> (novo)</td><td>Débito que o crédito não cobriu e passou do vencimento</td><td><span class="imp n">elemento novo</span></td></tr><tr><td><strong>Compensação sem lastro</strong> (novo, controle)</td><td>Crédito compensado sem débito casado — deve ser sempre zero; é o alarme da regra do art. 53</td><td><span class="imp n">elemento novo</span></td></tr><tr><td><strong>Família Ressarcimento</strong></td><td>Só nos meses credores; divergência com a Receita e impedimento do IBS continuam</td><td><span class="imp r">recalcula</span></td></tr><tr><td><strong>Grupos e SLA</strong> (proposta)</td><td>Se aprovada, os dois tipos novos precisam de regra de roteamento e SLA</td><td><span class="imp n">elemento novo</span></td></tr><tr><td><strong>Painéis</strong> — KPIs, Top 5, por tipo, kanban</td><td>Recalculam; cores e rótulos dos tipos novos</td><td><span class="imp c">muda código</span></td></tr></tbody></table></div>
+</div>
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Detalhes, históricos e exportações</span></div>
+<div class="table-wrap"><table><thead><tr><th>Item</th><th>O que muda</th><th>Tipo</th></tr></thead><tbody><tr><td>Histórico do RF de crédito</td><td>Utilização lista exatamente os débitos abatidos, com o valor de cada um; compensação parcial vira evento</td><td><span class="imp c">muda código</span></td></tr><tr><td>Histórico do RF de débito</td><td>Extinção lista os créditos que o abateram, ou o split, ou a guia</td><td><span class="imp c">muda código</span></td></tr><tr><td>Detalhe do DF</td><td>Status parcial, valor compensado e saldo de cada RF</td><td><span class="imp c">muda código</span></td></tr><tr><td>Detalhe do RF</td><td>Valor compensado, saldo, débitos abatidos, período de compensação</td><td><span class="imp c">muda código</span></td></tr><tr><td>Exportações CSV</td><td>Colunas novas nas listagens de Crédito, Débito e Apuração</td><td><span class="imp c">muda código</span></td></tr><tr><td>Assistente tributário</td><td>Respostas que contam status — recalculam; texto sobre compensação ganha a regra do art. 53</td><td><span class="imp r">recalcula</span></td></tr></tbody></table></div>
+</div>
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Documentação</span></div>
+<div class="table-wrap"><table><thead><tr><th>Documento</th><th>O que muda</th></tr></thead><tbody><tr><td>PRDs com valores citados (7)</td><td>Crédito, Débito, Início, Analytics, Conciliação, Pagamentos e Ressarcimento — exemplos e números</td></tr><tr><td>PRD de Apuração (novo)</td><td>O módulo não tem PRD; o motor é a regra central dele</td></tr><tr><td>Validação dos hubs</td><td>Nova rodada de auditoria; a tabela do art. 53 passa a mostrar zero</td></tr><tr><td>Mapa e priorização</td><td>Motor como funcionalidade nova da Apuração, em M1 — o M0 não muda (D17)</td></tr><tr><td>Ciclo de vida do produto</td><td>A fase de compensação ganha o motor</td></tr><tr><td>Changelogs</td><td>Hub e protótipo</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Esforço</span></div>
+<p>Unidade de medida: o módulo de Ressarcimento com as duas auditorias (cerca de 1.100 linhas novas, 20 pontos de encaixe e 10 documentos). A opção B fica entre <strong>2,5 e 3 unidades</strong>. A maior parte está em normalizar as telas, não no motor.</p><div class="table-wrap"><table><thead><tr><th>Fase</th><th>Entrega</th><th>Parte do esforço</th><th>Risco</th></tr></thead><tbody><tr><td>1 · Diagnóstico</td><td>Motor com a chave desligada; relatório de antes e depois por tela, sem mudar nada visível</td><td><div class="bar"><i style="width:30px"></i><span>10%</span></div></td><td>Baixo</td></tr><tr><td>2a · Base estável e split</td><td>Gerador sem sorteio; Split Payment nas vendas; perfil de meses credores</td><td><div class="bar"><i style="width:45px"></i><span>15%</span></div></td><td>Médio</td></tr><tr><td>2b · Motor e Apuração</td><td>Motor por tributo e período, uso parcial, Apuração e Ressarcimento lendo o motor</td><td><div class="bar"><i style="width:60px"></i><span>20%</span></div></td><td>Médio</td></tr><tr><td>2c · Normalização das telas</td><td>30 funções com código novo: KPIs, 9 gráficos, 9 listagens, detalhes, históricos, inconsistências, exportações</td><td><div class="bar"><i style="width:90px"></i><span>30%</span></div></td><td>Médio</td></tr><tr><td>2d · Auditoria</td><td>Conferência automática de 27 indicadores e 400 históricos, mais as regras novas do motor</td><td><div class="bar"><i style="width:30px"></i><span>10%</span></div></td><td>Baixo</td></tr><tr><td>3 · Documentação</td><td>PRDs, PRD de Apuração, validação, mapa, priorização, changelogs</td><td><div class="bar"><i style="width:45px"></i><span>15%</span></div></td><td>Baixo</td></tr></tbody></table></div><div class="table-wrap"><table><thead><tr><th>Medida</th><th>Valor</th></tr></thead><tbody><tr><td>Funções que leem os dados mestres</td><td>74 (de 123 encontradas; 49 eram falsos positivos)</td></tr><tr><td>Funções com código novo</td><td>30 — cerca de 4.550 linhas a revisar</td></tr><tr><td>Funções que só recalculam</td><td>47 — cerca de 4.000 linhas, cobertas pela conferência automática</td></tr><tr><td>Código novo estimado</td><td>Motor e ajustes do gerador: 400 a 600 linhas</td></tr><tr><td>Pontos de aprovação</td><td>3 — fim do diagnóstico, fim da normalização, documentação</td></tr></tbody></table></div><details><summary style="cursor:pointer;font-weight:700;color:var(--txt1)">As 27 funções com código novo, mais 3 fora da varredura</summary><div class="table-wrap"><table><thead><tr><th>Função</th><th>Arquivo</th><th>O que muda</th></tr></thead><tbody><tr><td><code>creditosRenderKPIs</code></td><td>index.html</td><td>KPIs legados do Crédito</td></tr><tr><td><code>dashRenderCreditKPIs</code></td><td>index.html</td><td>KPIs legados do Início</td></tr><tr><td><code>nfRenderLista</code></td><td>index.html</td><td>Gerador da base (index): determinístico + Split nas vendas</td></tr><tr><td><code>creditosDFsRender</code></td><td>index.html</td><td>Status do DF com uso parcial</td></tr><tr><td><code>apurExportarCSV</code></td><td>index.html</td><td>Colunas do motor na exportação</td></tr><tr><td><code>abrirDetalhesNFporNumero</code></td><td>data-sync-fixed.js</td><td>Detalhe do DF com o casamento</td></tr><tr><td><code>_rfGerarHistorico</code></td><td>data-sync-fixed.js</td><td>Vínculo exato crédito ↔ débito</td></tr><tr><td><code>abrirDetalheRF</code></td><td>data-sync-fixed.js</td><td>Valor compensado, saldo, débitos abatidos</td></tr><tr><td><code>creditosFiltrarGrid</code></td><td>data-sync-fixed.js</td><td>Filtro por situação de compensação</td></tr><tr><td><code>renderizarTabelaCreditos</code></td><td>data-sync-fixed.js</td><td>Colunas: valor compensado e saldo do RF</td></tr><tr><td><code>atualizarKPIsCreditos</code></td><td>data-sync-fixed.js</td><td>Utilizado por compensação real; uso parcial</td></tr><tr><td><code>renderizarForecastAproveitamento</code></td><td>data-sync-fixed.js</td><td>Projeção de compensação pelo motor</td></tr><tr><td><code>atualizarKPIsDashboard</code></td><td>data-sync-fixed.js</td><td>Início: a recolher e saldo credor pelo motor</td></tr><tr><td><code>_sincronizarInconsistencias</code></td><td>data-sync-fixed.js</td><td>Inconsistências derivadas do motor</td></tr><tr><td><code>renderizarRFsInconsistencias</code></td><td>data-sync-fixed.js</td><td>Tipos novos do motor</td></tr><tr><td><code>_enriquecerNFsSaida</code></td><td>data-sync-fixed.js</td><td>Enriquecimento das saídas: método Split, status pelo motor</td></tr><tr><td><code>debitosFiltrarGrid</code></td><td>data-sync-fixed.js</td><td>Filtro com Split Payment</td></tr><tr><td><code>renderizarTabelaDebitos</code></td><td>data-sync-fixed.js</td><td>Método Split e créditos usados por débito</td></tr><tr><td><code>debitosDFsRender</code></td><td>data-sync-fixed.js</td><td>DF de saída com extinção por método</td></tr><tr><td><code>atualizarKPIsDebitos</code></td><td>data-sync-fixed.js</td><td>KPIs: extinto por split, compensação, a recolher</td></tr><tr><td><code>renderizarExtincaoMetodo</code></td><td>data-sync-fixed.js</td><td>Série Split Payment e legenda</td></tr><tr><td><code>renderizarAgeingCreditos</code></td><td>data-sync-fixed.js</td><td>Saldo remanescente no ageing</td></tr><tr><td><code>renderizarFCT</code></td><td>data-sync-fixed.js</td><td>Recolhimento líquido e saldo pelo motor</td></tr><tr><td><code>renderizarFCTForecast</code></td><td>data-sync-fixed.js</td><td>Projeção com saldo credor e ressarcimento</td></tr><tr><td><code>renderizarEvolucaoAcumuladaCreditos</code></td><td>data-sync-fixed.js</td><td>Acumulado apropriado × compensado</td></tr><tr><td><code>renderizarComposicaoCreditos</code></td><td>data-sync-fixed.js</td><td>Uso parcial na composição</td></tr><tr><td><code>sincronizarApuracao</code></td><td>data-sync-fixed.js</td><td>Apuração lê o motor (compensado, a recolher, saldo credor)</td></tr><tr><td><code>seed / periodos</code></td><td>ressarcimento.js</td><td>Saldo e pedidos a partir do motor</td></tr><tr><td><code>gerarApuracaoCompleta</code></td><td>apuracao-completa.js</td><td>Apuração de exemplo substituída pelo motor</td></tr><tr><td><code>SH_TABLES</code></td><td>data-sync-fixed.js</td><td>Colunas novas nas listagens</td></tr></tbody></table></div></details>
+</div>
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Riscos</span></div>
+<div class="table-wrap"><table><thead><tr><th>Risco</th><th>Probabilidade</th><th>Impacto</th><th>Mitigação</th></tr></thead><tbody><tr><td><strong>Todos os números mudam</strong> — roteiros de demonstração e documentos com valores</td><td>Certa</td><td>Alto</td><td>Chave para comparar; lista dos documentos com valores; roteiro de demonstração revisto na fase 3</td></tr><tr><td><strong>Cenários de demonstração mudam de volume</strong> — RAD sem comprovante, vencidos, inconsistências</td><td>Média</td><td>Médio</td><td>Motor não toca esses RFs; contagem de cada cenário antes e depois no relatório da fase 1</td></tr><tr><td><strong>Uso parcial confunde</strong> — um RF “apropriado” já usado em parte</td><td>Média</td><td>Médio</td><td>Status só muda com 100% consumido; colunas de valor compensado e saldo; selo “parcial”</td></tr><tr><td><strong>Mudança de período</strong> — da emissão para a apropriação</td><td>Certa, se escolhida</td><td>Médio</td><td>Decisão explícita; se adiada, o motor usa a emissão como hoje</td></tr><tr><td><strong>Regressão silenciosa</strong> numa das 47 funções que só recalculam</td><td>Baixa</td><td>Médio</td><td>Conferência automática de indicadores, gráficos e históricos a cada fase</td></tr><tr><td><strong>Ressarcimento vazio</strong> em alguma carga</td><td>Baixa com base estável</td><td>Médio</td><td>Meses credores definidos por construção na fase 2a</td></tr><tr><td><strong>Trabalho não commitado no PRD de Crédito</strong></td><td>Certa</td><td>Baixo</td><td>Quem fez commita ou descarta antes da fase 3</td></tr><tr><td><strong>Desempenho</strong></td><td>Baixa</td><td>Baixo</td><td>O motor roda sobre cerca de 400 RFs</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Decisões para aprovar</span></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Decisão</th><th>Recomendação</th></tr></thead><tbody><tr><td>D-01</td><td>Seguir com a opção B em três fases, com a chave <code>SH_MOTOR_ART53</code></td><td><strong>Sim</strong></td></tr><tr><td>D-02</td><td>Base estável, sem sorteio a cada carga</td><td><strong>Sim</strong></td></tr><tr><td>D-03</td><td>Parcela das vendas extintas por Split Payment</td><td><strong>Cerca de metade</strong> dos débitos</td></tr><tr><td>D-04</td><td>Período da apuração: apropriação (art. 47) ou emissão</td><td><strong>Apropriação</strong> — mais correto; muda valores entre meses</td></tr><tr><td>D-05</td><td>Uso parcial de RF de crédito</td><td><strong>Sim</strong>, só no livro do motor</td></tr><tr><td>D-06</td><td>Meses credores: surgirem do split ou perfil definido</td><td><strong>Perfil definido</strong> — 3 a 4 em CBS, 2 a 3 em IBS</td></tr><tr><td>D-07</td><td>Faixa na priorização</td><td><strong>M1</strong> — o M0 não muda (D17)</td></tr><tr><td>D-08</td><td>Criar o PRD de Apuração junto</td><td><strong>Sim</strong></td></tr></tbody></table></div>
+</div>
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Como foi medido</span></div>
+<p>Varredura de <code>index.html</code> e dos 13 scripts em <code>src/js</code> por funções que leem <code>statusCredito</code>, <code>status</code> de RF, <code>metodoExtincao</code>, datas de extinção, apropriação e pagamento, <code>statusRegistro</code> e inconsistências. 123 funções encontradas; curadoria manual separou 49 falsos positivos (status de CNPJ, textos com a palavra inconsistência, utilitários), 27 funções com código novo e 47 que só recalculam. Gráficos e listagens contados pelas chamadas de desenho e pelo gerenciador de colunas.</p><p>Números do achado do art. 53 na <a href="ressarcimento-validacao-hubs.html" style="color:var(--blue)">validação dos hubs (v1.1)</a>.</p>
+</div>
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">18/09/2026 — Primeira versão: impacto da opção B em toda a aplicação, esforço por fase, riscos e decisões.</div></div>
+</div>
+</div>
+</body>
+</html>
