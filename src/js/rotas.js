@@ -50,7 +50,8 @@
     'ressarcimento/ibs':        function () { if (window.shRes) window.shRes.abrir('IBS', 'saldo'); },
     'ressarcimento/intencoes':  function () { if (window.shRes) window.shRes.abrir(null, 'intencoes'); },
     'ressarcimento/pedidos':    function () { if (window.shRes) window.shRes.abrir(null, 'pedidos'); },
-    'ressarcimento/recebimentos': function () { if (window.shRes) window.shRes.abrir(null, 'recebimentos'); }
+    'ressarcimento/recebimentos': function () { if (window.shRes) window.shRes.abrir(null, 'recebimentos'); },
+    'validacao-motor':          function () { var b = document.getElementById('nav-validacao-motor-btn'); if (b && window.showView) window.showView('validacao-motor', b); }
   };
 
   function ler() {
