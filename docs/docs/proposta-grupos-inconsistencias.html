@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grupos de Atendimento · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+
+/* ── mockups ── */
+.tela { margin: 26px 0 8px; }
+.tela-hdr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin-bottom: 8px; }
+.tela-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; color: var(--sur); background: var(--teal); border-radius: 4px; padding: 1px 7px; }
+.tela-nome { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.tela-cobre { font-size: 11px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; }
+.mk { border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; background: var(--bg); box-shadow: var(--shadow-sm); }
+.mk-bar { display: flex; align-items: center; gap: 6px; padding: 7px 12px; background: var(--sur2); border-bottom: 1px solid var(--brd); font-size: 10.5px; color: var(--txt3); }
+.mk-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); }
+.mk-bar .mk-url { margin-left: 8px; font-family: 'JetBrains Mono', monospace; }
+.mk-bar .mk-ilus { margin-left: auto; font-weight: 700; color: var(--amber); }
+.mk-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.mk-title { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.mk-title h5 { margin: 0; font-size: 15px; color: var(--txt1); }
+.mk-title .mk-sub { font-size: 11.5px; color: var(--txt3); }
+.mk-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.mk-kpi { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.mk-kpi .l { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); }
+.mk-kpi .v { font-size: 18px; font-weight: 800; color: var(--txt1); font-variant-numeric: tabular-nums; margin-top: 3px; }
+.mk-kpi .s { font-size: 11px; color: var(--txt2); margin-top: 2px; }
+.mk-kpi.hl { border-color: var(--teal); }
+.mk-cal { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0; border: 1px solid var(--brd); border-radius: 8px; overflow: hidden; background: var(--sur); }
+.mk-cal > div { padding: 9px 12px; border-right: 1px solid var(--brd); font-size: 11.5px; color: var(--txt2); }
+.mk-cal > div:last-child { border-right: none; }
+.mk-cal b { display: block; color: var(--txt1); font-size: 12px; }
+.mk-cal .urg b { color: var(--red); }
+.mk-cal .ok b { color: var(--teal); }
+.mk-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--brd); }
+.mk-tab { font-size: 12px; font-weight: 600; color: var(--txt3); padding: 7px 12px; border-bottom: 2px solid transparent; }
+.mk-tab.on { color: var(--teal); border-bottom-color: var(--teal); }
+.mk-tab .n { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var(--sur2); border-radius: 10px; padding: 0 6px; margin-left: 4px; }
+.mk-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mk-in { font-size: 11.5px; color: var(--txt3); background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; padding: 5px 10px; }
+.mk-btn { font-size: 11.5px; font-weight: 700; border-radius: 6px; padding: 5px 12px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); white-space: nowrap; }
+.mk-btn.p { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+.mk-btn.d { color: var(--red); border-color: var(--red); }
+.mk-btn.ml { margin-left: auto; }
+.mk-tw { overflow-x: auto; border: 1px solid var(--brd); border-radius: 8px; background: var(--sur); }
+.mk-t { width: 100%; border-collapse: collapse; font-size: 11.5px; min-width: 680px; }
+.mk-t th { text-align: left; font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); padding: 7px 9px; border-bottom: 1px solid var(--brd); background: var(--sur2); white-space: nowrap; }
+.mk-t td { padding: 7px 9px; border-bottom: 1px solid var(--brd); color: var(--txt2); white-space: nowrap; }
+.mk-t tr:last-child td { border-bottom: none; }
+.mk-t .r { text-align: right; font-variant-numeric: tabular-nums; }
+.mk-t .m { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; }
+.mk-t tr.sel td { background: var(--teal-d); }
+.mk-t .strong { color: var(--txt1); font-weight: 700; }
+.st { display: inline-block; font-size: 9.5px; font-weight: 700; border-radius: 10px; padding: 1px 8px; white-space: nowrap; }
+.st.teal { background: var(--teal-d); color: var(--teal); }
+.st.blue { background: var(--blue-d); color: var(--blue); }
+.st.amber { background: var(--amber-d); color: var(--amber); }
+.st.red { background: var(--red-d); color: var(--red); }
+.st.green { background: var(--green-d); color: var(--green); }
+.st.gray { background: var(--sur2); color: var(--txt3); }
+.cd { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; }
+.cd.red { color: var(--red); } .cd.amber { color: var(--amber); } .cd.ok { color: var(--teal); }
+.mk-split { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 760px) { .mk-split { grid-template-columns: minmax(0, 1fr); } }
+.mk-card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.mk-card h6 { margin: 0 0 8px; font-size: 12.5px; color: var(--txt1); }
+.mk-cmp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.mk-cmp > div { border: 1px solid var(--brd); border-radius: 6px; padding: 9px 10px; font-size: 11.5px; color: var(--txt2); }
+.mk-cmp > div.esc { border-color: var(--teal); background: var(--teal-d); }
+.mk-cmp b { display: block; font-size: 12px; color: var(--txt1); margin-bottom: 4px; }
+.mk-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; font-size: 11.5px; color: var(--txt2); }
+.mk-row span:last-child { font-variant-numeric: tabular-nums; color: var(--txt1); font-weight: 600; white-space: nowrap; }
+.mk-row.tot { border-top: 1px solid var(--brd); margin-top: 4px; padding-top: 6px; font-weight: 700; }
+.mk-modal-wrap { background: rgba(15,23,42,.35); padding: 18px; display: flex; justify-content: center; }
+.mk-modal { width: 100%; max-width: 560px; background: var(--sur); border: 1px solid var(--brd); border-top: 3px solid var(--teal); border-radius: 10px; box-shadow: var(--shadow-sm); }
+.mk-modal.warn { border-top-color: var(--amber); }
+.mk-mh { padding: 12px 16px; border-bottom: 1px solid var(--brd); }
+.mk-mh .ey { font-size: 9.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); }
+.mk-mh .t { font-size: 14px; font-weight: 700; color: var(--txt1); margin-top: 2px; }
+.mk-mb { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; font-size: 12px; color: var(--txt2); }
+.mk-mf { padding: 10px 16px; border-top: 1px solid var(--brd); display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.mk-field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); margin-bottom: 3px; }
+.mk-field .inp { border: 1px solid var(--brd); border-radius: 6px; padding: 6px 10px; background: var(--bg); color: var(--txt1); font-size: 12px; }
+.mk-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.mk-alert { border-left: 3px solid var(--amber); background: var(--amber-d); padding: 8px 10px; border-radius: 0 6px 6px 0; font-size: 11.5px; color: var(--txt1); }
+.mk-alert.red { border-left-color: var(--red); background: var(--red-d); }
+.mk-alert.ok { border-left-color: var(--teal); background: var(--teal-d); }
+.mk-chk { display: flex; gap: 8px; align-items: flex-start; font-size: 11.5px; }
+.mk-chk i { flex-shrink: 0; width: 13px; height: 13px; border: 1.5px solid var(--teal); border-radius: 3px; margin-top: 1px; background: var(--teal); }
+.mk-steps { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; }
+.mk-steps span { padding: 3px 10px; border-radius: 12px; background: var(--sur2); color: var(--txt3); font-weight: 600; }
+.mk-steps span.on { background: var(--teal); color: var(--sur); }
+.mk-steps span.done { background: var(--teal-d); color: var(--teal); }
+.mk-tl { display: flex; flex-direction: column; gap: 0; }
+.mk-tl > div { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 10px; padding-bottom: 10px; position: relative; }
+.mk-tl > div::before { content: ''; position: absolute; left: 5px; top: 12px; bottom: 0; width: 1px; background: var(--brd); }
+.mk-tl > div:last-child::before { display: none; }
+.mk-tl i { width: 11px; height: 11px; border-radius: 50%; background: var(--teal); margin-top: 2px; }
+.mk-tl i.pend { background: var(--sur); border: 2px solid var(--amber); }
+.mk-tl b { color: var(--txt1); font-size: 12px; }
+.mk-tl small { display: block; color: var(--txt3); font-size: 10.5px; }
+.mk-bars { display: flex; flex-direction: column; gap: 6px; }
+.mk-bars > div { display: grid; grid-template-columns: 58px minmax(0, 1fr) 96px; gap: 8px; align-items: center; font-size: 11px; color: var(--txt2); }
+.mk-bars .trk { height: 10px; background: var(--sur2); border-radius: 5px; overflow: hidden; display: flex; }
+.mk-bars .trk em { display: block; height: 100%; background: var(--teal); }
+.mk-bars .trk em.est { background: var(--teal-d); border-left: 1px dashed var(--teal); }
+.mk-bars .val { text-align: right; font-variant-numeric: tabular-nums; color: var(--txt1); font-weight: 600; }
+.obs { margin-top: 8px; }
+.obs li { margin: 3px 0; }
+
+.av { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: 8.5px; font-weight: 800; color: #fff; vertical-align: middle; margin-right: -4px; border: 1.5px solid var(--sur); }
+.av.a1 { background: #185fa5; } .av.a2 { background: #7C3AED; } .av.a3 { background: #D97706; } .av.a4 { background: #059669; }
+.av.a5 { background: #1d9e75; } .av.a6 { background: #B4577A; } .av.a7 { background: #4B6BFB; } .av.off { background: var(--txt3); opacity: .55; }
+.gchip { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 10px; white-space: nowrap; }
+.gchip::before { content: ''; width: 7px; height: 7px; border-radius: 2px; background: currentColor; }
+.g1 { color: #185fa5; background: rgba(24,95,165,.1); } .g2 { color: #059669; background: rgba(5,150,105,.1); }
+.g3 { color: #B4577A; background: rgba(180,87,122,.1); } .g4 { color: #D97706; background: rgba(217,119,6,.1); }
+.g5 { color: #7C3AED; background: rgba(124,58,237,.1); } .g0 { color: var(--txt3); background: var(--sur2); }
+.kb { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 10px; overflow-x: auto; }
+.kb-col { background: var(--sur2); border-radius: 8px; padding: 8px; min-width: 170px; display: flex; flex-direction: column; gap: 7px; }
+.kb-h { font-size: 11px; font-weight: 700; color: var(--txt1); display: flex; justify-content: space-between; padding: 2px 4px 4px; }
+.kb-c { background: var(--sur); border: 1px solid var(--brd); border-radius: 7px; padding: 8px 9px; font-size: 11px; color: var(--txt2); display: flex; flex-direction: column; gap: 4px; }
+.kb-c b { color: var(--txt1); font-size: 11.5px; }
+.kb-c .ft { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 2px; }
+.kb-c.me { border-color: var(--teal); }
+.kb-c.q { border-style: dashed; }
+.mx { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 560px; }
+.mx th, .mx td { border: 1px solid var(--brd); padding: 6px 8px; text-align: left; }
+.mx th { background: var(--sur2); font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.mx td.grp { background: var(--sur2); font-weight: 700; color: var(--txt1); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; }
+.mx td.gap { background: var(--amber-d); }
+.flowx { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 0; margin: 14px 0; }
+.fx { position: relative; padding: 10px 18px 10px 12px; border: 1px solid var(--brd); border-right: 0; background: var(--sur); }
+.fx:first-child { border-radius: 10px 0 0 10px; }
+.fx:last-child { border-right: 1px solid var(--brd); border-radius: 0 10px 10px 0; background: var(--teal-d); }
+.fx::after { content: '›'; position: absolute; right: 5px; top: 50%; transform: translateY(-50%); color: var(--txt3); font-weight: 700; }
+.fx:last-child::after { content: ''; }
+.fx-n { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; color: var(--teal); }
+.fx-t { font-size: 12.5px; font-weight: 700; color: var(--txt1); margin: 2px 0; }
+.fx-d { font-size: 11px; color: var(--txt2); line-height: 1.4; }
+@media (max-width: 760px) {
+  .flowx { grid-template-columns: minmax(0, 1fr); }
+  .fx, .fx:first-child, .fx:last-child { border: 1px solid var(--brd); border-radius: 0; margin-top: -1px; }
+  .fx::after { content: ''; }
+}
+.chip.m2 { background: rgba(107,63,160,.12); color: var(--purple); }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Inconsistências → Kanban</div>
+<h1>Grupos de atendimento de inconsistências</h1>
+<p class="subtitle">Cada área trata os chamados que são dela. O chamado nasce, as regras encontram o grupo pelo tipo de inconsistência e pelo tipo de DF, e um membro disponível é sorteado — sem ninguém distribuindo à mão.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta de funcionalidade</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">18/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Funcionalidades</span>&nbsp;<span class="meta-val">11</span></div>
+<div class="meta-pill"><span class="meta-label">Telas</span>&nbsp;<span class="meta-val">6</span></div>
+<div class="meta-pill"><span class="meta-label">Em M0</span>&nbsp;<span class="meta-val">7</span></div>
+<div class="meta-pill"><span class="meta-label">Decisões</span>&nbsp;<span class="meta-val">9</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip warn">v1.0</span></div>
+</div>
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> O problema</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> A proposta em uma tela</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Como o chamado encontra o grupo</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Como o responsável é escolhido</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> O que o usuário pode fazer depois</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Telas propostas</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Funcionalidades</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Modelo de dados</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Requisitos</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Impacto no produto</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Priorização sugerida</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Decisões para aprovar</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Histórico de versões</a></li>
+</ul></div>
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O problema</span></div>
+<p>Hoje o chamado do <a href="../index.html#/inconsistencias/kanban" style="color:var(--blue)">kanban de Inconsistências</a> é atribuído a uma pessoa, à mão, escolhida numa lista fixa de cinco nomes. Não há regra: todo chamado nasce <strong>sem responsável</strong> e fica parado até alguém lembrar de distribuí-lo.</p><div class="table-wrap"><table><thead><tr><th>Hoje</th><th>Consequência</th></tr></thead><tbody><tr><td>Atribuição nominal e manual</td><td>Chamado sem dono até alguém agir; quem distribui vira gargalo</td></tr><tr><td>Lista de pessoas fixa no código</td><td>Não acompanha a organização: entrada, saída, férias</td></tr><tr><td>Nenhuma relação entre tipo de chamado e área</td><td>Divergência de comprovante chega para quem cuida de alíquota</td></tr><tr><td>Sem visão de fila por área</td><td>Não se sabe quanto cada área tem em aberto nem onde está acumulando</td></tr></tbody></table></div><p>Na empresa, áreas diferentes tratam problemas diferentes: o fiscal cuida de alíquota e CST, a tesouraria de comprovante e split, o cadastro de falha de importação, a logística de frete. A proposta é o produto saber disso.</p>
+</div>
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">A proposta em uma tela</span></div>
+<div class="flowx"><div class="fx"><div class="fx-n">1</div><div class="fx-t">Chamado nasce</div><div class="fx-d">Com tipo de inconsistência e o tipo do DF de origem</div></div><div class="fx"><div class="fx-n">2</div><div class="fx-t">Regras avaliam</div><div class="fx-d">A mais específica vence; empate, a primeira da lista</div></div><div class="fx"><div class="fx-n">3</div><div class="fx-t">Grupo recebe</div><div class="fx-d">Nenhuma regra casou → Fila geral</div></div><div class="fx"><div class="fx-n">4</div><div class="fx-t">Sorteio</div><div class="fx-d">Um membro disponível do grupo, ao acaso</div></div><div class="fx"><div class="fx-n">5</div><div class="fx-t">Responsável</div><div class="fx-d">Grupo e pessoa no card, com a regra no histórico</div></div></div><div class="table-wrap"><table><thead><tr><th>Conceito</th><th>O que é</th></tr></thead><tbody><tr><td><strong>Grupo</strong></td><td>Uma área que trata chamados: nome, gestor, membros e forma de distribuição</td></tr><tr><td><strong>Membro</strong></td><td>Usuário da organização dentro de um grupo, disponível ou ausente. Um usuário pode estar em vários grupos</td></tr><tr><td><strong>Regra de roteamento</strong></td><td>Liga um grupo a tipos de inconsistência, a tipos de DF, ou aos dois</td></tr><tr><td><strong>Fila geral</strong></td><td>Grupo padrão, para o que nenhuma regra cobre. Sempre existe</td></tr><tr><td><strong>Fila do grupo</strong></td><td>Chamado que chegou ao grupo mas ficou sem responsável, porque ninguém estava disponível</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Como o chamado encontra o grupo</span></div>
+<h3>3.1 Os dois critérios</h3><div class="table-wrap"><table><thead><tr><th>Critério</th><th>Valores hoje</th><th>Exemplo de uso</th></tr></thead><tbody><tr><td><strong>Tipo de inconsistência</strong></td><td>Ingestão: falha de layout, CNPJ inválido, duplicidade · Apuração (CAPUR): valor, alíquota e CST de IBS e CBS, prazo expirado · Financeira (CFIN): split e comprovante de IBS e CBS</td><td>Tudo que é comprovante vai para a tesouraria</td></tr><tr><td><strong>Tipo de DF</strong></td><td>NF-e · CT-e · NFS-e</td><td>Tudo que é frete vai para a logística</td></tr></tbody></table></div><p>Uma regra pode usar um critério, o outro, ou os dois. Vários tipos podem ser marcados de uma vez. Critério vazio significa “qualquer”; os dois vazios não são permitidos.</p><h3>3.2 Quando mais de uma regra casa</h3><div class="table-wrap"><table><thead><tr><th>Ordem</th><th>Regra de desempate</th><th>Exemplo</th></tr></thead><tbody><tr><td>1</td><td><strong>Mais específica vence</strong>: regra com os dois critérios ganha de regra com um só</td><td>CT-e × alíquota IBS: R-01 (CT-e e CAPUR) ganha de R-03 (só CAPUR) → Logística</td></tr><tr><td>2</td><td><strong>Mesma especificidade</strong>: vence a que está antes na lista, que o administrador ordena</td><td>NFS-e × alíquota IBS: R-02 (NFS-e) e R-03 (CAPUR) têm um critério cada; R-02 está antes → Serviços Tomados</td></tr><tr><td>3</td><td><strong>Nenhuma casou</strong>: Fila geral</td><td>Evento fiscal em NF-e, enquanto não houver regra</td></tr></tbody></table></div><div class="callout info"><div class="ct">Um DF, vários chamados, vários grupos</div><p>Um documento pode ter várias inconsistências ao mesmo tempo. Cada uma é roteada sozinha: a alíquota da mesma nota pode ir ao fiscal e o comprovante à tesouraria. É o comportamento desejado — cada área vê só o que é dela.</p></div>
+</div>
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Como o responsável é escolhido</span></div>
+<div class="table-wrap"><table><thead><tr><th>Situação</th><th>O que acontece</th></tr></thead><tbody><tr><td><strong>Grupo com membros disponíveis</strong></td><td>Sorteio aleatório, com a mesma chance, entre os membros disponíveis</td></tr><tr><td><strong>Membro ausente</strong></td><td>Fica fora do sorteio até a data de volta; seus chamados abertos continuam com ele</td></tr><tr><td><strong>Ninguém disponível</strong></td><td>O chamado fica na <em>fila do grupo</em>, sem responsável, e o gestor é avisado. Quando alguém volta, a fila é sorteada</td></tr><tr><td><strong>Membro removido do grupo ou inativado</strong></td><td>Seus chamados abertos daquele grupo são sorteados de novo entre os disponíveis</td></tr><tr><td><strong>Chamado criado antes da funcionalidade</strong></td><td>Na ativação, os que estão sem responsável passam pelas regras; os que já têm dono ficam como estão</td></tr></tbody></table></div><div class="callout warn"><div class="ct">Sobre o sorteio</div><p>O pedido é distribuir ao acaso, e é isso que a proposta faz. Com poucos chamados, o acaso pode concentrar vários na mesma pessoa. Por isso a lista de grupos mostra quantos chamados cada membro tem aberto — se a concentração virar problema, a opção “menor carga” pode ser ligada por grupo depois (D-01).</p></div>
+</div>
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O que o usuário pode fazer depois</span></div>
+<div class="table-wrap"><table><thead><tr><th>Ação</th><th>Quem pode</th><th>Efeito</th></tr></thead><tbody><tr><td><strong>Reatribuir no grupo</strong></td><td>Gestor do grupo e administrador</td><td>Escolhe outro membro do mesmo grupo</td></tr><tr><td><strong>Pegar da fila do grupo</strong></td><td>Qualquer membro</td><td>Assume um chamado sem responsável do seu grupo</td></tr><tr><td><strong>Devolver à fila do grupo</strong></td><td>O responsável</td><td>Sai do seu nome e volta ao grupo, sem responsável</td></tr><tr><td><strong>Transferir de grupo</strong></td><td>O responsável, o gestor e o administrador</td><td>Pede motivo; sorteia um membro disponível do grupo de destino</td></tr><tr><td><strong>Ver “meus”, “do meu grupo” e “todos”</strong></td><td>Todos</td><td>Recortes do kanban; “meus” é o padrão</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Telas propostas</span></div>
+<div class="tela"><div class="tela-hdr"><span class="tela-id">T-01</span><span class="tela-nome">Lista de grupos</span><span class="tela-cobre">Configurações › Usuários e Acessos › Grupos · F-01, F-05</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · configurações / usuários e acessos / grupos</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-body"><div class="mk-title"><h5>Usuários e Acessos</h5><span class="mk-sub">Induspar Tecnologia S.A.</span></div><div class="mk-tabs"><span class="mk-tab">Usuários<span class="n">12</span></span><span class="mk-tab on">Grupos<span class="n">6</span></span><span class="mk-tab">Regras de roteamento<span class="n">5</span></span><span class="mk-tab">Acessos externos</span></div><div class="mk-tools"><span class="mk-in">Buscar grupo ou membro…</span><span class="mk-btn p ml">+ Novo grupo</span></div><div class="mk-tw"><table class="mk-t"><thead><tr><th>Grupo</th><th>Membros</th><th class="r">Disponíveis</th><th>Regras</th><th class="r">Chamados abertos</th><th class="r">Sem responsável</th><th>Situação</th></tr></thead><tbody><tr><td><span class="gchip g1">Fiscal — Apuração</span></td><td><span class="av a1">MC</span><span class="av a2">RL</span><span class="av off">AF</span></td><td class="r">2 de 3</td><td>R-03</td><td class="r strong">41</td><td class="r">0</td><td><span class="st teal">Ativo</span></td></tr><tr><td><span class="gchip g2">Tesouraria</span></td><td><span class="av a4">PT</span><span class="av a6">CM</span></td><td class="r">1 de 2</td><td>R-04</td><td class="r strong">18</td><td class="r">0</td><td><span class="st teal">Ativo</span></td></tr><tr><td><span class="gchip g3">Cadastro e Ingestão</span></td><td><span class="av a7">BN</span><span class="av off">DA</span></td><td class="r">1 de 2</td><td>R-05</td><td class="r strong">9</td><td class="r">0</td><td><span class="st teal">Ativo</span></td></tr><tr><td><span class="gchip g4">Logística — Fretes</span></td><td><span class="av a2">RL</span><span class="av a5">LP</span></td><td class="r">2 de 2</td><td>R-01</td><td class="r strong">6</td><td class="r">0</td><td><span class="st teal">Ativo</span></td></tr><tr><td><span class="gchip g5">Serviços Tomados</span></td><td><span class="av off">GS</span></td><td class="r"><span class="cd red">0 de 1</span></td><td>R-02</td><td class="r strong">4</td><td class="r"><span class="cd red">4</span></td><td><span class="st amber">Sem disponíveis</span></td></tr><tr><td><span class="gchip g0">Fila geral</span> <span class="st gray">padrão</span></td><td><span class="av a5">JS</span><span class="av a1">MC</span></td><td class="r">2 de 2</td><td>quando nenhuma regra casa</td><td class="r strong">2</td><td class="r">0</td><td><span class="st teal">Ativo</span></td></tr></tbody></table></div><div class="mk-alert">Serviços Tomados está sem ninguém disponível: 4 chamados aguardam na fila do grupo, sem responsável. O gestor foi avisado.</div></div></div><ul class="plain obs"><li>Um usuário pode estar em mais de um grupo — Rafael Lima está em Fiscal e em Logística.</li><li>Membro com avatar apagado está ausente: continua no grupo, mas não recebe chamados novos.</li><li>A Fila geral é o grupo padrão: não pode ser excluída nem ficar sem membros.</li></ul></div><div class="tela"><div class="tela-hdr"><span class="tela-id">T-02</span><span class="tela-nome">Editar grupo</span><span class="tela-cobre">Modal · F-01, F-02</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · configurações / grupos / fiscal-apuracao</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-modal-wrap"><div class="mk-modal"><div class="mk-mh"><div class="ey">Grupo de atendimento</div><div class="t">Fiscal — Apuração</div></div><div class="mk-mb"><div class="mk-fields"><div class="mk-field"><label>Nome</label><div class="inp">Fiscal — Apuração</div></div><div class="mk-field"><label>Gestor</label><div class="inp">Maria Costa</div></div></div><div class="mk-field"><label>Descrição</label><div class="inp">Divergências de valor, alíquota e CST contra a apuração da Receita e do Comitê Gestor</div></div><div class="mk-field"><label>Membros</label></div><div class="mk-tw"><table class="mk-t" style="min-width:420px"><thead><tr><th>Membro</th><th>Disponibilidade</th><th class="r">Abertos com ele</th><th></th></tr></thead><tbody><tr><td><span class="av a1">MC</span>&nbsp; Maria Costa <span class="st gray">gestor</span></td><td><span class="st teal">Disponível</span></td><td class="r">15</td><td class="r">Remover</td></tr><tr><td><span class="av a2">RL</span>&nbsp; Rafael Lima</td><td><span class="st teal">Disponível</span></td><td class="r">13</td><td class="r">Remover</td></tr><tr><td><span class="av a3">AF</span>&nbsp; Ana Ferreira</td><td><span class="st amber">Ausente até 26/09</span></td><td class="r">13</td><td class="r">Remover</td></tr></tbody></table></div><div class="mk-tools"><span class="mk-in">+ Adicionar usuário…</span></div><div class="mk-field"><label>Distribuição</label><div class="inp">Aleatória entre os membros disponíveis</div></div><div class="mk-alert ok">Regra que alimenta este grupo: R-03 — divergências de apuração e prazo expirado, qualquer tipo de DF.</div></div><div class="mk-mf"><span class="mk-btn">Cancelar</span><span class="mk-btn p">Salvar grupo</span></div></div></div></div><ul class="plain obs"><li>Ausência tem data de volta; ao chegar a data, o membro volta a receber chamados sozinho.</li><li>Remover um membro com chamados abertos pede o destino deles: sortear no grupo ou devolver à fila do grupo (D-05).</li></ul></div><div class="tela"><div class="tela-hdr"><span class="tela-id">T-03</span><span class="tela-nome">Regras de roteamento</span><span class="tela-cobre">Configurações › Usuários e Acessos › Regras · F-03, F-08</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · configurações / usuários e acessos / regras</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-body"><div class="mk-tabs"><span class="mk-tab">Usuários<span class="n">12</span></span><span class="mk-tab">Grupos<span class="n">6</span></span><span class="mk-tab on">Regras de roteamento<span class="n">5</span></span><span class="mk-tab">Acessos externos</span></div><div class="mk-tools"><span class="mk-in">Ordem de avaliação: mais específica primeiro, depois a ordem da lista</span><span class="mk-btn">Ver matriz</span><span class="mk-btn p ml">+ Nova regra</span></div><div class="mk-tw"><table class="mk-t"><thead><tr><th>#</th><th>Tipo de inconsistência</th><th>Tipo de DF</th><th>Critérios</th><th>Grupo</th><th class="r">Casou em 30 dias</th><th>Situação</th></tr></thead><tbody><tr><td class="m">R-01</td><td>Divergências de apuração (6)</td><td>CT-e</td><td><span class="st blue">2 — tipo e DF</span></td><td><span class="gchip g4">Logística — Fretes</span></td><td class="r">6</td><td><span class="st teal">Ativa</span></td></tr><tr><td class="m">R-02</td><td class="strong">qualquer</td><td>NFS-e</td><td><span class="st gray">1 — DF</span></td><td><span class="gchip g5">Serviços Tomados</span></td><td class="r">4</td><td><span class="st teal">Ativa</span></td></tr><tr><td class="m">R-03</td><td>Divergências de apuração (6) · Prazo expirado</td><td class="strong">qualquer</td><td><span class="st gray">1 — tipo</span></td><td><span class="gchip g1">Fiscal — Apuração</span></td><td class="r">41</td><td><span class="st teal">Ativa</span></td></tr><tr><td class="m">R-04</td><td>Divergências financeiras (4)</td><td class="strong">qualquer</td><td><span class="st gray">1 — tipo</span></td><td><span class="gchip g2">Tesouraria</span></td><td class="r">18</td><td><span class="st teal">Ativa</span></td></tr><tr><td class="m">R-05</td><td>Falhas de ingestão (3)</td><td class="strong">qualquer</td><td><span class="st gray">1 — tipo</span></td><td><span class="gchip g3">Cadastro e Ingestão</span></td><td class="r">9</td><td><span class="st teal">Ativa</span></td></tr><tr><td class="m">—</td><td colspan="3">Nenhuma regra casou</td><td><span class="gchip g0">Fila geral</span></td><td class="r">2</td><td><span class="st gray">Padrão</span></td></tr></tbody></table></div><div class="mk-card"><h6>Testar uma combinação</h6><div class="mk-fields"><div class="mk-field"><label>Tipo de inconsistência</label><div class="inp">Alíquota IBS incorreta</div></div><div class="mk-field"><label>Tipo de DF</label><div class="inp">NFS-e</div></div></div><div class="mk-alert" style="margin-top:10px">Casam <b>R-02</b> (DF) e <b>R-03</b> (tipo), ambas com 1 critério. Vence <b>R-02</b> por estar antes na lista → <span class="gchip g5">Serviços Tomados</span>. Arraste para mudar a ordem.</div></div></div></div><ul class="plain obs"><li>Cada regra exige pelo menos um critério. Critério vazio significa “qualquer”.</li><li>A contagem “casou em 30 dias” mostra se a regra está sendo usada — regra que nunca casa é candidata a sair.</li></ul></div><div class="tela"><div class="tela-hdr"><span class="tela-id">T-04</span><span class="tela-nome">Matriz de cobertura</span><span class="tela-cobre">Regras › Ver matriz · F-09</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · configurações / usuários e acessos / regras / matriz</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-body"><div class="mk-title"><h5>Para onde vai cada chamado</h5><span class="mk-sub">tipo de inconsistência × tipo de DF · resultado das 5 regras</span></div><div class="mk-tw"><table class="mx"><thead><tr><th>Tipo de inconsistência</th><th>NF-e</th><th>CT-e</th><th>NFS-e</th></tr></thead><tbody><tr><td class="grp" colspan="4">Ingestão</td></tr><tr><td>Falha de layout · CNPJ inválido · Duplicidade</td><td><span class="gchip g3">Cadastro e Ingestão</span></td><td><span class="gchip g3">Cadastro e Ingestão</span></td><td><span class="gchip g5">Serviços Tomados</span></td></tr><tr><td class="grp" colspan="4">Apuração — CAPUR</td></tr><tr><td>Valor, alíquota e CST de IBS e CBS (6)</td><td><span class="gchip g1">Fiscal — Apuração</span></td><td><span class="gchip g4">Logística — Fretes</span></td><td><span class="gchip g5">Serviços Tomados</span></td></tr><tr><td>Prazo de apuração expirado</td><td><span class="gchip g1">Fiscal — Apuração</span></td><td><span class="gchip g1">Fiscal — Apuração</span></td><td><span class="gchip g5">Serviços Tomados</span></td></tr><tr><td class="grp" colspan="4">Financeira — CFIN</td></tr><tr><td>Split e comprovante de IBS e CBS (4)</td><td><span class="gchip g2">Tesouraria</span></td><td><span class="gchip g2">Tesouraria</span></td><td><span class="gchip g5">Serviços Tomados</span></td></tr><tr><td class="grp" colspan="4">Eventos fiscais — proposto</td></tr><tr><td>Evento não conciliado · divergente · sem registro no ERP</td><td class="gap"><span class="gchip g0">Fila geral</span></td><td class="gap"><span class="gchip g0">Fila geral</span></td><td><span class="gchip g5">Serviços Tomados</span></td></tr></tbody></table></div><div class="mk-alert">Células em amarelo caem na Fila geral: nenhuma regra cobre eventos fiscais em NF-e e CT-e. Crie uma regra ou aceite a Fila geral como destino.</div></div></div><ul class="plain obs"><li>A matriz é a mesma lógica do roteamento, vista de uma vez: é onde se vê o que ficou sem dono.</li><li>Os tipos de eventos fiscais entram quando a proposta de eventos for aprovada.</li></ul></div><div class="tela"><div class="tela-hdr"><span class="tela-id">T-05</span><span class="tela-nome">Kanban com grupos</span><span class="tela-cobre">Inconsistências › Kanban · F-06</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · inconsistências / kanban</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-body"><div class="mk-tools"><span class="mk-btn p">Meus · 15</span><span class="mk-btn">Do meu grupo · 43</span><span class="mk-btn">Todos · 80</span><span class="mk-in">Grupo: Fiscal — Apuração ▾</span><span class="mk-in">Tipo de DF ▾</span><span class="mk-in">Tipo ▾</span></div><div class="kb"><div class="kb-col"><div class="kb-h">Aberta <span>5</span></div><div class="kb-c me"><b>Alíquota IBS incorreta</b>NF-e 000.184.221 · R$ 4.212,00<div class="ft"><span class="gchip g1">Fiscal — Apuração</span><span class="av a1">MC</span></div></div><div class="kb-c"><b>Valor CBS divergente</b>NF-e 000.190.004 · R$ 1.030,00<div class="ft"><span class="gchip g1">Fiscal — Apuração</span><span class="av a2">RL</span></div></div><div class="kb-c q"><b>CST IBS incorreto</b>NFS-e 2.418 · R$ 610,00<div class="ft"><span class="gchip g5">Serviços Tomados</span><span class="st amber">na fila</span></div></div></div><div class="kb-col"><div class="kb-h">Em análise <span>3</span></div><div class="kb-c me"><b>Prazo de apuração expirado</b>NF-e 000.177.590 · R$ 9.840,00<div class="ft"><span class="gchip g1">Fiscal — Apuração</span><span class="av a1">MC</span></div></div></div><div class="kb-col"><div class="kb-h">Em tratamento <span>2</span></div><div class="kb-c"><b>Valor IBS divergente</b>CT-e 81.220 · R$ 388,00<div class="ft"><span class="gchip g4">Logística — Fretes</span><span class="av a5">LP</span></div></div></div><div class="kb-col"><div class="kb-h">Resolvido <span>31</span></div><div class="kb-c me"><b>Alíquota CBS incorreta</b>NF-e 000.160.118 · R$ 2.150,00<div class="ft"><span class="gchip g1">Fiscal — Apuração</span><span class="av a1">MC</span></div></div></div></div></div></div><ul class="plain obs"><li>Todo card mostra o grupo; o avatar mostra o responsável sorteado. Card tracejado está na fila do grupo, sem responsável.</li><li>“Meus” é o recorte padrão ao abrir o kanban; “Do meu grupo” junta os grupos de que o usuário participa.</li></ul></div><div class="tela"><div class="tela-hdr"><span class="tela-id">T-06</span><span class="tela-nome">Detalhe do chamado — atribuição</span><span class="tela-cobre">Modal do card · F-04, F-07</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · inconsistências / INC-000412</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-modal-wrap"><div class="mk-modal"><div class="mk-mh"><div class="ey">INC-000412 · Alíquota IBS incorreta</div><div class="t">NF-e 000.184.221 · Eletropar Ind. Ltda</div></div><div class="mk-mb"><div class="mk-fields"><div class="mk-field"><label>Grupo</label><div class="inp"><span class="gchip g1">Fiscal — Apuração</span></div></div><div class="mk-field"><label>Responsável</label><div class="inp"><span class="av a1">MC</span>&nbsp; Maria Costa</div></div></div><div class="mk-alert ok">Roteado pela regra <b>R-03</b> (tipo: divergência de apuração). Responsável sorteado entre 2 membros disponíveis — Ana Ferreira estava ausente.</div><div class="mk-tools"><span class="mk-btn">Reatribuir no grupo</span><span class="mk-btn">Transferir de grupo</span><span class="mk-btn">Devolver à fila do grupo</span></div><div class="mk-tl"><div><i></i><span><b>Atribuição automática</b><small>17/09/2026 08:02 · R-03 → Fiscal — Apuração · sorteio: Maria Costa (2 disponíveis)</small></span></div><div><i class="pend"></i><span><b>Chamado aberto</b><small>17/09/2026 08:02 · conciliação CAPUR · RF de IBS</small></span></div></div></div><div class="mk-mf"><span class="mk-btn">Fechar</span></div></div></div></div><ul class="plain obs"><li>Transferir de grupo pede motivo e sorteia um membro disponível do grupo de destino — ou deixa na fila, se ninguém estiver disponível.</li><li>Toda atribuição entra no histórico dizendo se foi regra, sorteio, pessoa ou redistribuição.</li></ul></div>
+</div>
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Funcionalidades</span></div>
+<div class="feat"><div class="feat-hdr"><span class="feat-id">F-01</span><span class="feat-name">Cadastrar grupos</span><span class="feat-loc">Configurações › Usuários e Acessos › Grupos</span></div><div class="feat-body"><p>Nome, descrição, gestor e situação. Criar, editar, desativar. A Fila geral existe sempre.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-02</span><span class="feat-name">Gerir membros e disponibilidade</span><span class="feat-loc">Editar grupo</span></div><div class="feat-body"><p>Adicionar e remover usuários da organização; marcar ausência com data de volta.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-03</span><span class="feat-name">Regras de roteamento</span><span class="feat-loc">Aba Regras de roteamento</span></div><div class="feat-body"><p>Grupo por tipos de inconsistência e/ou tipos de DF, com ordem ajustável e contagem de uso.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-04</span><span class="feat-name">Atribuição automática na criação</span><span class="feat-loc">Motor, em segundo plano</span></div><div class="feat-body"><p>Todo chamado novo recebe grupo pela regra e responsável por sorteio entre os disponíveis.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-05</span><span class="feat-name">Fila geral e fila do grupo</span><span class="feat-loc">Kanban e lista de grupos</span></div><div class="feat-body"><p>Destino padrão sem regra; chamados sem ninguém disponível aguardam no grupo, com aviso ao gestor.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-06</span><span class="feat-name">Kanban por grupo</span><span class="feat-loc">Inconsistências › Kanban</span></div><div class="feat-body"><p>Grupo e responsável no card; recortes “meus”, “do meu grupo” e “todos”; filtro por grupo e tipo de DF.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-07</span><span class="feat-name">Reatribuir, transferir e devolver</span><span class="feat-loc">Detalhe do chamado</span></div><div class="feat-body"><p>As ações da seção 05, com histórico que distingue regra, sorteio, ação manual e redistribuição.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-08</span><span class="feat-name">Testar combinação</span><span class="feat-loc">Aba Regras de roteamento</span></div><div class="feat-body"><p>Escolher tipo e DF e ver qual regra vence e por quê.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-09</span><span class="feat-name">Matriz de cobertura</span><span class="feat-loc">Regras › Ver matriz</span></div><div class="feat-body"><p>Tipo × DF com o grupo resultante; destaca o que cai na Fila geral.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-10</span><span class="feat-name">Redistribuição por saída de membro</span><span class="feat-loc">Motor, em segundo plano</span></div><div class="feat-body"><p>Membro removido ou inativado: seus chamados abertos são sorteados de novo no grupo.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-11</span><span class="feat-name">Indicadores por grupo</span><span class="feat-loc">Lista de grupos</span></div><div class="feat-body"><p>Abertos, sem responsável, idade média e carga por membro.</p></div></div>
+</div>
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Modelo de dados</span></div>
+<div class="table-wrap"><table><thead><tr><th>Entidade</th><th>Campos</th></tr></thead><tbody><tr><td><strong>Grupo</strong></td><td><code>id</code>, <code>nome</code>, <code>descricao</code>, <code>gestorId</code>, <code>distribuicao</code> (aleatoria), <code>padrao</code> (bool), <code>ativo</code></td></tr><tr><td><strong>MembroGrupo</strong></td><td><code>grupoId</code>, <code>usuarioId</code>, <code>ausenteAte</code>, <code>desde</code></td></tr><tr><td><strong>RegraRoteamento</strong></td><td><code>id</code>, <code>ordem</code>, <code>grupoId</code>, <code>tiposInconsistencia[]</code>, <code>tiposDF[]</code>, <code>ativa</code></td></tr><tr><td><strong>Inconsistência</strong> (campos novos)</td><td><code>grupoId</code>, <code>responsavelId</code> (opcional — vazio = fila do grupo), <code>regraId</code></td></tr><tr><td><strong>EventoAtribuicao</strong></td><td><code>incId</code>, <code>origem</code> (regra|sorteio|manual|transferencia|redistribuicao|devolucao), <code>de</code>, <code>para</code>, <code>grupoDe</code>, <code>grupoPara</code>, <code>motivo</code>, <code>autor</code>, <code>ts</code></td></tr></tbody></table></div>
+</div>
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Requisitos</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri.</th></tr></thead><tbody><tr><td><span class="rid">RF-GRP-001</span></td><td>O sistema deve permitir criar, editar e desativar grupos com nome, descrição e gestor.</td><td>Grupo desativado não recebe chamados novos; suas regras ficam suspensas.</td><td>M</td></tr><tr><td><span class="rid">RF-GRP-002</span></td><td>O sistema deve permitir que um usuário pertença a vários grupos.</td><td>O mesmo usuário aparece em dois grupos e recebe chamados dos dois.</td><td>M</td></tr><tr><td><span class="rid">RF-GRP-003</span></td><td>O sistema deve permitir regras por tipos de inconsistência, tipos de DF ou ambos.</td><td>Regra sem nenhum critério não pode ser salva.</td><td>M</td></tr><tr><td><span class="rid">RF-GRP-004</span></td><td>O sistema deve escolher a regra mais específica e, no empate, a primeira da lista.</td><td>Os três exemplos da seção 3.2 produzem o grupo indicado.</td><td>M</td></tr><tr><td><span class="rid">RF-GRP-005</span></td><td>Todo chamado novo deve receber grupo e, havendo membro disponível, responsável sorteado.</td><td>Nenhum chamado criado após a ativação fica sem grupo.</td><td>M</td></tr><tr><td><span class="rid">RF-GRP-006</span></td><td>O sorteio deve considerar só membros disponíveis.</td><td>Membro ausente não é sorteado até a data de volta.</td><td>M</td></tr><tr><td><span class="rid">RF-GRP-007</span></td><td>Sem membro disponível, o chamado deve ficar na fila do grupo e o gestor deve ser avisado.</td><td>Chamado aparece no grupo sem responsável; aviso registrado.</td><td>M</td></tr><tr><td><span class="rid">RF-GRP-008</span></td><td>O sistema deve registrar toda atribuição com origem, autor e motivo quando houver.</td><td>Histórico do chamado distingue regra, sorteio e ação manual.</td><td>M</td></tr><tr><td><span class="rid">RF-GRP-009</span></td><td>Transferir de grupo deve exigir motivo.</td><td>Sem motivo, a transferência não é concluída.</td><td>S</td></tr><tr><td><span class="rid">RF-GRP-010</span></td><td>O kanban deve oferecer os recortes “meus”, “do meu grupo” e “todos”.</td><td>“Meus” é o padrão ao abrir.</td><td>S</td></tr></tbody></table></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Regra</th><th>Onde vive</th></tr></thead><tbody><tr><td><span class="rid">RN-GRP-01</span></td><td>A Fila geral é o grupo padrão; não pode ser excluída nem ficar sem membros</td><td>Grupos</td></tr><tr><td><span class="rid">RN-GRP-02</span></td><td>Cada inconsistência é roteada de forma independente, mesmo que o DF tenha várias</td><td>Roteamento</td></tr><tr><td><span class="rid">RN-GRP-03</span></td><td>Chamado já com responsável não é alterado por mudança de regra; só os novos seguem a regra nova</td><td>Roteamento</td></tr><tr><td><span class="rid">RN-GRP-04</span></td><td>Membro removido ou inativado tem seus chamados abertos sorteados de novo no grupo</td><td>Membros</td></tr><tr><td><span class="rid">RN-GRP-05</span></td><td>Somente administrador cria grupos e regras; o gestor administra os membros do seu grupo</td><td>Permissões</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Impacto no produto</span></div>
+<div class="table-wrap"><table><thead><tr><th>Onde</th><th>O que muda</th></tr></thead><tbody><tr><td><strong>Inconsistências · kanban e listagem</strong></td><td>Grupo e responsável no card; recortes e filtros; ações de atribuição no detalhe</td></tr><tr><td><strong>Configurações · Usuários e Acessos</strong></td><td>Abas Grupos e Regras de roteamento; a lista de usuários passa a ser a fonte dos membros — hoje o kanban usa uma lista fixa no código</td></tr><tr><td><strong>Automações</strong></td><td>O aviso ao gestor usa o envio de e-mail da régua; a integração ITSM (M2) poderá abrir chamado externo por grupo</td></tr><tr><td><strong>Eventos fiscais (proposto)</strong></td><td>As três inconsistências de evento entram na lista de tipos quando aprovadas</td></tr><tr><td><strong>Priorização</strong></td><td>Substitui a funcionalidade “Atribuição de responsável” (M0), que hoje está fora do núcleo do MVP</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Priorização sugerida</span></div>
+<div class="table-wrap"><table><thead><tr><th>Faixa</th><th>Funcionalidades</th><th>Por quê</th></tr></thead><tbody><tr><td><span class="chip teal">M0</span></td><td>F-01 a F-07</td><td>O ciclo completo: grupo, membros, regra, sorteio, fila, kanban e reatribuição</td></tr><tr><td><span class="chip info">M1</span></td><td>F-08, F-09, F-10</td><td>Ferramentas para configurar com segurança e manter a distribuição quando alguém sai</td></tr><tr><td><span class="chip m2">M2</span></td><td>F-11</td><td>Indicadores por grupo, quando houver volume</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Decisões para aprovar</span></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Decisão</th><th>Recomendação</th></tr></thead><tbody><tr><td><strong>D-01</strong></td><td>Distribuição aleatória ou por menor carga?</td><td><strong>Aleatória</strong>, como pedido; “menor carga” como opção futura por grupo</td></tr><tr><td><strong>D-02</strong></td><td>Chamado sem regra vai para onde?</td><td><strong>Fila geral</strong>, grupo padrão obrigatório</td></tr><tr><td><strong>D-03</strong></td><td>Desempate entre regras</td><td><strong>Mais específica, depois a ordem da lista</strong></td></tr><tr><td><strong>D-04</strong></td><td>Grupo sem ninguém disponível</td><td><strong>Fila do grupo</strong>, sem responsável, com aviso ao gestor</td></tr><tr><td><strong>D-05</strong></td><td>Membro removido com chamados abertos</td><td><strong>Sortear de novo no grupo</strong>; ausente mantém os seus</td></tr><tr><td><strong>D-06</strong></td><td>Quem pode transferir de grupo?</td><td><strong>Responsável, gestor e administrador</strong>, sempre com motivo</td></tr><tr><td><strong>D-07</strong></td><td>Chamados que já existem</td><td><strong>Rotear só os sem responsável</strong> na ativação</td></tr><tr><td><strong>D-08</strong></td><td>Incluir a direção do DF (entrada ou saída) como terceiro critério?</td><td><strong>Ainda não</strong> — tipo e DF cobrem o pedido; revisar com o uso</td></tr><tr><td><strong>D-09</strong></td><td>Onde configurar?</td><td><strong>Configurações › Usuários e Acessos</strong>, com as abas Grupos e Regras</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">18/09/2026 — Primeira versão: grupos, membros, regras por tipo de inconsistência e tipo de DF, sorteio entre disponíveis, filas, seis telas, onze funcionalidades e nove decisões.</div></div>
+</div>
+</div>
+</body>
+</html>
