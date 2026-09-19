@@ -13,10 +13,24 @@
   'use strict';
 
   var M = window.shMotor = window.shMotor || {};
-  M.opcoes = M.opcoes || { split: 50, periodo: 'emissao', vencidos: 'preservar' };
+  // Decisões de 18/09/2026: split fora por enquanto; preservar meses devedores —
+  // o saldo que sai para ressarcimento (plano do módulo) deixa de compensar.
+  M.opcoes = M.opcoes || { split: 0, periodo: 'emissao', vencidos: 'preservar', ressarcimento: 'modulo', pedido: 'modulo' };
 
   var MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function perAdd(k, n) { var p = k.split('-'); var d = new Date(+p[0], +p[1] - 1 + n, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+  // Plano de ressarcimento do módulo (mesmos períodos e proporções da base simulada),
+  // agora sobre o saldo credor que o motor apura.
+  function plano(T, ref) {
+    if (T === 'CBS') return [
+      { p: perAdd(ref, -4), tipo: 'pedido', frac: 0.6, status: 'pago', id: 'PED-CBS-' + perAdd(ref, -4) },
+      { p: perAdd(ref, -2), tipo: 'pedido', frac: 0.7, status: 'em_analise', id: 'PED-CBS-' + perAdd(ref, -2) },
+      { p: perAdd(ref, -1), tipo: 'intencao', frac: 1, status: 'declarada', id: 'INT-CBS-' + perAdd(ref, -1) }];
+    return [
+      { p: perAdd(ref, -4), tipo: 'pedido', frac: 0.6, status: 'pago', parcial: true, id: 'PED-IBS-' + perAdd(ref, -4) },
+      { p: perAdd(ref, -2), tipo: 'pedido', frac: 0.5, status: 'em_analise', id: 'PED-IBS-' + perAdd(ref, -2) }];
+  }
   function perLbl(k) { var p = k.split('-'); return MES[+p[1] - 1] + '/' + p[0]; }
   function fimMes(k) { var p = k.split('-'); var d = new Date(+p[0], +p[1], 0); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
   function br(iso) { var p = String(iso || '').slice(0, 10).split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : '—'; }
@@ -97,6 +111,8 @@
       var ci = 0, pool = [];
       ks.forEach(function (k) {
         while (ci < creds.length && creds[ci].per <= k) pool.push(creds[ci++]);
+        // deferimento parcial: o não reconhecido volta a compensar a partir da decisão
+        pool.forEach(function (c) { if (c.volta === k) { c.saldo = c.rf.valor || 0; c.res = null; c.volta = null; c.voltou = true; c.rf._disponivelDesde = k; } });
         debs.forEach(function (d) { if (d.per === k) fila.push(d); });
         var comp = 0;
         for (var i = 0; i < fila.length; i++) {
@@ -111,15 +127,34 @@
             livro.push({ tributo: T, mes: k, cred: c.rf.id, credDF: c.nf.numero, deb: d.rf.id, debDF: d.nf.numero, valor: v });
           }
         }
-        fila = fila.filter(function (d) { return d.falta > 0.005; });
+        // O que o crédito não cobriu é o tributo a recolher DO MÊS: vai para guia e não
+        // espera crédito futuro. Só o débito vencido e não pago segue na fila (art. 53, 1º).
+        var aRecolherMes = fila.filter(function (d) { return d.falta > 0.005 && d.orig !== 'vencido'; }).reduce(function (s, d) { return s + d.falta; }, 0);
+        fila = fila.filter(function (d) { return d.falta > 0.005 && d.orig === 'vencido'; });
+        // fim do período: o saldo que vai para ressarcimento sai do caminho da compensação
+        var saiu = 0;
+        if (op.ressarcimento === 'modulo') plano(T, op.ref).forEach(function (pl) {
+          if (pl.p !== k) return;
+          var livres = pool.filter(function (c) { return !c.res && c.saldo >= (c.rf.valor || 0) - 0.005 && c.saldo > 0.005; });
+          var alvo = livres.reduce(function (s, c) { return s + c.saldo; }, 0) * (op.pedido === 'integral' ? 1 : pl.frac), acum = 0, sel = [];
+          livres.forEach(function (c) { if (acum < alvo - 0.005 || !sel.length) { sel.push(c); acum += c.saldo; } });
+          sel.forEach(function (c, i) {
+            c.res = { id: pl.id, tipo: pl.tipo, status: pl.status, per: k }; saiu += c.saldo; c.saldo = 0;
+            if (pl.parcial && i === sel.length - 1 && sel.length > 1) c.volta = perAdd(k, 3);
+          });
+        });
         var saldo = pool.reduce(function (s, c) { return s + Math.max(0, c.saldo); }, 0);
-        var aberto = fila.reduce(function (s, d) { return s + d.falta; }, 0);
-        porMes[T + '|' + k] = { tributo: T, mes: k, compensado: comp, saldoCredor: saldo, aRecolher: aberto };
+        porMes[T + '|' + k] = { tributo: T, mes: k, compensado: comp, saldoCredor: saldo, aRecolher: aRecolherMes, vencidoAberto: fila.reduce(function (s, d) { return s + d.falta; }, 0), ressarcimento: saiu };
       });
       // grava o resultado na cópia
       creds.forEach(function (c) {
         var usado = (c.rf.valor || 0) - Math.max(0, c.saldo);
         c.rf._valorCompensado = usado;
+        if (c.res) {
+          if (c.res.status === 'pago') { c.rf.statusCredito = 'utilizado'; c.rf.status = 'utilizado'; c.rf.metodoExtincao = 'Ressarcimento'; c.rf.dataExtincaoCredito = fimMes(perAdd(c.res.per, 3)); c.rf._valorCompensado = 0; }
+          else { c.rf.statusCredito = 'apropriado'; c.rf.status = 'apropriado'; c.rf.metodoExtincao = null; c.rf.dataExtincaoCredito = null; c.rf._valorCompensado = 0; c.rf.ressarcimento = { marca: c.res.tipo === 'intencao' ? 'reservado' : 'em_pedido', ref: c.res.id, tributo: T }; }
+          return;
+        }
         if (c.saldo <= 0.005) { c.rf.statusCredito = 'utilizado'; c.rf.status = 'utilizado'; c.rf.metodoExtincao = 'Compensacao'; c.rf.dataExtincaoCredito = fimMes(c.fim); }
         else { c.rf.statusCredito = 'apropriado'; c.rf.status = 'apropriado'; c.rf.metodoExtincao = null; c.rf.dataExtincaoCredito = null; if (usado > 0.005) c.rf._parcial = true; }
       });
@@ -195,12 +230,18 @@
         (nf.registrosFiscais || []).forEach(function (rf) {
           if (T_(rf) !== T) return;
           var k = (nf.tipo === 'entrada' && periodo === 'apropriacao' && rf.dataApropriacao ? String(rf.dataApropriacao) : String(nf.data || rf.data)).slice(0, 7); ms[k] = ms[k] || { cred: 0, deb: 0 };
-          if (nf.tipo === 'entrada' && sc(rf) === 'apropriado') ms[k].cred += (rf.valor || 0) - (rf._valorCompensado || 0);
+          // crédito disponível para compensar: apropriado, sem reserva nem pedido de
+          // ressarcimento, a partir de quando voltou a compensar (deferimento parcial)
+          if (nf.tipo === 'entrada' && sc(rf) === 'apropriado' && !(rf.ressarcimento && rf.ressarcimento.marca !== 'ressarcido')) {
+            if (rf._disponivelDesde && rf._disponivelDesde > k) { k = rf._disponivelDesde; ms[k] = ms[k] || { cred: 0, deb: 0 }; }
+            ms[k].cred += (rf.valor || 0) - (rf._valorCompensado || 0);
+          }
+          // débito a recolher DO MÊS (o de meses anteriores foi a guia)
           if (nf.tipo === 'saida' && rf.status === 'nao_extinto') ms[k].deb += (rf.valor || 0) - (rf._valorCompensado || 0);
         });
       });
-      var cred = 0, deb = 0;
-      Object.keys(ms).sort().forEach(function (k) { cred += ms[k].cred; deb += ms[k].deb; if (cred > 0.005 && deb > 0.005) r[T]++; });
+      var cred = 0;
+      Object.keys(ms).sort().forEach(function (k) { cred += ms[k].cred; if (cred > 0.005 && ms[k].deb > 0.005) r[T]++; });
     });
     return r;
   }
@@ -210,6 +251,7 @@
     var op = M.opcoes;
     var hoje = window._nfListaCompleta || [];
     var base = copiaBase();
+    op.ref = (window.shRes && window.shRes.ref) || '2026-09';
     var nSplit = aplicarSplit(base, op.split);
     var mt = motor(base, op);
     var res = {
@@ -224,6 +266,8 @@
     ['CBS', 'IBS'].forEach(function (T) {
       try { res.resHoje[T] = window.shRes && window.shRes.resumo ? window.shRes.resumo(T).disponivel : null; } catch (e) { res.resHoje[T] = null; }
       var pm = mt.porMes[T + '|' + ref]; res.resMotor[T] = pm ? pm.saldoCredor : 0;
+      res.mesesDevedores = res.mesesDevedores || {};
+      res.mesesDevedores[T] = Object.keys(mt.porMes).filter(function (k) { return k.indexOf(T + '|') === 0 && mt.porMes[k].aRecolher > 0.005; }).map(function (k) { return perLbl(k.split('|')[1]); });
       res.mesesCredores[T] = Object.keys(mt.porMes).filter(function (k) { return k.indexOf(T + '|') === 0 && mt.porMes[k].saldoCredor > 0.005 && mt.porMes[k].aRecolher <= 0.005; }).length;
     });
     // equilíbrio do livro: crédito compensado = débito compensado
@@ -285,6 +329,8 @@
     H += '<div class="mt-op">'
       + '<label>Vendas por Split Payment<select id="mt-split" onchange="shMotor.set(\'split\',+this.value)">' + [0, 25, 50, 75].map(function (p) { return '<option value="' + p + '"' + (op.split === p ? ' selected' : '') + '>' + p + '% das NFs de saída</option>'; }).join('') + '</select></label>'
       + '<label>Período do crédito<select onchange="shMotor.set(\'periodo\',this.value)"><option value="emissao"' + (op.periodo === 'emissao' ? ' selected' : '') + '>Mês de emissão (como hoje)</option><option value="apropriacao"' + (op.periodo === 'apropriacao' ? ' selected' : '') + '>Mês da apropriação (art. 47)</option></select></label>'
+      + '<label>Ressarcimento<select onchange="shMotor.set(\'ressarcimento\',this.value)"><option value="modulo"' + (op.ressarcimento === 'modulo' ? ' selected' : '') + '>Seguir o plano do módulo</option><option value="nenhum"' + (op.ressarcimento === 'nenhum' ? ' selected' : '') + '>Sem ressarcimento</option></select></label>'
+      + '<label>Pedidos de ressarcimento<select onchange="shMotor.set(\'pedido\',this.value)"><option value="modulo"' + (op.pedido !== 'integral' ? ' selected' : '') + '>Como no módulo (parciais)</option><option value="integral"' + (op.pedido === 'integral' ? ' selected' : '') + '>Integrais</option></select></label>'
       + '<label>Débitos vencidos<select onchange="shMotor.set(\'vencidos\',this.value)"><option value="preservar"' + (op.vencidos === 'preservar' ? ' selected' : '') + '>Preservar o cenário</option><option value="compensar"' + (op.vencidos === 'compensar' ? ' selected' : '') + '>Compensar (art. 53, 1º)</option></select></label>'
       + '</div>';
 
@@ -320,6 +366,7 @@
       + linha('Débito', 'Com inconsistência', h.debInc, m.debInc)
       + ['CBS', 'IBS'].map(function (T) { return linha('Ressarcimento', 'Saldo credor disponível · ' + T + ' · ' + perLbl(r.ref), r.resHoje[T], r.resMotor[T]); }).join('')
       + ['CBS', 'IBS'].map(function (T) { return linha('Ressarcimento', 'Meses credores · ' + T, null, r.mesesCredores[T], 'n'); }).join('')
+      + ['CBS', 'IBS'].map(function (T) { return linha('Débito · Apuração', 'Meses devedores (tributo a recolher) · ' + T, null, r.mesesDevedores[T].length, 'n', r.mesesDevedores[T].join(', ') || 'nenhum'); }).join('')
       + linha('Analytics · FCT', 'Posição (crédito apropriado − débito)', h.credAprop - h.debTotal, m.credAprop - m.debTotal, null, 'Não depende de status — não muda')
       + linha('Pagamentos · Conciliação', 'Créditos pagos (apropriado ou utilizado)', h.credAprop, m.credAprop, null, 'Regra “pago” não muda');
     H += '<div class="mt-sec">2. Indicadores por tela</div>';
@@ -338,11 +385,11 @@
       Object.keys(r.mt.porMes).filter(function (k) { return k.indexOf(T + '|') === 0; }).sort().forEach(function (k) {
         var p = r.mt.porMes[k];
         var st = p.saldoCredor > 0.005 && p.aRecolher <= 0.005 ? '<span class="mt-ok">credor</span>' : p.aRecolher > 0.005 && p.saldoCredor <= 0.005 ? '<span class="mt-up">a recolher</span>' : p.aRecolher > 0.005 ? '<span class="mt-bad">os dois</span>' : '<span class="mt-eq">zerado</span>';
-        lm += '<tr><td>' + T + '</td><td>' + perLbl(p.mes) + '</td><td class="r mono">' + mi(p.compensado) + '</td><td class="r mono">' + mi(p.aRecolher) + '</td><td class="r mono">' + mi(p.saldoCredor) + '</td><td>' + st + '</td></tr>';
+        lm += '<tr><td>' + T + '</td><td>' + perLbl(p.mes) + '</td><td class="r mono">' + mi(p.compensado) + '</td><td class="r mono">' + (p.ressarcimento ? mi(p.ressarcimento) : '—') + '</td><td class="r mono">' + mi(p.aRecolher) + '</td><td class="r mono">' + mi(p.saldoCredor) + '</td><td>' + st + '</td></tr>';
       });
     });
     H += '<div class="mt-sec">4. Livro do motor, mês a mês</div>';
-    H += tabela('Compensação por tributo e mês', 'R$ milhões · a recolher e saldo credor acumulados no fim do mês', lm, ['Tributo', 'Mês', 'Compensado no mês', 'A recolher', 'Saldo credor', 'Posição']);
+    H += tabela('Compensação por tributo e mês', 'R$ milhões · a recolher e saldo credor acumulados no fim do mês · o que vai para ressarcimento deixa de compensar', lm, ['Tributo', 'Mês', 'Compensado no mês', 'Para ressarcimento', 'A recolher', 'Saldo credor', 'Posição']);
 
     // 5. exemplo de vínculo
     var ex = r.mt.livro.slice(0), porCred = {};
