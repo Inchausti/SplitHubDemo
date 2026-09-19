@@ -326,6 +326,9 @@
       + '<div class="hdr-act"><button class="btn" onclick="shMotor.baixarCSV()">↓ CSV do relatório</button><button class="btn" onclick="shMotor.baixarLivro()">↓ Livro do motor</button></div></div>';
     H += '<div class="mt-aviso"><b>Nada foi alterado no app.</b> O motor roda sobre uma cópia da base carregada agora e compara com o que as telas mostram. '
       + (/[?&]estavel=1/.test(location.search) ? '<b>Base estável ligada</b> — os números se repetem a cada recarga.' : 'Para números que se repetem a cada recarga, abra com <code>?estavel=1</code>.') + '</div>';
+    H += '<div class="mt-note" style="margin:-6px 0 14px"><b>Decisões registradas:</b> split fora por enquanto (18/09/2026) · '
+      + 'meses devedores preservados pelo plano de ressarcimento do módulo, com pedidos parciais — dois meses: CBS nov/26 e IBS jun/26 (19/09/2026). '
+      + 'As opções abaixo servem para comparar; o padrão é o decidido.</div>';
     H += '<div class="mt-op">'
       + '<label>Vendas por Split Payment<select id="mt-split" onchange="shMotor.set(\'split\',+this.value)">' + [0, 25, 50, 75].map(function (p) { return '<option value="' + p + '"' + (op.split === p ? ' selected' : '') + '>' + p + '% das NFs de saída</option>'; }).join('') + '</select></label>'
       + '<label>Período do crédito<select onchange="shMotor.set(\'periodo\',this.value)"><option value="emissao"' + (op.periodo === 'emissao' ? ' selected' : '') + '>Mês de emissão (como hoje)</option><option value="apropriacao"' + (op.periodo === 'apropriacao' ? ' selected' : '') + '>Mês da apropriação (art. 47)</option></select></label>'
