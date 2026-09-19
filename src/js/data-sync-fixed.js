@@ -8253,6 +8253,9 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window._enriquecerNFsSaida(); } catch(e) { console.error('[data-sync-fixed] Erro _enriquecerNFsSaida:', e); }
       // Ressarcimento: intenções, pedidos e pagamentos aplicados aos RFs antes de
       // qualquer indicador — só o pagamento muda o statusCredito (js/ressarcimento.js)
+      // Validação local (branch motor-art53): com a chave ligada, o motor do art. 53
+      // define compensação e saldo antes do ressarcimento e de qualquer indicador
+      try { window.shMotor && window.shMotor.aplicarNaBase && window.shMotor.aplicarNaBase(); } catch(e) { console.error('[motor]', e); }
       try { window.shRes && window.shRes.aplicarNaBase && window.shRes.aplicarNaBase(); } catch(e) {}
       try { _calcularStatusRegistro(); } catch(e) {}
       try {

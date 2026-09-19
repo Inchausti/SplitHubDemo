@@ -15,7 +15,9 @@
   var M = window.shMotor = window.shMotor || {};
   // Decisões de 18/09/2026: split fora por enquanto; preservar meses devedores —
   // o saldo que sai para ressarcimento (plano do módulo) deixa de compensar.
-  M.opcoes = M.opcoes || { split: 0, periodo: 'emissao', vencidos: 'preservar', ressarcimento: 'modulo', pedido: 'modulo' };
+  // Período pela apropriação: o crédito só existe depois do recolhimento do
+  // fornecedor (LC 214/2025, art. 47) — não pode compensar nem ser pedido antes.
+  M.opcoes = M.opcoes || { split: 0, periodo: 'apropriacao', vencidos: 'preservar', ressarcimento: 'modulo', pedido: 'modulo' };
 
   var MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
@@ -25,10 +27,11 @@
   function plano(T, ref) {
     if (T === 'CBS') return [
       { p: perAdd(ref, -4), tipo: 'pedido', frac: 0.6, status: 'pago', id: 'PED-CBS-' + perAdd(ref, -4) },
-      { p: perAdd(ref, -2), tipo: 'pedido', frac: 0.7, status: 'em_analise', id: 'PED-CBS-' + perAdd(ref, -2) },
+      { p: perAdd(ref, -2), tipo: 'pedido', frac: 0.7, status: 'em_analise', div: true, id: 'PED-CBS-' + perAdd(ref, -2) },
       { p: perAdd(ref, -1), tipo: 'intencao', frac: 1, status: 'declarada', id: 'INT-CBS-' + perAdd(ref, -1) }];
     return [
       { p: perAdd(ref, -4), tipo: 'pedido', frac: 0.6, status: 'pago', parcial: true, id: 'PED-IBS-' + perAdd(ref, -4) },
+      { p: perAdd(ref, -3), tipo: 'cancelada', frac: 0, status: 'cancelada', id: 'INT-IBS-' + perAdd(ref, -3) },
       { p: perAdd(ref, -2), tipo: 'pedido', frac: 0.5, status: 'em_analise', id: 'PED-IBS-' + perAdd(ref, -2) }];
   }
   function perLbl(k) { var p = k.split('-'); return MES[+p[1] - 1] + '/' + p[0]; }
@@ -83,7 +86,8 @@
 
   /* ── o motor ─────────────────────────────────────────────────────────── */
   function motor(L, op) {
-    var livro = [], porMes = {}, cenarioComCredito = 0;
+    var livro = [], porMes = {}, cenarioComCredito = 0, planoRes = {};
+    function ids(a) { return a.map(function (c) { return c.rf.id; }); }
     ['CBS', 'IBS'].forEach(function (T) {
       var creds = [], debs = [];
       L.forEach(function (nf) {
@@ -112,7 +116,8 @@
       ks.forEach(function (k) {
         while (ci < creds.length && creds[ci].per <= k) pool.push(creds[ci++]);
         // deferimento parcial: o não reconhecido volta a compensar a partir da decisão
-        pool.forEach(function (c) { if (c.volta === k) { c.saldo = c.rf.valor || 0; c.res = null; c.volta = null; c.voltou = true; c.rf._disponivelDesde = k; } });
+        var dev = 0;
+        pool.forEach(function (c) { if (c.volta === k) { c.saldo = c.rf.valor || 0; dev += c.saldo; c.res = null; c.volta = null; c.voltou = true; c.rf._disponivelDesde = k; } });
         debs.forEach(function (d) { if (d.per === k) fila.push(d); });
         var comp = 0;
         for (var i = 0; i < fila.length; i++) {
@@ -135,21 +140,35 @@
         var saiu = 0;
         if (op.ressarcimento === 'modulo') plano(T, op.ref).forEach(function (pl) {
           if (pl.p !== k) return;
-          var livres = pool.filter(function (c) { return !c.res && c.saldo >= (c.rf.valor || 0) - 0.005 && c.saldo > 0.005; });
-          var alvo = livres.reduce(function (s, c) { return s + c.saldo; }, 0) * (op.pedido === 'integral' ? 1 : pl.frac), acum = 0, sel = [];
-          livres.forEach(function (c) { if (acum < alvo - 0.005 || !sel.length) { sel.push(c); acum += c.saldo; } });
+          // só crédito já apropriado na data da intenção
+          // a intenção trava o saldo credor do período: entra o crédito apropriado até o fim dele
+          var lim = fimMes(k);
+          var livres = pool.filter(function (c) { return !c.res && c.saldo >= (c.rf.valor || 0) - 0.005 && c.saldo > 0.005 && (!c.rf.dataApropriacao || String(c.rf.dataApropriacao).slice(0, 10) <= lim); });
+          var reg = planoRes[pl.id] = { tributo: T, p: k, tipo: pl.tipo, status: pl.status, livres: ids(livres), sel: [], volta: null, div: null, valor: 0 };
+          if (pl.tipo === 'cancelada' || !livres.length) return;   // cancelada: reservou e devolveu no mesmo mês
+          var base = livres.slice();
+          if (pl.div && base.length > 2) { var dv = base.pop(); dv.rf._motorDiv = pl.id; reg.div = dv.rf.id; }
+          var alvo = base.reduce(function (s, c) { return s + c.saldo; }, 0) * (op.pedido === 'integral' ? 1 : pl.frac), acum = 0, sel = [];
+          base.forEach(function (c) { if (acum < alvo - 0.005 || !sel.length) { sel.push(c); acum += c.saldo; } });
           sel.forEach(function (c, i) {
-            c.res = { id: pl.id, tipo: pl.tipo, status: pl.status, per: k }; saiu += c.saldo; c.saldo = 0;
-            if (pl.parcial && i === sel.length - 1 && sel.length > 1) c.volta = perAdd(k, 3);
+            c.res = { id: pl.id, tipo: pl.tipo, status: pl.status, per: k }; saiu += c.saldo; reg.valor += c.saldo; c.saldo = 0;
+            if (pl.parcial && i === sel.length - 1 && sel.length > 1) { c.volta = perAdd(k, 3); reg.volta = c.rf.id; }
           });
+          reg.sel = ids(sel);
         });
         var saldo = pool.reduce(function (s, c) { return s + Math.max(0, c.saldo); }, 0);
-        porMes[T + '|' + k] = { tributo: T, mes: k, compensado: comp, saldoCredor: saldo, aRecolher: aRecolherMes, vencidoAberto: fila.reduce(function (s, d) { return s + d.falta; }, 0), ressarcimento: saiu };
+        porMes[T + '|' + k] = { tributo: T, mes: k, compensado: comp, saldoCredor: saldo, aRecolher: aRecolherMes, vencidoAberto: fila.reduce(function (s, d) { return s + d.falta; }, 0), ressarcimento: saiu, devolvido: dev };
       });
       // grava o resultado na cópia
       creds.forEach(function (c) {
         var usado = (c.rf.valor || 0) - Math.max(0, c.saldo);
         c.rf._valorCompensado = usado;
+        if (c.res && op.aplicar) {
+          // na base viva, o módulo de Ressarcimento marca e extingue — com a trilha
+          c.rf._motorRes = { id: c.res.id, tipo: c.res.tipo, status: c.res.status, per: c.res.per };
+          c.rf.statusCredito = 'apropriado'; c.rf.status = 'apropriado'; c.rf.metodoExtincao = null; c.rf.dataExtincaoCredito = null; c.rf._valorCompensado = 0;
+          return;
+        }
         if (c.res) {
           if (c.res.status === 'pago') { c.rf.statusCredito = 'utilizado'; c.rf.status = 'utilizado'; c.rf.metodoExtincao = 'Ressarcimento'; c.rf.dataExtincaoCredito = fimMes(perAdd(c.res.per, 3)); c.rf._valorCompensado = 0; }
           else { c.rf.statusCredito = 'apropriado'; c.rf.status = 'apropriado'; c.rf.metodoExtincao = null; c.rf.dataExtincaoCredito = null; c.rf._valorCompensado = 0; c.rf.ressarcimento = { marca: c.res.tipo === 'intencao' ? 'reservado' : 'em_pedido', ref: c.res.id, tributo: T }; }
@@ -174,7 +193,7 @@
         if (pm && pm.saldoCredor > 0.005) cenarioComCredito++;
       });
     });
-    return { livro: livro, porMes: porMes, cenarioComCredito: cenarioComCredito };
+    return { livro: livro, porMes: porMes, cenarioComCredito: cenarioComCredito, plano: planoRes };
   }
 
   /* ── indicadores, com as mesmas regras das telas ─────────────────────── */
@@ -246,14 +265,131 @@
     return r;
   }
 
+
+  /* ══ Fase 2 · etapa 1 — motor aplicado na base (atrás da chave) ══════════
+     Com a chave ligada, o motor roda na base carregada, antes de qualquer
+     indicador (data-sync _postProcessarDados), e o Ressarcimento monta os
+     pedidos sobre o saldo que ele apura. Chave desligada: nada muda. */
+  try { var _op = JSON.parse(sessionStorage.getItem('sh_motor_op') || 'null'); if (_op) M.opcoes = _op; } catch (e) {}
+  function refHoje() {
+    var d = new Date(), s = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    if (s < '2026-06-01') s = '2026-06-01'; if (s > '2026-12-20') s = '2026-12-20';
+    return s.slice(0, 7);
+  }
+  M.ligado = function () {
+    try {
+      if (/[?&]motor=1/.test(location.search)) sessionStorage.setItem('sh_motor_on', '1');
+      if (/[?&]motor=0/.test(location.search)) sessionStorage.removeItem('sh_motor_on');
+      return sessionStorage.getItem('sh_motor_on') === '1';
+    } catch (e) { return /[?&]motor=1/.test(location.search); }
+  };
+  M.alternar = function (ligar) {
+    try { if (ligar) sessionStorage.setItem('sh_motor_on', '1'); else sessionStorage.removeItem('sh_motor_on'); sessionStorage.setItem('sh_motor_op', JSON.stringify(M.opcoes)); } catch (e) {}
+    var q = location.search.replace(/([?&])motor=[01](&|$)/, '$1').replace(/[?&]$/, '');
+    var alvo = location.pathname + q;
+    // mesma página: só a âncora mudaria e o navegador não recarregaria
+    if (alvo === location.pathname + location.search) location.reload(); else location.href = alvo + location.hash;
+  };
+  M.aplicarNaBase = function () {
+    if (!M.ligado()) return;
+    var L = (window.nfListaFiltradaGlobal && window.nfListaFiltradaGlobal.length) ? window.nfListaFiltradaGlobal : (window._nfListaCompleta || []);
+    if (!L.length || (M.live && M.live.nf0 === L[0] && M.live.n === L.length)) return;
+    M.antes = JSON.parse(JSON.stringify(L, function (k, v) { return (k === '_inconsistencias' || k === '_resEventos' || k === '_eventos') ? undefined : v; }));
+    var op = { split: 0, periodo: M.opcoes.periodo, vencidos: M.opcoes.vencidos, ressarcimento: 'modulo', pedido: M.opcoes.pedido, aplicar: true, ref: refHoje() };
+    var r = motor(L, op);
+    var porCred = {}, porDeb = {};
+    r.livro.forEach(function (x) { (porCred[x.cred] = porCred[x.cred] || []).push(x); (porDeb[x.deb] = porDeb[x.deb] || []).push(x); });
+    M.live = { nf0: L[0], n: L.length, porMes: r.porMes, livro: r.livro, plano: r.plano, ref: op.ref, op: op, porCred: porCred, porDeb: porDeb };
+  };
+  function chaveDe(per) { if (per.indexOf('/') < 0) return per; var p = per.split('/'); return p[1] + '-' + pad(MES.indexOf(p[0]) + 1); }
+
+  // Apuração lida do livro do motor: compensação no mês em que acontece, saldo
+  // anterior consumido, devolução do deferimento parcial e débitos com os
+  // créditos que os abateram.
+  M.ajustarApuracao = function () {
+    if (!M.live || !window.apurData) return;
+    var V = M.live, L = window._nfListaCompleta || window.nfListaFiltradaGlobal || [], ad = window.apurData;
+    var rfNf = {}; L.forEach(function (nf) { (nf.registrosFiscais || []).forEach(function (rf) { rfNf[rf.id] = { rf: rf, nf: nf }; }); });
+    function perCred(rf, nf) { return (V.op.periodo === 'apropriacao' && rf.dataApropriacao ? String(rf.dataApropriacao) : String(rf.data || nf.data)).slice(0, 7); }
+    function doc(nf) { return (nf.tipoDF || 'NF-e') + ' ' + nf.numero; }
+    // crédito apropriado num mês sem DF emitido (ex.: DF de dez apropriado em jan)
+    // pertence à apuração daquele mês (art. 47): o período passa a existir
+    var novos = [];
+    L.forEach(function (nf) {
+      if (nf.tipo !== 'entrada') return;
+      (nf.registrosFiscais || []).forEach(function (rf) {
+        var st = sc(rf); if (st !== 'apropriado' && st !== 'utilizado') return;
+        var k = perCred(rf, nf), p = k.split('-'), lbl = MES[+p[1] - 1] + '/' + p[0];
+        if (!ad[lbl] && novos.indexOf(lbl) < 0) novos.push(lbl);
+      });
+    });
+    if (novos.length) {
+      var ord = function (a) { var p = a.split('/'); return +p[1] * 100 + MES.indexOf(p[0]); };
+      var ativo = window.apurPeriodoAtivo, todos = Object.keys(ad).concat(novos).sort(function (a, b) { return ord(a) - ord(b); }), copia = {};
+      todos.forEach(function (lbl) { copia[lbl] = ad[lbl] || { status: 'calculada', ultimaExecucao: null, ibsSaldoInicial: 0, cbsSaldoInicial: 0, creditos: [], debitos: [], soCredito: true }; });
+      Object.keys(ad).forEach(function (lbl) { delete ad[lbl]; });
+      todos.forEach(function (lbl) { ad[lbl] = copia[lbl]; });
+      var sel = document.getElementById('apur-periodo-sel');
+      if (sel) {
+        sel.innerHTML = '';
+        todos.slice().reverse().forEach(function (lbl) { var o = document.createElement('option'); o.value = lbl; o.textContent = lbl.charAt(0).toUpperCase() + lbl.slice(1) + (ad[lbl].soCredito ? ' · só créditos apropriados' : ''); sel.appendChild(o); });
+        if (ativo && ad[ativo]) sel.value = ativo;
+      }
+    }
+    Object.keys(ad).forEach(function (per) {
+      var k = chaveDe(per), d = ad[per], cred = [], deb = [];
+      ['IBS', 'CBS'].forEach(function (T) {
+        var ant = V.porMes[T + '|' + perAdd(k, -1)];
+        d[T === 'IBS' ? 'ibsSaldoInicial' : 'cbsSaldoInicial'] = ant ? ant.saldoCredor : 0;
+      });
+      L.forEach(function (nf) {
+        (nf.registrosFiscais || []).forEach(function (rf) {
+          var T = T_(rf); if (T !== 'IBS' && T !== 'CBS') return;
+          var v = rf.valor || 0;
+          if (nf.tipo === 'entrada') {
+            var st = sc(rf), isAprop = st === 'apropriado' || st === 'utilizado';
+            if ((isAprop ? perCred(rf, nf) : String(nf.data).slice(0, 7)) !== k) return;
+            var util = (V.porCred[rf.id] || []).filter(function (x) { return x.mes === k; }).reduce(function (a, x) { return a + x.valor; }, 0);
+            cred.push({ doc: doc(nf), tributo: T, data: br(nf.data), forn: nf.entidade || '—', total: v, aprop: isAprop ? v : 0, naoAprop: isAprop ? 0 : v,
+              util: util, naoUtil: isAprop ? Math.max(0, v - util) : 0, ressarc: rf.metodoExtincao === 'Ressarcimento' ? v : 0,
+              motivo: isAprop ? null : (rf.motivo || 'Aguardando confirmação na Plataforma Centralizada') });
+          } else if (nf.tipo === 'saida' && String(nf.data).slice(0, 7) === k) {
+            var ext = rf.status === 'extinto' ? v : (rf._valorCompensado || 0);
+            var met = rf.metodoExtincao, mec = ext <= 0 ? null : met === 'RAD' ? 'rad' : met === 'Split Payment' ? 'split' : 'credito';
+            var usados = (V.porDeb[rf.id] || []).map(function (x) { var c = rfNf[x.cred]; return { doc: c ? doc(c.nf) : x.cred, forn: c ? (c.nf.entidade || '—') : '—', valor: x.valor }; });
+            deb.push({ doc: doc(nf), tributo: T, data: br(nf.data), cliente: nf.entidade || '—', total: v, naoExt: v - ext, extinto: ext, mec: mec,
+              splitEvt: mec === 'split' ? { data: br(nf.data), meio: 'PIX', txId: 'SP-' + String(nf.data).replace(/-/g, '') + '-' + String(nf.numero).slice(-4), valor: ext } : null,
+              radEvt: mec === 'rad' ? { adquirente: nf.entidade, cnpj: nf.cnpj || '—', data: br(nf.data) } : null,
+              credEvt: mec === 'credito' ? usados : null });
+          }
+        });
+      });
+      // créditos de meses anteriores consumidos neste mês — o saldo anterior em uso
+      var ant = {};
+      V.livro.forEach(function (x) {
+        if (x.mes !== k) return; var c = rfNf[x.cred]; if (!c || perCred(c.rf, c.nf) === k) return;
+        ant[x.cred] = ant[x.cred] || { doc: doc(c.nf) + ' · saldo anterior', tributo: x.tributo, data: br(c.nf.data), forn: c.nf.entidade || '—', total: 0, aprop: 0, naoAprop: 0, util: 0, naoUtil: 0, ressarc: 0, motivo: null, saldoAnterior: true };
+        ant[x.cred].util += x.valor; ant[x.cred].total += x.valor;
+      });
+      Object.keys(ant).forEach(function (key) { cred.push(ant[key]); });
+      // devolução do deferimento parcial: o crédito volta ao saldo neste mês
+      Object.keys(V.plano).forEach(function (id) {
+        var pl = V.plano[id]; if (!pl.volta || perAdd(pl.p, 3) !== k) return; var c = rfNf[pl.volta]; if (!c) return;
+        cred.push({ doc: doc(c.nf) + ' · devolvido (' + id + ')', tributo: pl.tributo, data: br(fimMes(k)), forn: c.nf.entidade || '—', total: c.rf.valor, aprop: c.rf.valor, naoAprop: 0, util: 0, naoUtil: c.rf.valor, ressarc: 0, motivo: null, devolucao: true });
+      });
+      d.creditos = cred; d.debitos = deb;
+    });
+  };
+
   /* ── cálculo completo ────────────────────────────────────────────────── */
   M.calcular = function () {
     var op = M.opcoes;
-    var hoje = window._nfListaCompleta || [];
-    var base = copiaBase();
+    var vivo = !!M.live;
+    var hoje = vivo ? M.antes : (window._nfListaCompleta || []);
+    var base = vivo ? (window._nfListaCompleta || []) : copiaBase();
     op.ref = (window.shRes && window.shRes.ref) || '2026-09';
-    var nSplit = aplicarSplit(base, op.split);
-    var mt = motor(base, op);
+    var nSplit = vivo ? 0 : aplicarSplit(base, op.split);
+    var mt = vivo ? { livro: M.live.livro, porMes: M.live.porMes, plano: M.live.plano, cenarioComCredito: 0 } : motor(base, op);
     var res = {
       op: JSON.parse(JSON.stringify(op)), nSplit: nSplit, mt: mt,
       hoje: indicadores(hoje), motor: indicadores(base),
@@ -324,7 +460,12 @@
     var H = '';
     H += '<div class="pg-hdr"><div><div class="pg-title">Validação do motor de compensação</div><div class="pg-sub">Versão local · branch motor-art53 · relatório “antes × depois” · as telas do app seguem sem o motor</div></div>'
       + '<div class="hdr-act"><button class="btn" onclick="shMotor.baixarCSV()">↓ CSV do relatório</button><button class="btn" onclick="shMotor.baixarLivro()">↓ Livro do motor</button></div></div>';
-    H += '<div class="mt-aviso"><b>Nada foi alterado no app.</b> O motor roda sobre uma cópia da base carregada agora e compara com o que as telas mostram. '
+    H += '<div class="mt-aviso" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-style:solid">'
+      + '<span style="flex:1 1 320px;min-width:0"><b>Motor nas telas: ' + (M.live ? 'LIGADO' : 'desligado') + '.</b> '
+      + (M.live ? 'Etapa 1: a base carregada passa pelo motor antes dos indicadores; Apuração e Ressarcimento leem o livro do motor. As outras telas recalculam sozinhas — as adaptações delas vêm nas etapas 2 e 3.'
+                : 'Ligue para ver o app com o motor. A troca recarrega a página; desligar volta tudo ao que é hoje.') + '</span>'
+      + '<button class="btn ' + (M.live ? '' : 'btn-t') + '" onclick="shMotor.alternar(' + (M.live ? 'false' : 'true') + ')">' + (M.live ? 'Desligar o motor' : 'Ligar o motor nas telas') + '</button></div>';
+    H += '<div class="mt-aviso"><b>' + (M.live ? 'Comparação:' : 'Nada foi alterado no app.') + '</b> O motor roda sobre uma cópia da base carregada agora e compara com o que as telas mostram. '
       + (/[?&]estavel=1/.test(location.search) ? '<b>Base estável ligada</b> — os números se repetem a cada recarga.' : 'Para números que se repetem a cada recarga, abra com <code>?estavel=1</code>.') + '</div>';
     H += '<div class="mt-note" style="margin:-6px 0 14px"><b>Decisões registradas:</b> split fora por enquanto (18/09/2026) · '
       + 'meses devedores preservados pelo plano de ressarcimento do módulo, com pedidos parciais — dois meses: CBS nov/26 e IBS jun/26 (19/09/2026). '
@@ -407,7 +548,7 @@
     el.innerHTML = H;
   };
 
-  M.set = function (k, v) { M.opcoes[k] = v; M.render(); };
+  M.set = function (k, v) { M.opcoes[k] = v; try { sessionStorage.setItem('sh_motor_op', JSON.stringify(M.opcoes)); } catch (e) {} if (M.live) M.alternar(true); else M.render(); };
 
   function baixar(nome, texto) {
     var b = new Blob(['﻿' + texto], { type: 'text/csv;charset=utf-8' });
@@ -430,7 +571,29 @@
   /* ── gancho de navegação e selo de prévia ────────────────────────────── */
   function iniciar() {
     css();
-    if (!document.querySelector('.mt-previa')) { var p = document.createElement('div'); p.className = 'mt-previa'; p.textContent = 'Prévia local · motor-art53'; document.body.appendChild(p); }
+    if (!document.querySelector('.mt-previa')) { var p = document.createElement('div'); p.className = 'mt-previa'; p.textContent = 'Prévia local · motor ' + (M.live ? 'LIGADO' : 'desligado'); document.body.appendChild(p); }
+    // Apuração: com o motor ligado, lê o livro do motor depois da sincronização
+    if (typeof window.sincronizarApuracao === 'function' && !window.sincronizarApuracao._mt) {
+      var sa = window.sincronizarApuracao;
+      window.sincronizarApuracao = function () {
+        var r = sa.apply(this, arguments);
+        if (M.live) { try { M.ajustarApuracao(); if (window.apurRenderAll) window.apurRenderAll(); } catch (e) { console.error('[motor] apuração', e); } }
+        return r;
+      };
+      window.sincronizarApuracao._mt = true;
+    }
+    // "Não utilizados" do período: só o crédito do próprio período, sem o saldo anterior
+    if (typeof window.apurCalcTotals === 'function' && !window.apurCalcTotals._mt) {
+      var ct = window.apurCalcTotals;
+      window.apurCalcTotals = function (per, tri) {
+        var t = ct.apply(this, arguments);
+        if (M.live && window.apurData && window.apurData[per]) {
+          t.naoUtil = window.apurData[per].creditos.filter(function (c) { return c.tributo === tri && !c.saldoAnterior; }).reduce(function (a, c) { return a + (c.naoUtil || 0); }, 0);
+        }
+        return t;
+      };
+      window.apurCalcTotals._mt = true;
+    }
     if (typeof window.showView === 'function' && !window.showView._mt) {
       var sv = window.showView;
       window.showView = function (id) {

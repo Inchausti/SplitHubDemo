@@ -168,12 +168,23 @@
 
   // 1. Saldo apurado e intenção declarada (reserva) — e a aprovação, quando exigida
   function passoIntencao(arr, i, hora) {
-    trilha(arr, i.declaradaEm, hora, 'RESSARCIMENTO', function (x) {
+    // A intenção trava o saldo credor DO PERÍODO. Crédito apropriado depois da
+    // declaração (até o fim do período) entra na reserva na data em que nasce.
+    var hAprov = hora === '16:00' ? '17:10' : agora();
+    var antes = [], depois = [];
+    arr.forEach(function (x) { var ap = x.rf.dataApropriacao ? String(x.rf.dataApropriacao).slice(0, 10) : null; (ap && ap > i.declaradaEm ? depois : antes).push(x); });
+    trilha(antes, i.declaradaEm, hora, 'RESSARCIMENTO', function (x) {
       return 'Intenção de ressarcimento ' + i.id + ' declarada · crédito de ' + vT(x) + ' reservado no saldo credor de ' + perLbl(i.periodo)
         + ' · deixa de compensar débitos de ' + i.tributo + ' de ' + perLbl(perAdd(i.periodo, 1)) + ' · status do crédito segue Apropriado · ' + lgl(i.tributo) + ', §§ 4º e 5º';
     }, i.por, 'pending');
-    if (i.aprovadaPor) trilha(arr, i.declaradaEm, hora === '16:00' ? '17:10' : agora(), 'RESSARCIMENTO',
+    if (i.aprovadaPor) trilha(antes, i.declaradaEm, hAprov, 'RESSARCIMENTO',
       'Intenção ' + i.id + ' aprovada — valor acima do limite de ' + moneyC(R.LIMITE_APROVACAO[i.tributo]) + ' (D-03)', i.aprovadaPor, 'ok');
+    depois.forEach(function (x) {
+      trilha([x], String(x.rf.dataApropriacao).slice(0, 10), '11:40', 'RESSARCIMENTO',
+        'Crédito de ' + vT(x) + ' apropriado depois da intenção ' + i.id + ' (declarada em ' + br(i.declaradaEm) + (i.aprovadaPor ? ', aprovada por ' + i.aprovadaPor : '')
+        + ') · entra reservado no saldo credor de ' + perLbl(i.periodo) + ' · não compensa débitos de ' + i.tributo + ' de ' + perLbl(perAdd(i.periodo, 1))
+        + ' · ' + lgl(i.tributo) + ', §§ 4º e 5º', 'SplitHub', 'pending');
+    });
     var fimPer = (function (k) { var p = k.split('-'); return d2i(new Date(+p[0], +p[1], 0)); })(i.periodo);
     if (fimPer >= i.declaradaEm && fimPer <= R.hoje) trilha(arr, fimPer, '23:50', 'RESSARCIMENTO', function (x) {
       return 'Saldo credor de ' + i.tributo + ' de ' + perLbl(i.periodo) + ' apurado em ' + br(fimPer) + ' · crédito de ' + vT(x) + ' segue reservado, fora do transporte para compensação';
@@ -234,7 +245,7 @@
     R._seedNf = L[0]; R._seedN = L.length;
     R.intencoes = []; R.pedidos = []; R.recebimentos = [];
     R.hoje = hoje(); R.ref = R.hoje.slice(0, 7);
-    seedCBS(R.ref); seedIBS(R.ref);
+    if (motorVivo()) seedMotor(R.ref); else { seedCBS(R.ref); seedIBS(R.ref); }
     R.impedimentos = [
       { id: 'IMP-01', tributo: 'IBS', tipo: 'Auto de infração de IBS em contencioso', ref: 'AI 2026/000318 · 03/2026', base: 'Resolução CGIBS 6/2026, art. 486, III', efeito: 'Pode levar ao indeferimento, mesmo sem decisão definitiva. Alerta — não bloqueia o pedido (D-07).' }
     ];
@@ -243,6 +254,115 @@
       IBS: { programa: 'Não enquadrada', prazo: 180, base: 'Demais hipóteses — 180 dias' }
     };
     return true;
+  }
+
+
+  /* ── base do ressarcimento sobre o motor (validação local, chave ligada) ──
+     O motor já escolheu, na ordem do art. 53, o saldo que sobra em cada período
+     e quais créditos vão para intenção e pedido. Aqui só se registram os atos —
+     datas, valores, trilha — e se extingue o que foi pago. */
+  function motorVivo() { return !!(window.shMotor && window.shMotor.live); }
+  function seedMotor(ref) {
+    var P = window.shMotor.live.plano, seq = 1;
+    function g(id) { return P[id]; }
+    function L_(ids) { return doIds(ids || []); }
+    function sem(a, ids) { return a.filter(function (x) { return ids.indexOf(x.rf.id) < 0; }); }
+    // ── CBS
+    var T = 'CBS', p1 = perAdd(ref, -4), r1 = g('PED-CBS-' + p1);
+    if (r1 && r1.sel.length) {
+      var l1 = L_(r1.livres), it1 = L_(r1.sel), fora1 = sem(l1, r1.sel);
+      var v1 = soma(it1), i1 = ultimoDiaUtil(p1), pr1 = diaUtil(perAdd(p1, 1), 22), dc1 = addDias(pr1, 49), pg1 = addDias(dc1, 14);
+      var pedId = 'PED-CBS-' + p1, sel1 = selic(v1, pr1, pg1, false);
+      var int1 = { id: 'INT-CBS-' + p1, tributo: T, periodo: p1, valor: soma(l1), declaradaEm: i1, prazoPedido: ultimoDiaUtil(perAdd(p1, 1)), status: 'convertida', por: 'Maria Costa', aprovadaPor: 'Rafael Lima', pedidoId: pedId };
+      var ped1 = { id: pedId, tributo: T, periodo: p1, numero: perdcomp(pr1, seq++), valor: v1, protocoladoEm: pr1, prazo: 60, base: 'Art. 40 da LC 214/2025', fimAnalise: addDias(pr1, 60), pagSilencio: addDias(pr1, 75), status: 'pago', deferido: v1, decididoEm: dc1, pagoEm: pg1, rfs: ids(it1), excluidos: [],
+        hist: [ev(i1, 'Intenção declarada · ' + money(soma(l1)), 'Maria Costa'), ev(addDias(i1, 1), 'Intenção aprovada (acima do limite)', 'Rafael Lima'), ev(addDias(pr1, -2), 'Conferência com a API de créditos da CBS: todos os documentos conferem', 'Receita Federal', 'ok'), ev(pr1, 'Pedido transmitido · PER/DCOMP registrado · ' + money(v1) + (fora1.length ? ' · remanescente volta a compensar' : ''), 'Maria Costa'), ev(dc1, 'Deferido integral pela Receita Federal', 'Receita Federal', 'ok'), ev(pg1, 'Pagamento recebido e conciliado · Selic ' + money(sel1), 'José da Silva', 'ok')] };
+      var rec1 = { id: 'REC-CBS-' + p1, pedidoId: pedId, tributo: T, data: pg1, principal: v1, selic: sel1, total: v1 + sel1, conta: CONTA, conciliado: true };
+      R.intencoes.push(int1); R.pedidos.push(ped1); R.recebimentos.push(rec1);
+      passoIntencao(l1, int1, '16:00');
+      passoVerificacao(it1, ped1, addDias(pr1, -2), '14:00');
+      passoPedido(it1, ped1, '16:30', 'Maria Costa');
+      passoVolta(fora1, pr1, '16:35', 'Não incluído no pedido parcial ' + pedId, 'Maria Costa');
+      passoDecisao(it1, ped1, dc1, '11:00', 'Pedido ' + pedId + ' deferido integral pela Receita Federal · pagamento em até 15 dias', 'ok');
+      passoPagamento(it1, ped1, rec1);
+      extinguir(it1, pedId, T, pg1);
+    }
+    var p2 = perAdd(ref, -2), r2 = g('PED-CBS-' + p2);
+    if (r2 && r2.sel.length) {
+      var l2 = L_(r2.livres), it2 = L_(r2.sel), div = r2.div ? L_([r2.div])[0] : null;
+      var fora2 = sem(sem(l2, r2.sel), div ? [div.rf.id] : []);
+      var v2 = soma(it2), i2 = ultimoDiaUtil(p2), pr2 = diaUtil(perAdd(p2, 1), 20), pedId2 = 'PED-CBS-' + p2;
+      var int2 = { id: 'INT-CBS-' + p2, tributo: T, periodo: p2, valor: soma(l2), declaradaEm: i2, prazoPedido: ultimoDiaUtil(perAdd(p2, 1)), status: 'convertida', por: 'Maria Costa', aprovadaPor: 'Rafael Lima', pedidoId: pedId2 };
+      var ped2 = { id: pedId2, tributo: T, periodo: p2, numero: perdcomp(pr2, seq++), valor: v2, protocoladoEm: pr2, prazo: 60, base: 'Art. 40 da LC 214/2025', fimAnalise: addDias(pr2, 60), pagSilencio: addDias(pr2, 75), status: 'em_analise', deferido: 0, rfs: ids(it2),
+        excluidos: div ? [{ rfId: div.rf.id, doc: (div.nf.tipoDF || 'NF-e') + ' ' + div.nf.numero, valor: div.rf.valor, motivo: 'Saldo divergente na API de créditos da CBS' }] : [],
+        hist: [ev(i2, 'Intenção declarada · ' + money(soma(l2)), 'Maria Costa'), ev(addDias(i2, 1), 'Intenção aprovada (acima do limite)', 'Rafael Lima')] };
+      if (div) ped2.hist.push(ev(addDias(pr2, -2), 'Conferência com a Receita: 1 documento divergente excluído do pedido', 'Sistema', 'warn'));
+      ped2.hist.push(ev(pr2, 'Pedido parcial transmitido · ' + money(v2) + ' · remanescente volta a compensar', 'Maria Costa'));
+      R.intencoes.push(int2); R.pedidos.push(ped2);
+      passoIntencao(l2, int2, '16:00');
+      passoVerificacao(it2.concat(fora2), ped2, addDias(pr2, -2), '14:00');
+      if (div) {
+        trilha([div], addDias(pr2, -2), '14:05', 'RESSARCIMENTO', 'Conferência com a API de créditos da CBS · saldo do documento diverge da Receita Federal · excluído do pedido ' + pedId2 + ' (D-06) · inconsistência aberta', 'Receita Federal', 'erro');
+        passoVolta([div], addDias(pr2, -2), '14:06', 'Excluído do pedido por divergência com a Receita', 'SplitHub', 'erro');
+        R._divergente = { rfId: div.rf.id, nf: div.nf, rf: div.rf, pedidoId: pedId2 };
+      }
+      passoPedido(it2, ped2, '16:30', 'Maria Costa');
+      passoVolta(fora2, pr2, '16:35', 'Não incluído no pedido parcial ' + pedId2, 'Maria Costa');
+      marcar(it2, 'em_pedido', pedId2, T);
+    }
+    var p3 = perAdd(ref, -1), r3 = g('INT-CBS-' + p3);
+    if (r3 && r3.sel.length) {
+      var l3 = L_(r3.sel), i3 = ultimoDiaUtil(p3);
+      var int3 = { id: 'INT-CBS-' + p3, tributo: T, periodo: p3, valor: soma(l3), declaradaEm: i3, prazoPedido: ultimoDiaUtil(perAdd(p3, 1)), status: 'declarada', por: 'Maria Costa', aprovadaPor: 'Rafael Lima' };
+      R.intencoes.push(int3);
+      passoIntencao(l3, int3, '16:00');
+      marcar(l3, 'reservado', int3.id, T);
+    }
+    // ── IBS
+    T = 'IBS';
+    var q1 = perAdd(ref, -4), s1 = g('PED-IBS-' + q1);
+    if (s1 && s1.sel.length) {
+      var m1 = L_(s1.livres), j1 = L_(s1.sel), out1 = sem(m1, s1.sel);
+      var naoRec = s1.volta ? L_([s1.volta]) : [], def = sem(j1, s1.volta ? [s1.volta] : []);
+      var w1 = soma(j1), vd = soma(def);
+      var h1 = ultimoDiaUtil(q1), pq1 = diaUtil(perAdd(q1, 1), 24), dq1 = diaUtil(perAdd(q1, 3), 3), pgq1 = addDias(dq1, 13);
+      var pid = 'PED-IBS-' + q1, sq1 = selic(vd, pq1, pgq1, false);
+      var iq1 = { id: 'INT-IBS-' + q1, tributo: T, periodo: q1, valor: soma(m1), declaradaEm: h1, prazoPedido: ultimoDiaUtil(perAdd(q1, 1)), status: 'convertida', por: 'Ana Ferreira', aprovadaPor: 'Rafael Lima', pedidoId: pid };
+      var pd1 = { id: pid, tributo: T, periodo: q1, numero: protIbs(1), valor: w1, protocoladoEm: pq1, prazo: 180, base: 'Demais hipóteses — 180 dias', fimAnalise: addDias(pq1, 180), pagSilencio: addDias(pq1, 195), status: 'pago', deferido: vd, decididoEm: dq1, pagoEm: pgq1, rfs: ids(j1), excluidos: [],
+        hist: [ev(h1, 'Intenção declarada · ' + money(soma(m1)), 'Ana Ferreira'), ev(addDias(pq1, -1), 'Verificação de impedimentos: 1 alerta (auto de infração em contencioso)', 'Sistema', 'warn'), ev(pq1, 'Pedido registrado · protocolo do Comitê Gestor · ' + money(w1), 'Ana Ferreira'), ev(dq1, 'Deferido parcial · ' + money(vd) + ' · ' + naoRec.length + ' documento não reconhecido', 'Comitê Gestor do IBS', 'warn'), ev(dq1, 'Remanescente de ' + money(w1 - vd) + ' volta a compensar desde a decisão', 'Sistema'), ev(pgq1, 'Pagamento recebido e conciliado · Selic ' + money(sq1), 'José da Silva', 'ok')] };
+      var rq1 = { id: 'REC-IBS-' + q1, pedidoId: pid, tributo: T, data: pgq1, principal: vd, selic: sq1, total: vd + sq1, conta: CONTA, conciliado: true };
+      R.intencoes.push(iq1); R.pedidos.push(pd1); R.recebimentos.push(rq1);
+      passoIntencao(m1, iq1, '16:00');
+      passoVerificacao(j1, pd1, addDias(pq1, -1), '14:00');
+      passoPedido(j1, pd1, '16:30', 'Ana Ferreira');
+      passoVolta(out1, pq1, '16:35', 'Não incluído no pedido parcial ' + pid, 'Ana Ferreira');
+      passoDecisao(def, pd1, dq1, '11:00', 'Pedido ' + pid + ' deferido parcialmente pelo Comitê Gestor do IBS · crédito do documento reconhecido · pagamento em até 15 dias', 'ok');
+      passoDecisao(naoRec, pd1, dq1, '11:00', 'Pedido ' + pid + ' deferido parcialmente · crédito do documento não reconhecido no ressarcimento', 'erro');
+      passoVolta(naoRec, dq1, '11:05', 'Não reconhecido no deferimento parcial', 'Comitê Gestor do IBS', 'ok');
+      passoPagamento(def, pd1, rq1);
+      extinguir(def, pid, T, pgq1);
+    }
+    var q2 = perAdd(ref, -3), s2 = g('INT-IBS-' + q2);
+    if (s2 && s2.livres.length) {
+      var m2 = L_(s2.livres), h2 = ultimoDiaUtil(q2), canc = addDias(h2, 12);
+      var iq2 = { id: 'INT-IBS-' + q2, tributo: T, periodo: q2, valor: soma(m2), declaradaEm: h2, prazoPedido: ultimoDiaUtil(perAdd(q2, 1)), status: 'cancelada', por: 'Ana Ferreira', aprovadaPor: 'Rafael Lima', canceladaEm: canc, motivo: 'Débitos de IBS do mês seguinte absorveriam o saldo' };
+      R.intencoes.push(iq2);
+      passoIntencao(m2, iq2, '16:00');
+      passoVolta(m2, canc, '10:30', 'Intenção ' + iq2.id + ' cancelada por Ana Ferreira — débitos de IBS do mês seguinte absorveriam o saldo', 'Ana Ferreira', 'ok');
+    }
+    var q3 = perAdd(ref, -2), s3 = g('PED-IBS-' + q3);
+    if (s3 && s3.sel.length) {
+      var m3 = L_(s3.livres), j3 = L_(s3.sel), out3 = sem(m3, s3.sel);
+      var w3 = soma(j3), h3 = ultimoDiaUtil(q3), pq3 = diaUtil(perAdd(q3, 1), 26), pid3 = 'PED-IBS-' + q3;
+      var iq3 = { id: 'INT-IBS-' + q3, tributo: T, periodo: q3, valor: soma(m3), declaradaEm: h3, prazoPedido: ultimoDiaUtil(perAdd(q3, 1)), status: 'convertida', por: 'Ana Ferreira', aprovadaPor: 'Rafael Lima', pedidoId: pid3 };
+      var pd3 = { id: pid3, tributo: T, periodo: q3, numero: protIbs(2), valor: w3, protocoladoEm: pq3, prazo: 180, base: 'Demais hipóteses — 180 dias', fimAnalise: addDias(pq3, 180), pagSilencio: addDias(pq3, 195), status: 'em_analise', deferido: 0, rfs: ids(j3), excluidos: [],
+        hist: [ev(h3, 'Intenção declarada · ' + money(soma(m3)), 'Ana Ferreira'), ev(addDias(pq3, -1), 'Verificação de impedimentos: 1 alerta (auto de infração em contencioso)', 'Sistema', 'warn'), ev(pq3, 'Pedido parcial registrado · protocolo do Comitê Gestor', 'Ana Ferreira')] };
+      R.intencoes.push(iq3); R.pedidos.push(pd3);
+      passoIntencao(m3, iq3, '16:00');
+      passoVerificacao(j3, pd3, addDias(pq3, -1), '14:00');
+      passoPedido(j3, pd3, '16:30', 'Ana Ferreira');
+      passoVolta(out3, pq3, '16:35', 'Não incluído no pedido parcial ' + pid3, 'Ana Ferreira');
+      marcar(j3, 'em_pedido', pid3, T);
+    }
   }
 
   function seedCBS(ref) {
@@ -390,6 +510,14 @@
   // Valor que sai do saldo no período k: pedido (bloqueado ou deferido) ou intenção declarada.
   // A Apuração usa o mesmo cálculo para o transporte (sincronizarApuracao).
   function saidaDe(T, k) {
+    if (motorVivo()) {
+      var pm = window.shMotor.live.porMes[T + '|' + k], base = saidaBase(T, k);
+      base.valor = pm ? (pm.ressarcimento || 0) : 0;
+      return base;
+    }
+    return saidaBase(T, k);
+  }
+  function saidaBase(T, k) {
     var ped = R.pedidos.filter(function (p) { return p.tributo === T && p.periodo === k && p.status !== 'cancelado' && p.status !== 'indeferido'; })[0];
     var ints = R.intencoes.filter(function (i) { return i.tributo === T && i.periodo === k; });
     var intc = ints[ints.length - 1];
@@ -402,6 +530,23 @@
   R.aplicarNaBase = function () { R._viaBase = true; garantir(); };
 
   function periodos(T) {
+    if (motorVivo()) {
+      var V = window.shMotor.live, todos = rfsDo(T), res = [];
+      for (var km = '2026-01'; km <= R.ref; km = perAdd(km, 1)) {
+        var kk = km, ap = 0;
+        todos.forEach(function (x) {
+          var s = scOf(x.rf); if (s !== 'apropriado' && s !== 'utilizado') return;
+          var per = (V.op.periodo === 'apropriacao' && x.rf.dataApropriacao ? String(x.rf.dataApropriacao) : String(x.rf.data || x.nf.data)).slice(0, 7);
+          if (per === kk) ap += x.rf.valor || 0;
+        });
+        var pm = V.porMes[T + '|' + kk] || {}, pa = V.porMes[T + '|' + perAdd(kk, -1)] || {};
+        var ini0 = pa.saldoCredor || 0, dev = pm.devolvido || 0, comp0 = pm.compensado || 0, saida0 = pm.ressarcimento || 0;
+        var transp0 = pm.saldoCredor != null ? pm.saldoCredor : ini0 + ap + dev - comp0 - saida0;
+        var sd0 = saidaDe(T, kk);
+        res.push({ k: kk, ini: ini0, aprop: ap + dev, comp: comp0, fim: transp0 + saida0, saida: saida0, transp: transp0, destino: sd0.destino, ped: sd0.ped, intc: sd0.intc, dev: dev });
+      }
+      return res;
+    }
     var all = rfsDo(T), out = [], ini = 0;
     for (var k = '2026-01'; k <= R.ref; k = perAdd(k, 1)) {
       var aprop = 0, comp = 0;
