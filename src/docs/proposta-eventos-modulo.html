@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta — Módulo de Eventos Fiscais · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+
+.imp { display:inline-block; font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; border-radius:3px; padding:1px 6px; white-space:nowrap; }
+.imp.c { color: var(--red); background: var(--red-d); }
+.imp.n { color: var(--purple, #6B3FA0); background: rgba(107,63,160,.12); }
+.imp.r { color: var(--teal); background: var(--teal-d); }
+.imp.s { color: var(--txt3); background: var(--sur2); }
+.big { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin:14px 0; }
+.big > div { border:1px solid var(--brd); border-radius:10px; padding:12px 14px; background:var(--sur); }
+.big .n { font-size:26px; font-weight:800; color:var(--txt1); font-family:'JetBrains Mono',monospace; line-height:1.1; }
+.big .l { font-size:12px; color:var(--txt2); margin-top:4px; }
+.bar { display:flex; align-items:center; gap:8px; }
+.bar i { display:block; height:8px; border-radius:4px; background:var(--teal); }
+code { overflow-wrap:anywhere; }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Fiscal → Eventos Fiscais</div>
+<h1>Módulo de Eventos Fiscais — e o degrau que falta no modelo</h1>
+<p class="subtitle">O documento fiscal não é imutável: ele é corrigido, cancelado, devolvido e ajustado por eventos autorizados na SEFAZ. Hoje a aplicação não vê nenhum deles, e o modelo de dados para no registro por tributo — sem a camada de item, oito eventos não têm onde ser aplicados. Esta proposta cria o módulo, desce o degrau do item e lista o que reverbera em cada módulo.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta de módulo</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">21/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Funcionalidades</span>&nbsp;<span class="meta-val">10 novas + 8 reverberações</span></div>
+<div class="meta-pill"><span class="meta-label">Faixa proposta</span>&nbsp;<span class="meta-val">M0</span></div>
+<div class="meta-pill"><span class="meta-label">Decisões</span>&nbsp;<span class="meta-val">7</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn card-status-chip">Aguardando aprovação</span>&nbsp;<span class="chip warn">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Resumo</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> O papel do SplitHub</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> O degrau que falta: o item</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> O módulo, funcionalidade a funcionalidade</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> O que reverbera em cada módulo</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Conciliação em três pontas</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Impacto na priorização</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Riscos</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Decisões para aprovar</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Histórico de versões</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Resumo</span></div>
+<p>A aplicação trata o documento fiscal como um fato único e definitivo. Não é: depois de autorizado, o documento recebe <strong>eventos</strong> — cancelamento, carta de correção, devolução, ajuste — que mudam valor, base, destinação e até a existência do crédito. Enquanto o produto não os enxerga, ele apura sobre uma foto vencida.</p>
+<div class="big">
+<div><div class="n">10</div><div class="l">funcionalidades do módulo novo</div></div>
+<div><div class="n">8</div><div class="l">reverberações em módulos existentes</div></div>
+<div><div class="n">1</div><div class="l">camada nova no modelo: o item</div></div>
+<div><div class="n">M0</div><div class="l">faixa proposta para todas</div></div>
+</div>
+<div class="callout warn"><div class="ct">Por que M0</div><p>Sem evento, a apuração da competência pode estar errada e ninguém percebe: o documento mudou no Fisco e não mudou aqui. Isso ataca direto a tese do produto — garantir a apropriação do crédito. Não é refinamento; é condição para o número ser confiável.</p></div>
+<p>Esta proposta detalha o <strong>módulo</strong>. A análise de regime, códigos, prazos e a esteira completa está na <a class="xref" href="proposta-eventos-impacto.html">proposta de impacto dos eventos fiscais</a>, que continua valendo — esta aqui é a parte de produto.</p>
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O papel do SplitHub</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>#</th><th>Quem</th><th>O quê</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>ERP do cliente</td><td>emite o evento para a SEFAZ e trata a rejeição — já tem certificado, fila e responsabilidade</td></tr>
+<tr><td>2</td><td><strong>SplitHub</strong></td><td>importa pelo DW o evento já autorizado</td></tr>
+<tr><td>3</td><td><strong>SplitHub</strong></td><td>aplica o efeito no documento, nos itens e nos registros fiscais</td></tr>
+<tr><td>4</td><td><strong>SplitHub</strong></td><td>concilia com a apuração assistida, fechando o ciclo entre o que o ERP declarou e o que o Fisco apurou</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">O produto não emite — e por isso ganha um dever</div><p>A emissão fica com o ERP. Em troca, o SplitHub precisa saber apontar <strong>o evento que deveria ter sido emitido e não foi</strong>: divergência sem evento correspondente é ocorrência, com prazo e responsável.</p></div>
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">O degrau que falta: o item</span></div>
+<p>Hoje o modelo vai do <strong>documento</strong> direto ao <strong>registro por tributo</strong> — um de IBS, um de CBS. Não existe item. E <strong>oito eventos endereçam item específico</strong> (<code>nItem</code>): sem essa camada, o produto só sabe aplicar o efeito no documento inteiro, o que transforma correção parcial em cancelamento total.</p>
+<div class="state-grid">
+<div class="state-row"><span class="state-name sn-blue">hoje</span><span class="state-desc">documento → registro de IBS · registro de CBS</span></div>
+<div class="state-row"><span class="state-name sn-teal">proposto</span><span class="state-desc">documento → <strong>item</strong> → registro de IBS · registro de CBS do item</span></div>
+</div>
+<p>Descer esse degrau é o que permite: aplicar evento parcial; rastrear crédito e débito até o item; recalcular só a parte afetada; e manter o resto do documento apurado como estava.</p>
+<div class="callout warn"><div class="ct">É mudança estrutural, não cosmética</div><p>A camada de item atravessa base, listagens, detalhe do documento, apuração e histórico. É o item mais caro desta proposta — e o que destrava todo o resto.</p></div>
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O módulo, funcionalidade a funcionalidade</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Funcionalidade</th><th>O que faz</th></tr></thead>
+<tbody>
+<tr><td><strong>Captura dos eventos autorizados pelo DW</strong></td><td>o ERP emite para a SEFAZ e o SplitHub importa o que já foi autorizado — observa, aplica e concilia, sem emitir em nome do cliente</td></tr>
+<tr><td><strong>Catálogo dos eventos que afetam IBS e CBS</strong></td><td>quais eventos mudam valor, base, destinação ou existência, e o efeito de cada um sobre crédito e débito</td></tr>
+<tr><td><strong>Efeito aplicado ao documento e aos registros</strong></td><td>cada evento autorizado altera documento e registros: valor, base, situação e, quando for o caso, o próprio direito ao crédito</td></tr>
+<tr><td><strong>Camada de itens do documento</strong></td><td>o degrau novo do modelo — sem item não há como aplicar evento que endereça <code>nItem</code></td></tr>
+<tr><td><strong>Evento por item, com efeito parcial</strong></td><td>o efeito recai sobre o item e sobe para o documento como alteração parcial, não como cancelamento inteiro</td></tr>
+<tr><td><strong>Recálculo do crédito e do débito</strong></td><td>aplicado o evento, o valor apropriável e o débito apurado são recalculados, e o que já foi usado é revisto</td></tr>
+<tr><td><strong>Conciliação do evento com a apuração assistida</strong></td><td>confronto entre o que o ERP declarou e o que o Fisco apurou, documento a documento</td></tr>
+<tr><td><strong>Evento que deveria existir e não foi emitido</strong></td><td>a ausência vira ocorrência — é o dever que nasce de não emitir</td></tr>
+<tr><td><strong>Efeito separado por órgão</strong></td><td>o mesmo evento pode ser reconhecido pela Receita Federal na CBS e não pelo Comitê Gestor no IBS; os dois lados são tratados em separado</td></tr>
+<tr><td><strong>Trilha do evento no histórico</strong></td><td>cada evento capturado, aplicado ou recusado deixa registro com data, tipo, protocolo e efeito — no documento e nos registros</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O que reverbera em cada módulo</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Módulo</th><th>O que entra</th><th>Por quê</th></tr></thead>
+<tbody>
+<tr><td><strong>Ingestão de DFs</strong></td><td>recepção de eventos junto do documento</td><td>a esteira de entrada deixa de receber só o documento original</td></tr>
+<tr><td><strong>Crédito</strong></td><td>fase <em>apropriável</em> no ciclo</td><td>entre originado e apropriado: o fato gerador constituiu o direito, mas a apropriação ainda depende do recolhimento</td></tr>
+<tr><td><strong>Crédito</strong></td><td>crédito por item</td><td>rastreabilidade até onde o evento atua</td></tr>
+<tr><td><strong>Débito</strong></td><td>débito por item</td><td>evento parcial não pode obrigar a cancelar o documento inteiro</td></tr>
+<tr><td><strong>Apuração</strong></td><td>recálculo da competência afetada</td><td>evento sobre documento de período já apurado obriga a refazer a ordem de uso do crédito</td></tr>
+<tr><td><strong>Conciliação</strong></td><td>conciliação em três pontas</td><td>ERP, Fisco e o confronto entre os dois</td></tr>
+<tr><td><strong>Inconsistências</strong></td><td>divergência entre evento e apuração assistida</td><td>separa evento não emitido, evento não processado e fato que ninguém viu</td></tr>
+<tr><td><strong>Integrações</strong></td><td>contexto de eventos fiscais na API</td><td>escopo e credencial próprios para a captura</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Conciliação em três pontas</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Fonte</th><th>O que diz</th><th>Quando chega</th></tr></thead>
+<tbody>
+<tr><td><strong>ERP, via eventos</strong></td><td>o que a empresa declarou ter acontecido com cada documento</td><td>continuamente, conforme os eventos são autorizados</td></tr>
+<tr><td><strong>Apuração assistida</strong></td><td>o que o Fisco apurou a partir do que enxerga</td><td>até o dia 15 do mês seguinte</td></tr>
+<tr><td><strong>SplitHub</strong></td><td>o confronto entre as duas, documento a documento</td><td>depois da segunda — a conciliação é posterior por definição</td></tr>
+</tbody></table></div>
+<p>Divergência entre elas tem três causas, e distingui-las é o trabalho do módulo: <strong>evento que o ERP não emitiu</strong>, <strong>evento que o Fisco não processou</strong>, ou <strong>fato que nenhum dos dois viu</strong>. Cada uma pede ação diferente — e hoje as três aparecem como o mesmo silêncio.</p>
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Impacto na priorização</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Leitura</th><th class="num">Hoje</th><th class="num">Com a proposta</th></tr></thead>
+<tbody>
+<tr><td>Funcionalidades no inventário</td><td class="num">225</td><td class="num">243</td></tr>
+<tr><td>Itens em M0</td><td class="num">113</td><td class="num">131</td></tr>
+<tr><td>Módulos no mapa</td><td class="num">21</td><td class="num">22</td></tr>
+</tbody></table></div>
+<p>As 18 entram em <strong>M0</strong>, conforme decidido: sem evento, o número apurado não é confiável, e confiabilidade do número é o produto. Isso contraria a orientação anterior de manter o M0 intocado — por isso a decisão <strong>D-EV-06</strong> existe e precisa ser explícita.</p>
+<div class="callout info"><div class="ct">Relação com a priorização enxuta</div><p>Na <a class="xref" href="proposta-priorizacao-enxuta.html">proposta de priorização enxuta</a>, a captura de eventos, a camada de item e a conciliação em três pontas entram no núcleo: sem elas o ciclo do crédito se apoia numa foto que pode ter mudado.</p></div>
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Riscos</span></div>
+<ul class="plain">
+<li><strong>A camada de item é estrutural.</strong> Atravessa base, listagens, detalhe, apuração e histórico. É o maior custo da proposta e não tem meio-termo: ou existe, ou os oito eventos por item continuam sem endereço.</li>
+<li><strong>Recálculo retroativo.</strong> Evento sobre competência já apurada obriga a refazer a apuração daquele período — e a decidir o que fazer com crédito já compensado que deixou de existir.</li>
+<li><strong>Dependência do DW.</strong> A captura depende de disponibilidade e latência de terceiro; enquanto o evento não chega, a aplicação apura sobre dado antigo sem saber.</li>
+<li><strong>Silêncio ambíguo.</strong> Distinguir "o ERP não emitiu" de "o Fisco não processou" exige as duas fontes e uma janela de tolerância — e errar isso gera ocorrência falsa.</li>
+</ul>
+</div>
+
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Decisões para aprovar</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Decisão</th><th>Sugestão</th></tr></thead>
+<tbody>
+<tr><td class="rid">D-EV-01</td><td>Eventos fiscais viram módulo próprio ou entram dentro de Conciliação?</td><td>Módulo próprio — tem esteira, catálogo e trilha que não cabem na Conciliação</td></tr>
+<tr><td class="rid">D-EV-02</td><td>A camada de item entra junto ou depois?</td><td>Junto — sem item, oito eventos ficam sem endereço e o módulo nasce capenga</td></tr>
+<tr><td class="rid">D-EV-03</td><td>O SplitHub chega a emitir evento algum dia?</td><td>Não nesta fase: observar, aplicar e conciliar, sem responsabilidade jurídica de declaração</td></tr>
+<tr><td class="rid">D-EV-04</td><td>Evento sobre competência encerrada reabre a apuração?</td><td>Sim, com registro do motivo — e a diferença aparece na competência corrente</td></tr>
+<tr><td class="rid">D-EV-05</td><td>Qual a janela de tolerância antes de acusar evento ausente?</td><td>Alinhar com a conciliação da apuração assistida, hoje em 30 dias</td></tr>
+<tr><td class="rid">D-EV-06</td><td>As 18 funcionalidades entram em M0, mesmo com a orientação de não mexer no M0?</td><td>Sim — é a única exceção proposta, porque afeta a confiabilidade do número apurado</td></tr>
+<tr><td class="rid">D-EV-07</td><td>Crédito já compensado que o evento anula: como tratar?</td><td>Estornar na competência corrente, com trilha ligando ao evento que originou o estorno</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><span class="ver-num">v1.0</span><span class="ver-desc">21/09/2026 — proposta inicial do módulo: captura pelo DW, catálogo de eventos, camada de item, efeito parcial, recálculo, conciliação em três pontas, evento ausente, efeito separado por órgão e trilha; mais oito reverberações nos módulos existentes, impacto na priorização e 7 decisões.</span></div>
+</div>
+
+</div>
+</body>
+</html>
