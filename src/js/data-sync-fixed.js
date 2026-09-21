@@ -515,6 +515,7 @@ function bdg(status) {
     // ── Saída ──
     'extinto':       'Extinto',
     'nao_extinto':   'Não Extinto',
+    'parcial':       'Parcialmente Extinto',
     // ── Pagamentos ──
     'confirmado':    'Confirmado',
     'aguardando':    'Aguardando',
@@ -8244,7 +8245,9 @@ document.addEventListener('DOMContentLoaded', function() {
         inconsistencia: { label: 'Inconsistência', rgb: '220,38,38' },
         vencido:        { label: 'Vencido',         rgb: '220,38,38' },
         em_risco:       { label: 'Em risco',         rgb: '186,117,23' },
-        a_prescrever:   { label: 'A Prescrever',     rgb: '251,146,60' }
+        a_prescrever:   { label: 'A Prescrever',     rgb: '251,146,60' },
+        retido:         { label: 'Retido',            rgb: '37,99,235' },
+        em_contencioso: { label: 'Em contencioso',    rgb: '186,117,23' }
       };
       return flags.map(function(f) {
         var c = cfg[f] || { label: f, rgb: '156,163,175' };
@@ -8259,6 +8262,8 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window._enriquecerNFsSaida(); } catch(e) { console.error('[data-sync-fixed] Erro _enriquecerNFsSaida:', e); }
       // Ressarcimento: intenções, pedidos e pagamentos aplicados aos RFs antes de
       // qualquer indicador — só o pagamento muda o statusCredito (js/ressarcimento.js)
+      // Ciclo e flag do débito são eixos separados (proposta-status-debito)
+      try { window.shStatusDebito && window.shStatusDebito.normalizar(); } catch(e) { console.error('[status-debito]', e); }
       // A glosa nega o crédito antes de tudo: crédito glosado não entra no
       // pool de compensação nem no ressarcimento
       try { window.shGlosa && window.shGlosa.aplicarNaBase && window.shGlosa.aplicarNaBase(); } catch(e) { console.error('[glosa]', e); }
@@ -8290,6 +8295,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window.injetarFiltrosCreditos(); window.renderizarTabelaCreditos(); } catch(e) {}
       try { window.injetarFiltrosPagamentos(); window.renderizarTabelaPagamentos(); } catch(e) {}
       try { window._sincronizarInconsistencias(); } catch(e) {}
+      try { window.shStatusDebito && window.shStatusDebito.flagsDeInconsistencia(); } catch(e) {}
       try { window.renderizarRFsInconsistencias(); } catch(e) {}
       try { window.renderizarTop5Inconsistencias(); } catch(e) {}
       try { window.renderizarTop10Empresas(); } catch(e) {}

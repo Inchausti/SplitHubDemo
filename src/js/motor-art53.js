@@ -99,10 +99,13 @@
             var per = (op.periodo === 'apropriacao' && rf.dataApropriacao ? String(rf.dataApropriacao) : String(rf.data || nf.data)).slice(0, 7);
             creds.push({ rf: rf, nf: nf, per: per, ord: String(rf.dataApropriacao || rf.data || '') + rf.id, saldo: rf.valor || 0 });
           } else {
-            var st = rf.status;
-            var cobre = st === 'nao_extinto' || (st === 'extinto' && rf.metodoExtincao === 'Compensacao') || (op.vencidos === 'compensar' && st === 'vencido');
+            // D-DB-01 e D-DB-02: o vencido entra na fila e tem prioridade;
+            // o retido por inconsistencia fica fora ate a regularizacao.
+            var SD = window.shStatusDebito;
+            var st = rf.status, venc = !!(SD && SD.tem(rf, 'vencido')), retido = !!(SD && SD.tem(rf, 'retido'));
+            var cobre = !retido && (st === 'nao_extinto' || st === 'parcial' || (st === 'extinto' && rf.metodoExtincao === 'Compensacao'));
             if (!cobre) return;
-            debs.push({ rf: rf, nf: nf, per: String(nf.data || rf.data).slice(0, 7), ord: String(nf.data || '') + rf.id, falta: rf.valor || 0, orig: st });
+            debs.push({ rf: rf, nf: nf, per: String(nf.data || rf.data).slice(0, 7), ord: String(nf.data || '') + rf.id, falta: rf.valor || 0, orig: venc ? 'vencido' : st, venc: venc });
           }
         });
       });
@@ -119,6 +122,8 @@
         var dev = 0;
         pool.forEach(function (c) { if (c.volta === k) { c.saldo = c.rf.valor || 0; dev += c.saldo; c.res = null; c.volta = null; c.voltou = true; c.rf._disponivelDesde = k; } });
         debs.forEach(function (d) { if (d.per === k) fila.push(d); });
+        // art. 53, 1o: o saldo a recolher vencido vem antes dos debitos do periodo
+        fila.sort(function (a, b) { return (b.venc ? 1 : 0) - (a.venc ? 1 : 0); });
         var comp = 0;
         for (var i = 0; i < fila.length; i++) {
           var d = fila[i];
@@ -178,17 +183,21 @@
         else { c.rf.statusCredito = 'apropriado'; c.rf.status = 'apropriado'; c.rf.metodoExtincao = null; c.rf.dataExtincaoCredito = null; if (usado > 0.005) c.rf._parcial = true; }
       });
       debs.forEach(function (d) {
-        var usado = (d.rf.valor || 0) - d.falta;
+        var usado = (d.rf.valor || 0) - d.falta, SD = window.shStatusDebito;
         d.rf._valorCompensado = usado;
-        if (d.falta <= 0.005) { d.rf.status = 'extinto'; d.rf.metodoExtincao = 'Compensacao'; d.rf.dataExtincao = br(fimMes(d.fim)) + ' 18:00'; }
-        else { d.rf.status = d.orig === 'vencido' ? 'vencido' : 'nao_extinto'; d.rf.metodoExtincao = null; d.rf.dataExtincao = '—'; if (usado > 0.005) d.rf._parcial = true; }
+        var quitado = d.falta <= 0.005;
+        if (quitado) { d.rf.metodoExtincao = 'Compensacao'; d.rf.dataExtincao = br(fimMes(d.fim)) + ' 18:00'; }
+        else { d.rf.metodoExtincao = null; d.rf.dataExtincao = '—'; if (usado > 0.005) d.rf._parcial = true; }
+        if (SD && SD.aplicarCiclo) SD.aplicarCiclo(d.rf, quitado, usado > 0.005);
+        else d.rf.status = quitado ? 'extinto' : 'nao_extinto';
       });
     });
     // débitos de cenário preservados (vencido/inconsistência) em mês com crédito sobrando
     L.forEach(function (nf) {
       if (nf.tipo !== 'saida') return;
       (nf.registrosFiscais || []).forEach(function (rf) {
-        if (rf.status !== 'vencido' && rf.status !== 'inconsistencia') return;
+        var SD2 = window.shStatusDebito;
+        if (!(SD2 && (SD2.tem(rf, 'retido') || SD2.tem(rf, 'vencido')))) return;
         var pm = porMes[T_(rf) + '|' + String(nf.data).slice(0, 7)];
         if (pm && pm.saldoCredor > 0.005) cenarioComCredito++;
       });
@@ -543,11 +552,7 @@
     Object.keys(V.porMes).forEach(function (k) {
       var p = V.porMes[k]; if (tribs.indexOf(p.tributo) < 0) return;
       var x = slot(p.mes);
-      x.comp += p.compensado; x.guia += p.aRecolher; x.venc += p.vencidoAberto;
-      x.saldo += p.saldoCredor; x.ress += p.ressarcimento; x.dev += p.devolvido;
-      // o débito que depende de crédito: o que foi compensado mais o que sobrou
-      // de guia. Split e RAD extinguem com dinheiro e nunca disputam crédito.
-      x.debCred += p.compensado + p.aRecolher;
+      x.venc += p.vencidoAberto; x.saldo += p.saldoCredor; x.ress += p.ressarcimento; x.dev += p.devolvido;
     });
     (window.nfListaFiltradaGlobal || []).forEach(function (nf) {
       var mEmi = String(nf.data || '').slice(0, 7); if (!mEmi) return;
@@ -559,11 +564,19 @@
           var st = sc(rf); if (st !== 'apropriado' && st !== 'utilizado') return;
           slot(String(rf.dataApropriacao || nf.data).slice(0, 7)).cred += v;
         } else {
-          var x = slot(mEmi); x.deb += v;
-          if (rf.status === 'extinto' && rf.metodoExtincao === 'Split Payment') x.split += v;
-          else if (rf.status === 'extinto' && rf.metodoExtincao === 'RAD') x.rad += v;
-          // cenário preservado: vencido e inconsistência ficam fora do motor
-          else if (rf.status === 'vencido' || rf.status === 'inconsistencia') x.aberto += v;
+          // contas pelo lado do débito, no mês em que ele foi emitido: o que
+          // saiu em dinheiro, o que o crédito abateu, o que virou guia e o que
+          // segue em aberto (vencido sem cobertura ou retido por inconsistência)
+          var x = slot(mEmi), SD3 = window.shStatusDebito, comp = rf._valorCompensado || 0;
+          var resto = Math.max(0, v - comp);
+          x.deb += v;
+          if (rf.metodoExtincao === 'Split Payment') { x.split += v; }
+          else if (rf.metodoExtincao === 'RAD') { x.rad += v; }
+          else {
+            x.comp += comp; x.debCred += v;
+            var aberto = SD3 && (SD3.tem(rf, 'retido') || SD3.tem(rf, 'vencido'));
+            if (aberto) x.aberto += resto; else x.guia += resto;
+          }
         }
       });
     });
