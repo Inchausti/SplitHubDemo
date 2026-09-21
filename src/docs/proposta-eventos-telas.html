@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta visual — Eventos fiscais nas telas · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+
+.imp { display:inline-block; font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; border-radius:3px; padding:1px 6px; white-space:nowrap; }
+.imp.c { color: var(--red); background: var(--red-d); }
+.imp.n { color: var(--purple, #6B3FA0); background: rgba(107,63,160,.12); }
+.imp.r { color: var(--teal); background: var(--teal-d); }
+.imp.s { color: var(--txt3); background: var(--sur2); }
+.big { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin:14px 0; }
+.big > div { border:1px solid var(--brd); border-radius:10px; padding:12px 14px; background:var(--sur); }
+.big .n { font-size:26px; font-weight:800; color:var(--txt1); font-family:'JetBrains Mono',monospace; line-height:1.1; }
+.big .l { font-size:12px; color:var(--txt2); margin-top:4px; }
+.bar { display:flex; align-items:center; gap:8px; }
+.bar i { display:block; height:8px; border-radius:4px; background:var(--teal); }
+code { overflow-wrap:anywhere; }
+</style>
+</head>
+
+<style>
+/* ── maquetes de tela ─────────────────────────────────────────────── */
+.mk { border: 1px solid var(--brd); border-radius: 10px; background: var(--sur); overflow: hidden; margin: 14px 0 22px; }
+.mk-bar { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.mk-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.mk-path { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); }
+.mk-body { padding: 14px 16px; }
+.mk-h { font-size: 15px; font-weight: 700; color: var(--txt1); margin-bottom: 2px; }
+.mk-sub { font-size: 11.5px; color: var(--txt3); margin-bottom: 12px; }
+.mk-tabs { display: flex; gap: 14px; border-bottom: 1px solid var(--brd); margin-bottom: 12px; flex-wrap: wrap; }
+.mk-tab { font-size: 11.5px; font-weight: 600; color: var(--txt3); padding-bottom: 7px; white-space: nowrap; }
+.mk-tab.on { color: var(--teal); border-bottom: 2px solid var(--teal); }
+.mk-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(126px, 1fr)); gap: 9px; margin-bottom: 13px; }
+.mk-k { border: 1px solid var(--brd); border-radius: 7px; padding: 9px 11px; background: var(--bg); }
+.mk-k .l { font-size: 9.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--txt3); }
+.mk-k .v { font-size: 17px; font-weight: 800; color: var(--txt1); font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
+.mk-k .s { font-size: 10px; color: var(--txt3); margin-top: 2px; line-height: 1.35; }
+.mk-tbl { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.mk-tbl th { text-align: left; font-size: 9.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--txt3); padding: 7px 9px; border-bottom: 1px solid var(--brd); white-space: nowrap; }
+.mk-tbl td { padding: 7px 9px; border-bottom: 1px solid var(--brd); color: var(--txt2); white-space: nowrap; }
+.mk-tbl tr:last-child td { border-bottom: none; }
+.mk-tbl .mono { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; }
+.mk-tbl .r { text-align: right; }
+.mk-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--brd); border-radius: 7px; }
+.bdg { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .04em; padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
+.bdg.ok { background: var(--green-d); color: var(--green); }
+.bdg.warn { background: var(--amber-d); color: var(--amber); }
+.bdg.red { background: var(--red-d); color: var(--red); }
+.bdg.blue { background: var(--blue-d); color: var(--blue); }
+.bdg.roxo { background: var(--purple-d); color: var(--purple); }
+.bdg.cinza { background: var(--sur3); color: var(--txt3); }
+.novo { position: relative; border: 1.5px dashed var(--purple); border-radius: 8px; padding: 10px 11px 11px; margin: 11px 0; background: color-mix(in srgb, var(--purple) 4%, transparent); }
+.novo::before { content: "novo"; position: absolute; top: -9px; left: 11px; background: var(--purple); color: #fff; font-size: 9px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; padding: 1px 7px; border-radius: 3px; }
+.muda { position: relative; border: 1.5px dashed var(--amber); border-radius: 8px; padding: 10px 11px 11px; margin: 11px 0; background: color-mix(in srgb, var(--amber) 4%, transparent); }
+.muda::before { content: "muda"; position: absolute; top: -9px; left: 11px; background: var(--amber); color: #fff; font-size: 9px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; padding: 1px 7px; border-radius: 3px; }
+.leg { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin: 10px 0 18px; font-size: 11.5px; color: var(--txt2); }
+.leg i { display: inline-block; width: 13px; height: 13px; border-radius: 3px; border: 1.5px dashed; vertical-align: -2px; margin-right: 5px; }
+.arv { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt2); line-height: 1.85; background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+</style>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Eventos Fiscais → Telas</div>
+<h1>Eventos fiscais nas telas — o que muda e o que nasce</h1>
+<p class="subtitle">A proposta do módulo diz o que precisa existir. Esta aqui mostra onde isso aparece: uma tela nova, o detalhe do documento ganhando o degrau do item, e sete telas existentes que passam a conviver com o evento. Cada bloco marca o que é construção nova e o que é alteração.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta visual</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">21/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Telas novas</span>&nbsp;<span class="meta-val">2</span></div>
+<div class="meta-pill"><span class="meta-label">Telas alteradas</span>&nbsp;<span class="meta-val">7</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn card-status-chip">Aguardando aprovação</span>&nbsp;<span class="chip warn">v1.0</span></div>
+</div>
+
+<div class="leg">
+<span><i style="border-color:var(--purple)"></i> construção nova</span>
+<span><i style="border-color:var(--amber)"></i> alteração em tela existente</span>
+<span style="color:var(--txt3)">As maquetes são esquemáticas: mostram estrutura e conteúdo, não o acabamento final.</span>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Mapa das telas</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Tela nova · Eventos Fiscais</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Tela nova · Detalhe do evento</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> O degrau do item no documento</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Crédito — a fase apropriável</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Débito — item e efeito parcial</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Apuração — competência a recalcular</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Conciliação — três pontas</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Inconsistências e Integrações</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> O que é construir e o que é ajustar</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Decisões visuais</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Mapa das telas</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Tela</th><th>O que acontece</th><th>Esforço</th></tr></thead>
+<tbody>
+<tr><td><strong>Eventos Fiscais</strong> · listagem</td><td><span class="bdg roxo">nova</span> esteira dos eventos capturados, com efeito e estado da conciliação</td><td>alto</td></tr>
+<tr><td><strong>Detalhe do evento</strong></td><td><span class="bdg roxo">nova</span> o que o evento diz, o que ele muda e em que itens</td><td>médio</td></tr>
+<tr><td><strong>Detalhe do documento</strong></td><td><span class="bdg warn">muda</span> ganha a aba de itens e a linha do tempo dos eventos</td><td>alto</td></tr>
+<tr><td><strong>Crédito</strong></td><td><span class="bdg warn">muda</span> fase <em>apropriável</em> no ciclo e crédito por item</td><td>médio</td></tr>
+<tr><td><strong>Débito</strong></td><td><span class="bdg warn">muda</span> débito por item e efeito parcial do evento</td><td>médio</td></tr>
+<tr><td><strong>Apuração</strong></td><td><span class="bdg warn">muda</span> aviso de competência a recalcular e ação de refazer</td><td>médio</td></tr>
+<tr><td><strong>Conciliação</strong></td><td><span class="bdg warn">muda</span> terceira ponta: o que o ERP declarou por evento</td><td>médio</td></tr>
+<tr><td><strong>Inconsistências</strong></td><td><span class="bdg warn">muda</span> três tipos novos na fila</td><td>baixo</td></tr>
+<tr><td><strong>Integrações</strong></td><td><span class="bdg warn">muda</span> contexto de eventos no catálogo da API</td><td>baixo</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Tela nova · Eventos Fiscais</span></div>
+<p>A esteira. Um evento por linha, com o documento que ele atinge, o efeito que produziu e o estado da conciliação com o Fisco. É aqui que se vê que o ERP declarou algo que o Fisco ainda não reconheceu.</p>
+<div class="novo">
+<div class="mk">
+<div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-path">#/eventos-fiscais</span></div>
+<div class="mk-body">
+<div class="mk-h">Eventos Fiscais</div>
+<div class="mk-sub">Eventos autorizados na SEFAZ, importados pelo DW · competência ago/2026</div>
+<div class="mk-tabs"><span class="mk-tab on">Esteira</span><span class="mk-tab">Por documento</span><span class="mk-tab">Pendências</span></div>
+<div class="mk-kpis">
+  <div class="mk-k"><div class="l">Capturados</div><div class="v">312</div><div class="s">no período</div></div>
+  <div class="mk-k"><div class="l">Aplicados</div><div class="v">298</div><div class="s">efeito no documento</div></div>
+  <div class="mk-k"><div class="l">Conciliados</div><div class="v">271</div><div class="s">confirmados pelo Fisco</div></div>
+  <div class="mk-k"><div class="l">Divergentes</div><div class="v" style="color:var(--red)">27</div><div class="s">ERP declarou, Fisco não</div></div>
+  <div class="mk-k"><div class="l">Ausentes</div><div class="v" style="color:var(--amber)">9</div><div class="s">deveria existir e não veio</div></div>
+</div>
+<div class="mk-wrap"><table class="mk-tbl">
+<thead><tr><th>Evento</th><th>Tipo</th><th>Documento</th><th>Item</th><th class="r">Efeito</th><th>Tributo</th><th>Autorizado</th><th>Conciliação</th></tr></thead>
+<tbody>
+<tr><td class="mono">EV-000412</td><td>Cancelamento</td><td class="mono">NF-e 000188</td><td class="mono">—</td><td class="r mono">−R$ 412.900</td><td>IBS·CBS</td><td>14/08 09:12</td><td><span class="bdg ok">Conciliado</span></td></tr>
+<tr><td class="mono">EV-000415</td><td>Devolução parcial</td><td class="mono">NF-e 000191</td><td class="mono">3 de 8</td><td class="r mono">−R$ 38.410</td><td>IBS·CBS</td><td>15/08 16:40</td><td><span class="bdg ok">Conciliado</span></td></tr>
+<tr><td class="mono">EV-000418</td><td>Carta de correção</td><td class="mono">CT-e 000142</td><td class="mono">1 de 2</td><td class="r mono">R$ 0</td><td>CBS</td><td>18/08 11:05</td><td><span class="bdg warn">Aguardando Fisco</span></td></tr>
+<tr><td class="mono">EV-000423</td><td>Ajuste de base</td><td class="mono">NFS-e 000203</td><td class="mono">2 de 2</td><td class="r mono">−R$ 9.120</td><td>IBS</td><td>19/08 08:31</td><td><span class="bdg red">Divergente</span></td></tr>
+<tr><td class="mono">—</td><td>Cancelamento</td><td class="mono">NF-e 000205</td><td class="mono">—</td><td class="r mono">?</td><td>IBS·CBS</td><td>—</td><td><span class="bdg red">Ausente</span></td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+<p>A última linha é o caso que só existe porque o produto <strong>não emite</strong>: o Fisco apurou algo que nenhum evento do ERP explica. O evento que deveria existir aparece como linha sem identificador, marcada <span class="bdg red">Ausente</span>, e abre ocorrência na fila.</p>
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Tela nova · Detalhe do evento</span></div>
+<p>O que o evento diz, o que ele mudou e onde. Sempre com as duas leituras — a do ERP e a do Fisco — lado a lado.</p>
+<div class="novo">
+<div class="mk">
+<div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-path">modal · evento EV-000415</span></div>
+<div class="mk-body">
+<div class="mk-h">Devolução parcial · EV-000415</div>
+<div class="mk-sub">NF-e 000191 · Transcarro S.A. · autorizado em 15/08/2026 16:40 · protocolo 135260000418922</div>
+<div class="mk-kpis">
+  <div class="mk-k"><div class="l">Efeito no IBS</div><div class="v" style="color:var(--red)">−R$ 21.340</div><div class="s">Comitê Gestor · conciliado</div></div>
+  <div class="mk-k"><div class="l">Efeito na CBS</div><div class="v" style="color:var(--red)">−R$ 17.070</div><div class="s">Receita Federal · conciliado</div></div>
+  <div class="mk-k"><div class="l">Itens atingidos</div><div class="v">3 de 8</div><div class="s">efeito parcial</div></div>
+  <div class="mk-k"><div class="l">Competência</div><div class="v">ago/2026</div><div class="s">já apurada · recalcular</div></div>
+</div>
+<div class="mk-wrap"><table class="mk-tbl">
+<thead><tr><th>Item</th><th>Descrição</th><th class="r">Antes</th><th class="r">Depois</th><th class="r">Crédito IBS</th><th class="r">Crédito CBS</th><th>Situação</th></tr></thead>
+<tbody>
+<tr><td class="mono">3</td><td>Válvula industrial 2"</td><td class="r mono">R$ 84.200</td><td class="r mono">R$ 0</td><td class="r mono">−R$ 8.420</td><td class="r mono">−R$ 6.736</td><td><span class="bdg red">Devolvido</span></td></tr>
+<tr><td class="mono">5</td><td>Conjunto de vedação</td><td class="r mono">R$ 71.500</td><td class="r mono">R$ 0</td><td class="r mono">−R$ 7.150</td><td class="r mono">−R$ 5.720</td><td><span class="bdg red">Devolvido</span></td></tr>
+<tr><td class="mono">7</td><td>Serviço de instalação</td><td class="r mono">R$ 57.700</td><td class="r mono">R$ 0</td><td class="r mono">−R$ 5.770</td><td class="r mono">−R$ 4.614</td><td><span class="bdg red">Devolvido</span></td></tr>
+<tr><td class="mono">1,2,4,6,8</td><td>Demais itens</td><td class="r mono">R$ 512.300</td><td class="r mono">R$ 512.300</td><td class="r mono">—</td><td class="r mono">—</td><td><span class="bdg ok">Intactos</span></td></tr>
+</tbody></table></div>
+<div style="margin-top:11px;font-size:11.5px;color:var(--txt2)"><strong>Trilha:</strong> capturado 15/08 16:52 → aplicado ao documento 15/08 16:53 → crédito recalculado 15/08 16:53 → conciliado com a apuração assistida 16/09 08:30</div>
+</div></div>
+</div>
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O degrau do item no documento</span></div>
+<p>Hoje o detalhe do documento mostra os dois registros fiscais e nada entre eles. Com o item, o documento passa a ter três níveis — e é isso que permite ao evento atingir parte dele.</p>
+<div class="arv">documento fiscal
+├── <strong style="color:var(--purple)">item 1</strong> ── registro IBS · registro CBS
+├── <strong style="color:var(--purple)">item 2</strong> ── registro IBS · registro CBS
+└── <strong style="color:var(--purple)">item n</strong> ── registro IBS · registro CBS</div>
+<div class="muda">
+<div class="mk">
+<div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-path">modal · NF-e 000191</span></div>
+<div class="mk-body">
+<div class="mk-h">NF-e 000191 · Transcarro S.A.</div>
+<div class="mk-sub">Entrada · 12/08/2026 · R$ 725.700 · 8 itens · 2 eventos aplicados</div>
+<div class="mk-tabs"><span class="mk-tab">Documento</span><span class="mk-tab on" style="color:var(--purple);border-color:var(--purple)">Itens</span><span class="mk-tab">Registros fiscais</span><span class="mk-tab" style="color:var(--purple)">Eventos</span><span class="mk-tab">Histórico</span></div>
+<div class="mk-wrap"><table class="mk-tbl">
+<thead><tr><th>#</th><th>Descrição</th><th class="r">Valor</th><th class="r">IBS</th><th class="r">CBS</th><th>Crédito</th><th>Evento</th></tr></thead>
+<tbody>
+<tr><td class="mono">1</td><td>Bomba centrífuga 5cv</td><td class="r mono">R$ 186.400</td><td class="r mono">18.640</td><td class="r mono">14.912</td><td><span class="bdg ok">Apropriado</span></td><td class="mono">—</td></tr>
+<tr><td class="mono">2</td><td>Motor trifásico</td><td class="r mono">R$ 142.900</td><td class="r mono">14.290</td><td class="r mono">11.432</td><td><span class="bdg ok">Apropriado</span></td><td class="mono">—</td></tr>
+<tr><td class="mono">3</td><td>Válvula industrial 2"</td><td class="r mono" style="text-decoration:line-through;color:var(--txt3)">R$ 84.200</td><td class="r mono">—</td><td class="r mono">—</td><td><span class="bdg red">Anulado</span></td><td class="mono" style="color:var(--purple)">EV-000415</td></tr>
+<tr><td class="mono">4</td><td>Kit de manutenção</td><td class="r mono">R$ 96.100</td><td class="r mono">9.610</td><td class="r mono">7.688</td><td><span class="bdg warn">Apropriável</span></td><td class="mono">—</td></tr>
+<tr><td class="mono">5</td><td>Conjunto de vedação</td><td class="r mono" style="text-decoration:line-through;color:var(--txt3)">R$ 71.500</td><td class="r mono">—</td><td class="r mono">—</td><td><span class="bdg red">Anulado</span></td><td class="mono" style="color:var(--purple)">EV-000415</td></tr>
+</tbody></table></div>
+<div style="margin-top:10px;font-size:11.5px;color:var(--txt2)">3 itens anulados pelo evento · 5 intactos · crédito do documento recalculado de R$ 72.570 para R$ 51.230</div>
+</div></div>
+</div>
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Crédito — a fase apropriável</span></div>
+<p>O ciclo ganha um estado no meio: <strong>apropriável</strong>. O fato gerador constituiu o direito, mas a apropriação ainda depende do recolhimento. Hoje esse crédito aparece como "não apropriado", junto do que ainda não tem direito nenhum — e são coisas diferentes.</p>
+<div class="muda">
+<div class="mk">
+<div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-path">#/creditos</span></div>
+<div class="mk-body">
+<div class="mk-h">Créditos IBS/CBS</div>
+<div class="mk-kpis">
+  <div class="mk-k"><div class="l">Originado</div><div class="v">R$ 76,3M</div><div class="s">inclui glosados</div></div>
+  <div class="mk-k" style="border-color:var(--purple)"><div class="l" style="color:var(--purple)">Apropriável</div><div class="v">R$ 9,4M</div><div class="s">direito constituído, aguarda recolhimento</div></div>
+  <div class="mk-k"><div class="l">Apropriados</div><div class="v">R$ 60,1M</div><div class="s">78,7% do total</div></div>
+  <div class="mk-k"><div class="l">A apropriar</div><div class="v">R$ 5,5M</div><div class="s">sem fato gerador confirmado</div></div>
+  <div class="mk-k"><div class="l">Glosados</div><div class="v">R$ 1,3M</div><div class="s">3 registros</div></div>
+</div>
+<div class="mk-wrap"><table class="mk-tbl">
+<thead><tr><th>RF</th><th>Documento</th><th style="color:var(--purple)">Item</th><th>Fornecedor</th><th class="r">Crédito</th><th>Status</th><th style="color:var(--purple)">Evento</th></tr></thead>
+<tbody>
+<tr><td class="mono">RF-00000191</td><td class="mono">NF-e 000191</td><td class="mono">1</td><td>Transcarro S.A.</td><td class="r mono">R$ 18.640</td><td><span class="bdg ok">Apropriado</span></td><td class="mono">—</td></tr>
+<tr><td class="mono">RF-00000193</td><td class="mono">NF-e 000191</td><td class="mono">3</td><td>Transcarro S.A.</td><td class="r mono" style="text-decoration:line-through;color:var(--txt3)">R$ 8.420</td><td><span class="bdg red">Anulado</span></td><td class="mono" style="color:var(--purple)">EV-000415</td></tr>
+<tr><td class="mono">RF-00000194</td><td class="mono">NF-e 000191</td><td class="mono">4</td><td>Transcarro S.A.</td><td class="r mono">R$ 9.610</td><td><span class="bdg warn">Apropriável</span></td><td class="mono">—</td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Débito — item e efeito parcial</span></div>
+<p>Mesma lógica do outro lado: o débito passa a ser rastreável por item, e um evento parcial reduz o débito sem cancelar o documento inteiro. O ciclo e as flags, já separados, continuam como estão.</p>
+<div class="muda">
+<div class="mk">
+<div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-path">#/debitos</span></div>
+<div class="mk-body">
+<div class="mk-h">Débitos IBS/CBS</div>
+<div class="mk-wrap"><table class="mk-tbl">
+<thead><tr><th>RF</th><th>Documento</th><th style="color:var(--purple)">Item</th><th class="r">Débito</th><th class="r" style="color:var(--purple)">Ajuste por evento</th><th class="r">Débito atual</th><th>Ciclo</th><th>Flags</th></tr></thead>
+<tbody>
+<tr><td class="mono">RF-00000284</td><td class="mono">NF-e 500077</td><td class="mono">1</td><td class="r mono">R$ 47.740</td><td class="r mono">—</td><td class="r mono">R$ 47.740</td><td><span class="bdg ok">Extinto</span></td><td>—</td></tr>
+<tr><td class="mono">RF-00000285</td><td class="mono">NF-e 500077</td><td class="mono">2</td><td class="r mono">R$ 32.110</td><td class="r mono" style="color:var(--purple)">−R$ 32.110</td><td class="r mono">R$ 0</td><td><span class="bdg cinza">Anulado</span></td><td><span class="bdg roxo">Evento</span></td></tr>
+<tr><td class="mono">RF-00000291</td><td class="mono">CT-e 500084</td><td class="mono">1</td><td class="r mono">R$ 18.900</td><td class="r mono" style="color:var(--purple)">−R$ 4.200</td><td class="r mono">R$ 14.700</td><td><span class="bdg warn">Parcial</span></td><td><span class="bdg roxo">Evento</span></td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Apuração — competência a recalcular</span></div>
+<p>Evento sobre documento de período já apurado obriga a refazer a competência. A tela precisa dizer isso antes de qualquer número ser lido — e oferecer a ação.</p>
+<div class="muda">
+<div class="mk">
+<div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-path">#/apuracao</span></div>
+<div class="mk-body">
+<div class="mk-h">Apuração IBS/CBS</div>
+<div class="mk-sub">Competência ago/2026 · última execução 01/09/2026 10:22</div>
+<div style="border:1px solid var(--amber);background:var(--amber-d);border-radius:8px;padding:10px 13px;margin-bottom:13px;font-size:12px;color:var(--txt2)">
+  <strong style="color:var(--amber)">3 eventos afetam esta competência depois da última apuração.</strong>
+  Efeito estimado: IBS −R$ 21.340 · CBS −R$ 17.070. O saldo credor e a ordem de uso do crédito podem mudar.
+  <span style="display:inline-block;margin-left:8px;border:1px solid var(--amber);border-radius:5px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--amber)">Recalcular competência</span>
+</div>
+<div class="mk-wrap"><table class="mk-tbl">
+<thead><tr><th>Tributo</th><th class="r">Saldo anterior</th><th class="r">Apropriado</th><th class="r">Compensado</th><th class="r">A recolher</th><th class="r">Saldo credor</th><th style="color:var(--purple)">Eventos</th></tr></thead>
+<tbody>
+<tr><td>IBS</td><td class="r mono">R$ 1,02M</td><td class="r mono">R$ 4,01M</td><td class="r mono">R$ 4,49M</td><td class="r mono">R$ 0</td><td class="r mono">R$ 0,53M</td><td><span class="bdg warn">2 a aplicar</span></td></tr>
+<tr><td>CBS</td><td class="r mono">R$ 0,51M</td><td class="r mono">R$ 2,86M</td><td class="r mono">R$ 3,07M</td><td class="r mono">R$ 0</td><td class="r mono">R$ 0,30M</td><td><span class="bdg warn">1 a aplicar</span></td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Conciliação — três pontas</span></div>
+<p>Hoje a tela confronta duas fontes: o que a plataforma tem e o que o Fisco apurou. Com os eventos, entra a terceira — o que o ERP declarou. É a combinação das três que separa "evento não emitido" de "evento não processado".</p>
+<div class="muda">
+<div class="mk">
+<div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-path">#/conciliacao</span></div>
+<div class="mk-body">
+<div class="mk-h">Conciliação · jornada do documento</div>
+<div class="mk-wrap"><table class="mk-tbl">
+<thead><tr><th>Documento</th><th>Plataforma</th><th style="color:var(--purple)">ERP · evento</th><th>Apuração assistida</th><th>Diagnóstico</th></tr></thead>
+<tbody>
+<tr><td class="mono">NF-e 000191</td><td><span class="bdg ok">R$ 725.700</span></td><td><span class="bdg ok">devolução parcial</span></td><td><span class="bdg ok">R$ 512.300</span></td><td><span class="bdg ok">Conciliado</span></td></tr>
+<tr><td class="mono">NFS-e 000203</td><td><span class="bdg ok">R$ 91.200</span></td><td><span class="bdg warn">ajuste de base</span></td><td><span class="bdg red">R$ 91.200</span></td><td><span class="bdg red">Fisco não processou</span></td></tr>
+<tr><td class="mono">NF-e 000205</td><td><span class="bdg ok">R$ 318.000</span></td><td><span class="bdg red">sem evento</span></td><td><span class="bdg warn">R$ 0</span></td><td><span class="bdg red">ERP não emitiu</span></td></tr>
+<tr><td class="mono">CT-e 000142</td><td><span class="bdg ok">R$ 46.900</span></td><td><span class="bdg ok">carta de correção</span></td><td><span class="bdg cinza">aguardando</span></td><td><span class="bdg warn">Dentro do prazo</span></td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+</div>
+
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Inconsistências e Integrações</span></div>
+<div class="muda">
+<div class="mk">
+<div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-path">#/inconsistencias</span></div>
+<div class="mk-body">
+<div class="mk-h">Inconsistências · três tipos novos</div>
+<div class="mk-wrap"><table class="mk-tbl">
+<thead><tr><th>Ocorrência</th><th>Tipo</th><th>Documento</th><th class="r">Valor</th><th>Prioridade</th><th>Prazo</th></tr></thead>
+<tbody>
+<tr><td class="mono">INC-0081</td><td style="color:var(--purple)">Evento não emitido pelo ERP</td><td class="mono">NF-e 000205</td><td class="r mono">R$ 318.000</td><td><span class="bdg red">Crítica</span></td><td>30 dias</td></tr>
+<tr><td class="mono">INC-0082</td><td style="color:var(--purple)">Evento não processado pelo Fisco</td><td class="mono">NFS-e 000203</td><td class="r mono">R$ 9.120</td><td><span class="bdg warn">Alta</span></td><td>30 dias</td></tr>
+<tr><td class="mono">INC-0083</td><td style="color:var(--purple)">Fato sem evento e sem apuração</td><td class="mono">CT-e 000151</td><td class="r mono">R$ 27.400</td><td><span class="bdg warn">Alta</span></td><td>30 dias</td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+<div class="muda">
+<div class="mk">
+<div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-path">#/integracoes</span></div>
+<div class="mk-body">
+<div class="mk-h">Integrações · contexto novo</div>
+<div class="mk-wrap"><table class="mk-tbl">
+<thead><tr><th>Contexto</th><th>Direção</th><th>Escopo</th><th>Estado</th></tr></thead>
+<tbody>
+<tr><td>Documentos fiscais</td><td>entrada</td><td class="mono">df:read df:write</td><td><span class="bdg ok">Ativo</span></td></tr>
+<tr><td style="color:var(--purple)"><strong>Eventos fiscais</strong></td><td>entrada</td><td class="mono">ev:read</td><td><span class="bdg roxo">Novo</span></td></tr>
+<tr><td>Ciclo do crédito</td><td>saída</td><td class="mono">credito:events</td><td><span class="bdg ok">Ativo</span></td></tr>
+<tr><td>Comprovantes</td><td>entrada</td><td class="mono">pag:write</td><td><span class="bdg ok">Ativo</span></td></tr>
+</tbody></table></div>
+</div></div>
+</div>
+</div>
+
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">O que é construir e o que é ajustar</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Construção nova</th><th>Por quê</th></tr></thead>
+<tbody>
+<tr><td>Tela de Eventos Fiscais, com esteira e pendências</td><td>não existe nada equivalente hoje</td></tr>
+<tr><td>Detalhe do evento, com efeito por item</td><td>é onde o usuário entende o que mudou</td></tr>
+<tr><td>Camada de item no modelo e na interface</td><td>o degrau que falta — atravessa base, listagens, detalhe e apuração</td></tr>
+<tr><td>Captura pelo DW e catálogo de eventos</td><td>a esteira de entrada</td></tr>
+<tr><td>Recálculo de competência já apurada</td><td>hoje a apuração não sabe refazer</td></tr>
+</tbody></table></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Ajuste em tela existente</th><th>O que muda</th></tr></thead>
+<tbody>
+<tr><td>Crédito</td><td>KPI e status <em>apropriável</em>, coluna de item e coluna de evento</td></tr>
+<tr><td>Débito</td><td>coluna de item, ajuste por evento e débito atual</td></tr>
+<tr><td>Apuração</td><td>faixa de aviso, coluna de eventos por tributo e ação de recalcular</td></tr>
+<tr><td>Conciliação</td><td>coluna do ERP e diagnóstico das três causas</td></tr>
+<tr><td>Inconsistências</td><td>três tipos novos na taxonomia e na fila</td></tr>
+<tr><td>Integrações</td><td>um contexto a mais no catálogo</td></tr>
+<tr><td>Detalhe do documento</td><td>abas de itens e de eventos</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Decisões visuais</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Decisão</th><th>Sugestão</th></tr></thead>
+<tbody>
+<tr><td class="rid">D-EVT-01</td><td>Eventos ganham item próprio no menu ou vivem dentro de Conciliação?</td><td>Item próprio — a esteira é diária e tem pendências que pedem atenção</td></tr>
+<tr><td class="rid">D-EVT-02</td><td>Itens aparecem como aba do documento ou como listagem própria?</td><td>Aba do documento — o item só faz sentido no contexto dele</td></tr>
+<tr><td class="rid">D-EVT-03</td><td>Como marcar item anulado por evento?</td><td>Valor riscado e selo de estado, mantendo a linha visível — apagar esconde a história</td></tr>
+<tr><td class="rid">D-EVT-04</td><td><em>Apropriável</em> vira KPI próprio ou subtítulo do A apropriar?</td><td>KPI próprio: são direitos diferentes e a diferença é o que o usuário precisa ver</td></tr>
+<tr><td class="rid">D-EVT-05</td><td>O recálculo da competência é automático ou pedido?</td><td>Pedido, com aviso permanente — recálculo silencioso muda número sem ninguém saber</td></tr>
+<tr><td class="rid">D-EVT-06</td><td>A coluna de item entra nas listagens de Crédito e Débito por padrão?</td><td>Sim, com opção de ocultar pelo gerenciador de colunas</td></tr>
+</tbody></table></div>
+</div>
+
+</div>
+</body>
+</html>
