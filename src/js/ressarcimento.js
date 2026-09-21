@@ -1115,21 +1115,27 @@
     }
     if (linhas) linhas.forEach(function (r) { soma1(String(r.tipoFiscal || '').toUpperCase(), r.statusCredito, r.metodoExtincao, r.rfId, r.cred || 0); });
     else lista().forEach(function (nf) { if (nf.tipo !== 'entrada') return; (nf.registrosFiscais || []).forEach(function (rf) { soma1((rf.tipoFiscal || '').toUpperCase(), scOf(rf), rf.metodoExtincao, rf.id, rf.valor || 0); }); });
+    // o contador de registros desce para a linha de baixo: ao lado do valor
+    // ele empurrava a métrica e quebrava o alinhamento da grade
+    function rfs(n) { return n ? '<div class="res-muted" style="font-size:10.5px;font-weight:500;margin-top:1px">' + n + ' RF</div>' : ''; }
     function col(T) {
       var o = ag[T];
-      return '<div style="min-width:0"><div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">' + triChip(T) + '<span class="res-muted" style="font-size:11px">' + ORGAO[T] + '</span></div>'
-        + '<div class="shg3" style="gap:10px">'
-        + mini('Apropriado livre', moneyC(o.livre)) + mini('Reservado · intenção', moneyC(o.reservado) + (o.nRsv ? ' <span class="res-muted" style="font-size:11px;font-weight:500">' + o.nRsv + ' RF</span>' : ''))
-        + mini('Em pedido', moneyC(o.em_pedido) + (o.nPed ? ' <span class="res-muted" style="font-size:11px;font-weight:500">' + o.nPed + ' RF</span>' : ''))
-        + '</div><div class="shg2" style="gap:10px;margin-top:10px">'
-        + mini('Utilizado · compensado', moneyC(o.compensado)) + mini('Utilizado · ressarcido', moneyC(o.ressarcido) + (o.nRes ? ' <span class="res-muted" style="font-size:11px;font-weight:500">' + o.nRes + ' RF</span>' : ''))
+      return '<div style="flex:1 1 320px;min-width:0"><div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">' + triChip(T) + '<span class="res-muted" style="font-size:11px">' + ORGAO[T] + '</span></div>'
+        // As cinco métricas numa grade só: duas grades (3 e 2) em larguras
+        // médias deixavam uma métrica órfã e as linhas desencontradas.
+        + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px 14px">'
+        + mini('Apropriado livre', moneyC(o.livre))
+        + mini('Reservado · intenção', moneyC(o.reservado) + rfs(o.nRsv))
+        + mini('Em pedido', moneyC(o.em_pedido) + rfs(o.nPed))
+        + mini('Utilizado · compensado', moneyC(o.compensado))
+        + mini('Utilizado · ressarcido', moneyC(o.ressarcido) + rfs(o.nRes))
         + '</div></div>';
     }
     el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px">'
       + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0"><div class="ctitle" style="margin-bottom:0">Ressarcimento no ciclo do crédito</div>' + tag() + chip('amber', 'Simulação 2026') + '</div>'
       + '<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="res-act" onclick="shRes.filtrarCredito(\'reservado\')">RFs reservados</button><button class="res-act" onclick="shRes.filtrarCredito(\'em_pedido\')">RFs em pedido</button><button class="res-act" onclick="shRes.filtrarCredito(\'ressarcido\')">RFs ressarcidos</button><button class="res-act p" onclick="shRes.abrir()">Ressarcimento →</button></div></div>'
       + '<div style="font-size:11.5px;color:var(--txt3);margin-bottom:12px;line-height:1.5">Apropriado → reservado pela intenção → em pedido → ressarcido. Reservado e em pedido seguem <b>Apropriados</b> até o pagamento; ressarcido é <b>Utilizado</b> com método Ressarcimento e não abate débito. Mesmo recorte e filtros dos indicadores acima.</div>'
-      + '<div class="shg2" style="gap:18px">' + col('CBS') + col('IBS') + '</div>';
+      + '<div style="display:flex;flex-wrap:wrap;gap:18px">' + col('CBS') + col('IBS') + '</div>';
   };
   R.filtrarCredito = function (marca) {
     var b = document.getElementById('nav-creditos-btn');
