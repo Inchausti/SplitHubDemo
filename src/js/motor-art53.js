@@ -523,6 +523,225 @@
     return ev;
   }
 
+
+  /* ══ Fase 2 · etapa 3 — Fluxo de Caixa Tributário pelo motor ═══════════
+     A tela compara hoje crédito apropriado com débito bruto do mês de
+     emissão e chama a diferença de posição. Isso ignora três coisas: o
+     crédito só existe depois da apropriação, o débito extinto por split
+     ou RAD nunca precisou de crédito, e o saldo credor se transporta.
+     Com o motor, cada mês mostra o que de fato aconteceu: quanto o
+     crédito compensou, quanto sobrou de guia e qual saldo ficou. */
+  function fmM(v) {
+    var neg = v < 0; var a = Math.abs(v);
+    var t = a >= 1e6 ? 'R$ ' + (a / 1e6).toFixed(1).replace('.', ',') + 'M' : 'R$ ' + Math.round(a / 1e3) + 'K';
+    return neg ? '−' + t : t;
+  }
+  function fctTribs() { var t = (window._fctTributo || 'ambos').toUpperCase(); return t === 'AMBOS' ? ['IBS', 'CBS'] : [t]; }
+  function fctSerie() {
+    var V = M.live, tribs = fctTribs(), by = {}, fat = {};
+    function slot(m) { return (by[m] = by[m] || { cred: 0, deb: 0, debCred: 0, comp: 0, guia: 0, venc: 0, saldo: 0, ress: 0, dev: 0, split: 0, rad: 0, aberto: 0, fat: 0 }); }
+    Object.keys(V.porMes).forEach(function (k) {
+      var p = V.porMes[k]; if (tribs.indexOf(p.tributo) < 0) return;
+      var x = slot(p.mes);
+      x.comp += p.compensado; x.guia += p.aRecolher; x.venc += p.vencidoAberto;
+      x.saldo += p.saldoCredor; x.ress += p.ressarcimento; x.dev += p.devolvido;
+      // o débito que depende de crédito: o que foi compensado mais o que sobrou
+      // de guia. Split e RAD extinguem com dinheiro e nunca disputam crédito.
+      x.debCred += p.compensado + p.aRecolher;
+    });
+    (window.nfListaFiltradaGlobal || []).forEach(function (nf) {
+      var mEmi = String(nf.data || '').slice(0, 7); if (!mEmi) return;
+      if (nf.tipo === 'saida' && !fat[nf.id || mEmi + nf.entidade]) { fat[nf.id || mEmi + nf.entidade] = 1; slot(mEmi).fat += nf.valorTotal || 0; }
+      (nf.registrosFiscais || []).forEach(function (rf) {
+        var T = T_(rf); if (tribs.indexOf(T) < 0) return;
+        var v = rf.valor || 0;
+        if (nf.tipo === 'entrada') {
+          var st = sc(rf); if (st !== 'apropriado' && st !== 'utilizado') return;
+          slot(String(rf.dataApropriacao || nf.data).slice(0, 7)).cred += v;
+        } else {
+          var x = slot(mEmi); x.deb += v;
+          if (rf.status === 'extinto' && rf.metodoExtincao === 'Split Payment') x.split += v;
+          else if (rf.status === 'extinto' && rf.metodoExtincao === 'RAD') x.rad += v;
+          // cenário preservado: vencido e inconsistência ficam fora do motor
+          else if (rf.status === 'vencido' || rf.status === 'inconsistencia') x.aberto += v;
+        }
+      });
+    });
+    var meses = Object.keys(by).sort();
+    return { meses: meses, by: by };
+  }
+
+  function fctCabecalho() {
+    var tb = document.getElementById('fct-t-body'); if (!tb) return;
+    var tr = tb.parentElement && tb.parentElement.querySelector('thead tr'); if (!tr || tr.getAttribute('data-mt') === '1') return;
+    tr.innerHTML = '<th>Mês</th>'
+      + '<th class="r" style="color:var(--teal)">Crédito aprop.</th>'
+      + '<th class="r">Débito</th>'
+      + '<th class="r">Pago (split/RAD)</th>'
+      + '<th class="r" style="color:var(--purple)">Compensado</th>'
+      + '<th class="r" style="color:var(--amber)">A recolher</th>'
+      + '<th class="r" style="color:var(--red)">Em aberto</th>'
+      + '<th class="r" style="color:var(--teal)">Saldo credor</th>'
+      + '<th class="r">Alíq. efetiva</th>'
+      + '<th>Situação</th>';
+    tr.setAttribute('data-mt', '1');
+  }
+
+  function fctRender() {
+    if (!M.live) return;
+    var S = fctSerie(), meses = S.meses, by = S.by;
+    if (!meses.length) return;
+    var lbl = meses.map(function (m) { return m.slice(5, 7) + '/' + m.slice(2, 4); });
+    function serie(f) { return meses.map(function (m) { return +(f(by[m]) / 1e6).toFixed(2); }); }
+    if (typeof svgLine === 'function') {
+      // crédito apropriado × débito do mês × o que sobrou para guia
+      svgLine('cFCT', [
+        { data: serie(function (d) { return d.cred; }), color: 'var(--teal)', fill: true, dots: false, w: 2, label: 'Crédito apropriado' },
+        { data: serie(function (d) { return d.debCred; }), color: 'var(--red)', fill: false, dots: false, w: 2, label: 'Débito que depende de crédito', dash: true },
+        { data: serie(function (d) { return d.guia; }), color: 'var(--amber)', fill: false, dots: true, w: 1.5, label: 'A recolher em guia' }
+      ], lbl, 200, { min: 0 });
+      // saldo credor do motor — estoque, não acumulado de diferença
+      svgLine('cFCTSaldo', [
+        { data: serie(function (d) { return d.saldo; }), color: 'var(--teal)', fill: true, dots: true, w: 2.5, label: 'Saldo credor' }
+      ], lbl, 140, { min: 0 });
+      // alíquota efetiva: o débito que o crédito não absorveu, sobre o faturamento
+      var aliq = meses.map(function (m) { var d = by[m]; return d.fat ? +(((d.deb - d.comp) / d.fat) * 100).toFixed(2) : 0; });
+      var pos = aliq.filter(function (v) { return v > 0; });
+      svgLine('cFCTAliq', [
+        { data: aliq, color: 'var(--teal)', fill: true, dots: true, w: 2.5, label: 'Alíquota efetiva %' },
+        { data: meses.map(function () { return 26.5; }), color: 'var(--txt3)', fill: false, dots: false, w: 1.5, label: 'Referência 26,5%', dash: true }
+      ], lbl, 170, { min: pos.length ? Math.max(0, Math.min.apply(null, pos) - 4) : 0, max: Math.max(26.5, Math.max.apply(null, aliq)) + 4,
+        fmt: function (v) { return (v < 0 ? '−' : '') + Math.abs(v).toFixed(1).replace('.', ',') + '%'; } });
+      var med = pos.length ? +(pos.reduce(function (a, b) { return a + b; }, 0) / pos.length).toFixed(1) : 0;
+      var mStr = med.toFixed(1).replace('.', ',') + '%';
+      ['fct-aliq-media', 'fct-aliq-media-chart'].forEach(function (id) { var e = document.getElementById(id); if (e) e.textContent = mStr; });
+      var eco = +(26.5 - med).toFixed(1), eStr = (eco > 0 ? '−' : '+') + Math.abs(eco).toFixed(1).replace('.', ',') + 'pp vs ref.';
+      ['fct-aliq-economia', 'fct-aliq-economia-chart'].forEach(function (id) { var e = document.getElementById(id); if (e) { e.textContent = eStr; e.style.color = eco > 0 ? PALETTE.teal : PALETTE.red; } });
+    }
+    fctCabecalho();
+    var tb = document.getElementById('fct-t-body');
+    if (tb) {
+      tb.innerHTML = meses.map(function (m) {
+        var d = by[m];
+        var sit = d.aberto > 0.5 ? '<span style="color:' + PALETTE.red + ';font-weight:600;font-size:10px">● Débito em aberto</span>'
+          : d.guia > 0.5 || d.venc > 0.5
+          ? '<span style="color:' + PALETTE.amber + ';font-weight:600;font-size:10px">● A recolher</span>'
+          : d.saldo > 0.5 ? '<span style="color:' + PALETTE.teal + ';font-weight:600;font-size:10px">● Saldo credor</span>'
+          : '<span style="color:var(--txt3);font-weight:600;font-size:10px">● Zerado</span>';
+        var aliq = d.fat ? ((d.deb - d.comp) / d.fat * 100).toFixed(1) + '%' : '—';
+        return '<tr>'
+          + '<td class="nowrap">' + m.slice(5, 7) + '/' + m.slice(0, 4) + '</td>'
+          + '<td class="r mono" style="color:' + PALETTE.teal + '">' + fmM(d.cred) + '</td>'
+          + '<td class="r mono">' + fmM(d.deb) + '</td>'
+          + '<td class="r mono" style="color:var(--txt2)">' + fmM(d.split + d.rad) + '</td>'
+          + '<td class="r mono" style="color:var(--purple)">' + fmM(d.comp) + '</td>'
+          + '<td class="r mono" style="color:' + (d.guia > 0.5 ? PALETTE.amber : 'var(--txt3)') + ';font-weight:' + (d.guia > 0.5 ? '700' : '400') + '">' + fmM(d.guia) + '</td>'
+          + '<td class="r mono" style="color:' + (d.aberto > 0.5 ? PALETTE.red : 'var(--txt3)') + '">' + fmM(d.aberto) + '</td>'
+          + '<td class="r mono" style="color:' + PALETTE.teal + ';font-weight:700">' + fmM(d.saldo) + '</td>'
+          + '<td class="r mono">' + aliq + '</td>'
+          + '<td>' + sit + '</td>'
+          + '</tr>';
+      }).join('');
+    }
+    var sub = document.getElementById('fct-periodo-sub');
+    if (sub && sub.getAttribute('data-mt') !== '1') { sub.textContent = 'IBS+CBS · crédito apropriado, compensação pela ordem do art. 53, guia do mês e saldo credor'; sub.setAttribute('data-mt', '1'); }
+  }
+
+  /* Projeção: o saldo credor do último mês realizado segue pela média móvel
+     de 3 meses, compensando na ordem do art. 53 — o que o crédito não cobre
+     vira guia, e o que sobra fica de saldo. */
+  function fctForecast() {
+    if (!M.live) return;
+    var S = fctSerie(), meses = S.meses, by = S.by;
+    if (!meses.length) return;
+    var corte = new Date().toISOString().slice(0, 7);
+    var real = meses.filter(function (m) { return m <= corte; });
+    if (!real.length) real = meses.slice(0, Math.ceil(meses.length / 2));
+    var ultimo = real[real.length - 1], ano = +ultimo.slice(0, 4), mUlt = +ultimo.slice(5, 7);
+    var fc = []; for (var i = mUlt + 1; i <= 12; i++) fc.push(ano + '-' + pad(i));
+    function mm3(arr, n) {
+      var buf = arr.slice(), out = [];
+      for (var i = 0; i < n; i++) {
+        var k = Math.min(3, buf.length); if (!k) { out.push(0); buf.push(0); continue; }
+        var s = 0; for (var j = buf.length - k; j < buf.length; j++) s += buf[j];
+        var v = Math.round(s / k); out.push(v); buf.push(v);
+      }
+      return out;
+    }
+    var credReal = real.map(function (m) { return Math.round(by[m].cred); });
+    var debReal = real.map(function (m) { return Math.round(by[m].debCred); });
+    var saldoReal = real.map(function (m) { return Math.round(by[m].saldo); });
+    var guiaReal = real.map(function (m) { return Math.round(by[m].guia + by[m].venc); });
+    var credFc = mm3(credReal, fc.length), debFc = mm3(debReal, fc.length);
+    var saldo = saldoReal.length ? saldoReal[saldoReal.length - 1] : 0, saldoFc = [], guiaFc = [];
+    debFc.forEach(function (deb, i) {
+      var disp = saldo + credFc[i], comp = Math.min(disp, deb);
+      saldo = disp - comp; saldoFc.push(Math.round(saldo)); guiaFc.push(Math.round(deb - comp));
+    });
+    var totCred = credReal.reduce(function (a, b) { return a + b; }, 0);
+    var totDeb = debReal.reduce(function (a, b) { return a + b; }, 0);
+    var totGuia = guiaReal.reduce(function (a, b) { return a + b; }, 0);
+    var saldoHoje = saldoReal.length ? saldoReal[saldoReal.length - 1] : 0;
+    var saldoFim = saldoFc.length ? saldoFc[saldoFc.length - 1] : saldoHoje;
+    function set(id, v, c) { var e = document.getElementById(id); if (e) { e.textContent = v; if (c) e.style.color = c; } }
+    var lblUlt = pad(mUlt) + '/' + ano;
+    set('fct-fc-k-cred', fmM(totCred)); set('fct-fc-k-cred-sub', 'apropriado · Jan–' + lblUlt);
+    set('fct-fc-k-deb', fmM(totDeb)); set('fct-fc-k-deb-sub', 'que depende de crédito · Jan–' + lblUlt);
+    set('fct-fc-k-saldo', fmM(saldoHoje), PALETTE.teal);
+    var sSub = document.getElementById('fct-fc-k-saldo-sub'); if (sSub) sSub.textContent = 'saldo credor em ' + lblUlt;
+    set('fct-fc-k-fc', fmM(saldoFim), saldoFim >= 0 ? PALETTE.teal : PALETTE.red);
+    set('fct-fc-k-fc-sub', 'saldo credor projetado 12/' + ano);
+    set('fct-fc-badge', fc.length ? '● Forecast ' + fc[0].slice(5, 7) + '–12/' + ano : '');
+    // gráfico: mesma montagem do app, com o saldo credor do motor no lugar do acumulado
+    var canvas = document.getElementById('fct-fc-canvas');
+    if (canvas && window._renderFcChart && window._prepCanvas && canvas.parentElement && canvas.parentElement.offsetWidth > 10) {
+      var todos = real.concat(fc), hz = window._fctForecastHorizonte || 6, de = Math.max(0, todos.length - hz);
+      var visLabels = todos.slice(de).map(function (m) { return m.slice(5, 7) + '/' + m.slice(2, 4); });
+      var nReal = Math.max(0, real.length - de), cR = [], cF = [], dR = [], dF = [], sR = [], sF = [];
+      for (var j = de; j < todos.length; j++) {
+        var isR = j < real.length, k = j - real.length;
+        cR.push(isR ? credReal[j] : null); cF.push(isR ? null : credFc[k]);
+        dR.push(isR ? -debReal[j] : null); dF.push(isR ? null : -debFc[k]);
+        sR.push(isR ? saldoReal[j] : null); sF.push(isR ? null : saldoFc[k]);
+      }
+      if (nReal - 1 >= 0 && nReal - 1 < sF.length) sF[nReal - 1] = sR[nReal - 1];
+      var dark = document.documentElement.getAttribute('data-theme') === 'dark'
+        || (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches);
+      var H = Math.max(220, Math.min(300, canvas.parentElement.offsetWidth * 0.33));
+      window._prepCanvas(canvas, H);
+      window._renderFcChart(canvas, '_fctForecastChart', {
+        visLabels: visLabels, credRealVis: cR, credFcVis: cF, debRealVis: dR, debFcVis: dF,
+        saldoRealVis: sR, saldoFcVis: sF, visNReal: nReal, visNFc: fc.length, fmM: fmM,
+        tooltipBg: dark ? '#1c1f2a' : '#ffffff', tooltipBdr: dark ? '#2d3144' : '#e4e6ea',
+        tickC: dark ? '#6b7280' : '#9ca3af', gridC: dark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'
+      });
+    }
+    var ins = document.getElementById('fct-fc-insights');
+    if (ins) {
+      var nGuia = guiaReal.filter(function (v) { return v > 0.5; }).length;
+      var mesesGuia = real.filter(function (m) { return by[m].guia + by[m].venc > 0.5; }).map(function (m) { return m.slice(5, 7) + '/' + m.slice(2, 4); });
+      var tend = credFc.length ? credFc[credFc.length - 1] - credReal[credReal.length - 1] : 0;
+      var ressTotal = real.reduce(function (a, m) { return a + by[m].ress; }, 0);
+      var bloco = [
+        { cor: nGuia ? PALETTE.amber : PALETTE.teal,
+          titulo: nGuia ? 'Guia em ' + nGuia + (nGuia > 1 ? ' meses' : ' mês') : 'Nenhuma guia no período',
+          corpo: nGuia ? 'O crédito não cobriu todo o débito em ' + mesesGuia.join(', ') + ' — total de ' + fmM(totGuia) + ' a recolher, pela ordem do art. 53.'
+                       : 'Em todos os meses realizados o crédito apropriado cobriu o débito do período.' },
+        { cor: tend >= 0 ? PALETTE.teal : PALETTE.red,
+          titulo: tend >= 0 ? 'Tendência de crescimento' : 'Tendência de queda',
+          corpo: 'Crédito projetado para 12/' + ano + ': ' + fmM(credFc[credFc.length - 1] || 0) + ' (variação ' + (tend >= 0 ? '+' : '') + fmM(tend) + ' contra o último mês realizado).' },
+        { cor: PALETTE.teal, titulo: 'Saldo credor projetado 12/' + ano,
+          corpo: 'Saldo de ' + fmM(saldoFim) + ' ao fim do exercício, já descontado o que sai para ressarcimento (' + fmM(ressTotal) + ' no período realizado). Projeção por média móvel de 3 meses, compensando na ordem do art. 53.' }
+      ];
+      ins.innerHTML = bloco.map(function (b) {
+        return '<div style="border-left:3px solid ' + b.cor + ';padding:8px 12px;background:var(--bg2,var(--sidebar));border-radius:0 6px 6px 0;font-size:11px">'
+          + '<div style="font-weight:700;color:' + b.cor + ';margin-bottom:2px;font-size:12px">' + b.titulo + '</div>'
+          + '<div style="color:var(--txt2);line-height:1.5">' + b.corpo + '</div></div>';
+      }).join('');
+    }
+  }
+  M.fct = fctRender; M.fctFc = fctForecast;
+
   M.telas = function () {
     if (!M.live) return;
     ['renderizarTabelaCreditos', 'renderizarTabelaDebitos'].forEach(function (fn) {
@@ -534,6 +753,16 @@
         return r;
       };
       window[fn]._mt2 = true;
+    });
+    ['renderizarFCT', 'renderizarFCTForecast'].forEach(function (fn) {
+      if (typeof window[fn] !== 'function' || window[fn]._mt3) return;
+      var o = window[fn], ehFc = fn.indexOf('Forecast') > 0;
+      window[fn] = function () {
+        var r = o.apply(this, arguments);
+        try { setTimeout(ehFc ? fctForecast : fctRender, 0); } catch (e) { console.error('[motor] fluxo de caixa', e); }
+        return r;
+      };
+      window[fn]._mt3 = true;
     });
     if (typeof window._rfGerarHistorico === 'function' && !window._rfGerarHistorico._mt2) {
       var gh = window._rfGerarHistorico;
@@ -636,7 +865,7 @@
       + '<div class="hdr-act"><button class="btn" onclick="shMotor.baixarCSV()">↓ CSV do relatório</button><button class="btn" onclick="shMotor.baixarLivro()">↓ Livro do motor</button></div></div>';
     H += '<div class="mt-aviso" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-style:solid">'
       + '<span style="flex:1 1 320px;min-width:0"><b>Motor nas telas: ' + (M.live ? 'LIGADO' : 'desligado') + '.</b> '
-      + (M.live ? 'Etapa 1: a base carregada passa pelo motor antes dos indicadores; Apuração e Ressarcimento leem o livro do motor. As outras telas recalculam sozinhas — as adaptações delas vêm nas etapas 2 e 3.'
+      + (M.live ? 'A base carregada passa pelo motor antes de qualquer indicador. Apuração e Ressarcimento leem o livro do motor (etapa 1); Crédito, Débito, detalhe do RF e histórico mostram o vínculo exato e a compensação parcial (etapa 2); o Fluxo de Caixa Tributário mostra compensação, guia do mês e saldo credor (etapa 3). As demais telas leem os mesmos dados e recalculam sozinhas.'
                 : 'Ligue para ver o app com o motor. A troca recarrega a página; desligar volta tudo ao que é hoje.') + '</span>'
       + '<button class="btn ' + (M.live ? '' : 'btn-t') + '" onclick="shMotor.alternar(' + (M.live ? 'false' : 'true') + ')">' + (M.live ? 'Desligar o motor' : 'Ligar o motor nas telas') + '</button></div>';
     H += '<div class="mt-aviso"><b>' + (M.live ? 'Comparação:' : 'Nada foi alterado no app.') + '</b> O motor roda sobre uma cópia da base carregada agora e compara com o que as telas mostram. '
