@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRD — Ressarcimento · SplitHub v1.2</title>
+<title>PRD — Ressarcimento · SplitHub v1.3</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -215,13 +215,13 @@ code { overflow-wrap: anywhere; }
 <h1>Ressarcimento</h1>
 <p class="subtitle">Onde o saldo credor vira dinheiro — CBS na Receita Federal, IBS no Comitê Gestor, cada um com seu saldo, sua intenção, seu pedido e seus prazos. Implementado no protótipo em simulação 2026.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.2</span></div>
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.3</span></div>
 <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Fiscal → Ressarcimento</span></div>
 <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
 <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-ressarcimento</span></div>
 <div class="meta-pill"><span class="meta-label">Funcionalidades</span>&nbsp;<span class="meta-val">15</span></div>
 <div class="meta-pill"><span class="meta-label">Em M0</span>&nbsp;<span class="meta-val">0</span></div>
-<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v1.2</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v1.3</span></div>
 </div>
 <div class="res-upd" style="border:1px solid var(--brd);background:var(--sur);border-radius:10px;padding:14px 18px;margin:18px 0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);border:1px solid var(--teal);border-radius:3px;padding:1px 6px">Apuração</span><strong style="color:var(--txt1);font-size:14px">v1.2 — o saldo credor passa a vir da apuração</strong></div><ul style="list-style:disc;margin:0;padding:0;font-size:13px;color:var(--txt2)"><li style="margin:4px 0 0 18px">Intenções e pedidos deixam de partir de um saldo próprio: o saldo credor de cada período vem da <a href="prd-apuracao.html" style="color:var(--blue);font-weight:700">apuração</a>, depois de o crédito abater débito na ordem do art. 53.</li><li style="margin:4px 0 0 18px">A intenção trava o <strong>saldo do período</strong>: o crédito apropriado até o fim do período entra reservado, mesmo que a apropriação venha depois da declaração.</li><li style="margin:4px 0 0 18px">Crédito <strong>glosado</strong> é inelegivel a intenção e a pedido.</li><li style="margin:4px 0 0 18px">Deferimento parcial: o crédito não reconhecido volta ao saldo na data da decisão e aparece na apuração daquele período como devolução.</li><li style="margin:4px 0 0 18px">Mês devedor não tem intenção: sem saldo credor, não há o que reservar (art. 39).</li></ul><div style="font-size:12px;color:var(--txt2);margin-top:8px">21/09/2026 · <a href="prd-apuracao.html" style="color:var(--blue);font-weight:700">PRD de Apuração</a></div></div>
 <div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
@@ -241,6 +241,7 @@ code { overflow-wrap: anywhere; }
 <li><a href="#s14"><span class="toc-num">14</span> Regras de negócio</a></li>
 <li><a href="#s15"><span class="toc-num">15</span> Rotas diretas</a></li>
 <li><a href="#s16"><span class="toc-num">16</span> Decisões</a></li>
+<li><a href="#s18"><span class="toc-num">18</span> Adendo — APIs do Fisco para o ressarcimento</a></li>
 <li><a href="#s17"><span class="toc-num">17</span> Histórico de versões</a></li>
 </ul></div>
 <div class="section" id="s01">
@@ -308,8 +309,65 @@ code { overflow-wrap: anywhere; }
 <div class="sec-hdr"><span class="sec-num">16</span><span class="sec-title">Decisões</span></div>
 <div class="table-wrap"><table><thead><tr><th>#</th><th>Decisão</th><th>Situação</th></tr></thead><tbody><tr><td>D-01</td><td>Criar o módulo Ressarcimento, depois de Conciliação</td><td>Aprovada — 18/09/2026</td></tr><tr><td>D-02</td><td>Dois espaços isolados, sem totais combinados</td><td>Aprovada — 18/09/2026</td></tr><tr><td>D-03</td><td>Analista declara; aprovação acima de valor configurável por tributo</td><td>Aprovada — 18/09/2026</td></tr><tr><td>D-04</td><td>Registrar o pedido, não transmitir</td><td>Aprovada — 18/09/2026</td></tr><tr><td>D-05</td><td>Tesouraria com leitura</td><td>Aprovada — 18/09/2026 · perfil ainda não criado em Usuários</td></tr><tr><td>D-06</td><td>Divergência com a Receita exclui o documento do pedido de CBS</td><td>Aprovada — 18/09/2026</td></tr><tr><td>D-07</td><td>Impedimento do IBS alerta, não bloqueia</td><td>Aprovada — 18/09/2026</td></tr><tr><td>D-08</td><td>Faixas: todas fora do M0 — 13 em M1, 2 em M2</td><td>Aprovada — 18/09/2026 (substitui as 8 em M0 da proposta)</td></tr><tr><td>D-09</td><td>Reserva e pedido como marcas no RF</td><td>Aprovada — 17/09/2026</td></tr><tr><td>D-10</td><td>Simulação 2026: regra de saldos de 2026 desligada no protótipo</td><td>Aprovada — 18/09/2026</td></tr><tr><td>D-11</td><td>Motor de compensação pelo art. 53 na base (créditos e débitos casados por tributo e período)</td><td><span class="gap">Em aberto</span> — muda os números de todo o protótipo</td></tr></tbody></table></div>
 </div>
+<div class="section" id="s18">
+<div class="sec-hdr"><span class="sec-num">18</span><span class="sec-title">Adendo — APIs do Fisco para o ressarcimento</span></div>
+<p class="sec-sub">Observação de contexto externo, levantada em <strong>21/09/2026</strong> nas fontes oficiais da Receita Federal e do Comitê Gestor do IBS. Não altera nenhuma decisão, requisito ou regra deste PRD: registra o que existe hoje do lado do Fisco, para que a decisão D-04 — <em>registrar o pedido, não transmitir</em> — fique apoiada em fato e não em suposição.</p>
+
+<div class="callout info"><div class="ct">Em uma linha</div><p>Não existe API de ressarcimento — nem para <strong>solicitar</strong>, nem para <strong>acompanhar</strong> o pedido. Nenhuma foi publicada e nenhuma aparece no cronograma divulgado até o fim de novembro de 2026.</p></div>
+
+<h3>O que a Receita Federal publicou</h3>
+<p>O catálogo das APIs de apuração da CBS tem seis serviços, todos de consulta:</p>
+<div class="table-wrap"><table><thead><tr><th>Serviço</th><th>Situação</th></tr></thead><tbody>
+<tr><td>Regras comuns de solicitação e retorno (API assíncrona)</td><td>Publicado</td></tr>
+<tr><td>Consultar Débitos</td><td>Publicado · produção restrita (piloto CBS)</td></tr>
+<tr><td>Consultar Créditos</td><td>Publicado · produção restrita (piloto CBS)</td></tr>
+<tr><td>Consultar Pagamentos</td><td>Publicado</td></tr>
+<tr><td>Consultar Recolhimentos</td><td>Publicado</td></tr>
+<tr><td>Consultar Situação da Solicitação</td><td>Publicado</td></tr>
+</tbody></table></div>
+<p>O cronograma anunciado na documentação técnica de setembro de 2026 não menciona ressarcimento em nenhuma faixa:</p>
+<div class="table-wrap"><table><thead><tr><th>Quando</th><th>Serviço anunciado</th></tr></thead><tbody>
+<tr><td>Início de out/2026</td><td>Consultar débitos · consultar créditos</td></tr>
+<tr><td>Início de nov/2026</td><td>Consultar pagamentos · consultar recolhimentos como adquirente</td></tr>
+<tr><td>Fim de nov/2026</td><td>Emitir DARF para recolhimento como adquirente (RAD) e para pagamento do contribuinte (PCONT)</td></tr>
+</tbody></table></div>
+<p>A versão nova das APIs passa a devolver só o que mudou entre a última consulta e a atual — leitura incremental, não carga cheia a cada chamada.</p>
+
+<h3>Acompanhamento parcial existe, por dentro da API de Crédito</h3>
+<p>A API <em>Consultar Créditos</em> devolve, no grupo de utilização de cada crédito, dois campos que interessam diretamente a este módulo:</p>
+<div class="code-block"><code>naoUtilizado.saldoCredor          <span class="c">// sobra que segue para compensação</span>
+naoUtilizado.pedidoRessarcimento  <span class="c">// parcela alocada a pedido de ressarcimento</span></code></div>
+<p>Ou seja: dá para saber, <strong>por período de apuração e por documento</strong>, quanto do crédito foi para pedido de ressarcimento e quanto continuou como saldo credor. É <strong>valor alocado, não estado do pedido</strong> — não vem deferido, indeferido nem pago, não vem protocolo e não vem a contagem do prazo do art. 39. Para conferência de saldo serve; para a trilha do pedido, não.</p>
+
+<h3>O pedido, hoje, vive só no portal</h3>
+<p>Na Plataforma CBS (ambiente Beta) existem, em tela: consulta dos valores disponíveis, histórico de solicitações, simulação do pedido e a <strong>Intenção de Ressarcimento</strong>, que reserva o crédito do mês para não ser consumido na compensação automática. As fontes divergem quanto ao PER/DCOMP — parte noticia que o sistema gera o PER/DCOMP por grupo de crédito, e a cobertura da Contábeis ressalva que é simulação e não gera PER/DCOMP. A leitura provável é que o documento simulado seja produzido sem efeito jurídico, coerente com um ambiente Beta.</p>
+<div class="callout ok"><div class="ct">Confirmação para o produto</div><p>A <strong>intenção de ressarcimento</strong> modelada aqui (F-03, RN-RES-03) tem contraparte real na plataforma da Receita, com a mesma finalidade: reservar o crédito do período para que a compensação automática não o consuma.</p></div>
+
+<h3>IBS — Comitê Gestor</h3>
+<p>Nada publicado sobre API de ressarcimento. O que existe do CGIBS é a regra material — Resolução CGIBS nº 6/2026 e os prazos do art. 39 da LC 214/2025 (30, 60 ou 180 dias, deferimento tácito e pagamento em 15 dias) — além de APIs previstas para split payment e arrecadação. Mantém-se o que a F-15 já registra: o canal eletrônico do Comitê não foi publicado.</p>
+
+<h3>O que isso significa para o módulo</h3>
+<div class="table-wrap"><table><thead><tr><th>Ponto do PRD</th><th>Efeito do adendo</th></tr></thead><tbody>
+<tr><td><span class="rid">D-04</span> Registrar o pedido, não transmitir</td><td>Confirmada pelo fato: não há canal de transmissão por API para nenhum dos dois tributos</td></tr>
+<tr><td><span class="rid">F-12</span> Conferir com a Receita</td><td>Tem campo real de destino — <code>naoUtilizado.pedidoRessarcimento</code> e <code>naoUtilizado.saldoCredor</code> na API de Créditos</td></tr>
+<tr><td><span class="rid">F-06</span> / <span class="rid">F-07</span> / <span class="rid">F-08</span> Situação e decisão do pedido</td><td>Continuam <strong>entrada manual</strong>: não há fonte automatizada para o estado do pedido</td></tr>
+<tr><td><span class="rid">F-15</span> Pedido de IBS</td><td>Sem novidade — o canal do Comitê Gestor segue sem publicação</td></tr>
+</tbody></table></div>
+<p>O desenho realista para 2026 e 2027 permanece o que o módulo já faz: <strong>pedido protocolado no portal por ação humana</strong>, e a plataforma reconciliando pela API de Créditos para provar que o crédito reservado saiu do pool de compensação.</p>
+
+<h4>Fontes consultadas em 21/09/2026</h4>
+<ul class="plain">
+<li><a class="xref" href="https://docs.receitafederal.gov.br/apuracao-cbs/" target="_blank" rel="noopener">Documentação técnica das APIs de apuração da CBS</a> — Receita Federal</li>
+<li><a class="xref" href="https://www.gov.br/fazenda/pt-br/assuntos/noticias/2026/setembro/receita-federal-publica-nova-documentacao-tecnica-das-apis-de-apuracao-de-cbs" target="_blank" rel="noopener">Nova documentação técnica das APIs de apuração de CBS</a> — Ministério da Fazenda, set/2026</li>
+<li><a class="xref" href="https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/manuais/reforma-tributaria-do-consumo/manual-plataforma-cbs-21-maio-2026-07h40.pdf" target="_blank" rel="noopener">Manual da Plataforma CBS</a> — Receita Federal, 21/05/2026</li>
+<li><a class="xref" href="https://www.contabeis.com.br/noticias/76878/receita-atualiza-portal-da-reforma-tributaria-com-apuracao-assistida-da-cbs/" target="_blank" rel="noopener">Receita atualiza portal da reforma tributária com apuração assistida da CBS</a> — Contábeis</li>
+<li><a class="xref" href="https://www.cgibs.gov.br/upload/arquivos/202604/30084927-res-cgibs-n-6-30-abr-2026-regulamenta-o-ibs.pdf" target="_blank" rel="noopener">Resolução CGIBS nº 6, de 30/04/2026</a> — Comitê Gestor do IBS</li>
+</ul>
+<p style="font-size:12px;color:var(--txt3)">Levantamento externo, sujeito a mudança pelo Fisco. Vale reconferir quando a faixa de novembro de 2026 for liberada.</p>
+</div>
 <div class="section" id="s17">
 <div class="sec-hdr"><span class="sec-num">17</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.3</div><div class="ver-desc"><strong>21/09/2026</strong> — <strong>Adendo de observação: APIs do Fisco para o ressarcimento (seção 18).</strong> Levantamento nas fontes oficiais: não existe API para solicitar nem para acompanhar pedido de ressarcimento, e nenhuma aparece no cronograma até nov/2026. A API de Créditos da CBS já traz <code>naoUtilizado.pedidoRessarcimento</code> e <code>naoUtilizado.saldoCredor</code>, que dão conferência de saldo, não estado do pedido. A intenção de ressarcimento modelada aqui tem contraparte real na Plataforma CBS. Confirma a decisão D-04 e mantém F-06, F-07 e F-08 como entrada manual. Nenhum requisito ou regra alterado.</div></div>
 <div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>21/09/2026</strong> — <strong>Ordem do art. 53 na apuração.</strong> O saldo credor passa a vir da apuração; a intenção trava o saldo do período; crédito glosado é inelegivel; deferimento parcial devolve o crédito no período da decisão. A pendência da seção 12 deixa de existir.</div></div>
 <div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc">18/09/2026 — <strong>Trilha no histórico e auditoria.</strong> Cada passo do ressarcimento entra no histórico do RF e do DF, e o RF ressarcido deixa de aparecer como abatimento de débito. Reserva só de crédito apropriado até a data do ato. Painel no Crédito. Pendência do art. 53 registrada (D-11). Requisitos de 15 para 17.</div></div><div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">18/09/2026 — <strong>Primeira versão, implementada no protótipo.</strong> Módulo com os espaços CBS e IBS, quatro abas e três janelas, em simulação 2026. Integração com Início, Crédito, Débito, Conciliação, Apuração, Inconsistências, Automações, Organização e Analytics. Sincronia de valores conferida em sete pontos. Quinze funcionalidades fora do M0.</div></div>
 </div>
