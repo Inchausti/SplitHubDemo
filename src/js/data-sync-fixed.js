@@ -161,7 +161,6 @@ window.SH_TABLES = {
       { key: 'dataExtincaoCredito', label: 'Data Extinção', tip: 'Data em que o <strong>crédito</strong> foi consumido — compensado, ressarcido ou transferido. Anda com a coluna Método de Extinção. Vazia enquanto o crédito está apropriado e disponível.' },
       { key: 'dataPrevExtincao', label: 'Limite art. 54', tip: 'Data em que o direito de utilizar o crédito se extingue por decurso: 5 anos contados do primeiro dia do período de apuração seguinte ao da apropriação (LC 214/2025, art. 54). Âmbar no último ano, vermelho depois de vencido. Crédito já extinto não corre esse risco.' },
       { key: 'origemGeracao', label: 'Origem', tip: 'Se a guia foi produzida por uma <strong>política de execução ativa</strong> (AUTO) ou por seleção manual nesta tela (MANUAL). A faixa teal na linha marca as automáticas.' },
-      { key: 'entregaStatus', label: 'Entrega', tip: 'Estado do webhook <code>rad.darf_recebida</code>, que leva a guia gerada ao ERP. <strong>Entregue</strong> — o ERP respondeu 200 OK. <strong>Pendente</strong> — em retentativa. <strong>Falha</strong> — as tentativas se esgotaram e a guia existe aqui e não existe lá. O reenvio fica em Configurações &rarr; Integrações &rarr; Log de entregas.' },
       { key: '_detalhe', label: 'Detalhe', tip: 'Abre o registro fiscal completo, com a decomposição do valor e o rastreamento na Receita.', cls: 'tc' },
       { key: '_acao', label: 'Ação', tip: 'O que é possível fazer agora: gerar a guia, ver o comprovante, ou nada — quando o crédito está glosado.' }
     ]
@@ -515,6 +514,7 @@ function bdg(status) {
     // ── Saída ──
     'extinto':       'Extinto',
     'nao_extinto':   'Não Extinto',
+    'parcial':       'Parcialmente Extinto',
     // ── Pagamentos ──
     'confirmado':    'Confirmado',
     'aguardando':    'Aguardando',
@@ -750,10 +750,10 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165',
     'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23',
     'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246',
-    'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160' };
+    'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160', 'GLOSA':'163,45,45', 'IMPUGNAÇÃO':'186,117,23', 'GLOSA DEFINITIVA':'163,45,45', 'ENVIO ERP':'24,95,165', 'ENTREGA ERP':'29,158,117', 'COMPROVANTE ERP':'24,95,165' };
   var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!',
     'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌',
-    'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺' };
+    'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺', 'GLOSA':'✕', 'IMPUGNAÇÃO':'⚖', 'GLOSA DEFINITIVA':'✕', 'ENVIO ERP':'↑', 'ENTREGA ERP':'⇄', 'COMPROVANTE ERP':'⤓' };
 
   var allEvents = [];
   var d0 = r.data || '';
@@ -1032,7 +1032,9 @@ window._rfGerarHistorico = function(rf, nf) {
       'Aguardando reconhecimento de crédito pelo órgão competente', 'pending'));
   }
   if (_sc_hist === 'glosado') {
-    ev.push(mkEv(MK(A(d0,10),'10:45'), 'INCONSISTÊNCIA','Créditos',                  'Fisco',
+    var _glEv = (window.shGlosa && window.shGlosa.historicoRF) ? window.shGlosa.historicoRF(rf) : [];
+    if (_glEv.length) _glEv.forEach(function(e) { ev.push(e); });
+    else ev.push(mkEv(MK(A(d0,10),'10:45'), 'INCONSISTÊNCIA','Créditos',                  'Fisco',
       'Crédito glosado pelo Fisco · direito ao crédito negado · requer impugnação', 'erro'));
   }
   // Apropriação: data do recolhimento que extinguiu o débito do fornecedor
@@ -1675,8 +1677,8 @@ window.abrirDetalheRF = function(rfId) {
   var stRegLab = rfSR ? (stRegLabs[rfSR] || rfSR) : null;
   var stRegRgb = rfSR ? (stRegRgbs[rfSR] || '167,168,170') : null;
 
-  var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165', 'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23', 'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246', 'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160' };
-  var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌', 'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺' };
+  var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165', 'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23', 'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246', 'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160', 'GLOSA':'163,45,45', 'IMPUGNAÇÃO':'186,117,23', 'GLOSA DEFINITIVA':'163,45,45', 'ENVIO ERP':'24,95,165', 'ENTREGA ERP':'29,158,117', 'COMPROVANTE ERP':'24,95,165' };
+  var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌', 'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺', 'GLOSA':'✕', 'IMPUGNAÇÃO':'⚖', 'GLOSA DEFINITIVA':'✕', 'ENVIO ERP':'↑', 'ENTREGA ERP':'⇄', 'COMPROVANTE ERP':'⤓' };
 
   // Ordenar decrescente por timestamp (mais recente primeiro)
   eventos.sort(function(a, b) {
@@ -2114,6 +2116,7 @@ window.renderizarTabelaCreditos = function() {
 window.atualizarKPIsCreditos = function(listaRFs) {
   var aprop = 0, naoAprop = 0, glosado = 0, emRisco = 0, vencido = 0, util = 0, inconsist = 0, aPrescrever = 0;
   var utilRes = 0; // ressarcido: extinto sem abater débito
+  var glosadoN = 0;
   var naoApropCP = 0, naoApropLP = 0;
   var extinto = 0, extintoCount = 0, extintoUlt = 0;
   var vencNaoExt = 0, vencForn = 0, vencRad = 0, vencSplit = 0;
@@ -2142,7 +2145,7 @@ window.atualizarKPIsCreditos = function(listaRFs) {
         naoApropCP += v; // sem data → urgente (CP)
       }
     }
-    else if (sc === 'glosado')         { glosado  += v; }
+    else if (sc === 'glosado')         { glosado  += v; glosadoN++; }
     if      (sr === 'em_risco')        { emRisco      += v; }
     if      (sr === 'vencido')         { vencido      += v; }
     if      (sr === 'inconsistencia')  { inconsist    += v; }
@@ -2200,7 +2203,10 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   set('cred-aguard',        fmt(naoAprop));
   set('cred-aguard-sub',    pct(naoAprop, totalCred) + ' — apropriação pendente');
   set('cred-glosado',       fmt(glosado));
-  set('cred-glosado-sub',   pct(glosado, total) + ' — anulados pelo Fisco');
+  var _glCausas = 0;
+  try { _glCausas = (window.shGlosa && window.shGlosa.fichas || []).length; } catch (e) {}
+  set('cred-glosado-sub',   pct(glosado, totalCred) + ' do total · ' + glosadoN + ' RF' + (glosadoN === 1 ? '' : 's')
+    + (_glCausas ? ' · ' + _glCausas + ' glosa' + (_glCausas === 1 ? '' : 's') + ' com causa' : ' · crédito negado pelo Fisco'));
   // Status do Registro
   set('cred-risco',         fmt(emRisco));
   set('cred-risco-sub',     pct(emRisco, totalCred) + ' — créditos em risco');
@@ -4293,9 +4299,14 @@ window.renderizarRFsInconsistencias = function() {
     'cfin_cbs_valor':       'Comprovante CBS divergente',
     'chave_invalida':       'Chave de acesso inválida',
     'cnpj_divergente':      'CNPJ divergente',
-    'duplicidade_rf':       'RF duplicado'
+    'duplicidade_rf':       'RF duplicado',
+    'apur_df_sem_registro': 'DF sem registro na apuração assistida',
+    'apur_registro_sem_df': 'Registro na apuração assistida sem DF'
   };
-  var _incStatuses = ['aberta','aberta','em_analise','aguardando_emitente','aberta','resolvida','glosada','aberta','em_analise','aberta'];
+  // D-GL-05: o estado 'glosada' deixa de ser sorteado aqui. Ele passa a valer
+  // so para as ocorrencias que o modulo shGlosa cria a partir de uma glosa de
+  // credito de verdade - ver src/docs/proposta-glosa.html.
+  var _incStatuses = ['aberta','aberta','em_analise','aguardando_emitente','aberta','resolvida','resolvida','aberta','em_analise','aberta'];
   var _incPrios = function(v){ return v > 500000 ? 'critica' : v > 100000 ? 'alta' : v > 20000 ? 'media' : 'baixa'; };
   var incGlobal = [];
   lista.forEach(function(r, i) {
@@ -4334,6 +4345,9 @@ window.renderizarRFsInconsistencias = function() {
       dataExtincaoCredito: _incRf.dataExtincaoCredito || null
     });
   });
+  try { if (window.shGlosa && window.shGlosa.inconsistencias) window.shGlosa.inconsistencias(incGlobal); } catch (e) {}
+  try { if (window.shErp && window.shErp.inconsistencias) window.shErp.inconsistencias(incGlobal); } catch (e) { console.error('[erp] inconsistências', e); }
+  try { if (window.shConcApur && window.shConcApur.inconsistencias) window.shConcApur.inconsistencias(incGlobal); } catch (e) { console.error('[conc-apur] inconsistências', e); }
   try { if (window.shRes && window.shRes.inconsistencias) window.shRes.inconsistencias(incGlobal); } catch (e) {}
   window._inconsistenciasGlobal = incGlobal;
 
@@ -6187,17 +6201,25 @@ class DataSyncManagerFixed {
     const valorBase = Math.floor(somaTotal / 100);
     let somaAcumulada = 0;
 
+    // Piso por nota: a soma das 100 fecha em R$ 500M, mas nenhuma nota pode
+    // sair com valor zerado ou negativo. A conta de ajuste antiga
+    // (somaTotal - somaAcumulada - restantes * valorBase) virava negativa
+    // quando o sorteio corria alto, e a nota entrava na base com valor
+    // negativo — crédito fantasma no Total Originado.
+    const valorMinimo = Math.floor(valorBase * 0.2);
+
     for (let i = 1; i <= 100; i++) {
       let valor;
 
       if (i === 100) {
-        valor = somaTotal - somaAcumulada;
+        valor = Math.max(valorMinimo, somaTotal - somaAcumulada);
       } else {
+        const restantes = 100 - i;                                   // notas depois desta
+        const teto = somaTotal - somaAcumulada - restantes * valorMinimo;
         const variacao = 0.8 + Math.random() * 0.4;
         valor = Math.floor(valorBase * variacao);
-        if (somaAcumulada + valor > somaTotal) {
-          valor = somaTotal - somaAcumulada - (100 - i) * valorBase;
-        }
+        if (valor > teto) valor = teto;
+        if (valor < valorMinimo) valor = valorMinimo;
       }
 
       somaAcumulada += valor;
@@ -7306,7 +7328,6 @@ window.injetarFiltrosPagamentos = function() {
       { label: 'Status Crédito', id: 'fp-status-cred', type: 'select', options: [{value:'nao_apropriado',label:'Não Apropriado'},{value:'apropriado',label:'Apropriado'},{value:'utilizado',label:'Utilizado'},{value:'glosado',label:'Glosado'}] },
       { label: 'Status Registro',id: 'fp-status-reg',  type: 'select', options: [{value:'inconsistencia',label:'Inconsistência'},{value:'em_risco',label:'Em risco'},{value:'vencido',label:'Vencido'},{value:'a_prescrever',label:'A Prescrever'}] },
       { label: 'Origem da guia',  id: 'fp-origem',  type: 'select', options: [{value:'automatica',label:'Automática'},{value:'manual',label:'Manual'}] },
-      { label: 'Entrega ao ERP',  id: 'fp-entrega', type: 'select', options: [{value:'entregue',label:'Entregue'},{value:'pendente',label:'Pendente'},{value:'falha',label:'Falha'}] },
       { label: 'Retorno da guia', id: 'fp-retorno', type: 'select', options: [{value:'DARF_GERADO',label:'Gerada'},{value:'DFE_NAO_ENCONTRADO',label:'DF não encontrado'},{value:'VALOR_PARCIAL_SUPERIOR_DFE',label:'Valor parcial superior'}] }
     ]
   });
@@ -7331,7 +7352,7 @@ window.pagamentosFiltrarGrid = function() {
 };
 
 window.pagamentosLimparFiltros = function() {
-  ['fp-busca','fp-tipo','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max','fp-tipo-dfe','fp-contrato','fp-status-cred','fp-status-reg','fp-origem','fp-entrega','fp-retorno'].forEach(function(id) {
+  ['fp-busca','fp-tipo','fp-pagamento','fp-data-de','fp-data-ate','fp-valor-min','fp-valor-max','fp-tipo-dfe','fp-contrato','fp-status-cred','fp-status-reg','fp-origem','fp-retorno'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -7435,12 +7456,11 @@ window.renderizarTabelaPagamentos = function() {
   // Enriquece com os campos que a API de RAD devolve (T-05/T-06/T-07)
   if (window.radEnriquecerRF) rows.forEach(window.radEnriquecerRF);
 
-  // Filtros de origem, entrega e return_code
+  // Filtros de origem e return_code. A entrega ao ERP saiu da listagem:
+  // ela e um evento do RF e vive no historico, com data e tentativa.
   var _fOrigem  = (document.getElementById('fp-origem')  || {}).value || '';
-  var _fEntrega = (document.getElementById('fp-entrega') || {}).value || '';
   var _fRetorno = (document.getElementById('fp-retorno') || {}).value || '';
   if (_fOrigem)  rows = rows.filter(function(r) { return r.origemGeracao === _fOrigem; });
-  if (_fEntrega) rows = rows.filter(function(r) { return r.entregaStatus === _fEntrega; });
   if (_fRetorno) rows = rows.filter(function(r) { return r.returnCode === _fRetorno; });
 
   if (window.ShColMgr && ShColMgr.sortRows) rows = ShColMgr.sortRows('pag-rfs', rows);
@@ -7503,7 +7523,6 @@ window.renderizarTabelaPagamentos = function() {
       + '<td class="nowrap">' + (window.shCelulaExtincaoCredito ? window.shCelulaExtincaoCredito(r) : '&mdash;') + '</td>'
       + '<td class="nowrap">' + (window.shCelulaPrevExtincao ? window.shCelulaPrevExtincao(r) : '&mdash;') + '</td>'
       + '<td class="nowrap">' + (window.radCelulaOrigem ? window.radCelulaOrigem(r) : '—') + '</td>'
-      + '<td class="nowrap">' + (window.radCelulaEntrega ? window.radCelulaEntrega(r) : '—') + '</td>'
       + '<td class="tc" style="vertical-align:middle">' + detBtn + '</td>'
       + '<td class="nowrap" style="vertical-align:middle;white-space:nowrap">' + act + '</td>'
       + '</tr>';
@@ -8238,7 +8257,9 @@ document.addEventListener('DOMContentLoaded', function() {
         inconsistencia: { label: 'Inconsistência', rgb: '220,38,38' },
         vencido:        { label: 'Vencido',         rgb: '220,38,38' },
         em_risco:       { label: 'Em risco',         rgb: '186,117,23' },
-        a_prescrever:   { label: 'A Prescrever',     rgb: '251,146,60' }
+        a_prescrever:   { label: 'A Prescrever',     rgb: '251,146,60' },
+        retido:         { label: 'Retido',            rgb: '37,99,235' },
+        em_contencioso: { label: 'Em contencioso',    rgb: '186,117,23' }
       };
       return flags.map(function(f) {
         var c = cfg[f] || { label: f, rgb: '156,163,175' };
@@ -8253,6 +8274,14 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window._enriquecerNFsSaida(); } catch(e) { console.error('[data-sync-fixed] Erro _enriquecerNFsSaida:', e); }
       // Ressarcimento: intenções, pedidos e pagamentos aplicados aos RFs antes de
       // qualquer indicador — só o pagamento muda o statusCredito (js/ressarcimento.js)
+      // Ciclo e flag do débito são eixos separados (proposta-status-debito)
+      try { window.shStatusDebito && window.shStatusDebito.normalizar(); } catch(e) { console.error('[status-debito]', e); }
+      // A glosa nega o crédito antes de tudo: crédito glosado não entra no
+      // pool de compensação nem no ressarcimento
+      try { window.shGlosa && window.shGlosa.aplicarNaBase && window.shGlosa.aplicarNaBase(); } catch(e) { console.error('[glosa]', e); }
+      // Validação local (branch motor-art53): com a chave ligada, o motor do art. 53
+      // define compensação e saldo antes do ressarcimento e de qualquer indicador
+      try { window.shMotor && window.shMotor.aplicarNaBase && window.shMotor.aplicarNaBase(); } catch(e) { console.error('[motor]', e); }
       try { window.shRes && window.shRes.aplicarNaBase && window.shRes.aplicarNaBase(); } catch(e) {}
       try { _calcularStatusRegistro(); } catch(e) {}
       try {
@@ -8278,6 +8307,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window.injetarFiltrosCreditos(); window.renderizarTabelaCreditos(); } catch(e) {}
       try { window.injetarFiltrosPagamentos(); window.renderizarTabelaPagamentos(); } catch(e) {}
       try { window._sincronizarInconsistencias(); } catch(e) {}
+      try { window.shStatusDebito && window.shStatusDebito.flagsDeInconsistencia(); } catch(e) {}
       try { window.renderizarRFsInconsistencias(); } catch(e) {}
       try { window.renderizarTop5Inconsistencias(); } catch(e) {}
       try { window.renderizarTop10Empresas(); } catch(e) {}
@@ -10152,11 +10182,11 @@ window.downloadGuiaDARF = function() {
         'INCONSISTÊNCIA':'163,45,45','VENCIMENTO':'163,45,45','AGUARDANDO':'186,117,23',
         'APROPRIAÇÃO':'29,158,117','PAGAMENTO':'29,158,117','UTILIZAÇÃO':'139,92,246',
         'EXTINÇÃO':'167,168,170','CONCILIAÇÃO':'139,92,246',
-        'CONC APURAÇÃO':'24,95,165','CONC FINANCEIRA':'29,158,117','RESSARCIMENTO':'107,63,160' };
+        'CONC APURAÇÃO':'24,95,165','CONC FINANCEIRA':'29,158,117','RESSARCIMENTO':'107,63,160', 'GLOSA':'163,45,45', 'IMPUGNAÇÃO':'186,117,23', 'GLOSA DEFINITIVA':'163,45,45', 'ENVIO ERP':'24,95,165', 'ENTREGA ERP':'29,158,117', 'COMPROVANTE ERP':'24,95,165' };
       var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓','VALIDAÇÃO':'✓','GERAÇÃO RF':'◉','INCONSISTÊNCIA':'!',
         'VENCIMENTO':'✕','AGUARDANDO':'…','APROPRIAÇÃO':'✓','PAGAMENTO':'$','UTILIZAÇÃO':'◆',
         'EXTINÇÃO':'■','CONCILIAÇÃO':'⇌',
-        'CONC APURAÇÃO':'⇌','CONC FINANCEIRA':'⇌','RESSARCIMENTO':'↺' };
+        'CONC APURAÇÃO':'⇌','CONC FINANCEIRA':'⇌','RESSARCIMENTO':'↺', 'GLOSA':'✕', 'IMPUGNAÇÃO':'⚖', 'GLOSA DEFINITIVA':'✕', 'ENVIO ERP':'↑', 'ENTREGA ERP':'⇄', 'COMPROVANTE ERP':'⤓' };
 
       var allEvs = [];
 
