@@ -4299,7 +4299,9 @@ window.renderizarRFsInconsistencias = function() {
     'cfin_cbs_valor':       'Comprovante CBS divergente',
     'chave_invalida':       'Chave de acesso inválida',
     'cnpj_divergente':      'CNPJ divergente',
-    'duplicidade_rf':       'RF duplicado'
+    'duplicidade_rf':       'RF duplicado',
+    'apur_df_sem_registro': 'DF sem registro na apuração assistida',
+    'apur_registro_sem_df': 'Registro na apuração assistida sem DF'
   };
   // D-GL-05: o estado 'glosada' deixa de ser sorteado aqui. Ele passa a valer
   // so para as ocorrencias que o modulo shGlosa cria a partir de uma glosa de
@@ -4345,6 +4347,7 @@ window.renderizarRFsInconsistencias = function() {
   });
   try { if (window.shGlosa && window.shGlosa.inconsistencias) window.shGlosa.inconsistencias(incGlobal); } catch (e) {}
   try { if (window.shErp && window.shErp.inconsistencias) window.shErp.inconsistencias(incGlobal); } catch (e) { console.error('[erp] inconsistências', e); }
+  try { if (window.shConcApur && window.shConcApur.inconsistencias) window.shConcApur.inconsistencias(incGlobal); } catch (e) { console.error('[conc-apur] inconsistências', e); }
   try { if (window.shRes && window.shRes.inconsistencias) window.shRes.inconsistencias(incGlobal); } catch (e) {}
   window._inconsistenciasGlobal = incGlobal;
 
