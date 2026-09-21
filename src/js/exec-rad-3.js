@@ -318,3 +318,56 @@
   };
 
 })();
+
+/* ══ Entrega da guia ao ERP — agora no histórico do RF ═══════════════════
+   A listagem de Pagamentos tinha uma coluna "Entrega" com o estado do
+   webhook. Estado não é coluna: é evento. O envio e a confirmação (ou a
+   falha) passam a ser registros do RF, com data, tentativa e o que fazer
+   quando o ERP não recebeu. */
+(function () {
+  'use strict';
+  function dias(iso, n) {
+    var p = String(iso || '').slice(0, 10).split('-'); if (p.length !== 3) return null;
+    var d = new Date(+p[0], +p[1] - 1, +p[2] + n), z = function (x) { return String(x).padStart(2, '0'); };
+    return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate());
+  }
+  window.radHistoricoRF = function (rf, nf) {
+    if (!rf || !nf || nf.tipo !== 'entrada') return [];
+    var met = rf.metodoPagamento || nf.metodoPagamento;
+    if (met !== 'RAD' || !window.radEnriquecerRF) return [];
+    var r = window.radEnriquecerRF({
+      rfId: rf.id, tipo: (rf.tipoFiscal || '').toUpperCase(), pago: !!(rf.dataPagamento && rf.dataPagamento !== '—'),
+      valor: rf.valor || 0, dataRFIso: String(rf.data || nf.data).slice(0, 10), statusCredito: rf.statusCredito || rf.status
+    });
+    if (!r || !r.entregaStatus) return [];
+    var F = window._rfFmtTS || function (x) { return x; };
+    function ev(ts, tipo, ator, desc, cls) { return { ts: ts, data: F(ts), tipo: tipo, modulo: 'Pagamentos', ator: ator, desc: desc, cls: cls }; }
+    var envio = dias(String(rf.data || nf.data).slice(0, 10), 5), out = [];
+    if (!envio) return [];
+    var guia = r.guideNumber || r.darfId;
+    out.push(ev(envio + 'T07:40', 'ENVIO ERP', 'SplitHub · automático',
+      'Guia ' + guia + ' enviada ao ERP · webhook rad.darf_recebida · tentativa 1 de ' + r.entregaTentativas, 'ok'));
+    if (r.entregaStatus === 'entregue') {
+      out.push(ev(envio + 'T07:41', 'ENTREGA ERP', 'ERP',
+        'ERP confirmou o recebimento da guia ' + guia + ' · HTTP 200 OK · documento disponível no sistema do cliente', 'ok'));
+    } else if (r.entregaStatus === 'pendente') {
+      out.push(ev(dias(envio, 1) + 'T07:40', 'ENTREGA ERP', 'SplitHub · automático',
+        'ERP ainda não confirmou o recebimento da guia ' + guia + ' · ' + r.entregaTentativas + ' tentativas · reenvio automático em andamento', 'pending'));
+    } else {
+      out.push(ev(dias(envio, 2) + 'T07:40', 'ENTREGA ERP', 'SplitHub · automático',
+        'Entrega da guia ' + guia + ' falhou depois de ' + r.entregaTentativas + ' tentativas · a guia existe no SplitHub e não no ERP · reenvio manual em Configurações → Integrações → Log de entregas', 'erro'));
+    }
+    return out;
+  };
+  function gancho() {
+    if (typeof window._rfGerarHistorico !== 'function' || window._rfGerarHistorico._rad3) return;
+    var gh = window._rfGerarHistorico;
+    window._rfGerarHistorico = function (rf, nf) {
+      var ev = gh.apply(this, arguments);
+      try { window.radHistoricoRF(rf, nf).forEach(function (e) { ev.push(e); }); } catch (e) { console.error('[rad] histórico', e); }
+      return ev;
+    };
+    window._rfGerarHistorico._rad3 = true;
+  }
+  (function tentar(n) { gancho(); if (!(window._rfGerarHistorico && window._rfGerarHistorico._rad3) && (n || 0) < 20) setTimeout(function () { tentar((n || 0) + 1); }, 60); })(0);
+})();
