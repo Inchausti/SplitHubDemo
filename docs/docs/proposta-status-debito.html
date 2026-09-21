@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta — Status do débito: ciclo e flags · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+
+.imp { display:inline-block; font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; border-radius:3px; padding:1px 6px; white-space:nowrap; }
+.imp.c { color: var(--red); background: var(--red-d); }
+.imp.n { color: var(--purple, #6B3FA0); background: rgba(107,63,160,.12); }
+.imp.r { color: var(--teal); background: var(--teal-d); }
+.imp.s { color: var(--txt3); background: var(--sur2); }
+.big { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin:14px 0; }
+.big > div { border:1px solid var(--brd); border-radius:10px; padding:12px 14px; background:var(--sur); }
+.big .n { font-size:26px; font-weight:800; color:var(--txt1); font-family:'JetBrains Mono',monospace; line-height:1.1; }
+.big .l { font-size:12px; color:var(--txt2); margin-top:4px; }
+.bar { display:flex; align-items:center; gap:8px; }
+.bar i { display:block; height:8px; border-radius:4px; background:var(--teal); }
+code { overflow-wrap:anywhere; }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Débito → Ciclo de vida e flags</div>
+<h1>Status do débito — ciclo e flags</h1>
+<p class="subtitle">O débito tem hoje um campo só, com quatro valores que misturam o estado do ciclo com o problema do documento. Vencido e inconsistência não são etapas do ciclo: são marcas sobre um débito que continua não extinto — e podem valer ao mesmo tempo. A proposta separa as duas coisas, como o crédito já faz.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta de modelo</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">21/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Débito total</span>&nbsp;<span class="meta-val">R$ 87,71 mi</span></div>
+<div class="meta-pill"><span class="meta-label">Fora do ciclo hoje</span>&nbsp;<span class="meta-val">R$ 28,45 mi</span></div>
+<div class="meta-pill"><span class="meta-label">Decisões</span>&nbsp;<span class="meta-val">8</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn card-status-chip">Aguardando aprovação</span>&nbsp;<span class="chip warn">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Resumo</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> O que existe hoje</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> As provas do defeito</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> O modelo proposto</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> O que muda nos indicadores</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> O art. 53 e o débito vencido</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Impacto por tela</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Esforço e risco</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Decisões para aprovar</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Como foi medido</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Histórico de versões</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Resumo</span></div>
+<p>No registro fiscal de saída existe um único campo <code>status</code>, com quatro valores: <code>extinto</code>, <code>nao_extinto</code>, <code>vencido</code> e <code>inconsistencia</code>. Os dois primeiros são etapas do ciclo de vida do débito. Os dois últimos não são: <strong>vencido</strong> é um débito não extinto cujo prazo passou, e <strong>inconsistência</strong> é um problema apurado no documento. Os dois são marcas sobre o débito, e podem valer junto — inclusive com o débito já extinto.</p>
+<div class="big">
+<div><div class="n">200</div><div class="l">registros fiscais de saída</div></div>
+<div><div class="n">4</div><div class="l">valores num campo só, misturando ciclo e problema</div></div>
+<div><div class="n">0</div><div class="l">débitos com campo de flag — o crédito tem 32</div></div>
+<div><div class="n">14</div><div class="l">débitos com inconsistência que o KPI não conta</div></div>
+<div><div class="n">R$ 28,45 mi</div><div class="l">de débito fora do ciclo, em vencido e inconsistência</div></div>
+<div><div class="n">8</div><div class="l">decisões para aprovar</div></div>
+</div>
+<div class="callout warn"><div class="ct">Recomendação</div><p>Separar <strong>ciclo</strong> de <strong>flag</strong> no débito, exatamente como o crédito já faz. O ciclo passa a ter três estados — não extinto, parcialmente extinto e extinto — e vencido e inconsistência viram marcas que cruzam qualquer um deles. Isso conserta o KPI, revela as inconsistências que hoje somem e, principalmente, devolve R$ 28,45 mi ao ciclo do débito, que é onde o art. 53 vai procurá-los.</p></div>
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O que existe hoje</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Valor de <code>status</code></th><th class="num">RFs</th><th class="num">Valor</th><th>O que realmente é</th></tr></thead>
+<tbody>
+<tr><td><code>extinto</code></td><td class="num">134</td><td class="num">R$ 58,37 mi</td><td>estado do ciclo</td></tr>
+<tr><td><code>nao_extinto</code></td><td class="num">2</td><td class="num">R$ 899 mil</td><td>estado do ciclo</td></tr>
+<tr><td><code>vencido</code></td><td class="num">32</td><td class="num">R$ 14,20 mi</td><td><span class="gap">flag</span> — não extinto com prazo vencido</td></tr>
+<tr><td><code>inconsistencia</code></td><td class="num">32</td><td class="num">R$ 14,25 mi</td><td><span class="gap">flag</span> — problema no documento</td></tr>
+</tbody></table></div>
+<p>Como os quatro valores são mutuamente exclusivos, os KPIs da tela de Débito somam 100% do total. Essa soma bonita é consequência da modelagem, não da realidade: um débito vencido <em>também</em> é não extinto, e um débito com inconsistência está em algum ponto do ciclo — normalmente não extinto, às vezes já extinto.</p>
+<h3>O crédito já resolveu isso</h3>
+<p>No registro fiscal de entrada existem dois eixos: <code>statusCredito</code> para o ciclo — não apropriado, apropriado, utilizado, glosado — e <code>statusFlags</code>/<code>statusRegistro</code> para as marcas: em risco, a prescrever, vencido, inconsistência. Hoje <strong>32 registros de entrada carregam flag por cima do status</strong>, e ninguém confunde as duas coisas. No débito, <strong>nenhum</strong> registro tem campo de flag — ele não existe.</p>
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">As provas do defeito</span></div>
+<div class="feat">
+<div class="feat-hdr"><span class="feat-id">P-01</span><span class="feat-name">Inconsistência que some do indicador</span></div>
+<div class="feat-body"><p><strong>46 registros de saída têm inconsistência vinculada, mas só 32 carregam o rótulo <code>inconsistencia</code>.</strong> Os outros 14 estão classificados como extinto ou vencido — a divergência existe, está registrada, e não aparece no KPI de inconsistências da tela de Débito. Entre eles, <strong>3 são vencidos com inconsistência</strong>: a sobreposição que o modelo atual não permite representar.</p></div>
+</div>
+<div class="feat">
+<div class="feat-hdr"><span class="feat-id">P-02</span><span class="feat-name">Método de extinção sem extinção</span></div>
+<div class="feat-body"><p>O registro <code>RF-00000217</code> está com <code>status = vencido</code>, <code>metodoExtincao = Compensacao</code> e data de extinção vazia. Método de extinção preenchido num débito que não foi extinto é contradição direta — e acontece porque o campo de status foi ocupado pela marca, deixando o ciclo sem onde ser registrado.</p></div>
+</div>
+<div class="feat">
+<div class="feat-hdr"><span class="feat-id">P-03</span><span class="feat-name">Rótulo no lugar do estado</span></div>
+<div class="feat-body"><p>O registro <code>RF-00000221</code> está com <code>status = inconsistencia</code> e <code>metodoExtincao = RAD</code>. A inconsistência dele é "Split IBS não executado". O documento tem um problema, sim — mas o débito continua tendo um estado no ciclo, e esse estado foi perdido.</p></div>
+</div>
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O modelo proposto</span></div>
+<h3>Eixo 1 — ciclo de vida do débito</h3>
+<div class="state-grid">
+<div class="state-row"><span class="state-name sn-gray">nao_extinto</span><span class="state-desc">Débito apurado e ainda devido, no todo ou em parte.</span></div>
+<div class="state-row"><span class="state-name sn-purple">parcial</span><span class="state-desc">Parte do débito foi extinta — em geral por compensação que o crédito não cobriu inteira. Hoje o motor já produz esse caso, e ele não tem onde ser guardado.</span></div>
+<div class="state-row"><span class="state-name sn-green">extinto</span><span class="state-desc">Débito integralmente extinto, com método e data: split payment, RAD, compensação ou pagamento em guia.</span></div>
+</div>
+<h3>Eixo 2 — flags, ortogonais ao ciclo</h3>
+<div class="state-grid">
+<div class="state-row"><span class="state-name sn-red">vencido</span><span class="state-desc">O prazo de recolhimento passou e o débito não estava extinto. Vale sobre não extinto e sobre parcial; some quando o débito é extinto, ficando no histórico.</span></div>
+<div class="state-row"><span class="state-name sn-amber">inconsistencia</span><span class="state-desc">Há divergência apurada no documento ou no registro. Vale sobre qualquer estado do ciclo, inclusive extinto.</span></div>
+<div class="state-row"><span class="state-name sn-blue">retido</span><span class="state-desc">Débito impedido de ser extinto por compensação enquanto a inconsistência não for resolvida — ver <strong>D-DB-02</strong>.</span></div>
+<div class="state-row"><span class="state-name sn-amber">em_contencioso</span><span class="state-desc">Débito discutido administrativamente. Espelha o que a glosa faz do lado do crédito.</span></div>
+</div>
+<div class="callout info"><div class="ct">A regra em uma frase</div><p>O ciclo responde <strong>"quanto ainda devo"</strong>. A flag responde <strong>"o que há de errado ou de risco nesse débito"</strong>. Um débito pode estar não extinto, vencido e inconsistente ao mesmo tempo — hoje ele precisa escolher um dos três.</p></div>
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O que muda nos indicadores</span></div>
+<p>Os KPIs deixam de ser quatro fatias de um bolo e passam a ser duas leituras: o ciclo, que soma o total, e as marcas, que cruzam o ciclo e não somam com ele.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Leitura</th><th>Hoje</th><th>Proposto</th></tr></thead>
+<tbody>
+<tr><td><strong>Ciclo</strong></td><td>Extintos R$ 58,37 mi · Não extintos R$ 899 mil · Vencidos R$ 14,20 mi · Inconsistências R$ 14,25 mi <em>(somam 100%)</em></td><td>Extintos R$ 58,37 mi · Parcialmente extintos · Não extintos R$ 29,34 mi <em>(somam 100%)</em></td></tr>
+<tr><td><strong>Flags</strong></td><td>não existem</td><td>Vencidos R$ 14,20 mi · Com inconsistência ≈ R$ 16 mi (os 46 registros) · Retidos · Em contencioso <em>(cruzam o ciclo)</em></td></tr>
+<tr><td><strong>Extinção por método</strong></td><td>RAD R$ 26,77 mi + Compensação R$ 31,60 mi = R$ 58,37 mi</td><td>igual, mais a parcela já compensada dos parciais (R$ 320 mil hoje)</td></tr>
+</tbody></table></div>
+<p>O ganho imediato é que os <strong>14 registros com inconsistência que hoje não aparecem</strong> passam a contar, e que o valor não extinto deixa de ser R$ 899 mil — número que hoje esconde R$ 28,45 mi de débito devido.</p>
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">O art. 53 e o débito vencido</span></div>
+<p>Esta é a consequência que pesa. O art. 53 da LC 214/2025 manda o crédito cobrir, em primeiro lugar, o <strong>saldo a recolher vencido</strong>; só depois os débitos do período. Hoje o motor não vê esses débitos, porque eles estão fora do ciclo — e por isso aparecem como "Em aberto" no Fluxo de Caixa, R$ 28,45 mi parados.</p>
+<p>Com o modelo novo, eles voltam a ser débito não extinto e entram na fila. A simulação abaixo mede o efeito sobre a base de hoje, sem o plano de ressarcimento, só para dimensionar:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Quem entra na fila do art. 53</th><th class="num">Compensado</th><th class="num">Saldo credor no fim</th><th class="num">A recolher em guia</th></tr></thead>
+<tbody>
+<tr><td>Hoje — só não extintos</td><td class="num">R$ 32,50 mi</td><td class="num">R$ 27,56 mi</td><td class="num">—</td></tr>
+<tr><td>Com os vencidos</td><td class="num">R$ 46,70 mi</td><td class="num">R$ 13,36 mi</td><td class="num">—</td></tr>
+<tr><td>Com vencidos e inconsistentes</td><td class="num">R$ 56,24 mi</td><td class="num">R$ 3,82 mi</td><td class="num">R$ 4,72 mi em 5 meses</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">O que isso significa</div><p>Levar vencidos e inconsistentes para a fila <strong>consome quase todo o saldo credor</strong>: de R$ 27,56 mi para R$ 3,82 mi. Sem saldo, o módulo de Ressarcimento perde quase todo o objeto — intenções, pedidos e recebimentos encolhem na mesma proporção —, e aparecem cinco meses com guia a recolher em vez dos dois preservados hoje. É por isso que <strong>D-DB-01</strong> e <strong>D-DB-02</strong> precisam ser decididas antes de qualquer linha de código.</p></div>
+<p>Há ainda o efeito de acréscimos: débito vencido extinto depois do prazo cobra juros e multa. O protótipo já trata isso de forma simulada no RAD, por decisão anterior, e a proposta mantém esse tratamento (<strong>D-DB-04</strong>).</p>
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Impacto por tela</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Tela</th><th>O que muda</th><th>Código novo</th></tr></thead>
+<tbody>
+<tr><td><strong>Débito · KPIs</strong></td><td>duas leituras: ciclo (soma 100%) e flags (cruzam o ciclo)</td><td>Sim</td></tr>
+<tr><td><strong>Débito · listagem</strong></td><td>coluna de status do ciclo e coluna de flags, como já existe no Crédito; filtros por flag</td><td>Sim</td></tr>
+<tr><td><strong>Débito · composição e extinção por método</strong></td><td>a composição passa a ser por ciclo; as flags viram recorte próprio</td><td>Sim</td></tr>
+<tr><td><strong>Detalhe do RF de saída</strong></td><td>ciclo, flags, e o quanto já foi extinto quando parcial</td><td>Sim</td></tr>
+<tr><td><strong>Histórico</strong></td><td>vencimento e inconsistência viram eventos com data, em vez de estado</td><td>Sim</td></tr>
+<tr><td><strong>Motor do art. 53</strong></td><td>a fila passa a incluir o que for decidido em D-DB-01 e D-DB-02</td><td>Sim</td></tr>
+<tr><td><strong>Fluxo de Caixa</strong></td><td>a coluna "Em aberto" muda de tamanho conforme a decisão; o saldo credor acompanha</td><td>Ajuste</td></tr>
+<tr><td><strong>Ressarcimento</strong></td><td>o saldo credor disponível muda, e com ele intenções, pedidos e recebimentos</td><td>Ajuste</td></tr>
+<tr><td><strong>Inconsistências</strong></td><td>os 14 registros hoje invisíveis entram na contagem e na fila</td><td>Ajuste</td></tr>
+</tbody></table></div>
+<p>Documentação a atualizar junto: <strong>PRD de Débito</strong> (máquina de estados), PRD de Inconsistências, PRD de Apuração, Mapa de Funcionalidades e Mapa de Priorização.</p>
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Esforço e risco</span></div>
+<ul class="plain">
+<li><strong>A parte estrutural é barata.</strong> O crédito já tem o padrão pronto — dois eixos, badges de flag, filtros —, e o débito só precisa seguir o mesmo desenho.</li>
+<li><strong>A parte cara é a consequência.</strong> Mudar quem entra na fila do art. 53 mexe em compensação, saldo credor, ressarcimento, Fluxo de Caixa e nos meses devedores preservados. Não é refatoração: é mudança de cenário.</li>
+<li><strong>Risco de leitura.</strong> Indicadores que hoje somam 100% deixam de somar, e isso precisa ficar explícito na tela, senão parece erro.</li>
+<li><strong>Risco de base.</strong> A migração precisa decidir o ciclo de cada um dos 64 registros hoje marcados como vencido ou inconsistência — todos viram não extintos, exceto os que tiverem extinção registrada.</li>
+</ul>
+</div>
+
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Decisões para aprovar</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Decisão</th><th>Sugestão</th></tr></thead>
+<tbody>
+<tr><td class="rid">D-DB-01</td><td>Débito vencido entra na fila do art. 53 como saldo a recolher vencido?</td><td>Sim — é o que a lei manda, e é a primeira prioridade da ordem. O cenário de "meses devedores preservados" passa a vir de outro lugar</td></tr>
+<tr><td class="rid">D-DB-02</td><td>Débito com inconsistência pode ser extinto por compensação antes de a divergência ser resolvida?</td><td>Não — ganha a flag <em>retido</em> e fica fora da fila até a resolução</td></tr>
+<tr><td class="rid">D-DB-03</td><td>Criar o estado <em>parcialmente extinto</em> no ciclo?</td><td>Sim — o motor já produz esse caso e hoje ele fica escondido em "não extinto"</td></tr>
+<tr><td class="rid">D-DB-04</td><td>Juros e multa sobre o vencido extinto fora do prazo</td><td>Manter simulado, como já decidido para o RAD</td></tr>
+<tr><td class="rid">D-DB-05</td><td>Os KPIs da tela passam a ter duas linhas — ciclo e flags?</td><td>Sim, com rótulo dizendo que as flags cruzam o ciclo e não somam com ele</td></tr>
+<tr><td class="rid">D-DB-06</td><td>Quais flags entram já</td><td>Vencido e inconsistência agora; retido junto com D-DB-02; em contencioso quando houver contencioso de débito</td></tr>
+<tr><td class="rid">D-DB-07</td><td>Faixa de priorização</td><td>M1 — o M0 segue inalterado</td></tr>
+<tr><td class="rid">D-DB-08</td><td>Ordem em relação ao motor e à glosa</td><td>Depois das duas: o motor precisa estar estável para medir o efeito de trazer R$ 28,45 mi para a fila</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Como foi medido</span></div>
+<p>Tudo lido direto da base carregada no protótipo, com o motor ligado:</p>
+<ul class="plain">
+<li><strong>Distribuição do status</strong> — 200 registros fiscais de saída: 134 extintos, 32 vencidos, 32 com inconsistência, 2 não extintos.</li>
+<li><strong>Valores</strong> — total R$ 87,71 mi; extintos R$ 58,37 mi (RAD R$ 26,77 mi + compensação R$ 31,60 mi); não extintos R$ 899 mil; vencidos R$ 14,20 mi; inconsistências R$ 14,25 mi.</li>
+<li><strong>Inconsistências escondidas</strong> — 46 registros de saída têm inconsistência vinculada; só 32 carregam o rótulo; 3 dos vencidos também têm.</li>
+<li><strong>Ausência de flags</strong> — nenhum registro de saída tem <code>statusFlags</code> ou <code>statusRegistro</code> preenchido; do lado do crédito, 32 têm.</li>
+<li><strong>Contradições</strong> — <code>RF-00000217</code> (vencido com método de extinção e sem data) e <code>RF-00000221</code> (inconsistência com método RAD).</li>
+<li><strong>Simulação do art. 53</strong> — fila FIFO por tributo, crédito pelo mês de apropriação, vencido antes dos débitos do período, sem o plano de ressarcimento. Serve para dimensionar o efeito, não como número final.</li>
+</ul>
+</div>
+
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><span class="ver-num">v1.0</span><span class="ver-desc">21/09/2026 — proposta inicial: separação entre ciclo de vida e flags no débito, provas do defeito na base, KPIs em duas leituras, medição do efeito de levar vencidos e inconsistentes para a fila do art. 53, impacto por tela e 8 decisões.</span></div>
+</div>
+
+</div>
+</body>
+</html>
