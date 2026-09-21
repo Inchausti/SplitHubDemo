@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Débitos IBS/CBS · SplitHub v1.2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">PRD · Fiscal → Débitos</div>
+<h1>Débitos IBS/CBS — O contrapeso do crédito</h1>
+<p class="subtitle">O tributo que a organização deve nas suas vendas, por documento e por registro: quanto, quanto já foi extinto e por qual método, e o que venceu. É a metade da apuração que o crédito abate.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.2</span></div>
+<div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Fiscal → Débitos</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
+<div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-debitos</span></div>
+<div class="meta-pill"><span class="meta-label">Faixa MVP</span>&nbsp;<span class="meta-val">M0 parcial — 3 de 6</span></div>
+<div class="meta-pill"><span class="meta-label">LC 214/2025</span>&nbsp;<span class="meta-val">Arts. 10, 27 e 47</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v1.2</span></div>
+</div>
+<div class="res-upd" style="border:1px solid var(--brd);background:var(--sur);border-radius:10px;padding:14px 18px;margin:18px 0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--purple);border:1px solid var(--purple);border-radius:3px;padding:1px 6px">Ressarcimento</span><strong style="color:var(--txt1);font-size:14px">v1.1 — atualizado por conta do novo módulo de Ressarcimento</strong></div><ul style="list-style:disc;margin:0;padding:0;font-size:13px;color:var(--txt2)"><li style="margin:4px 0 0 18px">Faixa <em>Ressarcimento</em> no topo quando há intenção declarada: os créditos reservados não compensam débitos do mês seguinte do mesmo tributo, e os débitos não extintos seguem para recolhimento.</li><li style="margin:4px 0 0 18px">Botão para abrir as intenções no módulo.</li></ul><div style="font-size:12px;color:var(--txt2);margin-top:8px">18/09/2026 · <a href="prd-ressarcimento.html" style="color:var(--blue);font-weight:700">PRD de Ressarcimento</a> · <a href="ressarcimento-validacao-hubs.html" style="color:var(--blue);font-weight:700">validação dos hubs</a></div></div>
+  <div class="res-upd" style="border:1px solid var(--brd);background:var(--sur);border-radius:10px;padding:14px 18px;margin:18px 0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--purple);border:1px solid var(--purple);border-radius:3px;padding:1px 6px">Ressarcimento</span><strong style="color:var(--txt1);font-size:14px">v1.2 — auditoria de histórico e indicadores com o ressarcimento</strong></div><ul style="list-style:disc;margin:0;padding:0;font-size:13px;color:var(--txt2)"><li style="margin:4px 0 0 18px">Data de extinção do débito: emissão + 5 dias, virando o mês. O enriquecimento da base travava no último dia do mês, e 6 débitos apareciam extintos antes de o próprio RF existir no histórico.</li><li style="margin:4px 0 0 18px">Histórico do débito diz o tributo e o método em português — <em>Compensação com créditos do mesmo tributo</em>.</li><li style="margin:4px 0 0 18px">Data de extinção do DF de saída acompanha a dos RFs.</li></ul><div style="font-size:12px;color:var(--txt2);margin-top:8px">18/09/2026 · <a href="prd-ressarcimento.html" style="color:var(--blue);font-weight:700">PRD de Ressarcimento</a> · <a href="ressarcimento-validacao-hubs.html" style="color:var(--blue);font-weight:700">validação dos hubs</a></div></div>
+  <div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Contexto e posicionamento</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Jornadas de usuário atendidas</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Escopo e recorte do módulo</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Modelo de dados</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Arquitetura da tela</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Funcionalidades detalhadas</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Indicadores e gráficos</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Requisitos funcionais</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Regras de negócio</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Requisitos não funcionais</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Defeitos e divergências</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Integrações e dependências</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Glossário</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> Histórico de versões</a></li>
+</ul></div>
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Contexto e posicionamento</span></div>
+<h3>1.1 O outro lado do mesmo sistema</h3><p>O SplitHub existe para garantir a apropriação do crédito de IBS e CBS nas compras. O débito é o contrapeso: o tributo que a própria organização deve nas suas vendas. Os dois se encontram na apuração — o crédito apropriado abate o débito apurado, e o que sobra é o tributo a recolher.</p><p>Por isso este módulo não é um espelho do de Crédito. Ele existe para responder três perguntas, nesta ordem:</p><div class="table-wrap"><table><thead><tr><th>Pergunta</th><th>Onde é respondida</th><th>Por que importa</th></tr></thead><tbody><tr><td>Quanto devo neste período?</td><td>KPI <em>Total de débitos</em> e composição mensal</td><td>É o número que a apuração vai confrontar com o crédito apropriado</td></tr><tr><td>O que já foi extinto, e como?</td><td>KPIs de extinção e gráfico de método</td><td>Débito extinto por compensação consumiu crédito; por recolhimento, consumiu caixa</td></tr><tr><td>O que venceu ou está inconsistente?</td><td>KPIs <em>Vencidos</em> e <em>Inconsistências</em></td><td>Débito vencido gera multa e juros; inconsistente impede a apuração de fechar</td></tr></tbody></table></div><h3>1.2 Recorte legal</h3><p>O débito nasce do fato gerador na saída (LC 214/2025, art. 10) e se extingue pelas modalidades do art. 27 do Regulamento do IBS — entre elas a <strong>compensação com créditos apropriados</strong> e o <strong>pagamento</strong>. O módulo trata da extinção, não do cálculo do tributo devido: a alíquota e a base vêm do documento fiscal emitido.</p><div class="callout info"><div class="ct">Fronteira com a Apuração</div><p>O módulo de Débito mostra a <strong>posição por documento e por registro</strong>. Quem consolida a competência, aplica o saldo do período anterior e fecha o valor a recolher é o módulo de <strong>Apuração IBS/CBS</strong>. Os dois leem a mesma base; só um fecha.</p></div>
+</div>
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Jornadas de usuário atendidas</span></div>
+<div class="table-wrap"><table><thead><tr><th>Jornada</th><th>O que o módulo entrega</th><th>Cobertura</th></tr></thead><tbody><tr><td><strong>J-06</strong> · Acompanhar a posição fiscal do período</td><td>Total devido, extinto, vencido e inconsistente, com composição mês a mês</td><td><span class="chip ok">Completa</span></td></tr><tr><td><strong>J-04</strong> · Investigar um documento específico</td><td>Aba de documentos fiscais de saída, com drill até o registro e o detalhe do documento</td><td><span class="chip ok">Completa</span></td></tr><tr><td><strong>J-08</strong> · Entender como o débito foi extinto</td><td>Gráfico de método de extinção e coluna por registro</td><td><span class="chip warn">Parcial</span> — o gráfico não separa compensação por período de origem do crédito</td></tr><tr><td><strong>J-03</strong> · Tratar o que impede a apuração de fechar</td><td>Coluna de inconsistências por documento e por registro, com link para o módulo próprio</td><td><span class="chip warn">Parcial</span> — não há ação de tratamento dentro do módulo</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Escopo e recorte do módulo</span></div>
+<h3>3.1 O que entra</h3><p>Apenas documentos fiscais de <strong>saída</strong> (<code>nf.tipo === 'saida'</code>) e seus registros fiscais. Cada documento gera dois registros — um de IBS e um de CBS —, e o débito do documento é a soma dos dois.</p><h3>3.2 O que não entra</h3><div class="table-wrap"><table><thead><tr><th>Fora do módulo</th><th>Onde vive</th></tr></thead><tbody><tr><td>Cálculo do tributo devido (base e alíquota)</td><td>Vem do documento fiscal emitido, na ingestão</td></tr><tr><td>Consolidação da competência e saldo a recolher</td><td>Módulo de Apuração IBS/CBS</td></tr><tr><td>Tratamento das inconsistências</td><td>Módulo de Inconsistências</td></tr><tr><td>Geração de guia e comprovante</td><td>Módulo de Pagamentos RAD — que trata do crédito, não do débito próprio</td></tr></tbody></table></div><div class="callout warn"><div class="ct">O débito não tem fluxo de pagamento no produto</div><p>O módulo mostra o débito extinto e o não extinto, mas <strong>não existe ação de extinguir</strong>: nem compensação manual, nem emissão de guia do débito próprio. O status vem da base gerada, não de um ato do operador. É a maior lacuna do módulo — ver seção 11.</p></div>
+</div>
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Modelo de dados</span></div>
+<h3>4.1 Campos lidos do registro fiscal</h3><div class="table-wrap"><table><thead><tr><th>Campo</th><th>Tipo</th><th>Uso no módulo</th></tr></thead><tbody><tr><td><code>tipoFiscal</code></td><td><code>ibs</code> | <code>cbs</code></td><td>Separa as colunas de valor e o filtro por tributo</td></tr><tr><td><code>valor</code></td><td>número</td><td>Compõe o débito do registro e do documento</td></tr><tr><td><code>status</code></td><td>enum</td><td><code>extinto</code>, <code>nao_extinto</code>, <code>vencido</code>, <code>inconsistencia</code></td></tr><tr><td><code>statusRegistro</code></td><td>enum</td><td><code>inconsistencia</code>, <code>vencido</code>, <code>em_risco</code>, <code>a_prescrever</code></td></tr><tr><td><code>statusFlags</code></td><td>lista</td><td>Marcas acumuladas, exibidas como selos na coluna <em>St. Registro</em></td></tr><tr><td><code>metodoExtincao</code></td><td>enum</td><td><code>RAD</code> ou <code>Compensacao</code> — alimenta o gráfico de método</td></tr><tr><td><code>dataExtincao</code></td><td>data</td><td>Exibida na coluna <em>Extinção</em></td></tr><tr><td><code>contratoId</code></td><td>texto</td><td>Liga o registro ao contrato, com abertura do detalhe</td></tr><tr><td><code>_inconsistencias</code></td><td>lista</td><td>Selos vermelhos por tipo, na coluna própria</td></tr></tbody></table></div><h3>4.2 Campos derivados no documento</h3><div class="table-wrap"><table><thead><tr><th>Derivado</th><th>Como é calculado</th></tr></thead><tbody><tr><td>Débito do documento</td><td>Soma dos valores dos registros de IBS e CBS</td></tr><tr><td>Status do documento</td><td>Pior estado entre os registros — ver <span class="rid">RN-DEB-02</span></td></tr><tr><td>Método de extinção do documento</td><td>Primeiro método não vazio encontrado entre os registros</td></tr><tr><td>Data de extinção do documento</td><td>Primeira data não vazia encontrada entre os registros</td></tr><tr><td>Pior <code>statusRegistro</code></td><td>Maior severidade na escala <code>inconsistencia</code> 4 › <code>vencido</code> 3 › <code>em_risco</code> 2 › <code>a_prescrever</code> 1</td></tr></tbody></table></div><div class="callout warn"><div class="ct">Método e data do documento são o primeiro achado, não o correto</div><p>Quando IBS e CBS foram extintos por métodos ou em datas diferentes, o documento exibe apenas o que apareceu primeiro na lista de registros. Não há indicação de que houve divergência entre os dois.</p></div>
+</div>
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Arquitetura da tela</span></div>
+<p>Três abas sobre o mesmo recorte de período, em <code>#view-debitos</code>:</p><div class="table-wrap"><table><thead><tr><th>Aba</th><th>Id</th><th>Conteúdo</th></tr></thead><tbody><tr><td><strong>Visão Geral</strong></td><td><code>deb-visao</code></td><td>Quatro KPIs, composição mensal por status e gráfico de método de extinção</td></tr><tr><td><strong>Documentos Fiscais</strong></td><td><code>deb-dfs</code></td><td>Um documento por linha, 16 colunas, filtros e exportação</td></tr><tr><td><strong>Registros Fiscais</strong></td><td><code>deb-rfs</code></td><td>Um registro por linha, 20 colunas, no padrão RF Core</td></tr></tbody></table></div><p>O seletor de período é multi-seleção por <em>origem do fato gerador</em> e vale para as três abas. O filtro de grupo econômico da barra superior também atravessa o módulo.</p>
+</div>
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Funcionalidades detalhadas</span></div>
+<div class="feat" id="f-01"><div class="feat-hdr"><span class="feat-id">F-01</span><span class="feat-name">Listar documentos fiscais de saída</span><span class="feat-loc">deb-dfs</span></div><div class="feat-body"><p>Um documento por linha, com tipo, entidade, CNPJ, data, valor total, IBS, CBS, débito somado, data de extinção, status, inconsistências, contrato, método e quantidade de registros.</p><p>O débito aparece destacado em vermelho, porque é a coluna que o usuário procura — as demais são contexto.</p></div></div><div class="feat" id="f-02"><div class="feat-hdr"><span class="feat-id">F-02</span><span class="feat-name">Separar IBS e CBS em colunas próprias</span><span class="feat-loc">deb-dfs · deb-rfs</span></div><div class="feat-body"><p>Os dois tributos nunca são somados numa coluna só. Têm competência, destinação e prazo próprios, e um pode estar extinto enquanto o outro não.</p></div></div><div class="feat" id="f-03"><div class="feat-hdr"><span class="feat-id">F-03</span><span class="feat-name">Derivar o status do documento pelo pior registro</span><span class="feat-loc">deb-dfs</span></div><div class="feat-body"><p>Um documento não tem status próprio: ele herda o pior estado entre seus registros, na ordem inconsistência › vencido › extinto › não extinto.</p><div class="callout warn"><div class="ct">A regra atual mascara o débito parcialmente extinto</div><p>Um documento com IBS extinto e CBS não extinto é rotulado <em>Extinto</em>. Ver <span class="rid">DEF-01</span>.</p></div></div></div><div class="feat" id="f-04"><div class="feat-hdr"><span class="feat-id">F-04</span><span class="feat-name">Listar registros fiscais no padrão RF Core</span><span class="feat-loc">deb-rfs</span></div><div class="feat-body"><p>Vinte colunas: identificador do registro, tipo fiscal, tipo do documento, documento, cliente, data, valor total, valor líquido, CBS, IBS, débito, extinção, status, status de registro, inconsistências, contrato, método, e as três colunas do ciclo do crédito — apropriação, extinção e previsão.</p></div></div><div class="feat" id="f-05"><div class="feat-hdr"><span class="feat-id">F-05</span><span class="feat-name">Filtrar por qualquer coluna relevante</span><span class="feat-loc">deb-dfs · deb-rfs</span></div><div class="feat-body"><p>Busca textual, status, tipo de documento, método, extinção, faixa de data, faixa de valor total, faixa de débito, faixa de IBS, faixa de CBS e contrato — no painel colapsável padrão do produto.</p></div></div><div class="feat" id="f-06"><div class="feat-hdr"><span class="feat-id">F-06</span><span class="feat-name">Acompanhar os quatro KPIs do período</span><span class="feat-loc">deb-visao</span></div><div class="feat-body"><p>Total de débitos, extintos, não extintos, vencidos e inconsistências, cada um com o percentual sobre o total. Os percentuais são o que dá leitura: R$ 4,2M vencidos só significa algo ao lado de 3,1% do total.</p></div></div><div class="feat" id="f-07"><div class="feat-hdr"><span class="feat-id">F-07</span><span class="feat-name">Ver a composição mensal por status</span><span class="feat-loc">deb-visao</span></div><div class="feat-body"><p>Barras empilhadas mês a mês, com alternância entre todos os tributos, só IBS e só CBS.</p></div></div><div class="feat" id="f-08"><div class="feat-hdr"><span class="feat-id">F-08</span><span class="feat-name">Ver a distribuição por método de extinção</span><span class="feat-loc">deb-visao</span></div><div class="feat-body"><p>Quanto do débito foi extinto por compensação com crédito e quanto por recolhimento. É a leitura que diz se a organização está de fato usando o crédito que apropria.</p></div></div><div class="feat" id="f-09"><div class="feat-hdr"><span class="feat-id">F-09</span><span class="feat-name">Abrir o documento e o registro pelo identificador</span><span class="feat-loc">deb-dfs · deb-rfs</span></div><div class="feat-body"><p>O número do documento abre o detalhe com a linha do tempo; o identificador do registro abre o detalhe do registro; o contrato abre o detalhe do contrato. Nenhuma navegação perde o filtro de período.</p></div></div><div class="feat" id="f-10"><div class="feat-hdr"><span class="feat-id">F-10</span><span class="feat-name">Gerir colunas e exportar</span><span class="feat-loc">deb-dfs · deb-rfs</span></div><div class="feat-body"><p>Escolha, reordenação e ordenação das colunas, com exportação em CSV. A preferência fica no navegador.</p><div class="callout warn"><div class="ct">A exportação de documentos sai incompleta</div><p>Status, inconsistência e método vão vazios no CSV da aba de documentos. Ver <span class="rid">DEF-02</span>.</p></div></div></div>
+</div>
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Indicadores e gráficos</span></div>
+<div class="table-wrap"><table><thead><tr><th>Indicador</th><th>Fórmula</th><th>Leitura</th></tr></thead><tbody><tr><td><strong>Total de débitos</strong></td><td>Soma do débito dos registros filtrados</td><td>O que a organização deve no recorte</td></tr><tr><td><strong>Extintos</strong></td><td>Soma onde <code>status = extinto</code>, e o percentual sobre o total</td><td>O que já saiu da posição</td></tr><tr><td><strong>Não extintos</strong></td><td>Soma onde <code>status = nao_extinto</code></td><td>O que ainda vai consumir crédito ou caixa</td></tr><tr><td><strong>Vencidos</strong></td><td>Soma onde <code>status = vencido</code></td><td>Multa e juros já correndo</td></tr><tr><td><strong>Inconsistências</strong></td><td>Soma onde <code>status = inconsistencia</code></td><td>O que impede a apuração de fechar</td></tr></tbody></table></div><h3>7.1 Gráficos</h3><div class="table-wrap"><table><thead><tr><th>Gráfico</th><th>Eixos</th><th>Recorte</th></tr></thead><tbody><tr><td>Composição de débitos</td><td>Mês × R$ milhões, empilhado por status</td><td>Todos · IBS · CBS</td></tr><tr><td>Método de extinção</td><td>Participação de cada método</td><td>Compensação e recolhimento</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Requisitos funcionais</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri.</th></tr></thead><tbody><tr><td><span class="rid">RF-DEB-001</span></td><td>O módulo deve listar apenas documentos de saída.</td><td>Documento de entrada não aparece em nenhuma das três abas.</td><td>M</td></tr><tr><td><span class="rid">RF-DEB-002</span></td><td>IBS e CBS devem ser apresentados em colunas separadas de valor.</td><td>Nenhuma coluna soma os dois tributos, exceto a coluna <em>Débito</em>.</td><td>M</td></tr><tr><td><span class="rid">RF-DEB-003</span></td><td>O débito do documento deve ser a soma dos registros de IBS e CBS.</td><td>Documento com IBS 1.000 e CBS 2.000 exibe débito 3.000.</td><td>M</td></tr><tr><td><span class="rid">RF-DEB-004</span></td><td>O status do documento deve refletir o pior estado entre seus registros.</td><td>Um registro em inconsistência leva o documento a inconsistência.</td><td>M</td></tr><tr><td><span class="rid">RF-DEB-005</span></td><td>O documento parcialmente extinto deve ser distinguível do totalmente extinto.</td><td>IBS extinto e CBS não extinto não pode exibir <em>Extinto</em>. <em>Não atendido — DEF-01.</em></td><td>M</td></tr><tr><td><span class="rid">RF-DEB-006</span></td><td>Os KPIs devem apresentar valor e percentual sobre o total.</td><td>Cada KPI traz o subtítulo com a participação no período.</td><td>M</td></tr><tr><td><span class="rid">RF-DEB-007</span></td><td>Os KPIs devem respeitar o filtro de período e de grupo econômico.</td><td>Trocar o período recalcula os cinco indicadores.</td><td>M</td></tr><tr><td><span class="rid">RF-DEB-008</span></td><td>A composição mensal deve permitir recorte por tributo.</td><td>Alternar para IBS exibe só os valores de IBS.</td><td>S</td></tr><tr><td><span class="rid">RF-DEB-009</span></td><td>O gráfico de método deve cobrir apenas débitos extintos.</td><td>Débito não extinto não entra na distribuição.</td><td>M</td></tr><tr><td><span class="rid">RF-DEB-010</span></td><td>Cada registro deve exibir todas as suas inconsistências.</td><td>Registro com duas inconsistências exibe dois selos.</td><td>M</td></tr><tr><td><span class="rid">RF-DEB-011</span></td><td>O identificador do documento deve abrir o detalhe com a linha do tempo.</td><td>Clique no número abre o modal do documento.</td><td>M</td></tr><tr><td><span class="rid">RF-DEB-012</span></td><td>O identificador do contrato deve abrir o detalhe do contrato.</td><td>Clique no contrato abre o modal, sem sair da aba.</td><td>S</td></tr><tr><td><span class="rid">RF-DEB-013</span></td><td>Os filtros devem cobrir status, tipo, método, extinção, datas, valores e contrato.</td><td>O painel traz os treze filtros, e o contador reflete o resultado.</td><td>M</td></tr><tr><td><span class="rid">RF-DEB-014</span></td><td>A exportação deve conter todas as colunas visíveis, preenchidas.</td><td>O CSV traz status, inconsistência e método. <em>Não atendido — DEF-02.</em></td><td>M</td></tr><tr><td><span class="rid">RF-DEB-015</span></td><td>A ordenação deve ser preservada entre renderizações.</td><td>Ordenar por débito e trocar de aba mantém a ordem ao voltar.</td><td>S</td></tr><tr><td><span class="rid">RF-DEB-016</span></td><td>O módulo deve permitir registrar a extinção de um débito.</td><td><em>Não atendido — DEF-03.</em></td><td>M</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Regras de negócio</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Regra</th><th>Onde vive</th></tr></thead><tbody><tr><td><span class="rid">RN-DEB-01</span></td><td>Débito é sempre documento de saída. Documento de entrada gera crédito, nunca débito.</td><td><code>debitosDFsRender</code>, filtro por <code>nf.tipo</code></td></tr><tr><td><span class="rid">RN-DEB-02</span></td><td>O status do documento é o pior entre os registros: inconsistência › vencido › extinto › não extinto.</td><td><code>_dfDebSt()</code></td></tr><tr><td><span class="rid">RN-DEB-03</span></td><td>A severidade do status de registro segue a escala inconsistência 4 › vencido 3 › em risco 2 › a prescrever 1.</td><td><code>_SR_SEV</code></td></tr><tr><td><span class="rid">RN-DEB-04</span></td><td>O método e a data de extinção do documento são o primeiro valor não vazio entre os registros.</td><td><code>debitosDFsRender</code></td></tr><tr><td><span class="rid">RN-DEB-05</span></td><td>Débito extinto por compensação consome crédito apropriado; por recolhimento, consome caixa. Os dois extinguem, mas não têm o mesmo custo.</td><td>Gráfico de método de extinção</td></tr><tr><td><span class="rid">RN-DEB-06</span></td><td>Um débito vencido continua devido — vencimento não extingue, apenas acrescenta multa e juros.</td><td>Status <code>vencido</code>, tratado como não extinto na apuração</td></tr><tr><td><span class="rid">RN-DEB-07</span></td><td>O percentual de cada KPI é calculado sobre o total do período filtrado, não sobre o total geral.</td><td><code>atualizarKPIsDebitos</code></td></tr></tbody></table></div>
+</div>
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Requisitos não funcionais</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Requisito</th><th>Critério</th></tr></thead><tbody><tr><td><span class="rid">RNF-DEB-01</span></td><td>As três abas devem renderizar em até 400 ms para 500 documentos.</td><td>Medido do clique na aba até a tabela pintada.</td></tr><tr><td><span class="rid">RNF-DEB-02</span></td><td>As tabelas devem rolar horizontalmente sem que a página role.</td><td>Verificado em 375, 768 e 1440 px.</td></tr><tr><td><span class="rid">RNF-DEB-03</span></td><td>Toda coluna deve ter explicação no cabeçalho.</td><td>Catálogo de colunas declarado para <code>deb-dfs</code> e <code>deb-rfs</code>.</td></tr><tr><td><span class="rid">RNF-DEB-04</span></td><td>Cores de status devem vir dos tokens do tema.</td><td>Nenhum valor hexadecimal literal em código novo.</td></tr><tr><td><span class="rid">RNF-DEB-05</span></td><td>Uma tabela vazia deve dizer que o filtro não encontrou nada, e não ficar em branco.</td><td>Mensagem própria em cada aba.</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Defeitos e divergências</span></div>
+<p>Levantados na leitura do código em 14/09/2026. Nenhum deles é hipótese.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>O que acontece</th><th>Efeito</th><th>Onde</th></tr></thead><tbody><tr><td><span class="rid">DEF-01</span></td><td>As duas últimas condições de <code>_dfDebSt()</code> são equivalentes: <code>if(ext&&!nao)return'extinto'; if(ext)return'extinto';</code></td><td>Documento com um registro extinto e outro não extinto é rotulado <strong>Extinto</strong>. O débito parcialmente extinto desaparece da leitura.</td><td><code>data-sync-fixed.js</code> · <code>_dfDebSt</code></td></tr><tr><td><span class="rid">DEF-02</span></td><td>A projeção <code>_debDFsLista</code> exporta <code>status</code>, <code>inconsistencia</code> e <code>metodo</code> como string vazia.</td><td>O CSV da aba de documentos sai com três colunas em branco — as mesmas que a tela mostra preenchidas.</td><td><code>data-sync-fixed.js</code> · <code>debitosDFsRender</code></td></tr><tr><td><span class="rid">DEF-03</span></td><td>Não existe ação de extinguir débito: nem compensação, nem guia própria.</td><td>O módulo é somente leitura. O status vem da base gerada, e o operador não tem o que fazer diante de um débito não extinto.</td><td>Módulo inteiro</td></tr><tr><td><span class="rid">DEF-04</span></td><td>Método e data de extinção do documento são o primeiro valor encontrado entre os registros.</td><td>IBS e CBS extintos por métodos diferentes exibem um só, sem aviso de divergência.</td><td><code>debitosDFsRender</code></td></tr><tr><td><span class="rid">DEF-05</span></td><td>O filtro <em>Tipo DF</em> da aba de documentos oferece Entrada e Saída.</td><td>A opção Entrada nunca retorna nada, porque o módulo já filtra por saída.</td><td>Configuração do painel de filtros de <code>deb-dfs</code></td></tr></tbody></table></div><div class="callout warn"><div class="ct">DEF-03 é de escopo, não de implementação</div><p>Os outros quatro são corrigíveis em horas. O DEF-03 é uma decisão de produto: o débito é apenas observado, e a extinção acontece fora do SplitHub. Enquanto for assim, a aba <em>Não extintos</em> é um alerta sem botão.</p></div>
+</div>
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Integrações e dependências</span></div>
+<div class="table-wrap"><table><thead><tr><th>Depende de</th><th>Para quê</th></tr></thead><tbody><tr><td><strong>Ingestão de DFs</strong></td><td>Origem dos documentos de saída e de seus registros</td></tr><tr><td><strong>Contratos</strong></td><td>Vínculo do registro ao contrato e abertura do detalhe</td></tr><tr><td><strong>Inconsistências</strong></td><td>Selos por tipo, nas duas abas</td></tr><tr><td><strong>Crédito</strong></td><td>Créditos apropriados que extinguem débito por compensação</td></tr><tr><td><strong>Apuração IBS/CBS</strong></td><td>Consome a posição de débito para fechar a competência</td></tr></tbody></table></div><h3>12.1 Contexto de API</h3><p>O contexto <strong>Garantia de crédito</strong> emite <code>debito.status_alterado</code>, que traz o array <code>utilized_credits</code> com os créditos que abateram cada débito. É a única saída do módulo para fora do produto, e está no escopo do MVP.</p>
+</div>
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Glossário</span></div>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>Definição</th></tr></thead><tbody><tr><td><strong>Débito</strong></td><td>Tributo de IBS ou CBS devido pela organização em uma operação de saída.</td></tr><tr><td><strong>Extinção</strong></td><td>Ato que encerra o débito — por compensação com crédito apropriado ou por pagamento.</td></tr><tr><td><strong>Compensação</strong></td><td>Modalidade de extinção em que o crédito apropriado abate o débito, sem saída de caixa.</td></tr><tr><td><strong>Documento fiscal de saída</strong></td><td>Nota emitida pela organização, que origina o débito.</td></tr><tr><td><strong>Registro fiscal</strong></td><td>Desdobramento do documento por tributo: um de IBS, um de CBS.</td></tr><tr><td><strong>Débito vencido</strong></td><td>Débito cujo prazo de extinção passou. Continua devido, com multa e juros.</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s14">
+<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>18/09/2026</strong> — <strong>Novo módulo de Ressarcimento.</strong> Data de extinção corrigida e histórico do débito.</div></div>
+<div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>18/09/2026</strong> — <strong>Novo módulo de Ressarcimento.</strong> Faixa da trava da intenção sobre os débitos do mês seguinte.</div></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">14/09/2026 — Primeira versão. Documenta as três abas, dez funcionalidades, dezesseis requisitos funcionais, sete regras de negócio e cinco defeitos levantados na leitura do código, entre eles o documento parcialmente extinto rotulado como extinto (DEF-01) e a ausência de qualquer ação de extinção no módulo (DEF-03).</div></div>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Analytics · SplitHub v1.2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">PRD · Plataforma → Analytics</div>
+<h1>Analytics — Onde o crédito se perde, e o que vem pela frente</h1>
+<p class="subtitle">As três ferramentas de decisão do gestor fiscal: o diagnóstico do que já aconteceu, a projeção do que vem, e a consulta à norma. Nenhuma delas age sobre um documento — todas dizem onde agir.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.2</span></div>
+<div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Plataforma → Analytics</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Views</span>&nbsp;<span class="meta-val">#view-inteligencia · #view-fct · #view-assistente</span></div>
+<div class="meta-pill"><span class="meta-label">Faixa MVP</span>&nbsp;<span class="meta-val">M2 — 17 funcionalidades</span></div>
+<div class="meta-pill"><span class="meta-label">LC 214/2025</span>&nbsp;<span class="meta-val">Arts. 47, 48 e 54</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v1.2</span></div>
+</div>
+<div class="res-upd" style="border:1px solid var(--brd);background:var(--sur);border-radius:10px;padding:14px 18px;margin:18px 0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--purple);border:1px solid var(--purple);border-radius:3px;padding:1px 6px">Ressarcimento</span><strong style="color:var(--txt1);font-size:14px">v1.1 — atualizado por conta do novo módulo de Ressarcimento</strong></div><ul style="list-style:disc;margin:0;padding:0;font-size:13px;color:var(--txt2)"><li style="margin:4px 0 0 18px">Assistente Tributário: resposta nova para ressarcimento e base legal corrigida — LC 214/2025, arts. 39, 40 e 54, no lugar de 55 e 58.</li><li style="margin:4px 0 0 18px">Base de conhecimento ganha a entrada <code>kb-ressarcimento</code>.</li><li style="margin:4px 0 0 18px">Ajuda do gráfico Crédito vs Débito: o saldo a recuperar compensa os meses seguintes ou é pedido no módulo, por tributo.</li><li style="margin:4px 0 0 18px">Aba Apuração (sem PRD próprio): o transporte desconta o que sai para ressarcimento no período; crédito ressarcido fica fora de <em>Utilizados</em> e não abate <em>Tributos a pagar</em>; selo <em>Ressarcido</em>; faixa com o que sai no período; a aba sincroniza com os DFs ao abrir.</li></ul><div style="font-size:12px;color:var(--txt2);margin-top:8px">18/09/2026 · <a href="prd-ressarcimento.html" style="color:var(--blue);font-weight:700">PRD de Ressarcimento</a> · <a href="ressarcimento-validacao-hubs.html" style="color:var(--blue);font-weight:700">validação dos hubs</a></div></div>
+  <div class="res-upd" style="border:1px solid var(--brd);background:var(--sur);border-radius:10px;padding:14px 18px;margin:18px 0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--purple);border:1px solid var(--purple);border-radius:3px;padding:1px 6px">Ressarcimento</span><strong style="color:var(--txt1);font-size:14px">v1.2 — auditoria de histórico e indicadores com o ressarcimento</strong></div><ul style="list-style:disc;margin:0;padding:0;font-size:13px;color:var(--txt2)"><li style="margin:4px 0 0 18px">Fluxo de Caixa Tributário: a ajuda do <em>Recolhimento Líquido</em> diz o que ele é — débito menos os créditos apropriados no mês, compensados, a compensar ou ressarcidos: carga líquida, não o caixa do mês.</li><li style="margin:4px 0 0 18px">Crédito apropriado e débito bruto conferidos mês a mês contra a base.</li></ul><div style="font-size:12px;color:var(--txt2);margin-top:8px">18/09/2026 · <a href="prd-ressarcimento.html" style="color:var(--blue);font-weight:700">PRD de Ressarcimento</a> · <a href="ressarcimento-validacao-hubs.html" style="color:var(--blue);font-weight:700">validação dos hubs</a></div></div>
+  <div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Contexto e posicionamento</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Jornadas de usuário atendidas</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Escopo e recorte do módulo</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Modelo de dados</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Arquitetura da tela</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Funcionalidades detalhadas</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Indicadores e projeções</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Requisitos funcionais</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Regras de negócio</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Requisitos não funcionais</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Defeitos e divergências</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Integrações e dependências</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Glossário</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> Histórico de versões</a></li>
+</ul></div>
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Contexto e posicionamento</span></div>
+<h3>1.1 Três perguntas que o operacional não responde</h3><p>Os módulos operacionais dizem o que aconteceu com cada documento. O Analytics existe para as perguntas que só aparecem quando se olha o conjunto:</p><div class="table-wrap"><table><thead><tr><th>Pergunta</th><th>Aba</th><th>Horizonte</th></tr></thead><tbody><tr><td>Quem está me fazendo perder crédito?</td><td><strong>Inteligência</strong></td><td>Passado e presente</td></tr><tr><td>Quanto vou ter de caixa e de crédito nos próximos meses?</td><td><strong>Fluxo de Caixa Tributário</strong></td><td>Futuro projetado</td></tr><tr><td>A lei permite o que eu quero fazer?</td><td><strong>Assistente Tributário</strong></td><td>Atemporal</td></tr></tbody></table></div><h3>1.2 Por que as três moram juntas</h3><p>As três respondem a um mesmo usuário — o gestor fiscal que decide onde colocar esforço — e nenhuma delas exige ação sobre um documento específico. São ferramentas de decisão, não de operação.</p><div class="callout info"><div class="ct">Apuração IBS/CBS está na mesma navegação, mas não neste PRD</div><p>A aba <em>Apuração IBS/CBS</em> divide a barra de navegação com as três, por conveniência de acesso. Ela não é analítica: fecha competência e produz número exigível. Tem escopo e documento próprios.</p></div>
+</div>
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Jornadas de usuário atendidas</span></div>
+<div class="table-wrap"><table><thead><tr><th>Jornada</th><th>O que o módulo entrega</th><th>Cobertura</th></tr></thead><tbody><tr><td><strong>J-07</strong> · Descobrir onde o crédito está sendo perdido</td><td>Indicadores executivos, mapa de risco por fornecedor e alertas gerados dos dados</td><td><span class="chip ok">Completa</span></td></tr><tr><td><strong>J-05</strong> · Planejar caixa e crédito dos próximos meses</td><td>Forecast de fluxo fiscal e de aproveitamento, com horizonte selecionável</td><td><span class="chip warn">Parcial</span> — a projeção usa média móvel, sem sazonalidade nem contratos futuros</td></tr><tr><td><strong>J-08</strong> · Avaliar fornecedores antes de renovar contrato</td><td>Ranking e score por fornecedor, com volume financeiro</td><td><span class="chip warn">Parcial</span> — a escala do score diverge do que o produto documenta, ver DEF-01</td></tr><tr><td><strong>J-10</strong> · Esclarecer uma dúvida de enquadramento</td><td>Chat livre e diagnóstico guiado sobre a legislação indexada</td><td><span class="chip warn">Parcial</span> — as notas técnicas da RFB ainda não estão indexadas</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Escopo e recorte do módulo</span></div>
+<h3>3.1 As três abas</h3><div class="table-wrap"><table><thead><tr><th>Aba</th><th>View</th><th>Natureza</th></tr></thead><tbody><tr><td><strong>Inteligência</strong></td><td><code>#view-inteligencia</code></td><td>Diagnóstico do que já aconteceu</td></tr><tr><td><strong>Fluxo de Caixa Tributário</strong></td><td><code>#view-fct</code></td><td>Projeção do que deve acontecer</td></tr><tr><td><strong>Assistente Tributário</strong></td><td><code>#view-assistente</code></td><td>Consulta à norma</td></tr></tbody></table></div><h3>3.2 O que não entra</h3><p>Nenhuma ação sobre documento, registro ou guia. O Analytics aponta o problema e nomeia o responsável; a ação acontece em Crédito, Pagamentos ou Inconsistências.</p><div class="callout warn"><div class="ct">O Analytics é a faixa M2 quase inteira</div><p>Na priorização aprovada em 14/09, as três abas ficam fora do MVP: 17 funcionalidades em M2. Projeção pressupõe base histórica real, e score de fornecedor é argumento de renovação, não de adoção.</p></div>
+</div>
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Modelo de dados</span></div>
+<p>Como o Início, o módulo não tem entidade própria — deriva tudo de <code>nfListaFiltradaGlobal</code>.</p><h3>4.1 Agregados da Inteligência</h3><div class="table-wrap"><table><thead><tr><th>Agregado</th><th>Regra</th></tr></thead><tbody><tr><td>Crédito total</td><td>Soma dos registros de documentos de entrada no recorte</td></tr><tr><td>Apropriado</td><td><code>statusCredito</code> em apropriado, utilizado ou extinto</td></tr><tr><td>Em risco</td><td><code>statusRegistro</code> vencido, em risco ou inconsistência</td></tr><tr><td>Pendente</td><td><code>statusCredito = nao_apropriado</code> sem marca de risco</td></tr><tr><td>Score por fornecedor</td><td>Valor pendente ÷ valor total do fornecedor, normalizado — ver <span class="rid">RN-ANL-03</span></td></tr></tbody></table></div><h3>4.2 Séries do FCT</h3><div class="table-wrap"><table><thead><tr><th>Série</th><th>Composição</th></tr></thead><tbody><tr><td>Crédito realizado</td><td>Crédito por mês até o mês corrente</td></tr><tr><td>Débito realizado</td><td>Débito por mês até o mês corrente</td></tr><tr><td>Crédito e débito projetados</td><td>Média móvel de três meses, progressiva</td></tr><tr><td>Saldo acumulado</td><td>Crédito menos débito, acumulado ao longo da série</td></tr><tr><td>Taxa de aproveitamento</td><td>Apropriado ÷ disponível, realizado e projetado</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Arquitetura da tela</span></div>
+<p>Uma barra de abas comum leva às três views, mais a Apuração. Cada aba tem seu próprio recorte de período, e o filtro de grupo econômico da barra global vale para as três.</p><div class="table-wrap"><table><thead><tr><th>Bloco</th><th>Aba</th><th>Id</th></tr></thead><tbody><tr><td>Quatro indicadores executivos</td><td>Inteligência</td><td><code>intel-aprov-*</code>, <code>intel-pend-*</code>, <code>intel-risco-*</code></td></tr><tr><td>Evolução do crédito apropriado</td><td>Inteligência</td><td>gráfico mensal em três séries</td></tr><tr><td>Mapa de risco de fornecedores</td><td>Inteligência</td><td><code>score-bars</code></td></tr><tr><td>Volume financeiro por prazo</td><td>Inteligência</td><td>RAD 90 e 120 dias</td></tr><tr><td>Tabela mensal de crédito</td><td>Inteligência</td><td><code>intel-aprov-tbl</code>, recolhível</td></tr><tr><td>Alertas gerados dos dados</td><td>Inteligência</td><td><code>intel-alerts</code></td></tr><tr><td>Forecast de fluxo fiscal</td><td>FCT</td><td><code>fct-forecast-card</code></td></tr><tr><td>Forecast de aproveitamento</td><td>FCT</td><td><code>fct-aprov-canvas</code>, <code>fct-aprov-insights</code></td></tr><tr><td>Alíquota efetiva mensal</td><td>FCT</td><td><code>fct-aliq-*</code></td></tr><tr><td>Posição líquida acumulada</td><td>FCT</td><td>gráfico de linha</td></tr><tr><td>Fluxo mensal detalhado</td><td>FCT</td><td><code>fct-tbl-wrap</code>, expansível</td></tr><tr><td>Chat e diagnóstico</td><td>Assistente</td><td>duas abas internas</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Funcionalidades detalhadas</span></div>
+<div class="feat" id="f-01"><div class="feat-hdr"><span class="feat-id">F-01</span><span class="feat-name">Apresentar os indicadores executivos do crédito</span><span class="feat-loc">Inteligência</span></div><div class="feat-body"><p>Aproveitamento em percentual, valor apropriado, valor pendente e valor em risco, cada um com a leitura do que significa — o em risco traz a referência ao art. 48 da LC 214/2025.</p></div></div><div class="feat" id="f-02"><div class="feat-hdr"><span class="feat-id">F-02</span><span class="feat-name">Mostrar a evolução mensal do crédito apropriado</span><span class="feat-loc">Inteligência</span></div><div class="feat-body"><p>Barras por mês em três séries: apropriado, pendente e vencido ou inconsistente.</p></div></div><div class="feat" id="f-03"><div class="feat-hdr"><span class="feat-id">F-03</span><span class="feat-name">Pontuar o risco por fornecedor</span><span class="feat-loc">Inteligência</span></div><div class="feat-body"><p>Cada fornecedor recebe uma pontuação derivada da proporção do seu crédito que continua pendente, classificada em quatro faixas: até 15% baixo, 15 a 35% médio, 35 a 60% alto, acima de 60% crítico.</p><div class="callout warn"><div class="ct">A escala diverge do que o produto anuncia</div><p>O mapa de funcionalidades descreve score de 0 a 100 com selo verde a partir de 70. A implementação usa 0 a 10 e, nela, pontuação alta significa risco alto. Ver <span class="rid">DEF-01</span>.</p></div></div></div><div class="feat" id="f-04"><div class="feat-hdr"><span class="feat-id">F-04</span><span class="feat-name">Ranquear os melhores e os piores fornecedores</span><span class="feat-loc">Inteligência</span></div><div class="feat-body"><p>Cinco de cada lado, por pontuação e volume, para dirigir a conversa de renovação de contrato.</p></div></div><div class="feat" id="f-05"><div class="feat-hdr"><span class="feat-id">F-05</span><span class="feat-name">Gerar alertas a partir dos dados</span><span class="feat-loc">Inteligência</span></div><div class="feat-body"><p>Os três fornecedores com maior valor vencido produzem alerta crítico, com quantidade de registros, valor em risco e referência legal. Abaixo deles, alertas de atenção por inconsistência.</p><div class="callout warn"><div class="ct">A data de referência é fixa</div><p>O cálculo de proximidade usa uma data escrita no código. Ver <span class="rid">DEF-02</span>.</p></div></div></div><div class="feat" id="f-06"><div class="feat-hdr"><span class="feat-id">F-06</span><span class="feat-name">Mostrar o volume financeiro por prazo de recolhimento</span><span class="feat-loc">Inteligência</span></div><div class="feat-body"><p>Comparação entre as janelas de 90 e 120 dias, para dimensionar o efeito do prazo no caixa.</p></div></div><div class="feat" id="f-07"><div class="feat-hdr"><span class="feat-id">F-07</span><span class="feat-name">Abrir a tabela mensal de crédito</span><span class="feat-loc">Inteligência</span></div><div class="feat-body"><p>Apropriado e a apropriar mês a mês, em tabela recolhível — o detalhe por trás do gráfico.</p></div></div><div class="feat" id="f-08"><div class="feat-hdr"><span class="feat-id">F-08</span><span class="feat-name">Projetar o fluxo fiscal</span><span class="feat-loc">FCT</span></div><div class="feat-body"><p>Crédito e débito realizados até o mês corrente, e projetados até dezembro, com saldo em linha e horizonte selecionável de 6, 9 ou 12 meses. A parte projetada é desenhada com traço e preenchimento distintos do realizado.</p></div></div><div class="feat" id="f-09"><div class="feat-hdr"><span class="feat-id">F-09</span><span class="feat-name">Separar realizado de projetado na data de corte</span><span class="feat-loc">FCT</span></div><div class="feat-body"><p>O corte é o mês corrente: tudo até ele é realizado, o resto é projeção. A marca visual no gráfico evita que uma projeção seja lida como fato.</p></div></div><div class="feat" id="f-10"><div class="feat-hdr"><span class="feat-id">F-10</span><span class="feat-name">Projetar o aproveitamento do crédito</span><span class="feat-loc">FCT</span></div><div class="feat-body"><p>Taxa de apropriação realizada e projetada, com a perda estimada por ano derivada da taxa de não apropriação.</p></div></div><div class="feat" id="f-11"><div class="feat-hdr"><span class="feat-id">F-11</span><span class="feat-name">Apresentar os insights do forecast</span><span class="feat-loc">FCT</span></div><div class="feat-body"><p>Melhor mês, tendência e perda projetada, em linguagem direta, ao lado do gráfico que os sustenta.</p></div></div><div class="feat" id="f-12"><div class="feat-hdr"><span class="feat-id">F-12</span><span class="feat-name">Acompanhar a alíquota efetiva</span><span class="feat-loc">FCT</span></div><div class="feat-body"><p>Alíquota efetiva mês a mês contra a nominal de referência de 26,5%, com a economia apurada.</p></div></div><div class="feat" id="f-13"><div class="feat-hdr"><span class="feat-id">F-13</span><span class="feat-name">Mostrar a posição líquida acumulada</span><span class="feat-loc">FCT</span></div><div class="feat-body"><p>Crédito menos débito, acumulado — a curva que diz se a organização é credora ou devedora ao longo do ano.</p></div></div><div class="feat" id="f-14"><div class="feat-hdr"><span class="feat-id">F-14</span><span class="feat-name">Detalhar o fluxo mensal em tabela</span><span class="feat-loc">FCT</span></div><div class="feat-body"><p>Tabela expansível com os valores mês a mês por trás de todos os gráficos da aba.</p></div></div><div class="feat" id="f-15"><div class="feat-hdr"><span class="feat-id">F-15</span><span class="feat-name">Responder perguntas sobre a legislação</span><span class="feat-loc">Assistente</span></div><div class="feat-body"><p>Chat livre sobre IBS, CBS e split payment, respondido a partir das fontes indexadas, com a referência do dispositivo.</p></div></div><div class="feat" id="f-16"><div class="feat-hdr"><span class="feat-id">F-16</span><span class="feat-name">Conduzir um diagnóstico guiado</span><span class="feat-loc">Assistente</span></div><div class="feat-body"><p>Perguntas fechadas em árvore, até o enquadramento do caso — para quem não sabe formular a pergunta.</p></div></div><div class="feat" id="f-17"><div class="feat-hdr"><span class="feat-id">F-17</span><span class="feat-name">Listar e abrir as fontes indexadas</span><span class="feat-loc">Assistente</span></div><div class="feat-body"><p>LC 214/2025 e Decreto 12.955/2026 acessíveis pelo painel lateral; notas técnicas da RFB marcadas como em indexação.</p></div></div><div class="feat" id="f-18"><div class="feat-hdr"><span class="feat-id">F-18</span><span class="feat-name">Preservar o histórico de conversas</span><span class="feat-loc">Assistente</span></div><div class="feat-body"><p>Conversas anteriores na lateral, para retomar um diagnóstico sem refazer o caminho.</p></div></div>
+</div>
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Indicadores e projeções</span></div>
+<div class="table-wrap"><table><thead><tr><th>Indicador</th><th>Fórmula</th><th>Onde</th></tr></thead><tbody><tr><td><strong>Aproveitamento</strong></td><td>apropriado ÷ total do período</td><td>Inteligência</td></tr><tr><td><strong>Pendente</strong></td><td>não apropriado sem marca de risco</td><td>Inteligência</td></tr><tr><td><strong>Em risco</strong></td><td>vencido, em risco ou inconsistente</td><td>Inteligência</td></tr><tr><td><strong>Pontuação do fornecedor</strong></td><td>pendente ÷ total do fornecedor</td><td>Inteligência</td></tr><tr><td><strong>Saldo forecast</strong></td><td>crédito projetado − débito projetado, acumulado</td><td>FCT</td></tr><tr><td><strong>Perda estimada por ano</strong></td><td>taxa de não apropriação aplicada ao volume anual</td><td>FCT</td></tr><tr><td><strong>Alíquota efetiva</strong></td><td>tributo apurado ÷ base, contra 26,5% nominal</td><td>FCT</td></tr></tbody></table></div><h3>7.1 Método de projeção</h3><p>Média móvel dos três últimos meses, aplicada de forma progressiva: cada mês projetado entra na janela do mês seguinte. O horizonte vai do mês corrente até dezembro do ano do último mês com dados.</p><div class="callout warn"><div class="ct">O que a média móvel não captura</div><p>Sazonalidade, contratos assinados com início futuro, mudança de alíquota e entrada ou saída de filial do grupo. Numa série curta, o método também amplifica um mês atípico — que passa a alimentar todos os meses seguintes.</p></div>
+</div>
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Requisitos funcionais</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri.</th></tr></thead><tbody><tr><td><span class="rid">RF-ANL-001</span></td><td>Os indicadores executivos devem respeitar o período e o grupo econômico.</td><td>Trocar o recorte recalcula os quatro valores.</td><td>M</td></tr><tr><td><span class="rid">RF-ANL-002</span></td><td>Crédito em risco deve ter precedência sobre pendente.</td><td>Registro vencido conta em risco e não em pendente.</td><td>M</td></tr><tr><td><span class="rid">RF-ANL-003</span></td><td>A pontuação do fornecedor deve ser derivada do crédito pendente sobre o total dele.</td><td>Fornecedor com metade do crédito pendente recebe pontuação intermediária.</td><td>M</td></tr><tr><td><span class="rid">RF-ANL-004</span></td><td>A escala da pontuação deve ser única em todo o produto.</td><td>A mesma escala no mapa, no PRD e na tela. <em>Não atendido — DEF-01.</em></td><td>M</td></tr><tr><td><span class="rid">RF-ANL-005</span></td><td>Os alertas devem ser gerados dos dados do recorte, e não escritos no código.</td><td>Trocar o período muda os fornecedores citados.</td><td>M</td></tr><tr><td><span class="rid">RF-ANL-006</span></td><td>A data de referência dos alertas deve ser a data corrente.</td><td><em>Não atendido — DEF-02.</em></td><td>M</td></tr><tr><td><span class="rid">RF-ANL-007</span></td><td>O forecast deve separar visualmente realizado de projetado.</td><td>A parte projetada usa traço e preenchimento distintos, e a legenda diz qual é qual.</td><td>M</td></tr><tr><td><span class="rid">RF-ANL-008</span></td><td>O corte entre realizado e projetado deve ser o mês corrente.</td><td>Em setembro, agosto é realizado e outubro é projeção.</td><td>M</td></tr><tr><td><span class="rid">RF-ANL-009</span></td><td>O horizonte do forecast deve ser selecionável entre 6, 9 e 12 meses.</td><td>Trocar o horizonte redesenha a série sem recarregar a tela.</td><td>S</td></tr><tr><td><span class="rid">RF-ANL-010</span></td><td>O método de projeção deve estar declarado ao usuário.</td><td>A tela diz que a projeção é média móvel de três meses. <em>Não atendido — DEF-03.</em></td><td>S</td></tr><tr><td><span class="rid">RF-ANL-011</span></td><td>Sem meses realizados suficientes, o forecast deve avisar em vez de projetar.</td><td><em>Não atendido — DEF-04.</em></td><td>M</td></tr><tr><td><span class="rid">RF-ANL-012</span></td><td>A alíquota efetiva deve ser comparada à nominal de referência.</td><td>O gráfico traz a linha de 26,5% e a economia apurada.</td><td>M</td></tr><tr><td><span class="rid">RF-ANL-013</span></td><td>A tabela mensal deve conter os valores que sustentam os gráficos.</td><td>Os totais da tabela batem com as barras do mesmo mês.</td><td>M</td></tr><tr><td><span class="rid">RF-ANL-014</span></td><td>O assistente deve citar o dispositivo que fundamenta a resposta.</td><td>Toda resposta traz artigo e norma.</td><td>M</td></tr><tr><td><span class="rid">RF-ANL-015</span></td><td>As fontes não indexadas devem estar marcadas como tal.</td><td>As notas técnicas aparecem como em indexação, e não como disponíveis.</td><td>M</td></tr><tr><td><span class="rid">RF-ANL-016</span></td><td>O diagnóstico guiado deve permitir reinício a qualquer momento.</td><td>O botão de reiniciar volta à primeira pergunta.</td><td>S</td></tr><tr><td><span class="rid">RF-ANL-017</span></td><td>O histórico de conversas deve sobreviver à navegação entre abas.</td><td>Sair para o FCT e voltar preserva a conversa. <em>Não atendido — DEF-05.</em></td><td>S</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Regras de negócio</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Regra</th><th>Onde vive</th></tr></thead><tbody><tr><td><span class="rid">RN-ANL-01</span></td><td>Crédito apropriado é o que está em apropriado, utilizado ou extinto.</td><td><code>finalOk</code>, em <code>atualizarInteligencia</code></td></tr><tr><td><span class="rid">RN-ANL-02</span></td><td>A marca de risco vence a de não apropriado na classificação do valor.</td><td>Ordem das condições da agregação</td></tr><tr><td><span class="rid">RN-ANL-03</span></td><td>A pontuação do fornecedor é a proporção do seu crédito que segue pendente. Pontuação alta é risco alto.</td><td><code>renderizarTop10Empresas</code></td></tr><tr><td><span class="rid">RN-ANL-04</span></td><td>As faixas de risco do fornecedor são 15%, 35% e 60%.</td><td><code>scoreColor</code> e <code>scoreLabel</code></td></tr><tr><td><span class="rid">RN-ANL-05</span></td><td>Alerta crítico é reservado aos três fornecedores com maior valor vencido.</td><td>Geração de <code>intel-alerts</code></td></tr><tr><td><span class="rid">RN-ANL-06</span></td><td>Tudo até o mês corrente é realizado; do mês seguinte em diante é projeção.</td><td>Corte por data corrente, no FCT</td></tr><tr><td><span class="rid">RN-ANL-07</span></td><td>A projeção é média móvel de três meses, progressiva — o mês projetado alimenta a janela do próximo.</td><td><code>movAvg3progressive</code></td></tr><tr><td><span class="rid">RN-ANL-08</span></td><td>Não havendo mês realizado anterior ao corte, metade da série é tratada como realizada.</td><td>Recuo do FCT quando o corte não encontra meses</td></tr><tr><td><span class="rid">RN-ANL-09</span></td><td>A alíquota nominal de referência é 26,5%.</td><td>Constante dos gráficos de alíquota efetiva</td></tr><tr><td><span class="rid">RN-ANL-10</span></td><td>O Analytics não altera estado. Nenhuma tela dele escreve na base.</td><td>Ausência de escrita nos três módulos</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Requisitos não funcionais</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Requisito</th><th>Critério</th></tr></thead><tbody><tr><td><span class="rid">RNF-ANL-01</span></td><td>Os gráficos devem tentar renderizar novamente quando a biblioteca ainda não estiver pronta.</td><td>Repetição com limite, sem laço infinito nem tela em branco.</td></tr><tr><td><span class="rid">RNF-ANL-02</span></td><td>Falha num gráfico não pode impedir os demais de pintar.</td><td>Renderização protegida por bloco.</td></tr><tr><td><span class="rid">RNF-ANL-03</span></td><td>Cores de série devem vir dos tokens, e funcionar nos dois temas.</td><td>Verificado em claro e escuro.</td></tr><tr><td><span class="rid">RNF-ANL-04</span></td><td>Gráficos devem rolar no próprio contêiner em telas estreitas.</td><td>Verificado em 375, 768 e 1440 px.</td></tr><tr><td><span class="rid">RNF-ANL-05</span></td><td>Toda projeção deve ser rotulada como projeção no gráfico e na legenda.</td><td>Nenhuma série projetada sem marca.</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Defeitos e divergências</span></div>
+<p>Levantados na leitura do código em 14/09/2026.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>O que acontece</th><th>Efeito</th><th>Onde</th></tr></thead><tbody><tr><td><span class="rid">DEF-01</span></td><td>O mapa de funcionalidades descreve score de 0 a 100, com selo verde a partir de 70; a implementação usa 0 a 10, e pontuação alta significa risco alto.</td><td>Escala e sentido divergem entre documentação e produto. Quem lê 8,0 no mapa entende fornecedor bom; na tela, é fornecedor crítico.</td><td><code>renderizarTop10Empresas</code> e o mapa</td></tr><tr><td><span class="rid">DEF-02</span></td><td>A data de referência dos alertas é uma constante escrita no código.</td><td>A proximidade do prazo não acompanha o calendário: o alerta envelhece sozinho.</td><td>Geração de alertas da Inteligência</td></tr><tr><td><span class="rid">DEF-03</span></td><td>O método de projeção não é declarado em lugar nenhum da tela.</td><td>O usuário não sabe que a curva é média móvel de três meses, nem o que ela ignora.</td><td>FCT · forecast</td></tr><tr><td><span class="rid">DEF-04</span></td><td>Sem meses anteriores ao corte, o FCT trata metade da série como realizada em vez de avisar.</td><td>Numa base nova, a tela projeta a partir de dados que ela mesma classificou como passado.</td><td>FCT · recuo do corte</td></tr><tr><td><span class="rid">DEF-05</span></td><td>O histórico de conversas do assistente vive na sessão da página.</td><td>Recarregar a página perde o diagnóstico em andamento.</td><td>Assistente Tributário</td></tr><tr><td><span class="rid">DEF-06</span></td><td>As notas técnicas da RFB aparecem como fonte, marcadas em indexação.</td><td>A lista de fontes promete cobertura que a resposta não tem.</td><td>Assistente Tributário · painel de fontes</td></tr></tbody></table></div><div class="callout warn"><div class="ct">DEF-01 é o mais caro dos seis</div><p>Os outros cinco afetam a leitura. Esse afeta a decisão: a pontuação do fornecedor é usada para conversa de renovação de contrato, e documentação e tela discordam sobre o que é um número bom.</p></div>
+</div>
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Integrações e dependências</span></div>
+<div class="table-wrap"><table><thead><tr><th>Depende de</th><th>Para quê</th></tr></thead><tbody><tr><td><strong>Crédito</strong></td><td>Base de registros de entrada, estados e marcas de risco</td></tr><tr><td><strong>Débito</strong></td><td>Série de débito realizado, no FCT</td></tr><tr><td><strong>Fornecedores</strong></td><td>Identificação e agrupamento por entidade</td></tr><tr><td><strong>Organização</strong></td><td>Filtro de grupo econômico</td></tr><tr><td><strong>Início</strong></td><td>Consome a alíquota efetiva e o ranking produzidos aqui</td></tr><tr><td><strong>Fontes externas</strong></td><td>LC 214/2025 e Decreto 12.955/2026, indexados para o assistente</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Glossário</span></div>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>Definição</th></tr></thead><tbody><tr><td><strong>Realizado</strong></td><td>Valor apurado em mês igual ou anterior ao corrente.</td></tr><tr><td><strong>Projetado</strong></td><td>Valor estimado para mês posterior ao corrente, por média móvel.</td></tr><tr><td><strong>Média móvel progressiva</strong></td><td>Projeção em que cada mês estimado entra na janela de cálculo do mês seguinte.</td></tr><tr><td><strong>Pontuação de risco</strong></td><td>Proporção do crédito de um fornecedor que segue pendente.</td></tr><tr><td><strong>Alíquota efetiva</strong></td><td>Tributo apurado sobre a base, comparado à alíquota nominal de referência.</td></tr><tr><td><strong>Posição líquida</strong></td><td>Crédito menos débito, acumulado ao longo da série.</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s14">
+<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>18/09/2026</strong> — <strong>Novo módulo de Ressarcimento.</strong> Ajuda do Recolhimento Líquido e conferência do Fluxo de Caixa.</div></div>
+<div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>18/09/2026</strong> — <strong>Novo módulo de Ressarcimento.</strong> Assistente, ajuda do gráfico e a aba Apuração com o transporte do ressarcimento.</div></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">14/09/2026 — Primeira versão. Cobre as três abas do Analytics — Inteligência, Fluxo de Caixa Tributário e Assistente Tributário — com dezoito funcionalidades, dezessete requisitos funcionais, dez regras de negócio e seis defeitos, entre eles a divergência de escala da pontuação de fornecedor (DEF-01) e a data de referência fixa dos alertas (DEF-02). A Apuração IBS/CBS, que divide a mesma navegação, ficou fora do escopo.</div></div>
+</div>
+</div>
+</body>
+</html>
