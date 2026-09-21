@@ -96,6 +96,7 @@
           if (nf.tipo === 'entrada') {
             var s = sc(rf);
             if (s !== 'apropriado' && s !== 'utilizado') return;
+            if (!((rf.valor || 0) > 0)) return;   // valor nao positivo nao entra no pool
             var per = (op.periodo === 'apropriacao' && rf.dataApropriacao ? String(rf.dataApropriacao) : String(rf.data || nf.data)).slice(0, 7);
             creds.push({ rf: rf, nf: nf, per: per, ord: String(rf.dataApropriacao || rf.data || '') + rf.id, saldo: rf.valor || 0 });
           } else {
@@ -104,7 +105,7 @@
             var SD = window.shStatusDebito;
             var st = rf.status, venc = !!(SD && SD.tem(rf, 'vencido')), retido = !!(SD && SD.tem(rf, 'retido'));
             var cobre = !retido && (st === 'nao_extinto' || st === 'parcial' || (st === 'extinto' && rf.metodoExtincao === 'Compensacao'));
-            if (!cobre) return;
+            if (!cobre || !((rf.valor || 0) > 0)) return;
             debs.push({ rf: rf, nf: nf, per: String(nf.data || rf.data).slice(0, 7), ord: String(nf.data || '') + rf.id, falta: rf.valor || 0, orig: venc ? 'vencido' : st, venc: venc });
           }
         });
@@ -179,14 +180,14 @@
           else { c.rf.statusCredito = 'apropriado'; c.rf.status = 'apropriado'; c.rf.metodoExtincao = null; c.rf.dataExtincaoCredito = null; c.rf._valorCompensado = 0; c.rf.ressarcimento = { marca: c.res.tipo === 'intencao' ? 'reservado' : 'em_pedido', ref: c.res.id, tributo: T }; }
           return;
         }
-        if (c.saldo <= 0.005) { c.rf.statusCredito = 'utilizado'; c.rf.status = 'utilizado'; c.rf.metodoExtincao = 'Compensacao'; c.rf.dataExtincaoCredito = fimMes(c.fim); }
+        if (c.saldo <= 0.005) { c.rf.statusCredito = 'utilizado'; c.rf.status = 'utilizado'; c.rf.metodoExtincao = 'Compensacao'; c.rf.dataExtincaoCredito = fimMes(c.fim || c.per); }
         else { c.rf.statusCredito = 'apropriado'; c.rf.status = 'apropriado'; c.rf.metodoExtincao = null; c.rf.dataExtincaoCredito = null; if (usado > 0.005) c.rf._parcial = true; }
       });
       debs.forEach(function (d) {
         var usado = (d.rf.valor || 0) - d.falta, SD = window.shStatusDebito;
         d.rf._valorCompensado = usado;
         var quitado = d.falta <= 0.005;
-        if (quitado) { d.rf.metodoExtincao = 'Compensacao'; d.rf.dataExtincao = br(fimMes(d.fim)) + ' 18:00'; }
+        if (quitado) { d.rf.metodoExtincao = 'Compensacao'; d.rf.dataExtincao = br(fimMes(d.fim || d.per)) + ' 18:00'; }
         else { d.rf.metodoExtincao = null; d.rf.dataExtincao = '—'; if (usado > 0.005) d.rf._parcial = true; }
         if (SD && SD.aplicarCiclo) SD.aplicarCiclo(d.rf, quitado, usado > 0.005);
         else d.rf.status = quitado ? 'extinto' : 'nao_extinto';

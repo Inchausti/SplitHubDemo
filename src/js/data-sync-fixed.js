@@ -6201,17 +6201,25 @@ class DataSyncManagerFixed {
     const valorBase = Math.floor(somaTotal / 100);
     let somaAcumulada = 0;
 
+    // Piso por nota: a soma das 100 fecha em R$ 500M, mas nenhuma nota pode
+    // sair com valor zerado ou negativo. A conta de ajuste antiga
+    // (somaTotal - somaAcumulada - restantes * valorBase) virava negativa
+    // quando o sorteio corria alto, e a nota entrava na base com valor
+    // negativo — crédito fantasma no Total Originado.
+    const valorMinimo = Math.floor(valorBase * 0.2);
+
     for (let i = 1; i <= 100; i++) {
       let valor;
 
       if (i === 100) {
-        valor = somaTotal - somaAcumulada;
+        valor = Math.max(valorMinimo, somaTotal - somaAcumulada);
       } else {
+        const restantes = 100 - i;                                   // notas depois desta
+        const teto = somaTotal - somaAcumulada - restantes * valorMinimo;
         const variacao = 0.8 + Math.random() * 0.4;
         valor = Math.floor(valorBase * variacao);
-        if (somaAcumulada + valor > somaTotal) {
-          valor = somaTotal - somaAcumulada - (100 - i) * valorBase;
-        }
+        if (valor > teto) valor = teto;
+        if (valor < valorMinimo) valor = valorMinimo;
       }
 
       somaAcumulada += valor;
