@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta — Modelo de glosa do crédito · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+
+.imp { display:inline-block; font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; border-radius:3px; padding:1px 6px; white-space:nowrap; }
+.imp.c { color: var(--red); background: var(--red-d); }
+.imp.n { color: var(--purple, #6B3FA0); background: rgba(107,63,160,.12); }
+.imp.r { color: var(--teal); background: var(--teal-d); }
+.imp.s { color: var(--txt3); background: var(--sur2); }
+.big { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin:14px 0; }
+.big > div { border:1px solid var(--brd); border-radius:10px; padding:12px 14px; background:var(--sur); }
+.big .n { font-size:26px; font-weight:800; color:var(--txt1); font-family:'JetBrains Mono',monospace; line-height:1.1; }
+.big .l { font-size:12px; color:var(--txt2); margin-top:4px; }
+.bar { display:flex; align-items:center; gap:8px; }
+.bar i { display:block; height:8px; border-radius:4px; background:var(--teal); }
+code { overflow-wrap:anywhere; }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Crédito → Modelo de glosa</div>
+<h1>Modelo de glosa do crédito</h1>
+<p class="subtitle">Hoje a glosa é um sorteio: 15% dos documentos de entrada, R$ 11,64 mi, sem motivo, sem base legal, sem prazo e sem dono. A proposta troca o sorteio por causa tipificada, com ficha, processo e fila — e deixa só 3 registros glosados na base simulada. Os outros 27 voltam ao fluxo de apropriação.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta de modelo</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">21/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Glosado hoje</span>&nbsp;<span class="meta-val">R$ 11,64 mi</span></div>
+<div class="meta-pill"><span class="meta-label">Glosado depois</span>&nbsp;<span class="meta-val">R$ 1,33 mi</span></div>
+<div class="meta-pill"><span class="meta-label">Decisões</span>&nbsp;<span class="meta-val">8</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn card-status-chip">Aguardando aprovação</span>&nbsp;<span class="chip warn">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Resumo</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> O que existe hoje</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Catálogo de causas</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> A ficha da glosa</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Ciclo de vida e efeitos</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Os 3 registros glosados</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Os 27 que voltam ao fluxo</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Impacto nas telas</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Esforço e risco</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Decisões para aprovar</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Como foi medido</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Histórico de versões</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Resumo</span></div>
+<p>Glosa é a negativa do crédito pelo Fisco — a perda que a plataforma existe para evitar. No protótipo, ela aparece como número sem causa: uma fatia fixa de 15% dos documentos de entrada, atribuída pelo índice do documento no gerador da base. Nenhum dos 30 registros diz por que o crédito foi negado, com que fundamento, em que processo, até quando cabe defesa, nem quem cuida disso.</p>
+<div class="big">
+<div><div class="n">R$ 11,64 mi</div><div class="l">glosados hoje — 15,3% do crédito originado</div></div>
+<div><div class="n">30</div><div class="l">registros fiscais, em 15 documentos</div></div>
+<div><div class="n">0</div><div class="l">com motivo, flag ou inconsistência vinculada</div></div>
+<div><div class="n">R$ 1,33 mi</div><div class="l">glosados depois — 3 registros, 1,7% do originado</div></div>
+<div><div class="n">R$ 10,31 mi</div><div class="l">voltam ao fluxo de apropriação</div></div>
+<div><div class="n">8</div><div class="l">decisões para aprovar</div></div>
+</div>
+<div class="callout warn"><div class="ct">Recomendação</div><p>Trocar o sorteio por <strong>causa tipificada</strong>: toda glosa passa a ter causa, base legal, órgão que glosou, evidência, prazo de impugnação, status do contencioso e responsável. Na base simulada, ficam <strong>3 glosas</strong>, uma por causa, todas em documentos que já carregam a divergência que as justifica — e nenhuma em Split Payment. Os outros 27 registros voltam ao fluxo de apropriação, mantendo as proporções atuais de não apropriado, apropriado e utilizado.</p></div>
+<p>A proposta mexe em dados mestres, então conversa com a decisão do motor de compensação (art. 53) que já está no hub. As duas mudam os mesmos registros, e a ordem entre elas é a decisão <strong>D-GL-08</strong>.</p>
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O que existe hoje</span></div>
+<p>A regra está em <code>src/index.html</code>, no gerador da base: <code>_p = (idx*37+13) % 100</code>, e <code>_p &gt;= 85</code> vira <code>glosado</code>. É sorteio por posição do documento, sem relação com valor, tributo, método de recolhimento, contrato ou divergência apurada.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>O que se mede</th><th class="num">Hoje</th><th>Leitura</th></tr></thead>
+<tbody>
+<tr><td><strong>Valor glosado</strong></td><td class="num">R$ 11,64 mi</td><td>15,3% dos R$ 76,27 mi de crédito originado</td></tr>
+<tr><td><strong>Registros</strong></td><td class="num">30 RFs</td><td>15 documentos de entrada, os dois tributos de cada um</td></tr>
+<tr><td><strong>Por tributo</strong></td><td class="num">6,47 / 5,17</td><td>IBS e CBS, em milhões</td></tr>
+<tr><td><strong>Com motivo</strong></td><td class="num">0</td><td>campo <code>motivo</code> vazio nos 30</td></tr>
+<tr><td><strong>Com inconsistência vinculada</strong></td><td class="num">0</td><td>não entram em fila nenhuma</td></tr>
+<tr><td><strong>Com flag de risco</strong></td><td class="num">0</td><td>não aparecem em alerta nenhum</td></tr>
+<tr><td><strong>Em Split Payment</strong></td><td class="num">4 DFs · R$ 2,91 mi</td><td>8 RFs, 25% do valor glosado</td></tr>
+</tbody></table></div>
+<h3>As quatro fragilidades</h3>
+<ul class="plain">
+<li><strong>Glosa sem causa e sem base legal.</strong> O histórico do RF traz uma linha genérica — "Crédito glosado pelo Fisco · direito ao crédito negado · requer impugnação" — que não diz o que foi recusado nem com que fundamento.</li>
+<li><strong>"Requer impugnação" sem processo e sem prazo.</strong> Não há número de processo, data da ciência, data-limite de defesa nem status do contencioso. O texto manda agir e não diz até quando.</li>
+<li><strong>Glosa não vira trabalho de ninguém.</strong> Zero flags e zero inconsistências vinculadas: R$ 11,64 mi ficam parados fora de qualquer fila, alerta ou dashboard de risco.</li>
+<li><strong>Duas noções de glosa que não se falam.</strong> A tela de Inconsistências tem um estado próprio chamado <em>glosada</em>, com 6 ocorrências, sem nenhum vínculo com os 30 registros glosados do módulo de Crédito.</li>
+</ul>
+<div class="callout info"><div class="ct">Sobre o Split Payment</div><p>Nos 4 documentos em Split Payment, o tributo é segregado pelo PSP na própria liquidação e vai direto ao Fisco. Glosar esse crédito sem causa é o caso menos plausível do conjunto, e são R$ 2,91 mi. A proposta deixa o Split Payment fora das glosas da base simulada — e mantém a causa possível no catálogo, porque divergência de valor retido existe.</p></div>
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Catálogo de causas</span></div>
+<p>A glosa deixa de ser estado sorteado e passa a ser <strong>consequência de uma causa</strong>. Cada causa diz quem glosa, com que fundamento, que evidência sustenta e qual o caminho de recuperação. O órgão segue a regra da plataforma: <strong>CBS na Receita Federal</strong>, pela apuração assistida; <strong>IBS no Comitê Gestor</strong>.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Causa</th><th>Evidência na plataforma</th><th>Fundamento</th><th>Recuperável</th></tr></thead>
+<tbody>
+<tr><td class="rid">G-01</td><td><strong>Alíquota divergente</strong><br>o tributo destacado no documento não bate com o apurado pelo Fisco</td><td>conciliação de apuração (CAPUR) com status de inconsistência</td><td>o crédito é do valor que incidiu e foi recolhido — LC 214/2025, art. 47 c/c art. 48</td><td>Sim, com correção do documento ou impugnação</td></tr>
+<tr><td class="rid">G-02</td><td><strong>Base de cálculo divergente</strong><br>a base declarada difere da apurada</td><td>conciliação de apuração (CAPUR)</td><td>LC 214/2025, art. 47 c/c art. 48</td><td>Sim</td></tr>
+<tr><td class="rid">G-03</td><td><strong>Crédito sem recolhimento do fornecedor</strong><br>o débito correspondente não foi extinto</td><td>ausência de comprovante e conciliação financeira pendente</td><td>LC 214/2025, art. 47 — o crédito depende da extinção do débito</td><td>Sim, se o recolhimento vier depois</td></tr>
+<tr><td class="rid">G-04</td><td><strong>Documento inválido</strong><br>chave rejeitada, documento cancelado ou denegado</td><td>inconsistência de ingestão</td><td>documento que não existe validamente não sustenta crédito</td><td>Só com reemissão do documento</td></tr>
+<tr><td class="rid">G-05</td><td><strong>Operação sem direito a crédito</strong><br>uso e consumo pessoal e demais vedações</td><td>classificação da operação</td><td>vedações ao crédito da LC 214/2025</td><td>Não</td></tr>
+</tbody></table></div>
+<p>Na base simulada aparecem <strong>G-01, G-02 e G-03</strong> — uma glosa cada. G-04 e G-05 ficam no catálogo para a tela saber tratá-las, sem ocorrência gerada (<strong>D-GL-06</strong>).</p>
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">A ficha da glosa</span></div>
+<p>Cada glosa vira um registro próprio, vinculado ao RF, com identificador no padrão <code>GL-2026-00n</code>. É essa ficha que alimenta a listagem, o detalhe do RF, o histórico e a fila de trabalho.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Campo</th><th>Conteúdo</th><th>Origem</th></tr></thead>
+<tbody>
+<tr><td><code>id</code></td><td>GL-2026-001</td><td>sequencial</td></tr>
+<tr><td><code>rfId</code> · <code>dfNumero</code> · <code>tributo</code></td><td>registro e documento atingidos</td><td>base</td></tr>
+<tr><td><code>valorGlosado</code></td><td>valor negado — hoje sempre o total do RF</td><td>base · <strong>D-GL-02</strong> trata a glosa parcial</td></tr>
+<tr><td><code>causa</code> · <code>baseLegal</code></td><td>uma das cinco do catálogo, com o fundamento</td><td>catálogo</td></tr>
+<tr><td><code>orgao</code></td><td>Receita Federal (CBS) ou Comitê Gestor do IBS</td><td>tributo do RF</td></tr>
+<tr><td><code>evidencia</code></td><td>id da conciliação ou da inconsistência que sustenta a glosa</td><td>CAPUR / inconsistências</td></tr>
+<tr><td><code>cienciaEm</code> · <code>prazoImpugnacao</code></td><td>data da ciência e data-limite da defesa</td><td><strong>D-GL-01</strong> define o prazo</td></tr>
+<tr><td><code>status</code></td><td>aberta · impugnada · mantida · revertida · definitiva</td><td>máquina de estados da seção 05</td></tr>
+<tr><td><code>responsavel</code></td><td>quem responde pela defesa</td><td>fila de trabalho · <strong>D-GL-04</strong></td></tr>
+<tr><td><code>decididoEm</code> · <code>valorRevertido</code></td><td>desfecho do contencioso</td><td>ato do operador</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Ciclo de vida e efeitos</span></div>
+<div class="state-grid">
+<div class="state-row"><span class="state-name sn-red">aberta</span><span class="state-desc">Glosa registrada, com ciência e prazo correndo. O crédito sai do saldo compensável e do ressarcimento na data da ciência.</span></div>
+<div class="state-row"><span class="state-name sn-amber">impugnada</span><span class="state-desc">Defesa protocolada dentro do prazo. O crédito segue bloqueado, agora com processo vinculado.</span></div>
+<div class="state-row"><span class="state-name sn-gray">definitiva</span><span class="state-desc">Prazo vencido sem impugnação. A perda vira definitiva e entra no indicador de crédito perdido.</span></div>
+<div class="state-row"><span class="state-name sn-gray">mantida</span><span class="state-desc">Impugnação julgada improcedente. Mesmo efeito da definitiva, com a decisão registrada.</span></div>
+<div class="state-row"><span class="state-name sn-green">revertida</span><span class="state-desc">Glosa derrubada. O crédito volta a <strong>apropriado</strong> na data da decisão e volta a compensar dali em diante.</span></div>
+</div>
+<h3>Efeitos em cadeia</h3>
+<ul class="plain">
+<li><strong>Saldo compensável.</strong> Crédito glosado fica fora do pool do motor do art. 53 — que já o ignora hoje — e fora da apuração como crédito apropriado.</li>
+<li><strong>Ressarcimento.</strong> Crédito glosado não pode ser reservado em intenção nem incluído em pedido.</li>
+<li><strong>Fila e alerta.</strong> A glosa gera flag no RF e ocorrência na fila, com o prazo de defesa como SLA — hoje não gera nada.</li>
+<li><strong>Reversão.</strong> A data de apropriação original é preservada; o que muda é a data em que o crédito volta a estar disponível. Se isso reabre ou não a contagem do art. 54 é a decisão <strong>D-GL-03</strong>.</li>
+</ul>
+<div class="callout info"><div class="ct">Histórico do RF</div><p>O evento genérico de hoje é substituído por três: <strong>glosa</strong> (causa, fundamento, órgão, valor, evidência e prazo de defesa), <strong>impugnação</strong> (data e protocolo) e <strong>decisão</strong> (mantida ou revertida, com o valor que volta). É o mesmo padrão que o módulo de Ressarcimento já usa para intenção, pedido, decisão e pagamento.</p></div>
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Os 3 registros glosados</span></div>
+<p>Os três foram escolhidos entre documentos que <strong>já carregam a divergência</strong> que justifica a glosa, todos com método <strong>Fornecedor</strong> — nenhum em Split Payment. Cada glosa atinge <strong>um tributo só</strong>, e o outro tributo do mesmo documento segue no fluxo: é assim que a tela mostra que CBS e IBS são verificados por órgãos diferentes.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Glosa</th><th>RF</th><th>Documento</th><th>Tributo</th><th class="num">Valor</th><th>Causa</th><th>Órgão</th></tr></thead>
+<tbody>
+<tr><td class="rid">GL-2026-001</td><td><code>RF-00000027</code></td><td>NF-e 000014 · Eletropar Ind. Ltda · 12/06/2026</td><td>IBS</td><td class="num">R$ 470.588</td><td>G-01 alíquota divergente</td><td>Comitê Gestor</td></tr>
+<tr><td class="rid">GL-2026-002</td><td><code>RF-00000044</code></td><td>NFAg 000022 · Transcarro S.A. · 26/02/2026</td><td>CBS</td><td class="num">R$ 380.550</td><td>G-02 base de cálculo</td><td>Receita Federal</td></tr>
+<tr><td class="rid">GL-2026-003</td><td><code>RF-00000097</code></td><td>NFGás 000049 · Essenzia Cosméticos S.A. · 07/11/2026</td><td>IBS</td><td class="num">R$ 474.478</td><td>G-03 sem recolhimento</td><td>Comitê Gestor</td></tr>
+<tr><td colspan="4"><strong>Total glosado</strong></td><td class="num"><strong>R$ 1.325.616</strong></td><td colspan="2">1,7% do crédito originado</td></tr>
+</tbody></table></div>
+<p>Os três documentos já têm conciliação de apuração com status de inconsistência, então a evidência existe na base antes da glosa — a glosa passa a ser a consequência dela, não um sorteio paralelo. O tributo irmão de cada um segue o fluxo normal: CBS utilizada na NF-e 000014, IBS apropriado na NFAg 000022 e CBS apropriada na NFGás 000049.</p>
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Os 27 que voltam ao fluxo</span></div>
+<p>A faixa <code>_p &gt;= 85</code> deixa de significar glosa e passa a ser repartida entre os três estados normais, na mesma proporção que o restante da base já usa — 15% não apropriado, 20% apropriado, 50% utilizado. Em 15 documentos, isso dá 3, 3 e 9.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Faixa</th><th>Destino</th><th class="num">Documentos</th><th class="num">Valor que volta</th></tr></thead>
+<tbody>
+<tr><td><code>85 – 87</code></td><td>não apropriado</td><td class="num">3</td><td class="num">R$ 2,32 mi</td></tr>
+<tr><td><code>88 – 90</code></td><td>apropriado</td><td class="num">3</td><td class="num">R$ 1,58 mi</td></tr>
+<tr><td><code>91 – 99</code></td><td>utilizado</td><td class="num">9</td><td class="num">R$ 6,42 mi</td></tr>
+<tr><td colspan="2"><strong>Total</strong></td><td class="num"><strong>15</strong></td><td class="num"><strong>R$ 10,31 mi</strong></td></tr>
+</tbody></table></div>
+<h3>Os números antes e depois</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Indicador do módulo de Crédito</th><th class="num">Hoje</th><th class="num">Depois</th><th class="num">Variação</th></tr></thead>
+<tbody>
+<tr><td>Total originado</td><td class="num">R$ 76,27 mi</td><td class="num">R$ 76,27 mi</td><td class="num">—</td></tr>
+<tr><td>Glosado</td><td class="num">R$ 11,64 mi</td><td class="num">R$ 1,33 mi</td><td class="num">−10,31</td></tr>
+<tr><td>A apropriar</td><td class="num">R$ 11,43 mi</td><td class="num">R$ 13,75 mi</td><td class="num">+2,32</td></tr>
+<tr><td>Apropriados (inclui utilizados)</td><td class="num">R$ 53,20 mi</td><td class="num">R$ 61,20 mi</td><td class="num">+8,00</td></tr>
+<tr><td>Utilizados</td><td class="num">R$ 40,37 mi</td><td class="num">R$ 46,79 mi</td><td class="num">+6,42</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">Interação com o motor do art. 53</div><p>Dos R$ 10,31 mi que voltam, <strong>R$ 8,00 mi entram no pool de crédito compensável</strong> — os R$ 2,32 mi de não apropriado ficam de fora, porque crédito só compensa depois de apropriado (art. 47). Com o motor ligado, esses R$ 8,00 mi mudam a compensação mês a mês, o saldo credor, os meses devedores preservados e o plano de ressarcimento. Nada disso se estima no papel: depois de aprovada, a mudança exige rodar de novo a auditoria completa — 27 indicadores, 400 históricos e os cenários.</p></div>
+<div class="callout red"><div class="ct">Com o motor desligado</div><p>Os R$ 6,42 mi que voltam como <strong>utilizado</strong> agravam a inconsistência já conhecida (D-11 no PRD de Ressarcimento, D18 na priorização): crédito marcado como compensado sem débito casado do mesmo tributo. Se a base mudar antes de o motor entrar, o protótipo passa a mostrar R$ 46,79 mi de crédito utilizado sem lastro de débito — por isso a ordem entre as duas mudanças é a decisão <strong>D-GL-08</strong>.</p></div>
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Impacto nas telas</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Tela</th><th>O que muda</th><th>Código novo</th></tr></thead>
+<tbody>
+<tr><td><strong>Crédito · listagem</strong></td><td>coluna de causa da glosa e filtro por causa; o status glosado passa a ter razão visível</td><td>Sim</td></tr>
+<tr><td><strong>Crédito · detalhe do RF</strong></td><td>ficha da glosa: causa, fundamento, órgão, evidência, prazo e status do contencioso</td><td>Sim</td></tr>
+<tr><td><strong>Crédito · KPIs e composição</strong></td><td>glosado cai de R$ 11,64 mi para R$ 1,33 mi; quebra por causa no lugar de um bloco único</td><td>Sim</td></tr>
+<tr><td><strong>Histórico do RF</strong></td><td>três eventos no lugar da linha genérica: glosa, impugnação e decisão</td><td>Sim</td></tr>
+<tr><td><strong>Inconsistências</strong></td><td>o estado <em>glosada</em> da tela passa a ser o mesmo da glosa do crédito, com fila e SLA pelo prazo de defesa</td><td>Sim</td></tr>
+<tr><td><strong>Início (dashboard)</strong></td><td>a apropriar sobe R$ 2,32 mi; apropriados sobem R$ 8,00 mi; perda definitiva vira indicador próprio</td><td>Ajuste</td></tr>
+<tr><td><strong>Apuração</strong></td><td>mais crédito apropriado entra no período; glosado continua fora</td><td>Ajuste</td></tr>
+<tr><td><strong>Ressarcimento</strong></td><td>crédito glosado explicitamente inelegível a intenção e pedido</td><td>Ajuste</td></tr>
+<tr><td><strong>Fluxo de Caixa Tributário</strong></td><td>crédito glosado deixa de contar como recuperável; glosa revertida volta na data da decisão</td><td>Ajuste</td></tr>
+<tr><td><strong>Motor do art. 53</strong></td><td>nenhuma mudança de regra — já ignora glosado; muda o volume do pool</td><td>Não</td></tr>
+</tbody></table></div>
+<p>Documentação a atualizar junto: PRD de Crédito (ciclo de vida do crédito e máquina de estados), PRD de Inconsistências (estado glosada unificado), Mapa de Funcionalidades e Mapa de Priorização.</p>
+</div>
+
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Esforço e risco</span></div>
+<h3>Onde o código muda</h3>
+<ul class="plain">
+<li><strong>Gerador da base</strong> — a faixa de glosa some e as três glosas com causa passam a ser atribuídas por documento e tributo.</li>
+<li><strong>Ficha da glosa</strong> — estrutura nova, com catálogo de causas, órgão, evidência, prazo e máquina de estados.</li>
+<li><strong>Histórico do RF</strong> — o evento genérico vira três eventos com dados reais.</li>
+<li><strong>Módulo de Crédito</strong> — coluna, filtro, KPIs e a ficha no detalhe.</li>
+<li><strong>Inconsistências</strong> — unificação do estado <em>glosada</em>, fila e SLA.</li>
+<li><strong>Ajustes de leitura</strong> — Início, Apuração, Ressarcimento e Fluxo de Caixa.</li>
+</ul>
+<p>É <strong>menor que o módulo de Ressarcimento</strong>: não cria módulo novo, não tem prazos legais concorrentes nem cálculo de Selic, e reaproveita a ficha do RF, o padrão de eventos do histórico e a fila de Inconsistências que já existem.</p>
+<h3>Riscos</h3>
+<ul class="plain">
+<li><strong>Mexe em dados mestres.</strong> Todo indicador, gráfico e listagem que lê status de crédito muda de número. Exige a auditoria completa depois de aplicada.</li>
+<li><strong>Roteiros de demonstração.</strong> Quem usa números de cor vai encontrar outros — glosado cai para um sétimo do que é hoje.</li>
+<li><strong>Concorrência com o motor.</strong> As duas mudanças tocam os mesmos registros. Aplicar as duas ao mesmo tempo dificulta saber qual delas produziu cada diferença (<strong>D-GL-08</strong>).</li>
+<li><strong>Risco baixo de regressão de regra:</strong> nenhum motor de cálculo depende do estado glosado além de excluí-lo, e isso não muda.</li>
+</ul>
+</div>
+
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Decisões para aprovar</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Decisão</th><th>Sugestão</th></tr></thead>
+<tbody>
+<tr><td class="rid">D-GL-01</td><td>Prazo de impugnação da glosa — igual para CBS e IBS ou um para cada órgão?</td><td>30 dias da ciência, parametrizável, igual para os dois até haver regra específica do Comitê Gestor</td></tr>
+<tr><td class="rid">D-GL-02</td><td>Existe glosa parcial, de parte do valor do RF?</td><td>Sim no modelo, com <code>valorGlosado</code> próprio; na base simulada, as três são integrais</td></tr>
+<tr><td class="rid">D-GL-03</td><td>Glosa revertida reabre a contagem do prazo do art. 54?</td><td>Não reabre; o prazo segue contado da apropriação original, e a reversão só devolve a disponibilidade</td></tr>
+<tr><td class="rid">D-GL-04</td><td>Glosas ficam em fila própria ou como tipo dentro de Inconsistências?</td><td>Tipo dentro de Inconsistências, aproveitando grupos e SLA já propostos</td></tr>
+<tr><td class="rid">D-GL-05</td><td>Unificar o estado <em>glosada</em> da tela de Inconsistências com o status de crédito glosado?</td><td>Sim — hoje são duas contagens sem vínculo</td></tr>
+<tr><td class="rid">D-GL-06</td><td>As cinco causas entram já, ou só as três que aparecem na base?</td><td>Catálogo com as cinco; ocorrência só para as três</td></tr>
+<tr><td class="rid">D-GL-07</td><td>Faixa de priorização</td><td>M1 — o M0 segue inalterado, como nos itens de ressarcimento</td></tr>
+<tr><td class="rid">D-GL-08</td><td>Ordem em relação ao motor do art. 53</td><td>Motor primeiro, glosa depois: assim os R$ 8,00 mi entram num pool que já compensa pela ordem correta, e cada mudança é auditada separada</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Como foi medido</span></div>
+<p>Os números vêm da base carregada no protótipo, lida direto no navegador, sem estimativa:</p>
+<ul class="plain">
+<li><strong>Glosados de hoje</strong> — varredura dos registros fiscais de entrada com <code>statusCredito === 'glosado'</code>: 30 RFs, 15 documentos, R$ 11,64 mi, IBS R$ 6,47 mi e CBS R$ 5,17 mi, distribuídos nos 12 meses.</li>
+<li><strong>Ausência de causa</strong> — os mesmos 30 registros com campo <code>motivo</code> vazio, sem <code>statusFlags</code> e sem <code>_inconsistencias</code>.</li>
+<li><strong>Método de recolhimento</strong> — Split Payment em 4 documentos (8 RFs, R$ 2,91 mi), RAD em 4 (8 RFs, R$ 2,94 mi) e Fornecedor em 7 (14 RFs, R$ 5,79 mi).</li>
+<li><strong>Redistribuição</strong> — a régua nova aplicada aos mesmos 15 documentos, pelo valor real de cada registro: R$ 2,32 mi, R$ 1,58 mi e R$ 6,42 mi.</li>
+<li><strong>Total originado</strong> — R$ 76,27 mi, soma de todos os registros de entrada, inclusive glosados.</li>
+</ul>
+<p>A conferência foi feita com o motor do art. 53 ligado na cópia local de validação e com ele desligado; os totais de crédito originado, glosado e apropriado são os mesmos nos dois casos, porque o motor não toca em crédito glosado.</p>
+</div>
+
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><span class="ver-num">v1.0</span><span class="ver-desc">21/09/2026 — proposta inicial: diagnóstico da glosa sorteada, catálogo de cinco causas, ficha e ciclo de vida da glosa, três registros glosados na base simulada e os 27 que voltam ao fluxo, impacto por tela, esforço, riscos e 8 decisões.</span></div>
+</div>
+
+</div>
+</body>
+</html>
