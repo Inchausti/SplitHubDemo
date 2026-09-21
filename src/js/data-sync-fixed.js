@@ -750,10 +750,10 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165',
     'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23',
     'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246',
-    'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160' };
+    'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160', 'GLOSA':'163,45,45', 'IMPUGNAÇÃO':'186,117,23', 'GLOSA DEFINITIVA':'163,45,45' };
   var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!',
     'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌',
-    'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺' };
+    'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺', 'GLOSA':'✕', 'IMPUGNAÇÃO':'⚖', 'GLOSA DEFINITIVA':'✕' };
 
   var allEvents = [];
   var d0 = r.data || '';
@@ -1032,7 +1032,9 @@ window._rfGerarHistorico = function(rf, nf) {
       'Aguardando reconhecimento de crédito pelo órgão competente', 'pending'));
   }
   if (_sc_hist === 'glosado') {
-    ev.push(mkEv(MK(A(d0,10),'10:45'), 'INCONSISTÊNCIA','Créditos',                  'Fisco',
+    var _glEv = (window.shGlosa && window.shGlosa.historicoRF) ? window.shGlosa.historicoRF(rf) : [];
+    if (_glEv.length) _glEv.forEach(function(e) { ev.push(e); });
+    else ev.push(mkEv(MK(A(d0,10),'10:45'), 'INCONSISTÊNCIA','Créditos',                  'Fisco',
       'Crédito glosado pelo Fisco · direito ao crédito negado · requer impugnação', 'erro'));
   }
   // Apropriação: data do recolhimento que extinguiu o débito do fornecedor
@@ -1675,8 +1677,8 @@ window.abrirDetalheRF = function(rfId) {
   var stRegLab = rfSR ? (stRegLabs[rfSR] || rfSR) : null;
   var stRegRgb = rfSR ? (stRegRgbs[rfSR] || '167,168,170') : null;
 
-  var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165', 'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23', 'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246', 'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160' };
-  var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌', 'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺' };
+  var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165', 'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23', 'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246', 'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160', 'GLOSA':'163,45,45', 'IMPUGNAÇÃO':'186,117,23', 'GLOSA DEFINITIVA':'163,45,45' };
+  var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌', 'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺', 'GLOSA':'✕', 'IMPUGNAÇÃO':'⚖', 'GLOSA DEFINITIVA':'✕' };
 
   // Ordenar decrescente por timestamp (mais recente primeiro)
   eventos.sort(function(a, b) {
@@ -4295,7 +4297,10 @@ window.renderizarRFsInconsistencias = function() {
     'cnpj_divergente':      'CNPJ divergente',
     'duplicidade_rf':       'RF duplicado'
   };
-  var _incStatuses = ['aberta','aberta','em_analise','aguardando_emitente','aberta','resolvida','glosada','aberta','em_analise','aberta'];
+  // D-GL-05: o estado 'glosada' deixa de ser sorteado aqui. Ele passa a valer
+  // so para as ocorrencias que o modulo shGlosa cria a partir de uma glosa de
+  // credito de verdade - ver src/docs/proposta-glosa.html.
+  var _incStatuses = ['aberta','aberta','em_analise','aguardando_emitente','aberta','resolvida','resolvida','aberta','em_analise','aberta'];
   var _incPrios = function(v){ return v > 500000 ? 'critica' : v > 100000 ? 'alta' : v > 20000 ? 'media' : 'baixa'; };
   var incGlobal = [];
   lista.forEach(function(r, i) {
@@ -4334,6 +4339,7 @@ window.renderizarRFsInconsistencias = function() {
       dataExtincaoCredito: _incRf.dataExtincaoCredito || null
     });
   });
+  try { if (window.shGlosa && window.shGlosa.inconsistencias) window.shGlosa.inconsistencias(incGlobal); } catch (e) {}
   try { if (window.shRes && window.shRes.inconsistencias) window.shRes.inconsistencias(incGlobal); } catch (e) {}
   window._inconsistenciasGlobal = incGlobal;
 
@@ -8253,6 +8259,9 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window._enriquecerNFsSaida(); } catch(e) { console.error('[data-sync-fixed] Erro _enriquecerNFsSaida:', e); }
       // Ressarcimento: intenções, pedidos e pagamentos aplicados aos RFs antes de
       // qualquer indicador — só o pagamento muda o statusCredito (js/ressarcimento.js)
+      // A glosa nega o crédito antes de tudo: crédito glosado não entra no
+      // pool de compensação nem no ressarcimento
+      try { window.shGlosa && window.shGlosa.aplicarNaBase && window.shGlosa.aplicarNaBase(); } catch(e) { console.error('[glosa]', e); }
       // Validação local (branch motor-art53): com a chave ligada, o motor do art. 53
       // define compensação e saldo antes do ressarcimento e de qualquer indicador
       try { window.shMotor && window.shMotor.aplicarNaBase && window.shMotor.aplicarNaBase(); } catch(e) { console.error('[motor]', e); }
@@ -10155,11 +10164,11 @@ window.downloadGuiaDARF = function() {
         'INCONSISTÊNCIA':'163,45,45','VENCIMENTO':'163,45,45','AGUARDANDO':'186,117,23',
         'APROPRIAÇÃO':'29,158,117','PAGAMENTO':'29,158,117','UTILIZAÇÃO':'139,92,246',
         'EXTINÇÃO':'167,168,170','CONCILIAÇÃO':'139,92,246',
-        'CONC APURAÇÃO':'24,95,165','CONC FINANCEIRA':'29,158,117','RESSARCIMENTO':'107,63,160' };
+        'CONC APURAÇÃO':'24,95,165','CONC FINANCEIRA':'29,158,117','RESSARCIMENTO':'107,63,160', 'GLOSA':'163,45,45', 'IMPUGNAÇÃO':'186,117,23', 'GLOSA DEFINITIVA':'163,45,45' };
       var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓','VALIDAÇÃO':'✓','GERAÇÃO RF':'◉','INCONSISTÊNCIA':'!',
         'VENCIMENTO':'✕','AGUARDANDO':'…','APROPRIAÇÃO':'✓','PAGAMENTO':'$','UTILIZAÇÃO':'◆',
         'EXTINÇÃO':'■','CONCILIAÇÃO':'⇌',
-        'CONC APURAÇÃO':'⇌','CONC FINANCEIRA':'⇌','RESSARCIMENTO':'↺' };
+        'CONC APURAÇÃO':'⇌','CONC FINANCEIRA':'⇌','RESSARCIMENTO':'↺', 'GLOSA':'✕', 'IMPUGNAÇÃO':'⚖', 'GLOSA DEFINITIVA':'✕' };
 
       var allEvs = [];
 
