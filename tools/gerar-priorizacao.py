@@ -21,9 +21,9 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.5'
-DATA = u'18/09/2026'
-BASE_MAPA = u'Mapa de Funcionalidades v2.4'
+VERSAO = u'v2.6'
+DATA = u'21/09/2026'
+BASE_MAPA = u'Mapa de Funcionalidades v2.6'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
 URL_DOCS = 'https://split-hubhq.github.io/app/docs/'
@@ -129,26 +129,25 @@ def resolver_vinculo(p):
 # faixa por modulo: lista com a faixa de cada funcionalidade, na ordem do mapa
 FAIXAS = {
     0: ['M0','M2','M2','M2','M0','M0','M1'],
-    1: ['M0','M0','M0','M0','M2','M0','M2','M2','M2','M0','M0','M0','M0','M0','M1'],
-    2: ['M0','M0','M1','M1','M0','M1','M1'],
-    3:  ['M0','M0','M0','M0','M1','M1','M1','M0','M0','M1','M1','M0','M0','M0'],
-    4: ['M0','M0','M0','M0','M0','M1','M0','M1','M0','M1'],
-    5:  ['M0','M0','M0','M0','M0','M0','M0'],
-    6:  ['M2']*7,
-    7:  ['M2']*6,
-    8:  ['M0','M0','M0','M0','M0','M1','M0'],
-    9:  ['M0','M0','M1','M0','M2','M0','M0','M0','M0','M0','M0','M0'],
+    1: ['M0','M0','M0','M0','M2','M0','M2','M2','M2','M0','M0','M0','M0','M0','M1','M1','M1','M1'],
+    2: ['M0','M0','M1','M1','M0','M1','M1','M1','M1'],
+    3: ['M0','M0','M0','M0','M1','M1','M1','M0','M0','M1','M1','M0','M0','M0'],
+    4: ['M0','M0','M0','M0','M0','M1','M0','M1','M0','M1','M1','M1','M1'],
+    5: ['M0','M0','M0','M0','M0','M0','M0'],
+    6: ['M2','M2','M2','M2','M2','M2','M2','M1','M1','M1','M1','M1'],
+    7: ['M2','M2','M2','M2','M2','M2','M1'],
+    8: ['M0','M0','M0','M0','M0','M1','M0'],
+    9: ['M0','M0','M1','M0','M2','M0','M0','M0','M0','M0','M0','M0'],
     10: ['M0','M2','M0','M0','M1','M1'],
     11: ['M0','M0','M1','M1','M1','M1','M1','M0','M1','M1','M0','M1'],
-    12: ['M0','M0','M0','M0','M0','M0','M0','M0','M0','X','X','M0'],
+    12: ['M0','M0','M0','M0','M0','M0','M0','M0','M0','X','X','M1'],
     13: ['M0','M1','M1','M1','M1','M1','M0','M0','M1','M1','M1','M0','M1','M1','M1'],
-    14: ['M1']*16,
+    14: ['M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1'],
     15: ['M0','M0','M0','M0','M1','M0','M0','M1'],
-    16: ['M0','M1','M0','M0','M0','M0','M1','M1'],
-    17: ['M2']*4,
+    16: ['M0','M1','M0','M0','M0','M0','M1','M1','M1','M1','M1','M1'],
+    17: ['M2','M2','M2','M2'],
     18: ['M1','M1','M1','M1','M1','M0','M0','M0','M0','M0','M0'],
     19: ['M1','M1','M1','M1','M1','M0'],
-    # Ressarcimento — fora do M0 por decisão de 18/09/2026 (D16)
     20: ['M1','M2','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1','M1','M1','M1'],
 }
 
