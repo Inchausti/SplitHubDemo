@@ -300,6 +300,7 @@
     var porCred = {}, porDeb = {};
     r.livro.forEach(function (x) { (porCred[x.cred] = porCred[x.cred] || []).push(x); (porDeb[x.deb] = porDeb[x.deb] || []).push(x); });
     M.live = { nf0: L[0], n: L.length, porMes: r.porMes, livro: r.livro, plano: r.plano, ref: op.ref, op: op, porCred: porCred, porDeb: porDeb };
+    try { vincular(); M.telas(); } catch (e) { console.error('[motor] vínculo', e); }
   };
   function chaveDe(per) { if (per.indexOf('/') < 0) return per; var p = per.split('/'); return p[1] + '-' + pad(MES.indexOf(p[0]) + 1); }
 
@@ -380,6 +381,179 @@
       d.creditos = cred; d.debitos = deb;
     });
   };
+
+
+  /* ══ Fase 2 · etapa 2 — o vínculo exato entre crédito e débito ═════════
+     O livro do motor diz, linha a linha, qual crédito abateu qual débito e
+     por quanto. Aqui esse vínculo é gravado nos registros e passa a aparecer
+     nas listagens de Crédito e de Débito, no detalhe do RF e no histórico —
+     inclusive quando a compensação é parcial. */
+  function docDe(nf) { return (nf.tipoDF || 'NF-e') + ' ' + nf.numero; }
+  function vincular() {
+    var V = M.live, L = window._nfListaCompleta || window.nfListaFiltradaGlobal || [], ix = {};
+    L.forEach(function (nf) { (nf.registrosFiscais || []).forEach(function (rf) { ix[rf.id] = { rf: rf, nf: nf }; delete rf._motorUsos; delete rf._motorCreds; delete rf._dfsSaidaAbatidos; }); });
+    V.livro.forEach(function (x) {
+      var c = ix[x.cred], d = ix[x.deb]; if (!c || !d) return;
+      var quando = fimMes(x.mes);
+      (c.rf._motorUsos = c.rf._motorUsos || []).push({ id: x.deb, doc: docDe(d.nf), numero: d.nf.numero, ent: d.nf.entidade || '—', valor: x.valor, mes: x.mes, data: quando });
+      (d.rf._motorCreds = d.rf._motorCreds || []).push({ id: x.cred, doc: docDe(c.nf), numero: c.nf.numero, ent: c.nf.entidade || '—', valor: x.valor, mes: x.mes, data: quando });
+      // o histórico legado já sabe ler esta lista
+      (c.rf._dfsSaidaAbatidos = c.rf._dfsSaidaAbatidos || []).push({ numero: d.nf.numero, valor: x.valor });
+    });
+  }
+
+  /* ── listagens: duas colunas novas em Crédito e em Débito ────────────── */
+  var COL_CRED = [
+    { key: 'motorComp', label: 'Compensado', cls: 'r', tip: 'Quanto deste crédito já abateu débito, pela ordem do <strong>art. 53</strong>. Menor que o crédito significa <strong>compensação parcial</strong> — o resto segue disponível.' },
+    { key: 'motorUsos', label: 'Débitos abatidos', tip: 'Documentos de saída que este crédito abateu, com o valor de cada um e o período da apuração em que isso aconteceu.' }
+  ];
+  var COL_DEB = [
+    { key: 'motorComp', label: 'Compensado', cls: 'r', tip: 'Quanto deste débito foi extinto por compensação com crédito do mesmo tributo (<strong>art. 53</strong>). Menor que o débito significa <strong>compensação parcial</strong>.' },
+    { key: 'motorCreds', label: 'Créditos usados', tip: 'Documentos de entrada cujos créditos abateram este débito, com o valor de cada um.' }
+  ];
+  function colunas() {
+    var T = window.SH_TABLES || {};
+    if (T.creditos && !T.creditos._mt) { T.creditos.cols = T.creditos.cols.concat(COL_CRED); T.creditos._mt = 1; }
+    if (T.debitos && !T.debitos._mt) { T.debitos.cols = T.debitos.cols.concat(COL_DEB); T.debitos._mt = 1; }
+  }
+  function cifra(v) { return money(v); }
+  function celValor(rf, total) {
+    var c = rf._valorCompensado || 0;
+    if (c <= 0.005) return '<span style="color:var(--txt3)">—</span>';
+    var parcial = c < (total || 0) - 0.005;
+    return '<span class="mono" style="font-weight:600' + (parcial ? ';color:var(--purple)' : '') + '">' + cifra(c) + '</span>'
+      + (parcial ? '<br><span style="font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--purple)">PARCIAL</span>' : '');
+  }
+  function celDocs(lista) {
+    if (!lista || !lista.length) return '<span style="color:var(--txt3)">—</span>';
+    var ordem = lista.slice().sort(function (a, b) { return a.data < b.data ? -1 : a.data > b.data ? 1 : 0; });
+    var tit = ordem.map(function (x) { return x.doc + ' · ' + cifra(x.valor) + ' · apuração de ' + perLbl(x.mes); }).join('\n');
+    var vis = ordem.slice(0, 2).map(function (x) {
+      return '<span style="white-space:nowrap"><button onclick="window.abrirDetalhesNFporNumero(\'' + esc(String(x.numero)) + '\')" style="background:none;border:none;padding:0;font:inherit;font-size:11px;font-weight:600;color:var(--blue);cursor:pointer;text-decoration:underline">'
+        + esc(x.doc) + '</button> <span style="color:var(--txt2);font-size:10px">' + cifra(x.valor) + '</span></span>';
+    }).join('<br>');
+    var resto = ordem.length - 2;
+    return '<div title="' + esc(tit) + '" style="line-height:1.5">' + vis + (resto > 0 ? '<br><span style="font-size:10px;color:var(--txt3)">+ ' + resto + ' documento' + (resto > 1 ? 's' : '') + '</span>' : '') + '</div>';
+  }
+  function rfDaLinha(tr) {
+    var id = tr.cells.length ? String(tr.cells[0].textContent || '').trim() : '';
+    return (window._rfIndex || {})[id] || null;
+  }
+  function pintarLinhas(tbodyId, entrada) {
+    var tb = document.getElementById(tbodyId); if (!tb || !M.live) return;
+    Array.prototype.forEach.call(tb.querySelectorAll('tr'), function (tr) {
+      if (tr.getAttribute('data-mt') === '1' || tr.cells.length < 4) return;
+      var e = rfDaLinha(tr); if (!e) return;
+      var rf = e.rf;
+      var c1 = tr.insertCell(-1), c2 = tr.insertCell(-1);
+      c1.className = 'r'; c2.style.minWidth = '150px';
+      c1.innerHTML = celValor(rf, rf.valor || 0);
+      c2.innerHTML = celDocs(entrada ? rf._motorUsos : rf._motorCreds);
+      tr.setAttribute('data-mt', '1');
+    });
+  }
+
+  /* ── detalhe do RF: a seção da compensação, com os documentos ────────── */
+  function painelRF() {
+    var box = document.querySelector('#rf-detalhe-overlay .mbox-col'); if (!box || !M.live) return;
+    var tit = document.querySelector('#rf-detalhe-overlay .mbox-title');
+    var id = tit ? String(tit.textContent || '').split('·').pop().trim() : '';
+    var e = (window._rfIndex || {})[id]; if (!e) return;
+    var rf = e.rf, entrada = e.nf.tipo !== 'saida', usos = entrada ? rf._motorUsos : rf._motorCreds;
+    var comp = rf._valorCompensado || 0, tot = rf.valor || 0, DR = window._rfDetailRow;
+    if (!usos && comp <= 0.005) return;
+    var linhas = (usos || []).slice().sort(function (a, b) { return a.data < b.data ? -1 : 1; }).map(function (x) {
+      return '<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px solid var(--brd)">'
+        + '<button onclick="window.abrirDetalhesNFporNumero(\'' + esc(String(x.numero)) + '\')" style="background:none;border:none;padding:0;font:inherit;font-size:11px;font-weight:600;color:var(--blue);cursor:pointer;text-decoration:underline">' + esc(x.doc) + '</button>'
+        + '<span class="mono" style="font-size:11px">' + cifra(x.valor) + '</span></div>'
+        + '<div style="font-size:10px;color:var(--txt3);margin-bottom:5px">' + esc(x.ent) + ' · apuração de ' + perLbl(x.mes) + '</div>';
+    }).join('');
+    var d = document.createElement('div');
+    d.innerHTML = '<div class="mbox-divider"></div>'
+      + '<div class="mbox-section-label">Compensação · art. 53</div>'
+      + DR(entrada ? 'Crédito compensado' : 'Débito compensado', cifra(comp), 'var(--p-teal)')
+      + (comp < tot - 0.005 ? DR(entrada ? 'Saldo do crédito' : 'Ainda a recolher', cifra(tot - comp), 'var(--purple)') : '')
+      + (linhas ? '<div style="margin-top:6px">' + linhas + '</div>' : '')
+      + '<div class="mbox-info-box"><span class="mbox-info-box-label">Como o motor escolheu</span>'
+      + '<span style="color:var(--txt2)">O crédito abate, em cada apuração, primeiro o saldo a recolher vencido e depois os débitos do próprio período, do mais antigo para o mais novo (<strong>art. 53 da LC 214/2025</strong>). '
+      + 'Um crédito pode abater vários débitos, e um débito pode ser abatido por vários créditos — daí a compensação parcial.</span></div>';
+    box.appendChild(d);
+  }
+
+  /* ── histórico: o evento diz qual documento, quanto e em que apuração ── */
+  function historico(ev, rf, nf) {
+    if (!M.live) return ev;
+    var T = T_(rf), F = window._rfFmtTS || function (x) { return x; };
+    function mk(ts, tipo, modulo, ator, desc, cls) { return { ts: ts, data: F(ts), tipo: tipo, modulo: modulo, ator: ator, desc: desc, cls: cls }; }
+    function lista(us) { return us.map(function (x) { return x.doc + ' (' + cifra(x.valor) + ')'; }).join(', '); }
+    if (nf.tipo !== 'saida') {
+      var usos = rf._motorUsos;
+      if (!usos || !usos.length) return ev;
+      ev = ev.filter(function (e) { return e.tipo !== 'UTILIZAÇÃO'; });
+      var meses = {}; usos.forEach(function (x) { (meses[x.mes] = meses[x.mes] || []).push(x); });
+      var ks = Object.keys(meses).sort(), usado = 0;
+      ks.forEach(function (k, i) {
+        var us = meses[k], v = us.reduce(function (a, x) { return a + x.valor; }, 0); usado += v;
+        var resto = (rf.valor || 0) - usado;
+        var desc = 'Crédito de ' + cifra(v) + ' de ' + T + ' compensado na apuração de ' + perLbl(k)
+          + ' · ' + (us.length > 1 ? 'débitos abatidos' : 'débito abatido') + ': ' + lista(us)
+          + ' · método: Compensação · ordem do art. 53 da LC 214/2025';
+        if (i === ks.length - 1 && resto > 0.005) desc += ' · saldo de ' + cifra(resto) + ' segue disponível para os próximos períodos';
+        if (v < (rf.valor || 0) - 0.005 || ks.length > 1) desc = 'Compensação parcial · ' + desc;
+        ev.push(mk(fimMes(k) + 'T14:18', 'UTILIZAÇÃO', 'Apuração', 'SplitHub', desc, 'ok'));
+      });
+      return ev;
+    }
+    var creds = rf._motorCreds;
+    if (!creds || !creds.length) return ev;
+    var mesesD = {}; creds.forEach(function (x) { (mesesD[x.mes] = mesesD[x.mes] || []).push(x); });
+    var kd = Object.keys(mesesD).sort(), pago = 0, total = rf.valor || 0;
+    ev = ev.filter(function (e) { return !(e.tipo === 'EXTINÇÃO' && rf.metodoExtincao === 'Compensacao'); });
+    kd.forEach(function (k, i) {
+      var us = mesesD[k], v = us.reduce(function (a, x) { return a + x.valor; }, 0); pago += v;
+      var falta = total - pago, ultimo = i === kd.length - 1;
+      var desc = (falta > 0.005 || !ultimo ? 'Compensação parcial · ' : '') + 'Débito de ' + T + ' abatido em ' + cifra(v)
+        + ' na apuração de ' + perLbl(k) + ' · ' + (us.length > 1 ? 'créditos usados' : 'crédito usado') + ': ' + lista(us)
+        + ' · ordem do art. 53 da LC 214/2025'
+        + (ultimo && falta > 0.005 ? ' · restam ' + cifra(falta) + ' a recolher' : '');
+      ev.push(mk(fimMes(k) + 'T14:18', 'UTILIZAÇÃO', 'Apuração', 'SplitHub', desc, falta > 0.005 && ultimo ? 'pending' : 'ok'));
+      if (ultimo && falta <= 0.005) ev.push(mk(fimMes(k) + 'T18:00', 'EXTINÇÃO', 'Débitos', 'SplitHub',
+        'Débito de ' + T + ' extinto · ciclo tributário encerrado · método: Compensação com créditos do mesmo tributo', 'ok'));
+    });
+    return ev;
+  }
+
+  M.telas = function () {
+    if (!M.live) return;
+    ['renderizarTabelaCreditos', 'renderizarTabelaDebitos'].forEach(function (fn) {
+      if (typeof window[fn] !== 'function' || window[fn]._mt2) return;
+      var o = window[fn], entrada = fn.indexOf('Creditos') > 0;
+      window[fn] = function () {
+        var r = o.apply(this, arguments);
+        try { pintarLinhas(entrada ? 't-creditos' : 't-debitos', entrada); } catch (e) { console.error('[motor] listagem', e); }
+        return r;
+      };
+      window[fn]._mt2 = true;
+    });
+    if (typeof window._rfGerarHistorico === 'function' && !window._rfGerarHistorico._mt2) {
+      var gh = window._rfGerarHistorico;
+      window._rfGerarHistorico = function (rf, nf) {
+        var ev = gh.apply(this, arguments);
+        try { return historico(ev, rf, nf); } catch (e) { console.error('[motor] histórico', e); return ev; }
+      };
+      window._rfGerarHistorico._mt2 = true;
+    }
+    if (typeof window.abrirDetalheRF === 'function' && !window.abrirDetalheRF._mt2) {
+      var ad = window.abrirDetalheRF;
+      window.abrirDetalheRF = function () {
+        var r = ad.apply(this, arguments);
+        try { painelRF(); } catch (e) { console.error('[motor] detalhe', e); }
+        return r;
+      };
+      window.abrirDetalheRF._mt2 = true;
+    }
+  };
+  if (M.ligado()) { try { colunas(); } catch (e) { console.error('[motor] colunas', e); } }
 
   /* ── cálculo completo ────────────────────────────────────────────────── */
   M.calcular = function () {
@@ -594,6 +768,7 @@
       };
       window.apurCalcTotals._mt = true;
     }
+    M.telas();
     if (typeof window.showView === 'function' && !window.showView._mt) {
       var sv = window.showView;
       window.showView = function (id) {
