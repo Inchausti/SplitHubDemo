@@ -30,7 +30,7 @@
       { p: perAdd(ref, -2), tipo: 'pedido', frac: 0.7, status: 'em_analise', div: true, id: 'PED-CBS-' + perAdd(ref, -2) },
       { p: perAdd(ref, -1), tipo: 'intencao', frac: 1, status: 'declarada', id: 'INT-CBS-' + perAdd(ref, -1) }];
     return [
-      { p: perAdd(ref, -4), tipo: 'pedido', frac: 0.6, status: 'pago', parcial: true, id: 'PED-IBS-' + perAdd(ref, -4) },
+      { p: perAdd(ref, -4), tipo: 'pedido', frac: 1, status: 'pago', parcial: true, id: 'PED-IBS-' + perAdd(ref, -4) },
       { p: perAdd(ref, -3), tipo: 'cancelada', frac: 0, status: 'cancelada', id: 'INT-IBS-' + perAdd(ref, -3) },
       { p: perAdd(ref, -2), tipo: 'pedido', frac: 0.5, status: 'em_analise', id: 'PED-IBS-' + perAdd(ref, -2) }];
   }
