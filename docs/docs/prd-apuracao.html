@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Apuração IBS/CBS · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+</style>
+</head>
+
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">PRD · Fiscal → Apuração</div>
+<h1>Apuração IBS/CBS — Onde o crédito encontra o débito</h1>
+<p class="subtitle">O período fecha aqui. A apuração reúne o crédito apropriado e o débito apurado, usa o crédito na ordem que a lei manda, transporta o saldo credor e diz o que sobra para recolher em guia. É o módulo que decide, e os demais leem o que ele decidiu.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Fiscal → Apuração</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
+<div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-apuracao</span></div>
+<div class="meta-pill"><span class="meta-label">LC 214/2025</span>&nbsp;<span class="meta-val">Arts. 47, 48, 53 e 54</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Contexto e posicionamento</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Escopo e recorte</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> A ordem de uso do crédito</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> O período de apuração</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Modelo de dados</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Arquitetura da tela</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Funcionalidades detalhadas</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Indicadores</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Requisitos funcionais</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Regras de negócio</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Integrações e dependências</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Defeitos e decisões em aberto</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Glossário</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> Histórico de versões</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Contexto e posicionamento</span></div>
+<h3>1.1 O módulo que fecha</h3>
+<p>Crédito e Débito mostram posição por documento. A Apuração é o único módulo que <strong>fecha a competência</strong>: consolida o crédito apropriado no período, confronta com o débito apurado, aplica o crédito na ordem do art. 53 da LC 214/2025, transporta o saldo credor para o período seguinte e apura o valor a recolher em guia.</p>
+<p>Quem responde "quanto eu devo neste mês?" é este módulo. Os demais leem o resultado: o Fluxo de Caixa mostra o efeito no caixa, o Ressarcimento parte do saldo credor que sobra, o Crédito e o Débito exibem, registro a registro, o que a apuração consumiu.</p>
+<h3>1.2 A cadeia completa</h3>
+<div class="callout info"><div class="ct">Do documento ao evento de volta</div><p>O documento fiscal <strong>chega por integração</strong> → vira registro fiscal de IBS e de CBS → é conciliado com a <strong>apuração assistida</strong> do Fisco → o crédito se apropria quando o débito do fornecedor é extinto (art. 47) → a apuração usa o crédito na ordem do art. 53 → cada mudança de status volta ao ERP por webhook. A Apuração é o quarto elo, e depende dos três anteriores.</p></div>
+<h3>1.3 Recorte legal</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Dispositivo</th><th>O que determina</th><th>Onde aparece no módulo</th></tr></thead>
+<tbody>
+<tr><td><strong>Art. 47</strong></td><td>o crédito depende da extinção do débito pelo fornecedor</td><td>o crédito entra na apuração do período em que foi apropriado, não no da emissão</td></tr>
+<tr><td><strong>Art. 48</strong></td><td>apropriação do crédito e alíquota de transição</td><td>valor do crédito que entra no período</td></tr>
+<tr><td><strong>Art. 53</strong></td><td>ordem de uso: saldo vencido, débitos do período, saldo credor</td><td>seção 03 — é a regra central deste PRD</td></tr>
+<tr><td><strong>Art. 54</strong></td><td>prazo de 5 anos para usar o crédito</td><td>coluna <em>Limite art. 54</em> no registro fiscal</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Escopo e recorte</span></div>
+<h3>2.1 O que entra</h3>
+<ul class="plain">
+<li><strong>Crédito apropriado</strong> no período, por registro fiscal de entrada.</li>
+<li><strong>Débito apurado</strong> no período, por registro fiscal de saída.</li>
+<li><strong>Saldo credor</strong> transportado do período anterior.</li>
+<li><strong>Compensação</strong> — qual crédito abateu qual débito, e por quanto.</li>
+<li><strong>Saldo a recolher</strong> do período, que vira guia.</li>
+<li><strong>Devolução</strong> de crédito que voltou de um pedido de ressarcimento deferido em parte.</li>
+</ul>
+<h3>2.2 O que não entra</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Fora do módulo</th><th>Onde vive</th></tr></thead>
+<tbody>
+<tr><td>Ingestão e validação do documento</td><td>Ingestão de DFs</td></tr>
+<tr><td>Conciliação com a apuração assistida</td><td>Conciliação</td></tr>
+<tr><td>Glosa do crédito e contencioso</td><td>Crédito</td></tr>
+<tr><td>Intenção, pedido e recebimento de ressarcimento</td><td>Ressarcimento</td></tr>
+<tr><td>Geração e pagamento da guia</td><td>Pagamentos</td></tr>
+<tr><td>Projeção de caixa</td><td>Fluxo de Caixa Tributário</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">A ordem de uso do crédito</span></div>
+<p>O crédito apropriado não escolhe onde ir. O art. 53 da LC 214/2025 fixa a ordem, e a apuração a aplica <strong>por tributo</strong> — IBS e CBS nunca se cruzam.</p>
+<div class="state-grid">
+<div class="state-row"><span class="state-name sn-red">1º · saldo vencido</span><span class="state-desc">Débito de períodos anteriores que venceu sem extinção. É a primeira coisa que o crédito cobre, antes de qualquer débito novo.</span></div>
+<div class="state-row"><span class="state-name sn-amber">2º · débitos do período</span><span class="state-desc">Os débitos da própria competência, do mais antigo para o mais novo, até o crédito acabar.</span></div>
+<div class="state-row"><span class="state-name sn-teal">3º · saldo credor</span><span class="state-desc">O que sobrou de crédito é transportado para o período seguinte — e pode ser reservado para ressarcimento.</span></div>
+</div>
+<h3>3.1 O que não disputa crédito</h3>
+<p>Débito extinto por <strong>Split Payment</strong> ou por <strong>RAD</strong> sai com dinheiro na própria liquidação e nunca entra na fila. Débito com <strong>inconsistência aberta</strong> fica retido: não pode ser extinto por compensação enquanto a divergência não for resolvida.</p>
+<h3>3.2 Compensação parcial</h3>
+<p>Um crédito pode abater vários débitos, e um débito pode ser abatido por vários créditos. Quando o crédito não cobre o débito inteiro, os dois ficam parciais: o débito segue não extinto pelo saldo, e o crédito segue apropriado pelo que sobrou. A apuração registra o vínculo dos dois lados, com valor.</p>
+<h3>3.3 O que vira guia</h3>
+<p>O débito do período que o crédito não cobriu é <strong>saldo a recolher</strong> da competência e vai para guia; não fica esperando crédito futuro. Só o débito vencido continua na fila dos períodos seguintes, como primeira prioridade.</p>
+<div class="callout ok"><div class="ct">A identidade que a apuração garante</div><p>Em qualquer recorte, <strong>crédito compensado = débito compensado</strong>. Antes de o módulo existir, os dois lados eram sorteados de forma independente na base e divergiam em R$ 27,27 mi — crédito marcado como usado sem débito correspondente.</p></div>
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O período de apuração</span></div>
+<h3>4.1 Em que período o crédito entra</h3>
+<p>O crédito entra na apuração do período em que foi <strong>apropriado</strong>, não no da emissão do documento. É consequência direta do art. 47: antes do recolhimento do fornecedor não há crédito, e o que não existe não compensa.</p>
+<div class="callout warn"><div class="ct">Documento de dezembro, crédito de janeiro</div><p>Um documento emitido em dezembro cujo fornecedor recolhe em janeiro gera crédito na apuração de <strong>janeiro</strong>. O seletor de períodos abre esse período mesmo quando não há documento emitido nele, marcado como <em>só créditos apropriados</em>.</p></div>
+<h3>4.2 Saldo anterior</h3>
+<p>O saldo credor do período anterior abre o período seguinte e é consumido antes do crédito novo. Na listagem do período ele aparece como linha própria, identificada como <em>saldo anterior</em>, com o documento de origem — o crédito não perde a rastreabilidade ao atravessar a competência.</p>
+<h3>4.3 Devolução de ressarcimento</h3>
+<p>Crédito incluído em pedido de ressarcimento sai do saldo compensável. Se o pedido é deferido em parte, o que não foi reconhecido <strong>volta ao saldo</strong> na data da decisão e aparece na apuração daquele período como linha de devolução.</p>
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Modelo de dados</span></div>
+<h3>5.1 O período</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Campo</th><th>Conteúdo</th></tr></thead>
+<tbody>
+<tr><td><code>ibsSaldoInicial</code> · <code>cbsSaldoInicial</code></td><td>saldo credor transportado do período anterior, por tributo</td></tr>
+<tr><td><code>creditos</code></td><td>créditos do período: documento, tributo, fornecedor, valor, apropriado, utilizado, não utilizado</td></tr>
+<tr><td><code>debitos</code></td><td>débitos do período: documento, tributo, cliente, valor, extinto, não extinto, mecanismo de extinção</td></tr>
+<tr><td><code>status</code></td><td>estado da apuração do período</td></tr>
+</tbody></table></div>
+<h3>5.2 O vínculo</h3>
+<p>Cada compensação é um registro com tributo, período, crédito de origem, débito de destino e valor. É esse registro que alimenta a coluna <em>Débitos abatidos</em> no Crédito, a coluna <em>Créditos usados</em> no Débito, a seção de compensação no detalhe do registro e os eventos do histórico.</p>
+<h3>5.3 Posição por tributo e período</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Campo</th><th>Significado</th></tr></thead>
+<tbody>
+<tr><td><code>compensado</code></td><td>quanto de crédito foi usado no período</td></tr>
+<tr><td><code>saldoCredor</code></td><td>quanto sobrou ao fim do período</td></tr>
+<tr><td><code>aRecolher</code></td><td>débito do período que o crédito não cobriu — vira guia</td></tr>
+<tr><td><code>vencidoAberto</code></td><td>débito vencido que segue sem cobertura</td></tr>
+<tr><td><code>ressarcimento</code></td><td>saldo que saiu para intenção ou pedido</td></tr>
+<tr><td><code>devolvido</code></td><td>crédito que voltou de deferimento parcial</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Arquitetura da tela</span></div>
+<p>Uma competência por vez, escolhida no seletor, em <code>#view-apuracao</code>:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Bloco</th><th>Conteúdo</th></tr></thead>
+<tbody>
+<tr><td><strong>Cabeçalho</strong></td><td>competência ativa, estado da apuração e data da última execução</td></tr>
+<tr><td><strong>Resumo por tributo</strong></td><td>IBS e CBS lado a lado: saldo anterior, crédito apropriado, crédito utilizado, débito, saldo a recolher e saldo credor final</td></tr>
+<tr><td><strong>Créditos do período</strong></td><td>uma linha por registro, com o quanto foi utilizado e o motivo quando não foi apropriado; linhas de saldo anterior e de devolução vêm identificadas</td></tr>
+<tr><td><strong>Débitos do período</strong></td><td>uma linha por registro, com o mecanismo de extinção e, quando foi compensação, quais créditos a fizeram</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Funcionalidades detalhadas</span></div>
+<div class="feat" id="f-01"><div class="feat-hdr"><span class="feat-id">F-01</span><span class="feat-name">Apurar a competência por tributo</span></div><div class="feat-body"><p>Consolida crédito apropriado, débito apurado e saldo anterior, separadamente para IBS e CBS, e apresenta o resultado do período.</p></div></div>
+<div class="feat" id="f-02"><div class="feat-hdr"><span class="feat-id">F-02</span><span class="feat-name">Aplicar a ordem do art. 53</span></div><div class="feat-body"><p>Usa o crédito primeiro no saldo vencido, depois nos débitos do período, do mais antigo para o mais novo, e transporta o que sobra.</p></div></div>
+<div class="feat" id="f-03"><div class="feat-hdr"><span class="feat-id">F-03</span><span class="feat-name">Registrar o vínculo entre crédito e débito</span></div><div class="feat-body"><p>Cada abatimento guarda origem, destino e valor, e alimenta as duas listagens, o detalhe do registro e o histórico.</p></div></div>
+<div class="feat" id="f-04"><div class="feat-hdr"><span class="feat-id">F-04</span><span class="feat-name">Transportar o saldo credor</span></div><div class="feat-body"><p>O saldo final de um período abre o seguinte, e o crédito transportado aparece identificado como saldo anterior, com o documento de origem.</p></div></div>
+<div class="feat" id="f-05"><div class="feat-hdr"><span class="feat-id">F-05</span><span class="feat-name">Apurar o saldo a recolher</span></div><div class="feat-body"><p>O débito do período não coberto vira saldo a recolher da competência e segue para guia.</p></div></div>
+<div class="feat" id="f-06"><div class="feat-hdr"><span class="feat-id">F-06</span><span class="feat-name">Abrir período sem documento emitido</span></div><div class="feat-body"><p>Quando há crédito apropriado num mês sem documento emitido, o período existe na apuração, marcado como <em>só créditos apropriados</em>.</p></div></div>
+<div class="feat" id="f-07"><div class="feat-hdr"><span class="feat-id">F-07</span><span class="feat-name">Devolver crédito de deferimento parcial</span></div><div class="feat-body"><p>O crédito não reconhecido num pedido volta ao saldo na data da decisão, como linha de devolução do período.</p></div></div>
+<div class="feat" id="f-08"><div class="feat-hdr"><span class="feat-id">F-08</span><span class="feat-name">Mostrar o mecanismo de extinção de cada débito</span></div><div class="feat-body"><p>Split Payment, RAD ou compensação — e, na compensação, a lista dos créditos usados com valor.</p></div></div>
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Indicadores</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Indicador</th><th>Fórmula</th><th>Leitura</th></tr></thead>
+<tbody>
+<tr><td><strong>Saldo anterior</strong></td><td>saldo credor do período anterior, por tributo</td><td>o que a competência herda</td></tr>
+<tr><td><strong>Crédito apropriado</strong></td><td>soma dos créditos apropriados no período</td><td>o que entrou</td></tr>
+<tr><td><strong>Crédito utilizado</strong></td><td>soma dos abatimentos do período</td><td>o que foi consumido — igual ao débito compensado</td></tr>
+<tr><td><strong>Débito do período</strong></td><td>soma dos débitos apurados</td><td>a obrigação da competência</td></tr>
+<tr><td><strong>Saldo a recolher</strong></td><td>débito do período não coberto pelo crédito</td><td>o que vira guia</td></tr>
+<tr><td><strong>Saldo credor final</strong></td><td>crédito disponível ao fim do período</td><td>o que vai para o período seguinte ou para ressarcimento</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Requisitos funcionais</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri.</th></tr></thead>
+<tbody>
+<tr><td><span class="rid">RF-APU-001</span></td><td>A apuração deve ser feita por tributo, sem cruzar IBS e CBS.</td><td>Crédito de IBS nunca abate débito de CBS.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-APU-002</span></td><td>O crédito deve entrar no período da apropriação.</td><td>Documento de dezembro apropriado em janeiro entra na apuração de janeiro.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-APU-003</span></td><td>O crédito deve cobrir primeiro o saldo vencido.</td><td>Havendo débito vencido, ele é abatido antes dos débitos do período.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-APU-004</span></td><td>Débito retido por inconsistência não pode ser compensado.</td><td>Registro com inconsistência aberta não recebe crédito.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-APU-005</span></td><td>Cada abatimento deve registrar crédito, débito e valor.</td><td>A soma dos vínculos de um registro é igual ao valor compensado dele.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-APU-006</span></td><td>O saldo credor deve ser transportado ao período seguinte.</td><td>O saldo inicial de um período é igual ao saldo final do anterior.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-APU-007</span></td><td>O débito do período não coberto deve virar saldo a recolher.</td><td>Não fica aguardando crédito de períodos futuros.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-APU-008</span></td><td>O crédito compensado deve ser igual ao débito compensado.</td><td>Em qualquer recorte, os dois totais coincidem.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-APU-009</span></td><td>Crédito glosado não pode entrar na apuração como apropriado.</td><td>Registro glosado fica fora do saldo compensável.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-APU-010</span></td><td>A compensação parcial deve ser visível nos dois lados.</td><td>Crédito e débito parciais indicam quanto foi abatido e quanto resta.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-APU-011</span></td><td>Deve existir período de apuração quando só há crédito apropriado.</td><td>Mês sem documento emitido aparece no seletor, identificado.</td><td>S</td></tr>
+<tr><td><span class="rid">RF-APU-012</span></td><td>Crédito devolvido de deferimento parcial deve reentrar no saldo.</td><td>Aparece como devolução no período da decisão.</td><td>S</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Regras de negócio</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Regra</th><th>Base</th></tr></thead>
+<tbody>
+<tr><td><span class="rid">RN-APU-01</span></td><td>O crédito só compensa a partir do período em que foi apropriado.</td><td>LC 214/2025, art. 47</td></tr>
+<tr><td><span class="rid">RN-APU-02</span></td><td>A ordem de uso é saldo vencido, débitos do período, saldo credor.</td><td>LC 214/2025, art. 53</td></tr>
+<tr><td><span class="rid">RN-APU-03</span></td><td>IBS e CBS são apurados separadamente.</td><td>LC 214/2025</td></tr>
+<tr><td><span class="rid">RN-APU-04</span></td><td>Débito extinto por Split Payment ou RAD não disputa crédito.</td><td>modalidades de extinção</td></tr>
+<tr><td><span class="rid">RN-APU-05</span></td><td>Débito com inconsistência aberta fica retido e fora da fila.</td><td>decisão de produto D-DB-02</td></tr>
+<tr><td><span class="rid">RN-APU-06</span></td><td>Crédito reservado em intenção ou incluído em pedido sai do saldo compensável.</td><td>LC 214/2025, art. 39</td></tr>
+<tr><td><span class="rid">RN-APU-07</span></td><td>Crédito glosado fica fora da apuração enquanto a glosa não for revertida.</td><td>LC 214/2025, art. 47</td></tr>
+<tr><td><span class="rid">RN-APU-08</span></td><td>O saldo a recolher do período não espera crédito futuro.</td><td>LC 214/2025, art. 53</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Integrações e dependências</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Depende de</th><th>O que consome</th></tr></thead>
+<tbody>
+<tr><td><a class="xref" href="prd-ingestao.html">Ingestão de DFs</a></td><td>documento fiscal recebido por integração e transformado em registros de IBS e CBS</td></tr>
+<tr><td><a class="xref" href="prd-conciliacao.html">Conciliação</a></td><td>confirmação do documento na apuração assistida do Fisco</td></tr>
+<tr><td><a class="xref" href="prd-credito.html">Crédito</a></td><td>data de apropriação, valor e estado do crédito, inclusive glosa</td></tr>
+<tr><td><a class="xref" href="prd-debito.html">Débito</a></td><td>débito apurado, ciclo e flags — vencido e retido mudam a fila</td></tr>
+</tbody></table></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Alimenta</th><th>O que entrega</th></tr></thead>
+<tbody>
+<tr><td><a class="xref" href="prd-ressarcimento.html">Ressarcimento</a></td><td>saldo credor por período, base das intenções e dos pedidos</td></tr>
+<tr><td><a class="xref" href="prd-analytics.html">Fluxo de Caixa Tributário</a></td><td>compensado, saldo a recolher e saldo credor mês a mês</td></tr>
+<tr><td><a class="xref" href="prd-integracoes.html">Integrações</a></td><td>mudança de status do crédito, que dispara webhook ao ERP</td></tr>
+<tr><td><a class="xref" href="prd-pagamentos.html">Pagamentos</a></td><td>saldo a recolher que vira guia</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Defeitos e decisões em aberto</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Situação</th><th>Estado</th></tr></thead>
+<tbody>
+<tr><td><span class="rid">DEC-APU-01</span></td><td>Split Payment nas vendas está fora do modelo por decisão de produto: nenhum débito de saída é extinto por split na base atual.</td><td><span class="chip warn">Decidido — fora</span></td></tr>
+<tr><td><span class="rid">DEC-APU-02</span></td><td>Juros e multa sobre débito vencido extinto fora do prazo seguem simulados, como no RAD.</td><td><span class="chip warn">Decidido — simulado</span></td></tr>
+<tr><td><span class="rid">DEF-APU-01</span></td><td>Não há ação de fechar a apuração: o período é calculado e exibido, mas não existe ato de encerramento com trava.</td><td><span class="chip red">Aberto</span></td></tr>
+<tr><td><span class="rid">DEF-APU-02</span></td><td>A guia do saldo a recolher não é gerada a partir da apuração — o módulo de Pagamentos trata só do RAD do crédito.</td><td><span class="chip red">Aberto</span></td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Glossário</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Termo</th><th>Significado</th></tr></thead>
+<tbody>
+<tr><td><strong>Competência</strong></td><td>o período de apuração, mensal</td></tr>
+<tr><td><strong>Saldo credor</strong></td><td>crédito que sobrou depois de abater os débitos do período</td></tr>
+<tr><td><strong>Saldo a recolher</strong></td><td>débito do período que o crédito não cobriu; vira guia</td></tr>
+<tr><td><strong>Saldo vencido</strong></td><td>débito de período anterior que venceu sem extinção</td></tr>
+<tr><td><strong>Compensação parcial</strong></td><td>abatimento que não cobre o débito inteiro, ou não consome o crédito inteiro</td></tr>
+<tr><td><strong>Saldo anterior</strong></td><td>crédito transportado do período anterior, consumido antes do crédito novo</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s14">
+<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><span class="ver-num">v1.0</span><span class="ver-desc">21/09/2026 — PRD inicial. A apuração passa a ter documento próprio, com a ordem de uso do crédito do art. 53, o período pela data de apropriação, o transporte do saldo credor, a compensação parcial com vínculo dos dois lados, a devolução de deferimento parcial e o saldo a recolher da competência.</span></div>
+</div>
+
+</div>
+</body>
+</html>
