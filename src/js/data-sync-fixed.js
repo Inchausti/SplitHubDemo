@@ -750,10 +750,10 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
   var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165',
     'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23',
     'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246',
-    'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160', 'GLOSA':'163,45,45', 'IMPUGNAÇÃO':'186,117,23', 'GLOSA DEFINITIVA':'163,45,45', 'ENVIO ERP':'24,95,165', 'ENTREGA ERP':'29,158,117' };
+    'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160', 'GLOSA':'163,45,45', 'IMPUGNAÇÃO':'186,117,23', 'GLOSA DEFINITIVA':'163,45,45', 'ENVIO ERP':'24,95,165', 'ENTREGA ERP':'29,158,117', 'COMPROVANTE ERP':'24,95,165' };
   var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!',
     'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌',
-    'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺', 'GLOSA':'✕', 'IMPUGNAÇÃO':'⚖', 'GLOSA DEFINITIVA':'✕', 'ENVIO ERP':'↑', 'ENTREGA ERP':'⇄' };
+    'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺', 'GLOSA':'✕', 'IMPUGNAÇÃO':'⚖', 'GLOSA DEFINITIVA':'✕', 'ENVIO ERP':'↑', 'ENTREGA ERP':'⇄', 'COMPROVANTE ERP':'⤓' };
 
   var allEvents = [];
   var d0 = r.data || '';
@@ -1677,8 +1677,8 @@ window.abrirDetalheRF = function(rfId) {
   var stRegLab = rfSR ? (stRegLabs[rfSR] || rfSR) : null;
   var stRegRgb = rfSR ? (stRegRgbs[rfSR] || '167,168,170') : null;
 
-  var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165', 'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23', 'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246', 'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160', 'GLOSA':'163,45,45', 'IMPUGNAÇÃO':'186,117,23', 'GLOSA DEFINITIVA':'163,45,45', 'ENVIO ERP':'24,95,165', 'ENTREGA ERP':'29,158,117' };
-  var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌', 'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺', 'GLOSA':'✕', 'IMPUGNAÇÃO':'⚖', 'GLOSA DEFINITIVA':'✕', 'ENVIO ERP':'↑', 'ENTREGA ERP':'⇄' };
+  var evRgba  = { 'RAD ASSUMIDO':'24,95,165', 'RAD REVERTIDO':'186,117,23', 'INGESTÃO':'29,158,117', 'VALIDAÇÃO':'29,158,117', 'GERAÇÃO RF':'24,95,165', 'INCONSISTÊNCIA':'163,45,45', 'VENCIMENTO':'163,45,45', 'AGUARDANDO':'186,117,23', 'APROPRIAÇÃO':'29,158,117', 'PAGAMENTO':'29,158,117', 'UTILIZAÇÃO':'139,92,246', 'EXTINÇÃO':'167,168,170', 'CONCILIAÇÃO':'139,92,246', 'CONC APURAÇÃO':'24,95,165', 'CONC FINANCEIRA':'29,158,117', 'RESSARCIMENTO':'107,63,160', 'GLOSA':'163,45,45', 'IMPUGNAÇÃO':'186,117,23', 'GLOSA DEFINITIVA':'163,45,45', 'ENVIO ERP':'24,95,165', 'ENTREGA ERP':'29,158,117', 'COMPROVANTE ERP':'24,95,165' };
+  var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓', 'VALIDAÇÃO':'✓', 'GERAÇÃO RF':'◉', 'INCONSISTÊNCIA':'!', 'VENCIMENTO':'✕', 'AGUARDANDO':'…', 'APROPRIAÇÃO':'✓', 'PAGAMENTO':'$', 'UTILIZAÇÃO':'◆', 'EXTINÇÃO':'■', 'CONCILIAÇÃO':'⇌', 'CONC APURAÇÃO':'⇌', 'CONC FINANCEIRA':'⇌', 'RESSARCIMENTO':'↺', 'GLOSA':'✕', 'IMPUGNAÇÃO':'⚖', 'GLOSA DEFINITIVA':'✕', 'ENVIO ERP':'↑', 'ENTREGA ERP':'⇄', 'COMPROVANTE ERP':'⤓' };
 
   // Ordenar decrescente por timestamp (mais recente primeiro)
   eventos.sort(function(a, b) {
@@ -4344,6 +4344,7 @@ window.renderizarRFsInconsistencias = function() {
     });
   });
   try { if (window.shGlosa && window.shGlosa.inconsistencias) window.shGlosa.inconsistencias(incGlobal); } catch (e) {}
+  try { if (window.shErp && window.shErp.inconsistencias) window.shErp.inconsistencias(incGlobal); } catch (e) { console.error('[erp] inconsistências', e); }
   try { if (window.shRes && window.shRes.inconsistencias) window.shRes.inconsistencias(incGlobal); } catch (e) {}
   window._inconsistenciasGlobal = incGlobal;
 
@@ -10170,11 +10171,11 @@ window.downloadGuiaDARF = function() {
         'INCONSISTÊNCIA':'163,45,45','VENCIMENTO':'163,45,45','AGUARDANDO':'186,117,23',
         'APROPRIAÇÃO':'29,158,117','PAGAMENTO':'29,158,117','UTILIZAÇÃO':'139,92,246',
         'EXTINÇÃO':'167,168,170','CONCILIAÇÃO':'139,92,246',
-        'CONC APURAÇÃO':'24,95,165','CONC FINANCEIRA':'29,158,117','RESSARCIMENTO':'107,63,160', 'GLOSA':'163,45,45', 'IMPUGNAÇÃO':'186,117,23', 'GLOSA DEFINITIVA':'163,45,45', 'ENVIO ERP':'24,95,165', 'ENTREGA ERP':'29,158,117' };
+        'CONC APURAÇÃO':'24,95,165','CONC FINANCEIRA':'29,158,117','RESSARCIMENTO':'107,63,160', 'GLOSA':'163,45,45', 'IMPUGNAÇÃO':'186,117,23', 'GLOSA DEFINITIVA':'163,45,45', 'ENVIO ERP':'24,95,165', 'ENTREGA ERP':'29,158,117', 'COMPROVANTE ERP':'24,95,165' };
       var evIcons = { 'RAD ASSUMIDO':'⇄', 'RAD REVERTIDO':'↺', 'INGESTÃO':'↓','VALIDAÇÃO':'✓','GERAÇÃO RF':'◉','INCONSISTÊNCIA':'!',
         'VENCIMENTO':'✕','AGUARDANDO':'…','APROPRIAÇÃO':'✓','PAGAMENTO':'$','UTILIZAÇÃO':'◆',
         'EXTINÇÃO':'■','CONCILIAÇÃO':'⇌',
-        'CONC APURAÇÃO':'⇌','CONC FINANCEIRA':'⇌','RESSARCIMENTO':'↺', 'GLOSA':'✕', 'IMPUGNAÇÃO':'⚖', 'GLOSA DEFINITIVA':'✕', 'ENVIO ERP':'↑', 'ENTREGA ERP':'⇄' };
+        'CONC APURAÇÃO':'⇌','CONC FINANCEIRA':'⇌','RESSARCIMENTO':'↺', 'GLOSA':'✕', 'IMPUGNAÇÃO':'⚖', 'GLOSA DEFINITIVA':'✕', 'ENVIO ERP':'↑', 'ENTREGA ERP':'⇄', 'COMPROVANTE ERP':'⤓' };
 
       var allEvs = [];
 
