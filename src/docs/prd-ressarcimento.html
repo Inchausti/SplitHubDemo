@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRD — Ressarcimento · SplitHub v1.1</title>
+<title>PRD — Ressarcimento · SplitHub v1.2</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -215,14 +215,15 @@ code { overflow-wrap: anywhere; }
 <h1>Ressarcimento</h1>
 <p class="subtitle">Onde o saldo credor vira dinheiro — CBS na Receita Federal, IBS no Comitê Gestor, cada um com seu saldo, sua intenção, seu pedido e seus prazos. Implementado no protótipo em simulação 2026.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.1</span></div>
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.2</span></div>
 <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Fiscal → Ressarcimento</span></div>
 <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
 <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-ressarcimento</span></div>
 <div class="meta-pill"><span class="meta-label">Funcionalidades</span>&nbsp;<span class="meta-val">15</span></div>
 <div class="meta-pill"><span class="meta-label">Em M0</span>&nbsp;<span class="meta-val">0</span></div>
-<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v1.1</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v1.2</span></div>
 </div>
+<div class="res-upd" style="border:1px solid var(--brd);background:var(--sur);border-radius:10px;padding:14px 18px;margin:18px 0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);border:1px solid var(--teal);border-radius:3px;padding:1px 6px">Apuração</span><strong style="color:var(--txt1);font-size:14px">v1.2 — o saldo credor passa a vir da apuração</strong></div><ul style="list-style:disc;margin:0;padding:0;font-size:13px;color:var(--txt2)"><li style="margin:4px 0 0 18px">Intenções e pedidos deixam de partir de um saldo próprio: o saldo credor de cada período vem da <a href="prd-apuracao.html" style="color:var(--blue);font-weight:700">apuração</a>, depois de o crédito abater débito na ordem do art. 53.</li><li style="margin:4px 0 0 18px">A intenção trava o <strong>saldo do período</strong>: o crédito apropriado até o fim do período entra reservado, mesmo que a apropriação venha depois da declaração.</li><li style="margin:4px 0 0 18px">Crédito <strong>glosado</strong> é inelegivel a intenção e a pedido.</li><li style="margin:4px 0 0 18px">Deferimento parcial: o crédito não reconhecido volta ao saldo na data da decisão e aparece na apuração daquele período como devolução.</li><li style="margin:4px 0 0 18px">Mês devedor não tem intenção: sem saldo credor, não há o que reservar (art. 39).</li></ul><div style="font-size:12px;color:var(--txt2);margin-top:8px">21/09/2026 · <a href="prd-apuracao.html" style="color:var(--blue);font-weight:700">PRD de Apuração</a></div></div>
 <div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
 <li><a href="#s01"><span class="toc-num">01</span> Visão geral</a></li>
 <li><a href="#s02"><span class="toc-num">02</span> Simulação 2026</a></li>
@@ -235,7 +236,7 @@ code { overflow-wrap: anywhere; }
 <li><a href="#s09"><span class="toc-num">09</span> Integração com os outros módulos</a></li>
 <li><a href="#s10"><span class="toc-num">10</span> Sincronia de valores</a></li>
 <li><a href="#s11"><span class="toc-num">11</span> Trilha no histórico do DF e do RF</a></li>
-<li><a href="#s12"><span class="toc-num">12</span> Pendência de compliance — ordem do art. 53</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> A ordem do art. 53 — resolvida</a></li>
 <li><a href="#s13"><span class="toc-num">13</span> Requisitos funcionais</a></li>
 <li><a href="#s14"><span class="toc-num">14</span> Regras de negócio</a></li>
 <li><a href="#s15"><span class="toc-num">15</span> Rotas diretas</a></li>
@@ -287,8 +288,9 @@ code { overflow-wrap: anywhere; }
 <p>Todo RF que entra no ressarcimento guarda cada ato, com data, autor e base legal, e o histórico do RF e do DF mostra o caminho inteiro. O RF ressarcido não tem evento de <em>Utilização</em>: ele não abateu débito.</p><div class="table-wrap"><table><thead><tr><th>Passo</th><th>Evento no histórico</th><th>Quando aparece</th></tr></thead><tbody><tr><td>1</td><td>Intenção declarada · crédito reservado · não compensa o mês seguinte</td><td>Todo RF reservado</td></tr><tr><td>2</td><td>Intenção aprovada (acima do limite, D-03)</td><td>Quando houve aprovação</td></tr><tr><td>3</td><td>Saldo credor do período apurado · segue reservado</td><td>Fechado o período</td></tr><tr><td>4</td><td>Conferência com a API de créditos da CBS · ou verificação de impedimentos do IBS</td><td>Antes do pedido</td></tr><tr><td>5</td><td>Incluído no pedido · PER/DCOMP ou protocolo · prazo de análise · pagamento por silêncio</td><td>RF no pedido</td></tr><tr><td>6</td><td>Decisão: deferido, deferido parcial, indeferido, fiscalização</td><td>Registrada a decisão</td></tr><tr><td>7</td><td>Pagamento recebido · parcela do RF + Selic proporcional · conta · conciliação</td><td>Pedido pago</td></tr><tr><td>8</td><td>Extinção por ressarcimento · não abateu débito</td><td>Pedido pago</td></tr><tr><td>—</td><td>Volta a compensar: não incluído no pedido, excluído por divergência, não reconhecido, intenção cancelada ou vencida, pedido cancelado ou indeferido</td><td>Quando o RF sai do caminho</td></tr></tbody></table></div><p>Só entra na reserva crédito <strong>já apropriado na data do ato</strong> (LC 214/2025, art. 47). As ações do usuário recebem horários crescentes, para a trilha não inverter a ordem quando os passos são feitos em sequência.</p>
 </div>
 <div class="section" id="s12">
-<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Pendência de compliance — ordem do art. 53</span></div>
-<div class="callout warn"><div class="ct">A base sintética não segue a ordem de uso do crédito</div><p>Pelo art. 53 da LC 214/2025, o crédito abate primeiro os débitos do mesmo tributo e só o que sobra vira saldo a recuperar. Na base de demonstração, o status <em>utilizado</em> dos créditos e o <em>extinto por compensação</em> dos débitos são sorteados de forma independente — e os dois lados não se casam.</p></div><div class="table-wrap"><table><thead><tr><th>R$ milhões, 2026</th><th>CBS</th><th>IBS</th></tr></thead><tbody><tr><td>Crédito que o Crédito dá como <em>compensado</em></td><td>17,36</td><td>21,71</td></tr><tr><td>Débito que o Débito dá como <em>extinto por compensação</em></td><td>6,59</td><td>4,49</td></tr><tr><td>Débito ainda em aberto (a recolher)</td><td>22,16</td><td>27,70</td></tr><tr><td>Crédito apropriado parado como saldo credor</td><td>5,22</td><td>7,02</td></tr></tbody></table></div><p>Com débito em aberto maior que o crédito parado, a ordem do art. 53 não deixaria saldo credor — e não haveria o que ressarcir. O módulo usa o saldo como a Apuração o calcula hoje. A correção é um motor de compensação na base, que é decisão pendente (D-11).</p>
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">A ordem do art. 53 — resolvida</span></div>
+<div class="callout ok"><div class="ct">Resolvido em 21/09/2026</div><p>A apuração passou a usar o crédito na ordem do art. 53, e o saldo credor deste módulo vem de lá. <strong>Crédito compensado e débito compensado são o mesmo número</strong> — R$ 46,02 mi —, contra R$ 38,36 mi × R$ 11,09 mi antes. Ver o <a class="xref" href="prd-apuracao.html">PRD de Apuração</a>. O quadro abaixo fica como registro do que era.</p></div>
+<div class="callout warn"><div class="ct">Como era até 20/09/2026</div><p>Pelo art. 53 da LC 214/2025, o crédito abate primeiro os débitos do mesmo tributo e só o que sobra vira saldo a recuperar. Na base de demonstração, o status <em>utilizado</em> dos créditos e o <em>extinto por compensação</em> dos débitos são sorteados de forma independente — e os dois lados não se casam.</p></div><div class="table-wrap"><table><thead><tr><th>R$ milhões, 2026</th><th>CBS</th><th>IBS</th></tr></thead><tbody><tr><td>Crédito que o Crédito dá como <em>compensado</em></td><td>17,36</td><td>21,71</td></tr><tr><td>Débito que o Débito dá como <em>extinto por compensação</em></td><td>6,59</td><td>4,49</td></tr><tr><td>Débito ainda em aberto (a recolher)</td><td>22,16</td><td>27,70</td></tr><tr><td>Crédito apropriado parado como saldo credor</td><td>5,22</td><td>7,02</td></tr></tbody></table></div><p>Com débito em aberto maior que o crédito parado, a ordem do art. 53 não deixaria saldo credor — e não haveria o que ressarcir. O módulo usa o saldo como a Apuração o calcula hoje. A correção é um motor de compensação na base, que é decisão pendente (D-11).</p>
 </div>
 <div class="section" id="s13">
 <div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Requisitos funcionais</span></div>
@@ -308,6 +310,7 @@ code { overflow-wrap: anywhere; }
 </div>
 <div class="section" id="s17">
 <div class="sec-hdr"><span class="sec-num">17</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>21/09/2026</strong> — <strong>Ordem do art. 53 na apuração.</strong> O saldo credor passa a vir da apuração; a intenção trava o saldo do período; crédito glosado é inelegivel; deferimento parcial devolve o crédito no período da decisão. A pendência da seção 12 deixa de existir.</div></div>
 <div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc">18/09/2026 — <strong>Trilha no histórico e auditoria.</strong> Cada passo do ressarcimento entra no histórico do RF e do DF, e o RF ressarcido deixa de aparecer como abatimento de débito. Reserva só de crédito apropriado até a data do ato. Painel no Crédito. Pendência do art. 53 registrada (D-11). Requisitos de 15 para 17.</div></div><div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">18/09/2026 — <strong>Primeira versão, implementada no protótipo.</strong> Módulo com os espaços CBS e IBS, quatro abas e três janelas, em simulação 2026. Integração com Início, Crédito, Débito, Conciliação, Apuração, Inconsistências, Automações, Organização e Analytics. Sincronia de valores conferida em sete pontos. Quinze funcionalidades fora do M0.</div></div>
 </div>
 </div>
