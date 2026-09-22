@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Layouts dos DFs — API de Ingestão · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--blue); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--blue); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 760px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--blue); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--blue); background: var(--blue-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 26px 0 8px; scroll-margin-top: 20px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--blue); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.sim { text-align: center; color: var(--green); font-weight: 700; }
+.nao { text-align: center; color: var(--txt3); font-weight: 700; }
+.parc { text-align: center; color: var(--amber); font-weight: 700; }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+
+/* Ficha de documento */
+.df-hdr { display: flex; align-items: center; gap: 11px; margin: 30px 0 4px; padding: 11px 16px; background: var(--sur); border: 1px solid var(--brd); border-radius: 9px; flex-wrap: wrap; scroll-margin-top: 20px; }
+.df-mod { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 800; color: #fff; background: var(--blue); border-radius: 5px; padding: 3px 9px; flex-shrink: 0; }
+.df-nome { font-size: 14.5px; font-weight: 800; color: var(--txt1); }
+.df-org { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+@media (max-width: 620px) { .df-org { margin-left: 0; width: 100%; } }
+
+.verbo { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 3px; margin-right: 7px; }
+.verbo.post { background: var(--green-d); color: var(--green); }
+.verbo.get { background: var(--blue-d); color: var(--blue); }
+
+.src-note { font-size: 11.5px; color: var(--txt3); margin: 6px 0 0; }
+.selo { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; border-radius: 3px; padding: 1px 6px; white-space: nowrap; margin-left: 6px; }
+.selo.of { background: var(--green-d); color: var(--green); }
+.selo.sec { background: var(--amber-d); color: var(--amber); }
+.selo.prop { background: rgba(107,63,160,.12); color: var(--purple); }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+a.ext { color: var(--blue); text-decoration: none; font-weight: 600; }
+a.ext:hover { text-decoration: underline; }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--blue); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* Responsivo — padrao de projeto */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">Refer&ecirc;ncia &middot; Integra&ccedil;&atilde;o</div>
+<h1>Layouts dos documentos fiscais e a API de ingest&atilde;o</h1>
+<p class="subtitle">Os dez documentos que o SplitHub precisa receber &mdash; o que cada leiaute tem, onde eles s&atilde;o iguais, onde divergem, e o contrato de uma API &uacute;nica que aceite todos sem virar dez APIs disfar&ccedil;adas de uma.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Refer&ecirc;ncia t&eacute;cnica</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">22/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Documentos</span>&nbsp;<span class="meta-val">10</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip info">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">&Iacute;ndice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Objetivo e como ler</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Os dez documentos em uma tabela</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> O n&uacute;cleo comum: o grupo IBS/CBS</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Os sete eixos de diverg&ecirc;ncia</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Documento a documento</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> O modelo can&ocirc;nico</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Contrato da API</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Matriz de mapeamento</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Valida&ccedil;&otilde;es e erros</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Riscos e o que confirmar na fonte</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Fontes</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Hist&oacute;rico de vers&otilde;es</a></li>
+</ul></div>
+
+<!-- ─────────────────────────────── 01 -->
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Objetivo e como ler</span></div>
+<p>Este documento existe para responder a uma pergunta de engenharia: <strong>d&aacute; para construir uma API de ingest&atilde;o s&oacute;, que aceite os dez tipos de documento fiscal, sem que ela vire dez endpoints com um nome comum?</strong></p>
+<p>A resposta curta &eacute; sim, e o motivo &eacute; que a Reforma Tributária padronizou justamente a parte que interessa ao SplitHub. O grupo de IBS e CBS &eacute; <strong>o mesmo desenho em todos os documentos que o carregam</strong> &mdash; muda o lugar onde ele &eacute; pendurado, n&atilde;o a sua forma. O que diverge &eacute; a casca: quem &eacute; o destinat&aacute;rio, se existe item, como a chave &eacute; formada, que norma rege cada um.</p>
+<p>Ent&atilde;o o desenho proposto separa as duas coisas: um <strong>envelope can&ocirc;nico</strong> igual para todos, e um <strong>adaptador por modelo</strong> que traduz a casca. O grupo tribut&aacute;rio atravessa inteiro, sem tradu&ccedil;&atilde;o.</p>
+
+<h3 id="selos">Selo de origem</h3>
+<p>Cada afirma&ccedil;&atilde;o t&eacute;cnica leva um selo. &Eacute; a mesma conven&ccedil;&atilde;o da <a class="xref" href="integracao-apis-reforma.html">Refer&ecirc;ncia de APIs</a>, e serve para o leitor saber onde precisa conferir antes de codificar.</p>
+<div class="table-wrap"><table><thead><tr><th>Selo</th><th>Significado</th></tr></thead><tbody>
+<tr><td><span class="selo of">oficial</span></td><td>Confirmado em fonte oficial &mdash; portal do documento, nota t&eacute;cnica, ajuste SINIEF ou ato conjunto</td></tr>
+<tr><td><span class="selo sec">fonte secund&aacute;ria</span></td><td>Guia t&eacute;cnico ou publica&ccedil;&atilde;o especializada que reproduz o leiaute; <strong>conferir no MOC antes de implementar</strong></td></tr>
+<tr><td><span class="selo prop">proposta</span></td><td>Desenho do SplitHub, n&atilde;o norma. &Eacute; decis&atilde;o de produto, aberta a discuss&atilde;o</td></tr>
+</tbody></table></div>
+
+<div class="callout warn"><div class="ct">O que este documento n&atilde;o &eacute;</div><p>N&atilde;o &eacute; substituto do MOC de cada documento. Nenhum leiaute foi reproduzido campo a campo a partir do XSD: isso s&atilde;o dez manuais, cada um com centenas de campos, e transcrev&ecirc;-los de mem&oacute;ria seria inventar. O que est&aacute; aqui &eacute; a <strong>identidade de cada leiaute</strong>, a <strong>forma do grupo tribut&aacute;rio</strong> e as <strong>diferen&ccedil;as estruturais</strong> &mdash; que &eacute; o que decide a arquitetura da API. O detalhe de campo se confere no MOC, e a se&ccedil;&atilde;o <a class="xref" href="#s10">10</a> lista exatamente o que precisa ser conferido.</p></div>
+</div>
+
+<!-- ─────────────────────────────── 02 -->
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Os dez documentos em uma tabela</span></div>
+<p>A vis&atilde;o que decide tudo. <span class="selo of">oficial</span> para modelo, norma e data de obrigatoriedade; <span class="selo sec">fonte secund&aacute;ria</span> para raiz do XML e tamanho da chave.</p>
+<div class="table-wrap"><table><thead><tr><th>Documento</th><th>Mod.</th><th>O que registra</th><th>Norma do IBS/CBS</th><th>Obrigat&oacute;rio desde</th></tr></thead><tbody>
+<tr><td><strong>NF-e</strong></td><td><code>55</code></td><td>Mercadoria, B2B e B2C com destinat&aacute;rio identificado</td><td>NT 2025.002-RTC</td><td>03/08/2026</td></tr>
+<tr><td><strong>NFC-e</strong></td><td><code>65</code></td><td>Venda ao consumidor final, no varejo</td><td>NT 2025.002-RTC</td><td>03/08/2026</td></tr>
+<tr><td><strong>NFCom</strong></td><td><code>62</code></td><td>Servi&ccedil;o de comunica&ccedil;&atilde;o &mdash; fatura mensal</td><td>NT 2025.001-RTC e NT 2026.002</td><td>01/10/2026</td></tr>
+<tr><td><strong>NF3-e</strong></td><td><code>66</code></td><td>Energia el&eacute;trica &mdash; fatura mensal</td><td>NT 2025.001-RTC</td><td>03/08/2026</td></tr>
+<tr><td><strong>NFS-e</strong></td><td><code>-</code></td><td>Servi&ccedil;o, padr&atilde;o nacional</td><td>Anexos RTC do padr&atilde;o nacional</td><td>01/10/2026 (regra geral)</td></tr>
+<tr><td><strong>CT-e</strong></td><td><code>57</code></td><td>Transporte de carga</td><td>NT 2025.001-RTC</td><td>03/08/2026</td></tr>
+<tr><td><strong>NFAg</strong></td><td><code>75</code></td><td>&Aacute;gua e saneamento &mdash; fatura mensal</td><td>NT 2026.002-RTC</td><td>01/12/2026</td></tr>
+<tr><td><strong>NFG&aacute;s</strong></td><td><code>76</code></td><td>G&aacute;s canalizado &mdash; fatura mensal</td><td>Ajuste SINIEF 38/2025 &middot; NT 2026.002-RTC</td><td>01/12/2026</td></tr>
+<tr><td><strong>MDF-e</strong></td><td><code>58</code></td><td>Manifesto de carga &mdash; <strong>n&atilde;o &eacute; opera&ccedil;&atilde;o</strong></td><td>Ajuste SINIEF 24/2024, sem grupo pr&oacute;prio</td><td>03/08/2026 (sem destaque)</td></tr>
+<tr><td><strong>BP-e</strong></td><td><code>63</code></td><td>Bilhete de passagem &mdash; transporte de pessoas</td><td>NT 2025.001-RTC</td><td>03/08/2026 (a&eacute;reo e metropolitano: 01/12/2026)</td></tr>
+</tbody></table></div>
+
+<div class="callout red"><div class="ct">O MDF-e n&atilde;o pertence a esta fam&iacute;lia</div><p>O MDF-e &eacute; um <strong>manifesto de carga</strong>: amarra documentos de transporte a um ve&iacute;culo e a uma viagem. N&atilde;o tem operação tribut&aacute;vel, n&atilde;o tem base de c&aacute;lculo e <strong>n&atilde;o tem grupo de IBS/CBS no leiaute</strong> &mdash; est&aacute; previsto no Ajuste SINIEF 24/2024 com poss&iacute;veis adapta&ccedil;&otilde;es, mas hoje n&atilde;o destaca tributo. <span class="selo sec">fonte secund&aacute;ria</span></p><p style="margin-top:8px">Isso muda o desenho: ele entra na API, mas <strong>n&atilde;o gera registro fiscal nem cr&eacute;dito</strong>. &Eacute; documento de rastreio, e o valor dele est&aacute; em <em>referenciar</em> os CT-e e NF-e que transporta. Tratar MDF-e como os outros nove produziria cr&eacute;dito do nada.</p></div>
+
+<div class="table-wrap"><table><thead><tr><th>Documento</th><th>Raiz do XML</th><th>Chave</th><th>Tem item?</th><th>Grupo IBS/CBS?</th><th>Gera cr&eacute;dito?</th></tr></thead><tbody>
+<tr><td><strong>NF-e</strong> &middot; <strong>NFC-e</strong></td><td><code>&lt;NFe&gt;&lt;infNFe&gt;</code></td><td>44</td><td class="sim">sim</td><td class="sim">por item</td><td class="sim">sim</td></tr>
+<tr><td><strong>NFCom</strong></td><td><code>&lt;NFCom&gt;&lt;infNFCom&gt;</code></td><td>44</td><td class="sim">sim</td><td class="sim">por item</td><td class="sim">sim</td></tr>
+<tr><td><strong>NF3-e</strong></td><td><code>&lt;NF3e&gt;&lt;infNF3e&gt;</code></td><td>44</td><td class="sim">sim</td><td class="sim">por item</td><td class="sim">sim</td></tr>
+<tr><td><strong>NFS-e</strong></td><td><code>&lt;NFSe&gt;</code> &middot; entrada por <code>&lt;DPS&gt;&lt;infDPS&gt;</code></td><td><strong>50</strong></td><td class="parc">servi&ccedil;o &uacute;nico</td><td class="sim">no documento</td><td class="sim">sim</td></tr>
+<tr><td><strong>CT-e</strong></td><td><code>&lt;CTe&gt;&lt;infCte&gt;</code></td><td>44</td><td class="nao">n&atilde;o</td><td class="sim">no documento</td><td class="sim">sim</td></tr>
+<tr><td><strong>NFAg</strong></td><td><code>&lt;NFAg&gt;</code> <span class="selo sec">conferir</span></td><td>44</td><td class="sim">sim</td><td class="sim">por item</td><td class="sim">sim</td></tr>
+<tr><td><strong>NFG&aacute;s</strong></td><td><code>&lt;NFGas&gt;</code> <span class="selo sec">conferir</span></td><td>44</td><td class="sim">sim</td><td class="sim">por item</td><td class="sim">sim</td></tr>
+<tr><td><strong>MDF-e</strong></td><td><code>&lt;MDFe&gt;&lt;infMDFe&gt;</code></td><td>44</td><td class="nao">n&atilde;o</td><td class="nao"><strong>n&atilde;o</strong></td><td class="nao"><strong>n&atilde;o</strong></td></tr>
+<tr><td><strong>BP-e</strong></td><td><code>&lt;BPe&gt;&lt;infBPe&gt;</code></td><td>44</td><td class="nao">n&atilde;o</td><td class="sim">no documento</td><td class="sim">sim</td></tr>
+</tbody></table></div>
+<p class="src-note">A chave de 44 posi&ccedil;&otilde;es segue o padr&atilde;o SINIEF: UF (2) + AAMM (4) + CNPJ (14) + modelo (2) + s&eacute;rie (3) + n&uacute;mero (9) + forma de emiss&atilde;o (1) + c&oacute;digo num&eacute;rico (8) + DV (1). A NFS-e n&atilde;o segue esse padr&atilde;o.</p>
+</div>
+
+<!-- ─────────────────────────────── 03 -->
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">O n&uacute;cleo comum: o grupo IBS/CBS</span></div>
+<p>Esta &eacute; a boa not&iacute;cia da Reforma para quem constr&oacute;i integra&ccedil;&atilde;o. O grupo que carrega IBS e CBS tem <strong>o mesmo desenho nos nove documentos que o possuem</strong>. Na NF-e ele &eacute; o grupo <code>IBSCBS</code> de <code>det/imposto</code>; no CT-e e no BP-e ele pende do documento; mas a forma interna &eacute; a mesma. <span class="selo sec">fonte secund&aacute;ria</span></p>
+
+<h3 id="forma">A forma do grupo</h3>
+<div class="code-block"><code><span class="k">gIBSCBS</span>
+  <span class="v">vBC</span>            <span class="c">base de calculo comum a IBS e CBS</span>
+  <span class="k">gIBSUF</span>          <span class="c">parcela do IBS de competencia estadual</span>
+    <span class="v">pIBSUF</span> <span class="v">vIBSUF</span>
+    <span class="k">gRed</span>  <span class="v">pRedAliq</span> <span class="v">pAliqEfet</span>
+  <span class="k">gIBSMun</span>         <span class="c">parcela do IBS de competencia municipal</span>
+    <span class="v">pIBSMun</span> <span class="v">vIBSMun</span>
+    <span class="k">gRed</span>  <span class="v">pRedAliq</span> <span class="v">pAliqEfet</span>
+  <span class="v">vIBS</span>           <span class="c">vIBSUF + vIBSMun</span>
+  <span class="k">gCBS</span>            <span class="c">a CBS, federal</span>
+    <span class="v">pCBS</span> <span class="v">vCBS</span>
+    <span class="k">gRed</span>  <span class="v">pRedAliq</span> <span class="v">pAliqEfet</span>
+  <span class="k">gTribRegular</span>    <span class="c">condicional: beneficio fiscal (ZFM, ALC)</span>
+  <span class="k">gTribCompraGov</span>  <span class="c">condicional: compra governamental</span></code></div>
+
+<div class="callout info"><div class="ct">Tr&ecirc;s tributos, uma base</div><p><code>vBC</code> &eacute; uma s&oacute;. Dela saem tr&ecirc;s parcelas: IBS estadual, IBS municipal e CBS. O IBS &eacute; partido em dois porque estados e munic&iacute;pios t&ecirc;m compet&ecirc;ncias distintas dentro do mesmo imposto &mdash; mas ambos v&atilde;o ao Comit&ecirc; Gestor. A CBS vai &agrave; Receita Federal.</p><p style="margin-top:8px"><strong>No SplitHub isso j&aacute; est&aacute; refletido:</strong> o produto trata CBS e IBS como trilhas separadas e nunca as soma. A API de ingest&atilde;o precisa preservar <code>vIBSUF</code> e <code>vIBSMun</code> separados, mesmo que a tela mostre o IBS somado.</p></div>
+
+<h3 id="classificacao">Classifica&ccedil;&atilde;o: CST e cClassTrib</h3>
+<p>Dois c&oacute;digos governam o tratamento tribut&aacute;rio de cada linha, e s&atilde;o comuns a todos os documentos. <span class="selo of">oficial</span></p>
+<div class="table-wrap"><table><thead><tr><th>Campo</th><th>O que diz</th><th>Por que importa &agrave; ingest&atilde;o</th></tr></thead><tbody>
+<tr><td><code>CST</code></td><td>C&oacute;digo de Situa&ccedil;&atilde;o Tribut&aacute;ria do IBS/CBS &mdash; tributado, isento, imune, diferido, suspenso, monof&aacute;sico</td><td>Decide se aquela linha <strong>gera cr&eacute;dito</strong>. Isento e imune n&atilde;o geram</td></tr>
+<tr><td><code>cClassTrib</code></td><td>C&oacute;digo de Classifica&ccedil;&atilde;o Tribut&aacute;ria &mdash; cada c&oacute;digo aponta um dispositivo espec&iacute;fico da LC 214/2025</td><td>&Eacute; a base legal leg&iacute;vel por m&aacute;quina. Sem ele n&atilde;o d&aacute; para justificar uma glosa nem defender uma apropria&ccedil;&atilde;o</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">cClassTrib &eacute; o campo que o SplitHub mais vai usar e hoje n&atilde;o guarda</div><p>Ele amarra cada valor ao artigo que o autoriza. &Eacute; a mat&eacute;ria-prima de tr&ecirc;s coisas que o produto j&aacute; faz &mdash; a causa tipificada da glosa, o fundamento legal na ficha e a defesa no contencioso. Ingerir o documento sem guardar <code>cClassTrib</code> por linha significa perder a base legal e ter de reconstru&iacute;-la depois, por infer&ecirc;ncia.</p></div>
+
+<h3 id="grupos-extra">Grupos que a NT 2025.002 acrescentou</h3>
+<div class="table-wrap"><table><thead><tr><th>Grupo</th><th>Para que serve</th><th>Efeito no cr&eacute;dito</th></tr></thead><tbody>
+<tr><td><code>gAjusteCompet</code></td><td>Ajuste de compet&ecirc;ncia &mdash; o per&iacute;odo a que o valor se refere n&atilde;o &eacute; o da emiss&atilde;o</td><td>O cr&eacute;dito entra em <strong>outro per&iacute;odo de apura&ccedil;&atilde;o</strong>. Ignorar isso desloca a apura&ccedil;&atilde;o inteira</td></tr>
+<tr><td><code>gEstornoCred</code> &middot; <code>vIBSEstCred</code> &middot; <code>vCBSEstCred</code></td><td>Estorno de cr&eacute;dito</td><td>Reduz cr&eacute;dito j&aacute; apropriado. Precisa de evento pr&oacute;prio na trilha do registro fiscal</td></tr>
+<tr><td><code>gDif</code></td><td>Diferimento</td><td>O tributo n&atilde;o &eacute; cobrado agora; o cr&eacute;dito n&atilde;o nasce agora</td></tr>
+<tr><td><code>gDevTrib</code></td><td>Devolu&ccedil;&atilde;o de tributos</td><td>Valor devolvido ao contribuinte, fora do fluxo normal de cr&eacute;dito</td></tr>
+<tr><td><code>gIBSCredPres</code></td><td>Cr&eacute;dito presumido</td><td>Cr&eacute;dito que n&atilde;o vem de opera&ccedil;&atilde;o anterior. <strong>N&atilde;o depende do art. 47</strong></td></tr>
+</tbody></table></div>
+<p class="src-note"><span class="selo sec">fonte secund&aacute;ria</span> A exist&ecirc;ncia destes grupos est&aacute; confirmada; a estrutura interna de <code>gDif</code>, <code>gDevTrib</code> e <code>gIBSCredPres</code> precisa ser lida no MOC antes de modelar.</p>
+</div>
+
+<!-- ─────────────────────────────── 04 -->
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Os sete eixos de diverg&ecirc;ncia</span></div>
+<p>Se o grupo tribut&aacute;rio &eacute; igual, o que sobra de diferente? Sete coisas &mdash; e s&atilde;o exatamente elas que o adaptador por modelo precisa resolver.</p>
+
+<h3 id="e1">1. Onde o grupo tribut&aacute;rio mora</h3>
+<p>Em tr&ecirc;s n&iacute;veis diferentes, conforme o documento tenha ou n&atilde;o itens.</p>
+<div class="table-wrap"><table><thead><tr><th>N&iacute;vel</th><th>Documentos</th><th>Consequ&ecirc;ncia</th></tr></thead><tbody>
+<tr><td><strong>Por item</strong></td><td>NF-e, NFC-e, NFCom, NF3-e, NFAg, NFG&aacute;s</td><td>N linhas por documento, cada uma com sua base, CST e <code>cClassTrib</code></td></tr>
+<tr><td><strong>No documento</strong></td><td>CT-e, BP-e</td><td>Uma linha s&oacute;. O servi&ccedil;o &eacute; indivis&iacute;vel</td></tr>
+<tr><td><strong>No servi&ccedil;o</strong></td><td>NFS-e</td><td>Um servi&ccedil;o por DPS, com estrutura pr&oacute;pria</td></tr>
+</tbody></table></div>
+<div class="callout ok"><div class="ct">A escolha que simplifica tudo</div><p>O modelo can&ocirc;nico trata <strong>tudo como item</strong>. CT-e, BP-e e NFS-e viram documentos de <strong>um item s&oacute;</strong>. Assim n&atilde;o existem dois caminhos de c&oacute;digo: existe um, e os documentos sem item s&atilde;o o caso <code>n=1</code>. Isso tamb&eacute;m prepara o produto para a camada de item que os eventos fiscais v&atilde;o exigir.</p></div>
+
+<h3 id="e2">2. Quem &eacute; o outro lado</h3>
+<div class="table-wrap"><table><thead><tr><th>Documento</th><th>Contraparte</th><th>Identificada?</th></tr></thead><tbody>
+<tr><td>NF-e, NFCom, NF3-e, NFAg, NFG&aacute;s</td><td>Destinat&aacute;rio</td><td>Sempre &mdash; CNPJ ou CPF</td></tr>
+<tr><td>NFC-e</td><td>Consumidor final</td><td><strong>Opcional</strong> &mdash; pode n&atilde;o haver CPF</td></tr>
+<tr><td>NFS-e</td><td>Tomador do servi&ccedil;o</td><td>Em regra sim; h&aacute; casos sem</td></tr>
+<tr><td>CT-e</td><td>Remetente, destinat&aacute;rio, expedidor, recebedor e <strong>tomador</strong></td><td>Cinco papéis distintos; <strong>o tomador &eacute; quem gera o cr&eacute;dito</strong></td></tr>
+<tr><td>BP-e</td><td>Passageiro</td><td>Frequentemente n&atilde;o identificado</td></tr>
+<tr><td>MDF-e</td><td>&mdash;</td><td>N&atilde;o h&aacute; contraparte: h&aacute; ve&iacute;culo, condutor e percurso</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">O CT-e &eacute; a armadilha</div><p>Cinco pap&eacute;is, e o cr&eacute;dito do frete pertence <strong>ao tomador</strong> &mdash; que pode ser o remetente, o destinat&aacute;rio, o expedidor ou o recebedor, conforme o campo <code>toma</code>. Um adaptador que assuma &quot;destinat&aacute;rio = quem credita&quot; atribui o cr&eacute;dito &agrave; empresa errada em boa parte dos fretes.</p></div>
+
+<h3 id="e3">3. Opera&ccedil;&atilde;o pontual contra fatura de ciclo</h3>
+<p>NF-e, NFC-e, CT-e e BP-e registram <strong>um fato</strong>. NFCom, NF3-e, NFAg e NFG&aacute;s registram um <strong>ciclo de consumo</strong> &mdash; leitura anterior, leitura atual, per&iacute;odo de refer&ecirc;ncia, vencimento da fatura. Isso traz campos que n&atilde;o existem nos demais e, mais importante, traz uma <strong>data de compet&ecirc;ncia que n&atilde;o &eacute; a data de emiss&atilde;o</strong>.</p>
+<div class="callout info"><div class="ct">Por que isso &eacute; do produto e n&atilde;o s&oacute; do parser</div><p>O art. 47 amarra a apropria&ccedil;&atilde;o do cr&eacute;dito ao pagamento do fornecedor, e a apura&ccedil;&atilde;o usa o cr&eacute;dito no per&iacute;odo em que ele foi apropriado. Numa fatura de ciclo, o per&iacute;odo do consumo e o da emiss&atilde;o divergem por desenho. O campo <code>gAjusteCompet</code> existe para isso &mdash; e <strong>o SplitHub precisa honr&aacute;-lo</strong>, ou a apura&ccedil;&atilde;o de servi&ccedil;os cont&iacute;nuos sai do lugar.</p></div>
+
+<h3 id="e4">4. Quem autoriza</h3>
+<div class="table-wrap"><table><thead><tr><th>Autorizador</th><th>Documentos</th><th>Efeito na ingest&atilde;o</th></tr></thead><tbody>
+<tr><td>SEFAZ estadual &middot; SVRS</td><td>NF-e, NFC-e, NFCom, NF3-e, CT-e, MDF-e, BP-e, NFAg, NFG&aacute;s</td><td>Protocolo de autoriza&ccedil;&atilde;o com <code>nProt</code>, <code>dhRecbto</code> e <code>cStat</code></td></tr>
+<tr><td>Munic&iacute;pio &middot; ADN</td><td>NFS-e</td><td>DPS &eacute; enviada, o ADN converte em NFS-e e devolve a chave. Fluxo e vocabul&aacute;rio pr&oacute;prios</td></tr>
+</tbody></table></div>
+
+<h3 id="e5">5. A chave</h3>
+<p>Nove documentos usam a chave de <strong>44 posi&ccedil;&otilde;es</strong> do padr&atilde;o SINIEF. A <strong>NFS-e usa 50</strong>. <span class="selo of">oficial</span></p>
+<div class="callout red"><div class="ct">Consequ&ecirc;ncia direta no banco</div><p>Uma coluna <code>CHAR(44)</code> para chave de documento fiscal <strong>quebra na primeira NFS-e</strong>. O campo precisa nascer com 50, ou com 60 para folga &mdash; e a valida&ccedil;&atilde;o de formato precisa ser por modelo, n&atilde;o global.</p></div>
+
+<h3 id="e6">6. Eventos</h3>
+<p>Todo documento tem seu conjunto de eventos p&oacute;s-autoriza&ccedil;&atilde;o &mdash; cancelamento, carta de corre&ccedil;&atilde;o, manifesta&ccedil;&atilde;o do destinat&aacute;rio, substitui&ccedil;&atilde;o. Os c&oacute;digos e os nomes <strong>n&atilde;o s&atilde;o os mesmos entre modelos</strong>, e alguns eventos s&oacute; existem em um deles.</p>
+<p>A API precisa aceitar evento como cidad&atilde;o de primeira classe, n&atilde;o como atualiza&ccedil;&atilde;o do documento: um evento pode mudar valor, base, situa&ccedil;&atilde;o ou a pr&oacute;pria exist&ecirc;ncia do documento, e o produto precisa da trilha de qual evento causou o qu&ecirc;.</p>
+
+<h3 id="e7">7. Situa&ccedil;&atilde;o normativa</h3>
+<div class="table-wrap"><table><thead><tr><th>Situa&ccedil;&atilde;o</th><th>Documentos</th><th>Risco</th></tr></thead><tbody>
+<tr><td>Leiaute consolidado, em produ&ccedil;&atilde;o</td><td>NF-e, NFC-e, CT-e, BP-e, NF3-e, MDF-e</td><td>Baixo &mdash; NTs maduras, v&aacute;rias vers&otilde;es</td></tr>
+<tr><td>Leiaute recente</td><td>NFCom, NFG&aacute;s</td><td>M&eacute;dio &mdash; MOC de 2026, ainda sujeito a NT</td></tr>
+<tr><td><strong>Minuta</strong></td><td><strong>NFAg</strong></td><td><strong>Alto</strong> &mdash; aguarda ato normativo conjunto para publica&ccedil;&atilde;o definitiva</td></tr>
+<tr><td>Campos RTC parcialmente no XSD</td><td>NFS-e</td><td>M&eacute;dio &mdash; h&aacute; campos dos anexos RTC ainda fora do schema de produ&ccedil;&atilde;o</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">A NFAg &eacute; o &uacute;nico que ainda pode mudar de forma</div><p>O portal da SVRS descreve o modelo 75 como <strong>minuta</strong>, &agrave; espera de ato normativo conjunto para publica&ccedil;&atilde;o definitiva. Implementar o adaptador da NFAg antes disso &eacute; assumir retrabalho. A obrigatoriedade &eacute; 01/12/2026, o que d&aacute; folga para esperar a vers&atilde;o definitiva.</p></div>
+</div>
+
+<!-- ─────────────────────────────── 05 -->
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Documento a documento</span></div>
+<p class="sec-sub">A ficha de cada um: identidade, o que tem de pr&oacute;prio, e o que o adaptador precisa fazer.</p>
+
+<div class="df-hdr" id="df-nfe"><span class="df-mod">55</span><span class="df-nome">NF-e &mdash; Nota Fiscal Eletr&ocirc;nica</span><span class="df-org">nfe.fazenda.gov.br &middot; NT 2025.002-RTC</span></div>
+<div class="table-wrap"><table><tbody>
+<tr><td style="width:190px"><strong>Registra</strong></td><td>Circula&ccedil;&atilde;o de mercadoria e presta&ccedil;&otilde;es a ela vinculadas, entre contribuintes</td></tr>
+<tr><td><strong>Estrutura</strong></td><td><code>infNFe</code> com <code>ide</code>, <code>emit</code>, <code>dest</code>, N grupos <code>det</code>, <code>total</code>, <code>transp</code>, <code>pag</code>, <code>infAdic</code></td></tr>
+<tr><td><strong>Grupo tribut&aacute;rio</strong></td><td><code>det/imposto/IBSCBS</code>, por item. Totais em <code>total/IBSCBSTot</code></td></tr>
+<tr><td><strong>Pr&oacute;prio dele</strong></td><td>CFOP, NCM, CEST por item; grupo de pagamento; refer&ecirc;ncia a outras NF-e; <code>gAjusteCompet</code> e <code>gEstornoCred</code></td></tr>
+<tr><td><strong>O adaptador faz</strong></td><td>Nada de especial &mdash; a NF-e &eacute; a refer&ecirc;ncia. O modelo can&ocirc;nico &eacute; desenhado a partir dela</td></tr>
+</tbody></table></div>
+<p class="src-note">Obrigatoriedade do destaque em produ&ccedil;&atilde;o desde 03/08/2026 para regime regular; Simples Nacional a partir de 01/01/2027. <span class="selo of">oficial</span></p>
+
+<div class="df-hdr" id="df-nfce"><span class="df-mod">65</span><span class="df-nome">NFC-e &mdash; Nota Fiscal de Consumidor Eletr&ocirc;nica</span><span class="df-org">nfe.fazenda.gov.br &middot; NT 2025.002-RTC</span></div>
+<div class="table-wrap"><table><tbody>
+<tr><td style="width:190px"><strong>Registra</strong></td><td>Venda presencial ao consumidor final</td></tr>
+<tr><td><strong>Estrutura</strong></td><td>Mesma da NF-e &mdash; o XSD &eacute; compartilhado, muda o modelo e as regras</td></tr>
+<tr><td><strong>Pr&oacute;prio dele</strong></td><td>Destinat&aacute;rio opcional; QR Code; contingência offline; sem transporte</td></tr>
+<tr><td><strong>O adaptador faz</strong></td><td>Aceitar documento <strong>sem destinat&aacute;rio</strong>. A regra de cr&eacute;dito do produto precisa tolerar a aus&ecirc;ncia sem tratar como inconsist&ecirc;ncia</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">NFC-e quase nunca gera cr&eacute;dito de entrada</div><p>&Eacute; venda a consumidor final. Para o SplitHub ela &eacute; sobretudo <strong>d&eacute;bito de sa&iacute;da</strong>. Entra na ingest&atilde;o pelo lado da apura&ccedil;&atilde;o do pr&oacute;prio cliente, n&atilde;o pelo do cr&eacute;dito.</p></div>
+
+<div class="df-hdr" id="df-nfcom"><span class="df-mod">62</span><span class="df-nome">NFCom &mdash; Nota Fiscal Fatura de Servi&ccedil;o de Comunica&ccedil;&atilde;o</span><span class="df-org">SVRS &middot; NT 2025.001-RTC e NT 2026.002</span></div>
+<div class="table-wrap"><table><tbody>
+<tr><td style="width:190px"><strong>Registra</strong></td><td>Servi&ccedil;o de comunica&ccedil;&atilde;o &mdash; telefonia, internet, TV por assinatura</td></tr>
+<tr><td><strong>Estrutura</strong></td><td><code>infNFCom</code> com assinante, per&iacute;odo de refer&ecirc;ncia e itens de servi&ccedil;o</td></tr>
+<tr><td><strong>Pr&oacute;prio dele</strong></td><td>Dados do assinante e do contrato; fatura com vencimento; itens recorrentes</td></tr>
+<tr><td><strong>O adaptador faz</strong></td><td>Mapear <strong>per&iacute;odo de refer&ecirc;ncia</strong> para a compet&ecirc;ncia, n&atilde;o a data de emiss&atilde;o</td></tr>
+</tbody></table></div>
+
+<div class="df-hdr" id="df-nf3e"><span class="df-mod">66</span><span class="df-nome">NF3-e &mdash; Nota Fiscal de Energia El&eacute;trica</span><span class="df-org">SVRS &middot; NT 2025.001-RTC</span></div>
+<div class="table-wrap"><table><tbody>
+<tr><td style="width:190px"><strong>Registra</strong></td><td>Fornecimento de energia el&eacute;trica</td></tr>
+<tr><td><strong>Pr&oacute;prio dele</strong></td><td>Unidade consumidora, classe de consumo, leitura anterior e atual, grandezas medidas, bandeira tarif&aacute;ria</td></tr>
+<tr><td><strong>O adaptador faz</strong></td><td>Ignorar as grandezas de medi&ccedil;&atilde;o no can&ocirc;nico &mdash; guard&aacute;-las no bruto. Mapear a compet&ecirc;ncia pelo per&iacute;odo de leitura</td></tr>
+</tbody></table></div>
+
+<div class="df-hdr" id="df-nfse"><span class="df-mod">&mdash;</span><span class="df-nome">NFS-e &mdash; Nota Fiscal de Servi&ccedil;o, padr&atilde;o nacional</span><span class="df-org">gov.br/nfse &middot; ADN</span></div>
+<div class="table-wrap"><table><tbody>
+<tr><td style="width:190px"><strong>Registra</strong></td><td>Presta&ccedil;&atilde;o de servi&ccedil;o, com padr&atilde;o nacional e compet&ecirc;ncia municipal</td></tr>
+<tr><td><strong>Fluxo</strong></td><td>O prestador emite uma <strong>DPS</strong> (Declara&ccedil;&atilde;o de Presta&ccedil;&atilde;o de Servi&ccedil;o); o ADN valida e a converte em NFS-e, com chave de <strong>50 posi&ccedil;&otilde;es</strong></td></tr>
+<tr><td><strong>Pr&oacute;prio dele</strong></td><td>C&oacute;digo de tributa&ccedil;&atilde;o nacional do servi&ccedil;o; local da presta&ccedil;&atilde;o; reten&ccedil;&otilde;es; distribui&ccedil;&atilde;o por NSU no ADN</td></tr>
+<tr><td><strong>O adaptador faz</strong></td><td>Aceitar <code>DPS</code> e <code>NFSe</code> como duas formas do mesmo fato. Tratar chave de 50. Converter servi&ccedil;o &uacute;nico em item &uacute;nico</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">O leiaute da NFS-e ainda est&aacute; alcan&ccedil;ando a RTC</div><p>H&aacute; campos dos anexos da Reforma que ainda n&atilde;o est&atilde;o no XSD de produ&ccedil;&atilde;o. <span class="selo sec">fonte secund&aacute;ria</span> O adaptador deve tolerar aus&ecirc;ncia desses campos <strong>sem rejeitar o documento</strong>, e marcar a lacuna em vez de assumir zero &mdash; assumir zero cria cr&eacute;dito inexistente.</p></div>
+
+<div class="df-hdr" id="df-cte"><span class="df-mod">57</span><span class="df-nome">CT-e &mdash; Conhecimento de Transporte Eletr&ocirc;nico</span><span class="df-org">SVRS &middot; NT 2025.001-RTC</span></div>
+<div class="table-wrap"><table><tbody>
+<tr><td style="width:190px"><strong>Registra</strong></td><td>Presta&ccedil;&atilde;o de servi&ccedil;o de transporte de carga</td></tr>
+<tr><td><strong>Variantes</strong></td><td>CT-e (57), CT-e OS &mdash; Outros Servi&ccedil;os (67) e CT-e Simplificado (97). <strong>Leiautes distintos</strong></td></tr>
+<tr><td><strong>Grupo tribut&aacute;rio</strong></td><td>No documento, n&atilde;o por item &mdash; o servi&ccedil;o &eacute; um s&oacute;</td></tr>
+<tr><td><strong>Pr&oacute;prio dele</strong></td><td>Cinco pap&eacute;is (remetente, destinat&aacute;rio, expedidor, recebedor, tomador); <code>toma</code>; documentos transportados; modal</td></tr>
+<tr><td><strong>O adaptador faz</strong></td><td><strong>Resolver o tomador</strong> pelo campo <code>toma</code> e atribuir o cr&eacute;dito a ele. Gerar item &uacute;nico. Guardar as chaves dos documentos transportados</td></tr>
+</tbody></table></div>
+
+<div class="df-hdr" id="df-nfag"><span class="df-mod">75</span><span class="df-nome">NFAg &mdash; Nota Fiscal de &Aacute;gua e Saneamento</span><span class="df-org">dfe-portal.svrs.rs.gov.br/Nfag &middot; NT 2026.002-RTC</span></div>
+<div class="table-wrap"><table><tbody>
+<tr><td style="width:190px"><strong>Registra</strong></td><td>Fornecimento de &aacute;gua tratada e servi&ccedil;os de saneamento</td></tr>
+<tr><td><strong>Situa&ccedil;&atilde;o</strong></td><td><strong>Minuta</strong> &mdash; aguarda ato normativo conjunto para publica&ccedil;&atilde;o definitiva <span class="selo of">oficial</span></td></tr>
+<tr><td><strong>Publicado at&eacute; aqui</strong></td><td>NT 2026.002-RTC v1.00 (10/06/2026), Schemas (29/06/2026), MOC Anexo II (25/08/2026), Tabela de C&oacute;digos de Cr&eacute;dito Presumido (22/06/2026)</td></tr>
+<tr><td><strong>Pr&oacute;prio dele</strong></td><td>Unidade consumidora, leitura do hidr&ocirc;metro, per&iacute;odo de consumo, categoria de usu&aacute;rio</td></tr>
+<tr><td><strong>O adaptador faz</strong></td><td><strong>Esperar a vers&atilde;o definitiva.</strong> A obrigatoriedade &eacute; 01/12/2026 &mdash; h&aacute; folga</td></tr>
+</tbody></table></div>
+
+<div class="df-hdr" id="df-nfgas"><span class="df-mod">76</span><span class="df-nome">NFG&aacute;s &mdash; Nota Fiscal Eletr&ocirc;nica do G&aacute;s</span><span class="df-org">dfe-portal.svrs.rs.gov.br/NFGAS &middot; Ajuste SINIEF 38/2025</span></div>
+<div class="table-wrap"><table><tbody>
+<tr><td style="width:190px"><strong>Registra</strong></td><td>Fornecimento de g&aacute;s canalizado em redes urbanas</td></tr>
+<tr><td><strong>Institu&iacute;da por</strong></td><td>Ajuste SINIEF n&ordm; 38/2025 <span class="selo of">oficial</span></td></tr>
+<tr><td><strong>Publicado at&eacute; aqui</strong></td><td>MOC v1.00e e v1.00f (mar&ccedil;o/2026); NT 2026.002-RTC v1.00 (10/06/2026); Schemas (29/06/2026); MOC Anexo II &mdash; DANFGas v1.00a (25/08/2026)</td></tr>
+<tr><td><strong>Documento auxiliar</strong></td><td>DANFGas &mdash; a conta mensal entregue ao consumidor</td></tr>
+<tr><td><strong>Pr&oacute;prio dele</strong></td><td>Unidade consumidora, leitura do medidor, tipo de faturamento, per&iacute;odo de consumo</td></tr>
+<tr><td><strong>O adaptador faz</strong></td><td>Mesmo tratamento das demais faturas de ciclo: compet&ecirc;ncia pelo per&iacute;odo de consumo</td></tr>
+</tbody></table></div>
+
+<div class="df-hdr" id="df-mdfe"><span class="df-mod">58</span><span class="df-nome">MDF-e &mdash; Manifesto Eletr&ocirc;nico de Documentos Fiscais</span><span class="df-org">SVRS &middot; Ajuste SINIEF 24/2024</span></div>
+<div class="table-wrap"><table><tbody>
+<tr><td style="width:190px"><strong>Registra</strong></td><td>A viagem: ve&iacute;culo, condutor, percurso e os documentos fiscais transportados</td></tr>
+<tr><td><strong>Grupo tribut&aacute;rio</strong></td><td><strong>N&atilde;o tem.</strong> N&atilde;o h&aacute; base de c&aacute;lculo nem destaque de IBS/CBS no leiaute atual</td></tr>
+<tr><td><strong>Pr&oacute;prio dele</strong></td><td>Lista de chaves de CT-e e NF-e transportados; ve&iacute;culos; condutores; percurso por UF; eventos de encerramento</td></tr>
+<tr><td><strong>O adaptador faz</strong></td><td>Ingerir como <strong>documento de rastreio</strong>: sem registro fiscal, sem cr&eacute;dito, sem d&eacute;bito. Guardar as chaves referenciadas como v&iacute;nculo</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">Decis&atilde;o de produto</div><p>O MDF-e entra na API porque o cliente o emite e vai querer envi&aacute;-lo pelo mesmo canal &mdash; mas ele <strong>n&atilde;o participa da apura&ccedil;&atilde;o</strong>. O valor dele para o SplitHub &eacute; conciliat&oacute;rio: um CT-e manifestado que n&atilde;o chegou por outra via &eacute; um documento faltante detect&aacute;vel. Isso conversa com as ocorr&ecirc;ncias de concilia&ccedil;&atilde;o com a apura&ccedil;&atilde;o assistida que o produto j&aacute; tem.</p></div>
+
+<div class="df-hdr" id="df-bpe"><span class="df-mod">63</span><span class="df-nome">BP-e &mdash; Bilhete de Passagem Eletr&ocirc;nico</span><span class="df-org">SVRS &middot; NT 2025.001-RTC</span></div>
+<div class="table-wrap"><table><tbody>
+<tr><td style="width:190px"><strong>Registra</strong></td><td>Transporte de passageiros</td></tr>
+<tr><td><strong>Variantes</strong></td><td>BP-e (63) e BP-e TM &mdash; transporte metropolitano (93)</td></tr>
+<tr><td><strong>Grupo tribut&aacute;rio</strong></td><td>No documento &mdash; um trecho, um valor</td></tr>
+<tr><td><strong>Pr&oacute;prio dele</strong></td><td>Origem, destino, poltrona, data da viagem, tipo de viagem, passageiro frequentemente n&atilde;o identificado</td></tr>
+<tr><td><strong>O adaptador faz</strong></td><td>Item &uacute;nico. Tolerar aus&ecirc;ncia de contraparte identificada, como na NFC-e</td></tr>
+</tbody></table></div>
+<p class="src-note">A&eacute;reo e metropolitano t&ecirc;m obrigatoriedade em 01/12/2026, separada dos demais BP-e em 03/08/2026. <span class="selo of">oficial</span></p>
+</div>
+
+<!-- ─────────────────────────────── 06 -->
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">O modelo can&ocirc;nico</span></div>
+<p class="sec-sub"><span class="selo prop">proposta</span> O formato interno para o qual todos os dez convergem. Tr&ecirc;s regras o governam.</p>
+<ul class="plain">
+<li><strong>Tudo &eacute; item.</strong> Documento sem item vira documento de um item</li>
+<li><strong>O grupo tribut&aacute;rio atravessa inteiro.</strong> Nenhum valor de IBS ou CBS &eacute; recalculado na ingest&atilde;o &mdash; o que o Fisco autorizou &eacute; o que entra</li>
+<li><strong>O XML original &eacute; guardado sempre.</strong> O can&ocirc;nico &eacute; proje&ccedil;&atilde;o, n&atilde;o verdade. A verdade &eacute; o documento autorizado</li>
+</ul>
+
+<div class="code-block"><code>{
+  <span class="k">"documento"</span>: {
+    <span class="k">"modelo"</span>: <span class="s">"55"</span>,                  <span class="c">// 55 65 62 66 57 75 76 58 63, ou "NFSE"</span>
+    <span class="k">"chave"</span>: <span class="s">"4326..."</span>,              <span class="c">// 44 ou 50 posicoes</span>
+    <span class="k">"serie"</span>: <span class="s">"1"</span>, <span class="k">"numero"</span>: <span class="s">"128841"</span>,
+    <span class="k">"emissao"</span>: <span class="s">"2026-09-14T10:02:00-03:00"</span>,
+    <span class="k">"competencia"</span>: <span class="s">"2026-09"</span>,          <span class="c">// da emissao, ou de gAjusteCompet, ou do ciclo</span>
+    <span class="k">"situacao"</span>: <span class="s">"autorizado"</span>,          <span class="c">// autorizado cancelado denegado inutilizado</span>
+    <span class="k">"protocolo"</span>: { <span class="k">"numero"</span>: <span class="s">"..."</span>, <span class="k">"recebidoEm"</span>: <span class="s">"..."</span>, <span class="k">"orgao"</span>: <span class="s">"SVRS"</span> },
+    <span class="k">"participaApuracao"</span>: <span class="v">true</span>        <span class="c">// false no MDF-e</span>
+  },
+  <span class="k">"emitente"</span>:  { <span class="k">"ni"</span>: <span class="s">"..."</span>, <span class="k">"nome"</span>: <span class="s">"..."</span>, <span class="k">"uf"</span>: <span class="s">"RS"</span>, <span class="k">"municipio"</span>: <span class="s">"4314902"</span> },
+  <span class="k">"contraparte"</span>: {
+    <span class="k">"papel"</span>: <span class="s">"destinatario"</span>,          <span class="c">// destinatario tomador passageiro consumidor</span>
+    <span class="k">"ni"</span>: <span class="s">"..."</span>,                     <span class="c">// pode ser nulo: NFC-e, BP-e</span>
+    <span class="k">"identificada"</span>: <span class="v">true</span>
+  },
+  <span class="k">"ciclo"</span>: {                          <span class="c">// so em fatura: NFCom NF3-e NFAg NFGas</span>
+    <span class="k">"referencia"</span>: <span class="s">"2026-08"</span>,
+    <span class="k">"leituraDe"</span>: <span class="s">"2026-08-05"</span>, <span class="k">"leituraAte"</span>: <span class="s">"2026-09-04"</span>,
+    <span class="k">"vencimento"</span>: <span class="s">"2026-09-20"</span>
+  },
+  <span class="k">"itens"</span>: [
+    {
+      <span class="k">"sequencial"</span>: <span class="v">1</span>,
+      <span class="k">"descricao"</span>: <span class="s">"..."</span>,
+      <span class="k">"valor"</span>: <span class="v">1000.00</span>,
+      <span class="k">"classificacao"</span>: { <span class="k">"cst"</span>: <span class="s">"000"</span>, <span class="k">"cClassTrib"</span>: <span class="s">"000001"</span> },
+      <span class="k">"tributos"</span>: {
+        <span class="k">"vBC"</span>: <span class="v">1000.00</span>,
+        <span class="k">"ibsUF"</span>:  { <span class="k">"aliquota"</span>: <span class="v">0.1</span>, <span class="k">"valor"</span>: <span class="v">1.00</span>, <span class="k">"reducao"</span>: <span class="v">null</span> },
+        <span class="k">"ibsMun"</span>: { <span class="k">"aliquota"</span>: <span class="v">0.0</span>, <span class="k">"valor"</span>: <span class="v">0.00</span>, <span class="k">"reducao"</span>: <span class="v">null</span> },
+        <span class="k">"cbs"</span>:    { <span class="k">"aliquota"</span>: <span class="v">0.9</span>, <span class="k">"valor"</span>: <span class="v">9.00</span>, <span class="k">"reducao"</span>: <span class="v">null</span> },
+        <span class="k">"diferimento"</span>: <span class="v">null</span>, <span class="k">"creditoPresumido"</span>: <span class="v">null</span>,
+        <span class="k">"estornoCredito"</span>: <span class="v">null</span>, <span class="k">"devolucao"</span>: <span class="v">null</span>,
+        <span class="k">"ajusteCompetencia"</span>: <span class="v">null</span>
+      },
+      <span class="k">"especifico"</span>: { }                <span class="c">// campos do modelo que nao cabem no canonico</span>
+    }
+  ],
+  <span class="k">"referencias"</span>: [ <span class="s">"chave..."</span> ],      <span class="c">// MDF-e: os documentos transportados</span>
+  <span class="k">"origem"</span>: {
+    <span class="k">"xml"</span>: <span class="s">"&lt;base64&gt;"</span>,
+    <span class="k">"hash"</span>: <span class="s">"sha256:..."</span>,
+    <span class="k">"leiaute"</span>: { <span class="k">"versao"</span>: <span class="s">"4.00"</span>, <span class="k">"nt"</span>: <span class="s">"2025.002-RTC"</span> }
+  }
+}</code></div>
+
+<div class="callout ok"><div class="ct">Por que <code>especifico</code> &eacute; um objeto aberto</div><p>Leitura de hidr&ocirc;metro, poltrona, bandeira tarif&aacute;ria, modal de transporte &mdash; nada disso pertence ao can&ocirc;nico, e tentar acomodar tudo produziria um esquema com trezentos campos nulos. Guardar o espec&iacute;fico como objeto aberto, <strong>ao lado do XML original</strong>, mant&eacute;m o can&ocirc;nico pequeno sem perder informa&ccedil;&atilde;o.</p></div>
+
+<div class="callout warn"><div class="ct">Um campo que parece detalhe e n&atilde;o &eacute;: <code>participaApuracao</code></div><p>&Eacute; o que impede o MDF-e de virar cr&eacute;dito. Um booleano no envelope, decidido pelo adaptador, e n&atilde;o uma regra espalhada por cada consumidor do dado. Documentos denegados e inutilizados usam o mesmo campo.</p></div>
+</div>
+
+<!-- ─────────────────────────────── 07 -->
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Contrato da API</span></div>
+<p class="sec-sub"><span class="selo prop">proposta</span> Um endpoint de entrada para os dez modelos, e um de evento. A detec&ccedil;&atilde;o do modelo &eacute; do servidor, n&atilde;o do cliente.</p>
+
+<div class="table-wrap"><table><thead><tr><th>M&eacute;todo</th><th>Caminho</th><th>O que faz</th></tr></thead><tbody>
+<tr><td><span class="verbo post">POST</span></td><td><code>/v1/documentos</code></td><td>Ingere um documento, em XML ou no can&ocirc;nico. Detecta o modelo pela raiz do XML</td></tr>
+<tr><td><span class="verbo post">POST</span></td><td><code>/v1/documentos/lote</code></td><td>At&eacute; 500 documentos. Resultado por item &mdash; um erro n&atilde;o derruba o lote</td></tr>
+<tr><td><span class="verbo post">POST</span></td><td><code>/v1/documentos/{chave}/eventos</code></td><td>Evento p&oacute;s-autoriza&ccedil;&atilde;o: cancelamento, corre&ccedil;&atilde;o, manifesta&ccedil;&atilde;o, substitui&ccedil;&atilde;o</td></tr>
+<tr><td><span class="verbo get">GET</span></td><td><code>/v1/documentos/{chave}</code></td><td>O can&ocirc;nico, o status de processamento e as ocorr&ecirc;ncias abertas</td></tr>
+<tr><td><span class="verbo get">GET</span></td><td><code>/v1/documentos/{chave}/original</code></td><td>O XML como recebido</td></tr>
+<tr><td><span class="verbo get">GET</span></td><td><code>/v1/lotes/{id}</code></td><td>Situa&ccedil;&atilde;o de um lote</td></tr>
+</tbody></table></div>
+
+<h3 id="deteccao">Detec&ccedil;&atilde;o do modelo</h3>
+<p>O cliente <strong>n&atilde;o declara</strong> o tipo. O servidor l&ecirc; a raiz do XML e resolve &mdash; declarar o tipo abre espa&ccedil;o para o cliente declarar errado, e a&iacute; o erro s&oacute; aparece semanas depois, na apura&ccedil;&atilde;o.</p>
+<div class="code-block"><code>&lt;NFe&gt;    + ide/mod=55  <span class="c">-&gt; NF-e</span>
+&lt;NFe&gt;    + ide/mod=65  <span class="c">-&gt; NFC-e</span>
+&lt;NFCom&gt;                <span class="c">-&gt; NFCom</span>
+&lt;NF3e&gt;                 <span class="c">-&gt; NF3-e</span>
+&lt;CTe&gt;    + ide/mod      <span class="c">-&gt; CT-e | CT-e OS | CT-e Simplificado</span>
+&lt;MDFe&gt;                 <span class="c">-&gt; MDF-e   (participaApuracao = false)</span>
+&lt;BPe&gt;    + ide/mod      <span class="c">-&gt; BP-e | BP-e TM</span>
+&lt;NFGas&gt;                <span class="c">-&gt; NFGas</span>
+&lt;NFAg&gt;                 <span class="c">-&gt; NFAg</span>
+&lt;DPS&gt; | &lt;NFSe&gt;         <span class="c">-&gt; NFS-e</span></code></div>
+<p class="src-note">Raiz n&atilde;o reconhecida &eacute; erro <code>DF-001</code>, com a lista dos modelos aceitos. <strong>Nunca</strong> tentar adivinhar por heur&iacute;stica de conte&uacute;do.</p>
+
+<h3 id="idem">Idempot&ecirc;ncia</h3>
+<p>A chave de acesso &eacute; a identidade natural do documento &mdash; e o mesmo documento vai chegar mais de uma vez, por desenho: o ERP reenvia, o lote &eacute; repetido depois de um timeout, o mesmo XML vem por dois caminhos.</p>
+<div class="table-wrap"><table><thead><tr><th>Situa&ccedil;&atilde;o</th><th>Resposta</th></tr></thead><tbody>
+<tr><td>Chave nova</td><td><code>201 Created</code></td></tr>
+<tr><td>Chave conhecida, <strong>mesmo hash</strong> do XML</td><td><code>200 OK</code> com <code>duplicado: true</code> &mdash; nada &eacute; reprocessado</td></tr>
+<tr><td>Chave conhecida, <strong>hash diferente</strong></td><td><code>409 Conflict</code> &mdash; <strong>abre inconsist&ecirc;ncia</strong>. Documento autorizado n&atilde;o muda de conte&uacute;do; se mudou, algo est&aacute; errado na origem</td></tr>
+<tr><td>Chave conhecida, evento posterior</td><td><code>202 Accepted</code> &mdash; vai para a esteira de eventos</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">O 409 &eacute; funcionalidade, n&atilde;o erro t&eacute;cnico</div><p>Dois XML diferentes para a mesma chave significam ou adultera&ccedil;&atilde;o, ou bug no ERP, ou confus&atilde;o entre ambientes de homologa&ccedil;&atilde;o e produ&ccedil;&atilde;o. Qualquer um dos tr&ecirc;s &eacute; assunto do m&oacute;dulo de Inconsist&ecirc;ncias, com responsável e prazo &mdash; n&atilde;o um log que ningu&eacute;m l&ecirc;.</p></div>
+
+<h3 id="assinc">S&iacute;ncrono no aceite, ass&iacute;ncrono no processamento</h3>
+<p>A ingest&atilde;o responde r&aacute;pido dizendo se <em>aceitou</em>; o que o documento produz &mdash; registros fiscais, cr&eacute;dito, d&eacute;bito, v&iacute;nculos &mdash; vem depois.</p>
+<div class="code-block"><code><span class="k">POST</span> /v1/documentos
+Content-Type: application/xml
+Idempotency-Key: 43260912345678000190550010000128841000128847
+
+<span class="c">-- 201</span>
+{
+  <span class="k">"id"</span>: <span class="s">"doc_01J8..."</span>,
+  <span class="k">"chave"</span>: <span class="s">"43260912345678000190550010000128841000128847"</span>,
+  <span class="k">"modelo"</span>: <span class="s">"55"</span>,
+  <span class="k">"aceito"</span>: <span class="v">true</span>,
+  <span class="k">"processamento"</span>: <span class="s">"pendente"</span>,
+  <span class="k">"avisos"</span>: [ { <span class="k">"codigo"</span>: <span class="s">"DF-210"</span>, <span class="k">"campo"</span>: <span class="s">"item[3].cClassTrib"</span>,
+                 <span class="k">"mensagem"</span>: <span class="s">"ausente; classificacao ficara indefinida"</span> } ]
+}</code></div>
+<p><strong>Aviso n&atilde;o rejeita.</strong> Rejeitar um documento que o Fisco autorizou &eacute; pior do que aceit&aacute;-lo incompleto: ele existe, gera efeito e o cliente n&atilde;o pode reemitir. O que falta vira ocorr&ecirc;ncia com responsável, no m&oacute;dulo que j&aacute; existe para isso.</p>
+</div>
+
+<!-- ─────────────────────────────── 08 -->
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Matriz de mapeamento</span></div>
+<p class="sec-sub">Onde cada campo can&ocirc;nico nasce, por documento. <span class="selo sec">fonte secund&aacute;ria</span> &mdash; os caminhos XPath s&atilde;o o padr&atilde;o conhecido de cada leiaute e devem ser conferidos no MOC.</p>
+<div class="table-wrap"><table><thead><tr><th>Can&ocirc;nico</th><th>NF-e &middot; NFC-e</th><th>CT-e</th><th>NFS-e</th><th>Faturas de ciclo</th><th>MDF-e</th></tr></thead><tbody>
+<tr><td><code>chave</code></td><td><code>infNFe/@Id</code></td><td><code>infCte/@Id</code></td><td>chave de 50 do ADN</td><td><code>inf&hellip;/@Id</code></td><td><code>infMDFe/@Id</code></td></tr>
+<tr><td><code>emissao</code></td><td><code>ide/dhEmi</code></td><td><code>ide/dhEmi</code></td><td><code>infDPS/dhEmi</code></td><td><code>ide/dhEmi</code></td><td><code>ide/dhEmi</code></td></tr>
+<tr><td><code>competencia</code></td><td>emiss&atilde;o ou <code>gAjusteCompet</code></td><td>emiss&atilde;o</td><td>compet&ecirc;ncia da DPS</td><td><strong>per&iacute;odo de refer&ecirc;ncia</strong></td><td>&mdash;</td></tr>
+<tr><td><code>emitente.ni</code></td><td><code>emit/CNPJ</code></td><td><code>emit/CNPJ</code></td><td>prestador</td><td><code>emit/CNPJ</code></td><td><code>emit/CNPJ</code></td></tr>
+<tr><td><code>contraparte</code></td><td><code>dest</code> (opcional na NFC-e)</td><td><strong>resolver por <code>toma</code></strong></td><td>tomador</td><td>assinante ou unidade consumidora</td><td>&mdash;</td></tr>
+<tr><td><code>itens[]</code></td><td><code>det[]</code></td><td>item &uacute;nico sint&eacute;tico</td><td>servi&ccedil;o &uacute;nico</td><td><code>det[]</code></td><td>&mdash;</td></tr>
+<tr><td><code>tributos</code></td><td><code>det/imposto/IBSCBS</code></td><td><code>imp/IBSCBS</code></td><td>anexos RTC da DPS</td><td><code>det/imposto/IBSCBS</code></td><td><strong>n&atilde;o h&aacute;</strong></td></tr>
+<tr><td><code>classificacao</code></td><td><code>CST</code> + <code>cClassTrib</code></td><td><code>CST</code> + <code>cClassTrib</code></td><td>c&oacute;digo nacional + RTC</td><td><code>CST</code> + <code>cClassTrib</code></td><td>&mdash;</td></tr>
+<tr><td><code>referencias[]</code></td><td>NF-e referenciadas</td><td>documentos transportados</td><td>&mdash;</td><td>&mdash;</td><td><strong>CT-e e NF-e manifestados</strong></td></tr>
+<tr><td><code>participaApuracao</code></td><td><code>true</code></td><td><code>true</code></td><td><code>true</code></td><td><code>true</code></td><td><code>false</code></td></tr>
+</tbody></table></div>
+</div>
+
+<!-- ─────────────────────────────── 09 -->
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Valida&ccedil;&otilde;es e erros</span></div>
+<p class="sec-sub"><span class="selo prop">proposta</span> Tr&ecirc;s camadas, com severidades diferentes. S&oacute; a primeira rejeita.</p>
+<div class="table-wrap"><table><thead><tr><th>Camada</th><th>O que verifica</th><th>Falhou?</th></tr></thead><tbody>
+<tr><td><strong>1. Estrutural</strong></td><td>XML bem formado, raiz reconhecida, XSD do modelo, chave com d&iacute;gito verificador v&aacute;lido</td><td><code>400</code> &mdash; <strong>rejeita</strong>. N&atilde;o d&aacute; para processar o que n&atilde;o se l&ecirc;</td></tr>
+<tr><td><strong>2. Coer&ecirc;ncia</strong></td><td>Soma dos itens bate com o total; <code>vIBS = vIBSUF + vIBSMun</code>; al&iacute;quota &times; base bate com o valor; chave coerente com emitente, modelo e data</td><td><code>201</code> com aviso &mdash; <strong>aceita e abre ocorr&ecirc;ncia</strong></td></tr>
+<tr><td><strong>3. Neg&oacute;cio</strong></td><td><code>cClassTrib</code> presente e conhecido; CST compat&iacute;vel com o grupo; compet&ecirc;ncia dentro de per&iacute;odo aberto; contraparte identificada quando o modelo exige</td><td><code>201</code> com aviso &mdash; vira inconsist&ecirc;ncia tipificada</td></tr>
+</tbody></table></div>
+
+<div class="table-wrap"><table><thead><tr><th>C&oacute;digo</th><th>Camada</th><th>Quando</th></tr></thead><tbody>
+<tr><td><code>DF-001</code></td><td>1</td><td>Raiz do XML n&atilde;o reconhecida</td></tr>
+<tr><td><code>DF-002</code></td><td>1</td><td>XML malformado ou fora do XSD do modelo</td></tr>
+<tr><td><code>DF-003</code></td><td>1</td><td>Chave inv&aacute;lida &mdash; tamanho ou d&iacute;gito verificador</td></tr>
+<tr><td><code>DF-010</code></td><td>1</td><td>Modelo n&atilde;o habilitado para este cliente</td></tr>
+<tr><td><code>DF-100</code></td><td>2</td><td>Soma dos itens diverge do total</td></tr>
+<tr><td><code>DF-101</code></td><td>2</td><td><code>vIBS</code> diferente de <code>vIBSUF + vIBSMun</code></td></tr>
+<tr><td><code>DF-102</code></td><td>2</td><td>Al&iacute;quota aplicada &agrave; base n&atilde;o reproduz o valor destacado</td></tr>
+<tr><td><code>DF-110</code></td><td>2</td><td>Chave incoerente com emitente, modelo ou data de emiss&atilde;o</td></tr>
+<tr><td><code>DF-210</code></td><td>3</td><td><code>cClassTrib</code> ausente</td></tr>
+<tr><td><code>DF-211</code></td><td>3</td><td><code>cClassTrib</code> desconhecido na tabela vigente</td></tr>
+<tr><td><code>DF-212</code></td><td>3</td><td>CST incompat&iacute;vel com os grupos presentes</td></tr>
+<tr><td><code>DF-220</code></td><td>3</td><td>Compet&ecirc;ncia fora de per&iacute;odo aberto</td></tr>
+<tr><td><code>DF-230</code></td><td>3</td><td>Contraparte n&atilde;o identificada em modelo que exige</td></tr>
+<tr><td><code>DF-300</code></td><td>&mdash;</td><td>Conflito de conte&uacute;do na mesma chave (<code>409</code>)</td></tr>
+</tbody></table></div>
+
+<div class="callout warn"><div class="ct">A regra que vale mais que todas</div><p><strong>Nunca assumir zero.</strong> Campo ausente n&atilde;o &eacute; campo zerado. Um <code>vCBS</code> que n&atilde;o veio e entra como <code>0,00</code> vira, tr&ecirc;s telas adiante, um cr&eacute;dito de zero reais que ningu&eacute;m questiona &mdash; e a diferen&ccedil;a s&oacute; aparece na concilia&ccedil;&atilde;o com a apura&ccedil;&atilde;o assistida, meses depois. Ausente &eacute; <code>null</code>, e <code>null</code> abre ocorr&ecirc;ncia.</p></div>
+</div>
+
+<!-- ─────────────────────────────── 10 -->
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Riscos e o que confirmar na fonte</span></div>
+<p>O que este documento <strong>n&atilde;o</strong> resolve, e onde a informa&ccedil;&atilde;o precisa vir do MOC antes de virar c&oacute;digo.</p>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>A confirmar</th><th>Onde</th><th>Por qu&ecirc;</th></tr></thead><tbody>
+<tr><td>1</td><td>Estrutura interna de <code>gDif</code>, <code>gDevTrib</code> e <code>gIBSCredPres</code></td><td>MOC da NF-e &middot; NT 2025.002-RTC</td><td>S&atilde;o os grupos que mudam <strong>se e quando</strong> o cr&eacute;dito nasce</td></tr>
+<tr><td>2</td><td>Raiz do XML e estrutura da NFAg e da NFG&aacute;s</td><td>Schemas NT 2026.002-RTC, portais SVRS</td><td>Foram inferidos do padr&atilde;o; n&atilde;o lidos no XSD</td></tr>
+<tr><td>3</td><td>Quais campos RTC j&aacute; est&atilde;o no XSD de produ&ccedil;&atilde;o da NFS-e</td><td>gov.br/nfse &mdash; documenta&ccedil;&atilde;o atual</td><td>Define o que o adaptador pode exigir hoje</td></tr>
+<tr><td>4</td><td>Tabela de eventos por modelo, com c&oacute;digos</td><td>MOC de cada documento</td><td>A esteira de eventos depende disso</td></tr>
+<tr><td>5</td><td>Diferen&ccedil;as entre CT-e, CT-e OS e CT-e Simplificado</td><td>NT 2025.001-RTC</td><td>S&atilde;o tr&ecirc;s leiautes, n&atilde;o tr&ecirc;s varia&ccedil;&otilde;es do mesmo</td></tr>
+<tr><td>6</td><td>Alcance da flexibiliza&ccedil;&atilde;o do ATC CGIBS/RFB n&ordm; 1/2026</td><td>Ato T&eacute;cnico Conjunto de 31/07/2026</td><td>Suspendeu temporariamente a obrigatoriedade de preencher IBS/CBS em parte dos documentos &mdash; muda o que &eacute; realista exigir hoje</td></tr>
+<tr><td>7</td><td>Se o MDF-e ganhar&aacute; grupo tribut&aacute;rio</td><td>Ajuste SINIEF 24/2024 e adapta&ccedil;&otilde;es</td><td>Mudaria <code>participaApuracao</code> de constante para regra</td></tr>
+</tbody></table></div>
+
+<div class="callout red"><div class="ct">Achado no protótipo</div><p>A base sint&eacute;tica do SplitHub usa <strong>modelos errados</strong> para dois documentos: NFAg como <code>01</code> e NFG&aacute;s como <code>59</code>. Os corretos s&atilde;o <strong>75</strong> e <strong>76</strong>. O modelo <code>01</code> &eacute; a nota fiscal em papel e o <code>59</code> &eacute; o Cupom Fiscal Eletr&ocirc;nico &mdash; nenhum dos dois tem rela&ccedil;&atilde;o. N&atilde;o corrigido aqui por ser altera&ccedil;&atilde;o no gerador da base, fora do escopo deste documento.</p></div>
+
+<div class="callout info"><div class="ct">Ordem de implementa&ccedil;&atilde;o sugerida</div><p><span class="selo prop">proposta</span> <strong>Primeiro</strong> NF-e e NFC-e &mdash; leiaute maduro, maior volume, e o can&ocirc;nico nasce deles. <strong>Depois</strong> CT-e, que exerce o caso dif&iacute;cil do tomador e do documento sem item. <strong>Depois</strong> NFS-e, que exerce a chave de 50 e o fluxo do ADN. <strong>Depois</strong> as faturas de ciclo em bloco, que compartilham quase tudo. <strong>Por &uacute;ltimo</strong> MDF-e, que &eacute; simples, e NFAg, que ainda &eacute; minuta.</p></div>
+</div>
+
+<!-- ─────────────────────────────── 11 -->
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Fontes</span></div>
+<div class="table-wrap"><table><thead><tr><th>Assunto</th><th>Fonte</th></tr></thead><tbody>
+<tr><td>Cronograma de obrigatoriedade</td><td><a class="ext" href="https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2026/julho/receita-federal-e-comite-gestor-do-ibs-publicam-o-cronograma-de-implementacao-dos-documentos-fiscais-eletronicos-da-reforma-tributaria-do-consumo" target="_blank" rel="noopener">Cronograma de implementa&ccedil;&atilde;o dos DFe da RTC &mdash; RFB e CGIBS, 31/07/2026 &nearr;</a></td></tr>
+<tr><td>In&iacute;cio do preenchimento obrigat&oacute;rio</td><td><a class="ext" href="https://www.cgibs.gov.br/novo-marco-da-reforma-tributaria-inicia-em-03-de-agosto-com-preenchimento-obrigatorio-dos-campos-relativos-ao-ibs-e-a-cbs" target="_blank" rel="noopener">Novo marco em 03/08 &mdash; CGIBS &nearr;</a></td></tr>
+<tr><td>NF-e e NFC-e</td><td><a class="ext" href="https://www.nfe.fazenda.gov.br/portal/principal.aspx" target="_blank" rel="noopener">Portal da NF-e &nearr;</a> &middot; NT 2025.002-RTC</td></tr>
+<tr><td>NFS-e padr&atilde;o nacional</td><td><a class="ext" href="https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica/documentacao-atual" target="_blank" rel="noopener">Documenta&ccedil;&atilde;o t&eacute;cnica atual &nearr;</a></td></tr>
+<tr><td>NFG&aacute;s &mdash; modelo 76</td><td><a class="ext" href="https://dfe-portal.svrs.rs.gov.br/NFGAS" target="_blank" rel="noopener">Portal da NFG&aacute;s &mdash; SVRS &nearr;</a> &middot; Ajuste SINIEF 38/2025</td></tr>
+<tr><td>NFAg &mdash; modelo 75</td><td><a class="ext" href="https://dfe-portal.svrs.rs.gov.br/Nfag" target="_blank" rel="noopener">Portal da NFAg &mdash; SVRS &nearr;</a></td></tr>
+<tr><td>CT-e, BP-e, NF3-e, NFCom</td><td><a class="ext" href="https://dfe-portal.svrs.rs.gov.br/" target="_blank" rel="noopener">Portal DF-e da SVRS &nearr;</a> &middot; NT 2025.001-RTC</td></tr>
+<tr><td>Grupo IBS/CBS no leiaute</td><td><a class="ext" href="https://flexdocs.net/guiaNFe/gerarNFe.detalhe.imp.IBSCBS.gIBSCBS.html" target="_blank" rel="noopener">Guia de uso da NF-e &mdash; gIBSCBS &nearr;</a> <span class="selo sec">secund&aacute;ria</span></td></tr>
+<tr><td>Contexto no produto</td><td><a class="ext" href="integracao-apis-reforma.html">Refer&ecirc;ncia de APIs &mdash; Reforma Tribut&aacute;ria</a> &middot; <a class="ext" href="prd-ingestao.html">PRD de Ingest&atilde;o</a></td></tr>
+</tbody></table></div>
+</div>
+
+<!-- ─────────────────────────────── 12 -->
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>22/09/2026</strong> &mdash; Primeira vers&atilde;o. Os dez documentos identificados com modelo, norma e data de obrigatoriedade; a forma do grupo IBS/CBS comum aos nove que o carregam; os sete eixos de diverg&ecirc;ncia; ficha de cada documento; modelo can&ocirc;nico, contrato da API, matriz de mapeamento, camadas de valida&ccedil;&atilde;o com cat&aacute;logo de erros, e sete pontos a confirmar no MOC. Registra que o MDF-e n&atilde;o tem grupo tribut&aacute;rio e n&atilde;o participa da apura&ccedil;&atilde;o, e que a NFAg ainda &eacute; minuta.</div></div>
+</div>
+
+</div>
+</body>
+</html>
