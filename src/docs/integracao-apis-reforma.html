@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Referência de APIs — Reforma Tributária · SplitHub v1.1</title>
+<title>Referência de APIs — Reforma Tributária · SplitHub v1.2</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -236,7 +236,7 @@ details.pl > summary code { font-size: 11.5px; }
 <h1>Referência de APIs — Reforma Tributária</h1>
 <p class="subtitle">As APIs oficiais da Reforma Tributária do Consumo que o SplitHub consome ou precisa conhecer — comunicação, campos, payloads e regras, levantados da documentação oficial em 16/09/2026 e revistos em 22/09/2026, quando entraram o cronograma de liberação e os limites da integração.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.1</span></div>
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.2</span></div>
 <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Referência técnica</span></div>
 <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">22/09/2026</span></div>
 <div class="meta-pill"><span class="meta-label">APIs</span>&nbsp;<span class="meta-val">5</span></div>
@@ -245,8 +245,9 @@ details.pl > summary code { font-size: 11.5px; }
 <div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
 <li><a href="#s01"><span class="toc-num">01</span> Como usar esta referência</a></li>
 <li><a href="#s02"><span class="toc-num">02</span> As APIs em detalhe</a></li>
-<li><a href="#s03"><span class="toc-num">03</span> Fontes</a></li>
-<li><a href="#s04"><span class="toc-num">04</span> Histórico de versões</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Glossário</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Fontes</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Histórico de versões</a></li>
 </ul></div>
 <div class="section" id="s01">
 <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Como usar esta referência</span></div>
@@ -585,13 +586,127 @@ Valores: decimal(18,2) · CNPJ alfanumérico (ex.: cnpjRaizPspPag)</pre><p class
 <h3 style="margin-top:30px">O que as regras das APIs exigem do SplitHub</h3><div class="table-wrap"><table><thead><tr><th>Regra da API</th><th>Consequência no produto</th></tr></thead><tbody><tr><td>4 aberturas por dia e janela de 8 dias</td><td>Um agendador por CNPJ base e endpoint, com alarme se passar de 8 dias sem consulta concluída</td></tr><tr><td>Webhook HTTPS validado por <code>HEAD</code></td><td>Endpoint público do SplitHub, com resposta a <code>HEAD</code> e aceite idempotente pelo tíquete</td></tr><tr><td>Arquivo expira em 48 horas</td><td>Download e persistência imediatos; reprocessamento a partir do arquivo guardado, não da API</td></tr><tr><td>Consulta incremental por <code>atualizacao</code></td><td>Upsert por chave do documento, com histórico de mudança de valores</td></tr><tr><td>Crédito com vários estados de valor ao mesmo tempo</td><td>Estado do crédito por valor — o <code>statusCredito</code> único do protótipo não representa o arquivo</td></tr><tr><td>Treze tipos de documento na apuração</td><td>Cinco tipos novos para a ingestão e o fato gerador</td></tr><tr><td>Credencial por matriz e CNPJ base</td><td>Credencial no nível da raiz em Organização, não por estabelecimento</td></tr><tr><td>mTLS com certificado ICP-Brasil (Conformidade Fácil, NFS-e)</td><td>Gestão de certificado digital do cliente — hoje inexistente no produto</td></tr></tbody></table></div>
 </div>
 <div class="section" id="s03">
-<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Fontes</span></div>
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Glossário</span></div>
+<p>Todo termo, sigla e campo que aparece nesta referência, na ordem em que a cabeça precisa deles: primeiro quem é quem, depois como o débito morre, depois o vocabulário da apuração, os estados do valor, os documentos, a mecânica da API e a base legal.</p>
+
+<h3 id="g1">Os tributos e quem administra</h3>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>O que é</th></tr></thead><tbody>
+<tr><td><strong>RTC</strong></td><td>Reforma Tributária do Consumo — o guarda-chuva de IBS, CBS e Imposto Seletivo</td></tr>
+<tr><td><strong>CBS</strong></td><td>Contribuição sobre Bens e Serviços — tributo federal, administrado pela <strong>Receita Federal</strong></td></tr>
+<tr><td><strong>IBS</strong></td><td>Imposto sobre Bens e Serviços — tributo de estados e municípios, administrado pelo <strong>Comitê Gestor do IBS</strong></td></tr>
+<tr><td><strong>RFB</strong></td><td>Receita Federal do Brasil. Publica as APIs de apuração da CBS</td></tr>
+<tr><td><strong>CGIBS</strong></td><td>Comitê Gestor do IBS. Não publicou API de apuração — ver <a class="xref" href="#api-f">F</a></td></tr>
+<tr><td><strong>IS</strong></td><td>Imposto Seletivo — calculado pela Calculadora de Tributos, fora do escopo da apuração assistida</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Por que a separação é regra e não detalhe</div><p>Os dois tributos vão a órgãos diferentes, com sistemas, prazos e decisões próprios. Nenhum número do produto soma CBS e IBS — e a API existe hoje só para a CBS.</p></div>
+
+<h3 id="g2">Como o débito é extinto</h3>
+<div class="table-wrap"><table><thead><tr><th>Sigla</th><th>Nome</th><th>Quem paga, e quando</th></tr></thead><tbody>
+<tr><td><strong>PCONT</strong></td><td>Pagamento do Contribuinte</td><td>O <strong>próprio devedor</strong> recolhe o que apurou, por DARF, no vencimento. É a via ordinária — o que sobrou depois de o split e o RAD já terem antecipado parte</td></tr>
+<tr><td><strong>RAD</strong></td><td>Recolhimento pelo Adquirente</td><td>O <strong>comprador</strong> recolhe no lugar do fornecedor, por DARF, e com isso destrava o próprio crédito quando o fornecedor não paga</td></tr>
+<tr><td><strong>Split payment</strong></td><td>Pagamento segregado</td><td>O <strong>meio de pagamento</strong> separa o tributo no instante da liquidação e repassa ao Fisco, antes de o dinheiro chegar ao vendedor</td></tr>
+<tr><td>—</td><td>Compensação</td><td>O crédito apropriado abate o débito na apuração, na ordem do art. 53. Não há dinheiro</td></tr>
+<tr><td>—</td><td>Ressarcimento</td><td>O saldo credor vira dinheiro devolvido pelo Fisco. Não extingue débito: é o caminho inverso</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">PCONT no produto</div><p>A API separa <code>/pagamentos</code> — o que o contribuinte pagou, PCONT e split — de <code>/recolhimentos</code>, o que ele pagou como <strong>adquirente</strong>, em RAD. São perspectivas opostas do mesmo fato e não se somam. O protótipo hoje chama de <em>DARF CBS</em> e <em>Guia IBS</em> o que a Receita chama de PCONT; a emissão do DARF de PCONT e de RAD pela API está prevista para o fim de nov/2026 (<a class="xref" href="#a11">A.11</a>).</p></div>
+
+<h3 id="g3">O vocabulário da apuração</h3>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>O que é</th></tr></thead><tbody>
+<tr><td><strong>Apuração assistida</strong></td><td>O Fisco monta a apuração a partir dos documentos fiscais e devolve ao contribuinte já calculada. Art. 46 da LC 214/2025</td></tr>
+<tr><td><strong>Período de apuração</strong> · <code>pa</code></td><td>O mês de competência, no formato <code>mm/aaaa</code></td></tr>
+<tr><td><strong>Apropriação</strong></td><td>O momento em que o crédito passa a existir para uso. Depende de o débito do fornecedor ter sido extinto — art. 47</td></tr>
+<tr><td><strong>Saldo credor</strong></td><td>Crédito apropriado que sobrou depois de abater os débitos do período</td></tr>
+<tr><td><strong>DARF</strong></td><td>Documento de Arrecadação de Receitas Federais — a guia pela qual CBS, PCONT e RAD são pagos</td></tr>
+<tr><td><strong>Fato gerador</strong></td><td>O evento que faz nascer a obrigação. Nem todo documento fiscal tem</td></tr>
+</tbody></table></div>
+
+<h3 id="g4">Os estados do valor no arquivo</h3>
+<p>A API não devolve um rótulo por documento: devolve <strong>valores por estado</strong>, e o mesmo documento pode ter parcelas em estados diferentes ao mesmo tempo.</p>
+<div class="table-wrap"><table><thead><tr><th>Campo</th><th>Onde</th><th>O que significa</th></tr></thead><tbody>
+<tr><td><code>apurado</code></td><td>débito e crédito</td><td>O valor que o Fisco calculou</td></tr>
+<tr><td><code>excedente</code></td><td>débito e crédito</td><td>Parcela ainda não processada pela apuração</td></tr>
+<tr><td><code>inexigivel</code> · <code>suspenso</code></td><td>débito</td><td>Não pode ser cobrado, ou está com a exigibilidade suspensa</td></tr>
+<tr><td><code>extinto</code> · <code>saldoDevedor</code></td><td>débito</td><td>O que já morreu por alguma modalidade, e o que ainda falta</td></tr>
+<tr><td><code>apropriacao.inapropriavel</code></td><td>crédito</td><td>Parcela que não gera direito a crédito</td></tr>
+<tr><td><code>apropriacao.prescrito</code></td><td>crédito</td><td>Perdeu o prazo — cinco anos, art. 54</td></tr>
+<tr><td><code>apropriacao.aApropriar</code></td><td>crédito</td><td>Direito constituído, à espera de o fornecedor extinguir o débito</td></tr>
+<tr><td><code>apropriacao.apropriado</code></td><td>crédito</td><td>Já pode ser usado</td></tr>
+<tr><td><code>utilizacao.utilizado</code></td><td>crédito</td><td>Já abateu débito</td></tr>
+<tr><td><code>utilizacao.restabelecido</code></td><td>crédito</td><td>Voltou ao saldo depois de ter sido usado</td></tr>
+<tr><td><code>naoUtilizado.saldoCredor</code></td><td>crédito</td><td>Disponível, ainda não abateu nada</td></tr>
+<tr><td><code>naoUtilizado.pedidoRessarcimento</code></td><td>crédito</td><td>Parcela em pedido de ressarcimento. <strong>É valor, não estado do pedido</strong> — ver <a class="xref" href="#a12">A.12</a></td></tr>
+</tbody></table></div>
+
+<h3 id="g5">Os documentos que a apuração recebe</h3>
+<div class="table-wrap"><table><thead><tr><th>Sigla</th><th>Documento</th></tr></thead><tbody>
+<tr><td><strong>NF-e</strong> · <strong>NFC-e</strong></td><td>Nota Fiscal eletrônica (mercadoria, B2B) e ao Consumidor</td></tr>
+<tr><td><strong>NFS-e</strong> · <strong>NFS-e Via</strong></td><td>Nota Fiscal de Serviço eletrônica, padrão nacional, e sua via</td></tr>
+<tr><td><strong>CT-e</strong> · <strong>CT-e OS</strong> · <strong>CT-e Simplificado</strong></td><td>Conhecimento de Transporte eletrônico, o de Outros Serviços e o simplificado</td></tr>
+<tr><td><strong>NFCom</strong> · <strong>NF3-e</strong></td><td>Comunicação e energia elétrica</td></tr>
+<tr><td><strong>BP-e</strong> · <strong>BP-e TM</strong></td><td>Bilhete de Passagem eletrônico e o de transporte metropolitano</td></tr>
+<tr><td><strong>GTV-e</strong></td><td>Guia de Transporte de Valores eletrônica</td></tr>
+<tr><td><strong>DeRE</strong></td><td>Declaração de Regimes Específicos — documentação técnica conjunta RFB e CGIBS</td></tr>
+<tr><td><strong>DFe</strong></td><td>Documento Fiscal eletrônico, o termo genérico. No produto, <strong>DF</strong></td></tr>
+<tr><td><strong>Chave</strong></td><td>Identificador único de 44 posições do documento; na API vem como <code>string(50)</code></td></tr>
+</tbody></table></div>
+
+<h3 id="g6">A mecânica das APIs</h3>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>O que é</th></tr></thead><tbody>
+<tr><td><strong>API assíncrona</strong></td><td>Pede-se, recebe-se um tíquete, e o resultado chega depois. Nenhuma tela pode esperar por ela</td></tr>
+<tr><td><code>tiqueteSolicitacao</code></td><td>Identificador da solicitação. É por ele que o aviso é tratado de forma idempotente</td></tr>
+<tr><td><code>tEASegundos</code></td><td>Tempo estimado de atendimento, em segundos, devolvido na abertura</td></tr>
+<tr><td><code>urlRetorno</code></td><td>O webhook do consumidor, informado no corpo da solicitação</td></tr>
+<tr><td><code>urlAssinada</code> · <code>urlAssinadaExpiraEm</code></td><td>Link temporário do arquivo e sua validade — 48 horas. É segredo: não vai para log nem histórico</td></tr>
+<tr><td><strong>Webhook</strong></td><td>Endereço HTTPS do consumidor que a API chama quando termina. Validado por <code>HEAD</code> antes de a solicitação ser aceita</td></tr>
+<tr><td><strong>Polling</strong></td><td>Alternativa ao webhook: perguntar de tempos em tempos por <code>GET /situacao/{tiquete}</code></td></tr>
+<tr><td><strong>Consulta incremental</strong></td><td>A resposta traz só o que mudou desde a última consulta. A chave é o campo <code>atualizacao</code> de cada registro</td></tr>
+<tr><td><strong>Janela de retorno</strong></td><td>8 dias de inclusões e atualizações; na primeira consulta, desde o dia 1 do mês corrente. Passar de 8 dias sem consultar <strong>perde atualização sem aviso</strong></td></tr>
+<tr><td><code>ni</code> · <code>niConsumidor</code></td><td>Número de identificação do contribuinte e, quando houver, do consumidor</td></tr>
+<tr><td><strong>CNPJ base</strong></td><td>Os 8 primeiros dígitos, a raiz. A consulta cobre todos os estabelecimentos da raiz de uma vez</td></tr>
+<tr><td><strong>Produção restrita</strong></td><td>Ambiente do piloto da CBS, com dados reais e acesso limitado às empresas selecionadas</td></tr>
+<tr><td><strong>Produção beta</strong></td><td>Ambiente aberto a mais contribuintes, anterior à produção plena</td></tr>
+<tr><td><strong>Swagger</strong> · <strong>OpenAPI</strong></td><td>Especificação legível por máquina dos caminhos e corpos de uma API</td></tr>
+<tr><td><strong>ADN</strong> · <strong>NSU</strong></td><td>Ambiente de Distribuição Nacional da NFS-e e o número sequencial único de cada documento distribuído</td></tr>
+</tbody></table></div>
+
+<h3 id="g7">Segurança e credenciais</h3>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>O que é</th></tr></thead><tbody>
+<tr><td><strong>OAuth 2.0 <em>client credentials</em></strong></td><td>Autenticação de sistema para sistema: <code>Client Id</code> e <code>Client Secret</code> viram um <code>access_token</code> de 1 hora, enviado em <code>Authorization: Bearer</code></td></tr>
+<tr><td><strong>mTLS</strong></td><td>TLS mútuo — além de o servidor se identificar, o cliente também apresenta certificado. Exigido por Conformidade Fácil e NFS-e</td></tr>
+<tr><td><strong>ICP-Brasil</strong></td><td>A cadeia de certificação digital oficial brasileira. O certificado do cliente precisa vir dela</td></tr>
+<tr><td><strong>Credencial de matriz</strong></td><td>A credencial é gerada pelo estabelecimento matriz e vale para a raiz do CNPJ — não há credencial por filial</td></tr>
+</tbody></table></div>
+
+<h3 id="g8">Split payment — termos próprios</h3>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>O que é</th></tr></thead><tbody>
+<tr><td><strong>PSP</strong></td><td>Prestador de Serviço de Pagamento — quem envia as remessas à plataforma</td></tr>
+<tr><td><strong>Pix Dinâmico</strong> · <strong>Automático</strong> · <strong>Estático</strong></td><td>Os dois primeiros têm ciclo completo na plataforma; o estático é de liquidação direta, como TED e TEF</td></tr>
+<tr><td><code>txId</code> · <code>numCtrlTED</code> · <code>numCtrlTEF</code> · <code>idInfSegr</code></td><td>Chaves de correlação por meio de pagamento, com formato definido por expressão regular</td></tr>
+<tr><td><code>ResourceId</code></td><td>Identificador devolvido na inicialização da remessa, usado nas etapas seguintes</td></tr>
+<tr><td><strong>Remessa atômica</strong></td><td>Inicialização, transmissão em lotes de até 1.000 transações e encerramento. Um erro descarta o lote inteiro</td></tr>
+</tbody></table></div>
+
+<h3 id="g9">Base legal citada</h3>
+<div class="table-wrap"><table><thead><tr><th>Norma</th><th>O que trata, nesta referência</th></tr></thead><tbody>
+<tr><td><strong>LC 214/2025, art. 46</strong></td><td>Apuração assistida</td></tr>
+<tr><td><strong>LC 214/2025, art. 47</strong></td><td>O crédito só se apropria depois de extinto o débito do fornecedor</td></tr>
+<tr><td><strong>LC 214/2025, art. 53</strong></td><td>A ordem de uso do crédito: saldo vencido, débitos do período, saldo credor</td></tr>
+<tr><td><strong>LC 214/2025, arts. 39 e 40</strong></td><td>Ressarcimento: prazos de 30, 60 e 180 dias, deferimento tácito e pagamento em 15 dias</td></tr>
+<tr><td><strong>Decreto 12.955/2026</strong></td><td>Regulamento da CBS, de 30/04/2026</td></tr>
+<tr><td><strong>Resolução CGIBS nº 6/2026</strong></td><td>Regulamento do IBS, do mesmo dia</td></tr>
+<tr><td><strong>Ato Técnico Conjunto RFB/CGIBS nº 1/2026</strong></td><td>Adaptação dos documentos fiscais eletrônicos ao IBS e à CBS</td></tr>
+<tr><td><strong>IN RFB 2.229/2024</strong></td><td>CNPJ alfanumérico, usado nos campos do split payment</td></tr>
+</tbody></table></div>
+</div>
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Fontes</span></div>
 <div class="table-wrap"><table><thead><tr><th>API</th><th>Fonte</th></tr></thead><tbody><tr><td>Apuração da CBS</td><td><a class="ext" href="https://docs.receitafederal.gov.br/apuracao-cbs/" target="_blank" rel="noopener">Documentação v2 ↗</a> · <a class="ext" href="https://docs.receitafederal.gov.br/apuracao-cbs/guiaapiassincrona.html" target="_blank" rel="noopener">Guia das APIs assíncronas v1.0, 03/09/2026 ↗</a> · <a class="ext" href="https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/manuais/reforma-tributaria-do-consumo/manual-plataforma-cbs-21-maio-2026-07h40.pdf" target="_blank" rel="noopener">Manual da Plataforma CBS (maio/2026) ↗</a></td></tr>
 <tr><td>Cronograma das APIs da CBS</td><td><a class="ext" href="https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2026/setembro/receita-federal-publica-nova-documentacao-tecnica-das-apis-de-apuracao-de-cbs" target="_blank" rel="noopener">Nova documentação técnica das APIs (set/2026) ↗</a> · <a class="ext" href="https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2025/dezembro/receita-libera-api-para-consulta-a-apuracao-de-cbs" target="_blank" rel="noopener">Liberação original da API (dez/2025) ↗</a></td></tr>
 <tr><td>Apuração do IBS</td><td><a class="ext" href="https://www.cgibs.gov.br/projeto-piloto-do-sistema-de-apuracao-do-ibs-avanca-para-nova-etapa-com-inclusao-de-notas-de-servico" target="_blank" rel="noopener">Etapa 2 do piloto, com NFS-e ↗</a> · <a class="ext" href="https://www.cgibs.gov.br/cgibs-inicia-selecao-de-empresas-para-o-projeto-piloto-do-sistema-de-apuracao-assistida-do-ibs" target="_blank" rel="noopener">Seleção das empresas do piloto ↗</a> · <a class="ext" href="https://www.cgibs.gov.br/upload/arquivos/202604/30084927-res-cgibs-n-6-30-abr-2026-regulamenta-o-ibs.pdf" target="_blank" rel="noopener">Resolução CGIBS nº 6/2026 ↗</a></td></tr><tr><td>Calculadora de Tributos</td><td><a class="ext" href="https://consumo.tributos.gov.br/servico/calcular-tributos-consumo/calculadora/documentacao" target="_blank" rel="noopener">Documentação oficial ↗</a> · manual da Plataforma CBS, seção Calculadora</td></tr><tr><td>Conformidade Fácil</td><td><a class="ext" href="https://dfe-portal.svrs.rs.gov.br/Cff/Noticias" target="_blank" rel="noopener">Comunicados do portal ↗</a></td></tr><tr><td>NFS-e Padrão Nacional</td><td><a class="ext" href="https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica/documentacao-atual" target="_blank" rel="noopener">Documentação técnica atual ↗</a></td></tr><tr><td>Split Payment</td><td><a class="ext" href="https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2026/junho/receita-federal-e-cgibs-publicaram-hoje-a-documentacao-tecnica-da-plataforma-publica-do-split-payment" target="_blank" rel="noopener">Publicação do Manual e Swagger ↗</a> · consumo.tributos.gov.br</td></tr></tbody></table></div>
 </div>
-<div class="section" id="s04">
-<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Histórico de versões</span></div>
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>22/09/2026</strong> — <strong>Glossário.</strong> Nova seção 03 com todo termo, sigla e campo que a referência usa, em nove grupos: tributos e órgãos, modalidades de extinção do débito (PCONT, RAD, split, compensação e ressarcimento), vocabulário da apuração, os estados do valor no arquivo, os treze documentos fiscais, a mecânica das APIs, segurança e credenciais, termos próprios do split payment e a base legal citada. Fontes e histórico passam a 04 e 05.</div></div>
 <div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>22/09/2026</strong> — <strong>Cronograma e limites da integração.</strong> Nova seção A.11 com o calendário das três ondas de liberação dos endpoints da CBS, os ambientes de cada uma, os marcos desde dez/2025 e o estado em 22/09/2026 — nenhum endpoint da v2 no ar. Nova seção A.12 com o que a API não cobre, em especial a ausência de endpoint para solicitar e para acompanhar o ressarcimento, e a distinção entre <code>naoUtilizado.pedidoRessarcimento</code> como valor e o estado do pedido. Novo bloco F com a situação do IBS: sem API, com o cronograma do projeto piloto e o que o CGIBS publicou de técnico. Fontes ampliadas. Nada do conteúdo anterior foi alterado — as regras e os campos levantados em 16/09/2026 seguem conferidos contra a documentação.</div></div>
 <div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">16/09/2026 — Primeira versão, a partir da proposta aprovada de documentação de integração: cinco APIs com ambientes, autenticação, endpoints, comunicação, campos, enumerações, erros, regras e payloads colapsáveis. Já com as correções do Manual da Plataforma CBS: Calculadora só local, API v1 descrita, API de conclusão da apuração prevista e ausência de API pública do IBS.</div></div>
 </div>
