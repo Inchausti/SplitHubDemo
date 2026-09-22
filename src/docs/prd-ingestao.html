@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRD — Ingestão de DFs · SplitHub v2.2</title>
+<title>PRD — Ingestão de DFs · SplitHub v2.3</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -194,7 +194,7 @@ img, svg { max-width: 100%; height: auto; }
   <p class="subtitle">Captura os documentos fiscais eletrônicos emitidos e recebidos pelo grupo, valida-os e os transforma em <strong>Registros Fiscais</strong>. Sem DF ingerido e válido não há apuração, não há conciliação e não há crédito de IBS/CBS.</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.2</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.3</span></div>
     <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Admin → Importação de DFs</span></div>
     <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-ingestao</span></div>
@@ -224,7 +224,8 @@ img, svg { max-width: 100%; height: auto; }
       <li><a href="#s12"><span class="toc-num">12</span> Defeitos e divergências</a></li>
       <li><a href="#s13"><span class="toc-num">13</span> Integrações e dependências</a></li>
       <li><a href="#s14"><span class="toc-num">14</span> Glossário</a></li>
-      <li><a href="#s15"><span class="toc-num">15</span> Histórico de versões</a></li>
+      <li><a href="#s15"><span class="toc-num">15</span> O contrato de entrada</a></li>
+<li><a href="#s16"><span class="toc-num">16</span> Hist&oacute;rico de vers&otilde;es</a></li>
     </ul>
   </div>
 
@@ -834,8 +835,33 @@ Authorization: Bearer {access_token}     <span class="c">// escopo dfs:write</sp
 
   <!-- ══ 15 ══ -->
   <div class="section" id="s15">
-    <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Histórico de versões</span></div>
-    <div class="ver-row"><div class="ver-num">v2.2</div><div class="ver-desc"><strong>22/09/2026</strong> — <strong>Fronteiras de integração.</strong> Fronteiras de integração: entrada pela API pública, com o endpoint de lote, e conferência pela apuração assistida.</div></div>
+<div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">O contrato de entrada</span></div>
+
+<p class="sec-sub">Em produ&ccedil;&atilde;o o documento n&atilde;o &eacute; gerado: chega por <code>POST /v1/documentos-fiscais</code>. Esta se&ccedil;&atilde;o descreve o contrato.</p>
+<div class="table-wrap"><table><thead><tr><th>Recurso</th><th>Detalhe</th></tr></thead><tbody>
+<tr><td><strong>Unit&aacute;rio</strong></td><td><code>POST /v1/documentos-fiscais</code>, com <code>type</code>, <code>model</code>, <code>access_key</code>, <code>identification</code>, <code>emission</code>, <code>destination</code>, <code>items[]</code> e <code>total</code></td></tr>
+<tr><td><strong>Lote</strong></td><td><code>POST /v1/documentos-fiscais/batch</code> &mdash; at&eacute; <strong>500 documentos</strong> por requisi&ccedil;&atilde;o, em JSON ou CSV. Acima disso, rejei&ccedil;&atilde;o</td></tr>
+<tr><td><strong>Situa&ccedil;&atilde;o do lote</strong></td><td><code>GET /v1/documentos-fiscais/batch/{batch_id}</code></td></tr>
+<tr><td><strong>Consulta e listagem</strong></td><td><code>GET /v1/documentos-fiscais/{id}</code> e <code>GET /v1/documentos-fiscais</code>, com filtro de tipo e situa&ccedil;&atilde;o</td></tr>
+<tr><td><strong>Corre&ccedil;&atilde;o</strong></td><td><code>PATCH</code> apenas em <em>pending</em> ou <em>error</em>. <strong>Documento conclu&iacute;do &eacute; imut&aacute;vel</strong></td></tr>
+</tbody></table></div>
+<h3>Situa&ccedil;&otilde;es do documento</h3>
+<div class="table-wrap"><table><thead><tr><th>Situa&ccedil;&atilde;o</th><th>Significa</th></tr></thead><tbody>
+<tr><td><code>pending</code></td><td>Recebido, aguardando processamento</td></tr>
+<tr><td><code>processing</code></td><td>Em processamento &mdash; a resposta de aceite &eacute; <code>202</code>, nunca <code>200</code></td></tr>
+<tr><td><code>completed</code></td><td>Processado, com IBS e CBS calculados. Imut&aacute;vel</td></tr>
+<tr><td><code>error</code></td><td>Falhou. Abre ocorr&ecirc;ncia na fam&iacute;lia A de <a class="xref" href="prd-inconsistencias.html#f-doc">Inconsist&ecirc;ncias</a></td></tr>
+</tbody></table></div>
+<h3>V&iacute;nculo com contrato</h3>
+<p><code>contract_id</code> amarra o documento ao contrato, e <code>override_contract_params</code> permite divergir dele no documento espec&iacute;fico. <code>payment_method</code> e <code>payment_term_days</code> completam a condi&ccedil;&atilde;o. &Eacute; por a&iacute; que o <code>rad_eligible</code> do contrato alcan&ccedil;a o documento &mdash; ver <a class="xref" href="prd-contratos.html">Contratos</a>.</p>
+<h3>Tipos de documento</h3>
+<div class="callout warn"><div class="ct">O contrato aceita 14 tipos; o prot&oacute;tipo conhece 13</div><p>Faltam <strong>NF-e ABI (77)</strong>. E h&aacute; <strong>modelo errado</strong> na base sint&eacute;tica: NFAg como <code>01</code> e NFG&aacute;s como <code>59</code>, quando os corretos s&atilde;o <strong>75</strong> e <strong>76</strong> &mdash; o <code>01</code> &eacute; a nota em papel e o <code>59</code> &eacute; o Cupom Fiscal Eletr&ocirc;nico. Corre&ccedil;&atilde;o no gerador, n&atilde;o na documenta&ccedil;&atilde;o.</p><p style="margin-top:8px">O detalhe de leiaute por tipo est&aacute; em <a class="xref" href="layouts-df-api.html">Layouts dos DFs</a>.</p></div>
+</div>
+
+<div class="section" id="s16">
+<div class="sec-hdr"><span class="sec-num">16</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+    <div class="ver-row"><div class="ver-num">v2.3</div><div class="ver-desc"><strong>22/09/2026</strong> &mdash; O contrato de entrada. Endpoint unit&aacute;rio e de lote com at&eacute; 500 documentos em JSON ou CSV, situa&ccedil;&atilde;o do lote, as quatro situa&ccedil;&otilde;es do documento com a imutabilidade do conclu&iacute;do, e o v&iacute;nculo com contrato por <code>contract_id</code>. Registra que o contrato aceita 14 tipos contra 13 do prot&oacute;tipo, e o modelo errado de NFAg e NFG&aacute;s na base sint&eacute;tica.</div></div>
+<div class="ver-row"><div class="ver-num">v2.2</div><div class="ver-desc"><strong>22/09/2026</strong> — <strong>Fronteiras de integração.</strong> Fronteiras de integração: entrada pela API pública, com o endpoint de lote, e conferência pela apuração assistida.</div></div>
 <div class="ver-row"><div class="ver-num">v2.1</div><div class="ver-desc"><strong>21/09/2026</strong> — <strong>A cadeia do documento.</strong> A ingestão passa a ser descrita como o primeiro elo de uma cadeia que termina no evento de volta ao ERP, com as duas ocorrências de conciliação com a apuração assistida.</div></div>
     <div class="ver-row">
       <span class="ver-num">v2.0</span>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRD — Pagamentos RAD · SplitHub v2.10</title>
+<title>PRD — Pagamentos RAD · SplitHub v2.11</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -199,13 +199,13 @@ img, svg { max-width: 100%; height: auto; }
   <p class="subtitle">Gestão operacional das guias de recolhimento de IBS e CBS para Registros Fiscais sob RAD — <strong>Recolhimento pelo Adquirente</strong>, a opção do comprador de assumir o pagamento dos tributos de um documento fiscal no regime da reforma tributária. Cobre monitoramento de vencimento, geração de guias individuais e em lote, comprovação de pagamento e rastreamento do ciclo de apropriação do crédito.</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.10</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.11</span></div>
     <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Fiscal → Pagamentos</span></div>
     <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-pagamentos</span></div>
     <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025</span></div>
     <div class="meta-pill" style="margin-left:auto">
-      <span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v2.10</span>
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v2.11</span>
     </div>
   </div>
 
@@ -225,7 +225,8 @@ img, svg { max-width: 100%; height: auto; }
       <li><a href="#s09"><span class="toc-num">09</span> Requisitos não funcionais</a></li>
       <li><a href="#s10"><span class="toc-num">10</span> Integrações e dependências</a></li>
       <li><a href="#s11"><span class="toc-num">11</span> Glossário</a></li>
-      <li><a href="#s12"><span class="toc-num">12</span> Histórico de versões</a></li>
+      <li><a href="#s12"><span class="toc-num">12</span> Comprovante e concilia&ccedil;&atilde;o por integra&ccedil;&atilde;o</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Hist&oacute;rico de vers&otilde;es</a></li>
     </ul>
   </div>
 
@@ -2147,8 +2148,22 @@ meses.forEach(<span class="k">function</span>(m) {
 
   <!-- ══ 12 ══ -->
   <div class="section" id="s12">
-    <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Histórico de versões</span></div>
-                <div class="ver-row"><div class="ver-num">v2.10</div><div class="ver-desc"><strong>22/09/2026</strong> — <strong>Fronteiras de integração.</strong> Fronteiras de integração: pagamento do Fisco pelas APIs da Reforma, comprovante do cliente pela API pública.</div></div>
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Comprovante e concilia&ccedil;&atilde;o por integra&ccedil;&atilde;o</span></div>
+
+<p class="sec-sub">O comprovante deixa de ser anexo manual e passa a chegar por contrato. E a confirma&ccedil;&atilde;o de que o Fisco recebeu vem de outra ponta.</p>
+<div class="table-wrap"><table><thead><tr><th>Fonte</th><th>O que traz</th></tr></thead><tbody>
+<tr><td><strong>ERP</strong> &mdash; <code>POST /v1/rad/proofs</code></td><td>PIX com <code>end_to_end_id</code>, <code>txid</code>, <code>chave_pix</code>, <code>valor</code> e <code>timestamp</code>; ou boleto com <code>nosso_numero</code>, <code>codigo_barras</code> de 44 d&iacute;gitos, <code>linha_digitavel</code> de 48, <code>banco</code>, <code>agencia</code>, <code>conta</code>, <code>valor_pago</code> e <code>data_pagamento</code></td></tr>
+<tr><td><strong>Fisco</strong> &mdash; apura&ccedil;&atilde;o assistida</td><td>Consultas de <code>/pagamentos</code> e <code>/recolhimentos</code> da CBS, liberadas no in&iacute;cio de <strong>nov/2026</strong>. S&atilde;o perspectivas opostas e <strong>n&atilde;o se somam</strong>: <em>pagamentos</em> &eacute; o que o contribuinte pagou como devedor, <em>recolhimentos</em> o que pagou como adquirente</td></tr>
+<tr><td><strong>Rastreamento</strong></td><td><code>rastreamento_rfb</code> no evento <code>rad.proof_received</code>: protocolo, status RDOC e data de confirma&ccedil;&atilde;o</td></tr>
+</tbody></table></div>
+<div class="callout ok"><div class="ct">O comprovante concilia; ele n&atilde;o extingue</div><p>Decis&atilde;o D-03 de 22/09/2026. O comprovante do ERP serve &agrave; <strong>concilia&ccedil;&atilde;o financeira</strong>. A extin&ccedil;&atilde;o do d&eacute;bito &mdash; e, no RAD, a apropria&ccedil;&atilde;o do cr&eacute;dito pelo comprador &mdash; s&oacute; vale quando o ente fiscal reconhece. Ver o fluxo em <a class="xref" href="prd-execucao-rad.html">Execu&ccedil;&atilde;o RAD</a>.</p></div>
+<div class="callout info"><div class="ct">As duas divergências que a concilia&ccedil;&atilde;o expõe</div><p>Comprovante sem reconhecimento do Fisco, e reconhecimento sem comprovante. As duas viram ocorr&ecirc;ncia &mdash; a segunda &eacute; o tipo <em>Sem Comprovante</em> do <a class="xref" href="prd-inconsistencias.html#s03">cat&aacute;logo</a>.</p></div>
+</div>
+
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+                <div class="ver-row"><div class="ver-num">v2.11</div><div class="ver-desc"><strong>22/09/2026</strong> &mdash; Comprovante e concilia&ccedil;&atilde;o por integra&ccedil;&atilde;o. O comprovante deixa de ser anexo manual e passa por <code>POST /v1/rad/proofs</code>, em PIX ou boleto; a confirma&ccedil;&atilde;o do Fisco vem das consultas de pagamentos e recolhimentos, que n&atilde;o se somam; e o <code>rastreamento_rfb</code> entra na trilha. Registra a decis&atilde;o D-03: o comprovante concilia, quem extingue &eacute; o ente fiscal.</div></div>
+<div class="ver-row"><div class="ver-num">v2.10</div><div class="ver-desc"><strong>22/09/2026</strong> — <strong>Fronteiras de integração.</strong> Fronteiras de integração: pagamento do Fisco pelas APIs da Reforma, comprovante do cliente pela API pública.</div></div>
 <div class="ver-row"><div class="ver-num">v2.9</div><div class="ver-desc"><strong>21/09/2026</strong> — <strong>Entrega ao ERP no histórico.</strong> A coluna e o filtro de entrega saem da listagem; envio e confirmação viram eventos do registro fiscal, e a falha vira ocorrência.</div></div>
                 <div class="ver-row">
       <div class="ver-num">v2.8</div>
