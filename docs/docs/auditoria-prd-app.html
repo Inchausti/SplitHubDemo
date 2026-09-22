@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Auditoria PRD &times; Protótipo · SplitHub v1.0</title>
+<title>Auditoria PRD &times; Protótipo · SplitHub v1.1</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -154,12 +154,12 @@ img, svg { max-width: 100%; height: auto; }
 <h1>Auditoria PRD &times; prot&oacute;tipo, campo a campo</h1>
 <p class="subtitle">Todo artefato de tela e toda regra de backend do prot&oacute;tipo confrontados com o PRD do seu m&oacute;dulo. O que est&aacute; documentado, o que falta, o que &eacute; andaime do prot&oacute;tipo e n&atilde;o deve virar funcionalidade, e o que &eacute; regra da Reforma e precisa de contexto legal.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.1</span></div>
 <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Auditoria</span></div>
 <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">22/09/2026</span></div>
 <div class="meta-pill"><span class="meta-label">Artefatos</span>&nbsp;<span class="meta-val">593</span></div>
 <div class="meta-pill"><span class="meta-label">Cobertura</span>&nbsp;<span class="meta-val">84,7%</span></div>
-<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip info">v1.0</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip info">v1.1</span></div>
 </div>
 
 <div class="toc"><div class="toc-title">&Iacute;ndice</div><ul class="toc-list">
@@ -172,7 +172,11 @@ img, svg { max-width: 100%; height: auto; }
 <li><a href="#s07"><span class="toc-num">07</span> Os marcadores no hub</a></li>
 <li><a href="#s08"><span class="toc-num">08</span> O que fazer, em ordem</a></li>
 <li><a href="#s09"><span class="toc-num">09</span> Limita&ccedil;&otilde;es do m&eacute;todo</a></li>
-<li><a href="#s10"><span class="toc-num">10</span> Hist&oacute;rico de vers&otilde;es</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Contexto das integra&ccedil;&otilde;es</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Prot&oacute;tipo &times; API p&uacute;blica</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Valida&ccedil;&atilde;o inversa</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> Plano de 100% de compliance</a></li>
+<li><a href="#s15"><span class="toc-num">15</span> Hist&oacute;rico de vers&otilde;es</a></li>
 </ul></div>
 
 <!-- 01 -->
@@ -375,8 +379,153 @@ img, svg { max-width: 100%; height: auto; }
 </div>
 
 <!-- 10 -->
-<div class="section" id="s10">
-<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+<!-- 11 -->
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Contexto das integra&ccedil;&otilde;es</span></div>
+<p class="sec-sub">O SplitHub tem <strong>duas fronteiras de integra&ccedil;&atilde;o, e s&oacute; duas</strong>. Elas t&ecirc;m documenta&ccedil;&otilde;es distintas, naturezas opostas e est&atilde;o em lados contr&aacute;rios do ciclo de vida do cr&eacute;dito. Tudo o que o produto faz entre uma e outra &eacute; trabalho pr&oacute;prio.</p>
+
+<div class="table-wrap"><table><thead><tr><th>Fronteira</th><th>Com quem</th><th>Quem chama quem</th><th>Documenta&ccedil;&atilde;o</th></tr></thead><tbody>
+<tr><td><strong>A &mdash; ERP do cliente</strong></td><td>O sistema de gest&atilde;o da empresa</td><td><strong>O ERP chama o SplitHub</strong> para entregar documento, e <strong>o SplitHub chama o ERP</strong> de volta, por webhook, a cada mudan&ccedil;a no ciclo do cr&eacute;dito</td><td><a class="ext" href="https://split-hubhq.github.io/docs/ingestao-dfs.html" target="_blank" rel="noopener">API p&uacute;blica do SplitHub &nearr;</a></td></tr>
+<tr><td><strong>B &mdash; Fisco</strong></td><td>Receita Federal na CBS &middot; Comit&ecirc; Gestor no IBS</td><td><strong>O SplitHub chama o Fisco</strong> e espera o arquivo por webhook. O Fisco nunca inicia</td><td><a class="ext" href="integracao-apis-reforma.html#api-a">Refer&ecirc;ncia de APIs da Reforma</a></td></tr>
+</tbody></table></div>
+
+<h3 id="ciclo">O ciclo do cr&eacute;dito atravessa as duas</h3>
+<p>Cada etapa do ciclo pertence a uma fronteira, e o produto vive no meio. &Eacute; esta cadeia que precisa estar refletida em cada PRD.</p>
+<div class="code-block"><code><span class="c">[A] ERP           [SplitHub]                         [B] Fisco</span>
+ POST documento  <span class="k">-&gt;</span> registro fiscal criado
+                    concilia com a apuracao assistida <span class="k">&lt;-</span> GET /creditos
+                    credito apropriavel (art. 47)
+                    <span class="k">&lt;-</span> webhook credito.*                        <span class="c">// volta ao ERP</span>
+                    RAD: emite DARF, recebe comprovante
+ POST comprovante <span class="k">-&gt;</span> pagamento conciliado    <span class="k">&lt;-</span> GET /pagamentos, /recolhimentos
+                    credito apropriado
+                    usa na ordem do art. 53
+                    <span class="k">&lt;-</span> webhook credito.utilizado</code></div>
+
+<div class="table-wrap"><table><thead><tr><th>Fun&ccedil;&atilde;o do produto</th><th>Depende de</th><th>PRD que descreve</th></tr></thead><tbody>
+<tr><td><strong>Concilia&ccedil;&atilde;o</strong> do DF com a apura&ccedil;&atilde;o assistida</td><td>Fronteira B &mdash; <code>GET /creditos</code> e <code>/debitos</code> da CBS. No IBS <strong>n&atilde;o h&aacute; API</strong></td><td><a class="xref" href="prd-conciliacao.html">Concilia&ccedil;&atilde;o</a></td></tr>
+<tr><td><strong>Pagamento</strong> e sua concilia&ccedil;&atilde;o</td><td>Fronteira B para o que o Fisco registrou; fronteira A para o comprovante que o ERP envia</td><td><a class="xref" href="prd-pagamentos.html">Pagamentos</a></td></tr>
+<tr><td><strong>Emiss&atilde;o do DARF de RAD</strong></td><td>Fronteira B &mdash; emiss&atilde;o de DARF prevista para o <strong>fim de nov/2026</strong>; at&eacute; l&aacute;, fora da API</td><td><a class="xref" href="prd-execucao-rad.html">Execu&ccedil;&atilde;o RAD</a></td></tr>
+<tr><td><strong>Eventos do ciclo do cr&eacute;dito</strong></td><td>Fronteira A &mdash; webhook do SplitHub para o ERP a cada mudan&ccedil;a de status</td><td><a class="xref" href="prd-integracoes.html">Integra&ccedil;&otilde;es</a></td></tr>
+<tr><td><strong>Ingest&atilde;o do documento</strong></td><td>Fronteira A &mdash; <code>POST /v1/documentos-fiscais</code></td><td><a class="xref" href="prd-ingestao.html">Ingest&atilde;o</a></td></tr>
+<tr><td><strong>Apura&ccedil;&atilde;o na ordem do art. 53</strong></td><td>Nenhuma &mdash; <strong>&eacute; c&aacute;lculo pr&oacute;prio</strong>, conferido contra a apura&ccedil;&atilde;o assistida</td><td><a class="xref" href="prd-apuracao.html">Apura&ccedil;&atilde;o</a></td></tr>
+</tbody></table></div>
+
+<div class="callout warn"><div class="ct">A assimetria que define o produto</div><p>Na fronteira A o SplitHub <strong>define o contrato</strong> &mdash; a API p&uacute;blica &eacute; nossa. Na fronteira B o SplitHub <strong>obedece</strong> a um contrato que a Receita publica e muda, e que <strong>do lado do IBS ainda nem existe</strong>. Todo requisito que dependa de B precisa nascer com a pergunta &quot;e no IBS, de onde vem?&quot; &mdash; hoje a resposta &eacute; &quot;de lugar nenhum&quot;.</p></div>
+
+<div class="callout red"><div class="ct">Achado: nenhum PRD linka a fronteira B</div><p>A <a class="xref" href="integracao-apis-reforma.html">Refer&ecirc;ncia de APIs da Reforma</a> existe desde 16/09/2026 e <strong>nenhum dos 17 PRDs a referencia</strong>. Da fronteira A, s&oacute; o PRD de Integra&ccedil;&otilde;es cita a documenta&ccedil;&atilde;o p&uacute;blica. O hub <strong>n&atilde;o menciona a API p&uacute;blica em nenhum lugar</strong>. Corrigido nesta rodada.</p></div>
+</div>
+
+<!-- 12 -->
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Prot&oacute;tipo &times; API p&uacute;blica</span></div>
+<p class="sec-sub">O cat&aacute;logo completo da API p&uacute;blica, conferido contra o prot&oacute;tipo e contra o hub. <strong>19 endpoints em 7 p&aacute;ginas.</strong></p>
+
+<h3 id="cat">Cat&aacute;logo de endpoints</h3>
+<div class="table-wrap"><table><thead><tr><th>P&aacute;gina</th><th>Endpoints</th><th>M&oacute;dulo do prot&oacute;tipo</th><th>No hub?</th></tr></thead><tbody>
+<tr><td>autenticacao</td><td><code>POST /v1/auth/login</code></td><td>&mdash; (o prot&oacute;tipo n&atilde;o tem autentica&ccedil;&atilde;o)</td><td class="num">n&atilde;o</td></tr>
+<tr><td>fornecedores</td><td><code>GET</code> &middot; <code>POST /v1/fornecedores</code><br><code>GET</code> &middot; <code>PATCH</code> &middot; <code>DELETE /v1/fornecedores/{id}</code></td><td>Fornecedores</td><td class="num">n&atilde;o</td></tr>
+<tr><td>contratos</td><td><code>GET</code> &middot; <code>POST /v1/contratos</code><br><code>GET</code> &middot; <code>PATCH</code> &middot; <code>DELETE /v1/contratos/{id}</code></td><td>Contratos</td><td class="num">n&atilde;o</td></tr>
+<tr><td>ingestao-dfs</td><td><code>POST</code> &middot; <code>GET /v1/documentos-fiscais</code><br><code>GET</code> &middot; <code>PATCH</code> &middot; <code>DELETE /v1/documentos-fiscais/{id}</code><br><code>POST /v1/documentos-fiscais/batch</code><br><code>GET /v1/documentos-fiscais/batch/{batch_id}</code></td><td>Ingest&atilde;o de DFs</td><td class="num">n&atilde;o</td></tr>
+<tr><td>rad</td><td><code>POST /v1/rad/proofs</code></td><td>Execu&ccedil;&atilde;o RAD</td><td class="num">n&atilde;o</td></tr>
+<tr><td>automacoes</td><td><code>GET</code> &middot; <code>POST /v1/automacoes</code></td><td>Automa&ccedil;&otilde;es</td><td class="num">n&atilde;o</td></tr>
+<tr><td>garantia-credito</td><td>nenhum &mdash; s&oacute; webhooks</td><td>Cr&eacute;dito e D&eacute;bito</td><td class="num">n&atilde;o</td></tr>
+</tbody></table></div>
+
+<h3 id="div">As diverg&ecirc;ncias</h3>
+<p>Aqui est&aacute; o que a concilia&ccedil;&atilde;o encontrou. N&atilde;o s&atilde;o detalhes de reda&ccedil;&atilde;o: s&atilde;o contratos que n&atilde;o fecham.</p>
+
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Diverg&ecirc;ncia</th><th>API p&uacute;blica</th><th>Prot&oacute;tipo</th><th>Gravidade</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td>Eventos do ciclo do cr&eacute;dito</td><td><code>credito.status_alterado</code><br><code>debito.status_alterado</code><br>&mdash; dois eventos gen&eacute;ricos</td><td><code>credito.registrado</code><br><code>credito.apropriado</code><br><code>credito.utilizado</code><br><code>credito.glosado</code><br>&mdash; quatro eventos granulares, <strong>nenhum de d&eacute;bito</strong></td><td><span class="mk lac">alta</span></td></tr>
+<tr><td><strong>2</strong></td><td>Nomes dos estados</td><td><code>not_appropriated</code> &middot; <code>appropriated</code> &middot; <code>utilized</code><br><code>not_settled</code> &middot; <code>settled</code> &mdash; em ingl&ecirc;s</td><td><code>nao_apropriado</code> &middot; <code>apropriado</code> &middot; <code>utilizado</code> &middot; <code>glosado</code><br><code>nao_extinto</code> &middot; <code>parcial</code> &middot; <code>extinto</code> &mdash; em portugu&ecirc;s</td><td><span class="mk lac">alta</span></td></tr>
+<tr><td><strong>3</strong></td><td>Estado <em>glosado</em></td><td><strong>N&atilde;o existe.</strong> O ciclo p&uacute;blico tem tr&ecirc;s estados</td><td>Existe, com causa tipificada, ficha e contencioso</td><td><span class="mk lac">alta</span></td></tr>
+<tr><td><strong>4</strong></td><td>Extin&ccedil;&atilde;o parcial do d&eacute;bito</td><td>Dois estados: liquidado ou n&atilde;o</td><td>Tr&ecirc;s estados de ciclo mais quatro flags, desde a v1.3 do PRD de D&eacute;bito</td><td><span class="mk lac">alta</span></td></tr>
+<tr><td><strong>5</strong></td><td>Eventos de RAD</td><td><code>rad.darf_recebida</code><br><code>rad.darf_recebida_lote</code><br><code>rad.proof_received</code></td><td><strong>Nenhum dos tr&ecirc;s existe.</strong> O m&oacute;dulo emite DARF sem avisar o ERP</td><td><span class="mk lac">alta</span></td></tr>
+<tr><td><strong>6</strong></td><td>Endpoint do comprovante de RAD</td><td><code>POST /v1/rad/proofs</code> na vers&atilde;o publicada</td><td>&mdash;</td><td><span class="mk lac">m&eacute;dia</span></td></tr>
+<tr><td><strong>7</strong></td><td>Idioma dos contratos</td><td>Caminhos e estados em ingl&ecirc;s; campos do comprovante em portugu&ecirc;s (<code>tipo_pagamento</code>, <code>pix.chave_pix</code>, <code>boleto.nosso_numero</code>)</td><td>Tudo em portugu&ecirc;s</td><td><span class="mk lac">m&eacute;dia</span></td></tr>
+<tr><td><strong>8</strong></td><td>Lote de documentos</td><td><code>POST /v1/documentos-fiscais/batch</code>, at&eacute; 500 por requisi&ccedil;&atilde;o, com JSON ou CSV</td><td>Ingest&atilde;o unit&aacute;ria; n&atilde;o h&aacute; no&ccedil;&atilde;o de lote nem de <code>batch_id</code></td><td><span class="mk lac">m&eacute;dia</span></td></tr>
+<tr><td><strong>9</strong></td><td>Tipos de documento</td><td>14 tipos, incluindo <strong>NF-e ABI (77)</strong>, <strong>GTV-e (64)</strong>, <strong>CT-e OS (67)</strong> e <strong>NFS-e Via</strong></td><td>13 tipos, e dois com <strong>modelo errado</strong> &mdash; NFAg como <code>01</code> e NFG&aacute;s como <code>59</code>, quando s&atilde;o <code>75</code> e <code>76</code></td><td><span class="mk lac">m&eacute;dia</span></td></tr>
+<tr><td><strong>10</strong></td><td>Autentica&ccedil;&atilde;o</td><td>Bearer token por <code>POST /v1/auth/login</code></td><td>N&atilde;o existe &mdash; iniciativa de senha pausada desde 11/09/2026</td><td><span class="mk and">andaime</span></td></tr>
+</tbody></table></div>
+
+<div class="callout red"><div class="ct">A diverg&ecirc;ncia n&ordm; 1 &eacute; a que mais custa</div><p>A API p&uacute;blica promete ao cliente <strong>dois</strong> eventos com um campo de status; o prot&oacute;tipo emite <strong>quatro</strong> eventos nomeados. Quem integrar pelo contrato publicado n&atilde;o receber&aacute; <code>credito.glosado</code>, que &eacute; justamente o evento que o financeiro do cliente mais precisa &mdash; o que avisa que um cr&eacute;dito esperado n&atilde;o vir&aacute;. E o contr&aacute;rio tamb&eacute;m vale: o prot&oacute;tipo n&atilde;o emite nada quando um <strong>d&eacute;bito</strong> muda de estado, e o contrato p&uacute;blico promete isso.</p></div>
+
+<div class="callout warn"><div class="ct">Decis&atilde;o pendente, n&atilde;o erro</div><p>Nenhum dos dois lados est&aacute; &quot;errado&quot;: o contrato p&uacute;blico &eacute; de agosto de 2026 e o prot&oacute;tipo evoluiu depois, com glosa, ciclo do d&eacute;bito e motor do art. 53. O que falta &eacute; a <strong>decis&atilde;o de qual dos dois manda</strong>, e ela precisa sair antes de qualquer cliente integrar. A recomenda&ccedil;&atilde;o t&eacute;cnica &eacute; que o contrato p&uacute;blico se alinhe ao produto, n&atilde;o o contr&aacute;rio &mdash; eventos granulares s&atilde;o mais &uacute;teis ao ERP do que um evento gen&eacute;rico com campo de status, e o estado <em>glosado</em> n&atilde;o tem como ser omitido.</p></div>
+
+<div class="callout info"><div class="ct">Aviso de fonte</div><p>A c&oacute;pia local do reposit&oacute;rio da documenta&ccedil;&atilde;o p&uacute;blica (<code>repo-clone/</code>) est&aacute; <strong>defasada em rela&ccedil;&atilde;o ao site publicado</strong>: n&atilde;o tem os dois endpoints de lote e traz <code>/v1/rad/comprovantes</code> onde o site publica <code>/v1/rad/proofs</code>. Esta auditoria usou <strong>o site publicado</strong> como fonte. A c&oacute;pia local tem altera&ccedil;&otilde;es n&atilde;o commitadas e n&atilde;o foi tocada.</p></div>
+</div>
+
+<!-- 13 -->
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Valida&ccedil;&atilde;o inversa</span></div>
+<p class="sec-sub">O caminho contr&aacute;rio: <strong>o que o PRD declara e n&atilde;o se encontra no app</strong>. 200 funcionalidades e 502 campos citados em <code>&lt;code&gt;</code> procurados no c&oacute;digo-fonte do prot&oacute;tipo.</p>
+
+<div class="table-wrap"><table><thead><tr><th>Dire&ccedil;&atilde;o</th><th>Universo</th><th>N&atilde;o encontrado</th><th>Taxa</th></tr></thead><tbody>
+<tr><td>App &rarr; PRD (se&ccedil;&otilde;es 02 e 03)</td><td>593 artefatos de tela</td><td class="num">91</td><td><strong>15,3%</strong></td></tr>
+<tr><td><strong>PRD &rarr; app</strong></td><td>200 funcionalidades</td><td class="num">4</td><td><strong>2,0%</strong></td></tr>
+<tr><td><strong>PRD &rarr; app</strong></td><td>502 campos citados</td><td class="num">23</td><td><strong>4,6%</strong></td></tr>
+</tbody></table></div>
+<div class="callout ok"><div class="ct">O sentido inverso est&aacute; muito melhor</div><p>Os PRDs <strong>quase n&atilde;o prometem o que n&atilde;o existe</strong>. A d&iacute;vida da documenta&ccedil;&atilde;o &eacute; de omiss&atilde;o, n&atilde;o de fic&ccedil;&atilde;o &mdash; o que &eacute; muito melhor: falta escrever, n&atilde;o falta desmentir.</p></div>
+
+<h3 id="inv-func">Funcionalidades declaradas e n&atilde;o encontradas</h3>
+<div class="table-wrap"><table><thead><tr><th>PRD</th><th>ID</th><th>Funcionalidade</th><th>Veredito</th></tr></thead><tbody>
+<tr><td>Concilia&ccedil;&atilde;o v3.3</td><td><code>F-05</code></td><td>Apresentar o painel unificado</td><td><strong>Lacuna real.</strong> A express&atilde;o n&atilde;o existe no c&oacute;digo. A tela tem <em>Vis&atilde;o geral</em> e <em>Lista</em>; ou o painel n&atilde;o foi constru&iacute;do, ou foi constru&iacute;do com outro nome &mdash; e o PRD precisa dizer qual</td></tr>
+<tr><td>Pagamentos v2.9</td><td><code>F-10</code></td><td>Navega&ccedil;&atilde;o cruzada e integra&ccedil;&atilde;o de views</td><td><strong>Provavelmente cumprida por outro nome.</strong> As rotas diretas de <code>rotas.js</code> fazem isso; o PRD descreve o comportamento sem nomear o mecanismo</td></tr>
+<tr><td>Execu&ccedil;&atilde;o RAD v1.2</td><td><code>F-15</code></td><td>Separar reten&ccedil;&otilde;es por flag</td><td><strong>A conferir.</strong> O d&eacute;bito tem a flag <code>retido</code> desde a v1.3, mas a separa&ccedil;&atilde;o no m&oacute;dulo de RAD n&atilde;o aparece</td></tr>
+<tr><td>Cr&eacute;dito v2.9</td><td><code>F-06</code></td><td>Tooltips fiscais contextuais</td><td><span class="mk ok">falso positivo</span> &mdash; o app tem 33 tooltips; o que n&atilde;o casou foi a express&atilde;o &quot;fiscais contextuais&quot;</td></tr>
+</tbody></table></div>
+
+<h3 id="inv-campo">Campos declarados e n&atilde;o encontrados</h3>
+<div class="table-wrap"><table><thead><tr><th>PRD</th><th>Campos</th><th>Leitura</th></tr></thead><tbody>
+<tr><td><strong>Classifica&ccedil;&atilde;o de FG</strong></td><td><code>indFG</code> &middot; <code>fgStatus</code> &middot; <code>fgFonte</code> &middot; <code>fgRegraAplicada</code> &middot; <code>com_fato_gerador</code> &middot; <code>sem_fato_gerador</code> &middot; <code>revisao_manual</code> &middot; <code>override_cnpj</code> &middot; <code>venda_mercadoria</code> &middot; <code>transferencia_filial</code> &middot; <code>tpNF</code> &middot; <code>finNFe</code> &middot; <code>idDest</code> &middot; <code>vIBS</code> &middot; <code>vCBS</code></td><td><strong>15 dos 23.</strong> Coerente: &eacute; o PRD &oacute;rf&atilde;o de um m&oacute;dulo que <strong>nunca foi constru&iacute;do</strong> e n&atilde;o tem card no hub. N&atilde;o &eacute; d&iacute;vida &mdash; &eacute; escopo n&atilde;o iniciado</td></tr>
+<tr><td>Pagamentos v2.9</td><td><code>bloqueioRAD</code> &middot; <code>escrituradaDuplicata</code> &middot; <code>titularDuplicata</code></td><td><strong>Lacuna real.</strong> Tr&ecirc;s campos da duplicata escritural declarados e ausentes do c&oacute;digo</td></tr>
+<tr><td>Concilia&ccedil;&atilde;o v3.3</td><td><code>capur_cbs_cst</code> &middot; <code>capur_ibs_cst</code></td><td><strong>Lacuna real.</strong> CST por tributo na concilia&ccedil;&atilde;o &mdash; e <code>CST</code> &eacute; justamente o campo que decide se a linha gera cr&eacute;dito</td></tr>
+<tr><td>Contratos v2.7</td><td><code>encerraAcessoEm</code></td><td>Encerramento program&aacute;vel de acesso &mdash; conversa com a lacuna de Usu&aacute;rios</td></tr>
+<tr><td>Portal do Fornecedor v1.0</td><td><code>acessoFornecedor</code></td><td>Idem &mdash; o modelo de acesso do fornecedor est&aacute; declarado e n&atilde;o implementado</td></tr>
+<tr><td>Cr&eacute;dito v2.9</td><td><code>AAAAMM</code></td><td><span class="mk ok">falso positivo</span> &mdash; &eacute; nota&ccedil;&atilde;o de formato, n&atilde;o campo</td></tr>
+</tbody></table></div>
+
+<div class="callout warn"><div class="ct">Um padr&atilde;o nos achados inversos</div><p>Tirando o PRD &oacute;rf&atilde;o, quase tudo o que sobra converge para <strong>dois assuntos</strong>: o <strong>acesso</strong> (<code>encerraAcessoEm</code>, <code>acessoFornecedor</code>) e a <strong>duplicata escritural</strong>. S&atilde;o os mesmos dois pontos que a auditoria direta apontou como lacuna &mdash; o que refor&ccedil;a a prioriza&ccedil;&atilde;o da se&ccedil;&atilde;o <a class="xref" href="#s08">08</a>.</p></div>
+
+<div class="callout info"><div class="ct">Por que o m&eacute;todo inverso &eacute; mais fr&aacute;gil</div><p>Ele procura no <strong>c&oacute;digo-fonte</strong>, n&atilde;o na tela renderizada. Um campo pode existir com outro nome interno, e um comportamento pode ser cumprido sem que a express&atilde;o do PRD apare&ccedil;a em lugar nenhum &mdash; foi o caso de dois dos quatro achados. Por isso cada item acima traz veredito pr&oacute;prio, e n&atilde;o s&oacute; o resultado do script.</p></div>
+</div>
+
+<!-- 14 -->
+<div class="section" id="s14">
+<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Plano de 100% de compliance</span></div>
+<p class="sec-sub">Como sair de 84,7% e, mais importante, <strong>como n&atilde;o voltar a cair</strong>. Duas partes: zerar a d&iacute;vida, e mudar o processo para a d&iacute;vida n&atilde;o renascer.</p>
+
+<h3 id="p1">Parte 1 &mdash; Zerar a d&iacute;vida</h3>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Entrega</th><th>Fecha</th><th>Depende de</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td><strong>PRD de Inconsist&ecirc;ncias</strong> v1.0, do zero</td><td>44 artefatos &middot; as &uacute;nicas regras da Reforma sem documento</td><td>&mdash;</td></tr>
+<tr><td><strong>2</strong></td><td><strong>Decis&atilde;o sobre os contratos divergentes</strong> &mdash; eventos, estados e idioma</td><td>Diverg&ecirc;ncias 1 a 7 da se&ccedil;&atilde;o <a class="xref" href="#s12">12</a></td><td>Decis&atilde;o do produto, n&atilde;o de engenharia</td></tr>
+<tr><td><strong>3</strong></td><td><strong>Se&ccedil;&atilde;o de Usu&aacute;rios e acessos</strong> no PRD de Organiza&ccedil;&atilde;o</td><td>12 artefatos &middot; <code>encerraAcessoEm</code> &middot; <code>acessoFornecedor</code></td><td>&mdash;</td></tr>
+<tr><td><strong>4</strong></td><td><strong>Portal do Fornecedor</strong> v1.1 &mdash; a parte em que o fornecedor escreve</td><td>11 artefatos</td><td>Item 3 (perfis)</td></tr>
+<tr><td><strong>5</strong></td><td><strong>Apura&ccedil;&atilde;o</strong> v1.1 &mdash; KPIs da aba de cr&eacute;ditos e regra de <em>reabrir per&iacute;odo</em></td><td>11 artefatos</td><td>&mdash;</td></tr>
+<tr><td><strong>6</strong></td><td><strong>Registro transversal do arcabou&ccedil;o de UI</strong></td><td>Ru&iacute;do de &quot;Aplicar&quot; e &quot;Limpar filtros&quot; em 11 telas</td><td>&mdash;</td></tr>
+<tr><td><strong>7</strong></td><td>Lacunas menores &mdash; In&iacute;cio, Analytics, Concilia&ccedil;&atilde;o</td><td>6 artefatos</td><td>&mdash;</td></tr>
+<tr><td><strong>8</strong></td><td>Achados inversos: duplicata escritural e CST na concilia&ccedil;&atilde;o</td><td>5 campos</td><td>Decis&atilde;o: implementar ou remover do PRD</td></tr>
+<tr><td><strong>9</strong></td><td>Destino do <strong>PRD de Classifica&ccedil;&atilde;o de FG</strong>, &oacute;rf&atilde;o e sem card</td><td>15 campos &middot; 1 PRD fora do hub</td><td>Decis&atilde;o de escopo</td></tr>
+</tbody></table></div>
+
+<h3 id="p2">Parte 2 &mdash; Impedir a reincid&ecirc;ncia</h3>
+<p>A d&iacute;vida n&atilde;o apareceu por desleixo: apareceu porque <strong>nada obrigava o PRD a acompanhar a tela</strong>. Quatro mudan&ccedil;as de processo, da mais barata para a mais cara.</p>
+<div class="table-wrap"><table><thead><tr><th>Medida</th><th>Como funciona</th><th>Custo</th></tr></thead><tbody>
+<tr><td><strong>A. Auditoria reexecut&aacute;vel</strong></td><td>Os tr&ecirc;s scripts desta auditoria viram uma ferramenta em <code>tools/</code>, com sa&iacute;da em n&uacute;mero de cobertura por m&oacute;dulo. Rodar antes de cada publica&ccedil;&atilde;o</td><td>Baixo &mdash; os scripts j&aacute; existem</td></tr>
+<tr><td><strong>B. Cobertura vis&iacute;vel no hub</strong></td><td>Os marcadores <em>lacuna</em>, <em>andaime</em> e <em>regra RTC</em> j&aacute; est&atilde;o nos cards. A cada rodada da ferramenta, os n&uacute;meros s&atilde;o reescritos</td><td>Baixo &mdash; j&aacute; implantado</td></tr>
+<tr><td><strong>C. Autodeclara&ccedil;&atilde;o em todo PRD</strong></td><td>Hoje <strong>s&oacute; o PRD de Ressarcimento</strong> marca cada funcionalidade como implementada, parcial ou n&atilde;o implementada. Estender a todos torna a diverg&ecirc;ncia vis&iacute;vel sem script</td><td>M&eacute;dio &mdash; 185 funcionalidades a classificar</td></tr>
+<tr><td><strong>D. Regra de fechamento</strong></td><td>Nenhuma altera&ccedil;&atilde;o de m&oacute;dulo fecha sem que o PRD do m&oacute;dulo suba de vers&atilde;o no mesmo dia, com entrada no changelog do hub</td><td>Baixo &mdash; j&aacute; &eacute; a pr&aacute;tica; falta ser regra</td></tr>
+<tr><td><strong>E. Contrato p&uacute;blico no ciclo</strong></td><td>Mudan&ccedil;a em evento, estado ou endpoint entra em <strong>tr&ecirc;s lugares de uma vez</strong>: app, PRD do m&oacute;dulo e documenta&ccedil;&atilde;o p&uacute;blica. &Eacute; a aus&ecirc;ncia desta regra que produziu as dez diverg&ecirc;ncias da se&ccedil;&atilde;o 12</td><td>M&eacute;dio &mdash; envolve outro reposit&oacute;rio</td></tr>
+</tbody></table></div>
+
+<div class="callout ok"><div class="ct">A defini&ccedil;&atilde;o de 100%</div><p>Compliance aqui n&atilde;o &eacute; &quot;todo artefato citado&quot;. &Eacute; <strong>tr&ecirc;s condi&ccedil;&otilde;es simult&acirc;neas</strong>: todo artefato de tela e regra de backend descrito no PRD do seu m&oacute;dulo; toda funcionalidade do PRD com situa&ccedil;&atilde;o declarada e verdadeira; e todo evento, estado e endpoint id&ecirc;ntico nos tr&ecirc;s lugares &mdash; app, PRD e contrato p&uacute;blico. Os itens 1 a 9 fecham a primeira; a medida C fecha a segunda; a medida E fecha a terceira.</p></div>
+
+<div class="callout warn"><div class="ct">O que impede 100% hoje, e n&atilde;o depende de escrever PRD</div><p>Duas coisas. O <strong>PRD de Cr&eacute;dito est&aacute; bloqueado</strong> por altera&ccedil;&otilde;es n&atilde;o commitadas de outra sess&atilde;o &mdash; os 100% dele s&atilde;o provis&oacute;rios. E a <strong>decis&atilde;o sobre os contratos divergentes</strong> (item 2) &eacute; de produto: enquanto n&atilde;o houver, escrever o PRD de Integra&ccedil;&otilde;es em qualquer dos dois sentidos apenas documenta a diverg&ecirc;ncia com mais detalhe.</p></div>
+</div>
+
+<div class="section" id="s15">
+<div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+<div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>22/09/2026</strong> &mdash; <strong>Integra&ccedil;&otilde;es, concilia&ccedil;&atilde;o com a API p&uacute;blica, valida&ccedil;&atilde;o inversa e plano de compliance.</strong> Se&ccedil;&atilde;o 11 com as duas fronteiras de integra&ccedil;&atilde;o &mdash; ERP do cliente pela API p&uacute;blica, Fisco pelas APIs da Reforma &mdash; e o ciclo do cr&eacute;dito atravessando as duas, com concilia&ccedil;&atilde;o, pagamento, emiss&atilde;o de RAD e eventos ligados ao PRD de cada m&oacute;dulo. Se&ccedil;&atilde;o 12 com o cat&aacute;logo dos 19 endpoints p&uacute;blicos e <strong>dez diverg&ecirc;ncias</strong> entre contrato publicado e prot&oacute;tipo, a come&ccedil;ar pelos eventos do ciclo do cr&eacute;dito. Se&ccedil;&atilde;o 13 com a valida&ccedil;&atilde;o inversa: 4 funcionalidades e 23 campos declarados e n&atilde;o encontrados no app, contra 91 artefatos no sentido direto. Se&ccedil;&atilde;o 14 com o plano de 100% de compliance, em nove entregas e cinco medidas de processo.</div></div>
 <div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>22/09/2026</strong> &mdash; Primeira auditoria. 593 artefatos do prot&oacute;tipo confrontados com 200 funcionalidades, 481 requisitos e 179 regras dos 17 PRDs vivos; cobertura de 84,7%. Lacunas campo a campo em Inconsist&ecirc;ncias (sem PRD), Organiza&ccedil;&atilde;o e Usu&aacute;rios, Portal do Fornecedor, Apura&ccedil;&atilde;o, In&iacute;cio, Analytics e Concilia&ccedil;&atilde;o. Cat&aacute;logo dos andaimes de dados e de interface, cat&aacute;logo das regras da Reforma com base legal, e os tr&ecirc;s marcadores levados aos cards do hub.</div></div>
 </div>
 
