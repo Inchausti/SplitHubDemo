@@ -235,7 +235,7 @@ ul.uc-alt li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
   <p class="subtitle">Núcleo do SplitHub: rastreia o ciclo de vida completo do crédito de IBS e CBS desde a origem no fato gerador até a apropriação, utilização, glosa ou prescrição. Monitora o gap de aproveitamento, o envelhecimento dos créditos pendentes e a exposição à perda por decurso de prazo (art. 48, LC 214/2025).</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">3.0</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.9</span></div>
     <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Fiscal → Crédito</span></div>
     <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-creditos</span></div>
@@ -265,8 +265,7 @@ ul.uc-alt li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
       <li><a href="#s12"><span class="toc-num">13</span> Integrações e dependências</a></li>
       <li><a href="#sdef"><span class="toc-num">14</span> Defeitos e divergências</a></li>
       <li><a href="#s13"><span class="toc-num">15</span> Glossário</a></li>
-      <li><a href="#s16"><span class="toc-num">16</span> De onde vem o dado e o que sai para o ERP</a></li>
-<li><a href="#s17"><span class="toc-num">17</span> Hist&oacute;rico de vers&otilde;es</a></li>
+      <li><a href="#s14"><span class="toc-num">16</span> Histórico de versões</a></li>
     </ul>
   </div>
 
@@ -2420,33 +2419,9 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
   </div>
 
   <!-- ══ 14 ══ -->
-  <div class="section" id="s16">
-<div class="sec-hdr"><span class="sec-num">16</span><span class="sec-title">De onde vem o dado e o que sai para o ERP</span></div>
-
-<p class="sec-sub">O cr&eacute;dito n&atilde;o nasce aqui: nasce de um documento que chega por integra&ccedil;&atilde;o e s&oacute; se apropria quando um &oacute;rg&atilde;o reconhece. Esta se&ccedil;&atilde;o descreve as duas pontas.</p>
-<h3>De onde vem</h3>
-<div class="table-wrap"><table><thead><tr><th>Etapa</th><th>Origem em produ&ccedil;&atilde;o</th></tr></thead><tbody>
-<tr><td>O documento</td><td><code>POST /v1/documentos-fiscais</code>, unit&aacute;rio ou em lote, na fronteira com o ERP</td></tr>
-<tr><td>O valor do cr&eacute;dito</td><td>Grupo de IBS/CBS do pr&oacute;prio documento, por item, com <code>CST</code> e <code>cClassTrib</code></td></tr>
-<tr><td><strong>A apropria&ccedil;&atilde;o</strong></td><td><strong>A apura&ccedil;&atilde;o assistida.</strong> O cr&eacute;dito s&oacute; se apropria depois de extinto o d&eacute;bito do fornecedor (art. 47), e quem atesta a extin&ccedil;&atilde;o &eacute; o &oacute;rg&atilde;o &mdash; Receita Federal na CBS, Comit&ecirc; Gestor no IBS</td></tr>
-<tr><td>Apropria&ccedil;&atilde;o via RAD</td><td>Quando o pr&oacute;prio comprador recolhe, a apropria&ccedil;&atilde;o tamb&eacute;m vem do ente fiscal &mdash; decis&atilde;o D-03, detalhada no <a class="xref" href="prd-execucao-rad.html">PRD de Execu&ccedil;&atilde;o RAD</a>. O comprovante do ERP concilia, n&atilde;o apropria</td></tr>
-<tr><td>A glosa</td><td>Nega&ccedil;&atilde;o pelo &oacute;rg&atilde;o, com causa tipificada. Abre ocorr&ecirc;ncia em <a class="xref" href="prd-inconsistencias.html">Inconsist&ecirc;ncias</a> e ficha de contencioso aqui</td></tr>
-<tr><td>No IBS</td><td><strong>N&atilde;o h&aacute; API.</strong> O Comit&ecirc; Gestor n&atilde;o publicou documenta&ccedil;&atilde;o de integra&ccedil;&atilde;o; a confer&ecirc;ncia do IBS &eacute; manual at&eacute; que publique</td></tr>
-</tbody></table></div>
-<h3>O que sai para o ERP</h3>
-<div class="callout red"><div class="ct">&#9888; Decis&atilde;o D-01, em aberto</div><p>Os dois contratos abaixo <strong>convivem e s&atilde;o incompat&iacute;veis</strong>. Nenhum foi escolhido, em 22/09/2026. Por decis&atilde;o, ambos ficam descritos at&eacute; que o time opte; nada aqui deve ser lido como definitivo. Compara&ccedil;&atilde;o completa em <a href="auditoria-prd-app.html#d01" style="color:var(--blue);font-weight:700">Decis&atilde;o D-01</a>.</p></div>
-<div class="table-wrap"><table><thead><tr><th>&nbsp;</th><th>Contrato p&uacute;blico</th><th>Produto</th></tr></thead><tbody>
-<tr><td>Eventos</td><td><code>credito.status_alterado</code>, um s&oacute;, com <code>previous_status</code>, <code>current_status</code> e <code>change_reason</code> em <em>inbound_tax_payment</em> ou <em>outbound_debt_offset</em></td><td><code>credito.registrado</code> &middot; <code>credito.apropriado</code> &middot; <code>credito.utilizado</code> &middot; <code>credito.glosado</code></td></tr>
-<tr><td>Estados</td><td><code>not_appropriated</code> &middot; <code>appropriated</code> &middot; <code>utilized</code></td><td><code>nao_apropriado</code> &middot; <code>apropriado</code> &middot; <code>utilizado</code> &middot; <code>glosado</code></td></tr>
-<tr><td>Compensa&ccedil;&atilde;o</td><td><code>compensated_debt_dfe_key</code> quando o cr&eacute;dito &eacute; utilizado</td><td>V&iacute;nculo dos dois lados, calculado pelo motor do art. 53</td></tr>
-</tbody></table></div>
-<div class="callout red"><div class="ct">O estado <em>glosado</em> n&atilde;o existe no contrato p&uacute;blico</div><p>O ciclo publicado tem tr&ecirc;s estados. A glosa &mdash; que &eacute; o aviso de que um cr&eacute;dito esperado <strong>n&atilde;o vir&aacute;</strong> &mdash; n&atilde;o tem como ser comunicada por ele. &Eacute; a consequ&ecirc;ncia mais cara da D-01 ficar em aberto.</p></div>
-</div>
-
-<div class="section" id="s17">
-<div class="sec-hdr"><span class="sec-num">17</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
-                    <div class="ver-row"><div class="ver-num">v3.0</div><div class="ver-desc"><strong>22/09/2026</strong> &mdash; De onde vem o dado e o que sai para o ERP. A apropria&ccedil;&atilde;o do cr&eacute;dito passa a ser descrita como vinda da <strong>integra&ccedil;&atilde;o com os entes fiscais</strong>, inclusive no RAD (D-03), com o comprovante do ERP servindo &agrave; concilia&ccedil;&atilde;o. Os dois contratos de evento descritos lado a lado (D-01), com a nota de que o estado <em>glosado</em> n&atilde;o existe no contrato p&uacute;blico. Inclui os doze casos de uso publicados em 22/09/2026.</div></div>
-<div class="ver-row"><div class="ver-num">v2.9</div><div class="ver-desc"><strong>18/09/2026</strong> — <strong>Novo módulo de Ressarcimento.</strong> Ressarcimento no ciclo do crédito, composição só de entrada e histórico corrigido.</div></div>
+  <div class="section" id="s14">
+    <div class="sec-hdr"><span class="sec-num">16</span><span class="sec-title">Histórico de versões</span></div>
+                    <div class="ver-row"><div class="ver-num">v2.9</div><div class="ver-desc"><strong>18/09/2026</strong> — <strong>Novo módulo de Ressarcimento.</strong> Ressarcimento no ciclo do crédito, composição só de entrada e histórico corrigido.</div></div>
 <div class="ver-row"><div class="ver-num">v2.8</div><div class="ver-desc"><strong>18/09/2026</strong> — <strong>Novo módulo de Ressarcimento.</strong> Marcas de ressarcimento no RF, filtro e extinção só no pagamento.</div></div>
 <div class="ver-row">
       <div class="ver-num">v2.7.3</div>

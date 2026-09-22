@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRD — Execução RAD · SplitHub v1.4</title>
+<title>PRD — Execução RAD · SplitHub v1.3</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -194,7 +194,7 @@ img, svg { max-width: 100%; height: auto; }
   <p class="subtitle">Configura <strong>o que, quando e como</strong> a empresa gera as guias de IBS e CBS dos Registros Fiscais sob RAD — <strong>Recolhimento pelo Adquirente</strong> — e as entrega ao ERP sem ação assistida. O contrato define <em>quem</em> recolhe, por CNPJ fornecedor; a política define a régua de execução do lado do comprador.</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.4</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.3</span></div>
     <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Admin → Execução RAD</span></div>
     <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-exec-rad</span></div>
@@ -224,8 +224,7 @@ img, svg { max-width: 100%; height: auto; }
       <li><a href="#s11"><span class="toc-num">11</span> Requisitos não funcionais</a></li>
       <li><a href="#s12"><span class="toc-num">12</span> Integrações e dependências</a></li>
       <li><a href="#s13"><span class="toc-num">13</span> Glossário</a></li>
-      <li><a href="#s14"><span class="toc-num">14</span> O fluxo do RAD ponta a ponta</a></li>
-<li><a href="#s15"><span class="toc-num">15</span> Hist&oacute;rico de vers&otilde;es</a></li>
+      <li><a href="#s14"><span class="toc-num">14</span> Histórico de versões</a></li>
     </ul>
   </div>
 
@@ -1032,26 +1031,8 @@ POST {webhookUrl}
 
   <!-- ══ 14 ══ -->
   <div class="section" id="s14">
-<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">O fluxo do RAD ponta a ponta</span></div>
-
-<p class="sec-sub">Decis&atilde;o D-03, de 22/09/2026. O ponto central: <strong>quem paga n&atilde;o &eacute; quem d&aacute; f&eacute; do pagamento</strong>.</p>
-<div class="table-wrap"><table><thead><tr><th>Passo</th><th>Quem faz</th><th>Por onde</th></tr></thead><tbody>
-<tr><td><strong>1. Emiss&atilde;o da guia</strong></td><td><strong>SplitHub</strong> emite a guia de RAD na Receita Federal (CBS) e no Comit&ecirc; Gestor (IBS)</td><td>Fronteira com o Fisco. A API de emiss&atilde;o de DARF para RAD est&aacute; anunciada para o <strong>fim de nov/2026</strong> e ainda n&atilde;o tem documenta&ccedil;&atilde;o publicada</td></tr>
-<tr><td><strong>2. Aviso ao ERP</strong></td><td>SplitHub emite <code>rad.darf_recebida</code>, ou <code>rad.darf_recebida_lote</code> quando h&aacute; v&aacute;rias</td><td>Fronteira com o ERP</td></tr>
-<tr><td><strong>3. Pagamento</strong></td><td><strong>ERP do cliente</strong> paga a guia</td><td>Fora do produto</td></tr>
-<tr><td><strong>4. Comprovante</strong></td><td><strong>ERP</strong> devolve o comprovante</td><td><code>POST /v1/rad/proofs</code> &mdash; PIX com <code>end_to_end_id</code>, <code>txid</code> e <code>chave_pix</code>, ou boleto com <code>nosso_numero</code>, <code>codigo_barras</code> e <code>linha_digitavel</code></td></tr>
-<tr><td><strong>5. Apropria&ccedil;&atilde;o do cr&eacute;dito</strong></td><td><strong>O ente fiscal</strong> &mdash; o pagamento do RAD opera a apropria&ccedil;&atilde;o do cr&eacute;dito pelo comprador</td><td><strong>O evento vem da integra&ccedil;&atilde;o com os entes fiscais</strong>, pela apura&ccedil;&atilde;o assistida</td></tr>
-<tr><td><strong>6. Concilia&ccedil;&atilde;o financeira</strong></td><td>SplitHub confronta a apropria&ccedil;&atilde;o que o Fisco reconheceu com o comprovante que o ERP enviou</td><td><code>rad.proof_received</code> avisa o ERP, com <code>rastreamento_rfb</code></td></tr>
-</tbody></table></div>
-<div class="callout ok"><div class="ct">Por que o comprovante n&atilde;o apropria</div><p>O comprovante do ERP serve &agrave; <strong>concilia&ccedil;&atilde;o financeira</strong>. Quem apropria &eacute; o reconhecimento do ente fiscal. Isso mant&eacute;m o art. 47 intacto: o cr&eacute;dito depende da extin&ccedil;&atilde;o do d&eacute;bito, e quem atesta a extin&ccedil;&atilde;o &eacute; o Fisco, n&atilde;o o pagador.</p><p style="margin-top:8px">Se o produto apropriasse ao receber o comprovante, apropriaria <strong>antes</strong> de o Fisco reconhecer &mdash; e qualquer recusa ou atraso no processamento da guia produziria cr&eacute;dito que n&atilde;o existe. O passo 6 &eacute; o que exp&otilde;e a diferen&ccedil;a quando ela aparece.</p></div>
-<div class="callout warn"><div class="ct">Os tr&ecirc;s eventos ainda n&atilde;o s&atilde;o emitidos</div><p><code>rad.darf_recebida</code>, <code>rad.darf_recebida_lote</code> e <code>rad.proof_received</code> est&atilde;o no contrato p&uacute;blico e <strong>o produto n&atilde;o emite nenhum</strong>. Hoje o m&oacute;dulo emite a guia sem avisar o ERP, e o comprovante entra por anexo manual.</p></div>
-<div class="callout info"><div class="ct">Divergência a conciliar no passo 6</div><p>Comprovante sem apropria&ccedil;&atilde;o reconhecida, ou apropria&ccedil;&atilde;o sem comprovante, s&atilde;o ocorr&ecirc;ncias &mdash; as fam&iacute;lias B e C do <a class="xref" href="prd-inconsistencias.html#s03">cat&aacute;logo de Inconsist&ecirc;ncias</a>.</p></div>
-</div>
-
-<div class="section" id="s15">
-<div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
-    <div class="ver-row"><div class="ver-num">v1.4</div><div class="ver-desc"><strong>22/09/2026</strong> &mdash; O fluxo do RAD ponta a ponta, conforme a decis&atilde;o D-03: o SplitHub emite a guia nos dois &oacute;rg&atilde;os, o ERP paga e devolve o comprovante, e <strong>a apropria&ccedil;&atilde;o do cr&eacute;dito vem da integra&ccedil;&atilde;o com os entes fiscais</strong>, n&atilde;o do comprovante, que serve &agrave; concilia&ccedil;&atilde;o financeira. Os tr&ecirc;s eventos de RAD do contrato p&uacute;blico, ainda n&atilde;o emitidos.</div></div>
-<div class="ver-row"><div class="ver-num">v1.3</div><div class="ver-desc"><strong>22/09/2026</strong> — <strong>Fronteiras de integração.</strong> Fronteiras de integração: emissão de DARF depende da API da Receita prevista para nov/2026; comprovante e eventos de RAD pela API pública, com divergência registrada.</div></div>
+    <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Histórico de versões</span></div>
+    <div class="ver-row"><div class="ver-num">v1.3</div><div class="ver-desc"><strong>22/09/2026</strong> — <strong>Fronteiras de integração.</strong> Fronteiras de integração: emissão de DARF depende da API da Receita prevista para nov/2026; comprovante e eventos de RAD pela API pública, com divergência registrada.</div></div>
 <div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>21/09/2026</strong> — <strong>Entrega ao ERP no histórico.</strong> A coluna sai da listagem; envio e confirmação viram eventos do registro fiscal, e a falha vira ocorrência.</div></div>
     <div class="ver-row">
       <span class="ver-num">v1.1</span>
