@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Inconsistências · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--red); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--red); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.ref { background: rgba(107,63,160,.12); color: var(--purple); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--red); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--red); background: var(--red-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; scroll-margin-top: 20px; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--red); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; scroll-margin-top: 20px; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--red); background: var(--red-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+@media (max-width: 620px) { .feat-loc { margin-left: 0; width: 100%; } }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 132px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 220px; }
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--red); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+.st-ok { color: var(--green); font-weight: 700; white-space: nowrap; }
+.st-par { color: var(--amber); font-weight: 700; white-space: nowrap; }
+.st-no { color: var(--txt3); font-weight: 700; white-space: nowrap; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--red); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">PRD &middot; An&aacute;lise &rarr; Inconsist&ecirc;ncias</div>
+<h1>Inconsist&ecirc;ncias</h1>
+<p class="subtitle">Onde toda falha do produto vira trabalho de algu&eacute;m. Cada divergência que impede o cr&eacute;dito de se apropriar, o d&eacute;bito de ser reconhecido ou o documento de existir para o Fisco vira uma ocorr&ecirc;ncia com tipo, prioridade, respons&aacute;vel e desfecho.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">M&oacute;dulo</span>&nbsp;<span class="meta-val">An&aacute;lise &rarr; Inconsist&ecirc;ncias</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">22/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-inconsistencias</span></div>
+<div class="meta-pill"><span class="meta-label">Funcionalidades</span>&nbsp;<span class="meta-val">14</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip red">v1.0</span></div>
+</div>
+
+<div class="callout info" style="margin:18px 0"><div class="ct">Fronteiras de integra&ccedil;&atilde;o</div><p>O m&oacute;dulo n&atilde;o tem integra&ccedil;&atilde;o pr&oacute;pria: ele <strong>vive das falhas das outras duas</strong>. Da fronteira com o ERP vêm as falhas de ingest&atilde;o e de entrega de evento; da fronteira com o Fisco vêm as duas ocorr&ecirc;ncias de concilia&ccedil;&atilde;o com a apura&ccedil;&atilde;o assistida. Por isso &eacute; o &uacute;nico m&oacute;dulo em que <strong>uma ocorr&ecirc;ncia nova nasce toda vez que uma integra&ccedil;&atilde;o nova &eacute; criada</strong>.</p><p style="margin-top:8px;font-size:12px;color:var(--txt3)">Contexto completo na <a href="auditoria-prd-app.html#s11" style="color:var(--blue);font-weight:700">auditoria, se&ccedil;&atilde;o 11</a>.</p></div>
+
+<div class="toc"><div class="toc-title">&Iacute;ndice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Vis&atilde;o geral</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Escopo</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Cat&aacute;logo de tipos</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> M&aacute;quina de estados</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Prioridade, respons&aacute;vel e prazo</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Arquitetura da tela</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Modelo de dados</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Funcionalidades</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Indicadores</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Integra&ccedil;&atilde;o com os outros m&oacute;dulos</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Requisitos funcionais</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Regras de neg&oacute;cio</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Rotas diretas</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> Decis&otilde;es</a></li>
+<li><a href="#s15"><span class="toc-num">15</span> Hist&oacute;rico de vers&otilde;es</a></li>
+</ul></div>
+
+<!-- 01 -->
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Vis&atilde;o geral</span></div>
+<p>O SplitHub existe para garantir a apropria&ccedil;&atilde;o do cr&eacute;dito de IBS e CBS. <strong>Inconsist&ecirc;ncias &eacute; o m&oacute;dulo que trata tudo o que impede essa garantia</strong> &mdash; e por isso &eacute; onde as falhas de todos os outros m&oacute;dulos desembocam.</p>
+<p>Uma ocorr&ecirc;ncia nasce quando o produto detecta que algo <strong>n&atilde;o fecha</strong>: um documento que o Fisco n&atilde;o tem, um imposto destacado que n&atilde;o bate com o apurado, um cr&eacute;dito negado, um evento que o ERP n&atilde;o recebeu, um prazo vencido. Cada uma tem tipo, prioridade, respons&aacute;vel, prazo e um desfecho que precisa ser registrado.</p>
+<div class="callout red"><div class="ct">Por que este m&oacute;dulo &eacute; diferente dos outros</div><p>Os demais m&oacute;dulos descrevem <strong>o caminho feliz</strong> do documento. Este descreve o que acontece quando o caminho falha &mdash; e a falha &eacute; a regra, n&atilde;o a exce&ccedil;&atilde;o, porque o cr&eacute;dito depende de um terceiro pagar (art. 47 da LC 214/2025) e de um &oacute;rg&atilde;o reconhecer. <strong>Nenhum outro m&oacute;dulo pode resolver uma ocorr&ecirc;ncia; todos podem cri&aacute;-la.</strong></p></div>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Escopo</span></div>
+<div class="table-wrap"><table><thead><tr><th>Dentro</th><th>Fora</th></tr></thead><tbody>
+<tr><td>Detec&ccedil;&atilde;o autom&aacute;tica de divergência, por regra de cada m&oacute;dulo</td><td>A corre&ccedil;&atilde;o do documento na origem &mdash; isso &eacute; do ERP ou do emitente</td></tr>
+<tr><td>Classifica&ccedil;&atilde;o por tipo, fluxo, tributo e origem</td><td>Reemiss&atilde;o de documento fiscal</td></tr>
+<tr><td>Prioriza&ccedil;&atilde;o e atribui&ccedil;&atilde;o de respons&aacute;vel</td><td>Contencioso administrativo da glosa &mdash; vive no m&oacute;dulo de Cr&eacute;dito</td></tr>
+<tr><td>Ciclo de an&aacute;lise at&eacute; o desfecho, com trilha</td><td>Cobran&ccedil;a ao fornecedor &mdash; vive em Fornecedores</td></tr>
+<tr><td>Pain&eacute;is de volume, evolu&ccedil;&atilde;o e concentra&ccedil;&atilde;o</td><td>SLA por grupo de atendimento &mdash; proposta separada</td></tr>
+<tr><td>V&iacute;nculo com o DF, o registro fiscal e o fornecedor</td><td>Notifica&ccedil;&atilde;o externa &mdash; vive em Automa&ccedil;&otilde;es</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Cat&aacute;logo de tipos</span></div>
+<p class="sec-sub">Doze tipos, em quatro fam&iacute;lias. A fam&iacute;lia diz <strong>de onde a falha veio</strong>; o tipo diz <strong>o que fazer com ela</strong>.</p>
+
+<h3 id="f-doc">Fam&iacute;lia A &mdash; documento</h3>
+<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Quando nasce</th><th>Efeito no cr&eacute;dito</th></tr></thead><tbody>
+<tr><td><strong>Falha de Layout</strong></td><td>O documento n&atilde;o passou na valida&ccedil;&atilde;o estrutural da ingest&atilde;o</td><td>N&atilde;o h&aacute; registro fiscal &mdash; o cr&eacute;dito n&atilde;o chega a existir</td></tr>
+<tr><td><strong>Inconsist&ecirc;ncia de Dados</strong></td><td>Campo obrigat&oacute;rio ausente ou incoerente dentro do documento</td><td>Cr&eacute;dito fica retido at&eacute; a corre&ccedil;&atilde;o</td></tr>
+<tr><td><strong>Rejeitado SEFAZ</strong></td><td>O documento foi rejeitado pela autoriza&ccedil;&atilde;o</td><td>Documento n&atilde;o existe juridicamente; nada se apropria</td></tr>
+<tr><td><strong>Documento Duplicado</strong></td><td>Mesma chave de acesso ingerida mais de uma vez com conte&uacute;do divergente</td><td>Risco de cr&eacute;dito em dobro &mdash; bloqueia at&eacute; a resolu&ccedil;&atilde;o</td></tr>
+</tbody></table></div>
+
+<h3 id="f-fisc">Fam&iacute;lia B &mdash; confronto com o Fisco</h3>
+<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Quando nasce</th><th>Base</th></tr></thead><tbody>
+<tr><td><strong>N&atilde;o conciliado</strong></td><td>O documento est&aacute; na plataforma e n&atilde;o casa com o que o Fisco apurou</td><td>Concilia&ccedil;&atilde;o</td></tr>
+<tr><td><strong>Valor imposto divergente</strong></td><td>O IBS ou a CBS destacados no documento n&atilde;o batem com o apurado pelo &oacute;rg&atilde;o</td><td>Concilia&ccedil;&atilde;o</td></tr>
+<tr><td><strong>DF sem registro na apura&ccedil;&atilde;o assistida</strong><br><code>apur_df_sem_registro</code></td><td>Passados <strong>30 dias</strong>, o documento existe na plataforma e o &oacute;rg&atilde;o n&atilde;o o tem</td><td><strong>Art. 46 da LC 214/2025</strong> &mdash; sem registro no Fisco o cr&eacute;dito n&atilde;o se apropria e o d&eacute;bito n&atilde;o &eacute; reconhecido</td></tr>
+<tr><td><strong>Registro na apura&ccedil;&atilde;o assistida sem DF</strong><br><code>apur_registro_sem_df</code></td><td>O &oacute;rg&atilde;o tem documento em nome da empresa que nunca entrou na plataforma</td><td><strong>Art. 46</strong> &mdash; n&atilde;o ingerido, emitido em conting&ecirc;ncia, de outro estabelecimento, ou rejeitado e nunca reenviado</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">A fam&iacute;lia B &eacute; a que decide a apropria&ccedil;&atilde;o</div><p>&Eacute; a &uacute;nica cuja causa est&aacute; <strong>fora do alcance do cliente</strong>: depende do que o &oacute;rg&atilde;o registrou. Cada ocorr&ecirc;ncia nomeia o &oacute;rg&atilde;o &mdash; <strong>Receita Federal</strong> na CBS, <strong>Comit&ecirc; Gestor</strong> no IBS &mdash; porque o caminho de resolu&ccedil;&atilde;o &eacute; diferente em cada um. E porque hoje <strong>s&oacute; a CBS tem API</strong>: no IBS a detec&ccedil;&atilde;o depende de confer&ecirc;ncia manual at&eacute; o Comit&ecirc; publicar a documenta&ccedil;&atilde;o.</p></div>
+
+<h3 id="f-cred">Fam&iacute;lia C &mdash; ciclo do cr&eacute;dito e do d&eacute;bito</h3>
+<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Quando nasce</th><th>Base</th></tr></thead><tbody>
+<tr><td><strong>Glosa do cr&eacute;dito</strong><br><code>glosa_credito</code></td><td>O &oacute;rg&atilde;o nega o cr&eacute;dito, com causa tipificada</td><td><strong>Arts. 47 e 48</strong> (veda&ccedil;&otilde;es) e <strong>art. 54</strong> (prazo de cinco anos)</td></tr>
+<tr><td><strong>Vencido</strong></td><td>D&eacute;bito n&atilde;o extinto cujo prazo passou</td><td>Entra na fila do <strong>art. 53</strong>, antes dos d&eacute;bitos do per&iacute;odo</td></tr>
+<tr><td><strong>Sem Comprovante</strong></td><td>Pagamento sem comprova&ccedil;&atilde;o conciliada</td><td>Sem comprova&ccedil;&atilde;o n&atilde;o h&aacute; extin&ccedil;&atilde;o; sem extin&ccedil;&atilde;o o cr&eacute;dito do adquirente n&atilde;o se apropria</td></tr>
+</tbody></table></div>
+
+<h3 id="f-int">Fam&iacute;lia D &mdash; integra&ccedil;&atilde;o</h3>
+<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Quando nasce</th><th>Efeito</th></tr></thead><tbody>
+<tr><td><strong>Falha de entrega ao ERP</strong></td><td>O webhook do ciclo do cr&eacute;dito n&atilde;o foi aceito depois de esgotadas as tentativas</td><td>O ERP do cliente est&aacute; desatualizado sobre o pr&oacute;prio cr&eacute;dito. Traz o evento que n&atilde;o chegou e o caminho do reenvio</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">A fam&iacute;lia D cresce a cada integra&ccedil;&atilde;o nova</div><p>Hoje h&aacute; um tipo. Quando os eventos de RAD e de automa&ccedil;&atilde;o passarem a ser emitidos, cada um traz a sua pr&oacute;pria falha de entrega. A regra &eacute; a mesma: <strong>a ocorr&ecirc;ncia s&oacute; nasce depois de esgotada a retentativa</strong>, nunca na primeira falha.</p></div>
+
+<div class="callout red"><div class="ct">Lacuna conhecida &mdash; o filtro n&atilde;o lista os tipos novos</div><p>O filtro de tipo da tela oferece oito op&ccedil;&otilde;es e <strong>n&atilde;o inclui</strong> glosa do cr&eacute;dito, DF sem registro, registro sem DF nem falha de entrega ao ERP. As ocorr&ecirc;ncias existem e aparecem na listagem; o filtro &eacute; que n&atilde;o as alcan&ccedil;a. Ver <a class="xref" href="#s14">D-05</a>.</p></div>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">M&aacute;quina de estados</span></div>
+<p>Cinco estados. A ocorr&ecirc;ncia sempre nasce <em>aberta</em> e sempre termina em um estado final com registro de desfecho.</p>
+<div class="state-grid">
+<div class="state-row"><span class="state-name sn-red">aberta</span><span class="state-desc">Rec&eacute;m-detectada, sem respons&aacute;vel definido. &Eacute; o estado de entrada, e nenhuma ocorr&ecirc;ncia nasce em outro</span></div>
+<div class="state-row"><span class="state-name sn-amber">em_analise</span><span class="state-desc">Algu&eacute;m assumiu. Exige respons&aacute;vel nomeado; a partir daqui o rel&oacute;gio do prazo corre contra uma pessoa, n&atilde;o contra a fila</span></div>
+<div class="state-row"><span class="state-name sn-blue">ag_emitente</span><span class="state-desc">A resolu&ccedil;&atilde;o depende de terceiro &mdash; fornecedor, emitente ou &oacute;rg&atilde;o. <strong>O prazo interno fica suspenso</strong>, e o prazo externo passa a ser acompanhado</span></div>
+<div class="state-row"><span class="state-name sn-green">resolvida</span><span class="state-desc">Final. A causa foi eliminada e o efeito sobre o cr&eacute;dito ou o d&eacute;bito foi desfeito. Exige registro do que resolveu</span></div>
+<div class="state-row"><span class="state-name sn-gray">glosada</span><span class="state-desc">Final. A ocorr&ecirc;ncia terminou com o cr&eacute;dito negado em definitivo. O valor sai do fluxo de apropria&ccedil;&atilde;o</span></div>
+</div>
+<div class="table-wrap"><table><thead><tr><th>De</th><th>Para</th><th>Exige</th></tr></thead><tbody>
+<tr><td><code>aberta</code></td><td><code>em_analise</code></td><td>Respons&aacute;vel nomeado</td></tr>
+<tr><td><code>aberta</code> &middot; <code>em_analise</code></td><td><code>ag_emitente</code></td><td>Quem &eacute; o terceiro e o que se espera dele</td></tr>
+<tr><td><code>ag_emitente</code></td><td><code>em_analise</code></td><td>Resposta do terceiro registrada</td></tr>
+<tr><td><code>em_analise</code></td><td><code>resolvida</code></td><td>Desfecho descrito e efeito revertido</td></tr>
+<tr><td><code>em_analise</code> &middot; <code>ag_emitente</code></td><td><code>glosada</code></td><td>Decis&atilde;o definitiva do &oacute;rg&atilde;o, com a ficha de glosa vinculada</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">Reabertura</div><p>Uma ocorr&ecirc;ncia <em>resolvida</em> pode voltar a <em>aberta</em> se a mesma causa for detectada de novo no mesmo documento &mdash; e a<strong> nova detec&ccedil;&atilde;o n&atilde;o cria uma segunda ocorr&ecirc;ncia</strong>, reabre a primeira. &Eacute; o que impede a fila de inflar com repeti&ccedil;&otilde;es do mesmo problema. <em>Glosada</em> n&atilde;o reabre: a revers&atilde;o da glosa vive no contencioso, no m&oacute;dulo de Cr&eacute;dito.</p></div>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Prioridade, respons&aacute;vel e prazo</span></div>
+<h3 id="prio">Prioridade</h3>
+<p>Quatro n&iacute;veis, calculados pelo produto &mdash; n&atilde;o escolhidos pelo usu&aacute;rio. A prioridade responde a uma pergunta s&oacute;: <strong>quanto cr&eacute;dito est&aacute; em risco, e h&aacute; quanto tempo</strong>.</p>
+<div class="table-wrap"><table><thead><tr><th>N&iacute;vel</th><th>Quando</th></tr></thead><tbody>
+<tr><td><strong>Cr&iacute;tica</strong></td><td>Valor alto <strong>e</strong> prazo legal correndo &mdash; prescri&ccedil;&atilde;o do art. 54 pr&oacute;xima, d&eacute;bito vencido, ou janela de conting&ecirc;ncia expirando</td></tr>
+<tr><td><strong>Alta</strong></td><td>Valor alto, sem prazo legal iminente; ou valor m&eacute;dio com prazo correndo</td></tr>
+<tr><td><strong>M&eacute;dia</strong></td><td>Valor m&eacute;dio, sem prazo</td></tr>
+<tr><td><strong>Baixa</strong></td><td>Valor baixo e sem efeito sobre a apura&ccedil;&atilde;o do per&iacute;odo corrente</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Prioridade &eacute; derivada, n&atilde;o digitada</div><p>Deixar o usu&aacute;rio escolher a prioridade transformaria a fila em ordem de prefer&ecirc;ncia. Como o crit&eacute;rio &eacute; valor em risco somado a prazo, ele &eacute; calcul&aacute;vel &mdash; e recalculado a cada mudan&ccedil;a de valor ou de data. O usu&aacute;rio pode <strong>justificar uma eleva&ccedil;&atilde;o</strong>, que fica na trilha, mas n&atilde;o define o n&iacute;vel do zero.</p></div>
+
+<h3 id="resp">Respons&aacute;vel e prazo por fam&iacute;lia</h3>
+<div class="table-wrap"><table><thead><tr><th>Fam&iacute;lia</th><th>Quem resolve</th><th>Prazo sugerido</th></tr></thead><tbody>
+<tr><td><strong>A &mdash; documento</strong></td><td>Time fiscal do cliente, com o emitente</td><td>5 dias &uacute;teis</td></tr>
+<tr><td><strong>B &mdash; confronto com o Fisco</strong></td><td>Time fiscal, com o &oacute;rg&atilde;o nomeado</td><td>15 dias &uacute;teis &mdash; depende de terceiro</td></tr>
+<tr><td><strong>C &mdash; ciclo do cr&eacute;dito</strong></td><td>Time fiscal; a glosa escala para o contencioso</td><td>Prazo da norma, quando houver</td></tr>
+<tr><td><strong>D &mdash; integra&ccedil;&atilde;o</strong></td><td>Time t&eacute;cnico, do lado do cliente ou do SplitHub</td><td>1 dia &uacute;til</td></tr>
+</tbody></table></div>
+<p class="src-note">Os prazos acima s&atilde;o padr&atilde;o do produto. O modelo de SLA por grupo de atendimento est&aacute; na <a class="xref" href="proposta-grupos-inconsistencias.html">proposta de Grupos e SLA</a>, ainda n&atilde;o aprovada.</p>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Arquitetura da tela</span></div>
+<div class="table-wrap"><table><thead><tr><th>&Aacute;rea</th><th>Conte&uacute;do</th></tr></thead><tbody>
+<tr><td><strong>Modos</strong></td><td>Tr&ecirc;s: <em>Vis&atilde;o Geral</em> com os pain&eacute;is, <em>Kanban</em> por estado, e <em>Listagem</em> detalhada</td></tr>
+<tr><td><strong>KPIs</strong></td><td>Dez, descritos na se&ccedil;&atilde;o <a class="xref" href="#s09">09</a></td></tr>
+<tr><td><strong>Gr&aacute;ficos</strong></td><td>Cinco: Por Tipo &middot; Evolu&ccedil;&atilde;o Mensal &middot; Entrada vs Sa&iacute;da &middot; IBS vs CBS &middot; Top 5 Fornecedores por Volume</td></tr>
+<tr><td><strong>Listagem</strong></td><td>Dezenove colunas, com pagina&ccedil;&atilde;o e busca</td></tr>
+<tr><td><strong>Filtros</strong></td><td>Dez, no painel padr&atilde;o do produto</td></tr>
+</tbody></table></div>
+
+<h3 id="colunas">As dezenove colunas</h3>
+<div class="table-wrap"><table><thead><tr><th>Coluna</th><th>O que traz</th></tr></thead><tbody>
+<tr><td><strong>ID</strong></td><td>Identificador da ocorr&ecirc;ncia</td></tr>
+<tr><td><strong>Documento Fiscal</strong> &middot; <strong>Tipo Fiscal</strong></td><td>O DF de origem e o tributo afetado &mdash; IBS ou CBS</td></tr>
+<tr><td><strong>Fornecedor</strong> &middot; <strong>Contrato</strong></td><td>Contraparte e v&iacute;nculo contratual, quando houver</td></tr>
+<tr><td><strong>Data</strong></td><td>Detec&ccedil;&atilde;o da ocorr&ecirc;ncia</td></tr>
+<tr><td><strong>Valor Total</strong> &middot; <strong>Valor L&iacute;quido</strong></td><td>Valor do documento e valor l&iacute;quido</td></tr>
+<tr><td><strong>Cr&eacute;dito</strong></td><td>Valor de cr&eacute;dito em risco &mdash; a base da prioriza&ccedil;&atilde;o</td></tr>
+<tr><td><strong>RF</strong></td><td>Registro fiscal afetado</td></tr>
+<tr><td><strong>St. Cr&eacute;dito</strong> &middot; <strong>St. Registro</strong></td><td>Estado do cr&eacute;dito e do registro no momento da detec&ccedil;&atilde;o</td></tr>
+<tr><td><strong>Extin&ccedil;&atilde;o</strong> &middot; <strong>M&eacute;todo</strong></td><td>Se o d&eacute;bito foi extinto e por qual via</td></tr>
+<tr><td><strong>Fluxo</strong></td><td>Entrada, Sa&iacute;da ou Ingest&atilde;o</td></tr>
+<tr><td><strong>Origem</strong></td><td><em>Via RF</em> quando detectada sobre o registro fiscal; <em>DF direto</em> quando sobre o documento</td></tr>
+<tr><td><strong>Inconsist&ecirc;ncia</strong></td><td>O tipo, do cat&aacute;logo da se&ccedil;&atilde;o <a class="xref" href="#s03">03</a></td></tr>
+<tr><td><strong>Prioridade</strong> &middot; <strong>Status</strong></td><td>N&iacute;vel calculado e estado atual</td></tr>
+</tbody></table></div>
+
+<h3 id="filtros">Os dez filtros</h3>
+<p>Etapa &middot; Fluxo &middot; Tributo &middot; Tipo de inconsist&ecirc;ncia &middot; Prioridade &middot; Origem &middot; Contrato &middot; Status do cr&eacute;dito &middot; Status do registro &middot; M&eacute;todo de extin&ccedil;&atilde;o. Somam-se busca textual, faixa de valor total, faixa de valor l&iacute;quido e per&iacute;odo.</p>
+<p class="src-note">O comportamento do painel de filtros, da pagina&ccedil;&atilde;o e do gerenciador de colunas &eacute; transversal e est&aacute; descrito no <a class="xref" href="prd-arcabouco.html">PRD do Arcabou&ccedil;o de interface</a>.</p>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Modelo de dados</span></div>
+<div class="table-wrap"><table><thead><tr><th>Campo</th><th>Significado</th></tr></thead><tbody>
+<tr><td><code>id</code></td><td>Identificador da ocorr&ecirc;ncia</td></tr>
+<tr><td><code>tipo</code></td><td>Um dos doze do cat&aacute;logo</td></tr>
+<tr><td><code>familia</code></td><td>A, B, C ou D &mdash; derivada do tipo</td></tr>
+<tr><td><code>estado</code></td><td><code>aberta</code> &middot; <code>em_analise</code> &middot; <code>ag_emitente</code> &middot; <code>resolvida</code> &middot; <code>glosada</code></td></tr>
+<tr><td><code>prioridade</code></td><td><code>critica</code> &middot; <code>alta</code> &middot; <code>media</code> &middot; <code>baixa</code> &mdash; calculada</td></tr>
+<tr><td><code>dfId</code> &middot; <code>rfId</code></td><td>Documento e registro fiscal afetados</td></tr>
+<tr><td><code>tributo</code></td><td><code>IBS</code> ou <code>CBS</code> &mdash; nunca os dois</td></tr>
+<tr><td><code>orgao</code></td><td>Receita Federal na CBS, Comit&ecirc; Gestor no IBS. Obrigat&oacute;rio na fam&iacute;lia B</td></tr>
+<tr><td><code>valorCredito</code></td><td>Cr&eacute;dito em risco &mdash; base da prioridade</td></tr>
+<tr><td><code>fluxo</code> &middot; <code>origem</code></td><td>Entrada/Sa&iacute;da/Ingest&atilde;o &middot; Via RF/DF direto</td></tr>
+<tr><td><code>detectadaEm</code> &middot; <code>prazo</code></td><td>Data de detec&ccedil;&atilde;o e prazo de resolu&ccedil;&atilde;o</td></tr>
+<tr><td><code>responsavel</code></td><td>Obrigat&oacute;rio a partir de <code>em_analise</code></td></tr>
+<tr><td><code>desfecho</code> &middot; <code>resolvidaEm</code></td><td>O que encerrou a ocorr&ecirc;ncia, e quando</td></tr>
+<tr><td><code>glosaId</code></td><td>Ficha de glosa vinculada, quando o desfecho &eacute; <code>glosada</code></td></tr>
+<tr><td><code>hist[]</code></td><td>Trilha completa: cada transi&ccedil;&atilde;o com autor, data e observa&ccedil;&atilde;o</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">A ocorr&ecirc;ncia n&atilde;o guarda valor pr&oacute;prio</div><p><code>valorCredito</code> &eacute; lido do registro fiscal no momento da detec&ccedil;&atilde;o e <strong>recalculado</strong> quando o registro muda. Congelar o valor faria a fila priorizar por um n&uacute;mero que deixou de existir.</p></div>
+</div>
+
+<!-- 08 -->
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Funcionalidades</span></div>
+<p>Quatorze funcionalidades. A situa&ccedil;&atilde;o no prot&oacute;tipo aparece em cada uma.</p>
+
+<div class="feat" id="f-01"><div class="feat-hdr"><span class="feat-id">F-01</span><span class="feat-name">Detectar e abrir a ocorr&ecirc;ncia</span><span class="feat-loc">autom&aacute;tico</span></div><div class="feat-body"><p>Cada m&oacute;dulo aplica as pr&oacute;prias regras e abre ocorr&ecirc;ncia quando algo n&atilde;o fecha. A ocorr&ecirc;ncia nasce <code>aberta</code>, com tipo, fam&iacute;lia, tributo, &oacute;rg&atilde;o e valor em risco preenchidos.</p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-ok">Implementado</span></p></div></div>
+
+<div class="feat" id="f-02"><div class="feat-hdr"><span class="feat-id">F-02</span><span class="feat-name">Calcular a prioridade</span><span class="feat-loc">autom&aacute;tico</span></div><div class="feat-body"><p>Valor em risco cruzado com prazo legal. Recalculada a cada mudan&ccedil;a de valor ou de data, nunca digitada do zero.</p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-par">Parcial</span> &mdash; a prioridade aparece na listagem; a regra de c&aacute;lculo n&atilde;o est&aacute; implementada como descrita</p></div></div>
+
+<div class="feat" id="f-03"><div class="feat-hdr"><span class="feat-id">F-03</span><span class="feat-name">Ver a fila em tr&ecirc;s modos</span><span class="feat-loc">Vis&atilde;o Geral &middot; Kanban &middot; Listagem</span></div><div class="feat-body"><p>Vis&atilde;o Geral para medir, Kanban para trabalhar por estado, Listagem para investigar caso a caso.</p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-ok">Implementado</span></p></div></div>
+
+<div class="feat" id="f-04"><div class="feat-hdr"><span class="feat-id">F-04</span><span class="feat-name">Filtrar e buscar</span><span class="feat-loc">Painel de filtros</span></div><div class="feat-body"><p>Dez filtros, busca textual, faixas de valor e per&iacute;odo.</p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-par">Parcial</span> &mdash; o filtro de tipo n&atilde;o lista os quatro tipos novos, e a busca n&atilde;o alcan&ccedil;a identificadores <code>APUR-</code></p></div></div>
+
+<div class="feat" id="f-05"><div class="feat-hdr"><span class="feat-id">F-05</span><span class="feat-name">Assumir a ocorr&ecirc;ncia</span><span class="feat-loc">Kanban &middot; detalhe</span></div><div class="feat-body"><p>Passa de <code>aberta</code> a <code>em_analise</code> com respons&aacute;vel nomeado. A partir daqui o prazo corre contra uma pessoa.</p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-par">Parcial</span> &mdash; a movimenta&ccedil;&atilde;o existe; o respons&aacute;vel n&atilde;o &eacute; exigido</p></div></div>
+
+<div class="feat" id="f-06"><div class="feat-hdr"><span class="feat-id">F-06</span><span class="feat-name">Aguardar terceiro</span><span class="feat-loc">detalhe</span></div><div class="feat-body"><p>Estado <code>ag_emitente</code>, com quem &eacute; o terceiro e o que se espera. <strong>Suspende o prazo interno</strong> e passa a acompanhar o externo.</p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-par">Parcial</span> &mdash; o estado existe; a suspens&atilde;o de prazo n&atilde;o</p></div></div>
+
+<div class="feat" id="f-07"><div class="feat-hdr"><span class="feat-id">F-07</span><span class="feat-name">Registrar o desfecho</span><span class="feat-loc">detalhe</span></div><div class="feat-body"><p>Resolvida com descri&ccedil;&atilde;o do que resolveu, ou glosada com a ficha de glosa vinculada. Sem desfecho descrito a ocorr&ecirc;ncia n&atilde;o fecha.</p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-par">Parcial</span></p></div></div>
+
+<div class="feat" id="f-08"><div class="feat-hdr"><span class="feat-id">F-08</span><span class="feat-name">Reabrir pela mesma causa</span><span class="feat-loc">autom&aacute;tico</span></div><div class="feat-body"><p>Nova detec&ccedil;&atilde;o da mesma causa no mesmo documento <strong>reabre a ocorr&ecirc;ncia</strong> em vez de criar outra. &Eacute; o que impede a fila de inflar.</p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-no">N&atilde;o implementado</span></p></div></div>
+
+<div class="feat" id="f-09"><div class="feat-hdr"><span class="feat-id">F-09</span><span class="feat-name">Abrir o documento e o registro de origem</span><span class="feat-loc">listagem &middot; detalhe</span></div><div class="feat-body"><p>Da ocorr&ecirc;ncia para o DF e para o RF afetados, com o filtro j&aacute; aplicado.</p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-ok">Implementado</span></p></div></div>
+
+<div class="feat" id="f-10"><div class="feat-hdr"><span class="feat-id">F-10</span><span class="feat-name">Reenviar o evento ao ERP</span><span class="feat-loc">fam&iacute;lia D</span></div><div class="feat-body"><p>Na falha de entrega, reenviar o webhook que n&atilde;o chegou e registrar o resultado na trilha.</p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-par">Parcial</span> &mdash; a retentativa existe mas <strong>n&atilde;o abre a ocorr&ecirc;ncia correspondente</strong></p></div></div>
+
+<div class="feat" id="f-11"><div class="feat-hdr"><span class="feat-id">F-11</span><span class="feat-name">Medir o volume e a evolu&ccedil;&atilde;o</span><span class="feat-loc">Vis&atilde;o Geral</span></div><div class="feat-body"><p>Cinco gr&aacute;ficos: distribui&ccedil;&atilde;o por tipo, evolu&ccedil;&atilde;o mensal, entrada contra sa&iacute;da, IBS contra CBS e concentra&ccedil;&atilde;o por fornecedor.</p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-ok">Implementado</span></p></div></div>
+
+<div class="feat" id="f-12"><div class="feat-hdr"><span class="feat-id">F-12</span><span class="feat-name">Ver a trilha completa</span><span class="feat-loc">detalhe</span></div><div class="feat-body"><p>Cada transi&ccedil;&atilde;o com autor, data e observa&ccedil;&atilde;o. A mesma trilha aparece no hist&oacute;rico do DF e do RF.</p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-par">Parcial</span></p></div></div>
+
+<div class="feat" id="f-13"><div class="feat-hdr"><span class="feat-id">F-13</span><span class="feat-name">Separar por &oacute;rg&atilde;o</span><span class="feat-loc">fam&iacute;lia B</span></div><div class="feat-body"><p>Toda ocorr&ecirc;ncia de confronto com o Fisco nomeia o &oacute;rg&atilde;o, porque o caminho de resolu&ccedil;&atilde;o difere entre Receita Federal e Comit&ecirc; Gestor.</p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-ok">Implementado</span></p></div></div>
+
+<div class="feat" id="f-14"><div class="feat-hdr"><span class="feat-id">F-14</span><span class="feat-name">Escalar a glosa ao contencioso</span><span class="feat-loc">detalhe &rarr; Cr&eacute;dito</span></div><div class="feat-body"><p>A ocorr&ecirc;ncia de glosa liga &agrave; ficha no m&oacute;dulo de Cr&eacute;dito, onde vive o contencioso. <strong>O contencioso n&atilde;o &eacute; tratado aqui.</strong></p><p style="margin-top:6px"><span class="chip info">M1</span> &nbsp; <span class="st-par">Parcial</span></p></div></div>
+</div>
+
+<!-- 09 -->
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Indicadores</span></div>
+<div class="table-wrap"><table><thead><tr><th>KPI</th><th>C&aacute;lculo</th></tr></thead><tbody>
+<tr><td><strong>Total de Inconsist&ecirc;ncias</strong></td><td>Todas as ocorr&ecirc;ncias do recorte, em qualquer estado</td></tr>
+<tr><td><strong>Abertas</strong></td><td>Estado <code>aberta</code> &mdash; ningu&eacute;m assumiu ainda</td></tr>
+<tr><td><strong>Em An&aacute;lise</strong></td><td>Estado <code>em_analise</code></td></tr>
+<tr><td><strong>Ag. Emitente</strong></td><td>Estado <code>ag_emitente</code> &mdash; dependendo de terceiro</td></tr>
+<tr><td><strong>Resolvidas</strong></td><td>Estado <code>resolvida</code></td></tr>
+<tr><td><strong>Glosadas</strong></td><td>Estado <code>glosada</code> &mdash; cr&eacute;dito negado em definitivo</td></tr>
+<tr><td><strong>Inconsist&ecirc;ncia de Entrada</strong></td><td>Fluxo de entrada &mdash; afeta o cr&eacute;dito a apropriar</td></tr>
+<tr><td><strong>Inconsist&ecirc;ncia de Sa&iacute;da</strong></td><td>Fluxo de sa&iacute;da &mdash; afeta o d&eacute;bito apurado</td></tr>
+<tr><td><strong>Volume Financeiro Total</strong></td><td>Soma do cr&eacute;dito em risco de todas as ocorr&ecirc;ncias</td></tr>
+<tr><td><strong>Volume em Aberto</strong></td><td>Soma do cr&eacute;dito em risco das ocorr&ecirc;ncias n&atilde;o finalizadas</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">Os dois KPIs que importam</div><p><strong>Volume em Aberto</strong> &eacute; o &uacute;nico que mede o que est&aacute; em jogo agora &mdash; quanto cr&eacute;dito depende de algu&eacute;m resolver alguma coisa. Os de contagem medem trabalho; este mede risco. Nenhum dos dois soma CBS e IBS.</p></div>
+</div>
+
+<!-- 10 -->
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Integra&ccedil;&atilde;o com os outros m&oacute;dulos</span></div>
+<div class="table-wrap"><table><thead><tr><th>M&oacute;dulo</th><th>O que manda para c&aacute;</th></tr></thead><tbody>
+<tr><td><a class="xref" href="prd-ingestao.html">Ingest&atilde;o</a></td><td>Falha de layout, inconsist&ecirc;ncia de dados, rejei&ccedil;&atilde;o SEFAZ, documento duplicado</td></tr>
+<tr><td><a class="xref" href="prd-conciliacao.html">Concilia&ccedil;&atilde;o</a></td><td>N&atilde;o conciliado, valor divergente, e as duas ocorr&ecirc;ncias da apura&ccedil;&atilde;o assistida</td></tr>
+<tr><td><a class="xref" href="prd-credito.html">Cr&eacute;dito</a></td><td>Glosa, com causa tipificada e ficha. O contencioso volta para l&aacute;</td></tr>
+<tr><td><a class="xref" href="prd-debito.html">D&eacute;bito</a></td><td>Vencido &mdash; d&eacute;bito n&atilde;o extinto com prazo passado</td></tr>
+<tr><td><a class="xref" href="prd-pagamentos.html">Pagamentos</a></td><td>Sem comprovante</td></tr>
+<tr><td><a class="xref" href="prd-integracoes.html">Integra&ccedil;&otilde;es</a></td><td>Falha de entrega de evento ao ERP, depois de esgotada a retentativa</td></tr>
+<tr><td><a class="xref" href="prd-ressarcimento.html">Ressarcimento</a></td><td>Saldo divergente da Receita, impedimento do IBS, deferimento parcial</td></tr>
+<tr><td><a class="xref" href="prd-automacoes.html">Automa&ccedil;&otilde;es</a></td><td>Consome a fila para disparar r&eacute;gua e relat&oacute;rio</td></tr>
+<tr><td><a class="xref" href="prd-analytics.html">Analytics</a></td><td>Consome o volume para os alertas e anomalias</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 11 -->
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Requisitos funcionais</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Requisito</th><th>Crit&eacute;rio de aceite</th><th>Pri.</th></tr></thead><tbody>
+<tr><td><span class="rid">RF-INC-001</span></td><td>O sistema deve abrir ocorr&ecirc;ncia com tipo, fam&iacute;lia, tributo e valor em risco preenchidos</td><td>Nenhuma ocorr&ecirc;ncia existe sem tipo e sem tributo</td><td>Alta</td></tr>
+<tr><td><span class="rid">RF-INC-002</span></td><td>O sistema deve nomear o &oacute;rg&atilde;o em toda ocorr&ecirc;ncia da fam&iacute;lia B</td><td>Receita Federal na CBS, Comit&ecirc; Gestor no IBS</td><td>Alta</td></tr>
+<tr><td><span class="rid">RF-INC-003</span></td><td>O sistema deve calcular a prioridade por valor em risco e prazo legal</td><td>Prioridade muda quando o valor ou a data mudam</td><td>Alta</td></tr>
+<tr><td><span class="rid">RF-INC-004</span></td><td>O sistema deve exigir respons&aacute;vel na transi&ccedil;&atilde;o para <code>em_analise</code></td><td>N&atilde;o h&aacute; ocorr&ecirc;ncia em an&aacute;lise sem respons&aacute;vel</td><td>Alta</td></tr>
+<tr><td><span class="rid">RF-INC-005</span></td><td>O sistema deve suspender o prazo interno em <code>ag_emitente</code></td><td>O prazo n&atilde;o corre enquanto depende de terceiro</td><td>M&eacute;dia</td></tr>
+<tr><td><span class="rid">RF-INC-006</span></td><td>O sistema deve exigir desfecho descrito para encerrar</td><td>N&atilde;o h&aacute; ocorr&ecirc;ncia resolvida sem descri&ccedil;&atilde;o</td><td>Alta</td></tr>
+<tr><td><span class="rid">RF-INC-007</span></td><td>O sistema deve reabrir a ocorr&ecirc;ncia quando a mesma causa reincidir no mesmo documento</td><td>A segunda detec&ccedil;&atilde;o n&atilde;o cria ocorr&ecirc;ncia nova</td><td>Alta</td></tr>
+<tr><td><span class="rid">RF-INC-008</span></td><td>O sistema deve recalcular o valor em risco quando o registro fiscal mudar</td><td>O valor da ocorr&ecirc;ncia acompanha o do RF</td><td>M&eacute;dia</td></tr>
+<tr><td><span class="rid">RF-INC-009</span></td><td>O sistema deve oferecer todos os tipos do cat&aacute;logo no filtro</td><td>Os doze tipos aparecem no filtro</td><td>Alta</td></tr>
+<tr><td><span class="rid">RF-INC-010</span></td><td>O sistema deve permitir busca por identificador de ocorr&ecirc;ncia, de DF e de RF</td><td>A busca alcan&ccedil;a os prefixos usados pelo produto</td><td>M&eacute;dia</td></tr>
+<tr><td><span class="rid">RF-INC-011</span></td><td>O sistema deve registrar cada transi&ccedil;&atilde;o com autor, data e observa&ccedil;&atilde;o</td><td>Trilha completa no detalhe e no hist&oacute;rico do DF e do RF</td><td>Alta</td></tr>
+<tr><td><span class="rid">RF-INC-012</span></td><td>O sistema deve abrir ocorr&ecirc;ncia de integra&ccedil;&atilde;o s&oacute; depois de esgotada a retentativa</td><td>Falha isolada n&atilde;o gera ocorr&ecirc;ncia</td><td>Alta</td></tr>
+<tr><td><span class="rid">RF-INC-013</span></td><td>O sistema deve permitir o reenvio do evento a partir da ocorr&ecirc;ncia</td><td>O reenvio parte da ocorr&ecirc;ncia e registra o resultado</td><td>M&eacute;dia</td></tr>
+<tr><td><span class="rid">RF-INC-014</span></td><td>O sistema deve vincular a ocorr&ecirc;ncia de glosa &agrave; ficha no m&oacute;dulo de Cr&eacute;dito</td><td>Da ocorr&ecirc;ncia se chega ao contencioso</td><td>M&eacute;dia</td></tr>
+<tr><td><span class="rid">RF-INC-015</span></td><td>O sistema deve separar os indicadores por tributo, sem somar CBS e IBS</td><td>Nenhum KPI combina os dois</td><td>Alta</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 12 -->
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Regras de neg&oacute;cio</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Regra</th><th>Onde vive</th></tr></thead><tbody>
+<tr><td><span class="rid">RN-INC-01</span></td><td>Toda ocorr&ecirc;ncia pertence a um tributo s&oacute;; nada soma CBS e IBS</td><td>Todo o m&oacute;dulo</td></tr>
+<tr><td><span class="rid">RN-INC-02</span></td><td>Ocorr&ecirc;ncia nasce sempre <code>aberta</code>; nenhum m&oacute;dulo cria ocorr&ecirc;ncia j&aacute; resolvida</td><td>Detec&ccedil;&atilde;o</td></tr>
+<tr><td><span class="rid">RN-INC-03</span></td><td>Prioridade &eacute; calculada, n&atilde;o digitada. A eleva&ccedil;&atilde;o manual exige justificativa e fica na trilha</td><td>Prioriza&ccedil;&atilde;o</td></tr>
+<tr><td><span class="rid">RN-INC-04</span></td><td>A mesma causa no mesmo documento reabre a ocorr&ecirc;ncia; n&atilde;o cria outra</td><td>Detec&ccedil;&atilde;o</td></tr>
+<tr><td><span class="rid">RN-INC-05</span></td><td><code>glosada</code> n&atilde;o reabre; a revers&atilde;o vive no contencioso, no m&oacute;dulo de Cr&eacute;dito</td><td>Desfecho</td></tr>
+<tr><td><span class="rid">RN-INC-06</span></td><td>Fam&iacute;lia B nomeia o &oacute;rg&atilde;o. No IBS a detec&ccedil;&atilde;o depende de confer&ecirc;ncia manual enquanto n&atilde;o houver API</td><td>Confronto com o Fisco</td></tr>
+<tr><td><span class="rid">RN-INC-07</span></td><td>DF sem registro no Fisco s&oacute; vira ocorr&ecirc;ncia depois de <strong>30 dias</strong> da emiss&atilde;o</td><td>Concilia&ccedil;&atilde;o &mdash; art. 46</td></tr>
+<tr><td><span class="rid">RN-INC-08</span></td><td>Falha de integra&ccedil;&atilde;o s&oacute; vira ocorr&ecirc;ncia depois de esgotada a retentativa</td><td>Fam&iacute;lia D</td></tr>
+<tr><td><span class="rid">RN-INC-09</span></td><td><code>ag_emitente</code> suspende o prazo interno; o externo passa a ser acompanhado</td><td>Ciclo de an&aacute;lise</td></tr>
+<tr><td><span class="rid">RN-INC-10</span></td><td>Nenhum outro m&oacute;dulo resolve ocorr&ecirc;ncia; todos podem criar</td><td>Todo o m&oacute;dulo</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 13 -->
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Rotas diretas</span></div>
+<div class="table-wrap"><table><thead><tr><th>Rota</th><th>Abre</th></tr></thead><tbody>
+<tr><td><code>index.html#/inconsistencias</code></td><td>Vis&atilde;o Geral</td></tr>
+<tr><td><code>index.html#/inconsistencias/kanban</code></td><td>Kanban por estado</td></tr>
+<tr><td><code>index.html#/inconsistencias/listagem</code></td><td>Listagem detalhada</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 14 -->
+<div class="section" id="s14">
+<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Decis&otilde;es</span></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Decis&atilde;o</th><th>Situa&ccedil;&atilde;o</th></tr></thead><tbody>
+<tr><td>D-01</td><td>Cat&aacute;logo fechado de doze tipos, em quatro fam&iacute;lias pela origem da falha</td><td>Proposta &mdash; 22/09/2026</td></tr>
+<tr><td>D-02</td><td>Cinco estados, com <code>ag_emitente</code> suspendendo o prazo interno</td><td>Proposta &mdash; 22/09/2026</td></tr>
+<tr><td>D-03</td><td>Prioridade calculada por valor em risco e prazo legal, n&atilde;o digitada</td><td>Proposta &mdash; 22/09/2026</td></tr>
+<tr><td>D-04</td><td>Reincid&ecirc;ncia reabre em vez de criar ocorr&ecirc;ncia nova</td><td>Proposta &mdash; 22/09/2026</td></tr>
+<tr><td>D-05</td><td>Filtro de tipo passa a listar os doze tipos do cat&aacute;logo</td><td><span class="gap">Em aberto</span> &mdash; hoje lista oito</td></tr>
+<tr><td>D-06</td><td>Busca alcan&ccedil;a identificadores <code>APUR-</code> e demais prefixos</td><td><span class="gap">Em aberto</span></td></tr>
+<tr><td>D-07</td><td>Retentativa de integra&ccedil;&atilde;o abre a ocorr&ecirc;ncia correspondente</td><td><span class="gap">Em aberto</span></td></tr>
+<tr><td>D-08</td><td>SLA por grupo de atendimento</td><td><span class="gap">Em aberto</span> &mdash; <a class="xref" href="proposta-grupos-inconsistencias.html">proposta separada</a></td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 15 -->
+<div class="section" id="s15">
+<div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>22/09/2026</strong> &mdash; <strong>Primeira vers&atilde;o.</strong> O m&oacute;dulo existia no prot&oacute;tipo desde o in&iacute;cio e nunca teve PRD. Documenta o cat&aacute;logo de doze tipos em quatro fam&iacute;lias, a m&aacute;quina de cinco estados com suspens&atilde;o de prazo, a prioridade calculada, respons&aacute;vel e prazo por fam&iacute;lia, os tr&ecirc;s modos de visualiza&ccedil;&atilde;o, as dezenove colunas, os dez filtros, o modelo de dados, quatorze funcionalidades com situa&ccedil;&atilde;o declarada, dez indicadores, quinze requisitos e dez regras. Registra as duas ocorr&ecirc;ncias do art. 46 da LC 214/2025 &mdash; DF sem registro na apura&ccedil;&atilde;o assistida e registro do Fisco sem DF &mdash; que eram as &uacute;nicas regras da Reforma sem documento. Quatro pend&ecirc;ncias conhecidas ficam registradas como decis&otilde;es em aberto.</div></div>
+</div>
+
+</div>
+</body>
+</html>
