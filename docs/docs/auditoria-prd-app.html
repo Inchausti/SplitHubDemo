@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditoria PRD &times; Protótipo · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--purple); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--purple); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 760px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.red { background: var(--red-d); color: var(--red); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--purple); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 26px 0 8px; scroll-margin-top: 20px; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--purple); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* barra de cobertura */
+.cob { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+.cob-bar { flex: 1; height: 6px; background: var(--sur3); border-radius: 3px; overflow: hidden; min-width: 54px; }
+.cob-fill { height: 100%; border-radius: 3px; }
+.cob-pct { font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* marcadores */
+.mk { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; border-radius: 3px; padding: 1px 6px; white-space: nowrap; }
+.mk.and { background: var(--amber-d); color: var(--amber); border: 1px solid var(--amber); }
+.mk.rtc { background: rgba(107,63,160,.12); color: var(--purple); border: 1px solid var(--purple); }
+.mk.lac { background: var(--red-d); color: var(--red); border: 1px solid var(--red); }
+.mk.ok  { background: var(--green-d); color: var(--green); border: 1px solid var(--green); }
+
+.mod-hdr { display: flex; align-items: center; gap: 11px; margin: 30px 0 4px; padding: 11px 16px; background: var(--sur); border: 1px solid var(--brd); border-radius: 9px; flex-wrap: wrap; scroll-margin-top: 20px; }
+.mod-nome { font-size: 14.5px; font-weight: 800; color: var(--txt1); }
+.mod-prd { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+@media (max-width: 620px) { .mod-prd { margin-left: 0; width: 100%; } }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+a.ext { color: var(--blue); text-decoration: none; font-weight: 600; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--purple); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+.src-note { font-size: 11.5px; color: var(--txt3); margin: 6px 0 0; }
+
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">Auditoria &middot; Documenta&ccedil;&atilde;o</div>
+<h1>Auditoria PRD &times; prot&oacute;tipo, campo a campo</h1>
+<p class="subtitle">Todo artefato de tela e toda regra de backend do prot&oacute;tipo confrontados com o PRD do seu m&oacute;dulo. O que est&aacute; documentado, o que falta, o que &eacute; andaime do prot&oacute;tipo e n&atilde;o deve virar funcionalidade, e o que &eacute; regra da Reforma e precisa de contexto legal.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Auditoria</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">22/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Artefatos</span>&nbsp;<span class="meta-val">593</span></div>
+<div class="meta-pill"><span class="meta-label">Cobertura</span>&nbsp;<span class="meta-val">84,7%</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip info">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">&Iacute;ndice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> M&eacute;todo</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Placar por m&oacute;dulo</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> As lacunas, campo a campo</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Andaimes do prot&oacute;tipo</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Regras da Reforma</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Backend: superf&iacute;cie e cobertura</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Os marcadores no hub</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> O que fazer, em ordem</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Limita&ccedil;&otilde;es do m&eacute;todo</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Hist&oacute;rico de vers&otilde;es</a></li>
+</ul></div>
+
+<!-- 01 -->
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">M&eacute;todo</span></div>
+<p>A auditoria n&atilde;o foi feita a olho. Tr&ecirc;s extra&ccedil;&otilde;es autom&aacute;ticas, e depois triagem manual de cada candidato.</p>
+<div class="table-wrap"><table><thead><tr><th>Passo</th><th>O que faz</th><th>Sa&iacute;da</th></tr></thead><tbody>
+<tr><td><strong>1. Invent&aacute;rio do prot&oacute;tipo</strong></td><td>Percorre <code>src/index.html</code> bloco a bloco, por <code>view-*</code> e <code>admin-*</code>, e colhe r&oacute;tulo de KPI, t&iacute;tulo de se&ccedil;&atilde;o, t&iacute;tulo de gr&aacute;fico, cabe&ccedil;alho de coluna, filtro, aba e bot&atilde;o. Depois varre <code>src/js/*.js</code> atr&aacute;s dos artefatos injetados em tempo de execu&ccedil;&atilde;o</td><td><strong>593 artefatos</strong> em 21 telas</td></tr>
+<tr><td><strong>2. Invent&aacute;rio dos PRDs</strong></td><td>L&ecirc; os 17 PRDs vivos e extrai funcionalidades <code>F-xx</code>, requisitos <code>RF-</code>, regras <code>RN-</code> e todo campo citado em <code>&lt;code&gt;</code></td><td><strong>200 funcionalidades, 481 RF, 179 RN</strong></td></tr>
+<tr><td><strong>3. Cruzamento</strong></td><td>Cada artefato &eacute; normalizado (sem acento, sem caixa, sem pontua&ccedil;&atilde;o) e procurado no texto integral do PRD do seu m&oacute;dulo. Casa se a express&atilde;o aparece inteira, ou se ao menos 75% dos termos significativos aparecem</td><td><strong>91 artefatos n&atilde;o citados</strong></td></tr>
+<tr><td><strong>4. Triagem</strong></td><td>Cada n&atilde;o citado foi conferido &agrave; m&atilde;o contra o PRD, para separar lacuna real de sin&ocirc;nimo e de andaime</td><td>Se&ccedil;&otilde;es <a class="xref" href="#s03">03</a> e <a class="xref" href="#s04">04</a></td></tr>
+</tbody></table></div>
+<p class="src-note">O crit&eacute;rio &eacute; deliberadamente generoso: um artefato conta como documentado se o PRD o menciona de qualquer forma, mesmo sem detalhar. Ou seja, <strong>a cobertura real &eacute; menor que a medida</strong> &mdash; o n&uacute;mero aqui &eacute; um teto, n&atilde;o um piso.</p>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Placar por m&oacute;dulo</span></div>
+<div class="table-wrap"><table><thead><tr><th>M&oacute;dulo &middot; PRD</th><th>Artefatos</th><th>N&atilde;o documentados</th><th style="width:150px">Cobertura</th><th>Marcadores</th></tr></thead><tbody>
+<tr><td><strong>Inconsist&ecirc;ncias</strong><br><span class="src-note">sem PRD</span></td><td class="num">44</td><td class="num">44</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:0%;background:var(--red)"></div></div><span class="cob-pct" style="color:var(--red)">0%</span></div></td><td><span class="mk lac">lacuna</span> <span class="mk rtc">regra RTC</span></td></tr>
+<tr><td><strong>Organiza&ccedil;&atilde;o e Usu&aacute;rios</strong><br><span class="src-note">prd-organizacao v2.2</span></td><td class="num">29</td><td class="num">12</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:59%;background:var(--red)"></div></div><span class="cob-pct" style="color:var(--red)">59%</span></div></td><td><span class="mk lac">lacuna</span></td></tr>
+<tr><td><strong>Portal do Fornecedor</strong><br><span class="src-note">prd-portal-fornecedor v1.0</span></td><td class="num">39</td><td class="num">11</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:72%;background:var(--amber)"></div></div><span class="cob-pct" style="color:var(--amber)">72%</span></div></td><td><span class="mk lac">lacuna</span></td></tr>
+<tr><td><strong>Apura&ccedil;&atilde;o IBS/CBS</strong><br><span class="src-note">prd-apuracao v1.0</span></td><td class="num">60</td><td class="num">11</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:82%;background:var(--amber)"></div></div><span class="cob-pct" style="color:var(--amber)">82%</span></div></td><td><span class="mk lac">lacuna</span> <span class="mk rtc">regra RTC</span></td></tr>
+<tr><td><strong>In&iacute;cio</strong><br><span class="src-note">prd-inicio v1.2</span></td><td class="num">18</td><td class="num">3</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:83%;background:var(--amber)"></div></div><span class="cob-pct" style="color:var(--amber)">83%</span></div></td><td><span class="mk lac">lacuna</span></td></tr>
+<tr><td><strong>Analytics e FCT</strong><br><span class="src-note">prd-analytics v1.3</span></td><td class="num">50</td><td class="num">4</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:92%;background:var(--green)"></div></div><span class="cob-pct" style="color:var(--green)">92%</span></div></td><td><span class="mk rtc">regra RTC</span></td></tr>
+<tr><td><strong>Concilia&ccedil;&atilde;o</strong><br><span class="src-note">prd-conciliacao v3.3</span></td><td class="num">38</td><td class="num">2</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:95%;background:var(--green)"></div></div><span class="cob-pct" style="color:var(--green)">95%</span></div></td><td><span class="mk rtc">regra RTC</span></td></tr>
+<tr><td><strong>Execu&ccedil;&atilde;o RAD</strong><br><span class="src-note">prd-execucao-rad v1.2</span></td><td class="num">20</td><td class="num">1</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:95%;background:var(--green)"></div></div><span class="cob-pct" style="color:var(--green)">95%</span></div></td><td><span class="mk rtc">regra RTC</span></td></tr>
+<tr><td><strong>Fornecedores</strong><br><span class="src-note">prd-fornecedor v2.3</span></td><td class="num">11</td><td class="num">1</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:91%;background:var(--green)"></div></div><span class="cob-pct" style="color:var(--green)">91%</span></div></td><td><span class="mk and">andaime</span></td></tr>
+<tr><td><strong>D&eacute;bitos IBS/CBS</strong><br><span class="src-note">prd-debito v1.3</span></td><td class="num">45</td><td class="num">1</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:98%;background:var(--green)"></div></div><span class="cob-pct" style="color:var(--green)">98%</span></div></td><td><span class="mk rtc">regra RTC</span> <span class="mk and">andaime</span></td></tr>
+<tr><td><strong>Cr&eacute;ditos IBS/CBS</strong><br><span class="src-note">prd-credito v2.9</span></td><td class="num">59</td><td class="num">0</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:100%;background:var(--green)"></div></div><span class="cob-pct" style="color:var(--green)">100%</span></div></td><td><span class="mk rtc">regra RTC</span> <span class="mk and">andaime</span></td></tr>
+<tr><td><strong>Pagamentos</strong><br><span class="src-note">prd-pagamentos v2.9</span></td><td class="num">46</td><td class="num">0</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:100%;background:var(--green)"></div></div><span class="cob-pct" style="color:var(--green)">100%</span></div></td><td><span class="mk rtc">regra RTC</span></td></tr>
+<tr><td><strong>Ressarcimento</strong><br><span class="src-note">prd-ressarcimento v1.3</span></td><td class="num">42</td><td class="num">0</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:100%;background:var(--green)"></div></div><span class="cob-pct" style="color:var(--green)">100%</span></div></td><td><span class="mk rtc">regra RTC</span></td></tr>
+<tr><td><strong>Integra&ccedil;&otilde;es</strong><br><span class="src-note">prd-integracoes v1.1</span></td><td class="num">34</td><td class="num">0</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:100%;background:var(--green)"></div></div><span class="cob-pct" style="color:var(--green)">100%</span></div></td><td><span class="mk rtc">regra RTC</span></td></tr>
+<tr><td><strong>Ingest&atilde;o de DFs</strong><br><span class="src-note">prd-ingestao v2.1</span></td><td class="num">29</td><td class="num">0</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:100%;background:var(--green)"></div></div><span class="cob-pct" style="color:var(--green)">100%</span></div></td><td><span class="mk and">andaime</span></td></tr>
+<tr><td><strong>Contratos</strong><br><span class="src-note">prd-contratos v2.7</span></td><td class="num">10</td><td class="num">0</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:100%;background:var(--green)"></div></div><span class="cob-pct" style="color:var(--green)">100%</span></div></td><td><span class="mk and">andaime</span></td></tr>
+<tr><td><strong>Automa&ccedil;&otilde;es</strong><br><span class="src-note">prd-automacoes v1.1</span></td><td class="num">13</td><td class="num">0</td><td><div class="cob"><div class="cob-bar"><div class="cob-fill" style="width:100%;background:var(--green)"></div></div><span class="cob-pct" style="color:var(--green)">100%</span></div></td><td><span class="mk and">andaime</span></td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Leitura do placar</div><p><strong>Cobertura geral de 84,7%</strong> &mdash; 502 de 593 artefatos citados no PRD do seu m&oacute;dulo. Os m&oacute;dulos tocados pelo motor do art. 53 e pelas entregas recentes (Cr&eacute;dito, Pagamentos, Ressarcimento, Integra&ccedil;&otilde;es, Ingest&atilde;o, Contratos) est&atilde;o em 100%. A d&iacute;vida est&aacute; concentrada em tr&ecirc;s lugares, e um deles responde por metade dela.</p></div>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">As lacunas, campo a campo</span></div>
+
+<div class="mod-hdr" id="g-inc"><span class="mk lac">lacuna</span><span class="mod-nome">Inconsist&ecirc;ncias &mdash; m&oacute;dulo inteiro sem PRD</span><span class="mod-prd">44 artefatos &middot; 0% documentado</span></div>
+<p>&Eacute; a maior d&iacute;vida da documenta&ccedil;&atilde;o, e n&atilde;o &eacute; um detalhe: o m&oacute;dulo &eacute; onde <strong>toda falha do produto vira trabalho para algu&eacute;m</strong>. Glosa, falha de integra&ccedil;&atilde;o com o ERP, DF sem registro na apura&ccedil;&atilde;o assistida, registro do Fisco sem DF, deferimento parcial &mdash; tudo desemboca ali. O card no hub est&aacute; como <em>Rascunho</em>.</p>
+<div class="table-wrap"><table><thead><tr><th>Categoria</th><th>Artefatos no prot&oacute;tipo</th></tr></thead><tbody>
+<tr><td><strong>KPIs</strong> (10)</td><td>Total de Inconsist&ecirc;ncias &middot; Abertas &middot; Em An&aacute;lise &middot; Resolvidas &middot; Glosadas &middot; Ag. Emitente &middot; Inconsist&ecirc;ncia de Entrada &middot; Inconsist&ecirc;ncia de Sa&iacute;da &middot; Volume Financeiro Total &middot; Volume em Aberto</td></tr>
+<tr><td><strong>Gr&aacute;ficos</strong> (5)</td><td>Por Tipo de Inconsist&ecirc;ncia &middot; Evolu&ccedil;&atilde;o Mensal &middot; Entrada vs Sa&iacute;da &middot; IBS vs CBS &middot; Top 5 Fornecedores por Volume</td></tr>
+<tr><td><strong>Colunas</strong> (19)</td><td>ID &middot; Documento Fiscal &middot; Tipo Fiscal &middot; Fornecedor &middot; Contrato &middot; Data &middot; Valor Total &middot; Valor L&iacute;quido &middot; Cr&eacute;dito &middot; RF &middot; St. Cr&eacute;dito &middot; St. Registro &middot; Extin&ccedil;&atilde;o &middot; M&eacute;todo &middot; Fluxo &middot; Origem &middot; Inconsist&ecirc;ncia &middot; Prioridade &middot; Status</td></tr>
+<tr><td><strong>Modos de visualiza&ccedil;&atilde;o</strong> (3)</td><td>Vis&atilde;o Geral &middot; Kanban &middot; Listagem</td></tr>
+<tr><td><strong>Filtros</strong> (10)</td><td>Painel de filtros pr&oacute;prio, com tipo, status, prioridade, fluxo, origem e per&iacute;odo</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">O que a aus&ecirc;ncia custa</div><p>Sem PRD, ficam sem defini&ccedil;&atilde;o escrita: o <strong>cat&aacute;logo de tipos</strong> de ocorr&ecirc;ncia, a <strong>regra de prioriza&ccedil;&atilde;o</strong>, a m&aacute;quina de estados (aberta &rarr; em an&aacute;lise &rarr; resolvida &rarr; ag. emitente), quem &eacute; respons&aacute;vel por cada tipo, qual o prazo, e como a ocorr&ecirc;ncia se fecha. Tr&ecirc;s entregas recentes j&aacute; criaram tipos novos &mdash; falha de integra&ccedil;&atilde;o com o ERP, DF sem registro no Fisco e registro do Fisco sem DF &mdash; e nenhuma tem defini&ccedil;&atilde;o formal.</p></div>
+<p class="src-note">Pend&ecirc;ncias conhecidas e n&atilde;o documentadas: o filtro de tipo n&atilde;o lista os tipos novos; a busca n&atilde;o cobre identificadores <code>APUR-</code>; a retentativa n&atilde;o abre a ocorr&ecirc;ncia.</p>
+
+<div class="mod-hdr" id="g-org"><span class="mk lac">lacuna</span><span class="mod-nome">Organiza&ccedil;&atilde;o e Usu&aacute;rios</span><span class="mod-prd">prd-organizacao v2.2 &middot; 59%</span></div>
+<p>A tela de <strong>Usu&aacute;rios</strong> existe no prot&oacute;tipo e n&atilde;o tem se&ccedil;&atilde;o no PRD de Organiza&ccedil;&atilde;o. Gest&atilde;o de acesso &eacute; assunto de seguran&ccedil;a, e est&aacute; sem defini&ccedil;&atilde;o escrita.</p>
+<div class="table-wrap"><table><thead><tr><th>Artefato</th><th>Onde</th><th>O que falta definir</th></tr></thead><tbody>
+<tr><td>KPIs <strong>Administradores</strong> e <strong>Inativos</strong></td><td>Usu&aacute;rios</td><td>O que conta como administrador; quando um usu&aacute;rio vira inativo</td></tr>
+<tr><td>Coluna <strong>Perfil</strong></td><td>Usu&aacute;rios</td><td><strong>Quais perfis existem e o que cada um pode.</strong> O PRD de Ressarcimento j&aacute; prev&ecirc; um perfil Tesouraria que n&atilde;o existe em Usu&aacute;rios</td></tr>
+<tr><td>Coluna <strong>E-mail</strong> &middot; <strong>&Uacute;ltimo acesso</strong></td><td>Usu&aacute;rios</td><td>Se e-mail &eacute; identificador; o que registra o &uacute;ltimo acesso</td></tr>
+<tr><td>A&ccedil;&otilde;es <strong>Reativar</strong> &middot; <strong>Revogar</strong> &middot; <strong>Reenviar</strong></td><td>Usu&aacute;rios</td><td>Ciclo de vida do acesso e do convite; efeito sobre sess&otilde;es abertas</td></tr>
+<tr><td>Se&ccedil;&atilde;o <strong>Acessos de fornecedores</strong></td><td>Usu&aacute;rios</td><td>Acesso por pessoa <em>e</em> CNPJ, com a mesma pessoa atendendo v&aacute;rios fornecedores &mdash; modelo n&atilde;o descrito em nenhum PRD</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">Este &eacute; o &uacute;nico gap com natureza de seguran&ccedil;a</div><p>Quem v&ecirc; o qu&ecirc;, quem revoga, o que acontece com a sess&atilde;o de um acesso revogado. Some-se a isso que a iniciativa de senha de acesso est&aacute; pausada desde 11/09/2026, e o conjunto merece decis&atilde;o expl&iacute;cita, n&atilde;o omiss&atilde;o.</p></div>
+
+<div class="mod-hdr" id="g-apur"><span class="mk lac">lacuna</span><span class="mod-nome">Apura&ccedil;&atilde;o IBS/CBS</span><span class="mod-prd">prd-apuracao v1.0 &middot; 82%</span></div>
+<p>O PRD nasceu junto com o motor do art. 53 e cobre bem a regra de compensa&ccedil;&atilde;o. O que ficou de fora s&atilde;o os indicadores da aba de cr&eacute;ditos e as a&ccedil;&otilde;es do per&iacute;odo.</p>
+<div class="table-wrap"><table><thead><tr><th>Artefato</th><th>Tipo</th><th>Por que precisa estar no PRD</th></tr></thead><tbody>
+<tr><td><strong>A Apropriar</strong></td><td>KPI</td><td>&Eacute; o estoque de cr&eacute;dito travado pelo art. 47 &mdash; o n&uacute;mero que mede o risco da cadeia de fornecedores</td></tr>
+<tr><td><strong>Utilizados</strong> &middot; <strong>N&atilde;o Utilizados</strong></td><td>KPI</td><td>Separam o cr&eacute;dito que abateu d&eacute;bito do que virou saldo. &Eacute; a liga&ccedil;&atilde;o com o Ressarcimento</td></tr>
+<tr><td><strong>D&eacute;b. Extintos</strong></td><td>Coluna</td><td>Quanto do d&eacute;bito do per&iacute;odo morreu, por qualquer modalidade</td></tr>
+<tr><td><strong>Tributos a Pagar</strong></td><td>Coluna</td><td>O residual em guia. &Eacute; o n&uacute;mero que vai para o Fluxo de Caixa</td></tr>
+<tr><td><strong>&#8635; Calcular</strong> &middot; <strong>&#8634; Reabrir</strong></td><td>A&ccedil;&atilde;o</td><td><strong>Reabrir um per&iacute;odo fechado &eacute; a a&ccedil;&atilde;o mais sens&iacute;vel do m&oacute;dulo</strong> &mdash; desfaz compensa&ccedil;&atilde;o j&aacute; registrada. N&atilde;o tem regra escrita, nem quem pode, nem o que acontece com a trilha</td></tr>
+<tr><td><strong>&darr; Exportar</strong></td><td>A&ccedil;&atilde;o</td><td>Formato e escopo do que sai</td></tr>
+<tr><td><strong>Intelig&ecirc;ncia</strong></td><td>A&ccedil;&atilde;o</td><td>Atalho da apura&ccedil;&atilde;o para o Analytics, sem descri&ccedil;&atilde;o do contexto que leva</td></tr>
+</tbody></table></div>
+
+<div class="mod-hdr" id="g-portal"><span class="mk lac">lacuna</span><span class="mod-nome">Portal do Fornecedor</span><span class="mod-prd">prd-portal-fornecedor v1.0 &middot; 72%</span></div>
+<div class="table-wrap"><table><thead><tr><th>Artefato</th><th>O que falta definir</th></tr></thead><tbody>
+<tr><td>Aba <strong>Dashboard</strong></td><td>O PRD descreve as listagens, n&atilde;o a tela de abertura que o fornecedor v&ecirc; primeiro</td></tr>
+<tr><td><strong>Contatos e Respons&aacute;veis</strong></td><td>Bloco existe na tela; n&atilde;o h&aacute; defini&ccedil;&atilde;o de quem cadastra nem do que o fornecedor pode editar</td></tr>
+<tr><td><strong>Editar</strong> &middot; <strong>Salvar altera&ccedil;&otilde;es</strong> &middot; <strong>Cancelar</strong></td><td>O fornecedor <strong>escreve</strong> no sistema. Que campos, com que valida&ccedil;&atilde;o, com que trilha &mdash; nada disso est&aacute; escrito</td></tr>
+<tr><td><strong>Exportar CSV</strong></td><td>Que dados saem do per&iacute;metro da organiza&ccedil;&atilde;o pela m&atilde;o do fornecedor</td></tr>
+<tr><td>Colunas <strong>Emiss&atilde;o</strong> &middot; <strong>Unidade</strong> &middot; <strong>Valor L&iacute;quido</strong> &middot; <strong>IBS+CBS Apurado</strong></td><td>Campos vis&iacute;veis ao fornecedor sem defini&ccedil;&atilde;o de escopo</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">Escrita de terceiro sem especifica&ccedil;&atilde;o</div><p>&Eacute; o &uacute;nico ponto do produto em que <strong>algu&eacute;m de fora da organiza&ccedil;&atilde;o altera dado</strong>. Sem PRD dessa parte, n&atilde;o h&aacute; contrato sobre o que ele pode mudar nem sobre o que fica registrado.</p></div>
+
+<div class="mod-hdr" id="g-menores"><span class="mk lac">lacuna</span><span class="mod-nome">Lacunas menores</span><span class="mod-prd">In&iacute;cio, Analytics, Concilia&ccedil;&atilde;o, D&eacute;bito</span></div>
+<div class="table-wrap"><table><thead><tr><th>M&oacute;dulo</th><th>Artefato</th><th>Observa&ccedil;&atilde;o</th></tr></thead><tbody>
+<tr><td>In&iacute;cio</td><td><strong>Executar pagamento agora &rarr;</strong></td><td>A&ccedil;&atilde;o direta do In&iacute;cio para a execu&ccedil;&atilde;o de pagamento. &Eacute; atalho para opera&ccedil;&atilde;o financeira e n&atilde;o est&aacute; no PRD</td></tr>
+<tr><td>Analytics &middot; FCT</td><td><strong>Simular &rarr;</strong> e <strong>&#9662; Expandir</strong></td><td>A simula&ccedil;&atilde;o do fluxo de caixa n&atilde;o tem descri&ccedil;&atilde;o de par&acirc;metros nem de premissas</td></tr>
+<tr><td>Analytics &middot; Intelig&ecirc;ncia</td><td><strong>Alertas e anomalias detectadas</strong></td><td>Se&ccedil;&atilde;o inteira; o PRD n&atilde;o define que anomalias s&atilde;o detectadas nem com que limiar</td></tr>
+<tr><td>Concilia&ccedil;&atilde;o</td><td>Coluna <strong>NF L&iacute;quido</strong></td><td>Campo de valor sem defini&ccedil;&atilde;o de c&aacute;lculo</td></tr>
+<tr><td>D&eacute;bito &middot; v&aacute;rios</td><td><strong>Aplicar</strong></td><td>Bot&atilde;o do painel de filtros &mdash; <span class="mk and">andaime</span>, ver <a class="xref" href="#s04">04</a></td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Andaimes do prot&oacute;tipo</span></div>
+<p class="sec-sub">Coisas que existem <strong>para o prot&oacute;tipo funcionar</strong>, n&atilde;o porque o produto precise delas. N&atilde;o entram em PRD, n&atilde;o entram no mapa de funcionalidades e n&atilde;o entram na prioriza&ccedil;&atilde;o &mdash; mas precisam estar identificadas, ou algu&eacute;m as documenta por engano.</p>
+
+<h3 id="a-dados">Andaimes de dados</h3>
+<div class="table-wrap"><table><thead><tr><th>Andaime</th><th>Onde vive</th><th>O que faz</th><th>Em produ&ccedil;&atilde;o</th></tr></thead><tbody>
+<tr><td><strong>Gerador de base sint&eacute;tica</strong></td><td><code>data-sync-fixed.js</code></td><td>Fabrica DFs, fornecedores, contratos, valores e status. 12.287 linhas, 37% do app</td><td>Substitu&iacute;do pela <strong>integra&ccedil;&atilde;o com o ERP e com os entes fiscais</strong></td></tr>
+<tr><td><strong>Semente determin&iacute;stica</strong></td><td><code>base-semente.js</code></td><td>Troca <code>Math.random</code> por <code>mulberry32</code> com semente 20260918, para a base n&atilde;o mudar entre sess&otilde;es</td><td>N&atilde;o existe</td></tr>
+<tr><td><code>?aleatorio=1</code></td><td>par&acirc;metro de URL</td><td>Desliga a semente e volta a sortear, para testar a robustez</td><td>N&atilde;o existe</td></tr>
+<tr><td><code>gerarChaveNFe</code> &middot; <code>gerarChaveDF</code> &middot; <code>gerarRFPag</code></td><td><code>data-sync-fixed.js</code></td><td>Fabricam chave de acesso e registro fiscal plaus&iacute;veis</td><td>A chave vem no pr&oacute;prio documento</td></tr>
+<tr><td><strong>Sincronizador interno</strong></td><td><code>dataSyncFixed.sincronizar()</code></td><td>Reaplica glosa, motor, ressarcimento e status a cada a&ccedil;&atilde;o, para as telas n&atilde;o divergirem</td><td>Substitu&iacute;do por persist&ecirc;ncia e processamento ass&iacute;ncrono</td></tr>
+</tbody></table></div>
+<div class="callout ok"><div class="ct">Nada disso aparece na tela</div><p>Conferido: <strong>n&atilde;o h&aacute; nenhum controle de gera&ccedil;&atilde;o, semente ou recarga de base exposto na interface</strong>. O andaime &eacute; inteiramente interno, e <code>?aleatorio=1</code> &eacute; par&acirc;metro de URL. Isso &eacute; bom &mdash; significa que o invent&aacute;rio de tela n&atilde;o est&aacute; contaminado.</p></div>
+
+<h3 id="a-ui">Andaimes de interface</h3>
+<p>R&oacute;tulos gen&eacute;ricos do arcabou&ccedil;o de UI, que aparecem em quase toda tela e apareceram como &quot;n&atilde;o documentados&quot; no cruzamento. <strong>N&atilde;o s&atilde;o funcionalidade de m&oacute;dulo</strong> &mdash; s&atilde;o o painel de filtros e a pagina&ccedil;&atilde;o, que valem um &uacute;nico registro transversal.</p>
+<div class="table-wrap"><table><thead><tr><th>R&oacute;tulo</th><th>Componente</th><th>Onde aparece</th></tr></thead><tbody>
+<tr><td><strong>Aplicar</strong> &middot; <strong>&#10005; Limpar filtros</strong> &middot; <strong>&#10697; Filtros 0</strong></td><td>Painel de filtros <code>sh-fp-*</code></td><td>11 telas</td></tr>
+<tr><td><strong>&#8592; Anterior</strong> &middot; <strong>Pr&oacute;xima &rarr;</strong></td><td>Pagina&ccedil;&atilde;o de listagem</td><td>Listagens longas</td></tr>
+<tr><td><strong>&#8634; Recarregar</strong></td><td>Recarga da view</td><td>Inconsist&ecirc;ncias</td></tr>
+<tr><td><strong>&#9662; Expandir</strong> &middot; <strong>Enviar</strong></td><td>Acorde&atilde;o e caixa do assistente</td><td>FCT, Assistente</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Recomenda&ccedil;&atilde;o</div><p>Um registro &uacute;nico, transversal, no PRD que descreve o arcabou&ccedil;o &mdash; <strong>n&atilde;o</strong> repetido em cada m&oacute;dulo. O gerenciador de colunas (<code>col-mgr.js</code>) e as rotas diretas (<code>rotas.js</code>) s&atilde;o o caso oposto: parecem infraestrutura, mas s&atilde;o <strong>funcionalidade de produto</strong> e j&aacute; est&atilde;o documentados.</p></div>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Regras da Reforma</span></div>
+<p class="sec-sub">Funcionalidades que n&atilde;o s&atilde;o escolha de produto: s&atilde;o <strong>obriga&ccedil;&atilde;o legal traduzida em software</strong>. Cada uma precisa, no PRD, do artigo que a fundamenta &mdash; sem isso a equipe de desenvolvimento n&atilde;o sabe o que pode negociar e o que n&atilde;o pode.</p>
+<div class="table-wrap"><table><thead><tr><th>Regra</th><th>Base legal</th><th>Onde vive no c&oacute;digo</th><th>PRD</th></tr></thead><tbody>
+<tr><td>O cr&eacute;dito s&oacute; se apropria depois de extinto o d&eacute;bito do fornecedor</td><td><strong>LC 214/2025, art. 47</strong></td><td><code>data-sync-fixed.js</code>, <code>motor-art53.js</code>, <code>glosa.js</code>, <code>integracao-erp.js</code>, <code>conciliacao-apuracao.js</code></td><td><span class="mk ok">documentada</span></td></tr>
+<tr><td>Ordem de uso do cr&eacute;dito: saldo vencido, d&eacute;bitos do per&iacute;odo, saldo credor</td><td><strong>art. 53</strong></td><td><code>motor-art53.js</code>, <code>status-debito.js</code>, <code>ressarcimento.js</code></td><td><span class="mk ok">documentada</span></td></tr>
+<tr><td>Prazo de cinco anos para a apropria&ccedil;&atilde;o</td><td><strong>art. 54</strong></td><td><code>glosa.js</code></td><td><span class="mk ok">documentada</span></td></tr>
+<tr><td>Vedac&otilde;es ao cr&eacute;dito &mdash; causas de glosa</td><td><strong>art. 47 e 48</strong></td><td><code>glosa.js</code></td><td><span class="mk ok">documentada</span></td></tr>
+<tr><td>Ressarcimento: prazos de 30, 60 e 180 dias, deferimento t&aacute;cito, pagamento em 15 dias</td><td><strong>arts. 39 e 40</strong></td><td><code>ressarcimento.js</code></td><td><span class="mk ok">documentada</span></td></tr>
+<tr><td>Impedimentos ao ressarcimento do IBS</td><td><strong>art. 486</strong> (Res. CGIBS 6/2026)</td><td><code>ressarcimento.js</code></td><td><span class="mk ok">documentada</span></td></tr>
+<tr><td>Saldos de 2026 n&atilde;o s&atilde;o ressarc&iacute;veis</td><td><strong>Decreto 12.955/2026, art. 465</strong> &middot; <strong>Res. CGIBS 6/2026, art. 466</strong></td><td><code>ressarcimento.js</code> &mdash; regra desligada na simula&ccedil;&atilde;o</td><td><span class="mk ok">documentada</span></td></tr>
+<tr><td>Separa&ccedil;&atilde;o por &oacute;rg&atilde;o: Receita Federal na CBS, Comit&ecirc; Gestor no IBS</td><td>compet&ecirc;ncia da LC 214/2025</td><td>todo o produto</td><td><span class="mk ok">documentada</span></td></tr>
+<tr><td>Recolhimento pelo Adquirente (RAD) como forma de destravar o cr&eacute;dito</td><td>regime de recolhimento da RTC</td><td><code>exec-rad*.js</code></td><td><span class="mk ok">documentada</span></td></tr>
+<tr><td><strong>Tipos de ocorr&ecirc;ncia ligados &agrave; apura&ccedil;&atilde;o assistida</strong></td><td><strong>art. 46</strong> &mdash; apura&ccedil;&atilde;o assistida</td><td><code>conciliacao-apuracao.js</code>, <code>integracao-erp.js</code></td><td><span class="mk lac">sem PRD</span></td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">A &uacute;nica regra da Reforma sem PRD &eacute; a de Inconsist&ecirc;ncias</div><p>DF que est&aacute; na plataforma e o Fisco n&atilde;o tem, e registro que o Fisco tem e a plataforma n&atilde;o &mdash; as duas ocorr&ecirc;ncias existem no c&oacute;digo, com toler&acirc;ncia de 30 dias e &oacute;rg&atilde;o nomeado, e nenhuma tem defini&ccedil;&atilde;o escrita. S&atilde;o exatamente as que decidem se o cr&eacute;dito se apropria.</p></div>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Backend: superf&iacute;cie e cobertura</span></div>
+<p>O prot&oacute;tipo n&atilde;o tem servidor: o que faz papel de backend s&atilde;o os m&oacute;dulos de regra em JavaScript. A auditoria olhou a <strong>superf&iacute;cie p&uacute;blica</strong> de cada um &mdash; as fun&ccedil;&otilde;es que outros m&oacute;dulos chamam &mdash; e conferiu se a regra correspondente est&aacute; escrita no PRD.</p>
+<div class="table-wrap"><table><thead><tr><th>M&oacute;dulo de regra</th><th>Linhas</th><th>O que decide</th><th>PRD</th></tr></thead><tbody>
+<tr><td><code>motor-art53.js</code></td><td class="num">701</td><td>Ordem de uso do cr&eacute;dito, v&iacute;nculo cr&eacute;dito&harr;d&eacute;bito, saldo credor transportado, s&eacute;rie do fluxo de caixa</td><td><span class="mk ok">Apura&ccedil;&atilde;o v1.0</span></td></tr>
+<tr><td><code>ressarcimento.js</code></td><td class="num">1.218</td><td>Inten&ccedil;&atilde;o, pedido, decis&atilde;o, Selic, impedimentos, devolu&ccedil;&atilde;o de deferimento parcial</td><td><span class="mk ok">Ressarcimento v1.3</span></td></tr>
+<tr><td><code>glosa.js</code></td><td class="num">236</td><td>Cat&aacute;logo de causas, ficha, contencioso, efeito no cr&eacute;dito</td><td><span class="mk ok">Cr&eacute;dito v2.9</span></td></tr>
+<tr><td><code>status-debito.js</code></td><td class="num">216</td><td>Ciclo de extin&ccedil;&atilde;o separado das flags, KPIs e composi&ccedil;&atilde;o do d&eacute;bito</td><td><span class="mk ok">D&eacute;bito v1.3</span></td></tr>
+<tr><td><code>integracao-erp.js</code></td><td class="num">175</td><td>Webhook por mudan&ccedil;a de status, envio, entrega, comprovante, falha</td><td><span class="mk ok">Integra&ccedil;&otilde;es v1.1</span></td></tr>
+<tr><td><code>conciliacao-apuracao.js</code></td><td class="num">149</td><td>DF sem registro no Fisco e registro do Fisco sem DF, com toler&acirc;ncia de 30 dias</td><td><span class="mk ok">Concilia&ccedil;&atilde;o v3.3</span></td></tr>
+<tr><td><code>acesso-fornecedor.js</code></td><td class="num">1.161</td><td>Perfil de acesso do fornecedor, escopo do que ele v&ecirc; e do que ele edita</td><td><span class="mk lac">parcial &mdash; a escrita n&atilde;o est&aacute; especificada</span></td></tr>
+<tr><td><code>col-mgr.js</code></td><td class="num">459</td><td>Gerenciador de colunas por listagem</td><td><span class="mk ok">transversal</span></td></tr>
+<tr><td><code>data-sync-fixed.js</code></td><td class="num">12.287</td><td>Gera&ccedil;&atilde;o da base, renderiza&ccedil;&atilde;o de listagens, KPIs e sincronia</td><td><span class="mk and">andaime + funcionalidade misturados</span></td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">O arquivo que merece aten&ccedil;&atilde;o</div><p><code>data-sync-fixed.js</code> tem <strong>12.287 linhas</strong> e mistura duas coisas de naturezas opostas: o gerador da base sint&eacute;tica, que &eacute; andaime e morre na primeira integra&ccedil;&atilde;o real, e a renderiza&ccedil;&atilde;o de listagens e indicadores, que &eacute; produto. A auditoria n&atilde;o consegue separar as duas por script, e essa mistura &eacute; o que torna dif&iacute;cil dizer, para cada compor&shy;tamento, se ele &eacute; requisito ou artif&iacute;cio.</p></div>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Os marcadores no hub</span></div>
+<p>A auditoria n&atilde;o serve de nada se ficar s&oacute; aqui. Cada card de m&oacute;dulo no <a class="xref" href="prds.html">hub de PRDs</a> passa a exibir os marcadores que se aplicam a ele, com legenda no topo da se&ccedil;&atilde;o.</p>
+<div class="table-wrap"><table><thead><tr><th>Marcador</th><th>Significa</th><th>O que fazer</th></tr></thead><tbody>
+<tr><td><span class="mk lac">lacuna</span></td><td>H&aacute; artefato na tela ou regra no c&oacute;digo que o PRD n&atilde;o descreve</td><td>Completar o PRD. O n&uacute;mero de artefatos aparece no card</td></tr>
+<tr><td><span class="mk and">andaime</span></td><td>O m&oacute;dulo cont&eacute;m comportamento que existe <strong>s&oacute; para o prot&oacute;tipo</strong> &mdash; base sint&eacute;tica, semente, gera&ccedil;&atilde;o de chave</td><td><strong>N&atilde;o</strong> documentar como funcionalidade. Conferir que o PRD descreve a entrada real, por integra&ccedil;&atilde;o</td></tr>
+<tr><td><span class="mk rtc">regra RTC</span></td><td>O m&oacute;dulo implementa regra da Reforma com artigo de lei</td><td>O PRD precisa citar o artigo. Mudan&ccedil;a aqui n&atilde;o &eacute; decis&atilde;o de produto</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Por que &quot;andaime&quot; e &quot;regra RTC&quot; convivem no mesmo card</div><p>Cr&eacute;dito e D&eacute;bito t&ecirc;m os dois. O ciclo do cr&eacute;dito &eacute; regra do art. 47 &mdash; inegoci&aacute;vel &mdash; e ao mesmo tempo o documento que o origina nasce hoje de um gerador sint&eacute;tico que n&atilde;o existir&aacute; em produ&ccedil;&atilde;o. Quem l&ecirc; o PRD precisa dos dois avisos ao mesmo tempo.</p></div>
+</div>
+
+<!-- 08 -->
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">O que fazer, em ordem</span></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>A&ccedil;&atilde;o</th><th>Tamanho</th><th>Por que nesta ordem</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td><strong>PRD de Inconsist&ecirc;ncias</strong>, do zero</td><td>Grande</td><td>44 artefatos, metade da d&iacute;vida. &Eacute; onde toda falha vira trabalho, e onde est&atilde;o as &uacute;nicas regras da Reforma sem documento</td></tr>
+<tr><td><strong>2</strong></td><td>Se&ccedil;&atilde;o de <strong>Usu&aacute;rios e acessos</strong> no PRD de Organiza&ccedil;&atilde;o</td><td>M&eacute;dio</td><td>&Uacute;nico gap com natureza de seguran&ccedil;a. Define os perfis que outros PRDs j&aacute; pressup&otilde;em</td></tr>
+<tr><td><strong>3</strong></td><td>Completar o <strong>PRD do Portal do Fornecedor</strong></td><td>M&eacute;dio</td><td>&Eacute; o &uacute;nico lugar em que algu&eacute;m de fora escreve no sistema, e n&atilde;o h&aacute; contrato</td></tr>
+<tr><td><strong>4</strong></td><td><strong>Apura&ccedil;&atilde;o v1.1</strong>: KPIs da aba de cr&eacute;ditos e as a&ccedil;&otilde;es de per&iacute;odo</td><td>Pequeno</td><td><em>Reabrir per&iacute;odo</em> desfaz compensa&ccedil;&atilde;o registrada e n&atilde;o tem regra escrita</td></tr>
+<tr><td><strong>5</strong></td><td>Registro transversal do <strong>arcabou&ccedil;o de UI</strong></td><td>Pequeno</td><td>Fecha o ru&iacute;do de &quot;Aplicar&quot;, &quot;Limpar filtros&quot; e pagina&ccedil;&atilde;o em onze telas de uma vez</td></tr>
+<tr><td><strong>6</strong></td><td>Lacunas menores: In&iacute;cio, Analytics e Concilia&ccedil;&atilde;o</td><td>Pequeno</td><td>Seis artefatos somados</td></tr>
+</tbody></table></div>
+<div class="callout ok"><div class="ct">O que j&aacute; est&aacute; certo</div><p>Seis m&oacute;dulos em <strong>100% de cobertura</strong>: Cr&eacute;dito, Pagamentos, Ressarcimento, Integra&ccedil;&otilde;es, Ingest&atilde;o e Contratos. N&atilde;o por acaso &mdash; s&atilde;o os que receberam PRD depois das entregas recentes. O h&aacute;bito de atualizar o PRD junto com o m&oacute;dulo est&aacute; funcionando; a d&iacute;vida &eacute; anterior a ele.</p></div>
+</div>
+
+<!-- 09 -->
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Limita&ccedil;&otilde;es do m&eacute;todo</span></div>
+<p>Onde este n&uacute;mero pode enganar, dito antes que engane.</p>
+<ul class="plain">
+<li><strong>Cita&ccedil;&atilde;o n&atilde;o &eacute; especifica&ccedil;&atilde;o.</strong> Um artefato conta como documentado se o PRD o menciona. Mencionar &quot;Saldo credor&quot; numa tabela n&atilde;o &eacute; o mesmo que definir como ele &eacute; calculado. <strong>A cobertura real &eacute; menor que 84,7%</strong></li>
+<li><strong>O caminho inverso n&atilde;o foi medido.</strong> A auditoria pergunta &quot;o que est&aacute; na tela e n&atilde;o no PRD&quot;. N&atilde;o pergunta &quot;o que est&aacute; no PRD e n&atilde;o foi constru&iacute;do&quot; &mdash; isso &eacute; outra auditoria, e boa parte dos 481 requisitos est&aacute; em M1 ou M2, por decis&atilde;o</li>
+<li><strong>Artefato injetado por JS &eacute; colhido por padr&atilde;o de texto</strong>, e s&oacute; onde o c&oacute;digo monta HTML em <em>string</em>. Se algum m&oacute;dulo montar tela por outro caminho, escapa</li>
+<li><strong>Regra de backend foi lida pela superf&iacute;cie p&uacute;blica</strong>, n&atilde;o linha a linha. Uma regra enterrada dentro de uma fun&ccedil;&atilde;o grande n&atilde;o aparece</li>
+<li><strong>PRD de Cr&eacute;dito lido na vers&atilde;o do disco</strong>, que tem altera&ccedil;&otilde;es n&atilde;o commitadas de outra sess&atilde;o. Os 100% dele devem ser reconferidos quando for liberado</li>
+</ul>
+</div>
+
+<!-- 10 -->
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>22/09/2026</strong> &mdash; Primeira auditoria. 593 artefatos do prot&oacute;tipo confrontados com 200 funcionalidades, 481 requisitos e 179 regras dos 17 PRDs vivos; cobertura de 84,7%. Lacunas campo a campo em Inconsist&ecirc;ncias (sem PRD), Organiza&ccedil;&atilde;o e Usu&aacute;rios, Portal do Fornecedor, Apura&ccedil;&atilde;o, In&iacute;cio, Analytics e Concilia&ccedil;&atilde;o. Cat&aacute;logo dos andaimes de dados e de interface, cat&aacute;logo das regras da Reforma com base legal, e os tr&ecirc;s marcadores levados aos cards do hub.</div></div>
+</div>
+
+</div>
+</body>
+</html>
