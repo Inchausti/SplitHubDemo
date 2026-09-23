@@ -21,9 +21,9 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.6'
-DATA = u'21/09/2026'
-BASE_MAPA = u'Mapa de Funcionalidades v2.6'
+VERSAO = u'v2.7'
+DATA = u'22/09/2026'
+BASE_MAPA = u'Mapa de Funcionalidades v2.7'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
 URL_DOCS = 'https://split-hubhq.github.io/app/docs/'
@@ -116,6 +116,10 @@ def resolver_vinculo(p):
         info = prd_info(p[1:])
         return {'nivel': 'lacuna', 'href': p[1:], 'rotulo': u'Não descrita no PRD de ' + info['titulo'],
                 'fid': u'', 'destino': u''}
+    if '#' not in p:
+        # link para o PRD inteiro, sem ancora: aponta o documento, sem destino interno
+        info = prd_info(p)
+        return {'nivel': 'prd', 'href': p, 'rotulo': u'PRD de ' + info['titulo'], 'fid': u'', 'destino': u''}
     arq, anc = p.split('#', 1)
     info = prd_info(arq)
     if anc in info['blocos']:
@@ -128,26 +132,26 @@ def resolver_vinculo(p):
 
 # faixa por modulo: lista com a faixa de cada funcionalidade, na ordem do mapa
 FAIXAS = {
-    0: ['M0','M2','M2','M2','M0','M0','M1'],
-    1: ['M0','M0','M0','M0','M2','M0','M2','M2','M2','M0','M0','M0','M0','M0','M1','M1','M1','M1'],
-    2: ['M0','M0','M1','M1','M0','M1','M1','M1','M1'],
-    3: ['M0','M0','M0','M0','M1','M1','M1','M0','M0','M1','M1','M0','M0','M0'],
-    4: ['M0','M0','M0','M0','M0','M1','M0','M1','M0','M1','M1','M1','M1'],
-    5: ['M0','M0','M0','M0','M0','M0','M0'],
-    6: ['M2','M2','M2','M2','M2','M2','M2','M1','M1','M1','M1','M1'],
-    7: ['M2','M2','M2','M2','M2','M2','M1'],
-    8: ['M0','M0','M0','M0','M0','M1','M0'],
-    9: ['M0','M0','M1','M0','M2','M0','M0','M0','M0','M0','M0','M0'],
+    0: ['M0','M2','M2','M2','M0','M0','M1','M1'],
+    1: ['M0','M0','M0','M0','M2','M0','M2','M2','M2','M0','M0','M0','M0','M0','M1','M1','M1','M1','M1','M1'],
+    2: ['M0','M0','M1','M1','M0','M1','M1','M1','M1','M1'],
+    3: ['M0','M0','M0','M0','M1','M1','M1','M0','M0','M1','M1','M0','M0','M0','M1','M1'],
+    4: ['M0','M0','M0','M0','M0','M1','M0','M1','M0','M1','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1'],
+    5: ['M0','M0','M0','M0','M0','M0','M0','M1','M1','M1','M2'],
+    6: ['M2','M2','M2','M2','M2','M2','M2','M1','M1','M1','M1','M1','M2'],
+    7: ['M2','M2','M2','M2','M2','M2','M1','M1','M1'],
+    8: ['M0','M0','M0','M0','M0','M1','M0','M1','M1','M2'],
+    9: ['M0','M0','M1','M0','M2','M0','M0','M0','M0','M0','M0','M0','M1','M1'],
     10: ['M0','M2','M0','M0','M1','M1'],
-    11: ['M0','M0','M1','M1','M1','M1','M1','M0','M1','M1','M0','M1'],
-    12: ['M0','M0','M0','M0','M0','M0','M0','M0','M0','X','X','M1'],
-    13: ['M0','M1','M1','M1','M1','M1','M0','M0','M1','M1','M1','M0','M1','M1','M1'],
-    14: ['M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1'],
-    15: ['M0','M0','M0','M0','M1','M0','M0','M1'],
-    16: ['M0','M1','M0','M0','M0','M0','M1','M1','M1','M1','M1','M1'],
-    17: ['M2','M2','M2','M2'],
-    18: ['M1','M1','M1','M1','M1','M0','M0','M0','M0','M0','M0'],
-    19: ['M1','M1','M1','M1','M1','M0'],
+    11: ['M0','M0','M1','M1','M1','M1','M1','M0','M1','M1','M0','M1','M1','M1','M2'],
+    12: ['M0','M0','M0','M0','M0','M0','M0','M0','M0','X','X','M1','M1','M2','M2','M1','M2'],
+    13: ['M0','M1','M1','M1','M1','M1','M0','M0','M1','M1','M1','M0','M1','M1','M1','M1','M1','M1','M1'],
+    14: ['M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M2','M1'],
+    15: ['M0','M0','M0','M0','M1','M0','M0','M1','M1'],
+    16: ['M0','M1','M0','M0','M0','M0','M1','M1','M1','M1','M1','M1','M1','M1','M1'],
+    17: ['M2','M2','M2','M2','M2'],
+    18: ['M1','M1','M1','M1','M1','M0','M0','M0','M0','M0','M0','M1'],
+    19: ['M1','M1','M1','M1','M1','M0','M1','M1','M1','M2'],
     20: ['M1','M2','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1','M1','M1','M1'],
 }
 

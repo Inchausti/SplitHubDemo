@@ -203,7 +203,10 @@ var MODS = [
       {n:'Card de saldo credor e ressarcimento',t:'g',
        d:'No Início, CBS e IBS lado a lado — disponível, reservado, em pedido, recebido no ano e próximo prazo —, sem somar os tributos. Leva ao módulo de Ressarcimento.',
        p:'prd-ressarcimento.html#s09'},
-    ]
+          {n:'Atalho para a execução de pagamento',t:'a',
+       d:'Leva à tela da operação com o recorte aplicado. É navegação, não execução: nenhuma operação financeira parte do painel de resumo.',
+       p:'prd-inicio.html'},
+]
   },
   /* 1 */ {
     icon:'💳',name:'Créditos IBS/CBS',scope:'Cliente · Operacional + Analítico',
@@ -263,6 +266,12 @@ var MODS = [
       {n:'Compensação por documento no crédito',t:'l',
        d:'Colunas de quanto do crédito já abateu débito, com marca de compensação parcial, e quais documentos de saída foram abatidos, com valor de cada um.',
        p:'prd-apuracao.html#s03'},
+      {n:'Origem do crédito pela ingestão do documento',t:'p',
+       d:'O crédito nasce do documento que chega por integração, com o grupo de tributos por item.',
+       p:'prd-credito.html'},
+      {n:'Apropriação reconhecida pela apuração assistida',t:'r',
+       d:'O crédito só se apropria depois de extinto o débito do fornecedor, e quem atesta a extinção é o órgão. No IBS não há API: a conferência é manual enquanto o Comitê Gestor não publicar.',
+       p:'prd-credito.html'},
 ]
   },
   /* 2 */ {
@@ -296,6 +305,9 @@ var MODS = [
       {n:'Créditos que abateram cada débito',t:'l',
        d:'Coluna com o valor compensado, marca de parcial, e os documentos de entrada cujos créditos extinguiram o débito.',
        p:'prd-apuracao.html#s03'},
+      {n:'Extinção parcial no contrato de eventos',t:'r',
+       d:'O débito parcialmente extinto não cabe nos dois estados do contrato público — e é justamente o caso em que o crédito do adquirente se apropria só em parte.',
+       p:'prd-debito.html'},
 ]
   },
   /* 3 */ {
@@ -344,7 +356,13 @@ var MODS = [
       {n:'Aviso ao fornecedor do recolhimento',t:'a',
        d:'Paga a guia RAD, o fornecedor recebe por e-mail o comprovante e o aviso de que o adquirente já recolheu aquele tributo — sem isso ele recolhe de novo. Roda em segundo plano: o que aparece é o evento no histórico do documento e a marca na linha do pagamento.',
        p:'prd-pagamentos.html#f-13'},
-    ]
+          {n:'Comprovante recebido por integração',t:'a',
+       d:'O comprovante deixa de ser anexo manual e chega por contrato, em PIX ou boleto, com os identificadores da transação.',
+       p:'prd-pagamentos.html'},
+      {n:'Rastreamento do recolhimento na Receita',t:'l',
+       d:'Protocolo, situação e data de confirmação na trilha do pagamento.',
+       p:'prd-pagamentos.html'},
+]
   },
   /* 4 */ {
     icon:'⚠️',name:'Inconsistências',scope:'Cliente · Operacional + Gestão',
@@ -389,6 +407,27 @@ var MODS = [
       {n:'Registro na apuração assistida sem DF',t:'r',
        d:'O Fisco tem documento em nome da empresa que nunca entrou na plataforma — não ingerido, emitido em contingência, de outro estabelecimento ou rejeitado e nunca reenviado.',
        p:'prd-conciliacao.html#s06'},
+      {n:'Catálogo tipificado em quatro famílias',t:'c',
+       d:'Doze tipos agrupados pela origem da falha: documento, confronto com o Fisco, ciclo do crédito e integração. A família diz de onde a falha veio; o tipo diz o que fazer com ela.',
+       p:'prd-inconsistencias.html#s03'},
+      {n:'Prioridade calculada por valor em risco e prazo',t:'r',
+       d:'Quatro níveis derivados do crédito em risco cruzado com prazo legal, recalculados quando o valor ou a data mudam. O usuário justifica uma elevação, mas não define o nível do zero.',
+       p:'prd-inconsistencias.html#s05'},
+      {n:'Suspensão do prazo quando depende de terceiro',t:'a',
+       d:'Enquanto a ocorrência aguarda fornecedor, emitente ou órgão, o prazo interno para de correr e o externo passa a ser acompanhado.',
+       p:'prd-inconsistencias.html#s04'},
+      {n:'Reabertura pela reincidência da mesma causa',t:'a',
+       d:'Nova detecção da mesma causa no mesmo documento reabre a ocorrência em vez de criar outra. É o que impede a fila de inflar com repetições.',
+       p:'prd-inconsistencias.html#s04'},
+      {n:'Responsável e prazo por família de ocorrência',t:'c',
+       d:'Cada família tem quem resolve e em quanto tempo — do time fiscal ao técnico, com prazo maior onde depende de terceiro.',
+       p:'prd-inconsistencias.html#s05'},
+      {n:'Reenvio do evento a partir da ocorrência',t:'a',
+       d:'Na falha de entrega ao ERP, reenviar o webhook que não chegou e registrar o resultado na trilha.',
+       p:'prd-inconsistencias.html#f-10'},
+      {n:'Volume financeiro em risco como indicador',t:'g',
+       d:'Quanto crédito depende de alguém resolver alguma coisa. Mede risco, não trabalho.',
+       p:'prd-inconsistencias.html#s09'},
 ]
   },
   /* 5 */ {
@@ -416,7 +455,19 @@ var MODS = [
       {n:'Ingestão por API com credencial própria',t:'c',
        d:'A conexão de ingestão passa a ter credencial emitida dentro do produto, com escopos de escrita e leitura. É o canal que torna o upload manual uma exceção.',
        p:'prd-ingestao.html#s13'},
-    ]
+          {n:'Ingestão em lote de até 500 documentos',t:'a',
+       d:'Lote em JSON ou CSV, com identificador próprio para acompanhar o processamento do conjunto.',
+       p:'prd-ingestao.html'},
+      {n:'Situação do documento na esteira',t:'l',
+       d:'Recebido, em processamento, concluído ou com erro, com consulta por documento e por lote.',
+       p:'prd-ingestao.html'},
+      {n:'Imutabilidade do documento concluído',t:'r',
+       d:'Documento processado não é mais alterável; correção só em pendente ou com erro.',
+       p:'prd-ingestao.html'},
+      {n:'Vínculo ao contrato na entrada',t:'c',
+       d:'O documento chega amarrado ao contrato, com possibilidade de divergir dele no caso específico. É por aí que a elegibilidade ao RAD alcança o documento.',
+       p:'prd-ingestao.html'},
+]
   },
   /* 6 */ {
     icon:'📈',name:'FCT — Fluxo de Caixa Tributário',scope:'Cliente · Analítico',
@@ -458,6 +509,9 @@ var MODS = [
       {n:'Créditos a apropriar por mês de origem',t:'g',
        d:'Créditos ainda não apropriados distribuídos pelo mês do documento que os originou, separando condicionado, em risco e glosado.',
        p:'prd-analytics.html#s01'},
+      {n:'Simulação por cenário de receita e de fornecedor',t:'g',
+       d:'Horizonte, cenário de receita e comportamento do fornecedor — este último é o que mais move o resultado, porque é a dependência do pagamento em ação.',
+       p:'prd-analytics.html'},
 ]
   },
   /* 7 */ {
@@ -485,6 +539,12 @@ var MODS = [
           {n:'Volume financeiro de NFs sob RAD em 90 e 120 dias',t:'g',
        d:'Volume das notas cujo recolhimento pelo adquirente vence nas próximas janelas, para dimensionar o caixa necessário e antecipar decisão de política.',
        p:'prd-analytics.html#s01'},
+      {n:'Alertas de vencimento, concentração, desvio e divergência',t:'r',
+       d:'Quatro famílias de sinal calculadas sobre a base real de registros fiscais, nunca sobre projeção.',
+       p:'prd-analytics.html'},
+      {n:'Separação entre alerta e ocorrência',t:'r',
+       d:'Alerta é observação estatística; ocorrência é fato apurado, com responsável e prazo. Confundi-los encheria a fila de suspeitas.',
+       p:'prd-analytics.html'},
 ]
   },
   /* 8 */ {
@@ -512,7 +572,16 @@ var MODS = [
       {n:'Modelo Split Payment — retenção na liquidação',t:'c',
        d:'Terceiro método de pagamento do contrato: o IBS e a CBS são segregados no próprio instrumento de pagamento e recolhidos na liquidação. Documentos em Split Payment não admitem recolhimento assumido, porque o instrumento já separa o tributo (art. 36, caput).',
        p:'prd-contratos.html#s02'},
-    ]
+          {n:'Elegibilidade do contrato ao RAD',t:'c',
+       d:'Decide se aquele contrato entra no fluxo de recolhimento pelo adquirente. Torna a decisão uma propriedade negociada, e não uma escolha caso a caso na tela.',
+       p:'prd-contratos.html'},
+      {n:'Chave do contrato no ERP',t:'c',
+       d:'Identificador do contrato no sistema do cliente. Sustenta a idempotência: reenvio não cria contrato duplicado.',
+       p:'prd-contratos.html'},
+      {n:'Renovação automática do contrato',t:'c',
+       d:'O contrato se renova no fim da vigência, sem depender de ação.',
+       p:'prd-contratos.html'},
+]
   },
   /* 9 */ {
     icon:'🏪',name:'Fornecedores',scope:'Cliente · Gestão',
@@ -554,7 +623,13 @@ var MODS = [
       {n:'Histórico de lotes de importação',t:'l',
        d:'Cada importação vira um lote com autor, data, contagens e o arquivo original — a resposta para “quem inativou estes fornecedores?”.',
        p:'prd-fornecedor.html#f-17'},
-    ]
+          {n:'Representantes fiscais por CPF',t:'c',
+       d:'Quem responde pelo fornecedor perante o Fisco, identificado por CPF. Não se confunde com contato: a documentação oficial trata o dado como essencial ao cálculo correto do crédito.',
+       p:'prd-fornecedor.html'},
+      {n:'Cadastro recebido do ERP',t:'p',
+       d:'Razão social, situação cadastral, natureza jurídica, regime e atividade chegam por integração, em vez de digitados.',
+       p:'prd-fornecedor.html'},
+]
   },
   /* 10 */ {
     icon:'🏢',name:'Organização',scope:'Cliente · Gestão',
@@ -620,7 +695,16 @@ var MODS = [
       {n:'Papéis Responsável e Leitura',t:'c',
        d:'Responsável envia comprovante, contesta e conversa pelo chat; Leitura vê o mesmo e não age. É a única distinção que muda o risco do acesso externo.',
        p:'prd-portal-fornecedor.html#f-12'},
-    ]
+          {n:'Painel de abertura do fornecedor',t:'g',
+       d:'A posição do próprio fornecedor antes das listagens: documentos do período, o que depende dele e o que gerou ocorrência.',
+       p:'prd-portal-fornecedor.html'},
+      {n:'Edição restrita a contato e responsáveis',t:'a',
+       d:'O fornecedor corrige cadastro, nunca dado fiscal, com trilha de autor, data e valor anterior. O que ele contesta, contesta por ocorrência.',
+       p:'prd-portal-fornecedor.html'},
+      {n:'Exportação registrada do recorte visível',t:'a',
+       d:'Sai só o que ele já enxerga em tela, e a exportação fica registrada — é saída de dado do perímetro da organização.',
+       p:'prd-portal-fornecedor.html'},
+]
   },
   /* 12 */ {
     icon:'🔐',name:'Auth · Design System',scope:'Transversal',
@@ -662,6 +746,21 @@ var MODS = [
           {n:'Rotas diretas para telas e abas',t:'p',
        d:'Endereços próprios para cada tela e aba, de forma que um link leve direto ao ponto certo da aplicação — usado em documentação, no hub de PRDs e no compartilhamento entre pessoas.',
        p:'prd-inicio.html#s01'},
+      {n:'Contador de filtros ativos sempre visível',t:'p',
+       d:'Número filtrado nunca se confunde com total. Um indicador sob filtro, sem sinal de filtro, é erro de leitura esperando acontecer.',
+       p:'prd-arcabouco.html#s02'},
+      {n:'Filtro aplicado só sob confirmação',t:'p',
+       d:'O recorte inteiro é montado antes de a listagem ser refeita, em vez de recarregar a cada campo alterado.',
+       p:'prd-arcabouco.html#s02'},
+      {n:'Paginação com retorno à primeira página',t:'p',
+       d:'Mudar o recorte devolve a listagem ao início, para não mostrar a página 5 de um conjunto que acabou de mudar.',
+       p:'prd-arcabouco.html#s03'},
+      {n:'Alcance da busca declarado por módulo',t:'p',
+       d:'Cada módulo diz quais identificadores a própria busca encontra. Sem essa declaração, ninguém nota o que a busca deixou de fora.',
+       p:'prd-arcabouco.html#s03'},
+      {n:'Gerenciador de colunas com persistência por usuário',t:'p',
+       d:'Seleção, ordem e restauração do padrão, por listagem e por usuário, valendo também para a exportação.',
+       p:'prd-arcabouco.html#s04'},
 ]
   },
   /* 13 */ {
@@ -713,7 +812,19 @@ var MODS = [
       {n:'Vínculo com a conexão de destino',t:'c',
        d:'Só conexões do tipo RAD ↔ ERP aparecem no seletor, com a saúde da conexão à vista. Sem conexão, a guia é gerada e fica na plataforma.',
        p:'prd-execucao-rad.html#f-07'},
-    ]
+          {n:'Emissão da guia nos dois órgãos',t:'a',
+       d:'O SplitHub emite a guia de RAD na Receita Federal para a CBS e no Comitê Gestor para o IBS.',
+       p:'prd-execucao-rad.html'},
+      {n:'Comprovante de pagamento recebido do ERP',t:'a',
+       d:'O ERP paga a guia e devolve o comprovante, em PIX ou boleto, com os identificadores da transação.',
+       p:'prd-execucao-rad.html'},
+      {n:'Apropriação do crédito reconhecida pelo ente fiscal',t:'r',
+       d:'O pagamento do RAD opera a apropriação do crédito pelo comprador, e o reconhecimento vem da integração com o Fisco — não do comprovante.',
+       p:'prd-execucao-rad.html'},
+      {n:'Conciliação financeira do recolhimento',t:'r',
+       d:'Confronto entre o que o Fisco reconheceu e o comprovante que o ERP enviou. Divergência dos dois lados vira ocorrência.',
+       p:'prd-execucao-rad.html'},
+]
   },
   /* 14 */ {
     icon:'🔌',name:'Integrações',scope:'Cliente · Configuração',
@@ -773,6 +884,21 @@ var MODS = [
       {n:'Comprovante de recolhimento recebido do ERP',t:'a',
        d:'O comprovante chega pela integração e entra na trilha antes da apropriação do crédito, conciliado com o pagamento.',
        p:'prd-integracoes.html#s01'},
+      {n:'Evento de mudança de estado do débito',t:'a',
+       d:'O contrato público prevê o aviso ao ERP quando um débito é extinto, com os créditos que o abateram. O produto ainda não emite nada quando o débito muda.',
+       p:'prd-integracoes.html'},
+      {n:'Eventos da guia de RAD ao ERP',t:'a',
+       d:'Guia gerada, individual ou em lote, com número, vencimento, chave PIX, código de barras, PDF e o valor líquido ao fornecedor.',
+       p:'prd-integracoes.html'},
+      {n:'Evento de comprovante processado',t:'a',
+       d:'Confirma ao ERP o processamento do comprovante, com protocolo e situação na Receita.',
+       p:'prd-integracoes.html'},
+      {n:'Inscrição do ERP nos eventos de automação',t:'c',
+       d:'O ERP registra a própria URL e escolhe os eventos; lista vazia recebe todos.',
+       p:'prd-automacoes.html'},
+      {n:'Ambientes de teste e de produção',t:'c',
+       d:'Sandbox separado da produção, com credencial própria, para o cliente integrar sem tocar em dado real.',
+       p:'prd-integracoes.html'},
 ]
   },
   /* 15 */ {
@@ -803,7 +929,10 @@ var MODS = [
       {n:'Recorte por múltiplos períodos',t:'p',
        d:'Seleção de várias competências ao mesmo tempo, porque divergência de apuração costuma aparecer na virada do mês.',
        p:'prd-conciliacao.html#f-08'},
-    ]
+          {n:'Situação tributária por tributo na conciliação',t:'l',
+       d:'O código de situação que o Fisco registrou, por IBS e por CBS. É o campo que decide se a linha gera crédito: conciliar valor sem conciliar situação esconde a divergência que mais importa.',
+       p:'prd-conciliacao.html'},
+]
   },
   /* 16 */ {
     icon:'🧮',name:'Apuração IBS/CBS',scope:'Cliente · Operacional',
@@ -845,6 +974,15 @@ var MODS = [
       {n:'Devolução de deferimento parcial',t:'a',
        d:'O crédito não reconhecido num pedido de ressarcimento volta ao saldo na data da decisão e aparece na apuração daquele período como devolução.',
        p:'prd-apuracao.html#s04'},
+      {n:'Reabertura restrita, com justificativa e trilha',t:'r',
+       d:'Reabrir desfaz compensação registrada. Só administrador reabre, com justificativa, e todo vínculo desfeito entra na trilha do crédito e do débito.',
+       p:'prd-apuracao.html'},
+      {n:'Bloqueio da reabertura com pedido de ressarcimento em análise',t:'r',
+       d:'Período cujo saldo já foi comprometido com o órgão não reabre.',
+       p:'prd-apuracao.html'},
+      {n:'Crédito a apropriar como medida de risco da cadeia',t:'g',
+       d:'O estoque de crédito travado pela dependência do pagamento do fornecedor — o número que mede o risco da cadeia de fornecedores.',
+       p:'prd-apuracao.html'},
 ]
   },
   /* 17 */ {
@@ -863,7 +1001,10 @@ var MODS = [
       {n:'Histórico de conversas',t:'l',
        d:'Conversas anteriores preservadas na lateral, para retomar um diagnóstico sem refazer o caminho.',
        p:'prd-analytics.html#f-18'},
-    ]
+          {n:'Resposta ancorada nos números da base',t:'g',
+       d:'A resposta cita os números de onde saiu, respeita o recorte da tela e nunca soma os dois tributos. O assistente responde e leva à tela; não executa ação.',
+       p:'prd-analytics.html'},
+]
   },
   /* 18 */ {
     icon:'🤖',name:'Automações',scope:'Cliente · Configuração',
@@ -902,7 +1043,10 @@ var MODS = [
       {n:'Auditoria da régua com motivo',t:'p',
        d:'Criação, ativação e cada alteração de parâmetro ficam registradas com autor, data e justificativa.',
        p:'prd-automacoes.html#f-12'},
-    ]
+          {n:'Evento de automação executada e de falha',t:'a',
+       d:'O ERP recebe o resultado de cada automação, com gatilho, ação, duração e o erro quando houver.',
+       p:'prd-automacoes.html'},
+]
   },
   /* 19 */ {
     icon:'👥',name:'Usuários e Acessos',scope:'Cliente · Gestão',
@@ -926,7 +1070,19 @@ var MODS = [
       {n:'Painel de acessos externos',t:'l',
        d:'Todos os acessos de fornecedores numa tela, com busca, filtro por situação e a trilha recente. Responde quem, de fora da organização, enxerga os dados hoje.',
        p:'-'},
-    ]
+          {n:'Catálogo de perfis com o que cada um pode',t:'c',
+       d:'Administrador, Fiscal, Tesouraria, Leitura e Fornecedor. O perfil de Tesouraria é pressuposto pelo Ressarcimento e não existia no cadastro.',
+       p:'prd-organizacao.html'},
+      {n:'Revogação que derruba a sessão aberta',t:'a',
+       d:'Revogar sem encerrar a sessão deixa uma janela em que o acesso revogado continua valendo.',
+       p:'prd-organizacao.html'},
+      {n:'Acesso de fornecedor por pessoa e CNPJ',t:'c',
+       d:'A mesma pessoa pode atender vários fornecedores, com acessos independentes: revogar um não afeta os demais.',
+       p:'prd-organizacao.html'},
+      {n:'Encerramento programado do acesso',t:'a',
+       d:'O acesso do fornecedor termina junto com o contrato, sem depender de alguém lembrar.',
+       p:'prd-contratos.html'},
+]
   },
   /* 20 */ {
     icon:'💰',name:'Ressarcimento',scope:'Cliente · Fiscal',
