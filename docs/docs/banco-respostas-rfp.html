@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banco de respostas para RFP · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--green); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--green); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 760px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--green); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--green); background: var(--green-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 26px 0 8px; scroll-margin-top: 20px; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--green); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.mk { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; border-radius: 3px; padding: 1px 6px; white-space: nowrap; }
+.mk.nat { background: var(--green-d); color: var(--green); border: 1px solid var(--green); }
+.mk.cfg { background: var(--blue-d); color: var(--blue); border: 1px solid var(--blue); }
+.mk.cus { background: var(--amber-d); color: var(--amber); border: 1px solid var(--amber); }
+.mk.roa { background: rgba(107,63,160,.12); color: var(--purple); border: 1px solid var(--purple); }
+.mk.nao { background: var(--red-d); color: var(--red); border: 1px solid var(--red); }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--green); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+.src-note { font-size: 11.5px; color: var(--txt3); margin: 6px 0 0; }
+
+code, kbd, samp { overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">Refer&ecirc;ncia &middot; Comercial</div>
+<h1>Banco de respostas para RFP</h1>
+<p class="subtitle">A r&eacute;gua de classifica&ccedil;&atilde;o, as respostas can&ocirc;nicas por tema e os precedentes j&aacute; entregues. Cada resposta aponta o PRD que a sustenta &mdash; se o PRD muda, a resposta muda junto.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Refer&ecirc;ncia &middot; Comercial</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">23/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Precedentes</span>&nbsp;<span class="meta-val">2</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip info">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">&Iacute;ndice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Como usar este banco</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> A r&eacute;gua de classifica&ccedil;&atilde;o</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> As tr&ecirc;s premissas obrigat&oacute;rias</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Respostas can&ocirc;nicas por tema</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> O que n&atilde;o est&aacute; no escopo</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Precedentes</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Hist&oacute;rico de vers&otilde;es</a></li>
+</ul></div>
+
+<!-- 01 -->
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Como usar este banco</span></div>
+<p>Responder RFP tem um risco espec&iacute;fico: <strong>a resposta comercial descolar do produto</strong>. Guardar planilhas respondidas em pasta resolve o &quot;o que respondemos antes&quot; e n&atilde;o resolve o &quot;isso ainda &eacute; verdade?&quot;. Por isso este banco vive <strong>no reposit&oacute;rio, ao lado dos PRDs</strong>, e cada resposta cita o PRD que a sustenta.</p>
+<div class="table-wrap"><table><thead><tr><th>Passo</th><th>O que fazer</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td>Ler a <a class="xref" href="#s02">r&eacute;gua</a>. Ela decide a classifica&ccedil;&atilde;o, e a classifica&ccedil;&atilde;o &eacute; o que move a nota</td></tr>
+<tr><td><strong>2</strong></td><td>Procurar o tema na <a class="xref" href="#s04">se&ccedil;&atilde;o 04</a> e partir da resposta can&ocirc;nica, adaptando ao vocabul&aacute;rio do cliente</td></tr>
+<tr><td><strong>3</strong></td><td><strong>Conferir o PRD citado.</strong> Se ele mudou, a resposta muda. &Eacute; o passo que impede a resposta de envelhecer</td></tr>
+<tr><td><strong>4</strong></td><td>Aplicar as <a class="xref" href="#s03">tr&ecirc;s premissas obrigat&oacute;rias</a> em toda resposta que dependa de integra&ccedil;&atilde;o</td></tr>
+<tr><td><strong>5</strong></td><td>Conferir contra os <a class="xref" href="#s06">precedentes</a>: o mesmo tema n&atilde;o pode ter respostas incompat&iacute;veis em clientes diferentes</td></tr>
+<tr><td><strong>6</strong></td><td>Separar os <strong>questionamentos</strong> num documento pr&oacute;prio. Eles n&atilde;o v&atilde;o no arquivo que o cliente recebe</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Por que n&atilde;o um RAG sobre as planilhas</div><p>Um &iacute;ndice sobre os xlsx respondidos recupera o texto anterior, mas <strong>n&atilde;o sabe se ele continua verdadeiro</strong> &mdash; e RFP respondida &eacute; foto de uma data. O produto muda toda semana: em setembro de 2026 o m&oacute;dulo de Inconsist&ecirc;ncias ganhou PRD, o ciclo do cr&eacute;dito virou parti&ccedil;&atilde;o e o princ&iacute;pio de que o produto n&atilde;o controla o estado foi escrito. Uma resposta de agosto sobre qualquer um desses temas j&aacute; estaria errada.</p><p style="margin-top:8px">O banco resolve isso invertendo a direc&ccedil;&atilde;o: a resposta n&atilde;o &eacute; o que dissemos, &eacute; <strong>o que o PRD sustenta hoje</strong>. As planilhas viram precedente &mdash; &uacute;teis para tom e para coer&ecirc;ncia, n&atilde;o como fonte.</p></div>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">A r&eacute;gua de classifica&ccedil;&atilde;o</span></div>
+<p class="sec-sub">Extra&iacute;da da revis&atilde;o da RFP da Ra&iacute;zen em 23/09/2026. A escala varia de cliente para cliente &mdash; a Tereos usa <em>Atende / Parcial / Customizado / N&atilde;o Atende / Requer mais informa&ccedil;&otilde;es</em> &mdash;, mas o crit&eacute;rio &eacute; o mesmo.</p>
+<div class="table-wrap"><table><thead><tr><th>Classifica&ccedil;&atilde;o</th><th>Crit&eacute;rio</th><th>Exemplo</th></tr></thead><tbody>
+<tr><td><span class="mk nat">nativo</span></td><td>Comportamento padr&atilde;o do produto, <strong>incluindo o que s&oacute; precisa de parametriza&ccedil;&atilde;o na implanta&ccedil;&atilde;o</strong></td><td>Compara&ccedil;&atilde;o campo a campo, r&eacute;gua de comunica&ccedil;&atilde;o, roteamento por tipo, indicadores</td></tr>
+<tr><td><span class="mk cfg">configura&ccedil;&atilde;o</span></td><td>O <strong>cliente</strong> configura, e a configura&ccedil;&atilde;o muda o comportamento. Usar com parcim&ocirc;nia</td><td>Incluir campo fiscal que j&aacute; existe no modelo can&ocirc;nico</td></tr>
+<tr><td><span class="mk cus">customiza&ccedil;&atilde;o</span></td><td><strong>Exige desenvolvimento de c&oacute;digo.</strong> Informar esfor&ccedil;o</td><td>Conector SAP; campo novo fora do modelo can&ocirc;nico</td></tr>
+<tr><td><span class="mk roa">roadmap</span></td><td>Existe <strong>proposta escrita e n&atilde;o aprovada</strong>. Citar a proposta</td><td>Matriz de responsabilidade parametriz&aacute;vel e SLA por grupo</td></tr>
+<tr><td><span class="mk nao">n&atilde;o atende</span></td><td>Fora do escopo do produto. Dizer sem rodeio e apontar alternativa, se houver</td><td>Ver a <a class="xref" href="#s05">se&ccedil;&atilde;o 05</a></td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">O erro que esta r&eacute;gua corrige</div><p>Classificar <strong>parametriza&ccedil;&atilde;o de implanta&ccedil;&atilde;o como &quot;configura&ccedil;&atilde;o&quot;</strong> derruba a nota sem que nada no produto justifique. Na RFP da Ra&iacute;zen isso custou <strong>8,5 pontos percentuais</strong> &mdash; 29 itens reclassificados levaram a ader&ecirc;ncia de 79,2% para 87,7%. Configura&ccedil;&atilde;o &eacute; o que o cliente mexe depois; parametriza&ccedil;&atilde;o que o implantador faz uma vez &eacute; parte do produto.</p></div>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">As tr&ecirc;s premissas obrigat&oacute;rias</span></div>
+<p>Toda resposta que dependa de integra&ccedil;&atilde;o carrega estas tr&ecirc;s. Omitir &eacute; prometer o que n&atilde;o se controla.</p>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Premissa</th><th>Texto de refer&ecirc;ncia</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td>Cronograma das APIs do Fisco</td><td>Disponibilidade conforme o cronograma da Receita Federal &mdash; consulta de d&eacute;bitos e cr&eacute;ditos no in&iacute;cio de out/2026, pagamentos e recolhimentos no in&iacute;cio de nov/2026, emiss&atilde;o de DARF no fim de nov/2026. Depende de credenciais do piloto RTC-CBS e de certificado digital e-CNPJ do cliente</td></tr>
+<tr><td><strong>2</strong></td><td>Aus&ecirc;ncia de API no IBS</td><td>O Comit&ecirc; Gestor n&atilde;o publicou API de apura&ccedil;&atilde;o do IBS. A confer&ecirc;ncia do IBS depende de publica&ccedil;&atilde;o, <strong>sem data</strong>; at&eacute; l&aacute;, &eacute; manual</td></tr>
+<tr><td><strong>3</strong></td><td>Integra&ccedil;&atilde;o com ERP</td><td>O SplitHub integra por <strong>barramento de API</strong>, com contratos versionados. N&atilde;o h&aacute; conector SAP de prateleira: a leitura &eacute; constru&iacute;da sobre a interface que o cliente expuser &mdash; API, RFC/BAPI, view ou arquivo. O SplitHub n&atilde;o substitui o SAP DRC; &eacute; complementar</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">A premissa 3 &eacute; a que mais custa</div><p>Foi <em>Parcial</em> na Tereos e <em>customiza&ccedil;&atilde;o</em> na Ra&iacute;zen, com 184 h estimadas. Toda RFP com ERP SAP no centro vai atingir os mesmos itens &mdash; leitura do escriturado, monitoramento di&aacute;rio e trilha das consultas. <strong>Perguntar cedo por qual interface o cliente exp&otilde;e o SAP</strong> &eacute; o que separa uma resposta de customiza&ccedil;&atilde;o de uma de configura&ccedil;&atilde;o.</p></div>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Respostas can&ocirc;nicas por tema</span></div>
+<p class="sec-sub">Ponto de partida, n&atilde;o texto final. Adaptar ao vocabul&aacute;rio do cliente e conferir o PRD antes de usar.</p>
+<div class="table-wrap"><table><thead><tr><th>Tema</th><th>Classe</th><th>Resposta can&ocirc;nica</th><th>PRD que sustenta</th></tr></thead><tbody>
+
+<tr><td><strong>Captura da apura&ccedil;&atilde;o assistida</strong></td><td><span class="mk nat">nativo</span></td><td>Integra&ccedil;&atilde;o nativa com a apura&ccedil;&atilde;o assistida da CBS, com coleta agendada di&aacute;ria. Consultas ass&iacute;ncronas: abre a solicita&ccedil;&atilde;o, recebe o t&iacute;quete, busca o arquivo por link assinado. Limite de 4 chamadas por dia por endpoint, janela de 8 dias, leitura incremental</td><td><a class="xref" href="integracao-apis-reforma.html#api-a">Refer&ecirc;ncia de APIs</a></td></tr>
+
+<tr><td><strong>Conciliação DF &times; Fisco</strong></td><td><span class="mk nat">nativo</span></td><td>Cruzamento autom&aacute;tico entre o que o &oacute;rg&atilde;o devolve e o que o ERP escriturou, pela chave de acesso como identificador prim&aacute;rio. Roda na entrada do documento e a cada atualiza&ccedil;&atilde;o recebida</td><td><a class="xref" href="prd-conciliacao.html">Concilia&ccedil;&atilde;o</a></td></tr>
+
+<tr><td><strong>Compara&ccedil;&atilde;o campo a campo</strong></td><td><span class="mk nat">nativo</span></td><td>Compara&ccedil;&atilde;o entre o dado do &oacute;rg&atilde;o e o escriturado, campo a campo, com tolerância e severidade parametrizadas na implanta&ccedil;&atilde;o</td><td><a class="xref" href="prd-conciliacao.html">Concilia&ccedil;&atilde;o</a></td></tr>
+
+<tr><td><strong>Documento sem contraparte</strong></td><td><span class="mk nat">nativo</span></td><td>Ocorr&ecirc;ncia tipificada nos dois sentidos: DF que est&aacute; na plataforma e o Fisco n&atilde;o tem, e registro do Fisco que nunca entrou. Regra do art. 46 da LC 214/2025, com toler&acirc;ncia de 30 dias e &oacute;rg&atilde;o nomeado</td><td><a class="xref" href="prd-inconsistencias.html#f-fisc">Inconsist&ecirc;ncias, fam&iacute;lia B</a></td></tr>
+
+<tr><td><strong>Backlog e aging</strong></td><td><span class="mk nat">nativo</span></td><td>A ocorr&ecirc;ncia carrega documento, registro, tributo, fornecedor, valores e cr&eacute;dito em risco, com data de inclus&atilde;o, tempo em aberto e prioridade recalculada. Reincid&ecirc;ncia reabre em vez de duplicar</td><td><a class="xref" href="prd-inconsistencias.html">Inconsist&ecirc;ncias</a></td></tr>
+
+<tr><td><strong>Fila, respons&aacute;vel e desfecho</strong></td><td><span class="mk nat">nativo</span></td><td>M&aacute;quina de cinco estados, respons&aacute;vel exigido na an&aacute;lise, suspens&atilde;o de prazo quando depende de terceiro, e desfecho descrito obrigat&oacute;rio para encerrar. Kanban e listagem</td><td><a class="xref" href="prd-inconsistencias.html#s04">Inconsist&ecirc;ncias</a></td></tr>
+
+<tr><td><strong>Matriz de responsabilidade parametriz&aacute;vel</strong></td><td><span class="mk roa">roadmap</span></td><td>Hoje o produto atribui respons&aacute;vel por tipo de ocorr&ecirc;ncia. A matriz com crit&eacute;rios combinados &mdash; empresa, filial, centro, tipo, fornecedor, categoria &mdash; est&aacute; desenhada na proposta de Grupos de atendimento e SLA, n&atilde;o aprovada</td><td>Proposta &quot;Grupos e SLA&quot;</td></tr>
+
+<tr><td><strong>Comunica&ccedil;&atilde;o e r&eacute;gua</strong></td><td><span class="mk nat">nativo</span></td><td>Envio autom&aacute;tico &agrave;s &aacute;reas respons&aacute;veis, com destinat&aacute;rio, hor&aacute;rio, recorte e conte&uacute;do parametrizados. Blocos de pend&ecirc;ncia, diverg&ecirc;ncia e indicadores</td><td><a class="xref" href="prd-automacoes.html">Automa&ccedil;&otilde;es</a></td></tr>
+
+<tr><td><strong>Trilha de auditoria</strong></td><td><span class="mk nat">nativo</span></td><td>Trilha ponta a ponta entre documento, dado do Fisco, dado do ERP, regra aplicada, diverg&ecirc;ncia e desfecho, com autor, data e valores anterior e posterior. Export&aacute;vel. ISO/IEC 27001 e PCI DSS</td><td><a class="xref" href="prd-organizacao.html">Organiza&ccedil;&atilde;o</a></td></tr>
+
+<tr><td><strong>Ciclo do cr&eacute;dito e do d&eacute;bito</strong></td><td><span class="mk nat">nativo</span></td><td><strong>O produto n&atilde;o controla o estado</strong>: recebe dos entes fiscais, concilia, evidencia diverg&ecirc;ncia e segue a apura&ccedil;&atilde;o assistida. O que calcula &mdash; ordem do art. 53, v&iacute;nculo cr&eacute;dito&harr;d&eacute;bito &mdash; &eacute; confer&ecirc;ncia e antecipa&ccedil;&atilde;o</td><td><a class="xref" href="proposta-ciclo-vida.html#s10">Ciclo de vida, se&ccedil;&atilde;o 10</a></td></tr>
+
+<tr><td><strong>Fornecedor inadimplente</strong></td><td><span class="mk nat">nativo</span></td><td>Controle dos d&eacute;bitos do fornecedor, score de conformidade, r&eacute;gua de cobran&ccedil;a pr&eacute; e p&oacute;s-vencimento e portal do fornecedor. O crédito preso &eacute; medido; o RAD &eacute; o caminho de destrave</td><td><a class="xref" href="prd-fornecedor.html">Fornecedores</a></td></tr>
+
+<tr><td><strong>RAD</strong></td><td><span class="mk nat">nativo</span></td><td>Pol&iacute;tica de execu&ccedil;&atilde;o por CNPJ, contrato ou faixa, emiss&atilde;o da guia nos dois &oacute;rg&atilde;os, comprovante do ERP e concilia&ccedil;&atilde;o financeira. <strong>A apropria&ccedil;&atilde;o vem do reconhecimento do ente fiscal</strong>, n&atilde;o do comprovante</td><td><a class="xref" href="prd-execucao-rad.html">Execu&ccedil;&atilde;o RAD</a></td></tr>
+
+<tr><td><strong>Ressarcimento</strong></td><td><span class="mk nat">nativo</span></td><td>Inten&ccedil;&atilde;o, pedido integral ou parcial, decis&atilde;o, Selic e concilia&ccedil;&atilde;o do recebimento, por tributo e por &oacute;rg&atilde;o. <strong>N&atilde;o h&aacute; API para solicitar nem para acompanhar</strong>: o pedido &eacute; protocolado no portal</td><td><a class="xref" href="prd-ressarcimento.html#s18">Ressarcimento, adendo</a></td></tr>
+
+<tr><td><strong>Eventos ao ERP</strong></td><td><span class="mk nat">nativo</span></td><td>Webhook a cada mudan&ccedil;a de estado do cr&eacute;dito, com envio e entrega no hist&oacute;rico, e falha de entrega virando ocorr&ecirc;ncia ap&oacute;s esgotada a retentativa</td><td><a class="xref" href="prd-integracoes.html">Integra&ccedil;&otilde;es</a></td></tr>
+
+<tr><td><strong>Ingest&atilde;o de documentos</strong></td><td><span class="mk nat">nativo</span></td><td>Entrada unit&aacute;ria e em lote de at&eacute; 500, JSON ou CSV, com situa&ccedil;&atilde;o do documento e imutabilidade do conclu&iacute;do. <strong>Dez tipos</strong> de documento fiscal</td><td><a class="xref" href="prd-ingestao.html">Ingest&atilde;o</a> &middot; <a class="xref" href="layouts-df-api.html">Layouts</a></td></tr>
+
+<tr><td><strong>Identidade e acesso</strong></td><td><span class="mk nat">nativo</span></td><td>SSO por SAML 2.0 ou OpenID Connect, MFA pelo provedor corporativo, RBAC com perfis configur&aacute;veis e segrega&ccedil;&atilde;o de fun&ccedil;&otilde;es, contas administrativas nominativas</td><td><a class="xref" href="prd-organizacao.html">Organiza&ccedil;&atilde;o</a></td></tr>
+
+<tr><td><strong>Seguran&ccedil;a e prote&ccedil;&atilde;o de dados</strong></td><td><span class="mk nat">nativo</span></td><td>TLS em tr&acirc;nsito, criptografia em repouso, isolamento l&oacute;gico por cliente, reten&ccedil;&atilde;o e descarte configur&aacute;veis, exporta&ccedil;&atilde;o integral. <strong>ISO/IEC 27001 e PCI DSS</strong> como evid&ecirc;ncia de controles formais</td><td>&mdash;</td></tr>
+
+<tr><td><strong>Limites e escala</strong></td><td><span class="mk nat">nativo</span></td><td>SaaS em nuvem pr&oacute;pria, com limite de TPS de documentos definido pelo plano contratado e <strong>sem limite de usu&aacute;rios</strong></td><td>&mdash;</td></tr>
+
+<tr><td><strong>Integra&ccedil;&atilde;o com SAP</strong></td><td><span class="mk cus">customiza&ccedil;&atilde;o</span></td><td>Barramento de API com contratos versionados; a leitura do escriturado &eacute; constru&iacute;da sobre a interface que o cliente expuser. Complementar ao SAP DRC, n&atilde;o substituto</td><td><a class="xref" href="prd-integracoes.html">Integra&ccedil;&otilde;es</a></td></tr>
+
+</tbody></table></div>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O que n&atilde;o est&aacute; no escopo</span></div>
+<p class="sec-sub">Declarado como <span class="mk nao">n&atilde;o atende</span> na RFP da Tereos. Dizer cedo evita descobrir tarde.</p>
+<div class="table-wrap"><table><thead><tr><th>Fora do escopo</th><th>Como responder</th></tr></thead><tbody>
+<tr><td><strong>Parametriza&ccedil;&atilde;o de regras tribut&aacute;rias pelo usu&aacute;rio</strong></td><td>A plataforma n&atilde;o tem configura&ccedil;&atilde;o de regra tribut&aacute;ria. Ela segue o que a apura&ccedil;&atilde;o assistida devolve &mdash; coerente com o princ&iacute;pio de que o produto n&atilde;o controla o estado</td></tr>
+<tr><td><strong>Obriga&ccedil;&otilde;es acess&oacute;rias</strong></td><td>N&atilde;o gera nem transmite obriga&ccedil;&atilde;o acess&oacute;ria. O escopo &eacute; concilia&ccedil;&atilde;o entre DFs do ERP e apura&ccedil;&atilde;o assistida, e gest&atilde;o da cadeia de fornecedores</td></tr>
+<tr><td><strong>Monitoramento legal autom&aacute;tico</strong></td><td>N&atilde;o acompanha altera&ccedil;&atilde;o legislativa automaticamente. Mudan&ccedil;a normativa entra por release, com prioridade</td></tr>
+<tr><td><strong>Plano de contas e contabiliza&ccedil;&atilde;o</strong></td><td>N&atilde;o gere plano de contas. Emite eventos do ciclo de cr&eacute;dito e d&eacute;bito para o ERP contabilizar</td></tr>
+<tr><td><strong>Controle de estoque</strong></td><td>Fora do escopo. Casos de suspens&atilde;o vinculada a estoque, como o art. 82 da LC 214/2025, n&atilde;o s&atilde;o tratados</td></tr>
+<tr><td><strong>Autentica&ccedil;&atilde;o pr&oacute;pria de usu&aacute;rio final</strong></td><td>Iniciativa pausada. O contrato p&uacute;blico prev&ecirc; JWT; SSO corporativo &eacute; o caminho declarado</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Precedentes</span></div>
+<div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Escopo</th><th>Itens</th><th>Resultado</th><th>O que aprendemos</th></tr></thead><tbody>
+<tr><td><strong>Tereos</strong><br><span class="src-note">set/2026</span></td><td>Apura&ccedil;&atilde;o assistida &mdash; neg&oacute;cio e TI</td><td class="num">46 + 68</td><td>Escala pr&oacute;pria: Atende / Parcial / N&atilde;o Atende / Requer mais informa&ccedil;&otilde;es</td><td>Definiu o que est&aacute; fora do escopo, e que <strong>SAP &eacute; Parcial</strong>. Serve de refer&ecirc;ncia para toda a bateria de TI &mdash; seguran&ccedil;a, continuidade, licenciamento, governan&ccedil;a</td></tr>
+<tr><td><strong>Ra&iacute;zen</strong><br><span class="src-note">23/09/2026</span></td><td>Concilia&ccedil;&atilde;o CBS &times; SAP</td><td class="num">83</td><td><strong>87,7%</strong> ponderado &mdash; 67 nativo, 1 configura&ccedil;&atilde;o, 5 customiza&ccedil;&atilde;o, 10 roadmap, 0 n&atilde;o atende</td><td>Fixou a r&eacute;gua da se&ccedil;&atilde;o 02. Mostrou que a matriz de responsabilidade &eacute; a maior perda de ader&ecirc;ncia e depende de aprovar uma proposta j&aacute; escrita</td></tr>
+</tbody></table></div>
+<div class="callout ok"><div class="ct">O que mais moveria a nota da pr&oacute;xima RFP</div><p><strong>Aprovar a proposta de Grupos de atendimento e SLA.</strong> Sozinha, ela tirou 10 itens de roadmap na RFP da Ra&iacute;zen &mdash; a matriz inteira e o indicador de SLA. &Eacute; a maior perda de ader&ecirc;ncia do produto hoje, e n&atilde;o depende de desenvolvimento novo para ser decidida.</p></div>
+<p class="src-note">Os arquivos respondidos ficam no OneDrive, em <code>split-hub-repository/Clientes/&lt;cliente&gt;/</code>. Servem de precedente para tom e coer&ecirc;ncia &mdash; a fonte da resposta &eacute; este banco e os PRDs.</p>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>23/09/2026</strong> &mdash; Primeira vers&atilde;o, a partir das RFPs da Tereos e da Ra&iacute;zen. R&eacute;gua de classifica&ccedil;&atilde;o em cinco n&iacute;veis, tr&ecirc;s premissas obrigat&oacute;rias, dezenove respostas can&ocirc;nicas ancoradas ao PRD que as sustenta, seis itens fora do escopo e os dois precedentes com resultado.</div></div>
+</div>
+
+</div>
+</body>
+</html>
