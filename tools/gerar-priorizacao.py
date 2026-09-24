@@ -21,8 +21,8 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.7'
-DATA = u'22/09/2026'
+VERSAO = u'v2.7.1'
+DATA = u'24/09/2026'
 BASE_MAPA = u'Mapa de Funcionalidades v2.7'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
@@ -353,6 +353,7 @@ for bi, itens in NOVAS.items():
 
 TOTAL = sum(tot.values())
 DO_MAPA = TOTAL - NOVAS_N
+N_MODS = len(MODS)   # contado, nunca escrito a mao: o numero ja envelheceu uma vez
 
 
 def pct(n):
@@ -513,10 +514,10 @@ A(u'<div class="meta-bar">'
   u'<div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">%s</span></div>'
   u'<div class="meta-pill"><span class="meta-label">Status</span><span class="chip ok">Aprovada · em implementação</span></div>'
   u'<div class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">%s</span></div>'
-  u'<div class="meta-pill"><span class="meta-label">Escopo</span><span class="meta-val">%d do mapa + %d novas · 20 módulos</span></div>'
+  u'<div class="meta-pill"><span class="meta-label">Escopo</span><span class="meta-val">%d do mapa + %d novas · %d módulos</span></div>'
   u'<div class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">%s</span></div>'
   u'<div class="meta-pill" style="margin-left:auto"><a class="dl-pill" href="%s" download>↓ Planilha de revisão</a></div>'
-  u'</div>' % (VERSAO, BASE_MAPA, DO_MAPA, NOVAS_N, DATA, XLSX))
+  u'</div>' % (VERSAO, BASE_MAPA, DO_MAPA, NOVAS_N, N_MODS, DATA, XLSX))
 
 # 01 criterio
 A(u'<div class="section">')
@@ -576,7 +577,7 @@ A(u'</div>')
 # 03 modulo a modulo
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Funcionalidade a funcionalidade</span></div>')
-A(u'<p class="sec-sub">Os 20 módulos na ordem do Mapa de Funcionalidades. Em destaque, o que entra no M0. '
+A(u'<p class="sec-sub">Os %d módulos na ordem do Mapa de Funcionalidades. Em destaque, o que entra no M0. ' % N_MODS +
   u'Clique numa funcionalidade para ver o que ela faz, a história da faixa e o link para a descrição completa no PRD '
   u'do módulo.</p>')
 A(u'<div class="mod-tools" style="padding:4px 0 0"><button class="mini-btn" type="button" data-expandir="sec03" data-abrir="1">'
@@ -611,7 +612,7 @@ A(u'<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Aba</t
   u'<tr><td><strong>Priorização</strong></td><td>Uma linha por funcionalidade: grupo, módulo, nome, tipo, origem '
   u'(do mapa ou nova), faixa proposta e ordem de construção. Filtro em todas as colunas e cabeçalho fixo; '
   u'as colunas de revisão têm lista de valores, para a resposta voltar padronizada</td></tr>'
-  u'<tr><td><strong>Resumo</strong></td><td>Os 20 módulos com a contagem por faixa e a justificativa do corte — '
+  u'<tr><td><strong>Resumo</strong></td><td>Os %d módulos com a contagem por faixa e a justificativa do corte — ' % N_MODS +
   u'a mesma que aparece acima, em texto puro</td></tr>'
   u'<tr><td><strong>Como revisar</strong></td><td>O critério, as quatro faixas, o que escrever em cada coluna, e '
   u'a ficha desta fotografia: versão, data e escopo</td></tr>'
@@ -886,6 +887,18 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.7.1</div><div class="ver-desc">'
+  u'24/09/2026 — Correção, sem mudança de faixa. A contagem de módulos era escrita à mão em três lugares e ainda dizia '
+  u'<strong>20</strong> depois que o mapa passou a ter <strong>21</strong>. Agora é contada do próprio mapa, como o total de '
+  u'funcionalidades já era. Entram também as notas de v2.6 e v2.7, que tinham ficado sem registro aqui.</div></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.7</div><div class="ver-desc">'
+  u'22/09/2026 — Base: <strong>Mapa v2.7, com 277 funcionalidades</strong>. Entram <strong>52 itens</strong> do inventário '
+  u'revisto — 41 em <strong>M1</strong> e 11 em <strong>M2</strong>. <strong>O M0 não muda.</strong> Com as nove '
+  u'funcionalidades que ainda não existem no produto, a proposta passa a cobrir <strong>286 itens</strong>.</div></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.6</div><div class="ver-desc">'
+  u'21/09/2026 — Entram as funcionalidades do <strong>motor de compensação do art. 53</strong>, da glosa por causa, do ciclo '
+  u'do débito, das integrações com o ERP e da conciliação com a apuração assistida. Tudo em <strong>M1</strong>, fechando a '
+  u'decisão D18. <strong>O M0 não muda.</strong></div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v2.5</div><div class="ver-desc">'
   u'18/09/2026 — Entram <strong>seis itens de ressarcimento nos outros módulos</strong>, todos em <strong>M1</strong> (D17): card do '
   u'Início, painel do Crédito, aviso do Débito, família de inconsistências, enquadramento na Organização e saída para ressarcimento '
