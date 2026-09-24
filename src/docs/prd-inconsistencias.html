@@ -126,6 +126,7 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--red); white-space: nowrap; }
 .gap { color: var(--amber); font-weight: 700; }
+.done { color: var(--green); font-weight: 700; }
 .st-ok { color: var(--green); font-weight: 700; white-space: nowrap; }
 .st-par { color: var(--amber); font-weight: 700; white-space: nowrap; }
 .st-no { color: var(--txt3); font-weight: 700; white-space: nowrap; }
@@ -154,9 +155,9 @@ img, svg { max-width: 100%; height: auto; }
 <h1>Inconsist&ecirc;ncias</h1>
 <p class="subtitle">Onde toda falha do produto vira trabalho de algu&eacute;m. Cada divergência que impede o cr&eacute;dito de se apropriar, o d&eacute;bito de ser reconhecido ou o documento de existir para o Fisco vira uma ocorr&ecirc;ncia com tipo, prioridade, respons&aacute;vel e desfecho.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.1</span></div>
+<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.2</span></div>
 <div class="meta-pill"><span class="meta-label">M&oacute;dulo</span>&nbsp;<span class="meta-val">An&aacute;lise &rarr; Inconsist&ecirc;ncias</span></div>
-<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">22/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">24/09/2026</span></div>
 <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-inconsistencias</span></div>
 <div class="meta-pill"><span class="meta-label">Funcionalidades</span>&nbsp;<span class="meta-val">14</span></div>
 <div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip red">v1.0</span></div>
@@ -206,40 +207,76 @@ img, svg { max-width: 100%; height: auto; }
 
 <!-- 03 -->
 <div class="section" id="s03">
-<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Cat&aacute;logo de tipos</span></div>
-<p class="sec-sub">Doze tipos, em quatro fam&iacute;lias. A fam&iacute;lia diz <strong>de onde a falha veio</strong>; o tipo diz <strong>o que fazer com ela</strong>.</p>
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Catálogo de tipos</span></div>
+<p class="sec-sub"><strong>Vinte e um tipos, em seis famílias.</strong> A família diz <strong>de onde a falha veio</strong> e quem resolve; o tipo diz <strong>o que fazer com ela</strong>. O catálogo vive em <code>src/js/inc-catalogo.js</code> e é a fonte única: o filtro da listagem, o filtro do kanban, a coluna Família e os módulos que criam ocorrência leem dali. Acrescentar tipo é acrescentar uma linha.</p>
 
-<h3 id="f-doc">Fam&iacute;lia A &mdash; documento</h3>
-<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Quando nasce</th><th>Efeito no cr&eacute;dito</th></tr></thead><tbody>
-<tr><td><strong>Falha de Layout</strong></td><td>O documento n&atilde;o passou na valida&ccedil;&atilde;o estrutural da ingest&atilde;o</td><td>N&atilde;o h&aacute; registro fiscal &mdash; o cr&eacute;dito n&atilde;o chega a existir</td></tr>
-<tr><td><strong>Inconsist&ecirc;ncia de Dados</strong></td><td>Campo obrigat&oacute;rio ausente ou incoerente dentro do documento</td><td>Cr&eacute;dito fica retido at&eacute; a corre&ccedil;&atilde;o</td></tr>
-<tr><td><strong>Rejeitado SEFAZ</strong></td><td>O documento foi rejeitado pela autoriza&ccedil;&atilde;o</td><td>Documento n&atilde;o existe juridicamente; nada se apropria</td></tr>
-<tr><td><strong>Documento Duplicado</strong></td><td>Mesma chave de acesso ingerida mais de uma vez com conte&uacute;do divergente</td><td>Risco de cr&eacute;dito em dobro &mdash; bloqueia at&eacute; a resolu&ccedil;&atilde;o</td></tr>
+<div class="callout ok"><div class="ct">O que mudou na v1.2</div><p>Até a v1.1 este catálogo listava <strong>doze tipos em quatro famílias</strong>, e misturava rótulos de origem da base sintética — &ldquo;Falha de Layout&rdquo;, &ldquo;Não conciliado&rdquo;, &ldquo;Vencido&rdquo; — com as chaves reais que o produto usa. A lista foi refeita sobre as chaves de verdade, e as famílias passaram a seis: o <strong>recolhimento</strong> saiu do ciclo do crédito, e o <strong>ressarcimento</strong> ganhou família própria, porque já produzia ocorrência e não tinha onde ser classificado.</p></div>
+
+<h3 id="fam-a">Família A &mdash; Documento</h3>
+<p>O documento não passou na entrada. Sem registro fiscal, o crédito não chega a existir. Resolve-se na origem: reenviar o documento corrigido.</p>
+<div class="table-wrap"><table><thead><tr><th>Chave</th><th>Tipo</th><th>Quando nasce</th><th>Base hoje</th></tr></thead><tbody>
+<tr><td><code>chave_invalida</code></td><td>Chave de acesso inválida</td><td>A chave não passou na validação estrutural, ou o documento foi rejeitado na autorização</td><td>prevista</td></tr>
+<tr><td><code>cnpj_divergente</code></td><td>CNPJ divergente</td><td>O CNPJ do documento não corresponde ao da organização que o ingeriu</td><td>prevista</td></tr>
+<tr><td><code>duplicidade_rf</code></td><td>RF duplicado</td><td>Mesma chave ingerida mais de uma vez com conteúdo divergente — risco de crédito em dobro</td><td>prevista</td></tr>
 </tbody></table></div>
 
-<h3 id="f-fisc">Fam&iacute;lia B &mdash; confronto com o Fisco</h3>
-<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Quando nasce</th><th>Base</th></tr></thead><tbody>
-<tr><td><strong>N&atilde;o conciliado</strong></td><td>O documento est&aacute; na plataforma e n&atilde;o casa com o que o Fisco apurou</td><td>Concilia&ccedil;&atilde;o</td></tr>
-<tr><td><strong>Valor imposto divergente</strong></td><td>O IBS ou a CBS destacados no documento n&atilde;o batem com o apurado pelo &oacute;rg&atilde;o</td><td>Concilia&ccedil;&atilde;o</td></tr>
-<tr><td><strong>DF sem registro na apura&ccedil;&atilde;o assistida</strong><br><code>apur_df_sem_registro</code></td><td>Passados <strong>30 dias</strong>, o documento existe na plataforma e o &oacute;rg&atilde;o n&atilde;o o tem</td><td><strong>Art. 46 da LC 214/2025</strong> &mdash; sem registro no Fisco o cr&eacute;dito n&atilde;o se apropria e o d&eacute;bito n&atilde;o &eacute; reconhecido</td></tr>
-<tr><td><strong>Registro na apura&ccedil;&atilde;o assistida sem DF</strong><br><code>apur_registro_sem_df</code></td><td>O &oacute;rg&atilde;o tem documento em nome da empresa que nunca entrou na plataforma</td><td><strong>Art. 46</strong> &mdash; n&atilde;o ingerido, emitido em conting&ecirc;ncia, de outro estabelecimento, ou rejeitado e nunca reenviado</td></tr>
+<h3 id="fam-b">Família B &mdash; Confronto com o Fisco</h3>
+<p>O que a plataforma tem não bate com o que o órgão apurou. <strong>É a família que decide a apropriação</strong>, e a única cuja causa está fora do alcance do cliente. Cada ocorrência nomeia o órgão — <strong>Receita Federal</strong> na CBS, <strong>Comitê Gestor</strong> no IBS — porque o caminho de resolução é diferente em cada um.</p>
+<div class="table-wrap"><table><thead><tr><th>Chave</th><th>Tipo</th><th>Tributo</th><th>Quando nasce</th><th>Base hoje</th></tr></thead><tbody>
+<tr><td><code>capur_ibs_divergente</code></td><td>Valor IBS divergente da apuração</td><td>IBS</td><td rowspan="2">O valor do tributo no documento não bate com o que o órgão apurou</td><td>gerada</td></tr>
+<tr><td><code>capur_cbs_divergente</code></td><td>Valor CBS divergente da apuração</td><td>CBS</td><td>gerada</td></tr>
+<tr><td><code>capur_ibs_aliquota</code></td><td>Alíquota IBS incorreta</td><td>IBS</td><td rowspan="2">A alíquota aplicada no documento difere da que o órgão considerou</td><td>gerada</td></tr>
+<tr><td><code>capur_cbs_aliquota</code></td><td>Alíquota CBS incorreta</td><td>CBS</td><td>gerada</td></tr>
+<tr><td><code>apur_df_sem_registro</code></td><td>DF sem registro na apuração assistida</td><td>os dois</td><td>Passados <strong>30 dias</strong>, o documento existe na plataforma e o órgão não o tem. <strong>Art. 46</strong> — sem registro no Fisco o crédito não se apropria e o débito não é reconhecido</td><td>gerada</td></tr>
+<tr><td><code>apur_registro_sem_df</code></td><td>Registro na apuração assistida sem DF</td><td>os dois</td><td>O órgão tem documento em nome da empresa que nunca entrou na plataforma — não ingerido, emitido em contingência, de outro estabelecimento, ou rejeitado e nunca reenviado</td><td>gerada</td></tr>
 </tbody></table></div>
-<div class="callout warn"><div class="ct">A fam&iacute;lia B &eacute; a que decide a apropria&ccedil;&atilde;o</div><p>&Eacute; a &uacute;nica cuja causa est&aacute; <strong>fora do alcance do cliente</strong>: depende do que o &oacute;rg&atilde;o registrou. Cada ocorr&ecirc;ncia nomeia o &oacute;rg&atilde;o &mdash; <strong>Receita Federal</strong> na CBS, <strong>Comit&ecirc; Gestor</strong> no IBS &mdash; porque o caminho de resolu&ccedil;&atilde;o &eacute; diferente em cada um. E porque hoje <strong>s&oacute; a CBS tem API</strong>: no IBS a detec&ccedil;&atilde;o depende de confer&ecirc;ncia manual at&eacute; o Comit&ecirc; publicar a documenta&ccedil;&atilde;o.</p></div>
+<div class="callout info"><div class="ct">Os dois órgãos passaram a ter API</div><p>Até 23/09/2026 só a CBS tinha contrato publicado, e no IBS a detecção desta família dependia de conferência manual. Com o <strong>MOC v1.10</strong> do Comitê Gestor o IBS também tem API — mas com modelo oposto, e <strong>sem os estados nomeados</strong> que a CBS traz. Ver <a class="xref" href="cbs-x-ibs-integracao.html#s07">CBS × IBS, seção 07</a>: no IBS não existem <em>suspenso</em>, <em>prescrito</em> nem <em>inapropriável</em>, o que limita o que esta família consegue afirmar sobre o crédito de IBS.</p></div>
 
-<h3 id="f-cred">Fam&iacute;lia C &mdash; ciclo do cr&eacute;dito e do d&eacute;bito</h3>
-<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Quando nasce</th><th>Base</th></tr></thead><tbody>
-<tr><td><strong>Glosa do cr&eacute;dito</strong><br><code>glosa_credito</code></td><td>O &oacute;rg&atilde;o nega o cr&eacute;dito, com causa tipificada</td><td><strong>Arts. 47 e 48</strong> (veda&ccedil;&otilde;es) e <strong>art. 54</strong> (prazo de cinco anos)</td></tr>
-<tr><td><strong>Vencido</strong></td><td>D&eacute;bito n&atilde;o extinto cujo prazo passou</td><td>Entra na fila do <strong>art. 53</strong>, antes dos d&eacute;bitos do per&iacute;odo</td></tr>
-<tr><td><strong>Sem Comprovante</strong></td><td>Pagamento sem comprova&ccedil;&atilde;o conciliada</td><td>Sem comprova&ccedil;&atilde;o n&atilde;o h&aacute; extin&ccedil;&atilde;o; sem extin&ccedil;&atilde;o o cr&eacute;dito do adquirente n&atilde;o se apropria</td></tr>
+<h3 id="fam-c">Família C &mdash; Ciclo do crédito e do débito</h3>
+<p>O órgão mudou o estado do valor. O produto não controla esse estado: ele recebe, concilia e evidencia.</p>
+<div class="table-wrap"><table><thead><tr><th>Chave</th><th>Tipo</th><th>Quando nasce</th><th>Base legal</th><th>Base hoje</th></tr></thead><tbody>
+<tr><td><code>glosa_credito</code></td><td>Glosa do crédito</td><td>O órgão nega o crédito, com causa tipificada. O rótulo carrega a causa</td><td>Arts. <strong>47</strong> e <strong>48</strong></td><td>gerada</td></tr>
+<tr><td><code>prazo_expirado</code></td><td>Prazo de apuração expirado</td><td>A janela de apuração fechou com a divergência em aberto, ou o crédito passou dos cinco anos</td><td>Arts. <strong>53</strong> e <strong>54</strong></td><td>prevista</td></tr>
 </tbody></table></div>
 
-<h3 id="f-int">Fam&iacute;lia D &mdash; integra&ccedil;&atilde;o</h3>
-<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Quando nasce</th><th>Efeito</th></tr></thead><tbody>
-<tr><td><strong>Falha de entrega ao ERP</strong></td><td>O webhook do ciclo do cr&eacute;dito n&atilde;o foi aceito depois de esgotadas as tentativas</td><td>O ERP do cliente est&aacute; desatualizado sobre o pr&oacute;prio cr&eacute;dito. Traz o evento que n&atilde;o chegou e o caminho do reenvio</td></tr>
+<h3 id="fam-d">Família D &mdash; Recolhimento e comprovação</h3>
+<p>O recolhimento não aconteceu, ou não bate com o comprovante. <strong>Sem extinção do débito não há apropriação do crédito</strong> — esta família é a que trava a cadeia.</p>
+<div class="table-wrap"><table><thead><tr><th>Chave</th><th>Tipo</th><th>Tributo</th><th>Quando nasce</th><th>Base hoje</th></tr></thead><tbody>
+<tr><td><code>cfin_ibs_split</code></td><td>Split IBS não executado</td><td>IBS</td><td rowspan="2">O contrato define split payment e a retenção não apareceu na liquidação</td><td>gerada</td></tr>
+<tr><td><code>cfin_cbs_split</code></td><td>Split CBS não executado</td><td>CBS</td><td>gerada</td></tr>
+<tr><td><code>cfin_ibs_valor</code></td><td>Comprovante IBS divergente</td><td>IBS</td><td rowspan="2">O comprovante de pagamento não bate com o valor esperado do recolhimento</td><td>prevista</td></tr>
+<tr><td><code>cfin_cbs_valor</code></td><td>Comprovante CBS divergente</td><td>CBS</td><td>prevista</td></tr>
 </tbody></table></div>
-<div class="callout info"><div class="ct">A fam&iacute;lia D cresce a cada integra&ccedil;&atilde;o nova</div><p>Hoje h&aacute; um tipo. Quando os eventos de RAD e de automa&ccedil;&atilde;o passarem a ser emitidos, cada um traz a sua pr&oacute;pria falha de entrega. A regra &eacute; a mesma: <strong>a ocorr&ecirc;ncia s&oacute; nasce depois de esgotada a retentativa</strong>, nunca na primeira falha.</p></div>
 
-<div class="callout red"><div class="ct">Lacuna conhecida &mdash; o filtro n&atilde;o lista os tipos novos</div><p>O filtro de tipo da tela oferece oito op&ccedil;&otilde;es e <strong>n&atilde;o inclui</strong> glosa do cr&eacute;dito, DF sem registro, registro sem DF nem falha de entrega ao ERP. As ocorr&ecirc;ncias existem e aparecem na listagem; o filtro &eacute; que n&atilde;o as alcan&ccedil;a. Ver <a class="xref" href="#s14">D-05</a>.</p></div>
+<h3 id="fam-e">Família E &mdash; Ressarcimento</h3>
+<p>Intenção, pedido, decisão e recebimento fora do esperado. Família nova na v1.2: as ocorrências já eram criadas pelo módulo de Ressarcimento e não tinham família onde ser classificadas.</p>
+<div class="table-wrap"><table><thead><tr><th>Chave</th><th>Tipo</th><th>Quando nasce</th><th>Base hoje</th></tr></thead><tbody>
+<tr><td><code>res_intencao_sem_pedido</code></td><td>Intenção sem pedido no prazo</td><td>A intenção foi registrada e o pedido não foi protocolado dentro da janela</td><td>prevista</td></tr>
+<tr><td><code>res_saldo_divergente</code></td><td>Saldo credor divergente da Receita</td><td>O saldo credor apurado pelo produto não bate com o do órgão</td><td>gerada</td></tr>
+<tr><td><code>res_pedido_indeferido</code></td><td>Pedido de ressarcimento indeferido</td><td>O órgão indeferiu o pedido, total ou parcialmente</td><td>prevista</td></tr>
+<tr><td><code>res_pagamento_divergente</code></td><td>Pagamento divergente do deferido</td><td>O valor recebido não corresponde ao deferido — deferimento parcial com remanescente a revisar</td><td>gerada</td></tr>
+<tr><td><code>res_impedimento_ibs</code></td><td>Impedimento do IBS ao ressarcimento</td><td>Há impedimento do Comitê Gestor sobre o pedido de IBS. <strong>Art. 486</strong></td><td>prevista</td></tr>
+</tbody></table></div>
+
+<h3 id="fam-f">Família F &mdash; Integração</h3>
+<p>O evento não chegou ao sistema do cliente. A ocorrência <strong>só nasce depois de esgotada a retentativa</strong>, nunca na primeira falha.</p>
+<div class="table-wrap"><table><thead><tr><th>Chave</th><th>Tipo</th><th>Quando nasce</th><th>Base hoje</th></tr></thead><tbody>
+<tr><td><code>integracao_erp</code></td><td>Integração ao ERP falhou</td><td>O webhook do ciclo do crédito não foi aceito depois de esgotadas as tentativas. Traz o evento que não chegou e o caminho do reenvio</td><td>gerada</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">A família F cresce a cada integração nova</div><p>Hoje há um tipo. Quando os eventos de <strong>RAD</strong> e de <strong>automação</strong> passarem a ser emitidos, e quando as integrações com a <strong>Receita Federal</strong> e com o <strong>Comitê Gestor</strong> entrarem, cada uma traz a sua própria falha de entrega e a sua falha de coleta. No IBS há um caso que não existe na CBS: <strong>o Arquivo Diferencial que não chegou</strong>. Como o modelo do IBS é incremental, perder um Delta perde o lançamento — e recuperar depende de solicitação manual, limitada a duas por dia.</p></div>
+
+<h3 id="cobertura">Cobertura de hoje</h3>
+<p>Dos vinte e um tipos, <strong>doze já são produzidos</strong> pela base do protótipo e nove estão previstos no catálogo sem ocorrência gerada. Os previstos <strong>continuam no filtro</strong>, com contagem zero: o catálogo é o escopo do módulo, não o retrato da base de hoje.</p>
+<div class="table-wrap"><table><thead><tr><th>Família</th><th>Tipos</th><th>Gerados</th><th>Ocorrências na base</th></tr></thead><tbody>
+<tr><td>A &middot; Documento</td><td class="num">3</td><td class="num">0</td><td class="num">0</td></tr>
+<tr><td>B &middot; Confronto com o Fisco</td><td class="num">6</td><td class="num">6</td><td class="num">40</td></tr>
+<tr><td>C &middot; Ciclo do crédito e do débito</td><td class="num">2</td><td class="num">1</td><td class="num">3</td></tr>
+<tr><td>D &middot; Recolhimento e comprovação</td><td class="num">4</td><td class="num">2</td><td class="num">12</td></tr>
+<tr><td>E &middot; Ressarcimento</td><td class="num">5</td><td class="num">2</td><td class="num">2</td></tr>
+<tr><td>F &middot; Integração</td><td class="num">1</td><td class="num">1</td><td class="num">19</td></tr>
+<tr><td><strong>Total</strong></td><td class="num"><strong>21</strong></td><td class="num"><strong>12</strong></td><td class="num"><strong>76</strong></td></tr>
+</tbody></table></div>
+<div class="callout ok"><div class="ct">Lacuna do filtro — resolvida na v1.2</div><p>A v1.1 registrava que o filtro de tipo &ldquo;não incluía&rdquo; quatro tipos novos. O diagnóstico estava <strong>brando demais</strong>: o select oferecia oito rótulos de origem que o mapeamento da ingestão já havia convertido em chave, de modo que <strong>nenhuma das oito opções alcançava uma única linha</strong>, e nenhum dos doze tipos reais tinha opção. O filtro não estava incompleto — estava inteiramente quebrado.</p><p style="margin-top:8px">Na v1.2 o select é montado a partir do catálogo, agrupado por família, com a contagem em cada opção; entra um filtro de <strong>família</strong> que restringe o de tipo; o kanban ganha os mesmos dois filtros; e a listagem ganha a coluna <strong>Família</strong>. Ver <a class="xref" href="#s14">D-05</a>.</p></div>
 </div>
 
 <!-- 04 -->
@@ -463,11 +500,11 @@ img, svg { max-width: 100%; height: auto; }
 <div class="section" id="s14">
 <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Decis&otilde;es</span></div>
 <div class="table-wrap"><table><thead><tr><th>#</th><th>Decis&atilde;o</th><th>Situa&ccedil;&atilde;o</th></tr></thead><tbody>
-<tr><td>D-01</td><td>Cat&aacute;logo fechado de doze tipos, em quatro fam&iacute;lias pela origem da falha</td><td>Proposta &mdash; 22/09/2026</td></tr>
+<tr><td>D-01</td><td>Cat&aacute;logo fechado de <strong>vinte e um tipos, em seis fam&iacute;lias</strong> pela origem da falha, em fonte &uacute;nica (<code>inc-catalogo.js</code>)</td><td>Revista &mdash; 24/09/2026</td></tr>
 <tr><td>D-02</td><td>Cinco estados, com <code>ag_emitente</code> suspendendo o prazo interno</td><td>Proposta &mdash; 22/09/2026</td></tr>
 <tr><td>D-03</td><td>Prioridade calculada por valor em risco e prazo legal, n&atilde;o digitada</td><td>Proposta &mdash; 22/09/2026</td></tr>
 <tr><td>D-04</td><td>Reincid&ecirc;ncia reabre em vez de criar ocorr&ecirc;ncia nova</td><td>Proposta &mdash; 22/09/2026</td></tr>
-<tr><td>D-05</td><td>Filtro de tipo passa a listar os doze tipos do cat&aacute;logo</td><td><span class="gap">Em aberto</span> &mdash; hoje lista oito</td></tr>
+<tr><td>D-05</td><td>Filtro de tipo passa a listar <strong>todos</strong> os tipos do cat&aacute;logo, agrupados por fam&iacute;lia, com contagem; entra filtro de fam&iacute;lia na listagem e no kanban, e a coluna Fam&iacute;lia na tabela</td><td><span class="done">Implementada</span> &mdash; 24/09/2026</td></tr>
 <tr><td>D-06</td><td>Busca alcan&ccedil;a identificadores <code>APUR-</code> e demais prefixos</td><td><span class="gap">Em aberto</span></td></tr>
 <tr><td>D-07</td><td>Retentativa de integra&ccedil;&atilde;o abre a ocorr&ecirc;ncia correspondente</td><td><span class="gap">Em aberto</span></td></tr>
 <tr><td>D-08</td><td>SLA por grupo de atendimento</td><td><span class="gap">Em aberto</span> &mdash; <a class="xref" href="proposta-grupos-inconsistencias.html">proposta separada</a></td></tr>
@@ -477,6 +514,7 @@ img, svg { max-width: 100%; height: auto; }
 <!-- 15 -->
 <div class="section" id="s15">
 <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+<div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>24/09/2026</strong> &mdash; <strong>O cat&aacute;logo inteiro, e o filtro que funciona.</strong> A lista de tipos passa de doze para <strong>vinte e um</strong>, e as fam&iacute;lias de quatro para <strong>seis</strong>: o recolhimento sai do ciclo do cr&eacute;dito e o ressarcimento ganha fam&iacute;lia pr&oacute;pria, porque j&aacute; produzia ocorr&ecirc;ncia sem ter onde ser classificado. O cat&aacute;logo vira <strong>fonte &uacute;nica</strong> em <code>src/js/inc-catalogo.js</code> &mdash; antes a lista vivia em cinco lugares que n&atilde;o conversavam. Corrige o diagn&oacute;stico da v1.1: o filtro de tipo n&atilde;o estava incompleto, estava <strong>quebrado</strong> &mdash; as oito op&ccedil;&otilde;es eram r&oacute;tulos de origem j&aacute; convertidos pelo mapeamento, e nenhuma alcan&ccedil;ava uma linha. Agora o select sai do cat&aacute;logo, agrupado por fam&iacute;lia e com contagem; entra filtro de <strong>fam&iacute;lia</strong> na listagem e no kanban, mais o filtro de <strong>tipo</strong> no kanban; e a listagem ganha a coluna <strong>Fam&iacute;lia</strong>. Toda ocorr&ecirc;ncia passa a carregar fam&iacute;lia &mdash; antes 36 das 76 vinham sem nenhuma, e as demais com vocabul&aacute;rio pr&oacute;prio de cada m&oacute;dulo.</div></div>
 <div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>23/09/2026</strong> &mdash; <strong>Quem controla o estado do ciclo.</strong> Fica escrito que o estado do cr&eacute;dito e do d&eacute;bito pertence aos entes fiscais &mdash; apura&ccedil;&atilde;o assistida na CBS, Comit&ecirc; Gestor no IBS &mdash; e que o produto recebe, concilia, evidencia e segue. Por isso este m&oacute;dulo existe: toda diverg&ecirc;ncia entre o que o produto calculou e o que o &oacute;rg&atilde;o devolveu vira <strong>ocorr&ecirc;ncia</strong>, em vez de ser resolvida por conta pr&oacute;pria. <strong>Evidenciar &eacute; a fun&ccedil;&atilde;o</strong>, n&atilde;o o efeito colateral.</div></div>
 <div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>22/09/2026</strong> &mdash; <strong>Primeira vers&atilde;o.</strong> O m&oacute;dulo existia no prot&oacute;tipo desde o in&iacute;cio e nunca teve PRD. Documenta o cat&aacute;logo de doze tipos em quatro fam&iacute;lias, a m&aacute;quina de cinco estados com suspens&atilde;o de prazo, a prioridade calculada, respons&aacute;vel e prazo por fam&iacute;lia, os tr&ecirc;s modos de visualiza&ccedil;&atilde;o, as dezenove colunas, os dez filtros, o modelo de dados, quatorze funcionalidades com situa&ccedil;&atilde;o declarada, dez indicadores, quinze requisitos e dez regras. Registra as duas ocorr&ecirc;ncias do art. 46 da LC 214/2025 &mdash; DF sem registro na apura&ccedil;&atilde;o assistida e registro do Fisco sem DF &mdash; que eram as &uacute;nicas regras da Reforma sem documento. Quatro pend&ecirc;ncias conhecidas ficam registradas como decis&otilde;es em aberto.</div></div>
 </div>

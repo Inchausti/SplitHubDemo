@@ -21,9 +21,9 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.7.1'
+VERSAO = u'v2.8'
 DATA = u'24/09/2026'
-BASE_MAPA = u'Mapa de Funcionalidades v2.7'
+BASE_MAPA = u'Mapa de Funcionalidades v2.8'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
 URL_DOCS = 'https://split-hubhq.github.io/app/docs/'
@@ -136,7 +136,7 @@ FAIXAS = {
     1: ['M0','M0','M0','M0','M2','M0','M2','M2','M2','M0','M0','M0','M0','M0','M1','M1','M1','M1','M1','M1'],
     2: ['M0','M0','M1','M1','M0','M1','M1','M1','M1','M1'],
     3: ['M0','M0','M0','M0','M1','M1','M1','M0','M0','M1','M1','M0','M0','M0','M1','M1'],
-    4: ['M0','M0','M0','M0','M0','M1','M0','M1','M0','M1','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1'],
+    4: ['M0','M0','M0','M0','M0','M1','M0','M1','M0','M1','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1','M1','M1','M1'],
     5: ['M0','M0','M0','M0','M0','M0','M0','M1','M1','M1','M2'],
     6: ['M2','M2','M2','M2','M2','M2','M2','M1','M1','M1','M1','M1','M2'],
     7: ['M2','M2','M2','M2','M2','M2','M1','M1','M1'],
@@ -887,6 +887,11 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.8</div><div class="ver-desc">'
+  u'24/09/2026 \u2014 Base: <strong>Mapa v2.8, com 280 funcionalidades</strong>. Entram as <strong>tr\u00eas'
+  u' funcionalidades</strong> do cat\u00e1logo de inconsist\u00eancias \u2014 filtro por fam\u00edlia, coluna'
+  u' Fam\u00edlia na listagem e filtro de fam\u00edlia e tipo no kanban \u2014 todas em <strong>M1</strong>.'
+  u' <strong>O M0 n\u00e3o muda.</strong></div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v2.7.1</div><div class="ver-desc">'
   u'24/09/2026 — Correção, sem mudança de faixa. A contagem de módulos era escrita à mão em três lugares e ainda dizia '
   u'<strong>20</strong> depois que o mapa passou a ter <strong>21</strong>. Agora é contada do próprio mapa, como o total de '

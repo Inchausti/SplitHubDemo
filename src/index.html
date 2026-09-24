@@ -4043,7 +4043,8 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
             <div class="sh-fp-field"><label>Status</label><select id="inc-rf-etapa" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="aberta">Aberta</option><option value="em_analise">Em Análise</option><option value="aguardando_emitente">Ag. Emitente</option><option value="resolvida">Resolvida</option><option value="glosada">Glosada</option></select></div>
             <div class="sh-fp-field"><label>Tipo de DFe</label><select id="inc-rf-tipo-nf" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option><option value="ingestao">Ingestão</option></select></div>
             <div class="sh-fp-field"><label>Tipo Fiscal</label><select id="inc-rf-tipo-fiscal" onchange="window.incRfFiltrar()"><option value="">Todos</option><option value="ibs">IBS</option><option value="cbs">CBS</option></select></div>
-            <div class="sh-fp-field"><label>Tipo Inconsistência</label><select id="inc-rf-inc-tipo" onchange="window.incRfFiltrar()"><option value="">Todas</option><option value="Não conciliado">Não conciliado</option><option value="Valor imposto divergente">Valor imposto divergente</option><option value="Vencido">Vencido</option><option value="Sem Comprovante">Sem Comprovante</option><option value="Falha de Layout">Falha de Layout</option><option value="Inconsistência de Dados">Inconsistência de Dados</option><option value="Rejeitado SEFAZ">Rejeitado SEFAZ</option><option value="Documento Duplicado">Documento Duplicado</option></select></div>
+            <div class="sh-fp-field"><label>Família</label><select id="inc-rf-familia" onchange="window.incRfFiltrar()"><option value="">Todas</option></select></div>
+            <div class="sh-fp-field"><label>Tipo Inconsistência</label><select id="inc-rf-inc-tipo" onchange="window.incRfFiltrar()"><option value="">Todas</option></select></div>
             <div class="sh-fp-field"><label>Data RF — de</label><input id="inc-rf-data-de" type="date" onchange="window.incRfFiltrar()"></div>
             <div class="sh-fp-field"><label>Data RF — até</label><input id="inc-rf-data-ate" type="date" onchange="window.incRfFiltrar()"></div>
             <div class="sh-fp-field"><label>Valor mín (R$)</label><input id="inc-rf-valor-min" type="number" min="0" placeholder="0" oninput="window.incRfFiltrar()"></div>
@@ -5600,12 +5601,15 @@ function fornDetAba(k,cnpj){
   }
 }
 
-var INC_TIPOS={
-  nf_erro:{label:"NF importada com erro",v:"--red"},
-  nf_duplicada:{label:"NF importada duplicada",v:"--amber"},
-  imposto_vencido:{label:"Imposto da NF vencido",v:"--blue"},
-  cbs_incorreto:{label:"Valor CBS incorreto",v:"--teal"}
-};
+// Derivado de IncCatalogo — ver src/js/inc-catalogo.js. Os quatro rótulos que
+// viviam aqui não correspondiam a nenhum tipo gerado desde a migração do
+// mapeamento; a cor agora vem da família.
+var INC_TIPOS=(function(){
+  var K=window.IncCatalogo,o={};
+  if(!K)return o;
+  K.lista().forEach(function(t){o[t]={label:K.TIPOS[t].label,v:K.FAMILIAS[K.TIPOS[t].familia].cor};});
+  return o;
+})();
 function _incCv(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
 function inconsistTipoBadge(tipo){
   var t=INC_TIPOS[tipo];
@@ -10813,12 +10817,13 @@ if (window.Chart) {
   Chart.defaults.font.size = 11;
 }
 </script>
+<script src="js/inc-catalogo.js?v=1"></script><!-- fonte unica dos tipos de inconsistencia -->
 <script src="js/conciliacao-apuracao.js?v=1"></script>
 <script src="js/integracao-erp.js?v=3"></script>
 <script src="js/status-debito.js?v=4"></script>
 <script src="js/glosa.js?v=2"></script>
 <script src="js/ressarcimento.js?v=17"></script>
-<script src="js/data-sync-fixed.js?v=138"></script>
+<script src="js/data-sync-fixed.js?v=140"></script>
 <script src="js/rotas.js?v=3"></script>
 <script src="js/motor-art53.js?v=32"></script>
 <script src="js/apuracao-completa.js?v=2"></script>

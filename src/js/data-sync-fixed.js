@@ -177,7 +177,8 @@ window.SH_TABLES = {
       { key: 'valorTotal', label: 'Valor Total', tip: 'Valor bruto do documento em que a divergência aparece.',         cls: 'r' },
       { key: 'valorLiq', label: 'Valor Líquido', tip: 'Valor do documento descontados os tributos.',       cls: 'r' },
       { key: 'valor', label: 'Valor RF', tip: 'Valor do registro fiscal afetado — o montante efetivamente em risco.',            cls: 'r' },
-      { key: 'tipoLabel', label: 'Tipo Inconsistência', tip: 'A natureza da divergência: alíquota, base de cálculo, valor declarado versus apurado, cadastro ou prazo.' },
+      { key: 'tipoLabel', label: 'Tipo Inconsistência', tip: 'A natureza da divergência: alíquota, base de cálculo, valor declarado versus apurado, cadastro ou prazo. São 21 tipos, no catálogo de <code>inc-catalogo.js</code>.' },
+      { key: 'familiaLabel', label: 'Família', tip: 'De onde a falha veio, em seis famílias: documento, confronto com o Fisco, ciclo do crédito e do débito, recolhimento e comprovação, ressarcimento e integração. A família diz quem resolve; o tipo diz o que fazer.' },
       { key: 'origem', label: 'Origem', tip: 'Onde a divergência foi detectada: na ingestão, na apuração assistida ou na conciliação.' },
       { key: 'status', label: 'Status', tip: 'Se a ocorrência está aberta, em tratamento ou resolvida.' },
       { key: 'prioridade', label: 'Prioridade', tip: 'Severidade atribuída, combinando valor em risco e proximidade do prazo.' },
@@ -4263,46 +4264,12 @@ window.renderizarRFsInconsistencias = function() {
   window._rfIncGlobal = lista;
 
   // --- Construir _inconsistenciasGlobal (novo modelo) ---
-  var _tipoIncMap = {
-    // CAPUR — por imposto
-    'Valor IBS divergente':        'capur_ibs_divergente',
-    'Valor CBS divergente':        'capur_cbs_divergente',
-    'Alíquota IBS incorreta':      'capur_ibs_aliquota',
-    'Alíquota CBS incorreta':      'capur_cbs_aliquota',
-    'Prazo de apuração expirado':  'prazo_expirado',
-    // CFIN — por imposto
-    'Split IBS não executado':     'cfin_ibs_split',
-    'Split CBS não executado':     'cfin_cbs_split',
-    'Comprovante IBS divergente':  'cfin_ibs_valor',
-    'Comprovante CBS divergente':  'cfin_cbs_valor',
-    // Ingestão
-    'Falha de Layout':             'chave_invalida',
-    'Inconsistência de Dados':     'cnpj_divergente',
-    'Rejeitado SEFAZ':             'chave_invalida',
-    'Documento Duplicado':         'duplicidade_rf',
-    // Legado (compat)
-    'Divergência de Valor':        'capur_ibs_divergente',
-    'Valor imposto divergente':    'capur_ibs_aliquota',
-    'Não conciliado':              'capur_ibs_divergente',
-    'Sem Comprovante':             'cfin_ibs_split',
-    'Vencido':                     'prazo_expirado'
-  };
-  var _tipoIncLbl = {
-    'capur_ibs_divergente': 'Valor IBS divergente da apuração',
-    'capur_cbs_divergente': 'Valor CBS divergente da apuração',
-    'capur_ibs_aliquota':   'Alíquota IBS incorreta',
-    'capur_cbs_aliquota':   'Alíquota CBS incorreta',
-    'prazo_expirado':       'Prazo de apuração expirado',
-    'cfin_ibs_split':       'Split IBS não executado',
-    'cfin_cbs_split':       'Split CBS não executado',
-    'cfin_ibs_valor':       'Comprovante IBS divergente',
-    'cfin_cbs_valor':       'Comprovante CBS divergente',
-    'chave_invalida':       'Chave de acesso inválida',
-    'cnpj_divergente':      'CNPJ divergente',
-    'duplicidade_rf':       'RF duplicado',
-    'apur_df_sem_registro': 'DF sem registro na apuração assistida',
-    'apur_registro_sem_df': 'Registro na apuração assistida sem DF'
-  };
+  // Os dois mapas passaram a viver em src/js/inc-catalogo.js, para que o
+  // filtro da tela, o kanban e os módulos que criam ocorrência leiam a mesma
+  // lista. O fallback mantém a tela de pé se o catálogo não tiver carregado.
+  var _K = window.IncCatalogo || null;
+  var _tipoIncMap = _K ? _K.DE_ORIGEM : {};
+  var _tipoIncLbl = _K ? _K.rotulos() : {};
   // D-GL-05: o estado 'glosada' deixa de ser sorteado aqui. Ele passa a valer
   // so para as ocorrencias que o modulo shGlosa cria a partir de uma glosa de
   // credito de verdade - ver src/docs/proposta-glosa.html.
@@ -4319,6 +4286,7 @@ window.renderizarRFsInconsistencias = function() {
       id:              'INC-' + String(incGlobal.length + 1).padStart(4,'0'),
       tipo:            tipo,
       tipoLabel:       _tipoIncLbl[tipo] || (r.tipoLabel || r.inc || 'Inconsistência'),
+      familia:         _K ? _K.familia(tipo) : null,
       dfId:            r.nfVinc || '—',
       dfNum:           r.nfVinc || '—',
       nfNumero:        r.nfId   || '',
@@ -4349,6 +4317,17 @@ window.renderizarRFsInconsistencias = function() {
   try { if (window.shErp && window.shErp.inconsistencias) window.shErp.inconsistencias(incGlobal); } catch (e) { console.error('[erp] inconsistências', e); }
   try { if (window.shConcApur && window.shConcApur.inconsistencias) window.shConcApur.inconsistencias(incGlobal); } catch (e) { console.error('[conc-apur] inconsistências', e); }
   try { if (window.shRes && window.shRes.inconsistencias) window.shRes.inconsistencias(incGlobal); } catch (e) {}
+
+  // Cada módulo escrevia a família com vocabulário próprio — 'glosa',
+  // 'apuracao', 'integracao' — e os tipos do núcleo não escreviam nenhuma.
+  // A família passa a sair sempre do catálogo, pelo tipo.
+  if (_K) incGlobal.forEach(function (o) {
+    var t = _K.normalizar(o.tipo) || o.tipo;
+    o.tipo = t;
+    o.familia = _K.familia(t) || o.familia || null;
+    if (!o.tipoLabel || o.tipoLabel === t) o.tipoLabel = _K.label(t);
+  });
+
   window._inconsistenciasGlobal = incGlobal;
 
   // Popular select de contratos no filtro de inconsistências
@@ -4488,6 +4467,7 @@ window.renderizarRFsInconsistencias = function() {
   _incSvgMensal(document.getElementById('c-inc-mensal'), mapMes, 280);
 
   // 8. Renderizar listagem filtrada
+  try { window.incRfMontarSelects && window.incRfMontarSelects(); } catch (e) {}
   window.incRfFiltrar();
 };
 
@@ -4498,6 +4478,7 @@ window.incRfFiltrar = function() {
   var tipoNF   = (document.getElementById('inc-rf-tipo-nf')      ||{}).value||'';
   var tipoFisc = (document.getElementById('inc-rf-tipo-fiscal')  ||{}).value||'';
   var incTipo  = (document.getElementById('inc-rf-inc-tipo')     ||{}).value||'';
+  var incFam   = (document.getElementById('inc-rf-familia')      ||{}).value||'';
   var status   = (document.getElementById('inc-rf-etapa')        ||{}).value||'';
   var dataDe   = (document.getElementById('inc-rf-data-de')      ||{}).value||'';
   var dataAte  = (document.getElementById('inc-rf-data-ate')     ||{}).value||'';
@@ -4518,6 +4499,7 @@ window.incRfFiltrar = function() {
     if (tipoNF    && inc.tipoFluxo !== tipoNF)                                             return false;
     if (tipoFisc  && inc.tipoFiscal && inc.tipoFiscal !== '—' && inc.tipoFiscal.toLowerCase() !== tipoFisc) return false;
     if (incTipo   && inc.tipo !== incTipo && inc.tipoLabel !== incTipo)                    return false;
+    if (incFam    && inc.familia !== incFam)                                               return false;
     if (status    && inc.status !== status)                                                return false;
     if (dataDe    && inc.dataISO < dataDe)                                                 return false;
     if (dataAte   && inc.dataISO > dataAte)                                                return false;
@@ -4549,10 +4531,57 @@ window.incRfFiltrar = function() {
 };
 
 window.incRfLimparFiltros = function() {
-  ['inc-rf-busca','inc-rf-tipo-nf','inc-rf-tipo-fiscal','inc-rf-inc-tipo','inc-rf-etapa','inc-rf-data-de','inc-rf-data-ate','inc-rf-valor-min','inc-rf-valor-max','inc-rf-val-total-min','inc-rf-val-total-max','inc-rf-val-liq-min','inc-rf-val-liq-max','inc-rf-prioridade','inc-rf-origem','inc-rf-contrato','inc-rf-status-cred','inc-rf-status-reg','inc-rf-metodo'].forEach(function(id){
+  ['inc-rf-busca','inc-rf-tipo-nf','inc-rf-tipo-fiscal','inc-rf-familia','inc-rf-inc-tipo','inc-rf-etapa','inc-rf-data-de','inc-rf-data-ate','inc-rf-valor-min','inc-rf-valor-max','inc-rf-val-total-min','inc-rf-val-total-max','inc-rf-val-liq-min','inc-rf-val-liq-max','inc-rf-prioridade','inc-rf-origem','inc-rf-contrato','inc-rf-status-cred','inc-rf-status-reg','inc-rf-metodo'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
   window.incRfFiltrar();
+};
+
+/**
+ * Anota a contagem em cada opção. Tipo previsto que ainda não ocorreu fica
+ * com (0) — continua na lista, porque o catálogo é o escopo do módulo, não o
+ * retrato da base de hoje.
+ */
+function _incAnotarContagem(sel) {
+  var L = window._inconsistenciasGlobal || [];
+  var n = {};
+  L.forEach(function (i) { n[i.tipo] = (n[i.tipo] || 0) + 1; });
+  [].forEach.call(sel.options, function (o) {
+    if (!o.value) return;
+    o.textContent = o.textContent.replace(/\s*\(\d+\)$/, '') + ' (' + (n[o.value] || 0) + ')';
+  });
+}
+
+/**
+ * Monta os selects de família e de tipo a partir do catálogo, e deixa o de
+ * tipo restrito à família escolhida. Antes o select trazia oito rótulos de
+ * origem que o mapeamento já havia convertido: nenhuma opção alcançava linha.
+ */
+window.incRfMontarSelects = function() {
+  var K = window.IncCatalogo; if (!K) return;
+  var selFam  = document.getElementById('inc-rf-familia');
+  var selTipo = document.getElementById('inc-rf-inc-tipo');
+  if (selFam && selFam.options.length <= 1) {
+    selFam.innerHTML = '<option value="">Todas</option>' + K.porFamilia().map(function(f){
+      return '<option value="' + f.chave + '">' + f.letra + ' · ' + f.label + '</option>';
+    }).join('');
+  }
+  if (selTipo) { K.preencherSelect(selTipo, 'Todas'); _incAnotarContagem(selTipo); }
+  if (selFam && !selFam._sh) {
+    selFam._sh = 1;
+    selFam.addEventListener('change', function() {
+      var f = selFam.value, atual = selTipo ? selTipo.value : '';
+      if (!selTipo) return;
+      if (!f) { K.preencherSelect(selTipo, 'Todas'); }
+      else {
+        var g = K.porFamilia().filter(function(x){ return x.chave === f; })[0] || { tipos: [] };
+        selTipo.innerHTML = '<option value="">Todas de ' + K.FAMILIAS[f].label + '</option>'
+          + g.tipos.map(function(t){ return '<option value="' + t + '">' + K.label(t) + '</option>'; }).join('');
+      }
+      _incAnotarContagem(selTipo);
+      if (atual && selTipo.querySelector('option[value="' + atual + '"]')) selTipo.value = atual;
+    });
+  }
 };
 
 window._incRfRenderPagina = function() {
@@ -4625,6 +4654,7 @@ window._incRfRenderPagina = function() {
       + '<td class="r mono" style="color:var(--txt2)">'+ff(inc.valorLiq||0)+'</td>'
       + '<td class="r mono" style="color:var(--txt2)">'+ff(inc.valor)+'</td>'
       + '<td style="font-size:11px;color:var(--txt1)">'+inc.tipoLabel+'</td>'
+      + '<td class="nowrap">'+_incFamiliaCell(inc)+'</td>'
       + '<td class="nowrap">'+_badge(inc.origem==='df'?'24,95,165':'26,107,90', inc.origem==='df'?'DF':'RF')+'</td>'
       + '<td class="nowrap">'+_badge(sc[0],sc[1])+'</td>'
       + '<td class="nowrap">'+_badge(pc[0],pc[1])+'</td>'
@@ -4639,7 +4669,7 @@ window._incRfRenderPagina = function() {
       + '<td class="nowrap">' + (window.shCelulaPrevExtincao ? window.shCelulaPrevExtincao(inc) : '&mdash;') + '</td>'
       + '</tr>';
   });
-  if (!pag.length) h = '<tr><td colspan="22" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma inconsistência encontrada para este filtro.</td></tr>';
+  if (!pag.length) h = '<tr><td colspan="23" style="text-align:center;color:var(--txt3);padding:24px">Nenhuma inconsistência encontrada para este filtro.</td></tr>';
 
   var tbody = document.getElementById('t-inc-rfs');
   if (tbody) tbody.innerHTML = h;
@@ -4658,6 +4688,17 @@ window._incRfRenderPagina = function() {
   if (btnP) { btnP.disabled = pagAtual <= 1; btnP.style.opacity = pagAtual <= 1 ? '0.5' : '1'; btnP.style.cursor = pagAtual <= 1 ? 'not-allowed' : 'pointer'; }
   if (btnN) { btnN.disabled = pagAtual >= totalPag; btnN.style.opacity = pagAtual >= totalPag ? '0.5' : '1'; btnN.style.cursor = pagAtual >= totalPag ? 'not-allowed' : 'pointer'; }
 };
+
+/** Chip da família, com a letra e a cor do catálogo. */
+function _incFamiliaCell(inc) {
+  var K = window.IncCatalogo;
+  if (!K || !inc.familia || !K.FAMILIAS[inc.familia]) return '<span style="color:var(--txt3)">&mdash;</span>';
+  var f = K.FAMILIAS[inc.familia];
+  var c = K.cor(inc.tipo);
+  return '<span title="' + f.desc.replace(/"/g, '') + '" style="background:' + c + '1e;color:' + c
+    + ';border:1px solid ' + c + '55;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap">'
+    + f.letra + ' · ' + f.label + '</span>';
+}
 
 // Mapa de ações disponíveis por tipo de inconsistência
 var _incAcoesMap = {
@@ -4867,10 +4908,41 @@ window.renderizarKanbanInconsistencias = function() {
   var filtersEl = document.getElementById('inc-kb-filters');
   var _kbFiltroFluxo = window._kbFiltroFluxo || '';
   var _kbFiltroPrio  = window._kbFiltroPrio  || '';
+  var _kbFiltroFam   = window._kbFiltroFam   || '';
+  var _kbFiltroTipo  = window._kbFiltroTipo  || '';
+  var K = window.IncCatalogo;
   if (filtersEl) {
     var fluxoOpts = [['','Todos'],['entrada','↓ Entrada'],['saida','↑ Saída']];
     var prioOpts  = [['','Todas prioridades'],['critica','Crítica'],['alta','Alta'],['media','Média'],['baixa','Baixa']];
-    filtersEl.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">'
+    // Família e tipo entram como filtro do kanban: antes o quadro só separava
+    // por fluxo e prioridade, e não havia como olhar uma família de cada vez.
+    var famHtml = '', tipoHtml = '';
+    if (K) {
+      var comDado = {};
+      incList.forEach(function(i){ comDado[i.familia] = (comDado[i.familia] || 0) + 1; });
+      famHtml = '<button onclick="window._kbFiltroFam=\'\';window._kbFiltroTipo=\'\';window.renderizarKanbanInconsistencias()" '
+        + 'style="font-size:10px;font-weight:600;padding:4px 11px;border-radius:20px;border:1px solid var(--brd);background:'
+        + (_kbFiltroFam?'transparent':'var(--teal)') + ';color:' + (_kbFiltroFam?'var(--txt3)':'#fff')
+        + ';cursor:pointer;font-family:inherit">Todas as famílias</button>'
+        + K.porFamilia().map(function(f){
+            var n = comDado[f.chave] || 0, act = _kbFiltroFam === f.chave;
+            return '<button onclick="window._kbFiltroFam=\''+f.chave+'\';window._kbFiltroTipo=\'\';window.renderizarKanbanInconsistencias()" '
+              + 'title="' + f.desc.replace(/"/g,'') + '" '
+              + 'style="font-size:10px;font-weight:600;padding:4px 11px;border-radius:20px;border:1px solid var(--brd);background:'
+              + (act?'var(--teal)':'transparent') + ';color:' + (act?'#fff':(n?'var(--txt2)':'var(--txt3)'))
+              + ';cursor:pointer;font-family:inherit;opacity:' + (n?'1':'.5') + '">'
+              + f.letra + ' · ' + f.label + ' <span style="opacity:.7">' + n + '</span></button>';
+          }).join('');
+      var tiposVis = K.lista().filter(function(t){ return !_kbFiltroFam || K.familia(t) === _kbFiltroFam; });
+      tipoHtml = '<select onchange="window._kbFiltroTipo=this.value;window.renderizarKanbanInconsistencias()" '
+        + 'style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid var(--brd);background:var(--inp);color:var(--txt1);font-family:inherit">'
+        + '<option value="">Todos os tipos</option>'
+        + tiposVis.map(function(t){
+            var n = incList.filter(function(i){ return i.tipo === t; }).length;
+            return '<option value="'+t+'"'+(_kbFiltroTipo===t?' selected':'')+'>'+K.label(t)+' ('+n+')</option>';
+          }).join('') + '</select>';
+    }
+    filtersEl.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">'
       + fluxoOpts.map(function(o){
           var act = _kbFiltroFluxo === o[0];
           var c = o[0]==='entrada'?'29,158,117':o[0]==='saida'?'244,63,94':'167,168,170';
@@ -4883,13 +4955,17 @@ window.renderizarKanbanInconsistencias = function() {
           return '<button onclick="window._kbFiltroPrio=\''+o[0]+'\';window.renderizarKanbanInconsistencias()" '
             +'style="font-size:10px;font-weight:600;padding:4px 11px;border-radius:20px;border:1px solid var(--brd);background:'+(act?'var(--teal)':'transparent')+';color:'+(act?'#fff':'var(--txt3)')+';cursor:pointer;font-family:inherit">'+o[1]+'</button>';
         }).join('')
-      + '</div>';
+      + '</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">'
+      + famHtml + '&nbsp;' + tipoHtml + '</div>';
   }
 
   // Aplicar filtros
   var lista = incList.filter(function(inc) {
     if (_kbFiltroFluxo && inc.tipoFluxo !== _kbFiltroFluxo) return false;
     if (_kbFiltroPrio  && inc.prioridade !== _kbFiltroPrio)  return false;
+    if (_kbFiltroFam   && inc.familia    !== _kbFiltroFam)   return false;
+    if (_kbFiltroTipo  && inc.tipo       !== _kbFiltroTipo)  return false;
     return true;
   });
 
