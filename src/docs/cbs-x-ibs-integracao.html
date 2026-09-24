@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBS × IBS · Duas APIs, dois modelos</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 1080px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--teal); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 800px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--teal); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 26px 0 8px; scroll-margin-top: 20px; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--teal); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.tag { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; border-radius: 3px; padding: 1px 6px; white-space: nowrap; }
+.tag.cbs { background: var(--blue-d); color: var(--blue); border: 1px solid var(--blue); }
+.tag.ibs { background: var(--amber-d); color: var(--amber); border: 1px solid var(--amber); }
+.tag.none { background: var(--red-d); color: var(--red); border: 1px solid var(--red); }
+.tag.both { background: var(--green-d); color: var(--green); border: 1px solid var(--green); }
+
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 760px) { .split { grid-template-columns: 1fr; } }
+.pane { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; overflow: hidden; }
+.pane-hdr { padding: 9px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--brd); }
+.pane-hdr.cbs { background: var(--blue-d); color: var(--blue); }
+.pane-hdr.ibs { background: var(--amber-d); color: var(--amber); }
+pre { margin: 0; padding: 13px 15px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.6; color: var(--txt2); background: var(--sur); }
+pre b { color: var(--txt1); font-weight: 600; }
+pre .cm { color: var(--txt3); }
+
+ol.steps { list-style: none; counter-reset: st; display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+ol.steps li { counter-increment: st; font-size: 12.5px; color: var(--txt2); display: flex; gap: 10px; align-items: baseline; }
+ol.steps li::before { content: counter(st); flex-shrink: 0; width: 19px; height: 19px; border-radius: 4px; background: var(--sur3); color: var(--txt2); font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; }
+ol.steps li strong { color: var(--txt1); }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--teal); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+.src-note { font-size: 11.5px; color: var(--txt3); margin: 6px 0 0; }
+
+code, kbd, samp { overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">Refer&ecirc;ncia &middot; Integra&ccedil;&atilde;o</div>
+<h1>CBS &times; IBS: duas APIs, dois modelos</h1>
+<p class="subtitle">Os dois entes fiscais publicaram contrato para a mesma coisa &mdash; a apura&ccedil;&atilde;o assistida &mdash; e resolveram de formas opostas. Este documento desce at&eacute; o campo de payload: o que vem em uma e n&atilde;o vem na outra, e o que cada aus&ecirc;ncia obriga o SplitHub a construir.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Refer&ecirc;ncia &middot; Integra&ccedil;&atilde;o</span></div>
+<div class="meta-pill"><span class="meta-label">Fontes</span>&nbsp;<span class="meta-val">MOC IBS v1.10 &middot; APIs CBS v2</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">24/09/2026</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip info">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">&Iacute;ndice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Por que este documento</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> O contraste em uma tela</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Documento &times; opera&ccedil;&atilde;o</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> O fluxo, passo a passo</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Autentica&ccedil;&atilde;o e credencial</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Os payloads lado a lado</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> S&oacute; na CBS</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> S&oacute; no IBS</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Em nenhuma das duas</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Janela, limite e perda de dado</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> O impacto no SplitHub</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Cat&aacute;logo e cronograma</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Pend&ecirc;ncias declaradas</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> Fontes</a></li>
+<li><a href="#s15"><span class="toc-num">15</span> Hist&oacute;rico de vers&otilde;es</a></li>
+</ul></div>
+
+<!-- 01 -->
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Por que este documento</span></div>
+<p>Em <strong>23/09/2026</strong> o Comit&ecirc; Gestor publicou o MOC v1.10 da API da Apura&ccedil;&atilde;o Assistida do IBS. Com isso os dois tributos passaram a ter contrato publicado &mdash; e ficou vis&iacute;vel que <strong>eles n&atilde;o s&atilde;o duas vers&otilde;es do mesmo desenho</strong>.</p>
+<p>A tenta&ccedil;&atilde;o &eacute; tratar o IBS como &ldquo;a CBS com outro dom&iacute;nio&rdquo;: mesmo adaptador, outro <em>base path</em>. Isso n&atilde;o funciona. A CBS entrega <strong>saldo por documento</strong> quando o produto pede; o IBS entrega <strong>extrato de lan&ccedil;amentos por opera&ccedil;&atilde;o</strong> quando o Fisco decide. S&atilde;o dois modelos de dados, dois modelos de comunica&ccedil;&atilde;o e duas no&ccedil;&otilde;es de o que &eacute; um fato.</p>
+<div class="callout info"><div class="ct">O princ&iacute;pio que n&atilde;o muda</div><p>O SplitHub <strong>n&atilde;o controla o estado</strong> do ciclo de vida do cr&eacute;dito nem do d&eacute;bito em nenhum dos dois. Ele recebe, concilia, evidencia diverg&ecirc;ncia e segue o que o ente fiscal diz. O que muda entre CBS e IBS &eacute; <em>como</em> o estado chega &mdash; e, como se ver&aacute; na <a class="xref" href="#s07">se&ccedil;&atilde;o 07</a>, <strong>quanto de estado chega nomeado</strong>. Ver <a class="xref" href="proposta-ciclo-vida.html#s10">Ciclo de vida, se&ccedil;&atilde;o 10</a>.</p></div>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O contraste em uma tela</span></div>
+<div class="table-wrap"><table><thead><tr><th>Dimens&atilde;o</th><th>CBS &middot; Receita Federal</th><th>IBS &middot; Comit&ecirc; Gestor</th></tr></thead><tbody>
+<tr><td><strong>Inicia&ccedil;&atilde;o</strong></td><td>O produto <strong>puxa</strong>: abre solicita&ccedil;&atilde;o por endpoint</td><td>O Fisco <strong>empurra</strong>: Processamento Di&aacute;rio gera arquivo</td></tr>
+<tr><td><strong>Unidade</strong></td><td><strong>Documento fiscal</strong>, dentro de um per&iacute;odo de apura&ccedil;&atilde;o</td><td><strong>Opera&ccedil;&atilde;o</strong> (fornecimento ou aquisi&ccedil;&atilde;o), com conta corrente pr&oacute;pria</td></tr>
+<tr><td><strong>Natureza do dado</strong></td><td><strong>Saldo</strong> &mdash; a foto atual, particionada por estado</td><td><strong>Extrato</strong> &mdash; a lista de lan&ccedil;amentos que produziram o saldo</td></tr>
+<tr><td><strong>Recorte por assunto</strong></td><td><strong>Quatro endpoints</strong>: d&eacute;bitos, cr&eacute;ditos, pagamentos, recolhimentos</td><td><strong>Um arquivo &uacute;nico</strong>: cr&eacute;dito e d&eacute;bito no mesmo extrato</td></tr>
+<tr><td><strong>Transporte</strong></td><td>JSON por <code>urlAssinada</code>, v&aacute;lida 48 h</td><td>Arquivo <code>.zip</code> por download, validade informada na notifica&ccedil;&atilde;o</td></tr>
+<tr><td><strong>Autentica&ccedil;&atilde;o</strong></td><td>OAuth 2.0 client credentials, token de 1 h</td><td><code>ClientID</code> e <code>ClientSecret</code> no header de cada chamada</td></tr>
+<tr><td><strong>Papel do webhook</strong></td><td>Avisa que <strong>o que pedimos</strong> ficou pronto</td><td>Avisa que <strong>o Fisco gerou</strong> algo por conta pr&oacute;pria</td></tr>
+<tr><td><strong>Repeti&ccedil;&atilde;o</strong></td><td><strong>Cumulativa</strong>: a janela de 8 dias reentrega o documento atualizado</td><td><strong>Incremental</strong>: o Delta traz o lan&ccedil;amento uma vez s&oacute;</td></tr>
+<tr><td><strong>Cota</strong></td><td>4 chamadas/dia <em>por endpoint</em></td><td>2 solicita&ccedil;&otilde;es manuais/dia; o Delta n&atilde;o consome cota</td></tr>
+<tr><td><strong>Compet&ecirc;ncia</strong></td><td>Campo <code>pa</code> em cada documento</td><td><strong>Ausente na opera&ccedil;&atilde;o</strong> &mdash; s&oacute; o per&iacute;odo do arquivo</td></tr>
+<tr><td><strong>Camada de arrecada&ccedil;&atilde;o</strong></td><td>DARF, multa, juros e vencimento no payload</td><td><strong>N&atilde;o existe na Etapa 1</strong> &mdash; Documento de Arrecada&ccedil;&atilde;o &eacute; Etapa 4</td></tr>
+<tr><td><strong>Integridade</strong></td><td>N&atilde;o h&aacute; verificador no payload</td><td><code>hash</code> SHA1 acumulado do extrato</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">A consequ&ecirc;ncia de uma linha s&oacute;</div><p>Cumulativo contra incremental &eacute; a diferen&ccedil;a que mais custa. Na CBS, <strong>perder uma coleta n&atilde;o perde dado</strong>: a pr&oacute;xima reentrega tudo o que mudou nos &uacute;ltimos 8 dias. No IBS, <strong>perder um Delta perde o lan&ccedil;amento</strong> &mdash; e a recupera&ccedil;&atilde;o depende de Arquivo Manual, limitado a duas solicita&ccedil;&otilde;es por dia.</p></div>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Documento &times; opera&ccedil;&atilde;o: duas ideias de unidade</span></div>
+<p class="sec-sub">Antes do payload, o conceito. As duas APIs organizam a informa&ccedil;&atilde;o em torno de objetos diferentes, e isso governa tudo o que vem depois.</p>
+
+<h3>CBS: o documento dentro do per&iacute;odo</h3>
+<p>O envelope &eacute; o contribuinte (<code>ni</code>, CNPJ base de 8 d&iacute;gitos) e o per&iacute;odo de apura&ccedil;&atilde;o (<code>pa</code>). Dentro dele vem a lista de documentos, cada um com sua <code>chave</code> de 44 posi&ccedil;&otilde;es, o <code>modelo</code> e um bloco <code>cbs</code> com os valores <strong>no estado em que est&atilde;o hoje</strong>. N&atilde;o h&aacute; hist&oacute;rico: o que mudou aparece como um n&uacute;mero diferente numa coleta seguinte, e o campo <code>atualizacao</code> diz quando mudou &mdash; n&atilde;o o que mudou nem por qu&ecirc;.</p>
+
+<h3>IBS: a opera&ccedil;&atilde;o e seu conta corrente</h3>
+<p>O envelope &eacute; o arquivo. Dentro vem a lista de <strong>opera&ccedil;&otilde;es</strong> &mdash; cada uma um fornecimento (vis&atilde;o do fornecedor) ou uma aquisi&ccedil;&atilde;o (vis&atilde;o do adquirente), inaugurada por um documento fiscal e identificada por um <code>ID</code> pr&oacute;prio do Fisco. Cada opera&ccedil;&atilde;o carrega um <code>extrato_cc</code>: a <strong>lista de lan&ccedil;amentos</strong> que aconteceram nela. O primeiro lan&ccedil;amento &eacute; o registro da pr&oacute;pria opera&ccedil;&atilde;o; os seguintes s&atilde;o apropria&ccedil;&otilde;es, utiliza&ccedil;&otilde;es, pagamentos, cancelamentos, devolu&ccedil;&otilde;es e extin&ccedil;&otilde;es.</p>
+
+<div class="callout ok"><div class="ct">O que o IBS d&aacute; e a CBS n&atilde;o d&aacute;</div><p><strong>Auditoria nativa.</strong> No IBS d&aacute; para responder &ldquo;por que este cr&eacute;dito virou apropriado?&rdquo; olhando o extrato. Na CBS a mesma pergunta s&oacute; se responde comparando duas coletas &mdash; e o SplitHub precisa ter guardado a anterior. O produto j&aacute; guarda; mas a reconstitui&ccedil;&atilde;o &eacute; nossa, n&atilde;o do Fisco.</p></div>
+<div class="callout warn"><div class="ct">O que a CBS d&aacute; e o IBS n&atilde;o d&aacute;</div><p><strong>O saldo pronto.</strong> Na CBS o valor em cada estado vem calculado. No IBS o saldo &eacute; a <strong>soma do extrato</strong> &mdash; e s&oacute; est&aacute; certo se nenhum lan&ccedil;amento faltar. O <code>hash</code> existe exatamente para isso, e a <a class="xref" href="#s10">se&ccedil;&atilde;o 10</a> mostra por que ele vira requisito e n&atilde;o conforto.</p></div>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O fluxo, passo a passo</span></div>
+<div class="split">
+<div class="pane"><div class="pane-hdr cbs">CBS &middot; o produto puxa</div>
+<div style="padding:14px 16px">
+<ol class="steps">
+<li>Obt&eacute;m o <strong>token</strong> em <code>POST /token</code> com <em>client credentials</em>. Validade 1 h</li>
+<li>Abre a solicita&ccedil;&atilde;o: <code>POST /creditos/{cnpj}</code> com <code>urlRetorno</code> no corpo</li>
+<li>Recebe <strong>201</strong> com <code>tiqueteSolicitacao</code> e <code>tEASegundos</code> &mdash; a estimativa de espera</li>
+<li>A Receita chama <code>HEAD</code> no webhook para <strong>validar o endere&ccedil;o</strong>, antes do 201</li>
+<li>Ao concluir, chama <code>POST</code> no webhook com <code>urlAssinada</code> e <code>urlAssinadaExpiraEm</code></li>
+<li>O produto responde <strong>2xx</strong>. Qualquer outro status faz a Receita tentar de novo</li>
+<li>Baixa o JSON pela <code>urlAssinada</code> <strong>antes de 48 h</strong></li>
+<li>Alternativa sem webhook: <em>polling</em> em <code>GET /situacao/{tiquete}</code></li>
+</ol>
+<p class="src-note">Processamento at&eacute; <strong>240 minutos</strong>. Estouro devolve <code>APURACAO-408</code> no webhook, no lugar do link.</p>
+</div></div>
+
+<div class="pane"><div class="pane-hdr ibs">IBS &middot; o Fisco empurra</div>
+<div style="padding:14px 16px">
+<ol class="steps">
+<li>No <strong>Portal do Contribuinte</strong>, entra por GOV.BR e gera <code>ClientID</code> e <code>ClientSecret</code></li>
+<li>Habilita: <code>POST /v1/aassist/habilitar</code> com <code>queroHabilitar: "HAB"</code>, a <code>webhookUrl</code> HTTPS e, opcional, um <code>tokenContrib</code></li>
+<li><strong>N&atilde;o pede nada mais.</strong> Ap&oacute;s o fim do dia, o Fisco roda o <strong>Processamento Di&aacute;rio</strong></li>
+<li>O Processamento gera o <strong>Arquivo Diferencial (Delta)</strong> com os lan&ccedil;amentos do dia</li>
+<li>O webhook do contribuinte recebe <code>POST</code> com <code>idSolic</code>, <code>qtdOperSolic</code>, <code>dataValidSolic</code> e a lista <code>arquivos[]</code></li>
+<li>O produto baixa cada arquivo por <strong>Obter Arquivo</strong>, pelo nome recebido</li>
+<li>Se precisar de per&iacute;odo passado: <code>GET /v1/aassist/solicitacao/incluir</code> &mdash; o <strong>Arquivo Manual</strong></li>
+<li>Acompanhamento: <code>GET /v1/aassist/solicitacao/listar/&hellip;</code>; cancelamento por <code>DELETE</code></li>
+</ol>
+<p class="src-note">Situa&ccedil;&otilde;es da solicita&ccedil;&atilde;o: <strong>Solicitada, Gerada, Enviada, Cancelada, Expirada</strong>. O arquivo some quando expira.</p>
+</div></div>
+</div>
+
+<div class="callout red"><div class="ct">O webhook do IBS n&atilde;o &eacute; opcional</div><p>Na CBS o webhook tem alternativa: d&aacute; para trocar por <em>polling</em> em <code>/situacao</code>, porque sempre existe um t&iacute;quete nosso para consultar. <strong>No IBS n&atilde;o h&aacute; t&iacute;quete a consultar</strong> quando o arquivo &eacute; di&aacute;rio &mdash; a habilita&ccedil;&atilde;o exige <code>webhookUrl</code>, e o endere&ccedil;o precisa estar no ar todo dia. Sem ele, resta varrer <code>solicitacao/listar</code> por conta pr&oacute;pria.</p></div>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Autentica&ccedil;&atilde;o e credencial</span></div>
+<div class="table-wrap"><table><thead><tr><th>Aspecto</th><th>CBS</th><th>IBS</th></tr></thead><tbody>
+<tr><td><strong>Esquema</strong></td><td>OAuth 2.0 <em>client credentials</em>; <code>Authorization: Bearer</code></td><td><code>ClientID</code> e <code>ClientSecret</code> em header pr&oacute;prio, <strong>em toda chamada</strong></td></tr>
+<tr><td><strong>Onde nasce</strong></td><td>Portal RTC&ndash;CBS, &ldquo;Gerar Credencial para API&rdquo;, do estabelecimento matriz</td><td>Portal do Contribuinte do CGIBS, menu Credenciais de Acesso, ap&oacute;s login GOV.BR</td></tr>
+<tr><td><strong>Validade</strong></td><td>Token de <strong>1 hora</strong>, renov&aacute;vel</td><td>Par sem validade declarada; <strong>gerar um novo invalida o anterior</strong></td></tr>
+<tr><td><strong>Visibilidade</strong></td><td>Credencial recuper&aacute;vel no Portal</td><td><strong>S&oacute; no momento da gera&ccedil;&atilde;o</strong> &mdash; depois n&atilde;o aparece mais</td></tr>
+<tr><td><strong>Identifica&ccedil;&atilde;o</strong></td><td>CNPJ base de 8 d&iacute;gitos no caminho; cobre toda a raiz</td><td>CNPJ no corpo da solicita&ccedil;&atilde;o; no arquivo, <strong>CNPJ raiz de 8</strong> em fornecedor e adquirente</td></tr>
+<tr><td><strong>Autentica&ccedil;&atilde;o do webhook</strong></td><td><code>HEAD</code> de valida&ccedil;&atilde;o antes do 201</td><td><code>tokenContrib</code> opcional, devolvido no header da notifica&ccedil;&atilde;o</td></tr>
+<tr><td><strong>Certificado digital</strong></td><td>e-CNPJ exigido para gerar a credencial no piloto</td><td>Acesso ao Portal por GOV.BR</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">Dois riscos operacionais distintos</div><p>Na CBS o risco &eacute; de <strong>expira&ccedil;&atilde;o</strong>: esquecer de renovar o token derruba a coleta por uma hora. No IBS o risco &eacute; de <strong>rota&ccedil;&atilde;o</strong>: algu&eacute;m gerar um novo par no Portal invalida silenciosamente o que o SplitHub est&aacute; usando, e o segredo n&atilde;o pode ser lido de novo para conferir. A rota&ccedil;&atilde;o precisa de procedimento, n&atilde;o s&oacute; de c&oacute;digo.</p></div>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Os payloads lado a lado</span></div>
+<p class="sec-sub">Mesma situa&ccedil;&atilde;o &mdash; um cr&eacute;dito de aquisi&ccedil;&atilde;o &mdash; como cada API a entrega. Estruturas conforme a documenta&ccedil;&atilde;o; chaves e valores ilustrativos.</p>
+
+<div class="split">
+<div class="pane"><div class="pane-hdr cbs">CBS &middot; <code>POST /creditos/{cnpj}</code></div>
+<pre>{
+  "tiqueteSolicitacao": "c9e21b7a-…",
+  <b>"ni"</b>: "12345678",
+  "niConsumidor": "",
+  "geradoEm": "2026-10-01T09:14:22-03:00",
+  <b>"apuracao"</b>: [
+    {
+      <b>"pa"</b>: "09/2026",
+      "creditos": [
+        {
+          "origem": 0,
+          <b>"documento"</b>: 55,
+          <b>"chave"</b>: "4326…402219",
+          "emissao":     "2026-09-10T08:15:00-03:00",
+          <b>"registro"</b>:    "2026-09-10T08:15:44-03:00",
+          <b>"atualizacao"</b>: "2026-09-30T11:02:19-03:00",
+          <b>"cbs"</b>: {
+            "apurado":    12000.00,
+            "excedente":      0.00,
+            <b>"apropriacao"</b>: {
+              "inapropriavel": 0.00,
+              "suspenso":      0.00,
+              "prescrito":     0.00,
+              "aApropriar": 2000.00,
+              "apropriado":10000.00
+            },
+            <b>"utilizacao"</b>: {
+              "inutilizavel":  0.00,
+              "utilizado":  7500.00,
+              "restabelecido": 0.00,
+              "naoUtilizado": {
+                "saldoCredor":        2500.00,
+                "pedidoRessarcimento":   0.00
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}</pre></div>
+
+<div class="pane"><div class="pane-hdr ibs">IBS &middot; Obter Arquivo (Conta Corrente Fiscal)</div>
+<pre>{
+  <b>"header"</b>: {
+    "nomearquivo": "36588366_part1.json",
+    <b>"tiposolicitacao"</b>: "diferencial(delta)",
+    "datageracao": "2026-01-17 12:30:00",
+    <b>"parametrosgeracao"</b>: {
+      "datainicial": "2026-01-17 00:00:00",
+      "datafinal":   "2026-01-17 23:59:59",
+      "qtdoperacoes": 1
+    },
+    <b>"operacoes"</b>: [
+      {
+        <b>"ID"</b>: 36588366,
+        <b>"CHAVE_ACESSO"</b>: "3526…0125",
+        "DTH_EMISSAO":     "2026-01-17 11:17:49.000 +00:00",
+        <b>"DTH_AUTORIZACAO"</b>: "2026-01-17 12:24:25.000 +00:00",
+        <b>"CNPJ_FORNECEDOR"</b>: "UDTOIUJD33JJ66",
+        <b>"CNPJ_ADQUIRENTE"</b>: "6S13AHKM6DA768",
+        <b>"extrato_cc"</b>: {
+          <b>"hash"</b>: "d6b7972418e2…a141",
+          <b>"lista"</b>: [
+            {
+              <b>"ID"</b>: 37363032,
+              "DTH_LANCTO": "2026-01-17 12:24:25.000 +00:00",
+              <b>"MOV"</b>: "COMPENSAÇÃO COM CRÉDITOS POR AQUISIÇÃO",
+              "RECURSO_FINANCEIRO_DISPONIVEL_PARA_TRANSFERENCIA": 0.0,
+              "RECURSO_FINANCEIRO_A_TRANSFERIR": 0.0,
+              "CREDITO_A_PROPRIAR":   0.0,
+              "CREDITO_NAO_UTILIZADO":0.0,
+              "CREDITO_UTILIZADO":    0.0,
+              "DEBITO_EM_ABERTO":     0.0,
+              "DEBITO_EXTINTO":       0.0
+            }
+            <span class="cm">/* …uma linha por lançamento */</span>
+          ]
+        }
+      }
+    ]
+  }
+}</pre></div>
+</div>
+
+<div class="callout info"><div class="ct">Leia as duas estruturas de novo</div><p>Na CBS, <code>cbs</code> &eacute; um <strong>objeto de saldos</strong> com onze n&uacute;meros nomeados. No IBS, os mesmos assuntos viram <strong>sete colunas repetidas em cada linha</strong> do extrato. A CBS nomeia estados; o IBS nomeia <em>movimenta&ccedil;&otilde;es</em> e deixa o estado emergir da soma.</p></div>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">S&oacute; na CBS: campos que o IBS n&atilde;o entrega</span></div>
+<div class="table-wrap"><table><thead><tr><th>Campo CBS</th><th>O que carrega</th><th>Situa&ccedil;&atilde;o no IBS</th><th>Impacto</th></tr></thead><tbody>
+<tr><td><code>pa</code></td><td>Per&iacute;odo de apura&ccedil;&atilde;o do documento</td><td><strong>N&atilde;o existe</strong> na opera&ccedil;&atilde;o</td><td>A compet&ecirc;ncia do IBS precisa ser <strong>derivada</strong> do per&iacute;odo do arquivo ou da data do lan&ccedil;amento &mdash; e evento fiscal muda compet&ecirc;ncia</td></tr>
+<tr><td><code>documento</code></td><td>Modelo do DF: 55, 57, 65&hellip;</td><td>N&atilde;o existe</td><td>O modelo sai das <strong>posi&ccedil;&otilde;es 21&ndash;22 da chave</strong>. A NFS-e, de chave com 50, n&atilde;o cabe nessa regra</td></tr>
+<tr><td><code>origem</code></td><td>Origem do lan&ccedil;amento</td><td>N&atilde;o existe (o an&aacute;logo &eacute; <code>MOV</code>, em texto)</td><td>Classifica&ccedil;&atilde;o da origem no IBS depende de texto livre</td></tr>
+<tr><td><code>suspenso</code></td><td>Cr&eacute;dito com exigibilidade suspensa</td><td><strong>N&atilde;o existe como campo</strong></td><td rowspan="3">Os tr&ecirc;s estados de risco do cr&eacute;dito s&atilde;o <strong>nomeados na CBS e mudos no IBS</strong>. As flags de risco do IBS dependem de interpretar <code>MOV</code></td></tr>
+<tr><td><code>prescrito</code></td><td>Cr&eacute;dito fora do prazo do art. 54</td><td>N&atilde;o existe como campo</td></tr>
+<tr><td><code>inapropriavel</code></td><td>Cr&eacute;dito vedado &mdash; art. 48</td><td>N&atilde;o existe como campo</td></tr>
+<tr><td><code>inutilizavel</code> &middot; <code>restabelecido</code></td><td>Cr&eacute;dito que n&atilde;o pode ser usado; e o que voltou</td><td>N&atilde;o existem</td><td>Glosa e restabelecimento no IBS s&oacute; aparecem como varia&ccedil;&atilde;o de valor</td></tr>
+<tr><td><code>excedente</code> &middot; <code>inexigivel</code></td><td>Sobra de apura&ccedil;&atilde;o; d&eacute;bito n&atilde;o exig&iacute;vel</td><td>N&atilde;o existem</td><td>A parti&ccedil;&atilde;o do d&eacute;bito do IBS &eacute; mais pobre: s&oacute; <em>em aberto</em> e <em>extinto</em></td></tr>
+<tr><td><code>saldoDevedor</code> &middot; <code>saldoCredor</code></td><td>Saldos consolidados</td><td>N&atilde;o existem &mdash; equivalem a somar o extrato</td><td>O saldo do IBS &eacute; <strong>calculado por n&oacute;s</strong>. Diverg&ecirc;ncia de centavo vira inconsist&ecirc;ncia que o Fisco n&atilde;o reconhece</td></tr>
+<tr><td><code>numeroDARF</code></td><td>Guia que extinguiu o d&eacute;bito</td><td rowspan="5"><strong>Toda a camada de arrecada&ccedil;&atilde;o est&aacute; fora da Etapa 1.</strong> Documento de Arrecada&ccedil;&atilde;o &eacute; Etapa 4, sem especifica&ccedil;&atilde;o</td><td rowspan="5">A <strong>concilia&ccedil;&atilde;o financeira do RAD no IBS fica sem fonte</strong>. O produto emite a guia e n&atilde;o tem como confirmar a extin&ccedil;&atilde;o pelo contrato do IBS</td></tr>
+<tr><td><code>multa</code> &middot; <code>juros</code></td><td>Acr&eacute;scimos do recolhimento em atraso</td></tr>
+<tr><td><code>vencimento</code></td><td>Vencimento da parcela recolhida</td></tr>
+<tr><td><code>dataArrecadacao</code></td><td>Quando o valor entrou</td></tr>
+<tr><td><code>niFornecedor</code> &middot; <code>chaveDFE</code></td><td>De quem e por qual DF foi o recolhimento</td></tr>
+<tr><td><code>tEASegundos</code></td><td>Estimativa de espera da solicita&ccedil;&atilde;o</td><td>N&atilde;o existe</td><td>No IBS n&atilde;o d&aacute; para prever quando o Manual fica pronto &mdash; s&oacute; que ser&aacute; no pr&oacute;ximo Processamento Di&aacute;rio</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">O maior buraco: o estado nomeado</div><p>A CBS diz <strong>por que</strong> um cr&eacute;dito n&atilde;o pode ser usado &mdash; <em>inapropri&aacute;vel</em>, <em>suspenso</em>, <em>prescrito</em>, <em>inutiliz&aacute;vel</em>. O IBS d&aacute; apenas sete valores e um texto de movimenta&ccedil;&atilde;o. Como o produto <strong>segue o Fisco e n&atilde;o inventa estado</strong>, o cr&eacute;dito de IBS chega hoje com menos discernimento do que o de CBS &mdash; e a tabela de c&oacute;digos do <code>MOV</code>, que resolveria isso, ainda n&atilde;o existe.</p></div>
+</div>
+
+<!-- 08 -->
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">S&oacute; no IBS: campos que a CBS n&atilde;o entrega</span></div>
+<div class="table-wrap"><table><thead><tr><th>Campo IBS</th><th>O que carrega</th><th>Situa&ccedil;&atilde;o na CBS</th><th>Impacto</th></tr></thead><tbody>
+<tr><td><code>extrato_cc.lista[]</code></td><td>O hist&oacute;rico de lan&ccedil;amentos da opera&ccedil;&atilde;o</td><td><strong>N&atilde;o existe</strong> &mdash; a CBS entrega s&oacute; o saldo atual</td><td>Auditoria nativa do IBS. Na CBS, a mesma trilha s&oacute; existe porque <strong>o produto guarda as coletas anteriores</strong></td></tr>
+<tr><td><code>MOV</code></td><td>Tipo da movimenta&ccedil;&atilde;o &mdash; apropria&ccedil;&atilde;o, compensa&ccedil;&atilde;o, devolu&ccedil;&atilde;o&hellip;</td><td>N&atilde;o existe</td><td>&Eacute; a <strong>&uacute;nica</strong> pista de causa no IBS. Hoje em <strong>texto livre</strong>: parsing fr&aacute;gil at&eacute; a tabela sair</td></tr>
+<tr><td><code>RECURSO_FINANCEIRO_A_TRANSFERIR</code></td><td>Ressarcimento pendente, aguardando extin&ccedil;&atilde;o do d&eacute;bito</td><td rowspan="2">A CBS s&oacute; tem <code>pedidoRessarcimento</code>, um n&uacute;mero dentro de <code>naoUtilizado</code></td><td rowspan="2"><strong>O IBS &eacute; mais rico no ressarcimento.</strong> Separa o que j&aacute; est&aacute; dispon&iacute;vel do que ainda depende de extin&ccedil;&atilde;o &mdash; distin&ccedil;&atilde;o que o m&oacute;dulo de Ressarcimento faz e a CBS n&atilde;o alimenta</td></tr>
+<tr><td><code>RECURSO_FINANCEIRO_DISPONIVEL_PARA_TRANSFERENCIA</code></td><td>Ressarcimento j&aacute; dispon&iacute;vel ao fornecedor</td></tr>
+<tr><td><code>CNPJ_FORNECEDOR</code> &middot; <code>CNPJ_ADQUIRENTE</code></td><td>Os dois lados da opera&ccedil;&atilde;o, na raiz</td><td>S&oacute; o titular (<code>ni</code>); a contraparte aparece apenas em <code>/recolhimentos</code></td><td>No IBS d&aacute; para montar a <strong>cadeia de fornecedores direto do arquivo</strong>, sem cruzar com o ERP</td></tr>
+<tr><td><code>DTH_AUTORIZACAO</code></td><td>Autoriza&ccedil;&atilde;o do DF que inaugurou a opera&ccedil;&atilde;o</td><td>A CBS traz <code>registro</code>, que &eacute; o registro na apura&ccedil;&atilde;o</td><td>Datas <strong>n&atilde;o equivalentes</strong>: comparar as duas como se fossem a mesma coisa gera diverg&ecirc;ncia falsa</td></tr>
+<tr><td><code>hash</code></td><td>SHA1 acumulado de todos os lan&ccedil;amentos do extrato</td><td>N&atilde;o existe verificador</td><td>&Uacute;nica forma de saber que <strong>n&atilde;o faltou linha</strong>. Vira requisito de ingest&atilde;o &mdash; ver <a class="xref" href="#s10">se&ccedil;&atilde;o 10</a></td></tr>
+<tr><td><code>ID</code> da opera&ccedil;&atilde;o e do lan&ccedil;amento</td><td>Identificadores do pr&oacute;prio Fisco</td><td>N&atilde;o existem &mdash; a identidade &eacute; a <code>chave</code> do DF</td><td>Chave de <strong>idempot&ecirc;ncia</strong> pronta no IBS. Na CBS, dedu&ccedil;&atilde;o por <code>chave</code> + <code>pa</code></td></tr>
+<tr><td><code>tiposolicitacao</code></td><td>Se o arquivo &eacute; Delta ou Manual</td><td>N&atilde;o se aplica</td><td>A ingest&atilde;o precisa tratar Manual como <strong>reentrega</strong>, que pode duplicar lan&ccedil;amento j&aacute; recebido</td></tr>
+<tr><td><code>qtdoperacoes</code></td><td>Quantas opera&ccedil;&otilde;es vieram <em>neste</em> arquivo</td><td>N&atilde;o existe</td><td>Confer&ecirc;ncia de completude por arquivo, obrigat&oacute;ria no fatiamento</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 09 -->
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">O que n&atilde;o existe em nenhuma das duas</span></div>
+<div class="table-wrap"><table><thead><tr><th>Necessidade</th><th>Situa&ccedil;&atilde;o</th><th>Como o produto resolve</th></tr></thead><tbody>
+<tr><td><strong>Pedir ressarcimento</strong></td><td><span class="tag none">nenhuma</span> Nem CBS nem IBS t&ecirc;m endpoint de pedido</td><td>Protocolo no portal, manual. O produto instrui, calcula e concilia o recebimento</td></tr>
+<tr><td><strong>Acompanhar o pedido</strong></td><td><span class="tag none">nenhuma</span> Sem endpoint de situa&ccedil;&atilde;o do pedido</td><td>Controle de prazo pr&oacute;prio &mdash; 30/60/180 dias e deferimento t&aacute;cito</td></tr>
+<tr><td><strong>Detalhe por item do documento</strong></td><td><span class="tag none">nenhuma</span> As duas operam no total por documento</td><td>O item vem do ERP e serve &agrave; investiga&ccedil;&atilde;o, nunca ao batimento com o Fisco</td></tr>
+<tr><td><strong>Obriga&ccedil;&otilde;es acess&oacute;rias</strong></td><td><span class="tag none">nenhuma</span> Fora do escopo das duas APIs</td><td>Fora do escopo do produto</td></tr>
+<tr><td><strong>Contabiliza&ccedil;&atilde;o</strong></td><td><span class="tag none">nenhuma</span> Nenhuma das duas escritura</td><td>O produto emite evento; o ERP escritura</td></tr>
+<tr><td><strong>Concluir a apura&ccedil;&atilde;o do m&ecirc;s</strong></td><td><span class="tag cbs">s&oacute; CBS</span> Prevista, sem documenta&ccedil;&atilde;o nem data</td><td>A&ccedil;&atilde;o no portal at&eacute; existir contrato</td></tr>
+<tr><td><strong>Emitir guia de recolhimento</strong></td><td><span class="tag cbs">s&oacute; CBS</span> DARF para RAD e PCONT, fim de nov/2026. No IBS, Etapa 4 sem data</td><td>No IBS, guia pelo portal &mdash; o <strong>RAD do IBS n&atilde;o tem contrato</strong></td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 10 -->
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Janela, limite e o custo de perder um arquivo</span></div>
+<div class="table-wrap"><table><thead><tr><th>Regra</th><th>CBS</th><th>IBS</th></tr></thead><tbody>
+<tr><td>Abertura de solicita&ccedil;&atilde;o</td><td>4 por dia, <strong>por endpoint</strong> &mdash; com 4 endpoints, at&eacute; 16</td><td>2 por dia, no total; mais 2 por compet&ecirc;ncia no mesmo dia</td></tr>
+<tr><td>Entrega autom&aacute;tica</td><td>N&atilde;o h&aacute;: tudo parte de um pedido nosso</td><td><strong>Delta di&aacute;rio</strong>, sem consumir cota</td></tr>
+<tr><td>Janela retroativa</td><td>&Uacute;ltimos <strong>8 dias</strong>; na primeira, desde o dia 1 do m&ecirc;s</td><td>Per&iacute;odo livre no Manual, <strong>dentro de uma &uacute;nica compet&ecirc;ncia</strong>, sem sobreposi&ccedil;&atilde;o</td></tr>
+<tr><td>Validade do artefato</td><td><code>urlAssinada</code> por <strong>48 h</strong></td><td>Prazo informado na notifica&ccedil;&atilde;o; depois a solicita&ccedil;&atilde;o vira <strong>Expirada</strong></td></tr>
+<tr><td>Se a coleta falhar</td><td><strong>Sem perda</strong> &mdash; a pr&oacute;xima reentrega a janela</td><td><strong>Perda</strong> &mdash; s&oacute; recuper&aacute;vel por Manual, com 2 pedidos/dia</td></tr>
+<tr><td>Abuso</td><td>Limite por endpoint</td><td><strong>Consumo Indevido</strong> suspende o contribuinte por tempo determinado</td></tr>
+<tr><td>Fatiamento</td><td>N&atilde;o documentado</td><td>Mesma opera&ccedil;&atilde;o em v&aacute;rios arquivos; <code>hash</code> &eacute; <strong>acumulado</strong>, n&atilde;o da fatia</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">A conta que assusta</div><p>Um cliente com 30 dias de Delta n&atilde;o processado precisa de <strong>15 dias</strong> para recuperar pelo Manual &mdash; duas solicita&ccedil;&otilde;es por dia, uma compet&ecirc;ncia por vez, sem sobrepor per&iacute;odos. E o pr&oacute;prio manual avisa que repeti&ccedil;&atilde;o excessiva caracteriza <strong>Consumo Indevido</strong> e suspende o contribuinte. <strong>No IBS, monitorar a ingest&atilde;o n&atilde;o &eacute; higiene: &eacute; requisito.</strong></p></div>
+</div>
+
+<!-- 11 -->
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">O impacto no SplitHub</span></div>
+<p class="sec-sub">O que cada diferen&ccedil;a obriga a construir, e onde.</p>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>O que muda</th><th>M&oacute;dulo</th><th>O que precisa existir</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td>Dois formatos de chegada para o mesmo modelo interno</td><td>Integra&ccedil;&otilde;es</td><td><strong>Dois adaptadores, n&atilde;o um parametrizado.</strong> Um consome saldo e reconcilia por documento; o outro consome extrato e projeta saldo por opera&ccedil;&atilde;o</td></tr>
+<tr><td><strong>2</strong></td><td>Idempot&ecirc;ncia por chave diferente</td><td>Ingest&atilde;o</td><td>CBS: dedupe por <code>chave</code> + <code>pa</code>, sobrescrevendo saldo. IBS: dedupe por <code>ID</code> do lan&ccedil;amento, <strong>somando</strong> &mdash; reprocessar Manual n&atilde;o pode dobrar valor</td></tr>
+<tr><td><strong>3</strong></td><td>Webhook de entrada com dois significados</td><td>Integra&ccedil;&otilde;es</td><td>Endpoints separados. O da CBS casa com t&iacute;quete nosso; o do IBS aceita evento <strong>n&atilde;o solicitado</strong> e precisa de disponibilidade di&aacute;ria e do <code>tokenContrib</code></td></tr>
+<tr><td><strong>4</strong></td><td>Rota&ccedil;&atilde;o de credencial destrutiva</td><td>Organiza&ccedil;&atilde;o</td><td>Cofre por cliente, alerta de falha de autentica&ccedil;&atilde;o e <strong>procedimento de rota&ccedil;&atilde;o</strong> &mdash; o segredo do IBS n&atilde;o pode ser lido depois</td></tr>
+<tr><td><strong>5</strong></td><td>Compet&ecirc;ncia ausente no IBS</td><td>Apura&ccedil;&atilde;o</td><td>Regra expl&iacute;cita de deriva&ccedil;&atilde;o, com o caso de evento fiscal que muda compet&ecirc;ncia. <strong>&Eacute; a maior fonte de erro silencioso</strong></td></tr>
+<tr><td><strong>6</strong></td><td>Modelo do documento ausente no IBS</td><td>Ingest&atilde;o</td><td>Derivar das posi&ccedil;&otilde;es 21&ndash;22 da chave, com exce&ccedil;&atilde;o da NFS-e. J&aacute; descrito em <a class="xref" href="layouts-df-api.html">Layouts dos DFs</a></td></tr>
+<tr><td><strong>7</strong></td><td>Saldo do IBS &eacute; calculado, n&atilde;o recebido</td><td>Cr&eacute;dito &middot; D&eacute;bito</td><td>Motor de proje&ccedil;&atilde;o por opera&ccedil;&atilde;o e <strong>valida&ccedil;&atilde;o pelo <code>hash</code></strong>. Sem conferir o hash, um lan&ccedil;amento perdido vira saldo errado sem aviso</td></tr>
+<tr><td><strong>8</strong></td><td>Estados de risco mudos no IBS</td><td>Cr&eacute;dito &middot; Inconsist&ecirc;ncias</td><td>Mapa de <code>MOV</code> para os estados internos, <strong>declarado como provis&oacute;rio</strong>. At&eacute; a tabela de c&oacute;digos sair, o IBS n&atilde;o sustenta as flags que a CBS sustenta</td></tr>
+<tr><td><strong>9</strong></td><td>Sem camada de arrecada&ccedil;&atilde;o no IBS</td><td>Execu&ccedil;&atilde;o RAD</td><td>O RAD do IBS fica <strong>sem confirma&ccedil;&atilde;o por API</strong> at&eacute; a Etapa 4. Guia pelo portal e concilia&ccedil;&atilde;o pelo comprovante do ERP &mdash; declarar isso em proposta comercial</td></tr>
+<tr><td><strong>10</strong></td><td>Ressarcimento mais rico no IBS</td><td>Ressarcimento</td><td>Dois campos novos: dispon&iacute;vel e a transferir. A tela hoje reflete a vis&atilde;o da CBS; o IBS permite separar o que j&aacute; pode ser pedido</td></tr>
+<tr><td><strong>11</strong></td><td>Contraparte vem no arquivo do IBS</td><td>Fornecedores</td><td>Score e cr&eacute;dito em risco podem ser montados <strong>sem depender do cadastro do ERP</strong> no lado do IBS</td></tr>
+<tr><td><strong>12</strong></td><td>Perder Delta &eacute; perder dado</td><td>Automa&ccedil;&otilde;es &middot; Inconsist&ecirc;ncias</td><td>Monitor de continuidade: <strong>faltou Delta de ontem</strong> vira ocorr&ecirc;ncia de alta prioridade, com recupera&ccedil;&atilde;o por Manual respeitando 2/dia</td></tr>
+<tr><td><strong>13</strong></td><td>Fatiamento de opera&ccedil;&atilde;o</td><td>Ingest&atilde;o</td><td>Remontar por <code>ID</code> de lan&ccedil;amento e <strong>s&oacute; validar o hash com o conjunto completo</strong> &mdash; validar por fatia d&aacute; falso negativo</td></tr>
+<tr><td><strong>14</strong></td><td>Datas n&atilde;o equivalentes</td><td>Concilia&ccedil;&atilde;o</td><td><code>DTH_AUTORIZACAO</code> n&atilde;o &eacute; <code>registro</code>. Comparar as duas gera diverg&ecirc;ncia falsa &mdash; a regra precisa dizer qual data vale em cada tributo</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">A consequ&ecirc;ncia de produto</div><p>A funcionalidade <strong>&ldquo;Integra&ccedil;&atilde;o com o Comit&ecirc; Gestor &mdash; IBS&rdquo;</strong> est&aacute; em M0 na <a class="xref" href="priorizacao-mvp.html">Prioriza&ccedil;&atilde;o</a> como lacuna declarada. Ela deixou de ser espera e virou constru&ccedil;&atilde;o &mdash; mas <strong>n&atilde;o &eacute; o mesmo trabalho da CBS com outro endere&ccedil;o</strong>. Os itens 1, 2, 5, 7 e 8 desta tabela n&atilde;o t&ecirc;m equivalente do lado federal.</p></div>
+</div>
+
+<!-- 12 -->
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Cat&aacute;logo e cronograma</span></div>
+<h3>CBS &mdash; tr&ecirc;s ondas at&eacute; o fim de novembro de 2026</h3>
+<div class="table-wrap"><table><thead><tr><th>Onda</th><th>Endpoints</th><th>Ambientes</th></tr></thead><tbody>
+<tr><td><strong>In&iacute;cio out/2026</strong></td><td><code>POST /debitos/{cnpj}</code> &middot; <code>POST /creditos/{cnpj}</code></td><td>Produ&ccedil;&atilde;o Restrita e Produ&ccedil;&atilde;o Beta</td></tr>
+<tr><td><strong>In&iacute;cio nov/2026</strong></td><td><code>POST /pagamentos/{cnpj}</code> &middot; <code>POST /recolhimentos/{cnpj}</code></td><td>Produ&ccedil;&atilde;o Restrita e Produ&ccedil;&atilde;o Beta</td></tr>
+<tr><td><strong>Fim nov/2026</strong></td><td>Emiss&atilde;o de DARF para RAD e PCONT</td><td>Produ&ccedil;&atilde;o Restrita e Produ&ccedil;&atilde;o Beta</td></tr>
+<tr><td><strong>Sem data</strong></td><td>Concluir Apura&ccedil;&atilde;o do M&ecirc;s Anterior &middot; acesso al&eacute;m do piloto</td><td>&mdash;</td></tr>
+</tbody></table></div>
+
+<h3>IBS &mdash; quatro etapas, seis APIs com especifica&ccedil;&atilde;o</h3>
+<div class="table-wrap"><table><thead><tr><th>Etapa</th><th>API</th><th>Rota</th><th>Espec.</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td>Habilita&ccedil;&atilde;o do Contribuinte</td><td><code>POST /v1/aassist/habilitar</code></td><td>Sim</td></tr>
+<tr><td><strong>1</strong></td><td>Notifica&ccedil;&atilde;o de Disponibiliza&ccedil;&atilde;o (Webhook)</td><td><code>POST {webhookUrl}</code></td><td>Sim</td></tr>
+<tr><td><strong>1</strong></td><td>Obter Arquivo</td><td>Anexos I e II do MOC</td><td>Sim</td></tr>
+<tr><td><strong>2</strong></td><td>Consulta de Solicita&ccedil;&otilde;es</td><td><code>GET /v1/aassist/solicitacao/listar/&hellip;</code></td><td>Sim</td></tr>
+<tr><td><strong>2</strong></td><td>Nova Solicita&ccedil;&atilde;o</td><td><code>GET /v1/aassist/solicitacao/incluir</code></td><td>Sim</td></tr>
+<tr><td><strong>2</strong></td><td>Cancelamento de Solicita&ccedil;&atilde;o</td><td><code>DELETE /v1/aassist/solicitacao/cancelamento/{IdSolic}</code></td><td>Sim</td></tr>
+<tr><td><strong>3</strong></td><td>Consulta de Opera&ccedil;&atilde;o</td><td>&mdash;</td><td>N&atilde;o</td></tr>
+<tr><td><strong>3</strong></td><td>Consulta de Documento Fiscal</td><td>&mdash;</td><td>N&atilde;o</td></tr>
+<tr><td><strong>3</strong></td><td>Desabilita&ccedil;&atilde;o</td><td>Hoje s&oacute; pelo Portal</td><td>N&atilde;o</td></tr>
+<tr><td><strong>4</strong></td><td>Consulta de Saldo</td><td>&mdash;</td><td>N&atilde;o</td></tr>
+<tr><td><strong>4</strong></td><td>Emiss&atilde;o de Documento de Arrecada&ccedil;&atilde;o</td><td>&mdash;</td><td>N&atilde;o</td></tr>
+<tr><td><strong>4</strong></td><td>Consulta de Itens do Documento de Arrecada&ccedil;&atilde;o</td><td>&mdash;</td><td>N&atilde;o</td></tr>
+<tr><td><strong>4</strong></td><td>Emiss&atilde;o do Documento de Arrecada&ccedil;&atilde;o em PDF</td><td>&mdash;</td><td>N&atilde;o</td></tr>
+</tbody></table></div>
+<p class="src-note">Etapa 1 do IBS em <strong>homologa&ccedil;&atilde;o a partir de 28/09/2026</strong>. Etapas 2 a 4 constam como &ldquo;Implementa&ccedil;&atilde;o Futura&rdquo;, sem data. O atendimento de d&uacute;vidas sobre as APIs &eacute; hoje <strong>exclusivo das empresas do projeto piloto</strong> &mdash; nos dois &oacute;rg&atilde;os.</p>
+</div>
+
+<!-- 13 -->
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Pend&ecirc;ncias declaradas nos pr&oacute;prios manuais</span></div>
+<div class="table-wrap"><table><thead><tr><th>Lado</th><th>Pend&ecirc;ncia</th><th>Risco para o produto</th></tr></thead><tbody>
+<tr><td><span class="tag ibs">IBS</span></td><td>Algoritmo do <code>hash</code> do extrato n&atilde;o definido &mdash; os exemplos s&atilde;o ilustrativos</td><td>A verifica&ccedil;&atilde;o de completude, que o item 7 da <a class="xref" href="#s11">se&ccedil;&atilde;o 11</a> exige, <strong>ainda n&atilde;o pode ser implementada de verdade</strong></td></tr>
+<tr><td><span class="tag ibs">IBS</span></td><td>Tabela de c&oacute;digos do <code>MOV</code> n&atilde;o existe &mdash; hoje &eacute; texto de descri&ccedil;&atilde;o</td><td>Qualquer mapeamento de causa <strong>quebra quando a tabela sair</strong>. Construir isolado e descart&aacute;vel</td></tr>
+<tr><td><span class="tag ibs">IBS</span></td><td><code>hash_operacao</code> foi removido da especifica&ccedil;&atilde;o</td><td>Sinal de que o contrato ainda se move na v1.x</td></tr>
+<tr><td><span class="tag cbs">CBS</span></td><td>Enumera&ccedil;&atilde;o de <code>tipo</code> em pagamentos n&atilde;o publicada</td><td>Distinguir PCONT, RAD e split depende de valor n&atilde;o documentado</td></tr>
+<tr><td><span class="tag cbs">CBS</span></td><td>Emiss&atilde;o de DARF anunciada sem p&aacute;gina de documenta&ccedil;&atilde;o</td><td>A automa&ccedil;&atilde;o do RAD federal s&oacute; pode ser desenhada, n&atilde;o constru&iacute;da</td></tr>
+<tr><td><span class="tag both">as duas</span></td><td>Acesso restrito ao piloto</td><td><strong>Entrar nos dois pilotos &eacute; pr&eacute;-requisito</strong> de qualquer cronograma de integra&ccedil;&atilde;o que prometamos a cliente</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 14 -->
+<div class="section" id="s14">
+<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Fontes</span></div>
+<ul class="plain">
+<li><strong>MOC &mdash; API de Integra&ccedil;&atilde;o com a Apura&ccedil;&atilde;o Assistida do IBS, v1.10</strong>, Comit&ecirc; Gestor do IBS, setembro de 2026. 44 p&aacute;ginas, com os Anexos I e II da API Conta Corrente Fiscal. Publicado em 23/09/2026</li>
+<li><strong>Documenta&ccedil;&atilde;o t&eacute;cnica das APIs de Apura&ccedil;&atilde;o da CBS v2</strong>, Receita Federal, setembro de 2026, e o <strong>Guia das APIs ass&iacute;ncronas v1.0</strong> de 03/09/2026 &mdash; reunidos em <a class="xref" href="integracao-apis-reforma.html#api-a">Refer&ecirc;ncia de APIs, se&ccedil;&atilde;o A</a></li>
+<li><strong>Manual da Plataforma CBS</strong>, Receita Federal, 21/05/2026 &mdash; endpoint do token e validade de 1 hora</li>
+<li>Estruturas e nomes de campo transcritos <strong>na l&iacute;ngua original de cada API</strong>, sem tradu&ccedil;&atilde;o. Valores e chaves dos exemplos s&atilde;o ilustrativos</li>
+</ul>
+</div>
+
+<!-- 15 -->
+<div class="section" id="s15">
+<div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>24/09/2026</strong> &mdash; Primeira vers&atilde;o, no dia seguinte &agrave; publica&ccedil;&atilde;o do MOC do IBS. Compara&ccedil;&atilde;o campo a campo dos dois contratos: doze eixos de contraste, os dois fluxos passo a passo, payloads lado a lado, treze campos que s&oacute; a CBS entrega, nove que s&oacute; o IBS entrega, sete necessidades que nenhuma das duas cobre, e quatorze impactos de produto com o m&oacute;dulo respons&aacute;vel.</div></div>
+</div>
+
+</div>
+</body>
+</html>
