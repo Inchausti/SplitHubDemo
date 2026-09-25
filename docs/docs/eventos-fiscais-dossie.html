@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eventos fiscais &middot; Dossi&ecirc;</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 1120px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--teal); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+h1 { font-size: 29px; font-weight: 800; line-height: 1.16; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14.5px; color: var(--txt2); margin-bottom: 24px; max-width: 820px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--teal); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 52px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 18px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14.5px; font-weight: 700; color: var(--txt1); margin: 28px 0 8px; scroll-margin-top: 20px; }
+h4 { font-size: 13px; font-weight: 700; color: var(--txt2); margin: 20px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--teal); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.mono { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+pre { margin: 12px 0; padding: 14px 16px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.62; color: var(--txt2); background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; }
+pre b { color: var(--txt1); font-weight: 600; }
+pre .cm { color: var(--txt3); }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--teal); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+.src-note { font-size: 11.5px; color: var(--txt3); margin: 6px 0 0; }
+
+/* ── mockup de tela ─────────────────────────────────────────────── */
+.mock { border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; margin: 16px 0; background: var(--sur); }
+.mock-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.mock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.mock-url { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); margin-left: 4px; }
+.mock-tag { margin-left: auto; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
+.mock-tag.nova { background: var(--green-d); color: var(--green); }
+.mock-tag.muda { background: var(--amber-d); color: var(--amber); }
+.mock-body { padding: 16px 18px; }
+.mock-h { font-size: 15px; font-weight: 700; color: var(--txt1); margin-bottom: 2px; }
+.mock-s { font-size: 11.5px; color: var(--txt3); margin-bottom: 14px; }
+.mock-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.mock-tab { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--brd); color: var(--txt3); }
+.mock-tab.on { background: var(--teal); border-color: var(--teal); color: #fff; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--sur2); border: 1px solid var(--brd); border-radius: 7px; padding: 9px 11px; }
+.kpi-l { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.kpi-v { font-size: 19px; font-weight: 800; color: var(--txt1); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.kpi-s { font-size: 10px; color: var(--txt3); }
+.kpi.alert .kpi-v { color: var(--red); }
+.kpi.warn .kpi-v { color: var(--amber); }
+.kpi.good .kpi-v { color: var(--green); }
+.mock table { font-size: 11.5px; }
+.mock th { font-size: 9.5px; padding: 7px 10px; }
+.mock td { padding: 7px 10px; }
+.st { display: inline-block; font-size: 9.5px; font-weight: 800; padding: 1px 7px; border-radius: 20px; white-space: nowrap; }
+.st.ok { background: var(--green-d); color: var(--green); }
+.st.wait { background: var(--blue-d); color: var(--blue); }
+.st.div { background: var(--red-d); color: var(--red); }
+.st.abs { background: var(--amber-d); color: var(--amber); }
+.st.neu { background: var(--gray-d); color: var(--gray); }
+.new { display: inline-block; font-size: 9px; font-weight: 800; background: var(--teal); color: #fff; border-radius: 3px; padding: 0 5px; margin-left: 5px; letter-spacing: .04em; vertical-align: 1px; }
+
+figure { margin: 18px 0; }
+figure svg { display: block; width: 100%; height: auto; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; }
+figcaption { font-size: 11.5px; color: var(--txt3); margin-top: 7px; }
+.s-lbl { font: 600 11px 'Inter', sans-serif; }
+.s-sm { font: 500 9.5px 'Inter', sans-serif; }
+.s-mono { font: 500 10px 'JetBrains Mono', monospace; }
+
+code, kbd, samp { overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } .kpis { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">Dossi&ecirc; &middot; Produto e Integra&ccedil;&atilde;o</div>
+<h1>Eventos fiscais: dossi&ecirc; completo</h1>
+<p class="subtitle"><strong>Resumo organizado</strong> do que os eventos fiscais s&atilde;o, mudam e exigem &mdash; norma, documento a documento, a&ccedil;&atilde;o por evento, impacto no prot&oacute;tipo, concilia&ccedil;&atilde;o com os dois &oacute;rg&atilde;os, contrato de API e o que falta decidir. <strong>N&atilde;o substitui os seis documentos de origem</strong>: organiza os temas e aponta para cada um.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Resume</span>&nbsp;<span class="meta-val">6 documentos</span></div>
+<div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">NT 2025.002-RTC v1.51</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">25/09/2026</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprova&ccedil;&atilde;o</span>&nbsp;<span class="chip info">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">&Iacute;ndice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> O essencial, em uma p&aacute;gina</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Refer&ecirc;ncia normativa</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Eventos por tipo de DF</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Impacto no prot&oacute;tipo</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Da captura &agrave; execu&ccedil;&atilde;o &mdash; a a&ccedil;&atilde;o por evento</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Telas e mockups</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Concilia&ccedil;&atilde;o com CBS e IBS</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> API de integra&ccedil;&atilde;o com o ERP</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Gaps e decis&otilde;es</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Fontes e hist&oacute;rico</a></li>
+</ul></div>
+
+<!-- ══════════════ 01 ══════════════ -->
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O essencial, em uma p&aacute;gina</span></div>
+
+<p><strong>Evento fiscal &eacute; ato de terceiro que muda o documento depois de ele estar autorizado.</strong> Muda valor, muda compet&ecirc;ncia, muda o estado do cr&eacute;dito. O SplitHub trata o documento como est&aacute;vel a partir da ingest&atilde;o &mdash; e n&atilde;o &eacute;.</p>
+
+<div class="callout red"><div class="ct">O problema em uma frase</div><p>Entre a emiss&atilde;o e o recolhimento, os eventos reescrevem o documento. Sem receb&ecirc;-los, o produto concilia contra uma foto desatualizada: <strong>aponta diverg&ecirc;ncia onde n&atilde;o h&aacute;, e deixa de apontar onde h&aacute;</strong>.</p></div>
+
+<h3 id="placar">O placar</h3>
+<div class="table-wrap"><table><thead><tr><th>Dimens&atilde;o</th><th>N&uacute;mero</th><th>Onde</th></tr></thead><tbody>
+<tr><td>Eventos de IBS e CBS na norma</td><td class="num"><strong>16</strong></td><td>15 espec&iacute;ficos + cancelamento &mdash; <a class="xref" href="#s02">02</a></td></tr>
+<tr><td>Formatos distintos de <code>detEvento</code></td><td class="num"><strong>6</strong></td><td>oito no contrato da API &mdash; <a class="xref" href="#s07">07</a></td></tr>
+<tr><td>Eventos que endere&ccedil;am <strong>item</strong>, n&atilde;o documento</td><td class="num"><strong>8</strong></td><td>at&eacute; 990 itens cada</td></tr>
+<tr><td>Documentos fiscais com eventos pr&oacute;prios</td><td class="num"><strong>11</strong></td><td><a class="xref" href="#s03">03</a></td></tr>
+<tr><td>Gaps do produto</td><td class="num"><strong>14</strong></td><td>3 mudam o modelo &mdash; <a class="xref" href="#s04">04</a></td></tr>
+<tr><td>M&oacute;dulos afetados</td><td class="num"><strong>12</strong> de 21</td><td>5 de forma estrutural</td></tr>
+<tr><td>Telas novas e alteradas</td><td class="num"><strong>2 + 7</strong></td><td><a class="xref" href="#s05">05</a></td></tr>
+<tr><td>Eventos que conciliam <strong>por saldo</strong></td><td class="num"><strong>7</strong></td><td>3 em parte, 6 n&atilde;o &mdash; <a class="xref" href="#s06">06</a></td></tr>
+<tr><td>Rotas novas de API</td><td class="num"><strong>6</strong></td><td>+ 4 endpoints existentes afetados &mdash; <a class="xref" href="#s07">07</a></td></tr>
+<tr><td>Itens a construir</td><td class="num"><strong>21</strong></td><td><a class="xref" href="#s08">08</a></td></tr>
+<tr><td>Decis&otilde;es em aberto</td><td class="num"><strong>27</strong></td><td>4 travam o desenho</td></tr>
+</tbody></table></div>
+
+<h3 id="caminho">O caminho do evento</h3>
+<p>O SplitHub <strong>n&atilde;o emite evento e n&atilde;o quer emitir</strong>. Ele precisa <em>saber</em> que o evento existiu, para conciliar o efeito com o que o Fisco devolver.</p>
+
+<figure>
+<svg viewBox="0 0 1040 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fluxo do evento fiscal do ERP at&eacute; o SplitHub">
+  <defs>
+    <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--txt3)"/>
+    </marker>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--teal)"/>
+    </marker>
+  </defs>
+
+  <rect x="14" y="70" width="150" height="62" rx="8" fill="var(--sur2)" stroke="var(--brd)"/>
+  <text x="89" y="95" text-anchor="middle" class="s-lbl" fill="var(--txt1)">ERP do cliente</text>
+  <text x="89" y="112" text-anchor="middle" class="s-sm" fill="var(--txt3)">monta o XML do evento</text>
+
+  <rect x="220" y="70" width="150" height="62" rx="8" fill="var(--blue-d)" stroke="var(--blue)"/>
+  <text x="295" y="95" text-anchor="middle" class="s-lbl" fill="var(--blue)">SEFAZ &middot; SVRS</text>
+  <text x="295" y="112" text-anchor="middle" class="s-sm" fill="var(--txt3)">NFeRecepcaoEvento</text>
+
+  <rect x="426" y="26" width="168" height="62" rx="8" fill="var(--amber-d)" stroke="var(--amber)"/>
+  <text x="510" y="51" text-anchor="middle" class="s-lbl" fill="var(--amber)">Apura&ccedil;&atilde;o CBS</text>
+  <text x="510" y="68" text-anchor="middle" class="s-sm" fill="var(--txt3)">Receita Federal</text>
+
+  <rect x="426" y="114" width="168" height="62" rx="8" fill="var(--amber-d)" stroke="var(--amber)"/>
+  <text x="510" y="139" text-anchor="middle" class="s-lbl" fill="var(--amber)">Apura&ccedil;&atilde;o IBS</text>
+  <text x="510" y="156" text-anchor="middle" class="s-sm" fill="var(--txt3)">Comit&ecirc; Gestor</text>
+
+  <rect x="662" y="70" width="180" height="62" rx="8" fill="var(--teal-d)" stroke="var(--teal)" stroke-width="2"/>
+  <text x="752" y="95" text-anchor="middle" class="s-lbl" fill="var(--teal)">SplitHub</text>
+  <text x="752" y="112" text-anchor="middle" class="s-sm" fill="var(--txt3)">concilia e evidencia</text>
+
+  <line x1="164" y1="101" x2="214" y2="101" stroke="var(--txt3)" stroke-width="1.5" marker-end="url(#a1)"/>
+  <line x1="370" y1="92" x2="420" y2="62" stroke="var(--txt3)" stroke-width="1.5" marker-end="url(#a1)"/>
+  <line x1="370" y1="110" x2="420" y2="140" stroke="var(--txt3)" stroke-width="1.5" marker-end="url(#a1)"/>
+  <line x1="594" y1="62" x2="656" y2="92" stroke="var(--amber)" stroke-width="1.5" marker-end="url(#a1)"/>
+  <line x1="594" y1="140" x2="656" y2="110" stroke="var(--amber)" stroke-width="1.5" marker-end="url(#a1)"/>
+
+  <path d="M89,70 C89,18 700,6 752,64" fill="none" stroke="var(--teal)" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a2)"/>
+  <text x="420" y="14" text-anchor="middle" class="s-lbl" fill="var(--teal)">A proposta: o ERP tamb&eacute;m manda o evento direto ao SplitHub</text>
+
+  <text x="89" y="160" text-anchor="middle" class="s-sm" fill="var(--txt3)">1 &middot; registra</text>
+  <text x="295" y="160" text-anchor="middle" class="s-sm" fill="var(--txt3)">2 &middot; autoriza e protocola</text>
+  <text x="510" y="198" text-anchor="middle" class="s-sm" fill="var(--txt3)">3 &middot; consomem o evento e reapuram</text>
+  <text x="752" y="160" text-anchor="middle" class="s-sm" fill="var(--txt3)">4 &middot; confere o saldo</text>
+
+  <rect x="240" y="208" width="560" height="30" rx="6" fill="var(--red-d)" stroke="var(--red)"/>
+  <text x="520" y="228" text-anchor="middle" class="s-lbl" fill="var(--red)">Hoje o passo 4 acontece sem o passo 1 &mdash; o produto n&atilde;o recebe o evento</text>
+</svg>
+<figcaption>O evento nasce no ERP, &eacute; autorizado na SEFAZ e de l&aacute; alimenta as duas apura&ccedil;&otilde;es. O SplitHub precisa da mesma informa&ccedil;&atilde;o para conciliar &mdash; e hoje n&atilde;o a tem.</figcaption>
+</figure>
+
+<h3 id="origem">Duas origens poss&iacute;veis, e a decis&atilde;o que n&atilde;o foi tomada</h3>
+<div class="table-wrap"><table><thead><tr><th>Origem</th><th>Como funciona</th><th>A favor</th><th>Contra</th></tr></thead><tbody>
+<tr><td><strong>DW nacional</strong></td><td>O SplitHub consome o ambiente nacional continuamente, com marca de posi&ccedil;&atilde;o</td><td>Chega o evento de <strong>qualquer</strong> emissor, inclusive o que o ERP do cliente n&atilde;o conhece</td><td>Depende de acesso ao DW; lat&ecirc;ncia n&atilde;o control&aacute;vel</td></tr>
+<tr><td><strong>ERP do cliente</strong></td><td>O ERP envia o evento pela API do SplitHub, j&aacute; autorizado</td><td>Depende s&oacute; do cliente; chega r&aacute;pido; &eacute; o desenho da <a class="xref" href="#s07">se&ccedil;&atilde;o 07</a></td><td><strong>S&oacute; chega o que o ERP emitiu</strong> &mdash; evento do fornecedor n&atilde;o vem</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">As duas podem coexistir &mdash; e provavelmente precisam</div><p>Os eventos da s&eacute;rie <strong>211xxx</strong> s&atilde;o do adquirente: se o cliente &eacute; o adquirente, o ERP dele os tem. Os da s&eacute;rie <strong>112xxx</strong> s&atilde;o do <strong>fornecedor</strong>, e o ERP do cliente <strong>n&atilde;o os emite nem os v&ecirc;</strong>. Sem o DW, metade do cat&aacute;logo nunca chega. <strong>&Eacute; a decis&atilde;o D-21, em aberto.</strong></p></div>
+</div>
+
+<!-- ══════════════ 02 ══════════════ -->
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Refer&ecirc;ncia normativa</span></div>
+<p class="sec-sub">O contrato campo a campo est&aacute; em <a class="xref" href="eventos-fiscais-leiautes.html">Leiautes dos eventos da Reforma</a>. Aqui fica o que &eacute; preciso saber para ler o resto deste dossi&ecirc;.</p>
+
+<h3 id="n1">2.1 Onde o evento vive</h3>
+<div class="table-wrap"><table><thead><tr><th>Item</th><th>Valor</th></tr></thead><tbody>
+<tr><td>Norma</td><td><strong>NT 2025.002-RTC</strong>, vers&atilde;o <strong>1.51</strong>, publicada em 04/08/2026</td></tr>
+<tr><td>Canal</td><td>Web Service <code>NFeRecepcaoEvento</code>, no ambiente autorizador <strong>SVRS</strong></td></tr>
+<tr><td>Envelope</td><td><code>envEventoNFe_v9.99.xsd</code> &mdash; se&ccedil;&atilde;o 5.8 do MOC da NF-e</td></tr>
+<tr><td>Parte espec&iacute;fica</td><td>Um XSD por evento: <code>e211110_v1.00.xsd</code>, <code>e112130_v1.00.xsd</code>&hellip;</td></tr>
+<tr><td>Lote</td><td>O envelope aceita <strong>at&eacute; 20</strong>, mas a NT <strong>orienta</strong> envio individual nos eventos da Reforma</td></tr>
+<tr><td>Destino</td><td><strong>N&atilde;o vai &agrave; apura&ccedil;&atilde;o assistida.</strong> Ela consome do ambiente autorizador</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">O cat&aacute;logo se move</div><p>A NT j&aacute; teve quinze vers&otilde;es. O evento <strong><code>211120</code></strong> &mdash; destina&ccedil;&atilde;o de item para consumo pessoal &mdash; <strong>foi eliminado na v1.50</strong>, porque a LC 227/2026 revogou o &sect; 6&ordm; do art. 57 da LC 214/2025. Qualquer mapa de c&oacute;digos no produto precisa ser <strong>versionado com vig&ecirc;ncia</strong>, e c&oacute;digo desconhecido precisa virar pend&ecirc;ncia vis&iacute;vel &mdash; nunca sil&ecirc;ncio.</p></div>
+
+<h3 id="n2">2.2 Os dezesseis, por autor</h3>
+<div class="table-wrap"><table><thead><tr><th>C&oacute;digo</th><th>Evento</th><th>Autor</th><th>Alcance</th><th>Formato</th></tr></thead><tbody>
+<tr><td class="mono"><strong>112110</strong></td><td>Informa&ccedil;&atilde;o de efetivo pagamento integral</td><td>emitente</td><td>documento</td><td>escalar</td></tr>
+<tr><td class="mono"><strong>112120</strong></td><td>Importa&ccedil;&atilde;o em ALC/ZFM n&atilde;o convertida em isen&ccedil;&atilde;o</td><td>emitente</td><td><strong>item</strong></td><td>item + estoque</td></tr>
+<tr><td class="mono"><strong>112130</strong></td><td>Perecimento no transporte do <strong>fornecedor</strong> (CIF)</td><td>emitente</td><td><strong>item</strong></td><td>item + estorno</td></tr>
+<tr><td class="mono"><strong>112140</strong></td><td>Fornecimento n&atilde;o realizado com pagamento antecipado</td><td>emitente</td><td><strong>item</strong></td><td>item + estoque</td></tr>
+<tr><td class="mono"><strong>112150</strong></td><td>Atualiza&ccedil;&atilde;o da data de previs&atilde;o de entrega</td><td>emitente</td><td>documento</td><td>data</td></tr>
+<tr><td class="mono"><strong>211110</strong></td><td>Solicita&ccedil;&atilde;o de apropria&ccedil;&atilde;o de cr&eacute;dito presumido</td><td>emitente <em>ou</em> adquirente</td><td><strong>item</strong></td><td>presumido</td></tr>
+<tr><td class="mono"><strong>211124</strong></td><td>Perecimento no transporte do <strong>adquirente</strong> (FOB)</td><td>adquirente</td><td><strong>item</strong></td><td>item + estoque</td></tr>
+<tr><td class="mono"><strong>211128</strong></td><td>Aceite de d&eacute;bito por emiss&atilde;o de nota de cr&eacute;dito</td><td>adquirente</td><td>documento</td><td>escalar</td></tr>
+<tr><td class="mono"><strong>211130</strong></td><td>Imobiliza&ccedil;&atilde;o de item</td><td>adquirente</td><td><strong>item</strong></td><td>item + estoque</td></tr>
+<tr><td class="mono"><strong>211140</strong></td><td>Apropria&ccedil;&atilde;o de cr&eacute;dito de combust&iacute;vel</td><td>adquirente</td><td><strong>item</strong></td><td>item + estoque</td></tr>
+<tr><td class="mono"><strong>211150</strong></td><td>Cr&eacute;dito de bens e servi&ccedil;os que dependem da atividade</td><td>adquirente</td><td><strong>item</strong></td><td>item sem estoque</td></tr>
+<tr><td class="mono"><strong>212110</strong></td><td>Aceite de transfer&ecirc;ncia de cr&eacute;dito de <strong>IBS</strong> por sucess&atilde;o</td><td>sucessora</td><td>documento</td><td>escalar</td></tr>
+<tr><td class="mono"><strong>212120</strong></td><td>Aceite de transfer&ecirc;ncia de cr&eacute;dito de <strong>CBS</strong> por sucess&atilde;o</td><td>sucessora</td><td>documento</td><td>escalar</td></tr>
+<tr><td class="mono"><strong>412120</strong></td><td>Manifesta&ccedil;&atilde;o do Fisco sobre a transfer&ecirc;ncia de IBS</td><td><strong>Fisco</strong></td><td>documento</td><td>deferimento</td></tr>
+<tr><td class="mono"><strong>412130</strong></td><td>Manifesta&ccedil;&atilde;o do Fisco sobre a transfer&ecirc;ncia de CBS</td><td><strong>Fisco</strong></td><td>documento</td><td>deferimento</td></tr>
+<tr><td class="mono"><strong>110001</strong></td><td>Cancelamento de evento</td><td>o mesmo do original</td><td>evento</td><td>cancelamento</td></tr>
+</tbody></table></div>
+
+<div class="callout info"><div class="ct">A assimetria que decide o desenho</div><p>As s&eacute;ries <strong>112xxx</strong> s&atilde;o do <strong>fornecedor</strong> e as <strong>211xxx</strong> do <strong>adquirente</strong>. Lidas juntas, as duas contam a mesma hist&oacute;ria por lados opostos: a 112 &eacute; o fornecedor <em>desfazendo ou condicionando o que a nota afirmou</em> &mdash; pagou, n&atilde;o entregou, perdeu, adiou. A 211 &eacute; o adquirente <em>pedindo o que a nota n&atilde;o deu</em> &mdash; presumido, combust&iacute;vel, condicionado &mdash; ou recusando o que ela deu. <strong>A apura&ccedil;&atilde;o assistida &eacute; onde os dois lados se encontram.</strong></p></div>
+
+<h3 id="n3">2.3 Prazos que o produto precisa conhecer</h3>
+<div class="table-wrap"><table><thead><tr><th>Marco</th><th>Prazo</th><th>Efeito</th></tr></thead><tbody>
+<tr><td>Publica&ccedil;&atilde;o da apura&ccedil;&atilde;o</td><td>at&eacute; o <strong>dia 15</strong> do m&ecirc;s seguinte</td><td>Abre a janela de confer&ecirc;ncia</td></tr>
+<tr><td>Janela de ajuste</td><td>at&eacute; o <strong>&uacute;ltimo dia &uacute;til</strong> do m&ecirc;s subsequente</td><td>Depois disso vem o <strong>aceite t&aacute;cito</strong></td></tr>
+<tr><td>Obrigatoriedade em produ&ccedil;&atilde;o</td><td><strong>03/08/2026</strong></td><td>Emiss&atilde;o com campos de IBS e CBS no regime regular</td></tr>
+<tr><td>Devolu&ccedil;&otilde;es com <code>DFeReferenciado</code></td><td><strong>05/10/2026</strong></td><td>Passa a ser obrigat&oacute;rio referenciar o documento original</td></tr>
+<tr><td>Cobran&ccedil;a efetiva do IBS</td><td><strong>01/01/2027</strong></td><td>A apura&ccedil;&atilde;o assistida passa a valer</td></tr>
+</tbody></table></div>
+<p class="src-note">Detalhe completo da janela e do aceite t&aacute;cito na <a class="xref" href="proposta-eventos-fiscais.html#s08">refer&ecirc;ncia normativa, se&ccedil;&atilde;o 08</a>.</p>
+</div>
+
+<!-- ══════════════ 03 ══════════════ -->
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Os eventos novos de IBS e CBS, por tipo de documento</span></div>
+<p class="sec-sub">O foco aqui s&atilde;o os <strong>dezesseis eventos criados pela Reforma</strong> &mdash; n&atilde;o os eventos cl&aacute;ssicos que cada documento j&aacute; tinha. E a leitura da norma produz um achado que organiza toda a se&ccedil;&atilde;o.</p>
+
+<div class="callout red"><div class="ct">Os dezesseis s&atilde;o todos da NF-e modelo 55</div><p>Conferido evento a evento na <strong>NT 2025.002-RTC v1.51</strong>: as dezesseis fichas da se&ccedil;&atilde;o 8 declaram, sem exce&ccedil;&atilde;o, <strong><code>Modelo: NF-e modelo 55</code></strong>. Nenhum dos eventos novos de IBS e CBS se aplica a CT-e, NFS-e, NF3-e, NFCom, BP-e, NFC-e ou a qualquer outro documento.</p></div>
+
+<h3 id="d0">3.1 O que isso significa</h3>
+<p>N&atilde;o &eacute; um detalhe de escopo. &Eacute; o desenho da norma at&eacute; aqui &mdash; e tem duas consequ&ecirc;ncias opostas:</p>
+<div class="table-wrap"><table><thead><tr><th>Consequ&ecirc;ncia</th><th>Para o produto</th></tr></thead><tbody>
+<tr><td><strong>Alivia o escopo imediato.</strong> Toda a m&aacute;quina de eventos da Reforma &mdash; camada de item, presumido, perecimento, imobiliza&ccedil;&atilde;o, combust&iacute;vel, cr&eacute;dito condicionado &mdash; incide sobre <strong>um</strong> tipo de documento</td><td>A camada de item pode nascer <strong>s&oacute; para a NF-e 55</strong> e ser generalizada depois, sem retrabalho de modelo</td></tr>
+<tr><td><strong>Abre um vazio normativo.</strong> Os mesmos fatos econ&ocirc;micos acontecem nos outros documentos, e <strong>n&atilde;o h&aacute; evento para declar&aacute;-los</strong></td><td>Frete perecido em CT-e, servi&ccedil;o n&atilde;o prestado em NFS-e, energia estimada e retificada em NF3-e: o efeito existe e <strong>o canal de declara&ccedil;&atilde;o, n&atilde;o</strong></td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">Pergunta para o piloto</div><p>Os eventos da Reforma ser&atilde;o <strong>estendidos aos demais documentos</strong> em vers&otilde;es futuras da NT, ou cada documento resolver&aacute; o mesmo problema pelos seus <strong>eventos pr&oacute;prios</strong>? A resposta muda o tamanho do m&oacute;dulo. <strong>N&atilde;o est&aacute; na norma que lemos.</strong></p></div>
+
+<h3 id="d1">3.2 NF-e modelo 55 &mdash; onde tudo acontece</h3>
+<p>&Uacute;nico documento alcan&ccedil;ado pelos dezesseis. Os eventos por <strong>efeito sobre o cr&eacute;dito</strong>:</p>
+<div class="table-wrap"><table><thead><tr><th>Efeito</th><th>Eventos</th><th>Alcance</th><th>O que o produto precisa ter</th></tr></thead><tbody>
+<tr><td><strong>Constitui</strong> cr&eacute;dito</td><td class="mono"><code>211110</code> <code>211140</code> <code>211150</code></td><td>item</td><td>Camada de item, cr&eacute;dito como saldo, cr&eacute;dito presumido</td></tr>
+<tr><td><strong>Libera</strong> a apropria&ccedil;&atilde;o</td><td class="mono"><code>112110</code></td><td>documento</td><td>Fase apropri&aacute;vel, <code>origemEstado</code>, cruzamento com RAD</td></tr>
+<tr><td><strong>Estorna</strong> cr&eacute;dito</td><td class="mono"><code>112130</code> <code>112140</code> <code>211124</code></td><td>item</td><td>Camada de item com quantidade, v&iacute;nculo a outro DF (no <code>112130</code>)</td></tr>
+<tr><td><strong>Acrescenta</strong> d&eacute;bito</td><td class="mono"><code>112120</code></td><td>item</td><td>D&eacute;bito por item</td></tr>
+<tr><td><strong>Ajusta</strong> valor</td><td class="mono"><code>211128</code></td><td>documento</td><td>V&iacute;nculo &agrave; nota de cr&eacute;dito, valor como saldo</td></tr>
+<tr><td><strong>Marca regime</strong> de prazo</td><td class="mono"><code>211130</code></td><td>item</td><td>Regime de ressarcimento do art. 40, I no item</td></tr>
+<tr><td><strong>Move compet&ecirc;ncia</strong></td><td class="mono"><code>112150</code></td><td>documento</td><td>Compet&ecirc;ncia pr&oacute;pria, com hist&oacute;rico e recalculo de apura&ccedil;&atilde;o</td></tr>
+<tr><td><strong>Transfere</strong> entre CNPJs</td><td class="mono"><code>212110</code> <code>212120</code> <code>412120</code> <code>412130</code></td><td>documento</td><td>Cadastro da contraparte, a&ccedil;&atilde;o em duas etapas</td></tr>
+<tr><td><strong>Anula</strong> evento</td><td class="mono"><code>110001</code></td><td>evento</td><td>S&eacute;rie hist&oacute;rica do saldo</td></tr>
+</tbody></table></div>
+<p class="src-note">Leiaute campo a campo de cada um em <a class="xref" href="eventos-fiscais-leiautes.html#s05">Leiautes dos eventos</a>. A a&ccedil;&atilde;o que o produto planeja em cada caso est&aacute; na <a class="xref" href="#s05">se&ccedil;&atilde;o 05</a>.</p>
+
+<h3 id="d2">3.3 Os outros dez documentos &mdash; o efeito sem o evento</h3>
+<p class="sec-sub">Para cada documento: o fato econ&ocirc;mico que nos outros produz evento da Reforma, e o que existe no lugar dele hoje.</p>
+<div class="table-wrap"><table><thead><tr><th>Documento</th><th>Eventos RTC</th><th>Fato que ficaria sem canal</th><th>O que existe no lugar</th><th>Risco</th></tr></thead><tbody>
+
+<tr><td><strong>NFS-e</strong><br><span style="color:var(--txt3)">servi&ccedil;os</span></td><td><strong>nenhum</strong></td><td>Servi&ccedil;o n&atilde;o prestado ap&oacute;s pagamento antecipado &mdash; an&aacute;logo do <code>112140</code>. Cr&eacute;dito condicionado &agrave; atividade &mdash; an&aacute;logo do <code>211150</code></td><td><code>nfseCancelada</code> e <code>nfseSubstituida</code>, que <strong>cancelam o documento inteiro</strong>, sem granularidade</td><td><strong>Alto</strong> &mdash; NFS-e &eacute; volume grande, e a chave de 50 posi&ccedil;&otilde;es j&aacute; exige tratamento pr&oacute;prio</td></tr>
+
+<tr><td><strong>CT-e</strong> 57<br><span style="color:var(--txt3)">transporte</span></td><td><strong>nenhum</strong></td><td>Carga perecida em tr&acirc;nsito &mdash; an&aacute;logo do <code>112130</code> e do <code>211124</code>. &Eacute; justamente o documento em que perecimento &eacute; mais prov&aacute;vel</td><td><code>110160</code> presta&ccedil;&atilde;o em desacordo, que &eacute; <strong>contesta&ccedil;&atilde;o</strong>, n&atilde;o estorno declarado</td><td><strong>Alto</strong> &mdash; o fato gerador j&aacute; depende do MDF-e; somar perecimento sem evento pr&oacute;prio complica</td></tr>
+
+<tr><td><strong>NF3-e</strong> 66<br><span style="color:var(--txt3)">energia</span></td><td><strong>nenhum</strong></td><td>Leitura estimada que vira definitiva &mdash; an&aacute;logo do ajuste de valor do <code>211128</code></td><td><strong>NF3-e retificadora</strong>: documento novo que substitui o anterior</td><td>M&eacute;dio &mdash; resolve por documento, n&atilde;o por evento; exige v&iacute;nculo DF&rarr;DF</td></tr>
+
+<tr><td><strong>NFCom</strong> 21/22<br><span style="color:var(--txt3)">telecom</span></td><td><strong>nenhum</strong></td><td>Ajuste de per&iacute;odo faturado &mdash; an&aacute;logo do <code>211128</code>; recarga pr&eacute;-paga como fato gerador pr&oacute;prio</td><td><strong>NFCom retificadora</strong>, mesmo mecanismo da NF3-e</td><td>M&eacute;dio</td></tr>
+
+<tr><td><strong>BP-e</strong> 63<br><span style="color:var(--txt3)">passagens</span></td><td><strong>nenhum</strong></td><td><code>noShow</code> &eacute; exatamente o fato do <code>112140</code>: pagou e n&atilde;o consumiu</td><td>Evento pr&oacute;prio <code>noShow</code> do documento</td><td>Baixo &mdash; o evento pr&oacute;prio cobre bem</td></tr>
+
+<tr><td><strong>NFC-e</strong> 65<br><span style="color:var(--txt3)">varejo</span></td><td><strong>vedado</strong></td><td>&mdash;</td><td>A NT <strong>rejeita explicitamente</strong> cr&eacute;dito presumido no modelo 65 &mdash; rejei&ccedil;&otilde;es 1049 e 1138</td><td>Nenhum &mdash; n&atilde;o gera cr&eacute;dito ao adquirente</td></tr>
+
+<tr><td><strong>CF-e SAT</strong></td><td><strong>nenhum</strong></td><td>&mdash;</td><td>Cancelamento em 30 minutos; sem eventos de cr&eacute;dito</td><td>Baixo &mdash; equivalente ao NFC-e</td></tr>
+
+<tr><td><strong>NFA-e</strong><br><span style="color:var(--txt3)">produtor rural</span></td><td><strong>nenhum</strong></td><td><strong>Cr&eacute;dito presumido</strong> &mdash; o <code>cCredPres</code> 1 &eacute; &ldquo;aquisi&ccedil;&atilde;o de produtor rural n&atilde;o contribuinte&rdquo;, e o <code>211110</code> <strong>s&oacute; vale para NF-e 55</strong></td><td>Retifica&ccedil;&atilde;o por nova NFA-e, sem evento de cancelamento</td><td><strong>Alto e espec&iacute;fico</strong> &mdash; ver o alerta abaixo</td></tr>
+
+<tr><td><strong>CT-e OS</strong> 67</td><td><strong>nenhum</strong></td><td>Servi&ccedil;o log&iacute;stico n&atilde;o conclu&iacute;do</td><td><code>servi&ccedil;oConclu&iacute;do</code> como fato gerador; nada para desfazer</td><td>M&eacute;dio</td></tr>
+
+<tr><td><strong>DC-e</strong><br><span style="color:var(--txt3)">marketplace</span></td><td><strong>nenhum</strong></td><td>Devolu&ccedil;&atilde;o e n&atilde;o entrega &mdash; an&aacute;logos do <code>112140</code> e do perecimento</td><td><code>objetoDevolvido</code> e pedido cancelado, eventos pr&oacute;prios do rastreamento</td><td>M&eacute;dio &mdash; cobre, mas por outro vocabul&aacute;rio</td></tr>
+</tbody></table></div>
+
+<div class="callout red"><div class="ct">O caso NFA-e merece decis&atilde;o pr&oacute;pria</div><p>O c&oacute;digo <strong><code>cCredPres</code> 1</strong> da tabela de cr&eacute;dito presumido &eacute; <em>&ldquo;aquisi&ccedil;&atilde;o de produtor rural n&atilde;o contribuinte&rdquo;</em> &mdash; e a <strong>NFA-e &eacute; o documento que a SEFAZ emite em nome do produtor rural</strong>. Mas o evento que pede a apropria&ccedil;&atilde;o do presumido, o <code>211110</code>, s&oacute; vale para <strong>NF-e 55</strong>.</p><p style="margin-top:8px">Ou o presumido do produtor rural vem <strong>destacado na pr&oacute;pria NFA-e</strong>, sem evento &mdash; o que &eacute; plaus&iacute;vel, j&aacute; que o grupo <code>gCredPresOper</code> existe no leiaute do documento e n&atilde;o s&oacute; no evento &mdash; ou h&aacute; um vazio. <strong>&Eacute; a pergunta mais concreta para levar ao piloto.</strong></p></div>
+
+<h3 id="d3">3.4 Matriz de esfor&ccedil;o por documento</h3>
+<div class="table-wrap"><table><thead><tr><th>Documento</th><th>No produto</th><th>Eventos RTC</th><th>Camada de item</th><th>Fato gerador</th><th>V&iacute;nculo DF&rarr;DF</th><th>Esfor&ccedil;o</th></tr></thead><tbody>
+<tr style="background:var(--teal-d)"><td><strong>NF-e</strong> 55</td><td>sim</td><td><strong>16</strong></td><td><strong>obrigat&oacute;ria</strong></td><td>coincide</td><td>NC/ND, devolu&ccedil;&atilde;o</td><td><strong>Alto</strong></td></tr>
+<tr><td><strong>NFS-e</strong></td><td>sim</td><td>0</td><td>parcial</td><td><strong>retroage</strong> (RPS)</td><td>substitui&ccedil;&atilde;o</td><td>M&eacute;dio</td></tr>
+<tr><td><strong>CT-e</strong> 57</td><td>sim</td><td>0</td><td>n&atilde;o</td><td><strong>difere</strong> (MDF-e)</td><td><strong>MDF-e</strong></td><td>M&eacute;dio</td></tr>
+<tr><td><strong>NFC-e</strong> 65</td><td>sim</td><td>0 &middot; vedado</td><td>n&atilde;o</td><td>coincide</td><td>devolu&ccedil;&atilde;o</td><td>Baixo</td></tr>
+<tr><td><strong>NF3-e</strong> 66</td><td>sim</td><td>0</td><td>n&atilde;o</td><td><strong>retroage</strong></td><td>retificadora</td><td>Baixo</td></tr>
+<tr><td><strong>NFCom</strong></td><td>sim</td><td>0</td><td>n&atilde;o</td><td><strong>retroage</strong></td><td>retificadora</td><td>Baixo</td></tr>
+<tr><td><strong>BP-e</strong> 63</td><td>sim</td><td>0</td><td>n&atilde;o</td><td><strong>difere</strong></td><td>remarca&ccedil;&atilde;o</td><td>Baixo</td></tr>
+<tr style="background:var(--red-d)"><td><strong>CF-e SAT</strong></td><td><strong>n&atilde;o</strong></td><td>0</td><td>n&atilde;o</td><td>coincide</td><td>&mdash;</td><td>Baixo</td></tr>
+<tr style="background:var(--red-d)"><td><strong>NFA-e</strong></td><td><strong>n&atilde;o</strong></td><td>0 <span style="color:var(--red)">(mas precisa de presumido)</span></td><td>n&atilde;o</td><td><strong>difere</strong></td><td>retifica&ccedil;&atilde;o</td><td><strong>M&eacute;dio</strong></td></tr>
+<tr style="background:var(--red-d)"><td><strong>CT-e OS</strong> 67</td><td><strong>n&atilde;o</strong></td><td>0</td><td>n&atilde;o</td><td><strong>difere</strong></td><td>DI / DUE</td><td>Baixo</td></tr>
+<tr style="background:var(--red-d)"><td><strong>DC-e</strong></td><td><strong>n&atilde;o</strong></td><td>0</td><td>n&atilde;o</td><td><strong>difere</strong></td><td>rastreamento</td><td>M&eacute;dio</td></tr>
+</tbody></table></div>
+<div class="callout ok"><div class="ct">A sequ&ecirc;ncia que isso sugere</div><p><strong>Fase 1: NF-e 55 sozinha.</strong> Concentra os dezesseis eventos, a camada de item e o cr&eacute;dito presumido &mdash; e &eacute; o documento de maior volume B2B. Entregar s&oacute; ela j&aacute; fecha toda a m&aacute;quina de eventos da Reforma.</p><p style="margin-top:8px"><strong>Fase 2: os fatos geradores diferidos e retroativos</strong> &mdash; CT-e, NFS-e, NF3-e, NFCom, BP-e. N&atilde;o exigem eventos da Reforma; exigem <strong>compet&ecirc;ncia pr&oacute;pria e v&iacute;nculo entre documentos</strong>, que s&atilde;o gaps G-04, G-10 e G-13.</p><p style="margin-top:8px"><strong>Fase 3: os quatro ausentes</strong>, por decis&atilde;o D-07 &mdash; e a NFA-e sobe de prioridade se o piloto tiver produtor rural.</p></div>
+
+<h3 id="d4">3.5 Os eventos cl&aacute;ssicos, como contexto</h3>
+<p>Cada documento mant&eacute;m os seus eventos e situa&ccedil;&otilde;es de sempre &mdash; ci&ecirc;ncia, confirma&ccedil;&atilde;o, cancelamento, carta de corre&ccedil;&atilde;o, denega&ccedil;&atilde;o, rejei&ccedil;&atilde;o, conting&ecirc;ncia. Eles <strong>n&atilde;o s&atilde;o o objeto deste dossi&ecirc;</strong>, mas continuam produzindo efeito sobre o cr&eacute;dito e o produto precisa deles.</p>
+<div class="table-wrap"><table><thead><tr><th>Grupo</th><th>Exemplos</th><th>Efeito t&iacute;pico</th></tr></thead><tbody>
+<tr><td>Manifesta&ccedil;&atilde;o do destinat&aacute;rio</td><td class="mono"><code>210200</code> ci&ecirc;ncia &middot; <code>210210</code> confirma&ccedil;&atilde;o &middot; <code>210220</code> desconhecimento &middot; <code>210240</code> n&atilde;o realizada</td><td>Constituem ou negam o <strong>fato gerador</strong></td></tr>
+<tr><td>Ciclo do documento</td><td class="mono"><code>110110</code> carta de corre&ccedil;&atilde;o &middot; <code>110111</code> cancelamento &middot; <code>110170</code> registro de sa&iacute;da &middot; <code>110140</code> EPEC</td><td>Revertem, consolidam ou adiam o cr&eacute;dito</td></tr>
+<tr><td>Situa&ccedil;&atilde;o na SEFAZ</td><td class="mono">cStat 100 &middot; 110 &middot; 301 &middot; 302</td><td>Autoriza&ccedil;&atilde;o, denega&ccedil;&atilde;o e rejei&ccedil;&atilde;o &mdash; origem ou aus&ecirc;ncia de cr&eacute;dito</td></tr>
+<tr><td>Pr&oacute;prios de cada DF</td><td class="mono"><code>110160</code> CT-e &middot; <code>110115</code> BP-e &middot; <code>rpsConvertido</code> NFS-e &middot; <code>objetoEntregue</code> DC-e</td><td>Definem o fato gerador quando ele n&atilde;o coincide com a emiss&atilde;o</td></tr>
+</tbody></table></div>
+<p class="src-note">O levantamento completo, documento a documento, est&aacute; na <a class="xref" href="proposta-eventos-fiscais.html#s09">refer&ecirc;ncia normativa, se&ccedil;&atilde;o 09</a>.</p>
+</div>
+
+<!-- ══════════════ 04 ══════════════ -->
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Impacto no prot&oacute;tipo</span></div>
+<p class="sec-sub">Levantado na leitura do c&oacute;digo em 14/09/2026, confrontada com a norma. Cada gap &eacute; uma dist&acirc;ncia medida entre o que o produto faz e o que o regime exige &mdash; n&atilde;o hip&oacute;tese.</p>
+
+<h3 id="g0">4.1 Os catorze gaps</h3>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Gap</th><th>Hoje</th><th>A norma exige</th></tr></thead><tbody>
+<tr style="background:var(--red-d)"><td><strong>G-01</strong></td><td><strong>Falta a fase apropri&aacute;vel</strong></td><td><code>statusCredito</code> tem <em>nao_apropriado, apropriado, utilizado, extinto</em></td><td>Tr&ecirc;s fases: originado, <strong>apropri&aacute;vel</strong> e apropriado. A do meio &eacute; constitu&iacute;da pelo fato gerador</td></tr>
+<tr style="background:var(--red-d)"><td><strong>G-02</strong></td><td><strong>N&atilde;o existe camada de item</strong></td><td>O modelo vai do documento direto ao registro por tributo</td><td>Oito eventos endere&ccedil;am <code>nItem</code>, com quantidade e unidade pr&oacute;prias</td></tr>
+<tr style="background:var(--red-d)"><td><strong>G-03</strong></td><td><strong>Valor e cr&eacute;dito s&atilde;o campos fixos</strong></td><td>Escritos na ingest&atilde;o e lidos por todo o resto</td><td>Notas de cr&eacute;dito e d&eacute;bito ajustam depois da autoriza&ccedil;&atilde;o: <strong>valor &eacute; saldo</strong></td></tr>
+<tr><td>G-04</td><td>O prazo conta da emiss&atilde;o</td><td>A classifica&ccedil;&atilde;o CP/LP/vencidos usa a data do documento</td><td>O prazo corre do <strong>fato gerador</strong> &mdash; que retroage ou difere em sete dos onze</td></tr>
+<tr><td>G-05</td><td>A concilia&ccedil;&atilde;o de apura&ccedil;&atilde;o &eacute; simulada</td><td><code>capur_status</code> vem de hash determin&iacute;stico do n&uacute;mero e do CNPJ</td><td>Confronto real com o resultado da apura&ccedil;&atilde;o assistida</td></tr>
+<tr><td>G-06</td><td>N&atilde;o existe entidade de evento fiscal</td><td>A linha do tempo tem quinze tipos, todos <strong>internos</strong> ao produto</td><td>O evento &eacute; ato de terceiro: imut&aacute;vel, cumulativo, com efeito pr&oacute;prio</td></tr>
+<tr><td>G-07</td><td>N&atilde;o h&aacute; opera&ccedil;&atilde;o sem cr&eacute;dito</td><td>Todo documento de entrada &eacute; tratado como gerador</td><td>NFC-e, CF-e e BP-e contra CPF n&atilde;o geram cr&eacute;dito</td></tr>
+<tr><td>G-08</td><td>Quatro documentos ausentes</td><td>Conhece sete</td><td>S&atilde;o onze &mdash; faltam CF-e SAT, NFA-e, CT-e OS e DC-e</td></tr>
+<tr><td>G-09</td><td>N&atilde;o h&aacute; janela de corre&ccedil;&atilde;o</td><td>Nenhuma tela conhece o prazo da apura&ccedil;&atilde;o</td><td>Dia 15 do m&ecirc;s seguinte; ajuste at&eacute; o &uacute;ltimo dia &uacute;til do subsequente; depois, <strong>aceite t&aacute;cito</strong></td></tr>
+<tr><td>G-10</td><td>N&atilde;o h&aacute; v&iacute;nculo entre documentos</td><td>Cada documento &eacute; ilha: sem <code>refNFe</code>, <code>refCTe</code>, <code>infCTeSub</code></td><td>NC, devolu&ccedil;&atilde;o, substitui&ccedil;&atilde;o e redespacho referenciam a chave original</td></tr>
+<tr><td>G-11</td><td>N&atilde;o h&aacute; ingest&atilde;o cont&iacute;nua</td><td>CSV e API, ambas de documento e acionadas por algu&eacute;m</td><td>Eventos chegam em fluxo, sem operador, e <strong>podem preceder o documento</strong></td></tr>
+<tr><td>G-12</td><td>N&atilde;o h&aacute; cr&eacute;dito presumido</td><td>O cr&eacute;dito &eacute; sempre o valor destacado</td><td>No regime do produtor rural, o adquirente credita o <strong>presumido</strong></td></tr>
+<tr><td>G-13</td><td>A compet&ecirc;ncia &eacute; a data do documento</td><td>N&atilde;o existe campo de compet&ecirc;ncia independente</td><td>O <code>112150</code> desloca a compet&ecirc;ncia depois da autoriza&ccedil;&atilde;o</td></tr>
+<tr><td>G-14</td><td>Nada persiste</td><td>Todo o estado &eacute; seed em mem&oacute;ria, recriado a cada carregamento</td><td>Evento fiscal &eacute; <strong>hist&oacute;rico permanente</strong>, e a reconstru&ccedil;&atilde;o depende dele</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">Tr&ecirc;s gaps mudam o modelo, n&atilde;o a tela</div><p><strong>G-01</strong> (fase), <strong>G-02</strong> (item) e <strong>G-03</strong> (saldo) n&atilde;o acrescentam funcionalidade: <strong>mudam a forma do dado</strong>. Adiar qualquer um significa implementar duas vezes &mdash; e a segunda com migra&ccedil;&atilde;o de base.</p></div>
+
+<h3 id="g1">4.2 O modelo de estados, antes e depois</h3>
+<figure>
+<svg viewBox="0 0 1040 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M&aacute;quina de estados do cr&eacute;dito antes e depois dos eventos">
+  <defs>
+    <marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--txt3)"/>
+    </marker>
+  </defs>
+
+  <text x="20" y="26" class="s-lbl" fill="var(--txt3)">HOJE &mdash; quatro estados, transi&ccedil;&atilde;o deduzida</text>
+  <rect x="20" y="42" width="150" height="44" rx="7" fill="var(--sur2)" stroke="var(--brd)"/>
+  <text x="95" y="69" text-anchor="middle" class="s-mono" fill="var(--txt2)">nao_apropriado</text>
+  <rect x="210" y="42" width="130" height="44" rx="7" fill="var(--sur2)" stroke="var(--brd)"/>
+  <text x="275" y="69" text-anchor="middle" class="s-mono" fill="var(--txt2)">apropriado</text>
+  <rect x="380" y="42" width="120" height="44" rx="7" fill="var(--sur2)" stroke="var(--brd)"/>
+  <text x="440" y="69" text-anchor="middle" class="s-mono" fill="var(--txt2)">utilizado</text>
+  <rect x="540" y="42" width="110" height="44" rx="7" fill="var(--sur2)" stroke="var(--brd)"/>
+  <text x="595" y="69" text-anchor="middle" class="s-mono" fill="var(--txt2)">extinto</text>
+  <line x1="170" y1="64" x2="204" y2="64" stroke="var(--txt3)" stroke-width="1.5" marker-end="url(#b1)"/>
+  <line x1="340" y1="64" x2="374" y2="64" stroke="var(--txt3)" stroke-width="1.5" marker-end="url(#b1)"/>
+  <line x1="500" y1="64" x2="534" y2="64" stroke="var(--txt3)" stroke-width="1.5" marker-end="url(#b1)"/>
+  <text x="690" y="60" class="s-sm" fill="var(--red)">A transi&ccedil;&atilde;o &eacute; inferida do documento.</text>
+  <text x="690" y="76" class="s-sm" fill="var(--red)">Nada observa o fato gerador.</text>
+
+  <line x1="20" y1="112" x2="1020" y2="112" stroke="var(--brd)" stroke-dasharray="4 4"/>
+
+  <text x="20" y="142" class="s-lbl" fill="var(--teal)">DEPOIS &mdash; a fase do meio, constitu&iacute;da por evento</text>
+  <rect x="20" y="158" width="130" height="48" rx="7" fill="var(--sur2)" stroke="var(--brd)"/>
+  <text x="85" y="179" text-anchor="middle" class="s-mono" fill="var(--txt2)">originado</text>
+  <text x="85" y="194" text-anchor="middle" class="s-sm" fill="var(--txt3)">documento autorizado</text>
+
+  <rect x="196" y="158" width="150" height="48" rx="7" fill="var(--teal-d)" stroke="var(--teal)" stroke-width="2"/>
+  <text x="271" y="179" text-anchor="middle" class="s-mono" fill="var(--teal)">apropriavel</text>
+  <text x="271" y="194" text-anchor="middle" class="s-sm" fill="var(--txt3)">fato gerador constitu&iacute;do</text>
+
+  <rect x="392" y="158" width="130" height="48" rx="7" fill="var(--sur2)" stroke="var(--brd)"/>
+  <text x="457" y="179" text-anchor="middle" class="s-mono" fill="var(--txt2)">apropriado</text>
+  <text x="457" y="194" text-anchor="middle" class="s-sm" fill="var(--txt3)">d&eacute;bito extinto</text>
+
+  <rect x="568" y="158" width="120" height="48" rx="7" fill="var(--sur2)" stroke="var(--brd)"/>
+  <text x="628" y="185" text-anchor="middle" class="s-mono" fill="var(--txt2)">utilizado</text>
+
+  <rect x="734" y="158" width="110" height="48" rx="7" fill="var(--sur2)" stroke="var(--brd)"/>
+  <text x="789" y="185" text-anchor="middle" class="s-mono" fill="var(--txt2)">extinto</text>
+
+  <line x1="150" y1="182" x2="190" y2="182" stroke="var(--teal)" stroke-width="2" marker-end="url(#b1)"/>
+  <line x1="346" y1="182" x2="386" y2="182" stroke="var(--txt3)" stroke-width="1.5" marker-end="url(#b1)"/>
+  <line x1="522" y1="182" x2="562" y2="182" stroke="var(--txt3)" stroke-width="1.5" marker-end="url(#b1)"/>
+  <line x1="688" y1="182" x2="728" y2="182" stroke="var(--txt3)" stroke-width="1.5" marker-end="url(#b1)"/>
+
+  <text x="170" y="150" text-anchor="middle" class="s-sm" fill="var(--teal)">evento</text>
+
+  <rect x="196" y="228" width="648" height="52" rx="7" fill="var(--amber-d)" stroke="var(--amber)"/>
+  <text x="520" y="248" text-anchor="middle" class="s-lbl" fill="var(--amber)">Campo novo: origemEstado</text>
+  <text x="520" y="266" text-anchor="middle" class="s-sm" fill="var(--txt2)">deduzido (o produto inferiu) &middot; observado (evento confirmou) &middot; divergente (evento contradiz)</text>
+  <line x1="271" y1="210" x2="271" y2="224" stroke="var(--amber)" stroke-width="1.5"/>
+</svg>
+<figcaption>A fase <code>apropriavel</code> separa o cr&eacute;dito pronto do que ainda depende de um evento que pode n&atilde;o vir. O <code>origemEstado</code> registra se o produto deduziu ou se o Fisco confirmou &mdash; <strong>o produto nunca sobrescreve em sil&ecirc;ncio</strong>.</figcaption>
+</figure>
+
+<h3 id="g2">4.3 Os doze m&oacute;dulos afetados</h3>
+<p>De vinte e um m&oacute;dulos, doze mudam. <strong>Cinco de forma estrutural.</strong></p>
+<div class="table-wrap"><table><thead><tr><th>M&oacute;dulo</th><th>N&iacute;vel</th><th>O que muda</th><th>O que precisa ser constru&iacute;do</th></tr></thead><tbody>
+<tr style="background:var(--red-d)"><td><strong>Cr&eacute;dito IBS/CBS</strong></td><td><strong>estrutural</strong></td><td>&Eacute; o que mais muda. Ganha fase, o prazo passa a contar do fato gerador, e o cr&eacute;dito deixa de ser n&uacute;mero fixo para ser saldo. Listagem, ciclo, classifica&ccedil;&atilde;o CP/LP, coluna de inconsist&ecirc;ncias, badge de extin&ccedil;&atilde;o e filtros &mdash; todos mudam</td><td>Fase <code>apropriavel</code>, <code>origemEstado</code>, data do fato gerador, camada de item, cr&eacute;dito como saldo, linha do tempo fiscal</td></tr>
+<tr style="background:var(--red-d)"><td><strong>Ingest&atilde;o de DFs</strong></td><td><strong>estrutural</strong></td><td>Ganha uma <strong>segunda porta</strong>, de natureza diferente: cont&iacute;nua, sem operador, e que pode receber o evento antes do documento. A valida&ccedil;&atilde;o bin&aacute;ria ganha um terceiro destino</td><td>Consumo cont&iacute;nuo, normaliza&ccedil;&atilde;o, mapa versionado, correla&ccedil;&atilde;o por chave, fila de &oacute;rf&atilde;os, reprocessamento idempotente</td></tr>
+<tr style="background:var(--red-d)"><td><strong>Concilia&ccedil;&atilde;o</strong></td><td><strong>estrutural</strong></td><td><strong>Muda de natureza.</strong> Hoje compara o escriturado contra um resultado que o pr&oacute;prio produto gerou por hash; passa a comparar <strong>duas fontes reais</strong></td><td>Confronto a tr&ecirc;s pontas e classifica&ccedil;&atilde;o da causa da diverg&ecirc;ncia</td></tr>
+<tr style="background:var(--red-d)"><td><strong>Inconsist&ecirc;ncias</strong></td><td><strong>estrutural</strong></td><td>Ganha fam&iacute;lias novas &mdash; diverg&ecirc;ncia entre evento e estado, e <strong>evento faltante</strong>. &Eacute; a que mais volume gera nos primeiros meses, porque exp&otilde;e de uma vez o passivo de dedu&ccedil;&atilde;o errada</td><td>Tipos novos no cat&aacute;logo, resolu&ccedil;&atilde;o que exige ato fiscal</td></tr>
+<tr style="background:var(--red-d)"><td><strong>Apura&ccedil;&atilde;o</strong></td><td><strong>estrutural</strong></td><td>Compet&ecirc;ncia deixa de ser a data do documento. Evento que desloca compet&ecirc;ncia obriga a <strong>recalcular per&iacute;odo j&aacute; fechado</strong></td><td>Compet&ecirc;ncia pr&oacute;pria com hist&oacute;rico, aviso de recalcular, a&ccedil;&atilde;o de refazer</td></tr>
+<tr><td>D&eacute;bito IBS/CBS</td><td>m&eacute;dio</td><td>D&eacute;bito por item e efeito parcial do evento</td><td>Camada de item no d&eacute;bito</td></tr>
+<tr><td>Pagamentos &middot; RAD</td><td>m&eacute;dio</td><td>O <code>112110</code> do fornecedor passa a <strong>bloquear ou alertar</strong> a convers&atilde;o para RAD</td><td>Regra dos quatro cen&aacute;rios &mdash; <a class="xref" href="#g4">4.5</a></td></tr>
+<tr><td>Integra&ccedil;&otilde;es</td><td>m&eacute;dio</td><td>Contexto de eventos no cat&aacute;logo da API</td><td>Endpoints da <a class="xref" href="#s07">se&ccedil;&atilde;o 07</a></td></tr>
+<tr><td>Analytics</td><td>baixo</td><td>Indicadores de lat&ecirc;ncia e de cobertura de eventos</td><td>&mdash;</td></tr>
+<tr><td>Automa&ccedil;&otilde;es</td><td>baixo</td><td>R&eacute;gua disparada por evento faltante</td><td>&mdash;</td></tr>
+<tr><td>Fornecedores</td><td>baixo</td><td>Score passa a ver evento de recolhimento</td><td>&mdash;</td></tr>
+<tr><td>In&iacute;cio</td><td>baixo</td><td>Card de eventos pendentes de concilia&ccedil;&atilde;o</td><td>&mdash;</td></tr>
+</tbody></table></div>
+
+<h3 id="g3">4.4 A esteira de ingest&atilde;o</h3>
+<figure>
+<svg viewBox="0 0 1040 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Esteira de ingest&atilde;o do evento fiscal">
+  <defs>
+    <marker id="c1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--teal)"/>
+    </marker>
+  </defs>
+  <g>
+    <rect x="12" y="52" width="134" height="56" rx="7" fill="var(--sur2)" stroke="var(--brd)"/>
+    <text x="79" y="76" text-anchor="middle" class="s-lbl" fill="var(--txt1)">Coleta</text>
+    <text x="79" y="92" text-anchor="middle" class="s-sm" fill="var(--txt3)">marca de posi&ccedil;&atilde;o</text>
+
+    <rect x="172" y="52" width="134" height="56" rx="7" fill="var(--sur2)" stroke="var(--brd)"/>
+    <text x="239" y="76" text-anchor="middle" class="s-lbl" fill="var(--txt1)">Normaliza&ccedil;&atilde;o</text>
+    <text x="239" y="92" text-anchor="middle" class="s-sm" fill="var(--txt3)">tpEvento &rarr; fun&ccedil;&atilde;o</text>
+
+    <rect x="332" y="52" width="134" height="56" rx="7" fill="var(--sur2)" stroke="var(--brd)"/>
+    <text x="399" y="76" text-anchor="middle" class="s-lbl" fill="var(--txt1)">Correla&ccedil;&atilde;o</text>
+    <text x="399" y="92" text-anchor="middle" class="s-sm" fill="var(--txt3)">pela chave de acesso</text>
+
+    <rect x="492" y="52" width="134" height="56" rx="7" fill="var(--sur2)" stroke="var(--brd)"/>
+    <text x="559" y="76" text-anchor="middle" class="s-lbl" fill="var(--txt1)">Aplica&ccedil;&atilde;o</text>
+    <text x="559" y="92" text-anchor="middle" class="s-sm" fill="var(--txt3)">motor de efeito</text>
+
+    <rect x="652" y="52" width="134" height="56" rx="7" fill="var(--teal-d)" stroke="var(--teal)"/>
+    <text x="719" y="76" text-anchor="middle" class="s-lbl" fill="var(--teal)">Concilia&ccedil;&atilde;o</text>
+    <text x="719" y="92" text-anchor="middle" class="s-sm" fill="var(--txt3)">contra a apura&ccedil;&atilde;o</text>
+
+    <rect x="812" y="52" width="134" height="56" rx="7" fill="var(--sur2)" stroke="var(--brd)"/>
+    <text x="879" y="76" text-anchor="middle" class="s-lbl" fill="var(--txt1)">Visibilidade</text>
+    <text x="879" y="92" text-anchor="middle" class="s-sm" fill="var(--txt3)">tela e ocorr&ecirc;ncia</text>
+  </g>
+  <g stroke="var(--teal)" stroke-width="1.6" marker-end="url(#c1)">
+    <line x1="146" y1="80" x2="166" y2="80"/><line x1="306" y1="80" x2="326" y2="80"/>
+    <line x1="466" y1="80" x2="486" y2="80"/><line x1="626" y1="80" x2="646" y2="80"/>
+    <line x1="786" y1="80" x2="806" y2="80"/>
+  </g>
+  <rect x="332" y="132" width="294" height="44" rx="7" fill="var(--amber-d)" stroke="var(--amber)"/>
+  <text x="479" y="152" text-anchor="middle" class="s-lbl" fill="var(--amber)">Fila de &oacute;rf&atilde;os</text>
+  <text x="479" y="168" text-anchor="middle" class="s-sm" fill="var(--txt2)">evento que chegou antes do documento &mdash; nunca descartar</text>
+  <line x1="399" y1="108" x2="399" y2="128" stroke="var(--amber)" stroke-width="1.5"/>
+  <text x="80" y="30" class="s-sm" fill="var(--txt3)">C-09</text>
+  <text x="240" y="30" class="s-sm" fill="var(--txt3)">C-10 &middot; C-11</text>
+  <text x="400" y="30" class="s-sm" fill="var(--txt3)">C-12 &middot; C-13</text>
+  <text x="560" y="30" class="s-sm" fill="var(--txt3)">C-16</text>
+  <text x="720" y="30" class="s-sm" fill="var(--txt3)">C-18</text>
+  <text x="880" y="30" class="s-sm" fill="var(--txt3)">C-17 &middot; C-19</text>
+</svg>
+<figcaption>Seis est&aacute;gios. O ponto de falha silenciosa &eacute; a correla&ccedil;&atilde;o: <strong>descartar evento &oacute;rf&atilde;o produz cr&eacute;dito apropriado sobre documento que n&atilde;o existe</strong>.</figcaption>
+</figure>
+
+<h3 id="g4">4.5 RAD e eventos &mdash; o cruzamento de maior risco</h3>
+<p>Dos dezesseis, <strong>um s&oacute; fala de recolhimento</strong>: o <code>112110</code>, e quem o emite &eacute; o <strong>fornecedor</strong>. N&atilde;o h&aacute; evento em que o adquirente declare ter recolhido por RAD. Isso desenha os dois caminhos de forma assim&eacute;trica.</p>
+<div class="table-wrap"><table><thead><tr><th>Caminho</th><th>Como se confirma</th><th>O que o produto observa</th></tr></thead><tbody>
+<tr><td>Fornecedor recolhe &middot; PCONT</td><td>Evento <code>112110</code>, e depois a apura&ccedil;&atilde;o</td><td><strong>Ato de terceiro</strong> &mdash; chega de fora, sem controle do cliente</td></tr>
+<tr><td>Adquirente assume &middot; RAD</td><td>Guia gerada, paga e comprovante vinculado</td><td><strong>Ato pr&oacute;prio</strong> &mdash; nasce dentro do produto, sem evento</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">Os quatro cen&aacute;rios de duplicidade</div><p>&Eacute; o cruzamento de maior risco financeiro de toda a proposta.</p></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Situa&ccedil;&atilde;o</th><th>O que o produto precisa fazer</th></tr></thead><tbody>
+<tr><td><strong>A</strong></td><td><code>112110</code> chega <strong>antes</strong> de o operador assumir RAD</td><td><strong>Bloquear a a&ccedil;&atilde;o.</strong> O fornecedor j&aacute; quitou; assumir seria pagar de novo. Hoje a tela de assumir n&atilde;o tem nenhum insumo externo</td></tr>
+<tr><td><strong>B</strong></td><td>RAD assumido, guia emitida, <strong>ainda n&atilde;o paga</strong>, chega o <code>112110</code></td><td><strong>Suspender a guia</strong> e parar a cobran&ccedil;a. Abre confer&ecirc;ncia: pagar agora &eacute; duplicar</td></tr>
+<tr><td><strong>C</strong></td><td>Guia RAD <strong>j&aacute; paga</strong>, chega o <code>112110</code></td><td><strong>Duplicidade consumada.</strong> Abre inconsist&ecirc;ncia de recolhimento em duplicidade &mdash; o caminho &eacute; restitui&ccedil;&atilde;o ou compensa&ccedil;&atilde;o, n&atilde;o ajuste de tela</td></tr>
+<tr><td><strong>D</strong></td><td>RAD assumido e pago, <code>112110</code> nunca vem</td><td><strong>Caso normal.</strong> O fornecedor n&atilde;o recolhe porque o adquirente recolheu</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">A confirmar na norma</div><p>A inexist&ecirc;ncia de evento pr&oacute;prio para o recolhimento pelo adquirente vem do cat&aacute;logo da NT. <strong>Se houver mecanismo declarat&oacute;rio do RAD em outra norma</strong> &mdash; e &eacute; plaus&iacute;vel que haja, j&aacute; que o Fisco precisa saber quem recolheu &mdash; os cen&aacute;rios <strong>C</strong> e <strong>D</strong> mudam de desenho.</p></div>
+</div>
+
+<!-- ══════════════ 05 ══════════════ -->
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Da captura &agrave; execu&ccedil;&atilde;o &mdash; a a&ccedil;&atilde;o por evento</span></div>
+<p class="sec-sub">O produto <strong>n&atilde;o aplica o evento na chegada</strong>. Ele captura, <strong>planeja</strong> o que aquele evento deveria produzir, <strong>espera</strong> o órg&atilde;o refletir, e s&oacute; <strong>executa</strong> quando o saldo confirma. &Eacute; a mesma regra que governa todo o resto: o SplitHub segue o Fisco, n&atilde;o o antecipa.</p>
+
+<h3 id="a0">5.1 As quatro fases da a&ccedil;&atilde;o</h3>
+<figure>
+<svg viewBox="0 0 1040 290" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ciclo de vida da a&ccedil;&atilde;o planejada a partir do evento fiscal">
+  <defs>
+    <marker id="d1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--teal)"/>
+    </marker>
+    <marker id="d2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--red)"/>
+    </marker>
+  </defs>
+
+  <rect x="16" y="86" width="164" height="66" rx="9" fill="var(--sur2)" stroke="var(--brd)" stroke-width="1.5"/>
+  <text x="98" y="106" text-anchor="middle" class="s-lbl" fill="var(--txt1)">1 &middot; CAPTURA</text>
+  <text x="98" y="123" text-anchor="middle" class="s-sm" fill="var(--txt3)">evento autorizado chega</text>
+  <text x="98" y="138" text-anchor="middle" class="s-sm" fill="var(--txt3)">do ERP ou do DW</text>
+
+  <rect x="216" y="86" width="182" height="66" rx="9" fill="var(--blue-d)" stroke="var(--blue)" stroke-width="1.5"/>
+  <text x="307" y="106" text-anchor="middle" class="s-lbl" fill="var(--blue)">2 &middot; PLANEJA</text>
+  <text x="307" y="123" text-anchor="middle" class="s-sm" fill="var(--txt3)">calcula o efeito no item</text>
+  <text x="307" y="138" text-anchor="middle" class="s-sm" fill="var(--txt3)">e grava a&ccedil;&atilde;o pendente</text>
+
+  <rect x="434" y="86" width="182" height="66" rx="9" fill="var(--amber-d)" stroke="var(--amber)" stroke-width="1.5"/>
+  <text x="525" y="106" text-anchor="middle" class="s-lbl" fill="var(--amber)">3 &middot; AGUARDA</text>
+  <text x="525" y="123" text-anchor="middle" class="s-sm" fill="var(--txt3)">o saldo do DF mover</text>
+  <text x="525" y="138" text-anchor="middle" class="s-sm" fill="var(--txt3)">na apura&ccedil;&atilde;o assistida</text>
+
+  <rect x="652" y="86" width="182" height="66" rx="9" fill="var(--green-d)" stroke="var(--green)" stroke-width="2"/>
+  <text x="743" y="106" text-anchor="middle" class="s-lbl" fill="var(--green)">4 &middot; EXECUTA</text>
+  <text x="743" y="123" text-anchor="middle" class="s-sm" fill="var(--txt3)">aplica no cr&eacute;dito, d&eacute;bito</text>
+  <text x="743" y="138" text-anchor="middle" class="s-sm" fill="var(--txt3)">e compet&ecirc;ncia</text>
+
+  <g stroke="var(--teal)" stroke-width="1.8" marker-end="url(#d1)">
+    <line x1="180" y1="119" x2="210" y2="119"/>
+    <line x1="398" y1="119" x2="428" y2="119"/>
+    <line x1="616" y1="119" x2="646" y2="119"/>
+  </g>
+
+  <rect x="434" y="196" width="400" height="56" rx="9" fill="var(--red-d)" stroke="var(--red)" stroke-width="1.5"/>
+  <text x="634" y="217" text-anchor="middle" class="s-lbl" fill="var(--red)">DIVERGENTE &mdash; o Fisco n&atilde;o confirmou</text>
+  <text x="634" y="235" text-anchor="middle" class="s-sm" fill="var(--txt2)">a a&ccedil;&atilde;o N&Atilde;O executa &middot; abre ocorr&ecirc;ncia com o valor esperado e o observado</text>
+  <path d="M525,152 L525,192" stroke="var(--red)" stroke-width="1.8" marker-end="url(#d2)"/>
+
+  <rect x="868" y="86" width="156" height="66" rx="9" fill="var(--sur2)" stroke="var(--brd)" stroke-dasharray="4 3"/>
+  <text x="946" y="106" text-anchor="middle" class="s-lbl" fill="var(--txt2)">CANCELADA</text>
+  <text x="946" y="123" text-anchor="middle" class="s-sm" fill="var(--txt3)">chegou 110001</text>
+  <text x="946" y="138" text-anchor="middle" class="s-sm" fill="var(--txt3)">antes de executar</text>
+
+  <text x="98" y="56" text-anchor="middle" class="s-sm" fill="var(--txt3)">ato de terceiro</text>
+  <text x="307" y="56" text-anchor="middle" class="s-sm" fill="var(--blue)">nada muda no saldo ainda</text>
+  <text x="525" y="56" text-anchor="middle" class="s-sm" fill="var(--amber)">janela de at&eacute; 8 dias (CBS)</text>
+  <text x="743" y="56" text-anchor="middle" class="s-sm" fill="var(--green)">a&iacute; sim o n&uacute;mero muda</text>
+
+  <rect x="16" y="196" width="400" height="56" rx="9" fill="var(--sur2)" stroke="var(--brd)"/>
+  <text x="216" y="217" text-anchor="middle" class="s-lbl" fill="var(--txt2)">Por que n&atilde;o aplicar direto na captura</text>
+  <text x="216" y="235" text-anchor="middle" class="s-sm" fill="var(--txt3)">o evento pode ser cancelado, rejeitado ou n&atilde;o processado pelo &oacute;rg&atilde;o</text>
+</svg>
+<figcaption>Entre <strong>planejar</strong> e <strong>executar</strong> h&aacute; uma espera que o produto n&atilde;o controla. A a&ccedil;&atilde;o pendente &eacute; vis&iacute;vel na tela desde o primeiro minuto &mdash; o operador sabe o que <em>vai</em> acontecer antes de acontecer.</figcaption>
+</figure>
+
+<div class="callout ok"><div class="ct">O que esse desenho compra</div><p><strong>Previs&atilde;o sem mentira.</strong> A tela mostra o efeito calculado como <em>previsto</em>, n&atilde;o como fato. Se o &oacute;rg&atilde;o confirmar, vira fato sem retrabalho. Se n&atilde;o confirmar, a diverg&ecirc;ncia aparece <strong>com os dois n&uacute;meros lado a lado</strong> &mdash; o que o evento dizia e o que o Fisco fez &mdash; em vez de o produto ter aplicado e precisar desfazer.</p></div>
+
+<h3 id="a1">5.2 Estados da a&ccedil;&atilde;o</h3>
+<div class="table-wrap"><table><thead><tr><th>Estado</th><th>Significa</th><th>O saldo do produto</th><th>Sa&iacute;da</th></tr></thead><tbody>
+<tr><td><span class="st neu">capturada</span></td><td>Evento recebido e validado, ainda sem correla&ccedil;&atilde;o com o DF</td><td>intacto</td><td>vai a <em>planejada</em> ou fica na fila de &oacute;rf&atilde;os</td></tr>
+<tr><td><span class="st wait">planejada</span></td><td>Efeito calculado por item, gravado como <strong>a&ccedil;&atilde;o pendente</strong></td><td><strong>intacto</strong> &mdash; a tela mostra o previsto &agrave; parte</td><td>aguarda o &oacute;rg&atilde;o</td></tr>
+<tr><td><span class="st wait">aguardando fisco</span></td><td>Esperando a pr&oacute;xima coleta refletir o efeito</td><td>intacto</td><td>executada, divergente ou expirada</td></tr>
+<tr><td><span class="st ok">executada</span></td><td>O saldo do &oacute;rg&atilde;o moveu no valor previsto</td><td><strong>alterado</strong> &mdash; cr&eacute;dito, d&eacute;bito ou compet&ecirc;ncia</td><td>final</td></tr>
+<tr><td><span class="st div">divergente</span></td><td>O saldo moveu em valor diferente, ou n&atilde;o moveu quando deveria</td><td>intacto</td><td>ocorr&ecirc;ncia aberta, com responsável e prazo</td></tr>
+<tr><td><span class="st abs">n&atilde;o atribu&iacute;vel</span></td><td>Mais de um evento no mesmo DF dentro da janela &mdash; o delta fecha em montante, sem atribui&ccedil;&atilde;o</td><td><strong>alterado no total</strong>, sem imputa&ccedil;&atilde;o por evento</td><td>ocorr&ecirc;ncia informativa</td></tr>
+<tr><td><span class="st neu">cancelada</span></td><td>Chegou <code>110001</code> v&aacute;lido antes da execu&ccedil;&atilde;o</td><td>intacto</td><td>final &mdash; nada a desfazer</td></tr>
+<tr><td><span class="st abs">revertida</span></td><td>Chegou <code>110001</code> <strong>depois</strong> da execu&ccedil;&atilde;o</td><td>volta ao anterior</td><td>exige s&eacute;rie hist&oacute;rica</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">O estado que vale ouro</div><p><span class="st neu">cancelada</span> s&oacute; existe porque o produto <strong>n&atilde;o aplicou na chegada</strong>. No desenho ing&ecirc;nuo &mdash; aplicar e depois reconciliar &mdash; todo cancelamento vira <em>revertida</em>, com desfazimento no saldo, na compet&ecirc;ncia e possivelmente em apura&ccedil;&atilde;o j&aacute; fechada.</p></div>
+
+<h3 id="a2">5.3 A a&ccedil;&atilde;o de cada evento, em detalhe</h3>
+<p class="sec-sub">Para cada um dos dezesseis: o que o SplitHub <strong>planeja</strong> ao capturar, o que <strong>espera</strong> do &oacute;rg&atilde;o, o que <strong>executa</strong> na confirma&ccedil;&atilde;o, e o que acontece se o evento <strong>faltar</strong>.</p>
+
+<h4>S&eacute;rie 112xxx &mdash; o fornecedor declara</h4>
+<div class="table-wrap"><table><thead><tr><th>Evento</th><th>A&ccedil;&atilde;o planejada</th><th>O que espera do &oacute;rg&atilde;o</th><th>Executa</th><th>Se faltar</th></tr></thead><tbody>
+
+<tr><td class="mono"><strong>112110</strong><br><span style="color:var(--txt3)">pagamento integral</span></td>
+<td>Marcar o recolhimento como <strong>observado</strong> e liberar a apropria&ccedil;&atilde;o do presumido. <strong>Se houver guia RAD em aberto, suspender a cobran&ccedil;a imediatamente</strong> &mdash; essa parte n&atilde;o espera confirma&ccedil;&atilde;o, porque o risco &eacute; pagar duas vezes</td>
+<td><strong>CBS:</strong> d&eacute;bito <code>extinto</code> &uarr; e <code>saldoDevedor</code> &darr;; cr&eacute;dito <code>aApropriar</code> &darr; e <code>apropriado</code> &uarr;<br><strong>IBS:</strong> <code>DEBITO_EXTINTO</code> &uarr;, <code>CREDITO_NAO_UTILIZADO</code> &uarr;</td>
+<td>Cr&eacute;dito passa a <strong>apropriado</strong>; <code>origemEstado</code> = observado; data de apropria&ccedil;&atilde;o = a do recolhimento</td>
+<td>O cr&eacute;dito fica parado em <em>apropri&aacute;vel</em> e a r&eacute;gua de cobran&ccedil;a segue rodando <strong>contra quem j&aacute; quitou</strong></td></tr>
+
+<tr><td class="mono"><strong>112120</strong><br><span style="color:var(--txt3)">ALC/ZFM sem isen&ccedil;&atilde;o</span></td>
+<td>Lan&ccedil;ar o IBS e a CBS declarados sobre a <strong>quantidade do item</strong> e recalcular o saldo do documento. O cr&eacute;dito do item deixa de ser o do documento original</td>
+<td><strong>CBS:</strong> d&eacute;bito <code>apurado</code> &uarr; no montante somado dos itens<br><strong>IBS:</strong> <code>DEBITO_EM_ABERTO</code> &uarr;</td>
+<td>Saldo do item reescrito; d&eacute;bito reconhecido; recomposi&ccedil;&atilde;o do total do DF</td>
+<td>Sa&iacute;da de ALC/ZFM sem convers&atilde;o fica <strong>sem o d&eacute;bito devido</strong> &mdash; passivo silencioso</td></tr>
+
+<tr><td class="mono"><strong>112130</strong><br><span style="color:var(--txt3)">perecimento CIF</span></td>
+<td><strong>Duas a&ccedil;&otilde;es.</strong> (1) estornar o d&eacute;bito do item na quantidade perecida; (2) estornar o <strong>cr&eacute;dito de aquisi&ccedil;&atilde;o</strong> daquele item, que vem nos campos P31&ndash;P32 e cai <em>em outro documento</em></td>
+<td>D&eacute;bito do DF &darr; <strong>e</strong> <code>apropriado</code> &darr; em algum documento de entrada da mesma compet&ecirc;ncia</td>
+<td>Estorno em dois documentos, ambos na compet&ecirc;ncia do evento. Se o DF j&aacute; estava apropriado, abre <strong>inconsist&ecirc;ncia de ajuste posterior</strong></td>
+<td>Cr&eacute;dito apropriado sobre <strong>mercadoria que nunca chegou</strong>, e d&eacute;bito de sa&iacute;da que n&atilde;o ocorreu</td></tr>
+
+<tr><td class="mono"><strong>112140</strong><br><span style="color:var(--txt3)">fornecimento n&atilde;o realizado</span></td>
+<td>Desfazer o cr&eacute;dito do item na quantidade n&atilde;o fornecida e marcar o item como n&atilde;o entregue. <strong>O pagamento antecipado permanece; o cr&eacute;dito, n&atilde;o</strong></td>
+<td>D&eacute;bito <code>apurado</code> &darr; ou <code>inexigivel</code> &uarr;; cr&eacute;dito do adquirente desfeito</td>
+<td>Item marcado; saldo do cr&eacute;dito reduzido; d&eacute;bito ajustado</td>
+<td>Cr&eacute;dito de item <strong>pago e nunca entregue</strong> permanece no saldo</td></tr>
+
+<tr><td class="mono"><strong>112150</strong><br><span style="color:var(--txt3)">nova previs&atilde;o de entrega</span></td>
+<td>Deslocar a <strong>data do fato gerador e a compet&ecirc;ncia</strong> para a nova data, reclassificar o prazo entre curto, longo e vencido, e registrar no extrato de compet&ecirc;ncias</td>
+<td><strong>N&atilde;o h&aacute; valor a conferir.</strong> Espera-se que a mesma chave <strong>migre de <code>pa</code></strong> nos arquivos da CBS</td>
+<td>Compet&ecirc;ncia trocada, prazo recalculado. Se a compet&ecirc;ncia de destino estiver <strong>fechada, sinaliza sem reabrir</strong> &mdash; D-14</td>
+<td>O cr&eacute;dito aparece na <strong>compet&ecirc;ncia errada</strong>, e a apura&ccedil;&atilde;o discorda sem causa vis&iacute;vel</td></tr>
+</tbody></table></div>
+
+<h4>S&eacute;rie 211xxx &mdash; o adquirente pede</h4>
+<div class="callout warn"><div class="ct">Aqui a omiss&atilde;o &eacute; do cliente</div><p>S&atilde;o os eventos que o <strong>pr&oacute;prio ERP do cliente</strong> deve emitir. A coluna <em>se faltar</em> pesa mais: a omiss&atilde;o &eacute; dele, e o preju&iacute;zo tamb&eacute;m.</p></div>
+<div class="table-wrap"><table><thead><tr><th>Evento</th><th>A&ccedil;&atilde;o planejada</th><th>O que espera do &oacute;rg&atilde;o</th><th>Executa</th><th>Se faltar</th></tr></thead><tbody>
+
+<tr><td class="mono"><strong>211110</strong><br><span style="color:var(--txt3)">cr&eacute;dito presumido</span></td>
+<td><strong>Substituir</strong> o cr&eacute;dito destacado pelo presumido no item: grava <code>vBCCredPres</code>, <code>cCredPres</code> e, <strong>por tributo</strong>, <code>pCredPres</code> e <code>vCredPres</code>. Marca a origem do cr&eacute;dito como presumida &mdash; o n&uacute;mero da tela deixa de ser o do documento</td>
+<td>Cr&eacute;dito <code>apurado</code> passa a ser <strong>o presumido</strong>, n&atilde;o o destacado. <strong>&Eacute; o melhor caso de confer&ecirc;ncia</strong>: o evento declara valor exato por tributo</td>
+<td>Cr&eacute;dito do item reescrito com o presumido; origem marcada; <code>①&rarr;②</code></td>
+<td>Compra de produtor rural fica <strong>sem cr&eacute;dito</strong>, ou com o destacado, que n&atilde;o &eacute; o devido</td></tr>
+
+<tr><td class="mono"><strong>211124</strong><br><span style="color:var(--txt3)">perecimento FOB</span></td>
+<td>Estornar o cr&eacute;dito do item na quantidade perecida. <strong>Uma perna s&oacute;</strong> &mdash; ao contr&aacute;rio do <code>112130</code></td>
+<td><code>aApropriar</code> ou <code>apropriado</code> &darr; no montante somado</td>
+<td>Saldo do cr&eacute;dito reduzido na propor&ccedil;&atilde;o</td>
+<td>Perda registrada no estoque e <strong>n&atilde;o no fisco</strong>: o cr&eacute;dito continua de p&eacute; indevidamente</td></tr>
+
+<tr><td class="mono"><strong>211128</strong><br><span style="color:var(--txt3)">aceite de nota de cr&eacute;dito</span></td>
+<td>Com <code>1</code>: <strong>consolidar o ajuste</strong> &mdash; reduzir o valor bruto e o cr&eacute;dito pelo montante da NC, na compet&ecirc;ncia do evento. Com <code>0</code>: <strong>manter o saldo</strong> e abrir diverg&ecirc;ncia com o fornecedor</td>
+<td>Com <code>1</code>, o d&eacute;bito muda pelo valor da NC. <strong>Com <code>0</code>, o saldo N&Atilde;O deve mudar</strong> &mdash; e saldo que mude a&iacute; &eacute; inconsist&ecirc;ncia</td>
+<td>Valor e cr&eacute;dito reescritos, ou diverg&ecirc;ncia registrada</td>
+<td><strong>O caso mais comum.</strong> NC recebida sem aceite: o produto mostra um valor, a apura&ccedil;&atilde;o mostra outro, e o ajuste pode n&atilde;o ser reconhecido</td></tr>
+
+<tr><td class="mono"><strong>211130</strong><br><span style="color:var(--txt3)">imobiliza&ccedil;&atilde;o</span></td>
+<td><strong>Marcar o cr&eacute;dito do item como de ativo imobilizado</strong>, para que lhe seja aplicado o prazo do art. 40, I na aprecia&ccedil;&atilde;o de ressarcimento. N&atilde;o segrega valor: <strong>marca regime de prazo</strong></td>
+<td><strong>Nenhum saldo se move.</strong> A confer&ecirc;ncia &eacute; outra: que o <strong>prazo aplicado</strong> ao pedido de ressarcimento daquele cr&eacute;dito seja o do imobilizado</td>
+<td>Marca&ccedil;&atilde;o de regime no item, que passa a reger a tela de Ressarcimento</td>
+<td>Cr&eacute;dito de ativo tratado com <strong>prazo de insumo</strong> &mdash; pedido apreciado no rito errado</td></tr>
+
+<tr><td class="mono"><strong>211140</strong><br><span style="color:var(--txt3)">cr&eacute;dito de combust&iacute;vel</span></td>
+<td>Apropriar o cr&eacute;dito <strong>proporcional &agrave; quantidade consumida</strong>: o item passa a ter parte consumida e parte pendente, e o saldo acompanha os eventos sucessivos</td>
+<td><code>aApropriar</code> &rarr; <code>apropriado</code> na propor&ccedil;&atilde;o. <strong>Parcial por natureza</strong> &mdash; v&aacute;rios eventos sobre o mesmo item ao longo do tempo</td>
+<td>Apropria&ccedil;&atilde;o fracionada; <code>①&rarr;②</code> parcial</td>
+<td>Combust&iacute;vel consumido <strong>sem cr&eacute;dito apropriado</strong> &mdash; perda pura</td></tr>
+
+<tr><td class="mono"><strong>211150</strong><br><span style="color:var(--txt3)">cr&eacute;dito condicionado</span></td>
+<td><strong>Constituir o cr&eacute;dito</strong> de bens e servi&ccedil;os que dependem da atividade, nos valores declarados por item. Sem quantidade: o que se afirma &eacute; destina&ccedil;&atilde;o</td>
+<td><code>aApropriar</code> &rarr; <code>apropriado</code> no montante de <code>vCredIBS</code> e <code>vCredCBS</code></td>
+<td>Cr&eacute;dito constitu&iacute;do no item; <code>①&rarr;②</code></td>
+<td><strong>O cr&eacute;dito nunca nasce.</strong> &Eacute; o evento que o constitui &mdash; sem ele n&atilde;o h&aacute; o que apropriar</td></tr>
+</tbody></table></div>
+
+<h4>Sucess&atilde;o, Fisco e cancelamento</h4>
+<div class="table-wrap"><table><thead><tr><th>Evento</th><th>A&ccedil;&atilde;o planejada</th><th>O que espera do &oacute;rg&atilde;o</th><th>Executa</th><th>Se faltar</th></tr></thead><tbody>
+
+<tr><td class="mono"><strong>212110</strong> &middot; <strong>212120</strong><br><span style="color:var(--txt3)">aceite de transfer&ecirc;ncia</span></td>
+<td>Registrar o aceite e <strong>marcar o cr&eacute;dito como em transfer&ecirc;ncia</strong>, por tributo. N&atilde;o mover saldo: a transfer&ecirc;ncia ainda depende do Fisco</td>
+<td>Nada ainda. <strong>A a&ccedil;&atilde;o fica pendente esperando o <code>412120</code> ou <code>412130</code></strong></td>
+<td>Nada no saldo. Muda o r&oacute;tulo do cr&eacute;dito e liga a a&ccedil;&atilde;o &agrave; decis&atilde;o do Fisco</td>
+<td>A transfer&ecirc;ncia n&atilde;o se completa e o cr&eacute;dito fica preso na sucedida</td></tr>
+
+<tr><td class="mono"><strong>412120</strong> &middot; <strong>412130</strong><br><span style="color:var(--txt3)">decis&atilde;o do Fisco</span></td>
+<td>Com <strong>deferimento</strong>: executar a transfer&ecirc;ncia. Com <strong>indeferimento</strong>: cancelar a a&ccedil;&atilde;o pendente do aceite e devolver o cr&eacute;dito ao estado anterior</td>
+<td>Deferido: o cr&eacute;dito <strong>sai</strong> da apura&ccedil;&atilde;o da sucedida e <strong>entra</strong> na da sucessora. <strong>Indeferido: nenhum saldo deve mover</strong></td>
+<td>Cr&eacute;dito transferido entre CNPJs, ou a&ccedil;&atilde;o cancelada com motivo do <code>cMotivo</code></td>
+<td>O aceite fica pendente para sempre &mdash; e o cr&eacute;dito, no limbo</td></tr>
+
+<tr><td class="mono"><strong>110001</strong><br><span style="color:var(--txt3)">cancelamento</span></td>
+<td>Localizar a a&ccedil;&atilde;o do evento cancelado pelo <code>nProtEvento</code>. <strong>Se ainda n&atilde;o executou: cancelar sem tocar no saldo.</strong> Se j&aacute; executou: planejar a rever&atilde;o</td>
+<td>Na rever&atilde;o, o saldo deve <strong>voltar ao estado anterior</strong> ao evento cancelado</td>
+<td>A&ccedil;&atilde;o marcada <em>cancelada</em> ou <em>revertida</em>; no segundo caso, o saldo volta</td>
+<td>Evento cancelado no Fisco continua produzindo efeito no produto &mdash; <strong>diverg&ecirc;ncia permanente</strong></td></tr>
+</tbody></table></div>
+
+<h3 id="a3">5.4 O que n&atilde;o espera confirma&ccedil;&atilde;o</h3>
+<p>Tr&ecirc;s a&ccedil;&otilde;es s&atilde;o <strong>defensivas</strong> e executam na captura, porque esperar custa dinheiro:</p>
+<div class="table-wrap"><table><thead><tr><th>Gatilho</th><th>A&ccedil;&atilde;o imediata</th><th>Por qu&ecirc;</th></tr></thead><tbody>
+<tr><td><code>112110</code> com guia RAD <strong>em aberto</strong></td><td><strong>Suspender a guia</strong> e parar a cobran&ccedil;a</td><td>Esperar a confirma&ccedil;&atilde;o &eacute; arriscar pagar de novo &mdash; cen&aacute;rio <strong>B</strong> da <a class="xref" href="#g4">se&ccedil;&atilde;o 4.5</a></td></tr>
+<tr><td><code>112110</code> antes de assumir RAD</td><td><strong>Bloquear a a&ccedil;&atilde;o</strong> de assumir</td><td>Cen&aacute;rio <strong>A</strong>: o fornecedor j&aacute; quitou</td></tr>
+<tr><td>Evento de cancelamento de DF</td><td><strong>Parar a r&eacute;gua</strong> de cobran&ccedil;a daquele documento</td><td>Cobrar sobre documento cancelado &eacute; erro vis&iacute;vel ao fornecedor</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">A regra</div><p>Executa na captura <strong>o que evita perda financeira ou constrangimento</strong>. Espera confirma&ccedil;&atilde;o <strong>tudo o que altera saldo, cr&eacute;dito, d&eacute;bito ou compet&ecirc;ncia</strong>. As tr&ecirc;s a&ccedil;&otilde;es acima n&atilde;o mexem em nenhum dos quatro &mdash; suspendem processo, n&atilde;o valor.</p></div>
+</div>
+
+<!-- ══════════════ 06 ══════════════ -->
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Telas &mdash; a ideia</span></div>
+<p class="sec-sub">Duas telas novas e sete alteradas. Aqui fica o <strong>princ&iacute;pio</strong> e o mapa; o detalhamento campo a campo, com mockup de cada uma, est&aacute; em <a class="xref" href="eventos-fiscais-telas.html">Eventos fiscais: as telas, em detalhe</a>.</p>
+
+<div class="callout red"><div class="ct">A regra que governa toda a interface</div><p><strong>Valor previsto nunca aparece somado ao valor vigente.</strong> Enquanto a a&ccedil;&atilde;o est&aacute; <em>planejada</em>, o n&uacute;mero na tela continua sendo o antigo, e o previsto aparece <strong>ao lado, marcado</strong>. Somar antes da confirma&ccedil;&atilde;o do &oacute;rg&atilde;o &eacute; mentir para o operador &mdash; e obrigar a desfazer depois.</p></div>
+
+<h3 id="t0">6.1 O mapa</h3>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Tela</th><th>Situa&ccedil;&atilde;o</th><th>O que acontece</th><th>Esfor&ccedil;o</th><th>Detalhe</th></tr></thead><tbody>
+<tr><td>T-01</td><td><strong>Eventos Fiscais</strong> &middot; listagem</td><td><span class="st ok">nova</span></td><td>A esteira: um evento por linha, com a <strong>a&ccedil;&atilde;o planejada</strong> e o estado da confirma&ccedil;&atilde;o. &Eacute; onde se v&ecirc; que o ERP declarou algo que o Fisco ainda n&atilde;o reconheceu</td><td>alto</td><td><a class="xref" href="eventos-fiscais-telas.html#s03">T-01</a></td></tr>
+<tr><td>T-02</td><td><strong>Detalhe do evento</strong></td><td><span class="st ok">nova</span></td><td>As quatro fases, o efeito calculado por item e <strong>o que cada &oacute;rg&atilde;o precisa confirmar</strong>, com valor esperado e &uacute;ltima coleta</td><td>m&eacute;dio</td><td><a class="xref" href="eventos-fiscais-telas.html#s04">T-02</a></td></tr>
+<tr><td>T-03</td><td>Detalhe do documento</td><td><span class="st abs">muda</span></td><td>Ganha a aba de <strong>itens</strong> &mdash; o degrau que falta no modelo &mdash; e a linha do tempo fiscal</td><td>alto</td><td><a class="xref" href="eventos-fiscais-telas.html#s05">T-03</a></td></tr>
+<tr><td>T-04</td><td>Cr&eacute;dito</td><td><span class="st abs">muda</span></td><td>Fase <em>apropri&aacute;vel</em> no ciclo, <code>origemEstado</code> e cr&eacute;dito por item</td><td>m&eacute;dio</td><td><a class="xref" href="eventos-fiscais-telas.html#s06">T-04</a></td></tr>
+<tr><td>T-05</td><td>D&eacute;bito</td><td><span class="st abs">muda</span></td><td>D&eacute;bito por item e efeito parcial do evento</td><td>m&eacute;dio</td><td><a class="xref" href="eventos-fiscais-telas.html#s07">T-05</a></td></tr>
+<tr><td>T-06</td><td>Apura&ccedil;&atilde;o</td><td><span class="st abs">muda</span></td><td>Aviso de <strong>compet&ecirc;ncia a recalcular</strong> e a&ccedil;&atilde;o de refazer &mdash; sem reabrir sozinho</td><td>m&eacute;dio</td><td><a class="xref" href="eventos-fiscais-telas.html#s08">T-06</a></td></tr>
+<tr><td>T-07</td><td>Concilia&ccedil;&atilde;o</td><td><span class="st abs">muda</span></td><td>Terceira ponta: o que o ERP declarou por evento</td><td>m&eacute;dio</td><td><a class="xref" href="eventos-fiscais-telas.html#s09">T-07</a></td></tr>
+<tr><td>T-08</td><td>Inconsist&ecirc;ncias</td><td><span class="st abs">muda</span></td><td>Tr&ecirc;s tipos novos no cat&aacute;logo &mdash; cabem sem estrutura nova</td><td>baixo</td><td><a class="xref" href="eventos-fiscais-telas.html#s10">T-08</a></td></tr>
+<tr><td>T-09</td><td>Pagamentos &middot; assumir RAD</td><td><span class="st abs">muda</span></td><td><strong>Bloqueio</strong> quando o <code>112110</code> j&aacute; chegou &mdash; evita pagar duas vezes</td><td>baixo</td><td><a class="xref" href="eventos-fiscais-telas.html#s11">T-09</a></td></tr>
+</tbody></table></div>
+
+<h3 id="t9">6.2 As tr&ecirc;s telas que carregam o conceito</h3>
+<div class="table-wrap"><table><thead><tr><th>Tela</th><th>O que ela resolve, e ningu&eacute;m mais resolve</th></tr></thead><tbody>
+<tr><td><strong>Eventos Fiscais</strong></td><td>&Eacute; o &uacute;nico lugar onde a <strong>aus&ecirc;ncia</strong> aparece. Um evento que deveria existir e n&atilde;o veio n&atilde;o tem onde ser visto em nenhuma tela atual &mdash; entra como linha sem identificador, marcada <span class="st abs">ausente</span></td></tr>
+<tr><td><strong>Aba de itens</strong> no documento</td><td>Oito dos dezesseis eventos endere&ccedil;am item. Sem essa aba, um estorno de 12 de 40 unidades teria de ser <strong>rateado no documento inteiro</strong> &mdash; e a apura&ccedil;&atilde;o discordaria</td></tr>
+<tr><td><strong>Compet&ecirc;ncia a recalcular</strong></td><td>O <code>112150</code> move d&eacute;bito de um m&ecirc;s fechado para outro. Sem aviso, a apura&ccedil;&atilde;o do m&ecirc;s fica errada <strong>sem ningu&eacute;m saber por qu&ecirc;</strong></td></tr>
+</tbody></table></div>
+<p class="src-note">Mockup de cada uma, campos novos, estados e regras de intera&ccedil;&atilde;o em <a class="xref" href="eventos-fiscais-telas.html">Eventos fiscais: as telas, em detalhe</a>.</p>
+</div>
+
+</div>
+
+<!-- ══════════════ 07 ══════════════ -->
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Concilia&ccedil;&atilde;o com CBS e IBS</span></div>
+<p class="sec-sub">A confer&ecirc;ncia campo a campo est&aacute; em <a class="xref" href="eventos-fiscais-leiautes.html#s07">Leiautes, se&ccedil;&atilde;o 07</a>. Aqui fica o que o desenho de <strong>a&ccedil;&atilde;o planejada</strong> exige da concilia&ccedil;&atilde;o.</p>
+
+<h3 id="c1">7.1 Tr&ecirc;s pontas, n&atilde;o duas</h3>
+<p>A concilia&ccedil;&atilde;o do produto hoje compara <strong>duas</strong> fontes: o que o ERP escriturou e o que a apura&ccedil;&atilde;o devolveu. Com eventos, passam a ser <strong>tr&ecirc;s</strong>.</p>
+<div class="table-wrap"><table><thead><tr><th>Ponta</th><th>O que traz</th><th>Quando diverge</th></tr></thead><tbody>
+<tr><td><strong>1 &middot; ERP</strong></td><td>O documento escriturado, com valor e tributo</td><td>Escritura&ccedil;&atilde;o errada ou atrasada</td></tr>
+<tr><td><strong>2 &middot; Evento</strong> <span class="new">novo</span></td><td>O ato de terceiro que <strong>muda</strong> o documento depois</td><td>O ERP escriturou e n&atilde;o declarou o evento &mdash; ou declarou e n&atilde;o escriturou</td></tr>
+<tr><td><strong>3 &middot; Apura&ccedil;&atilde;o</strong></td><td>O que o &oacute;rg&atilde;o reconheceu</td><td>&Eacute; a refer&ecirc;ncia &mdash; <strong>onde h&aacute; conflito, vale o &oacute;rg&atilde;o</strong></td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">A causa da diverg&ecirc;ncia passa a ser classific&aacute;vel</div><p>Com duas pontas, diverg&ecirc;ncia &eacute; um n&uacute;mero que n&atilde;o bate. Com tr&ecirc;s, d&aacute; para dizer <strong>de quem &eacute; a falha</strong>: se o evento existe e a apura&ccedil;&atilde;o n&atilde;o refletiu, &eacute; do &oacute;rg&atilde;o ou do prazo; se a apura&ccedil;&atilde;o refletiu e n&atilde;o h&aacute; evento, o ERP omitiu; se n&atilde;o h&aacute; nem evento nem reflexo, a escritura&ccedil;&atilde;o &eacute; que est&aacute; errada.</p></div>
+
+<h3 id="c2">7.2 O placar da confirma&ccedil;&atilde;o</h3>
+<p>Dos dezesseis, quantos t&ecirc;m como ser confirmados pelo saldo do documento:</p>
+<div class="table-wrap"><table><thead><tr><th>Situa&ccedil;&atilde;o</th><th>Eventos</th><th>Quantos</th><th>Como a a&ccedil;&atilde;o executa</th></tr></thead><tbody>
+<tr><td><strong>Confirma por saldo</strong></td><td class="mono"><code>112110</code> <code>112120</code> <code>112140</code> <code>211110</code> <code>211124</code> <code>211140</code> <code>211150</code></td><td class="num"><strong>7</strong></td><td>Autom&aacute;tica, quando o delta bate com o previsto</td></tr>
+<tr><td><strong>Confirma em parte</strong></td><td class="mono"><code>112130</code> <code>211128</code> <code>110001</code></td><td class="num"><strong>3</strong></td><td>Autom&aacute;tica numa perna, manual na outra</td></tr>
+<tr><td><strong>N&atilde;o confirma por saldo</strong></td><td class="mono"><code>112150</code> <code>211130</code> <code>212110</code> <code>212120</code> <code>412120</code> <code>412130</code></td><td class="num"><strong>6</strong></td><td>Confer&ecirc;ncia pr&oacute;pria &mdash; ver 7.3</td></tr>
+</tbody></table></div>
+
+<h3 id="c3">7.3 Como confirmar os seis que o saldo n&atilde;o resolve</h3>
+<div class="table-wrap"><table><thead><tr><th>Evento</th><th>Por que o saldo n&atilde;o basta</th><th>Sinal que confirma a execu&ccedil;&atilde;o</th></tr></thead><tbody>
+<tr><td class="mono"><code>112150</code></td><td>Move compet&ecirc;ncia, n&atilde;o valor</td><td>A mesma <code>chave</code> <strong>migra de <code>pa</code></strong> nos arquivos da CBS, com <code>atualizacao</code> posterior ao evento</td></tr>
+<tr><td class="mono"><code>211130</code></td><td>Marca regime de prazo, n&atilde;o saldo</td><td>O <strong>prazo aplicado</strong> ao pedido de ressarcimento passa a ser o do imobilizado &mdash; art. 40, I</td></tr>
+<tr><td class="mono"><code>212110</code> <code>212120</code></td><td>O cr&eacute;dito troca de CNPJ</td><td>Ficam <strong>pendentes por desenho</strong>: s&oacute; a decis&atilde;o do Fisco confirma</td></tr>
+<tr><td class="mono"><code>412120</code> <code>412130</code></td><td>Deferido: sai de um <code>ni</code>, entra em outro. Indeferido: nada move</td><td>Deferido: <strong>desaparecimento</strong> do saldo na sucedida. Indeferido: <strong>aus&ecirc;ncia de movimento</strong> &mdash; e saldo que se mova a&iacute; &eacute; inconsist&ecirc;ncia</td></tr>
+</tbody></table></div>
+
+<h3 id="c4">7.4 A diferen&ccedil;a entre os dois &oacute;rg&atilde;os muda a confirma&ccedil;&atilde;o</h3>
+<div class="table-wrap"><table><thead><tr><th>Pergunta</th><th>CBS &middot; Receita</th><th>IBS &middot; Comit&ecirc; Gestor</th></tr></thead><tbody>
+<tr><td>O saldo mudou?</td><td>Sim, comparando duas coletas</td><td>Sim, somando o extrato</td></tr>
+<tr><td><strong>Qual evento mudou?</strong></td><td><strong>N&atilde;o d&aacute; para saber</strong> quando h&aacute; mais de um na janela</td><td><strong>Uma linha por lan&ccedil;amento</strong>, com <code>DTH_LANCTO</code> e <code>MOV</code></td></tr>
+<tr><td>Perder a coleta custa?</td><td>N&atilde;o &mdash; a janela de 8 dias reentrega</td><td><strong>Sim</strong> &mdash; o Delta traz o lan&ccedil;amento uma vez s&oacute;</td></tr>
+<tr><td>Confirma&ccedil;&atilde;o por evento</td><td>Por <strong>montante</strong>, com risco de ambiguidade</td><td>Por <strong>lan&ccedil;amento</strong> &mdash; assim que a tabela do <code>MOV</code> existir</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">O caso que quebra a atribui&ccedil;&atilde;o</div><p>Dois eventos no mesmo documento dentro da mesma janela de coleta. Na CBS o delta mostra a <strong>soma</strong> e n&atilde;o h&aacute; como imputar. A a&ccedil;&atilde;o fecha em montante e fica <span class="st abs">n&atilde;o atribu&iacute;vel</span> &mdash; o produto <strong>registra a ambiguidade em vez de escolher um evento</strong>. Mitiga&ccedil;&atilde;o: coletar de seis em seis horas, dentro do teto de 4 chamadas por dia.</p></div>
+<p class="src-note">Compara&ccedil;&atilde;o completa dos dois modelos em <a class="xref" href="cbs-x-ibs-integracao.html">CBS &times; IBS: duas APIs, dois modelos</a>.</p>
+</div>
+
+<!-- ══════════════ 08 ══════════════ -->
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">API de integra&ccedil;&atilde;o com o ERP</span></div>
+<p class="sec-sub">O contrato completo est&aacute; em <a class="xref" href="proposta-api-eventos-fiscais.html">API de eventos fiscais</a>. Aqui ficam as rotas e, sobretudo, <strong>o que muda nos endpoints que j&aacute; existem</strong>.</p>
+
+<h3 id="e1">8.1 As seis rotas novas</h3>
+<div class="table-wrap"><table><thead><tr><th>M&eacute;todo e rota</th><th>Para qu&ecirc;</th></tr></thead><tbody>
+<tr><td class="mono"><code>POST /v1/eventos-fiscais</code></td><td>Importa&ccedil;&atilde;o individual, com envelope discriminado por <code>type</code></td></tr>
+<tr><td class="mono"><code>POST /v1/eventos-fiscais/batch</code></td><td>Lote de at&eacute; 500, com recusa item a item</td></tr>
+<tr><td class="mono"><code>GET /v1/eventos-fiscais/{id}</code></td><td>Situa&ccedil;&atilde;o do evento e da <strong>a&ccedil;&atilde;o</strong> que ele planejou</td></tr>
+<tr><td class="mono"><code>GET /v1/eventos-fiscais</code></td><td>Listagem com filtros por tipo, c&oacute;digo, estado e chave</td></tr>
+<tr><td class="mono"><code>GET /v1/documentos-fiscais/{id}/eventos</code></td><td>A hist&oacute;ria fiscal de um documento</td></tr>
+<tr><td class="mono"><code>DELETE /v1/eventos-fiscais/{id}</code></td><td>Desfaz <strong>importa&ccedil;&atilde;o indevida</strong> &mdash; n&atilde;o cancela nada no Fisco</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Duas decis&otilde;es de desenho</div><p><strong>N&atilde;o h&aacute; <code>PATCH</code>:</strong> evento autorizado &eacute; imut&aacute;vel; a norma cancela pelo <code>110001</code>, que &eacute; ele pr&oacute;prio um evento. Cancelar &eacute; um <code>POST</code>. E a <strong>idempot&ecirc;ncia sai do dom&iacute;nio</strong> &mdash; <code>access_key</code> + <code>event_code</code> + <code>sequence</code> &eacute; &uacute;nica por defini&ccedil;&atilde;o da norma, sem cabe&ccedil;alho extra.</p></div>
+
+<h3 id="e2">8.2 O impacto nos endpoints que j&aacute; existem</h3>
+<p>Quatro dos vinte e cinco mudam. <strong>Nenhum quebra</strong> &mdash; todos ganham campo opcional ou evento novo.</p>
+<div class="table-wrap"><table><thead><tr><th>Endpoint</th><th>O que muda</th><th>Compat&iacute;vel</th></tr></thead><tbody>
+<tr><td class="mono"><code>POST /v1/documentos-fiscais</code></td><td>Ganha <code>items[].item_number</code> como campo <strong>obrigat&oacute;rio quando houver itens</strong> &mdash; hoje o item existe mas n&atilde;o &eacute; endere&ccedil;&aacute;vel. Sem ele, nenhum dos oito eventos de item tem onde ser aplicado</td><td><strong>Quebra</strong> se o ERP hoje n&atilde;o numera itens &mdash; exige vers&atilde;o</td></tr>
+<tr><td class="mono"><code>GET /v1/documentos-fiscais/{id}</code></td><td>Ganha <code>fiscal_events_summary</code>: quantos eventos, quantos com a&ccedil;&atilde;o pendente, e o saldo previsto</td><td>Sim &mdash; campo novo</td></tr>
+<tr><td class="mono"><code>credito.status_alterado</code> <span style="color:var(--txt3)">(webhook)</span></td><td>Ganha <code>change_reason</code> preenchido com o <strong>evento que causou</strong>, e <code>origin</code> com <em>deduzido</em> ou <em>observado</em></td><td>Sim &mdash; o campo j&aacute; existe no contrato</td></tr>
+<tr><td class="mono"><code>debito.status_alterado</code> <span style="color:var(--txt3)">(webhook)</span></td><td>Idem, e <code>extinction_type</code> passa a distinguir extin&ccedil;&atilde;o confirmada por evento</td><td>Sim</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">O &uacute;nico que quebra compatibilidade</div><p><code>item_number</code> na ingest&atilde;o. <strong>&Eacute; o pre&ccedil;o da camada de item</strong> &mdash; e n&atilde;o h&aacute; como evitar: oito eventos endere&ccedil;am <code>nItem</code>, e o documento precisa ter item numerado para receb&ecirc;-los. Exige vers&atilde;o do contrato e janela de migra&ccedil;&atilde;o com o ERP.</p></div>
+
+<h3 id="e3">8.3 Tr&ecirc;s webhooks novos &mdash; presos &agrave; D-01</h3>
+<div class="table-wrap"><table><thead><tr><th>Evento</th><th>Dispara quando</th></tr></thead><tbody>
+<tr><td class="mono"><code>evento_fiscal.correlacionado</code></td><td>O evento encontrou o documento e a a&ccedil;&atilde;o foi <strong>planejada</strong>, com o efeito por item</td></tr>
+<tr><td class="mono"><code>evento_fiscal.conciliado</code></td><td>O &oacute;rg&atilde;o confirmou e a a&ccedil;&atilde;o foi <strong>executada</strong></td></tr>
+<tr><td class="mono"><code>evento_fiscal.divergente</code></td><td>N&atilde;o confirmou &mdash; vai o motivo e a ocorr&ecirc;ncia aberta</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">N&atilde;o publicar antes da D-01</div><p>O produto emite <code>credito.registrado|apropriado|utilizado|glosado</code>; o contrato p&uacute;blico define <code>credito.status_alterado</code>. <strong>Os dois convivem sem decis&atilde;o desde a auditoria.</strong> Publicar estes tr&ecirc;s antes cria o <strong>terceiro vocabul&aacute;rio</strong> de eventos do produto.</p></div>
+</div>
+
+<!-- ══════════════ 09 ══════════════ -->
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Gaps e decis&otilde;es</span></div>
+
+<h3 id="x1">9.1 Os vinte e um itens a construir</h3>
+<div class="table-wrap"><table><thead><tr><th>Grupo</th><th>#</th><th>O que construir</th><th>Depende de</th><th>Faixa</th></tr></thead><tbody>
+<tr><td rowspan="8"><strong>Modelo de dados</strong></td><td>C-01</td><td>Entidade de evento fiscal, com o envelope e o payload cru</td><td>&mdash;</td><td>M0</td></tr>
+<tr><td>C-02</td><td><strong>Camada de item</strong> entre documento e registro fiscal, com quantidade e unidade</td><td>&mdash;</td><td>M0</td></tr>
+<tr><td>C-03</td><td>Fase <code>apropriavel</code> na m&aacute;quina de estados</td><td>C-01</td><td>M0</td></tr>
+<tr><td>C-04</td><td>Campo <code>origemEstado</code> &mdash; deduzido, observado ou divergente</td><td>C-03</td><td>M0</td></tr>
+<tr><td>C-05</td><td><strong>Valor e cr&eacute;dito como saldo</strong>, com hist&oacute;rico de ajustes</td><td>C-01, C-02</td><td>M0</td></tr>
+<tr><td>C-06</td><td>Compet&ecirc;ncia pr&oacute;pria, desloc&aacute;vel, com hist&oacute;rico</td><td>C-01</td><td>M1</td></tr>
+<tr><td>C-07</td><td>V&iacute;nculo documento &rarr; documento</td><td>&mdash;</td><td>M1</td></tr>
+<tr><td>C-08</td><td>Indicador de opera&ccedil;&atilde;o sem direito a cr&eacute;dito</td><td>&mdash;</td><td>M1</td></tr>
+<tr><td rowspan="7"><strong>Esteira</strong></td><td>C-09</td><td>Consumo cont&iacute;nuo, com marca de posi&ccedil;&atilde;o e retomada</td><td>C-01</td><td>M0</td></tr>
+<tr><td>C-10</td><td>Normaliza&ccedil;&atilde;o do evento para o modelo interno</td><td>C-09</td><td>M0</td></tr>
+<tr><td>C-11</td><td>Mapa <code>tpEvento</code> &rarr; fun&ccedil;&atilde;o, <strong>versionado com vig&ecirc;ncia</strong></td><td>C-10</td><td>M0</td></tr>
+<tr><td>C-12</td><td>Correla&ccedil;&atilde;o por chave, com <strong>fila de &oacute;rf&atilde;os</strong></td><td>C-10</td><td>M0</td></tr>
+<tr><td>C-13</td><td>Idempot&ecirc;ncia e ordena&ccedil;&atilde;o por sequ&ecirc;ncia</td><td>C-10</td><td>M0</td></tr>
+<tr><td>C-14</td><td>Reprocessamento por per&iacute;odo ou documento</td><td>C-13</td><td>M1</td></tr>
+<tr><td>C-15</td><td>Tratamento do <code>110001</code> &mdash; evento que anula evento</td><td>C-13</td><td>M1</td></tr>
+<tr><td rowspan="6"><strong>Aplica&ccedil;&atilde;o</strong></td><td>C-16</td><td><strong>Motor de efeito</strong> por fun&ccedil;&atilde;o &mdash; origina, torna apropri&aacute;vel, apropria, reverte, substitui</td><td>C-11, C-03</td><td>M0</td></tr>
+<tr><td>C-17</td><td>Linha do tempo fiscal, separando evento do produto de evento fiscal</td><td>C-01</td><td>M0</td></tr>
+<tr><td>C-18</td><td>Diverg&ecirc;ncia entre evento e estado, como inconsist&ecirc;ncia</td><td>C-04, C-16</td><td>M0</td></tr>
+<tr><td>C-19</td><td>Apontamento do <strong>evento que faltou</strong>, por regra e por documento</td><td>C-11, C-02</td><td>M0</td></tr>
+<tr><td>C-20</td><td>Janela de corre&ccedil;&atilde;o: prazo, contagem regressiva e alerta</td><td>&mdash;</td><td>M0</td></tr>
+<tr><td>C-21</td><td>Lat&ecirc;ncia da esteira &mdash; dist&acirc;ncia entre ocorr&ecirc;ncia e recebimento</td><td>C-09</td><td>M2</td></tr>
+</tbody></table></div>
+
+<h3 id="x2">9.2 As decis&otilde;es que travam o desenho</h3>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Decis&atilde;o</th><th>Recomenda&ccedil;&atilde;o</th></tr></thead><tbody>
+<tr><td><strong>D-01</strong></td><td>A fase <em>apropri&aacute;vel</em> entra na m&aacute;quina de estados?</td><td><strong>Sim.</strong> &Eacute; o que separa o cr&eacute;dito pronto do que depende de evento que pode n&atilde;o vir</td></tr>
+<tr><td><strong>D-02</strong></td><td>A camada de item entra agora?</td><td><strong>Sim.</strong> Oito eventos endere&ccedil;am item; adiar &eacute; implementar duas vezes</td></tr>
+<tr><td><strong>D-03</strong></td><td>Valor e cr&eacute;dito passam a ser saldo?</td><td><strong>Sim.</strong> &Uacute;nica forma de a tela concordar com a apura&ccedil;&atilde;o depois de nota de cr&eacute;dito</td></tr>
+<tr><td><strong>D-04</strong></td><td>Evento prevalece sobre estado deduzido?</td><td><strong>Sim</strong>, com a diverg&ecirc;ncia registrada &mdash; o produto nunca sobrescreve em sil&ecirc;ncio</td></tr>
+<tr><td><strong>D-21</strong></td><td><strong>Origem dos eventos</strong>: DW nacional ou ERP?</td><td><strong>Em aberto.</strong> As duas se complementam &mdash; a s&eacute;rie 112xxx &eacute; do fornecedor e o ERP do cliente n&atilde;o a emite</td></tr>
+</tbody></table></div>
+
+<h3 id="x3">9.3 As perguntas que a norma n&atilde;o responde</h3>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Pergunta</th><th>Por que importa</th></tr></thead><tbody>
+<tr><td>N-01</td><td>Os eventos da Reforma ser&atilde;o <strong>estendidos aos demais documentos</strong>?</td><td>Hoje os dezesseis s&atilde;o s&oacute; da NF-e 55 &mdash; muda o tamanho do m&oacute;dulo</td></tr>
+<tr><td>N-02</td><td>Como o <strong>cr&eacute;dito presumido do produtor rural</strong> chega, se o <code>211110</code> s&oacute; vale para NF-e 55 e o produtor emite NFA-e?</td><td>&Eacute; o <code>cCredPres</code> 1, a hip&oacute;tese mais comum de presumido</td></tr>
+<tr><td>N-03</td><td>H&aacute; <strong>mecanismo declarat&oacute;rio do RAD</strong> em outra norma?</td><td>N&atilde;o h&aacute; evento do adquirente para recolhimento &mdash; muda os cen&aacute;rios C e D</td></tr>
+<tr><td>N-04</td><td>Qual a <strong>tabela <code>cCredPres</code></strong> completa, com os indicadores?</td><td>N&atilde;o est&aacute; na NT; vem &agrave; parte do Portal Nacional</td></tr>
+<tr><td>N-05</td><td>Qual a <strong>tabela de c&oacute;digos do <code>MOV</code></strong> do IBS?</td><td>&Eacute; a &uacute;nica via de atribui&ccedil;&atilde;o evento a evento no IBS</td></tr>
+<tr><td>N-06</td><td>O schema do <code>212110</code> &eacute; mesmo <code>e212110.00.xsd</code>, sem o <code>_v1</code>?</td><td>Parece erro de digita&ccedil;&atilde;o da NT</td></tr>
+</tbody></table></div>
+<p class="src-note">As seis s&atilde;o perguntas para o <strong>projeto piloto</strong>, onde o atendimento t&eacute;cnico dos dois &oacute;rg&atilde;os est&aacute; dispon&iacute;vel. Nenhuma se resolve por leitura.</p>
+</div>
+
+<!-- ══════════════ 10 ══════════════ -->
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Fontes e hist&oacute;rico</span></div>
+<h3 id="f1">Os seis documentos que este resumo organiza</h3>
+<div class="table-wrap"><table><thead><tr><th>Documento</th><th>O que traz que este n&atilde;o traz</th></tr></thead><tbody>
+<tr><td><a class="xref" href="proposta-eventos-fiscais.html">Refer&ecirc;ncia normativa dos eventos</a></td><td>O ciclo em tr&ecirc;s fases, o fato gerador por DF, a janela de corre&ccedil;&atilde;o e o aceite t&aacute;cito, e o levantamento completo dos <strong>eventos cl&aacute;ssicos</strong> dos onze documentos</td></tr>
+<tr><td><a class="xref" href="eventos-fiscais-leiautes.html">Leiautes dos eventos da Reforma</a></td><td>O envelope e o <code>detEvento</code> de cada um dos dezesseis <strong>campo a campo</strong>, com tipo, ocorr&ecirc;ncia, tamanho e schema</td></tr>
+<tr><td><a class="xref" href="proposta-eventos-impacto.html">An&aacute;lise de impacto</a></td><td>A esteira em detalhe, os quatro cen&aacute;rios de RAD, os riscos e as vinte e uma decis&otilde;es originais</td></tr>
+<tr><td><a class="xref" href="proposta-eventos-modulo.html">O m&oacute;dulo</a></td><td>Funcionalidade a funcionalidade, e o que reverbera em cada m&oacute;dulo</td></tr>
+<tr><td><a class="xref" href="eventos-fiscais-telas.html">As telas, em detalhe</a></td><td>Mockup, campos, estados e regra de intera&ccedil;&atilde;o de cada tela</td></tr>
+<tr><td><a class="xref" href="proposta-api-eventos-fiscais.html">API de eventos fiscais</a></td><td>O contrato completo: envelope, oito formatos de <code>detail</code>, valida&ccedil;&otilde;es e erros</td></tr>
+</tbody></table></div>
+<h3 id="f2">Fontes normativas</h3>
+<ul class="plain">
+<li><strong>NT 2025.002-RTC v1.51</strong>, 04/08/2026 &mdash; se&ccedil;&atilde;o 8, p&aacute;ginas 75 a 95, baixada do Portal Nacional da NF-e em 25/09/2026</li>
+<li><strong>LC 214/2025</strong> &middot; <strong>LC 227/2026</strong> &middot; <strong>Decreto 12.955/2026</strong> &middot; <strong>Res. CGIBS 6/2026</strong></li>
+<li><strong>MOC da API da Apura&ccedil;&atilde;o Assistida do IBS v1.10</strong>, CGIBS, 23/09/2026</li>
+<li>Documenta&ccedil;&atilde;o das <strong>APIs de Apura&ccedil;&atilde;o da CBS v2</strong>, Receita Federal</li>
+</ul>
+<h3 id="f3">Hist&oacute;rico de vers&otilde;es</h3>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>25/09/2026</strong> &mdash; Primeira vers&atilde;o. Organiza em nove temas o que estava em seis documentos, e acrescenta duas an&aacute;lises novas: o <strong>modelo de a&ccedil;&atilde;o em quatro fases</strong> &mdash; captura, planeja, aguarda, executa &mdash; com a a&ccedil;&atilde;o detalhada de cada um dos dezesseis eventos; e a constata&ccedil;&atilde;o, conferida evento a evento na NT, de que <strong>os dezesseis se aplicam somente &agrave; NF-e modelo 55</strong>, com o que isso significa para os outros dez documentos.</div></div>
+</div>
+</body>
+</html>
