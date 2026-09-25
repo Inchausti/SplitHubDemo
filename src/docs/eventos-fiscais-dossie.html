@@ -841,6 +841,115 @@ img, svg { max-width: 100%; height: auto; }
 </tbody></table></div>
 <div class="callout red"><div class="ct">O caso que quebra a atribui&ccedil;&atilde;o</div><p>Dois eventos no mesmo documento dentro da mesma janela de coleta. Na CBS o delta mostra a <strong>soma</strong> e n&atilde;o h&aacute; como imputar. A a&ccedil;&atilde;o fecha em montante e fica <span class="st abs">n&atilde;o atribu&iacute;vel</span> &mdash; o produto <strong>registra a ambiguidade em vez de escolher um evento</strong>. Mitiga&ccedil;&atilde;o: coletar de seis em seis horas, dentro do teto de 4 chamadas por dia.</p></div>
 <p class="src-note">Compara&ccedil;&atilde;o completa dos dois modelos em <a class="xref" href="cbs-x-ibs-integracao.html">CBS &times; IBS: duas APIs, dois modelos</a>.</p>
+
+<h3 id="c5">7.5 Uma inconsist&ecirc;ncia por diverg&ecirc;ncia</h3>
+<div class="callout red"><div class="ct">A regra</div><p>Quando a a&ccedil;&atilde;o planejada n&atilde;o se confirma na apura&ccedil;&atilde;o &mdash; da CBS ou do IBS &mdash; <strong>abre-se uma ocorr&ecirc;ncia por diverg&ecirc;ncia</strong>, n&atilde;o uma por evento nem uma por documento. Um evento que diverge no IBS e concilia na CBS gera <strong>uma</strong>. Um evento que diverge nos dois gera <strong>duas</strong>, porque o caminho de resolu&ccedil;&atilde;o &eacute; diferente em cada &oacute;rg&atilde;o.</p></div>
+<div class="table-wrap"><table><thead><tr><th>Situa&ccedil;&atilde;o</th><th>Ocorr&ecirc;ncias abertas</th><th>Por qu&ecirc;</th></tr></thead><tbody>
+<tr><td>Evento diverge s&oacute; na CBS</td><td class="num"><strong>1</strong></td><td>Interlocutor &eacute; a Receita Federal</td></tr>
+<tr><td>Evento diverge s&oacute; no IBS</td><td class="num"><strong>1</strong></td><td>Interlocutor &eacute; o Comit&ecirc; Gestor</td></tr>
+<tr><td>Evento diverge nos dois</td><td class="num"><strong>2</strong></td><td><strong>Dois &oacute;rg&atilde;os, dois prazos, dois caminhos</strong> &mdash; agrupar esconde metade</td></tr>
+<tr><td>Um evento atinge tr&ecirc;s itens e diverge em dois</td><td class="num"><strong>2</strong></td><td>A resolu&ccedil;&atilde;o &eacute; por item &mdash; um pode estar certo e o outro n&atilde;o</td></tr>
+<tr><td>Tr&ecirc;s eventos no mesmo DF, delta amb&iacute;guo</td><td class="num"><strong>1</strong></td><td>&Eacute; <em>uma</em> diverg&ecirc;ncia: a n&atilde;o atribui&ccedil;&atilde;o. Abrir tr&ecirc;s culparia eventos inocentes</td></tr>
+</tbody></table></div>
+
+<h3 id="c6">7.6 Cat&aacute;logo por causa &mdash; 26 tipos</h3>
+<p class="sec-sub">Os tipos derivam dos pontos de falha do modelo de quatro fases. A coluna <strong>onde se resolve</strong> &eacute; a mais importante: <strong>a maioria das a&ccedil;&otilde;es acontece fora do SplitHub</strong>.</p>
+
+<h4>A &middot; Falha na captura e na correla&ccedil;&atilde;o</h4>
+<div class="table-wrap"><table><thead><tr><th>C&oacute;digo</th><th>Quando nasce</th><th>Eventos</th><th>A&ccedil;&atilde;o sugerida</th><th>Onde se resolve</th></tr></thead><tbody>
+<tr><td><code>evt_documento_ausente</code></td><td>Evento na fila de &oacute;rf&atilde;os al&eacute;m do prazo &mdash; o DF nunca chegou</td><td>todos</td><td>Verificar se o documento foi ingerido; reenviar pela ingest&atilde;o. Se n&atilde;o existir, o evento aponta para DF de terceiro</td><td><strong>ERP</strong> &middot; ingest&atilde;o</td></tr>
+<tr><td><code>evt_item_inexistente</code></td><td>O <code>nItem</code> do evento n&atilde;o existe no documento</td><td>os 8 de item</td><td>Conferir a numera&ccedil;&atilde;o dos itens na ingest&atilde;o. Diverg&ecirc;ncia de numera&ccedil;&atilde;o entre ERP e XML autorizado</td><td><strong>ERP</strong></td></tr>
+<tr><td><code>evt_codigo_desconhecido</code></td><td><code>tpEvento</code> fora do cat&aacute;logo vigente &mdash; a NT mudou</td><td>&mdash;</td><td><strong>Nunca descartar.</strong> Atualizar o mapa versionado e reprocessar. Foi o que aconteceu com o <code>211120</code></td><td>SplitHub</td></tr>
+<tr><td><code>evt_autor_incompativel</code></td><td>O <code>tax_id</code> do autor n&atilde;o &eacute; emitente nem destinat&aacute;rio do DF</td><td>todos</td><td>Conferir a chave. Evento de outra opera&ccedil;&atilde;o enviado por engano</td><td><strong>ERP</strong></td></tr>
+<tr><td><code>evt_duplicado_divergente</code></td><td>Mesma chave, c&oacute;digo e sequ&ecirc;ncia, <strong>com conte&uacute;do diferente</strong></td><td>todos</td><td>Comparar os dois payloads; o autorizado na SEFAZ manda. Indica reenvio com dado alterado</td><td><strong>ERP</strong></td></tr>
+<tr><td><code>evt_sem_protocolo</code></td><td>Evento sem <code>nProtEvento</code> &mdash; n&atilde;o h&aacute; prova de autoriza&ccedil;&atilde;o</td><td>todos</td><td>Confirmar o registro no ambiente autorizador. <strong>Sem autoriza&ccedil;&atilde;o o evento n&atilde;o produz efeito</strong></td><td><strong>SEFAZ</strong> &middot; ERP</td></tr>
+<tr><td><code>evt_ambiente_homologacao</code></td><td>Evento com <code>tpAmb</code> = 2 chegou &agrave; base de produ&ccedil;&atilde;o</td><td>todos</td><td>Descartar na normaliza&ccedil;&atilde;o, com contador vis&iacute;vel. Indica conex&atilde;o apontada para o ambiente errado</td><td><strong>ERP</strong> &middot; integra&ccedil;&atilde;o</td></tr>
+</tbody></table></div>
+
+<h4>B &middot; Falha na confirma&ccedil;&atilde;o &mdash; evento &times; apura&ccedil;&atilde;o</h4>
+<p>&Eacute; a fam&iacute;lia central. Todas s&atilde;o <strong>por &oacute;rg&atilde;o</strong>: a ocorr&ecirc;ncia nomeia a Receita Federal ou o Comit&ecirc; Gestor.</p>
+<div class="table-wrap"><table><thead><tr><th>C&oacute;digo</th><th>Quando nasce</th><th>Eventos</th><th>A&ccedil;&atilde;o sugerida</th><th>Onde se resolve</th></tr></thead><tbody>
+<tr><td><code>evt_nao_refletido</code></td><td>A a&ccedil;&atilde;o foi planejada e o &oacute;rg&atilde;o <strong>n&atilde;o moveu nada</strong> at&eacute; o fim da janela</td><td>os 7 que conciliam por saldo</td><td>Conferir se o evento consta no ambiente nacional. Se constar, abrir chamado no &oacute;rg&atilde;o dentro da janela de ajuste</td><td><strong>&Oacute;rg&atilde;o</strong> &middot; SEFAZ</td></tr>
+<tr><td><code>evt_valor_divergente</code></td><td>O &oacute;rg&atilde;o moveu, <strong>em valor diferente</strong> do declarado</td><td>os 7</td><td>Comparar o valor do evento com a base de c&aacute;lculo do &oacute;rg&atilde;o. Costuma ser al&iacute;quota ou quantidade</td><td><strong>Fiscal</strong> &middot; &oacute;rg&atilde;o</td></tr>
+<tr><td><code>evt_ausente</code></td><td>O &oacute;rg&atilde;o moveu o saldo e <strong>nenhum evento explica</strong></td><td>&mdash;</td><td>O evento existe e n&atilde;o chegou ao produto, ou foi emitido pela contraparte. Buscar no ambiente nacional; se n&atilde;o houver, contestar</td><td><strong>ERP</strong> &middot; fornecedor &middot; &oacute;rg&atilde;o</td></tr>
+<tr><td><code>evt_movimento_indevido</code></td><td><code>indAceitacao</code> = 0 ou <code>indDeferimento</code> = 0, e <strong>o saldo mexeu assim mesmo</strong></td><td><code>211128</code> <code>212110</code> <code>212120</code> <code>412120</code> <code>412130</code></td><td><strong>Contestar.</strong> A recusa foi registrada e o &oacute;rg&atilde;o processou como aceite</td><td><strong>&Oacute;rg&atilde;o</strong></td></tr>
+<tr><td><code>evt_nao_atribuivel</code></td><td>Dois ou mais eventos no mesmo DF dentro da janela &mdash; o delta fecha em montante, sem imputa&ccedil;&atilde;o</td><td>todos</td><td><strong>Informativa.</strong> Conferir o total; reduzir o intervalo de coleta. No IBS, usar o extrato</td><td>SplitHub</td></tr>
+<tr><td><code>evt_competencia_nao_migrou</code></td><td><code>112150</code> autorizado e a chave <strong>continua no mesmo <code>pa</code></strong></td><td><code>112150</code></td><td>Conferir se o &oacute;rg&atilde;o processou o deslocamento. Enquanto n&atilde;o migrar, a apura&ccedil;&atilde;o do m&ecirc;s est&aacute; errada nos dois lados</td><td><strong>&Oacute;rg&atilde;o</strong></td></tr>
+<tr><td><code>evt_prazo_ressarcimento</code></td><td><code>211130</code> registrado e o pedido de ressarcimento foi apreciado no <strong>prazo comum</strong>, n&atilde;o no do imobilizado</td><td><code>211130</code></td><td>Apontar o evento no processo de ressarcimento. Art. 40, I</td><td><strong>&Oacute;rg&atilde;o</strong> &middot; fiscal</td></tr>
+<tr><td><code>evt_divergencia_entre_orgaos</code></td><td>A CBS confirmou e o IBS n&atilde;o, ou o contr&aacute;rio</td><td>todos</td><td>Abrir <strong>duas</strong> ocorr&ecirc;ncias. O evento &eacute; um, mas os processamentos s&atilde;o independentes</td><td><strong>&Oacute;rg&atilde;o</strong> &middot; cada um</td></tr>
+</tbody></table></div>
+
+<h4>C &middot; Espec&iacute;ficas de evento</h4>
+<div class="table-wrap"><table><thead><tr><th>C&oacute;digo</th><th>Quando nasce</th><th>Evento</th><th>A&ccedil;&atilde;o sugerida</th><th>Onde se resolve</th></tr></thead><tbody>
+<tr><td><code>evt_estorno_sem_contrapartida</code></td><td>A perna do <strong>cr&eacute;dito de aquisi&ccedil;&atilde;o a estornar</strong> n&atilde;o achou documento candidato, ou achou mais de um</td><td><code>112130</code></td><td>Identificar manualmente o documento de entrada do item perecido. <strong>O evento n&atilde;o nomeia a chave</strong> &mdash; s&oacute; o valor</td><td><strong>Fiscal</strong></td></tr>
+<tr><td><code>evt_nc_sem_documento</code></td><td>Aceite de nota de cr&eacute;dito cuja NC <strong>n&atilde;o est&aacute; na base</strong></td><td><code>211128</code></td><td>Ingerir a nota de cr&eacute;dito. Desde 05/10/2026 a devolu&ccedil;&atilde;o referencia o original por <code>DFeReferenciado</code></td><td><strong>ERP</strong></td></tr>
+<tr><td><code>evt_transferencia_sem_contraparte</code></td><td>Aceite de sucess&atilde;o e o <strong>CNPJ da outra ponta n&atilde;o est&aacute; cadastrado</strong></td><td><code>212110</code> <code>212120</code></td><td>Cadastrar a contraparte, ou registrar que o SplitHub s&oacute; atende um lado &mdash; <strong>a concilia&ccedil;&atilde;o fica pela metade por defini&ccedil;&atilde;o</strong></td><td>SplitHub &middot; <strong>cliente</strong></td></tr>
+<tr><td><code>evt_deferimento_sem_aceite</code></td><td>Chegou a decis&atilde;o do Fisco <strong>sem o aceite correspondente</strong></td><td><code>412120</code> <code>412130</code></td><td>Buscar o <code>212110</code>/<code>212120</code> no ambiente nacional. A sucessora pode n&atilde;o ter registrado</td><td><strong>Sucessora</strong> &middot; SEFAZ</td></tr>
+<tr><td><code>evt_cancelamento_orfao</code></td><td><code>110001</code> cujo <code>nProtEvento</code> <strong>n&atilde;o corresponde a evento na base</strong></td><td><code>110001</code></td><td>O evento cancelado nunca chegou. Reprocessar o per&iacute;odo &mdash; se n&atilde;o vier, a base tem buraco de coleta</td><td>SplitHub &middot; <strong>ERP</strong></td></tr>
+<tr><td><code>evt_presumido_sem_classificacao</code></td><td><code>cCredPres</code> fora da tabela carregada</td><td><code>211110</code></td><td>Atualizar a tabela <code>cCredPres</code> do Portal Nacional &mdash; ela <strong>n&atilde;o vem na NT</strong> e &eacute; versionada &agrave; parte</td><td>SplitHub</td></tr>
+<tr><td><code>evt_presumido_vedado</code></td><td><code>211110</code> sobre <strong>modelo 65</strong> &mdash; rejei&ccedil;&atilde;o 1049</td><td><code>211110</code></td><td>N&atilde;o h&aacute; cr&eacute;dito presumido em NFC-e. O evento foi emitido indevidamente</td><td><strong>ERP</strong></td></tr>
+<tr><td><code>evt_tributo_vedado</code></td><td>Grupo de IBS ou de CBS informado quando o <code>cCredPres</code> o <strong>veda</strong> &mdash; rejei&ccedil;&otilde;es 1053 e 1050</td><td><code>211110</code></td><td>Conferir os indicadores <code>ind_gIBSCredPres</code> e <code>ind_gCBSCredPres</code> da classifica&ccedil;&atilde;o</td><td><strong>ERP</strong></td></tr>
+</tbody></table></div>
+
+<h4>D &middot; Cruzamento com o RAD</h4>
+<div class="table-wrap"><table><thead><tr><th>C&oacute;digo</th><th>Quando nasce</th><th>A&ccedil;&atilde;o sugerida</th><th>Onde se resolve</th></tr></thead><tbody>
+<tr><td><code>rad_guia_suspensa</code></td><td>Cen&aacute;rio <strong>B</strong> &mdash; guia emitida e n&atilde;o paga, chega o <code>112110</code></td><td>Cancelar a guia. <strong>A suspens&atilde;o da cobran&ccedil;a j&aacute; foi autom&aacute;tica na captura</strong></td><td>SplitHub</td></tr>
+<tr><td><code>rad_duplicidade_consumada</code></td><td>Cen&aacute;rio <strong>C</strong> &mdash; guia <strong>j&aacute; paga</strong>, chega o <code>112110</code></td><td><strong>Restitui&ccedil;&atilde;o ou compensa&ccedil;&atilde;o</strong> junto ao &oacute;rg&atilde;o. N&atilde;o &eacute; ajuste de tela &mdash; &eacute; processo administrativo com dinheiro parado</td><td><strong>&Oacute;rg&atilde;o</strong> &middot; financeiro</td></tr>
+<tr><td><code>rad_recolhimento_sem_evento</code></td><td>A apura&ccedil;&atilde;o mostra d&eacute;bito extinto e <strong>n&atilde;o houve RAD nem <code>112110</code></strong></td><td>Identificar a modalidade &mdash; split payment ou PCONT do fornecedor. O <code>extinto</code> da CBS <strong>n&atilde;o diz qual</strong></td><td><strong>Fiscal</strong></td></tr>
+</tbody></table></div>
+
+<h3 id="c7">7.7 Segregado por tipo de documento &mdash; 14 tipos</h3>
+<p class="sec-sub">Al&eacute;m das acima, cada documento tem diverg&ecirc;ncias que s&oacute; nele existem &mdash; quase todas ligadas ao <strong>fato gerador que n&atilde;o coincide com a emiss&atilde;o</strong>.</p>
+<div class="table-wrap"><table><thead><tr><th>Documento</th><th>C&oacute;digo</th><th>Quando nasce</th><th>A&ccedil;&atilde;o sugerida</th><th>Onde</th></tr></thead><tbody>
+
+<tr><td><strong>NF-e</strong> 55</td><td><code>df_evento_rtc_incompativel</code></td><td>Um dos dezesseis chegou <strong>para documento que n&atilde;o &eacute; NF-e 55</strong></td><td>Recusar. A NT declara <code>Modelo: NF-e modelo 55</code> nos dezesseis &mdash; o ERP emitiu para o documento errado</td><td><strong>ERP</strong></td></tr>
+
+<tr><td><strong>NF-e</strong> 55</td><td><code>df_manifestacao_ausente</code></td><td>Documento autorizado h&aacute; mais de 30 dias <strong>sem ci&ecirc;ncia nem confirma&ccedil;&atilde;o</strong> &mdash; <code>210200</code>/<code>210210</code></td><td>Manifestar. Sem confirma&ccedil;&atilde;o o fato gerador n&atilde;o se constitui e o cr&eacute;dito n&atilde;o fica apropri&aacute;vel</td><td><strong>ERP</strong> &middot; fiscal</td></tr>
+
+<tr><td><strong>NFS-e</strong></td><td><code>df_rps_nao_convertido</code></td><td>RPS emitido e <strong>n&atilde;o convertido no prazo</strong></td><td>Converter. Vencido, o cr&eacute;dito n&atilde;o se origina e h&aacute; multa ao prestador</td><td><strong>Prestador</strong> &middot; munic&iacute;pio</td></tr>
+<tr><td><strong>NFS-e</strong></td><td><code>df_nfse_substituida_sem_origem</code></td><td>Chegou NFS-e substituta e a <strong>original n&atilde;o est&aacute; na base</strong></td><td>Ingerir a original. Sem ela, o cancelamento do cr&eacute;dito anterior n&atilde;o tem alvo</td><td><strong>ERP</strong></td></tr>
+
+<tr><td><strong>CT-e</strong> 57</td><td><code>df_mdfe_nao_encerrado</code></td><td>CT-e autorizado e o <strong>MDF-e correspondente n&atilde;o foi encerrado</strong></td><td>Encerrar o MDF-e. <strong>Sem ele o fato gerador fica pendente</strong> e o cr&eacute;dito n&atilde;o se torna apropri&aacute;vel</td><td><strong>Transportador</strong></td></tr>
+<tr><td><strong>CT-e</strong> 57</td><td><code>df_prestacao_em_desacordo</code></td><td>Registrado o <code>110160</code> e o valor do frete permanece</td><td>Acompanhar a resolu&ccedil;&atilde;o com o transportador; pode gerar CT-e substituto</td><td><strong>Transportador</strong></td></tr>
+
+<tr><td><strong>NF3-e</strong> 66</td><td><code>df_estimada_sem_retificacao</code></td><td>Leitura estimada h&aacute; mais de um ciclo <strong>sem retificadora</strong></td><td>Cobrar a retificadora da distribuidora. O cr&eacute;dito provis&oacute;rio <strong>n&atilde;o deveria permanecer</strong></td><td><strong>Distribuidora</strong></td></tr>
+
+<tr><td><strong>NFCom</strong></td><td><code>df_ciclo_sem_fechamento</code></td><td>Per&iacute;odo de faturamento sem fechamento no prazo</td><td>Cobrar da operadora. O fato gerador <strong>retroage ao in&iacute;cio do per&iacute;odo</strong> e sem fechamento n&atilde;o h&aacute; compet&ecirc;ncia</td><td><strong>Operadora</strong></td></tr>
+
+<tr><td><strong>BP-e</strong> 63</td><td><code>df_embarque_indefinido</code></td><td>Bilhete emitido, data passou, <strong>sem <code>embarqueConfirmado</code> nem <code>noShow</code></strong></td><td>Cobrar a confirma&ccedil;&atilde;o. Em aberto, o cr&eacute;dito fica originado e nunca apropri&aacute;vel</td><td><strong>Transportadora</strong></td></tr>
+
+<tr><td><strong>NFC-e</strong> 65</td><td><code>df_credito_indevido</code></td><td>Cr&eacute;dito lan&ccedil;ado sobre documento que <strong>n&atilde;o gera cr&eacute;dito</strong></td><td>Estornar. &Eacute; o gap <strong>G-07</strong>: falta o indicador de opera&ccedil;&atilde;o sem direito</td><td>SplitHub</td></tr>
+
+<tr><td><strong>NFA-e</strong></td><td><code>df_presumido_sem_evento</code></td><td>Aquisi&ccedil;&atilde;o de produtor rural com presumido devido, e <strong>o <code>211110</code> n&atilde;o cabe</strong> porque s&oacute; vale para NF-e 55</td><td><strong>Pergunta N-02, em aberto.</strong> Conferir se o presumido vem destacado na pr&oacute;pria NFA-e. At&eacute; l&aacute;, tratamento manual</td><td><strong>&Oacute;rg&atilde;o</strong> &middot; piloto</td></tr>
+
+<tr><td><strong>DC-e</strong></td><td><code>df_entrega_nao_confirmada</code></td><td>Objeto postado e <strong>n&atilde;o entregue</strong> al&eacute;m do prazo de rastreamento</td><td>Cobrar do marketplace. O cr&eacute;dito fica em tr&acirc;nsito e o fato gerador n&atilde;o se constitui</td><td><strong>Marketplace</strong></td></tr>
+
+<tr><td><strong>CT-e OS</strong> 67</td><td><code>df_desembaraco_pendente</code></td><td>Servi&ccedil;o log&iacute;stico conclu&iacute;do sem DI ou DUE registrada no Siscomex</td><td>Acompanhar o despacho aduaneiro &mdash; &eacute; fato gerador complementar</td><td><strong>Despachante</strong></td></tr>
+
+<tr><td><strong>todos</strong></td><td><code>df_fato_gerador_indefinido</code></td><td>Documento de tipo com fato gerador diferido, <strong>sem o evento que o constitui</strong>, al&eacute;m do prazo</td><td>Identificar o evento que falta pelo tipo do documento. <strong>Sete dos onze t&ecirc;m fato gerador que n&atilde;o coincide com a emiss&atilde;o</strong></td><td><strong>Emissor</strong></td></tr>
+</tbody></table></div>
+
+<h3 id="c8">7.8 Onde as a&ccedil;&otilde;es acontecem</h3>
+<p>S&atilde;o <strong>quarenta</strong> tipos no cat&aacute;logo acima. A maioria <strong>n&atilde;o se resolve dentro do SplitHub</strong>. Isso muda o que a tela precisa oferecer: n&atilde;o um bot&atilde;o de corrigir, mas <strong>a instru&ccedil;&atilde;o de para onde ir e o que levar</strong>.</p>
+<div class="table-wrap"><table><thead><tr><th>Onde</th><th>Quantas</th><th>O que a tela deve dar</th></tr></thead><tbody>
+<tr><td><strong>ERP do cliente</strong></td><td class="num">11</td><td>A chave, o item e o campo divergente, prontos para copiar. Quando couber, o <strong>evento a emitir</strong></td></tr>
+<tr><td><strong>Terceiro</strong> &mdash; fornecedor, transportador, operadora, marketplace, prestador, sucessora</td><td class="num">10</td><td>Contato, hist&oacute;rico e <strong>r&eacute;gua de cobran&ccedil;a</strong> &mdash; o portal do fornecedor j&aacute; faz isso</td></tr>
+<tr><td><strong>&Oacute;rg&atilde;o</strong> &mdash; RFB ou CGIBS</td><td class="num">8</td><td>O valor esperado, o observado, a data da coleta e o <strong>prazo da janela de ajuste</strong> correndo</td></tr>
+<tr><td><strong>SplitHub</strong></td><td class="num">7</td><td>A&ccedil;&atilde;o direta: atualizar tabela, reprocessar per&iacute;odo, cadastrar contraparte, cancelar guia</td></tr>
+<tr><td><strong>Fiscal</strong> &mdash; an&aacute;lise interna, sem sistema externo</td><td class="num">3</td><td>Os dados dos dois lados e a mem&oacute;ria de c&aacute;lculo</td></tr>
+<tr><td><strong>SEFAZ</strong></td><td class="num">1</td><td>Consulta do evento no ambiente autorizador pelo protocolo</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">O que isso exige do m&oacute;dulo de Inconsist&ecirc;ncias</div><p>O cat&aacute;logo de hoje tem <strong>seis fam&iacute;lias</strong> e resolve tudo dentro do produto. Estas quarenta precisam de um campo novo &mdash; <strong>onde se resolve</strong> &mdash; e de um <strong>texto de instru&ccedil;&atilde;o por tipo</strong>, porque o operador vai agir em outro sistema. O <code>inc-catalogo.js</code> suporta: fam&iacute;lia, respons&aacute;vel e prazo j&aacute; existem; falta o destino.</p></div>
+
+<h3 id="c9">7.9 Prioridade sugerida</h3>
+<div class="table-wrap"><table><thead><tr><th>Prioridade</th><th>Crit&eacute;rio</th><th>Exemplos</th></tr></thead><tbody>
+<tr><td><strong>Cr&iacute;tica</strong></td><td>Dinheiro parado ou pago em dobro</td><td><code>rad_duplicidade_consumada</code> &middot; <code>evt_movimento_indevido</code></td></tr>
+<tr><td><strong>Alta</strong></td><td>Cr&eacute;dito que n&atilde;o se apropria, ou d&eacute;bito n&atilde;o reconhecido, <strong>com prazo correndo</strong></td><td><code>evt_nao_refletido</code> &middot; <code>evt_competencia_nao_migrou</code> &middot; <code>df_mdfe_nao_encerrado</code></td></tr>
+<tr><td><strong>M&eacute;dia</strong></td><td>Diverg&ecirc;ncia de valor sem risco de prazo imediato</td><td><code>evt_valor_divergente</code> &middot; <code>evt_estorno_sem_contrapartida</code></td></tr>
+<tr><td><strong>Baixa</strong></td><td>Higiene de dado e integra&ccedil;&atilde;o</td><td><code>evt_ambiente_homologacao</code> &middot; <code>evt_codigo_desconhecido</code></td></tr>
+<tr><td><strong>Informativa</strong></td><td>Registra sem exigir a&ccedil;&atilde;o</td><td><code>evt_nao_atribuivel</code></td></tr>
+</tbody></table></div>
+<p class="src-note">A prioridade final continua sendo <strong>calculada</strong> pelo m&oacute;dulo de Inconsist&ecirc;ncias, combinando valor em risco e proximidade do prazo &mdash; a tabela acima &eacute; o piso por tipo, n&atilde;o o valor final.</p>
 </div>
 
 <!-- ══════════════ 08 ══════════════ -->
