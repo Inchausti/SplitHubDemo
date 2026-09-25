@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API de eventos fiscais</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 1080px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--teal); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 800px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--teal); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 26px 0 8px; scroll-margin-top: 20px; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--teal); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.mono { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+pre { margin: 12px 0; padding: 14px 16px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.62; color: var(--txt2); background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; }
+pre b { color: var(--txt1); font-weight: 600; }
+pre .cm { color: var(--txt3); }
+pre .k { color: var(--teal); }
+
+.verb { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; letter-spacing: .03em; }
+.verb.post { background: var(--green-d); color: var(--green); border: 1px solid var(--green); }
+.verb.get { background: var(--blue-d); color: var(--blue); border: 1px solid var(--blue); }
+.verb.del { background: var(--red-d); color: var(--red); border: 1px solid var(--red); }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--teal); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+.src-note { font-size: 11.5px; color: var(--txt3); margin: 6px 0 0; }
+
+code, kbd, samp { overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">Proposta &middot; Integra&ccedil;&atilde;o</div>
+<h1>API de eventos fiscais</h1>
+<p class="subtitle">A API p&uacute;blica do SplitHub recebe documentos fiscais e n&atilde;o recebe eventos. Sem eles o produto n&atilde;o sabe que um cr&eacute;dito foi estornado, que um presumido foi pedido ou que um d&eacute;bito mudou de compet&ecirc;ncia. Esta proposta desenha o contrato que falta: seis rotas e um envelope que absorve os dezesseis tipos.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta &middot; Integra&ccedil;&atilde;o</span></div>
+<div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">NT 2025.002-RTC v1.51</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">25/09/2026</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprova&ccedil;&atilde;o</span>&nbsp;<span class="chip info">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">&Iacute;ndice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> O buraco no contrato</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> O princ&iacute;pio do desenho</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> As rotas</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> O envelope</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Os oito formatos de <code>detail</code></a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Os dezesseis tipos</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Valida&ccedil;&otilde;es</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Ciclo de vida e webhooks</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Erros</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Decis&otilde;es em aberto</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Hist&oacute;rico</a></li>
+</ul></div>
+
+<!-- 01 -->
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O buraco no contrato</span></div>
+<p>A API p&uacute;blica tem <strong>25 endpoints em sete p&aacute;ginas</strong> &mdash; autentica&ccedil;&atilde;o, fornecedores, contratos, ingest&atilde;o de DFs com lote de at&eacute; 500, RAD, automa&ccedil;&otilde;es e garantia de cr&eacute;dito. <strong>Nenhum recebe evento fiscal.</strong></p>
+<p>O documento entra por <code>POST /v1/documentos-fiscais</code> e a partir da&iacute; o produto o trata como algo est&aacute;vel. N&atilde;o &eacute;: entre a emiss&atilde;o e o recolhimento, os eventos <strong>mudam valor, compet&ecirc;ncia e estado do cr&eacute;dito</strong>. Sem receb&ecirc;-los, o SplitHub concilia contra uma foto desatualizada e produz diverg&ecirc;ncia onde n&atilde;o h&aacute;.</p>
+<div class="table-wrap"><table><thead><tr><th>Sem o endpoint</th><th>Consequ&ecirc;ncia</th></tr></thead><tbody>
+<tr><td>Perecimento em tr&acirc;nsito n&atilde;o chega</td><td>O produto mant&eacute;m cr&eacute;dito sobre mercadoria que n&atilde;o existe</td></tr>
+<tr><td>Cr&eacute;dito presumido pedido por evento n&atilde;o chega</td><td>O valor conciliado &eacute; o destacado, e o Fisco vai apurar o presumido</td></tr>
+<tr><td>Previs&atilde;o de entrega atualizada n&atilde;o chega</td><td>D&eacute;bito cobrado na compet&ecirc;ncia errada</td></tr>
+<tr><td>Aceite de nota de cr&eacute;dito n&atilde;o chega</td><td>Ajuste de valor sem rastro de quem consentiu</td></tr>
+<tr><td>Transfer&ecirc;ncia por sucess&atilde;o n&atilde;o chega</td><td>Cr&eacute;dito sai da apura&ccedil;&atilde;o sem explica&ccedil;&atilde;o</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">O caminho do evento n&atilde;o passa pelo SplitHub</div><p>O ERP registra o evento no <strong>ambiente autorizador</strong> &mdash; SVRS, pelo Web Service <code>NFeRecepcaoEvento</code>. De l&aacute; a apura&ccedil;&atilde;o assistida o consome. <strong>O SplitHub n&atilde;o emite evento e n&atilde;o quer emitir</strong>: ele precisa <em>saber</em> que o evento existiu, para conciliar o efeito com o saldo que o Fisco devolver. Por isso o endpoint &eacute; de <strong>importa&ccedil;&atilde;o</strong>, e recebe o evento <strong>j&aacute; autorizado</strong>.</p></div>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O princ&iacute;pio do desenho</span></div>
+<p class="sec-sub">S&atilde;o dezesseis tipos com estruturas diferentes. H&aacute; tr&ecirc;s formas de absorver isso, e duas d&atilde;o errado.</p>
+<div class="table-wrap"><table><thead><tr><th>Op&ccedil;&atilde;o</th><th>Como seria</th><th>Por que n&atilde;o</th></tr></thead><tbody>
+<tr><td>Um endpoint por evento</td><td><code>POST /v1/eventos/perecimento-fob</code>, e mais quinze</td><td><strong>Dezesseis rotas para manter.</strong> A NT muda &mdash; o <code>211120</code> foi eliminado na v1.50 &mdash; e cada mudan&ccedil;a vira mudan&ccedil;a de contrato p&uacute;blico</td></tr>
+<tr><td>Um envelope plano com todos os campos</td><td>Um objeto com <code>indQuitacao</code>, <code>dPrevEntrega</code>, <code>gPerecimento</code>&hellip; todos opcionais</td><td><strong>Nada &eacute; obrigat&oacute;rio e tudo &eacute; poss&iacute;vel.</strong> A valida&ccedil;&atilde;o migra para o servidor e o ERP descobre o erro tarde</td></tr>
+<tr><td><strong>Um envelope com discriminador</strong></td><td><code>type</code> decide o formato de <code>detail</code></td><td><strong>&Eacute; a proposta.</strong> Espelha a pr&oacute;pria norma &mdash; <code>tpEvento</code> mais <code>detEvento</code> &mdash; e o padr&atilde;o que a API j&aacute; usa em <code>documentos-fiscais</code>, onde <code>type</code> decide o resto</td></tr>
+</tbody></table></div>
+<div class="callout ok"><div class="ct">Espelhar a norma n&atilde;o &eacute; pregui&ccedil;a de desenho</div><p>O ERP j&aacute; tem o dado <strong>nessa forma</strong>: ele montou o XML para enviar &agrave; SEFAZ. Pedir outra estrutura obriga o cliente a traduzir duas vezes e cria uma superf&iacute;cie de erro que n&atilde;o precisa existir. O que a API acrescenta &eacute; <strong>nome leg&iacute;vel, tipagem por discriminador e valida&ccedil;&atilde;o na entrada</strong> &mdash; n&atilde;o uma ontologia nova.</p></div>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">As rotas</span></div>
+<div class="table-wrap"><table><thead><tr><th>M&eacute;todo</th><th>Rota</th><th>Para qu&ecirc;</th><th>Resposta</th></tr></thead><tbody>
+<tr><td><span class="verb post">POST</span></td><td class="mono"><code>/v1/eventos-fiscais</code></td><td>Importa&ccedil;&atilde;o individual</td><td><code>202</code></td></tr>
+<tr><td><span class="verb post">POST</span></td><td class="mono"><code>/v1/eventos-fiscais/batch</code></td><td>Lote de at&eacute; <strong>500</strong>, como em documentos</td><td><code>202</code></td></tr>
+<tr><td><span class="verb get">GET</span></td><td class="mono"><code>/v1/eventos-fiscais/{id}</code></td><td>Situa&ccedil;&atilde;o de um evento e o resultado da concilia&ccedil;&atilde;o</td><td><code>200</code></td></tr>
+<tr><td><span class="verb get">GET</span></td><td class="mono"><code>/v1/eventos-fiscais</code></td><td>Listagem com filtros: <code>type</code>, <code>event_code</code>, <code>status</code>, <code>access_key</code>, <code>from</code>, <code>to</code></td><td><code>200</code></td></tr>
+<tr><td><span class="verb get">GET</span></td><td class="mono"><code>/v1/documentos-fiscais/{id}/eventos</code></td><td><strong>A hist&oacute;ria do documento</strong> &mdash; todos os eventos daquele DF, em ordem</td><td><code>200</code></td></tr>
+<tr><td><span class="verb del">DELETE</span></td><td class="mono"><code>/v1/eventos-fiscais/{id}</code></td><td>Remove o <strong>registro de importa&ccedil;&atilde;o</strong> enviado por engano</td><td><code>204</code></td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">N&atilde;o h&aacute; <code>PATCH</code>, e o <code>DELETE</code> n&atilde;o cancela nada no Fisco</div><p>Evento autorizado &eacute; <strong>imut&aacute;vel</strong>. A norma n&atilde;o corrige evento: ela <strong>cancela</strong> pelo <code>110001</code>, que &eacute; ele pr&oacute;prio um evento. Portanto cancelar, na nossa API, &eacute; <strong>um <code>POST</code> de um evento do tipo <code>cancelamento</code></strong> &mdash; nunca um <code>PATCH</code> nem um <code>DELETE</code>.</p><p style="margin-top:8px">O <code>DELETE</code> existe s&oacute; para desfazer uma <strong>importa&ccedil;&atilde;o indevida</strong> &mdash; o ERP mandou o evento errado para o SplitHub. N&atilde;o toca no ambiente autorizador, e deve recusar evento que j&aacute; foi conciliado.</p></div>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O envelope</span></div>
+<p>Comum a todos os dezesseis. O que muda &eacute; s&oacute; o <code>detail</code>.</p>
+<pre>{
+  <b>"type"</b>:           "apropriacao_credito_presumido",   <span class="cm">// nome legível</span>
+  <b>"event_code"</b>:     "211110",                          <span class="cm">// tpEvento da norma</span>
+  <b>"access_key"</b>:     "41260912345678000190550010000012341123456789",
+  <b>"protocol"</b>:       "141260000123456",                 <span class="cm">// nProtEvento — a prova</span>
+  <b>"event_datetime"</b>: "2026-09-25T10:15:00-03:00",       <span class="cm">// dhEvento</span>
+  <b>"sequence"</b>:       1,                                 <span class="cm">// nSeqEvento</span>
+  <b>"author"</b>: {
+    "tax_id": "12345678000190",                         <span class="cm">// CNPJ ou CPF do autor</span>
+    "role":   "acquirer"                                <span class="cm">// issuer | acquirer | successor | tax_authority</span>
+  },
+  "authorizer_state": "41",                             <span class="cm">// cOrgaoAutor</span>
+  "environment":      "production",                     <span class="cm">// production | staging — tpAmb</span>
+  <b>"detail"</b>: { <span class="cm">/* formato decidido por type — seção 05 */</span> }
+}</pre>
+<div class="table-wrap"><table><thead><tr><th>Campo</th><th>Origem na norma</th><th>Obrig.</th><th>Por que est&aacute; aqui</th></tr></thead><tbody>
+<tr><td><code>type</code></td><td>&mdash;</td><td>sim</td><td>Nome leg&iacute;vel, est&aacute;vel entre vers&otilde;es da NT. &Eacute; o discriminador de <code>detail</code></td></tr>
+<tr><td><code>event_code</code></td><td><code>tpEvento</code></td><td>sim</td><td>O c&oacute;digo oficial. <strong>Os dois v&ecirc;m juntos e o servidor valida a coer&ecirc;ncia</strong> &mdash; o ERP fala o c&oacute;digo, o produto fala o nome</td></tr>
+<tr><td><code>access_key</code></td><td><code>chNFe</code></td><td>sim</td><td>44 posi&ccedil;&otilde;es. Liga o evento ao documento e &agrave; apura&ccedil;&atilde;o dos dois &oacute;rg&atilde;os</td></tr>
+<tr><td><code>protocol</code></td><td><code>nProtEvento</code></td><td>sim</td><td><strong>A prova de que a SEFAZ autorizou.</strong> Evento sem protocolo n&atilde;o produziu efeito e n&atilde;o deve conciliar</td></tr>
+<tr><td><code>event_datetime</code></td><td><code>dhEvento</code></td><td>sim</td><td>Define a janela onde procurar o efeito no saldo</td></tr>
+<tr><td><code>sequence</code></td><td><code>nSeqEvento</code></td><td>sim</td><td>Com <code>access_key</code> e <code>event_code</code>, forma a <strong>chave natural de idempot&ecirc;ncia</strong></td></tr>
+<tr><td><code>author.tax_id</code></td><td><code>CNPJ</code> / <code>CPF</code></td><td>sim</td><td>Quem registrou</td></tr>
+<tr><td><code>author.role</code></td><td><code>tpAutor</code></td><td>sim</td><td>Mapeia 1, 2, 8 e 5 para nome. Validado contra o papel daquele CNPJ no documento</td></tr>
+<tr><td><code>authorizer_state</code></td><td><code>cOrgaoAutor</code></td><td>n&atilde;o</td><td>UF do autor. &Uacute;til na trilha, dispens&aacute;vel na concilia&ccedil;&atilde;o</td></tr>
+<tr><td><code>environment</code></td><td><code>tpAmb</code></td><td>n&atilde;o</td><td>Evento de homologa&ccedil;&atilde;o nunca concilia contra apura&ccedil;&atilde;o de produ&ccedil;&atilde;o</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Idempot&ecirc;ncia sem cabe&ccedil;alho extra</div><p>A tripla <code>access_key</code> + <code>event_code</code> + <code>sequence</code> &eacute; &uacute;nica por defini&ccedil;&atilde;o da norma. Reenvio do mesmo evento devolve <strong><code>200</code> com o registro existente</strong>, n&atilde;o <code>202</code> nem duplicata. N&atilde;o &eacute; preciso <code>Idempotency-Key</code>: o dom&iacute;nio j&aacute; tem chave.</p></div>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Os oito formatos de <code>detail</code></span></div>
+<p class="sec-sub">Os dezesseis tipos usam oito estruturas. Quem implementa escreve oito validadores, n&atilde;o dezesseis.</p>
+<div class="callout info"><div class="ct">Oito aqui, seis na norma</div><p>Os <a class="xref" href="eventos-fiscais-leiautes.html#s04">Leiautes</a> agrupam o <code>detEvento</code> em <strong>seis formas</strong>. A API usa <strong>oito</strong> porque separa o que a norma junta: a forma escalar vira <code>indicator</code> e <code>date</code>, que t&ecirc;m tipos diferentes; e o <code>112130</code> ganha forma pr&oacute;pria, porque carrega a perna de estorno que os outros eventos de item n&atilde;o t&ecirc;m. <strong>Tipagem mais fina na entrada rejeita mais cedo.</strong></p></div>
+
+<h3 id="f1">1 &middot; <code>indicator</code> &mdash; confirma&ccedil;&atilde;o bin&aacute;ria</h3>
+<p>Tipos: <code>112110</code>, <code>211128</code>, <code>212110</code>, <code>212120</code>.</p>
+<pre>"detail": { <b>"accepted"</b>: true }        <span class="cm">// indQuitacao / indAceitacao</span></pre>
+<p class="src-note">No <code>112110</code> a norma s&oacute; admite &ldquo;1&rdquo;: <code>accepted</code> falso deve ser recusado na entrada.</p>
+
+<h3 id="f2">2 &middot; <code>date</code> &mdash; nova compet&ecirc;ncia</h3>
+<p>Tipo: <code>112150</code>.</p>
+<pre>"detail": { <b>"expected_delivery_date"</b>: "2026-11-30" }   <span class="cm">// dPrevEntrega</span></pre>
+
+<h3 id="f3">3 &middot; <code>items</code> &mdash; valor e quantidade por item</h3>
+<p>Tipos: <code>112120</code>, <code>112130</code>, <code>112140</code>, <code>211124</code>, <code>211130</code>, <code>211140</code>. At&eacute; <strong>990</strong> itens.</p>
+<pre>"detail": {
+  <b>"items"</b>: [
+    {
+      "item_number": 1,                    <span class="cm">// nItem</span>
+      "ibs_amount": 120.00,                <span class="cm">// vIBS</span>
+      "cbs_amount": 108.00,                <span class="cm">// vCBS</span>
+      <b>"quantity"</b>: 3.0000,                 <span class="cm">// gControleEstoque</span>
+      <b>"unit"</b>: "UN"
+    }
+  ]
+}</pre>
+<p class="src-note">Um &uacute;nico formato para os seis: a norma d&aacute; nome diferente ao par quantidade/unidade em cada evento &mdash; <code>qPerecimento</code>, <code>qImobilizado</code>, <code>qComb</code>, <code>qNaoFornecida</code>, <code>qtde</code> &mdash; mas a sem&acirc;ntica &eacute; a mesma. O <code>type</code> j&aacute; diz do que se trata.</p>
+
+<h3 id="f4">4 &middot; <code>items_with_reversal</code> &mdash; o caso do <code>112130</code></h3>
+<p>S&oacute; o perecimento em frete CIF. Acrescenta a segunda perna.</p>
+<pre>"detail": {
+  "items": [
+    {
+      "item_number": 1,
+      "ibs_amount": 120.00, "cbs_amount": 108.00,
+      "quantity": 3.0000, "unit": "UN",
+      <b>"acquisition_credit_reversal"</b>: {    <span class="cm">// P30–P32 — só neste evento</span>
+        "ibs_amount": 90.00,
+        "cbs_amount": 81.00
+      }
+    }
+  ]
+}</pre>
+
+<h3 id="f5">5 &middot; <code>credit_items</code> &mdash; cr&eacute;dito sem quantidade</h3>
+<p>Tipo: <code>211150</code>. Afirma destina&ccedil;&atilde;o, n&atilde;o consumo f&iacute;sico.</p>
+<pre>"detail": {
+  "items": [
+    { "item_number": 1, <b>"ibs_credit_amount"</b>: 120.00, <b>"cbs_credit_amount"</b>: 108.00 }
+  ]
+}</pre>
+
+<h3 id="f6">6 &middot; <code>presumed_credit</code> &mdash; o <code>211110</code></h3>
+<p>&Uacute;nico com base, classifica&ccedil;&atilde;o e subgrupos por tributo.</p>
+<pre>"detail": {
+  "items": [
+    {
+      "item_number": 1,
+      <b>"calculation_base"</b>: 10000.00,        <span class="cm">// vBCCredPres</span>
+      <b>"classification_code"</b>: "01",         <span class="cm">// cCredPres — tabela do Portal</span>
+      <b>"ibs"</b>: { "rate": 1.00, "amount": 100.00, "suspensive_amount": null },
+      <b>"cbs"</b>: { "rate": 0.90, "amount":  90.00, "suspensive_amount": null }
+    }
+  ]
+}</pre>
+<p class="src-note"><code>ibs</code> e <code>cbs</code> s&atilde;o opcionais e <strong>excludentes conforme o c&oacute;digo</strong>: a tabela <code>cCredPres</code> traz indicadores que vedam ou exigem cada um. O <code>suspensive_amount</code> corresponde a <code>vCredPresCondSus</code> e s&oacute; vale para a classifica&ccedil;&atilde;o 4, a partir de 2027 na CBS e 2033 no IBS &mdash; ver <a class="xref" href="creditos-sem-df.html#s04">o cr&eacute;dito presumido em detalhe</a>.</p>
+
+<h3 id="f7">7 e 8 &middot; <code>decision</code> e <code>cancellation</code></h3>
+<pre><span class="cm">// 412120 e 412130 — manifestação do Fisco</span>
+"detail": { <b>"granted"</b>: false, <b>"reason_code"</b>: "1", <b>"reason"</b>: "Falta de manifestação de todas as sucessoras" }
+
+<span class="cm">// 110001 — cancelamento</span>
+"detail": { <b>"cancelled_event_code"</b>: "211110", <b>"cancelled_protocol"</b>: "141260000123456" }</pre>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Os dezesseis tipos</span></div>
+<p class="sec-sub">O cat&aacute;logo completo, com o <code>type</code> proposto, o autor esperado, o formato de <code>detail</code> e o efeito. O leiaute campo a campo est&aacute; em <a class="xref" href="eventos-fiscais-leiautes.html">Leiautes dos eventos da Reforma</a>.</p>
+<div class="table-wrap"><table><thead><tr><th><code>event_code</code></th><th><code>type</code> proposto</th><th><code>author.role</code></th><th><code>detail</code></th><th>O que faz, e o efeito</th></tr></thead><tbody>
+
+<tr><td class="mono"><strong>112110</strong></td><td class="mono">pagamento_integral</td><td>issuer</td><td>indicator</td><td>O fornecedor declara a quita&ccedil;&atilde;o integral da opera&ccedil;&atilde;o, <strong>para liberar o cr&eacute;dito presumido do adquirente</strong>. Onde n&atilde;o h&aacute; contribuinte, n&atilde;o h&aacute; d&eacute;bito a comprovar &mdash; este evento faz as vezes. <em>D&eacute;bito extinto &uarr; &middot; cr&eacute;dito apropriado &uarr;</em></td></tr>
+
+<tr><td class="mono"><strong>112120</strong></td><td class="mono">importacao_sem_isencao</td><td>issuer</td><td>items</td><td>Na importa&ccedil;&atilde;o para ALC/ZFM o tributo fica suspenso esperando a condi&ccedil;&atilde;o. Quando ela n&atilde;o se cumpre, o evento <strong>traz o tributo de volta</strong>, pela quantidade que falhou. <em>D&eacute;bito apurado &uarr;</em></td></tr>
+
+<tr><td class="mono"><strong>112130</strong></td><td class="mono">perecimento_transporte_fornecedor</td><td>issuer</td><td>items_with_reversal</td><td>Frete <strong>CIF</strong>: o risco &eacute; do fornecedor. Estorna o d&eacute;bito da nota <em>e</em> o cr&eacute;dito que ele tomou nas aquisi&ccedil;&otilde;es daquele item. <em>D&eacute;bito &darr; e cr&eacute;dito de entrada &darr;</em></td></tr>
+
+<tr><td class="mono"><strong>112140</strong></td><td class="mono">fornecimento_nao_realizado</td><td>issuer</td><td>items</td><td>Pagamento antecipado j&aacute; gerou d&eacute;bito e cr&eacute;dito; o fornecimento n&atilde;o veio. Desfaz os dois. Autor: emitente da nota de d&eacute;bito <strong>tipo 06</strong>. <em>D&eacute;bito &darr; &middot; cr&eacute;dito desfeito</em></td></tr>
+
+<tr><td class="mono"><strong>112150</strong></td><td class="mono">previsao_entrega</td><td>issuer</td><td>date</td><td>Atualiza a previs&atilde;o de entrega <strong>para remover o d&eacute;bito do m&ecirc;s em que foi previsto</strong>. &Uacute;nico que n&atilde;o move valor: move <strong>compet&ecirc;ncia</strong></td></tr>
+
+<tr><td class="mono"><strong>211110</strong></td><td class="mono">apropriacao_credito_presumido</td><td>acquirer <em>ou</em> issuer</td><td>presumed_credit</td><td>Pede a apropria&ccedil;&atilde;o do presumido, ou o emitente corrige o que n&atilde;o entrou na nota. <strong>O cr&eacute;dito passa a ser o presumido, n&atilde;o o destacado.</strong> <em>Cr&eacute;dito apurado substitu&iacute;do</em></td></tr>
+
+<tr><td class="mono"><strong>211124</strong></td><td class="mono">perecimento_transporte_adquirente</td><td>acquirer</td><td>items</td><td>Frete <strong>FOB</strong>: o risco &eacute; do adquirente. <strong>S&oacute; estorna o cr&eacute;dito</strong> &mdash; n&atilde;o tem a segunda perna do <code>112130</code>. <em>Cr&eacute;dito &darr;</em></td></tr>
+
+<tr><td class="mono"><strong>211128</strong></td><td class="mono">aceite_nota_credito</td><td>acquirer</td><td>indicator</td><td>Concord&acirc;ncia com os valores de nota de cr&eacute;dito &mdash; emitida <strong>pelo fornecedor ou pelo adquirente</strong> &mdash; que ser&atilde;o lan&ccedil;ados a d&eacute;bito. Com <code>accepted</code> falso, <strong>nada deve se mover</strong></td></tr>
+
+<tr><td class="mono"><strong>211130</strong></td><td class="mono">imobilizacao_item</td><td>acquirer</td><td>items</td><td>Marca que o bem foi ao ativo, <strong>para o Fisco aplicar o prazo-limite de aprecia&ccedil;&atilde;o do ressarcimento</strong> &mdash; art. 40, I. O efeito &eacute; sobre <strong>prazo</strong>, n&atilde;o sobre saldo</td></tr>
+
+<tr><td class="mono"><strong>211140</strong></td><td class="mono">credito_combustivel</td><td>acquirer</td><td>items</td><td>Combust&iacute;vel &eacute; monof&aacute;sico: o cr&eacute;dito nasce <strong>no consumo</strong>, n&atilde;o na compra. Art. 172, com exce&ccedil;&atilde;o do art. 180. <em>Cr&eacute;dito apropriado &uarr; na propor&ccedil;&atilde;o consumida</em></td></tr>
+
+<tr><td class="mono"><strong>211150</strong></td><td class="mono">credito_bens_servicos_atividade</td><td>acquirer</td><td>credit_items</td><td>O cr&eacute;dito condicionado: s&oacute; se sabe se cabe depois de saber o uso. Declara valor sem quantidade. <em>Cr&eacute;dito a apropriar &rarr; apropriado</em></td></tr>
+
+<tr><td class="mono"><strong>212110</strong></td><td class="mono">aceite_transferencia_ibs</td><td>successor</td><td>indicator</td><td rowspan="2">Aceite, pela sucessora, da transfer&ecirc;ncia de cr&eacute;dito vinda de <strong>outra sucessora da mesma empresa sucedida</strong> &mdash; empresa que se partiu em v&aacute;rias. IBS e CBS transferem independentemente</td></tr>
+<tr><td class="mono"><strong>212120</strong></td><td class="mono">aceite_transferencia_cbs</td><td>successor</td><td>indicator</td></tr>
+
+<tr><td class="mono"><strong>412120</strong></td><td class="mono">decisao_fisco_transferencia_ibs</td><td>tax_authority</td><td>decision</td><td rowspan="2">A transfer&ecirc;ncia s&oacute; se completa com o <strong>deferimento do Fisco</strong>. <code>reason_code</code> 1 &eacute; &ldquo;falta de manifesta&ccedil;&atilde;o de todas as sucessoras&rdquo;. Com <code>granted</code> falso, <strong>nenhum saldo deve mover</strong></td></tr>
+<tr><td class="mono"><strong>412130</strong></td><td class="mono">decisao_fisco_transferencia_cbs</td><td>tax_authority</td><td>decision</td></tr>
+
+<tr><td class="mono"><strong>110001</strong></td><td class="mono">cancelamento</td><td>o mesmo do original</td><td>cancellation</td><td>Cancela qualquer evento da NT <strong>exceto ele pr&oacute;prio</strong>, e s&oacute; pelo mesmo autor. <em>O saldo deve voltar ao estado anterior</em></td></tr>
+
+</tbody></table></div>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Valida&ccedil;&otilde;es na entrada</span></div>
+<p class="sec-sub">O valor de um endpoint tipado est&aacute; em recusar cedo. Estas s&atilde;o as regras que o contrato deve aplicar antes de aceitar.</p>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Regra</th><th>C&oacute;digo</th></tr></thead><tbody>
+<tr><td>V-01</td><td><code>event_code</code> existe no cat&aacute;logo da NT vigente</td><td><code>event_code_unknown</code></td></tr>
+<tr><td>V-02</td><td><code>type</code> corresponde ao <code>event_code</code></td><td><code>type_code_mismatch</code></td></tr>
+<tr><td>V-03</td><td><code>detail</code> tem o formato do <code>type</code></td><td><code>detail_shape_invalid</code></td></tr>
+<tr><td>V-04</td><td><code>access_key</code> com 44 posi&ccedil;&otilde;es e d&iacute;gito verificador v&aacute;lido</td><td><code>access_key_invalid</code></td></tr>
+<tr><td>V-05</td><td><code>protocol</code> presente &mdash; <strong>evento sem autoriza&ccedil;&atilde;o n&atilde;o entra</strong></td><td><code>protocol_required</code></td></tr>
+<tr><td>V-06</td><td><code>author.role</code> compat&iacute;vel com o papel do <code>tax_id</code> no documento</td><td><code>author_role_mismatch</code></td></tr>
+<tr><td>V-07</td><td>Eventos de item: <code>item_number</code> existe no DF, e n&atilde;o se repete</td><td><code>item_not_found</code> &middot; <code>item_duplicated</code></td></tr>
+<tr><td>V-08</td><td>M&aacute;ximo de <strong>990</strong> itens em <code>detail.items</code></td><td><code>items_limit_exceeded</code></td></tr>
+<tr><td>V-09</td><td><code>apropriacao_credito_presumido</code> recusado em documento <strong>modelo 65</strong></td><td><code>presumed_credit_not_allowed</code></td></tr>
+<tr><td>V-10</td><td><code>cancelamento</code> n&atilde;o pode cancelar outro <code>cancelamento</code></td><td><code>cannot_cancel_cancellation</code></td></tr>
+<tr><td>V-11</td><td><code>cancelamento</code>: autor igual ao do evento cancelado</td><td><code>cancel_author_mismatch</code></td></tr>
+<tr><td>V-12</td><td><code>pagamento_integral</code> com <code>accepted</code> falso</td><td><code>indicator_value_invalid</code></td></tr>
+<tr><td>V-13</td><td>Duplicidade por <code>access_key</code> + <code>event_code</code> + <code>sequence</code></td><td>devolve <code>200</code> com o existente</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">O documento pode n&atilde;o existir ainda</div><p>V-04 e V-07 pressup&otilde;em o DF na base. <strong>Evento que chega antes do documento &eacute; caso normal</strong>, n&atilde;o erro: o endpoint aceita com <code>202</code> e status <code>aguardando_documento</code>, e reavalia quando o DF entrar. <strong>Descartar produz cr&eacute;dito apropriado sobre documento que n&atilde;o existe.</strong></p></div>
+</div>
+
+<!-- 08 -->
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Ciclo de vida e webhooks</span></div>
+<p>O evento entra, correlaciona com o documento e espera o saldo se mover na apura&ccedil;&atilde;o. O <code>GET</code> devolve onde ele est&aacute;.</p>
+<div class="table-wrap"><table><thead><tr><th><code>status</code></th><th>Significa</th></tr></thead><tbody>
+<tr><td><code>recebido</code></td><td>Aceito e validado</td></tr>
+<tr><td><code>aguardando_documento</code></td><td>O DF ainda n&atilde;o chegou &mdash; fica na fila de correla&ccedil;&atilde;o</td></tr>
+<tr><td><code>correlacionado</code></td><td>Ligado ao documento e aos itens</td></tr>
+<tr><td><code>conciliado</code></td><td><strong>O saldo na apura&ccedil;&atilde;o moveu no valor declarado</strong></td></tr>
+<tr><td><code>divergente</code></td><td>O saldo moveu em valor diferente, ou n&atilde;o moveu quando deveria</td></tr>
+<tr><td><code>nao_atribuivel</code></td><td>Mais de um evento na mesma janela de coleta &mdash; o delta fecha em montante, sem atribui&ccedil;&atilde;o</td></tr>
+<tr><td><code>cancelado</code></td><td>Um <code>cancelamento</code> v&aacute;lido o alcan&ccedil;ou</td></tr>
+</tbody></table></div>
+<p>Tr&ecirc;s eventos de webhook, no envelope que a API j&aacute; usa &mdash; <code>event</code>, <code>created_at</code>, <code>data</code>:</p>
+<div class="table-wrap"><table><thead><tr><th>Evento</th><th>Quando dispara</th></tr></thead><tbody>
+<tr><td><code>evento_fiscal.correlacionado</code></td><td>O evento encontrou o documento, com o efeito calculado nos itens</td></tr>
+<tr><td><code>evento_fiscal.conciliado</code></td><td>A apura&ccedil;&atilde;o confirmou o efeito</td></tr>
+<tr><td><code>evento_fiscal.divergente</code></td><td>N&atilde;o confirmou &mdash; vai junto o motivo e a ocorr&ecirc;ncia aberta</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">Depende da decis&atilde;o D-01</div><p>O produto emite hoje <code>credito.registrado</code>, <code>apropriado</code>, <code>utilizado</code> e <code>glosado</code>; o contrato p&uacute;blico define <code>credito.status_alterado</code> e <code>debito.status_alterado</code>. <strong>Os dois contratos convivem sem decis&atilde;o desde a auditoria.</strong> Os tr&ecirc;s nomes acima seguem o padr&atilde;o do contrato p&uacute;blico, mas <strong>n&atilde;o devem ser publicados antes de D-01</strong> &mdash; ou nascem j&aacute; em conflito. Ver <a class="xref" href="auditoria-prd-app.html#d01">D-01 na auditoria</a>.</p></div>
+</div>
+
+<!-- 09 -->
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Erros e lote</span></div>
+<p>Resposta individual, <code>202</code>, no formato que a ingest&atilde;o de DFs j&aacute; usa:</p>
+<pre>{
+  "id": "evt_9c41b7de",
+  "status": "recebido",
+  "type": "apropriacao_credito_presumido",
+  "event_code": "211110",
+  "access_key": "4126…6789",
+  "created_at": "2026-09-25T13:02:11.000Z"
+}</pre>
+<p>No lote, <strong>o que vale &eacute; a recusa item a item</strong>: um evento inv&aacute;lido n&atilde;o derruba os outros 499.</p>
+<pre>{
+  "batch_id": "evtbatch_3k9m2x",
+  "status": "processing",
+  "total_events": 500,
+  "accepted": 498,
+  "rejected": 2,
+  "events": [
+    { "index": 0, "id": "evt_9c41b7de", "status": "recebido" },
+    { "index": 17, "status": "rejected",
+      "error": { "code": "item_not_found", "message": "Item 4 não existe no documento",
+                 "field": "detail.items[0].item_number" } }
+  ]
+}</pre>
+<p class="src-note">O objeto de erro &mdash; <code>code</code>, <code>message</code>, <code>field</code> &mdash; &eacute; proposta desta p&aacute;gina: a documenta&ccedil;&atilde;o p&uacute;blica atual <strong>n&atilde;o publica formato de erro</strong>. Se houver um padr&atilde;o interno, ele manda.</p>
+</div>
+
+<!-- 10 -->
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Decis&otilde;es em aberto</span></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Decis&atilde;o</th><th>Por que trava</th></tr></thead><tbody>
+<tr><td><strong>AE-01</strong></td><td>Aceitar evento <strong>sem <code>protocol</code></strong>?</td><td>A proposta exige. Se algum ERP quiser antecipar o envio antes da autoriza&ccedil;&atilde;o, muda o desenho: entra um status <code>nao_autorizado</code> que nunca concilia</td></tr>
+<tr><td><strong>AE-02</strong></td><td>Nomes dos webhooks</td><td>Preso a <strong>D-01</strong>. Publicar antes cria o terceiro vocabul&aacute;rio de eventos do produto</td></tr>
+<tr><td><strong>AE-03</strong></td><td><code>type</code> leg&iacute;vel al&eacute;m do <code>event_code</code>?</td><td>Dobra a superf&iacute;cie. A alternativa &eacute; s&oacute; o c&oacute;digo num&eacute;rico &mdash; mais fiel &agrave; norma, menos leg&iacute;vel no contrato</td></tr>
+<tr><td><strong>AE-04</strong></td><td>Ingest&atilde;o de eventos por <strong>CSV</strong>, como em documentos</td><td>O <code>detail</code> aninhado n&atilde;o cabe bem em coluna. Talvez s&oacute; para os formatos <code>indicator</code> e <code>date</code></td></tr>
+<tr><td><strong>AE-05</strong></td><td>Versionamento do cat&aacute;logo de <code>event_code</code></td><td>A NT j&aacute; eliminou um evento. O contrato precisa dizer o que faz com c&oacute;digo que deixou de existir &mdash; recusar ou aceitar com aviso</td></tr>
+<tr><td><strong>AE-06</strong></td><td>Origem do evento: ERP ou DW nacional</td><td>A an&aacute;lise de impacto sup&otilde;e coleta do DW. Este endpoint sup&otilde;e envio pelo ERP. <strong>Os dois podem coexistir</strong>, mas a duplicidade precisa de regra</td></tr>
+</tbody></table></div>
+<p class="src-note">Somadas &agrave;s 13 decis&otilde;es da <a class="xref" href="proposta-eventos-impacto.html">an&aacute;lise de impacto</a>, o m&oacute;dulo de eventos passa a ter <strong>19 decis&otilde;es em aberto</strong>.</p>
+</div>
+
+<!-- 11 -->
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>25/09/2026</strong> &mdash; Primeira proposta. Seis rotas, um envelope com discriminador, oito formatos de <code>detail</code> para os dezesseis tipos, treze valida&ccedil;&otilde;es de entrada, sete estados de ciclo de vida, tr&ecirc;s webhooks e seis decis&otilde;es em aberto. Baseada na NT 2025.002-RTC v1.51 e nas conven&ccedil;&otilde;es da API p&uacute;blica em vigor.</div></div>
+</div>
+
+</div>
+</body>
+</html>
