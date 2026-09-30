@@ -716,7 +716,7 @@
       + '<div class="hdr-act" style="gap:8px;flex-wrap:wrap"><div class="res-tri" role="tablist" aria-label="Tributo">'
       + ['CBS', 'IBS'].map(function (t) { return '<button role="tab" aria-selected="' + (t === T) + '" class="' + (t === T ? 'on' : '') + '" onclick="shRes.setTri(\'' + t + '\')">' + t + '</button>'; }).join('')
       + '</div></div></div>';
-    h += '<div class="res-sim">' + chip('amber', 'Simulação 2026') + '<div><b>Regra de 2026 desligada neste protótipo.</b> Pela LC 214/2025 (Decreto 12.955/2026, art. 465; Resolução CGIBS 6/2026, art. 466), saldos credores de 2026 não são ressarcidos. '
+    h += '<div class="res-sim">' + chip('amber', 'Simulação 2026') + '<div><b>Regra de 2026 desligada.</b> Pela LC 214/2025 (Decreto 12.955/2026, art. 465; Resolução CGIBS 6/2026, art. 466), saldos credores de 2026 não são ressarcidos. '
       + 'Aqui a regra RN-RES-02 está desligada para demonstrar o fluxo com a base atual. Nenhum pedido é transmitido ao Fisco; números de PER/DCOMP e protocolos são ilustrativos, e a Selic é simulada.</div></div>';
     h += '<div class="kgrid k5 res-kpi">'
       + kpi('Saldo credor disponível', moneyC(S.disponivel), 'Período em curso · ' + perLbl(R.ref))
@@ -851,7 +851,7 @@
       + '<li>O saldo de ' + money(v) + ' deixa de compensar débitos de ' + T + ' de ' + perLbl(perAdd(R.ref, 1)) + '; esses débitos seguem para recolhimento.</li>'
       + '<li>Os registros fiscais do saldo recebem a marca <span class="res-mark amber" style="cursor:default">Reservado · ressarcimento</span>; o status do crédito não muda.</li>'
       + '<li>Cancelável até o pedido: o saldo volta a compensar na hora. Sem pedido até o prazo, a intenção vence e o saldo volta a compensar.</li></ul></div>'
-      + (v > lim ? '<div class="res-alert" style="border-color:rgba(var(--status-amber-rgb),.4);background:rgba(var(--status-amber-rgb),.07)"><b style="color:var(--amber)">Acima do limite de ' + moneyC(lim) + '.</b> A intenção precisa de aprovação (D-03). No protótipo, a aprovação é registrada por Rafael Lima.</div>' : '')
+      + (v > lim ? '<div class="res-alert" style="border-color:rgba(var(--status-amber-rgb),.4);background:rgba(var(--status-amber-rgb),.07)"><b style="color:var(--amber)">Acima do limite de ' + moneyC(lim) + '.</b> A intenção precisa de aprovação (D-03). Na simulação, a aprovação é registrada por Rafael Lima.</div>' : '')
       + (T === 'IBS' && (R.impedimentos || []).length ? '<div class="res-alert"><b>Impedimento do IBS · alerta.</b> ' + esc(R.impedimentos[0].tipo) + '. O pedido pode ser indeferido; a intenção segue permitida.</div>' : '');
     modal('Declarar intenção de ressarcimento · ' + T, 'Simulação 2026 · a regra de saldos de 2026 está desligada', corpo,
       '<button class="btn" onclick="shRes.fechar()">Cancelar</button><button class="btn btn-t" onclick="shRes.confirmarIntencao()">Declarar intenção</button>');
