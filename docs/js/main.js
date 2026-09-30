@@ -49,6 +49,11 @@ function showView(viewName, btnElement, isMobile = false) {
     buttons.forEach(b => b.classList.remove('active'));
   }
 
+  // Recolhe os submenus (ex.: Configurações) ao trocar de módulo.
+  // Quem abre um submenu — showAdminSub — expande o grupo depois desta chamada.
+  document.querySelectorAll('.nav-sub-group').forEach(g => g.classList.remove('expanded'));
+  document.querySelectorAll('.nav-sub-btn').forEach(b => b.classList.remove('active'));
+
   if (btnElement) {
     btnElement.classList.add('active');
   }

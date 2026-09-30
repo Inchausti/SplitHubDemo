@@ -1177,7 +1177,7 @@
       var sv = window.showView;
       window.showView = function (id, btn, fb) {
         var r = sv.apply(this, arguments);
-        if (id === 'ressarcimento') { var t = document.getElementById('ah-title'); if (t) t.textContent = 'Ressarcimento'; setTimeout(R.render, 0); }
+        if (id === 'ressarcimento') setTimeout(R.render, 0);
         if (id === 'apuracao') setTimeout(function () { try { if (window.sincronizarApuracao) window.sincronizarApuracao(); } catch (e) {} }, 0);
         if (id === 'dashboard' || id === 'creditos' || id === 'debitos' || id === 'conciliacao' || id === 'apuracao' || id === 'admin') setTimeout(R.renderIntegracoes, 60);
         return r;
