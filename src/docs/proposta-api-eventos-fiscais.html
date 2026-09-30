@@ -139,11 +139,11 @@ img, svg { max-width: 100%; height: auto; }
 <h1>API de eventos fiscais</h1>
 <p class="subtitle">A API p&uacute;blica do SplitHub recebe documentos fiscais e n&atilde;o recebe eventos. Sem eles o produto n&atilde;o sabe que um cr&eacute;dito foi estornado, que um presumido foi pedido ou que um d&eacute;bito mudou de compet&ecirc;ncia. Esta proposta desenha o contrato que falta: seis rotas e um envelope que absorve os dezesseis tipos.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.2</span></div>
+<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.3</span></div>
 <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta &middot; Integra&ccedil;&atilde;o</span></div>
 <div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">NT 2025.002-RTC v1.51</span></div>
 <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">30/09/2026</span></div>
-<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprova&ccedil;&atilde;o</span>&nbsp;<span class="chip info">v1.2</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprova&ccedil;&atilde;o</span>&nbsp;<span class="chip info">v1.3</span></div>
 </div>
 
 <div class="toc"><div class="toc-title">&Iacute;ndice</div><ul class="toc-list">
@@ -251,7 +251,7 @@ img, svg { max-width: 100%; height: auto; }
 <pre>"detail": { <b>"expected_delivery_date"</b>: "2026-11-30" }   <span class="cm">// dPrevEntrega</span></pre>
 
 <h3 id="f3">3 &middot; <code>items</code> &mdash; valor e quantidade por item</h3>
-<p>Tipos: <code>112120</code>, <code>112130</code>, <code>112140</code>, <code>211124</code>, <code>211130</code>, <code>211140</code>. At&eacute; <strong>990</strong> itens.</p>
+<p>Tipos: <code>112120</code>, <code>112140</code>, <code>211124</code>, <code>211130</code>, <code>211140</code>. At&eacute; <strong>990</strong> itens.</p>
 <pre>"detail": {
   <b>"items"</b>: [
     {
@@ -356,7 +356,7 @@ img, svg { max-width: 100%; height: auto; }
 <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Valida&ccedil;&otilde;es na entrada</span></div>
 <p class="sec-sub">O valor de um endpoint tipado est&aacute; em recusar cedo. Estas s&atilde;o as regras que o contrato deve aplicar antes de aceitar.</p>
 <div class="table-wrap"><table><thead><tr><th>#</th><th>Regra</th><th>C&oacute;digo</th></tr></thead><tbody>
-<tr><td>V-01</td><td><code>event_code</code> existe no cat&aacute;logo da NT vigente</td><td><code>event_code_unknown</code></td></tr>
+<tr><td>V-01</td><td><code>event_code</code> existe no cat&aacute;logo da NT. C&oacute;digo que <strong>nunca existiu</strong> &eacute; recusado; c&oacute;digo que <strong>existiu e foi eliminado</strong>, como o <code>211120</code>, entra com aviso e sem a&ccedil;&atilde;o planejada (AE-05)</td><td><code>event_code_unknown</code> &middot; aviso <code>event_code_retired</code></td></tr>
 <tr><td>V-02</td><td><code>type</code> corresponde ao <code>event_code</code></td><td><code>type_code_mismatch</code></td></tr>
 <tr><td>V-03</td><td><code>detail</code> tem o formato do <code>type</code></td><td><code>detail_shape_invalid</code></td></tr>
 <tr><td>V-04</td><td><code>access_key</code> com 44 posi&ccedil;&otilde;es e d&iacute;gito verificador v&aacute;lido</td><td><code>access_key_invalid</code></td></tr>
@@ -468,14 +468,14 @@ o IBS divergiu, a CBS &eacute; vedada pelo c&oacute;digo de presumido.</p>
     }
   },
   "inconsistencies": [                     <span class="cm">// sempre lista; vazia &eacute; [], nunca null</span>
-    { "id": "INC-2307", "tax": "ibs", "item_number": 7,
+    { "id": "INC-2307", "tax": "ibs",
       "type": "evt_valor_divergente", "status": "aberta" }
   ]
 }</pre>
 <div class="table-wrap"><table><thead><tr><th>Bloco</th><th>Regra</th></tr></thead><tbody>
 <tr><td><code>planned_effect</code></td><td>Presente a partir de <code>planejada</code>. IBS e CBS em campos separados, <strong>nunca somados</strong>. <code>null</code> quer dizer que o evento n&atilde;o toca aquele tributo; zero n&atilde;o &eacute; usado para isso. &Eacute; sempre o <em>previsto</em>: o saldo vigente continua no documento</td></tr>
 <tr><td><code>reconciliation</code></td><td>Os dois tributos sempre presentes, mesmo quando um for <code>nao_aplicavel</code> &mdash; aus&ecirc;ncia de chave seria amb&iacute;gua entre &ldquo;n&atilde;o se aplica&rdquo; e &ldquo;n&atilde;o calculado ainda&rdquo;. <code>expected</code> e <code>observed</code> v&ecirc;m lado a lado sempre que houver diverg&ecirc;ncia</td></tr>
-<tr><td><code>inconsistencies</code></td><td><strong>Uma por diverg&ecirc;ncia</strong>, e diverg&ecirc;ncia &eacute; por tributo e por item: um evento que falha nos dois &oacute;rg&atilde;os traz duas; um que atinge tr&ecirc;s itens e diverge em dois traz duas. A ocorr&ecirc;ncia de <code>nao_atribuivel</code> &eacute; uma s&oacute; para a janela e aparece em cada evento envolvido, com <code>shared_with</code> listando os outros. O tipo vem do <a class="xref" href="eventos-fiscais-dossie.html#c6">cat&aacute;logo de inconsist&ecirc;ncias de evento</a></td></tr>
+<tr><td><code>inconsistencies</code></td><td><strong>Uma por tributo, por evento</strong> (D-22): um evento que falha nos dois &oacute;rg&atilde;os traz duas, um que falha s&oacute; num traz uma. <strong>N&atilde;o h&aacute; ocorr&ecirc;ncia por item</strong>: os dois &oacute;rg&atilde;os s&oacute; informam o total do documento, e qual item divergiu n&atilde;o &eacute; observ&aacute;vel. A ocorr&ecirc;ncia de <code>nao_atribuivel</code> &eacute; uma s&oacute; para a janela e aparece em cada evento envolvido, com <code>shared_with</code> listando os outros. O tipo vem do <a class="xref" href="eventos-fiscais-dossie.html#c6">cat&aacute;logo de inconsist&ecirc;ncias de evento</a></td></tr>
 </tbody></table></div>
 
 <h3 id="hooks">8.5 Webhooks</h3>
@@ -484,7 +484,7 @@ o IBS divergiu, a CBS &eacute; vedada pelo c&oacute;digo de presumido.</p>
 <div class="table-wrap"><table><thead><tr><th>Evento</th><th>Quando dispara</th></tr></thead><tbody>
 <tr><td><code>evento_fiscal.correlacionado</code></td><td>A fase chegou a <code>planejada</code>: o evento encontrou o documento e o efeito previsto est&aacute; calculado</td></tr>
 <tr><td><code>evento_fiscal.conciliado</code></td><td>A fase chegou a <code>executada</code>: todos os tributos com efeito confirmaram</td></tr>
-<tr><td><code>evento_fiscal.divergente</code></td><td>A fase chegou a <code>divergente</code> ou <code>nao_atribuivel</code>. Vai junto a lista <code>inconsistencies</code> &mdash; uma por tributo e por item divergente, com o previsto e o observado</td></tr>
+<tr><td><code>evento_fiscal.divergente</code></td><td>A fase chegou a <code>divergente</code> ou <code>nao_atribuivel</code>. Vai junto a lista <code>inconsistencies</code> &mdash; uma por tributo divergente, com o previsto e o observado</td></tr>
 </tbody></table></div>
 <div class="callout red"><div class="ct">Depende da decis&atilde;o D-01</div><p>O produto emite hoje <code>credito.registrado</code>, <code>apropriado</code>, <code>utilizado</code> e <code>glosado</code>; o contrato p&uacute;blico define <code>credito.status_alterado</code> e <code>debito.status_alterado</code>. <strong>Os dois contratos convivem sem decis&atilde;o desde a auditoria.</strong> Os tr&ecirc;s nomes acima seguem o padr&atilde;o do contrato p&uacute;blico, mas <strong>n&atilde;o devem ser publicados antes de D-01</strong> &mdash; ou nascem j&aacute; em conflito. Ver <a class="xref" href="auditoria-prd-app.html#d01">D-01 na auditoria</a>.</p></div>
 </div>
@@ -515,6 +515,16 @@ o IBS divergiu, a CBS &eacute; vedada pelo c&oacute;digo de presumido.</p>
                  "field": "detail.items[0].item_number" } }
   ]
 }</pre>
+<p><strong>Aviso sem recusa.</strong> Um c&oacute;digo que a NT eliminou entra, pela AE-05, com <code>202</code> e um bloco de avisos. Ele fica em <code>capturada</code> e n&atilde;o ganha a&ccedil;&atilde;o planejada:</p>
+<pre>{
+  "id": "evt_4f02aa91",
+  "event_code": "211120",
+  "action": { "phase": "capturada" },
+  "warnings": [
+    { "code": "event_code_retired",
+      "message": "Evento eliminado na NT 2025.002-RTC v1.50; registrado sem a&ccedil;&atilde;o planejada" }
+  ]
+}</pre>
 <p class="src-note">No lote, <code>status</code> diz s&oacute; se o item foi aceito ou recusado; a situa&ccedil;&atilde;o do evento &eacute; a <code>phase</code>. A v1.0 usava <code>status</code> para as duas coisas. O objeto de erro &mdash; <code>code</code>, <code>message</code>, <code>field</code> &mdash; &eacute; proposta desta p&aacute;gina: a documenta&ccedil;&atilde;o p&uacute;blica atual <strong>n&atilde;o publica formato de erro</strong>. Se houver um padr&atilde;o interno, ele manda.</p>
 </div>
 
@@ -522,20 +532,21 @@ o IBS divergiu, a CBS &eacute; vedada pelo c&oacute;digo de presumido.</p>
 <div class="section" id="s10">
 <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Decis&otilde;es em aberto</span></div>
 <div class="table-wrap"><table><thead><tr><th>#</th><th>Decis&atilde;o</th><th>Por que trava</th></tr></thead><tbody>
-<tr><td><strong>AE-01</strong></td><td>Aceitar evento <strong>sem <code>protocol</code></strong>?</td><td>A proposta exige. Se algum ERP quiser antecipar o envio antes da autoriza&ccedil;&atilde;o, muda o desenho: entra um status <code>nao_autorizado</code> que nunca concilia</td></tr>
+<tr><td><strong>AE-01</strong></td><td>Aceitar evento <strong>sem <code>protocol</code></strong>?</td><td><strong>Decidida em 30/09/2026:</strong> o protocolo &eacute; obrigat&oacute;rio (V-05). Evento sem autoriza&ccedil;&atilde;o n&atilde;o entra, e n&atilde;o existe estado <code>nao_autorizado</code></td></tr>
 <tr><td><strong>AE-02</strong></td><td>Nomes dos webhooks</td><td>Preso a <strong>D-01</strong>. Publicar antes cria o terceiro vocabul&aacute;rio de eventos do produto</td></tr>
-<tr><td><strong>AE-03</strong></td><td><code>type</code> leg&iacute;vel al&eacute;m do <code>event_code</code>?</td><td>Dobra a superf&iacute;cie. A alternativa &eacute; s&oacute; o c&oacute;digo num&eacute;rico &mdash; mais fiel &agrave; norma, menos leg&iacute;vel no contrato</td></tr>
-<tr><td><strong>AE-04</strong></td><td>Ingest&atilde;o de eventos por <strong>CSV</strong>, como em documentos</td><td>O <code>detail</code> aninhado n&atilde;o cabe bem em coluna. Talvez s&oacute; para os formatos <code>indicator</code> e <code>date</code></td></tr>
-<tr><td><strong>AE-05</strong></td><td>Versionamento do cat&aacute;logo de <code>event_code</code></td><td>A NT j&aacute; eliminou um evento. O contrato precisa dizer o que faz com c&oacute;digo que deixou de existir &mdash; recusar ou aceitar com aviso</td></tr>
+<tr><td><strong>AE-03</strong></td><td><code>type</code> leg&iacute;vel al&eacute;m do <code>event_code</code>?</td><td><strong>Decidida em 30/09/2026:</strong> o <code>type</code> leg&iacute;vel fica ao lado do <code>event_code</code>, e o servidor valida a coer&ecirc;ncia dos dois (V-02)</td></tr>
+<tr><td><strong>AE-04</strong></td><td>Ingest&atilde;o de eventos por <strong>CSV</strong>, como em documentos</td><td><strong>Decidida em 30/09/2026:</strong> sim, para os oito formatos. O CSV &eacute; outra forma de chamar esta API, n&atilde;o outra porta &mdash; ver a <a class="xref" href="proposta-eventos-csv.html">proposta de upload por CSV</a></td></tr>
+<tr><td><strong>AE-05</strong></td><td>Versionamento do cat&aacute;logo de <code>event_code</code></td><td><strong>Decidida em 30/09/2026:</strong> aceitar com aviso. O evento entra em <code>capturada</code>, sem a&ccedil;&atilde;o planejada, e a resposta traz <code>event_code_retired</code> em <code>warnings</code> &mdash; ver V-01</td></tr>
 <tr><td><strong>AE-06</strong></td><td>Origem do evento: ERP ou DW nacional</td><td><strong>Decidida em 30/09/2026 &mdash; D-21.</strong> Os eventos chegam por esta API, enviados pelo cliente a partir do ERP e do sistema fiscal. O SplitHub n&atilde;o l&ecirc; o DW, e a regra de duplicidade entre duas fontes deixa de ser necess&aacute;ria</td></tr>
-<tr><td><strong>AE-07</strong></td><td>O tipo <code>evt_divergencia_entre_orgaos</code> continua no cat&aacute;logo?</td><td>Com a concilia&ccedil;&atilde;o por tributo, &ldquo;a CBS confirmou e o IBS n&atilde;o&rdquo; aparece direto nas duas colunas, e o tributo que falhou j&aacute; abre a sua ocorr&ecirc;ncia. Manter o tipo abriria uma <strong>segunda ocorr&ecirc;ncia para a mesma diverg&ecirc;ncia</strong> &mdash; contra a regra de uma por diverg&ecirc;ncia. Recomenda&ccedil;&atilde;o: retirar do cat&aacute;logo do dossi&ecirc;</td></tr>
+<tr><td><strong>AE-07</strong></td><td>O tipo <code>evt_divergencia_entre_orgaos</code> continua no cat&aacute;logo?</td><td><strong>Decidida em 30/09/2026:</strong> retirado do cat&aacute;logo do dossi&ecirc;, que fica com 39 tipos ativos. O c&oacute;digo n&atilde;o se reaproveita</td></tr>
 </tbody></table></div>
-<p class="src-note">Somadas &agrave;s <strong>19 decis&otilde;es ainda abertas</strong> da <a class="xref" href="proposta-eventos-impacto.html">an&aacute;lise de impacto</a> &mdash; D-01 a D-05, D-07 a D-19 e a metade aberta da D-21 &mdash;, o m&oacute;dulo de eventos tem <strong>25 decis&otilde;es em aberto</strong>, sem contar as seis decis&otilde;es visuais das telas. A v1.1 dizia 13 e 20: a an&aacute;lise de impacto nunca teve 13.</p>
+<p class="src-note">Em 30/09/2026 esta p&aacute;gina fechou AE-01, AE-03, AE-04, AE-05 e AE-07; a AE-06 j&aacute; estava fechada. Resta a <strong>AE-02</strong>, presa &agrave; D-01 da auditoria. Somada &agrave;s onze pend&ecirc;ncias da <a class="xref" href="proposta-eventos-impacto.html#s10">an&aacute;lise de impacto</a> &mdash; oito abertas (D-08, D-10, D-11, D-15 a D-19) e tr&ecirc;s adiadas por escolha (D-02, D-07, D-12) &mdash;, o m&oacute;dulo de eventos tem <strong>12 pend&ecirc;ncias</strong>, sem contar as seis decis&otilde;es visuais das telas.</p>
 </div>
 
 <!-- 11 -->
 <div class="section" id="s11">
 <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+<div class="ver-row"><div class="ver-num">v1.3</div><div class="ver-desc"><strong>30/09/2026</strong> &mdash; <strong>Decis&otilde;es de 30/09.</strong> AE-01: o protocolo &eacute; obrigat&oacute;rio. AE-03: o <code>type</code> leg&iacute;vel fica. AE-04: CSV para os oito formatos, na <a class="xref" href="proposta-eventos-csv.html">proposta de upload</a>. AE-05: c&oacute;digo eliminado entra com aviso &mdash; a V-01 passa a separar c&oacute;digo que nunca existiu de c&oacute;digo aposentado, e a resposta ganha <code>warnings</code>. AE-07: tipo retirado do cat&aacute;logo. Pela D-22, <code>inconsistencies</code> deixa de ser por item: uma por tributo, por evento, e o campo <code>item_number</code> sai do objeto da ocorr&ecirc;ncia. Corrigida a lista do formato <code>items</code>, que inclu&iacute;a o <code>112130</code> &mdash; ele usa <code>items_with_reversal</code>, como a se&ccedil;&atilde;o 06 j&aacute; dizia.</div></div>
 <div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>30/09/2026</strong> &mdash; <strong>AE-06 decidida pela D-21:</strong> esta API &eacute; a &uacute;nica porta de entrada dos eventos, e o cliente envia a partir do ERP e do sistema fiscal. A se&ccedil;&atilde;o 01 passa a dizer de onde vem cada s&eacute;rie. Corrigida a contagem de decis&otilde;es em aberto: 19 na an&aacute;lise de impacto e 25 no m&oacute;dulo, e n&atilde;o 13 e 20.</div></div>
 <div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>30/09/2026</strong> &mdash; <strong>A situa&ccedil;&atilde;o do evento passa a ter duas camadas.</strong> O status &uacute;nico da v1.0 vira a <strong>fase da a&ccedil;&atilde;o</strong> &mdash; nove fases, com <code>planejada</code> e <code>aguardando_fisco</code> no meio e <code>cancelado</code> dividido em <code>cancelada</code> e <code>revertida</code>, que t&ecirc;m consequ&ecirc;ncias opostas para o ERP &mdash; e a <strong>concilia&ccedil;&atilde;o por tributo</strong>, com sete estados, entre eles <code>sem_saldo_a_mover</code> e <code>nao_aplicavel</code>. Sem o primeiro, os seis eventos que o saldo n&atilde;o confirma nunca chegariam a <code>executada</code>. A fase deriva dos dois tributos por uma ordem de preced&ecirc;ncia, e a execu&ccedil;&atilde;o &eacute; por tributo. A resposta ganha <code>planned_effect</code>, o previsto, nunca somado ao vigente; <code>reconciliation</code>, com previsto e observado lado a lado; e <code>inconsistencies</code> como lista, uma por diverg&ecirc;ncia por tributo e por item. O <code>status</code> do lote passa a dizer s&oacute; se o item foi aceito. Os filtros da listagem acompanham. Nova decis&atilde;o AE-07, sobre um tipo do cat&aacute;logo de eventos que ficou redundante. Mesmo vocabul&aacute;rio da aba de eventos no detalhe do documento.</div></div>
 <div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>25/09/2026</strong> &mdash; Primeira proposta. Seis rotas, um envelope com discriminador, oito formatos de <code>detail</code> para os dezesseis tipos, treze valida&ccedil;&otilde;es de entrada, sete estados de ciclo de vida, tr&ecirc;s webhooks e seis decis&otilde;es em aberto. Baseada na NT 2025.002-RTC v1.51 e nas conven&ccedil;&otilde;es da API p&uacute;blica em vigor.</div></div>

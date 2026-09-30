@@ -29,8 +29,8 @@ import re
 import html as H
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSAO = '1.0'
-DATA = '25/09/2026'
+VERSAO = '1.1'
+DATA = '30/09/2026'
 
 # ---------------------------------------------------------------- familias --
 FAMILIAS = {
@@ -50,10 +50,13 @@ FAMILIAS = {
                       u'Inten&ccedil;&atilde;o, pedido, decis&atilde;o e recebimento fora do esperado.', 'vivo'),
     'integracao':   ('F', 'Integra&ccedil;&atilde;o', '--gray',
                      u'O evento n&atilde;o chegou ao sistema do cliente depois de esgotada a retentativa.', 'vivo'),
+    'eventos':      ('I', 'Eventos fiscais', '--teal',
+                     u'O evento fiscal n&atilde;o se confirmou no &oacute;rg&atilde;o, ou o &oacute;rg&atilde;o moveu o que nenhum evento explica. '
+                     u'Aprovada em 30/09/2026 (D-13); os tipos est&atilde;o no <a href="eventos-fiscais-dossie.html#c6">cat&aacute;logo do dossi&ecirc;</a>.', 'aprovado'),
 }
 
 FAM_ORDEM = ['documento', 'cadastro', 'fg', 'fisco', 'ciclo', 'financeiro',
-             'ressarcimento', 'integracao']
+             'ressarcimento', 'integracao', 'eventos']
 
 CRIT = {
     'critica': ('Cr&iacute;tica', '--red'),
@@ -1174,6 +1177,7 @@ FAM_CURTO = {
     'documento': 'Documento', 'cadastro': 'Cadastro', 'fg': 'Fato gerador',
     'fisco': 'Fisco', 'ciclo': 'Ciclo', 'financeiro': 'Recolhimento',
     'ressarcimento': 'Ressarcimento', 'integracao': u'Integra&ccedil;&atilde;o',
+    'eventos': 'Eventos fiscais',
 }
 FAM_MAPA = dict((k, (u'%s &middot; %s' % (FAMILIAS[k][0], FAM_CURTO[k]), FAMILIAS[k][2]))
                 for k in FAMILIAS)
@@ -1237,7 +1241,8 @@ acontece &mdash; que nem sempre &eacute; dentro do produto.</p>
 <div class="section" id="s02">
   <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Taxonomia: as fam&iacute;lias</span></div>
   <p>A fam&iacute;lia responde <strong>de onde a falha veio</strong>, e por consequ&ecirc;ncia quem a resolve.
-  Seis fam&iacute;lias j&aacute; existem no produto. A leitura dos PRDs mostrou duas lacunas, propostas aqui.</p>
+  Seis fam&iacute;lias j&aacute; existem no produto. A leitura dos PRDs mostrou duas lacunas, propostas aqui.
+  E uma terceira, a dos <strong>eventos fiscais</strong>, foi aprovada em 30/09/2026 pela D-13, com cat&aacute;logo pr&oacute;prio.</p>
   <div class="table-wrap"><table><thead><tr>
     <th>Letra</th><th>Fam&iacute;lia</th><th>O que re&uacute;ne</th><th>Ocorr&ecirc;ncias</th><th>Estado</th>
   </tr></thead><tbody>%(famtab)s</tbody></table></div>
@@ -1298,7 +1303,8 @@ acontece &mdash; que nem sempre &eacute; dentro do produto.</p>
 <div class="section" id="s04">
   <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">A fronteira: o que n&atilde;o vira ocorr&ecirc;ncia</span></div>
   <p>Nem toda regra violada produz uma inconsist&ecirc;ncia. Tr&ecirc;s categorias de regra foram lidas e
-  deliberadamente deixadas fora do cat&aacute;logo &mdash; e sab&ecirc;-lo &eacute; t&atilde;o &uacute;til quanto a lista.</p>
+  deliberadamente deixadas fora do cat&aacute;logo &mdash; e sab&ecirc;-lo &eacute; t&atilde;o &uacute;til quanto a lista. Uma quarta
+  categoria veio de uma decis&atilde;o, e n&atilde;o de uma regra: o alerta de compet&ecirc;ncia (D-14).</p>
   <div class="flow">
     <div class="flow-step"><div class="flow-k">n&atilde;o entra</div><div class="flow-t">Valida&ccedil;&atilde;o bloqueante</div>
       <div class="flow-d">O produto recusa no salvamento. N&atilde;o h&aacute; estado inconsistente para registrar.</div></div>
@@ -1306,6 +1312,8 @@ acontece &mdash; que nem sempre &eacute; dentro do produto.</p>
       <div class="flow-d">O valor &eacute; calculado a cada leitura. N&atilde;o pode divergir de si mesmo.</div></div>
     <div class="flow-step"><div class="flow-k">n&atilde;o entra</div><div class="flow-t">Car&ecirc;ncia declarada</div>
       <div class="flow-d">O fato existe e ainda n&atilde;o &eacute; ocorr&ecirc;ncia. S&oacute; vira depois do prazo.</div></div>
+    <div class="flow-step"><div class="flow-k">n&atilde;o entra</div><div class="flow-t">Alerta de compet&ecirc;ncia</div>
+      <div class="flow-d">O dado est&aacute; certo; o per&iacute;odo &eacute; que j&aacute; fechou. Pede decis&atilde;o, n&atilde;o corre&ccedil;&atilde;o.</div></div>
   </div>
   <div class="table-wrap"><table><thead><tr>
     <th>Regra</th><th>Por que n&atilde;o vira ocorr&ecirc;ncia</th><th>Categoria</th>
@@ -1348,6 +1356,12 @@ acontece &mdash; que nem sempre &eacute; dentro do produto.</p>
       em outro m&oacute;dulo n&atilde;o &eacute; inconsist&ecirc;ncia de dados &mdash; &eacute; defeito, e vai para a
       <a href="prd-inconsistencias.html#s14">lista de decis&otilde;es</a>.</td>
       <td>Fronteira de m&oacute;dulo</td></tr>
+    <tr><td class="mono">D-14</td>
+      <td>Evento confirmado que cai em <strong>apura&ccedil;&atilde;o j&aacute; fechada</strong> n&atilde;o diverge de nada &mdash; o &oacute;rg&atilde;o
+      confirmou. Falta decidir o que fazer com o per&iacute;odo, e o SplitHub n&atilde;o reabre sozinho. Vai para a
+      <a href="proposta-inconsistencias-alertas.html">aba de Alertas</a>. S&oacute; vira ocorr&ecirc;ncia se a janela de ajuste
+      fechar sem tratamento.</td>
+      <td>Alerta de compet&ecirc;ncia</td></tr>
   </tbody></table></div>
 </div>
 
@@ -1361,9 +1375,9 @@ acontece &mdash; que nem sempre &eacute; dentro do produto.</p>
 
 <div class="section" id="s06">
   <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Eventos fiscais</span></div>
-  <p>Os eventos fiscais da NT 2025.002-RTC produzem uma fam&iacute;lia pr&oacute;pria de inconsist&ecirc;ncias,
-  j&aacute; catalogada em separado: <strong>quarenta tipos</strong>, segregados por tipo de documento e
-  tipo de evento, no
+  <p>Os eventos fiscais da NT 2025.002-RTC produzem uma fam&iacute;lia pr&oacute;pria de inconsist&ecirc;ncias &mdash;
+  a <strong>I &middot; Eventos fiscais</strong>, aprovada em 30/09/2026 pela D-13 &mdash;, catalogada em separado:
+  <strong>trinta e nove tipos ativos</strong>, segregados por tipo de documento e tipo de evento, no
   <a href="eventos-fiscais-dossie.html#s07">dossi&ecirc; de eventos fiscais, se&ccedil;&atilde;o 07</a>.</p>
   <p>Aquele cat&aacute;logo n&atilde;o &eacute; repetido aqui por uma raz&atilde;o de m&eacute;todo: ele nasce de um
   <strong>leiaute externo ainda em homologa&ccedil;&atilde;o</strong>, e muda quando a nota t&eacute;cnica muda.
@@ -1371,8 +1385,8 @@ acontece &mdash; que nem sempre &eacute; dentro do produto.</p>
   Misturar os dois faria cada revis&atilde;o da NT reabrir o documento inteiro.</p>
   <div class="callout warn">
     <div class="ct">O achado que liga os dois</div>
-    <p>Dos quarenta tipos de inconsist&ecirc;ncia de evento fiscal, <strong>apenas sete se resolvem
-    dentro do SplitHub</strong> &mdash; os outros trinta e tr&ecirc;s dependem do emitente, do ERP ou do
+    <p>Dos trinta e nove tipos ativos de inconsist&ecirc;ncia de evento fiscal, <strong>apenas sete se resolvem
+    dentro do SplitHub</strong> &mdash; os outros trinta e dois dependem do emitente, do ERP ou do
     &oacute;rg&atilde;o. Neste cat&aacute;logo a propor&ccedil;&atilde;o &eacute; quase oposta: <strong>%(n_dentro)d das %(tot)d
     fecham dentro</strong>. A diferen&ccedil;a n&atilde;o &eacute; ru&iacute;do &mdash; ela diz de onde vem cada cat&aacute;logo.
     Inconsist&ecirc;ncia de evento nasce de um leiaute que terceiros preenchem, e por isso terceiros
@@ -1517,7 +1531,12 @@ acontece &mdash; que nem sempre &eacute; dentro do produto.</p>
   <div class="table-wrap"><table><thead><tr>
     <th>Vers&atilde;o</th><th>Data</th><th>Mudan&ccedil;a</th>
   </tr></thead><tbody>
-    <tr><td class="mono">v1.0</td><td class="mono">%(data)s</td>
+    <tr><td class="mono">v1.1</td><td class="mono">%(data)s</td>
+      <td>Fam&iacute;lia <strong>I &middot; Eventos fiscais</strong>, aprovada pela D-13, entra na taxonomia com os tipos no
+      cat&aacute;logo do dossi&ecirc; &mdash; trinta e nove ativos depois da retirada de um pela AE-07. A fronteira ganha o
+      <strong>alerta de compet&ecirc;ncia</strong> (D-14): evento confirmado em apura&ccedil;&atilde;o fechada n&atilde;o &eacute;
+      inconsist&ecirc;ncia, &eacute; decis&atilde;o, e vai para a aba de Alertas.</td></tr>
+    <tr><td class="mono">v1.0</td><td class="mono">25/09/2026</td>
       <td>Primeira edi&ccedil;&atilde;o. %(tot)d ocorr&ecirc;ncias lidas nas regras de neg&oacute;cio dos dezenove PRDs
       vivos, em oito fam&iacute;lias &mdash; seis existentes e duas propostas. Se&ccedil;&atilde;o de fronteira
       com as oito regras que deliberadamente n&atilde;o produzem ocorr&ecirc;ncia. Documento gerado por
@@ -1535,11 +1554,14 @@ for k in FAM_ORDEM:
     letra, nome, cor, desc, est = FAMILIAS[k]
     n = POR_FAM.get(k, 0)
     nv = sum(1 for e in C if e['fam'] == k and e['estado'] == 'vivo')
-    tag = (u'<span class="tag ok">no produto</span>' if est == 'vivo'
-           else u'<span class="tag pend">proposta</span>')
+    tag = {'vivo': u'<span class="tag ok">no produto</span>',
+           'aprovado': u'<span class="tag ok">aprovada &middot; a implementar</span>'}.get(
+        est, u'<span class="tag pend">proposta</span>')
+    qtd = (u'39<div class="cel-reg">no dossi&ecirc;</div>' if k == 'eventos'
+           else u'%d<div class="cel-reg">%d no produto</div>' % (n, nv))
     famtab.append(u'<tr><td>%s</td><td><strong>%s</strong></td><td>%s</td>'
-                  u'<td class="mono">%d<div class="cel-reg">%d no produto</div></td><td>%s</td></tr>'
-                  % (chip(letra, cor), nome, desc, n, nv, tag))
+                  u'<td class="mono">%s</td><td>%s</td></tr>'
+                  % (chip(letra, cor), nome, desc, qtd, tag))
 
 toc = ''.join(u'<li><a href="#%s"><span class="toc-num">%s</span>%s</a></li>' % (a, n, t)
               for n, t, a in TOC)

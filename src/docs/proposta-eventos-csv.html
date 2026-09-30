@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload de eventos por CSV</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 1120px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--teal); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+h1 { font-size: 28px; font-weight: 800; line-height: 1.18; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 820px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--teal); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 52px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 18px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14.5px; font-weight: 700; color: var(--txt1); margin: 28px 0 8px; scroll-margin-top: 20px; }
+h4 { font-size: 12px; font-weight: 700; color: var(--txt2); margin: 20px 0 6px; text-transform: uppercase; letter-spacing: .06em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--teal); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.mono { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--teal); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+.src-note { font-size: 11.5px; color: var(--txt3); margin: 6px 0 0; }
+
+/* ── mockup ─────────────────────────────────────────────────────── */
+.mock { border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; margin: 16px 0; background: var(--sur); }
+.mock-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.mock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.mock-url { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); margin-left: 4px; }
+.mock-tag { margin-left: auto; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
+.mock-tag.nova { background: var(--green-d); color: var(--green); }
+.mock-tag.muda { background: var(--amber-d); color: var(--amber); }
+.mock-body { padding: 16px 18px; }
+.mock-h { font-size: 15px; font-weight: 700; color: var(--txt1); margin-bottom: 2px; }
+.mock-s { font-size: 11.5px; color: var(--txt3); margin-bottom: 14px; }
+.mock-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.mock-tab { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--brd); color: var(--txt3); }
+.mock-tab.on { background: var(--teal); border-color: var(--teal); color: #fff; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--sur2); border: 1px solid var(--brd); border-radius: 7px; padding: 9px 11px; }
+.kpi-l { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.kpi-v { font-size: 19px; font-weight: 800; color: var(--txt1); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.kpi-s { font-size: 10px; color: var(--txt3); }
+.kpi.alert .kpi-v { color: var(--red); }
+.kpi.warn .kpi-v { color: var(--amber); }
+.kpi.good .kpi-v { color: var(--green); }
+.mock table { font-size: 11.5px; }
+.mock th { font-size: 9.5px; padding: 7px 10px; }
+.mock td { padding: 7px 10px; }
+.btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.btn-p { background: var(--teal); color: #fff; border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.btn-g { border: 1px solid var(--brd); color: var(--txt2); border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.st { display: inline-block; font-size: 9.5px; font-weight: 800; padding: 1px 7px; border-radius: 20px; white-space: nowrap; }
+.st.ok { background: var(--green-d); color: var(--green); }
+.st.wait { background: var(--blue-d); color: var(--blue); }
+.st.div { background: var(--red-d); color: var(--red); }
+.st.abs { background: var(--amber-d); color: var(--amber); }
+.st.neu { background: var(--gray-d); color: var(--gray); }
+.st.own { background: var(--purple-d); color: var(--purple); }
+.new { display: inline-block; font-size: 9px; font-weight: 800; background: var(--teal); color: #fff; border-radius: 3px; padding: 0 5px; margin-left: 5px; letter-spacing: .04em; vertical-align: 1px; }
+
+code, kbd, samp { overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } .kpis { grid-template-columns: repeat(2, 1fr); } }
+</style>
+<style>
+pre { margin: 12px 0; padding: 14px 16px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.6; color: var(--txt2); background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; white-space: pre; }
+.flow { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.flow-step { flex: 1 1 150px; background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 6px; padding: 10px 12px; }
+.flow-step.warn { border-left-color: var(--amber); }
+.flow-step.red { border-left-color: var(--red); }
+.flow-k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); }
+.flow-step.warn .flow-k { color: var(--amber); }
+.flow-step.red .flow-k { color: var(--red); }
+.flow-t { font-size: 12.5px; font-weight: 700; color: var(--txt1); margin-top: 3px; }
+.flow-d { font-size: 11.5px; color: var(--txt2); margin-top: 4px; }
+tr.grp td { background: var(--sur2); color: var(--txt1); font-weight: 600; font-size: 11.5px; }
+tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
+.drop { border: 1.5px dashed var(--brd); border-radius: 8px; padding: 16px; text-align: center; font-size: 12px; color: var(--txt3); margin: 10px 0 14px; }
+.drop strong { color: var(--txt1); }
+.field { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12px; color: var(--txt2); margin-bottom: 8px; }
+.field .sel { border: 1px solid var(--brd); border-radius: 6px; padding: 4px 10px; background: var(--sur); color: var(--txt1); font-weight: 600; }
+.small { font-size: 11px; color: var(--txt3); margin-top: 8px; }
+.mock td code { white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">Proposta · Eventos fiscais · AE-04</div>
+<h1>Upload de eventos por CSV</h1>
+<p class="subtitle">A mesma porta da API, com outro envelope. Para quem ainda não integrou, para carga retroativa e para registro pontual — com as mesmas validações, a mesma idempotência e o mesmo ciclo de vida do evento que chega pela API.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta · Funcionalidade</span></div>
+<div class="meta-pill"><span class="meta-label">Origem</span>&nbsp;<span class="meta-val"><a class="xref" href="proposta-api-eventos-fiscais.html#s10">AE-04</a> · 30/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val"><a class="xref" href="proposta-api-eventos-fiscais.html">API de eventos v1.3</a></span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">30/09/2026</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip info">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Para que serve</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> O princípio: o CSV não é uma porta nova</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> O arquivo</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Os oito modelos</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> O fluxo em quatro passos</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Validações</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Reenvio e correção</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Trilha</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> O que o CSV não faz</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Requisitos</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Decisões em aberto</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Histórico de versões</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Para que serve</span></div>
+
+<p>A <strong>AE-04</strong>, aprovada em 30/09/2026, abriu o envio de eventos por arquivo. Três situações precisam dele:</p>
+<div class="table-wrap"><table><thead><tr><th>Situação</th><th>Por que a API não basta</th></tr></thead><tbody>
+<tr><td><strong>Cliente ainda sem integração</strong></td><td>Piloto e implantação: o ERP e o sistema fiscal ainda não chamam a API, e os eventos já estão acontecendo</td></tr>
+<tr><td><strong>Carga retroativa</strong></td><td>Os eventos do período anterior à integração, que nenhuma chamada vai trazer</td></tr>
+<tr><td><strong>Registro pontual</strong></td><td>O time fiscal soube de um evento por fora — consulta ao portal, contato do fornecedor — e precisa registrá-lo sem esperar a integração</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Exceção, não regra</div><p>Como no upload de documentos fiscais, o canal declarado é a API. O CSV cobre o que a API ainda não cobre — e por isso fica num botão da esteira, não num fluxo de rotina.</p></div>
+
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O princípio: o CSV não é uma porta nova</span></div>
+
+<p>A <strong>D-21</strong> fixou que a API pública é a única porta de entrada dos eventos. O CSV respeita isso: <strong>cada evento do arquivo vira uma chamada da mesma API</strong>, em lotes de 500 pela rota <code>POST /v1/eventos-fiscais/batch</code>. Não existe caminho paralelo, e não existe regra que valha só para o arquivo.</p>
+<div class="callout red"><div class="ct">O erro que não se repete</div><p>O upload de documentos fiscais pula o pipeline. O <a class="xref" href="prd-ingestao.html">PRD de Ingestão</a> registra isso: o upload não verifica chave, unicidade nem CNPJ, e carregar duas vezes o mesmo arquivo cria documentos duplicados sem aviso. Para eventos, o mesmo atalho seria pior — evento duplicado planeja a mesma ação duas vezes. Por isso o CSV passa pelas <strong>treze validações da API</strong>, pela <strong>idempotência da chave natural</strong> (V-13) e pelo <strong>mesmo ciclo de vida</strong>.</p></div>
+<div class="table-wrap"><table><thead><tr><th>Aspecto</th><th>Pela API</th><th>Pelo CSV</th></tr></thead><tbody>
+<tr><td>Validações</td><td>V-01 a V-13</td><td><strong>As mesmas</strong>, mais cinco de formato de arquivo</td></tr>
+<tr><td>Idempotência</td><td>Chave de acesso + código + sequência</td><td><strong>A mesma</strong> — reenviar o arquivo não duplica</td></tr>
+<tr><td>Ciclo de vida</td><td>Entra em <code>capturada</code></td><td><strong>O mesmo</strong></td></tr>
+<tr><td>Envelope</td><td>JSON</td><td>Linhas, uma por evento ou uma por item</td></tr>
+<tr><td>Antes de enviar</td><td>—</td><td>Pré-visualização com o resultado de cada evento</td></tr>
+<tr><td>Erros</td><td>Na resposta</td><td>Na tela e num arquivo com as linhas recusadas</td></tr>
+</tbody></table></div>
+
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">O arquivo</span></div>
+
+<div class="table-wrap"><table><thead><tr><th>Regra</th><th>Como é</th></tr></thead><tbody>
+<tr><td><strong>Separador</strong></td><td>Ponto e vírgula, como no upload de documentos</td></tr>
+<tr><td><strong>Número</strong></td><td>Vírgula decimal, sem separador de milhar — <code>2880,00</code></td></tr>
+<tr><td><strong>Datas</strong></td><td><code>dd/mm/aaaa</code> ou <code>aaaa-mm-dd</code>. Data e hora do evento em ISO com fuso, como no leiaute — <code>2026-08-15T16:40:00-03:00</code></td></tr>
+<tr><td><strong>Codificação</strong></td><td>UTF-8, com ou sem BOM — o Excel grava com</td></tr>
+<tr><td><strong>Cabeçalho</strong></td><td>Obrigatório, na primeira linha, <strong>por nome</strong>. A ordem das colunas não importa. O upload de documentos usa posição fixa, e ali uma coluna a mais desloca todas as outras sem erro visível</td></tr>
+<tr><td><strong>Um arquivo, um modelo</strong></td><td>O cabeçalho diz o modelo. Eventos de códigos diferentes que usam o mesmo modelo podem vir juntos</td></tr>
+<tr><td><strong>Tamanho</strong></td><td>Até 5.000 eventos por arquivo, enviados em lotes de 500</td></tr>
+<tr><td><strong>Extensão</strong></td><td><code>.csv</code> ou <code>.txt</code></td></tr>
+</tbody></table></div>
+
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Os oito modelos</span></div>
+
+<p>A API tem oito formatos de <code>detail</code>; o CSV tem um modelo para cada. Todos começam pelas mesmas colunas, as do envelope.</p>
+<h4>O envelope — comum aos oito</h4>
+<div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Obrig.</th><th>Na norma</th><th>Observação</th></tr></thead><tbody>
+<tr><td><code>event_code</code></td><td>sim</td><td><code>tpEvento</code></td><td>Diz o evento; o cabeçalho diz o modelo</td></tr>
+<tr><td><code>type</code></td><td>não</td><td>—</td><td>Derivado do código. Se vier, tem de bater (V-02)</td></tr>
+<tr><td><code>access_key</code></td><td>sim</td><td><code>chNFe</code></td><td>44 posições, com dígito verificador</td></tr>
+<tr><td><code>protocol</code></td><td>sim</td><td><code>nProtEvento</code></td><td>Obrigatório pela AE-01: evento sem autorização não entra</td></tr>
+<tr><td><code>event_datetime</code></td><td>sim</td><td><code>dhEvento</code></td><td>Data e hora da autorização, com fuso</td></tr>
+<tr><td><code>sequence</code></td><td>sim</td><td><code>nSeqEvento</code></td><td>Com a chave e o código, forma a chave natural</td></tr>
+<tr><td><code>author_tax_id</code></td><td>sim</td><td>CNPJ ou CPF</td><td>Quem registrou o evento — não quem carregou o arquivo</td></tr>
+<tr><td><code>author_role</code></td><td>sim</td><td><code>tpAutor</code></td><td><code>issuer</code>, <code>acquirer</code>, <code>successor</code> ou <code>tax_authority</code></td></tr>
+<tr><td><code>authorizer_state</code></td><td>não</td><td><code>cOrgaoAutor</code></td><td>UF do autor</td></tr>
+<tr><td><code>environment</code></td><td>não</td><td><code>tpAmb</code></td><td>Depende da D-10, ainda em aberto</td></tr>
+</tbody></table></div>
+<h4>As colunas de cada modelo</h4>
+<div class="table-wrap"><table><thead><tr><th>Modelo</th><th>Eventos</th><th>Colunas próprias</th><th>Linhas por evento</th></tr></thead><tbody>
+<tr><td><strong>M1 · indicador</strong></td><td><code>112110</code> <code>211128</code> <code>212110</code> <code>212120</code></td><td><code>accepted</code> — 1 ou 0</td><td>uma</td></tr>
+<tr><td><strong>M2 · data</strong></td><td><code>112150</code></td><td><code>expected_delivery_date</code></td><td>uma</td></tr>
+<tr><td><strong>M3 · itens</strong></td><td><code>112120</code> <code>112140</code> <code>211124</code> <code>211130</code> <code>211140</code></td><td><code>item_number</code>, <code>ibs_amount</code>, <code>cbs_amount</code>, <code>quantity</code>, <code>unit</code></td><td>uma por item</td></tr>
+<tr><td><strong>M4 · itens com estorno</strong></td><td><code>112130</code></td><td>as do M3, mais <code>reversal_ibs_amount</code> e <code>reversal_cbs_amount</code></td><td>uma por item</td></tr>
+<tr><td><strong>M5 · itens de crédito</strong></td><td><code>211150</code></td><td><code>item_number</code>, <code>ibs_credit_amount</code>, <code>cbs_credit_amount</code></td><td>uma por item</td></tr>
+<tr><td><strong>M6 · crédito presumido</strong></td><td><code>211110</code></td><td><code>item_number</code>, <code>calculation_base</code>, <code>classification_code</code>, <code>ibs_rate</code>, <code>ibs_amount</code>, <code>ibs_suspensive_amount</code>, <code>cbs_rate</code>, <code>cbs_amount</code>, <code>cbs_suspensive_amount</code></td><td>uma por item</td></tr>
+<tr><td><strong>M7 · decisão</strong></td><td><code>412120</code> <code>412130</code></td><td><code>granted</code>, <code>reason_code</code>, <code>reason</code></td><td>uma</td></tr>
+<tr><td><strong>M8 · cancelamento</strong></td><td><code>110001</code></td><td><code>cancelled_event_code</code>, <code>cancelled_protocol</code></td><td>uma</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Por que um evento vira várias linhas</div><p>Nos modelos de item, cada linha é um item e o envelope se repete. As linhas são agrupadas pela <strong>chave natural</strong> — chave de acesso, código e sequência —, a mesma que garante a idempotência. Linhas do mesmo evento com envelope diferente são recusadas juntas (CV-04): evento pela metade não existe.</p></div>
+<h4>Exemplo · modelo M3</h4>
+<p>O <code>211124</code> do item 3 da NF-e 000191 — o perecimento de 12 unidades que aparece na <a class="xref" href="eventos-fiscais-telas.html#s05">aba de eventos do documento</a> — e um segundo evento, de outro documento, com dois itens:</p>
+<pre>event_code;access_key;protocol;event_datetime;sequence;author_tax_id;author_role;item_number;ibs_amount;cbs_amount;quantity;unit
+211124;41260812345678000190550010000001911104577819;141260000456781;2026-08-15T16:40:00-03:00;1;98765432000110;acquirer;3;2880,00;2592,00;12,0000;UN
+211124;41260812345678000190550010000002031209311447;141260000456902;2026-08-16T09:10:00-03:00;1;98765432000110;acquirer;1;410,00;369,00;2,0000;UN
+211124;41260812345678000190550010000002031209311447;141260000456902;2026-08-16T09:10:00-03:00;1;98765432000110;acquirer;4;155,00;139,50;1,0000;UN</pre>
+<p class="src-note">Quatro linhas, dois eventos. A segunda e a terceira linha são o mesmo evento: mesma chave, mesmo código, mesma sequência.</p>
+
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O fluxo em quatro passos</span></div>
+
+<div class="flow">
+  <div class="flow-step"><div class="flow-k">1</div><div class="flow-t">Escolher e carregar</div><div class="flow-d">Modelo, modelo em branco para baixar, o arquivo</div></div>
+  <div class="flow-step"><div class="flow-k">2</div><div class="flow-t">Pré-visualizar</div><div class="flow-d">O resultado de cada evento, antes de enviar</div></div>
+  <div class="flow-step"><div class="flow-k">3</div><div class="flow-t">Enviar</div><div class="flow-d">Só os prontos e os com aviso, em lotes de 500</div></div>
+  <div class="flow-step"><div class="flow-k">4</div><div class="flow-t">Resultado</div><div class="flow-d">O que entrou, o que voltou, e o arquivo para corrigir</div></div>
+</div>
+<div class="mock">
+  <div class="mock-bar"><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-url">#/eventos · Importar eventos por CSV</span><span class="mock-tag nova">modal novo</span></div>
+  <div class="mock-body">
+    <div class="mock-h">Importar eventos por CSV</div>
+    <div class="mock-s">Passos 1 e 2 · o arquivo passa pelas mesmas validações da API antes de sair daqui</div>
+    <div class="field">Modelo <span class="sel">M3 · itens — 112120, 112140, 211124, 211130, 211140</span> <span class="btn-g">Baixar modelo em branco</span></div>
+    <div class="drop"><strong>eventos-perecimento-agosto.csv</strong> · 14 linhas · <strong>10 eventos</strong> · modelo reconhecido pelo cabeçalho</div>
+    <div class="kpis">
+      <div class="kpi good"><div class="kpi-l">Prontos</div><div class="kpi-v">6</div></div>
+      <div class="kpi warn"><div class="kpi-l">Com aviso</div><div class="kpi-v">1</div></div>
+      <div class="kpi alert"><div class="kpi-l">Com erro</div><div class="kpi-v">2</div></div>
+      <div class="kpi"><div class="kpi-l">Já importados</div><div class="kpi-v">1</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Linhas</th><th>Evento</th><th>Documento</th><th>Itens</th><th>Resultado</th><th>Detalhe</th></tr></thead><tbody>
+      <tr><td class="mono">2</td><td><code>211124</code></td><td>NF-e&nbsp;000191</td><td class="num">1</td><td><span class="st ok">pronto</span></td><td>—</td></tr>
+      <tr><td class="mono">3–4</td><td><code>211124</code></td><td>NF-e&nbsp;000203</td><td class="num">2</td><td><span class="st ok">pronto</span></td><td>—</td></tr>
+      <tr><td class="mono">5</td><td><code>211140</code></td><td>NF-e&nbsp;000177</td><td class="num">1</td><td><span class="st ok">pronto</span></td><td>—</td></tr>
+      <tr><td class="mono">6</td><td><code>211130</code></td><td>NF-e&nbsp;000191</td><td class="num">1</td><td><span class="st ok">pronto</span></td><td>—</td></tr>
+      <tr><td class="mono">7</td><td><code>112140</code></td><td>NF-e&nbsp;000191</td><td class="num">1</td><td><span class="st neu">já importado</span></td><td>Chegou antes pela API — V-13 devolve o existente</td></tr>
+      <tr><td class="mono">8</td><td><code>211120</code></td><td>NF-e&nbsp;000212</td><td class="num">1</td><td><span class="st abs">aviso</span></td><td><code>event_code_retired</code> — eliminado na NT v1.50; entra sem ação planejada (AE-05)</td></tr>
+      <tr style="background:var(--red-d)"><td class="mono">9–10</td><td><code>211124</code></td><td>NF-e&nbsp;000215</td><td class="num">2</td><td><span class="st div">erro</span></td><td><code>item_not_found</code> — linha 10, <code>item_number</code>: o item 9 não existe no documento</td></tr>
+      <tr style="background:var(--red-d)"><td class="mono">11</td><td><code>211140</code></td><td>NF-e&nbsp;000221</td><td class="num">1</td><td><span class="st div">erro</span></td><td><code>protocol_required</code> — linha 11, <code>protocol</code> vazio</td></tr>
+      <tr><td class="mono">12</td><td><code>112120</code></td><td>NF-e&nbsp;000230</td><td class="num">1</td><td><span class="st ok">pronto</span></td><td>—</td></tr>
+      <tr><td class="mono">13–14</td><td><code>211124</code></td><td>NF-e&nbsp;000234</td><td class="num">2</td><td><span class="st ok">pronto</span></td><td>—</td></tr>
+    </tbody></table></div>
+    <div class="btn-row"><span class="btn-p">Enviar 7 eventos</span><span class="btn-g">Baixar as linhas com erro</span><span class="btn-g">Cancelar</span></div>
+    <div class="small">O resultado é <strong>por evento</strong>: um erro na linha 10 recusa também a linha 9, que é o mesmo evento. O botão envia os prontos e o com aviso; os com erro ficam de fora e o já importado não é reenviado.</div>
+  </div>
+</div>
+<div class="mock">
+  <div class="mock-bar"><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-url">#/eventos · Importar eventos por CSV</span><span class="mock-tag nova">modal novo</span></div>
+  <div class="mock-body">
+    <div class="mock-h">Importação concluída</div>
+    <div class="mock-s">Passos 3 e 4 · 1 lote · 7 eventos · 30/09/2026 10:42 · por Time fiscal</div>
+    <div class="table-wrap"><table><thead><tr><th>Resultado</th><th class="num">Eventos</th><th>O que acontece agora</th></tr></thead><tbody>
+      <tr><td><span class="st ok">recebidos</span></td><td class="num">7</td><td>Entram em <code>capturada</code> e seguem o ciclo de qualquer evento: planeja, aguarda o órgão, executa</td></tr>
+      <tr><td><span class="st abs">com aviso</span></td><td class="num">1 dos 7</td><td>O <code>211120</code> fica registrado sem ação planejada, visível na esteira para análise</td></tr>
+      <tr><td><span class="st div">recusados</span></td><td class="num">2</td><td>No arquivo de erros, com as linhas originais e três colunas a mais: <code>erro_codigo</code>, <code>erro_mensagem</code>, <code>erro_coluna</code></td></tr>
+      <tr><td><span class="st neu">já existiam</span></td><td class="num">1</td><td>Nada muda: o evento já estava na base</td></tr>
+    </tbody></table></div>
+    <div class="btn-row"><span class="btn-p">Ver os 7 na esteira</span><span class="btn-g">Baixar arquivo de erros</span></div>
+  </div>
+</div>
+
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Validações</span></div>
+
+<p>As <a class="xref" href="proposta-api-eventos-fiscais.html#s07">treze validações da API</a> valem sem mudança. O CSV acrescenta cinco, que só existem porque o envelope é uma planilha:</p>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Regra</th><th>Código</th><th>Alcance</th></tr></thead><tbody>
+<tr><td class="mono">CV-01</td><td>O cabeçalho corresponde a um dos oito modelos</td><td><code>header_unknown</code></td><td>arquivo</td></tr>
+<tr><td class="mono">CV-02</td><td>As colunas obrigatórias do modelo estão presentes</td><td><code>column_missing</code></td><td>arquivo</td></tr>
+<tr><td class="mono">CV-03</td><td>Número com vírgula decimal e data em formato aceito</td><td><code>value_format_invalid</code></td><td>evento</td></tr>
+<tr><td class="mono">CV-04</td><td>Linhas do mesmo evento com o mesmo envelope</td><td><code>group_inconsistent</code></td><td>evento</td></tr>
+<tr><td class="mono">CV-05</td><td>No máximo 5.000 eventos por arquivo</td><td><code>file_too_large</code></td><td>arquivo</td></tr>
+</tbody></table></div>
+<p><strong>A recusa é por evento, nunca pelo arquivo inteiro</strong> — com três exceções, CV-01, CV-02 e CV-05, que tornam o arquivo ilegível e param antes da pré-visualização. Um erro numa linha de item recusa o evento inteiro, todas as linhas do grupo.</p>
+<p><strong>Código eliminado pela NT</strong> não é erro: pela AE-05, entra com o aviso <code>event_code_retired</code> e sem ação planejada.</p>
+
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Reenvio e correção</span></div>
+
+<div class="table-wrap"><table><thead><tr><th>Situação</th><th>O que fazer</th></tr></thead><tbody>
+<tr><td><strong>Reenviar o mesmo arquivo</strong></td><td>Seguro. A chave natural devolve o evento que já existe (V-13), e ele aparece como <em>já importado</em>. Nada se duplica</td></tr>
+<tr><td><strong>Corrigir as recusas</strong></td><td>Baixar as linhas com erro, corrigir e reenviar só elas — ou o arquivo inteiro, pelo motivo acima</td></tr>
+<tr><td><strong>Importou um evento com dado errado</strong></td><td>Não há edição: evento não tem PATCH. Enquanto a ação não foi executada, apaga-se o registro de importação (<code>DELETE</code> da API, que desfaz a importação e não toca no órgão) e importa-se de novo</td></tr>
+<tr><td><strong>O evento em si precisa ser cancelado</strong></td><td>O cancelamento é um evento, o <code>110001</code>: o ERP o registra na SEFAZ, e ele chega pela API ou pelo modelo M8</td></tr>
+</tbody></table></div>
+
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Trilha</span></div>
+
+<p>Todo evento que entra por arquivo guarda de onde veio. O <strong>autor</strong> continua sendo quem registrou o evento no órgão — as colunas <code>author_*</code> —, e quem <strong>carregou</strong> o arquivo fica registrado à parte:</p>
+<div class="table-wrap"><table><thead><tr><th>Campo</th><th>Conteúdo</th></tr></thead><tbody>
+<tr><td>Canal</td><td><code>csv</code> — ou <code>api</code> para o que chegou pela integração</td></tr>
+<tr><td>Arquivo</td><td>Nome, hash SHA-256 e a linha — ou as linhas — de onde o evento saiu</td></tr>
+<tr><td>Carregado por</td><td>Usuário e data e hora do envio</td></tr>
+</tbody></table></div>
+<p>A trilha aparece no <a class="xref" href="eventos-fiscais-telas.html#s04">detalhe do evento (T-02)</a>. Na <a class="xref" href="eventos-fiscais-telas.html#s05">aba de eventos do documento</a>, a coluna de autor continua mostrando o autor do evento.</p>
+
+</div>
+
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">O que o CSV não faz</span></div>
+
+<ul class="plain">
+<li><strong>Não substitui a integração.</strong> É o caminho de exceção; o canal declarado continua sendo a API.</li>
+<li><strong>Não aceita o XML do evento.</strong> Quem tem o XML autorizado tem como chamar a API — decisão UC-04.</li>
+<li><strong>Não edita evento.</strong> Evento autorizado é imutável; o caminho é o da seção <a class="xref" href="#s07">07</a>.</li>
+<li><strong>Não emite evento.</strong> A emissão fica no ERP, desde a decisão de 14/09/2026. O arquivo traz evento <em>já autorizado</em>.</li>
+<li><strong>Não decide sobre homologação.</strong> A coluna <code>environment</code> segue a D-10, ainda em aberto.</li>
+</ul>
+
+</div>
+
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Requisitos</span></div>
+
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Requisito</th></tr></thead><tbody>
+<tr><td class="mono">CSV-R01</td><td>Botão <strong>Importar CSV</strong> na esteira de eventos (T-01), para o perfil fiscal</td></tr>
+<tr><td class="mono">CSV-R02</td><td>Oito modelos em branco para baixar, com o cabeçalho, e o dicionário de colunas na própria tela</td></tr>
+<tr><td class="mono">CSV-R03</td><td>Detecção do modelo pelo cabeçalho, com colunas em qualquer ordem</td></tr>
+<tr><td class="mono">CSV-R04</td><td>Agrupamento das linhas pela chave natural</td></tr>
+<tr><td class="mono">CSV-R05</td><td>Pré-visualização com o resultado de cada evento: pronto, aviso, erro, já importado</td></tr>
+<tr><td class="mono">CSV-R06</td><td>As treze validações da API, mais CV-01 a CV-05</td></tr>
+<tr><td class="mono">CSV-R07</td><td>Envio em lotes de 500 pela rota de lote da API — sem caminho próprio</td></tr>
+<tr><td class="mono">CSV-R08</td><td>Resultado final e arquivo das linhas recusadas, com código, mensagem e coluna</td></tr>
+<tr><td class="mono">CSV-R09</td><td>Trilha: canal, arquivo, hash, linha e quem carregou</td></tr>
+<tr><td class="mono">CSV-R10</td><td>Idempotência: reenviar não duplica</td></tr>
+</tbody></table></div>
+
+</div>
+
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Decisões em aberto</span></div>
+
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Decisão</th><th>Recomendação</th></tr></thead><tbody>
+<tr><td class="mono">UC-01</td><td>Cabeçalho com os nomes da API ou em português?</td><td><strong>Os nomes da API.</strong> Um contrato, um dicionário; nomes em português dobram o que se mantém e criam uma tradução que pode divergir</td></tr>
+<tr><td class="mono">UC-02</td><td>Limite de 5.000 eventos por arquivo?</td><td><strong>Sim, para começar</strong>, e medir. É o que cabe numa pré-visualização legível</td></tr>
+<tr><td class="mono">UC-03</td><td>Aceitar vários modelos no mesmo arquivo?</td><td><strong>Não.</strong> O cabeçalho é o que diz o modelo; arquivo misto obrigaria a uma coluna de modelo e a linhas com metade das colunas vazias</td></tr>
+<tr><td class="mono">UC-04</td><td>Aceitar também o XML do evento?</td><td><strong>Não nesta versão.</strong> Quem tem o XML tem como chamar a API</td></tr>
+<tr><td class="mono">UC-05</td><td>A coluna <code>environment</code></td><td>Segue a <strong>D-10</strong>, ainda em aberto</td></tr>
+</tbody></table></div>
+
+</div>
+
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Histórico de versões</span></div>
+
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>30/09/2026</strong> — Primeira proposta, a partir da AE-04. O CSV como outra forma de chamar a mesma API: oito modelos — um por formato de <code>detail</code> —, cabeçalho por nome, uma linha por item com agrupamento pela chave natural, as treze validações da API mais cinco de arquivo, pré-visualização por evento, envio em lotes de 500, arquivo de erros e trilha de quem carregou. Dez requisitos e cinco decisões em aberto.</div></div>
+
+</div>
+
+
+</div>
+</body>
+</html>
