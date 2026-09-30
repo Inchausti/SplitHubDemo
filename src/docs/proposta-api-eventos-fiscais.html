@@ -139,11 +139,11 @@ img, svg { max-width: 100%; height: auto; }
 <h1>API de eventos fiscais</h1>
 <p class="subtitle">A API p&uacute;blica do SplitHub recebe documentos fiscais e n&atilde;o recebe eventos. Sem eles o produto n&atilde;o sabe que um cr&eacute;dito foi estornado, que um presumido foi pedido ou que um d&eacute;bito mudou de compet&ecirc;ncia. Esta proposta desenha o contrato que falta: seis rotas e um envelope que absorve os dezesseis tipos.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.1</span></div>
 <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta &middot; Integra&ccedil;&atilde;o</span></div>
 <div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">NT 2025.002-RTC v1.51</span></div>
-<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">25/09/2026</span></div>
-<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprova&ccedil;&atilde;o</span>&nbsp;<span class="chip info">v1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">30/09/2026</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprova&ccedil;&atilde;o</span>&nbsp;<span class="chip info">v1.1</span></div>
 </div>
 
 <div class="toc"><div class="toc-title">&Iacute;ndice</div><ul class="toc-list">
@@ -154,7 +154,7 @@ img, svg { max-width: 100%; height: auto; }
 <li><a href="#s05"><span class="toc-num">05</span> Os oito formatos de <code>detail</code></a></li>
 <li><a href="#s06"><span class="toc-num">06</span> Os dezesseis tipos</a></li>
 <li><a href="#s07"><span class="toc-num">07</span> Valida&ccedil;&otilde;es</a></li>
-<li><a href="#s08"><span class="toc-num">08</span> Ciclo de vida e webhooks</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Ciclo de vida, concilia&ccedil;&atilde;o e webhooks</a></li>
 <li><a href="#s09"><span class="toc-num">09</span> Erros</a></li>
 <li><a href="#s10"><span class="toc-num">10</span> Decis&otilde;es em aberto</a></li>
 <li><a href="#s11"><span class="toc-num">11</span> Hist&oacute;rico</a></li>
@@ -194,7 +194,7 @@ img, svg { max-width: 100%; height: auto; }
 <tr><td><span class="verb post">POST</span></td><td class="mono"><code>/v1/eventos-fiscais</code></td><td>Importa&ccedil;&atilde;o individual</td><td><code>202</code></td></tr>
 <tr><td><span class="verb post">POST</span></td><td class="mono"><code>/v1/eventos-fiscais/batch</code></td><td>Lote de at&eacute; <strong>500</strong>, como em documentos</td><td><code>202</code></td></tr>
 <tr><td><span class="verb get">GET</span></td><td class="mono"><code>/v1/eventos-fiscais/{id}</code></td><td>Situa&ccedil;&atilde;o de um evento e o resultado da concilia&ccedil;&atilde;o</td><td><code>200</code></td></tr>
-<tr><td><span class="verb get">GET</span></td><td class="mono"><code>/v1/eventos-fiscais</code></td><td>Listagem com filtros: <code>type</code>, <code>event_code</code>, <code>status</code>, <code>access_key</code>, <code>from</code>, <code>to</code></td><td><code>200</code></td></tr>
+<tr><td><span class="verb get">GET</span></td><td class="mono"><code>/v1/eventos-fiscais</code></td><td>Listagem com filtros: <code>type</code>, <code>event_code</code>, <code>phase</code>, <code>ibs_status</code>, <code>cbs_status</code>, <code>access_key</code>, <code>from</code>, <code>to</code></td><td><code>200</code></td></tr>
 <tr><td><span class="verb get">GET</span></td><td class="mono"><code>/v1/documentos-fiscais/{id}/eventos</code></td><td><strong>A hist&oacute;ria do documento</strong> &mdash; todos os eventos daquele DF, em ordem</td><td><code>200</code></td></tr>
 <tr><td><span class="verb del">DELETE</span></td><td class="mono"><code>/v1/eventos-fiscais/{id}</code></td><td>Remove o <strong>registro de importa&ccedil;&atilde;o</strong> enviado por engano</td><td><code>204</code></td></tr>
 </tbody></table></div>
@@ -370,27 +370,121 @@ img, svg { max-width: 100%; height: auto; }
 <tr><td>V-12</td><td><code>pagamento_integral</code> com <code>accepted</code> falso</td><td><code>indicator_value_invalid</code></td></tr>
 <tr><td>V-13</td><td>Duplicidade por <code>access_key</code> + <code>event_code</code> + <code>sequence</code></td><td>devolve <code>200</code> com o existente</td></tr>
 </tbody></table></div>
-<div class="callout warn"><div class="ct">O documento pode n&atilde;o existir ainda</div><p>V-04 e V-07 pressup&otilde;em o DF na base. <strong>Evento que chega antes do documento &eacute; caso normal</strong>, n&atilde;o erro: o endpoint aceita com <code>202</code> e status <code>aguardando_documento</code>, e reavalia quando o DF entrar. <strong>Descartar produz cr&eacute;dito apropriado sobre documento que n&atilde;o existe.</strong></p></div>
+<div class="callout warn"><div class="ct">O documento pode n&atilde;o existir ainda</div><p>V-04 e V-07 pressup&otilde;em o DF na base. <strong>Evento que chega antes do documento &eacute; caso normal</strong>, n&atilde;o erro: o endpoint aceita com <code>202</code> e fase <code>aguardando_documento</code>, e reavalia quando o DF entrar. <strong>Descartar produz cr&eacute;dito apropriado sobre documento que n&atilde;o existe.</strong></p></div>
 </div>
 
 <!-- 08 -->
 <div class="section" id="s08">
-<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Ciclo de vida e webhooks</span></div>
-<p>O evento entra, correlaciona com o documento e espera o saldo se mover na apura&ccedil;&atilde;o. O <code>GET</code> devolve onde ele est&aacute;.</p>
-<div class="table-wrap"><table><thead><tr><th><code>status</code></th><th>Significa</th></tr></thead><tbody>
-<tr><td><code>recebido</code></td><td>Aceito e validado</td></tr>
-<tr><td><code>aguardando_documento</code></td><td>O DF ainda n&atilde;o chegou &mdash; fica na fila de correla&ccedil;&atilde;o</td></tr>
-<tr><td><code>correlacionado</code></td><td>Ligado ao documento e aos itens</td></tr>
-<tr><td><code>conciliado</code></td><td><strong>O saldo na apura&ccedil;&atilde;o moveu no valor declarado</strong></td></tr>
-<tr><td><code>divergente</code></td><td>O saldo moveu em valor diferente, ou n&atilde;o moveu quando deveria</td></tr>
-<tr><td><code>nao_atribuivel</code></td><td>Mais de um evento na mesma janela de coleta &mdash; o delta fecha em montante, sem atribui&ccedil;&atilde;o</td></tr>
-<tr><td><code>cancelado</code></td><td>Um <code>cancelamento</code> v&aacute;lido o alcan&ccedil;ou</td></tr>
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Ciclo de vida, concilia&ccedil;&atilde;o e webhooks</span></div>
+<p>A situa&ccedil;&atilde;o de um evento tem <strong>duas camadas</strong>, e a resposta da API separa as duas. A
+<strong>fase da a&ccedil;&atilde;o</strong> &eacute; do evento: em que ponto do ciclo capturar, planejar, aguardar, executar
+ele est&aacute;. A <strong>concilia&ccedil;&atilde;o</strong> &eacute; <strong>por tributo</strong>: o IBS e a CBS s&atilde;o confirmados
+por &oacute;rg&atilde;os diferentes, em momentos diferentes, e cada um tem o seu registro fiscal (RN-ING-06).
+Um status &uacute;nico n&atilde;o consegue dizer que o IBS fechou e a CBS ainda est&aacute; aguardando.</p>
+<div class="callout info"><div class="ct">Mesmo vocabul&aacute;rio da tela</div><p>As duas camadas s&atilde;o as da
+<a class="xref" href="eventos-fiscais-telas.html#s05">aba de eventos fiscais no documento</a> e do
+<a class="xref" href="eventos-fiscais-dossie.html#s05">modelo de a&ccedil;&atilde;o do dossi&ecirc;</a>. O ERP l&ecirc; pela API o que
+o operador v&ecirc; na tela &mdash; com os mesmos nomes.</p></div>
+
+<h3 id="fase">8.1 A fase da a&ccedil;&atilde;o &mdash; <code>action.phase</code></h3>
+<div class="table-wrap"><table><thead><tr><th><code>phase</code></th><th>Significa</th><th>Saldo do produto</th></tr></thead><tbody>
+<tr><td><code>capturada</code></td><td>Aceito e validado, ainda sem correla&ccedil;&atilde;o com o documento</td><td>intacto</td></tr>
+<tr><td><code>aguardando_documento</code></td><td>O DF ainda n&atilde;o chegou &mdash; fila de correla&ccedil;&atilde;o. Reavaliado quando o documento entrar</td><td>intacto</td></tr>
+<tr><td><code>planejada</code></td><td>Ligado ao documento e aos itens, com o <strong>efeito previsto</strong> calculado por item e por tributo</td><td>intacto &mdash; o previsto vem &agrave; parte</td></tr>
+<tr><td><code>aguardando_fisco</code></td><td>Esperando a pr&oacute;xima coleta refletir o efeito em pelo menos um tributo</td><td>intacto, ou alterado s&oacute; no tributo j&aacute; executado</td></tr>
+<tr><td><code>executada</code></td><td><strong>Todos os tributos com efeito confirmaram</strong></td><td>alterado</td></tr>
+<tr><td><code>divergente</code></td><td>Algum tributo moveu em valor diferente, ou n&atilde;o moveu quando deveria</td><td>intacto no tributo divergente; ocorr&ecirc;ncias abertas</td></tr>
+<tr><td><code>nao_atribuivel</code></td><td>Mais de um evento no mesmo DF dentro da janela: o delta fecha em montante, sem imputa&ccedil;&atilde;o por evento</td><td>alterado no total; uma ocorr&ecirc;ncia aberta</td></tr>
+<tr><td><code>cancelada</code></td><td>Chegou um <code>cancelamento</code> v&aacute;lido <strong>antes</strong> da execu&ccedil;&atilde;o</td><td>intacto &mdash; nada a desfazer</td></tr>
+<tr><td><code>revertida</code></td><td>Chegou um <code>cancelamento</code> v&aacute;lido <strong>depois</strong> da execu&ccedil;&atilde;o</td><td>volta ao anterior</td></tr>
 </tbody></table></div>
-<p>Tr&ecirc;s eventos de webhook, no envelope que a API j&aacute; usa &mdash; <code>event</code>, <code>created_at</code>, <code>data</code>:</p>
+<div class="callout warn"><div class="ct">Cancelada e revertida n&atilde;o s&atilde;o a mesma coisa</div><p>Para quem integra, as
+consequ&ecirc;ncias s&atilde;o opostas. Em <code>cancelada</code>, o saldo nunca mudou e o ERP n&atilde;o tem nada a ajustar. Em
+<code>revertida</code>, o saldo mudou e voltou &mdash; e o ERP que j&aacute; tinha contabilizado o efeito precisa estornar.
+A v1.0 tinha um <code>cancelado</code> s&oacute;, e ele n&atilde;o dizia qual dos dois casos tinha acontecido.</p></div>
+
+<h3 id="conc">8.2 A concilia&ccedil;&atilde;o por tributo &mdash; <code>reconciliation.ibs</code> e <code>reconciliation.cbs</code></h3>
+<div class="table-wrap"><table><thead><tr><th><code>status</code></th><th>Quando</th><th>Abre ocorr&ecirc;ncia?</th></tr></thead><tbody>
+<tr><td><code>aguardando</code></td><td>Ainda dentro da janela &mdash; at&eacute; 8 dias na CBS, at&eacute; o pr&oacute;ximo arquivo Delta no IBS</td><td>N&atilde;o</td></tr>
+<tr><td><code>conciliado</code></td><td>O delta do &oacute;rg&atilde;o bateu com o previsto</td><td>N&atilde;o</td></tr>
+<tr><td><code>divergente</code></td><td>O &oacute;rg&atilde;o moveu, em valor diferente do previsto</td><td><strong>Sim</strong> &mdash; <code>evt_valor_divergente</code></td></tr>
+<tr><td><code>sem_reflexo</code></td><td>A janela fechou e o &oacute;rg&atilde;o n&atilde;o moveu o que o evento prometia</td><td><strong>Sim</strong> &mdash; <code>evt_nao_refletido</code></td></tr>
+<tr><td><code>nao_atribuivel</code></td><td>O montante fecha, a imputa&ccedil;&atilde;o n&atilde;o &mdash; na pr&aacute;tica, s&oacute; na CBS</td><td><strong>Sim, uma s&oacute;</strong> para todos os eventos da janela &mdash; <code>evt_nao_atribuivel</code></td></tr>
+<tr><td><code>sem_saldo_a_mover</code></td><td>O evento n&atilde;o promete delta: <code>112150</code>, <code>211130</code>, <code>212110</code>, <code>212120</code>, <code>412120</code>, <code>412130</code></td><td><strong>N&atilde;o.</strong> A confirma&ccedil;&atilde;o &eacute; por confer&ecirc;ncia pr&oacute;pria &mdash; dossi&ecirc; 7.3</td></tr>
+<tr><td><code>nao_aplicavel</code></td><td>O evento n&atilde;o toca aquele tributo. Exemplo: presumido com <code>ind_gCBSCredPres</code> = 0</td><td>N&atilde;o</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">A regra que impede o falso positivo</div><p><strong>Aus&ecirc;ncia de movimento s&oacute;
+&eacute; diverg&ecirc;ncia quando o evento prometia movimento.</strong> Sem <code>sem_saldo_a_mover</code>, os seis eventos que
+o saldo n&atilde;o confirma nunca chegariam a <code>executada</code> pela API: ficariam em <code>aguardando_fisco</code> para
+sempre, ou cairiam em <code>sem_reflexo</code> quando a janela fechasse &mdash; doze ocorr&ecirc;ncias falsas por documento.</p></div>
+
+<h3 id="deriva">8.3 Como a fase deriva dos dois tributos</h3>
+<p>A fase n&atilde;o &eacute; um terceiro dado que pode discordar dos outros dois: ela &eacute; calculada a partir deles, nesta ordem.</p>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Condi&ccedil;&atilde;o</th><th>Fase</th></tr></thead><tbody>
+<tr><td class="mono">1</td><td>Chegou <code>cancelamento</code> v&aacute;lido</td><td><code>cancelada</code> se nada executou; <code>revertida</code> se algum tributo j&aacute; executou</td></tr>
+<tr><td class="mono">2</td><td>Algum tributo em <code>divergente</code> ou <code>sem_reflexo</code></td><td><code>divergente</code></td></tr>
+<tr><td class="mono">3</td><td>Algum tributo em <code>nao_atribuivel</code></td><td><code>nao_atribuivel</code></td></tr>
+<tr><td class="mono">4</td><td>Algum tributo em <code>aguardando</code></td><td><code>aguardando_fisco</code></td></tr>
+<tr><td class="mono">5</td><td>Todos em <code>conciliado</code> ou <code>nao_aplicavel</code></td><td><code>executada</code></td></tr>
+<tr><td class="mono">6</td><td>Evento dos seis de <code>sem_saldo_a_mover</code></td><td>Decidida pela <strong>confer&ecirc;ncia pr&oacute;pria</strong> do dossi&ecirc; 7.3, n&atilde;o pelas colunas. O <code>212110</code> e o <code>212120</code> ficam em <code>aguardando_fisco</code> at&eacute; a decis&atilde;o do Fisco, o <code>412120</code> ou o <code>412130</code></td></tr>
+</tbody></table></div>
+<p><strong>A execu&ccedil;&atilde;o &eacute; por tributo.</strong> Quando o IBS confirma e a CBS ainda aguarda, o efeito do IBS
+j&aacute; &eacute; aplicado &mdash; <code>reconciliation.ibs.executed_at</code> vem preenchido &mdash; e a fase fica em
+<code>aguardando_fisco</code>. Segurar o IBS confirmado at&eacute; a CBS chegar faria o saldo do produto discordar do
+extrato do Comit&ecirc; Gestor sem motivo.</p>
+
+<h3 id="resp">8.4 A resposta completa</h3>
+<p>O <code>GET /v1/eventos-fiscais/{id}</code> e o <code>data</code> dos webhooks carregam o mesmo objeto. O exemplo &eacute;
+o <code>211110</code> do item 7 que aparece na <a class="xref" href="eventos-fiscais-telas.html#s05">aba do documento</a>:
+o IBS divergiu, a CBS &eacute; vedada pelo c&oacute;digo de presumido.</p>
+<pre>{
+  "id": "evt_9c41b7de",
+  "type": "apropriacao_credito_presumido",
+  "event_code": "211110",
+  "access_key": "4126…6789",
+  "event_datetime": "2026-08-19T11:05:00-03:00",
+  "action": {
+    "phase": "divergente",
+    "captured_at": "2026-08-19T14:07:40Z",
+    "planned_at":  "2026-08-19T14:07:41Z",
+    "executed_at": null                     <span class="cm">// a do &uacute;ltimo tributo; null enquanto faltar algum</span>
+  },
+  "planned_effect": {                      <span class="cm">// o previsto &mdash; nunca somado ao vigente</span>
+    "items": [
+      { "item_number": 7, "ibs_amount": 1240.00, "cbs_amount": null }   <span class="cm">// null: tributo n&atilde;o tocado</span>
+    ]
+  },
+  "reconciliation": {
+    "ibs": {
+      "status": "divergente",
+      "expected": 1240.00,
+      "observed": 980.00,
+      "checked_at": "2026-08-21T09:00:00Z",
+      "executed_at": null
+    },
+    "cbs": {
+      "status": "nao_aplicavel",
+      "reason": "cCredPres veda o grupo da CBS"
+    }
+  },
+  "inconsistencies": [                     <span class="cm">// sempre lista; vazia &eacute; [], nunca null</span>
+    { "id": "INC-2307", "tax": "ibs", "item_number": 7,
+      "type": "evt_valor_divergente", "status": "aberta" }
+  ]
+}</pre>
+<div class="table-wrap"><table><thead><tr><th>Bloco</th><th>Regra</th></tr></thead><tbody>
+<tr><td><code>planned_effect</code></td><td>Presente a partir de <code>planejada</code>. IBS e CBS em campos separados, <strong>nunca somados</strong>. <code>null</code> quer dizer que o evento n&atilde;o toca aquele tributo; zero n&atilde;o &eacute; usado para isso. &Eacute; sempre o <em>previsto</em>: o saldo vigente continua no documento</td></tr>
+<tr><td><code>reconciliation</code></td><td>Os dois tributos sempre presentes, mesmo quando um for <code>nao_aplicavel</code> &mdash; aus&ecirc;ncia de chave seria amb&iacute;gua entre &ldquo;n&atilde;o se aplica&rdquo; e &ldquo;n&atilde;o calculado ainda&rdquo;. <code>expected</code> e <code>observed</code> v&ecirc;m lado a lado sempre que houver diverg&ecirc;ncia</td></tr>
+<tr><td><code>inconsistencies</code></td><td><strong>Uma por diverg&ecirc;ncia</strong>, e diverg&ecirc;ncia &eacute; por tributo e por item: um evento que falha nos dois &oacute;rg&atilde;os traz duas; um que atinge tr&ecirc;s itens e diverge em dois traz duas. A ocorr&ecirc;ncia de <code>nao_atribuivel</code> &eacute; uma s&oacute; para a janela e aparece em cada evento envolvido, com <code>shared_with</code> listando os outros. O tipo vem do <a class="xref" href="eventos-fiscais-dossie.html#c6">cat&aacute;logo de inconsist&ecirc;ncias de evento</a></td></tr>
+</tbody></table></div>
+
+<h3 id="hooks">8.5 Webhooks</h3>
+<p>Tr&ecirc;s eventos, no envelope que a API j&aacute; usa &mdash; <code>event</code>, <code>created_at</code>, <code>data</code>. O
+<code>data</code> &eacute; o objeto da se&ccedil;&atilde;o 8.4 inteiro, no estado do momento do disparo.</p>
 <div class="table-wrap"><table><thead><tr><th>Evento</th><th>Quando dispara</th></tr></thead><tbody>
-<tr><td><code>evento_fiscal.correlacionado</code></td><td>O evento encontrou o documento, com o efeito calculado nos itens</td></tr>
-<tr><td><code>evento_fiscal.conciliado</code></td><td>A apura&ccedil;&atilde;o confirmou o efeito</td></tr>
-<tr><td><code>evento_fiscal.divergente</code></td><td>N&atilde;o confirmou &mdash; vai junto o motivo e a ocorr&ecirc;ncia aberta</td></tr>
+<tr><td><code>evento_fiscal.correlacionado</code></td><td>A fase chegou a <code>planejada</code>: o evento encontrou o documento e o efeito previsto est&aacute; calculado</td></tr>
+<tr><td><code>evento_fiscal.conciliado</code></td><td>A fase chegou a <code>executada</code>: todos os tributos com efeito confirmaram</td></tr>
+<tr><td><code>evento_fiscal.divergente</code></td><td>A fase chegou a <code>divergente</code> ou <code>nao_atribuivel</code>. Vai junto a lista <code>inconsistencies</code> &mdash; uma por tributo e por item divergente, com o previsto e o observado</td></tr>
 </tbody></table></div>
 <div class="callout red"><div class="ct">Depende da decis&atilde;o D-01</div><p>O produto emite hoje <code>credito.registrado</code>, <code>apropriado</code>, <code>utilizado</code> e <code>glosado</code>; o contrato p&uacute;blico define <code>credito.status_alterado</code> e <code>debito.status_alterado</code>. <strong>Os dois contratos convivem sem decis&atilde;o desde a auditoria.</strong> Os tr&ecirc;s nomes acima seguem o padr&atilde;o do contrato p&uacute;blico, mas <strong>n&atilde;o devem ser publicados antes de D-01</strong> &mdash; ou nascem j&aacute; em conflito. Ver <a class="xref" href="auditoria-prd-app.html#d01">D-01 na auditoria</a>.</p></div>
 </div>
@@ -401,10 +495,10 @@ img, svg { max-width: 100%; height: auto; }
 <p>Resposta individual, <code>202</code>, no formato que a ingest&atilde;o de DFs j&aacute; usa:</p>
 <pre>{
   "id": "evt_9c41b7de",
-  "status": "recebido",
   "type": "apropriacao_credito_presumido",
   "event_code": "211110",
   "access_key": "4126…6789",
+  "action": { "phase": "capturada" },     <span class="cm">// ou "aguardando_documento", se o DF n&atilde;o chegou</span>
   "created_at": "2026-09-25T13:02:11.000Z"
 }</pre>
 <p>No lote, <strong>o que vale &eacute; a recusa item a item</strong>: um evento inv&aacute;lido n&atilde;o derruba os outros 499.</p>
@@ -415,13 +509,13 @@ img, svg { max-width: 100%; height: auto; }
   "accepted": 498,
   "rejected": 2,
   "events": [
-    { "index": 0, "id": "evt_9c41b7de", "status": "recebido" },
+    { "index": 0, "id": "evt_9c41b7de", "status": "accepted", "phase": "capturada" },
     { "index": 17, "status": "rejected",
       "error": { "code": "item_not_found", "message": "Item 4 não existe no documento",
                  "field": "detail.items[0].item_number" } }
   ]
 }</pre>
-<p class="src-note">O objeto de erro &mdash; <code>code</code>, <code>message</code>, <code>field</code> &mdash; &eacute; proposta desta p&aacute;gina: a documenta&ccedil;&atilde;o p&uacute;blica atual <strong>n&atilde;o publica formato de erro</strong>. Se houver um padr&atilde;o interno, ele manda.</p>
+<p class="src-note">No lote, <code>status</code> diz s&oacute; se o item foi aceito ou recusado; a situa&ccedil;&atilde;o do evento &eacute; a <code>phase</code>. A v1.0 usava <code>status</code> para as duas coisas. O objeto de erro &mdash; <code>code</code>, <code>message</code>, <code>field</code> &mdash; &eacute; proposta desta p&aacute;gina: a documenta&ccedil;&atilde;o p&uacute;blica atual <strong>n&atilde;o publica formato de erro</strong>. Se houver um padr&atilde;o interno, ele manda.</p>
 </div>
 
 <!-- 10 -->
@@ -434,13 +528,15 @@ img, svg { max-width: 100%; height: auto; }
 <tr><td><strong>AE-04</strong></td><td>Ingest&atilde;o de eventos por <strong>CSV</strong>, como em documentos</td><td>O <code>detail</code> aninhado n&atilde;o cabe bem em coluna. Talvez s&oacute; para os formatos <code>indicator</code> e <code>date</code></td></tr>
 <tr><td><strong>AE-05</strong></td><td>Versionamento do cat&aacute;logo de <code>event_code</code></td><td>A NT j&aacute; eliminou um evento. O contrato precisa dizer o que faz com c&oacute;digo que deixou de existir &mdash; recusar ou aceitar com aviso</td></tr>
 <tr><td><strong>AE-06</strong></td><td>Origem do evento: ERP ou DW nacional</td><td>A an&aacute;lise de impacto sup&otilde;e coleta do DW. Este endpoint sup&otilde;e envio pelo ERP. <strong>Os dois podem coexistir</strong>, mas a duplicidade precisa de regra</td></tr>
+<tr><td><strong>AE-07</strong></td><td>O tipo <code>evt_divergencia_entre_orgaos</code> continua no cat&aacute;logo?</td><td>Com a concilia&ccedil;&atilde;o por tributo, &ldquo;a CBS confirmou e o IBS n&atilde;o&rdquo; aparece direto nas duas colunas, e o tributo que falhou j&aacute; abre a sua ocorr&ecirc;ncia. Manter o tipo abriria uma <strong>segunda ocorr&ecirc;ncia para a mesma diverg&ecirc;ncia</strong> &mdash; contra a regra de uma por diverg&ecirc;ncia. Recomenda&ccedil;&atilde;o: retirar do cat&aacute;logo do dossi&ecirc;</td></tr>
 </tbody></table></div>
-<p class="src-note">Somadas &agrave;s 13 decis&otilde;es da <a class="xref" href="proposta-eventos-impacto.html">an&aacute;lise de impacto</a>, o m&oacute;dulo de eventos passa a ter <strong>19 decis&otilde;es em aberto</strong>.</p>
+<p class="src-note">Somadas &agrave;s 13 decis&otilde;es da <a class="xref" href="proposta-eventos-impacto.html">an&aacute;lise de impacto</a>, o m&oacute;dulo de eventos passa a ter <strong>20 decis&otilde;es em aberto</strong>.</p>
 </div>
 
 <!-- 11 -->
 <div class="section" id="s11">
 <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+<div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>30/09/2026</strong> &mdash; <strong>A situa&ccedil;&atilde;o do evento passa a ter duas camadas.</strong> O status &uacute;nico da v1.0 vira a <strong>fase da a&ccedil;&atilde;o</strong> &mdash; nove fases, com <code>planejada</code> e <code>aguardando_fisco</code> no meio e <code>cancelado</code> dividido em <code>cancelada</code> e <code>revertida</code>, que t&ecirc;m consequ&ecirc;ncias opostas para o ERP &mdash; e a <strong>concilia&ccedil;&atilde;o por tributo</strong>, com sete estados, entre eles <code>sem_saldo_a_mover</code> e <code>nao_aplicavel</code>. Sem o primeiro, os seis eventos que o saldo n&atilde;o confirma nunca chegariam a <code>executada</code>. A fase deriva dos dois tributos por uma ordem de preced&ecirc;ncia, e a execu&ccedil;&atilde;o &eacute; por tributo. A resposta ganha <code>planned_effect</code>, o previsto, nunca somado ao vigente; <code>reconciliation</code>, com previsto e observado lado a lado; e <code>inconsistencies</code> como lista, uma por diverg&ecirc;ncia por tributo e por item. O <code>status</code> do lote passa a dizer s&oacute; se o item foi aceito. Os filtros da listagem acompanham. Nova decis&atilde;o AE-07, sobre um tipo do cat&aacute;logo de eventos que ficou redundante. Mesmo vocabul&aacute;rio da aba de eventos no detalhe do documento.</div></div>
 <div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>25/09/2026</strong> &mdash; Primeira proposta. Seis rotas, um envelope com discriminador, oito formatos de <code>detail</code> para os dezesseis tipos, treze valida&ccedil;&otilde;es de entrada, sete estados de ciclo de vida, tr&ecirc;s webhooks e seis decis&otilde;es em aberto. Baseada na NT 2025.002-RTC v1.51 e nas conven&ccedil;&otilde;es da API p&uacute;blica em vigor.</div></div>
 </div>
 
