@@ -186,12 +186,12 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <h1>Upload de eventos por CSV</h1>
 <p class="subtitle">A mesma porta da API, com outro envelope. Para quem ainda não integrou, para carga retroativa e para registro pontual — com as mesmas validações, a mesma idempotência e o mesmo ciclo de vida do evento que chega pela API.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.1</span></div>
 <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta · Funcionalidade</span></div>
 <div class="meta-pill"><span class="meta-label">Origem</span>&nbsp;<span class="meta-val"><a class="xref" href="proposta-api-eventos-fiscais.html#s10">AE-04</a> · 30/09/2026</span></div>
-<div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val"><a class="xref" href="proposta-api-eventos-fiscais.html">API de eventos v1.3</a></span></div>
+<div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val"><a class="xref" href="proposta-api-eventos-fiscais.html">API de eventos v1.4</a></span></div>
 <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">30/09/2026</span></div>
-<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip info">v1.0</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip info">v1.1</span></div>
 </div>
 
 <div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
@@ -226,9 +226,9 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O princípio: o CSV não é uma porta nova</span></div>
 
 <p>A <strong>D-21</strong> fixou que a API pública é a única porta de entrada dos eventos. O CSV respeita isso: <strong>cada evento do arquivo vira uma chamada da mesma API</strong>, em lotes de 500 pela rota <code>POST /v1/eventos-fiscais/batch</code>. Não existe caminho paralelo, e não existe regra que valha só para o arquivo.</p>
-<div class="callout red"><div class="ct">O erro que não se repete</div><p>O upload de documentos fiscais pula o pipeline. O <a class="xref" href="prd-ingestao.html">PRD de Ingestão</a> registra isso: o upload não verifica chave, unicidade nem CNPJ, e carregar duas vezes o mesmo arquivo cria documentos duplicados sem aviso. Para eventos, o mesmo atalho seria pior — evento duplicado planeja a mesma ação duas vezes. Por isso o CSV passa pelas <strong>treze validações da API</strong>, pela <strong>idempotência da chave natural</strong> (V-13) e pelo <strong>mesmo ciclo de vida</strong>.</p></div>
+<div class="callout red"><div class="ct">O erro que não se repete</div><p>O upload de documentos fiscais pula o pipeline. O <a class="xref" href="prd-ingestao.html">PRD de Ingestão</a> registra isso: o upload não verifica chave, unicidade nem CNPJ, e carregar duas vezes o mesmo arquivo cria documentos duplicados sem aviso. Para eventos, o mesmo atalho seria pior — evento duplicado planeja a mesma ação duas vezes. Por isso o CSV passa pelas <strong>catorze validações da API</strong>, pela <strong>idempotência da chave natural</strong> (V-13) e pelo <strong>mesmo ciclo de vida</strong>.</p></div>
 <div class="table-wrap"><table><thead><tr><th>Aspecto</th><th>Pela API</th><th>Pelo CSV</th></tr></thead><tbody>
-<tr><td>Validações</td><td>V-01 a V-13</td><td><strong>As mesmas</strong>, mais cinco de formato de arquivo</td></tr>
+<tr><td>Validações</td><td>V-01 a V-14</td><td><strong>As mesmas</strong>, mais cinco de formato de arquivo</td></tr>
 <tr><td>Idempotência</td><td>Chave de acesso + código + sequência</td><td><strong>A mesma</strong> — reenviar o arquivo não duplica</td></tr>
 <tr><td>Ciclo de vida</td><td>Entra em <code>capturada</code></td><td><strong>O mesmo</strong></td></tr>
 <tr><td>Envelope</td><td>JSON</td><td>Linhas, uma por evento ou uma por item</td></tr>
@@ -269,7 +269,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <tr><td><code>author_tax_id</code></td><td>sim</td><td>CNPJ ou CPF</td><td>Quem registrou o evento — não quem carregou o arquivo</td></tr>
 <tr><td><code>author_role</code></td><td>sim</td><td><code>tpAutor</code></td><td><code>issuer</code>, <code>acquirer</code>, <code>successor</code> ou <code>tax_authority</code></td></tr>
 <tr><td><code>authorizer_state</code></td><td>não</td><td><code>cOrgaoAutor</code></td><td>UF do autor</td></tr>
-<tr><td><code>environment</code></td><td>não</td><td><code>tpAmb</code></td><td>Depende da D-10, ainda em aberto</td></tr>
+<tr><td><code>environment</code></td><td>não</td><td><code>tpAmb</code></td><td>Homologação só entra com credencial de sandbox; a de produção recusa a linha (V-14, D-10)</td></tr>
 </tbody></table></div>
 <h4>As colunas de cada modelo</h4>
 <div class="table-wrap"><table><thead><tr><th>Modelo</th><th>Eventos</th><th>Colunas próprias</th><th>Linhas por evento</th></tr></thead><tbody>
@@ -351,7 +351,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <div class="section" id="s06">
 <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Validações</span></div>
 
-<p>As <a class="xref" href="proposta-api-eventos-fiscais.html#s07">treze validações da API</a> valem sem mudança. O CSV acrescenta cinco, que só existem porque o envelope é uma planilha:</p>
+<p>As <a class="xref" href="proposta-api-eventos-fiscais.html#s07">catorze validações da API</a> valem sem mudança. O CSV acrescenta cinco, que só existem porque o envelope é uma planilha:</p>
 <div class="table-wrap"><table><thead><tr><th>#</th><th>Regra</th><th>Código</th><th>Alcance</th></tr></thead><tbody>
 <tr><td class="mono">CV-01</td><td>O cabeçalho corresponde a um dos oito modelos</td><td><code>header_unknown</code></td><td>arquivo</td></tr>
 <tr><td class="mono">CV-02</td><td>As colunas obrigatórias do modelo estão presentes</td><td><code>column_missing</code></td><td>arquivo</td></tr>
@@ -397,7 +397,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <li><strong>Não aceita o XML do evento.</strong> Quem tem o XML autorizado tem como chamar a API — decisão UC-04.</li>
 <li><strong>Não edita evento.</strong> Evento autorizado é imutável; o caminho é o da seção <a class="xref" href="#s07">07</a>.</li>
 <li><strong>Não emite evento.</strong> A emissão fica no ERP, desde a decisão de 14/09/2026. O arquivo traz evento <em>já autorizado</em>.</li>
-<li><strong>Não decide sobre homologação.</strong> A coluna <code>environment</code> segue a D-10, ainda em aberto.</li>
+<li><strong>Não carrega homologação em produção.</strong> Pela D-10, evento com <code>environment</code> de homologação é recusado quando o upload usa credencial de produção.</li>
 </ul>
 
 </div>
@@ -411,7 +411,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <tr><td class="mono">CSV-R03</td><td>Detecção do modelo pelo cabeçalho, com colunas em qualquer ordem</td></tr>
 <tr><td class="mono">CSV-R04</td><td>Agrupamento das linhas pela chave natural</td></tr>
 <tr><td class="mono">CSV-R05</td><td>Pré-visualização com o resultado de cada evento: pronto, aviso, erro, já importado</td></tr>
-<tr><td class="mono">CSV-R06</td><td>As treze validações da API, mais CV-01 a CV-05</td></tr>
+<tr><td class="mono">CSV-R06</td><td>As catorze validações da API, mais CV-01 a CV-05</td></tr>
 <tr><td class="mono">CSV-R07</td><td>Envio em lotes de 500 pela rota de lote da API — sem caminho próprio</td></tr>
 <tr><td class="mono">CSV-R08</td><td>Resultado final e arquivo das linhas recusadas, com código, mensagem e coluna</td></tr>
 <tr><td class="mono">CSV-R09</td><td>Trilha: canal, arquivo, hash, linha e quem carregou</td></tr>
@@ -428,7 +428,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <tr><td class="mono">UC-02</td><td>Limite de 5.000 eventos por arquivo?</td><td><strong>Sim, para começar</strong>, e medir. É o que cabe numa pré-visualização legível</td></tr>
 <tr><td class="mono">UC-03</td><td>Aceitar vários modelos no mesmo arquivo?</td><td><strong>Não.</strong> O cabeçalho é o que diz o modelo; arquivo misto obrigaria a uma coluna de modelo e a linhas com metade das colunas vazias</td></tr>
 <tr><td class="mono">UC-04</td><td>Aceitar também o XML do evento?</td><td><strong>Não nesta versão.</strong> Quem tem o XML tem como chamar a API</td></tr>
-<tr><td class="mono">UC-05</td><td>A coluna <code>environment</code></td><td>Segue a <strong>D-10</strong>, ainda em aberto</td></tr>
+<tr><td class="mono">UC-05</td><td>A coluna <code>environment</code></td><td><strong>Decidida pela D-10 (30/09/2026):</strong> homologação só com credencial de sandbox</td></tr>
 </tbody></table></div>
 
 </div>
@@ -436,6 +436,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <div class="section" id="s12">
 <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Histórico de versões</span></div>
 
+<div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>30/09/2026</strong> — UC-05 fechada pela D-10: evento de homologação só entra com credencial de sandbox. As validações da API passam a ser catorze, com a V-14.</div></div>
 <div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>30/09/2026</strong> — Primeira proposta, a partir da AE-04. O CSV como outra forma de chamar a mesma API: oito modelos — um por formato de <code>detail</code> —, cabeçalho por nome, uma linha por item com agrupamento pela chave natural, as treze validações da API mais cinco de arquivo, pré-visualização por evento, envio em lotes de 500, arquivo de erros e trilha de quem carregou. Dez requisitos e cinco decisões em aberto.</div></div>
 
 </div>
