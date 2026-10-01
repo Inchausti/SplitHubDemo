@@ -105,6 +105,14 @@ body { background: var(--bg); color: var(--txt1); font: 14px/1.6 'Segoe UI', sys
 .chip.draft { background: var(--sur2); color: var(--txt3); }
 
 /* ── Changelog ── */
+.cl-toggle { display: flex; align-items: center; gap: 10px; width: 100%; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.cl-toggle:focus-visible { outline: 2px solid var(--teal); outline-offset: 4px; border-radius: 4px; }
+.cl-resumo { font-size: 12px; font-weight: 500; color: var(--txt3); }
+.cl-chev { margin-left: auto; color: var(--txt3); transition: transform .2s ease; flex-shrink: 0; }
+.cl-toggle:hover .cl-chev, .cl-toggle:hover .cl-resumo { color: var(--teal); }
+#changelog-section.cl-fechado .cl-chev { transform: rotate(-90deg); }
+#changelog-section.cl-fechado #cl-padrao, #changelog-section.cl-fechado #changelog-entries { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .cl-chev { transition: none; } }
 .cl-entry { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--brd); }
 .cl-entry:last-child { border-bottom: none; }
 .cl-left { display: flex; flex-direction: column; align-items: flex-end; min-width: 96px; gap: 3px; }
@@ -2179,8 +2187,8 @@ img, svg { max-width: 100%; height: auto; }
   <hr>
 
   <!-- Changelog -->
-  <div class="section" id="changelog-section">
-    <div class="sec-hdr"><span class="sec-num">—</span><span class="sec-title">Changelog de PRDs</span></div>
+  <div class="section cl-fechado" id="changelog-section">
+    <div class="sec-hdr"><button type="button" class="cl-toggle" id="cl-toggle" aria-expanded="false" aria-controls="changelog-entries" onclick="clAlternar()"><span class="sec-num">—</span><span class="sec-title">Changelog de PRDs</span><span class="cl-resumo" id="cl-resumo"></span><svg class="cl-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
 
     <div id="cl-padrao" style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;padding:14px 18px;background:var(--sur2);border:1px solid var(--brd);border-radius:8px;margin-bottom:18px">
       <div style="min-width:150px">
@@ -2198,6 +2206,17 @@ img, svg { max-width: 100%; height: auto; }
     </div>
 
     <div id="changelog-entries">
+      <div class="cl-entry">
+        <div class="cl-left">
+          <div class="cl-rel">R-148</div>
+          <div class="cl-ver">feat</div>
+          <div class="cl-date">01/10/2026</div>
+        </div>
+        <div class="cl-body">
+          <strong><span class="cl-mod">Hub</span> Changelog colapsável</strong>
+          O changelog passou de cem entradas e ocupava o fim do hub inteiro. Agora abre <strong>fechado</strong>, numa linha só, com o total de entradas e o último release; um clique no cabeçalho expande e recolhe. A escolha de cada leitor fica guardada no navegador dele, e um link para <code>#changelog-section</code> abre a seção. A estrutura de <code>#changelog-entries</code> não mudou, porque é por ela que o editor do hub insere entradas.
+        </div>
+      </div>
       <div class="cl-entry">
         <div class="cl-left">
           <div class="cl-rel">R-147</div>
@@ -4629,6 +4648,45 @@ function setStatus(type, msg) {
 function escAttr(s) {
   return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+/* ── Changelog colapsável ──────────────────────────────────────────────
+   Fechado por padrão. A escolha de cada leitor fica no navegador dele, e
+   um link para #changelog-section abre a seção. A estrutura de
+   #changelog-entries não muda: o editor do hub insere entradas por ela. */
+var CL_CHAVE = 'prds-changelog-aberto';
+function clAplicar(aberto) {
+  var sec = document.getElementById('changelog-section');
+  var btn = document.getElementById('cl-toggle');
+  if (!sec || !btn) return;
+  sec.classList.toggle('cl-fechado', !aberto);
+  btn.setAttribute('aria-expanded', aberto ? 'true' : 'false');
+  btn.title = aberto ? 'Recolher o changelog' : 'Expandir o changelog';
+}
+function clResumo() {
+  var el = document.getElementById('cl-resumo');
+  var ents = document.querySelectorAll('#changelog-entries .cl-entry');
+  if (!el || !ents.length) return;
+  var rel = ents[0].querySelector('.cl-rel'), dt = ents[0].querySelector('.cl-date');
+  el.textContent = ents.length + ' entradas · última ' + (rel ? rel.textContent.trim() : '') +
+    (dt ? ', ' + dt.textContent.trim() : '');
+}
+function clAlternar() {
+  var aberto = document.getElementById('changelog-section').classList.contains('cl-fechado');
+  clAplicar(aberto);
+  try { localStorage.setItem(CL_CHAVE, aberto ? '1' : '0'); } catch (e) {}
+}
+(function () {
+  var aberto = false;
+  try { aberto = localStorage.getItem(CL_CHAVE) === '1'; } catch (e) {}
+  if (location.hash === '#changelog-section') aberto = true;
+  clAplicar(aberto);
+  clResumo();
+  window.addEventListener('hashchange', function () {
+    if (location.hash === '#changelog-section') clAplicar(true);
+  });
+  var lista = document.getElementById('changelog-entries');
+  if (lista && window.MutationObserver) new MutationObserver(clResumo).observe(lista, { childList: true });
+})();
 </script>
 </body>
 </html>
