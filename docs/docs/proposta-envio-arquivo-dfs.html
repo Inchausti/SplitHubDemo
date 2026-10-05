@@ -197,12 +197,12 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <h1>Envio de arquivo de documentos fiscais</h1>
 <p class="subtitle">A rota que falta na proposta do desenvolvimento, desenhada a partir do payload que o docs já publica: enviar o arquivo, ver o que entra e o que não entra, e só então importar — com as mesmas verificações da chamada por documento.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.1</span></div>
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.2</span></div>
 <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta · API</span></div>
 <div class="meta-pill"><span class="meta-label">Origem</span>&nbsp;<span class="meta-val"><a class="xref" href="avaliacao-api-desenvolvimento.html#s07">Avaliação da API · item 8</a></span></div>
 <div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val"><a class="xref" href="https://split-hubhq.github.io/docs/ingestao-dfs.html">Docs v1.1.0</a> · <a class="xref" href="prd-ingestao.html">PRD Ingestão</a></span></div>
 <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">05/10/2026</span></div>
-<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip info">v1.1</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Aprovada</span>&nbsp;<span class="chip info">v1.2</span></div>
 </div>
 
 <div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
@@ -216,7 +216,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <li><a href="#s08"><span class="toc-num">08</span> Reenvio e correção</a></li>
 <li><a href="#s09"><span class="toc-num">09</span> Limites, segurança e trilha</a></li>
 <li><a href="#s10"><span class="toc-num">10</span> O que muda</a></li>
-<li><a href="#s11"><span class="toc-num">11</span> Decisões em aberto</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Decisões</a></li>
 <li><a href="#s12"><span class="toc-num">12</span> Histórico de versões</a></li>
 </ul></div>
 
@@ -257,22 +257,22 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <div class="section" id="s04">
 <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O fluxo em quatro passos</span></div>
 <div class="flow">
-<div class="flow-step"><div class="flow-k">1 · Enviar</div><div class="flow-t">POST /v1/arquivos</div><div class="flow-d">Recebe o arquivo e devolve o <code>id</code>. Não lê o conteúdo.</div></div>
-<div class="flow-step"><div class="flow-k">2 · Prévia</div><div class="flow-t">POST …/importacoes</div><div class="flow-d">Lê, verifica e mostra o que entra, o que não entra e por quê.</div></div>
-<div class="flow-step"><div class="flow-k">3 · Confirmar</div><div class="flow-t">POST …/{id}/confirmar</div><div class="flow-d">Importa só os documentos importáveis. Responde <code>202</code>.</div></div>
+<div class="flow-step"><div class="flow-k">1 · Enviar</div><div class="flow-t">POST /v1/uploads</div><div class="flow-d">Recebe o arquivo e devolve o <code>id</code>. Não lê o conteúdo.</div></div>
+<div class="flow-step"><div class="flow-k">2 · Prévia</div><div class="flow-t">POST …/ingestions</div><div class="flow-d">Lê, verifica e mostra o que entra, o que não entra e por quê.</div></div>
+<div class="flow-step"><div class="flow-k">3 · Confirmar</div><div class="flow-t">POST …/{id}/confirm</div><div class="flow-d">Importa só os documentos importáveis. Responde <code>202</code>.</div></div>
 <div class="flow-step"><div class="flow-k">4 · Acompanhar</div><div class="flow-t">GET …/{id}</div><div class="flow-d">Até <code>confirmed</code> ou <code>failed</code>. Cada documento ganha seu <code>df_…</code>.</div></div>
 </div>
 
 <h3>1. Enviar o arquivo</h3>
 <p>Envio em <code>multipart/form-data</code>, com o arquivo e a finalidade. A rota só guarda o arquivo: não o interpreta, e por isso responde rápido mesmo para arquivos grandes. O <code>sha256</code> identifica o conteúdo — o mesmo arquivo enviado de novo em 24 horas traz em <code>duplicate_of</code> o <code>id</code> do envio anterior.</p>
-<pre>curl -X POST https://api.splithub.com.br/v1/arquivos \
+<pre>curl -X POST https://api.splithub.com.br/v1/uploads \
   -H &quot;Authorization: Bearer {token}&quot; \
   -H &quot;Idempotency-Key: entradas-2026-09&quot; \
-  -F &quot;purpose=documentos_fiscais&quot; \
+  -F &quot;purpose=fiscal_documents&quot; \
   -F &quot;file=@entradas-setembro.csv&quot;</pre>
 <p class="src-note">Resposta <code>201 Created</code></p><pre>{
-  &quot;id&quot;: &quot;arq_3c8e5f&quot;,
-  &quot;purpose&quot;: &quot;documentos_fiscais&quot;,
+  &quot;id&quot;: &quot;upl_3c8e5f&quot;,
+  &quot;purpose&quot;: &quot;fiscal_documents&quot;,
   &quot;filename&quot;: &quot;entradas-setembro.csv&quot;,
   &quot;format&quot;: &quot;csv&quot;,
   &quot;size_bytes&quot;: 1843512,
@@ -282,18 +282,18 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
   &quot;created_at&quot;: &quot;2026-10-05T14:00:00Z&quot;
 }</pre>
 
-<p>O campo <code>purpose</code> existe para que a mesma rota receba, depois, o arquivo de eventos fiscais da <a class="xref" href="proposta-eventos-csv.html">AE-04</a>. Nesta proposta, o único valor é <code>documentos_fiscais</code>.</p>
+<p>O campo <code>purpose</code> existe para que a mesma rota receba, depois, o arquivo de eventos fiscais da <a class="xref" href="proposta-eventos-csv.html">AE-04</a>. Nesta proposta, o único valor é <code>fiscal_documents</code>.</p>
 
 <h3>2. Criar a importação e obter a prévia</h3>
-<pre>curl -X POST https://api.splithub.com.br/v1/documentos-fiscais/importacoes \
+<pre>curl -X POST https://api.splithub.com.br/v1/ingestions \
   -H &quot;Authorization: Bearer {token}&quot; \
   -H &quot;Idempotency-Key: entradas-2026-09&quot; \
   -H &quot;Content-Type: application/json&quot; \
-  -d &#x27;{ &quot;file_id&quot;: &quot;arq_3c8e5f&quot; }&#x27;</pre>
+  -d &#x27;{ &quot;file_id&quot;: &quot;upl_3c8e5f&quot; }&#x27;</pre>
 <p class="src-note">Resposta <code>201 Created</code> — a prévia</p><pre>{
-  &quot;id&quot;: &quot;imp_7b1d4e&quot;,
+  &quot;id&quot;: &quot;ing_7b1d4e&quot;,
   &quot;status&quot;: &quot;awaiting_confirmation&quot;,
-  &quot;file_id&quot;: &quot;arq_3c8e5f&quot;,
+  &quot;file_id&quot;: &quot;upl_3c8e5f&quot;,
   &quot;format&quot;: &quot;csv&quot;,
   &quot;summary&quot;: {
     &quot;documents&quot;: 412,
@@ -325,7 +325,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
       &quot;v_tot_cbs&quot;: &quot;61.20&quot;,
       &quot;contract&quot;: {
         &quot;id&quot;: &quot;ctr_5f8a2d&quot;,
-        &quot;origin&quot;: &quot;informado&quot;
+        &quot;origin&quot;: &quot;provided&quot;
       },
       &quot;payment_method&quot;: &quot;RAD&quot;,
       &quot;reconcilable&quot;: true,
@@ -350,13 +350,13 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
       &quot;v_tot_cbs&quot;: &quot;8.10&quot;,
       &quot;contract&quot;: {
         &quot;id&quot;: null,
-        &quot;origin&quot;: &quot;sobrescrito&quot;
+        &quot;origin&quot;: &quot;overridden&quot;
       },
       &quot;payment_method&quot;: &quot;FORNECEDOR&quot;,
       &quot;reconcilable&quot;: false,
       &quot;warnings&quot;: [
         {
-          &quot;code&quot;: &quot;tipo_nao_conciliavel&quot;,
+          &quot;code&quot;: &quot;type_not_reconcilable&quot;,
           &quot;message&quot;: &quot;NFCom ainda não é conciliável com a apuração assistida. O documento é importado e fica visível; a conciliação não ocorre.&quot;
         }
       ]
@@ -371,8 +371,8 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
         ]
       },
       &quot;access_key&quot;: &quot;35260914200166000187550010000004211234567891&quot;,
-      &quot;check&quot;: &quot;duplicidade&quot;,
-      &quot;code&quot;: &quot;chave_ja_registrada&quot;,
+      &quot;check&quot;: &quot;access_key&quot;,
+      &quot;code&quot;: &quot;access_key_already_registered&quot;,
       &quot;message&quot;: &quot;Chave de acesso já registrada no documento df_2a9c11, importado em 03/09/2026.&quot;,
       &quot;document_id&quot;: &quot;df_2a9c11&quot;
     },
@@ -384,8 +384,8 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
         ]
       },
       &quot;access_key&quot;: &quot;35260914200166000187550010000004381234567892&quot;,
-      &quot;check&quot;: &quot;duplicidade&quot;,
-      &quot;code&quot;: &quot;chave_repetida_no_arquivo&quot;,
+      &quot;check&quot;: &quot;access_key&quot;,
+      &quot;code&quot;: &quot;duplicate_access_key_in_file&quot;,
       &quot;message&quot;: &quot;A chave aparece nas linhas 88 e 89. As duas ficam de fora: o arquivo não diz qual é a certa.&quot;
     },
     {
@@ -395,8 +395,8 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
         ]
       },
       &quot;access_key&quot;: &quot;3526091420016600018755001000000512123456789&quot;,
-      &quot;check&quot;: &quot;dados&quot;,
-      &quot;code&quot;: &quot;chave_invalida&quot;,
+      &quot;check&quot;: &quot;access_key&quot;,
+      &quot;code&quot;: &quot;invalid_access_key&quot;,
       &quot;message&quot;: &quot;A chave de acesso tem 43 dígitos; são exigidos 44, com dígito verificador válido.&quot;,
       &quot;field&quot;: &quot;access_key&quot;,
       &quot;received&quot;: &quot;3526091420016600018755001000000512123456789&quot;
@@ -405,14 +405,14 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
   &quot;unusable_next_cursor&quot;: null
 }</pre>
 
-<p>A resposta traz o resumo e os primeiros 100 registros de cada lista. As listas completas ficam em <code>GET …/importacoes/{id}/documentos</code> e <code>GET …/importacoes/{id}/inutilizaveis</code>, com paginação por cursor. Uma prévia de 10 mil documentos não cabe numa resposta, e o resumo é o que a pessoa olha primeiro.</p>
+<p>A resposta traz o resumo e os primeiros 100 registros de cada lista. As listas completas ficam em <code>GET …/ingestions/{id}/documents</code> e <code>GET …/ingestions/{id}/unusable</code>, com paginação por cursor. Uma prévia de 10 mil documentos não cabe numa resposta, e o resumo é o que a pessoa olha primeiro.</p>
 
 <h3>3. Confirmar</h3>
-<pre>curl -X POST https://api.splithub.com.br/v1/documentos-fiscais/importacoes/imp_7b1d4e/confirmar \
+<pre>curl -X POST https://api.splithub.com.br/v1/ingestions/ing_7b1d4e/confirm \
   -H &quot;Authorization: Bearer {token}&quot; \
-  -H &quot;Idempotency-Key: entradas-2026-09-confirmar&quot;</pre>
+  -H &quot;Idempotency-Key: entradas-2026-09-confirm&quot;</pre>
 <p class="src-note">Resposta <code>202 Accepted</code> — a importação foi iniciada, não concluída</p><pre>{
-  &quot;id&quot;: &quot;imp_7b1d4e&quot;,
+  &quot;id&quot;: &quot;ing_7b1d4e&quot;,
   &quot;status&quot;: &quot;importing&quot;,
   &quot;summary&quot;: {
     &quot;documents&quot;: 412,
@@ -424,12 +424,12 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 }</pre>
 
 <p>A confirmação importa os documentos importáveis e deixa de fora os inutilizáveis. Quem quer só o arquivo inteiro corrige antes e envia de novo — ver a <a class="xref" href="#s11">U-07</a>.</p>
-<div class="callout red"><div class="ct">A duplicidade é verificada de novo na confirmação</div><p>Entre a prévia e a confirmação podem passar até 24 horas, e nesse intervalo o mesmo documento pode chegar pela API. Na confirmação, a unicidade da chave é verificada outra vez; o documento que passou a existir sai dos importáveis e entra nos inutilizáveis com <code>chave_ja_registrada</code>. O resumo final mostra quantos mudaram (<code>rechecked_at_confirmation</code>).</p></div>
+<div class="callout red"><div class="ct">A duplicidade é verificada de novo na confirmação</div><p>Entre a prévia e a confirmação podem passar até 24 horas, e nesse intervalo o mesmo documento pode chegar pela API. Na confirmação, a unicidade da chave é verificada outra vez; o documento que passou a existir sai dos importáveis e entra nos inutilizáveis com <code>access_key_already_registered</code>. O resumo final mostra quantos mudaram (<code>rechecked_at_confirmation</code>).</p></div>
 
 <h3>4. Acompanhar</h3>
-<p>Consulte <code>GET /v1/documentos-fiscais/importacoes/{id}</code> com espera crescente — 10 segundos, dobrando até 2 minutos, como na proposta do time — ou receba o evento <code>importacao.concluida</code> (<a class="xref" href="#s11">U-06</a>).</p>
+<p>Consulte <code>GET /v1/ingestions/{id}</code> com espera crescente — 10 segundos, dobrando até 2 minutos, como na proposta do time — ou receba o evento <code>ingestion.completed</code> (<a class="xref" href="#s11">U-06</a>).</p>
 <pre>{
-  &quot;id&quot;: &quot;imp_7b1d4e&quot;,
+  &quot;id&quot;: &quot;ing_7b1d4e&quot;,
   &quot;status&quot;: &quot;confirmed&quot;,
   &quot;summary&quot;: {
     &quot;documents&quot;: 412,
@@ -441,7 +441,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
   &quot;completed_at&quot;: &quot;2026-10-05T14:24:10Z&quot;
 }</pre>
 
-<p>Concluída a importação, <code>GET …/importacoes/{id}/documentos</code> devolve o <code>document_id</code> de cada chave. A partir daí, cada documento segue o processamento assíncrono de qualquer documento da API — <code>processing</code>, depois <code>completed</code> ou <code>error</code> (<a class="xref" href="prd-ingestao.html">RF-ING-003</a>) — e é consultado em <code>GET /v1/documentos-fiscais/{id}</code>.</p>
+<p>Concluída a importação, <code>GET …/ingestions/{id}/documents</code> devolve o <code>document_id</code> de cada chave. A partir daí, cada documento segue o processamento assíncrono de qualquer documento da API — <code>processing</code>, depois <code>completed</code> ou <code>error</code> (<a class="xref" href="prd-ingestao.html">RF-ING-003</a>) — e é consultado em <code>GET /v1/documentos-fiscais/{id}</code>.</p>
 <pre>{
   &quot;data&quot;: [
     {
@@ -460,7 +460,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 }</pre>
 
 <h3>Situações da importação</h3>
-<div class="table-wrap"><table class=""><thead><tr><th>Situação</th><th>Quando</th><th>Próxima</th></tr></thead><tbody><tr><td><code>awaiting_confirmation</code></td><td>Prévia pronta</td><td><code>importing</code>, <code>cancelled</code> ou <code>expired</code></td></tr><tr><td><code>importing</code></td><td>Confirmada; documentos sendo registrados</td><td><code>confirmed</code> ou <code>failed</code></td></tr><tr><td><code>confirmed</code></td><td>Documentos registrados. <strong>Final</strong></td><td>—</td></tr><tr><td><code>failed</code></td><td>A importação não terminou; motivo em <code>failure_reason</code>. Nenhum documento fica pela metade: ou o documento foi registrado, ou não foi. <strong>Final</strong></td><td>—</td></tr><tr><td><code>cancelled</code> <span class="new">NOVO</span></td><td>Cancelada antes da confirmação, por <code>POST …/{id}/cancelar</code>. <strong>Final</strong></td><td>—</td></tr><tr><td><code>expired</code></td><td>24 horas sem confirmação; o arquivo é descartado. <strong>Final</strong></td><td>—</td></tr></tbody></table></div>
+<div class="table-wrap"><table class=""><thead><tr><th>Situação</th><th>Quando</th><th>Próxima</th></tr></thead><tbody><tr><td><code>awaiting_confirmation</code></td><td>Prévia pronta</td><td><code>importing</code>, <code>cancelled</code> ou <code>expired</code></td></tr><tr><td><code>importing</code></td><td>Confirmada; documentos sendo registrados</td><td><code>confirmed</code> ou <code>failed</code></td></tr><tr><td><code>confirmed</code></td><td>Documentos registrados. <strong>Final</strong></td><td>—</td></tr><tr><td><code>failed</code></td><td>A importação não terminou; motivo em <code>failure_reason</code>. Nenhum documento fica pela metade: ou o documento foi registrado, ou não foi. <strong>Final</strong></td><td>—</td></tr><tr><td><code>cancelled</code> <span class="new">NOVO</span></td><td>Cancelada antes da confirmação, por <code>POST …/{id}/cancel</code>. <strong>Final</strong></td><td>—</td></tr><tr><td><code>expired</code></td><td>24 horas sem confirmação; o arquivo é descartado. <strong>Final</strong></td><td>—</td></tr></tbody></table></div>
 </div>
 
 <div class="section" id="s05">
@@ -478,7 +478,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <p>O modelo do docs passa a ter <strong>uma linha por documento</strong>. Saem as 17 colunas de item, fora desta primeira fase, e entram as 5 colunas de documento que faltavam para cobrir o payload.</p>
 
 <h3>Regras do arquivo</h3>
-<div class="table-wrap"><table class=""><thead><tr><th>Regra</th><th>Como fica</th></tr></thead><tbody><tr><td>Codificação</td><td>UTF-8, com ou sem BOM</td></tr><tr><td>Separador</td><td>Vírgula ou ponto e vírgula, reconhecido pela linha de cabeçalho. Campo com o separador vai entre aspas duplas</td></tr><tr><td>Cabeçalho</td><td>Obrigatório. As colunas são lidas <strong>pelo nome</strong>, em qualquer ordem. Coluna obrigatória ausente ou coluna desconhecida recusa o arquivo inteiro, com o nome da coluna (<a class="xref" href="#s11">U-05</a>)</td></tr><tr><td>Uma linha por documento</td><td>Cada linha é um documento. Duas linhas com a mesma <code>access_key</code> deixam as duas de fora (<code>chave_repetida_no_arquivo</code>)</td></tr><tr><td>Colunas de item</td><td>As colunas <code>item_*</code> do modelo atual não fazem parte do v2. Arquivo que as traz é recusado como <code>coluna_desconhecida</code>, com o nome da coluna (<a class="xref" href="#s11">U-05</a>)</td></tr><tr><td>Valores</td><td>Texto decimal com ponto: até 2 casas em valores, até 4 em alíquotas — a regra que o docs já adota desde a v1.1.0. Vírgula decimal e separador de milhar tornam o documento inutilizável, com o valor recebido (<a class="xref" href="#s11">U-04</a>)</td></tr><tr><td>Datas</td><td><code>identification_emission_date</code> em ISO 8601 com fuso; <code>competence_date</code> em AAAA-MM-DD</td></tr><tr><td>Célula vazia</td><td>Campo não informado. Diferente de zero</td></tr></tbody></table></div>
+<div class="table-wrap"><table class=""><thead><tr><th>Regra</th><th>Como fica</th></tr></thead><tbody><tr><td>Codificação</td><td>UTF-8, com ou sem BOM</td></tr><tr><td>Separador</td><td>Vírgula ou ponto e vírgula, reconhecido pela linha de cabeçalho. Campo com o separador vai entre aspas duplas</td></tr><tr><td>Cabeçalho</td><td>Obrigatório. As colunas são lidas <strong>pelo nome</strong>, em qualquer ordem. Coluna obrigatória ausente ou coluna desconhecida recusa o arquivo inteiro, com o nome da coluna (<a class="xref" href="#s11">U-05</a>)</td></tr><tr><td>Uma linha por documento</td><td>Cada linha é um documento. Duas linhas com a mesma <code>access_key</code> deixam as duas de fora (<code>duplicate_access_key_in_file</code>)</td></tr><tr><td>Colunas de item</td><td>As colunas <code>item_*</code> do modelo atual não fazem parte do v2. Arquivo que as traz é recusado como <code>unknown_column</code>, com o nome da coluna (<a class="xref" href="#s11">U-05</a>)</td></tr><tr><td>Valores</td><td>Texto decimal com ponto: até 2 casas em valores, até 4 em alíquotas — a regra que o docs já adota desde a v1.1.0. Vírgula decimal e separador de milhar tornam o documento inutilizável, com o valor recebido (<a class="xref" href="#s11">U-04</a>)</td></tr><tr><td>Datas</td><td><code>identification_emission_date</code> em ISO 8601 com fuso; <code>competence_date</code> em AAAA-MM-DD</td></tr><tr><td>Célula vazia</td><td>Campo não informado. Diferente de zero</td></tr></tbody></table></div>
 
 <h3>As 5 colunas novas</h3>
 <div class="table-wrap"><table class=""><thead><tr><th>Coluna</th><th>Nível</th><th>Regra</th></tr></thead><tbody><tr><td><code>override_contract_params</code></td><td>Documento</td><td><code>true</code> ou <code>false</code>. Vazio vale <code>false</code></td></tr><tr><td><code>payment_method</code></td><td>Documento</td><td><code>RAD</code> ou <code>FORNECEDOR</code>. Obrigatório quando <code>override_contract_params</code> é <code>true</code></td></tr><tr><td><code>payment_term_days</code></td><td>Documento</td><td>Prazo em dias. Obrigatório quando <code>override_contract_params</code> é <code>true</code></td></tr><tr><td><code>competence_date</code></td><td>Documento</td><td>AAAA-MM-DD. Obrigatório para NFCom, NFS-e e similares</td></tr><tr><td><code>total_services_value</code></td><td>Documento</td><td>Total de serviços, quando o documento é de serviço</td></tr></tbody></table></div>
@@ -500,16 +500,16 @@ nfcom,62,35260814200166000187620010000087654321098765,,true,FORNECEDOR,30,654321
 
 <h3>O arquivo inteiro é recusado</h3>
 <p>Problemas que impedem ler o arquivo respondem <code>422</code> na criação da importação, sem prévia.</p>
-<div class="table-wrap"><table class=""><thead><tr><th>Código</th><th>Quando</th></tr></thead><tbody><tr><td><code>formato_nao_suportado</code></td><td>O conteúdo não é JSON, XML, ZIP nem CSV</td></tr><tr><td><code>codificacao_invalida</code></td><td>O texto não é UTF-8</td></tr><tr><td><code>arquivo_vazio</code></td><td>Nenhum documento no arquivo</td></tr><tr><td><code>limite_excedido</code></td><td>Tamanho, quantidade de documentos ou de arquivos no ZIP acima do limite (<a class="xref" href="#s09">seção 09</a>)</td></tr><tr><td><code>coluna_obrigatoria_ausente</code></td><td>CSV sem uma coluna obrigatória no cabeçalho</td></tr><tr><td><code>coluna_desconhecida</code></td><td>CSV com coluna que não está no modelo</td></tr><tr><td><code>zip_invalido</code></td><td>ZIP criptografado, com ZIP dentro, com caminho para fora da pasta, ou com arquivo que não é XML</td></tr><tr><td><code>xml_inseguro</code></td><td>XML com DTD ou entidade externa</td></tr></tbody></table></div>
+<div class="table-wrap"><table class=""><thead><tr><th>Código</th><th>Quando</th></tr></thead><tbody><tr><td><code>unsupported_format</code></td><td>O conteúdo não é JSON, XML, ZIP nem CSV</td></tr><tr><td><code>invalid_encoding</code></td><td>O texto não é UTF-8</td></tr><tr><td><code>empty_file</code></td><td>Nenhum documento no arquivo</td></tr><tr><td><code>limit_exceeded</code></td><td>Tamanho, quantidade de documentos ou de arquivos no ZIP acima do limite (<a class="xref" href="#s09">seção 09</a>)</td></tr><tr><td><code>missing_required_column</code></td><td>CSV sem uma coluna obrigatória no cabeçalho</td></tr><tr><td><code>unknown_column</code></td><td>CSV com coluna que não está no modelo</td></tr><tr><td><code>invalid_zip</code></td><td>ZIP criptografado, com ZIP dentro, com caminho para fora da pasta, ou com arquivo que não é XML</td></tr><tr><td><code>unsafe_xml</code></td><td>XML com DTD ou entidade externa</td></tr></tbody></table></div>
 
 <h3>O documento é inutilizável</h3>
 <p>Os demais documentos do arquivo seguem. O inutilizável aparece na prévia com o motivo e nunca é importado.</p>
-<div class="table-wrap"><table class=""><thead><tr><th>Verificação</th><th>Código</th><th>Quando</th><th>Requisito</th></tr></thead><tbody><tr><td>Schema</td><td><code>schema_invalido</code></td><td>XML fora do XSD do modelo, ou JSON fora da estrutura do payload</td><td><a class="xref" href="prd-ingestao.html">RF-ING-009</a></td></tr><tr><td>Campos obrigatórios</td><td><code>campo_obrigatorio_ausente</code></td><td>Campo exigido para o tipo ausente — inclusive os condicionais, como <code>competence_date</code> na NFCom</td><td><a class="xref" href="prd-ingestao.html">RF-ING-009</a></td></tr><tr><td>Dados</td><td><code>valor_invalido</code></td><td>Valor como número, com vírgula decimal ou com casas demais. Traz o valor recebido</td><td><a class="xref" href="prd-ingestao.html">RF-ING-006</a></td></tr><tr><td>Dados</td><td><code>data_invalida</code></td><td>Data fora do formato. Traz o valor recebido</td><td><a class="xref" href="prd-ingestao.html">RF-ING-007</a></td></tr><tr><td>Chave de acesso</td><td><code>chave_invalida</code></td><td>Chave sem 44 dígitos ou com dígito verificador inválido</td><td><a class="xref" href="prd-ingestao.html">RF-ING-011</a></td></tr><tr><td>Chave de acesso</td><td><code>chave_ja_registrada</code></td><td>Chave já registrada na plataforma, por qualquer canal. Traz o <code>document_id</code> existente</td><td><a class="xref" href="prd-ingestao.html">RF-ING-010</a></td></tr><tr><td>Chave de acesso</td><td><code>chave_repetida_no_arquivo</code></td><td>Dois documentos com a mesma chave no arquivo — no CSV, duas linhas. Os dois ficam de fora: o arquivo não diz qual é o certo</td><td><a class="xref" href="prd-ingestao.html">RN-ING-01</a></td></tr><tr><td>CNPJ do emitente</td><td><code>cnpj_emitente_invalido</code></td><td>CNPJ inexistente ou inativo na Receita Federal</td><td><a class="xref" href="prd-ingestao.html">RF-ING-009</a></td></tr><tr><td>Destinatário</td><td><code>destinatario_nao_cadastrado</code></td><td>Destinatário não cadastrado ou inativo em Organização</td><td><a class="xref" href="prd-ingestao.html">RF-ING-014</a></td></tr><tr><td>Contrato</td><td><code>contrato_nao_encontrado</code></td><td><code>contract_id</code> informado não existe para a empresa</td><td><a class="xref" href="prd-ingestao.html">RF-ING-015</a></td></tr><tr><td>Contrato</td><td><code>contrato_fora_vigencia</code></td><td><code>contract_id</code> informado sem vigência na data de emissão (<a class="xref" href="#s11">U-09</a>)</td><td><a class="xref" href="prd-ingestao.html">RN-ING-04</a></td></tr></tbody></table></div>
+<div class="table-wrap"><table class=""><thead><tr><th>Verificação</th><th>Código</th><th>Quando</th><th>Requisito</th></tr></thead><tbody><tr><td>Schema</td><td><code>invalid_schema</code></td><td>XML fora do XSD do modelo, ou JSON fora da estrutura do payload</td><td><a class="xref" href="prd-ingestao.html">RF-ING-009</a></td></tr><tr><td>Campos obrigatórios</td><td><code>missing_required_field</code></td><td>Campo exigido para o tipo ausente — inclusive os condicionais, como <code>competence_date</code> na NFCom</td><td><a class="xref" href="prd-ingestao.html">RF-ING-009</a></td></tr><tr><td>Dados</td><td><code>invalid_value</code></td><td>Valor como número, com vírgula decimal ou com casas demais. Traz o valor recebido</td><td><a class="xref" href="prd-ingestao.html">RF-ING-006</a></td></tr><tr><td>Dados</td><td><code>invalid_date</code></td><td>Data fora do formato. Traz o valor recebido</td><td><a class="xref" href="prd-ingestao.html">RF-ING-007</a></td></tr><tr><td>Chave de acesso</td><td><code>invalid_access_key</code></td><td>Chave sem 44 dígitos ou com dígito verificador inválido</td><td><a class="xref" href="prd-ingestao.html">RF-ING-011</a></td></tr><tr><td>Chave de acesso</td><td><code>access_key_already_registered</code></td><td>Chave já registrada na plataforma, por qualquer canal. Traz o <code>document_id</code> existente</td><td><a class="xref" href="prd-ingestao.html">RF-ING-010</a></td></tr><tr><td>Chave de acesso</td><td><code>duplicate_access_key_in_file</code></td><td>Dois documentos com a mesma chave no arquivo — no CSV, duas linhas. Os dois ficam de fora: o arquivo não diz qual é o certo</td><td><a class="xref" href="prd-ingestao.html">RN-ING-01</a></td></tr><tr><td>CNPJ do emitente</td><td><code>invalid_issuer_cnpj</code></td><td>CNPJ inexistente ou inativo na Receita Federal</td><td><a class="xref" href="prd-ingestao.html">RF-ING-009</a></td></tr><tr><td>Destinatário</td><td><code>recipient_not_registered</code></td><td>Destinatário não cadastrado ou inativo em Organização</td><td><a class="xref" href="prd-ingestao.html">RF-ING-014</a></td></tr><tr><td>Contrato</td><td><code>contract_not_found</code></td><td><code>contract_id</code> informado não existe para a empresa</td><td><a class="xref" href="prd-ingestao.html">RF-ING-015</a></td></tr><tr><td>Contrato</td><td><code>contract_not_in_force</code></td><td><code>contract_id</code> informado sem vigência na data de emissão (<a class="xref" href="#s11">U-09</a>)</td><td><a class="xref" href="prd-ingestao.html">RN-ING-04</a></td></tr></tbody></table></div>
 
 <h3>O documento entra, com aviso</h3>
-<div class="table-wrap"><table class=""><thead><tr><th>Código</th><th>Quando</th><th>Efeito</th></tr></thead><tbody><tr><td><code>sem_contrato_vigente</code></td><td>Nenhum contrato vigente na data de emissão</td><td>Importado sem contrato vinculado. A prévia mostra <code>contract.origin: "nenhum"</code></td></tr><tr><td><code>tipo_nao_conciliavel</code></td><td>Tipo de DF ainda não conciliável com a apuração assistida</td><td>Importado e visível, sem conciliação. Mantém o <code>reconcilable</code> da proposta do time</td></tr></tbody></table></div>
+<div class="table-wrap"><table class=""><thead><tr><th>Código</th><th>Quando</th><th>Efeito</th></tr></thead><tbody><tr><td><code>no_contract_in_force</code></td><td>Nenhum contrato vigente na data de emissão</td><td>Importado sem contrato vinculado. A prévia mostra <code>contract.origin: "none"</code></td></tr><tr><td><code>type_not_reconcilable</code></td><td>Tipo de DF ainda não conciliável com a apuração assistida</td><td>Importado e visível, sem conciliação. Mantém o <code>reconcilable</code> da proposta do time</td></tr></tbody></table></div>
 
-<p>O campo <code>contract.origin</code> diz de onde veio o contrato: <code>informado</code> (o arquivo trouxe), <code>vigente</code> (a plataforma encontrou pelo fornecedor e pela data de emissão), <code>sobrescrito</code> (o arquivo trouxe o método e o prazo) ou <code>nenhum</code>.</p>
+<p>O campo <code>contract.origin</code> diz de onde veio o contrato: <code>provided</code> (o arquivo trouxe), <code>in_force</code> (a plataforma encontrou pelo fornecedor e pela data de emissão), <code>overridden</code> (o arquivo trouxe o método e o prazo) ou <code>none</code>.</p>
 </div>
 
 <div class="section" id="s08">
@@ -518,9 +518,9 @@ nfcom,62,35260814200166000187620010000087654321098765,,true,FORNECEDOR,30,654321
 <p>A prévia não é editável: o arquivo é a fonte, e a correção acontece nele.</p>
 <ul class="plain">
 <li><strong>Corrigir os inutilizáveis.</strong> Confirme os importáveis e envie um arquivo só com os documentos corrigidos.</li>
-<li><strong>Enviar de novo o mesmo arquivo.</strong> Não duplica nada: os documentos já importados aparecem como <code>chave_ja_registrada</code>, e só entram os que faltavam. Reenviar o arquivo inteiro depois de corrigir parte dele é seguro.</li>
+<li><strong>Enviar de novo o mesmo arquivo.</strong> Não duplica nada: os documentos já importados aparecem como <code>access_key_already_registered</code>, e só entram os que faltavam. Reenviar o arquivo inteiro depois de corrigir parte dele é seguro.</li>
 <li><strong>Repetir a chamada.</strong> Toda operação aceita <code>Idempotency-Key</code>: repetir o envio, a criação da importação ou a confirmação com a mesma chave devolve a mesma resposta.</li>
-<li><strong>Desistir.</strong> <code>POST …/importacoes/{id}/cancelar</code> descarta a prévia e o arquivo. Sem cancelamento, a prévia expira em 24 horas.</li>
+<li><strong>Desistir.</strong> <code>POST …/ingestions/{id}/cancel</code> descarta a prévia e o arquivo. Sem cancelamento, a prévia expira em 24 horas.</li>
 </ul>
 </div>
 
@@ -535,10 +535,10 @@ nfcom,62,35260814200166000187620010000087654321098765,,true,FORNECEDOR,30,654321
 
 <h3>Na proposta do desenvolvimento</h3>
 <p>Mantidos como o time propôs: as duas etapas, a expiração de 24 horas, o <code>202</code> na confirmação, a consulta com espera crescente, o <code>reconcilable</code> e a classificação como operação pesada.</p>
-<div class="table-wrap"><table class="cmp"><thead><tr><th>Proposta do time</th><th>Esta proposta</th><th>Por quê</th></tr></thead><tbody><tr><td><code>uploadId</code> sem rota que o devolva</td><td><code>POST /v1/arquivos</code> devolve o <code>id</code></td><td>Sem a rota, o fluxo não começa</td></tr><tr><td><code>kind</code>: <code>dfe</code> ou <code>nfse</code></td><td>Removido. O tipo vem de cada documento</td><td>O docs aceita 14 tipos; um arquivo pode misturá-los</td></tr><tr><td><code>uploadId</code> em camelCase</td><td><code>file_id</code></td><td>Convenção do docs: <code>snake_case</code></td></tr><tr><td>Prévia com <code>chave_dfe</code>, <code>valor_total</code>, <code>valor_ibs</code>, <code>valor_cbs</code></td><td><code>access_key</code>, <code>total_note_value</code>, <code>v_tot_ibs</code>, <code>v_tot_cbs</code></td><td>Os mesmos nomes do payload que o cliente enviou</td></tr><tr><td>Inutilizável como <code>{line, reason}</code></td><td><code>{source, access_key, check, code, message, received}</code></td><td><a class="xref" href="prd-ingestao.html">RF-ING-012</a> e <a class="xref" href="prd-ingestao.html">RN-ING-07</a>: dizer qual verificação falhou. "Linha" não serve para ZIP e JSON</td></tr><tr><td>Prévia inteira na resposta</td><td>Resumo e 100 primeiros; listas completas paginadas</td><td>Arquivo de 10 mil documentos</td></tr><tr><td>Sem cancelamento</td><td><code>POST …/cancelar</code> e situação <code>cancelled</code></td><td>Desistir sem esperar 24 horas</td></tr><tr><td>Unicidade verificada só na prévia</td><td>Verificada de novo na confirmação</td><td><a class="xref" href="prd-ingestao.html">RN-ING-01</a>: a prévia pode ter 24 horas</td></tr><tr><td>Sem autor</td><td><code>created_by</code> e <code>confirmed_by</code></td><td>DEF-07</td></tr><tr><td>Só consulta periódica</td><td>Evento <code>importacao.concluida</code></td><td><a class="xref" href="#s11">U-06</a></td></tr></tbody></table></div>
+<div class="table-wrap"><table class="cmp"><thead><tr><th>Proposta do time</th><th>Esta proposta</th><th>Por quê</th></tr></thead><tbody><tr><td><code>uploadId</code> sem rota que o devolva</td><td><code>POST /v1/uploads</code> devolve o <code>id</code></td><td>Sem a rota, o fluxo não começa</td></tr><tr><td><code>kind</code>: <code>dfe</code> ou <code>nfse</code></td><td>Removido. O tipo vem de cada documento</td><td>O docs aceita 14 tipos; um arquivo pode misturá-los</td></tr><tr><td><code>uploadId</code> em camelCase</td><td><code>file_id</code></td><td>Convenção do docs: <code>snake_case</code></td></tr><tr><td>Prévia com <code>chave_dfe</code>, <code>valor_total</code>, <code>valor_ibs</code>, <code>valor_cbs</code></td><td><code>access_key</code>, <code>total_note_value</code>, <code>v_tot_ibs</code>, <code>v_tot_cbs</code></td><td>Os mesmos nomes do payload que o cliente enviou</td></tr><tr><td>Inutilizável como <code>{line, reason}</code></td><td><code>{source, access_key, check, code, message, received}</code></td><td><a class="xref" href="prd-ingestao.html">RF-ING-012</a> e <a class="xref" href="prd-ingestao.html">RN-ING-07</a>: dizer qual verificação falhou. "Linha" não serve para ZIP e JSON</td></tr><tr><td>Prévia inteira na resposta</td><td>Resumo e 100 primeiros; listas completas paginadas</td><td>Arquivo de 10 mil documentos</td></tr><tr><td>Sem cancelamento</td><td><code>POST …/cancel</code> e situação <code>cancelled</code></td><td>Desistir sem esperar 24 horas</td></tr><tr><td>Unicidade verificada só na prévia</td><td>Verificada de novo na confirmação</td><td><a class="xref" href="prd-ingestao.html">RN-ING-01</a>: a prévia pode ter 24 horas</td></tr><tr><td>Sem autor</td><td><code>created_by</code> e <code>confirmed_by</code></td><td>DEF-07</td></tr><tr><td>Só consulta periódica</td><td>Evento <code>ingestion.completed</code></td><td><a class="xref" href="#s11">U-06</a></td></tr></tbody></table></div>
 
 <h3>No docs da plataforma</h3>
-<p>Aplicado só depois do aceite, como versão v1.2.0 do docs:</p>
+<p>Aceita em 05/10/2026. Entra no docs na v1.2.0, junto com a migração das rotas e dos campos para inglês. As referências a rotas e valores do docs nesta proposta usam os nomes publicados hoje — <code>/v1/documentos-fiscais</code>, <code>RAD</code>, <code>FORNECEDOR</code> — e mudam com o mapa de nomes da avaliação.</p>
 <ul class="plain">
 <li><strong>Ingestão de DFs</strong> — nova seção "Enviar arquivo", com as 7 operações: enviar, criar importação, consultar, listar documentos, listar inutilizáveis, confirmar e cancelar.</li>
 <li><strong>Sai</strong> o envio de CSV por <code>POST /v1/documentos-fiscais/batch</code>. O lote em JSON de até 500 documentos fica.</li>
@@ -553,21 +553,23 @@ nfcom,62,35260814200166000187620010000087654321098765,,true,FORNECEDOR,30,654321
 </div>
 
 <div class="section" id="s11">
-<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Decisões em aberto</span></div>
-<div class="dec" id="u-01"><div class="dec-h"><span class="dec-id">U-01</span><span class="dec-t">Envio em rota própria ou junto com a importação</span></div><p>O arquivo pode ir numa rota própria (<code>POST /v1/arquivos</code>, depois a importação) ou direto, em <code>multipart</code>, na criação da importação.</p><p class="rec">Recomendação: <strong>Rota própria.</strong> É o desenho que a proposta do time já pressupõe com o <code>uploadId</code>, separa o envio — lento, de arquivo grande — da leitura, e serve também ao arquivo de eventos da AE-04.</p></div>
-<div class="dec" id="u-02"><div class="dec-h"><span class="dec-id">U-02</span><span class="dec-t">Limites</span></div><p>50 MB por arquivo, 10.000 documentos, ZIP com até 10.000 XMLs e 500 MB descompactado.</p><p class="rec">Recomendação: <strong>Validar com o time</strong> contra a infraestrutura. Os valores cobrem um mês de entradas de um cliente de grande porte em um arquivo.</p></div>
-<div class="dec" id="u-03"><div class="dec-h"><span class="dec-id">U-03</span><span class="dec-t">A tela do app usa a mesma rota</span></div><p>Hoje a tela lê um CSV posicional de 16 colunas no navegador e importa sem verificar. Usar a mesma rota resolve DEF-01, DEF-04, DEF-05 e DEF-07 de uma vez, mas muda o RNF-ING-01: a leitura sai do navegador.</p><p class="rec">Recomendação: <strong>Sim, em fase posterior</strong>, com o modelo v2 no lugar do posicional. Um canal, um pipeline.</p></div>
-<div class="dec" id="u-04"><div class="dec-h"><span class="dec-id">U-04</span><span class="dec-t">Vírgula decimal no CSV</span></div><p>Planilhas em português gravam <code>1.234,56</code>. O RNF-ING-03 aceita esse formato na tela; o docs exige ponto desde a v1.1.0.</p><p class="rec">Recomendação: <strong>Não aceitar.</strong> Ponto apenas, com recusa que traz o valor recebido. Aceitar os dois torna <code>1.234</code> ambíguo — mil duzentos e trinta e quatro, ou um vírgula dois três quatro.</p></div>
-<div class="dec" id="u-05"><div class="dec-h"><span class="dec-id">U-05</span><span class="dec-t">Coluna desconhecida no CSV</span></div><p>Recusar o arquivo ou ignorar a coluna com aviso.</p><p class="rec">Recomendação: <strong>Recusar.</strong> Uma coluna opcional com o nome errado seria ignorada em silêncio, e o dado se perderia sem ninguém saber.</p></div>
-<div class="dec" id="u-06"><div class="dec-h"><span class="dec-id">U-06</span><span class="dec-t">Evento ao concluir a importação</span></div><p>Publicar <code>importacao.concluida</code>, no envelope padrão, quando a importação chega a <code>confirmed</code> ou <code>failed</code>.</p><p class="rec">Recomendação: <strong>Sim.</strong> Evita a consulta periódica numa operação que pode levar minutos.</p></div>
-<div class="dec" id="u-07"><div class="dec-h"><span class="dec-id">U-07</span><span class="dec-t">Confirmação parcial</span></div><p>Confirmar só os importáveis, ou exigir que o arquivo inteiro passe.</p><p class="rec">Recomendação: <strong>Parcial.</strong> Numa carga histórica, um documento com problema não deve segurar outros mil. O reenvio é seguro (<a class="xref" href="#s08">seção 08</a>).</p></div>
-<div class="dec" id="u-08"><div class="dec-h"><span class="dec-id">U-08</span><span class="dec-t">Nomes das rotas</span></div><p><code>/v1/arquivos</code> e <code>/v1/documentos-fiscais/importacoes</code>, ou os nomes da proposta do time, <code>/v1/uploads</code> e <code>/v1/ingestions</code>.</p><p class="rec">Recomendação: <strong>Em português</strong>, o mesmo critério aplicado a créditos e guias na v1.1.0 do docs.</p></div>
-<div class="dec" id="u-09"><div class="dec-h"><span class="dec-id">U-09</span><span class="dec-t">Contrato informado fora de vigência</span></div><p>O arquivo informa um <code>contract_id</code> que não estava vigente na data de emissão.</p><p class="rec">Recomendação: <strong>Inutilizável</strong>, com o motivo. Importar aplicaria um método de pagamento que o <a class="xref" href="prd-ingestao.html">RN-ING-04</a> não admite; reenviar sem o <code>contract_id</code> deixa a plataforma achar o contrato certo.</p></div>
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Decisões</span></div>
+<p>Aceitas em 05/10/2026 com a proposta. A U-08 foi decidida pela escolha de rotas e campos em inglês.</p>
+<div class="dec" id="u-01"><div class="dec-h"><span class="dec-id">U-01</span><span class="dec-t">Envio em rota própria ou junto com a importação</span><span class="chip ok">Aceita em 05/10</span></div><p>O arquivo pode ir numa rota própria (<code>POST /v1/uploads</code>, depois a importação) ou direto, em <code>multipart</code>, na criação da importação.</p><p class="rec">Recomendação: <strong>Rota própria.</strong> É o desenho que a proposta do time já pressupõe com o <code>uploadId</code>, separa o envio — lento, de arquivo grande — da leitura, e serve também ao arquivo de eventos da AE-04.</p></div>
+<div class="dec" id="u-02"><div class="dec-h"><span class="dec-id">U-02</span><span class="dec-t">Limites</span><span class="chip ok">Aceita em 05/10. Os valores passam pela validação do time contra a infraestrutura</span></div><p>50 MB por arquivo, 10.000 documentos, ZIP com até 10.000 XMLs e 500 MB descompactado.</p><p class="rec">Recomendação: <strong>Validar com o time</strong> contra a infraestrutura. Os valores cobrem um mês de entradas de um cliente de grande porte em um arquivo.</p></div>
+<div class="dec" id="u-03"><div class="dec-h"><span class="dec-id">U-03</span><span class="dec-t">A tela do app usa a mesma rota</span><span class="chip ok">Aceita em 05/10, para fase posterior</span></div><p>Hoje a tela lê um CSV posicional de 16 colunas no navegador e importa sem verificar. Usar a mesma rota resolve DEF-01, DEF-04, DEF-05 e DEF-07 de uma vez, mas muda o RNF-ING-01: a leitura sai do navegador.</p><p class="rec">Recomendação: <strong>Sim, em fase posterior</strong>, com o modelo v2 no lugar do posicional. Um canal, um pipeline.</p></div>
+<div class="dec" id="u-04"><div class="dec-h"><span class="dec-id">U-04</span><span class="dec-t">Vírgula decimal no CSV</span><span class="chip ok">Aceita em 05/10</span></div><p>Planilhas em português gravam <code>1.234,56</code>. O RNF-ING-03 aceita esse formato na tela; o docs exige ponto desde a v1.1.0.</p><p class="rec">Recomendação: <strong>Não aceitar.</strong> Ponto apenas, com recusa que traz o valor recebido. Aceitar os dois torna <code>1.234</code> ambíguo — mil duzentos e trinta e quatro, ou um vírgula dois três quatro.</p></div>
+<div class="dec" id="u-05"><div class="dec-h"><span class="dec-id">U-05</span><span class="dec-t">Coluna desconhecida no CSV</span><span class="chip ok">Aceita em 05/10</span></div><p>Recusar o arquivo ou ignorar a coluna com aviso.</p><p class="rec">Recomendação: <strong>Recusar.</strong> Uma coluna opcional com o nome errado seria ignorada em silêncio, e o dado se perderia sem ninguém saber.</p></div>
+<div class="dec" id="u-06"><div class="dec-h"><span class="dec-id">U-06</span><span class="dec-t">Evento ao concluir a importação</span><span class="chip ok">Aceita em 05/10</span></div><p>Publicar <code>ingestion.completed</code>, no envelope padrão, quando a importação chega a <code>confirmed</code> ou <code>failed</code>.</p><p class="rec">Recomendação: <strong>Sim.</strong> Evita a consulta periódica numa operação que pode levar minutos.</p></div>
+<div class="dec" id="u-07"><div class="dec-h"><span class="dec-id">U-07</span><span class="dec-t">Confirmação parcial</span><span class="chip ok">Aceita em 05/10</span></div><p>Confirmar só os importáveis, ou exigir que o arquivo inteiro passe.</p><p class="rec">Recomendação: <strong>Parcial.</strong> Numa carga histórica, um documento com problema não deve segurar outros mil. O reenvio é seguro (<a class="xref" href="#s08">seção 08</a>).</p></div>
+<div class="dec" id="u-08"><div class="dec-h"><span class="dec-id">U-08</span><span class="dec-t">Nomes das rotas</span><span class="chip ok">Decidida em 05/10: inglês</span></div><p>Rotas em português — arquivos e importações sob documentos fiscais — ou os nomes da proposta do time, <code>/v1/uploads</code> e <code>/v1/ingestions</code>.</p><p class="rec">Recomendação: <strong>Inglês</strong>, pela decisão de 05/10 na avaliação da API: rotas e campos em inglês. Ficam os nomes da proposta do time.</p></div>
+<div class="dec" id="u-09"><div class="dec-h"><span class="dec-id">U-09</span><span class="dec-t">Contrato informado fora de vigência</span><span class="chip ok">Aceita em 05/10</span></div><p>O arquivo informa um <code>contract_id</code> que não estava vigente na data de emissão.</p><p class="rec">Recomendação: <strong>Inutilizável</strong>, com o motivo. Importar aplicaria um método de pagamento que o <a class="xref" href="prd-ingestao.html">RN-ING-04</a> não admite; reenviar sem o <code>contract_id</code> deixa a plataforma achar o contrato certo.</p></div>
 </div>
 
 <div class="section" id="s12">
 <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Histórico de versões</span></div>
 
+<div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>05/10/2026</strong> — Proposta aprovada, com as nove decisões aceitas. Rotas, campos e códigos em inglês, pela decisão da avaliação da API: <code>/v1/uploads</code> e <code>/v1/ingestions</code>, com <code>/confirm</code>, <code>/cancel</code>, <code>/documents</code> e <code>/unusable</code>; códigos de recusa e de aviso, finalidade do arquivo, origem do contrato e o evento <code>ingestion.completed</code> também em inglês. A U-08 fica decidida pelos nomes da proposta do time.</div></div>
 <div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>05/10/2026</strong> — Envio de arquivo no nível do documento, sem segmentação por item nesta primeira fase. O CSV v2 passa a uma linha por documento, com 23 colunas: saem as 17 de item, e das 6 colunas novas fica fora a de tipo de serviço do item. No JSON, no XML e no ZIP, os itens não são lidos. Saem a verificação de linhas divergentes e o aviso de totais divergentes; duas linhas com a mesma chave caem em chave repetida no arquivo. A prévia deixa de trazer a contagem de itens.</div></div>
 <div class="ver-row"><div class="ver-num">v1.0.1</div><div class="ver-desc"><strong>05/10/2026</strong> — O aviso <code>sem_contrato_vigente</code> deixa de citar um mecanismo de pagamento padrão, fora do escopo desta versão: o documento é importado sem contrato vinculado.</div></div>
 <div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>05/10/2026</strong> — Primeira versão, a partir do item 8 da <a class="xref" href="avaliacao-api-desenvolvimento.html">avaliação da API proposta pelo desenvolvimento</a>. Fluxo em quatro passos com rota de envio, quatro formatos, modelo CSV v2 com 41 colunas e regra de agrupamento por chave, códigos de recusa ligados aos requisitos de Ingestão, reverificação de duplicidade na confirmação, limites e trilha, e nove decisões em aberto.</div></div>
