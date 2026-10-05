@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avaliação da API v1.0.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 1120px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--teal); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+h1 { font-size: 28px; font-weight: 800; line-height: 1.18; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 820px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--teal); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 52px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 18px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14.5px; font-weight: 700; color: var(--txt1); margin: 28px 0 8px; scroll-margin-top: 20px; }
+h4 { font-size: 12px; font-weight: 700; color: var(--txt2); margin: 20px 0 6px; text-transform: uppercase; letter-spacing: .06em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--teal); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.mono { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--teal); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+.src-note { font-size: 11.5px; color: var(--txt3); margin: 6px 0 0; }
+
+/* ── mockup ─────────────────────────────────────────────────────── */
+.mock { border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; margin: 16px 0; background: var(--sur); }
+.mock-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.mock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.mock-url { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); margin-left: 4px; }
+.mock-tag { margin-left: auto; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
+.mock-tag.nova { background: var(--green-d); color: var(--green); }
+.mock-tag.muda { background: var(--amber-d); color: var(--amber); }
+.mock-body { padding: 16px 18px; }
+.mock-h { font-size: 15px; font-weight: 700; color: var(--txt1); margin-bottom: 2px; }
+.mock-s { font-size: 11.5px; color: var(--txt3); margin-bottom: 14px; }
+.mock-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.mock-tab { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--brd); color: var(--txt3); }
+.mock-tab.on { background: var(--teal); border-color: var(--teal); color: #fff; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--sur2); border: 1px solid var(--brd); border-radius: 7px; padding: 9px 11px; }
+.kpi-l { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.kpi-v { font-size: 19px; font-weight: 800; color: var(--txt1); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.kpi-s { font-size: 10px; color: var(--txt3); }
+.kpi.alert .kpi-v { color: var(--red); }
+.kpi.warn .kpi-v { color: var(--amber); }
+.kpi.good .kpi-v { color: var(--green); }
+.mock table { font-size: 11.5px; }
+.mock th { font-size: 9.5px; padding: 7px 10px; }
+.mock td { padding: 7px 10px; }
+.btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.btn-p { background: var(--teal); color: #fff; border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.btn-g { border: 1px solid var(--brd); color: var(--txt2); border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.st { display: inline-block; font-size: 9.5px; font-weight: 800; padding: 1px 7px; border-radius: 20px; white-space: nowrap; }
+.st.ok { background: var(--green-d); color: var(--green); }
+.st.wait { background: var(--blue-d); color: var(--blue); }
+.st.div { background: var(--red-d); color: var(--red); }
+.st.abs { background: var(--amber-d); color: var(--amber); }
+.st.neu { background: var(--gray-d); color: var(--gray); }
+.st.own { background: var(--purple-d); color: var(--purple); }
+.new { display: inline-block; font-size: 9px; font-weight: 800; background: var(--teal); color: #fff; border-radius: 3px; padding: 0 5px; margin-left: 5px; letter-spacing: .04em; vertical-align: 1px; }
+
+code, kbd, samp { overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } .kpis { grid-template-columns: repeat(2, 1fr); } }
+</style>
+<style>
+.mono-s { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+td.path { font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: nowrap; color: var(--txt1); }
+td .m { display: inline-block; min-width: 46px; font-weight: 700; font-size: 10px; color: var(--teal); }
+tr.grp td { background: var(--sur2); color: var(--txt1); font-weight: 700; font-size: 11.5px; }
+.small { font-size: 11.5px; color: var(--txt3); }
+.cards3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 14px 0; }
+.cardx { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; }
+.cardx h5 { font-size: 12.5px; font-weight: 700; color: var(--txt1); margin-bottom: 6px; }
+.cardx p { font-size: 12px; margin: 0; }
+.gap { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 12px 0; scroll-margin-top: 20px; }
+.gap:target { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-d); }
+.gap-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 16px 8px; }
+.gap-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--txt3); }
+.gap-t { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.gap-b { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 8px 16px 12px; }
+.gap-b p { font-size: 12.5px; margin-bottom: 0; }
+.gap-f { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 10px 16px 12px; border-top: 1px solid var(--brd); background: var(--sur2); border-radius: 0 0 10px 10px; font-size: 12.5px; color: var(--txt2); }
+.lbl { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 5px; }
+.reqs { list-style: none; display: flex; flex-direction: column; gap: 6px; margin: 0 0 8px; padding: 0; }
+.reqs li { font-size: 12px; color: var(--txt2); line-height: 1.5; }
+.porque { font-size: 12px !important; color: var(--txt2); background: var(--teal-d); border-radius: 6px; padding: 7px 10px; }
+@media (max-width: 760px) { .gap-b, .gap-f { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">Integração · Avaliação técnica</div>
+<h1>Avaliação da API proposta pelo desenvolvimento</h1>
+<p class="subtitle">A proposta de endpoints entregue pelo time de desenvolvimento, lida contra o docs da plataforma. Cada gap vem ligado ao requisito de negócio que o justifica — o que falta para o docs operar, o que diverge, o que não faz sentido no contexto, e o que a proposta faz melhor e deveria subir para o docs.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Proposta avaliada</span>&nbsp;<span class="meta-val">OpenAPI v1.0.0 · 30/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Referência</span>&nbsp;<span class="meta-val">split-hubhq/docs · 590f1ed</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">05/10/2026</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Para revisão do time</span>&nbsp;<span class="chip info">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Resumo</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Fontes e régua</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Cobertura do docs, endpoint a endpoint</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Gaps, com o requisito de negócio de cada um</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Endpoints que não fazem sentido no contexto</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> O que a proposta faz melhor que o docs</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Inconsistências internas da proposta</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> O que corrigir no docs e nos PRDs</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Além do docs</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Plano de ação sugerido</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Histórico de versões</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Resumo</span></div>
+<div class="kpis"><div class="kpi"><div class="kpi-l">Docs da plataforma</div><div class="kpi-v">25 + 7</div><div class="kpi-s">endpoints + webhooks</div></div><div class="kpi"><div class="kpi-l">Proposta do time</div><div class="kpi-v">32</div><div class="kpi-s">operações · 0 eventos liberados</div></div><div class="kpi alert"><div class="kpi-l">Endpoints do docs ausentes</div><div class="kpi-v">6 de 25</div><div class="kpi-s">e 3 parciais</div></div><div class="kpi alert"><div class="kpi-l">Webhooks do docs ausentes</div><div class="kpi-v">7 de 7</div><div class="kpi-s">nenhum evento liberado</div></div><div class="kpi warn"><div class="kpi-l">Gaps</div><div class="kpi-v">36</div><div class="kpi-s">10 críticos · 9 altos</div></div></div>
+<p>A proposta do time é <strong>tecnicamente mais madura que o docs</strong> em várias convenções — OAuth 2.0 com escopos, idempotência, paginação por cursor, inativar em vez de apagar. Mas ela <strong>não sustenta a operação que o docs descreve</strong>. O mapa de integração do docs classifica três integrações como essenciais — <strong>documentos fiscais, DARF RAD e comprovante de pagamento</strong> —, e as três estão quebradas na proposta:</p>
+<ul class="plain">
+<li><strong>Documentos fiscais:</strong> não há envio de documento por API, só por arquivo — e o arquivo não tem endpoint de envio. Depois de confirmado, o documento não pode ser consultado. Requisito: <a class="xref" href="prd-ingestao.html#s09">RF-ING-001 a 003</a>.</li>
+<li><strong>DARF RAD:</strong> a guia não chega ao ERP — não há evento liberado, e o objeto Guia não tem código de barras, PIX nem PDF. Requisito: <a class="xref" href="prd-pagamentos.html#s07">RF-PAG-050 a 054</a> e <a class="xref" href="prd-execucao-rad.html#s09">RF-EXR-022</a>.</li>
+<li><strong>Comprovante:</strong> a proposta aceita um id de arquivo, sem valor pago nem data. Requisito: <a class="xref" href="prd-pagamentos.html#s12">Pagamentos §12</a>, que reproduz o payload do docs.</li>
+</ul>
+<p>Duas incompatibilidades quebram qualquer integração escrita pelo docs logo na primeira chamada — <strong>dinheiro como texto</strong> e <strong>CNPJ só numérico</strong>. E uma lacuna está nos dois documentos: <strong>o contrato não tem método de pagamento</strong>, e nenhum dos dois conhece o <strong>split payment</strong>, que é o método padrão do produto.</p>
+<p>Cada gap da seção 04 traz o requisito de negócio que o sustenta, com link para o PRD e para a página do docs. Dos 36, 33 têm requisito escrito nos PRDs; os outros 3 são de convenção técnica ou só do docs, e estão marcados assim.</p>
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Fontes e régua</span></div>
+<div class="table-wrap"><table><thead><tr><th>Documento</th><th>Versão</th><th>O que tem</th></tr></thead><tbody>
+<tr><td><strong>Docs da plataforma</strong> — referência · <a class="xref" href="https://split-hubhq.github.io/docs/" target="_blank" rel="noopener">abrir ↗</a></td><td class="mono-s">split-hubhq/docs · commit 590f1ed · 08/09/2026</td><td>13 páginas, 25 endpoints, 7 eventos de webhook</td></tr>
+<tr><td><strong>Proposta do time de desenvolvimento</strong></td><td class="mono-s">OpenAPI 3.0.3 · Manual de Integração v1.0.0 · 30/09/2026</td><td>32 operações, 34 objetos, envelope de webhook sem eventos</td></tr>
+<tr><td><strong>PRDs do hub</strong> — requisitos de negócio</td><td class="mono-s">Ingestão, Contratos, Fornecedor, Organização, Pagamentos, Execução RAD, Crédito, Débito, Integrações, Automações, Portal, Conciliação</td><td>RF (requisito funcional) e RN (regra de negócio) citados em cada item, com link para a seção</td></tr>
+</tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Severidade</th><th>Critério</th></tr></thead><tbody>
+<tr><td><span class="st div">Crítico</span></td><td>Quebra uma integração que o docs classifica como <strong>essencial</strong> — documentos fiscais, DARF RAD, comprovante —, impede qualquer integração escrita pelo docs, ou produz dado fiscal errado</td></tr>
+<tr><td><span class="st abs">Alto</span></td><td>Perde informação de que a apuração ou o crédito dependem, ou quebra uma integração opcional do docs</td></tr>
+<tr><td><span class="st wait">Médio</span></td><td>Divergência de contrato com contorno possível</td></tr>
+<tr><td><span class="st neu">Baixo</span></td><td>Forma, consistência ou conveniência</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Cobertura do docs, endpoint a endpoint</span></div>
+<p>Dos 25 endpoints do docs, 8 estão cobertos como estão, 4 cobertos por uma solução melhor, 4 com divergência, 3 parcialmente e <strong>6 ausentes</strong>. Dos 7 eventos de webhook, <strong>nenhum</strong> existe na proposta.</p>
+<div class="table-wrap"><table style="min-width:860px"><thead><tr><th>No docs</th><th>Na proposta</th><th>Situação</th><th>Observação</th></tr></thead><tbody>
+<tr class="grp"><td colspan="4">Autenticação</td></tr>
+<tr><td class="path"><span class="m">POST</span>/v1/auth/login</td><td class="path">POST /public/oauth/token</td><td><span class="st own">Coberto — melhor</span></td><td>OAuth 2.0 com escopos no lugar do login JSON (<a class="xref" href="#G-08">G-08</a>, <a class="xref" href="#G-09">G-09</a>)</td></tr>
+<tr class="grp"><td colspan="4">Fornecedores</td></tr>
+<tr><td class="path"><span class="m">POST</span>/v1/fornecedores</td><td class="path">POST /v1/suppliers</td><td><span class="st abs">Divergência</span></td><td>CNPJ só numérico e sete campos a menos (<a class="xref" href="#G-02">G-02</a>, <a class="xref" href="#G-10">G-10</a>)</td></tr>
+<tr><td class="path"><span class="m">GET</span>/v1/fornecedores</td><td class="path">GET /v1/suppliers</td><td><span class="st ok">Coberto</span></td><td>Sem filtro de situação (<a class="xref" href="#G-12">G-12</a>)</td></tr>
+<tr><td class="path"><span class="m">GET</span>/v1/fornecedores/{id}</td><td class="path">GET /v1/suppliers/{supplierID}</td><td><span class="st ok">Coberto</span></td><td>Sem <code>updated_at</code></td></tr>
+<tr><td class="path"><span class="m">PATCH</span>/v1/fornecedores/{id}</td><td class="path">PUT /v1/suppliers/{supplierID}</td><td><span class="st abs">Divergência</span></td><td>Substituição total (<a class="xref" href="#G-11">G-11</a>)</td></tr>
+<tr><td class="path"><span class="m">DELETE</span>/v1/fornecedores/{id}</td><td class="path">PATCH …/status</td><td><span class="st own">Coberto — melhor</span></td><td>Inativar em vez de apagar</td></tr>
+<tr><td class="path"><span class="m">POST</span>…/{cnpj}/representantes</td><td class="path">POST …/representatives</td><td><span class="st ok">Coberto</span></td><td>Pelo id, não pelo CNPJ. Finalidade em N-06</td></tr>
+<tr><td class="path"><span class="m">GET</span>…/{cnpj}/representantes</td><td class="path">GET …/representatives</td><td><span class="st ok">Coberto</span></td><td>—</td></tr>
+<tr><td class="path"><span class="m">GET</span>…/{cnpj}/representantes/{id}</td><td class="path">GET …/representatives/{id}</td><td><span class="st ok">Coberto</span></td><td>Resposta mais pobre (<a class="xref" href="#G-13">G-13</a>)</td></tr>
+<tr><td class="path"><span class="m">PATCH</span>…/{cnpj}/representantes/{id}</td><td class="path">PUT …/representatives/{id}</td><td><span class="st ok">Coberto</span></td><td>Substituição total (<a class="xref" href="#G-11">G-11</a>)</td></tr>
+<tr><td class="path"><span class="m">DELETE</span>…/{cnpj}/representantes/{id}</td><td class="path">PATCH …/{id}/status</td><td><span class="st own">Coberto — melhor</span></td><td>Inativar em vez de apagar</td></tr>
+<tr class="grp"><td colspan="4">Contratos</td></tr>
+<tr><td class="path"><span class="m">POST</span>/v1/contratos</td><td class="path">POST /v1/contracts</td><td><span class="st abs">Divergência</span></td><td>Sem CNPJ comprador; nenhum dos dois tem método e prazo (<a class="xref" href="#G-03">G-03</a>, <a class="xref" href="#G-14">G-14</a>)</td></tr>
+<tr><td class="path"><span class="m">GET</span>/v1/contratos</td><td class="path">GET /v1/contracts</td><td><span class="st wait">Parcial</span></td><td>Sem filtros (<a class="xref" href="#G-16">G-16</a>)</td></tr>
+<tr><td class="path"><span class="m">GET</span>/v1/contratos/{id}</td><td class="path">GET /v1/contracts/{id}</td><td><span class="st ok">Coberto</span></td><td>Sem <code>updated_at</code> (<a class="xref" href="#G-17">G-17</a>)</td></tr>
+<tr><td class="path"><span class="m">PATCH</span>/v1/contratos/{id}</td><td class="path">PUT /v1/contracts/{id}</td><td><span class="st abs">Divergência</span></td><td>Substituição total (<a class="xref" href="#G-11">G-11</a>)</td></tr>
+<tr><td class="path"><span class="m">DELETE</span>/v1/contratos/{id}</td><td class="path">PATCH /v1/contracts/{id}/status</td><td><span class="st own">Coberto — melhor</span></td><td>Encerrar em vez de apagar</td></tr>
+<tr class="grp"><td colspan="4">Ingestão de DFs</td></tr>
+<tr><td class="path"><span class="m">POST</span>/v1/documentos-fiscais</td><td class="path">—</td><td><span class="st div">Ausente</span></td><td>Integração essencial do docs (<a class="xref" href="#G-18">G-18</a>)</td></tr>
+<tr><td class="path"><span class="m">POST</span>/v1/documentos-fiscais/batch</td><td class="path">POST /v1/ingestions + /confirm</td><td><span class="st wait">Parcial</span></td><td>Só por arquivo, e o arquivo não tem endpoint (<a class="xref" href="#G-18">G-18</a>, <a class="xref" href="#G-19">G-19</a>)</td></tr>
+<tr><td class="path"><span class="m">GET</span>…/batch/{batch_id}</td><td class="path">GET /v1/ingestions/{id}</td><td><span class="st ok">Coberto</span></td><td>Só contagens (<a class="xref" href="#G-20">G-20</a>)</td></tr>
+<tr><td class="path"><span class="m">GET</span>/v1/documentos-fiscais/{id}</td><td class="path">—</td><td><span class="st div">Ausente</span></td><td>(<a class="xref" href="#G-20">G-20</a>)</td></tr>
+<tr><td class="path"><span class="m">GET</span>/v1/documentos-fiscais</td><td class="path">—</td><td><span class="st div">Ausente</span></td><td>Lista lotes, não documentos (<a class="xref" href="#G-20">G-20</a>)</td></tr>
+<tr><td class="path"><span class="m">PATCH</span>/v1/documentos-fiscais/{id}</td><td class="path">—</td><td><span class="st div">Ausente</span></td><td>(<a class="xref" href="#G-20">G-20</a>)</td></tr>
+<tr><td class="path"><span class="m">DELETE</span>/v1/documentos-fiscais/{id}</td><td class="path">—</td><td><span class="st div">Ausente</span></td><td>(<a class="xref" href="#G-20">G-20</a>)</td></tr>
+<tr class="grp"><td colspan="4">RAD</td></tr>
+<tr><td class="path"><span class="m">POST</span>/v1/rad/proofs</td><td class="path">POST …/guias/{tributo}/payment</td><td><span class="st wait">Parcial</span></td><td>Sem os dados de PIX e boleto (<a class="xref" href="#G-25">G-25</a>, <a class="xref" href="#G-26">G-26</a>)</td></tr>
+<tr class="grp"><td colspan="4">Automações</td></tr>
+<tr><td class="path"><span class="m">POST</span>/v1/webhooks/automacoes</td><td class="path">—</td><td><span class="st div">Ausente</span></td><td>A proposta configura a régua, em vez de receber o retorno (<a class="xref" href="#G-33">G-33</a>, N-01)</td></tr>
+<tr class="grp"><td colspan="4">Webhooks (da plataforma para o cliente)</td></tr>
+<tr><td class="path">rad.darf_recebida</td><td class="path">—</td><td><span class="st div">Ausente</span></td><td>(<a class="xref" href="#G-24">G-24</a>, <a class="xref" href="#G-34">G-34</a>)</td></tr>
+<tr><td class="path">rad.darf_recebida_lote</td><td class="path">—</td><td><span class="st div">Ausente</span></td><td>(<a class="xref" href="#G-34">G-34</a>)</td></tr>
+<tr><td class="path">rad.proof_received</td><td class="path">—</td><td><span class="st div">Ausente</span></td><td>Ver D-07 antes de implementar</td></tr>
+<tr><td class="path">credito.status_alterado</td><td class="path">—</td><td><span class="st div">Ausente</span></td><td>(<a class="xref" href="#G-29">G-29</a>)</td></tr>
+<tr><td class="path">debito.status_alterado</td><td class="path">—</td><td><span class="st div">Ausente</span></td><td>(<a class="xref" href="#G-28">G-28</a>)</td></tr>
+<tr><td class="path">automation.executed</td><td class="path">—</td><td><span class="st div">Ausente</span></td><td>(<a class="xref" href="#G-33">G-33</a>)</td></tr>
+<tr><td class="path">automation.failed</td><td class="path">—</td><td><span class="st div">Ausente</span></td><td>(<a class="xref" href="#G-33">G-33</a>)</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Gaps, com o requisito de negócio de cada um</span></div>
+<p>36 itens — <strong>10 críticos</strong>, 9 altos, 12 médios e 5 baixos. Em cada cartão: o que o docs pede e a proposta não entrega, o requisito de negócio que justifica a cobrança — com link para o PRD —, o efeito na operação e a recomendação.</p>
+<h3>Transversal</h3>
+<div class="gap" id="G-01">
+  <div class="gap-h"><span class="gap-id">G-01</span><span class="st div">Crítico</span><span class="gap-t">Valores monetários: o docs manda número, a proposta recusa número</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>A proposta só aceita dinheiro como texto decimal e responde <code>400</code> a <code>"total_value": 120000.00</code>. O docs usa número em todos os exemplos — contrato, itens, base, IBS e CBS, guias.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/ingestao-dfs.html" target="_blank" rel="noopener">Docs · Ingestão DFs ↗</a> · <a class="xref" href="https://split-hubhq.github.io/docs/contratos.html" target="_blank" rel="noopener">Docs · Contratos ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref" href="prd-ingestao.html#s15">Ingestão §15 — O contrato de entrada</a> — em produção o documento chega pelo contrato publicado, com os campos de valor do docs</li><li><a class="xref" href="prd-contratos.html#s14">Contratos §14 — O contrato vindo do ERP</a> — em produção o contrato chega do ERP por <code>/v1/contratos</code>, com <code>total_value</code></li><li><a class="xref mono-s" href="prd-ingestao.html#s09">RF-ING-001</a> <span class="small">(Ingestão)</span> — o sistema deve aceitar documentos por API</li></ul><p class="porque"><strong>Por que é requisito:</strong> Os PRDs adotaram o contrato publicado como a fronteira de produção. Se a API recusa o formato do docs, nenhum documento nem contrato entra.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Toda integração escrita pelo docs falha na primeira chamada.</div><div><span class="lbl">Recomendação</span> Decidir o formato. Se for texto — tecnicamente melhor —, reescrever o docs e aceitar os dois formatos por um período de transição.</div></div>
+</div>
+<div class="gap" id="G-02">
+  <div class="gap-h"><span class="gap-id">G-02</span><span class="st div">Crítico</span><span class="gap-t">CNPJ alfanumérico recusado</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>A proposta valida CNPJ com <code>^\d{14}$</code> no fornecedor e nas guias. O docs aceita o CNPJ alfanumérico.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/fornecedores.html" target="_blank" rel="noopener">Docs · Fornecedores ↗</a> · <a class="xref" href="https://split-hubhq.github.io/docs/contratos.html" target="_blank" rel="noopener">Docs · Contratos ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref" href="prd-contratos.html#s14">Contratos §14 — O contrato vindo do ERP</a> — "CNPJ alfanumérico, pela IN RFB 2.229/2024, vigente desde 27/07/2026"</li><li><a class="xref mono-s" href="prd-fornecedor.html#s10">RN-FORN-01</a> <span class="small">(Fornecedor)</span> — o CNPJ é a identidade do fornecedor: liga emitente, documento, contrato e trilha</li><li><a class="xref mono-s" href="prd-fornecedor.html#s09">RF-FORN-010</a> <span class="small">(Fornecedor)</span> — o cadastro deve validar o dígito verificador do CNPJ</li></ul><p class="porque"><strong>Por que é requisito:</strong> O CNPJ é a chave de tudo. Recusar o formato vigente impede o vínculo do fornecedor novo com as notas dele.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Fornecedor com CNPJ novo não cadastra, e as notas dele não têm onde se vincular.</div><div><span class="lbl">Recomendação</span> Aceitar 12 posições alfanuméricas mais 2 dígitos verificadores, validando o dígito.</div></div>
+</div>
+<div class="gap" id="G-03">
+  <div class="gap-h"><span class="gap-id">G-03</span><span class="st abs">Alto</span><span class="gap-t">Não há como dizer qual estabelecimento do grupo é o comprador</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>Na proposta, a empresa vem do token e não existe parâmetro de empresa. O docs tem <code>buyer_cnpj</code> no contrato e <code>acquisition_cnpj</code> nos eventos de RAD.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/contratos.html" target="_blank" rel="noopener">Docs · Contratos ↗</a> · <a class="xref" href="https://split-hubhq.github.io/docs/rad.html" target="_blank" rel="noopener">Docs · RAD ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref" href="prd-contratos.html#s14">Contratos §14 — O contrato vindo do ERP</a> — o contrato tem "as duas pontas": <code>buyer_cnpj</code> e <code>supplier_cnpj</code></li><li><a class="xref mono-s" href="prd-organizacao.html#s10">RN-ORG-01</a> <span class="small">(Organização)</span> — o DF de entrada só é associado ao grupo se o CNPJ destinatário estiver cadastrado e ativo</li><li><a class="xref mono-s" href="prd-credito.html#s10">RN-CRE-16</a> <span class="small">(Crédito)</span> — o filtro por CNPJ inclui todos os CNPJs do mesmo grupo</li><li><a class="xref mono-s" href="prd-execucao-rad.html#s09">RF-EXR-011</a> <span class="small">(Execução RAD)</span> — a política por CNPJ inclui só notas cujo CNPJ comprador esteja na lista</li></ul><p class="porque"><strong>Por que é requisito:</strong> O produto opera grupos com vários CNPJs, e a Execução RAD orquestra por CNPJ comprador. Sem esse dado na API, a escolha da política não pode ser verificada pelo ERP.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Contrato, crédito e guia ficam sem o CNPJ comprador; a filial não é filtrável nem auditável pela API.</div><div><span class="lbl">Recomendação</span> <code>buyer_tax_id</code> no contrato, e filtro por CNPJ comprador em créditos e guias.</div></div>
+</div>
+<div class="gap" id="G-04">
+  <div class="gap-h"><span class="gap-id">G-04</span><span class="st wait">Médio</span><span class="gap-t">Formato de erro diferente, e sem o campo que falhou</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs responde <code>{error, message}</code>; a proposta, <code>{error_code, message}</code>, e põe o campo com problema no texto de <code>message</code> — que ela mesma proíbe de ser lido por máquina.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/autenticacao.html" target="_blank" rel="noopener">Docs · Autenticação ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-ingestao.html#s10">RN-ING-07</a> <span class="small">(Ingestão)</span> — a recusa é informativa, nunca silenciosa: registra qual verificação falhou e por quê</li><li><a class="xref mono-s" href="prd-ingestao.html#s09">RF-ING-012</a> <span class="small">(Ingestão)</span> — o documento recusado deve registrar qual verificação falhou</li><li><a class="xref" href="prd-integracoes.html#s12">Integrações §12 — Segurança e lacunas da API</a> — lacuna "Sem códigos de erro HTTP": documentar 400, 401, 404, 409 e 422 com corpo padronizado</li></ul><p class="porque"><strong>Por que é requisito:</strong> A regra pede que a recusa diga o que falhou. Sem o campo estruturado, o ERP não corrige sozinho.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Em lote e em formulário, o integrador não consegue apontar o campo errado.</div><div><span class="lbl">Recomendação</span> Padronizar <code>{error_code, message, field}</code>.</div></div>
+</div>
+<div class="gap" id="G-05">
+  <div class="gap-h"><span class="gap-id">G-05</span><span class="st wait">Médio</span><span class="gap-t">Idioma das rotas e dos campos</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs usa rotas em português (<code>/fornecedores</code>, <code>/contratos</code>, <code>/documentos-fiscais</code>) e campos em inglês. A proposta usa rotas em inglês e mistura os dois idiomas no mesmo objeto: <code>valor</code>, <code>saldo</code>, <code>used_value</code>, <code>appropriated_at</code>.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/visao-geral.html" target="_blank" rel="noopener">Docs · Visão geral ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-integracoes.html#s09">RF-INT-003</a> <span class="small">(Integrações)</span> — a tela de Integrações mostra ao cliente "os caminhos reais da API"</li><li><a class="xref mono-s" href="prd-ingestao.html#s09">RF-ING-001</a> <span class="small">(Ingestão)</span> — o requisito cita literalmente <code>POST /v1/documentos-fiscais</code></li></ul><p class="porque"><strong>Por que é requisito:</strong> O produto e os PRDs já mostram ao cliente as rotas do docs. Se a API usar outras, a tela ensina o caminho errado.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Nenhuma rota do docs funciona na proposta, e o cliente aprende dois vocabulários.</div><div><span class="lbl">Recomendação</span> Decidir um idioma por camada e aplicar no docs, nos PRDs e na tela de Integrações.</div></div>
+</div>
+<div class="gap" id="G-06">
+  <div class="gap-h"><span class="gap-id">G-06</span><span class="st wait">Médio</span><span class="gap-t">Endereços e ambientes não fecham</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs publica <code>sandbox-api.splithub.com.br/v1</code> e <code>api.splithub.com.br/v1</code>. A proposta tem só homologação em <code>splithub.app.br</code>, produção "a definir", e o token fora do <code>/v1</code>.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/visao-geral.html" target="_blank" rel="noopener">Docs · Visão geral ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-integracoes.html#s09">RF-INT-004</a> <span class="small">(Integrações)</span> — a conexão deve declarar produção ou sandbox, com credencial <code>live</code> ou <code>test</code></li><li><a class="xref" href="prd-integracoes.html#s12">Integrações §12 — Segurança e lacunas da API</a> — lacuna "Sem ambiente de testes"</li></ul><p class="porque"><strong>Por que é requisito:</strong> O produto separa produção e sandbox pela credencial; a API precisa dos dois endereços para isso valer.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> O cliente não sabe para onde apontar.</div><div><span class="lbl">Recomendação</span> Fixar os endereços e publicar nos dois documentos.</div></div>
+</div>
+<div class="gap" id="G-07">
+  <div class="gap-h"><span class="gap-id">G-07</span><span class="st neu">Baixo</span><span class="gap-t">Paginação com três convenções</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs usa <code>page/limit</code> e <code>page/per_page</code>; a proposta, <code>page/page_size</code> e cursor nas coleções grandes.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/fornecedores.html" target="_blank" rel="noopener">Docs · Fornecedores ↗</a> · <a class="xref" href="https://split-hubhq.github.io/docs/ingestao-dfs.html" target="_blank" rel="noopener">Docs · Ingestão DFs ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><p class="small">Sem requisito de negócio nos PRDs.</p><p class="porque"><strong>Por que é requisito:</strong> Convenção técnica, sem requisito de negócio. O cursor da proposta é melhor.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Pequeno.</div><div><span class="lbl">Recomendação</span> Adotar a da proposta e alinhar o docs.</div></div>
+</div>
+<h3>Autenticação</h3>
+<div class="gap" id="G-08">
+  <div class="gap-h"><span class="gap-id">G-08</span><span class="st wait">Médio</span><span class="gap-t">Fluxo de autenticação diferente</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs: <code>POST /v1/auth/login</code> com JSON, token de 3.600 s. A proposta: OAuth 2.0 client credentials em <code>/public/oauth/token</code>, 720 s, com escopos.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/autenticacao.html" target="_blank" rel="noopener">Docs · Autenticação ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref" href="prd-integracoes.html#s12">Integrações §12 — Segurança e lacunas da API</a> — lacuna "Emissão de credencial não especificada"</li><li><a class="xref mono-s" href="prd-integracoes.html#s09">RF-INT-013</a> <span class="small">(Integrações)</span> — a tela monta o curl do login e da primeira chamada com os valores reais</li></ul><p class="porque"><strong>Por que é requisito:</strong> O produto entrega ao cliente o exemplo de login; ele precisa ser o da API que vai a produção.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Integrador seguindo o docs não obtém token.</div><div><span class="lbl">Recomendação</span> Ficar com a proposta, que é o padrão de mercado, e reescrever a página do docs e o exemplo da tela de Integrações.</div></div>
+</div>
+<div class="gap" id="G-09">
+  <div class="gap-h"><span class="gap-id">G-09</span><span class="st abs">Alto</span><span class="gap-t">Escopos não cobrem o docs</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>Faltam escopos para envio de documento por API, comprovante RAD estruturado, débito, inscrição em webhook e automações. O PRD chama o escopo de ingestão de <code>dfs:write</code>; a proposta, de <code>ingestions:write</code>.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/autenticacao.html" target="_blank" rel="noopener">Docs · Autenticação ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-integracoes.html#s10">RN-INT-05</a> <span class="small">(Integrações)</span> — chamada fora do escopo retorna <code>403</code>: "o escopo só vale se for aplicado"</li><li><a class="xref mono-s" href="prd-ingestao.html#s09">RF-ING-001</a> <span class="small">(Ingestão)</span> — documento por API "autenticado com escopo <code>dfs:write</code>"</li><li><a class="xref mono-s" href="prd-integracoes.html#s09">RF-INT-014</a> <span class="small">(Integrações)</span> — escopos destrutivos não vêm marcados por padrão</li></ul><p class="porque"><strong>Por que é requisito:</strong> Sem escopo declarado, o recurso não tem como ser autorizado nem negado.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Mesmo implementados, esses recursos não teriam como ser liberados por credencial.</div><div><span class="lbl">Recomendação</span> Ampliar a lista de escopos com cada endpoint que faltar, e alinhar os nomes com o PRD.</div></div>
+</div>
+<h3>Fornecedores</h3>
+<div class="gap" id="G-10">
+  <div class="gap-h"><span class="gap-id">G-10</span><span class="st wait">Médio</span><span class="gap-t">Sete campos do docs ausentes</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>Faltam <code>trade_name</code>, <code>founding_date</code>, <code>legal_nature</code>, <code>tax_regime</code>, <code>economic_activity</code>, <code>address.complement</code>, <code>contact.phone</code> — e <code>updated_at</code> na resposta.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/fornecedores.html" target="_blank" rel="noopener">Docs · Fornecedores ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><p class="small">Sem requisito de negócio nos PRDs.</p><p class="porque"><strong>Por que é requisito:</strong> São campos opcionais do mapa do docs. Nenhum PRD usa o regime tributário do fornecedor hoje; vale decidir se ele entra, porque é o único com efeito fiscal possível.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Cadastro mais pobre que o do docs.</div><div><span class="lbl">Recomendação</span> Incluir os campos, ou tirá-los do docs.</div></div>
+</div>
+<div class="gap" id="G-11">
+  <div class="gap-h"><span class="gap-id">G-11</span><span class="st wait">Médio</span><span class="gap-t">Atualização por substituição total</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs atualiza com <code>PATCH</code> parcial; a proposta usa <code>PUT</code> com o objeto inteiro e exige <code>legal_name</code> e <code>tax_id</code> no corpo. Vale também para representantes e contratos.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/fornecedores.html" target="_blank" rel="noopener">Docs · Fornecedores ↗</a> · <a class="xref" href="https://split-hubhq.github.io/docs/contratos.html" target="_blank" rel="noopener">Docs · Contratos ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-fornecedor.html#s09">RF-FORN-020</a> <span class="small">(Fornecedor)</span> — a auditoria registra de/para só dos campos alterados</li><li><a class="xref mono-s" href="prd-contratos.html#s10">RN-CTR-20</a> <span class="small">(Contratos)</span> — alteração vazia não gera evento</li><li><a class="xref mono-s" href="prd-contratos.html#s10">RN-CTR-18</a> <span class="small">(Contratos)</span> — toda alteração do contrato é registrada com autor, momento e diff</li></ul><p class="porque"><strong>Por que é requisito:</strong> A trilha do produto depende de saber o que mudou. Com substituição total, ou a chamada é recusada, ou o que o ERP omitiu é apagado — e aparece na trilha como mudança.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> ERP que envia só o campo alterado é recusado, ou apaga o resto.</div><div><span class="lbl">Recomendação</span> <code>PATCH</code> parcial, ou documentar a substituição e calcular o diff no servidor.</div></div>
+</div>
+<div class="gap" id="G-12">
+  <div class="gap-h"><span class="gap-id">G-12</span><span class="st neu">Baixo</span><span class="gap-t">Listagem sem filtro de situação e sem busca exata por CNPJ</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs filtra por situação e razão social; a proposta tem um único <code>search</code> textual, que é o único caminho do CNPJ para o id.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/fornecedores.html" target="_blank" rel="noopener">Docs · Fornecedores ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-fornecedor.html#s10">RN-FORN-01</a> <span class="small">(Fornecedor)</span> — o CNPJ não se repete na base</li><li><a class="xref mono-s" href="prd-contratos.html#s09">RF-CTR-010</a> <span class="small">(Contratos)</span> — a resolução do fornecedor é por CNPJ, nunca por razão social</li></ul><p class="porque"><strong>Por que é requisito:</strong> O CNPJ é chave única; busca por texto pode trazer mais de um resultado onde só pode haver um.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Resolver CNPJ em id fica ambíguo.</div><div><span class="lbl">Recomendação</span> Filtros <code>status</code> e <code>tax_id</code> exato.</div></div>
+</div>
+<div class="gap" id="G-13">
+  <div class="gap-h"><span class="gap-id">G-13</span><span class="st neu">Baixo</span><span class="gap-t">Representante sem vínculo nem datas na resposta</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs devolve <code>supplier_id</code>, CNPJ, <code>created_at</code> e <code>updated_at</code>; a proposta, não.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/fornecedores.html" target="_blank" rel="noopener">Docs · Fornecedores ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><p class="small">Sem requisito de negócio nos PRDs.</p><p class="porque"><strong>Por que é requisito:</strong> Consistência com o docs; sem requisito de negócio próprio — ver N-06 sobre a finalidade do recurso.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Pequeno.</div><div><span class="lbl">Recomendação</span> Incluir.</div></div>
+</div>
+<h3>Contratos</h3>
+<div class="gap" id="G-14">
+  <div class="gap-h"><span class="gap-id">G-14</span><span class="st div">Crítico</span><span class="gap-t">Contrato sem método de pagamento e sem prazo</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>A ingestão do docs diz que o documento pode "sobrescrever os parâmetros de contrato (método de pagamento e prazo)". Mas nem o contrato do docs nem o da proposta têm esses campos — só <code>rad_eligible</code>.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/contratos.html" target="_blank" rel="noopener">Docs · Contratos ↗</a> · <a class="xref" href="https://split-hubhq.github.io/docs/ingestao-dfs.html" target="_blank" rel="noopener">Docs · Ingestão DFs ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-contratos.html#s09">RF-CTR-001</a> <span class="small">(Contratos)</span> — o contrato deve registrar CNPJ, vigência, modelo de operação e prazo de pagamento</li><li><a class="xref mono-s" href="prd-contratos.html#s09">RF-CTR-002</a> <span class="small">(Contratos)</span> — o método é um enum de três valores — <code>split</code>, <code>rad</code>, <code>fornecedor</code> — com fonte única</li><li><a class="xref mono-s" href="prd-contratos.html#s09">RF-CTR-013</a> <span class="small">(Contratos)</span> — o contrato resolvido determina o método do registro fiscal gerado</li><li><a class="xref mono-s" href="prd-contratos.html#s10">RN-CTR-15</a> <span class="small">(Contratos)</span> — prazo de 1 a 360 dias</li><li><a class="xref mono-s" href="prd-ingestao.html#s10">RN-ING-04</a> <span class="small">(Ingestão)</span> — o método do registro fiscal vem do contrato vigente na data de emissão</li></ul><p class="porque"><strong>Por que é requisito:</strong> É o contrato que diz quem recolhe. Sem método no contrato, a plataforma não sabe se gera guia RAD, se o recolhimento é do fornecedor ou por split.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> O RAD por contrato não funciona, e o crédito nasce sem método.</div><div><span class="lbl">Recomendação</span> <code>payment_method</code> (<code>split_payment</code>, <code>rad</code>, <code>fornecedor</code>) e <code>payment_term_days</code> no contrato — nos dois documentos.</div></div>
+</div>
+<div class="gap" id="G-15">
+  <div class="gap-h"><span class="gap-id">G-15</span><span class="st abs">Alto</span><span class="gap-t">Situação digitada, e não derivada da vigência</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>Docs e proposta guardam a situação (<code>active</code>, <code>suspended</code>…) como dado do cliente. A proposta só valida número de contrato repetido.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/contratos.html" target="_blank" rel="noopener">Docs · Contratos ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-contratos.html#s10">RN-CTR-03</a> <span class="small">(Contratos)</span> — o status é calculado da vigência a cada leitura; nunca armazenado</li><li><a class="xref mono-s" href="prd-contratos.html#s09">RF-CTR-003</a> <span class="small">(Contratos)</span> — produz <code>ativo</code>, <code>a_iniciar</code>, <code>encerrado</code> ou <code>invalido</code> com a passagem do tempo</li><li><a class="xref mono-s" href="prd-contratos.html#s10">RN-CTR-02</a> <span class="small">(Contratos)</span> — um contrato vigente por CNPJ: vigências não podem se sobrepor</li><li><a class="xref mono-s" href="prd-contratos.html#s09">RF-CTR-022</a> <span class="small">(Contratos)</span> — o cadastro rejeita vigência sobreposta a contrato do mesmo CNPJ</li></ul><p class="porque"><strong>Por que é requisito:</strong> Com dois contratos vigentes, o método da nota fica ambíguo; com status digitado, contrato vencido segue valendo.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Contrato vencido segue <code>active</code>; dois contratos vigentes deixam o método da nota ambíguo.</div><div><span class="lbl">Recomendação</span> Vigência derivada das datas; suspensão e cancelamento como atos; <code>409</code> para vigência sobreposta.</div></div>
+</div>
+<div class="gap" id="G-16">
+  <div class="gap-h"><span class="gap-id">G-16</span><span class="st wait">Médio</span><span class="gap-t">Listagem de contratos sem filtros</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs filtra por situação, CNPJ e data; a proposta não tem filtro algum.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/contratos.html" target="_blank" rel="noopener">Docs · Contratos ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-contratos.html#s09">RF-CTR-045</a> <span class="small">(Contratos)</span> — a busca cobre identificador, CNPJ e razão social</li></ul><p class="porque"><strong>Por que é requisito:</strong> O produto encontra contrato por CNPJ e identificador; a API precisa do mesmo para o ERP sincronizar.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Sincronizar os contratos de um fornecedor exige ler tudo.</div><div><span class="lbl">Recomendação</span> Filtros de situação, fornecedor e vigência.</div></div>
+</div>
+<div class="gap" id="G-17">
+  <div class="gap-h"><span class="gap-id">G-17</span><span class="st neu">Baixo</span><span class="gap-t">Sem observações e sem data de atualização</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>Faltam <code>notes</code> e <code>updated_at</code>. O fim da vigência, obrigatório no docs, ficou opcional na proposta ("indeterminado").</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/contratos.html" target="_blank" rel="noopener">Docs · Contratos ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-contratos.html#s10">RN-CTR-05</a> <span class="small">(Contratos)</span> — fim posterior ao início — a regra pressupõe fim definido</li></ul><p class="porque"><strong>Por que é requisito:</strong> Contrato sem fim muda o cálculo de vigência do produto; precisa ser decisão explícita.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Pequeno.</div><div><span class="lbl">Recomendação</span> Incluir os campos e decidir se contrato sem fim é aceito.</div></div>
+</div>
+<h3>Ingestão de DFs</h3>
+<div class="gap" id="G-18">
+  <div class="gap-h"><span class="gap-id">G-18</span><span class="st div">Crítico</span><span class="gap-t">Não há envio de documento por API</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs tem <code>POST /v1/documentos-fiscais</code> — JSON estruturado ou XML assinado — e lote JSON de até 500. A proposta só recebe arquivo, em duas etapas: prévia e confirmação.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/ingestao-dfs.html" target="_blank" rel="noopener">Docs · Ingestão DFs ↗</a> · <a class="xref" href="https://split-hubhq.github.io/docs/mapa-integracao.html" target="_blank" rel="noopener">Docs · Mapa de Integração ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-ingestao.html#s09">RF-ING-001</a> <span class="small">(Ingestão)</span> — "o sistema deve aceitar documentos por API" — <code>POST /v1/documentos-fiscais</code></li><li><a class="xref mono-s" href="prd-ingestao.html#s09">RF-ING-002</a> <span class="small">(Ingestão)</span> — o lote por API deve aceitar até 500 documentos</li><li><a class="xref" href="prd-credito.html#s16">Crédito §16 — O que sai para o ERP</a> — "o documento: <code>POST /v1/documentos-fiscais</code>, unitário ou em lote, na fronteira com o ERP"</li></ul><p class="porque"><strong>Por que é requisito:</strong> É a primeira integração essencial do mapa do docs, e o requisito mais citado dos PRDs. O crédito não nasce sem o documento.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> O ERP não integra nota a nota; o crédito não nasce.</div><div><span class="lbl">Recomendação</span> Implementar o envio individual e o lote JSON. O fluxo por arquivo com prévia fica como canal complementar.</div></div>
+</div>
+<div class="gap" id="G-19">
+  <div class="gap-h"><span class="gap-id">G-19</span><span class="st div">Crítico</span><span class="gap-t">O arquivo não tem como ser enviado</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p><code>POST /v1/ingestions</code> exige um <code>uploadId</code>, mas nenhuma operação cria o upload, nem diz formato, tamanho ou tipos de arquivo aceitos.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/ingestao-dfs.html" target="_blank" rel="noopener">Docs · Ingestão DFs ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-ingestao.html#s09">RF-ING-008</a> <span class="small">(Ingestão)</span> — o upload deve apresentar pré-visualização antes de confirmar</li><li><a class="xref mono-s" href="prd-ingestao.html#s09">RF-ING-009</a> <span class="small">(Ingestão)</span> — todo documento passa pelas quatro verificações antes de ser marcado importado</li></ul><p class="porque"><strong>Por que é requisito:</strong> A prévia da proposta corresponde a um requisito do produto, mas o passo que a alimenta não existe.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> O fluxo, como especificado, não é executável.</div><div><span class="lbl">Recomendação</span> <code>POST /v1/uploads</code> com formato, limites e verificação antivírus descritos.</div></div>
+</div>
+<div class="gap" id="G-20">
+  <div class="gap-h"><span class="gap-id">G-20</span><span class="st div">Crítico</span><span class="gap-t">O documento some depois da confirmação</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>Faltam consulta, listagem, correção (<code>PATCH</code> em <code>pending</code>/<code>error</code>) e remoção de documento. O lote confirmado só traz contagens e um <code>failure_reason</code> do lote inteiro.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/ingestao-dfs.html" target="_blank" rel="noopener">Docs · Ingestão DFs ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-ingestao.html#s09">RF-ING-003</a> <span class="small">(Ingestão)</span> — processamento assíncrono "com estado consultável": <code>pending</code>, <code>processing</code>, <code>completed</code>, <code>error</code></li><li><a class="xref" href="prd-ingestao.html#s15">Ingestão §15 — O contrato de entrada</a> — consulta, listagem e correção apenas em <code>pending</code> ou <code>error</code>; documento concluído é imutável</li><li><a class="xref mono-s" href="prd-ingestao.html#s10">RN-ING-07</a> <span class="small">(Ingestão)</span> — a recusa registra qual verificação falhou e por quê</li></ul><p class="porque"><strong>Por que é requisito:</strong> Sem estado por documento, a recusa fica silenciosa — exatamente o que a regra proíbe.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> O cliente não sabe qual nota entrou, qual falhou nem por quê.</div><div><span class="lbl">Recomendação</span> Recurso de documento com o ciclo do docs, e resultado por documento no lote.</div></div>
+</div>
+<div class="gap" id="G-21">
+  <div class="gap-h"><span class="gap-id">G-21</span><span class="st abs">Alto</span><span class="gap-t">Tipo do documento reduzido a "dfe" ou "nfse"</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs trabalha com 14 tipos (<code>type</code> e <code>model</code>); a proposta tem <code>kind</code> com dois valores.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/ingestao-dfs.html" target="_blank" rel="noopener">Docs · Ingestão DFs ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref" href="prd-ingestao.html#s15">Ingestão §15 — O contrato de entrada</a> — "o contrato aceita 14 tipos", com modelo oficial</li><li><a class="xref mono-s" href="prd-ingestao.html#s09">RF-ING-019</a> <span class="small">(Ingestão)</span> — filtros por tipo combináveis</li></ul><p class="porque"><strong>Por que é requisito:</strong> As regras por tipo — fato gerador, eventos, leiaute — dependem de saber o modelo.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> NF-e, CT-e, NFCom e NF3-e chegam indistintos.</div><div><span class="lbl">Recomendação</span> <code>type</code> e <code>model</code> por documento.</div></div>
+</div>
+<div class="gap" id="G-22">
+  <div class="gap-h"><span class="gap-id">G-22</span><span class="st abs">Alto</span><span class="gap-t">Sem vínculo com contrato e sem sobrescrita do método</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>Faltam <code>contract_id</code>, <code>override_contract_params</code>, <code>payment_method</code> e <code>payment_term_days</code>.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/ingestao-dfs.html" target="_blank" rel="noopener">Docs · Ingestão DFs ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-ingestao.html#s09">RF-ING-015</a> <span class="small">(Ingestão)</span> — a ingestão aplica o método do contrato vigente na data de emissão</li><li><a class="xref" href="prd-ingestao.html#s15">Ingestão §15 — O contrato de entrada</a> — "é por aí que o <code>rad_eligible</code> do contrato alcança o documento"</li></ul><p class="porque"><strong>Por que é requisito:</strong> É o elo entre a nota e o RAD.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Não há como dizer, por nota, que aquela operação é RAD.</div><div><span class="lbl">Recomendação</span> Incluir, depois de resolver o método no contrato.</div></div>
+</div>
+<div class="gap" id="G-23">
+  <div class="gap-h"><span class="gap-id">G-23</span><span class="st wait">Médio</span><span class="gap-t">Duplicidade pela chave de acesso não declarada</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>Nada diz o que acontece quando a mesma chave chega duas vezes.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/ingestao-dfs.html" target="_blank" rel="noopener">Docs · Ingestão DFs ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-ingestao.html#s10">RN-ING-01</a> <span class="small">(Ingestão)</span> — "chave repetida é crédito contado duas vezes — o erro mais caro que a ingestão pode produzir"</li><li><a class="xref mono-s" href="prd-ingestao.html#s09">RF-ING-010</a> <span class="small">(Ingestão)</span> — documento com chave já registrada é recusado como duplicidade</li><li><a class="xref mono-s" href="prd-ingestao.html#s09">RF-ING-011</a> <span class="small">(Ingestão)</span> — a chave deve ter 44 dígitos, com dígito verificador válido</li></ul><p class="porque"><strong>Por que é requisito:</strong> É a regra de maior custo da ingestão.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Reenvio pode duplicar crédito.</div><div><span class="lbl">Recomendação</span> Responder com o documento existente, ou <code>409 duplicate_access_key</code>.</div></div>
+</div>
+<h3>RAD</h3>
+<div class="gap" id="G-24">
+  <div class="gap-h"><span class="gap-id">G-24</span><span class="st div">Crítico</span><span class="gap-t">A guia não chega ao ERP</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs entrega a guia por evento, com número, vencimento, código de barras, chave PIX, PDF, principal, multa, juros e código de retorno. A proposta não tem evento liberado, e o objeto Guia não tem nenhum desses campos — nem endpoint de detalhe.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/rad.html" target="_blank" rel="noopener">Docs · RAD ↗</a> · <a class="xref" href="https://split-hubhq.github.io/docs/mapa-integracao.html" target="_blank" rel="noopener">Docs · Mapa de Integração ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-pagamentos.html#s07">RF-PAG-050</a> <span class="small">(Pagamentos)</span> — guia IBS com código de receita 6912 e DARF CBS com 5952</li><li><a class="xref mono-s" href="prd-pagamentos.html#s07">RF-PAG-053</a> <span class="small">(Pagamentos)</span> — linha digitável no formato de segmentos</li><li><a class="xref mono-s" href="prd-pagamentos.html#s07">RF-PAG-054</a> <span class="small">(Pagamentos)</span> — payload PIX no padrão BR Code</li><li><a class="xref mono-s" href="prd-pagamentos.html#s07">RF-PAG-061</a> <span class="small">(Pagamentos)</span> — recebedor por tributo: Comitê Gestor no IBS, Receita na CBS</li><li><a class="xref mono-s" href="prd-execucao-rad.html#s09">RF-EXR-022</a> <span class="small">(Execução RAD)</span> — no modo automático, o lote gera e emite o webhook</li><li><a class="xref mono-s" href="prd-execucao-rad.html#s10">RN-EXR-12</a> <span class="small">(Execução RAD)</span> — "o que não se pode é fingir que entregou"</li></ul><p class="porque"><strong>Por que é requisito:</strong> O produto gera a guia completa e a entrega ao ERP por webhook. A proposta guarda a guia sem os dados que permitem pagá-la.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> O ERP não paga nem contabiliza a guia. É a segunda integração essencial do docs.</div><div><span class="lbl">Recomendação</span> Campos de pagamento no objeto Guia, <code>GET /guias/{id}</code> e o evento de guia emitida.</div></div>
+</div>
+<div class="gap" id="G-25">
+  <div class="gap-h"><span class="gap-id">G-25</span><span class="st div">Crítico</span><span class="gap-t">Comprovante sem os dados do pagamento</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs recebe o comprovante estruturado: PIX (<code>end_to_end_id</code>, <code>txid</code>, chave, valor, data) ou boleto (nosso número, código de barras, linha digitável, banco, agência, conta, valor pago, data). A proposta aceita só um id de arquivo ou um id externo.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/rad.html" target="_blank" rel="noopener">Docs · RAD ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref" href="prd-pagamentos.html#s12">Pagamentos §12 — Comprovante e conciliação por integração</a> — "ERP — <code>POST /v1/rad/proofs</code>: PIX com <code>end_to_end_id</code>, <code>txid</code>, <code>chave_pix</code>, valor e timestamp; ou boleto com nosso número, código de barras, linha digitável, banco, agência, conta, valor pago e data"</li><li><a class="xref" href="prd-pagamentos.html#s12">Pagamentos §12 — Comprovante e conciliação por integração</a> — decisão D-03: o comprovante serve à conciliação financeira</li><li><a class="xref mono-s" href="prd-pagamentos.html#s07">RF-PAG-062</a> <span class="small">(Pagamentos)</span> — o E2EId segue o formato PIX</li></ul><p class="porque"><strong>Por que é requisito:</strong> O PRD de Pagamentos reproduz o payload do docs como requisito. Sem valor pago e data, a conciliação financeira não é automática.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> A conciliação do pagamento deixa de ser automática. É a terceira integração essencial do docs.</div><div><span class="lbl">Recomendação</span> Aceitar o comprovante estruturado do docs; o arquivo vira anexo opcional.</div></div>
+</div>
+<div class="gap" id="G-26">
+  <div class="gap-h"><span class="gap-id">G-26</span><span class="st abs">Alto</span><span class="gap-t">O comprovante é endereçado pela nota, e não pela guia</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>A proposta registra o pagamento em <code>/supplier-invoices/{id}/guias/{tributo}/payment</code>; o docs, pelo <code>darf_id</code>. O objeto Guia tem id próprio, que a rota não usa.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/rad.html" target="_blank" rel="noopener">Docs · RAD ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-portal-fornecedor.html#s07">RF-POR-004</a> <span class="small">(Portal do fornecedor)</span> — "o comprovante deve ser anexado à guia, e não ao fornecedor"</li><li><a class="xref mono-s" href="prd-pagamentos.html#s08">RN-PAG-16</a> <span class="small">(Pagamentos)</span> — "a guia é por tributo, e cada uma tem o seu comprovante"</li></ul><p class="porque"><strong>Por que é requisito:</strong> A unidade do comprovante, no produto, é a guia.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Nota com mais de uma guia do mesmo tributo — complemento, multa, pagamento parcial — fica sem como ser paga.</div><div><span class="lbl">Recomendação</span> <code>POST /v1/guias/{id}/payments</code>.</div></div>
+</div>
+<h3>Crédito e débito</h3>
+<div class="gap" id="G-27">
+  <div class="gap-h"><span class="gap-id">G-27</span><span class="st div">Crítico</span><span class="gap-t">Método de pagamento sem split payment</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O enum da proposta é <code>fornecedor</code>, <code>rad</code>, <code>indefinido</code>. O <code>payment_method</code> do docs também não tem split.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/ingestao-dfs.html" target="_blank" rel="noopener">Docs · Ingestão DFs ↗</a> · <a class="xref" href="https://split-hubhq.github.io/docs/garantia-credito.html" target="_blank" rel="noopener">Docs · Garantia de crédito ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-contratos.html#s10">RN-CTR-16</a> <span class="small">(Contratos)</span> — nota sem contrato vigente: aplica-se Split Payment, mecanismo padrão da LC 214/2025</li><li><a class="xref mono-s" href="prd-contratos.html#s09">RF-CTR-002</a> <span class="small">(Contratos)</span> — enum de três valores: <code>split</code>, <code>rad</code>, <code>fornecedor</code></li><li><a class="xref mono-s" href="prd-conciliacao.html#s11">RN-CONC-05</a> <span class="small">(Conciliação)</span> — a conciliação independe do mecanismo: split e RAD chegam ao mesmo confronto</li><li><a class="xref mono-s" href="prd-credito.html#s10">RN-CRE-19</a> <span class="small">(Crédito)</span> — Split Payment não se converte em recolhimento assumido</li></ul><p class="porque"><strong>Por que é requisito:</strong> Split é o método padrão do produto, não um caso futuro. A primeira fase do split está prevista para 2027.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Crédito de operação com split sai como "indefinido": dado fiscal errado na origem.</div><div><span class="lbl">Recomendação</span> <code>split_payment</code> no enum, no contrato e na ingestão — nos dois documentos.</div></div>
+</div>
+<div class="gap" id="G-28">
+  <div class="gap-h"><span class="gap-id">G-28</span><span class="st abs">Alto</span><span class="gap-t">Débito não existe na proposta</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>Nem consulta, nem evento. O docs tem o evento <code>debito.status_alterado</code>, com os créditos usados na compensação.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/garantia-credito.html" target="_blank" rel="noopener">Docs · Garantia de crédito ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-debito.html#s08">RF-DEB-016</a> <span class="small">(Débito)</span> — o módulo deve permitir registrar a extinção de um débito</li><li><a class="xref mono-s" href="prd-debito.html#s09">RN-DEB-05</a> <span class="small">(Débito)</span> — débito extinto por compensação consome crédito; por recolhimento, consome caixa</li><li><a class="xref" href="auditoria-prd-app.html#d01">Auditoria — Decisão D-01: qual contrato de eventos vale</a> — <code>debito.status_alterado</code> é o contrato público do débito</li></ul><p class="porque"><strong>Por que é requisito:</strong> O ciclo crédito × débito é o que o docs chama de Garantia de crédito; sem débito, ele fica pela metade.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> O ERP não acompanha a extinção dos próprios débitos.</div><div><span class="lbl">Recomendação</span> Consulta de débitos e o evento de mudança de status.</div></div>
+</div>
+<div class="gap" id="G-29">
+  <div class="gap-h"><span class="gap-id">G-29</span><span class="st abs">Alto</span><span class="gap-t">Mudança de status do crédito sem evento</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs entrega <code>credito.status_alterado</code>; a proposta oferece só consulta.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/garantia-credito.html" target="_blank" rel="noopener">Docs · Garantia de crédito ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref" href="prd-credito.html#s16">Crédito §16 — O que sai para o ERP</a> — "o que sai para o ERP" — os contratos de evento do crédito</li><li><a class="xref" href="auditoria-prd-app.html#d01">Auditoria — Decisão D-01: qual contrato de eventos vale</a> — a escolha entre o contrato público e o do protótipo segue em aberto — e a proposta não tem nenhum dos dois</li></ul><p class="porque"><strong>Por que é requisito:</strong> A apropriação é o KPI central do produto; o ERP precisa saber quando acontece.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> O ERP tem de fazer polling para saber que o crédito foi apropriado.</div><div><span class="lbl">Recomendação</span> Evento de mudança de status, depois de decidida a D-01.</div></div>
+</div>
+<div class="gap" id="G-30">
+  <div class="gap-h"><span class="gap-id">G-30</span><span class="st wait">Médio</span><span class="gap-t">Vocabulário de status diferente</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>Docs: <code>not_appropriated</code>, <code>appropriated</code>, <code>utilized</code>. Proposta: <code>nao_apropriado</code>, <code>apropriado</code>, <code>utilizado</code>, <code>glosado</code>.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/garantia-credito.html" target="_blank" rel="noopener">Docs · Garantia de crédito ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref" href="auditoria-prd-app.html#d01">Auditoria — Decisão D-01: qual contrato de eventos vale</a> — a auditoria compara exatamente estes dois vocabulários e registra que são incompatíveis</li></ul><p class="porque"><strong>Por que é requisito:</strong> É a mesma decisão em aberto da D-01; a proposta escolheu um lado sem que ela tenha sido tomada.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Integração por um não entende o outro.</div><div><span class="lbl">Recomendação</span> Fechar a D-01 e usar um vocabulário só, com <code>glosado</code>.</div></div>
+</div>
+<div class="gap" id="G-31">
+  <div class="gap-h"><span class="gap-id">G-31</span><span class="st wait">Médio</span><span class="gap-t">Prazo do art. 54 contado de forma diferente do PRD</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>A proposta conta <code>extincao_em</code> "a partir da apropriação".</p></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-credito.html#s09">RF-CRE-024</a> <span class="small">(Crédito)</span> — prescrição por status explícito ou por decurso de 5 anos <strong>da data do DF</strong></li><li><a class="xref mono-s" href="prd-credito.html#s10">RN-CRE-07</a> <span class="small">(Crédito)</span> — data do DF anterior a hoje menos 5 anos: prescrito</li></ul><p class="porque"><strong>Por que é requisito:</strong> Duas regras para a mesma data. Uma das duas está errada, e a decisão é jurídica.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Datas de prescrição diferentes entre a tela e a API.</div><div><span class="lbl">Recomendação</span> Confirmar com o jurídico e alinhar PRD e API antes de publicar.</div></div>
+</div>
+<div class="gap" id="G-32">
+  <div class="gap-h"><span class="gap-id">G-32</span><span class="st neu">Baixo</span><span class="gap-t">Registro de crédito sem contexto da nota, e competência ambígua</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>Sem fornecedor, data de emissão e competência do documento no objeto. O filtro <code>competencia</code> não diz se é a da emissão ou a da apropriação.</p></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-credito.html#s09">RF-CRE-002</a> <span class="small">(Crédito)</span> — o filtro de período opera sobre a data de emissão do DF</li></ul><p class="porque"><strong>Por que é requisito:</strong> O produto filtra pela emissão; a API precisa dizer qual competência usa.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Cada linha exige outra consulta, e o filtro pode trazer outro recorte que a tela.</div><div><span class="lbl">Recomendação</span> Incluir o contexto e nomear o filtro pela data que ele usa.</div></div>
+</div>
+<h3>Automações</h3>
+<div class="gap" id="G-33">
+  <div class="gap-h"><span class="gap-id">G-33</span><span class="st abs">Alto</span><span class="gap-t">Sem retorno das automações</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>O docs: automações configuradas no portal, e a API só se inscreve para receber <code>automation.executed</code> e <code>automation.failed</code>. A proposta não tem a inscrição, nem os eventos, nem as automações de ITSM e de relatórios.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/automacoes.html" target="_blank" rel="noopener">Docs · Automações ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref" href="prd-automacoes.html#s16">Automações §16 — Webhook e eventos de automação</a> — "em produção o ERP se inscreve e recebe os eventos" por <code>POST /v1/webhooks/automacoes</code></li><li><a class="xref mono-s" href="prd-automacoes.html#s09">RF-AUT-008</a> <span class="small">(Automações)</span> — o histórico de ITSM registra o status HTTP e o número do chamado</li></ul><p class="porque"><strong>Por que é requisito:</strong> O PRD de Automações adota o modelo do docs: configuração no produto, retorno por evento.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> O cliente não sabe se a automação rodou.</div><div><span class="lbl">Recomendação</span> Inscrição e eventos do docs.</div></div>
+</div>
+<h3>Webhooks</h3>
+<div class="gap" id="G-34">
+  <div class="gap-h"><span class="gap-id">G-34</span><span class="st div">Crítico</span><span class="gap-t">Nenhum evento liberado nem catalogado</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>A proposta define só o envelope e avisa que o recurso "ainda não foi liberado". Os sete eventos do docs ficam sem entrega.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/webhooks.html" target="_blank" rel="noopener">Docs · Webhooks ↗</a> · <a class="xref" href="https://split-hubhq.github.io/docs/rad.html" target="_blank" rel="noopener">Docs · RAD ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-integracoes.html#s09">RF-INT-016</a> <span class="small">(Integrações)</span> — conexão de saída exige ao menos um evento</li><li><a class="xref mono-s" href="prd-integracoes.html#s10">RN-INT-11</a> <span class="small">(Integrações)</span> — o endpoint do cliente responde 200, ou o evento é reenviado</li><li><a class="xref mono-s" href="prd-execucao-rad.html#s09">RF-EXR-022</a> <span class="small">(Execução RAD)</span> — o lote automático emite o webhook sem aprovação</li></ul><p class="porque"><strong>Por que é requisito:</strong> O RAD inteiro do docs é por evento: guia emitida, guias do lote, comprovante.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> RAD depende de evento, e não há evento.</div><div><span class="lbl">Recomendação</span> Catálogo de tipos com o payload de cada um, antes do primeiro cliente.</div></div>
+</div>
+<div class="gap" id="G-35">
+  <div class="gap-h"><span class="gap-id">G-35</span><span class="st wait">Médio</span><span class="gap-t">Evento só com o identificador, sem endpoint para buscar o resto</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>A proposta manda no evento só o id do recurso, para o cliente consultar a API. Faltam os endpoints de detalhe: guia, documento, débito.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/webhooks.html" target="_blank" rel="noopener">Docs · Webhooks ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-execucao-rad.html#s10">RN-EXR-12</a> <span class="small">(Execução RAD)</span> — "o que não se pode é fingir que entregou"</li></ul><p class="porque"><strong>Por que é requisito:</strong> Evento que não leva a nada é entrega fingida.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> O evento chega e não há o que consultar.</div><div><span class="lbl">Recomendação</span> Ou eventos completos, como no docs, ou endpoints de detalhe para cada tipo.</div></div>
+</div>
+<div class="gap" id="G-36">
+  <div class="gap-h"><span class="gap-id">G-36</span><span class="st wait">Médio</span><span class="gap-t">Configuração da URL e do segredo não descrita</span></div>
+  <div class="gap-b">
+    <div><div class="lbl">Docs × proposta</div><p>Docs: <code>{event, created_at, data}</code>, segredo no portal. Proposta: <code>{id, type, occurred_at, data}</code> e assinatura com carimbo de tempo — mas sem dizer onde se cadastra a URL nem como se troca o segredo.</p><div class="small" style="margin-top:6px"><a class="xref" href="https://split-hubhq.github.io/docs/webhooks.html" target="_blank" rel="noopener">Docs · Webhooks ↗</a></div></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref" href="prd-integracoes.html#s12">Integrações §12 — Segurança e lacunas da API</a> — propõe exatamente a assinatura <code>t=&lt;unix&gt;,v1=&lt;hmac&gt;</code> que a proposta adotou</li><li><a class="xref mono-s" href="prd-integracoes.html#s09">RF-INT-007</a> <span class="small">(Integrações)</span> — conexão de saída recebe segredo de assinatura</li><li><a class="xref mono-s" href="prd-integracoes.html#s10">RN-INT-03</a> <span class="small">(Integrações)</span> — rotação mantém o segredo anterior por 24 horas</li><li><a class="xref mono-s" href="prd-integracoes.html#s09">RF-INT-015</a> <span class="small">(Integrações)</span> — URL de webhook exige HTTPS</li></ul><p class="porque"><strong>Por que é requisito:</strong> O envelope da proposta segue o PRD; a gestão da URL e do segredo está especificada no PRD e ausente na API.</p></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Efeito na operação</span> Envelope certo, configuração em aberto.</div><div><span class="lbl">Recomendação</span> Adotar o envelope da proposta e apontar a gestão para a tela de Integrações.</div></div>
+</div>
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Endpoints que não fazem sentido no contexto</span></div>
+<p>Seis pontos da proposta — um deles também presente no docs — que vão contra uma regra de negócio ou não têm caso de uso de integração.</p>
+<div class="gap" id="N-01">
+  <div class="gap-h"><span class="gap-id">N-01</span><span class="gap-t">Régua de cobrança configurada por API</span></div>
+  <div class="small mono-s" style="padding:0 16px">GET/POST /v1/contracts/{id}/billing-rules · PUT · PATCH …/active</div>
+  <div class="gap-b">
+    <div><div class="lbl">Por que não faz sentido</div><p>O docs configura automação no portal, e a API só recebe o retorno. Pela proposta, o ERP escreve o e-mail que vai ao fornecedor em nome da organização, sem aprovação. A régua é presa ao contrato, mas dispara pelo "vencimento" de um objeto que a proposta não diz qual é; e não tem condição de disparo, então cobra fornecedor que já pagou.</p></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-automacoes.html#s10">RN-AUT-08</a> <span class="small">(Automações)</span> — cobrar fornecedor é ato externo; o texto sai em nome da organização — por isso alterar template pede aprovação</li><li><a class="xref mono-s" href="prd-automacoes.html#s10">RN-AUT-07</a> <span class="small">(Automações)</span> — alteração de parâmetro exige justificativa</li><li><a class="xref mono-s" href="prd-automacoes.html#s09">RF-AUT-011</a> <span class="small">(Automações)</span> — cada etapa define dia relativo, canal, <strong>condição</strong> e assunto</li><li><a class="xref" href="prd-automacoes.html#s16">Automações §16 — Webhook e eventos de automação</a> — "em produção o ERP se inscreve e recebe os eventos" — não configura</li></ul></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Recomendação</span> Tirar da API pública; a régua fica no produto, como o docs prevê. Se houver caso de uso de ERP, só leitura.</div></div>
+</div>
+<div class="gap" id="N-02">
+  <div class="gap-h"><span class="gap-id">N-02</span><span class="gap-t">Credencial de fornecedor pagando guia RAD</span></div>
+  <div class="small mono-s" style="padding:0 16px">escopo supplier_guias:pay · "credenciais de fornecedor acessam apenas as próprias guias"</div>
+  <div class="gap-b">
+    <div><div class="lbl">Por que não faz sentido</div><p>No RAD quem recolhe é o adquirente — o cliente da API. O fornecedor não paga essa guia. Abrir a API corporativa a credenciais de terceiros amplia a superfície de ataque sem caso de uso no docs.</p></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-pagamentos.html#s08">RN-PAG-15</a> <span class="small">(Pagamentos)</span> — módulo oculto ao perfil Fornecedor: "RAD é operação do adquirente"</li><li><a class="xref mono-s" href="prd-portal-fornecedor.html#s08">RN-POR-03</a> <span class="small">(Portal do fornecedor)</span> — quem concede e revoga acesso de fornecedor é o adquirente</li><li><a class="xref mono-s" href="prd-portal-fornecedor.html#s08">RN-POR-01</a> <span class="small">(Portal do fornecedor)</span> — a filtragem do que o fornecedor vê é do servidor, nunca da tela</li></ul></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Recomendação</span> Remover o papel de fornecedor da API. Se o produto quiser fornecedor na API, é decisão separada.</div></div>
+</div>
+<div class="gap" id="N-03">
+  <div class="gap-h"><span class="gap-id">N-03</span><span class="gap-t">Ranking de fornecedores por crédito</span></div>
+  <div class="small mono-s" style="padding:0 16px">GET /v1/credits/suppliers/top</div>
+  <div class="gap-b">
+    <div><div class="lbl">Por que não faz sentido</div><p>É um gráfico do painel. Devolve o nome do fornecedor em texto, não o id — não dá para cruzar com nada no ERP. O docs não tem nada parecido.</p></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-credito.html#s09">RF-CRE-059</a> <span class="small">(Crédito)</span> — o Top 10 é componente de tela, com barra segmentada e score de 0 a 10</li></ul></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Recomendação</span> Remover. Análise vai pela exportação para BI, que o docs lista como integração opcional.</div></div>
+</div>
+<div class="gap" id="N-04">
+  <div class="gap-h"><span class="gap-id">N-04</span><span class="gap-t">Indicadores de painel expostos como API</span></div>
+  <div class="small mono-s" style="padding:0 16px">/v1/credits/composition · /v1/credits/deadlines · /v1/supplier-invoices/guias/totals · /v1/ingestions/metrics</div>
+  <div class="gap-b">
+    <div><div class="lbl">Por que não faz sentido</div><p>São agregados de tela. O ERP calcula a partir das listagens; mantê-los obriga a garantir que a API e a tela somem igual. E <code>/v1/ingestions/metrics</code> colide com <code>/v1/ingestions/{id}</code>.</p></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-pagamentos.html#s07">RF-PAG-003</a> <span class="small">(Pagamentos)</span> — o recorte da tabela e dos indicadores tem de ser idêntico — uma terceira soma na API é mais um ponto de divergência</li><li><a class="xref mono-s" href="prd-credito.html#s10">RN-CRE-15</a> <span class="small">(Crédito)</span> — os indicadores dependem dos filtros da tela</li></ul></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Recomendação</span> Manter só os que tiverem caso de uso de integração declarado; o resto vai para a exportação analítica.</div></div>
+</div>
+<div class="gap" id="N-05">
+  <div class="gap-h"><span class="gap-id">N-05</span><span class="gap-t">Separar "dfe" de "nfse" no envio</span></div>
+  <div class="small mono-s" style="padding:0 16px">POST /v1/ingestions — campo kind</div>
+  <div class="gap-b">
+    <div><div class="lbl">Por que não faz sentido</div><p>No docs, NFS-e é um dos 14 tipos, com o mesmo tratamento dos outros. A separação sugere dois fluxos sem razão escrita.</p></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref" href="prd-ingestao.html#s15">Ingestão §15 — O contrato de entrada</a> — o contrato aceita 14 tipos, NFS-e entre eles</li></ul></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Recomendação</span> Trocar <code>kind</code> por <code>type</code> e <code>model</code> (<a class="xref" href="#G-21">G-21</a>).</div></div>
+</div>
+<div class="gap" id="N-06">
+  <div class="gap-h"><span class="gap-id">N-06</span><span class="gap-t">Representante fiscal com RG e órgão emissor — no docs e na proposta</span></div>
+  <div class="small mono-s" style="padding:0 16px">…/representatives</div>
+  <div class="gap-b">
+    <div><div class="lbl">Por que não faz sentido</div><p>O docs diz que o representante é "essencial para validação de documentos fiscais e cálculo de créditos". Nenhuma regra do produto usa o representante para isso. Guardar RG de pessoa física sem finalidade definida esbarra no princípio da necessidade da LGPD.</p></div>
+    <div><div class="lbl">Requisito de negócio</div><ul class="reqs"><li><a class="xref mono-s" href="prd-fornecedor.html#s10">RN-FORN-08</a> <span class="small">(Fornecedor)</span> — a única entidade de pessoa no produto é o acesso ao portal, por pessoa e CNPJ</li></ul></div>
+  </div>
+  <div class="gap-f"><div><span class="lbl">Recomendação</span> Definir a finalidade — por exemplo, o acesso ao portal — ou retirar RG e órgão emissor.</div></div>
+</div>
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">O que a proposta faz melhor que o docs</span></div>
+<p>A avaliação não é só de falta. Estes pontos deveriam <strong>subir para o docs</strong> — vários já estavam pedidos no <a class="xref" href="prd-integracoes.html#s12">PRD de Integrações, §12</a>, como lacunas do docs publicado.</p>
+<div class="cards3"><div class="cardx"><h5>OAuth 2.0 com escopos</h5><p>Padrão de mercado, e <code>invalid_client</code> não revela qual metade da credencial falhou.</p><p class="small" style="margin-top:6px">Já proposto em <a class="xref" href="prd-integracoes.html#s12">Integrações §12</a></p></div><div class="cardx"><h5>Chave de idempotência</h5><p><code>Idempotency-Key</code>, com <code>409</code> para corpo diferente.</p><p class="small" style="margin-top:6px">Já proposto em <a class="xref" href="prd-integracoes.html#s12">Integrações §12</a></p></div><div class="cardx"><h5>Inativar em vez de apagar</h5><p>Fornecedor, representante e contrato mudam de situação e não somem.</p><p class="small" style="margin-top:6px">Alinhado a RN-ORG-03 · RN-CTR-19</p></div><div class="cardx"><h5>Dinheiro como texto decimal</h5><p>Evita erro silencioso de ponto flutuante. Precisa de transição (<a class="xref" href="#G-01">G-01</a>).</p></div><div class="cardx"><h5>404 para recurso de outra empresa</h5><p>Não confirma a existência do recurso.</p></div><div class="cardx"><h5>Paginação por cursor</h5><p>Nas coleções grandes, com total opcional e teto declarado.</p></div><div class="cardx"><h5>Assinatura de webhook com carimbo de tempo</h5><p>Protege contra reenvio malicioso, e o envelope traz <code>id</code> para deduplicar — que o docs pede e não fornece.</p><p class="small" style="margin-top:6px">Já proposto em <a class="xref" href="prd-integracoes.html#s12">Integrações §12</a></p></div><div class="cardx"><h5>Prévia antes de importar arquivo</h5><p>Bom como canal complementar ao envio por API.</p><p class="small" style="margin-top:6px">Alinhado a RF-ING-008</p></div><div class="cardx"><h5>Consulta de créditos e guias</h5><p>O docs só tinha eventos; a consulta é o caminho de reconciliação quando um evento se perde.</p></div><div class="cardx"><h5>Limites de requisição documentados</h5><p>Com cabeçalhos de limite e <code>Retry-After</code>.</p></div><div class="cardx"><h5>Situação na Receita separada da situação na plataforma</h5><p><code>registration_status</code> e <code>status</code> deixam de se confundir.</p></div></div>
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Inconsistências internas da proposta</span></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>O quê</th><th>Detalhe</th></tr></thead><tbody><tr><td class="mono-s"><strong>I-01</strong></td><td><strong><code>uploadId</code> em camelCase</strong></td><td>A proposta declara <code>snake_case</code> em todos os campos.</td></tr><tr><td class="mono-s"><strong>I-02</strong></td><td><strong>Cancelamento de pagamento que não existe</strong></td><td>O <code>409 already_paid</code> manda "cancelar o pagamento antes de registrar outro comprovante", e não há operação de cancelamento.</td></tr><tr><td class="mono-s"><strong>I-03</strong></td><td><strong>"Cálculo de apuração" sem endpoint</strong></td><td>Aparece entre as operações pesadas do limite de requisições, e não existe. O escopo <code>apuracoes:read</code> cobre só crédito.</td></tr><tr><td class="mono-s"><strong>I-04</strong></td><td><strong>Colisão de rota</strong></td><td><code>/v1/ingestions/metrics</code> pode ser capturado por <code>/v1/ingestions/{id}</code>, conforme a ordem das rotas.</td></tr><tr><td class="mono-s"><strong>I-05</strong></td><td><strong>Respostas de erro incompletas</strong></td><td>24 das 31 operações protegidas não declaram <code>401</code>; várias também não declaram <code>403</code> e <code>429</code>.</td></tr><tr><td class="mono-s"><strong>I-06</strong></td><td><strong>"indefinido" sem regra</strong></td><td>O método <code>indefinido</code> não diz quando acontece nem o que fazer. No produto, nota sem contrato vai para split (<a class="xref" href="#G-27">G-27</a>).</td></tr><tr><td class="mono-s"><strong>I-07</strong></td><td><strong>Idiomas misturados no mesmo objeto</strong></td><td><code>CreditRecord</code> tem <code>valor</code>, <code>saldo</code>, <code>used_value</code> e <code>appropriated_at</code>; <code>GuiaTotals</code>, <code>pending</code> e <code>a_vencer</code>.</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">O que corrigir no docs e nos PRDs</span></div>
+<p>A comparação também expôs falhas na referência — no docs e em dois PRDs.</p>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Onde</th><th>O quê</th><th>Detalhe</th></tr></thead><tbody><tr><td class="mono-s"><strong>D-01</strong></td><td><span class="st neu">docs</span></td><td><strong>Contratos repete a seção de representantes</strong></td><td>A página copia a de Fornecedores: diz "representantes vinculados a contratos" e usa a rota de fornecedores.</td></tr><tr><td class="mono-s"><strong>D-02</strong></td><td><span class="st neu">docs</span></td><td><strong>Dois nomes para o mesmo evento</strong></td><td>O exemplo de código de Webhooks trata <code>rad.comprovante_enviado</code>; a página de RAD documenta <code>rad.proof_received</code>.</td></tr><tr><td class="mono-s"><strong>D-03</strong></td><td><span class="st neu">docs</span></td><td><strong>Deduplicar por um id que não existe</strong></td><td>Webhooks manda deduplicar pelo <code>id</code> do evento, e o envelope do docs não tem <code>id</code>.</td></tr><tr><td class="mono-s"><strong>D-04</strong></td><td><span class="st neu">docs</span></td><td><strong>Contrato sem os parâmetros que a ingestão sobrescreve</strong></td><td>A ingestão fala em sobrescrever método e prazo do contrato, e o contrato não tem esses campos (<a class="xref" href="#G-14">G-14</a>).</td></tr><tr><td class="mono-s"><strong>D-05</strong></td><td><span class="st neu">docs</span></td><td><strong>Método de pagamento sem split</strong></td><td><code>payment_method</code> admite só RAD e FORNECEDOR (<a class="xref" href="#G-27">G-27</a>).</td></tr><tr><td class="mono-s"><strong>D-06</strong></td><td><span class="st neu">docs</span></td><td><strong>Exemplo de DARF com estados e alíquotas que não existem</strong></td><td><code>credit_status_change</code> usa <code>pending</code> e <code>retained</code>, ausentes do ciclo de Garantia de crédito; o exemplo traz IBS de 0,9%, igual à CBS, quando 2026 é 0,1% e 0,9%.</td></tr><tr><td class="mono-s"><strong>D-07</strong></td><td><span class="st neu">docs</span></td><td><strong>"O Splithub assumiu a obrigação tributária"</strong></td><td>O evento <code>rad.proof_received</code> diz que o SplitHub "assumiu e liquidou a obrigação tributária em nome do lojista". O fornecedor continua sujeito passivo, quem recolhe no RAD é o adquirente, e o SplitHub pagar DARF exigiria papel de instituição de pagamento que nenhum PRD prevê. Confirmar se esse fluxo existe antes de cobrar do time.</td></tr><tr><td class="mono-s"><strong>D-08</strong></td><td><span class="st neu">docs</span></td><td><strong>Changelog e página com status em idiomas diferentes</strong></td><td>O changelog fala em <code>nao_apropriado</code> e <code>nao_extinto</code>; a página usa <code>not_appropriated</code> e <code>not_settled</code>.</td></tr><tr><td class="mono-s"><strong>D-09</strong></td><td><span class="st neu">docs</span></td><td><strong>Modelo CSV com um item por linha</strong></td><td>Não representa nota com vários itens, e usa vírgula onde o upload de documentos do produto usa ponto e vírgula (RF-ING-004).</td></tr><tr><td class="mono-s"><strong>D-10</strong></td><td><span class="st own">PRD</span></td><td><strong>Fornecedor: formato de CNPJ só numérico</strong></td><td>O RF-FORN-008 ainda descreve o formato <code>00.000.000/0000-00</code>, enquanto o PRD de Contratos já registra o CNPJ alfanumérico (<a class="xref" href="#G-02">G-02</a>).</td></tr><tr><td class="mono-s"><strong>D-11</strong></td><td><span class="st own">PRD</span></td><td><strong>Crédito: prazo do art. 54</strong></td><td>Se o jurídico confirmar a contagem pela apropriação, o RF-CRE-024 muda (<a class="xref" href="#G-31">G-31</a>).</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Além do docs: o que o produto já decidiu</span></div>
+<p>Não entram na contagem de gaps, porque o docs também não os tem. Mas o produto já os decidiu ou os prevê, e a API vai precisar deles.</p>
+<div class="table-wrap"><table><thead><tr><th>Tema</th><th>Situação</th><th></th></tr></thead><tbody><tr><td><strong>API de eventos fiscais</strong></td><td>Pela D-21, aprovada em 30/09/2026, os eventos fiscais chegam ao SplitHub pela API pública. Há proposta de endpoints no hub, e nem o docs nem a proposta do time os têm.</td><td><a class="xref" href="proposta-api-eventos-fiscais.html">ver</a></td></tr><tr><td><strong>Retorno do split payment</strong></td><td>Além do método (<a class="xref" href="#G-27">G-27</a>), o quanto de CBS e IBS foi segregado por documento não tem onde aparecer.</td><td><a class="xref" href="https://www.cgibs.gov.br/upload/arquivos/202609/24101007-split-payment-manual-de-operacoes-v1-0-1.pdf" target="_blank" rel="noopener">manual CGIBS ↗</a></td></tr><tr><td><strong>Inconsistências</strong></td><td>O produto abre ocorrências — uma por tributo, por evento. Nenhuma API as expõe; é o que alimentaria a integração ITSM que o docs promete.</td><td><a class="xref" href="prd-inconsistencias.html">ver</a></td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Plano de ação sugerido</span></div>
+<div class="table-wrap"><table><thead><tr><th>Etapa</th><th>O que entra</th><th>Por quê</th></tr></thead><tbody>
+<tr><td><span class="st div">Crítico</span> <strong>Antes do primeiro cliente</strong></td><td><a class="xref" href="#G-01">G-01</a>, <a class="xref" href="#G-02">G-02</a>, <a class="xref" href="#G-14">G-14</a>, <a class="xref" href="#G-27">G-27</a>, <a class="xref" href="#G-18">G-18</a>, <a class="xref" href="#G-19">G-19</a>, <a class="xref" href="#G-20">G-20</a>, <a class="xref" href="#G-24">G-24</a>, <a class="xref" href="#G-25">G-25</a>, <a class="xref" href="#G-34">G-34</a></td><td>Sem eles, as três integrações essenciais do docs não funcionam, ou o dado fiscal nasce errado</td></tr>
+<tr><td><span class="st abs">Alto</span> <strong>Em seguida</strong></td><td>Os demais itens altos</td><td>Estabelecimento comprador, vigência do contrato, débito, eventos de ciclo, escopos</td></tr>
+<tr><td><span class="st wait">Médio</span> <strong>Depois</strong></td><td>Médios e baixos, e as seções 05, 07 e 08</td><td>Consistência e limpeza</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">Decisões de produto que precisam vir antes</div><p>Seis escolhas destravam o resto, e não são do time de desenvolvimento: <strong>(1)</strong> idioma das rotas e dos campos; <strong>(2)</strong> dinheiro como texto ou número; <strong>(3)</strong> fluxo de autenticação; <strong>(4)</strong> o contrato de eventos — a <a class="xref" href="auditoria-prd-app.html#d01">D-01 da auditoria</a>, em aberto desde 22/09; <strong>(5)</strong> se fornecedor tem credencial na API; <strong>(6)</strong> se o SplitHub paga DARF em nome do cliente (D-07).</p></div>
+</div>
+
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>05/10/2026</strong> — Primeira avaliação da proposta de API do time de desenvolvimento (OpenAPI v1.0.0, 30/09/2026) contra o docs da plataforma (commit 590f1ed, 08/09/2026). Matriz de cobertura dos 25 endpoints e 7 eventos; 36 gaps, cada um ligado ao requisito de negócio dos PRDs que o justifica; seis pontos sem sentido no contexto; onze em que a proposta é melhor que o docs; sete inconsistências internas e 11 correções no docs e nos PRDs.</div></div>
+</div>
+
+</div>
+</body>
+</html>
