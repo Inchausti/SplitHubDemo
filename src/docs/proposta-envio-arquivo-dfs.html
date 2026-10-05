@@ -197,12 +197,12 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <h1>Envio de arquivo de documentos fiscais</h1>
 <p class="subtitle">A rota que falta na proposta do desenvolvimento, desenhada a partir do payload que o docs já publica: enviar o arquivo, ver o que entra e o que não entra, e só então importar — com as mesmas verificações da chamada por documento.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0.1</span></div>
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.1</span></div>
 <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta · API</span></div>
 <div class="meta-pill"><span class="meta-label">Origem</span>&nbsp;<span class="meta-val"><a class="xref" href="avaliacao-api-desenvolvimento.html#s07">Avaliação da API · item 8</a></span></div>
 <div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val"><a class="xref" href="https://split-hubhq.github.io/docs/ingestao-dfs.html">Docs v1.1.0</a> · <a class="xref" href="prd-ingestao.html">PRD Ingestão</a></span></div>
 <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">05/10/2026</span></div>
-<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip info">v1.0.1</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip info">v1.1</span></div>
 </div>
 
 <div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
@@ -236,20 +236,21 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O que existe hoje</span></div>
 
 <p>Três canais de arquivo convivem, e nenhum deles valida o que importa antes de importar.</p>
-<div class="table-wrap"><table class=""><thead><tr><th>Onde</th><th>Como é hoje</th><th>O problema</th></tr></thead><tbody><tr><td><strong>Docs da plataforma</strong><br><span class="sm">CSV em <code>POST /v1/documentos-fiscais/batch</code></span></td><td>O arquivo vai direto para o lote, com <code>Content-Type: text/csv</code>. O <a class="xref" href="https://split-hubhq.github.io/docs/assets/templates/documentos-fiscais-batch.csv">modelo</a> tem 35 colunas separadas por vírgula, uma linha por item.</td><td>O texto diz "cada linha representa um documento", mas o modelo é uma linha por item, e nenhuma regra diz como as linhas se juntam num documento. O modelo não tem 6 campos do JSON — por isso nenhuma NFCom e nenhuma sobrescrita de contrato chega por CSV. Não há prévia: o erro aparece depois da carga.</td></tr><tr><td><strong>Docs da plataforma</strong><br><span class="sm">XML em <code>POST /v1/documentos-fiscais</code></span></td><td>O texto aceita "o XML do documento assinado em base64".</td><td>O corpo da chamada não tem campo para o XML. A promessa existe, o caminho não.</td></tr><tr><td><strong>Proposta do desenvolvimento</strong><br><span class="sm"><code>POST /v1/ingestions</code></span></td><td>Duas etapas: prévia e confirmação, com expiração de 24 horas e resposta <code>202</code> na confirmação.</td><td>A prévia pede <code>uploadId</code>, mas não existe rota de envio. O campo <code>kind</code> tem dois valores (<code>dfe</code>, <code>nfse</code>) para 14 tipos de DF. O motivo da recusa é só um texto por linha — não diz qual verificação falhou, e "linha" não serve para ZIP.</td></tr><tr><td><strong>Tela do app</strong><br><span class="sm">Ingestão · upload manual</span></td><td>CSV posicional de 16 colunas separadas por ponto e vírgula, lido no navegador (<a class="xref" href="prd-ingestao.html">RF-ING-004</a>, RNF-ING-01).</td><td>Depois da prévia, todo documento entra como importado, sem as quatro verificações (DEF-01). Chave repetida entra duas vezes. A chave não é validada (DEF-04). Não fica registrado quem importou (DEF-07).</td></tr></tbody></table></div>
+<div class="table-wrap"><table class=""><thead><tr><th>Onde</th><th>Como é hoje</th><th>O problema</th></tr></thead><tbody><tr><td><strong>Docs da plataforma</strong><br><span class="sm">CSV em <code>POST /v1/documentos-fiscais/batch</code></span></td><td>O arquivo vai direto para o lote, com <code>Content-Type: text/csv</code>. O <a class="xref" href="https://split-hubhq.github.io/docs/assets/templates/documentos-fiscais-batch.csv">modelo</a> tem 35 colunas separadas por vírgula — 18 do documento e 17 do item.</td><td>O texto diz "cada linha representa um documento", mas o modelo traz colunas de item, e nenhuma regra diz o que fazer com nota de mais de um item. Faltam 5 campos de documento do JSON — por isso nenhuma NFCom e nenhuma sobrescrita de contrato chega por CSV. Não há prévia: o erro aparece depois da carga.</td></tr><tr><td><strong>Docs da plataforma</strong><br><span class="sm">XML em <code>POST /v1/documentos-fiscais</code></span></td><td>O texto aceita "o XML do documento assinado em base64".</td><td>O corpo da chamada não tem campo para o XML. A promessa existe, o caminho não.</td></tr><tr><td><strong>Proposta do desenvolvimento</strong><br><span class="sm"><code>POST /v1/ingestions</code></span></td><td>Duas etapas: prévia e confirmação, com expiração de 24 horas e resposta <code>202</code> na confirmação.</td><td>A prévia pede <code>uploadId</code>, mas não existe rota de envio. O campo <code>kind</code> tem dois valores (<code>dfe</code>, <code>nfse</code>) para 14 tipos de DF. O motivo da recusa é só um texto por linha — não diz qual verificação falhou, e "linha" não serve para ZIP.</td></tr><tr><td><strong>Tela do app</strong><br><span class="sm">Ingestão · upload manual</span></td><td>CSV posicional de 16 colunas separadas por ponto e vírgula, lido no navegador (<a class="xref" href="prd-ingestao.html">RF-ING-004</a>, RNF-ING-01).</td><td>Depois da prévia, todo documento entra como importado, sem as quatro verificações (DEF-01). Chave repetida entra duas vezes. A chave não é validada (DEF-04). Não fica registrado quem importou (DEF-07).</td></tr></tbody></table></div>
 <div class="callout warn"><div class="ct">Por que isso importa</div><p>A chave de acesso repetida é crédito contado duas vezes — o erro mais caro que a ingestão pode produzir (<a class="xref" href="prd-ingestao.html">RN-ING-01</a>). Hoje, carregar duas vezes o mesmo arquivo cria documentos duplicados sem aviso, em qualquer dos três canais.</p></div>
 </div>
 
 <div class="section" id="s03">
 <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">O princípio: o arquivo é outro envelope do mesmo documento</span></div>
 
-<p>Cada documento lido de um arquivo vira <strong>exatamente o corpo de</strong> <code>POST /v1/documentos-fiscais</code> e passa pelas mesmas verificações. O arquivo nunca cria um documento que a API recusaria, e nunca recusa um documento que a API aceitaria.</p>
+<p>Cada documento lido de um arquivo vira <strong>o corpo de</strong> <code>POST /v1/documentos-fiscais</code> no nível do documento — identificação, partes, contrato e totais — e passa pelas mesmas verificações. O arquivo nunca cria um documento que a API recusaria, e nunca recusa um documento que a API aceitaria.</p>
 <ul class="plain">
 <li><strong>Mesmo payload.</strong> Os nomes dos campos na prévia e na resposta são os do docs (<code>access_key</code>, <code>total_note_value</code>, <code>v_tot_ibs</code>), não nomes novos.</li>
 <li><strong>Mesmas verificações.</strong> Schema, campos obrigatórios, CNPJ do emitente e chave de acesso — as quatro do <a class="xref" href="prd-ingestao.html">RF-ING-009</a> —, mais destinatário cadastrado e contrato.</li>
 <li><strong>Mesma identidade.</strong> A chave de acesso é a identidade do documento, em qualquer canal. Documento já registrado pela API não entra pelo arquivo, e vice-versa.</li>
 <li><strong>A prévia não grava nada.</strong> Nenhum documento é registrado antes da confirmação.</li>
 </ul>
+<div class="callout info"><div class="ct">Sem segmentação por item nesta primeira fase</div><p>O envio de arquivo lê o documento, não os itens. O CSV tem uma linha por documento; no JSON, no XML e no ZIP, os itens não são lidos. Os totais de IBS e CBS do documento dão origem aos dois registros fiscais (<a class="xref" href="prd-ingestao.html">RN-ING-06</a>).</p></div>
 <p>A chamada por documento e o lote em JSON de até 500 documentos continuam como estão: atendem a integração em tempo real, entre sistemas, onde ninguém olha uma prévia. O envio de arquivo é o canal para carga em volume e para quem confere antes de importar.</p>
 </div>
 
@@ -308,8 +309,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
     {
       &quot;source&quot;: {
         &quot;lines&quot;: [
-          2,
-          3
+          2
         ]
       },
       &quot;access_key&quot;: &quot;35260714200166000187550010000012341234567890&quot;,
@@ -320,7 +320,6 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
       &quot;emission_date&quot;: &quot;2026-09-12T10:00:00-03:00&quot;,
       &quot;emission_cnpj&quot;: &quot;14200166000187&quot;,
       &quot;destination_cnpj_cpf&quot;: &quot;98765432000188&quot;,
-      &quot;items_count&quot;: 2,
       &quot;total_note_value&quot;: &quot;6800.00&quot;,
       &quot;v_tot_ibs&quot;: &quot;6.80&quot;,
       &quot;v_tot_cbs&quot;: &quot;61.20&quot;,
@@ -335,7 +334,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
     {
       &quot;source&quot;: {
         &quot;lines&quot;: [
-          4
+          3
         ]
       },
       &quot;access_key&quot;: &quot;35260814200166000187620010000087654321098765&quot;,
@@ -346,7 +345,6 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
       &quot;emission_date&quot;: &quot;2026-09-02T14:30:00-03:00&quot;,
       &quot;emission_cnpj&quot;: &quot;14200166000187&quot;,
       &quot;destination_cnpj_cpf&quot;: &quot;98765432000188&quot;,
-      &quot;items_count&quot;: 1,
       &quot;total_note_value&quot;: &quot;900.00&quot;,
       &quot;v_tot_ibs&quot;: &quot;0.90&quot;,
       &quot;v_tot_cbs&quot;: &quot;8.10&quot;,
@@ -386,14 +384,9 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
         ]
       },
       &quot;access_key&quot;: &quot;35260914200166000187550010000004381234567892&quot;,
-      &quot;check&quot;: &quot;layout&quot;,
-      &quot;code&quot;: &quot;linhas_divergentes&quot;,
-      &quot;message&quot;: &quot;As linhas 88 e 89 têm a mesma chave e valores diferentes em total_total_note_value.&quot;,
-      &quot;field&quot;: &quot;total_total_note_value&quot;,
-      &quot;received&quot;: [
-        &quot;3150.00&quot;,
-        &quot;3510.00&quot;
-      ]
+      &quot;check&quot;: &quot;duplicidade&quot;,
+      &quot;code&quot;: &quot;chave_repetida_no_arquivo&quot;,
+      &quot;message&quot;: &quot;A chave aparece nas linhas 88 e 89. As duas ficam de fora: o arquivo não diz qual é a certa.&quot;
     },
     {
       &quot;source&quot;: {
@@ -412,7 +405,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
   &quot;unusable_next_cursor&quot;: null
 }</pre>
 
-<p>A resposta traz o resumo e os primeiros 100 itens de cada lista. As listas completas ficam em <code>GET …/importacoes/{id}/documentos</code> e <code>GET …/importacoes/{id}/inutilizaveis</code>, com paginação por cursor. Uma prévia de 10 mil documentos não cabe numa resposta, e o resumo é o que a pessoa olha primeiro.</p>
+<p>A resposta traz o resumo e os primeiros 100 registros de cada lista. As listas completas ficam em <code>GET …/importacoes/{id}/documentos</code> e <code>GET …/importacoes/{id}/inutilizaveis</code>, com paginação por cursor. Uma prévia de 10 mil documentos não cabe numa resposta, e o resumo é o que a pessoa olha primeiro.</p>
 
 <h3>3. Confirmar</h3>
 <pre>curl -X POST https://api.splithub.com.br/v1/documentos-fiscais/importacoes/imp_7b1d4e/confirmar \
@@ -457,8 +450,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
       &quot;status&quot;: &quot;processing&quot;,
       &quot;source&quot;: {
         &quot;lines&quot;: [
-          2,
-          3
+          2
         ]
       }
     }
@@ -475,7 +467,7 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Formatos aceitos</span></div>
 
 <p>O formato é reconhecido pelo conteúdo do arquivo, não pela extensão. Um arquivo de cada vez; cada arquivo, um formato.</p>
-<div class="table-wrap"><table class=""><thead><tr><th>Formato</th><th>Conteúdo</th><th>O que carrega</th><th>Origem na prévia</th></tr></thead><tbody><tr><td><strong>JSON</strong></td><td><code>{"documents": [ … ]}</code> — o mesmo corpo do lote, sem o teto de 500</td><td>Tudo o que o payload da API carrega</td><td><code>{&quot;index&quot;: 37}</code></td></tr><tr><td><strong>XML</strong></td><td>Um DF-e assinado, no leiaute oficial do modelo</td><td>O documento como autorizado. Sem contrato informado: vale o contrato vigente na data de emissão</td><td><code>{}</code></td></tr><tr><td><strong>ZIP</strong></td><td>Apenas XMLs de DF-e assinados, na raiz ou em pastas</td><td>Como o XML</td><td><code>{&quot;file&quot;: &quot;nfe-0042.xml&quot;}</code></td></tr><tr><td><strong>CSV</strong></td><td>Modelo v2, uma linha por item — <a class="xref" href="#s06">seção 06</a></td><td>Tudo o que o payload da API carrega</td><td><code>{&quot;lines&quot;: [2, 3]}</code></td></tr></tbody></table></div>
+<div class="table-wrap"><table class=""><thead><tr><th>Formato</th><th>Conteúdo</th><th>O que carrega</th><th>Origem na prévia</th></tr></thead><tbody><tr><td><strong>JSON</strong></td><td><code>{"documents": [ … ]}</code> — o mesmo corpo do lote, sem o teto de 500</td><td>Os campos de documento do payload da API. <code>items</code>, se vier, não é lido</td><td><code>{&quot;index&quot;: 37}</code></td></tr><tr><td><strong>XML</strong></td><td>Um DF-e assinado, no leiaute oficial do modelo</td><td>Identificação, partes e totais do documento como autorizado; os itens não são lidos. Sem contrato informado: vale o contrato vigente na data de emissão</td><td><code>{}</code></td></tr><tr><td><strong>ZIP</strong></td><td>Apenas XMLs de DF-e assinados, na raiz ou em pastas</td><td>Como o XML</td><td><code>{&quot;file&quot;: &quot;nfe-0042.xml&quot;}</code></td></tr><tr><td><strong>CSV</strong></td><td>Modelo v2, uma linha por documento — <a class="xref" href="#s06">seção 06</a></td><td>Os campos de documento do payload da API</td><td><code>{&quot;lines&quot;: [2]}</code></td></tr></tbody></table></div>
 
 <p>No XML e no ZIP, o tipo e o modelo vêm do próprio documento, e o contrato é o vigente na data de emissão (<a class="xref" href="prd-ingestao.html">RF-ING-015</a>). Quem precisa informar <code>contract_id</code> ou sobrescrever o método de pagamento usa JSON ou CSV.</p>
 </div>
@@ -483,23 +475,22 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <div class="section" id="s06">
 <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">O CSV, modelo v2</span></div>
 
-<p>O modelo atual do docs continua valendo, com duas mudanças: ganha as 6 colunas que faltavam para cobrir o payload inteiro, e passa a ter regras escritas para juntar linhas num documento.</p>
+<p>O modelo do docs passa a ter <strong>uma linha por documento</strong>. Saem as 17 colunas de item, fora desta primeira fase, e entram as 5 colunas de documento que faltavam para cobrir o payload.</p>
 
 <h3>Regras do arquivo</h3>
-<div class="table-wrap"><table class=""><thead><tr><th>Regra</th><th>Como fica</th></tr></thead><tbody><tr><td>Codificação</td><td>UTF-8, com ou sem BOM</td></tr><tr><td>Separador</td><td>Vírgula ou ponto e vírgula, reconhecido pela linha de cabeçalho. Campo com o separador vai entre aspas duplas</td></tr><tr><td>Cabeçalho</td><td>Obrigatório. As colunas são lidas <strong>pelo nome</strong>, em qualquer ordem. Coluna obrigatória ausente ou coluna desconhecida recusa o arquivo inteiro, com o nome da coluna (<a class="xref" href="#s11">U-05</a>)</td></tr><tr><td>Uma linha por item</td><td>Linhas com a mesma <code>access_key</code> formam um documento, um item por linha. As linhas não precisam ser vizinhas</td></tr><tr><td>Colunas de documento</td><td>Toda coluna que não começa com <code>item_</code> é do documento e se repete, igual, em todas as linhas da mesma chave. Valor diferente entre linhas torna o documento inutilizável (<code>linhas_divergentes</code>)</td></tr><tr><td>Valores</td><td>Texto decimal com ponto: até 2 casas em valores, até 4 em alíquotas — a regra que o docs já adota desde a v1.1.0. Vírgula decimal e separador de milhar tornam o documento inutilizável, com o valor recebido (<a class="xref" href="#s11">U-04</a>)</td></tr><tr><td>Datas</td><td><code>identification_emission_date</code> em ISO 8601 com fuso; <code>competence_date</code> em AAAA-MM-DD</td></tr><tr><td>Célula vazia</td><td>Campo não informado. Diferente de zero</td></tr></tbody></table></div>
+<div class="table-wrap"><table class=""><thead><tr><th>Regra</th><th>Como fica</th></tr></thead><tbody><tr><td>Codificação</td><td>UTF-8, com ou sem BOM</td></tr><tr><td>Separador</td><td>Vírgula ou ponto e vírgula, reconhecido pela linha de cabeçalho. Campo com o separador vai entre aspas duplas</td></tr><tr><td>Cabeçalho</td><td>Obrigatório. As colunas são lidas <strong>pelo nome</strong>, em qualquer ordem. Coluna obrigatória ausente ou coluna desconhecida recusa o arquivo inteiro, com o nome da coluna (<a class="xref" href="#s11">U-05</a>)</td></tr><tr><td>Uma linha por documento</td><td>Cada linha é um documento. Duas linhas com a mesma <code>access_key</code> deixam as duas de fora (<code>chave_repetida_no_arquivo</code>)</td></tr><tr><td>Colunas de item</td><td>As colunas <code>item_*</code> do modelo atual não fazem parte do v2. Arquivo que as traz é recusado como <code>coluna_desconhecida</code>, com o nome da coluna (<a class="xref" href="#s11">U-05</a>)</td></tr><tr><td>Valores</td><td>Texto decimal com ponto: até 2 casas em valores, até 4 em alíquotas — a regra que o docs já adota desde a v1.1.0. Vírgula decimal e separador de milhar tornam o documento inutilizável, com o valor recebido (<a class="xref" href="#s11">U-04</a>)</td></tr><tr><td>Datas</td><td><code>identification_emission_date</code> em ISO 8601 com fuso; <code>competence_date</code> em AAAA-MM-DD</td></tr><tr><td>Célula vazia</td><td>Campo não informado. Diferente de zero</td></tr></tbody></table></div>
 
-<h3>As 6 colunas novas</h3>
-<div class="table-wrap"><table class=""><thead><tr><th>Coluna</th><th>Nível</th><th>Regra</th></tr></thead><tbody><tr><td><code>override_contract_params</code></td><td>Documento</td><td><code>true</code> ou <code>false</code>. Vazio vale <code>false</code></td></tr><tr><td><code>payment_method</code></td><td>Documento</td><td><code>RAD</code> ou <code>FORNECEDOR</code>. Obrigatório quando <code>override_contract_params</code> é <code>true</code></td></tr><tr><td><code>payment_term_days</code></td><td>Documento</td><td>Prazo em dias. Obrigatório quando <code>override_contract_params</code> é <code>true</code></td></tr><tr><td><code>competence_date</code></td><td>Documento</td><td>AAAA-MM-DD. Obrigatório para NFCom, NFS-e e similares</td></tr><tr><td><code>item_service_type</code></td><td>Item</td><td>Tipo de serviço, para NFCom</td></tr><tr><td><code>total_services_value</code></td><td>Documento</td><td>Total de serviços, quando o documento é de serviço</td></tr></tbody></table></div>
+<h3>As 5 colunas novas</h3>
+<div class="table-wrap"><table class=""><thead><tr><th>Coluna</th><th>Nível</th><th>Regra</th></tr></thead><tbody><tr><td><code>override_contract_params</code></td><td>Documento</td><td><code>true</code> ou <code>false</code>. Vazio vale <code>false</code></td></tr><tr><td><code>payment_method</code></td><td>Documento</td><td><code>RAD</code> ou <code>FORNECEDOR</code>. Obrigatório quando <code>override_contract_params</code> é <code>true</code></td></tr><tr><td><code>payment_term_days</code></td><td>Documento</td><td>Prazo em dias. Obrigatório quando <code>override_contract_params</code> é <code>true</code></td></tr><tr><td><code>competence_date</code></td><td>Documento</td><td>AAAA-MM-DD. Obrigatório para NFCom, NFS-e e similares</td></tr><tr><td><code>total_services_value</code></td><td>Documento</td><td>Total de serviços, quando o documento é de serviço</td></tr></tbody></table></div>
 
-<p class="sm">Com elas, o modelo passa de 35 para 41 colunas e cobre os dois exemplos do docs — NF-e e NFCom — sem campo de fora.</p>
+<p class="sm">Com elas, e sem as de item, o modelo passa de 35 para 23 colunas e cobre os dois exemplos do docs — NF-e e NFCom — no nível do documento.</p>
 
-<h3>Exemplo: uma NF-e com dois itens e uma NFCom</h3>
-<pre>type,model,access_key,contract_id,override_contract_params,payment_method,payment_term_days,identification_number,identification_series,identification_emission_date,emission_cnpj,emission_legal_name,emission_state,destination_cnpj_cpf,destination_name,destination_state,competence_date,item_code,item_description,item_ncm,item_service_type,item_cfop,item_quantity,item_unit,item_unit_price,item_total_value,item_tax_ibs_cbs_cst,item_tax_ibs_cbs_c_class_trib,item_tax_ibs_cbs_v_bc,item_tax_ibs_cbs_g_ibs_uf_p_ibs_uf,item_tax_ibs_cbs_g_ibs_uf_v_ibs_uf,item_tax_ibs_cbs_g_ibs_mun_p_ibs_mun,item_tax_ibs_cbs_g_ibs_mun_v_ibs_mun,item_tax_ibs_cbs_g_cbs_p_cbs,item_tax_ibs_cbs_g_cbs_v_cbs,total_products_value,total_services_value,total_total_note_value,total_ibs_cbs_total_v_bc,total_ibs_cbs_total_v_tot_ibs,total_ibs_cbs_total_v_tot_cbs
-nfe,55,35260714200166000187550010000012341234567890,ctr_5f8a2d,,,,123456,1,2026-09-12T10:00:00-03:00,14200166000187,Fornecedor Exemplo LTDA,SP,98765432000188,Cliente Exemplo LTDA,RJ,,PROD-001,Produtos diversos,84713012,,1102,100,unit,64.00,6400.00,000,000001,6400.00,0.05,3.20,0.05,3.20,0.9,57.60,6800.00,,6800.00,6800.00,6.80,61.20
-nfe,55,35260714200166000187550010000012341234567890,ctr_5f8a2d,,,,123456,1,2026-09-12T10:00:00-03:00,14200166000187,Fornecedor Exemplo LTDA,SP,98765432000188,Cliente Exemplo LTDA,RJ,,PROD-003,Acessórios,84733049,,1102,10,unit,40.00,400.00,000,000001,400.00,0.05,0.20,0.05,0.20,0.9,3.60,6800.00,,6800.00,6800.00,6.80,61.20
-nfcom,62,35260814200166000187620010000087654321098765,,true,FORNECEDOR,30,654321,1,2026-09-02T14:30:00-03:00,14200166000187,Operadora Telecom LTDA,SP,98765432000188,Cliente Exemplo LTDA,RJ,2026-09-01,SERV-0101,Telefonia móvel corporativa,,mobile_telephony,5302,1,month,900.00,900.00,000,000001,900.00,0.05,0.45,0.05,0.45,0.9,8.10,,900.00,900.00,900.00,0.90,8.10</pre>
+<h3>Exemplo: uma NF-e e uma NFCom</h3>
+<pre>type,model,access_key,contract_id,override_contract_params,payment_method,payment_term_days,identification_number,identification_series,identification_emission_date,emission_cnpj,emission_legal_name,emission_state,destination_cnpj_cpf,destination_name,destination_state,competence_date,total_products_value,total_services_value,total_total_note_value,total_ibs_cbs_total_v_bc,total_ibs_cbs_total_v_tot_ibs,total_ibs_cbs_total_v_tot_cbs
+nfe,55,35260714200166000187550010000012341234567890,ctr_5f8a2d,,,,123456,1,2026-09-12T10:00:00-03:00,14200166000187,Fornecedor Exemplo LTDA,SP,98765432000188,Cliente Exemplo LTDA,RJ,,6800.00,,6800.00,6800.00,6.80,61.20
+nfcom,62,35260814200166000187620010000087654321098765,,true,FORNECEDOR,30,654321,1,2026-09-02T14:30:00-03:00,14200166000187,Operadora Telecom LTDA,SP,98765432000188,Cliente Exemplo LTDA,RJ,2026-09-01,,900.00,900.00,900.00,0.90,8.10</pre>
 
-<p>As linhas 2 e 3 formam um documento — mesma chave, colunas de documento iguais, dois itens. A linha 4 é uma NFCom de um item, com <code>competence_date</code>, <code>item_service_type</code> e sobrescrita do método de pagamento — nada disso cabe no modelo atual.</p>
+<p>A linha 2 é uma NF-e com contrato informado. A linha 3 é uma NFCom, com <code>competence_date</code>, total de serviços e sobrescrita do método de pagamento — nada disso cabe no modelo atual.</p>
 </div>
 
 <div class="section" id="s07">
@@ -513,10 +504,10 @@ nfcom,62,35260814200166000187620010000087654321098765,,true,FORNECEDOR,30,654321
 
 <h3>O documento é inutilizável</h3>
 <p>Os demais documentos do arquivo seguem. O inutilizável aparece na prévia com o motivo e nunca é importado.</p>
-<div class="table-wrap"><table class=""><thead><tr><th>Verificação</th><th>Código</th><th>Quando</th><th>Requisito</th></tr></thead><tbody><tr><td>Schema</td><td><code>schema_invalido</code></td><td>XML fora do XSD do modelo, ou JSON fora da estrutura do payload</td><td><a class="xref" href="prd-ingestao.html">RF-ING-009</a></td></tr><tr><td>Campos obrigatórios</td><td><code>campo_obrigatorio_ausente</code></td><td>Campo exigido para o tipo ausente — inclusive os condicionais, como <code>competence_date</code> na NFCom</td><td><a class="xref" href="prd-ingestao.html">RF-ING-009</a></td></tr><tr><td>Campos obrigatórios</td><td><code>linhas_divergentes</code></td><td>CSV: linhas da mesma chave com colunas de documento diferentes</td><td><a class="xref" href="prd-ingestao.html">RF-ING-009</a></td></tr><tr><td>Dados</td><td><code>valor_invalido</code></td><td>Valor como número, com vírgula decimal ou com casas demais. Traz o valor recebido</td><td><a class="xref" href="prd-ingestao.html">RF-ING-006</a></td></tr><tr><td>Dados</td><td><code>data_invalida</code></td><td>Data fora do formato. Traz o valor recebido</td><td><a class="xref" href="prd-ingestao.html">RF-ING-007</a></td></tr><tr><td>Chave de acesso</td><td><code>chave_invalida</code></td><td>Chave sem 44 dígitos ou com dígito verificador inválido</td><td><a class="xref" href="prd-ingestao.html">RF-ING-011</a></td></tr><tr><td>Chave de acesso</td><td><code>chave_ja_registrada</code></td><td>Chave já registrada na plataforma, por qualquer canal. Traz o <code>document_id</code> existente</td><td><a class="xref" href="prd-ingestao.html">RF-ING-010</a></td></tr><tr><td>Chave de acesso</td><td><code>chave_repetida_no_arquivo</code></td><td>JSON ou ZIP com dois documentos de mesma chave. Os dois ficam de fora: o arquivo não diz qual é o certo</td><td><a class="xref" href="prd-ingestao.html">RN-ING-01</a></td></tr><tr><td>CNPJ do emitente</td><td><code>cnpj_emitente_invalido</code></td><td>CNPJ inexistente ou inativo na Receita Federal</td><td><a class="xref" href="prd-ingestao.html">RF-ING-009</a></td></tr><tr><td>Destinatário</td><td><code>destinatario_nao_cadastrado</code></td><td>Destinatário não cadastrado ou inativo em Organização</td><td><a class="xref" href="prd-ingestao.html">RF-ING-014</a></td></tr><tr><td>Contrato</td><td><code>contrato_nao_encontrado</code></td><td><code>contract_id</code> informado não existe para a empresa</td><td><a class="xref" href="prd-ingestao.html">RF-ING-015</a></td></tr><tr><td>Contrato</td><td><code>contrato_fora_vigencia</code></td><td><code>contract_id</code> informado sem vigência na data de emissão (<a class="xref" href="#s11">U-09</a>)</td><td><a class="xref" href="prd-ingestao.html">RN-ING-04</a></td></tr></tbody></table></div>
+<div class="table-wrap"><table class=""><thead><tr><th>Verificação</th><th>Código</th><th>Quando</th><th>Requisito</th></tr></thead><tbody><tr><td>Schema</td><td><code>schema_invalido</code></td><td>XML fora do XSD do modelo, ou JSON fora da estrutura do payload</td><td><a class="xref" href="prd-ingestao.html">RF-ING-009</a></td></tr><tr><td>Campos obrigatórios</td><td><code>campo_obrigatorio_ausente</code></td><td>Campo exigido para o tipo ausente — inclusive os condicionais, como <code>competence_date</code> na NFCom</td><td><a class="xref" href="prd-ingestao.html">RF-ING-009</a></td></tr><tr><td>Dados</td><td><code>valor_invalido</code></td><td>Valor como número, com vírgula decimal ou com casas demais. Traz o valor recebido</td><td><a class="xref" href="prd-ingestao.html">RF-ING-006</a></td></tr><tr><td>Dados</td><td><code>data_invalida</code></td><td>Data fora do formato. Traz o valor recebido</td><td><a class="xref" href="prd-ingestao.html">RF-ING-007</a></td></tr><tr><td>Chave de acesso</td><td><code>chave_invalida</code></td><td>Chave sem 44 dígitos ou com dígito verificador inválido</td><td><a class="xref" href="prd-ingestao.html">RF-ING-011</a></td></tr><tr><td>Chave de acesso</td><td><code>chave_ja_registrada</code></td><td>Chave já registrada na plataforma, por qualquer canal. Traz o <code>document_id</code> existente</td><td><a class="xref" href="prd-ingestao.html">RF-ING-010</a></td></tr><tr><td>Chave de acesso</td><td><code>chave_repetida_no_arquivo</code></td><td>Dois documentos com a mesma chave no arquivo — no CSV, duas linhas. Os dois ficam de fora: o arquivo não diz qual é o certo</td><td><a class="xref" href="prd-ingestao.html">RN-ING-01</a></td></tr><tr><td>CNPJ do emitente</td><td><code>cnpj_emitente_invalido</code></td><td>CNPJ inexistente ou inativo na Receita Federal</td><td><a class="xref" href="prd-ingestao.html">RF-ING-009</a></td></tr><tr><td>Destinatário</td><td><code>destinatario_nao_cadastrado</code></td><td>Destinatário não cadastrado ou inativo em Organização</td><td><a class="xref" href="prd-ingestao.html">RF-ING-014</a></td></tr><tr><td>Contrato</td><td><code>contrato_nao_encontrado</code></td><td><code>contract_id</code> informado não existe para a empresa</td><td><a class="xref" href="prd-ingestao.html">RF-ING-015</a></td></tr><tr><td>Contrato</td><td><code>contrato_fora_vigencia</code></td><td><code>contract_id</code> informado sem vigência na data de emissão (<a class="xref" href="#s11">U-09</a>)</td><td><a class="xref" href="prd-ingestao.html">RN-ING-04</a></td></tr></tbody></table></div>
 
 <h3>O documento entra, com aviso</h3>
-<div class="table-wrap"><table class=""><thead><tr><th>Código</th><th>Quando</th><th>Efeito</th></tr></thead><tbody><tr><td><code>sem_contrato_vigente</code></td><td>Nenhum contrato vigente na data de emissão</td><td>Importado sem contrato vinculado. A prévia mostra <code>contract.origin: "nenhum"</code></td></tr><tr><td><code>tipo_nao_conciliavel</code></td><td>Tipo de DF ainda não conciliável com a apuração assistida</td><td>Importado e visível, sem conciliação. Mantém o <code>reconcilable</code> da proposta do time</td></tr><tr><td><code>totais_divergentes</code></td><td>A soma dos itens não fecha com os totalizadores do documento</td><td>Importado como enviado; a divergência fica registrada no documento</td></tr></tbody></table></div>
+<div class="table-wrap"><table class=""><thead><tr><th>Código</th><th>Quando</th><th>Efeito</th></tr></thead><tbody><tr><td><code>sem_contrato_vigente</code></td><td>Nenhum contrato vigente na data de emissão</td><td>Importado sem contrato vinculado. A prévia mostra <code>contract.origin: "nenhum"</code></td></tr><tr><td><code>tipo_nao_conciliavel</code></td><td>Tipo de DF ainda não conciliável com a apuração assistida</td><td>Importado e visível, sem conciliação. Mantém o <code>reconcilable</code> da proposta do time</td></tr></tbody></table></div>
 
 <p>O campo <code>contract.origin</code> diz de onde veio o contrato: <code>informado</code> (o arquivo trouxe), <code>vigente</code> (a plataforma encontrou pelo fornecedor e pela data de emissão), <code>sobrescrito</code> (o arquivo trouxe o método e o prazo) ou <code>nenhum</code>.</p>
 </div>
@@ -552,7 +543,8 @@ nfcom,62,35260814200166000187620010000087654321098765,,true,FORNECEDOR,30,654321
 <li><strong>Ingestão de DFs</strong> — nova seção "Enviar arquivo", com as 7 operações: enviar, criar importação, consultar, listar documentos, listar inutilizáveis, confirmar e cancelar.</li>
 <li><strong>Sai</strong> o envio de CSV por <code>POST /v1/documentos-fiscais/batch</code>. O lote em JSON de até 500 documentos fica.</li>
 <li><strong>Corrigido</strong> o texto que aceita "XML assinado em base64" na chamada por documento: o XML entra pelo envio de arquivo.</li>
-<li><strong>Modelo CSV v2</strong>, com 41 colunas, substitui o atual.</li>
+<li><strong>Modelo CSV v2</strong>, com 23 colunas e uma linha por documento, substitui o atual.</li>
+<li><strong>Itens</strong> — o envio de arquivo não lê itens nesta primeira fase. O payload da chamada por documento fica como está.</li>
 <li><strong>Autenticação</strong> — a tabela de escopos passa a citar arquivos e importações em <code>dfs:write</code> e <code>dfs:read</code>.</li>
 <li><strong>Changelog</strong> v1.2.0, com a remoção do CSV no lote como mudança que quebra compatibilidade.</li>
 </ul>
@@ -576,6 +568,7 @@ nfcom,62,35260814200166000187620010000087654321098765,,true,FORNECEDOR,30,654321
 <div class="section" id="s12">
 <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Histórico de versões</span></div>
 
+<div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>05/10/2026</strong> — Envio de arquivo no nível do documento, sem segmentação por item nesta primeira fase. O CSV v2 passa a uma linha por documento, com 23 colunas: saem as 17 de item, e das 6 colunas novas fica fora a de tipo de serviço do item. No JSON, no XML e no ZIP, os itens não são lidos. Saem a verificação de linhas divergentes e o aviso de totais divergentes; duas linhas com a mesma chave caem em chave repetida no arquivo. A prévia deixa de trazer a contagem de itens.</div></div>
 <div class="ver-row"><div class="ver-num">v1.0.1</div><div class="ver-desc"><strong>05/10/2026</strong> — O aviso <code>sem_contrato_vigente</code> deixa de citar um mecanismo de pagamento padrão, fora do escopo desta versão: o documento é importado sem contrato vinculado.</div></div>
 <div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>05/10/2026</strong> — Primeira versão, a partir do item 8 da <a class="xref" href="avaliacao-api-desenvolvimento.html">avaliação da API proposta pelo desenvolvimento</a>. Fluxo em quatro passos com rota de envio, quatro formatos, modelo CSV v2 com 41 colunas e regra de agrupamento por chave, códigos de recusa ligados aos requisitos de Ingestão, reverificação de duplicidade na confirmação, limites e trilha, e nove decisões em aberto.</div></div>
 </div>
