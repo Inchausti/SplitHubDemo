@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eventos de crédito e débito</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 1120px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--teal); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+h1 { font-size: 28px; font-weight: 800; line-height: 1.18; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 820px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--teal); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 52px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 18px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14.5px; font-weight: 700; color: var(--txt1); margin: 28px 0 8px; scroll-margin-top: 20px; }
+h4 { font-size: 12px; font-weight: 700; color: var(--txt2); margin: 20px 0 6px; text-transform: uppercase; letter-spacing: .06em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--teal); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.mono { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--teal); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+.src-note { font-size: 11.5px; color: var(--txt3); margin: 6px 0 0; }
+
+/* ── mockup ─────────────────────────────────────────────────────── */
+.mock { border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; margin: 16px 0; background: var(--sur); }
+.mock-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.mock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.mock-url { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); margin-left: 4px; }
+.mock-tag { margin-left: auto; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
+.mock-tag.nova { background: var(--green-d); color: var(--green); }
+.mock-tag.muda { background: var(--amber-d); color: var(--amber); }
+.mock-body { padding: 16px 18px; }
+.mock-h { font-size: 15px; font-weight: 700; color: var(--txt1); margin-bottom: 2px; }
+.mock-s { font-size: 11.5px; color: var(--txt3); margin-bottom: 14px; }
+.mock-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.mock-tab { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--brd); color: var(--txt3); }
+.mock-tab.on { background: var(--teal); border-color: var(--teal); color: #fff; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--sur2); border: 1px solid var(--brd); border-radius: 7px; padding: 9px 11px; }
+.kpi-l { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.kpi-v { font-size: 19px; font-weight: 800; color: var(--txt1); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.kpi-s { font-size: 10px; color: var(--txt3); }
+.kpi.alert .kpi-v { color: var(--red); }
+.kpi.warn .kpi-v { color: var(--amber); }
+.kpi.good .kpi-v { color: var(--green); }
+.mock table { font-size: 11.5px; }
+.mock th { font-size: 9.5px; padding: 7px 10px; }
+.mock td { padding: 7px 10px; }
+.btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.btn-p { background: var(--teal); color: #fff; border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.btn-g { border: 1px solid var(--brd); color: var(--txt2); border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.st { display: inline-block; font-size: 9.5px; font-weight: 800; padding: 1px 7px; border-radius: 20px; white-space: nowrap; }
+.st.ok { background: var(--green-d); color: var(--green); }
+.st.wait { background: var(--blue-d); color: var(--blue); }
+.st.div { background: var(--red-d); color: var(--red); }
+.st.abs { background: var(--amber-d); color: var(--amber); }
+.st.neu { background: var(--gray-d); color: var(--gray); }
+.st.own { background: var(--purple-d); color: var(--purple); }
+.new { display: inline-block; font-size: 9px; font-weight: 800; background: var(--teal); color: #fff; border-radius: 3px; padding: 0 5px; margin-left: 5px; letter-spacing: .04em; vertical-align: 1px; }
+
+code, kbd, samp { overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } .kpis { grid-template-columns: repeat(2, 1fr); } }
+</style>
+<style>
+pre { margin: 12px 0; padding: 14px 16px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.6; color: var(--txt2); background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; white-space: pre; }
+.flow { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.flow-step { flex: 1 1 150px; background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 6px; padding: 10px 12px; }
+.flow-step.warn { border-left-color: var(--amber); }
+.flow-step.red { border-left-color: var(--red); }
+.flow-k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); }
+.flow-step.warn .flow-k { color: var(--amber); }
+.flow-step.red .flow-k { color: var(--red); }
+.flow-t { font-size: 12.5px; font-weight: 700; color: var(--txt1); margin-top: 3px; }
+.flow-d { font-size: 11.5px; color: var(--txt2); margin-top: 4px; }
+tr.grp td { background: var(--sur2); color: var(--txt1); font-weight: 600; font-size: 11.5px; }
+tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
+.drop { border: 1.5px dashed var(--brd); border-radius: 8px; padding: 16px; text-align: center; font-size: 12px; color: var(--txt3); margin: 10px 0 14px; }
+.drop strong { color: var(--txt1); }
+.field { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12px; color: var(--txt2); margin-bottom: 8px; }
+.field .sel { border: 1px solid var(--brd); border-radius: 6px; padding: 4px 10px; background: var(--sur); color: var(--txt1); font-weight: 600; }
+.small { font-size: 11px; color: var(--txt3); margin-top: 8px; }
+.mock td code { white-space: nowrap; }
+</style>
+<style>
+.dec { border: 1px solid var(--brd); border-radius: 8px; padding: 14px 18px; margin: 12px 0; background: var(--sur); }
+.dec-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; }
+.dec-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.dec-t { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.dec p { margin-bottom: 6px; }
+.dec .rec { font-size: 12.5px; color: var(--txt1); }
+.dec .rec strong { color: var(--green); }
+.sm { font-size: 11.5px; color: var(--txt3); }
+.lado { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.lado > div { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 16px; }
+.lado h4 { margin-top: 0; }
+@media (max-width: 760px) { .lado { grid-template-columns: 1fr; } }
+td.nul { color: var(--txt3); font-style: italic; }
+td:first-child code { white-space: nowrap; overflow-wrap: normal; }
+.sec-num { flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">Proposta · Integração · Decisão 2 da avaliação da API</div>
+<h1>Eventos de crédito e débito</h1>
+<p class="subtitle">O que o SplitHub envia ao ERP quando um crédito ou um débito muda no Fisco: um registro igual para CBS e IBS, com o saldo partido por situação; um evento por fato, com o registro completo; e a gestão do envio, da inscrição à recuperação do que se perdeu.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta · API</span></div>
+<div class="meta-pill"><span class="meta-label">Origem</span>&nbsp;<span class="meta-val"><a class="xref" href="avaliacao-api-desenvolvimento.html#d01">Avaliação da API · decisão 2</a></span></div>
+<div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val"><a class="xref" href="integracao-apis-reforma.html">APIs CBS v2 · MOC IBS v1.10</a></span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">05/10/2026</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip info">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Para que serve</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Como chegam ao SplitHub</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Os princípios</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> O layout</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Os eventos</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> O payload</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Da entrada ao evento</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> A gestão do envio</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> O que depende do Fisco</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> O que resolve</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Decisões em aberto</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Histórico de versões</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Para que serve</span></div>
+
+<p>Na <a class="xref" href="avaliacao-api-desenvolvimento.html#d01">avaliação da API</a>, a decisão 2 ficou em aberto: qual contrato vale para os eventos de crédito e de débito que o SplitHub envia ao ERP. O docs publicado manda um evento genérico por mudança de status; o produto trabalha com um evento por fato; a proposta do time de desenvolvimento não tem evento nenhum.</p>
+<p>Esta proposta parte de onde o dado nasce — as APIs da apuração assistida da <strong>CBS</strong>, na Receita Federal, e do <strong>IBS</strong>, no Comitê Gestor — e propõe três coisas:</p>
+<ul class="plain">
+<li><strong>O layout:</strong> um registro de crédito e um de débito, iguais para os dois tributos, com o saldo partido por situação.</li>
+<li><strong>O payload:</strong> o envelope de webhook que o docs já usa, com o fato que aconteceu e o registro completo.</li>
+<li><strong>A gestão do envio:</strong> inscrição, entrega, ordem, recuperação de evento perdido e monitoramento.</li>
+</ul>
+<div class="callout info"><div class="ct">O princípio que governa tudo</div><p>O SplitHub não controla o estado do crédito nem do débito: recebe do ente fiscal, concilia e repassa (<a class="xref" href="proposta-ciclo-vida.html#s10">Ciclo de vida, seção 10</a>). Todo evento fiscal desta proposta nasce de uma mudança que a Receita Federal ou o Comitê Gestor publicou. O que o produto calcula por conta própria — prazos e alertas — sai numa família separada, marcada como do SplitHub.</p></div>
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Como o crédito e o débito chegam ao SplitHub</span></div>
+
+<p>Os dois entes publicaram contrato para a mesma coisa e resolveram de formas opostas. O detalhe de cada API está na <a class="xref" href="integracao-apis-reforma.html#api-a">Referência de APIs</a> e na comparação <a class="xref" href="cbs-x-ibs-integracao.html">CBS × IBS</a>; aqui fica o que importa para desenhar a saída.</p>
+<div class="lado">
+<div><h4>CBS · Receita Federal</h4>
+<ul class="plain">
+<li><strong>O SplitHub puxa:</strong> abre uma solicitação por assunto — <code>/creditos</code>, <code>/debitos</code>, <code>/pagamentos</code>, <code>/recolhimentos</code> —, recebe o aviso por webhook e baixa o arquivo.</li>
+<li><strong>Saldo por documento</strong>, dentro do período de apuração. O crédito vem partido em onze valores: a apropriar, apropriado, inapropriável, suspenso, prescrito, utilizado, inutilizável, restabelecido, saldo credor, em ressarcimento e excedente.</li>
+<li><strong>Cumulativo:</strong> cada coleta traz o que mudou nos últimos 8 dias. Perder uma coleta não perde dado.</li>
+<li><strong>Sem histórico:</strong> o que mudou se descobre comparando com a coleta anterior.</li>
+<li>Até 4 coletas por dia por assunto.</li>
+</ul></div>
+<div><h4>IBS · Comitê Gestor</h4>
+<ul class="plain">
+<li><strong>O Fisco empurra:</strong> o Processamento Diário gera o arquivo diferencial, o webhook avisa e o SplitHub baixa.</li>
+<li><strong>Extrato por operação</strong> — aquisição, que é crédito, ou fornecimento, que é débito. Cada lançamento traz a movimentação, em texto, e sete valores: crédito a apropriar, não utilizado e utilizado; débito em aberto e extinto; ressarcimento a transferir e disponível.</li>
+<li><strong>Incremental:</strong> o lançamento vem uma vez só. Perder um arquivo perde dado, e a recuperação manual é limitada a 2 pedidos por dia.</li>
+<li><strong>Com histórico nativo</strong> e um hash do extrato inteiro.</li>
+<li>Uma entrega por dia, depois do Processamento Diário.</li>
+</ul></div>
+</div>
+
+<h3>Três consequências para a saída</h3>
+<div class="table-wrap"><table><thead><tr><th>O que a entrada mostra</th><th>O que a saída precisa fazer</th></tr></thead><tbody><tr><td><strong>Um documento tem vários estados ao mesmo tempo.</strong> Na CBS, o mesmo crédito pode estar parte apropriado, parte a apropriar e parte suspenso. Um rótulo único por crédito não representa o arquivo</td><td>O registro carrega o <strong>saldo partido por situação</strong>. O status resumido é derivado dele, nunca o contrário</td></tr><tr><td><strong>A CBS dá saldo; o IBS dá movimentação.</strong> Nenhum dos dois entrega "o crédito foi apropriado" como fato pronto</td><td>O SplitHub <strong>deriva o fato</strong> — comparando coletas na CBS, lendo lançamentos no IBS — e envia um evento por fato</td></tr><tr><td><strong>O IBS é mais pobre em estado.</strong> Não informa suspenso, prescrito, inapropriável nem inutilizável, e não traz competência nem modelo do documento</td><td>Campo que o ente não informa vai como <code>null</code>, nunca como zero. A competência derivada vem marcada como derivada</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Os princípios do modelo</span></div>
+
+<ul class="plain">
+<li><strong>Um registro por documento e por tributo.</strong> Um crédito de CBS e um de IBS para cada documento de entrada; o mesmo para o débito na saída. IBS e CBS nunca vêm somados (<a class="xref" href="prd-ingestao.html#s10">RN-ING-06</a>).</li>
+<li><strong>Saldo partido por situação.</strong> O registro carrega todos os valores que o ente informa, com nomes iguais para CBS e IBS.</li>
+<li><strong>Um evento por fato.</strong> <code>credit.appropriated</code>, <code>credit.utilized</code>, <code>debit.settled</code> — o ERP assina o que interessa e não precisa comparar estados. É a opção B da decisão 2.</li>
+<li><strong>Evento completo.</strong> Cada evento traz o fato e o registro inteiro, como ficou depois dele — a decisão 7.</li>
+<li><strong>Origem rastreável.</strong> Cada evento diz de qual ente veio, por qual coleta ou arquivo, e quando o fato aconteceu no Fisco.</li>
+<li><strong>Fiscal separado do que é do SplitHub.</strong> Prazos e alertas que o produto calcula saem na família <code>alert.*</code>, nunca misturados aos eventos fiscais.</li>
+</ul>
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O layout: um registro de crédito e um de débito</span></div>
+
+<p>O mesmo objeto sai no evento e na consulta — <code>GET /v1/credits/{id}</code> e <code>GET /v1/debits/{id}</code> devolvem exatamente o <code>credit</code> e o <code>debit</code> do evento. Valores em texto decimal, como no resto da API. Em itálico, o que o ente não informa e o SplitHub deriva ou deixa nulo.</p>
+<h3>Crédito</h3>
+<div class="table-wrap"><table style="min-width:900px"><thead><tr><th>Campo</th><th>Tipo</th><th>O que é</th><th>Vem da CBS</th><th>Vem do IBS</th></tr></thead><tbody><tr class="grp"><td colspan="5">Identificação</td></tr><tr><td><code>id</code></td><td>string</td><td>Identificador do crédito: <code>cred_</code> + tributo + documento</td><td>—</td><td>—</td></tr><tr><td><code>record_version</code></td><td>inteiro</td><td>Versão do registro. Sobe a cada mudança; o ERP aplica só versão maior que a que tem</td><td>—</td><td>—</td></tr><tr><td><code>tax_type</code></td><td>string</td><td><code>cbs</code> ou <code>ibs</code></td><td>endpoint</td><td>arquivo</td></tr><tr><td><code>authority</code></td><td>string</td><td><code>rfb</code> ou <code>cgibs</code> — quem detém o estado</td><td>—</td><td>—</td></tr><tr><td><code>dfe_key</code></td><td>string</td><td>Chave do documento de entrada</td><td><code>chave</code></td><td><code>CHAVE_ACESSO</code></td></tr><tr><td><code>document_model</code></td><td>string</td><td>Modelo do documento</td><td><code>documento</code></td><td class="nul">Derivado da chave, posições 21–22</td></tr><tr><td><code>document_id</code></td><td>string</td><td>Documento no SplitHub (<code>df_…</code>), quando ingerido</td><td>—</td><td>—</td></tr><tr><td><code>supplier_tax_id</code></td><td>string</td><td>CNPJ do fornecedor</td><td class="nul">Do documento ingerido</td><td><code>CNPJ_FORNECEDOR</code> (raiz)</td></tr><tr><td><code>acquirer_tax_id</code></td><td>string</td><td>CNPJ do adquirente — o estabelecimento do grupo</td><td><code>ni</code> (raiz)</td><td><code>CNPJ_ADQUIRENTE</code> (raiz)</td></tr><tr><td><code>issue_date</code></td><td>data e hora</td><td>Emissão — o fato gerador</td><td><code>emissao</code></td><td><code>DTH_EMISSAO</code></td></tr><tr><td><code>period</code> · <code>period_source</code></td><td>string</td><td>Competência (AAAA-MM) e se veio do Fisco (<code>fiscal</code>) ou foi derivada (<code>derived</code>)</td><td><code>pa</code></td><td class="nul">Não existe: derivada</td></tr><tr><td><code>payment_method</code></td><td>string</td><td><code>rad</code> ou <code>supplier</code>. Sem contrato vigente, <code>supplier</code>: a plataforma aguarda a confirmação do recolhimento pelo fornecedor</td><td>—</td><td>—</td></tr><tr><td><code>contract_id</code></td><td>string</td><td>Contrato vigente na emissão, se houver</td><td>—</td><td>—</td></tr><tr><td><code>status</code></td><td>string</td><td>Resumo derivado do saldo — regra abaixo</td><td>—</td><td>—</td></tr><tr class="grp"><td colspan="5">Saldo partido — <code>balances</code></td></tr><tr><td><code>assessed</code></td><td>decimal</td><td>Crédito apurado no documento</td><td><code>apurado</code></td><td class="nul">Soma de a apropriar, não utilizado e utilizado</td></tr><tr><td><code>unprocessed</code></td><td>decimal</td><td>Ainda não processado pela apuração</td><td><code>excedente</code></td><td class="nul">null</td></tr><tr><td><code>pending</code></td><td>decimal</td><td>A apropriar: aguarda a extinção do débito do fornecedor</td><td><code>apropriacao.aApropriar</code></td><td><code>CREDITO_A_PROPRIAR</code></td></tr><tr><td><code>appropriated</code></td><td>decimal</td><td>Apropriado, no total</td><td><code>apropriacao.apropriado</code></td><td class="nul">Soma de não utilizado e utilizado</td></tr><tr><td><code>not_appropriable</code></td><td>decimal</td><td>Sem direito a crédito</td><td><code>apropriacao.inapropriavel</code></td><td class="nul">null</td></tr><tr><td><code>suspended</code></td><td>decimal</td><td>Apropriação suspensa</td><td><code>apropriacao.suspenso</code></td><td class="nul">null</td></tr><tr><td><code>expired</code></td><td>decimal</td><td>Prescrito — fora do prazo do art. 54</td><td><code>apropriacao.prescrito</code></td><td class="nul">null</td></tr><tr><td><code>utilized</code></td><td>decimal</td><td>Usado para extinguir débitos</td><td><code>utilizacao.utilizado</code></td><td><code>CREDITO_UTILIZADO</code></td></tr><tr><td><code>not_usable</code></td><td>decimal</td><td>Apropriado, mas que não pode ser usado</td><td><code>utilizacao.inutilizavel</code></td><td class="nul">null</td></tr><tr><td><code>restored</code></td><td>decimal</td><td>Devolvido ao saldo depois de usado</td><td><code>utilizacao.restabelecido</code></td><td class="nul">null</td></tr><tr><td><code>available</code></td><td>decimal</td><td>Saldo credor disponível para compensar</td><td><code>naoUtilizado.saldoCredor</code></td><td><code>CREDITO_NAO_UTILIZADO</code></td></tr><tr><td><code>refund_requested</code></td><td>decimal</td><td>Em pedido de ressarcimento</td><td><code>naoUtilizado.pedidoRessarcimento</code></td><td><code>RECURSO_FINANCEIRO_A_TRANSFERIR</code></td></tr><tr><td><code>refund_available</code></td><td>decimal</td><td>Ressarcimento já disponível</td><td class="nul">null</td><td><code>RECURSO_FINANCEIRO_DISPONIVEL_PARA_TRANSFERENCIA</code></td></tr><tr class="grp"><td colspan="5">Prazos e marcas do SplitHub</td></tr><tr><td><code>deadlines.appropriation_due_date</code></td><td>data</td><td>Prazo para apropriar: último dia do mês seguinte ao da emissão</td><td>—</td><td>—</td></tr><tr><td><code>deadlines.expiration_date</code></td><td>data</td><td>Prazo do art. 54, contado do fato gerador, com regra por tipo de documento</td><td>—</td><td>—</td></tr><tr><td><code>flags</code></td><td>lista</td><td>Marcas do SplitHub — <code>appropriation_due_soon</code>, <code>appropriation_overdue</code>, <code>expiring</code>, <code>inconsistency</code>, <code>refund_reserved</code>. Não são estado fiscal</td><td>—</td><td>—</td></tr><tr><td><code>updated_at</code></td><td>data e hora</td><td>Última mudança do registro no SplitHub</td><td>—</td><td>—</td></tr></tbody></table></div>
+
+<h3>Débito</h3>
+<div class="table-wrap"><table style="min-width:900px"><thead><tr><th>Campo</th><th>Tipo</th><th>O que é</th><th>Vem da CBS</th><th>Vem do IBS</th></tr></thead><tbody><tr><td><code>id</code>, <code>record_version</code>, <code>tax_type</code>, <code>authority</code></td><td>—</td><td>Como no crédito, com <code>deb_</code></td><td>—</td><td>—</td></tr><tr><td><code>dfe_key</code>, <code>document_model</code>, <code>document_id</code>, <code>issue_date</code>, <code>period</code></td><td>—</td><td>Como no crédito, sobre o documento de saída</td><td><code>chave</code>, <code>documento</code>, <code>emissao</code>, <code>pa</code></td><td><code>CHAVE_ACESSO</code>, <code>DTH_EMISSAO</code></td></tr><tr><td><code>customer_tax_id</code></td><td>string</td><td>CNPJ ou CPF do destinatário</td><td class="nul">Do documento ingerido</td><td><code>CNPJ_ADQUIRENTE</code> (raiz, pode faltar)</td></tr><tr><td><code>status</code></td><td>string</td><td>Resumo derivado do saldo</td><td>—</td><td>—</td></tr><tr class="grp"><td colspan="5">Saldo partido — <code>balances</code></td></tr><tr><td><code>assessed</code></td><td>decimal</td><td>Débito apurado</td><td><code>apurado</code></td><td class="nul">Soma de em aberto e extinto</td></tr><tr><td><code>unprocessed</code></td><td>decimal</td><td>Ainda não processado</td><td><code>excedente</code></td><td class="nul">null</td></tr><tr><td><code>not_enforceable</code></td><td>decimal</td><td>Não exigível</td><td><code>inexigivel</code></td><td class="nul">null</td></tr><tr><td><code>suspended</code></td><td>decimal</td><td>Exigibilidade suspensa</td><td><code>suspenso</code></td><td class="nul">null</td></tr><tr><td><code>settled</code></td><td>decimal</td><td>Extinto</td><td><code>extinto</code></td><td><code>DEBITO_EXTINTO</code></td></tr><tr><td><code>outstanding</code></td><td>decimal</td><td>Em aberto</td><td><code>saldoDevedor</code></td><td><code>DEBITO_EM_ABERTO</code></td></tr><tr class="grp"><td colspan="5">Como foi extinto — <code>settlements[]</code></td></tr><tr><td><code>method</code></td><td>string</td><td><code>credit_offset</code> (compensação com créditos), <code>payment</code> (guia paga pelo próprio contribuinte) ou <code>rad</code> (recolhido pelo adquirente)</td><td>/pagamentos · /recolhimentos</td><td>MOV</td></tr><tr><td><code>amount</code></td><td>decimal</td><td>Parcela extinta por esse meio</td><td><code>composicao[].total</code></td><td>Variação de <code>DEBITO_EXTINTO</code></td></tr><tr><td><code>darf_number</code>, <code>paid_at</code></td><td>string · data</td><td>Guia e data, quando houve pagamento</td><td><code>numeroDARF</code>, <code>dataArrecadacao</code></td><td class="nul">null — arrecadação do IBS é Etapa 4</td></tr><tr><td><code>credits[]</code></td><td>lista</td><td>Créditos usados na compensação, com o valor de cada um. <code>allocation: "splithub"</code>: o Fisco não informa o vínculo; quem o calcula é o motor do art. 53</td><td class="nul">Não informa</td><td class="nul">Não informa</td></tr></tbody></table></div>
+
+<h3>O status resumido</h3>
+<p>Existe para filtrar e exibir. A verdade é o saldo. A primeira regra que se aplica decide:</p>
+<div class="table-wrap"><table><thead><tr><th>Ordem</th><th>Status do crédito</th><th>Quando</th></tr></thead><tbody><tr><td>1</td><td><code>cancelled</code></td><td>O documento foi cancelado</td></tr><tr><td>2</td><td><code>disallowed</code></td><td>Todo o apurado está em <code>not_appropriable</code> ou <code>not_usable</code></td></tr><tr><td>3</td><td><code>expired</code></td><td>Todo o valor ainda não utilizado está em <code>expired</code></td></tr><tr><td>4</td><td><code>utilized</code></td><td><code>utilized</code> &gt; 0, <code>available</code> = 0 e <code>pending</code> = 0</td></tr><tr><td>5</td><td><code>partially_utilized</code></td><td><code>utilized</code> &gt; 0 e ainda há <code>available</code></td></tr><tr><td>6</td><td><code>appropriated</code></td><td><code>appropriated</code> &gt; 0, sem <code>pending</code> e sem uso</td></tr><tr><td>7</td><td><code>partially_appropriated</code></td><td><code>appropriated</code> &gt; 0 e ainda há <code>pending</code></td></tr><tr><td>8</td><td><code>not_appropriated</code></td><td>Nada apropriado ainda</td></tr></tbody></table></div>
+
+<p>No débito: <code>cancelled</code>; <code>settled</code> quando <code>outstanding</code> é zero; <code>partially_settled</code> quando há parte extinta e parte em aberto; <code>not_settled</code> nos demais casos. Suspensão e parcelas não exigíveis aparecem no saldo, não no status.</p>
+<div class="callout warn"><div class="ct">O que o crédito de IBS não diz</div><p>Suspenso, prescrito, inapropriável, inutilizável e restabelecido não existem no arquivo do IBS. No crédito de IBS esses campos vão <code>null</code>, e o status não chega a <code>disallowed</code> nem a <code>expired</code> por saldo. Até o Comitê Gestor publicar a tabela de códigos da movimentação, a glosa no IBS só se reconhece pelo texto do lançamento, por mapeamento provisório.</p></div>
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Os eventos</span></div>
+
+<p>Dezenove tipos fiscais — doze de crédito e sete de débito — e três alertas. Cada tipo tem payload próprio e estável: um fato novo vira um tipo novo, sem mudar os que existem.</p>
+<div class="table-wrap"><table style="min-width:900px"><thead><tr><th>Tipo</th><th>O que aconteceu</th><th>Gatilho na CBS</th><th>Gatilho no IBS</th></tr></thead><tbody><tr class="grp"><td colspan="4">Crédito</td></tr><tr><td><code>credit.registered</code></td><td>O crédito apareceu no Fisco</td><td>Primeira coleta com a chave em <code>/creditos</code></td><td>Primeiro lançamento da operação de aquisição</td></tr><tr><td><code>credit.appropriated</code></td><td>Parte ou todo o crédito foi apropriado</td><td><code>aApropriar</code> cai e <code>apropriado</code> sobe</td><td><code>CREDITO_A_PROPRIAR</code> cai e <code>CREDITO_NAO_UTILIZADO</code> sobe</td></tr><tr><td><code>credit.utilized</code></td><td>Crédito usado para extinguir débito</td><td><code>utilizado</code> sobe</td><td><code>CREDITO_UTILIZADO</code> sobe</td></tr><tr><td><code>credit.restored</code></td><td>Crédito usado voltou ao saldo</td><td><code>restabelecido</code> sobe</td><td>Lançamento de estorno, por mapeamento provisório</td></tr><tr><td><code>credit.disallowed</code></td><td>Glosa: parte ou todo o crédito perdeu o direito</td><td><code>inapropriavel</code> ou <code>inutilizavel</code> sobe</td><td>Só pelo texto da movimentação, provisório</td></tr><tr><td><code>credit.suspended</code> · <code>credit.released</code></td><td>Apropriação suspensa, e a suspensão levantada</td><td><code>suspenso</code> sobe · desce</td><td>—</td></tr><tr><td><code>credit.expired</code></td><td>Parte do crédito prescreveu</td><td><code>prescrito</code> sobe</td><td>—</td></tr><tr><td><code>credit.refund_requested</code></td><td>Parte do crédito entrou em pedido de ressarcimento</td><td><code>pedidoRessarcimento</code> sobe</td><td><code>RECURSO_FINANCEIRO_A_TRANSFERIR</code> sobe</td></tr><tr><td><code>credit.refund_available</code></td><td>Ressarcimento liberado para transferência</td><td>—</td><td><code>RECURSO_FINANCEIRO_DISPONIVEL_PARA_TRANSFERENCIA</code> sobe</td></tr><tr><td><code>credit.cancelled</code></td><td>O documento foi cancelado</td><td>Origem de cancelamento (30, 31, 32)</td><td>Movimentação de cancelamento</td></tr><tr><td><code>credit.adjusted</code></td><td>O valor mudou sem um fato reconhecido</td><td><code>apurado</code> mudou; devoluções e perecimento (origens 20–22, 50–55); queda sem explicação</td><td>Movimentação ainda não mapeada</td></tr><tr class="grp"><td colspan="4">Débito</td></tr><tr><td><code>debit.registered</code></td><td>O débito apareceu no Fisco</td><td>Primeira coleta com a chave em <code>/debitos</code></td><td>Primeiro lançamento da operação de fornecimento</td></tr><tr><td><code>debit.partially_settled</code></td><td>Parte do débito foi extinta</td><td><code>extinto</code> sobe e <code>saldoDevedor</code> segue maior que zero</td><td><code>DEBITO_EXTINTO</code> sobe e <code>DEBITO_EM_ABERTO</code> segue maior que zero</td></tr><tr><td><code>debit.settled</code></td><td>O débito foi extinto por inteiro</td><td><code>saldoDevedor</code> chega a zero</td><td><code>DEBITO_EM_ABERTO</code> chega a zero</td></tr><tr><td><code>debit.suspended</code> · <code>debit.released</code></td><td>Exigibilidade suspensa, e levantada</td><td><code>suspenso</code> sobe · desce</td><td>—</td></tr><tr><td><code>debit.cancelled</code> · <code>debit.adjusted</code></td><td>Como no crédito</td><td>Como no crédito</td><td>Como no crédito</td></tr><tr class="grp"><td colspan="4">Alertas do SplitHub — <code>alert.*</code></td></tr><tr><td><code>alert.appropriation_due_soon</code></td><td>Crédito a 30 dias do prazo para apropriar</td><td>Calculado pelo SplitHub</td><td>Calculado pelo SplitHub</td></tr><tr><td><code>alert.appropriation_overdue</code></td><td>Prazo para apropriar vencido</td><td>Calculado pelo SplitHub</td><td>Calculado pelo SplitHub</td></tr><tr><td><code>alert.credit_expiring</code></td><td>Crédito dentro da janela de prescrição do art. 54</td><td>Calculado pelo SplitHub</td><td>Calculado pelo SplitHub</td></tr></tbody></table></div>
+
+<p class="sm">Gatilho na CBS: comparação com a coleta anterior do mesmo documento e período. Gatilho no IBS: o lançamento novo do extrato. O detalhe está na seção 07.</p>
+<h3>A causa da apropriação e da extinção</h3>
+<p>O ERP quer saber não só que o crédito foi apropriado, mas por quê. O campo <code>change.cause</code> responde quando o Fisco permite:</p>
+<div class="table-wrap"><table><thead><tr><th>Evento</th><th>Causa</th><th>Como se sabe</th></tr></thead><tbody><tr><td><code>credit.appropriated</code></td><td><code>rad_payment</code></td><td>O próprio cliente recolheu pelo RAD: o documento aparece em <code>/recolhimentos</code> da CBS, com a guia</td></tr><tr><td><code>credit.appropriated</code></td><td><code>supplier_settlement</code></td><td>O débito do fornecedor foi extinto por ele — pagamento ou compensação. A plataforma só observa</td></tr><tr><td><code>debit.partially_settled</code> · <code>debit.settled</code></td><td><code>credit_offset</code></td><td>Compensação com créditos. Na CBS, <code>utilizado</code> sobe sem guia; no IBS, a movimentação de compensação</td></tr><tr><td><code>debit.partially_settled</code> · <code>debit.settled</code></td><td><code>payment</code> · <code>rad</code></td><td>Guia paga pelo cliente em <code>/pagamentos</code>, ou recolhimento do adquirente sobre a nota do cliente</td></tr><tr><td>Qualquer</td><td><code>unknown</code></td><td>O Fisco mudou o saldo e nenhuma fonte explica. O evento sai mesmo assim, e a causa fica aberta</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">O payload</span></div>
+
+<p>O envelope é o do docs v1.1.0 — <code>id</code>, <code>type</code>, <code>occurred_at</code>, <code>data</code> —, com assinatura e carimbo de tempo. Dentro de <code>data</code>, sempre duas partes:</p>
+<div class="table-wrap"><table><thead><tr><th>Parte</th><th>O que traz</th></tr></thead><tbody><tr><td><code>change</code></td><td>O fato: quanto mudou (<code>amount</code>), de que parcela para qual (<code>from</code>, <code>to</code>), a causa, a guia ou as compensações quando houver, e a origem — ente, coleta ou arquivo, lançamento e quando o SplitHub recebeu</td></tr><tr><td><code>credit</code> ou <code>debit</code></td><td>O registro inteiro, como ficou depois do fato, com <code>record_version</code></td></tr></tbody></table></div>
+
+<p><code>occurred_at</code> é quando o fato aconteceu no Fisco — a <code>atualizacao</code> da CBS ou o <code>DTH_LANCTO</code> do IBS —, não quando o SplitHub recebeu nem quando enviou.</p>
+
+<h3>Crédito de CBS apropriado pelo RAD</h3>
+<pre>{
+  &quot;id&quot;: &quot;evt_c41a9e&quot;,
+  &quot;type&quot;: &quot;credit.appropriated&quot;,
+  &quot;occurred_at&quot;: &quot;2026-10-30T18:40:00-03:00&quot;,
+  &quot;data&quot;: {
+    &quot;change&quot;: {
+      &quot;amount&quot;: &quot;2000.00&quot;,
+      &quot;from&quot;: &quot;pending&quot;,
+      &quot;to&quot;: &quot;appropriated&quot;,
+      &quot;cause&quot;: &quot;rad_payment&quot;,
+      &quot;payment&quot;: {
+        &quot;darf_number&quot;: &quot;07.17.26301.7654321-0&quot;,
+        &quot;paid_at&quot;: &quot;2026-10-28T10:30:00-03:00&quot;,
+        &quot;amount&quot;: &quot;2000.00&quot;
+      },
+      &quot;source&quot;: {
+        &quot;authority&quot;: &quot;rfb&quot;,
+        &quot;endpoint&quot;: &quot;creditos&quot;,
+        &quot;reference&quot;: &quot;a41c9d02-7e3b-4f55-8c21-0b9e6d3f1a88&quot;,
+        &quot;fiscal_updated_at&quot;: &quot;2026-10-30T18:40:00-03:00&quot;,
+        &quot;received_at&quot;: &quot;2026-10-31T06:05:12-03:00&quot;
+      }
+    },
+    &quot;credit&quot;: {
+      &quot;id&quot;: &quot;cred_cbs_8f3a1c2b&quot;,
+      &quot;record_version&quot;: 3,
+      &quot;tax_type&quot;: &quot;cbs&quot;,
+      &quot;authority&quot;: &quot;rfb&quot;,
+      &quot;dfe_key&quot;: &quot;43260998765432000110550010000402211000402219&quot;,
+      &quot;document_model&quot;: &quot;55&quot;,
+      &quot;document_id&quot;: &quot;df_8f3a1c2b&quot;,
+      &quot;supplier_tax_id&quot;: &quot;98765432000110&quot;,
+      &quot;acquirer_tax_id&quot;: &quot;12345678000190&quot;,
+      &quot;issue_date&quot;: &quot;2026-09-10T08:15:00-03:00&quot;,
+      &quot;period&quot;: &quot;2026-09&quot;,
+      &quot;period_source&quot;: &quot;fiscal&quot;,
+      &quot;payment_method&quot;: &quot;rad&quot;,
+      &quot;contract_id&quot;: &quot;ctr_5f8a2d&quot;,
+      &quot;status&quot;: &quot;partially_utilized&quot;,
+      &quot;balances&quot;: {
+        &quot;assessed&quot;: &quot;12000.00&quot;,
+        &quot;unprocessed&quot;: &quot;0.00&quot;,
+        &quot;pending&quot;: &quot;0.00&quot;,
+        &quot;appropriated&quot;: &quot;12000.00&quot;,
+        &quot;not_appropriable&quot;: &quot;0.00&quot;,
+        &quot;suspended&quot;: &quot;0.00&quot;,
+        &quot;expired&quot;: &quot;0.00&quot;,
+        &quot;utilized&quot;: &quot;7500.00&quot;,
+        &quot;not_usable&quot;: &quot;0.00&quot;,
+        &quot;restored&quot;: &quot;0.00&quot;,
+        &quot;available&quot;: &quot;4500.00&quot;,
+        &quot;refund_requested&quot;: &quot;0.00&quot;,
+        &quot;refund_available&quot;: null
+      },
+      &quot;deadlines&quot;: {
+        &quot;appropriation_due_date&quot;: &quot;2026-10-31&quot;,
+        &quot;expiration_date&quot;: &quot;2031-09-10&quot;
+      },
+      &quot;flags&quot;: [],
+      &quot;updated_at&quot;: &quot;2026-10-31T06:05:14-03:00&quot;
+    }
+  }
+}</pre>
+
+<p>R$ 2 mil passaram de a apropriar para apropriado, porque o cliente recolheu a guia RAD do documento. O crédito já tinha R$ 7,5 mil usados; restam R$ 4,5 mil disponíveis.</p>
+
+<h3>Crédito de IBS usado em compensação</h3>
+<pre>{
+  &quot;id&quot;: &quot;evt_7d20b1&quot;,
+  &quot;type&quot;: &quot;credit.utilized&quot;,
+  &quot;occurred_at&quot;: &quot;2026-11-10T20:10:05-03:00&quot;,
+  &quot;data&quot;: {
+    &quot;change&quot;: {
+      &quot;amount&quot;: &quot;350.00&quot;,
+      &quot;from&quot;: &quot;available&quot;,
+      &quot;to&quot;: &quot;utilized&quot;,
+      &quot;cause&quot;: &quot;credit_offset&quot;,
+      &quot;offsets&quot;: [
+        {
+          &quot;debit_dfe_key&quot;: &quot;35261112345678000190550010000099871000099876&quot;,
+          &quot;amount&quot;: &quot;350.00&quot;,
+          &quot;allocation&quot;: &quot;splithub&quot;
+        }
+      ],
+      &quot;source&quot;: {
+        &quot;authority&quot;: &quot;cgibs&quot;,
+        &quot;file&quot;: &quot;36588366_part1.json&quot;,
+        &quot;request_id&quot;: &quot;9120334&quot;,
+        &quot;entry_id&quot;: 37363032,
+        &quot;movement&quot;: &quot;COMPENSAÇÃO COM CRÉDITOS POR AQUISIÇÃO&quot;,
+        &quot;integrity&quot;: &quot;unverified&quot;,
+        &quot;received_at&quot;: &quot;2026-11-11T04:12:40-03:00&quot;
+      }
+    },
+    &quot;credit&quot;: {
+      &quot;id&quot;: &quot;cred_ibs_4b7e90aa&quot;,
+      &quot;record_version&quot;: 2,
+      &quot;tax_type&quot;: &quot;ibs&quot;,
+      &quot;authority&quot;: &quot;cgibs&quot;,
+      &quot;dfe_key&quot;: &quot;35261098765432000110550010000123451000123459&quot;,
+      &quot;document_model&quot;: &quot;55&quot;,
+      &quot;document_id&quot;: &quot;df_4b7e90aa&quot;,
+      &quot;supplier_tax_id&quot;: &quot;98765432&quot;,
+      &quot;acquirer_tax_id&quot;: &quot;12345678&quot;,
+      &quot;issue_date&quot;: &quot;2026-10-20T09:00:00-03:00&quot;,
+      &quot;period&quot;: &quot;2026-10&quot;,
+      &quot;period_source&quot;: &quot;derived&quot;,
+      &quot;payment_method&quot;: &quot;supplier&quot;,
+      &quot;contract_id&quot;: null,
+      &quot;status&quot;: &quot;partially_utilized&quot;,
+      &quot;balances&quot;: {
+        &quot;assessed&quot;: &quot;1000.00&quot;,
+        &quot;unprocessed&quot;: null,
+        &quot;pending&quot;: &quot;0.00&quot;,
+        &quot;appropriated&quot;: &quot;1000.00&quot;,
+        &quot;not_appropriable&quot;: null,
+        &quot;suspended&quot;: null,
+        &quot;expired&quot;: null,
+        &quot;utilized&quot;: &quot;350.00&quot;,
+        &quot;not_usable&quot;: null,
+        &quot;restored&quot;: null,
+        &quot;available&quot;: &quot;650.00&quot;,
+        &quot;refund_requested&quot;: &quot;0.00&quot;,
+        &quot;refund_available&quot;: &quot;0.00&quot;
+      },
+      &quot;deadlines&quot;: {
+        &quot;appropriation_due_date&quot;: &quot;2026-11-30&quot;,
+        &quot;expiration_date&quot;: &quot;2031-10-20&quot;
+      },
+      &quot;flags&quot;: [],
+      &quot;updated_at&quot;: &quot;2026-11-11T04:12:41-03:00&quot;
+    }
+  }
+}</pre>
+
+<p>Os campos que o IBS não informa vão <code>null</code>. A competência foi derivada (<code>period_source: "derived"</code>), e o hash do extrato ainda não pode ser verificado (<code>integrity: "unverified"</code>) — ver a <a class="xref" href="#s09">seção 09</a>.</p>
+
+<h3>Débito de CBS extinto</h3>
+<pre>{
+  &quot;id&quot;: &quot;evt_e90f33&quot;,
+  &quot;type&quot;: &quot;debit.settled&quot;,
+  &quot;occurred_at&quot;: &quot;2026-10-30T14:12:00-03:00&quot;,
+  &quot;data&quot;: {
+    &quot;change&quot;: {
+      &quot;amount&quot;: &quot;3000.00&quot;,
+      &quot;from&quot;: &quot;outstanding&quot;,
+      &quot;to&quot;: &quot;settled&quot;,
+      &quot;cause&quot;: &quot;payment&quot;,
+      &quot;payment&quot;: {
+        &quot;darf_number&quot;: &quot;07.17.26303.1234567-8&quot;,
+        &quot;paid_at&quot;: &quot;2026-10-30T14:12:00-03:00&quot;,
+        &quot;principal&quot;: &quot;3000.00&quot;,
+        &quot;penalty&quot;: &quot;0.00&quot;,
+        &quot;interest&quot;: &quot;0.00&quot;
+      },
+      &quot;source&quot;: {
+        &quot;authority&quot;: &quot;rfb&quot;,
+        &quot;endpoint&quot;: &quot;pagamentos&quot;,
+        &quot;reference&quot;: &quot;c9e21b7a-3d05-4a6f-b812-5f0c7a2e9d13&quot;,
+        &quot;received_at&quot;: &quot;2026-11-04T08:10:02-03:00&quot;
+      }
+    },
+    &quot;debit&quot;: {
+      &quot;id&quot;: &quot;deb_cbs_77a02c19&quot;,
+      &quot;record_version&quot;: 4,
+      &quot;tax_type&quot;: &quot;cbs&quot;,
+      &quot;authority&quot;: &quot;rfb&quot;,
+      &quot;dfe_key&quot;: &quot;43260912345678000190550010000128841000128847&quot;,
+      &quot;document_model&quot;: &quot;55&quot;,
+      &quot;document_id&quot;: &quot;df_77a02c19&quot;,
+      &quot;customer_tax_id&quot;: &quot;55443322000166&quot;,
+      &quot;issue_date&quot;: &quot;2026-09-14T10:02:00-03:00&quot;,
+      &quot;period&quot;: &quot;2026-09&quot;,
+      &quot;period_source&quot;: &quot;fiscal&quot;,
+      &quot;status&quot;: &quot;settled&quot;,
+      &quot;balances&quot;: {
+        &quot;assessed&quot;: &quot;9000.00&quot;,
+        &quot;unprocessed&quot;: &quot;0.00&quot;,
+        &quot;not_enforceable&quot;: &quot;0.00&quot;,
+        &quot;suspended&quot;: &quot;0.00&quot;,
+        &quot;settled&quot;: &quot;9000.00&quot;,
+        &quot;outstanding&quot;: &quot;0.00&quot;
+      },
+      &quot;settlements&quot;: [
+        {
+          &quot;method&quot;: &quot;credit_offset&quot;,
+          &quot;amount&quot;: &quot;6000.00&quot;,
+          &quot;allocation&quot;: &quot;splithub&quot;,
+          &quot;credits&quot;: [
+            {
+              &quot;credit_dfe_key&quot;: &quot;43260998765432000110550010000402211000402219&quot;,
+              &quot;amount&quot;: &quot;6000.00&quot;
+            }
+          ]
+        },
+        {
+          &quot;method&quot;: &quot;payment&quot;,
+          &quot;amount&quot;: &quot;3000.00&quot;,
+          &quot;darf_number&quot;: &quot;07.17.26303.1234567-8&quot;,
+          &quot;paid_at&quot;: &quot;2026-10-30T14:12:00-03:00&quot;
+        }
+      ],
+      &quot;updated_at&quot;: &quot;2026-11-04T08:10:05-03:00&quot;
+    }
+  }
+}</pre>
+
+<p>R$ 6 mil foram compensados com crédito — vínculo calculado pelo SplitHub, porque o Fisco não o informa — e R$ 3 mil, pagos por guia.</p>
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Da entrada ao evento</span></div>
+
+<div class="lado">
+<div><h4>CBS: comparar coletas</h4>
+<ul class="plain">
+<li>A cada coleta, o SplitHub compara o saldo de cada documento e período com o último guardado.</li>
+<li>Cada parcela que mudou vira um evento, pela tabela da seção 05. Várias mudanças na mesma coleta saem na ordem do ciclo: registro, apropriação, uso, os demais.</li>
+<li>Todos os eventos da mesma mudança levam o mesmo <code>occurred_at</code> — a <code>atualizacao</code> do documento.</li>
+<li>Queda de parcela que nenhum fato explica vira <code>credit.adjusted</code> e abre inconsistência.</li>
+<li>Coleta repetida sem mudança não gera evento: a identidade é chave, período e origem.</li>
+</ul></div>
+<div><h4>IBS: ler lançamentos</h4>
+<ul class="plain">
+<li>Cada lançamento do extrato muda os sete valores. O SplitHub calcula a variação de cada um e emite o evento correspondente.</li>
+<li>A identidade é o ID do lançamento: um arquivo manual que repete lançamento já recebido não gera evento de novo.</li>
+<li>Operação fatiada em vários arquivos só gera evento quando o extrato está completo.</li>
+<li>A movimentação, em texto, vai junto em <code>change.source.movement</code>. O mapa de texto para tipo é provisório até a tabela de códigos sair.</li>
+<li>Aquisição gera crédito; fornecimento gera débito.</li>
+</ul></div>
+</div>
+<div class="callout red"><div class="ct">Evento não é coleta</div><p>Um evento sai quando o saldo muda, não quando o SplitHub consulta o Fisco. Quatro coletas da CBS sem mudança no documento geram zero eventos. Uma coleta com mudança em três parcelas gera três.</p></div>
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">A gestão do envio</span></div>
+
+<h3>Inscrição</h3>
+<p>Uma inscrição é uma URL e a lista de tipos que ela recebe. Vale para todos os eventos da plataforma — crédito, débito, alertas, RAD, automações —, e a inscrição de automações do docs passa a ser um caso dela.</p>
+<pre>POST /v1/webhook-subscriptions
+Authorization: Bearer {token}
+Idempotency-Key: erp-contas-a-pagar-01
+
+{
+  &quot;url&quot;: &quot;https://erp.cliente.com.br/splithub/eventos&quot;,
+  &quot;event_types&quot;: [&quot;credit.*&quot;, &quot;debit.settled&quot;, &quot;debit.partially_settled&quot;],
+  &quot;description&quot;: &quot;ERP — contas a pagar&quot;
+}</pre>
+<p class="src-note">Resposta <code>201 Created</code> — o segredo aparece uma vez só</p><pre>{
+  &quot;id&quot;: &quot;whs_4c2a9e&quot;,
+  &quot;url&quot;: &quot;https://erp.cliente.com.br/splithub/eventos&quot;,
+  &quot;event_types&quot;: [
+    &quot;credit.*&quot;,
+    &quot;debit.settled&quot;,
+    &quot;debit.partially_settled&quot;
+  ],
+  &quot;status&quot;: &quot;active&quot;,
+  &quot;secret&quot;: &quot;whsec_…&quot;,
+  &quot;created_at&quot;: &quot;2026-10-05T15:00:00Z&quot;
+}</pre>
+<div class="table-wrap"><table><thead><tr><th>Operação</th><th>Para quê</th></tr></thead><tbody><tr><td><code>POST /v1/webhook-subscriptions</code></td><td>Criar. URL só em HTTPS (<a class="xref" href="prd-integracoes.html#s09">RF-INT-015</a>), ao menos um tipo (<a class="xref" href="prd-integracoes.html#s09">RF-INT-016</a>), segredo gerado e exibido uma vez (<a class="xref" href="prd-integracoes.html#s09">RF-INT-007</a>)</td></tr><tr><td><code>GET /v1/webhook-subscriptions</code> · <code>/{id}</code></td><td>Listar e consultar</td></tr><tr><td><code>PATCH /v1/webhook-subscriptions/{id}</code></td><td>Trocar URL ou tipos</td></tr><tr><td><code>PATCH /v1/webhook-subscriptions/{id}/status</code></td><td>Pausar e reativar. Não há exclusão: o histórico de entrega fica</td></tr><tr><td><code>POST /v1/webhook-subscriptions/{id}/secret-rotation</code></td><td>Novo segredo. O anterior segue aceito por 24 horas (<a class="xref" href="prd-integracoes.html#s10">RN-INT-03</a>)</td></tr><tr><td><code>POST /v1/webhook-subscriptions/{id}/test</code></td><td>Envia um <code>webhook.test</code> para validar o endereço e a assinatura</td></tr><tr><td><code>GET /v1/webhook-subscriptions/{id}/deliveries</code></td><td>Log de entrega: cada tentativa, o status HTTP devolvido e o tempo de resposta</td></tr><tr><td><code>POST /v1/webhook-deliveries/{id}/retry</code></td><td>Reenviar uma entrega que esgotou as tentativas</td></tr><tr><td><code>GET /v1/events</code></td><td>Log de eventos, por cursor, filtrável por tipo e data. Guardado por 30 dias (E-03)</td></tr></tbody></table></div>
+
+<h3>Entrega</h3>
+<div class="table-wrap"><table><thead><tr><th>Regra</th><th>Como fica</th></tr></thead><tbody><tr><td>Garantia</td><td>Pelo menos uma vez. Reentrega repete o mesmo <code>id</code>; o ERP deduplica por ele</td></tr><tr><td>Sucesso</td><td>Resposta 2xx em até 30 segundos (<a class="xref" href="prd-integracoes.html#s10">RN-INT-11</a>)</td></tr><tr><td>Retentativas</td><td>Até 10, com a espera dobrando a partir de 1 minuto — a última cerca de 17 horas depois —, como no docs v1.1.0</td></tr><tr><td>Ordem</td><td>Não garantida entre eventos. Dentro de um registro, <code>record_version</code> resolve: o ERP aplica só versão maior que a guardada e descarta a mais antiga (E-02)</td></tr><tr><td>Um evento por chamada</td><td>Sem lote no webhook. Uma coleta da CBS com mil mudanças gera mil chamadas, em paralelo limitado por inscrição</td></tr><tr><td>Pausa automática</td><td>72 horas seguidas sem nenhuma entrega com sucesso pausam a inscrição e avisam o administrador. Os eventos continuam no log (E-07)</td></tr><tr><td>Carga inicial</td><td>Eventos só a partir da criação da inscrição. A posição de partida vem por <code>GET /v1/credits</code> e <code>GET /v1/debits</code> (E-06)</td></tr></tbody></table></div>
+
+<h3>Recuperar o que se perdeu</h3>
+<p>O mesmo problema que o SplitHub tem com o IBS — arquivo perdido é dado perdido — o ERP teria com o webhook. Por isso o envio tem dois caminhos:</p>
+<ul class="plain">
+<li><strong>Empurrado:</strong> o webhook, para reagir ao fato.</li>
+<li><strong>Puxado:</strong> o log de eventos, para recuperar o que o ERP não recebeu — guardando o último <code>id</code> processado e pedindo os seguintes.</li>
+</ul>
+<pre>GET /v1/events?after=evt_c41a9e&amp;type=credit.appropriated&amp;limit=100
+Authorization: Bearer {token}</pre>
+
+<p>O log devolve os mesmos eventos, com o mesmo payload, em ordem de criação e com paginação por cursor. Para reconciliar o saldo inteiro, a consulta de créditos e de débitos devolve o registro atual.</p>
+
+<h3>Quando os eventos chegam</h3>
+<div class="table-wrap"><table><thead><tr><th>Tributo</th><th>Ritmo</th><th>Atraso típico até o ERP</th></tr></thead><tbody><tr><td>CBS</td><td>Em ondas, depois de cada coleta — até 4 por dia por assunto</td><td>Horas, conforme o agendamento das coletas e o processamento de até 240 minutos na Receita</td></tr><tr><td>IBS</td><td>Uma onda por dia, depois do Processamento Diário</td><td>D+1 em relação ao lançamento</td></tr><tr><td>Alertas</td><td>Uma vez por dia</td><td>—</td></tr></tbody></table></div>
+<div class="callout info"><div class="ct">Por que não em tempo real</div><p>O SplitHub não sabe de uma apropriação antes do Fisco publicar. O <code>occurred_at</code> diz quando o fato aconteceu; a diferença para o recebimento é o ritmo de cada ente, não atraso da plataforma.</p></div>
+</div>
+
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">O que depende do Fisco</span></div>
+
+<div class="table-wrap"><table><thead><tr><th>Limite</th><th>Efeito nos eventos</th><th>Até quando</th></tr></thead><tbody><tr><td>O IBS não nomeia suspenso, prescrito, inapropriável, inutilizável nem restabelecido</td><td>No IBS não há <code>credit.suspended</code>, <code>credit.expired</code> nem <code>credit.restored</code> por saldo. <code>credit.disallowed</code> só por texto da movimentação, provisório</td><td>Tabela de códigos da movimentação, sem data</td></tr><tr><td>O algoritmo do hash do extrato do IBS não foi definido</td><td>Eventos do IBS saem com <code>integrity: "unverified"</code>. Definido o algoritmo, só sai evento de extrato verificado (E-05)</td><td>Pendência declarada no manual do IBS</td></tr><tr><td>O IBS não traz competência nem modelo do documento</td><td><code>period_source: "derived"</code>; modelo pela chave</td><td>Sem previsão</td></tr><tr><td>A arrecadação do IBS é Etapa 4, sem especificação</td><td>Débito de IBS extinto por guia não traz número nem data da guia; o crédito apropriado por RAD no IBS sai com <code>cause: "unknown"</code> até haver fonte</td><td>Etapa 4, sem data</td></tr><tr><td>O Fisco não informa qual crédito extinguiu qual débito</td><td>O vínculo vem do motor do art. 53, com <code>allocation: "splithub"</code></td><td>Permanente</td></tr><tr><td>Os endpoints da CBS entram em ondas</td><td>Crédito e débito a partir de out/2026; pagamentos e recolhimentos — que dão a causa — a partir de nov/2026</td><td>Fim de nov/2026</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">O que esta proposta resolve</span></div>
+
+<div class="table-wrap"><table><thead><tr><th>Onde</th><th>O que muda</th></tr></thead><tbody><tr><td>Avaliação da API — decisão 2</td><td>Responde a decisão: opção B, com o saldo partido por situação. Fecha os gaps de evento de crédito, de vocabulário de status e de débito da avaliação</td></tr><tr><td>Docs da plataforma</td><td>Os eventos <code>credito.status_alterado</code> e <code>debito.status_alterado</code> dão lugar a este catálogo, na v1.2.0. A consulta de créditos passa a devolver o mesmo registro, e entra a de débitos</td></tr><tr><td>Proposta do time</td><td>Precisa da inscrição, do log de eventos e dos tipos acima. O <code>CreditRecord</code> vira o registro da seção 04</td></tr><tr><td>PRDs de Crédito, Débito e Integrações</td><td>Travados desde 22/09 pela decisão de contrato de eventos. O status único do registro fiscal passa a ser resumo de um saldo partido — mudança de modelo, não de tela</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Decisões em aberto</span></div>
+<div class="dec" id="e-01"><div class="dec-h"><span class="dec-id">E-01</span><span class="dec-t">Status resumido</span></div><p>Manter um status derivado do saldo, ou só o saldo.</p><p class="rec">Recomendação: <strong>Manter</strong>, com a regra de precedência da seção 04. Filtrar por status é o uso mais comum; o saldo continua sendo a verdade.</p></div>
+<div class="dec" id="e-02"><div class="dec-h"><span class="dec-id">E-02</span><span class="dec-t">Ordem de entrega</span></div><p>Garantir ordem por registro — o próximo evento só sai depois do anterior —, ou entregar em paralelo com <code>record_version</code>.</p><p class="rec">Recomendação: <strong>Paralelo com <code>record_version</code>.</strong> Ordem garantida trava a fila inteira de um registro quando uma entrega falha.</p></div>
+<div class="dec" id="e-03"><div class="dec-h"><span class="dec-id">E-03</span><span class="dec-t">Retenção do log de eventos</span></div><p>30 ou 90 dias.</p><p class="rec">Recomendação: <strong>30 dias</strong>, mais que as 17 horas de retentativa e que um recesso longo do ERP.</p></div>
+<div class="dec" id="e-04"><div class="dec-h"><span class="dec-id">E-04</span><span class="dec-t">Alertas do SplitHub</span></div><p>Família separada <code>alert.*</code>, opcional, ou dentro dos eventos de crédito.</p><p class="rec">Recomendação: <strong>Separada.</strong> Misturar marca do produto com fato do Fisco faz o ERP contabilizar o que não aconteceu.</p></div>
+<div class="dec" id="e-05"><div class="dec-h"><span class="dec-id">E-05</span><span class="dec-t">Eventos do IBS sem hash verificável</span></div><p>Emitir marcados como não verificados, ou segurar até o algoritmo sair.</p><p class="rec">Recomendação: <strong>Emitir marcados.</strong> Segurar deixa o IBS sem evento por tempo indeterminado.</p></div>
+<div class="dec" id="e-06"><div class="dec-h"><span class="dec-id">E-06</span><span class="dec-t">Carga inicial</span></div><p>Só eventos a partir da inscrição, ou reenviar o histórico como eventos.</p><p class="rec">Recomendação: <strong>Só a partir da inscrição.</strong> O histórico vem pela consulta, que é mais rápida e não esgota o endpoint do ERP.</p></div>
+<div class="dec" id="e-07"><div class="dec-h"><span class="dec-id">E-07</span><span class="dec-t">Pausa automática</span></div><p>Pausar a inscrição depois de 72 horas sem sucesso, ou nunca pausar.</p><p class="rec">Recomendação: <strong>Pausar e avisar.</strong> Sem pausa, um endpoint fora do ar acumula retentativas sem fim.</p></div>
+<div class="dec" id="e-08"><div class="dec-h"><span class="dec-id">E-08</span><span class="dec-t">Granularidade</span></div><p>Um evento por parcela que mudou, ou um evento por coleta com todas as mudanças do documento.</p><p class="rec">Recomendação: <strong>Um por parcela.</strong> É o que permite assinar só <code>credit.appropriated</code>.</p></div>
+</div>
+
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Histórico de versões</span></div>
+
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>05/10/2026</strong> — Primeira versão, a partir da decisão 2 da avaliação da API. Como crédito e débito chegam da CBS e do IBS; registro normalizado com o saldo partido em treze parcelas no crédito e seis no débito, mapeado campo a campo às duas APIs; dezenove eventos fiscais e três alertas, com gatilho em cada ente e causa; payload com o fato e o registro completo; gestão do envio com inscrição, entrega, ordem por versão do registro e log de eventos para recuperação; limites que dependem do Fisco; e oito decisões em aberto.</div></div>
+</div>
+
+</div>
+</body>
+</html>
