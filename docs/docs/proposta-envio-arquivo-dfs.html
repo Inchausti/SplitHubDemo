@@ -197,12 +197,12 @@ tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
 <h1>Envio de arquivo de documentos fiscais</h1>
 <p class="subtitle">A rota que falta na proposta do desenvolvimento, desenhada a partir do payload que o docs já publica: enviar o arquivo, ver o que entra e o que não entra, e só então importar — com as mesmas verificações da chamada por documento.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.2</span></div>
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.2.1</span></div>
 <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta · API</span></div>
 <div class="meta-pill"><span class="meta-label">Origem</span>&nbsp;<span class="meta-val"><a class="xref" href="avaliacao-api-desenvolvimento.html#s07">Avaliação da API · item 8</a></span></div>
 <div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val"><a class="xref" href="https://split-hubhq.github.io/docs/ingestao-dfs.html">Docs v1.1.0</a> · <a class="xref" href="prd-ingestao.html">PRD Ingestão</a></span></div>
 <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">05/10/2026</span></div>
-<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Aprovada</span>&nbsp;<span class="chip info">v1.2</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Aprovada</span>&nbsp;<span class="chip info">v1.2.1</span></div>
 </div>
 
 <div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
@@ -538,7 +538,7 @@ nfcom,62,35260814200166000187620010000087654321098765,,true,FORNECEDOR,30,654321
 <div class="table-wrap"><table class="cmp"><thead><tr><th>Proposta do time</th><th>Esta proposta</th><th>Por quê</th></tr></thead><tbody><tr><td><code>uploadId</code> sem rota que o devolva</td><td><code>POST /v1/uploads</code> devolve o <code>id</code></td><td>Sem a rota, o fluxo não começa</td></tr><tr><td><code>kind</code>: <code>dfe</code> ou <code>nfse</code></td><td>Removido. O tipo vem de cada documento</td><td>O docs aceita 14 tipos; um arquivo pode misturá-los</td></tr><tr><td><code>uploadId</code> em camelCase</td><td><code>file_id</code></td><td>Convenção do docs: <code>snake_case</code></td></tr><tr><td>Prévia com <code>chave_dfe</code>, <code>valor_total</code>, <code>valor_ibs</code>, <code>valor_cbs</code></td><td><code>access_key</code>, <code>total_note_value</code>, <code>v_tot_ibs</code>, <code>v_tot_cbs</code></td><td>Os mesmos nomes do payload que o cliente enviou</td></tr><tr><td>Inutilizável como <code>{line, reason}</code></td><td><code>{source, access_key, check, code, message, received}</code></td><td><a class="xref" href="prd-ingestao.html">RF-ING-012</a> e <a class="xref" href="prd-ingestao.html">RN-ING-07</a>: dizer qual verificação falhou. "Linha" não serve para ZIP e JSON</td></tr><tr><td>Prévia inteira na resposta</td><td>Resumo e 100 primeiros; listas completas paginadas</td><td>Arquivo de 10 mil documentos</td></tr><tr><td>Sem cancelamento</td><td><code>POST …/cancel</code> e situação <code>cancelled</code></td><td>Desistir sem esperar 24 horas</td></tr><tr><td>Unicidade verificada só na prévia</td><td>Verificada de novo na confirmação</td><td><a class="xref" href="prd-ingestao.html">RN-ING-01</a>: a prévia pode ter 24 horas</td></tr><tr><td>Sem autor</td><td><code>created_by</code> e <code>confirmed_by</code></td><td>DEF-07</td></tr><tr><td>Só consulta periódica</td><td>Evento <code>ingestion.completed</code></td><td><a class="xref" href="#s11">U-06</a></td></tr></tbody></table></div>
 
 <h3>No docs da plataforma</h3>
-<p>Aceita em 05/10/2026. Entra no docs na v1.2.0, junto com a migração das rotas e dos campos para inglês. As referências a rotas e valores do docs nesta proposta usam os nomes publicados hoje — <code>/v1/documentos-fiscais</code>, <code>RAD</code>, <code>FORNECEDOR</code> — e mudam com o mapa de nomes da avaliação.</p>
+<p>Aceita em 05/10/2026. Entra no docs na v1.3.0, junto com a migração das rotas e dos campos para inglês. As referências a rotas e valores do docs nesta proposta usam os nomes publicados hoje — <code>/v1/documentos-fiscais</code>, <code>RAD</code>, <code>FORNECEDOR</code> — e mudam com o mapa de nomes da avaliação.</p>
 <ul class="plain">
 <li><strong>Ingestão de DFs</strong> — nova seção "Enviar arquivo", com as 7 operações: enviar, criar importação, consultar, listar documentos, listar inutilizáveis, confirmar e cancelar.</li>
 <li><strong>Sai</strong> o envio de CSV por <code>POST /v1/documentos-fiscais/batch</code>. O lote em JSON de até 500 documentos fica.</li>
@@ -546,7 +546,7 @@ nfcom,62,35260814200166000187620010000087654321098765,,true,FORNECEDOR,30,654321
 <li><strong>Modelo CSV v2</strong>, com 23 colunas e uma linha por documento, substitui o atual.</li>
 <li><strong>Itens</strong> — o envio de arquivo não lê itens nesta primeira fase. O payload da chamada por documento fica como está.</li>
 <li><strong>Autenticação</strong> — a tabela de escopos passa a citar arquivos e importações em <code>dfs:write</code> e <code>dfs:read</code>.</li>
-<li><strong>Changelog</strong> v1.2.0, com a remoção do CSV no lote como mudança que quebra compatibilidade.</li>
+<li><strong>Changelog</strong> v1.3.0, com a remoção do CSV no lote como mudança que quebra compatibilidade.</li>
 </ul>
 <h3>Na tela do app</h3>
 <p>Fora desta proposta. Se a tela de upload passar a usar a mesma rota (<a class="xref" href="#s11">U-03</a>), o PRD de Ingestão muda: o CSV posicional de 16 colunas dá lugar ao modelo v2, e a prévia passa do navegador para a plataforma.</p>
@@ -569,6 +569,7 @@ nfcom,62,35260814200166000187620010000087654321098765,,true,FORNECEDOR,30,654321
 <div class="section" id="s12">
 <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Histórico de versões</span></div>
 
+<div class="ver-row"><div class="ver-num">v1.2.1</div><div class="ver-desc"><strong>05/10/2026</strong> — A entrada no docs passa para a v1.3.0, porque a v1.2.0 saiu só com os eventos de crédito e débito.</div></div>
 <div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>05/10/2026</strong> — Proposta aprovada, com as nove decisões aceitas. Rotas, campos e códigos em inglês, pela decisão da avaliação da API: <code>/v1/uploads</code> e <code>/v1/ingestions</code>, com <code>/confirm</code>, <code>/cancel</code>, <code>/documents</code> e <code>/unusable</code>; códigos de recusa e de aviso, finalidade do arquivo, origem do contrato e o evento <code>ingestion.completed</code> também em inglês. A U-08 fica decidida pelos nomes da proposta do time.</div></div>
 <div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>05/10/2026</strong> — Envio de arquivo no nível do documento, sem segmentação por item nesta primeira fase. O CSV v2 passa a uma linha por documento, com 23 colunas: saem as 17 de item, e das 6 colunas novas fica fora a de tipo de serviço do item. No JSON, no XML e no ZIP, os itens não são lidos. Saem a verificação de linhas divergentes e o aviso de totais divergentes; duas linhas com a mesma chave caem em chave repetida no arquivo. A prévia deixa de trazer a contagem de itens.</div></div>
 <div class="ver-row"><div class="ver-num">v1.0.1</div><div class="ver-desc"><strong>05/10/2026</strong> — O aviso <code>sem_contrato_vigente</code> deixa de citar um mecanismo de pagamento padrão, fora do escopo desta versão: o documento é importado sem contrato vinculado.</div></div>
