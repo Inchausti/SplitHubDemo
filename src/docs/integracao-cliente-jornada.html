@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jornada de integração do cliente</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 1120px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--teal); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+h1 { font-size: 28px; font-weight: 800; line-height: 1.18; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 820px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--teal); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 52px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 18px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14.5px; font-weight: 700; color: var(--txt1); margin: 28px 0 8px; scroll-margin-top: 20px; }
+h4 { font-size: 12px; font-weight: 700; color: var(--txt2); margin: 20px 0 6px; text-transform: uppercase; letter-spacing: .06em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--teal); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.mono { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--teal); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+.src-note { font-size: 11.5px; color: var(--txt3); margin: 6px 0 0; }
+
+/* ── mockup ─────────────────────────────────────────────────────── */
+.mock { border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; margin: 16px 0; background: var(--sur); }
+.mock-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.mock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.mock-url { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); margin-left: 4px; }
+.mock-tag { margin-left: auto; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
+.mock-tag.nova { background: var(--green-d); color: var(--green); }
+.mock-tag.muda { background: var(--amber-d); color: var(--amber); }
+.mock-body { padding: 16px 18px; }
+.mock-h { font-size: 15px; font-weight: 700; color: var(--txt1); margin-bottom: 2px; }
+.mock-s { font-size: 11.5px; color: var(--txt3); margin-bottom: 14px; }
+.mock-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.mock-tab { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--brd); color: var(--txt3); }
+.mock-tab.on { background: var(--teal); border-color: var(--teal); color: #fff; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--sur2); border: 1px solid var(--brd); border-radius: 7px; padding: 9px 11px; }
+.kpi-l { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.kpi-v { font-size: 19px; font-weight: 800; color: var(--txt1); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.kpi-s { font-size: 10px; color: var(--txt3); }
+.kpi.alert .kpi-v { color: var(--red); }
+.kpi.warn .kpi-v { color: var(--amber); }
+.kpi.good .kpi-v { color: var(--green); }
+.mock table { font-size: 11.5px; }
+.mock th { font-size: 9.5px; padding: 7px 10px; }
+.mock td { padding: 7px 10px; }
+.btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.btn-p { background: var(--teal); color: #fff; border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.btn-g { border: 1px solid var(--brd); color: var(--txt2); border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.st { display: inline-block; font-size: 9.5px; font-weight: 800; padding: 1px 7px; border-radius: 20px; white-space: nowrap; }
+.st.ok { background: var(--green-d); color: var(--green); }
+.st.wait { background: var(--blue-d); color: var(--blue); }
+.st.div { background: var(--red-d); color: var(--red); }
+.st.abs { background: var(--amber-d); color: var(--amber); }
+.st.neu { background: var(--gray-d); color: var(--gray); }
+.st.own { background: var(--purple-d); color: var(--purple); }
+.new { display: inline-block; font-size: 9px; font-weight: 800; background: var(--teal); color: #fff; border-radius: 3px; padding: 0 5px; margin-left: 5px; letter-spacing: .04em; vertical-align: 1px; }
+
+code, kbd, samp { overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } .kpis { grid-template-columns: repeat(2, 1fr); } }
+</style>
+<style>
+pre { margin: 12px 0; padding: 14px 16px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.6; color: var(--txt2); background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; white-space: pre; }
+.flow { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.flow-step { flex: 1 1 150px; background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 6px; padding: 10px 12px; }
+.flow-step.warn { border-left-color: var(--amber); }
+.flow-step.red { border-left-color: var(--red); }
+.flow-k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); }
+.flow-step.warn .flow-k { color: var(--amber); }
+.flow-step.red .flow-k { color: var(--red); }
+.flow-t { font-size: 12.5px; font-weight: 700; color: var(--txt1); margin-top: 3px; }
+.flow-d { font-size: 11.5px; color: var(--txt2); margin-top: 4px; }
+tr.grp td { background: var(--sur2); color: var(--txt1); font-weight: 600; font-size: 11.5px; }
+tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
+.drop { border: 1.5px dashed var(--brd); border-radius: 8px; padding: 16px; text-align: center; font-size: 12px; color: var(--txt3); margin: 10px 0 14px; }
+.drop strong { color: var(--txt1); }
+.field { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12px; color: var(--txt2); margin-bottom: 8px; }
+.field .sel { border: 1px solid var(--brd); border-radius: 6px; padding: 4px 10px; background: var(--sur); color: var(--txt1); font-weight: 600; }
+.small { font-size: 11px; color: var(--txt3); margin-top: 8px; }
+.mock td code { white-space: nowrap; }
+</style>
+<style>
+.sec-num { flex-shrink: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td:first-child code { white-space: nowrap; overflow-wrap: normal; }
+pre.json { padding: 12px 0; }
+pre.json .ln { display: block; padding: 0 16px; min-height: 1.6em; }
+pre.json .ln.hl { background: var(--teal-d); box-shadow: inset 3px 0 0 var(--teal); }
+.jk { color: var(--txt1); } .js { color: var(--teal); } .jn { color: var(--blue); } .jl { color: var(--txt3); font-style: italic; }
+details.pl { border: 1px solid var(--brd); border-radius: 8px; margin: 10px 0; background: var(--sur); }
+details.pl > summary { cursor: pointer; padding: 10px 14px; font-size: 12.5px; font-weight: 600; color: var(--txt1); list-style: none; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+details.pl > summary::-webkit-details-marker { display: none; }
+details.pl > summary::before { content: "\25B8"; color: var(--teal); display: inline-block; transition: transform .15s; }
+details.pl[open] > summary::before { transform: rotate(90deg); }
+details.pl > summary:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; border-radius: 6px; }
+details.pl > summary .sm { font-weight: 400; color: var(--txt3); font-size: 11.5px; }
+details.pl pre { margin: 0; border: none; border-top: 1px solid var(--brd); border-radius: 0 0 8px 8px; }
+.tp { border: 1px solid var(--brd); border-radius: 10px; padding: 16px 20px 8px; margin: 18px 0 28px; }
+.tp.off { border-style: dashed; }
+.tp-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
+.tp-n { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; }
+.tp-t { font-size: 15px; font-weight: 700; color: var(--txt1); }
+.tp-d { font-size: 11.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.ev { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+.mov { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt2); white-space: nowrap; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; font-size: 12.5px; margin: 8px 0 12px; }
+.kv dt { color: var(--txt3); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding-top: 2px; }
+.kv dd { color: var(--txt1); margin: 0; }
+.lc td.c { padding-left: 28px; }
+.bar { display: flex; height: 12px; border-radius: 3px; overflow: hidden; background: var(--sur2); min-width: 140px; }
+.bar span { display: block; height: 100%; }
+.b-p { background: var(--amber); } .b-a { background: var(--teal); } .b-u { background: var(--blue); }
+.leg { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px; color: var(--txt2); margin: 6px 0 12px; }
+.leg i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.nobook { display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--txt3); border: 1px solid var(--brd); border-radius: 4px; padding: 1px 6px; }
+.book { display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--green); background: var(--green-d); border-radius: 4px; padding: 1px 6px; }
+@media (max-width: 620px) { .tp { padding: 14px 14px 6px; } .tp-d { margin-left: 0; width: 100%; } .kv { grid-template-columns: 1fr; } }
+.fx-wrap { overflow-x: auto; margin: 14px 0 8px; border: 1px solid var(--brd); border-radius: 10px; background: var(--bg); }
+.fx { min-width: 1060px; }
+.fx-row { display: grid; grid-template-columns: 190px repeat(5, minmax(112px, 1fr)) 250px; }
+.fx-row > * { grid-row: 1; }
+.fx-row + .fx-row { border-top: 1px dotted var(--brd); }
+.fx-head { background: var(--sur); border-bottom: 1px solid var(--brd); }
+.fx-head > div { padding: 12px 8px; text-align: center; font-size: 12px; font-weight: 700; color: var(--txt1); }
+.fx-head > div small { display: block; font-size: 10.5px; font-weight: 400; color: var(--txt3); margin-top: 2px; }
+.fx-head > div.fx-hl { text-align: left; padding-left: 14px; color: var(--txt3); font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; }
+.fx-lane { background: linear-gradient(var(--brd), var(--brd)) center / 1px 100% no-repeat; }
+.fx-step { padding: 10px 10px 10px 14px; font-size: 12px; color: var(--txt1); display: flex; flex-direction: column; gap: 4px; }
+.fx-step .fx-num { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; color: var(--teal); margin-right: 6px; }
+.fx-step .fx-at { font-size: 10.5px; color: var(--txt3); }
+.fx-step a.fx-t { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: var(--teal); text-decoration: none; border: 1px solid var(--brd); border-radius: 3px; padding: 0 4px; }
+.fx-obj { padding: 10px 14px 10px 12px; font-size: 11.5px; color: var(--txt2); border-left: 1px solid var(--brd); display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.fx-ph { padding: 7px 14px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--txt2); background: var(--sur2); border-top: 1px solid var(--brd); border-bottom: 1px solid var(--brd); }
+.fx-arw { align-self: center; margin: 0 calc(50% / var(--n)); position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.fx-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 600; line-height: 1.35; text-align: center; overflow-wrap: anywhere; padding: 1px 6px; background: var(--bg); border-radius: 3px; color: var(--c); }
+.fx-line { width: 100%; height: 2px; background: var(--c); position: relative; }
+.fx-line::after { content: ""; position: absolute; right: -1px; top: 50%; transform: translateY(-50%); border-left: 8px solid var(--c); border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+.fx-arw.rtl .fx-line::after { right: auto; left: -1px; border-left: none; border-right: 8px solid var(--c); }
+.fx-arw.k-al .fx-line { background: none; border-top: 2px dashed var(--c); height: 0; }
+.fx-self { align-self: center; justify-self: center; z-index: 1; font-size: 10.5px; font-weight: 600; line-height: 1.35; color: var(--c); border: 1.5px solid var(--c); background: var(--bg); border-radius: 6px; padding: 5px 8px; text-align: center; max-width: 94%; }
+.k-fis { --c: var(--amber); } .k-feed { --c: var(--blue); } .k-rfb { --c: var(--blue); } .k-cg { --c: var(--green); }
+.fx-tags { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.txc { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700; border-radius: 3px; padding: 0 5px; }
+.tx-cbs { color: var(--blue); background: var(--blue-d); } .tx-ibs { color: var(--green); background: var(--green-d); }
+.fx-head > div.l-cbs { box-shadow: inset 0 3px 0 var(--blue); } .fx-head > div.l-ibs { box-shadow: inset 0 3px 0 var(--green); }
+.fx-lane.l-cbs { background: linear-gradient(var(--brd), var(--brd)) center / 1px 100% no-repeat, var(--blue-d); }
+.fx-lane.l-ibs { background: linear-gradient(var(--brd), var(--brd)) center / 1px 100% no-repeat, var(--green-d); } .k-wh { --c: var(--teal); } .k-api { --c: var(--txt2); } .k-al { --c: var(--txt3); }
+.fx-leg { display: flex; gap: 18px; flex-wrap: wrap; font-size: 11.5px; color: var(--txt2); margin: 8px 0 4px; }
+.fx-leg span::before { content: ""; display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--c); margin-right: 6px; vertical-align: 3px; }
+.fx-leg span.k-al::before { border-top-style: dashed; }
+.fx-hint { display: none; font-size: 11px; color: var(--txt3); margin: 4px 0 0; }
+@media (max-width: 980px) { .fx-hint { display: block; } }
+</style><style>
+.fx { min-width: 980px; }
+.fx-row { grid-template-columns: 180px repeat(5, minmax(108px, 1fr)) 240px; }
+.fx.l4 { min-width: 900px; }
+.fx-lbl { overflow-wrap: normal; word-break: normal; }
+.fx.l4 .fx-row { grid-template-columns: 180px repeat(4, minmax(120px, 1fr)) 260px; }
+.k-cli { --c: var(--purple); }
+.fx-head > div.l-cli { box-shadow: inset 0 3px 0 var(--purple); }
+.fx-lane.l-cli { background: linear-gradient(var(--brd), var(--brd)) center / 1px 100% no-repeat, var(--purple-d); }
+.prem { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 18px; margin: 12px 0; }
+.prem div { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: var(--txt2); }
+.prem b { display: block; color: var(--txt1); font-size: 13px; margin-bottom: 2px; }
+@media (max-width: 760px) { .prem { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">Referência · Integração · Reunião de arquitetura do piloto</div>
+<h1>Integração com o cliente: jornada e fluxo de dados</h1>
+<p class="subtitle">Como o ERP do cliente se integra ao SplitHub no piloto: as premissas, a jornada em seis fases, o fluxo operacional que faz o crédito existir, o fluxo que assiste a gestão e os dados que trafegam entre os dois.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Referência técnica</span></div>
+<div class="meta-pill"><span class="meta-label">Contrato</span>&nbsp;<span class="meta-val">docs v1.3.1</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">08/10/2026</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip info">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Premissas</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> A jornada de integração do cliente</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Fluxo operacional — Core</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Fluxo de assistência à gestão</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Fluxo de dados</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Contrato técnico</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Pontos para a reunião</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Histórico de versões</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Premissas</span></div>
+
+<p>O que vale para toda a integração. São as regras que o desenho do piloto não renegocia.</p>
+<div class="prem">
+<div><b>O cliente é o ERP do adquirente</b>Ele envia documentos e cadastros, e recebe guias e fatos. O fornecedor não usa a API: usa o portal.</div>
+<div><b>O estado é do Fisco</b>Crédito e débito mudam só quando a Receita Federal (CBS) ou o Comitê Gestor (IBS) informam. Nenhuma chamada do cliente muda estado fiscal.</div>
+<div><b>Um registro por documento e por tributo</b>Cada documento gera um registro de CBS e um de IBS, nunca somados, cada um no ritmo do seu ente.</div>
+<div><b>O contrato decide quem recolhe</b>O método — RAD ou fornecedor — vem do contrato vigente na data de emissão. Sem contrato, o fornecedor recolhe e o SplitHub aguarda o Fisco.</div>
+<div><b>RAD em dois modos</b>Escolhido na implantação: o SplitHub instrui o pagamento, ou o ERP paga e devolve o comprovante. Quem paga é sempre o adquirente.</div>
+<div><b>Um evento por fato</b>Webhook com o fato e o registro completo. Entrega pelo menos uma vez, sem garantia de ordem; o log de eventos recupera o que se perdeu.</div>
+<div><b>Primeira versão enxuta</b>Sem split payment. Documento apurado por inteiro, sem segmentação por item.</div>
+<div><b>Contrato estável e em inglês</b>Rotas e campos em inglês; valores em texto decimal; datas em ISO 8601 com fuso; inativar em vez de excluir; dado pessoal fora de URL.</div>
+</div>
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">A jornada de integração do cliente</span></div>
+
+<p>Seis fases, na ordem em que o piloto as constrói. Cada uma só começa quando a anterior está pronta.</p>
+<div class="table-wrap"><table><thead><tr><th>Fase</th><th>O que o ERP faz</th><th>Contrato</th><th>Pronta quando</th></tr></thead><tbody><tr><td><strong>1. Conectar</strong></td><td>Obtém a credencial, o token e inscreve a URL que recebe os eventos</td><td><code>POST /public/oauth/token</code><br><code>POST /v1/webhook-subscriptions</code><br><code>POST …/{id}/test</code></td><td>Evento <code>webhook.test</code> recebido, com a assinatura validada</td></tr><tr><td><strong>2. Cadastrar a base</strong></td><td>Envia fornecedores e contratos, com método, prazo e vigência</td><td><code>POST /v1/suppliers</code><br><code>POST /v1/contracts</code></td><td>Todo fornecedor do piloto com contrato vigente</td></tr><tr><td><strong>3. Enviar documentos</strong></td><td>Envia cada documento de entrada e de saída, na emissão</td><td><code>POST /v1/fiscal-documents</code><br><code>…/batch</code> · <code>POST /v1/uploads</code> + <code>/v1/ingestions</code></td><td>Todo documento com <code>df_…</code>; recusas tratadas pelo código</td></tr><tr><td><strong>4. Recolher pelo RAD</strong></td><td>Recebe as guias, paga e devolve o comprovante — no modo de pagamento pelo ERP</td><td><code>rad.darf_received</code><br><code>POST /v1/rad/proofs</code><br><code>rad.proof_received</code></td><td>Toda guia paga com comprovante conciliado</td></tr><tr><td><strong>5. Receber os fatos</strong></td><td>Lança cada fato fiscal e guarda o espelho do registro</td><td><code>credit.*</code> · <code>debit.*</code> · <code>alert.*</code></td><td>A contabilidade bate com o saldo do SplitHub, por documento e tributo</td></tr><tr><td><strong>6. Reconciliar</strong></td><td>Confere a posição e recupera o que não chegou</td><td><code>GET /v1/credits</code> · <code>/v1/debits</code><br><code>GET /v1/events</code></td><td>Nenhum evento perdido no período</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Fluxo operacional — Core</span></div>
+
+<p>O que precisa acontecer para o crédito existir e ser confirmado: o cliente alimenta, o SplitHub organiza e recolhe, o Fisco confirma. Doze passos, em cinco raias.</p>
+<div class="fx-leg"><span style="--c:var(--purple)">Cliente chama a API</span><span style="--c:var(--teal)">Webhook ao cliente</span><span style="--c:var(--txt2)">SplitHub chama o Fisco ou o PSP</span><span style="--c:var(--blue)">Receita Federal informa</span><span style="--c:var(--green)">Comitê Gestor informa</span><span style="--c:var(--amber)">Pagamento</span></div><div class="fx-wrap" role="region" aria-label="Fluxo operacional — Core" tabindex="0"><div class="fx"><div class="fx-row fx-head"><div class="fx-hl">Passo</div><div class="l-cli">ERP do cliente<small>SAP do adquirente</small></div><div class="">SplitHub<small>API e motor</small></div><div class="l-cbs">Receita Federal<small>CBS · o SplitHub pede</small></div><div class="l-ibs">Comitê Gestor<small>IBS · o Fisco envia</small></div><div class="">Banco ou PSP<small>Pagamento da guia</small></div><div class="fx-hl">Objetivo</div></div><div class="fx-ph">Entrada — o cliente alimenta o SplitHub</div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">1</span><strong>Autenticar</strong></div><span class="fx-at">Ator: ERP do cliente</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane l-cbs" style="grid-column:4"></div><div class="fx-lane l-ibs" style="grid-column:5"></div><div class="fx-lane" style="grid-column:6"></div><div class="fx-arw k-cli" style="grid-column:2 / 4;--n:2"><span class="fx-lbl">POST /<wbr>public/<wbr>oauth/<wbr>token</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:7"><div>Token de 12 minutos, com os escopos da credencial. Renovar 2 minutos antes de vencer.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">2</span><strong>Cadastrar a base</strong></div><span class="fx-at">Ator: ERP do cliente</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane l-cbs" style="grid-column:4"></div><div class="fx-lane l-ibs" style="grid-column:5"></div><div class="fx-lane" style="grid-column:6"></div><div class="fx-arw k-cli" style="grid-column:2 / 4;--n:2"><span class="fx-lbl">POST /<wbr>v1/<wbr>suppliers · /<wbr>v1/<wbr>contracts</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:7"><div>O contrato diz quem recolhe — <code>rad</code> ou <code>supplier</code> — e o prazo, com vigência e renovação.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">3</span><strong>Enviar o documento</strong></div><span class="fx-at">Ator: ERP do cliente</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane l-cbs" style="grid-column:4"></div><div class="fx-lane l-ibs" style="grid-column:5"></div><div class="fx-lane" style="grid-column:6"></div><div class="fx-arw k-cli" style="grid-column:2 / 4;--n:2"><span class="fx-lbl">POST /<wbr>v1/<wbr>fiscal-documents</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:7"><div>Documento de entrada e de saída, na emissão. Resposta <code>202</code> com o <code>df_…</code>. Lote e arquivo como alternativa.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">4</span><strong>Classificar</strong></div><span class="fx-at">Ator: SplitHub</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane l-cbs" style="grid-column:4"></div><div class="fx-lane l-ibs" style="grid-column:5"></div><div class="fx-lane" style="grid-column:6"></div><div class="fx-self k-api" style="grid-column:3">2 registros: CBS e IBS</div><div class="fx-obj" style="grid-column:7"><div>Um crédito ou débito por tributo, com o método do contrato vigente na emissão.</div></div></div><div class="fx-ph">Recolhimento pelo RAD — só nos documentos com método rad</div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">5</span><strong>Entregar as guias</strong></div><span class="fx-at">Ator: SplitHub</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane l-cbs" style="grid-column:4"></div><div class="fx-lane l-ibs" style="grid-column:5"></div><div class="fx-lane" style="grid-column:6"></div><div class="fx-arw k-wh rtl" style="grid-column:2 / 4;--n:2"><span class="fx-lbl">rad.<wbr>darf_<wbr>received</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:7"><div>Guia de CBS e de IBS, com valor, vencimento, código de barras e PIX.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">6</span><strong>Pagar a guia</strong></div><span class="fx-at">Ator: ERP do cliente</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane l-cbs" style="grid-column:4"></div><div class="fx-lane l-ibs" style="grid-column:5"></div><div class="fx-lane" style="grid-column:6"></div><div class="fx-arw k-fis" style="grid-column:2 / 7;--n:5"><span class="fx-lbl">paga por PIX ou boleto</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:7"><div>No modo de pagamento pelo ERP. No modo de instrução, quem aciona o PSP é o SplitHub, em nome do cliente.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">7</span><strong>Devolver o comprovante</strong></div><span class="fx-at">Ator: ERP do cliente</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane l-cbs" style="grid-column:4"></div><div class="fx-lane l-ibs" style="grid-column:5"></div><div class="fx-lane" style="grid-column:6"></div><div class="fx-arw k-cli" style="grid-column:2 / 4;--n:2"><span class="fx-lbl">POST /<wbr>v1/<wbr>rad/<wbr>proofs</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:7"><div>Um comprovante por guia, para conciliar pagamento e guia.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">8</span><strong>Confirmar o pagamento</strong></div><span class="fx-at">Ator: SplitHub</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane l-cbs" style="grid-column:4"></div><div class="fx-lane l-ibs" style="grid-column:5"></div><div class="fx-lane" style="grid-column:6"></div><div class="fx-arw k-wh rtl" style="grid-column:2 / 4;--n:2"><span class="fx-lbl">rad.<wbr>proof_<wbr>received</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:7"><div>A Receita registrou o pagamento. Pagar ainda não apropria.</div></div></div><div class="fx-ph">Confirmação pelo Fisco — o estado oficial</div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">9</span><strong>Pedir o saldo da CBS</strong></div><span class="fx-at">Ator: SplitHub</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane l-cbs" style="grid-column:4"></div><div class="fx-lane l-ibs" style="grid-column:5"></div><div class="fx-lane" style="grid-column:6"></div><div class="fx-arw k-api" style="grid-column:3 / 5;--n:2"><span class="fx-lbl">solicitação: créditos, débitos, pagamentos, recolhimentos</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:7"><div>Até 4 coletas por dia. Cada coleta reentrega 8 dias.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">10</span><strong>Receber o saldo da CBS</strong></div><span class="fx-at">Ator: Receita Federal</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane l-cbs" style="grid-column:4"></div><div class="fx-lane l-ibs" style="grid-column:5"></div><div class="fx-lane" style="grid-column:6"></div><div class="fx-arw k-rfb rtl" style="grid-column:3 / 5;--n:2"><span class="fx-lbl">aviso + arquivo de saldo</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:7"><div>Saldo por documento, partido por situação.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">11</span><strong>Receber o extrato do IBS</strong></div><span class="fx-at">Ator: Comitê Gestor</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane l-cbs" style="grid-column:4"></div><div class="fx-lane l-ibs" style="grid-column:5"></div><div class="fx-lane" style="grid-column:6"></div><div class="fx-arw k-cg rtl" style="grid-column:3 / 6;--n:3"><span class="fx-lbl">aviso + arquivo diário · dia seguinte</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:7"><div>Lançamentos do dia anterior, uma vez só. Arquivo perdido é dado perdido.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">12</span><strong>Conciliar</strong></div><span class="fx-at">Ator: SplitHub</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane l-cbs" style="grid-column:4"></div><div class="fx-lane l-ibs" style="grid-column:5"></div><div class="fx-lane" style="grid-column:6"></div><div class="fx-self k-api" style="grid-column:3">registro × apuração × pagamento</div><div class="fx-obj" style="grid-column:7"><div>Confronta o que o cliente enviou com o que o Fisco apurou e recebeu. Divergência abre inconsistência; o valor só muda pelo Fisco.</div></div></div></div></div><p class="fx-hint">Role o fluxo para o lado para ver todas as raias e o objetivo.</p>
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Fluxo de assistência à gestão</span></div>
+
+<p>O que o SplitHub devolve para o cliente acompanhar e agir: fatos para a contabilidade, alertas para o fiscal, automações e consultas de conferência. Nove passos, em quatro raias.</p>
+<div class="fx-leg"><span style="--c:var(--teal)">Webhook</span><span style="--c:var(--purple)">Cliente chama a API</span><span style="--c:var(--txt2)">SplitHub age</span><span class="k-al" style="--c:var(--txt3)">Alerta do SplitHub</span></div><div class="fx-wrap" role="region" aria-label="Fluxo de assistência à gestão" tabindex="0"><div class="fx l4"><div class="fx-row fx-head"><div class="fx-hl">Passo</div><div class="l-cli">ERP do cliente<small>Contabilidade e fiscal</small></div><div class="">SplitHub<small>API e motor</small></div><div class="">Ferramentas do cliente<small>ITSM e BI</small></div><div class="">Fornecedor<small>Portal, sem API</small></div><div class="fx-hl">Objetivo</div></div><div class="fx-ph">O SplitHub avisa</div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">1</span><strong>Derivar o fato</strong></div><span class="fx-at">Ator: SplitHub</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane" style="grid-column:4"></div><div class="fx-lane" style="grid-column:5"></div><div class="fx-self k-api" style="grid-column:3">mudança de saldo vinda do Fisco</div><div class="fx-obj" style="grid-column:6"><div>Cada parcela que muda vira um evento — um por fato, com o registro inteiro.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">2</span><strong>Contabilizar</strong></div><span class="fx-at">Ator: SplitHub</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane" style="grid-column:4"></div><div class="fx-lane" style="grid-column:5"></div><div class="fx-arw k-wh rtl" style="grid-column:2 / 4;--n:2"><span class="fx-lbl">credit.* · debit.*</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:6"><div>Apropriado, utilizado, glosado, extinto e os demais. O lançamento usa o <code>change</code>; o <code>balances</code> confere.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">3</span><strong>Alertar</strong></div><span class="fx-at">Ator: SplitHub</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane" style="grid-column:4"></div><div class="fx-lane" style="grid-column:5"></div><div class="fx-arw k-al rtl" style="grid-column:2 / 4;--n:2"><span class="fx-lbl">alert.<wbr>*</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:6"><div>Prazo de apropriação e prescrição. Calculado pelo SplitHub; não lança.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">4</span><strong>Automatizar</strong></div><span class="fx-at">Ator: SplitHub</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane" style="grid-column:4"></div><div class="fx-lane" style="grid-column:5"></div><div class="fx-arw k-wh" style="grid-column:3 / 5;--n:2"><span class="fx-lbl">automation.executed · automation.failed</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:6"><div>Ação disparada por regra — abrir chamado, notificar, gerar relatório.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">5</span><strong>Cobrar o fornecedor</strong></div><span class="fx-at">Ator: SplitHub</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane" style="grid-column:4"></div><div class="fx-lane" style="grid-column:5"></div><div class="fx-arw k-api" style="grid-column:3 / 6;--n:3"><span class="fx-lbl">portal e e-mail</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:6"><div>Régua de cobrança e comprovantes pelo portal. O fornecedor não usa a API.</div></div></div><div class="fx-ph">O cliente consulta e se recupera</div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">6</span><strong>Posição e conferência</strong></div><span class="fx-at">Ator: ERP do cliente</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane" style="grid-column:4"></div><div class="fx-lane" style="grid-column:5"></div><div class="fx-arw k-cli" style="grid-column:2 / 4;--n:2"><span class="fx-lbl">GET /<wbr>v1/<wbr>credits · /<wbr>v1/<wbr>debits</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:6"><div>Posição inicial na entrada em produção e conferência periódica do saldo.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">7</span><strong>Recuperar eventos</strong></div><span class="fx-at">Ator: ERP do cliente</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane" style="grid-column:4"></div><div class="fx-lane" style="grid-column:5"></div><div class="fx-arw k-cli" style="grid-column:2 / 4;--n:2"><span class="fx-lbl">GET /<wbr>v1/<wbr>events?after=</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:6"><div>Ler o que não chegou, a partir do último id processado.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">8</span><strong>Acompanhar a entrega</strong></div><span class="fx-at">Ator: ERP do cliente</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane" style="grid-column:4"></div><div class="fx-lane" style="grid-column:5"></div><div class="fx-arw k-cli" style="grid-column:2 / 4;--n:2"><span class="fx-lbl">GET …/<wbr>deliveries · POST …/<wbr>retry</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:6"><div>Log de cada tentativa e reenvio. 72 horas sem sucesso pausam a inscrição.</div></div></div><div class="fx-row"><div class="fx-step" style="grid-column:1"><div><span class="fx-num">9</span><strong>Analisar</strong></div><span class="fx-at">Ator: Ferramentas do cliente</span></div><div class="fx-lane l-cli" style="grid-column:2"></div><div class="fx-lane" style="grid-column:3"></div><div class="fx-lane" style="grid-column:4"></div><div class="fx-lane" style="grid-column:5"></div><div class="fx-arw k-cli rtl" style="grid-column:3 / 5;--n:2"><span class="fx-lbl">exportação para BI</span><span class="fx-line"></span></div><div class="fx-obj" style="grid-column:6"><div>Contrato ainda não publicado.</div></div></div></div></div><p class="fx-hint">Role o fluxo para o lado para ver todas as raias e o objetivo.</p>
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Fluxo de dados</span></div>
+
+<p>Os objetos que trafegam, a chave de cada um e por onde entram e saem. A chave de acesso do documento é o fio que liga tudo: crédito, débito e guia a carregam como <code>dfe_key</code>.</p>
+<div class="table-wrap"><table><thead><tr><th>Objeto</th><th>Id</th><th>Chave de negócio</th><th>Nasce em</th><th>Sai por</th></tr></thead><tbody><tr><td>Documento fiscal</td><td><code>df_…</code></td><td><code>access_key</code> — 44 dígitos, única em qualquer canal</td><td>Cliente → <code>POST /v1/fiscal-documents</code></td><td><code>GET /v1/fiscal-documents/{id}</code></td></tr><tr><td>Fornecedor</td><td><code>forn_…</code></td><td><code>cnpj</code></td><td>Cliente → <code>POST /v1/suppliers</code></td><td><code>GET /v1/suppliers</code></td></tr><tr><td>Contrato</td><td><code>ctr_…</code></td><td>fornecedor + vigência</td><td>Cliente → <code>POST /v1/contracts</code></td><td><code>GET /v1/contracts</code></td></tr><tr><td>Crédito</td><td><code>cred_cbs_…</code> · <code>cred_ibs_…</code></td><td><code>dfe_key</code> + <code>tax_type</code></td><td>Fisco → SplitHub</td><td><code>credit.*</code> · <code>GET /v1/credits</code></td></tr><tr><td>Débito</td><td><code>deb_cbs_…</code> · <code>deb_ibs_…</code></td><td><code>dfe_key</code> + <code>tax_type</code></td><td>Fisco → SplitHub</td><td><code>debit.*</code> · <code>GET /v1/debits</code></td></tr><tr><td>Guia RAD</td><td><code>darf_…</code></td><td>documento + tributo</td><td>SplitHub</td><td><code>rad.darf_received</code> · <code>GET /v1/rad/guides</code></td></tr><tr><td>Comprovante</td><td><code>comp_…</code></td><td><code>darf_id</code></td><td>Cliente → <code>POST /v1/rad/proofs</code></td><td><code>rad.proof_received</code></td></tr><tr><td>Evento</td><td><code>evt_…</code></td><td><code>id</code> — chave de deduplicação</td><td>SplitHub</td><td>Webhook · <code>GET /v1/events</code></td></tr></tbody></table></div>
+<h3>Um documento atravessando a integração</h3>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Fato</th><th>Chamada ou evento</th><th>O que liga ao passo anterior</th></tr></thead><tbody><tr><td>1</td><td>O ERP envia a nota</td><td><code>POST /v1/fiscal-documents</code></td><td><code>"access_key": "3527…0221…"</code> · <code>Idempotency-Key</code></td></tr><tr><td>2</td><td>O SplitHub aceita</td><td><code>202 Accepted</code></td><td><code>"id": "df_5c1e9a20"</code></td></tr><tr><td>3</td><td>O Fisco reconhece o crédito</td><td><code>credit.registered</code></td><td><code>"id": "cred_cbs_5c1e9a20"</code> · <code>"record_version": 1</code></td></tr><tr><td>4</td><td>O SplitHub entrega a guia</td><td><code>rad.darf_received</code></td><td><code>"dfe_key": "3527…0221…"</code> · <code>cbs_guide</code> · <code>ibs_guide</code></td></tr><tr><td>5</td><td>O ERP devolve o comprovante</td><td><code>POST /v1/rad/proofs</code></td><td><code>"darf_id": "darf_71840c"</code></td></tr><tr><td>6</td><td>O Fisco apropria</td><td><code>credit.appropriated</code></td><td><code>"from": "pending"</code> · <code>"to": "appropriated"</code> · <code>"cause": "rad_payment"</code></td></tr><tr><td>7</td><td>O crédito abate um débito</td><td><code>credit.utilized</code> + <code>debit.settled</code></td><td><code>"offsets": [{ "debit_dfe_key": … }]</code></td></tr></tbody></table></div>
+<p class="small">O ciclo completo de um crédito, com o payload de cada evento, está em <a class="xref" href="ciclo-credito-eventos-erp.html">O ciclo de um crédito, evento a evento</a>.</p>
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Contrato técnico</span></div>
+<div class="table-wrap"><table><thead><tr><th>Tema</th><th>Regra</th></tr></thead><tbody><tr><td>Autenticação</td><td>OAuth 2.0, client credentials. Token de 12 minutos; reutilizar e renovar com folga. Escopo por credencial: fora dele, <code>403</code>.</td></tr><tr><td>Idempotência</td><td><code>Idempotency-Key</code> em toda escrita. A chave de acesso não se repete: documento repetido é recusado com o <code>document_id</code> do original.</td></tr><tr><td>Formato</td><td>Valores em texto decimal com ponto; datas em ISO 8601 com fuso; <code>null</code> não é zero; paginação por cursor.</td></tr><tr><td>Assinatura do webhook</td><td>HMAC-SHA256 sobre carimbo + corpo bruto, nos cabeçalhos <code>X-Splithub-Timestamp</code> e <code>X-Splithub-Signature</code>. Janela de 5 minutos.</td></tr><tr><td>Entrega</td><td>Sucesso é qualquer <code>2xx</code> em até 30 segundos. Até 10 retentativas, com espera dobrando por cerca de 17 horas. Pelo menos uma vez; um evento por chamada.</td></tr><tr><td>Ordem e versão</td><td>Sem garantia de ordem. Deduplicar pelo <code>id</code> do evento; no espelho do registro, aplicar só <code>record_version</code> maior.</td></tr><tr><td>Recuperação</td><td><code>GET /v1/events?after={último id}</code> devolve os mesmos eventos, com o mesmo payload, em ordem de criação.</td></tr><tr><td>Erros</td><td>Toda recusa traz a verificação que falhou, um código estável e o valor recebido.</td></tr></tbody></table></div>
+<p class="small">Contrato completo no <a class="xref" href="https://split-hubhq.github.io/docs/index.html" target="_blank" rel="noopener">docs da plataforma ↗</a> — docs v1.3.1.</p>
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Pontos para a reunião</span></div>
+<div class="table-wrap"><table><thead><tr><th>Tema</th><th>Situação</th></tr></thead><tbody><tr><td>Modo de pagamento da guia no piloto</td><td>O contrato da instrução de pagamento pelo SplitHub ainda não foi publicado; hoje só o modo de pagamento pelo ERP está completo</td></tr><tr><td>Canal e RAD do piloto</td><td>Proposta do núcleo do MVP: API como canal, com arquivo CSV de plano B; RAD gerado manualmente no volume do piloto</td></tr><tr><td>Retenção e limites</td><td>Prazo de guarda do log de eventos (E-03) e limites do envio de arquivo (U-02), em aberto com o time</td></tr><tr><td>Guias RAD por evento</td><td>O docs descreve um evento por tributo; o exemplo traz as duas guias juntas</td></tr><tr><td>Escopos</td><td>Dois escopos seguem em português — <code>apuracoes:read</code> e <code>supplier_guias:read</code> — depois da decisão por inglês</td></tr><tr><td>IBS</td><td>O Comitê Gestor não publicou a conferência de integridade do extrato nem a tabela de códigos das movimentações; a arrecadação do IBS não tem API</td></tr><tr><td>Exportação para BI</td><td>Sem contrato publicado</td></tr><tr><td>Infraestrutura</td><td>BFF, hospedagem e região de dados do piloto ainda não definidos</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Histórico de versões</span></div>
+
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>08/10/2026</strong> — Primeira versão, para a reunião de arquitetura do piloto de integração. Oito premissas; a jornada do cliente em seis fases; o fluxo operacional em 12 passos e cinco raias, com a Receita Federal e o Comitê Gestor separados; o fluxo de assistência à gestão em nove passos; os objetos e chaves que trafegam, com um documento atravessando a integração; o contrato técnico e oito pontos para a reunião.</div></div>
+</div>
+
+</div>
+</body>
+</html>
