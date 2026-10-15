@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Comprovante pelo retorno CNAB</title>
+<title>Comprovante de boleto CNAB</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -197,34 +197,34 @@ td:first-child code { white-space: nowrap; overflow-wrap: normal; }
 
 <a class="back" href="prds.html">&larr; Hub de PRDs</a>
 <div class="eyebrow">Proposta · API · RAD</div>
-<h1>Comprovante de pagamento pelo retorno CNAB</h1>
-<p class="subtitle">Quais campos do arquivo de retorno do banco entram no comprovante da guia RAD paga pelo ERP — os que provam o pagamento — e quais ficam de fora.</p>
+<h1>Comprovante de boleto pelo CNAB 240</h1>
+<p class="subtitle">Quais campos o ERP lê no arquivo de retorno CNAB 240 do banco e envia no comprovante da guia RAD paga por boleto — e como cada um se chama na API.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.1</span></div>
 <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta · API</span></div>
-<div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">docs v1.5.0 · CNAB 240 FEBRABAN</span></div>
+<div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">docs v1.6.0 · CNAB 240 FEBRABAN</span></div>
 <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">15/10/2026</span></div>
-<div class="meta-pill" style="margin-left:auto"><span class="chip" style="background:var(--amber-d);color:var(--amber)">Aguardando aprovação</span>&nbsp;<span class="chip info">v1.0</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip" style="background:var(--green-d);color:var(--green)">Publicada no docs</span>&nbsp;<span class="chip info">v1.1</span></div>
 </div>
 
 <div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
 <li><a href="#s01"><span class="toc-num">01</span> Para que serve</a></li>
 <li><a href="#s02"><span class="toc-num">02</span> Do retorno do banco ao comprovante</a></li>
 <li><a href="#s03"><span class="toc-num">03</span> A guia RAD não é boleto de cobrança</a></li>
-<li><a href="#s04"><span class="toc-num">04</span> Campos do retorno e o que entra</a></li>
-<li><a href="#s05"><span class="toc-num">05</span> O comprovante proposto</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Campos do retorno e o envio</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> O envio do comprovante</a></li>
 <li><a href="#s06"><span class="toc-num">06</span> Regras</a></li>
-<li><a href="#s07"><span class="toc-num">07</span> O que muda no docs</a></li>
-<li><a href="#s08"><span class="toc-num">08</span> Decisões para aprovar</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> O que mudou no docs</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Decisões tomadas</a></li>
 <li><a href="#s09"><span class="toc-num">09</span> Histórico de versões</a></li>
 </ul></div>
 
 <div class="section" id="s01">
 <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Para que serve</span></div>
 
-<p>Desde o <a class="xref" href="https://split-hubhq.github.io/docs/rad.html#submit-proof" target="_blank" rel="noopener">docs v1.5.0 ↗</a>, o comprovante de uma guia RAD paga por boleto registra o pagamento feito pelo ERP: valor, data e, opcionalmente, o identificador do pagamento no ERP. Saíram os dados bancários.</p>
-<p>Esta proposta revisa o comprovante a partir do que o banco devolve no <strong>arquivo de retorno CNAB 240</strong> (FEBRABAN). Ela separa o que prova o pagamento e vale entrar do que repete dado que o SplitHub já tem.</p>
-<div class="callout info"><div class="ct">O que a proposta acrescenta</div><p>Seis campos opcionais no bloco <code>bank_slip</code> — autenticação, protocolo, código de ocorrência, valor do documento, multa e juros — e a data do pagamento aceita sem hora. Nenhum campo é retirado, e nenhum campo novo é obrigatório.</p></div>
+<p>O ERP do cliente captura o comprovante do boleto no <strong>arquivo de retorno CNAB 240</strong> do banco (layout FEBRABAN) e envia esses campos ao SplitHub no <code>POST /v1/rad/proofs</code>. Com eles, a plataforma monta o comprovante e concilia o pago com a guia.</p>
+<p>Este documento lista os campos do retorno que entram no envio, como cada um se chama na API e as regras de preenchimento.</p>
+<div class="callout ok"><div class="ct">Aplicado no <a class="xref" href="https://split-hubhq.github.io/docs/rad.html#submit-proof" target="_blank" rel="noopener">docs v1.6.0 ↗</a></div><p>Os campos estão no bloco <code>bank_slip</code> do envio do comprovante, com um de-para do retorno CNAB, e voltam no evento <code>rad.proof_received</code>. Também estão no PRD de Execução RAD v1.8 e no material da POC Claro. Mudança só de acréscimo: quem envia o comprovante da v1.5.0 continua válido.</p></div>
 </div>
 
 <div class="section" id="s02">
@@ -233,7 +233,7 @@ td:first-child code { white-space: nowrap; overflow-wrap: normal; }
 <div class="flow">
 <div class="flow-step"><div class="flow-k">1 · ERP</div><div class="flow-t">Paga a guia</div><div class="flow-d">Envia o pagamento ao banco no arquivo de remessa, com o código de barras da guia.</div></div>
 <div class="flow-step"><div class="flow-k">2 · Banco</div><div class="flow-t">Devolve o retorno</div><div class="flow-d">Arquivo CNAB 240 (.RET), com o valor pago, a data, a ocorrência e a autenticação.</div></div>
-<div class="flow-step"><div class="flow-k">3 · ERP</div><div class="flow-t">Registra o pagamento</div><div class="flow-d">Lê o retorno e envia ao SplitHub os campos da seção 05 — pela API ou, na POC, em artefato.</div></div>
+<div class="flow-step"><div class="flow-k">3 · ERP</div><div class="flow-t">Captura o comprovante</div><div class="flow-d">Lê o retorno no layout CNAB 240 e envia os campos da seção 04 no POST do comprovante — pela API ou, na POC, em artefato.</div></div>
 <div class="flow-step"><div class="flow-k">4 · SplitHub</div><div class="flow-t">Monta o comprovante</div><div class="flow-d">Concilia o pago com a guia e devolve <code>rad.proof_received</code> com o <code>erp_payment_id</code>.</div></div>
 </div>
 </div>
@@ -242,19 +242,20 @@ td:first-child code { white-space: nowrap; overflow-wrap: normal; }
 <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">A guia RAD não é boleto de cobrança</span></div>
 
 <p>O CNAB 240 de pagamentos separa os documentos por segmento. A guia de CBS (DARF) e a guia de IBS são <strong>documentos de arrecadação</strong>: o código de barras começa com 8 e a linha digitável tem 48 dígitos. No retorno, elas vêm no segmento de tributos, não no de títulos de cobrança.</p>
-<div class="table-wrap"><table><thead><tr><th>Segmento</th><th>O que traz</th><th>Na guia RAD</th></tr></thead><tbody><tr><td><strong>J</strong></td><td>Pagamento de títulos de cobrança — boletos</td><td>Não se aplica. Os campos de desconto e de nosso número vêm daqui</td></tr><tr><td><strong>O</strong></td><td>Pagamento de contas e tributos com código de barras</td><td><strong>É o segmento da guia RAD</strong>: valor do documento, valor pago, data, seu número</td></tr><tr><td><strong>N</strong></td><td>Tributos sem código de barras</td><td>Não se aplica: a guia RAD tem código de barras</td></tr><tr><td><strong>Z</strong></td><td>Autenticação e protocolo do pagamento</td><td><strong>Se aplica</strong>, como a qualquer pagamento</td></tr></tbody></table></div>
-<div class="callout warn"><div class="ct">A confirmar com o banco da Claro</div><p>Cada banco publica a própria versão do layout. Posições, tamanhos e a tabela de ocorrências precisam ser conferidos no layout do banco que a Claro usa para pagar as guias.</p></div>
+<div class="table-wrap"><table><thead><tr><th>Segmento</th><th>O que traz</th><th>Na guia RAD</th></tr></thead><tbody><tr><td><strong>J</strong></td><td>Pagamento de títulos de cobrança — boletos</td><td>Só se o banco tratar o pagamento como título. Traz descontos e juros e multa</td></tr><tr><td><strong>O</strong></td><td>Pagamento de contas e tributos com código de barras</td><td><strong>É o segmento usual da guia RAD</strong>: valor do título, valor pago, data, seu número, nosso número</td></tr><tr><td><strong>N</strong></td><td>Tributos sem código de barras</td><td>Não se aplica: a guia RAD tem código de barras</td></tr><tr><td><strong>Z</strong></td><td>Autenticação e protocolo do pagamento</td><td><strong>Se aplica</strong>, como a qualquer pagamento</td></tr></tbody></table></div>
+<p>Por isso o envio aceita os campos dos dois segmentos, todos opcionais menos valor e data: o ERP envia o que o retorno trouxe.</p>
+<div class="callout warn"><div class="ct">A confirmar com o banco de cada cliente</div><p>Cada banco publica a própria versão do layout. Posições, tamanhos e a tabela de ocorrências precisam ser conferidos no layout do banco que o cliente usa para pagar as guias — na POC, o da Claro.</p></div>
 </div>
 
 <div class="section" id="s04">
-<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Campos do retorno e o que entra</span></div>
-<div class="table-wrap"><table><thead><tr><th>Campo no retorno CNAB</th><th>Segmento</th><th>Campo proposto</th><th>Situação</th><th>Por quê</th></tr></thead><tbody><tr class="grp"><td colspan="5">Autenticação e protocolo — Segmento Z</td></tr><tr><td>Autenticação eletrônica (até 64 caracteres)</td><td>Z</td><td><code>bank_slip.authentication</code></td><td><span class="st rc">Recomendado</span></td><td>É a prova bancária do pagamento — a mesma do recibo. Vai no comprovante que a plataforma monta</td></tr><tr><td>Protocolo bancário (25 posições)</td><td>Z</td><td><code>bank_slip.bank_protocol</code></td><td><span class="st op">Opcional</span></td><td>Código de validação interna do banco. Ajuda a localizar o pagamento numa contestação</td></tr><tr><td>Data real da efetivação (DDMMAAAA)</td><td>Z, J ou O</td><td><code>bank_slip.paid_at</code></td><td><span class="st ob">Obrigatório</span></td><td>Já existe. Passa a aceitar só a data (AAAA-MM-DD), que é o que o retorno traz</td></tr><tr class="grp"><td colspan="5">Valores — Segmento O (tributos com código de barras) ou J (boletos de cobrança)</td></tr><tr><td>Valor do documento (nominal)</td><td>O ou J</td><td><code>bank_slip.face_value</code></td><td><span class="st op">Opcional</span></td><td>Valor da guia como emitida. Confere com o total da guia RAD</td></tr><tr><td>Valor de multa · valor de juros</td><td>J</td><td><code>bank_slip.penalty_value</code> · <code>bank_slip.interest_value</code></td><td><span class="st op">Opcional</span></td><td>Acréscimos pagos em atraso. Conferem com a multa e os juros da guia</td></tr><tr><td>Valor pago (líquido)</td><td>O ou J</td><td><code>bank_slip.amount_paid</code></td><td><span class="st ob">Obrigatório</span></td><td>Já existe. É o valor que a conciliação confere com a guia</td></tr><tr><td>Valor de desconto ou abatimento</td><td>J</td><td>—</td><td><span class="st ne">Não entra</span></td><td>Guia de tributo não tem desconto. No RAD o campo seria sempre zero</td></tr><tr class="grp"><td colspan="5">Controle — retorno</td></tr><tr><td>Código de ocorrência</td><td>J ou O</td><td><code>bank_slip.occurrence_code</code></td><td><span class="st rc">Recomendado</span></td><td>A confirmação do banco de que o pagamento foi efetivado. Só se envia comprovante com o código de pagamento efetivado — ver a regra 2</td></tr><tr><td>Seu número (número do documento no ERP)</td><td>J ou O</td><td><code>erp_payment_id</code></td><td><span class="st op">Opcional</span></td><td>Já existe desde o docs v1.5.0: é o identificador do pagamento no ERP, que garante a rastreabilidade</td></tr><tr><td>Nosso número</td><td>J ou O</td><td>—</td><td><span class="st ne">Não entra</span></td><td>Identificador do banco para o documento. A guia já é identificada pelo <code>darf_id</code></td></tr><tr class="grp"><td colspan="5">Retirados no docs v1.5.0 — continuam fora</td></tr><tr><td>Código de barras · linha digitável</td><td>J ou O</td><td>—</td><td><span class="st ne">Não entra</span></td><td>Repetem a guia, que o <code>darf_id</code> já identifica</td></tr><tr><td>Banco · agência · conta do pagador</td><td>Header de lote</td><td>—</td><td><span class="st ne">Não entra</span></td><td>Dado bancário sem uso na conciliação</td></tr></tbody></table></div>
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Campos do retorno e o envio</span></div>
+<div class="table-wrap"><table><thead><tr><th>Campo no retorno CNAB</th><th>Segmento</th><th>Campo no envio</th><th>Situação</th><th>Por quê</th></tr></thead><tbody><tr class="grp"><td colspan="5">Autenticação e protocolo — Segmento Z</td></tr><tr><td>Autenticação eletrônica / número do comprovante (até 64)</td><td>Z</td><td><code>bank_slip.authentication</code></td><td><span class="st rc">Recomendado</span></td><td>É a prova bancária do pagamento — a mesma do recibo. Aparece no comprovante que a plataforma monta</td></tr><tr><td>Protocolo bancário (25 posições)</td><td>Z</td><td><code>bank_slip.bank_protocol</code></td><td><span class="st op">Opcional</span></td><td>Código de validação interna do banco. Ajuda a localizar o pagamento numa contestação</td></tr><tr><td>Data real da efetivação (DDMMAAAA)</td><td>Z, J ou O</td><td><code>bank_slip.paid_at</code></td><td><span class="st ob">Obrigatório</span></td><td>O ERP converte para AAAA-MM-DD. Com hora, vale ISO 8601</td></tr><tr class="grp"><td colspan="5">Valores — Segmento J (boleto de cobrança) ou O (documento de arrecadação)</td></tr><tr><td>Valor do título</td><td>J ou O</td><td><code>bank_slip.face_value</code></td><td><span class="st op">Opcional</span></td><td>Valor como emitido. Confere com o total da guia RAD</td></tr><tr><td>Valor dos descontos / abatimentos</td><td>J</td><td><code>bank_slip.discount_value</code></td><td><span class="st op">Opcional</span></td><td>Vem do Segmento J. Na guia RAD, paga pelo Segmento O, normalmente não vem</td></tr><tr><td>Valor dos juros / multa</td><td>J</td><td><code>bank_slip.interest_penalty_value</code></td><td><span class="st op">Opcional</span></td><td>Um campo só, como no layout. Confere com a multa e os juros da guia</td></tr><tr><td>Valor líquido pago</td><td>J ou O</td><td><code>bank_slip.amount_paid</code></td><td><span class="st ob">Obrigatório</span></td><td>É o valor que a conciliação confere com a guia</td></tr><tr class="grp"><td colspan="5">Controle — retorno</td></tr><tr><td>Código de movimento / ocorrência</td><td>J ou O</td><td><code>bank_slip.occurrence_code</code></td><td><span class="st rc">Recomendado</span></td><td>A confirmação do banco de que o pagamento foi efetivado — ver a regra 2</td></tr><tr><td>Seu número (identificador no ERP)</td><td>J ou O</td><td><code>erp_payment_id</code></td><td><span class="st op">Opcional</span></td><td>Existe desde o docs v1.5.0: o identificador do pagamento no ERP, que garante a rastreabilidade</td></tr><tr><td>Nosso número</td><td>J ou O</td><td><code>bank_slip.our_number</code></td><td><span class="st op">Opcional</span></td><td>Identificador do documento atribuído pelo banco. Ajuda a localizar o pagamento no extrato</td></tr><tr class="grp"><td colspan="5">Fora do comprovante</td></tr><tr><td>Código de barras · linha digitável</td><td>J ou O</td><td>—</td><td><span class="st ne">Não entra</span></td><td>Repetem a guia, que o <code>darf_id</code> já identifica. Saíram no docs v1.5.0</td></tr><tr><td>Banco · agência · conta do pagador</td><td>Header de lote</td><td>—</td><td><span class="st ne">Não entra</span></td><td>Dado bancário sem uso na conciliação. Saíram no docs v1.5.0</td></tr></tbody></table></div>
 </div>
 
 <div class="section" id="s05">
-<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O comprovante proposto</span></div>
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O envio do comprovante</span></div>
 
-<p>Exemplo de uma guia de IBS de R$ 20.000,00, paga no vencimento. Os campos novos estão marcados na tabela.</p>
+<p>Exemplo de uma guia de IBS de R$ 20.000,00, paga no vencimento, com todos os campos do retorno preenchidos.</p>
 <pre>POST /v1/rad/proofs
 {
   &quot;darf_id&quot;: &quot;darf_71841c&quot;,
@@ -264,45 +265,49 @@ td:first-child code { white-space: nowrap; overflow-wrap: normal; }
     &quot;amount_paid&quot;: &quot;20000.00&quot;,
     &quot;paid_at&quot;: &quot;2027-04-09&quot;,
     &quot;face_value&quot;: &quot;20000.00&quot;,
-    &quot;penalty_value&quot;: &quot;0.00&quot;,
-    &quot;interest_value&quot;: &quot;0.00&quot;,
+    &quot;discount_value&quot;: &quot;0.00&quot;,
+    &quot;interest_penalty_value&quot;: &quot;0.00&quot;,
     &quot;occurrence_code&quot;: &quot;00&quot;,
     &quot;authentication&quot;: &quot;A7F3C9D21B8E4F60A1C5D7E9F2B4C6D8&quot;,
     &quot;bank_protocol&quot;: &quot;0000000000000000000045678&quot;,
+    &quot;our_number&quot;: &quot;000000000012345&quot;,
     &quot;description&quot;: &quot;Guia IBS — NF-e 40.221&quot;
   }
 }</pre>
-<div class="table-wrap"><table><thead><tr><th>Campo</th><th>Tipo</th><th>Status</th><th>Origem no retorno CNAB</th><th>Observação</th></tr></thead><tbody><tr><td><code>darf_id</code></td><td>string</td><td><span class="st ob">Obrigatório</span></td><td>—</td><td>Guia paga — já existe</td></tr><tr><td><code>erp_payment_id</code></td><td>string</td><td><span class="st op">Opcional</span></td><td>Seu número</td><td>Identificador do pagamento no ERP — já existe</td></tr><tr><td><code>payment_type</code></td><td>string</td><td><span class="st ob">Obrigatório</span></td><td>—</td><td><code>bank_slip</code> — já existe</td></tr><tr><td><code>bank_slip.amount_paid</code></td><td>decimal</td><td><span class="st ob">Obrigatório</span></td><td>Valor pago</td><td>Valor efetivamente pago — já existe</td></tr><tr><td><code>bank_slip.paid_at</code></td><td>data ou data e hora</td><td><span class="st ob">Obrigatório</span></td><td>Data real da efetivação</td><td>Passa a aceitar só a data</td></tr><tr><td><code>bank_slip.authentication</code></td><td>string, até 64</td><td><span class="st rc">Recomendado</span></td><td>Autenticação eletrônica (Z)</td><td>Novo. A prova bancária, exibida no comprovante</td></tr><tr><td><code>bank_slip.occurrence_code</code></td><td>string</td><td><span class="st rc">Recomendado</span></td><td>Código de ocorrência</td><td>Novo. Confirmação de pagamento efetivado</td></tr><tr><td><code>bank_slip.bank_protocol</code></td><td>string, até 25</td><td><span class="st op">Opcional</span></td><td>Protocolo bancário (Z)</td><td>Novo</td></tr><tr><td><code>bank_slip.face_value</code></td><td>decimal</td><td><span class="st op">Opcional</span></td><td>Valor do documento</td><td>Novo. Confere com o total da guia</td></tr><tr><td><code>bank_slip.penalty_value</code> · <code>interest_value</code></td><td>decimal</td><td><span class="st op">Opcional</span></td><td>Multa · juros</td><td>Novos. Conferem com a guia</td></tr><tr><td><code>bank_slip.description</code></td><td>string</td><td><span class="st op">Opcional</span></td><td>—</td><td>Observação livre — já existe</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Campo</th><th>Tipo</th><th>Status</th><th>Origem no retorno CNAB</th><th>Observação</th></tr></thead><tbody><tr><td><code>darf_id</code></td><td>string</td><td><span class="st ob">Obrigatório</span></td><td>—</td><td>Guia paga</td></tr><tr><td><code>erp_payment_id</code></td><td>string</td><td><span class="st op">Opcional</span></td><td>Seu número</td><td>Identificador do pagamento no ERP</td></tr><tr><td><code>payment_type</code></td><td>string</td><td><span class="st ob">Obrigatório</span></td><td>—</td><td><code>bank_slip</code></td></tr><tr><td><code>bank_slip.amount_paid</code></td><td>decimal</td><td><span class="st ob">Obrigatório</span></td><td>Valor líquido pago</td><td>Conferido com o total da guia</td></tr><tr><td><code>bank_slip.paid_at</code></td><td>data ou data e hora</td><td><span class="st ob">Obrigatório</span></td><td>Data real da efetivação</td><td>Aceita só a data</td></tr><tr><td><code>bank_slip.face_value</code></td><td>decimal</td><td><span class="st op">Opcional</span></td><td>Valor do título</td><td>Confere com o total da guia</td></tr><tr><td><code>bank_slip.discount_value</code></td><td>decimal</td><td><span class="st op">Opcional</span></td><td>Descontos / abatimentos</td><td>Só no Segmento J</td></tr><tr><td><code>bank_slip.interest_penalty_value</code></td><td>decimal</td><td><span class="st op">Opcional</span></td><td>Juros / multa</td><td>Só no Segmento J. Confere com a guia</td></tr><tr><td><code>bank_slip.occurrence_code</code></td><td>string</td><td><span class="st rc">Recomendado</span></td><td>Código de ocorrência</td><td>Confirma o pagamento efetivado</td></tr><tr><td><code>bank_slip.authentication</code></td><td>string, até 64</td><td><span class="st rc">Recomendado</span></td><td>Autenticação eletrônica (Z)</td><td>A prova bancária, exibida no comprovante</td></tr><tr><td><code>bank_slip.bank_protocol</code></td><td>string, até 25</td><td><span class="st op">Opcional</span></td><td>Protocolo bancário (Z)</td><td>—</td></tr><tr><td><code>bank_slip.our_number</code></td><td>string</td><td><span class="st op">Opcional</span></td><td>Nosso número</td><td>—</td></tr><tr><td><code>bank_slip.description</code></td><td>string</td><td><span class="st op">Opcional</span></td><td>—</td><td>Observação livre</td></tr></tbody></table></div>
 </div>
 
 <div class="section" id="s06">
 <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Regras</span></div>
-<h4>1. O comprovante nasce do registro do ERP</h4><p>O ERP paga, recebe o retorno do banco e registra o pagamento no SplitHub. A plataforma monta o comprovante a partir desse registro — não recebe o arquivo do banco.</p>
-<h4>2. Só pagamento efetivado vira comprovante</h4><p>No layout FEBRABAN, a ocorrência <code>00</code> indica débito efetivado. Ocorrências de inclusão ou agendamento aceitos não provam pagamento e não devem ser enviadas. A tabela de ocorrências varia por banco: confirmar com o banco da Claro.</p>
-<h4>3. O valor pago fecha com a guia</h4><p>Valor pago = valor do documento + multa + juros. Diferença para o total da guia abre inconsistência na conciliação financeira, com os dois valores.</p>
-<h4>4. A data vem do retorno</h4><p>O retorno traz a data da efetivação, sem hora. <code>paid_at</code> passa a aceitar <code>AAAA-MM-DD</code>; com hora, continua valendo o formato ISO 8601 com fuso.</p>
-<h4>5. A autenticação vai no comprovante</h4><p>O comprovante montado pela plataforma exibe a autenticação e o protocolo. Sem a autenticação, o comprovante mostra só o registro do ERP.</p>
-<h4>6. PIX não muda</h4><p>No PIX, o <code>end_to_end_id</code> já é a prova do pagamento; os campos novos são só do <code>bank_slip</code>.</p>
+<h4>1. O ERP captura, o SplitHub monta</h4><p>O ERP paga a guia, lê o retorno CNAB 240 do banco e envia os campos no <code>POST /v1/rad/proofs</code>. A plataforma monta o comprovante a partir desse envio — não recebe o arquivo do banco.</p>
+<h4>2. Só pagamento efetivado vira comprovante</h4><p>No layout FEBRABAN, a ocorrência <code>00</code> indica pagamento efetivado. Ocorrências de inclusão ou agendamento aceitos, como <code>BD</code>, não provam pagamento e não devem ser enviadas. A tabela de ocorrências varia por banco: confirmar com o banco do cliente.</p>
+<h4>3. O valor pago fecha com a guia</h4><p>Quando os valores vierem: valor pago = valor do título − descontos + juros e multa. Diferença para o total da guia abre inconsistência na conciliação financeira, com os dois valores.</p>
+<h4>4. A data vem do retorno</h4><p>O retorno traz a data da efetivação, sem hora (DDMMAAAA). O ERP envia <code>AAAA-MM-DD</code>; com hora, vale o formato ISO 8601 com fuso.</p>
+<h4>5. Envie o que o retorno trouxer</h4><p>A guia RAD costuma vir no Segmento O, que não traz desconto nem juros e multa. Campo que o retorno não trouxe fica de fora do envio — não vai zerado por padrão.</p>
+<h4>6. A autenticação vai no comprovante</h4><p>O comprovante montado pela plataforma exibe a autenticação e o protocolo. Sem a autenticação, o comprovante mostra só o registro do ERP.</p>
+<h4>7. PIX não muda</h4><p>No PIX, o <code>end_to_end_id</code> já é a prova do pagamento; os campos do CNAB são só do <code>bank_slip</code>.</p>
 </div>
 
 <div class="section" id="s07">
-<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">O que muda no docs</span></div>
-<div class="table-wrap"><table><thead><tr><th>Onde</th><th>Hoje — docs v1.5.0</th><th>Com a proposta</th></tr></thead><tbody><tr><td><code>POST /v1/rad/proofs</code> — boleto</td><td><code>amount_paid</code>, <code>paid_at</code>, <code>description</code></td><td>Mais <code>authentication</code>, <code>bank_protocol</code>, <code>occurrence_code</code>, <code>face_value</code>, <code>penalty_value</code> e <code>interest_value</code>, todos opcionais</td></tr><tr><td><code>bank_slip.paid_at</code></td><td>Data e hora ISO 8601</td><td>Aceita também só a data</td></tr><tr><td><code>rad.proof_received</code></td><td>Valor e data no boleto</td><td>Devolve também a autenticação e o protocolo, quando enviados</td></tr><tr><td>Texto do bloco <code>bank_slip</code></td><td>Boleto</td><td>Boleto ou documento de arrecadação — guia de CBS e de IBS</td></tr></tbody></table></div>
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">O que mudou no docs</span></div>
+<div class="table-wrap"><table><thead><tr><th>Onde</th><th>docs v1.5.0</th><th>docs v1.6.0</th></tr></thead><tbody><tr><td><code>POST /v1/rad/proofs</code> — boleto</td><td><code>amount_paid</code>, <code>paid_at</code>, <code>description</code></td><td>Mais <code>face_value</code>, <code>discount_value</code>, <code>interest_penalty_value</code>, <code>occurrence_code</code>, <code>authentication</code>, <code>bank_protocol</code> e <code>our_number</code>, todos opcionais</td></tr><tr><td><code>bank_slip.paid_at</code></td><td>Data e hora ISO 8601</td><td>Aceita também só a data</td></tr><tr><td>De-para CNAB 240</td><td>—</td><td>Tabela que liga cada campo do retorno ao campo do envio</td></tr><tr><td><code>rad.proof_received</code></td><td>Valor e data no boleto</td><td>Devolve também os campos do CNAB que foram enviados</td></tr></tbody></table></div>
 <p class="small">Mudança só de acréscimo: quem já envia o comprovante da v1.5.0 continua válido.</p>
 </div>
 
 <div class="section" id="s08">
-<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Decisões para aprovar</span></div>
-<div class="dec"><div class="dec-h"><span class="dec-id">D-01</span><span class="dec-t">Aceitar os campos do Segmento Z</span></div><p class="rec">Recomendação: <strong>Sim</strong> — <code>authentication</code> recomendado e <code>bank_protocol</code> opcional. São a prova bancária do pagamento.</p></div>
-<div class="dec"><div class="dec-h"><span class="dec-id">D-02</span><span class="dec-t"><code>paid_at</code> aceitar só a data</span></div><p class="rec">Recomendação: <strong>Sim</strong> — é o que o retorno traz, e exigir hora levaria o ERP a inventá-la.</p></div>
-<div class="dec"><div class="dec-h"><span class="dec-id">D-03</span><span class="dec-t">Código de ocorrência no comprovante</span></div><p class="rec">Recomendação: <strong>Sim, recomendado</strong> — e só com o código de pagamento efetivado.</p></div>
-<div class="dec"><div class="dec-h"><span class="dec-id">D-04</span><span class="dec-t">Valor do documento, multa e juros</span></div><p class="rec">Recomendação: <strong>Sim, opcionais</strong> — permitem conferir a composição do valor pago com a guia.</p></div>
-<div class="dec"><div class="dec-h"><span class="dec-id">D-05</span><span class="dec-t">Nome do bloco</span></div><p class="rec">Recomendação: <strong>Manter <code>bank_slip</code></strong>, documentando que cobre o documento de arrecadação. Trocar o nome quebraria o contrato sem ganho para o cliente.</p></div>
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Decisões tomadas</span></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-01</span><span class="dec-t">Campos do Segmento Z</span></div><p class="rec">Como ficou: <strong>Entram</strong> — <code>authentication</code> e <code>bank_protocol</code>, opcionais. A autenticação é recomendada: é a prova bancária.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-02</span><span class="dec-t"><code>paid_at</code> com só a data</span></div><p class="rec">Como ficou: <strong>Aceito</strong> — é o que o retorno traz; exigir hora levaria o ERP a inventá-la.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-03</span><span class="dec-t">Código de ocorrência</span></div><p class="rec">Como ficou: <strong>Entra</strong>, opcional e recomendado. Comprovante só com pagamento efetivado.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-04</span><span class="dec-t">Valores do Segmento J</span></div><p class="rec">Como ficou: <strong>Entram</strong> — valor do título, descontos e abatimentos, juros e multa, todos opcionais. Juros e multa num campo só, como no layout, para o ERP mapear um para um.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-05</span><span class="dec-t">Nosso número</span></div><p class="rec">Como ficou: <strong>Volta como opcional</strong>. Saiu como obrigatório no docs v1.5.0; está no layout do retorno e ajuda a localizar o pagamento.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-06</span><span class="dec-t">Nome do bloco</span></div><p class="rec">Como ficou: <strong>Mantido <code>bank_slip</code></strong>, cobrindo também o documento de arrecadação. Trocar o nome quebraria o contrato sem ganho para o cliente.</p></div>
 </div>
 
 <div class="section" id="s09">
 <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>
 
+<div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>15/10/2026</strong> — <strong>Aplicada no docs v1.6.0.</strong> Enquadramento corrigido: o ERP do cliente captura o comprovante no retorno CNAB 240 e envia os campos no POST do comprovante. Entram todos os campos do layout pesquisado — inclusive descontos e abatimentos e nosso número, antes fora —, com juros e multa num campo só. Decisões registradas como tomadas.</div></div>
 <div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>15/10/2026</strong> — Primeira versão, a partir da pesquisa sobre o retorno CNAB 240. Distingue a guia RAD, que é documento de arrecadação, do boleto de cobrança; classifica os campos do retorno; propõe seis campos opcionais no comprovante e a data sem hora; cinco decisões para aprovar.</div></div>
 </div>
 
