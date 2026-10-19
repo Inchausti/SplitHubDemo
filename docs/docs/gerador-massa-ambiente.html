@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subida do gerador de massa</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 1120px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--teal); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+h1 { font-size: 28px; font-weight: 800; line-height: 1.18; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 820px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--teal); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 52px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 18px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14.5px; font-weight: 700; color: var(--txt1); margin: 28px 0 8px; scroll-margin-top: 20px; }
+h4 { font-size: 12px; font-weight: 700; color: var(--txt2); margin: 20px 0 6px; text-transform: uppercase; letter-spacing: .06em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--teal); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.mono { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--teal); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+.src-note { font-size: 11.5px; color: var(--txt3); margin: 6px 0 0; }
+
+/* ── mockup ─────────────────────────────────────────────────────── */
+.mock { border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; margin: 16px 0; background: var(--sur); }
+.mock-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.mock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.mock-url { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); margin-left: 4px; }
+.mock-tag { margin-left: auto; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
+.mock-tag.nova { background: var(--green-d); color: var(--green); }
+.mock-tag.muda { background: var(--amber-d); color: var(--amber); }
+.mock-body { padding: 16px 18px; }
+.mock-h { font-size: 15px; font-weight: 700; color: var(--txt1); margin-bottom: 2px; }
+.mock-s { font-size: 11.5px; color: var(--txt3); margin-bottom: 14px; }
+.mock-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.mock-tab { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--brd); color: var(--txt3); }
+.mock-tab.on { background: var(--teal); border-color: var(--teal); color: #fff; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--sur2); border: 1px solid var(--brd); border-radius: 7px; padding: 9px 11px; }
+.kpi-l { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.kpi-v { font-size: 19px; font-weight: 800; color: var(--txt1); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.kpi-s { font-size: 10px; color: var(--txt3); }
+.kpi.alert .kpi-v { color: var(--red); }
+.kpi.warn .kpi-v { color: var(--amber); }
+.kpi.good .kpi-v { color: var(--green); }
+.mock table { font-size: 11.5px; }
+.mock th { font-size: 9.5px; padding: 7px 10px; }
+.mock td { padding: 7px 10px; }
+.btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.btn-p { background: var(--teal); color: #fff; border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.btn-g { border: 1px solid var(--brd); color: var(--txt2); border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.st { display: inline-block; font-size: 9.5px; font-weight: 800; padding: 1px 7px; border-radius: 20px; white-space: nowrap; }
+.st.ok { background: var(--green-d); color: var(--green); }
+.st.wait { background: var(--blue-d); color: var(--blue); }
+.st.div { background: var(--red-d); color: var(--red); }
+.st.abs { background: var(--amber-d); color: var(--amber); }
+.st.neu { background: var(--gray-d); color: var(--gray); }
+.st.own { background: var(--purple-d); color: var(--purple); }
+.new { display: inline-block; font-size: 9px; font-weight: 800; background: var(--teal); color: #fff; border-radius: 3px; padding: 0 5px; margin-left: 5px; letter-spacing: .04em; vertical-align: 1px; }
+
+code, kbd, samp { overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } .kpis { grid-template-columns: repeat(2, 1fr); } }
+</style>
+<style>
+pre { margin: 12px 0; padding: 14px 16px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.6; color: var(--txt2); background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; white-space: pre; }
+.flow { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.flow-step { flex: 1 1 150px; background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 6px; padding: 10px 12px; }
+.flow-step.warn { border-left-color: var(--amber); }
+.flow-step.red { border-left-color: var(--red); }
+.flow-k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); }
+.flow-step.warn .flow-k { color: var(--amber); }
+.flow-step.red .flow-k { color: var(--red); }
+.flow-t { font-size: 12.5px; font-weight: 700; color: var(--txt1); margin-top: 3px; }
+.flow-d { font-size: 11.5px; color: var(--txt2); margin-top: 4px; }
+tr.grp td { background: var(--sur2); color: var(--txt1); font-weight: 600; font-size: 11.5px; }
+tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
+.drop { border: 1.5px dashed var(--brd); border-radius: 8px; padding: 16px; text-align: center; font-size: 12px; color: var(--txt3); margin: 10px 0 14px; }
+.drop strong { color: var(--txt1); }
+.field { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12px; color: var(--txt2); margin-bottom: 8px; }
+.field .sel { border: 1px solid var(--brd); border-radius: 6px; padding: 4px 10px; background: var(--sur); color: var(--txt1); font-weight: 600; }
+.small { font-size: 11px; color: var(--txt3); margin-top: 8px; }
+.mock td code { white-space: nowrap; }
+</style>
+<style>
+.sec-num { flex-shrink: 0; }
+td:first-child code { white-space: nowrap; overflow-wrap: normal; }
+.passo { border: 1px solid var(--brd); border-radius: 10px; padding: 14px 18px 8px; margin: 14px 0 18px; background: var(--sur); scroll-margin-top: 20px; }
+.passo-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; }
+.passo-n { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; }
+.passo-t { font-size: 15px; font-weight: 700; color: var(--txt1); }
+.passo-q { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.passo p, .passo li { font-size: 12.5px; color: var(--txt2); }
+.passo ol { margin: 6px 0 8px; padding-left: 20px; } .passo li { margin: 3px 0; }
+.pronto { font-size: 12px; color: var(--green); background: var(--green-d); border-radius: 6px; padding: 6px 10px; margin: 8px 0 6px; }
+.pronto strong { color: var(--green); }
+.passo pre { background: var(--bg); }
+.dec { border: 1px solid var(--brd); border-radius: 8px; padding: 14px 18px; margin: 12px 0; background: var(--sur); }
+.dec-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; }
+.dec-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.dec-t { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.dec .rec { font-size: 12.5px; color: var(--txt1); }
+.dec .rec strong { color: var(--green); }
+#s02 table, #s03 table, #s05 table { min-width: 680px; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">Proposta · Infraestrutura · Testes</div>
+<h1>Subida do gerador de massa</h1>
+<p class="subtitle">Como colocar o gerador de massa no ar com banco, CI, hospedagem e login usando só planos gratuitos — e o passo a passo para montar.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta · Infraestrutura</span></div>
+<div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">Gerador de massa v2.0</span></div>
+<div class="meta-pill"><span class="meta-label">Custo</span>&nbsp;<span class="meta-val">R$ 0,00</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">19/10/2026</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip info">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Objetivo e premissas</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Arquitetura no free</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Limites e como o projeto convive</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Estrutura do repositório</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Banco de dados</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Passo a passo</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Rotina de operação</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Quando sair do free</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Decisões para aprovar</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Histórico de versões</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Objetivo e premissas</span></div>
+
+<p>Subir o <a class="xref" href="proposta-gerador-massa.html">Gerador de massa de dados</a> como um projeto estruturado — repositório, banco, CI, hospedagem e login — usando <strong>só planos gratuitos</strong>, e deixar o passo a passo para quem for montar.</p>
+<div class="table-wrap"><table><thead><tr><th>Premissa</th><th>O que significa</th></tr></thead><tbody><tr><td><strong>Custo zero</strong></td><td>Todos os serviços em plano gratuito, sem cartão de crédito no cadastro.</td></tr><tr><td><strong>Sair do free sem retrabalho</strong></td><td>O app roda em Docker e lê a configuração de variáveis de ambiente. Trocar de plano ou de provedor não muda o código.</td></tr><tr><td><strong>Decisões da proposta</strong></td><td>Assume a D-01 (TypeScript e PostgreSQL) e a D-02 (app hospedado, com acesso restrito ao time).</td></tr><tr><td><strong>Nunca produção</strong></td><td>A trava de domínios vale também no servidor, por variável de ambiente, acima do que for cadastrado na tela.</td></tr></tbody></table></div>
+<div class="callout warn"><div class="ct">Limites dos planos gratuitos</div><p>Os números das seções 02 e 03 são de referência e mudam com frequência. Confira a página de preços de cada serviço no dia da subida.</p></div>
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Arquitetura no free</span></div>
+<div class="flow"><div class="flow-step"><div class="flow-k">Time</div><div class="flow-t">Navegador</div><div class="flow-d">Login pelo GitHub.</div></div><div class="flow-step"><div class="flow-k">Render Free</div><div class="flow-t">Serviço único</div><div class="flow-d">Interface, API, webhooks e execução.</div></div><div class="flow-step"><div class="flow-k">Neon Free</div><div class="flow-t">PostgreSQL</div><div class="flow-d">Estado, cadastros e acompanhamento.</div></div><div class="flow-step warn"><div class="flow-k">Destinos</div><div class="flow-t">Sandboxes</div><div class="flow-d">Recebem a massa e devolvem webhooks.</div></div></div>
+<div class="table-wrap"><table><thead><tr><th>Peça</th><th>Serviço</th><th>Papel</th><th>Limite principal</th></tr></thead><tbody><tr><td><strong>Código, CI e login</strong></td><td>GitHub Free</td><td>Repositório privado, GitHub Actions, OAuth App para o login e o backup semanal</td><td>2.000 minutos de Actions por mês em repositório privado</td></tr><tr><td><strong>App</strong></td><td>Render Free</td><td>Um serviço web em Docker com a interface, a API, o receptor de webhooks e a execução dos envios</td><td>Dorme após 15 minutos sem acesso e leva cerca de 1 minuto para acordar; 750 horas por mês; 512 MB de memória; sem worker separado</td></tr><tr><td><strong>Banco</strong></td><td>Neon Free</td><td>PostgreSQL gerenciado, com um <em>branch</em> para homologação</td><td>0,5 GB por projeto; horas de computação limitadas por mês; suspende quando ocioso</td></tr><tr><td><strong>Monitor</strong></td><td>UptimeRobot Free (opcional)</td><td>Checa <code>/health</code> a cada 5 minutos e avisa por e-mail</td><td>50 monitores, intervalo de 5 minutos</td></tr><tr><td><strong>Desenvolvimento</strong></td><td>Docker Desktop</td><td>PostgreSQL e um destino falso (WireMock) na máquina de cada pessoa</td><td>Licença gratuita para uso pessoal e empresas pequenas: conferir o enquadramento da empresa</td></tr></tbody></table></div>
+<p class="small">A interface é servida pelo mesmo serviço da API. Assim tudo fica no mesmo endereço, sem CORS e sem cookie de terceiros no login.</p>
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Limites e como o projeto convive com eles</span></div>
+<div class="table-wrap"><table><thead><tr><th>Limite</th><th>Efeito</th><th>Como o projeto lida</th></tr></thead><tbody><tr><td><strong>Banco de 0,5 GB</strong></td><td>Guardar a massa e todos os corpos de requisição estoura o espaço.</td><td>A massa não é guardada: a semente e a versão do cenário regeneram tudo. O banco guarda estado, ids no destino, gabarito resumido e o corpo só das requisições com falha ou divergência; as de sucesso guardam o resumo. Retenção de 15 dias para os corpos.</td></tr><tr><td><strong>Serviço dorme</strong></td><td>A primeira chamada depois de 15 minutos parado leva cerca de 1 minuto; webhook que chega com o serviço dormindo pode falhar na primeira tentativa.</td><td>A tela do monitor consulta o servidor enquanto há envio, e isso o mantém acordado. Para webhooks, o destino reenvia; se precisar, o UptimeRobot mantém o serviço acordado (INF-05).</td></tr><tr><td><strong>Sem worker separado</strong></td><td>A execução não pode rodar num processo à parte.</td><td>A execução roda no mesmo processo e grava o progresso no banco a cada registro. Se o serviço reiniciar, ela continua de onde parou.</td></tr><tr><td><strong>750 horas por mês</strong></td><td>Cabe um serviço ligado o mês todo, e só um.</td><td>Homologação do app fica no <em>branch</em> do Neon e na máquina local, não num segundo serviço.</td></tr><tr><td><strong>Computação do Neon</strong></td><td>Consulta contínua ao banco o impede de suspender e gasta as horas do mês.</td><td>Nada de fila que consulta o banco a cada poucos segundos: o processo só consulta quando há execução ativa.</td></tr><tr><td><strong>Minutos do Actions</strong></td><td>CI pesado esgota os 2.000 minutos.</td><td>CI só em pull request e na main, com cache do pnpm; backup uma vez por semana.</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Estrutura do repositório</span></div>
+<pre>gerador-massa/
+├── apps/
+│   ├── web/          interface (React + Vite), servida pelo server
+│   └── server/       API, receptor de webhooks, execução dos envios e a interface
+├── packages/
+│   ├── core/         núcleo de geração: modelos, geradores, regras, gabarito
+│   ├── engine/       envio: autenticação, limites, idempotência, retentativas
+│   ├── importers/    collection e environment do Postman; OpenAPI depois
+│   ├── db/           esquema e migrações (Drizzle)
+│   └── shared/       tipos e validação (Zod)
+├── packs/
+│   └── splithub/     pacote SplitHub (YAML)
+├── infra/
+│   └── wiremock/     destino falso para desenvolvimento
+├── .github/workflows/
+│   ├── ci.yml        checagem a cada pull request
+│   └── backup.yml    cópia semanal do banco
+├── docker-compose.yml
+├── Dockerfile
+├── render.yaml
+├── .env.example
+└── README.md</pre>
+<p>Um monorepo com pnpm. O <code>core</code> não acessa rede nem banco: é o núcleo genérico da proposta, testável sozinho. O <code>server</code> junta tudo num processo só enquanto o app estiver no free.</p>
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Banco de dados</span></div>
+<p>PostgreSQL 17. Os dados das entidades ficam em colunas JSON, porque o app é genérico e não sabe de antemão os campos de cada domínio.</p>
+<div class="table-wrap"><table><thead><tr><th>Tabela</th><th>O que guarda</th></tr></thead><tbody><tr class="grp"><td colspan="2">Configuração</td></tr><tr><td><code>usuarios</code></td><td>Quem acessa: login do GitHub, papel (administrador, operador, leitor)</td></tr><tr><td><code>pacotes</code> · <code>pacote_versoes</code></td><td>Pacotes de domínio e o conteúdo de cada versão (JSON)</td></tr><tr><td><code>modelos_entidade</code></td><td>Modelos de entidade: campos, geradores, relações, perfis e regras (JSON)</td></tr><tr><td><code>destinos</code></td><td>Destino: tipo de ambiente, endereço, pacote, autenticação, limites, idempotência e canais</td></tr><tr><td><code>destino_segredos</code></td><td>Credenciais cifradas (AES-256-GCM com a chave mestra), uma linha por segredo</td></tr><tr><td><code>operacoes</code></td><td>Estrutura de APIs do destino: entidade, ação, método, rota, cabeçalhos, corpo modelo, mapeamento e origem (importada, manual ou do pacote)</td></tr><tr><td><code>importacoes</code></td><td>Resumo de cada importação do Postman e as divergências. O arquivo original não é guardado</td></tr><tr class="grp"><td colspan="2">Cadastros e cenários</td></tr><tr><td><code>cadastros</code> · <code>cadastro_versoes</code></td><td>Cadastros mestres de qualquer entidade (dados em JSON), com etiquetas e versões</td></tr><tr><td><code>cadastro_vinculos</code></td><td>O id de cada cadastro em cada destino e quando foi conferido</td></tr><tr><td><code>cenarios</code></td><td>Definição do cenário, semente e versão</td></tr><tr class="grp"><td colspan="2">Execução e acompanhamento</td></tr><tr><td><code>execucoes</code></td><td>Cenário e versão, semente, destino, código da execução, situação, contagens, quem enviou</td></tr><tr><td><code>registros</code></td><td>Um por registro da massa: entidade, posição na semente, id no destino, situação e gabarito resumido — sem o corpo, que é regenerado</td></tr><tr><td><code>requisicoes</code></td><td>Cada chamada: operação, método, rota, status, tempo, tentativa, chave de idempotência; corpos só em falha ou divergência. Particionada por mês</td></tr><tr><td><code>eventos_recebidos</code></td><td>Webhooks recebidos: tipo, payload, assinatura válida ou não, registro de origem</td></tr><tr><td><code>conferencias</code></td><td>Esperado, obtido e resultado por registro</td></tr><tr><td><code>auditoria</code></td><td>Quem fez o quê, em qual destino e quando</td></tr></tbody></table></div>
+<div class="callout info"><div class="ct">Cabe em 0,5 GB</div><p>Uma execução de 20.000 documentos gera cerca de 20.000 linhas em <code>registros</code> e outras tantas em <code>requisicoes</code>, sem corpos — poucos megabytes. É o corpo de cada chamada que pesa, e ele só é guardado quando há falha ou divergência.</p></div>
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Passo a passo</span></div>
+<p>Quatorze passos em quatro blocos. Cada um diz quem faz e como saber que acabou.</p>
+<h3>Preparar</h3>
+<div class="passo" id="p01"><div class="passo-h"><span class="passo-n">Passo 1</span><span class="passo-t">Criar as contas gratuitas</span><span class="passo-q">Tech lead</span></div>
+<ol><li><strong>GitHub</strong>: a organização <code>split-hubhq</code> já existe. Criar o time <code>gerador-massa</code> com quem vai usar o app.</li>
+<li><strong>Render</strong>: criar a conta pelo login do GitHub.</li>
+<li><strong>Neon</strong>: criar a conta pelo login do GitHub.</li>
+<li><strong>UptimeRobot</strong> (opcional): criar a conta.</li></ol>
+<div class="pronto"><strong>Pronto quando:</strong> as contas existem, nenhuma pediu cartão, e o time está criado no GitHub.</div></div>
+<div class="passo" id="p02"><div class="passo-h"><span class="passo-n">Passo 2</span><span class="passo-t">Instalar as ferramentas</span><span class="passo-q">Cada pessoa do time</span></div>
+<p>Git, Node.js 24 LTS, Docker Desktop e GitHub CLI. No Windows, rode os comandos deste guia no Git Bash ou no WSL.</p>
+<pre>node -v          # v24.x
+docker -v
+gh auth login</pre>
+<div class="pronto"><strong>Pronto quando:</strong> os três comandos respondem e o <code>gh</code> está autenticado.</div></div>
+<h3>Montar o projeto</h3>
+<div class="passo" id="p03"><div class="passo-h"><span class="passo-n">Passo 3</span><span class="passo-t">Criar o repositório e o monorepo</span><span class="passo-q">Tech lead</span></div>
+<p>Repositório privado, estrutura da seção 04 e as dependências de base.</p>
+<pre>gh repo create split-hubhq/gerador-massa --private --clone
+cd gerador-massa
+
+corepack enable
+pnpm init
+corepack use pnpm@latest
+printf &#x27;packages:\n  - &quot;apps/*&quot;\n  - &quot;packages/*&quot;\n&#x27; &gt; pnpm-workspace.yaml
+
+pnpm create vite apps/web --template react-ts
+(cd apps/web &amp;&amp; npm pkg set name=@massa/web)
+
+for p in apps/server packages/core packages/db packages/engine packages/importers packages/shared; do
+  mkdir -p &quot;$p/src&quot;
+  (cd &quot;$p&quot; &amp;&amp; pnpm init &gt; /dev/null &amp;&amp; npm pkg set name=&quot;@massa/$(basename &quot;$p&quot;)&quot;)
+done
+
+pnpm --filter @massa/server add fastify @fastify/static @fastify/cookie
+pnpm --filter @massa/db add drizzle-orm pg
+pnpm --filter @massa/db add -D drizzle-kit @types/pg
+pnpm --filter @massa/core add jsonata zod
+pnpm add -Dw typescript @types/node tsx vitest</pre>
+
+<p>Depois, no GitHub: <em>Settings → Branches</em>, regra para a <code>main</code> — merge só por pull request, com o CI do passo 7 passando.</p>
+<div class="pronto"><strong>Pronto quando:</strong> <code>pnpm install</code> roda sem erro e a <code>main</code> está protegida.</div></div>
+<div class="passo" id="p04"><div class="passo-h"><span class="passo-n">Passo 4</span><span class="passo-t">Subir o ambiente local</span><span class="passo-q">Dev</span></div>
+<p>PostgreSQL e o destino falso pelo Docker. O <code>.env</code> fica fora do Git; o <code>.env.example</code> é versionado.</p>
+<pre>services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: massa
+      POSTGRES_PASSWORD: massa
+      POSTGRES_DB: massa
+    ports: [&quot;5432:5432&quot;]
+    volumes: [&quot;db-data:/var/lib/postgresql/data&quot;]
+    healthcheck:
+      test: [&quot;CMD-SHELL&quot;, &quot;pg_isready -U massa&quot;]
+      interval: 5s
+      retries: 10
+
+  destino-falso:            # API falsa para testar envio sem tocar em sandbox
+    image: wiremock/wiremock:3.9.1
+    ports: [&quot;8089:8080&quot;]
+    volumes: [&quot;./infra/wiremock:/home/wiremock&quot;]
+
+volumes:
+  db-data:</pre>
+<pre># Banco: local pelo docker compose; na nuvem, a string do Neon (com sslmode=require)
+DATABASE_URL=postgres://massa:massa@localhost:5432/massa
+
+# Chave mestra do cofre: 32 bytes em base64 (openssl rand -base64 32). Nunca versionar.
+MASTER_KEY=
+
+# Login pelo GitHub: OAuth App da organização, liberado só para o time
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+GITHUB_ORG=split-hubhq
+GITHUB_TEAM=gerador-massa
+
+# Endereço público do app: callback do login e URL dos webhooks
+APP_URL=http://localhost:3000
+
+# Trava de produção: só estes domínios podem ser destino (vale acima do cadastro)
+ALLOWED_DESTINATION_DOMAINS=localhost</pre>
+<pre>cp .env.example .env
+openssl rand -base64 32        # cole o resultado em MASTER_KEY, no .env
+docker compose up -d
+docker compose ps              # db &quot;healthy&quot; e destino-falso no ar</pre>
+<div class="pronto"><strong>Pronto quando:</strong> <code>docker compose ps</code> mostra o banco saudável e o destino falso responde em <code>http://localhost:8089</code>.</div></div>
+<div class="passo" id="p05"><div class="passo-h"><span class="passo-n">Passo 5</span><span class="passo-t">Criar o banco: esquema e migrações</span><span class="passo-q">Dev</span></div>
+<p>As tabelas da seção 05 em <code>packages/db/src/schema.ts</code>. A partição mensal de <code>requisicoes</code> vai numa migração em SQL escrita à mão. O cofre cifra as credenciais com a chave mestra.</p>
+<pre>// packages/db/drizzle.config.ts
+import { defineConfig } from &#x27;drizzle-kit&#x27;;
+
+export default defineConfig({
+  schema: &#x27;./src/schema.ts&#x27;,
+  out: &#x27;./migrations&#x27;,
+  dialect: &#x27;postgresql&#x27;,
+  dbCredentials: { url: process.env.DATABASE_URL! },
+});</pre>
+<pre>pnpm --filter @massa/db exec drizzle-kit generate   # cria a migração a partir do schema.ts
+pnpm --filter @massa/db exec drizzle-kit migrate    # aplica no banco do .env</pre>
+<pre>// packages/core/src/cofre.ts — AES-256-GCM com a chave mestra
+import { createCipheriv, createDecipheriv, randomBytes } from &#x27;node:crypto&#x27;;
+
+const chave = Buffer.from(process.env.MASTER_KEY!, &#x27;base64&#x27;);   // 32 bytes
+
+export function cifrar(texto: string) {
+  const iv = randomBytes(12);
+  const c = createCipheriv(&#x27;aes-256-gcm&#x27;, chave, iv);
+  const dado = Buffer.concat([c.update(texto, &#x27;utf8&#x27;), c.final()]);
+  return { iv, dado, tag: c.getAuthTag() };
+}
+
+export function decifrar({ iv, dado, tag }: { iv: Buffer; dado: Buffer; tag: Buffer }) {
+  const d = createDecipheriv(&#x27;aes-256-gcm&#x27;, chave, iv);
+  d.setAuthTag(tag);
+  return Buffer.concat([d.update(dado), d.final()]).toString(&#x27;utf8&#x27;);
+}</pre>
+<div class="pronto"><strong>Pronto quando:</strong> as tabelas existem no banco local, e um teste cifra e decifra um segredo.</div></div>
+<div class="passo" id="p06"><div class="passo-h"><span class="passo-n">Passo 6</span><span class="passo-t">Servidor e interface no mesmo serviço</span><span class="passo-q">Dev</span></div>
+<p>O servidor aplica as migrações ao subir, responde <code>/health</code>, expõe <code>/api</code> e <code>/hooks</code> e serve a interface já compilada. A execução dos envios roda neste mesmo processo (INF-03).</p>
+<pre>// apps/server/src/index.ts
+import Fastify from &#x27;fastify&#x27;;
+import fastifyStatic from &#x27;@fastify/static&#x27;;
+import path from &#x27;node:path&#x27;;
+import { migrar } from &#x27;@massa/db&#x27;;
+
+await migrar();                                   // aplica migrações pendentes antes de abrir a porta
+
+const app = Fastify({ logger: { redact: [&#x27;req.headers.authorization&#x27;, &#x27;req.headers.cookie&#x27;] } });
+
+app.get(&#x27;/health&#x27;, async () =&gt; ({ ok: true }));
+// app.register(rotasApi, { prefix: &#x27;/api&#x27; });
+// app.register(rotasWebhooks, { prefix: &#x27;/hooks&#x27; });
+
+await app.register(fastifyStatic, { root: path.resolve(&#x27;apps/web/dist&#x27;) });
+app.setNotFoundHandler((req, reply) =&gt;
+  req.url.startsWith(&#x27;/api&#x27;) ? reply.code(404).send() : reply.sendFile(&#x27;index.html&#x27;));
+
+await app.listen({ port: Number(process.env.PORT ?? 3000), host: &#x27;0.0.0.0&#x27; });</pre>
+<pre>FROM node:24-slim
+RUN corepack enable
+WORKDIR /repo
+COPY . .
+RUN pnpm install --frozen-lockfile &amp;&amp; pnpm -r build
+ENV NODE_ENV=production
+EXPOSE 3000
+CMD [&quot;node&quot;, &quot;apps/server/dist/index.js&quot;]</pre>
+<div class="pronto"><strong>Pronto quando:</strong> com <code>docker build</code> e <code>docker run</code>, <code>http://localhost:3000/health</code> responde <code>{&quot;ok&quot;:true}</code> e a interface abre.</div></div>
+<div class="passo" id="p07"><div class="passo-h"><span class="passo-n">Passo 7</span><span class="passo-t">CI no GitHub Actions</span><span class="passo-q">Dev</span></div><pre># .github/workflows/ci.yml
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  checar:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: massa
+          POSTGRES_DB: massa_teste
+        ports: [&quot;5432:5432&quot;]
+        options: &gt;-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:massa@localhost:5432/massa_teste
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r typecheck
+      - run: pnpm --filter @massa/db exec drizzle-kit migrate
+      - run: pnpm -r test
+      - run: pnpm -r build</pre>
+<div class="pronto"><strong>Pronto quando:</strong> um pull request de teste mostra o CI verde, e a regra da <code>main</code> passa a exigi-lo.</div></div>
+<div class="passo" id="p08"><div class="passo-h"><span class="passo-n">Passo 8</span><span class="passo-t">Login pelo GitHub</span><span class="passo-q">Tech lead</span></div>
+<ol><li>Na organização: <em>Settings → Developer settings → OAuth Apps → New OAuth App</em>.</li>
+<li><em>Homepage URL</em>: o <code>APP_URL</code>. <em>Authorization callback URL</em>: <code>APP_URL/auth/callback</code>. No início, <code>http://localhost:3000</code>; depois do passo 10, o endereço do Render.</li>
+<li>Copiar o <em>Client ID</em> e gerar o <em>Client secret</em> para o <code>.env</code>.</li>
+<li>No servidor, depois do login, consultar se a pessoa é membro do time <code>gerador-massa</code> — escopo <code>read:org</code> — e recusar quem não for.</li></ol>
+<div class="pronto"><strong>Pronto quando:</strong> quem está no time entra, e quem não está recebe acesso negado.</div></div>
+<h3>Subir na nuvem</h3>
+<div class="passo" id="p09"><div class="passo-h"><span class="passo-n">Passo 9</span><span class="passo-t">Banco no Neon</span><span class="passo-q">Tech lead</span></div>
+<ol><li>Criar o projeto <code>gerador-massa</code>, PostgreSQL 17, na região da Virgínia (EUA).</li>
+<li>Criar o <em>branch</em> <code>homologacao</code> para testar migrações antes da principal.</li>
+<li>Copiar duas strings de conexão: a <em>pooled</em>, para o app, e a direta, para o backup.</li></ol>
+<div class="pronto"><strong>Pronto quando:</strong> as migrações aplicam no <em>branch</em> <code>homologacao</code> com <code>drizzle-kit migrate</code> apontando para ele.</div></div>
+<div class="passo" id="p10"><div class="passo-h"><span class="passo-n">Passo 10</span><span class="passo-t">Serviço no Render</span><span class="passo-q">Tech lead</span></div>
+<p>Com o <code>render.yaml</code> na raiz, usar <em>New → Blueprint</em> e escolher o repositório. O Render pede os valores marcados com <code>sync: false</code>.</p>
+<pre># render.yaml — um serviço web, plano gratuito
+services:
+  - type: web
+    name: gerador-massa
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL          # string &quot;pooled&quot; do Neon
+        sync: false
+      - key: MASTER_KEY
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_ORG
+        value: split-hubhq
+      - key: GITHUB_TEAM
+        value: gerador-massa
+      - key: APP_URL
+        sync: false
+      - key: ALLOWED_DESTINATION_DOMAINS
+        sync: false</pre>
+
+<ol><li><code>DATABASE_URL</code>: a string <em>pooled</em> do Neon.</li>
+<li><code>MASTER_KEY</code>: uma chave nova, diferente da local.</li>
+<li><code>APP_URL</code>: o endereço <code>https://gerador-massa.onrender.com</code> que o Render mostrar.</li>
+<li><code>ALLOWED_DESTINATION_DOMAINS</code>: só os domínios dos sandboxes.</li></ol>
+<div class="pronto"><strong>Pronto quando:</strong> o deploy termina, <code>/health</code> responde no endereço do Render e cada push na <code>main</code> publica sozinho.</div></div>
+<div class="passo" id="p11"><div class="passo-h"><span class="passo-n">Passo 11</span><span class="passo-t">Fechar o acesso</span><span class="passo-q">Tech lead</span></div>
+<ol><li>Trocar a <em>callback URL</em> do OAuth App para o endereço do Render.</li>
+<li>Testar o login com alguém de fora do time: precisa ser recusado.</li>
+<li>Dar papel de administrador a quem cadastra destinos; operador a quem envia.</li></ol>
+<div class="pronto"><strong>Pronto quando:</strong> só o time entra, e só administradores veem o cadastro de destinos.</div></div>
+<div class="passo" id="p12"><div class="passo-h"><span class="passo-n">Passo 12</span><span class="passo-t">Monitor e backup</span><span class="passo-q">Tech lead</span></div>
+<p>Backup semanal pelo Actions, guardado como artefato por 30 dias. Cadastrar a string direta do Neon em <em>Settings → Secrets → Actions</em> como <code>NEON_DATABASE_URL</code>.</p>
+<pre># .github/workflows/backup.yml
+name: backup
+on:
+  schedule:
+    - cron: &quot;0 6 * * 1&quot;            # segunda, 03:00 em Brasília
+  workflow_dispatch:
+
+jobs:
+  copiar-banco:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker run --rm postgres:17 pg_dump &quot;$DATABASE_URL&quot; --format=custom &gt; massa-$(date +%F).dump
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}   # string direta, sem pooler
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backup-banco
+          path: &quot;*.dump&quot;
+          retention-days: 30</pre>
+
+<p>No UptimeRobot, se for usar: monitor HTTP para <code>/health</code>, a cada 5 minutos, com alerta por e-mail.</p>
+<div class="pronto"><strong>Pronto quando:</strong> a execução manual do backup gera o artefato, e uma restauração de teste num banco local funciona.</div></div>
+<h3>Primeiro uso</h3>
+<div class="passo" id="p13"><div class="passo-h"><span class="passo-n">Passo 13</span><span class="passo-t">Pacote SplitHub e primeiro destino</span><span class="passo-q">Produto e QA</span></div>
+<ol><li>Instalar o pacote SplitHub (<code>packs/splithub</code>).</li>
+<li>Em <em>Destinos</em>, <em>Importar do Postman</em>: a <a class="xref" href="https://split-hubhq.github.io/docs/postman.html" target="_blank" rel="noopener">Collection Postman do docs ↗</a> e um environment com o endereço do sandbox.</li>
+<li>Informar a credencial do sandbox, que vai para o cofre, e revisar o mapeamento e as divergências.</li>
+<li><em>Testar conexão</em>.</li></ol>
+<div class="pronto"><strong>Pronto quando:</strong> o teste de conexão mostra token obtido, escopos e latência.</div></div>
+<div class="passo" id="p14"><div class="passo-h"><span class="passo-n">Passo 14</span><span class="passo-t">Rodar o cenário de fumaça</span><span class="passo-q">QA</span></div>
+<p>Montar o C-01 do pacote — 1 fornecedor, 1 contrato RAD, 1 NF-e —, pré-visualizar, enviar e acompanhar no monitor de requisições.</p>
+<div class="pronto"><strong>Pronto quando:</strong> as chamadas de criação — fornecedor, contrato e documento — aparecem no monitor, e a conferência marca o documento como concluído, como no gabarito.</div></div>
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Rotina de operação</span></div>
+<div class="table-wrap"><table><thead><tr><th>Rotina</th><th>Quando</th><th>Como</th></tr></thead><tbody><tr><td><strong>Backup</strong></td><td>Toda segunda</td><td>Workflow do Actions; restauração de teste uma vez por mês</td></tr><tr><td><strong>Retenção</strong></td><td>Todo dia, na primeira execução</td><td>O servidor remove os corpos de requisição com mais de 15 dias e as partições vazias</td></tr><tr><td><strong>Espaço do banco</strong></td><td>Toda semana</td><td>Painel do Neon; alerta interno em 80% dos 0,5 GB</td></tr><tr><td><strong>Migrações</strong></td><td>A cada mudança de esquema</td><td>Primeiro no <em>branch</em> <code>homologacao</code>, depois na principal, pela subida do servidor</td></tr><tr><td><strong>Chave mestra</strong></td><td>Se vazar ou a cada 12 meses</td><td>Gerar nova, decifrar e cifrar de novo os segredos, trocar no Render</td></tr><tr><td><strong>Dependências</strong></td><td>Todo mês</td><td>Dependabot do GitHub, gratuito, com pull requests passando pelo CI</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Quando sair do free</span></div>
+<div class="table-wrap"><table><thead><tr><th>Sinal</th><th>Próximo passo</th></tr></thead><tbody><tr><td>O minuto para acordar atrapalha o uso diário</td><td>Render Starter: o serviço não dorme</td></tr><tr><td>Envios longos ou concorrentes</td><td>Worker separado (Render Background Worker) e fila no banco</td></tr><tr><td>O banco passa de 0,5 GB</td><td>Neon Launch, ou guardar corpos de sucesso por amostragem</td></tr><tr><td>Mais de um ambiente do app no ar</td><td>Segundo serviço para homologação</td></tr><tr><td>Exigência de nuvem corporativa</td><td>O mesmo Dockerfile sobe em AWS (ECS Fargate e RDS) ou Azure (Container Apps e PostgreSQL Flexible Server)</td></tr></tbody></table></div>
+<p class="small">Como tudo roda em Docker e lê variáveis de ambiente, sair do free é trocar plano ou provedor, não reescrever.</p>
+</div>
+
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Decisões para aprovar</span></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">INF-01</span><span class="dec-t">Onde hospedar sem custo</span></div><p class="rec">Recomendação: <strong>Render Free para o app e Neon Free para o banco</strong>, ambos na região da Virgínia (EUA), comum aos dois. Alternativas: uma VM do Oracle Cloud Always Free — mais capacidade e sem dormir, mas pede cartão para o cadastro e administração do servidor —, ou uma máquina do time com Cloudflare Tunnel, que depende da máquina ligada. Os dados são fictícios, então a região fora do Brasil não traz questão de LGPD.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">INF-02</span><span class="dec-t">Login</span></div><p class="rec">Recomendação: <strong>GitHub, liberado só para o time da organização</strong> (OAuth App, gratuito). O time já está no GitHub, e não há outro provedor de identidade a configurar.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">INF-03</span><span class="dec-t">Execução dos envios</span></div><p class="rec">Recomendação: <strong>No mesmo processo do servidor enquanto o app estiver no free</strong>, com o progresso gravado no banco para retomar depois de um reinício. Worker separado quando houver plano pago — o código já fica isolado no pacote <code>engine</code>.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">INF-04</span><span class="dec-t">O que o banco guarda</span></div><p class="rec">Recomendação: <strong>A semente, não a massa.</strong> Mesmo cenário e mesma semente regeneram a massa (RF-GMD-405), então o banco guarda só estado, ids no destino e o corpo das requisições com problema. No free, a retenção dos corpos cai de 90 para 15 dias (ajusta a D-08 da proposta).</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">INF-05</span><span class="dec-t">Manter o serviço acordado</span></div><p class="rec">Recomendação: <strong>Começar aceitando o cerca de 1 minuto para acordar</strong>; ligar o UptimeRobot a cada 5 minutos só se os webhooks sofrerem. Um serviço ligado o mês todo usa cerca de 730 das 750 horas gratuitas; conferir os termos do Render antes.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">INF-06</span><span class="dec-t">Banco e migrações</span></div><p class="rec">Recomendação: <strong>PostgreSQL 17 com Drizzle</strong>: esquema em TypeScript, migrações em SQL versionadas no repositório e aplicadas na subida do servidor.</p></div>
+</div>
+
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Histórico de versões</span></div>
+
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>19/10/2026</strong> — Primeira versão. Subida do gerador de massa só com planos gratuitos: GitHub, Render, Neon e Docker local; limites do free e como o projeto convive com eles; estrutura do repositório; banco de dados; passo a passo em 14 passos; rotina de operação; quando sair do free; seis decisões de infraestrutura.</div></div>
+</div>
+
+</div>
+</body>
+</html>
