@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de massa de dados</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 1120px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--teal); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+h1 { font-size: 28px; font-weight: 800; line-height: 1.18; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 820px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--teal); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 52px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 18px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14.5px; font-weight: 700; color: var(--txt1); margin: 28px 0 8px; scroll-margin-top: 20px; }
+h4 { font-size: 12px; font-weight: 700; color: var(--txt2); margin: 20px 0 6px; text-transform: uppercase; letter-spacing: .06em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--teal); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.mono { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--teal); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+.src-note { font-size: 11.5px; color: var(--txt3); margin: 6px 0 0; }
+
+/* ── mockup ─────────────────────────────────────────────────────── */
+.mock { border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; margin: 16px 0; background: var(--sur); }
+.mock-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.mock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.mock-url { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); margin-left: 4px; }
+.mock-tag { margin-left: auto; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
+.mock-tag.nova { background: var(--green-d); color: var(--green); }
+.mock-tag.muda { background: var(--amber-d); color: var(--amber); }
+.mock-body { padding: 16px 18px; }
+.mock-h { font-size: 15px; font-weight: 700; color: var(--txt1); margin-bottom: 2px; }
+.mock-s { font-size: 11.5px; color: var(--txt3); margin-bottom: 14px; }
+.mock-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.mock-tab { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--brd); color: var(--txt3); }
+.mock-tab.on { background: var(--teal); border-color: var(--teal); color: #fff; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--sur2); border: 1px solid var(--brd); border-radius: 7px; padding: 9px 11px; }
+.kpi-l { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.kpi-v { font-size: 19px; font-weight: 800; color: var(--txt1); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.kpi-s { font-size: 10px; color: var(--txt3); }
+.kpi.alert .kpi-v { color: var(--red); }
+.kpi.warn .kpi-v { color: var(--amber); }
+.kpi.good .kpi-v { color: var(--green); }
+.mock table { font-size: 11.5px; }
+.mock th { font-size: 9.5px; padding: 7px 10px; }
+.mock td { padding: 7px 10px; }
+.btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.btn-p { background: var(--teal); color: #fff; border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.btn-g { border: 1px solid var(--brd); color: var(--txt2); border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.st { display: inline-block; font-size: 9.5px; font-weight: 800; padding: 1px 7px; border-radius: 20px; white-space: nowrap; }
+.st.ok { background: var(--green-d); color: var(--green); }
+.st.wait { background: var(--blue-d); color: var(--blue); }
+.st.div { background: var(--red-d); color: var(--red); }
+.st.abs { background: var(--amber-d); color: var(--amber); }
+.st.neu { background: var(--gray-d); color: var(--gray); }
+.st.own { background: var(--purple-d); color: var(--purple); }
+.new { display: inline-block; font-size: 9px; font-weight: 800; background: var(--teal); color: #fff; border-radius: 3px; padding: 0 5px; margin-left: 5px; letter-spacing: .04em; vertical-align: 1px; }
+
+code, kbd, samp { overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } .kpis { grid-template-columns: repeat(2, 1fr); } }
+</style>
+<style>
+pre { margin: 12px 0; padding: 14px 16px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.6; color: var(--txt2); background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; white-space: pre; }
+.flow { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.flow-step { flex: 1 1 150px; background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 6px; padding: 10px 12px; }
+.flow-step.warn { border-left-color: var(--amber); }
+.flow-step.red { border-left-color: var(--red); }
+.flow-k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); }
+.flow-step.warn .flow-k { color: var(--amber); }
+.flow-step.red .flow-k { color: var(--red); }
+.flow-t { font-size: 12.5px; font-weight: 700; color: var(--txt1); margin-top: 3px; }
+.flow-d { font-size: 11.5px; color: var(--txt2); margin-top: 4px; }
+tr.grp td { background: var(--sur2); color: var(--txt1); font-weight: 600; font-size: 11.5px; }
+tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
+.drop { border: 1.5px dashed var(--brd); border-radius: 8px; padding: 16px; text-align: center; font-size: 12px; color: var(--txt3); margin: 10px 0 14px; }
+.drop strong { color: var(--txt1); }
+.field { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12px; color: var(--txt2); margin-bottom: 8px; }
+.field .sel { border: 1px solid var(--brd); border-radius: 6px; padding: 4px 10px; background: var(--sur); color: var(--txt1); font-weight: 600; }
+.small { font-size: 11px; color: var(--txt3); margin-top: 8px; }
+.mock td code { white-space: nowrap; }
+</style>
+<style>
+.sec-num { flex-shrink: 0; }
+td:first-child code { white-space: nowrap; overflow-wrap: normal; }
+.fase { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; border-radius: 4px; padding: 1px 7px; white-space: nowrap; }
+.fase.f1 { color: var(--teal); background: var(--teal-d); } .fase.f2 { color: var(--blue); background: var(--blue-d); } .fase.f3 { color: var(--txt3); border: 1px solid var(--brd); }
+.mod { border: 1px solid var(--brd); border-radius: 10px; padding: 14px 18px 6px; margin: 14px 0 20px; background: var(--sur); }
+.mod-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 4px; }
+.mod-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; }
+.mod-t { font-size: 15px; font-weight: 700; color: var(--txt1); }
+.mod p { font-size: 12.5px; color: var(--txt2); margin: 4px 0 8px; }
+.dec { border: 1px solid var(--brd); border-radius: 8px; padding: 14px 18px; margin: 12px 0; background: var(--sur); }
+.dec-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; }
+.dec-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.dec-t { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.dec .rec { font-size: 12.5px; color: var(--txt1); }
+.dec .rec strong { color: var(--green); }
+.mod table { min-width: 620px; }
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); white-space: nowrap; }
+#s07 table, #s09 table, #s10 table { min-width: 720px; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">Proposta · Projeto · Testes</div>
+<h1>Gerador de massa de dados</h1>
+<p class="subtitle">Um app à parte, interativo, para montar empresas, contratos, documentos fiscais e comprovantes fictícios pelos payloads do docs, enviá-los a um sandbox cadastrado e conferir o que a plataforma fez.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta · Projeto</span></div>
+<div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">docs da API v1.7.0</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">19/10/2026</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip info">v1.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Para que serve</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Princípios</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Como funciona</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Destinos e integrações</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Telas</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Funcionalidades</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Cenários prontos</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Regras de coerência</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Envio ao destino</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Segurança e dados</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Arquitetura</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Fases</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Decisões para aprovar</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> Riscos e dependências</a></li>
+<li><a href="#s15"><span class="toc-num">15</span> Histórico de versões</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Para que serve</span></div>
+
+<p>Testar a plataforma pede dados: empresas, contratos, documentos fiscais e comprovantes que conversem entre si — o contrato vigente na emissão, a chave de acesso com o CNPJ do emitente, o comprovante com o valor da guia. Montar isso à mão é lento e não se repete igual.</p>
+<p>O <strong>Gerador de massa</strong> é um app à parte, em repositório próprio, que monta essa massa de forma interativa, seguindo os payloads do <a class="xref" href="https://split-hubhq.github.io/docs/index.html" target="_blank" rel="noopener">docs da API ↗</a>, e a envia a um sandbox hospedado como faria o ERP de um cliente. Cada registro leva o resultado esperado, e o app confere o que a plataforma fez.</p>
+<div class="callout info"><div class="ct">Em uma frase</div><p>Um cliente ERP sintético: cria empresas e contratos fictícios, gera documentos e comprovantes coerentes, envia ao sandbox cadastrado e diz, caso a caso, se a plataforma respondeu como devia.</p></div>
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Princípios</span></div>
+<div class="table-wrap"><table><thead><tr><th>Princípio</th><th>O que significa</th></tr></thead><tbody><tr><td><strong>Segregado</strong></td><td>Repositório, banco e credenciais próprios. Não acessa o banco nem o código da plataforma.</td></tr><tr><td><strong>Só o contrato público</strong></td><td>Fala com a plataforma apenas pela API documentada no docs. Testa o que o cliente vai usar.</td></tr><tr><td><strong>Nunca produção</strong></td><td>Só envia para destinos cadastrados como sandbox, homologação ou desenvolvimento.</td></tr><tr><td><strong>Fictício e marcado</strong></td><td>Todo dado é gerado e leva a marca da execução. Nenhum dado real de cliente entra.</td></tr><tr><td><strong>Reprodutível</strong></td><td>Mesmo cenário e mesma semente geram a mesma massa.</td></tr><tr><td><strong>Com gabarito</strong></td><td>Cada registro sabe o que deveria acontecer com ele.</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Como funciona</span></div>
+<div class="flow"><div class="flow-step"><div class="flow-k">1 · Cadastrar</div><div class="flow-t">Destino</div><div class="flow-d">Sandbox, credencial, canais e limites.</div></div><div class="flow-step"><div class="flow-k">2 · Montar</div><div class="flow-t">Cenário</div><div class="flow-d">Empresas, contratos, documentos, comprovantes e casos de borda.</div></div><div class="flow-step"><div class="flow-k">3 · Gerar</div><div class="flow-t">Massa</div><div class="flow-d">Registros coerentes e o gabarito de cada um.</div></div><div class="flow-step"><div class="flow-k">4 · Revisar</div><div class="flow-t">Pré-visualização</div><div class="flow-d">Contagens, JSON, validação contra o docs.</div></div><div class="flow-step"><div class="flow-k">5 · Enviar</div><div class="flow-t">Destino</div><div class="flow-d">Na ordem das dependências, dentro dos limites.</div></div><div class="flow-step warn"><div class="flow-k">6 · Conferir</div><div class="flow-t">Gabarito × obtido</div><div class="flow-d">Status, recusas, guias, créditos e eventos.</div></div></div>
+<p class="small">O passo 6 usa a consulta à API e, quando o destino tem retorno por webhook, os eventos recebidos.</p>
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Destinos e integrações</span></div>
+
+<p>O destino é onde a massa é entregue: um sandbox hospedado da plataforma. O cadastro guarda tudo o que o envio precisa, e as integrações dizem por quais canais a massa entra e o retorno volta.</p>
+<div class="table-wrap"><table><thead><tr><th>Campo do destino</th><th>Para que serve</th></tr></thead><tbody><tr><td><strong>Nome e tipo</strong></td><td>Identificação e o tipo de ambiente: sandbox, homologação ou desenvolvimento. Produção não existe como opção.</td></tr><tr><td><strong>Endereço base</strong></td><td>Validado contra a lista de domínios permitidos.</td></tr><tr><td><strong>Credencial</strong></td><td><code>client_id</code> e <code>client_secret</code>, guardados cifrados. O teste de conexão mostra os escopos concedidos.</td></tr><tr><td><strong>Versão do contrato</strong></td><td>Versão do docs que o destino implementa. Define o esquema usado na geração.</td></tr><tr><td><strong>Comprador padrão</strong></td><td>Organização e estabelecimentos já cadastrados no destino.</td></tr><tr><td><strong>Limites</strong></td><td>Teto de requisições por minuto e tamanho do lote.</td></tr><tr><td><strong>Situação</strong></td><td>Ativo ou inativo, e o resultado do último teste de conexão.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Integração</th><th>Sentido</th><th>Como funciona</th><th>Fase</th></tr></thead><tbody><tr><td><strong>API</strong></td><td>App → destino</td><td>Fornecedores, contratos, documentos (individual ou lote) e comprovantes.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><strong>Consulta</strong></td><td>Destino → app</td><td>Leitura periódica de documentos, lotes, guias e créditos para a conferência.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><strong>Arquivo</strong></td><td>App → destino</td><td>Envio por <code>/v1/uploads</code> e importação por <code>/v1/ingestions</code>, com confirmação.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><strong>Webhook</strong></td><td>Destino → app</td><td>Inscrição gerenciada pelo app e receptor com validação de assinatura.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><strong>Exportação</strong></td><td>App → arquivo</td><td>JSON, CSV e collection do Postman, para quem vai enviar por outro caminho.</td><td><span class="fase f1">MVP</span></td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Telas</span></div>
+<div class="table-wrap"><table><thead><tr><th>Tela</th><th>O que o usuário faz</th></tr></thead><tbody><tr><td><strong>Painel</strong></td><td>Últimas execuções, saúde de cada destino e atalhos para os cenários prontos.</td></tr><tr><td><strong>Destinos</strong></td><td>Lista e cadastro de destinos, credencial, canais habilitados, receptor de webhook e o botão <em>Testar conexão</em>.</td></tr><tr><td><strong>Empresas</strong></td><td>Biblioteca de compradores e fornecedores: gerar em quantidade, editar, travar e reaproveitar.</td></tr><tr><td><strong>Contratos</strong></td><td>Contratos por fornecedor, com a mistura de métodos e de situações.</td></tr><tr><td><strong>Montar cenário</strong></td><td>Assistente em sete passos (abaixo), com o resumo e a estimativa de duração no fim.</td></tr><tr><td><strong>Pré-visualização</strong></td><td>Contagens, tabelas por entidade, JSON de cada registro, erros de validação e edição pontual.</td></tr><tr><td><strong>Envio</strong></td><td>Progresso ao vivo por etapa e log de requisições. Pausar, retomar, cancelar, reenviar falhas.</td></tr><tr><td><strong>Conferência</strong></td><td>Gabarito contra o obtido, caso a caso, com o relatório para exportar.</td></tr><tr><td><strong>Execuções</strong></td><td>Histórico, manifesto, repetir e limpar.</td></tr></tbody></table></div>
+<p>O assistente de montagem do cenário:</p>
+<div class="flow"><div class="flow-step"><div class="flow-k">1</div><div class="flow-t">Destino</div><div class="flow-d">Sandbox e versão do contrato</div></div><div class="flow-step"><div class="flow-k">2</div><div class="flow-t">Empresas</div><div class="flow-d">Comprador e fornecedores</div></div><div class="flow-step"><div class="flow-k">3</div><div class="flow-t">Contratos</div><div class="flow-d">Métodos, prazos, situações</div></div><div class="flow-step"><div class="flow-k">4</div><div class="flow-t">Documentos</div><div class="flow-d">Tipos, volume, período, valores</div></div><div class="flow-step"><div class="flow-k">5</div><div class="flow-t">Comprovantes</div><div class="flow-d">PIX, boleto, em dia, atraso</div></div><div class="flow-step warn"><div class="flow-k">6</div><div class="flow-t">Casos de borda</div><div class="flow-d">Do catálogo, com percentual</div></div><div class="flow-step"><div class="flow-k">7</div><div class="flow-t">Resumo</div><div class="flow-d">Contagens e duração estimada</div></div></div>
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Funcionalidades</span></div>
+<p>Dez módulos. Cada funcionalidade tem a fase em que entra; o MVP fecha o ciclo de cadastro e documento contra um sandbox.</p>
+<div class="mod" id="m1"><div class="mod-h"><span class="mod-id">M1</span><span class="mod-t">Destinos e integrações</span></div><p>Onde a massa é entregue. Cada destino é um sandbox hospedado com a sua credencial, os canais habilitados e os limites de envio.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-001</span></td><td>Cadastrar destino: nome, tipo de ambiente (sandbox, homologação ou desenvolvimento), endereço base, versão do contrato do docs e comprador padrão.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-002</span></td><td>Guardar a credencial OAuth do destino — <code>client_id</code> e <code>client_secret</code> — cifrada. O segredo nunca volta à tela, a logs nem a exportações.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-003</span></td><td>Testar a conexão: obter o token, comparar os escopos concedidos com os que os cenários exigem, fazer uma leitura simples e mostrar latência e cabeçalhos <code>RateLimit-*</code>.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-004</span></td><td>Trava de produção: só aceitar endereços de uma lista de domínios permitidos. O endereço de produção fica bloqueado sempre, inclusive para administradores.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-005</span></td><td>Integrações por destino: escolher os canais habilitados — API (documento individual e lote), consulta periódica, arquivo (<code>/v1/uploads</code> e <code>/v1/ingestions</code>) e retorno por webhook.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-006</span></td><td>Receptor de webhooks: URL pública do app por destino. Cria ou reaproveita a inscrição em <code>/v1/webhook-subscriptions</code> — são 25 por empresa, sem exclusão —, valida a assinatura e guarda os eventos.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><span class="rid">RF-GMD-007</span></td><td>Limites próprios por destino, abaixo dos da API: requisições por minuto e tamanho do lote (até 500).</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-008</span></td><td>Perfis de acesso: quem pode cadastrar destino e quem pode enviar para cada um, com a trilha de quem enviou.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m2"><div class="mod-h"><span class="mod-id">M2</span><span class="mod-t">Empresas fictícias</span></div><p>Compradores, estabelecimentos e fornecedores com identidade fiscal válida no formato e marcada como massa.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-010</span></td><td>Gerar comprador com matriz e filiais na mesma raiz de CNPJ, razão social, UF e endereço.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-011</span></td><td>Gerar fornecedores por perfil — regime tributário, CNAE, UF, porte e situação —, com endereço e contato.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-012</span></td><td>Editar uma empresa e travá-la, para que não mude quando o cenário for gerado de novo.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-013</span></td><td>Biblioteca de empresas reutilizáveis entre cenários.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-014</span></td><td>Representantes fiscais do fornecedor, com CPF fictício.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><span class="rid">RF-GMD-015</span></td><td>CNPJ alfanumérico como opção de geração, conforme o suporte da plataforma.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m3"><div class="mod-h"><span class="mod-id">M3</span><span class="mod-t">Contratos</span></div><p>Contratos entre comprador e fornecedor com os campos obrigatórios do docs.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-020</span></td><td>Gerar contratos por fornecedor com mistura de método (RAD ou fornecedor), prazo de pagamento, vigência relativa à data de referência e autorrenovação.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-021</span></td><td>Gerar contratos e fornecedores em cada situação — ativo, suspenso, encerrado, inativo — para testar as recusas.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-022</span></td><td>Gerar contrato cuja vigência não cobre a emissão do documento.</td><td><span class="fase f1">MVP</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m4"><div class="mod-h"><span class="mod-id">M4</span><span class="mod-t">Documentos fiscais</span></div><p>Os documentos de entrada que originam os créditos, coerentes entre si e com o contrato.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-030</span></td><td>Gerar documentos dos tipos do docs com o modelo correto. MVP: NF-e, NFCom, CT-e e NFS-e; os demais na fase seguinte.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-031</span></td><td>Chave de acesso de 44 posições coerente com UF, ano e mês, CNPJ emitente, modelo, série e número, com dígito verificador.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-032</span></td><td>Itens e totais coerentes: IBS da UF e do município e CBS por item, somando o total. Alíquotas por ano, parametrizáveis. Sem base de cálculo, como no docs v1.4.0.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-033</span></td><td>Valores redondos por padrão, com faixa configurável.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-034</span></td><td>Vínculo com contrato por <code>contract_id</code> e documento com método e prazo próprios (<code>override_contract_params</code>).</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-035</span></td><td>Exportar em JSON e no modelo CSV de 22 colunas.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-036</span></td><td>Os 14 tipos de documento do docs.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><span class="rid">RF-GMD-037</span></td><td>Notas de saída do comprador — vendas a empresas e a pessoas físicas —, para gerar débitos e testar a compensação.</td><td><span class="fase f3">Fase 3</span></td></tr><tr><td><span class="rid">RF-GMD-038</span></td><td>XML do documento no leiaute oficial, com o grupo de IBS e CBS, para o envio por arquivo.</td><td><span class="fase f3">Fase 3</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m5"><div class="mod-h"><span class="mod-id">M5</span><span class="mod-t">Guias e comprovantes</span></div><p>O pagamento das guias RAD que a plataforma gera, nos dois meios do docs v1.6.0.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-040</span></td><td>Buscar as guias geradas no destino — <code>GET /v1/rad/guides</code> ou o evento <code>rad.darf_received</code> — e ligá-las aos documentos.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><span class="rid">RF-GMD-041</span></td><td>Gerar comprovantes PIX (<code>end_to_end_id</code>, <code>txid</code>, chave) e de boleto com os campos do retorno CNAB 240, pelo Segmento O ou J.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><span class="rid">RF-GMD-042</span></td><td>Perfis de pagamento: em dia, em atraso com juros e multa, com valor divergente, sem guia, ocorrência não efetivada e em duplicidade.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><span class="rid">RF-GMD-043</span></td><td>Exportar comprovantes em JSON e no modelo CSV de 18 colunas da POC.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m6"><div class="mod-h"><span class="mod-id">M6</span><span class="mod-t">Cenários e casos de borda</span></div><p>O que a massa testa. Cenário é um arquivo salvo: o mesmo cenário com a mesma semente gera a mesma massa.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-050</span></td><td>Montar o cenário num assistente: destino, empresas, contratos, documentos, comprovantes, casos de borda e resumo.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-051</span></td><td>Semente de geração: mesma semente e mesmo cenário, mesma massa.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-052</span></td><td>Cenários prontos (seção 07) e cenários próprios salvos como modelo.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-053</span></td><td>Catálogo de casos de borda ligado ao Catálogo de Inconsistências do hub, com percentual por caso. MVP: cadastro e documento; Fase 2: financeiro.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-054</span></td><td>Data de referência configurável, para simular meses passados, vencimentos e prazos de prescrição.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m7"><div class="mod-h"><span class="mod-id">M7</span><span class="mod-t">Pré-visualização e exportação</span></div><p>Ver e ajustar a massa antes de enviar.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-060</span></td><td>Pré-visualizar: contagens por entidade, tabela, payload JSON de cada registro e validação contra o contrato do docs da versão do destino.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-061</span></td><td>Editar um registro na pré-visualização e validar de novo.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-062</span></td><td>Exportar em JSON por rota e nos modelos CSV.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-063</span></td><td>Exportar a massa como collection do Postman.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m8"><div class="mod-h"><span class="mod-id">M8</span><span class="mod-t">Envio e orquestração</span></div><p>Mandar a massa ao destino como um cliente ERP faria, respeitando o contrato e os limites.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-070</span></td><td>Enviar na ordem das dependências: fornecedores, contratos, documentos e, depois das guias, comprovantes.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-071</span></td><td>Reutilizar o token e renová-lo com 2 minutos de folga (validade de 720 segundos).</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-072</span></td><td>Idempotency-Key derivada da execução e do registro — nunca aleatória por tentativa —, para reenviar sem duplicar.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-073</span></td><td>Respeitar os limites: 1.000 por minuto em geral e 20 por minuto para lote, arquivo e importação; no 429, <code>Retry-After</code> e espera exponencial.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-074</span></td><td>Escolher o canal dos documentos: individual, lote de até 500 ou arquivo.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-075</span></td><td>Acompanhar ao vivo: progresso por etapa e log por requisição (rota, status, código de erro, tempo). Pausar, retomar, cancelar e reenviar as falhas.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-076</span></td><td>Estimar a duração antes de enviar, a partir do volume e dos limites.</td><td><span class="fase f1">MVP</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m9"><div class="mod-h"><span class="mod-id">M9</span><span class="mod-t">Retorno e conferência</span></div><p>Comparar o que a plataforma fez com o que a massa esperava.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-080</span></td><td>Gabarito: cada registro leva o resultado esperado — status, código de erro e valores.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-081</span></td><td>Conferir documentos e lotes: situação final e motivo de recusa.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-082</span></td><td>Conferir guias (valor e vencimento), créditos (saldo por situação) e eventos recebidos.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><span class="rid">RF-GMD-083</span></td><td>Relatório de conferência por caso, exportável.</td><td><span class="fase f1">MVP</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m10"><div class="mod-h"><span class="mod-id">M10</span><span class="mod-t">Execuções</span></div><p>O registro de cada envio, para repetir, auditar e limpar.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-090</span></td><td>Histórico: cenário, semente, destino, versão do contrato, quem enviou, contagens e resultado.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-091</span></td><td>Manifesto com os identificadores criados no destino.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-092</span></td><td>Marcar tudo com o código da execução: razão social, <code>external_contract_id</code> e descrição.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-093</span></td><td>Repetir uma execução com a mesma semente e um código novo.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-094</span></td><td>Limpeza: inativar fornecedores, encerrar contratos e remover documentos — a API não exclui fornecedor nem contrato.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Cenários prontos</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Cenário</th><th>O que gera</th><th>Resultado esperado</th><th>Fase</th></tr></thead><tbody><tr><td>C-01</td><td><strong>Fumaça</strong></td><td>1 fornecedor, 1 contrato RAD, 1 NF-e</td><td>Documento concluído</td><td><span class="fase f1">MVP</span></td></tr><tr><td>C-02</td><td><strong>Mês de um grande comprador</strong></td><td>3 estabelecimentos, 200 fornecedores (70% RAD), 20.000 documentos de NF-e, NFCom, CT-e e NFS-e</td><td>Todos concluídos. São 40 lotes de 500: cerca de 2 minutos pelo limite de 20 lotes por minuto</td><td><span class="fase f1">MVP</span></td></tr><tr><td>C-03</td><td><strong>Fornecedor recolhe</strong></td><td>Documentos sem contrato ou com método fornecedor</td><td>Nenhuma guia gerada</td><td><span class="fase f1">MVP</span></td></tr><tr><td>C-04</td><td><strong>Parâmetros próprios</strong></td><td>Documentos com <code>override_contract_params</code></td><td>Método e prazo do documento prevalecem sobre os do contrato</td><td><span class="fase f1">MVP</span></td></tr><tr><td>C-05</td><td><strong>Recusas de cadastro</strong></td><td>Fornecedor inativo, contrato encerrado reaberto, destinatário fora da organização, contrato fora de vigência, chave repetida</td><td>409 <code>supplier_inactive</code>, 409 <code>invalid_status_transition</code>, <code>recipient_not_registered</code>, 422 <code>contract_not_found</code>, recusa da chave repetida</td><td><span class="fase f1">MVP</span></td></tr><tr><td>C-06</td><td><strong>Ciclo RAD completo</strong></td><td>Documentos RAD, guias, comprovantes PIX e boleto pelos Segmentos O e J, em dia e em atraso</td><td>Guias pagas e conciliadas, sem divergência</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td>C-07</td><td><strong>Divergência financeira</strong></td><td>Comprovante com valor diferente da guia, sem guia, com ocorrência não efetivada e em duplicidade</td><td>Inconsistências das famílias B e C do catálogo</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td>C-08</td><td><strong>POC Claro</strong></td><td>Massa nos modelos CSV dos passos 2 e 11</td><td>Arquivos prontos para a troca por artefato</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td>C-09</td><td><strong>Prazos</strong></td><td>Documentos perto do fim do prazo de apropriação e da prescrição</td><td><code>alert.appropriation_due_soon</code> e <code>alert.credit_expiring</code></td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Regras de coerência da geração</span></div>
+<div class="table-wrap"><table><thead><tr><th>Regra</th><th>Como fica</th></tr></thead><tbody><tr><td><strong>CNPJ</strong></td><td>14 posições com dígito verificador válido. Matriz e filiais na mesma raiz. Faixa de massa configurável (D-04).</td></tr><tr><td><strong>CPF</strong></td><td>Dígito verificador válido, só onde o docs pede: representante fiscal e venda a pessoa física. Nunca acompanha nome de pessoa real.</td></tr><tr><td><strong>Chave de acesso</strong></td><td>44 posições: UF, ano e mês da emissão, CNPJ emitente, modelo, série, número, tipo de emissão, código e dígito verificador (módulo 11).</td></tr><tr><td><strong>Totais</strong></td><td>A soma dos itens fecha o total do documento. O IBS é a soma do IBS da UF e do município. CBS e IBS sempre separados.</td></tr><tr><td><strong>Alíquotas</strong></td><td>Tabela por ano, parametrizável. Em 2026, ano de teste, CBS de 0,9% e IBS de 0,1%.</td></tr><tr><td><strong>Datas</strong></td><td>Emissão dentro da vigência do contrato, salvo caso de borda. Competência no mês da emissão para os serviços continuados.</td></tr><tr><td><strong>RAD</strong></td><td>Guia só para documento com método RAD, pelo contrato ou pelos parâmetros próprios.</td></tr><tr><td><strong>Comprovante</strong></td><td>Valor da guia. No boleto, valor pago = valor do título − descontos + juros e multa. Pagamento depois da emissão.</td></tr><tr><td><strong>Valores</strong></td><td>Redondos por padrão: R$ 20.000,00, e não R$ 19.873,42.</td></tr><tr><td><strong>Marcação</strong></td><td>Razão social com o sufixo de massa e o código da execução; <code>external_contract_id</code> com o mesmo prefixo. Dá para achar e limpar tudo o que uma execução criou.</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Envio ao destino</span></div>
+<div class="table-wrap"><table><thead><tr><th>Tema</th><th>Como o app faz</th></tr></thead><tbody><tr><td><strong>Autenticação</strong></td><td>OAuth 2.0 <em>client credentials</em>. Um token por destino, reutilizado e renovado com 2 minutos de folga.</td></tr><tr><td><strong>Ordem</strong></td><td>Fornecedores, contratos, documentos. Os comprovantes esperam as guias, por consulta ou por evento.</td></tr><tr><td><strong>Idempotência</strong></td><td>Chave derivada do código da execução e do registro, válida por 24 horas. Repetir não duplica; mesma chave com corpo diferente responde 409.</td></tr><tr><td><strong>Limites</strong></td><td>1.000 requisições por minuto em geral; 20 por minuto para lote, arquivo e importação; 20 tokens por minuto. O app fica abaixo, com o teto do destino.</td></tr><tr><td><strong>Falhas</strong></td><td>429: respeita o <code>Retry-After</code> e espera em progressão exponencial. 5xx: nova tentativa com a mesma chave. 4xx de negócio: registrado e comparado com o gabarito, sem nova tentativa.</td></tr><tr><td><strong>Volume</strong></td><td>Lote de até 500 documentos. A estimativa de duração usa esses números antes do envio.</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Segurança e dados</span></div>
+<div class="table-wrap"><table><thead><tr><th>Tema</th><th>Como fica</th></tr></thead><tbody><tr><td><strong>Nunca produção</strong></td><td>Lista de domínios permitidos por destino; o endereço de produção é recusado no cadastro e no envio.</td></tr><tr><td><strong>Segredos</strong></td><td>Credenciais cifradas em repouso, fora do cenário e das exportações. Na tela, só os 4 últimos caracteres do <code>client_id</code>.</td></tr><tr><td><strong>Dados 100% fictícios</strong></td><td>O app não importa dado real de cliente. Documento real anonimizado fica fora do escopo: a anonimização da POC preserva chave, CNPJ e valores, e isso não é massa.</td></tr><tr><td><strong>CPF</strong></td><td>Um CPF gerado pode coincidir com o de uma pessoa real. Por isso é usado só onde o docs exige e nunca com nome de pessoa real.</td></tr><tr><td><strong>Trilha</strong></td><td>Quem montou, quem enviou, para qual destino e quando. Logs sem token, sem segredo e sem corpo de credencial.</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Arquitetura</span></div>
+<div class="table-wrap"><table><thead><tr><th>Componente</th><th>Papel</th></tr></thead><tbody><tr><td><strong>Interface web</strong></td><td>As telas da seção 05. Interativa: montar, pré-visualizar, enviar e conferir.</td></tr><tr><td><strong>API do app</strong></td><td>Cadastros, cenários, geração e execuções.</td></tr><tr><td><strong>Motor de geração</strong></td><td>Identidades, regras de coerência e gabarito. Biblioteca isolada, testável sozinha.</td></tr><tr><td><strong>Contrato do docs</strong></td><td>Esquemas dos payloads por versão do docs (hoje v1.7.0). A geração e a pré-visualização validam contra a versão do destino.</td></tr><tr><td><strong>Fila de envio</strong></td><td>Executa o envio fora da tela, com controle de taxa por destino, pausa e retomada.</td></tr><tr><td><strong>Receptor de webhooks</strong></td><td>URL pública que recebe os eventos do destino e valida a assinatura.</td></tr><tr><td><strong>Banco</strong></td><td>Destinos, empresas, cenários, execuções, manifestos e gabaritos. Segredos à parte, cifrados.</td></tr></tbody></table></div>
+<div class="callout ok"><div class="ct">Fronteira com a plataforma</div><p>O app conversa com a plataforma só pela API pública, como um cliente. Nada de acesso ao banco, a filas ou a código da plataforma: se o app consegue, um cliente também consegue.</p></div>
+</div>
+
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Fases</span></div>
+<div class="table-wrap"><table><thead><tr><th>Fase</th><th>O que entra</th><th>Pronto quando</th></tr></thead><tbody><tr><td><span class="fase f1">MVP</span></td><td>Destinos com API e consulta; empresas; contratos; documentos de 4 tipos; assistente; pré-visualização; envio individual e em lote; gabarito de documentos; execuções e marcação.</td><td>C-01 a C-05 rodam de ponta a ponta contra o sandbox, e a conferência fecha.</td></tr><tr><td><span class="fase f2">Fase 2</span></td><td>Guias e comprovantes (PIX e CNAB); receptor de webhooks; envio por arquivo; conferência de guias, créditos e eventos; limpeza; data de referência; representantes; perfis de acesso; export Postman.</td><td>C-06 a C-09 rodam de ponta a ponta.</td></tr><tr><td><span class="fase f3">Fase 3</span></td><td>Os 14 tipos de documento; XML no leiaute oficial; vendas e débitos; aviso de versão nova do docs com o que mudou nos payloads.</td><td>Massa de vendas compensa créditos, e o app acusa a mudança de contrato antes do envio.</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Decisões para aprovar</span></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-01</span><span class="dec-t">Tecnologia</span></div><p class="rec">Recomendação: <strong>TypeScript na interface e no servidor</strong>, com PostgreSQL. Um só idioma para os esquemas do contrato, o motor e as telas.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-02</span><span class="dec-t">Onde o app roda</span></div><p class="rec">Recomendação: <strong>Hospedado, com acesso restrito ao time.</strong> O receptor de webhooks precisa de URL pública, e o envio longo não pode depender de uma máquina ligada.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-03</span><span class="dec-t">Cadastro do comprador</span></div><p class="rec">Recomendação: A API pública não cria os estabelecimentos do comprador. <strong>No MVP, o app gera os dados e um roteiro de cadastro na plataforma</strong>; avaliar depois uma rota de apoio só nos sandboxes.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-04</span><span class="dec-t">Marcação da massa</span></div><p class="rec">Recomendação: <strong>Raiz de CNPJ numa faixa reservada e sufixo de massa na razão social.</strong> Facilita achar, filtrar e limpar no destino.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-05</span><span class="dec-t">Fonte do contrato</span></div><p class="rec">Recomendação: <strong>Esquemas derivados do docs, versionados no repositório do app.</strong> Trocar pelo esquema oficial da API quando a plataforma publicar um.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-06</span><span class="dec-t">Guias sem evento</span></div><p class="rec">Recomendação: O evento <code>rad.darf_received</code> está no contrato, mas o produto ainda não o emite (PRD de Execução RAD). <strong>Consulta periódica a <code>GET /v1/rad/guides</code></strong>, trocando pelo evento quando ele existir.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-07</span><span class="dec-t">Quem envia</span></div><p class="rec">Recomendação: <strong>Produto e QA.</strong> Desenvolvimento usa os mesmos cenários pelo app, sem acesso direto às credenciais.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-08</span><span class="dec-t">Retenção</span></div><p class="rec">Recomendação: <strong>Execuções e massa por 90 dias</strong>; cenários salvos, sem prazo.</p></div>
+</div>
+
+<div class="section" id="s14">
+<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Riscos e dependências</span></div>
+<div class="table-wrap"><table><thead><tr><th>Risco</th><th>Efeito</th><th>Como tratar</th></tr></thead><tbody><tr><td><strong>Contrato muda no docs</strong></td><td>A massa sai fora do contrato e falha por motivo errado.</td><td>Esquema por versão; o destino declara a versão; validação antes do envio.</td></tr><tr><td><strong>Acúmulo no sandbox</strong></td><td>Fornecedores e contratos não são excluídos; o sandbox enche de massa.</td><td>Marcação por execução e limpeza por situação. Combinar reinício periódico do sandbox.</td></tr><tr><td><strong>Eventos RAD não emitidos</strong></td><td>Comprovantes dependem das guias.</td><td>Consulta periódica (D-06).</td></tr><tr><td><strong>Comprador sem API</strong></td><td>Massa nova exige cadastro na plataforma.</td><td>Roteiro gerado e comprador reaproveitado da biblioteca (D-03).</td></tr><tr><td><strong>Inscrições de webhook</strong></td><td>25 por empresa, sem exclusão.</td><td>Reaproveitar a inscrição do app; nunca criar uma por execução.</td></tr><tr><td><strong>Limites de taxa</strong></td><td>Volume alto leva minutos e pode disputar a cota com outros testes.</td><td>Teto por destino abaixo do da API e estimativa antes do envio.</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s15">
+<div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Histórico de versões</span></div>
+
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>19/10/2026</strong> — Primeira versão. App segregado e interativo para montar massa de dados pelos payloads do docs e enviá-la a sandboxes cadastrados; dez módulos com 55 funcionalidades em três fases; nove cenários prontos; oito decisões para aprovar.</div></div>
+</div>
+
+</div>
+</body>
+</html>
