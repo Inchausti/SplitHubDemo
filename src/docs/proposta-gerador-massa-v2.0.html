@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de massa de dados</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 1120px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--teal); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+h1 { font-size: 28px; font-weight: 800; line-height: 1.18; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 820px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--teal); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 52px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 18px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14.5px; font-weight: 700; color: var(--txt1); margin: 28px 0 8px; scroll-margin-top: 20px; }
+h4 { font-size: 12px; font-weight: 700; color: var(--txt2); margin: 20px 0 6px; text-transform: uppercase; letter-spacing: .06em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "\00B7"; color: var(--teal); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.mono { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--teal); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+.src-note { font-size: 11.5px; color: var(--txt3); margin: 6px 0 0; }
+
+/* ── mockup ─────────────────────────────────────────────────────── */
+.mock { border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; margin: 16px 0; background: var(--sur); }
+.mock-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.mock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.mock-url { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); margin-left: 4px; }
+.mock-tag { margin-left: auto; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
+.mock-tag.nova { background: var(--green-d); color: var(--green); }
+.mock-tag.muda { background: var(--amber-d); color: var(--amber); }
+.mock-body { padding: 16px 18px; }
+.mock-h { font-size: 15px; font-weight: 700; color: var(--txt1); margin-bottom: 2px; }
+.mock-s { font-size: 11.5px; color: var(--txt3); margin-bottom: 14px; }
+.mock-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.mock-tab { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--brd); color: var(--txt3); }
+.mock-tab.on { background: var(--teal); border-color: var(--teal); color: #fff; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--sur2); border: 1px solid var(--brd); border-radius: 7px; padding: 9px 11px; }
+.kpi-l { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.kpi-v { font-size: 19px; font-weight: 800; color: var(--txt1); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.kpi-s { font-size: 10px; color: var(--txt3); }
+.kpi.alert .kpi-v { color: var(--red); }
+.kpi.warn .kpi-v { color: var(--amber); }
+.kpi.good .kpi-v { color: var(--green); }
+.mock table { font-size: 11.5px; }
+.mock th { font-size: 9.5px; padding: 7px 10px; }
+.mock td { padding: 7px 10px; }
+.btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.btn-p { background: var(--teal); color: #fff; border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.btn-g { border: 1px solid var(--brd); color: var(--txt2); border-radius: 6px; padding: 6px 14px; font-size: 11.5px; font-weight: 600; }
+.st { display: inline-block; font-size: 9.5px; font-weight: 800; padding: 1px 7px; border-radius: 20px; white-space: nowrap; }
+.st.ok { background: var(--green-d); color: var(--green); }
+.st.wait { background: var(--blue-d); color: var(--blue); }
+.st.div { background: var(--red-d); color: var(--red); }
+.st.abs { background: var(--amber-d); color: var(--amber); }
+.st.neu { background: var(--gray-d); color: var(--gray); }
+.st.own { background: var(--purple-d); color: var(--purple); }
+.new { display: inline-block; font-size: 9px; font-weight: 800; background: var(--teal); color: #fff; border-radius: 3px; padding: 0 5px; margin-left: 5px; letter-spacing: .04em; vertical-align: 1px; }
+
+code, kbd, samp { overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .doc, .section { overflow-wrap: anywhere; } .kpis { grid-template-columns: repeat(2, 1fr); } }
+</style>
+<style>
+pre { margin: 12px 0; padding: 14px 16px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.6; color: var(--txt2); background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; white-space: pre; }
+.flow { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.flow-step { flex: 1 1 150px; background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 6px; padding: 10px 12px; }
+.flow-step.warn { border-left-color: var(--amber); }
+.flow-step.red { border-left-color: var(--red); }
+.flow-k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); }
+.flow-step.warn .flow-k { color: var(--amber); }
+.flow-step.red .flow-k { color: var(--red); }
+.flow-t { font-size: 12.5px; font-weight: 700; color: var(--txt1); margin-top: 3px; }
+.flow-d { font-size: 11.5px; color: var(--txt2); margin-top: 4px; }
+tr.grp td { background: var(--sur2); color: var(--txt1); font-weight: 600; font-size: 11.5px; }
+tr.grp td .g-s { font-weight: 400; color: var(--txt3); }
+.drop { border: 1.5px dashed var(--brd); border-radius: 8px; padding: 16px; text-align: center; font-size: 12px; color: var(--txt3); margin: 10px 0 14px; }
+.drop strong { color: var(--txt1); }
+.field { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12px; color: var(--txt2); margin-bottom: 8px; }
+.field .sel { border: 1px solid var(--brd); border-radius: 6px; padding: 4px 10px; background: var(--sur); color: var(--txt1); font-weight: 600; }
+.small { font-size: 11px; color: var(--txt3); margin-top: 8px; }
+.mock td code { white-space: nowrap; }
+</style>
+<style>
+.sec-num { flex-shrink: 0; }
+td:first-child code { white-space: nowrap; overflow-wrap: normal; }
+.fase { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; border-radius: 4px; padding: 1px 7px; white-space: nowrap; }
+.fase.f1 { color: var(--teal); background: var(--teal-d); } .fase.f2 { color: var(--blue); background: var(--blue-d); } .fase.f3 { color: var(--txt3); border: 1px solid var(--brd); }
+.mod { border: 1px solid var(--brd); border-radius: 10px; padding: 14px 18px 6px; margin: 14px 0 20px; background: var(--sur); }
+.mod-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 4px; }
+.mod-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; }
+.mod-t { font-size: 15px; font-weight: 700; color: var(--txt1); }
+.mod p { font-size: 12.5px; color: var(--txt2); margin: 4px 0 8px; }
+.mod table { min-width: 620px; }
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); white-space: nowrap; }
+.camada { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 14px 0; }
+.camada > div { border: 1px solid var(--brd); border-radius: 10px; padding: 14px 16px; background: var(--sur); }
+.camada .k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); }
+.camada .t { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 4px 0 6px; }
+.camada ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--txt2); }
+.camada li { margin: 2px 0; }
+.camada > div.pac { border-left: 3px solid var(--purple); } .camada > div.pac .k { color: var(--purple); }
+.dec { border: 1px solid var(--brd); border-radius: 8px; padding: 14px 18px; margin: 12px 0; background: var(--sur); }
+.dec-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; }
+.dec-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.dec-t { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.dec .rec { font-size: 12.5px; color: var(--txt1); }
+.dec .rec strong { color: var(--green); }
+#s05 table, #s09 table, #s10 table, #s11 table { min-width: 720px; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">&larr; Hub de PRDs</a>
+<div class="eyebrow">Proposta · Projeto · Testes</div>
+<h1>Gerador de massa de dados</h1>
+<p class="subtitle">Um app genérico e interativo para modelar entidades, gerar massa coerente, enviá-la a APIs de destino cadastradas e acompanhar e conferir cada requisição. O SplitHub é o primeiro pacote de domínio.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta · Projeto</span></div>
+<div class="meta-pill"><span class="meta-label">Primeiro pacote</span>&nbsp;<span class="meta-val">SplitHub · docs v1.7.0</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">19/10/2026</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprovação</span>&nbsp;<span class="chip info">v2.0</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Para que serve</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Princípios</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Como funciona</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Núcleo e pacotes</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Modelar entidades</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Telas</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Destinos e estrutura de APIs</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Funcionalidades</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Pacote SplitHub</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Envio ao destino</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Segurança e dados</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Arquitetura e fases</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Decisões para aprovar</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> Riscos e dependências</a></li>
+<li><a href="#s15"><span class="toc-num">15</span> Histórico de versões</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Para que serve</span></div>
+
+<p>Testar um sistema pede dados que conversem entre si: o cadastro que o documento referencia, o contrato vigente na data, o pagamento com o valor da cobrança. Montar isso à mão é lento e não se repete igual.</p>
+<p>O <strong>Gerador de massa</strong> é um app à parte, em repositório próprio e <strong>genérico</strong>: o usuário modela as entidades, gera massa coerente, envia a uma API de destino cadastrada, acompanha cada requisição e confere o resultado contra um gabarito. Nada no núcleo é específico de um sistema: o domínio entra por <strong>pacotes</strong>. O SplitHub é o primeiro pacote, construído a partir do <a class="xref" href="https://split-hubhq.github.io/docs/index.html" target="_blank" rel="noopener">docs da API ↗</a>.</p>
+<div class="callout info"><div class="ct">Em uma frase</div><p>Um cliente sintético configurável: modela, gera, envia, acompanha e confere massa de teste para qualquer API — e já vem com o pacote do SplitHub.</p></div>
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Princípios</span></div>
+<div class="table-wrap"><table><thead><tr><th>Princípio</th><th>O que significa</th></tr></thead><tbody><tr><td><strong>Genérico</strong></td><td>O núcleo não conhece nenhum domínio. Entidades, regras e cenários são configuração, organizada em pacotes.</td></tr><tr><td><strong>Segregado</strong></td><td>Repositório, banco e credenciais próprios. Não acessa banco nem código de nenhum sistema testado.</td></tr><tr><td><strong>Só a API do destino</strong></td><td>Fala com o sistema testado apenas pela API, como um cliente.</td></tr><tr><td><strong>Nunca produção</strong></td><td>Só envia para destinos de sandbox, homologação ou desenvolvimento, na lista de domínios permitidos.</td></tr><tr><td><strong>Fictício e marcado</strong></td><td>Todo dado é gerado ou cadastrado como massa e leva a marca da execução.</td></tr><tr><td><strong>Reprodutível</strong></td><td>Mesmo cenário e mesma semente geram a mesma massa.</td></tr><tr><td><strong>Com gabarito</strong></td><td>Cada registro sabe o que deveria acontecer com ele.</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Como funciona</span></div>
+<div class="flow"><div class="flow-step"><div class="flow-k">1 · Destino</div><div class="flow-t">Cadastrar</div><div class="flow-d">À mão ou importando collection e environment do Postman.</div></div><div class="flow-step"><div class="flow-k">2 · Modelar</div><div class="flow-t">Entidades</div><div class="flow-d">Pelo pacote do domínio ou à mão.</div></div><div class="flow-step"><div class="flow-k">3 · Montar</div><div class="flow-t">Cenário</div><div class="flow-d">Volumes, perfis, cadastros salvos e casos de borda.</div></div><div class="flow-step"><div class="flow-k">4 · Gerar</div><div class="flow-t">Massa</div><div class="flow-d">Registros coerentes e o gabarito de cada um.</div></div><div class="flow-step"><div class="flow-k">5 · Revisar</div><div class="flow-t">Pré-visualização</div><div class="flow-d">Contagens, corpos, validação.</div></div><div class="flow-step"><div class="flow-k">6 · Enviar</div><div class="flow-t">Acompanhar</div><div class="flow-d">Monitor de cada requisição.</div></div><div class="flow-step warn"><div class="flow-k">7 · Conferir</div><div class="flow-t">Gabarito × obtido</div><div class="flow-d">Status, erros, campos e eventos.</div></div></div>
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Núcleo e pacotes</span></div>
+
+<p>O que é igual para qualquer sistema fica no núcleo. O que é de um sistema — as entidades dele, as regras de negócio, os cenários e a estrutura da API — fica num pacote, instalado no app e declarado pelo destino.</p>
+<div class="camada">
+<div><div class="k">Núcleo · genérico</div><div class="t">O que o app sabe fazer</div><ul>
+<li>Destinos, autenticação, limites e canais</li><li>Estrutura de APIs: importar, preencher, mapear</li><li>Modelos de entidade, geradores e regras</li><li>Cadastros mestres e cenários</li><li>Envio, monitor, conferência e execuções</li></ul></div>
+<div class="pac"><div class="k">Pacote · por domínio</div><div class="t">O que um sistema exige</div><ul>
+<li>Modelos das entidades do domínio</li><li>Regras de negócio e casos de borda</li><li>Geradores especializados que usa</li><li>Esquema do contrato e estrutura padrão</li><li>Cenários prontos com gabarito</li></ul></div>
+</div>
+<div class="callout ok"><div class="ct">Teste de que o núcleo é genérico</div><p>Modelar e mandar massa para uma API que não é o SplitHub sem escrever código. É o critério de pronto do MVP (seção 12).</p></div>
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Modelar entidades</span></div>
+
+<p>Uma entidade tem campos, cada campo tem um gerador, e regras ligam campos e entidades. Exemplo com duas entidades do pacote SplitHub — o mesmo editor serve a qualquer domínio:</p>
+<div class="table-wrap"><table><thead><tr><th>Campo</th><th>Tipo</th><th>Gerador</th><th>Regra</th></tr></thead><tbody><tr class="grp"><td colspan="4"><strong>Fornecedor</strong></td></tr><tr><td><code>cnpj</code></td><td>texto</td><td>CNPJ</td><td>Único na execução</td></tr><tr><td><code>legal_name</code></td><td>texto</td><td>Nome de empresa + marca da execução</td><td>—</td></tr><tr><td><code>state</code></td><td>UF</td><td>Lista com pesos (SP 40%, RJ 20%…)</td><td>—</td></tr><tr><td><code>address</code></td><td>objeto</td><td>CEP e endereço coerentes com <code>state</code></td><td>—</td></tr><tr class="grp"><td colspan="4"><strong>Contrato</strong></td></tr><tr><td><em>fornecedor</em></td><td>relação</td><td>Pertence a Fornecedor: 1 contrato por fornecedor</td><td>—</td></tr><tr><td><code>payment_method</code></td><td>lista</td><td>rad 70%, supplier 30% (perfis)</td><td>—</td></tr><tr><td><code>start_date</code></td><td>data</td><td>Data de referência − 30 dias</td><td>—</td></tr><tr><td><code>end_date</code></td><td>data</td><td>Expressão: <code>start_date + 395 dias</code></td><td>Depois de <code>start_date</code></td></tr><tr><td><code>rad_eligible</code></td><td>booleano</td><td>Expressão: <code>payment_method = &#x27;rad&#x27;</code></td><td>—</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Peça</th><th>O que é</th></tr></thead><tbody><tr><td><strong>Gerador</strong></td><td>De onde vem o valor: genérico (sequencial, faixa, lista com pesos, data relativa, padrão), do Brasil (CNPJ, CPF, CEP, município) ou especializado de um pacote.</td></tr><tr><td><strong>Expressão</strong></td><td>Campo calculado sobre outros campos e entidades: soma, data mais prazo, condição.</td></tr><tr><td><strong>Relação</strong></td><td>Pertence a, tem muitos — com cardinalidade e distribuição — ou referência a cadastro salvo.</td></tr><tr><td><strong>Perfil</strong></td><td>Variante da entidade com proporção, como 70% RAD e 30% fornecedor.</td></tr><tr><td><strong>Regra</strong></td><td>Restrição entre campos e entidades. O caso de borda é a quebra controlada de uma regra, com o resultado esperado.</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Telas</span></div>
+<div class="table-wrap"><table><thead><tr><th>Tela</th><th>O que o usuário faz</th></tr></thead><tbody><tr><td><strong>Painel</strong></td><td>Últimas execuções, saúde de cada destino e atalhos para os cenários.</td></tr><tr><td><strong>Destinos</strong></td><td>Cadastro à mão ou <em>Importar do Postman</em>; autenticação, limites, canais, receptor de webhook e <em>Testar conexão</em>.</td></tr><tr><td><strong>Estrutura de APIs</strong></td><td>Operações do destino, a entidade e a ação de cada uma, o mapeamento de campos e as divergências com o esquema. Tudo editável à mão.</td></tr><tr><td><strong>Modelos de entidade</strong></td><td>Editor de campos, tipos, geradores, relações, perfis e regras.</td></tr><tr><td><strong>Pacotes</strong></td><td>Pacotes instalados, versões, o que cada um traz; importar e exportar.</td></tr><tr><td><strong>Cadastros</strong></td><td>Biblioteca de cadastros mestres de qualquer entidade: formulário, busca, etiquetas e o id em cada destino.</td></tr><tr><td><strong>Montar cenário</strong></td><td>Assistente em sete passos (abaixo), com resumo e duração estimada.</td></tr><tr><td><strong>Pré-visualização</strong></td><td>Contagens, tabelas, corpo de cada requisição, erros de validação e edição pontual.</td></tr><tr><td><strong>Envio</strong></td><td>Progresso por etapa e painel da execução. Pausar, retomar, cancelar, reenviar falhas.</td></tr><tr><td><strong>Monitor de requisições</strong></td><td>Cada chamada com o que foi enviado, o que voltou, o esperado e a linha do tempo do registro.</td></tr><tr><td><strong>Conferência</strong></td><td>Gabarito contra o obtido, caso a caso, com relatório.</td></tr><tr><td><strong>Execuções</strong></td><td>Histórico, manifesto, repetir e limpar.</td></tr></tbody></table></div>
+<p>O assistente de montagem do cenário:</p>
+<div class="flow"><div class="flow-step"><div class="flow-k">1</div><div class="flow-t">Destino</div><div class="flow-d">E o pacote que ele usa</div></div><div class="flow-step"><div class="flow-k">2</div><div class="flow-t">Entidades</div><div class="flow-d">Quais e quantas</div></div><div class="flow-step"><div class="flow-k">3</div><div class="flow-t">Perfis</div><div class="flow-d">Proporções e faixas</div></div><div class="flow-step"><div class="flow-k">4</div><div class="flow-t">Cadastros</div><div class="flow-d">Salvos a reaproveitar</div></div><div class="flow-step warn"><div class="flow-k">5</div><div class="flow-t">Casos de borda</div><div class="flow-d">Regras a quebrar, com percentual</div></div><div class="flow-step"><div class="flow-k">6</div><div class="flow-t">Ordem</div><div class="flow-d">Dependências e esperas</div></div><div class="flow-step"><div class="flow-k">7</div><div class="flow-t">Resumo</div><div class="flow-d">Contagens e duração</div></div></div>
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Destinos e estrutura de APIs</span></div>
+
+<p>O destino e a sua estrutura de APIs são montados por dois caminhos, que se combinam: importar e depois ajustar à mão, ou preencher à mão e depois importar por cima, vendo o que muda.</p>
+<div class="table-wrap"><table><thead><tr><th>Caminho</th><th>Cadastro do destino</th><th>Estrutura de APIs</th></tr></thead><tbody><tr><td><strong>Importar do Postman</strong></td><td>Do environment: endereço, valores padrão e credenciais, que vão para o cofre.</td><td>Da collection: cada requisição ligada a uma entidade e a uma ação.</td></tr><tr><td><strong>Preencher à mão</strong></td><td>Formulário: tipo de ambiente, endereço, autenticação, limites, idempotência, canais.</td><td>Operação a operação; com pacote instalado, parte da estrutura padrão do pacote.</td></tr></tbody></table></div>
+<div class="flow"><div class="flow-step"><div class="flow-k">1 · Importar</div><div class="flow-t">Collection e environment</div><div class="flow-d">Os dois arquivos JSON do Postman.</div></div><div class="flow-step"><div class="flow-k">2 · Ler</div><div class="flow-t">Estrutura e variáveis</div><div class="flow-d">Requisições, autenticação e variáveis.</div></div><div class="flow-step"><div class="flow-k">3 · Ligar</div><div class="flow-t">Entidades e ações</div><div class="flow-d">Por método e rota; o resto à mão.</div></div><div class="flow-step warn"><div class="flow-k">4 · Comparar</div><div class="flow-t">Com o esquema</div><div class="flow-d">Rotas e campos divergentes.</div></div><div class="flow-step"><div class="flow-k">5 · Salvar</div><div class="flow-t">Destino pronto</div><div class="flow-d">Segredos no cofre.</div></div></div>
+<div class="table-wrap"><table><thead><tr><th>O que vem do arquivo</th><th>Onde fica no app</th></tr></thead><tbody><tr><td>Requisições da collection</td><td>Operações do destino, cada uma ligada a uma entidade e a uma ação</td></tr><tr><td>Método, rota, cabeçalhos e corpo modelo</td><td>Molde da chamada; o conteúdo do corpo vem do gerador, validado pelo esquema</td></tr><tr><td>Autenticação</td><td>Reproduzida pelo app, sem rodar o script</td></tr><tr><td>Endereço base</td><td>Endereço do destino, só se estiver na lista de domínios permitidos</td></tr><tr><td>Credenciais e variáveis secretas</td><td>Cofre</td></tr><tr><td>Variáveis gravadas por script</td><td>Descartadas: o app encadeia os ids pela própria execução</td></tr><tr><td>Demais variáveis</td><td>Valores padrão do destino, editáveis</td></tr><tr><td>Scripts</td><td>Não executados; servem só para sugerir o encadeamento</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Funcionalidades</span></div>
+<p>Treze módulos, todos do núcleo. O que é do SplitHub está no pacote (seção 09).</p>
+<div class="mod" id="m1"><div class="mod-h"><span class="mod-id">M1</span><span class="mod-t">Destinos e integrações</span></div><p>Para onde a massa vai. Cada destino é uma API de teste com autenticação, limites e canais próprios.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-101</span></td><td>Cadastrar destino à mão ou por importação (M2): nome, tipo de ambiente (sandbox, homologação ou desenvolvimento), endereço base, pacote e versão do contrato, valores padrão.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-102</span></td><td>Autenticação configurável: sem autenticação, chave de API em cabeçalho, Basic, Bearer fixo e OAuth 2.0 <em>client credentials</em> com renovação antes de expirar.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-103</span></td><td>Credenciais e segredos cifrados. Nunca voltam à tela, a logs nem a exportações.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-104</span></td><td>Testar a conexão: autenticar, fazer uma chamada de leitura escolhida e mostrar latência e cabeçalhos de limite.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-105</span></td><td>Trava de produção: lista de domínios permitidos por destino; endereço marcado como produção é recusado no cadastro e no envio.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-106</span></td><td>Limites por destino: requisições por minuto, em geral e por operação; tamanho máximo do lote; concorrência; retentativas e espera.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-107</span></td><td>Idempotência configurável: nome do cabeçalho e composição da chave (execução e registro), ou nenhuma.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-108</span></td><td>Canais por destino: API REST (individual e em lote) e consulta periódica no MVP; envio de arquivo e retorno por webhook na Fase 2.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-109</span></td><td>Receptor de webhooks: URL pública por destino e validação de assinatura configurável — cabeçalho, algoritmo e segredo.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><span class="rid">RF-GMD-110</span></td><td>Perfis de acesso: quem cadastra destino e quem pode enviar para cada um.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m2"><div class="mod-h"><span class="mod-id">M2</span><span class="mod-t">Estrutura de APIs</span></div><p>As chamadas que cada destino aceita, importadas ou preenchidas à mão, e a ligação de cada uma com as entidades.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-201</span></td><td>Importar collection (Postman v2.1) e environment do Postman: pastas, requisições, método, rota, cabeçalhos, corpo modelo, autenticação e variáveis.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-202</span></td><td>Ler o environment: endereço validado na lista de domínios; credenciais e variáveis secretas para o cofre; variáveis de execução descartadas; as demais como valores padrão.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-203</span></td><td>Importar especificação OpenAPI 3 como estrutura e como esquema dos corpos.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><span class="rid">RF-GMD-204</span></td><td>Preencher à mão, operação a operação: método, rota, cabeçalhos, corpo modelo e resposta esperada.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-205</span></td><td>Combinar os caminhos: editar o que veio da importação e importar sobre um destino preenchido à mão, vendo o que muda antes de aplicar.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-206</span></td><td>Ligar cada operação a uma entidade e a uma ação — criar, atualizar, consultar, remover, enviar em lote — e mapear os campos da entidade para o corpo e para a rota, inclusive os ids de entidades relacionadas.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-207</span></td><td>Não executar scripts importados. Lê-los só para sugerir o encadeamento: qual variável guarda o id devolvido por qual requisição.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-208</span></td><td>Reconhecer a autenticação da collection e reproduzi-la com as opções do M1.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-209</span></td><td>Trocar as variáveis dinâmicas do Postman (<code>{{$guid}}</code>, <code>{{$timestamp}}</code>, <code>{{$randomInt}}</code>) pelos geradores do app, para a massa continuar reprodutível.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-210</span></td><td>Comparar a estrutura com o esquema do pacote ou da OpenAPI: rota sem esquema, campo desconhecido, obrigatório ausente.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-211</span></td><td>Reimportar mostrando o que mudou e exportar a estrutura para collection e environment, sem segredos.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m3"><div class="mod-h"><span class="mod-id">M3</span><span class="mod-t">Modelos de entidade</span></div><p>O formato de cada coisa que a massa contém, definido por configuração.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-301</span></td><td>Criar tipos de entidade com campos: nome, tipo (texto, número, decimal, data, data e hora, booleano, lista, objeto), obrigatoriedade e restrições (tamanho, faixa, padrão, valores permitidos).</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-302</span></td><td>Relações: pertence a, tem muitos — com cardinalidade e distribuição, como 1 a 5 itens por documento — e referência a cadastro salvo.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-303</span></td><td>Objetos e listas aninhados, como endereço e itens.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-304</span></td><td>Perfis da entidade com proporção, como 70% de um perfil e 30% de outro.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-305</span></td><td>Criar o modelo a partir de um corpo importado (collection) para ajustar, em vez de começar do zero; a partir da OpenAPI na Fase 2.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-306</span></td><td>Versão do modelo; cenários e execuções guardam a versão usada.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m4"><div class="mod-h"><span class="mod-id">M4</span><span class="mod-t">Geradores</span></div><p>De onde vem o valor de cada campo.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-401</span></td><td>Geradores genéricos: sequencial, número em faixa, lista com pesos, data relativa à data de referência, texto por padrão, UUID, e-mail, telefone, nome fictício de empresa e de pessoa.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-402</span></td><td>Geradores do Brasil: CNPJ e CPF com dígito verificador, CEP e endereço coerentes com a UF, código de município do IBGE. CNPJ alfanumérico e inscrição estadual na Fase 2.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-403</span></td><td>Valores monetários redondos por padrão, com faixa e passo configuráveis.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-404</span></td><td>Campo calculado por expressão sobre outros campos e entidades relacionadas: soma dos itens, data mais prazo, valor vezes alíquota.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-405</span></td><td>Semente: mesma semente e mesmo cenário geram a mesma massa.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-406</span></td><td>Geradores especializados entregues com o app e usados pelos pacotes por nome, como a chave de acesso de documento fiscal (D-04).</td><td><span class="fase f1">MVP</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m5"><div class="mod-h"><span class="mod-id">M5</span><span class="mod-t">Regras de coerência</span></div><p>O que mantém a massa consistente — e o que um caso de borda quebra de propósito.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-501</span></td><td>Regras por expressão entre campos e entidades: igualdade, soma, intervalo de datas e condição (se um campo vale X, outro deve…).</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-502</span></td><td>Unicidade: por execução, por destino ou global, como a chave de acesso.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-503</span></td><td>A geração respeita as regras, e a pré-visualização acusa o registro que as quebra.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-504</span></td><td>Caso de borda como quebra controlada de uma regra ou restrição, com percentual e resultado esperado.</td><td><span class="fase f1">MVP</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m6"><div class="mod-h"><span class="mod-id">M6</span><span class="mod-t">Pacotes de domínio</span></div><p>Onde mora o domínio: tudo o que é específico de um sistema fica num pacote, não no núcleo.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-601</span></td><td>Pacote: modelos de entidade, regras, geradores especializados usados, cenários prontos, esquema do contrato e estrutura de APIs padrão, num arquivo versionado.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-602</span></td><td>Instalar, atualizar e remover pacotes. Cada destino declara o pacote e a versão que usa.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-603</span></td><td>Pacote SplitHub entregue com o app (seção 09).</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-604</span></td><td>Criar um pacote a partir do que foi modelado no app e exportá-lo.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><span class="rid">RF-GMD-605</span></td><td>Comparar duas versões de um pacote e mostrar o que muda em modelos e regras.</td><td><span class="fase f3">Fase 3</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m7"><div class="mod-h"><span class="mod-id">M7</span><span class="mod-t">Cadastros mestres</span></div><p>O que é cadastrado fica salvo e vira matriz para os cenários.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-701</span></td><td>Salvar qualquer registro de qualquer entidade como cadastro mestre, preenchido à mão ou escolhido na massa gerada.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-702</span></td><td>Formulário montado a partir do modelo da entidade, com as mesmas restrições e regras da geração.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-703</span></td><td>Modelos de geração salvos: perfil com os campos fixos e os que variam.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-704</span></td><td>Usar cadastros e modelos salvos nos cenários, misturados aos gerados.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-705</span></td><td>Vínculo por destino: o id que cada cadastro recebeu em cada destino, reaproveitado sem criar de novo. Antes de reaproveitar, o app lê o registro no destino e aponta diferença.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-706</span></td><td>Busca, filtros e etiquetas.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-707</span></td><td>Versão do cadastro e envio da alteração como atualização.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><span class="rid">RF-GMD-708</span></td><td>Importar e exportar cadastros e modelos em CSV ou JSON.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m8"><div class="mod-h"><span class="mod-id">M8</span><span class="mod-t">Cenários</span></div><p>O que a massa testa. Cenário é um arquivo salvo: mesmo cenário e mesma semente, mesma massa.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-801</span></td><td>Montar o cenário num assistente: destino e pacote, entidades e volumes, perfis, cadastros salvos, casos de borda, ordem e resumo.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-802</span></td><td>Data de referência configurável, para simular períodos passados e prazos.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-803</span></td><td>Salvar cenário como modelo; os cenários prontos vêm dos pacotes.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-804</span></td><td>Ordem de envio derivada das relações entre entidades, ajustável à mão.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-805</span></td><td>Etapa que depende de recurso criado pelo destino: buscar por consulta ou por evento e usar nas entidades seguintes.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m9"><div class="mod-h"><span class="mod-id">M9</span><span class="mod-t">Pré-visualização e exportação</span></div><p>Ver e ajustar a massa antes de enviar.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-901</span></td><td>Pré-visualizar contagens, tabela por entidade, corpo de cada requisição e o resultado da validação.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-902</span></td><td>Editar um registro e validar de novo.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-903</span></td><td>Exportar JSON por operação e CSV por entidade, com layout de colunas configurável.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-904</span></td><td>Exportar a massa como collection do Postman.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m10"><div class="mod-h"><span class="mod-id">M10</span><span class="mod-t">Envio</span></div><p>Mandar a massa como um cliente faria, dentro do que o destino permite.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-1001</span></td><td>Enviar na ordem do cenário, com a autenticação, os limites e a idempotência do destino.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1002</span></td><td>Retentativas: no 429, respeitar <code>Retry-After</code>; no 5xx, espera exponencial com a mesma chave; em erro de negócio, nenhuma.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1003</span></td><td>Envio em lote quando o destino tiver a operação, até o tamanho máximo configurado.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1004</span></td><td>Pausar, retomar, cancelar e reenviar as falhas.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1005</span></td><td>Estimar a duração antes de enviar, pelo volume e pelos limites do destino.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1006</span></td><td>Envio de arquivo (upload) quando o destino tiver esse canal.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m11"><div class="mod-h"><span class="mod-id">M11</span><span class="mod-t">Monitor de requisições</span></div><p>Acompanhar cada chamada: o que foi enviado, o que voltou e o que aconteceu depois com o registro.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-1101</span></td><td>Monitor ao vivo: horário, destino, execução, operação, método, rota, status, tempo de resposta, tentativa e chave de idempotência.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1102</span></td><td>Detalhe: cabeçalhos e corpo enviados; cabeçalhos e corpo recebidos, com os cabeçalhos de limite e o código de erro. Token e segredos mascarados.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1103</span></td><td>Esperado e obtido lado a lado, com a diferença destacada.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1104</span></td><td>Filtrar por execução, destino, operação, faixa de status (2xx, 4xx, 429, 5xx), código de erro, valor de campo e período.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1105</span></td><td>Linha do tempo por registro: enviado, aceito, processado, recusado ou concluído, pelas respostas e consultas.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1106</span></td><td>Eventos de webhook na mesma linha do tempo, com o payload e a validação da assinatura.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><span class="rid">RF-GMD-1107</span></td><td>Reenviar uma requisição isolada — mesma chave de idempotência ou nova — e copiá-la como curl, sem o token.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1108</span></td><td>Painel da execução: requisições por minuto, consumo do limite, tempo médio, contagem por status e erros mais frequentes.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1109</span></td><td>Exportar o log da execução em JSON, CSV ou HAR.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m12"><div class="mod-h"><span class="mod-id">M12</span><span class="mod-t">Conferência</span></div><p>O gabarito de cada registro contra o que o destino fez.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-1201</span></td><td>Gabarito por registro: status HTTP esperado, código de erro esperado e asserções sobre campos da resposta — caminho no JSON e valor.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1202</span></td><td>Consultas de conferência depois do envio: ler o recurso no destino e comparar com o esperado, inclusive quando o processamento é assíncrono.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1203</span></td><td>Conferência pelos eventos recebidos.</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td><span class="rid">RF-GMD-1204</span></td><td>Relatório por caso, exportável.</td><td><span class="fase f1">MVP</span></td></tr></tbody></table></div>
+</div>
+<div class="mod" id="m13"><div class="mod-h"><span class="mod-id">M13</span><span class="mod-t">Execuções</span></div><p>O registro de cada envio, para repetir, auditar e limpar.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Funcionalidade</th><th>Fase</th></tr></thead><tbody><tr><td><span class="rid">RF-GMD-1301</span></td><td>Histórico: cenário, semente, destino, pacote e versão, quem enviou, contagens e resultado.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1302</span></td><td>Manifesto com os ids criados no destino.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1303</span></td><td>Marcação configurável: código da execução em campos escolhidos do modelo — nome, identificador externo, descrição.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1304</span></td><td>Repetir uma execução com a mesma semente e um código novo.</td><td><span class="fase f1">MVP</span></td></tr><tr><td><span class="rid">RF-GMD-1305</span></td><td>Limpeza pelas operações de remoção ou inativação que o destino oferecer.</td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+</div>
+
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Pacote SplitHub</span></div>
+<p>O primeiro pacote, entregue com o app. Traz o domínio do SplitHub como configuração, a partir do docs da API.</p>
+<div class="table-wrap"><table><thead><tr><th>Item</th><th>O que traz</th></tr></thead><tbody><tr class="grp"><td colspan="2">Entidades</td></tr><tr><td>Comprador e estabelecimentos</td><td>Matriz e filiais na mesma raiz de CNPJ, UF e endereço.</td></tr><tr><td>Fornecedor e representante fiscal</td><td>Regime, CNAE, UF, situação, endereço e contato; representante com CPF.</td></tr><tr><td>Contrato</td><td>Os campos obrigatórios do docs: comprador, fornecedor, identificador externo, vigência, valor, condições, método, prazo, elegibilidade ao RAD e autorrenovação.</td></tr><tr><td>Documento fiscal e itens</td><td>Os 14 tipos do docs, com o modelo correto; itens com IBS da UF e do município e CBS; sem base de cálculo.</td></tr><tr><td>Guia RAD</td><td>Criada pelo destino. O pacote a busca por consulta ou evento (etapa dependente, RF-GMD-805).</td></tr><tr><td>Comprovante</td><td>PIX ou boleto com os campos do retorno CNAB 240.</td></tr><tr class="grp"><td colspan="2">Geradores especializados e regras</td></tr><tr><td>Chave de acesso</td><td>44 posições: UF, ano e mês da emissão, CNPJ emitente, modelo, série, número, tipo de emissão, código e dígito (módulo 11).</td></tr><tr><td>PIX e CNAB</td><td><code>end_to_end_id</code> e <code>txid</code>; autenticação, protocolo e nosso número do retorno CNAB.</td></tr><tr><td>Totais e tributos</td><td>Soma dos itens = total; IBS = IBS da UF + IBS do município; CBS e IBS sempre separados. Alíquotas por ano — em 2026, CBS de 0,9% e IBS de 0,1%.</td></tr><tr><td>Vigência e RAD</td><td>Emissão dentro da vigência do contrato; guia só para documento com método RAD.</td></tr><tr><td>Comprovante</td><td>Valor da guia; no boleto, valor pago = valor do título − descontos + juros e multa.</td></tr><tr class="grp"><td colspan="2">Destino padrão</td></tr><tr><td>Estrutura de APIs</td><td>Rotas do <a class="xref" href="https://split-hubhq.github.io/docs/changelog.html" target="_blank" rel="noopener">docs v1.7.0 ↗</a> e a <a class="xref" href="https://split-hubhq.github.io/docs/postman.html" target="_blank" rel="noopener">Collection Postman do docs ↗</a>. Guias e comprovantes, que ainda não estão na collection, usam a rota do pacote.</td></tr><tr><td>Autenticação e limites</td><td>OAuth 2.0 <em>client credentials</em>, token de 720 segundos renovado com 2 minutos de folga; 1.000 requisições por minuto, 20 por minuto em lote, arquivo e importação; lote de até 500; Idempotency-Key válida por 24 horas.</td></tr><tr><td>Webhooks</td><td>Inscrição em <code>/v1/webhook-subscriptions</code>: 25 por empresa, sem exclusão — o app reaproveita a sua.</td></tr></tbody></table></div>
+<h3>Cenários prontos</h3>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Cenário</th><th>O que gera</th><th>Resultado esperado</th><th>Fase</th></tr></thead><tbody><tr><td>C-01</td><td><strong>Fumaça</strong></td><td>1 fornecedor, 1 contrato RAD, 1 NF-e</td><td>Documento concluído</td><td><span class="fase f1">MVP</span></td></tr><tr><td>C-02</td><td><strong>Mês de um grande comprador</strong></td><td>3 estabelecimentos, 200 fornecedores (70% RAD), 20.000 documentos de NF-e, NFCom, CT-e e NFS-e</td><td>Todos concluídos; 40 lotes de 500, cerca de 2 minutos pelo limite de 20 lotes por minuto</td><td><span class="fase f1">MVP</span></td></tr><tr><td>C-03</td><td><strong>Fornecedor recolhe</strong></td><td>Documentos sem contrato ou com método fornecedor</td><td>Nenhuma guia gerada</td><td><span class="fase f1">MVP</span></td></tr><tr><td>C-04</td><td><strong>Parâmetros próprios</strong></td><td>Documentos com <code>override_contract_params</code></td><td>Método e prazo do documento prevalecem</td><td><span class="fase f1">MVP</span></td></tr><tr><td>C-05</td><td><strong>Recusas de cadastro</strong></td><td>Fornecedor inativo, contrato encerrado reaberto, destinatário fora da organização, contrato fora de vigência, chave repetida</td><td>409 <code>supplier_inactive</code>, 409 <code>invalid_status_transition</code>, <code>recipient_not_registered</code>, 422 <code>contract_not_found</code>, recusa da chave repetida</td><td><span class="fase f1">MVP</span></td></tr><tr><td>C-06</td><td><strong>Ciclo RAD completo</strong></td><td>Documentos RAD, guias, comprovantes PIX e boleto pelos Segmentos O e J, em dia e em atraso</td><td>Guias pagas e conciliadas</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td>C-07</td><td><strong>Divergência financeira</strong></td><td>Comprovante com valor diferente, sem guia, ocorrência não efetivada, duplicidade</td><td>Inconsistências das famílias B e C do catálogo</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td>C-08</td><td><strong>POC Claro</strong></td><td>Massa nos modelos CSV dos passos 2 e 11</td><td>Arquivos prontos para a troca por artefato</td><td><span class="fase f2">Fase 2</span></td></tr><tr><td>C-09</td><td><strong>Prazos</strong></td><td>Documentos perto do fim do prazo de apropriação e da prescrição</td><td><code>alert.appropriation_due_soon</code> e <code>alert.credit_expiring</code></td><td><span class="fase f2">Fase 2</span></td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Envio ao destino</span></div>
+<div class="table-wrap"><table><thead><tr><th>Tema</th><th>Como o núcleo faz</th><th>No pacote SplitHub</th></tr></thead><tbody><tr><td><strong>Autenticação</strong></td><td>A configurada no destino. Token reutilizado e renovado antes de expirar.</td><td>OAuth 2.0, token de 720 s, renovação com 2 min de folga</td></tr><tr><td><strong>Ordem</strong></td><td>Derivada das relações entre entidades; etapas podem esperar um recurso criado pelo destino.</td><td>Fornecedor, contrato, documento; comprovante espera a guia</td></tr><tr><td><strong>Idempotência</strong></td><td>Chave composta pela execução e pelo registro — nunca aleatória por tentativa.</td><td>Idempotency-Key, 24 h; mesma chave com corpo diferente, 409</td></tr><tr><td><strong>Limites</strong></td><td>Os do destino, por operação, sempre abaixo dos da API.</td><td>1.000/min; 20/min em lote, arquivo e importação</td></tr><tr><td><strong>Falhas</strong></td><td>429: <code>Retry-After</code>. 5xx: espera exponencial, mesma chave. Erro de negócio: registrado e conferido, sem retentativa.</td><td>—</td></tr><tr><td><strong>Volume</strong></td><td>Lote até o máximo do destino; duração estimada antes do envio.</td><td>Lote de até 500</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Segurança e dados</span></div>
+<div class="table-wrap"><table><thead><tr><th>Tema</th><th>Como fica</th></tr></thead><tbody><tr><td><strong>Nunca produção</strong></td><td>Lista de domínios permitidos por destino; endereço de produção recusado no cadastro e no envio.</td></tr><tr><td><strong>Segredos</strong></td><td>Cifrados em repouso, fora de cenários, pacotes e exportações. Environment importado com segredo preenchido: o segredo vai para o cofre, o arquivo original não é guardado e o usuário é avisado.</td></tr><tr><td><strong>Dados fictícios</strong></td><td>Todo registro — gerado ou cadastrado à mão — leva a marca de massa. O app não importa base real de cliente.</td></tr><tr><td><strong>Documentos de pessoa</strong></td><td>Um CPF gerado pode coincidir com o de uma pessoa real: usar só onde o destino exige e nunca com nome de pessoa real.</td></tr><tr><td><strong>Sem código importado</strong></td><td>Scripts de collection não rodam; pacotes não trazem código, só configuração (D-04).</td></tr><tr><td><strong>Trilha</strong></td><td>Quem montou, quem enviou, para qual destino e quando. O registro de requisições guarda os corpos da massa, nunca o token nem o segredo.</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Arquitetura e fases</span></div>
+<div class="table-wrap"><table><thead><tr><th>Componente</th><th>Papel</th></tr></thead><tbody><tr><td><strong>Interface web</strong></td><td>As telas da seção 06.</td></tr><tr><td><strong>Núcleo de geração</strong></td><td>Modelos, geradores, regras e gabarito. Não conhece nenhum domínio; biblioteca isolada e testável.</td></tr><tr><td><strong>Pacotes</strong></td><td>Arquivos declarativos versionados com o domínio: modelos, regras, cenários, esquemas e estrutura padrão.</td></tr><tr><td><strong>Estrutura de APIs</strong></td><td>Por destino: operações, mapeamento de campos e autenticação.</td></tr><tr><td><strong>Fila de envio</strong></td><td>Envio fora da tela, com controle de taxa por destino, pausa e retomada.</td></tr><tr><td><strong>Registro de requisições</strong></td><td>Cada chamada e cada evento, com segredos mascarados. Alimenta o monitor e a conferência.</td></tr><tr><td><strong>Receptor de webhooks</strong></td><td>URL pública por destino, com validação de assinatura.</td></tr><tr><td><strong>Banco e cofre</strong></td><td>Destinos, modelos, pacotes, cadastros com vínculo por destino, cenários e execuções; segredos à parte, cifrados.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Fase</th><th>O que entra</th><th>Pronto quando</th></tr></thead><tbody><tr><td><span class="fase f1">MVP</span></td><td>Núcleo genérico: modelos, geradores genéricos e do Brasil, regras por expressão, cenários, pré-visualização, envio REST com as autenticações do M1, monitor, gabarito e conferência por consulta, cadastros mestres e execuções. Destinos à mão ou pelo Postman. Pacote SplitHub com cadastros e documentos.</td><td>Um destino fora do SplitHub é modelado e recebe massa sem escrever código; o pacote SplitHub roda C-01 a C-05 e a conferência fecha.</td></tr><tr><td><span class="fase f2">Fase 2</span></td><td>OpenAPI; webhooks; envio de arquivo; etapas que esperam recurso do destino; versões de modelos e cadastros; exportar pacote e collection. Pacote SplitHub com guias e comprovantes.</td><td>C-06 a C-09 rodam de ponta a ponta.</td></tr><tr><td><span class="fase f3">Fase 3</span></td><td>Comparar versões de pacote; corpos em XML; no pacote SplitHub, XML de documento fiscal e notas de saída com débitos.</td><td>Massa de vendas compensa créditos no SplitHub.</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Decisões para aprovar</span></div>
+<h3>Do núcleo</h3>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-01</span><span class="dec-t">Tecnologia</span></div><p class="rec">Recomendação: <strong>TypeScript na interface e no servidor</strong>, com PostgreSQL. Um só idioma para esquemas, núcleo e telas.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-02</span><span class="dec-t">Onde o app roda</span></div><p class="rec">Recomendação: <strong>Hospedado, com acesso restrito ao time.</strong> O receptor de webhooks precisa de URL pública, e o envio longo não pode depender de uma máquina ligada.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-03</span><span class="dec-t">Formato do pacote</span></div><p class="rec">Recomendação: <strong>Arquivo declarativo (YAML ou JSON) versionado em repositório</strong>, importado pelo app. O domínio fica revisável em código, fora do banco.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-04</span><span class="dec-t">Regras e geradores sem código livre</span></div><p class="rec">Recomendação: <strong>Linguagem de expressão segura para regras e campos calculados</strong>, sem acesso a rede nem a arquivo. Geradores especializados entram como módulos do app e o pacote os chama por nome — pacote não executa código.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-05</span><span class="dec-t">Fonte da estrutura e dos esquemas</span></div><p class="rec">Recomendação: <strong>Papéis separados.</strong> A chamada — rota, método, cabeçalhos, autenticação — vem da collection ou da OpenAPI do destino; o conteúdo do corpo segue o esquema do pacote. Divergência aparece na importação.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-06</span><span class="dec-t">Operação sem requisição na estrutura</span></div><p class="rec">Recomendação: <strong>Usar a operação padrão do pacote, marcada como tal</strong>, em vez de bloquear.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-07</span><span class="dec-t">Quem envia</span></div><p class="rec">Recomendação: <strong>Produto e QA.</strong> Desenvolvimento usa os mesmos cenários pelo app, sem acesso direto às credenciais.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-08</span><span class="dec-t">Retenção</span></div><p class="rec">Recomendação: <strong>Execuções, massa e registro de requisições por 90 dias</strong>; cenários, cadastros e pacotes, sem prazo.</p></div>
+<h3>Do pacote SplitHub</h3>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-09</span><span class="dec-t">Cadastro do comprador</span></div><p class="rec">Recomendação: A API pública não cria os estabelecimentos do comprador. <strong>No MVP, o pacote gera os dados e um roteiro de cadastro na plataforma</strong>; avaliar uma rota de apoio só nos sandboxes.</p></div>
+<div class="dec"><div class="dec-h"><span class="dec-id">D-10</span><span class="dec-t">Guias sem evento</span></div><p class="rec">Recomendação: O evento <code>rad.darf_received</code> está no contrato, mas o produto ainda não o emite (PRD de Execução RAD). <strong>Consulta periódica a <code>GET /v1/rad/guides</code></strong>, trocando pelo evento quando ele existir.</p></div>
+</div>
+
+<div class="section" id="s14">
+<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Riscos e dependências</span></div>
+<div class="table-wrap"><table><thead><tr><th>Risco</th><th>Efeito</th><th>Como tratar</th></tr></thead><tbody><tr><td><strong>Genérico demais para usar</strong></td><td>Modelar do zero afasta quem só quer massa.</td><td>Pacotes prontos, modelo criado a partir do corpo importado e cenários de exemplo.</td></tr><tr><td><strong>Contrato muda no destino</strong></td><td>A massa sai fora do contrato e falha por motivo errado.</td><td>Pacote e esquema por versão; o destino declara a versão; validação antes do envio.</td></tr><tr><td><strong>Acúmulo no destino</strong></td><td>Destinos sem exclusão enchem de massa.</td><td>Marcação por execução, limpeza pelo que o destino oferece e reinício periódico combinado.</td></tr><tr><td><strong>Collection com segredo</strong></td><td>Environment exportado com credencial ou token preenchido.</td><td>Segredo para o cofre, token descartado, arquivo não guardado, usuário avisado.</td></tr><tr><td><strong>Estrutura fora do esquema</strong></td><td>A collection usa rota ou campo que o esquema não tem.</td><td>Comparação na importação; o destino só fica pronto com as divergências aceitas.</td></tr><tr><td><strong>Cadastro fora de sincronia</strong></td><td>O registro mudou no destino, e o cadastro mestre não sabe.</td><td>Leitura no destino antes de reaproveitar o vínculo.</td></tr><tr><td><strong>Limites de taxa</strong></td><td>Volume alto leva minutos e disputa a cota com outros testes.</td><td>Teto por destino e estimativa antes do envio.</td></tr></tbody></table></div>
+</div>
+
+<div class="section" id="s15">
+<div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Histórico de versões</span></div>
+
+<div class="ver-row"><div class="ver-num">v2.0</div><div class="ver-desc"><strong>19/10/2026</strong> — <strong>App genérico.</strong> O núcleo deixa de conhecer o SplitHub: modelos de entidade, geradores e regras passam a ser configuração, e o domínio entra por pacotes. O SplitHub vira o primeiro pacote, com entidades, regras, cenários e estrutura do docs. Autenticação, limites e idempotência passam a ser configurados por destino. Módulos reorganizados em 13, com ids renumerados por módulo; 83 funcionalidades; decisões do núcleo e do pacote separadas.</div></div>
+<div class="ver-row"><div class="ver-num">v1.3</div><div class="ver-desc"><strong>19/10/2026</strong> — Cadastros mestres e monitor de requisições.</div></div>
+<div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>19/10/2026</strong> — Destino importado do Postman ou preenchido à mão, combináveis.</div></div>
+<div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>19/10/2026</strong> — Estrutura de APIs por importação de collection e environment do Postman.</div></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>19/10/2026</strong> — Primeira versão, voltada ao SplitHub.</div></div>
+</div>
+
+</div>
+</body>
+</html>
