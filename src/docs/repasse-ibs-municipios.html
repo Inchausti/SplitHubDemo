@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repasse do IBS aos Municípios — Referência · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+
+.src { font-size: 11px; color: var(--txt3); white-space: nowrap; }
+.src a { color: var(--txt3); }
+.ess { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 14px 0; }
+.ess-c { border: 1px solid var(--brd); border-radius: 12px; padding: 12px 14px; background: var(--sur); }
+.ess-k { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--teal); }
+.ess-t { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 4px 0; }
+.ess-d { font-size: 12.5px; color: var(--txt2); line-height: 1.45; }
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 0; margin: 14px 0; }
+.fl { position: relative; padding: 10px 18px 10px 12px; border: 1px solid var(--brd); border-right: 0; background: var(--sur); }
+.fl:first-child { border-radius: 10px 0 0 10px; }
+.fl:last-child { border-right: 1px solid var(--brd); border-radius: 0 10px 10px 0; }
+.fl::after { content: '›'; position: absolute; right: 5px; top: 50%; transform: translateY(-50%); color: var(--txt3); font-weight: 700; }
+.fl:last-child::after { content: ''; }
+.fl.ret { background: var(--blue-d); }
+.fl.end { background: var(--teal-d); }
+.fl-c { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; color: var(--txt1); }
+.fl-t { font-size: 12px; font-weight: 700; color: var(--txt1); margin-top: 2px; }
+.fl-d { font-size: 11px; color: var(--txt3); margin-top: 2px; line-height: 1.35; }
+@media (max-width: 760px) {
+  .flow { grid-template-columns: minmax(0, 1fr); }
+  .fl, .fl:first-child, .fl:last-child { border: 1px solid var(--brd); border-radius: 0; margin-top: -1px; }
+  .fl::after { content: ''; }
+}
+.ev { font-family: 'JetBrains Mono', monospace; font-weight: 800; color: var(--txt1); white-space: nowrap; }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.formula { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--sur2); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 12px; margin: 10px 0; overflow-x: auto; color: var(--txt1); }
+.tag-n { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+.tag-n.ok { color: var(--teal); background: var(--teal-d); }
+.tag-n.no { color: var(--red); background: var(--red-d); }
+.tag-n.pd { color: var(--amber); background: var(--amber-d); }
+.fontes li { margin: 6px 0; font-size: 13px; }
+</style>
+<style>
+.src { white-space: normal; }
+tr.grp td { background: var(--sur2); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); }
+tr.tot td { color: var(--txt1); font-weight: 700; }
+tr.tot td.num { color: var(--teal); }
+td.art { font-size: 11px; color: var(--txt3); white-space: nowrap; }
+.fl-c { color: var(--amber); }
+.formula .fc { color: var(--txt3); }
+.feat-body h4:first-child { margin-top: 0; }
+.feat-body ul.plain { margin: 6px 0 10px; }
+.feat-id.p { color: var(--teal); background: var(--teal-d); }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Referência · Reforma Tributária</div>
+<h1>Repasse do IBS aos Municípios</h1>
+<p class="subtitle">Como o Comitê Gestor do IBS calcula e entrega o que cabe a cada prefeitura, como funciona a cota-parte estadual, o que faz o valor mudar todo mês e como a prefeitura concilia cada parcela recebida.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Referência normativa</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">20/10/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">LC 227/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Repasse</span>&nbsp;<span class="meta-val">até 3 dias úteis</span></div>
+<div class="meta-pill"><span class="meta-label">Coeficientes</span>&nbsp;<span class="meta-val">31/08/2027</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip teal">Referência</span>&nbsp;<span class="chip warn">v1.0</span></div>
+</div>
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> O essencial</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Linha do tempo da transição</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Receita própria</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Parcela retida e complementar</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Cota-parte estadual</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> O repasse em uma conta</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> O que muda o repasse</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Conciliação mensal, parcela por parcela</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Artefatos da conciliação</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Rotina mensal de conferência</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Calendário e conferências pontuais</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Indicadores</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Onde contestar</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> O que ainda não está definido</a></li>
+<li><a href="#s15"><span class="toc-num">15</span> Fontes</a></li>
+<li><a href="#s16"><span class="toc-num">16</span> Histórico de versões</a></li>
+</ul></div>
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O essencial</span></div>
+<p>O IBS é arrecadado de forma centralizada pelo <strong>Comitê Gestor do IBS</strong>, que distribui o produto da arrecadação aos Estados, ao Distrito Federal e aos Municípios <span class="src">(LC 227/2026, art. 2º, II)</span>. A prefeitura não recebe o imposto do contribuinte: recebe <strong>repasses</strong> do Comitê Gestor, calculados pelo destino de cada operação e sujeitos a regras de transição que vão até 2096. A CBS é da União, administrada pela Receita Federal, e não entra nesse repasse.</p>
+<div class="ess"><div class="ess-c"><div class="ess-k">Quem distribui</div><div class="ess-t">Comitê Gestor do IBS</div><div class="ess-d">Arrecada, retém, compensa e distribui. Publica relatório mensal por ente (art. 43).</div></div><div class="ess-c"><div class="ess-k">Base</div><div class="ess-t">Destino da operação</div><div class="ess-d">IBS extinto nas operações com local no município, menos o que virou crédito do adquirente (art. 106).</div></div><div class="ess-c"><div class="ess-k">Composição</div><div class="ess-t">Quatro parcelas</div><div class="ess-d">Receita própria, parcela retida da transição, distribuição complementar e cota-parte do IBS estadual.</div></div><div class="ess-c"><div class="ess-k">Prazo</div><div class="ess-t">Até 3 dias úteis</div><div class="ess-d">Depois de cada período de determinação, que vai de 1 dia útil ao período de apuração (art. 104).</div></div></div>
+<div class="callout info"><div class="ct">Por que a conferência é da prefeitura</div><p>O cálculo é do Comitê Gestor, mas o resultado é receita do município: entra nos mínimos de saúde e educação, no Fundeb e nos relatórios fiscais. A lei dá ao município relatórios mensais agregados por ente e prazo para contestar só os coeficientes da transição. Conferir o resto depende de a prefeitura montar a própria estimativa — é disso que tratam as seções 08 a 10.</p></div>
+<div class="callout warn"><div class="ct">Escopo e data da leitura</div><p>Estudo de referência regulatória; não descreve funcionalidade do SplitHub. Leitura feita em 20/10/2026 sobre o texto original da LC 227/2026. Os atos do Comitê Gestor que detalham o cálculo e a alocação de cada item (art. 112, § 1º) ainda podem mudar a forma de conferir.</p></div>
+</div>
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Linha do tempo da transição</span></div>
+<div class="table-wrap"><table><thead><tr><th>Ano</th><th>ISS e ICMS</th><th>IBS</th><th>Retenção de transição</th><th>Retenção complementar</th><th>Teto do financiamento do Comitê Gestor</th></tr></thead><tbody><tr><td><strong>2026</strong></td><td>Integrais</td><td>0,1% estadual, em teste</td><td>—</td><td>—</td><td>Até 100%, limitado ao orçamento</td></tr><tr><td><strong>2027–2028</strong></td><td>Integrais</td><td>0,05% estadual + 0,05% municipal</td><td>—</td><td>—</td><td>Até 50%</td></tr><tr><td><strong>2029</strong></td><td>90% das alíquotas</td><td>Sobe para compensar</td><td>80%</td><td>5%</td><td>Até 2%</td></tr><tr><td><strong>2030</strong></td><td>80%</td><td>Sobe para compensar</td><td>80%</td><td>5%</td><td>Até 1%</td></tr><tr><td><strong>2031</strong></td><td>70%</td><td>Sobe para compensar</td><td>80%</td><td>5%</td><td>Até 0,67%</td></tr><tr><td><strong>2032</strong></td><td>60%</td><td>Sobe para compensar</td><td>80%</td><td>5%</td><td>Até 0,5%</td></tr><tr><td><strong>2033</strong></td><td>Extintos</td><td>Integral</td><td>90%</td><td>5%</td><td>Até 0,2%</td></tr><tr><td><strong>2034–2077</strong></td><td>—</td><td>Integral</td><td>Menos 2 pontos por ano: 88% em 2034, 2% em 2077</td><td>5%</td><td>Até 0,2%</td></tr><tr><td><strong>2078–2096</strong></td><td>—</td><td>Integral</td><td>—</td><td>Menos 0,25 ponto por ano: 4,75% em 2078, 0,25% em 2096</td><td>Até 0,2%</td></tr><tr><td><strong>2097 em diante</strong></td><td>—</td><td>Integral</td><td>—</td><td>—</td><td>Até 0,2%</td></tr></tbody></table></div>
+<p class="src">Retenções: LC 227/2026, arts. 109 e 110, e ADCT, art. 131. Financiamento: LC 227/2026, arts. 46 a 51. Os pontos por ano das retenções são conta nossa sobre as frações da lei (1/45 e 1/20).</p>
+<p>Em 2027 e 2028 o Comitê Gestor pode apurar a Receita-Base pela receita agregada, sem cálculo por operação, e usar estimativas onde faltarem 12 meses de dados <span class="src">(art. 112, § 7º)</span>. Com a alíquota de teste e até metade da arrecadação indo para o financiamento do Comitê Gestor, o repasse desses anos é pequeno. É o momento de montar e ensaiar a rotina de conferência: a partir de 2029 o IBS passa a substituir o ISS e o ICMS de verdade.</p>
+</div>
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Receita própria: o IBS que segue o consumo</span></div>
+<p class="sec-sub">É a parcela calculada pelo destino: o IBS das operações cujo local fica no município. O Comitê Gestor a calcula a cada período de determinação, nesta ordem:</p>
+<div class="flow"><div class="fl"><div class="fl-c">art. 106</div><div class="fl-t">IBS extinto</div><div class="fl-d">Pagamento, split payment, compensação, recolhimento pelo adquirente</div></div><div class="fl"><div class="fl-c">art. 106</div><div class="fl-t">Menos o crédito</div><div class="fl-d">Sai a parte apropriada como crédito pelo adquirente</div></div><div class="fl"><div class="fl-c">art. 107</div><div class="fl-t">Devolução geral</div><div class="fl-d">Cashback às pessoas físicas, percentual igual para todos</div></div><div class="fl"><div class="fl-c">art. 108</div><div class="fl-t">Créditos presumidos</div><div class="fl-d">Percentual igual para todos; entram juros e multas de mora</div></div><div class="fl ret"><div class="fl-c">art. 109</div><div class="fl-t">Retenção de transição</div><div class="fl-d">80% a 90%, caindo até 2077</div></div><div class="fl ret"><div class="fl-c">art. 110</div><div class="fl-t">Retenção complementar</div><div class="fl-d">5% do que sobra</div></div><div class="fl end"><div class="fl-c">arts. 111 e 119</div><div class="fl-t">Receita-Base</div><div class="fl-d">Volta o ajuste da alíquota própria; deduções municipais</div></div></div>
+<div class="table-wrap"><table><thead><tr><th>Passo</th><th>O que acontece</th><th>Artigo</th></tr></thead><tbody><tr><td><strong>Receita inicial</strong></td><td>IBS extinto e não apropriado como crédito, nas operações com destino no município, nos regimes regular, Simples Nacional e específicos. O destino é o local da operação (art. 11 da LC 214). Entram juros e multas de mora; ficam de fora multas punitivas e os juros sobre elas. <strong>Estornos e cancelamentos afetam a receita no período em que ocorrem.</strong></td><td class="art">art. 106</td></tr><tr><td><strong>Fora da receita inicial</strong></td><td>IBS de produtor rural e de transportador autônomo não contribuintes, e de MEI. O primeiro grupo é rateado depois, pela participação de cada ente nos últimos 12 meses.</td><td class="art">art. 106, § 3º; art. 108, § 3º</td></tr><tr><td><strong>Simples Nacional</strong></td><td>O Comitê Gestor identifica o destino pelos documentos fiscais, pelas declarações ou por lançamento de ofício, na proporção entre as alíquotas estadual e municipal.</td><td class="art">art. 106, § 2º</td></tr><tr><td><strong>Devolução geral</strong></td><td>Dedução de um percentual fixado pelo Comitê Gestor a cada período, por estimativa, igual para todos os entes.</td><td class="art">art. 107, I</td></tr><tr><td><strong>Alíquota própria</strong></td><td>Se o município fixou alíquota acima da referência, o ganho é deduzido antes das retenções; se abaixo, a perda é acrescida. Os dois voltam na Receita-Base: o efeito da escolha fica inteiro com o município e não passa pelas retenções.</td><td class="art">arts. 107, II, e 111</td></tr><tr><td><strong>Créditos presumidos</strong></td><td>Dedução de percentual igual para todos, que financia os créditos de produtor rural, transportador autônomo, reciclagem, bens móveis usados, cooperativas e Zona Franca de Manaus.</td><td class="art">art. 108, §§ 1º e 2º</td></tr><tr><td><strong>Itens não alocáveis</strong></td><td>O que não tem destino identificável é distribuído pela participação de cada ente nos últimos 12 meses.</td><td class="art">art. 112, §§ 2º e 3º</td></tr><tr><td><strong>Retenções</strong></td><td>Retenção de transição e, sobre o que sobra, retenção complementar. Multas punitivas não sofrem retenção.</td><td class="art">arts. 109 e 110</td></tr><tr><td><strong>Destinação municipal</strong></td><td>Soma multas punitivas e juros quando a fiscalização foi do município. Deduz a devolução específica criada por lei municipal, o fundo municipal de combate à pobreza (quando houver) e o financiamento do Comitê Gestor.</td><td class="art">art. 119</td></tr><tr><td><strong>Acertos</strong></td><td>Se as deduções do período não cobrem as despesas, a diferença é compensada no período seguinte, com percentuais maiores. Se sobram, o valor pode ficar reservado, reduzir percentuais ou ser devolvido aos entes.</td><td class="art">art. 112, §§ 4º a 6º</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Parcela retida e distribuição complementar</span></div>
+<h3>Parcela retida da transição</h3>
+<p>O valor retido de todos os entes volta a eles pelo <strong>coeficiente de participação</strong>: a receita média de referência de cada ente sobre o total <span class="src">(arts. 114 a 116)</span>. Para o município, a receita média soma o <strong>ISS</strong> e a <strong>cota-parte de ICMS</strong> recebida, de 2019 a 2026, corrigidas até 2026 pela variação nominal da arrecadação de ICMS e ISS. Entram Simples Nacional, juros e multas, inscritos ou não em dívida ativa <span class="src">(art. 115)</span>.</p>
+<ul class="plain"><li><span><strong>Publicação:</strong> até 31/08/2027, no DOU, com fontes e cálculo detalhados por ente (art. 116, § 1º).</span></li><li><span><strong>Fontes:</strong> Siconfi e balanços oficiais; outras fontes admitidas com metodologia uniforme; estimativa para quem não prestou contas (art. 116, §§ 2º a 4º).</span></li><li><span><strong>Componentes:</strong> o valor recebido é separado em ISS e cota-parte de ICMS, na proporção da receita média. Só o componente de cota-parte de ICMS sofre dedução do Fundeb; os dois pagam o fundo de combate à pobreza, quando houver, e o financiamento do Comitê Gestor (arts. 121, 126 e 127).</span></li></ul>
+<h3>Distribuição complementar</h3>
+<p>A retenção complementar é distribuída todo mês, de 2029 a 2096, aos entes com a <strong>menor razão</strong> entre a média mensal de IBS dos últimos 12 meses e a receita média de referência ajustada. A distribuição sobe os mais baixos até que a razão se iguale entre os beneficiados <span class="src">(art. 117)</span>.</p>
+<ul class="plain"><li><span><strong>Teto da receita ajustada:</strong> o menor valor entre a média do próprio ente e 3 vezes a média per capita do conjunto, multiplicada pela população média de 2019 a 2026 (§§ 3º e 4º).</span></li><li><span><strong>População:</strong> estimativas mais recentes do IBGE; revisões não reabrem valores já distribuídos (§§ 7º e 8º).</span></li><li><span><strong>De 2029 a 2033:</strong> os valores do ano anterior são ajustados pela razão entre as alíquotas de referência dos dois anos (§ 2º).</span></li></ul>
+<p>Os <strong>rendimentos de aplicação</strong> do IBS também são distribuídos integralmente, na proporção da receita de cada ente nos últimos 12 meses <span class="src">(art. 103)</span>.</p>
+</div>
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Cota-parte estadual</span></div>
+<h3>O que é</h3>
+<p><strong>Cota-parte</strong> é a fatia que a Constituição reserva aos Municípios na arrecadação de um imposto do Estado. Hoje, 25% do ICMS de cada Estado pertence aos seus Municípios <span class="src">(Constituição, art. 158, IV, "a")</span>, distribuídos por um índice em que pelo menos 65% segue o <strong>valor adicionado fiscal</strong> (VAF) gerado em cada município e até 35% segue lei estadual, com no mínimo 10 pontos por indicadores de educação <span class="src">(art. 158, § 1º)</span>. Com a reforma, a mesma regra dos 25% passa a valer para o IBS estadual <span class="src">(art. 158, IV, "b")</span>, mas com critérios novos e sem VAF <span class="src">(art. 158, § 2º; LC 227/2026, art. 128)</span>.</p>
+<div class="table-wrap"><table><thead><tr><th></th><th>Cota-parte do ICMS (hoje)</th><th>Cota-parte do IBS (reforma)</th></tr></thead><tbody><tr><td><strong>Base</strong></td><td>25% do ICMS arrecadado pelo Estado</td><td>25% da Receita-Base do IBS do Estado, depois das deduções estaduais</td></tr><tr><td><strong>Critérios</strong></td><td>Mínimo de 65% por VAF; até 35% por lei estadual, com no mínimo 10 pontos de educação</td><td>80% população; 10% aprendizagem e equidade; 5% preservação ambiental; 5% partes iguais</td></tr><tr><td><strong>Quem calcula o índice</strong></td><td>Estado</td><td>Estado, que informa ao Comitê Gestor (art. 130)</td></tr><tr><td><strong>Quem repassa</strong></td><td>Estado, pela conta de participação dos Municípios, toda semana (LC 63/1990)</td><td>Comitê Gestor, direto ao Município, em até 3 dias úteis após cada período (arts. 2º, § 1º, IX, e 128, § 2º)</td></tr><tr><td><strong>Deduções</strong></td><td>Fundeb (20%)</td><td>Fundeb (20%) e financiamento do Comitê Gestor (art. 128, § 1º)</td></tr><tr><td><strong>Quem leva mais</strong></td><td>Municípios com indústria e geração de valor</td><td>Municípios populosos, com peso para educação e meio ambiente</td></tr></tbody></table></div>
+<h3>Como a operação vai funcionar</h3>
+<div class="flow"><div class="fl"><div class="fl-c">art. 111</div><div class="fl-t">Receita-Base do Estado</div><div class="fl-d">IBS estadual pelo destino, com as mesmas etapas da receita própria</div></div><div class="fl"><div class="fl-c">art. 118, I</div><div class="fl-t">Multas estaduais</div><div class="fl-d">Soma multas punitivas e juros da fiscalização do Estado</div></div><div class="fl ret"><div class="fl-c">art. 118, II</div><div class="fl-t">Deduções estaduais</div><div class="fl-d">Saldo credor de ICMS compensado, estoque de ST, devolução específica</div></div><div class="fl ret"><div class="fl-c">art. 118, § 2º</div><div class="fl-t">Fundo de pobreza</div><div class="fl-d">Fundo estadual de combate à pobreza, quando houver</div></div><div class="fl"><div class="fl-c">art. 118, § 3º</div><div class="fl-t">Retém 25%</div><div class="fl-d">Parcela que pertence aos Municípios do Estado</div></div><div class="fl"><div class="fl-c">arts. 128 e 130</div><div class="fl-t">Aplica o índice</div><div class="fl-d">Coeficiente de cada Município informado pelo Estado</div></div><div class="fl end"><div class="fl-c">art. 128</div><div class="fl-t">Deduz e transfere</div><div class="fl-d">Fundeb e financiamento; crédito em até 3 dias úteis</div></div></div>
+<div class="callout warn"><div class="ct">A cota-parte depende de deduções do Estado</div><p>A base dos 25% é a Receita-Base estadual <strong>depois</strong> do saldo credor de ICMS compensado, da compensação do estoque de substituição tributária em 31/12/2032, da devolução específica estadual e do fundo estadual de combate à pobreza (art. 118, II e § 2º; art. 141). Quando os saldos credores de ICMS começarem a ser compensados contra o IBS, a cota-parte cai sem que nada mude no município.</p></div>
+<h3>A transição: o VAF não sai de uma vez</h3>
+<p>A cota-parte do IBS incide só sobre a parte <strong>não retida</strong> do IBS estadual. A parte retida volta aos entes pelo coeficiente da média de 2019 a 2026 — e, no coeficiente do município, entra a cota-parte de ICMS que ele recebeu nesses anos, calculada pelo VAF <span class="src">(art. 115)</span>. Por isso o critério antigo continua pesando por décadas e só sai à medida que a retenção cai.</p>
+<div class="table-wrap"><table><thead><tr><th>Ano</th><th>ICMS e sua cota-parte por VAF</th><th>IBS estadual retido — volta pela média histórica</th><th>IBS estadual não retido — cota-parte pelos critérios novos</th></tr></thead><tbody><tr><td><strong>2026–2028</strong></td><td>Integrais</td><td>—</td><td>IBS em teste</td></tr><tr><td><strong>2029–2032</strong></td><td>90% a 60% das alíquotas</td><td>80%</td><td>20%</td></tr><tr><td><strong>2033</strong></td><td>Extinto; o ICMS que ainda entrar é repartido pelos índices de 2032 (LC 63/1990, alterada pelo art. 166 da LC 227)</td><td>90%</td><td>10%</td></tr><tr><td><strong>2050</strong></td><td>—</td><td>56%</td><td>44%</td></tr><tr><td><strong>2077</strong></td><td>—</td><td>2%</td><td>98%</td></tr><tr><td><strong>2078 em diante</strong></td><td>—</td><td>—</td><td>100%</td></tr></tbody></table></div>
+<p class="src">A retenção complementar de 5% (art. 110) incide depois da retenção de transição e não aparece nesta tabela.</p>
+<p>Na prática, o município terá por décadas <strong>três fluxos de origem estadual</strong> para conciliar: o resíduo do ICMS, repartido pela LC 63; o componente de cota-parte de ICMS da parcela retida, pelo coeficiente histórico; e a cota-parte do IBS, pelos critérios novos.</p>
+<h3>O cálculo do índice</h3>
+<div class="formula">Índice do município =<br>
+&nbsp;&nbsp;0,80 × (população do município ÷ população do Estado)<br>
++ 0,10 × participação do município no indicador de aprendizagem e equidade<br>
++ 0,05 × participação do município no indicador ambiental<br>
++ 0,05 × (1 ÷ número de Municípios do Estado)<br>
+<br>
+Cota-parte do município = base estadual × 25% × índice <span class="fc">− Fundeb (20%) − financiamento do Comitê Gestor</span></div>
+<div class="table-wrap"><table><thead><tr><th>Componente</th><th>Dado do exemplo</th><th>Peso</th><th class="num">Contribuição ao índice</th></tr></thead><tbody><tr><td><strong>População</strong></td><td>50.000 de 10.000.000 habitantes = 0,5%</td><td>80%</td><td class="num">0,40%</td></tr><tr><td><strong>Aprendizagem e equidade</strong></td><td>0,6% do indicador estadual</td><td>10%</td><td class="num">0,06%</td></tr><tr><td><strong>Preservação ambiental</strong></td><td>0,6% do indicador estadual</td><td>5%</td><td class="num">0,03%</td></tr><tr><td><strong>Partes iguais</strong></td><td>1 de 500 Municípios = 0,2%</td><td>5%</td><td class="num">0,01%</td></tr><tr class="tot"><td>Índice do município</td><td></td><td></td><td class="num">0,50%</td></tr></tbody></table></div>
+<h3>Variáveis da cota-parte</h3>
+<div class="table-wrap"><table><thead><tr><th>Variável</th><th>Como entra na conta</th><th>Quem controla</th></tr></thead><tbody><tr class="grp"><td colspan="3">Base estadual</td></tr><tr><td><strong>IBS estadual extinto com destino no Estado</strong></td><td>Base de tudo</td><td>Contribuintes; economia do Estado</td></tr><tr><td><strong>Crédito apropriado nas operações destinadas ao Estado</strong></td><td>Reduz a base</td><td>Contribuintes</td></tr><tr><td><strong>Alíquota própria do Estado</strong></td><td>O efeito volta inteiro na Receita-Base do Estado — e 25% dele vai aos Municípios</td><td>Lei estadual</td></tr><tr><td><strong>Percentual de retenção do ano</strong></td><td>Define a fatia não retida, a única que segue os critérios novos</td><td>LC 227/2026 e ADCT</td></tr><tr><td><strong>Saldo credor de ICMS e estoque de ST compensados</strong></td><td>Reduzem a base antes dos 25%</td><td>Contribuintes; homologação pelo Estado</td></tr><tr><td><strong>Devolução específica e fundo de pobreza estaduais</strong></td><td>Reduzem a base antes dos 25%</td><td>Lei estadual</td></tr><tr class="grp"><td colspan="3">Índice</td></tr><tr><td><strong>População do município e do Estado</strong></td><td>80% do índice</td><td>IBGE</td></tr><tr><td><strong>Indicadores de aprendizagem e equidade</strong></td><td>10% do índice</td><td>Lei estadual; resultados das escolas do município</td></tr><tr><td><strong>Indicadores de preservação ambiental</strong></td><td>5% do índice</td><td>Lei estadual; gestão ambiental do município</td></tr><tr><td><strong>Número de Municípios do Estado</strong></td><td>5% em partes iguais</td><td>—</td></tr><tr class="grp"><td colspan="3">Deduções</td></tr><tr><td><strong>Fundeb e financiamento do Comitê Gestor</strong></td><td>Saem do valor de cada Município</td><td>Constituição; Conselho Superior do Comitê Gestor</td></tr></tbody></table></div>
+<div class="callout ok"><div class="ct">O que o município consegue influenciar</div><p>Os indicadores de educação e de meio ambiente são os únicos componentes do índice que dependem da gestão local. Juntos, valem 15% da cota-parte — e a lei estadual que os define merece acompanhamento desde já.</p></div>
+</div>
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">O repasse em uma conta</span></div>
+<div class="formula">Repasse do período =<br>
+&nbsp;&nbsp;Receita-Base própria<span class="fc"> (arts. 106 a 111)</span><br>
++ parcela retida × coeficiente do município<span class="fc"> (arts. 114 a 116)</span><br>
++ distribuição complementar, se elegível<span class="fc"> (art. 117)</span><br>
++ base estadual × 25% × índice do município<span class="fc"> (art. 128)</span><br>
++ multas e juros da fiscalização própria + rendimentos ± acertos<br>
+− Fundeb<span class="fc"> (componente de cota-parte de ICMS e cota-parte do IBS)</span><br>
+− fundo municipal de combate à pobreza − devolução específica − financiamento do Comitê Gestor</div>
+<h3>Exemplo — município fictício, um mês de 2030 (R$)</h3>
+<div class="table-wrap"><table><thead><tr><th>Item</th><th class="num">Valor</th><th>Regra</th></tr></thead><tbody><tr class="grp"><td colspan="3">Receita própria</td></tr><tr><td>IBS extinto em operações com destino no município</td><td class="num">1.600.000</td><td class="art">art. 106</td></tr><tr><td>(−) Parte apropriada como crédito pelos adquirentes</td><td class="num">500.000</td><td class="art">art. 106</td></tr><tr class="tot"><td>= Receita inicial</td><td class="num">1.100.000</td><td class="art"></td></tr><tr><td>(−) Devolução geral às pessoas físicas</td><td class="num">60.000</td><td class="art">art. 107, I</td></tr><tr><td>(−) Créditos presumidos</td><td class="num">40.000</td><td class="art">art. 108</td></tr><tr class="tot"><td>= Base das retenções</td><td class="num">1.000.000</td><td class="art"></td></tr><tr><td>(−) Retenção de transição — 80% em 2030</td><td class="num">800.000</td><td class="art">art. 109</td></tr><tr><td>(−) Retenção complementar — 5% do restante</td><td class="num">10.000</td><td class="art">art. 110</td></tr><tr class="tot"><td>= Receita-Base própria</td><td class="num">190.000</td><td class="art">art. 111</td></tr><tr><td>(−) Financiamento do Comitê Gestor — 1%</td><td class="num">1.900</td><td class="art">art. 119, § 3º</td></tr><tr class="tot"><td>= Receita própria líquida</td><td class="num">188.100</td><td class="art"></td></tr><tr class="grp"><td colspan="3">Parcela retida da transição</td></tr><tr><td>Total retido de todos os entes no período</td><td class="num">20.000.000.000</td><td class="art">art. 114</td></tr><tr><td>× Coeficiente do município — 0,003%</td><td class="num">600.000</td><td class="art">art. 116</td></tr><tr><td>&nbsp;&nbsp;dos quais componente ISS (75%)</td><td class="num">450.000</td><td class="art">art. 121</td></tr><tr><td>&nbsp;&nbsp;dos quais componente cota-parte de ICMS (25%)</td><td class="num">150.000</td><td class="art">art. 121</td></tr><tr><td>(−) Fundeb — 20% do componente de cota-parte de ICMS</td><td class="num">30.000</td><td class="art">art. 127</td></tr><tr><td>(−) Financiamento do Comitê Gestor — 1%</td><td class="num">6.000</td><td class="art">arts. 126 e 127</td></tr><tr class="tot"><td>= Parcela retida líquida</td><td class="num">564.000</td><td class="art"></td></tr><tr class="grp"><td colspan="3">Distribuição complementar</td></tr><tr class="tot"><td>Município fora do grupo de menor razão</td><td class="num">0</td><td class="art">art. 117</td></tr><tr class="grp"><td colspan="3">Cota-parte do IBS estadual</td></tr><tr><td>Receita-Base do Estado, após as deduções estaduais</td><td class="num">400.000.000</td><td class="art">art. 118</td></tr><tr><td>× 25% pertencentes aos Municípios</td><td class="num">100.000.000</td><td class="art">art. 118, § 3º</td></tr><tr><td>× Índice do município — 0,5%</td><td class="num">500.000</td><td class="art">art. 128</td></tr><tr><td>(−) Fundeb — 20%</td><td class="num">100.000</td><td class="art">art. 128, § 1º</td></tr><tr><td>(−) Financiamento do Comitê Gestor — 1%</td><td class="num">5.000</td><td class="art">art. 128, § 1º</td></tr><tr class="tot"><td>= Cota-parte líquida</td><td class="num">395.000</td><td class="art"></td></tr><tr class="grp"><td colspan="3">Fechamento</td></tr><tr class="tot"><td>Repasse líquido do mês (188.100 + 564.000 + 0 + 395.000)</td><td class="num">1.147.100</td><td class="art"></td></tr></tbody></table></div>
+<p class="src">Percentuais de devolução geral, créditos presumidos e financiamento são ilustrativos: os reais são fixados pelo Comitê Gestor a cada período. Fundeb e financiamento foram calculados sobre o bruto de cada parcela; a base exata depende do ato do Comitê Gestor. O município do exemplo usa a alíquota de referência e não tem fundo de combate à pobreza nem devolução específica. Para simplificar, o mês tem um único período de determinação.</p>
+<p>Duas leituras do exemplo. O município reteve 800.000 da própria receita e recebeu 600.000 pela média histórica: seu consumo atual pesa mais que sua arrecadação de 2019 a 2026. Num polo de serviços ou industrial, com ISS ou VAF históricos altos, a conta se inverte. E, em 2030, o ISS ainda é cobrado pelo próprio município, a 80% das alíquotas, e o ICMS ainda gera cota-parte pela LC 63 — os dois fora deste repasse.</p>
+</div>
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">O que muda o repasse de um mês para outro</span></div>
+<div class="table-wrap"><table><thead><tr><th>Variável</th><th>Efeito no repasse</th><th>Quem define</th><th>Frequência</th></tr></thead><tbody><tr class="grp"><td colspan="4">Receita própria</td></tr><tr><td><strong>Consumo com destino no município</strong></td><td>Base da receita própria — o motor principal</td><td>Economia local; local da operação informado nos documentos</td><td>Contínua</td></tr><tr><td><strong>Parte apropriada como crédito</strong></td><td>Reduz a receita própria: venda entre empresas gera pouco repasse</td><td>Contribuintes adquirentes</td><td>Contínua</td></tr><tr><td><strong>Ritmo de extinção do IBS</strong></td><td>Só o IBS extinto entra; inadimplência e parcelamento atrasam</td><td>Contribuintes</td><td>Contínua</td></tr><tr><td><strong>Estornos, cancelamentos e devoluções</strong></td><td>Reduzem a receita no período em que ocorrem</td><td>Contribuintes</td><td>Contínua</td></tr><tr><td><strong>Percentuais de devolução geral e de créditos presumidos</strong></td><td>Deduções iguais para todos os entes</td><td>Comitê Gestor</td><td>A cada período</td></tr><tr><td><strong>Alíquota própria</strong></td><td>Ganho ou perda fica inteiro com o município</td><td>Lei municipal</td><td>Quando a lei muda</td></tr><tr><td><strong>Multas e juros da fiscalização própria</strong></td><td>Acréscimo, sem retenção</td><td>Fiscalização municipal</td><td>Contínua</td></tr><tr class="grp"><td colspan="4">Transição e complementar</td></tr><tr><td><strong>Percentual de retenção do ano</strong></td><td>Quanto da receita própria vai para a média histórica</td><td>LC 227/2026 e ADCT</td><td>Anual</td></tr><tr><td><strong>Coeficiente da receita média</strong></td><td>Quanto o município recebe da parcela retida</td><td>Comitê Gestor, com dados de 2019 a 2026</td><td>Fixo após 31/08/2027</td></tr><tr><td><strong>Razão para a complementar</strong></td><td>Se o município entra na partilha dos 5%</td><td>Comitê Gestor, com dados dos últimos 12 meses e do IBGE</td><td>Mensal</td></tr><tr class="grp"><td colspan="4">Cota-parte</td></tr><tr><td><strong>Base estadual</strong></td><td>Base da cota-parte</td><td>Arrecadação estadual; deduções estaduais</td><td>Contínua</td></tr><tr><td><strong>Índice do município</strong></td><td>Fatia da cota-parte</td><td>Estado, por lei estadual, e IBGE</td><td>Conforme regulamento</td></tr><tr class="grp"><td colspan="4">Deduções e acertos</td></tr><tr><td><strong>Financiamento do Comitê Gestor</strong></td><td>Dedução sobre todas as parcelas</td><td>Conselho Superior do Comitê Gestor, até 31/07</td><td>Anual</td></tr><tr><td><strong>Fundo municipal de combate à pobreza e devolução específica</strong></td><td>Deduções da receita própria</td><td>Lei municipal</td><td>Anual ou quando a lei muda</td></tr><tr><td><strong>Acertos de períodos anteriores e rendimentos</strong></td><td>Somam ou subtraem</td><td>Comitê Gestor</td><td>Período seguinte</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Conciliação mensal, parcela por parcela</span></div>
+<p class="sec-sub">A conciliação compara três coisas para cada parcela: o que entrou na conta, o que o Comitê Gestor informou e o que a prefeitura recalcula. Esta seção descreve a operação, as contas e os artefatos de cada parcela.</p>
+<h3>O ciclo do mês</h3>
+<div class="flow"><div class="fl"><div class="fl-c">1</div><div class="fl-t">Captura</div><div class="fl-d">Extrato de cada crédito do Comitê Gestor</div></div><div class="fl"><div class="fl-c">2</div><div class="fl-t">Identificação</div><div class="fl-d">Cada crédito ligado a um período e a uma parcela</div></div><div class="fl"><div class="fl-c">3</div><div class="fl-t">Recálculo</div><div class="fl-d">Memória de cálculo de cada parcela</div></div><div class="fl"><div class="fl-c">4</div><div class="fl-t">Estimativa</div><div class="fl-d">Base própria de documentos fiscais</div></div><div class="fl ret"><div class="fl-c">5</div><div class="fl-t">Comparação</div><div class="fl-d">Diferenças financeira, aritmética e analítica</div></div><div class="fl ret"><div class="fl-c">6</div><div class="fl-t">Tratamento</div><div class="fl-d">Divergência registrada, investigada e levada adiante</div></div><div class="fl end"><div class="fl-c">7</div><div class="fl-t">Fechamento</div><div class="fl-d">Contabilização e dossiê do mês</div></div></div>
+<h3>Três níveis de conciliação</h3>
+<div class="table-wrap"><table><thead><tr><th>Nível</th><th>Compara</th><th>Tolerância</th><th>Se não bater</th></tr></thead><tbody><tr><td><strong>Financeiro</strong></td><td>Extrato bancário contra o relatório do Comitê Gestor</td><td>Zero</td><td>Pendência imediata: crédito faltando, a mais ou fora do prazo</td></tr><tr><td><strong>Aritmético</strong></td><td>Relatório contra o recálculo da prefeitura, com os valores e percentuais publicados</td><td>Arredondamento</td><td>Erro de cálculo ou de percentual: pedido de informação ao Comitê Gestor</td></tr><tr><td><strong>Analítico</strong></td><td>Base informada contra a estimativa própria</td><td>Definida pela prefeitura — sugestão: começar em 5% e calibrar com o histórico</td><td>Investigação: local da operação, cancelamentos, inadimplência, crédito</td></tr></tbody></table></div>
+<p>O nível financeiro e o aritmético dão certeza; o analítico dá indício. Uma diferença analítica não prova erro do Comitê Gestor — pode ser inadimplência ou crédito legítimo —, mas é o que aponta onde a fiscalização deve olhar.</p>
+<h3>Parcela por parcela</h3>
+<div class="feat"><div class="feat-hdr"><span class="feat-id p">P1</span><span class="feat-name">Receita própria</span><span class="feat-loc">arts. 106 a 111 e 119</span></div><div class="feat-body"><h4>Operação</h4>
+<p>A cada período, o Comitê Gestor identifica o IBS extinto nas operações com local no município — pagamento, split payment, compensação com crédito, recolhimento pelo adquirente ou por responsável —, tira a parte que o adquirente apropriou como crédito, aplica os ajustes, as retenções e as deduções municipais e transfere o saldo.</p>
+<h4>Cálculo de conferência</h4>
+<div class="formula">Receita inicial = IBS extinto com destino no município − IBS apropriado como crédito<br>
+Ajuste de alíquota = receita inicial × (alíquota própria − alíquota de referência) ÷ alíquota própria<br>
+Base 107 = receita inicial − receita inicial × % devolução geral − ajuste de alíquota<br>
+Base das retenções = base 107 × (1 − % créditos presumidos) + rateios<span class="fc"> (produtor rural, transportador, juros e multas de mora)</span><br>
+Receita-Base = base das retenções × (1 − % transição) × (1 − % complementar) + ajuste de alíquota<br>
+Repasse P1 = Receita-Base + multas próprias − devolução específica − fundo de pobreza − financiamento</div>
+<p>A <strong>estimativa própria</strong> da receita inicial parte dos documentos fiscais: soma o IBS municipal das operações com local no município, tira os cancelados e estornados no período e separa as operações com adquirente contribuinte do regime regular, cuja parte tende a virar crédito. O que sobra — consumidor final, não contribuinte e MEI — é a estimativa da receita inicial.</p>
+<h4>Artefatos</h4>
+<ul class="plain"><li><span><strong>Entrada:</strong> relatório mensal do Comitê Gestor (art. 43, I, II, III, VII e VIII); atos com os percentuais do período; lei municipal da alíquota e alíquota de referência; base de documentos fiscais com local no município; cadastro de contribuintes com o regime de cada adquirente; extrato.</span></li><li><span><strong>Saída:</strong> base analítica do mês; memória de cálculo da cascata; mapa de diferenças por setor e por contribuinte; registro de divergências.</span></li></ul>
+<h4>Conciliação</h4>
+<ul class="plain"><li><span><strong>Financeira:</strong> extrato da parcela igual ao valor informado.</span></li><li><span><strong>Aritmética:</strong> recalcular a cascata a partir da receita inicial informada e dos percentuais publicados; tem de dar o mesmo valor, salvo arredondamento.</span></li><li><span><strong>Analítica:</strong> receita inicial informada contra a estimativa própria, dentro da tolerância.</span></li></ul>
+<h4>Divergências típicas</h4>
+<p>Local da operação errado nos documentos; cancelamento sem documento cancelado de fato; crédito acima do esperado; inadimplência de grandes contribuintes; alíquota própria ou vigência errada; percentual diferente do publicado.</p>
+</div></div>
+<div class="feat"><div class="feat-hdr"><span class="feat-id p">P2</span><span class="feat-name">Parcela retida da transição</span><span class="feat-loc">arts. 109, 114 a 116, 121, 126 e 127</span></div><div class="feat-body"><h4>Operação</h4>
+<p>O Comitê Gestor soma a retenção de transição de todos os entes no período e a distribui pelo coeficiente publicado em 2027. O valor do município é separado em componente de ISS e componente de cota-parte de ICMS, na proporção da sua receita média, e cada componente sofre as próprias deduções.</p>
+<h4>Cálculo de conferência</h4>
+<div class="formula">P2 bruto = total retido no período × coeficiente do município<br>
+Componente ISS = P2 bruto × participação do ISS na receita média<br>
+Componente ICMS = P2 bruto × participação da cota-parte de ICMS na receita média<br>
+Repasse P2 = P2 bruto − 20% do componente ICMS<span class="fc"> (Fundeb)</span> − fundo de pobreza − financiamento</div>
+<h4>Artefatos</h4>
+<ul class="plain"><li><span><strong>Entrada:</strong> publicação do coeficiente no DOU, com o detalhamento por fonte (art. 116, § 1º); resposta às contestações (§ 8º); relatório mensal com os valores retidos por tipo (art. 43, III); dados de 2019 a 2026 no Siconfi.</span></li><li><span><strong>Saída:</strong> memória de cálculo do coeficiente, feita uma vez em 2027 e guardada como referência; memória mensal da parcela.</span></li></ul>
+<h4>Conciliação</h4>
+<ul class="plain"><li><span><strong>Financeira:</strong> extrato igual ao informado.</span></li><li><span><strong>Aritmética:</strong> coeficiente aplicado igual ao publicado; total retido × coeficiente igual ao bruto informado; proporção entre componentes fixa; Fundeb só sobre o componente de ICMS.</span></li><li><span><strong>Analítica:</strong> total retido coerente com a soma das retenções do relatório.</span></li></ul>
+<h4>Divergências típicas</h4>
+<p>Coeficiente antigo depois de uma revisão; Fundeb aplicado sobre o componente de ISS; total retido diferente entre o relatório e a base usada.</p>
+</div></div>
+<div class="feat"><div class="feat-hdr"><span class="feat-id p">P3</span><span class="feat-name">Distribuição complementar</span><span class="feat-loc">arts. 110 e 117</span></div><div class="feat-body"><h4>Operação</h4>
+<p>Todo mês, o Comitê Gestor calcula a razão de cada ente — média mensal de IBS dos últimos 12 meses sobre a receita média ajustada —, ordena do menor para o maior e distribui o fundo complementar subindo os de menor razão até que fiquem iguais. Quem fica acima desse nível de corte não recebe.</p>
+<h4>Cálculo de conferência</h4>
+<div class="formula">Razão do município = média mensal de IBS dos últimos 12 meses ÷ receita média ajustada mensal<br>
+Receita média ajustada = menor valor entre a receita média do município e<br>
+&nbsp;&nbsp;3 × média per capita do conjunto × população média de 2019 a 2026<br>
+Se a razão do município está abaixo do nível de corte:<br>
+&nbsp;&nbsp;Repasse P3 = (nível de corte − razão do município) × receita média ajustada mensal<br>
+Senão: Repasse P3 = 0</div>
+<p>O nível de corte é o valor em que a soma do que todos os elegíveis recebem iguala o fundo complementar do mês.</p>
+<h4>Artefatos</h4>
+<ul class="plain"><li><span><strong>Entrada:</strong> relatório mensal com o valor destinado a cada ente (art. 43, IX); receita média publicada; estimativas de população do IBGE; histórico de 12 meses dos repasses do próprio município.</span></li><li><span><strong>Saída:</strong> memória da razão do mês e da distância até o corte.</span></li></ul>
+<h4>Conciliação</h4>
+<ul class="plain"><li><span><strong>Financeira:</strong> extrato igual ao informado.</span></li><li><span><strong>Aritmética:</strong> elegibilidade coerente com a razão calculada; valor coerente com o nível de corte, quando divulgado.</span></li></ul>
+<h4>Divergências típicas</h4>
+<p>Município elegível sem receber; população desatualizada; média de 12 meses que não bate com os repasses registrados.</p>
+</div></div>
+<div class="feat"><div class="feat-hdr"><span class="feat-id p">P4</span><span class="feat-name">Cota-parte do IBS estadual</span><span class="feat-loc">arts. 118, 128 e 130</span></div><div class="feat-body"><h4>Operação</h4>
+<p>O Comitê Gestor apura a Receita-Base do Estado, aplica as deduções estaduais, retém 25% para os Municípios e aplica o índice que o Estado informou. Do valor de cada Município saem o Fundeb e o financiamento, e o saldo é transferido. A seção 05 detalha cada etapa.</p>
+<h4>Cálculo de conferência</h4>
+<div class="formula">Base estadual = Receita-Base do Estado + multas estaduais − saldo credor de ICMS compensado<br>
+&nbsp;&nbsp;− estoque de ST compensado − devolução específica estadual − fundo estadual de pobreza<br>
+P4 bruto = base estadual × 25% × índice do município<br>
+Repasse P4 = P4 bruto − 20%<span class="fc"> (Fundeb)</span> − financiamento</div>
+<p>O município refaz o próprio índice com a população do IBGE, os indicadores publicados pelo Estado e o número de Municípios, e confere se é o mesmo que o Estado informou.</p>
+<h4>Artefatos</h4>
+<ul class="plain"><li><span><strong>Entrada:</strong> relatório mensal com a cota-parte por ente (art. 43, IV) e os valores compensados, ressarcidos e de saldo credor homologado (V e VI); índice publicado pelo Estado; lei estadual dos indicadores; estimativas do IBGE.</span></li><li><span><strong>Saída:</strong> memória do índice; memória mensal da parcela; série da base estadual para explicar variações.</span></li></ul>
+<h4>Conciliação</h4>
+<ul class="plain"><li><span><strong>Financeira:</strong> extrato igual ao informado.</span></li><li><span><strong>Aritmética:</strong> índice aplicado igual ao publicado; base × 25% × índice igual ao bruto; Fundeb e financiamento nos percentuais certos.</span></li><li><span><strong>Analítica:</strong> variação da base estadual explicada pela arrecadação e pelas deduções estaduais do relatório.</span></li></ul>
+<h4>Divergências típicas</h4>
+<p>Índice desatualizado; revisão de população aplicada fora do período; queda da base por compensação de saldo credor de ICMS sem aviso.</p>
+<h4>Fora do Comitê Gestor</h4>
+<p>Até 2032, e no resíduo depois disso, a cota-parte do ICMS continua chegando pelo Estado, pela LC 63/1990. Essa conciliação segue a rotina que a prefeitura já tem.</p>
+</div></div>
+<div class="feat"><div class="feat-hdr"><span class="feat-id p">P5</span><span class="feat-name">Multas e juros da fiscalização própria</span><span class="feat-loc">arts. 4º, 119 e 57</span></div><div class="feat-body"><h4>Operação</h4>
+<p>Quando a fiscalização do município lança e o contribuinte paga, a multa punitiva e os juros sobre ela ficam com o município, sem retenção. Em fiscalização conjunta ou delegada, os valores são partilhados entre os entes envolvidos e distribuídos de forma segregada.</p>
+<h4>Cálculo de conferência</h4>
+<div class="formula">Repasse P5 = Σ multas punitivas e juros pagos no período, dos lançamentos do município × participação do município na partilha</div>
+<h4>Artefatos</h4>
+<ul class="plain"><li><span><strong>Entrada:</strong> autos de infração e pagamentos no sistema eletrônico do processo administrativo (art. 57); convênios de fiscalização conjunta ou delegada.</span></li><li><span><strong>Saída:</strong> lista dos lançamentos pagos no período com o valor esperado de cada um.</span></li></ul>
+<h4>Conciliação</h4>
+<ul class="plain"><li><span>Cada lançamento pago aparece no repasse, pelo valor e pela partilha corretos.</span></li></ul>
+</div></div>
+<div class="feat"><div class="feat-hdr"><span class="feat-id p">P6</span><span class="feat-name">Rendimentos e acertos</span><span class="feat-loc">arts. 103 e 112</span></div><div class="feat-body"><h4>Operação</h4>
+<p>Os rendimentos das aplicações do IBS são rateados pela receita de cada ente nos últimos 12 meses. Os acertos devolvem ou cobram diferenças de períodos anteriores — falta para cobrir as deduções, sobra reservada ou devolvida.</p>
+<h4>Cálculo de conferência</h4>
+<div class="formula">Rendimentos do município = rendimentos totais × participação do município na receita dos últimos 12 meses<br>
+Acerto = diferença apurada no período anterior, conforme o ato do Comitê Gestor</div>
+<h4>Artefatos</h4>
+<ul class="plain"><li><span><strong>Entrada:</strong> relatório mensal; atos do Comitê Gestor sobre os acertos; prestação de contas anual do Comitê Gestor (art. 44).</span></li><li><span><strong>Saída:</strong> controle de acertos por período de origem, para que nenhum seja contado duas vezes.</span></li></ul>
+<h4>Conciliação</h4>
+<ul class="plain"><li><span>Participação usada igual à calculada pelo município; cada acerto ligado ao período que o originou.</span></li></ul>
+</div></div>
+<h3>Planilha de conciliação do mês — exemplo</h3>
+<p>Com os números da seção 06. A receita própria bate no financeiro e no aritmético, mas a estimativa própria indica 100.000 a mais de receita inicial do que o Comitê Gestor alocou — a prefeitura abre a divergência e investiga, começando pelo local da operação e pelos cancelamentos do mês.</p>
+<div class="table-wrap"><table><thead><tr><th>Parcela</th><th class="num">Recebido no extrato</th><th class="num">Informado pelo Comitê Gestor</th><th class="num">Recalculado</th><th class="num">Diferença financeira</th><th class="num">Diferença aritmética</th><th>Verificação analítica</th><th>Situação</th></tr></thead><tbody><tr><td><strong>P1 Receita própria</strong></td><td class="num">188.100</td><td class="num">188.100</td><td class="num">188.100</td><td class="num">0</td><td class="num">0</td><td>Receita inicial informada 1.100.000 contra estimativa 1.200.000: diferença de 100.000</td><td><span class="tag-n pd">Divergência aberta</span></td></tr><tr><td><strong>P2 Retida</strong></td><td class="num">564.000</td><td class="num">564.000</td><td class="num">564.000</td><td class="num">0</td><td class="num">0</td><td>Coeficiente igual ao do DOU</td><td><span class="tag-n ok">Conciliada</span></td></tr><tr><td><strong>P3 Complementar</strong></td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td>Razão acima do corte</td><td><span class="tag-n ok">Conciliada</span></td></tr><tr><td><strong>P4 Cota-parte</strong></td><td class="num">395.000</td><td class="num">395.000</td><td class="num">395.000</td><td class="num">0</td><td class="num">0</td><td>Índice igual ao publicado pelo Estado</td><td><span class="tag-n ok">Conciliada</span></td></tr><tr class="tot"><td>Total do mês</td><td class="num">1.147.100</td><td class="num">1.147.100</td><td class="num">1.147.100</td><td class="num">0</td><td class="num">0</td><td></td><td></td></tr></tbody></table></div>
+</div>
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Artefatos da conciliação</span></div>
+<h3>Entrada</h3>
+<div class="table-wrap"><table><thead><tr><th>Artefato</th><th>Origem</th><th>O que se usa</th><th>Periodicidade</th><th>Parcelas</th></tr></thead><tbody><tr><td><strong>Extrato da conta de repasse</strong></td><td>Banco</td><td>Data, valor e histórico de cada crédito</td><td>A cada período</td><td>Todas</td></tr><tr><td><strong>Relatório mensal do Comitê Gestor</strong></td><td>Meio eletrônico de acesso público (art. 43)</td><td>Arrecadado; valores por ente; retidos por tipo; cota-parte por ente; compensados e ressarcidos; saldo credor homologado; devoluções; parte não retida e parte distribuída; complementar por ente</td><td>Mensal</td><td>Todas</td></tr><tr><td><strong>Atos do Comitê Gestor</strong></td><td>Comitê Gestor</td><td>Percentuais de devolução geral, créditos presumidos e financiamento; metodologia de cálculo (art. 112, § 1º)</td><td>A cada período ou anual</td><td>P1, P2, P4, P6</td></tr><tr><td><strong>Publicação dos coeficientes</strong></td><td>DOU (art. 116)</td><td>Coeficiente e detalhamento das fontes</td><td>2027 e revisões</td><td>P2, P3</td></tr><tr><td><strong>Base de documentos fiscais</strong></td><td>NFS-e de padrão nacional e documentos compartilhados com a administração tributária (art. 34, III)</td><td>Chave, data, local da operação, IBS municipal, adquirente, situação</td><td>Contínua</td><td>P1</td></tr><tr><td><strong>Cadastro de contribuintes</strong></td><td>Administração tributária</td><td>Regime do adquirente: regular, Simples Nacional, MEI</td><td>Contínua</td><td>P1</td></tr><tr><td><strong>Lei da alíquota própria</strong></td><td>Município; alíquota de referência</td><td>Alíquota e vigência</td><td>Quando muda</td><td>P1</td></tr><tr><td><strong>Índice da cota-parte</strong></td><td>Estado (art. 130)</td><td>Coeficiente de cada Município e seus componentes</td><td>Conforme regulamento</td><td>P4</td></tr><tr><td><strong>Lei estadual dos indicadores</strong></td><td>Estado</td><td>Metodologia de educação e de meio ambiente</td><td>Quando muda</td><td>P4</td></tr><tr><td><strong>Estimativas de população</strong></td><td>IBGE</td><td>População do município e do Estado</td><td>Anual</td><td>P3, P4</td></tr><tr><td><strong>Receita de 2019 a 2026</strong></td><td>Siconfi e balanços do município</td><td>ISS e cota-parte de ICMS</td><td>Uma vez, em 2027</td><td>P2, P3</td></tr><tr><td><strong>Autos de infração e pagamentos</strong></td><td>Fiscalização municipal; sistema do processo administrativo (art. 57)</td><td>Multas punitivas e juros pagos</td><td>Contínua</td><td>P5</td></tr><tr><td><strong>Convênios de fiscalização</strong></td><td>Município, Estado e Comitê Gestor</td><td>Regras de partilha</td><td>Quando muda</td><td>P5</td></tr></tbody></table></div>
+<h3>Produzidos pela prefeitura</h3>
+<div class="table-wrap"><table><thead><tr><th>Artefato</th><th>Conteúdo</th><th>Quem usa</th></tr></thead><tbody><tr><td><strong>Base analítica do mês</strong></td><td>Documentos com local no município, IBS, adquirente e situação</td><td>Fiscalização; P1</td></tr><tr><td><strong>Memória de cálculo por parcela</strong></td><td>A conta de cada parcela, com os valores e percentuais usados e a fonte de cada um</td><td>Tesouraria; controle interno</td></tr><tr><td><strong>Planilha de conciliação</strong></td><td>Recebido, informado, recalculado e estimado, com as três diferenças por parcela</td><td>Tesouraria; contabilidade</td></tr><tr><td><strong>Registro de divergências</strong></td><td>Identificador, parcela, período, valor, causa provável, evidência, responsável, prazo e situação</td><td>Fiscalização; procuradoria</td></tr><tr><td><strong>Pedido de informação ao Comitê Gestor</strong></td><td>Divergência, memória de cálculo e evidências</td><td>Comitê Gestor</td></tr><tr><td><strong>Lançamentos contábeis</strong></td><td>Receita por parcela e por componente, com o Fundeb como dedução, nas naturezas de receita que a STN definir</td><td>Contabilidade; relatórios fiscais</td></tr><tr><td><strong>Dossiê do mês</strong></td><td>Todos os artefatos acima, com a aprovação do fechamento</td><td>Controle interno; Tribunal de Contas</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Rotina mensal de conferência</span></div>
+<p class="sec-sub">O resumo de bolso da seção 08: o que conferir todo mês, em que parcela e o que acende o alerta.</p>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Conferência</th><th>Parcela</th><th>Como fazer</th><th>Sinal de alerta</th></tr></thead><tbody><tr><td class="rid">C-01</td><td><strong>Banco contra relatório</strong></td><td>Todas</td><td>Bater cada crédito com o relatório mensal, parcela por parcela e período por período.</td><td>Crédito sem período; atraso maior que 3 dias úteis; valor diferente</td></tr><tr><td class="rid">C-02</td><td><strong>Percentuais aplicados</strong></td><td>Todas</td><td>Retenção do ano, devolução geral, créditos presumidos, financiamento, Fundeb e fundo de pobreza contra atos, lei e teto do ano.</td><td>Percentual diferente do publicado ou acima do teto</td></tr><tr><td class="rid">C-03</td><td><strong>Receita própria contra estimativa</strong></td><td>P1</td><td>Estimativa própria da receita inicial contra a informada, dentro da tolerância.</td><td>Diferença acima da tolerância; queda sem causa econômica</td></tr><tr><td class="rid">C-04</td><td><strong>Local da operação</strong></td><td>P1</td><td>Documentos com município de incidência errado, sobretudo serviços (art. 11 da LC 214).</td><td>Prestador local emitindo com incidência em outro município</td></tr><tr><td class="rid">C-05</td><td><strong>Estornos e cancelamentos</strong></td><td>P1</td><td>Maiores do mês confirmados contra os documentos.</td><td>Concentração em poucos contribuintes</td></tr><tr><td class="rid">C-06</td><td><strong>Destacado contra extinto</strong></td><td>P1</td><td>IBS destacado nos documentos contra IBS extinto no relatório.</td><td>Inadimplência crescente; grande contribuinte sem extinção</td></tr><tr><td class="rid">C-07</td><td><strong>Alíquota própria</strong></td><td>P1</td><td>Alíquota e vigência registradas; ajuste devolvido inteiro (art. 111).</td><td>Ajuste deduzido e não devolvido</td></tr><tr><td class="rid">C-08</td><td><strong>Coeficiente e componentes</strong></td><td>P2</td><td>Coeficiente igual ao DOU; Fundeb só no componente de ICMS.</td><td>Fundeb sobre o componente de ISS</td></tr><tr><td class="rid">C-09</td><td><strong>Razão da complementar</strong></td><td>P3</td><td>Razão do município contra o corte; população do IBGE.</td><td>Elegível sem receber</td></tr><tr><td class="rid">C-10</td><td><strong>Índice e base estadual</strong></td><td>P4</td><td>Índice igual ao do Estado; variação da base explicada.</td><td>Queda sem queda da arrecadação estadual</td></tr><tr><td class="rid">C-11</td><td><strong>Multas próprias</strong></td><td>P5</td><td>Lançamentos pagos creditados, com a partilha certa.</td><td>Multa paga sem crédito</td></tr><tr><td class="rid">C-12</td><td><strong>Acertos e rendimentos</strong></td><td>P6</td><td>Cada acerto ligado ao período de origem; rendimentos pela participação.</td><td>Acerto sem memória de cálculo</td></tr><tr><td class="rid">C-13</td><td><strong>Contabilização</strong></td><td>Todas</td><td>Receita por parcela e componente, com o Fundeb como dedução.</td><td>Receita lançada pelo líquido</td></tr><tr><td class="rid">C-14</td><td><strong>ISS e ICMS na transição</strong></td><td>Fora do Comitê Gestor</td><td>Queda do ISS e da cota-parte de ICMS contra a subida do IBS, de 2029 a 2032.</td><td>Queda maior do que o IBS compensa</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Calendário e conferências pontuais</span></div>
+<div class="table-wrap"><table><thead><tr><th>Quando</th><th>O que acontece</th><th>O que a prefeitura faz</th><th>Artigo</th></tr></thead><tbody><tr><td><strong>Até a publicação dos coeficientes</strong></td><td>O Comitê Gestor levanta a receita de 2019 a 2026 no Siconfi e nos balanços</td><td>Revisar os dados declarados: ISS, inclusive do Simples Nacional, juros, multas, dívida ativa e cota-parte de ICMS recebida. Um erro aqui vale até 2077</td><td class="art">arts. 115 e 116</td></tr><tr><td><strong>Até 31/08/2027</strong></td><td>Coeficientes publicados no DOU, com fontes e cálculo por ente</td><td>Refazer o cálculo do próprio coeficiente</td><td class="art">art. 116, § 1º</td></tr><tr><td><strong>30 dias após a publicação</strong></td><td>Prazo de contestação</td><td>Contestar de forma fundamentada. O Comitê Gestor responde em até 90 dias depois da última contestação, sem nova contestação ou recurso</td><td class="art">art. 116, §§ 7º e 8º</td></tr><tr><td><strong>Até 31/07 de cada ano</strong></td><td>Conselho Superior propõe o percentual de financiamento do ano seguinte</td><td>Acompanhar a proposta e o teto do ano</td><td class="art">arts. 46 a 51</td></tr><tr><td><strong>Até 31/07 do ano anterior</strong></td><td>Informação do percentual do fundo de combate à pobreza, a partir de 2033</td><td>Informar ao Comitê Gestor, se o município tiver fundo</td><td class="art">art. 129, § 4º</td></tr><tr><td><strong>Conforme regulamento</strong></td><td>Estado informa os coeficientes da cota-parte</td><td>Conferir população e indicadores de educação e meio ambiente; contestar no Estado</td><td class="art">art. 130</td></tr><tr><td><strong>A cada bimestre</strong></td><td>Relatório resumido de execução orçamentária do Comitê Gestor, em até 30 dias</td><td>Conferir o custo do Comitê Gestor contra a dedução de financiamento</td><td class="art">art. 41</td></tr><tr><td><strong>A cada quadrimestre</strong></td><td>Relatório de gestão fiscal do Comitê Gestor, em até 30 dias</td><td>Idem</td><td class="art">art. 42</td></tr><tr><td><strong>Até 30/04</strong></td><td>Prestação de contas anual do Comitê Gestor</td><td>Conferir sobras e faltas do financiamento que voltam em acertos</td><td class="art">art. 44</td></tr><tr><td><strong>Quando a lei municipal muda</strong></td><td>Alíquota própria, devolução específica ou fundo de pobreza</td><td>Confirmar o registro e a vigência no Comitê Gestor</td><td class="art">arts. 107, 119 e 129</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Indicadores para acompanhar</span></div>
+<div class="table-wrap"><table><thead><tr><th>Indicador</th><th>Conta</th><th>Para que serve</th></tr></thead><tbody><tr><td><strong>Reconhecimento</strong></td><td>Receita inicial informada ÷ estimativa própria</td><td>Mostra se o Comitê Gestor está alocando ao município o que os documentos indicam</td></tr><tr><td><strong>Peso do crédito</strong></td><td>Parte apropriada como crédito ÷ IBS extinto com destino no município</td><td>Explica por que o repasse é menor que o IBS destacado; muda com o perfil da economia local</td></tr><tr><td><strong>Extinção</strong></td><td>IBS extinto ÷ IBS destacado nos documentos</td><td>Mede inadimplência e atraso; orienta a fiscalização</td></tr><tr><td><strong>Cancelamento</strong></td><td>Estornos e cancelamentos ÷ IBS do período</td><td>Detecta quedas que precisam de explicação</td></tr><tr><td><strong>Dependência da transição</strong></td><td>Parcela retida ÷ repasse total</td><td>Mostra quanto do repasse ainda vem da média histórica e quanto vai cair até 2077</td></tr><tr><td><strong>Distância do corte</strong></td><td>Razão do município ÷ nível de corte da complementar</td><td>Antecipa a entrada ou a saída da distribuição complementar</td></tr><tr><td><strong>Variação por parcela</strong></td><td>Mês atual ÷ média dos 12 meses anteriores, para cada parcela</td><td>Separa uma queda de consumo de um erro de cálculo</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Onde a prefeitura pode contestar</span></div>
+<div class="table-wrap"><table><thead><tr><th>Divergência</th><th>Caminho</th><th>Prazo</th></tr></thead><tbody><tr><td><strong>Coeficiente da parcela retida</strong></td><td>Contestação fundamentada ao Comitê Gestor</td><td>30 dias da publicação; resposta em até 90 dias, sem nova contestação ou recurso (art. 116, §§ 7º e 8º)</td></tr><tr><td><strong>Índice da cota-parte</strong></td><td>Estado, nos termos da lei estadual</td><td>O da lei estadual</td></tr><tr><td><strong>Repasse de um mês</strong></td><td>A LC 227/2026 não traz rito próprio. Os caminhos são o pedido de informação ao Comitê Gestor, que deve franquear o acesso à informação requerida (arts. 20, IV, 22, IX, e 24, VI), a representação municipal no Conselho Superior e os Tribunais de Contas, que fiscalizam o Comitê Gestor de forma compartilhada (art. 40)</td><td>Sem prazo definido</td></tr><tr><td><strong>Contribuinte que recolhe errado</strong></td><td>Fiscalização municipal, coordenada pelo Comitê Gestor; multas punitivas e juros sobre elas ficam com o ente que fiscalizou (arts. 4º, § 1º, e 31, I)</td><td>O da fiscalização</td></tr></tbody></table></div>
+<div class="callout warn"><div class="ct">Sem rito para o repasse mensal</div><p>Por isso a conciliação precisa produzir evidência: memória de cálculo, documentos e diferenças por parcela. Sem rito próprio, a força da prefeitura está na qualidade do dossiê que ela leva ao Comitê Gestor e ao Tribunal de Contas.</p></div>
+</div>
+<div class="section" id="s14">
+<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">O que ainda não está definido</span></div>
+<div class="table-wrap"><table><thead><tr><th>Tema</th><th>Situação</th></tr></thead><tbody><tr><td><strong>Detalhe do cálculo da Receita-Base</strong></td><td>Depende de ato do Comitê Gestor (art. 112, § 1º)</td></tr><tr><td><strong>Granularidade do relatório mensal</strong></td><td>O art. 43 exige valores por ente, não por operação nem por período de determinação</td></tr><tr><td><strong>Acesso do município aos dados por operação</strong></td><td>Não assegurado no texto lido; o art. 34, III prevê a gestão conjunta do controle de emissão de documentos fiscais</td></tr><tr><td><strong>Coeficientes da cota-parte</strong></td><td>Forma e prazo em regulamento (art. 130); educação e meio ambiente dependem de lei estadual</td></tr><tr><td><strong>Nível de corte da complementar</strong></td><td>O relatório traz o valor destinado a cada ente (art. 43, IX); a divulgação do corte não está prevista</td></tr><tr><td><strong>Contestação do repasse mensal</strong></td><td>Sem rito na LC 227/2026</td></tr><tr><td><strong>Prazo para comunicar a alíquota própria</strong></td><td>Não localizado na LC 227/2026; ver a LC 214/2025 e o regulamento</td></tr><tr><td><strong>Naturezas de receita</strong></td><td>Os códigos contábeis das parcelas do IBS dependem da STN</td></tr><tr><td><strong>Documento de arrecadação do IBS</strong></td><td>A etapa da API do Comitê Gestor que trata dele ainda não tem especificação publicada; afeta como se acompanha o IBS pago</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s15">
+<div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Fontes</span></div>
+<ol class="fontes">
+<li><a href="https://www2.camara.leg.br/legin/fed/leicom/2026/leicomplementar-227-13-janeiro-2026-798657-publicacaooriginal-177770-pl.html">Lei Complementar nº 227, de 13 de janeiro de 2026</a> — texto original publicado. Arts. 2º, 4º, 20, 22, 24, 31, 34, 40 a 52, 57, 103 a 130, 141 e 166.</li>
+<li><a href="https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp227.htm">LC 227/2026 no Planalto</a>, para a redação consolidada.</li>
+<li><a href="https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm">Lei Complementar nº 214/2025</a>, art. 11 (local da operação).</li>
+<li><a href="https://www.legjur.com/legislacao/art/cf880000000198801-131">ADCT, art. 131</a> — retenção da transição.</li>
+<li><a href="https://sapl.fozdoiguacu.pr.leg.br/media/sapl/public/documentoacessorio/2024/7850/parecer_ibam.pdf">Parecer do IBAM</a> sobre a cota-parte do IBS (Constituição, art. 158, § 2º).</li>
+<li><a href="https://www.estrategiaconcursos.com.br/blog/reparticao-da-cota-municipal/">Estratégia Concursos — repartição da cota municipal do IBS</a>.</li>
+<li><a href="https://radardareformatributaria.com/ibs-coeficiente-municipios-estados-dados-2019-2026-arrecadacao/">Radar da Reforma Tributária — dados de 2019 a 2026 e a fatia histórica do IBS</a>.</li>
+<li><a href="https://reformatributaria.sefin.ro.gov.br/2026/01/29/veja-a-lei-complementar-no-227-26-sumarizada-que-institui-o-comite-gestor-do-ibs-e-atualiza-a-lc-214-25/">Sefin/RO — LC 227/26 sumarizada</a>.</li>
+<li><a href="https://www.tce.mt.gov.br/conteudo/download/id/145579">TCE-MT — apresentação sobre a transição</a>.</li>
+</ol>
+</div>
+<div class="section" id="s16">
+<div class="sec-hdr"><span class="sec-num">16</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">20/10/2026 — Primeira versão, sobre o texto original da LC 227/2026: as quatro parcelas do repasse e a linha do tempo da transição; a cota-parte estadual — o que é, como opera, a saída gradual do VAF e o cálculo do índice; o repasse em uma conta, com exemplo; as variáveis que mudam o valor a cada mês; a conciliação mensal parcela por parcela, com operação, contas, artefatos e três níveis de diferença; os artefatos de entrada e os produzidos; a rotina em 14 passos, o calendário, os indicadores e onde contestar.</div></div>
+</div>
+</div>
+</body>
+</html>
