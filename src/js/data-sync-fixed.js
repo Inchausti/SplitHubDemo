@@ -734,9 +734,11 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       + '<button onclick="document.getElementById(\'nf-detalhe-overlay\').remove();window.abrirDetalheRF(\'' + rf.id + '\')" style="background:rgba(var(--blue-rgb),.08);border:1px solid rgba(var(--blue-rgb),.2);border-radius:4px;color:'+PALETTE.blue+';cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px">Ver RF →</button>'
       + '</div>'
       + '<div class="shg2" style="gap:6px;font-size:11px">'
-      + '<div style="color:var(--txt3)">Valor: <span style="color:var(--txt1);font-weight:600">' + ff(rf.valor) + '</span></div>'
+      + '<div style="color:var(--txt3)">' + (rf.balances ? 'Apurado' : 'Valor') + ': <span style="color:var(--txt1);font-weight:600">' + ff(rf.valor) + '</span></div>'
       + '<div style="color:var(--txt3)">NF Total: <span style="color:var(--txt1)">' + ff(rf.valorTotalNF || 0) + '</span></div>'
-      + '<div style="display:flex;align-items:center;gap:4px">Status: <span style="background:rgba(' + stRfRgb + ',.12);color:rgba(' + stRfRgb + ',1);border:1px solid rgba(' + stRfRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRfLab + '</span></div>'
+      + (rf.balances && window.shParcial
+          ? '<div style="grid-column:1/-1">' + window.shParcial.resumoRF(rf) + '</div>'
+          : '<div style="display:flex;align-items:center;gap:4px">Status: <span style="background:rgba(' + stRfRgb + ',.12);color:rgba(' + stRfRgb + ',1);border:1px solid rgba(' + stRfRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRfLab + '</span></div>')
       + (stRgLab ? '<div style="display:flex;align-items:center;gap:4px">RF: <span style="background:rgba(' + stRgRgb + ',.12);color:rgba(' + stRgRgb + ',1);border:1px solid rgba(' + stRgRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRgLab + '</span></div>' : '<div></div>')
       + ((rf.statusCredito||rf.status)==='utilizado'&&rf.metodoExtincao ? '<div style="color:var(--txt3)">Extinção: <span style="color:var(--teal);font-weight:600">' + ({Compensacao:'Compensação',Transferencia:'Transferência'}[rf.metodoExtincao] || rf.metodoExtincao) + (rf.ressarcimento && rf.ressarcimento.marca === 'ressarcido' ? ' · ' + rf.ressarcimento.ref : '') + '</span></div>' : '')
       + ((rf.statusCredito||rf.status)==='utilizado'&&rf.dataExtincao ? '<div style="color:var(--txt3)">Data: <span style="color:var(--txt1)">' + rf.dataExtincao + '</span></div>' : '')
@@ -879,7 +881,9 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + DR('Emitente', r.entidade || '—')
     + DR('CNPJ', r.cnpj || '—', null, true)
     + DR('Data', dataFmt)
-    + DR('Status', '<span style="background:rgba(' + stRgb + ',.12);color:rgba(' + stRgb + ',1);border:1px solid rgba(' + stRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLab + '</span>')
+    + (window.shParcial && r.tipo === 'entrada' && (r.registrosFiscais || []).some(function(x){ return x.balances; })
+        ? DR('Crédito', '<span style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">' + window.shParcial.selosDF(r) + '</span>')
+        : DR('Status', '<span style="background:rgba(' + stRgb + ',.12);color:rgba(' + stRgb + ',1);border:1px solid rgba(' + stRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLab + '</span>'))
     + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Valores</div>'
     + DR('Total', ff(r.valorTotal || 0))
@@ -899,8 +903,9 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + window._incRenderVinculadasHtml(r._inconsistencias && r._inconsistencias.length ? r._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return String(i.nfNumero) === String(r.numero) || i.dfNum === ((r.tipoDF||'NF-e')+' '+r.numero); }))
     + '</div>'
 
-    // Right panel: timeline
+    // Right panel: partição do crédito (T-02) e timeline
     + '<div class="mbox-col" style="flex:1">'
+    + (window.shParcial && r.tipo === 'entrada' ? window.shParcial.secaoDF(r) : '')
     + '<div class="mbox-section-label">Histórico do Ciclo · ' + allEvents.length + ' evento' + (allEvents.length !== 1 ? 's' : '') + '</div>'
     + (tlH || '<div style="color:var(--txt3);font-size:12px">Nenhum evento disponível.</div>')
     + '</div>'
@@ -1737,9 +1742,13 @@ window.abrirDetalheRF = function(rfId) {
     + '<div class="mbox-section-label">Dados do Registro</div>'
     + DR('ID do RF', rf.id, 'var(--p-blue)')
     + DR('Tipo Fiscal', '<span style="color:' + tfColor + ';font-weight:700">' + tfLabel + '</span>')
-    + DR('Valor', ff(rf.valor), 'var(--p-teal)')
-    + DR('Status Crédito', '<span style="background:rgba(' + stRgb + ',.12);color:rgba(' + stRgb + ',1);border:1px solid rgba(' + stRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLab + '</span>')
-    + (stRegLab ? DR('Status Registro', '<span style="background:rgba(' + stRegRgb + ',.12);color:rgba(' + stRegRgb + ',1);border:1px solid rgba(' + stRegRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stRegLab + '</span>') : '')
+    + DR(rf.balances ? 'Apurado' : 'Valor', ff(rf.valor), 'var(--p-teal)')
+    + (rf.balances && window.shParcial
+        ? DR('Status Crédito', window.shParcial.selo(rf, false))
+          + '<div style="margin:-2px 0 8px">' + window.shParcial.barra(rf, 8) + '</div>'
+          + (rf.flagsFatia && rf.flagsFatia.length ? '<div style="margin:0 0 8px">' + window.shParcial.flagsHtml(rf) + '</div>' : '')
+        : DR('Status Crédito', '<span style="background:rgba(' + stRgb + ',.12);color:rgba(' + stRgb + ',1);border:1px solid rgba(' + stRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLab + '</span>'))
+    + (stRegLab && !rf.balances ? DR('Status Registro', '<span style="background:rgba(' + stRegRgb + ',.12);color:rgba(' + stRegRgb + ',1);border:1px solid rgba(' + stRegRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stRegLab + '</span>') : '')
     + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Documento Fiscal</div>'
     + DR('NF Vinculada', (nf.tipoDF || 'DF') + ' ' + nf.numero)
@@ -1777,10 +1786,11 @@ window.abrirDetalheRF = function(rfId) {
     + window._incRenderVinculadasHtml(rf._inconsistencias && rf._inconsistencias.length ? rf._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return i.rfId === rf.id || (i.nfNumero && String(i.nfNumero) === String((window._rfIndex&&window._rfIndex[rf.id]||{}).nf&&(window._rfIndex[rf.id].nf.numero))); }))
     + '</div>'
 
-    // Right panel: timeline
-    + '<div class="mbox-col" style="flex:1">'
-    + '<div class="mbox-section-label">Histórico do Ciclo · ' + eventos.length + ' evento' + (eventos.length !== 1 ? 's' : '') + '</div>'
-    + tlH
+    // Right panel: movimentos de valor (T-03) e timeline
+    + '<div class="mbox-col" style="flex:1;min-width:0">'
+    + (rf.balances && window.shParcial
+        ? window.shParcial.abas(rf, tlH, eventos.length)
+        : '<div class="mbox-section-label">Histórico do Ciclo · ' + eventos.length + ' evento' + (eventos.length !== 1 ? 's' : '') + '</div>' + tlH)
     + '</div>'
     + '</div>'
     + '</div>'
@@ -2045,7 +2055,8 @@ window.renderizarTabelaCreditos = function() {
         ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\''+r.rfId+'\')" title="Ver comprovante" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">'+r.pag+'</a>'
         : '<span style="color:var(--txt3)">—</span>';
 
-      var statusBadge = bdg(r.statusCredito) + (window.shRes && window.shRes.marcaHtml ? window.shRes.marcaHtml(r.rfId) : '');
+      var _rfP = window.shParcial && window._rfIndex && window._rfIndex[r.rfId] ? window._rfIndex[r.rfId].rf : null;
+      var statusBadge = (_rfP && _rfP.balances ? window.shParcial.selo(_rfP, false) + window.shParcial.barra(_rfP, 5) : bdg(r.statusCredito)) + (window.shRes && window.shRes.marcaHtml ? window.shRes.marcaHtml(r.rfId) : '');
       var _incLabels = (r._inconsistencias && r._inconsistencias.length)
         ? r._inconsistencias.map(function(i){ return i.tipoLabel || i.tipo || 'Inconsistência'; })
         : (r.inconsistencia ? [r.inconsistencia] : []);
@@ -8360,6 +8371,9 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window.shMotor && window.shMotor.aplicarNaBase && window.shMotor.aplicarNaBase(); } catch(e) { console.error('[motor]', e); }
       try { window.shRes && window.shRes.aplicarNaBase && window.shRes.aplicarNaBase(); } catch(e) {}
       try { _calcularStatusRegistro(); } catch(e) {}
+      // Parcialidade (lote 1): partição do valor apurado e movimentos por RF,
+      // status calculado da partição e marcas sobre a fatia (js/parcialidade.js)
+      try { window.shParcial && window.shParcial.aplicarNaBase && window.shParcial.aplicarNaBase(); } catch(e) { console.error('[parcialidade]', e); }
       try {
         // Atribuir cnpjComprador round-robin pelos CNPJs ativos da Induspar
         var _ativosOrg = (window._orgCnpjs || []).filter(function(c) { return c.status === 'ativo'; });

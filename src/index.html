@@ -1633,7 +1633,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
         <div class="sh-fp-grid">
           <div class="sh-fp-field"><label>Status Importação</label><select id="cred-dfs-status" onchange="creditosDFsRender()"><option value="">Todos</option><option value="importado">Importado</option><option value="inconsistencia">Inconsistência</option><option value="pendente">Pendente</option></select></div>
           <div class="sh-fp-field"><label>Tipo DF</label><select id="cred-dfs-tipo" onchange="creditosDFsRender()"><option value="">Todos</option><option value="NF-e">NF-e</option><option value="CT-e">CT-e</option><option value="NFS-e">NFS-e</option></select></div>
-          <div class="sh-fp-field"><label>Status Crédito</label><select id="cred-dfs-credito" onchange="creditosDFsRender()"><option value="">Todos</option><option value="a_apropriar">A Apropriar</option><option value="parc_apropriado">Parc. Apropriado</option><option value="apropriado">Apropriado</option><option value="parc_utilizado">Parc. Utilizado</option><option value="utilizado">Utilizado</option><option value="glosado">Glosado</option></select></div>
+          <div class="sh-fp-field"><label>Crédito por tributo</label><select id="cred-dfs-credito" onchange="creditosDFsRender()"><option value="">Todos</option><option value="tem_pendente">Com valor a apropriar</option><option value="p:not_appropriated">Algum tributo não apropriado</option><option value="p:partially_appropriated">Algum tributo parcialmente apropriado</option><option value="p:appropriated">Algum tributo apropriado</option><option value="p:partially_utilized">Algum tributo parcialmente utilizado</option><option value="p:utilized">Algum tributo utilizado</option><option value="p:disallowed">Algum tributo glosado</option></select></div>
           <div class="sh-fp-field"><label>Método de Pagamento</label><select id="cred-dfs-metodo" onchange="creditosDFsRender()"><option value="">Todos</option><option value="Split Payment">Split Payment</option><option value="RAD">RAD</option><option value="Fornecedor">Fornecedor</option></select></div>
           <div class="sh-fp-field"><label>Origem do método</label><select id="cred-dfs-origem" onchange="creditosDFsRender()"><option value="">Todas</option><option value="contrato">Definido no contrato</option><option value="alteracao_manual">Recolhimento assumido</option></select></div>
           <div class="sh-fp-field"><label>Extinção</label><select id="cred-dfs-extincao" onchange="creditosDFsRender()"><option value="">Todos</option><option value="com">Com extinção</option><option value="sem">Sem extinção</option></select></div>
@@ -1670,7 +1670,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
         <th class="r">Crédito</th>
         <th>Método</th>
         <th>Status Importação</th>
-        <th>Status Crédito</th>
+        <th>Crédito por tributo</th>
         <th>Inconsistências</th>
         <th>Contrato</th>
         <th>Extinção</th>
@@ -7412,6 +7412,9 @@ function creditosDFsRender(){
     dfs=dfs.filter(function(d){
       var nfNum=d.nfNumero!=null?String(d.nfNumero):'—';
       var rfs=(nfMap[nfNum]||{}).registrosFiscais||[];
+      // Parcialidade: filtro pela partição de cada tributo (js/parcialidade.js)
+      if(window.shParcial&&filtCredito==='tem_pendente')return window.shParcial.aApropriar(nfMap[nfNum]||{})>0;
+      if(window.shParcial&&filtCredito.indexOf('p:')===0)return rfs.some(function(rf){return rf.statusParcial===filtCredito.slice(2);});
       return _dfCreditStatus(rfs)===filtCredito;
     });
   }
@@ -7508,7 +7511,7 @@ function creditosDFsRender(){
       :'<span style="color:var(--txt3)">—</span>';
     h+='<td class="nowrap">'+metBadge+'</td>';
     h+='<td class="nowrap">'+bdg(status)+'</td>';
-    h+='<td class="nowrap">'+_csBadge(creditoDF)+'</td>';
+    h+='<td class="nowrap" style="min-width:150px">'+(window.shParcial&&rfs.some(function(rf){return rf.balances;})?window.shParcial.celulaDF(nfOrig):_csBadge(creditoDF))+'</td>';
     h+='<td style="vertical-align:middle">'+incTypesBadge+'</td>';
     h+='<td class="nowrap">'+contratoCell+'</td>';
     h+='<td class="nowrap">'+metExtBadge+'</td>';
@@ -10817,7 +10820,8 @@ if (window.Chart) {
 <script src="js/status-debito.js?v=4"></script>
 <script src="js/glosa.js?v=2"></script>
 <script src="js/ressarcimento.js?v=19"></script>
-<script src="js/data-sync-fixed.js?v=140"></script>
+<script src="js/parcialidade.js?v=1"></script>
+<script src="js/data-sync-fixed.js?v=141"></script>
 <script src="js/rotas.js?v=3"></script>
 <script src="js/motor-art53.js?v=32"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
@@ -10988,7 +10992,7 @@ if (window.Chart) {
         {key:'credito',    label:'Crédito',         fixed:false,visible:true,  type:'num'},
         {key:'metodoPagamento',label:'Método',      fixed:false,visible:true,  type:'str'},
         {key:'status',     label:'Status Importação',fixed:false,visible:true, type:'str'},
-        {key:'statusCredito',  label:'Status Crédito',fixed:false,visible:true,type:'str'},
+        {key:'statusCredito',  label:'Crédito por tributo',fixed:false,visible:true,type:'str'},
         {key:'inconsistencia', label:'Inconsistências',fixed:false,visible:false,type:'str'},
         {key:'contratoId', label:'Contrato',        fixed:false,visible:false, type:'str'},
         {key:'metodoExtincao', label:'Extinção',    fixed:false,visible:false, type:'str'},
