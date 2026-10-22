@@ -138,7 +138,7 @@
         var apr = r2(v - pend - inap);
         mov(movs, dAprop, 'pending', 'available', apr, 'Extinção parcial do débito do fornecedor', fonte, '', prazoArt54(dAprop));
         mov(movs, dUso, 'available', 'utilized', ut, causaUso, 'Apuração assistida', vincUso);
-        mov(movs, addDias(dUso, 5), 'pending', 'not_appropriable', inap, 'Glosa parcial',
+        mov(movs, addDias(dAprop, 10), 'pending', 'not_appropriable', inap, 'Glosa parcial',
           trib === 'ibs' ? fonte + ' · movimentação identificada' : fonte, 'Ficha de glosa');
         b.pending = pend; b.available = r2(apr - ut); b.utilized = ut;
         b.not_appropriable = inap;
@@ -297,14 +297,19 @@
       var p = P.PARC.filter(function (x) { return x.k === k; })[0] || { cor: 'var(--border)', rot: k };
       return '<span style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap"><span style="width:8px;height:8px;border-radius:2px;background:' + p.cor + ';display:inline-block"></span>' + p.rot + '</span>';
     };
-    return '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:620px"><thead><tr>'
-      + ['Reconhecido em', 'De', 'Para', 'Valor', 'Causa', 'Fonte', 'Vínculo · prazo'].map(function (h) { return '<th ' + th + '>' + h + '</th>'; }).join('')
+    var sub = 'style="display:block;font-size:10.5px;color:var(--txt3);margin-top:2px"';
+    return '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:440px"><thead><tr>'
+      + ['Reconhecido em', 'De → para', 'Valor', 'Causa · fonte · vínculo'].map(function (h) { return '<th ' + th + '>' + h + '</th>'; }).join('')
       + '</tr></thead><tbody>'
       + ms.map(function (m) {
-        return '<tr><td ' + td + '>' + br(m.reconhecidoEm) + '</td><td ' + td + '>' + parc(m.de) + '</td><td ' + td + '>' + parc(m.para) + '</td>'
+        return '<tr><td ' + td + '>' + br(m.reconhecidoEm) + '</td>'
+          + '<td ' + td + '>' + parc(m.de) + '<span style="display:block;color:var(--txt3);font-size:10px;margin:1px 0 1px 2px">↓</span>' + parc(m.para) + '</td>'
           + '<td ' + td.replace('color:var(--txt2)', 'color:var(--txt1);font-family:var(--font-mono,monospace);white-space:nowrap') + '>' + money(m.valor) + '</td>'
-          + '<td ' + td + '>' + esc(m.causa) + '</td><td ' + td + '>' + esc(m.fonte) + '</td>'
-          + '<td ' + td + '>' + esc(m.vinculo || '') + (m.prazoArt54 ? (m.vinculo ? '<br>' : '') + 'Limite art. 54: ' + br(m.prazoArt54) : '') + '</td></tr>';
+          + '<td ' + td + '><span style="color:var(--txt1)">' + esc(m.causa) + '</span>'
+          + '<span ' + sub + '>' + esc(m.fonte) + '</span>'
+          + (m.vinculo ? '<span ' + sub + '>' + esc(m.vinculo) + '</span>' : '')
+          + (m.prazoArt54 ? '<span ' + sub + '>Limite art. 54: ' + br(m.prazoArt54) + '</span>' : '')
+          + '</td></tr>';
       }).join('')
       + '</tbody></table></div>';
   };
