@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parcialidade — resumo executivo · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+
+.src { font-size: 11px; color: var(--txt3); white-space: nowrap; }
+.src a { color: var(--txt3); }
+.ess { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 14px 0; }
+.ess-c { border: 1px solid var(--brd); border-radius: 12px; padding: 12px 14px; background: var(--sur); }
+.ess-k { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--teal); }
+.ess-t { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 4px 0; }
+.ess-d { font-size: 12.5px; color: var(--txt2); line-height: 1.45; }
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 0; margin: 14px 0; }
+.fl { position: relative; padding: 10px 18px 10px 12px; border: 1px solid var(--brd); border-right: 0; background: var(--sur); }
+.fl:first-child { border-radius: 10px 0 0 10px; }
+.fl:last-child { border-right: 1px solid var(--brd); border-radius: 0 10px 10px 0; }
+.fl::after { content: '›'; position: absolute; right: 5px; top: 50%; transform: translateY(-50%); color: var(--txt3); font-weight: 700; }
+.fl:last-child::after { content: ''; }
+.fl.ret { background: var(--blue-d); }
+.fl.end { background: var(--teal-d); }
+.fl-c { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; color: var(--txt1); }
+.fl-t { font-size: 12px; font-weight: 700; color: var(--txt1); margin-top: 2px; }
+.fl-d { font-size: 11px; color: var(--txt3); margin-top: 2px; line-height: 1.35; }
+@media (max-width: 760px) {
+  .flow { grid-template-columns: minmax(0, 1fr); }
+  .fl, .fl:first-child, .fl:last-child { border: 1px solid var(--brd); border-radius: 0; margin-top: -1px; }
+  .fl::after { content: ''; }
+}
+.ev { font-family: 'JetBrains Mono', monospace; font-weight: 800; color: var(--txt1); white-space: nowrap; }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.formula { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--sur2); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 12px; margin: 10px 0; overflow-x: auto; color: var(--txt1); }
+.tag-n { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+.tag-n.ok { color: var(--teal); background: var(--teal-d); }
+.tag-n.no { color: var(--red); background: var(--red-d); }
+.tag-n.pd { color: var(--amber); background: var(--amber-d); }
+.fontes li { margin: 6px 0; font-size: 13px; }
+</style>
+<style>
+.doc { max-width: 1120px; }
+.ex-top { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; margin: 2px 0 10px; }
+.ex-top h1 { margin: 0; font-size: 26px; }
+.ex-top .eyebrow { margin: 0; }
+.ex-lede { font-size: 14.5px; line-height: 1.55; color: var(--txt1); margin: 0 0 14px; max-width: 980px; }
+.ex-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 14px; }
+.ex-kpi { border: 1px solid var(--brd); border-radius: 8px; background: var(--sur); padding: 8px 12px; }
+.ex-kpi b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--txt1); line-height: 1.2; }
+.ex-kpi span { font-size: 11.5px; color: var(--txt3); }
+.ex-kpi.ok b { color: var(--green); } .ex-kpi.warn b { color: var(--amber); } .ex-kpi.info b { color: var(--teal); }
+.ex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 12px; }
+.ex-box { border: 1px solid var(--brd); border-radius: 10px; background: var(--sur); padding: 12px 14px; min-width: 0; }
+.ex-box h2 { font-size: 12px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--teal); margin: 0 0 8px; }
+.ex-box.wide { grid-column: 1 / -1; }
+.ex-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ex-list li { font-size: 12.5px; line-height: 1.5; color: var(--txt2); padding-left: 12px; position: relative; }
+.ex-list li::before { content: ''; position: absolute; left: 0; top: 7px; width: 5px; height: 5px; border-radius: 50%; background: var(--teal); }
+.ex-list li b { color: var(--txt1); }
+.ex-id { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); white-space: nowrap; }
+.ex-st { display: inline-block; font-size: 10px; font-weight: 700; border-radius: 999px; padding: 0 7px; margin-left: 4px; white-space: nowrap; }
+.ex-st.ok { color: var(--green); background: var(--green-d); } .ex-st.pend { color: var(--amber); background: var(--amber-d); } .ex-st.nao { color: var(--purple); background: var(--sur3); }
+.ex-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; }
+.ex-step { border: 1px solid var(--brd); border-radius: 6px; padding: 6px 8px; font-size: 11.5px; color: var(--txt2); background: var(--bg); }
+.ex-step b { display: block; font-size: 11px; color: var(--txt1); }
+.ex-step.done { border-color: var(--green); background: var(--green-d); }
+.ex-foot { font-size: 11px; color: var(--txt3); margin-top: 10px; }
+@media print {
+  @page { size: A4 landscape; margin: 8mm; }
+  html { zoom: 0.66; }
+  body { background: var(--sur); }
+  .back, .toc { display: none !important; }
+  .doc { max-width: none; padding: 0; }
+  .ex-lede { font-size: 11.5px; margin-bottom: 8px; }
+  .ex-kpi b { font-size: 15px; } .ex-kpi { padding: 5px 9px; }
+  .ex-box { padding: 8px 10px; break-inside: avoid; }
+  .ex-list li { font-size: 10px; } .ex-step { font-size: 9.5px; }
+  .ex-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="ex-top"><div class="eyebrow">Resumo executivo · 22/10/2026</div><h1>Parcialidade do crédito</h1></div>
+<p class="ex-lede">O crédito de cada documento deixa de ter um rótulo e passa a ter uma <strong>repartição do valor</strong>, por tributo: parte a apropriar, parte disponível, parte utilizada, parte glosada — ao mesmo tempo. A ferramenta passa a medir, cobrar, conciliar e recolher por parcela, e a API leva ao ERP a mesma partição. É o que garante a apropriação do crédito no dinheiro certo.</p>
+<div class="ex-kpis">
+<div class="ex-kpi ok"><b>15 de 17</b><span>decisões aprovadas</span></div>
+<div class="ex-kpi warn"><b>2</b><span>sem decisão, em estudo</span></div>
+<div class="ex-kpi info"><b>1 de 10</b><span>partes executadas</span></div>
+<div class="ex-kpi"><b>8</b><span>telas — 1 nova, 7 mudam</span></div>
+<div class="ex-kpi"><b>v1.8.0</b><span>API publicada</span></div>
+</div>
+<div class="ex-grid">
+<div class="ex-box"><h2>O que muda na ferramenta</h2><ul class="ex-list"><li><b>O documento deixa de ter status.</b> Cada tributo ganha um selo, com o status calculado pela partição, e uma barra com onde está o dinheiro. <span class="ex-id">D-PAR-04</span></li><li><b>Listagens e indicadores em valor.</b> Aproveitamento = (disponível + utilizado) ÷ (apurado − inapropriável), total e por tributo; o prescrito conta como perda; os cards somam parcelas. <span class="ex-id">D-PAR-08 · 14</span></li><li><b>Flags acompanham a fatia.</b> Vencido e em risco sobre o valor a apropriar; a prescrever sobre o disponível. O RF apropriado em parte não perde mais o alerta. <span class="ex-id">D-PAR-05</span></li><li><b>Histórico vira razão de movimentos</b> — de, para, valor, causa, fonte e data do reconhecimento. <span class="ex-id">T-03</span></li><li><b>Glosa com valor.</b> A parte negada vai para inapropriável ou inutilizável; o resto segue. Revertida, volta à parcela de origem. <span class="ex-id">D-PAR-02 · 13</span></li><li><b>RAD do saldo.</b> Uma guia por imposto, emitida uma por vez, pelo que falta recolher; o líquido ao fornecedor é decomposto por tributo. <span class="ex-id">D-PAR-07</span></li><li><b>Conciliação parcela a parcela.</b> CBS contra a Receita Federal, IBS contra o Comitê Gestor; quando um dos lados não chega, abre inconsistência. <span class="ex-id">C-01</span></li><li><b>Débito com as parcelas do órgão.</b> O contencioso vira a parcela suspenso, com a causa do art. 151 do CTN. <span class="ex-id">D-PAR-15</span></li></ul></div>
+<div class="ex-box"><h2>O que muda na API</h2><ul class="ex-list"><li><b>v1.7.0 — já no contrato.</b> Registro de crédito com <code>balances</code> (13 parcelas) e status calculado (8 valores). <span class="ex-st ok">publicada</span></li><li><b>v1.8.0 — 22/10/2026.</b> Prazo do art. 54 por fatia apropriada: <code>deadlines.expiration_date</code> é o mais próximo e <code>change.expiration_date</code> vem em cada apropriação; a apropriação vai de <code>pending</code> para <code>available</code>. <span class="ex-st ok">publicada</span></li><li><b>Glosa.</b> Causa <code>disallowance</code> e o bloco da ficha no <code>credit.disallowed</code>. <span class="ex-st pend">a executar</span></li><li><b>RAD.</b> <code>rad.darf_received</code> com a decomposição do líquido ao fornecedor por tributo e guia por imposto. <span class="ex-st pend">a executar</span></li><li><b>Débito.</b> Bloco <code>suspension</code>, com a causa e o processo. <span class="ex-st pend">a executar</span></li></ul><h2 style="margin-top:12px">Regras de negócio que mudaram</h2><ul class="ex-list"><li><b>Um vocabulário só</b>, o da API: <em>disponível</em> é o crédito apropriado e não usado; <em>saldo credor</em> fica para o saldo do período. <span class="ex-id">D-PAR-01</span></li><li><b>Prazo do art. 54 por fatia apropriada</b>, do primeiro dia do período seguinte ao da apropriação — revisa a decisão de 05/10, que contava do fato gerador. <span class="ex-id">D-PAR-03</span></li><li><b>No IBS, nulo não é zero</b>: o que o Comitê Gestor não informa aparece como <em>não informado</em>. <span class="ex-id">D-PAR-09</span></li><li><b>Partição no documento</b> na primeira versão; item quando a ingestão segmentar. <span class="ex-id">D-PAR-06</span></li><li><b>Só a Conciliação move valor</b>, sempre a partir do dado do órgão. <span class="ex-id">C-01</span></li></ul></div>
+<div class="ex-box"><h2>Em aberto</h2><ul class="ex-list"><li><b>Guia vencida sem pagamento</b> — em estudo: validade e cancelamento das guias, multa e juros, líquido já pago ao fornecedor. A lei só diz que, sem pagamento, a opção não foi exercida. <span class="ex-id">D-PAR-11</span> <span class="ex-st nao">sem decisão</span></li><li><b>Fornecedor recolhe com a guia aberta</b> — em avaliação técnica: latência da informação, cancelamento e reemissão da guia, aviso ao ERP. <span class="ex-id">D-PAR-12</span> <span class="ex-st nao">sem decisão</span></li><li><b>Dependências externas</b> — emissão de DARF do RAD na API da Receita Federal no fim de novembro de 2026; documento de arrecadação do IBS ainda sem especificação no MOC.</li></ul><h2 style="margin-top:12px">Exemplo</h2><p style="font-size:12.5px;line-height:1.5;color:var(--txt2);margin:0">CBS de R$ 10.000: o fornecedor pagou R$ 6.000, a apuração usou R$ 5.000 e o órgão negou R$ 1.000. Hoje a tela mostra <em>Utilizado</em> e aproveitamento de 100%. Com a parcialidade: R$ 3.000 a apropriar, R$ 1.000 disponível, R$ 5.000 utilizado, R$ 1.000 inapropriável — e o alerta continua sobre os R$ 3.000.</p></div>
+<div class="ex-box wide"><h2>Execução</h2><div class="ex-steps"><div class="ex-step done"><b>Parte 1</b>Vocabulário · Ciclo de vida 1.16 · API 1.8.0</div><div class="ex-step"><b>Parte 2</b>PRD de Crédito 3.3</div><div class="ex-step"><b>Parte 3</b>Conciliação 3.8 · Inconsistências 1.5</div><div class="ex-step"><b>Parte 4</b>Pagamentos e Execução RAD</div><div class="ex-step"><b>Partes 5 e 6</b>Glosa · listagens e indicadores</div><div class="ex-step"><b>Partes 7 e 8</b>Débito · demais áreas</div><div class="ex-step"><b>Parte 9</b>Protótipo numa branch, avaliado pelo time antes do merge</div><div class="ex-step"><b>Parte 10</b>MassGen e fechamento</div></div></div>
+</div>
+<p class="ex-foot">Detalhe de cada decisão, com o de-para das telas: <a class="xref" href="proposta-parcialidade-aprovacao.html">proposta de aprovação por partes</a> · impacto por área: <a class="xref" href="relatorio-parcialidade-credito.html">relatório de parcialidade</a> · contrato: API da plataforma, v1.8.0.</p>
+</div>
+</body>
+</html>
