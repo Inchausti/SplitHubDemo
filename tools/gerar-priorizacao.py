@@ -21,8 +21,8 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.8'
-DATA = u'24/09/2026'
+VERSAO = u'v2.9'
+DATA = u'22/10/2026'
 BASE_MAPA = u'Mapa de Funcionalidades v2.8'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
@@ -262,6 +262,19 @@ PRIO_NOTA = {
 
 # funcionalidades que NAO existem no produto e entram na priorizacao mesmo assim
 NOVAS = {
+    1: [
+        (u'Partição do crédito por tributo', 'r', 'M0', None,
+         u'Cada RF mostra onde está o valor apurado — a apropriar, disponível, utilizado, glosado em parte —, com o status '
+         u'calculado e as marcas sobre a fatia. Sem ela, o RF apropriado em parte perde o alerta e o crédito pendente sai do radar.'),
+        (u'Selo por tributo no documento', 'l', 'M0', None,
+         u'O documento deixa de ter status próprio e mostra o selo da CBS e o do IBS, cada um com a barra da partição. '
+         u'É o que faz a listagem achar todo documento com crédito a apropriar.'),
+        (u'Detalhe do documento com as duas partições', 'l', 'M0', None,
+         u'Um painel por tributo, com a partição, a conferência da soma, o prazo do art. 54 mais próximo e a última leitura do órgão.'),
+        (u'Histórico de movimentos de valor', 'l', 'M0', None,
+         u'Razão do RF: cada movimento leva uma quantia de uma parcela para outra, com causa, fonte e vínculo. '
+         u'É a fonte da partição — a soma dos movimentos é o saldo de cada parcela.'),
+    ],
     18: [
         (u'Motor de execução das automações', 'c', 'M0', None,
          u'O que faz a régua disparar: avaliação diária dos registros contra as etapas, respeito ao teto de envios e '
@@ -297,8 +310,13 @@ NOVAS = {
           u'vindos de lá. Não existe no produto: hoje o acesso é uma senha no código.')],
 }
 
-# vinculo com o PRD das funcionalidades que ainda nao existem: nenhuma esta especificada
-NOVAS_PRD = {}
+# vinculo com o PRD das funcionalidades que ainda nao existem
+NOVAS_PRD = {
+    u'Partição do crédito por tributo': 'prd-credito.html#f-09',
+    u'Selo por tributo no documento': 'prd-credito.html#s04',
+    u'Detalhe do documento com as duas partições': 'prd-credito.html#f-10',
+    u'Histórico de movimentos de valor': 'prd-credito.html#f-11',
+}
 
 # contextos da API (src/js/integracoes.js), com a faixa de cada um
 CONTEXTOS = [
@@ -815,6 +833,10 @@ A(u'</div>')
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Decisões</span></div>')
 DEC = [
+    ('ok', u'D19 · Parcialidade do crédito pela gravidade',
+     u'<strong>Decidido em 22/10/2026 (D-PAR-10 da proposta de aprovação da parcialidade).</strong> O que o relatório de parcialidade '
+     u'classificou como gravidade alta entra no M0, a média no M1 e a baixa no M2. A primeira leva — partição, selo por tributo, '
+     u'detalhe do documento e histórico de movimentos — entra como nova, em M0.'),
     ('ok', u'D17 · Ressarcimento de M1 em diante — o M0 não muda',
      u'<strong>Decidido em 18/09/2026.</strong> Tudo o que o ressarcimento trouxe aos outros módulos entra em M1: o card do Início, '
      u'o painel do Crédito, o aviso do Débito, a família de inconsistências, o enquadramento na Organização e a saída para '
@@ -887,6 +909,11 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.9</div><div class="ver-desc">'
+  u'22/10/2026 \u2014 <strong>Parcialidade do crédito.</strong> Entram como novas, todas em <strong>M0</strong>, as quatro '
+  u'funcionalidades do PRD de Crédito 3.3: partição do crédito por tributo, selo por tributo no documento, detalhe do documento '
+  u'com as duas partições e histórico de movimentos de valor. Ficam como novas até o protótipo da branch <code>parcialidade-prototipo</code> '
+  u'ser aprovado; aí passam ao mapa. A faixa segue a D-PAR-10: o que o relatório de parcialidade classificou como gravidade alta entra no M0.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v2.8</div><div class="ver-desc">'
   u'24/09/2026 \u2014 Base: <strong>Mapa v2.8, com 280 funcionalidades</strong>. Entram as <strong>tr\u00eas'
   u' funcionalidades</strong> do cat\u00e1logo de inconsist\u00eancias \u2014 filtro por fam\u00edlia, coluna'

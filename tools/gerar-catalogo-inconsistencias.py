@@ -29,8 +29,8 @@ import re
 import html as H
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSAO = '1.1'
-DATA = '30/09/2026'
+VERSAO = '1.2'
+DATA = '22/10/2026'
 
 # ---------------------------------------------------------------- familias --
 FAMILIAS = {
@@ -453,10 +453,36 @@ add('INC-CONC-11', u'IBS sem confer&ecirc;ncia autom&aacute;tica dispon&iacute;v
     u'<a href="integracao-apis-reforma.html#f">cronograma</a>.',
     'fora')
 
+add('INC-CONC-12', u'Movimento n&atilde;o refletido pelo &oacute;rg&atilde;o', 'fisco',
+    u'H&aacute; o fato do nosso lado &mdash; guia RAD paga com comprovante, evento do ERP, compensa&ccedil;&atilde;o da apura&ccedil;&atilde;o, '
+    u'ficha de glosa aberta pela ci&ecirc;ncia &mdash; e a Receita Federal, na CBS, ou o Comit&ecirc; Gestor, no IBS, n&atilde;o trouxe o '
+    u'movimento correspondente. O valor n&atilde;o se move enquanto o &oacute;rg&atilde;o n&atilde;o confirmar. Uma ocorr&ecirc;ncia por tributo e por evento.',
+    'RN-CRE-27, C-01 (complemento de 22/10/2026), D-08 do Ciclo de vida',
+    u'S&oacute; depois de esgotada a espera configur&aacute;vel (D-08): a CBS &eacute; consultada at&eacute; quatro vezes por dia e o '
+    u'arquivo do IBS &eacute; di&aacute;rio. Antes disso &eacute; processamento normal do &oacute;rg&atilde;o, n&atilde;o ocorr&ecirc;ncia.',
+    'critica',
+    u'Conferir se o fato chegou ao &oacute;rg&atilde;o &mdash; pagamento compensado, evento autorizado &mdash; e aguardar nova leitura, '
+    u'ou abrir chamado. Enquanto aberta, o cr&eacute;dito segue a apropriar.',
+    'misto')
+
+add('INC-CONC-13', u'Movimento do &oacute;rg&atilde;o sem contrapartida', 'fisco',
+    u'O &oacute;rg&atilde;o trouxe um movimento que o SplitHub n&atilde;o esperava &mdash; apropria&ccedil;&atilde;o por RAD sem guia emitida, '
+    u'compensa&ccedil;&atilde;o sem apura&ccedil;&atilde;o correspondente, pagamento sem comprovante. O movimento &eacute; gravado, porque '
+    u'&eacute; o dado do &oacute;rg&atilde;o; a ocorr&ecirc;ncia pede a origem. A glosa fica de fora: ela j&aacute; abre a ficha.',
+    'RN-CRE-27, C-01 (complemento de 22/10/2026)',
+    u'Movimento lido do &oacute;rg&atilde;o sem v&iacute;nculo com guia, comprovante, apura&ccedil;&atilde;o ou ficha do SplitHub, '
+    u'passada a espera configur&aacute;vel para a contrapartida chegar.',
+    'alta',
+    u'Achar a origem: pagamento feito fora do produto, recolhimento em duplicidade, evento do ERP n&atilde;o integrado. '
+    u'Se for duplicidade, seguir a ocorr&ecirc;ncia de recolhimento em duplicidade.',
+    'misto')
+
 # ---- CRE -------------------------------------------------------------------
 add('INC-CRE-01', u'Glosa do cr&eacute;dito', 'ciclo',
-    u'O &oacute;rg&atilde;o recusou o cr&eacute;dito. Qualquer RF glosado p&otilde;e o DF inteiro em glosado.',
-    'RN-CRE-02, RN-CRE-09, RN-APU-07',
+    u'O &oacute;rg&atilde;o recusou todo o cr&eacute;dito ou parte dele. A parte negada vai para inapropri&aacute;vel, '
+    u'se ainda estava a apropriar, ou para inutiliz&aacute;vel, se j&aacute; estava dispon&iacute;vel; o resto segue no fluxo. '
+    u'O RF s&oacute; fica <code>disallowed</code> com todo o apurado glosado.',
+    'RN-CRE-28, RN-CRE-02, RN-APU-07',
     u'Retorno do &oacute;rg&atilde;o ou marca&ccedil;&atilde;o manual.',
     'critica',
     u'A revers&atilde;o vive no contencioso, n&atilde;o na fila de inconsist&ecirc;ncias '
@@ -474,20 +500,21 @@ add('INC-CRE-02', u'Prazo de apropria&ccedil;&atilde;o expirado', 'ciclo',
     'dentro', 'vivo', 'prazo_expirado')
 
 add('INC-CRE-03', u'Cr&eacute;dito prescrito pelo decurso de cinco anos', 'ciclo',
-    u'A data do documento &eacute; anterior a hoje menos cinco anos. Prescri&ccedil;&atilde;o do art. 54 '
-    u'opera mesmo sem status expl&iacute;cito, e n&atilde;o se confunde com vencido recuper&aacute;vel.',
-    'RN-CRE-07, RN-CRE-08, art. 54',
-    u'Deriva&ccedil;&atilde;o por data, independente de status.',
+    u'Uma fatia apropriada passou de cinco anos contados do primeiro dia do per&iacute;odo seguinte ao da sua '
+    u'apropria&ccedil;&atilde;o. Cada fatia tem o pr&oacute;prio prazo; o valor a apropriar n&atilde;o prescreve, e '
+    u'prescrito n&atilde;o se confunde com vencido recuper&aacute;vel.',
+    'RN-CRE-26, RN-CRE-08, art. 54',
+    u'Parcela <code>expired</code> informada pela Receita Federal na CBS; no IBS, c&aacute;lculo pelo prazo de cada fatia.',
     'critica',
     u'N&atilde;o h&aacute; contorno: o direito acabou. A ocorr&ecirc;ncia existe para documentar a perda '
     u'e para apontar o que est&aacute; a menos de doze meses da mesma sorte.',
     'dentro')
 
 add('INC-CRE-04', u'Documento parado em estado parcial', 'ciclo',
-    u'IBS e CBS do mesmo DF em estados diferentes por mais de uma compet&ecirc;ncia. '
-    u'O DF fica em <code>parc_apropriado</code> e ningu&eacute;m o v&ecirc; como pendente.',
-    'RN-CRE-10, RN-CRE-11',
-    u'Idade do estado parcial no n&iacute;vel do DF.',
+    u'Um tributo do documento avan&ccedil;ou e o outro ficou parado por mais de uma compet&ecirc;ncia. '
+    u'Com o selo por tributo o atraso aparece na tela, mas continua precisando de algu&eacute;m que o trate.',
+    'RN-CRE-24, RN-CRE-25',
+    u'Idade do valor a apropriar de um tributo enquanto o outro j&aacute; foi apropriado.',
     'alta',
     u'Tratar o tributo atrasado. O estado parcial &eacute; leg&iacute;timo por alguns dias e '
     u'suspeito depois disso &mdash; os dois tributos t&ecirc;m ciclos distintos, n&atilde;o prazos distintos.',
@@ -522,6 +549,16 @@ add('INC-CRE-07', u'Convers&atilde;o para recolhimento assumido sobre d&eacute;b
     u'A a&ccedil;&atilde;o &eacute; bloqueada quando algum RF j&aacute; est&aacute; apropriado ou utilizado. '
     u'Se a guia saiu mesmo assim, o caminho &eacute; a restitui&ccedil;&atilde;o &mdash; fora do produto.',
     'fora')
+
+add('INC-CRE-08', u'Parti&ccedil;&atilde;o que n&atilde;o fecha no apurado', 'fisco',
+    u'A soma das parcelas de um RF &mdash; a apropriar, dispon&iacute;vel, utilizado, inapropri&aacute;vel e as demais &mdash; '
+    u'difere do valor apurado do tributo. Algum valor se perdeu no caminho, ou foi contado duas vezes. Uma ocorr&ecirc;ncia por tributo.',
+    'RN-CRE-23',
+    u'Confer&ecirc;ncia da soma a cada movimento gravado e a cada leitura do &oacute;rg&atilde;o.',
+    'alta',
+    u'Reler a parti&ccedil;&atilde;o no &oacute;rg&atilde;o. Se o &oacute;rg&atilde;o fecha e n&oacute;s n&atilde;o, o erro &eacute; de processamento: '
+    u'reprocessar os movimentos. Se o &oacute;rg&atilde;o n&atilde;o fecha, abrir chamado com a Receita Federal ou o Comit&ecirc; Gestor.',
+    'misto')
 
 # ---- DEB -------------------------------------------------------------------
 add('INC-DEB-01', u'D&eacute;bito vencido e n&atilde;o extinto', 'financeiro',
@@ -1531,7 +1568,9 @@ acontece &mdash; que nem sempre &eacute; dentro do produto.</p>
   <div class="table-wrap"><table><thead><tr>
     <th>Vers&atilde;o</th><th>Data</th><th>Mudan&ccedil;a</th>
   </tr></thead><tbody>
-    <tr><td class="mono">v1.1</td><td class="mono">%(data)s</td>
+    <tr><td class="mono">v1.2</td><td class="mono">%(data)s</td>
+      <td><strong>Parcialidade do cr&eacute;dito</strong> (PRD de Cr&eacute;dito 3.3). Entram tr&ecirc;s tipos: <strong>INC-CRE-08</strong>, a parti&ccedil;&atilde;o que n&atilde;o fecha no apurado (RN-CRE-23); <strong>INC-CONC-12</strong>, o movimento n&atilde;o refletido pelo &oacute;rg&atilde;o, e <strong>INC-CONC-13</strong>, o movimento do &oacute;rg&atilde;o sem contrapartida &mdash; o complemento da C-01, de 22/10/2026 (RN-CRE-27). A glosa passa a ser inteira ou parcial (RN-CRE-28), a prescri&ccedil;&atilde;o corre por fatia apropriada (RN-CRE-26) e o estado parcial passa a ser por tributo (RN-CRE-24).</td></tr>
+    <tr><td class="mono">v1.1</td><td class="mono">30/09/2026</td>
       <td>Fam&iacute;lia <strong>I &middot; Eventos fiscais</strong>, aprovada pela D-13, entra na taxonomia com os tipos no
       cat&aacute;logo do dossi&ecirc; &mdash; trinta e nove ativos depois da retirada de um pela AE-07. A fronteira ganha o
       <strong>alerta de compet&ecirc;ncia</strong> (D-14): evento confirmado em apura&ccedil;&atilde;o fechada n&atilde;o &eacute;

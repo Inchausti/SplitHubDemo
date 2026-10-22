@@ -235,7 +235,7 @@ ul.uc-alt li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
   <p class="subtitle">Núcleo do SplitHub: rastreia o ciclo de vida completo do crédito de IBS e CBS desde a origem no fato gerador até a apropriação, utilização, glosa ou prescrição. Monitora o gap de aproveitamento, o envelhecimento dos créditos pendentes e a exposição à perda por decurso de prazo (art. 48, LC 214/2025).</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">3.2</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">3.3</span></div>
     <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Fiscal → Crédito</span></div>
     <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Out/2026</span></div>
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-creditos</span></div>
@@ -448,12 +448,13 @@ ul.uc-alt li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
     <h3>3.1 Hierarquia</h3>
     <div class="code-block"><code><span class="v">Documento Fiscal</span> (NF-e, CT-e, NFS-e)   <span class="c">← aba "Documentos Fiscais"</span>
   ├── <span class="v">Registro Fiscal</span> IBS               <span class="c">← aba "Registros Fiscais"</span>
-  │     statusCredito, statusRegistro, valor
+  │     valor (apurado) · balances · movimentos · status calculado
   └── <span class="v">Registro Fiscal</span> CBS
-        statusCredito, statusRegistro, valor
+        valor (apurado) · balances · movimentos · status calculado
 
 <span class="c">Um DF origina tipicamente 2 RFs (IBS + CBS).</span>
-<span class="c">O status do DF é DERIVADO da combinação dos status dos seus RFs.</span></code></div>
+<span class="c">Cada RF carrega a partição do valor apurado (balances); o status é resumo calculado dela.</span>
+<span class="c">O DF não tem status próprio: mostra um selo por tributo (RN-CRE-24).</span></code></div>
 
     <h3>3.2 Campos do Registro Fiscal</h3>
     <div class="table-wrap">
@@ -462,22 +463,76 @@ ul.uc-alt li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
         <tbody>
           <tr><td><code>id</code></td><td>string</td><td>Identificador do RF</td></tr>
           <tr><td><code>tipoFiscal</code></td><td><code>'ibs' | 'cbs'</code></td><td>Tributo do registro</td></tr>
-          <tr><td><code>valor</code></td><td>number</td><td>Valor do crédito (usado nos KPIs e gráficos)</td></tr>
+          <tr><td><code>valor</code></td><td>number</td><td>Valor <strong>apurado</strong> do tributo no documento (<code>assessed</code>). A soma das parcelas de <code>balances</code> fecha nele (RN-CRE-23)</td></tr>
+          <tr><td><code>balances</code></td><td>object</td><td>A partição do valor apurado, com as parcelas da API — ver 3.2.1. No IBS, parcela que o Comitê Gestor não informa vem <code>null</code> e aparece como <em>não informado</em> (RN-CRE-29)</td></tr>
+          <tr><td><code>movimentos</code></td><td>object[]</td><td>Cada mudança de valor entre parcelas — ver 3.2.2. É a fonte da partição: os movimentos de cada parcela somam o saldo dela</td></tr>
           <tr><td><code>cred</code></td><td>number</td><td>Valor do crédito na lista normalizada consumida pelos KPIs</td></tr>
           <tr><td><code>data</code> / <code>dataNF</code></td><td>ISO date</td><td>Origem do fato gerador; base do ageing e da prescrição</td></tr>
-          <tr><td><code>statusCredito</code></td><td>enum (4)</td><td>Ciclo do crédito — ver seção 4.1</td></tr>
-          <tr><td><code>statusRegistro</code></td><td>enum (4) | null</td><td>Sinalização de risco — ver seção 4.3</td></tr>
+          <tr><td><code>statusCredito</code></td><td>enum (8)</td><td>Resumo <strong>calculado</strong> da partição, pela precedência da API — ver seção 4.1</td></tr>
+          <tr><td><code>statusRegistro</code></td><td>enum (4) | null</td><td>Marca de risco mais grave, calculada sobre a fatia — ver seção 4.3</td></tr>
           <tr><td><code>statusFlags</code></td><td>string[]</td><td>Flags acumuladas de risco</td></tr>
           <tr><td><code>metodoPagamento</code></td><td><code>'RAD' | 'Fornecedor' | 'Split Payment'</code></td><td>Quem recolhe — valor <strong>efetivo</strong>, lido por listagens, filtros, KPIs, gráficos e pelo módulo de Pagamentos</td></tr>
           <tr><td><code>metodoPagamentoContrato</code></td><td>string | ausente</td><td>Método definido no contrato, preservado quando o recolhimento é assumido — ver F-08</td></tr>
           <tr><td><code>metodoPagamentoOrigem</code></td><td><code>'contrato' | 'alteracao_manual'</code> | ausente</td><td>De onde vem o método efetivo; ausente equivale a <code>'contrato'</code></td></tr>
           <tr><td><code>conversaoRAD</code></td><td>object | ausente</td><td>Registro da ação: <code>id</code>, <code>em</code>, <code>por</code>, <code>perfil</code>, <code>motivo</code>, <code>justificativa</code>, <code>declaracoes</code>, <code>guiaGeradaEm</code>, <code>revertidaEm</code>, <code>revertidaPor</code>. Presente também na DF</td></tr>
           <tr><td><code>_eventos</code></td><td>object[]</td><td>Histórico gravado das ações do operador, somado aos eventos derivados do estado. Presente também na DF</td></tr>
-          <tr><td><code>metodoExtincao</code></td><td>string | null</td><td>Como o débito foi extinto — 5 valores possíveis</td></tr>
-          <tr><td><code>dataPagamento</code></td><td>string | <code>'—'</code></td><td>Data do recolhimento</td></tr>
+          <tr><td><code>metodoExtincao</code></td><td>string | null</td><td>Meio do último movimento de uso. O detalhe fica em <code>movimentos</code>: um mesmo RF pode ser compensado em parte e ressarcido em parte</td></tr>
+          <tr><td><code>dataPagamento</code></td><td>string | <code>'—'</code></td><td>Data do último comprovante. Cada apropriação tem a própria data em <code>movimentos</code></td></tr>
           <tr><td><code>contratoId</code></td><td>string | null</td><td>Vínculo contratual</td></tr>
           <tr><td><code>entidade</code> / <code>cnpj</code></td><td>string</td><td>Fornecedor emissor</td></tr>
-          <tr><td><code>_inconsistencias</code></td><td>object[]</td><td>Divergências detectadas</td></tr>
+          <tr><td><code>_inconsistencias</code></td><td>object[]</td><td>Divergências detectadas, com a parcela e o valor afetado</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>3.2.1 A partição do RF</h3>
+    <p>O crédito de um RF não tem um estado: tem uma <strong>repartição do valor apurado</strong>. Os nomes são os da API, e a tela usa o rótulo em português (glossário do <a class="xref" href="proposta-ciclo-vida.html#glossario">Ciclo de vida</a>, D-PAR-01).</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Rótulo</th><th>Campo</th><th>O que é</th><th>No IBS</th></tr></thead>
+        <tbody>
+          <tr><td>Não processado</td><td><code>unprocessed</code></td><td>O órgão ainda não processou</td><td>não informado</td></tr>
+          <tr><td>A apropriar</td><td><code>pending</code></td><td>Depende da extinção do débito do fornecedor — art. 47</td><td>informado</td></tr>
+          <tr><td>Disponível</td><td><code>available</code></td><td>Apropriado e ainda não usado: pode compensar ou ir a pedido de ressarcimento</td><td>informado</td></tr>
+          <tr><td>Utilizado</td><td><code>utilized</code></td><td>Já abateu débito</td><td>informado</td></tr>
+          <tr><td>Inapropriável</td><td><code>not_appropriable</code></td><td>Vedação do art. 48, ou glosa antes da apropriação (RN-CRE-28)</td><td>não informado</td></tr>
+          <tr><td>Inutilizável</td><td><code>not_usable</code></td><td>Apropriado, mas não pode ser usado — glosa depois da apropriação (RN-CRE-28)</td><td>não informado</td></tr>
+          <tr><td>Suspenso</td><td><code>suspended</code></td><td>Parado por decisão ou diferimento</td><td>não informado</td></tr>
+          <tr><td>Prescrito</td><td><code>expired</code></td><td>Perdeu o prazo do art. 54, por fatia apropriada (RN-CRE-26)</td><td>não informado</td></tr>
+          <tr><td>Restabelecido</td><td><code>restored</code></td><td>Voltou ao saldo depois de usado</td><td>não informado</td></tr>
+          <tr><td>Em pedido de ressarcimento</td><td><code>refund_requested</code></td><td>Está num pedido ao órgão</td><td>informado</td></tr>
+          <tr><td>Ressarcimento disponível</td><td><code>refund_available</code></td><td>Deferido, aguardando transferência</td><td>informado; na CBS, não informado</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>Apropriado</strong> (<code>appropriated</code>) é a soma do disponível, do utilizado e do inutilizável; <strong>glosado</strong> é status, não parcela; <strong>saldo credor</strong> é o saldo do período de apuração, não parcela do documento.</p>
+    <h4>Um crédito, quatro momentos</h4>
+    <p>CBS de R$ 10.000 numa NF-e, no caminho em que o fornecedor recolhe.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Momento</th><th>A apropriar</th><th>Disponível</th><th>Utilizado</th><th>Inapropriável</th><th>Status calculado</th></tr></thead>
+        <tbody>
+          <tr><td>1. O documento chega</td><td class="r">10.000</td><td class="r">0</td><td class="r">0</td><td class="r">0</td><td><code>not_appropriated</code></td></tr>
+          <tr><td>2. O fornecedor extingue R$ 6.000</td><td class="r">4.000</td><td class="r">6.000</td><td class="r">0</td><td class="r">0</td><td><code>partially_appropriated</code></td></tr>
+          <tr><td>3. A apuração compensa R$ 5.000</td><td class="r">4.000</td><td class="r">1.000</td><td class="r">5.000</td><td class="r">0</td><td><code>partially_utilized</code></td></tr>
+          <tr><td>4. O órgão nega R$ 1.000 do que estava a apropriar</td><td class="r">3.000</td><td class="r">1.000</td><td class="r">5.000</td><td class="r">1.000</td><td><code>partially_utilized</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Em cada linha a soma fecha em R$ 10.000 — a conferência da RN-CRE-23.</p>
+    <h3>3.2.2 Movimentos</h3>
+    <p>Quem altera o RF grava um movimento, e a partição é recalculada. Só a Conciliação grava, sempre a partir do dado do órgão (RN-CRE-27). É o mesmo conteúdo do <code>change</code> que a API leva ao ERP.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Campo</th><th>O que é</th></tr></thead>
+        <tbody>
+          <tr><td><code>reconhecidoEm</code></td><td>Data do reconhecimento pelo órgão — não a do pagamento. Na apropriação, abre o prazo do art. 54</td></tr>
+          <tr><td><code>de</code> · <code>para</code></td><td>Parcela de origem e de destino. <code>appropriated</code> nunca aparece: a apropriação vai de <code>pending</code> para <code>available</code></td></tr>
+          <tr><td><code>valor</code></td><td>Quanto mudou</td></tr>
+          <tr><td><code>causa</code></td><td>Extinção pelo fornecedor, RAD, compensação, glosa, reabertura, decisão…</td></tr>
+          <tr><td><code>fonte</code></td><td>Receita Federal (consulta) ou Comitê Gestor (arquivo diário), com a data da leitura</td></tr>
+          <tr><td><code>vinculo</code></td><td>O débito abatido, a guia, a ficha de glosa ou o pedido</td></tr>
+          <tr><td><code>prazoArt54</code></td><td>Nas apropriações, o limite do art. 54 da fatia — RN-CRE-26</td></tr>
         </tbody>
       </table>
     </div>
@@ -551,6 +606,11 @@ ul.uc-alt li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
       <span class="nid">Res. CGIBS 6/2026, art. 55, par. único</span>.</p>
     </div>
 
+    <div class="callout info">
+      <div class="ct">Com a parcialidade, uma data por fatia (v3.3)</div>
+      <p>O mesmo RF pode ser apropriado em fatias, em datas diferentes. Cada movimento de apropriação guarda a própria data e o próprio limite do art. 54; os campos <code>dataApropriacao</code> e <code>dataPrevExtincao</code> passam a resumir: a última apropriação e o limite mais próximo entre as fatias com saldo disponível. O valor a apropriar não tem prazo do art. 54 — o risco dele é o vencimento (RN-CRE-25 e RN-CRE-26).</p>
+    </div>
+
     <h3>Colunas do ciclo nas listagens</h3>
     <p>Três colunas, presentes em toda listagem e todo detalhamento de DF ou RF:</p>
     <div class="table-wrap">
@@ -564,7 +624,7 @@ ul.uc-alt li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
               <td>Data em que o crédito foi consumido</td>
               <td>Enquanto o crédito está apropriado e disponível</td></tr>
           <tr><td><strong>Limite art. 54</strong></td>
-              <td>Fim do prazo de 5 anos. <span style="color:var(--amber);font-weight:700">Âmbar</span> no último
+              <td>Fim do prazo de 5 anos da fatia disponível que vence primeiro. <span style="color:var(--amber);font-weight:700">Âmbar</span> no último
               ano, <span style="color:var(--red);font-weight:700">vermelho</span> depois de vencido. Crédito já
               extinto não corre esse risco e sai em cinza</td>
               <td>Sem apropriação, nenhum prazo corre</td></tr>
@@ -581,71 +641,39 @@ ul.uc-alt li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
   <div class="section" id="s04">
     <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Máquinas de estado</span></div>
 
-    <h3>4.1 <code>statusCredito</code> — nível RF</h3>
-    <p>Quatro estados efetivamente presentes nos dados. Escrito pela Conciliação; o módulo de Crédito é consumidor.</p>
-    <div class="state-grid">
-      <div class="state-row">
-        <div class="state-name sn-gray">nao_apropriado</div>
-        <div class="state-desc">Crédito originado, aguardando confirmação do recolhimento na Plataforma Centralizada. Estado inicial. Alimenta os KPIs <em>A Apropriar</em>, o ageing, o calendário de prescrição e o gráfico de vencimento.</div>
-      </div>
-      <div class="state-row">
-        <div class="state-name sn-teal">apropriado</div>
-        <div class="state-desc">Recolhimento confirmado pelo CG-IBS/RFB. Crédito disponível para abater débito. Conta no numerador do índice de aproveitamento.</div>
-      </div>
-      <div class="state-row">
-        <div class="state-name sn-blue">utilizado</div>
-        <div class="state-desc">Crédito apropriado e já consumido contra débito de saída. <strong>Também soma em "apropriado"</strong> nos KPIs — é um subconjunto, não um estado paralelo.</div>
-      </div>
-      <div class="state-row">
-        <div class="state-name sn-red">glosado</div>
-        <div class="state-desc">Crédito rejeitado pelo Fisco. <strong>Excluído do total aproveitável</strong> — não entra em <code>totalCred</code>, apenas no denominador <code>total</code> usado para o percentual de glosa.</div>
-      </div>
-    </div>
-
-    <div class="callout warn">
-      <div class="ct">Utilizado é subconjunto de apropriado</div>
-      <p>Na acumulação dos KPIs, <code>utilizado</code> incrementa <strong>dois</strong> acumuladores: <code>aprop</code> e <code>util</code>. O percentual "Utilizados" é calculado sobre <code>aprop</code>, não sobre o total — responde "dos créditos que consegui apropriar, quantos já usei?". Tratar utilizado como estado paralelo a apropriado produziria dupla contagem.</p>
-    </div>
-
-    <div class="code-block"><code><span class="k">if</span>      (sc === <span class="s">'apropriado'</span>)     { aprop += v; }
-<span class="k">else if</span> (sc === <span class="s">'utilizado'</span>)      { aprop += v; util += v; }   <span class="c">// ambos</span>
-<span class="k">else if</span> (sc === <span class="s">'nao_apropriado'</span>) { naoAprop += v; <span class="c">/* + split CP/LP */</span> }
-<span class="k">else if</span> (sc === <span class="s">'glosado'</span>)        { glosado += v; }
-
-<span class="k">var</span> total    = aprop + naoAprop + glosado;  <span class="c">// universo completo</span>
-<span class="k">var</span> totalCred = aprop + naoAprop;           <span class="c">// aproveitável (glosado fora)</span></code></div>
-
-    <h3>4.2 Status derivado do DF — <code>_dfCreditStatus()</code></h3>
-    <p>Na aba "Documentos Fiscais", o status exibido não é lido de um campo: é <strong>calculado</strong> a partir da combinação dos status dos RFs de IBS e CBS. Isso produz seis estados, dois deles parciais que não existem no nível do RF.</p>
-
-    <h4>Normalização de entrada</h4>
-    <div class="code-block"><code><span class="k">var</span> norm = <span class="k">function</span>(s) {
-  <span class="k">if</span> (!s || s === <span class="s">'nao_apropriado'</span>) <span class="k">return</span> <span class="s">'a_apropriar'</span>;
-  <span class="k">return</span> s;
-};
-<span class="c">// nao_apropriado (RF) → a_apropriar (DF). Ausência também vira a_apropriar.</span></code></div>
-
-    <h4>Cascata de precedência</h4>
+    <h3>4.1 <code>statusCredito</code> — resumo calculado da partição</h3>
+    <p>Desde a v3.3 o status não é escrito por ninguém: é <strong>calculado</strong> da partição, pela primeira regra que se aplica, como na API. Quem altera o RF grava movimentos (3.2.2) e o status é recalculado.</p>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>#</th><th>Condição</th><th>Status do DF</th><th>Racional</th></tr></thead>
+        <thead><tr><th>Ordem</th><th>Status</th><th>Rótulo</th><th>Quando vale</th></tr></thead>
         <tbody>
-          <tr><td>1</td><td>IBS ou CBS <code>glosado</code></td><td><code>glosado</code></td><td>Glosa em qualquer tributo encerra o ciclo do documento</td></tr>
-          <tr><td>2</td><td>IBS e CBS <code>utilizado</code></td><td><code>utilizado</code></td><td>Ciclo completo em ambos</td></tr>
-          <tr><td>3</td><td>IBS ou CBS <code>utilizado</code></td><td><code>parc_utilizado</code></td><td>Ao menos um completou o ciclo</td></tr>
-          <tr><td>4</td><td>IBS e CBS <code>apropriado</code></td><td><code>apropriado</code></td><td>Ambos confirmados, nenhum usado</td></tr>
-          <tr><td>5</td><td>IBS ou CBS <code>apropriado</code></td><td><code>parc_apropriado</code></td><td>Confirmação parcial</td></tr>
-          <tr><td>6</td><td>Nenhum dos acima</td><td><code>a_apropriar</code></td><td>Ambos pendentes</td></tr>
+          <tr><td>1</td><td><code>cancelled</code></td><td>Cancelado</td><td>O documento foi cancelado</td></tr>
+          <tr><td>2</td><td><code>disallowed</code></td><td>Glosado</td><td>Todo o apurado está em inapropriável ou inutilizável</td></tr>
+          <tr><td>3</td><td><code>expired</code></td><td>Prescrito</td><td>Todo o valor ainda não utilizado prescreveu</td></tr>
+          <tr><td>4</td><td><code>utilized</code></td><td>Utilizado</td><td>Há valor utilizado, nada disponível e nada a apropriar</td></tr>
+          <tr><td>5</td><td><code>partially_utilized</code></td><td>Parcialmente utilizado</td><td>Há valor utilizado e ainda há disponível</td></tr>
+          <tr><td>6</td><td><code>appropriated</code></td><td>Apropriado</td><td>Apropriado, sem nada a apropriar e sem uso</td></tr>
+          <tr><td>7</td><td><code>partially_appropriated</code></td><td>Parcialmente apropriado</td><td>Parte apropriada e parte a apropriar</td></tr>
+          <tr><td>8</td><td><code>not_appropriated</code></td><td>Não apropriado</td><td>Nada apropriado ainda</td></tr>
         </tbody>
       </table>
     </div>
-
-    <div class="callout info">
-      <div class="ct">Por que os estados parciais importam</div>
-      <p>Um DF em <code>parc_apropriado</code> sinaliza que o IBS foi confirmado mas o CBS não (ou vice-versa) — situação que indica problema específico de um dos entes arrecadadores, não do fornecedor como um todo. Sem essa composição, o analista veria apenas "parcialmente resolvido" sem saber qual metade falta.</p>
+    <div class="callout warn">
+      <div class="ct">De-para dos quatro estados de antes</div>
+      <p><code>nao_apropriado</code> e <code>a_apropriar</code> → <code>not_appropriated</code> · <code>apropriado</code> → <code>appropriated</code> ou <code>partially_appropriated</code> · <code>utilizado</code> → <code>utilized</code> ou <code>partially_utilized</code> · <code>glosado</code> → <code>disallowed</code>, só com glosa total. Os indicadores deixam de somar o RF inteiro pelo rótulo e passam a somar parcelas — regra detalhada na v3.5, com as listagens e a Visão Geral.</p>
     </div>
 
+    <h3>4.2 O DF não tem status próprio — um selo por tributo</h3>
+    <p>Até a v3.2 o DF tinha um status calculado da combinação dos rótulos dos dois RFs (<code>_dfCreditStatus()</code>, seis valores). Com oito status por RF seriam 64 combinações, e a listagem e o detalhe já usavam regras diferentes. Desde a v3.3 (D-PAR-04):</p>
+    <ul class="plain">
+      <li><span>Listagens e detalhe mostram <strong>um selo por tributo</strong> — CBS e IBS — com o status calculado de cada RF e a barra da partição.</span></li>
+      <li><span>Somem <code>a_apropriar</code>, <code>parc_apropriado</code> e <code>parc_utilizado</code> como status de documento; <em>parcial</em> passa a querer dizer parte do valor do mesmo tributo.</span></li>
+      <li><span>A herança se inverte: o DF resume os seus RFs, e não o contrário.</span></li>
+      <li><span>A glosa de um tributo não marca o documento inteiro: aparece no selo daquele tributo, e só como <em>Glosado</em> se todo o apurado dele estiver glosado.</span></li>
+    </ul>
+
     <h3>4.3 <code>statusRegistro</code> — sinalização de risco</h3>
+    <p><strong>Desde a v3.3 as marcas valem sobre a fatia</strong> (D-PAR-05): <em>vencido</em> e <em>em risco</em> enquanto houver valor a apropriar, com o valor dessa fatia; <em>a prescrever</em> sobre o disponível, pela fatia com o limite do art. 54 mais próximo; <em>inconsistência</em> pelo vínculo com a ocorrência. Um RF apropriado em parte não perde mais o alerta — a regra antiga zerava as marcas de todo RF apropriado, utilizado ou glosado. Na API, os nomes são <code>appropriation_overdue</code>, <code>appropriation_due_soon</code>, <code>expiring</code> e <code>inconsistency</code>.</p>
     <p>Ortogonal ao <code>statusCredito</code>: um RF pode ser <code>nao_apropriado</code> e simultaneamente <code>em_risco</code>. Os KPIs de risco acumulam de forma <strong>independente</strong> (usam <code>if</code>, não <code>else if</code>), o que significa que um mesmo RF pode contribuir para mais de um indicador de risco.</p>
     <div class="state-grid">
       <div class="state-row">
@@ -682,26 +710,19 @@ ul.uc-alt li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 }</code></div>
     <p>A comparação usa o inteiro <code>AAAAMM</code> em vez de objetos <code>Date</code>, evitando erro de fuso e comparação de horas. A ausência de data classifica como CP — falha para o lado seguro, forçando revisão manual.</p>
 
-    <h3>4.5 Prescrição — critério duplo</h3>
-    <div class="code-block"><code><span class="k">var</span> _scExt     = sc === <span class="s">'extinto'</span>;                <span class="c">// status explícito</span>
-<span class="k">var</span> _prescrito = _dataObj && _dataObj &lt; _5anosAtras;  <span class="c">// ou por decurso</span>
-<span class="k">if</span> (_scExt || _prescrito) {
-  extinto += v; extintoCount++;
-  <span class="c">// rastreia o mês mais recente de prescrição</span>
-  <span class="k">var</span> _ym = _dataObj.getFullYear() * <span class="n">100</span> + _dataObj.getMonth() + <span class="n">1</span>;
-  <span class="k">if</span> (_ym &gt; extintoUlt) extintoUlt = _ym;
-}</code></div>
-    <p>O crédito é considerado prescrito por <strong>status explícito</strong> ou por <strong>cálculo de decurso</strong>. O segundo critério garante que a prescrição apareça mesmo que a Conciliação ainda não tenha marcado o registro — a interface não depende do backend para sinalizar perda por tempo.</p>
-
-    <h4>Exclusão mútua com "vencido não prescrito"</h4>
-    <div class="code-block"><code><span class="k">if</span> (sr === <span class="s">'vencido'</span> && !_scExt && !_prescrito) {
-  vencNaoExt += v;
-  <span class="c">// breakdown por método de pagamento</span>
-  <span class="k">var</span> _met = (r.metodoPagamento || <span class="s">''</span>).toLowerCase();
-  <span class="k">if</span> (_met === <span class="s">'rad'</span>) vencRad += v;
-  <span class="k">else</span>                 vencForn += v;
-}</code></div>
-    <p>Um crédito prescrito não conta como "vencido recuperável" — a exclusão evita que a mesma perda apareça duas vezes com prognósticos contraditórios.</p>
+    <h3>4.5 Prescrição — por fatia apropriada</h3>
+    <p>O art. 54 da LC 214/2025 conta cinco anos <em>do primeiro dia do período subsequente ao de apuração em que tiver ocorrido a apropriação</em>. Com recolhimento parcial, cada fatia apropriada tem o próprio prazo (D-PAR-03, que revisa a decisão de 05/10/2026):</p>
+    <ul class="plain">
+      <li><span>Cada movimento de apropriação abre o seu prazo; o RF mostra o mais próximo entre as fatias com saldo disponível.</span></li>
+      <li><span>O valor a apropriar não prescreve: ainda não é crédito. O risco dele é o vencimento.</span></li>
+      <li><span>A fatia restabelecida mantém a data da apropriação original, como na sucessão (art. 55).</span></li>
+      <li><span>Na CBS, a parcela <code>expired</code> vem da Receita Federal. No IBS, o Comitê Gestor não a informa: o SplitHub calcula pelo prazo de cada fatia.</span></li>
+    </ul>
+    <p>Exemplo: CBS apropriada em parte em 30/09/2026 (limite 01/10/2031) e em parte em 15/03/2027 (limite 01/04/2032). Em 02/10/2031 só a primeira fatia está prescrita. O dia final segue a regra de contagem que o jurídico confirmar; a regra fixa o início da contagem.</p>
+    <div class="callout warn">
+      <div class="ct">O cálculo de hoje conta do documento</div>
+      <p>O protótipo ainda considera prescrito o RF com data do DF anterior a cinco anos (critério de decurso). A troca para a fatia apropriada entra com o protótipo da parcialidade.</p>
+    </div>
   </div>
 
   <!-- ══ 05 ══ -->
@@ -753,6 +774,38 @@ ul.uc-alt li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 <span class="n">Faixa 5</span>  grid 1fr 1fr
          [Top 5 Inconsistência G-06]     [Top 10 Empresas G-07]</code></div>
     <p>A progressão é deliberada: <strong>números → risco → tempo → tendência → responsáveis</strong>. O analista desce a página saindo do "quanto" para o "quem".</p>
+
+    <h3>5.3 Detalhe do documento — as duas partições (T-02)</h3>
+    <p>O detalhe do DF troca os cartões de RF com valor e status únicos por dois painéis lado a lado, um por tributo. De-para completo na <a class="xref" href="proposta-parcialidade-aprovacao.html#t02">proposta da parcialidade</a>.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Elemento</th><th>Como fica</th></tr></thead>
+        <tbody>
+          <tr><td>Cabeçalho</td><td>Dois selos, CBS e IBS, com o status calculado de cada RF; o documento não tem selo próprio</td></tr>
+          <tr><td>Painel por tributo</td><td>O órgão (Receita Federal na CBS, Comitê Gestor no IBS), a barra da partição e uma linha por parcela, em R$</td></tr>
+          <tr><td>Conferência</td><td><em>Soma das parcelas = apurado</em>, em verde; se não fechar, em vermelho e com inconsistência aberta (RN-CRE-23)</td></tr>
+          <tr><td>Não informado</td><td>Parcela que o Comitê Gestor não traz aparece em itálico como <em>não informado</em>, nunca como zero</td></tr>
+          <tr><td>Prazos</td><td>O limite do art. 54 mais próximo, com o valor da fatia que vence; os demais ficam nos movimentos</td></tr>
+          <tr><td>Atualização</td><td>Data da última leitura do órgão: consulta à Receita Federal ou arquivo do Comitê Gestor</td></tr>
+          <tr><td>Navegação</td><td>Cada parcela abre o histórico de movimentos filtrado nela (T-03)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>5.4 Histórico de movimentos de valor (T-03)</h3>
+    <p>O detalhe do RF ganha a aba <em>Movimentos de valor</em>, ao lado da linha do tempo de eventos de hoje, que continua.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Elemento</th><th>Como fica</th></tr></thead>
+        <tbody>
+          <tr><td>Linha</td><td>Um movimento: reconhecido em, de, para, valor, causa, fonte e vínculo; na apropriação, o limite do art. 54</td></tr>
+          <tr><td>Soma</td><td>Os movimentos de cada parcela fecham no saldo dela</td></tr>
+          <tr><td>Eventos inferidos</td><td>Vencimento, em risco e a prescrever saem do histórico e ficam como marcas</td></tr>
+          <tr><td>Uso</td><td>Cada uso aponta o débito abatido; o mesmo movimento aparece no documento de saída</td></tr>
+          <tr><td>Reversão</td><td>Reabertura e cancelamento entram como movimento de volta, para restabelecido; nenhuma linha é apagada</td></tr>
+          <tr><td>Exportação</td><td>CSV com o mesmo conteúdo do <code>change</code> da API</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- ══ Casos de uso ══ -->
@@ -1607,6 +1660,42 @@ window.renderizarPagamentosMetodo();</code></div>
         </div>
       </div>
     </div>
+    <!-- F09 -->
+    <div class="feat" id="f-09">
+      <div class="feat-hdr">
+        <span class="feat-id">F-09</span>
+        <span class="feat-name">Partição do crédito por tributo</span>
+        <span class="feat-loc">listagens de Créditos · detalhe do DF e do RF</span>
+      </div>
+      <div class="feat-body">
+        <p><span class="chip warn">A implementar</span> Especificada na v3.3; entra no protótipo pela branch <code>parcialidade-prototipo</code>.</p>
+        <p>Cada RF mostra onde está o valor apurado: a apropriar, disponível, utilizado, inapropriável, inutilizável e as demais parcelas da API, com o status calculado pela precedência (4.1). O documento não tem status: mostra um selo por tributo e a barra da partição de cada um (4.2). As marcas de risco seguem a fatia (4.3), e a prescrição corre por fatia apropriada (4.5). Ver 3.2.1, RF-CRE-074 a 080 e RN-CRE-23 a 29.</p>
+      </div>
+    </div>
+    <!-- F10 -->
+    <div class="feat" id="f-10">
+      <div class="feat-hdr">
+        <span class="feat-id">F-10</span>
+        <span class="feat-name">Detalhe do documento com as duas partições</span>
+        <span class="feat-loc">detalhe do DF · T-02</span>
+      </div>
+      <div class="feat-body">
+        <p><span class="chip warn">A implementar</span> Especificada na v3.3; entra no protótipo pela branch <code>parcialidade-prototipo</code>.</p>
+        <p>Dois painéis lado a lado, um por tributo, com o órgão, a barra da partição, uma linha por parcela, a conferência da soma, o limite do art. 54 mais próximo e a data da última leitura do órgão. Parcela que o Comitê Gestor não informa aparece como <em>não informado</em>. Ver 5.3 e RF-CRE-081.</p>
+      </div>
+    </div>
+    <!-- F11 -->
+    <div class="feat" id="f-11">
+      <div class="feat-hdr">
+        <span class="feat-id">F-11</span>
+        <span class="feat-name">Histórico de movimentos de valor</span>
+        <span class="feat-loc">detalhe do RF · aba Movimentos de valor · T-03</span>
+      </div>
+      <div class="feat-body">
+        <p><span class="chip warn">A implementar</span> Especificada na v3.3; entra no protótipo pela branch <code>parcialidade-prototipo</code>.</p>
+        <p>Razão de movimentos do RF: cada linha move uma quantia de uma parcela para outra, com a data do reconhecimento pelo órgão, causa, fonte e vínculo; na apropriação, o limite do art. 54 da fatia. Exporta em CSV com o mesmo conteúdo do <code>change</code> da API. Ver 3.2.2, 5.4 e RF-CRE-082.</p>
+      </div>
+    </div>
       <h3>Mapa de implementação</h3>
     <p>Todo elemento acionável da view, com o identificador que o implementa. A tabela é gerada a partir da própria tela: um controle novo sem descrição não passa na geração, e é assim que este PRD se mantém conferível contra o código.</p>
     <div class="table-wrap">
@@ -2146,7 +2235,7 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
           <tr><td class="rid">RF-CRE-021</td><td>Créditos com vencimento ≤ mês corrente devem ser classificados como CP; futuros, como LP.</td><td>A soma CP + LP é igual ao total "A Apropriar".</td><td>M</td></tr>
           <tr><td class="rid">RF-CRE-022</td><td>Créditos sem data devem ser classificados como CP.</td><td>RF sem <code>dataNF</code> aparece em CP, não é descartado.</td><td>M</td></tr>
           <tr><td class="rid">RF-CRE-023</td><td>A comparação de vencimento deve usar o inteiro <code>AAAAMM</code>, evitando fuso e horas.</td><td>Crédito que vence no último dia do mês corrente conta como CP em qualquer fuso.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CRE-024</td><td>A prescrição deve ser reconhecida por status explícito <strong>ou</strong> por decurso de 5 anos do <strong>fato gerador</strong>, com a regra específica de cada tipo de documento.</td><td>Crédito com 5 anos e 1 dia contados do fato gerador aparece como prescrito mesmo sem marcação do backend. O fato gerador segue a regra do tipo de documento — decisão de 05/10/2026.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-024</td><td>A prescrição deve ser reconhecida por fatia apropriada: pela parcela <code>expired</code> que a Receita Federal informa na CBS e, no IBS, por decurso de 5 anos contados do primeiro dia do período seguinte ao da apropriação de cada fatia. O valor a apropriar não prescreve; a fatia restabelecida mantém a data original.</td><td>CBS apropriada em parte em 30/09/2026 e em parte em 15/03/2027: em 02/10/2031 só a primeira fatia aparece prescrita. Revisa a decisão de 05/10/2026 (D-PAR-03, 22/10/2026).</td><td>M</td></tr>
           <tr><td class="rid">RF-CRE-025</td><td>Créditos prescritos não devem contar como "vencidos não prescritos".</td><td>Os dois cards não somam o mesmo valor; a exclusão é mútua.</td><td>M</td></tr>
           <tr><td class="rid">RF-CRE-026</td><td>O card de prescritos deve exibir valor, contagem de RFs, percentual e mês mais recente.</td><td>Os quatro elementos preenchidos; mês no formato <code>Abr/26</code>.</td><td>S</td></tr>
           <tr><td class="rid">RF-CRE-027</td><td>Vencidos não prescritos devem ser segmentados por método de pagamento.</td><td>Fornecedor e RAD exibidos com valor e percentual sobre o total vencido.</td><td>S</td></tr>
@@ -2226,6 +2315,15 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
           <tr><td class="rid">RF-CRE-071</td><td><em>Devolver ao fornecedor</em> deve ser permitido enquanto nenhuma guia foi gerada ou paga, com justificativa e evento no histórico.</td><td>Depois de gerar a guia, a opção fica desabilitada com o motivo.</td><td>M</td></tr>
           <tr><td class="rid">RF-CRE-072</td><td>A ação deve sobreviver ao recarregamento da página.</td><td>O log é reaplicado a cada geração da base; reaplicar de novo não altera nada.</td><td>M</td></tr>
           <tr><td class="rid">RF-CRE-073</td><td>A aba Documentos Fiscais deve oferecer o filtro <em>Origem do método</em>, e as colunas Método de Créditos e Pagamentos devem marcar o documento como <strong>alterado</strong>.</td><td>Filtrar por <em>Recolhimento assumido</em> retorna só as DFs convertidas.</td><td>S</td></tr>
+          <tr><td class="rid">RF-CRE-074</td><td>O RF deve carregar a partição do valor apurado em <code>balances</code>, com as parcelas da API, e <code>valor</code> passa a ser o apurado.</td><td>A soma das parcelas fecha no apurado; no IBS, parcela não informada vem <code>null</code> e aparece como <em>não informado</em>.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-075</td><td>Toda mudança de valor deve ser gravada como movimento — reconhecido em, de, para, valor, causa, fonte e vínculo; na apropriação, o limite do art. 54 da fatia.</td><td>Os movimentos de cada parcela somam o saldo dela; nenhum movimento sem fonte do órgão.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-076</td><td>O <code>statusCredito</code> deve ser calculado da partição pela precedência da API, com oito valores.</td><td>CBS com a apropriar 3.000, disponível 1.000, utilizado 5.000 e inapropriável 1.000 resulta em <code>partially_utilized</code>.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-077</td><td>O DF não deve ter status próprio: listagens e detalhe mostram um selo por tributo, com o status do RF e a barra da partição.</td><td>O mesmo documento mostra o mesmo selo na listagem e no detalhe; <code>parc_apropriado</code> e <code>parc_utilizado</code> deixam de existir.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-078</td><td>As marcas de risco devem valer sobre a fatia: vencido e em risco sobre o valor a apropriar; a prescrever sobre o disponível, pela fatia de limite mais próximo.</td><td>RF apropriado em parte, com R$ 3.000 a apropriar vencidos, mostra <em>Vencido · R$ 3.000</em>.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-079</td><td>Partição cuja soma não fecha no apurado deve abrir inconsistência, por tributo.</td><td>Soma diferente do apurado gera uma ocorrência com os dois valores.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-080</td><td>A glosa de parte deve mover valor para inapropriável, antes da apropriação, ou para inutilizável, depois; <em>Glosado</em> só com todo o apurado nessas parcelas.</td><td>Glosa de R$ 1.000 num RF de R$ 10.000 deixa R$ 9.000 no fluxo e o status em parcial.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-081</td><td>O detalhe do DF deve mostrar dois painéis, um por tributo, com a partição, a conferência da soma, o limite do art. 54 mais próximo e a última leitura do órgão (T-02).</td><td>Soma que não fecha aparece em vermelho; parcela não informada aparece como <em>não informado</em>.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CRE-082</td><td>O detalhe do RF deve ter a aba <em>Movimentos de valor</em>, com exportação em CSV (T-03).</td><td>O CSV traz o mesmo conteúdo do <code>change</code> da API.</td><td>S</td></tr>
         </tbody>
       </table>
     </div>
@@ -2244,11 +2342,11 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
           <tr><td class="rid">RN-CRE-04</td><td><strong>Vencimento da apropriação</strong></td><td>Sempre</td><td>Último dia do mês seguinte ao da emissão</td></tr>
           <tr><td class="rid">RN-CRE-05</td><td><strong>Classificação CP</strong></td><td>Mês de vencimento ≤ mês corrente</td><td>Crédito em curto prazo — ação imediata</td></tr>
           <tr><td class="rid">RN-CRE-06</td><td><strong>Ausência de data</strong></td><td><code>dataNF</code> nula</td><td>Classificado como CP (falha para o lado seguro)</td></tr>
-          <tr><td class="rid">RN-CRE-07</td><td><strong>Prescrição por decurso</strong></td><td>Data do DF &lt; hoje − 5 anos</td><td>Prescrito, mesmo sem status explícito</td></tr>
+          <tr><td class="rid">RN-CRE-07</td><td><strong>Prescrição por decurso</strong></td><td>Data do DF &lt; hoje − 5 anos</td><td>Prescrito, mesmo sem status explícito <em>— substituída pela RN-CRE-26 na v3.3</em></td></tr>
           <tr><td class="rid">RN-CRE-08</td><td><strong>Exclusão prescrito × vencido</strong></td><td>Prescrito</td><td>Não conta como vencido recuperável</td></tr>
-          <tr><td class="rid">RN-CRE-09</td><td><strong>Precedência da glosa no DF</strong></td><td>Qualquer RF glosado</td><td>DF inteiro em <code>glosado</code></td></tr>
-          <tr><td class="rid">RN-CRE-10</td><td><strong>Status parcial do DF</strong></td><td>IBS e CBS em estados diferentes</td><td><code>parc_apropriado</code> ou <code>parc_utilizado</code> conforme cascata</td></tr>
-          <tr><td class="rid">RN-CRE-11</td><td><strong>Normalização no nível DF</strong></td><td><code>nao_apropriado</code> ou ausente</td><td>Normaliza para <code>a_apropriar</code></td></tr>
+          <tr><td class="rid">RN-CRE-09</td><td><strong>Precedência da glosa no DF</strong></td><td>Qualquer RF glosado</td><td>DF inteiro em <code>glosado</code> <em>— substituída pela RN-CRE-24 na v3.3</em></td></tr>
+          <tr><td class="rid">RN-CRE-10</td><td><strong>Status parcial do DF</strong></td><td>IBS e CBS em estados diferentes</td><td><code>parc_apropriado</code> ou <code>parc_utilizado</code> conforme cascata <em>— substituída pela RN-CRE-24 na v3.3</em></td></tr>
+          <tr><td class="rid">RN-CRE-11</td><td><strong>Normalização no nível DF</strong></td><td><code>nao_apropriado</code> ou ausente</td><td>Normaliza para <code>a_apropriar</code> <em>— substituída pela RN-CRE-24 na v3.3</em></td></tr>
           <tr><td class="rid">RN-CRE-12</td><td><strong>Exclusividade de faixa de ageing</strong></td><td>Classificação por dias</td><td>Primeira faixa que casa; <code>break</code> imediato</td></tr>
           <tr><td class="rid">RN-CRE-13</td><td><strong>Calendário só projeta futuro</strong></td><td>Data de prescrição ≤ hoje</td><td>Excluído do calendário; aparece no card de prescritos</td></tr>
           <tr><td class="rid">RN-CRE-14</td><td><strong>Score de fornecedor</strong></td><td>Sempre</td><td><code>pendente / total × 10</code>; maior score, pior situação</td></tr>
@@ -2260,6 +2358,13 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
           <tr><td class="rid">RN-CRE-20</td><td><strong>Guia fecha a reversão</strong></td><td><code>guiaGeradaEm</code> preenchido ou RF pago</td><td><em>Devolver ao fornecedor</em> indisponível</td></tr>
           <tr><td class="rid">RN-CRE-21</td><td><strong>Conversão não cria inconsistência</strong></td><td>Recolhimento assumido</td><td>Não gera <em>Sem comprovante</em>: o RF está aguardando guia, não em falta</td></tr>
           <tr><td class="rid">RN-CRE-22</td><td><strong>O estado do crédito é o saldo partido por situação</strong>, como o órgão informa — um mesmo crédito pode estar parte apropriado, parte a apropriar e parte suspenso. O <code>statusCredito</code> é resumo derivado desse saldo.</td><td>Rótulo único por crédito não representa o arquivo da CBS. O resumo serve para filtrar e exibir; a conciliação usa o saldo.</td></tr>
+          <tr><td class="rid">RN-CRE-23</td><td><strong>A soma das parcelas é o apurado</strong></td><td>Sempre, por RF</td><td>Soma que não fecha é erro e abre inconsistência</td></tr>
+          <tr><td class="rid">RN-CRE-24</td><td><strong>O DF não tem status próprio</strong></td><td>Listagens e detalhe</td><td>Um selo por tributo, com o status calculado de cada RF (D-PAR-04)</td></tr>
+          <tr><td class="rid">RN-CRE-25</td><td><strong>Marcas sobre a fatia</strong></td><td>Valor a apropriar ou disponível acima de zero</td><td>Vencido e em risco sobre o a apropriar; a prescrever sobre o disponível, pela fatia de limite mais próximo (D-PAR-05)</td></tr>
+          <tr><td class="rid">RN-CRE-26</td><td><strong>Prescrição por fatia apropriada</strong></td><td>Cada apropriação</td><td>Cinco anos do primeiro dia do período seguinte ao da apropriação; a apropriar não prescreve; restabelecido mantém a data (D-PAR-03)</td></tr>
+          <tr><td class="rid">RN-CRE-27</td><td><strong>Só a Conciliação move valor</strong></td><td>Qualquer movimento</td><td>Sempre a partir do dado do órgão. Fato de um lado sem o movimento do outro, passada a espera configurável, abre inconsistência (C-01)</td></tr>
+          <tr><td class="rid">RN-CRE-28</td><td><strong>Destino da glosa parcial</strong></td><td>Glosa de parte do crédito</td><td>Antes da apropriação, inapropriável; depois, inutilizável; o motivo vai no movimento (D-PAR-02)</td></tr>
+          <tr><td class="rid">RN-CRE-29</td><td><strong>No IBS, nulo não é zero</strong></td><td>Parcela que o Comitê Gestor não informa</td><td>Aparece como <em>não informado</em> e fica fora das somas que comparam CBS e IBS (D-PAR-09)</td></tr>
         </tbody>
       </table>
     </div>
@@ -2450,7 +2555,8 @@ e.score = Math.round(e.pct * <span class="n">10</span> * <span class="n">10</spa
 
 <div class="section" id="s17">
 <div class="sec-hdr"><span class="sec-num">17</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
-                    <div class="ver-row"><div class="ver-num">v3.2</div><div class="ver-desc"><strong>05/10/2026</strong> &mdash; <strong>Contrato de saída e prazo do art. 54.</strong> Decisão D-01 fechada: o crédito sai para o ERP como um evento por fato, com o registro completo e o saldo partido por situação — publicado no docs v1.2.0. Nova RN-CRE-22: o estado é o saldo partido, e o <code>statusCredito</code>, resumo derivado. RF-CRE-024 passa a contar a prescrição do fato gerador, com a regra de cada tipo de documento. A linha do IBS registra a API publicada pelo Comitê Gestor em 23/09/2026.</div></div>
+                    <div class="ver-row"><div class="ver-num">v3.3</div><div class="ver-desc"><strong>22/10/2026</strong> &mdash; <strong>A partição do crédito.</strong> Execução da Parte 2 da parcialidade. O RF passa a carregar a partição do valor apurado (<code>balances</code>) e os movimentos que a formam; o <code>statusCredito</code> passa a ser calculado, com os oito valores da API; o DF deixa de ter status próprio e mostra um selo por tributo; as marcas de risco valem sobre a fatia; a prescrição corre por fatia apropriada; a glosa de parte vai para inapropriável ou inutilizável; só a Conciliação move valor, e lado ausente abre inconsistência. Novas seções 3.2.1, 3.2.2, 5.3 (T-02) e 5.4 (T-03), RF-CRE-074 a 082, RN-CRE-23 a 29 e RF-CRE-024 revisto. Decisões D-PAR-02, 03, 04, 05, 09 e C-01.</div></div>
+<div class="ver-row"><div class="ver-num">v3.2</div><div class="ver-desc"><strong>05/10/2026</strong> &mdash; <strong>Contrato de saída e prazo do art. 54.</strong> Decisão D-01 fechada: o crédito sai para o ERP como um evento por fato, com o registro completo e o saldo partido por situação — publicado no docs v1.2.0. Nova RN-CRE-22: o estado é o saldo partido, e o <code>statusCredito</code>, resumo derivado. RF-CRE-024 passa a contar a prescrição do fato gerador, com a regra de cada tipo de documento. A linha do IBS registra a API publicada pelo Comitê Gestor em 23/09/2026.</div></div>
 <div class="ver-row"><div class="ver-num">v3.1</div><div class="ver-desc"><strong>23/09/2026</strong> &mdash; <strong>Quem controla o estado do ciclo.</strong> Fica escrito que o estado do cr&eacute;dito e do d&eacute;bito pertence aos entes fiscais &mdash; apura&ccedil;&atilde;o assistida na CBS, Comit&ecirc; Gestor no IBS &mdash; e que o produto recebe, concilia, evidencia e segue. Nenhuma a&ccedil;&atilde;o deste m&oacute;dulo muda o estado de um cr&eacute;dito: o que o usu&aacute;rio faz produz <strong>fato</strong> &mdash; assumir o RAD, contestar, pedir ressarcimento &mdash; e o estado chega depois, do &oacute;rg&atilde;o. As <strong>marcas pr&oacute;prias</strong> do produto, como reserva e flags de risco, s&atilde;o a &uacute;nica exce&ccedil;&atilde;o: existem aqui e n&atilde;o existem para o Fisco.</div></div>
 <div class="ver-row"><div class="ver-num">v3.0</div><div class="ver-desc"><strong>22/09/2026</strong> &mdash; De onde vem o dado e o que sai para o ERP. A apropria&ccedil;&atilde;o do cr&eacute;dito passa a ser descrita como vinda da <strong>integra&ccedil;&atilde;o com os entes fiscais</strong>, inclusive no RAD (D-03), com o comprovante do ERP servindo &agrave; concilia&ccedil;&atilde;o. Os dois contratos de evento descritos lado a lado (D-01), com a nota de que o estado <em>glosado</em> n&atilde;o existe no contrato p&uacute;blico. Inclui os doze casos de uso publicados em 22/09/2026.</div></div>
 <div class="ver-row"><div class="ver-num">v2.9</div><div class="ver-desc"><strong>18/09/2026</strong> — <strong>Novo módulo de Ressarcimento.</strong> Ressarcimento no ciclo do crédito, composição só de entrada e histórico corrigido.</div></div>
