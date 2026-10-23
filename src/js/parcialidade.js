@@ -362,10 +362,133 @@
     }).join('') + '</div>';
   };
 
+  /* ── aproveitamento medido em valor (T-07, D-PAR-08, D-PAR-14) ─────────
+     (disponível + utilizado + em ressarcimento) ÷ (apurado − inapropriável).
+     O inapropriável sai do denominador: crédito que nunca existiu não é
+     perda. Prescrito e inutilizável ficam, como perda. O nulo do IBS fica
+     fora de qualquer soma (D-PAR-09). */
+  P.aproveitado = function (b) { return r2((b.available || 0) + (b.utilized || 0) + (b.refund_requested || 0) + (b.refund_available || 0)); };
+  P.baseAproveitamento = function (b, apurado) { return r2((apurado || 0) - (b.not_appropriable || 0)); };
+  P.utilizadoRessarcido = function (rf) {
+    return r2((rf.movimentos || []).filter(function (m) { return m.para === 'utilized' && /Ressarc/.test(m.causa); }).reduce(function (s, m) { return s + m.valor; }, 0));
+  };
+  // vencimento da fatia a apropriar: o do documento (RN-CRE-04)
+  P.vencimentoPendente = function (nf, rf) { return vencimento(nf.data || rf.data); };
+  // saldo disponível de cada fatia apropriada, pelo prazo do art. 54 dela; a
+  // saída é atribuída às fatias mais antigas primeiro
+  P.fatiasDisponiveis = function (rf) {
+    var ms = (rf.movimentos || []).slice().sort(function (a, b) { return a.reconhecidoEm < b.reconhecidoEm ? -1 : 1; });
+    var fat = ms.filter(function (m) { return m.para === 'available'; }).map(function (m) { return { prazo: m.prazoArt54, resta: m.valor }; });
+    var saiu = ms.filter(function (m) { return m.de === 'available'; }).reduce(function (s, m) { return s + m.valor; }, 0);
+    fat.forEach(function (f) { var u = Math.min(f.resta, saiu); f.resta = r2(f.resta - u); saiu = r2(saiu - u); });
+    return fat.filter(function (f) { return f.resta > 0.005 && f.prazo; });
+  };
+  P.NAO_INFORMADAS_IBS = NULO_IBS.length;
+
+  /* ═══ partição do débito (T-08, D-PAR-01, 04, 15) ═══════════════════════
+     O débito troca os três estados pelas parcelas do órgão: em análise,
+     inexigível, suspenso, extinto e saldo devedor, que somam o apurado. Cada
+     meio de extinção leva o seu valor (settlements[] da API). O contencioso
+     vira a parcela suspenso, com uma das causas do CTN, art. 151; no IBS o
+     Comitê Gestor não informa a parcela e a ficha registra o processo sem
+     mover valor (C-01). */
+  P.PARC_DEB = [
+    { k: 'unprocessed',     rot: 'Em análise pelo órgão', cor: 'var(--gray)' },
+    { k: 'not_enforceable', rot: 'Inexigível',            cor: 'var(--status-blue)' },
+    { k: 'suspended',       rot: 'Suspenso',              cor: 'var(--violet)' },
+    { k: 'extinguished',    rot: 'Extinto',               cor: 'var(--teal-dark)' },
+    { k: 'outstanding',     rot: 'Saldo devedor',         cor: 'var(--amber)' }
+  ];
+  P.MEIOS = { compensation: 'Compensação com crédito', rad: 'RAD pelo adquirente', split: 'Split Payment', guide: 'Guia paga' };
+  P.CAUSAS151 = { II: 'depósito do montante integral', III: 'impugnação ou recurso administrativo', IV: 'liminar em mandado de segurança', VI: 'parcelamento' };
+  P.STATUS_DEB = { extinguished: 'Extinto', partially_extinguished: 'Parcialmente extinto', outstanding: 'Em aberto',
+    suspended: 'Suspenso', unprocessed: 'Em análise pelo órgão', not_enforceable: 'Inexigível' };
+  var ROT_DEB = {}; P.PARC_DEB.forEach(function (p) { ROT_DEB[p.k] = p.rot; });
+  P.rotDeb = function (k) { return ROT_DEB[k] || k; };
+  P.apuradoDeb = function (b) { var s = 0; P.PARC_DEB.forEach(function (p) { if (b[p.k]) s += b[p.k]; }); return r2(s); };
+  P.derivarDeb = function (b) {
+    var v = function (k) { return b[k] || 0; }, ap = P.apuradoDeb(b);
+    if (ap <= 0) return 'outstanding';
+    if (v('unprocessed') >= ap - 0.005) return 'unprocessed';
+    if (v('extinguished') >= ap - 0.005) return 'extinguished';
+    if (v('not_enforceable') >= ap - 0.005) return 'not_enforceable';
+    if (v('suspended') > 0) return 'suspended';
+    if (v('extinguished') > 0) return 'partially_extinguished';
+    return 'outstanding';
+  };
+  function montarDebito(rf, nf) {
+    var t = rf.tipoFiscal === 'ibs' ? 'ibs' : 'cbs', v = r2(rf.valor), sd = rf.statusDebito || rf.status || 'nao_extinto';
+    var b = { unprocessed: 0, not_enforceable: 0, suspended: t === 'ibs' ? null : 0, extinguished: 0, outstanding: 0 };
+    var met = rf.metodoExtincao || '', meio = met === 'Compensacao' ? 'compensation' : met === 'RAD' ? 'rad' : /Split/i.test(met) ? 'split' : 'guide';
+    var h = hash((nf.numero || '') + t) % 100, meios = [];
+    var emi = String(nf.data || rf.data || '').slice(0, 10);
+    if (sd === 'extinto') {
+      b.extinguished = v;
+      // parte da base extinta por dois meios, como no exemplo da proposta
+      if (meio === 'compensation' && h < 25) { var c = r2(v * 0.7); meios = [{ k: 'compensation', valor: c }, { k: 'guide', valor: r2(v - c) }]; }
+      else meios = [{ k: meio, valor: v }];
+    } else if (sd === 'parcial') {
+      var comp = r2(Math.min(v, rf._valorCompensado || v * 0.6));
+      b.extinguished = comp; b.outstanding = r2(v - comp); meios = [{ k: 'compensation', valor: comp }];
+    } else if (h < 10) {
+      b.unprocessed = v;                          // o órgão ainda não processou o documento
+    } else b.outstanding = v;
+    rf.suspensao = null;
+    var contencioso = (rf.statusFlags || []).indexOf('em_contencioso') >= 0 || (h >= 10 && h < 18);
+    if (b.outstanding > 0 && contencioso) {
+      var causa = ['III', 'IV', 'II', 'VI'][h % 4], s = b.outstanding;
+      var ficha = { causa: causa, causaRot: P.CAUSAS151[causa], processo: (t === 'cbs' ? '10880.' : 'CGIBS-') + String(100000 + h * 37).slice(-6) + '/2026',
+        desde: addDias(emi, 45), valor: s, semMovimento: t === 'ibs' };
+      if (t === 'cbs') { b.suspended = s; b.outstanding = 0; }
+      rf.suspensao = ficha;
+    } else if (t === 'cbs' && b.outstanding > 0 && h >= 18 && h < 21) {
+      // contencioso ganho em decisão definitiva: o valor sai do saldo devedor para inexigível
+      b.not_enforceable = b.outstanding; b.outstanding = 0;
+      rf.suspensao = { causa: 'III', causaRot: P.CAUSAS151.III, processo: '10880.' + String(100000 + h * 37).slice(-6) + '/2026', desde: addDias(emi, 45), valor: b.not_enforceable, desfecho: 'ganho', decisaoEm: addDias(emi, 90) };
+    }
+    rf.debBalances = b;
+    rf.debMeios = meios;
+    rf.debStatus = P.derivarDeb(b);
+    rf.debEstimado = b.unprocessed > 0;
+  }
+  var COR_DEB = { extinguished: 'var(--teal)', partially_extinguished: 'var(--teal)', outstanding: 'var(--amber)', suspended: 'var(--violet)', unprocessed: 'var(--gray)', not_enforceable: 'var(--status-blue)' };
+  var RGB_DEB = { extinguished: '--teal-rgb', partially_extinguished: '--teal-rgb', outstanding: '--amber-rgb', suspended: '--blue-rgb', unprocessed: '--status-gray-rgb', not_enforceable: '--status-blue-rgb' };
+  P.seloDeb = function (rf, comTributo) {
+    var st = rf.debStatus || 'outstanding', lbl = (comTributo ? String(rf.tipoFiscal || '').toUpperCase() + ' · ' : '') + (P.STATUS_DEB[st] || st);
+    return '<span title="' + esc(P.STATUS_DEB[st] || st) + '" style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:.03em;padding:1px 7px;border-radius:3px;white-space:nowrap;'
+      + 'color:' + COR_DEB[st] + ';background:rgba(var(' + RGB_DEB[st] + '),.1);border:1px solid rgba(var(' + RGB_DEB[st] + '),.3)">' + esc(lbl) + '</span>';
+  };
+  P.barraDeb = function (rf, alto) {
+    var b = rf.debBalances || {}, ap = P.apuradoDeb(b) || 1;
+    var seg = P.PARC_DEB.filter(function (p) { return b[p.k] > 0; }).map(function (p) {
+      return '<span title="' + esc(p.rot + ' ' + money(b[p.k])) + '" style="display:block;flex:' + (b[p.k] / ap) + ' 0 0;background:' + p.cor + ';min-width:2px"></span>';
+    }).join('');
+    return '<div role="img" aria-label="Partição do débito" style="display:flex;height:' + (alto || 6) + 'px;border-radius:3px;overflow:hidden;background:var(--border);margin-top:3px;min-width:90px">' + seg + '</div>';
+  };
+  P.meiosHtml = function (rf) {
+    var m = rf.debMeios || [];
+    if (!m.length) return '<span style="color:var(--txt3)">—</span>';
+    return m.map(function (x) { return '<span style="white-space:nowrap">' + esc(P.MEIOS[x.k] || x.k) + ' <b style="font-family:var(--font-mono,monospace)">' + money(x.valor) + '</b></span>'; }).join('<br>');
+  };
+  P.celulaDebDF = function (nf) {
+    var rfs = (nf.registrosFiscais || []).filter(function (rf) { return rf.debBalances; })
+      .sort(function (a, b) { return a.tipoFiscal === 'cbs' ? -1 : b.tipoFiscal === 'cbs' ? 1 : 0; });
+    if (!rfs.length) return '';
+    return rfs.map(function (rf) { return '<div style="margin:2px 0 4px">' + P.seloDeb(rf, true) + P.barraDeb(rf, 5) + '</div>'; }).join('');
+  };
+  // o documento de saída só está extinto quando os dois tributos estão (DEF-01)
+  P.statusDocDeb = function (nf) {
+    var rfs = (nf.registrosFiscais || []).filter(function (rf) { return rf.debBalances; });
+    if (!rfs.length) return null;
+    if (rfs.every(function (rf) { return rf.debStatus === 'extinguished'; })) return 'extinto';
+    return rfs.some(function (rf) { return (rf.debBalances.extinguished || 0) > 0; }) ? 'parcial' : 'nao_extinto';
+  };
+
   P.aplicarNaBase = function () {
     var L = window.nfListaFiltradaGlobal || window._nfListaCompleta || [];
     var n = 0;
     L.forEach(function (nf) {
+      if (nf.tipo === 'saida') { (nf.registrosFiscais || []).forEach(function (rf) { montarDebito(rf, nf); }); return; }
       if (nf.tipo !== 'entrada') return;
       (nf.registrosFiscais || []).forEach(function (rf) { montar(rf, nf); n++; });
     });

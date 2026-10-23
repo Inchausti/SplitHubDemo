@@ -149,6 +149,67 @@
         : t0 === 'ibs' ? 'n/i: parcela não informada pelo Comitê Gestor (D-PAR-09).' : 'Ressarcimento disponível só existe no IBS.') + '</div>';
   }
 
+  /* ── quadro do débito (T-08): o mesmo conceito, com as parcelas do débito ─ */
+  X.ativoDeb = function (nf) { return !!(nf && nf.tipo === 'saida' && (nf.registrosFiscais || []).some(function (rf) { return rf.debBalances; })); };
+  function rfsDeb(nf) {
+    return (nf.registrosFiscais || []).filter(function (rf) { return rf.debBalances; })
+      .sort(function (a, b) { return trib(a) === trib(b) ? 0 : trib(a) === 'cbs' ? -1 : 1; });
+  }
+  function hojeBr() { var d = new Date(); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear(); }
+  function quadroDeb(nf, rfUnico) {
+    var cols = rfUnico ? [rfUnico] : rfsDeb(nf), doc = !rfUnico, mut = '<span class="pp-mut">—</span>';
+    var n = cols.length + (doc ? 2 : 1);
+    var grp = function (t) { return '<tr class="pp-grp"><td colspan="' + n + '">' + t + '</td></tr>'; };
+    var lin = function (rot, vals, tot, cls, livre) {
+      var td = '<td class="r' + (livre ? '' : ' pp-num') + '">';
+      return '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + rot + '</td>' + vals.map(function (v) { return td + v + '</td>'; }).join('') + (doc ? td + tot + '</td>' : '') + '</tr>';
+    };
+    var soma = function (f) { return r2(cols.reduce(function (s, rf) { return s + (f(rf) || 0); }, 0)); };
+    var h = '<table class="pp-tab pp-quadro"><thead><tr><th></th>' + cols.map(function (rf) {
+      var t = trib(rf);
+      return '<th class="r"><div class="pp-th-t">' + chipTrib(t) + ORG[t] + '</div><div class="pp-mono">' + esc(rf.id) + '</div>' + P.barraDeb(rf, 6) + '</th>';
+    }).join('') + (doc ? '<th class="r">Documento</th>' : '') + '</tr></thead><tbody>';
+    h += grp(doc ? 'Valores do documento' : 'Valor')
+      + (doc ? lin('Total do documento', cols.map(function () { return mut; }), money(nf.valorTotal || 0))
+        + lin('Líquido', cols.map(function () { return mut; }), money(nf.valorLiquido || 0)) : '')
+      + lin('Débito apurado', cols.map(function (rf) { return money(rf.valor); }), money(soma(function (rf) { return rf.valor; })), 'pp-forte');
+    h += grp('Partição do débito');
+    P.PARC_DEB.forEach(function (p) {
+      var tot = soma(function (rf) { return rf.debBalances[p.k]; });
+      h += lin('<span class="pp-parc">' + dot(p.cor) + esc(p.rot) + '</span>', cols.map(function (rf) {
+        var v = rf.debBalances[p.k];
+        return v === null ? '<span class="pp-mut" title="O Comitê Gestor não informa esta parcela">n/i</span>' : v > 0 ? money(v) : mut;
+      }), tot > 0 ? money(tot) : mut);
+    });
+    h += lin('Soma das parcelas', cols.map(function (rf) {
+      var ok = Math.abs(P.apuradoDeb(rf.debBalances) - r2(rf.valor)) < 0.01;
+      return '<span class="pp-conf ' + (ok ? 'ok' : 'err') + '">' + (ok ? '✓ ' : '✕ ') + '</span>' + money(P.apuradoDeb(rf.debBalances));
+    }), money(soma(function (rf) { return P.apuradoDeb(rf.debBalances); })), 'pp-forte');
+    h += grp('Situação')
+      + lin('Status', cols.map(function (rf) { return P.seloDeb(rf, false); }), '<span class="pp-mut" title="D-PAR-04">sem status próprio</span>', '', true)
+      + lin('Contencioso', cols.map(function (rf) {
+        var s = rf.suspensao; if (!s) return mut;
+        return esc(s.causaRot) + ' · CTN art. 151, ' + s.causa + '<div class="pp-mono">' + esc(s.processo) + '</div>'
+          + (s.desfecho === 'ganho' ? '<div class="pp-mut">ganho: inexigível</div>' : s.semMovimento ? '<div class="pp-mut">processo registrado; o valor não se move até o Comitê Gestor informar</div>' : '');
+      }), mut, '', true);
+    h += grp('Como foi extinto');
+    Object.keys(P.MEIOS).forEach(function (k) {
+      var por = function (rf) { return (rf.debMeios || []).filter(function (m) { return m.k === k; }).reduce(function (s, m) { return s + m.valor; }, 0); };
+      var tot = soma(por);
+      h += lin(esc(P.MEIOS[k]), cols.map(function (rf) { var v = por(rf); return v > 0 ? money(v) : mut; }), tot > 0 ? money(tot) : mut);
+    });
+    h += grp('Leitura do órgão')
+      + lin('Conferido', cols.map(function (rf) {
+        return rf.debEstimado ? '<span class="pp-mut">estimativa: o órgão ainda não processou</span>'
+          : (trib(rf) === 'cbs' ? 'consulta de ' + hojeBr() + ', 06:00' : 'arquivo diário de ' + hojeBr());
+      }), mut, '', true);
+    h += '</tbody>' + (doc ? '<tfoot><tr><td></td>' + cols.map(function (rf) { return '<td class="r">' + btnRF(rf) + '</td>'; }).join('') + '<td></td></tr></tfoot>' : '') + '</table>';
+    var t0 = rfUnico ? trib(rfUnico) : null;
+    return '<div class="mbox-section-label">' + (doc ? 'Valores e registros fiscais · débito · CBS × IBS' : 'Valor e partição do débito · ' + t0.toUpperCase() + ' · ' + ORG[t0]) + '</div>'
+      + '<div class="pp-scroll pp-bloco">' + h + '</div>'
+      + '<div class="pp-nota pp-nota-q">As parcelas somam o apurado. Inexigível não entra na cobrança; suspenso sai da fila do art. 53 enquanto durar a causa (D-PAR-15).</div>';
+  }
+
   /* ── abas ─────────────────────────────────────────────────────────────── */
   X.alternar = function (btn) {
     var g = btn.getAttribute('data-g'), v = btn.getAttribute('data-v');
@@ -172,7 +233,7 @@
     'UTILIZAÇÃO': 'uso', 'RESSARCIMENTO': 'uso', 'EXTINÇÃO': 'uso',
     'CONC APURAÇÃO': 'conciliacao', 'CONC FINANCEIRA': 'conciliacao', 'CONCILIAÇÃO': 'conciliacao',
     'INCONSISTÊNCIA': 'risco', 'VENCIMENTO': 'risco', 'AGUARDANDO': 'risco', 'GLOSA': 'risco', 'IMPUGNAÇÃO': 'risco', 'GLOSA DEFINITIVA': 'risco',
-    'GLOSA REVERTIDA': 'risco', 'PRESCRIÇÃO': 'risco', 'SUSPENSÃO': 'risco', 'RESTABELECIMENTO': 'risco',
+    'GLOSA REVERTIDA': 'risco', 'PRESCRIÇÃO': 'risco', 'SUSPENSÃO': 'risco', 'RESTABELECIMENTO': 'risco', 'INEXIGÍVEL': 'risco', 'RETIDO': 'risco',
     'ENVIO ERP': 'erp', 'ENTREGA ERP': 'erp', 'COMPROVANTE ERP': 'erp', 'ERP': 'erp'
   };
   var TITULO = {
@@ -182,6 +243,7 @@
     'CONC APURAÇÃO': 'Conciliação com a apuração assistida', 'CONC FINANCEIRA': 'Conciliação financeira', 'CONCILIAÇÃO': 'Conciliação',
     'INCONSISTÊNCIA': 'Inconsistência', 'VENCIMENTO': 'Prazo de apropriação vencido', 'AGUARDANDO': 'Aguardando',
     'GLOSA': 'Glosa', 'IMPUGNAÇÃO': 'Impugnação', 'GLOSA DEFINITIVA': 'Glosa definitiva', 'GLOSA REVERTIDA': 'Glosa revertida',
+    'SUSPENSÃO': 'Exigibilidade suspensa', 'INEXIGÍVEL': 'Débito inexigível', 'RETIDO': 'Débito retido',
     'COMPROVANTE ERP': 'Comprovante recebido do ERP'
   };
   var ORIGENS = [['orgao', 'Órgão'], ['financeiro', 'Financeiro'], ['plataforma', 'SplitHub'], ['operador', 'Operador'], ['erp', 'ERP']];
@@ -322,7 +384,15 @@
     cards = cards.filter(function (i) { return stCard(i) !== 'resolvida'; });
     var cardDe = function (rfId, re) { return cards.filter(function (i) { return i.rfId === rfId && re.test(i.tipo); })[0] || null; };
     rfs.forEach(function (rf) {
-      var t = trib(rf), b = rf.balances;
+      var t = trib(rf), b = rf.balances, db = rf.debBalances;
+      // débito (T-08): o estado de cada parcela, como informação
+      if (db) {
+        if (db.outstanding > 0) info.push({ trib: t, txt: money(db.outstanding) + ' de saldo devedor' });
+        if (db.suspended > 0 && rf.suspensao) info.push({ trib: t, txt: money(db.suspended) + ' suspensos · ' + rf.suspensao.causaRot + ' · processo ' + rf.suspensao.processo });
+        if (rf.suspensao && rf.suspensao.semMovimento) info.push({ trib: t, txt: 'Processo ' + rf.suspensao.processo + ' registrado; o Comitê Gestor ainda não informa a suspensão' });
+        if (db.unprocessed > 0) info.push({ trib: t, txt: money(db.unprocessed) + ' em análise pelo órgão · saldo é estimativa' });
+        if (db.not_enforceable > 0) info.push({ trib: t, txt: money(db.not_enforceable) + ' inexigíveis · nada a pagar' });
+      }
       if (!b) return;
       var fl = (rf.flagsFatia || []).map(function (f) { return f.f; });
       if (b.pending > 0) {
@@ -529,6 +599,7 @@
   /* ═══ montagem dos modais ═════════════════════════════════════════════ */
   // corpo do detalhe do DF de entrada com partição
   X.corpoDF = function (nf, ctx) {
+    if (nf.tipo === 'saida') return corpoDFDeb(nf, ctx);
     var q = X.valores(nf), key = chave('df-' + nf.numero);
     var evs = X.eventos(nf, null);
     X._cache[key] = { evs: evs, nf: nf, rfs: q.rfs, modo: 'df' };
@@ -543,6 +614,18 @@
       + '</div>';
     return '<div class="pp-body"><div class="mbox-col pp-col-l">' + esq + '</div><div class="mbox-col pp-col-r">' + dir + '</div></div>';
   };
+  // documento de saída: o quadro do débito e a trilha do ciclo
+  function corpoDFDeb(nf, ctx) {
+    var key = chave('df-' + nf.numero), rfs = rfsDeb(nf);
+    X._cache[key] = { evs: X.eventos(nf, null), nf: nf, rfs: rfs, modo: 'df' };
+    var esq = '<div class="mbox-section-label">Documento Fiscal</div>' + ctx.docHtml
+      + '<div class="mbox-divider"></div>' + ctx.chaveHtml + ctx.ctrHtml + ctx.radHtml
+      + '<div class="mbox-divider"></div><div class="mbox-section-label">Inconsistências Vinculadas</div>' + ctx.incHtml;
+    var dir = quadroDeb(nf, null)
+      + '<div data-pp-box>' + abasBar([['hist', 'Histórico do ciclo · ' + X._cache[key].evs.length]])
+      + '<div data-aba="hist"><div id="pph-' + key + '">' + X.historico(key) + '</div></div></div>';
+    return '<div class="pp-body"><div class="mbox-col pp-col-l">' + esq + '</div><div class="mbox-col pp-col-r">' + dir + '</div></div>';
+  }
   // histórico do DF sem partição (saída): só a trilha
   X.historicoDF = function (nf) {
     var key = chave('df-' + nf.numero);
@@ -552,7 +635,7 @@
   // coluna direita do detalhe do RF: o mesmo quadro do DF, com a coluna do
   // tributo, e as abas de movimentos, histórico e apuração assistida
   X.colunaRF = function (rf, nf) {
-    return (rf.balances ? quadro(nf, X.valores(nf), rf) : '') + abasRF(rf, nf);
+    return (rf.balances ? quadro(nf, X.valores(nf), rf) : rf.debBalances ? quadroDeb(nf, rf) : '') + abasRF(rf, nf);
   };
   function abasRF(rf, nf) {
     var key = chave('rf-' + rf.id), evs = X.eventos(nf, rf), part = !!rf.balances;
