@@ -247,24 +247,29 @@
       + DR('Situação', '<span style="color:' + cor + ';font-weight:700">' + esc(G.STATUS_LBL[f.status] || f.status) + '</span>'
           + (f.processo ? ' · processo ' + esc(f.processo) : '') + (f.decisaoEm ? ' · revertida em ' + br(f.decisaoEm) : '') + (f.definitivaEm ? ' · definitiva em ' + br(f.definitivaEm) : ''))
       + DR('Responsável', esc(f.responsavel))
+      + recomendacao(f)
       + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">'
-      + (f.status === 'aberta' ? '<button class="pp-btn" onclick="window.shGlosa.abrirContencioso(\'' + esc(f.rfId) + '\')">Abrir contencioso desta glosa</button>' : '')
       + '<button class="pp-btn" onclick="var b=document.querySelector(\'#rf-detalhe-overlay [data-g=aba][data-v=mov]\');if(b)b.click()">Ver movimentos</button></div>'
       + '<div class="mbox-info-box"><span class="mbox-info-box-label">O que a glosa faz com o crédito</span>'
       + '<span style="color:var(--txt2)">Só a fatia glosada sai do fluxo: vai para inapropriável, se a glosa veio antes da apropriação, ou para inutilizável, se veio depois. '
       + 'Revertida, volta à parcela de onde saiu, e o prazo do art. 54 segue a apropriação original (D-PAR-13).</span></div>';
     box.appendChild(d);
   }
-  // abre o contencioso da fatia glosada (simulação: vale até recarregar a página)
-  G.abrirContencioso = function (rfId) {
-    var f = G.ficha(rfId); if (!f || f.status !== 'aberta') return;
-    var d = new Date(), z = function (n) { return n < 10 ? '0' + n : '' + n; };
-    f.status = 'impugnada';
-    f.impugnadaEm = d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate());
-    f.processo = 'PA-2026-' + pad(300 + G.fichas.indexOf(f) * 7 + 7);
-    var o = document.getElementById('rf-detalhe-overlay'); if (o) o.remove();
-    if (window.abrirDetalheRF) window.abrirDetalheRF(rfId);
-  };
+  /* Recomendação, não automação: nesta primeira versão o SplitHub não abre o
+     contencioso. A ficha diz o que fazer em cada situação; o processo corre
+     fora da ferramenta e, protocolado, é registrado na ficha. */
+  function recomendacao(f) {
+    var txt = f.status === 'aberta'
+      ? 'Avaliar a impugnação até ' + br(f.prazoImpugnacao) + ', só sobre os ' + money(f.valor) + ' glosados. '
+        + 'Reunir a evidência' + (f.evidencia ? ' (' + esc(f.evidencia) + ')' : '') + ' e o fundamento; protocolada a defesa no órgão, registrar o processo nesta ficha.'
+      : f.status === 'impugnada'
+      ? 'Acompanhar o processo ' + esc(f.processo) + ' no órgão. O valor segue bloqueado até a decisão.'
+      : f.status === 'revertida'
+      ? 'Nada a fazer: o valor já voltou à parcela de origem.'
+      : 'Nada a contestar: o prazo de impugnação acabou em ' + br(f.prazoImpugnacao) + ' e a perda é definitiva.';
+    return '<div class="mbox-info-box" style="margin:4px 0 8px"><span class="mbox-info-box-label">Recomendação</span>'
+      + '<span style="color:var(--txt2)">' + txt + '</span></div>';
+  }
 
   function ganchos() {
     if (typeof window.renderizarTabelaCreditos === 'function' && !window.renderizarTabelaCreditos._gl) {
