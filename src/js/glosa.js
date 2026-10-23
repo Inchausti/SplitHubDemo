@@ -86,7 +86,9 @@
         baseLegal: causa.base, recuperavel: causa.recuperavel, orgao: G.ORGAO[T],
         evidencia: evid.concId || null, evidenciaTipo: 'Conciliação de apuração',
         cienciaEm: ciencia, prazoImpugnacao: prazo, status: sp.estado, responsavel: sp.por,
-        dataEmissao: nf.data
+        dataEmissao: nf.data,
+        // T-04: a ficha leva o valor negado e a parcela de onde ele saiu
+        valorApurado: rf.valor || 0, origem: 'pending', destino: 'not_appropriable', item: null, parcial: false
       };
       ficha.id = 'GL-2026-' + pad(seq);
       if (sp.estado === 'impugnada') {
@@ -116,7 +118,38 @@
     for (var i = 0; i < G.fichas.length; i++) if (G.fichas[i].rfId === rfId) return G.fichas[i];
     return null;
   };
-  G.total = function () { return G.fichas.reduce(function (a, f) { return a + f.valor; }, 0); };
+  G.total = function () { return G.fichas.reduce(function (a, f) { return a + (f.status === 'revertida' ? 0 : f.valor); }, 0); };
+
+  /* ── glosa de parte do crédito (D-PAR-02, T-04) ──────────────────────────
+     A ficha nasce do movimento que o órgão informou e leva só a fatia negada;
+     o resto do crédito segue no fluxo, com as próprias datas e prazos. Chamada
+     pela partição (js/parcialidade.js) ao montar o RF. Revertida, a glosa
+     devolve o valor à parcela de onde saiu (D-PAR-13). */
+  var ESTADOS_PARCIAL = ['aberta', 'impugnada', 'revertida'];
+  G.registrarParcial = function (rf, nf, m) {
+    var f = G.ficha(rf.id); if (f) return f;
+    var T = T_(rf), seq = G.fichas.length + 1, causa = G.CAUSAS['G-01'];
+    var h = 0, s = String(rf.id);
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    var estado = ESTADOS_PARCIAL[Math.abs(h) % ESTADOS_PARCIAL.length];
+    var evid = rf._concRegApur || nf._concRegApur || {};
+    f = {
+      id: 'GL-2026-' + pad(seq), rfId: rf.id, dfNumero: nf.numero, doc: (nf.tipoDF || 'NF-e') + ' ' + nf.numero,
+      fornecedor: nf.entidade || '—', cnpj: nf.cnpj || '—', tributo: T, valor: m.valor, valorApurado: rf.valor || 0,
+      origem: m.de, destino: m.para, item: null, parcial: m.valor < (rf.valor || 0) - 0.005,
+      causa: 'G-01', causaNome: causa.nome, causaDesc: 'o tributo destacado excede, nesta parte, o apurado pelo órgão',
+      baseLegal: causa.base, recuperavel: causa.recuperavel, orgao: G.ORGAO[T],
+      evidencia: evid.concId || null, evidenciaTipo: 'Conciliação de apuração',
+      cienciaEm: m.reconhecidoEm, prazoImpugnacao: addDias(m.reconhecidoEm, G.PRAZO_DIAS),
+      status: estado, responsavel: 'Ana Ferreira', dataEmissao: nf.data
+    };
+    if (estado !== 'aberta') { f.impugnadaEm = addDias(f.cienciaEm, 10); f.processo = 'PA-2026-' + pad(300 + seq * 7); }
+    if (estado === 'revertida') f.decisaoEm = addDias(f.cienciaEm, 28);
+    G.fichas.push(f);
+    return f;
+  };
+  var PARC_ROT = { pending: 'A apropriar', available: 'Disponível', not_appropriable: 'Inapropriável', not_usable: 'Inutilizável' };
+  function trajeto(f) { return (PARC_ROT[f.origem] || f.origem || '—') + ' → ' + (PARC_ROT[f.destino] || f.destino || '—'); }
 
   /* ── histórico do RF: glosa, impugnação e desfecho ───────────────────── */
   G.historicoRF = function (rf) {
@@ -124,14 +157,19 @@
     var F = window._rfFmtTS || function (x) { return x; };
     function ev(ts, tipo, ator, desc, cls) { return { ts: ts, data: F(ts), tipo: tipo, modulo: 'Créditos', ator: ator, desc: desc, cls: cls }; }
     var out = [ev(f.cienciaEm + 'T10:45', 'GLOSA', f.orgao,
-      'Crédito de ' + money(f.valor) + ' de ' + f.tributo + ' glosado ' + G.PELO[f.tributo] + ' · causa: ' + f.causaNome.toLowerCase()
+      'Crédito de ' + money(f.valor) + (f.parcial ? ' de ' + money(f.valorApurado) : '') + ' de ' + f.tributo + ' glosado ' + G.PELO[f.tributo]
+      + ' · ' + trajeto(f) + ' · causa: ' + f.causaNome.toLowerCase()
       + ' — ' + f.causaDesc + ' · fundamento: ' + f.baseLegal
       + (f.evidencia ? ' · evidência: ' + f.evidencia : '')
-      + ' · o crédito sai do saldo compensável e não pode ser ressarcido · impugnação até ' + br(f.prazoImpugnacao)
-      + ' (' + G.PRAZO_DIAS + ' dias da ciência)', 'erro')];
+      + (f.parcial ? ' · só a fatia glosada sai do fluxo; ' + money(f.valorApurado - f.valor) + ' seguem com as datas e os prazos de antes'
+                   : ' · o crédito sai do saldo compensável e não pode ser ressarcido')
+      + ' · impugnação até ' + br(f.prazoImpugnacao) + ' (' + G.PRAZO_DIAS + ' dias da ciência)', 'erro')];
     if (f.impugnadaEm) out.push(ev(f.impugnadaEm + 'T15:20', 'IMPUGNAÇÃO', f.responsavel,
       'Impugnação da glosa ' + f.id + ' protocolada · processo ' + f.processo + ' · ' + money(f.valor)
       + ' em discussão · o crédito segue bloqueado até a decisão', 'pending'));
+    if (f.decisaoEm) out.push(ev(f.decisaoEm + 'T11:00', 'GLOSA REVERTIDA', f.orgao,
+      'Glosa ' + f.id + ' revertida por decisão no processo ' + f.processo + ' · ' + money(f.valor)
+      + ' voltam para ' + (PARC_ROT[f.origem] || f.origem) + ', a parcela de onde saíram · o prazo do art. 54 segue a apropriação original (D-PAR-13)', 'ok'));
     if (f.definitivaEm) out.push(ev(f.definitivaEm + 'T08:00', 'GLOSA DEFINITIVA', 'SplitHub',
       'Prazo de impugnação encerrado em ' + br(f.prazoImpugnacao) + ' sem defesa · perda definitiva de '
       + money(f.valor) + ' de ' + f.tributo, 'erro'));
@@ -142,15 +180,16 @@
   G.inconsistencias = function (inc) {
     if (!inc || !G.fichas.length) return;
     G.fichas.forEach(function (f) {
+      if (f.status === 'revertida') return;   // decidida a favor: não há o que tratar
       inc.push({
         id: 'INC-' + String(inc.length + 1).padStart(4, '0'), familia: 'glosa',
-        tipo: 'glosa_credito', tipoLabel: 'Glosa · ' + G.CAUSAS[f.causa].curto,
+        tipo: f.parcial ? 'glosa_parcial' : 'glosa_credito', tipoLabel: (f.parcial ? 'Glosa parcial · ' : 'Glosa · ') + G.CAUSAS[f.causa].curto,
         dfId: f.dfNumero, dfNum: f.doc, nfNumero: f.dfNumero, rfId: f.rfId, tipoFiscal: f.tributo,
         origem: 'apuracao', tipoFluxo: 'entrada',
         status: f.status === 'aberta' ? 'aberta' : f.status === 'impugnada' ? 'em_analise' : 'glosada',
         prioridade: 'alta', valor: f.valor, valorTotal: f.valor, valorLiq: f.valor,
         entidade: f.fornecedor, cnpj: f.cnpj, dataISO: f.cienciaEm, data: br(f.cienciaEm),
-        statusCredito: 'glosado', metodoExtincao: null,
+        statusCredito: f.parcial ? 'parcialmente glosado' : 'glosado', metodoExtincao: null,
         prazo: f.prazoImpugnacao, responsavel: f.responsavel
       });
     });
@@ -168,6 +207,7 @@
     var cor = f.status === 'revertida' ? 'var(--teal)' : f.status === 'impugnada' ? 'var(--amber)' : 'var(--red)';
     return '<div style="line-height:1.45" title="' + esc(f.causaNome + ' · ' + f.baseLegal + ' · ' + f.orgao) + '">'
       + '<span style="font-size:11px;font-weight:600;color:' + cor + '">' + esc(G.CAUSAS[f.causa].curto) + '</span>'
+      + (f.parcial ? '<br><span style="font-size:10px;color:var(--txt2)">' + money(f.valor) + ' de ' + money(f.valorApurado) + '</span>' : '')
       + '<br><span style="font-size:9px;font-weight:700;letter-spacing:.06em;color:' + cor + '">' + esc((G.STATUS_LBL[f.status] || f.status).toUpperCase()) + '</span>'
       + '</div>';
   }
@@ -181,32 +221,50 @@
       tr.setAttribute('data-gl', '1');
     });
   }
+  // Ficha de glosa no detalhe do RF (T-04): valor glosado de quanto, parcela de
+  // origem e destino, item, decisão, o que segue no fluxo e o contencioso
   function painelRF() {
     var box = document.querySelector('#rf-detalhe-overlay .mbox-col'); if (!box) return;
+    if (box.querySelector('[data-glosa-ficha]')) return;
     var tit = document.querySelector('#rf-detalhe-overlay .mbox-title');
     var id = tit ? String(tit.textContent || '').split('·').pop().trim() : '';
     var f = G.ficha(id); if (!f) return;
-    var DR = window._rfDetailRow, cor = f.status === 'impugnada' ? 'var(--p-amber)' : 'var(--p-red)';
+    var DR = window._rfDetailRow;
+    var cor = f.status === 'revertida' ? 'var(--p-teal)' : f.status === 'impugnada' ? 'var(--p-amber)' : 'var(--p-red)';
+    var segue = (f.valorApurado || f.valor) - f.valor;
     var d = document.createElement('div');
+    d.setAttribute('data-glosa-ficha', '1');
     d.innerHTML = '<div class="mbox-divider"></div>'
-      + '<div class="mbox-section-label">Glosa · ' + esc(f.id) + '</div>'
-      + DR('Causa', '<span style="color:' + cor + ';font-weight:700">' + esc(f.causaNome) + '</span>')
-      + DR('Fundamento', esc(f.baseLegal))
-      + DR('Órgão', esc(f.orgao))
-      + DR('Valor glosado', money(f.valor), 'var(--p-red)')
+      + '<div class="mbox-section-label">Ficha de glosa · ' + esc(f.id) + '</div>'
+      + DR('Valor glosado', money(f.valor) + (f.parcial ? ' <span style="color:var(--txt2)">de ' + money(f.valorApurado) + '</span>' : ''), 'var(--p-red)')
+      + DR('Parcela de origem', esc(trajeto(f)))
+      + DR('Item', '— <span style="color:var(--txt2)">(sem segmentação na primeira versão)</span>')
+      + DR('Decisão', esc(f.orgao) + ' · ' + br(f.cienciaEm))
+      + DR('O que segue', segue > 0.005 ? money(segue) + ' no fluxo, com as datas e os prazos de antes' : 'Nada: todo o apurado foi glosado')
+      + DR('Causa', '<span style="color:' + cor + ';font-weight:700">' + esc(f.causaNome) + '</span> · ' + esc(f.baseLegal))
       + (f.evidencia ? DR('Evidência', esc(f.evidenciaTipo) + ' · ' + esc(f.evidencia), null, true) : '')
-      + DR('Ciência', br(f.cienciaEm))
-      + DR('Impugnação até', br(f.prazoImpugnacao))
-      + DR('Situação', '<span style="color:' + cor + ';font-weight:700">' + esc(G.STATUS_LBL[f.status] || f.status) + '</span>')
-      + (f.processo ? DR('Processo', esc(f.processo) + ' · ' + br(f.impugnadaEm), null, true) : '')
-      + (f.definitivaEm ? DR('Perda definitiva', br(f.definitivaEm), 'var(--p-red)') : '')
+      + DR('Prazo para contestar', br(f.prazoImpugnacao))
+      + DR('Situação', '<span style="color:' + cor + ';font-weight:700">' + esc(G.STATUS_LBL[f.status] || f.status) + '</span>'
+          + (f.processo ? ' · processo ' + esc(f.processo) : '') + (f.decisaoEm ? ' · revertida em ' + br(f.decisaoEm) : '') + (f.definitivaEm ? ' · definitiva em ' + br(f.definitivaEm) : ''))
       + DR('Responsável', esc(f.responsavel))
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px">'
+      + (f.status === 'aberta' ? '<button class="pp-btn" onclick="window.shGlosa.abrirContencioso(\'' + esc(f.rfId) + '\')">Abrir contencioso desta glosa</button>' : '')
+      + '<button class="pp-btn" onclick="var b=document.querySelector(\'#rf-detalhe-overlay [data-g=aba][data-v=mov]\');if(b)b.click()">Ver movimentos</button></div>'
       + '<div class="mbox-info-box"><span class="mbox-info-box-label">O que a glosa faz com o crédito</span>'
-      + '<span style="color:var(--txt2)">O crédito negado sai do saldo compensável e não pode ser reservado em intenção nem incluído em pedido de ressarcimento. '
-      + 'Recuperação: <strong>' + esc(f.recuperavel) + '</strong>. Revertida a glosa, o crédito volta a apropriado na data da decisão, '
-      + 'com o prazo do art. 54 contado da apropriação original.</span></div>';
+      + '<span style="color:var(--txt2)">Só a fatia glosada sai do fluxo: vai para inapropriável, se a glosa veio antes da apropriação, ou para inutilizável, se veio depois. '
+      + 'Revertida, volta à parcela de onde saiu, e o prazo do art. 54 segue a apropriação original (D-PAR-13).</span></div>';
     box.appendChild(d);
   }
+  // abre o contencioso da fatia glosada (simulação: vale até recarregar a página)
+  G.abrirContencioso = function (rfId) {
+    var f = G.ficha(rfId); if (!f || f.status !== 'aberta') return;
+    var d = new Date(), z = function (n) { return n < 10 ? '0' + n : '' + n; };
+    f.status = 'impugnada';
+    f.impugnadaEm = d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate());
+    f.processo = 'PA-2026-' + pad(300 + G.fichas.indexOf(f) * 7 + 7);
+    var o = document.getElementById('rf-detalhe-overlay'); if (o) o.remove();
+    if (window.abrirDetalheRF) window.abrirDetalheRF(rfId);
+  };
 
   function ganchos() {
     if (typeof window.renderizarTabelaCreditos === 'function' && !window.renderizarTabelaCreditos._gl) {

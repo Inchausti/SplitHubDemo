@@ -142,6 +142,17 @@
           trib === 'ibs' ? fonte + ' · movimentação identificada' : fonte, 'Ficha de glosa');
         b.pending = pend; b.available = r2(apr - ut); b.utilized = ut;
         b.not_appropriable = inap;
+        // a glosa parcial tem ficha própria (T-04); revertida, o valor volta à
+        // parcela de onde saiu, por movimento com causa decisão (D-PAR-13)
+        var mg = movs[movs.length - 1];
+        var fg = window.shGlosa && window.shGlosa.registrarParcial ? window.shGlosa.registrarParcial(rf, nf, mg) : null;
+        if (fg) {
+          mg.vinculo = 'Ficha ' + fg.id;
+          if (fg.status === 'revertida' && fg.decisaoEm) {
+            mov(movs, fg.decisaoEm, 'not_appropriable', 'pending', inap, 'Glosa revertida · decisão', fonte, 'Ficha ' + fg.id);
+            b.not_appropriable = 0; b.pending = r2(pend + inap);
+          }
+        }
       } else {
         mov(movs, dAprop, 'pending', 'available', v, 'Extinção do débito do fornecedor', fonte, '', prazoArt54(dAprop));
         mov(movs, dUso, 'available', 'utilized', v, causaUso, 'Apuração assistida', vincUso);
@@ -195,6 +206,161 @@
       rf.statusRegistro = arr.reduce(function (best, x) { return (SEV[x] || 0) > (SEV[best] || 0) ? x : best; }, arr[0] || null);
     }
   }
+
+  /* ── confronto com o órgão, parcela a parcela (T-06, C-01) ─────────────
+     Pela C-01 o SplitHub só grava movimento a partir do dado do órgão, então
+     as partições batem. A divergência simulada é a que a conciliação já
+     aponta no documento: o órgão moveu um valor que não tem contrapartida no
+     SplitHub — uma glosa ainda não registrada aqui — ou apurou menos. */
+  function concDe(rf, nf, k) { return rf[k] || nf[k] || null; }
+  P.orgao = function (rf, nf) {
+    var b = rf.balances; if (!b) return null;
+    var semReg = window.shConcApur && window.shConcApur.semRegistro ? window.shConcApur.semRegistro() : [];
+    for (var i = 0; i < semReg.length; i++) if (semReg[i].nf === nf) return { sem: true };
+    var o = {}; P.PARC.forEach(function (p) { o[p.k] = b[p.k]; });
+    var c = concDe(rf, nf, '_concRegApur'), div = null;
+    if (c && c.concStatus === 'inconsistencia') {
+      var x = r2(rf.valor * 0.05);
+      if ((b.pending || 0) >= x) { o.pending = r2(o.pending - x); o.not_appropriable = r2((o.not_appropriable || 0) + x); div = { tipo: 'mov', de: 'pending', para: 'not_appropriable', valor: x }; }
+      else {
+        var k = ['available', 'utilized', 'not_appropriable'].filter(function (q) { return (b[q] || 0) >= x; })[0];
+        if (k) { o[k] = r2(o[k] - x); div = { tipo: 'apurado', parc: k, valor: x }; }
+      }
+    }
+    return { b: o, apurado: P.apurado(o), div: div, conc: c };
+  };
+  // pago contra extinção reconhecida, em valor, por tributo (CFIN)
+  P.cfin = function (rf, nf) {
+    var b = rf.balances || {};
+    var rec = r2((rf.movimentos || []).filter(function (m) { return m.de === 'pending' && m.para === 'available'; }).reduce(function (s, m) { return s + m.valor; }, 0));
+    var comp = !!(rf.dataPagamento && rf.dataPagamento !== '—');
+    var c = concDe(rf, nf, '_concRegFin'), pago = comp ? rec : 0;
+    if (comp && c && c.concStatus === 'inconsistencia') pago = r2(rec + r2(rf.valor * 0.05));
+    return { pago: pago, reconhecido: rec, comprovante: comp, diverge: comp && Math.abs(pago - rec) > 0.005, conc: c };
+  };
+
+  /* ── divergência vira card na fila de inconsistências ──────────────────
+     Uma por tributo e por etapa, com os dois valores e o vínculo ao DF e ao
+     RF. Se a fila já tem o card da etapa para o RF, ele recebe o detalhe; se
+     não tem (o legado pulava RF apropriado, utilizado ou glosado), nasce
+     aqui. Glosa e integração com o ERP têm card pelos próprios módulos. */
+  var ETAPA = function (tipo) { return /^capur_|^mov_orgao|^mov_nao/.test(tipo) ? 'CAPUR' : /^cfin_|^reconhecido_/.test(tipo) ? 'CFIN' : tipo === 'particao_nao_fecha' ? 'PART' : null; };
+  P.divergencias = function (rf, nf) {
+    var t = rf.tipoFiscal === 'ibs' ? 'ibs' : 'cbs', T = t.toUpperCase(), org = ORGAO[t], out = [];
+    var o = P.orgao(rf, nf);
+    if (o && o.div) {
+      var dv = o.div;
+      out.push(dv.tipo === 'mov'
+        ? { etapa: 'CAPUR', tipo: 'mov_orgao_sem_contrapartida', valor: dv.valor,
+            resumo: 'Órgão: ' + money(dv.valor) + ' em ' + P.rot(dv.para) + '; aqui em ' + P.rot(dv.de) + '.',
+            detalhe: org + ' informa ' + money(dv.valor) + ' de ' + T + ' em ' + P.rot(dv.para) + ' que o SplitHub mantém em ' + P.rot(dv.de) + ' — glosa ainda não registrada aqui. Nenhum dos valores foi aplicado.' }
+        : { etapa: 'CAPUR', tipo: 'capur_' + t + '_divergente', valor: dv.valor,
+            resumo: 'Órgão apurou ' + money(dv.valor) + ' a menos em ' + P.rot(dv.parc) + '.',
+            detalhe: org + ' apurou ' + money(dv.valor) + ' a menos de ' + T + ' (' + P.rot(dv.parc) + ': SplitHub ' + money(rf.balances[dv.parc]) + ' × órgão ' + money(o.b[dv.parc]) + '). Nenhum dos valores foi aplicado.' });
+    }
+    var f = P.cfin(rf, nf);
+    if (f.diverge) out.push({ etapa: 'CFIN', tipo: 'reconhecido_diferente_pago', valor: r2(f.pago - f.reconhecido),
+      resumo: 'Pago ' + money(f.pago) + ' × reconhecido ' + money(f.reconhecido) + '.',
+      detalhe: 'Pago ' + money(f.pago) + ' de ' + T + ', reconhecido por ' + org + ' ' + money(f.reconhecido) + '. Diferença de ' + money(f.pago - f.reconhecido) + '.' });
+    if (Math.abs(P.apurado(rf.balances) - r2(rf.valor)) > 0.01) out.push({ etapa: 'PART', tipo: 'particao_nao_fecha', valor: r2(Math.abs(P.apurado(rf.balances) - rf.valor)),
+      resumo: 'Parcelas somam ' + money(P.apurado(rf.balances)) + '; apurado ' + money(rf.valor) + '.',
+      detalhe: 'As parcelas de ' + T + ' somam ' + money(P.apurado(rf.balances)) + ' e o apurado é ' + money(rf.valor) + '.' });
+    return out;
+  };
+  P.inconsistencias = function (inc) {
+    if (!inc) return;
+    var L = window.nfListaFiltradaGlobal || window._nfListaCompleta || [];
+    var prio = function (v) { return v > 500000 ? 'critica' : v > 100000 ? 'alta' : v > 20000 ? 'media' : 'baixa'; };
+    L.forEach(function (nf) {
+      if (nf.tipo !== 'entrada') return;
+      (nf.registrosFiscais || []).forEach(function (rf) {
+        if (!rf.balances) return;
+        P.divergencias(rf, nf).forEach(function (d) {
+          var ja = inc.filter(function (i) { return i.rfId === rf.id && ETAPA(i.tipo) === d.etapa; })[0];
+          if (ja) {
+            ja.detalhe = d.detalhe; ja.resumo = d.resumo; ja.divergencia = d;
+            if (ja.status === 'resolvida') ja.status = 'aberta';   // o órgão ainda informa a divergência
+            return;
+          }
+          var dp = String(nf.data || '').split('-');
+          inc.push({
+            id: 'INC-' + String(inc.length + 1).padStart(4, '0'), tipo: d.tipo, tipoLabel: null, familia: null,
+            dfId: (nf.tipoDF || 'NF-e') + ' ' + nf.numero, dfNum: (nf.tipoDF || 'NF-e') + ' ' + nf.numero, nfNumero: nf.numero,
+            rfId: rf.id, tipoFiscal: String(rf.tipoFiscal || '').toUpperCase(), origem: 'rf', tipoFluxo: 'entrada',
+            status: 'aberta', prioridade: prio(d.valor), valor: d.valor, valorTotal: nf.valorTotal || 0, valorLiq: nf.valorLiquido || 0,
+            entidade: nf.entidade || '—', cnpj: nf.cnpj || '—', dataISO: String(nf.data || ''), data: dp.length === 3 ? dp[2] + '/' + dp[1] + '/' + dp[0] : '—',
+            contratoId: rf.contratoId || nf.contratoId || null, statusCredito: rf.statusCredito || rf.status || null,
+            statusRegistro: rf.statusRegistro || null, metodoPagamento: rf.metodoPagamento || null, metodoExtincao: rf.metodoExtincao || null,
+            dataApropriacao: rf.dataApropriacao || null, dataPrevExtincao: rf.dataPrevExtincao || null, dataExtincaoCredito: rf.dataExtincaoCredito || null,
+            detalhe: d.detalhe, resumo: d.resumo, divergencia: d
+          });
+        });
+      });
+    });
+  };
+
+  /* ── Conciliação parcela a parcela (T-06) ──────────────────────────────
+     Um painel por tributo, cada um contra o seu órgão: parcela do SplitHub,
+     parcela do órgão, diferença e situação; e o financeiro, pago contra
+     extinção reconhecida. Nenhum dos valores divergentes é aplicado sozinho. */
+  function cardDa(rf, re) { return (rf._inconsistencias || []).filter(function (i) { return re.test(i.tipo); })[0] || null; }
+  // parcelas divergentes por tributo: o Δ e o filtro da lista da Conciliação
+  P.divergentesPor = function (nf) {
+    var n = { cbs: 0, ibs: 0 };
+    (nf.registrosFiscais || []).forEach(function (rf) {
+      var o = rf.balances && P.orgao(rf, nf); if (!o || o.sem) return;
+      var t = rf.tipoFiscal === 'ibs' ? 'ibs' : 'cbs';
+      P.PARC.forEach(function (p) { if (rf.balances[p.k] !== null && o.b[p.k] !== null && Math.abs((rf.balances[p.k] || 0) - (o.b[p.k] || 0)) > 0.005) n[t]++; });
+    });
+    return n;
+  };
+  P.divergentes = function (nf) { var n = P.divergentesPor(nf); return n.cbs + n.ibs; };
+  P.confrontoHtml = function (nf) {
+    var rfs = (nf.registrosFiscais || []).filter(function (rf) { return rf.balances; })
+      .sort(function (a, b) { return a.tipoFiscal === 'cbs' ? -1 : b.tipoFiscal === 'cbs' ? 1 : 0; });
+    if (!rfs.length) return '';
+    var capDiverge = {};
+    return '<div class="shg shg-lg pp-bloco">' + rfs.map(function (rf) {
+      var t = rf.tipoFiscal === 'ibs' ? 'ibs' : 'cbs', T = t.toUpperCase(), org = ORGAO[t], b = rf.balances, o = P.orgao(rf, nf), f = P.cfin(rf, nf);
+      var hdr = '<div class="pp-card-hdr"><span class="pp-trib pp-trib-' + t + '">' + T + '</span><strong>Confronto com ' + (t === 'cbs' ? 'a ' : 'o ') + org + '</strong>'
+        + '<span class="pp-mono">' + esc(rf.id) + '</span></div>';
+      if (o && o.sem) {
+        return '<div class="pp-card">' + hdr + '<div class="pp-ev-desc">Sem leitura do órgão: o documento não foi localizado na apuração assistida dentro da espera. Nada se move até o órgão refletir (C-01).</div></div>';
+      }
+      var linhas = [{ rot: 'Apurado', s: r2(rf.valor), o: o.apurado, k: '_ap' }].concat(P.PARC.filter(function (p) {
+        return !(p.k === 'refund_available' && t === 'cbs') && ((b[p.k] || 0) > 0 || (o.b[p.k] || 0) > 0);
+      }).map(function (p) { return { rot: p.rot, s: b[p.k], o: o.b[p.k], k: p.k, cor: p.cor }; }));
+      var nulas = t === 'ibs' ? P.PARC.filter(function (p) { return b[p.k] === null; }).length : 0;
+      var nDiv = 0;
+      var rows = linhas.map(function (l) {
+        var nulo = l.s === null || l.o === null;
+        var d = nulo ? null : r2((l.o || 0) - (l.s || 0));
+        var div = d !== null && Math.abs(d) > 0.005;
+        if (div && l.k !== '_ap') nDiv++;
+        var sit = nulo ? '<span class="pp-mut">Não informado (D-PAR-09)</span>'
+          : !div ? '<span class="pp-conf ok" style="margin:0">Confere</span>'
+          : l.k === 'not_appropriable' && d > 0 ? '<span class="pp-st pp-st-erro">glosa ainda não registrada aqui</span>'
+          : '<span class="pp-st pp-st-erro">divergente</span>';
+        var cel = function (v) { return v === null ? '<span class="pp-mut">n/i</span>' : v > 0 ? money(v) : '<span class="pp-mut">—</span>'; };
+        return '<tr' + (div ? ' class="pp-div"' : '') + '><td>' + (l.cor ? '<span class="pp-parc"><span class="pp-dot" style="background:' + l.cor + '"></span>' + esc(l.rot) + '</span>' : '<strong class="pp-forte-t">' + esc(l.rot) + '</strong>') + '</td>'
+          + '<td class="r pp-num">' + cel(l.s) + '</td><td class="r pp-num">' + cel(l.o) + '</td>'
+          + '<td class="r pp-num">' + (d === null ? '<span class="pp-mut">—</span>' : div ? (d > 0 ? '+' : '−') + money(Math.abs(d)) : '<span class="pp-mut">—</span>') + '</td><td>' + sit + '</td></tr>';
+      }).join('')
+        + (nulas ? '<tr><td colspan="5" class="pp-mut">' + nulas + ' parcelas não informadas pelo Comitê Gestor · sem diferença calculada (D-PAR-09)</td></tr>' : '');
+      capDiverge[t] = nDiv > 0;
+      var cC = cardDa(rf, /^capur_|^mov_/), cF = cardDa(rf, /^cfin_|^reconhecido_/);
+      var ref = function (c) { return c ? ' <button class="pp-ref" onclick="window.kbAbrirCard && window.kbAbrirCard(\'' + esc(c.id) + '\')">' + esc(c.id) + '</button>' : ''; };
+      var fin = !f.comprovante ? '<span class="pp-mut">Sem comprovante do recolhimento ainda.</span>'
+        : capDiverge[t] ? '<span class="pp-mut">Pago ' + money(f.pago) + ' · aguarda a conciliação de apuração deste tributo.</span>'
+        : f.diverge ? '<span class="pp-st pp-st-erro">divergente</span> Pago ' + money(f.pago) + ' · reconhecido ' + money(f.reconhecido) + ref(cF)
+        : '<span class="pp-conf ok" style="margin:0">Confere</span> Pago ' + money(f.pago) + ' · reconhecido ' + money(f.reconhecido);
+      return '<div class="pp-card">' + hdr
+        + '<div class="pp-scroll"><table class="pp-tab pp-conf-t"><thead><tr><th>Parcela</th><th class="r">SplitHub</th><th class="r">' + org + '</th><th class="r">Diferença</th><th>Situação</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+        + (nDiv ? '<div class="pp-nota">' + nDiv + ' parcela' + (nDiv > 1 ? 's' : '') + ' divergente' + (nDiv > 1 ? 's' : '') + ' · nenhum dos valores foi aplicado' + ref(cC) + '</div>' : '')
+        + '<div class="pp-sub">Financeiro · pago × extinção reconhecida</div><div class="pp-ev-desc">' + fin + '</div>'
+        + '</div>';
+    }).join('') + '</div>';
+  };
 
   P.aplicarNaBase = function () {
     var L = window.nfListaFiltradaGlobal || window._nfListaCompleta || [];

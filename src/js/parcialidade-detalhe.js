@@ -314,7 +314,13 @@
   function curto(s, n) { s = String(s || '').replace(/<[^>]+>/g, ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
   X.situacao = function (nf, rfs, evs) {
     var al = [], info = [];
-    var ponto = function (nivel, t, titulo, det, ev) { al.push({ nivel: nivel, trib: t, titulo: titulo, det: det }); if (ev) ev.alerta = nivel; };
+    var ponto = function (nivel, t, titulo, det, ev, card) { al.push({ nivel: nivel, trib: t, titulo: titulo, det: det, card: card || null }); if (ev) { ev.alerta = nivel; if (card) ev.card = card; } };
+    // cards vinculados: os do tributo e os do documento sem tributo; resolvido não conta
+    var cards = [];
+    rfs.forEach(function (rf) { (rf._inconsistencias || []).forEach(function (i) { cards.push(i); }); });
+    (nf._inconsistencias || []).forEach(function (i) { if (!i.rfId && cards.indexOf(i) < 0) cards.push(i); });
+    cards = cards.filter(function (i) { return stCard(i) !== 'resolvida'; });
+    var cardDe = function (rfId, re) { return cards.filter(function (i) { return i.rfId === rfId && re.test(i.tipo); })[0] || null; };
     rfs.forEach(function (rf) {
       var t = trib(rf), b = rf.balances;
       if (!b) return;
@@ -330,17 +336,14 @@
         else info.push({ trib: t, txt: money(b.available) + ' disponível' + (rf.prazoArt54Prox ? ' · art. 54 até ' + br(rf.prazoArt54Prox) : '') });
       }
       if (b.refund_requested > 0) info.push({ trib: t, txt: money(b.refund_requested) + ' em pedido de ressarcimento' });
-      if (fl.indexOf('inconsistencia') >= 0) {
-        var rot = (rf._inconsistencias || []).map(function (i) { return i.tipoLabel || i.tipo; }).filter(Boolean);
-        ponto('alerta', t, 'Inconsistência aberta', (rot.length ? curto(rot.join(', '), 70) + '. ' : '') + 'Tratar na fila de Inconsistências.');
-      }
       var g = window.shGlosa && window.shGlosa.ficha ? window.shGlosa.ficha(rf.id) : null;
       if (g && g.status !== 'revertida') {
         var tipoG = g.status === 'impugnada' ? 'IMPUGNAÇÃO' : g.status === 'definitiva' ? 'GLOSA DEFINITIVA' : 'GLOSA';
         var evG = (evs || []).filter(function (e) { return e.rfId === rf.id && e.tipo === tipoG; })[0];
-        if (g.status === 'impugnada') ponto('atencao', t, 'Glosa em impugnação · ' + money(g.valor), 'Processo ' + g.processo + '; valor bloqueado até a decisão.', evG);
-        else if (g.status === 'definitiva' || g.status === 'mantida') ponto('alerta', t, 'Glosa definitiva · ' + money(g.valor), 'Perda definitiva' + (g.definitivaEm ? ' desde ' + br(g.definitivaEm) : '') + '.', evG);
-        else ponto('alerta', t, 'Glosa aberta · ' + money(g.valor), 'Impugnar até ' + br(g.prazoImpugnacao) + ' (ficha ' + g.id + ').', evG);
+        var cG = cardDe(rf.id, /^glosa_/);
+        if (g.status === 'impugnada') ponto('atencao', t, 'Glosa em impugnação · ' + money(g.valor), 'Processo ' + g.processo + '; valor bloqueado até a decisão.', evG, cG);
+        else if (g.status === 'definitiva' || g.status === 'mantida') ponto('alerta', t, 'Glosa definitiva · ' + money(g.valor), 'Perda definitiva' + (g.definitivaEm ? ' desde ' + br(g.definitivaEm) : '') + '.', evG, cG);
+        else ponto('alerta', t, 'Glosa aberta · ' + money(g.valor), 'Impugnar até ' + br(g.prazoImpugnacao) + ' (ficha ' + g.id + ').', evG, cG);
       }
     });
     // conciliação: vale o registro mais recente de cada etapa, por tributo
@@ -352,13 +355,19 @@
       var e = ultimo[k], fin = e.tipo === 'CONC FINANCEIRA', id = (/(C(?:APUR|FIN)-[0-9A-F]+)/.exec(e.desc) || [])[1] || '';
       if (e.cls === 'pending') ponto('atencao', e.trib, 'Conciliação ' + (fin ? 'financeira' : 'de apuração') + ' pendente',
         (fin ? 'Falta o comprovante do recolhimento' : 'Documento ainda não lido na apuração do órgão') + (id ? ' (' + id + ').' : '.'), e);
-      else if (e.cls === 'erro') ponto('alerta', e.trib, 'Conciliação ' + (fin ? 'financeira' : 'de apuração') + ' com divergência',
-        'Não bate com o órgão' + (id ? ' (' + id + ')' : '') + '. Analisar na Conciliação.', e);
+    });
+    // divergência de verdade é card na fila de Inconsistências, com o vínculo ao DF e ao RF
+    var feitos = al.map(function (a) { return a.card; });
+    cards.forEach(function (i) {
+      if (feitos.indexOf(i) >= 0) return;
+      var t = i.rfId ? (String(i.tipoFiscal || '').toLowerCase() === 'ibs' ? 'ibs' : 'cbs') : null;
+      var et = /^capur_|^mov_|^apur_/.test(i.tipo) ? 'CONC APURAÇÃO' : /^cfin_|^reconhecido_/.test(i.tipo) ? 'CONC FINANCEIRA' : i.tipo === 'integracao_erp' ? 'ERP' : null;
+      var ev = et ? (evs || []).filter(function (e) { return e.trib === t && (et === 'ERP' ? e.tipo === 'ERP' && e.entrega === 'falhou' : e.tipo === et); }).sort(function (a, b) { return a.ts < b.ts ? 1 : -1; })[0] : null;
+      ponto('alerta', t, (i.tipoLabel || i.tipo) + (i.valor > 0 ? ' · ' + money(i.valor) : ''), i.resumo || 'Analisar no card.', ev, i);
     });
     (evs || []).forEach(function (e) {
       if (e.alerta || !e.ts) return;
       if (e.tipo === 'ERP' && e.entrega === 'pendente') ponto('atencao', e.trib, 'ERP sem confirmação', e.titulo.replace('Webhook ', '') + ': reenvio automático em andamento.', e);
-      else if (e.tipo === 'ERP' && e.entrega === 'falhou') ponto('alerta', e.trib, 'ERP não recebeu o evento', e.titulo.replace('Webhook ', '') + ': reenviar em Integrações › Log de entregas.', e);
       else if (e.tipo === 'INCONSISTÊNCIA' || (e.cls === 'erro' && ['risco', 'conciliacao', 'erp'].indexOf(e.fase) < 0)) ponto('alerta', e.trib, e.titulo, curto(e.desc, 90), e);
     });
     (evs || []).forEach(function (e) { if (!e.ts && e.tipo === 'AGUARDANDO') info.push({ trib: e.trib, txt: curto(e.desc, 90) }); });
@@ -377,13 +386,23 @@
     return '<span class="pp-st pp-st-' + c + '">' + e.entrega + '</span>';
   }
   var NIVEL = { alerta: ['alerta', 'erro'], atencao: ['atenção', 'pending'] };
+  var ST_CARD = { aberta: 'Aberta', em_analise: 'Em análise', aguardando_emitente: 'Ag. emitente', resolvida: 'Resolvida', glosada: 'Glosada' };
+  function stCard(i) { return (window._kanbanState && window._kanbanState[i.id]) || i.status || 'aberta'; }
+  function refCard(i) {
+    return ' <button class="pp-ref" title="Abrir o card no módulo de Inconsistências" onclick="window.shDetalhe.abrirCard(\'' + esc(i.id) + '\')">'
+      + esc(i.id) + ' · ' + esc(ST_CARD[stCard(i)] || stCard(i)) + '</button>';
+  }
+  X.abrirCard = function (id) {
+    ['nf-detalhe-overlay', 'rf-detalhe-overlay'].forEach(function (k) { var o = document.getElementById(k); if (o) o.remove(); });
+    if (window.kbAbrirCard) window.kbAbrirCard(id);
+  };
   function situacaoHtml(s) {
     if (!s.alertas.length && !s.info.length) return '';
     var n = s.alertas.length;
     return '<div class="pp-pend"><div class="pp-sub pp-sub0">Situação agora · ' + (n ? n + ' ponto' + (n > 1 ? 's' : '') + ' de atenção' : 'nenhum ponto de atenção') + '</div>'
       + s.alertas.map(function (a) {
         return '<div class="pp-pend-i">' + chipTrib(a.trib) + '<span class="pp-st pp-st-' + NIVEL[a.nivel][1] + '">' + NIVEL[a.nivel][0] + '</span>'
-          + '<span><strong class="pp-forte-t">' + esc(a.titulo) + '</strong> <span class="pp-mut">— ' + esc(a.det) + '</span></span></div>';
+          + '<span><strong class="pp-forte-t">' + esc(a.titulo) + '</strong> <span class="pp-mut">— ' + esc(a.det) + '</span>' + (a.card ? refCard(a.card) : '') + '</span></div>';
       }).join('')
       + s.info.map(function (x) { return '<div class="pp-pend-i">' + chipTrib(x.trib) + '<span class="pp-mut">' + esc(x.txt) + '</span></div>'; }).join('')
       + '</div>';
@@ -409,7 +428,7 @@
       return '<tr data-trib="' + (e.trib || 'doc') + '" data-orig="' + e.origem + '" data-ts="' + esc(e.ts || '') + '" onclick="this.classList.toggle(\'aberto\')">'
         + '<td class="pp-num pp-mut">' + brTs(e.ts) + '</td><td>' + chipTrib(e.trib) + '</td><td class="pp-mut">' + ORIGEM_ROT[e.origem] + '</td>'
         + '<td><strong class="pp-forte-t">' + esc(e.titulo) + '</strong> ' + statusErp(e)
-        + (e.alerta ? ' <span class="pp-st pp-st-' + NIVEL[e.alerta][1] + '">' + NIVEL[e.alerta][0] + '</span>' : '') + '<div class="pp-ev-desc">' + e.desc + (e.descEntrega ? ' · ' + e.descEntrega : '') + '</div></td>'
+        + (e.alerta ? ' <span class="pp-st pp-st-' + NIVEL[e.alerta][1] + '">' + NIVEL[e.alerta][0] + '</span>' : '') + (e.card ? refCard(e.card) : '') + '<div class="pp-ev-desc">' + e.desc + (e.descEntrega ? ' · ' + e.descEntrega : '') + '</div></td>'
         + '<td>' + (e.valor > 0 && e.para !== undefined ? efeitoHtml(e) : '<span class="pp-mut">—</span>') + '</td><td class="pp-mut">' + esc(e.ator) + '</td></tr>';
     }).join('');
     return '<div data-pp-trilha>' + tool + '<div class="pp-scroll"><table class="pp-tab pp-trilha-t"><thead><tr><th>Data e hora</th><th>Tributo</th><th>Origem</th><th>Evento</th><th>Valor e efeito</th><th>Quem registrou</th></tr></thead><tbody>'
@@ -459,7 +478,7 @@
   X.historico = function (key) {
     var c = X._cache[key]; if (!c) return '';
     if (!c.evs.length) return '<div class="pp-mut">Nenhum evento disponível.</div>';
-    c.evs.forEach(function (e) { delete e.alerta; });
+    c.evs.forEach(function (e) { delete e.alerta; delete e.card; });
     var s = X.situacao(c.nf, c.rfs, c.evs);
     return resumo(c.evs, s) + situacaoHtml(s) + trilha(c, key);
   };
