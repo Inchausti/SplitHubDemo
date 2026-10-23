@@ -852,8 +852,24 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Contrato</div>'
       + '<div style="font-size:11px;color:var(--txt3);font-style:italic">Nenhum contrato vigente na data da NF.</div>';
   }
+  // Peças da coluna esquerda, usadas pelo corpo de sempre e pelas propostas em
+  // avaliação da parcialidade (js/parcialidade-propostas.js)
+  var docHtml = DR('Número', (r.tipoDF || 'NF-e') + ' ' + r.numero)
+    + DR('Tipo', '<span style="color:' + tipoColor + ';font-weight:700">' + tipoLabel + '</span>')
+    + DR('Emitente', r.entidade || '—')
+    + DR('CNPJ', r.cnpj || '—', null, true)
+    + DR('Data', dataFmt)
+    + (window.shParcial && r.tipo === 'entrada' && (r.registrosFiscais || []).some(function(x){ return x.balances; })
+        ? DR('Crédito', '<span style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">' + window.shParcial.selosDF(r) + '</span>')
+        : DR('Status', '<span style="background:rgba(' + stRgb + ',.12);color:rgba(' + stRgb + ',1);border:1px solid rgba(' + stRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLab + '</span>'));
+  var chaveHtml = '<div class="mbox-section-label" style="margin-bottom:4px">Chave DF</div>'
+    + '<div style="font-size:9px;font-family:monospace;color:var(--txt3);word-break:break-all;line-height:1.7;margin-bottom:14px">' + chaveFormatada + '</div>';
+  var radHtml = window.shRADBlocoMetodo ? window.shRADBlocoMetodo(r) : '';
+  var incHtml = window._incRenderVinculadasHtml(r._inconsistencias && r._inconsistencias.length ? r._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return String(i.nfNumero) === String(r.numero) || i.dfNum === ((r.tipoDF||'NF-e')+' '+r.numero); }));
+  var _pp = !!(window.shProp && window.shProp.ativo(r));
+
   var html = '<div id="nf-detalhe-overlay" class="moverlay" onclick="if(event.target===this)document.getElementById(\'nf-detalhe-overlay\').remove()">'
-    + '<div class="mbox" style="width:900px">'
+    + '<div class="mbox" style="width:' + (_pp ? 1040 : 900) + 'px">'
 
     // Header
     + '<div class="mbox-hdr" style="flex-wrap:wrap">'
@@ -870,46 +886,44 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + '</div>'
     + '</div>'
 
-    // Body: two columns
-    + '<div style="display:flex;flex:1;overflow:hidden">'
+    // Entrada com partição: propostas em avaliação (registros fiscais e
+    // partição num bloco só, Valores com as parcelas, histórico e apuração)
+    + (_pp
+      ? window.shProp.barraDF(r) + window.shProp.corpoDF(r, { docHtml: docHtml, chaveHtml: chaveHtml, ctrHtml: ctrHtml, radHtml: radHtml, incHtml: incHtml })
+      // Body: two columns
+      : '<div style="display:flex;flex:1;overflow:hidden">'
 
-    // Left panel
-    + '<div class="mbox-col" style="width:300px;flex-shrink:0;border-right:1px solid var(--brd)">'
-    + '<div class="mbox-section-label">Documento Fiscal</div>'
-    + DR('Número', (r.tipoDF || 'NF-e') + ' ' + r.numero)
-    + DR('Tipo', '<span style="color:' + tipoColor + ';font-weight:700">' + tipoLabel + '</span>')
-    + DR('Emitente', r.entidade || '—')
-    + DR('CNPJ', r.cnpj || '—', null, true)
-    + DR('Data', dataFmt)
-    + (window.shParcial && r.tipo === 'entrada' && (r.registrosFiscais || []).some(function(x){ return x.balances; })
-        ? DR('Crédito', '<span style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">' + window.shParcial.selosDF(r) + '</span>')
-        : DR('Status', '<span style="background:rgba(' + stRgb + ',.12);color:rgba(' + stRgb + ',1);border:1px solid rgba(' + stRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLab + '</span>'))
-    + '<div class="mbox-divider"></div>'
-    + '<div class="mbox-section-label">Valores</div>'
-    + DR('Total', ff(r.valorTotal || 0))
-    + DR('Líquido', ff(r.valorLiquido || 0))
-    + DR('CBS', ffz(r.cbs || 0), 'var(--p-amber)')
-    + DR('IBS', ffz(r.ibs || 0), 'var(--p-blue)')
-    + '<div class="mbox-divider"></div>'
-    + '<div class="mbox-section-label" style="margin-bottom:4px">Chave DF</div>'
-    + '<div style="font-size:9px;font-family:monospace;color:var(--txt3);word-break:break-all;line-height:1.7;margin-bottom:14px">' + chaveFormatada + '</div>'
-    + ctrHtml
-    + (window.shRADBlocoMetodo ? window.shRADBlocoMetodo(r) : '')
-    + '<div class="mbox-divider"></div>'
-    + '<div class="mbox-section-label">Registros Fiscais</div>'
-    + rfsHtml
-    + '<div class="mbox-divider"></div>'
-    + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
-    + window._incRenderVinculadasHtml(r._inconsistencias && r._inconsistencias.length ? r._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return String(i.nfNumero) === String(r.numero) || i.dfNum === ((r.tipoDF||'NF-e')+' '+r.numero); }))
-    + '</div>'
+      // Left panel
+      + '<div class="mbox-col" style="width:300px;flex-shrink:0;border-right:1px solid var(--brd)">'
+      + '<div class="mbox-section-label">Documento Fiscal</div>'
+      + docHtml
+      + '<div class="mbox-divider"></div>'
+      + '<div class="mbox-section-label">Valores</div>'
+      + DR('Total', ff(r.valorTotal || 0))
+      + DR('Líquido', ff(r.valorLiquido || 0))
+      + DR('CBS', ffz(r.cbs || 0), 'var(--p-amber)')
+      + DR('IBS', ffz(r.ibs || 0), 'var(--p-blue)')
+      + '<div class="mbox-divider"></div>'
+      + chaveHtml
+      + ctrHtml
+      + radHtml
+      + '<div class="mbox-divider"></div>'
+      + '<div class="mbox-section-label">Registros Fiscais</div>'
+      + rfsHtml
+      + '<div class="mbox-divider"></div>'
+      + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
+      + incHtml
+      + '</div>'
 
-    // Right panel: partição do crédito (T-02) e timeline
-    + '<div class="mbox-col" style="flex:1">'
-    + (window.shParcial && r.tipo === 'entrada' ? window.shParcial.secaoDF(r) : '')
-    + '<div class="mbox-section-label">Histórico do Ciclo · ' + allEvents.length + ' evento' + (allEvents.length !== 1 ? 's' : '') + '</div>'
-    + (tlH || '<div style="color:var(--txt3);font-size:12px">Nenhum evento disponível.</div>')
-    + '</div>'
-    + '</div>'
+      // Right panel: partição do crédito (T-02) e timeline
+      + '<div class="mbox-col" style="flex:1">'
+      + (window.shParcial && r.tipo === 'entrada' ? window.shParcial.secaoDF(r) : '')
+      + (window.shProp
+          ? window.shProp.historicoDF(r)
+          : '<div class="mbox-section-label">Histórico do Ciclo · ' + allEvents.length + ' evento' + (allEvents.length !== 1 ? 's' : '') + '</div>'
+            + (tlH || '<div style="color:var(--txt3);font-size:12px">Nenhum evento disponível.</div>'))
+      + '</div>'
+      + '</div>')
     + '</div>'
     + '</div>';
 
@@ -1722,7 +1736,7 @@ window.abrirDetalheRF = function(rfId) {
   var DR = window._rfDetailRow;
 
   var html = '<div id="rf-detalhe-overlay" class="moverlay" onclick="if(event.target===this)document.getElementById(\'rf-detalhe-overlay\').remove()">'
-    + '<div class="mbox" style="width:860px">'
+    + '<div class="mbox" style="width:' + (window.shProp ? 980 : 860) + 'px">'
 
     // Header
     + '<div class="mbox-hdr">'
@@ -1735,10 +1749,10 @@ window.abrirDetalheRF = function(rfId) {
     + '</div>'
 
     // Body
-    + '<div style="display:flex;flex:1;overflow:hidden">'
+    + (window.shProp ? '<div class="pp-body">' : '<div style="display:flex;flex:1;overflow:hidden">')
 
     // Left panel: dados do RF
-    + '<div class="mbox-col" style="width:280px;flex-shrink:0;border-right:1px solid var(--brd)">'
+    + (window.shProp ? '<div class="mbox-col pp-col-l">' : '<div class="mbox-col" style="width:280px;flex-shrink:0;border-right:1px solid var(--brd)">')
     + '<div class="mbox-section-label">Dados do Registro</div>'
     + DR('ID do RF', rf.id, 'var(--p-blue)')
     + DR('Tipo Fiscal', '<span style="color:' + tfColor + ';font-weight:700">' + tfLabel + '</span>')
@@ -1787,8 +1801,10 @@ window.abrirDetalheRF = function(rfId) {
     + '</div>'
 
     // Right panel: movimentos de valor (T-03) e timeline
-    + '<div class="mbox-col" style="flex:1;min-width:0">'
-    + (rf.balances && window.shParcial
+    + (window.shProp ? '<div class="mbox-col pp-col-r">' : '<div class="mbox-col" style="flex:1;min-width:0">')
+    + (window.shProp
+        ? window.shProp.abasRF(rf, nf)
+        : rf.balances && window.shParcial
         ? window.shParcial.abas(rf, tlH, eventos.length)
         : '<div class="mbox-section-label">Histórico do Ciclo · ' + eventos.length + ' evento' + (eventos.length !== 1 ? 's' : '') + '</div>' + tlH)
     + '</div>'
