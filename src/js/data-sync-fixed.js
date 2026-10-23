@@ -852,8 +852,8 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Contrato</div>'
       + '<div style="font-size:11px;color:var(--txt3);font-style:italic">Nenhum contrato vigente na data da NF.</div>';
   }
-  // Peças da coluna esquerda, usadas pelo corpo de sempre e pelas propostas em
-  // avaliação da parcialidade (js/parcialidade-propostas.js)
+  // Peças da coluna esquerda, usadas pelo corpo de sempre e pelo detalhe da
+  // parcialidade (js/parcialidade-detalhe.js)
   var docHtml = DR('Número', (r.tipoDF || 'NF-e') + ' ' + r.numero)
     + DR('Tipo', '<span style="color:' + tipoColor + ';font-weight:700">' + tipoLabel + '</span>')
     + DR('Emitente', r.entidade || '—')
@@ -866,7 +866,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + '<div style="font-size:9px;font-family:monospace;color:var(--txt3);word-break:break-all;line-height:1.7;margin-bottom:14px">' + chaveFormatada + '</div>';
   var radHtml = window.shRADBlocoMetodo ? window.shRADBlocoMetodo(r) : '';
   var incHtml = window._incRenderVinculadasHtml(r._inconsistencias && r._inconsistencias.length ? r._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return String(i.nfNumero) === String(r.numero) || i.dfNum === ((r.tipoDF||'NF-e')+' '+r.numero); }));
-  var _pp = !!(window.shProp && window.shProp.ativo(r));
+  var _pp = !!(window.shDetalhe && window.shDetalhe.ativo(r));
 
   var html = '<div id="nf-detalhe-overlay" class="moverlay" onclick="if(event.target===this)document.getElementById(\'nf-detalhe-overlay\').remove()">'
     + '<div class="mbox" style="width:' + (_pp ? 1040 : 900) + 'px">'
@@ -886,10 +886,10 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + '</div>'
     + '</div>'
 
-    // Entrada com partição: propostas em avaliação (registros fiscais e
-    // partição num bloco só, Valores com as parcelas, histórico e apuração)
+    // Entrada com partição: quadro CBS × IBS com os registros fiscais e os
+    // valores da partição, trilha do ciclo e da apuração (js/parcialidade-detalhe.js)
     + (_pp
-      ? window.shProp.barraDF(r) + window.shProp.corpoDF(r, { docHtml: docHtml, chaveHtml: chaveHtml, ctrHtml: ctrHtml, radHtml: radHtml, incHtml: incHtml })
+      ? window.shDetalhe.corpoDF(r, { docHtml: docHtml, chaveHtml: chaveHtml, ctrHtml: ctrHtml, radHtml: radHtml, incHtml: incHtml })
       // Body: two columns
       : '<div style="display:flex;flex:1;overflow:hidden">'
 
@@ -918,8 +918,8 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       // Right panel: partição do crédito (T-02) e timeline
       + '<div class="mbox-col" style="flex:1">'
       + (window.shParcial && r.tipo === 'entrada' ? window.shParcial.secaoDF(r) : '')
-      + (window.shProp
-          ? window.shProp.historicoDF(r)
+      + (window.shDetalhe
+          ? window.shDetalhe.historicoDF(r)
           : '<div class="mbox-section-label">Histórico do Ciclo · ' + allEvents.length + ' evento' + (allEvents.length !== 1 ? 's' : '') + '</div>'
             + (tlH || '<div style="color:var(--txt3);font-size:12px">Nenhum evento disponível.</div>'))
       + '</div>'
@@ -1735,8 +1735,9 @@ window.abrirDetalheRF = function(rfId) {
   var nfDataFmt = dpNF.length === 3 ? dpNF[2]+'/'+dpNF[1]+'/'+dpNF[0] : (nf.data || '—');
   var DR = window._rfDetailRow;
 
+  var _ppRF = !!(window.shDetalhe && rf.balances);
   var html = '<div id="rf-detalhe-overlay" class="moverlay" onclick="if(event.target===this)document.getElementById(\'rf-detalhe-overlay\').remove()">'
-    + '<div class="mbox" style="width:' + (window.shProp ? 980 : 860) + 'px">'
+    + '<div class="mbox" style="width:' + (window.shDetalhe ? 980 : 860) + 'px">'
 
     // Header
     + '<div class="mbox-hdr">'
@@ -1749,15 +1750,17 @@ window.abrirDetalheRF = function(rfId) {
     + '</div>'
 
     // Body
-    + (window.shProp ? '<div class="pp-body">' : '<div style="display:flex;flex:1;overflow:hidden">')
+    + (window.shDetalhe ? '<div class="pp-body">' : '<div style="display:flex;flex:1;overflow:hidden">')
 
     // Left panel: dados do RF
-    + (window.shProp ? '<div class="mbox-col pp-col-l">' : '<div class="mbox-col" style="width:280px;flex-shrink:0;border-right:1px solid var(--brd)">')
+    + (window.shDetalhe ? '<div class="mbox-col pp-col-l">' : '<div class="mbox-col" style="width:280px;flex-shrink:0;border-right:1px solid var(--brd)">')
     + '<div class="mbox-section-label">Dados do Registro</div>'
     + DR('ID do RF', rf.id, 'var(--p-blue)')
     + DR('Tipo Fiscal', '<span style="color:' + tfColor + ';font-weight:700">' + tfLabel + '</span>')
     + DR(rf.balances ? 'Apurado' : 'Valor', ff(rf.valor), 'var(--p-teal)')
-    + (rf.balances && window.shParcial
+    // com o detalhe da parcialidade, status, barra e marcas ficam no quadro da direita
+    + (_ppRF ? ''
+      : rf.balances && window.shParcial
         ? DR('Status Crédito', window.shParcial.selo(rf, false))
           + '<div style="margin:-2px 0 8px">' + window.shParcial.barra(rf, 8) + '</div>'
           + (rf.flagsFatia && rf.flagsFatia.length ? '<div style="margin:0 0 8px">' + window.shParcial.flagsHtml(rf) + '</div>' : '')
@@ -1783,7 +1786,7 @@ window.abrirDetalheRF = function(rfId) {
     + (rf.dataPagamento && rf.dataPagamento !== '—' ? DR('Data Pagamento', rf.dataPagamento) : '')
     + (rfSt === 'utilizado' && rf.metodoExtincao ? DR('Método Extinção', rf.metodoExtincao, 'var(--p-teal)') : '')
     + (rfSt === 'utilizado' && rf.dataExtincao ? DR('Data Extinção', rf.dataExtincao) : '')
-    + '<div class="mbox-divider"></div>'
+    + (_ppRF ? '' : '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Ciclo do Crédito</div>'
     + DR('Apropriação', window.shCelulaApropriacao ? window.shCelulaApropriacao(rf) : '—')
     + DR('Extinção do Crédito', window.shCelulaExtincaoCredito ? window.shCelulaExtincaoCredito(rf) : '—')
@@ -1794,16 +1797,16 @@ window.abrirDetalheRF = function(rfId) {
     + 'nota; no RAD, o pagamento da guia; no Fornecedor, o vencimento do tributo. '
     + '<strong>Extinção do Crédito</strong> é quando ele foi consumido. '
     + '<strong>Limite art. 54</strong> é o fim do prazo de 5 anos, contado do primeiro dia do período de '
-    + 'apuração seguinte ao da apropriação — não da emissão do documento.</span></div>'
+    + 'apuração seguinte ao da apropriação — não da emissão do documento.</span></div>')
     + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
     + window._incRenderVinculadasHtml(rf._inconsistencias && rf._inconsistencias.length ? rf._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return i.rfId === rf.id || (i.nfNumero && String(i.nfNumero) === String((window._rfIndex&&window._rfIndex[rf.id]||{}).nf&&(window._rfIndex[rf.id].nf.numero))); }))
     + '</div>'
 
     // Right panel: movimentos de valor (T-03) e timeline
-    + (window.shProp ? '<div class="mbox-col pp-col-r">' : '<div class="mbox-col" style="flex:1;min-width:0">')
-    + (window.shProp
-        ? window.shProp.abasRF(rf, nf)
+    + (window.shDetalhe ? '<div class="mbox-col pp-col-r">' : '<div class="mbox-col" style="flex:1;min-width:0">')
+    + (window.shDetalhe
+        ? window.shDetalhe.colunaRF(rf, nf)
         : rf.balances && window.shParcial
         ? window.shParcial.abas(rf, tlH, eventos.length)
         : '<div class="mbox-section-label">Histórico do Ciclo · ' + eventos.length + ' evento' + (eventos.length !== 1 ? 's' : '') + '</div>' + tlH)
