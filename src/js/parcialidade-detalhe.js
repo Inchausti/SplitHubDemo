@@ -277,7 +277,9 @@
         if (e.tipo === 'INGESTÃO' || e.tipo === 'VALIDAÇÃO') { if (!doc) deles.push(norm(e, null)); return; }
         if (e.dfEvento && !rfAlvo) return;   // espelho de ação do DF: entra uma vez, pelos eventos do próprio DF
         if (comPart && (e.tipo === 'APROPRIAÇÃO' || e.tipo === 'UTILIZAÇÃO')) return;   // falam do RF inteiro: o movimento substitui
-        if (comPart && e.tipo === 'AGUARDANDO' && (!e.ts || e.ts === '—')) return;       // vai para "Situação agora"
+        // marcas do RF inteiro (em risco, a prescrever, vencido) contradizem as da fatia: com a
+        // partição, a situação sai das marcas da fatia, em "Situação agora" (D-PAR-05)
+        if (comPart && (e.tipo === 'AGUARDANDO' || e.tipo === 'VENCIMENTO')) return;
         var n = norm(e, rf);
         // recolhimento parcial: a guia e o comprovante cobrem o que foi apropriado, não o RF inteiro
         if (comPart && (e.tipo === 'PAGAMENTO' || e.tipo === 'COMPROVANTE ERP') && apropriado > 0 && apropriado < r2(rf.valor) - 0.005) {
@@ -305,29 +307,63 @@
     return ordenar(juntarErp(out), false);
   };
 
-  // o que ainda não aconteceu não é evento: é a situação de agora
-  X.pendencias = function (nf, rfs, evs) {
-    var out = [];
+  // O que ainda não aconteceu não é evento: é a situação de agora. Cada ponto de
+  // atenção é uma linha só — o que é e o que fazer —; o estado normal entra como
+  // informação, sem contar como alerta.
+  function dias(iso) { var p = String(iso || '').slice(0, 10).split('-'); if (p.length !== 3) return null; var h = new Date(); h.setHours(0, 0, 0, 0); return Math.round((new Date(+p[0], +p[1] - 1, +p[2]) - h) / 86400000); }
+  function curto(s, n) { s = String(s || '').replace(/<[^>]+>/g, ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+  X.situacao = function (nf, rfs, evs) {
+    var al = [], info = [];
+    var ponto = function (nivel, t, titulo, det, ev) { al.push({ nivel: nivel, trib: t, titulo: titulo, det: det }); if (ev) ev.alerta = nivel; };
     rfs.forEach(function (rf) {
       var t = trib(rf), b = rf.balances;
       if (!b) return;
       var fl = (rf.flagsFatia || []).map(function (f) { return f.f; });
       if (b.pending > 0) {
-        var ve = vencimento(nf.data || rf.data);
-        out.push({ trib: t, cls: fl.indexOf('vencido') >= 0 ? 'erro' : 'pending',
-          txt: '<b class="pp-num">' + money(b.pending) + '</b> a apropriar · aguarda ' + ORG_A[t] + ' reconhecer a extinção do débito do fornecedor'
-            + (ve ? ' · vencimento da apropriação ' + br(ve) + (fl.indexOf('vencido') >= 0 ? ' (vencido)' : '') : '') });
+        var ve = vencimento(nf.data || rf.data), d = dias(ve);
+        if (fl.indexOf('vencido') >= 0) ponto('alerta', t, 'Apropriação vencida · ' + money(b.pending), 'Venceu em ' + br(ve) + '. Cobrar o fornecedor ou assumir o recolhimento.');
+        else if (fl.indexOf('em_risco') >= 0) ponto('atencao', t, 'Apropriação vence em ' + d + ' dia' + (d === 1 ? '' : 's') + ' · ' + money(b.pending), 'Vence em ' + br(ve) + '. Cobrar o fornecedor ou assumir o recolhimento.');
+        else info.push({ trib: t, txt: money(b.pending) + ' a apropriar · vence em ' + br(ve) });
       }
-      if (b.available > 0) out.push({ trib: t, cls: fl.indexOf('a_prescrever') >= 0 ? 'pending' : 'ok',
-        txt: '<b class="pp-num">' + money(b.available) + '</b> disponível para compensação' + (rf.prazoArt54Prox ? ' · limite do art. 54 mais próximo ' + br(rf.prazoArt54Prox) : '') });
-      if (b.refund_requested > 0) out.push({ trib: t, cls: 'pending', txt: '<b class="pp-num">' + money(b.refund_requested) + '</b> em pedido de ressarcimento · aguarda a decisão' });
-      if (fl.indexOf('inconsistencia') >= 0) out.push({ trib: t, cls: 'erro', txt: 'Inconsistência aberta neste tributo · ver Inconsistências vinculadas' });
+      if (b.available > 0) {
+        if (fl.indexOf('a_prescrever') >= 0) { var dp = dias(rf.prazoArt54Prox); ponto('atencao', t, 'Prazo do art. 54 em ' + dp + ' dias · ' + money(b.available), 'Limite em ' + br(rf.prazoArt54Prox) + '. Priorizar na compensação.'); }
+        else info.push({ trib: t, txt: money(b.available) + ' disponível' + (rf.prazoArt54Prox ? ' · art. 54 até ' + br(rf.prazoArt54Prox) : '') });
+      }
+      if (b.refund_requested > 0) info.push({ trib: t, txt: money(b.refund_requested) + ' em pedido de ressarcimento' });
+      if (fl.indexOf('inconsistencia') >= 0) {
+        var rot = (rf._inconsistencias || []).map(function (i) { return i.tipoLabel || i.tipo; }).filter(Boolean);
+        ponto('alerta', t, 'Inconsistência aberta', (rot.length ? curto(rot.join(', '), 70) + '. ' : '') + 'Tratar na fila de Inconsistências.');
+      }
+      var g = window.shGlosa && window.shGlosa.ficha ? window.shGlosa.ficha(rf.id) : null;
+      if (g && g.status !== 'revertida') {
+        var tipoG = g.status === 'impugnada' ? 'IMPUGNAÇÃO' : g.status === 'definitiva' ? 'GLOSA DEFINITIVA' : 'GLOSA';
+        var evG = (evs || []).filter(function (e) { return e.rfId === rf.id && e.tipo === tipoG; })[0];
+        if (g.status === 'impugnada') ponto('atencao', t, 'Glosa em impugnação · ' + money(g.valor), 'Processo ' + g.processo + '; valor bloqueado até a decisão.', evG);
+        else if (g.status === 'definitiva' || g.status === 'mantida') ponto('alerta', t, 'Glosa definitiva · ' + money(g.valor), 'Perda definitiva' + (g.definitivaEm ? ' desde ' + br(g.definitivaEm) : '') + '.', evG);
+        else ponto('alerta', t, 'Glosa aberta · ' + money(g.valor), 'Impugnar até ' + br(g.prazoImpugnacao) + ' (ficha ' + g.id + ').', evG);
+      }
+    });
+    // conciliação: vale o registro mais recente de cada etapa, por tributo
+    var ultimo = {};
+    (evs || []).forEach(function (e) {
+      if ((e.tipo === 'CONC APURAÇÃO' || e.tipo === 'CONC FINANCEIRA') && e.ts) { var k = e.tipo + '|' + e.trib; if (!ultimo[k] || e.ts > ultimo[k].ts) ultimo[k] = e; }
+    });
+    Object.keys(ultimo).forEach(function (k) {
+      var e = ultimo[k], fin = e.tipo === 'CONC FINANCEIRA', id = (/(C(?:APUR|FIN)-[0-9A-F]+)/.exec(e.desc) || [])[1] || '';
+      if (e.cls === 'pending') ponto('atencao', e.trib, 'Conciliação ' + (fin ? 'financeira' : 'de apuração') + ' pendente',
+        (fin ? 'Falta o comprovante do recolhimento' : 'Documento ainda não lido na apuração do órgão') + (id ? ' (' + id + ').' : '.'), e);
+      else if (e.cls === 'erro') ponto('alerta', e.trib, 'Conciliação ' + (fin ? 'financeira' : 'de apuração') + ' com divergência',
+        'Não bate com o órgão' + (id ? ' (' + id + ')' : '') + '. Analisar na Conciliação.', e);
     });
     (evs || []).forEach(function (e) {
-      if (e.tipo === 'ERP' && e.entrega !== 'entregue') out.push({ trib: e.trib, cls: e.entrega === 'falhou' ? 'erro' : 'pending', txt: esc(e.titulo) + ' ' + (e.entrega === 'falhou' ? 'não chegou ao ERP · reenvio manual em Integrações' : 'sem confirmação do ERP · reenvio automático') });
-      if (!e.ts && e.tipo === 'AGUARDANDO') out.push({ trib: e.trib, cls: 'pending', txt: e.desc });
+      if (e.alerta || !e.ts) return;
+      if (e.tipo === 'ERP' && e.entrega === 'pendente') ponto('atencao', e.trib, 'ERP sem confirmação', e.titulo.replace('Webhook ', '') + ': reenvio automático em andamento.', e);
+      else if (e.tipo === 'ERP' && e.entrega === 'falhou') ponto('alerta', e.trib, 'ERP não recebeu o evento', e.titulo.replace('Webhook ', '') + ': reenviar em Integrações › Log de entregas.', e);
+      else if (e.tipo === 'INCONSISTÊNCIA' || (e.cls === 'erro' && ['risco', 'conciliacao', 'erp'].indexOf(e.fase) < 0)) ponto('alerta', e.trib, e.titulo, curto(e.desc, 90), e);
     });
-    return out;
+    (evs || []).forEach(function (e) { if (!e.ts && e.tipo === 'AGUARDANDO') info.push({ trib: e.trib, txt: curto(e.desc, 90) }); });
+    al.sort(function (a, b) { return (a.nivel === 'alerta' ? 0 : 1) - (b.nivel === 'alerta' ? 0 : 1); });
+    return { alertas: al, info: info };
   };
 
   /* ── peças da trilha ──────────────────────────────────────────────────── */
@@ -340,17 +376,23 @@
     var c = { entregue: 'ok', pendente: 'pending', falhou: 'erro' }[e.entrega];
     return '<span class="pp-st pp-st-' + c + '">' + e.entrega + '</span>';
   }
-  function pendHtml(pend) {
-    if (!pend.length) return '';
-    return '<div class="pp-pend"><div class="pp-sub pp-sub0">Situação agora</div>' + pend.map(function (p) {
-      return '<div class="pp-pend-i">' + chipTrib(p.trib) + '<span class="pp-st pp-st-' + p.cls + '">' + ({ ok: 'ok', pending: 'atenção', erro: 'alerta' }[p.cls]) + '</span><span>' + p.txt + '</span></div>';
-    }).join('') + '</div>';
+  var NIVEL = { alerta: ['alerta', 'erro'], atencao: ['atenção', 'pending'] };
+  function situacaoHtml(s) {
+    if (!s.alertas.length && !s.info.length) return '';
+    var n = s.alertas.length;
+    return '<div class="pp-pend"><div class="pp-sub pp-sub0">Situação agora · ' + (n ? n + ' ponto' + (n > 1 ? 's' : '') + ' de atenção' : 'nenhum ponto de atenção') + '</div>'
+      + s.alertas.map(function (a) {
+        return '<div class="pp-pend-i">' + chipTrib(a.trib) + '<span class="pp-st pp-st-' + NIVEL[a.nivel][1] + '">' + NIVEL[a.nivel][0] + '</span>'
+          + '<span><strong class="pp-forte-t">' + esc(a.titulo) + '</strong> <span class="pp-mut">— ' + esc(a.det) + '</span></span></div>';
+      }).join('')
+      + s.info.map(function (x) { return '<div class="pp-pend-i">' + chipTrib(x.trib) + '<span class="pp-mut">' + esc(x.txt) + '</span></div>'; }).join('')
+      + '</div>';
   }
-  function resumo(evs) {
+  function resumo(evs, s) {
     var mov = evs.filter(function (e) { return e.mov; }).length, erp = evs.filter(function (e) { return e.fase === 'erp'; }).length;
-    var al = evs.filter(function (e) { return e.cls === 'erro' || e.cls === 'pending'; }).length;
+    var n = s.alertas.length;
     return '<div class="pp-resumo">' + evs.length + ' registros · ' + mov + ' movimentos de valor · ' + erp + ' integrações com o ERP'
-      + (al ? ' · <span class="pp-alerta">' + al + ' alerta(s)</span>' : '') + '</div>';
+      + (n ? ' · <span class="pp-alerta">' + n + ' ponto' + (n > 1 ? 's' : '') + ' de atenção</span>' : '') + '</div>';
   }
 
   /* ── histórico do ciclo: trilha de auditoria (proposta 3) ─────────────── */
@@ -366,7 +408,8 @@
     var rows = evs.map(function (e) {
       return '<tr data-trib="' + (e.trib || 'doc') + '" data-orig="' + e.origem + '" data-ts="' + esc(e.ts || '') + '" onclick="this.classList.toggle(\'aberto\')">'
         + '<td class="pp-num pp-mut">' + brTs(e.ts) + '</td><td>' + chipTrib(e.trib) + '</td><td class="pp-mut">' + ORIGEM_ROT[e.origem] + '</td>'
-        + '<td><strong class="pp-forte-t">' + esc(e.titulo) + '</strong> ' + statusErp(e) + '<div class="pp-ev-desc">' + e.desc + (e.descEntrega ? ' · ' + e.descEntrega : '') + '</div></td>'
+        + '<td><strong class="pp-forte-t">' + esc(e.titulo) + '</strong> ' + statusErp(e)
+        + (e.alerta ? ' <span class="pp-st pp-st-' + NIVEL[e.alerta][1] + '">' + NIVEL[e.alerta][0] + '</span>' : '') + '<div class="pp-ev-desc">' + e.desc + (e.descEntrega ? ' · ' + e.descEntrega : '') + '</div></td>'
         + '<td>' + (e.valor > 0 && e.para !== undefined ? efeitoHtml(e) : '<span class="pp-mut">—</span>') + '</td><td class="pp-mut">' + esc(e.ator) + '</td></tr>';
     }).join('');
     return '<div data-pp-trilha>' + tool + '<div class="pp-scroll"><table class="pp-tab pp-trilha-t"><thead><tr><th>Data e hora</th><th>Tributo</th><th>Origem</th><th>Evento</th><th>Valor e efeito</th><th>Quem registrou</th></tr></thead><tbody>'
@@ -416,7 +459,9 @@
   X.historico = function (key) {
     var c = X._cache[key]; if (!c) return '';
     if (!c.evs.length) return '<div class="pp-mut">Nenhum evento disponível.</div>';
-    return resumo(c.evs) + pendHtml(X.pendencias(c.nf, c.rfs, c.evs)) + trilha(c, key);
+    c.evs.forEach(function (e) { delete e.alerta; });
+    var s = X.situacao(c.nf, c.rfs, c.evs);
+    return resumo(c.evs, s) + situacaoHtml(s) + trilha(c, key);
   };
 
   /* ═══ aba Apuração assistida: trilha de auditoria por imposto ═════════ */
