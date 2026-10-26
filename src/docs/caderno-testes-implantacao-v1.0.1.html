@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caderno de Testes da Implantação · SplitHub v1.0.1</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 980px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--blue); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--blue); margin-bottom: 10px; }
+h1 { font-size: 28px; font-weight: 800; line-height: 1.18; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 700px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.purple { background: var(--purple-d); color: var(--purple); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--blue); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 48px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--blue); background: var(--blue-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 26px 0 8px; }
+h4 { font-size: 12px; font-weight: 700; color: var(--txt2); margin: 18px 0 7px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--blue); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.jid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+td.tc { text-align: center; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--blue); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+.code-block code .r { color: var(--red); }
+
+/* ── Ficha de jornada ── */
+.jor { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 18px 0; overflow: hidden; }
+.jor-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.jor-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 4px; flex-shrink: 0; }
+.jor-name { font-size: 14.5px; font-weight: 700; color: var(--txt1); }
+.jor-cad { font-size: 10.5px; font-weight: 700; color: var(--txt3); margin-left: auto; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.jor-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-bottom: 1px solid var(--brd); background: var(--sur2); }
+@media (max-width: 700px) { .jor-meta { grid-template-columns: 1fr; } }
+.jor-meta > div { padding: 11px 18px; border-right: 1px solid var(--brd); }
+.jor-meta > div:last-child { border-right: none; }
+.jm-k { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 3px; }
+.jm-v { font-size: 12px; color: var(--txt1); font-weight: 500; line-height: 1.45; }
+.jor-body { padding: 6px 18px 16px; }
+
+.step { display: flex; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--brd); }
+.step:last-child { border-bottom: none; }
+.step-n { width: 24px; height: 24px; border-radius: 50%; background: var(--blue-d); color: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+.step-main { flex: 1; min-width: 0; }
+.step-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 5px; }
+.step-acao { font-size: 13px; font-weight: 600; color: var(--txt1); }
+.step-onde { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--sur2); color: var(--txt2); border: 1px solid var(--brd); white-space: nowrap; flex-shrink: 0; }
+.step-lay { display: grid; grid-template-columns: 78px 1fr; gap: 3px 10px; font-size: 11.5px; margin-top: 6px; }
+@media (max-width: 560px) { .step-lay { grid-template-columns: 1fr; gap: 1px; } }
+.sl-k { color: var(--txt3); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; padding-top: 1px; }
+.sl-v { color: var(--txt2); }
+.sl-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--blue); }
+.sl-risco { color: var(--amber); }
+.sl-inst { color: var(--teal); }
+.step-dec { margin-top: 7px; padding: 8px 12px; background: var(--purple-d); border-left: 2px solid var(--purple); border-radius: 0 5px 5px 0; font-size: 11.5px; color: var(--txt2); }
+.step-dec strong { color: var(--purple); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 2px; }
+
+/* cores por natureza de jornada */
+.nat-setup   { background: var(--purple-d); color: var(--purple); }
+.nat-ciclo   { background: var(--teal-d);   color: var(--teal); }
+.nat-excecao { background: var(--red-d);    color: var(--red); }
+.nat-risco   { background: var(--amber-d);  color: var(--amber); }
+.nat-report  { background: var(--blue-d);   color: var(--blue); }
+.nat-ext     { background: var(--gray-d);   color: var(--gray); }
+
+.leg { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 0 4px; }
+.leg-i { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--txt2); }
+.leg-s { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--blue); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+
+/* ── v3.0: telas, caderno de testes, fases ── */
+.tela { margin: 14px 0 6px; }
+.tela a { display: block; border: 1px solid var(--brd); border-radius: 8px; overflow: hidden; background: var(--sur2); }
+.tela img { display: block; width: 100%; height: auto; }
+.tela.estreita a { max-width: 560px; }
+.tela figcaption { font-size: 11.5px; color: var(--txt3); margin-top: 6px; }
+.telas { margin: 6px 0 4px; }
+.jor-body .callout { margin: 12px 0 4px; }
+.jor-prds { font-size: 11px; color: var(--txt3); padding: 10px 18px; border-top: 1px solid var(--brd); background: var(--sur2); }
+.jor-prds a { color: var(--blue); text-decoration: none; }
+.jor-faixa { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--sur2); color: var(--txt2); border: 1px solid var(--brd); white-space: nowrap; }
+.jor-nova { font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; background: var(--green-d); color: var(--green); }
+
+.cad { border: 1px solid var(--brd); border-radius: 10px; margin: 10px 0 30px; overflow: hidden; background: var(--sur); }
+.cad-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 11px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.cad-t { font-size: 12px; font-weight: 700; color: var(--txt1); }
+.cad-s { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.cad .table-wrap { margin: 0; border: none; border-radius: 0; }
+.cad td { font-size: 12px; }
+.cad td.cid { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+.cad td.cesp { color: var(--txt1); }
+.cad td.cres { font-size: 11px; color: var(--txt3); }
+.fase { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+.fase.f1 { background: var(--purple-d); color: var(--purple); }
+.fase.f2 { background: var(--blue-d); color: var(--blue); }
+.fase.f3 { background: var(--teal-d); color: var(--teal); }
+.fase.f4 { background: var(--amber-d); color: var(--amber); }
+.prod { display: inline-block; font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
+.prod.ok { background: var(--green-d); color: var(--green); }
+.prod.parcial { background: var(--amber-d); color: var(--amber); }
+.prod.nao { background: var(--red-d); color: var(--red); }
+.prod.integ { background: var(--blue-d); color: var(--blue); }
+.prod.def { background: var(--purple-d); color: var(--purple); }
+
+.svgwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--brd); border-radius: 10px; background: var(--sur); padding: 12px; margin: 14px 0; }
+.svgwrap svg { display: block; min-width: 760px; width: 100%; height: auto; }
+.leg-s { border: 2px solid currentColor; }
+.svgwrap text { font-family: 'Inter', system-ui, sans-serif; }
+
+.mat td.tc { font-size: 13px; }
+.mat th.jh { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.step-dec strong { display: inline; font-size: inherit; text-transform: none; letter-spacing: normal; color: var(--txt1); margin: 0; }
+.step-dec .dec-t { display: block; color: var(--purple); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+
+
+.fase { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+.fase.f1 { background: var(--purple-d); color: var(--purple); }
+.fase.f2 { background: var(--blue-d); color: var(--blue); }
+.fase.f3 { background: var(--teal-d); color: var(--teal); }
+.fase.f4 { background: var(--amber-d); color: var(--amber); }
+.prod { display: inline-block; font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
+.prod.ok { background: var(--green-d); color: var(--green); }
+.prod.parcial { background: var(--amber-d); color: var(--amber); }
+.prod.integ { background: var(--blue-d); color: var(--blue); }
+.jb { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 18px 0 28px; overflow: hidden; scroll-margin-top: 20px; }
+.jb-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 13px 18px; border-bottom: 1px solid var(--brd); }
+.jb-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 4px; background: var(--blue-d); color: var(--blue); }
+.jb-nome { font-size: 14.5px; font-weight: 700; color: var(--txt1); }
+.jb-n { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.jb .jor-meta > div { padding: 10px 18px; }
+.jb .table-wrap { margin: 0; border: none; border-radius: 0; }
+.jb td { font-size: 12px; }
+td.cid { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+td.conde { font-size: 11px; color: var(--txt3); min-width: 120px; }
+td.cesp { color: var(--txt1); }
+td.cres { font-size: 11px; color: var(--txt3); }
+td.cexe { font-size: 11px; color: var(--txt2); white-space: nowrap; line-height: 1.9; }
+.campo td { height: 34px; }
+.campo td:first-child { width: 34%; font-weight: 600; color: var(--txt1); }
+.assin td { height: 46px; }
+.acoes { display: flex; gap: 8px; margin: -6px 0 22px; }
+.btn-imp { font: 600 12px/1 'Inter', system-ui, sans-serif; padding: 9px 14px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); cursor: pointer; }
+.btn-imp:hover { border-color: var(--blue); color: var(--blue); }
+@media print {
+  :root, :root[data-theme="dark"], :root:not([data-theme="light"]) {
+    --bg: #FFFFFF; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #CBD2DE;
+    --txt1: #131720; --txt2: #3A4456; --txt3: #6B7385;
+    --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1); --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+    --red: #D63A49; --red-d: rgba(214,58,73,.08); --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+    --green: #1A7940; --green-d: rgba(26,121,64,.08); --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+    --gray: #6B7280; --gray-d: rgba(107,114,128,.08); --mono: #EDF0F5;
+  }
+  body { padding: 0; font-size: 11px; }
+  .no-print, .back, .toc { display: none; }
+  .table-wrap { overflow: visible; }
+  table { font-size: 9.5px; }
+  th, td { padding: 5px 6px; }
+  .jb { break-before: page; border-color: var(--brd); }
+  tr { break-inside: avoid; }
+}
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <a class="back no-print" href="prds.html">← Hub de PRDs</a>
+
+  <div class="eyebrow">Implantação · Caderno de testes</div>
+  <h1>Caderno de Testes da Implantação</h1>
+  <p class="subtitle">Os casos de teste que conduzem a implantação do SplitHub no ambiente do cliente e definem os critérios de aceite. Cada caso diz onde é executado, com que dados, e o que precisa acontecer para ser aprovado.</p>
+
+  <div class="meta-bar">
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0.1</span></div>
+    <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">26/10/2026</span></div>
+    <div class="meta-pill"><span class="meta-label">Jornadas</span>&nbsp;<span class="meta-val">12</span></div>
+    <div class="meta-pill"><span class="meta-label">Casos de teste</span>&nbsp;<span class="meta-val">81</span></div>
+    <div class="meta-pill"><span class="meta-label">Fases</span>&nbsp;<span class="meta-val">4</span></div>
+  </div>
+  <div class="acoes no-print"><button class="btn-imp" onclick="window.print()">Imprimir ou salvar em PDF</button></div>
+
+  <div class="toc">
+    <div class="toc-title">Índice</div>
+    <ul class="toc-list">
+      <li><a href="#s01"><span class="toc-num">01</span> Dados da implantação</a></li>
+      <li><a href="#s02"><span class="toc-num">02</span> Como usar este caderno</a></li>
+      <li><a href="#s03"><span class="toc-num">03</span> Plano por fase</a></li>
+      <li><a href="#s04"><span class="toc-num">04</span> Critérios de aceite</a></li>
+      <li><a href="#j-01"><span class="toc-num">J-01</span> Implantação da plataforma</a></li>
+      <li><a href="#j-02"><span class="toc-num">J-02</span> Ingestão e validação de documentos fiscais</a></li>
+      <li><a href="#j-03"><span class="toc-num">J-03</span> Operação de pagamentos RAD</a></li>
+      <li><a href="#j-04"><span class="toc-num">J-04</span> Conciliação e apropriação do crédito</a></li>
+      <li><a href="#j-17"><span class="toc-num">J-17</span> Apuração do débito e extinção</a></li>
+      <li><a href="#j-15"><span class="toc-num">J-15</span> Fechamento da competência</a></li>
+      <li><a href="#j-05"><span class="toc-num">J-05</span> Tratamento de inconsistências</a></li>
+      <li><a href="#j-06"><span class="toc-num">J-06</span> Prevenção de perda por prazo</a></li>
+      <li><a href="#j-07"><span class="toc-num">J-07</span> Governança contratual</a></li>
+      <li><a href="#j-08"><span class="toc-num">J-08</span> Prestação de contas e decisão</a></li>
+      <li><a href="#j-09"><span class="toc-num">J-09</span> Relação com o fornecedor pelo portal</a></li>
+      <li><a href="#j-10"><span class="toc-num">J-10</span> Esclarecer uma dúvida de enquadramento</a></li>
+      <li><a href="#s06"><span class="toc-num">06</span> Registro de defeitos</a></li>
+      <li><a href="#s07"><span class="toc-num">07</span> Termo de aceite</a></li>
+    </ul>
+  </div>
+
+  <!-- ══ 01 ══ -->
+  <div class="section" id="s01">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Dados da implantação</span></div>
+    <div class="table-wrap"><table class="campo"><tbody>
+      <tr><td>Cliente</td><td></td></tr>
+      <tr><td>CNPJs no escopo</td><td></td></tr>
+      <tr><td>ERP e middleware</td><td></td></tr>
+      <tr><td>Ambiente de homologação (sandbox)</td><td>https://sandbox-api.splithub.com.br/v1</td></tr>
+      <tr><td>Ambiente de produção</td><td>https://api.splithub.com.br/v1</td></tr>
+      <tr><td>Responsável do cliente</td><td></td></tr>
+      <tr><td>Responsável Positivo</td><td></td></tr>
+      <tr><td>Início da implantação</td><td></td></tr>
+      <tr><td>Previsão de aceite</td><td></td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- ══ 02 ══ -->
+  <div class="section" id="s02">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Como usar este caderno</span></div>
+    <p>Os casos estão agrupados pela jornada do usuário que eles provam, na ordem em que a implantação acontece. Cada caso pertence a uma das quatro fases, e uma fase só começa depois que os casos obrigatórios da anterior forem aprovados.</p>
+    <div class="table-wrap"><table><thead><tr><th>Campo</th><th>O que significa</th></tr></thead><tbody>
+      <tr><td><strong>ID</strong></td><td>Identificador do caso, citado no termo de aceite. A numeração acompanha o catálogo de casos do produto; um número ausente é um caso fora do escopo desta implantação</td></tr>
+      <tr><td><strong>Fase</strong></td><td>F1 configuração · F2 integração · F3 homologação · F4 operação assistida</td></tr>
+      <tr><td><strong>Onde</strong></td><td>Módulo e tela da plataforma em que o caso é executado</td></tr>
+      <tr><td><strong>Cenário e dados</strong></td><td>O que montar e o que fazer. Os valores são exemplos redondos; a CBS e o IBS são sempre tratados separadamente</td></tr>
+      <tr><td><strong>Resultado esperado</strong></td><td>O critério de aceite: se acontecer, o caso é aprovado; se não, é reprovado e gera um defeito</td></tr>
+      <tr><td><strong>Disponibilidade</strong></td><td>A situação da funcionalidade na versão atual da plataforma</td></tr>
+      <tr><td><strong>Execução</strong></td><td>Resultado, data e, à parte, a evidência — captura de tela, protocolo do órgão ou payload</td></tr>
+    </tbody></table></div>
+    <div class="leg">
+      <span class="leg-i"><span class="prod ok">Disponível</span> executável desde o início da implantação</span>
+      <span class="leg-i"><span class="prod integ">Com a integração</span> depende das credenciais e da conexão com a Receita Federal, o Comitê Gestor ou o ERP do cliente</span>
+      <span class="leg-i"><span class="prod parcial">Em evolução</span> condicionado à entrega acordada no plano do projeto, antes do portão da fase</span>
+    </div>
+  </div>
+
+  <!-- ══ 03 ══ -->
+  <div class="section" id="s03">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Plano por fase</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Fase</th><th>Objetivo</th><th>Ambiente</th><th>Casos</th><th>Portão de saída</th><th>Previsto</th><th>Concluído</th></tr></thead><tbody>
+      <tr><td><span class="fase f1">F1</span> <strong>Configuração</strong></td><td>Organização, fornecedores, contratos, política de RAD, usuários e automações</td><td>Homologação</td><td>10 — <a class="xref" href="#j01">CT-J01-01</a>, <a class="xref" href="#j01">CT-J01-02</a>, <a class="xref" href="#j01">CT-J01-03</a>, <a class="xref" href="#j01">CT-J01-08</a>, <a class="xref" href="#j01">CT-J01-09</a>, <a class="xref" href="#j06">CT-J06-04</a>, <a class="xref" href="#j07">CT-J07-01</a>, <a class="xref" href="#j07">CT-J07-02</a>, <a class="xref" href="#j08">CT-J08-04</a>, <a class="xref" href="#j09">CT-J09-06</a></td><td>Cobertura contratual de 100% e perfis validados</td><td></td><td></td></tr>
+      <tr><td><span class="fase f2">F2</span> <strong>Integração</strong></td><td>Conexões de entrada e saída, leituras da Receita Federal e do Comitê Gestor e entrega ao ERP</td><td>Homologação, com o middleware do cliente</td><td>9 — <a class="xref" href="#j01">CT-J01-04</a>, <a class="xref" href="#j01">CT-J01-05</a>, <a class="xref" href="#j01">CT-J01-06</a>, <a class="xref" href="#j01">CT-J01-07</a>, <a class="xref" href="#j03">CT-J03-04</a>, <a class="xref" href="#j03">CT-J03-05</a>, <a class="xref" href="#j04">CT-J04-01</a>, <a class="xref" href="#j04">CT-J04-02</a>, <a class="xref" href="#j05">CT-J05-08</a></td><td>Chamadas aceitas, webhooks entregues com assinatura conferida e as duas leituras ativas</td><td></td><td></td></tr>
+      <tr><td><span class="fase f3">F3</span> <strong>Homologação</strong></td><td>As jornadas de ponta a ponta com dados reais do cliente</td><td>Homologação, com dados reais</td><td>56 — todos os demais</td><td>Casos obrigatórios aprovados e nenhum defeito crítico aberto</td><td></td><td></td></tr>
+      <tr><td><span class="fase f4">F4</span> <strong>Operação assistida</strong></td><td>Primeiro ciclo em produção, em paralelo com o processo atual</td><td>Produção</td><td>6 — <a class="xref" href="#j02">CT-J02-08</a>, <a class="xref" href="#j03">CT-J03-08</a>, <a class="xref" href="#j04">CT-J04-09</a>, <a class="xref" href="#j17">CT-J17-06</a>, <a class="xref" href="#j15">CT-J15-06</a>, <a class="xref" href="#j06">CT-J06-06</a></td><td>Primeiro fechamento conciliado e termo de aceite assinado</td><td></td><td></td></tr>
+    </tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>Disponibilidade</th><th class="num">Casos</th></tr></thead><tbody>
+      <tr><td><span class="prod ok">Disponível</span></td><td class="num">46</td></tr>
+      <tr><td><span class="prod integ">Com a integração</span></td><td class="num">14</td></tr>
+      <tr><td><span class="prod parcial">Em evolução</span></td><td class="num">21</td></tr>
+      <tr><td><strong>Total</strong></td><td class="num"><strong>81</strong></td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- ══ 04 ══ -->
+  <div class="section" id="s04">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Critérios de aceite</span></div>
+    <ul class="plain">
+      <li><strong>Todos os casos obrigatórios aprovados</strong>, cada um com evidência anexada.</li>
+      <li><strong>Nenhum defeito crítico aberto.</strong> Defeito não crítico só é aceito com data de correção acordada.</li>
+      <li><strong>Primeiro fechamento conciliado:</strong> o saldo a recolher de cada tributo igual ao da apuração assistida, ou toda diferença explicada por uma ocorrência (CT-J15-06).</li>
+      <li><strong>Nenhum crédito apropriado sem a leitura do órgão</strong> e nenhuma guia RAD vencida durante a operação assistida.</li>
+      <li><strong>Metas numéricas fixadas na F1</strong> — taxa de sucesso da ingestão, taxa de automação do RAD e aproveitamento do crédito —, com o valor de referência do cliente.</li>
+    </ul>
+    <div class="table-wrap"><table class="campo"><tbody>
+      <tr><td>Meta de taxa de sucesso da ingestão</td><td></td></tr>
+      <tr><td>Meta de taxa de automação do RAD</td><td></td></tr>
+      <tr><td>Meta de aproveitamento do crédito</td><td></td></tr>
+      <tr><td>Tempo de resposta do endpoint de webhooks do cliente</td><td></td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- ══ 05 ══ -->
+  <div class="section" id="s05">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Casos de teste por jornada</span></div>
+    <p class="sec-sub">81 casos em 12 jornadas, na ordem da implantação.</p>
+
+  <div class="jb" id="j-01">
+    <div class="jb-hdr"><span class="jb-id">J-01</span><span class="jb-nome">Implantação da plataforma</span><span class="jb-n">9 casos · fases F1, F2</span></div>
+    <div class="jor-meta">
+      <div><div class="jm-k">Quem executa</div><div class="jm-v">Administrador do cliente, com TI e fiscal</div></div>
+      <div><div class="jm-k">O que precisa ficar provado</div><div class="jm-v">Plataforma apta a receber documentos, com as leituras da Receita Federal e do Comitê Gestor ativas</div></div>
+      <div><div class="jm-k">Métrica acompanhada</div><div class="jm-v">100% dos CNPJs com contrato vigente e conexões aprovadas no teste</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Fase</th><th>Onde</th><th>Cenário e dados</th><th>Resultado esperado — critério de aceite</th><th>Responsável</th><th>Disponibilidade</th><th>Execução</th></tr></thead><tbody><tr><td class="cid">CT-J01-01</td><td><span class="fase f1">F1</span></td><td class="conde">Config → Organização</td><td>Carregar a lista oficial de CNPJs do cliente (matriz e filiais).</td><td class="cesp">Todos os CNPJs ativos, com UF e tipo; a contagem bate com a lista oficial.</td><td class="cres">Cliente · Positivo</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J01-02</td><td><span class="fase f1">F1</span></td><td class="conde">Config → Fornecedor</td><td>Carregar os fornecedores do período de teste e tentar cadastrar um CNPJ repetido.</td><td class="cesp">100% dos fornecedores do escopo cadastrados e agrupados; o CNPJ duplicado é bloqueado com mensagem.</td><td class="cres">Cliente</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J01-03</td><td><span class="fase f1">F1</span></td><td class="conde">Config → Contratos</td><td>Cadastrar um contrato RAD e um contrato Fornecedor; tentar uma vigência sobreposta no mesmo CNPJ.</td><td class="cesp">Cobertura contratual de 100% nos CNPJs do escopo; a sobreposição é recusada.</td><td class="cres">Cliente</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J01-04</td><td><span class="fase f2">F2</span></td><td class="conde">Config → Integrações · API</td><td>Emitir a credencial de entrada e enviar um documento ao sandbox por <code>POST /v1/fiscal-documents</code>; repetir com um escopo que não foi concedido.</td><td class="cesp">Documento aceito e com situação consultável; a chamada sem escopo volta <code>403</code>; o segredo não reaparece depois de fechada a tela.</td><td class="cres">TI do cliente</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J01-05</td><td><span class="fase f2">F2</span></td><td class="conde">Config → Integrações</td><td>Cadastrar a URL do middleware e rodar o teste de conexão.</td><td class="cesp">Webhook de teste entregue; o cliente valida a assinatura HMAC do cabeçalho; o endpoint responde <code>200</code> dentro do tempo acordado.</td><td class="cres">TI do cliente</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J01-06</td><td><span class="fase f2">F2</span></td><td class="conde">Config → Integrações</td><td>Configurar o certificado e-CNPJ e as credenciais da Receita Federal.</td><td class="cesp">Primeira consulta diária da CBS concluída, com protocolo, data e hora gravados.</td><td class="cres">TI · Positivo</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J01-07</td><td><span class="fase f2">F2</span></td><td class="conde">Config → Integrações</td><td>Configurar o recebimento do arquivo do IBS enviado pelo Comitê Gestor.</td><td class="cesp">Arquivo do IBS recebido e preservado com protocolo; campo não informado aparece como <em>n/i</em>, nunca como zero.</td><td class="cres">TI · Positivo</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J01-08</td><td><span class="fase f1">F1</span></td><td class="conde">Config → Execução RAD</td><td>Criar uma política automática por CNPJ e uma segunda que alcance o mesmo CNPJ por faixa de valor.</td><td class="cesp">A listagem mostra as guias previstas na próxima janela e nomeia a sobreposição entre as duas políticas.</td><td class="cres">Tesouraria</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J01-09</td><td><span class="fase f1">F1</span></td><td class="conde">Login · Config → Usuários</td><td>Entrar pelo provedor de identidade do cliente com dois perfis diferentes e com um usuário sem perfil.</td><td class="cesp">Login federado com MFA; cada perfil vê só o que lhe cabe; o usuário sem perfil não acessa.</td><td class="cres">TI do cliente</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr></tbody></table></div>
+  </div>
+  <div class="jb" id="j-02">
+    <div class="jb-hdr"><span class="jb-id">J-02</span><span class="jb-nome">Ingestão e validação de documentos fiscais</span><span class="jb-n">8 casos · fases F3, F4</span></div>
+    <div class="jor-meta">
+      <div><div class="jm-k">Quem executa</div><div class="jm-v">Analista fiscal, com TI na integração</div></div>
+      <div><div class="jm-k">O que precisa ficar provado</div><div class="jm-v">Cada documento válido vira um registro fiscal de CBS e um de IBS</div></div>
+      <div><div class="jm-k">Métrica acompanhada</div><div class="jm-v">% de documentos importados sem inconsistência</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Fase</th><th>Onde</th><th>Cenário e dados</th><th>Resultado esperado — critério de aceite</th><th>Responsável</th><th>Disponibilidade</th><th>Execução</th></tr></thead><tbody><tr><td class="cid">CT-J02-01</td><td><span class="fase f3">F3</span></td><td class="conde">API · Crédito → Documentos Fiscais</td><td>Enviar uma NF-e de entrada com CBS de R$ 1.000,00 e IBS de R$ 2.000,00.</td><td class="cesp">Documento importado; dois RFs criados com os valores exatos; <code>nao_apropriado</code>; partição 100% em <em>A apropriar</em>.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J02-02</td><td><span class="fase f3">F3</span></td><td class="conde">API de ingestão em lote</td><td>Enviar um lote de 500 documentos.</td><td class="cesp">Lote processado de forma assíncrona, com identificador; a contagem final é 500, sem perda nem duplicidade.</td><td class="cres">TI do cliente</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J02-03</td><td><span class="fase f3">F3</span></td><td class="conde">API · Inconsistências</td><td>Reenviar o mesmo documento; depois reenviar a mesma chave com valor diferente.</td><td class="cesp">O reenvio idêntico não cria registro novo; a chave com conteúdo divergente abre a ocorrência <em>RF duplicado</em>.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J02-04</td><td><span class="fase f3">F3</span></td><td class="conde">Config → Importação de DFs</td><td>Enviar um documento com chave de acesso inválida.</td><td class="cesp">Recusado com a mensagem da verificação; ocorrência <em>Chave de acesso inválida</em>.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J02-05</td><td><span class="fase f3">F3</span></td><td class="conde">Config → Importação de DFs</td><td>Enviar um documento destinado a um CNPJ fora da organização.</td><td class="cesp">Ocorrência <em>CNPJ divergente</em>; nenhum registro fiscal criado.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J02-06</td><td><span class="fase f3">F3</span></td><td class="conde">Débito → Documentos Fiscais</td><td>Enviar um documento de saída (NFCom ou NF-e de venda).</td><td class="cesp">O documento aparece em Débito e não em Crédito, com RFs de débito de CBS e de IBS.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J02-07</td><td><span class="fase f3">F3</span></td><td class="conde">Crédito → Registros Fiscais</td><td>Enviar notas de um fornecedor com contrato RAD e de outro sem contrato.</td><td class="cesp">A primeira herda RAD; a segunda aparece como não coberta no KPI de cobertura.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J02-08</td><td><span class="fase f4">F4</span></td><td class="conde">Config → Importação de DFs</td><td>Rodar uma semana de volume real do cliente.</td><td class="cesp">Taxa de sucesso igual ou acima da meta acordada na implantação; nenhum documento sem situação.</td><td class="cres">Cliente · Positivo</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr></tbody></table></div>
+  </div>
+  <div class="jb" id="j-03">
+    <div class="jb-hdr"><span class="jb-id">J-03</span><span class="jb-nome">Operação de pagamentos RAD</span><span class="jb-n">8 casos · fases F2, F3, F4</span></div>
+    <div class="jor-meta">
+      <div><div class="jm-k">Quem executa</div><div class="jm-v">Analista de tesouraria</div></div>
+      <div><div class="jm-k">O que precisa ficar provado</div><div class="jm-v">Guia gerada, entregue ao ERP, paga e comprovada</div></div>
+      <div><div class="jm-k">Métrica acompanhada</div><div class="jm-v">taxa de automação, entrega na primeira tentativa e zero guias vencidas</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Fase</th><th>Onde</th><th>Cenário e dados</th><th>Resultado esperado — critério de aceite</th><th>Responsável</th><th>Disponibilidade</th><th>Execução</th></tr></thead><tbody><tr><td class="cid">CT-J03-01</td><td><span class="fase f3">F3</span></td><td class="conde">Pagamentos → Execução Programada</td><td>Nota com contrato RAD vencendo em 3 dias; política automática com antecedência de 5 dias.</td><td class="cesp">As guias aparecem em Próxima execução antes da janela e são geradas nela, sem ação humana.</td><td class="cres">Tesouraria</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J03-02</td><td><span class="fase f3">F3</span></td><td class="conde">Pagamentos → Guias RAD</td><td>Documento com CBS de R$ 1.000,00 e IBS de R$ 2.000,00.</td><td class="cesp">Duas guias — DARF de R$ 1.000,00 e guia do IBS de R$ 2.000,00 —, nunca somadas.</td><td class="cres">Tesouraria</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J03-03</td><td><span class="fase f3">F3</span></td><td class="conde">Pagamentos → Execução Programada</td><td>Política em modo assistido: aprovar uma janela e recusar outra.</td><td class="cesp">A janela aprovada é enviada; a recusada não gera envio; as duas decisões ficam na trilha.</td><td class="cres">Tesouraria</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J03-04</td><td><span class="fase f2">F2</span></td><td class="conde">Config → Integrações · ERP</td><td>Reenviar ao ERP o mesmo lote.</td><td class="cesp">A chave de idempotência impede o pagamento em dobro; protocolo único gravado.</td><td class="cres">TI do cliente</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J03-05</td><td><span class="fase f2">F2</span></td><td class="conde">Pagamentos → Execução Programada</td><td>Derrubar o endpoint do ERP durante a janela.</td><td class="cesp">Retentativa com espera progressiva; a falha aparece em Histórico e falhas, com opção de reprocessar.</td><td class="cres">TI do cliente</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J03-06</td><td><span class="fase f3">F3</span></td><td class="conde">API · Pagamentos → Guias RAD</td><td>O ERP envia o comprovante por <code>POST /v1/rad/proofs</code>.</td><td class="cesp">Guia marcada paga, com comprovante vinculado; o crédito <strong>não</strong> se apropria até a confirmação do órgão.</td><td class="cres">TI · Tesouraria</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J03-07</td><td><span class="fase f3">F3</span></td><td class="conde">Config → Execução RAD</td><td>Duas políticas ativas alcançam o mesmo RF.</td><td class="cesp">O aviso nomeia o par; a guia não sai em duplicidade.</td><td class="cres">Tesouraria</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J03-08</td><td><span class="fase f4">F4</span></td><td class="conde">Pagamentos → Execução Programada</td><td>Um mês de janelas em produção.</td><td class="cesp">Zero guias vencidas; taxa de automação e de entrega na primeira tentativa dentro da meta acordada.</td><td class="cres">Tesouraria · Positivo</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr></tbody></table></div>
+  </div>
+  <div class="jb" id="j-04">
+    <div class="jb-hdr"><span class="jb-id">J-04</span><span class="jb-nome">Conciliação e apropriação do crédito</span><span class="jb-n">9 casos · fases F2, F3, F4</span></div>
+    <div class="jor-meta">
+      <div><div class="jm-k">Quem executa</div><div class="jm-v">Analista fiscal · controladoria</div></div>
+      <div><div class="jm-k">O que precisa ficar provado</div><div class="jm-v">Crédito apropriado — no todo ou em parte —, com a partição batendo com o que o órgão reconhece</div></div>
+      <div><div class="jm-k">Métrica acompanhada</div><div class="jm-v">% apropriado sobre o originado</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Fase</th><th>Onde</th><th>Cenário e dados</th><th>Resultado esperado — critério de aceite</th><th>Responsável</th><th>Disponibilidade</th><th>Execução</th></tr></thead><tbody><tr><td class="cid">CT-J04-01</td><td><span class="fase f2">F2</span></td><td class="conde">Config → Integrações</td><td>Rodar a leitura diária da CBS por uma semana.</td><td class="cesp">Uma coleta por dia, com protocolo, respeitando o limite de chamadas; falha gera retentativa e alerta.</td><td class="cres">TI · Positivo</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J04-02</td><td><span class="fase f2">F2</span></td><td class="conde">Config → Integrações · detalhe do documento</td><td>Receber um arquivo do IBS com campos não informados.</td><td class="cesp">Arquivo preservado e processado; os campos ausentes aparecem como <em>n/i</em>, fora da soma.</td><td class="cres">TI · Positivo</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J04-03</td><td><span class="fase f3">F3</span></td><td class="conde">Conciliação → Listagem</td><td>Documento com CBS de R$ 1.000,00 e IBS de R$ 2.000,00; os dois órgãos apuram os mesmos valores.</td><td class="cesp">CAPUR conciliada nos dois tributos, com delta zero.</td><td class="cres">Analista fiscal</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J04-04</td><td><span class="fase f3">F3</span></td><td class="conde">Conciliação · Inconsistências</td><td>O Comitê Gestor apura IBS de R$ 1.800,00 para o mesmo documento.</td><td class="cesp">Ocorrência <em>Valor IBS divergente da apuração</em>, com delta de R$ 200,00 e órgão Comitê Gestor; nenhum ajuste automático.</td><td class="cres">Analista fiscal</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J04-05</td><td><span class="fase f3">F3</span></td><td class="conde">Crédito → detalhe do documento</td><td>A Receita Federal reconhece R$ 600,00 dos R$ 1.000,00 de CBS.</td><td class="cesp">Partição: R$ 400,00 em <em>A apropriar</em> e R$ 600,00 em <em>Disponível</em>; a soma das parcelas fecha; prazo do art. 54 da fatia a partir do primeiro dia do período seguinte.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J04-06</td><td><span class="fase f3">F3</span></td><td class="conde">Crédito → detalhe do documento</td><td>O órgão glosa R$ 200,00 do IBS.</td><td class="cesp">Ficha de glosa criada; R$ 200,00 em <em>Inapropriável</em>; webhook de glosa entregue ao ERP; recomendação conforme a situação da glosa.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J04-07</td><td><span class="fase f3">F3</span></td><td class="conde">Conciliação → Listagem</td><td>O fornecedor recolhe a CBS e não recolhe o IBS.</td><td class="cesp">O documento fica em inconsistência financeira; o IBS não se apropria; a CBS segue independente.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J04-08</td><td><span class="fase f3">F3</span></td><td class="conde">Config → Integrações</td><td>Apropriação de uma fatia.</td><td class="cesp">Webhook <code>credit.appropriated</code> entregue ao ERP com o valor da fatia e o tributo.</td><td class="cres">TI do cliente</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J04-09</td><td><span class="fase f4">F4</span></td><td class="conde">Início · Crédito</td><td>Primeiro mês em produção.</td><td class="cesp">Aproveitamento dentro da meta acordada; nenhum crédito apropriado sem leitura do órgão.</td><td class="cres">Cliente · Positivo</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr></tbody></table></div>
+  </div>
+  <div class="jb" id="j-17">
+    <div class="jb-hdr"><span class="jb-id">J-17</span><span class="jb-nome">Apuração do débito e extinção</span><span class="jb-n">6 casos · fases F3, F4</span></div>
+    <div class="jor-meta">
+      <div><div class="jm-k">Quem executa</div><div class="jm-v">Analista fiscal</div></div>
+      <div><div class="jm-k">O que precisa ficar provado</div><div class="jm-v">Débito por documento e por tributo, com o meio de extinção conciliado</div></div>
+      <div><div class="jm-k">Métrica acompanhada</div><div class="jm-v">% do débito extinto e débito vencido igual a zero</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Fase</th><th>Onde</th><th>Cenário e dados</th><th>Resultado esperado — critério de aceite</th><th>Responsável</th><th>Disponibilidade</th><th>Execução</th></tr></thead><tbody><tr><td class="cid">CT-J17-01</td><td><span class="fase f3">F3</span></td><td class="conde">Débito → Documentos Fiscais</td><td>Emitir uma NFCom com CBS de R$ 1.000,00 e IBS de R$ 2.000,00.</td><td class="cesp">Dois RFs de débito com os valores exatos, em Débito → Documentos Fiscais.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J17-02</td><td><span class="fase f3">F3</span></td><td class="conde">Apuração IBS/CBS · Débito</td><td>Com R$ 600,00 de crédito de CBS disponível, apurar um débito de CBS de R$ 1.000,00.</td><td class="cesp">R$ 600,00 compensados e R$ 400,00 a recolher; o débito de IBS não é tocado.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J17-03</td><td><span class="fase f3">F3</span></td><td class="conde">Débito → Documentos Fiscais</td><td>Documento com o IBS extinto e a CBS não.</td><td class="cesp">O documento não aparece como <em>Extinto</em>.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J17-04</td><td><span class="fase f3">F3</span></td><td class="conde">Débito · Inconsistências</td><td>Documento emitido sem registro no órgão depois de 30 dias.</td><td class="cesp">Ocorrência <em>DF sem registro na apuração assistida</em>, com o órgão nomeado.</td><td class="cres">Analista fiscal</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J17-05</td><td><span class="fase f3">F3</span></td><td class="conde">Débito → Documentos Fiscais</td><td>Exportar a aba de documentos de saída em CSV.</td><td class="cesp">Status, inconsistência e método preenchidos no arquivo.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J17-06</td><td><span class="fase f4">F4</span></td><td class="conde">Débito → Documentos Fiscais</td><td>Carregar um ciclo real de faturamento.</td><td class="cesp">A fila absorve o pico; todos os documentos com RF dentro do prazo acordado.</td><td class="cres">TI · Positivo</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr></tbody></table></div>
+  </div>
+  <div class="jb" id="j-15">
+    <div class="jb-hdr"><span class="jb-id">J-15</span><span class="jb-nome">Fechamento da competência</span><span class="jb-n">6 casos · fases F3, F4</span></div>
+    <div class="jor-meta">
+      <div><div class="jm-k">Quem executa</div><div class="jm-v">Analista fiscal · controladoria</div></div>
+      <div><div class="jm-k">O que precisa ficar provado</div><div class="jm-v">Competência apurada por tributo, com a ordem do art. 53 aplicada, o saldo a recolher em guia e o saldo credor transportado</div></div>
+      <div><div class="jm-k">Métrica acompanhada</div><div class="jm-v">competência fechada no prazo e igual à apuração do órgão</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Fase</th><th>Onde</th><th>Cenário e dados</th><th>Resultado esperado — critério de aceite</th><th>Responsável</th><th>Disponibilidade</th><th>Execução</th></tr></thead><tbody><tr><td class="cid">CT-J15-01</td><td><span class="fase f3">F3</span></td><td class="conde">Apuração IBS/CBS</td><td>CBS: crédito apropriado de R$ 600,00 e débito de R$ 1.000,00.</td><td class="cesp">Saldo a recolher de R$ 400,00 em guia; o IBS apurado à parte.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J15-02</td><td><span class="fase f3">F3</span></td><td class="conde">Apuração IBS/CBS</td><td>CBS: crédito de R$ 1.500,00 e débito de R$ 1.000,00.</td><td class="cesp">Saldo credor de R$ 500,00, transportado e aberto no período seguinte como saldo anterior.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J15-03</td><td><span class="fase f3">F3</span></td><td class="conde">Apuração IBS/CBS · detalhe do registro</td><td>Saldo vencido de R$ 300,00 e débitos do período.</td><td class="cesp">O saldo vencido é consumido primeiro; os vínculos aparecem no detalhe de cada RF.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J15-04</td><td><span class="fase f3">F3</span></td><td class="conde">Apuração IBS/CBS</td><td>Mês com crédito apropriado e nenhum documento emitido.</td><td class="cesp">O período existe, marcado como <em>só créditos apropriados</em>.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J15-05</td><td><span class="fase f3">F3</span></td><td class="conde">Apuração IBS/CBS · Inconsistências</td><td>Comparar o valor a recolher com a apuração assistida de cada órgão.</td><td class="cesp">Valores iguais por tributo; diferença abre ocorrência.</td><td class="cres">Analista fiscal</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J15-06</td><td><span class="fase f4">F4</span></td><td class="conde">Apuração IBS/CBS</td><td>Primeiro fechamento em paralelo com o processo atual do cliente.</td><td class="cesp">Diferença zero, ou toda diferença explicada por uma ocorrência.</td><td class="cres">Controladoria · Positivo</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr></tbody></table></div>
+  </div>
+  <div class="jb" id="j-05">
+    <div class="jb-hdr"><span class="jb-id">J-05</span><span class="jb-nome">Tratamento de inconsistências</span><span class="jb-n">8 casos · fases F2, F3</span></div>
+    <div class="jor-meta">
+      <div><div class="jm-k">Quem executa</div><div class="jm-v">Analista fiscal · compliance</div></div>
+      <div><div class="jm-k">O que precisa ficar provado</div><div class="jm-v">Ocorrência resolvida com o efeito revertido, ou glosada com a ficha vinculada</div></div>
+      <div><div class="jm-k">Métrica acompanhada</div><div class="jm-v">tempo de resolução, valor em risco aberto e reincidência</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Fase</th><th>Onde</th><th>Cenário e dados</th><th>Resultado esperado — critério de aceite</th><th>Responsável</th><th>Disponibilidade</th><th>Execução</th></tr></thead><tbody><tr><td class="cid">CT-J05-01</td><td><span class="fase f3">F3</span></td><td class="conde">Inconsistências · detalhe do documento</td><td>Divergência de R$ 200,00 no IBS de um documento.</td><td class="cesp">Ocorrência <em>aberta</em>, família B, órgão Comitê Gestor, valor em risco de R$ 200,00; card visível no documento e no RF.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J05-02</td><td><span class="fase f3">F3</span></td><td class="conde">Inconsistências → Listagem</td><td>Divergência nos dois tributos do mesmo documento.</td><td class="cesp">Duas ocorrências, uma por tributo.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J05-03</td><td><span class="fase f3">F3</span></td><td class="conde">Inconsistências → Kanban</td><td>Assumir uma ocorrência sem informar responsável.</td><td class="cesp">A passagem para <em>em análise</em> exige responsável.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J05-04</td><td><span class="fase f3">F3</span></td><td class="conde">Inconsistências → detalhe</td><td>Mover para <em>aguardando emitente</em>.</td><td class="cesp">O prazo interno fica suspenso e o terceiro, registrado.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J05-05</td><td><span class="fase f3">F3</span></td><td class="conde">Inconsistências → detalhe</td><td>Resolver uma ocorrência sem descrever o desfecho.</td><td class="cesp">A ocorrência não fecha sem desfecho.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J05-06</td><td><span class="fase f3">F3</span></td><td class="conde">Inconsistências → detalhe</td><td>Glosar uma ocorrência.</td><td class="cesp">Exige ficha de glosa vinculada; o valor sai do fluxo de apropriação.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J05-07</td><td><span class="fase f3">F3</span></td><td class="conde">Inconsistências → Listagem</td><td>Detectar de novo a mesma causa num documento com ocorrência resolvida.</td><td class="cesp">A ocorrência original é reaberta; nenhuma segunda é criada.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J05-08</td><td><span class="fase f2">F2</span></td><td class="conde">Config → Automações</td><td>Ligar a integração com o sistema de chamados do cliente.</td><td class="cesp">As ocorrências escolhidas abrem chamado, com o mapeamento de campos configurado.</td><td class="cres">TI do cliente</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr></tbody></table></div>
+  </div>
+  <div class="jb" id="j-06">
+    <div class="jb-hdr"><span class="jb-id">J-06</span><span class="jb-nome">Prevenção de perda por prazo</span><span class="jb-n">6 casos · fases F1, F3, F4</span></div>
+    <div class="jor-meta">
+      <div><div class="jm-k">Quem executa</div><div class="jm-v">Gestor fiscal</div></div>
+      <div><div class="jm-k">O que precisa ficar provado</div><div class="jm-v">Crédito recuperado antes do vencimento e da prescrição</div></div>
+      <div><div class="jm-k">Métrica acompanhada</div><div class="jm-v">valor prescrito no período (meta: zero)</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Fase</th><th>Onde</th><th>Cenário e dados</th><th>Resultado esperado — critério de aceite</th><th>Responsável</th><th>Disponibilidade</th><th>Execução</th></tr></thead><tbody><tr><td class="cid">CT-J06-01</td><td><span class="fase f3">F3</span></td><td class="conde">Crédito → Visão Geral</td><td>Documentos a apropriar com idades de 20, 70 e 200 dias.</td><td class="cesp">Cada um na faixa correta do ageing; a soma das faixas é igual ao total a apropriar.</td><td class="cres">Gestor fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J06-02</td><td><span class="fase f3">F3</span></td><td class="conde">Crédito → Visão Geral</td><td>Crédito com limite do art. 54 em um mês determinado.</td><td class="cesp">Aparece no calendário de prescrição naquele mês.</td><td class="cres">Gestor fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J06-03</td><td><span class="fase f3">F3</span></td><td class="conde">Crédito → detalhe do documento</td><td>Num documento de fornecedor inadimplente, usar Assumir recolhimento.</td><td class="cesp">O documento passa a RAD, a guia entra em J-03 e o portal mostra o aviso ao fornecedor.</td><td class="cres">Tesouraria</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J06-04</td><td><span class="fase f1">F1</span></td><td class="conde">Config → Automações</td><td>Configurar a régua de cobrança com etapas antes e depois do vencimento.</td><td class="cesp">Régua salva com etapas, canal e condição. O disparo real ainda não existe.</td><td class="cres">Gestor fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J06-05</td><td><span class="fase f3">F3</span></td><td class="conde">Crédito → Visão Geral</td><td>Crédito com prazo expirado.</td><td class="cesp">Aparece em Créditos Prescritos e sai do aproveitável.</td><td class="cres">Gestor fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J06-06</td><td><span class="fase f4">F4</span></td><td class="conde">Crédito → Visão Geral</td><td>Primeiro trimestre em produção.</td><td class="cesp">Valor prescrito no período igual a zero.</td><td class="cres">Gestor fiscal</td><td><span class="prod integ">Com a integração</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr></tbody></table></div>
+  </div>
+  <div class="jb" id="j-07">
+    <div class="jb-hdr"><span class="jb-id">J-07</span><span class="jb-nome">Governança contratual</span><span class="jb-n">6 casos · fases F1, F3</span></div>
+    <div class="jor-meta">
+      <div><div class="jm-k">Quem executa</div><div class="jm-v">Administrador · jurídico</div></div>
+      <div><div class="jm-k">O que precisa ficar provado</div><div class="jm-v">Cobertura contratual mantida</div></div>
+      <div><div class="jm-k">Métrica acompanhada</div><div class="jm-v">volume de notas sob contrato vencido</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Fase</th><th>Onde</th><th>Cenário e dados</th><th>Resultado esperado — critério de aceite</th><th>Responsável</th><th>Disponibilidade</th><th>Execução</th></tr></thead><tbody><tr><td class="cid">CT-J07-01</td><td><span class="fase f1">F1</span></td><td class="conde">Config → Contratos</td><td>Conferir a cobertura depois da carga de contratos.</td><td class="cesp">100% dos CNPJs fornecedores do escopo com contrato vigente.</td><td class="cres">Administrador</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J07-02</td><td><span class="fase f1">F1</span></td><td class="conde">Config → Contratos</td><td>Cadastrar um contrato com vigência sobreposta à de outro.</td><td class="cesp">Gravação recusada, com o conflito nomeado.</td><td class="cres">Administrador</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J07-03</td><td><span class="fase f3">F3</span></td><td class="conde">Config → Contratos</td><td>Trocar o método de RAD para Fornecedor.</td><td class="cesp">Só as notas futuras mudam; o histórico registra o diff com autor e data.</td><td class="cres">Administrador</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J07-04</td><td><span class="fase f3">F3</span></td><td class="conde">Config → Contratos</td><td>Encerrar um contrato.</td><td class="cesp">A confirmação declara o impacto; o encerramento fica registrado no histórico.</td><td class="cres">Administrador</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J07-05</td><td><span class="fase f3">F3</span></td><td class="conde">Config → Fornecedor</td><td>Deixar um contrato vencer.</td><td class="cesp">O fornecedor aparece no filtro <em>sem contrato ativo</em> no dia seguinte, sem sincronização manual.</td><td class="cres">Administrador</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J07-06</td><td><span class="fase f3">F3</span></td><td class="conde">Config → Execução RAD</td><td>Política RAD por contrato com contrato vencido.</td><td class="cesp">As notas do contrato vencido saem do alcance da política.</td><td class="cres">Tesouraria</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr></tbody></table></div>
+  </div>
+  <div class="jb" id="j-08">
+    <div class="jb-hdr"><span class="jb-id">J-08</span><span class="jb-nome">Prestação de contas e decisão</span><span class="jb-n">4 casos · fases F1, F3</span></div>
+    <div class="jor-meta">
+      <div><div class="jm-k">Quem executa</div><div class="jm-v">CFO · controladoria</div></div>
+      <div><div class="jm-k">O que precisa ficar provado</div><div class="jm-v">Posição fiscal comunicada</div></div>
+      <div><div class="jm-k">Métrica acompanhada</div><div class="jm-v">índice de aproveitamento</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Fase</th><th>Onde</th><th>Cenário e dados</th><th>Resultado esperado — critério de aceite</th><th>Responsável</th><th>Disponibilidade</th><th>Execução</th></tr></thead><tbody><tr><td class="cid">CT-J08-01</td><td><span class="fase f3">F3</span></td><td class="conde">Início · Crédito</td><td>Comparar o aproveitamento do Início com o do Crédito no mesmo recorte.</td><td class="cesp">Mesmo número; CBS e IBS também separados; parcela do IBS não informada fora da conta.</td><td class="cres">Controladoria</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J08-02</td><td><span class="fase f3">F3</span></td><td class="conde">Início</td><td>Aplicar o filtro de grupo econômico.</td><td class="cesp">O recorte atravessa todos os cartões e gráficos da tela.</td><td class="cres">Controladoria</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J08-04</td><td><span class="fase f1">F1</span></td><td class="conde">Config → Automações</td><td>Agendar o relatório mensal de créditos.</td><td class="cesp">Relatório salvo com destinatários, formato e recorrência. O envio real ainda não existe.</td><td class="cres">Administrador</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J08-05</td><td><span class="fase f3">F3</span></td><td class="conde">Listagens</td><td>Exportar uma listagem filtrada em CSV.</td><td class="cesp">O arquivo respeita o filtro e as colunas visíveis.</td><td class="cres">Controladoria</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr></tbody></table></div>
+  </div>
+  <div class="jb" id="j-09">
+    <div class="jb-hdr"><span class="jb-id">J-09</span><span class="jb-nome">Relação com o fornecedor pelo portal</span><span class="jb-n">6 casos · fases F1, F3</span></div>
+    <div class="jor-meta">
+      <div><div class="jm-k">Quem executa</div><div class="jm-v">Fornecedor, com perfil restrito ao próprio CNPJ e ao grupo econômico</div></div>
+      <div><div class="jm-k">O que precisa ficar provado</div><div class="jm-v">O fornecedor sabe o que deve, comprova o que pagou e contesta o que discorda, sem contato manual</div></div>
+      <div><div class="jm-k">Métrica acompanhada</div><div class="jm-v">redução de contatos manuais</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Fase</th><th>Onde</th><th>Cenário e dados</th><th>Resultado esperado — critério de aceite</th><th>Responsável</th><th>Disponibilidade</th><th>Execução</th></tr></thead><tbody><tr><td class="cid">CT-J09-01</td><td><span class="fase f3">F3</span></td><td class="conde">Portal do Fornecedor</td><td>Entrar com o acesso de um fornecedor que responde por matriz e uma filial.</td><td class="cesp">Vê só os documentos dos dois CNPJs; não vê Crédito, Débito, Pagamentos nem Conciliação.</td><td class="cres">Fornecedor · Positivo</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J09-02</td><td><span class="fase f3">F3</span></td><td class="conde">Portal → Documentos Fiscais</td><td>Abrir um documento com CBS recolhida e IBS em aberto.</td><td class="cesp">Os dois tributos em linhas próprias, cada um com a sua situação.</td><td class="cres">Fornecedor</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J09-03</td><td><span class="fase f3">F3</span></td><td class="conde">Portal → guia</td><td>Anexar o comprovante PIX à guia.</td><td class="cesp">Comprovante vinculado à guia; a conciliação financeira do adquirente passa a vê-lo.</td><td class="cres">Fornecedor</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J09-04</td><td><span class="fase f3">F3</span></td><td class="conde">Portal → documento</td><td>Abrir um documento que o adquirente converteu para RAD.</td><td class="cesp">O aviso de recolhimento assumido aparece antes de qualquer ação de recolher.</td><td class="cres">Fornecedor</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J09-05</td><td><span class="fase f3">F3</span></td><td class="conde">Portal → contestação</td><td>Contestar um documento vencido e mandar uma mensagem.</td><td class="cesp">Contestação registrada com trilha; a mensagem chega ao adquirente.</td><td class="cres">Fornecedor</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J09-06</td><td><span class="fase f1">F1</span></td><td class="conde">Config → Fornecedor</td><td>Revogar o acesso de um fornecedor.</td><td class="cesp">O login é bloqueado; o último acesso fica visível para o adquirente.</td><td class="cres">Administrador</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr></tbody></table></div>
+  </div>
+  <div class="jb" id="j-10">
+    <div class="jb-hdr"><span class="jb-id">J-10</span><span class="jb-nome">Esclarecer uma dúvida de enquadramento</span><span class="jb-n">5 casos · fases F3</span></div>
+    <div class="jor-meta">
+      <div><div class="jm-k">Quem executa</div><div class="jm-v">Analista fiscal</div></div>
+      <div><div class="jm-k">O que precisa ficar provado</div><div class="jm-v">Resposta com a citação do dispositivo, ou diagnóstico guiado até o enquadramento</div></div>
+      <div><div class="jm-k">Métrica acompanhada</div><div class="jm-v">perguntas respondidas com citação válida</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Fase</th><th>Onde</th><th>Cenário e dados</th><th>Resultado esperado — critério de aceite</th><th>Responsável</th><th>Disponibilidade</th><th>Execução</th></tr></thead><tbody><tr><td class="cid">CT-J10-01</td><td><span class="fase f3">F3</span></td><td class="conde">Analytics → Assistente Tributário</td><td>Perguntar quando o crédito do adquirente se apropria.</td><td class="cesp">A resposta cita o dispositivo da LC 214/2025 de onde saiu.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J10-02</td><td><span class="fase f3">F3</span></td><td class="conde">Analytics → Assistente Tributário</td><td>Perguntar algo fora da legislação indexada.</td><td class="cesp">O assistente diz que não tem fonte, em vez de inventar.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J10-03</td><td><span class="fase f3">F3</span></td><td class="conde">Analytics → Assistente Tributário</td><td>Pedir o crédito total de IBS e CBS do período.</td><td class="cesp">Os números vêm por tributo, nunca somados.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J10-04</td><td><span class="fase f3">F3</span></td><td class="conde">Analytics → Assistente Tributário</td><td>Percorrer o diagnóstico guiado de uma devolução.</td><td class="cesp">A árvore termina num enquadramento com a referência.</td><td class="cres">Analista fiscal</td><td><span class="prod ok">Disponível</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr><tr><td class="cid">CT-J10-05</td><td><span class="fase f3">F3</span></td><td class="conde">Analytics → Assistente Tributário</td><td>Recarregar a página no meio de um diagnóstico.</td><td class="cesp">O histórico se mantém.</td><td class="cres">Analista fiscal</td><td><span class="prod parcial">Em evolução</span></td><td class="cexe">☐ Aprovado<br>☐ Reprovado<br>☐ Bloqueado<br>Data: ____/____</td></tr></tbody></table></div>
+  </div>
+  </div>
+
+  <!-- ══ 06 ══ -->
+  <div class="section" id="s06">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Registro de defeitos</span></div>
+    <p class="sec-sub">Todo caso reprovado abre uma linha aqui. Severidade: crítica (impede a fase), alta, média ou baixa.</p>
+    <div class="table-wrap"><table class="assin"><thead><tr><th>Nº</th><th>Caso</th><th>Descrição</th><th>Severidade</th><th>Responsável</th><th>Prazo</th><th>Situação</th></tr></thead><tbody>
+      <tr><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>6</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>7</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>8</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- ══ 07 ══ -->
+  <div class="section" id="s07">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Termo de aceite</span></div>
+    <p class="sec-sub">Cada fase é aceita em separado. O aceite final da implantação vem com o portão da F4.</p>
+    <div class="table-wrap"><table class="assin"><thead><tr><th>Fase</th><th>Casos aprovados</th><th>Pendências acordadas</th><th>Cliente — nome e assinatura</th><th>Positivo — nome e assinatura</th><th>Data</th></tr></thead><tbody>
+      <tr><td><span class="fase f1">F1</span> Configuração</td><td>&nbsp;&nbsp;&nbsp;&nbsp;de 10</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td><span class="fase f2">F2</span> Integração</td><td>&nbsp;&nbsp;&nbsp;&nbsp;de 9</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td><span class="fase f3">F3</span> Homologação</td><td>&nbsp;&nbsp;&nbsp;&nbsp;de 56</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td><span class="fase f4">F4</span> Operação assistida</td><td>&nbsp;&nbsp;&nbsp;&nbsp;de 6</td><td></td><td></td><td></td><td></td></tr>
+    </tbody></table></div>
+  </div>
+
+  <p style="font-size:11px;color:var(--txt3);text-align:center;margin-top:40px">SplitHub · Caderno de Testes da Implantação · v1.0.1 · 26/10/2026</p>
+</div>
+</body>
+</html>
