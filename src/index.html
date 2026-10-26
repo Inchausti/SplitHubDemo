@@ -810,6 +810,7 @@ tr:last-child td{border-bottom:none}
 [data-theme="light"] .sh-fp-apply{background:var(--teal);color:#fff}
 </style>
 <link rel="stylesheet" href="css/parcialidade.css?v=4"/>
+<link rel="stylesheet" href="css/usuarios.css?v=1"/>
 </head>
 <body>
 
@@ -3495,124 +3496,52 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
 
   <!-- GESTÃO DE USUÁRIOS -->
   <div id="admin-usuarios" class="sv">
-    <div class="kgrid k4" style="margin-bottom:20px">
-      <div class="kcard" ><div class="klbl">Usuários ativos</div><div class="kval">8</div><div class="ksub">Na organização</div></div>
-      <div class="kcard" ><div class="klbl">Administradores</div><div class="kval">2</div><div class="ksub">Acesso total</div></div>
-      <div class="kcard" ><div class="klbl">Convites pendentes</div><div class="kval">3</div><div class="ksub">Aguardando aceite</div></div>
-      <div class="kcard" ><div class="klbl">Inativos</div><div class="kval">1</div><div class="ksub">Acesso revogado</div></div>
-    </div>
+    <div id="usu-kpis" class="kgrid k4"></div>
 
     <div class="crd">
       <div class="sechdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-        <div><h2>Usuários da Organização</h2><p>Gerencie acessos, perfis e permissões dos membros da conta.</p></div>
-        <button class="btn btn-t" style="font-size:12px">+ Convidar usuário</button>
+        <div><h2>Usuários da Organização</h2><p>Quem acessa a conta e com que perfil. O convite vale 7 dias e a própria pessoa cria a senha.</p></div>
+        <button class="btn btn-t" style="font-size:12px" onclick="shUsu.convidar()">+ Convidar usuário</button>
       </div>
 
-      <!-- Filtros -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 14px">
-        <button class="btn" style="font-size:11px;padding:5px 12px;background:rgba(var(--teal-alt-rgb),.12);border-color:var(--teal);color:var(--teal);font-weight:600">Todos (12)</button>
-        <button class="btn" style="font-size:11px;padding:5px 12px">Ativos (8)</button>
-        <button class="btn" style="font-size:11px;padding:5px 12px">Pendentes (3)</button>
-        <button class="btn" style="font-size:11px;padding:5px 12px">Inativos (1)</button>
+      <div class="usu-filtros">
+        <input id="usu-busca" class="usu-busca" type="text" oninput="shUsu.render()" placeholder="Buscar nome ou e-mail" aria-label="Buscar usuário">
+        <select id="usu-f-perfil" onchange="shUsu.render()" aria-label="Filtrar por perfil">
+          <option value="">Todos os perfis</option>
+          <option value="administrador">Administrador</option>
+          <option value="fiscal">Fiscal</option>
+          <option value="tesouraria">Tesouraria</option>
+          <option value="leitura">Leitura</option>
+        </select>
+        <select id="usu-f-estado" onchange="shUsu.render()" aria-label="Filtrar por estado">
+          <option value="">Todos os estados</option>
+          <option value="ativo">Ativos</option>
+          <option value="convite">Convites</option>
+          <option value="inativo">Desativados</option>
+        </select>
+        <span id="usu-count" class="usu-count"></span>
       </div>
 
-      <!-- Tabela de usuários -->
       <div class="tcrd">
         <div class="twrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Usuário</th>
-              <th>E-mail</th>
-              <th>Perfil</th>
-              <th>Último acesso</th>
-              <th>Status</th>
-              <th class="r">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="usu-tbody">
-            <tr data-usu-status="ativo">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--on-primary-dark);flex-shrink:0">JS</div><div><div style="font-size:13px;font-weight:600;color:var(--txt1)">José da Silva</div><div style="font-size:11px;color:var(--txt3)">Você</div></div></div></td>
-              <td>jose.silva@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(var(--teal-alt-rgb),.15);color:var(--teal)">Administrador</span></td>
-              <td>Agora</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Ativo</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px;opacity:.4" disabled>Editar</button></td>
-            </tr>
-            <tr data-usu-status="ativo">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">MC</div><div><div style="font-size:13px;font-weight:600;color:var(--txt1)">Maria Costa</div></div></div></td>
-              <td>maria.costa@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(var(--teal-alt-rgb),.15);color:var(--teal)">Administrador</span></td>
-              <td>Hoje 09:14</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Ativo</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px">Editar</button></td>
-            </tr>
-            <tr data-usu-status="ativo">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--org-matriz);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">RL</div><div><div style="font-size:13px;font-weight:600;color:var(--txt1)">Rafael Lima</div></div></div></td>
-              <td>rafael.lima@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(var(--status-blue-rgb),.15);color:var(--blue)">Analista Fiscal</span></td>
-              <td>Ontem 16:42</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Ativo</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px">Editar</button></td>
-            </tr>
-            <tr data-usu-status="ativo">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">AF</div><div><div style="font-size:13px;font-weight:600;color:var(--txt1)">Ana Ferreira</div></div></div></td>
-              <td>ana.ferreira@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(var(--status-blue-rgb),.15);color:var(--blue)">Analista Fiscal</span></td>
-              <td>17/08 11:03</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Ativo</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px">Editar</button></td>
-            </tr>
-            <tr data-usu-status="ativo">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--teal-dark);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">PT</div><div><div style="font-size:13px;font-weight:600;color:var(--txt1)">Paulo Torres</div></div></div></td>
-              <td>paulo.torres@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(var(--status-amber-rgb),.15);color:var(--amber)">Controller</span></td>
-              <td>15/08 08:31</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Ativo</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px">Editar</button></td>
-            </tr>
-            <tr data-usu-status="pendente">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--txt3);flex-shrink:0">?</div><div><div style="font-size:13px;font-weight:600;color:var(--txt2)">Convite pendente</div></div></div></td>
-              <td>julia.mendes@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(var(--status-blue-rgb),.15);color:var(--blue)">Analista Fiscal</span></td>
-              <td>—</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--amber)"><span style="width:7px;height:7px;border-radius:50%;background:var(--amber);display:inline-block"></span>Pendente</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px">Reenviar</button><button class="btn" style="font-size:11px;padding:4px 10px;color:var(--red);border-color:var(--red)">Revogar</button></td>
-            </tr>
-            <tr data-usu-status="inativo">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--txt3);flex-shrink:0">CB</div><div><div style="font-size:13px;font-weight:600;color:var(--txt3)">Carlos Barros</div></div></div></td>
-              <td>carlos.barros@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,.06);color:var(--txt3)">Auditor</span></td>
-              <td>02/07 10:15</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--txt3)"><span style="width:7px;height:7px;border-radius:50%;background:var(--txt3);display:inline-block"></span>Inativo</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px;color:var(--teal);border-color:var(--teal)">Reativar</button></td>
-            </tr>
-          </tbody>
-        </table>
-          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>Perfil</th>
+                <th>Estado</th>
+                <th>Último acesso</th>
+                <th class="r">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="usu-tbody"></tbody>
+          </table>
         </div>
+      </div>
 
-      <!-- Perfis disponíveis -->
-      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
-        <div style="font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">Perfis de acesso disponíveis</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
-            <div style="font-size:11px;font-weight:700;color:var(--teal);margin-bottom:4px">Administrador</div>
-            <div style="font-size:11px;color:var(--txt3);line-height:1.5">Acesso total — configurações, usuários, todos os módulos.</div>
-          </div>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
-            <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:4px">Analista Fiscal</div>
-            <div style="font-size:11px;color:var(--txt3);line-height:1.5">Crédito, Débito, Pagamentos, Conciliação, Inconsistência.</div>
-          </div>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
-            <div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:4px">Controller</div>
-            <div style="font-size:11px;color:var(--txt3);line-height:1.5">Leitura em todos os módulos + Analytics. Sem ações.</div>
-          </div>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
-            <div style="font-size:11px;font-weight:700;color:var(--txt2);margin-bottom:4px">Auditor</div>
-            <div style="font-size:11px;color:var(--txt3);line-height:1.5">Somente leitura — Crédito, Débito, Conciliação.</div>
-          </div>
-        </div>
+      <div class="usu-perfis-wrap">
+        <div class="usu-perfis-t">Perfis de acesso</div>
+        <div id="usu-perfis" class="shg shg-md" style="--shg-gap:10px"></div>
       </div>
     </div>
 
@@ -10909,7 +10838,8 @@ if (window.Chart) {
 <script src="js/exec-rad-3.js?v=4"></script>
 <script src="js/integracoes.js?v=3"></script>
 <script src="js/integracoes-gestao.js?v=2"></script>
-<script src="js/acesso-fornecedor.js?v=2"></script>
+<script src="js/acesso-fornecedor.js?v=3"></script>
+<script src="js/usuarios.js?v=1"></script>
 <script>
 // ── ShColMgr: registrações de todas as tabelas ──────────────────────────────
 (function(){

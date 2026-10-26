@@ -411,7 +411,7 @@
     var s = (document.getElementById('acf-senha') || {}).value || '';
     var s2 = (document.getElementById('acf-senha2') || {}).value || '';
     var regras = [
-      { ok: s.length >= 10, txt: 'pelo menos 10 caracteres' },
+      { ok: s.length >= 12, txt: '12 caracteres ou mais' },
       { ok: /[a-zA-Z]/.test(s) && /\d/.test(s), txt: 'letras e números' },
       { ok: !!s && s === s2, txt: 'as duas iguais' }
     ];
