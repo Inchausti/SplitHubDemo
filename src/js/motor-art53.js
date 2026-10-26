@@ -337,6 +337,8 @@
   /* ── detalhe do RF: a seção da compensação, com os documentos ────────── */
   function painelRF() {
     var box = document.querySelector('#rf-detalhe-overlay .mbox-col'); if (!box || !M.live) return;
+    // o gancho pode ficar envolvido duas vezes por outros módulos: a seção entra uma vez só
+    if (box.querySelector('[data-motor-comp]')) return;
     var tit = document.querySelector('#rf-detalhe-overlay .mbox-title');
     var id = tit ? String(tit.textContent || '').split('·').pop().trim() : '';
     var e = (window._rfIndex || {})[id]; if (!e) return;
@@ -350,6 +352,7 @@
         + '<div style="font-size:10px;color:var(--txt3);margin-bottom:5px">' + esc(x.ent) + ' · apuração de ' + perLbl(x.mes) + '</div>';
     }).join('');
     var d = document.createElement('div');
+    d.setAttribute('data-motor-comp', '1');
     d.innerHTML = '<div class="mbox-divider"></div>'
       + '<div class="mbox-section-label">Compensação · art. 53</div>'
       + DR(entrada ? 'Crédito compensado' : 'Débito compensado', cifra(comp), 'var(--p-teal)')

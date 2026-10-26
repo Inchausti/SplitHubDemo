@@ -61,10 +61,20 @@
                              label: 'DF sem registro na apuração assistida' },
     apur_registro_sem_df:  { familia: 'fisco',      tributo: null,  origem: 'conciliacao', gerado: true,
                              label: 'Registro na apuração assistida sem DF' },
+    /* parcialidade (catálogo v1.2, lote 2 do protótipo): o confronto passa a
+       ser parcela a parcela, por tributo, e os dois lados da C-01 */
+    mov_orgao_sem_contrapartida: { familia: 'fisco', tributo: null, origem: 'conciliacao', gerado: true,
+                             label: 'Movimento do órgão sem contrapartida' },
+    mov_nao_refletido:     { familia: 'fisco',      tributo: null,  origem: 'conciliacao',
+                             label: 'Movimento não refletido pelo órgão' },
+    particao_nao_fecha:    { familia: 'fisco',      tributo: null,  origem: 'conciliacao',
+                             label: 'Partição que não fecha' },
 
     /* C — ciclo do crédito e do débito */
     glosa_credito:         { familia: 'ciclo',      tributo: null,  origem: 'glosa', gerado: true,
                              label: 'Glosa do crédito' },
+    glosa_parcial:         { familia: 'ciclo',      tributo: null,  origem: 'glosa', gerado: true,
+                             label: 'Glosa parcial' },
     prazo_expirado:        { familia: 'ciclo',      tributo: null,  origem: 'apuracao',
                              label: 'Prazo de apuração expirado' },
 
@@ -77,6 +87,8 @@
                              label: 'Comprovante IBS divergente' },
     cfin_cbs_valor:        { familia: 'financeiro', tributo: 'CBS', origem: 'pagamentos',
                              label: 'Comprovante CBS divergente' },
+    reconhecido_diferente_pago: { familia: 'financeiro', tributo: null, origem: 'conciliacao', gerado: true,
+                             label: 'Reconhecido diferente do pago' },
 
     /* E — ressarcimento */
     res_intencao_sem_pedido:  { familia: 'ressarcimento', tributo: null, origem: 'ressarcimento',

@@ -94,12 +94,26 @@
       if (tem(rf, 'retido')) t.retido += v;
       if (rf._foiVencido) { t.exVencido += v; t.nExVenc++; }
     });
+    // T-08: com a partição do débito, os cards somam o valor de cada parcela
+    var P = window.shParcial, part = !!(P && (listaRFs || []).length && (listaRFs || []).every(function (r) { var x = ix[r.rf] || ix[r.rfId]; return x && x.debBalances; }));
+    if (part) {
+      t.extinto = t.naoExt = t.parcial = t.parcialAbatido = 0; t.susp = 0; t.analise = 0; t.inex = 0; t.devedor = 0; t.nParc = 0;
+      (listaRFs || []).forEach(function (r) {
+        var b = (ix[r.rf] || ix[r.rfId]).debBalances;
+        t.extinto += b.extinguished || 0; t.devedor += b.outstanding || 0; t.susp += b.suspended || 0;
+        t.analise += b.unprocessed || 0; t.inex += b.not_enforceable || 0;
+        if ((b.extinguished || 0) > 0 && (b.outstanding || 0) + (b.suspended || 0) > 0) { t.nParc++; t.parcial += (b.outstanding || 0) + (b.suspended || 0); t.parcialAbatido += b.extinguished; }
+      });
+      t.naoExt = t.devedor + t.susp + t.analise;
+    }
     var pct = function (v) { return t.total > 0 ? (v / t.total * 100).toFixed(1).replace('.', ',') + '%' : '—'; };
     set('deb-total', fmt(t.total));
     set('deb-extinto', fmt(t.extinto));
     set('deb-extinto-sub', pct(t.extinto) + ' do total — ciclo encerrado');
     set('deb-nao-extinto', fmt(t.naoExt));
-    set('deb-nao-extinto-sub', pct(t.naoExt) + ' — ' + (t.parcial > 0 ? fmt(t.parcial) + ' parcialmente extintos (' + fmt(t.parcialAbatido) + ' já abatidos)' : 'nenhum parcialmente extinto'));
+    set('deb-nao-extinto-sub', part
+      ? pct(t.naoExt) + ' — saldo devedor ' + fmt(t.devedor) + (t.susp > 0 ? ' · suspenso ' + fmt(t.susp) : '') + (t.analise > 0 ? ' · em análise ' + fmt(t.analise) : '') + (t.inex > 0 ? ' · ' + fmt(t.inex) + ' inexigíveis fora da conta' : '')
+      : pct(t.naoExt) + ' — ' + (t.parcial > 0 ? fmt(t.parcial) + ' parcialmente extintos (' + fmt(t.parcialAbatido) + ' já abatidos)' : 'nenhum parcialmente extinto'));
     rotulo('deb-vencido', 'Vencidos · flag');
     set('deb-vencido', fmt(t.vencido));
     set('deb-vencido-sub', t.nVenc
@@ -108,8 +122,8 @@
     rotulo('deb-inconsist', 'Com inconsistência · flag');
     set('deb-inconsist', fmt(t.inc));
     set('deb-inconsist-sub', t.nInc + ' RFs · ' + fmt(t.retido) + ' retidos, fora da compensação (D-DB-02)');
-    set('deb-aguard', fmt(t.naoExt));
-    set('deb-aguard-sub', pct(t.naoExt) + ' — recolhimento pendente');
+    set('deb-aguard', fmt(part ? t.devedor : t.naoExt));
+    set('deb-aguard-sub', pct(part ? t.devedor : t.naoExt) + ' — recolhimento pendente');
     S._tot = t;
   };
 
@@ -121,7 +135,15 @@
     var ISO = MES.map(function (_, i) { return '2026-' + (i < 9 ? '0' : '') + (i + 1); });
     var ordem = ['extinto', 'parcial', 'nao_extinto'];
     var cor = { extinto: PALETTE.teal, parcial: PALETTE.purple, nao_extinto: PALETTE.gray };
-    var agg = {}; ISO.forEach(function (m) { agg[m] = { extinto: 0, parcial: 0, nao_extinto: 0 }; });
+    var rotulos = S.CICLO;
+    // T-08: com a partição, as barras somam parcelas
+    var part = false; saidas(function (rf) { if (rf.debBalances) part = true; });
+    if (part) {
+      ordem = ['extinguished', 'outstanding', 'suspended', 'unprocessed', 'not_enforceable'];
+      cor = { extinguished: PALETTE.teal, outstanding: PALETTE.amber, suspended: PALETTE.purple, unprocessed: PALETTE.gray, not_enforceable: PALETTE.blue };
+      rotulos = {}; ordem.forEach(function (k) { rotulos[k] = window.shParcial.rotDeb(k); });
+    }
+    var agg = {}; ISO.forEach(function (m) { agg[m] = {}; ordem.forEach(function (k) { agg[m][k] = 0; }); });
     var f = window._filtrosDebitos || {}, busca = (f.busca || '').toLowerCase();
     saidas(function (rf) {
       if (filtro && rf.tipoFiscal !== filtro) return;
@@ -136,14 +158,19 @@
       var v = rf.valor || 0;
       if (f.debMin !== '' && v < parseFloat(f.debMin)) return;
       if (f.debMax !== '' && v > parseFloat(f.debMax)) return;
+      if (part && rf.debBalances) {
+        ordem.forEach(function (k) { agg[m][k] += (rf.debBalances[k] || 0) / 1e6; });
+        return;
+      }
       var c = rf.statusDebito || rf.status || 'nao_extinto';
       if (agg[m][c] !== undefined) agg[m][c] += Math.round(v / 1e6 * 1000) / 1000;
     });
     _svgStackedBar('cDebComposicao', ordem.map(function (c) {
-      return { label: S.CICLO[c], color: cor[c], data: ISO.map(function (m) { return Math.round((agg[m][c] || 0) * 100) / 100; }) };
+      return { label: rotulos[c], color: cor[c], data: ISO.map(function (m) { return Math.round((agg[m][c] || 0) * 100) / 100; }) };
     }), MES, 200);
     var sub = document.getElementById('cDebComposicao-sub');
-    if (sub) sub.textContent = 'R$ milhões · IBS + CBS · por estado do ciclo · vencido e inconsistência são flags e aparecem nos KPIs';
+    if (sub) sub.textContent = part ? 'R$ milhões · IBS + CBS · por parcela do débito · mês a mês'
+      : 'R$ milhões · IBS + CBS · por estado do ciclo · vencido e inconsistência são flags e aparecem nos KPIs';
     ['btn-deb-todos', 'btn-deb-ibs', 'btn-deb-cbs'].forEach(function (id) {
       var b = document.getElementById(id); if (!b) return;
       var on = (id === 'btn-deb-todos' && !filtro) || (id === 'btn-deb-ibs' && filtro === 'ibs') || (id === 'btn-deb-cbs' && filtro === 'cbs');
@@ -166,6 +193,16 @@
         'Prazo de recolhimento do débito de ' + (rf.tipoFiscal || '').toUpperCase() + ' vencido em ' + String(venc).slice(0, 10).split('-').reverse().join('/')
         + ' sem extinção · ' + money(v) + ' em atraso · acréscimos legais sobre o valor não extinto'
         + (rf._foiVencido ? ' · extinto depois, por compensação na ordem do art. 53' : ''), rf._foiVencido ? 'pending' : 'erro'));
+    }
+    var su = rf.suspensao;
+    if (su && su.desde) {
+      var Tt = (rf.tipoFiscal || '').toUpperCase();
+      out.push(ev(su.desde + 'T10:00', 'SUSPENSÃO', Tt === 'IBS' ? 'Comitê Gestor' : 'Receita Federal',
+        money(su.valor) + ' de ' + Tt + ' com a exigibilidade suspensa · causa: ' + su.causaRot + ' (CTN, art. 151, ' + su.causa + ') · processo ' + su.processo
+        + (su.semMovimento ? ' · o Comitê Gestor não informa a parcela suspenso: a ficha registra o processo e o valor não se move (C-01)' : ' · o valor sai da fila do art. 53 e da cobrança'),
+        su.semMovimento ? 'pending' : 'ok'));
+      if (su.desfecho === 'ganho' && su.decisaoEm) out.push(ev(su.decisaoEm + 'T11:00', 'INEXIGÍVEL', 'Receita Federal',
+        'Decisão definitiva favorável no processo ' + su.processo + ' · ' + money(su.valor) + ' saem do saldo devedor e ficam inexigíveis · nada a pagar', 'ok'));
     }
     if (tem(rf, 'retido')) {
       var inc = (rf._inconsistencias || [])[0];
