@@ -21,9 +21,9 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.10'
+VERSAO = u'v2.11'
 DATA = u'26/10/2026'
-BASE_MAPA = u'Mapa de Funcionalidades v2.9'
+BASE_MAPA = u'Mapa de Funcionalidades v2.10'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
 URL_DOCS = 'https://split-hubhq.github.io/app/docs/'
@@ -144,14 +144,14 @@ FAIXAS = {
     9: ['M0','M0','M1','M0','M2','M0','M0','M0','M0','M0','M0','M0','M1','M1'],
     10: ['M0','M2','M0','M0','M1','M1'],
     11: ['M0','M0','M1','M1','M1','M1','M1','M0','M1','M1','M0','M1','M1','M1','M2'],
-    12: ['M0','M0','M0','M0','M0','M0','M0','M0','M0','X','X','M1','M1','M2','M2','M1','M2'],
+    12: ['M0','M0','M0','M0','M0','M0','M0','M0','X','X','M1','M1','M2','M2','M1','M2'],
     13: ['M0','M1','M1','M1','M1','M1','M0','M0','M1','M1','M1','M0','M1','M1','M1','M1','M1','M1','M1'],
     14: ['M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M1','M2','M1'],
     15: ['M0','M0','M0','M0','M1','M0','M0','M1','M1'],
     16: ['M0','M1','M0','M0','M0','M0','M1','M1','M1','M1','M1','M1','M1','M1','M1'],
     17: ['M2','M2','M2','M2','M2'],
     18: ['M1','M1','M1','M1','M1','M0','M0','M0','M0','M0','M0','M1'],
-    19: ['M1','M1','M1','M1','M1','M0','M1','M1','M1','M2','M1','M1'],
+    19: ['M1','M1','M1','M1','M1','M0','M1','M1','M1','M2','M1','M1','M1'],
     20: ['M1','M2','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1','M1','M1','M1'],
 }
 
@@ -236,7 +236,9 @@ NOTA = {
     9:  u'Deixou de ser só cadastro: ganhou a gestão de acesso do fornecedor e a importação em massa, implementadas em 14/09. Na revisão de 15/09 saíram a revogação com motivo e a pré-visualização da importação — são refinamentos do fluxo, não o fluxo. Score de conformidade e trilha de auditoria seguem depois.',
     10: u'Hierarquia e filtro de grupo econômico atravessam todas as telas — sem eles, nenhum número fecha. O enquadramento por órgão para o ressarcimento entra em M1 (D17).',
     11: u'Recortado em 14/09 e ampliado em 15/09: entram o painel inicial, a listagem dos documentos contra o comprador, os comprovantes de pagamento, o acesso por convite e — pela revisão — o <strong>envio de comprovante RAD/PIX</strong>. O fornecedor deixa de só se informar e passa a responder. Ver seção 06.',
-    12: u'Login, perfis e o sistema de design, mais o selo de modo demonstração da troca de perfil. O SSO corporativo continua sendo a única funcionalidade do MVP que não existe em parte alguma.',
+    12: u'Login, perfis e o sistema de design. Pela D20, de 26/10, o MVP entra com o <strong>login próprio por e-mail e senha</strong>, '
+        u'que ainda não existe, e o <strong>SSO corporativo</strong> desce a M1, para a fase 2 com o SCIM. A troca de perfil saiu do '
+        u'inventário: é só do protótipo (D-USR-06).',
     13: u'O corte mais duro, afrouxado em 15/09: de 4 para 7 de 15. Entram a orquestração por CNPJ, por contrato e a auditoria com diff campo a campo — decidir <em>de quem</em> gerar a guia passa a ser do MVP; decidir <em>quando</em>, por faixa de valor e base de comparação, continua fora.',
     14: u'Duas das 16 no M0, pelas revisões de 14 e 15/09: o <strong>catálogo dos contextos</strong> e os <strong>comprovantes recebidos do ERP</strong>. O resto da gestão — conexões, credenciais, escopos, log — fica em M1, com a configuração por variável de ambiente. As quatro integrações externas a desenvolver seguem em M0 — ver seção 07.',
     15: u'A prova de que o recolhimento aconteceu. Sem conciliação, o crédito é uma afirmação sem lastro. Com a revisão de 15/09 o módulo entra <strong>inteiro</strong>: a próxima ação sugerida e o recorte por múltiplos períodos completam o que faltava.',
@@ -244,7 +246,7 @@ NOTA = {
     17: u'Depende de base legal indexada e de confiança que um piloto ainda não tem.',
     18: u'A <strong>régua de cobrança</strong> entra no M0 por decisão de 14/09: cobrança não feita é crédito perdido. Relatórios agendados ficam em M1 e a integração ITSM desceu a M2 em 15/09 — abrir chamado é rotina de time grande, não do piloto.',
     20: u'<strong>Fora do M0 por decisão de 18/09/2026.</strong> A cadeia do crédito fecha na apropriação; o ressarcimento é o passo seguinte — transformar o saldo que sobrou em dinheiro. E o primeiro pedido real só existe em 2027: saldos de 2026 não são ressarcíveis. Treze funcionalidades em M1, o ciclo que tira o analista da planilha — saldo, intenção, pedido, decisão, recebimento, prazos, conferência e impedimentos. Duas em M2: o comparativo compensar × ressarcir e a previsão de caixa, que explicam a decisão em vez de executá-la. Implementado no protótipo em simulação 2026.',
-    19: u'Multiusuário interno é consequência de adoção. A exceção é o painel de acessos externos, que entrou no M0 junto com o acesso do fornecedor — e foi confirmado na revisão de 15/09. A gestão de usuários implementada em 26/10 trouxe o <strong>histórico do usuário</strong> e a <strong>redefinição de senha pelo administrador</strong>, as duas em M1 com o resto do módulo. O que a autenticação muda no M0 está na D20, em aberto.',
+    19: u'Multiusuário interno é consequência de adoção. A exceção é o painel de acessos externos, que entrou no M0 junto com o acesso do fornecedor — e foi confirmado na revisão de 15/09. A gestão de usuários implementada em 26/10 trouxe o <strong>histórico do usuário</strong> e a <strong>redefinição de senha pelo administrador</strong>, as duas em M1 com o resto do módulo. O <strong>escopo por CNPJ</strong> (D-USR-05) também entra em M1, pelo critério: é multiusuário, e a cadeia do crédito fecha sem ele. O que a autenticação muda no M0 está na D20.',
 }
 
 CORES = {'M0': 'teal', 'M1': 'info', 'M2': 'ref', 'X': 'warn'}
@@ -292,13 +294,19 @@ NOVAS = {
          u'Ingestão de comprovantes de recolhimento a partir do lakehouse do cliente, em vez de upload arquivo a '
          u'arquivo. É o que alimenta a conciliação financeira em volume.'),
     ],
-    12: [(u'Login via SSO corporativo', 'a', 'M0', 'P1',
+    12: [(u'Login próprio por e-mail e senha', 'a', 'M0', 'P1',
+          u'E-mail e senha da própria pessoa, em provedor de identidade gerenciado, com convite, primeiro acesso, '
+          u'recuperação de senha, sessão de 30 minutos sem uso e trilha de entrada. Não existe no produto: hoje o acesso '
+          u'é uma senha no código. Entrou no MVP pela D20, no lugar do SSO.'),
+         (u'Login via SSO corporativo', 'a', 'M1', None,
           u'Entrada pelo provedor de identidade da empresa (SAML 2.0 ou OIDC), com provisionamento e revogação '
-          u'vindos de lá. Não existe no produto: hoje o acesso é uma senha no código.')],
+          u'vindos de lá pelo SCIM. Fase 2 da gestão de usuários (D-USR-08); desceu do M0 pela D20.')],
 }
 
 # vinculo com o PRD das funcionalidades que ainda nao existem
 NOVAS_PRD = {
+    u'Login próprio por e-mail e senha': 'prd-organizacao.html#s15',
+    u'Login via SSO corporativo': 'prd-organizacao.html#s15',
 }
 
 # contextos da API (src/js/integracoes.js), com a faixa de cada um
@@ -816,11 +824,10 @@ A(u'</div>')
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Decisões</span></div>')
 DEC = [
-    ('?', u'D20 · Autenticação do MVP: login próprio no lugar do SSO',
-     u'<strong>Em aberto.</strong> Na proposta de gestão de usuários, em 26/10/2026, a autenticação de pessoas entrou no '
-     u'escopo do produto (D-USR-01), com login próprio por e-mail e senha na fase 1, e o SSO com SCIM foi para a fase 2 '
-     u'(D-USR-08). A D6 deixava o SSO no M0. Proposta: o login próprio entra como novo em M0 e o SSO desce a M1, e o M0 '
-     u'não muda de tamanho. Revê a D6. Nada mudou de faixa até a confirmação.'),
+    ('ok', u'D20 · Autenticação do MVP: login próprio no lugar do SSO',
+     u'<strong>Decidido em 26/10/2026.</strong> Com a autenticação de pessoas no escopo do produto (D-USR-01) e o SSO com SCIM '
+     u'na fase 2 (D-USR-08), o <strong>login próprio por e-mail e senha</strong> entra como novo em M0 e o <strong>SSO corporativo</strong> '
+     u'desce a M1. Revê a D6. O MVP deixa de depender do provedor de identidade do cliente.'),
     ('ok', u'D19 · Parcialidade do crédito pela gravidade',
      u'<strong>Decidido em 22/10/2026 (D-PAR-10 da proposta de aprovação da parcialidade).</strong> O que o relatório de parcialidade '
      u'classificou como gravidade alta entra no M0, a média no M1 e a baixa no M2. A primeira leva — partição, selo por tributo, '
@@ -861,9 +868,9 @@ DEC = [
      u'<strong>Decidido em 14/09/2026.</strong> O portal do MVP é de leitura: o fornecedor vê o que deve e encontra o '
      u'comprovante do que foi recolhido. Toda ação dele pelo portal fica para o M1 — e, até lá, continua acontecendo '
      u'por e-mail, como acontece hoje.'),
-    ('ok', u'D6 · SSO corporativo no M0',
-     u'<strong>Decidido em 14/09/2026.</strong> Funcionalidade nova, não presente no mapa nem no produto. '
-     u'Substitui a senha de acesso que hoje está no código, e torna desnecessária a iniciativa pausada em 11/09.'),
+    ('ok', u'D6 · SSO corporativo no M0 — <em>revista pela D20</em>',
+     u'<strong>Decidido em 14/09/2026, revisto em 26/10/2026.</strong> Funcionalidade nova, não presente no mapa nem no produto. '
+     u'Substituiria a senha de acesso que hoje está no código. Pela D20, quem a substitui no MVP é o login próprio, e o SSO vai a M1.'),
     ('ok', u'D7 · Acesso do fornecedor externo por convite',
      u'<strong>Decidido em 14/09/2026.</strong> Convite por e-mail com senha própria, em vez de link assinado por '
      u'documento ou federação com o provedor do fornecedor. Entra como funcionalidade nova no núcleo do portal.'),
@@ -898,6 +905,11 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.11</div><div class="ver-desc">'
+  u'26/10/2026 \u2014 Base: <strong>Mapa v2.10, com 286 funcionalidades</strong>. <strong>D20 decidida:</strong> entra como novo o '
+  u'<strong>login próprio por e-mail e senha</strong>, em M0, e o <strong>SSO corporativo</strong> desce a M1. Sai do mapa a '
+  u'<em>troca de perfil in-session</em>, que estava em M0 e passa a ser só do protótipo (D-USR-06), e entra o '
+  u'<em>escopo por CNPJ do usuário</em>, em M1 (D-USR-05). O M0 passa de 117 para 116.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v2.10</div><div class="ver-desc">'
   u'26/10/2026 \u2014 Base: <strong>Mapa v2.9, com 286 funcionalidades</strong>. O app de avaliação foi incorporado ao '
   u'master, e as quatro funcionalidades da parcialidade deixam de ser novas e passam ao mapa, no módulo de Créditos, '

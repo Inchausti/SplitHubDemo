@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão de usuários e acessos · SplitHub v1.2.1</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 980px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--blue); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--blue); margin-bottom: 10px; }
+h1 { font-size: 28px; font-weight: 800; line-height: 1.18; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 700px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.purple { background: var(--purple-d); color: var(--purple); }
+
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--blue); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 48px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--blue); background: var(--blue-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 26px 0 8px; }
+h4 { font-size: 12px; font-weight: 700; color: var(--txt2); margin: 18px 0 7px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--blue); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.jid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+td.tc { text-align: center; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--blue); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+.code-block code .r { color: var(--red); }
+
+/* ── Ficha de jornada ── */
+.jor { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 18px 0; overflow: hidden; }
+.jor-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.jor-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 4px; flex-shrink: 0; }
+.jor-name { font-size: 14.5px; font-weight: 700; color: var(--txt1); }
+.jor-cad { font-size: 10.5px; font-weight: 700; color: var(--txt3); margin-left: auto; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.jor-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-bottom: 1px solid var(--brd); background: var(--sur2); }
+@media (max-width: 700px) { .jor-meta { grid-template-columns: 1fr; } }
+.jor-meta > div { padding: 11px 18px; border-right: 1px solid var(--brd); }
+.jor-meta > div:last-child { border-right: none; }
+.jm-k { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 3px; }
+.jm-v { font-size: 12px; color: var(--txt1); font-weight: 500; line-height: 1.45; }
+.jor-body { padding: 6px 18px 16px; }
+
+.step { display: flex; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--brd); }
+.step:last-child { border-bottom: none; }
+.step-n { width: 24px; height: 24px; border-radius: 50%; background: var(--blue-d); color: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+.step-main { flex: 1; min-width: 0; }
+.step-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 5px; }
+.step-acao { font-size: 13px; font-weight: 600; color: var(--txt1); }
+.step-onde { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--sur2); color: var(--txt2); border: 1px solid var(--brd); white-space: nowrap; flex-shrink: 0; }
+.step-lay { display: grid; grid-template-columns: 78px 1fr; gap: 3px 10px; font-size: 11.5px; margin-top: 6px; }
+@media (max-width: 560px) { .step-lay { grid-template-columns: 1fr; gap: 1px; } }
+.sl-k { color: var(--txt3); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; padding-top: 1px; }
+.sl-v { color: var(--txt2); }
+.sl-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--blue); }
+.sl-risco { color: var(--amber); }
+.sl-inst { color: var(--teal); }
+.step-dec { margin-top: 7px; padding: 8px 12px; background: var(--purple-d); border-left: 2px solid var(--purple); border-radius: 0 5px 5px 0; font-size: 11.5px; color: var(--txt2); }
+.step-dec strong { color: var(--purple); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 2px; }
+
+/* cores por natureza de jornada */
+.nat-setup   { background: var(--purple-d); color: var(--purple); }
+.nat-ciclo   { background: var(--teal-d);   color: var(--teal); }
+.nat-excecao { background: var(--red-d);    color: var(--red); }
+.nat-risco   { background: var(--amber-d);  color: var(--amber); }
+.nat-report  { background: var(--blue-d);   color: var(--blue); }
+.nat-ext     { background: var(--gray-d);   color: var(--gray); }
+
+.leg { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 0 4px; }
+.leg-i { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--txt2); }
+.leg-s { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--blue); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+
+/* ── v3.0: telas, caderno de testes, fases ── */
+.tela { margin: 14px 0 6px; }
+.tela a { display: block; border: 1px solid var(--brd); border-radius: 8px; overflow: hidden; background: var(--sur2); }
+.tela img { display: block; width: 100%; height: auto; }
+.tela.estreita a { max-width: 560px; }
+.tela figcaption { font-size: 11.5px; color: var(--txt3); margin-top: 6px; }
+.telas { margin: 6px 0 4px; }
+.jor-body .callout { margin: 12px 0 4px; }
+.jor-prds { font-size: 11px; color: var(--txt3); padding: 10px 18px; border-top: 1px solid var(--brd); background: var(--sur2); }
+.jor-prds a { color: var(--blue); text-decoration: none; }
+.jor-faixa { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--sur2); color: var(--txt2); border: 1px solid var(--brd); white-space: nowrap; }
+.jor-nova { font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; background: var(--green-d); color: var(--green); }
+
+.cad { border: 1px solid var(--brd); border-radius: 10px; margin: 10px 0 30px; overflow: hidden; background: var(--sur); }
+.cad-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 11px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.cad-t { font-size: 12px; font-weight: 700; color: var(--txt1); }
+.cad-s { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.cad .table-wrap { margin: 0; border: none; border-radius: 0; }
+.cad td { font-size: 12px; }
+.cad td.cid { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+.cad td.cesp { color: var(--txt1); }
+.cad td.cres { font-size: 11px; color: var(--txt3); }
+.fase { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+.fase.f1 { background: var(--purple-d); color: var(--purple); }
+.fase.f2 { background: var(--blue-d); color: var(--blue); }
+.fase.f3 { background: var(--teal-d); color: var(--teal); }
+.fase.f4 { background: var(--amber-d); color: var(--amber); }
+.prod { display: inline-block; font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
+.prod.ok { background: var(--green-d); color: var(--green); }
+.prod.parcial { background: var(--amber-d); color: var(--amber); }
+.prod.nao { background: var(--red-d); color: var(--red); }
+.prod.integ { background: var(--blue-d); color: var(--blue); }
+.prod.def { background: var(--purple-d); color: var(--purple); }
+
+.svgwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--brd); border-radius: 10px; background: var(--sur); padding: 12px; margin: 14px 0; }
+.svgwrap svg { display: block; min-width: 760px; width: 100%; height: auto; }
+.leg-s { border: 2px solid currentColor; }
+.svgwrap text { font-family: 'Inter', system-ui, sans-serif; }
+
+.mat td.tc { font-size: 13px; }
+.mat th.jh { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.step-dec strong { display: inline; font-size: inherit; text-transform: none; letter-spacing: normal; color: var(--txt1); margin: 0; }
+.step-dec .dec-t { display: block; color: var(--purple); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+
+
+/* ── Telas e antes/depois ── */
+:root {
+  /* tokens do visual da plataforma, usados só nos mockups (sempre no tema claro da aplicação) */
+  --app-teal: #1D9E75; --app-teal-dk: #0F6E56; --app-on-teal: #FFFFFF; --app-on-teal-2: rgba(255,255,255,.72);
+  --app-bg: #F4F3EF; --app-card: #FBFAF7; --app-brd: #DCD8CF; --app-txt: #1F2328; --app-txt2: #5B6070; --app-txt3: #8C909C;
+  --app-purple: #6B3FA0; --app-purple-d: rgba(107,63,160,.12); --app-blue: #185FA5; --app-blue-d: rgba(24,95,165,.10);
+  --app-green: #1A7940; --app-green-d: rgba(26,121,64,.12); --app-amber: #BA7517; --app-amber-d: rgba(186,117,23,.12);
+  --app-red: #A32D2D; --app-red-d: rgba(163,45,45,.10); --app-gray: #6B7280; --app-gray-d: rgba(107,114,128,.12);
+  --app-dim: rgba(31,35,40,.35);
+}
+.tela { margin: 10px 0 4px; }
+.tela a { display: block; border: 1px solid var(--brd); border-radius: 8px; overflow: hidden; background: var(--sur2); }
+.tela img { display: block; width: 100%; height: auto; }
+.tela.estreita a { max-width: 520px; }
+.tela figcaption { font-size: 11.5px; color: var(--txt3); margin-top: 6px; }
+.lado { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+.lado .tela { flex: 0 1 300px; min-width: 0; }
+.ad { margin: 20px 0 6px; }
+.ad-tag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 3px 10px; border-radius: 4px; }
+.ad-tag.antes { background: var(--gray-d); color: var(--gray); }
+.ad-tag.depois { background: var(--green-d); color: var(--green); }
+.muda { background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--green); border-radius: 8px; padding: 12px 16px; margin: 12px 0 28px; }
+.muda-t { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--green); margin-bottom: 4px; }
+.nota { display: block; font-size: 10px; color: var(--txt3); }
+.nota-p { font-size: 11.5px; color: var(--txt3); }
+table.matriz td.tc { text-align: center; }
+.svgwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--brd); border-radius: 10px; background: var(--sur); padding: 12px; margin: 14px 0; }
+.svgwrap svg { display: block; min-width: 680px; width: 100%; height: auto; }
+.svgwrap text { font-family: 'Inter', system-ui, sans-serif; }
+
+/* mockup: moldura que rola dentro do próprio contêiner no celular */
+.mockwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--brd); border-radius: 10px; margin: 6px 0; }
+.mock { min-width: 940px; background: var(--app-bg); color: var(--app-txt); font: 12px/1.45 'Inter', system-ui, sans-serif;
+        display: grid; grid-template-columns: 170px minmax(0, 1fr); grid-template-rows: 44px auto; }
+.m-top { grid-column: 1 / -1; background: var(--app-teal); color: var(--app-on-teal); display: flex; align-items: center; gap: 16px; padding: 0 16px; }
+.m-logo { font-weight: 800; font-size: 17px; letter-spacing: -.02em; width: 140px; }
+.m-pill { margin: 0 auto; border: 1px solid var(--app-on-teal-2); border-radius: 20px; padding: 3px 12px; font-size: 11px; font-weight: 600; }
+.m-user { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 11.5px; }
+.m-user small { display: block; font-weight: 500; color: var(--app-on-teal-2); font-size: 10px; }
+.m-side { background: var(--app-teal); color: var(--app-on-teal); padding: 10px 8px; }
+.m-nav { padding: 6px 10px; border-radius: 6px; font-size: 11.5px; }
+.m-nav.on { background: rgba(255,255,255,.18); font-weight: 700; }
+.m-sub { padding: 4px 10px 4px 22px; font-size: 11px; color: var(--app-on-teal-2); }
+.m-sub.on { color: var(--app-on-teal); font-weight: 700; }
+.m-main { padding: 16px 20px 20px; min-width: 0; }
+.m-h1 { font-size: 17px; font-weight: 700; }
+.m-h2 { font-size: 11.5px; color: var(--app-txt2); margin-bottom: 12px; }
+.m-kpis { display: grid; gap: 10px; margin-bottom: 12px; }
+.m-kpis.k5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.m-kpi { background: var(--app-card); border: 1px solid var(--app-brd); border-radius: 8px; padding: 9px 12px; }
+.m-kpi span { display: block; font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--app-txt3); }
+.m-kpi b { display: block; font-size: 20px; font-family: 'JetBrains Mono', monospace; margin: 2px 0; }
+.m-kpi small { font-size: 10.5px; color: var(--app-txt2); }
+.am { color: var(--app-amber); } .rd { color: var(--app-red); }
+.m-card { background: var(--app-card); border: 1px solid var(--app-brd); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+.m-mini { font-size: 11.5px; color: var(--app-txt2); }
+.m-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.m-in { flex: 1 1 200px; border: 1px solid var(--app-brd); border-radius: 6px; padding: 6px 10px; color: var(--app-txt3); background: var(--app-bg); }
+.m-sel { border: 1px solid var(--app-brd); border-radius: 6px; padding: 6px 10px; color: var(--app-txt2); background: var(--app-bg); white-space: nowrap; }
+.m-btn { display: inline-block; border: 1px solid var(--app-brd); border-radius: 6px; padding: 5px 11px; font-weight: 600; font-size: 11px; color: var(--app-txt); background: var(--app-card); white-space: nowrap; }
+.m-btn.primary { background: var(--app-teal-dk); border-color: var(--app-teal-dk); color: var(--app-on-teal); }
+.m-btn.danger { border-color: var(--app-red); color: var(--app-red); }
+.m-btn.full { display: block; text-align: center; padding: 9px; margin-top: 10px; }
+.m-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.m-table th { text-align: left; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--app-txt3); padding: 7px 8px; border-bottom: 1px solid var(--app-brd); white-space: nowrap; background: transparent; }
+.m-table td { padding: 8px; border-bottom: 1px solid var(--app-brd); color: var(--app-txt); vertical-align: middle; }
+.m-table td b { font-weight: 600; }
+.m-table td small { display: block; font-size: 10px; color: var(--app-txt3); }
+.m-table tr.dim td { color: var(--app-txt3); }
+.m-table td.r { text-align: right; }
+.m-table tbody tr:hover { background: transparent; }
+.mock thead tr { background: transparent; }
+.m-av { display: inline-flex; float: left; width: 26px; height: 26px; border-radius: 50%; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--app-on-teal); background: var(--app-gray); margin-right: 8px; }
+.m-user .m-av { float: none; margin: 0; background: rgba(255,255,255,.25); }
+.m-av.g { background: var(--app-teal); } .m-av.b { background: var(--app-blue); } .m-av.t { background: var(--app-purple); } .m-av.o { background: var(--app-amber); } .m-av.x { background: var(--app-gray); }
+.m-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+.m-badge.purple { background: var(--app-purple-d); color: var(--app-purple); } .m-badge.teal { background: var(--app-green-d); color: var(--app-green); }
+.m-badge.blue { background: var(--app-blue-d); color: var(--app-blue); } .m-badge.gray { background: var(--app-gray-d); color: var(--app-gray); }
+.m-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--app-gray); margin-right: 6px; }
+.m-dot.ok { background: var(--app-green); } .m-dot.warn { background: var(--app-amber); } .m-dot.blue { background: var(--app-blue); }
+
+/* gaveta lateral */
+.mock.drawer { grid-template-columns: minmax(0, 1fr) 400px; grid-template-rows: auto; }
+.m-dimbg { background: var(--app-dim); padding: 22px; min-height: 100%; }
+.m-dimbg .m-h1 { color: var(--app-card); }
+.m-ghost { height: 34px; border-radius: 6px; background: rgba(255,255,255,.18); margin-top: 12px; }
+.m-ghost.short { width: 60%; }
+.m-drawer { background: var(--app-card); border-left: 1px solid var(--app-brd); padding: 14px 18px 16px; }
+.m-dh { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-bottom: 8px; }
+.m-dh span { color: var(--app-txt3); font-size: 16px; }
+.m-lbl { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--app-txt3); margin: 10px 0 4px; }
+.m-field { border: 1px solid var(--app-brd); border-radius: 6px; padding: 7px 10px; background: var(--app-bg); }
+.m-field.ro { color: var(--app-txt2); }
+.m-field.ph { color: var(--app-txt3); font-style: italic; }
+.m-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.m-opt { border: 1px solid var(--app-brd); border-radius: 6px; padding: 7px 9px; }
+.m-opt b { display: block; font-size: 11.5px; }
+.m-opt small { font-size: 10px; color: var(--app-txt2); }
+.m-opt.on { border-color: var(--app-teal); box-shadow: 0 0 0 1px var(--app-teal); background: var(--app-green-d); }
+.m-radio { display: flex; align-items: center; gap: 7px; padding: 3px 0; }
+.m-radio .o { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--app-brd); }
+.m-radio.on .o { border-color: var(--app-teal); background: radial-gradient(var(--app-teal) 45%, transparent 50%); }
+.m-check { font-size: 11px; padding: 2px 0 2px 19px; color: var(--app-txt2); }
+.m-check.on { color: var(--app-txt); font-weight: 600; }
+.m-resumo { margin-top: 12px; padding: 9px 11px; border-radius: 6px; background: var(--app-blue-d); color: var(--app-txt); font-size: 11.5px; }
+.m-dfoot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.m-tabs { display: flex; gap: 16px; border-bottom: 1px solid var(--app-brd); margin-bottom: 8px; }
+.m-tabs span { padding: 6px 0; color: var(--app-txt3); font-weight: 600; }
+.m-tabs span.on { color: var(--app-teal-dk); border-bottom: 2px solid var(--app-teal-dk); }
+.m-kv { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: 11.5px; }
+.m-kv span { color: var(--app-txt3); }
+.m-kv b { font-weight: 600; text-align: right; }
+.m-kv small { color: var(--app-txt3); font-weight: 500; }
+.m-sep { border-top: 1px solid var(--app-brd); margin: 10px 0; }
+.m-sess { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 11px; }
+.m-sess span:first-child { flex: 1; }
+.m-sess small { color: var(--app-txt3); }
+.m-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* telas de autenticação */
+.mock.auth { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto; gap: 20px; padding: 26px; min-width: 760px; background: linear-gradient(160deg, var(--app-teal-dk), var(--app-teal)); }
+.m-auth-card { background: var(--app-card); border-radius: 10px; padding: 18px 20px 20px; box-shadow: 0 8px 28px rgba(0,0,0,.18); }
+.m-auth-h { font-weight: 800; font-size: 16px; color: var(--app-teal-dk); margin-bottom: 10px; }
+.m-steps { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.m-steps span { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; background: var(--app-gray-d); color: var(--app-gray); }
+.m-steps span.on { background: var(--app-green-d); color: var(--app-green); }
+.m-steps span.done { background: var(--app-teal); color: var(--app-on-teal); }
+.m-p { font-size: 11.5px; color: var(--app-txt2); margin: 0 0 6px; }
+.m-p b { color: var(--app-txt); }
+.m-regras { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px; font-size: 10.5px; }
+.m-regras .ok { color: var(--app-green); }
+.m-qr { width: 120px; height: 120px; margin: 8px auto; border: 6px solid var(--app-card); outline: 1px solid var(--app-brd);
+        background: repeating-conic-gradient(var(--app-txt) 0 25%, var(--app-card) 0 50%) 0 0 / 16px 16px; }
+.m-link { font-size: 11px; color: var(--app-blue); margin-top: 8px; }
+.m-sso { margin-top: 12px; text-align: center; font-size: 11px; color: var(--app-txt3); }
+.m-sso .m-btn { margin-top: 6px; }
+.m-sso small { display: block; margin-top: 4px; }
+.m-otp { display: flex; gap: 6px; margin: 10px 0; }
+.m-otp span { flex: 1; text-align: center; border: 1px solid var(--app-brd); border-radius: 6px; padding: 9px 0; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; background: var(--app-bg); }
+.m-alerta { margin-top: 12px; padding: 8px 10px; border-radius: 6px; background: var(--app-amber-d); color: var(--app-amber); font-size: 10.5px; }
+.m-tog { display: inline-block; width: 30px; height: 16px; border-radius: 10px; background: var(--app-teal); vertical-align: middle; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <a class="back" href="prds.html">← Hub de PRDs</a>
+
+  <div class="eyebrow">Proposta · Configurações → Usuários</div>
+  <h1>Gestão de usuários e acessos</h1>
+  <p class="subtitle">Hoje a tela de Usuários é uma vitrine: mostra uma lista fixa e não cria ninguém. Esta proposta define como uma pessoa ganha acesso, entra na plataforma, recebe um perfil e um escopo, e perde o acesso na hora certa. Para cada tela, mostra o <strong>antes</strong> e o <strong>depois</strong>.</p>
+
+  <div class="meta-bar">
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.2.1</span></div>
+    <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta de funcionalidade</span></div>
+    <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">26/10/2026</span></div>
+    <div class="meta-pill"><span class="meta-label">Módulos</span>&nbsp;<span class="meta-val">Usuários · Autenticação · Portal do Fornecedor</span></div>
+    <div class="meta-pill"><span class="meta-label">Origem</span>&nbsp;<span class="meta-val">CT-01-09 do caderno da implantação</span></div>
+    <div class="meta-pill" style="margin-left:auto"><span class="chip warn">Em aprovação · 6 de 8 decididas</span></div>
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Índice</div>
+    <ul class="toc-list">
+      <li><a href="#s01"><span class="toc-num">01</span> O gap</a></li>
+      <li><a href="#s02"><span class="toc-num">02</span> Princípios</a></li>
+      <li><a href="#s03"><span class="toc-num">03</span> Perfis: um modelo só</a></li>
+      <li><a href="#s04"><span class="toc-num">04</span> Escopo por empresa</a></li>
+      <li><a href="#s05"><span class="toc-num">05</span> Ciclo de vida do acesso</a></li>
+      <li><a href="#s06"><span class="toc-num">06</span> Telas: antes e depois</a></li>
+      <li><a href="#s07"><span class="toc-num">07</span> Regras de negócio</a></li>
+      <li><a href="#s08"><span class="toc-num">08</span> Segurança da autenticação</a></li>
+      <li><a href="#s09"><span class="toc-num">09</span> Fases de entrega</a></li>
+      <li><a href="#s10"><span class="toc-num">10</span> Impacto no produto e no caderno</a></li>
+      <li><a href="#s11"><span class="toc-num">11</span> Decisões a aprovar</a></li>
+      <li><a href="#s12"><span class="toc-num">12</span> Histórico de versões</a></li>
+    </ul>
+  </div>
+
+  <!-- ══ 01 ══ -->
+  <div class="section" id="s01">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O gap</span></div>
+    <p class="sec-sub">O caso CT-01-09 do caderno da implantação — <em>criar os usuários do cliente</em> — não pode ser executado. O motivo não é um botão: é que a plataforma não tem gestão de usuários.</p>
+    <div class="table-wrap"><table><thead><tr><th>O que existe hoje</th><th>O problema</th></tr></thead><tbody>
+      <tr><td><strong>Tela de Usuários</strong></td><td>KPIs e lista escritos no HTML. <em>Convidar usuário</em> não faz nada, <em>Editar</em> não abre, os filtros não filtram.</td></tr>
+      <tr><td><strong>Login</strong></td><td>Um acesso de demonstração único, igual para todos. Não existe usuário por pessoa, senha própria, MFA nem bloqueio por tentativas.</td></tr>
+      <tr><td><strong>Perfil</strong></td><td>O próprio usuário escolhe o perfil no modal de Configurações (<em>modo demonstração</em>). Nada impede um operador de virar fornecedor e vice-versa.</td></tr>
+      <tr><td><strong>Fornecedor</strong></td><td>Entra escolhendo um CNPJ numa lista com todos os fornecedores da base.</td></tr>
+      <tr><td><strong>Três conjuntos de perfis</strong></td><td>O protótipo usa <em>Administrador, Analista Fiscal, Controller e Auditor</em>; o PRD de Organização, <em>Administrador, Fiscal, Tesouraria, Leitura e Fornecedor</em>; as respostas de segurança enviadas a clientes, seis perfis com outros nomes. Não há como testar, nem prometer, o que não está definido.</td></tr>
+      <tr><td><strong>Decisão D-07</strong> (22/09/2026)</td><td>Tirou a autenticação do escopo "por ora". O ambiente do cliente em implantação não tem integração — nem com provedor de identidade —, então sem login próprio ninguém entra.</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- ══ 02 ══ -->
+  <div class="section" id="s02">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Princípios</span></div>
+    <ul class="plain">
+      <li><strong>Uma identidade por pessoa.</strong> O e-mail identifica o acesso; não existe usuário compartilhado.</li>
+      <li><strong>Dois jeitos de entrar, um modelo de acesso.</strong> Login próprio com e-mail, senha e MFA — o padrão desta fase — e SSO pelo provedor de identidade do cliente, quando houver. Perfil e escopo são os mesmos nos dois.</li>
+      <li><strong>Acesso negado por padrão.</strong> Sem perfil, não entra; sem escopo, não vê empresa nenhuma.</li>
+      <li><strong>Perfil decide o que; escopo decide onde.</strong> O perfil diz quais ações a pessoa pode fazer; o escopo diz em quais CNPJs.</li>
+      <li><strong>Ninguém escolhe o próprio perfil.</strong> A troca de perfil dentro da sessão sai do produto e fica só no ambiente de demonstração.</li>
+      <li><strong>Revogar vale na hora.</strong> Desativar um usuário encerra as sessões abertas — sem janela em que o acesso revogado continua valendo.</li>
+      <li><strong>Tudo deixa rastro.</strong> Convite, aceite, entrada, falha de entrada, troca de perfil, troca de escopo, bloqueio e desativação vão para a trilha, com autor e data.</li>
+    </ul>
+  </div>
+
+  <!-- ══ 03 ══ -->
+  <div class="section" id="s03">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Perfis: um modelo só</span></div>
+    <p class="sec-sub">Parte do PRD de Organização (v2.3), que é o mais recente e o único que já previa a Tesouraria, de que o RAD e o ressarcimento dependem. Quatro perfis internos e um externo.</p>
+    <div class="table-wrap"><table><thead><tr><th>Perfil</th><th>Para quem</th><th>O que pode</th><th>Substitui</th></tr></thead><tbody>
+      <tr><td><span class="chip purple">Administrador</span></td><td>Quem configura a conta</td><td>Tudo, inclusive usuários, perfis, escopos, contratos, integrações e políticas de RAD</td><td>Administrador</td></tr>
+      <tr><td><span class="chip teal">Fiscal</span></td><td>Analista fiscal</td><td>Opera Crédito, Débito, Conciliação, Inconsistências e Apuração; lê o resto</td><td>Analista Fiscal · operador</td></tr>
+      <tr><td><span class="chip info">Tesouraria</span></td><td>Analista de tesouraria</td><td>Opera Pagamentos RAD — execução, aprovação do modo assistido e comprovantes; lê os módulos fiscais</td><td>— (novo no protótipo)</td></tr>
+      <tr><td><span class="chip gray">Leitura</span></td><td>Controladoria, auditoria, gestão</td><td>Consulta e exporta tudo; nenhuma ação com efeito</td><td>Controller · Auditor · visualizador</td></tr>
+      <tr><td><span class="chip warn">Fornecedor</span></td><td>Pessoa de fora, por fornecedor</td><td>Só o Portal do Fornecedor e só os CNPJs do seu acesso</td><td>Fornecedor</td></tr>
+    </tbody></table></div>
+    <h3>Matriz de permissões</h3>
+    <div class="table-wrap"><table class="matriz"><thead><tr><th>Módulo</th><th>Administrador</th><th>Fiscal</th><th>Tesouraria</th><th>Leitura</th><th>Fornecedor</th></tr></thead><tbody>
+      <tr><td><strong>Início e Analytics</strong></td><td class="tc">Ver</td><td class="tc">Ver</td><td class="tc">Ver</td><td class="tc">Ver</td><td class="tc">—</td></tr>
+      <tr><td><strong>Crédito, Débito, Conciliação, Apuração</strong></td><td class="tc">Operar</td><td class="tc">Operar</td><td class="tc">Ver</td><td class="tc">Ver</td><td class="tc">—</td></tr>
+      <tr><td><strong>Inconsistências</strong></td><td class="tc">Operar</td><td class="tc">Operar</td><td class="tc">Operar <span class="nota">família recolhimento</span></td><td class="tc">Ver</td><td class="tc">—</td></tr>
+      <tr><td><strong>Pagamentos RAD</strong></td><td class="tc">Operar</td><td class="tc">Ver</td><td class="tc">Operar</td><td class="tc">Ver</td><td class="tc">—</td></tr>
+      <tr><td><strong>Config → Organização, Fornecedor, Contratos</strong></td><td class="tc">Administrar</td><td class="tc">Ver</td><td class="tc">Ver</td><td class="tc">Ver</td><td class="tc">—</td></tr>
+      <tr><td><strong>Config → Importação de DFs</strong></td><td class="tc">Administrar</td><td class="tc">Operar</td><td class="tc">—</td><td class="tc">Ver</td><td class="tc">—</td></tr>
+      <tr><td><strong>Config → Execução RAD, Integrações, Automações</strong></td><td class="tc">Administrar</td><td class="tc">Ver</td><td class="tc">Ver</td><td class="tc">Ver</td><td class="tc">—</td></tr>
+      <tr><td><strong>Config → Usuários</strong></td><td class="tc">Administrar</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td></tr>
+      <tr><td><strong>Portal do Fornecedor</strong></td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">—</td><td class="tc">Operar</td></tr>
+    </tbody></table></div>
+    <p class="nota-p"><strong>Ver</strong> consulta e exporta · <strong>Operar</strong> executa as ações do módulo · <strong>Administrar</strong> cria, altera e remove configuração.</p>
+    <div class="callout info"><div class="ct">E o perfil de serviço?</div><p>As respostas de segurança citam um perfil "serviço". Ele não é pessoa: é a credencial de uma integração, emitida em Config → Integrações, com escopos próprios. Fica fora da lista de usuários — e fora deste ambiente, que não tem integração.</p></div>
+  </div>
+
+  <!-- ══ 04 ══ -->
+  <div class="section" id="s04">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Escopo por empresa</span></div>
+    <p>O escopo é a lista de CNPJs que o usuário enxerga: <strong>toda a organização</strong> ou <strong>CNPJs selecionados</strong> — uma filial, um grupo de filiais, uma empresa do grupo econômico. Ele recorta todas as telas, inclusive o Início, os gráficos e as exportações, e vale do mesmo jeito para o filtro de grupo econômico do cabeçalho: o filtro só oferece o que está no escopo.</p>
+    <div class="table-wrap"><table><thead><tr><th>Exemplo</th><th>Perfil</th><th>Escopo</th><th>O que vê</th></tr></thead><tbody>
+      <tr><td>Analista da filial de Curitiba</td><td><span class="chip teal">Fiscal</span></td><td>1 CNPJ</td><td>Créditos, débitos e inconsistências só daquela filial</td></tr>
+      <tr><td>Tesouraria central</td><td><span class="chip info">Tesouraria</span></td><td>Toda a organização</td><td>Todas as guias RAD de todos os CNPJs</td></tr>
+      <tr><td>Auditoria externa do trimestre</td><td><span class="chip gray">Leitura</span></td><td>Empresa auditada</td><td>Tudo daquela empresa, sem poder agir</td></tr>
+    </tbody></table></div>
+    <p>O <strong>Administrador tem sempre a organização inteira</strong>: quem administra acessos precisa enxergar todas as empresas a que dá acesso.</p>
+  </div>
+
+  <!-- ══ 05 ══ -->
+  <div class="section" id="s05">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Ciclo de vida do acesso</span></div>
+    <div class="svgwrap">
+      <svg viewBox="0 0 900 230" role="img" aria-labelledby="cv-t cv-d" xmlns="http://www.w3.org/2000/svg">
+        <title id="cv-t">Ciclo de vida do acesso</title>
+        <desc id="cv-d">Convidado passa a ativo quando aceita o convite, ou a expirado em 7 dias, de onde volta a convidado com novo envio. Ativo vai a bloqueado por tentativas ou por decisão do administrador, e volta a ativo no desbloqueio. Ativo ou bloqueado vai a desativado, que encerra as sessões; desativado volta a ativo pela reativação.</desc>
+        <defs><marker id="cva" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--txt3)"/></marker></defs>
+        <g font-size="12">
+          <rect x="20" y="85" width="140" height="50" rx="8" style="fill:var(--sur2);stroke:var(--blue)" stroke-width="1.6"/><text x="90" y="115" text-anchor="middle" font-weight="700" style="fill:var(--blue)">convidado</text>
+          <rect x="300" y="85" width="140" height="50" rx="8" style="fill:var(--sur2);stroke:var(--green)" stroke-width="1.6"/><text x="370" y="115" text-anchor="middle" font-weight="700" style="fill:var(--green)">ativo</text>
+          <rect x="580" y="20" width="140" height="50" rx="8" style="fill:var(--sur2);stroke:var(--amber)" stroke-width="1.6"/><text x="650" y="50" text-anchor="middle" font-weight="700" style="fill:var(--amber)">bloqueado</text>
+          <rect x="580" y="150" width="140" height="50" rx="8" style="fill:var(--sur2);stroke:var(--red)" stroke-width="1.6"/><text x="650" y="180" text-anchor="middle" font-weight="700" style="fill:var(--red)">desativado</text>
+          <rect x="20" y="170" width="140" height="44" rx="8" style="fill:var(--sur2);stroke:var(--gray)" stroke-width="1.6"/><text x="90" y="197" text-anchor="middle" font-weight="700" style="fill:var(--gray)">expirado</text>
+        </g>
+        <g fill="none" style="stroke:var(--txt3)" stroke-width="1.4" marker-end="url(#cva)">
+          <path d="M160,110 L298,110"/>
+          <path d="M90,135 L90,168"/>
+          <path d="M60,170 L60,137"/>
+          <path d="M440,98 L578,50"/>
+          <path d="M600,70 L440,112" />
+          <path d="M440,122 L578,172"/>
+          <path d="M650,70 L650,148"/>
+          <path d="M580,190 C470,215 400,175 380,137"/>
+        </g>
+        <g font-size="10.5" style="fill:var(--txt3)">
+          <text x="175" y="102">aceita o convite</text>
+          <text x="96" y="156">7 dias</text>
+          <text x="4" y="156" text-anchor="start">reenviar</text>
+          <text x="470" y="58">5 tentativas ou admin</text>
+          <text x="470" y="96">desbloquear</text>
+          <text x="470" y="160">desativar</text>
+          <text x="656" y="114">desativar</text>
+          <text x="440" y="214">reativar, com perfil e escopo anteriores</text>
+        </g>
+      </svg>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Estado</th><th>Entra?</th><th>Aparece na lista</th><th>Conta como licença?</th></tr></thead><tbody>
+      <tr><td><strong>convidado</strong></td><td>Só pelo link do convite</td><td>Sim, com o prazo do convite</td><td>Não</td></tr>
+      <tr><td><strong>ativo</strong></td><td>Sim</td><td>Sim</td><td>Sim</td></tr>
+      <tr><td><strong>bloqueado</strong></td><td>Não, até desbloquear</td><td>Sim, com o motivo</td><td>Sim</td></tr>
+      <tr><td><strong>desativado</strong></td><td>Não</td><td>No filtro de inativos</td><td>Não</td></tr>
+      <tr><td><strong>expirado</strong></td><td>Não</td><td>Sim, com <em>Reenviar</em></td><td>Não</td></tr>
+    </tbody></table></div>
+    <p class="nota-p">Usuários são ilimitados no plano; a coluna de licença serve para os relatórios de acesso, não para cobrança.</p>
+  </div>
+
+  <!-- ══ 06 ══ -->
+  <div class="section" id="s06">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Telas: antes e depois</span></div>
+    <p class="sec-sub">O antes é captura do protótipo de hoje. O depois é o desenho proposto, no visual da plataforma, com dados fictícios. Seis telas.</p>
+
+    <!-- T1 -->
+    <h3 id="t1">6.1 · Config → Usuários</h3>
+    <div class="ad"><span class="ad-tag antes">Antes</span></div>
+    <figure class="tela"><a href="img/usuarios/usr-antes-lista.webp" target="_blank" rel="noopener"><img src="img/usuarios/usr-antes-lista.webp" width="1200" height="1042" loading="lazy" alt="Tela atual de usuários: KPIs fixos, lista fixa e botões sem ação"></a><figcaption>Lista e KPIs fixos no HTML; Convidar, Editar e os filtros não funcionam; quatro perfis que não batem com o PRD.</figcaption></figure>
+    <div class="ad"><span class="ad-tag depois">Depois</span></div>
+    <div class="mockwrap"><div class="mock">
+      <div class="m-top"><span class="m-logo">splithub</span><span class="m-pill">Grupo Econômico ▾</span><span class="m-user"><span class="m-av">JS</span>José da Silva<small>Administrador</small></span></div>
+      <div class="m-side">
+        <div class="m-nav">Início</div><div class="m-nav">Crédito</div><div class="m-nav">Débito</div><div class="m-nav">Pagamentos</div><div class="m-nav">Conciliação</div><div class="m-nav">Inconsistência</div><div class="m-nav">Analytics</div><div class="m-nav on">Configurações</div>
+        <div class="m-sub">Organização</div><div class="m-sub on">Usuários</div><div class="m-sub">Importação de DFs</div><div class="m-sub">Fornecedor</div><div class="m-sub">Contratos</div>
+      </div>
+      <div class="m-main">
+        <div class="m-h1">Usuários</div><div class="m-h2">Quem acessa a conta, com que perfil e em quais empresas.</div>
+        <div class="m-kpis k5">
+          <div class="m-kpi"><span>Ativos</span><b>9</b><small>de 12 acessos</small></div>
+          <div class="m-kpi"><span>Administradores</span><b>2</b><small>mínimo recomendado: 2</small></div>
+          <div class="m-kpi"><span>Convites pendentes</span><b class="am">2</b><small>1 expira em 48h</small></div>
+          <div class="m-kpi"><span>Bloqueados</span><b class="rd">1</b><small>tentativas de senha</small></div>
+          <div class="m-kpi"><span>Sem acesso há 90 dias</span><b>1</b><small>candidato a revisão</small></div>
+        </div>
+        <div class="m-card">
+          <div class="m-bar">
+            <span class="m-in">Buscar nome ou e-mail</span><span class="m-sel">Perfil: todos ▾</span><span class="m-sel">Escopo: todos ▾</span><span class="m-sel">Estado: todos ▾</span>
+            <span class="m-btn primary">+ Convidar usuário</span>
+          </div>
+          <table class="m-table"><thead><tr><th>Usuário</th><th>Perfil</th><th>Escopo</th><th>Entrada</th><th>Estado</th><th>Último acesso</th><th></th></tr></thead><tbody>
+            <tr><td><span class="m-av g">JS</span><b>José da Silva</b><small>jose.silva@induspar.com.br · você</small></td><td><span class="m-badge purple">Administrador</span></td><td>Toda a organização</td><td>Senha + MFA</td><td><span class="m-dot ok"></span>Ativo</td><td>agora</td><td class="r">⋯</td></tr>
+            <tr><td><span class="m-av b">MC</span><b>Maria Costa</b><small>maria.costa@induspar.com.br</small></td><td><span class="m-badge purple">Administrador</span></td><td>Toda a organização</td><td>Senha + MFA</td><td><span class="m-dot ok"></span>Ativo</td><td>hoje 09:14</td><td class="r">⋯</td></tr>
+            <tr><td><span class="m-av t">RL</span><b>Rafael Lima</b><small>rafael.lima@induspar.com.br</small></td><td><span class="m-badge teal">Fiscal</span></td><td>3 CNPJs · filiais PR</td><td>Senha + MFA</td><td><span class="m-dot ok"></span>Ativo</td><td>ontem 16:42</td><td class="r">⋯</td></tr>
+            <tr><td><span class="m-av o">AF</span><b>Ana Ferreira</b><small>ana.ferreira@induspar.com.br</small></td><td><span class="m-badge blue">Tesouraria</span></td><td>Toda a organização</td><td>Senha + MFA</td><td><span class="m-dot warn"></span>Bloqueado <small>5 tentativas · 10:02</small></td><td>17/10 11:03</td><td class="r"><span class="m-btn">Desbloquear</span></td></tr>
+            <tr><td><span class="m-av x">?</span><b>Júlia Mendes</b><small>julia.mendes@induspar.com.br</small></td><td><span class="m-badge teal">Fiscal</span></td><td>1 CNPJ · Curitiba</td><td>—</td><td><span class="m-dot blue"></span>Convidado <small>expira em 2 dias</small></td><td>—</td><td class="r"><span class="m-btn">Reenviar</span></td></tr>
+            <tr><td><span class="m-av x">PT</span><b>Paulo Torres</b><small>paulo.torres@induspar.com.br</small></td><td><span class="m-badge gray">Leitura</span></td><td>Toda a organização</td><td>Senha + MFA</td><td><span class="m-dot ok"></span>Ativo</td><td>15/07 08:31 <small class="am">há 103 dias</small></td><td class="r">⋯</td></tr>
+            <tr class="dim"><td><span class="m-av x">CB</span><b>Carlos Barros</b><small>carlos.barros@induspar.com.br</small></td><td><span class="m-badge gray">Leitura</span></td><td>—</td><td>—</td><td><span class="m-dot"></span>Desativado <small>por Maria Costa · 02/07</small></td><td>02/07 10:15</td><td class="r"><span class="m-btn">Reativar</span></td></tr>
+          </tbody></table>
+        </div>
+        <div class="m-card m-mini"><b>Acessos de fornecedores</b> — a seção continua aqui, como na proposta de acesso de fornecedores: convite por pessoa e CNPJ, revogação imediata.</div>
+      </div>
+    </div></div>
+    <div class="muda"><div class="muda-t">O que muda</div><ul class="plain">
+      <li>A lista vem dos usuários reais da conta; KPIs e filtros passam a funcionar.</li>
+      <li>Entram as colunas <strong>Escopo</strong> e <strong>Entrada</strong> (senha com MFA, ou SSO quando houver) e os estados <em>bloqueado</em> e <em>expirado</em>, com o motivo.</li>
+      <li>O KPI <em>Sem acesso há 90 dias</em> alimenta a revisão periódica de acessos.</li>
+      <li>As ações ficam na linha: o atalho da situação (Desbloquear, Reenviar, Reativar) e o menu ⋯ com Editar, Redefinir senha, Redefinir MFA e Desativar.</li>
+    </ul></div>
+
+    <!-- T2 -->
+    <h3 id="t2">6.2 · Convidar usuário</h3>
+    <div class="ad"><span class="ad-tag antes">Antes</span></div>
+    <p>Não existe: o botão <em>+ Convidar usuário</em> não tem ação.</p>
+    <div class="ad"><span class="ad-tag depois">Depois</span></div>
+    <div class="mockwrap"><div class="mock drawer">
+      <div class="m-dimbg"><div class="m-h1">Usuários</div><div class="m-ghost"></div><div class="m-ghost"></div><div class="m-ghost short"></div></div>
+      <div class="m-drawer">
+        <div class="m-dh"><b>Convidar usuário</b><span>×</span></div>
+        <label class="m-lbl">Nome</label><div class="m-field">Júlia Mendes</div>
+        <label class="m-lbl">E-mail</label><div class="m-field">julia.mendes@induspar.com.br</div>
+        <label class="m-lbl">Perfil</label>
+        <div class="m-cards">
+          <div class="m-opt"><b>Administrador</b><small>Tudo, inclusive usuários e configurações</small></div>
+          <div class="m-opt on"><b>Fiscal</b><small>Opera crédito, débito, conciliação, inconsistências e apuração</small></div>
+          <div class="m-opt"><b>Tesouraria</b><small>Opera pagamentos RAD; lê o fiscal</small></div>
+          <div class="m-opt"><b>Leitura</b><small>Consulta e exporta, sem ações</small></div>
+        </div>
+        <label class="m-lbl">Escopo</label>
+        <div class="m-radio"><span class="o"></span>Toda a organização</div>
+        <div class="m-radio on"><span class="o"></span>CNPJs selecionados</div>
+        <div class="m-check on">☑ 54.891.237/0003-10 · Induspar · Curitiba (PR)</div>
+        <div class="m-check">☐ 54.891.237/0001-48 · Induspar · matriz (SP)</div>
+        <div class="m-check">☐ 54.891.237/0002-29 · Induspar · Joinville (SC)</div>
+        <div class="m-resumo"><b>Júlia vai poder</b> operar Crédito, Débito, Conciliação, Inconsistências e Apuração, e ler o resto, <b>só da filial de Curitiba</b>. O convite vale 7 dias.</div>
+        <div class="m-dfoot"><span class="m-btn">Cancelar</span><span class="m-btn primary">Enviar convite</span></div>
+      </div>
+    </div></div>
+    <div class="muda"><div class="muda-t">O que muda</div><ul class="plain">
+      <li>Perfil escolhido em cartões que dizem o que cada um pode — ninguém precisa decorar a matriz.</li>
+      <li>Escopo na mesma tela, com a organização inteira ou a lista de CNPJs.</li>
+      <li>O resumo em linguagem natural é a última conferência antes de enviar.</li>
+      <li>O e-mail já usado na organização é recusado na hora; o convite expira em 7 dias.</li>
+    </ul></div>
+
+    <!-- T3 -->
+    <h3 id="t3">6.3 · Primeiro acesso: aceitar o convite</h3>
+    <div class="ad"><span class="ad-tag antes">Antes</span></div>
+    <p>Não existe. Todo mundo entra pelo mesmo acesso de demonstração.</p>
+    <div class="ad"><span class="ad-tag depois">Depois</span></div>
+    <div class="mockwrap"><div class="mock auth">
+      <div class="m-auth-card">
+        <div class="m-auth-h">SplitHub</div>
+        <div class="m-steps"><span class="on">1 · Senha</span><span>2 · Autenticador</span><span>3 · Códigos de recuperação</span></div>
+        <p class="m-p"><b>Maria Costa</b> convidou você para a conta da <b>Induspar Tecnologia</b> com o perfil <b>Fiscal</b>.</p>
+        <label class="m-lbl">E-mail</label><div class="m-field ro">julia.mendes@induspar.com.br</div>
+        <label class="m-lbl">Crie sua senha</label><div class="m-field">••••••••••••••</div>
+        <div class="m-regras"><span class="ok">✓ 12 caracteres ou mais</span><span class="ok">✓ letras e números</span><span class="ok">✓ não usada em vazamentos conhecidos</span></div>
+        <label class="m-lbl">Confirme a senha</label><div class="m-field">••••••••••••••</div>
+        <div class="m-btn primary full">Continuar</div>
+      </div>
+      <div class="m-auth-card">
+        <div class="m-auth-h">SplitHub</div>
+        <div class="m-steps"><span class="done">1 · Senha</span><span class="on">2 · Autenticador</span><span>3 · Códigos de recuperação</span></div>
+        <p class="m-p">Leia o código com um aplicativo autenticador — Google Authenticator, Microsoft Authenticator ou outro.</p>
+        <div class="m-qr" aria-hidden="true"></div>
+        <label class="m-lbl">Código de 6 dígitos</label><div class="m-field">482 913</div>
+        <div class="m-btn primary full">Ativar e entrar</div>
+      </div>
+    </div></div>
+    <div class="muda"><div class="muda-t">O que muda</div><ul class="plain">
+      <li>O link do convite leva a uma tela que diz quem convidou, para qual conta e com qual perfil.</li>
+      <li>A pessoa cria a própria senha e ativa o MFA antes da primeira entrada — sem senha provisória por e-mail.</li>
+      <li>Ao fim, recebe códigos de recuperação de uso único, para o caso de perder o celular.</li>
+    </ul></div>
+
+    <!-- T4 -->
+    <h3 id="t4">6.4 · Entrar</h3>
+    <div class="ad"><span class="ad-tag antes">Antes</span></div>
+    <figure class="tela estreita"><a href="img/usuarios/usr-antes-login.webp" target="_blank" rel="noopener"><img src="img/usuarios/usr-antes-login.webp" width="720" height="600" loading="lazy" alt="Login atual com usuário e senha de demonstração"></a><figcaption>Usuário e senha de demonstração, iguais para todos; sem MFA, sem bloqueio, sem recuperação.</figcaption></figure>
+    <div class="ad"><span class="ad-tag depois">Depois</span></div>
+    <div class="mockwrap"><div class="mock auth">
+      <div class="m-auth-card">
+        <div class="m-auth-h">SplitHub</div>
+        <label class="m-lbl">E-mail</label><div class="m-field">julia.mendes@induspar.com.br</div>
+        <label class="m-lbl">Senha</label><div class="m-field">••••••••••••••</div>
+        <div class="m-link">Esqueci minha senha</div>
+        <div class="m-btn primary full">Entrar</div>
+        <div class="m-sso">ou <span class="m-btn full">Entrar com o login da empresa</span><small>aparece só quando a conta tem SSO</small></div>
+      </div>
+      <div class="m-auth-card">
+        <div class="m-auth-h">SplitHub</div>
+        <p class="m-p">Digite o código do seu aplicativo autenticador.</p>
+        <div class="m-otp"><span>4</span><span>8</span><span>2</span><span>9</span><span>1</span><span>3</span></div>
+        <div class="m-link">Usar um código de recuperação</div>
+        <div class="m-btn primary full">Confirmar</div>
+        <div class="m-alerta">Após 5 tentativas erradas, o acesso é bloqueado por 15 minutos e o administrador é avisado.</div>
+      </div>
+    </div></div>
+    <div class="muda"><div class="muda-t">O que muda</div><ul class="plain">
+      <li>Entrada por e-mail e senha da própria pessoa, sempre seguida do código do autenticador.</li>
+      <li><em>Esqueci minha senha</em> manda um link de uso único, válido por 30 minutos.</li>
+      <li>O botão de SSO só aparece na conta que tiver provedor de identidade configurado (fase 2).</li>
+    </ul></div>
+
+    <!-- T5 -->
+    <h3 id="t5">6.5 · Detalhe do usuário</h3>
+    <div class="ad"><span class="ad-tag antes">Antes</span></div>
+    <p>Não existe: <em>Editar</em> fica desabilitado.</p>
+    <div class="ad"><span class="ad-tag depois">Depois</span></div>
+    <div class="mockwrap"><div class="mock drawer">
+      <div class="m-dimbg"><div class="m-h1">Usuários</div><div class="m-ghost"></div><div class="m-ghost"></div><div class="m-ghost short"></div></div>
+      <div class="m-drawer">
+        <div class="m-dh"><b>Rafael Lima</b><span>×</span></div>
+        <div class="m-tabs"><span class="on">Acesso</span><span>Sessões</span><span>Histórico</span></div>
+        <div class="m-kv"><span>E-mail</span><b>rafael.lima@induspar.com.br</b></div>
+        <div class="m-kv"><span>Estado</span><b><span class="m-dot ok"></span>Ativo desde 03/08/2026</b></div>
+        <div class="m-kv"><span>Entrada</span><b>Senha + MFA · autenticador ativo</b></div>
+        <label class="m-lbl">Perfil</label><div class="m-field sel">Fiscal ▾</div>
+        <label class="m-lbl">Escopo</label><div class="m-field sel">3 CNPJs · filiais PR ▾</div>
+        <label class="m-lbl">Motivo da alteração</label><div class="m-field ph">Obrigatório ao trocar perfil ou escopo</div>
+        <div class="m-sep"></div>
+        <div class="m-tabbody"><b>Sessões abertas</b>
+          <div class="m-sess"><span>Chrome · Windows · 177.92.x.x</span><small>desde hoje 08:12</small><span class="m-btn">Encerrar</span></div>
+          <div class="m-sess"><span>Edge · Windows · 189.4.x.x</span><small>desde ontem 17:40</small><span class="m-btn">Encerrar</span></div>
+        </div>
+        <div class="m-sep"></div>
+        <div class="m-acts"><span class="m-btn">Redefinir senha</span><span class="m-btn">Redefinir MFA</span><span class="m-btn">Bloquear</span><span class="m-btn danger">Desativar</span></div>
+        <div class="m-dfoot"><span class="m-btn">Cancelar</span><span class="m-btn primary">Salvar</span></div>
+      </div>
+    </div></div>
+    <div class="muda"><div class="muda-t">O que muda</div><ul class="plain">
+      <li>Perfil e escopo editáveis, sempre com motivo — o que vai para a trilha.</li>
+      <li>As sessões abertas aparecem com navegador, sistema e IP, e podem ser encerradas uma a uma.</li>
+      <li>Desativar pede confirmação, encerra todas as sessões e mantém o histórico; o usuário some da operação, não da auditoria.</li>
+      <li>A aba Histórico mostra convite, aceite, entradas, falhas e cada alteração, com autor e data.</li>
+    </ul></div>
+
+    <!-- T6 -->
+    <h3 id="t6">6.6 · Minha conta e a troca de perfil</h3>
+    <div class="ad"><span class="ad-tag antes">Antes</span></div>
+    <div class="lado">
+      <figure class="tela"><a href="img/usuarios/usr-antes-config.webp" target="_blank" rel="noopener"><img src="img/usuarios/usr-antes-config.webp" width="312" height="386" loading="lazy" alt="Modal de Configurações com troca de perfil Cliente e Fornecedor"></a><figcaption>O usuário troca o próprio perfil entre Cliente e Fornecedor.</figcaption></figure>
+      <figure class="tela"><a href="img/usuarios/usr-antes-fornecedor.webp" target="_blank" rel="noopener"><img src="img/usuarios/usr-antes-fornecedor.webp" width="472" height="732" loading="lazy" alt="Seletor de fornecedor com a lista de todos os fornecedores"></a><figcaption>Como fornecedor, escolhe qualquer CNPJ da lista.</figcaption></figure>
+    </div>
+    <div class="ad"><span class="ad-tag depois">Depois</span></div>
+    <div class="mockwrap"><div class="mock auth">
+      <div class="m-auth-card wide">
+        <div class="m-dh"><b>Minha conta</b><span>×</span></div>
+        <div class="m-kv"><span>Nome</span><b>Rafael Lima</b></div>
+        <div class="m-kv"><span>E-mail</span><b>rafael.lima@induspar.com.br</b></div>
+        <div class="m-kv"><span>Perfil</span><b><span class="m-badge teal">Fiscal</span> <small>definido pelo administrador</small></b></div>
+        <div class="m-kv"><span>Escopo</span><b>3 CNPJs · filiais PR</b></div>
+        <div class="m-sep"></div>
+        <div class="m-acts"><span class="m-btn">Trocar senha</span><span class="m-btn">Trocar autenticador</span><span class="m-btn">Novos códigos de recuperação</span><span class="m-btn">Encerrar minhas outras sessões</span></div>
+        <div class="m-sep"></div>
+        <div class="m-kv"><span>Modo claro</span><b><span class="m-tog"></span></b></div>
+      </div>
+      <div class="m-auth-card">
+        <div class="m-auth-h">Portal do Fornecedor</div>
+        <p class="m-p">O fornecedor entra com o próprio e-mail, senha e MFA e cai direto nos CNPJs do seu acesso — sem lista de fornecedores para escolher.</p>
+        <div class="m-kv"><span>Acesso</span><b>Ferroplex Mineração S.A.</b></div>
+        <div class="m-kv"><span>CNPJs</span><b>matriz e 1 filial</b></div>
+        <div class="m-link">Detalhes na proposta de acesso de fornecedores</div>
+      </div>
+    </div></div>
+    <div class="muda"><div class="muda-t">O que muda</div><ul class="plain">
+      <li>O modal vira <strong>Minha conta</strong>: perfil e escopo aparecem, mas só o administrador altera.</li>
+      <li>A troca de perfil Cliente ↔ Fornecedor sai do produto; continua apenas no ambiente de demonstração.</li>
+      <li>O seletor com todos os fornecedores dá lugar à entrada do próprio fornecedor, já restrita ao seu CNPJ.</li>
+    </ul></div>
+  </div>
+
+  <!-- ══ 07 ══ -->
+  <div class="section" id="s07">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Regras de negócio</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Regra</th><th>Descrição</th></tr></thead><tbody>
+      <tr><td class="jid">RN-USR-01</td><td>O e-mail é único dentro da organização. Convidar um e-mail já existente é recusado.</td></tr>
+      <tr><td class="jid">RN-USR-02</td><td>Todo usuário tem exatamente um perfil e um escopo. Sem os dois, o convite não é enviado.</td></tr>
+      <tr><td class="jid">RN-USR-03</td><td>O convite vale 7 dias. Reenviar gera um link novo e invalida o anterior.</td></tr>
+      <tr><td class="jid">RN-USR-04</td><td>O MFA é obrigatório no login próprio. Não há como pular a ativação no primeiro acesso.</td></tr>
+      <tr><td class="jid">RN-USR-05</td><td>Cinco tentativas erradas seguidas, de senha ou de código, bloqueiam o acesso por 15 minutos e avisam os administradores.</td></tr>
+      <tr><td class="jid">RN-USR-06</td><td>Desativar encerra todas as sessões abertas do usuário no mesmo instante.</td></tr>
+      <tr><td class="jid">RN-USR-07</td><td>A organização não pode ficar sem administrador ativo: o último não pode ser desativado, rebaixado nem bloqueado pelo administrador.</td></tr>
+      <tr><td class="jid">RN-USR-08</td><td>O Administrador tem sempre a organização inteira como escopo.</td></tr>
+      <tr><td class="jid">RN-USR-09</td><td>Trocar perfil ou escopo exige motivo e vale a partir da próxima ação do usuário, sem novo login.</td></tr>
+      <tr><td class="jid">RN-USR-10</td><td>Usuário desativado não é apagado: some da operação e permanece na trilha, com tudo o que fez.</td></tr>
+      <tr><td class="jid">RN-USR-11</td><td>A sessão expira após 30 minutos sem uso e, de qualquer forma, após 12 horas.</td></tr>
+      <tr><td class="jid">RN-USR-12</td><td>O usuário não altera o próprio perfil nem o próprio escopo, mesmo sendo administrador.</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- ══ 08 ══ -->
+  <div class="section" id="s08">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Segurança da autenticação</span></div>
+    <p class="sec-sub">É o que já foi declarado nas respostas de segurança enviadas a clientes — login próprio com MFA em provedor de identidade gerenciado — e que hoje o produto não entrega.</p>
+    <div class="table-wrap"><table><thead><tr><th>Tema</th><th>Proposta</th></tr></thead><tbody>
+      <tr><td><strong>Identidade</strong></td><td>Provedor de identidade gerenciado da AWS (Amazon Cognito), com a senha guardada só como hash pelo provedor; a plataforma nunca vê nem grava a senha.</td></tr>
+      <tr><td><strong>Senha</strong></td><td>12 caracteres ou mais, letras e números, recusada se constar em vazamentos conhecidos; sem troca forçada periódica.</td></tr>
+      <tr><td><strong>MFA</strong></td><td>Fora neste momento (D-USR-03). Proposto: aplicativo autenticador (TOTP) obrigatório, com códigos de recuperação de uso único; o modelo permite ligá-lo depois sem mudar perfis nem escopos.</td></tr>
+      <tr><td><strong>Sessão</strong></td><td>Cookie protegido (httpOnly, SameSite, só por TLS), expiração por inatividade e por tempo máximo, encerramento remoto.</td></tr>
+      <tr><td><strong>E-mails</strong></td><td>Convite e redefinição por e-mail transacional (Amazon SES), com link de uso único e prazo curto.</td></tr>
+      <tr><td><strong>Trilha</strong></td><td>Entrada e saída, falhas de entrada com IP, bloqueios, convites, aceites e cada alteração de perfil, escopo ou estado.</td></tr>
+      <tr><td><strong>Autorização</strong></td><td>Cada requisição avaliada pela política central de autorização a partir do perfil e do escopo, com acesso negado por padrão.</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- ══ 09 ══ -->
+  <div class="section" id="s09">
+    <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Fases de entrega</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Fase</th><th>Entra</th><th>Para quê</th></tr></thead><tbody>
+      <tr><td><span class="chip ok">Fase 1</span></td><td>Login próprio por e-mail e senha, convite e primeiro acesso, os cinco perfis com a matriz, desativação com fim das sessões, Minha conta e trilha. O escopo e a saída da troca de perfil entram conforme a D-USR-05 e a D-USR-06</td><td>A implantação do cliente atual, que não tem integração — e o CT-01-09 do caderno</td></tr>
+      <tr><td><span class="chip info">Fase 2</span></td><td>SSO por SAML 2.0 ou OpenID Connect, provisionamento por SCIM 2.0, revisão periódica de acessos com relatório de usuários e perfis</td><td>Clientes com provedor de identidade, como os que pedem Entra ID ou PingIdentity nas RFPs</td></tr>
+      <tr><td><span class="chip gray">Fora</span></td><td>Perfis personalizados pelo cliente, aprovação em duas pessoas para dar acesso, restrição por IP ou horário</td><td>Sem demanda concreta hoje; o modelo de perfis fixos cobre os casos conhecidos</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- ══ 10 ══ -->
+  <div class="section" id="s10">
+    <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Impacto no produto e no caderno</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Onde</th><th>O que muda</th></tr></thead><tbody>
+      <tr><td><strong>Caderno da implantação</strong></td><td>CT-01-09 passa a <em>Disponível</em> com a fase 1. Casos sugeridos para entrar: convite expirado, bloqueio por tentativas, desativação que encerra a sessão, escopo que recorta as telas e o último administrador protegido.</td></tr>
+      <tr><td><strong>PRD de Organização</strong></td><td>A seção 15 ganha os perfis unificados, a matriz e a autenticação; a decisão D-07 é revista.</td></tr>
+      <tr><td><strong>Proposta de acesso de fornecedores</strong></td><td>O fornecedor usa a mesma autenticação desta proposta; as duas podem ser aprovadas juntas.</td></tr>
+      <tr><td><strong>Banco de respostas para RFP</strong></td><td>A resposta de perfis passa a citar os cinco perfis e a matriz, no lugar dos seis nomes antigos.</td></tr>
+      <tr><td><strong>API pública</strong></td><td>Sem mudança: as integrações continuam por credencial de serviço em Config → Integrações.</td></tr>
+    </tbody></table></div>
+  </div>
+
+  <!-- ══ 11 ══ -->
+  <div class="section" id="s11">
+    <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Decisões a aprovar</span></div>
+    <div class="table-wrap"><table><thead><tr><th>#</th><th>Decisão</th><th>Recomendação</th><th>Situação</th></tr></thead><tbody>
+      <tr><td class="jid">D-USR-01</td><td>Rever a D-07 e trazer a autenticação para o escopo</td><td>Sim: sem login próprio, o cliente atual não entra</td><td><span class="chip ok">Aprovada</span> 26/10/2026 · opção A</td></tr>
+      <tr><td class="jid">D-USR-02</td><td>Perfis: Administrador, Fiscal, Tesouraria, Leitura e Fornecedor, com a matriz da seção 3</td><td>Sim, substituindo os nomes do protótipo e das respostas de segurança</td><td><span class="chip ok">Aprovada</span> 26/10/2026</td></tr>
+      <tr><td class="jid">D-USR-03</td><td>MFA obrigatório no login próprio</td><td>Sim</td><td><span class="chip red">Fora neste momento</span> 26/10/2026 · login só com e-mail e senha</td></tr>
+      <tr><td class="jid">D-USR-04</td><td>Convite válido por 7 dias</td><td>Sim</td><td><span class="chip ok">Aprovada</span> 26/10/2026</td></tr>
+      <tr><td class="jid">D-USR-05</td><td>Escopo por CNPJ, com o Administrador sempre na organização inteira</td><td>Sim</td><td><span class="chip warn">Em análise</span> detalhe na <a href="#d-usr-05">11.3</a></td></tr>
+      <tr><td class="jid">D-USR-06</td><td>Tirar a troca de perfil do produto, mantendo-a só na demonstração</td><td>Sim</td><td><span class="chip warn">Em análise</span> detalhe na <a href="#d-usr-06">11.4</a></td></tr>
+      <tr><td class="jid">D-USR-07</td><td>Bloqueio de 15 minutos após 5 tentativas; sessão de 30 minutos sem uso e 12 horas no máximo</td><td>Sim</td><td><span class="chip red">Bloqueio fora neste momento</span> 26/10/2026 · tempos de sessão a confirmar, na <a href="#d-usr-07">11.5</a></td></tr>
+      <tr><td class="jid">D-USR-08</td><td>SSO e SCIM na fase 2</td><td>Sim</td><td><span class="chip ok">Aprovada</span> 26/10/2026</td></tr>
+    </tbody></table></div>
+    <h3>11.1 · A D-USR-01 em detalhe</h3>
+    <p>A D-07 foi tomada em 22/09/2026 e registrada no PRD de Organização (v2.3): <em>"não mexer em autenticação por ora"</em>. A auditoria PRD × protótipo tinha marcado a autenticação como andaime — a API prometia um <code>POST /v1/auth/login</code> sem tela nem PRD —, e a iniciativa de proteger o acesso de demonstração do site estava pausada desde 11/09. Para não travar a atualização dos PRDs, a decisão foi documentar quem pode o quê e deixar de fora como a pessoa entra.</p>
+    <p>Aprovar a D-USR-01 revoga a D-07: a autenticação de pessoas passa a ser escopo do produto, construída pelo time de desenvolvimento, e o PRD de Organização vai à v2.4. Não mudam a autenticação das integrações (credencial de serviço do contrato público), a iniciativa de senha do site de demonstração (segue pausada) nem o protótipo, que é estático e só simula as telas.</p>
+    <h3>11.2 · O que as decisões mudam nas telas</h3>
+    <div class="table-wrap"><table><thead><tr><th>Tela</th><th>Ajuste</th><th>Por quê</th></tr></thead><tbody>
+      <tr><td><strong>6.1 Config → Usuários</strong></td><td>Sai o KPI <em>Bloqueados</em> e o estado <em>bloqueado</em>; a coluna <em>Entrada</em> mostra <em>Senha</em> (ou <em>SSO</em>, na fase 2)</td><td>D-USR-03 e D-USR-07</td></tr>
+      <tr><td><strong>6.3 Primeiro acesso</strong></td><td>Fica só a etapa da senha; saem o autenticador e os códigos de recuperação</td><td>D-USR-03</td></tr>
+      <tr><td><strong>6.4 Entrar</strong></td><td>Fica a tela de e-mail e senha; saem o código do autenticador e o aviso de bloqueio</td><td>D-USR-03 e D-USR-07</td></tr>
+      <tr><td><strong>6.5 Detalhe do usuário</strong></td><td>Saem <em>Redefinir MFA</em> e <em>Bloquear</em>; ficam <em>Redefinir senha</em> e <em>Desativar</em></td><td>D-USR-03 e D-USR-07</td></tr>
+      <tr><td><strong>6.6 Minha conta</strong></td><td>Saem <em>Trocar autenticador</em> e <em>Novos códigos de recuperação</em></td><td>D-USR-03</td></tr>
+      <tr><td><strong>Regras</strong></td><td>RN-USR-04 (MFA) e RN-USR-05 (bloqueio) ficam suspensas</td><td>D-USR-03 e D-USR-07</td></tr>
+    </tbody></table></div>
+    <p class="nota-p">As telas da seção 6 seguem como foram propostas, para registro; o ajuste acima é o que entra na construção. Elas serão redesenhadas depois que a D-USR-05 e a D-USR-06 forem decididas.</p>
+
+    <h3 id="d-usr-05">11.3 · A D-USR-05 em detalhe: escopo por CNPJ</h3>
+    <p><strong>O que é.</strong> Além do perfil, que diz <em>o que</em> a pessoa pode fazer, cada usuário teria um escopo, que diz <em>sobre quais CNPJs</em>. O escopo é a organização inteira ou uma lista de CNPJs. Ele recorta todas as telas, os indicadores do Início, os gráficos, as exportações e o próprio filtro de grupo econômico do cabeçalho, que só oferece o que está no escopo. O Administrador tem sempre a organização inteira (RN-USR-08).</p>
+    <p><strong>Como é hoje.</strong> Não existe escopo: todo usuário vê todos os CNPJs. O filtro de grupo econômico é uma escolha de visualização, não uma restrição, e qualquer pessoa troca de grupo quando quiser. O app incorporado ao master em 26/10 já mostra, no resumo do convite, <em>"em toda a organização"</em>, que é o comportamento de hoje escrito por extenso.</p>
+    <div class="table-wrap"><table><thead><tr><th>Situação</th><th>Com escopo</th><th>Sem escopo</th></tr></thead><tbody>
+      <tr><td>Analista que só atende a filial de Curitiba</td><td>Vê os créditos, débitos e inconsistências daquela filial</td><td>Vê os de todas as empresas e filiais</td></tr>
+      <tr><td>Auditoria externa de uma empresa do grupo</td><td>Leitura daquela empresa e de mais nada</td><td>Leitura do grupo inteiro, inclusive das empresas não auditadas</td></tr>
+      <tr><td>Grupo com duas empresas e times fiscais separados</td><td>Cada time vê a própria empresa</td><td>Os dois times veem as duas</td></tr>
+      <tr><td>CNPJ novo cadastrado na organização</td><td>Entra para quem tem a organização inteira; quem tem lista precisa que o administrador o acrescente</td><td>Aparece para todos</td></tr>
+    </tbody></table></div>
+    <p><strong>O ponto que precisa de decisão: o recorte é por filial ou por empresa?</strong> A apuração da CBS e do IBS e o saldo credor são da empresa, a raiz do CNPJ, e não da filial. Quem tem no escopo só a filial de Curitiba enxerga os documentos dela, mas a apuração e o saldo que esses documentos ajudam a formar são da empresa inteira. Há três saídas, e nenhuma é gratuita: esconder a Apuração de quem não tem a empresa inteira; mostrar a apuração da empresa só para leitura, abrindo uma exceção ao escopo; ou mostrar só a contribuição da filial, um número que não existe em nenhuma declaração.</p>
+    <p>O resto se resolve por regra: fornecedores e contratos são cadastros e aparecem para todos, mas os documentos, as guias e os valores dentro deles seguem o escopo; uma política de Execução RAD que cobre CNPJs fora do escopo fica só para leitura; as exportações seguem o escopo; a credencial das integrações não muda.</p>
+    <div class="table-wrap"><table><thead><tr><th>Opção</th><th>O que entra</th><th>Ganha</th><th>Custa</th></tr></thead><tbody>
+      <tr><td><span class="chip info">A</span> Por CNPJ, como proposto</td><td>Escopo por filial ou por empresa, à escolha do administrador</td><td>Cobre todos os casos acima, inclusive o analista da filial</td><td>Exige decidir o que a filial vê na Apuração, e é o maior volume de construção e de testes</td></tr>
+      <tr><td><span class="chip ok">B</span> Sem escopo na fase 1</td><td>Todos veem a organização inteira; o escopo vai para a fase 2</td><td>Nada a construir agora; o convite e o caderno ficam como estão</td><td>Auditoria externa e grupos com times separados não são atendidos</td></tr>
+      <tr><td><span class="chip teal">C</span> Por empresa</td><td>Escopo pela raiz do CNPJ: a empresa inteira ou nada</td><td>A apuração e o saldo ficam inteiros para quem os vê; atende a auditoria e os times por empresa</td><td>O analista de uma filial só passa a ver a empresa toda</td></tr>
+    </tbody></table></div>
+    <div class="callout info"><div class="ct">Recomendação</div><p><strong>C na fase 1</strong>, com o recorte por filial na fase 2 se um cliente pedir. O modelo é o mesmo: o escopo continua sendo uma lista, de empresas em vez de CNPJs, e passar à filial depois não muda perfis nem dados. Se o cliente da implantação tiver uma empresa só, a <strong>B</strong> resolve a fase 1 sem custo e a C entra quando o primeiro grupo com mais de uma empresa chegar.</p></div>
+    <p><strong>O que muda com A ou C:</strong> o convite e o detalhe do usuário ganham o campo <em>Escopo</em>, a listagem ganha a coluna, a trilha registra a troca de escopo com motivo (RN-USR-09) e o caderno ganha o caso <em>"o escopo recorta as telas"</em>. Com B, nada muda agora.</p>
+
+    <h3 id="d-usr-06">11.4 · A D-USR-06 em detalhe: a troca de perfil</h3>
+    <p><strong>Como é hoje.</strong> No modal de Configurações, a pessoa alterna o próprio perfil entre <em>Cliente</em> e <em>Fornecedor</em>, sem novo login (telas da seção 6.6). Ao virar Fornecedor, escolhe qualquer fornecedor da lista e passa a ver o Portal como se fosse ele, inclusive com as ações do portal, como enviar o comprovante de RAD ou PIX. Existe para a demonstração: mostrar os dois lados do produto com um login só. Na priorização ela aparece como <em>Troca de perfil in-session</em>, em M0, e na proposta do núcleo do MVP como recurso de demonstração.</p>
+    <p><strong>O que já foi decidido.</strong> Em 14/09/2026, na <a href="proposta-fornecedores-acesso.html">proposta de acesso de fornecedores</a> (v1.2, aprovada), a troca foi mantida <em>como recurso de demonstração</em>, para sair do produto antes da primeira instalação com dados reais, e ganhou o selo <em>Modo demonstração</em> no modal. Na mesma proposta, o fornecedor passou a entrar por convite e senha própria, o que já está no protótipo. A D-USR-06 confirma essa decisão no novo modelo de perfis e diz o que a substitui.</p>
+    <p><strong>Por que não pode ir para produção:</strong></p>
+    <ul class="plain">
+      <li><strong>Quebra a segregação.</strong> Um funcionário do cliente entra no portal de qualquer fornecedor, sem convite e sem o fornecedor saber.</li>
+      <li><strong>Falseia a prova.</strong> O comprovante enviado por esse caminho fica registrado como enviado pelo fornecedor, mas foi o cliente quem enviou. É justamente a evidência que sustenta a apropriação do crédito.</li>
+      <li><strong>Contorna a autenticação.</strong> Com o login próprio (D-USR-01), o perfil vem de quem entrou. Um botão que troca o perfil por dentro anula esse controle.</li>
+    </ul>
+    <div class="table-wrap"><table><thead><tr><th>Opção</th><th>O que fica</th><th>Quando faz sentido</th></tr></thead><tbody>
+      <tr><td><span class="chip ok">A</span> Tirar do produto</td><td>Só no ambiente de demonstração. O modal vira <em>Minha conta</em> e o fornecedor entra com o próprio login</td><td>Sempre; é a recomendação e é o que já foi decidido em 14/09</td></tr>
+      <tr><td><span class="chip info">B</span> A, mais um "ver como fornecedor"</td><td>Uma prévia somente leitura do que um fornecedor vê, para o Administrador, sem nenhuma ação e registrada na trilha</td><td>Se o suporte ao fornecedor for frequente, como em <em>"o fornecedor diz que não vê o documento"</em>. Pode entrar depois, sem desfazer a A</td></tr>
+      <tr><td><span class="chip red">C</span> Manter como está</td><td>A troca livre, com todas as ações</td><td>Não recomendada: carrega os três problemas acima para produção</td></tr>
+    </tbody></table></div>
+    <div class="callout info"><div class="ct">Sem dependência pendente</div><p>Com a A, o Portal do Fornecedor só é alcançado pelo login do próprio fornecedor. Essa porta de entrada já foi aprovada em 14/09, na proposta de acesso de fornecedores, e o convite com senha própria já está no protótipo. O que falta é o mesmo que falta para o cliente: o login de verdade, em provedor de identidade, que a D-USR-01 trouxe para o escopo.</p></div>
+    <p><strong>O que muda com A:</strong> a <em>Troca de perfil in-session</em> sai do inventário do produto e da faixa M0, como saiu o selo de modo demonstração na v2.6 do mapa; a tela 6.6 passa a ser a Minha conta; o ambiente de demonstração e o de avaliação seguem com a troca.</p>
+
+    <h3 id="d-usr-07">11.5 · O que falta na D-USR-07: os tempos de sessão</h3>
+    <p>O bloqueio por tentativas ficou fora; os tempos de sessão ainda não foram confirmados. A proposta é <strong>30 minutos sem uso</strong>, depois dos quais a pessoa entra de novo, e <strong>12 horas no máximo</strong> por sessão, o que cobre um dia de trabalho com folga e obriga um login novo por dia. Tempos mais longos reduzem o atrito, mas alargam a janela de quem deixa a máquina aberta; mais curtos interrompem o fechamento da apuração no meio. Recomendação: confirmar 30 minutos e 12 horas.</p>
+  </div>
+
+  <!-- ══ 12 ══ -->
+  <div class="section" id="s12">
+    <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Histórico de versões</span></div>
+    <div class="ver-row"><div class="ver-num">v1.2.1</div><div class="ver-desc"><strong>26/10/2026</strong> — Correção na 11.4. A troca de perfil já tinha sido decidida em 14/09, na proposta de acesso de fornecedores: fica só como recurso de demonstração e sai antes da primeira instalação com dados reais. Aquela proposta está aprovada, e não em aprovação, como a v1.2 dizia, e o acesso do fornecedor por convite já está no protótipo. A D-USR-06 passa a ser a confirmação dessa decisão.</div></div>
+    <div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>26/10/2026</strong> — Detalhe das duas decisões em análise. Escopo por CNPJ (D-USR-05): como é hoje, o que muda, o recorte por filial ou por empresa diante da apuração, que é da empresa, e três opções, com a recomendação do recorte por empresa na fase 1. Troca de perfil (D-USR-06): por que não vai para produção, três opções e a dependência da proposta de acesso de fornecedores. Os tempos de sessão que faltam na D-USR-07. Corrigidas a linha da fase 1 e a do MFA, que ainda citavam o MFA e o bloqueio.</div></div>
+    <div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>26/10/2026</strong> — Seis das oito decisões tomadas. Aprovadas: a autenticação no escopo, que revoga a D-07 (D-USR-01), os cinco perfis (D-USR-02), o convite de 7 dias (D-USR-04) e o SSO e SCIM na fase 2 (D-USR-08). Ficam fora neste momento o MFA (D-USR-03) e o bloqueio por tentativas (D-USR-07). Seguem em análise o escopo por CNPJ (D-USR-05) e a troca de perfil (D-USR-06). Entram o detalhe da D-USR-01 e o que as decisões mudam nas telas.</div></div>
+    <div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>26/10/2026</strong> — Primeira versão. O gap da tela de Usuários, os princípios, os cinco perfis unificados com a matriz, o escopo por CNPJ e o ciclo de vida do acesso. Traz seis telas com antes e depois — lista, convite, primeiro acesso, entrada, detalhe e Minha conta —, além de doze regras, a segurança da autenticação, as fases e as oito decisões a aprovar.</div></div>
+  </div>
+
+  <p style="font-size:11px;color:var(--txt3);text-align:center;margin-top:40px">SplitHub · Proposta · Gestão de usuários e acessos · v1.2.1 · 26/10/2026</p>
+</div>
+
+</body>
+</html>
