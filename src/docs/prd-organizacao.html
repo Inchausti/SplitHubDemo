@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRD — Organização · SplitHub v2.3</title>
+<title>PRD — Organização · SplitHub v2.4</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -194,14 +194,14 @@ img, svg { max-width: 100%; height: auto; }
   <p class="subtitle">Mantém o cadastro dos estabelecimentos que compõem o grupo econômico <strong>comprador</strong> — os destinatários dos documentos fiscais de entrada. Sem o CNPJ ativo aqui, o DF ingerido não é associado ao grupo e o crédito de IBS/CBS não é apurado.</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.3</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">2.4</span></div>
     <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Admin → Organização</span></div>
-    <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
+    <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Out/2026</span></div>
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#admin-organizacao</span></div>
     <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">LC 214/2025</span></div>
     <div class="meta-pill"><span class="meta-label">Norma</span>&nbsp;<span class="meta-val">IN RFB 2.240/2025</span></div>
     <div class="meta-pill" style="margin-left:auto">
-      <span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v2.3</span>
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v2.4</span>
     </div>
   </div>
 
@@ -734,11 +734,25 @@ img, svg { max-width: 100%; height: auto; }
 <tr><td>Coluna <strong>E-mail</strong></td><td>Identificador do acesso. N&atilde;o se repete dentro da organiza&ccedil;&atilde;o</td></tr>
 <tr><td>Coluna <strong>&Uacute;ltimo acesso</strong></td><td>Data da &uacute;ltima sess&atilde;o iniciada. Vazio significa convite nunca aceito</td></tr>
 </tbody></table></div>
-<div class="callout warn"><div class="ct">Autentica&ccedil;&atilde;o fica fora, por decis&atilde;o</div><p>Decis&atilde;o D-07 de 22/09/2026: <strong>n&atilde;o mexer em autentica&ccedil;&atilde;o por ora</strong>. O contrato p&uacute;blico prev&ecirc; <code>POST /v1/auth/login</code> com JWT, e a iniciativa de senha segue pausada desde 11/09/2026. Esta se&ccedil;&atilde;o descreve <strong>quem pode o qu&ecirc;</strong>, n&atilde;o como a pessoa se autentica.</p></div>
+<h3>Autenticação</h3>
+<p>A decisão <strong>D-USR-01</strong> de 26/10/2026, da proposta de <a href="proposta-gestao-usuarios.html" style="color:var(--blue)">Gestão de usuários e acessos</a>, traz a autenticação de pessoas para o escopo do produto e <strong>revoga a D-07</strong> de 22/09/2026, que a deixava de fora. Na mesma rodada: os cinco perfis acima foram confirmados (D-USR-02), substituindo os nomes do protótipo — Analista Fiscal, Controller e Auditor —; o convite vale 7 dias (D-USR-04); e o SSO fica para a fase 2 (D-USR-08). <strong>MFA e bloqueio por tentativas ficam fora neste momento</strong> (D-USR-03 e D-USR-07).</p>
+<div class="table-wrap"><table><thead><tr><th>Item</th><th>Definição</th><th>Fase</th></tr></thead><tbody>
+<tr><td><strong>Login próprio</strong></td><td>E-mail e senha da própria pessoa, em provedor de identidade gerenciado (Amazon Cognito). A plataforma nunca vê nem grava a senha</td><td>1</td></tr>
+<tr><td><strong>Convite e primeiro acesso</strong></td><td>O convite vale 7 dias; reenviar gera um link novo e invalida o anterior. Pelo link, a pessoa cria a própria senha antes de entrar, sem senha provisória por e-mail</td><td>1</td></tr>
+<tr><td><strong>Recuperação de senha</strong></td><td>Link de uso único enviado por e-mail transacional, com prazo curto</td><td>1</td></tr>
+<tr><td><strong>Sessão</strong></td><td>Pode ser encerrada pelo próprio usuário ou pelo administrador; revogar o acesso encerra todas as sessões</td><td>1</td></tr>
+<tr><td><strong>Trilha</strong></td><td>Entrada, saída, falha de entrada com IP, convite, aceite e cada alteração de perfil, escopo ou estado</td><td>1</td></tr>
+<tr><td><strong>MFA</strong></td><td>Fora neste momento (D-USR-03). O modelo permite ligá-lo depois sem mudar perfis nem escopos</td><td>—</td></tr>
+<tr><td><strong>Bloqueio por tentativas</strong></td><td>Fora neste momento (D-USR-07)</td><td>—</td></tr>
+<tr><td><strong>SSO e SCIM</strong></td><td>Login pelo provedor de identidade do cliente (SAML 2.0 ou OpenID Connect) e provisionamento automático de usuários (D-USR-08)</td><td>2</td></tr>
+</tbody></table></div>
+<p>A matriz de permissões de cada perfil, módulo a módulo, está na <a href="proposta-gestao-usuarios.html#s03" style="color:var(--blue)">seção 3 da proposta</a>.</p>
+<div class="callout info"><div class="ct">O que ainda está em aprovação</div><p>O escopo por CNPJ (D-USR-05), a saída da troca de perfil do produto (D-USR-06) e os tempos de expiração da sessão. A autenticação das integrações não muda: credencial de serviço emitida em Config → Integrações, como no contrato público.</p></div>
 </div>
 
 <div class="section" id="s16">
 <div class="sec-hdr"><span class="sec-num">16</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+        <div class="ver-row"><div class="ver-num">v2.4</div><div class="ver-desc"><strong>26/10/2026</strong> &mdash; A autenticação entra no escopo: a D-USR-01, da proposta de Gestão de usuários e acessos, revoga a D-07. Na fase 1 entram login próprio com e-mail e senha, convite de 7 dias com primeiro acesso, recuperação de senha, encerramento de sessão e trilha; MFA e bloqueio por tentativas ficam fora neste momento. Os cinco perfis são confirmados; SSO e SCIM ficam para a fase 2.</div></div>
         <div class="ver-row"><div class="ver-num">v2.3</div><div class="ver-desc"><strong>22/09/2026</strong> &mdash; Se&ccedil;&atilde;o de Usu&aacute;rios e acessos, que n&atilde;o existia. Cinco perfis, incluindo o de Tesouraria que o PRD de Ressarcimento j&aacute; pressupunha; ciclo de vida do acesso com convite, reenvio, revoga&ccedil;&atilde;o derrubando sess&otilde;es e reativa&ccedil;&atilde;o; acesso de fornecedor por pessoa e CNPJ; e a defini&ccedil;&atilde;o dos indicadores e colunas da listagem. Autentica&ccedil;&atilde;o fica fora por decis&atilde;o (D-07).</div></div>
 <div class="ver-row"><div class="ver-num">v2.2</div><div class="ver-desc"><strong>18/09/2026</strong> — <strong>Novo módulo de Ressarcimento.</strong> Enquadramento por órgão e impedimentos do IBS.</div></div>
 <div class="ver-row">
