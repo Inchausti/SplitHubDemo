@@ -734,9 +734,11 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       + '<button onclick="document.getElementById(\'nf-detalhe-overlay\').remove();window.abrirDetalheRF(\'' + rf.id + '\')" style="background:rgba(var(--blue-rgb),.08);border:1px solid rgba(var(--blue-rgb),.2);border-radius:4px;color:'+PALETTE.blue+';cursor:pointer;font-size:10px;font-weight:700;padding:3px 8px">Ver RF →</button>'
       + '</div>'
       + '<div class="shg2" style="gap:6px;font-size:11px">'
-      + '<div style="color:var(--txt3)">Valor: <span style="color:var(--txt1);font-weight:600">' + ff(rf.valor) + '</span></div>'
+      + '<div style="color:var(--txt3)">' + (rf.balances ? 'Apurado' : 'Valor') + ': <span style="color:var(--txt1);font-weight:600">' + ff(rf.valor) + '</span></div>'
       + '<div style="color:var(--txt3)">NF Total: <span style="color:var(--txt1)">' + ff(rf.valorTotalNF || 0) + '</span></div>'
-      + '<div style="display:flex;align-items:center;gap:4px">Status: <span style="background:rgba(' + stRfRgb + ',.12);color:rgba(' + stRfRgb + ',1);border:1px solid rgba(' + stRfRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRfLab + '</span></div>'
+      + (rf.balances && window.shParcial
+          ? '<div style="grid-column:1/-1">' + window.shParcial.resumoRF(rf) + '</div>'
+          : '<div style="display:flex;align-items:center;gap:4px">Status: <span style="background:rgba(' + stRfRgb + ',.12);color:rgba(' + stRfRgb + ',1);border:1px solid rgba(' + stRfRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRfLab + '</span></div>')
       + (stRgLab ? '<div style="display:flex;align-items:center;gap:4px">RF: <span style="background:rgba(' + stRgRgb + ',.12);color:rgba(' + stRgRgb + ',1);border:1px solid rgba(' + stRgRgb + ',.3);border-radius:3px;padding:1px 6px;font-size:10px;font-weight:600">' + stRgLab + '</span></div>' : '<div></div>')
       + ((rf.statusCredito||rf.status)==='utilizado'&&rf.metodoExtincao ? '<div style="color:var(--txt3)">Extinção: <span style="color:var(--teal);font-weight:600">' + ({Compensacao:'Compensação',Transferencia:'Transferência'}[rf.metodoExtincao] || rf.metodoExtincao) + (rf.ressarcimento && rf.ressarcimento.marca === 'ressarcido' ? ' · ' + rf.ressarcimento.ref : '') + '</span></div>' : '')
       + ((rf.statusCredito||rf.status)==='utilizado'&&rf.dataExtincao ? '<div style="color:var(--txt3)">Data: <span style="color:var(--txt1)">' + rf.dataExtincao + '</span></div>' : '')
@@ -850,8 +852,27 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       + '<div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Contrato</div>'
       + '<div style="font-size:11px;color:var(--txt3);font-style:italic">Nenhum contrato vigente na data da NF.</div>';
   }
+  // Peças da coluna esquerda, usadas pelo corpo de sempre e pelo detalhe da
+  // parcialidade (js/parcialidade-detalhe.js)
+  var docHtml = DR('Número', (r.tipoDF || 'NF-e') + ' ' + r.numero)
+    + DR('Tipo', '<span style="color:' + tipoColor + ';font-weight:700">' + tipoLabel + '</span>')
+    + DR('Emitente', r.entidade || '—')
+    + DR('CNPJ', r.cnpj || '—', null, true)
+    + DR('Data', dataFmt)
+    + (window.shParcial && r.tipo === 'entrada' && (r.registrosFiscais || []).some(function(x){ return x.balances; })
+        ? DR('Crédito', '<span style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">' + window.shParcial.selosDF(r) + '</span>')
+        // saída com partição: um selo por tributo, nunca o pior estado (DEF-01, T-08)
+        : window.shParcial && r.tipo === 'saida' && window.shParcial.celulaDebDF(r)
+        ? DR('Débito', '<span style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">' + (r.registrosFiscais || []).filter(function(x){ return x.debBalances; }).map(function(x){ return window.shParcial.seloDeb(x, true); }).join(' ') + '</span>')
+        : DR('Status', '<span style="background:rgba(' + stRgb + ',.12);color:rgba(' + stRgb + ',1);border:1px solid rgba(' + stRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLab + '</span>'));
+  var chaveHtml = '<div class="mbox-section-label" style="margin-bottom:4px">Chave DF</div>'
+    + '<div style="font-size:9px;font-family:monospace;color:var(--txt3);word-break:break-all;line-height:1.7;margin-bottom:14px">' + chaveFormatada + '</div>';
+  var radHtml = window.shRADBlocoMetodo ? window.shRADBlocoMetodo(r) : '';
+  var incHtml = window._incRenderVinculadasHtml(r._inconsistencias && r._inconsistencias.length ? r._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return String(i.nfNumero) === String(r.numero) || i.dfNum === ((r.tipoDF||'NF-e')+' '+r.numero); }));
+  var _pp = !!(window.shDetalhe && (window.shDetalhe.ativo(r) || window.shDetalhe.ativoDeb(r)));
+
   var html = '<div id="nf-detalhe-overlay" class="moverlay" onclick="if(event.target===this)document.getElementById(\'nf-detalhe-overlay\').remove()">'
-    + '<div class="mbox" style="width:900px">'
+    + '<div class="mbox" style="width:' + (_pp ? 1040 : 900) + 'px">'
 
     // Header
     + '<div class="mbox-hdr" style="flex-wrap:wrap">'
@@ -868,43 +889,44 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + '</div>'
     + '</div>'
 
-    // Body: two columns
-    + '<div style="display:flex;flex:1;overflow:hidden">'
+    // Entrada com partição: quadro CBS × IBS com os registros fiscais e os
+    // valores da partição, trilha do ciclo e da apuração (js/parcialidade-detalhe.js)
+    + (_pp
+      ? window.shDetalhe.corpoDF(r, { docHtml: docHtml, chaveHtml: chaveHtml, ctrHtml: ctrHtml, radHtml: radHtml, incHtml: incHtml })
+      // Body: two columns
+      : '<div style="display:flex;flex:1;overflow:hidden">'
 
-    // Left panel
-    + '<div class="mbox-col" style="width:300px;flex-shrink:0;border-right:1px solid var(--brd)">'
-    + '<div class="mbox-section-label">Documento Fiscal</div>'
-    + DR('Número', (r.tipoDF || 'NF-e') + ' ' + r.numero)
-    + DR('Tipo', '<span style="color:' + tipoColor + ';font-weight:700">' + tipoLabel + '</span>')
-    + DR('Emitente', r.entidade || '—')
-    + DR('CNPJ', r.cnpj || '—', null, true)
-    + DR('Data', dataFmt)
-    + DR('Status', '<span style="background:rgba(' + stRgb + ',.12);color:rgba(' + stRgb + ',1);border:1px solid rgba(' + stRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLab + '</span>')
-    + '<div class="mbox-divider"></div>'
-    + '<div class="mbox-section-label">Valores</div>'
-    + DR('Total', ff(r.valorTotal || 0))
-    + DR('Líquido', ff(r.valorLiquido || 0))
-    + DR('CBS', ffz(r.cbs || 0), 'var(--p-amber)')
-    + DR('IBS', ffz(r.ibs || 0), 'var(--p-blue)')
-    + '<div class="mbox-divider"></div>'
-    + '<div class="mbox-section-label" style="margin-bottom:4px">Chave DF</div>'
-    + '<div style="font-size:9px;font-family:monospace;color:var(--txt3);word-break:break-all;line-height:1.7;margin-bottom:14px">' + chaveFormatada + '</div>'
-    + ctrHtml
-    + (window.shRADBlocoMetodo ? window.shRADBlocoMetodo(r) : '')
-    + '<div class="mbox-divider"></div>'
-    + '<div class="mbox-section-label">Registros Fiscais</div>'
-    + rfsHtml
-    + '<div class="mbox-divider"></div>'
-    + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
-    + window._incRenderVinculadasHtml(r._inconsistencias && r._inconsistencias.length ? r._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return String(i.nfNumero) === String(r.numero) || i.dfNum === ((r.tipoDF||'NF-e')+' '+r.numero); }))
-    + '</div>'
+      // Left panel
+      + '<div class="mbox-col" style="width:300px;flex-shrink:0;border-right:1px solid var(--brd)">'
+      + '<div class="mbox-section-label">Documento Fiscal</div>'
+      + docHtml
+      + '<div class="mbox-divider"></div>'
+      + '<div class="mbox-section-label">Valores</div>'
+      + DR('Total', ff(r.valorTotal || 0))
+      + DR('Líquido', ff(r.valorLiquido || 0))
+      + DR('CBS', ffz(r.cbs || 0), 'var(--p-amber)')
+      + DR('IBS', ffz(r.ibs || 0), 'var(--p-blue)')
+      + '<div class="mbox-divider"></div>'
+      + chaveHtml
+      + ctrHtml
+      + radHtml
+      + '<div class="mbox-divider"></div>'
+      + '<div class="mbox-section-label">Registros Fiscais</div>'
+      + rfsHtml
+      + '<div class="mbox-divider"></div>'
+      + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
+      + incHtml
+      + '</div>'
 
-    // Right panel: timeline
-    + '<div class="mbox-col" style="flex:1">'
-    + '<div class="mbox-section-label">Histórico do Ciclo · ' + allEvents.length + ' evento' + (allEvents.length !== 1 ? 's' : '') + '</div>'
-    + (tlH || '<div style="color:var(--txt3);font-size:12px">Nenhum evento disponível.</div>')
-    + '</div>'
-    + '</div>'
+      // Right panel: partição do crédito (T-02) e timeline
+      + '<div class="mbox-col" style="flex:1">'
+      + (window.shParcial && r.tipo === 'entrada' ? window.shParcial.secaoDF(r) : '')
+      + (window.shDetalhe
+          ? window.shDetalhe.historicoDF(r)
+          : '<div class="mbox-section-label">Histórico do Ciclo · ' + allEvents.length + ' evento' + (allEvents.length !== 1 ? 's' : '') + '</div>'
+            + (tlH || '<div style="color:var(--txt3);font-size:12px">Nenhum evento disponível.</div>'))
+      + '</div>'
+      + '</div>')
     + '</div>'
     + '</div>';
 
@@ -1174,6 +1196,40 @@ window._rfGerarHistorico = function(rf, nf) {
     return d ? String(d.status || '').toLowerCase() : 'importado';
   }
   function statusDoRF(rf) { return rf.statusCredito || rf.status || 'nao_apropriado'; }
+  /* Saldo por imposto para a guia (D-PAR-07, T-05): o que falta recolher é o
+     valor a apropriar menos o que já está em guia aberta; o que o fornecedor
+     já extinguiu volta para ele dentro do pagamento. */
+  function r2(v) { return Math.round((v || 0) * 100) / 100; }
+  function emGuiaAberta(rf) {
+    var c = rf.conversaoRAD;
+    if (!c || c.revertidaId) return 0;
+    var pend = (rf.balances && rf.balances.pending) || 0;
+    return c.valorGuia != null ? Math.min(c.valorGuia, pend) : pend;
+  }
+  function saldoRAD(rf) {
+    var b = rf.balances || {};
+    var ext = (rf.movimentos || []).filter(function (m) { return m.de === 'pending' && m.para === 'available'; })
+      .reduce(function (s, m) { return s + m.valor; }, 0);
+    var aberta = emGuiaAberta(rf);
+    return { trib: rf.tipoFiscal, apurado: r2(rf.valor), extinto: r2(ext), aberta: r2(aberta),
+             guia: Math.max(0, r2((b.pending || 0) - aberta)), pendente: r2(b.pending || 0) };
+  }
+  function comParticao(nf) {
+    var rfs = (nf && nf.registrosFiscais) || [];
+    return !!rfs.length && rfs.every(function (rf) { return rf.balances; });
+  }
+  // líquido ao fornecedor = valor sem os tributos + o tributo que segue com ele
+  // (o que ele já recolheu e o que ele ainda recolhe), por imposto
+  function liquidoRAD(nf, sel) {
+    var rfs = nf.registrosFiscais || [];
+    var semTrib = (nf.valorTotal || 0) - rfs.reduce(function (s, rf) { return s + (rf.valor || 0); }, 0);
+    var partes = rfs.map(function (rf) {
+      var s = saldoRAD(rf), assumido = s.aberta + (sel === rf.tipoFiscal ? s.guia : 0);
+      return { trib: rf.tipoFiscal, segue: r2(s.apurado - assumido) };
+    });
+    return { semTrib: r2(semTrib), partes: partes, total: r2(semTrib + partes.reduce(function (s, x) { return s + x.segue; }, 0)) };
+  }
+  window.shRADSaldo = saldoRAD;
   function pago(rf) {
     var s = statusDoRF(rf);
     return s === 'apropriado' || s === 'utilizado' || !!(rf.dataPagamento && rf.dataPagamento !== '—');
@@ -1190,7 +1246,8 @@ window._rfGerarHistorico = function(rf, nf) {
     if (met === 'RAD') {
       if (nf.metodoPagamentoOrigem !== 'alteracao_manual') return R;   // RAD de contrato: nada a fazer
       R.visivel = true; R.reverter = true;
-      if (rfs.some(pago)) R.motivo = 'A guia já foi paga — o recolhimento não pode mais voltar ao fornecedor.';
+      // com a partição, o que o fornecedor já pagou não é guia nossa: só a guia gerada fecha a porta
+      if (!comParticao(nf) && rfs.some(pago)) R.motivo = 'A guia já foi paga — o recolhimento não pode mais voltar ao fornecedor.';
       else if (rfs.some(function (rf) { return rf.conversaoRAD && rf.conversaoRAD.guiaGeradaEm; }))
         R.motivo = 'A guia já foi gerada — o recolhimento não pode mais voltar ao fornecedor.';
       else R.ok = true;
@@ -1201,6 +1258,20 @@ window._rfGerarHistorico = function(rf, nf) {
 
     var st = {};
     rfs.forEach(function (rf) { st[rf.tipoFiscal] = statusDoRF(rf); });
+    var imp;
+    if (comParticao(nf)) {
+      // Com a partição (T-05): ativo enquanto houver valor a apropriar em algum
+      // imposto, descontada a guia aberta. O que o fornecedor já pagou não
+      // bloqueia: a guia sai só pelo que falta.
+      var sal = rfs.map(saldoRAD);
+      if (!sal.some(function (s) { return s.pendente > 0.005; })) return R;   // nada a apropriar
+      R.visivel = true;
+      if (!st.ibs || !st.cbs) { R.motivo = 'O documento não tem os dois registros fiscais (IBS e CBS).'; return R; }
+      if (!sal.some(function (s) { return s.guia > 0.005; })) { R.motivo = 'Todo o saldo a apropriar já está em guia aberta.'; return R; }
+      imp = stImport || statusImportacao(nf.numero);
+      if (imp === 'pendente' || imp === 'inconsistencia') { R.motivo = 'O documento ainda não foi validado na importação.'; return R; }
+      R.avisos.push('Assuma antes de o ERP pagar o fornecedor: se o pagamento já saiu pelo bruto, a guia paga o tributo de novo.');
+    } else {
     var estados = [st.ibs, st.cbs];
     if (estados.indexOf('glosado') >= 0) return R;                      // pagar não recupera crédito glosado
     var apropriados = estados.filter(function (s) { return s === 'apropriado' || s === 'utilizado'; }).length;
@@ -1208,7 +1279,7 @@ window._rfGerarHistorico = function(rf, nf) {
     R.visivel = true;
 
     if (!st.ibs || !st.cbs) { R.motivo = 'O documento não tem os dois registros fiscais (IBS e CBS).'; return R; }
-    var imp = stImport || statusImportacao(nf.numero);
+    imp = stImport || statusImportacao(nf.numero);
     if (imp === 'pendente' || imp === 'inconsistencia') { R.motivo = 'O documento ainda não foi validado na importação.'; return R; }
     if (apropriados === 1) {
       var qual = (st.ibs === 'apropriado' || st.ibs === 'utilizado') ? 'IBS' : 'CBS';
@@ -1216,6 +1287,7 @@ window._rfGerarHistorico = function(rf, nf) {
       return R;
     }
     if (rfs.some(pago)) { R.motivo = 'Já existe pagamento registrado para este documento.'; return R; }
+    }
 
     var bloqueio = null, conciliacao = false;
     rfs.forEach(function (rf) {
@@ -1256,22 +1328,48 @@ window._rfGerarHistorico = function(rf, nf) {
   function tributo(rf) { return String(rf.tipoFiscal || '').toUpperCase(); }
 
   function aplicarAssumir(nf, acao) {
-    if (nf.conversaoRAD && nf.conversaoRAD.id === acao.id) return false;
     var rfs = nf.registrosFiscais || [];
+    // uma guia por imposto (D-PAR-07): a ação nova traz o tributo; a antiga, os dois
+    var alvo = acao.tributo ? rfs.filter(function (rf) { return rf.tipoFiscal === acao.tributo; }) : rfs;
+    if (acao.tributo ? alvo.every(function (rf) { return rf.conversaoRAD && rf.conversaoRAD.id === acao.id; })
+                     : (nf.conversaoRAD && nf.conversaoRAD.id === acao.id)) return false;
     var metContrato = nf.metodoPagamentoContrato || nf.metodoPagamento || 'Fornecedor';
     var ctr = nf.contratoId || (rfs[0] && rfs[0].contratoId) || null;
     var motivo = MOTIVOS[acao.motivo] || acao.motivo;
-    [nf].concat(rfs).forEach(function (o) {
+    var conv = function () {
+      return {
+        id: acao.id, em: acao.em, por: acao.por, perfil: acao.perfil,
+        motivo: acao.motivo, justificativa: acao.justificativa,
+        declaracoes: acao.declaracoes, guiaGeradaEm: null, revertidaEm: null, revertidaPor: null, revertidaId: null,
+        tributo: acao.tributo || null, valorGuia: acao.valorGuia != null ? acao.valorGuia : null
+      };
+    };
+    // cada registro guarda a própria cópia: a guia é gerada por tributo
+    alvo.forEach(function (o) {
       o.metodoPagamentoContrato = o.metodoPagamentoContrato || metContrato;
       o.metodoPagamento = 'RAD';
       o.metodoPagamentoOrigem = 'alteracao_manual';
-      // cada registro guarda a própria cópia: a guia é gerada por tributo
-      o.conversaoRAD = {
-        id: acao.id, em: acao.em, por: acao.por, perfil: acao.perfil,
-        motivo: acao.motivo, justificativa: acao.justificativa,
-        declaracoes: acao.declaracoes, guiaGeradaEm: null, revertidaEm: null, revertidaPor: null, revertidaId: null
-      };
+      o.conversaoRAD = conv();
     });
+    // o documento só vira RAD quando os dois impostos foram assumidos
+    nf.metodoPagamentoContrato = nf.metodoPagamentoContrato || metContrato;
+    if (rfs.every(function (rf) { return rf.metodoPagamento === 'RAD'; })) {
+      nf.metodoPagamento = 'RAD'; nf.metodoPagamentoOrigem = 'alteracao_manual'; nf.conversaoRAD = conv();
+    }
+    if (acao.tributo) {
+      var Tt = String(acao.tributo).toUpperCase();
+      registrar(nf, evento(acao, 'df', 'RAD ASSUMIDO',
+        'Recolhimento de ' + Tt + ' assumido pelo adquirente · guia de ' + ff(acao.valorGuia || 0) + ' pelo saldo a apropriar'
+        + (acao.extinto != null ? ' (apurado ' + ff(acao.apurado || 0) + ' − extinto pelo fornecedor ' + ff(acao.extinto) + ' − em guia aberta ' + ff(acao.emAberta || 0) + ')' : '')
+        + (acao.liquido != null ? ' · líquido ao fornecedor ' + ff(acao.liquido) : '')
+        + ' · motivo: ' + motivo + ' · incluído em Pagamentos RAD'));
+      alvo.forEach(function (rf) {
+        registrar(rf, evento(acao, 'rf-' + rf.id, 'RAD ASSUMIDO',
+          'Método de pagamento alterado: ' + metContrato + ' → RAD · ' + tributo(rf) + ' · guia de ' + ff(acao.valorGuia || 0)
+          + ' pelo saldo a apropriar · incluído em Pagamentos RAD · motivo: ' + motivo));
+      });
+      return true;
+    }
     var total = rfs.reduce(function (s, rf) { return s + (rf.valor || 0); }, 0);
     registrar(nf, evento(acao, 'df', 'RAD ASSUMIDO',
       'Recolhimento assumido pelo adquirente · método ' + metContrato + ' → RAD · '
@@ -1425,6 +1523,24 @@ window._rfGerarHistorico = function(rf, nf) {
 
   window.shRADBlocoMetodo = function (o) {
     if (!o) return '';
+    // documento com guia por imposto: a decomposição e o líquido ao fornecedor (T-05)
+    if (o.registrosFiscais && comParticao(o)) {
+      var conv = o.registrosFiscais.filter(function (rf) { var c0 = rf.conversaoRAD; return c0 && !c0.revertidaId && c0.valorGuia != null; });
+      if (conv.length) {
+        var liq = liquidoRAD(o, null);
+        return caixa('--amber-rgb', 'Recolhimento assumido · RAD por imposto',
+          conv.map(function (rf) { var c1 = rf.conversaoRAD;
+            return '<strong>' + tributo(rf) + '</strong>: guia de ' + ff(c1.valorGuia) + ' · em ' + fmtTS(c1.em) + ' por ' + esc(c1.por) + (c1.guiaGeradaEm ? ' · gerada em ' + fmtTS(c1.guiaGeradaEm) : ''); }).join('<br>')
+          + '<br>Líquido ao fornecedor: <strong>' + ff(liq.total) + '</strong> = ' + ff(liq.semTrib) + ' sem os tributos'
+          + liq.partes.map(function (x) { return ' + ' + ff(x.segue) + ' de ' + String(x.trib).toUpperCase(); }).join('') + ' que seguem com ele');
+      }
+    }
+    if (o.conversaoRAD && o.conversaoRAD.valorGuia != null && !o.registrosFiscais && o.metodoPagamentoOrigem === 'alteracao_manual') {
+      var cr = o.conversaoRAD;
+      return caixa('--amber-rgb', 'Recolhimento assumido · RAD',
+        'Guia de <strong>' + ff(cr.valorGuia) + '</strong> pelo saldo a apropriar · em ' + fmtTS(cr.em) + ' por ' + esc(cr.por)
+        + '<br>Motivo: ' + esc(MOTIVOS[cr.motivo] || cr.motivo) + (cr.guiaGeradaEm ? '<br>Guia gerada em ' + fmtTS(cr.guiaGeradaEm) : ''));
+    }
     var c = o.conversaoRAD;
     if (c && o.metodoPagamentoOrigem === 'alteracao_manual') {
       return caixa('--amber-rgb', 'Recolhimento assumido · RAD',
@@ -1506,6 +1622,22 @@ window._rfGerarHistorico = function(rf, nf) {
     var rfs = nf.registrosFiscais || [];
     var ibs = 0, cbs = 0;
     rfs.forEach(function (rf) { if (rf.tipoFiscal === 'ibs') ibs += rf.valor || 0; else if (rf.tipoFiscal === 'cbs') cbs += rf.valor || 0; });
+    var part = comParticao(nf);
+    _radNf = nf;
+    var sal = part ? rfs.map(saldoRAD).sort(function (a, b) { return a.trib === 'cbs' ? -1 : b.trib === 'cbs' ? 1 : 0; }) : [];
+    var primeiro = (sal.filter(function (s) { return s.guia > 0.005; })[0] || {}).trib;
+    var tabelaGuias = part
+      ? '<div class="mbox-section-label" style="margin-top:4px">Uma guia por imposto · escolha qual emitir agora</div>'
+        + '<div class="pp-scroll" id="rad-f-trib-box"><table class="pp-tab pp-guia-t"><thead><tr><th>Emitir</th><th>Tributo</th><th class="r">Apurado</th><th class="r">Extinto pelo fornecedor</th><th class="r">Em guia aberta</th><th class="r">Guia</th></tr></thead><tbody>'
+        + sal.map(function (s) {
+            var pode = s.guia > 0.005, T = String(s.trib).toUpperCase();
+            return '<tr><td><input type="radio" name="rad-f-trib" id="rad-f-trib-' + s.trib + '" value="' + s.trib + '" data-guia="' + s.guia + '"'
+              + (pode ? '' : ' disabled') + (s.trib === primeiro ? ' checked' : '') + ' onchange="window.shRADValidar()"></td>'
+              + '<td><label for="rad-f-trib-' + s.trib + '">' + T + '</label></td><td class="r pp-num">' + ff(s.apurado) + '</td><td class="r pp-num">' + ff(s.extinto) + '</td>'
+              + '<td class="r pp-num">' + ff(s.aberta) + '</td><td class="r pp-num"><strong>' + (pode ? ff(s.guia) : '—') + '</strong></td></tr>';
+          }).join('') + '</tbody></table></div>'
+        + '<div id="rad-f-liq" class="pp-nota"></div>'
+      : '';
     var ctr = nf.contratoId || (rfs[0] && rfs[0].contratoId) || null;
     var venc = window.shVencimentoTributo ? window.shVencimentoTributo(nf.data) : null;
     var DR = window._rfDetailRow;
@@ -1527,22 +1659,25 @@ window._rfGerarHistorico = function(rf, nf) {
       +   DR('CNPJ', esc(nf.cnpj || '—'), null, true)
       +   DR('Contrato', ctr ? esc(ctr) : 'Sem contrato vigente')
       +   DR('Método do contrato', esc(nf.metodoPagamento || 'Fornecedor'))
-      +   DR('IBS', ff(ibs), 'var(--p-blue)')
+      + (part ? '' : DR('IBS', ff(ibs), 'var(--p-blue)')
       +   DR('CBS', ff(cbs), 'var(--p-amber)')
-      +   DR('Total a recolher', '<strong>' + ff(ibs + cbs) + '</strong>', 'var(--p-teal)')
+      +   DR('Total a recolher', '<strong>' + ff(ibs + cbs) + '</strong>', 'var(--p-teal)'))
       +   DR('Vencimento do tributo', venc ? fmtTS(venc) : '—')
       + '</div>'
+      + tabelaGuias
       + el.avisos.map(function (a) { return caixa('--amber-rgb', 'Atenção', esc(a)); }).join('')
       + '<div class="mbox-divider"></div>'
       + '<div class="mbox-section-label">Declarações</div>'
       + dec('rad-f-dec-split', 'O pagamento ao fornecedor usará instrumento que <strong>não permite a segregação</strong> do tributo.')
-      + dec('rad-f-dec-liquido', 'O fornecedor receberá o <strong>valor líquido</strong>, sem o IBS e a CBS deste documento.')
+      + dec('rad-f-dec-liquido', part
+          ? 'O fornecedor receberá o <strong>líquido calculado acima</strong>: o valor sem os tributos mais o tributo que segue com ele.'
+          : 'O fornecedor receberá o <strong>valor líquido</strong>, sem o IBS e a CBS deste documento.')
       + '<div class="sh-fp-field" style="margin-top:6px"><label for="rad-f-motivo">Motivo</label><select id="rad-f-motivo" onchange="window.shRADValidar()">' + opcoes(MOTIVOS) + '</select></div>'
       + '<div class="sh-fp-field" style="margin-top:12px"><label for="rad-f-just">Justificativa</label>'
       +   campoTexto('rad-f-just', 'window.shRADValidar()', 'Por que o recolhimento está sendo assumido') + '</div>'
-      + caixa('--status-red-rgb', 'Pagamento em duplicidade',
+      + (part ? '<div id="rad-f-dup"></div>' : caixa('--status-red-rgb', 'Pagamento em duplicidade',
           'Se o fornecedor também recolher, o valor pago por nós quita só o débito ainda não extinto, e o excedente é '
-          + '<strong>transferido ao fornecedor</strong> em até 3 dias úteis (Res. CGIBS 6/2026, art. 36, § 3º). Avise-o de que o recolhimento foi assumido.')
+          + '<strong>transferido ao fornecedor</strong> em até 3 dias úteis (Res. CGIBS 6/2026, art. 36, § 3º). Avise-o de que o recolhimento foi assumido.'))
       + '</div>'
       + rodape(id, 'LC 214/2025, art. 36', 'rad-f-ok', 'Assumir recolhimento', 'btn btn-t', 'window.shRADConfirmarAssumir(\'' + numSeguro(nf) + '\')')
       + '</div></div>';
@@ -1551,15 +1686,33 @@ window._rfGerarHistorico = function(rf, nf) {
     window.shRADValidar();
   };
 
+  var _radNf = null;
+  function atualizarLiquido() {
+    var box = document.getElementById('rad-f-liq'); if (!box || !_radNf) return;
+    var r = document.querySelector('input[name="rad-f-trib"]:checked'), sel = r ? r.value : null;
+    var liq = liquidoRAD(_radNf, sel);
+    box.innerHTML = 'Líquido ao fornecedor: <strong class="pp-num">' + ff(liq.total) + '</strong> = ' + ff(liq.semTrib) + ' sem os tributos'
+      + liq.partes.map(function (x) { return ' + ' + ff(x.segue) + ' de ' + String(x.trib).toUpperCase(); }).join('') + ' que seguem com ele.';
+    var dup = document.getElementById('rad-f-dup');
+    if (dup) {
+      var s = sel ? (_radNf.registrosFiscais || []).filter(function (rf) { return rf.tipoFiscal === sel; }).map(saldoRAD)[0] : null;
+      dup.innerHTML = s ? caixa('--status-red-rgb', 'Sem pagamento em dobro',
+        ff(s.extinto) + ' de ' + String(sel).toUpperCase() + ' já foram extintos pelo fornecedor; a guia cobre só os ' + ff(s.guia) + ' que faltam. '
+        + 'Se ele recolher também, o excedente vai para ele em até 3 dias úteis (art. 36, § 3º).') : '';
+    }
+  }
   window.shRADValidar = function (tentativa) {
     var marcada = function (id) { var e = document.getElementById(id); return !!(e && e.checked); };
     var n = contarJustificativa('rad-f-just');
-    return conferir('rad-f-ok', [
+    atualizarLiquido();
+    var temGuias = !!document.getElementById('rad-f-trib-box');
+    var escolhida = !!document.querySelector('input[name="rad-f-trib"]:checked');
+    return conferir('rad-f-ok', [].concat(temGuias ? [{ id: 'rad-f-trib-box', ok: escolhida, rotulo: 'imposto da guia' }] : [], [
       { id: 'rad-f-dec-split',   check: true, ok: marcada('rad-f-dec-split'),   rotulo: 'declaração de instrumento' },
       { id: 'rad-f-dec-liquido', check: true, ok: marcada('rad-f-dec-liquido'), rotulo: 'declaração de valor líquido' },
       { id: 'rad-f-motivo',      ok: !!valor('rad-f-motivo'),                   rotulo: 'motivo' },
       { id: 'rad-f-just',        ok: n >= MIN_JUST,                             rotulo: 'justificativa (' + n + ' de ' + MIN_JUST + ' caracteres)' }
-    ], !!tentativa);
+    ]), !!tentativa);
   };
 
   window.shRADConfirmarAssumir = function (nfNumero) {
@@ -1574,6 +1727,20 @@ window._rfGerarHistorico = function(rf, nf) {
       toast(el.motivo || 'O documento deixou de permitir assumir o recolhimento.', 'erro');
       return;
     }
+    var sel = null, s = null, liq = null;
+    if (comParticao(nfs[0])) {
+      var radio = document.querySelector('input[name="rad-f-trib"]:checked');
+      sel = radio ? radio.value : null;
+      s = (nfs[0].registrosFiscais || []).filter(function (rf) { return rf.tipoFiscal === sel; }).map(saldoRAD)[0] || null;
+      if (!s || s.guia <= 0.005) { fechar('rad-assumir-overlay'); reRenderizar(); toast('Este imposto não tem mais saldo a recolher.', 'erro'); return; }
+      // o fornecedor pode ter recolhido depois de a tela abrir: mostra o valor novo e pede confirmação
+      if (Math.abs(s.guia - (+radio.getAttribute('data-guia') || 0)) > 0.005) {
+        window.shRADAbrirAssumir(nfNumero);
+        toast('O saldo de ' + String(sel).toUpperCase() + ' mudou: a guia agora é de ' + ff(s.guia) + '. Confira e confirme de novo.', 'erro');
+        return;
+      }
+      liq = liquidoRAD(nfs[0], sel).total;
+    }
     var a = ator();
     var acao = {
       id: 'rad' + Date.now().toString(36), tipo: 'assumir', nfNumero: String(nfs[0].numero), cnpj: nfs[0].cnpj || '',
@@ -1581,10 +1748,12 @@ window._rfGerarHistorico = function(rf, nf) {
       motivo: valor('rad-f-motivo'), justificativa: valor('rad-f-just').trim(),
       declaracoes: { semSegregacao: true, pagamentoLiquido: true }
     };
+    if (s) { acao.tributo = sel; acao.valorGuia = s.guia; acao.apurado = s.apurado; acao.extinto = s.extinto; acao.emAberta = s.aberta; acao.liquido = liq; }
     var log = lerLog(); log.push(acao); gravarLog(log);
     nfs.forEach(function (nf) { aplicarAssumir(nf, acao); });
     fechar('rad-assumir-overlay');
-    posAcao(nfs[0], 'Recolhimento assumido · ' + (nfs[0].tipoDF || 'NF-e') + ' ' + nfs[0].numero + ' enviado para Pagamentos RAD',
+    posAcao(nfs[0], 'Recolhimento ' + (sel ? 'de ' + String(sel).toUpperCase() + ' ' : '') + 'assumido · ' + (nfs[0].tipoDF || 'NF-e') + ' ' + nfs[0].numero
+      + (s ? ' · guia de ' + ff(s.guia) : '') + ' enviado para Pagamentos RAD',
       { rotulo: 'Abrir em Pagamentos', onclick: 'window.shRADIrPagamentos()' });
   };
 
@@ -1716,8 +1885,9 @@ window.abrirDetalheRF = function(rfId) {
   var nfDataFmt = dpNF.length === 3 ? dpNF[2]+'/'+dpNF[1]+'/'+dpNF[0] : (nf.data || '—');
   var DR = window._rfDetailRow;
 
+  var _ppRF = !!(window.shDetalhe && (rf.balances || rf.debBalances));
   var html = '<div id="rf-detalhe-overlay" class="moverlay" onclick="if(event.target===this)document.getElementById(\'rf-detalhe-overlay\').remove()">'
-    + '<div class="mbox" style="width:860px">'
+    + '<div class="mbox" style="width:' + (window.shDetalhe ? 980 : 860) + 'px">'
 
     // Header
     + '<div class="mbox-hdr">'
@@ -1730,16 +1900,22 @@ window.abrirDetalheRF = function(rfId) {
     + '</div>'
 
     // Body
-    + '<div style="display:flex;flex:1;overflow:hidden">'
+    + (window.shDetalhe ? '<div class="pp-body">' : '<div style="display:flex;flex:1;overflow:hidden">')
 
     // Left panel: dados do RF
-    + '<div class="mbox-col" style="width:280px;flex-shrink:0;border-right:1px solid var(--brd)">'
+    + (window.shDetalhe ? '<div class="mbox-col pp-col-l">' : '<div class="mbox-col" style="width:280px;flex-shrink:0;border-right:1px solid var(--brd)">')
     + '<div class="mbox-section-label">Dados do Registro</div>'
     + DR('ID do RF', rf.id, 'var(--p-blue)')
     + DR('Tipo Fiscal', '<span style="color:' + tfColor + ';font-weight:700">' + tfLabel + '</span>')
-    + DR('Valor', ff(rf.valor), 'var(--p-teal)')
-    + DR('Status Crédito', '<span style="background:rgba(' + stRgb + ',.12);color:rgba(' + stRgb + ',1);border:1px solid rgba(' + stRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLab + '</span>')
-    + (stRegLab ? DR('Status Registro', '<span style="background:rgba(' + stRegRgb + ',.12);color:rgba(' + stRegRgb + ',1);border:1px solid rgba(' + stRegRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stRegLab + '</span>') : '')
+    + DR(rf.balances ? 'Apurado' : 'Valor', ff(rf.valor), 'var(--p-teal)')
+    // com o detalhe da parcialidade, status, barra e marcas ficam no quadro da direita
+    + (_ppRF ? ''
+      : rf.balances && window.shParcial
+        ? DR('Status Crédito', window.shParcial.selo(rf, false))
+          + '<div style="margin:-2px 0 8px">' + window.shParcial.barra(rf, 8) + '</div>'
+          + (rf.flagsFatia && rf.flagsFatia.length ? '<div style="margin:0 0 8px">' + window.shParcial.flagsHtml(rf) + '</div>' : '')
+        : DR('Status Crédito', '<span style="background:rgba(' + stRgb + ',.12);color:rgba(' + stRgb + ',1);border:1px solid rgba(' + stRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stLab + '</span>'))
+    + (stRegLab && !rf.balances ? DR('Status Registro', '<span style="background:rgba(' + stRegRgb + ',.12);color:rgba(' + stRegRgb + ',1);border:1px solid rgba(' + stRegRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stRegLab + '</span>') : '')
     + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Documento Fiscal</div>'
     + DR('NF Vinculada', (nf.tipoDF || 'DF') + ' ' + nf.numero)
@@ -1760,7 +1936,7 @@ window.abrirDetalheRF = function(rfId) {
     + (rf.dataPagamento && rf.dataPagamento !== '—' ? DR('Data Pagamento', rf.dataPagamento) : '')
     + (rfSt === 'utilizado' && rf.metodoExtincao ? DR('Método Extinção', rf.metodoExtincao, 'var(--p-teal)') : '')
     + (rfSt === 'utilizado' && rf.dataExtincao ? DR('Data Extinção', rf.dataExtincao) : '')
-    + '<div class="mbox-divider"></div>'
+    + (_ppRF ? '' : '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Ciclo do Crédito</div>'
     + DR('Apropriação', window.shCelulaApropriacao ? window.shCelulaApropriacao(rf) : '—')
     + DR('Extinção do Crédito', window.shCelulaExtincaoCredito ? window.shCelulaExtincaoCredito(rf) : '—')
@@ -1771,16 +1947,20 @@ window.abrirDetalheRF = function(rfId) {
     + 'nota; no RAD, o pagamento da guia; no Fornecedor, o vencimento do tributo. '
     + '<strong>Extinção do Crédito</strong> é quando ele foi consumido. '
     + '<strong>Limite art. 54</strong> é o fim do prazo de 5 anos, contado do primeiro dia do período de '
-    + 'apuração seguinte ao da apropriação — não da emissão do documento.</span></div>'
+    + 'apuração seguinte ao da apropriação — não da emissão do documento.</span></div>')
     + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
-    + window._incRenderVinculadasHtml(rf._inconsistencias && rf._inconsistencias.length ? rf._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return i.rfId === rf.id || (i.nfNumero && String(i.nfNumero) === String((window._rfIndex&&window._rfIndex[rf.id]||{}).nf&&(window._rfIndex[rf.id].nf.numero))); }))
+    // só os cards deste tributo e os do documento sem tributo
+    + window._incRenderVinculadasHtml(rf._inconsistencias && rf._inconsistencias.length ? rf._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return i.rfId === rf.id || (!i.rfId && i.nfNumero && String(i.nfNumero) === String(nf.numero)); }))
     + '</div>'
 
-    // Right panel: timeline
-    + '<div class="mbox-col" style="flex:1">'
-    + '<div class="mbox-section-label">Histórico do Ciclo · ' + eventos.length + ' evento' + (eventos.length !== 1 ? 's' : '') + '</div>'
-    + tlH
+    // Right panel: movimentos de valor (T-03) e timeline
+    + (window.shDetalhe ? '<div class="mbox-col pp-col-r">' : '<div class="mbox-col" style="flex:1;min-width:0">')
+    + (window.shDetalhe
+        ? window.shDetalhe.colunaRF(rf, nf)
+        : rf.balances && window.shParcial
+        ? window.shParcial.abas(rf, tlH, eventos.length)
+        : '<div class="mbox-section-label">Histórico do Ciclo · ' + eventos.length + ' evento' + (eventos.length !== 1 ? 's' : '') + '</div>' + tlH)
     + '</div>'
     + '</div>'
     + '</div>'
@@ -2045,7 +2225,8 @@ window.renderizarTabelaCreditos = function() {
         ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\''+r.rfId+'\')" title="Ver comprovante" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">'+r.pag+'</a>'
         : '<span style="color:var(--txt3)">—</span>';
 
-      var statusBadge = bdg(r.statusCredito) + (window.shRes && window.shRes.marcaHtml ? window.shRes.marcaHtml(r.rfId) : '');
+      var _rfP = window.shParcial && window._rfIndex && window._rfIndex[r.rfId] ? window._rfIndex[r.rfId].rf : null;
+      var statusBadge = (_rfP && _rfP.balances ? window.shParcial.selo(_rfP, false) + window.shParcial.barra(_rfP, 5) : bdg(r.statusCredito)) + (window.shRes && window.shRes.marcaHtml ? window.shRes.marcaHtml(r.rfId) : '');
       var _incLabels = (r._inconsistencias && r._inconsistencias.length)
         ? r._inconsistencias.map(function(i){ return i.tipoLabel || i.tipo || 'Inconsistência'; })
         : (r.inconsistencia ? [r.inconsistencia] : []);
@@ -2177,6 +2358,37 @@ window.atualizarKPIsCreditos = function(listaRFs) {
       else                               vencForn  += v;
     }
   });
+  // T-07 / D-PAR-08: com a partição, cada card soma o valor da parcela; um
+  // documento entra em mais de um card, com fatias diferentes
+  var _P = window.shParcial, _part = false, _apurado = 0;
+  if (_P && window._rfIndex) {
+    var _rfsL = (listaRFs || []).map(function (r) { var e = window._rfIndex[r.rfId]; return e && e.rf.balances ? e : null; }).filter(Boolean);
+    if (_rfsL.length && _rfsL.length === (listaRFs || []).length) {
+      _part = true;
+      aprop = naoAprop = glosado = util = utilRes = naoApropCP = naoApropLP = emRisco = vencido = aPrescrever = extinto = 0;
+      glosadoN = 0; extintoCount = 0;
+      _rfsL.forEach(function (e) {
+        var rf = e.rf, nf = e.nf, b = rf.balances;
+        _apurado += rf.valor || 0;
+        aprop += _P.aproveitado(b);
+        util += b.utilized || 0; utilRes += _P.utilizadoRessarcido(rf);
+        var pend = b.pending || 0;
+        naoAprop += pend;
+        if (pend > 0) {
+          var ve = _P.vencimentoPendente(nf, rf), mv = ve ? ve.getFullYear() * 100 + (ve.getMonth() + 1) : 0;
+          if (!ve || mv <= _mesAtual) naoApropCP += pend; else naoApropLP += pend;
+        }
+        var gl = (b.not_appropriable || 0) + (b.not_usable || 0);
+        if (gl > 0) { glosado += gl; glosadoN++; }
+        if ((b.expired || 0) > 0) { extinto += b.expired; extintoCount++; }
+        (rf.flagsFatia || []).forEach(function (fl) {
+          if (fl.f === 'em_risco') emRisco += fl.valor || 0;
+          if (fl.f === 'vencido') vencido += fl.valor || 0;
+          if (fl.f === 'a_prescrever') aPrescrever += fl.valor || 0;
+        });
+      });
+    }
+  }
   var total = aprop + naoAprop + glosado;
   var fmt = function(v) {
     if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
@@ -2187,12 +2399,14 @@ window.atualizarKPIsCreditos = function(listaRFs) {
   var set = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
   // Total Originado = todos os RFs de entrada, inclusive glosados — a mesma base
   // do Início e a definição da ajuda do card. Antes o glosado ficava de fora.
-  var totalCred = aprop + naoAprop + glosado;
+  var totalCred = _part ? _apurado : aprop + naoAprop + glosado;
   set('cred-total',         fmt(totalCred));
-  set('cred-total-sub',     'IBS + CBS · inclui ' + fmt(glosado) + ' glosados pelo Fisco');
+  set('cred-total-sub',     _part ? 'IBS + CBS · apurado · inclui ' + fmt(glosado) + ' glosados' : 'IBS + CBS · inclui ' + fmt(glosado) + ' glosados pelo Fisco');
+  var _nota = document.getElementById('cred-nota-parcelas');
+  if (_nota) _nota.style.display = _part ? '' : 'none';
   // Status do Crédito
   set('cred-aprop',         fmt(aprop));
-  set('cred-aprop-sub',     pct(aprop, totalCred) + ' do total · IBS+CBS apropriados');
+  set('cred-aprop-sub',     pct(aprop, totalCred) + (_part ? ' do apurado · disponível, utilizado e em ressarcimento' : ' do total · IBS+CBS apropriados'));
   set('cred-nao-aprop',     fmt(naoAprop));
   set('cred-nao-aprop-sub', pct(naoAprop, totalCred) + ' do total · aguardando apropriação');
   set('cred-nao-aprop-cp',  fmt(naoApropCP));
@@ -2249,6 +2463,17 @@ window.renderizarCalendarioExtincao = function() {
   (window.nfListaFiltradaGlobal || []).forEach(function(nf) {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
+      // T-07 / D-PAR-03: o art. 54 conta da apropriação de cada fatia; o que
+      // está a apropriar ainda não prescreve
+      if (rf.balances && window.shParcial) {
+        window.shParcial.fatiasDisponiveis(rf).forEach(function (fa) {
+          var dp = new Date(fa.prazo + 'T00:00:00');
+          if (dp <= hoje) return;
+          var ymf = fa.prazo.slice(0, 7);
+          byMonth[ymf] = (byMonth[ymf] || 0) + fa.resta;
+        });
+        return;
+      }
       if ((rf.statusCredito || '') !== 'nao_apropriado') return;
       var dataNF = rf.data || nf.data || '';
       if (!dataNF) return;
@@ -2547,6 +2772,8 @@ window.atualizarKPIsDashboard = function() {
 
   // --- CRÉDITOS (entrada, período selecionado) ---
   var aprop = 0, total = 0, bad = 0, risco = 0;
+  // T-07: com a partição, o aproveitamento é medido em valor, total e por tributo
+  var _P = window.shParcial, _base = 0, _trib = { cbs: { num: 0, den: 0 }, ibs: { num: 0, den: 0 } }, _part = false;
   // --- DÉBITOS (saída, período selecionado) ---
   var debTotal = 0, debExtinto = 0, debVencido = 0;
   // --- PAGAMENTOS (entrada) ---
@@ -2573,11 +2800,21 @@ window.atualizarKPIsDashboard = function() {
       var sr = rf.statusRegistro || null;
       if (sr === 'inconsistencia') concInconsist++;
       var v = rf.valor || 0;
-      if (nf.tipo === 'entrada') {
-        total += v;
+      if (nf.tipo === 'entrada' && _P && rf.balances) {
+        _part = true;
+        var _b = rf.balances, _num = _P.aproveitado(_b), _den = _P.baseAproveitamento(_b, v);
+        var _t = rf.tipoFiscal === 'ibs' ? 'ibs' : 'cbs';
+        total += v; aprop += _num; _base += _den; bad += _b.pending || 0;
+        _trib[_t].num += _num; _trib[_t].den += _den;
+        (rf.flagsFatia || []).forEach(function (fl) { if ((fl.f === 'vencido' || fl.f === 'em_risco') && fl.valor) risco += fl.valor; });
+      }
+      if (nf.tipo === 'entrada' && !(_P && rf.balances)) {
+        total += v; _base += v;
         if (sc === 'apropriado' || sc === 'utilizado') aprop += v;
         if (sc === 'nao_apropriado') bad += v;   // glosado não aguarda apropriação — mesma regra do Crédito
         if (sr === 'vencido' || sr === 'em_risco' || sr === 'a_prescrever') risco += v;
+      }
+      if (nf.tipo === 'entrada') {
         // Pagamentos
         var eAprop = sc === 'apropriado' || sc === 'utilizado';
         if (temPag || eAprop)        pagPago     += v;
@@ -2619,7 +2856,9 @@ window.atualizarKPIsDashboard = function() {
   function setStyle(id, prop, val) { var e = document.getElementById(id); if (e) e.style[prop] = val; }
 
   // --- HERO ---
-  var heroPct = total > 0 ? (aprop / total * 100) : 0;
+  var heroPct = _base > 0 ? (aprop / _base * 100) : 0;
+  var _pctT = function (o) { return o.den > 0 ? (o.num / o.den * 100).toFixed(1).replace('.', ',') + '%' : '—'; };
+  setEl('dash-hero-trib', _part ? 'CBS ' + _pctT(_trib.cbs) + ' · IBS ' + _pctT(_trib.ibs) + ' · ' + (_P.NAO_INFORMADAS_IBS || 4) + ' parcelas do IBS não informadas, fora da conta' : '');
   var heroPctStr = heroPct.toFixed(1).replace('.', ',') + '%';
   var heroColor = heroPct >= 75 ? 'var(--teal)' : heroPct >= 50 ? 'var(--amber)' : 'var(--red)';
   var heroBadge = heroPct >= 75 ? 'Saudável' : heroPct >= 50 ? 'Atenção' : 'Crítico';
@@ -2638,11 +2877,11 @@ window.atualizarKPIsDashboard = function() {
   if (badgeEl) { badgeEl.textContent = heroBadge; badgeEl.style.background = heroBg; badgeEl.style.color = heroColor; badgeEl.style.borderColor = heroBdr; }
 
   // --- CARD CRÉDITO ---
-  var credPct = total > 0 ? (aprop / total * 100).toFixed(1).replace('.', ',') + '%' : '—';
+  var credPct = _base > 0 ? (aprop / _base * 100).toFixed(1).replace('.', ',') + '%' : '—';
   setEl('dash-cred-aprop',  fmtM(aprop));
   setEl('dash-cred-risco',  fmtM(risco));
   setEl('dash-cred-pct',    credPct);
-  setStyle('dash-cred-bar', 'width', total > 0 ? Math.min(100, aprop / total * 100) + '%' : '0%');
+  setStyle('dash-cred-bar', 'width', _base > 0 ? Math.min(100, aprop / _base * 100) + '%' : '0%');
   // backward compat IDs
   if (total > 0) {
     setEl('dash-cred-apropriar', (bad / total * 100).toFixed(1).replace('.', ',') + '%');
@@ -3765,6 +4004,10 @@ window.atualizarEstatisticasConciliacao = function() {
 
 var _concUniIpp = 20;
 
+function _concPart(nf) {
+  return !!(window.shParcial && window.shParcial.confrontoHtml && nf && nf.tipo === 'entrada'
+    && (nf.registrosFiscais || []).some(function (x) { return x.balances; }));
+}
 function _concUnifiedRender() {
   var lista = window._concUniFiltrada || [];
   var pag = window._concUniPag || 1;
@@ -3854,15 +4097,24 @@ function _concUnifiedRender() {
     var delta = r.deltaValor;
     var deltaStr = Math.abs(delta) < 1 ? '—' : (delta > 0 ? '+' : '') + _concFmt(delta);
     var deltaColor = Math.abs(delta) > 5 ? (delta > 0 ? 'color:#ba7517' : 'color:#a32d2d') : 'color:var(--txt3)';
+    // com a partição, o Δ é contado em parcelas divergentes (T-06)
+    if (_concPart(nf)) {
+      var _nDiv = window.shParcial.divergentes(nf);
+      deltaStr = _nDiv ? _nDiv + ' parcela' + (_nDiv > 1 ? 's' : '') : '—';
+      deltaColor = _nDiv ? 'color:var(--amber);font-family:inherit' : 'color:var(--txt3)';
+    }
     var detail = '<div style="padding:10px 16px 14px">'
       + '<div style="font-size:10px;color:var(--txt3);margin-bottom:10px">Valor total NF: <strong style="color:var(--txt1)">' + fmtV(nf.valorTotal||0) + '</strong>'
       + ' · IBS: <strong style="color:var(--txt1)">' + fmtV(nf.ibs) + '</strong>'
       + ' · CBS: <strong style="color:var(--txt1)">' + fmtV(nf.cbs) + '</strong>'
       + ' · Fornecedor: <strong style="color:var(--txt1)">' + (nf.entidade||'—') + '</strong></div>'
-      + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'
-      + stageApur(r)
-      + stageFin(r)
-      + '</div>'
+      // entrada com partição: confronto parcela a parcela, por tributo (T-06)
+      + (_concPart(nf)
+          ? window.shParcial.confrontoHtml(nf)
+          : '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'
+            + stageApur(r)
+            + stageFin(r)
+            + '</div>')
       + '<div style="border-top:1px solid var(--border);padding-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
       + rfChip(r.ibsRF, 'IBS')
       + rfChip(r.cbsRF, 'CBS')
@@ -3904,10 +4156,17 @@ window.concUnifiedFiltrar = function() {
   var tipo   = (document.getElementById('uni-tipo')  || {}).value || '';
   var apur   = (document.getElementById('uni-apur')  || {}).value || '';
   var fin    = (document.getElementById('uni-fin')   || {}).value || '';
+  var parc   = (document.getElementById('uni-parc')  || {}).value || '';
   busca = busca.toLowerCase();
   window._concUniFiltrada = (window._concListaGlobal || []).filter(function(r) {
     var nf = r.nf;
     if (tipo && nf.tipo      !== tipo) return false;
+    // parcela divergente, por tributo (T-06)
+    if (parc) {
+      if (!_concPart(nf)) return false;
+      var _dv = window.shParcial.divergentesPor(nf);
+      if (parc === 'qualquer' ? !(_dv.cbs + _dv.ibs) : !_dv[parc]) return false;
+    }
     if (apur && r.capur_status !== apur) return false;
     if (fin  && r.cfin_status  !== fin)  return false;
     if (busca) {
@@ -4317,6 +4576,8 @@ window.renderizarRFsInconsistencias = function() {
   try { if (window.shErp && window.shErp.inconsistencias) window.shErp.inconsistencias(incGlobal); } catch (e) { console.error('[erp] inconsistências', e); }
   try { if (window.shConcApur && window.shConcApur.inconsistencias) window.shConcApur.inconsistencias(incGlobal); } catch (e) { console.error('[conc-apur] inconsistências', e); }
   try { if (window.shRes && window.shRes.inconsistencias) window.shRes.inconsistencias(incGlobal); } catch (e) {}
+  // Parcialidade: cada divergência por tributo vira card, ligado ao DF e ao RF (js/parcialidade.js)
+  try { if (window.shParcial && window.shParcial.inconsistencias) window.shParcial.inconsistencias(incGlobal); } catch (e) { console.error('[parcialidade] inconsistências', e); }
 
   // Cada módulo escrevia a família com vocabulário próprio — 'glosa',
   // 'apuracao', 'integracao' — e os tipos do núcleo não escreviam nenhuma.
@@ -5132,6 +5393,12 @@ var _kbAcoesMap = {
 };
 
 var _incDescricaoMap = {
+  // Parcialidade (catálogo v1.2): confronto parcela a parcela e os dois lados da C-01
+  mov_orgao_sem_contrapartida: 'O órgão informou um movimento de valor sem a contrapartida que o SplitHub esperava. O movimento é do órgão, mas nenhum dos dois valores é aplicado sozinho: a divergência fica lado a lado até a análise do time.',
+  mov_nao_refletido: 'Há o fato no SplitHub ou no ERP, mas o órgão não trouxe o movimento correspondente dentro da espera configurada. O valor não se move até o órgão refletir.',
+  particao_nao_fecha: 'A soma das parcelas do registro fiscal não é o valor apurado. Uma parcela foi informada ou gravada errada.',
+  reconhecido_diferente_pago: 'O valor pago no recolhimento não é o valor que o órgão reconheceu como extinção. O crédito só nasce na medida do débito extinto (art. 47).',
+  glosa_parcial: 'O órgão negou parte do crédito. Só a fatia glosada sai do fluxo; o restante segue com as próprias datas e prazos.',
   // CAPUR
   capur_ibs_divergente: 'O valor de IBS declarado no Documento Fiscal diverge do valor calculado pela Apuração Assistida da Plataforma Centralizada do CG-IBS. A diferença pode indicar alíquota incorreta, base de cálculo divergente ou retificação de NF pendente.',
   capur_cbs_divergente: 'O valor de CBS declarado no Documento Fiscal diverge do valor calculado pela Apuração Assistida da RFB. A diferença pode indicar alíquota incorreta, base de cálculo divergente ou retificação de NF pendente.',
@@ -5391,7 +5658,8 @@ window.kbAbrirCard = function(incId) {
   });
 
   var DR = window._rfDetailRow;
-  var descricao = _incDescricaoMap[inc.tipo] || 'Inconsistência identificada pelo motor de validação SplitHub. Verifique os dados vinculados ao Documento Fiscal e tome as ações necessárias.';
+  var descricao = (inc.detalhe ? '<strong style="color:var(--txt1)">' + inc.detalhe + '</strong><br><br>' : '')
+    + (_incDescricaoMap[inc.tipo] || 'Inconsistência identificada pelo motor de validação SplitHub. Verifique os dados vinculados ao Documento Fiscal e tome as ações necessárias.');
 
   var acoes = _incAcoesMap[inc.tipo] || [
     { label: 'Enviar para Contabilidade', icon: '📊', desc: 'Escala para revisão pela equipe contábil',  nextStatus: 'em_analise' },
@@ -5857,7 +6125,9 @@ window.renderizarTabelaDebitos = function() {
     var nfTipoBadgeDeb = r.tipoNF === 'entrada'
       ? '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--teal-rgb),.28);color:'+PALETTE.teal+';background:transparent">Entrada</span>'
       : '<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--amber-rgb),.28);color:'+PALETTE.amber+';background:transparent">Saída</span>';
-    var stBadge  = bdg(r.status);
+    var _rfDb = window.shParcial && window._rfIndex && window._rfIndex[r.rf] ? window._rfIndex[r.rf].rf : null;
+    // partição do débito (T-08): selo derivado e barra; meios de extinção com o valor de cada um
+    var stBadge  = _rfDb && _rfDb.debBalances ? window.shParcial.seloDeb(_rfDb, false) + window.shParcial.barraDeb(_rfDb, 5) : bdg(r.status);
     var stRgBadge = window._statusFlagsBadges ? window._statusFlagsBadges({ statusFlags: r.statusFlags, statusRegistro: r.statusRegistro }) : (r.statusRegistro ? bdg(r.statusRegistro) : '');
     var rfIncTypesBadgeDeb = (r._inconsistencias && r._inconsistencias.length)
       ? r._inconsistencias.map(function(i){ return '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(220,38,38,.08);color:rgb(220,38,38);border:1px solid rgba(220,38,38,.25);white-space:nowrap;display:inline-block;margin:1px 1px 0 0">'+(i.tipoLabel||i.tipo||'—')+'</span>'; }).join('')
@@ -5882,7 +6152,7 @@ window.renderizarTabelaDebitos = function() {
       + '<td style="vertical-align:middle">' + stRgBadge + '</td>'
       + '<td style="vertical-align:middle">' + rfIncTypesBadgeDeb + '</td>'
       + '<td class="nowrap">' + contratoDebCell + '</td>'
-      + '<td class="nowrap">' + mBadge + '</td>'
+      + '<td class="nowrap">' + (_rfDb && _rfDb.debBalances ? window.shParcial.meiosHtml(_rfDb) : mBadge) + '</td>'
       + '<td class="nowrap">' + (window.shCelulaApropriacao ? window.shCelulaApropriacao(r) : '&mdash;') + '</td>'
       + '<td class="nowrap">' + (window.shCelulaExtincaoCredito ? window.shCelulaExtincaoCredito(r) : '&mdash;') + '</td>'
       + '<td class="nowrap">' + (window.shCelulaPrevExtincao ? window.shCelulaPrevExtincao(r) : '&mdash;') + '</td>'
@@ -5943,7 +6213,7 @@ window.debitosDFsRender = function() {
 
   if(busca){nfs=nfs.filter(function(nf){var s=(nf.entidade||'')+(nf.cnpj||'')+String(nf.numero||'');return s.toLowerCase().indexOf(busca)>=0;});}
   if(filtTp){nfs=nfs.filter(function(nf){return (nf.tipoDF||'').indexOf(filtTp)>=0;});}
-  if(filtSt){nfs=nfs.filter(function(nf){return _dfDebSt(nf.registrosFiscais||[])===filtSt;});}
+  if(filtSt){nfs=nfs.filter(function(nf){if(filtSt==='vencido'||filtSt==='inconsistencia')return _dfDebSt(nf.registrosFiscais||[])===filtSt;return ((window.shParcial&&window.shParcial.statusDocDeb(nf))||_dfDebSt(nf.registrosFiscais||[]))===filtSt;});}
   if(filtMe){nfs=nfs.filter(function(nf){return (nf.registrosFiscais||[]).some(function(rf){return rf.metodoExtincao===filtMe;});});}
   if(dataDe||dataAte){nfs=nfs.filter(function(nf){var d=nf.data||'';return (!dataDe||d>=dataDe)&&(!dataAte||d<=dataAte);});}
   if(filtExt){nfs=nfs.filter(function(nf){var hasExt=(nf.registrosFiscais||[]).some(function(rf){return rf.dataExtincao&&rf.dataExtincao!=='—';});if(filtExt==='com')return hasExt;return !hasExt;});}
@@ -5984,7 +6254,7 @@ window.debitosDFsRender = function() {
       if(rf.statusRegistro&&(_SR_SEV[rf.statusRegistro]||0)>(_SR_SEV[worstSR]||0))worstSR=rf.statusRegistro;
     });
     var deb=ibs+cbs;
-    var dfSt=_dfDebSt(rfs);
+    var dfSt=(window.shParcial&&window.shParcial.statusDocDeb(nf))||_dfDebSt(rfs);
     var nfNum=String(nf.numero||'—');
     var tipoDF=nf.tipoDF||'NF-e';
     var dataRaw=nf.data||'—';
@@ -5992,6 +6262,7 @@ window.debitosDFsRender = function() {
     var valor=nf.valorTotal||0;
     var stRgb=_stCor[dfSt]||'167,168,170';
     var stBadge='<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:3px;background:rgba('+stRgb+',.12);color:rgb('+stRgb+');border:1px solid rgba('+stRgb+',.28)">'+(_stLbl[dfSt]||dfSt)+'</span>';
+    if(window.shParcial&&window.shParcial.celulaDebDF(nf))stBadge=window.shParcial.celulaDebDF(nf);
     var tipoBadge='<span style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid rgba(var(--amber-rgb),.28);color:var(--amber);background:transparent">'+tipoDF+'</span>';
     var mRgb=metExt?(_metCor[metExt]||'167,168,170'):null;
     var metBadge=mRgb?'<span style="font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:rgba('+mRgb+',.12);color:rgba('+mRgb+',1);border:1px solid rgba('+mRgb+',.28)">'+(_metLbl[metExt]||metExt)+'</span>':'<span style="color:var(--txt3)">—</span>';
@@ -6726,7 +6997,9 @@ window.renderizarAgeingCreditos = function() {
     if (nf.tipo !== 'entrada') return;
     (nf.registrosFiscais || []).forEach(function(rf) {
       var sc = rf.statusCredito || rf.status || '';
-      if (sc !== 'nao_apropriado') return;
+      // com a partição, envelhece a fatia a apropriar, não o RF inteiro (T-07)
+      var vAge = rf.balances ? (rf.balances.pending || 0) : (sc === 'nao_apropriado' ? (rf.valor || 0) : 0);
+      if (!(vAge > 0)) return;
       var dataStr = nf.data || rf.data || '';
       if (!dataStr) return;
       var partes = dataStr.split('-');
@@ -6735,7 +7008,7 @@ window.renderizarAgeingCreditos = function() {
       var dias = Math.floor((hoje - dataRF) / 86400000);
       for (var i = 0; i < faixas.length; i++) {
         if (dias >= faixas[i].min && dias <= faixas[i].max) {
-          totais[i] += rf.valor || 0;
+          totais[i] += vAge;
           cnts[i]++;
           break;
         }
@@ -7477,7 +7750,9 @@ window.renderizarTabelaPagamentos = function() {
       if (f.pagamento === 'com' && !pago) return;
       if (f.pagamento === 'sem' && pago) return;
 
-      var valor = rf.valor || 0;
+      // a guia sai pelo saldo a apropriar (T-05); sem a partição, pelo valor do RF
+      var _cvP = rf.conversaoRAD;
+      var valor = _cvP && !_cvP.revertidaId && _cvP.valorGuia != null ? _cvP.valorGuia : (rf.valor || 0);
       if (f.valorMin !== '' && valor < parseFloat(f.valorMin)) return;
       if (f.valorMax !== '' && valor > parseFloat(f.valorMax)) return;
       if (f.tipoDFe && (rf.tipoNF || nf.tipo || 'entrada') !== f.tipoDFe) return;
@@ -7508,7 +7783,7 @@ window.renderizarTabelaPagamentos = function() {
         cnpj: rf.cnpj || nf.cnpj || '—',
         nfVinc: (nf.tipoDF || 'NF-e') + ' ' + (nf.numero || '—'),
         nfNumero: nf.numero || '',
-        tipo: tipoCol, tipoNF: nf.tipo || 'entrada', valor: valor,
+        tipo: tipoCol, tipoNF: nf.tipo || 'entrada', valor: valor, valorApurado: rf.valor || 0,
         dataRF: dataFmt, dataRFIso: dataRFIso, pagamento: pagFmt, pago: pago,
         statusCredito: _scP || 'nao_apropriado',
         metodo: rf.metodoPagamento || nf.metodoPagamento || 'RAD',
@@ -7574,7 +7849,8 @@ window.renderizarTabelaPagamentos = function() {
       + '<td class="nowrap">' + tipoBadge + '</td>'
       + '<td class="nowrap">' + nfTipoBadgePag + '</td>'
       + '<td class="nowrap"><span style="font-size:10px;font-weight:700;letter-spacing:.06em;padding:2px 8px;border-radius:3px;border:1px solid rgba(var(--teal-alt-rgb),.35);color:var(--teal);background:rgba(var(--teal-alt-rgb),.08)">RAD</span>' + (window.shRADSufixoMetodo ? window.shRADSufixoMetodo(r) : '') + '</td>'
-      + '<td class="r mono" style="font-weight:600">' + ff(r.valor) + '</td>'
+      + '<td class="r mono" style="font-weight:600">' + ff(r.valor)
+      +   (r.valorApurado && r.valor < r.valorApurado - 0.005 ? '<div style="font-size:10px;font-weight:400;color:var(--txt2)">de ' + ff(r.valorApurado) + ' apurado</div>' : '') + '</td>'
       + '<td class="nowrap" style="color:var(--txt2)">' + r.dataRF + '</td>'
       + '<td class="nowrap">' + (r.pago && r.pagamento && r.pagamento !== '—'
           ? '<a href="javascript:void(0)" onclick="window.abrirComprovanteRF(\'' + r.rfId + '\')" title="Ver comprovante PIX" style="color:var(--teal);font-weight:600;text-decoration:underline dotted;cursor:pointer">' + r.pagamento + '</a>'
@@ -8145,6 +8421,9 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
   // e as séries Vencido e Inconsistência vinham, na prática, de débitos.
   // Utilizado se abre em compensado (abateu débito) e ressarcido (virou dinheiro).
   var statusList = ['apropriado','compensado','ressarcido','nao_apropriado','vencido','inconsistencia','glosado'];
+  // T-07: com a partição, as barras somam parcelas, não o rótulo do RF
+  var _parc = !!(window.shParcial && (window.nfListaFiltradaGlobal || []).some(function (n) { return n.tipo === 'entrada' && (n.registrosFiscais || []).some(function (r) { return r.balances; }); }));
+  if (_parc) statusList = ['apropriado','compensado','ressarcido','em_ressarcimento','nao_apropriado','glosado','prescrito'];
   var statusCores = {
     'apropriado':    PALETTE.teal,
     'compensado':    PALETTE.blue,
@@ -8152,7 +8431,9 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
     'nao_apropriado':PALETTE.gray,
     'vencido':       PALETTE.amber,
     'inconsistencia':PALETTE.red,
-    'glosado':       PALETTE.statusGray
+    'glosado':       PALETTE.statusGray,
+    'em_ressarcimento': PALETTE.purple,
+    'prescrito':     PALETTE.red
   };
 
   // Inicializar acumuladores por mês e status
@@ -8195,6 +8476,17 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
 
       var mes = rf.data ? rf.data.substring(0, 7) : null;
       if (!mes || !agg[mes]) return;
+      if (_parc && rf.balances) {
+        var _b = rf.balances, _res = window.shParcial.utilizadoRessarcido(rf);
+        agg[mes].apropriado       += _b.available || 0;
+        agg[mes].compensado       += (_b.utilized || 0) - _res;
+        agg[mes].ressarcido       += _res;
+        agg[mes].em_ressarcimento += (_b.refund_requested || 0) + (_b.refund_available || 0);
+        agg[mes].nao_apropriado   += _b.pending || 0;
+        agg[mes].glosado          += (_b.not_appropriable || 0) + (_b.not_usable || 0);
+        agg[mes].prescrito        += _b.expired || 0;
+        return;
+      }
       var sc = rf.statusCredito || rf.status || 'nao_apropriado', sr = rf.statusRegistro || null, st;
       if (sc === 'utilizado') st = rf.metodoExtincao === 'Ressarcimento' ? 'ressarcido' : 'compensado';
       else if (sc === 'nao_apropriado' && (sr === 'vencido' || sr === 'inconsistencia')) st = sr;
@@ -8206,6 +8498,7 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
 
   // Converter para milhões, montar datasets (ordem: topo→base = apropriado→inconsistencia)
   var statusLabels = { 'apropriado':'Apropriado', 'compensado':'Utilizado · compensado', 'ressarcido':'Utilizado · ressarcido', 'nao_apropriado':'Não Apropriado', 'vencido':'Vencido', 'inconsistencia':'Inconsistência', 'glosado':'Glosado' };
+  if (_parc) statusLabels = { 'apropriado':'Disponível', 'compensado':'Utilizado · compensado', 'ressarcido':'Utilizado · ressarcido', 'em_ressarcimento':'Em ressarcimento', 'nao_apropriado':'A apropriar', 'glosado':'Glosado (inapropriável e inutilizável)', 'prescrito':'Prescrito' };
   var datasets = statusList.map(function(st) {
     return {
       label: statusLabels[st] || st,
@@ -8220,9 +8513,10 @@ window.renderizarComposicaoCreditos = function(filtroTipo) {
   // Atualizar subtítulo
   var sub = document.getElementById('cComposicao-sub');
   if (sub) {
-    sub.textContent = filtro === 'ibs' ? 'R$ milhões · IBS · por status de RF · mês a mês'
-                    : filtro === 'cbs' ? 'R$ milhões · CBS · por status de RF · mês a mês'
-                    : 'R$ milhões · IBS + CBS · por status de RF · mês a mês';
+    var _porQ = _parc ? 'por parcela' : 'por status de RF';
+    sub.textContent = filtro === 'ibs' ? 'R$ milhões · IBS · ' + _porQ + ' · mês a mês'
+                    : filtro === 'cbs' ? 'R$ milhões · CBS · ' + _porQ + ' · mês a mês'
+                    : 'R$ milhões · IBS + CBS · ' + _porQ + ' · mês a mês';
   }
 
   // Atualizar estado ativo dos botões de filtro
@@ -8360,6 +8654,9 @@ document.addEventListener('DOMContentLoaded', function() {
       try { window.shMotor && window.shMotor.aplicarNaBase && window.shMotor.aplicarNaBase(); } catch(e) { console.error('[motor]', e); }
       try { window.shRes && window.shRes.aplicarNaBase && window.shRes.aplicarNaBase(); } catch(e) {}
       try { _calcularStatusRegistro(); } catch(e) {}
+      // Parcialidade (lote 1): partição do valor apurado e movimentos por RF,
+      // status calculado da partição e marcas sobre a fatia (js/parcialidade.js)
+      try { window.shParcial && window.shParcial.aplicarNaBase && window.shParcial.aplicarNaBase(); } catch(e) { console.error('[parcialidade]', e); }
       try {
         // Atribuir cnpjComprador round-robin pelos CNPJs ativos da Induspar
         var _ativosOrg = (window._orgCnpjs || []).filter(function(c) { return c.status === 'ativo'; });

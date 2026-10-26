@@ -51,11 +51,11 @@
   function tentativas(st) { return st === 'falha' ? 4 : st === 'pendente' ? 2 : 1; }
 
   /* ── o par envio + entrega de um evento ──────────────────────────────── */
-  function par(out, rf, T, ts, chave, detalhe) {
+  function par(out, rf, T, ts, chave, detalhe, sufixo) {
     var ev = E.EVENTOS[chave]; if (!ev || !ts) return;
     var F = window._rfFmtTS || function (x) { return x; };
-    var id = 'evt_' + hash(rf.id + ev.nome).toString(16).slice(0, 8);
-    var st = entrega(rf.id, ev.nome), n = tentativas(st);
+    var id = 'evt_' + hash(rf.id + ev.nome + (sufixo || '')).toString(16).slice(0, 8);
+    var st = entrega(rf.id + (sufixo || ''), ev.nome), n = tentativas(st);
     function mk(t, tipo, ator, desc, cls) { return { ts: t, data: F(t), tipo: tipo, modulo: 'Integrações', ator: ator, desc: desc, cls: cls }; }
     out.push(mk(somaMin(ts, 5), 'ENVIO ERP', 'SplitHub · automático',
       'Webhook ' + ev.nome + ' enviado ao ERP · ' + T + ' · ' + detalhe
@@ -99,27 +99,47 @@
           + ' · conciliado com o pagamento de ' + br(iso), cls: 'ok' });
     }
 
-    // 3. apropriação
-    if (rf.dataApropriacao && (sc === 'apropriado' || sc === 'utilizado')) {
-      par(out, rf, T, String(rf.dataApropriacao).slice(0, 10) + 'T11:30', 'apropriado',
-        'crédito de ' + money(rf.valor) + ' apropriado · art. 47 da LC 214/2025');
-    }
+    var gl = (window.shGlosa && window.shGlosa.ficha) ? window.shGlosa.ficha(rf.id) : null;
+    var pelo = T === 'IBS' ? 'pelo Comitê Gestor' : 'pela Receita Federal';
 
-    // 4. utilização — compensação ou ressarcimento
-    if (sc === 'utilizado' && rf.dataExtincaoCredito) {
-      var comoUsou = rf.metodoExtincao === 'Ressarcimento'
-        ? 'crédito de ' + money(rf.valor) + ' extinto por ressarcimento — não abateu débito'
-        : 'crédito de ' + money(rf.valor) + ' compensado com débito do mesmo tributo · ordem do art. 53';
-      par(out, rf, T, String(rf.dataExtincaoCredito).slice(0, 10) + 'T14:18', 'utilizado', comoUsou);
+    if (rf.movimentos && rf.movimentos.length) {
+      // 3 e 4 com a partição (parcialidade, lote 1): cada movimento de valor
+      // dispara o seu webhook, com a quantia que mudou e não com o RF inteiro
+      var vezes = {};
+      rf.movimentos.slice().sort(function (a, b) { return a.reconhecidoEm < b.reconhecidoEm ? -1 : 1; }).forEach(function (m) {
+        var ch = m.para === 'available' ? 'apropriado' : m.para === 'utilized' ? 'utilizado'
+          : (m.para === 'not_appropriable' || m.para === 'not_usable') && !gl ? 'glosado' : null;
+        if (!ch) return;
+        var parte = m.valor < (rf.valor || 0) - 0.005 ? ' de ' + money(rf.valor) : '';
+        var txt = ch === 'apropriado' ? 'crédito de ' + money(m.valor) + parte + ' apropriado · art. 47 da LC 214/2025'
+          : ch === 'utilizado' ? (/Ressarc/.test(m.causa) ? 'crédito de ' + money(m.valor) + parte + ' extinto por ressarcimento — não abateu débito'
+                                                        : 'crédito de ' + money(m.valor) + parte + ' compensado com débito do mesmo tributo · ordem do art. 53')
+          : 'crédito de ' + money(m.valor) + parte + ' glosado ' + pelo;
+        var n = vezes[ch] = (vezes[ch] || 0) + 1;
+        par(out, rf, T, m.reconhecidoEm + (ch === 'apropriado' ? 'T11:30' : ch === 'utilizado' ? 'T14:18' : 'T10:45'), ch, txt, n > 1 ? '#' + n : '');
+      });
+    } else {
+      // 3. apropriação
+      if (rf.dataApropriacao && (sc === 'apropriado' || sc === 'utilizado')) {
+        par(out, rf, T, String(rf.dataApropriacao).slice(0, 10) + 'T11:30', 'apropriado',
+          'crédito de ' + money(rf.valor) + ' apropriado · art. 47 da LC 214/2025');
+      }
+
+      // 4. utilização — compensação ou ressarcimento
+      if (sc === 'utilizado' && rf.dataExtincaoCredito) {
+        var comoUsou = rf.metodoExtincao === 'Ressarcimento'
+          ? 'crédito de ' + money(rf.valor) + ' extinto por ressarcimento — não abateu débito'
+          : 'crédito de ' + money(rf.valor) + ' compensado com débito do mesmo tributo · ordem do art. 53';
+        par(out, rf, T, String(rf.dataExtincaoCredito).slice(0, 10) + 'T14:18', 'utilizado', comoUsou);
+      }
     }
 
     // 5. glosa
-    var gl = (window.shGlosa && window.shGlosa.ficha) ? window.shGlosa.ficha(rf.id) : null;
     if (gl) {
       par(out, rf, T, gl.cienciaEm + 'T10:45', 'glosado',
         'crédito de ' + money(gl.valor) + ' glosado · causa ' + gl.causa + ' — ' + gl.causaNome.toLowerCase() + ' · ' + gl.orgao);
-    } else if (sc === 'glosado') {
-      par(out, rf, T, addDias(d0, 10) + 'T10:45', 'glosado', 'crédito de ' + money(rf.valor) + ' glosado pelo Fisco');
+    } else if (sc === 'glosado' && !(rf.movimentos && rf.movimentos.length)) {
+      par(out, rf, T, addDias(d0, 10) + 'T10:45', 'glosado', 'crédito de ' + money(rf.valor) + ' glosado ' + pelo);
     }
     return out;
   };

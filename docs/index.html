@@ -809,6 +809,8 @@ tr:last-child td{border-bottom:none}
 [data-theme="light"] .sh-fp-field input,[data-theme="light"] .sh-fp-field select{background:#fff;border-color:#E4E7EC;color:#111827}
 [data-theme="light"] .sh-fp-apply{background:var(--teal);color:#fff}
 </style>
+<link rel="stylesheet" href="css/parcialidade.css?v=4"/>
+<link rel="stylesheet" href="css/usuarios.css?v=1"/>
 </head>
 <body>
 
@@ -1039,7 +1041,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       <div>
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:6px;display:flex;align-items:center;gap:5px">
           Aproveitamento IBS+CBS
-          <span class="periodo-info" data-tip="Proporção do crédito IBS+CBS efetivamente apropriado em relação ao montante total originado no período. Inclui créditos com TF confirmado pela Plataforma Centralizada. Créditos a apropriar, em risco ou com inconsistência reduzem este índice.">i</span>
+          <span class="periodo-info" data-tip="Medido em valor: (disponível + utilizado + em ressarcimento) ÷ (apurado − inapropriável). O crédito apropriado em parte entra só com a parte apropriada. Prescrito e inutilizável ficam na conta, como perda; o inapropriável sai, porque nunca existiu. As parcelas que o Comitê Gestor não informa ficam fora.">i</span>
         </div>
         <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">
           <span id="dash-hero-pct" style="font-size:36px;font-weight:800;color:var(--teal);font-family:var(--font-mono);line-height:1">—</span>
@@ -1048,6 +1050,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
         <div style="background:var(--border);border-radius:4px;height:5px;overflow:hidden;width:200px">
           <div id="dash-hero-fill" style="height:100%;background:linear-gradient(90deg,var(--p-teal),var(--p-teal-dark));width:0%;border-radius:4px;transition:width .8s ease"></div>
         </div>
+        <div id="dash-hero-trib" class="pp-nota" style="max-width:260px"></div>
       </div>
       <!-- Divisor -->
       <div style="width:1px;height:52px;background:var(--border)"></div>
@@ -1059,7 +1062,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
           <div id="dash-hero-total" style="font-size:17px;font-weight:700;font-family:var(--font-mono);color:var(--txt1)">—</div>
         </div>
         <div style="padding:0 16px;border-right:1px solid var(--border)">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:4px">Apropriados</div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:4px">Aproveitado</div>
           <div id="dash-hero-aprop-val" style="font-size:17px;font-weight:700;font-family:var(--font-mono);color:var(--teal)">—</div>
         </div>
         <div style="padding:0 16px;border-right:1px solid var(--border)">
@@ -1434,6 +1437,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <div class="kcard" ><div class="klbl">Glosados <span class="periodo-info" data-tip="RFs com statusCredito = glosado: o Fisco negou o direito ao crédito. Cada glosa tem causa tipificada, fundamento, órgão (Receita Federal na CBS, Comitê Gestor no IBS), prazo de impugnação e estado do contencioso. Crédito glosado fica fora do saldo compensável e não pode ser ressarcido. % calculado sobre o total originado.">i</span></div><div class="kval" id="cred-glosado">—</div><div class="ksub"><span id="cred-glosado-sub">Crédito negado pelo Fisco</span><br/><a href="javascript:void(0)" onclick="creditosVerGlosados()" style="color:var(--org-matriz);font-weight:600;text-decoration:none;font-size:11px">Ver registros glosados →</a></div></div>
     <div class="kcard" ><div class="klbl">Inconsistências <span class="periodo-info" data-tip="RFs com statusRegistro = inconsistencia: divergência entre o Registro Fiscal (RF) e o Termo Fiscal (TF) ou ausência de TF. Impedem a apropriação do crédito e requerem revisão.">i</span></div><div class="kval" id="cred-inconsist">—</div><div class="ksub"><span id="cred-inconsist-sub">RFs com inconsistência · requer revisão</span><br/><a href="javascript:void(0)" onclick="window.creditosIrParaInconsistencias()" style="color:var(--red);font-weight:600;text-decoration:none;font-size:11px">Ver RFs com inconsistência →</a></div></div>
   </div>
+  <div id="cred-nota-parcelas" class="pp-nota" style="margin:-6px 0 12px;display:none">Os cards somam o valor de cada parcela dos documentos filtrados: um documento entra em mais de um card, com fatias diferentes (D-PAR-08).</div>
   <!-- Row 2: Extintos + Vencidos NE + Ageing (3 colunas — Proposta B) -->
   <div class="shg3" style="gap:12px;margin-bottom:14px">
     <div class="kcard" style="display:block;padding:14px 16px">
@@ -1633,7 +1637,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
         <div class="sh-fp-grid">
           <div class="sh-fp-field"><label>Status Importação</label><select id="cred-dfs-status" onchange="creditosDFsRender()"><option value="">Todos</option><option value="importado">Importado</option><option value="inconsistencia">Inconsistência</option><option value="pendente">Pendente</option></select></div>
           <div class="sh-fp-field"><label>Tipo DF</label><select id="cred-dfs-tipo" onchange="creditosDFsRender()"><option value="">Todos</option><option value="NF-e">NF-e</option><option value="CT-e">CT-e</option><option value="NFS-e">NFS-e</option></select></div>
-          <div class="sh-fp-field"><label>Status Crédito</label><select id="cred-dfs-credito" onchange="creditosDFsRender()"><option value="">Todos</option><option value="a_apropriar">A Apropriar</option><option value="parc_apropriado">Parc. Apropriado</option><option value="apropriado">Apropriado</option><option value="parc_utilizado">Parc. Utilizado</option><option value="utilizado">Utilizado</option><option value="glosado">Glosado</option></select></div>
+          <div class="sh-fp-field"><label>Crédito por tributo</label><select id="cred-dfs-credito" onchange="creditosDFsRender()"><option value="">Todos</option><option value="tem_pendente">Com valor a apropriar</option><option value="p:not_appropriated">Algum tributo não apropriado</option><option value="p:partially_appropriated">Algum tributo parcialmente apropriado</option><option value="p:appropriated">Algum tributo apropriado</option><option value="p:partially_utilized">Algum tributo parcialmente utilizado</option><option value="p:utilized">Algum tributo utilizado</option><option value="p:disallowed">Algum tributo glosado</option></select></div>
           <div class="sh-fp-field"><label>Método de Pagamento</label><select id="cred-dfs-metodo" onchange="creditosDFsRender()"><option value="">Todos</option><option value="Split Payment">Split Payment</option><option value="RAD">RAD</option><option value="Fornecedor">Fornecedor</option></select></div>
           <div class="sh-fp-field"><label>Origem do método</label><select id="cred-dfs-origem" onchange="creditosDFsRender()"><option value="">Todas</option><option value="contrato">Definido no contrato</option><option value="alteracao_manual">Recolhimento assumido</option></select></div>
           <div class="sh-fp-field"><label>Extinção</label><select id="cred-dfs-extincao" onchange="creditosDFsRender()"><option value="">Todos</option><option value="com">Com extinção</option><option value="sem">Sem extinção</option></select></div>
@@ -1670,7 +1674,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
         <th class="r">Crédito</th>
         <th>Método</th>
         <th>Status Importação</th>
-        <th>Status Crédito</th>
+        <th>Crédito por tributo</th>
         <th>Inconsistências</th>
         <th>Contrato</th>
         <th>Extinção</th>
@@ -1778,7 +1782,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
       </div>
       <div class="sh-fp-panel" id="deb-dfs-corpo" style="display:none">
         <div class="sh-fp-grid">
-          <div class="sh-fp-field"><label>Status</label><select id="deb-dfs-status" onchange="window.debitosDFsRender()"><option value="">Todos</option><option value="extinto">Extinto</option><option value="nao_extinto">Não Extinto</option><option value="vencido">Vencido</option><option value="inconsistencia">Inconsistência</option></select></div>
+          <div class="sh-fp-field"><label>Status</label><select id="deb-dfs-status" onchange="window.debitosDFsRender()"><option value="">Todos</option><option value="extinto">Extinto</option><option value="parcial">Parcialmente extinto</option><option value="nao_extinto">Não Extinto</option><option value="vencido">Vencido</option><option value="inconsistencia">Inconsistência</option></select></div>
           <div class="sh-fp-field"><label>Tipo DF</label><select id="deb-dfs-tipo" onchange="window.debitosDFsRender()"><option value="">Todos</option><option value="NF-e">NF-e</option><option value="CT-e">CT-e</option><option value="NFS-e">NFS-e</option></select></div>
           <div class="sh-fp-field"><label>Método Extinção</label><select id="deb-dfs-metodo" onchange="window.debitosDFsRender()"><option value="">Todos</option><option value="RAD">RAD</option><option value="Compensacao">Compensação</option><option value="Split Payment">Split Payment</option></select></div>
           <div class="sh-fp-field"><label>Extinção</label><select id="deb-dfs-extincao" onchange="window.debitosDFsRender()"><option value="">Todos</option><option value="com">Com extinção</option><option value="sem">Sem extinção</option></select></div>
@@ -2141,6 +2145,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
           <div class="sh-fp-field"><label>Tipo DF</label><select id="uni-tipo" onchange="window.concUnifiedFiltrar&&window.concUnifiedFiltrar()"><option value="">Todos</option><option value="entrada">Entrada (Crédito)</option><option value="saida">Saída (Débito)</option></select></div>
           <div class="sh-fp-field"><label>CAPUR</label><select id="uni-apur" onchange="window.concUnifiedFiltrar&&window.concUnifiedFiltrar()"><option value="">Todos</option><option value="conciliado">CAPUR OK</option><option value="inconsistencia">Inconsistência CAPUR</option><option value="pendente">Ag. Apuração</option><option value="estornado">Estornado</option></select></div>
           <div class="sh-fp-field"><label>CFIN</label><select id="uni-fin" onchange="window.concUnifiedFiltrar&&window.concUnifiedFiltrar()"><option value="">Todos</option><option value="conciliado">CFIN OK</option><option value="inconsistencia">Inconsistência CFIN</option><option value="pendente">Ag. Comprovantes</option><option value="estornado">Estornado</option></select></div>
+          <div class="sh-fp-field"><label>Parcela divergente</label><select id="uni-parc" onchange="window.concUnifiedFiltrar&&window.concUnifiedFiltrar()"><option value="">Todos</option><option value="qualquer">Com parcela divergente</option><option value="cbs">CBS divergente</option><option value="ibs">IBS divergente</option></select></div>
         </div>
         <div class="sh-fp-footer">
           <button class="sh-fp-clear" onclick="window.concUnifiedLimpar&&window.concUnifiedLimpar()">✕ Limpar filtros</button>
@@ -3491,124 +3496,52 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
 
   <!-- GESTÃO DE USUÁRIOS -->
   <div id="admin-usuarios" class="sv">
-    <div class="kgrid k4" style="margin-bottom:20px">
-      <div class="kcard" ><div class="klbl">Usuários ativos</div><div class="kval">8</div><div class="ksub">Na organização</div></div>
-      <div class="kcard" ><div class="klbl">Administradores</div><div class="kval">2</div><div class="ksub">Acesso total</div></div>
-      <div class="kcard" ><div class="klbl">Convites pendentes</div><div class="kval">3</div><div class="ksub">Aguardando aceite</div></div>
-      <div class="kcard" ><div class="klbl">Inativos</div><div class="kval">1</div><div class="ksub">Acesso revogado</div></div>
-    </div>
+    <div id="usu-kpis" class="kgrid k4"></div>
 
     <div class="crd">
       <div class="sechdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-        <div><h2>Usuários da Organização</h2><p>Gerencie acessos, perfis e permissões dos membros da conta.</p></div>
-        <button class="btn btn-t" style="font-size:12px">+ Convidar usuário</button>
+        <div><h2>Usuários da Organização</h2><p>Quem acessa a conta e com que perfil. O convite vale 7 dias e a própria pessoa cria a senha.</p></div>
+        <button class="btn btn-t" style="font-size:12px" onclick="shUsu.convidar()">+ Convidar usuário</button>
       </div>
 
-      <!-- Filtros -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 14px">
-        <button class="btn" style="font-size:11px;padding:5px 12px;background:rgba(var(--teal-alt-rgb),.12);border-color:var(--teal);color:var(--teal);font-weight:600">Todos (12)</button>
-        <button class="btn" style="font-size:11px;padding:5px 12px">Ativos (8)</button>
-        <button class="btn" style="font-size:11px;padding:5px 12px">Pendentes (3)</button>
-        <button class="btn" style="font-size:11px;padding:5px 12px">Inativos (1)</button>
+      <div class="usu-filtros">
+        <input id="usu-busca" class="usu-busca" type="text" oninput="shUsu.render()" placeholder="Buscar nome ou e-mail" aria-label="Buscar usuário">
+        <select id="usu-f-perfil" onchange="shUsu.render()" aria-label="Filtrar por perfil">
+          <option value="">Todos os perfis</option>
+          <option value="administrador">Administrador</option>
+          <option value="fiscal">Fiscal</option>
+          <option value="tesouraria">Tesouraria</option>
+          <option value="leitura">Leitura</option>
+        </select>
+        <select id="usu-f-estado" onchange="shUsu.render()" aria-label="Filtrar por estado">
+          <option value="">Todos os estados</option>
+          <option value="ativo">Ativos</option>
+          <option value="convite">Convites</option>
+          <option value="inativo">Desativados</option>
+        </select>
+        <span id="usu-count" class="usu-count"></span>
       </div>
 
-      <!-- Tabela de usuários -->
       <div class="tcrd">
         <div class="twrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Usuário</th>
-              <th>E-mail</th>
-              <th>Perfil</th>
-              <th>Último acesso</th>
-              <th>Status</th>
-              <th class="r">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="usu-tbody">
-            <tr data-usu-status="ativo">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--on-primary-dark);flex-shrink:0">JS</div><div><div style="font-size:13px;font-weight:600;color:var(--txt1)">José da Silva</div><div style="font-size:11px;color:var(--txt3)">Você</div></div></div></td>
-              <td>jose.silva@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(var(--teal-alt-rgb),.15);color:var(--teal)">Administrador</span></td>
-              <td>Agora</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Ativo</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px;opacity:.4" disabled>Editar</button></td>
-            </tr>
-            <tr data-usu-status="ativo">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">MC</div><div><div style="font-size:13px;font-weight:600;color:var(--txt1)">Maria Costa</div></div></div></td>
-              <td>maria.costa@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(var(--teal-alt-rgb),.15);color:var(--teal)">Administrador</span></td>
-              <td>Hoje 09:14</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Ativo</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px">Editar</button></td>
-            </tr>
-            <tr data-usu-status="ativo">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--org-matriz);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">RL</div><div><div style="font-size:13px;font-weight:600;color:var(--txt1)">Rafael Lima</div></div></div></td>
-              <td>rafael.lima@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(var(--status-blue-rgb),.15);color:var(--blue)">Analista Fiscal</span></td>
-              <td>Ontem 16:42</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Ativo</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px">Editar</button></td>
-            </tr>
-            <tr data-usu-status="ativo">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">AF</div><div><div style="font-size:13px;font-weight:600;color:var(--txt1)">Ana Ferreira</div></div></div></td>
-              <td>ana.ferreira@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(var(--status-blue-rgb),.15);color:var(--blue)">Analista Fiscal</span></td>
-              <td>17/08 11:03</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Ativo</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px">Editar</button></td>
-            </tr>
-            <tr data-usu-status="ativo">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--teal-dark);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">PT</div><div><div style="font-size:13px;font-weight:600;color:var(--txt1)">Paulo Torres</div></div></div></td>
-              <td>paulo.torres@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(var(--status-amber-rgb),.15);color:var(--amber)">Controller</span></td>
-              <td>15/08 08:31</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>Ativo</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px">Editar</button></td>
-            </tr>
-            <tr data-usu-status="pendente">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--txt3);flex-shrink:0">?</div><div><div style="font-size:13px;font-weight:600;color:var(--txt2)">Convite pendente</div></div></div></td>
-              <td>julia.mendes@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(var(--status-blue-rgb),.15);color:var(--blue)">Analista Fiscal</span></td>
-              <td>—</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--amber)"><span style="width:7px;height:7px;border-radius:50%;background:var(--amber);display:inline-block"></span>Pendente</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px">Reenviar</button><button class="btn" style="font-size:11px;padding:4px 10px;color:var(--red);border-color:var(--red)">Revogar</button></td>
-            </tr>
-            <tr data-usu-status="inativo">
-              <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--txt3);flex-shrink:0">CB</div><div><div style="font-size:13px;font-weight:600;color:var(--txt3)">Carlos Barros</div></div></div></td>
-              <td>carlos.barros@empresa.com.br</td>
-              <td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,.06);color:var(--txt3)">Auditor</span></td>
-              <td>02/07 10:15</td>
-              <td><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--txt3)"><span style="width:7px;height:7px;border-radius:50%;background:var(--txt3);display:inline-block"></span>Inativo</span></td>
-              <td class="r"><button class="btn" style="font-size:11px;padding:4px 10px;color:var(--teal);border-color:var(--teal)">Reativar</button></td>
-            </tr>
-          </tbody>
-        </table>
-          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>Perfil</th>
+                <th>Estado</th>
+                <th>Último acesso</th>
+                <th class="r">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="usu-tbody"></tbody>
+          </table>
         </div>
+      </div>
 
-      <!-- Perfis disponíveis -->
-      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
-        <div style="font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">Perfis de acesso disponíveis</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
-            <div style="font-size:11px;font-weight:700;color:var(--teal);margin-bottom:4px">Administrador</div>
-            <div style="font-size:11px;color:var(--txt3);line-height:1.5">Acesso total — configurações, usuários, todos os módulos.</div>
-          </div>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
-            <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:4px">Analista Fiscal</div>
-            <div style="font-size:11px;color:var(--txt3);line-height:1.5">Crédito, Débito, Pagamentos, Conciliação, Inconsistência.</div>
-          </div>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
-            <div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:4px">Controller</div>
-            <div style="font-size:11px;color:var(--txt3);line-height:1.5">Leitura em todos os módulos + Analytics. Sem ações.</div>
-          </div>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
-            <div style="font-size:11px;font-weight:700;color:var(--txt2);margin-bottom:4px">Auditor</div>
-            <div style="font-size:11px;color:var(--txt3);line-height:1.5">Somente leitura — Crédito, Débito, Conciliação.</div>
-          </div>
-        </div>
+      <div class="usu-perfis-wrap">
+        <div class="usu-perfis-t">Perfis de acesso</div>
+        <div id="usu-perfis" class="shg shg-md" style="--shg-gap:10px"></div>
       </div>
     </div>
 
@@ -7412,6 +7345,9 @@ function creditosDFsRender(){
     dfs=dfs.filter(function(d){
       var nfNum=d.nfNumero!=null?String(d.nfNumero):'—';
       var rfs=(nfMap[nfNum]||{}).registrosFiscais||[];
+      // Parcialidade: filtro pela partição de cada tributo (js/parcialidade.js)
+      if(window.shParcial&&filtCredito==='tem_pendente')return window.shParcial.aApropriar(nfMap[nfNum]||{})>0;
+      if(window.shParcial&&filtCredito.indexOf('p:')===0)return rfs.some(function(rf){return rf.statusParcial===filtCredito.slice(2);});
       return _dfCreditStatus(rfs)===filtCredito;
     });
   }
@@ -7508,7 +7444,7 @@ function creditosDFsRender(){
       :'<span style="color:var(--txt3)">—</span>';
     h+='<td class="nowrap">'+metBadge+'</td>';
     h+='<td class="nowrap">'+bdg(status)+'</td>';
-    h+='<td class="nowrap">'+_csBadge(creditoDF)+'</td>';
+    h+='<td class="nowrap" style="min-width:150px">'+(window.shParcial&&rfs.some(function(rf){return rf.balances;})?window.shParcial.celulaDF(nfOrig):_csBadge(creditoDF))+'</td>';
     h+='<td style="vertical-align:middle">'+incTypesBadge+'</td>';
     h+='<td class="nowrap">'+contratoCell+'</td>';
     h+='<td class="nowrap">'+metExtBadge+'</td>';
@@ -10811,15 +10747,17 @@ if (window.Chart) {
   Chart.defaults.font.size = 11;
 }
 </script>
-<script src="js/inc-catalogo.js?v=1"></script><!-- fonte unica dos tipos de inconsistencia -->
+<script src="js/inc-catalogo.js?v=2"></script><!-- fonte unica dos tipos de inconsistencia -->
 <script src="js/conciliacao-apuracao.js?v=1"></script>
-<script src="js/integracao-erp.js?v=3"></script>
-<script src="js/status-debito.js?v=4"></script>
-<script src="js/glosa.js?v=2"></script>
+<script src="js/integracao-erp.js?v=4"></script>
+<script src="js/status-debito.js?v=5"></script>
+<script src="js/glosa.js?v=5"></script>
 <script src="js/ressarcimento.js?v=19"></script>
-<script src="js/data-sync-fixed.js?v=140"></script>
+<script src="js/parcialidade.js?v=8"></script>
+<script src="js/parcialidade-detalhe.js?v=4"></script>
+<script src="js/data-sync-fixed.js?v=147"></script>
 <script src="js/rotas.js?v=3"></script>
-<script src="js/motor-art53.js?v=32"></script>
+<script src="js/motor-art53.js?v=33"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
 <script src="js/main.js?v=8"></script>
 <script src="js/charts.js?v=2"></script>
@@ -10900,7 +10838,8 @@ if (window.Chart) {
 <script src="js/exec-rad-3.js?v=4"></script>
 <script src="js/integracoes.js?v=3"></script>
 <script src="js/integracoes-gestao.js?v=2"></script>
-<script src="js/acesso-fornecedor.js?v=2"></script>
+<script src="js/acesso-fornecedor.js?v=3"></script>
+<script src="js/usuarios.js?v=1"></script>
 <script>
 // ── ShColMgr: registrações de todas as tabelas ──────────────────────────────
 (function(){
@@ -10988,7 +10927,7 @@ if (window.Chart) {
         {key:'credito',    label:'Crédito',         fixed:false,visible:true,  type:'num'},
         {key:'metodoPagamento',label:'Método',      fixed:false,visible:true,  type:'str'},
         {key:'status',     label:'Status Importação',fixed:false,visible:true, type:'str'},
-        {key:'statusCredito',  label:'Status Crédito',fixed:false,visible:true,type:'str'},
+        {key:'statusCredito',  label:'Crédito por tributo',fixed:false,visible:true,type:'str'},
         {key:'inconsistencia', label:'Inconsistências',fixed:false,visible:false,type:'str'},
         {key:'contratoId', label:'Contrato',        fixed:false,visible:false, type:'str'},
         {key:'metodoExtincao', label:'Extinção',    fixed:false,visible:false, type:'str'},
