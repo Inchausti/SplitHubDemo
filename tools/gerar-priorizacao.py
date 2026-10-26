@@ -21,9 +21,9 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.9'
-DATA = u'22/10/2026'
-BASE_MAPA = u'Mapa de Funcionalidades v2.8'
+VERSAO = u'v2.10'
+DATA = u'26/10/2026'
+BASE_MAPA = u'Mapa de Funcionalidades v2.9'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
 URL_DOCS = 'https://split-hubhq.github.io/app/docs/'
@@ -133,7 +133,7 @@ def resolver_vinculo(p):
 # faixa por modulo: lista com a faixa de cada funcionalidade, na ordem do mapa
 FAIXAS = {
     0: ['M0','M2','M2','M2','M0','M0','M1','M1'],
-    1: ['M0','M0','M0','M0','M2','M0','M2','M2','M2','M0','M0','M0','M0','M0','M1','M1','M1','M1','M1','M1'],
+    1: ['M0','M0','M0','M0','M2','M0','M2','M2','M2','M0','M0','M0','M0','M0','M1','M1','M1','M1','M1','M1','M0','M0','M0','M0'],
     2: ['M0','M0','M1','M1','M0','M1','M1','M1','M1','M1'],
     3: ['M0','M0','M0','M0','M1','M1','M1','M0','M0','M1','M1','M0','M0','M0','M1','M1'],
     4: ['M0','M0','M0','M0','M0','M1','M0','M1','M0','M1','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1','M1','M1','M1'],
@@ -151,7 +151,7 @@ FAIXAS = {
     16: ['M0','M1','M0','M0','M0','M0','M1','M1','M1','M1','M1','M1','M1','M1','M1'],
     17: ['M2','M2','M2','M2','M2'],
     18: ['M1','M1','M1','M1','M1','M0','M0','M0','M0','M0','M0','M1'],
-    19: ['M1','M1','M1','M1','M1','M0','M1','M1','M1','M2'],
+    19: ['M1','M1','M1','M1','M1','M0','M1','M1','M1','M2','M1','M1'],
     20: ['M1','M2','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1','M1','M1','M1'],
 }
 
@@ -225,7 +225,7 @@ REV_INDEX = {(h['bi'], h['i']): h for h in REV_HIST}
 # justificativa do corte, por modulo
 NOTA = {
     0:  u'Só o que responde “onde está meu crédito hoje”. Forecast e cockpit dependem de série histórica que o piloto ainda não tem. O <strong>card de saldo credor e ressarcimento</strong> entra em M1 (D17).',
-    1:  u'O módulo que a tese defende entra quase inteiro: 11 de 14. Ficam fora três gráficos analíticos — eles explicam o crédito, não o garantem. O Top 5 e Top 10 de fornecedores subiu na revisão de 15/09: saber de quem cobrar primeiro é operação, não análise. O painel <strong>Ressarcimento no ciclo do crédito</strong> entra em M1 (D17): o M0 do módulo não muda.',
+    1:  u'O módulo que a tese defende entra quase inteiro: 11 de 14. Ficam fora três gráficos analíticos — eles explicam o crédito, não o garantem. O Top 5 e Top 10 de fornecedores subiu na revisão de 15/09: saber de quem cobrar primeiro é operação, não análise. O painel <strong>Ressarcimento no ciclo do crédito</strong> entra em M1 (D17): o M0 do módulo não muda. A <strong>parcialidade</strong> (D19) passou ao mapa em 26/10, com o protótipo incorporado ao master: partição por tributo, selo por tributo, detalhe com as duas partições e histórico de movimentos, as quatro em M0.',
     2:  u'Débito entra só para a apuração fechar. O produto se vende pelo crédito. O aviso da trava da intenção de ressarcimento entra em M1 (D17).',
     3:  u'Entra a guia, o comprovante e o rastro dos três status. A entrega ao ERP passa ao M0 junto com a API. Na revisão de 15/09 a <strong>aba Execução Programada</strong> entrou e a gestão de colunas saiu: o piloto precisa ver o que está agendado, não configurar a própria grade. Entra também o <strong>aviso ao fornecedor</strong> do recolhimento — sem ele o fornecedor paga o mesmo tributo de novo.',
     4:  u'A inconsistência é o que impede o crédito de morrer em silêncio. Na revisão de 15/09 a <strong>atribuição de responsável</strong> entrou — inconsistência sem dono não é tratada — e os filtros multiselect saíram. A família Ressarcimento de inconsistências entra em M1 (D17).',
@@ -244,7 +244,7 @@ NOTA = {
     17: u'Depende de base legal indexada e de confiança que um piloto ainda não tem.',
     18: u'A <strong>régua de cobrança</strong> entra no M0 por decisão de 14/09: cobrança não feita é crédito perdido. Relatórios agendados ficam em M1 e a integração ITSM desceu a M2 em 15/09 — abrir chamado é rotina de time grande, não do piloto.',
     20: u'<strong>Fora do M0 por decisão de 18/09/2026.</strong> A cadeia do crédito fecha na apropriação; o ressarcimento é o passo seguinte — transformar o saldo que sobrou em dinheiro. E o primeiro pedido real só existe em 2027: saldos de 2026 não são ressarcíveis. Treze funcionalidades em M1, o ciclo que tira o analista da planilha — saldo, intenção, pedido, decisão, recebimento, prazos, conferência e impedimentos. Duas em M2: o comparativo compensar × ressarcir e a previsão de caixa, que explicam a decisão em vez de executá-la. Implementado no protótipo em simulação 2026.',
-    19: u'Multiusuário interno é consequência de adoção. A exceção é o painel de acessos externos, que entrou no M0 junto com o acesso do fornecedor — e foi confirmado na revisão de 15/09.',
+    19: u'Multiusuário interno é consequência de adoção. A exceção é o painel de acessos externos, que entrou no M0 junto com o acesso do fornecedor — e foi confirmado na revisão de 15/09. A gestão de usuários implementada em 26/10 trouxe o <strong>histórico do usuário</strong> e a <strong>redefinição de senha pelo administrador</strong>, as duas em M1 com o resto do módulo. O que a autenticação muda no M0 está na D20, em aberto.',
 }
 
 CORES = {'M0': 'teal', 'M1': 'info', 'M2': 'ref', 'X': 'warn'}
@@ -262,19 +262,6 @@ PRIO_NOTA = {
 
 # funcionalidades que NAO existem no produto e entram na priorizacao mesmo assim
 NOVAS = {
-    1: [
-        (u'Partição do crédito por tributo', 'r', 'M0', None,
-         u'Cada RF mostra onde está o valor apurado — a apropriar, disponível, utilizado, glosado em parte —, com o status '
-         u'calculado e as marcas sobre a fatia. Sem ela, o RF apropriado em parte perde o alerta e o crédito pendente sai do radar.'),
-        (u'Selo por tributo no documento', 'l', 'M0', None,
-         u'O documento deixa de ter status próprio e mostra o selo da CBS e o do IBS, cada um com a barra da partição. '
-         u'É o que faz a listagem achar todo documento com crédito a apropriar.'),
-        (u'Detalhe do documento com as duas partições', 'l', 'M0', None,
-         u'Um painel por tributo, com a partição, a conferência da soma, o prazo do art. 54 mais próximo e a última leitura do órgão.'),
-        (u'Histórico de movimentos de valor', 'l', 'M0', None,
-         u'Razão do RF: cada movimento leva uma quantia de uma parcela para outra, com causa, fonte e vínculo. '
-         u'É a fonte da partição — a soma dos movimentos é o saldo de cada parcela.'),
-    ],
     18: [
         (u'Motor de execução das automações', 'c', 'M0', None,
          u'O que faz a régua disparar: avaliação diária dos registros contra as etapas, respeito ao teto de envios e '
@@ -312,10 +299,6 @@ NOVAS = {
 
 # vinculo com o PRD das funcionalidades que ainda nao existem
 NOVAS_PRD = {
-    u'Partição do crédito por tributo': 'prd-credito.html#f-09',
-    u'Selo por tributo no documento': 'prd-credito.html#s04',
-    u'Detalhe do documento com as duas partições': 'prd-credito.html#f-10',
-    u'Histórico de movimentos de valor': 'prd-credito.html#f-11',
 }
 
 # contextos da API (src/js/integracoes.js), com a faixa de cada um
@@ -833,10 +816,16 @@ A(u'</div>')
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Decisões</span></div>')
 DEC = [
+    ('?', u'D20 · Autenticação do MVP: login próprio no lugar do SSO',
+     u'<strong>Em aberto.</strong> Na proposta de gestão de usuários, em 26/10/2026, a autenticação de pessoas entrou no '
+     u'escopo do produto (D-USR-01), com login próprio por e-mail e senha na fase 1, e o SSO com SCIM foi para a fase 2 '
+     u'(D-USR-08). A D6 deixava o SSO no M0. Proposta: o login próprio entra como novo em M0 e o SSO desce a M1, e o M0 '
+     u'não muda de tamanho. Revê a D6. Nada mudou de faixa até a confirmação.'),
     ('ok', u'D19 · Parcialidade do crédito pela gravidade',
      u'<strong>Decidido em 22/10/2026 (D-PAR-10 da proposta de aprovação da parcialidade).</strong> O que o relatório de parcialidade '
      u'classificou como gravidade alta entra no M0, a média no M1 e a baixa no M2. A primeira leva — partição, selo por tributo, '
-     u'detalhe do documento e histórico de movimentos — entra como nova, em M0.'),
+     u'detalhe do documento e histórico de movimentos — entra como nova, em M0. Passou ao mapa em 26/10/2026, com o protótipo '
+     u'incorporado ao master.'),
     ('ok', u'D17 · Ressarcimento de M1 em diante — o M0 não muda',
      u'<strong>Decidido em 18/09/2026.</strong> Tudo o que o ressarcimento trouxe aos outros módulos entra em M1: o card do Início, '
      u'o painel do Crédito, o aviso do Débito, a família de inconsistências, o enquadramento na Organização e a saída para '
@@ -909,6 +898,12 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.10</div><div class="ver-desc">'
+  u'26/10/2026 \u2014 Base: <strong>Mapa v2.9, com 286 funcionalidades</strong>. O app de avaliação foi incorporado ao '
+  u'master, e as quatro funcionalidades da parcialidade deixam de ser novas e passam ao mapa, no módulo de Créditos, '
+  u'com a mesma faixa, <strong>M0</strong>. A gestão de usuários implementada traz duas ao mapa, ambas em <strong>M1</strong>: '
+  u'histórico do usuário e redefinição de senha pelo administrador; as abas por situação viraram filtro. '
+  u'<strong>O M0 não muda.</strong> Entra a D20, em aberto: login próprio no M0 e SSO em M1, pelas decisões da gestão de usuários.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v2.9</div><div class="ver-desc">'
   u'22/10/2026 \u2014 <strong>Parcialidade do crédito.</strong> Entram como novas, todas em <strong>M0</strong>, as quatro '
   u'funcionalidades do PRD de Crédito 3.3: partição do crédito por tributo, selo por tributo no documento, detalhe do documento '
