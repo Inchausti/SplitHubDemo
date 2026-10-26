@@ -6237,10 +6237,11 @@ window.debitosDFsRender = function() {
   var _metCor={'RAD':'139,92,246','Compensacao':'29,158,117'};
   var _metLbl={'RAD':'RAD','Compensacao':'Compensação'};
   var _stCor={'extinto':'29,158,117','nao_extinto':'167,168,170','vencido':'186,117,23','inconsistencia':'244,63,94'};
-  var _stLbl={'extinto':'Extinto','nao_extinto':'Não Extinto','vencido':'Vencido','inconsistencia':'Inconsistência'};
+  var _stLbl={'extinto':'Extinto','parcial':'Parcialmente Extinto','nao_extinto':'Não Extinto','vencido':'Vencido','inconsistencia':'Inconsistência'};
 
   var _SR_SEV = { inconsistencia:4, vencido:3, em_risco:2, a_prescrever:1 };
   var h='';
+  var _exp=[];   // linhas do CSV, com os mesmos status, inconsistências e métodos da tela (DEF-02)
   nfs.forEach(function(nf){
     var rfs=nf.registrosFiscais||[];
     var ibs=0,cbs=0,metExt=null,dataExt='—';
@@ -6293,9 +6294,19 @@ window.debitosDFsRender = function() {
     h+='<td class="nowrap">'+(window.shCelulaApropriacao?window.shCelulaApropriacao(nf):'&mdash;')+'</td>';
     h+='<td class="r mono" style="color:var(--txt2)">'+rfs.length+'</td>';
     h+='</tr>';
+    var _mets=[];
+    rfs.forEach(function(rf){ var m=rf.metodoExtincao; if(m&&m!=='—'){ var t=(rf.tipoFiscal||'').toUpperCase()+': '+(_metLbl[m]||m); if(_mets.indexOf(t)<0)_mets.push(t); } });
+    // as chaves são as das colunas registradas no ShColMgr ('deb-dfs')
+    _exp.push({numero:tipoDF+' '+nfNum,tipoDF:tipoDF,entidade:nf.entidade||'',cnpj:nf.cnpj||'',data:nf.data||'',valorTotal:valor,ibs:ibs,cbs:cbs,debito:deb,
+      dataExtincao:dataExt==='—'?'':dataExt,
+      status:_stLbl[dfSt]||dfSt,
+      inconsistencia:_nfIncs.map(function(i){return i.tipoLabel||i.tipo||'';}).filter(Boolean).join('; '),
+      contratoId:contratoId||'',
+      metodoExtincao:_mets.join('; '),
+      dataApropriacao:nf.dataApropriacao||''});
   });
   // Expose data for ShColMgr CSV export
-  window._debDFsLista=nfs.map(function(nf){var rfs2=nf.registrosFiscais||[];var ibs2=0,cbs2=0;rfs2.forEach(function(rf){if(rf.tipoFiscal==='ibs')ibs2+=rf.valor||0;else cbs2+=rf.valor||0;});return{numero:(nf.tipoDF||'')+' '+(nf.numero||''),tipoDF:nf.tipoDF||'',entidade:nf.entidade||'',cnpj:nf.cnpj||'',data:nf.data||'',valorTotal:nf.valorTotal||0,ibs:ibs2,cbs:cbs2,debito:ibs2+cbs2,status:'',inconsistencia:'',metodo:''};});
+  window._debDFsLista=_exp;
   el.innerHTML=h;
   if(window.ShColMgr&&ShColMgr.afterRender)try{ShColMgr.afterRender('deb-dfs');}catch(e){}
 };
