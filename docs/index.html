@@ -202,6 +202,12 @@ nav{padding:10px;flex:1;overflow-y:auto}
 .nav-sub-dot{width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.6;flex-shrink:0}
 .nav-sub-group{max-height:0;overflow:hidden;transition:max-height .25s ease}
 .nav-sub-group.expanded{max-height:240px}
+/* menu recolhido: os itens do grupo aparecem ao lado do ícone (main.js) */
+.nav-flyout{position:fixed;z-index:400;min-width:190px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.nav-flyout-t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);padding:4px 10px 6px}
+.nav-flyout-i{display:block;width:100%;text-align:left;background:transparent;border:none;border-radius:6px;color:var(--txt1);font:inherit;font-size:12.5px;padding:7px 10px;cursor:pointer}
+.nav-flyout-i:hover{background:rgba(var(--teal-alt-rgb),.1);color:var(--teal)}
+.nav-flyout-i.active{color:var(--teal);font-weight:600}
 .analytics-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px;overflow-x:auto;flex-shrink:0}
 .atab{background:none;border:none;border-bottom:2px solid transparent;padding:10px 20px;font-size:13px;color:var(--txt2);cursor:pointer;white-space:nowrap;margin-bottom:-1px;transition:color .15s,border-color .15s}
 .atab:hover{color:var(--txt1)}
@@ -220,6 +226,10 @@ nav{padding:10px;flex:1;overflow-y:auto}
 .perfil-btn.active{background:#fff;color:#0B2920;box-shadow:0 1px 4px rgba(0,0,0,.3)}
 [data-perfil="cliente"] #subnav-admin-produto{display:none}
 [data-perfil="fornecedor"] #nav-dashboard-btn,
+[data-perfil="fornecedor"] #nav-grp-credito,
+[data-perfil="fornecedor"] #nav-sub-group-credito,
+[data-perfil="fornecedor"] #nav-grp-apuracao,
+[data-perfil="fornecedor"] #nav-sub-group-apuracao,
 [data-perfil="fornecedor"] #nav-creditos-btn,
 [data-perfil="fornecedor"] #nav-debitos-btn,
 [data-perfil="fornecedor"] #nav-pagamentos-btn,
@@ -929,8 +939,8 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <button class="bnav-btn active" onclick="showView('dashboard',this,true)"><span class="bicon">◉</span>Início</button>
     <button class="bnav-btn" onclick="showView('creditos',this,true)"><span class="bicon">◈</span>Crédito</button>
     <button class="bnav-btn" onclick="showView('debitos',this,true)"><span class="bicon">◇</span>Débito</button>
-    <button class="bnav-btn" onclick="showView('pagamentos',this,true)"><span class="bicon">⊟</span>Pag. RAD</button>
-    <button class="bnav-btn" onclick="showView('conciliacao',this,true)"><span class="bicon">⋈</span>Conciliação</button>
+    <button class="bnav-btn" data-view="apuracao" onclick="abrirApuracao(this,true)"><span class="bicon">⋈</span>Apuração</button>
+    <button class="bnav-btn" data-view="inconsistencias" onclick="showView('inconsistencias',this,true)"><span class="bicon">⚠</span>Inconsist.</button>
   </div>
 </nav>
 
@@ -953,14 +963,22 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
   <nav>
     <button class="nav-btn active" id="nav-dashboard-btn" title="Início" onclick="showView('dashboard',this)"><span class="nav-icon">◉</span><span class="nav-label"> Início</span></button>
     <button class="nav-btn" id="nav-fornecedor-btn" title="Portal Fornecedor" onclick="showView('fornecedor',this)" style="display:none"><span class="nav-icon">🏭</span><span class="nav-label"> Portal Fornecedor</span></button>
-    <button class="nav-btn" id="nav-creditos-btn" title="Crédito" onclick="showView('creditos',this)"><span class="nav-icon">◈</span><span class="nav-label"> Crédito</span></button>
+    <!-- Grupos (proposta do menu lateral, R-269): o clique no grupo abre o primeiro item -->
+    <button class="nav-btn nav-grp" id="nav-grp-credito" title="Crédito" data-grupo="nav-sub-group-credito" onclick="navGrupo(this)"><span class="nav-icon">◈</span><span class="nav-label"> Crédito</span></button>
+    <div class="nav-sub-group" id="nav-sub-group-credito">
+      <button class="nav-sub-btn" id="nav-creditos-btn" title="Crédito · Visão geral" data-view="creditos" onclick="showView('creditos',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Visão geral</span></button>
+      <button class="nav-sub-btn" id="nav-pagamentos-btn" title="Pagamentos RAD" data-view="pagamentos" onclick="showView('pagamentos',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Pagamentos RAD</span></button>
+    </div>
     <button class="nav-btn" id="nav-debitos-btn" title="Débito" onclick="showView('debitos',this)"><span class="nav-icon">◇</span><span class="nav-label"> Débito</span></button>
-    <button class="nav-btn" id="nav-pagamentos-btn" title="Pagamentos" onclick="showView('pagamentos',this)"><span class="nav-icon">⊟</span><span class="nav-label"> Pagamentos</span></button>
-    <button class="nav-btn" id="nav-conciliacao-btn" title="Conciliação" onclick="showView('conciliacao',this)"><span class="nav-icon">⋈</span><span class="nav-label"> Conciliação</span></button>
-    <button class="nav-btn" id="nav-inconsist-btn" title="Inconsistência" onclick="showView('inconsistencias',this)"><span class="nav-icon">⚠</span><span class="nav-label"> Inconsistência</span></button>
+    <button class="nav-btn nav-grp" id="nav-grp-apuracao" title="Apuração Assistida" data-grupo="nav-sub-group-apuracao" onclick="navGrupo(this)"><span class="nav-icon">⋈</span><span class="nav-label"> Apuração Assistida</span></button>
+    <div class="nav-sub-group" id="nav-sub-group-apuracao">
+      <button class="nav-sub-btn" id="nav-apuracao-btn" title="Apuração IBS/CBS" data-view="apuracao" onclick="abrirApuracao(this)"><span class="nav-sub-dot"></span><span class="nav-label"> Apuração IBS/CBS</span></button>
+      <button class="nav-sub-btn" id="nav-conciliacao-btn" title="Conciliação" data-view="conciliacao" onclick="showView('conciliacao',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Conciliação</span></button>
+      <button class="nav-sub-btn" id="nav-inconsist-btn" title="Inconsistências" data-view="inconsistencias" onclick="showView('inconsistencias',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Inconsistências</span></button>
+    </div>
     <button class="nav-btn" id="nav-ressarcimento-btn" title="Ressarcimento" onclick="showView('ressarcimento',this)"><span class="nav-icon">↺</span><span class="nav-label"> Ressarcimento</span></button>
     <button class="nav-btn" id="nav-analytics-btn" title="Analytics" onclick="showView('inteligencia',this)"><span class="nav-icon">◆</span><span class="nav-label"> Analytics</span></button>
-    <button class="nav-btn" id="nav-admin-btn" title="Configurações" onclick="showAdminSub('organizacao',document.getElementById('subnav-admin-organizacao'))"><span class="nav-icon">⚙</span><span class="nav-label"> Configurações</span></button>
+    <button class="nav-btn" id="nav-admin-btn" title="Configurações" data-grupo="nav-sub-group-admin" onclick="showAdminSub('organizacao',document.getElementById('subnav-admin-organizacao'))"><span class="nav-icon">⚙</span><span class="nav-label"> Configurações</span></button>
     <div class="nav-sub-group" id="nav-sub-group-admin">
       <button class="nav-sub-btn" id="subnav-admin-organizacao" onclick="showAdminSub('organizacao',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Organização</span></button>
       <button class="nav-sub-btn" id="subnav-admin-usuarios" onclick="showAdminSub('usuarios',this)"><span class="nav-sub-dot"></span><span class="nav-label"> Usuários</span></button>
@@ -1839,7 +1857,6 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <button class="atab" id="atab-fct-inteligencia" onclick="showAnalyticsTab('inteligencia')">Inteligência</button>
     <button class="atab atab-off" id="atab-fct-assistente" disabled title="O Assistente Tributário está desabilitado nesta versão do protótipo">Assistente Tributário</button>
     <button class="atab atab-fct active" onclick="showAnalyticsTab('fct')">Fluxo de Caixa Tributário</button>
-    <button class="atab" id="atab-fct-apuracao" onclick="showAnalyticsTab('apuracao')">Apuração IBS/CBS</button>
   </div>
   <div class="pg-hdr">
     <div>
@@ -2637,7 +2654,6 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <button class="atab atab-int active" onclick="showAnalyticsTab('inteligencia')">Inteligência</button>
     <button class="atab atab-off" disabled title="O Assistente Tributário está desabilitado nesta versão do protótipo">Assistente Tributário</button>
     <button class="atab" onclick="showAnalyticsTab('fct')">Fluxo de Caixa Tributário</button>
-    <button class="atab" onclick="showAnalyticsTab('apuracao')">Apuração IBS/CBS</button>
   </div>
   <div class="pg-hdr">
     <div>
@@ -2735,7 +2751,6 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
     <button class="atab" onclick="showAnalyticsTab('inteligencia')">Inteligência</button>
     <button class="atab atab-ass active" onclick="showAnalyticsTab('assistente')">Assistente Tributário</button>
     <button class="atab" onclick="showAnalyticsTab('fct')">Fluxo de Caixa Tributário</button>
-    <button class="atab" onclick="showAnalyticsTab('apuracao')">Apuração IBS/CBS</button>
   </div>
   <div class="pg-hdr">
     <div>
@@ -2837,12 +2852,6 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Enter')lpCheck();}
 
 <!-- APURAÇÃO IBS/CBS -->
 <div id="view-apuracao" class="view">
-  <div class="analytics-tabs">
-    <button class="atab" onclick="showAnalyticsTab('inteligencia')">Inteligência</button>
-    <button class="atab atab-off" disabled title="O Assistente Tributário está desabilitado nesta versão do protótipo">Assistente Tributário</button>
-    <button class="atab" onclick="showAnalyticsTab('fct')">Fluxo de Caixa Tributário</button>
-    <button class="atab atab-apur active" onclick="showAnalyticsTab('apuracao')">Apuração IBS/CBS</button>
-  </div>
   <div class="pg-hdr">
     <div><div class="pg-title">Apuração IBS/CBS</div><div class="pg-sub" id="apur-sub">Competência: mai/2026 · Última execução: 01/06/2026 às 10:22</div></div>
     <div class="hdr-act" style="flex-wrap:wrap;gap:8px">
@@ -7942,6 +7951,7 @@ function showAdminSub(id,btn){
 
 function showAnalyticsTab(id){
   if(id==='assistente') return;   // Assistente Tributário desabilitado no protótipo (26/10/2026)
+  if(id==='apuracao') return abrirApuracao();   // a Apuração IBS/CBS fica em Apuração Assistida desde o R-271
   showView(id,document.getElementById("nav-analytics-btn"));
 }
 function showAnalyticsSub(id,btn){
@@ -10759,10 +10769,10 @@ if (window.Chart) {
 <script src="js/parcialidade.js?v=8"></script>
 <script src="js/parcialidade-detalhe.js?v=4"></script>
 <script src="js/data-sync-fixed.js?v=148"></script>
-<script src="js/rotas.js?v=3"></script>
+<script src="js/rotas.js?v=4"></script>
 <script src="js/motor-art53.js?v=33"></script>
 <script src="js/apuracao-completa.js?v=2"></script>
-<script src="js/main.js?v=8"></script>
+<script src="js/main.js?v=9"></script>
 <script src="js/charts.js?v=2"></script>
 
 <!-- Tooltip flutuante global para .periodo-info -->
