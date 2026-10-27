@@ -41,14 +41,14 @@ def ajustar_para_versoes(txt, versoes):
     """Links de um documento que passa a morar em versoes/: tudo sobe um nível, menos as outras versões."""
     def f(m):
         url = m.group(2)
-        if not url or EXTERNO.match(url) or url.startswith('../'):
+        if not url or EXTERNO.match(url):
             return m.group(0)
         base = re.split(r'[#?]', url)[0]
         if base in versoes or base.startswith('versoes/'):
             return m.group(1) + url.replace('versoes/', '', 1) + m.group(3)
         return m.group(1) + '../' + url + m.group(3)
     txt = LINK.sub(f, txt)
-    return re.sub(r"url\((['\"]?)(?!https?:|data:|/|#|\.\./)([^)'\"]+)\1\)", r"url(\1../\2\1)", txt)
+    return re.sub(r"url\((['\"]?)(?!https?:|data:|/|#)([^)'\"]+)\1\)", r"url(\1../\2\1)", txt)
 
 
 def indice():
@@ -97,6 +97,9 @@ def checar(pastas=None):
             if not f.endswith('.html'):
                 continue
             t = io.open(os.path.join(pasta, f), encoding='utf-8', errors='ignore').read()
+            if not t.strip():
+                quebrados.append((os.path.relpath(os.path.join(pasta, f), REPO), '(arquivo vazio)'))
+                continue
             for m in LINK.finditer(t):
                 url = m.group(2)
                 if not url or EXTERNO.match(url) or '{' in url or "'" in url or '+' in url:
