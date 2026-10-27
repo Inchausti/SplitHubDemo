@@ -52,6 +52,7 @@
     'ressarcimento/intencoes':  function () { if (window.shRes) window.shRes.abrir(null, 'intencoes'); },
     'ressarcimento/pedidos':    function () { if (window.shRes) window.shRes.abrir(null, 'pedidos'); },
     'ressarcimento/recebimentos': function () { if (window.shRes) window.shRes.abrir(null, 'recebimentos'); },
+    'backoffice':               function () { if (window.shBo) window.shBo.abrir(); },
   };
 
   // Nomes do menu agrupado (R-271): sinônimos das rotas de sempre, que continuam valendo
