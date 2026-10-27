@@ -22,6 +22,7 @@
     'fornecedores':             function () { admin('fornecedores'); },
     'organizacao':              function () { admin('organizacao'); },
     'integracoes':              function () { admin('integracoes'); },
+    'eventos-fiscais':          function () { admin('eventos'); },
     'automacoes':               function () { admin('automacoes'); },
     'execucao-rad':             function () { admin('exec-rad'); },
     'pagamentos':               function () { view('pagamentos'); sub('pag', 'imp'); },
