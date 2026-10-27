@@ -284,22 +284,92 @@ window.shFeature && shFeature.registrar({"id": "AV-BO", "nome": "Backoffice da p
   }
   function telaFlags() {
     return '<div class="bo-hdr"><div><h2>Feature flags da plataforma</h2><p>O plano define o padrão; a organização pode ter exceção; a plataforma pode desligar um recurso para todos. Recurso do núcleo fica sempre ligado.</p></div></div>'
-      + '<div class="bo-tw"><table class="bo-t"><thead><tr><th>Flag</th><th>Módulo</th><th>Estágio</th><th>Entrega</th><th>Na plataforma</th><th>Essencial</th><th>Completo</th><th>Depende de</th><th class="r">Organizações com ela</th></tr></thead><tbody>'
+      + '<div class="bo-tw"><table class="bo-t"><thead><tr><th>Flag</th><th>Módulo</th><th>Estágio</th><th>Entrega</th><th>Na plataforma</th><th>Nos planos</th><th>Depende de</th><th class="r">Organizações com ela</th></tr></thead><tbody>'
       + FLAGS.map(function (f) {
         var g = ST.global[f.k], nOn = ST.tenants.filter(function (t) { return efetiva(t, f.k).on; }).length;
-        var pd = function (p) { return f.estagio === 'nucleo' ? '●' : (plano(p).liga.indexOf(f.k) >= 0 ? '●' : '—'); };
+        var pls = f.estagio === 'nucleo' ? 'todos' : (PLANOS.filter(function (p) { return p.ativo !== false && p.liga.indexOf(f.k) >= 0; }).map(function (p) { return p.nome; }).join(', ') || '—');
         return '<tr class="bo-tr-click" onclick="shBo.flag(\'' + f.k + '\')"><td><b>' + esc(f.nome) + '</b><span class="bo-sub bo-mono">' + esc(f.k) + '</span></td><td>' + esc(f.mod) + '</td><td>' + chip(EST[f.estagio][1], EST[f.estagio][0]) + '</td><td>' + entregaChip(f.k) + '</td>'
-          + '<td>' + (g.on ? chip('teal', 'ligada') : chip('red', 'desligada')) + '</td><td class="bo-c">' + pd('essencial') + '</td><td class="bo-c">' + pd('completo') + '</td>'
+          + '<td>' + (g.on ? chip('teal', 'ligada') : chip('red', 'desligada')) + '</td><td class="bo-sub2">' + esc(pls) + '</td>'
           + '<td>' + esc((f.dep || []).map(function (d) { return flag(d).nome; }).join(', ') || '—') + '</td><td class="r">' + nOn + ' de ' + ST.tenants.length + '</td></tr>';
       }).join('') + '</tbody></table></div>';
   }
   function telaPlanos() {
-    return '<div class="bo-hdr"><div><h2>Planos</h2><p>O plano é o conjunto padrão de recursos. A edição de planos, preços e limites está na proposta do backoffice como recurso futuro.</p></div></div>'
+    var ed = pode('plano');
+    return '<div class="bo-hdr"><div><h2>Planos</h2><p>O plano é o conjunto padrão de recursos de uma organização. Crie quantos precisar; mudar um plano muda todas as organizações nele, exceto onde há exceção. Preço e limites de uso estão na proposta do backoffice.</p></div>'
+      + (ed ? '<button class="btn btn-t" onclick="shBo.planoEditar()">+ Novo plano</button>' : '') + '</div>'
       + '<div class="bo-planos">' + PLANOS.map(function (p) {
-        var n = ST.tenants.filter(function (t) { return t.plano === p.k; }).length;
-        return '<div class="bo-plano"><div class="bo-plano-h"><b>' + esc(p.nome) + '</b><span class="bo-sub">' + n + ' organizaç' + (n === 1 ? 'ão' : 'ões') + '</span></div><p class="bo-p">' + esc(p.desc) + '</p>'
-          + '<div class="bo-tags">' + FLAGS.filter(function (f) { return f.estagio === 'nucleo' || p.liga.indexOf(f.k) >= 0; }).map(function (f) { return '<span class="bo-tag">' + esc(f.nome) + '</span>'; }).join('') + '</div></div>';
+        var n = ST.tenants.filter(function (t) { return t.plano === p.k; }).length, apos = p.ativo === false;
+        return '<div class="bo-plano' + (apos ? ' bo-plano-off' : '') + '"><div class="bo-plano-h"><b>' + esc(p.nome) + (apos ? ' ' + chip('gray', 'aposentado') : '') + '</b><span class="bo-sub">' + n + ' organizaç' + (n === 1 ? 'ão' : 'ões') + '</span></div><p class="bo-p">' + esc(p.desc) + '</p>'
+          + '<div class="bo-tags">' + FLAGS.filter(function (f) { return f.estagio === 'nucleo' || p.liga.indexOf(f.k) >= 0; }).map(function (f) { return '<span class="bo-tag">' + esc(f.nome) + '</span>'; }).join('') + '</div>'
+          + (ed && !apos ? '<div class="bo-acoes bo-mt"><button class="btn bo-btn-sm" onclick="shBo.planoEditar(\'' + p.k + '\')">Editar</button><button class="btn bo-btn-sm" onclick="shBo.planoEditar(null,\'' + p.k + '\')">Duplicar</button>'
+            + (n ? '' : '<button class="btn bo-btn-sm bo-btn-red" onclick="shBo.planoAposentar(\'' + p.k + '\')">Aposentar</button>') + '</div>' : '')
+          + (p.por ? '<span class="bo-sub bo-mt">' + esc(p.por) + '</span>' : '') + '</div>';
       }).join('') + '</div>';
+  }
+
+  /* ── Planos: criar, editar, duplicar, aposentar ───────────────────────── */
+  // recurso fora da primeira versão não entra em plano; núcleo entra em todos
+  function flagsDePlano() { return FLAGS.filter(function (f) { return f.estagio !== 'nucleo' && f.estagio !== 'fora'; }); }
+  function planoEditar(k, base) {
+    if (!exigir('plano')) return;
+    var p = k ? plano(k) : null, src = p || (base ? plano(base) : null), id = 'bo-plano-ov';
+    ST._plano = { k: k || null };
+    overlay(id, 640, cab(id, '▦', p ? 'Editar plano · ' + esc(p.nome) : 'Novo plano', p ? 'Muda todas as organizações neste plano, exceto onde há exceção' : (base ? 'A partir de ' + esc(plano(base).nome) : 'Escolha os recursos'))
+      + '<div class="mbox-col bo-col"><div class="bo-duo"><div class="bo-campo"><label for="bo-pl-nome">Nome</label><input id="bo-pl-nome" class="bo-in" value="' + esc(p ? p.nome : (base ? plano(base).nome + ' — cópia' : '')) + '" oninput="shBo.planoImpacto()"></div>'
+      + '<div class="bo-campo"><label for="bo-pl-desc">Descrição</label><input id="bo-pl-desc" class="bo-in" value="' + esc(src ? src.desc : '') + '"></div></div>'
+      + '<div class="bo-sec">Recursos · o núcleo vem em todos os planos</div><div class="bo-ck">'
+      + flagsDePlano().map(function (f) {
+        return '<label class="bo-ck-l"><input type="checkbox" data-pl="' + f.k + '"' + (src && src.liga.indexOf(f.k) >= 0 ? ' checked' : '') + ' onchange="shBo.planoImpacto()"> ' + esc(f.nome)
+          + ' <span class="bo-sub">' + esc(EST[f.estagio][0]) + (f.dep ? ' · depende de ' + esc(f.dep.map(function (d) { return flag(d).nome; }).join(', ')) : '') + '</span></label>';
+      }).join('') + '</div>'
+      + '<div id="bo-pl-imp"></div>'
+      + '<div class="bo-campo"><label for="bo-pl-mot">Motivo</label><textarea id="bo-pl-mot" class="bo-in" rows="2" placeholder="Fica na trilha de auditoria"></textarea></div></div>'
+      + rodape(id, p ? 'O impacto aparece acima.' : 'Nome, recursos e motivo.', p ? 'Salvar plano' : 'Criar plano', 'shBo.planoSalvar()'));
+    planoImpacto();
+  }
+  function planoLido() {
+    var liga = Array.prototype.map.call(document.querySelectorAll('#bo-plano-ov input[data-pl]:checked'), function (c) { return c.getAttribute('data-pl'); });
+    return { nome: (document.getElementById('bo-pl-nome').value || '').trim(), desc: (document.getElementById('bo-pl-desc').value || '').trim(), liga: liga, mot: (document.getElementById('bo-pl-mot') || {}).value };
+  }
+  function planoImpacto() {
+    var box = document.getElementById('bo-pl-imp'); if (!box) return;
+    var v = planoLido(), k = ST._plano.k, h = '';
+    var semDep = v.liga.filter(function (x) { var f = flag(x); return f.dep && f.dep.some(function (d) { return flag(d).estagio !== 'nucleo' && v.liga.indexOf(d) < 0; }); });
+    if (semDep.length) h += '<div class="bo-caixa bo-caixa-amb"><div class="bo-caixa-t">Dependência</div>' + semDep.map(function (x) { return esc(flag(x).nome) + ' depende de ' + esc(flag(x).dep.map(function (d) { return flag(d).nome; }).join(', ')); }).join('; ') + '. Sem ela, fica desligado nas organizações.</div>';
+    if (k) {
+      var p = plano(k), ganha = v.liga.filter(function (x) { return p.liga.indexOf(x) < 0; }), perde = p.liga.filter(function (x) { return v.liga.indexOf(x) < 0; });
+      var orgs = ST.tenants.filter(function (t) { return t.plano === k; });
+      if (ganha.length || perde.length) h += '<div class="bo-caixa"><div class="bo-caixa-t">Impacto em ' + orgs.length + ' organizaç' + (orgs.length === 1 ? 'ão' : 'ões') + '</div>'
+        + (ganha.length ? 'Ganham: ' + esc(ganha.map(function (x) { return flag(x).nome; }).join(', ')) + '. ' : '') + (perde.length ? 'Perdem: ' + esc(perde.map(function (x) { return flag(x).nome; }).join(', ')) + '. ' : '')
+        + (orgs.length ? esc(orgs.map(function (t) { return t.nome; }).join(', ').replace(/\.$/, '')) + '. Exceções de cada organização continuam valendo.' : '') + '</div>';
+    }
+    box.innerHTML = h;
+  }
+  function planoSalvar() {
+    var v = planoLido(), k = ST._plano.k, st = document.getElementById('bo-plano-ov-st');
+    var dup = PLANOS.some(function (p) { return p.k !== k && p.nome.toLowerCase() === v.nome.toLowerCase(); });
+    var erro = !v.nome ? 'Dê um nome ao plano.' : (dup ? 'Já existe um plano com este nome.' : (!(v.mot || '').trim() ? 'Informe o motivo.' : ''));
+    if (erro) { st.textContent = erro; st.className = 'bo-rodape-st amb'; return; }
+    var assin = 'por ' + opAtual().nome + ' em ' + fmtD(agora());
+    if (k) {
+      var p = plano(k), antes = p.liga.slice();
+      p.nome = v.nome; p.desc = v.desc; p.liga = v.liga; p.por = 'Alterado ' + assin;
+      log('—', 'Plano alterado', p.nome + ' · ' + v.liga.length + ' recursos além do núcleo (antes ' + antes.length + ') · ' + v.mot.trim());
+    } else {
+      var novo = { k: 'pl_' + v.nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') + '_' + (PLANOS.length + 1), nome: v.nome, desc: v.desc, liga: v.liga, por: 'Criado ' + assin };
+      PLANOS.push(novo);
+      log('—', 'Plano criado', novo.nome + ' · ' + v.liga.length + ' recursos além do núcleo · ' + v.mot.trim());
+    }
+    fechar('bo-plano-ov'); toast(k ? 'Plano salvo. As organizações nele já refletem.' : 'Plano ' + v.nome + ' criado.'); depois();
+  }
+  function planoAposentar(k) {
+    if (!exigir('plano')) return;
+    var p = plano(k);
+    if (ST.tenants.some(function (t) { return t.plano === k; })) { toast('Há organizações neste plano. Mude-as de plano antes.', true); return; }
+    pedirMotivo('Aposentar o plano ' + p.nome, 'Some do cadastro e da troca de plano; a trilha fica', function (m) {
+      p.ativo = false; p.por = 'Aposentado por ' + opAtual().nome + ' em ' + fmtD(agora());
+      log('—', 'Plano aposentado', p.nome + ' · ' + m); render();
+    });
   }
   function telaSaude() {
     var cel = [], T = ST.tenants;
@@ -364,7 +434,7 @@ window.shFeature && shFeature.registrar({"id": "AV-BO", "nome": "Backoffice da p
     var ck = t.checklist, peds = ST.pedidos.filter(function (p) { return p.tenant === t.id && p.sit === 'aberto'; });
     overlay(oid, 860, cab(oid, '🏢', esc(t.nome), 'CNPJ raiz ' + esc(t.raiz) + ' · ' + esc(plano(t.plano).nome) + ' · ' + SIT[t.sit][0] + ' · ' + esc(t.amb))
       + '<div class="mbox-col bo-col">'
-      + '<div class="bo-kv"><span>Plano</span><b><select class="bo-in bo-sel"' + (pode('plano') ? '' : ' disabled') + ' onchange="shBo.mudarPlano(\'' + t.id + '\',this.value)">' + PLANOS.map(function (p) { return '<option value="' + p.k + '"' + (p.k === t.plano ? ' selected' : '') + '>' + p.nome + '</option>'; }).join('') + '</select></b></div>'
+      + '<div class="bo-kv"><span>Plano</span><b><select class="bo-in bo-sel"' + (pode('plano') ? '' : ' disabled') + ' onchange="shBo.mudarPlano(\'' + t.id + '\',this.value)">' + PLANOS.filter(function (p) { return p.ativo !== false || p.k === t.plano; }).map(function (p) { return '<option value="' + p.k + '"' + (p.k === t.plano ? ' selected' : '') + '>' + p.nome + '</option>'; }).join('') + '</select></b></div>'
       + (t.admin ? '<div class="bo-kv"><span>Administrador inicial</span><b>' + esc(t.admin.nome) + ' · ' + esc(t.admin.email) + ' · convite até ' + fmtD(t.admin.expira) + '</b></div>' : '')
       + '<div class="bo-sec">Recursos · ' + contagem(t) + ' de ' + FLAGS.length + ' ligados</div>'
       + '<div class="bo-tw"><table class="bo-t"><thead><tr><th>Recurso</th><th>Estado</th><th>Por quê</th><th></th></tr></thead><tbody>' + flags + '</tbody></table></div>'
@@ -490,7 +560,7 @@ window.shFeature && shFeature.registrar({"id": "AV-BO", "nome": "Backoffice da p
       + '<div class="bo-sec">2 · Estabelecimentos</div><div class="bo-campo"><label for="bo-n-cnpjs">CNPJs da organização — um por linha; a lista completa vem na implantação, por CSV</label><textarea id="bo-n-cnpjs" class="bo-in" rows="3" placeholder="00.000.000/0001-00" oninput="shBo.validarNova()"></textarea></div>'
       + '<div class="bo-sec">3 · Administrador inicial</div><div class="bo-duo">' + c('bo-n-adm', 'Nome', 'Quem administra a organização') + c('bo-n-email', 'E-mail', 'nome@empresa.com.br', 'email') + '</div>'
       + '<div class="bo-sub">Recebe o convite de 7 dias e cria a própria senha no primeiro acesso, como os demais usuários.</div>'
-      + '<div class="bo-sec">4 · Plano e recursos</div><div class="bo-planos-op">' + PLANOS.map(function (p, i) {
+      + '<div class="bo-sec">4 · Plano e recursos</div><div class="bo-planos-op">' + PLANOS.filter(function (p) { return p.ativo !== false; }).map(function (p, i) {
         return '<label class="bo-popt"><input type="radio" name="bo-n-plano" value="' + p.k + '"' + (i === 0 ? ' checked' : '') + ' onchange="shBo.validarNova()"><span class="bo-min0"><b>' + p.nome + '</b><small>' + esc(p.desc) + '</small></span></label>';
       }).join('') + '</div>'
       + '<div class="bo-sub">As exceções por recurso são feitas depois, no detalhe da organização.</div>'
@@ -718,6 +788,7 @@ window.shFeature && shFeature.registrar({"id": "AV-BO", "nome": "Backoffice da p
   window.shBo = {
     entrar: entrar, abrir: abrir, sair: sair, aba: aba, org: org, flag: verFlag, trocar: trocar, voltarPlano: voltarPlano, mudarPlano: mudarPlano,
     situacao: situacao, marcar: marcar, abrirNoApp: abrirNoApp, global: global, nova: nova, validarNova: validarNova, criar: criar,
+    planoEditar: planoEditar, planoImpacto: planoImpacto, planoSalvar: planoSalvar, planoAposentar: planoAposentar,
     verComo: verComo, convidarOp: convidarOp, criarOp: criarOp, primeiroAcesso: primeiroAcesso, perfilOp: perfilOp, salvarPerfilOp: salvarPerfilOp,
     desativarOp: desativarOp, reativarOp: reativarOp, saude: verSaude, verificar: verificar, resolverInc: resolverInc,
     pedirLiberacao: pedirLiberacao, _enviarPedido: _enviarPedido, liberarPedido: liberarPedido, recusarPedido: recusarPedido, recursosApp: renderRecursosApp,
