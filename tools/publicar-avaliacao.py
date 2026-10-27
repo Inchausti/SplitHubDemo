@@ -86,8 +86,8 @@ io.open(os.path.join(SITE, '.nojekyll'), 'w').write('')
 io.open(os.path.join(SITE, 'README.md'), 'w', encoding='utf-8').write(
     u'# SplitHub — ambiente de avaliação\n\nProtótipo da branch `%s` do repositório split-hubhq/app, publicado só para avaliação do time, '
     u'em %s. Não é o protótipo oficial. Cada pacote aprovado entra no master sozinho, atrás de feature flag, e este ambiente é refeito com o que ainda está pendente. '
-    u'Relatório de avaliação: ' + RELATORIO + u'\n\n'
-    u'Publicado por `tools/publicar-avaliacao.py`, no repositório do hub. Versão publicada: `%s`.\n' % (BRANCH, SITE_URL, sha))
+    u'Relatório de avaliação: %s\n\n'
+    u'Publicado por `tools/publicar-avaliacao.py`, no repositório do hub. Versão publicada: `%s`.\n' % (BRANCH, SITE_URL, RELATORIO, sha))
 
 # 4. commit e envio
 run(['git', 'add', '-A'], SITE)
