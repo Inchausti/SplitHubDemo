@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Publica o protótipo da branch parcialidade-prototipo no ambiente de avaliação (E-01).
 
-Uso:  python tools/publicar-avaliacao.py "mensagem do lote"
+Uso:  SH_BRANCH=<branch> python tools/publicar-avaliacao.py "mensagem do lote"
 
 Monta o site a partir de src/ na ponta da branch, sem passar pela árvore de trabalho, põe a faixa de
 ambiente de avaliação no index.html e envia para a main de
@@ -15,7 +15,8 @@ import sys
 import tempfile
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BRANCH = 'parcialidade-prototipo'
+# a branch publicada vem da variável SH_BRANCH; sem ela, a da parcialidade, como antes
+BRANCH = os.environ.get('SH_BRANCH', 'parcialidade-prototipo')
 DEST_URL = 'https://github.com/split-hubhq/split-hubhq-app-avaliacao.git'
 SITE_URL = 'https://split-hubhq.github.io/split-hubhq-app-avaliacao/'
 TRAB = os.path.join(tempfile.gettempdir(), 'splithub-avaliacao')
