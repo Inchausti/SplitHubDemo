@@ -147,7 +147,11 @@ python tools/avaliacao.py montar --publicar "pacote AV-EV no app"</code></div></
     });
     var txt = linhas.length ? 'Decisões do relatório de avaliação\n' + linhas.join('\n') : 'Nenhuma decisão marcada.';
     var s = document.getElementById('saida'); s.value = txt; s.hidden = false; s.select();
-    try { navigator.clipboard.writeText(txt); document.getElementById('copiado').textContent = 'Copiado. Cole na conversa.'; } catch (e) {}
+    var aviso = document.getElementById('copiado');
+    try {
+      navigator.clipboard.writeText(txt).then(function () { aviso.textContent = 'Copiado. Cole na conversa.'; },
+        function () { aviso.textContent = 'Selecione o texto abaixo e copie.'; });
+    } catch (e) { aviso.textContent = 'Selecione o texto abaixo e copie.'; }
   };
   window.limparDecisoes = function () { st = {}; gravar(st); location.reload(); };
 })();
