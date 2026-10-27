@@ -16,7 +16,7 @@
    módulo; eventos_modo_direto, a transmissão direta — sem ela, só pelo ERP.
    ═══════════════════════════════════════════════════════════════════════════ */
 /* @pacote — o estado das flags é reescrito por tools/avaliacao.py promover */
-window.shFeature && shFeature.registrar({"id": "AV-EV", "nome": "Evento fiscal e nota de ajuste", "branch": "feat/eventos-fiscais", "flags": {"eventos_fiscais": "avaliacao", "eventos_modo_direto": "avaliacao"}, "rotulos": {"eventos_fiscais": "As 18 opções na inconsistência e no documento, pelo ERP", "eventos_modo_direto": "Transmissão direta à SEFAZ, com credencial e termo"}, "alvos": {"eventos_fiscais": ["#subnav-admin-eventos"]}});
+window.shFeature && shFeature.registrar({"id": "AV-EV", "nome": "Evento fiscal e nota de ajuste", "branch": "feat/eventos-fiscais", "entrada": "#/eventos-fiscais", "flags": {"eventos_fiscais": "avaliacao", "eventos_modo_direto": "avaliacao"}, "rotulos": {"eventos_fiscais": "As 18 opções na inconsistência e no documento, pelo ERP", "eventos_modo_direto": "Transmissão direta à SEFAZ, com credencial e termo"}, "alvos": {"eventos_fiscais": ["#subnav-admin-eventos"]}});
 /* @fim-pacote */
 (function () {
   'use strict';
