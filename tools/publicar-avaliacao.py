@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Publica o protótipo da branch parcialidade-prototipo no ambiente de avaliação (E-01).
+"""Publica o protótipo no ambiente de avaliação (E-01).
 
-Uso:  python tools/publicar-avaliacao.py "mensagem do lote"
+Uso:  python tools/avaliacao.py montar --publicar "mensagem do lote"     (o caminho normal)
+      SH_BRANCH=<branch> python tools/publicar-avaliacao.py "mensagem"     (uma branch avulsa)
 
-Monta o site a partir de src/ na ponta da branch, sem passar pela árvore de trabalho, põe a faixa de
-ambiente de avaliação no index.html e envia para a main de
+Sem SH_BRANCH, publica a branch avaliacao: o master com os pacotes pendentes, montada por
+tools/avaliacao.py. Monta o site a partir de src/ na ponta da branch, sem passar pela árvore de
+trabalho, marca o ambiente (SH_AMBIENTE, que liga as flags em avaliação), põe a faixa com o painel
+de features e o relatório no index.html e envia para a main de
 https://github.com/split-hubhq/split-hubhq-app-avaliacao (Pages na raiz da main).
 Até 23/10/2026 o ambiente ficava em Inchausti/split-hubhq-app-avaliacao; o histórico foi levado inteiro."""
 import io
@@ -15,7 +18,9 @@ import sys
 import tempfile
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BRANCH = 'parcialidade-prototipo'
+# a branch publicada vem da variável SH_BRANCH; sem ela, a integração montada por tools/avaliacao.py
+BRANCH = os.environ.get('SH_BRANCH', 'avaliacao')
+RELATORIO = 'https://split-hubhq.github.io/app/docs/relatorio-avaliacao.html'
 DEST_URL = 'https://github.com/split-hubhq/split-hubhq-app-avaliacao.git'
 SITE_URL = 'https://split-hubhq.github.io/split-hubhq-app-avaliacao/'
 TRAB = os.path.join(tempfile.gettempdir(), 'splithub-avaliacao')
@@ -66,16 +71,22 @@ t = io.open(idx, encoding='utf-8').read()
 FAIXA = (u'<div id="sh-avaliacao-faixa" role="note" style="position:fixed;left:0;right:0;bottom:0;z-index:99999;'
          u'background:var(--amber);color:var(--bg);font:600 12px/1.4 system-ui,sans-serif;padding:5px 12px;text-align:center">'
          u'Ambiente de avaliação · branch <code>%s</code> · versão %s · '
-         u'<a href="https://split-hubhq.github.io/app/docs/parcialidade-resumo-executivo.html" style="color:inherit;text-decoration:underline">o que muda</a>'
-         u'</div>' % (BRANCH, sha))
+         u'<button type="button" onclick="window.shFeature&&shFeature.painel()" style="font:inherit;color:inherit;background:none;border:0;padding:0;text-decoration:underline;cursor:pointer">features</button> · '
+         u'<a href="%s" style="color:inherit;text-decoration:underline">relatório de avaliação</a>'
+         u'</div>' % (BRANCH, sha, RELATORIO))
 i = t.index(u'<body')
 j = t.index(u'>', i) + 1
 t = t[:j] + u'\n' + FAIXA + t[j:]
+# o ambiente se declara antes do features.js: flag em avaliação liga aqui
+i = t.index(u'<head')
+j = t.index(u'>', i) + 1
+t = t[:j] + u"\n<script>window.SH_AMBIENTE='avaliacao';</script>" + t[j:]
 io.open(idx, 'w', encoding='utf-8', newline='\n').write(t)
 io.open(os.path.join(SITE, '.nojekyll'), 'w').write('')
 io.open(os.path.join(SITE, 'README.md'), 'w', encoding='utf-8').write(
     u'# SplitHub — ambiente de avaliação\n\nProtótipo da branch `%s` do repositório split-hubhq/app, publicado só para avaliação do time, '
-    u'em %s. Não é o protótipo oficial. Aprovado, as mudanças entram no master e este ambiente deixa de ser atualizado.\n\n'
+    u'em %s. Não é o protótipo oficial. Cada pacote aprovado entra no master sozinho, atrás de feature flag, e este ambiente é refeito com o que ainda está pendente. '
+    u'Relatório de avaliação: ' + RELATORIO + u'\n\n'
     u'Publicado por `tools/publicar-avaliacao.py`, no repositório do hub. Versão publicada: `%s`.\n' % (BRANCH, SITE_URL, sha))
 
 # 4. commit e envio
