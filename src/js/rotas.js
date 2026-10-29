@@ -35,6 +35,8 @@
     'debitos':                  function () { view('debitos'); sub('deb', 'visao'); },
     'debitos/rfs':              function () { view('debitos'); sub('deb', 'rfs'); },
     'debitos/dfs':              function () { view('debitos'); sub('deb', 'dfs'); },
+    'pcont':                    function () { clicar('#nav-pcont-btn'); },
+    'painel-apuracao':          function () { clicar('#nav-pcont-painel-btn'); },
     'apuracao':                 function () {
       clicar('#nav-apuracao-btn');
       sub('apur', 'resumo');
@@ -57,7 +59,7 @@
   var SINONIMOS = {
     'credito': 'creditos', 'credito/visao-geral': 'creditos', 'credito/pagamentos-rad': 'pagamentos',
     'credito/pagamentos-rad/execucao': 'pagamentos/execucao', 'apuracao-assistida': 'apuracao',
-    'apuracao-assistida/apuracao': 'apuracao', 'apuracao-assistida/conciliacao': 'conciliacao',
+    'apuracao-assistida/apuracao': 'apuracao', 'apuracao-assistida/pcont': 'pcont', 'apuracao-assistida/painel': 'painel-apuracao', 'apuracao-assistida/conciliacao': 'conciliacao',
     'apuracao-assistida/conciliacao/lista': 'conciliacao/lista', 'apuracao-assistida/inconsistencias': 'inconsistencias',
     'apuracao-assistida/inconsistencias/kanban': 'inconsistencias/kanban', 'apuracao-assistida/inconsistencias/listagem': 'inconsistencias/listagem'
   };
