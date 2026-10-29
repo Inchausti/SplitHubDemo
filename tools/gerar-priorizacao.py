@@ -21,9 +21,9 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.11'
-DATA = u'26/10/2026'
-BASE_MAPA = u'Mapa de Funcionalidades v2.10'
+VERSAO = u'v2.12'
+DATA = u'29/10/2026'
+BASE_MAPA = u'Mapa de Funcionalidades v2.11'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
 URL_DOCS = 'https://split-hubhq.github.io/app/docs/'
@@ -153,6 +153,7 @@ FAIXAS = {
     18: ['M1','M1','M1','M1','M1','M0','M0','M0','M0','M0','M0','M1'],
     19: ['M1','M1','M1','M1','M1','M0','M1','M1','M1','M2','M1','M1','M1'],
     20: ['M1','M2','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1','M1','M1','M1'],
+    21: ['M0','M0','M0','M1','M0','M1','M0','M1','M0','M1','M1','M1','M2','M1','M1','M2','M1','M1','M2','M1'],
 }
 
 # ── revisoes de faixa ──────────────────────────────────────────────────────
@@ -246,6 +247,7 @@ NOTA = {
     17: u'Depende de base legal indexada e de confiança que um piloto ainda não tem.',
     18: u'A <strong>régua de cobrança</strong> entra no M0 por decisão de 14/09: cobrança não feita é crédito perdido. Relatórios agendados ficam em M1 e a integração ITSM desceu a M2 em 15/09 — abrir chamado é rotina de time grande, não do piloto.',
     20: u'<strong>Fora do M0 por decisão de 18/09/2026.</strong> A cadeia do crédito fecha na apropriação; o ressarcimento é o passo seguinte — transformar o saldo que sobrou em dinheiro. E o primeiro pedido real só existe em 2027: saldos de 2026 não são ressarcíveis. Treze funcionalidades em M1, o ciclo que tira o analista da planilha — saldo, intenção, pedido, decisão, recebimento, prazos, conferência e impedimentos. Duas em M2: o comparativo compensar × ressarcir e a previsão de caixa, que explicam a decisão em vez de executá-la. Implementado no protótipo em simulação 2026.',
+    21: u'<strong>Entrou no app em 29/10/2026</strong> (AV-PC). Seis no M0, pelo critério: a empresa do grupo, a competência, a visão consolidada, o demonstrativo contra o ente, o ciclo recalcular–fechar–reabrir — que era da tela da Apuração e continua contado lá também — e as <strong>divergências com chamado</strong>, porque crédito que o ente não reconhece é crédito que falhou e precisa virar tratável. A guia do saldo, o ERP, o histórico e a auditoria ficam em M1: pagar o próprio saldo é obrigação a partir de 2027, mas a cadeia do crédito fecha sem a guia sair daqui — ela pode sair do portal. Três em M2, que explicam em vez de garantir: a simulação de parcial, os encargos e o <strong>painel executivo</strong>.',
     19: u'Multiusuário interno é consequência de adoção. A exceção é o painel de acessos externos, que entrou no M0 junto com o acesso do fornecedor — e foi confirmado na revisão de 15/09. A gestão de usuários implementada em 26/10 trouxe o <strong>histórico do usuário</strong> e a <strong>redefinição de senha pelo administrador</strong>, as duas em M1 com o resto do módulo. O <strong>escopo por CNPJ</strong> (D-USR-05) também entra em M1, pelo critério: é multiusuário, e a cadeia do crédito fecha sem ele. O que a autenticação muda no M0 está na D20.',
 }
 
@@ -905,6 +907,10 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.12</div><div class="ver-desc">'
+  u'29/10/2026 \u2014 Base: <strong>Mapa v2.11, com 306 funcionalidades</strong>. Entra o módulo <strong>PCONT</strong>, promovido ao app '
+  u'depois de aprovado (AV-PC), com 20 funcionalidades: 6 em M0, 11 em M1 e 3 em M2. O painel executivo e a auditoria das ações vieram '
+  u'com ele. O M0 passa de 116 para 122.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v2.11</div><div class="ver-desc">'
   u'26/10/2026 \u2014 Base: <strong>Mapa v2.10, com 286 funcionalidades</strong>. <strong>D20 decidida:</strong> entra como novo o '
   u'<strong>login próprio por e-mail e senha</strong>, em M0, e o <strong>SSO corporativo</strong> desce a M1. Sai do mapa a '
