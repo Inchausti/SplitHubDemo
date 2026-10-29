@@ -18,10 +18,13 @@
    se emite guia. 2027 é um exercício simulado para a avaliação.
    Com a flag ligada, a Apuração IBS/CBS sai do menu e o PCONT faz o cálculo
    dela: recalcular, fechar e reabrir por tributo, resumos e listagens.
+   Painel executivo (flag pcont_painel): o grupo econômico e cada empresa numa
+   tela, com os mesmos dados do PCONT. Soma entre empresas só dentro do mesmo
+   tributo; entre tributos, só o desembolso de caixa.
    Pacote AV-PC; estado em memória, como os demais módulos do protótipo.
    ═══════════════════════════════════════════════════════════════════════════ */
 /* @pacote — o estado das flags é reescrito por tools/avaliacao.py promover */
-window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagamento do saldo", "branch": "feat/pcont", "entrada": "#/pcont", "flags": {"pcont": "avaliacao"}, "rotulos": {"pcont": "Módulo PCONT no lugar da Apuração IBS/CBS"}});
+window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagamento do saldo", "branch": "feat/pcont", "entrada": "#/pcont", "flags": {"pcont": "avaliacao", "pcont_painel": "avaliacao"}, "rotulos": {"pcont": "Módulo PCONT no lugar da Apuração IBS/CBS", "pcont_painel": "Painel executivo do grupo econômico e das empresas"}});
 /* @fim-pacote */
 (function () {
   'use strict';
@@ -886,6 +889,223 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
       '<a class="btn pc-btn-sm" href="docs/proposta-modulo-pcont.html" target="_blank" rel="noopener">Proposta aprovada ↗</a><button class="btn pc-btn-sm" onclick="document.getElementById(\'pc-regras\').remove()">Fechar</button>', true);
   }
 
+  /* ── Painel executivo da apuração assistida (flag pcont_painel) ───────── */
+  // grupo econômico e empresas (CNPJ raiz). Soma entre empresas só no mesmo
+  // tributo — CBS com CBS, IBS com IBS; entre tributos, só o caixa das guias.
+  var P = { ano: 2027, comp: '2027-03', emp: 'todas', tabela: {} };
+  function pEmpresas() { var l = empresas(); return P.emp === 'todas' ? l : l.filter(function (e) { return e.raiz === P.emp; }); }
+  function pComp(emp, id) { return dados(emp)[P.ano].filter(function (c) { return c.id === id; })[0]; }
+  function pComps() { return dados(empresas()[0])[P.ano]; }
+  function situacaoGuia(T) {
+    var g = guiaAtiva(T), e = etapa(T);
+    if (g) return g.status;
+    if (T.comp.informativo) return 'info';
+    if (e.k === 'zero') return 'zero';
+    if (e.k === 'apur' || e.k === 'cons' || e.k === 'sem') return 'antes';
+    return 'aemitir';
+  }
+  function agregar(id) {
+    var A = { CBS: { sh: 0, en: 0, enAj: 0, divs: 0, efeito: 0 }, IBS: { sh: 0, en: 0, enAj: 0, divs: 0, efeito: 0 }, desemb: 0, divs: [], credNao: 0, guias: { aemitir: [0, 0], emitida: [0, 0], enviada: [0, 0], paga: [0, 0], processada: [0, 0] }, linhas: [], semDecisao: 0 };
+    pEmpresas().forEach(function (emp) {
+      var c = pComp(emp, id); if (!c || !temDados(c)) return;
+      var linhaEmp = { emp: emp, c: c, t: {} };
+      TRIS.forEach(function (t) {
+        var T = c.tributos[t], ab = abertas(c, t), sh = saldo(T, 'sh', true), en = saldo(T, 'en', true), enAj = saldoEnteAjustado(T), s = situacaoGuia(T);
+        A[t].sh += sh; A[t].en += en; A[t].enAj += Math.max(0, enAj); A[t].divs += ab.length; A[t].efeito += ab.reduce(function (x, dv) { return x + efeitoDv(dv); }, 0);
+        ab.forEach(function (dv) { A.divs.push({ emp: emp, dv: dv }); if (dv.linha.nat === 'credito' && difDv(dv) < 0) A.credNao += -difDv(dv); });
+        A.semDecisao += semDecisao(c, t).length;
+        if (!c.informativo) { var v = valorSugerido(T); if (A.guias[s]) { A.guias[s][0]++; A.guias[s][1] += v; } if (s !== 'zero' && s !== 'antes') A.desemb += v; }
+        linhaEmp.t[t] = { T: T, sh: sh, en: en, e: etapa(T), s: s, ab: ab.length };
+      });
+      A.linhas.push(linhaEmp);
+    });
+    return A;
+  }
+  function compacto(v) { var a = Math.abs(v); return a >= 1e6 ? (v / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' mi' : (a >= 1e3 ? (v / 1e3).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' mil' : fmt(v)); }
+  var SIT = { aemitir: 'A emitir', emitida: 'Emitida', enviada: 'No ERP', paga: 'Paga', processada: 'Processada', info: 'Informativa', zero: 'Sem saldo', antes: 'Antes da entrega', cancelada: 'Cancelada', substituida: 'Substituída' };
+  var ICO = { ok: '✓', aj: '!', ap: '…', at: '✕', cz: '–', te: '$' };
+
+  function painel() {
+    var el = document.getElementById('view-pcont-painel'); if (!el) return;
+    var lista = pComps(); if (!lista.some(function (c) { return c.id === P.comp; })) { var cd = lista.filter(temDados); P.comp = (cd[cd.length - (P.ano === 2027 ? 2 : 1)] || lista[0]).id; }
+    var c0 = lista.filter(function (c) { return c.id === P.comp; })[0], A = agregar(P.comp), grupo = (empresas()[0] || {}).grupo || 'Grupo econômico';
+    el.innerHTML = '<div class="pc-hdr"><div><div class="pg-title">Painel executivo</div><div class="pg-sub">Apuração assistida do ' + esc(grupo) + ': o grupo e cada empresa (CNPJ raiz), com a Receita Federal (CBS) e o Comitê Gestor (IBS). ' + (P.ano === 2027 ? 'Exercício simulado, referência ' + fD(REF[2027]) : '2026 informativo') + '.</div></div>'
+      + '<div class="pc-hdr-d"><button class="btn" data-pa="exportar">↓ Exportar</button><button class="btn btn-t" data-pa="pcont">Abrir o PCONT</button></div></div>'
+      + '<div class="pc-emp"><div class="pc-anos">' + [[2027, '2027 · simulado'], [2026, '2026 · informativo']].map(function (a) { return '<button data-pa="ano" data-arg="' + a[0] + '"' + (P.ano === a[0] ? ' class="on"' : '') + '>' + a[1] + '</button>'; }).join('') + '</div>'
+      + '<label>Competência<select data-pch="comp">' + lista.filter(temDados).map(function (c) { return '<option value="' + c.id + '"' + (c.id === P.comp ? ' selected' : '') + '>' + rotL(c) + '</option>'; }).join('') + '</select></label>'
+      + '<label>Empresa<select data-pch="emp"><option value="todas">Todas as empresas do grupo</option>' + empresas().map(function (e) { return '<option value="' + esc(e.raiz) + '"' + (P.emp === e.raiz ? ' selected' : '') + '>' + esc(e.razao) + ' · ' + esc(e.raiz) + '</option>'; }).join('') + '</select></label>'
+      + '<div class="pc-emp-i">Vencimento<b>' + fD(c0.venc) + (P.ano === 2027 && REF[2027] <= c0.venc ? ' · em ' + diasEntre(REF[2027], c0.venc) + ' dias' : '') + '</b></div></div>'
+      + kpis(A, c0) + alertas(A, c0)
+      + '<div class="pp-card"><div class="pp-card-h"><span class="pp-card-n">Empresas do grupo · ' + rotL(c0) + '</span><span class="pc-info">clique numa empresa para abrir o PCONT dela</span></div>' + tabelaEmpresas(A, c0) + '</div>'
+      + '<div class="pc-duo pc-mt">' + TRIS.map(function (t) { return cartaoGrafico('evo-' + t, 'Saldo a recolher por mês · ' + t + ' · ' + ENTE[t], 'Resultado da apuração, antes do PCONT, das empresas selecionadas', evolucao(t), tabelaEvolucao(t), true); }).join('') + '</div>'
+      + '<div class="pc-duo pc-mt">' + TRIS.map(function (t) { return cartaoGrafico('cascata-' + t, 'Composição do saldo da ' + ENTE[t] + ' · ' + t + ' · ' + rotL(c0), 'Como os débitos viram o saldo a recolher, somando as empresas', cascata(t), tabelaCascata(t), false); }).join('') + '</div>'
+      + '<div class="pp-card pc-mt"><div class="pp-card-h"><span class="pp-card-n">Etapa de cada empresa por competência</span><span class="pc-info">' + P.ano + '</span></div>' + mapaEtapas() + '</div>'
+      + '<div class="pc-duo pc-mt">' + cartaoDivergencias(A) + cartaoGuias(A, c0) + '</div>'
+      + '<div class="pc-nota">CBS e IBS não se somam: cada tributo tem o seu ente. Os totais do grupo somam as empresas dentro do mesmo tributo; o desembolso é a única soma entre tributos, e é de caixa (D-PC-11).</div>'
+      + '<div id="pp-tip" role="tooltip" hidden></div>';
+  }
+  function kpis(A, c) {
+    function tile(rot, val, sub, cls) { return '<div class="pp-kpi' + (cls ? ' ' + cls : '') + '"><span class="pp-kpi-r">' + rot + '</span><b>' + val + '</b><span class="pp-kpi-s">' + sub + '</span></div>'; }
+    var nDiv = A.divs.length, nCred = A.divs.filter(function (x) { return x.dv.linha.nat === 'credito'; }).length;
+    var aEmitir = A.guias.aemitir[0], pend = aEmitir + A.guias.emitida[0] + A.guias.enviada[0];
+    return '<div class="pp-kpis">'
+      + TRIS.map(function (t) { var d = A[t].en - A[t].sh; return tile(t + ' a recolher · ' + ENTE[t], fmt(Math.max(0, A[t].enAj)), 'SplitHub ' + fmt(A[t].sh) + ' · diferença <span class="' + (d ? 'pp-dif' : 'pp-ok') + '">' + fmtS(d) + '</span>'); }).join('')
+      + (c.informativo ? tile('Desembolso da competência', '—', '2026 informativo: sem recolhimento') : tile('Desembolso da competência', fmt(A.desemb), 'caixa das guias de CBS e IBS · ' + pend + ' guia(s) pendente(s)'))
+      + tile('Divergências abertas', String(nDiv), nCred + ' de crédito · ' + (nDiv - nCred) + ' de débito · ' + A.semDecisao + ' sem decisão', nDiv ? 'pp-alerta' : '')
+      + tile('Crédito não reconhecido pelos entes', fmt(A.credNao), 'apropriado no SplitHub e "a apropriar" no ente: vira caixa a mais', A.credNao ? 'pp-alerta' : '')
+      + tile('Empresas no grupo', String(pEmpresas().length), A.linhas.length + ' com apuração em ' + rotL(c)) + '</div>';
+  }
+  function alertas(A, c) {
+    var l = [];
+    A.linhas.forEach(function (x) {
+      TRIS.forEach(function (t) {
+        var y = x.t[t]; if (!y) return;
+        if (y.e.k === 'atraso') l.push(['red', '✕', esc(x.emp.razao) + ': ' + t + ' vencida sem pagamento à ' + ENTE[t] + '.']);
+        else if (y.e.k === 'aj' && !c.informativo) l.push(['amber', '!', esc(x.emp.razao) + ': ' + t + ' em ajustes, ' + esc(y.e.rot.split('· ')[1] || '') + ' · guia ' + SIT[y.s].toLowerCase() + (y.ab ? ' · ' + y.ab + ' divergência(s)' : '') + '.']);
+        if (y.s === 'paga') l.push(['blue', '…', esc(x.emp.razao) + ': ' + t + ' paga, aguardando o processamento da ' + ENTE[t] + '.']);
+      });
+    });
+    A.divs.slice(0, 4).forEach(function (x) { l.push(['red', '!', esc(x.emp.razao) + ': ' + x.dv.id + ' · ' + x.dv.tri + ' · ' + esc(x.dv.linha.nome) + ' · diferença ' + fmt(difDv(x.dv)) + ' · chamado <b>' + x.dv.chamado.id + '</b> (' + esc(x.dv.chamado.estado) + ').']); });
+    if (!l.length) l.push(['green', '✓', 'Nenhuma pendência nas empresas selecionadas em ' + rotL(c) + '.']);
+    return '<div class="pp-card pc-mt"><div class="pp-card-h"><span class="pp-card-n">O que pede atenção</span></div><ul class="pp-alertas">' + l.slice(0, 8).map(function (a) { return '<li class="' + a[0] + '"><span class="pp-ico" aria-hidden="true">' + a[1] + '</span><span>' + a[2] + '</span></li>'; }).join('') + '</ul></div>';
+  }
+  function tabelaEmpresas(A, c) {
+    var h = '<div class="pc-tw"><table class="pc-tb larga"><thead><tr><th class="l">Empresa</th>' + TRIS.map(function (t) { return '<th>' + t + ' · SplitHub</th><th>' + t + ' · ' + ENTE[t] + '</th><th>Diferença</th><th class="l">Etapa ' + t + '</th>'; }).join('') + '<th>Divergências</th><th>Desembolso</th></tr></thead><tbody>';
+    A.linhas.forEach(function (x) {
+      var nd = TRIS.reduce(function (s, t) { return s + x.t[t].ab; }, 0), des = c.informativo ? 0 : TRIS.reduce(function (s, t) { var y = x.t[t]; return s + (y.s !== 'zero' && y.s !== 'antes' ? valorSugerido(y.T) : 0); }, 0);
+      h += '<tr class="clic" data-pa="empresa" data-arg="' + esc(x.emp.raiz) + '"><td class="l min"><b>' + esc(x.emp.razao) + '</b><span class="pc-sub">' + esc(x.emp.raiz) + ' · matriz ' + esc((x.emp.matriz || {}).uf || '') + ' · ' + x.emp.estab + ' estabelecimento(s)</span></td>'
+        + TRIS.map(function (t) { var y = x.t[t], d = y.en - y.sh; return '<td>' + fmtDC(y.sh) + '</td><td>' + fmtDC(y.en) + '</td><td class="' + (d ? 'dif' : 'z') + '">' + fmt(d) + '</td><td class="l"><span class="pc-chip ' + y.e.chip + '">' + esc(y.e.rot) + '</span><span class="pc-sub">guia: ' + SIT[y.s].toLowerCase() + '</span></td>'; }).join('')
+        + '<td>' + (nd ? '<span class="pc-dv">' + nd + '</span>' : '0') + '</td><td>' + (c.informativo ? '—' : fmt(des)) + '</td></tr>';
+    });
+    if (A.linhas.length > 1) h += '<tr class="res"><td class="l">Grupo · soma por tributo</td>' + TRIS.map(function (t) { var d = A[t].en - A[t].sh; return '<td>' + fmtDC(A[t].sh) + '</td><td>' + fmtDC(A[t].en) + '</td><td class="' + (d ? 'dif' : 'z') + '">' + fmt(d) + '</td><td></td>'; }).join('') + '<td>' + A.divs.length + '</td><td>' + (c.informativo ? '—' : fmt(A.desemb)) + '</td></tr>';
+    return h + '</tbody></table></div>';
+  }
+  function cartaoGrafico(id, titulo, sub, grafico, tabela, legenda) {
+    var tab = P.tabela[id];
+    return '<div class="pp-card"><div class="pp-card-h"><span class="pp-card-n">' + titulo + '</span><button class="btn pc-btn-sm" data-pa="tabela" data-arg="' + id + '" aria-pressed="' + (tab ? 'true' : 'false') + '">' + (tab ? 'Ver gráfico' : 'Ver tabela') + '</button></div><div class="pc-info">' + sub + '</div>'
+      + (legenda && !tab ? '<div class="pp-leg"><span><i class="pp-sw sh"></i>SplitHub</span><span><i class="pp-sw en"></i>Ente do tributo</span></div>' : '')
+      + '<div class="pp-graf">' + (tab ? tabela : grafico) + '</div></div>';
+  }
+  function serieMensal(t) {
+    return pComps().filter(temDados).map(function (c0) {
+      var sh = 0, en = 0;
+      pEmpresas().forEach(function (emp) { var c = pComp(emp, c0.id); if (!c || !temDados(c)) return; sh += saldo(c.tributos[t], 'sh', true); en += saldo(c.tributos[t], 'en', true); });
+      return { c: c0, sh: sh, en: en };
+    });
+  }
+  function barra(x, y0, w, v, esc_, cls, tip) {
+    var h = Math.abs(v) * esc_, y = v >= 0 ? y0 - h : y0, r = Math.min(4, w / 2, h);
+    var d = v >= 0 ? 'M' + x + ',' + y0 + 'V' + (y + r) + 'Q' + x + ',' + y + ' ' + (x + r) + ',' + y + 'H' + (x + w - r) + 'Q' + (x + w) + ',' + y + ' ' + (x + w) + ',' + (y + r) + 'V' + y0 + 'Z'
+      : 'M' + x + ',' + y0 + 'V' + (y0 + h - r) + 'Q' + x + ',' + (y0 + h) + ' ' + (x + r) + ',' + (y0 + h) + 'H' + (x + w - r) + 'Q' + (x + w) + ',' + (y0 + h) + ' ' + (x + w) + ',' + (y0 + h - r) + 'V' + y0 + 'Z';
+    return h < 0.5 ? '' : '<path class="' + cls + '" d="' + d + '" data-tip="' + esc(tip) + '"></path>';
+  }
+  function eixoY(max, min, W, H, top, base) {
+    var passos = 4, out = '', amp = max - min || 1;
+    for (var i = 0; i <= passos; i++) { var v = min + amp * i / passos, y = base - (v - min) / amp * (base - top); out += '<line class="pp-grade" x1="56" x2="' + W + '" y1="' + y + '" y2="' + y + '"></line><text class="pp-eixo" x="50" y="' + (y + 3) + '" text-anchor="end">' + compacto(v) + '</text>'; }
+    return out;
+  }
+  function evolucao(t) {
+    var s = serieMensal(t); if (!s.length) return '<div class="pc-nota">Sem dados.</div>';
+    var W = 560, H = 230, top = 16, base = 196, max = Math.max.apply(null, s.map(function (x) { return Math.max(x.sh, x.en, 0); })), min = Math.min(0, Math.min.apply(null, s.map(function (x) { return Math.min(x.sh, x.en); })));
+    max = max || 1; var amp = max - min, k = (base - top) / amp, y0 = base - (0 - min) * k, slot = (W - 64) / s.length, bw = Math.min(26, slot / 2 - 4);
+    var out = '<svg class="pp-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Saldo a recolher por mês, ' + t + '">' + eixoY(max, min, W, H, top, base);
+    s.forEach(function (x, i) {
+      var cx = 64 + slot * i + slot / 2, sel = x.c.id === P.comp;
+      out += barra(cx - bw - 1, y0, bw, x.sh, k, 'pp-b sh', rot(x.c) + ' · SplitHub · ' + t + ': ' + fmtDC(x.sh)) + barra(cx + 1, y0, bw, x.en, k, 'pp-b en', rot(x.c) + ' · ' + ENTE[t] + ' · ' + t + ': ' + fmtDC(x.en));
+      out += '<text class="pp-eixo' + (sel ? ' sel' : '') + '" x="' + cx + '" y="' + (H - 18) + '" text-anchor="middle">' + rot(x.c) + '</text>';
+      if (sel) out += '<text class="pp-rot" x="' + cx + '" y="' + (Math.min(y0, base) - Math.max(x.sh, x.en, 0) * k - 6) + '" text-anchor="middle">' + compacto(x.en) + '</text>';
+    });
+    out += '<line class="pp-base" x1="56" x2="' + W + '" y1="' + y0 + '" y2="' + y0 + '"></line></svg>';
+    return out;
+  }
+  function tabelaEvolucao(t) {
+    return '<div class="pc-tw"><table class="pc-tb"><thead><tr><th class="l">Competência</th><th>SplitHub</th><th>' + ENTE[t] + '</th><th>Diferença</th></tr></thead><tbody>' + serieMensal(t).map(function (x) { return '<tr><td class="l">' + rotL(x.c) + '</td><td>' + fmtDC(x.sh) + '</td><td>' + fmtDC(x.en) + '</td><td class="' + (x.en - x.sh ? 'dif' : 'z') + '">' + fmt(x.en - x.sh) + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  }
+  var CASCATA = [['deb', 'Débitos'], ['rdeb', 'Redutores'], ['cred', 'Créditos'], ['rcred', 'Estornos'], ['ant', 'Anteriores'], ['ext', 'RAD e split'], ['pcont', 'PCONT']];
+  function passosCascata(t) {
+    var v = {}; CASCATA.forEach(function (p) { v[p[0]] = { sh: 0, en: 0 }; });
+    pEmpresas().forEach(function (emp) { var c = pComp(emp, P.comp); if (!c || !temDados(c)) return; CASCATA.forEach(function (p) { var l = linha(c.tributos[t], p[0]); v[p[0]].sh += somaLinha(l, c, 'sh'); v[p[0]].en += somaLinha(l, c, 'en'); }); });
+    var acc = 0, passos = CASCATA.map(function (p) { var l = linhasVazias().filter(function (x) { return x.id === p[0]; })[0], s = l.op === '+' ? 1 : -1, de = acc; acc += s * v[p[0]].en; return { rot: p[1], de: de, ate: acc, v: s * v[p[0]].en, sh: s * v[p[0]].sh }; });
+    passos.push({ rot: 'Saldo', de: 0, ate: acc, v: acc, total: true, sh: passos.reduce(function (a, x) { return a + x.sh; }, 0) });
+    return passos;
+  }
+  function cascata(t) {
+    var ps = passosCascata(t), W = 560, H = 230, top = 16, base = 196;
+    var max = Math.max.apply(null, ps.map(function (p) { return Math.max(p.de, p.ate); })), min = Math.min(0, Math.min.apply(null, ps.map(function (p) { return Math.min(p.de, p.ate); })));
+    max = max || 1; var k = (base - top) / (max - min), y = function (v) { return base - (v - min) * k; }, slot = (W - 64) / ps.length, bw = Math.min(40, slot - 10);
+    var out = '<svg class="pp-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Composição do saldo, ' + t + '">' + eixoY(max, min, W, H, top, base);
+    ps.forEach(function (p, i) {
+      var x = 64 + slot * i + (slot - bw) / 2, a = y(Math.max(p.de, p.ate)), b = y(Math.min(p.de, p.ate)), h = Math.max(1, b - a);
+      out += '<rect class="pp-b ' + (p.total ? 'en' : 'cx') + '" x="' + x + '" y="' + a + '" width="' + bw + '" height="' + h + '" rx="3" data-tip="' + esc(p.rot + ' · ' + ENTE[t] + ': ' + (p.total ? fmtDC(p.v) : fmtS(p.v)) + ' · SplitHub: ' + (p.total ? fmtDC(p.sh) : fmtS(p.sh))) + '"></rect>';
+      if (i < ps.length - 1 && !p.total) out += '<line class="pp-liga" x1="' + (x + bw) + '" x2="' + (x + slot) + '" y1="' + y(p.ate) + '" y2="' + y(p.ate) + '"></line>';
+      out += '<text class="pp-eixo" x="' + (x + bw / 2) + '" y="' + (H - 18) + '" text-anchor="middle">' + p.rot + '</text>';
+      if (p.total || i === 0) out += '<text class="pp-rot" x="' + (x + bw / 2) + '" y="' + (a - 6) + '" text-anchor="middle">' + compacto(p.v) + '</text>';
+    });
+    return out + '</svg>';
+  }
+  function tabelaCascata(t) {
+    return '<div class="pc-tw"><table class="pc-tb"><thead><tr><th class="l">Passo</th><th>' + ENTE[t] + '</th><th>SplitHub</th></tr></thead><tbody>' + passosCascata(t).map(function (p) { return '<tr' + (p.total ? ' class="res"' : '') + '><td class="l">' + p.rot + '</td><td>' + (p.total ? fmtDC(p.v) : fmtS(p.v)) + '</td><td>' + (p.total ? fmtDC(p.sh) : fmtS(p.sh)) + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  }
+  function mapaEtapas() {
+    var cs = pComps();
+    var h = '<div class="pc-tw"><table class="pc-tb pp-mapa"><thead><tr><th class="l">Empresa · tributo</th>' + cs.map(function (c) { return '<th>' + rot(c) + '</th>'; }).join('') + '</tr></thead><tbody>';
+    pEmpresas().forEach(function (emp) {
+      TRIS.forEach(function (t) {
+        h += '<tr><td class="l"><b>' + esc(emp.razao) + '</b> · ' + t + '<span class="pc-sub">' + ENTE[t] + '</span></td>' + cs.map(function (c0) {
+          var c = pComp(emp, c0.id), e = c ? etapa(c.tributos[t]) : { cls: 'cz', rot: 'Sem dados' };
+          return '<td class="pp-cel ' + e.cls + (c0.id === P.comp ? ' sel' : '') + '" data-tip="' + esc(emp.razao + ' · ' + t + ' · ' + rotL(c0) + ': ' + e.rot) + '"><span aria-hidden="true">' + ICO[e.cls] + '</span> ' + esc(e.rot.split(' · ')[0]) + '</td>';
+        }).join('') + '</tr>';
+      });
+    });
+    return h + '</tbody></table></div><div class="pp-leg">' + [['ok', 'Processada ou sem saldo'], ['te', 'Paga, aguardando o ente'], ['ap', 'Em apuração, entrega ou guia emitida'], ['aj', 'Ajustes'], ['at', 'Em atraso'], ['cz', 'Sem dados ou informativa']].map(function (x) { return '<span><i class="pp-sq ' + x[0] + '"><b aria-hidden="true">' + ICO[x[0]] + '</b></i>' + x[1] + '</span>'; }).join('') + '</div>';
+  }
+  function cartaoDivergencias(A) {
+    var linhas = [];
+    TRIS.forEach(function (t) { ['credito', 'debito'].forEach(function (n) { var l = A.divs.filter(function (x) { return x.dv.tri === t && x.dv.linha.nat === n; }); linhas.push({ t: t, n: n, q: l.length, v: l.reduce(function (s, x) { return s + Math.abs(difDv(x.dv)); }, 0) }); }); });
+    var max = Math.max.apply(null, linhas.map(function (x) { return x.v; })) || 1;
+    return '<div class="pp-card"><div class="pp-card-h"><span class="pp-card-n">Divergências por tributo e natureza</span><button class="btn pc-btn-sm" data-pa="divs">Ver no PCONT</button></div><div class="pc-info">Valor absoluto das diferenças abertas</div>'
+      + '<div class="pp-barras">' + linhas.map(function (x) { return '<div class="pp-barra" data-tip="' + esc(x.t + ' · ' + NAT[x.n] + ': ' + x.q + ' divergência(s), ' + fmt(x.v)) + '"><span class="pp-barra-r">' + x.t + ' · ' + (x.n === 'credito' ? 'Crédito · DF de entrada' : 'Débito · DF de saída') + '</span><span class="pp-barra-t"><i style="width:' + (x.v / max * 100).toFixed(1) + '%"></i></span><span class="pp-barra-v">' + x.q + ' · ' + fmt(x.v) + '</span></div>'; }).join('') + '</div>'
+      + '<div class="pc-nota">Crédito não reconhecido pelos entes: <b>' + fmt(A.credNao) + '</b>.</div></div>';
+  }
+  function cartaoGuias(A, c) {
+    if (c.informativo) return '<div class="pp-card"><div class="pp-card-h"><span class="pp-card-n">Guias da competência</span></div><div class="pc-alerta info">2026 é informativo: sem guia (art. 348, § 1º).</div></div>';
+    var est = ['aemitir', 'emitida', 'enviada', 'paga', 'processada'];
+    return '<div class="pp-card"><div class="pp-card-h"><span class="pp-card-n">Guias da competência · ' + rotL(c) + '</span><button class="btn pc-btn-sm" data-pa="guias">Ver no PCONT</button></div><div class="pc-info">Empresas × tributos, pelo valor sugerido ou emitido</div>'
+      + '<div class="pp-funil">' + est.map(function (s) { var g = A.guias[s]; return '<div class="pp-etp' + (g[0] ? ' on' : '') + '"><span>' + SIT[s] + '</span><b>' + g[0] + '</b><i>' + fmt(g[1]) + '</i></div>'; }).join('') + '</div>'
+      + '<div class="pc-nota">A CBS sai em DARF pelo SplitHub; a guia do IBS é registrada do portal do Comitê Gestor até a emissão por API existir.</div></div>';
+  }
+  function tip(ev) {
+    var t = document.getElementById('pp-tip'); if (!t) return;
+    var a = ev.target.closest && ev.target.closest('[data-tip]');
+    if (!a || !document.getElementById('view-pcont-painel').contains(a)) { t.hidden = true; return; }
+    t.textContent = a.getAttribute('data-tip'); t.hidden = false;
+    var x = Math.min(window.innerWidth - t.offsetWidth - 12, ev.clientX + 14), y = ev.clientY + 16;
+    if (y + t.offsetHeight > window.innerHeight - 8) y = ev.clientY - t.offsetHeight - 12;
+    t.style.left = Math.max(8, x) + 'px'; t.style.top = y + 'px';
+  }
+  function cliquePainel(ev) {
+    var b = ev.target.closest('[data-pa]'); if (!b) return;
+    var a = b.getAttribute('data-pa'), arg = b.getAttribute('data-arg');
+    if (a === 'ano') { P.ano = +arg; P.comp = ''; }
+    else if (a === 'tabela') P.tabela[arg] = !P.tabela[arg];
+    else if (a === 'empresa' || a === 'pcont' || a === 'divs' || a === 'guias') {
+      if (a === 'empresa') S.empresa = arg; else if (P.emp !== 'todas') S.empresa = P.emp;
+      S.ano = P.ano; S.comp = P.comp; S.aba = a === 'divs' ? 'div' : (a === 'guias' ? 'guias' : 'comp'); S.modo = 'cons';
+      abrir(); return;
+    } else if (a === 'exportar') {
+      var A = agregar(P.comp), c = pComps().filter(function (x) { return x.id === P.comp; })[0];
+      csv('painel-apuracao-' + P.comp + '.csv', [['Empresa', 'CNPJ raiz', 'Tributo', 'Ente', 'SplitHub', 'Ente (valor)', 'Diferença', 'Etapa', 'Guia']].concat([].concat.apply([], A.linhas.map(function (x) { return TRIS.map(function (t) { var y = x.t[t]; return [x.emp.razao, x.emp.raiz, t, ENTE[t], y.sh, y.en, y.en - y.sh, y.e.rot, SIT[y.s]]; }); }))));
+      return;
+    } else return;
+    painel();
+  }
+  function mudaPainel(ev) {
+    var el = ev.target, k = el.getAttribute && el.getAttribute('data-pch'); if (!k || ev.type !== 'change') return;
+    if (k === 'comp') P.comp = el.value; if (k === 'emp') P.emp = el.value;
+    painel();
+  }
+  function abrirPainel(btn, mobile) { showView('pcont-painel', btn || document.getElementById('nav-pcont-painel-btn'), !!mobile); painel(); }
+
   /* ── entrada no app: menu, rota e a Apuração IBS/CBS aposentada ───────── */
   function abrir(btn, mobile) {
     showView('pcont', btn || document.getElementById('nav-pcont-btn'), !!mobile);
@@ -903,11 +1123,23 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
       b.onclick = function () { abrir(this); };
       grupo.insertBefore(b, grupo.firstChild);
     }
+    if (entregue('pcont_painel')) {
+      var vp = document.createElement('div'); vp.id = 'view-pcont-painel'; vp.className = 'view';
+      v.parentNode.insertBefore(vp, v);
+      vp.addEventListener('click', cliquePainel); vp.addEventListener('change', mudaPainel);
+      vp.addEventListener('mousemove', tip); vp.addEventListener('mouseleave', function () { var t = document.getElementById('pp-tip'); if (t) t.hidden = true; });
+      if (grupo) {
+        var bp = document.createElement('button'); bp.className = 'nav-sub-btn'; bp.id = 'nav-pcont-painel-btn'; bp.title = 'Painel executivo'; bp.setAttribute('data-view', 'pcont-painel');
+        bp.innerHTML = '<span class="nav-sub-dot"></span><span class="nav-label"> Painel executivo</span>';
+        bp.onclick = function () { abrirPainel(this); };
+        grupo.insertBefore(bp, grupo.firstChild);
+      }
+    }
     var velho = document.getElementById('nav-apuracao-btn'); if (velho) velho.style.display = 'none';
     var inf = document.querySelector('#bottom-nav [data-view="apuracao"]'); if (inf) inf.setAttribute('data-view', 'pcont');
     // quem chamava a Apuração IBS/CBS (atalhos, rota #/apuracao, barra inferior) agora abre o PCONT
     window.abrirApuracao = function (btn, mobile) { abrir(btn && btn.closest && btn.closest('#sidebar') ? document.getElementById('nav-pcont-btn') : null, mobile); };
   }
-  window.shPcont = { abrir: abrir, render: render };
+  window.shPcont = { abrir: abrir, render: render, abrirPainel: abrirPainel, painel: painel };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', montar); else montar();
 })();
