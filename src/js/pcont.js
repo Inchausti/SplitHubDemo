@@ -18,6 +18,8 @@
    se emite guia. 2027 é um exercício simulado para a avaliação.
    Com a flag ligada, a Apuração IBS/CBS sai do menu e o PCONT faz o cálculo
    dela: recalcular, fechar e reabrir por tributo, resumos e listagens.
+   Auditoria: toda ação de usuário, do ERP e do sistema entra numa trilha
+   só de acréscimo, encadeada por hash, com quem, quando, antes e depois.
    Painel executivo (flag pcont_painel): o grupo econômico e cada empresa numa
    tela, com os mesmos dados do PCONT. Soma entre empresas só dentro do mesmo
    tributo; entre tributos, só o desembolso de caixa.
@@ -31,6 +33,8 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
 
   function entregue(k) { return !window.shFeature || shFeature.entrega(k); }
   if (!entregue('pcont')) return;
+  // a folha de estilo vem com o módulo: o index.html só carrega o script
+  (function () { if (document.getElementById('pc-css')) return; var l = document.createElement('link'); l.id = 'pc-css'; l.rel = 'stylesheet'; l.href = 'css/pcont.css?v=2'; document.head.appendChild(l); })();
 
   /* ── utilidades ───────────────────────────────────────────────────────── */
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -55,7 +59,8 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
     return d;
   }
   function seguinte(ano, mes, dia) { return dt(mes === 12 ? ano + 1 : ano, mes === 12 ? 1 : mes + 1, dia); }
-  function quem() { return 'Você'; }
+  function quem() { var n = document.querySelector('#app-header .ah-uname'); return (n && n.textContent.trim()) || window.CONTRATO_USUARIO_ATUAL || 'Usuário'; }
+  function perfil() { var p = document.getElementById('ah-perfil-label'); return (p && p.textContent.trim()) || ''; }
   function toast(msg) {
     var t = document.getElementById('pc-toast'); if (t) t.remove();
     t = document.createElement('div'); t.id = 'pc-toast'; t.setAttribute('role', 'status'); t.textContent = msg;
@@ -174,6 +179,7 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
     var D = { 2026: [], 2027: [] }, m;
     for (m = 1; m <= 12; m++) D[2026].push(novaComp(emp, 2026, m));
     for (m = 1; m <= 6; m++) D[2027].push(novaComp(emp, 2027, m));
+    D.aud = [];
     DADOS[emp.raiz] = D;
     divergencias(D, emp, [2026, 2027]);
     historicoInicial(D, emp);
@@ -278,6 +284,24 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
 
   /* ── histórico já vivido no exercício simulado ────────────────────────── */
   function evento(T, q, etapaId, txt) { T.eventos.push({ q: q, e: etapaId, txt: txt }); T.eventos.sort(function (a, b) { return a.q - b.q; }); }
+  /* ── auditoria: trilha só de acréscimo, encadeada por hash ────────────── */
+  var ACAO = { decisao: 'Decisão de divergência', chamado: 'Chamado', emitir: 'Emissão de guia', registrar: 'Registro de guia do portal', erp: 'Envio ao ERP', comprovante: 'Comprovante de pagamento', processar: 'Processamento pelo ente', devolucao: 'Excedente devolvido', cancelar: 'Cancelamento de guia', substituir: 'Substituição de guia', fechar: 'Fechamento da apuração', reabrir: 'Reabertura da apuração', recalcular: 'Recálculo', exportar: 'Exportação', leitura: 'Leitura dos entes' };
+  function hash(txt) { var h = 2166136261; for (var i = 0; i < txt.length; i++) { h ^= txt.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return ('0000000' + h.toString(16)).slice(-8); }
+  function conteudo(r) { return [r.seq, +r.q, r.quem, r.perfil, r.origem, r.acao, r.comp, r.tri, r.alvo, r.antes, r.depois, r.motivo].join('|'); }
+  function auditar(D, r) {
+    var ant = D.aud.length ? D.aud[D.aud.length - 1].hash : '00000000';
+    ['perfil', 'origem', 'comp', 'tri', 'alvo', 'antes', 'depois', 'motivo'].forEach(function (k) { if (r[k] == null) r[k] = ''; });
+    if (!r.origem) r.origem = 'Tela';
+    r.seq = D.aud.length + 1; r.anterior = ant; r.hash = hash(ant + '|' + conteudo(r));
+    D.aud.push(Object.freeze(r));
+  }
+  function integra(D) { var ant = '00000000'; return D.aud.every(function (r) { var ok = r.anterior === ant && r.hash === hash(ant + '|' + conteudo(r)); ant = r.hash; return ok; }); }
+  // ação feita agora, na data de referência do exercício da competência
+  function aud(acao, c, tri, alvo, antes, depois, motivo, origem, autor) {
+    var q = new Date(c ? ref(c) : REF[S.ano]), h = new Date(); q.setHours(h.getHours(), h.getMinutes(), h.getSeconds());
+    auditar(dados(empresa()), { q: q, quem: autor || quem(), perfil: autor ? '' : perfil(), origem: origem || 'Tela', acao: acao, comp: c ? c.id : '', tri: tri, alvo: alvo, antes: antes, depois: depois, motivo: motivo });
+  }
+
   function novaGuia(T, valor, origem, emissao, base) {
     var c = T.comp, n = (T.comp.ano * 100 + c.mes) % 10000;
     var g = { id: 'PC-' + c.id.replace('-', '') + '-' + T.tri, tipo: T.tri === 'CBS' ? 'DARF' : 'Documento de arrecadação', origem: origem, valor: valor, venc: c.venc, emitida: emissao, status: 'emitida', base: base,
@@ -291,7 +315,9 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
     return { em: new Date(ref(T.comp)), linhas: T.linhas.map(function (l) { return { nome: l.nome, op: l.op, sh: somaLinha(l, T.comp, 'sh'), en: somaLinha(l, T.comp, 'en') }; }), saldoSh: saldo(T, 'sh'), saldoEn: saldo(T, 'en'), divs: abertas(T.comp, T.tri).length };
   }
   function historicoInicial(D, emp) {
-    var cham = 90 + emp.base * 100;
+    var cham = 90 + emp.base * 100, sem = [];
+    function s_(q, quem_, perfil_, origem, acao, c, t, alvo, antes, depois, motivo) { sem.push({ q: q, quem: quem_, perfil: perfil_, origem: origem, acao: acao, comp: c.id, tri: t, alvo: alvo, antes: antes, depois: depois, motivo: motivo }); }
+    var ANA = 'Ana Souza', ANAP = 'Analista fiscal';
     D[2027].forEach(function (c) {
       TRIS.forEach(function (t) {
         var T = c.tributos[t], sh = saldo(T, 'sh'), e = c.entrega, nv = docsV(linha(T, 'deb').origens[0], c).length, nc = docsV(linha(T, 'cred').origens[0], c).length;
@@ -300,7 +326,11 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
         if (c.mes <= 2) {
           var en0 = sh + (c.mes === 2 && t === 'CBS' ? arred(50000 * emp.fator) : 0);
           evento(T, dt(e.getFullYear(), e.getMonth() + 1, 16, 8, 0), 'E3', 'Apuração entregue pela ' + ENTE[t] + ' · saldo <b>' + fmt(en0) + '</b> · SplitHub <b>' + fmt(sh) + '</b>' + (en0 !== sh ? ' · DV-01 aberta, chamado <b>INC-' + ('000' + cham).slice(-4) + '</b>' : ''));
+          s_(dt(e.getFullYear(), e.getMonth() + 1, 16, 8, 0), 'Sistema · ' + ENTE[t], '', 'Sistema', 'leitura', c, t, 'apuração assistida', '', 'saldo ' + fmt(en0) + (en0 !== sh ? ' · 1 divergência' : ''), '');
           if (en0 !== sh) {
+            s_(dt(e.getFullYear(), e.getMonth() + 1, 16, 8, 1), 'Sistema', '', 'Sistema', 'chamado', c, t, 'DV-01 · INC-' + ('000' + cham).slice(-4), '', 'aberto automaticamente', 'diferença de ' + fmt(en0 - sh));
+            s_(dt(e.getFullYear(), e.getMonth() + 1, 20, 15, 0), ANA, ANAP, 'Tela', 'decisao', c, t, 'DV-01 · INC-' + ('000' + cham).slice(-4), 'sem decisão', 'Ajustar no portal', 'estorno lançado em duplicidade');
+            s_(dt(e.getFullYear(), e.getMonth() + 1, 24, 8, 0), 'Sistema · ' + ENTE[t], '', 'Sistema', 'chamado', c, t, 'DV-01 · INC-' + ('000' + cham).slice(-4), 'em análise', 'resolvida', 'ajuste refletido na leitura');
             evento(T, dt(e.getFullYear(), e.getMonth() + 1, 22, 10, 0), 'E4', 'INC-' + ('000' + cham).slice(-4) + ' resolvido: ajuste de ' + fmt(sh - en0) + ' feito no portal da ' + ENTE[t] + ', por Ana Souza');
             evento(T, dt(e.getFullYear(), e.getMonth() + 1, 24, 8, 0), 'E4', 'Nova leitura · saldo <b>' + fmt(sh) + '</b>, igual ao do SplitHub');
           }
@@ -308,33 +338,41 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
           var g = novaGuia(T, sh, t === 'CBS' ? 'splithub' : 'portal', emis, 'ente');
           g.retrato.em = emis; g.retrato.saldoEn = sh; g.retrato.divs = 0;
           evento(T, emis, 'E6', (t === 'CBS' ? 'DARF emitido pelo SplitHub' : 'Guia emitida no portal do Comitê Gestor e registrada') + ' · <b>' + fmt(sh) + '</b> · vence ' + fD(c.venc));
+          s_(emis, ANA, ANAP, 'Tela', t === 'CBS' ? 'emitir' : 'registrar', c, t, g.id, '', fmt(sh) + ' · saldo do ente', '');
+          s_(dt(emis.getFullYear(), emis.getMonth() + 1, emis.getDate(), 9, 5), ANA, ANAP, 'Tela', 'erp', c, t, g.id, 'emitida', 'no ERP · pcont.guide_issued', '');
           g.status = 'enviada'; g.erp = emis; evento(T, dt(emis.getFullYear(), emis.getMonth() + 1, emis.getDate(), 9, 5), 'E6', 'Enviada ao ERP (<code>pcont.guide_issued</code>)');
           var pago = dt(c.venc.getFullYear(), c.venc.getMonth() + 1, c.venc.getDate() - (t === 'CBS' ? 0 : 1), 11, 0);
           g.status = 'paga'; g.pagoEm = pago; evento(T, pago, 'E6', 'Comprovante recebido do ERP (<code>POST /v1/pcont/proofs</code>)');
+          s_(pago, 'ERP · integração', '', 'API', 'comprovante', c, t, g.id, 'no ERP', 'paga · POST /v1/pcont/proofs', '');
           var proc = new Date(pago); proc.setDate(proc.getDate() + 1); proc.setHours(8, 0);
           var im = imputacao(T, sh);
           g.status = 'processada'; g.procEm = proc; g.extintas = im.extintas; g.clientes = im.clientes;
           evento(T, proc, 'E7', 'A ' + ENTE[t] + ' processou o pagamento: <b>' + im.extintas + '</b> notas extintas, crédito liberado para <b>' + im.clientes + '</b> clientes');
+          s_(proc, 'Sistema · ' + ENTE[t], '', 'Sistema', 'processar', c, t, g.id, 'paga', 'processada · ' + im.extintas + ' notas extintas', '');
           linha(T, 'pcont').origens[0].docs.push(doc(g.id, fD(dt(c.ano, c.mes + 1, 0)), 'Guia ' + g.tipo + ' · processada em ' + fD(proc), sh, sh));
           if (c.mes === 1 && t === 'CBS') {
             var exc = arred(10000 * emp.fator), dvl = new Date(proc); dvl.setDate(dvl.getDate() + 3);
             g.excedente = exc; g.devolvidoEm = dvl;
             evento(T, dvl, 'E8', 'RAD de cliente processado depois do pagamento: excedente de <b>' + fmt(exc) + '</b> devolvido em ' + fD(dvl) + ' (art. 27, § 1º)');
+            s_(dvl, 'Sistema · ' + ENTE[t], '', 'Sistema', 'devolucao', c, t, g.id, '', fmt(exc) + ' devolvido', 'art. 27, § 1º');
           }
           cham++;
         } else if (c.mes === 3) {
           var en = saldo(T, 'en'), ab = abertas(c, t);
           evento(T, dt(2027, 4, 16, 8, 0), 'E3', 'Apuração entregue em 15/04 · ' + ENTE[t] + ' <b>' + fmt(en) + '</b> × SplitHub <b>' + fmt(sh) + '</b>' + (ab.length ? ' · ' + ab.length + ' divergência' + (ab.length > 1 ? 's' : '') + ': ' + ab.map(function (dv) { return '<b>' + dv.chamado.id + '</b>'; }).join(', ') : ' · sem divergência'));
+          s_(dt(2027, 4, 16, 8, 0), 'Sistema · ' + ENTE[t], '', 'Sistema', 'leitura', c, t, 'apuração assistida', '', 'saldo ' + fmt(en) + ' · ' + ab.length + ' divergência(s)', '');
+          ab.forEach(function (dv) { s_(dt(2027, 4, 16, 8, 1), 'Sistema', '', 'Sistema', 'chamado', c, t, dv.id + ' · ' + dv.chamado.id, '', 'aberto automaticamente', dv.tipo + ' · diferença de ' + fmt(difDv(dv))); });
           ab.forEach(function (dv, i) {
             dv.chamado.terceiro = dv.tipo === 'INC-CONC-12' ? ENTE[t] : (dv.tipo === 'INC-CONC-13' ? 'ERP' : 'Sistema do cliente');
             dv.chamado.estado = i === 0 ? 'aguardando emitente' : (i === 1 ? 'em análise' : 'aberta');
             dv.chamado.resp = i === 2 ? null : 'Ana Souza';
             dv.chamado.sla = dt(2027, 4, 28 - i);
           });
-          if (ab[0] && ab[0].tipo === 'INC-CONC-12') { T.decisoes[ab[0].id] = { op: 'aguardar', por: 'Ana Souza', em: dt(2027, 4, 18, 14, 0), nota: '' }; evento(T, dt(2027, 4, 18, 14, 0), 'E4', ab[0].id + ': decisão "Aguardar o reflexo", por Ana Souza'); }
+          if (ab[0] && ab[0].tipo === 'INC-CONC-12') { T.decisoes[ab[0].id] = { op: 'aguardar', por: 'Ana Souza', em: dt(2027, 4, 18, 14, 0), nota: '' }; evento(T, dt(2027, 4, 18, 14, 0), 'E4', ab[0].id + ': decisão "Aguardar o reflexo", por Ana Souza'); s_(dt(2027, 4, 18, 14, 0), ANA, ANAP, 'Tela', 'decisao', c, t, ab[0].id + ' · ' + ab[0].chamado.id, 'sem decisão', 'Aguardar o reflexo', 'guia RAD paga com comprovante'); }
         }
       });
     });
+    sem.sort(function (a, b) { return a.q - b.q; }).forEach(function (r) { auditar(D, r); });
   }
   // 2026 informativo: só a entrega simulada do ente, sem guia
   function eventos2026(D) {
@@ -349,7 +387,7 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
   }
 
   /* ── estado da tela ───────────────────────────────────────────────────── */
-  var S = { empresa: null, ano: 2027, comp: '2027-03', aba: 'comp', modo: 'cons', abertas: { cred: true }, divTri: 'todos', divNat: 'todas', tlTri: 'CBS', histTri: 'todos', base: { CBS: 'ente', IBS: 'ente' }, outro: { CBS: 0, IBS: 0 }, ultimaExec: dt(2027, 4, 20, 8, 10) };
+  var S = { empresa: null, ano: 2027, comp: '2027-03', aba: 'comp', modo: 'cons', abertas: { cred: true }, divTri: 'todos', divNat: 'todas', tlTri: 'CBS', histTri: 'todos', audQuem: 'todos', audAcao: 'todas', audComp: 'todas', audTri: 'todos', base: { CBS: 'ente', IBS: 'ente' }, outro: { CBS: 0, IBS: 0 }, ultimaExec: dt(2027, 4, 20, 8, 10) };
 
   /* ── tela ─────────────────────────────────────────────────────────────── */
   function root() { return document.getElementById('view-pcont'); }
@@ -365,8 +403,8 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
       + '<button class="btn btn-t" data-act="irGuia" data-arg="CBS">Gerar guia CBS</button><button class="btn pc-btn-off" data-act="ibsRoadmap" title="O Comitê Gestor ainda não emite por API">Gerar guia IBS · em breve</button></div></div>'
       + barraEmpresa(emp)
       + '<div class="pc-car">' + comps().map(cartao).join('') + '</div>'
-      + '<div class="stabs pc-tabs">' + [['comp', 'Competência'], ['tl', 'Linha do tempo'], ['div', 'Divergências' + (nd.length ? ' · ' + abertas(c).length : '')], ['guias', 'Guias e pagamentos'], ['hist', 'Histórico']].map(function (a) { return '<button class="stab' + (S.aba === a[0] ? ' active' : '') + '" data-act="aba" data-arg="' + a[0] + '">' + a[1] + '</button>'; }).join('') + '</div>'
-      + '<div class="pc-corpo">' + ({ comp: abaComp, tl: abaLinhaTempo, div: abaDiv, guias: abaGuias, hist: abaHist }[S.aba])(c, emp) + '</div>';
+      + '<div class="stabs pc-tabs">' + [['comp', 'Competência'], ['tl', 'Linha do tempo'], ['div', 'Divergências' + (nd.length ? ' · ' + abertas(c).length : '')], ['guias', 'Guias e pagamentos'], ['hist', 'Histórico'], ['aud', 'Auditoria']].map(function (a) { return '<button class="stab' + (S.aba === a[0] ? ' active' : '') + '" data-act="aba" data-arg="' + a[0] + '">' + a[1] + '</button>'; }).join('') + '</div>'
+      + '<div class="pc-corpo">' + ({ comp: abaComp, tl: abaLinhaTempo, div: abaDiv, guias: abaGuias, hist: abaHist, aud: abaAud }[S.aba])(c, emp) + '</div>';
     // a competência escolhida fica à vista no carrossel, sem rolar a página
     var car = el.querySelector('.pc-car'), sel = el.querySelector('.pc-car-c.sel');
     if (car && sel) car.scrollLeft = Math.max(0, sel.offsetLeft - car.offsetLeft - (car.clientWidth - sel.offsetWidth) / 2);
@@ -601,6 +639,32 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
       + '<div class="pc-nota">Clique numa linha para ver a linha do tempo da competência e o retrato do demonstrativo no momento da emissão.</div>';
   }
 
+  /* aba Auditoria */
+  function filtroAud(D, c) {
+    return D.aud.filter(function (r) { return (S.audQuem === 'todos' || r.quem === S.audQuem) && (S.audAcao === 'todas' || r.acao === S.audAcao) && (S.audComp === 'todas' || r.comp === c.id) && (S.audTri === 'todos' || r.tri === S.audTri); }).slice().reverse();
+  }
+  function abaAud(c) {
+    var D = dados(empresa()), quems = [], acoes = [];
+    D.aud.forEach(function (r) { if (quems.indexOf(r.quem) < 0) quems.push(r.quem); if (acoes.indexOf(r.acao) < 0) acoes.push(r.acao); });
+    var l = filtroAud(D, c), ok = integra(D);
+    function sel(k, opts) { return '<select data-ch="' + k + '">' + opts.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (S[k] === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select>'; }
+    return '<div class="pc-filtros">'
+      + '<label>Usuário ' + sel('audQuem', [['todos', 'Todos']].concat(quems.map(function (x) { return [x, x]; }))) + '</label>'
+      + '<label>Ação ' + sel('audAcao', [['todas', 'Todas']].concat(acoes.map(function (x) { return [x, ACAO[x] || x]; }))) + '</label>'
+      + '<label>Competência ' + sel('audComp', [['todas', 'Todas'], ['atual', rotL(c)]]) + '</label>'
+      + '<label>Tributo ' + sel('audTri', [['todos', 'Todos'], ['CBS', 'CBS · Receita Federal'], ['IBS', 'IBS · Comitê Gestor']]) + '</label>'
+      + '<button class="btn pc-btn-sm" data-act="audCsv">↓ CSV</button></div>'
+      + '<div class="pc-alerta ' + (ok ? 'ok' : 'red') + '">' + (ok ? '✓ Trilha íntegra' : '✕ Trilha com quebra de encadeamento') + ': <b>' + D.aud.length + '</b> registro(s) de ' + esc(empresa().razao) + '. Cada registro leva o hash do anterior; nada se edita nem se apaga. Último hash <span class="pc-mono">' + (D.aud.length ? D.aud[D.aud.length - 1].hash : '—') + '</span>.</div>'
+      + (l.length ? '<div class="pc-tw"><table class="pc-tb larga"><thead><tr><th>#</th><th class="l">Data e hora</th><th class="l">Quem</th><th class="l">Origem</th><th class="l">Ação</th><th class="l">Competência · tributo</th><th class="l">Alvo</th><th class="l">Antes → depois</th><th class="l">Motivo</th><th class="l">Hash</th></tr></thead><tbody>'
+        + l.map(function (r) {
+          var cp = r.comp ? rotL({ ano: +r.comp.slice(0, 4), mes: +r.comp.slice(5, 7) }) : '—';
+          return '<tr><td>' + r.seq + '</td><td class="l"><span class="pc-mono">' + fDH(r.q) + '</span></td><td class="l"><b>' + esc(r.quem) + '</b>' + (r.perfil ? '<span class="pc-sub">' + esc(r.perfil) + '</span>' : '') + '</td>'
+            + '<td class="l"><span class="pc-dv ' + (r.origem === 'Tela' ? 'inf' : (r.origem === 'API' ? 'ok' : 'gr')) + '">' + esc(r.origem) + '</span></td><td class="l">' + esc(ACAO[r.acao] || r.acao) + '</td><td class="l">' + cp + (r.tri ? ' · ' + r.tri : '') + '</td>'
+            + '<td class="l"><span class="pc-mono">' + esc(r.alvo) + '</span></td><td class="l">' + (r.antes ? esc(r.antes) + ' → ' : '') + esc(r.depois) + '</td><td class="l">' + esc(r.motivo) + '</td><td class="l"><span class="pc-mono">' + r.hash + '</span></td></tr>';
+        }).join('') + '</tbody></table></div>' : '<div class="pc-alerta info">Nenhum registro com estes filtros.</div>')
+      + '<div class="pc-nota">Entram as ações na tela, as chamadas do ERP pela API e os eventos do sistema (leituras dos entes, chamados abertos e resolvidos, processamento). Navegar e filtrar não entram.</div>';
+  }
+
   /* ── modais ───────────────────────────────────────────────────────────── */
   function modal(id, titulo, sub, corpo, rodape, estreito) {
     fechar(id);
@@ -723,6 +787,7 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
     var T = T_(t), c = T.comp, b = S.base[t], en = saldoEnteAjustado(T), val = b === 'ente' ? en : (b === 'sh' ? Math.max(0, saldo(T, 'sh')) : (S.outro[t] || 0));
     if (!(val > 0)) { toast('Informe um valor maior que zero.'); return; }
     var g = novaGuia(T, val, 'splithub', new Date(ref(c)), b); g.just = just || '';
+    aud('emitir', c, t, g.id, '', fmt(val) + ' · ' + (b === 'ente' ? 'saldo do ente após os ajustes' : (b === 'sh' ? 'saldo do SplitHub' : 'valor informado')), just);
     evento(T, new Date(ref(c)), 'E6', 'DARF emitido pelo SplitHub · <b>' + fmt(val) + '</b> · vence ' + fD(c.venc) + (b !== 'ente' ? ' · valor ' + (b === 'sh' ? 'do SplitHub' : 'informado') : '') + (just ? ' · justificativa: ' + esc(just) : ''));
     toast('DARF emitido: ' + fmt(val) + '. Envie ao ERP para pagamento.'); render();
   }
@@ -745,6 +810,7 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
     if (semDecisao(c, 'IBS').length && just == null) { PEND = { v: v, ln: ln, f: f ? f.name : '' }; fechar('pc-portal'); pedirJust('portal', 'IBS'); return; }
     var dados_ = PEND || { v: v, ln: ln, f: f ? f.name : '' }; PEND = null;
     var g = novaGuia(T, dados_.v, 'portal', new Date(ref(c)), Math.abs(dados_.v - saldoEnteAjustado(T)) < 0.005 ? 'ente' : 'outro'); g.linha = dados_.ln; g.arquivo = dados_.f; g.just = just || '';
+    aud('registrar', c, 'IBS', g.id, '', fmt(dados_.v) + ' · guia do portal do Comitê Gestor' + (dados_.f ? ' · PDF ' + dados_.f : ''), just);
     evento(T, new Date(ref(c)), 'E6', 'Guia emitida no portal do Comitê Gestor e registrada · <b>' + fmt(dados_.v) + '</b> · vence ' + fD(c.venc));
     fechar('pc-portal'); toast('Guia do IBS registrada.'); render();
   }
@@ -752,6 +818,7 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
   function avancarLeitura() {
     var r = REF[2027], n = new Date(r); n.setDate(n.getDate() + 1); while (!util(n)) n.setDate(n.getDate() + 1); n.setHours(8, 0); REF[2027] = n; S.ultimaExec = new Date(n.getTime() + 600000);
     var mudou = [];
+    aud('leitura', null, '', 'leitura simulada dos entes', fDH(r), fDH(n), 'simulação do protótipo');
     dados(empresa())[2027].forEach(function (c) {
       (c.divs || []).forEach(function (dv) {
         if (dv.chamado.estado === 'resolvida' || !visivel(dv.doc, c)) return;
@@ -761,6 +828,7 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
         else if (d.op === 'importar' || d.op === 'corrigir') { dv.doc.sh = dv.doc.en; txt = d.op === 'importar' ? 'comprovante do cliente importado' : 'documento corrigido pelo ERP'; }
         else if (d.op === 'aceitar') txt = 'valor do ente aceito';
         dv.chamado.estado = 'resolvida';
+        auditar(dados(empresa()), { q: new Date(n), quem: 'Sistema · ' + ENTE[dv.tri], origem: 'Sistema', acao: 'chamado', comp: c.id, tri: dv.tri, alvo: dv.id + ' · ' + dv.chamado.id, antes: nomeDecisao(dv, d.op), depois: 'resolvida', motivo: txt });
         evento(dv.T, new Date(n), 'E4', 'Leitura de ' + fDH(n) + ': ' + dv.id + ' ' + txt + ' · chamado <b>' + dv.chamado.id + '</b> resolvido');
         mudou.push(dv.id);
       });
@@ -781,7 +849,7 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
       case 'origem': var p = arg.split('|'); DET = { tri: S.modo, linha: p[0], origem: +p[1], busca: '', soDiv: false, doc: null }; detalhe(); return;
       case 'aapropriar': DET = { tri: S.modo, linha: 'aapropriar', origem: 0, busca: '', soDiv: false, doc: null }; detalhe(); return;
       case 'docCC': DET.doc = +arg; detalhe(); var cc = document.querySelector('#pc-det .pc-cc'); if (cc) cc.scrollIntoView({ block: 'center', behavior: 'smooth' }); return;
-      case 'detCsv': csv('pcont-' + DET.tri + '-' + c.id + '-detalhe.csv', [['Contraparte', 'Documento', 'Data', 'SplitHub', ENTE[DET.tri], 'Diferença']].concat((DET.docs || []).map(function (d) { return [d.parte, d.num, d.data, d.sh, d.en, d.en - d.sh]; }))); return;
+      case 'detCsv': aud('exportar', c, DET.tri, 'detalhamento · CSV', '', (DET.docs || []).length + ' lançamento(s)'); csv('pcont-' + DET.tri + '-' + c.id + '-detalhe.csv', [['Contraparte', 'Documento', 'Data', 'SplitHub', ENTE[DET.tri], 'Diferença']].concat((DET.docs || []).map(function (d) { return [d.parte, d.num, d.data, d.sh, d.en, d.en - d.sh]; }))); return;
       case 'tlTri': S.tlTri = arg; break;
       case 'divTri': S.divTri = arg; break;
       case 'divNat': S.divNat = arg; break;
@@ -793,7 +861,9 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
       case 'dvSalvar':
         if (!DVESC) { toast('Escolha uma decisão.'); return; }
         var dv = (c.divs || []).filter(function (x) { return x.id === arg; })[0], nota = (document.getElementById('pc-dv-nota') || {}).value || '';
+        var antes = dv.T.decisoes[dv.id] ? nomeDecisao(dv, dv.T.decisoes[dv.id].op) : 'sem decisão';
         dv.T.decisoes[dv.id] = { op: DVESC, por: quem(), em: new Date(ref(c)), nota: nota };
+        aud('decisao', c, dv.tri, dv.id + ' · ' + dv.chamado.id, antes, nomeDecisao(dv, DVESC) + (DVESC === 'aceitar' ? ' · chamado resolvido' : ''), nota);
         if (DVESC === 'aceitar') { dv.chamado.estado = 'resolvida'; evento(dv.T, new Date(ref(c)), 'E4', dv.id + ': valor do ente aceito, por ' + quem() + ' · chamado <b>' + dv.chamado.id + '</b> resolvido'); }
         else { if (dv.chamado.estado === 'aberta') dv.chamado.estado = 'em análise'; if (!dv.chamado.resp) dv.chamado.resp = quem(); evento(dv.T, new Date(ref(c)), 'E4', dv.id + ': decisão "' + nomeDecisao(dv, DVESC) + '", por ' + quem() + (nota ? ' · ' + esc(nota) : '')); }
         fechar('pc-dv'); toast('Decisão registrada em ' + dv.id + '.'); break;
@@ -805,23 +875,25 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
       case 'justOk': var j = (document.getElementById('pc-just-t') || {}).value || ''; if (!j.trim()) { toast('Escreva a justificativa.'); return; } fechar('pc-just'); var k = arg.split('|'); if (k[0] === 'emitir') emitir(k[1], j.trim()); else portalOk(j.trim()); return;
       case 'registrarPortal': registrarPortal(); return;
       case 'portalOk': portalOk(); return;
-      case 'erp': var g1 = guiaAtiva(T_(arg)); g1.status = 'enviada'; g1.erp = new Date(ref(c)); evento(T_(arg), new Date(ref(c)), 'E6', 'Enviada ao ERP (<code>pcont.guide_issued</code>), com a apuração do mês e a decomposição'); modalPayload(arg); break;
+      case 'erp': var g1 = guiaAtiva(T_(arg)); aud('erp', c, arg, g1.id, rotStatus(g1), 'no ERP · pcont.guide_issued'); g1.status = 'enviada'; g1.erp = new Date(ref(c)); evento(T_(arg), new Date(ref(c)), 'E6', 'Enviada ao ERP (<code>pcont.guide_issued</code>), com a apuração do mês e a decomposição'); modalPayload(arg); break;
       case 'payload': modalPayload(arg); return;
-      case 'comprovante': var g2 = guiaAtiva(T_(arg)); g2.status = 'paga'; g2.pagoEm = new Date(ref(c)); evento(T_(arg), new Date(ref(c)), 'E6', 'Comprovante recebido do ERP (<code>POST /v1/pcont/proofs</code>)'); toast('Comprovante registrado.'); break;
+      case 'comprovante': var g2 = guiaAtiva(T_(arg)); aud('comprovante', c, arg, g2.id, rotStatus(g2), 'paga · POST /v1/pcont/proofs', 'simulado por ' + quem(), 'API', 'ERP · integração'); g2.status = 'paga'; g2.pagoEm = new Date(ref(c)); evento(T_(arg), new Date(ref(c)), 'E6', 'Comprovante recebido do ERP (<code>POST /v1/pcont/proofs</code>)'); toast('Comprovante registrado.'); break;
       case 'processar':
         var T3 = T_(arg), g3 = guiaAtiva(T3), im = imputacao(T3, g3.valor), pr = new Date(ref(c)); pr.setDate(pr.getDate() + 1); pr.setHours(8, 0);
         g3.status = 'processada'; g3.procEm = pr; g3.extintas = im.extintas; g3.clientes = im.clientes;
+        aud('processar', c, arg, g3.id, 'paga', 'processada · ' + im.extintas + ' notas extintas', 'simulado por ' + quem(), 'Sistema', 'Sistema · ' + ENTE[arg]);
         linha(T3, 'pcont').origens[0].docs.push(doc(g3.id, fD(dt(c.ano, c.mes + 1, 0)), 'Guia ' + g3.tipo + ' · processada em ' + fD(pr), g3.valor, g3.valor));
         evento(T3, pr, 'E7', 'A ' + ENTE[arg] + ' processou o pagamento: <b>' + im.extintas + '</b> notas extintas, crédito liberado para <b>' + im.clientes + '</b> clientes' + (im.emAberto.length ? ' · <b>' + im.emAberto.length + '</b> nota(s) ainda em aberto' : ''));
         toast('Pagamento processado pela ' + ENTE[arg] + '.'); break;
       case 'complementar': S.base[arg] = 'ente'; if (arg === 'CBS') emitir('CBS', ''); else registrarPortal(); return;
-      case 'cancelar': var g4 = guiaAtiva(T_(arg)); g4.status = 'cancelada'; evento(T_(arg), new Date(ref(c)), 'E6', 'Guia ' + esc(g4.id) + ' cancelada antes do pagamento (<code>pcont.guide_cancelled</code>)'); toast('Guia cancelada.'); break;
-      case 'substituir': S.base[arg] = 'ente'; evento(T_(arg), new Date(ref(c)), 'E6', 'Guia substituída: o saldo do ente mudou depois da emissão (<code>pcont.guide_replaced</code>)'); if (arg === 'CBS') emitir('CBS', 'substituição pelo novo saldo do ente'); else { guiaAtiva(T_(arg)).status = 'substituida'; registrarPortal(); } return;
+      case 'cancelar': var g4 = guiaAtiva(T_(arg)); aud('cancelar', c, arg, g4.id, rotStatus(g4), 'cancelada · pcont.guide_cancelled'); g4.status = 'cancelada'; evento(T_(arg), new Date(ref(c)), 'E6', 'Guia ' + esc(g4.id) + ' cancelada antes do pagamento (<code>pcont.guide_cancelled</code>)'); toast('Guia cancelada.'); break;
+      case 'substituir': var g5 = guiaAtiva(T_(arg)); aud('substituir', c, arg, g5 ? g5.id : '', g5 ? fmt(g5.valor) : '', 'substituída pelo novo saldo do ente', 'saldo do ente mudou depois da emissão'); S.base[arg] = 'ente'; evento(T_(arg), new Date(ref(c)), 'E6', 'Guia substituída: o saldo do ente mudou depois da emissão (<code>pcont.guide_replaced</code>)'); if (arg === 'CBS') emitir('CBS', 'substituição pelo novo saldo do ente'); else { guiaAtiva(T_(arg)).status = 'substituida'; registrarPortal(); } return;
       case 'fechar': fecharApuracao(arg); return;
-      case 'fecharOk': var tt = arg, Tf = T_(tt), jf = (document.getElementById('pc-fe-t') || {}).value || ''; if (abertas(c, tt).length && !jf.trim()) { toast('Escreva a justificativa.'); return; } Tf.fechada = true; evento(Tf, new Date(ref(c)), 'E4', 'Apuração ' + tt + ' do SplitHub fechada por ' + quem() + (jf ? ' · ' + esc(jf) : '')); sincApur(c); fechar('pc-fe'); toast('Apuração ' + tt + ' fechada.'); break;
-      case 'reabrir': var Tr = T_(arg); Tr.fechada = false; Tr.reabertas++; evento(Tr, new Date(ref(c)), 'E4', 'Apuração ' + arg + ' do SplitHub reaberta por ' + quem()); sincApur(c); toast('Apuração ' + arg + ' reaberta.'); break;
+      case 'fecharOk': var tt = arg, Tf = T_(tt), jf = (document.getElementById('pc-fe-t') || {}).value || ''; if (abertas(c, tt).length && !jf.trim()) { toast('Escreva a justificativa.'); return; } Tf.fechada = true; aud('fechar', c, tt, 'Apuração ' + tt + ' do SplitHub', 'aberta', 'fechada', jf); evento(Tf, new Date(ref(c)), 'E4', 'Apuração ' + tt + ' do SplitHub fechada por ' + quem() + (jf ? ' · ' + esc(jf) : '')); sincApur(c); fechar('pc-fe'); toast('Apuração ' + tt + ' fechada.'); break;
+      case 'reabrir': var Tr = T_(arg); aud('reabrir', c, arg, 'Apuração ' + arg + ' do SplitHub', 'fechada', 'aberta'); Tr.fechada = false; Tr.reabertas++; evento(Tr, new Date(ref(c)), 'E4', 'Apuração ' + arg + ' do SplitHub reaberta por ' + quem()); sincApur(c); toast('Apuração ' + arg + ' reaberta.'); break;
       case 'recalcular': recalcular(); return;
-      case 'exportar': exportar(); return;
+      case 'exportar': aud('exportar', c, S.modo === 'cons' ? '' : S.modo, 'demonstrativo · CSV', '', S.modo === 'cons' ? 'CBS e IBS' : S.modo); exportar(); return;
+      case 'audCsv': var Da = dados(empresa()), la = filtroAud(Da, c); aud('exportar', c, '', 'trilha de auditoria · CSV', '', la.length + ' registro(s)'); csv('pcont-auditoria-' + empresa().raiz.replace(/\D/g, '') + '.csv', [['#', 'Data e hora', 'Quem', 'Perfil', 'Origem', 'Ação', 'Competência', 'Tributo', 'Alvo', 'Antes', 'Depois', 'Motivo', 'Hash', 'Hash anterior']].concat(la.map(function (r) { return [r.seq, fDH(r.q), r.quem, r.perfil, r.origem, ACAO[r.acao] || r.acao, r.comp, r.tri, r.alvo, r.antes, r.depois, r.motivo, r.hash, r.anterior]; }))); render(); return;
       case 'regras': regras(); return;
       case 'leitura': avancarLeitura(); return;
       default: return;
@@ -835,6 +907,7 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
     if (k === 'outro' && ev.type === 'change') { var t = el.getAttribute('data-arg'); S.outro[t] = parseFloat(el.value) || 0; S.base[t] = 'outro'; render(); }
     if (k === 'detBusca' && ev.type === 'input') { DET.busca = el.value; DET.doc = null; var pos = el.selectionStart; detalhe(); var n = document.querySelector('#pc-det [data-ch="detBusca"]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} } }
     if (k === 'detDiv' && ev.type === 'change') { DET.soDiv = el.checked; DET.doc = null; detalhe(); }
+    if (/^aud(Quem|Acao|Comp|Tri)$/.test(k) && ev.type === 'change') { S[k] = el.value; render(); }
   }
   function fecharApuracao(t) {
     var c = comp(), n = abertas(c, t).length;
@@ -848,6 +921,7 @@ window.shFeature && shFeature.registrar({"id": "AV-PC", "nome": "PCONT · pagame
     window.apurData[k].status = TRIS.every(function (t) { return c.tributos[t].fechada; }) ? 'concluida' : 'calculada';
   }
   function recalcular() {
+    aud('recalcular', comp(), '', S.ano === 2026 ? 'cálculo do SplitHub · 2026' : 'exercício 2027', '', 'recalculado');
     if (S.ano === 2026 && empresa().principal) {
       try { if (window.sincronizarApuracao) window.sincronizarApuracao(); } catch (e) {}
       var D = DADOS[empresa().raiz], fechadas = {};
