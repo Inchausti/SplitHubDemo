@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatórios contábeis e conciliação com o ERP — Proposta · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; --sombra:rgba(0,0,0,.12); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --sombra:rgba(0,0,0,.4); } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --sombra:rgba(0,0,0,.4); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.back { display: inline-flex; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 760px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.meta-fim { margin-left: auto; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; scroll-margin-top: 20px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child { margin-bottom: 0; }
+.callout ul.plain { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+td strong { color: var(--txt1); }
+td ul.plain { margin: 4px 0 0 16px; }
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); overflow-wrap: anywhere; }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+th.num { text-align: right; }
+tr.tot td { color: var(--txt1); font-weight: 700; }
+tr.grp td { background: var(--sur2); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.src { font-size: 11px; color: var(--txt3); }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.foot { margin-top: 40px; font-size: 11.5px; color: var(--txt3); }
+
+/* ══ Grade responsiva — padrão de projeto ═════════════════════════
+   As mesmas classes do src/index.html (skill `responsividade`).
+   minmax(0,1fr), nunca 1fr: a trilha precisa poder encolher. */
+.shg2,.shg3{display:grid;gap:12px}
+.shg2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.shg3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.shg2>*,.shg3>*,.shg>*,.shgc>*{min-width:0}
+.shg{display:grid;gap:var(--shg-gap,12px);grid-template-columns:repeat(auto-fit,minmax(min(var(--shg-min,220px),100%),1fr))}
+.shg-sm{--shg-min:160px}
+.shgc{display:grid;gap:var(--shgc-gap,12px);grid-template-columns:minmax(0,1fr)}
+@media(min-width:721px){.shgc{grid-template-columns:var(--shgc,1fr 1fr)}}
+@media(max-width:1024px){.shg3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.shg2,.shg3{grid-template-columns:minmax(0,1fr)}}
+
+/* cartões de resumo */
+.ess-c { border: 1px solid var(--brd); border-radius: 12px; padding: 12px 14px; background: var(--sur); }
+.ess-k { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--teal); }
+.ess-t { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 4px 0; }
+.ess-d { font-size: 12.5px; color: var(--txt2); line-height: 1.45; }
+.ess-dep { font-size: 11.5px; color: var(--txt3); margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--brd); }
+.ess-dep b { color: var(--txt1); }
+
+/* passos do fluxo */
+.etapas { list-style: none; display: flex; flex-direction: column; margin: 8px 0 0; }
+.etapa { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; }
+.etapa-m { display: flex; flex-direction: column; align-items: center; }
+.etapa-m b { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--amber); background: var(--sur); font-size: 10px; display: flex; align-items: center; justify-content: center; color: var(--amber); flex-shrink: 0; }
+.etapa-m i { flex: 1; width: 2px; background: var(--brd); }
+.etapa:last-child .etapa-m i { display: none; }
+.etapa-c { padding-bottom: 14px; min-width: 0; }
+.etapa-h { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.etapa-h b { font-size: 12.5px; color: var(--txt1); }
+.etapa-h span { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); }
+.etapa-c p { font-size: 12.5px; margin: 2px 0 0; }
+
+/* razão: tabela numérica larga, rola dentro do próprio cartão */
+.dm-wrap { overflow-x: auto; border: 1px solid var(--brd); border-radius: 8px; margin: 10px 0; }
+table.dm { font-size: 11.5px; min-width: 780px; }
+table.dm th { text-transform: none; letter-spacing: 0; font-size: 11px; text-align: right; padding: 9px 12px; color: var(--txt1); }
+table.dm th:first-child, table.dm td:first-child { text-align: left; }
+table.dm td { text-align: right; padding: 8px 12px; color: var(--txt1); white-space: nowrap; vertical-align: middle; font-variant-numeric: tabular-nums; }
+table.dm td:first-child { white-space: normal; min-width: 170px; }
+table.dm tr.grp td { text-align: left; }
+table.dm tr.res td { background: var(--blue-d); font-weight: 700; }
+table.dm td.z { color: var(--txt3); }
+table.dm td.ni { color: var(--txt3); font-style: italic; }
+table.dm td.hl { background: var(--teal-d); }
+table.dm td.l, table.dm th.l { text-align: left; white-space: normal; }
+.dv { display: inline-block; font-size: 9.5px; font-weight: 700; padding: 1px 7px; border-radius: 10px; background: var(--gray-d); color: var(--gray); white-space: nowrap; }
+.dv.ok { background: var(--green-d); color: var(--green); }
+.dv.inf { background: var(--blue-d); color: var(--blue); }
+.dv.am { background: var(--amber-d); color: var(--amber); }
+.dv.rd { background: var(--red-d); color: var(--red); }
+.ente { display: inline-flex; gap: 6px; align-items: baseline; flex-wrap: wrap; font-size: 12.5px; font-weight: 700; color: var(--txt1); margin: 18px 0 2px; }
+.ente span { font-size: 11px; font-weight: 500; color: var(--txt3); }
+
+/* provas */
+.prova { border: 1px solid var(--brd); border-radius: 8px; padding: 10px 12px; background: var(--sur); }
+.prova-h { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; font-weight: 700; color: var(--txt1); margin-bottom: 4px; }
+.prova p { font-size: 11.5px; margin: 0; }
+
+/* maquetes */
+.tela-t { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 22px 0 6px; }
+.tela-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 7px; border-radius: 4px; }
+.tela-nome { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.tela-onde { font-size: 11.5px; color: var(--txt3); }
+.mk { border: 1px solid var(--brd); border-radius: 10px; background: var(--sur); overflow: hidden; margin: 8px 0 6px; }
+.mk-bar { display: flex; gap: 6px; align-items: center; padding: 8px 12px; background: var(--sur2); border-bottom: 1px solid var(--brd); font-size: 11px; color: var(--txt3); min-width: 0; }
+.mk-bar span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.mk-body { padding: 16px; font-size: 12px; color: var(--txt2); }
+.mk-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.mk-top > div { min-width: 0; }
+.mk-crumb { font-size: 11px; color: var(--txt3); margin-bottom: 2px; }
+.mk-crumb b { color: var(--txt1); font-weight: 600; }
+.mk-h { font-size: 18px; font-weight: 800; color: var(--txt1); line-height: 1.25; }
+.mk-sub { font-size: 11.5px; color: var(--txt2); max-width: 560px; }
+.mk-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.mk-btn { font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); white-space: nowrap; }
+.mk-btn.pri { background: var(--blue); border-color: var(--blue); color: var(--sur); }
+.mk-alerta { font-size: 11.5px; color: var(--txt1); background: var(--amber-d); border-left: 3px solid var(--amber); border-radius: 6px; padding: 8px 10px; margin: 10px 0; }
+.mk-alerta.info { background: var(--blue-d); border-color: var(--blue); }
+.mk-alerta.rd { background: var(--red-d); border-color: var(--red); }
+.mk-nota { font-size: 11px; color: var(--txt3); margin-top: 10px; }
+.mk-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--brd); margin-bottom: 12px; overflow-x: auto; }
+.mk-tabs span { font-size: 11.5px; padding: 7px 10px; color: var(--txt2); white-space: nowrap; border-bottom: 2px solid transparent; }
+.mk-tabs span.on { color: var(--blue); border-color: var(--blue); font-weight: 700; }
+.mk-filt { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.mk-filt span { font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--brd); background: var(--bg); color: var(--txt2); white-space: nowrap; }
+.mk-filt span b { color: var(--txt1); }
+.mk-kpi { border: 1px solid var(--brd); border-radius: 8px; padding: 8px 10px; background: var(--bg); }
+.mk-kpi span { display: block; font-size: 10.5px; color: var(--txt3); }
+.mk-kpi b { font-size: 15px; color: var(--txt1); font-variant-numeric: tabular-nums; }
+.mk-drop { border: 2px dashed var(--brd); border-radius: 8px; padding: 12px; text-align: center; font-size: 11.5px; color: var(--txt3); margin-bottom: 12px; }
+
+/* decisões */
+.dec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 14px 16px; margin: 12px 0; scroll-margin-top: 20px; }
+.dec-h { display: flex; gap: 8px 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; }
+.dec-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.dec-q { font-size: 13.5px; font-weight: 700; color: var(--txt1); flex: 1; min-width: 200px; }
+.dec-n { font-size: 10.5px; color: var(--txt3); }
+.dec p { margin-bottom: 8px; }
+.decide { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.opt { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--txt1); cursor: pointer; border: 1px solid var(--brd); border-radius: 20px; padding: 4px 12px; }
+.opt:has(input:checked) { border-color: var(--teal); background: var(--teal-d); }
+.opt .rec { font-size: 10px; font-weight: 700; color: var(--teal); }
+.obs { width: 100%; font: inherit; font-size: 12.5px; color: var(--txt1); background: var(--bg); border: 1px solid var(--brd); border-radius: 6px; padding: 7px 10px; resize: vertical; min-height: 34px; }
+.barra { position: sticky; bottom: 12px; margin-top: 24px; background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; box-shadow: 0 8px 24px var(--sombra); }
+.barra span { font-size: 12.5px; color: var(--txt2); margin-right: auto; }
+.btn { font: inherit; font-size: 12.5px; font-weight: 700; border-radius: 6px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--brd); background: var(--sur2); color: var(--txt1); }
+.btn.pri { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+textarea.saida { width: 100%; min-height: 180px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 12px; margin-top: 10px; display: none; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível quebra dentro do
+   próprio bloco; bloco largo rola dentro do seu container, nunca no body. */
+ul.plain li, ol.plain li { min-width: 0; overflow-wrap: anywhere; }
+pre { overflow-x: auto; } pre code { overflow-wrap: normal; }
+@media (max-width: 640px) {
+  body { padding: 28px 16px 60px; }
+  h1 { font-size: 23px; }
+  .meta-fim { margin-left: 0; }
+  .doc, .section { overflow-wrap: anywhere; }
+  .mk-body { padding: 12px; }
+  .barra span { margin-right: 0; width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Integração e Contabilidade</div>
+<h1>Relatórios contábeis e conciliação com o ERP</h1>
+<p class="subtitle">Como o SplitHub passa a entregar à contabilidade do cliente o que ela precisa para fechar o mês: o razão auxiliar do crédito e do débito, os lançamentos sugeridos no plano de contas do cliente e a conciliação com o que o ERP lançou. São três níveis. O primeiro não depende de ninguém; o segundo e o terceiro dependem da POC contábil SAP. O documento traz regras, telas, leiautes, um exemplo e 14 decisões.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">03/11/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Base</span><span class="meta-val"><a class="xref" href="ciclo-credito-eventos-erp.html">Ciclo do crédito no ERP</a> v1.1 (POC contábil SAP)</span></div>
+<div class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">14</span></div>
+<div class="meta-pill meta-fim"><span class="chip warn">Em decisão</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> O que a proposta cobre</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> O que já existe</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Os três níveis</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Regras que valem para os três</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Nível 1 · Razão auxiliar do crédito e do débito</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Nível 2 · Lançamentos contábeis sugeridos</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Nível 3 · Conciliação com o ERP</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Um mês, do razão à conciliação</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Telas de referência</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Leiautes</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Ordem de entrega</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Decisões</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Fontes e premissas</a></li>
+</ul></div>
+
+<!-- 01 -->
+<div class="section" id="s01"><div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O que a proposta cobre</span></div>
+<p>O cliente pergunta se o SplitHub gera relatório contábil para exportar e conciliar com o ERP. Hoje, em parte. Os eventos do ciclo do crédito e do débito chegam ao ERP a cada fato, e o PCONT e a apuração exportam CSV. Mas cada cliente monta o próprio controle a partir dos eventos. O produto não mostra saldo inicial, movimento e saldo final do jeito que o contador lê um razão. Também não tem como confrontar essa posição com o que o ERP lançou.</p>
+<ul class="plain">
+<li><strong>Cobre:</strong> o razão auxiliar do crédito e do débito de CBS e de IBS, os lançamentos sugeridos pelo plano de contas do cliente e a conciliação com o razão ou os saldos do ERP.</li>
+<li><strong>Não cobre:</strong> a escrituração da nota e o pagamento ao fornecedor, que continuam no ERP. Também fica de fora o ressarcimento depois do pedido, que é do módulo de <a class="xref" href="prd-ressarcimento.html">Ressarcimento</a>. Split payment e créditos sem documento fiscal entram no razão quando entrarem no produto.</li>
+<li><strong>Não muda nada no app</strong> até as decisões da seção 12.</li>
+</ul>
+<div class="callout warn"><div class="ct">Princípio que vale para tudo abaixo</div><p>O SplitHub não decide o estado do crédito. A Receita Federal decide o da CBS, e o Comitê Gestor, o do IBS. O razão é a soma dos fatos que cada ente informou, evento a evento, e não a contabilidade do cliente. O SplitHub organiza, sugere e confronta; quem lança é o ERP.</p></div>
+<div class="callout ok"><div class="ct">Por que isto serve à garantia do crédito</div><p>O que trava um crédito quase nunca aparece na contabilidade. O ERP lança o tributo "a recuperar" na escrituração e espera. A conciliação mostra, documento a documento, três situações que a garantia da apropriação precisa enxergar:</p><ul class="plain">
+<li>o crédito que o ERP trata como apropriado e o ente não apropriou;</li>
+<li>o crédito escriturado que o SplitHub nunca recebeu;</li>
+<li>o crédito glosado ou prescrito que continua no ativo.</li>
+</ul></div>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s02"><div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O que já existe</span></div>
+<p class="sec-sub">A base está pronta. Falta o produto: guardar a posição, mostrá-la como razão, sugerir o lançamento e confrontar com o ERP.</p>
+<div class="table-wrap"><table><thead><tr><th>Fonte</th><th>O que traz</th><th>O que falta para virar relatório</th></tr></thead><tbody>
+<tr><td><strong>Webhooks do ciclo do crédito ao ERP</strong><br><a class="xref" href="prd-integracoes.html#s01">Integrações, seção 01</a></td><td>Os eventos <code>credit.*</code> e <code>debit.*</code> avisam o ERP a cada fato do ciclo de vida, com o registro completo. O log <code>GET /v1/events</code> recupera o que se perdeu.</td><td>O ERP recebe os fatos, mas cada cliente reconstrói o saldo por conta própria. O SplitHub não mostra essa posição.</td></tr>
+<tr><td><strong>Eventos da guia de RAD e do PCONT</strong><br><a class="xref" href="prd-pcont.html#f-14">PCONT, F-14</a> · <a class="xref" href="ciclo-credito-eventos-erp.html#s07">RAD na POC</a></td><td><code>pcont.guide_issued</code> leva a guia, a apuração do mês e a decomposição, e o comprovante volta por <code>POST /v1/pcont/proofs</code>. No RAD, <code>rad.darf_received</code> e <code>rad.proof_received</code> levam as guias e a confirmação do pagamento.</td><td>Os eventos existem, mas nenhum relatório os reúne por conta e por mês.</td></tr>
+<tr><td><strong>Exportações CSV</strong><br><a class="xref" href="prd-pcont.html#f-18">PCONT, F-18</a> · <a class="xref" href="mapa-funcionalidades-detalhado.html">Mapa detalhado</a>, Apuração IBS/CBS</td><td>O PCONT exporta o demonstrativo do tributo ou da competência e o detalhamento por documento. A "Exportação da apuração" gera a posição apurada para conferir e anexar ao fechamento contábil, e ainda não tem PRD.</td><td>São posições de apuração, por competência fiscal. Não trazem saldo inicial, movimento por parcela, saldo final nem o ID do evento.</td></tr>
+<tr><td><strong>POC contábil SAP</strong><br><a class="xref" href="ciclo-credito-eventos-erp.html">Ciclo do crédito no ERP</a> v1.1</td><td>Uma nota acompanhada da importação à utilização total, com o payload de cada webhook. Traz também o <a class="xref" href="ciclo-credito-eventos-erp.html#s08">tratamento sugerido por evento</a>, as <a class="xref" href="ciclo-credito-eventos-erp.html#s09">dez regras da integração contábil</a> e as <a class="xref" href="ciclo-credito-eventos-erp.html#s10">decisões P-01 a P-06</a>.</td><td>É referência para o time contábil. Não gera lançamento nem concilia, e as seis decisões estão abertas.</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s03"><div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Os três níveis</span></div>
+<p class="sec-sub">Cada nível usa o anterior. O primeiro pode começar já.</p>
+<div class="shg3">
+<div class="ess-c"><div class="ess-k">Nível 1</div><div class="ess-t">Razão auxiliar do crédito e do débito</div><div class="ess-d">Por tributo, mês contábil e CNPJ. Saldo inicial, movimentos e saldo final de cada parcela, com o detalhe por documento e o ID do evento. Exporta em CSV ou XLSX.</div><div class="ess-dep"><b>Depende de:</b> nada além do que já existe. Não usa as decisões da POC.</div></div>
+<div class="ess-c"><div class="ess-k">Nível 2</div><div class="ess-t">Lançamentos contábeis sugeridos</div><div class="ess-d">Um de-para parametrizável de evento para conta débito e conta crédito, pelo plano de contas do cliente. A exportação sai num leiaute que o ERP importa.</div><div class="ess-dep"><b>Depende de:</b> P-01 a P-06 decididas na POC SAP, e do Nível 1.</div></div>
+<div class="ess-c"><div class="ess-k">Nível 3</div><div class="ess-t">Conciliação com o ERP</div><div class="ess-d">Importa o razão ou os saldos do ERP e casa com o SplitHub por evento, documento e mês. Cada diferença fica explicada ou vira inconsistência.</div><div class="ess-dep"><b>Depende de:</b> o mapa de contas do Nível 2.</div></div>
+</div>
+<div class="table-wrap"><table><thead><tr><th>Nível</th><th>Pergunta que responde</th><th>Quem usa</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td>Quanto de crédito e de débito de cada tributo eu tinha, o que mudou no mês e por quê, documento a documento?</td><td>Fiscal e contabilidade, para conferir e anexar ao fechamento</td></tr>
+<tr><td><strong>2</strong></td><td>Que lançamento eu faço para cada fato, nas minhas contas?</td><td>Contabilidade, para importar no ERP em vez de digitar</td></tr>
+<tr><td><strong>3</strong></td><td>O que está no meu ERP bate com o que a Receita Federal e o Comitê Gestor dizem? Se não bate, por quê?</td><td>Contabilidade e fiscal, no fechamento; a garantia do crédito, sempre</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s04"><div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Regras que valem para os três</span></div>
+<p class="sec-sub">As regras de 01 a 09 vêm da <a class="xref" href="ciclo-credito-eventos-erp.html#s09">seção 09 da POC</a>, viradas em regra do produto. As de 10 a 12 são novas.</p>
+<div class="table-wrap"><table><thead><tr><th>Regra</th><th>O que diz</th></tr></thead><tbody>
+<tr><td class="rid">RN-RC-01</td><td><strong>O movimento nasce do <code>change</code>, nunca do status.</strong> O valor é <code>change.amount</code>. A parcela de origem é <code>change.from</code>, e a de destino, <code>change.to</code>. O status resume o saldo e não diz quanto mudou, por isso não entra em nenhuma conta.</td></tr>
+<tr><td class="rid">RN-RC-02</td><td><strong>Cada evento entra uma vez, pelo <code>id</code>.</strong> A reentrega repete o <code>id</code> e é descartada.</td></tr>
+<tr><td class="rid">RN-RC-03</td><td><strong>Fora de ordem também entra.</strong> Cada <code>change</code> é uma variação, e variações somam em qualquer ordem. O <code>record_version</code> serve ao espelho do registro, não para decidir se o evento entra.</td></tr>
+<tr><td class="rid">RN-RC-04</td><td><strong>A compensação tem um lado só.</strong> O mesmo fato aparece em <code>credit.utilized</code> e no <code>debit.*</code> com <code>cause: "credit_offset"</code>. O lado que lança é o crédito, que traz o débito em <code>offsets</code>. O razão do débito mostra a compensação como espelho, e o de-para do Nível 2 trava esse evento em "não lança".</td></tr>
+<tr><td class="rid">RN-RC-05</td><td><strong>A data contábil é o <code>occurred_at</code>.</strong> É a hora do fato no ente, no fuso que o payload traz, lida no horário de Brasília. O mês contábil do evento é o mês dessa data, desde que ele chegue até o corte (RN-RC-11).</td></tr>
+<tr><td class="rid">RN-RC-06</td><td><strong>CBS e IBS sempre separados.</strong> A CBS é da Receita Federal e o IBS, do Comitê Gestor. Cada um tem razão, contas e lançamentos próprios, e nenhum total soma os dois. O de-para recusa a mesma conta para os dois tributos.</td></tr>
+<tr><td class="rid">RN-RC-07</td><td><strong><code>null</code> não é zero.</strong> Parcela que o ente não informa aparece como "não informado" (<em>n/i</em>). O Comitê Gestor não informa seis parcelas do IBS. Zero quer dizer que o ente informou que não há valor.</td></tr>
+<tr><td class="rid">RN-RC-08</td><td><strong>A coluna sai do de/para, não da causa.</strong> A causa vai para o detalhe. A exceção é a extinção do débito, em que o de/para é sempre o mesmo e a causa separa compensado, pago por guia e recolhido no RAD. Débito extinto com <code>cause: "unknown"</code> vai para "extinto sem causa" e para a fila de análise, sem lançamento automático.</td></tr>
+<tr><td class="rid">RN-RC-09</td><td><strong>Alertas não entram.</strong> A família <code>alert.*</code> é calculada pelo SplitHub e não muda saldo. Fica fora do razão e do de-para.</td></tr>
+<tr><td class="rid">RN-RC-10</td><td><strong>Confere pelo registro.</strong> Por documento e tributo, a soma dos <code>change</code> de cada parcela tem de bater com os <code>balances</code> da última versão do registro. Se não bate, falta um evento: o SplitHub o recupera pelo log, e o mês não fecha enquanto a diferença existir.</td></tr>
+<tr><td class="rid">RN-RC-11</td><td><strong>Corte e retrato.</strong> O mês fica aberto até o corte (D-RC-04). Fechado, vira retrato: não muda mais. Evento de um mês fechado que chega depois do corte entra no primeiro mês aberto, marcado "após o corte". A data de lançamento é o primeiro dia desse mês, e a data do documento continua sendo o <code>occurred_at</code>.</td></tr>
+<tr><td class="rid">RN-RC-12</td><td><strong>Saldo de abertura pelo registro.</strong> O SplitHub pode conhecer um crédito já no meio do ciclo: o cliente entrou depois, ou a nota é antiga. Nesse caso, o crédito entra pelo primeiro registro recebido como saldo de abertura, e não como movimento do mês.</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s05"><div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Nível 1 · Razão auxiliar do crédito e do débito</span></div>
+<p class="sec-sub">É uma tela e um arquivo, um razão do crédito e outro do débito, por tributo. As linhas são as parcelas do saldo, e as colunas, os movimentos do mês.</p>
+
+<h3>Os três eixos</h3>
+<div class="table-wrap"><table><thead><tr><th>Eixo</th><th>O que é</th><th>Detalhe</th></tr></thead><tbody>
+<tr><td><strong>Tributo</strong></td><td>CBS, da Receita Federal, ou IBS, do Comitê Gestor</td><td>Um razão por tributo, lado a lado, nunca somados (RN-RC-06)</td></tr>
+<tr><td><strong>Mês contábil</strong></td><td>O mês do <code>occurred_at</code>, com o corte</td><td>A competência do documento (<code>period</code>) vira coluna e filtro, não eixo (D-RC-03)</td></tr>
+<tr><td><strong>CNPJ</strong></td><td>A raiz, como os entes apuram</td><td>Abre por estabelecimento pelo CNPJ do documento de origem (D-RC-05). O registro de crédito traz só a raiz do adquirente.</td></tr>
+</tbody></table></div>
+<p>Os filtros também valem para o fornecedor, a forma de pagamento (fornecedor ou RAD), o contrato e a competência do documento.</p>
+
+<h3>Linhas e colunas do razão do crédito</h3>
+<p><strong>Linhas</strong> são as parcelas que continuam no ativo: a apropriar (<code>pending</code>), disponível (<code>available</code>) e suspenso (<code>suspended</code>, só CBS). O que sai delas, como utilização, glosa, prescrição e ressarcimento, aparece como movimento, e o saldo some do razão. <strong>Colunas:</strong> saldo inicial, os seis movimentos, "outros" e o saldo final.</p>
+<div class="table-wrap"><table><thead><tr><th>Evento</th><th>Coluna</th><th>Efeito nas linhas</th><th>Ente</th></tr></thead><tbody>
+<tr><td><code>credit.registered</code></td><td><strong>Apurado</strong></td><td>+ a apropriar</td><td>CBS e IBS</td></tr>
+<tr><td><code>credit.adjusted</code></td><td><strong>Apurado</strong> (ajuste)</td><td>± na parcela do <code>change</code>; o lançamento vai para a fila de análise</td><td>CBS e IBS</td></tr>
+<tr><td><code>credit.appropriated</code></td><td><strong>Apropriado</strong></td><td>− a apropriar, + disponível. A soma da coluna dá zero: o valor muda de linha</td><td>CBS e IBS</td></tr>
+<tr><td><code>credit.utilized</code></td><td><strong>Utilizado</strong></td><td>− disponível</td><td>CBS e IBS</td></tr>
+<tr><td><code>credit.disallowed</code></td><td><strong>Glosado</strong></td><td>− a parcela de origem: a apropriar ou disponível</td><td>CBS; IBS pelo texto da movimentação</td></tr>
+<tr><td><code>credit.restored</code></td><td><strong>Estornado</strong></td><td>+ disponível: a utilização foi desfeita</td><td>Só CBS</td></tr>
+<tr><td><code>credit.refund_requested</code></td><td><strong>Ressarcimento</strong></td><td>− disponível. Daí em diante, quem acompanha é o Ressarcimento</td><td>CBS e IBS</td></tr>
+<tr><td><code>credit.suspended</code> · <code>credit.released</code></td><td><strong>Outros</strong></td><td>a apropriar ↔ suspenso</td><td>Só CBS</td></tr>
+<tr><td><code>credit.expired</code></td><td><strong>Outros</strong></td><td>− a parcela de origem. Também dispara o alerta de crédito prescrito</td><td>Só CBS</td></tr>
+<tr><td><code>credit.cancelled</code></td><td><strong>Outros</strong></td><td>− todas as linhas com saldo do documento</td><td>CBS e IBS</td></tr>
+<tr><td><code>credit.refund_available</code></td><td>—</td><td>Nenhum: a mudança acontece dentro do ressarcimento</td><td>Só IBS</td></tr>
+</tbody></table></div>
+
+<h3>O razão do débito</h3>
+<p>Mesma estrutura, com as parcelas do débito: em aberto (<code>outstanding</code>) e suspenso (<code>suspended</code>, só CBS). A extinção abre em três colunas pela causa (RN-RC-08).</p>
+<div class="table-wrap"><table><thead><tr><th>Evento</th><th>Coluna</th><th>Lança no Nível 2?</th></tr></thead><tbody>
+<tr><td><code>debit.registered</code> · <code>debit.adjusted</code></td><td><strong>Apurado</strong></td><td>Não: confere com o débito lançado na emissão da nota de saída</td></tr>
+<tr><td><code>debit.partially_settled</code> · <code>debit.settled</code>, <code>cause: "credit_offset"</code></td><td><strong>Compensado</strong></td><td>Nunca: é espelho do <code>credit.utilized</code> (RN-RC-04)</td></tr>
+<tr><td>Os mesmos, <code>cause: "payment"</code></td><td><strong>Pago por guia</strong></td><td>Não: confirma a guia, já lançada no pagamento</td></tr>
+<tr><td>Os mesmos, <code>cause: "rad"</code></td><td><strong>Recolhido no RAD</strong></td><td>Sim: o cliente da venda recolheu o tributo</td></tr>
+<tr><td><code>debit.suspended</code> · <code>debit.released</code> · <code>debit.cancelled</code></td><td><strong>Outros</strong></td><td>Conforme a política do cliente</td></tr>
+</tbody></table></div>
+
+<h3>As três provas</h3>
+<p>Ficam embaixo dos dois razões, por tributo. Prova que não fecha impede o fechamento do mês.</p>
+<div class="shg3">
+<div class="prova"><div class="prova-h">Prova do registro <span class="dv ok">por documento</span></div><p>Soma dos <code>change</code> de cada parcela = <code>balances</code> da última versão do registro (RN-RC-10).</p></div>
+<div class="prova"><div class="prova-h">Prova da compensação <span class="dv ok">por raiz</span></div><p>Utilizado no razão do crédito = compensado no razão do débito, por tributo e mês. Por estabelecimento não vale: o crédito de uma filial abate o débito de outra.</p></div>
+<div class="prova"><div class="prova-h">Prova do saldo <span class="dv ok">por linha</span></div><p>Saldo inicial + movimentos = saldo final, em cada linha. O saldo final de um mês é o saldo inicial do seguinte.</p></div>
+</div>
+
+<h3>Detalhe por documento e por evento</h3>
+<p>Qualquer célula abre a lista de documentos que formam o valor: chave, número, fornecedor, competência do documento, forma de pagamento e valor. Cada documento abre os eventos, com:</p>
+<ul class="plain">
+<li>o <code>id</code> do evento e o tipo;</li>
+<li>o de/para e o valor;</li>
+<li>o <code>occurred_at</code>, o <code>received_at</code> e a causa;</li>
+<li>a origem no ente: na CBS, o <code>endpoint</code> e o <code>reference</code> da coleta; no IBS, o arquivo e o <code>entry_id</code>;</li>
+<li>a marca "após o corte", quando houver.</li>
+</ul>
+<p>O status do registro não aparece como valor (RN-RC-01).</p>
+
+<h3>Exportação</h3>
+<p>CSV de movimentos, uma linha por evento (L-RC-01), e XLSX com o resumo de cada tributo em aba própria, os movimentos, os documentos e as provas (L-RC-02). As convenções do CSV são as do produto: ponto e vírgula, vírgula decimal sem separador de milhar, UTF-8 e cabeçalho por nome. O arquivo de um mês fechado traz o hash do retrato.</p>
+
+<h3>Fechamento do mês</h3>
+<ol class="etapas">
+<li class="etapa"><div class="etapa-m"><b>1</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>Mês aberto</b><span>até o corte</span></div><p>O razão é provisório e muda a cada evento. A tela mostra a data do corte e os eventos do mês ainda esperados: o arquivo do IBS do último dia chega no dia seguinte.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>2</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>Corte</b><span>D-RC-04</span></div><p>O SplitHub roda as três provas. Se todas fecham, o mês pode ser fechado. Se uma não fecha, aparece o documento que a impede.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>3</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>Retrato</b><span>RN-RC-11</span></div><p>O mês fechado fica congelado, com hash e com quem fechou e quando, como o retrato das guias do <a class="xref" href="prd-pcont.html#f-17">PCONT</a>. Evento atrasado entra no mês seguinte, marcado. Reabrir é manual, com motivo, e fica na trilha.</p></div></li>
+</ol>
+
+<h3>Por que o Nível 1 não depende da POC</h3>
+<div class="table-wrap"><table><thead><tr><th>Decisão da POC</th><th>Por que o razão não precisa dela</th></tr></thead><tbody>
+<tr><td class="rid">P-01</td><td><strong>Quando reconhecer o crédito.</strong> O razão mostra o apurado quando o ente registra. A escrituração é do ERP, e a diferença de tempo entre as duas é explicada no Nível 3.</td></tr>
+<tr><td class="rid">P-02</td><td><strong>Quais parcelas viram subconta.</strong> O razão mostra todas as parcelas que o ente informa. Quais viram subconta se decide no Nível 2.</td></tr>
+<tr><td class="rid">P-03</td><td><strong>Data do lançamento.</strong> O razão usa o <code>occurred_at</code> com corte, que é a sugestão da POC e aqui vira regra (RN-RC-05). O <code>received_at</code> vai em coluna, para quem quiser outro corte no ERP.</td></tr>
+<tr><td class="rid">P-04</td><td><strong>Lado que lança a compensação.</strong> O razão mostra os dois lados, utilizado no crédito e compensado no débito, e prova que são iguais. Escolher o lado é coisa do lançamento.</td></tr>
+<tr><td class="rid">P-05</td><td><strong>Nível do saldo contábil.</strong> O razão tem o resumo e o detalhe por documento, e serve tanto ao lançamento por nota quanto ao agregado.</td></tr>
+<tr><td class="rid">P-06</td><td><strong>Glosa contestada.</strong> O razão mostra a glosa como fato do ente. A contestação aparece como marca no detalhe; a conta que a recebe é do Nível 2.</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s06"><div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Nível 2 · Lançamentos contábeis sugeridos</span></div>
+<p class="sec-sub">O SplitHub sugere o lançamento de cada fato nas contas do cliente e entrega num arquivo que o ERP importa. Ele não lança no ERP.</p>
+
+<h3>O de-para</h3>
+<p>Uma regra liga um movimento a um par de contas. A chave da regra é o tipo do evento, o de/para do <code>change</code>, o tributo e, só na extinção do débito, a causa. A regra devolve:</p>
+<ul class="plain">
+<li>a conta débito e a conta crédito, do plano de contas do cliente;</li>
+<li>o centro de custo, se o cliente usar;</li>
+<li>o histórico padrão, com variáveis como <code>{numero_df}</code>, <code>{fornecedor}</code> e <code>{evento}</code>;</li>
+<li>ou "não lança", quando o fato é só conferência.</li>
+</ul>
+<p>O de-para pode ser aberto por estabelecimento, quando o ERP tem contas por filial. Duas regras são travadas e não se editam: o <code>debit.*</code> com <code>credit_offset</code> (RN-RC-04) e os <code>alert.*</code> (RN-RC-09).</p>
+
+<h3>O modelo de partida</h3>
+<p>O de-para começa preenchido com o <a class="xref" href="ciclo-credito-eventos-erp.html#s08">tratamento sugerido pela POC</a>. Cada linha existe duas vezes, uma com as contas de CBS e outra com as de IBS. Os nomes das contas são ilustrativos.</p>
+<div class="table-wrap"><table><thead><tr><th>Evento · de → para</th><th>Débito</th><th>Crédito</th><th>Observação</th></tr></thead><tbody>
+<tr><td><code>credit.registered</code> · — → a apropriar</td><td>—</td><td>—</td><td>Não lança se o crédito for reconhecido na escrituração (P-01); confere</td></tr>
+<tr><td><code>credit.appropriated</code> · a apropriar → apropriado</td><td>Tributo a recuperar — apropriado</td><td>Tributo a recuperar — a apropriar</td><td></td></tr>
+<tr><td><code>credit.utilized</code> · disponível → utilizado</td><td>Tributo a recolher</td><td>Tributo a recuperar — apropriado</td><td>O lado que lança a compensação</td></tr>
+<tr><td><code>debit.*</code> · <code>credit_offset</code></td><td>—</td><td>—</td><td><span class="dv rd">travada</span> não lança</td></tr>
+<tr><td><code>credit.restored</code> · utilizado → restabelecido</td><td>Tributo a recuperar — apropriado</td><td>Tributo a recolher</td><td>Só CBS</td></tr>
+<tr><td><code>credit.disallowed</code> · origem → inapropriável ou inutilizável</td><td>Perda de crédito (resultado) ou crédito em discussão</td><td>Subconta de origem</td><td>Conta do débito pela P-06</td></tr>
+<tr><td><code>credit.suspended</code> · a apropriar → suspenso</td><td>Tributo a recuperar — suspenso</td><td>Tributo a recuperar — a apropriar</td><td>Só CBS; só se a P-02 criar a subconta</td></tr>
+<tr><td><code>credit.expired</code> · origem → prescrito</td><td>Perda de crédito (resultado)</td><td>Subconta de origem</td><td>Só CBS</td></tr>
+<tr><td><code>credit.refund_requested</code> · disponível → em ressarcimento</td><td>Ressarcimento a receber</td><td>Tributo a recuperar — apropriado</td><td></td></tr>
+<tr><td><code>credit.cancelled</code> · <code>credit.adjusted</code> · <code>debit.adjusted</code></td><td>—</td><td>—</td><td>Fila de análise: o cancelamento costuma já estar lançado pelo ERP</td></tr>
+<tr><td><code>debit.*</code> · <code>payment</code></td><td>—</td><td>—</td><td>Confirma a guia, já lançada no pagamento</td></tr>
+<tr><td><code>debit.*</code> · <code>rad</code></td><td>Tributo a recolher</td><td>Clientes</td><td></td></tr>
+<tr><td><code>rad.darf_received</code></td><td>Fornecedores</td><td>Tributo retido no RAD a recolher</td><td>Um lançamento por guia</td></tr>
+<tr><td><code>rad.proof_received</code> · <code>success</code></td><td>Tributo retido no RAD a recolher</td><td>Bancos</td><td>Só quando o SplitHub instrui o pagamento; no modo de pagamento pelo ERP, confere</td></tr>
+<tr><td><code>alert.*</code></td><td>—</td><td>—</td><td><span class="dv rd">travada</span> não lança</td></tr>
+</tbody></table></div>
+
+<h3>Como o lançamento nasce</h3>
+<ol class="etapas">
+<li class="etapa"><div class="etapa-m"><b>1</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>O evento entra no razão</b><span>Nível 1</span></div><p>Uma vez, pelo <code>id</code> (RN-RC-02), no mês que o corte define.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>2</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>A regra é procurada</b><span>de-para</span></div><p>Pelo tipo, de/para, tributo e, no débito, causa. Sem regra, o lançamento fica na fila "sem conta" e não sai no arquivo até alguém criar a regra. Nada é descartado em silêncio.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>3</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>O lançamento é sugerido</b><span>partidas dobradas</span></div><p>Valor = <code>change.amount</code>. A data de lançamento é o <code>occurred_at</code>, ou o primeiro dia do mês aberto quando o evento chegou após o corte. A data do documento é sempre o <code>occurred_at</code>. Leva as contas, o histórico e o <code>id</code> do evento como referência.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>4</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>A exportação sai em lote</b><span>L-RC-03 · L-RC-04</span></div><p>Só o que ainda não foi exportado. Cada lote tem número e hash, e reexportar o mesmo lote gera o mesmo arquivo. Mudar o de-para não reescreve o que já saiu: vale a partir do próximo lote.</p></div></li>
+</ol>
+
+<h3>O que muda com as decisões da POC</h3>
+<div class="table-wrap"><table><thead><tr><th>Decisão</th><th>Efeito no Nível 2</th></tr></thead><tbody>
+<tr><td class="rid">P-01</td><td>Reconhecimento na escrituração: o <code>credit.registered</code> não lança. No evento: lança a débito de "a apropriar" contra o custo ou o estoque.</td></tr>
+<tr><td class="rid">P-02</td><td>Define as contas de destino. A parcela que não vira subconta fica na conta-mãe: sem subconta de suspenso, por exemplo, a suspensão não lança.</td></tr>
+<tr><td class="rid">P-03</td><td>Esta proposta assume o <code>occurred_at</code> com corte. Se a POC escolher o recebimento, muda a coluna de data, e o razão continua igual.</td></tr>
+<tr><td class="rid">P-04</td><td>Esta proposta assume o crédito como o lado que lança, e a regra fica travada. A POC confirma.</td></tr>
+<tr><td class="rid">P-05</td><td>Por nota ou agregado: é a D-RC-10. Agregado só com o detalhe por evento anexo.</td></tr>
+<tr><td class="rid">P-06</td><td>A glosa contestada vai para resultado ou para crédito em discussão. Na segunda opção, a regra da glosa usa a marca de contestação do registro.</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s07"><div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Nível 3 · Conciliação com o ERP</span></div>
+<p class="sec-sub">O cliente traz o que o ERP lançou no mês. O SplitHub casa com a sua posição e diz, diferença por diferença, se está explicada ou se é problema.</p>
+
+<h3>O que o ERP envia</h3>
+<div class="shg2">
+<div class="ess-c"><div class="ess-k">Modelo A · lançamentos</div><div class="ess-t">O razão das contas mapeadas</div><div class="ess-d">Uma linha por partida, com data, conta, débito ou crédito, valor, histórico, referência e documento. Permite os três níveis de casamento (L-RC-05).</div></div>
+<div class="ess-c"><div class="ess-k">Modelo B · saldos</div><div class="ess-t">O balancete das contas mapeadas</div><div class="ess-d">Uma linha por conta, estabelecimento e mês, com saldo inicial, débitos, créditos e saldo final. Só permite o casamento por saldo.</div></div>
+</div>
+<p>As contas do arquivo são lidas pelo mapa de contas, que diz qual conta do ERP guarda qual parcela de qual tributo. O mapa sai do de-para do Nível 2. Sem o Nível 2, o cliente preenche só o mapa, mas para isso precisa da P-02 decidida.</p>
+
+<h3>Casamento em cascata</h3>
+<ol class="etapas">
+<li class="etapa"><div class="etapa-m"><b>1</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>Por evento</b><span>referência = id</span></div><p>A linha do ERP traz o <code>id</code> do evento, porque veio do arquivo do Nível 2. Casa quando o <code>id</code>, o valor e o par de contas são os mesmos.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>2</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>Por documento</b><span>chave + tributo + parcela</span></div><p>O que sobrou é somado por documento, tributo, parcela e mês, dos dois lados. A chave de acesso é a referência; sem ela, valem número, série e CNPJ do emitente.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>3</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>Por saldo</b><span>conta + mês + CNPJ</span></div><p>O saldo de cada conta no ERP é comparado ao da parcela no razão. O resto que nenhum casamento explica vira a INC-CTB-06.</p></div></li>
+</ol>
+<p>A conciliação roda sobre o retrato do mês fechado e fica, ela também, como retrato com hash. O arquivo de diferenças sai em CSV.</p>
+
+<h3>Toda diferença tem destino</h3>
+<p>Ou está explicada, por um motivo de uma lista fechada, ou vira inconsistência no módulo de <a class="xref" href="prd-inconsistencias.html">Inconsistências</a>. Não existe diferença sem destino.</p>
+<div class="table-wrap"><table><thead><tr><th>Motivo</th><th>Quando se aplica</th><th>Como</th><th>Até quando</th></tr></thead><tbody>
+<tr><td class="rid">E-01</td><td><strong>Aguardando o ente.</strong> Documento escriturado no ERP que a Receita Federal ou o Comitê Gestor ainda não registrou</td><td>Automático</td><td>Até o corte do mês seguinte. Depois, aponta para a <a class="xref" href="catalogo-inconsistencias.html#INC-CONC-12">INC-CONC-12</a>, ou para a INC-CTB-04 se o SplitHub não tem o documento</td></tr>
+<tr><td class="rid">E-02</td><td><strong>Após o corte.</strong> O SplitHub levou o fato ao mês seguinte e o ERP lançou no mês do fato, ou o contrário</td><td>Automático, pelo <code>occurred_at</code> e pelo <code>received_at</code></td><td>Some no mês seguinte</td></tr>
+<tr><td class="rid">E-03</td><td><strong>Antes do SplitHub.</strong> Documento anterior ao início da operação do cliente na plataforma</td><td>Automático, pela data de implantação</td><td>Permanente</td></tr>
+<tr><td class="rid">E-04</td><td><strong>Justificada.</strong> O usuário explica e anexa a evidência; um segundo usuário aprova</td><td>Manual, na trilha</td><td>O que a justificativa disser</td></tr>
+</tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Código</th><th>Inconsistência proposta</th><th>Gravidade</th><th>Por que importa</th></tr></thead><tbody>
+<tr><td class="rid">INC-CTB-01</td><td><strong>Movimento no ERP sem fato do ente.</strong> O ERP moveu valor entre subcontas, tipicamente apropriou, sem evento da Receita Federal ou do Comitê Gestor</td><td><span class="chip red">Alta</span></td><td>O ERP pode usar na apuração um crédito que o ente não reconhece</td></tr>
+<tr><td class="rid">INC-CTB-02</td><td><strong>Fato do ente sem lançamento no ERP.</strong> Passado o corte, um evento entregue não tem lançamento</td><td><span class="chip red">Alta</span> para glosa e prescrição; <span class="chip warn">Média</span> para as demais</td><td>Glosa ou prescrição fora do ERP deixa o ativo maior do que é. Se a entrega falhou, aponta para a <a class="xref" href="catalogo-inconsistencias.html#INC-INT-01">INC-INT-01</a></td></tr>
+<tr><td class="rid">INC-CTB-03</td><td><strong>Valor diferente no mesmo evento.</strong> O <code>id</code> casa, o valor não</td><td><span class="chip warn">Média</span></td><td>Digitação ou arredondamento no ERP</td></tr>
+<tr><td class="rid">INC-CTB-04</td><td><strong>Documento escriturado que o SplitHub não tem.</strong> Chave lançada no ERP sem documento na plataforma, passado o prazo do E-01</td><td><span class="chip red">Alta</span></td><td>O crédito está fora da garantia: ninguém acompanha a apropriação dele</td></tr>
+<tr><td class="rid">INC-CTB-05</td><td><strong>Compensação lançada dos dois lados.</strong> O ERP lançou o <code>credit.utilized</code> e também o <code>debit.*</code> com <code>credit_offset</code></td><td><span class="chip red">Alta</span></td><td>O tributo a recolher é baixado em dobro e a guia do mês sai menor do que deve</td></tr>
+<tr><td class="rid">INC-CTB-06</td><td><strong>Diferença de saldo sem explicação por documento.</strong> Sobra no casamento por saldo</td><td><span class="chip warn">Média</span></td><td>Lançamento manual sem documento, ou conta usada para outra coisa</td></tr>
+</tbody></table></div>
+<div class="callout"><div class="ct">Reaproveitar antes de criar</div><p>Quando a causa da diferença é o ente ou a entrega, e não o ERP, a ocorrência já existe no <a class="xref" href="catalogo-inconsistencias.html">catálogo</a>. A conciliação aponta para ela, em vez de abrir uma INC-CTB. É o caso da <a class="xref" href="catalogo-inconsistencias.html#INC-CONC-12">INC-CONC-12</a> (movimento não refletido pelo órgão), da <a class="xref" href="catalogo-inconsistencias.html#INC-INT-01">INC-INT-01</a> (falha de entrega ao ERP) e das <a class="xref" href="catalogo-inconsistencias.html#INC-CRE-02">INC-CRE-02</a> e <a class="xref" href="catalogo-inconsistencias.html#INC-CRE-03">INC-CRE-03</a> (prazos).</p></div>
+</div>
+
+<!-- 08 -->
+<div class="section" id="s08"><div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Um mês, do razão à conciliação</span></div>
+<p class="sec-sub">Indústria Alfa S.A., raiz 12.345.678, maio de 2027, com o corte em 8 dias corridos. Valores redondos e fictícios, já somados por coluna; o detalhe por evento está nas telas da seção 09.</p>
+
+<h3>Os fatos do mês</h3>
+<div class="shg2">
+<div class="ess-c"><div class="ess-k">CBS · Receita Federal</div><div class="ess-d"><ul class="plain">
+<li>40.000 apurados nas notas de entrada de maio;</li>
+<li>60.000 apropriados;</li>
+<li>10.000 suspensos e 10.000 glosados, os dois de crédito ainda a apropriar;</li>
+<li>80.000 utilizados na apuração de abril;</li>
+<li>20.000 em pedido de ressarcimento.</li>
+</ul></div></div>
+<div class="ess-c"><div class="ess-k">IBS · Comitê Gestor</div><div class="ess-d"><ul class="plain">
+<li>80.000 apurados;</li>
+<li>120.000 apropriados. Desses, 10.000 têm <code>occurred_at</code> de 30/04 e chegaram em 10/05, depois do corte de abril (08/05), e entram em maio marcados;</li>
+<li>20.000 glosados;</li>
+<li>160.000 utilizados;</li>
+<li>40.000 em pedido de ressarcimento.</li>
+</ul></div></div>
+</div>
+
+<h3>Razão do crédito</h3>
+<div class="ente">CBS <span>Receita Federal · maio/2027 · raiz 12.345.678</span></div>
+<div class="dm-wrap"><table class="dm"><thead><tr><th>Parcela</th><th>Saldo inicial</th><th>Apurado</th><th>Apropriado</th><th>Utilizado</th><th>Glosado</th><th>Estornado</th><th>Ressarcimento</th><th>Outros</th><th>Saldo final</th></tr></thead><tbody>
+<tr><td>A apropriar</td><td>50.000</td><td>40.000</td><td>−60.000</td><td class="z">—</td><td>−10.000</td><td class="z">—</td><td class="z">—</td><td>−10.000</td><td>10.000</td></tr>
+<tr><td>Disponível</td><td>100.000</td><td class="z">—</td><td>60.000</td><td>−80.000</td><td>0</td><td>0</td><td>−20.000</td><td>0</td><td>60.000</td></tr>
+<tr><td>Suspenso</td><td>0</td><td class="z">—</td><td class="z">—</td><td class="z">—</td><td class="z">—</td><td class="z">—</td><td class="z">—</td><td>10.000</td><td>10.000</td></tr>
+<tr class="res"><td>Saldo do crédito de CBS</td><td>150.000</td><td>40.000</td><td>0</td><td>−80.000</td><td>−10.000</td><td>0</td><td>−20.000</td><td>0</td><td>80.000</td></tr>
+</tbody></table></div>
+<div class="ente">IBS <span>Comitê Gestor · maio/2027 · raiz 12.345.678</span></div>
+<div class="dm-wrap"><table class="dm"><thead><tr><th>Parcela</th><th>Saldo inicial</th><th>Apurado</th><th>Apropriado</th><th>Utilizado</th><th>Glosado</th><th>Estornado</th><th>Ressarcimento</th><th>Outros</th><th>Saldo final</th></tr></thead><tbody>
+<tr><td>A apropriar</td><td>100.000</td><td>80.000</td><td>−120.000</td><td class="z">—</td><td>−20.000</td><td class="z">—</td><td class="z">—</td><td>0</td><td>40.000</td></tr>
+<tr><td>Disponível</td><td>200.000</td><td class="z">—</td><td>120.000</td><td>−160.000</td><td>0</td><td class="ni">n/i</td><td>−40.000</td><td>0</td><td>120.000</td></tr>
+<tr><td>Suspenso</td><td class="ni">n/i</td><td class="z">—</td><td class="z">—</td><td class="z">—</td><td class="z">—</td><td class="z">—</td><td class="z">—</td><td class="ni">n/i</td><td class="ni">n/i</td></tr>
+<tr class="res"><td>Saldo do crédito de IBS</td><td>300.000</td><td>80.000</td><td>0</td><td>−160.000</td><td>−20.000</td><td class="ni">n/i</td><td>−40.000</td><td>0</td><td>160.000</td></tr>
+</tbody></table></div>
+<p class="src">— a coluna não se aplica à linha · 0 o ente informou e não houve valor · n/i o ente não informa (RN-RC-07). Na CBS, "Outros" é a suspensão: sai de a apropriar e entra em suspenso.</p>
+
+<h3>Razão do débito</h3>
+<div class="dm-wrap"><table class="dm"><thead><tr><th>Tributo · parcela</th><th>Saldo inicial</th><th>Apurado</th><th>Compensado</th><th>Pago por guia</th><th>Recolhido no RAD</th><th>Outros</th><th>Saldo final</th></tr></thead><tbody>
+<tr><td>CBS · em aberto</td><td>30.000</td><td>120.000</td><td class="hl">−80.000</td><td>−50.000</td><td>0</td><td>0</td><td>20.000</td></tr>
+<tr><td>IBS · em aberto</td><td>60.000</td><td>240.000</td><td class="hl">−160.000</td><td>−100.000</td><td>0</td><td>0</td><td>40.000</td></tr>
+</tbody></table></div>
+<div class="shg2">
+<div class="prova"><div class="prova-h">Prova da compensação · CBS <span class="dv ok">fecha</span></div><p>Utilizado 80.000 = compensado 80.000. Só o crédito lança; o débito confere.</p></div>
+<div class="prova"><div class="prova-h">Prova da compensação · IBS <span class="dv ok">fecha</span></div><p>Utilizado 160.000 = compensado 160.000.</p></div>
+</div>
+
+<h3>Lançamentos sugeridos</h3>
+<p>Plano de contas fictício. Na tabela, os lançamentos estão somados por tipo de evento para caber; no arquivo, sai um por evento.</p>
+<div class="table-wrap"><table><thead><tr><th>Conta</th><th>Nome</th><th>Conta</th><th>Nome</th></tr></thead><tbody>
+<tr><td class="rid">1.1.5.01</td><td>CBS a recuperar — a apropriar</td><td class="rid">1.1.5.11</td><td>IBS a recuperar — a apropriar</td></tr>
+<tr><td class="rid">1.1.5.02</td><td>CBS a recuperar — apropriado</td><td class="rid">1.1.5.12</td><td>IBS a recuperar — apropriado</td></tr>
+<tr><td class="rid">1.1.5.03</td><td>CBS a recuperar — suspenso</td><td class="rid">1.1.6.11</td><td>IBS — ressarcimento a receber</td></tr>
+<tr><td class="rid">1.1.6.01</td><td>CBS — ressarcimento a receber</td><td class="rid">2.1.4.11</td><td>IBS a recolher</td></tr>
+<tr><td class="rid">2.1.4.01</td><td>CBS a recolher</td><td class="rid">3.4.9.11</td><td>Perda de crédito de IBS</td></tr>
+<tr><td class="rid">3.4.9.01</td><td>Perda de crédito de CBS</td><td></td><td></td></tr>
+</tbody></table></div>
+<div class="dm-wrap"><table class="dm"><thead><tr><th class="l">Evento</th><th>Débito</th><th>Crédito</th><th>Valor</th><th class="l">Observação</th></tr></thead><tbody>
+<tr class="grp"><td colspan="5">CBS · Receita Federal</td></tr>
+<tr><td><code>credit.registered</code></td><td class="z">—</td><td class="z">—</td><td>40.000</td><td class="l">Confere com a escrituração (P-01)</td></tr>
+<tr><td><code>credit.appropriated</code></td><td>1.1.5.02</td><td>1.1.5.01</td><td>60.000</td><td class="l"></td></tr>
+<tr><td><code>credit.suspended</code></td><td>1.1.5.03</td><td>1.1.5.01</td><td>10.000</td><td class="l">Com a subconta de suspenso (P-02)</td></tr>
+<tr><td><code>credit.disallowed</code></td><td>3.4.9.01</td><td>1.1.5.01</td><td>10.000</td><td class="l">Glosa não contestada (P-06)</td></tr>
+<tr><td><code>credit.utilized</code></td><td>2.1.4.01</td><td>1.1.5.02</td><td>80.000</td><td class="l"></td></tr>
+<tr><td><code>debit.*</code> · <code>credit_offset</code></td><td class="z">—</td><td class="z">—</td><td>80.000</td><td class="l">Travado: não lança</td></tr>
+<tr><td><code>credit.refund_requested</code></td><td>1.1.6.01</td><td>1.1.5.02</td><td>20.000</td><td class="l"></td></tr>
+<tr><td><code>debit.*</code> · <code>payment</code></td><td class="z">—</td><td class="z">—</td><td>50.000</td><td class="l">Confirma a guia</td></tr>
+<tr class="grp"><td colspan="5">IBS · Comitê Gestor</td></tr>
+<tr><td><code>credit.registered</code></td><td class="z">—</td><td class="z">—</td><td>80.000</td><td class="l">Confere com a escrituração</td></tr>
+<tr><td><code>credit.appropriated</code></td><td>1.1.5.12</td><td>1.1.5.11</td><td>120.000</td><td class="l">10.000 com data de lançamento 01/05 e data do documento 30/04</td></tr>
+<tr><td><code>credit.disallowed</code></td><td>3.4.9.11</td><td>1.1.5.11</td><td>20.000</td><td class="l"></td></tr>
+<tr><td><code>credit.utilized</code></td><td>2.1.4.11</td><td>1.1.5.12</td><td>160.000</td><td class="l"></td></tr>
+<tr><td><code>debit.*</code> · <code>credit_offset</code></td><td class="z">—</td><td class="z">—</td><td>160.000</td><td class="l">Travado: não lança</td></tr>
+<tr><td><code>credit.refund_requested</code></td><td>1.1.6.11</td><td>1.1.5.12</td><td>40.000</td><td class="l"></td></tr>
+<tr><td><code>debit.*</code> · <code>payment</code></td><td class="z">—</td><td class="z">—</td><td>100.000</td><td class="l">Confirma a guia</td></tr>
+</tbody></table></div>
+<p>Com esses lançamentos, e com a escrituração e o pagamento das guias que o ERP já faz, cada conta termina o mês com o saldo da linha do razão. Por exemplo, 1.1.5.01 = 50.000 + 40.000 − 60.000 − 10.000 − 10.000 = 10.000, o saldo final de "a apropriar" da CBS.</p>
+
+<h3>Conciliação com o balancete do ERP</h3>
+<p>O ERP integra os webhooks por conta própria e mandou o balancete de maio (modelo B), mais o razão das contas (modelo A) para o casamento por documento.</p>
+<div class="dm-wrap"><table class="dm"><thead><tr><th>Conta</th><th>SplitHub</th><th>ERP</th><th>Diferença</th><th class="l">Fato</th><th class="l">Destino</th></tr></thead><tbody>
+<tr class="grp"><td colspan="6">CBS · Receita Federal</td></tr>
+<tr><td>1.1.5.01 a apropriar</td><td>10.000</td><td>25.000</td><td>15.000</td><td class="l">5.000 da NF-e 41.300, escriturada em 31/05 e registrada pela Receita em 02/06. Os outros 10.000 são a suspensão sem lançamento</td><td class="l"><span class="dv inf">E-01</span> <span class="dv am">INC-CTB-02</span></td></tr>
+<tr><td>1.1.5.02 apropriado</td><td>60.000</td><td>60.000</td><td>0</td><td class="l"></td><td class="l"><span class="dv ok">conferida</span></td></tr>
+<tr><td>1.1.5.03 suspenso</td><td>10.000</td><td>0</td><td>−10.000</td><td class="l">O mesmo <code>credit.suspended</code>, do outro lado</td><td class="l"><span class="dv am">INC-CTB-02</span></td></tr>
+<tr><td>2.1.4.01 CBS a recolher</td><td>20.000 C</td><td>20.000 C</td><td>0</td><td class="l"></td><td class="l"><span class="dv ok">conferida</span></td></tr>
+<tr class="grp"><td colspan="6">IBS · Comitê Gestor</td></tr>
+<tr><td>1.1.5.11 a apropriar</td><td>40.000</td><td>30.000</td><td>−10.000</td><td class="l">NF-e 40.500: lançamento manual de 28/05 apropriou 10.000 sem evento do Comitê Gestor</td><td class="l"><span class="dv rd">INC-CTB-01</span></td></tr>
+<tr><td>1.1.5.12 apropriado</td><td>120.000</td><td>130.000</td><td>10.000</td><td class="l">O mesmo lançamento manual</td><td class="l"><span class="dv rd">INC-CTB-01</span></td></tr>
+<tr><td>2.1.4.11 IBS a recolher</td><td>40.000 C</td><td>120.000 D</td><td>160.000</td><td class="l">O ERP lançou também os <code>debit.settled</code> com <code>credit_offset</code></td><td class="l"><span class="dv rd">INC-CTB-05</span></td></tr>
+</tbody></table></div>
+<div class="callout"><div class="ct">Leitura</div><p>Das 7 contas, 2 conferem e 5 têm diferença. As 5 diferenças vêm de 4 fatos: um explicado (E-01) e três inconsistências. A mais grave para a garantia é a INC-CTB-01. O ERP trata como disponível 10.000 de IBS que o Comitê Gestor não apropriou, e, se os usar, a apuração do cliente fica com um crédito que não existe. A INC-CTB-05 é a regra do lado único descumprida: o IBS a recolher foi baixado duas vezes.</p></div>
+</div>
+
+<!-- 09 -->
+<div class="section" id="s09"><div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Telas de referência</span></div>
+<p class="sec-sub">Maquetes de estrutura, não de acabamento, com os números do exemplo da seção 08. O lugar no menu é a D-RC-02.</p>
+
+<div class="tela-t"><span class="tela-id">T-RC-01</span><span class="tela-nome">Razão auxiliar</span><span class="tela-onde">Apuração Assistida → Contabilidade → Razão auxiliar · Nível 1</span></div>
+<div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span>Apuração Assistida › Contabilidade › Razão auxiliar</span></div>
+<div class="mk-body">
+<div class="mk-top"><div><div class="mk-crumb">Contabilidade › <b>Razão auxiliar</b></div><div class="mk-h">Maio/2027 <span class="dv am">aberto até 08/06</span></div><div class="mk-sub">A soma dos fatos que cada ente informou. Mês contábil pelo <code>occurred_at</code>; evento que chegar depois do corte vai para junho, marcado.</div></div><div class="mk-btns"><span class="mk-btn">Exportar CSV</span><span class="mk-btn">Exportar XLSX</span><span class="mk-btn pri">Fechar o mês</span></div></div>
+<div class="mk-filt"><span>CNPJ <b>12.345.678 · raiz</b></span><span>Estabelecimento <b>todos</b></span><span>Fornecedor <b>todos</b></span><span>Forma de pagamento <b>todas</b></span><span>Competência do documento <b>todas</b></span></div>
+<div class="mk-tabs"><span class="on">CBS · Receita Federal</span><span>IBS · Comitê Gestor</span></div>
+<div class="dm-wrap"><table class="dm"><thead><tr><th>Crédito</th><th>Saldo inicial</th><th>Apurado</th><th>Apropriado</th><th>Utilizado</th><th>Glosado</th><th>Estornado</th><th>Ressarc.</th><th>Outros</th><th>Saldo final</th></tr></thead><tbody>
+<tr><td>A apropriar</td><td>50.000</td><td>40.000</td><td>−60.000</td><td class="z">—</td><td>−10.000</td><td class="z">—</td><td class="z">—</td><td>−10.000</td><td>10.000</td></tr>
+<tr><td>Disponível</td><td>100.000</td><td class="z">—</td><td class="hl">60.000</td><td>−80.000</td><td>0</td><td>0</td><td>−20.000</td><td>0</td><td>60.000</td></tr>
+<tr><td>Suspenso</td><td>0</td><td class="z">—</td><td class="z">—</td><td class="z">—</td><td class="z">—</td><td class="z">—</td><td class="z">—</td><td>10.000</td><td>10.000</td></tr>
+<tr class="res"><td>Saldo do crédito</td><td>150.000</td><td>40.000</td><td>0</td><td>−80.000</td><td>−10.000</td><td>0</td><td>−20.000</td><td>0</td><td>80.000</td></tr>
+</tbody></table></div>
+<div class="shg3">
+<div class="prova"><div class="prova-h">Registro <span class="dv ok">fecha</span></div><p>312 documentos conferidos com os <code>balances</code>.</p></div>
+<div class="prova"><div class="prova-h">Compensação <span class="dv ok">fecha</span></div><p>Utilizado 80.000 = compensado 80.000.</p></div>
+<div class="prova"><div class="prova-h">Saldo <span class="dv ok">fecha</span></div><p>Saldo final de abril = saldo inicial de maio.</p></div>
+</div>
+<div class="mk-alerta info">Ainda esperados até o corte: o arquivo do IBS de 31/05, que chega em 01/06.</div>
+</div></div>
+<p class="mk-nota">Cada célula é clicável e abre a T-RC-02. A célula destacada é a do exemplo seguinte. O razão do débito fica abaixo, na mesma tela.</p>
+
+<div class="tela-t"><span class="tela-id">T-RC-02</span><span class="tela-nome">Detalhe de uma célula, por documento e evento</span><span class="tela-onde">Painel lateral da T-RC-01 · Nível 1</span></div>
+<div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span>Razão auxiliar › CBS › Disponível › Apropriado</span></div>
+<div class="mk-body">
+<div class="mk-top"><div><div class="mk-crumb">CBS · maio/2027 › <b>Disponível · Apropriado</b></div><div class="mk-h">60.000 em 3 documentos</div></div><div class="mk-btns"><span class="mk-btn">Exportar estes eventos</span></div></div>
+<div class="dm-wrap"><table class="dm"><thead><tr><th class="l">Documento</th><th class="l">Fornecedor</th><th class="l">Competência</th><th class="l">Pagamento</th><th>Valor</th></tr></thead><tbody>
+<tr><td>NF-e 52.100 · série 1</td><td class="l">Distribuidora Beta Ltda.</td><td class="l">04/2027</td><td class="l">fornecedor</td><td>30.000</td></tr>
+<tr><td>NF-e 52.140 · série 1</td><td class="l">Metalúrgica Ômega S.A.</td><td class="l">04/2027</td><td class="l">RAD</td><td>20.000</td></tr>
+<tr><td>NF-e 52.180 · série 2</td><td class="l">Transportes Sigma Ltda.</td><td class="l">05/2027</td><td class="l">fornecedor</td><td>10.000</td></tr>
+</tbody></table></div>
+<div class="ente">NF-e 52.100 <span>2 eventos</span></div>
+<div class="dm-wrap"><table class="dm"><thead><tr><th class="l">Evento</th><th class="l">Tipo</th><th class="l">De → para</th><th>Valor</th><th class="l">Ocorreu</th><th class="l">Recebido</th><th class="l">Causa</th><th class="l">Origem</th></tr></thead><tbody>
+<tr><td><code>evt_cbs_3c4e</code></td><td class="l">credit.appropriated</td><td class="l">pending → appropriated</td><td>12.000</td><td class="l">12/05 19:20</td><td class="l">12/05 22:05</td><td class="l">supplier_settlement</td><td class="l">coleta · creditos</td></tr>
+<tr><td><code>evt_cbs_4d91</code></td><td class="l">credit.appropriated</td><td class="l">pending → appropriated</td><td>18.000</td><td class="l">27/05 18:40</td><td class="l">27/05 22:05</td><td class="l">supplier_settlement</td><td class="l">coleta · creditos</td></tr>
+</tbody></table></div>
+</div></div>
+<p class="mk-nota">No IBS, a coluna Origem mostra o arquivo e o <code>entry_id</code> do Comitê Gestor. O status do registro não aparece: o valor é o do <code>change</code>.</p>
+
+<div class="tela-t"><span class="tela-id">T-RC-03</span><span class="tela-nome">De-para de contas</span><span class="tela-onde">Configurações → Contabilidade → De-para · Nível 2</span></div>
+<div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span>Configurações › Contabilidade › De-para</span></div>
+<div class="mk-body">
+<div class="mk-top"><div><div class="mk-crumb">Contabilidade › <b>De-para</b></div><div class="mk-h">Regras de lançamento</div><div class="mk-sub">Começa com o modelo da POC. Cada regra vale para um tributo.</div></div><div class="mk-btns"><span class="mk-btn">Importar plano de contas</span><span class="mk-btn pri">Nova regra</span></div></div>
+<div class="mk-tabs"><span class="on">CBS · Receita Federal</span><span>IBS · Comitê Gestor</span></div>
+<div class="dm-wrap"><table class="dm"><thead><tr><th class="l">Evento</th><th class="l">De → para · causa</th><th class="l">Débito</th><th class="l">Crédito</th><th class="l">Histórico</th></tr></thead><tbody>
+<tr><td>credit.appropriated</td><td class="l">a apropriar → apropriado</td><td class="l">1.1.5.02</td><td class="l">1.1.5.01</td><td class="l">Apropriação CBS NF {numero_df}</td></tr>
+<tr><td>credit.utilized</td><td class="l">disponível → utilizado</td><td class="l">2.1.4.01</td><td class="l">1.1.5.02</td><td class="l">Compensação CBS NF {numero_df}</td></tr>
+<tr><td>debit.*</td><td class="l">em aberto → extinto · credit_offset</td><td class="l" colspan="3"><span class="dv rd">travada</span> não lança: o crédito já lançou (RN-RC-04)</td></tr>
+<tr><td>credit.disallowed</td><td class="l">a apropriar → inapropriável</td><td class="l">3.4.9.01</td><td class="l">1.1.5.01</td><td class="l">Glosa CBS NF {numero_df}</td></tr>
+<tr><td>credit.suspended</td><td class="l">a apropriar → suspenso</td><td class="l">1.1.5.03</td><td class="l">1.1.5.01</td><td class="l">Suspensão CBS NF {numero_df}</td></tr>
+<tr><td>credit.adjusted</td><td class="l">conforme o ente</td><td class="l" colspan="3"><span class="dv am">fila de análise</span> sem lançamento automático</td></tr>
+</tbody></table></div>
+<div class="mk-alerta">1 movimento possível sem regra: <code>credit.expired</code> de disponível para prescrito. O que cair nele fica na fila "sem conta" e não sai no arquivo.</div>
+<div class="mk-alerta rd">A conta 1.1.5.02 é de CBS e não pode receber regra de IBS (RN-RC-06).</div>
+</div></div>
+
+<div class="tela-t"><span class="tela-id">T-RC-04</span><span class="tela-nome">Lançamentos sugeridos</span><span class="tela-onde">Apuração Assistida → Contabilidade → Lançamentos · Nível 2</span></div>
+<div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span>Apuração Assistida › Contabilidade › Lançamentos</span></div>
+<div class="mk-body">
+<div class="mk-top"><div><div class="mk-crumb">Contabilidade › <b>Lançamentos · maio/2027</b></div><div class="mk-h">CBS · Receita Federal</div></div><div class="mk-btns"><span class="mk-btn">Leiaute: SAP</span><span class="mk-btn pri">Exportar lote 2027-05-01</span></div></div>
+<div class="shg shg-sm">
+<div class="mk-kpi"><span>Eventos do mês</span><b>40</b></div>
+<div class="mk-kpi"><span>Lançamentos sugeridos</span><b>30</b></div>
+<div class="mk-kpi"><span>Não lançam (conferência ou travados)</span><b>8</b></div>
+<div class="mk-kpi"><span>Sem conta</span><b>2</b></div>
+</div>
+<div class="dm-wrap"><table class="dm"><thead><tr><th class="l">Data lanç.</th><th class="l">Evento</th><th class="l">Documento</th><th class="l">Débito</th><th class="l">Crédito</th><th>Valor</th><th class="l">Situação</th></tr></thead><tbody>
+<tr><td>12/05/2027</td><td class="l"><code>evt_cbs_3c4e</code></td><td class="l">NF-e 52.100</td><td class="l">1.1.5.02</td><td class="l">1.1.5.01</td><td>12.000</td><td class="l"><span class="dv inf">sugerido</span></td></tr>
+<tr><td>20/05/2027</td><td class="l"><code>evt_cbs_5b28</code></td><td class="l">NF-e 52.100</td><td class="l">2.1.4.01</td><td class="l">1.1.5.02</td><td>10.000</td><td class="l"><span class="dv inf">sugerido</span></td></tr>
+<tr><td>20/05/2027</td><td class="l"><code>evt_cbs_6e03</code></td><td class="l">NF-e 12.884</td><td class="l" colspan="2">não lança · espelho do evt_cbs_5b28</td><td>10.000</td><td class="l"><span class="dv">travado</span></td></tr>
+<tr><td>29/05/2027</td><td class="l"><code>evt_cbs_9f10</code></td><td class="l">NF-e 52.300</td><td class="l" colspan="2">sem regra para credit.expired</td><td>10.000</td><td class="l"><span class="dv am">sem conta</span></td></tr>
+</tbody></table></div>
+</div></div>
+<p class="mk-nota">Os números desta tela são uma amostra e não somam o mês. Depois de importado no ERP, o lançamento passa a "conciliado" quando o Nível 3 o encontra pelo <code>id</code>.</p>
+
+<div class="tela-t"><span class="tela-id">T-RC-05</span><span class="tela-nome">Conciliação com o ERP</span><span class="tela-onde">Apuração Assistida → Contabilidade → Conciliação com o ERP · Nível 3</span></div>
+<div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span>Apuração Assistida › Contabilidade › Conciliação com o ERP</span></div>
+<div class="mk-body">
+<div class="mk-top"><div><div class="mk-crumb">Contabilidade › <b>Conciliação · maio/2027</b></div><div class="mk-h">7 contas, 5 com diferença</div><div class="mk-sub">Sobre o retrato de maio, fechado em 08/06. Arquivo do ERP: balancete e razão das contas mapeadas.</div></div><div class="mk-btns"><span class="mk-btn">Exportar diferenças</span><span class="mk-btn pri">Concluir conciliação</span></div></div>
+<div class="mk-drop">Arraste o arquivo do ERP (CSV, modelo A ou B) · balancete-2027-05.csv carregado, 7 contas, 214 lançamentos</div>
+<div class="shg shg-sm">
+<div class="mk-kpi"><span>Conferidas</span><b>2</b></div>
+<div class="mk-kpi"><span>Explicadas</span><b>1</b></div>
+<div class="mk-kpi"><span>Inconsistências</span><b>3</b></div>
+<div class="mk-kpi"><span>Sem destino</span><b>0</b></div>
+</div>
+<div class="mk-tabs"><span>CBS · Receita Federal</span><span class="on">IBS · Comitê Gestor</span></div>
+<div class="dm-wrap"><table class="dm"><thead><tr><th>Conta</th><th>SplitHub</th><th>ERP</th><th>Diferença</th><th class="l">Casou por</th><th class="l">Destino</th></tr></thead><tbody>
+<tr><td>1.1.5.11 a apropriar</td><td>40.000</td><td>30.000</td><td>−10.000</td><td class="l">documento · NF-e 40.500</td><td class="l"><span class="dv rd">INC-CTB-01</span></td></tr>
+<tr><td>1.1.5.12 apropriado</td><td>120.000</td><td>130.000</td><td>10.000</td><td class="l">documento · NF-e 40.500</td><td class="l"><span class="dv rd">INC-CTB-01</span></td></tr>
+<tr><td>2.1.4.11 IBS a recolher</td><td>40.000 C</td><td>120.000 D</td><td>160.000</td><td class="l">evento · 9 <code>debit.settled</code></td><td class="l"><span class="dv rd">INC-CTB-05</span></td></tr>
+</tbody></table></div>
+<div class="mk-alerta rd">INC-CTB-01 · NF-e 40.500: o ERP apropriou 10.000 de IBS em 28/05 sem evento do Comitê Gestor. O crédito segue a apropriar no ente.</div>
+</div></div>
+<p class="mk-nota">"Concluir" só é possível sem diferença sem destino. A conclusão vira retrato com hash, e as inconsistências seguem no módulo próprio.</p>
+</div>
+
+<!-- 10 -->
+<div class="section" id="s10"><div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Leiautes</span></div>
+<p class="sec-sub">Todos os CSV seguem as convenções do produto, as mesmas do <a class="xref" href="proposta-eventos-csv.html#s03">CSV de eventos</a>: ponto e vírgula, vírgula decimal sem separador de milhar, data e hora do evento em ISO com fuso, UTF-8 com ou sem BOM e cabeçalho por nome.</p>
+
+<h3 id="l-rc-01">L-RC-01 · Razão: movimentos em CSV</h3>
+<p>Uma linha por evento. Com ele, o resumo se refaz em qualquer planilha.</p>
+<div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Conteúdo</th><th>Exemplo</th></tr></thead><tbody>
+<tr><td><code>tributo</code> · <code>ente</code></td><td><code>cbs</code> e <code>rfb</code>, ou <code>ibs</code> e <code>cgibs</code></td><td><code>cbs</code> · <code>rfb</code></td></tr>
+<tr><td><code>cnpj_raiz</code> · <code>cnpj_estabelecimento</code></td><td>Raiz do adquirente; estabelecimento pelo documento de origem</td><td><code>12345678</code> · <code>12345678000190</code></td></tr>
+<tr><td><code>mes_contabil</code> · <code>apos_corte</code></td><td>Mês pelo <code>occurred_at</code> e pelo corte; <code>sim</code> ou <code>nao</code></td><td><code>2027-05</code> · <code>nao</code></td></tr>
+<tr><td><code>razao</code> · <code>coluna</code></td><td><code>credito</code> ou <code>debito</code>; a coluna do razão (seção 05)</td><td><code>credito</code> · <code>apropriado</code></td></tr>
+<tr><td><code>evento_id</code> · <code>evento_tipo</code></td><td><code>id</code> e <code>type</code> do evento</td><td><code>evt_cbs_3c4e</code> · <code>credit.appropriated</code></td></tr>
+<tr><td><code>parcela_de</code> · <code>parcela_para</code> · <code>valor</code></td><td><code>change.from</code>, <code>change.to</code> e <code>change.amount</code></td><td><code>pending</code> · <code>appropriated</code> · <code>12000,00</code></td></tr>
+<tr><td><code>causa</code></td><td><code>change.cause</code>, vazio quando o ente não manda</td><td><code>supplier_settlement</code></td></tr>
+<tr><td><code>occurred_at</code> · <code>received_at</code></td><td>ISO com fuso</td><td><code>2027-05-12T19:20:00-03:00</code></td></tr>
+<tr><td><code>chave_df</code> · <code>numero_df</code> · <code>serie_df</code> · <code>competencia_df</code></td><td>Documento de origem e a competência dele (<code>period</code>)</td><td><code>3527…</code> · <code>52100</code> · <code>1</code> · <code>2027-04</code></td></tr>
+<tr><td><code>fornecedor_cnpj</code> · <code>forma_pagamento</code> · <code>contrato_id</code></td><td>Do documento e do registro</td><td><code>98765432000110</code> · <code>supplier</code> · <code>ctr_5f8a2d</code></td></tr>
+<tr><td><code>origem</code> · <code>origem_ref</code></td><td>CBS: <code>endpoint</code> e <code>reference</code>; IBS: arquivo e <code>entry_id</code></td><td><code>creditos</code> · <code>0f8c2d41-…</code></td></tr>
+</tbody></table></div>
+
+<h3 id="l-rc-02">L-RC-02 · Razão em XLSX</h3>
+<div class="table-wrap"><table><thead><tr><th>Aba</th><th>O que traz</th></tr></thead><tbody>
+<tr><td><strong>CBS</strong></td><td>Razão do crédito e do débito da CBS e as três provas</td></tr>
+<tr><td><strong>IBS</strong></td><td>O mesmo para o IBS, com <em>n/i</em> onde o Comitê Gestor não informa. CBS e IBS ficam em abas separadas, sem aba que some os dois</td></tr>
+<tr><td><strong>Movimentos</strong></td><td>O L-RC-01, com filtro</td></tr>
+<tr><td><strong>Documentos</strong></td><td>Saldo inicial e final de cada parcela por documento e tributo</td></tr>
+<tr><td><strong>Parâmetros</strong></td><td>Filtros usados, corte, situação do mês, gerado por e quando, hash do retrato</td></tr>
+</tbody></table></div>
+
+<h3 id="l-rc-03">L-RC-03 · Lançamentos: CSV genérico</h3>
+<p>Uma linha por partida: cada lançamento tem uma linha a débito e outra a crédito.</p>
+<div class="table-wrap"><table><thead><tr><th>Coluna</th><th>Conteúdo</th><th>Exemplo</th></tr></thead><tbody>
+<tr><td><code>lote</code> · <code>lancamento</code> · <code>partida</code></td><td>Número do lote, do lançamento no lote e da partida</td><td><code>2027-05-01</code> · <code>17</code> · <code>1</code></td></tr>
+<tr><td><code>data_lancamento</code> · <code>data_documento</code></td><td>Data contábil pelo corte; <code>occurred_at</code></td><td><code>2027-05-12</code> · <code>2027-05-12</code></td></tr>
+<tr><td><code>conta</code> · <code>natureza</code> · <code>valor</code></td><td>Do de-para; <code>D</code> ou <code>C</code></td><td><code>1.1.5.02</code> · <code>D</code> · <code>12000,00</code></td></tr>
+<tr><td><code>tributo</code> · <code>cnpj_estabelecimento</code> · <code>centro_custo</code></td><td>Centro de custo, se a regra tiver</td><td><code>cbs</code> · <code>12345678000190</code> · vazio</td></tr>
+<tr><td><code>historico</code></td><td>Histórico padrão da regra, já resolvido</td><td><code>Apropriação CBS NF 52100</code></td></tr>
+<tr><td><code>evento_id</code> · <code>chave_df</code> · <code>regra_id</code></td><td>Para o casamento do Nível 3 e para a trilha</td><td><code>evt_cbs_3c4e</code> · <code>3527…</code> · <code>dp_cbs_02</code></td></tr>
+</tbody></table></div>
+
+<h3 id="l-rc-04">L-RC-04 · Lançamentos: leiaute SAP</h3>
+<p>Os campos do lançamento de razão geral no SAP, para a carga em lote. É uma proposta, a validar com o time SAP na POC.</p>
+<div class="table-wrap"><table><thead><tr><th>Campo SAP</th><th>Conteúdo</th><th>Vem de</th></tr></thead><tbody>
+<tr><td><code>BUKRS</code></td><td>Empresa</td><td>Mapa CNPJ → empresa, na implantação</td></tr>
+<tr><td><code>BUDAT</code> · <code>BLDAT</code></td><td>Data de lançamento e data do documento</td><td><code>data_lancamento</code> e <code>data_documento</code></td></tr>
+<tr><td><code>BLART</code> · <code>WAERS</code></td><td>Tipo de documento e moeda</td><td>Parâmetro do cliente · <code>BRL</code></td></tr>
+<tr><td><code>HKONT</code> · <code>SHKZG</code> · <code>WRBTR</code></td><td>Conta, débito (<code>S</code>) ou crédito (<code>H</code>), montante</td><td><code>conta</code>, <code>natureza</code>, <code>valor</code></td></tr>
+<tr><td><code>BUPLA</code> · <code>KOSTL</code></td><td>Local de negócios e centro de custo</td><td>Estabelecimento e regra</td></tr>
+<tr><td><code>SGTXT</code></td><td>Texto do item</td><td><code>historico</code></td></tr>
+<tr><td><code>ZUONR</code></td><td>Atribuição</td><td><code>evento_id</code>: é por ele que o Nível 3 casa</td></tr>
+<tr><td><code>XBLNR</code></td><td>Referência</td><td>Número e série da nota</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">A validar na POC</div><ul class="plain">
+<li>A atribuição tem 18 posições. Se o <code>id</code> do evento for maior, vai um código curto do SplitHub na atribuição e o <code>id</code> inteiro no texto.</li>
+<li>A chave de acesso tem 44 posições e não cabe na referência. Vai no texto do item ou num campo que o time SAP indicar.</li>
+<li>O formato da carga, se arquivo ou interface, é do time SAP.</li>
+</ul></div>
+
+<h3 id="l-rc-05">L-RC-05 · Importação do ERP</h3>
+<div class="table-wrap"><table><thead><tr><th>Modelo</th><th>Colunas obrigatórias</th><th>Opcionais</th></tr></thead><tbody>
+<tr><td><strong>A · lançamentos</strong></td><td><code>data_lancamento</code>, <code>conta</code>, <code>natureza</code>, <code>valor</code>, <code>cnpj_estabelecimento</code></td><td><code>referencia</code> (o <code>evento_id</code>), <code>chave_df</code> ou <code>numero_df</code> + <code>serie_df</code> + <code>cnpj_emitente</code>, <code>historico</code>, <code>documento_erp</code></td></tr>
+<tr><td><strong>B · saldos</strong></td><td><code>conta</code>, <code>cnpj_estabelecimento</code>, <code>mes</code>, <code>saldo_inicial</code>, <code>debitos</code>, <code>creditos</code>, <code>saldo_final</code>, <code>natureza_saldo</code></td><td>—</td></tr>
+</tbody></table></div>
+<p>Conta que não está no mapa recusa a linha, e a linha aparece na lista de recusas. Mês ainda aberto no SplitHub não concilia.</p>
+</div>
+
+<!-- 11 -->
+<div class="section" id="s11"><div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Ordem de entrega</span></div>
+<p class="sec-sub">Começa pelo que não depende de ninguém. É a D-RC-01.</p>
+<div class="table-wrap"><table><thead><tr><th>Etapa</th><th>Depende de</th><th>O que entra</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td>As decisões desta proposta</td><td><ul class="plain">
+<li>o razão do crédito e do débito, com o detalhe por documento e evento;</li>
+<li>as três provas, o corte e o fechamento com retrato;</li>
+<li>o saldo de abertura pelo registro;</li>
+<li>a exportação em CSV e XLSX.</li>
+</ul></td></tr>
+<tr><td><strong>2</strong></td><td>P-01 a P-06 decididas na POC SAP</td><td><ul class="plain">
+<li>o de-para com o modelo de partida e as regras travadas;</li>
+<li>a fila "sem conta";</li>
+<li>os lotes de lançamento nos leiautes genérico e SAP.</li>
+</ul></td></tr>
+<tr><td><strong>3</strong></td><td>O mapa de contas da etapa 2</td><td><ul class="plain">
+<li>a importação dos modelos A e B;</li>
+<li>o casamento em cascata e os motivos E-01 a E-04;</li>
+<li>as INC-CTB-01 a 06 no catálogo;</li>
+<li>a conciliação com retrato.</li>
+</ul></td></tr>
+</tbody></table></div>
+<p>Depois das decisões, entram nos documentos: os PRDs de <a class="xref" href="prd-integracoes.html">Integrações</a>, <a class="xref" href="prd-credito.html">Crédito</a>, <a class="xref" href="prd-debito.html">Débito</a>, <a class="xref" href="prd-apuracao.html">Apuração</a>, que ganha também o PRD da exportação, <a class="xref" href="prd-pcont.html">PCONT</a> e <a class="xref" href="prd-inconsistencias.html">Inconsistências</a>; o <a class="xref" href="catalogo-inconsistencias.html">catálogo de inconsistências</a>; o mapa de funcionalidades; e a priorização do MVP.</p>
+</div>
+
+<!-- 12 -->
+<div class="section" id="s12"><div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Decisões</span></div>
+<p>Marque uma opção em cada decisão e use "Copiar escolhas" para mandar o resultado. A primeira opção é a recomendada.</p>
+<div id="decisoes">
+<div class="dec" data-dec="D-RC-01"><div class="dec-h"><span class="dec-id">D-RC-01</span><span class="dec-q">Ordem de entrega</span><span class="dec-n">geral</span></div><p>Razão primeiro, lançamentos depois da POC e conciliação por último, como na seção 11. Esperar a POC para entregar tudo junto deixa o cliente sem nada até lá, e o razão não depende dela.</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-01" value="1, 2 e 3, começando pelo razão"> 1, 2 e 3, começando pelo razão <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-01" value="Os três juntos, depois da POC"> Os três juntos, depois da POC</label><label class="opt"><input type="radio" name="D-RC-01" value="Só o Nível 1 por enquanto"> Só o Nível 1</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-RC-02"><div class="dec-h"><span class="dec-id">D-RC-02</span><span class="dec-q">Lugar no app</span><span class="dec-n">geral</span></div><p>Um item "Contabilidade" na Apuração Assistida, com Razão auxiliar, Lançamentos e Conciliação com o ERP, e o de-para em Configurações. Fica perto da apuração e do PCONT, que fecham o mesmo mês. Dentro de Crédito, o débito ficaria fora; em Analytics, o razão pareceria indicador.</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-02" value="Contabilidade na Apuração Assistida, de-para em Configurações"> Na Apuração Assistida <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-02" value="Dentro de Crédito"> Dentro de Crédito</label><label class="opt"><input type="radio" name="D-RC-02" value="Em Analytics"> Em Analytics</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-RC-03"><div class="dec-h"><span class="dec-id">D-RC-03</span><span class="dec-q">Mês do razão</span><span class="dec-n">nível 1</span></div><p>O mês contábil pelo <code>occurred_at</code>, com a competência do documento como coluna e filtro. É o mês em que o fato aconteceu no ente, o que o contador lança. A competência do documento responde a outra pergunta, a da apuração, que a exportação da apuração já atende.</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-03" value="Mês contábil pelo occurred_at, competência do documento como filtro"> Pelo <code>occurred_at</code> <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-03" value="Competência do documento (period)"> Pela competência do documento</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-RC-04"><div class="dec-h"><span class="dec-id">D-RC-04</span><span class="dec-q">Corte e mês fechado</span><span class="dec-n">nível 1</span></div><p>Corte em 8 dias corridos depois do fim do mês, parametrizável por cliente. É a janela em que a coleta da CBS reentrega os fatos, e cobre com folga o dia de atraso do IBS. Evento depois do corte vai para o mês aberto, marcado, e o mês fechado só reabre manualmente, com motivo. Corte mais curto fecha antes, mas leva mais eventos para o mês seguinte. Reabrir sozinho mudaria um mês já entregue ao ERP.</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-04" value="8 dias corridos, parametrizável; após o corte vai ao mês aberto"> 8 dias corridos, parametrizável <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-04" value="3º dia útil"> 3º dia útil</label><label class="opt"><input type="radio" name="D-RC-04" value="Reabrir o mês do fato automaticamente"> Reabrir automaticamente</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-RC-05"><div class="dec-h"><span class="dec-id">D-RC-05</span><span class="dec-q">Nível do CNPJ</span><span class="dec-n">nível 1</span></div><p>A raiz como padrão, porque é como a Receita Federal e o Comitê Gestor apuram, com abertura por estabelecimento pelo documento de origem, porque é como o ERP costuma contabilizar. A prova da compensação só vale na raiz.</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-05" value="Raiz com abertura por estabelecimento"> Raiz com abertura por estabelecimento <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-05" value="Só raiz"> Só raiz</label><label class="opt"><input type="radio" name="D-RC-05" value="Só estabelecimento"> Só estabelecimento</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-RC-06"><div class="dec-h"><span class="dec-id">D-RC-06</span><span class="dec-q">Parcelas do razão</span><span class="dec-n">nível 1</span></div><p>Todas as parcelas que o ente informa, com <em>n/i</em> onde não informa. Mostrar só a apropriar e disponível amarra o razão à P-02, que é da contabilidade de cada cliente, e esconde a suspensão.</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-06" value="Todas as parcelas informadas"> Todas <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-06" value="Só a apropriar e disponível"> Só a apropriar e disponível</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-RC-07"><div class="dec-h"><span class="dec-id">D-RC-07</span><span class="dec-q">Colunas de movimento</span><span class="dec-n">nível 1</span></div><p>Os seis movimentos mais "Outros", com o tipo exato no detalhe. Uma coluna por tipo de evento chega a doze colunas, quase todas vazias na maior parte dos meses. A prescrição, mesmo em "Outros", dispara o alerta próprio.</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-07" value="Seis movimentos e Outros"> Seis e "Outros" <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-07" value="Uma coluna por tipo de evento"> Uma por tipo</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-RC-08"><div class="dec-h"><span class="dec-id">D-RC-08</span><span class="dec-q">Formato do arquivo</span><span class="dec-n">nível 1</span></div><p>CSV com as convenções do produto e XLSX com uma aba por tributo. O CSV é o que o ERP lê; o XLSX é o que o contador abre e anexa ao fechamento.</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-08" value="CSV e XLSX"> CSV e XLSX <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-08" value="Só CSV"> Só CSV</label><label class="opt"><input type="radio" name="D-RC-08" value="Só XLSX"> Só XLSX</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-RC-09"><div class="dec-h"><span class="dec-id">D-RC-09</span><span class="dec-q">Leiautes de lançamento</span><span class="dec-n">nível 2</span></div><p>Genérico e SAP, porque a POC é com SAP. Os dois são instâncias de um leiaute configurável, com ordem, nome e formato das colunas. Um ERP novo vira parametrização de implantação, e não código. Um leiaute por ERP, feito sob demanda, é customização a cada cliente.</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-09" value="Genérico e SAP, sobre leiaute configurável"> Genérico e SAP, configurável <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-09" value="Só o genérico"> Só o genérico</label><label class="opt"><input type="radio" name="D-RC-09" value="Um leiaute por ERP, sob demanda"> Um por ERP, sob demanda</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-RC-10"><div class="dec-h"><span class="dec-id">D-RC-10</span><span class="dec-q">Agregação dos lançamentos</span><span class="dec-n">nível 2 · P-05</span></div><p>Um lançamento por evento como padrão, rastreável pelo <code>id</code>. A agregação por conta e por dia fica como opção, sempre com o detalhe por evento anexo. Só agregado, o Nível 3 perde o casamento por evento, que é o que acha o crédito travado.</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-10" value="Por evento, agregação diária como opção"> Por evento, agregação como opção <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-10" value="Só agregado"> Só agregado</label><label class="opt"><input type="radio" name="D-RC-10" value="Só por evento"> Só por evento</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-RC-11"><div class="dec-h"><span class="dec-id">D-RC-11</span><span class="dec-q">Casamento na conciliação</span><span class="dec-n">nível 3</span></div><p>Em cascata: evento, documento e saldo. Só por saldo, a conciliação diz que há diferença, mas não onde. Só por documento, não alcança o cliente que manda balancete.</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-11" value="Cascata: evento, documento, saldo"> Em cascata <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-11" value="Só por saldo"> Só por saldo</label><label class="opt"><input type="radio" name="D-RC-11" value="Só por documento"> Só por documento</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-RC-12"><div class="dec-h"><span class="dec-id">D-RC-12</span><span class="dec-q">Quando a diferença vira inconsistência</span><span class="dec-n">nível 3</span></div><p>Sem tolerância de valor, porque os valores do ente vêm em centavos exatos. A diferença de tempo fica explicada até o corte do mês seguinte, e a justificativa manual exige aprovação de um segundo usuário. Uma tolerância por conta esconde a nota pequena que não se apropriou.</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-12" value="Tolerância zero, tempo até o corte seguinte, justificativa com aprovação"> Tolerância zero e aprovação <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-12" value="Tolerância de R$ 1,00 por conta"> Tolerância de R$ 1,00 por conta</label><label class="opt"><input type="radio" name="D-RC-12" value="Justificativa sem aprovação"> Justificativa sem aprovação</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-RC-13"><div class="dec-h"><span class="dec-id">D-RC-13</span><span class="dec-q">Inconsistências</span><span class="dec-n">nível 3</span></div><p>Criar as INC-CTB-01 a 06 e reaproveitar as do catálogo quando a causa for o ente ou a entrega.</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-13" value="Criar as seis e reaproveitar as do catálogo"> Criar as seis e reaproveitar <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-13" value="Só as de gravidade alta"> Só as de gravidade alta</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-RC-14"><div class="dec-h"><span class="dec-id">D-RC-14</span><span class="dec-q">Razão por API</span><span class="dec-n">geral</span></div><p>Fica fora da primeira entrega. O ERP que quer montar o próprio razão já tem os webhooks e o <code>GET /v1/events</code>, e o que falta ao cliente é a tela e o arquivo. A API do razão entra quando um cliente pedir, nos termos das decisões da API (em inglês).</p><div class="decide"><label class="opt"><input type="radio" name="D-RC-14" value="Fora da primeira entrega"> Fora da primeira entrega <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-RC-14" value="Já no Nível 1"> Já no Nível 1</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+</div>
+<div class="barra"><span id="cont">0 de 14 decididas</span><button class="btn" type="button" onclick="recomendadas()">Marcar as recomendadas</button><button class="btn pri" type="button" onclick="copiar()">Copiar escolhas</button></div>
+<textarea class="saida" id="saida" readonly></textarea>
+</div>
+
+<!-- 13 -->
+<div class="section" id="s13"><div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Fontes e premissas</span></div>
+<ul class="plain">
+<li>No hub: <a class="xref" href="ciclo-credito-eventos-erp.html">Ciclo do crédito no ERP</a> (v1.1), com o tratamento por evento na seção 08, as regras na 09 e as decisões da POC na 10. Também o <a class="xref" href="prd-integracoes.html#s01">PRD de Integrações</a>, o <a class="xref" href="prd-pcont.html#f-14">PRD do PCONT</a>, o <a class="xref" href="mapa-funcionalidades-detalhado.html">mapa de funcionalidades detalhado</a>, o <a class="xref" href="catalogo-inconsistencias.html">catálogo de inconsistências</a>, <a class="xref" href="credito-conciliacao-essencial.html">Crédito e Conciliação: funções e regras essenciais</a> e o <a class="xref" href="proposta-eventos-csv.html">CSV de eventos</a>, de onde vêm as convenções de arquivo.</li>
+<li>O contrato dos eventos é o do docs da API, versão 1.3.1, a mesma da POC.</li>
+</ul>
+<div class="callout warn"><div class="ct">Premissas a confirmar</div><ul class="plain">
+<li>O docs não diz que evento de débito acompanha o <code>credit.restored</code>, que desfaz uma compensação. Até isso ficar claro, a prova da compensação considera só utilização e compensação, e o exemplo não tem estorno.</li>
+<li>O Comitê Gestor não informa suspensão, prescrição nem estorno do IBS, e a glosa só vem pelo texto da movimentação. Se passar a informar, as células <em>n/i</em> ganham valor sem mudar o leiaute.</li>
+<li>O corte de 8 dias supõe a reentrega de 8 dias da coleta da CBS e o atraso de um dia do arquivo do IBS, como descritos na POC.</li>
+<li>O registro de crédito traz só a raiz do adquirente. O estabelecimento vem do documento de origem, que o SplitHub tem.</li>
+<li>O leiaute SAP é proposta e depende do time SAP da POC.</li>
+<li>Contas, valores, notas e identificadores dos exemplos são fictícios.</li>
+</ul></div>
+</div>
+
+<div class="foot">Proposta v1.0 · 03/11/2026 · base: POC contábil SAP v1.1 (Ciclo do crédito no ERP); valores de exemplo.</div>
+</div>
+<script>
+(function () {
+  var decs = document.querySelectorAll('[data-dec]');
+  function contar() {
+    var n = 0;
+    decs.forEach(function (d) { if (d.querySelector('input:checked')) n++; });
+    document.getElementById('cont').textContent = n + ' de ' + decs.length + ' decididas';
+  }
+  document.getElementById('decisoes').addEventListener('change', contar);
+  window.recomendadas = function () {
+    decs.forEach(function (d) { var r = d.querySelector('input[type=radio]'); if (r && !d.querySelector('input:checked')) r.checked = true; });
+    contar();
+  };
+  window.copiar = function () {
+    var out = ['Proposta Relatórios contábeis e conciliação com o ERP v1.0: escolhas'];
+    decs.forEach(function (d) {
+      var r = d.querySelector('input:checked'), o = d.querySelector('textarea');
+      out.push(d.getAttribute('data-dec') + ': ' + (r ? r.value : 'sem escolha') + (o && o.value.trim() ? ' (' + o.value.trim() + ')' : ''));
+    });
+    var s = out.join('\n'), ta = document.getElementById('saida');
+    ta.value = s; ta.style.display = 'block';
+    var aviso = function (t) { document.getElementById('cont').textContent = t; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(s).then(function () { aviso('Escolhas copiadas.'); }).catch(function () { aviso('Copie o texto abaixo.'); ta.select(); });
+    } else { aviso('Copie o texto abaixo.'); ta.select(); }
+  };
+})();
+</script>
+</body>
+</html>
