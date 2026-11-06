@@ -1,6 +1,6 @@
 {
-  "versao": "1.0",
-  "atualizado": "29/10/2026",
+  "versao": "1.1",
+  "atualizado": "05/11/2026",
   "integracao": "avaliacao",
   "app": {
     "branch": "master",
@@ -630,6 +630,158 @@
           "limites": "Trilha em memória no protótipo: recarregar a página volta ao histórico de exemplo.",
           "decisao": "aprovado",
           "obs": "Aprovado em 29/10/2026: módulo PCONT e painel executivo."
+        }
+      ]
+    },
+    {
+      "id": "AV-EF",
+      "nome": "Eventos fiscais — esteira e detalhe do evento",
+      "branch": "feat/modulo-eventos",
+      "depende": [
+        "AV-00"
+      ],
+      "registro": "src/js/eventos-modulo.js",
+      "flags": {
+        "eventos_modulo": "A esteira de eventos recebidos e o detalhe com a confirmação por órgão"
+      },
+      "principal": "eventos_modulo",
+      "situacao": "em_avaliacao",
+      "promovido": null,
+      "proposta": "eventos-fiscais-telas.html",
+      "resumo": "Lote 1 do módulo de eventos fiscais: a esteira (T-01) e o detalhe do evento (T-02) da proposta de telas v1.2, ajustados pelas decisões que vieram depois — eventos chegam pela API e por CSV (D-21), a confirmação é por tributo, com a Receita Federal e o Comitê Gestor em separado, atributo vale na autorização e valor só no reflexo do órgão, divergência nunca aplica valor, e a v1 não segmenta por item. Os eventos são de exemplo, gerados sobre as NF-e da base. O lote 2 traz o documento (aba de eventos e linha do tempo), a família I em Inconsistências com a aba de alertas e o upload por CSV; o lote 3, os reflexos em crédito, débito, conciliação e pagamentos.",
+      "itens": [
+        {
+          "id": "AV-EF-01",
+          "flag": "eventos_modulo",
+          "titulo": "Esteira de eventos fiscais",
+          "construido": "Tela nova em Apuração Assistida › Eventos fiscais: os eventos autorizados que o cliente envia pela API e por CSV, um por linha, com o tipo, o documento, a ação planejada em linguagem de negócio, o efeito com sinal, os tributos e o estado. Cinco indicadores no topo — recebidos, planejados, executados, divergentes e ausentes — e quatro abas: Esteira, Ações pendentes, Por documento e Ausências.",
+          "onde": "Apuração Assistida › Eventos fiscais · rota #/eventos",
+          "testar": [
+            "Abra a tela e confira que os indicadores somam a lista.",
+            "Clique em Divergentes e em Ausentes: a lista filtra e as pendências sobem para o topo.",
+            "Na aba Por documento, veja os documentos com mais de um evento e o efeito previsto e aplicado por tributo."
+          ],
+          "atende": "Telas v1.2 · T-01; D-21",
+          "limites": "",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-EF-02",
+          "flag": "eventos_modulo",
+          "titulo": "Estado por tributo, nunca somado",
+          "construido": "Quando a Receita Federal e o Comitê Gestor estão em tempos diferentes, a linha mostra um chip por tributo (CBS executada, IBS aguardando). O efeito de cada tributo é calculado e confirmado em separado.",
+          "onde": "Esteira › coluna Estado · detalhe do evento",
+          "testar": [
+            "Procure um evento com dois chips de estado e abra o detalhe: cada órgão tem a sua linha."
+          ],
+          "atende": "D-21, D-22; Receita Federal e Comitê Gestor nunca agrupados",
+          "limites": "",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-EF-03",
+          "flag": "eventos_modulo",
+          "titulo": "Filtros e busca",
+          "construido": "Busca por evento, documento, código ou entidade, e painel de filtros: tipo de evento agrupado por série (110, 112, 211, 212, 412), estado da ação, tributo, entrada ou saída, autor, canal (API ou CSV) e período de recebimento.",
+          "onde": "Esteira › Filtros",
+          "testar": [
+            "Filtre por 211128 e depois por IBS.",
+            "Busque um número de NF-e."
+          ],
+          "atende": "Telas v1.2 · T-01, filtros",
+          "limites": "O filtro \"só com item\" saiu: a v1 não segmenta por item (05/10/2026).",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-EF-04",
+          "flag": "eventos_modulo",
+          "titulo": "Detalhe do evento com as quatro fases",
+          "construido": "Modal com o cabeçalho do evento (código, autorização, protocolo, autor, sequência), as quatro fases — capturado, planejado, aguardando o órgão, executado —, a ação planejada por tributo e a trilha. O previsto nunca soma ao vigente: o crédito ou o débito vigente só muda quando o órgão do tributo confirma.",
+          "onde": "Esteira › clicar numa linha · rota #/eventos/EV-000404",
+          "testar": [
+            "Abra um evento planejado: o vigente é igual ao antes.",
+            "Abra um executado: o vigente já tem o delta."
+          ],
+          "atende": "Telas v1.2 · T-02; princípio visual",
+          "limites": "O efeito é a soma dos itens do evento e cai no registro do tributo. O RF nas telas de Crédito e de Débito ainda não muda — isso é o lote 3.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-EF-05",
+          "flag": "eventos_modulo",
+          "titulo": "O que cada órgão precisa confirmar",
+          "construido": "Tabela por órgão no detalhe: Receita Federal (CBS) e Comitê Gestor (IBS), com o campo na API, o valor esperado, a última leitura e a situação. O botão Ler a Receita Federal agora tem cota de três leituras sob demanda por dia; o Simular arquivo do Comitê Gestor representa o envio do arquivo, já que o IBS não tem leitura sob demanda. Os dois mudam os estados.",
+          "onde": "Detalhe do evento › O que cada órgão precisa confirmar · botões no topo da esteira",
+          "testar": [
+            "Use Ler a Receita Federal agora três vezes: o botão desliga com o motivo no tooltip.",
+            "Use Simular arquivo do Comitê Gestor e veja o IBS mudar."
+          ],
+          "atende": "Telas v1.2 · T-02; D-21; MOC do IBS (o Comitê Gestor envia o arquivo)",
+          "limites": "Leitura e arquivo são simulados.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-EF-06",
+          "flag": "eventos_modulo",
+          "titulo": "Divergência sem valor aplicado",
+          "construido": "Evento cujo valor o órgão não confirma fica divergente: faixa vermelha no detalhe com o esperado e o observado de cada tributo, nada aplicado, e o encaminhamento para Inconsistências, família I · Eventos fiscais, com uma ocorrência por tributo.",
+          "onde": "Esteira › Divergentes › abrir um evento",
+          "testar": [
+            "Abra um divergente e confira que o vigente não mudou."
+          ],
+          "atende": "Ciclo de vida D-09; D-13; D-22",
+          "limites": "A ocorrência ainda não é aberta no Kanban — entra no lote 2, com a família I.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-EF-07",
+          "flag": "eventos_modulo",
+          "titulo": "Ausências",
+          "construido": "Evento que deveria existir e não chegou aparece como linha sem identificador, em âmbar, com efeito \"?\". O detalhe mostra o indício (o que o órgão mostra ou o que a norma exige), quem emite, a espera de 30 dias antes de virar ocorrência e o botão Pedir o reenvio ao ERP.",
+          "onde": "Esteira › aba Ausências",
+          "testar": [
+            "Abra uma ausência e peça o reenvio: o pedido fica registrado com a data."
+          ],
+          "atende": "Proposta do módulo · evento que deveria existir; D-EV-05 (30 dias)",
+          "limites": "O reenvio é simulado; a ocorrência ao fim dos 30 dias entra no lote 2.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-EF-08",
+          "flag": "eventos_modulo",
+          "titulo": "Cancelamento e eventos de atributo",
+          "construido": "O 110001 cancela outro evento: o cancelado fica riscado, com a faixa \"nada foi aplicado\". Eventos de atributo (112110, 112150, 211130) executam na autorização, sem esperar o órgão, e não mudam valor.",
+          "onde": "Esteira › o 110001 e o evento cancelado por ele",
+          "testar": [
+            "Abra o evento cancelado e o 110001 que o cancela.",
+            "Abra um 112150: a fase 3 diz que não se aplica."
+          ],
+          "atende": "C-01 (atributo vale na autorização); AV-EV D-10, D-11",
+          "limites": "",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-EF-09",
+          "flag": "eventos_modulo",
+          "titulo": "Payload, revisão e exportação",
+          "construido": "No detalhe, Ver payload original abre o JSON recebido, no formato da API de eventos fiscais (type, event_code, protocol, author…), guardado para reprocessar e auditar. Marcar para revisão deixa a marca na linha e na trilha. Exportar baixa a lista filtrada em CSV.",
+          "onde": "Detalhe do evento › rodapé · Esteira › Exportar",
+          "testar": [
+            "Abra o payload de um evento recebido por CSV: ele aparece já no formato da API.",
+            "Exporte com um filtro ligado."
+          ],
+          "atende": "API de eventos fiscais · seção 04; C-09",
+          "limites": "",
+          "decisao": "pendente",
+          "obs": ""
         }
       ]
     }
