@@ -41,6 +41,28 @@ def git(args, cwd=REPO, ok=False):
     return r if ok else r.stdout
 
 
+def espelhar_app(d):
+    """Copia para docs/ (o app publicado) o que o merge do pacote mudou em src/.
+
+    O GitHub Actions de cada remoto só sincroniza uma lista fixa de arquivos e, quando sincroniza,
+    cria um commit próprio em cada remoto — os dois divergem. Com o espelho no commit da promoção,
+    o Actions não encontra o que copiar e não cria commit nenhum."""
+    copiados = []
+    for f in git(['diff', '--cached', '--name-only', 'HEAD'], d).split():
+        f = f.replace('\\', '/')
+        if f == 'src/index.html' or re.match(r'src/(js|css)/[^/]+$', f) or re.match(r'src/docs/[^/]+\.html$', f):
+            destino = 'docs/' + f[len('src/'):]
+            if f.startswith('src/docs/'):
+                destino = 'docs/docs/' + f[len('src/docs/'):]
+            origem = os.path.join(d, f)
+            if not os.path.exists(origem):
+                continue
+            os.makedirs(os.path.dirname(os.path.join(d, destino)), exist_ok=True)
+            shutil.copyfile(origem, os.path.join(d, destino))
+            copiados.append(destino)
+    return copiados
+
+
 def carregar(base=REPO):
     return json.load(io.open(os.path.join(base, REG), encoding='utf-8'))
 
@@ -202,6 +224,9 @@ def cmd_promover(pid, enviar=False):
             gravar(dados, d)
             gerar_relatorio(dados, d)
             git(['add', REG, REL, REL_ESPELHO] + ([arq] if arq else []), d)
+            espelho = espelhar_app(d)
+            if espelho:
+                git(['add'] + espelho, d)
             corpo = '\n'.join('%s %s' % (i['id'], i['titulo']) for i in p['itens'] if i['decisao'] == 'aprovado')
             corpo += '\n\nFlags: ' + ', '.join('%s=%s' % kv for kv in flags.items()) if flags else ''
             git(['commit', '-q', '-m', 'feat(%s): %s promovido ao app depois de aprovado' % (x, p['nome']),
