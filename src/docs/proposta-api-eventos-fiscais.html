@@ -139,11 +139,11 @@ img, svg { max-width: 100%; height: auto; }
 <h1>API de eventos fiscais</h1>
 <p class="subtitle">A API p&uacute;blica do SplitHub recebe documentos fiscais e n&atilde;o recebe eventos. Sem eles o produto n&atilde;o sabe que um cr&eacute;dito foi estornado, que um presumido foi pedido ou que um d&eacute;bito mudou de compet&ecirc;ncia. Esta proposta desenha o contrato que falta: seis rotas e um envelope que absorve os dezesseis tipos.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.4</span></div>
+<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.5</span></div>
 <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta &middot; Integra&ccedil;&atilde;o</span></div>
 <div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">NT 2025.002-RTC v1.51</span></div>
-<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">30/09/2026</span></div>
-<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprova&ccedil;&atilde;o</span>&nbsp;<span class="chip info">v1.4</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">09/11/2026</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Aguardando aprova&ccedil;&atilde;o</span>&nbsp;<span class="chip info">v1.5</span></div>
 </div>
 
 <div class="toc"><div class="toc-title">&Iacute;ndice</div><ul class="toc-list">
@@ -164,7 +164,7 @@ img, svg { max-width: 100%; height: auto; }
 <div class="section" id="s01">
 <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O buraco no contrato</span></div>
 <p>A API p&uacute;blica tem <strong>25 endpoints em sete p&aacute;ginas</strong> &mdash; autentica&ccedil;&atilde;o, fornecedores, contratos, ingest&atilde;o de DFs com lote de at&eacute; 500, RAD, automa&ccedil;&otilde;es e garantia de cr&eacute;dito. <strong>Nenhum recebe evento fiscal.</strong></p>
-<p>O documento entra por <code>POST /v1/documentos-fiscais</code> e a partir da&iacute; o produto o trata como algo est&aacute;vel. N&atilde;o &eacute;: entre a emiss&atilde;o e o recolhimento, os eventos <strong>mudam valor, compet&ecirc;ncia e estado do cr&eacute;dito</strong>. Sem receb&ecirc;-los, o SplitHub concilia contra uma foto desatualizada e produz diverg&ecirc;ncia onde n&atilde;o h&aacute;.</p>
+<p>O documento entra por <code>POST /v1/fiscal-documents</code> e a partir da&iacute; o produto o trata como algo est&aacute;vel. N&atilde;o &eacute;: entre a emiss&atilde;o e o recolhimento, os eventos <strong>mudam valor, compet&ecirc;ncia e estado do cr&eacute;dito</strong>. Sem receb&ecirc;-los, o SplitHub concilia contra uma foto desatualizada e produz diverg&ecirc;ncia onde n&atilde;o h&aacute;.</p>
 <div class="table-wrap"><table><thead><tr><th>Sem o endpoint</th><th>Consequ&ecirc;ncia</th></tr></thead><tbody>
 <tr><td>Perecimento em tr&acirc;nsito n&atilde;o chega</td><td>O produto mant&eacute;m cr&eacute;dito sobre mercadoria que n&atilde;o existe</td></tr>
 <tr><td>Cr&eacute;dito presumido pedido por evento n&atilde;o chega</td><td>O valor conciliado &eacute; o destacado, e o Fisco vai apurar o presumido</td></tr>
@@ -180,7 +180,7 @@ img, svg { max-width: 100%; height: auto; }
 <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O princ&iacute;pio do desenho</span></div>
 <p class="sec-sub">S&atilde;o dezesseis tipos com estruturas diferentes. H&aacute; tr&ecirc;s formas de absorver isso, e duas d&atilde;o errado.</p>
 <div class="table-wrap"><table><thead><tr><th>Op&ccedil;&atilde;o</th><th>Como seria</th><th>Por que n&atilde;o</th></tr></thead><tbody>
-<tr><td>Um endpoint por evento</td><td><code>POST /v1/eventos/perecimento-fob</code>, e mais quinze</td><td><strong>Dezesseis rotas para manter.</strong> A NT muda &mdash; o <code>211120</code> foi eliminado na v1.50 &mdash; e cada mudan&ccedil;a vira mudan&ccedil;a de contrato p&uacute;blico</td></tr>
+<tr><td>Um endpoint por evento</td><td><code>POST /v1/fiscal-events/fob-perishing</code>, e mais quinze</td><td><strong>Dezesseis rotas para manter.</strong> A NT muda &mdash; o <code>211120</code> foi eliminado na v1.50 &mdash; e cada mudan&ccedil;a vira mudan&ccedil;a de contrato p&uacute;blico</td></tr>
 <tr><td>Um envelope plano com todos os campos</td><td>Um objeto com <code>indQuitacao</code>, <code>dPrevEntrega</code>, <code>gPerecimento</code>&hellip; todos opcionais</td><td><strong>Nada &eacute; obrigat&oacute;rio e tudo &eacute; poss&iacute;vel.</strong> A valida&ccedil;&atilde;o migra para o servidor e o ERP descobre o erro tarde</td></tr>
 <tr><td><strong>Um envelope com discriminador</strong></td><td><code>type</code> decide o formato de <code>detail</code></td><td><strong>&Eacute; a proposta.</strong> Espelha a pr&oacute;pria norma &mdash; <code>tpEvento</code> mais <code>detEvento</code> &mdash; e o padr&atilde;o que a API j&aacute; usa em <code>documentos-fiscais</code>, onde <code>type</code> decide o resto</td></tr>
 </tbody></table></div>
@@ -191,12 +191,12 @@ img, svg { max-width: 100%; height: auto; }
 <div class="section" id="s03">
 <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">As rotas</span></div>
 <div class="table-wrap"><table><thead><tr><th>M&eacute;todo</th><th>Rota</th><th>Para qu&ecirc;</th><th>Resposta</th></tr></thead><tbody>
-<tr><td><span class="verb post">POST</span></td><td class="mono"><code>/v1/eventos-fiscais</code></td><td>Importa&ccedil;&atilde;o individual</td><td><code>202</code></td></tr>
-<tr><td><span class="verb post">POST</span></td><td class="mono"><code>/v1/eventos-fiscais/batch</code></td><td>Lote de at&eacute; <strong>500</strong>, como em documentos</td><td><code>202</code></td></tr>
-<tr><td><span class="verb get">GET</span></td><td class="mono"><code>/v1/eventos-fiscais/{id}</code></td><td>Situa&ccedil;&atilde;o de um evento e o resultado da concilia&ccedil;&atilde;o</td><td><code>200</code></td></tr>
-<tr><td><span class="verb get">GET</span></td><td class="mono"><code>/v1/eventos-fiscais</code></td><td>Listagem com filtros: <code>type</code>, <code>event_code</code>, <code>phase</code>, <code>ibs_status</code>, <code>cbs_status</code>, <code>access_key</code>, <code>from</code>, <code>to</code></td><td><code>200</code></td></tr>
-<tr><td><span class="verb get">GET</span></td><td class="mono"><code>/v1/documentos-fiscais/{id}/eventos</code></td><td><strong>A hist&oacute;ria do documento</strong> &mdash; todos os eventos daquele DF, em ordem</td><td><code>200</code></td></tr>
-<tr><td><span class="verb del">DELETE</span></td><td class="mono"><code>/v1/eventos-fiscais/{id}</code></td><td>Remove o <strong>registro de importa&ccedil;&atilde;o</strong> enviado por engano</td><td><code>204</code></td></tr>
+<tr><td><span class="verb post">POST</span></td><td class="mono"><code>/v1/fiscal-events</code></td><td>Importa&ccedil;&atilde;o individual</td><td><code>202</code></td></tr>
+<tr><td><span class="verb post">POST</span></td><td class="mono"><code>/v1/fiscal-events/batch</code></td><td>Lote de at&eacute; <strong>500</strong>, como em documentos</td><td><code>202</code></td></tr>
+<tr><td><span class="verb get">GET</span></td><td class="mono"><code>/v1/fiscal-events/{id}</code></td><td>Situa&ccedil;&atilde;o de um evento e o resultado da concilia&ccedil;&atilde;o</td><td><code>200</code></td></tr>
+<tr><td><span class="verb get">GET</span></td><td class="mono"><code>/v1/fiscal-events</code></td><td>Listagem com filtros: <code>type</code>, <code>event_code</code>, <code>phase</code>, <code>ibs_status</code>, <code>cbs_status</code>, <code>access_key</code>, <code>from</code>, <code>to</code></td><td><code>200</code></td></tr>
+<tr><td><span class="verb get">GET</span></td><td class="mono"><code>/v1/fiscal-documents/{id}/events</code></td><td><strong>A hist&oacute;ria do documento</strong> &mdash; todos os eventos daquele DF, em ordem</td><td><code>200</code></td></tr>
+<tr><td><span class="verb del">DELETE</span></td><td class="mono"><code>/v1/fiscal-events/{id}</code></td><td>Remove o <strong>registro de importa&ccedil;&atilde;o</strong> enviado por engano</td><td><code>204</code></td></tr>
 </tbody></table></div>
 <div class="callout red"><div class="ct">N&atilde;o h&aacute; <code>PATCH</code>, e o <code>DELETE</code> n&atilde;o cancela nada no Fisco</div><p>Evento autorizado &eacute; <strong>imut&aacute;vel</strong>. A norma n&atilde;o corrige evento: ela <strong>cancela</strong> pelo <code>110001</code>, que &eacute; ele pr&oacute;prio um evento. Portanto cancelar, na nossa API, &eacute; <strong>um <code>POST</code> de um evento do tipo <code>cancelamento</code></strong> &mdash; nunca um <code>PATCH</code> nem um <code>DELETE</code>.</p><p style="margin-top:8px">O <code>DELETE</code> existe s&oacute; para desfazer uma <strong>importa&ccedil;&atilde;o indevida</strong> &mdash; o ERP mandou o evento errado para o SplitHub. N&atilde;o toca no ambiente autorizador, e deve recusar evento que j&aacute; foi conciliado.</p></div>
 </div>
@@ -435,7 +435,7 @@ j&aacute; &eacute; aplicado &mdash; <code>reconciliation.ibs.executed_at</code> 
 extrato do Comit&ecirc; Gestor sem motivo.</p>
 
 <h3 id="resp">8.4 A resposta completa</h3>
-<p>O <code>GET /v1/eventos-fiscais/{id}</code> e o <code>data</code> dos webhooks carregam o mesmo objeto. O exemplo &eacute;
+<p>O <code>GET /v1/fiscal-events/{id}</code> e o <code>data</code> dos webhooks carregam o mesmo objeto. O exemplo &eacute;
 o <code>211110</code> do item 7 que aparece na <a class="xref" href="eventos-fiscais-telas.html#s05">aba do documento</a>:
 o IBS divergiu, a CBS &eacute; vedada pelo c&oacute;digo de presumido.</p>
 <pre>{
@@ -547,6 +547,7 @@ o IBS divergiu, a CBS &eacute; vedada pelo c&oacute;digo de presumido.</p>
 <!-- 11 -->
 <div class="section" id="s11">
 <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+<div class="ver-row"><div class="ver-num">v1.5</div><div class="ver-desc"><strong>09/11/2026</strong> &mdash; <strong>Rotas em ingl&ecirc;s.</strong> Pela decis&atilde;o de 05/10/2026, a API p&uacute;blica fala ingl&ecirc;s, como o AV-EV j&aacute; faz no app: <code>/v1/eventos-fiscais</code> passa a <code>/v1/fiscal-events</code>, a hist&oacute;ria do documento passa a <code>/v1/fiscal-documents/{id}/events</code> e a entrada do documento passa a <code>/v1/fiscal-documents</code>. Contrato, valida&ccedil;&otilde;es e c&oacute;digos de erro n&atilde;o mudam. Corrige a DV-30 do <a class="xref" href="prd-eventos-fiscais.html#s15">PRD de Eventos fiscais</a>.</div></div>
 <div class="ver-row"><div class="ver-num">v1.4</div><div class="ver-desc"><strong>30/09/2026</strong> &mdash; Entra a <strong>V-14</strong>, pela D-10: evento de homologa&ccedil;&atilde;o s&oacute; entra com credencial de sandbox, e a de produ&ccedil;&atilde;o o recusa com <code>environment_mismatch</code>. S&atilde;o agora catorze valida&ccedil;&otilde;es. O m&oacute;dulo de eventos fica com dez pend&ecirc;ncias.</div></div>
 <div class="ver-row"><div class="ver-num">v1.3</div><div class="ver-desc"><strong>30/09/2026</strong> &mdash; <strong>Decis&otilde;es de 30/09.</strong> AE-01: o protocolo &eacute; obrigat&oacute;rio. AE-03: o <code>type</code> leg&iacute;vel fica. AE-04: CSV para os oito formatos, na <a class="xref" href="proposta-eventos-csv.html">proposta de upload</a>. AE-05: c&oacute;digo eliminado entra com aviso &mdash; a V-01 passa a separar c&oacute;digo que nunca existiu de c&oacute;digo aposentado, e a resposta ganha <code>warnings</code>. AE-07: tipo retirado do cat&aacute;logo. Pela D-22, <code>inconsistencies</code> deixa de ser por item: uma por tributo, por evento, e o campo <code>item_number</code> sai do objeto da ocorr&ecirc;ncia. Corrigida a lista do formato <code>items</code>, que inclu&iacute;a o <code>112130</code> &mdash; ele usa <code>items_with_reversal</code>, como a se&ccedil;&atilde;o 06 j&aacute; dizia.</div></div>
 <div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>30/09/2026</strong> &mdash; <strong>AE-06 decidida pela D-21:</strong> esta API &eacute; a &uacute;nica porta de entrada dos eventos, e o cliente envia a partir do ERP e do sistema fiscal. A se&ccedil;&atilde;o 01 passa a dizer de onde vem cada s&eacute;rie. Corrigida a contagem de decis&otilde;es em aberto: 19 na an&aacute;lise de impacto e 25 no m&oacute;dulo, e n&atilde;o 13 e 20.</div></div>

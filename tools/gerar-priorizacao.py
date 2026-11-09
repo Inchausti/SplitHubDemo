@@ -21,9 +21,9 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.13'
+VERSAO = u'v2.14'
 DATA = u'09/11/2026'
-BASE_MAPA = u'Mapa de Funcionalidades v2.12'
+BASE_MAPA = u'Mapa de Funcionalidades v2.13'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
 URL_DOCS = 'https://split-hubhq.github.io/app/docs/'
@@ -154,7 +154,7 @@ FAIXAS = {
     19: ['M1','M1','M1','M1','M1','M0','M1','M1','M1','M2','M1','M1','M1'],
     20: ['M1','M2','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1','M1','M1','M1'],
     21: ['M0','M0','M0','M1','M0','M1','M0','M1','M0','M1','M1','M1','M2','M1','M1','M2','M1','M1','M2','M1'],
-    22: ['M1'] * 15,
+    22: ['M1'] * 16,
 }
 
 # ── revisoes de faixa ──────────────────────────────────────────────────────
@@ -249,7 +249,7 @@ NOTA = {
     18: u'A <strong>régua de cobrança</strong> entra no M0 por decisão de 14/09: cobrança não feita é crédito perdido. Relatórios agendados ficam em M1 e a integração ITSM desceu a M2 em 15/09 — abrir chamado é rotina de time grande, não do piloto.',
     20: u'<strong>Fora do M0 por decisão de 18/09/2026.</strong> A cadeia do crédito fecha na apropriação; o ressarcimento é o passo seguinte — transformar o saldo que sobrou em dinheiro. E o primeiro pedido real só existe em 2027: saldos de 2026 não são ressarcíveis. Treze funcionalidades em M1, o ciclo que tira o analista da planilha — saldo, intenção, pedido, decisão, recebimento, prazos, conferência e impedimentos. Duas em M2: o comparativo compensar × ressarcir e a previsão de caixa, que explicam a decisão em vez de executá-la. Implementado no protótipo em simulação 2026.',
     21: u'<strong>Entrou no app em 29/10/2026</strong> (AV-PC). Seis no M0, pelo critério: a empresa do grupo, a competência, a visão consolidada, o demonstrativo contra o ente, o ciclo recalcular–fechar–reabrir — que era da tela da Apuração e continua contado lá também — e as <strong>divergências com chamado</strong>, porque crédito que o ente não reconhece é crédito que falhou e precisa virar tratável. A guia do saldo, o ERP, o histórico e a auditoria ficam em M1: pagar o próprio saldo é obrigação a partir de 2027, mas a cadeia do crédito fecha sem a guia sair daqui — ela pode sair do portal. Três em M2, que explicam em vez de garantir: a simulação de parcial, os encargos e o <strong>painel executivo</strong>.',
-    22: u'<strong>Entrou no app em 09/11/2026</strong> (AV-EF, lote 1, e a parte de configuração e emissão do AV-EV). <strong>Faixa provisória: o módulo inteiro em M1</strong>, até a decisão de escopo. Pelo critério, a cadeia mínima do crédito fecha sem ele: o efeito do evento chega ao crédito pelo reflexo da Receita Federal e do Comitê Gestor, que a conciliação e o PCONT já confrontam, e a divergência e a ausência viram ocorrência da família I. O módulo tira o operador do meio — mostra o que mudou no documento depois da emissão e pede o evento pelo ERP. A pergunta aberta é se a esteira, o estado por tributo, a confirmação por órgão e a divergência sem valor aplicado sobem ao M0: sobem se o piloto tiver volume de eventos que mude o crédito antes da apropriação. Os lotes 2 e 3 (documento, família I com alertas, reflexos em crédito e débito) ainda não estão no mapa.',
+    22: u'<strong>Entrou no app em 09/11/2026</strong> (AV-EF, lote 1, e a parte de configuração e emissão do AV-EV). <strong>Faixa provisória: o módulo inteiro em M1</strong>, até a decisão de escopo. Pelo critério, a cadeia mínima do crédito fecha sem ele: o efeito do evento chega ao crédito pelo reflexo da Receita Federal e do Comitê Gestor, que a conciliação e o PCONT já confrontam, e a divergência e a ausência viram ocorrência da família I. O módulo tira o operador do meio — mostra o que mudou no documento depois da emissão, recebe por arquivo o evento de quem ainda não integrou e pede o evento pelo ERP. A pergunta aberta é se a esteira, o estado por tributo, a confirmação por órgão e a divergência sem valor aplicado sobem ao M0: sobem se o piloto tiver volume de eventos que mude o crédito antes da apropriação. Os lotes 2 e 3 (documento, família I com alertas, reflexos em crédito e débito) ainda não estão no mapa.',
     19: u'Multiusuário interno é consequência de adoção. A exceção é o painel de acessos externos, que entrou no M0 junto com o acesso do fornecedor — e foi confirmado na revisão de 15/09. A gestão de usuários implementada em 26/10 trouxe o <strong>histórico do usuário</strong> e a <strong>redefinição de senha pelo administrador</strong>, as duas em M1 com o resto do módulo. O <strong>escopo por CNPJ</strong> (D-USR-05) também entra em M1, pelo critério: é multiusuário, e a cadeia do crédito fecha sem ele. O que a autenticação muda no M0 está na D20.',
 }
 
@@ -909,6 +909,10 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.14</div><div class="ver-desc">'
+  u'09/11/2026 \u2014 Base: <strong>Mapa v2.13, com 325 funcionalidades</strong>. Entra a <strong>importação de eventos por CSV</strong> '
+  u'no módulo 22, corrigida no app pela DV-11 do PRD de Eventos fiscais, em M1 como o resto do módulo: tira o operador do meio para quem ainda '
+  u'não integrou, e a cadeia mínima do crédito fecha sem ela. O M0 não muda.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v2.13</div><div class="ver-desc">'
   u'09/11/2026 \u2014 Base: <strong>Mapa v2.12, com 324 funcionalidades</strong>. Entram os pacotes <strong>AV-EV</strong> e '
   u'<strong>AV-EF</strong>, promovidos ao app depois de aprovados: 3 funcionalidades em Inconsistências (2 em M1 e 1 em M2) e o '
