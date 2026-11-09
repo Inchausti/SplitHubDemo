@@ -141,10 +141,10 @@ img, svg { max-width: 100%; height: auto; }
 
   <div class="meta-row">
     <div class="meta-item"><div class="meta-label">Produto</div><div class="meta-val">SplitHub</div></div>
-    <div class="meta-item"><div class="meta-label">Módulos</div><div class="meta-val">22 módulos</div></div>
+    <div class="meta-item"><div class="meta-label">Módulos</div><div class="meta-val">23 módulos</div></div>
     <div class="meta-item"><div class="meta-label">Funcionalidades</div><div class="meta-val" id="totalFeat">—</div></div>
     <div class="meta-item"><div class="meta-label">Base legal</div><div class="meta-val">LC 214/2025</div></div>
-    <div class="meta-item"><div class="meta-label">Atualizado em</div><div class="meta-val">Out/2026</div></div>
+    <div class="meta-item"><div class="meta-label">Atualizado em</div><div class="meta-val">Nov/2026</div></div>
   </div>
 
   <div class="ver-nav">
@@ -171,7 +171,7 @@ var TYPE_LABEL = {l:'Listagem',a:'Ação',r:'Risco/Inc.',g:'Analítico',c:'Confi
 var TYPE_CLASS = {l:'ft-l',a:'ft-a',r:'ft-r',g:'ft-g',c:'ft-c',p:'ft-p'};
 
 var GROUPS = [
-  {num:'Operacional',title:'Gestão e operação fiscal',mods:[0,1,2,3,4,5,15,16,21,20]},
+  {num:'Operacional',title:'Gestão e operação fiscal',mods:[0,1,2,3,4,5,15,16,21,22,20]},
   {num:'Analítico',title:'Inteligência e planejamento',mods:[6,7,17]},
   {num:'Gestão',title:'Cadastros e organização',mods:[8,9,10,13,14,18,19]},
   {num:'Portais',title:'Acesso externo e infraestrutura',mods:[11,12]},
@@ -449,6 +449,15 @@ var MODS = [
       {n:'Filtro de família e de tipo no kanban', t:'l',
        d:'O quadro passa a filtrar por família, com a contagem de cada uma, e por tipo dentro da família escolhida — antes separava só por fluxo e prioridade.',
        p:'prd-inconsistencias.html#s03'},
+      {n:'Evento fiscal ou nota de ajuste como ação',t:'a',
+       d:'A inconsistência oferece as 18 opções de evento da Reforma ou de nota de ajuste, com a sugestão em destaque, como ação ou como resolução. A ocorrência se resolve pelo documento fiscal, não só por um registro de correção.',
+       p:'!prd-inconsistencias.html'},
+      {n:'Prévia do efeito antes de pedir o evento',t:'g',
+       d:'Mostra, por tributo, o crédito e o débito antes e depois do evento, antes de a solicitação sair. Ninguém pede um evento sem ver o que ele faz no saldo.',
+       p:'!prd-inconsistencias.html'},
+      {n:'Inconsistência acompanha a solicitação do evento',t:'r',
+       d:'A ocorrência segue o estado do evento ou da nota pedida e só se resolve com o reflexo da Receita Federal e do Comitê Gestor.',
+       p:'!prd-inconsistencias.html'},
 ]
   },
   /* 5 */ {
@@ -1226,6 +1235,57 @@ var MODS = [
       {n:'Auditoria das ações',t:'l',
        d:'Trilha encadeada por hash de tudo que muda o estado do módulo — tela, API e sistema —, com quem, antes e depois e motivo; filtros, integridade e CSV.',
        p:'prd-pcont.html#f-20'},
+    ]
+  },
+  /* 22 */ {
+    icon:'🧾', name:'Eventos fiscais', scope:'Cliente · Fiscal',
+    mc:'var(--cyan)', ml:'var(--cyan-d)', md:'var(--txt1)',
+    feats:[
+      {n:'Esteira de eventos fiscais',t:'l',
+       d:'Os eventos recebidos pela API ou por CSV, com indicadores, e as abas Esteira, Ações pendentes, Por documento e Ausências. É onde o analista vê o que mudou no documento depois da emissão.',
+       p:'-'},
+      {n:'Estado por tributo, sem somar CBS e IBS',t:'r',
+       d:'Cada evento mostra o estado da CBS e o do IBS em linhas separadas: a Receita Federal confirma um, o Comitê Gestor confirma o outro, e um não fecha o outro.',
+       p:'-'},
+      {n:'Filtros e busca da esteira',t:'l',
+       d:'Recorte por tipo de evento, situação, órgão, competência e documento, com busca pela chave.',
+       p:'-'},
+      {n:'Detalhe do evento em quatro fases',t:'l',
+       d:'Capturado, planejado, aguardando o órgão e executado, com o crédito antes, o previsto e o vigente por tributo. O previsto nunca soma ao vigente.',
+       p:'-'},
+      {n:'Confirmação por órgão',t:'r',
+       d:'O que cada órgão precisa confirmar, campo a campo, com o valor esperado e a última leitura. O atributo vale na autorização; o valor, só no reflexo do órgão.',
+       p:'-'},
+      {n:'Divergência sem valor aplicado',t:'r',
+       d:'Quando a leitura do órgão diverge do esperado, nada é aplicado ao crédito: o evento fica em divergência e abre a ocorrência da família I.',
+       p:'-'},
+      {n:'Ausências do evento esperado',t:'r',
+       d:'Documento que deveria ter evento e não tem, depois da espera de 30 dias. Antes do prazo, é processamento normal do órgão.',
+       p:'-'},
+      {n:'Cancelamento e eventos de atributo',t:'a',
+       d:'O cancelamento pelo 110001 e os eventos que mudam atributo do documento, sem mover valor, tratados à parte dos que mudam o crédito.',
+       p:'-'},
+      {n:'Payload, revisão e exportação do evento',t:'a',
+       d:'O evento no formato da API, a marcação para revisão e a exportação, para conferir com o ERP o que foi recebido.',
+       p:'-'},
+      {n:'Pedido de evento no detalhe do documento',t:'a',
+       d:'O evento fiscal ou a nota de ajuste também saem do detalhe do DF e do RF, sem precisar de uma inconsistência aberta.',
+       p:'-'},
+      {n:'Emissão pelo ERP por webhook',t:'c',
+       d:'O SplitHub prepara e comanda; o ERP do cliente emite. Os comandos fiscal_event.requested e adjustment_note.requested saem por webhook, e o retorno volta pela API.',
+       p:'-'},
+      {n:'Nota de ajuste com aceite, rejeição e cancelamento',t:'a',
+       d:'A nota pedida pode ser aceita, rejeitada ou cancelada pelo 110001, e cada desfecho volta à inconsistência e ao documento.',
+       p:'-'},
+      {n:'Ajuste na trilha e na decomposição de valores',t:'l',
+       d:'O ajuste executado aparece na trilha do documento e na decomposição dos valores, com quem pediu, quando e por quê.',
+       p:'-'},
+      {n:'Configuração de eventos fiscais',t:'c',
+       d:'Configurações › Eventos fiscais: solicitações, modo de emissão, qualidade de serviço, webhooks e trilha de configuração.',
+       p:'-'},
+      {n:'Transmissão direta à SEFAZ',t:'c',
+       d:'Alternativa ao ERP, por CNPJ: o SplitHub transmite o evento com a credencial da organização, depois do termo de responsabilidade.',
+       p:'-'},
     ]
   },
 ];
