@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detalhe do documento fiscal: três estruturas — Proposta · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; --sombra:rgba(0,0,0,.12); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --sombra:rgba(0,0,0,.4); } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --sombra:rgba(0,0,0,.4); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.back { display: inline-flex; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 760px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.meta-fim { margin-left: auto; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+td strong { color: var(--txt1); }
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); overflow-wrap: anywhere; }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+th.num { text-align: right; }
+td.bom { color: var(--green); font-weight: 600; }
+td.mau { color: var(--red); font-weight: 600; }
+.src { font-size: 11px; color: var(--txt3); }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.foot { margin-top: 40px; font-size: 11.5px; color: var(--txt3); }
+
+/* cartões de resumo */
+.ess { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 14px 0; }
+.ess-c { border: 1px solid var(--brd); border-radius: 12px; padding: 12px 14px; background: var(--sur); min-width: 0; }
+.ess-k { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--teal); }
+.ess-k.mau { color: var(--red); }
+.ess-t { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 4px 0; }
+.ess-d { font-size: 12.5px; color: var(--txt2); line-height: 1.45; }
+
+/* maquetes de estrutura */
+.wf-cap { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 22px 0 6px; }
+.wf-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 7px; border-radius: 4px; }
+.wf-nome { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.wf-onde { font-size: 11.5px; color: var(--txt3); }
+.wf { border: 1px solid var(--brd); border-radius: 10px; background: var(--sur2); padding: 10px; margin: 8px 0 6px; font-size: 11px; line-height: 1.45; color: var(--txt2); min-width: 0; }
+.wf-hdr { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; padding: 7px 10px; margin-bottom: 8px; }
+.wf-hdr b { color: var(--txt1); font-size: 12px; }
+.wf-acts { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.wf-btn { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 5px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); white-space: nowrap; }
+.wf-btn.pri { background: var(--blue); border-color: var(--blue); color: var(--sur); }
+.wf-cols { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 7fr); gap: 8px; align-items: start; }
+.wf-duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-items: start; }
+.wf-faixa { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; padding: 7px 10px; margin-bottom: 8px; }
+.wf-faixa span { white-space: nowrap; }
+.wf-faixa b { color: var(--txt1); font-weight: 600; }
+.wf-b { background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; padding: 8px 10px; min-width: 0; margin-bottom: 8px; }
+.wf-col > .wf-b:last-child { margin-bottom: 0; }
+.wf-b.novo, .wf-faixa.novo { border-color: var(--teal); box-shadow: inset 3px 0 0 var(--teal); }
+.wf-k.sub { margin-top: 8px; }
+.wf-b.prob { border-color: var(--red); box-shadow: inset 3px 0 0 var(--red); }
+.wf-k { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 5px; display: flex; gap: 4px 8px; justify-content: space-between; flex-wrap: wrap; }
+.wf-k i { font-style: normal; text-transform: none; letter-spacing: 0; color: var(--red); }
+.wf-k i.n { color: var(--teal); }
+.wf-r { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; border-bottom: 1px dashed var(--brd); }
+.wf-r:last-child { border-bottom: none; }
+.wf-r b { color: var(--txt1); font-weight: 600; white-space: nowrap; }
+.wf-ln { height: 6px; border-radius: 3px; background: var(--brd); margin: 6px 0; }
+.wf-ln.w9 { width: 90%; } .wf-ln.w7 { width: 70%; } .wf-ln.w5 { width: 50%; }
+.wf-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--brd); margin-bottom: 8px; overflow-x: auto; }
+.wf-tabs span { font-size: 10.5px; padding: 5px 8px; white-space: nowrap; border-bottom: 2px solid transparent; color: var(--txt2); }
+.wf-tabs span.on { color: var(--blue); border-color: var(--blue); font-weight: 700; }
+.wf-tabs.quebra { flex-wrap: wrap; overflow-x: visible; }
+.wf-fold { position: relative; border-top: 2px dashed var(--amber); margin: 14px 0 10px; }
+.wf-fold span { position: absolute; right: 0; top: -10px; font-size: 9.5px; font-weight: 700; color: var(--amber); background: var(--sur2); padding: 0 6px; white-space: nowrap; }
+.wf-nota { font-size: 11.5px; color: var(--txt3); margin: 4px 0 14px; }
+.tg { display: inline-block; font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 10px; white-space: nowrap; background: var(--gray-d); color: var(--gray); }
+.tg.ok { background: var(--green-d); color: var(--green); }
+.tg.am { background: var(--amber-d); color: var(--amber); }
+.tg.red { background: var(--red-d); color: var(--red); }
+.tg.inf { background: var(--blue-d); color: var(--blue); }
+.wf-tw { overflow-x: auto; border: 1px solid var(--brd); border-radius: 6px; background: var(--sur); }
+table.ev { font-size: 10.5px; }
+table.ev th { font-size: 9px; padding: 6px 7px; text-transform: none; letter-spacing: 0; }
+table.ev td { padding: 6px 7px; color: var(--txt2); }
+table.ev td b { color: var(--txt1); font-weight: 600; }
+table.ev td small { display: block; color: var(--txt3); font-size: 9.5px; }
+table.ev.compacta { min-width: 520px; }
+table.ev.larga { min-width: 1000px; }
+.wf-corte { position: relative; }
+.wf-corte::after { content: 'fora da área visível →'; position: absolute; top: 0; bottom: 0; left: 64%; right: 0; background: var(--red-d); border-left: 2px dashed var(--red); color: var(--red); font-size: 9.5px; font-weight: 700; display: flex; align-items: flex-start; justify-content: center; padding-top: 6px; pointer-events: none; }
+
+/* ao lado: a mesma proposta no celular */
+.par { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 14px; align-items: start; }
+.cel { border: 2px solid var(--brd); border-radius: 18px; padding: 12px 8px; background: var(--sur2); margin-top: 8px; font-size: 10.5px; line-height: 1.4; color: var(--txt2); }
+.cel-t { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); text-align: center; margin-bottom: 8px; }
+.cel .wf-b { padding: 6px 8px; margin-bottom: 6px; }
+.cel .wf-tabs span { font-size: 9.5px; padding: 4px 6px; }
+
+/* prós e contras */
+.pc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 12px 0; }
+.pc-c { border: 1px solid var(--brd); border-radius: 10px; padding: 12px 14px; background: var(--sur); min-width: 0; }
+.pc-c h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.pc-c.ganha h4 { color: var(--green); } .pc-c.perde h4 { color: var(--red); }
+.pc-c ul { margin: 0 0 0 16px; display: flex; flex-direction: column; gap: 4px; }
+.pc-c li { font-size: 12.5px; color: var(--txt2); }
+.pc-c li strong { color: var(--txt1); }
+
+/* decisões */
+.dec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 14px 16px; margin: 12px 0; scroll-margin-top: 20px; }
+.dec-h { display: flex; gap: 8px 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; }
+.dec-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.dec-q { font-size: 13.5px; font-weight: 700; color: var(--txt1); flex: 1; min-width: 200px; }
+.dec p { margin-bottom: 8px; }
+.decide { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.opt { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--txt1); cursor: pointer; border: 1px solid var(--brd); border-radius: 20px; padding: 4px 12px; }
+.opt:has(input:checked) { border-color: var(--teal); background: var(--teal-d); }
+.opt .rec { font-size: 10px; font-weight: 700; color: var(--teal); }
+.obs { width: 100%; font: inherit; font-size: 12.5px; color: var(--txt1); background: var(--bg); border: 1px solid var(--brd); border-radius: 6px; padding: 7px 10px; resize: vertical; min-height: 34px; }
+.barra { position: sticky; bottom: 12px; margin-top: 24px; background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; box-shadow: 0 8px 24px var(--sombra); }
+.barra span { font-size: 12.5px; color: var(--txt2); margin-right: auto; }
+.btn { font: inherit; font-size: 12.5px; font-weight: 700; border-radius: 6px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--brd); background: var(--sur2); color: var(--txt1); }
+.btn.pri { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+textarea.saida { width: 100%; min-height: 150px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 12px; margin-top: 10px; display: none; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível quebra dentro do
+   próprio bloco; bloco largo rola dentro do seu container, nunca no body. */
+ul.plain li, ol.plain li { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 860px) {
+  .par { grid-template-columns: minmax(0, 1fr); }
+  .cel { max-width: 240px; }
+}
+@media (max-width: 640px) {
+  body { padding: 28px 16px 60px; }
+  h1 { font-size: 23px; }
+  .meta-fim { margin-left: 0; }
+  .doc, .section { overflow-wrap: anywhere; }
+  .wf-cols, .wf-duo, .pc { grid-template-columns: minmax(0, 1fr); }
+  .wf-acts { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="../prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Documentos fiscais</div>
+<h1>Detalhe do documento fiscal: três estruturas</h1>
+<p class="subtitle">Com o lote 2 de Eventos fiscais, o detalhe do documento ganhou duas abas e ficou comprido demais. As abas ficam abaixo da dobra, e a tabela de eventos esconde a CBS, o IBS e a ocorrência. Este documento traz três jeitos de reorganizar a tela, para escolher um. Nada muda nos dados, nas regras nem na API.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">10/11/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Base</span><span class="meta-val"><a class="xref" href="../prd-credito.html#f-10">Crédito, F-10</a> e <a class="xref" href="../prd-eventos-fiscais.html#f-20">Eventos fiscais, F-20</a></span></div>
+<div class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">5</span></div>
+<div class="meta-pill meta-fim"><span class="chip warn">Em decisão</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> O que está hoje</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> O que vale para as três</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Proposta A · Abas no topo</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Proposta B · Resumo por tributo e abas logo abaixo</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Proposta C · Uma faixa por tributo</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Lado a lado</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Recomendação e entrega</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Decisões</a></li>
+</ul></div>
+
+<!-- 01 -->
+<div class="section" id="s01"><div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O que está hoje</span></div>
+<p>Medido em 10/11/2026, no protótipo, abrindo a NF-e 000091 a partir de Crédito › Documentos Fiscais. Ela tem 2 eventos fiscais, 1 ocorrência aberta e 30 registros no histórico. O detalhe abre como janela sobre a lista. À esquerda fica a coluna do documento. A coluna da direita tem, nesta ordem, a partição CBS × IBS, os ajustes do documento e as abas.</p>
+
+<div class="wf-cap"><span class="wf-id">HOJE</span><span class="wf-nome">Detalhe do documento fiscal</span><span class="wf-onde">1440 × 900 · a linha tracejada é onde a tela acaba</span></div>
+<div class="wf">
+  <div class="wf-hdr"><b>NF-e 000091</b><span>Sulpar Implementos S.A. · 17/05/2026</span><span class="wf-acts"><span class="wf-btn">Abrir contestação</span><span class="wf-btn">✕</span></span></div>
+  <div class="wf-cols">
+    <div class="wf-col">
+      <div class="wf-b"><div class="wf-k">Documento fiscal</div><div class="wf-r"><span>Tipo</span><b>Entrada</b></div><div class="wf-r"><span>Emitente</span><b>Sulpar</b></div><div class="wf-r"><span>Crédito</span><b>CBS · IBS</b></div></div>
+      <div class="wf-b"><div class="wf-k">Chave DF</div><div class="wf-ln w9"></div></div>
+      <div class="wf-b"><div class="wf-k">Contrato</div><div class="wf-ln w7"></div><div class="wf-ln w5"></div></div>
+      <div class="wf-b"><div class="wf-k">Inconsistências vinculadas</div><div class="wf-r"><span>INC-0074</span><span class="tg am">aberta</span></div><div class="wf-r"><span>INC-0111</span><span class="tg am">aberta</span></div></div>
+    </div>
+    <div class="wf-col">
+      <div class="wf-b"><div class="wf-k">Partição CBS × IBS <i>744 px · 22 linhas</i></div>
+        <div class="wf-r"><span>Tributo apurado</span><b>R$ 80.000,00 · R$ 100.000,00</b></div>
+        <div class="wf-r"><span>A apropriar · Disponível · Utilizado · …</span><b>10 parcelas</b></div>
+        <div class="wf-r"><span>Situação · Datas · Recolhimento e leitura</span><b>9 linhas</b></div>
+        <div class="wf-ln w9"></div><div class="wf-ln w7"></div><div class="wf-ln w9"></div><div class="wf-ln w5"></div>
+      </div>
+      <div class="wf-fold"><span>a tela acaba aqui</span></div>
+      <div class="wf-b"><div class="wf-k">Ajustes do documento <i>bloco solto</i></div><div class="wf-ln w9"></div><div class="wf-ln w7"></div></div>
+      <div class="wf-b prob"><div class="wf-k">Abas <i>982 px abaixo do topo · quebram em duas linhas</i></div>
+        <div class="wf-tabs quebra"><span>Histórico do ciclo · 30</span><span>Apuração assistida · CBS</span><span>Apuração assistida · IBS</span><span class="on">Eventos fiscais 2</span><span>Linha do tempo fiscal</span></div>
+        <div class="wf-tw wf-corte"><table class="ev larga"><thead><tr><th>Evento</th><th>Autor · autorização</th><th>Alcance</th><th>Efeito previsto</th><th>Fase da ação</th><th>CBS · Receita Federal</th><th>IBS · Comitê Gestor</th><th>Ocorrência</th></tr></thead>
+        <tbody><tr><td><b>211128</b> Aceite de débito…</td><td>Destinatário</td><td>documento</td><td>CBS −R$ 8.000,00</td><td>divergente</td><td>conciliado</td><td>divergente</td><td>INC-0111 · IBS</td></tr></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="table-wrap"><table><thead><tr><th>Largura</th><th class="num">Onde começam as abas</th><th class="num">Altura visível</th><th class="num">Tabela de eventos</th></tr></thead><tbody>
+<tr><td><strong>1440 × 900</strong>, desktop</td><td class="num">982 px</td><td class="num">726 px</td><td class="num">1.090 px numa aba de 699 px</td></tr>
+<tr><td><strong>768 × 1024</strong>, tablet</td><td class="num">1.025 px</td><td class="num">835 px</td><td class="num">1.090 px numa aba de 387 px</td></tr>
+<tr><td><strong>375 × 812</strong>, celular, colunas empilhadas</td><td class="num">1.769 px</td><td class="num">597 px</td><td class="num">rola na horizontal</td></tr>
+</tbody></table></div>
+
+<div class="ess">
+<div class="ess-c"><div class="ess-k mau">1 · Abas escondidas</div><div class="ess-t">Ninguém vê que há abas</div><div class="ess-d">Nas três larguras, as abas começam depois do fim da tela. Quem abre o documento vê a partição e não sabe que embaixo há eventos, histórico e apuração assistida. Foi o que fez a aba nova parecer que não existia.</div></div>
+<div class="ess-c"><div class="ess-k mau">2 · Eventos cortados</div><div class="ess-t">A confirmação do órgão fica fora</div><div class="ess-d">A tabela de eventos tem oito colunas. As três que ficam para fora são as que importam: CBS · Receita Federal, IBS · Comitê Gestor e Ocorrência.</div></div>
+<div class="ess-c"><div class="ess-k mau">3 · Partição longa</div><div class="ess-t">744 px antes de qualquer outra coisa</div><div class="ess-d">São 22 linhas. Nesta nota, 8 das 10 parcelas estão vazias nos dois tributos, e mesmo assim cada uma ocupa a sua linha.</div></div>
+<div class="ess-c"><div class="ess-k mau">4 · Ajustes soltos</div><div class="ess-t">O efeito fica longe da causa</div><div class="ess-d">Os ajustes do documento ficam num bloco entre a partição e as abas, separados dos eventos e das notas que os produzem.</div></div>
+</div>
+<p>Há ainda a aba vazia: dos 40 documentos da lista de Crédito, 26 não têm evento nenhum, e a aba Eventos fiscais aparece sem conteúdo. Isso é tratado na D-DF-04.</p>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s02"><div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O que vale para as três</span></div>
+<ul class="plain">
+<li><strong>Os dados não mudam.</strong> O cabeçalho, as ações, os campos, as regras e a API ficam como estão. As propostas só mudam onde cada coisa aparece.</li>
+<li><strong>CBS · Receita Federal e IBS · Comitê Gestor ficam sempre separados.</strong> Nenhum elemento novo soma os dois tributos. Cada um tem o seu órgão, o seu prazo e a sua confirmação.</li>
+<li><strong>Abas numa linha só.</strong> Os rótulos ficam curtos e com contagem: <em>Histórico · 30</em>, <em>Apuração · CBS</em>, <em>Apuração · IBS</em>, <em>Eventos · 2</em>, <em>Linha do tempo</em>. A barra fica presa no topo ao rolar, e no celular ela rola na horizontal.</li>
+<li><strong>A tabela de eventos fica compacta</strong>, com cinco colunas em vez de oito e largura de 520 px:
+  <ul class="plain">
+  <li>o autor, a data e o alcance passam para baixo do nome do evento;</li>
+  <li>a fase da ação passa para baixo do efeito previsto;</li>
+  <li>a CBS, o IBS e a ocorrência ficam sempre à vista.</li>
+  </ul>
+  Abaixo de 640 px, cada evento vira um cartão. Isso é a D-DF-02.</li>
+</ul>
+<div class="wf-cap"><span class="wf-id">COMUM</span><span class="wf-nome">Tabela de eventos compacta</span><span class="wf-onde">cabe na coluna de 699 px com folga</span></div>
+<div class="wf-tw"><table class="ev compacta"><thead><tr><th>Evento</th><th>Efeito previsto</th><th>CBS · Receita Federal</th><th>IBS · Comitê Gestor</th><th>Ocorrência</th></tr></thead><tbody>
+<tr><td><b>211128</b> Aceite de débito por emissão de nota de crédito<small>EV-000404 · Destinatário · 25/10 · documento</small></td><td>CBS −R$ 8.000,00<br>IBS −R$ 10.000,00<small>fase: divergente</small></td><td><span class="tg ok">conciliado</span></td><td><span class="tg red">divergente</span><small>previsto R$ 90.000,00 · lido R$ 95.000,00</small></td><td>INC-0111 · IBS</td></tr>
+<tr><td><b>211110</b> Solicitação de apropriação de crédito presumido<small>EV-000403 · Destinatário · 07/11 · item 1</small></td><td>CBS +R$ 8.000,00<br>IBS +R$ 10.000,00<small>fase: aguardando</small></td><td><span class="tg am">aguardando</span></td><td><span class="tg am">aguardando</span></td><td>—</td></tr>
+</tbody></table></div>
+<p class="wf-nota">Valores de exemplo, redondos. A nota real tem outros valores.</p>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s03"><div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Proposta A · Abas no topo</span></div>
+<p class="sec-sub">A menor mudança. A coluna da direita passa a ser só abas. A partição e os ajustes viram as duas primeiras.</p>
+<div class="par">
+<div>
+<div class="wf-cap"><span class="wf-id">A</span><span class="wf-nome">Abas no topo da coluna da direita</span><span class="wf-onde">1440 × 900</span></div>
+<div class="wf">
+  <div class="wf-hdr"><b>NF-e 000091</b><span>Sulpar Implementos S.A. · 17/05/2026</span><span class="wf-acts"><span class="wf-btn">Abrir contestação</span><span class="wf-btn">✕</span></span></div>
+  <div class="wf-cols">
+    <div class="wf-col">
+      <div class="wf-b"><div class="wf-k">Documento fiscal</div><div class="wf-r"><span>Tipo</span><b>Entrada</b></div><div class="wf-r"><span>Crédito</span><b>CBS · IBS</b></div></div>
+      <div class="wf-b"><div class="wf-k">Chave DF · Contrato</div><div class="wf-ln w9"></div><div class="wf-ln w7"></div></div>
+      <div class="wf-b"><div class="wf-k">Inconsistências vinculadas</div><div class="wf-r"><span>INC-0074</span><span class="tg am">aberta</span></div><div class="wf-r"><span>INC-0111</span><span class="tg am">aberta</span></div></div>
+    </div>
+    <div class="wf-col">
+      <div class="wf-b novo"><div class="wf-k">Abas no topo, presas ao rolar <i class="n">sempre à vista</i></div>
+        <div class="wf-tabs"><span class="on">Partição</span><span>Ajustes</span><span>Histórico · 30</span><span>Apuração · CBS</span><span>Apuração · IBS</span><span>Eventos · 2</span><span>Linha do tempo</span></div>
+        <div class="wf-r"><span>Tributo apurado</span><b>R$ 80.000,00 · R$ 100.000,00</b></div>
+        <div class="wf-r"><span>Parcelas, situação, datas, recolhimento</span><b>22 linhas, como hoje</b></div>
+        <div class="wf-ln w9"></div><div class="wf-ln w7"></div><div class="wf-ln w9"></div>
+      </div>
+      <div class="wf-fold"><span>a tela acaba aqui</span></div>
+      <div class="wf-b"><div class="wf-k">O resto da partição</div><div class="wf-ln w7"></div><div class="wf-ln w5"></div></div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="cel"><div class="cel-t">No celular</div>
+  <div class="wf-b"><div class="wf-k">NF-e 000091 · Sulpar</div><div class="wf-ln w7"></div></div>
+  <div class="wf-b"><div class="wf-k">Documento <i class="n">recolhido</i></div><div class="wf-ln w5"></div></div>
+  <div class="wf-b novo"><div class="wf-tabs"><span class="on">Partição</span><span>Ajustes</span><span>Histórico</span><span>…</span></div><div class="wf-ln w9"></div><div class="wf-ln w7"></div></div>
+</div>
+</div>
+<div class="pc">
+<div class="pc-c ganha"><h4>Ganha</h4><ul>
+<li>As abas ficam <strong>à vista ao abrir</strong>, nas três larguras.</li>
+<li>A rolagem passa a ser só a da aba aberta. A mais longa é o Histórico, com cerca de 2.400 px.</li>
+<li>Reaproveita a troca de abas que já existe (<code>shDetalhe.alternar</code>). Não há componente novo.</li>
+</ul></div>
+<div class="pc-c perde"><h4>Perde</h4><ul>
+<li>A partição e os eventos <strong>nunca aparecem juntos</strong>. Para comparar o efeito previsto com a parcela, é preciso trocar de aba.</li>
+<li>Sete abas em 740 px é o limite. Qualquer aba nova vai para a rolagem horizontal.</li>
+<li>A primeira coisa que se vê continua sendo a tabela de 22 linhas, com as parcelas vazias.</li>
+</ul></div>
+</div>
+<p><strong>Celular:</strong> a coluna do documento vira um bloco recolhido acima, e a barra de abas fica presa no topo da janela. <strong>Esforço:</strong> baixo.</p>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s04"><div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Proposta B · Resumo por tributo e abas logo abaixo</span></div>
+<p class="sec-sub">A coluna da direita abre com dois cartões, um por tributo, com o que se lê em cinco segundos. Logo abaixo vêm as abas. A partição completa vira uma delas, e os ajustes vão para a aba de eventos.</p>
+<div class="par">
+<div>
+<div class="wf-cap"><span class="wf-id">B</span><span class="wf-nome">Resumo CBS · IBS e abas</span><span class="wf-onde">1440 × 900 · aberta na aba de eventos, porque há divergência</span></div>
+<div class="wf">
+  <div class="wf-hdr"><b>NF-e 000091</b><span>Sulpar Implementos S.A. · 17/05/2026</span><span class="wf-acts"><span class="wf-btn">Abrir contestação</span><span class="wf-btn">✕</span></span></div>
+  <div class="wf-cols">
+    <div class="wf-col">
+      <div class="wf-b"><div class="wf-k">Documento fiscal</div><div class="wf-r"><span>Tipo</span><b>Entrada</b></div><div class="wf-r"><span>Crédito</span><b>CBS · IBS</b></div></div>
+      <div class="wf-b"><div class="wf-k">Chave DF · Contrato</div><div class="wf-ln w9"></div><div class="wf-ln w7"></div></div>
+      <div class="wf-b"><div class="wf-k">Inconsistências vinculadas</div><div class="wf-r"><span>INC-0074</span><span class="tg am">aberta</span></div><div class="wf-r"><span>INC-0111</span><span class="tg am">aberta</span></div></div>
+    </div>
+    <div class="wf-col">
+      <div class="wf-duo">
+        <div class="wf-b novo"><div class="wf-k">CBS · Receita Federal <span class="tg ok">Disponível</span></div>
+          <div class="wf-r"><span>Tributo apurado</span><b>R$ 80.000,00</b></div>
+          <div class="wf-r"><span>Ajustes aplicados</span><b>−R$ 8.000,00</b></div>
+          <div class="wf-r"><span>Aguardando o órgão</span><b>+R$ 8.000,00</b></div>
+          <div class="wf-r"><span>Disponível</span><b>R$ 72.000,00</b></div>
+          <div class="wf-r"><span>Apropriação · limite art. 54</span><b>15/08 · —</b></div>
+          <div class="wf-r"><span>Split Payment · consulta diária</span><b>Ver RF →</b></div>
+        </div>
+        <div class="wf-b novo"><div class="wf-k">IBS · Comitê Gestor <span class="tg inf">Em ressarcimento</span></div>
+          <div class="wf-r"><span>Tributo apurado</span><b>R$ 100.000,00</b></div>
+          <div class="wf-r"><span>Ajustes aplicados</span><b>—</b></div>
+          <div class="wf-r"><span>Aguardando o órgão</span><b>+R$ 10.000,00</b></div>
+          <div class="wf-r"><span>Em pedido de ressarcimento</span><b>R$ 100.000,00</b></div>
+          <div class="wf-r"><span>Divergência</span><b><span class="tg red">INC-0111 · IBS</span></b></div>
+          <div class="wf-r"><span>Split Payment · arquivo diário</span><b>Ver RF →</b></div>
+        </div>
+      </div>
+      <div class="wf-b novo"><div class="wf-k">Abas, presas ao rolar <i class="n">a cerca de 260 px do topo</i></div>
+        <div class="wf-tabs"><span class="on">Eventos · 2</span><span>Partição completa</span><span>Histórico · 30</span><span>Apuração · CBS</span><span>Apuração · IBS</span><span>Linha do tempo</span></div>
+        <div class="wf-r"><span>Ajustes do documento, por tributo</span><span class="wf-btn pri">Emitir evento ou nota</span></div>
+        <div class="wf-tw"><table class="ev compacta"><thead><tr><th>Evento</th><th>Efeito previsto</th><th>CBS · Receita Federal</th><th>IBS · Comitê Gestor</th><th>Ocorrência</th></tr></thead><tbody>
+        <tr><td><b>211128</b><small>EV-000404 · documento</small></td><td>−R$ 8.000,00 · −R$ 10.000,00</td><td><span class="tg ok">conciliado</span></td><td><span class="tg red">divergente</span></td><td>INC-0111 · IBS</td></tr>
+        </tbody></table></div>
+        <div class="wf-fold"><span>a tela acaba aqui</span></div>
+        <div class="wf-ln w7"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="cel"><div class="cel-t">No celular</div>
+  <div class="wf-b"><div class="wf-k">NF-e 000091 · Sulpar</div><div class="wf-ln w7"></div></div>
+  <div class="wf-b novo"><div class="wf-k">CBS · Receita Federal</div><div class="wf-r"><span>Disponível</span><b>R$ 72.000,00</b></div></div>
+  <div class="wf-b novo"><div class="wf-k">IBS · Comitê Gestor</div><div class="wf-r"><span>Ressarcimento</span><b>R$ 100.000,00</b></div></div>
+  <div class="wf-b novo"><div class="wf-tabs"><span class="on">Eventos · 2</span><span>Partição</span><span>…</span></div><div class="wf-ln w9"></div></div>
+  <div class="wf-b"><div class="wf-k">Documento <i class="n">recolhido</i></div><div class="wf-ln w5"></div></div>
+</div>
+</div>
+<div class="pc">
+<div class="pc-c ganha"><h4>Ganha</h4><ul>
+<li>A leitura rápida <strong>sem rolar</strong>: a situação de cada tributo, o valor, o prazo e se há divergência.</li>
+<li>Os cartões mostram só as parcelas que têm valor. A partição completa, com as 22 linhas, fica a um clique.</li>
+<li>Os ajustes ficam junto dos eventos e das notas que os produzem, e o botão <em>Emitir evento ou nota</em> fica no mesmo lugar.</li>
+<li>CBS e IBS ficam lado a lado, sem soma.</li>
+</ul></div>
+<div class="pc-c perde"><h4>Perde</h4><ul>
+<li>As parcelas aparecem em dois lugares, no cartão e na partição completa. Os dois precisam ler a mesma fonte.</li>
+<li>Quem procura uma parcela vazia, como <em>Suspenso</em>, precisa abrir a partição completa.</li>
+<li>Dá mais trabalho que A: o cartão por tributo é um componente novo.</li>
+</ul></div>
+</div>
+<p><strong>Celular:</strong> os dois cartões empilham, CBS primeiro e IBS depois. As abas vêm logo abaixo, e a coluna do documento vai para o fim, recolhida. <strong>Esforço:</strong> médio.</p>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s05"><div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Proposta C · Uma faixa por tributo</span></div>
+<p class="sec-sub">A mudança maior, e a que segue mais de perto a regra do produto. Em vez de colunas por tipo de informação, a tela tem uma faixa por tributo. Cada faixa conta tudo o que aquele órgão disse sobre o documento.</p>
+<div class="par">
+<div>
+<div class="wf-cap"><span class="wf-id">C</span><span class="wf-nome">Faixas CBS e IBS, histórico embaixo</span><span class="wf-onde">1440 × 900 · janela mais larga, sem a coluna da esquerda</span></div>
+<div class="wf">
+  <div class="wf-hdr"><b>NF-e 000091</b><span>Sulpar Implementos S.A. · 17/05/2026</span><span class="wf-acts"><span class="wf-btn">Emitir evento ou nota</span><span class="wf-btn">Abrir contestação</span><span class="wf-btn">✕</span></span></div>
+  <div class="wf-faixa novo"><span><b>Entrada</b></span><span>CNPJ 14.382.976/0001-09</span><span>Chave 3526…0120</span><span>Contrato <b>CT-0003</b></span><span class="tg am">2 inconsistências</span></div>
+  <div class="wf-duo">
+    <div class="wf-b novo"><div class="wf-k">CBS · Receita Federal <span class="tg ok">Disponível</span></div>
+      <div class="wf-r"><span>Tributo apurado</span><b>R$ 80.000,00</b></div>
+      <div class="wf-r"><span>Disponível</span><b>R$ 72.000,00</b></div>
+      <div class="wf-r"><span>Apropriação · limite art. 54</span><b>15/08 · —</b></div>
+      <div class="wf-k sub">Eventos, pela Receita Federal</div>
+      <div class="wf-r"><span>211128 · −R$ 8.000,00</span><span class="tg ok">conciliado</span></div>
+      <div class="wf-r"><span>211110 · +R$ 8.000,00</span><span class="tg am">aguardando</span></div>
+      <div class="wf-k sub">Apuração assistida</div>
+      <div class="wf-r"><span>RF-00000182</span><b>Ver RF →</b></div>
+    </div>
+    <div class="wf-b novo"><div class="wf-k">IBS · Comitê Gestor <span class="tg inf">Em ressarcimento</span></div>
+      <div class="wf-r"><span>Tributo apurado</span><b>R$ 100.000,00</b></div>
+      <div class="wf-r"><span>Em pedido de ressarcimento</span><b>R$ 100.000,00</b></div>
+      <div class="wf-r"><span>Apropriação · limite art. 54</span><b>15/08 · —</b></div>
+      <div class="wf-k sub">Eventos, pelo Comitê Gestor</div>
+      <div class="wf-r"><span>211128 · −R$ 10.000,00</span><span class="tg red">divergente · INC-0111</span></div>
+      <div class="wf-r"><span>211110 · +R$ 10.000,00</span><span class="tg am">aguardando</span></div>
+      <div class="wf-k sub">Apuração assistida</div>
+      <div class="wf-r"><span>RF-00000181</span><b>Ver RF →</b></div>
+    </div>
+  </div>
+  <div class="wf-fold"><span>a tela acaba aqui</span></div>
+  <div class="wf-b"><div class="wf-tabs"><span class="on">Histórico · 30</span><span>Linha do tempo</span><span>Eventos · 2, detalhados</span></div><div class="wf-ln w9"></div><div class="wf-ln w7"></div></div>
+</div>
+</div>
+<div class="cel"><div class="cel-t">No celular</div>
+  <div class="wf-b"><div class="wf-k">NF-e 000091 · Sulpar</div><div class="wf-ln w7"></div></div>
+  <div class="wf-tabs"><span class="on">CBS</span><span>IBS</span><span>Histórico</span></div>
+  <div class="wf-b novo"><div class="wf-k">CBS · Receita Federal</div><div class="wf-r"><span>Disponível</span><b>R$ 72.000,00</b></div><div class="wf-r"><span>211128</span><span class="tg ok">conciliado</span></div><div class="wf-ln w7"></div></div>
+</div>
+</div>
+<div class="pc">
+<div class="pc-c ganha"><h4>Ganha</h4><ul>
+<li>A tela segue a regra do produto: <strong>cada tributo tem o seu órgão, o seu prazo e o seu caminho</strong>. A confirmação e a ocorrência de cada tributo ficam na faixa dele.</li>
+<li>A apuração assistida deixa de ser duas abas e entra na faixa de cada tributo.</li>
+<li>A janela mais larga dá espaço ao histórico e à linha do tempo, que são do documento e não de um tributo.</li>
+</ul></div>
+<div class="pc-c perde"><h4>Perde</h4><ul>
+<li>É a <strong>maior mudança</strong>: o detalhe inteiro é refeito, e o F-10 do PRD de Crédito muda junto.</li>
+<li>O mesmo evento aparece duas vezes, uma em cada faixa, com o autor e o alcance repetidos. O detalhe do evento vai para uma aba própria.</li>
+<li>Sai a coluna da esquerda, e com ela a lista de inconsistências à vista. Ficam a contagem na faixa e o link.</li>
+<li>No celular as faixas viram abas, CBS e IBS, e a comparação lado a lado some.</li>
+</ul></div>
+</div>
+<p><strong>Celular:</strong> as faixas viram as duas primeiras abas, e o histórico vem depois. <strong>Esforço:</strong> alto.</p>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s06"><div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Lado a lado</span></div>
+<div class="table-wrap"><table><thead><tr><th>Critério</th><th>Hoje</th><th>A · Abas no topo</th><th>B · Resumo e abas</th><th>C · Faixa por tributo</th></tr></thead><tbody>
+<tr><td><strong>Abas à vista ao abrir, em 1440 × 900</strong></td><td class="mau">não, a 982 px</td><td class="bom">sim, no topo</td><td class="bom">sim, a cerca de 260 px</td><td>só o histórico, abaixo das faixas</td></tr>
+<tr><td><strong>Situação de cada tributo sem rolar</strong></td><td>sim, na tabela de 22 linhas</td><td>só na aba Partição</td><td class="bom">sim, nos cartões</td><td class="bom">sim, nas faixas</td></tr>
+<tr><td><strong>Confirmação de cada órgão à vista</strong></td><td class="mau">não, fora da tabela</td><td>sim, na aba Eventos</td><td class="bom">sim, abre na aba Eventos quando há pendência</td><td class="bom">sim, em cada faixa</td></tr>
+<tr><td><strong>Partição e eventos juntos</strong></td><td>com rolagem</td><td class="mau">não</td><td class="bom">resumo e eventos juntos</td><td class="bom">sim</td></tr>
+<tr><td><strong>Ajustes junto dos eventos</strong></td><td class="mau">não</td><td>aba própria</td><td class="bom">sim</td><td class="bom">sim, por tributo</td></tr>
+<tr><td><strong>Inconsistências vinculadas à vista</strong></td><td class="bom">sim</td><td class="bom">sim</td><td class="bom">sim</td><td>contagem e link</td></tr>
+<tr><td><strong>Celular</strong></td><td class="mau">abas a 1.769 px</td><td>abas no topo</td><td>cartões, depois abas</td><td>CBS e IBS viram abas</td></tr>
+<tr><td><strong>Esforço</strong></td><td>—</td><td class="bom">baixo</td><td>médio</td><td class="mau">alto</td></tr>
+<tr><td><strong>PRDs que mudam</strong></td><td>—</td><td>Crédito F-10</td><td>Crédito F-10, Eventos fiscais F-20</td><td>Crédito F-10 refeito, Eventos fiscais F-20</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s07"><div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Recomendação e entrega</span></div>
+<div class="callout ok"><div class="ct">Recomendada: B</div><p>A B resolve os quatro problemas medidos sem desmontar a tela que o usuário já conhece. Os cartões dão a leitura CBS × IBS lado a lado que a C busca, sem repetir cada evento duas vezes. A A é a saída se a prioridade for entregar já: resolve as abas escondidas e a tabela cortada, mas deixa a partição como a primeira coisa da tela. A C só compensa se o produto for organizar outras telas por tributo também, como o registro fiscal e a conciliação.</p></div>
+<ul class="plain">
+<li><strong>Como entra:</strong> como pacote de avaliação, com flag própria e o detalhe atual mantido para comparar. Vai para o app só com a sua aprovação, como os outros pacotes.</li>
+<li><strong>Testes:</strong> abrir o documento a partir de Crédito, Inconsistências, Eventos fiscais e Conciliação, nas três larguras. Conferir que a página não rola na horizontal e que a tabela de eventos cabe.</li>
+<li><strong>Documentação, na promoção:</strong> o F-10 do PRD de Crédito e o F-20 do PRD de Eventos fiscais. O mapa de funcionalidades não muda, porque nenhuma funcionalidade entra nem sai.</li>
+</ul>
+</div>
+
+<!-- 08 -->
+<div class="section" id="s08"><div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Decisões</span></div>
+<p>Marque uma opção em cada decisão e use "Copiar escolhas" para mandar o resultado. A primeira opção é a recomendada.</p>
+<div id="decisoes">
+<div class="dec" data-dec="D-DF-01"><div class="dec-h"><span class="dec-id">D-DF-01</span><span class="dec-q">Estrutura do detalhe</span></div><p>Qual das três propostas segue para o pacote de avaliação.</p><div class="decide"><label class="opt"><input type="radio" name="D-DF-01" value="B · Resumo por tributo e abas logo abaixo"> B · Resumo por tributo <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DF-01" value="A · Abas no topo"> A · Abas no topo</label><label class="opt"><input type="radio" name="D-DF-01" value="C · Uma faixa por tributo"> C · Faixa por tributo</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DF-02"><div class="dec-h"><span class="dec-id">D-DF-02</span><span class="dec-q">Tabela de eventos</span></div><p>Na compacta, o autor, o alcance e a fase passam para dentro das células e as cinco colunas cabem em 520 px. Na outra opção, as oito colunas ficam, a primeira fica presa e o resto rola na horizontal.</p><div class="decide"><label class="opt"><input type="radio" name="D-DF-02" value="Compacta, cinco colunas, cartão no celular"> Compacta, cinco colunas <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DF-02" value="Oito colunas, primeira presa e rolagem"> Oito colunas com rolagem</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DF-03"><div class="dec-h"><span class="dec-id">D-DF-03</span><span class="dec-q">Onde ficam os ajustes do documento</span></div><p>O quadro de ajustes, com o valor no XML, os ajustes aplicados, o que aguarda o órgão e o valor ajustado, mais o botão <em>Emitir evento ou nota</em>.</p><div class="decide"><label class="opt"><input type="radio" name="D-DF-03" value="No topo da aba Eventos fiscais"> No topo da aba Eventos <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DF-03" value="Nos cartões ou faixas de cada tributo"> No cartão de cada tributo</label><label class="opt"><input type="radio" name="D-DF-03" value="Como hoje, bloco próprio"> Como hoje</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DF-04"><div class="dec-h"><span class="dec-id">D-DF-04</span><span class="dec-q">Aba de eventos em documento sem evento</span></div><p>Hoje, 26 dos 40 documentos da lista de Crédito abrem com a aba vazia. Se os ajustes forem para essa aba (D-DF-03), ela é também onde se emite o primeiro evento, e por isso precisa aparecer sempre.</p><div class="decide"><label class="opt"><input type="radio" name="D-DF-04" value="Sempre aparece, com estado vazio e o botão Emitir evento ou nota"> Sempre, com estado vazio <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DF-04" value="Só aparece com evento ou ausência"> Só com evento</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DF-05"><div class="dec-h"><span class="dec-id">D-DF-05</span><span class="dec-q">Aba de abertura</span></div><p>Qual aba abre primeiro. Com pendência, a de Eventos abre quando há evento divergente, ocorrência da família I ou evento ausente. Sem pendência, abre o histórico, ou a Partição na proposta A.</p><div class="decide"><label class="opt"><input type="radio" name="D-DF-05" value="A que tem pendência; senão, a primeira"> A que tem pendência <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DF-05" value="Sempre a primeira"> Sempre a primeira</label><label class="opt"><input type="radio" name="D-DF-05" value="A última aberta pelo usuário"> A última aberta</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+</div>
+<div class="barra"><span id="cont">0 de 5 decididas</span><button class="btn" type="button" onclick="recomendadas()">Marcar as recomendadas</button><button class="btn pri" type="button" onclick="copiar()">Copiar escolhas</button></div>
+<textarea class="saida" id="saida" readonly></textarea>
+</div>
+
+<div class="foot">Proposta v1.0 · 10/11/2026 · medidas do protótipo em 10/11/2026, NF-e 000091; valores das maquetes de exemplo.</div>
+</div>
+<script>
+(function () {
+  var decs = document.querySelectorAll('[data-dec]');
+  function contar() {
+    var n = 0;
+    decs.forEach(function (d) { if (d.querySelector('input:checked')) n++; });
+    document.getElementById('cont').textContent = n + ' de ' + decs.length + ' decididas';
+  }
+  document.getElementById('decisoes').addEventListener('change', contar);
+  window.recomendadas = function () {
+    decs.forEach(function (d) { var r = d.querySelector('input[type=radio]'); if (r && !d.querySelector('input:checked')) r.checked = true; });
+    contar();
+  };
+  window.copiar = function () {
+    var out = ['Proposta Detalhe do documento fiscal v1.0: escolhas'];
+    decs.forEach(function (d) {
+      var r = d.querySelector('input:checked'), o = d.querySelector('textarea');
+      out.push(d.getAttribute('data-dec') + ': ' + (r ? r.value : 'sem escolha') + (o && o.value.trim() ? ' (' + o.value.trim() + ')' : ''));
+    });
+    var s = out.join('\n'), ta = document.getElementById('saida');
+    ta.value = s; ta.style.display = 'block';
+    var aviso = function (t) { document.getElementById('cont').textContent = t; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(s).then(function () { aviso('Escolhas copiadas.'); }).catch(function () { aviso('Copie o texto abaixo.'); ta.select(); });
+    } else { aviso('Copie o texto abaixo.'); ta.select(); }
+  };
+})();
+</script>
+</body>
+</html>
