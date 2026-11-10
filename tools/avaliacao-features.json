@@ -1,6 +1,6 @@
 {
   "versao": "1.1",
-  "atualizado": "09/11/2026",
+  "atualizado": "10/11/2026",
   "integracao": "avaliacao",
   "app": {
     "branch": "master",
@@ -802,6 +802,197 @@
           "limites": "",
           "decisao": "aprovado",
           "obs": "Aprovado em 09/11/2026: o lote 1 do módulo de eventos fiscais sobe ao app a pedido do usuário."
+        }
+      ]
+    },
+    {
+      "id": "AV-E2",
+      "nome": "Eventos fiscais — lote 2: documento, ocorrências, alertas e estados",
+      "branch": "feat/eventos-lote2",
+      "depende": [
+        "AV-00"
+      ],
+      "registro": "src/js/eventos-lote2.js",
+      "flags": {
+        "eventos_documento": "Detalhe do DF com as abas Eventos fiscais e Linha do tempo fiscal (T-03)",
+        "eventos_inconsistencias": "Família I em Inconsistências, uma ocorrência por tributo, e o contexto de eventos em Integrações",
+        "eventos_alertas": "Aba Alertas de competência em Inconsistências (D-14)",
+        "eventos_estados": "Não atribuível, revertida, aguardando documento e as solicitações do AV-EV na esteira"
+      },
+      "principal": "eventos_documento",
+      "situacao": "em_avaliacao",
+      "promovido": null,
+      "proposta": "prd-eventos-fiscais.html",
+      "resumo": "Lote 2 do módulo de eventos fiscais, sobre a esteira do AV-EF e o pedido de evento do AV-EV: o documento com as abas de eventos e a linha do tempo (T-03), a família I em Inconsistências com a aba de alertas de competência (T-08), os estados não atribuível, revertida e aguardando documento com a fila de órfãos, e as solicitações do AV-EV na esteira. Atende às DV-13, 15, 21, 22, 24, 28 e 32 do PRD de Eventos fiscais. As DV-09, 19, 29, 33 e 34 continuam em aberto e o app fica como está nelas. Os exemplos são gerados sobre as NF-e da base; os códigos citados nos testes são os de 10/11/2026. O lote 3 traz os reflexos em crédito, débito, PCONT e conciliação.",
+      "itens": [
+        {
+          "id": "AV-E2-01",
+          "flag": "eventos_documento",
+          "titulo": "Aba Eventos fiscais no detalhe do documento",
+          "construido": "O detalhe do DF ganha a aba Eventos fiscais, ao lado do histórico do ciclo: um evento por linha, na ordem da autorização, com o autor, o alcance (item ou documento, só informação), o efeito previsto por tributo, a fase da ação e uma coluna para a CBS e outra para o IBS, no vocabulário do documento — conciliado, aguardando, divergente (previsto · observado), sem reflexo, não atribuível, sem saldo a mover, não aplicável. A última coluna traz a ocorrência de cada tributo e, com os alertas ligados, o alerta de competência. A ausência esperada também aparece. O contador da aba mostra as ocorrências abertas.",
+          "onde": "Detalhe de qualquer NF-e › aba Eventos fiscais · ou o botão Ver documento no detalhe do evento",
+          "testar": [
+            "Em Apuração Assistida › Eventos fiscais, abra o EV-000404 e clique em Ver documento: a NF-e 000091 abre direto na aba, com o 211128 divergente no IBS e o 211110 aguardando.",
+            "Confira que a CBS e o IBS ficam em colunas separadas e que o clique na ocorrência abre o card em Inconsistências.",
+            "Abra um documento com um evento cancelado ou revertido e veja as duas linhas, a execução e a reversão."
+          ],
+          "atende": "Telas v1.3 · T-03; DV-24",
+          "limites": "A aba Itens fica fora: a primeira versão não segmenta por item (D-02).",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E2-02",
+          "flag": "eventos_documento",
+          "titulo": "Linha do tempo fiscal",
+          "construido": "Segunda aba nova no detalhe do DF: a vida do documento, mais recente primeiro, com quatro marcadores — círculo cheio para o evento fiscal (ato da SEFAZ, da Receita Federal ou do Comitê Gestor), círculo vazado para o evento do produto, losango vazado para a ação planejada e losango cheio para a ação executada. Junta os eventos do produto que o histórico do ciclo já mostrava aos eventos fiscais, às ações e às confirmações de cada órgão.",
+          "onde": "Detalhe de qualquer NF-e › aba Linha do tempo fiscal",
+          "testar": [
+            "Na NF-e 000091, abra a Linha do tempo fiscal e siga o 211128: autorizado, planejado, CBS confirmada pela Receita Federal e IBS com valor diferente do previsto.",
+            "Clique numa linha de evento: o detalhe do evento abre."
+          ],
+          "atende": "Telas v1.3 · T-03; DV-24",
+          "limites": "",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E2-03",
+          "flag": "eventos_inconsistencias",
+          "titulo": "Família I · Eventos fiscais em Inconsistências",
+          "construido": "Cinco tipos novos no catálogo, na família I: valor divergente no órgão, evento não refletido (a janela da CBS fechou sem movimento), reflexo não atribuível (informativa, uma por documento e leitura), evento esperado que não chegou (depois da espera de 30 dias) e evento sem documento além do prazo. Sempre uma ocorrência por tributo, porque são dois órgãos e dois caminhos. O card mostra o evento de origem, com o esperado e o lido, e os caminhos de volta ao evento e ao documento.",
+          "onde": "Inconsistências › Kanban e Listagem · filtro de família I · Eventos fiscais",
+          "testar": [
+            "Filtre o Kanban pela família I: as ocorrências de eventos aparecem com a CBS e o IBS separados.",
+            "Abra uma ocorrência e confira o bloco Evento fiscal de origem, antes das ações sugeridas.",
+            "Confira a não atribuível: prioridade baixa e uma só ocorrência para os dois eventos da mesma leitura."
+          ],
+          "atende": "D-13; dossiê 7.6; telas v1.3 · T-08",
+          "limites": "Os tipos entram no inc-catalogo.js; o Catálogo de Inconsistências Possíveis não muda, porque os tipos de evento ficam no dossiê. A expiração do alerta não abre ocorrência (DA-01 em aberto).",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E2-04",
+          "flag": "eventos_inconsistencias",
+          "titulo": "Do aviso de divergência à ocorrência",
+          "construido": "O aviso de divergência no detalhe do evento passa a dizer qual ocorrência foi aberta, uma por tributo, com o link para o card. Antes, o aviso só mandava acompanhar pelo indicador Divergentes.",
+          "onde": "Detalhe do evento divergente · faixa vermelha",
+          "testar": [
+            "Abra o EV-000404 e clique na etiqueta da ocorrência do IBS: o detalhe fecha e o card abre em Inconsistências."
+          ],
+          "atende": "DV-22",
+          "limites": "",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E2-05",
+          "flag": "eventos_inconsistencias",
+          "titulo": "Ausência vencida abre a ocorrência",
+          "construido": "Na aba Ausências, a ausência que passou da espera de 30 dias abre a ocorrência direto, em vez do painel da ausência. O painel continua para as que estão dentro da espera, e mostra os links da ocorrência quando a espera vence.",
+          "onde": "Eventos fiscais › aba Ausências",
+          "testar": [
+            "Clique na ausência AUS-05, com 36 dias: abre o card da ocorrência da CBS.",
+            "Clique numa ausência dentro da espera: abre o painel, com a contagem de dias."
+          ],
+          "atende": "DV-13",
+          "limites": "",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E2-06",
+          "flag": "eventos_inconsistencias",
+          "titulo": "Sétimo contexto da API em Integrações",
+          "construido": "Integrações ganha o contexto Eventos fiscais, bidirecional: as rotas POST /v1/fiscal-events, POST /v1/fiscal-events/batch e GET /v1/fiscal-events/{id}, os webhooks fiscal_event.requested, adjustment_note.requested, fiscal_event.authorized e fiscal_event.rejected, e os escopos fiscal_events:write e fiscal_events:read.",
+          "onde": "Configurações › Integrações › Nova conexão",
+          "testar": [
+            "Abra Nova conexão e confira o contexto Eventos fiscais no grupo Bidirecional.",
+            "Filtre as conexões pelo tipo Eventos fiscais."
+          ],
+          "atende": "DV-28",
+          "limites": "Os escopos são uma proposta: a especificação da API ainda não os define. A referência pública aponta para em breve, porque os docs da plataforma ainda não têm a rota.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E2-07",
+          "flag": "eventos_alertas",
+          "titulo": "Aba Alertas de competência",
+          "construido": "Nova aba em Inconsistências para o evento que mexe em apuração já fechada: chegou depois do fechamento (C-2), confirmou depois do fechamento (C-3) ou reverteu depois do fechamento (C-4). Um alerta por evento e período, com a CBS e o IBS em colunas separadas e \"já apurado\" no tributo que confirmou antes. Indicadores de abertos, impacto na CBS e no IBS (nunca somados), janela fechando em até 7 dias e fora da janela. Ações por período — refazer a apuração dentro da janela, encaminhar para retificação fora dela — e por alerta, assumir e manter com justificativa obrigatória. Nada reabre sozinho.",
+          "onde": "Inconsistências › aba Alertas",
+          "testar": [
+            "Confira os três exemplos: outubro/2026 com C-2 e C-3 dentro da janela, setembro/2026 com C-4 fora da janela.",
+            "Clique em Refazer a apuração de outubro/2026 e depois em Registrar a apuração refeita: os dois alertas se fecham.",
+            "Abra o AL-001 e tente encaminhar sem texto: o produto pede a justificativa."
+          ],
+          "atende": "D-14; proposta de alertas v1.0; telas v1.3 · T-08",
+          "limites": "O fechamento é simulado no dia 3 do mês seguinte enquanto a DA-02 não decide de onde vem a data. A causa C-1 (112150) espera a C-06 e a DV-34. O alerta fora da janela não vira ocorrência (DA-01). A apuração refeita é registrada aqui, sem integração com o PCONT, que fica no lote 3.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E2-08",
+          "flag": "eventos_estados",
+          "titulo": "Não atribuível, com os outros eventos da janela",
+          "construido": "Quando dois eventos do mesmo documento confirmam na mesma leitura da Receita Federal, a CBS fecha o montante, mas não diz quanto é de cada um. O estado não atribuível aplica o valor em montante e registra a ambiguidade. O aviso lista os outros eventos do documento na janela de 8 dias da CBS, com o estado de cada um. No IBS, o extrato do Comitê Gestor confirma evento a evento.",
+          "onde": "Eventos fiscais › filtro de estado › não atribuível · detalhe do evento",
+          "testar": [
+            "Abra o EV-000432: o aviso mostra o montante e o EV-000433 na mesma janela.",
+            "Clique em Ler a Receita Federal: se dois eventos do mesmo documento confirmarem juntos, o aviso da leitura conta os que fecharam em montante."
+          ],
+          "atende": "DV-15; DV-21",
+          "limites": "",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E2-09",
+          "flag": "eventos_estados",
+          "titulo": "Revertida: cancelar o que já foi executado",
+          "construido": "O 110001 sobre um evento já executado deixa de ser recusado (cancel_after_execution): ele reverte o evento, leva o valor aplicado de volta e espera o órgão de cada tributo como qualquer valor. A esteira guarda as duas linhas. No CSV do modelo M8, a recusa vira aviso (reversal_after_execution).",
+          "onde": "Eventos fiscais › filtro de estado › revertida · detalhe do evento",
+          "testar": [
+            "Abra o EV-000434, revertido pelo EV-000435: a CBS já voltou e o IBS aguarda o Comitê Gestor.",
+            "Abra o EV-000435 e confira a faixa azul com o valor que volta."
+          ],
+          "atende": "DV-15",
+          "limites": "",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E2-10",
+          "flag": "eventos_estados",
+          "titulo": "Aguardando documento e fila de órfãos",
+          "construido": "O evento cuja chave ainda não está na base deixa de ser recusado (document_not_found): entra na fila de órfãos e espera o documento por 30 dias. Uma aba nova mostra a fila com a espera de cada um. Passados os 30 dias, abre uma ocorrência por tributo. No detalhe, um botão simula a chegada do documento: o evento é correlacionado pela chave, entra na data da autorização e aparece no documento como capturado com atraso.",
+          "onde": "Eventos fiscais › aba Fila de órfãos",
+          "testar": [
+            "Abra a fila: o EV-000436 está dentro da espera e o EV-000437 já passou, com as ocorrências da CBS e do IBS.",
+            "No EV-000436, clique em Simular a chegada do documento: ele sai da fila e passa a planejado.",
+            "Importe o CSV de exemplo: a última linha tem uma chave nova, entra com o aviso awaiting_document e vai para a fila."
+          ],
+          "atende": "DV-15; C-12",
+          "limites": "A espera de 30 dias é a mesma da ausência (D-EV-05); a DV-33 continua em aberto.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E2-11",
+          "flag": "eventos_estados",
+          "titulo": "Solicitações do AV-EV na esteira",
+          "construido": "O evento que o SplitHub pede a partir de uma ocorrência (pacote AV-EV) entra na esteira quando é autorizado, com o request_id e a inconsistência de origem. Uma aba nova mostra as solicitações em andamento, com o caminho, a situação e o evento correspondente. O reflexo vale nos dois sentidos: a confirmação do órgão na esteira fecha o ajuste da solicitação, e o reflexo marcado no AV-EV executa o tributo na esteira.",
+          "onde": "Eventos fiscais › aba Solicitações",
+          "testar": [
+            "Em Inconsistências, abra a ocorrência da AUS-05, peça o 211128 e espere a autorização.",
+            "Na aba Solicitações, confira a linha com a inconsistência e o evento novo na esteira.",
+            "Clique em Ler a Receita Federal até a CBS confirmar: a solicitação passa a aplicada."
+          ],
+          "atende": "DV-32",
+          "limites": "",
+          "decisao": "pendente",
+          "obs": ""
         }
       ]
     }
