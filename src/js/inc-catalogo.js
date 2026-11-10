@@ -8,7 +8,8 @@
    "Tipo Inconsistência" oferecia oito rótulos de origem que o mapeamento já
    havia convertido — nenhuma das opções alcançava uma linha sequer.
 
-   Aqui ficam os 21 tipos em 6 famílias. Todo módulo que cria ocorrência lê
+   Aqui ficam os 31 tipos em 7 famílias (a I, dos eventos fiscais, desde o
+   lote 2 do módulo de eventos). Todo módulo que cria ocorrência lê
    daqui, e o filtro da listagem e o do kanban são montados a partir daqui.
    Acrescentar tipo é acrescentar uma linha em TIPOS — nada mais.
    ========================================================================== */
@@ -30,7 +31,11 @@
     ressarcimento:{ ordem: 5, letra: 'E', label: 'Ressarcimento',             cor: '--teal',
                     desc: 'Intenção, pedido, decisão e recebimento fora do esperado.' },
     integracao:   { ordem: 6, letra: 'F', label: 'Integração',                cor: '--gray',
-                    desc: 'O evento não chegou ao sistema do cliente depois de esgotada a retentativa.' }
+                    desc: 'O evento não chegou ao sistema do cliente depois de esgotada a retentativa.' },
+    /* D-13 (30/09/2026): a família dos eventos fiscais. Os tipos ativos ficam no
+       dossiê, seção 7.6; aqui entram os que o produto abre (lote 2, pacote AV-E2) */
+    eventos:      { ordem: 7, letra: 'I', label: 'Eventos fiscais',           cor: '--status-orange',
+                    desc: 'O evento fiscal não se confirmou no órgão do tributo, ou o órgão moveu o que nenhum evento explica.' }
   };
 
   /* ── tipos ──────────────────────────────────────────────────────────────
@@ -104,7 +109,20 @@
 
     /* F — integração */
     integracao_erp:        { familia: 'integracao', tributo: null,  origem: 'integracao-erp', gerado: true,
-                             label: 'Integração ao ERP falhou' }
+                             label: 'Integração ao ERP falhou' },
+
+    /* I — eventos fiscais (dossiê 7.6). Sempre uma por tributo: o tributo da
+       ocorrência é o do órgão que não confirmou (D-22, RN-INC-01) */
+    evt_valor_divergente:  { familia: 'eventos',    tributo: null,  origem: 'eventos', gerado: true,
+                             label: 'Evento com valor divergente no órgão' },
+    evt_nao_refletido:     { familia: 'eventos',    tributo: null,  origem: 'eventos', gerado: true,
+                             label: 'Evento não refletido pelo órgão' },
+    evt_nao_atribuivel:    { familia: 'eventos',    tributo: 'CBS', origem: 'eventos', gerado: true,
+                             label: 'Reflexo não atribuível a um evento' },
+    evt_ausente:           { familia: 'eventos',    tributo: null,  origem: 'eventos', gerado: true,
+                             label: 'Evento esperado que não chegou' },
+    evt_documento_ausente: { familia: 'eventos',    tributo: null,  origem: 'eventos', gerado: true,
+                             label: 'Evento sem documento além do prazo' }
   };
 
   /* ── rótulos de origem que a base sintética ainda emite ──────────────────

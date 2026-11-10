@@ -4578,6 +4578,8 @@ window.renderizarRFsInconsistencias = function() {
   try { if (window.shRes && window.shRes.inconsistencias) window.shRes.inconsistencias(incGlobal); } catch (e) {}
   // Parcialidade: cada divergência por tributo vira card, ligado ao DF e ao RF (js/parcialidade.js)
   try { if (window.shParcial && window.shParcial.inconsistencias) window.shParcial.inconsistencias(incGlobal); } catch (e) { console.error('[parcialidade] inconsistências', e); }
+  // Eventos fiscais, lote 2: família I — uma ocorrência por tributo (js/eventos-lote2.js)
+  try { if (window.shEvmL2 && window.shEvmL2.inconsistencias) window.shEvmL2.inconsistencias(incGlobal); } catch (e) { console.error('[eventos] inconsistências', e); }
 
   // Cada módulo escrevia a família com vocabulário próprio — 'glosa',
   // 'apuracao', 'integracao' — e os tipos do núcleo não escreviam nenhuma.

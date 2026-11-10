@@ -24,6 +24,11 @@
        existe no catálogo de Inconsistências
    Pacote AV-EF, atrás da flag eventos_modulo (features.js, pacote AV-00).
    A rota é #/eventos — #/eventos-fiscais já é a configuração do AV-EV.
+   Lote 2 (pacote AV-E2, js/eventos-lote2.js): os ganchos L2() abaixo dão
+   lugar aos estados novos (não atribuível, revertida, aguardando documento),
+   às ocorrências da família I e às solicitações do AV-EV. Com o pacote
+   desligado, nenhum deles muda o que esta tela faz: os estados novos só
+   existem em dado que o lote 2 cria.
    ═══════════════════════════════════════════════════════════════════════════ */
 /* @pacote — o estado das flags é reescrito por tools/avaliacao.py promover */
 window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais — esteira e detalhe", "branch": "feat/modulo-eventos", "entrada": "#/eventos", "flags": {"eventos_modulo": "aprovada"}, "rotulos": {"eventos_modulo": "A esteira de eventos recebidos e o detalhe com a confirmação por órgão"}, "alvos": {"eventos_modulo": ["#nav-eventos-btn", "#view-eventos"]}});
@@ -33,6 +38,8 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
 
   var FLAG = 'eventos_modulo';
   function on() { return !window.shFeature || shFeature.ligada(FLAG); }
+  // o lote 2 responde por flag: eventos_documento, eventos_inconsistencias, eventos_alertas, eventos_estados
+  function L2(f) { var x = window.shEvmL2; return x && x.on(f) ? x : null; }
 
   /* ── utilitários ──────────────────────────────────────────────────────── */
   function esc(s) {
@@ -138,6 +145,8 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
   };
   var TRIBS = ['CBS', 'IBS'];
   var ESTADOS = ['capturada', 'planejada', 'aguardando', 'executada', 'divergente', 'ausente', 'cancelada'];
+  var ESTADOS_L2 = ['nao_atribuivel', 'revertida', 'aguardando_documento'];   // DV-15, no lote 2
+  function estados() { return L2('eventos_estados') ? ESTADOS.concat(ESTADOS_L2) : ESTADOS; }
   var ESPERA_AUSENCIA = 30; // dias — alinhada à conciliação da apuração assistida (D-EV-05)
 
   /* ── Estado ───────────────────────────────────────────────────────────── */
@@ -280,6 +289,8 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
       ST.ausentes.push({ id: 'AUS-' + p2(i + 1), cod: a.cod, lado: a.lado, nf: nf.numero, entidade: nf.entidade, chave: nf.chaveDF,
         tribs: a.tribs, valores: v, desde: ult - a.dias * DIA, indicio: a.indicio(v), revisao: false, pedido: null });
     });
+    // lote 2: os exemplos dos estados novos e dos alertas, sobre documentos ainda não usados
+    if (window.shEvmL2) { try { window.shEvmL2.semear(INT, usados, agora); } catch (e) { console.error('[eventos lote 2] semear', e); } }
     encadear();
     ST.eventos.sort(function (a, b) { return b.capt - a.capt; });
     ST.ok = true;
@@ -299,7 +310,7 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
           var gap = x.observado == null ? null : x.observado - x.antes;
           x.antes = vig[t];
           if (gap != null) x.observado = x.antes + gap;
-          if (x.estado === 'executada' && !ev.canceladoPor && CAT[ev.cod].efeito === 'valor') vig[t] = x.antes + x.delta;
+          if (aplicado(x) && !ev.canceladoPor && movel(ev)) vig[t] = x.antes + x.delta;
         });
       });
     });
@@ -307,16 +318,24 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
 
   /* ── Estado do evento a partir dos tributos ───────────────────────────── */
   function tribsDo(ev) { return TRIBS.filter(function (t) { return ev.trib[t]; }); }
+  // move valor: os eventos de valor e, no lote 2, o 110001 que reverte um evento já executado
+  function movel(ev) { return CAT[ev.cod].efeito === 'valor' || !!ev.reverte; }
+  // não atribuível (lote 2): o montante fechou na leitura e foi aplicado; só a imputação a cada evento é que não
+  function aplicado(x) { return x.estado === 'executada' || x.estado === 'nao_atribuivel'; }
   function estadoEv(ev) {
     if (ev.canceladoPor) return 'cancelada';
+    if (ev.revertidoPor) return 'revertida';
+    if (ev.orfao) return 'aguardando_documento';
     var es = tribsDo(ev).map(function (t) { return ev.trib[t].estado; });
     if (es.indexOf('divergente') >= 0) return 'divergente';
+    if (es.indexOf('nao_atribuivel') >= 0) return 'nao_atribuivel';
     if (es.indexOf('capturada') >= 0) return 'capturada';
     if (es.every(function (e) { return e === 'executada'; })) return 'executada';
     if (es.indexOf('aguardando') >= 0) return 'aguardando';
     return 'planejada';
   }
-  var ROT_EST = { capturada: 'capturada', planejada: 'planejada', aguardando: 'aguardando', executada: 'executada', divergente: 'divergente', ausente: 'ausente', cancelada: 'cancelada' };
+  var ROT_EST = { capturada: 'capturada', planejada: 'planejada', aguardando: 'aguardando', executada: 'executada', divergente: 'divergente', ausente: 'ausente', cancelada: 'cancelada',
+    nao_atribuivel: 'não atribuível', revertida: 'revertida', aguardando_documento: 'aguardando documento' };
   function chip(e, trib) { return '<span class="evm-chip ' + e + '">' + (trib ? '<span class="evm-trib">' + trib + '</span>' : '') + ROT_EST[e] + '</span>'; }
   function chipsEv(ev) {
     var e = estadoEv(ev);
@@ -327,12 +346,11 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     return '<span class="evm-chips">' + ts.map(function (t) { return chip(ev.trib[t].estado, t); }).join('') + '</span>';
   }
   function efeitoEv(ev) {
-    var c = CAT[ev.cod];
-    if (ev.cod === '110001' || c.efeito === 'atributo') return 0;
+    if (!movel(ev)) return 0;
     return tribsDo(ev).reduce(function (s, t) { return s + ev.trib[t].delta; }, 0);
   }
   function acaoEv(ev) {
-    if (ev.cod === '110001') return 'Cancelar o ' + ev.cancela + ' — nada havia sido aplicado';
+    if (ev.cod === '110001') return ev.reverte ? 'Reverter o ' + ev.cancela + ' — devolver o valor já aplicado' : 'Cancelar o ' + ev.cancela + ' — nada havia sido aplicado';
     var c = CAT[ev.cod]; return (c.acao && c.acao[ev.lado]) || '—';
   }
   function serie(cod) { return String(cod).slice(0, 3); }
@@ -341,7 +359,8 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
   /* ── Linhas da esteira (eventos e ausências) ──────────────────────────── */
   function linhas() {
     var vis = {}; (window.nfListaFiltradaGlobal || nfs()).forEach(function (nf) { vis[nf.numero] = 1; });
-    var L = ST.eventos.filter(function (ev) { return vis[ev.nf]; }).map(function (ev) {
+    // o órfão (lote 2) ainda não tem documento: entra sem passar pelo filtro de documentos
+    var L = ST.eventos.filter(function (ev) { return vis[ev.nf] || ev.orfao; }).map(function (ev) {
       return { tipo: 'ev', ev: ev, id: ev.id, cod: ev.cod, nf: ev.nf, entidade: ev.entidade, lado: ev.lado, estado: estadoEv(ev),
         data: ev.capt, tribs: tribsDo(ev), autor: CAT[ev.cod].autor, canal: ev.canal };
     });
@@ -354,7 +373,7 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
   function filtrar(L) {
     var f = ST.f, q = (f.q || '').toLowerCase();
     return L.filter(function (l) {
-      if (ST.aba === 'pendentes' && ['planejada', 'aguardando', 'capturada'].indexOf(l.estado) < 0) return false;
+      if (ST.aba === 'pendentes' && ['planejada', 'aguardando', 'capturada', 'aguardando_documento'].indexOf(l.estado) < 0) return false;
       if (ST.aba === 'ausencias' && l.estado !== 'ausente') return false;
       if (ST.kpi === 'planejados' && ['planejada', 'aguardando'].indexOf(l.estado) < 0) return false;
       if (ST.kpi && ST.kpi !== 'planejados' && l.estado !== ST.kpi) return false;
@@ -440,7 +459,7 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
       + '<div class="sh-fp-panel" id="evm-f-corpo" style="display:' + (ST.fAberto ? 'block' : 'none') + '">'
       + '<div class="sh-fp-grid">'
       + '<div class="sh-fp-field"><label for="evm-f-cod">Tipo de evento</label><select id="evm-f-cod" onchange="shEvm.filtro(\'cod\',this.value)">' + tipos + '</select></div>'
-      + '<div class="sh-fp-field"><label for="evm-f-estado">Estado da ação</label><select id="evm-f-estado" onchange="shEvm.filtro(\'estado\',this.value)"><option value="">Todos</option>' + ESTADOS.map(function (e) { return opt(e, ROT_EST[e], f.estado); }).join('') + '</select></div>'
+      + '<div class="sh-fp-field"><label for="evm-f-estado">Estado da ação</label><select id="evm-f-estado" onchange="shEvm.filtro(\'estado\',this.value)"><option value="">Todos</option>' + estados().map(function (e) { return opt(e, ROT_EST[e], f.estado); }).join('') + '</select></div>'
       + '<div class="sh-fp-field"><label for="evm-f-trib">Tributo</label><select id="evm-f-trib" onchange="shEvm.filtro(\'trib\',this.value)"><option value="">Todos</option>' + opt('CBS', 'CBS — Receita Federal', f.trib) + opt('IBS', 'IBS — Comitê Gestor', f.trib) + '</select></div>'
       + '<div class="sh-fp-field"><label for="evm-f-lado">Documento</label><select id="evm-f-lado" onchange="shEvm.filtro(\'lado\',this.value)"><option value="">Entrada e saída</option>' + opt('entrada', 'Entrada — crédito', f.lado) + opt('saida', 'Saída — débito', f.lado) + '</select></div>'
       + '<div class="sh-fp-field"><label for="evm-f-autor">Autor</label><select id="evm-f-autor" onchange="shEvm.filtro(\'autor\',this.value)"><option value="">Todos</option>' + Object.keys(AUTOR).map(function (a) { return opt(a, AUTOR[a], f.autor); }).join('') + '</select></div>'
@@ -524,6 +543,8 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
       case 'tipo':
         return '<td><span class="evm-mono">' + l.cod + '</span> <span class="evm-small">' + (a ? 'esperado · ' : '') + esc(CAT[l.cod].nome) + '</span></td>';
       case 'doc':
+        if (ev && ev.orfao) return '<td><span class="evm-mono">' + esc(String(ev.chave || '').replace(/\D/g, '').slice(0, 4) + '…' + String(ev.chave || '').replace(/\D/g, '').slice(-4)) + '</span> <span class="evm-small">sem documento</span>'
+          + '<div class="evm-small">' + esc(l.entidade) + '</div></td>';
         return '<td><span class="evm-mono">' + esc(l.nf) + '</span>' + (a ? '' : ' <span class="evm-small">' + (l.lado === 'entrada' ? 'entrada' : 'saída') + '</span>')
           + '<div class="evm-small">' + esc(l.entidade) + '</div></td>';
       case 'acao':
@@ -546,25 +567,29 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     return '<td></td>';
   }
   function linhaEv(o, cols) {
-    var l = o._l, abre = l.tipo === 'aus' ? 'shEvm.ausencia(\'' + l.aus.id + '\')' : 'shEvm.detalhe(\'' + l.ev.id + '\')';
+    // DV-13 (lote 2): passada a espera, a ausência é ocorrência, e o clique abre a ocorrência
+    var oc = l2Ausencia(o._l);
+    var l = o._l, abre = l.tipo === 'aus' ? (oc || 'shEvm.ausencia(\'' + l.aus.id + '\')') : 'shEvm.detalhe(\'' + l.ev.id + '\')';
     return '<tr class="evm-linha ' + l.estado + '" tabindex="0" onclick="' + abre + '" onkeydown="if(event.key===\'Enter\')' + abre + '">'
       + cols.map(function (c) { return celula(c.key, l, o); }).join('') + '</tr>';
   }
+  function l2Ausencia(l) { var x = l.tipo === 'aus' && L2('eventos_inconsistencias'); return x ? x.abrirAusencia(l.aus) : null; }
 
   function porDocumento(L) {
     var g = {}, ordem = [];
     L.forEach(function (l) {
+      if (l.nf == null) return;   // órfão: ainda sem documento
       if (!g[l.nf]) { g[l.nf] = { nf: l.nf, entidade: l.entidade, lado: l.lado, ls: [] }; ordem.push(l.nf); }
       g[l.nf].ls.push(l);
     });
-    var peso = { ausente: 0, divergente: 1, capturada: 2, planejada: 3, aguardando: 4, executada: 5, cancelada: 6 };
+    var peso = { ausente: 0, divergente: 1, nao_atribuivel: 2, capturada: 2, planejada: 3, aguardando: 4, aguardando_documento: 4, revertida: 5, executada: 5, cancelada: 6 };
     return ordem.map(function (k) {
       var d = g[k], prev = { CBS: 0, IBS: 0 }, apl = { CBS: 0, IBS: 0 }, pior = 'cancelada', ult = 0;
       d.ls.forEach(function (l) {
         if (peso[l.estado] < peso[pior]) pior = l.estado;
         if (l.data > ult) ult = l.data;
-        if (l.tipo !== 'ev' || l.ev.canceladoPor || CAT[l.cod].efeito !== 'valor') return;
-        TRIBS.forEach(function (t) { var x = l.ev.trib[t]; if (!x) return; if (x.estado === 'executada') apl[t] += x.delta; else prev[t] += x.delta; });
+        if (l.tipo !== 'ev' || l.ev.canceladoPor || !movel(l.ev)) return;
+        TRIBS.forEach(function (t) { var x = l.ev.trib[t]; if (!x || x.estado === 'cancelada') return; if (aplicado(x)) apl[t] += x.delta; else prev[t] += x.delta; });
       });
       return '<tr class="evm-linha" tabindex="0" onclick="shEvm.doDocumento(\'' + esc(d.nf) + '\')" onkeydown="if(event.key===\'Enter\')shEvm.doDocumento(\'' + esc(d.nf) + '\')">'
         + '<td><span class="evm-mono">' + esc(d.nf) + '</span> <span class="evm-small">' + (d.lado === 'entrada' ? 'entrada · crédito' : 'saída · débito') + '</span><div class="evm-small">' + esc(d.entidade) + '</div></td>'
@@ -580,13 +605,19 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     var v = document.getElementById('view-eventos');
     if (!v || !on()) return;
     if (!semear()) { v.innerHTML = '<div class="evm-vazio">Os documentos ainda estão carregando. Abra a tela de novo em instantes.</div>'; return; }
+    // lote 2: as solicitações do AV-EV autorizadas entram como evento antes de montar a esteira (DV-32)
+    var ext = L2('eventos_estados');
+    if (ext) { try { ext.sincronizar(); } catch (e) { console.error('[eventos lote 2] sincronizar', e); } }
+    if (!ext && ['solicitacoes', 'orfaos'].indexOf(ST.aba) >= 0) ST.aba = 'esteira';
     var todas = linhas(), k = kpis(todas), L = filtrar(todas);
     var aba = function (id, rot) { return '<button class="atab' + (ST.aba === id ? ' active' : '') + '" onclick="shEvm.aba(\'' + id + '\')">' + rot + '</button>'; };
     var restam = ST.cota - ST.cotaUsada;
-    var tabela;
+    var tabela, extT = ext && ext.tabela(ST.aba);   // {html, n, titulo, sub} nas abas do lote 2
     if (ST.aba === 'documento') {
       tabela = '<table><thead><tr><th>Documento</th><th class="r">Eventos</th><th>Último</th><th class="r">Previsto CBS</th><th class="r">Previsto IBS</th><th class="r">Aplicado CBS</th><th class="r">Aplicado IBS</th><th>Pior estado</th></tr></thead><tbody>'
         + (L.length ? porDocumento(L) : '<tr><td colspan="8" class="evm-vazio">Nenhum documento com eventos neste filtro.</td></tr>') + '</tbody></table>';
+    } else if (extT) {
+      tabela = extT.html;
     } else {
       registrarColunas();
       var cols = colunas(), vis = cols.map(function (c) { return c.key; });
@@ -609,7 +640,8 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     var cmVivo = document.querySelector('#evm-col-toolbar > .sh-cm-controls');
     if (cmVivo) { cmNo = cmVivo; cmVivo.parentNode.removeChild(cmVivo); }
     v.innerHTML =
-      '<div class="analytics-tabs" role="tablist">' + aba('esteira', 'Esteira') + aba('pendentes', 'Ações pendentes') + aba('documento', 'Por documento') + aba('ausencias', 'Ausências') + '</div>'
+      '<div class="analytics-tabs" role="tablist">' + aba('esteira', 'Esteira') + aba('pendentes', 'Ações pendentes') + aba('documento', 'Por documento') + aba('ausencias', 'Ausências')
+      + (ext ? ext.abas().map(function (a) { return aba(a[0], a[1]); }).join('') : '') + '</div>'
       + '<div class="pg-hdr"><div class="evm-min0"><div class="pg-title">Eventos fiscais</div><div class="pg-sub">Eventos autorizados que o cliente envia pela API e por CSV, com a ação planejada de cada um e a confirmação de cada órgão</div></div>'
       + '<div class="evm-hdr-acoes">'
       + '<button class="evm-btn" onclick="shEvm.lerReceita()"' + (restam <= 0 ? ' disabled' : '') + ' title="' + (restam <= 0 ? 'Cota de leituras sob demanda esgotada hoje — a próxima leitura agendada é às 06:00' : 'Lê a apuração assistida da CBS fora do horário agendado · ' + restam + ' de ' + ST.cota + ' leituras sob demanda hoje') + '">↻ Ler a Receita Federal agora</button>'
@@ -628,9 +660,9 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
       + '</div>'
       + filtrosHtml()
       + '<div class="tcrd"><div class="tcrd-hdr evm-tcrd-hdr">'
-      + '<div class="sechdr evm-min0" style="margin-bottom:0"><h2>' + titulos[ST.aba] + '</h2><p>' + (ST.aba === 'documento' ? L.map(function (l) { return l.nf; }).filter(function (x, i, a) { return a.indexOf(x) === i; }).length : L.length) + ' ' + subtab[ST.aba]
-      + (ST.kpi ? ' · filtro do indicador ativo — <a href="#" onclick="shEvm.kpi(\'\');return false">limpar</a>' : '') + '</p></div>'
-      + (ST.aba === 'documento' ? '' : '<div id="evm-col-toolbar" class="evm-col-toolbar"></div>') + '</div>'
+      + '<div class="sechdr evm-min0" style="margin-bottom:0"><h2>' + (extT ? extT.titulo : titulos[ST.aba]) + '</h2><p>' + (extT ? extT.n : ST.aba === 'documento' ? L.map(function (l) { return l.nf; }).filter(function (x, i, a) { return x != null && a.indexOf(x) === i; }).length : L.length) + ' ' + (extT ? extT.sub : subtab[ST.aba])
+      + (ST.kpi && !extT ? ' · filtro do indicador ativo — <a href="#" onclick="shEvm.kpi(\'\');return false">limpar</a>' : '') + '</p></div>'
+      + (ST.aba === 'documento' || extT ? '' : '<div id="evm-col-toolbar" class="evm-col-toolbar"></div>') + '</div>'
       + '<div class="twrap">' + tabela + '</div></div>';
     var slot = document.getElementById('evm-col-toolbar');
     if (slot && cmNo) slot.appendChild(cmNo);
@@ -658,12 +690,12 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     var f1 = '<div class="evm-fase feita"><div class="evm-fase-n">1 · Capturado</div><div class="evm-fase-l"><b>' + fDH(ev.capt) + '</b><br>' + (ev.canal === 'CSV' ? 'pelo upload de CSV' : 'pela API') + '</div></div>';
     var f2 = ev.plan
       ? '<div class="evm-fase feita"><div class="evm-fase-n">2 · Planejado</div><div class="evm-fase-l"><b>' + fDH(ev.plan) + '</b><br>efeito calculado</div></div>'
-      : '<div class="evm-fase atual"><div class="evm-fase-n">2 · Planejado</div><div class="evm-fase-l">—<br>calculando o efeito</div></div>';
+      : '<div class="evm-fase atual"><div class="evm-fase-n">2 · Planejado</div><div class="evm-fase-l">—<br>' + (ev.orfao ? 'esperando o documento' : 'calculando o efeito') + '</div></div>';
     var f3, f4;
-    if (e === 'cancelada') {
-      f3 = '<div class="evm-fase"><div class="evm-fase-n">3 · Aguardando</div><div class="evm-fase-l">—<br>interrompido pelo cancelamento</div></div>';
+    if (e === 'cancelada' || ev.orfao) {
+      f3 = '<div class="evm-fase"><div class="evm-fase-n">3 · Aguardando</div><div class="evm-fase-l">—<br>' + (ev.orfao ? 'depois que o documento chegar' : 'interrompido pelo cancelamento') + '</div></div>';
       f4 = '<div class="evm-fase"><div class="evm-fase-n">4 · Executado</div><div class="evm-fase-l">—<br>nada foi aplicado</div></div>';
-    } else if (c.efeito !== 'valor') {
+    } else if (!movel(ev)) {
       f3 = '<div class="evm-fase feita"><div class="evm-fase-n">3 · Aguardando</div><div class="evm-fase-l">não se aplica<br>' + (ev.cod === '110001' ? 'o cancelado não tinha efeito aplicado' : 'atributo vale na autorização') + '</div></div>';
       f4 = '<div class="evm-fase feita"><div class="evm-fase-n">4 · Executado</div><div class="evm-fase-l"><b>' + fDH(ev.aut) + '</b><br>na autorização</div></div>';
     } else {
@@ -671,10 +703,12 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
         var x = ev.trib[t], o = ORGAO[t];
         if (x.estado === 'capturada' || x.estado === 'planejada') return '<b>' + t + '</b> · ' + o.nome + ': ' + (t === 'CBS' ? 'leitura às ' + fDH(proxima06()) : 'arquivo do próximo envio');
         if (x.estado === 'aguardando') return '<b>' + t + '</b> · ' + o.nome + ': esperando ' + ha(ev.plan);
-        if (x.estado === 'divergente') return '<b>' + t + '</b> · ' + o.nome + ': valor diferente';
+        if (x.estado === 'divergente') return '<b>' + t + '</b> · ' + o.nome + ': ' + (x.semReflexo ? 'sem reflexo na janela' : 'valor diferente');
+        if (x.estado === 'nao_atribuivel') return '<b>' + t + '</b> · ' + o.nome + ': o montante fechou, sem imputação';
+        if (x.estado === 'cancelada') return '<b>' + t + '</b> · ' + o.nome + ': interrompido pela reversão';
         return '<b>' + t + '</b> · ' + o.nome + ': confirmou';
       }).join('<br>');
-      var l4 = ts.map(function (t) { var x = ev.trib[t]; return '<b>' + t + '</b>: ' + (x.estado === 'executada' ? fDH(x.exec) : x.estado === 'divergente' ? 'não aplicado' : '—'); }).join('<br>');
+      var l4 = ts.map(function (t) { var x = ev.trib[t]; return '<b>' + t + '</b>: ' + (x.estado === 'executada' ? fDH(x.exec) : x.estado === 'nao_atribuivel' ? 'em montante, ' + fDH(x.exec) : x.estado === 'divergente' || x.estado === 'cancelada' ? 'não aplicado' : '—'); }).join('<br>');
       var todasExec = ts.every(function (t) { return ev.trib[t].estado === 'executada'; });
       var algumaDiv = ts.some(function (t) { return ev.trib[t].estado === 'divergente'; });
       f3 = '<div class="evm-fase ' + (algumaDiv ? 'erro' : todasExec ? 'feita' : ev.plan ? 'atual' : '') + '"><div class="evm-fase-n">3 · Aguardando o órgão</div><div class="evm-fase-l">' + l3 + '</div></div>';
@@ -686,13 +720,17 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
   function faixa(ev) {
     var c = CAT[ev.cod], e = estadoEv(ev);
     if (e === 'cancelada') return '<div class="evm-faixa neutra">Cancelado pelo <b>' + esc(ev.canceladoPor) + '</b> em ' + fDH(ev.canceladoEm) + '. Nada foi aplicado: o evento ainda esperava o órgão.</div>';
+    // lote 2: revertida, órfão, não atribuível (DV-21) e o 110001 que reverte
+    var x2 = L2('eventos_estados'), f2 = x2 && x2.faixa(ev, e); if (f2) return f2;
     var div = tribsDo(ev).filter(function (t) { return ev.trib[t].estado === 'divergente'; });
     if (div.length) {
+      var oc = L2('eventos_inconsistencias');
       return '<div class="evm-faixa red">' + div.map(function (t) {
         var x = ev.trib[t];
         return '<b>Divergência ' + (t === 'CBS' ? 'na' : 'no') + ' ' + t + '.</b> ' + ORGAO[t].o.toUpperCase() + ' ' + ORGAO[t].nome + ' mostra ' + money(x.observado) + '; o esperado era ' + money(x.antes + x.delta) + '.';
       }).join(' ') + ' Nada foi aplicado — divergência nunca aplica valor sozinha.'
-        + ' O evento fica no indicador Divergentes desta esteira; marque-o para revisão para acompanhar o tratamento.</div>';
+        // DV-22: com a família I no catálogo, o aviso leva à ocorrência de cada tributo
+        + (oc ? ' ' + oc.linkDivergencia(ev, div) : ' O evento fica no indicador Divergentes desta esteira; marque-o para revisão para acompanhar o tratamento.') + '</div>';
     }
     if (ev.cod === '110001') return '<div class="evm-faixa neutra">Cancela o <b>' + esc(ev.cancela) + '</b>. Como o cancelado ainda esperava o órgão, não há efeito a desfazer.</div>';
     if (c.efeito === 'atributo') return '<div class="evm-faixa blue">Evento de atributo: vale na autorização e não espera o órgão. Nenhum valor muda.</div>';
@@ -703,17 +741,18 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
   function tabelaAcao(ev) {
     var c = CAT[ev.cod], ts = tribsDo(ev), lado = ev.lado === 'entrada' ? 'Crédito' : 'Débito';
     var linhas_ = ts.map(function (t) {
-      var x = ev.trib[t], exec = x.estado === 'executada' && c.efeito === 'valor' && !ev.canceladoPor;
+      var x = ev.trib[t], exec = aplicado(x) && movel(ev) && !ev.canceladoPor;
       var vig = exec ? x.antes + x.delta : x.antes;
       return '<tr><td><b>' + t + '</b><div class="evm-small">' + ORGAO[t].nome + '</div></td>'
         + '<td><a href="#" class="evm-mono" onclick="shEvm.verRf(\'' + esc(x.rf) + '\');return false">' + esc(x.rf) + '</a></td>'
         + '<td class="evm-num">' + money(x.antes) + '</td>'
-        + '<td class="evm-num">' + (c.efeito === 'valor' && !ev.canceladoPor ? money(x.antes + x.delta) : '<span class="evm-muted">—</span>') + '</td>'
+        + '<td class="evm-num">' + (movel(ev) && !ev.canceladoPor ? money(x.antes + x.delta) : '<span class="evm-muted">—</span>') + '</td>'
         + '<td class="evm-num">' + (ev.canceladoPor ? delta(0) : delta(x.delta)) + '</td>'
         + '<td class="evm-num"><b>' + money(vig) + '</b></td>'
         + '<td>' + chip(ev.canceladoPor ? 'cancelada' : x.estado) + '</td></tr>';
     }).join('');
-    var algumExec = ts.some(function (t) { return ev.trib[t].estado === 'executada'; }) && c.efeito === 'valor';
+    var algumExec = ts.some(function (t) { return aplicado(ev.trib[t]); }) && movel(ev);
+    if (ev.orfao) return '<div><div class="evm-rot">Ação planejada</div><div class="evm-small">O documento desta chave ainda não está na base. O efeito só é calculado quando ele chegar pela ingestão: até lá, nada é planejado nem aplicado.</div></div>';
     if (!ev.plan) return '<div><div class="evm-rot">Ação planejada</div><div class="evm-small">O evento acabou de chegar e o efeito ainda está sendo calculado. Os valores aparecem aqui quando o cálculo terminar.</div></div>';
     return '<div><div class="evm-rot">Ação planejada · ' + esc(acaoEv(ev)) + '</div>'
       + '<div class="twrap" style="--twrap-h:none"><table><thead><tr><th>Tributo</th><th>Registro</th><th class="r">' + lado + ' antes</th><th class="r">' + (algumExec ? 'Previsto / aplicado' : 'Previsto') + '</th><th class="r">Delta</th><th class="r">' + lado + ' vigente</th><th>Situação</th></tr></thead><tbody>' + linhas_ + '</tbody></table></div>'
@@ -723,7 +762,7 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
   function tabelaConfirmacao(ev) {
     var c = CAT[ev.cod];
     if (!ev.plan) return '';
-    if (c.efeito !== 'valor') {
+    if (!movel(ev)) {
       return '<div><div class="evm-rot">O que cada órgão precisa confirmar</div><div class="evm-small">Nada: ' + (ev.cod === '110001' ? 'o cancelamento não desfaz valor algum.' : 'o evento muda um atributo, que vale na autorização.') + '</div></div>';
     }
     var linhas_ = tribsDo(ev).map(function (t) {
@@ -748,10 +787,11 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     it.push([ev.capt, 'Recebido ' + (ev.canal === 'CSV' ? 'pelo upload de CSV' : 'pela API')
       + (arq ? ' · arquivo ' + arq.nome + ', ' + faixaLinhas(arq.linhas, true) + ' · carregado por ' + arq.por + (arq.hash ? ' · SHA-256 ' + arq.hash.slice(0, 12) + '…' : '') : '')]);
     if (ev.plan) it.push([ev.plan, 'Efeito calculado: ' + acaoEv(ev)]);
-    if (c.efeito === 'valor' && !ev.canceladoPor) {
+    if (movel(ev) && !ev.canceladoPor) {
       tribsDo(ev).forEach(function (t) {
         var x = ev.trib[t];
         if (x.estado === 'executada') it.push([x.exec, t + ' confirmada ' + ORGAO[t].pelo + ' ' + ORGAO[t].nome + ' — valor aplicado']);
+        else if (x.estado === 'nao_atribuivel') it.push([x.exec, t + ': o montante do documento fechou na leitura ' + (t === 'CBS' ? 'da Receita Federal' : 'do Comitê Gestor') + ' — aplicado em montante, sem imputação a este evento']);
         else if (x.estado === 'divergente') it.push([x.lido, t + ': ' + ORGAO[t].o + ' ' + ORGAO[t].nome + ' mostra ' + money(x.observado) + ', diferente do esperado — nada aplicado']);
         else if (x.estado === 'aguardando') it.push([x.lido, t + ': ' + (t === 'CBS' ? 'leitura da Receita Federal' : 'arquivo do Comitê Gestor') + ' ainda sem o efeito']);
       });
@@ -770,12 +810,15 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     var c = CAT[ev.cod];
     var sub = '<span class="evm-mono">' + ev.cod + '</span><span>autorizado ' + fDH(ev.aut) + '</span><span>protocolo <span class="evm-mono">' + ev.protocolo + '</span></span>'
       + '<span>autor: ' + esc(AUTOR[c.autor]) + '</span><span>sequência ' + ev.seq + '</span>'
-      + '<span>NF-e <span class="evm-mono">' + esc(ev.nf) + '</span> · ' + (ev.lado === 'entrada' ? 'entrada' : 'saída') + ' · competência ' + ev.competenciaDoc + '</span>';
+      + (ev.orfao ? '<span>chave <span class="evm-mono">' + esc(String(ev.chave || '').replace(/\D/g, '').slice(0, 4) + '…' + String(ev.chave || '').replace(/\D/g, '').slice(-4)) + '</span> · documento ainda não chegou</span>'
+        : '<span>NF-e <span class="evm-mono">' + esc(ev.nf) + '</span> · ' + (ev.lado === 'entrada' ? 'entrada' : 'saída') + ' · competência ' + ev.competenciaDoc + '</span>');
+    var x2 = L2('eventos_estados');
     overlay('evm-det', 920,
       cab('evm-det', esc(ev.id) + ' · ' + esc(c.nome), chip(estadoEv(ev)), sub)
       + '<div class="evm-corpo">' + faixa(ev) + fases(ev) + tabelaAcao(ev) + tabelaConfirmacao(ev) + trilha(ev) + '</div>'
       + '<div class="evm-pe">'
-      + '<button class="evm-btn" onclick="shEvm.verDocumento(\'' + esc(ev.nf) + '\')">Ver documento</button>'
+      + (ev.orfao ? '' : '<button class="evm-btn" onclick="shEvm.verDocumento(\'' + esc(ev.nf) + '\')">Ver documento</button>')
+      + (x2 ? x2.botoesDetalhe(ev) : '')
       + (vePayload() ? '<button class="evm-btn" onclick="shEvm.payload(\'' + ev.id + '\')">Ver payload original</button>' : '')
       + '<button class="evm-btn pri" onclick="shEvm.revisao(\'' + ev.id + '\')">' + (ev.revisao ? 'Tirar a marca de revisão' : 'Marcar para revisão') + '</button>'
       + '</div>');
@@ -821,7 +864,7 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
       + '<div class="evm-fases">'
       + '<div class="evm-fase"><div class="evm-fase-n">Quem emite</div><div class="evm-fase-l">' + esc(AUTOR[c.autor]) + (c.autor === 'destinatario' && a.lado === 'entrada' || c.autor === 'emitente' && a.lado === 'saida' ? ' — a própria empresa' : ' — a outra parte') + '</div></div>'
       + '<div class="evm-fase"><div class="evm-fase-n">Visto pelo órgão</div><div class="evm-fase-l">' + a.tribs.map(function (t) { return '<b>' + t + '</b> · ' + ORGAO[t].nome + (a.valores[t] ? ': ' + money(a.valores[t]) : ''); }).join('<br>') + '</div></div>'
-      + '<div class="evm-fase ' + (dias >= ESPERA_AUSENCIA ? 'erro' : 'atual') + '"><div class="evm-fase-n">Espera</div><div class="evm-fase-l"><b>' + dias + ' de ' + ESPERA_AUSENCIA + ' dias</b><br>' + (dias >= ESPERA_AUSENCIA ? 'prazo vencido: a ausência pede tratamento' : 'antes do prazo, é processamento normal do órgão') + '</div></div>'
+      + '<div class="evm-fase ' + (dias >= ESPERA_AUSENCIA ? 'erro' : 'atual') + '"><div class="evm-fase-n">Espera</div><div class="evm-fase-l"><b>' + dias + ' de ' + ESPERA_AUSENCIA + ' dias</b><br>' + (dias >= ESPERA_AUSENCIA ? (L2('eventos_inconsistencias') ? 'prazo vencido: ' + L2('eventos_inconsistencias').linksAusencia(a) : 'prazo vencido: a ausência pede tratamento') : 'antes do prazo, é processamento normal do órgão') + '</div></div>'
       + '<div class="evm-fase"><div class="evm-fase-n">Pedido</div><div class="evm-fase-l">' + (a.pedido ? 'reenvio pedido ao ERP em <b>' + fDH(a.pedido) + '</b>' : 'nenhum ainda') + '</div></div>'
       + '</div>'
       + '<div class="evm-small">Pode ser um evento que o ERP não enviou, um que o órgão processou sem o SplitHub saber, ou um fato que nenhum dos dois viu. O efeito não é aplicado enquanto o evento não chega.</div>'
@@ -838,7 +881,7 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     var r = { ok: 0, div: 0, seg: 0 }, agora = Date.now();
     ST.eventos.forEach(function (ev) {
       var x = ev.trib[t];
-      if (!x || ev.canceladoPor || CAT[ev.cod].efeito !== 'valor') return;
+      if (!x || ev.canceladoPor || !movel(ev)) return;
       if (x.estado === 'planejada' || x.estado === 'aguardando') {
         var h = hash(ev.id + t + ST.cotaUsada) % 10;
         if (h < 7) { x.estado = 'executada'; x.exec = agora; x.lido = agora; x.observado = x.antes + x.delta; r.ok++; }
@@ -847,13 +890,16 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
       }
     });
     ST.leitura[t] = agora;
+    // lote 2: dois eventos do mesmo documento na mesma leitura da CBS não se imputam (DV-21), e o reflexo vai à solicitação do AV-EV (DV-32)
+    if (L2('eventos_estados')) { try { L2('eventos_estados').aposLeitura(t, agora, r); } catch (e) { console.error('[eventos lote 2] leitura', e); } }
     return r;
   }
   function lerReceita() {
     if (ST.cotaUsada >= ST.cota) return;
     ST.cotaUsada++;
     var r = confirmar('CBS');
-    toast('Receita Federal lida: ' + pl(r.ok, 'confirmado', 'confirmados') + ', ' + pl(r.div, 'divergente', 'divergentes') + ' e ' + pl(r.seg, 'segue', 'seguem') + ' aguardando na CBS.');
+    toast('Receita Federal lida: ' + pl(r.ok, 'confirmado', 'confirmados') + ', ' + pl(r.div, 'divergente', 'divergentes') + ' e ' + pl(r.seg, 'segue', 'seguem') + ' aguardando na CBS'
+      + (r.na ? '; ' + pl(r.na, 'evento fechou', 'eventos fecharam') + ' em montante, sem imputação' : '') + '.');
     render();
   }
   function arquivoComite() {
@@ -996,7 +1042,10 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     // V-13: a chave natural já existe — devolve o existente, nada se duplica
     var ja = ST.eventos.filter(function (e) { return digitos(e.chave) === chave && e.cod === cod && +e.seq === +seq; })[0];
     if (ja) { o.res = 'existe'; o.msg = 'chegou antes ' + (ja.canal === 'CSV' ? 'por CSV' : 'pela API') + ', como ' + ja.id + ' — a V-13 devolve o existente.'; return o; }
-    if (!nf) return falha('document_not_found', 'o documento desta chave não está na base. Nesta versão, o evento só entra com o documento já carregado.', 'access_key');
+    // lote 2 (DV-15, C-12): sem o documento, o evento entra na fila de órfãos em vez de voltar recusado
+    var orfao = !nf && !!L2('eventos_estados');
+    if (!nf && !orfao) return falha('document_not_found', 'o documento desta chave não está na base. Nesta versão, o evento só entra com o documento já carregado.', 'access_key');
+    if (orfao) o.docRot = 'sem documento';
     var prot = val(r0, 'protocol');
     if (!prot) return falha('protocol_required', 'protocol vazio: evento sem autorização não entra.', 'protocol');      // V-05
     var dh = val(r0, 'event_datetime');                                                                                 // CV-03
@@ -1006,18 +1055,19 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     if (['homologation', 'homologacao', 'homologação', '2'].indexOf(amb) >= 0) return falha('environment_mismatch', 'evento de homologação só entra com credencial de sandbox; esta importação usa a de produção.', 'environment');
     if (amb && ['production', 'producao', 'produção', '1'].indexOf(amb) < 0) return falha('value_format_invalid', 'environment precisa ser production.', 'environment');
     // V-06: o papel e o CNPJ do autor batem com o documento
-    var papel = val(r0, 'author_role'), lado = nf.tipo;
+    var papel = val(r0, 'author_role'), lado = nf ? nf.tipo : null;
     if (['issuer', 'acquirer', 'successor', 'tax_authority'].indexOf(papel) < 0) return falha('value_format_invalid', 'author_role precisa ser issuer, acquirer, successor ou tax_authority.', 'author_role');
     if (c.autor !== 'autor_evento' && papel !== ROLE[c.autor]) return falha('author_role_mismatch', 'o ' + cod + ' é registrado pelo ' + AUTOR[c.autor].toLowerCase() + ' (' + ROLE[c.autor] + '), e a linha diz ' + papel + '.', 'author_role');
-    if (papel === 'issuer' || papel === 'acquirer') {
+    // o que depende do documento fica para a correlação, quando o órfão encontrar o seu
+    if (nf && (papel === 'issuer' || papel === 'acquirer')) {
       var daEmpresa = papel === (lado === 'entrada' ? 'acquirer' : 'issuer');
       if (digitos(val(r0, 'author_tax_id')) !== digitos(daEmpresa ? nf.cnpjComprador : nf.cnpj))
         return falha('author_role_mismatch', 'o CNPJ do autor não é o do ' + (papel === 'issuer' ? 'emitente' : 'destinatário') + ' do documento.', 'author_tax_id');
     }
-    if (cod !== '110001' && !(c.acao && c.acao[lado]))
+    if (nf && cod !== '110001' && !(c.acao && c.acao[lado]))
       return falha('event_side_not_supported', 'o ' + cod + ' não muda o ' + (lado === 'entrada' ? 'crédito' : 'débito') + ' da empresa num documento de ' + (lado === 'entrada' ? 'entrada' : 'saída') + '.', 'access_key');
-    if (cod === '211110' && nf.tipoDF === 'NFC-e') return falha('presumed_credit_not_allowed', 'crédito presumido não cabe em documento modelo 65 (NFC-e).', 'access_key');   // V-09
-    if (!rfDe(nf, 'CBS') && !rfDe(nf, 'IBS')) return falha('document_without_tax', 'o documento não tem registro fiscal de CBS nem de IBS para receber o efeito.', 'access_key');
+    if (nf && cod === '211110' && nf.tipoDF === 'NFC-e') return falha('presumed_credit_not_allowed', 'crédito presumido não cabe em documento modelo 65 (NFC-e).', 'access_key');   // V-09
+    if (nf && !rfDe(nf, 'CBS') && !rfDe(nf, 'IBS')) return falha('document_without_tax', 'o documento não tem registro fiscal de CBS nem de IBS para receber o efeito.', 'access_key');
     // o que cada modelo traz
     var soma = { CBS: 0, IBS: 0 }, det = {}, alvo = null;
     if (M.itens) {
@@ -1057,13 +1107,22 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
       if (alvo.cod === '110001') return falha('cannot_cancel_cancellation', 'um cancelamento não cancela outro cancelamento.', 'cancelled_event_code');   // V-10
       if (papel !== ROLE[CAT[alvo.cod].autor]) return falha('cancel_author_mismatch', 'quem cancela é o autor do evento cancelado (' + ROLE[CAT[alvo.cod].autor] + ').', 'author_role');   // V-11
       if (alvo.canceladoPor) return falha('already_cancelled', 'o ' + alvo.id + ' já foi cancelado pelo ' + alvo.canceladoPor + '.', 'cancelled_protocol');
-      if (CAT[alvo.cod].efeito === 'valor' && tribsDo(alvo).some(function (t) { return alvo.trib[t].estado === 'executada'; }))
+      if (alvo.revertidoPor) return falha('already_cancelled', 'o ' + alvo.id + ' já foi revertido pelo ' + alvo.revertidoPor + '.', 'cancelled_protocol');
+      var revert = CAT[alvo.cod].efeito === 'valor' && tribsDo(alvo).some(function (t) { return aplicado(alvo.trib[t]); });
+      // lote 2 (DV-15): o cancelamento de evento já executado entra e reverte o valor aplicado
+      if (revert && !L2('eventos_estados'))
         return falha('cancel_after_execution', 'o ' + alvo.id + ' já foi executado, e a esteira ainda não desfaz valor aplicado.', 'cancelled_protocol');
       det = { cancelled_event_code: cc, cancelled_protocol: cp };
     }
     // avisos: o evento entra, e o aviso fica na trilha dele
     var vis = window.nfListaFiltradaGlobal;
-    if (vis && !vis.some(function (x) { return x.numero === nf.numero; })) {
+    if (orfao) {
+      o.res = 'aviso'; o.codigo = 'awaiting_document';
+      o.msg = 'o documento desta chave ainda não está na base: o evento entra na fila de órfãos e espera até ' + ESPERA_AUSENCIA + ' dias pela ingestão; o efeito só é calculado quando o documento chegar.';
+    } else if (m === 'M8' && revert) {
+      o.res = 'aviso'; o.codigo = 'reversal_after_execution';
+      o.msg = 'o ' + alvo.id + ' já foi executado: o cancelamento entra, o ' + alvo.id + ' fica revertido e o valor aplicado volta quando cada órgão refletir.';
+    } else if (vis && !vis.some(function (x) { return x.numero === nf.numero; })) {
       o.res = 'aviso'; o.codigo = 'document_out_of_filter';
       o.msg = 'o documento está fora do filtro de empresa atual: o evento entra, mas só aparece na esteira com o filtro ajustado.';
     } else if (c.efeito === 'valor') {
@@ -1076,7 +1135,7 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
         o.msg = 'o documento já tem o ' + junto.id + ' esperando o órgão: se os dois refletirem na mesma leitura, o reflexo pode não ser atribuível a um só.';
       }
     }
-    o.data = { nf: nf, cod: cod, seq: +seq, protocolo: prot, aut: Date.parse(dh), soma: soma, detalhe: det, alvo: alvo };
+    o.data = { nf: nf, cod: cod, seq: +seq, protocolo: prot, aut: Date.parse(dh), soma: soma, detalhe: det, alvo: alvo, chave: chave, papel: papel };
     return o;
   }
 
@@ -1231,6 +1290,9 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     if (e[4]) evento('211124', e[4], 'acquirer', [['2', v(e[4], 'IBS'), v(e[4], 'CBS')], ['2', v(e[4], 'IBS'), v(e[4], 'CBS')]]);   // item_duplicated
     if (sai[0]) evento('112120', sai[0], 'issuer', [['1', v(sai[0], 'IBS'), v(sai[0], 'CBS')]]);
     if (e[5]) evento('211140', e[5], 'acquirer', [['1', '1.000,00', v(e[5], 'CBS')]]);                                             // value_format_invalid
+    // lote 2: uma chave que a base ainda não tem — o evento entra na fila de órfãos (awaiting_document)
+    var x2o = L2('eventos_estados');
+    if (x2o && e[0]) evento('211124', { numero: 'orfao', tipo: 'entrada', chaveDF: x2o.chaveExemplo(agora), cnpj: '45123678000112', cnpjComprador: e[0].cnpjComprador }, 'acquirer', [['1', '800,00', '600,00']]);
     IMP.passo = 1;
     processar('eventos-exemplo-' + iso(agora) + '.csv', L.map(function (r) { return r.map(csvCampo).join(';'); }).join('\r\n'));
   }
@@ -1240,7 +1302,14 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     if (!ok.length) return;
     var agora = Date.now(), por = nomeUsuario(), ids = [];
     ok.forEach(function (g) {
-      var d = g.data, nf = d.nf, c = CAT[d.cod], lado = nf.tipo;
+      var d = g.data, nf = d.nf, c = CAT[d.cod];
+      // órfão (lote 2): entra sem documento, na fila; o lote 2 monta o evento
+      if (!nf) {
+        var x2 = L2('eventos_estados'), evo = x2 && x2.novoOrfao(d, g, { nome: IMP.nome, hash: IMP.hash, linhas: g.linhas, por: por, em: agora });
+        if (evo) { ST.eventos.push(evo); ids.push(evo.id); }
+        return;
+      }
+      var lado = nf.tipo;
       var ev = {
         id: 'EV-' + ('000000' + (++ST.seq)).slice(-6), cod: d.cod, lado: lado, canal: 'CSV', nf: nf.numero, entidade: nf.entidade, cnpj: nf.cnpj, cnpjEmpresa: nf.cnpjComprador, chave: nf.chaveDF,
         competenciaDoc: comp(nf.data + 'T12:00:00'), compIso: String(nf.data).slice(0, 7), aut: d.aut, capt: agora, plan: null,
@@ -1273,17 +1342,22 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
   function planejar(ids) {
     var agora = Date.now(), n = 0;
     ST.eventos.forEach(function (ev) {
-      if (ids.indexOf(ev.id) < 0 || ev.plan) return;
-      var c = CAT[ev.cod]; ev.plan = agora; n++;
-      tribsDo(ev).forEach(function (t) {
-        var x = ev.trib[t];
-        if (c.efeito === 'valor') x.estado = 'planejada';
-        else { x.estado = 'executada'; x.exec = ev.aut; }   // atributo e cancelamento valem na autorização
-      });
+      if (ids.indexOf(ev.id) < 0 || ev.plan || ev.orfao) return;   // o órfão espera o documento
+      ev.plan = agora; n++;
       if (ev.cancela) {
         var alvo = ST.eventos.filter(function (e) { return e.id === ev.cancela; })[0];
-        if (alvo && !alvo.canceladoPor) { alvo.canceladoPor = ev.id; alvo.canceladoEm = ev.aut; }
+        var x2 = L2('eventos_estados');
+        if (alvo && !alvo.canceladoPor && !alvo.revertidoPor) {
+          // lote 2 (DV-15): cancelar o que já foi executado é reverter — o 110001 leva o valor de volta
+          if (x2 && CAT[alvo.cod].efeito === 'valor' && tribsDo(alvo).some(function (t) { return aplicado(alvo.trib[t]); })) x2.reverter(alvo, ev);
+          else { alvo.canceladoPor = ev.id; alvo.canceladoEm = ev.aut; }
+        }
       }
+      tribsDo(ev).forEach(function (t) {
+        var x = ev.trib[t];
+        if (movel(ev) && !(ev.reverte && !x.delta)) x.estado = 'planejada';
+        else { x.estado = 'executada'; x.exec = ev.aut; }   // atributo e cancelamento valem na autorização
+      });
     });
     if (!n) return;
     encadear();
@@ -1318,6 +1392,15 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     if (nome) toast('Esteira filtrada pelo canal CSV. Os eventos de ' + nome + ' estão no topo.');
   }
 
+  /* ── O que o lote 2 (js/eventos-lote2.js) lê daqui ───────────────────── */
+  var INT = {
+    ST: ST, CAT: CAT, ORGAO: ORGAO, TRIBS: TRIBS, AUTOR: AUTOR, ROT_EST: ROT_EST, ESPERA_AUSENCIA: ESPERA_AUSENCIA, DIA: DIA, HORA: HORA, MIN: MIN,
+    semear: semear, encadear: encadear, render: render, estadoEv: estadoEv, tribsDo: tribsDo, movel: movel, aplicado: aplicado,
+    acaoEv: acaoEv, efeitoEv: efeitoEv, chip: chip, money: money, delta: delta, esc: esc, fD: fD, fDH: fDH, iso: iso, comp: comp, p2: p2,
+    hash: hash, redondo: redondo, nfs: nfs, rfDe: rfDe, candidatos: candidatos, ultimaLeitura06: ultimaLeitura06, digitos: digitos,
+    overlay: overlay, cab: cab, fechar: fechar, toast: toast, pl: pl, nomeUsuario: nomeUsuario, detalhe: detalhe, ausencia: ausencia, planejar: planejar
+  };
+
   /* ── Rota: #/eventos, #/eventos/EV-000401, #/eventos/ausencias ────────── */
   function rota() {
     var h = location.hash || '';
@@ -1326,6 +1409,7 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     if (lp && lp.style.display !== 'none') return;
     var resto = h.slice('#/eventos'.length).replace(/^\//, '').split('?')[0];
     if (['esteira', 'pendentes', 'documento', 'ausencias'].indexOf(resto) >= 0) ST.aba = resto;
+    else if (L2('eventos_estados') && ['solicitacoes', 'orfaos'].indexOf(resto) >= 0) ST.aba = resto;
     abrirView();
     if (/^EV-\d+$/.test(resto)) setTimeout(function () { detalhe(resto); }, 50);
   }
@@ -1364,7 +1448,8 @@ window.shFeature && shFeature.registrar({"id": "AV-EF", "nome": "Eventos fiscais
     lerReceita: lerReceita, arquivoComite: arquivoComite,
     importar: importar, impModelo: impModelo, impArquivo: impArquivo, impExemplo: impExemplo, impEnviar: impEnviar,
     impErros: impErros, impBaixarModelo: impBaixarModelo, impFechar: impFechar, impVer: impVer,
-    estado: function () { return ST; }
+    estado: function () { return ST; },
+    _int: INT
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', montar); else montar();
