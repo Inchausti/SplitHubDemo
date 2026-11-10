@@ -75,7 +75,8 @@
     var off = desligadasAqui(), muda = ambiente() !== 'app';
     var corpo = Object.keys(PACOTES).map(function (pid) {
       var p = PACOTES[pid];
-      return '<div class="ff-pac"><div class="ff-pac-h"><b>' + esc(p.id) + ' · ' + esc(p.nome) + '</b><span class="ff-sub">branch ' + esc(p.branch || '—') + '</span></div>'
+      var abrir = p.entrada && entrega(Object.keys(p.flags)[0]) ? ' · <a class="ff-link" href="' + esc(p.entrada) + '" onclick="document.getElementById(\'' + id + '\').remove()">abrir</a>' : '';
+      return '<div class="ff-pac"><div class="ff-pac-h"><b>' + esc(p.id) + ' · ' + esc(p.nome) + '</b><span class="ff-sub">branch ' + esc(p.branch || '—') + abrir + '</span></div>'
         + Object.keys(p.flags).map(function (k) {
           var e = p.flags[k], r = ROT[e] || [e, 'amber'], on = entrega(k);
           return '<label class="ff-fl"><input type="checkbox" data-ff="' + esc(k) + '"' + (on ? ' checked' : '') + (muda && e !== 'rejeitada' ? '' : ' disabled') + '>'
@@ -104,7 +105,32 @@
     pacotes: function () { return PACOTES; }, estado: function (k) { return FLAGS[k] ? FLAGS[k].estado : null; },
     painel: painel, _aplicarPainel: _aplicarPainel, _todas: function () { gravar([]); }
   };
-  function inicio() { aplicar(); if (/[?&]ff\b/.test(location.search)) painel(); }
+  // o botão escondido também não abre a tela: rota, link ou clique programado param aqui
+  function bloqueado(btn) {
+    var k = btn && btn.getAttribute && btn.getAttribute('data-ff-off');
+    if (!k) return false;
+    var t = document.getElementById('ff-toast'); if (t) t.remove();
+    t = document.createElement('div'); t.id = 'ff-toast'; t.className = 'ff-toast'; t.setAttribute('role', 'status');
+    t.textContent = entrega(k) ? 'Recurso não liberado para esta organização.' : 'Recurso ainda em avaliação: não liberado neste ambiente.';
+    document.body.appendChild(t); setTimeout(function () { if (t.parentNode) t.remove(); }, 4000);
+    return true;
+  }
+  function guardar(nome) {
+    var fn = window[nome]; if (typeof fn !== 'function' || fn._ff) return;
+    window[nome] = function (id, btn) {
+      if (bloqueado(btn)) return;
+      var r = fn.apply(this, arguments); setTimeout(aplicar, 120); return r;
+    };
+    window[nome]._ff = true;
+  }
+  // telas que montam alvos depois da carga (cards do Início, submenus) pedem nova passada
+  function inicio() {
+    aplicar();
+    guardar('showView'); guardar('showAdminSub');
+    window.addEventListener('hashchange', function () { setTimeout(aplicar, 300); });
+    setTimeout(aplicar, 2500);
+    if (/[?&]ff\b/.test(location.search)) painel();
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(inicio, 250); });
   else setTimeout(inicio, 250);
 })();

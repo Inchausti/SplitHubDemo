@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zona Franca de Manaus no SplitHub — Proposta · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; --sombra:rgba(0,0,0,.12); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --sombra:rgba(0,0,0,.4); } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --sombra:rgba(0,0,0,.4); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.back { display: inline-flex; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 760px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.meta-fim { margin-left: auto; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+td strong { color: var(--txt1); }
+td ul.plain { margin: 4px 0 0 16px; }
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); overflow-wrap: anywhere; }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.art { font-size: 11px; color: var(--txt3); }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+th.num { text-align: right; }
+tr.tot td { color: var(--txt1); font-weight: 700; }
+.src { font-size: 11px; color: var(--txt3); }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.foot { margin-top: 40px; font-size: 11.5px; color: var(--txt3); }
+
+/* cartões de resumo */
+.ess { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 14px 0; }
+.ess-c { border: 1px solid var(--brd); border-radius: 12px; padding: 12px 14px; background: var(--sur); }
+.ess-k { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--teal); }
+.ess-t { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 4px 0; }
+.ess-d { font-size: 12.5px; color: var(--txt2); line-height: 1.45; }
+
+/* passos do fluxo */
+.etapas { list-style: none; display: flex; flex-direction: column; margin: 8px 0 0; }
+.etapa { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; }
+.etapa-m { display: flex; flex-direction: column; align-items: center; }
+.etapa-m b { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--amber); background: var(--sur); font-size: 10px; display: flex; align-items: center; justify-content: center; color: var(--amber); flex-shrink: 0; }
+.etapa-m i { flex: 1; width: 2px; background: var(--brd); }
+.etapa:last-child .etapa-m i { display: none; }
+.etapa-c { padding-bottom: 14px; min-width: 0; }
+.etapa-h { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.etapa-h b { font-size: 12.5px; color: var(--txt1); }
+.etapa-h span { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); }
+.etapa-c p { font-size: 12.5px; margin: 2px 0 0; }
+
+/* maquetes */
+.tela-t { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 22px 0 6px; }
+.tela-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 7px; border-radius: 4px; }
+.tela-nome { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.tela-onde { font-size: 11.5px; color: var(--txt3); }
+.mk { border: 1px solid var(--brd); border-radius: 10px; background: var(--sur); overflow: hidden; margin: 8px 0 6px; }
+.mk-bar { display: flex; gap: 6px; align-items: center; padding: 8px 12px; background: var(--sur2); border-bottom: 1px solid var(--brd); font-size: 11px; color: var(--txt3); min-width: 0; }
+.mk-bar span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.mk-body { padding: 16px; font-size: 12px; color: var(--txt2); }
+.mk-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.mk-crumb { font-size: 11px; color: var(--txt3); margin-bottom: 2px; }
+.mk-crumb b { color: var(--txt1); font-weight: 600; }
+.mk-h { font-size: 18px; font-weight: 800; color: var(--txt1); line-height: 1.25; }
+.mk-sub { font-size: 11.5px; color: var(--txt2); max-width: 560px; }
+.mk-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.mk-btn { font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); white-space: nowrap; }
+.mk-btn.pri { background: var(--blue); border-color: var(--blue); color: var(--sur); }
+.mk-alerta { font-size: 11.5px; color: var(--txt1); background: var(--amber-d); border-left: 3px solid var(--amber); border-radius: 6px; padding: 8px 10px; margin: 10px 0; }
+.mk-alerta.info { background: var(--blue-d); border-color: var(--blue); }
+.mk-nota { font-size: 11px; color: var(--txt3); margin-top: 10px; }
+.mk-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--brd); margin-bottom: 12px; overflow-x: auto; }
+.mk-tabs span { font-size: 11.5px; padding: 7px 10px; color: var(--txt2); white-space: nowrap; border-bottom: 2px solid transparent; }
+.mk-tabs span.on { color: var(--blue); border-color: var(--blue); font-weight: 700; }
+.duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 680px) { .duo { grid-template-columns: minmax(0, 1fr); } }
+.tc { border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; background: var(--sur); min-width: 0; }
+.tc-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.tc-n { font-size: 13px; font-weight: 800; color: var(--txt1); }
+.tc-r { display: flex; justify-content: space-between; gap: 10px; font-size: 11.5px; padding: 4px 0; border-bottom: 1px dashed var(--brd); }
+.tc-r:last-of-type { border-bottom: none; }
+.tc-r b { color: var(--txt1); font-weight: 700; white-space: nowrap; }
+.tc-r b.zero { color: var(--green); }
+.tc-f { font-size: 10.5px; color: var(--txt3); margin-top: 8px; }
+.dm-wrap { overflow-x: auto; border: 1px solid var(--brd); border-radius: 8px; }
+table.dm { font-size: 11.5px; min-width: 760px; }
+table.dm th { text-transform: none; letter-spacing: 0; font-size: 11px; text-align: right; padding: 9px 12px; color: var(--txt1); }
+table.dm th:first-child, table.dm td:first-child { text-align: left; }
+table.dm td { text-align: right; padding: 8px 12px; color: var(--txt1); white-space: nowrap; vertical-align: middle; }
+table.dm td:first-child { white-space: normal; min-width: 210px; }
+table.dm tr.grp td { background: var(--sur2); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); text-align: left; }
+table.dm tr.n2 td:first-child { padding-left: 28px; }
+table.dm tr.res td { background: var(--blue-d); font-weight: 700; }
+table.dm td.z { color: var(--txt3); }
+table.dm td.rec { color: var(--blue); }
+.dv { display: inline-block; font-size: 9.5px; font-weight: 700; padding: 1px 7px; border-radius: 10px; background: var(--gray-d); color: var(--gray); white-space: nowrap; }
+.dv.ok { background: var(--green-d); color: var(--green); }
+.dv.inf { background: var(--blue-d); color: var(--blue); }
+.dv.am { background: var(--amber-d); color: var(--amber); }
+
+/* decisões */
+.dec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 14px 16px; margin: 12px 0; scroll-margin-top: 20px; }
+.dec-h { display: flex; gap: 8px 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; }
+.dec-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.dec-q { font-size: 13.5px; font-weight: 700; color: var(--txt1); flex: 1; min-width: 200px; }
+.dec p { margin-bottom: 8px; }
+.decide { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.opt { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--txt1); cursor: pointer; border: 1px solid var(--brd); border-radius: 20px; padding: 4px 12px; }
+.opt:has(input:checked) { border-color: var(--teal); background: var(--teal-d); }
+.opt .rec { font-size: 10px; font-weight: 700; color: var(--teal); }
+.obs { width: 100%; font: inherit; font-size: 12.5px; color: var(--txt1); background: var(--bg); border: 1px solid var(--brd); border-radius: 6px; padding: 7px 10px; resize: vertical; min-height: 34px; }
+.barra { position: sticky; bottom: 12px; margin-top: 24px; background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; box-shadow: 0 8px 24px var(--sombra); }
+.barra span { font-size: 12.5px; color: var(--txt2); margin-right: auto; }
+.btn { font: inherit; font-size: 12.5px; font-weight: 700; border-radius: 6px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--brd); background: var(--sur2); color: var(--txt1); }
+.btn.pri { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+textarea.saida { width: 100%; min-height: 180px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 12px; margin-top: 10px; display: none; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível quebra dentro do
+   próprio bloco; bloco largo rola dentro do seu container, nunca no body. */
+ul.plain li, ol.plain li { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  body { padding: 28px 16px 60px; }
+  h1 { font-size: 23px; }
+  .meta-fim { margin-left: 0; }
+  .doc, .section { overflow-wrap: anywhere; }
+  .mk-body { padding: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Apuração e Crédito</div>
+<h1>Zona Franca de Manaus no SplitHub</h1>
+<p class="subtitle">Como o SplitHub passa a tratar a indústria incentivada da Zona Franca de Manaus, nos dois lados da nota. Quem compra dela tem a guia do IBS reduzida e o crédito cheio. Quem é ela apura o IBS em subapurações e ganha o presumido de CBS. Um documento só, com regras, inconsistências, telas de referência, ordem de entrega e 12 decisões.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">30/10/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">Estudo <a class="xref" href="zfm-subapuracao-ibs.html">ZFM, subapuração do IBS</a> v1.1</span></div>
+<div class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">12</span></div>
+<div class="meta-pill meta-fim"><span class="chip warn">Em decisão</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> O que a proposta cobre</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> As duas situações</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Situação A · quem compra da indústria incentivada</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Situação B · quem é a indústria incentivada</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Regras de negócio propostas</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Inconsistências</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Dados e API</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Telas de referência</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Ordem de entrega</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Decisões</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Fontes e premissas</a></li>
+</ul></div>
+
+<!-- 01 -->
+<div class="section" id="s01"><div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O que a proposta cobre</span></div>
+<p>O estudo de referência explica a regra; esta proposta diz o que o SplitHub faz com ela. A partir de 2029, a indústria incentivada da Zona Franca apura o IBS em subapurações, uma por percentual de crédito presumido sobre o saldo devedor e uma não incentivada, antes da consolidação da empresa <span class="src">(Res. CGIBS 6, art. 522)</span>. A CBS dela tem um presumido de 6% ou 2% sobre o valor da nota desde 2027 <span class="src">(Decreto 12.955, art. 531)</span>. O incentivo também muda o que o cliente dela recolhe no RAD.</p>
+<ul class="plain">
+<li><strong>Cobre:</strong> Ingestão, Fornecedor, Organização, Execução RAD, Pagamentos, Crédito, Conciliação, Inconsistências, PCONT, motor do art. 53, Ressarcimento e Prazos.</li>
+<li><strong>Não cobre:</strong> os outros benefícios da Zona Franca e das Áreas de Livre Comércio. Os presumidos de aquisição (arts. 444, 447 e 449 da LC 214) só aparecem aqui quando entram no rateio da fábrica. O comércio na Zona Franca também fica de fora.</li>
+<li><strong>Não muda nada no app</strong> até as decisões da seção 10. A entrega proposta é um pacote na avaliação (D-ZF-12).</li>
+</ul>
+<div class="callout warn"><div class="ct">Princípio que vale para tudo abaixo</div><p>O SplitHub não controla o estado do ciclo: recebe dos entes, concilia, evidencia e segue. O que esta proposta calcula — guia esperada, crédito esperado, prévia das subapurações — é <strong>esperado</strong>, para conferir e antecipar. Quando o Comitê Gestor ou a Receita Federal publicar o valor, vale o deles, e a diferença vira informação ou inconsistência conforme a seção 06.</p></div>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s02"><div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">As duas situações</span></div>
+<p class="sec-sub">Um mesmo grupo pode estar nas duas: comprar de uma fábrica de Manaus e ter a própria.</p>
+<div class="ess">
+<div class="ess-c"><div class="ess-k">Situação A</div><div class="ess-t">O cliente compra da indústria incentivada</div><div class="ess-d">Qualquer cliente que compra do Polo Industrial de Manaus. Só IBS, a partir das competências de 2029. Toca a garantia do crédito.</div></div>
+<div class="ess-c"><div class="ess-k">Situação B</div><div class="ess-t">O cliente é a indústria incentivada</div><div class="ess-d">Grupo com fábrica em Manaus e estabelecimentos fora. CBS a partir de 2027 e IBS a partir de 2029. Toca o lado devedor, no PCONT.</div></div>
+</div>
+<div class="table-wrap"><table><thead><tr><th>Módulo</th><th>Situação A</th><th>Situação B</th></tr></thead><tbody>
+<tr><td><strong>Ingestão</strong></td><td>Desdobramento do IBS por classificação nas notas de entrada</td><td>O mesmo nas notas de saída, mais as notas de crédito tipo 02</td></tr>
+<tr><td><strong>Fornecedor · Organização</strong></td><td>Marca de indústria incentivada no fornecedor</td><td>Marca no estabelecimento do cliente, com Suframa e vigência</td></tr>
+<tr><td><strong>Execução RAD · Pagamentos</strong></td><td>Guia do IBS reduzida e líquido ao fornecedor ajustado</td><td>—</td></tr>
+<tr><td><strong>Crédito</strong></td><td>Crédito esperado igual ao IBS destacado</td><td>Presumidos de aquisição no rateio</td></tr>
+<tr><td><strong>PCONT</strong></td><td>—</td><td>Subapurações do IBS e presumido de CBS</td></tr>
+<tr><td><strong>Motor do art. 53 · Ressarcimento</strong></td><td>—</td><td>Créditos por subapuração; presumidos fora do ressarcimento</td></tr>
+<tr><td><strong>Conciliação · Inconsistências</strong></td><td>INC-PAG-03 ajustada e três ocorrências novas</td><td>Três ocorrências novas e o confronto por subapuração</td></tr>
+<tr><td><strong>Prazos</strong></td><td>—</td><td>Nota de crédito até a véspera da conclusão e devolução em 3 dias úteis</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s03"><div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Situação A · quem compra da indústria incentivada</span></div>
+<p class="sec-sub">Exemplo usado na seção: nota de 1.000.000 de um fornecedor de Manaus, com IBS de 100.000 (80.000 em bens de consumo final, a 55%, e 20.000 em bens de informática, a 100%) e CBS de 90.000, paga com recolhimento pelo adquirente.</p>
+<ol class="etapas">
+<li class="etapa"><div class="etapa-m"><b>1</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>A nota chega</b><span>Ingestão</span></div><p>O SplitHub lê a classificação de cada item (<code>tpCredPresIBSZFM</code>) e grava no registro fiscal do IBS o desdobramento: 80.000 na classificação 1 e 20.000 na 4. O item não é guardado; só a soma por classificação (D-ZF-02). Nota sem classificação fica com o IBS inteiro na classificação 0.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>2</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>O fornecedor é reconhecido</b><span>Fornecedor</span></div><p>Emitente do Amazonas com o grupo <code>gCredPresIBSZFM</code> preenchido ganha a marca "indústria incentivada · Zona Franca". A inscrição na Suframa, quando informada, confirma a marca (D-ZF-05).</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>3</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>A guia esperada é calculada</b><span>Execução RAD</span></div><p>Guia esperada do IBS = 80.000 × 45% + 20.000 × 0% = <strong>36.000</strong>. A guia da CBS segue em 90.000. A redução só acontece com as três condições juntas: competência de 2029 em diante, classificação de 1 a 4 e fornecedor marcado. Faltando uma delas, a guia é cheia (RN-ZF-02).</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>4</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>A guia é emitida</b><span>Execução RAD</span></div><p>Quando o Comitê Gestor devolver o valor da guia do adquirente, esse valor substitui o calculado. Ele pode ser menor, porque desconta os créditos da fábrica (§ 8º, II). A diferença é esperada e não abre inconsistência (D-ZF-04).</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>5</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>O fornecedor é pago</b><span>Pagamentos</span></div><p>Líquido ao fornecedor = total da nota − guias efetivas = 1.190.000 − 90.000 − 36.000 = <strong>1.064.000</strong>. Um único valor de guia alimenta a guia e o líquido; se a guia mudar, o líquido é refeito (RN-ZF-05).</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>6</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>O crédito é esperado cheio</b><span>Crédito</span></div><p>Crédito esperado do IBS = <strong>100.000</strong>, o destacado (§ 12). A parcialidade compara a extinção com a guia esperada, não com o destacado: a guia de 36.000 paga é extinção total, não 36% (D-ZF-06).</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>7</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>O Comitê Gestor confirma</b><span>Conciliação</span></div><p>O movimento do crédito continua vindo só do Comitê Gestor (C-01). Se ele apropriar menos que o destacado numa nota com guia reduzida, abre a INC-ZF-03, a mais grave da proposta.</p></div></li>
+</ol>
+<div class="table-wrap"><table><thead><tr><th></th><th class="num">Hoje</th><th class="num">Com a proposta</th></tr></thead><tbody>
+<tr><td><strong>Guia do IBS</strong></td><td class="num">100.000</td><td class="num">36.000</td></tr>
+<tr><td><strong>Guia da CBS</strong></td><td class="num">90.000</td><td class="num">90.000</td></tr>
+<tr><td><strong>Líquido ao fornecedor</strong></td><td class="num">1.000.000</td><td class="num">1.064.000</td></tr>
+<tr class="tot"><td>Desembolso do cliente</td><td class="num">1.190.000</td><td class="num">1.190.000</td></tr>
+<tr class="tot"><td>Crédito de IBS esperado</td><td class="num">100.000</td><td class="num">100.000</td></tr>
+</tbody></table></div>
+<div class="callout"><div class="ct">Por que "na dúvida, guia cheia"</div><p>Guia cheia não tira crédito: o débito do fornecedor é extinto por inteiro, e o incentivo chega a ele depois, pela subapuração. Guia reduzida para quem não tem o incentivo deixa parte do débito em aberto, e o crédito do cliente depende da extinção <span class="src">(LC 214, art. 47)</span>. O erro de um lado custa caixa ao fornecedor por alguns dias; o do outro custa crédito ao cliente.</p></div>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s04"><div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Situação B · quem é a indústria incentivada</span></div>
+<p class="sec-sub">A empresa do exemplo do estudo: fábrica em Manaus e matriz em São Paulo. O PCONT fecha o mês do lado devedor e é nele que tudo aparece.</p>
+<h3>Cadastro e dados</h3>
+<ul class="plain">
+<li><strong>Estabelecimento:</strong> marca de indústria incentivada em Organização, com inscrição na Suframa, número do projeto aprovado e vigência. A marca liga a subapuração; sem ela, a fábrica entra no consolidado como qualquer estabelecimento.</li>
+<li><strong>Classificação dos débitos:</strong> vem das notas de saída emitidas pelo cliente, com o mesmo desdobramento da situação A. Débito sem classificação vai para a subapuração não incentivada, a mais conservadora (RN-ZF-07).</li>
+<li><strong>Histórico do rateio:</strong> 12 meses de vendas da fábrica por classificação, transferências incluídas. Carga inicial por arquivo do ERP e, daí em diante, acumulado pelas notas (D-ZF-09).</li>
+</ul>
+<h3>PCONT · IBS</h3>
+<p>O IBS da empresa ganha uma etapa antes do saldo consolidado. Para cada subapuração da fábrica, o SplitHub monta a prévia: débitos, créditos rateados, saldo devedor, presumido, extinções e resultado. O resultado a recolher entra no consolidado com os estabelecimentos de fora, e a guia continua única. A simulação de imputação do PCONT passa a partir do consolidado já calculado. Quando o Comitê Gestor publicar as subapurações, a prévia é confrontada com elas (D-ZF-08). A tela está na seção 08.</p>
+<h3>PCONT · CBS</h3>
+<p>Uma linha de crédito presumido na apuração única da CBS: 6% do valor das vendas para os produtos do art. 454 da LC 214 e 2% nos demais casos, apropriável na emissão da nota. Ficam fora as operações isentas, com alíquota zero, suspensão ou diferimento, e os bens excluídos do regime. Começa nas competências de 2027 (D-ZF-11).</p>
+<h3>Créditos, ressarcimento e prazos</h3>
+<ul class="plain">
+<li><strong>Motor do art. 53:</strong> os créditos da fábrica ficam separados por subapuração. O saldo a recuperar de uma subapuração só compensa nela, e o presumido só compensa IBS.</li>
+<li><strong>Ressarcimento:</strong> os presumidos saem da base do pedido. A devolução em até 3 dias úteis do saldo a recuperar (§ 13, II) é um recebível acompanhado à parte, não um pedido de ressarcimento.</li>
+<li><strong>Nota de crédito tipo 02:</strong> o SplitHub calcula o presumido de cada subapuração e avisa; o emissor do cliente emite a nota (D-ZF-10). O prazo é a véspera da conclusão da apuração, com aviso cinco dias antes.</li>
+<li><strong>Validade:</strong> o presumido expira em 5 anos. Conta por fatia apropriada, como o resto do crédito desde a D-PAR-03.</li>
+</ul>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s05"><div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Regras de negócio propostas</span></div>
+<p class="sec-sub">Entram nos PRDs indicados depois da aprovação. Os IDs são provisórios.</p>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Regra</th><th>Sit.</th><th>PRD</th><th>Base</th></tr></thead><tbody>
+<tr><td class="rid">RN-ZF-01</td><td>O registro fiscal do IBS guarda o desdobramento por classificação (0 a 4), calculado na ingestão a partir dos itens. Nota sem classificação fica com tudo na 0.</td><td>A, B</td><td>Ingestão</td><td class="art">NT 2025.002, I05k</td></tr>
+<tr><td class="rid">RN-ZF-02</td><td>Guia esperada do IBS = soma, por classificação, do IBS × (1 − percentual). Só vale com competência de 2029 em diante, classificação de 1 a 4 e fornecedor marcado. Faltando uma condição, a guia é cheia.</td><td>A</td><td>Execução RAD</td><td class="art">Res. 6, art. 522, §§ 8º, I, 9º e 10</td></tr>
+<tr><td class="rid">RN-ZF-03</td><td>Valor de guia devolvido pelo Comitê Gestor substitui o calculado. A diferença entre os dois não abre inconsistência.</td><td>A</td><td>Execução RAD</td><td class="art">§ 8º, II</td></tr>
+<tr><td class="rid">RN-ZF-04</td><td>Crédito esperado do IBS = IBS destacado, qualquer que seja a guia. A parcialidade compara a extinção com a guia esperada.</td><td>A</td><td>Crédito</td><td class="art">§ 12; LC 214, art. 450, § 4º</td></tr>
+<tr><td class="rid">RN-ZF-05</td><td>Líquido ao fornecedor = total da nota − guia da CBS − guia do IBS efetivas. Mudou a guia, o líquido é refeito.</td><td>A</td><td>Execução RAD</td><td class="art">LC 214, art. 36, § 3º</td></tr>
+<tr><td class="rid">RN-ZF-06</td><td>A guia da CBS no RAD nunca é reduzida pelo incentivo.</td><td>A</td><td>Execução RAD</td><td class="art">Decreto 12.955, arts. 29, § 7º, e 36</td></tr>
+<tr><td class="rid">RN-ZF-07</td><td>Débito da fábrica cai na subapuração da sua classificação. Sem classificação, na não incentivada.</td><td>B</td><td>PCONT</td><td class="art">Res. 6, art. 522, §§ 1º e 2º</td></tr>
+<tr><td class="rid">RN-ZF-08</td><td>Créditos das compras da fábrica, presumidos de aquisição incluídos, são rateados pela média de 12 meses das vendas por subapuração, contando o mês e as transferências. Com menos de 12 meses de atividade, usam-se os meses em atividade.</td><td>B</td><td>PCONT</td><td class="art">§§ 4º e 5º</td></tr>
+<tr><td class="rid">RN-ZF-09</td><td>Presumido da subapuração = percentual × saldo devedor sem o presumido. Saldo devedor zero ou negativo, presumido zero.</td><td>B</td><td>PCONT</td><td class="art">§ 7º; Res. 6, art. 521, § 1º</td></tr>
+<tr><td class="rid">RN-ZF-10</td><td>Ordem em cada subapuração: saldo devedor, presumido, extinções por split, RAD e responsável. Saldo a recuperar volta à fábrica em até 3 dias úteis, limitado às extinções do mês; o que sobrar compensa na própria subapuração. Saldo a recolher vai ao consolidado.</td><td>B</td><td>PCONT · Apuração</td><td class="art">§ 13</td></tr>
+<tr><td class="rid">RN-ZF-11</td><td>Presumidos de IBS e de CBS compensam só o próprio tributo, não entram no ressarcimento e expiram em 5 anos.</td><td>B</td><td>Ressarcimento · Crédito</td><td class="art">LC 214, art. 452; Res. 6, art. 523; Decreto 12.955, art. 533</td></tr>
+<tr><td class="rid">RN-ZF-12</td><td>Uma nota de crédito tipo 02 por subapuração, até a véspera da conclusão da apuração. Aviso cinco dias antes.</td><td>B</td><td>Prazos</td><td class="art">§ 14</td></tr>
+<tr><td class="rid">RN-ZF-13</td><td>Presumido de CBS da fábrica: 6% ou 2% do valor da operação, apropriável na emissão, a partir das competências de 2027, fora as operações excluídas.</td><td>B</td><td>PCONT</td><td class="art">Decreto 12.955, art. 531</td></tr>
+<tr><td class="rid">RN-ZF-14</td><td>Valores de CBS e de IBS nunca são somados, nem os presumidos. O total só aparece no desembolso da competência.</td><td>A, B</td><td>PCONT</td><td class="art">Decisão do PCONT (R-274)</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s06"><div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Inconsistências</span></div>
+<p class="sec-sub">Uma ajustada e seis novas. Os IDs definitivos saem quando entrarem no <a class="xref" href="catalogo-inconsistencias.html">catálogo</a>.</p>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>O que acontece</th><th>Sit.</th><th>Gravidade</th><th>Ação sugerida</th></tr></thead><tbody>
+<tr><td class="rid">INC-PAG-03</td><td><strong>Ajustada.</strong> Comprovante de IBS divergente passa a comparar com a guia esperada, não com o <code>rf.valor</code>. Sem o ajuste, dispararia em toda nota da Zona Franca.</td><td>A</td><td><span class="chip red">Alta</span></td><td>—</td></tr>
+<tr><td class="rid">INC-ZF-01</td><td>Nota de fornecedor marcado como indústria incentivada sem a classificação do item. A guia sai cheia.</td><td>A</td><td><span class="chip gray">Baixa</span></td><td>Pedir ao fornecedor a nota com a classificação</td></tr>
+<tr><td class="rid">INC-ZF-02</td><td>Guia reduzida paga para fornecedor sem a marca ou com o projeto vencido. Parte do débito pode ter ficado em aberto.</td><td>A</td><td><span class="chip red">Alta</span></td><td>Recolher a diferença; conferir o cadastro</td></tr>
+<tr><td class="rid">INC-ZF-03</td><td>Crédito apropriado pelo Comitê Gestor abaixo do IBS destacado em nota com guia reduzida paga.</td><td>A</td><td><span class="chip red">Alta</span></td><td>Chamado ao Comitê Gestor com a guia e a nota</td></tr>
+<tr><td class="rid">INC-ZF-04</td><td>Prévia de uma subapuração diverge da publicada pelo Comitê Gestor.</td><td>B</td><td><span class="chip warn">Média</span></td><td>Conferir rateio, classificação e extinções</td></tr>
+<tr><td class="rid">INC-ZF-05</td><td>Nota de crédito tipo 02 de uma subapuração não encontrada na véspera da conclusão.</td><td>B</td><td><span class="chip red">Alta</span></td><td>Emitir a nota com o valor calculado</td></tr>
+<tr><td class="rid">INC-ZF-06</td><td>Devolução do saldo a recuperar não recebida em 3 dias úteis da conclusão.</td><td>B</td><td><span class="chip warn">Média</span></td><td>Acompanhar com o Comitê Gestor</td></tr>
+</tbody></table></div>
+<p class="src">A gravidade segue a D-PAR-10: alta vai para o M0, média para o M1 e baixa para o M2.</p>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s07"><div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Dados e API</span></div>
+<p class="sec-sub">Nomes em inglês, como o resto da API. Todos provisórios.</p>
+<div class="table-wrap"><table><thead><tr><th>Onde</th><th>Campo</th><th>O que leva</th></tr></thead><tbody>
+<tr><td><strong>DF · entrada e saída</strong></td><td><code>ibs.zfm_breakdown[]</code></td><td><code>classification</code> (0 a 4), <code>rate</code> e <code>ibs_amount</code>. Calculado na ingestão a partir dos itens.</td></tr>
+<tr><td><strong>Registro fiscal do IBS</strong></td><td><code>expected_payment_amount</code><br><code>expected_credit_amount</code><br><code>payment_basis</code></td><td>A guia esperada e o crédito esperado, separados. A base diz de onde veio a guia: <code>full</code>, <code>zfm_rate</code> ou <code>tax_authority</code>.</td></tr>
+<tr><td><strong>Fornecedor</strong></td><td><code>zfm_incentivized_industry</code></td><td><code>source</code> (<code>invoice</code> ou <code>suframa</code>), <code>suframa_registration</code> e <code>valid_until</code>.</td></tr>
+<tr><td><strong>Estabelecimento</strong></td><td><code>zfm_incentivized_industry</code></td><td><code>suframa_registration</code>, <code>project_number</code>, <code>valid_from</code> e <code>valid_until</code>.</td></tr>
+<tr><td><strong>Evento <code>rad.darf_received</code></strong></td><td><code>amount</code>, <code>expected_amount</code>, <code>payment_basis</code>, <code>supplier_net_amount</code></td><td>O valor efetivo da guia, o esperado, a base e o líquido ao fornecedor, para o ERP pagar certo.</td></tr>
+<tr><td><strong>PCONT · IBS</strong></td><td><code>sub_assessments[]</code></td><td>Por subapuração: <code>classification</code>, <code>debits</code>, <code>allocated_credits</code>, <code>debit_balance</code>, <code>presumed_credit</code>, <code>extinctions</code>, <code>result</code> e <code>source</code> (<code>splithub</code> ou <code>tax_authority</code>).</td></tr>
+<tr><td><strong>Carga do rateio</strong></td><td>arquivo mensal</td><td>Vendas da fábrica por mês e classificação, transferências separadas, para os 12 meses anteriores ao início no SplitHub.</td></tr>
+</tbody></table></div>
+<p class="src">O item da nota não é guardado na v1 (escopo de 05/10/2026). O desdobramento por classificação resolve a Zona Franca sem ele; quando o item entrar, o desdobramento passa a ser derivado dele.</p>
+</div>
+
+<!-- 08 -->
+<div class="section" id="s08"><div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Telas de referência</span></div>
+<p class="sec-sub">Maquetes de estrutura, não de acabamento. Valores fictícios.</p>
+
+<div class="tela-t"><span class="tela-id">T-ZF-01</span><span class="tela-nome">Detalhe do DF de uma nota da Zona Franca</span><span class="tela-onde">Crédito → documento · situação A</span></div>
+<div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span>Crédito › Documento fiscal</span></div>
+<div class="mk-body">
+<div class="mk-top"><div><div class="mk-crumb">Crédito › <b>NF-e 4.512</b></div><div class="mk-h">Indústria Exemplo Ltda. <span class="dv am">indústria incentivada · Zona Franca</span></div><div class="mk-sub">Manaus/AM · competência 03/2029 · recolhimento pelo adquirente</div></div><div class="mk-btns"><span class="mk-btn">Ver nota</span><span class="mk-btn pri">Emitir guias</span></div></div>
+<div class="mk-tabs"><span>Resumo</span><span class="on">IBS</span><span>CBS</span><span>Histórico</span></div>
+<div class="duo">
+<div class="tc"><div class="tc-h"><span class="tc-n">Guia do IBS</span><span class="dv inf">reduzida pelo percentual</span></div>
+<div class="tc-r"><span>Consumo final · 55% · IBS 80.000</span><b>36.000</b></div>
+<div class="tc-r"><span>Informática · 100% · IBS 20.000</span><b class="zero">0</b></div>
+<div class="tc-r"><span>Guia esperada</span><b>36.000</b></div>
+<div class="tc-f">Base: percentual da nota (§ 9º). Troca pelo valor do Comitê Gestor quando ele devolver a guia do adquirente.</div></div>
+<div class="tc"><div class="tc-h"><span class="tc-n">Crédito do IBS</span><span class="dv ok">esperado cheio</span></div>
+<div class="tc-r"><span>IBS destacado</span><b>100.000</b></div>
+<div class="tc-r"><span>Crédito esperado</span><b>100.000</b></div>
+<div class="tc-r"><span>Apropriado pelo Comitê Gestor</span><b>aguardando</b></div>
+<div class="tc-f">A guia de 36.000 paga extingue o débito inteiro (§ 12).</div></div>
+</div>
+<div class="mk-alerta info">Líquido ao fornecedor: 1.190.000 − 90.000 (CBS) − 36.000 (IBS) = <b>1.064.000</b>. É o valor que vai ao ERP no <code>rad.darf_received</code>.</div>
+</div></div>
+<p class="mk-nota">Sem a marca do fornecedor ou sem a classificação, o cartão da guia mostra "cheia" e a INC-ZF-01 aparece no lugar do desdobramento.</p>
+
+<div class="tela-t"><span class="tela-id">T-ZF-02</span><span class="tela-nome">PCONT · IBS com as subapurações da fábrica</span><span class="tela-onde">Apuração Assistida → PCONT · situação B</span></div>
+<div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span>Apuração Assistida › PCONT › IBS</span></div>
+<div class="mk-body">
+<div class="mk-top"><div><div class="mk-crumb">PCONT › <b>Grupo Exemplo · 03/2029 · IBS</b></div><div class="mk-h">Saldo do IBS da competência</div><div class="mk-sub">A fábrica de Manaus é apurada antes, por subapuração. A guia continua única.</div></div><div class="mk-btns"><span class="mk-btn">Rateio de 12 meses</span><span class="mk-btn pri">Simular guia</span></div></div>
+<div class="dm-wrap"><table class="dm"><thead><tr><th>Origem</th><th>Débitos</th><th>Créditos</th><th>Saldo devedor</th><th>Presumido</th><th>Extinções</th><th>Resultado</th><th>Comitê Gestor</th></tr></thead><tbody>
+<tr class="grp"><td colspan="8">Fábrica Manaus · indústria incentivada</td></tr>
+<tr class="n2"><td>Consumo final · 55% <span class="src">rateio 60%</span></td><td>1.200.000</td><td>600.000</td><td>600.000</td><td>330.000</td><td>200.000</td><td>70.000</td><td><span class="dv">aguardando</span></td></tr>
+<tr class="n2"><td>Informática · 100% <span class="src">rateio 30%</span></td><td>500.000</td><td>300.000</td><td>200.000</td><td>200.000</td><td class="z">—</td><td>0</td><td><span class="dv">aguardando</span></td></tr>
+<tr class="n2"><td>Não incentivada <span class="src">rateio 10%</span></td><td>150.000</td><td>100.000</td><td>50.000</td><td class="z">—</td><td>80.000</td><td class="rec">30.000 a recuperar</td><td><span class="dv">aguardando</span></td></tr>
+<tr class="grp"><td colspan="8">Fora da Zona Franca</td></tr>
+<tr class="n2"><td>Matriz e filiais</td><td>3.000.000</td><td>2.000.000</td><td>1.000.000</td><td class="z">—</td><td>600.000</td><td>400.000</td><td><span class="dv ok">confere</span></td></tr>
+<tr class="res"><td>Guia única do IBS</td><td></td><td></td><td></td><td></td><td></td><td>470.000</td><td></td></tr>
+</tbody></table></div>
+<div class="mk-alerta">Nota de crédito tipo 02: consumo final, 330.000, e informática, 200.000. Prazo: véspera da conclusão da apuração. Devolução esperada: 30.000 em até 3 dias úteis.</div>
+</div></div>
+<p class="mk-nota">A CBS da mesma competência fica na aba ao lado, numa apuração única, com a linha do presumido de 6% ou 2% da fábrica.</p>
+</div>
+
+<!-- 09 -->
+<div class="section" id="s09"><div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Ordem de entrega</span></div>
+<p class="sec-sub">Pela data em que cada regra passa a valer. Entrega no pacote AV-ZF, com as flags <code>zfm_adquirente</code> e <code>zfm_industria</code>, ligadas por empresa no backoffice.</p>
+<div class="table-wrap"><table><thead><tr><th>Etapa</th><th>Quando</th><th>O que entra</th><th>Sit.</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td>Até dez/2026</td><td>Decisões desta proposta. Se houver cliente com fábrica incentivada, o presumido de CBS no PCONT do exercício de 2027.</td><td>B</td></tr>
+<tr><td><strong>2</strong></td><td>2027</td><td>
+<ul class="plain">
+<li>o desdobramento por classificação na ingestão, de entrada e de saída;</li>
+<li>a marca no fornecedor e no estabelecimento;</li>
+<li>a carga inicial e o acúmulo do histórico do rateio.</li>
+</ul></td><td>A, B</td></tr>
+<tr><td><strong>3</strong></td><td>2028</td><td>
+<ul class="plain">
+<li>a guia esperada, o líquido e o crédito esperado;</li>
+<li>a INC-PAG-03 ajustada e as INC-ZF-01 a 03;</li>
+<li>a prévia das subapurações em modo simulado.</li>
+</ul></td><td>A, B</td></tr>
+<tr><td><strong>4</strong></td><td>Jan/2029</td><td>
+<ul class="plain">
+<li>as subapurações valendo no PCONT;</li>
+<li>o motor do art. 53 por subapuração;</li>
+<li>a nota de crédito tipo 02 e as INC-ZF-05 e 06;</li>
+<li>o ressarcimento sem os presumidos.</li>
+</ul>
+A INC-ZF-04 e o confronto por subapuração entram quando o Comitê Gestor publicar as subapurações.</td><td>B</td></tr>
+</tbody></table></div>
+<p>PRDs a atualizar depois das decisões: <a class="xref" href="prd-ingestao.html">Ingestão</a>, <a class="xref" href="prd-fornecedor.html">Fornecedor</a>, <a class="xref" href="prd-organizacao.html">Organização</a>, <a class="xref" href="prd-execucao-rad.html">Execução RAD</a>, <a class="xref" href="prd-credito.html">Crédito</a>, <a class="xref" href="prd-conciliacao.html">Conciliação</a>, <a class="xref" href="prd-pcont.html">PCONT</a>, <a class="xref" href="prd-apuracao.html">Apuração</a> e <a class="xref" href="prd-ressarcimento.html">Ressarcimento</a>, além do catálogo de inconsistências e do leiaute de DF da API.</p>
+</div>
+
+<!-- 10 -->
+<div class="section" id="s10"><div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Decisões</span></div>
+<p>Marque uma opção em cada decisão e use "Copiar escolhas" para mandar o resultado. A primeira opção é a recomendada.</p>
+<div id="decisoes">
+<div class="dec" data-dec="D-ZF-01"><div class="dec-h"><span class="dec-id">D-ZF-01</span><span class="dec-q">Escopo</span></div><p>As duas situações, na ordem da seção 09. A situação A é a de quase todo cliente e toca a garantia do crédito; a B é rara, mas tem o primeiro efeito, em 2027.</p><div class="decide"><label class="opt"><input type="radio" name="D-ZF-01" value="A e B, por etapas"> A e B, por etapas <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-ZF-01" value="Só A"> Só A</label><label class="opt"><input type="radio" name="D-ZF-01" value="Só B"> Só B</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-ZF-02"><div class="dec-h"><span class="dec-id">D-ZF-02</span><span class="dec-q">Nível do dado, sem o item da nota</span></div><p>Calcular na ingestão a soma do IBS por classificação e guardar só isso no registro fiscal. Resolve a Zona Franca na v1, que não guarda item. A alternativa é esperar o item, previsto para os próximos 12 meses.</p><div class="decide"><label class="opt"><input type="radio" name="D-ZF-02" value="Desdobramento por classificação no registro fiscal"> Desdobramento por classificação <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-ZF-02" value="Esperar o item da nota"> Esperar o item</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-ZF-03"><div class="dec-h"><span class="dec-id">D-ZF-03</span><span class="dec-q">Valor da guia do IBS no RAD</span></div><p>Reduzir só com as três condições (competência, classificação e marca do fornecedor) e, na dúvida, guia cheia. Sempre cheia é a opção mais segura para o crédito, mas atrasa o caixa do fornecedor até a conclusão da apuração dele.</p><div class="decide"><label class="opt"><input type="radio" name="D-ZF-03" value="Reduzida com as três condições, cheia na dúvida"> Reduzida com as três condições <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-ZF-03" value="Sempre cheia"> Sempre cheia</label><label class="opt"><input type="radio" name="D-ZF-03" value="Política do cliente por fornecedor"> Política do cliente por fornecedor</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-ZF-04"><div class="dec-h"><span class="dec-id">D-ZF-04</span><span class="dec-q">Valor do Comitê Gestor</span></div><p>Quando o Comitê Gestor devolver o valor da guia do adquirente, ele substitui o calculado, e a diferença não abre inconsistência.</p><div class="decide"><label class="opt"><input type="radio" name="D-ZF-04" value="Prevalece o do Comitê Gestor"> Prevalece o do Comitê Gestor <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-ZF-04" value="Só o calculado pelo SplitHub"> Só o calculado</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-ZF-05"><div class="dec-h"><span class="dec-id">D-ZF-05</span><span class="dec-q">Como o fornecedor é marcado</span></div><p>Pela nota (emitente do Amazonas com o grupo preenchido), confirmada pela inscrição na Suframa quando o cliente informar. Só cadastro manual deixa de fora o fornecedor que ninguém cadastrou.</p><div class="decide"><label class="opt"><input type="radio" name="D-ZF-05" value="Pela nota, confirmada pela Suframa"> Pela nota, confirmada pela Suframa <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-ZF-05" value="Só cadastro manual"> Só cadastro manual</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-ZF-06"><div class="dec-h"><span class="dec-id">D-ZF-06</span><span class="dec-q">Crédito esperado</span></div><p>Sempre o IBS destacado, com a parcialidade comparando a extinção com a guia esperada. A alternativa é não mostrar esperado e esperar o Comitê Gestor, o que tira o aviso da INC-ZF-03.</p><div class="decide"><label class="opt"><input type="radio" name="D-ZF-06" value="Destacado, parcialidade contra a guia esperada"> Destacado, parcialidade contra a guia esperada <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-ZF-06" value="Sem esperado, só o do Comitê Gestor"> Sem esperado</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-ZF-07"><div class="dec-h"><span class="dec-id">D-ZF-07</span><span class="dec-q">Inconsistências</span></div><p>Ajustar a INC-PAG-03 e criar as seis da seção 06.</p><div class="decide"><label class="opt"><input type="radio" name="D-ZF-07" value="Ajustar a INC-PAG-03 e criar as seis"> Ajustar e criar as seis <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-ZF-07" value="Ajustar a INC-PAG-03 e criar só as de gravidade alta"> Só as de gravidade alta</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-ZF-08"><div class="dec-h"><span class="dec-id">D-ZF-08</span><span class="dec-q">Subapurações no PCONT</span></div><p>O SplitHub monta a prévia e confronta com o Comitê Gestor quando ele publicar. Mostrar só o publicado deixa o cliente sem o número até o dia da apuração assistida.</p><div class="decide"><label class="opt"><input type="radio" name="D-ZF-08" value="Prévia do SplitHub e confronto com o Comitê Gestor"> Prévia e confronto <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-ZF-08" value="Só o publicado pelo Comitê Gestor"> Só o publicado</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-ZF-09"><div class="dec-h"><span class="dec-id">D-ZF-09</span><span class="dec-q">Histórico para o rateio de 12 meses</span></div><p>Carga inicial por arquivo do ERP e acúmulo pelas notas daí em diante. Só pelas notas, o rateio fica errado nos primeiros 12 meses de uso de uma fábrica que já operava.</p><div class="decide"><label class="opt"><input type="radio" name="D-ZF-09" value="Carga inicial pelo ERP e acúmulo pelas notas"> Carga inicial e acúmulo <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-ZF-09" value="Só pelas notas no SplitHub"> Só pelas notas</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-ZF-10"><div class="dec-h"><span class="dec-id">D-ZF-10</span><span class="dec-q">Nota de crédito tipo 02</span></div><p>O SplitHub calcula o valor e avisa, e o emissor do cliente emite. Gerar o XML no SplitHub o colocaria no papel de emissor de NF-e.</p><div class="decide"><label class="opt"><input type="radio" name="D-ZF-10" value="SplitHub calcula e avisa, o emissor do cliente emite"> Calcula e avisa <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-ZF-10" value="SplitHub gera o XML para o emissor assinar"> Gera o XML</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-ZF-11"><div class="dec-h"><span class="dec-id">D-ZF-11</span><span class="dec-q">Presumido de CBS no PCONT</span></div><p>Entra no exercício de 2027, quando passa a valer. Deixar para 2029, junto com o IBS, mostra uma CBS a pagar maior do que a real por dois anos.</p><div class="decide"><label class="opt"><input type="radio" name="D-ZF-11" value="No exercício de 2027"> Em 2027 <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-ZF-11" value="Junto com o IBS, em 2029"> Em 2029</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-ZF-12"><div class="dec-h"><span class="dec-id">D-ZF-12</span><span class="dec-q">Entrega</span></div><p>Pacote AV-ZF na avaliação, com as flags <code>zfm_adquirente</code> e <code>zfm_industria</code>.</p><div class="decide"><label class="opt"><input type="radio" name="D-ZF-12" value="Pacote AV-ZF na avaliação"> Pacote AV-ZF na avaliação <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-ZF-12" value="Direto no app"> Direto no app</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+</div>
+<div class="barra"><span id="cont">0 de 12 decididas</span><button class="btn" type="button" onclick="recomendadas()">Marcar as recomendadas</button><button class="btn pri" type="button" onclick="copiar()">Copiar escolhas</button></div>
+<textarea class="saida" id="saida" readonly></textarea>
+</div>
+
+<!-- 11 -->
+<div class="section" id="s11"><div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Fontes e premissas</span></div>
+<ul class="plain">
+<li>No hub: o estudo <a class="xref" href="zfm-subapuracao-ibs.html">Zona Franca de Manaus: a subapuração do IBS</a> (v1.1), com as fontes normativas na seção 13, o mês passo a passo na seção 05 e o impacto por módulo na seção 10. Também <a class="xref" href="creditos-sem-df.html">Créditos sem documento fiscal</a>, o <a class="xref" href="prd-pcont.html">PRD do PCONT</a> e o <a class="xref" href="catalogo-inconsistencias.html">catálogo de inconsistências</a>.</li>
+<li>LC 214/2025, na redação da LC 227/2026: arts. 36, 42, 47, 450, 452, 454 e 544.</li>
+<li>Resolução CGIBS nº 6/2026: arts. 435, 521, 522 e 523.</li>
+<li>Decreto nº 12.955/2026: arts. 29, § 7º, 36, 531 e 533.</li>
+<li>NT 2025.002-RTC v1.30: campos I05k, UB109 e UB131 e a nota de crédito tipo 02.</li>
+</ul>
+<div class="callout warn"><div class="ct">Premissas a confirmar</div><ul class="plain">
+<li>A API da guia do adquirente do IBS está listada no MOC v1.10 (item 5.11) sem especificação. Não se sabe se ela vai devolver o valor já reduzido.</li>
+<li>A cartilha e o MOC da apuração assistida do IBS ainda não mostram as subapurações. O confronto da D-ZF-08 depende disso.</li>
+<li>A obrigatoriedade da classificação do item está como "implementação futura" na NT. Até lá, haverá nota de indústria incentivada sem ela.</li>
+<li>Duas fábricas incentivadas na mesma empresa: o art. 522 não diz se as subapurações do mesmo percentual somam. A tela T-ZF-02 supõe uma fábrica.</li>
+<li>O débito sem classificação ir para a subapuração não incentivada é leitura nossa do § 2º, escolhida por ser a mais conservadora.</li>
+<li>Os valores das telas e dos exemplos são fictícios.</li>
+</ul></div>
+</div>
+
+<div class="foot">Proposta v1.0 · 30/10/2026 · base: estudo ZFM v1.1 (R-282); valores de exemplo.</div>
+</div>
+<script>
+(function () {
+  var decs = document.querySelectorAll('[data-dec]');
+  function contar() {
+    var n = 0;
+    decs.forEach(function (d) { if (d.querySelector('input:checked')) n++; });
+    document.getElementById('cont').textContent = n + ' de ' + decs.length + ' decididas';
+  }
+  document.getElementById('decisoes').addEventListener('change', contar);
+  window.recomendadas = function () {
+    decs.forEach(function (d) { var r = d.querySelector('input[type=radio]'); if (r && !d.querySelector('input:checked')) r.checked = true; });
+    contar();
+  };
+  window.copiar = function () {
+    var out = ['Proposta Zona Franca de Manaus v1.0: escolhas'];
+    decs.forEach(function (d) {
+      var r = d.querySelector('input:checked'), o = d.querySelector('textarea');
+      out.push(d.getAttribute('data-dec') + ': ' + (r ? r.value : 'sem escolha') + (o && o.value.trim() ? ' (' + o.value.trim() + ')' : ''));
+    });
+    var s = out.join('\n'), ta = document.getElementById('saida');
+    ta.value = s; ta.style.display = 'block';
+    var aviso = function (t) { document.getElementById('cont').textContent = t; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(s).then(function () { aviso('Escolhas copiadas.'); }).catch(function () { aviso('Copie o texto abaixo.'); ta.select(); });
+    } else { aviso('Copie o texto abaixo.'); ta.select(); }
+  };
+})();
+</script>
+</body>
+</html>

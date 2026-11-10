@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — PCONT · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="doc">
+<a class="back" href="../prds.html">← Hub de PRDs</a>
+<div class="eyebrow">PRD · Apuração Assistida → PCONT</div>
+<h1>PCONT — O saldo do mês, por tributo, até a extinção</h1>
+<p class="subtitle">O fechamento do mês do lado devedor. Para cada empresa do grupo, o PCONT compara o saldo a recolher do SplitHub com o da Receita Federal (CBS) e com o do Comitê Gestor (IBS), abre cada valor até a nota, liga cada divergência a um chamado, gera a guia, manda tudo ao ERP e acompanha até o ente extinguir os débitos. Substitui a tela da Apuração IBS/CBS e traz o painel executivo do grupo.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Apuração Assistida → PCONT</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">29/10/2026</span></div>
+<div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-pcont · #view-pcont-painel</span></div>
+<div class="meta-pill"><span class="meta-label">LC 214/2025</span>&nbsp;<span class="meta-val">Arts. 27, 44 a 47 e 348</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Em avaliação · AV-PC</span>&nbsp;<span class="chip ok">v1.0</span></div>
+</div>
+
+<div class="callout info" style="margin:18px 0"><div class="ct">De onde vem</div><p>Proposta aprovada em 29/10/2026 com as 14 decisões (<a class="xref" href="../proposta-modulo-pcont.html">proposta-modulo-pcont.html</a>, v1.1): o painel da competência, com o prazo por etapa e a decisão registrada por divergência. Depois da aprovação, o usuário pediu mais duas coisas: a escolha da empresa do grupo econômico e um painel executivo do grupo e das empresas. As duas estão neste PRD. O protótipo está no pacote <strong>AV-PC</strong> (branch <code>feat/pcont</code>), atrás das flags <code>pcont</code> e <code>pcont_painel</code>.</p></div>
+<div class="callout red" style="margin:18px 0"><div class="ct">Um tributo, um ente</div><p>A CBS é apurada e paga à <strong>Receita Federal</strong>, por DARF. O IBS é apurado e pago ao <strong>Comitê Gestor</strong>, por documento de arrecadação. Os saldos dos dois tributos nunca se somam, e o módulo não usa a palavra "Fisco" para os dois juntos. Somar empresas dentro do mesmo tributo é permitido. O único valor que soma tributos é o <strong>desembolso da competência</strong>, que é caixa e não saldo.</p></div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Contexto e posicionamento</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Escopo e recorte</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Empresa do grupo econômico</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> As etapas da competência</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Demonstrativo e detalhamento</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Divergências e chamados</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Guias, ERP e histórico</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Painel executivo</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Arquitetura da tela</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Funcionalidades detalhadas</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Requisitos funcionais</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Regras de negócio</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Integrações e dependências</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> Entrega e decisões</a></li>
+<li><a href="#s15"><span class="toc-num">15</span> Glossário</a></li>
+<li><a href="#s16"><span class="toc-num">16</span> Histórico de versões</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Contexto e posicionamento</span></div>
+<h3>1.1 O que o PCONT resolve</h3>
+<p>PCONT é o pagamento pelo contribuinte, uma das modalidades de extinção do débito do art. 27 da LC 214/2025. A empresa paga o <strong>saldo a recolher</strong> da apuração do mês. Antes do PCONT, o app calculava o saldo (Apuração IBS/CBS) e conferia documento a documento (Conciliação), mas não fechava o mês: não comparava o saldo com o de cada ente, não gerava a guia do saldo (DEF-APU-02) e não tinha ato de fechar (DEF-APU-01).</p>
+<div class="table-wrap"><table>
+<thead><tr><th>O que está em jogo</th><th>Regra</th><th>Base</th></tr></thead>
+<tbody>
+<tr><td><strong>O saldo vira dívida confessada</strong></td><td>Confirmar ou ajustar é confissão de dívida. Sem manifestação, o saldo do ente é presumido correto.</td><td>Art. 46, §§ 6º e 7º</td></tr>
+<tr><td><strong>Pagar a menos tira crédito dos clientes</strong></td><td>O pagamento extingue os débitos na ordem cronológica dos documentos. O que faltar fica nas últimas notas, e os clientes delas não apropriam o crédito.</td><td>Regulamentos, art. 26; LC 214, art. 47</td></tr>
+<tr><td><strong>Crédito não reconhecido vira caixa</strong></td><td>Todo crédito que o ente vê como "a apropriar" aumenta o saldo cobrado.</td><td>Art. 44</td></tr>
+<tr><td><strong>Atraso custa</strong></td><td>Multa de 0,33% ao dia, limitada a 20%, mais Selic.</td><td>Regulamentos, art. 27</td></tr>
+</tbody></table></div>
+<h3>1.2 Onde fica</h3>
+<p>Apuração Assistida › <strong>Painel executivo</strong> (flag <code>pcont_painel</code>), <strong>PCONT</strong> (flag <code>pcont</code>), Conciliação e Inconsistências. Com a flag <code>pcont</code> ligada, a Apuração IBS/CBS sai do menu (D-PC-12). A rota <code>#/apuracao</code>, o atalho "Apuração" da barra inferior e <code>abrirApuracao()</code> passam a abrir o PCONT.</p>
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Escopo e recorte</span></div>
+<h3>2.1 O que entra</h3>
+<ul class="plain">
+<li>O saldo da apuração do mês por empresa (CNPJ raiz) e por tributo, do SplitHub e do ente.</li>
+<li>O cálculo do SplitHub que era da Apuração IBS/CBS: recalcular, fechar e reabrir, resumos e listagens.</li>
+<li>Divergências documento a documento, com o chamado em Inconsistências e a decisão registrada.</li>
+<li>A guia do saldo: o DARF da CBS emitido pelo SplitHub, e a guia do IBS registrada do portal do Comitê Gestor.</li>
+<li>O envio ao ERP e o comprovante de volta, o processamento pelo ente e o histórico.</li>
+<li>O painel executivo do grupo e das empresas.</li>
+</ul>
+<h3>2.2 O que não entra</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Fora do módulo</th><th>Onde vive</th></tr></thead>
+<tbody>
+<tr><td>A ordem de uso do crédito (art. 53), o vínculo crédito–débito e o transporte de saldo credor</td><td><a class="xref" href="../prd-apuracao.html">Apuração</a> (motor); o PCONT mostra o resultado</td></tr>
+<tr><td>Conferência campo a campo do documento com a apuração assistida</td><td><a class="xref" href="../prd-conciliacao.html">Conciliação</a></td></tr>
+<tr><td>Guias RAD, em que a empresa paga como adquirente</td><td><a class="xref" href="../prd-pagamentos.html">Pagamentos RAD</a></td></tr>
+<tr><td>Fluxo do chamado: atribuição, SLA e passagens de estado</td><td><a class="xref" href="../prd-inconsistencias.html">Inconsistências</a></td></tr>
+<tr><td>Split payment</td><td>Fora da primeira versão: a linha mostra o que o ente informar, sem divergência</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">2026 e 2027 no protótipo</div><p>Em <strong>2026</strong>, quem cumpre as obrigações acessórias está dispensado de recolher (art. 348, § 1º). O módulo mostra o confronto e o histórico, sem emissão de guia (D-PC-13). Na empresa principal, os números vêm do cálculo do SplitHub (<code>apurData</code>), e a leitura do ente é simulada igual. <strong>2027</strong> é um exercício simulado, com data de referência ajustável, para avaliar as guias, o ERP e o histórico.</p></div>
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Empresa do grupo econômico</span></div>
+<p>A apuração é por pessoa jurídica: cada <strong>CNPJ raiz</strong> tem a sua apuração, centralizada na matriz, que recolhe por todos os estabelecimentos (cartilha do IBS, 1.2 e 1.6). Tudo no PCONT é gerado para a empresa escolhida no seletor: competências, demonstrativo, divergências, guias, linha do tempo e histórico.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Campo</th><th>De onde vem</th></tr></thead>
+<tbody>
+<tr><td><strong>Empresas do grupo</strong></td><td>Os CNPJs ativos da organização (Configurações › Organização), agrupados pela raiz</td></tr>
+<tr><td><strong>Matriz</strong></td><td>O CNPJ marcado como matriz na raiz: recolhimento centralizado e calendário de vencimento (art. 45)</td></tr>
+<tr><td><strong>Estabelecimentos</strong></td><td>Quantidade de CNPJs ativos da raiz</td></tr>
+</tbody></table></div>
+<p>O seletor "Grupo Econômico" do topo do app filtra CNPJs nos painéis e continua como está. O PCONT usa seletor próprio porque a unidade da apuração é uma empresa, não um conjunto de CNPJs.</p>
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">As etapas da competência</span></div>
+<p>Cada competência tem uma linha do tempo por ente: a CBS segue a Receita Federal e o IBS, o Comitê Gestor. As etiquetas vêm do sistema do Comitê Gestor (cartilha, 1.5), mais as etapas de pagamento.</p>
+<div class="state-grid">
+<div class="state-row"><span class="state-name sn-blue">E1 · Em apuração</span><span class="state-desc">Dia 1 ao último dia do mês. O ente processa os documentos todo dia; no piloto do IBS, a cada 4 horas.</span></div>
+<div class="state-row"><span class="state-name sn-blue">E2 · Consolidação</span><span class="state-desc">Do dia 1 do mês seguinte até a entrega. No Comitê Gestor, até o dia 5 ainda entram documentos do mês.</span></div>
+<div class="state-row"><span class="state-name sn-blue">E3 · Entrega</span><span class="state-desc">Até o dia 15 do mês seguinte, ou dia 20 com DeRE (art. 46, I e II). O SplitHub lê, compara e abre as divergências.</span></div>
+<div class="state-row"><span class="state-name sn-amber">E4 · Realizar ajustes</span><span class="state-desc">Da entrega ao vencimento (art. 46, §§ 2º e 3º). Decisões sobre as divergências; a guia pode sair a qualquer momento.</span></div>
+<div class="state-row"><span class="state-name sn-red">E5 · Vencimento</span><span class="state-desc">Último dia útil do mês seguinte, pelo calendário da matriz (art. 45). Sem manifestação, vale o saldo do ente.</span></div>
+<div class="state-row"><span class="state-name sn-teal">E6 · Pagamento</span><span class="state-desc">Guia emitida, enviada ao ERP e paga, com o comprovante de volta.</span></div>
+<div class="state-row"><span class="state-name sn-teal">E7 · Extinção confirmada</span><span class="state-desc">A leitura seguinte mostra os débitos extintos na ordem cronológica e o crédito dos clientes apropriado.</span></div>
+<div class="state-row"><span class="state-name sn-gray">E8 · Depois do vencimento</span><span class="state-desc">Excedente devolvido (art. 27, § 1º), encargos de atraso ou ajuste fora do prazo.</span></div>
+</div>
+<p>No carrossel, cada tributo mostra a etapa e o prazo, como "Realizar ajustes · 10 dias". Depois da guia, os estados são: guia emitida, no ERP, paga · aguardando o ente, processada, paga parcialmente, guia vencida e sem saldo a recolher.</p>
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Demonstrativo e detalhamento</span></div>
+<p>Mesmo demonstrativo para os dois tributos, com três colunas: SplitHub, ente e diferença (ente − SplitHub).</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Linha</th><th>Sinal</th><th>Natureza</th><th>Origens</th></tr></thead>
+<tbody>
+<tr><td><strong>Débitos</strong></td><td>+</td><td>Débito · DF de saída</td><td>Fornecimentos</td></tr>
+<tr><td><strong>Redutores de débitos</strong></td><td>−</td><td>Débito</td><td>Devoluções de venda</td></tr>
+<tr><td><strong>Créditos apropriados</strong></td><td>−</td><td>Crédito · DF de entrada</td><td>Por aquisição, presumido</td></tr>
+<tr><td><strong>Redutores de créditos apropriados</strong></td><td>+</td><td>Crédito</td><td>Estornos de crédito</td></tr>
+<tr><td><strong>Créditos de apurações anteriores</strong></td><td>−</td><td>Crédito</td><td>Saldo credor transportado</td></tr>
+<tr><td><strong>Extinções por RAD e split</strong></td><td>−</td><td>Débito</td><td>RAD dos clientes; split informado pelo ente</td></tr>
+<tr><td><strong>Pagamentos pelo contribuinte</strong></td><td>−</td><td>Débito</td><td>Guias pagas e processadas</td></tr>
+</tbody></table></div>
+<p>O <strong>resultado da apuração</strong> é o saldo antes do PCONT; o <strong>saldo a recolher atualizado</strong> já desconta os pagamentos (art. 44). Saldo positivo é devedor (D); negativo, a recuperar (C). Abaixo vem o bloco de créditos a apropriar.</p>
+<h3>5.1 Quatro níveis</h3>
+<ol class="plain">
+<li><strong>Linha</strong> do demonstrativo.</li>
+<li><strong>Origem</strong>, ou modalidade, da linha.</li>
+<li><strong>Documento</strong>, agrupado por cliente ou fornecedor, com busca, filtro "só com divergência" e CSV.</li>
+<li><strong>Conta corrente da operação</strong>: o histórico da nota no SplitHub ao lado do histórico no ente, com a diferença marcada.</li>
+</ol>
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Divergências e chamados</span></div>
+<p>Qualquer diferença num documento é divergência, com tolerância zero (D-PC-06), e abre o chamado sozinha em Inconsistências (D-PC-05): um por tributo e documento. A lista filtra por tributo e por <strong>natureza</strong>: crédito (DF de entrada) ou débito (DF de saída). O quadro tributo × natureza mostra a quantidade e a diferença de cada cruzamento, e cada célula filtra a lista.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Tipo</th><th>Quando</th><th>Decisões possíveis</th></tr></thead>
+<tbody>
+<tr><td><code>INC-CONC-12</code></td><td>Fato do SplitHub, como uma guia RAD paga, que o ente não refletiu</td><td>Aguardar o reflexo · Aceitar o valor do ente · Ajustar no portal</td></tr>
+<tr><td><code>INC-CONC-13</code></td><td>Movimento do ente sem contrapartida no SplitHub</td><td>Importar o comprovante do cliente · Aceitar o valor do ente</td></tr>
+<tr><td><code>INC-CONC-01</code> · <code>02</code></td><td>Valor do documento diferente do apurado pelo ente</td><td>Corrigir o documento pelo ERP · Aceitar o valor do ente · Ajustar no portal</td></tr>
+</tbody></table></div>
+<p>A decisão fica registrada com quem decidiu, quando e a observação. Ela não bloqueia a guia: emitir com divergência sem decisão pede uma justificativa, que vai para o histórico. "Ajustar no portal" desconta a diferença do valor sugerido da guia, que é o saldo do ente após os ajustes.</p>
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Guias, ERP e histórico</span></div>
+<h3>7.1 A guia de cada tributo</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Tributo</th><th>Guia</th><th>Como sai</th></tr></thead>
+<tbody>
+<tr><td><strong>CBS</strong> · Receita Federal</td><td>DARF</td><td>Emitido pelo SplitHub, pela API de apuração da CBS. A emissão de DARF de PCONT foi anunciada para o fim de nov/2026, sem documentação ainda.</td></tr>
+<tr><td><strong>IBS</strong> · Comitê Gestor</td><td>Documento de arrecadação</td><td>No roadmap do Comitê Gestor: a etapa "saldo e documento de arrecadação" da API não tem especificação nem data. Até lá, a guia é emitida no portal e registrada no SplitHub (linha digitável, valor e PDF), e o resto funciona igual (D-PC-07).</td></tr>
+</tbody></table></div>
+<p><strong>Valor:</strong> o padrão é o saldo do ente após os ajustes (D-PC-04). A pessoa pode trocar pelo saldo do SplitHub ou por outro valor. Nesse caso, a simulação da imputação mostra quantas notas o pagamento extingue, quais ficam em aberto e de quais clientes (D-PC-09).</p>
+<p><strong>Estados:</strong> emitida → no ERP → paga → processada. Também pode ser cancelada antes do pagamento, ou substituída quando o saldo do ente muda depois da emissão. Vencida sem pagamento, mostra os encargos simulados (D-PC-10). Paga a menos, mostra o restante e permite emitir a guia complementar.</p>
+<h3>7.2 ERP</h3>
+<p>Webhook e API, no padrão de <code>/v1/rad/guides</code> (D-PC-08). Nomes em inglês.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Rota ou evento</th><th>Para quê</th></tr></thead>
+<tbody>
+<tr><td><code>pcont.guide_issued</code></td><td>Guia emitida ou registrada, com a apuração do mês (linhas, saldos, divergências abertas) e a decomposição: notas extintas e em aberto</td></tr>
+<tr><td><code>pcont.guide_replaced</code> · <code>pcont.guide_cancelled</code></td><td>Guia trocada por uma nova leitura, ou cancelada antes do pagamento</td></tr>
+<tr><td><code>pcont.settlement_updated</code></td><td>Leitura do ente mudou o saldo ou as divergências</td></tr>
+<tr><td><code>pcont.payment_processed</code> · <code>pcont.excess_returned</code></td><td>Ente extinguiu os débitos ou devolveu excedente</td></tr>
+<tr><td><code>GET /v1/pcont/settlements</code> · <code>/divergences</code></td><td>Demonstrativo e divergências; <code>nature=credit|debit</code></td></tr>
+<tr><td><code>GET /v1/pcont/guides/{id}</code> · <code>/pdf</code> · <code>/allocation</code></td><td>Guia, PDF e documentos que ela extingue, na ordem</td></tr>
+<tr><td><code>POST /v1/pcont/proofs</code></td><td>Comprovante de pagamento vindo do ERP</td></tr>
+<tr><td><code>GET /v1/pcont/payments</code></td><td>Histórico de pagamentos</td></tr>
+</tbody></table></div>
+<h3>7.3 Histórico</h3>
+<p>Lista de todas as guias da empresa, por tributo e competência. O detalhe traz a linha do tempo da competência e o <strong>retrato</strong> do demonstrativo no momento da emissão, que fica congelado mesmo que o ente mude depois.</p>
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Painel executivo</span></div>
+<p>Pedido de 29/10/2026: a visão executiva do grupo econômico e das empresas, já que a apuração é por CNPJ raiz. Tem filtros de exercício, competência e empresa (todas ou uma). Mostra:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Bloco</th><th>O que mostra</th></tr></thead>
+<tbody>
+<tr><td><strong>Indicadores</strong></td><td>
+<ul class="plain">
+<li>CBS a recolher à Receita Federal e IBS ao Comitê Gestor, separados, cada um com a diferença para o SplitHub.</li>
+<li>Desembolso da competência, que é caixa.</li>
+<li>Divergências abertas, por natureza.</li>
+<li>Crédito não reconhecido pelos entes.</li>
+<li>Empresas com apuração.</li>
+</ul></td></tr>
+<tr><td><strong>O que pede atenção</strong></td><td>Tributos em ajustes ou vencidos, guias aguardando o ente, divergências com o chamado</td></tr>
+<tr><td><strong>Empresas do grupo</strong></td><td>Por empresa e tributo: saldo do SplitHub e do ente, diferença, etapa e guia, divergências e desembolso. A linha do grupo soma só dentro do tributo. O clique abre o PCONT da empresa.</td></tr>
+<tr><td><strong>Saldo por mês</strong></td><td>Um gráfico por tributo, SplitHub ao lado do ente, com tooltip e visão em tabela</td></tr>
+<tr><td><strong>Composição do saldo</strong></td><td>Cascata por tributo: dos débitos ao saldo a recolher</td></tr>
+<tr><td><strong>Etapa por competência</strong></td><td>Mapa empresa × tributo × competência, com ícone e texto, além da cor</td></tr>
+<tr><td><strong>Divergências e guias</strong></td><td>Divergências por tributo e natureza; funil das guias (a emitir, emitida, no ERP, paga, processada)</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Arquitetura da tela</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Bloco</th><th>Conteúdo</th></tr></thead>
+<tbody>
+<tr><td><strong>Cabeçalho</strong></td><td>Regras da apuração, Recalcular, Exportar, Gerar guia CBS, Gerar guia IBS (em breve)</td></tr>
+<tr><td><strong>Barra da empresa</strong></td><td>Empresa do grupo, matriz, estabelecimentos, data de referência, exercício (2027 simulado, 2026 informativo) e, no protótipo, a leitura simulada dos entes</td></tr>
+<tr><td><strong>Carrossel</strong></td><td>Competências do exercício com a etapa e o prazo de cada tributo</td></tr>
+<tr><td><strong>Competência</strong></td><td>Consolidado (cartões por tributo e desembolso) ou um tributo (demonstrativo, apropriação de créditos, fechar e reabrir)</td></tr>
+<tr><td><strong>Linha do tempo</strong></td><td>Trilhos dos dois entes e as etapas E1 a E8 do ente escolhido, com os eventos</td></tr>
+<tr><td><strong>Divergências</strong></td><td>Filtros, quadro tributo × natureza, lista com decisão e chamado</td></tr>
+<tr><td><strong>Guias e pagamentos</strong></td><td>Um cartão por tributo: valor, simulação, emissão ou registro, ERP, comprovante, processamento</td></tr>
+<tr><td><strong>Histórico</strong></td><td>Guias da empresa, com o detalhe e o retrato</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Funcionalidades detalhadas</span></div>
+<div class="feat" id="f-01"><div class="feat-hdr"><span class="feat-id">F-01</span><span class="feat-name">Escolher a empresa do grupo</span></div><div class="feat-body"><p>Seletor pelo CNPJ raiz, com matriz e estabelecimentos; todas as informações do módulo passam a ser da empresa escolhida.</p></div></div>
+<div class="feat" id="f-02"><div class="feat-hdr"><span class="feat-id">F-02</span><span class="feat-name">Competências com a etapa e o prazo</span></div><div class="feat-body"><p>Carrossel do exercício com a etapa de cada tributo no ente e os dias até o prazo da etapa.</p></div></div>
+<div class="feat" id="f-03"><div class="feat-hdr"><span class="feat-id">F-03</span><span class="feat-name">Visão consolidada da competência</span></div><div class="feat-body"><p>Os dois tributos lado a lado: saldo do SplitHub, saldo do ente, diferença, divergências e guia, sem somar.</p></div></div>
+<div class="feat" id="f-04"><div class="feat-hdr"><span class="feat-id">F-04</span><span class="feat-name">Desembolso da competência</span></div><div class="feat-body"><p>As duas guias e o total de caixa, com os entes nomeados; não é saldo (D-PC-11).</p></div></div>
+<div class="feat" id="f-05"><div class="feat-hdr"><span class="feat-id">F-05</span><span class="feat-name">Demonstrativo SplitHub × ente</span></div><div class="feat-body"><p>As linhas do art. 44 com três colunas, o resultado antes do PCONT, o saldo atualizado e os créditos a apropriar.</p></div></div>
+<div class="feat" id="f-06"><div class="feat-hdr"><span class="feat-id">F-06</span><span class="feat-name">Detalhamento até a nota</span></div><div class="feat-body"><p>Linha, origem, documento por contraparte e conta corrente da operação, com busca, filtro de divergência e CSV.</p></div></div>
+<div class="feat" id="f-07"><div class="feat-hdr"><span class="feat-id">F-07</span><span class="feat-name">Recalcular, fechar e reabrir</span></div><div class="feat-body"><p>O cálculo que era da Apuração IBS/CBS: recalcular a partir dos documentos, fechar a apuração do SplitHub por tributo (com justificativa se houver divergência) e reabrir.</p></div></div>
+<div class="feat" id="f-08"><div class="feat-hdr"><span class="feat-id">F-08</span><span class="feat-name">Linha do tempo por ente</span></div><div class="feat-body"><p>Trilhos da Receita Federal e do Comitê Gestor e as etapas E1 a E8, com o que aconteceu em cada uma.</p></div></div>
+<div class="feat" id="f-09"><div class="feat-hdr"><span class="feat-id">F-09</span><span class="feat-name">Divergências por tributo e natureza</span></div><div class="feat-body"><p>Lista com valores, efeito no saldo do ente, tipo do catálogo e chamado; filtros e quadro tributo × natureza.</p></div></div>
+<div class="feat" id="f-10"><div class="feat-hdr"><span class="feat-id">F-10</span><span class="feat-name">Decisão por divergência</span></div><div class="feat-body"><p>A opção do tipo, com quem, quando e observação; ajustar no portal entra no valor sugerido da guia.</p></div></div>
+<div class="feat" id="f-11"><div class="feat-hdr"><span class="feat-id">F-11</span><span class="feat-name">Emitir o DARF da CBS</span></div><div class="feat-body"><p>Pelo saldo do ente após os ajustes, do SplitHub ou outro valor; justificativa quando há divergência sem decisão.</p></div></div>
+<div class="feat" id="f-12"><div class="feat-hdr"><span class="feat-id">F-12</span><span class="feat-name">Registrar a guia do IBS do portal</span></div><div class="feat-body"><p>Linha digitável, valor e PDF da guia emitida no portal do Comitê Gestor, até a emissão por API existir.</p></div></div>
+<div class="feat" id="f-13"><div class="feat-hdr"><span class="feat-id">F-13</span><span class="feat-name">Simular o pagamento parcial</span></div><div class="feat-body"><p>Quantas notas o valor extingue na ordem cronológica, quais ficam em aberto e de quais clientes.</p></div></div>
+<div class="feat" id="f-14"><div class="feat-hdr"><span class="feat-id">F-14</span><span class="feat-name">Enviar ao ERP e receber o comprovante</span></div><div class="feat-body"><p><code>pcont.guide_issued</code> com a guia, a apuração do mês e a decomposição; o comprovante volta por <code>POST /v1/pcont/proofs</code>.</p></div></div>
+<div class="feat" id="f-15"><div class="feat-hdr"><span class="feat-id">F-15</span><span class="feat-name">Acompanhar até a extinção</span></div><div class="feat-body"><p>Processamento pelo ente com as notas extintas e os clientes liberados; cancelar, substituir e emitir a guia complementar.</p></div></div>
+<div class="feat" id="f-16"><div class="feat-hdr"><span class="feat-id">F-16</span><span class="feat-name">Encargos simulados de atraso</span></div><div class="feat-body"><p>Multa e juros simulados quando a guia passa do vencimento sem pagamento.</p></div></div>
+<div class="feat" id="f-17"><div class="feat-hdr"><span class="feat-id">F-17</span><span class="feat-name">Histórico com retrato</span></div><div class="feat-body"><p>Guias por tributo e competência, com a linha do tempo e o demonstrativo congelado na emissão.</p></div></div>
+<div class="feat" id="f-18"><div class="feat-hdr"><span class="feat-id">F-18</span><span class="feat-name">Exportar</span></div><div class="feat-body"><p>CSV do demonstrativo do tributo ou da competência, e do detalhamento por documento.</p></div></div>
+<div class="feat" id="f-19"><div class="feat-hdr"><span class="feat-id">F-19</span><span class="feat-name">Painel executivo do grupo</span></div><div class="feat-body"><p>Indicadores, alertas, empresas, saldo por mês, composição, mapa de etapas, divergências e funil das guias, do grupo ou de uma empresa.</p></div></div>
+</div>
+
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Requisitos funcionais</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Requisito</th><th>Aceite</th></tr></thead>
+<tbody>
+<tr><td><span class="rid">RF-PC-01</span></td><td>Tudo no módulo é da empresa escolhida, pelo CNPJ raiz.</td><td>Trocar de empresa troca competências, saldos, divergências, guias e histórico.</td></tr>
+<tr><td><span class="rid">RF-PC-02</span></td><td>CBS comparada só com a Receita Federal e IBS só com o Comitê Gestor.</td><td>Nenhuma tela soma saldo de CBS com IBS; o desembolso é rotulado como caixa.</td></tr>
+<tr><td><span class="rid">RF-PC-03</span></td><td>A etapa de cada tributo segue o calendário do ente.</td><td>Entrega no dia 15 (20 com DeRE) e vencimento no último dia útil do mês seguinte.</td></tr>
+<tr><td><span class="rid">RF-PC-04</span></td><td>Diferença em qualquer documento vira divergência com chamado.</td><td>Tolerância zero; um chamado por tributo e documento.</td></tr>
+<tr><td><span class="rid">RF-PC-05</span></td><td>A guia sai pelo saldo do ente após os ajustes, e a pessoa pode trocar o valor.</td><td>Outro valor mostra a simulação; divergência sem decisão pede justificativa.</td></tr>
+<tr><td><span class="rid">RF-PC-06</span></td><td>A guia do IBS é registrada do portal enquanto o Comitê Gestor não emite por API.</td><td>O botão de emissão do IBS fica indisponível, com o motivo.</td></tr>
+<tr><td><span class="rid">RF-PC-07</span></td><td>A guia vai ao ERP com a apuração do mês e a decomposição.</td><td>Payload <code>pcont.guide_issued</code> visível na tela.</td></tr>
+<tr><td><span class="rid">RF-PC-08</span></td><td>O histórico congela o demonstrativo na emissão da guia.</td><td>Uma leitura posterior do ente não muda o retrato.</td></tr>
+<tr><td><span class="rid">RF-PC-09</span></td><td>2026 não emite guia.</td><td>Cartão de guia informativo, com o art. 348.</td></tr>
+<tr><td><span class="rid">RF-PC-10</span></td><td>Com a flag <code>pcont</code>, a Apuração IBS/CBS sai do menu e nada se perde.</td><td>Recalcular, fechar, reabrir, resumos, listagens e a rota <code>#/apuracao</code> funcionam no PCONT.</td></tr>
+<tr><td><span class="rid">RF-PC-11</span></td><td>O painel executivo soma empresas só dentro do mesmo tributo.</td><td>Linha "Grupo · soma por tributo"; todo gráfico tem tooltip e visão em tabela.</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Regras de negócio</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Regra</th></tr></thead>
+<tbody>
+<tr><td><span class="rid">RN-PC-01</span></td><td>Saldo = débitos − redutores de débitos − créditos apropriados + redutores de créditos − créditos de apurações anteriores − extinções por RAD, split e pagamento (art. 44).</td></tr>
+<tr><td><span class="rid">RN-PC-02</span></td><td>O pagamento extingue os débitos na ordem cronológica dos documentos, depois da compensação com créditos (regulamentos, art. 26).</td></tr>
+<tr><td><span class="rid">RN-PC-03</span></td><td>Sem manifestação até o vencimento, vale o saldo do ente (art. 46, § 7º).</td></tr>
+<tr><td><span class="rid">RN-PC-04</span></td><td>Excedente só volta em até 3 dias úteis quando RAD ou split extinguem débitos depois do pagamento (art. 27, § 1º); fora disso, fica como saldo a recuperar.</td></tr>
+<tr><td><span class="rid">RN-PC-05</span></td><td>Encargos de atraso: 0,33% ao dia, limitados a 20%, mais Selic. No protótipo, simulados.</td></tr>
+<tr><td><span class="rid">RN-PC-06</span></td><td>Split não conta como divergência na primeira versão: a linha mostra o que o ente informar.</td></tr>
+<tr><td><span class="rid">RN-PC-07</span></td><td>A apuração de cada empresa é centralizada na matriz, que recolhe por todos os estabelecimentos.</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Integrações e dependências</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Depende de</th><th>O que consome</th></tr></thead>
+<tbody>
+<tr><td><a class="xref" href="../prd-apuracao.html">Apuração</a></td><td>O cálculo do SplitHub por competência e tributo</td></tr>
+<tr><td><a class="xref" href="../integracao-apis-reforma.html">APIs da reforma</a></td><td>CBS: API de apuração v2 (débitos, créditos, pagamentos, recolhimentos e, quando sair, emissão de DARF). IBS: arquivo da apuração pelo webhook do Comitê Gestor (MOC v1.10).</td></tr>
+<tr><td><a class="xref" href="../prd-organizacao.html">Organização</a></td><td>CNPJs do grupo, raiz e matriz</td></tr>
+<tr><td><a class="xref" href="../prd-inconsistencias.html">Inconsistências</a></td><td>Chamados das divergências: estados, responsável, terceiro e SLA</td></tr>
+</tbody></table></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Alimenta</th><th>O que entrega</th></tr></thead>
+<tbody>
+<tr><td><a class="xref" href="../prd-integracoes.html">Integrações</a></td><td>Webhooks <code>pcont.*</code> e rotas <code>/v1/pcont/*</code> para o ERP</td></tr>
+<tr><td><a class="xref" href="../prd-analytics.html">Fluxo de Caixa Tributário</a></td><td>O desembolso da competência por tributo e o vencimento</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s14">
+<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Entrega e decisões</span></div>
+<p>Pacote <strong>AV-PC</strong> na branch <code>feat/pcont</code>, no ambiente de avaliação (D-PC-14):</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Flag</th><th>Liga</th><th>Desligada</th></tr></thead>
+<tbody>
+<tr><td><code>pcont</code></td><td>O PCONT, no lugar da Apuração IBS/CBS</td><td>O menu continua com a Apuração IBS/CBS, como hoje</td></tr>
+<tr><td><code>pcont_painel</code></td><td>O painel executivo, primeiro item de Apuração Assistida</td><td>Sem painel; depende de <code>pcont</code></td></tr>
+</tbody></table></div>
+<p>As 14 decisões estão na <a class="xref" href="../proposta-modulo-pcont.html#s11">proposta, seção 11</a>. O painel executivo e a escolha da empresa vieram depois da aprovação. A posição do painel como primeiro item do grupo fica para a avaliação decidir, porque a D-PC-02 previa o PCONT em primeiro.</p>
+<p>Quando o pacote for promovido, o PCONT e o painel entram no Mapa de Funcionalidades e na priorização do MVP, que hoje só listam módulos do app.</p>
+</div>
+
+<div class="section" id="s15">
+<div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Glossário</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Termo</th><th>Significado</th></tr></thead>
+<tbody>
+<tr><td><strong>PCONT</strong></td><td>Pagamento pelo contribuinte do saldo a recolher (art. 27, II)</td></tr>
+<tr><td><strong>Ente</strong></td><td>Receita Federal, na CBS, ou Comitê Gestor, no IBS</td></tr>
+<tr><td><strong>Saldo do ente após os ajustes</strong></td><td>Saldo do ente menos o efeito das divergências que a pessoa decidiu ajustar no portal</td></tr>
+<tr><td><strong>Desembolso da competência</strong></td><td>Soma de caixa das guias de CBS e IBS do mês; não é saldo</td></tr>
+<tr><td><strong>Retrato</strong></td><td>O demonstrativo congelado no momento da emissão da guia</td></tr>
+<tr><td><strong>Conta corrente da operação</strong></td><td>Histórico de uma nota no ente: débito, extinções, compensações e pagamentos</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s16">
+<div class="sec-hdr"><span class="sec-num">16</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>29/10/2026</strong> — PRD inicial, a partir da proposta aprovada (R-274), com a empresa do grupo econômico e o painel executivo pedidos depois. Protótipo no pacote AV-PC.</div></div>
+</div>
+
+</div>
+</body>
+</html>

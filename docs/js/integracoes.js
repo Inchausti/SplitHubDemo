@@ -38,12 +38,12 @@
       direcao: 'entrada', doc: 'ingestao-dfs.html', icone: '⇥',
       resumo: 'O ERP envia os DFs para identificação automática de IBS/CBS. É a porta de entrada de todo o resto do produto.',
       endpoints: [
-        'POST /v1/documentos-fiscais',
-        'POST /v1/documentos-fiscais/batch',
-        'GET /v1/documentos-fiscais/{id}',
-        'GET /v1/documentos-fiscais',
-        'PATCH /v1/documentos-fiscais/{id}',
-        'DELETE /v1/documentos-fiscais/{id}'
+        'POST /v1/fiscal-documents',
+        'POST /v1/fiscal-documents/batch',
+        'GET /v1/fiscal-documents/{id}',
+        'GET /v1/fiscal-documents',
+        'PATCH /v1/fiscal-documents/{id}',
+        'DELETE /v1/fiscal-documents/{id}'
       ],
       escopos: [
         { v: 'dfs:write', label: 'Enviar documentos', desc: 'POST individual e em lote' },
@@ -57,7 +57,7 @@
         'Lote de até 500 documentos; acima disso retorna 400.',
         'Processamento assíncrono: 202 Accepted → pending → processing → completed | error.'
       ],
-      exemplo: 'POST /v1/documentos-fiscais'
+      exemplo: 'POST /v1/fiscal-documents'
     },
     {
       v: 'fornecedores', nome: 'Base de fornecedores',

@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo DeRE · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; --sombra:rgba(0,0,0,.12); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --sombra:rgba(0,0,0,.4); } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --sombra:rgba(0,0,0,.4); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.back { display: inline-flex; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 760px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.meta-fim { margin-left: auto; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+td strong { color: var(--txt1); }
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); overflow-wrap: anywhere; }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { background: none; padding: 0; color: var(--txt1); white-space: pre; display: block; line-height: 1.7; font-size: 11.5px; }
+.foot { margin-top: 40px; font-size: 11.5px; color: var(--txt3); }
+
+/* três propostas */
+.tres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 14px 0; }
+@media (max-width: 820px) { .tres { grid-template-columns: minmax(0, 1fr); } }
+.pp { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; text-decoration: none; }
+.pp:hover { border-color: var(--amber); }
+.pp-l { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); }
+.pp-n { font-size: 14.5px; font-weight: 800; color: var(--txt1); }
+.pp-d { font-size: 12.5px; color: var(--txt2); }
+.pp-e { font-size: 11px; color: var(--txt3); margin-top: auto; }
+.prop { background: var(--sur); border: 1px solid var(--brd); border-radius: 12px; padding: 18px 20px; margin: 16px 0; }
+.prop-ideia { font-size: 13.5px; color: var(--txt1); margin-bottom: 10px; }
+.kv { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 6px 14px; font-size: 13px; margin: 10px 0; }
+@media (max-width: 620px) { .kv { grid-template-columns: minmax(0, 1fr); } .kv dt { margin-top: 6px; } }
+.kv dt { color: var(--txt3); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding-top: 2px; }
+.kv dd { color: var(--txt2); min-width: 0; }
+.kv dd strong { color: var(--txt1); }
+.pc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+@media (max-width: 680px) { .pc { grid-template-columns: minmax(0, 1fr); } }
+.pc > div { border-radius: 8px; padding: 12px 14px; }
+.pc .a-favor { background: var(--green-d); }
+.pc .contra { background: var(--red-d); }
+.pc ul { margin: 6px 0 0 16px; display: flex; flex-direction: column; gap: 4px; }
+.pc li { font-size: 12.5px; color: var(--txt2); }
+.cobre { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.tela-t { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 22px 0 6px; }
+.tela-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 7px; border-radius: 4px; }
+.tela-nome { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.tela-onde { font-size: 11.5px; color: var(--txt3); }
+.obs-mk { font-size: 12px; color: var(--txt2); margin: 6px 0 0 16px; display: flex; flex-direction: column; gap: 4px; }
+
+/* maquetes: seguem o esboço enviado */
+.mk { border: 1px solid var(--brd); border-radius: 10px; background: var(--sur); overflow: hidden; margin: 8px 0 6px; }
+.mk-bar { display: flex; gap: 6px; align-items: center; padding: 8px 12px; background: var(--sur2); border-bottom: 1px solid var(--brd); font-size: 11px; color: var(--txt3); min-width: 0; }
+.mk-bar span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.mk-body { padding: 16px; font-size: 12px; color: var(--txt2); }
+.mk-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.mk-crumb { font-size: 11px; color: var(--txt3); margin-bottom: 2px; }
+.mk-crumb b { color: var(--txt1); font-weight: 600; }
+.mk-h { font-size: 18px; font-weight: 800; color: var(--txt1); line-height: 1.25; }
+.mk-sub { font-size: 11.5px; color: var(--txt2); max-width: 520px; }
+.mk-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.mk-btn { font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); white-space: nowrap; }
+.mk-btn.pri { background: var(--blue); border-color: var(--blue); color: var(--sur); }
+.mk-btn.off { color: var(--txt3); border-style: dashed; }
+.mk-linha { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; margin: 10px 0 12px; }
+.mk-info { font-size: 11px; color: var(--txt3); }
+.mk-info b { color: var(--txt1); }
+.mk-nota { font-size: 11px; color: var(--txt3); margin-top: 10px; }
+.mk-alerta { font-size: 11.5px; color: var(--txt1); background: var(--amber-d); border-left: 3px solid var(--amber); border-radius: 6px; padding: 8px 10px; margin: 10px 0; }
+.mk-alerta.info { background: var(--blue-d); border-color: var(--blue); }
+.mk-t { font-size: 13px; font-weight: 800; color: var(--txt1); margin: 16px 0 8px; }
+.car { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; margin-bottom: 12px; }
+.car-seta { flex: 0 0 26px; display: flex; align-items: center; justify-content: center; color: var(--blue); border: 1px solid var(--brd); border-radius: 8px; }
+.car-c { flex: 0 0 158px; border: 1px solid var(--brd); border-radius: 8px; padding: 8px 10px; background: var(--sur); }
+.car-c.sel { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue); }
+.car-c.vazio { opacity: .5; }
+.car-m { font-size: 12px; font-weight: 700; color: var(--txt1); margin-bottom: 2px; }
+.car-t { display: flex; justify-content: space-between; gap: 6px; font-size: 10px; color: var(--txt2); padding: 4px 0 3px; border-bottom: 2px solid var(--brd); }
+.car-t b { font-weight: 700; color: var(--txt1); }
+.car-t.ok { border-color: var(--green); } .car-t.aj { border-color: var(--amber); } .car-t.ap { border-color: var(--blue); } .car-t.at { border-color: var(--red); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--brd); border-radius: 6px; overflow: hidden; }
+.seg span { font-size: 11px; font-weight: 600; padding: 6px 11px; color: var(--txt2); border-right: 1px solid var(--brd); white-space: nowrap; }
+.seg span:last-child { border-right: none; }
+.seg span.on { background: var(--blue); color: var(--sur); }
+.mk-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--brd); margin-bottom: 12px; overflow-x: auto; }
+.mk-tabs span { font-size: 11.5px; padding: 7px 10px; color: var(--txt2); white-space: nowrap; border-bottom: 2px solid transparent; }
+.mk-tabs span.on { color: var(--blue); border-color: var(--blue); font-weight: 700; }
+.mk-tabs span.novo::after { content: "novo"; font-size: 9px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 8px; padding: 0 5px; margin-left: 5px; }
+.duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 680px) { .duo { grid-template-columns: minmax(0, 1fr); } }
+.tc { border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; background: var(--sur); }
+.tc-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.tc-n { font-size: 13px; font-weight: 800; color: var(--txt1); }
+.tc-r { display: flex; justify-content: space-between; gap: 10px; font-size: 11.5px; padding: 4px 0; border-bottom: 1px dashed var(--brd); }
+.tc-r:last-of-type { border-bottom: none; }
+.tc-r b { color: var(--txt1); font-weight: 700; white-space: nowrap; }
+.tc-r b.dif { color: var(--red); } .tc-r b.zero { color: var(--green); }
+.tc-f { font-size: 10.5px; color: var(--txt3); margin-top: 8px; }
+.tc-a { display: inline-block; font-size: 11px; font-weight: 700; color: var(--blue); margin-top: 8px; }
+.dm-wrap { overflow-x: auto; border: 1px solid var(--brd); border-radius: 8px; }
+table.dm { font-size: 11.5px; min-width: 620px; }
+table.dm th { text-transform: none; letter-spacing: 0; font-size: 11px; text-align: right; padding: 9px 12px; color: var(--txt1); }
+table.dm th:first-child, table.dm td:first-child { text-align: left; }
+table.dm td { text-align: right; padding: 8px 12px; color: var(--txt1); white-space: nowrap; vertical-align: middle; }
+table.dm td:first-child { white-space: normal; min-width: 230px; }
+table.dm tr.res td { background: var(--blue-d); font-weight: 700; }
+table.dm tr.n2 td { background: var(--bg); color: var(--txt2); }
+table.dm tr.n2 td:first-child { padding-left: 52px; }
+table.dm td.dif { color: var(--red); font-weight: 700; }
+table.dm td.z { color: var(--txt3); }
+table.dm td.esq { text-align: left; white-space: normal; min-width: 110px; }
+table.dm code { white-space: nowrap; overflow-wrap: normal; }
+table.dm.larga { min-width: 940px; }
+.cv { display: inline-block; width: 14px; color: var(--txt3); }
+.op { display: inline-block; width: 16px; font-weight: 800; color: var(--txt3); text-align: center; margin-right: 4px; }
+.dv { display: inline-block; font-size: 9.5px; font-weight: 700; padding: 1px 7px; border-radius: 10px; background: var(--red-d); color: var(--red); white-space: nowrap; }
+.dv.ok { background: var(--green-d); color: var(--green); }
+.dv.inf { background: var(--blue-d); color: var(--blue); }
+.dv.gr { background: var(--gray-d); color: var(--gray); }
+.cham { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; color: var(--blue); }
+.mini { font-size: 10.5px; color: var(--txt3); display: block; }
+.cc { display: grid; grid-template-columns: 70px minmax(0, 1fr) minmax(0, 1fr); border: 1px solid var(--brd); border-radius: 8px; overflow: hidden; font-size: 11.5px; }
+@media (max-width: 560px) { .cc { grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr); font-size: 11px; } }
+.cc > div { padding: 7px 9px; border-bottom: 1px solid var(--brd); color: var(--txt2); min-width: 0; }
+.cc > .h { background: var(--sur2); font-weight: 700; color: var(--txt1); font-size: 11px; }
+.cc > .d { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); }
+.cc > .x { background: var(--red-d); color: var(--txt1); }
+.cc > div:nth-last-child(-n+3) { border-bottom: none; }
+.stp { display: flex; gap: 6px; overflow-x: auto; margin: 4px 0 14px; padding-bottom: 4px; }
+.stp > div { flex: 1 0 128px; border: 1px solid var(--brd); border-radius: 8px; padding: 8px 10px; font-size: 11px; }
+.stp b { display: block; font-size: 11.5px; color: var(--txt1); }
+.stp .feito { border-color: var(--green); background: var(--green-d); }
+.stp .agora { border-color: var(--amber); background: var(--amber-d); box-shadow: 0 0 0 1px var(--amber); }
+.stp i { font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--txt3); }
+.esc { display: flex; flex-wrap: wrap; gap: 6px; }
+.esc span { font-size: 10.5px; border: 1px solid var(--brd); border-radius: 14px; padding: 2px 9px; color: var(--txt2); white-space: nowrap; }
+.esc span.on { border-color: var(--teal); background: var(--teal-d); color: var(--teal); font-weight: 700; }
+.pt { display: inline-flex; gap: 3px; vertical-align: middle; margin-right: 6px; }
+.pt i { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); }
+.pt i.f { background: var(--green); } .pt i.a { background: var(--amber); }
+.guia { border: 1px dashed var(--brd); border-radius: 8px; padding: 12px 14px; background: var(--bg); }
+.guia-cb { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); letter-spacing: .04em; margin-top: 6px; overflow-wrap: anywhere; }
+.opc { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 10px; }
+.opc div { border: 1px solid var(--brd); border-radius: 6px; padding: 7px 10px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 11.5px; }
+.opc div.on { border-color: var(--teal); background: var(--teal-d); }
+.opc b { color: var(--txt1); }
+.tl { list-style: none; border-left: 2px solid var(--brd); margin: 8px 0 4px 6px; padding-left: 14px; display: flex; flex-direction: column; gap: 9px; }
+.tl li { position: relative; font-size: 11.5px; color: var(--txt2); }
+.tl li::before { content: ""; position: absolute; left: -20px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--sur); border: 2px solid var(--blue); }
+.tl li.ok::before { border-color: var(--green); background: var(--green); }
+.tl li.av::before { border-color: var(--amber); }
+.tl li b { color: var(--txt1); }
+.tl .q { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); margin-right: 6px; }
+.ref2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+@media (max-width: 760px) { .ref2 { grid-template-columns: minmax(0, 1fr); } }
+.ref { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 14px 16px; }
+.ref-t { font-size: 13px; font-weight: 800; color: var(--txt1); margin-bottom: 2px; }
+.ref-s { font-size: 11px; color: var(--txt3); margin-bottom: 8px; }
+.linha-tempo { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.linha-tempo span { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: var(--sur2); color: var(--txt1); }
+.linha-tempo em { font-style: normal; color: var(--txt3); align-self: center; font-size: 11px; }
+.mark { color: var(--green); font-weight: 800; } .part { color: var(--amber); font-weight: 800; } .nao { color: var(--red); font-weight: 800; }
+/* linha do tempo da competência */
+.trilhos { overflow-x: auto; border: 1px solid var(--brd); border-radius: 8px; padding: 12px; }
+.trilhos-in { min-width: 640px; display: flex; flex-direction: column; gap: 10px; position: relative; }
+.trilho { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; align-items: center; }
+.trilho-n { font-size: 11.5px; font-weight: 800; color: var(--txt1); }
+.trilho-n span { display: block; font-size: 10px; font-weight: 500; color: var(--txt3); }
+.faixa { display: flex; gap: 2px; position: relative; }
+.faixa > div { border-radius: 4px; padding: 5px 6px; font-size: 10px; line-height: 1.3; color: var(--txt1); min-width: 0; overflow: hidden; }
+.faixa > div i { display: block; font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--txt3); }
+.faixa .e-ok { background: var(--green-d); border: 1px solid var(--green); }
+.faixa .e-ag { background: var(--amber-d); border: 1px solid var(--amber); }
+.faixa .e-fu { background: var(--sur2); border: 1px dashed var(--brd); color: var(--txt2); }
+.f31 { flex: 31; } .f15 { flex: 15; } .f10 { flex: 10; } .f5 { flex: 5; } .f8 { flex: 8; }
+.hoje { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--red); }
+.hoje span { position: absolute; top: -16px; left: 5px; font-size: 9.5px; font-weight: 700; color: var(--red); white-space: nowrap; }
+.trilho-eixo { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; }
+.eixo { display: flex; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--txt3); }
+.etapas { list-style: none; display: flex; flex-direction: column; margin: 8px 0 0; }
+.etapa { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; }
+.etapa-m { display: flex; flex-direction: column; align-items: center; }
+.etapa-m b { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--brd); background: var(--sur); font-size: 10px; display: flex; align-items: center; justify-content: center; color: var(--txt3); flex-shrink: 0; }
+.etapa-m i { flex: 1; width: 2px; background: var(--brd); }
+.etapa.ok .etapa-m b { border-color: var(--green); background: var(--green); color: var(--sur); }
+.etapa.ag .etapa-m b { border-color: var(--amber); color: var(--amber); box-shadow: 0 0 0 3px var(--amber-d); }
+.etapa-c { padding-bottom: 14px; min-width: 0; }
+.etapa-h { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.etapa-h b { font-size: 12.5px; color: var(--txt1); }
+.etapa-h span { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); }
+.etapa-c ul { margin: 4px 0 0 16px; display: flex; flex-direction: column; gap: 2px; }
+.etapa-c li { font-size: 11.5px; color: var(--txt2); }
+.etapa-c li b { color: var(--txt1); }
+.etapa-base { font-size: 10.5px; color: var(--txt3); margin-top: 3px; }
+/* decisões */
+.dec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 14px 16px; margin: 12px 0; scroll-margin-top: 20px; }
+.dec-h { display: flex; gap: 8px 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; }
+.dec-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.dec-q { font-size: 13.5px; font-weight: 700; color: var(--txt1); flex: 1; min-width: 200px; }
+.dec p { margin-bottom: 8px; }
+.decide { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.opt { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--txt1); cursor: pointer; border: 1px solid var(--brd); border-radius: 20px; padding: 4px 12px; }
+.opt:has(input:checked) { border-color: var(--teal); background: var(--teal-d); }
+.opt .rec { font-size: 10px; font-weight: 700; color: var(--teal); }
+.obs { width: 100%; font: inherit; font-size: 12.5px; color: var(--txt1); background: var(--bg); border: 1px solid var(--brd); border-radius: 6px; padding: 7px 10px; resize: vertical; min-height: 34px; }
+.barra { position: sticky; bottom: 12px; margin-top: 24px; background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; box-shadow: 0 8px 24px var(--sombra); }
+.barra span { font-size: 12.5px; color: var(--txt2); margin-right: auto; }
+.btn { font: inherit; font-size: 12.5px; font-weight: 700; border-radius: 6px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--brd); background: var(--sur2); color: var(--txt1); }
+.btn.pri { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+textarea.saida { width: 100%; min-height: 180px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 12px; margin-top: 10px; display: none; }
+
+/* casos de uso */
+h3.top { font-size: 15px; margin: 30px 0 10px; padding-top: 10px; border-top: 1px dashed var(--brd); }
+.uc { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 12px 0; overflow: hidden; scroll-margin-top: 20px; }
+.uc-h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 10px 16px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.uc-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.uc-n { font-size: 13.5px; font-weight: 700; color: var(--txt1); flex: 1; min-width: 200px; }
+.uc-b { padding: 12px 16px; }
+.uc-b .kv dd ol { margin: 0 0 0 18px; display: flex; flex-direction: column; gap: 3px; }
+.uc-b .kv dd ol li { font-size: 13px; color: var(--txt2); }
+table.cen { margin-top: 10px; border: 1px solid var(--brd); border-radius: 8px; overflow: hidden; display: block; overflow-x: auto; }
+table.cen td:first-child { min-width: 190px; color: var(--txt1); font-weight: 600; }
+table.cen td:nth-child(2) { white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="doc">
+<a class="back" href="../prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Apuração Assistida → DeRE</div>
+<h1>Módulo DeRE: os dois atores, os casos de uso e os cenários</h1>
+<p class="subtitle">A DeRE muda a vida de dois clientes diferentes do SplitHub. O banco, a seguradora e a operadora de plano de saúde <strong>declaram</strong> a margem do mês e confessam o tributo. A indústria do regime regular <strong>compra</strong> desses setores e toma crédito sem nota fiscal, pelo que o fornecedor informou aos entes. Esta proposta descreve cada ator, os tópicos de cada um e, para cada tópico, os casos de uso e os cenários: o principal, os alternativos e os de exceção.</p>
+<div class="meta-bar"><span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.0</span></span><span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">29/10/2026</span></span><span class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">DeRE v1.3.0 · LC 214/2025</span></span><span class="meta-pill"><span class="meta-label">Casos de uso</span><span class="meta-val">25</span></span><span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">12</span></span><span class="meta-pill meta-fim"><span class="chip warn">Em decisão</span></span></div>
+<div class="toc"><div class="toc-title">Conteúdo</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span>O que a proposta cobre</a></li>
+<li><a href="#s02"><span class="toc-num">02</span>Os atores</a></li>
+<li><a href="#s03"><span class="toc-num">03</span>O mês com os dois atores</a></li>
+<li><a href="#s04"><span class="toc-num">04</span>Ator 1 · Quem declara</a></li>
+<li><a href="#s05"><span class="toc-num">05</span>Ator 2 · Quem compra</a></li>
+<li><a href="#s06"><span class="toc-num">06</span>Quando os dois são clientes</a></li>
+<li><a href="#s07"><span class="toc-num">07</span>Telas de referência</a></li>
+<li><a href="#s08"><span class="toc-num">08</span>Integrações e o que muda no app</a></li>
+<li><a href="#s09"><span class="toc-num">09</span>Decisões</a></li>
+<li><a href="#s10"><span class="toc-num">10</span>Fontes e premissas</a></li>
+</ul></div>
+
+<!-- 01 -->
+<div class="section" id="s01"><div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O que a proposta cobre</span></div>
+<p>A <strong>DeRE</strong> (Declaração de Regimes Específicos) é a escrituração mensal de quem tributa pela margem e não nota a nota: serviços financeiros, planos de saúde, funerários e de animais, e concursos de prognósticos.</p>
+<ul class="plain">
+<li><strong>Como é entregue:</strong> uma declaração por raiz de CNPJ, feita de eventos XML enviados por API ao ambiente nacional da DeRE, que é conjunto da Receita Federal e do Comitê Gestor.</li>
+<li><strong>Prazo:</strong> dia <strong>15</strong> do mês seguinte, sem prorrogação.</li>
+<li><strong>Fechamento:</strong> confessa o tributo e manda o débito para a apuração assistida de cada ente. A CBS e o IS vão para a <strong>Receita Federal</strong>; o IBS, para o <strong>Comitê Gestor</strong>.</li>
+<li><strong>Primeira competência:</strong> outubro/2026, com prazo em 15/11/2026, um domingo e feriado.</li>
+</ul>
+<div class="table-wrap"><table><thead><tr><th>Ator</th><th>O problema</th><th>O que o módulo entrega</th></tr></thead><tbody>
+<tr><td><strong>Quem declara</strong><br>banco, seguradora, operadora, loteria</td><td>Mapear a contabilidade para códigos de tributação, mandar oito a dez eventos por mês na ordem certa, conferir os retornos, decidir sobre bases negativas e fechar até o dia 15. O fechamento é confissão; corrigir depois exige reabertura.</td><td><strong>Gestão da DeRE</strong>: calendário, mapeamento do plano de contas, montagem e conferência dos eventos, simulação do débito, bases negativas, fechamento com aprovação, reabertura, confronto com a apuração assistida e o pagamento pelo PCONT.</td></tr>
+<tr><td><strong>Quem compra</strong><br>empresa do regime regular</td><td>Juros, tarifas, leasing, MDR, consórcio e plano de saúde de empregados geram crédito <strong>sem nota fiscal</strong>. O crédito sai do que o fornecedor informou aos entes (art. 190), com regras de cálculo próprias e regime de caixa. Hoje o SplitHub não tem de onde tirar esse número.</td><td><strong>Créditos de regimes específicos</strong>: inventário dos serviços, crédito esperado por regra, vedações, confronto com o que os entes reconhecem, divergência com chamado, e o crédito na apuração e no módulo de Crédito.</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">O que mudou desde o estudo do hub</div><p>O <a href="../dere-referencia.html">estudo de 17/09</a> partia do MOD 1.1.0. A documentação está na <strong>v1.3.0</strong> (Ato Técnico Conjunto nº 6, de 28/09/2026). As novidades são:</p><ul class="plain"><li>a reabertura de período (D-1198);</li><li>a relação de deduções por documento (D-1121);</li><li>os eventos <strong>transacionais</strong> (séries D-2000, D-3000 e D-4000), que identificam quem comprou de cada operação.</li></ul><p>São os transacionais que tornam viável o lado de quem compra.</p></div>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s02"><div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Os atores</span></div>
+<div class="table-wrap"><table><thead><tr><th>Ator</th><th>Tipo</th><th>Papel</th></tr></thead><tbody>
+<tr><td><strong>Declarante</strong> (Banco Alfa S.A., raiz 11.222.333)</td><td>Principal · cliente</td><td>Contribuinte do regime específico. Entrega a DeRE, confessa o débito, confere a apuração e paga o saldo.</td></tr>
+<tr><td><strong>Adquirente</strong> (Induspar Tecnologia S.A., raiz 54.891.237)</td><td>Principal · cliente</td><td>Contribuinte do regime regular que compra dos setores da DeRE e toma crédito sem nota.</td></tr>
+<tr><td>Analista fiscal · contador · controller</td><td>Perfis dentro do cliente</td><td>O analista prepara e confere. O contador responde pelo balancete. O controller aprova o fechamento, que é confissão.</td></tr>
+<tr><td>ERP e contabilidade do cliente</td><td>Sistema</td><td>Fonte do balancete, das aplicações, dos títulos e das deduções (declarante). Fonte dos pagamentos e dos contratos financeiros (adquirente).</td></tr>
+<tr><td><strong>Receita Federal</strong></td><td>Ente</td><td>CBS e IS. Apuração assistida da CBS, DARF e o portal da DeRE no SPED.</td></tr>
+<tr><td><strong>Comitê Gestor</strong></td><td>Ente</td><td>IBS. Apuração assistida do IBS, documento de arrecadação e o destino do IBS para estados e municípios.</td></tr>
+<tr><td>Ambiente nacional da DeRE</td><td>Sistema dos entes</td><td>Recebe os lotes, valida, processa de forma assíncrona, devolve protocolo, recibo e retornos, e calcula o débito aferido (D-9199).</td></tr>
+<tr><td>Fornecedor do regime específico</td><td>Terceiro (visto pelo adquirente)</td><td>O banco ou a operadora de quem a indústria compra. Se ele não informa, o crédito do adquirente não aparece.</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s03"><div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">O mês com os dois atores</span></div>
+<p>Competência de outubro/2026, a primeira da DeRE.</p>
+<div class="table-wrap"><table><thead><tr><th>Quando</th><th>Quem declara (Banco Alfa)</th><th>Entes</th><th>Quem compra (Induspar)</th></tr></thead><tbody>
+<tr><td><strong>Desde 01/10</strong></td><td>Tabelas vigentes: D-1001 (contribuinte) e D-1011 (plano de contas com <code>codTrib</code>)</td><td>Recebem e validam as tabelas</td><td>Mapeia os contratos com o banco: empréstimo, tarifas, leasing</td></tr>
+<tr><td><strong>Durante outubro</strong></td><td>Operações; contabilidade do mês; transacionais por adquirente</td><td>—</td><td>Paga juros, tarifas e parcelas; o crédito nasce no pagamento (regime de caixa)</td></tr>
+<tr><td><strong>Até 15/11 (domingo)</strong></td><td>D-1101, D-1106, D-2101, D-1121 e os transacionais; confere os retornos; fecha com o D-1199</td><td>D-9199: débito aferido de IBS, CBS e IS; confissão</td><td>Calcula o crédito esperado de outubro pelos pagamentos</td></tr>
+<tr><td><strong>Até 20/11</strong></td><td>Recebe a apuração assistida com o débito da DeRE contra os créditos</td><td>A Receita Federal entrega a da CBS e o Comitê Gestor, a do IBS (art. 46, I)</td><td>Lê nas apurações dele o crédito que o banco informou e confronta</td></tr>
+<tr><td><strong>Até 30/11</strong></td><td>Ajustes e pagamento do saldo pelo PCONT</td><td>Vencimento (último dia útil)</td><td>Divergência vira chamado ao banco; crédito reconhecido entra na apuração</td></tr>
+<tr><td><strong>Depois</strong></td><td>Erro achado: reabertura (D-1198), retificação, novo fechamento</td><td>Nova leitura nas duas apurações</td><td>O crédito que faltava aparece na leitura seguinte</td></tr>
+</tbody></table></div>
+<div class="callout"><div class="ct">2026</div><p>Em 2026 não há recolhimento para quem cumpre as obrigações acessórias (art. 348, § 1º). Para o declarante, entregar a DeRE é justamente o que garante a dispensa: o módulo vale desde a competência de outubro. Para o adquirente, o crédito de 2026 é informativo.</p></div>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s04"><div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Ator 1 · Quem declara</span></div>
+<p>Nove tópicos, na ordem do mês. Cada caso de uso traz o ator, o gatilho, o fluxo principal e os cenários.</p>
+
+<h3 class="top">T1 · Cadastro e tabelas</h3>
+<div class="uc" id="uc-d01"><div class="uc-h"><span class="uc-id">UC-D01</span><span class="uc-n">Cadastrar o contribuinte e os regimes</span><span class="chip info">D-1001</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Analista fiscal</dd><dt>Gatilho</dt><dd>Implantação, ou mudança de atividade ou de regulador</dd><dt>Fluxo principal</dt><dd><ol><li>Informa a raiz do CNPJ, o regime principal (o da atividade regulada pelo BCB, pela ANS ou pela SUSEP) e os secundários.</li><li>O SplitHub monta o D-1001 com vigência e transmite.</li><li>Guarda o recibo do D-9001.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Banco com um regulador</td><td><span class="chip ok">principal</span></td><td>Regime principal: serviços financeiros. D-1001 aceito.</td></tr>
+<tr><td>S2 · Grupo com banco e seguradora na mesma raiz</td><td><span class="chip info">alternativo</span></td><td>O principal é o de maior faturamento no ano anterior; o outro entra como secundário.</td></tr>
+<tr><td>S3 · Entidade que só entrega o D-1001</td><td><span class="chip info">alternativo</span></td><td>Autogestão em saúde, EFPC, fundos garantidores e resseguradoras: o módulo dispensa os mensais e mostra a obrigação cumprida.</td></tr>
+<tr><td>S4 · Certificado vencido</td><td><span class="chip red">exceção</span></td><td>A transmissão é bloqueada antes do envio, com aviso a 30, 15 e 5 dias do vencimento do certificado.</td></tr>
+</tbody></table></div></div>
+
+<div class="uc" id="uc-d02"><div class="uc-h"><span class="uc-id">UC-D02</span><span class="uc-n">Mapear o plano de contas para os códigos de tributação</span><span class="chip info">D-1011</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Contador e analista fiscal</dd><dt>Gatilho</dt><dd>Implantação; conta nova no ERP</dd><dt>Fluxo principal</dt><dd><ol><li>O SplitHub importa o plano de contas do ERP e o referencial (COSIF, ANS, SUSEP ou SPED).</li><li>Sugere o <code>codTrib</code> de cada conta analítica pelo histórico e pela descrição, para a pessoa confirmar.</li><li>Desdobra a conta mista em filhas (<code>cDbrMista</code>).</li><li>Monta e transmite o D-1011.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · 1.200 contas analíticas, todas mapeadas</td><td><span class="chip ok">principal</span></td><td>D-1011 aceito; o mapa fica com vigência a partir de 01/10/2026.</td></tr>
+<tr><td>S2 · Conta com receita tributável e imune</td><td><span class="chip info">alternativo</span></td><td>Desdobrada em duas filhas, cada uma com o seu <code>codTrib</code>.</td></tr>
+<tr><td>S3 · Três contas sem <code>codTrib</code></td><td><span class="chip red">exceção</span></td><td>O D-1011 não sai; a lista das três contas vira pendência do contador.</td></tr>
+<tr><td>S4 · Conta sintética com código</td><td><span class="chip red">exceção</span></td><td>Bloqueado pela regra do leiaute: só conta analítica recebe <code>codTrib</code>.</td></tr>
+</tbody></table></div></div>
+
+<div class="uc" id="uc-d03"><div class="uc-h"><span class="uc-id">UC-D03</span><span class="uc-n">Alterar o plano de contas com vigência</span><span class="chip info">D-1011</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Contador</dd><dt>Gatilho</dt><dd>Conta nova, reclassificação ou correção de <code>codTrib</code></dd><dt>Fluxo principal</dt><dd><ol><li>A alteração entra com novo início de validade.</li><li>O SplitHub mostra o que muda nos meses já fechados.</li><li>Transmite e guarda a versão.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Conta nova a partir de novembro</td><td><span class="chip ok">principal</span></td><td>Vigência aberta em 01/11; outubro não muda.</td></tr>
+<tr><td>S2 · Correção retroativa de outubro já fechado</td><td><span class="chip warn">atenção</span></td><td>O SplitHub avisa que o mês fechado precisa de reabertura (UC-D15). Sem ela, o PGCC do mês diverge do usado no fechamento e o D-1199 é rejeitado.</td></tr>
+<tr><td>S3 · Exclusão que abre lacuna de vigência</td><td><span class="chip red">exceção</span></td><td>Bloqueada: lacuna impede os mensais daquele intervalo.</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T2 · Escrituração mensal</h3>
+<div class="uc" id="uc-d04"><div class="uc-h"><span class="uc-id">UC-D04</span><span class="uc-n">Importar e conferir o balancete do mês</span><span class="chip info">D-1101</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>ERP (API ou arquivo) e contador</dd><dt>Gatilho</dt><dd>Fechamento contábil do mês</dd><dt>Fluxo principal</dt><dd><ol><li>O balancete chega do ERP.</li><li>O SplitHub valida a continuidade (saldo inicial igual ao final do mês anterior), as contas vigentes no PGCC e o <code>vApur</code> de cada conta pela natureza.</li><li>Arredonda pela NBR 5891.</li><li>Monta o D-1101.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Balancete consistente</td><td><span class="chip ok">principal</span></td><td>Pronto para transmitir; o resumo mostra receitas tributáveis de 10.000.000,00 e deduções de 6.000.000,00.</td></tr>
+<tr><td>S2 · Estorno e cancelamento no mês</td><td><span class="chip info">alternativo</span></td><td>O <code>vApur</code> considera os ajustes. Exemplo do manual: 600.000 − 50.000 + 10.000 = 560.000,00.</td></tr>
+<tr><td>S3 · Saldo inicial diferente do final de setembro</td><td><span class="chip red">exceção</span></td><td>Bloqueado, com a lista das contas que quebram a continuidade.</td></tr>
+<tr><td>S4 · Conta do balancete fora do PGCC vigente</td><td><span class="chip red">exceção</span></td><td>Bloqueado; o caso abre o UC-D03.</td></tr>
+<tr><td>S5 · Despesa dedutível sem documento idôneo</td><td><span class="chip warn">atenção</span></td><td>Alerta: a dedução precisa de lastro e fica marcada para o D-1121.</td></tr>
+</tbody></table></div></div>
+
+<div class="uc" id="uc-d05"><div class="uc-h"><span class="uc-id">UC-D05</span><span class="uc-n">Informar aplicações financeiras e títulos com oferta pública</span><span class="chip info">D-1106 · D-2101</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>ERP e analista</dd><dt>Gatilho</dt><dd>Mensal, quando houver ativos garantidores ou títulos</dd><dt>Fluxo principal</dt><dd><ol><li>Importa os ativos, até 500 por conta.</li><li>Importa os títulos, título a título.</li><li>Confere a soma dos saldos com a conta do balancete, a mesma checagem que o fechamento fará.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Seguradora com ativos garantidores</td><td><span class="chip ok">principal</span></td><td>D-1106 com os rendimentos do período.</td></tr>
+<tr><td>S2 · Sem aplicações</td><td><span class="chip info">alternativo</span></td><td>D-1106 enviado com <code>semAplic = 1</code>.</td></tr>
+<tr><td>S3 · Plano de saúde sem queda de reservas</td><td><span class="chip info">alternativo</span></td><td>O rendimento não entra na base do mês.</td></tr>
+<tr><td>S4 · Soma do D-2101 diferente da conta</td><td><span class="chip red">exceção</span></td><td>Bloqueado antes do fechamento, com a diferença por título.</td></tr>
+</tbody></table></div></div>
+
+<div class="uc" id="uc-d06"><div class="uc-h"><span class="uc-id">UC-D06</span><span class="uc-n">Relacionar as deduções por documento</span><span class="chip info">D-1121</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Analista fiscal</dd><dt>Gatilho</dt><dd>Deduções da base que dependem de documento, como a intermediação de seguros</dd><dt>Fluxo principal</dt><dd><ol><li>O SplitHub cruza as deduções do balancete com os documentos fiscais recebidos, que já estão no módulo de ingestão.</li><li>Monta o D-1121.</li><li>Impede que a mesma nota gere dedução e crédito ao mesmo tempo.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Dedução com nota do intermediário</td><td><span class="chip ok">principal</span></td><td>Relacionada; a nota fica marcada como usada em dedução.</td></tr>
+<tr><td>S2 · Correção antes do fechamento</td><td><span class="chip info">alternativo</span></td><td>Inclusão, alteração e exclusão livres até o D-1199.</td></tr>
+<tr><td>S3 · Correção depois do fechamento</td><td><span class="chip warn">atenção</span></td><td>Só por retificação por documento, depois da reabertura (UC-D15).</td></tr>
+<tr><td>S4 · <code>codTrib</code> fora dos permitidos para dedução</td><td><span class="chip red">exceção</span></td><td>Rejeitado pela regra <code>CODTRIB_PERMITIDO_D1121</code> (v1.3).</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T3 · Eventos transacionais</h3>
+<div class="uc" id="uc-d07"><div class="uc-h"><span class="uc-id">UC-D07</span><span class="uc-n">Conferir os transacionais contra o balancete</span><span class="chip info">D-22xx · D-3201 · D-4201</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Analista e o core bancário, que gera os transacionais</dd><dt>Gatilho</dt><dd>Lote de transacionais do mês</dd><dt>Fluxo principal</dt><dd><ol><li>O SplitHub recebe os totais por evento: crédito e TVM (D-2211), tarifas (D-2202), leasing (D-2231), arranjos de pagamento (D-2241), seguros (D-2251 e D-2252), planos de saúde (D-3201).</li><li>Confere os totais com as contas do balancete.</li><li>Mostra quantos adquirentes do regime regular vão ver crédito.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Totais batem com o balancete</td><td><span class="chip ok">principal</span></td><td>40.000 operações de crédito, 1.200 clientes pessoa jurídica: transacionais liberados.</td></tr>
+<tr><td>S2 · Transacional a menor que a conta</td><td><span class="chip red">exceção</span></td><td>Diferença de 1.000.000,00 em tarifas. O alerta avisa que clientes vão ficar sem crédito, e os adquirentes afetados são listados.</td></tr>
+<tr><td>S3 · Retorno D-9209 com erro</td><td><span class="chip red">exceção</span></td><td>O lote volta ao analista com o código e o campo.</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T4 · Transmissão e retornos</h3>
+<div class="uc" id="uc-d08"><div class="uc-h"><span class="uc-id">UC-D08</span><span class="uc-n">Transmitir o lote e acompanhar protocolo e recibo</span><span class="chip info">API · Receita Integra</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>SplitHub, ou o sistema do cliente (D-DR-02)</dd><dt>Gatilho</dt><dd>Evento pronto</dd><dt>Fluxo principal</dt><dd><ol><li>Assina com o certificado ICP-Brasil.</li><li>Envia em lote, respeitando as dependências: nada sem o PGCC vigente.</li><li>Guarda o protocolo, que não é recibo.</li><li>Consulta o processamento até o recibo, com Sucesso, Erro ou Aviso, e o <code>seqEvento</code>.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Recibo com Sucesso</td><td><span class="chip ok">principal</span></td><td>O evento fica "processado", com o número do recibo.</td></tr>
+<tr><td>S2 · Sucesso com Aviso</td><td><span class="chip info">alternativo</span></td><td>Processado; o aviso vai para revisão, sem bloquear.</td></tr>
+<tr><td>S3 · Erro de regra de negócio</td><td><span class="chip red">exceção</span></td><td>Não gravado. O erro aparece com código, descrição e campo, e o evento volta a "a corrigir".</td></tr>
+<tr><td>S4 · Ambiente indisponível perto do prazo</td><td><span class="chip red">exceção</span></td><td>Nova tentativa automática; alerta ao controller a 48 e a 24 horas do dia 15.</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T5 · Conferência e simulação do débito</h3>
+<div class="uc" id="uc-d09"><div class="uc-h"><span class="uc-id">UC-D09</span><span class="uc-n">Simular o débito do mês antes de fechar</span><span class="chip info">D-9101 · D-9109</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Analista e controller</dd><dt>Gatilho</dt><dd>Mensais processados</dd><dt>Fluxo principal</dt><dd><ol><li>Pelos <code>codTrib</code> e <code>codBC</code>, o SplitHub soma as receitas, tira as deduções e devolve as reversões.</li><li>Tira o tributo embutido na base (gross-down) e calcula o IBS e a CBS esperados.</li><li>Confere com os totalizadores dos entes.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Base bruta de 4.040.000,00</td><td><span class="chip ok">principal</span></td><td>Base líquida de 4.000.000,00 com alíquotas de teste de 0,9% de CBS e 0,1% de IBS: CBS 36.000,00 e IBS 4.000,00.</td></tr>
+<tr><td>S2 · Receita ainda sob PIS/Cofins</td><td><span class="chip info">alternativo</span></td><td>A base se divide em geral e de transição; a de transição não tem CBS.</td></tr>
+<tr><td>S3 · Totalizador diferente do SplitHub</td><td><span class="chip red">exceção</span></td><td>Divergência por <code>codBC</code>, com as contas que a explicam. O fechamento pede decisão.</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T6 · Bases de cálculo negativas</h3>
+<div class="uc" id="uc-d10"><div class="uc-h"><span class="uc-id">UC-D10</span><span class="uc-n">Gerir o estoque de base negativa</span><span class="chip info">BCN · D-1199</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Controller</dd><dt>Gatilho</dt><dd>Mês com deduções acima das receitas num <code>codBC</code>, ou mês com base positiva e estoque</dd><dt>Fluxo principal</dt><dd><ol><li>O SplitHub mantém o estoque por <code>codBC</code> e tributo, com o prazo de 5 anos de cada base.</li><li>Propõe o uso na ordem de geração, com teto opcional.</li><li>Mostra o efeito no débito antes do fechamento.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Base negativa de 1.000.000,00 em setembro</td><td><span class="chip ok">principal</span></td><td>Usada em outubro contra a base positiva do mesmo <code>codBC</code>; o débito cai.</td></tr>
+<tr><td>S2 · Escolha manual</td><td><span class="chip info">alternativo</span></td><td>O controller escolhe base a base e registra o motivo.</td></tr>
+<tr><td>S3 · Base vencendo em 60 dias</td><td><span class="chip warn">atenção</span></td><td>Alerta com o valor que se perde se não for usado.</td></tr>
+<tr><td>S4 · Uso acima da base do mês</td><td><span class="chip red">exceção</span></td><td>Bloqueado: nunca acima da base positiva do mês.</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T7 · Fechamento e reabertura</h3>
+<div class="uc" id="uc-d11"><div class="uc-h"><span class="uc-id">UC-D11</span><span class="uc-n">Fechar o mês</span><span class="chip info">D-1199 → D-9199</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Analista prepara; controller aprova</dd><dt>Gatilho</dt><dd>Todos os mensais obrigatórios processados</dd><dt>Fluxo principal</dt><dd><ol><li>Lista de conferência: eventos processados, PGCC do mês, consistência de aplicações e títulos com o balancete, simulação conferida, escolha das bases negativas.</li><li>Aprovação em dois níveis, porque o fechamento é confissão.</li><li>Transmissão do D-1199 e leitura do D-9199, com a base, a base negativa usada, o IBS municipal e estadual, a CBS e o IS.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Fechamento em 12/11</td><td><span class="chip ok">principal</span></td><td>D-9199 igual à simulação; mês bloqueado; o débito segue para as duas apurações assistidas.</td></tr>
+<tr><td>S2 · Mês sem movimento</td><td><span class="chip info">alternativo</span></td><td>Fecha mesmo assim: sem fechamento não há confissão nem dispensa em 2026.</td></tr>
+<tr><td>S3 · Mensal obrigatório ausente</td><td><span class="chip red">exceção</span></td><td>O fechamento não sai, e a pendência é apontada.</td></tr>
+<tr><td>S4 · PGCC do mês diferente do usado nos mensais</td><td><span class="chip red">exceção</span></td><td>Rejeitado pela regra do leiaute; a tela orienta a reenviar os mensais.</td></tr>
+<tr><td>S5 · Prazo em 15/11, um domingo e feriado</td><td><span class="chip warn">atenção</span></td><td>Não há prorrogação. O calendário puxa a meta interna para sexta, 13/11.</td></tr>
+</tbody></table></div></div>
+
+<div class="uc" id="uc-d12"><div class="uc-h"><span class="uc-id">UC-D12</span><span class="uc-n">Reabrir e retificar um mês fechado</span><span class="chip info">D-1198 → D-9198</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Controller</dd><dt>Gatilho</dt><dd>Erro achado depois do fechamento: pelo próprio banco, por divergência na apuração ou por pedido de um cliente adquirente</dd><dt>Fluxo principal</dt><dd><ol><li>Pede a reabertura com o motivo.</li><li>Transmite o D-1198.</li><li>Retifica os eventos.</li><li>Fecha de novo, com nova aprovação.</li><li>Compara o débito novo com o anterior.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Conta mapeada errado</td><td><span class="chip ok">principal</span></td><td>Reabertura, correção do <code>codTrib</code>, novo fechamento; o débito muda de 40.000,00 para 36.000,00.</td></tr>
+<tr><td>S2 · Cliente adquirente reclama de crédito ausente</td><td><span class="chip info">alternativo</span></td><td>O transacional faltante é incluído na retificação e o crédito do cliente aparece na leitura seguinte (UC-A06).</td></tr>
+<tr><td>S3 · Reabertura depois do vencimento</td><td><span class="chip warn">atenção</span></td><td>O débito a maior entra com encargos; a tela simula antes de confirmar.</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T8 · Apuração assistida e pagamento</h3>
+<div class="uc" id="uc-d13"><div class="uc-h"><span class="uc-id">UC-D13</span><span class="uc-n">Conferir o débito da DeRE na apuração de cada ente</span><span class="chip info">dia 20</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Analista fiscal</dd><dt>Gatilho</dt><dd>Entrega da apuração assistida, até o dia 20 para quem entrega DeRE</dd><dt>Fluxo principal</dt><dd><ol><li>O SplitHub lê a apuração da CBS na Receita Federal e a do IBS no Comitê Gestor.</li><li>Confere se o débito aferido no D-9199 chegou inteiro.</li><li>Soma os créditos do próprio banco nas aquisições.</li><li>Mostra o saldo no PCONT.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Débito igual ao D-9199 nos dois entes</td><td><span class="chip ok">principal</span></td><td>O saldo vai para o PCONT, por tributo.</td></tr>
+<tr><td>S2 · Comitê Gestor ainda sem a leitura</td><td><span class="chip info">alternativo</span></td><td>O IBS fica "sem leitura" e o prazo segue visível.</td></tr>
+<tr><td>S3 · Débito na apuração diferente do D-9199</td><td><span class="chip red">exceção</span></td><td>A divergência vira chamado, com o ente como terceiro.</td></tr>
+</tbody></table></div></div>
+
+<div class="uc" id="uc-d14"><div class="uc-h"><span class="uc-id">UC-D14</span><span class="uc-n">Pagar o saldo pelo PCONT</span><span class="chip info">PCONT</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Analista e ERP</dd><dt>Gatilho</dt><dd>Saldo devedor depois dos ajustes</dd><dt>Fluxo principal</dt><dd><ol><li>Usa o PCONT que já está no app: DARF da CBS, guia do IBS registrada do portal, envio ao ERP, comprovante e processamento.</li><li>O que muda: a origem do débito é a DeRE, e o histórico guarda o recibo do D-1199.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Competência de 2027</td><td><span class="chip ok">principal</span></td><td>Guia por tributo até o último dia útil do mês seguinte.</td></tr>
+<tr><td>S2 · Competência de 2026</td><td><span class="chip info">alternativo</span></td><td>Informativa: sem guia, pela dispensa do art. 348.</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T9 · Calendário, alertas e auditoria</h3>
+<div class="uc" id="uc-d15"><div class="uc-h"><span class="uc-id">UC-D15</span><span class="uc-n">Acompanhar o calendário da competência</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Controller</dd><dt>Gatilho</dt><dd>Contínuo</dd><dt>Fluxo principal</dt><dd><ol><li>Linha do tempo por competência: tabelas, mensais, transacionais, fechamento (dia 15), apuração (dia 20) e vencimento.</li><li>Situação de cada evento e responsável.</li><li>Alertas antes de cada prazo.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Tudo no prazo</td><td><span class="chip ok">principal</span></td><td>Etapas verdes; o mês fecha com folga.</td></tr>
+<tr><td>S2 · Balancete atrasado no ERP</td><td><span class="chip warn">atenção</span></td><td>Alerta ao contador e ao controller com os dias que faltam.</td></tr>
+<tr><td>S3 · Prazo perdido</td><td><span class="chip red">exceção</span></td><td>Situação "em atraso", com o aviso de que a dispensa de 2026 fica em risco.</td></tr>
+</tbody></table></div></div>
+
+<div class="uc" id="uc-d16"><div class="uc-h"><span class="uc-id">UC-D16</span><span class="uc-n">Auditar o que foi declarado</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Auditoria e fiscalização</dd><dt>Gatilho</dt><dd>Qualquer ação</dd><dt>Fluxo principal</dt><dd><ol><li>Trilha encadeada, como a do PCONT, com: quem mapeou cada conta, quem aprovou o fechamento, cada lote, protocolo e recibo, cada reabertura e o motivo.</li><li>Guarda os XML enviados e recebidos pelo prazo legal.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Fiscalização pede o XML de outubro</td><td><span class="chip ok">principal</span></td><td>Exporta o lote, o recibo e a memória de cálculo do D-9199.</td></tr>
+</tbody></table></div></div>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s05"><div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Ator 2 · Quem compra</span></div>
+<p>A Induspar não entrega a DeRE, mas paga ao Banco Alfa juros, tarifas e leasing; à credenciadora, MDR; e à operadora, o plano de saúde dos empregados. Os créditos desses serviços são apropriados <strong>com base no que o fornecedor informou aos entes</strong> (art. 190). Sete tópicos.</p>
+<div class="table-wrap"><table><thead><tr><th>Serviço</th><th>Crédito</th><th>Como se calcula</th><th>Quando</th><th>LC 214</th></tr></thead><tbody>
+<tr><td>Juros de empréstimo e financiamento</td><td><span class="chip ok">sim</span></td><td>Sobre os juros pagos, nos termos do artigo</td><td>No pagamento</td><td>art. 194</td></tr>
+<tr><td>Debêntures e notas comerciais</td><td><span class="chip ok">sim</span></td><td>Como o 194, enquanto o título estiver com instituição do regime específico; com oferta pública, o emissor não credita</td><td>No pagamento</td><td>art. 195</td></tr>
+<tr><td>Antecipação de recebíveis, desconto, factoring</td><td><span class="chip ok">sim</span></td><td>Deságio acima da curva DI</td><td>Na liquidação</td><td>art. 196</td></tr>
+<tr><td>Tarifas e comissões bancárias</td><td><span class="chip ok">sim</span></td><td>Valores pagos</td><td>No pagamento</td><td>art. 198</td></tr>
+<tr><td>Leasing financeiro</td><td><span class="chip ok">sim</span></td><td>Parcelas e valor residual</td><td>No pagamento</td><td>art. 203</td></tr>
+<tr><td>Consórcio · bolsas e registradoras</td><td><span class="chip ok">sim</span></td><td>Valores pagos</td><td>No pagamento</td><td>arts. 205 e 221</td></tr>
+<tr><td>Credenciadora (MDR)</td><td><span class="chip ok">sim</span></td><td>Remuneração bruta devida ao arranjo</td><td>—</td><td>art. 218</td></tr>
+<tr><td>Plano de saúde de empregados (acordo ou convenção)</td><td><span class="chip warn">sim, proporcional</span></td><td>Débito da operadora × prêmios dos empregados ÷ prêmios totais; sem a parte do empregado</td><td>Quando a operadora informa</td><td>art. 238, par. único</td></tr>
+<tr><td>Moeda estrangeira · outros não listados · plano de saúde fora da regra</td><td><span class="chip red">vedado</span></td><td>—</td><td>—</td><td>arts. 197, 199 e 238</td></tr>
+</tbody></table></div>
+
+<h3 class="top">T1 · Inventário dos serviços de regimes específicos</h3>
+<div class="uc" id="uc-a01"><div class="uc-h"><span class="uc-id">UC-A01</span><span class="uc-n">Identificar fornecedores e contratos de regime específico</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Analista fiscal</dd><dt>Gatilho</dt><dd>Implantação; contrato financeiro novo</dd><dt>Fluxo principal</dt><dd><ol><li>Marca o fornecedor como regime específico, com o regime (financeiro, saúde).</li><li>Cadastra cada contrato com o tipo de serviço da tabela acima.</li><li>O SplitHub liga os pagamentos do ERP ao contrato.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Banco Alfa com empréstimo, tarifas e leasing</td><td><span class="chip ok">principal</span></td><td>Três contratos, cada um com a sua regra de crédito.</td></tr>
+<tr><td>S2 · Fornecedor já marcado por outro cliente do SplitHub</td><td><span class="chip info">alternativo</span></td><td>A sugestão vem pronta para confirmar, sem expor dados do outro cliente.</td></tr>
+<tr><td>S3 · Contrato em moeda estrangeira</td><td><span class="chip red">exceção</span></td><td>Cadastrado como vedado: nunca gera crédito (UC-A04).</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T2 · Base do crédito, sem nota</h3>
+<div class="uc" id="uc-a02"><div class="uc-h"><span class="uc-id">UC-A02</span><span class="uc-n">Importar os pagamentos e calcular o crédito esperado</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>ERP (contas a pagar e tesouraria) e SplitHub</dd><dt>Gatilho</dt><dd>Pagamento ao fornecedor</dd><dt>Fluxo principal</dt><dd><ol><li>O pagamento chega do ERP com o contrato.</li><li>O SplitHub aplica a regra do serviço, no mês do pagamento (regime de caixa).</li><li>Cria o registro de crédito sem documento fiscal, com origem DeRE, na situação "a confirmar pelo ente".</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Tarifas de 100.000,00 pagas em outubro</td><td><span class="chip ok">principal</span></td><td>Crédito esperado de outubro, pelos valores pagos (art. 198).</td></tr>
+<tr><td>S2 · Juros de 1.000.000,00 pagos em parcela</td><td><span class="chip ok">principal</span></td><td>Crédito no mês do pagamento, não no da contratação (art. 194).</td></tr>
+<tr><td>S3 · Antecipação de recebíveis</td><td><span class="chip info">alternativo</span></td><td>Só o deságio acima do DI do período; o SplitHub usa a curva do dia da liquidação.</td></tr>
+<tr><td>S4 · Pagamento sem contrato associado</td><td><span class="chip red">exceção</span></td><td>Fica em "a classificar" com o fornecedor; sem crédito até a classificação.</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T3 · Vedações</h3>
+<div class="uc" id="uc-a03"><div class="uc-h"><span class="uc-id">UC-A03</span><span class="uc-n">Impedir crédito vedado</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>SplitHub</dd><dt>Gatilho</dt><dd>Pagamento de serviço com vedação</dd><dt>Fluxo principal</dt><dd><ol><li>Pagamento de serviço vedado entra no inventário com crédito zero e o motivo.</li><li>Se o ente refletir crédito nele, abre divergência.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Câmbio de importação</td><td><span class="chip ok">principal</span></td><td>Sem crédito (art. 197, II).</td></tr>
+<tr><td>S2 · Plano de saúde de diretoria, sem acordo coletivo</td><td><span class="chip ok">principal</span></td><td>Sem crédito (art. 238).</td></tr>
+<tr><td>S3 · Ente reflete crédito em serviço vedado</td><td><span class="chip red">exceção</span></td><td>Divergência: crédito indevido que o cliente não deve usar; vai para glosa preventiva.</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T4 · Confronto com os entes</h3>
+<div class="uc" id="uc-a04"><div class="uc-h"><span class="uc-id">UC-A04</span><span class="uc-n">Ler o crédito informado pelo fornecedor</span><span class="chip info">transacionais → apuração</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>SplitHub</dd><dt>Gatilho</dt><dd>Leitura das apurações assistidas, depois do dia 20</dd><dt>Fluxo principal</dt><dd><ol><li>Lê na apuração da CBS (Receita Federal) e na do IBS (Comitê Gestor) os créditos que vieram dos transacionais do fornecedor.</li><li>Casa com o crédito esperado por fornecedor, contrato e mês.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Tarifas reconhecidas iguais</td><td><span class="chip ok">principal</span></td><td>O crédito passa a "reconhecido" e entra na apuração.</td></tr>
+<tr><td>S2 · Reconhecido só pela Receita Federal</td><td><span class="chip info">alternativo</span></td><td>CBS reconhecida, IBS "aguardando o Comitê Gestor": cada tributo segue o seu ente.</td></tr>
+<tr><td>S3 · Granularidade agregada</td><td><span class="chip warn">atenção</span></td><td>O ente mostra um total por fornecedor, não por contrato: o casamento é por fornecedor e mês (D-DR-08).</td></tr>
+</tbody></table></div></div>
+
+<div class="uc" id="uc-a05"><div class="uc-h"><span class="uc-id">UC-A05</span><span class="uc-n">Tratar o crédito que o ente não reconheceu</span><span class="chip info">chamado</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Analista fiscal, fornecedor e ente</dd><dt>Gatilho</dt><dd>Diferença entre o esperado e o reconhecido</dd><dt>Fluxo principal</dt><dd><ol><li>A divergência abre um chamado em Inconsistências, por tributo, com o fornecedor como terceiro.</li><li>O SplitHub monta o pedido ao fornecedor: o contrato, os pagamentos e o valor esperado.</li><li>O fornecedor retifica a DeRE dele: reabre, corrige o transacional e fecha de novo.</li><li>A leitura seguinte resolve o chamado.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Juros sem transacional do banco</td><td><span class="chip ok">principal</span></td><td>Esperado 100.000,00, reconhecido 0,00. O chamado vai ao Banco Alfa, que reabre outubro; em dezembro o crédito aparece.</td></tr>
+<tr><td>S2 · Reconhecido a menor</td><td><span class="chip info">alternativo</span></td><td>A diferença abre chamado; a parte reconhecida já pode ser usada.</td></tr>
+<tr><td>S3 · Fornecedor não corrige</td><td><span class="chip red">exceção</span></td><td>O chamado fica com o fornecedor; o crédito segue a apropriar, com o prazo à vista.</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T5 · Apropriação e uso</h3>
+<div class="uc" id="uc-a06"><div class="uc-h"><span class="uc-id">UC-A06</span><span class="uc-n">Levar o crédito ao módulo de Crédito e à apuração</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>SplitHub</dd><dt>Gatilho</dt><dd>Crédito reconhecido pelo ente</dd><dt>Fluxo principal</dt><dd><ol><li>O crédito entra no módulo de Crédito como registro fiscal sem documento de origem, com o tipo DeRE, o fornecedor e o contrato.</li><li>Conta na apuração do mês e no PCONT da Induspar.</li><li>Segue o art. 54 pelo prazo da fatia apropriada.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Crédito reconhecido em novembro</td><td><span class="chip ok">principal</span></td><td>Apropriado em novembro; usado na compensação daquele mês.</td></tr>
+<tr><td>S2 · Crédito esperado, mas ainda não reconhecido</td><td><span class="chip info">alternativo</span></td><td>Aparece como "a apropriar", nunca como disponível. Onde divergem, vale o ente.</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T6 · Plano de saúde de empregados</h3>
+<div class="uc" id="uc-a07"><div class="uc-h"><span class="uc-id">UC-A07</span><span class="uc-n">Acompanhar o crédito proporcional da operadora</span><span class="chip info">D-3201</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Analista fiscal e RH</dd><dt>Gatilho</dt><dd>Mensalidade paga; leitura do ente</dd><dt>Fluxo principal</dt><dd><ol><li>Registra o contrato e o acordo coletivo.</li><li>Separa a parte paga pelo empregado, que não credita.</li><li>Espera a operadora informar no D-3201.</li><li>Lê o crédito proporcional na apuração.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Proporção informada pela operadora</td><td><span class="chip ok">principal</span></td><td>Crédito reconhecido no mês da leitura.</td></tr>
+<tr><td>S2 · Valor muda todo mês</td><td><span class="chip info">alternativo</span></td><td>O SplitHub mostra a série e não projeta como certo: o valor depende da carteira inteira da operadora.</td></tr>
+<tr><td>S3 · Sem acordo ou convenção coletiva</td><td><span class="chip red">exceção</span></td><td>Vedado (UC-A03).</td></tr>
+</tbody></table></div></div>
+
+<h3 class="top">T7 · Visão do crédito de regimes específicos</h3>
+<div class="uc" id="uc-a08"><div class="uc-h"><span class="uc-id">UC-A08</span><span class="uc-n">Acompanhar o crédito por fornecedor, serviço e mês</span></div><div class="uc-b">
+<dl class="kv"><dt>Ator</dt><dd>Controller</dd><dt>Gatilho</dt><dd>Contínuo</dd><dt>Fluxo principal</dt><dd><ol><li>Esperado, reconhecido, a apropriar, vedado e em chamado, por fornecedor, serviço, tributo e mês.</li><li>Ranking dos fornecedores que mais deixam crédito para trás.</li><li>Entra também no Painel executivo.</li></ol></dd></dl>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Fechamento do trimestre</td><td><span class="chip ok">principal</span></td><td>O controller vê quanto do crédito sem nota ficou para trás e com quem cobrar.</td></tr>
+</tbody></table></div></div>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s06"><div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Quando os dois são clientes</span></div>
+<div class="uc" id="uc-r01"><div class="uc-h"><span class="uc-id">UC-R01</span><span class="uc-n">Conferência cruzada entre o banco e o cliente dele</span><span class="chip gray">depois do MVP</span></div><div class="uc-b">
+<p>Se o Banco Alfa e a Induspar usam o SplitHub, o crédito que a Induspar espera pode ser conferido contra o transacional que o banco vai mandar, <strong>antes</strong> do fechamento do banco. Com o consentimento dos dois, o problema sai do mês seguinte e vira um aviso no mês corrente.</p>
+<table class="cen"><thead><tr><th>Cenário</th><th>Tipo</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td>S1 · Os dois consentem</td><td><span class="chip ok">principal</span></td><td>A diferença aparece no UC-D07 do banco antes do D-1199.</td></tr>
+<tr><td>S2 · Só um consente</td><td><span class="chip info">alternativo</span></td><td>Nada é compartilhado; cada lado segue o próprio fluxo.</td></tr>
+</tbody></table></div></div>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s07"><div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Telas de referência</span></div>
+<div class="tela-t"><span class="tela-id">T-A</span><span class="tela-nome">Quem declara · competência outubro/2026</span><span class="tela-onde">Apuração Assistida › DeRE</span></div>
+<div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span>splithub · #/apuracao-assistida/dere</span></div><div class="mk-body">
+<div class="mk-top"><div><div class="mk-crumb">Apuração Assistida / <b>DeRE</b></div><div class="mk-h">DeRE · Banco Alfa S.A. · 11.222.333</div><div class="mk-sub">Competência outubro/2026 · prazo 15/11/2026 (domingo e feriado, sem prorrogação) · meta interna 13/11</div></div><div class="mk-btns"><span class="mk-btn">Simular débito</span><span class="mk-btn off">Fechar o mês · 2 pendências</span></div></div>
+<div class="dm-wrap"><table class="dm"><thead><tr><th>Evento</th><th style="text-align:left">Situação</th><th style="text-align:left">Recibo</th><th style="text-align:left">Pendência</th></tr></thead><tbody>
+<tr><td>D-1001 · Contribuinte</td><td class="esq"><span class="dv ok">processado</span></td><td class="esq"><span class="cham">1.0001.2026</span></td><td class="esq">—</td></tr>
+<tr><td>D-1011 · Plano de contas comentado</td><td class="esq"><span class="dv ok">processado</span></td><td class="esq"><span class="cham">1.0002.2026</span></td><td class="esq">—</td></tr>
+<tr><td>D-1101 · Balancete</td><td class="esq"><span class="dv">a corrigir</span></td><td class="esq">—</td><td class="esq">3 contas sem <code>codTrib</code></td></tr>
+<tr><td>D-2101 · Títulos com oferta pública</td><td class="esq"><span class="dv inf">pronto</span></td><td class="esq">—</td><td class="esq">—</td></tr>
+<tr><td>D-1121 · Deduções</td><td class="esq"><span class="dv inf">pronto</span></td><td class="esq">—</td><td class="esq">—</td></tr>
+<tr><td>D-2202 · D-2211 · D-2231 · Transacionais</td><td class="esq"><span class="dv">a conferir</span></td><td class="esq">—</td><td class="esq">Tarifas 1.000.000,00 abaixo do balancete</td></tr>
+<tr><td>D-1199 · Fechamento</td><td class="esq"><span class="dv gr">bloqueado</span></td><td class="esq">—</td><td class="esq">Depende dos itens acima e da aprovação</td></tr>
+</tbody></table></div>
+</div></div>
+<div class="tela-t"><span class="tela-id">T-B</span><span class="tela-nome">Quem compra · créditos de regimes específicos</span><span class="tela-onde">Crédito › Regimes específicos</span></div>
+<div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span>splithub · #/credito/regimes-especificos</span></div><div class="mk-body">
+<div class="dm-wrap"><table class="dm"><thead><tr><th>Fornecedor · serviço · outubro/2026</th><th>Esperado (R$)</th><th>Reconhecido (R$)</th><th style="text-align:left">Situação</th><th style="text-align:left">Chamado</th></tr></thead><tbody>
+<tr><td>Banco Alfa · tarifas</td><td>10.000,00</td><td>10.000,00</td><td class="esq"><span class="dv ok">reconhecido</span></td><td class="esq">—</td></tr>
+<tr><td>Banco Alfa · juros de empréstimo</td><td>100.000,00</td><td>0,00</td><td class="esq"><span class="dv">não reconhecido</span></td><td class="esq"><span class="cham">INC-0301</span> · Banco Alfa</td></tr>
+<tr><td>Banco Alfa · leasing</td><td>50.000,00</td><td>50.000,00</td><td class="esq"><span class="dv ok">reconhecido</span></td><td class="esq">—</td></tr>
+<tr><td>Operadora Gama · plano de empregados</td><td>a informar</td><td>20.000,00</td><td class="esq"><span class="dv inf">proporcional</span></td><td class="esq">—</td></tr>
+<tr><td>Corretora Delta · câmbio</td><td>0,00</td><td>0,00</td><td class="esq"><span class="dv gr">vedado</span></td><td class="esq">—</td></tr>
+</tbody></table></div>
+<div class="mk-nota">Valores de crédito de CBS, ilustrativos. O IBS segue em linha própria, com o Comitê Gestor.</div>
+</div></div>
+</div>
+
+<!-- 08 -->
+<div class="section" id="s08"><div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Integrações e o que muda no app</span></div>
+<div class="table-wrap"><table><thead><tr><th>Onde</th><th>O que muda</th></tr></thead><tbody>
+<tr><td><strong>Ambiente nacional da DeRE</strong></td><td>Envio de lotes, consulta de recibos e retornos, autenticação pelo Receita Integra, certificado ICP-Brasil (D-DR-02)</td></tr>
+<tr><td><strong>Apuração assistida</strong></td><td>As duas leituras que o PCONT já faz passam a separar o débito vindo da DeRE e os créditos vindos dos transacionais</td></tr>
+<tr><td><strong>ERP</strong></td><td>Declarante: balancete, aplicações, títulos e deduções. Adquirente: pagamentos e contratos financeiros. Por API e por arquivo (D-DR-03)</td></tr>
+<tr><td><strong>Organização</strong></td><td>Marca a empresa do grupo como contribuinte de regime específico; libera o lado declarante por empresa (CNPJ raiz)</td></tr>
+<tr><td><strong>Fornecedores e Contratos</strong></td><td>Fornecedor de regime específico; contrato com o tipo de serviço financeiro ou de saúde</td></tr>
+<tr><td><strong>Crédito</strong></td><td>Registro fiscal sem documento de origem, com o tipo DeRE, a regra e o regime de caixa</td></tr>
+<tr><td><strong>Inconsistências</strong></td><td>Novos tipos: evento rejeitado, totalizador divergente, transacional a menor, crédito não reconhecido, crédito vedado refletido</td></tr>
+<tr><td><strong>PCONT e Painel executivo</strong></td><td>O saldo do declarante vem da DeRE; o painel ganha o crédito sem nota do adquirente</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 09 -->
+<div class="section" id="s09"><div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Decisões</span></div>
+<p>Marque uma opção em cada decisão e use "Copiar escolhas" para mandar o resultado. A primeira opção é a recomendada.</p>
+<div id="decisoes">
+<div class="dec" data-dec="D-DR-01"><div class="dec-h"><span class="dec-id">D-DR-01</span><span class="dec-q">Um módulo ou dois?</span></div><p>O lado declarante vira o item DeRE em Apuração Assistida, ligado só para a empresa do grupo marcada como regime específico. O lado adquirente vira uma aba de Crédito, para todos.</p><div class="decide"><label class="opt"><input type="radio" name="D-DR-01" value="Declarante em Apuração Assistida e adquirente em Crédito"> Declarante em Apuração Assistida, adquirente em Crédito <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DR-01" value="Um módulo DeRE com as duas visões"> Um módulo com as duas visões</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DR-02"><div class="dec-h"><span class="dec-id">D-DR-02</span><span class="dec-q">Quem transmite a DeRE</span></div><p>O SplitHub monta, confere e transmite com o certificado e o termo do cliente, como o modo direto dos eventos fiscais. A outra opção é o SplitHub montar e conferir, e o sistema do cliente transmitir.</p><div class="decide"><label class="opt"><input type="radio" name="D-DR-02" value="SplitHub transmite com certificado e termo"> SplitHub transmite <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DR-02" value="Sistema do cliente transmite"> Sistema do cliente transmite</label><label class="opt"><input type="radio" name="D-DR-02" value="Os dois modos"> Os dois modos</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DR-03"><div class="dec-h"><span class="dec-id">D-DR-03</span><span class="dec-q">Como o balancete e os pagamentos chegam</span></div><div class="decide"><label class="opt"><input type="radio" name="D-DR-03" value="API e arquivo"> API e arquivo <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DR-03" value="Só API"> Só API</label><label class="opt"><input type="radio" name="D-DR-03" value="Só arquivo"> Só arquivo</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DR-04"><div class="dec-h"><span class="dec-id">D-DR-04</span><span class="dec-q">Os transacionais</span></div><p>O core do banco gera os transacionais (milhões de operações), e o SplitHub confere os totais contra o balancete e mostra os adquirentes afetados. Gerar dentro do SplitHub exigiria trazer a base inteira de operações.</p><div class="decide"><label class="opt"><input type="radio" name="D-DR-04" value="Core gera, SplitHub confere"> Core gera, SplitHub confere <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DR-04" value="SplitHub gera"> SplitHub gera</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DR-05"><div class="dec-h"><span class="dec-id">D-DR-05</span><span class="dec-q">Aprovação do fechamento</span></div><p>Dois níveis, porque o fechamento é confissão: o analista prepara e o controller aprova.</p><div class="decide"><label class="opt"><input type="radio" name="D-DR-05" value="Dois níveis"> Dois níveis <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DR-05" value="Um nível"> Um nível</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DR-06"><div class="dec-h"><span class="dec-id">D-DR-06</span><span class="dec-q">Bases negativas</span></div><div class="decide"><label class="opt"><input type="radio" name="D-DR-06" value="Ordem de geração com teto, manual opcional"> Ordem de geração com teto, manual opcional <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DR-06" value="Só manual"> Só manual</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DR-07"><div class="dec-h"><span class="dec-id">D-DR-07</span><span class="dec-q">De onde vem o crédito do adquirente</span></div><p>O SplitHub calcula o esperado pelos pagamentos e pela regra, e confronta com o que o ente reconhece. Onde divergem, vale o ente. A alternativa é mostrar só o que o ente reconhece, sem esperado, e perder o aviso do crédito que ficou para trás.</p><div class="decide"><label class="opt"><input type="radio" name="D-DR-07" value="Esperado + confronto com o ente"> Esperado + confronto <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DR-07" value="Só o reconhecido pelo ente"> Só o reconhecido</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DR-08"><div class="dec-h"><span class="dec-id">D-DR-08</span><span class="dec-q">Nível do confronto</span></div><p>Por fornecedor e mês até se saber o nível que a apuração assistida mostra; por contrato quando houver.</p><div class="decide"><label class="opt"><input type="radio" name="D-DR-08" value="Fornecedor e mês, contrato quando houver"> Fornecedor e mês, contrato quando houver <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DR-08" value="Só por contrato"> Só por contrato</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DR-09"><div class="dec-h"><span class="dec-id">D-DR-09</span><span class="dec-q">Plano de saúde de empregados no MVP</span></div><p>Entra só como acompanhamento: o valor depende da carteira da operadora e não dá para projetar.</p><div class="decide"><label class="opt"><input type="radio" name="D-DR-09" value="Acompanhamento"> Acompanhamento <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DR-09" value="Fora do MVP"> Fora do MVP</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DR-10"><div class="dec-h"><span class="dec-id">D-DR-10</span><span class="dec-q">Conferência cruzada entre clientes (UC-R01)</span></div><div class="decide"><label class="opt"><input type="radio" name="D-DR-10" value="Depois do MVP, com consentimento"> Depois do MVP, com consentimento <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DR-10" value="No MVP"> No MVP</label><label class="opt"><input type="radio" name="D-DR-10" value="Não fazer"> Não fazer</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DR-11"><div class="dec-h"><span class="dec-id">D-DR-11</span><span class="dec-q">Ordem de construção</span></div><p>O declarante primeiro: a obrigação já vale desde outubro/2026 e o primeiro prazo é 15/11. O adquirente depois: o crédito de 2026 é informativo, e a leitura dos transacionais nas apurações ainda não foi especificada pelos entes.</p><div class="decide"><label class="opt"><input type="radio" name="D-DR-11" value="Declarante primeiro"> Declarante primeiro <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DR-11" value="Adquirente primeiro"> Adquirente primeiro</label><label class="opt"><input type="radio" name="D-DR-11" value="Os dois juntos"> Os dois juntos</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-DR-12"><div class="dec-h"><span class="dec-id">D-DR-12</span><span class="dec-q">Entrega</span></div><p>Pacote AV-DR na avaliação, com as flags <code>dere_declarante</code> e <code>dere_adquirente</code>, ligadas por empresa pelo backoffice.</p><div class="decide"><label class="opt"><input type="radio" name="D-DR-12" value="Pacote AV-DR na avaliação"> Pacote AV-DR na avaliação <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-DR-12" value="Direto no app"> Direto no app</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+</div>
+<div class="barra"><span id="cont">0 de 12 decididas</span><button class="btn" type="button" onclick="recomendadas()">Marcar as recomendadas</button><button class="btn pri" type="button" onclick="copiar()">Copiar escolhas</button></div>
+<textarea class="saida" id="saida" readonly></textarea>
+</div>
+
+<!-- 10 -->
+<div class="section" id="s10"><div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Fontes e premissas</span></div>
+<ul class="plain">
+<li>No hub: <a href="../dere-referencia.html">DeRE — referência</a> (base MOD 1.1.0), <a href="../creditos-sem-df.html">Créditos sem documento fiscal</a>, <a href="../prd-pcont.html">PRD do PCONT</a> e <a href="../catalogo-inconsistencias.html">catálogo de inconsistências</a>.</li>
+<li><a href="https://www.cgibs.gov.br/cgibs-e-receita-federal-publicam-versao-1-2-0-da-documentacao-tecnica-da-dere">CGIBS — versão 1.2.0 da DeRE</a> (05/09/2026): transacionais, controle de deduções e reabertura.</li>
+<li><a href="https://fenacon.org.br/reforma-tributaria/dere-cgibs-e-receita-federal-publicam-versao-1-3-0-da-documentacao-tecnica-e-disponibilizam-manual-do-usuario/">Fenacon — versão 1.3.0 e o manual</a> (Ato Técnico Conjunto nº 6, de 28/09/2026).</li>
+<li><a href="https://buscadorncm.com.br/dere/mudancas">Buscador NCM — mudanças entre as versões</a>, para os códigos dos eventos novos.</li>
+<li>LC 214/2025, arts. 46, 182 a 245 e 348; Decreto 12.955/2026 e Resolução CGIBS 6/2026, art. 46.</li>
+</ul>
+<div class="callout warn"><div class="ct">Premissas a confirmar</div><ul class="plain">
+<li>Os códigos e nomes dos eventos transacionais e as novidades da 1.3 vêm de fontes secundárias. Uma delas diz que a 1.3 ainda não é aceita no ambiente de produção.</li>
+<li>O prazo dos transacionais não está fixado nas fontes oficiais consultadas.</li>
+<li>Os entes ainda não disseram em que nível a apuração assistida do adquirente mostra o crédito vindo da DeRE.</li>
+<li>Os valores de crédito das telas são ilustrativos.</li>
+</ul></div>
+</div>
+
+<div class="foot">Proposta v1.0 · 29/10/2026 · casos de uso por ator; valores de exemplo.</div>
+</div>
+<script>
+(function () {
+  var decs = document.querySelectorAll('[data-dec]');
+  function contar() {
+    var n = 0;
+    decs.forEach(function (d) { if (d.querySelector('input:checked')) n++; });
+    document.getElementById('cont').textContent = n + ' de ' + decs.length + ' decididas';
+  }
+  document.getElementById('decisoes').addEventListener('change', contar);
+  window.recomendadas = function () {
+    decs.forEach(function (d) { var r = d.querySelector('input[type=radio]'); if (r && !d.querySelector('input:checked')) r.checked = true; });
+    contar();
+  };
+  window.copiar = function () {
+    var out = ['Proposta do módulo DeRE v1.0: escolhas'];
+    decs.forEach(function (d) {
+      var r = d.querySelector('input:checked'), o = d.querySelector('textarea');
+      out.push(d.getAttribute('data-dec') + ': ' + (r ? r.value : 'sem escolha') + (o && o.value.trim() ? ' (' + o.value.trim() + ')' : ''));
+    });
+    var s = out.join('\n'), ta = document.getElementById('saida');
+    ta.value = s; ta.style.display = 'block';
+    var aviso = function (t) { document.getElementById('cont').textContent = t; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(s).then(function () { aviso('Escolhas copiadas.'); }).catch(function () { aviso('Copie o texto abaixo.'); ta.select(); });
+    } else { aviso('Copie o texto abaixo.'); ta.select(); }
+  };
+})();
+</script>
+</body>
+</html>

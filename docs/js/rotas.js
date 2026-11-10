@@ -10,7 +10,8 @@
 
   function btn(sel) { return document.querySelector(sel); }
   function clicar(sel) { var b = btn(sel); if (b) b.click(); return !!b; }
-  function view(id) { return clicar('.nav-btn[onclick^="showView(\'' + id + '\',this)"]'); }
+  // o item pode ser de primeiro nível ou de grupo (Crédito, Apuração Assistida)
+  function view(id) { return clicar('#sidebar [onclick^="showView(\'' + id + '\',this)"]'); }
   function sub(ns, id) { return clicar('.stab[onclick^="showSub(\'' + ns + '\',\'' + id + '\',this)"]'); }
   function admin(id) { return clicar('#subnav-admin-' + id); }
 
@@ -22,6 +23,7 @@
     'fornecedores':             function () { admin('fornecedores'); },
     'organizacao':              function () { admin('organizacao'); },
     'integracoes':              function () { admin('integracoes'); },
+    'eventos-fiscais':          function () { admin('eventos'); },
     'automacoes':               function () { admin('automacoes'); },
     'execucao-rad':             function () { admin('exec-rad'); },
     'pagamentos':               function () { view('pagamentos'); sub('pag', 'imp'); },
@@ -34,9 +36,10 @@
     'debitos':                  function () { view('debitos'); sub('deb', 'visao'); },
     'debitos/rfs':              function () { view('debitos'); sub('deb', 'rfs'); },
     'debitos/dfs':              function () { view('debitos'); sub('deb', 'dfs'); },
+    'pcont':                    function () { clicar('#nav-pcont-btn'); },
+    'painel-apuracao':          function () { clicar('#nav-pcont-painel-btn'); },
     'apuracao':                 function () {
-      clicar('.atab[onclick="showAnalyticsTab(\'apuracao\')"]');
-      try { if (window.sincronizarApuracao) window.sincronizarApuracao(); else if (window.apurRenderAll) window.apurRenderAll(); } catch (e) {}
+      clicar('#nav-apuracao-btn');
       sub('apur', 'resumo');
     },
     'apuracao/creditos':        function () { ROTAS['apuracao'](); setTimeout(function () { sub('apur', 'creditos-tab'); }, 60); },
@@ -52,6 +55,16 @@
     'ressarcimento/pedidos':    function () { if (window.shRes) window.shRes.abrir(null, 'pedidos'); },
     'ressarcimento/recebimentos': function () { if (window.shRes) window.shRes.abrir(null, 'recebimentos'); },
   };
+
+  // Nomes do menu agrupado (R-271): sinônimos das rotas de sempre, que continuam valendo
+  var SINONIMOS = {
+    'credito': 'creditos', 'credito/visao-geral': 'creditos', 'credito/pagamentos-rad': 'pagamentos',
+    'credito/pagamentos-rad/execucao': 'pagamentos/execucao', 'apuracao-assistida': 'apuracao',
+    'apuracao-assistida/apuracao': 'apuracao', 'apuracao-assistida/pcont': 'pcont', 'apuracao-assistida/painel': 'painel-apuracao', 'apuracao-assistida/conciliacao': 'conciliacao',
+    'apuracao-assistida/conciliacao/lista': 'conciliacao/lista', 'apuracao-assistida/inconsistencias': 'inconsistencias',
+    'apuracao-assistida/inconsistencias/kanban': 'inconsistencias/kanban', 'apuracao-assistida/inconsistencias/listagem': 'inconsistencias/listagem'
+  };
+  Object.keys(SINONIMOS).forEach(function (k) { ROTAS[k] = function () { ROTAS[SINONIMOS[k]](); }; });
 
   function ler() {
     var h = location.hash || '';

@@ -41,13 +41,7 @@ function showView(viewName, btnElement, isMobile = false) {
     selectedView.classList.add('active');
   }
 
-  if (isMobile) {
-    const buttons = document.querySelectorAll('.bnav-btn');
-    buttons.forEach(b => b.classList.remove('active'));
-  } else {
-    const buttons = document.querySelectorAll('.nav-btn');
-    buttons.forEach(b => b.classList.remove('active'));
-  }
+  document.querySelectorAll('.bnav-btn, .nav-btn').forEach(b => b.classList.remove('active'));
 
   // Recolhe os submenus (ex.: Configurações) ao trocar de módulo.
   // Quem abre um submenu — showAdminSub — expande o grupo depois desta chamada.
@@ -57,6 +51,12 @@ function showView(viewName, btnElement, isMobile = false) {
   if (btnElement) {
     btnElement.classList.add('active');
   }
+  // O menu lateral e a barra inferior acompanham um ao outro; item de grupo
+  // (Crédito, Apuração Assistida) deixa o grupo aberto e o pai marcado.
+  const lateral = btnElement && btnElement.closest('#sidebar') ? btnElement : navItem('#sidebar', viewName);
+  if (lateral) navMarcar(lateral);
+  const inferior = navItem('#bottom-nav', viewName);
+  if (inferior) inferior.classList.add('active');
 
   closeSidebar();
 
@@ -76,6 +76,77 @@ function showView(viewName, btnElement, isMobile = false) {
     }, 60);
   }
 }
+
+// ─── GRUPOS DO MENU (Crédito, Apuração Assistida, Configurações) ───
+function navItem(raiz, viewName) {
+  return document.querySelector(raiz + ' [data-view="' + viewName + '"]') ||
+    document.querySelector(raiz + ' [onclick^="showView(\'' + viewName + '\',"]');
+}
+
+function navMarcar(btn) {
+  btn.classList.add('active');
+  const grupo = btn.closest('.nav-sub-group');
+  if (!grupo) return;
+  grupo.classList.add('expanded');
+  const pai = document.querySelector('[data-grupo="' + grupo.id + '"]');
+  if (pai) pai.classList.add('active');
+}
+
+// O clique no grupo abre o primeiro item visível
+function navGrupo(pai) {
+  const grupo = document.getElementById(pai.dataset.grupo);
+  const primeiro = grupo && Array.from(grupo.querySelectorAll('.nav-sub-btn')).find(b => b.style.display !== 'none');
+  if (primeiro) primeiro.click();
+}
+
+// Apuração IBS/CBS: saiu das abas do Analytics para Apuração Assistida (R-271)
+function abrirApuracao(btn, isMobile) {
+  showView('apuracao', btn || document.getElementById('nav-apuracao-btn'), !!isMobile);
+  setTimeout(function() {
+    try { if (window.sincronizarApuracao) window.sincronizarApuracao(); else if (window.apurRenderAll) window.apurRenderAll(); } catch(e) {}
+  }, 0);
+}
+
+// Menu recolhido: passar o mouse num grupo mostra os itens ao lado do ícone
+(function() {
+  let fly = null;
+  function fechar() { if (fly) { fly.remove(); fly = null; } }
+  function recolhido(pai) {
+    const l = pai.querySelector('.nav-label');
+    return !!l && getComputedStyle(l).display === 'none';
+  }
+  function abrir(pai) {
+    fechar();
+    const grupo = document.getElementById(pai.dataset.grupo);
+    if (!grupo || !recolhido(pai)) return;
+    const r = pai.getBoundingClientRect();
+    fly = document.createElement('div');
+    fly.className = 'nav-flyout';
+    fly.style.top = r.top + 'px';
+    fly.style.left = (r.right + 6) + 'px';
+    const t = document.createElement('div');
+    t.className = 'nav-flyout-t';
+    t.textContent = pai.title;
+    fly.appendChild(t);
+    grupo.querySelectorAll('.nav-sub-btn').forEach(function(b) {
+      if (b.style.display === 'none') return;
+      const i = document.createElement('button');
+      i.type = 'button';
+      i.className = 'nav-flyout-i' + (b.classList.contains('active') ? ' active' : '');
+      i.textContent = b.textContent.trim();
+      i.onclick = function() { fechar(); b.click(); };
+      fly.appendChild(i);
+    });
+    fly.addEventListener('mouseleave', fechar);
+    document.body.appendChild(fly);
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('#sidebar [data-grupo]').forEach(function(pai) {
+      pai.addEventListener('mouseenter', function() { abrir(pai); });
+      pai.addEventListener('mouseleave', function(e) { if (fly && !fly.contains(e.relatedTarget)) fechar(); });
+    });
+  });
+})();
 
 // ─── SUBMENU TOGGLE ───
 function showAnalyticsSub(viewName, btnElement) {

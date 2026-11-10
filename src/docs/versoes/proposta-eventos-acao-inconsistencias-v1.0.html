@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evento Fiscal na Inconsistência · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+
+/* ── mockups ── */
+.tela { margin: 26px 0 8px; }
+.tela-hdr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin-bottom: 8px; }
+.tela-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; color: var(--sur); background: var(--teal); border-radius: 4px; padding: 1px 7px; }
+.tela-nome { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.tela-cobre { font-size: 11px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; }
+.mk { border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; background: var(--bg); box-shadow: var(--shadow-sm); }
+.mk-bar { display: flex; align-items: center; gap: 6px; padding: 7px 12px; background: var(--sur2); border-bottom: 1px solid var(--brd); font-size: 10.5px; color: var(--txt3); }
+.mk-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); }
+.mk-bar .mk-url { margin-left: 8px; font-family: 'JetBrains Mono', monospace; }
+.mk-bar .mk-ilus { margin-left: auto; font-weight: 700; color: var(--amber); }
+.mk-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.mk-title { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.mk-title h5 { margin: 0; font-size: 15px; color: var(--txt1); }
+.mk-title .mk-sub { font-size: 11.5px; color: var(--txt3); }
+.mk-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.mk-kpi { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.mk-kpi .l { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); }
+.mk-kpi .v { font-size: 18px; font-weight: 800; color: var(--txt1); font-variant-numeric: tabular-nums; margin-top: 3px; }
+.mk-kpi .s { font-size: 11px; color: var(--txt2); margin-top: 2px; }
+.mk-kpi.hl { border-color: var(--teal); }
+.mk-cal { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0; border: 1px solid var(--brd); border-radius: 8px; overflow: hidden; background: var(--sur); }
+.mk-cal > div { padding: 9px 12px; border-right: 1px solid var(--brd); font-size: 11.5px; color: var(--txt2); }
+.mk-cal > div:last-child { border-right: none; }
+.mk-cal b { display: block; color: var(--txt1); font-size: 12px; }
+.mk-cal .urg b { color: var(--red); }
+.mk-cal .ok b { color: var(--teal); }
+.mk-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--brd); }
+.mk-tab { font-size: 12px; font-weight: 600; color: var(--txt3); padding: 7px 12px; border-bottom: 2px solid transparent; }
+.mk-tab.on { color: var(--teal); border-bottom-color: var(--teal); }
+.mk-tab .n { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: var(--sur2); border-radius: 10px; padding: 0 6px; margin-left: 4px; }
+.mk-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mk-in { font-size: 11.5px; color: var(--txt3); background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; padding: 5px 10px; }
+.mk-btn { font-size: 11.5px; font-weight: 700; border-radius: 6px; padding: 5px 12px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); white-space: nowrap; }
+.mk-btn.p { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+.mk-btn.d { color: var(--red); border-color: var(--red); }
+.mk-btn.ml { margin-left: auto; }
+.mk-tw { overflow-x: auto; border: 1px solid var(--brd); border-radius: 8px; background: var(--sur); }
+.mk-t { width: 100%; border-collapse: collapse; font-size: 11.5px; min-width: 680px; }
+.mk-t th { text-align: left; font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); padding: 7px 9px; border-bottom: 1px solid var(--brd); background: var(--sur2); white-space: nowrap; }
+.mk-t td { padding: 7px 9px; border-bottom: 1px solid var(--brd); color: var(--txt2); white-space: nowrap; }
+.mk-t tr:last-child td { border-bottom: none; }
+.mk-t .r { text-align: right; font-variant-numeric: tabular-nums; }
+.mk-t .m { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; }
+.mk-t tr.sel td { background: var(--teal-d); }
+.mk-t .strong { color: var(--txt1); font-weight: 700; }
+.st { display: inline-block; font-size: 9.5px; font-weight: 700; border-radius: 10px; padding: 1px 8px; white-space: nowrap; }
+.st.teal { background: var(--teal-d); color: var(--teal); }
+.st.blue { background: var(--blue-d); color: var(--blue); }
+.st.amber { background: var(--amber-d); color: var(--amber); }
+.st.red { background: var(--red-d); color: var(--red); }
+.st.green { background: var(--green-d); color: var(--green); }
+.st.gray { background: var(--sur2); color: var(--txt3); }
+.cd { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; }
+.cd.red { color: var(--red); } .cd.amber { color: var(--amber); } .cd.ok { color: var(--teal); }
+.mk-split { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 760px) { .mk-split { grid-template-columns: minmax(0, 1fr); } }
+.mk-card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.mk-card h6 { margin: 0 0 8px; font-size: 12.5px; color: var(--txt1); }
+.mk-cmp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.mk-cmp > div { border: 1px solid var(--brd); border-radius: 6px; padding: 9px 10px; font-size: 11.5px; color: var(--txt2); }
+.mk-cmp > div.esc { border-color: var(--teal); background: var(--teal-d); }
+.mk-cmp b { display: block; font-size: 12px; color: var(--txt1); margin-bottom: 4px; }
+.mk-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; font-size: 11.5px; color: var(--txt2); }
+.mk-row span:last-child { font-variant-numeric: tabular-nums; color: var(--txt1); font-weight: 600; white-space: nowrap; }
+.mk-row.tot { border-top: 1px solid var(--brd); margin-top: 4px; padding-top: 6px; font-weight: 700; }
+.mk-modal-wrap { background: rgba(15,23,42,.35); padding: 18px; display: flex; justify-content: center; }
+.mk-modal { width: 100%; max-width: 560px; background: var(--sur); border: 1px solid var(--brd); border-top: 3px solid var(--teal); border-radius: 10px; box-shadow: var(--shadow-sm); }
+.mk-modal.warn { border-top-color: var(--amber); }
+.mk-mh { padding: 12px 16px; border-bottom: 1px solid var(--brd); }
+.mk-mh .ey { font-size: 9.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); }
+.mk-mh .t { font-size: 14px; font-weight: 700; color: var(--txt1); margin-top: 2px; }
+.mk-mb { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; font-size: 12px; color: var(--txt2); }
+.mk-mf { padding: 10px 16px; border-top: 1px solid var(--brd); display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.mk-field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); margin-bottom: 3px; }
+.mk-field .inp { border: 1px solid var(--brd); border-radius: 6px; padding: 6px 10px; background: var(--bg); color: var(--txt1); font-size: 12px; }
+.mk-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.mk-alert { border-left: 3px solid var(--amber); background: var(--amber-d); padding: 8px 10px; border-radius: 0 6px 6px 0; font-size: 11.5px; color: var(--txt1); }
+.mk-alert.red { border-left-color: var(--red); background: var(--red-d); }
+.mk-alert.ok { border-left-color: var(--teal); background: var(--teal-d); }
+.mk-chk { display: flex; gap: 8px; align-items: flex-start; font-size: 11.5px; }
+.mk-chk i { flex-shrink: 0; width: 13px; height: 13px; border: 1.5px solid var(--teal); border-radius: 3px; margin-top: 1px; background: var(--teal); }
+.mk-steps { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; }
+.mk-steps span { padding: 3px 10px; border-radius: 12px; background: var(--sur2); color: var(--txt3); font-weight: 600; }
+.mk-steps span.on { background: var(--teal); color: var(--sur); }
+.mk-steps span.done { background: var(--teal-d); color: var(--teal); }
+.mk-tl { display: flex; flex-direction: column; gap: 0; }
+.mk-tl > div { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 10px; padding-bottom: 10px; position: relative; }
+.mk-tl > div::before { content: ''; position: absolute; left: 5px; top: 12px; bottom: 0; width: 1px; background: var(--brd); }
+.mk-tl > div:last-child::before { display: none; }
+.mk-tl i { width: 11px; height: 11px; border-radius: 50%; background: var(--teal); margin-top: 2px; }
+.mk-tl i.pend { background: var(--sur); border: 2px solid var(--amber); }
+.mk-tl b { color: var(--txt1); font-size: 12px; }
+.mk-tl small { display: block; color: var(--txt3); font-size: 10.5px; }
+.mk-bars { display: flex; flex-direction: column; gap: 6px; }
+.mk-bars > div { display: grid; grid-template-columns: 58px minmax(0, 1fr) 96px; gap: 8px; align-items: center; font-size: 11px; color: var(--txt2); }
+.mk-bars .trk { height: 10px; background: var(--sur2); border-radius: 5px; overflow: hidden; display: flex; }
+.mk-bars .trk em { display: block; height: 100%; background: var(--teal); }
+.mk-bars .trk em.est { background: var(--teal-d); border-left: 1px dashed var(--teal); }
+.mk-bars .val { text-align: right; font-variant-numeric: tabular-nums; color: var(--txt1); font-weight: 600; }
+.obs { margin-top: 8px; }
+.obs li { margin: 3px 0; }
+
+.av { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: 8.5px; font-weight: 800; color: #fff; vertical-align: middle; margin-right: -4px; border: 1.5px solid var(--sur); }
+.av.a1 { background: #185fa5; } .av.a2 { background: #7C3AED; } .av.a3 { background: #D97706; } .av.a4 { background: #059669; }
+.av.a5 { background: #1d9e75; } .av.a6 { background: #B4577A; } .av.a7 { background: #4B6BFB; } .av.off { background: var(--txt3); opacity: .55; }
+.gchip { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 10px; white-space: nowrap; }
+.gchip::before { content: ''; width: 7px; height: 7px; border-radius: 2px; background: currentColor; }
+.g1 { color: #185fa5; background: rgba(24,95,165,.1); } .g2 { color: #059669; background: rgba(5,150,105,.1); }
+.g3 { color: #B4577A; background: rgba(180,87,122,.1); } .g4 { color: #D97706; background: rgba(217,119,6,.1); }
+.g5 { color: #7C3AED; background: rgba(124,58,237,.1); } .g0 { color: var(--txt3); background: var(--sur2); }
+.kb { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 10px; overflow-x: auto; }
+.kb-col { background: var(--sur2); border-radius: 8px; padding: 8px; min-width: 170px; display: flex; flex-direction: column; gap: 7px; }
+.kb-h { font-size: 11px; font-weight: 700; color: var(--txt1); display: flex; justify-content: space-between; padding: 2px 4px 4px; }
+.kb-c { background: var(--sur); border: 1px solid var(--brd); border-radius: 7px; padding: 8px 9px; font-size: 11px; color: var(--txt2); display: flex; flex-direction: column; gap: 4px; }
+.kb-c b { color: var(--txt1); font-size: 11.5px; }
+.kb-c .ft { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 2px; }
+.kb-c.me { border-color: var(--teal); }
+.kb-c.q { border-style: dashed; }
+.mx { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 560px; }
+.mx th, .mx td { border: 1px solid var(--brd); padding: 6px 8px; text-align: left; }
+.mx th { background: var(--sur2); font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.mx td.grp { background: var(--sur2); font-weight: 700; color: var(--txt1); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; }
+.mx td.gap { background: var(--amber-d); }
+.flowx { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 0; margin: 14px 0; }
+.fx { position: relative; padding: 10px 18px 10px 12px; border: 1px solid var(--brd); border-right: 0; background: var(--sur); }
+.fx:first-child { border-radius: 10px 0 0 10px; }
+.fx:last-child { border-right: 1px solid var(--brd); border-radius: 0 10px 10px 0; background: var(--teal-d); }
+.fx::after { content: '›'; position: absolute; right: 5px; top: 50%; transform: translateY(-50%); color: var(--txt3); font-weight: 700; }
+.fx:last-child::after { content: ''; }
+.fx-n { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; color: var(--teal); }
+.fx-t { font-size: 12.5px; font-weight: 700; color: var(--txt1); margin: 2px 0; }
+.fx-d { font-size: 11px; color: var(--txt2); line-height: 1.4; }
+@media (max-width: 760px) {
+  .flowx { grid-template-columns: minmax(0, 1fr); }
+  .fx, .fx:first-child, .fx:last-child { border: 1px solid var(--brd); border-radius: 0; margin-top: -1px; }
+  .fx::after { content: ''; }
+}
+.chip.m2 { background: rgba(107,63,160,.12); color: var(--purple); }
+
+.sla { display: inline-flex; align-items: center; gap: 4px; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 800; padding: 1px 7px; border-radius: 10px; white-space: nowrap; }
+.sla::before { content: '◷'; font-family: inherit; }
+.sla.ok { color: var(--teal); background: var(--teal-d); }
+.sla.risk { color: var(--amber); background: var(--amber-d); }
+.sla.late { color: var(--red); background: var(--red-d); }
+.sla.pause { color: var(--txt3); background: var(--sur2); }
+.sla.done { color: var(--green); background: var(--green-d); }
+.sla.done::before { content: '✓'; }
+.clk { border: 1px solid var(--brd); border-radius: 8px; padding: 9px 11px; background: var(--sur); display: flex; flex-direction: column; gap: 5px; font-size: 11.5px; color: var(--txt2); }
+.clk b { color: var(--txt1); }
+.clk .trk { height: 7px; background: var(--sur2); border-radius: 4px; overflow: hidden; }
+.clk .trk em { display: block; height: 100%; background: var(--teal); }
+.clk .trk em.risk { background: var(--amber); }
+.clk-g { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.nr { color: var(--amber); font-weight: 700; }
+</style>
+<style>
+.fam { display:inline-block; font-size:9.5px; font-weight:800; padding:1px 6px; border-radius:4px; background:var(--sur2); color:var(--txt2); margin-right:4px; }
+.trib { display:inline-block; font-size:9.5px; font-weight:700; padding:1px 6px; border-radius:4px; border:1px solid var(--brd); color:var(--txt2); }
+.ev { font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:700; color:var(--purple); }
+.ad { display:flex; align-items:center; gap:8px; margin:18px 0 8px; }
+.ad-tag { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; padding:3px 10px; border-radius:20px; }
+.ad-tag.antes { background:var(--sur2); color:var(--txt2); }
+.ad-tag.depois { background:var(--teal-d); color:var(--teal); }
+.lado { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px; align-items:start; }
+@media (max-width: 720px) { .lado { grid-template-columns:minmax(0, 1fr); } }
+figure.shot { margin:0; min-width:0; }
+figure.shot img { display:block; width:100%; height:auto; border:1px solid var(--brd); border-radius:8px; }
+figure.shot figcaption { font-size:11.5px; color:var(--txt3); margin-top:6px; line-height:1.5; }
+.seq { display:flex; flex-direction:column; gap:6px; margin:14px 0; }
+.seq-l { display:grid; grid-template-columns:28px 150px minmax(0, 1fr); gap:10px; align-items:baseline; padding:9px 12px; background:var(--sur); border:1px solid var(--brd); border-radius:6px; font-size:12.5px; }
+.seq-l b { font-size:12px; }
+.seq-n { font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:700; color:var(--teal); }
+@media (max-width: 600px) { .seq-l { grid-template-columns:24px minmax(0, 1fr); } .seq-l > span:last-child { grid-column:2; } }
+.aj-de { color:var(--txt3); text-decoration:line-through; }
+.aj-para { font-weight:700; color:var(--txt1); }
+pre.code { background:var(--mono); border:1px solid var(--brd); border-radius:8px; padding:12px 14px; font:11.5px/1.55 'JetBrains Mono', monospace; color:var(--txt1); overflow-x:auto; margin:10px 0; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="../prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Inconsistências → Eventos fiscais</div>
+<h1>Evento fiscal como ação da inconsistência</h1>
+<p class="subtitle">A inconsistência passa a oferecer, como ação ou como caminho de resolução, a emissão de um evento fiscal da Reforma para ajustar o documento. O SplitHub prepara o evento e o solicita por webhook; o sistema do cliente transmite; o evento autorizado volta pela API. Cada ajuste de valor ou de atributo fica registrado, com trilha completa, e aparece na decomposição de valores do documento e do registro fiscal.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Proposta de funcionalidade e de API</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">26/10/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Base</span>&nbsp;<span class="meta-val">NT 2025.002-RTC v1.51</span></div>
+<div class="meta-pill"><span class="meta-label">Funcionalidades</span>&nbsp;<span class="meta-val">14</span></div>
+<div class="meta-pill"><span class="meta-label">Telas</span>&nbsp;<span class="meta-val">6</span></div>
+<div class="meta-pill"><span class="meta-label">Decisões</span>&nbsp;<span class="meta-val">13</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip warn">Em aprovação</span>&nbsp;<span class="chip warn">v1.0</span></div>
+</div>
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> O pedido e o que muda</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Antes e depois</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Os eventos que podem ser solicitados</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Da inconsistência ao evento</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> O fluxo ponta a ponta</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> A emissão por webhook e o retorno pela API</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> O ajuste e a trilha de auditoria</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Os ajustes na decomposição de valores</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Telas propostas</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Funcionalidades</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Modelo de dados</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Requisitos e regras</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Impacto no produto</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> Decisões para aprovar</a></li>
+<li><a href="#s15"><span class="toc-num">15</span> Histórico de versões</a></li>
+</ul></div>
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O pedido e o que muda</span></div>
+<p>Hoje a inconsistência aponta o problema e sugere ações genéricas — recalcular, pedir retificação, escalar para a contabilidade. Nenhuma delas corrige o documento perante a Receita Federal e o Comitê Gestor. Na Reforma, boa parte das correções é feita por <strong>evento fiscal</strong>: aceitar uma nota de crédito, pedir o crédito presumido, declarar perecimento, atualizar a previsão de entrega.</p><p>A proposta liga as duas coisas. Da inconsistência, o analista escolhe o evento que corrige o documento; o SplitHub monta o evento com o que já sabe do documento, mostra o efeito antes de pedir, envia a solicitação ao sistema do cliente e acompanha até o órgão refletir. O documento guarda cada ajuste, com quem pediu, quem aprovou, o protocolo e o antes e o depois.</p><div class="callout warn"><div class="ct">O SplitHub continua sem transmitir evento</div><p>Em 14/09/2026 ficou decidido que o SplitHub não emite evento: quem transmite é o sistema do cliente, que tem o certificado, a fila e a responsabilidade pela declaração. Esta proposta mantém isso. O que muda é a origem: o SplitHub passa a <strong>preparar e solicitar</strong> o evento, pelo webhook <code>fiscal_event.requested</code>, e o sistema do cliente decide, transmite e devolve o resultado. A revisão do papel é a D-01.</p></div><div class="table-wrap"><table><thead><tr><th>Antes</th><th>Com a proposta</th></tr></thead><tbody><tr><td>Ação sugerida genérica, sem efeito no documento</td><td>O evento que corrige o documento, sugerido pelo tipo da inconsistência e pelo papel do cliente no DF</td></tr><tr><td>O ERP emite evento por conta própria, e o SplitHub só sabe quando importa</td><td>O SplitHub pede, o ERP transmite, e a solicitação liga o evento à inconsistência que o motivou</td></tr><tr><td>Valor do documento muda sem registro do porquê</td><td>Cada ajuste é um registro imutável, com origem, antes e depois, e a trilha inteira</td></tr><tr><td>A decomposição de valores mostra só o estado atual</td><td>A decomposição lista os ajustes e as mudanças de atributo, com o valor original ao lado</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Antes e depois</span></div>
+<div class="ad"><span class="ad-tag antes">Antes</span></div><div class="lado"><figure class="shot"><a href="../img/eventos-acao/ev-antes-card.webp" target="_blank" rel="noopener"><img src="../img/eventos-acao/ev-antes-card.webp" width="920" height="1326" loading="lazy" alt="Card de inconsistência com ações sugeridas genéricas"></a><figcaption>O card de uma divergência de IBS. As ações sugeridas recalculam, notificam ou escalam; nenhuma corrige o documento.</figcaption></figure><figure class="shot"><a href="../img/eventos-acao/ev-antes-valores.webp" target="_blank" rel="noopener"><img src="../img/eventos-acao/ev-antes-valores.webp" width="703" height="758" loading="lazy" alt="Quadro de valores e registros fiscais do documento"></a><figcaption>A decomposição de valores do documento mostra o estado atual. Não há onde ver o que mudou, quando e por quê.</figcaption></figure></div><div class="ad"><span class="ad-tag depois">Depois</span></div><p>As telas T-01 a T-06, na seção 09: a ação de evento no card, o formulário com a prévia do efeito, o acompanhamento da solicitação, os ajustes na decomposição de valores, a trilha de um ajuste e a configuração.</p>
+</div>
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Os eventos que podem ser solicitados</span></div>
+<p>Só os eventos da Reforma — os dezesseis da NT 2025.002-RTC, descritos na <a href="../proposta-eventos-fiscais.html#s04" style="color:var(--blue)">referência de eventos</a>. Quem pode registrar cada um depende do papel do cliente no documento, e é isso que filtra a lista.</p><div class="table-wrap"><table><thead><tr><th>Código</th><th>Evento</th><th>O cliente pode solicitar quando</th><th>O que muda no documento</th></tr></thead><tbody><tr><td><span class="ev">211110</span></td><td>Solicitação de apropriação de crédito presumido</td><td>é o adquirente; também como emitente, quando a informação não entrou na nota</td><td>Valor e atributo: o crédito do item passa a ser o presumido, e a origem do crédito, “presumida”</td></tr><tr><td><span class="ev">211124</span></td><td>Perecimento, perda, roubo ou furto — transporte FOB</td><td>é o adquirente</td><td>Valor: estorna o crédito do item na quantidade perdida</td></tr><tr><td><span class="ev">211128</span></td><td>Aceite de débito por emissão de nota de crédito</td><td>é o adquirente</td><td>Valor: com aceite, reduz o valor e o crédito pelo montante da nota de crédito</td></tr><tr><td><span class="ev">211130</span></td><td>Imobilização de item</td><td>é o adquirente</td><td>Atributo: o item fica marcado como imobilizado, e o prazo do ressarcimento passa a ser o do imobilizado</td></tr><tr><td><span class="ev">211140</span></td><td>Apropriação de crédito de combustível</td><td>é o adquirente</td><td>Valor: o crédito passa a ser pela quantidade consumida</td></tr><tr><td><span class="ev">211150</span></td><td>Apropriação de crédito de bens e serviços vinculados à atividade</td><td>é o adquirente</td><td>Valor: constitui o crédito condicionado do item</td></tr><tr><td><span class="ev">112110</span></td><td>Informação de efetivo pagamento integral</td><td>é o emitente — documento de saída</td><td>Atributo: pagamento integral informado, o que libera o crédito presumido do adquirente</td></tr><tr><td><span class="ev">112120</span></td><td>Importação em ALC/ZFM não convertida em isenção</td><td>é o emitente — documento de saída</td><td>Valor: tributa o item declarado</td></tr><tr><td><span class="ev">112130</span></td><td>Perecimento, perda, roubo ou furto — transporte CIF</td><td>é o emitente — documento de saída</td><td>Valor: estorna na quantidade perdida</td></tr><tr><td><span class="ev">112140</span></td><td>Fornecimento não realizado com pagamento antecipado</td><td>é o emitente — documento de saída</td><td>Valor: desfaz o débito e o crédito do não fornecido</td></tr><tr><td><span class="ev">112150</span></td><td>Atualização da data de previsão de entrega</td><td>é o emitente — documento de saída</td><td>Atributo: nova previsão de entrega, que desloca a competência</td></tr><tr><td><span class="ev">110001</span></td><td>Cancelamento de evento</td><td>é o autor do evento a cancelar</td><td>Desfaz os ajustes do evento cancelado com ajustes inversos</td></tr></tbody></table></div><div class="table-wrap"><table><thead><tr><th>Fora do fluxo</th><th>Por quê</th></tr></thead><tbody><tr><td>Eventos do outro lado do documento — por exemplo, o 112130 num documento de entrada</td><td>Quem registra é o fornecedor. A ação vira <strong>pedido ao emitente</strong>: o chamado vai para <em>aguardando emitente</em>, com o evento esperado registrado</td></tr><tr><td><span class="ev">212110</span> · <span class="ev">212120</span> — manifestação da sucessora</td><td>Dependem de uma sucessão empresarial, que não nasce de inconsistência de documento</td></tr><tr><td><span class="ev">412120</span> · <span class="ev">412130</span> — manifestação do Fisco</td><td>São do órgão: só chegam, pela importação</td></tr></tbody></table></div><div class="callout info"><div class="ct">Oito eventos são por item, e a primeira versão não segmenta o documento por item</div><p>Os eventos 112120, 112130, 112140, 211110, 211124, 211130, 211140 e 211150 levam o número do item. Como a ingestão da primeira versão não separa itens, o analista informa o item e os valores dele no formulário, conferindo com o XML; o ajuste é registrado no registro fiscal do tributo, por valor. O item fica na trilha (D-06).</p></div>
+</div>
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Da inconsistência ao evento</span></div>
+<p>O produto sugere, e o analista escolhe. A sugestão vem do tipo da inconsistência e do papel do cliente no documento; qualquer evento que o cliente possa registrar naquele documento pode ser escolhido, com justificativa.</p><div class="table-wrap"><table><thead><tr><th>Inconsistência</th><th>Documento</th><th>Evento sugerido</th><th>Quando faz sentido</th></tr></thead><tbody><tr><td><span class="fam">B</span>Valor IBS ou CBS divergente da apuração</td><td>Entrada</td><td><span class="ev">211128</span></td><td>O fornecedor emitiu nota de crédito e falta o aceite do adquirente</td></tr><tr><td></td><td>Entrada</td><td><span class="ev">211110</span></td><td>Compra que dá crédito presumido, e o órgão apurou o destacado</td></tr><tr><td></td><td>Entrada</td><td><span class="ev">211124</span></td><td>Mercadoria perdida em transporte por conta do adquirente</td></tr><tr><td></td><td>Entrada</td><td>pedir <span class="ev">112130</span> ou <span class="ev">112140</span> ao emitente</td><td>A perda ou o não fornecimento é do lado do fornecedor</td></tr><tr><td><span class="fam">B</span>Movimento do órgão sem contrapartida</td><td>Entrada ou saída</td><td><span class="ev">110001</span></td><td>O movimento vem de um evento do próprio cliente registrado por engano</td></tr><tr><td><span class="fam">B</span>DF sem registro na apuração assistida</td><td>Saída</td><td><span class="ev">112150</span></td><td>A entrega foi adiada e a competência mudou</td></tr><tr><td><span class="fam">C</span>Prazo de apuração expirado</td><td>Saída</td><td><span class="ev">112150</span></td><td>A previsão de entrega ficou desatualizada</td></tr><tr><td><span class="fam">D</span>Reconhecido diferente do pago</td><td>Saída</td><td><span class="ev">112110</span></td><td>O cliente recebeu o pagamento integral e não informou</td></tr><tr><td><span class="fam">B</span>Apropriação não pedida — crédito condicionado</td><td>Entrada</td><td><span class="ev">211150</span> · <span class="ev">211140</span></td><td>Crédito vinculado à atividade ou de combustível que nunca foi pedido</td></tr></tbody></table></div><p>Na <a href="../proposta-grupos-inconsistencias.html" style="color:var(--blue)">proposta de gestão de inconsistências</a>, emitir o evento é uma ação do responsável, em <em>em análise</em>. Enquanto o sistema do cliente transmite e o órgão não reflete, o chamado fica em <em>aguardando emitente</em>, com o terceiro registrado — o sistema do cliente e, depois, o órgão de cada tributo. O relógio de resolução pausa. Quando o órgão reflete o evento e a divergência some, o desfecho vem preenchido com o evento e o protocolo, e o responsável fecha o chamado.</p>
+</div>
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O fluxo ponta a ponta</span></div>
+<div class="seq"><div class="seq-l"><span class="seq-n">1</span><b>Escolher</b><span>Na inconsistência, o responsável escolhe o evento sugerido ou outro da lista do papel do cliente.</span></div><div class="seq-l"><span class="seq-n">2</span><b>Preencher</b><span>O formulário vem com chave de acesso, código, autor e os campos do evento preenchidos a partir do documento e da divergência. O que o SplitHub não sabe, como o número do item, o analista informa.</span></div><div class="seq-l"><span class="seq-n">3</span><b>Ver o efeito</b><span>A prévia mostra o que vai mudar no documento e em cada registro fiscal — valor e atributo, antes e depois, por tributo.</span></div><div class="seq-l"><span class="seq-n">4</span><b>Aprovar</b><span>Evento que muda valor passa pela aprovação de outra pessoa, com perfil Administrador (D-04).</span></div><div class="seq-l"><span class="seq-n">5</span><b>Solicitar</b><span>O SplitHub registra a solicitação e envia o webhook <code>fiscal_event.requested</code> ao sistema do cliente.</span></div><div class="seq-l"><span class="seq-n">6</span><b>Transmitir</b><span>O sistema do cliente monta o XML, assina e transmite ao ambiente autorizador. O SplitHub não participa.</span></div><div class="seq-l"><span class="seq-n">7</span><b>Devolver</b><span>O sistema do cliente devolve o resultado: o evento autorizado, com protocolo, pela importação de eventos; ou a rejeição, com o motivo.</span></div><div class="seq-l"><span class="seq-n">8</span><b>Registrar</b><span>Com a autorização, o ajuste é registrado no documento. Atributo vale na hora; valor fica aguardando o órgão.</span></div><div class="seq-l"><span class="seq-n">9</span><b>Refletir</b><span>Quando a Receita Federal reflete a CBS e o Comitê Gestor reflete o IBS, cada um no seu tempo, o valor do tributo se move na partição.</span></div><div class="seq-l"><span class="seq-n">10</span><b>Fechar</b><span>Sem divergência restante, o desfecho vem preenchido e o responsável resolve o chamado.</span></div></div><div class="table-wrap"><table><thead><tr><th>Estado da solicitação</th><th>Quando</th><th>O que o chamado mostra</th></tr></thead><tbody><tr><td><span class="st gray">rascunho</span></td><td>O formulário foi aberto e não enviado</td><td>—</td></tr><tr><td><span class="st amber">aguardando aprovação</span></td><td>Evento que muda valor, à espera do aprovador</td><td>Ação pendente</td></tr><tr><td><span class="st blue">solicitada</span></td><td>Webhook enviado; o SplitHub espera a entrega</td><td>Aguardando emitente · sistema do cliente</td></tr><tr><td><span class="st blue">entregue</span></td><td>O sistema do cliente respondeu 2xx ao webhook</td><td>Aguardando emitente · sistema do cliente</td></tr><tr><td><span class="st teal">autorizada</span></td><td>O evento voltou com protocolo</td><td>Aguardando emitente · Receita Federal ou Comitê Gestor</td></tr><tr><td><span class="st red">rejeitada</span></td><td>O sistema do cliente devolveu a rejeição</td><td>Volta a em análise, com o motivo</td></tr><tr><td><span class="st gray">cancelada</span></td><td>Cancelada antes da transmissão, por quem pediu ou pelo aprovador</td><td>Volta a em análise</td></tr><tr><td><span class="st red">sem retorno</span></td><td>Nenhum resultado em 24 horas</td><td>Aviso ao responsável; em 72 horas, inconsistência de integração (D-09)</td></tr></tbody></table></div><div class="callout info"><div class="ct">O valor só se move com o órgão</div><p>Em 22/10/2026 ficou decidido que só a Conciliação grava movimento de valor, a partir do dado do órgão (C-01). O evento autorizado é a declaração do cliente; o órgão é quem confirma. Por isso o ajuste de valor nasce <em>aguardando o órgão</em> e só move a partição quando a Receita Federal, para a CBS, ou o Comitê Gestor, para o IBS, refletir. Se o órgão refletir um valor diferente do declarado, nada é aplicado sozinho: abre inconsistência, como decidido em 30/09/2026.</p></div>
+</div>
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">A emissão por webhook e o retorno pela API</span></div>
+<p>O canal segue o padrão dos webhooks da API pública: inscrição em <code>/v1/webhook-subscriptions</code>, assinatura HMAC-SHA256 sobre o carimbo de tempo e o corpo, entrega pelo menos uma vez, até dez retentativas e log em <code>GET /v1/events</code>. Os nomes seguem a decisão de 05/10/2026: contrato em inglês.</p><h3>6.1 O webhook de solicitação</h3><div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Quando sai</th><th>Quem consome</th></tr></thead><tbody><tr><td><code>fiscal_event.requested</code></td><td>A solicitação foi aprovada — ou não precisava de aprovação</td><td>O sistema do cliente que transmite eventos — ERP ou emissor fiscal</td></tr><tr><td><code>fiscal_event.request_canceled</code></td><td>A solicitação foi cancelada antes de qualquer resultado</td><td>O mesmo sistema, para não transmitir</td></tr></tbody></table></div><pre class="code">POST https://erp.cliente.com.br/splithub/eventos
+X-Splithub-Timestamp: 1793050000
+X-Splithub-Signature: v1=…
+
+{
+  "id": "evt_7d2a90",
+  "type": "fiscal_event.requested",
+  "created_at": "2026-10-26T14:00:00Z",
+  "data": {
+    "request_id": "fer_01h2",
+    "fiscal_document_id": "df_184221",
+    "access_key": "4126…0001",
+    "event": {
+      "type": "credit_note_acceptance",
+      "code": "211128",
+      "author_cnpj": "54891237000148",
+      "detail": { "acceptance": 1 }
+    },
+    "expected_effect": [
+      { "tax": "IBS", "field": "credit_amount", "from": "2000.00", "to": "1800.00" },
+      { "tax": "CBS", "field": "credit_amount", "from": "1000.00", "to": "900.00" }
+    ],
+    "inconsistency_id": "INC-000412",
+    "requested_by": "maria.costa@induspar.com.br",
+    "approved_by": "jose.silva@induspar.com.br",
+    "respond_by": "2026-10-27T14:00:00Z"
+  }
+}</pre><p>O <code>event</code> usa o mesmo envelope da importação de eventos proposta em 30/09: <code>type</code> legível decide o formato de <code>detail</code>, que espelha o <code>detEvento</code> da NT. O sistema do cliente não precisa traduzir nada: monta o XML a partir do mesmo dado que já usaria.</p><h3>6.2 O retorno</h3><div class="table-wrap"><table><thead><tr><th>Método</th><th>Rota</th><th>Para quê</th><th>Resposta</th></tr></thead><tbody><tr><td>POST</td><td><code>/v1/fiscal-events</code></td><td>Importar o evento autorizado, com o protocolo e o <code>request_id</code> da solicitação — a mesma rota de importação de eventos, que ganha o campo</td><td>202</td></tr><tr><td>POST</td><td><code>/v1/fiscal-event-requests/{id}/rejection</code></td><td>Devolver a rejeição do ambiente autorizador, com o código e o motivo</td><td>200</td></tr><tr><td>GET</td><td><code>/v1/fiscal-event-requests</code></td><td>Listar solicitações por situação — o caminho para quem prefere buscar a receber</td><td>200</td></tr><tr><td>GET</td><td><code>/v1/fiscal-event-requests/{id}</code></td><td>Uma solicitação, com o efeito esperado e o resultado</td><td>200</td></tr></tbody></table></div><div class="table-wrap"><table><thead><tr><th>Regra</th><th>Por quê</th></tr></thead><tbody><tr><td>O <code>request_id</code> é a chave de idempotência do lado do cliente</td><td>Webhook é entregue pelo menos uma vez: o mesmo pedido pode chegar duas vezes</td></tr><tr><td>Evento autorizado sem <code>request_id</code> continua sendo aceito</td><td>O ERP segue podendo emitir por conta própria; o SplitHub só não liga o evento a uma inconsistência</td></tr><tr><td>Evento autorizado com efeito diferente do esperado é aceito e sinalizado</td><td>O que vale é o que foi autorizado; a diferença abre inconsistência para análise</td></tr><tr><td>Solicitação cancelada que mesmo assim volta autorizada é aceita e sinalizada</td><td>O evento existe no ambiente autorizador; o SplitHub registra e avisa</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">O ajuste e a trilha de auditoria</span></div>
+<p>Cada mudança que um evento causa no documento é um <strong>ajuste</strong>: um registro próprio, imutável, que diz o que mudou, de quanto para quanto, por quê e por ordem de quem. Um evento pode gerar vários ajustes — um por tributo e um por atributo.</p><div class="table-wrap"><table><thead><tr><th>Campo do ajuste</th><th>Exemplo</th></tr></thead><tbody><tr><td>Documento e registro fiscal</td><td>NF-e 000.184.221 · RF de IBS</td></tr><tr><td>Alvo</td><td>Valor do crédito · ou atributo, como a previsão de entrega ou a origem do crédito</td></tr><tr><td>Antes e depois</td><td>R$ 2.000,00 → R$ 1.800,00</td></tr><tr><td>Origem</td><td>Evento 211128, protocolo, solicitação fer_01h2, inconsistência INC-000412</td></tr><tr><td>Pessoas</td><td>Pedido por Maria Costa; aprovado por José da Silva</td></tr><tr><td>Datas</td><td>Solicitado, entregue, autorizado, refletido e aplicado — cada uma registrada</td></tr><tr><td>Situação</td><td>declarado · aguardando o órgão · aplicado · divergente · revertido</td></tr><tr><td>Prova</td><td>Hash do corpo do webhook e do evento autorizado</td></tr></tbody></table></div><div class="table-wrap"><table><thead><tr><th>Regra</th><th>Como funciona</th></tr></thead><tbody><tr><td>Ajuste não se edita</td><td>Correção é um ajuste novo; reversão é o cancelamento do evento (110001), que gera ajustes inversos</td></tr><tr><td>Ajuste não se apaga</td><td>Evento cancelado deixa os seus ajustes como revertidos, visíveis</td></tr><tr><td>Valor original sempre à vista</td><td>A decomposição mostra o valor do XML ao lado do ajustado</td></tr><tr><td>Atributo também é ajuste</td><td>Previsão de entrega, origem do crédito, item imobilizado, pagamento integral informado</td></tr><tr><td>Trilha por tributo</td><td>A CBS e o IBS de um mesmo evento são ajustes separados, cada um com o seu órgão e o seu tempo</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Os ajustes na decomposição de valores</span></div>
+<p>O quadro <em>Valores e registros fiscais · CBS × IBS</em> do detalhe do documento, e o mesmo quadro no detalhe do registro fiscal, ganham dois blocos.</p><div class="table-wrap"><table><thead><tr><th>Bloco</th><th>O que mostra</th></tr></thead><tbody><tr><td><strong>Valores do documento</strong> — linhas novas</td><td><em>Tributo no XML</em>, <em>Ajustes</em> (a soma, por tributo) e <em>Tributo ajustado</em>. O valor original nunca some</td></tr><tr><td><strong>Ajustes do documento</strong> — bloco novo, abaixo da partição</td><td>Uma linha por ajuste: quando, evento e protocolo, tributo, o que mudou — valor ou atributo — com o antes e o depois, situação e a inconsistência de origem. Cada linha abre a trilha do ajuste</td></tr><tr><td><strong>Atributos</strong> — linhas novas em Datas</td><td>Previsão de entrega e competência, origem do crédito, item imobilizado, pagamento integral informado — com a marca <em>ajustado por evento</em></td></tr></tbody></table></div><p>No detalhe do registro fiscal, o bloco mostra só os ajustes daquele tributo. A soma das parcelas continua conferida: o ajuste aplicado move valor entre parcelas e entra no histórico de movimentos de valor, com a causa <em>evento fiscal</em>.</p>
+</div>
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Telas propostas</span></div>
+<p class="sec-sub">Seis telas. Os valores são ilustrativos e redondos.</p><div class="tela"><div class="tela-hdr"><span class="tela-id">T-01</span><span class="tela-nome">Ação de evento no chamado</span><span class="tela-cobre">Detalhe do chamado · F-01, F-02, F-12</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · inconsistências / INC-000412</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-modal-wrap"><div class="mk-modal"><div class="mk-mh"><div class="ey">INC-000412 · <span class="fam">B</span>Valor IBS divergente da apuração · IBS · Comitê Gestor</div><div class="t">NF-e 000.184.221 · Eletropar Ind. Ltda</div></div><div class="mk-mb"><div class="mk-row"><span>IBS no XML · IBS apurado pelo Comitê Gestor</span><span>R$ 2.000,00 · R$ 1.800,00</span></div><div class="mk-row"><span>Nota de crédito do fornecedor · aceite</span><span>R$ 200,00 de IBS · sem aceite</span></div><div class="mk-field"><label>Ações</label></div><div class="mk-card"><h6><span class="ev">211128</span> Aceitar a nota de crédito <span class="st teal">sugerido</span></h6><div style="font-size:11.5px;color:var(--txt2)">O fornecedor emitiu nota de crédito e o Comitê Gestor já apurou o valor menor. O aceite consolida o ajuste: IBS de R$ 2.000,00 para R$ 1.800,00 e CBS de R$ 1.000,00 para R$ 900,00.</div><div class="mk-tools"><span class="mk-btn p">Preparar evento</span></div></div><div class="mk-card"><h6>Outro evento da Reforma</h6><div style="font-size:11.5px;color:var(--txt2)">211110 · 211124 · 211130 · 211140 · 211150 · 110001 — os que o adquirente pode registrar neste documento.</div></div><div class="mk-card"><h6>Pedir ao emitente</h6><div style="font-size:11.5px;color:var(--txt2)">112130 ou 112140 são do fornecedor: o chamado vai para <em>aguardando emitente</em>, com o evento esperado.</div></div></div><div class="mk-mf"><span class="mk-btn">Fechar</span></div></div></div></div><ul class="plain obs"><li>A sugestão vem do tipo da inconsistência e do papel do cliente no documento — aqui, adquirente.</li><li>As ações antigas — recalcular, pedir retificação, escalar — continuam abaixo, para os casos sem evento.</li></ul></div>
+<div class="tela"><div class="tela-hdr"><span class="tela-id">T-02</span><span class="tela-nome">Preparar o evento, com a prévia do efeito</span><span class="tela-cobre">Modal · F-03, F-04, F-05</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · inconsistências / INC-000412 / evento 211128</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-modal-wrap"><div class="mk-modal"><div class="mk-mh"><div class="ey">Evento fiscal · solicitação</div><div class="t"><span class="ev">211128</span> Aceite de débito por nota de crédito</div></div><div class="mk-mb"><div class="mk-fields"><div class="mk-field"><label>Chave de acesso</label><div class="inp">4126 1054 8912 3700 0148 5500 1000 1842 2110 0000 0001</div></div><div class="mk-field"><label>Autor</label><div class="inp">54.891.237/0001-48 · adquirente</div></div></div><div class="mk-fields"><div class="mk-field"><label>Aceite</label><div class="inp">1 — aceita</div></div><div class="mk-field"><label>Justificativa</label><div class="inp">Nota de crédito NC 3.100 do fornecedor, conferida com o pedido</div></div></div><div class="mk-field"><label>Efeito no documento</label></div><div class="mk-tw"><table class="mk-t" style="min-width:520px"><thead><tr><th>Registro</th><th>O que muda</th><th>Antes → depois</th><th>Quando</th></tr></thead><tbody><tr><td>IBS · Comitê Gestor</td><td>Valor do crédito</td><td><span class="aj-de">R$ 2.000,00</span> → <span class="aj-para">R$ 1.800,00</span></td><td>quando o Comitê Gestor refletir</td></tr><tr><td>CBS · Receita Federal</td><td>Valor do crédito</td><td><span class="aj-de">R$ 1.000,00</span> → <span class="aj-para">R$ 900,00</span></td><td>quando a Receita Federal refletir</td></tr><tr><td>Documento</td><td>Valor declarado do documento — atributo</td><td><span class="aj-de">R$ 20.000,00</span> → <span class="aj-para">R$ 17.000,00</span></td><td>na autorização</td></tr></tbody></table></div><div class="mk-alert">Este evento muda valor: vai para a aprovação de um Administrador antes de sair. Aprovador sugerido: José da Silva.</div></div><div class="mk-mf"><span class="mk-btn">Cancelar</span><span class="mk-btn p">Pedir aprovação</span></div></div></div></div><ul class="plain obs"><li>Tudo o que o SplitHub sabe vem preenchido; o que não sabe — como o número do item, nos eventos por item — o analista informa.</li><li>A prévia separa o que muda na autorização do que espera o órgão de cada tributo.</li></ul></div>
+<div class="tela"><div class="tela-hdr"><span class="tela-id">T-03</span><span class="tela-nome">Acompanhar a solicitação</span><span class="tela-cobre">Detalhe do chamado · F-08, F-07</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · inconsistências / INC-000412 / fer_01h2</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-body"><div class="mk-card"><h6>Solicitação fer_01h2 · <span class="ev">211128</span> Aceite de nota de crédito</h6><div class="mk-steps"><span style="background:var(--teal-d);color:var(--teal)">pedido</span><span style="background:var(--teal-d);color:var(--teal)">aprovado</span><span style="background:var(--teal-d);color:var(--teal)">entregue</span><span style="background:var(--teal-d);color:var(--teal)">autorizado</span><span style="background:var(--teal-d);color:var(--teal)">IBS refletido</span><span>CBS refletida</span><span>aplicado</span></div><div class="mk-tl" style="margin-top:12px"><div><i></i><span><b>IBS refletido pelo Comitê Gestor</b><small>28/10/2026 06:00 · arquivo diário · R$ 1.800,00 · ajuste AJ-0031 aplicado</small></span></div><div><i></i><span><b>Autorizado</b><small>26/10/2026 14:06 · protocolo 141260000123456 · devolvido pelo ERP em POST /v1/fiscal-events</small></span></div><div><i></i><span><b>Webhook entregue</b><small>26/10/2026 14:00 · resposta 200 do ERP em 0,4 s · entrega whd_9a1</small></span></div><div><i></i><span><b>Aprovado</b><small>26/10/2026 13:58 · José da Silva</small></span></div><div><i></i><span><b>Pedido</b><small>26/10/2026 13:50 · Maria Costa · INC-000412</small></span></div><div><i class="pend"></i><span><b>CBS — aguardando a Receita Federal</b><small>consulta diária · ajuste AJ-0032 aguardando o órgão</small></span></div></div></div></div></div><ul class="plain obs"><li>O chamado fica em <em>aguardando emitente</em> enquanto a solicitação não volta, com o terceiro trocando de sistema do cliente para o órgão de cada tributo.</li><li>Rejeição volta o chamado para <em>em análise</em>, com o motivo do ambiente autorizador no histórico.</li></ul></div>
+<div class="tela"><div class="tela-hdr"><span class="tela-id">T-04</span><span class="tela-nome">Os ajustes na decomposição de valores</span><span class="tela-cobre">Detalhe do documento · F-10</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · créditos / NF-e 000.184.221</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-body"><div class="mk-title"><h5>Valores e registros fiscais · CBS × IBS</h5><span class="mk-sub">NF-e 000.184.221 · Eletropar Ind. Ltda</span></div><div class="mk-tw"><table class="mk-t"><thead><tr><th>Valores do documento</th><th class="r">CBS · Receita Federal</th><th class="r">IBS · Comitê Gestor</th><th class="r">Documento</th></tr></thead><tbody><tr><td>Tributo no XML</td><td class="r">R$ 1.000,00</td><td class="r">R$ 2.000,00</td><td class="r">R$ 3.000,00</td></tr><tr><td>Ajustes</td><td class="r">− R$ 100,00 · aguardando</td><td class="r">− R$ 200,00</td><td class="r">− R$ 300,00</td></tr><tr><td class="strong">Tributo ajustado</td><td class="r strong">R$ 900,00</td><td class="r strong">R$ 1.800,00</td><td class="r strong">R$ 2.700,00</td></tr></tbody></table></div><div class="mk-field" style="margin-top:12px"><label>Ajustes do documento · 3</label></div><div class="mk-tw"><table class="mk-t" style="min-width:640px"><thead><tr><th>Quando</th><th>Evento</th><th>Tributo</th><th>O que mudou</th><th>Situação</th><th>Origem</th></tr></thead><tbody><tr><td>28/10 06:00</td><td><span class="ev">211128</span> prot. …3456</td><td><span class="trib">IBS</span></td><td>Crédito <span class="aj-de">R$ 2.000,00</span> → <span class="aj-para">R$ 1.800,00</span></td><td><span class="st teal">aplicado</span></td><td class="m">INC-000412</td></tr><tr><td>26/10 14:06</td><td><span class="ev">211128</span> prot. …3456</td><td><span class="trib">CBS</span></td><td>Crédito <span class="aj-de">R$ 1.000,00</span> → <span class="aj-para">R$ 900,00</span></td><td><span class="st amber">aguardando a Receita Federal</span></td><td class="m">INC-000415</td></tr><tr><td>20/10 10:12</td><td><span class="ev">211130</span> prot. …1188</td><td>documento</td><td>Item 2 <span class="aj-de">não imobilizado</span> → <span class="aj-para">imobilizado</span></td><td><span class="st teal">declarado</span></td><td class="m">—</td></tr></tbody></table></div><div class="mk-alert ok">O valor do XML continua à vista. Cada linha abre a trilha do ajuste (T-05).</div></div></div><ul class="plain obs"><li>No detalhe do registro fiscal, o mesmo bloco mostra só os ajustes do tributo daquele registro.</li><li>Ajuste revertido por cancelamento fica na lista, riscado, com o evento 110001 que o reverteu.</li></ul></div>
+<div class="tela"><div class="tela-hdr"><span class="tela-id">T-05</span><span class="tela-nome">Trilha de um ajuste</span><span class="tela-cobre">Detalhe do ajuste · F-09</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · créditos / NF-e 000.184.221 / AJ-0031</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-modal-wrap"><div class="mk-modal"><div class="mk-mh"><div class="ey">Ajuste AJ-0031 · IBS · Comitê Gestor</div><div class="t">Crédito <span class="aj-de">R$ 2.000,00</span> → <span class="aj-para">R$ 1.800,00</span></div></div><div class="mk-mb"><div class="mk-tw"><table class="mk-t"><thead><tr><th>Campo</th><th>Valor</th></tr></thead><tbody><tr><td>Origem</td><td><span class="ev">211128</span> Aceite de nota de crédito · protocolo 141260000123456</td></tr><tr><td>Solicitação</td><td>fer_01h2 · webhook evt_7d2a90 · entrega whd_9a1</td></tr><tr><td>Inconsistência</td><td>INC-000412 · Valor IBS divergente da apuração · resolvida em 28/10</td></tr><tr><td>Pedido por</td><td>Maria Costa · Fiscal · 26/10/2026 13:50</td></tr><tr><td>Aprovado por</td><td>José da Silva · Administrador · 26/10/2026 13:58</td></tr><tr><td>Autorizado</td><td>26/10/2026 14:06 · devolvido pelo ERP</td></tr><tr><td>Refletido</td><td>28/10/2026 06:00 · arquivo diário do Comitê Gestor · R$ 1.800,00</td></tr><tr><td>Movimento de valor</td><td>R$ 200,00 de “a apropriar” para “inapropriável” · causa: evento fiscal</td></tr><tr><td>Prova</td><td><span class="m">sha256 do webhook 9f2c… · do evento autorizado 41ab…</span></td></tr></tbody></table></div></div><div class="mk-mf"><span class="mk-btn">Exportar trilha</span><span class="mk-btn">Fechar</span></div></div></div></div><ul class="plain obs"><li>Ajuste é imutável: o único caminho de volta é o cancelamento do evento, que gera o ajuste inverso.</li></ul></div>
+<div class="tela"><div class="tela-hdr"><span class="tela-id">T-06</span><span class="tela-nome">Configurar a emissão</span><span class="tela-cobre">Configurações › Integrações · F-13, F-05, F-14</span></div><div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-url">splithub · configurações / integrações / eventos fiscais</span><span class="mk-ilus">dados ilustrativos</span></div><div class="mk-body"><div class="mk-title"><h5>Eventos fiscais por solicitação</h5><span class="mk-sub">Induspar Tecnologia S.A.</span></div><div class="mk-tw"><table class="mk-t"><thead><tr><th>Item</th><th>Configuração</th></tr></thead><tbody><tr><td class="strong">Webhook</td><td><code>fiscal_event.requested</code> e <code>fiscal_event.request_canceled</code> → https://erp.cliente.com.br/splithub/eventos · <span class="st teal">ativo</span></td></tr><tr><td class="strong">Quem pode pedir</td><td>Administrador e Fiscal; Tesouraria só o 112110, da família de recolhimento</td></tr><tr><td class="strong">Aprovação</td><td>Evento que muda valor: outro usuário com perfil Administrador. Evento só de atributo: sem aprovação</td></tr><tr><td class="strong">Prazo de retorno</td><td>Aviso em 24 horas; inconsistência de integração em 72 horas</td></tr><tr><td class="strong">Eventos habilitados</td><td>Os 12 do papel do cliente; o cliente pode desligar algum</td></tr></tbody></table></div><div class="mk-alert">Sem webhook ativo, a ação de evento aparece desabilitada no chamado, com o motivo.</div></div></div><ul class="plain obs"><li>A inscrição usa a mesma tela de webhooks das integrações; a solicitação é só mais um tipo de evento.</li></ul></div>
+
+</div>
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Funcionalidades</span></div>
+<div class="feat"><div class="feat-hdr"><span class="feat-id">F-01</span><span class="feat-name">Ação de evento na inconsistência</span><span class="feat-loc">Detalhe do chamado</span></div><div class="feat-body"><p>O evento sugerido pelo tipo e pelo papel do cliente, os demais da Reforma e o pedido ao emitente.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-02</span><span class="feat-name">Eventos por papel no documento</span><span class="feat-loc">Catálogo</span></div><div class="feat-body"><p>Os eventos da NT 2025.002-RTC que o cliente pode registrar como adquirente ou emitente; os do outro lado, como pedido.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-03</span><span class="feat-name">Formulário do evento</span><span class="feat-loc">Modal</span></div><div class="feat-body"><p>Campos do evento preenchidos com o que o documento e a divergência já dizem, validados como na importação.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-04</span><span class="feat-name">Prévia do efeito</span><span class="feat-loc">Modal</span></div><div class="feat-body"><p>O que muda em valor e em atributo, por tributo, antes e depois, e quando cada mudança acontece.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-05</span><span class="feat-name">Aprovação da solicitação</span><span class="feat-loc">Modal e notificação</span></div><div class="feat-body"><p>Evento que muda valor passa por outro usuário com perfil Administrador.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-06</span><span class="feat-name">Webhook de solicitação</span><span class="feat-loc">API</span></div><div class="feat-body"><p><code>fiscal_event.requested</code> e <code>fiscal_event.request_canceled</code>, com assinatura, retentativa e log.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-07</span><span class="feat-name">Retorno do sistema do cliente</span><span class="feat-loc">API</span></div><div class="feat-body"><p>Evento autorizado pela importação, com <code>request_id</code>; rejeição por rota própria.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-08</span><span class="feat-name">Acompanhamento da solicitação</span><span class="feat-loc">Detalhe do chamado</span></div><div class="feat-body"><p>Linha do tempo do pedido ao reflexo de cada tributo.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-09</span><span class="feat-name">Ajuste com trilha de auditoria</span><span class="feat-loc">Detalhe do ajuste</span></div><div class="feat-body"><p>Registro imutável de cada mudança de valor ou atributo, com origem, pessoas, datas e prova.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-10</span><span class="feat-name">Ajustes na decomposição de valores</span><span class="feat-loc">Detalhe do documento e do RF</span></div><div class="feat-body"><p>Tributo no XML, ajustes e ajustado; a lista de ajustes; os atributos ajustados.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-11</span><span class="feat-name">Cancelamento com ajuste inverso</span><span class="feat-loc">Detalhe do ajuste</span></div><div class="feat-body"><p>O 110001, solicitado pelo mesmo caminho, reverte os ajustes do evento cancelado sem apagá-los.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-12</span><span class="feat-name">Pedido ao emitente</span><span class="feat-loc">Detalhe do chamado</span></div><div class="feat-body"><p>Evento do outro lado do documento vira <em>aguardando emitente</em>, com o evento esperado.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-13</span><span class="feat-name">Configuração da emissão</span><span class="feat-loc">Configurações › Integrações</span></div><div class="feat-body"><p>Webhook, quem pode pedir, aprovação, prazo de retorno e eventos habilitados.</p></div></div><div class="feat"><div class="feat-hdr"><span class="feat-id">F-14</span><span class="feat-name">Prazo de retorno</span><span class="feat-loc">Em segundo plano</span></div><div class="feat-body"><p>Aviso em 24 horas sem resultado; inconsistência de integração em 72 horas.</p></div></div>
+</div>
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Modelo de dados</span></div>
+<div class="table-wrap"><table><thead><tr><th>Entidade</th><th>Campos</th></tr></thead><tbody><tr><td>SolicitacaoEvento</td><td>id (fer_), documentoId, registrosFiscais[], inconsistenciaId, codigo, tipo, autorCnpj, detalhe, efeitoEsperado[], justificativa, situacao (rascunho|aguardando_aprovacao|solicitada|entregue|autorizada|rejeitada|cancelada|sem_retorno), pedidoPor, aprovadoPor, webhookId, entregas[], protocolo, rejeicao {codigo, motivo}, datas</td></tr><tr><td>Ajuste</td><td>id (AJ-), documentoId, registroFiscalId (vazio = documento), tributo, orgao, alvo (valor|atributo), campo, antes, depois, situacao (declarado|aguardando_orgao|aplicado|divergente|revertido), origem {evento, codigo, protocolo, solicitacaoId}, inconsistenciaId, pedidoPor, aprovadoPor, datas {solicitado, autorizado, refletido, aplicado}, movimentoId, revertidoPor, hashProva</td></tr><tr><td>Documento fiscal (campos novos)</td><td>ajustes[], atributosAjustados {previsaoEntrega, competencia, origemCredito, itensImobilizados[], pagamentoIntegralInformado}</td></tr><tr><td>Movimento de valor (campo novo)</td><td>causa: evento_fiscal, ajusteId</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Requisitos e regras</span></div>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Requisito</th><th>Critério de aceite</th><th>Pri.</th></tr></thead><tbody><tr><td><span class="rid">RF-EVA-001</span></td><td>A inconsistência oferece os eventos que o cliente pode registrar no documento, com o sugerido em destaque.</td><td>Num documento de entrada, nenhum evento 112xxx aparece para emitir.</td><td>M</td></tr><tr><td><span class="rid">RF-EVA-002</span></td><td>Só eventos da NT 2025.002-RTC podem ser solicitados.</td><td>Nenhum outro código é aceito.</td><td>M</td></tr><tr><td><span class="rid">RF-EVA-003</span></td><td>O formulário mostra o efeito antes de solicitar.</td><td>Cada mudança aparece por tributo, com antes, depois e quando.</td><td>M</td></tr><tr><td><span class="rid">RF-EVA-004</span></td><td>Evento que muda valor exige aprovação de outro usuário com perfil Administrador.</td><td>Quem pede não aprova o próprio pedido.</td><td>M</td></tr><tr><td><span class="rid">RF-EVA-005</span></td><td>A solicitação aprovada sai pelo webhook assinado.</td><td>Entrega registrada, com retentativa e log.</td><td>M</td></tr><tr><td><span class="rid">RF-EVA-006</span></td><td>O evento autorizado volta pela importação com o request_id.</td><td>A solicitação passa a autorizada e o ajuste é registrado.</td><td>M</td></tr><tr><td><span class="rid">RF-EVA-007</span></td><td>A rejeição volta por rota própria, com código e motivo.</td><td>O chamado volta a em análise com o motivo no histórico.</td><td>M</td></tr><tr><td><span class="rid">RF-EVA-008</span></td><td>Ajuste de valor só move a partição quando o órgão do tributo reflete.</td><td>Antes do reflexo, o ajuste fica aguardando o órgão.</td><td>M</td></tr><tr><td><span class="rid">RF-EVA-009</span></td><td>Reflexo diferente do declarado não é aplicado.</td><td>Abre inconsistência; nenhum valor muda sozinho.</td><td>M</td></tr><tr><td><span class="rid">RF-EVA-010</span></td><td>Todo ajuste é imutável e auditável.</td><td>Nenhuma rota ou tela edita ou apaga ajuste.</td><td>M</td></tr><tr><td><span class="rid">RF-EVA-011</span></td><td>A decomposição de valores mostra o valor do XML, os ajustes e o ajustado.</td><td>Valores e atributos ajustados visíveis no documento e no RF.</td><td>M</td></tr><tr><td><span class="rid">RF-EVA-012</span></td><td>Cancelamento por 110001 gera ajustes inversos.</td><td>Os ajustes do evento cancelado ficam revertidos, não apagados.</td><td>S</td></tr><tr><td><span class="rid">RF-EVA-013</span></td><td>Sem retorno em 24 horas, aviso; em 72, inconsistência de integração.</td><td>Os dois registrados no chamado.</td><td>S</td></tr></tbody></table></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Regra</th></tr></thead><tbody><tr><td><span class="rid">RN-EVA-01</span></td><td>O SplitHub prepara e solicita; quem transmite é o sistema do cliente, com o certificado dele</td></tr><tr><td><span class="rid">RN-EVA-02</span></td><td>Uma solicitação é de um evento; um evento pode gerar vários ajustes — um por tributo e um por atributo</td></tr><tr><td><span class="rid">RN-EVA-03</span></td><td>Atributo declarado — inclusive o valor bruto do documento — vale na autorização; o valor de cada tributo, no reflexo do órgão</td></tr><tr><td><span class="rid">RN-EVA-04</span></td><td>A Receita Federal reflete a CBS e o Comitê Gestor reflete o IBS, cada um no seu tempo — nunca somados</td></tr><tr><td><span class="rid">RN-EVA-05</span></td><td>Evento do outro lado do documento nunca é solicitado: vira pedido ao emitente</td></tr><tr><td><span class="rid">RN-EVA-06</span></td><td>O desfecho do chamado vem preenchido pelo evento, mas quem resolve é o responsável</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Impacto no produto</span></div>
+<div class="table-wrap"><table><thead><tr><th>Onde</th><th>O que muda</th></tr></thead><tbody><tr><td><strong>Inconsistências</strong></td><td>Ação de evento no chamado; a solicitação acompanha o chamado em <em>aguardando emitente</em>; o desfecho é preenchido pelo evento. Liga-se à proposta de gestão de inconsistências v2.0 (T-07 e T-08)</td></tr><tr><td><strong>Crédito e Débito</strong> · detalhe do DF e do RF</td><td>Linhas de valor no XML, ajustes e ajustado; bloco de ajustes; atributos ajustados; a causa <em>evento fiscal</em> no histórico de movimentos</td></tr><tr><td><strong>API pública</strong></td><td>Webhooks <code>fiscal_event.requested</code> e <code>fiscal_event.request_canceled</code>; <code>request_id</code> na importação de eventos; rotas de <code>fiscal-event-requests</code>. Entra na documentação da plataforma depois da aprovação, numa versão nova</td></tr><tr><td><strong>Configurações › Integrações</strong></td><td>A inscrição do webhook e a configuração da emissão</td></tr><tr><td><strong>Usuários</strong></td><td>Quem pode pedir — Administrador e Fiscal; Tesouraria, só o 112110 — e quem aprova — Administrador</td></tr><tr><td><strong>Eventos fiscais</strong> · referência, módulo e API</td><td>O papel do SplitHub passa de “não emite” para “prepara e solicita, sem transmitir”. A importação de eventos deixa de ser só a porta de entrada do que o ERP emite sozinho e vira também o retorno do que o SplitHub pediu</td></tr><tr><td><strong>Catálogo de inconsistências</strong></td><td>Dois tipos novos na família F, integração: solicitação de evento rejeitada e solicitação sem retorno do sistema do cliente</td></tr><tr><td><strong>Protótipo</strong></td><td>O fluxo inteiro, com o webhook, a autorização e o reflexo simulados, como o e-mail; a emissão real é da aplicação desenvolvida</td></tr><tr><td><strong>Caderno de testes</strong></td><td>Casos novos para solicitar, aprovar, receber a autorização, receber a rejeição, refletir por tributo e cancelar</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s14">
+<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Decisões para aprovar</span></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Decisão</th><th>Recomendação</th></tr></thead><tbody><tr><td><strong>D-01</strong></td><td>O SplitHub passa a preparar e solicitar evento, sem transmitir?</td><td><strong>Sim</strong>. Revê o “não emite” de 14/09 só na origem: a transmissão e a responsabilidade pela declaração seguem com o sistema do cliente</td></tr><tr><td><strong>D-02</strong></td><td>O canal é um webhook, com retorno pela API?</td><td><strong>Sim</strong>: <code>fiscal_event.requested</code> assinado; o autorizado volta pela importação com <code>request_id</code>, a rejeição por rota própria</td></tr><tr><td><strong>D-03</strong></td><td>Quais eventos?</td><td><strong>Os da NT 2025.002-RTC de autoria do cliente no documento</strong>; os do outro lado viram pedido ao emitente; sucessão e manifestação do Fisco ficam fora</td></tr><tr><td><strong>D-04</strong></td><td>Quem aprova?</td><td><strong>Outro usuário com perfil Administrador</strong>, em todo evento que muda valor; evento só de atributo dispensa</td></tr><tr><td><strong>D-05</strong></td><td>Quando o ajuste vale?</td><td><strong>Atributo na autorização; valor no reflexo do órgão de cada tributo</strong>, como na C-01 de 22/10</td></tr><tr><td><strong>D-06</strong></td><td>Eventos por item, sem camada de item na primeira versão</td><td><strong>O analista informa o item</strong>; o ajuste é registrado no RF do tributo, por valor, com o item na trilha</td></tr><tr><td><strong>D-07</strong></td><td>Quem resolve o chamado depois do evento?</td><td><strong>O responsável</strong>, com o desfecho já preenchido pelo evento e o protocolo</td></tr><tr><td><strong>D-08</strong></td><td>Rejeição</td><td><strong>O chamado volta a em análise</strong> com o motivo; nova tentativa é uma solicitação nova, ligada à anterior</td></tr><tr><td><strong>D-09</strong></td><td>Prazo de retorno do sistema do cliente</td><td><strong>Aviso em 24 horas e inconsistência de integração em 72</strong></td></tr><tr><td><strong>D-10</strong></td><td>Cancelamento</td><td><strong>Pelo 110001, solicitado pelo mesmo caminho</strong>; os ajustes ficam revertidos, nunca apagados</td></tr><tr><td><strong>D-11</strong></td><td>Ajuste editável?</td><td><strong>Não</strong>: correção é ajuste novo; reversão é cancelamento</td></tr><tr><td><strong>D-12</strong></td><td>Protótipo</td><td><strong>Fluxo inteiro com webhook, autorização e reflexo simulados</strong>; emissão real na aplicação desenvolvida</td></tr><tr><td><strong>D-13</strong></td><td>Faixa na priorização</td><td><strong>M1</strong>, junto com o núcleo de eventos, que ficou fora do M0 em 30/09</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s15">
+<div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">26/10/2026 — Primeira versão. A inconsistência ganha a emissão de evento fiscal da Reforma como ação: o SplitHub prepara e solicita pelo webhook <code>fiscal_event.requested</code>, o sistema do cliente transmite e devolve pela API, e cada ajuste de valor ou atributo fica registrado com trilha completa e aparece na decomposição de valores do documento e do registro fiscal. Seis telas, 14 funcionalidades e 13 decisões.</div></div>
+</div>
+<p style="font-size:11px;color:var(--txt3);text-align:center;margin-top:40px">SplitHub · Proposta · Evento fiscal como ação da inconsistência · v1.0 · 26/10/2026</p>
+</div>
+</body>
+</html>

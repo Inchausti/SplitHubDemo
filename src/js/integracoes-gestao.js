@@ -127,7 +127,7 @@
         inicio: '05/09/2026 16:40', fim: '05/09/2026 18:05', estado: 'resolvido',
         impacto: { guias: 0, valor: 0, chamadas: 148 },
         eventos: [
-          { ts: '05/09/2026 16:40', tipo: 'deteccao', texto: '148 chamadas com 422 em POST /v1/documentos-fiscais/batch.' },
+          { ts: '05/09/2026 16:40', tipo: 'deteccao', texto: '148 chamadas com 422 em POST /v1/fiscal-documents/batch.' },
           { ts: '05/09/2026 17:10', tipo: 'diagnostico', texto: 'Documentos enviados sem items[].tax.ibs_cbs, obrigatório desde 01/01/2026.' },
           { ts: '05/09/2026 18:05', tipo: 'resolucao', texto: 'Mapeamento corrigido no sandbox e lote reenviado com sucesso.' }
         ],

@@ -21,9 +21,9 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.11'
-DATA = u'26/10/2026'
-BASE_MAPA = u'Mapa de Funcionalidades v2.10'
+VERSAO = u'v2.14'
+DATA = u'09/11/2026'
+BASE_MAPA = u'Mapa de Funcionalidades v2.13'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
 URL_DOCS = 'https://split-hubhq.github.io/app/docs/'
@@ -136,7 +136,7 @@ FAIXAS = {
     1: ['M0','M0','M0','M0','M2','M0','M2','M2','M2','M0','M0','M0','M0','M0','M1','M1','M1','M1','M1','M1','M0','M0','M0','M0'],
     2: ['M0','M0','M1','M1','M0','M1','M1','M1','M1','M1'],
     3: ['M0','M0','M0','M0','M1','M1','M1','M0','M0','M1','M1','M0','M0','M0','M1','M1'],
-    4: ['M0','M0','M0','M0','M0','M1','M0','M1','M0','M1','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1','M1','M1','M1'],
+    4: ['M0','M0','M0','M0','M0','M1','M0','M1','M0','M1','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1','M1','M1','M1','M1','M2','M1'],
     5: ['M0','M0','M0','M0','M0','M0','M0','M1','M1','M1','M2'],
     6: ['M2','M2','M2','M2','M2','M2','M2','M1','M1','M1','M1','M1','M2'],
     7: ['M2','M2','M2','M2','M2','M2','M1','M1','M1'],
@@ -153,6 +153,8 @@ FAIXAS = {
     18: ['M1','M1','M1','M1','M1','M0','M0','M0','M0','M0','M0','M1'],
     19: ['M1','M1','M1','M1','M1','M0','M1','M1','M1','M2','M1','M1','M1'],
     20: ['M1','M2','M1','M1','M1','M1','M1','M1','M1','M2','M1','M1','M1','M1','M1'],
+    21: ['M0','M0','M0','M1','M0','M1','M0','M1','M0','M1','M1','M1','M2','M1','M1','M2','M1','M1','M2','M1'],
+    22: ['M1'] * 16,
 }
 
 # ── revisoes de faixa ──────────────────────────────────────────────────────
@@ -228,7 +230,7 @@ NOTA = {
     1:  u'O módulo que a tese defende entra quase inteiro: 11 de 14. Ficam fora três gráficos analíticos — eles explicam o crédito, não o garantem. O Top 5 e Top 10 de fornecedores subiu na revisão de 15/09: saber de quem cobrar primeiro é operação, não análise. O painel <strong>Ressarcimento no ciclo do crédito</strong> entra em M1 (D17): o M0 do módulo não muda. A <strong>parcialidade</strong> (D19) passou ao mapa em 26/10, com o protótipo incorporado ao master: partição por tributo, selo por tributo, detalhe com as duas partições e histórico de movimentos, as quatro em M0.',
     2:  u'Débito entra só para a apuração fechar. O produto se vende pelo crédito. O aviso da trava da intenção de ressarcimento entra em M1 (D17).',
     3:  u'Entra a guia, o comprovante e o rastro dos três status. A entrega ao ERP passa ao M0 junto com a API. Na revisão de 15/09 a <strong>aba Execução Programada</strong> entrou e a gestão de colunas saiu: o piloto precisa ver o que está agendado, não configurar a própria grade. Entra também o <strong>aviso ao fornecedor</strong> do recolhimento — sem ele o fornecedor paga o mesmo tributo de novo.',
-    4:  u'A inconsistência é o que impede o crédito de morrer em silêncio. Na revisão de 15/09 a <strong>atribuição de responsável</strong> entrou — inconsistência sem dono não é tratada — e os filtros multiselect saíram. A família Ressarcimento de inconsistências entra em M1 (D17).',
+    4:  u'A inconsistência é o que impede o crédito de morrer em silêncio. Na revisão de 15/09 a <strong>atribuição de responsável</strong> entrou — inconsistência sem dono não é tratada — e os filtros multiselect saíram. A família Ressarcimento de inconsistências entra em M1 (D17). Em 09/11/2026 entrou o <strong>evento fiscal ou a nota de ajuste como ação</strong> da inconsistência (AV-EV): pedir o evento e acompanhar a solicitação ficam em M1, porque tiram o operador do meio; a prévia do efeito fica em M2, porque explica o saldo antes de mudá-lo.',
     5:  u'A porta de entrada inteira, inclusive por API: com a decisão de 14/09, o documento entra por arquivo ou por integração desde o primeiro dia.',
     6:  u'Projeção pressupõe base real acumulada. Não existe piloto que comece por aqui.',
     7:  u'<strong>Reclassificado em 15/09:</strong> 5 de 6 no M0. O score, o critério, o badge, o ranking e o mapa de bolhas deixam de ser argumento de renovação e passam a ser o que diz <em>de quem cobrar primeiro</em>. Só a evolução histórica do score fica para depois — ela exige série que o piloto ainda não tem.',
@@ -246,6 +248,8 @@ NOTA = {
     17: u'Depende de base legal indexada e de confiança que um piloto ainda não tem.',
     18: u'A <strong>régua de cobrança</strong> entra no M0 por decisão de 14/09: cobrança não feita é crédito perdido. Relatórios agendados ficam em M1 e a integração ITSM desceu a M2 em 15/09 — abrir chamado é rotina de time grande, não do piloto.',
     20: u'<strong>Fora do M0 por decisão de 18/09/2026.</strong> A cadeia do crédito fecha na apropriação; o ressarcimento é o passo seguinte — transformar o saldo que sobrou em dinheiro. E o primeiro pedido real só existe em 2027: saldos de 2026 não são ressarcíveis. Treze funcionalidades em M1, o ciclo que tira o analista da planilha — saldo, intenção, pedido, decisão, recebimento, prazos, conferência e impedimentos. Duas em M2: o comparativo compensar × ressarcir e a previsão de caixa, que explicam a decisão em vez de executá-la. Implementado no protótipo em simulação 2026.',
+    21: u'<strong>Entrou no app em 29/10/2026</strong> (AV-PC). Seis no M0, pelo critério: a empresa do grupo, a competência, a visão consolidada, o demonstrativo contra o ente, o ciclo recalcular–fechar–reabrir — que era da tela da Apuração e continua contado lá também — e as <strong>divergências com chamado</strong>, porque crédito que o ente não reconhece é crédito que falhou e precisa virar tratável. A guia do saldo, o ERP, o histórico e a auditoria ficam em M1: pagar o próprio saldo é obrigação a partir de 2027, mas a cadeia do crédito fecha sem a guia sair daqui — ela pode sair do portal. Três em M2, que explicam em vez de garantir: a simulação de parcial, os encargos e o <strong>painel executivo</strong>.',
+    22: u'<strong>Entrou no app em 09/11/2026</strong> (AV-EF, lote 1, e a parte de configuração e emissão do AV-EV). <strong>Faixa provisória: o módulo inteiro em M1</strong>, até a decisão de escopo. Pelo critério, a cadeia mínima do crédito fecha sem ele: o efeito do evento chega ao crédito pelo reflexo da Receita Federal e do Comitê Gestor, que a conciliação e o PCONT já confrontam, e a divergência e a ausência viram ocorrência da família I. O módulo tira o operador do meio — mostra o que mudou no documento depois da emissão, recebe por arquivo o evento de quem ainda não integrou e pede o evento pelo ERP. A pergunta aberta é se a esteira, o estado por tributo, a confirmação por órgão e a divergência sem valor aplicado sobem ao M0: sobem se o piloto tiver volume de eventos que mude o crédito antes da apropriação. Os lotes 2 e 3 (documento, família I com alertas, reflexos em crédito e débito) ainda não estão no mapa.',
     19: u'Multiusuário interno é consequência de adoção. A exceção é o painel de acessos externos, que entrou no M0 junto com o acesso do fornecedor — e foi confirmado na revisão de 15/09. A gestão de usuários implementada em 26/10 trouxe o <strong>histórico do usuário</strong> e a <strong>redefinição de senha pelo administrador</strong>, as duas em M1 com o resto do módulo. O <strong>escopo por CNPJ</strong> (D-USR-05) também entra em M1, pelo critério: é multiusuário, e a cadeia do crédito fecha sem ele. O que a autenticação muda no M0 está na D20.',
 }
 
@@ -905,6 +909,18 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.14</div><div class="ver-desc">'
+  u'09/11/2026 \u2014 Base: <strong>Mapa v2.13, com 325 funcionalidades</strong>. Entra a <strong>importação de eventos por CSV</strong> '
+  u'no módulo 22, corrigida no app pela DV-11 do PRD de Eventos fiscais, em M1 como o resto do módulo: tira o operador do meio para quem ainda '
+  u'não integrou, e a cadeia mínima do crédito fecha sem ela. O M0 não muda.</div></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.13</div><div class="ver-desc">'
+  u'09/11/2026 \u2014 Base: <strong>Mapa v2.12, com 324 funcionalidades</strong>. Entram os pacotes <strong>AV-EV</strong> e '
+  u'<strong>AV-EF</strong>, promovidos ao app depois de aprovados: 3 funcionalidades em Inconsistências (2 em M1 e 1 em M2) e o '
+  u'módulo 22, <strong>Eventos fiscais</strong>, com 15, todas em M1 em caráter provisório, até a decisão de escopo. O M0 não muda.</div></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.12</div><div class="ver-desc">'
+  u'29/10/2026 \u2014 Base: <strong>Mapa v2.11, com 306 funcionalidades</strong>. Entra o módulo <strong>PCONT</strong>, promovido ao app '
+  u'depois de aprovado (AV-PC), com 20 funcionalidades: 6 em M0, 11 em M1 e 3 em M2. O painel executivo e a auditoria das ações vieram '
+  u'com ele. O M0 passa de 116 para 122.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v2.11</div><div class="ver-desc">'
   u'26/10/2026 \u2014 Base: <strong>Mapa v2.10, com 286 funcionalidades</strong>. <strong>D20 decidida:</strong> entra como novo o '
   u'<strong>login próprio por e-mail e senha</strong>, em M0, e o <strong>SSO corporativo</strong> desce a M1. Sai do mapa a '

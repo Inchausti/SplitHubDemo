@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MassGen: emulador da apuração assistida — Proposta · SplitHub v4.1</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; --sombra:rgba(0,0,0,.12); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --sombra:rgba(0,0,0,.4); } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --sombra:rgba(0,0,0,.4); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.back { display: inline-flex; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 760px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.meta-fim { margin-left: auto; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+td strong { color: var(--txt1); }
+td ul.plain { margin: 4px 0 0 16px; }
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); overflow-wrap: anywhere; }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.art { font-size: 11px; color: var(--txt3); }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+th.num { text-align: right; }
+tr.tot td { color: var(--txt1); font-weight: 700; }
+.src { font-size: 11px; color: var(--txt3); }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.foot { margin-top: 40px; font-size: 11.5px; color: var(--txt3); }
+
+/* cartões de resumo */
+.ess { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 14px 0; }
+.ess-c { border: 1px solid var(--brd); border-radius: 12px; padding: 12px 14px; background: var(--sur); }
+.ess-k { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--teal); }
+.ess-t { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 4px 0; }
+.ess-d { font-size: 12.5px; color: var(--txt2); line-height: 1.45; }
+
+/* passos do fluxo */
+.etapas { list-style: none; display: flex; flex-direction: column; margin: 8px 0 0; }
+.etapa { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; }
+.etapa-m { display: flex; flex-direction: column; align-items: center; }
+.etapa-m b { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--amber); background: var(--sur); font-size: 10px; display: flex; align-items: center; justify-content: center; color: var(--amber); flex-shrink: 0; }
+.etapa-m i { flex: 1; width: 2px; background: var(--brd); }
+.etapa:last-child .etapa-m i { display: none; }
+.etapa-c { padding-bottom: 14px; min-width: 0; }
+.etapa-h { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.etapa-h b { font-size: 12.5px; color: var(--txt1); }
+.etapa-h span { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--txt3); }
+.etapa-c p { font-size: 12.5px; margin: 2px 0 0; }
+
+/* maquetes */
+.tela-t { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 22px 0 6px; }
+.tela-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 7px; border-radius: 4px; }
+.tela-nome { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.tela-onde { font-size: 11.5px; color: var(--txt3); }
+.mk { border: 1px solid var(--brd); border-radius: 10px; background: var(--sur); overflow: hidden; margin: 8px 0 6px; }
+.mk-bar { display: flex; gap: 6px; align-items: center; padding: 8px 12px; background: var(--sur2); border-bottom: 1px solid var(--brd); font-size: 11px; color: var(--txt3); min-width: 0; }
+.mk-bar span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.mk-body { padding: 16px; font-size: 12px; color: var(--txt2); }
+.mk-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.mk-crumb { font-size: 11px; color: var(--txt3); margin-bottom: 2px; }
+.mk-crumb b { color: var(--txt1); font-weight: 600; }
+.mk-h { font-size: 18px; font-weight: 800; color: var(--txt1); line-height: 1.25; }
+.mk-sub { font-size: 11.5px; color: var(--txt2); max-width: 560px; }
+.mk-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.mk-btn { font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); white-space: nowrap; }
+.mk-btn.pri { background: var(--blue); border-color: var(--blue); color: var(--sur); }
+.mk-alerta { font-size: 11.5px; color: var(--txt1); background: var(--amber-d); border-left: 3px solid var(--amber); border-radius: 6px; padding: 8px 10px; margin: 10px 0; }
+.mk-alerta.info { background: var(--blue-d); border-color: var(--blue); }
+.mk-nota { font-size: 11px; color: var(--txt3); margin-top: 10px; }
+.mk-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--brd); margin-bottom: 12px; overflow-x: auto; }
+.mk-tabs span { font-size: 11.5px; padding: 7px 10px; color: var(--txt2); white-space: nowrap; border-bottom: 2px solid transparent; }
+.mk-tabs span.on { color: var(--blue); border-color: var(--blue); font-weight: 700; }
+.duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 680px) { .duo { grid-template-columns: minmax(0, 1fr); } }
+.tc { border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; background: var(--sur); min-width: 0; }
+.tc-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.tc-n { font-size: 13px; font-weight: 800; color: var(--txt1); }
+.tc-r { display: flex; justify-content: space-between; gap: 10px; font-size: 11.5px; padding: 4px 0; border-bottom: 1px dashed var(--brd); }
+.tc-r:last-of-type { border-bottom: none; }
+.tc-r b { color: var(--txt1); font-weight: 700; white-space: nowrap; }
+.tc-r b.zero { color: var(--green); }
+.tc-f { font-size: 10.5px; color: var(--txt3); margin-top: 8px; }
+.dm-wrap { overflow-x: auto; border: 1px solid var(--brd); border-radius: 8px; }
+table.dm { font-size: 11.5px; min-width: 760px; }
+table.dm th { text-transform: none; letter-spacing: 0; font-size: 11px; text-align: right; padding: 9px 12px; color: var(--txt1); }
+table.dm th:first-child, table.dm td:first-child { text-align: left; }
+table.dm td { text-align: right; padding: 8px 12px; color: var(--txt1); white-space: nowrap; vertical-align: middle; }
+table.dm td:first-child { white-space: normal; min-width: 210px; }
+table.dm tr.grp td { background: var(--sur2); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); text-align: left; }
+table.dm tr.n2 td:first-child { padding-left: 28px; }
+table.dm tr.res td { background: var(--blue-d); font-weight: 700; }
+table.dm td.z { color: var(--txt3); }
+table.dm td.rec { color: var(--blue); }
+.dv { display: inline-block; font-size: 9.5px; font-weight: 700; padding: 1px 7px; border-radius: 10px; background: var(--gray-d); color: var(--gray); white-space: nowrap; }
+.dv.ok { background: var(--green-d); color: var(--green); }
+.dv.inf { background: var(--blue-d); color: var(--blue); }
+.dv.am { background: var(--amber-d); color: var(--amber); }
+
+/* decisões */
+.dec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 14px 16px; margin: 12px 0; scroll-margin-top: 20px; }
+.dec-h { display: flex; gap: 8px 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; }
+.dec-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.dec-q { font-size: 13.5px; font-weight: 700; color: var(--txt1); flex: 1; min-width: 200px; }
+.dec p { margin-bottom: 8px; }
+.decide { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.opt { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--txt1); cursor: pointer; border: 1px solid var(--brd); border-radius: 20px; padding: 4px 12px; }
+.opt:has(input:checked) { border-color: var(--teal); background: var(--teal-d); }
+.opt .rec { font-size: 10px; font-weight: 700; color: var(--teal); }
+.obs { width: 100%; font: inherit; font-size: 12.5px; color: var(--txt1); background: var(--bg); border: 1px solid var(--brd); border-radius: 6px; padding: 7px 10px; resize: vertical; min-height: 34px; }
+.barra { position: sticky; bottom: 12px; margin-top: 24px; background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; box-shadow: 0 8px 24px var(--sombra); }
+.barra span { font-size: 12.5px; color: var(--txt2); margin-right: auto; }
+.btn { font: inherit; font-size: 12.5px; font-weight: 700; border-radius: 6px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--brd); background: var(--sur2); color: var(--txt1); }
+.btn.pri { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+textarea.saida { width: 100%; min-height: 180px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 12px; margin-top: 10px; display: none; }
+
+/* complementos desta proposta */
+.dv.red { background: var(--red-d); color: var(--red); }
+tr.grp td { background: var(--sur2); color: var(--txt1); font-weight: 600; font-size: 11.5px; }
+table.dm.esq th, table.dm.esq td { text-align: left; }
+.tc-r.off, .tc-r.off b { color: var(--txt3); font-weight: 500; }
+.mk-sec { font-size: 13px; font-weight: 800; color: var(--txt1); margin: 14px 0 8px; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--teal); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 0; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível quebra dentro do
+   próprio bloco; bloco largo rola dentro do seu container, nunca no body. */
+ul.plain li, ol.plain li { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  body { padding: 28px 16px 60px; }
+  h1 { font-size: 23px; }
+  .meta-fim { margin-left: 0; }
+  .doc, .section { overflow-wrap: anywhere; }
+  .mk-body { padding: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="../prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Proposta · Projeto · Testes</div>
+<h1>MassGen: emulador da apuração assistida da CBS e do IBS</h1>
+<p class="subtitle">O MassGen deixa de ser um gerador genérico de massa e passa a ser o emulador da Receita Federal e do Comitê Gestor para a POC. Ele lê os mesmos XMLs que o cliente importa no SplitHub, gera os eventos de cada nota e os entrega pelo barramento que a documentação de cada apuração assistida descreve. Um documento só, com o catálogo completo de eventos, a cobertura, o envio sob demanda, o histórico por nota e as decisões.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">4.1</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">02/11/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">APIs de Apuração da CBS v2 · MOC da API do IBS v1.10</span></div>
+<div class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">14 abertas · 6 já decididas</span></div>
+<div class="meta-pill meta-fim"><span class="chip warn">Em decisão</span></div>
+</div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> O que muda</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Como a POC funciona</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> O barramento: o MassGen no lugar dos entes</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Das notas aos eventos</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Catálogo de eventos · CBS</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Catálogo de eventos · IBS</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> Eventos de transporte e falha</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Roteiros e plano de cobertura</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Envio sob demanda</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Relógio e linha do tempo</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Histórico de envio por nota</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Telas</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> O que muda no código</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> Dados do cliente e segurança</a></li>
+<li><a href="#s15"><span class="toc-num">15</span> Etapas de construção</a></li>
+<li><a href="#s16"><span class="toc-num">16</span> Decisões</a></li>
+<li><a href="#s17"><span class="toc-num">17</span> Riscos e pendências</a></li>
+<li><a href="#s18"><span class="toc-num">18</span> Histórico de versões</a></li>
+</ul></div>
+
+<!-- 01 -->
+<div class="section" id="s01"><div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O que muda</span></div>
+<p>Até a v3.0, o MassGen era um gerador de massa genérico, com a emulação dos entes como um dos módulos. Na v4.0, o objetivo passa a ser um só: <strong>emular as apurações assistidas da CBS e do IBS</strong> para que o SplitHub seja testado numa POC com as notas reais do cliente.</p>
+<div class="ess">
+<div class="ess-c"><div class="ess-k">Entrada</div><div class="ess-t">Os XMLs do cliente</div><div class="ess-d">As mesmas notas que o SplitHub importa. Cada nota define o conteúdo dos eventos dela.</div></div>
+<div class="ess-c"><div class="ess-k">Papel</div><div class="ess-t">Receita Federal e Comitê Gestor</div><div class="ess-d">O MassGen implementa o lado dos entes, como a documentação de cada um descreve.</div></div>
+<div class="ess-c"><div class="ess-k">Cobertura</div><div class="ess-t">Todos os tipos de evento</div><div class="ess-d">26 tipos na CBS, 24 no IBS e 9 de transporte e falha, pelo plano automático ou escolhidos à mão.</div></div>
+<div class="ess-c"><div class="ess-k">Prova</div><div class="ess-t">Histórico por nota</div><div class="ess-d">Cada evento, o payload, o envio e se o SplitHub recebeu e baixou.</div></div>
+</div>
+<h3>Já decidido pelo usuário</h3>
+<div class="table-wrap"><table><thead><tr><th>Quando</th><th>Decisão</th></tr></thead><tbody>
+<tr><td class="rid">01/11/2026</td><td>O objetivo do MassGen é emular os eventos das apurações assistidas da CBS e do IBS.</td></tr>
+<tr><td class="rid">01/11/2026</td><td>O MassGen recebe as mesmas notas importadas no SplitHub e determina por elas o conteúdo de cada evento.</td></tr>
+<tr><td class="rid">01/11/2026</td><td>Os envios cobrem todos os tipos de evento possíveis em cada apuração assistida.</td></tr>
+<tr><td class="rid">01/11/2026</td><td>Dá para ver o histórico de envio de cada nota: o payload, os dados enviados e se o SplitHub recebeu ou não.</td></tr>
+<tr><td class="rid">02/11/2026</td><td>O SplitHub não tem barramento para receber esses eventos. O MassGen constrói o barramento de envio seguindo a documentação liberada pelas duas apurações, e o SplitHub constrói o dele contra a mesma documentação. Na POC, a collection é a dos entes e só a URL muda.</td></tr>
+<tr><td class="rid">02/11/2026</td><td>O usuário do MassGen escolhe uma ou mais notas e um ou mais tipos de evento, manda executar, e os eventos saem para o SplitHub.</td></tr>
+</tbody></table></div>
+<h3>O que fica, o que muda e o que sai</h3>
+<div class="table-wrap"><table><thead><tr><th>Parte do app</th><th>Na v4.0</th></tr></thead><tbody>
+<tr><td><strong>Login, usuários, auditoria encadeada</strong></td><td><span class="chip ok">fica</span> Como está.</td></tr>
+<tr><td><strong>Ambientes e biblioteca de APIs</strong></td><td><span class="chip ok">fica</span> A biblioteca passa a guardar também a collection dos entes emulados (D-MG-12).</td></tr>
+<tr><td><strong>Cofre, trava de domínio, monitor de requisições</strong></td><td><span class="chip ok">fica</span> O monitor ganha as chamadas que o SplitHub faz ao MassGen, além das que o MassGen faz ao SplitHub.</td></tr>
+<tr><td><strong>Emulação de entes (M15 da v3.0)</strong></td><td><span class="chip info">vira o centro</span> Com as APIs dos dois entes, o catálogo de eventos, os roteiros e o relógio.</td></tr>
+<tr><td><strong>POC, notas e histórico por nota</strong></td><td><span class="chip info">novo</span> Importação de XML, plano de cobertura, envio sob demanda e histórico.</td></tr>
+<tr><td><strong>Modelos, geradores, cenários, cadastros mestres, gabarito</strong></td><td><span class="chip gray">sai do menu</span> Congelados no código, sem evolução (D-MG-01).</td></tr>
+</tbody></table></div>
+<p class="src">As decisões D-01 a D-16 da v3.0 ficam encerradas por esta versão. A D-13 (emular os entes) continua valendo e virou o objetivo do app; o "aguardando rota" dela deixa de existir, porque o SplitHub não precisa entregar rotas próprias.</p>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s02"><div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Como a POC funciona</span></div>
+<ol class="etapas">
+<li class="etapa"><div class="etapa-m"><b>1</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>O cliente entrega os XMLs</b><span>Cliente</span></div><p>Uma quantidade de notas, de entrada e de saída, num arquivo compactado.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>2</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>O SplitHub importa as notas</b><span>SplitHub</span></div><p>Pelo caminho normal de ingestão. É a base contra a qual os eventos dos entes vão ser conciliados.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>3</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>O MassGen recebe as mesmas notas</b><span>MassGen</span></div><p>Lê cada XML, identifica o papel do cliente (vendedor ou comprador) pelo CNPJ raiz e confere, pela API do SplitHub, que a nota foi importada.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>4</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>O MassGen monta o plano de eventos</b><span>MassGen</span></div><p>Distribui os roteiros pelas notas até cobrir todos os tipos de evento da CBS e do IBS. O operador revisa e ajusta e, a qualquer momento, escolhe notas e tipos e envia na hora.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>5</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>O relógio corre e os entes falam</b><span>MassGen ↔ SplitHub</span></div><p>No IBS, o MassGen roda o Processamento Diário, avisa o webhook do SplitHub e serve o arquivo. Na CBS, atende as solicitações do SplitHub, valida o webhook, avisa e serve o link assinado.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>6</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>Histórico e cobertura</b><span>MassGen</span></div><p>Cada nota mostra seus eventos, em que arquivo foram, o payload, o aviso, a resposta do SplitHub e se ele baixou. O painel de cobertura mostra o que foi exercitado e o que faltou.</p></div></li>
+</ol>
+<div class="callout"><div class="ct">O que a POC prova</div><p>Que o SplitHub consome as duas apurações assistidas como a documentação manda, concilia cada nota com o que os entes dizem e abre inconsistência quando deve. Como o MassGen segue a documentação, o barramento que o SplitHub construir para a POC é o mesmo que vai usar contra os entes de verdade: trocam a URL e a credencial.</p></div>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s03"><div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">O barramento: o MassGen no lugar dos entes</span></div>
+<p class="sec-sub">Os dois entes resolveram a mesma coisa de formas opostas. Na CBS, o contribuinte pede e a Receita Federal entrega; no IBS, o Comitê Gestor entrega por conta própria. O MassGen implementa os dois modelos como estão documentados. Ver <a class="xref" href="../cbs-x-ibs-integracao.html">CBS × IBS: duas APIs, dois modelos</a>.</p>
+<h3>CBS · Receita Federal emulada</h3>
+<div class="table-wrap"><table><thead><tr><th>Quem chama</th><th>Chamada</th><th>O que o MassGen faz</th></tr></thead><tbody>
+<tr><td>SplitHub</td><td><code>POST /token</code></td><td>Emite o token OAuth 2.0 (client credentials), válido por 1 hora, com a credencial da POC.</td></tr>
+<tr><td>SplitHub</td><td><code>POST /debitos/{cnpj}</code><br><code>POST /creditos/{cnpj}</code><br><code>POST /pagamentos/{cnpj}</code><br><code>POST /recolhimentos/{cnpj}</code></td><td>Recebe a solicitação com a <code>urlRetorno</code>, faz o <code>HEAD</code> nela para validar e responde 201 com o <code>tiqueteSolicitacao</code> e o <code>tEASegundos</code>.</td></tr>
+<tr><td>MassGen</td><td><code>POST {urlRetorno}</code></td><td>Ao concluir, avisa com a <code>urlAssinada</code> e a <code>urlAssinadaExpiraEm</code>. Repete se o SplitHub não responder 2xx. <strong>Este é o envio.</strong></td></tr>
+<tr><td>SplitHub</td><td><code>GET {urlAssinada}</code></td><td>Serve o JSON com os documentos que mudaram na janela: 8 dias, ou desde o dia 1 do mês na primeira coleta. <strong>O download é a prova de recebimento.</strong></td></tr>
+<tr><td>SplitHub</td><td><code>GET /situacao/{tiquete}</code></td><td>Responde o estado da solicitação, para quem usa consulta no lugar do webhook.</td></tr>
+</tbody></table></div>
+<h3>IBS · Comitê Gestor emulado</h3>
+<div class="table-wrap"><table><thead><tr><th>Quem chama</th><th>Chamada</th><th>O que o MassGen faz</th></tr></thead><tbody>
+<tr><td>SplitHub</td><td><code>POST /v1/aassist/habilitar</code></td><td>Habilita o contribuinte com a <code>webhookUrl</code> e o <code>tokenContrib</code>. Autenticação por ClientID e ClientSecret no header.</td></tr>
+<tr><td>MassGen</td><td><code>POST {webhookUrl}</code></td><td>Depois de cada Processamento Diário, avisa com <code>idSolic</code>, <code>qtdOperSolic</code>, <code>dataValidSolic</code> e a lista de arquivos, devolvendo o <code>tokenContrib</code> no header. <strong>Este é o envio.</strong></td></tr>
+<tr><td>SplitHub</td><td>Obter Arquivo</td><td>Serve o Arquivo Diferencial (Delta) com as operações e o <code>extrato_cc</code> de cada uma, conforme os Anexos I e II do MOC. <strong>O download é a prova de recebimento.</strong></td></tr>
+<tr><td>SplitHub</td><td><code>GET /v1/aassist/solicitacao/incluir</code><br><code>GET …/solicitacao/listar/…</code><br><code>DELETE …/solicitacao/cancelamento/{IdSolic}</code></td><td>Arquivo Manual por período, com as situações Solicitada, Gerada, Enviada, Cancelada e Expirada.</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">Fora do emulador</div><p>O que os entes ainda não especificaram não é emulado: a emissão de DARF da CBS (anunciada para o fim de novembro, sem documentação), a conclusão da apuração da CBS e as etapas 3 e 4 do IBS (consultas de operação, de documento e de saldo, e o documento de arrecadação). Entra quando a especificação sair (D-MG-11).</p></div>
+<p>Os limites documentados valem no emulador, para o teste pegar quem os desrespeita: 4 solicitações por dia por endpoint na CBS; no IBS, 2 solicitações manuais por dia e 2 por competência no mesmo dia, sem períodos sobrepostos. Uma chave da POC relaxa os limites quando o teste não for sobre eles (D-MG-08).</p>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s04"><div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Das notas aos eventos</span></div>
+<p>O MassGen lê de cada XML o que precisa para montar os eventos e mais nada.</p>
+<div class="table-wrap"><table><thead><tr><th>Do XML</th><th>Para quê</th></tr></thead><tbody>
+<tr><td><strong>Chave, modelo, data de emissão e de autorização</strong></td><td>Identidade do documento na CBS (<code>chave</code>, <code>documento</code>, <code>emissao</code>) e da operação no IBS (<code>CHAVE_ACESSO</code>, <code>DTH_EMISSAO</code>, <code>DTH_AUTORIZACAO</code>).</td></tr>
+<tr><td><strong>Emitente e destinatário</strong></td><td>O papel do cliente, pelo CNPJ raiz da POC: emitente é fornecimento (débito); destinatário é aquisição (crédito). <code>CNPJ_FORNECEDOR</code> e <code>CNPJ_ADQUIRENTE</code> do IBS.</td></tr>
+<tr><td><strong>Totais de CBS e de IBS</strong></td><td>Os valores dos eventos. O IBS é a soma das parcelas estadual e municipal.</td></tr>
+<tr><td><strong>Finalidade e nota referenciada</strong></td><td>Nota complementar e nota de devolução ligam-se à original. São elas que permitem os eventos de complemento e de devolução.</td></tr>
+<tr><td><strong>Eventos da nota no XML</strong> <span class="src">(se vierem)</span></td><td>O cancelamento autorizado permite os eventos de cancelamento.</td></tr>
+</tbody></table></div>
+<ul class="plain">
+<li><strong>Fica de fora:</strong> nota sem o grupo de IBS e CBS, nota de homologação e nota em que o cliente é emitente e destinatário ao mesmo tempo. O MassGen lista cada uma com o motivo.</li>
+<li><strong>Nota não importada no SplitHub:</strong> o MassGen avisa antes de enviar. Se o operador mandar assim mesmo, vira o caso de teste T08 (movimento do ente sem contrapartida).</li>
+<li><strong>Valores parciais:</strong> apropriação parcial, extinção parcial e afins usam frações da própria nota, arredondadas.</li>
+<li><strong>Tipos de documento:</strong> NF-e primeiro; CT-e, NFC-e e NFS-e na etapa seguinte (D-MG-10).</li>
+</ul>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s05"><div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Catálogo de eventos · CBS</span></div>
+<p class="sec-sub">Na CBS, evento é mudança no saldo de um documento. A Receita Federal não manda o que mudou; manda a foto nova, e o <code>atualizacao</code> diz quando. Por isso cada tipo abaixo é uma mudança de valor num campo do arquivo de um dos quatro endpoints.</p>
+<h3>Débitos · o cliente como fornecedor</h3>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Evento</th><th>O que muda no arquivo</th></tr></thead><tbody>
+<tr><td class="rid">E-CBS-D01</td><td>Débito registrado</td><td><code>apurado</code> e <code>saldoDevedor</code> com a CBS da nota</td></tr>
+<tr><td class="rid">E-CBS-D02</td><td>Débito excedente</td><td><code>excedente</code> &gt; 0: valor ainda não processado</td></tr>
+<tr><td class="rid">E-CBS-D03</td><td>Extinção parcial</td><td><code>extinto</code> com parte; <code>saldoDevedor</code> com o resto</td></tr>
+<tr><td class="rid">E-CBS-D04</td><td>Extinção total</td><td><code>extinto</code> = <code>apurado</code>; <code>saldoDevedor</code> zero. A modalidade aparece em Pagamentos</td></tr>
+<tr><td class="rid">E-CBS-D05</td><td>Débito inexigível</td><td><code>inexigivel</code> &gt; 0</td></tr>
+<tr><td class="rid">E-CBS-D06</td><td>Débito suspenso</td><td><code>suspenso</code> &gt; 0</td></tr>
+<tr><td class="rid">E-CBS-D07</td><td>Débito ajustado</td><td><code>apurado</code> muda: complemento, cancelamento ou devolução</td></tr>
+</tbody></table></div>
+<h3>Créditos · o cliente como adquirente</h3>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Evento</th><th>O que muda no arquivo</th></tr></thead><tbody>
+<tr><td class="rid">E-CBS-C01</td><td>Crédito registrado</td><td><code>apurado</code> e <code>apropriacao.aApropriar</code></td></tr>
+<tr><td class="rid">E-CBS-C02</td><td>Apropriação total</td><td><code>apropriado</code> = <code>apurado</code></td></tr>
+<tr><td class="rid">E-CBS-C03</td><td>Apropriação parcial</td><td>Parte em <code>apropriado</code>, parte em <code>aApropriar</code></td></tr>
+<tr><td class="rid">E-CBS-C04</td><td>Crédito inapropriável</td><td><code>inapropriavel</code> &gt; 0: vedação, uso e consumo pessoal</td></tr>
+<tr><td class="rid">E-CBS-C05</td><td>Apropriação suspensa</td><td><code>apropriacao.suspenso</code> &gt; 0</td></tr>
+<tr><td class="rid">E-CBS-C06</td><td>Crédito prescrito</td><td><code>prescrito</code> &gt; 0</td></tr>
+<tr><td class="rid">E-CBS-C07</td><td>Utilização</td><td><code>utilizacao.utilizado</code></td></tr>
+<tr><td class="rid">E-CBS-C08</td><td>Crédito inutilizável</td><td><code>inutilizavel</code> &gt; 0: glosa depois da apropriação</td></tr>
+<tr><td class="rid">E-CBS-C09</td><td>Crédito restabelecido</td><td><code>restabelecido</code> &gt; 0</td></tr>
+<tr><td class="rid">E-CBS-C10</td><td>Saldo credor</td><td><code>naoUtilizado.saldoCredor</code></td></tr>
+<tr><td class="rid">E-CBS-C11</td><td>Pedido de ressarcimento</td><td><code>naoUtilizado.pedidoRessarcimento</code></td></tr>
+<tr><td class="rid">E-CBS-C12</td><td>Crédito excedente</td><td><code>excedente</code> &gt; 0</td></tr>
+</tbody></table></div>
+<h3>Pagamentos e recolhimentos</h3>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Evento</th><th>Endpoint</th><th>O que vem</th></tr></thead><tbody>
+<tr><td class="rid">E-CBS-P01</td><td>Pagamento próprio (PCONT)</td><td>Pagamentos</td><td><code>numeroDARF</code>, <code>tipo</code>, composição por <code>pa</code> com principal</td></tr>
+<tr><td class="rid">E-CBS-P02</td><td>RAD recebido de um adquirente</td><td>Pagamentos</td><td>Com <code>niAdquirente</code></td></tr>
+<tr><td class="rid">E-CBS-P03</td><td>Split</td><td>Pagamentos</td><td>Retido no pagamento recebido</td></tr>
+<tr><td class="rid">E-CBS-P04</td><td>Pagamento em atraso</td><td>Pagamentos</td><td><code>multa</code> e <code>juros</code> &gt; 0</td></tr>
+<tr><td class="rid">E-CBS-R01</td><td>RAD recolhido pelo cliente</td><td>Recolhimentos</td><td><code>niFornecedor</code>, <code>chaveDFE</code>, <code>vencimento</code></td></tr>
+<tr><td class="rid">E-CBS-R02</td><td>Split no pagamento do cliente</td><td>Recolhimentos</td><td>Por documento do fornecedor</td></tr>
+<tr><td class="rid">E-CBS-R03</td><td>Recolhimento em atraso</td><td>Recolhimentos</td><td><code>multa</code> e <code>juros</code> &gt; 0</td></tr>
+</tbody></table></div>
+<p class="src">A enumeração de <code>tipo</code> em pagamentos não foi publicada pela Receita Federal. O emulador usa valores provisórios declarados na collection dos entes emulados.</p>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s06"><div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Catálogo de eventos · IBS</span></div>
+<p class="sec-sub">No IBS, evento é um lançamento no extrato da operação, com o tipo no campo <code>MOV</code> e o reflexo em sete campos financeiros. Os 24 tipos abaixo são os que o MOC v1.10 usa nos exemplos dos cenários de aquisição e de fornecimento, com o texto exato, enquanto a tabela de códigos não sai.</p>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>MOV</th><th>Campos que mexe</th><th>Lado</th></tr></thead><tbody>
+<tr class="grp"><td colspan="4">Registro e complemento</td></tr>
+<tr><td class="rid">E-IBS-01</td><td>Aquisicao</td><td>+ crédito a apropriar</td><td>Adquirente</td></tr>
+<tr><td class="rid">E-IBS-02</td><td>Fornecimento</td><td>+ débito em aberto</td><td>Fornecedor</td></tr>
+<tr><td class="rid">E-IBS-03</td><td>Complemento de Aquisicao</td><td>+ crédito a apropriar</td><td>Adquirente</td></tr>
+<tr><td class="rid">E-IBS-04</td><td>Complemento de Fornecimento</td><td>+ débito em aberto</td><td>Fornecedor</td></tr>
+<tr class="grp"><td colspan="4">Crédito</td></tr>
+<tr><td class="rid">E-IBS-05</td><td>Apropriacao de Credito</td><td>− a apropriar, + não utilizado</td><td>Adquirente</td></tr>
+<tr><td class="rid">E-IBS-06</td><td>Utilizacao de Credito</td><td>− não utilizado, + utilizado</td><td>Adquirente</td></tr>
+<tr><td class="rid">E-IBS-07</td><td>COMPENSAÇÃO COM CRÉDITOS POR AQUISIÇÃO</td><td>conforme o caso</td><td>Os dois</td></tr>
+<tr class="grp"><td colspan="4">Extinção do débito</td></tr>
+<tr><td class="rid">E-IBS-08</td><td>Extincao por Compensacao</td><td>− débito em aberto, + extinto</td><td>Os dois</td></tr>
+<tr><td class="rid">E-IBS-09</td><td>Extincao por Recolhimento</td><td>− débito em aberto, + extinto</td><td>Os dois</td></tr>
+<tr><td class="rid">E-IBS-10</td><td>RAD provisionado</td><td>− débito em aberto, + extinto</td><td>Fornecedor</td></tr>
+<tr><td class="rid">E-IBS-11</td><td>Estorno de RAD</td><td>+ débito em aberto, − extinto</td><td>Fornecedor</td></tr>
+<tr><td class="rid">E-IBS-12</td><td>SPLIT provisionado</td><td>− débito em aberto, + extinto</td><td>Fornecedor</td></tr>
+<tr><td class="rid">E-IBS-13</td><td>Estorno de SPLIT provisionado</td><td>+ débito em aberto, − extinto</td><td>Fornecedor</td></tr>
+<tr><td class="rid">E-IBS-14</td><td>Extincao por SPLIT</td><td>− débito em aberto, + extinto</td><td>Fornecedor</td></tr>
+<tr class="grp"><td colspan="4">Cancelamento</td></tr>
+<tr><td class="rid">E-IBS-15</td><td>Cancelamento - Estorno de Credito Nao Utilizado</td><td>− não utilizado</td><td>Adquirente</td></tr>
+<tr><td class="rid">E-IBS-16</td><td>Cancelamento - Abertura de Debito para Adquirente</td><td>+ débito em aberto</td><td>Adquirente</td></tr>
+<tr><td class="rid">E-IBS-17</td><td>Cancelamento - Estorno de Debito em aberto</td><td>− débito em aberto</td><td>Fornecedor</td></tr>
+<tr><td class="rid">E-IBS-18</td><td>Cancelamento - SPLIT a transferir</td><td>+ recurso a transferir</td><td>Fornecedor</td></tr>
+<tr class="grp"><td colspan="4">Devolução</td></tr>
+<tr><td class="rid">E-IBS-19</td><td>Devolucao - Estorno de Credito a apropriar</td><td>− a apropriar</td><td>Adquirente</td></tr>
+<tr><td class="rid">E-IBS-20</td><td>Devolucao - Abertura de Debito para Adquirente</td><td>+ débito em aberto</td><td>Adquirente</td></tr>
+<tr><td class="rid">E-IBS-21</td><td>Devolucao - Credito a apropriar</td><td>+ a apropriar</td><td>Fornecedor</td></tr>
+<tr><td class="rid">E-IBS-22</td><td>Devolucao - Apropriacao de Credito</td><td>+ não utilizado</td><td>Fornecedor</td></tr>
+<tr class="grp"><td colspan="4">Transferência ao fornecedor</td></tr>
+<tr><td class="rid">E-IBS-23</td><td>Transferencia para Fornecedor</td><td>− a transferir, + disponível para transferência</td><td>Fornecedor</td></tr>
+<tr><td class="rid">E-IBS-24</td><td>Transferencia para Fornecedor por Excesso</td><td>+ disponível para transferência</td><td>Fornecedor</td></tr>
+</tbody></table></div>
+<p class="src">Fonte: MOC v1.10, passo 7 e Anexo II (cenário 1, aquisição; cenário 2, fornecimento). O texto do <code>MOV</code> é provisório pelo próprio manual; quando a tabela de códigos sair, o catálogo troca o texto pelo código sem mudar os eventos.</p>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s07"><div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Eventos de transporte e falha</span></div>
+<p class="sec-sub">Não são tipos de movimento: são as situações do barramento que a documentação prevê e que o SplitHub precisa aguentar. Entram como casos opcionais da cobertura (D-MG-06).</p>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Caso</th><th>Ente</th><th>O que o SplitHub precisa fazer</th></tr></thead><tbody>
+<tr><td class="rid">T01</td><td>Reentrega na janela de 8 dias: o mesmo documento volta com valores novos</td><td>CBS</td><td>Sobrescrever o saldo, não somar</td></tr>
+<tr><td class="rid">T02</td><td>Link assinado expirado antes do download</td><td>CBS</td><td>Abrir nova solicitação</td></tr>
+<tr><td class="rid">T03</td><td>Processamento estourado: <code>APURACAO-408</code> no lugar do link</td><td>CBS</td><td>Tentar de novo dentro do limite do dia</td></tr>
+<tr><td class="rid">T04</td><td>Arquivo Manual que repete lançamentos já entregues</td><td>IBS</td><td>Deduplicar pelo ID do lançamento</td></tr>
+<tr><td class="rid">T05</td><td>Operação fatiada em dois arquivos, com hash acumulado</td><td>IBS</td><td>Remontar e só conferir o hash no conjunto</td></tr>
+<tr><td class="rid">T06</td><td>Dia sem Delta</td><td>IBS</td><td>Perceber a falta e pedir o Arquivo Manual</td></tr>
+<tr><td class="rid">T07</td><td>Hash que não fecha: falta uma linha</td><td>IBS</td><td>Recusar o saldo e abrir ocorrência</td></tr>
+<tr><td class="rid">T08</td><td>Evento de nota que não está no SplitHub</td><td>Os dois</td><td>Gravar o movimento e abrir inconsistência (C-01)</td></tr>
+<tr><td class="rid">T09</td><td>Webhook sem resposta 2xx</td><td>Os dois</td><td>O MassGen repete; o SplitHub não pode duplicar ao receber de novo</td></tr>
+</tbody></table></div>
+<p class="src">O algoritmo do hash do IBS ainda não foi definido no MOC. O emulador usa SHA-1 acumulado sobre os lançamentos, declarado como provisório.</p>
+</div>
+
+<!-- 08 -->
+<div class="section" id="s08"><div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Roteiros e plano de cobertura</span></div>
+<p class="sec-sub">Um roteiro é a história de uma nota, contada uma vez e traduzida para cada ente no tempo dele. Cobrir todos os tipos é distribuir os roteiros pelas notas.</p>
+<div class="table-wrap"><table><thead><tr><th>Roteiro</th><th>História</th><th>CBS</th><th>IBS</th><th>Precisa de</th></tr></thead><tbody>
+<tr class="grp"><td colspan="5">Cliente comprador</td></tr>
+<tr><td class="rid">RT-A1</td><td>Fornecedor recolhe; crédito apropriado e usado</td><td>C01 C02 C07</td><td>01 05 06</td><td>—</td></tr>
+<tr><td class="rid">RT-A2</td><td>Cliente paga pelo RAD</td><td>C01 R01 C02</td><td>01 05</td><td>—</td></tr>
+<tr><td class="rid">RT-A3</td><td>Pagamento com split</td><td>C01 R02 C02</td><td>01 05</td><td>—</td></tr>
+<tr><td class="rid">RT-A4</td><td>Apropriação parcial, depois complemento</td><td>C03 C02</td><td>01 03 05</td><td>Nota complementar</td></tr>
+<tr><td class="rid">RT-A5</td><td>Cancelada depois de usada</td><td>C07 D07</td><td>15 16 08</td><td>Cancelamento</td></tr>
+<tr><td class="rid">RT-A6</td><td>Devolvida ao fornecedor</td><td>D07</td><td>19 20 09</td><td>Nota de devolução</td></tr>
+<tr><td class="rid">RT-A7</td><td>Crédito em risco</td><td>C04 C05 C06 C08 C09</td><td>— <span class="src">(mudo no IBS)</span></td><td>—</td></tr>
+<tr><td class="rid">RT-A8</td><td>Saldo credor e ressarcimento</td><td>C10 C11 C12</td><td>—</td><td>—</td></tr>
+<tr><td class="rid">RT-A9</td><td>RAD em atraso</td><td>R03</td><td>—</td><td>—</td></tr>
+<tr class="grp"><td colspan="5">Cliente vendedor</td></tr>
+<tr><td class="rid">RT-F1</td><td>Cliente recolhe pelo PCONT</td><td>D01 P01 D04</td><td>02 09</td><td>—</td></tr>
+<tr><td class="rid">RT-F2</td><td>Compensação com créditos</td><td>D01 D03 D04</td><td>02 07 08</td><td>—</td></tr>
+<tr><td class="rid">RT-F3</td><td>Cliente do cliente paga pelo RAD, com estorno e excesso</td><td>D01 P02 D04</td><td>02 10 11 24</td><td>—</td></tr>
+<tr><td class="rid">RT-F4</td><td>Split, com estorno</td><td>D01 P03 D04</td><td>02 12 13 14</td><td>—</td></tr>
+<tr><td class="rid">RT-F5</td><td>Complemento de valor</td><td>D07</td><td>04</td><td>Nota complementar</td></tr>
+<tr><td class="rid">RT-F6</td><td>Cancelada com split já retido</td><td>D07</td><td>17 18 23</td><td>Cancelamento</td></tr>
+<tr><td class="rid">RT-F7</td><td>Devolução recebida do cliente do cliente</td><td>C01 C02</td><td>21 22</td><td>Nota de devolução</td></tr>
+<tr><td class="rid">RT-F8</td><td>Débito excedente, inexigível, suspenso, pago em atraso</td><td>D02 D05 D06 P04</td><td>—</td><td>—</td></tr>
+</tbody></table></div>
+<p class="src">Os números das colunas CBS e IBS são os IDs das seções 05 e 06, sem o prefixo. A tradução de cada roteiro para o IBS segue os cenários do MOC. A tradução para a CBS nos casos de cancelamento e devolução é leitura nossa, porque a documentação não diz como a foto do documento muda nesses casos.</p>
+<h3>Como o plano é montado</h3>
+<ul class="plain">
+<li><strong>Automático primeiro:</strong> o MassGen dá a cada nota o roteiro que cobre o tipo ainda não coberto, respeitando o papel do cliente na nota e o que ela permite. Depois de tudo coberto, as demais notas seguem o caminho feliz (RT-A1 ou RT-F1). O operador troca o roteiro de qualquer nota (D-MG-04).</li>
+<li><strong>Quando falta nota:</strong> complemento, cancelamento e devolução só existem se o lote trouxer a nota que os origina. O painel diz qual XML falta para cobrir o tipo, e o MassGen não inventa nota (D-MG-05).</li>
+<li><strong>Cobertura por ente:</strong> a meta é contada separada para a CBS e o IBS, porque os catálogos são diferentes. O painel fecha quando cada tipo tiver pelo menos uma nota entregue <em>e</em> baixada pelo SplitHub.</li>
+</ul>
+</div>
+
+<!-- 09 -->
+<div class="section" id="s09"><div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Envio sob demanda</span></div>
+<p class="sec-sub">Além do plano automático, o usuário escolhe uma ou mais notas e um ou mais tipos de evento e manda executar. Serve para repetir um caso que falhou, testar um tipo isolado ou mostrar um evento numa demonstração.</p>
+<ol class="etapas">
+<li class="etapa"><div class="etapa-m"><b>1</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>Escolher as notas</b><span>uma ou várias</span></div><p>Busca por número, chave, CNPJ, papel do cliente e situação no SplitHub. Do histórico de uma nota, o envio abre com ela já marcada.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>2</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>Escolher os tipos</b><span>um ou vários</span></div><p>O catálogo das seções 05, 06 e 07, por ente. Só ficam ativos os tipos que valem para as notas marcadas; os demais aparecem apagados, com o motivo. Um atalho marca o par do outro ente, como a apropriação (E-CBS-C02 e E-IBS-05).</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>3</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>Ajustar valor e data</b><span>opcional</span></div><p>Valor cheio da nota por padrão, ou uma fração para os tipos parciais. Data simulada no dia corrente do relógio, ou outra dentro da competência.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>4</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>Revisar</b><span>antes de enviar</span></div><p>A lista dos eventos que vão ser gerados, nota a nota, com os pré-requisitos que entram antes e o trecho do payload de cada um.</p></div></li>
+<li class="etapa"><div class="etapa-m"><b>5</b><i></i></div><div class="etapa-c"><div class="etapa-h"><b>Executar e enviar</b><span>pelo barramento da seção 03</span></div><p>Os eventos mudam o estado da nota no ente emulado e saem como a documentação manda. No IBS, o MassGen fecha o dia simulado na hora: roda o Processamento Diário, gera o Delta e avisa o webhook do SplitHub (D-MG-14). Na CBS, o evento fica disponível e sai na próxima coleta do SplitHub, a menos que a D-MG-03 libere o aviso sem pedido.</p></div></li>
+</ol>
+<h3>Regras do envio sob demanda</h3>
+<ul class="plain">
+<li><strong>Papel:</strong> tipo do adquirente só em nota em que o cliente é destinatário; tipo do fornecedor, só em nota em que é emitente.</li>
+<li><strong>Nota relacionada:</strong> complemento, cancelamento e devolução só com a nota que os origina no lote (D-MG-05).</li>
+<li><strong>Ordem:</strong> se o pré-requisito do tipo ainda não aconteceu, ele entra antes e aparece marcado na revisão. Mandar fora de ordem de propósito só com a opção "forçar", para testar como o SplitHub reage (D-MG-13).</li>
+<li><strong>Saldo:</strong> o valor não passa do saldo da nota no ente emulado; não se utiliza mais do que foi apropriado. O "forçar" também libera isso.</li>
+<li><strong>Plano:</strong> o envio manual conta para a cobertura. Evento do plano que fica repetido ou impossível depois dele é marcado "substituído pelo envio manual" e não sai.</li>
+<li><strong>Reenvio:</strong> no histórico, "Reenviar aviso" repete o mesmo aviso e o mesmo arquivo sem gerar evento novo. É o caso T09 a qualquer momento.</li>
+<li><strong>Registro:</strong> cada execução tem número, quem executou, quando, as notas, os tipos e os eventos gerados. Aparece no histórico de cada nota com a origem "envio manual" e vai para a auditoria.</li>
+</ul>
+<h3>Ordem dos eventos</h3>
+<p>O que precisa ter acontecido na nota antes de cada tipo. Vale para o envio sob demanda e para o plano automático.</p>
+<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Precisa antes</th></tr></thead><tbody>
+<tr class="grp"><td colspan="2">CBS</td></tr>
+<tr><td class="rid">D01 · D02 · C01 · C12</td><td>Nada: a nota basta</td></tr>
+<tr><td class="rid">C02 · C03 · C04 · C05 · C06</td><td>C01</td></tr>
+<tr><td class="rid">C07 · C08 · C10 · C11</td><td>C02 ou C03</td></tr>
+<tr><td class="rid">C09</td><td>C08</td></tr>
+<tr><td class="rid">D03 · D04 · D05 · D06</td><td>D01</td></tr>
+<tr><td class="rid">P01 · P02 · P03 · P04</td><td>D01</td></tr>
+<tr><td class="rid">R01 · R02 · R03</td><td>C01</td></tr>
+<tr><td class="rid">D07</td><td>O registro do documento (D01 ou C01) e a nota relacionada</td></tr>
+<tr class="grp"><td colspan="2">IBS</td></tr>
+<tr><td class="rid">01 · 02</td><td>Nada: a nota basta</td></tr>
+<tr><td class="rid">03</td><td>01 e a nota complementar</td></tr>
+<tr><td class="rid">04</td><td>02 e a nota complementar</td></tr>
+<tr><td class="rid">05</td><td>01 ou 03</td></tr>
+<tr><td class="rid">06</td><td>05</td></tr>
+<tr><td class="rid">07 · 08 · 09</td><td>02, ou o débito aberto ao adquirente (16 ou 20)</td></tr>
+<tr><td class="rid">10 · 12</td><td>02</td></tr>
+<tr><td class="rid">11 · 24</td><td>10</td></tr>
+<tr><td class="rid">13 · 14</td><td>12</td></tr>
+<tr><td class="rid">15</td><td>05 e o cancelamento</td></tr>
+<tr><td class="rid">16</td><td>06 e o cancelamento</td></tr>
+<tr><td class="rid">17</td><td>02 e o cancelamento</td></tr>
+<tr><td class="rid">18</td><td>14 e o cancelamento</td></tr>
+<tr><td class="rid">23</td><td>18</td></tr>
+<tr><td class="rid">19</td><td>01 e a nota de devolução</td></tr>
+<tr><td class="rid">20</td><td>06 e a nota de devolução</td></tr>
+<tr><td class="rid">21</td><td>02 e a nota de devolução</td></tr>
+<tr><td class="rid">22</td><td>21</td></tr>
+</tbody></table></div>
+<p class="src">Números sem prefixo, como na seção 08. A ordem do IBS segue os cenários do MOC v1.10; a da CBS é leitura nossa dos campos de cada endpoint.</p>
+</div>
+
+<!-- 10 -->
+<div class="section" id="s10"><div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Relógio e linha do tempo</span></div>
+<ul class="plain">
+<li><strong>Dia simulado:</strong> cada evento tem uma data dentro da competência da POC. O relógio da POC avança por comando ou a cada intervalo configurado, e o envio acompanha o relógio (D-MG-07).</li>
+<li><strong>IBS:</strong> fechar um dia simulado roda o Processamento Diário: os lançamentos daquele dia vão para o Delta, e o webhook é avisado. Um Delta pode trazer várias notas, como no ente.</li>
+<li><strong>CBS:</strong> os eventos mudam o saldo do documento na base emulada, com o <code>atualizacao</code> no horário simulado. Eles só saem quando o SplitHub pede, e o arquivo traz o que mudou na janela de 8 dias.</li>
+<li><strong>Cada ente no seu tempo:</strong> a mesma nota pode ter o crédito apropriado na CBS num dia e no IBS em outro, como a decisão D-21 dos eventos fiscais prevê. O roteiro define a defasagem.</li>
+<li><strong>Ordem:</strong> nenhum evento sai antes do que ele pressupõe. Utilização depois da apropriação, extinção depois do registro, estorno depois do provisionamento. A tabela da seção 09 dá a ordem de cada tipo.</li>
+</ul>
+<div class="callout warn"><div class="ct">CBS: o envio depende do pedido do SplitHub</div><p>Como a Receita Federal só entrega quando o contribuinte pede, um evento da CBS fica "disponível para coleta" até o SplitHub abrir a solicitação. O histórico mostra isso, e o painel conta como não recebido. É fiel à documentação, e testa se a coleta do SplitHub roda.</p></div>
+</div>
+
+<!-- 11 -->
+<div class="section" id="s11"><div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Histórico de envio por nota</span></div>
+<p class="sec-sub">Cada nota tem uma linha do tempo com todos os eventos dela, nos dois entes.</p>
+<div class="table-wrap"><table><thead><tr><th>O que o histórico guarda</th><th>Detalhe</th></tr></thead><tbody>
+<tr><td><strong>O evento</strong></td><td>Ente, ID do catálogo, roteiro, data simulada e valores.</td></tr>
+<tr><td><strong>A origem</strong></td><td>Plano de cobertura ou envio manual, com o número da execução e quem executou.</td></tr>
+<tr><td><strong>Onde ele foi</strong></td><td>IBS: o Delta (ou Manual), a solicitação e a posição no extrato. CBS: o tíquete, o endpoint e o arquivo.</td></tr>
+<tr><td><strong>O payload</strong></td><td>O trecho da nota e o arquivo inteiro, com o hash; o aviso do webhook.</td></tr>
+<tr><td><strong>O envio</strong></td><td>URL, método, cabeçalhos sem segredo, horário, tempo de resposta e tentativas.</td></tr>
+<tr><td><strong>A resposta do SplitHub</strong></td><td>Código HTTP e corpo, no aviso e no <code>HEAD</code> de validação.</td></tr>
+<tr><td><strong>O recebimento</strong></td><td>Se e quando o SplitHub baixou o arquivo e quantas vezes.</td></tr>
+<tr><td><strong>A conferência</strong> <span class="src">(quando a API permitir)</span></td><td>O que o SplitHub mostra para a nota depois do evento, consultado pela API dele (D-MG-09).</td></tr>
+<tr><td><strong>As ações</strong></td><td>"Reenviar aviso", que repete o mesmo aviso e o mesmo arquivo, e "Enviar eventos", que abre o envio sob demanda com a nota marcada.</td></tr>
+</tbody></table></div>
+<h3>Situações de um evento</h3>
+<div class="table-wrap"><table><thead><tr><th>Situação</th><th>Quer dizer</th></tr></thead><tbody>
+<tr><td><span class="dv">planejado</span></td><td>Está no plano; o relógio ainda não chegou à data dele</td></tr>
+<tr><td><span class="dv">substituído</span></td><td>Evento do plano que um envio manual tornou repetido ou impossível; não sai</td></tr>
+<tr><td><span class="dv am">disponível</span></td><td>CBS: já está na base emulada, esperando o SplitHub pedir</td></tr>
+<tr><td><span class="dv inf">avisado</span></td><td>O webhook do SplitHub respondeu 2xx ao aviso</td></tr>
+<tr><td><span class="dv ok">recebido</span></td><td>O SplitHub baixou o arquivo que contém o evento</td></tr>
+<tr><td><span class="dv ok">conferido</span></td><td>A API do SplitHub mostra a nota no estado esperado</td></tr>
+<tr><td><span class="dv red">não recebido</span></td><td>Aviso sem 2xx depois das tentativas, link expirado sem download ou Delta não baixado</td></tr>
+<tr><td><span class="dv red">divergente</span></td><td>A conferência mostra estado diferente do esperado</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 12 -->
+<div class="section" id="s12"><div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Telas</span></div>
+<div class="table-wrap"><table><thead><tr><th>Tela</th><th>O que faz</th></tr></thead><tbody>
+<tr><td><strong>POCs</strong></td><td>Cria a POC: cliente (CNPJ raiz), competência, ambiente, as duas integrações emuladas e a integração com a API do SplitHub para a conferência.</td></tr>
+<tr><td><strong>Notas</strong></td><td>Importa os XMLs, mostra o papel do cliente, o que ficou de fora e por quê, e se a nota está no SplitHub.</td></tr>
+<tr><td><strong>Plano de cobertura</strong></td><td>Tipos de evento por ente, a nota que cobre cada um e o que falta, com o XML que resolveria.</td></tr>
+<tr><td><strong>Relógio</strong></td><td>Dia simulado, próximos eventos, avançar, pausar e fechar o dia.</td></tr>
+<tr><td><strong>Barramento</strong></td><td>Credenciais emitidas, habilitação do IBS, solicitações da CBS, avisos, downloads e limites consumidos.</td></tr>
+<tr><td><strong>Enviar eventos</strong></td><td>O envio sob demanda da seção 09: notas, tipos, revisão com os pré-requisitos e envio na hora.</td></tr>
+<tr><td><strong>Histórico da nota</strong></td><td>A linha do tempo da seção 11, com o payload aberto.</td></tr>
+</tbody></table></div>
+
+<div class="tela-t"><span class="tela-id">T-MG-01</span><span class="tela-nome">Plano de cobertura</span><span class="tela-onde">POC › Cobertura</span></div>
+<div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span>MassGen › POC Exemplo › Cobertura</span></div>
+<div class="mk-body">
+<div class="mk-top"><div><div class="mk-crumb">POC Exemplo › <b>Cobertura</b></div><div class="mk-h">48 de 59 tipos recebidos</div><div class="mk-sub">200 notas importadas · 140 de entrada e 60 de saída · competência 11/2026</div></div><div class="mk-btns"><span class="mk-btn">Refazer plano</span><span class="mk-btn pri">Avançar o relógio</span></div></div>
+<div class="mk-tabs"><span class="on">IBS · 24</span><span>CBS · 26</span><span>Transporte · 9</span></div>
+<div class="dm-wrap"><table class="dm"><thead><tr><th>Tipo</th><th>Notas no plano</th><th>Avisado</th><th>Recebido</th><th>Situação</th></tr></thead><tbody>
+<tr><td>E-IBS-01 · Aquisicao</td><td>140</td><td>140</td><td>140</td><td><span class="dv ok">coberto</span></td></tr>
+<tr><td>E-IBS-10 · RAD provisionado</td><td>4</td><td>4</td><td>3</td><td><span class="dv ok">coberto</span></td></tr>
+<tr><td>E-IBS-11 · Estorno de RAD</td><td>1</td><td>1</td><td class="z">0</td><td><span class="dv red">não baixado</span></td></tr>
+<tr><td>E-IBS-15 · Cancelamento - Estorno de Credito Nao Utilizado</td><td>2</td><td class="z">0</td><td class="z">0</td><td><span class="dv">planejado · dia 18</span></td></tr>
+<tr><td>E-IBS-19 · Devolucao - Estorno de Credito a apropriar</td><td class="z">0</td><td class="z">—</td><td class="z">—</td><td><span class="dv am">falta nota de devolução</span></td></tr>
+</tbody></table></div>
+<div class="mk-alerta">Para cobrir E-IBS-19, E-IBS-20 e E-CBS-D07 por devolução, o lote precisa de uma NF-e de devolução de uma das notas de entrada.</div>
+</div></div>
+
+<div class="tela-t"><span class="tela-id">T-MG-02</span><span class="tela-nome">Histórico da nota</span><span class="tela-onde">POC › Notas › nota</span></div>
+<div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span>MassGen › POC Exemplo › Notas › NF-e 1.200</span></div>
+<div class="mk-body">
+<div class="mk-top"><div><div class="mk-crumb">Notas › <b>NF-e 1.200</b></div><div class="mk-h">Fornecedor Exemplo Ltda. → cliente</div><div class="mk-sub">Aquisição · CBS 9.000 · IBS 18.000 · roteiro RT-A2 (cliente paga pelo RAD) · no SplitHub desde 03/11</div></div><div class="mk-btns"><span class="mk-btn">Ver XML</span><span class="mk-btn">Trocar roteiro</span><span class="mk-btn pri">Enviar eventos</span></div></div>
+<div class="dm-wrap"><table class="dm esq"><thead><tr><th>Dia simulado</th><th>Ente</th><th>Evento</th><th>Onde foi</th><th>Resposta</th><th>Situação</th></tr></thead><tbody>
+<tr><td>04/11</td><td>IBS</td><td>E-IBS-01 · Aquisicao · 18.000</td><td>Delta 04/11 · solic. 9001</td><td>200 em 120 ms</td><td><span class="dv ok">recebido 05/11 06:02</span></td></tr>
+<tr><td>04/11</td><td>CBS</td><td>E-CBS-C01 · registrado · 9.000</td><td>/creditos · tíquete 7b3f…</td><td>HEAD 200 · aviso 200</td><td><span class="dv ok">recebido 04/11 10:15</span></td></tr>
+<tr><td>12/11</td><td>CBS</td><td>E-CBS-R01 · RAD · 9.000</td><td>/recolhimentos</td><td class="z">—</td><td><span class="dv am">disponível · sem pedido</span></td></tr>
+<tr><td>13/11</td><td>IBS</td><td>E-IBS-05 · Apropriacao · 18.000</td><td>Delta 13/11</td><td>500 · 3 tentativas</td><td><span class="dv red">não recebido</span></td></tr>
+</tbody></table></div>
+<div class="mk-alerta info">Abrindo uma linha: a origem, o trecho da nota no arquivo, o arquivo inteiro com o hash, o aviso do webhook, os cabeçalhos sem segredo, a resposta do SplitHub, cada download e o botão "Reenviar aviso".</div>
+</div></div>
+
+<div class="tela-t"><span class="tela-id">T-MG-03</span><span class="tela-nome">Enviar eventos</span><span class="tela-onde">POC › Notas › Enviar eventos</span></div>
+<div class="mk"><div class="mk-bar"><span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span><span>MassGen › POC Exemplo › Notas › Enviar eventos</span></div>
+<div class="mk-body">
+<div class="mk-top"><div><div class="mk-crumb">Notas › <b>Enviar eventos</b></div><div class="mk-h">2 notas · 3 tipos · 8 eventos</div><div class="mk-sub">Dia simulado 14/11/2026 · o IBS sai no fechamento do dia, feito na hora; a CBS fica disponível para a próxima coleta do SplitHub</div></div><div class="mk-btns"><span class="mk-btn">Limpar</span><span class="mk-btn pri">Executar e enviar</span></div></div>
+<div class="duo">
+<div class="tc"><div class="tc-h"><span class="tc-n">1 · Notas</span><span class="chip info">2 marcadas</span></div>
+<div class="tc-r"><span>☑ NF-e 1.400 · Fornecedor Exemplo Ltda. · aquisição</span><b>IBS 18.000</b></div>
+<div class="tc-r"><span>☑ NF-e 1.450 · Fornecedor Exemplo Ltda. · aquisição</span><b>IBS 6.000</b></div>
+<div class="tc-r"><span>☐ NF-e 2.010 · cliente → Comprador Exemplo S.A. · fornecimento</span><b>IBS 12.000</b></div>
+<div class="tc-f">Busca por número, chave, CNPJ ou papel. Nota que não está no SplitHub só entra marcando "incluir não importadas" (T08).</div></div>
+<div class="tc"><div class="tc-h"><span class="tc-n">2 · Tipos</span><span class="chip info">3 marcados</span></div>
+<div class="tc-r"><span>☑ E-IBS-05 · Apropriacao de Credito</span><b>valor cheio</b></div>
+<div class="tc-r"><span>☑ E-IBS-06 · Utilizacao de Credito</span><b>50%</b></div>
+<div class="tc-r"><span>☑ E-CBS-C02 · Apropriação total</span><b>valor cheio</b></div>
+<div class="tc-r off"><span>☐ E-IBS-19 · Devolucao - Estorno de Credito a apropriar</span><b>sem nota de devolução</b></div>
+<div class="tc-r off"><span>☐ E-IBS-02 · Fornecimento</span><b>só em nota de saída</b></div>
+<div class="tc-f">Só ficam ativos os tipos que valem para o papel do cliente nas notas marcadas.</div></div>
+</div>
+<div class="mk-sec">3 · Revisão</div>
+<div class="dm-wrap"><table class="dm esq"><thead><tr><th>Nota</th><th>Evento</th><th>Valor</th><th>Origem</th><th>Sai em</th></tr></thead><tbody>
+<tr><td>NF-e 1.400</td><td>E-IBS-05 · Apropriacao de Credito</td><td>18.000</td><td><span class="dv inf">escolhido</span></td><td>Delta 14/11</td></tr>
+<tr><td>NF-e 1.400</td><td>E-IBS-06 · Utilizacao de Credito</td><td>9.000</td><td><span class="dv inf">escolhido</span></td><td>Delta 14/11</td></tr>
+<tr><td>NF-e 1.400</td><td>E-CBS-C02 · Apropriação total</td><td>9.000</td><td><span class="dv inf">escolhido</span></td><td>próxima coleta</td></tr>
+<tr><td>NF-e 1.450</td><td>E-IBS-01 · Aquisicao</td><td>6.000</td><td><span class="dv am">pré-requisito</span></td><td>Delta 14/11</td></tr>
+<tr><td>NF-e 1.450</td><td>E-IBS-05 · Apropriacao de Credito</td><td>6.000</td><td><span class="dv inf">escolhido</span></td><td>Delta 14/11</td></tr>
+<tr><td>NF-e 1.450</td><td>E-IBS-06 · Utilizacao de Credito</td><td>3.000</td><td><span class="dv inf">escolhido</span></td><td>Delta 14/11</td></tr>
+<tr><td>NF-e 1.450</td><td>E-CBS-C01 · Crédito registrado</td><td>3.000</td><td><span class="dv am">pré-requisito</span></td><td>próxima coleta</td></tr>
+<tr><td>NF-e 1.450</td><td>E-CBS-C02 · Apropriação total</td><td>3.000</td><td><span class="dv inf">escolhido</span></td><td>próxima coleta</td></tr>
+</tbody></table></div>
+<div class="mk-alerta">A NF-e 1.450 ainda não teve eventos: entram antes a Aquisicao no IBS e o registro do crédito na CBS.</div>
+</div></div>
+</div>
+
+<!-- 13 -->
+<div class="section" id="s13"><div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">O que muda no código</span></div>
+<p class="sec-sub">O app continua Node 24 com TypeScript, SQLite e interface em React. O que existe é reaproveitado; o que é do domínio fica fora do núcleo, como hoje.</p>
+<div class="table-wrap"><table><thead><tr><th>Parte</th><th>Onde</th><th>O que acontece</th></tr></thead><tbody>
+<tr><td><strong>Servidor dos entes</strong></td><td><code>server/entes/cbs.ts</code><br><code>server/entes/ibs.ts</code></td><td>Novo. As rotas da seção 03, num prefixo próprio por ente, com a autenticação de cada um.</td></tr>
+<tr><td><strong>Leitura de XML</strong></td><td><code>server/emulacao/xml.ts</code></td><td>Novo. NF-e com o grupo de IBS e CBS.</td></tr>
+<tr><td><strong>Catálogo, roteiros e plano</strong></td><td><code>server/emulacao/catalogo.ts</code><br><code>roteiros.ts</code> · <code>plano.ts</code></td><td>Novo. O catálogo é dado, não código: trocar o texto do <code>MOV</code> pela tabela de códigos não muda o motor.</td></tr>
+<tr><td><strong>Montagem dos arquivos</strong></td><td><code>server/emulacao/arquivo-cbs.ts</code><br><code>arquivo-ibs.ts</code></td><td>Novo. A foto por documento da CBS; o Delta, o fatiamento e o hash do IBS.</td></tr>
+<tr><td><strong>Envio sob demanda</strong></td><td><code>server/emulacao/execucao.ts</code></td><td>Novo. Valida papel, nota relacionada, ordem e saldo, monta a execução e põe os eventos no próximo arquivo de cada ente.</td></tr>
+<tr><td><strong>Relógio</strong></td><td><code>server/emulacao/relogio.ts</code></td><td>Novo. Dia simulado e Processamento Diário.</td></tr>
+<tr><td><strong>Banco</strong></td><td>migração 5</td><td>Tabelas <code>pocs</code>, <code>notas</code>, <code>eventos</code>, <code>arquivos</code>, <code>avisos</code>, <code>downloads</code>, <code>solicitacoes</code> e <code>execucoes</code>.</td></tr>
+<tr><td><strong>Monitor e executor</strong></td><td><code>server/engine/*</code><br><code>servicos/monitor.ts</code></td><td>Reaproveitados nos avisos de webhook. O monitor passa a registrar também as chamadas que chegam.</td></tr>
+<tr><td><strong>Gerador genérico</strong></td><td><code>server/core/*</code><br><code>servicos/cenarios.ts</code> e afins</td><td>Congelado: fica no código e nos testes, sai do menu.</td></tr>
+<tr><td><strong>Pacote SplitHub</strong></td><td><code>packs/splithub.json</code></td><td>Continua para a conferência pela API do SplitHub (documentos fiscais).</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 14 -->
+<div class="section" id="s14"><div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Dados do cliente e segurança</span></div>
+<ul class="plain">
+<li><strong>XML real:</strong> as notas do cliente têm CNPJ, valores e produtos reais. Ficam só no banco da POC, nunca no repositório, com acesso pelos papéis do app, e são apagadas ao fim da POC, com registro na auditoria (D-MG-12).</li>
+<li><strong>Credenciais emitidas:</strong> o client_id e o client_secret da CBS emulada e o ClientID e ClientSecret do IBS emulado são gerados por POC, guardados em hash e mostrados uma vez, como no Comitê Gestor.</li>
+<li><strong>Quem executa:</strong> o envio sob demanda e o "forçar" dependem do papel do usuário. Cada execução vai para a auditoria encadeada.</li>
+<li><strong>Só destinos liberados:</strong> o aviso de webhook só vai para domínio da lista do app. O MassGen nunca chama a Receita Federal, o Comitê Gestor ou a produção do SplitHub.</li>
+<li><strong>Endereço público:</strong> as rotas dos entes emulados ficam atrás do mesmo acesso do app hospedado, com exceção liberada só para o IP ou o túnel do ambiente da POC do SplitHub.</li>
+</ul>
+</div>
+
+<!-- 15 -->
+<div class="section" id="s15"><div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Etapas de construção</span></div>
+<div class="table-wrap"><table><thead><tr><th>Etapa</th><th>O que entrega</th><th>Fica pronto quando</th></tr></thead><tbody>
+<tr><td><strong>1 · IBS de ponta a ponta</strong></td><td>
+<ul class="plain">
+<li>POC e importação de XML;</li>
+<li>habilitação, Processamento Diário, webhook e Obter Arquivo;</li>
+<li>os 24 tipos do IBS e os roteiros;</li>
+<li>o envio sob demanda do IBS;</li>
+<li>o histórico por nota.</li>
+</ul></td><td>Uma nota de entrada e uma de saída percorrem RT-A1 e RT-F1 e são baixadas pelo SplitHub da POC.</td></tr>
+<tr><td><strong>2 · CBS de ponta a ponta</strong></td><td>
+<ul class="plain">
+<li>token, as quatro solicitações, o <code>HEAD</code>, o aviso e o link assinado;</li>
+<li>a janela de 8 dias;</li>
+<li>os 26 tipos da CBS e o envio sob demanda da CBS.</li>
+</ul></td><td>As mesmas notas aparecem nas coletas da CBS.</td></tr>
+<tr><td><strong>3 · Cobertura completa</strong></td><td>
+<ul class="plain">
+<li>plano automático e painel;</li>
+<li>relógio com defasagem entre os entes;</li>
+<li>Arquivo Manual e os casos T01 a T09.</li>
+</ul></td><td>O painel fecha os 59 tipos com um lote real.</td></tr>
+<tr><td><strong>4 · Conferência</strong></td><td>Consulta à API do SplitHub depois de cada evento e situação "conferido" ou "divergente".</td><td>Depende de a API do SplitHub expor o estado da nota por ente.</td></tr>
+</tbody></table></div>
+<p class="src">A ordem começa pelo IBS porque é o modelo em que o ente empurra e porque o SplitHub ainda não tem o adaptador dele. A CBS pode vir primeiro se o time do SplitHub começar por ela.</p>
+</div>
+
+<!-- 16 -->
+<div class="section" id="s16"><div class="sec-hdr"><span class="sec-num">16</span><span class="sec-title">Decisões</span></div>
+<p>Marque uma opção em cada decisão e use "Copiar escolhas" para mandar o resultado. A primeira opção é a recomendada.</p>
+<div id="decisoes">
+<div class="dec" data-dec="D-MG-01"><div class="dec-h"><span class="dec-id">D-MG-01</span><span class="dec-q">O gerador genérico</span></div><p>O emulador vira a função do app. Os modelos, cenários, cadastros mestres e o gabarito saem do menu e ficam congelados no código, sem evolução, para voltar se precisar.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-01" value="Congelar fora do menu"> Congelar fora do menu <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-01" value="Manter no menu, ao lado do emulador"> Manter no menu</label><label class="opt"><input type="radio" name="D-MG-01" value="Remover do código"> Remover do código</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-MG-02"><div class="dec-h"><span class="dec-id">D-MG-02</span><span class="dec-q">Quem importa as notas no SplitHub</span></div><p>O SplitHub, pelo caminho normal, porque a ingestão também está sendo provada. O MassGen confere pela API se cada nota chegou antes de mandar os eventos dela.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-02" value="O SplitHub importa; o MassGen confere"> O SplitHub importa, o MassGen confere <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-02" value="O MassGen envia as notas pela API de documentos fiscais"> O MassGen envia pela API</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-MG-03"><div class="dec-h"><span class="dec-id">D-MG-03</span><span class="dec-q">CBS: entrega só quando o SplitHub pede</span></div><p>Fiel à documentação: o evento da CBS fica disponível até o SplitHub abrir a solicitação. A alternativa é o MassGen mandar o aviso sem pedido, o que a Receita Federal não faz.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-03" value="Só quando o SplitHub pede"> Só quando o SplitHub pede <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-03" value="Aviso sem pedido, como atalho da POC"> Aviso sem pedido</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-MG-04"><div class="dec-h"><span class="dec-id">D-MG-04</span><span class="dec-q">Plano de cobertura</span></div><p>Automático, cobrindo primeiro os tipos que faltam, e ajustável nota a nota.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-04" value="Automático e ajustável"> Automático e ajustável <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-04" value="Roteiro escolhido à mão em cada nota"> À mão</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-MG-05"><div class="dec-h"><span class="dec-id">D-MG-05</span><span class="dec-q">Tipo que precisa de uma nota que o lote não tem</span></div><p>Avisar qual XML falta. Gerar uma nota sintética resolve a cobertura, mas o SplitHub não teria essa nota importada, e a POC deixaria de ser só com dados do cliente.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-05" value="Avisar qual XML falta"> Avisar qual XML falta <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-05" value="Gerar nota sintética derivada da do cliente"> Gerar nota sintética</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-MG-06"><div class="dec-h"><span class="dec-id">D-MG-06</span><span class="dec-q">Casos de transporte e falha</span></div><p>Os nove casos da seção 07 entram como opcionais da cobertura, ligados um a um.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-06" value="Opcionais, ligados um a um"> Opcionais <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-06" value="Sempre ligados"> Sempre ligados</label><label class="opt"><input type="radio" name="D-MG-06" value="Fora da POC"> Fora da POC</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-MG-07"><div class="dec-h"><span class="dec-id">D-MG-07</span><span class="dec-q">Relógio</span></div><p>Dias simulados que avançam por comando ou por intervalo, para uma competência caber numa sessão de POC.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-07" value="Dia simulado, por comando ou intervalo"> Dia simulado <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-07" value="Tempo real"> Tempo real</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-MG-08"><div class="dec-h"><span class="dec-id">D-MG-08</span><span class="dec-q">Limites da documentação</span></div><p>Valem por padrão, para o teste pegar quem os desrespeita, com uma chave da POC para relaxar.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-08" value="Valem, com chave para relaxar"> Valem, com chave <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-08" value="Sem limites na POC"> Sem limites</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-MG-09"><div class="dec-h"><span class="dec-id">D-MG-09</span><span class="dec-q">O que conta como recebido</span></div><p>O download do arquivo, que o MassGen vê porque é ele quem serve. A conferência pela API do SplitHub entra na etapa 4, quando a API mostrar o estado da nota por ente.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-09" value="Download, e conferência quando houver API"> Download, depois conferência <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-09" value="Só a resposta 2xx ao aviso"> Só o 2xx ao aviso</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-MG-10"><div class="dec-h"><span class="dec-id">D-MG-10</span><span class="dec-q">Tipos de documento</span></div><p>NF-e primeiro. CT-e, NFC-e e NFS-e na etapa seguinte; a NFS-e tem chave de 50 posições e pede regra própria.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-10" value="NF-e primeiro"> NF-e primeiro <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-10" value="Todos desde o início"> Todos desde o início</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-MG-11"><div class="dec-h"><span class="dec-id">D-MG-11</span><span class="dec-q">O que os entes não especificaram</span></div><p>Fica fora até sair a especificação. Emular com contrato inventado faria o SplitHub construir contra algo que pode não existir.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-11" value="Fora até a especificação"> Fora até a especificação <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-11" value="Emular com contrato provisório"> Contrato provisório</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-MG-12"><div class="dec-h"><span class="dec-id">D-MG-12</span><span class="dec-q">Dados do cliente e collection dos entes</span></div><p>Os XMLs ficam só na POC e são apagados ao fim dela. O MassGen publica, na biblioteca, a collection dos entes emulados com o environment da POC, para o time do SplitHub construir e testar o barramento dele.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-12" value="Apagar ao fim e publicar a collection"> Apagar ao fim e publicar a collection <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-12" value="Mascarar CNPJ e valores na importação"> Mascarar na importação</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-MG-13"><div class="dec-h"><span class="dec-id">D-MG-13</span><span class="dec-q">Tipo escolhido sem o pré-requisito</span></div><p>Incluir antes o que falta e mostrar na revisão. Mandar fora de ordem de propósito fica para quem tem permissão de "forçar", porque testa uma sequência que o ente não produziria.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-13" value="Incluir o pré-requisito; forçar por permissão"> Incluir o pré-requisito <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-13" value="Bloquear até o pré-requisito sair"> Bloquear</label><label class="opt"><input type="radio" name="D-MG-13" value="Enviar como escolhido, sem checar"> Enviar sem checar</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+<div class="dec" data-dec="D-MG-14"><div class="dec-h"><span class="dec-id">D-MG-14</span><span class="dec-q">IBS: quando sai o envio sob demanda</span></div><p>Fechar o dia simulado na hora mantém um Delta por dia, como no Comitê Gestor, e o resultado aparece em segundos. Um Delta extra no mesmo dia é mais rápido de usar, mas o ente não faz isso.</p><div class="decide"><label class="opt"><input type="radio" name="D-MG-14" value="Fechar o dia simulado na hora"> Fechar o dia na hora <span class="rec">recomendada</span></label><label class="opt"><input type="radio" name="D-MG-14" value="Esperar o fechamento normal do dia"> Esperar o fechamento</label><label class="opt"><input type="radio" name="D-MG-14" value="Delta extra, fora do ciclo diário"> Delta extra</label></div><textarea class="obs" placeholder="Observação (opcional)"></textarea></div>
+</div>
+<div class="barra"><span id="cont">0 de 14 decididas</span><button class="btn" type="button" onclick="recomendadas()">Marcar as recomendadas</button><button class="btn pri" type="button" onclick="copiar()">Copiar escolhas</button></div>
+<textarea class="saida" id="saida" readonly></textarea>
+</div>
+
+<!-- 17 -->
+<div class="section" id="s17"><div class="sec-hdr"><span class="sec-num">17</span><span class="sec-title">Riscos e pendências</span></div>
+<div class="table-wrap"><table><thead><tr><th>Risco</th><th>Efeito</th><th>Como o emulador trata</th></tr></thead><tbody>
+<tr><td><strong>Tabela de códigos do <code>MOV</code> não existe</strong></td><td>O texto pode mudar quando a tabela sair</td><td>Catálogo como dado; troca sem mexer no motor</td></tr>
+<tr><td><strong>Algoritmo do hash do IBS não definido</strong></td><td>O SplitHub não consegue conferir o hash real</td><td>SHA-1 acumulado, declarado como provisório</td></tr>
+<tr><td><strong>Enumeração de <code>tipo</code> em pagamentos da CBS não publicada</strong></td><td>PCONT, RAD e split não se distinguem pelo contrato</td><td>Valores provisórios declarados na collection</td></tr>
+<tr><td><strong>Cancelamento e devolução na CBS</strong></td><td>A documentação não diz como a foto muda</td><td>Leitura nossa, marcada no catálogo</td></tr>
+<tr><td><strong>Contratos ainda em v1.x</strong></td><td>Campo removido ou renomeado entre versões</td><td>A versão do contrato emulado aparece em cada arquivo e no histórico</td></tr>
+<tr><td><strong>Envio manual fora de ordem</strong></td><td>A POC mostra uma sequência que o ente não produziria</td><td>Só com "forçar", marcado na revisão e no histórico</td></tr>
+<tr><td><strong>Lote sem notas de exceção</strong></td><td>Tipos sem cobertura</td><td>O painel pede o XML que falta</td></tr>
+<tr><td><strong>Adaptadores do SplitHub</strong></td><td>A POC só anda quando o SplitHub consumir pelo menos um ente</td><td>A collection dos entes emulados é entregue antes, na etapa 1</td></tr>
+</tbody></table></div>
+<p class="src">Fontes: <a class="xref" href="../cbs-x-ibs-integracao.html">CBS × IBS: duas APIs, dois modelos</a>, <a class="xref" href="../integracao-apis-reforma.html">Referência de APIs</a>, o MOC da API da Apuração Assistida do IBS v1.10 (Comitê Gestor, 23/09/2026) e a documentação das APIs de Apuração da CBS v2 (Receita Federal).</p>
+</div>
+
+<!-- 18 -->
+<div class="section" id="s18">
+<div class="sec-hdr"><span class="sec-num">18</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v4.1</div><div class="ver-desc"><strong>02/11/2026</strong> — <strong>Envio sob demanda.</strong> O usuário escolhe uma ou mais notas e um ou mais tipos de evento e envia na hora, com os pré-requisitos incluídos antes. Entram também a ordem dos eventos por tipo, a tela T-MG-03, a origem e o reenvio do aviso no histórico e as decisões D-MG-13 e D-MG-14. <a class="xref" href="proposta-gerador-massa-v4.0.html">Ver a v4.0</a></div></div>
+<div class="ver-row"><div class="ver-num">v4.0</div><div class="ver-desc"><strong>02/11/2026</strong> — <strong>Emulador da apuração assistida.</strong> O objetivo do app passa a ser emular a Receita Federal e o Comitê Gestor numa POC com as notas reais do cliente, seguindo a documentação dos dois entes; o SplitHub constrói o barramento dele contra a mesma documentação, e só a URL muda. Catálogo com 26 tipos de evento da CBS, 24 do IBS e 9 de transporte e falha; 17 roteiros; plano de cobertura; relógio; histórico de envio por nota; quatro etapas e 12 decisões. O gerador genérico sai do menu. <a class="xref" href="proposta-gerador-massa-v3.0.html">Ver a v3.0</a></div></div>
+<div class="ver-row"><div class="ver-num">v3.0</div><div class="ver-desc"><strong>20/10/2026</strong> — Ambientes com várias integrações, biblioteca de APIs, dados mestre por ambiente, contexto de massa e emulação de entes. 15 módulos, 112 funcionalidades e 16 decisões.</div></div>
+<div class="ver-row"><div class="ver-num">v2.0</div><div class="ver-desc"><strong>19/10/2026</strong> — App genérico: o domínio entra por pacotes, e o SplitHub é o primeiro.</div></div>
+<div class="ver-row"><div class="ver-num">v1.3</div><div class="ver-desc"><strong>19/10/2026</strong> — Cadastros mestres e monitor de requisições.</div></div>
+<div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>19/10/2026</strong> — Destino importado do Postman ou preenchido à mão, combináveis.</div></div>
+<div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>19/10/2026</strong> — Estrutura de APIs por importação de collection e environment do Postman.</div></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>19/10/2026</strong> — Primeira versão, voltada ao SplitHub.</div></div>
+</div>
+
+<div class="foot">Proposta v4.1 · 02/11/2026 · valores e nomes de exemplo.</div>
+</div>
+<script>
+(function () {
+  var decs = document.querySelectorAll('[data-dec]');
+  function contar() {
+    var n = 0;
+    decs.forEach(function (d) { if (d.querySelector('input:checked')) n++; });
+    document.getElementById('cont').textContent = n + ' de ' + decs.length + ' decididas';
+  }
+  document.getElementById('decisoes').addEventListener('change', contar);
+  window.recomendadas = function () {
+    decs.forEach(function (d) { var r = d.querySelector('input[type=radio]'); if (r && !d.querySelector('input:checked')) r.checked = true; });
+    contar();
+  };
+  window.copiar = function () {
+    var out = ['Proposta MassGen v4.1: escolhas'];
+    decs.forEach(function (d) {
+      var r = d.querySelector('input:checked'), o = d.querySelector('textarea');
+      out.push(d.getAttribute('data-dec') + ': ' + (r ? r.value : 'sem escolha') + (o && o.value.trim() ? ' (' + o.value.trim() + ')' : ''));
+    });
+    var s = out.join('\n'), ta = document.getElementById('saida');
+    ta.value = s; ta.style.display = 'block';
+    var aviso = function (t) { document.getElementById('cont').textContent = t; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(s).then(function () { aviso('Escolhas copiadas.'); }).catch(function () { aviso('Copie o texto abaixo.'); ta.select(); });
+    } else { aviso('Copie o texto abaixo.'); ta.select(); }
+  };
+})();
+</script>
+</body>
+</html>
