@@ -535,8 +535,11 @@ window.shFeature && shFeature.registrar({"id": "AV-EV", "nome": "Evento fiscal e
     var ov = document.getElementById('rf-detalhe-overlay'); if (!ov) return;
     var rfId = ov.getAttribute('data-evf-rf'), ent = rfId && (window._rfIndex || {})[rfId]; if (!ent) return;
     var old = ov.querySelector('[data-evf]'); if (old) old.remove();
-    var ancora = ov.querySelector('.pp-nota-q');
     var h = blocoDF(ent.nf, ent.rf.tipoFiscal.toUpperCase());
+    // detalhe do RF com abas no topo (AV-RF): o quadro de ajustes vai para o topo da aba Eventos e ajustes
+    var slot = ov.querySelector('[data-evf-slot]');
+    if (slot) { slot.innerHTML = h; return; }
+    var ancora = ov.querySelector('.pp-nota-q');
     if (ancora) ancora.insertAdjacentHTML('afterend', h);
   }
   function injetarCard() {
