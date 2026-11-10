@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detalhe do RF — mockups clicáveis · SplitHub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; --sombra:rgba(0,0,0,.12); --scrim:rgba(19,23,32,.45); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --sombra:rgba(0,0,0,.4); --scrim:rgba(0,0,0,.6); } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --sombra:rgba(0,0,0,.4); --scrim:rgba(0,0,0,.6); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.5 'Inter', system-ui, sans-serif; padding: 24px 16px 60px; }
+button { font: inherit; }
+.pg { max-width: 1500px; margin: 0 auto; }
+.back { display: inline-flex; gap: 14px; flex-wrap: wrap; font-size: 12px; font-weight: 600; margin-bottom: 16px; }
+.back a { color: var(--txt3); text-decoration: none; }
+.back a:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 6px; }
+h1 { font-size: 23px; font-weight: 800; line-height: 1.2; margin-bottom: 6px; }
+.lead { font-size: 13px; color: var(--txt2); max-width: 900px; margin-bottom: 14px; }
+
+/* controles */
+.ctl { position: sticky; top: 0; z-index: 30; background: var(--bg); padding: 10px 0; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; border-bottom: 1px solid var(--brd); }
+.grp { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.grp-l { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--brd); border-radius: 8px; overflow: hidden; background: var(--sur); }
+.seg button { font-size: 12px; font-weight: 600; padding: 6px 12px; border: 0; border-right: 1px solid var(--brd); background: transparent; color: var(--txt2); cursor: pointer; white-space: nowrap; }
+.seg button:last-child { border-right: 0; }
+.seg button:hover { color: var(--txt1); }
+.seg button.on { background: var(--teal-d); color: var(--teal); }
+.seg button:disabled { color: var(--txt3); cursor: default; opacity: .5; }
+.info { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: flex-start; margin: 12px 0 14px; }
+.info-t { font-size: 13px; color: var(--txt2); flex: 1 1 520px; min-width: 0; }
+.info-t b { color: var(--txt1); }
+.medidas { display: flex; flex-wrap: wrap; gap: 6px; }
+.md { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: var(--gray-d); color: var(--txt2); }
+.md.ok { background: var(--green-d); color: var(--green); }
+.md.mau { background: var(--red-d); color: var(--red); }
+
+/* palco e moldura */
+.stage { width: 100%; }
+.stage-w { position: relative; margin: 0 auto; width: calc(var(--dw) * var(--s) * 1px); height: calc(var(--dh) * var(--s) * 1px); }
+.dev { position: absolute; top: 0; left: 0; width: calc(var(--dw) * 1px); height: calc(var(--dh) * 1px); transform: scale(var(--s)); transform-origin: top left; border: 1px solid var(--brd); border-radius: 12px; overflow: hidden; background: var(--bg); box-shadow: 0 8px 30px var(--sombra); font-size: 13px; color: var(--txt1); }
+.dev[data-d="m"] { border-radius: 26px; border-width: 6px; }
+.rodape { font-size: 11.5px; color: var(--txt3); margin-top: 12px; text-align: center; }
+
+/* app de fundo */
+.app { position: absolute; inset: 0; display: flex; }
+.app-side { width: 210px; flex-shrink: 0; background: var(--sur); border-right: 1px solid var(--brd); padding: 16px 12px; }
+.dev[data-d="t"] .app-side, .dev[data-d="m"] .app-side { display: none; }
+.logo { font-weight: 800; font-size: 15px; margin-bottom: 18px; color: var(--teal); }
+.si { font-size: 12.5px; color: var(--txt2); padding: 7px 10px; border-radius: 6px; }
+.si.on { background: var(--teal-d); color: var(--teal); font-weight: 700; }
+.app-main { flex: 1; min-width: 0; padding: 20px 24px; }
+.crumb { font-size: 12px; color: var(--txt3); margin-bottom: 14px; }
+.crumb b { color: var(--txt1); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.dev[data-d="m"] .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.kpi { height: 64px; border: 1px solid var(--brd); border-radius: 8px; background: var(--sur); }
+.lst { border: 1px solid var(--brd); border-radius: 8px; background: var(--sur); padding: 6px 14px; }
+.lst div { height: 30px; border-bottom: 1px solid var(--brd); }
+.lst div:last-child { border-bottom: 0; }
+.scrim { position: absolute; inset: 0; background: var(--scrim); display: flex; align-items: center; justify-content: center; }
+
+/* janela do detalhe: 980 px hoje; 1.120 px, a do documento, na proposta */
+.modal { background: var(--sur); border: 1px solid var(--brd); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px var(--sombra); width: 980px; height: 800px; }
+.modal.doc-w { width: 1120px; }
+.dev[data-d="t"] .modal { width: 728px; height: 984px; }
+.dev[data-d="m"] .modal { width: 100%; height: 100%; border: 0; border-radius: 0; }
+.mh { display: flex; align-items: center; gap: 10px 12px; flex-wrap: wrap; padding: 12px 18px; border-bottom: 1px solid var(--brd); }
+.mh-ic { width: 34px; height: 34px; border-radius: 8px; background: var(--blue-d); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.mh-t { min-width: 0; flex: 1; }
+.mh-t b { display: block; font-size: 15px; }
+.mh-t span { font-size: 12px; color: var(--txt3); }
+.mh-a { display: flex; gap: 6px; flex-wrap: wrap; }
+.dev[data-d="m"] .mh { padding: 12px 14px; }
+.bt { font-size: 12px; font-weight: 600; padding: 6px 11px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); cursor: pointer; white-space: nowrap; }
+.bt:hover { border-color: var(--txt3); }
+.bt.pri { background: var(--blue); border-color: var(--blue); color: var(--sur); }
+.mb { flex: 1; min-height: 0; display: flex; overflow: hidden; }
+.mb > * { flex: 1; min-width: 0; }
+.dev[data-d="m"] .mb { display: block; overflow: auto; }
+.c2 { display: grid; grid-template-columns: 300px minmax(0, 1fr); min-height: 0; }
+.colL { border-right: 1px solid var(--brd); padding: 16px 18px; overflow: auto; min-height: 0; }
+.colR { padding: 16px 20px; overflow: auto; min-height: 0; }
+.c1m { padding: 14px; }
+.dev[data-d="m"] .c2 { display: block; }
+.dev[data-d="m"] .colL, .dev[data-d="m"] .colR { overflow: visible; border-right: 0; padding: 14px; }
+.dev[data-d="m"] .colL { border-bottom: 1px solid var(--brd); }
+
+/* peças */
+.lb { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--txt3); margin: 0 0 8px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.fd { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 5px 0; font-size: 12.5px; border-bottom: 1px dashed var(--brd); }
+.fd:last-child { border-bottom: 0; }
+.fd > span { color: var(--txt3); flex-shrink: 0; }
+.fd > b { font-weight: 600; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.dv { height: 1px; background: var(--brd); margin: 14px 0; }
+.vz { font-size: 12px; color: var(--txt3); }
+.inc { display: block; width: 100%; text-align: left; border: 1px solid var(--brd); border-radius: 8px; padding: 9px 12px; margin-bottom: 8px; background: var(--sur); cursor: pointer; color: var(--txt1); }
+.inc:hover { border-color: var(--amber); }
+.inc-h { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 700; }
+.inc-t { display: block; font-size: 12px; color: var(--txt2); }
+.irm { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 8px; text-align: left; border: 1px solid var(--brd); border-radius: 8px; padding: 9px 12px; background: var(--sur); cursor: pointer; color: var(--txt1); font-size: 12px; }
+.irm:hover { border-color: var(--blue); }
+.irm small { display: block; color: var(--txt3); font-size: 11px; }
+.irm > span:first-child { min-width: 0; }
+.irm .lk { white-space: nowrap; flex-shrink: 0; }
+.tg { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 10px; white-space: nowrap; background: var(--gray-d); color: var(--gray); }
+.tg.ok { background: var(--green-d); color: var(--green); }
+.tg.am { background: var(--amber-d); color: var(--amber); }
+.tg.red { background: var(--red-d); color: var(--red); }
+.tg.inf { background: var(--blue-d); color: var(--blue); }
+.lk { color: var(--blue); cursor: pointer; font-weight: 600; text-decoration: none; background: none; border: 0; padding: 0; font-size: inherit; }
+.lk:hover { text-decoration: underline; }
+.lb.m0 { margin: 0; }
+.mt10 { margin-top: 10px; }
+.nota { font-size: 11px; color: var(--txt3); margin: 6px 0 0; }
+.blk { margin-top: 16px; }
+.abox { margin-top: 16px; }
+.okv { color: var(--green); font-weight: 600; }
+.mut { color: var(--txt3); }
+.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* tabelas */
+.tw { overflow-x: auto; border: 1px solid var(--brd); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { text-align: left; font-size: 10.5px; font-weight: 700; color: var(--txt2); background: var(--sur2); padding: 7px 10px; border-bottom: 1px solid var(--brd); white-space: nowrap; }
+th small { display: block; font-weight: 500; color: var(--txt3); }
+td { padding: 7px 10px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 0; }
+td b { color: var(--txt1); font-weight: 600; }
+td small { display: block; color: var(--txt3); font-size: 10.5px; }
+td.nw { white-space: nowrap; }
+td.nw small { white-space: normal; }
+table.pt td:not(:first-child), table.pt th:not(:first-child) { text-align: right; white-space: nowrap; }
+table.pt td { padding: 5px 10px; }
+table.pt tr.g td { background: var(--sur2); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); padding: 4px 10px; }
+table.pt tr.tot td { font-weight: 700; }
+tr.evr { cursor: pointer; }
+tr.evr:hover td { background: var(--sur2); }
+tr.evr.on td { background: var(--blue-d); }
+tr.evd > td { background: var(--sur2); }
+
+/* painel das abas: tabela vira cartão quando o painel é estreito */
+.apn { container-type: inline-size; padding-top: 12px; }
+.abas { display: flex; gap: 2px; border-bottom: 1px solid var(--brd); overflow-x: auto; position: sticky; top: 0; z-index: 3; background: var(--sur); scrollbar-width: none; }
+.abas::-webkit-scrollbar { display: none; }
+.abas.quebra { flex-wrap: wrap; overflow: visible; position: static; }
+.ab { font-size: 12px; padding: 9px 11px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--txt2); cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.ab:hover { color: var(--txt1); }
+.ab.on { color: var(--blue); border-color: var(--blue); font-weight: 700; }
+.bd { display: inline-block; min-width: 16px; font-size: 10px; font-weight: 700; padding: 0 5px; border-radius: 8px; background: var(--red-d); color: var(--red); margin-left: 4px; }
+@container (max-width: 560px) {
+  table.rsp thead { display: none; }
+  table.rsp, table.rsp tbody, table.rsp tr, table.rsp td { display: block; width: 100%; }
+  table.rsp tr { border-bottom: 1px solid var(--brd); padding: 6px 0; }
+  table.rsp tbody tr:last-child { border-bottom: 0; }
+  table.rsp td { border: 0; padding: 3px 10px; display: flex; justify-content: space-between; gap: 10px; text-align: right; }
+  table.rsp td::before { content: attr(data-l); color: var(--txt3); font-size: 10.5px; text-align: left; flex-shrink: 0; }
+  table.rsp td:first-child { display: block; text-align: left; }
+  table.rsp td:first-child::before { display: none; }
+  table.rsp tr.evd td { display: block; text-align: left; }
+  table.rsp tr.evd td::before { display: none; }
+}
+.evcab { font-size: 12px; color: var(--txt3); margin-bottom: 8px; }
+.evd-g { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 12px; margin-bottom: 10px; }
+.evd-g span { color: var(--txt3); margin-right: 4px; }
+.evd-c { border: 1px solid var(--brd); border-radius: 8px; padding: 8px 10px; background: var(--sur); font-size: 12px; }
+.evd-c p { margin: 4px 0 0; color: var(--txt2); }
+.evd-a { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.vazio { border: 1px dashed var(--brd); border-radius: 10px; padding: 22px; text-align: center; color: var(--txt2); font-size: 12.5px; }
+.vazio b { display: block; color: var(--txt1); margin-bottom: 4px; }
+.aj-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.seta { color: var(--txt3); }
+
+/* histórico, alertas e linha do tempo */
+.hsum { font-size: 12px; color: var(--txt3); margin-bottom: 10px; }
+.alert-t { color: var(--red); font-weight: 700; }
+.pend { border: 1px solid var(--amber); background: var(--amber-d); border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+.pend .lb { margin-bottom: 4px; }
+.pend-i { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; font-size: 12px; color: var(--txt1); padding: 2px 0; }
+.pend-i b { font-weight: 600; }
+.tb { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; padding: 1px 6px; border-radius: 3px; border: 1px solid; white-space: nowrap; }
+.tb.cbs { color: var(--amber); background: var(--amber-d); border-color: var(--amber); }
+.tb.ibs { color: var(--blue); background: var(--blue-d); border-color: var(--blue); }
+.tb.doc { color: var(--txt2); background: var(--gray-d); border-color: var(--gray); }
+.st { font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 3px; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.st.erro { color: var(--red); background: var(--red-d); }
+.st.pending { color: var(--amber); background: var(--amber-d); }
+.ref { font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 4px; border: 1px solid var(--brd); background: var(--sur); color: var(--blue); cursor: pointer; white-space: nowrap; }
+.htool { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-bottom: 10px; }
+.sg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--brd); border-radius: 6px; overflow: hidden; }
+.sg button { font-size: 11px; font-weight: 600; padding: 5px 9px; border: 0; border-right: 1px solid var(--brd); background: none; color: var(--txt2); cursor: pointer; }
+.sg button:last-child { border-right: 0; }
+.sg button.on { background: var(--teal-d); color: var(--teal); }
+.chips { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.chip { font-size: 10.5px; font-weight: 600; padding: 2px 9px; border-radius: 12px; border: 1px solid var(--brd); background: none; color: var(--txt2); cursor: pointer; }
+.chip.on { color: var(--teal); border-color: var(--teal); background: var(--teal-d); }
+.al-sum { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.al-p { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 12px; }
+.al-p.acao { background: var(--red-d); color: var(--red); }
+.al-p.acomp { background: var(--amber-d); color: var(--amber); }
+.al-p.info { background: var(--gray-d); color: var(--txt2); }
+.alg { margin-bottom: 16px; }
+.alg-h { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.alg-h.acao { color: var(--red); } .alg-h.acomp { color: var(--amber); } .alg-h.info { color: var(--txt3); }
+.alg-d { font-size: 11.5px; color: var(--txt3); margin: 2px 0 8px; }
+.al { border: 1px solid var(--brd); border-left: 3px solid var(--gray); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; background: var(--sur); }
+.al.acao { border-left-color: var(--red); } .al.acomp { border-left-color: var(--amber); } .al.info { border-left-color: var(--blue); }
+.al-h { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.al-h b { font-size: 12.5px; font-weight: 700; color: var(--txt1); flex: 1; min-width: 160px; }
+.al-o { font-size: 11px; color: var(--txt3); }
+.al-v { font-size: 12.5px; font-weight: 700; color: var(--txt1); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.al-d { font-size: 12px; color: var(--txt2); margin-top: 4px; }
+.al-m { font-size: 11px; color: var(--txt3); margin-top: 2px; }
+.al-a { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+table.ht { min-width: 640px; }
+tr.hrow { cursor: pointer; }
+tr.hrow:hover td { background: var(--sur2); }
+.hdesc { color: var(--txt2); font-size: 11.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+tr.hrow.aberto .hdesc { display: block; }
+@container (max-width: 560px) { table.ht { min-width: 0; } }
+.leg { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 11px; color: var(--txt3); margin-bottom: 12px; }
+.leg i, .tle i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+.k-t { background: var(--blue); } .k-p { background: var(--teal); } .k-a { background: var(--amber); } .k-x { background: var(--green); } .k-r { background: var(--red); }
+.tle { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 8px; padding: 0 0 12px; font-size: 12px; }
+.tle i { margin: 4px 0 0; }
+.tle time { display: block; color: var(--txt3); font-size: 11px; }
+.tle b { display: block; color: var(--txt1); font-weight: 600; }
+
+/* apuração assistida */
+.ap { border: 1px solid var(--brd); border-radius: 10px; padding: 14px 16px; }
+.ap-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.ap-h b { font-size: 13.5px; }
+.alerta { font-size: 12px; background: var(--red-d); border-left: 3px solid var(--red); border-radius: 6px; padding: 8px 10px; margin-top: 10px; color: var(--txt1); }
+
+/* coluna do registro recolhida, no celular */
+.doc-col { border: 1px solid var(--brd); border-radius: 10px; }
+.doc-col > button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; border: 0; background: transparent; color: var(--txt1); font-weight: 700; font-size: 12.5px; cursor: pointer; text-align: left; }
+.doc-col > div { padding: 0 12px 12px; }
+
+/* aviso do mockup */
+.toast { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--txt1); color: var(--sur); font-size: 12.5px; padding: 9px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50; max-width: 90%; text-align: center; }
+.toast.on { opacity: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   A página nunca rola na horizontal: a moldura é reduzida para caber.
+   O que muda de tela para tela dentro da moldura segue o aparelho
+   escolhido (data-d) e a largura do painel (container query). */
+@media (max-width: 640px) {
+  body { padding: 18px 16px 40px; }
+  h1 { font-size: 20px; }
+  .ctl { position: static; }
+}
+</style>
+</head>
+<body>
+<div class="pg">
+<div class="back"><a href="prds.html">← Hub de PRDs</a><a href="proposta-detalhe-rf.html">← Proposta do detalhe do RF</a><a href="proposta-detalhe-rf.html#s06">Decisões</a><a href="proposta-detalhe-df-mockups.html#v=A&amp;tela=d&amp;doc=91">Mockup aprovado do DF</a></div>
+<div class="eyebrow">Proposta · Registro fiscal · mockups clicáveis</div>
+<h1>Detalhe do registro fiscal: hoje e no modelo aprovado do DF</h1>
+<p class="lead">O mesmo registro fiscal como está hoje e no modelo aprovado para o documento, dentro de uma tela do tamanho real e reduzida para caber. Clique nas abas, nos eventos, nos alertas e no RF do outro tributo. O que levaria a outra tela mostra um aviso. Os valores são de exemplo.</p>
+
+<div class="ctl">
+  <div class="grp"><span class="grp-l">Estrutura</span><div class="seg" data-ctl="v"><button data-val="hoje">Hoje</button><button data-val="P">Abas no topo · modelo do DF</button></div></div>
+  <div class="grp"><span class="grp-l">Tela</span><div class="seg" data-ctl="d"><button data-val="d">Desktop 1440</button><button data-val="t">Tablet 768</button><button data-val="m">Celular 375</button></div></div>
+  <div class="grp"><span class="grp-l">Registro</span><div class="seg" data-ctl="rf"><button data-val="181">RF-00000181 · IBS · 2 eventos</button><button data-val="182">RF-00000182 · CBS · 2 eventos</button><button data-val="019">RF-00000019 · IBS · sem evento</button></div></div>
+  <div class="grp"><span class="grp-l">Janela</span><div class="seg" data-ctl="jan"><button data-val="1120">1.120 px, a do DF</button><button data-val="980">980 px, a de hoje</button></div></div>
+</div>
+
+<div class="info"><div class="info-t" id="desc"></div><div class="medidas" id="medidas"></div></div>
+
+<div class="stage" id="stage"><div class="stage-w" id="wrap"><div class="dev" id="dev"></div></div></div>
+<p class="rodape">Mockup para aprovar a estrutura. Os dados, as regras e a API não mudam.</p>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var DIM = { d: [1440, 900], t: [768, 1024], m: [375, 812] };
+  var PARC = [['apr', 'A apropriar'], ['disp', 'Disponível'], ['uti', 'Utilizado'], ['inap', 'Inapropriável'],
+    ['inut', 'Inutilizável', 'ibs'], ['susp', 'Suspenso', 'ibs'], ['presc', 'Prescrito', 'ibs'], ['rest', 'Restabelecido', 'ibs'],
+    ['ress', 'Em pedido de ressarcimento'], ['rdisp', 'Ressarcimento disponível', 'cbs']];
+  var TOM = { conciliado: 'ok', divergente: 'red', aguardando: 'am', executado: 'ok' };
+  var OUTRO = { cbs: 'ibs', ibs: 'cbs' };
+
+  var DOCS = {
+    '91': {
+      mod: 'NF-e', num: '000091', emit: 'Sulpar Implementos S.A.', cnpj: '14.382.976/0001-09', data: '17/05/2026', tipo: 'Entrada',
+      chaveC: '3526…0120', comp: 'mai/2026', total: 1000000,
+      incs: [{ id: 'INC-0074', t: 'DF sem registro na apuração assistida', trib: 'cbs', crit: 'Crítica', val: 80000 },
+        { id: 'INC-0111', t: 'Evento com valor divergente no órgão', trib: 'ibs', crit: 'Média', val: 5000 }],
+      T: {
+        cbs: { sig: 'CBS', org: 'Receita Federal', rf: 'RF-00000182', id: '182', st: 'Disponível', tom: 'ok', apurado: 80000, aplic: -8000, aguard: 8000,
+          p: { disp: 72000 }, apro: '15/08/2026', uso: '—', l54: '01/09/2031', pag: 'Split Payment', dpag: '15/08/2026 09:00', leit: 'consulta diária', ult: '10/11/2026 06:00' },
+        ibs: { sig: 'IBS', org: 'Comitê Gestor', rf: 'RF-00000181', id: '181', st: 'Em pedido de ressarcimento', tom: 'inf', apurado: 100000, aplic: 0, aguard: 10000,
+          p: { ress: 100000 }, apro: '15/08/2026', uso: '—', l54: '—', pag: 'Split Payment', dpag: '15/08/2026 09:00', leit: 'arquivo diário', ult: '10/11/2026 06:12',
+          div: { inc: 'INC-0111', ev: 'EV-000404', val: -10000, prev: 90000, lido: 95000 } }
+      },
+      ev: [
+        { id: 'EV-000404', cod: '211128', nome: 'Aceite de débito por emissão de nota de crédito', autor: 'Destinatário', quando: '25/10/2026 01:36', curto: '25/10',
+          prot: '1412675813300001', alc: 'documento', ef: { cbs: -8000, ibs: -10000 }, fase: 'divergente',
+          cbs: { st: 'conciliado', txt: 'Aplicado em 26/10/2026, na consulta diária da Receita Federal.' }, ibs: { st: 'divergente', txt: 'Esperado R$ 90.000,00, lido R$ 95.000,00. Nada aplicado.' }, inc: 'INC-0111', incT: 'ibs' },
+        { id: 'EV-000403', cod: '211110', nome: 'Solicitação de apropriação de crédito presumido', autor: 'Destinatário', quando: '07/11/2026 23:16', curto: '07/11',
+          prot: '1412675813300002', alc: 'item 1', ef: { cbs: 8000, ibs: 10000 }, fase: 'aguardando',
+          cbs: { st: 'aguardando', txt: 'Na próxima consulta diária da Receita Federal.' }, ibs: { st: 'aguardando', txt: 'No próximo arquivo diário do Comitê Gestor.' }, inc: null }
+      ],
+      alertas: [
+        { sev: 'acao', trib: 'ibs', titulo: 'Evento com valor divergente no órgão', valor: 5000, det: 'Esperado R$ 90.000,00 · o Comitê Gestor leu R$ 95.000,00 · nada aplicado', desde: '10/11/2026', orig: 'Órgão', inc: 'INC-0111', ev: 'EV-000404' },
+        { sev: 'acao', trib: 'cbs', titulo: 'DF sem registro na apuração assistida', valor: 80000, det: 'A Receita Federal não trouxe o documento na apuração assistida depois da espera. Analisar no card.', desde: '20/06/2026', orig: 'Órgão', inc: 'INC-0074' },
+        { sev: 'acomp', trib: 'cbs', titulo: 'ERP sem confirmação', valor: 0, det: 'Webhook credito.ajustado sem resposta do ERP · reenvio automático em andamento, 2ª de 5 tentativas', desde: '26/10/2026', orig: 'ERP' },
+        { sev: 'info', trib: 'ibs', titulo: 'Crédito em pedido de ressarcimento', valor: 100000, det: 'PED-IBS-2026-09 · análise do Comitê Gestor em até 180 dias, até 24/04/2027', desde: '24/09/2026', orig: 'Órgão' }
+      ],
+      pendAgora: [
+        ['ibs', 'erro', 'alerta', 'Evento com valor divergente no órgão · R$ 5.000,00', 'IBS: esperado R$ 90.000,00 × Comitê Gestor R$ 95.000,00', 'INC-0111'],
+        ['cbs', 'erro', 'alerta', 'DF sem registro na apuração assistida · R$ 80.000,00', 'Analisar no card.', 'INC-0074'],
+        ['cbs', 'pending', 'atenção', 'ERP sem confirmação', 'credito.ajustado: reenvio automático em andamento.', null],
+        ['ibs', null, null, '', 'R$ 100.000,00 em pedido de ressarcimento', null]
+      ],
+      mov: {
+        cbs: [['19/05/2026', null, 'A apropriar', 80000, 'Documento registrado', 'Receita Federal · consulta diária', ''],
+          ['15/08/2026', 'A apropriar', 'Disponível', 80000, 'Extinção do débito do fornecedor', 'Receita Federal · consulta diária', 'Limite art. 54: 01/09/2031'],
+          ['26/10/2026', 'Disponível', 'sai do crédito', 8000, 'Ajuste do evento 211128, conciliado', 'Receita Federal · consulta diária', 'EV-000404']],
+        ibs: [['19/05/2026', null, 'A apropriar', 100000, 'Documento registrado', 'Comitê Gestor · arquivo diário', ''],
+          ['15/08/2026', 'A apropriar', 'Disponível', 100000, 'Extinção do débito do fornecedor', 'Comitê Gestor · arquivo diário', 'Limite art. 54: 01/09/2031'],
+          ['24/09/2026', 'Disponível', 'Em pedido de ressarcimento', 100000, 'Pedido de ressarcimento', 'Comitê Gestor', 'PED-IBS-2026-09']]
+      },
+      hist: [
+        ['10/11/2026 06:15', 'ibs', 'plataforma', 'Ocorrência aberta', 'INC-0111 · Evento com valor divergente no órgão · IBS', '—', 'SplitHub'],
+        ['10/11/2026 06:12', 'ibs', 'orgao', 'Leitura do órgão', 'Arquivo diário do Comitê Gestor: R$ 95.000,00 depois do EV-000404; o esperado era R$ 90.000,00. Nada aplicado.', '—', 'Comitê Gestor · arquivo diário'],
+        ['08/11/2026 00:01', 'cbs', 'plataforma', 'Ação planejada', 'Somar o crédito presumido do EV-000403: +R$ 8.000,00 previstos · aguardando a Receita Federal', '—', 'SplitHub'],
+        ['08/11/2026 00:01', 'ibs', 'plataforma', 'Ação planejada', 'Somar o crédito presumido do EV-000403: +R$ 10.000,00 previstos · aguardando o Comitê Gestor', '—', 'SplitHub'],
+        ['26/10/2026 16:30', 'ibs', 'plataforma', 'Ressarcimento', 'Incluído no pedido PED-IBS-2026-09 · protocolo CGIBS-2026-0004826 · R$ 100.000,00 de IBS bloqueado até a decisão · análise em até 180 dias', '—', 'Ana Ferreira'],
+        ['26/10/2026 06:05', 'cbs', 'erp', 'Webhook credito.ajustado', 'Ajuste de −R$ 8.000,00 na CBS · EV-000404 · aguardando a confirmação do ERP', '—', 'SplitHub → ERP · Financeiro'],
+        ['26/10/2026 06:00', 'cbs', 'orgao', 'Ajuste confirmado', 'A Receita Federal conciliou o EV-000404 na consulta diária', 'Disponível R$ 80.000,00 → R$ 72.000,00', 'Receita Federal · consulta diária'],
+        ['25/10/2026 14:00', 'ibs', 'plataforma', 'Ressarcimento', 'Verificação de impedimentos do IBS · nenhum impedimento encontrado', '—', 'SplitHub'],
+        ['25/10/2026 01:40', 'cbs', 'plataforma', 'Evento fiscal recebido', '211128 · Aceite de débito por emissão de nota de crédito · EV-000404 · previsto −R$ 8.000,00', '—', 'SplitHub'],
+        ['25/10/2026 01:40', 'ibs', 'plataforma', 'Evento fiscal recebido', '211128 · Aceite de débito por emissão de nota de crédito · EV-000404 · previsto −R$ 10.000,00', '—', 'SplitHub'],
+        ['30/09/2026 23:50', 'ibs', 'plataforma', 'Ressarcimento', 'Saldo credor de IBS de set/2026 apurado · crédito de R$ 100.000,00', '—', 'SplitHub'],
+        ['30/09/2026 17:10', 'ibs', 'plataforma', 'Ressarcimento', 'Intenção INT-IBS-2026-09 aprovada', '—', 'Rafael Lima'],
+        ['30/09/2026 16:00', 'ibs', 'plataforma', 'Ressarcimento', 'Intenção de ressarcimento INT-IBS-2026-09 declarada · crédito de R$ 100.000,00', '—', 'Ana Ferreira'],
+        ['24/09/2026 15:00', 'ibs', 'orgao', 'Pedido de ressarcimento', 'Pedido de ressarcimento · PED-IBS-2026-09', 'Disponível → Em pedido de ressarcimento R$ 100.000,00', 'Comitê Gestor'],
+        ['15/08/2026 11:35', 'ibs', 'erp', 'Webhook credito.apropriado', 'Crédito de R$ 100.000,00 apropriado · art. 47 da LC 214/2025', '—', 'SplitHub → ERP · Financeiro'],
+        ['15/08/2026 11:35', 'cbs', 'erp', 'Webhook credito.apropriado', 'Crédito de R$ 80.000,00 apropriado · art. 47 da LC 214/2025', '—', 'SplitHub → ERP · Financeiro'],
+        ['15/08/2026 11:30', 'ibs', 'orgao', 'Apropriação', 'Extinção do débito do fornecedor · limite do art. 54 desta fatia: 01/09/2031', 'A apropriar → Disponível R$ 100.000,00', 'Comitê Gestor · arquivo diário'],
+        ['15/08/2026 11:30', 'cbs', 'orgao', 'Apropriação', 'Extinção do débito do fornecedor · limite do art. 54 desta fatia: 01/09/2031', 'A apropriar → Disponível R$ 80.000,00', 'Receita Federal · consulta diária'],
+        ['15/08/2026 09:20', 'ibs', 'erp', 'Comprovante recebido do ERP', 'Comprovante do recolhimento recebido pela integração · IBS · R$ 100.000,00', '—', 'ERP · Financeiro'],
+        ['15/08/2026 09:20', 'cbs', 'erp', 'Comprovante recebido do ERP', 'Comprovante do recolhimento recebido pela integração · CBS · R$ 80.000,00', '—', 'ERP · Financeiro'],
+        ['15/08/2026 09:00', 'ibs', 'financeiro', 'Guia paga', 'Guia IBS quitada · R$ 100.000,00 · via Split Payment', '—', 'Split Payment'],
+        ['15/08/2026 09:00', 'cbs', 'financeiro', 'Guia paga', 'Guia DARF CBS quitada · R$ 80.000,00 · via Split Payment', '—', 'Split Payment'],
+        ['21/05/2026 10:44', 'ibs', 'plataforma', 'Conciliação com a apuração assistida', 'Valores calculados × apuração assistida do Comitê Gestor', '—', 'SplitHub'],
+        ['21/05/2026 10:44', 'cbs', 'plataforma', 'Conciliação com a apuração assistida', 'Valores calculados × apuração assistida da Receita Federal', '—', 'SplitHub'],
+        ['19/05/2026 10:05', 'ibs', 'erp', 'Webhook credito.registrado', 'Crédito de R$ 100.000,00 registrado no documento NF-e 000091', '—', 'SplitHub → ERP · Financeiro'],
+        ['19/05/2026 10:05', 'cbs', 'erp', 'Webhook credito.registrado', 'Crédito de R$ 80.000,00 registrado no documento NF-e 000091', '—', 'SplitHub → ERP · Financeiro'],
+        ['19/05/2026 10:00', 'ibs', 'plataforma', 'Registro fiscal gerado', 'RF-00000181 gerado · IBS · alíquota de transição 2026', 'Apuração do documento → A apropriar R$ 100.000,00', 'SplitHub'],
+        ['19/05/2026 10:00', 'cbs', 'plataforma', 'Registro fiscal gerado', 'RF-00000182 gerado · CBS · alíquota de transição 2026', 'Apuração do documento → A apropriar R$ 80.000,00', 'SplitHub'],
+        ['18/05/2026 09:15', 'doc', 'plataforma', 'Documento validado', 'Schema XML e dados fiscais validados · emitente e destinatário conferidos', '—', 'SplitHub'],
+        ['17/05/2026 08:32', 'doc', 'orgao', 'Documento recebido', 'Documento NF-e 000091 recebido e registrado no SplitHub', '—', 'SEFAZ']
+      ],
+      tl: {
+        ibs: [['10/11/2026 06:12', 'r', 'IBS: valor diferente do previsto', 'O Comitê Gestor mostra R$ 95.000,00 · nada aplicado · EV-000404'],
+          ['08/11/2026 00:01', 'a', 'Somar o crédito presumido ao crédito do IBS', 'Previsto +R$ 10.000,00 · aguardando o Comitê Gestor · EV-000403'],
+          ['07/11/2026 23:16', 't', '211110 · Solicitação de apropriação de crédito presumido autorizada na SEFAZ', 'Destinatário · protocolo 1412675813300002 · EV-000403'],
+          ['25/10/2026 01:36', 't', '211128 · Aceite de débito por emissão de nota de crédito autorizado na SEFAZ', 'Destinatário · protocolo 1412675813300001 · EV-000404'],
+          ['17/05/2026 09:00', 'p', 'Documento recebido', 'NF-e 000091 · competência mai/2026']],
+        cbs: [['08/11/2026 00:01', 'a', 'Somar o crédito presumido ao crédito da CBS', 'Previsto +R$ 8.000,00 · aguardando a Receita Federal · EV-000403'],
+          ['07/11/2026 23:16', 't', '211110 · Solicitação de apropriação de crédito presumido autorizada na SEFAZ', 'Destinatário · protocolo 1412675813300002 · EV-000403'],
+          ['26/10/2026 06:00', 'x', 'CBS: ajuste aplicado', '−R$ 8.000,00 · a Receita Federal conciliou · EV-000404'],
+          ['25/10/2026 01:36', 't', '211128 · Aceite de débito por emissão de nota de crédito autorizado na SEFAZ', 'Destinatário · protocolo 1412675813300001 · EV-000404'],
+          ['17/05/2026 09:00', 'p', 'Documento recebido', 'NF-e 000091 · competência mai/2026']]
+      }
+    },
+    '01': {
+      mod: 'NF-e', num: '000001', emit: 'Agromaq Peças Ltda.', cnpj: '21.450.118/0001-30', data: '02/06/2026', tipo: 'Entrada',
+      chaveC: '3526…0007', comp: 'jun/2026', total: 500000, incs: [],
+      T: {
+        cbs: { sig: 'CBS', org: 'Receita Federal', rf: 'RF-00000020', id: null, st: 'Disponível', tom: 'ok', apurado: 40000, aplic: 0, aguard: 0,
+          p: { disp: 40000 }, apro: '20/07/2026', uso: '—', l54: '01/08/2031', pag: 'Split Payment', dpag: '20/06/2026 14:00', leit: 'consulta diária', ult: '10/11/2026 06:00' },
+        ibs: { sig: 'IBS', org: 'Comitê Gestor', rf: 'RF-00000019', id: '019', st: 'Disponível', tom: 'ok', apurado: 50000, aplic: 0, aguard: 0,
+          p: { disp: 50000 }, apro: '20/07/2026', uso: '—', l54: '01/08/2031', pag: 'Split Payment', dpag: '20/06/2026 14:00', leit: 'arquivo diário', ult: '10/11/2026 06:12' }
+      },
+      ev: [], alertas: [], pendAgora: [],
+      mov: {
+        cbs: [['03/06/2026', null, 'A apropriar', 40000, 'Documento registrado', 'Receita Federal · consulta diária', ''],
+          ['20/07/2026', 'A apropriar', 'Disponível', 40000, 'Extinção do débito do fornecedor', 'Receita Federal · consulta diária', 'Limite art. 54: 01/08/2031']],
+        ibs: [['03/06/2026', null, 'A apropriar', 50000, 'Documento registrado', 'Comitê Gestor · arquivo diário', ''],
+          ['20/07/2026', 'A apropriar', 'Disponível', 50000, 'Extinção do débito do fornecedor', 'Comitê Gestor · arquivo diário', 'Limite art. 54: 01/08/2031']]
+      },
+      hist: [
+        ['20/07/2026 06:05', 'ibs', 'erp', 'Webhook credito.apropriado', 'Crédito de R$ 50.000,00 apropriado · art. 47 da LC 214/2025', '—', 'SplitHub → ERP · Financeiro'],
+        ['20/07/2026 06:05', 'cbs', 'erp', 'Webhook credito.apropriado', 'Crédito de R$ 40.000,00 apropriado · art. 47 da LC 214/2025', '—', 'SplitHub → ERP · Financeiro'],
+        ['20/07/2026 06:00', 'ibs', 'orgao', 'Apropriação', 'Extinção do débito do fornecedor', 'A apropriar → Disponível R$ 50.000,00', 'Comitê Gestor · arquivo diário'],
+        ['20/07/2026 06:00', 'cbs', 'orgao', 'Apropriação', 'Extinção do débito do fornecedor', 'A apropriar → Disponível R$ 40.000,00', 'Receita Federal · consulta diária'],
+        ['20/06/2026 14:00', 'ibs', 'financeiro', 'Guia paga', 'Guia IBS quitada · R$ 50.000,00 · via Split Payment', '—', 'Split Payment'],
+        ['20/06/2026 14:00', 'cbs', 'financeiro', 'Guia paga', 'Guia DARF CBS quitada · R$ 40.000,00 · via Split Payment', '—', 'Split Payment'],
+        ['03/06/2026 10:00', 'ibs', 'plataforma', 'Registro fiscal gerado', 'RF-00000019 gerado · IBS · alíquota de transição 2026', 'Apuração do documento → A apropriar R$ 50.000,00', 'SplitHub'],
+        ['03/06/2026 10:00', 'cbs', 'plataforma', 'Registro fiscal gerado', 'RF-00000020 gerado · CBS · alíquota de transição 2026', 'Apuração do documento → A apropriar R$ 40.000,00', 'SplitHub'],
+        ['02/06/2026 09:15', 'doc', 'plataforma', 'Documento validado', 'Schema XML e dados fiscais validados', '—', 'SplitHub'],
+        ['02/06/2026 09:10', 'doc', 'orgao', 'Documento recebido', 'Documento NF-e 000001 recebido e registrado no SplitHub', '—', 'SEFAZ']
+      ],
+      tl: { ibs: [['02/06/2026 09:10', 'p', 'Documento recebido', 'NF-e 000001 · competência jun/2026']], cbs: [['02/06/2026 09:10', 'p', 'Documento recebido', 'NF-e 000001 · competência jun/2026']] }
+    }
+  };
+  var RFS = { '181': ['91', 'ibs'], '182': ['91', 'cbs'], '019': ['01', 'ibs'] };
+
+  var DESC = {
+    hoje: '<b>Hoje.</b> Como está no app. A coluna da direita tem o quadro do tributo, os ajustes e, só depois, três abas: Movimentos de valor, Histórico do ciclo e Apuração assistida. Os pontos de atenção ficam no topo do histórico. O RF ainda não mostra os eventos fiscais, a linha do tempo nem os alertas do lote 2, e não tem link para o documento nem para o RF do outro tributo.',
+    P: '<b>Abas no topo, no modelo aprovado do DF.</b> A coluna da direita é só abas, presas no topo, e o detalhe abre sempre na Partição, que é o quadro do tributo. <b>Alertas</b> traz só o que é deste tributo e do documento. <b>Eventos e ajustes</b> mostra os eventos do documento com o efeito e a confirmação só deste órgão. <b>Movimentos</b>, <b>Histórico</b> e <b>Apuração</b> ficam como hoje, e a <b>Linha do tempo</b> chega ao RF filtrada pelo tributo. Na coluna da esquerda, links para o documento e para o RF do outro tributo.'
+  };
+
+  var S = { v: 'P', d: 'd', rf: '181', jan: '1120', tab: null, ev: null, docAb: false, hTrib: 'todos', hOrd: 'desc', hOrig: { orgao: 1, financeiro: 1, plataforma: 1, erp: 1 }, hAb: {}, alTrib: 'todos' };
+  var dev = document.getElementById('dev'), wrap = document.getElementById('wrap'), stage = document.getElementById('stage');
+  var esc = 1;
+
+  /* ── formatação ── */
+  function brl(v) { return 'R$ ' + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function sv(v) { return v ? (v > 0 ? '+' : '−') + brl(v) : '—'; }
+  function vv(v) { return v ? brl(v) : '—'; }
+  function tg(t, tom) { return '<span class="tg ' + (tom || '') + '">' + t + '</span>'; }
+  function fd(l, v) { return '<div class="fd"><span>' + l + '</span><b>' + v + '</b></div>'; }
+  function aviso(msg, txt, cls) { return '<button class="' + (cls || 'lk') + '" data-act="toast" data-msg="' + msg + '">' + txt + '</button>'; }
+  function soma(t) { var s = 0; for (var k in t.p) s += t.p[k]; return s; }
+  function vazio(t, d) { return '<div class="vazio"><b>' + t + '</b>' + d + '</div>'; }
+  function R() { var r = RFS[S.rf], d = DOCS[r[0]]; return { d: d, k: r[1], t: d.T[r[1]] }; }
+  function doTrib(d, k) { return function (x) { return x.trib === k || x.trib === 'doc'; }; }
+  var TRIB = { cbs: 'CBS', ibs: 'IBS', doc: 'DF' };
+
+  /* ── coluna da esquerda ── */
+  function incs(d, k) {
+    var L = d.incs.filter(doTrib(d, k));
+    return '<div class="lb">Inconsistências vinculadas</div>' + (L.length ? L.map(function (i) {
+      return '<button class="inc" data-act="toast" data-msg="No app, abre o card da ocorrência ' + i.id + '."><span class="inc-h"><span>' + i.id + '</span>' + tg('Aberta', 'am') +
+        '</span><span class="inc-t">' + i.t + '</span><span class="inc-t mut">' + i.crit + ' · ' + brl(i.val) + '</span></button>';
+    }).join('') : '<p class="vz">Nenhuma.</p>');
+  }
+  function colEsqHoje(d, k, t) {
+    return '<div class="lb">Dados do registro</div>' + fd('ID do RF', t.rf) + fd('Tipo fiscal', t.sig) + fd('Apurado', brl(t.apurado)) +
+      '<div class="dv"></div><div class="lb">Documento fiscal</div>' + fd('NF vinculada', d.mod + ' ' + d.num) + fd('Emitente', d.emit) + fd('CNPJ', d.cnpj) +
+      fd('Data NF', d.data) + fd('Valor total NF', brl(d.total)) + fd('Tipo', d.tipo) +
+      '<div class="dv"></div>' + fd('Método pagamento', t.pag) + fd('Data pagamento', t.dpag) + '<div class="dv"></div>' + incs(d, k);
+  }
+  function irmao(d, k) {
+    var o = d.T[OUTRO[k]];
+    var corpo = '<span><b>' + o.sig + ' · ' + o.org + '</b><small>' + o.rf + ' · ' + o.st + ' · ' + brl(o.apurado) + '</small></span><span class="lk">Abrir →</span>';
+    return o.id ? '<button class="irm" data-act="rf" data-rf="' + o.id + '">' + corpo + '</button>'
+      : '<button class="irm" data-act="toast" data-msg="No app, abre o registro fiscal ' + o.rf + '.">' + corpo + '</button>';
+  }
+  function colEsq(d, k, t) {
+    return '<div class="lb">Registro fiscal</div>' + fd('ID do RF', t.rf) + fd('Tributo', t.sig + ' · ' + t.org) + fd('Apurado', brl(t.apurado)) + fd('Status', tg(t.st, t.tom)) +
+      '<div class="dv"></div><div class="lb">Documento fiscal</div>' +
+      fd('Documento', aviso('No app, abre o detalhe do documento ' + d.mod + ' ' + d.num + ', na Partição.', d.mod + ' ' + d.num + ' →')) +
+      fd('Emitente', d.emit) + fd('CNPJ', d.cnpj) + fd('Data', d.data) + fd('Valor total', brl(d.total)) + fd('Tipo', d.tipo) +
+      '<div class="dv"></div><div class="lb">Pagamento</div>' + fd('Método', t.pag) + fd('Data', t.dpag) +
+      '<div class="dv"></div><div class="lb">O outro tributo do documento</div>' + irmao(d, k) +
+      '<div class="dv"></div>' + incs(d, k);
+  }
+  function docCol(d, k, t) {
+    return '<div class="doc-col"><button data-act="doc"><span>Registro, documento e inconsistências</span><span>' + (S.docAb ? '▴' : '▾') + '</span></button>' +
+      (S.docAb ? '<div>' + colEsq(d, k, t) + '</div>' : '') + '</div>';
+  }
+
+  /* ── partição do tributo ── */
+  function quadro(d, k, t) {
+    function r(l, a, cls) { return '<tr class="' + (cls || '') + '"><td>' + l + '</td><td>' + a + '</td></tr>'; }
+    function g(x) { return '<tr class="g"><td colspan="2">' + x + '</td></tr>'; }
+    var h = '<div class="tw"><table class="pt"><thead><tr><th></th><th>' + t.sig + '<small>' + t.org + ' · ' + t.rf + '</small></th></tr></thead><tbody>';
+    h += g('Valor') + r('Tributo apurado', brl(t.apurado)) + g('Partição do crédito');
+    PARC.forEach(function (p) { h += r(p[1], p[2] === k ? 'n/i' : vv(t.p[p[0]] || 0)); });
+    h += r('Soma das parcelas', '<span class="okv">✓ ' + brl(soma(t)) + '</span>', 'tot');
+    h += g('Situação') + r('Status', t.st) + r('Marcas', '—');
+    h += g('Datas') + r('Apropriação', t.apro) + r('Último uso', t.uso) + r('Limite art. 54 mais próximo', t.l54);
+    h += g('Recolhimento e leitura') + r('Pagamento', t.pag) + r('Leitura do órgão', t.leit);
+    return h + '</tbody></table></div><p class="nota">n/i: parcela não informada pelo ' + t.org + '.</p>';
+  }
+
+  /* ── ajustes e eventos deste tributo ── */
+  function ajustes(d, k, t) {
+    var n = d.ev.filter(function (e) { return e[k].st === 'conciliado'; }).length;
+    var h = '<div class="aj-h"><div class="lb m0">Ajustes do documento no ' + t.sig + ' · ' + n + '</div>' +
+      aviso('No app, abre a gaveta Emitir evento ou nota do documento ' + d.mod + ' ' + d.num + '.', 'Emitir evento ou nota', 'bt pri') + '</div>';
+    h += '<div class="tw"><table class="rsp"><thead><tr><th>Tributo</th><th class="n">No XML</th><th class="n">Ajustes aplicados</th><th class="n">Aguardando o órgão</th><th class="n">Ajustado</th></tr></thead><tbody>' +
+      '<tr><td data-l="Tributo"><b>' + t.sig + '</b> · ' + t.org + '</td><td class="n" data-l="No XML">' + brl(t.apurado) + '</td><td class="n" data-l="Ajustes aplicados">' + sv(t.aplic) +
+      '</td><td class="n" data-l="Aguardando o órgão">' + sv(t.aguard) + '</td><td class="n" data-l="Ajustado"><b>' + brl(t.apurado + t.aplic) + '</b></td></tr></tbody></table></div>';
+    if (t.div) h += '<p class="nota">' + sv(t.div.val) + ' do ' + t.div.ev + ' está divergente no ' + t.org + ' e nada foi aplicado · ' + t.div.inc + '.</p>';
+    if (!d.ev.length) h += '<p class="nota">Nenhum ajuste por evento ou nota neste documento.</p>';
+    return h;
+  }
+  function evDetalhe(d, k, t, e) {
+    var o = e[k];
+    return '<tr class="evd"><td colspan="4"><div class="evd-g"><div><span>Autor · autorização</span>' + e.autor + ' · ' + e.quando + ' · protocolo ' + e.prot +
+      '</div><div><span>Alcance</span>' + e.alc + '</div></div><div class="evd-c"><b>' + t.sig + ' · ' + t.org + '</b> ' + tg(o.st, TOM[o.st]) + '<p>' + sv(e.ef[k]) + ' previsto. ' + o.txt + '</p>' +
+      (e.inc && e.incT === k ? '<p>' + aviso('No app, abre o card da ocorrência ' + e.inc + '.', e.inc + ' · ' + t.sig) + '</p>' : '') + '</div>' +
+      '<div class="evd-a">' + aviso('No app, abre o ' + e.id + ' na esteira de Eventos fiscais.', 'Abrir na esteira', 'bt') +
+      aviso('No app, abre o detalhe do documento na aba Eventos e ajustes, com a CBS e o IBS lado a lado.', 'Ver no documento', 'bt') + '</div></td></tr>';
+  }
+  function eventos(d, k, t) {
+    if (!d.ev.length) return vazio('Nenhum evento fiscal neste documento.', 'Os eventos de terceiros aparecem aqui quando chegam da SEFAZ; os do produto, quando alguém emite pelo botão acima.');
+    var oc = d.ev.filter(function (e) { return e.inc && e.incT === k; }).length;
+    var h = '<div class="evcab">Os eventos são do documento ' + d.mod + ' ' + d.num + '. Aqui aparecem o efeito no ' + t.sig + ' e a confirmação do ' + t.org + ' · ' + d.ev.length + ' eventos · ' + oc + ' ocorrência' + (oc === 1 ? '' : 's') + ' do ' + t.sig + '</div>';
+    h += '<div class="tw"><table class="rsp"><thead><tr><th>Evento</th><th>Efeito previsto no ' + t.sig + '</th><th data-c="org">' + t.sig + ' · ' + t.org + '</th><th>Ocorrência</th></tr></thead><tbody>';
+    d.ev.forEach(function (e) {
+      var on = S.ev === e.id, o = e[k];
+      h += '<tr class="evr' + (on ? ' on' : '') + '" data-act="ev" data-id="' + e.id + '"><td data-l="Evento"><b>' + e.cod + '</b> ' + e.nome + '<small>' + e.id + ' · ' + e.autor + ' · ' + e.curto + ' · ' + e.alc + '</small></td>' +
+        '<td class="nw" data-l="Efeito previsto no ' + t.sig + '">' + sv(e.ef[k]) + '</td><td data-l="' + t.sig + ' · ' + t.org + '">' + tg(o.st, TOM[o.st]) +
+        (o.st === 'divergente' && t.div ? '<small>previsto ' + brl(t.div.prev) + ' · lido ' + brl(t.div.lido) + '</small>' : '') + '</td><td class="nw" data-l="Ocorrência">' +
+        (e.inc && e.incT === k ? aviso('No app, abre o card da ocorrência ' + e.inc + '.', e.inc) : '—') + '</td></tr>';
+      if (on) h += evDetalhe(d, k, t, e);
+    });
+    return h + '</tbody></table></div><p class="nota">Clique numa linha para abrir o detalhe do evento no ' + t.org + '.</p>';
+  }
+
+  /* ── movimentos, histórico, alertas, linha do tempo e apuração ── */
+  function movimentos(d, k) {
+    var L = d.mov[k];
+    return '<div class="tw"><table class="rsp"><thead><tr><th>Reconhecido em</th><th>De → para</th><th class="n">Valor</th><th>Causa · fonte · vínculo</th></tr></thead><tbody>' +
+      L.map(function (m) {
+        return '<tr><td class="nw" data-l="Reconhecido em">' + m[0] + '</td><td data-l="De → para">' + (m[1] || '—') + ' <span class="seta">→</span> <b>' + m[2] + '</b></td><td class="n" data-l="Valor">' + brl(m[3]) +
+          '</td><td data-l="Causa · fonte · vínculo"><b>' + m[4] + '</b><small>' + m[5] + (m[6] ? ' · ' + m[6] : '') + '</small></td></tr>';
+      }).join('') + '</tbody></table></div><p class="nota">Cada linha move uma quantia de uma parcela para outra. A data é a do reconhecimento pelo órgão.</p>';
+  }
+  var ORIG = [['orgao', 'Órgão'], ['financeiro', 'Financeiro'], ['plataforma', 'SplitHub'], ['erp', 'ERP']];
+  function chave(ts) { return ts.slice(6, 10) + ts.slice(3, 5) + ts.slice(0, 2) + ts.slice(11); }
+  function histDo(d, k) { return d.hist.filter(function (r) { return r[1] === k || r[1] === 'doc'; }); }
+  function hist(d, k, t) {
+    var base = histDo(d, k), nOrig = {}, nMov = 0;
+    base.forEach(function (r) { nOrig[r[2]] = (nOrig[r[2]] || 0) + 1; if (r[5] !== '—') nMov++; });
+    var pend = d.pendAgora.filter(function (p) { return p[0] === k || p[0] === 'doc'; });
+    var nAt = pend.filter(function (p) { return p[1]; }).length;
+    var hoje = S.v === 'hoje';
+    var h = '<div class="hsum">' + base.length + ' registros · ' + nMov + ' movimentos de valor · ' + (nOrig.erp || 0) + ' integrações com o ERP' +
+      (hoje ? ' · ' + (nAt ? '<span class="alert-t">' + nAt + ' pontos de atenção</span>' : 'nenhum ponto de atenção') : '') + '</div>';
+    if (hoje && pend.length) {
+      h += '<div class="pend"><div class="lb">Situação agora · ' + nAt + ' pontos de atenção</div>' + pend.map(function (p) {
+        return '<div class="pend-i"><span class="tb ' + p[0] + '">' + TRIB[p[0]] + '</span>' + (p[1] ? '<span class="st ' + p[1] + '">' + p[2] + '</span>' : '') +
+          '<span>' + (p[3] ? '<b>' + p[3] + '</b> ' : '') + '<span class="mut">' + (p[3] ? '— ' : '') + p[4] + '</span>' +
+          (p[5] ? ' ' + aviso('No app, abre o card da ocorrência ' + p[5] + '.', p[5] + ' · Aberta', 'ref') : '') + '</span></div>';
+      }).join('') + '</div>';
+    }
+    h += '<div class="htool">' + (hoje ? '' : '<span class="sg">' + [['todos', 'Todos'], [k, t.sig], ['doc', 'DF']].map(function (x) {
+      return '<button class="' + (S.hTrib === x[0] ? 'on' : '') + '" data-act="htrib" data-v="' + x[0] + '">' + x[1] + '</button>';
+    }).join('') + '</span>') + '<span class="chips">' + ORIG.map(function (o) {
+      return '<button class="chip' + (S.hOrig[o[0]] ? ' on' : '') + '" data-act="horig" data-v="' + o[0] + '">' + o[1] + ' · ' + (nOrig[o[0]] || 0) + '</button>';
+    }).join('') + '</span><span class="sg"><button class="' + (S.hOrd === 'desc' ? 'on' : '') + '" data-act="hord" data-v="desc">Recentes primeiro</button><button class="' +
+      (S.hOrd === 'asc' ? 'on' : '') + '" data-act="hord" data-v="asc">Antigos primeiro</button></span>' +
+      aviso('No app, baixa o histórico do registro em CSV.', 'Exportar CSV', 'bt') + '</div>';
+    var linhas = base.map(function (r, i) { return [r, i]; }).filter(function (x) {
+      return (hoje || S.hTrib === 'todos' || x[0][1] === S.hTrib) && S.hOrig[x[0][2]];
+    });
+    linhas.sort(function (a, b) { var c = chave(a[0][0]) < chave(b[0][0]) ? -1 : chave(a[0][0]) > chave(b[0][0]) ? 1 : a[1] - b[1]; return S.hOrd === 'asc' ? c : -c; });
+    var nomeOrig = {}; ORIG.forEach(function (o) { nomeOrig[o[0]] = o[1]; });
+    h += '<div class="tw"><table class="rsp ht"><thead><tr><th>Data e hora</th><th>Tributo</th><th>Origem</th><th>Evento</th><th>Valor e efeito</th><th>Quem registrou</th></tr></thead><tbody>' +
+      (linhas.length ? linhas.map(function (x) {
+        var r = x[0], ab = S.hAb[x[1]];
+        return '<tr class="hrow' + (ab ? ' aberto' : '') + '" data-act="hrow" data-i="' + x[1] + '"><td class="nw mut" data-l="Data e hora">' + r[0] + '</td><td data-l="Tributo"><span class="tb ' + r[1] + '">' + TRIB[r[1]] +
+          '</span></td><td class="mut" data-l="Origem">' + nomeOrig[r[2]] + '</td><td data-l="Evento"><b>' + r[3] + '</b><div class="hdesc">' + r[4] + '</div></td><td data-l="Valor e efeito">' +
+          (r[5] === '—' ? '<span class="mut">—</span>' : r[5]) + '</td><td class="mut" data-l="Quem registrou">' + r[6] + '</td></tr>';
+      }).join('') : '<tr><td colspan="6" class="mut">Nenhum registro com estes filtros.</td></tr>') + '</tbody></table></div>';
+    return h + '<p class="nota">' + linhas.length + ' de ' + base.length + ' registros. Clique numa linha para ler a descrição inteira.</p>';
+  }
+  var SEV = [['acao', 'Exigem ação', 'Ocorrências abertas: alguém precisa analisar e decidir.'],
+    ['acomp', 'Em acompanhamento', 'O SplitHub está resolvendo sozinho. Vira ação se não resolver.'],
+    ['info', 'Informativos', 'Situações normais do ciclo que vale saber.']];
+  function alDo(d, k) { return d.alertas.filter(doTrib(d, k)); }
+  function rotAl(d, k) { var n = alDo(d, k).filter(function (a) { return a.sev !== 'info'; }).length; return 'Alertas' + (n ? '<span class="bd">' + n + '</span>' : ''); }
+  function alertas(d, k, t) {
+    var L = alDo(d, k);
+    if (!L.length) return vazio('Nenhum alerta neste registro.', 'Quando algo pedir atenção no ' + t.sig + ', como uma divergência no ' + t.org + ', uma ocorrência aberta ou uma integração sem resposta, aparece aqui. Os alertas do ' + d.T[OUTRO[k]].sig + ' ficam no RF dele.');
+    var temDoc = L.some(function (a) { return a.trib === 'doc'; });
+    var h = '<div class="htool"><span class="al-sum">' + SEV.map(function (g) {
+      var n = L.filter(function (a) { return a.sev === g[0]; }).length;
+      return n ? '<span class="al-p ' + g[0] + '">' + n + ' ' + (n === 1 ? g[1].replace('Exigem', 'Exige').replace('Informativos', 'Informativo') : g[1]).toLowerCase() + '</span>' : '';
+    }).join('') + '</span>' + (temDoc ? '<span class="sg">' + [['todos', 'Todos'], [k, t.sig], ['doc', 'DF']].map(function (x) {
+      return '<button class="' + (S.alTrib === x[0] ? 'on' : '') + '" data-act="altrib" data-v="' + x[0] + '">' + x[1] + '</button>';
+    }).join('') + '</span>' : '') + '</div>';
+    var vis = L.filter(function (a) { return S.alTrib === 'todos' || a.trib === S.alTrib; });
+    SEV.forEach(function (g) {
+      var it = vis.filter(function (a) { return a.sev === g[0]; });
+      if (!it.length) return;
+      h += '<div class="alg"><div class="alg-h ' + g[0] + '">' + g[1] + ' · ' + it.length + '</div><p class="alg-d">' + g[2] + '</p>' + it.map(function (a) {
+        return '<div class="al ' + a.sev + '"><div class="al-h"><span class="tb ' + a.trib + '">' + TRIB[a.trib] + '</span><span class="al-o">' + (a.trib === 'doc' ? 'Documento' : t.org) + '</span><b>' + a.titulo + '</b>' +
+          (a.valor ? '<span class="al-v">' + brl(a.valor) + '</span>' : '') + '</div><div class="al-d">' + a.det + '</div><div class="al-m">Desde ' + a.desde + ' · origem ' + a.orig + '</div><div class="al-a">' +
+          (a.inc ? aviso('No app, abre o card da ocorrência ' + a.inc + '.', a.inc + ' · Aberta', 'ref') : '') +
+          (a.ev ? '<button class="bt" data-act="alev" data-id="' + a.ev + '">Ver o evento ' + a.ev + '</button>' : '') +
+          '<button class="bt" data-act="alhist" data-v="' + a.trib + '">Ver no histórico</button></div></div>';
+      }).join('') + '</div>';
+    });
+    return h + '<p class="nota">Só os alertas do ' + t.sig + ' e os do documento. Os do ' + d.T[OUTRO[k]].sig + ' ficam no RF dele.</p>';
+  }
+  function linha(d, k) {
+    var h = '<div class="leg"><span><i class="k-t"></i>Evento fiscal · ato de terceiro</span><span><i class="k-p"></i>Evento do produto</span><span><i class="k-a"></i>Ação planejada</span><span><i class="k-x"></i>Ação executada</span><span><i class="k-r"></i>Divergência</span></div>';
+    return h + d.tl[k].map(function (r) { return '<div class="tle"><i class="k-' + r[1] + '"></i><div><time>' + r[0] + '</time><b>' + r[2] + '</b>' + r[3] + '</div></div>'; }).join('');
+  }
+  function apur(d, k, t) {
+    var h = '<div class="ap"><div class="ap-h"><b>Apuração assistida · ' + t.sig + ' · ' + t.org + '</b>' + tg(t.rf, 'inf') + '</div>' +
+      fd('Competência', d.comp) + fd('Status no órgão', t.st) + PARC.filter(function (p) { return t.p[p[0]]; }).map(function (p) { return fd(p[1], brl(t.p[p[0]])); }).join('') +
+      fd('Leitura', t.leit) + fd('Última leitura', t.ult);
+    if (t.div) h += '<div class="alerta">O ' + t.org + ' leu ' + brl(t.div.lido) + ' depois do ' + t.div.ev + '; o esperado era ' + brl(t.div.prev) + '. Nada foi aplicado. ' + aviso('No app, abre o card da ocorrência ' + t.div.inc + '.', t.div.inc) + '</div>';
+    return h + '</div>';
+  }
+
+  /* ── abas ── */
+  function abas(lista, cur, quebra) {
+    return '<div class="abas' + (quebra ? ' quebra' : '') + '" data-abas>' + lista.map(function (x) {
+      return '<button class="ab' + (x[0] === cur ? ' on' : '') + '" data-act="tab" data-tab="' + x[0] + '">' + x[1] + '</button>';
+    }).join('') + '</div>';
+  }
+  function conteudo(d, k, t, tab) {
+    if (tab === 'part') return quadro(d, k, t);
+    if (tab === 'al') return alertas(d, k, t);
+    if (tab === 'evaj') return ajustes(d, k, t) + '<div class="dv"></div>' + eventos(d, k, t);
+    if (tab === 'mov') return movimentos(d, k);
+    if (tab === 'hist') return hist(d, k, t);
+    if (tab === 'ap') return apur(d, k, t);
+    if (tab === 'tl') return linha(d, k);
+    return '';
+  }
+
+  /* ── as duas estruturas ── */
+  function corpo() {
+    var x = R(), d = x.d, k = x.k, t = x.t, tab, lista;
+    var nH = histDo(d, k).length;
+    if (S.v === 'hoje') {
+      tab = S.tab || 'mov';
+      lista = [['mov', 'Movimentos de valor'], ['hist', 'Histórico do ciclo · ' + nH], ['ap', 'Apuração assistida · ' + t.sig]];
+      return '<div class="c2"><div class="colL" data-sc="L">' + colEsqHoje(d, k, t) + '</div><div class="colR" data-sc="R">' + quadro(d, k, t) +
+        '<div class="blk">' + ajustes(d, k, t) + '</div><div class="abox">' + abas(lista, tab, true) + '<div class="apn">' + conteudo(d, k, t, tab) + '</div></div></div></div>';
+    }
+    tab = S.tab || 'part';
+    lista = [['part', 'Partição'], ['al', rotAl(d, k)], ['evaj', d.ev.length ? 'Eventos e ajustes · ' + d.ev.length : 'Eventos e ajustes'], ['mov', 'Movimentos'],
+      ['hist', 'Histórico · ' + nH], ['ap', 'Apuração · ' + t.sig], ['tl', 'Linha do tempo']];
+    var dir = abas(lista, tab) + '<div class="apn">' + conteudo(d, k, t, tab) + '</div>';
+    if (S.d === 'm') return '<div class="c1m">' + docCol(d, k, t) + '<div class="blk">' + dir + '</div></div>';
+    return '<div class="c2"><div class="colL" data-sc="L">' + colEsq(d, k, t) + '</div><div class="colR" data-sc="R">' + dir + '</div></div>';
+  }
+
+  function tela() {
+    var x = R(), d = x.d, t = x.t;
+    var fundo = '<div class="app"><div class="app-side"><div class="logo">SplitHub</div>' +
+      ['Painel', 'Crédito', 'Débito', 'Pagamentos', 'Conciliação', 'Inconsistências', 'Eventos fiscais'].map(function (s) { return '<div class="si' + (s === 'Crédito' ? ' on' : '') + '">' + s + '</div>'; }).join('') +
+      '</div><div class="app-main"><div class="crumb">Crédito › <b>Registros Fiscais</b></div><div class="kpis"><div class="kpi"></div><div class="kpi"></div><div class="kpi"></div><div class="kpi"></div></div>' +
+      '<div class="lst">' + new Array(14).join('<div></div>') + '</div></div></div>';
+    var cab = '<div class="mh"><div class="mh-ic">📋</div><div class="mh-t"><b>Registro Fiscal · ' + t.rf + '</b><span>' + d.mod + ' ' + d.num + ' · ' + d.emit + '</span></div><div class="mh-a">' +
+      aviso('No app, fecha o detalhe e volta à lista.', '✕', 'bt') + '</div></div>';
+    var larga = S.v === 'P' && S.jan === '1120';
+    return fundo + '<div class="scrim"><div class="modal' + (larga ? ' doc-w' : '') + '">' + cab + '<div class="mb" data-sc="B">' + corpo() + '</div></div></div><div class="toast" id="toast"></div>';
+  }
+
+  /* ── desenho, rolagem e medidas ── */
+  function rolaveis() { return [].slice.call(dev.querySelectorAll('[data-sc]')); }
+  function render(manterRolagem) {
+    var antes = {};
+    if (manterRolagem) rolaveis().forEach(function (el) { antes[el.getAttribute('data-sc')] = el.scrollTop; });
+    dev.setAttribute('data-d', S.d);
+    dev.innerHTML = tela();
+    if (manterRolagem) rolaveis().forEach(function (el) { var k = el.getAttribute('data-sc'); if (antes[k]) el.scrollTop = antes[k]; });
+    else medir();
+    medirAbas();
+    marcar();
+  }
+  function rolador(el) {
+    var p = el.parentElement;
+    while (p && p !== dev) {
+      if (p.hasAttribute('data-sc')) { var o = getComputedStyle(p).overflowY; if (o === 'auto' || o === 'scroll') return p; }
+      p = p.parentElement;
+    }
+    return null;
+  }
+  var med = { topo: '', linha: '' };
+  function medir() {
+    var ab = dev.querySelector('[data-abas]');
+    med.topo = '';
+    if (!ab) return;
+    var sc = rolador(ab);
+    if (!sc) return;
+    var top = Math.round((ab.getBoundingClientRect().top - sc.getBoundingClientRect().top) / esc + sc.scrollTop);
+    var vis = sc.clientHeight;
+    med.topo = top < vis - 30
+      ? '<span class="md ok">Abas à vista ao abrir: a ' + top + ' px do topo, numa área de ' + vis + ' px</span>'
+      : '<span class="md mau">Abas abaixo da dobra: a ' + top + ' px do topo, numa área de ' + vis + ' px</span>';
+  }
+  function medirAbas() {
+    med.linha = '';
+    var ab = dev.querySelector('[data-abas]');
+    if (!ab || S.v !== 'P') return;
+    var n = ab.children.length, sobra = ab.scrollWidth - ab.clientWidth;
+    if (sobra <= 1) med.linha = '<span class="md ok">As ' + n + ' abas cabem numa linha (' + ab.clientWidth + ' px)</span>';
+    else if (S.d === 'd') med.linha = '<span class="md mau">As ' + n + ' abas não cabem: faltam ' + sobra + ' px, e as últimas ficam para a rolagem lateral</span>';
+    else med.linha = '<span class="md">A barra rola de lado, como no detalhe do DF</span>';
+  }
+  function marcar() {
+    document.getElementById('desc').innerHTML = DESC[S.v];
+    document.getElementById('medidas').innerHTML = med.topo + med.linha;
+    [].forEach.call(document.querySelectorAll('[data-ctl]'), function (seg) {
+      var k = seg.getAttribute('data-ctl');
+      [].forEach.call(seg.children, function (b) {
+        b.classList.toggle('on', b.getAttribute('data-val') === S[k]);
+        if (k === 'jan') b.disabled = !(S.v === 'P' && S.d === 'd');
+      });
+    });
+  }
+  function escala() {
+    var dim = DIM[S.d];
+    esc = Math.min(1, stage.clientWidth / dim[0]);
+    wrap.style.setProperty('--dw', dim[0]);
+    wrap.style.setProperty('--dh', dim[1]);
+    wrap.style.setProperty('--s', esc);
+  }
+  function hash() {
+    try { history.replaceState(null, '', '#v=' + S.v + '&tela=' + S.d + '&rf=' + S.rf + (S.jan === '980' ? '&jan=980' : '')); } catch (e) {}
+  }
+  function lerHash() {
+    location.hash.replace('#', '').split('&').forEach(function (p) {
+      var kv = p.split('=');
+      if (kv[0] === 'v' && DESC[kv[1]]) S.v = kv[1];
+      if (kv[0] === 'tela' && DIM[kv[1]]) S.d = kv[1];
+      if (kv[0] === 'rf' && RFS[kv[1]]) S.rf = kv[1];
+      if (kv[0] === 'jan' && (kv[1] === '980' || kv[1] === '1120')) S.jan = kv[1];
+    });
+  }
+  function limpar() {
+    S.tab = null; S.ev = null; S.docAb = false;
+    S.hTrib = 'todos'; S.hOrd = 'desc'; S.hOrig = { orgao: 1, financeiro: 1, plataforma: 1, erp: 1 }; S.hAb = {}; S.alTrib = 'todos';
+  }
+  var tt;
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('on');
+    clearTimeout(tt); tt = setTimeout(function () { t.classList.remove('on'); }, 2400);
+  }
+
+  /* ── cliques ── */
+  document.querySelector('.ctl').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-val]');
+    if (!b || b.disabled) return;
+    S[b.parentElement.getAttribute('data-ctl')] = b.getAttribute('data-val');
+    limpar(); escala(); hash(); render(false);
+  });
+  dev.addEventListener('click', function (e) {
+    var a = e.target.closest('[data-act]');
+    if (!a || !dev.contains(a)) return;
+    var act = a.getAttribute('data-act');
+    if (act === 'toast') { e.stopPropagation(); toast(a.getAttribute('data-msg')); return; }
+    if (act === 'tab') {
+      S.tab = a.getAttribute('data-tab'); S.ev = null;
+      render(true);
+      var ab = dev.querySelector('[data-abas]'), sc = ab && rolador(ab);
+      if (sc && !ab.classList.contains('quebra')) {
+        var apn = ab.nextElementSibling;
+        var topo = (apn.getBoundingClientRect().top - sc.getBoundingClientRect().top) / esc + sc.scrollTop - ab.offsetHeight;
+        if (sc.scrollTop > topo) sc.scrollTop = topo;
+      }
+      return;
+    }
+    if (act === 'rf') { S.rf = a.getAttribute('data-rf'); limpar(); hash(); render(false); toast('Abriu o ' + R().t.rf + ', o registro do outro tributo.'); return; }
+    if (act === 'ev') { var id = a.getAttribute('data-id'); S.ev = S.ev === id ? null : id; render(true); return; }
+    if (act === 'doc') { S.docAb = !S.docAb; render(true); return; }
+    if (act === 'htrib') { S.hTrib = a.getAttribute('data-v'); render(true); return; }
+    if (act === 'horig') { var o = a.getAttribute('data-v'); S.hOrig[o] = S.hOrig[o] ? 0 : 1; render(true); return; }
+    if (act === 'altrib') { S.alTrib = a.getAttribute('data-v'); render(true); return; }
+    if (act === 'alev') { S.tab = 'evaj'; S.ev = a.getAttribute('data-id'); render(false); var lin = dev.querySelector('tr.evr.on'); if (lin) lin.scrollIntoView({ block: 'nearest' }); return; }
+    if (act === 'alhist') { S.tab = 'hist'; S.hTrib = a.getAttribute('data-v'); render(false); return; }
+    if (act === 'hord') { S.hOrd = a.getAttribute('data-v'); render(true); return; }
+    if (act === 'hrow') { var hi = a.getAttribute('data-i'); S.hAb[hi] = !S.hAb[hi]; render(true); }
+  });
+  window.addEventListener('resize', function () { escala(); });
+  /* a barra de rolagem da página aparece depois do primeiro desenho e estreita o palco */
+  if (window.ResizeObserver) new ResizeObserver(function () { escala(); }).observe(stage);
+
+  lerHash(); escala(); render(false);
+})();
+</script>
+</body>
+</html>
