@@ -57,9 +57,8 @@ window.shFeature && shFeature.registrar({"id": "AV-RF", "nome": "Detalhe do regi
     var P = p(), t = P.trib(rf);
     var o = (nf.registrosFiscais || []).filter(function (x) { return x.id !== rf.id && P.trib(x) !== t; })[0];
     if (!o) return '';
-    var T = P.trib(o).toUpperCase();
     return '<div class="mbox-divider"></div><div class="mbox-section-label">O outro tributo do documento</div>'
-      + '<div class="rfa-irm"><span>' + P.chipTrib(P.trib(o)) + ' <span class="pp-mono">' + P.esc(o.id) + '</span> <span class="pp-mut">' + T + ' · ' + ORG[P.trib(o)] + '</span></span>'
+      + '<div class="rfa-irm"><span>' + P.chipTrib(P.trib(o)) + ' <span class="pp-mono">' + P.esc(o.id) + '</span> <span class="pp-mut">' + ORG[P.trib(o)] + '</span></span>'
       + '<button class="rfa-lk" onclick="window.shDetalheRF.abrirRF(\'' + P.esc(o.id) + '\')">Abrir →</button></div>';
   }
   function abrirDoc(n) {
