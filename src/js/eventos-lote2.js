@@ -720,10 +720,11 @@ window.shFeature && shFeature.registrar({"id": "AV-E2", "nome": "Eventos fiscais
     if (I.movel(ev)) return I.tribsDo(ev).map(function (t) { return '<div' + (ev.canceladoPor ? ' class="evl-risc"' : '') + '>' + t + ' ' + (ev.canceladoPor ? semTag(I.delta(ev.trib[t].delta)) : I.delta(ev.trib[t].delta)) + '</div>'; }).join('');
     return '<span class="evm-small">' + (ev.cod === '211130' ? 'prazo do art. 40, I' : 'sem saldo a mover') + '</span>';
   }
-  // o detalhe por órgão que a linha abre: o que cada um precisa confirmar e o que leu
-  function porOrgao(ev) {
+  // o detalhe por órgão que a linha abre: o que cada um precisa confirmar e o que leu.
+  // No RF (AV-RF, D-RF-04), só o órgão do tributo, com os atalhos para a esteira e o documento.
+  function porOrgao(ev, so) {
     var I = int();
-    return '<div class="evl-x-g">' + ['CBS', 'IBS'].map(function (t) {
+    return '<div class="evl-x-g' + (so ? ' um' : '') + '">' + (so ? [so] : ['CBS', 'IBS']).map(function (t) {
       var x = ev.trib[t], o = I.ORGAO[t];
       var cab = '<div class="evl-x-t">' + t + ' · ' + o.nome + '</div>';
       if (!x) return '<div class="evl-x-c">' + cab + '<div class="evm-small">O evento não toca este tributo.</div></div>';
@@ -735,7 +736,51 @@ window.shFeature && shFeature.registrar({"id": "AV-E2", "nome": "Eventos fiscais
         + '<div class="evl-x-r"><span>Quando</span><b>' + (x.exec ? I.fDH(x.exec) : x.lido ? I.fDH(x.lido) : 'aguardando a leitura') + '</b></div>'
         + '<div class="evl-x-r"><span>Situação</span><b>' + voc(v) + '</b></div></div>';
     }).join('') + '</div>'
-      + '<div class="evl-x-a"><button class="evm-btn" onclick="shEvm.detalhe(\'' + ev.id + '\')">Abrir o evento ' + ev.id + '</button></div>';
+      + (so ? '<div class="evl-x-a"><button class="evm-btn" onclick="shEvm.detalhe(\'' + ev.id + '\')">Abrir na esteira</button> '
+          + '<button class="evm-btn" onclick="shEvmL2.verNoDoc(\'' + esc(ev.nf) + '\',\'' + ev.id + '\')">Ver no documento</button></div>'
+        : '<div class="evl-x-a"><button class="evm-btn" onclick="shEvm.detalhe(\'' + ev.id + '\')">Abrir o evento ' + ev.id + '</button></div>');
+  }
+  // RF (AV-RF, D-RF-04): quatro colunas — o efeito previsto e a confirmação só deste tributo
+  function noT(T) { return (T === 'CBS' ? 'na ' : 'no ') + T; }   // a contribuição, o imposto
+  function efeitoT(ev, T) {
+    var I = int(), x = ev.trib[T];
+    if (ev.cod === '110001' && !ev.reverte) return '<span class="evm-small">cancela o ' + esc(ev.cancela) + '</span>';
+    if (!x) return '<span class="evm-small">não toca ' + (T === 'CBS' ? 'a ' : 'o ') + T + '</span>';
+    if (ev.cod === '110001' || I.movel(ev)) return x.delta ? '<div' + (ev.canceladoPor ? ' class="evl-risc"' : '') + '>' + (ev.canceladoPor ? semTag(I.delta(x.delta)) : I.delta(x.delta)) + '</div>' : '<span class="evm-small">sem saldo a mover</span>';
+    return '<span class="evm-small">' + (ev.cod === '211130' ? 'prazo do art. 40, I' : 'sem saldo a mover') + '</span>';
+  }
+  function ocsDocT(nf, T) { return ocsDoc(nf).filter(function (i) { return String(i.tipoFiscal || '').toUpperCase() === T; }); }
+  function abaEventosRF(nf, T) {
+    var I = int(), evs = evsDoc(nf), aus = I.ST.ausentes.filter(function (a) { return a.nf === nf.numero; });
+    var ocOn = on('eventos_inconsistencias'), ALS_ = on('eventos_alertas') ? alertasLista() : [], o = I.ORGAO[T], L = [];
+    evs.forEach(function (ev) {
+      var c = I.CAT[ev.cod];
+      var oc = ocOn ? linkOc([ev.id + '|' + T].concat(T === 'CBS' && ev.trib.CBS && ev.trib.CBS.estado === 'nao_atribuivel' ? ['NA|' + ev.nf + '|' + ev.trib.CBS.exec] : []), '') : '';
+      var al = ALS_.filter(function (a) { return a.ev.id === ev.id && a.val[T] && a.val[T].st === 'pesa'; }).map(function (a) { return '<a href="#" class="evl-tag al" onclick="shEvmL2.verAlerta(\'' + a.id + '\');return false" title="Alerta de competência · ' + esc(rotP(a.P)) + '">' + a.id + ' · alerta</a>'; }).join(' ');
+      L.push('<tr class="evl-r" data-ev="' + ev.id + '" onclick="shEvmL2.expandir(this, event)">'
+        + '<td data-l="Evento"><span class="evl-seta">▸</span><a href="#" class="evm-mono" onclick="shEvm.detalhe(\'' + ev.id + '\');return false">' + ev.cod + '</a> <span class="evl-nome">' + esc(c.nome) + '</span>'
+        + '<div class="evm-small">' + ev.id + ' · ' + esc(I.AUTOR[c.autor]) + ' · ' + I.fDH(ev.aut) + ' · ' + alcance(ev) + '</div></td>'
+        + '<td data-l="Efeito previsto ' + noT(T) + '" class="evm-num">' + efeitoT(ev, T) + '<div class="evl-fase">' + I.chip(I.estadoEv(ev)) + '</div></td>'
+        + '<td data-l="' + T + ' · ' + o.nome + '">' + voc(vocab(ev, T)) + '</td>'
+        + '<td data-l="Ocorrência">' + ((oc + ' ' + al).trim() || '<span class="evm-muted">—</span>') + '</td></tr>'
+        + '<tr class="evl-x" data-ev-x="' + ev.id + '" hidden><td colspan="4">' + porOrgao(ev, T) + '</td></tr>');
+    });
+    aus.forEach(function (a) {
+      var dias = Math.floor((Date.now() - a.desde) / I.DIA), c = I.CAT[a.cod], toca = a.tribs.indexOf(T) >= 0;
+      var oc = ocOn && toca && dias >= I.ESPERA_AUSENCIA ? linkOc([a.id + '|' + T], '') : '';
+      L.push('<tr class="evl-r evl-aus"><td data-l="Evento"><a href="#" class="evm-mono" onclick="shEvm.ausencia(\'' + a.id + '\');return false">' + a.cod + '</a> <span class="evl-nome">esperado · ' + esc(c.nome) + '</span>'
+        + '<div class="evm-small">' + esc(I.AUTOR[c.autor]) + ' · não chegou</div></td>'
+        + '<td data-l="Efeito previsto ' + noT(T) + '" class="evm-num">—<div class="evl-fase">' + I.chip('ausente') + '</div></td>'
+        + '<td data-l="' + T + ' · ' + o.nome + '">' + (toca ? voc(['ausente', 'amber']) : voc(['não aplicável', 'na'])) + '</td>'
+        + '<td data-l="Ocorrência">' + (oc || (toca ? '<span class="evm-small">espera ' + dias + ' de ' + I.ESPERA_AUSENCIA + ' dias</span>' : '<span class="evm-muted">—</span>')) + '</td></tr>');
+    });
+    var abertas = ocOn ? ocsDocT(nf, T).length : 0;
+    var sub = '<div class="evl-doc-sub">' + evs.length + ' evento' + (evs.length === 1 ? '' : 's') + ' fiscais do documento' + (aus.length ? ' · ' + aus.length + ' esperado' + (aus.length === 1 ? '' : 's') : '')
+      + (ocOn ? ' · ' + abertas + ' ocorrência' + (abertas === 1 ? '' : 's') + ' aberta' + (abertas === 1 ? '' : 's') + ' ' + noT(T) : '') + ' · competência ' + I.comp(nf.data + 'T12:00:00') + '</div>';
+    if (!L.length) return sub + '<div class="evm-vazio">Nenhum evento fiscal recebido para este documento. O primeiro pode ser emitido pelo botão Emitir evento ou nota, acima.</div>';
+    return sub + '<div class="evl-tc-w"><table class="evl-tc evl-tc4"><thead><tr><th>Evento</th><th class="r">Efeito previsto ' + noT(T) + '</th><th>' + T + ' · ' + o.nome + '</th><th>Ocorrência</th></tr></thead><tbody>'
+      + L.join('') + '</tbody></table></div>'
+      + '<div class="evm-small evl-nota">Os eventos do documento, com o que cada um prevê neste tributo e o que ' + o.o + ' ' + o.nome + ' confirmou. Clique numa linha para ver o detalhe no órgão. O outro tributo fica no registro dele.</div>';
   }
   function abaEventosCompacta(nf, evs, aus, ocOn, ALS_, abertas) {
     var I = int(), L = [];
@@ -773,10 +818,13 @@ window.shFeature && shFeature.registrar({"id": "AV-E2", "nome": "Eventos fiscais
     var x = tr.parentNode.querySelector('[data-ev-x="' + tr.getAttribute('data-ev') + '"]'); if (!x) return;
     var abrir = x.hidden; x.hidden = !abrir; tr.classList.toggle('aberto', abrir);
   }
-  function linhaDoTempo(nf) {
-    var I = int(), it = [];
+  // so (AV-RF, D-RF-07): só o que é deste tributo — os eventos do documento ficam todos,
+  // a ação planejada, a confirmação e a divergência só deste órgão
+  function linhaDoTempo(nf, so) {
+    var I = int(), it = [], tl = so ? so.toLowerCase() : null;
     try {
       if (window.shDetalhe && window.shDetalhe.eventos) window.shDetalhe.eventos(nf, null).forEach(function (e) {
+        if (tl && e.trib && e.trib !== tl) return;
         var ts = e.ts ? Date.parse(String(e.ts).length === 16 ? e.ts + ':00' : e.ts) : NaN; if (isNaN(ts)) return;
         it.push({ ts: ts, mk: 'produto', t: semTag(e.titulo), d: semTag(e.desc) });
       });
@@ -787,7 +835,8 @@ window.shFeature && shFeature.registrar({"id": "AV-E2", "nome": "Eventos fiscais
         + (ev.correlacionadoEm ? ' · capturado com atraso: correlacionado em ' + I.fDH(ev.correlacionadoEm) : '') + (ev.canceladoPor ? ' · cancelado pelo ' + ev.canceladoPor : '') + (ev.revertidoPor ? ' · revertido pelo ' + ev.revertidoPor : ''), ev: ev.id });
       if (!ev.plan || ev.canceladoPor) return;
       if (!I.movel(ev)) { it.push({ ts: ev.aut, mk: 'exec', t: ev.cod === '110001' ? 'Cancelamento registrado' : 'Atributo registrado', d: I.acaoEv(ev) + ' · vale na autorização', ev: ev.id }); return; }
-      var ts = I.tribsDo(ev).filter(function (t) { return ev.trib[t].delta; });
+      var ts = I.tribsDo(ev).filter(function (t) { return ev.trib[t].delta && (!so || t === so); });
+      if (so && !ts.length) return;
       var esp = ts.filter(function (t) { return !I.aplicado(ev.trib[t]); }).map(function (t) { return I.ORGAO[t].o + ' ' + I.ORGAO[t].nome; });
       it.push({ ts: ev.plan, mk: 'plan', t: I.acaoEv(ev), d: 'previsto ' + ts.map(function (t) { return t + ' ' + semTag(I.delta(ev.trib[t].delta)); }).join(' · ') + (esp.length ? ' · aguardando ' + esp.join(' e ') : ''), ev: ev.id });
       ts.forEach(function (t) {
@@ -796,10 +845,11 @@ window.shFeature && shFeature.registrar({"id": "AV-E2", "nome": "Eventos fiscais
         else if (x.estado === 'divergente') it.push({ ts: x.lido, mk: 'produto', t: t + ': ' + (x.semReflexo ? 'sem reflexo na janela' : 'valor diferente do previsto'), d: o.nome + ' mostra ' + I.money(x.observado) + ' · nada aplicado · ' + ev.id, ev: ev.id });
       });
     });
-    I.ST.ausentes.filter(function (a) { return a.nf === nf.numero; }).forEach(function (a) {
+    I.ST.ausentes.filter(function (a) { return a.nf === nf.numero && (!so || a.tribs.indexOf(so) >= 0); }).forEach(function (a) {
       it.push({ ts: a.desde, mk: 'produto', t: 'Ausência detectada: ' + a.cod + ' esperado', d: a.indicio });
     });
     it.sort(function (a, b) { return b.ts - a.ts; });
+    if (!it.length) return '<div class="pp-mut">Nenhum evento' + (so ? ' deste tributo' : '') + ' neste documento.</div>';
     var MK = { fiscal: 'Evento fiscal · ato de terceiro', produto: 'Evento do produto', plan: 'Ação planejada', exec: 'Ação executada' };
     return '<div class="evl-leg">' + Object.keys(MK).map(function (k) { return '<span><i class="evl-mk ' + k + '"></i>' + MK[k] + '</span>'; }).join('') + '</div>'
       + '<ol class="evl-tl">' + it.map(function (i) {
@@ -808,6 +858,27 @@ window.shFeature && shFeature.registrar({"id": "AV-E2", "nome": "Eventos fiscais
           + (i.d ? '<div class="evm-small">' + esc(i.d) + '</div>' : '') + '</div></li>';
       }).join('') + '</ol>'
       + '<div class="evm-small evl-nota">Mais recente primeiro. O círculo cheio é o que a SEFAZ, a Receita Federal ou o Comitê Gestor fizeram; o vazado, o que o produto registrou; o losango vazado é o previsto, e o cheio, o que já vale.</div>';
+  }
+  // detalhe do RF com abas no topo (AV-RF): preenche as abas do tributo, como no DF
+  function injetarRF(n, T) {
+    if (!on('eventos_documento')) return;
+    var ov = document.getElementById('rf-detalhe-overlay'), I = int(); if (!ov || !I || !I.semear()) return;
+    var nf = nfPorNumero(n); if (!nf) return;
+    sincronizar();
+    var sEv = ov.querySelector('[data-evl-slot="eventos"]'); if (!sEv) return;
+    var nEv = evsDoc(nf).length + I.ST.ausentes.filter(function (a) { return a.nf === nf.numero; }).length;
+    sEv.innerHTML = abaEventosRF(nf, T);
+    var sTl = ov.querySelector('[data-evl-slot="tempo"]'); if (sTl) sTl.innerHTML = linhaDoTempo(nf, T);
+    var rot = ov.querySelector('[data-evaj-n]'); if (rot) rot.textContent = nEv ? ' · ' + nEv : '';
+  }
+  // "Ver no documento": fecha o RF e abre o detalhe do DF na aba de eventos, com a linha marcada
+  function verNoDoc(n, id) {
+    var o = document.getElementById('rf-detalhe-overlay'); if (o) o.remove();
+    if (typeof window.abrirDetalhesNFporNumero !== 'function') return;
+    window.abrirDetalhesNFporNumero(n);
+    var ov = document.getElementById('nf-detalhe-overlay'), box = ov && ov.querySelector('[data-pp-box]');
+    if (box && window.shDetalheDF && shDetalheDF.on()) { shDetalheDF.verEvento(box, id); return; }
+    if (on('eventos_documento')) selecionarAba('evl-eventos');
   }
   function injetarDF(n) {
     if (!on('eventos_documento')) return;
@@ -1085,7 +1156,7 @@ window.shFeature && shFeature.registrar({"id": "AV-E2", "nome": "Eventos fiscais
     botoesDetalhe: botoesDetalhe, aposLeitura: aposLeitura, novoOrfao: novoOrfao, reverter: reverter, executado: executado,
     ocorrencia: ocorrencia, abrirInc: abrirInc, correlacionar: correlacionar, docAba: docAba, fecharCard: fecharCard,
     alertas: renderAlertas, alFiltro: alFiltro, alPeriodo: alPeriodo, alAbrir: alAbrir, alAcao: alAcao, fecharAl: fecharAl, verAlerta: verAlerta,
-    expandir: expandir,
+    expandir: expandir, injetarRF: injetarRF, verNoDoc: verNoDoc,
     chaveExemplo: function (ref) { return chaveFake(ref - 3 * 864e5, '45123678000112', 990700 + (int() ? int().ST.seq : 0)); },
     _alertas: alertasLista
   };

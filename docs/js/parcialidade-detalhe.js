@@ -506,7 +506,9 @@
   /* ── histórico do ciclo: trilha de auditoria (proposta 3) ─────────────── */
   function trilha(c, key) {
     var evs = ordenar(c.evs.slice(), true);
-    var tribOps = c.modo === 'df' ? [['todos', 'Todos']].concat(c.rfs.map(function (rf) { return [trib(rf), trib(rf).toUpperCase()]; })).concat([['doc', 'DF']]) : null;
+    // no RF com abas no topo (AV-RF, D-RF-06): Todos, o tributo do registro e o documento
+    var tribOps = c.modo === 'df' ? [['todos', 'Todos']].concat(c.rfs.map(function (rf) { return [trib(rf), trib(rf).toUpperCase()]; })).concat([['doc', 'DF']])
+      : c.modo === 'rf' && c.semSituacao ? [['todos', 'Todos'], [trib(c.rf), trib(c.rf).toUpperCase()], ['doc', 'DF']] : null;
     var usadas = {}; evs.forEach(function (e) { usadas[e.origem] = (usadas[e.origem] || 0) + 1; });
     var tool = '<div class="pp-tool">'
       + (tribOps ? '<span class="pp-seg">' + tribOps.map(function (o, i) { return '<button data-tv="' + o[0] + '" class="' + (i ? '' : 'on') + '" onclick="window.shDetalhe.filtrarTrilha(this)">' + o[1] + '</button>'; }).join('') + '</span>' : '')
@@ -661,6 +663,8 @@
   // coluna direita do detalhe do RF: o mesmo quadro do DF, com a coluna do
   // tributo, e as abas de movimentos, histórico e apuração assistida
   X.colunaRF = function (rf, nf) {
+    // pacote AV-RF (js/detalhe-rf.js): abas no topo, como no DF
+    if (X.abasTopoRF && X.abasTopoRF() && X.colunaRFAbas) return X.colunaRFAbas(rf, nf);
     return (rf.balances ? quadro(nf, X.valores(nf), rf) : rf.debBalances ? quadroDeb(nf, rf) : '') + abasRF(rf, nf);
   };
   function abasRF(rf, nf) {

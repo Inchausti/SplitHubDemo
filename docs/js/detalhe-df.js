@@ -100,16 +100,18 @@ window.shFeature && shFeature.registrar({"id": "AV-DF", "nome": "Detalhe do docu
       + (acoes ? '<div class="dfa-al-a">' + acoes + '</div>' : '')
       + '</div>';
   }
-  function alertasHtml(L) {
-    if (!L.length) return '<div class="dfa-vazio"><strong>Nenhum alerta neste documento.</strong>Quando algo pedir atenção, como uma divergência no órgão, uma ocorrência aberta, um prazo correndo ou uma integração sem resposta, aparece aqui.</div>';
+  // tribs: os tributos do filtro — os dois no DF; no RF (AV-RF), só o do registro
+  function alertasHtml(L, tribs, onde) {
+    if (!L.length) return '<div class="dfa-vazio"><strong>Nenhum alerta neste ' + (onde || 'documento') + '.</strong>Quando algo pedir atenção, como uma divergência no órgão, uma ocorrência aberta, um prazo correndo ou uma integração sem resposta, aparece aqui.</div>';
     var porT = { todos: L.length, cbs: 0, ibs: 0, doc: 0 };
     L.forEach(function (a) { porT[a.trib] = (porT[a.trib] || 0) + 1; });
+    tribs = tribs || ['cbs', 'ibs'];
     var pills = GRUPOS.map(function (g) {
       var n = L.filter(function (a) { return a.sev === g[0]; }).length; if (!n) return '';
       var r = n === 1 ? { acao: 'exige ação', acomp: 'em acompanhamento', info: 'informativo' }[g[0]] : g[1].toLowerCase();
       return '<span class="dfa-pill ' + g[0] + '">' + n + ' ' + r + '</span>';
     }).join('');
-    var seg = [['todos', 'Todos'], ['cbs', 'CBS'], ['ibs', 'IBS'], ['doc', 'DF']].map(function (t, i) {
+    var seg = [['todos', 'Todos']].concat(tribs.map(function (t) { return [t, t.toUpperCase()]; })).concat([['doc', 'DF']]).map(function (t, i) {
       return '<button data-alt="' + t[0] + '" class="' + (i ? '' : 'on') + '" onclick="window.shDetalheDF.alFiltro(this)">' + t[1] + ' · ' + (porT[t[0]] || 0) + '</button>';
     }).join('');
     return '<div data-dfa-al><div class="pp-tool"><span class="dfa-pills">' + pills + '</span><span class="pp-sp"></span><span class="pp-seg">' + seg + '</span></div>'
@@ -192,7 +194,7 @@ window.shFeature && shFeature.registrar({"id": "AV-DF", "nome": "Detalhe do docu
     btn.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
   function irPara(de, v) {
-    var box = de.closest('[data-pp-box]') || document.querySelector('#nf-detalhe-overlay [data-pp-box]'); if (!box) return null;
+    var box = de.closest('[data-pp-box]') || document.querySelector('#nf-detalhe-overlay [data-pp-box]') || document.querySelector('#rf-detalhe-overlay [data-pp-box]'); if (!box) return null;
     var b = box.querySelector('[data-g="aba"][data-v="' + v + '"]'); if (b) aba(b);
     return box;
   }
@@ -212,7 +214,7 @@ window.shFeature && shFeature.registrar({"id": "AV-DF", "nome": "Detalhe do docu
     if (b && !b.classList.contains('on')) X.filtrarTrilha(b);
   }
   function verAlerta(id) {
-    var o = document.getElementById('nf-detalhe-overlay'); if (o) o.remove();
+    ['nf-detalhe-overlay', 'rf-detalhe-overlay'].forEach(function (k) { var o = document.getElementById(k); if (o) o.remove(); });
     if (window.shEvmL2 && shEvmL2.verAlerta) shEvmL2.verAlerta(id);
   }
 
@@ -244,7 +246,9 @@ window.shFeature && shFeature.registrar({"id": "AV-DF", "nome": "Detalhe do docu
     window.abrirDetalhesNFporNumero = w;
   }
 
-  window.shDetalheDF = { on: on, aba: aba, alFiltro: alFiltro, verEvento: verEvento, verHist: verHist, verAlerta: verAlerta, _itens: itens };
+  // _situacao, _alertasHtml, _rotAlertas: o detalhe do RF (AV-RF, js/detalhe-rf.js) monta a mesma aba Alertas
+  window.shDetalheDF = { on: on, aba: aba, alFiltro: alFiltro, verEvento: verEvento, verHist: verHist, verAlerta: verAlerta, _itens: itens,
+    _situacao: situacao, _alertasHtml: alertasHtml, _rotAlertas: rotAlertas };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(ganchos, 700); });
   else setTimeout(ganchos, 700);

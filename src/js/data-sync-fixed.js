@@ -1886,8 +1886,10 @@ window.abrirDetalheRF = function(rfId) {
   var DR = window._rfDetailRow;
 
   var _ppRF = !!(window.shDetalhe && (rf.balances || rf.debBalances));
+  // pacote AV-RF (js/detalhe-rf.js): abas no topo, janela de 1.120 px e a coluna da esquerda recolhível no celular
+  var _abRF = !!(window.shDetalhe && window.shDetalhe.abasTopoRF && window.shDetalhe.abasTopoRF() && window.shDetalheRF);
   var html = '<div id="rf-detalhe-overlay" class="moverlay" onclick="if(event.target===this)document.getElementById(\'rf-detalhe-overlay\').remove()">'
-    + '<div class="mbox" style="width:' + (window.shDetalhe ? 980 : 860) + 'px">'
+    + '<div class="mbox" style="width:' + (window.shDetalhe ? (_abRF ? 1120 : 980) : 860) + 'px">'
 
     // Header
     + '<div class="mbox-hdr">'
@@ -1900,14 +1902,16 @@ window.abrirDetalheRF = function(rfId) {
     + '</div>'
 
     // Body
-    + (window.shDetalhe ? '<div class="pp-body">' : '<div style="display:flex;flex:1;overflow:hidden">')
+    + (window.shDetalhe ? '<div class="pp-body' + (_abRF ? ' pp-abas-topo' : '') + '">' : '<div style="display:flex;flex:1;overflow:hidden">')
 
     // Left panel: dados do RF
     + (window.shDetalhe ? '<div class="mbox-col pp-col-l">' : '<div class="mbox-col" style="width:280px;flex-shrink:0;border-right:1px solid var(--brd)">')
+    + (_abRF ? '<details class="dfa-doc" open><summary>' + window.shDetalheRF.resumo(rf, nf) + '</summary>' : '')
     + '<div class="mbox-section-label">Dados do Registro</div>'
     + DR('ID do RF', rf.id, 'var(--p-blue)')
-    + DR('Tipo Fiscal', '<span style="color:' + tfColor + ';font-weight:700">' + tfLabel + '</span>')
+    + DR('Tipo Fiscal', '<span style="color:' + tfColor + ';font-weight:700">' + tfLabel + '</span>' + (_abRF ? window.shDetalheRF.orgao(rf) : ''))
     + DR(rf.balances ? 'Apurado' : 'Valor', ff(rf.valor), 'var(--p-teal)')
+    + (_abRF && _ppRF ? window.shDetalheRF.status(rf, DR) : '')
     // com o detalhe da parcialidade, status, barra e marcas ficam no quadro da direita
     + (_ppRF ? ''
       : rf.balances && window.shParcial
@@ -1918,7 +1922,7 @@ window.abrirDetalheRF = function(rfId) {
     + (stRegLab && !rf.balances ? DR('Status Registro', '<span style="background:rgba(' + stRegRgb + ',.12);color:rgba(' + stRegRgb + ',1);border:1px solid rgba(' + stRegRgb + ',.3);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + stRegLab + '</span>') : '')
     + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Documento Fiscal</div>'
-    + DR('NF Vinculada', (nf.tipoDF || 'DF') + ' ' + nf.numero)
+    + DR('NF Vinculada', _abRF ? window.shDetalheRF.linkDoc(nf) : (nf.tipoDF || 'DF') + ' ' + nf.numero)
     + DR('Emitente', nf.entidade || '—')
     + DR('CNPJ', nf.cnpj || '—', null, true)
     + DR('Data NF', nfDataFmt)
@@ -1948,10 +1952,12 @@ window.abrirDetalheRF = function(rfId) {
     + '<strong>Extinção do Crédito</strong> é quando ele foi consumido. '
     + '<strong>Limite art. 54</strong> é o fim do prazo de 5 anos, contado do primeiro dia do período de '
     + 'apuração seguinte ao da apropriação — não da emissão do documento.</span></div>')
+    + (_abRF ? window.shDetalheRF.irmao(rf, nf) : '')
     + '<div class="mbox-divider"></div>'
     + '<div class="mbox-section-label">Inconsistências Vinculadas</div>'
     // só os cards deste tributo e os do documento sem tributo
     + window._incRenderVinculadasHtml(rf._inconsistencias && rf._inconsistencias.length ? rf._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return i.rfId === rf.id || (!i.rfId && i.nfNumero && String(i.nfNumero) === String(nf.numero)); }))
+    + (_abRF ? '</details>' : '')
     + '</div>'
 
     // Right panel: movimentos de valor (T-03) e timeline
