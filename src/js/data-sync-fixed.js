@@ -869,7 +869,11 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     + '<div style="font-size:9px;font-family:monospace;color:var(--txt3);word-break:break-all;line-height:1.7;margin-bottom:14px">' + chaveFormatada + '</div>';
   var radHtml = window.shRADBlocoMetodo ? window.shRADBlocoMetodo(r) : '';
   var incHtml = window._incRenderVinculadasHtml(r._inconsistencias && r._inconsistencias.length ? r._inconsistencias : (window._inconsistenciasGlobal||[]).filter(function(i){ return String(i.nfNumero) === String(r.numero) || i.dfNum === ((r.tipoDF||'NF-e')+' '+r.numero); }));
-  var _pp = !!(window.shDetalhe && (window.shDetalhe.ativo(r) || window.shDetalhe.ativoDeb(r)));
+  // pacote AV-DF: com as abas no topo, todo documento usa o corpo novo, com ou sem partição
+  var _pp = !!(window.shDetalhe && (window.shDetalhe.ativo(r) || window.shDetalhe.ativoDeb(r) || (window.shDetalhe.abasTopo && window.shDetalhe.abasTopo())));
+  var valHtml = '<div class="mbox-section-label">Valores</div>'
+    + DR('Total', ff(r.valorTotal || 0)) + DR('Líquido', ff(r.valorLiquido || 0))
+    + DR('CBS', ffz(r.cbs || 0), 'var(--p-amber)') + DR('IBS', ffz(r.ibs || 0), 'var(--p-blue)');
 
   var html = '<div id="nf-detalhe-overlay" class="moverlay" onclick="if(event.target===this)document.getElementById(\'nf-detalhe-overlay\').remove()">'
     + '<div class="mbox" style="width:' + (_pp ? 1040 : 900) + 'px">'
@@ -892,7 +896,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
     // Entrada com partição: quadro CBS × IBS com os registros fiscais e os
     // valores da partição, trilha do ciclo e da apuração (js/parcialidade-detalhe.js)
     + (_pp
-      ? window.shDetalhe.corpoDF(r, { docHtml: docHtml, chaveHtml: chaveHtml, ctrHtml: ctrHtml, radHtml: radHtml, incHtml: incHtml })
+      ? window.shDetalhe.corpoDF(r, { docHtml: docHtml, chaveHtml: chaveHtml, ctrHtml: ctrHtml, radHtml: radHtml, incHtml: incHtml, valHtml: valHtml, rfsHtml: rfsHtml })
       // Body: two columns
       : '<div style="display:flex;flex:1;overflow:hidden">'
 
@@ -901,11 +905,7 @@ window.abrirDetalhesNFporNumero = function(nfNumero) {
       + '<div class="mbox-section-label">Documento Fiscal</div>'
       + docHtml
       + '<div class="mbox-divider"></div>'
-      + '<div class="mbox-section-label">Valores</div>'
-      + DR('Total', ff(r.valorTotal || 0))
-      + DR('Líquido', ff(r.valorLiquido || 0))
-      + DR('CBS', ffz(r.cbs || 0), 'var(--p-amber)')
-      + DR('IBS', ffz(r.ibs || 0), 'var(--p-blue)')
+      + valHtml
       + '<div class="mbox-divider"></div>'
       + chaveHtml
       + ctrHtml

@@ -523,6 +523,9 @@ window.shFeature && shFeature.registrar({"id": "AV-EV", "nome": "Evento fiscal e
     var col = ov.querySelector('.pp-col-r'); if (!col) return;
     var old = col.querySelector('[data-evf]'); if (old) old.remove();
     var nfNum = ov.getAttribute('data-evf-nf'); var nf = nfPorNumero(nfNum); if (!nf) return;
+    // detalhe com abas no topo (AV-DF): o quadro de ajustes vai para o topo da aba Eventos e ajustes
+    var slot = col.querySelector('[data-evf-slot]');
+    if (slot) { slot.innerHTML = blocoDF(nf, null); return; }
     var ancora = col.querySelector('.pp-nota-q');
     if (ancora) ancora.insertAdjacentHTML('afterend', blocoDF(nf, null));
     else col.insertAdjacentHTML('afterbegin', blocoDF(nf, null));

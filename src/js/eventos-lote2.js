@@ -676,10 +676,13 @@ window.shFeature && shFeature.registrar({"id": "AV-E2", "nome": "Eventos fiscais
       return /^evt_/.test(i.tipo) && String(i.nfNumero) === String(nf.numero) && ((window._kanbanState || {})[i.id] || i.status) !== 'resolvida';
     });
   }
-  function abaEventos(nf) {
+  // compacto (AV-DF, D-DF-02): cinco colunas — autor, data e alcance dentro do Evento, a fase
+  // dentro do Efeito —, a linha abre o detalhe por órgão, e vira cartão em coluna estreita
+  function abaEventos(nf, compacto) {
     var I = int(), evs = evsDoc(nf), aus = I.ST.ausentes.filter(function (a) { return a.nf === nf.numero; });
     var ocOn = on('eventos_inconsistencias'), alOn = on('eventos_alertas'), ALS_ = alOn ? alertasLista() : [];
     var abertas = ocOn ? ocsDoc(nf).length : 0;
+    if (compacto) return abaEventosCompacta(nf, evs, aus, ocOn, ALS_, abertas);
     var linhas = evs.map(function (ev) {
       var c = I.CAT[ev.cod], e = I.estadoEv(ev);
       var ef = ev.cod === '110001' ? (ev.reverte ? I.tribsDo(ev).filter(function (t) { return ev.trib[t].delta; }).map(function (t) { return '<div>' + t + ' ' + I.delta(ev.trib[t].delta) + '</div>'; }).join('') : '<span class="evm-small">cancela o ' + esc(ev.cancela) + '</span>')
@@ -710,6 +713,65 @@ window.shFeature && shFeature.registrar({"id": "AV-E2", "nome": "Eventos fiscais
         + linhas.join('') + '</tbody></table></div>'
         + '<div class="evm-small evl-nota">Ordem da autorização no órgão — a aba é histórico. Uma ocorrência por tributo, porque são dois órgãos, dois prazos e dois caminhos; o clique abre a ocorrência, que se trata em Inconsistências. O Alcance é só informação: a primeira versão não segmenta por item (D-02).</div>'
         : '<div class="evm-vazio">Nenhum evento fiscal recebido para este documento.</div>');
+  }
+  function efeitoEv(ev) {
+    var I = int();
+    if (ev.cod === '110001') return ev.reverte ? I.tribsDo(ev).filter(function (t) { return ev.trib[t].delta; }).map(function (t) { return '<div>' + t + ' ' + I.delta(ev.trib[t].delta) + '</div>'; }).join('') : '<span class="evm-small">cancela o ' + esc(ev.cancela) + '</span>';
+    if (I.movel(ev)) return I.tribsDo(ev).map(function (t) { return '<div' + (ev.canceladoPor ? ' class="evl-risc"' : '') + '>' + t + ' ' + (ev.canceladoPor ? semTag(I.delta(ev.trib[t].delta)) : I.delta(ev.trib[t].delta)) + '</div>'; }).join('');
+    return '<span class="evm-small">' + (ev.cod === '211130' ? 'prazo do art. 40, I' : 'sem saldo a mover') + '</span>';
+  }
+  // o detalhe por órgão que a linha abre: o que cada um precisa confirmar e o que leu
+  function porOrgao(ev) {
+    var I = int();
+    return '<div class="evl-x-g">' + ['CBS', 'IBS'].map(function (t) {
+      var x = ev.trib[t], o = I.ORGAO[t];
+      var cab = '<div class="evl-x-t">' + t + ' · ' + o.nome + '</div>';
+      if (!x) return '<div class="evl-x-c">' + cab + '<div class="evm-small">O evento não toca este tributo.</div></div>';
+      var v = vocab(ev, t);
+      return '<div class="evl-x-c">' + cab
+        + '<div class="evl-x-r"><span>Antes</span><b class="evm-num">' + I.money(x.antes) + '</b></div>'
+        + '<div class="evl-x-r"><span>Previsto</span><b class="evm-num">' + I.money(x.antes + x.delta) + '</b></div>'
+        + '<div class="evl-x-r"><span>Lido no órgão</span><b class="evm-num">' + (x.observado != null ? I.money(x.observado) : '—') + '</b></div>'
+        + '<div class="evl-x-r"><span>Quando</span><b>' + (x.exec ? I.fDH(x.exec) : x.lido ? I.fDH(x.lido) : 'aguardando a leitura') + '</b></div>'
+        + '<div class="evl-x-r"><span>Situação</span><b>' + voc(v) + '</b></div></div>';
+    }).join('') + '</div>'
+      + '<div class="evl-x-a"><button class="evm-btn" onclick="shEvm.detalhe(\'' + ev.id + '\')">Abrir o evento ' + ev.id + '</button></div>';
+  }
+  function abaEventosCompacta(nf, evs, aus, ocOn, ALS_, abertas) {
+    var I = int(), L = [];
+    evs.forEach(function (ev) {
+      var c = I.CAT[ev.cod];
+      var oc = ocOn ? linkOc(['CBS', 'IBS'].map(function (t) { return ev.id + '|' + t; }).concat(ev.trib.CBS && ev.trib.CBS.estado === 'nao_atribuivel' ? ['NA|' + ev.nf + '|' + ev.trib.CBS.exec] : []), '') : '';
+      var al = ALS_.filter(function (a) { return a.ev.id === ev.id; }).map(function (a) { return '<a href="#" class="evl-tag al" onclick="shEvmL2.verAlerta(\'' + a.id + '\');return false" title="Alerta de competência · ' + esc(rotP(a.P)) + '">' + a.id + ' · alerta</a>'; }).join(' ');
+      L.push('<tr class="evl-r" data-ev="' + ev.id + '" onclick="shEvmL2.expandir(this, event)">'
+        + '<td data-l="Evento"><span class="evl-seta">▸</span><a href="#" class="evm-mono" onclick="shEvm.detalhe(\'' + ev.id + '\');return false">' + ev.cod + '</a> <span class="evl-nome">' + esc(c.nome) + '</span>'
+        + '<div class="evm-small">' + esc(I.AUTOR[c.autor]) + ' · ' + I.fDH(ev.aut) + ' · ' + alcance(ev) + '</div>'
+        + '<div class="evm-small">' + ev.id + (ev.correlacionadoEm ? ' · capturado com atraso' : '') + (ev.requestId ? ' · pedido pelo SplitHub' : '') + '</div></td>'
+        + '<td data-l="Efeito previsto" class="evm-num">' + efeitoEv(ev) + '<div class="evl-fase">' + I.chip(I.estadoEv(ev)) + '</div></td>'
+        + '<td data-l="CBS · Receita Federal">' + voc(vocab(ev, 'CBS')) + '</td><td data-l="IBS · Comitê Gestor">' + voc(vocab(ev, 'IBS')) + '</td>'
+        + '<td data-l="Ocorrência">' + ((oc + ' ' + al).trim() || '<span class="evm-muted">—</span>') + '</td></tr>'
+        + '<tr class="evl-x" data-ev-x="' + ev.id + '" hidden><td colspan="5">' + porOrgao(ev) + '</td></tr>');
+    });
+    aus.forEach(function (a) {
+      var dias = Math.floor((Date.now() - a.desde) / I.DIA), c = I.CAT[a.cod];
+      var oc = ocOn && dias >= I.ESPERA_AUSENCIA ? linkOc(a.tribs.map(function (t) { return a.id + '|' + t; }), '') : '';
+      L.push('<tr class="evl-r evl-aus"><td data-l="Evento"><a href="#" class="evm-mono" onclick="shEvm.ausencia(\'' + a.id + '\');return false">' + a.cod + '</a> <span class="evl-nome">esperado · ' + esc(c.nome) + '</span>'
+        + '<div class="evm-small">' + esc(I.AUTOR[c.autor]) + ' · não chegou</div></td>'
+        + '<td data-l="Efeito previsto" class="evm-num">—<div class="evl-fase">' + I.chip('ausente') + '</div></td>'
+        + ['CBS', 'IBS'].map(function (t) { return '<td data-l="' + t + ' · ' + I.ORGAO[t].nome + '">' + (a.tribs.indexOf(t) >= 0 ? voc(['ausente', 'amber']) : voc(['não aplicável', 'na'])) + '</td>'; }).join('')
+        + '<td data-l="Ocorrência">' + (oc || '<span class="evm-small">espera ' + dias + ' de ' + I.ESPERA_AUSENCIA + ' dias</span>') + '</td></tr>');
+    });
+    var sub = '<div class="evl-doc-sub">' + evs.length + ' evento' + (evs.length === 1 ? '' : 's') + ' fiscais' + (aus.length ? ' · ' + aus.length + ' esperado' + (aus.length === 1 ? '' : 's') : '')
+      + (ocOn ? ' · ' + abertas + ' ocorrência' + (abertas === 1 ? '' : 's') + ' aberta' + (abertas === 1 ? '' : 's') : '') + ' · competência ' + I.comp(nf.data + 'T12:00:00') + '</div>';
+    if (!L.length) return sub + '<div class="evm-vazio">Nenhum evento fiscal recebido para este documento. O primeiro pode ser emitido pelo botão Emitir evento ou nota, acima.</div>';
+    return sub + '<div class="evl-tc-w"><table class="evl-tc"><thead><tr><th>Evento</th><th class="r">Efeito previsto</th><th>CBS · Receita Federal</th><th>IBS · Comitê Gestor</th><th>Ocorrência</th></tr></thead><tbody>'
+      + L.join('') + '</tbody></table></div>'
+      + '<div class="evm-small evl-nota">Ordem da autorização no órgão. Clique numa linha para ver o que cada órgão precisa confirmar. Uma ocorrência por tributo; o clique abre a ocorrência em Inconsistências. O Alcance é só informação (D-02).</div>';
+  }
+  function expandir(tr, e) {
+    if (e && e.target && e.target.closest && e.target.closest('a,button')) return;
+    var x = tr.parentNode.querySelector('[data-ev-x="' + tr.getAttribute('data-ev') + '"]'); if (!x) return;
+    var abrir = x.hidden; x.hidden = !abrir; tr.classList.toggle('aberto', abrir);
   }
   function linhaDoTempo(nf) {
     var I = int(), it = [];
@@ -753,6 +815,15 @@ window.shFeature && shFeature.registrar({"id": "AV-E2", "nome": "Eventos fiscais
     var nf = nfPorNumero(n); if (!nf) return;
     sincronizar();
     ov.querySelectorAll('[data-evl]').forEach(function (e) { e.remove(); });
+    // detalhe com abas no topo (AV-DF): as abas já existem; aqui só se preenchem, com a tabela compacta
+    var sEv = ov.querySelector('[data-evl-slot="eventos"]');
+    if (sEv) {
+      var nEv = evsDoc(nf).length + I.ST.ausentes.filter(function (a) { return a.nf === nf.numero; }).length;
+      sEv.innerHTML = abaEventos(nf, true);
+      var sTl = ov.querySelector('[data-evl-slot="tempo"]'); if (sTl) sTl.innerHTML = linhaDoTempo(nf);
+      var rot = ov.querySelector('[data-evaj-n]'); if (rot) rot.textContent = nEv ? ' · ' + nEv : '';
+      return;
+    }
     var box = ov.querySelector('.pp-col-r [data-pp-box]');
     if (!box) {
       // detalhe sem partição: a coluna da direita ganha a barra de abas, com o histórico na primeira
@@ -1014,6 +1085,7 @@ window.shFeature && shFeature.registrar({"id": "AV-E2", "nome": "Eventos fiscais
     botoesDetalhe: botoesDetalhe, aposLeitura: aposLeitura, novoOrfao: novoOrfao, reverter: reverter, executado: executado,
     ocorrencia: ocorrencia, abrirInc: abrirInc, correlacionar: correlacionar, docAba: docAba, fecharCard: fecharCard,
     alertas: renderAlertas, alFiltro: alFiltro, alPeriodo: alPeriodo, alAbrir: alAbrir, alAcao: alAcao, fecharAl: fecharAl, verAlerta: verAlerta,
+    expandir: expandir,
     chaveExemplo: function (ref) { return chaveFake(ref - 3 * 864e5, '45123678000112', 990700 + (int() ? int().ST.seq : 0)); },
     _alertas: alertasLista
   };

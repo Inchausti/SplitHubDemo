@@ -376,7 +376,16 @@
   function curto(s, n) { s = String(s || '').replace(/<[^>]+>/g, ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
   X.situacao = function (nf, rfs, evs) {
     var al = [], info = [];
-    var ponto = function (nivel, t, titulo, det, ev, card) { al.push({ nivel: nivel, trib: t, titulo: titulo, det: det, card: card || null }); if (ev) { ev.alerta = nivel; if (card) ev.card = card; } };
+    // o: o que a aba Alertas do AV-DF usa — grupo (acao, acomp), título curto,
+    // valor, desde quando e a origem. Sem o, a leitura de sempre.
+    var ponto = function (nivel, t, titulo, det, ev, card, o) {
+      o = o || {};
+      if (card) { o.grupo = o.grupo || 'acao'; o.desde = o.desde || card.dataISO || null; }
+      al.push({ nivel: nivel, trib: t, titulo: titulo, det: det, card: card || null, ev: ev || null,
+        grupo: o.grupo || (nivel === 'alerta' ? 'acao' : 'acomp'), tit: o.tit || titulo, valor: o.valor || 0,
+        desde: o.desde || (ev && ev.ts) || null, orig: o.orig || (ev && ORIGEM_ROT[ev.origem]) || 'SplitHub' });
+      if (ev) { ev.alerta = nivel; if (card) ev.card = card; }
+    };
     // cards vinculados: os do tributo e os do documento sem tributo; resolvido não conta
     var cards = [];
     rfs.forEach(function (rf) { (rf._inconsistencias || []).forEach(function (i) { cards.push(i); }); });
@@ -397,12 +406,15 @@
       var fl = (rf.flagsFatia || []).map(function (f) { return f.f; });
       if (b.pending > 0) {
         var ve = vencimento(nf.data || rf.data), d = dias(ve);
-        if (fl.indexOf('vencido') >= 0) ponto('alerta', t, 'Apropriação vencida · ' + money(b.pending), 'Venceu em ' + br(ve) + '. Cobrar o fornecedor ou assumir o recolhimento.');
-        else if (fl.indexOf('em_risco') >= 0) ponto('atencao', t, 'Apropriação vence em ' + d + ' dia' + (d === 1 ? '' : 's') + ' · ' + money(b.pending), 'Vence em ' + br(ve) + '. Cobrar o fornecedor ou assumir o recolhimento.');
+        if (fl.indexOf('vencido') >= 0) ponto('alerta', t, 'Apropriação vencida · ' + money(b.pending), 'Venceu em ' + br(ve) + '. Cobrar o fornecedor ou assumir o recolhimento.', null, null,
+          { grupo: 'acao', tit: 'Apropriação vencida', valor: b.pending, desde: ve, orig: 'SplitHub' });
+        else if (fl.indexOf('em_risco') >= 0) ponto('atencao', t, 'Apropriação vence em ' + d + ' dia' + (d === 1 ? '' : 's') + ' · ' + money(b.pending), 'Vence em ' + br(ve) + '. Cobrar o fornecedor ou assumir o recolhimento.', null, null,
+          { grupo: 'acao', tit: 'Apropriação vence em ' + d + ' dia' + (d === 1 ? '' : 's'), valor: b.pending, desde: nf.data || rf.data, orig: 'SplitHub' });
         else info.push({ trib: t, txt: money(b.pending) + ' a apropriar · vence em ' + br(ve) });
       }
       if (b.available > 0) {
-        if (fl.indexOf('a_prescrever') >= 0) { var dp = dias(rf.prazoArt54Prox); ponto('atencao', t, 'Prazo do art. 54 em ' + dp + ' dias · ' + money(b.available), 'Limite em ' + br(rf.prazoArt54Prox) + '. Priorizar na compensação.'); }
+        if (fl.indexOf('a_prescrever') >= 0) { var dp = dias(rf.prazoArt54Prox); ponto('atencao', t, 'Prazo do art. 54 em ' + dp + ' dias · ' + money(b.available), 'Limite em ' + br(rf.prazoArt54Prox) + '. Priorizar na compensação.', null, null,
+          { grupo: 'acao', tit: 'Prazo do art. 54 em ' + dp + ' dias', valor: b.available, orig: 'SplitHub' }); }
         else info.push({ trib: t, txt: money(b.available) + ' disponível' + (rf.prazoArt54Prox ? ' · art. 54 até ' + br(rf.prazoArt54Prox) : '') });
       }
       if (b.refund_requested > 0) info.push({ trib: t, txt: money(b.refund_requested) + ' em pedido de ressarcimento' });
@@ -411,9 +423,12 @@
         var tipoG = g.status === 'impugnada' ? 'IMPUGNAÇÃO' : g.status === 'definitiva' ? 'GLOSA DEFINITIVA' : 'GLOSA';
         var evG = (evs || []).filter(function (e) { return e.rfId === rf.id && e.tipo === tipoG; })[0];
         var cG = cardDe(rf.id, /^glosa_/);
-        if (g.status === 'impugnada') ponto('atencao', t, 'Glosa em impugnação · ' + money(g.valor), 'Processo ' + g.processo + '; valor bloqueado até a decisão.', evG, cG);
-        else if (g.status === 'definitiva' || g.status === 'mantida') ponto('alerta', t, 'Glosa definitiva · ' + money(g.valor), 'Perda definitiva' + (g.definitivaEm ? ' desde ' + br(g.definitivaEm) : '') + '.', evG, cG);
-        else ponto('alerta', t, 'Glosa aberta · ' + money(g.valor), 'Impugnar até ' + br(g.prazoImpugnacao) + ' (ficha ' + g.id + ').', evG, cG);
+        if (g.status === 'impugnada') ponto('atencao', t, 'Glosa em impugnação · ' + money(g.valor), 'Processo ' + g.processo + '; valor bloqueado até a decisão.', evG, cG,
+          { grupo: 'acomp', tit: 'Glosa em impugnação', valor: g.valor, orig: 'Órgão' });
+        else if (g.status === 'definitiva' || g.status === 'mantida') ponto('alerta', t, 'Glosa definitiva · ' + money(g.valor), 'Perda definitiva' + (g.definitivaEm ? ' desde ' + br(g.definitivaEm) : '') + '.', evG, cG,
+          { grupo: 'acao', tit: 'Glosa definitiva', valor: g.valor, desde: g.definitivaEm, orig: 'Órgão' });
+        else ponto('alerta', t, 'Glosa aberta · ' + money(g.valor), 'Impugnar até ' + br(g.prazoImpugnacao) + ' (ficha ' + g.id + ').', evG, cG,
+          { grupo: 'acao', tit: 'Glosa aberta', valor: g.valor, orig: 'Órgão' });
       }
     });
     // conciliação: vale o registro mais recente de cada etapa, por tributo
@@ -424,7 +439,8 @@
     Object.keys(ultimo).forEach(function (k) {
       var e = ultimo[k], fin = e.tipo === 'CONC FINANCEIRA', id = (/(C(?:APUR|FIN)-[0-9A-F]+)/.exec(e.desc) || [])[1] || '';
       if (e.cls === 'pending') ponto('atencao', e.trib, 'Conciliação ' + (fin ? 'financeira' : 'de apuração') + ' pendente',
-        (fin ? 'Falta o comprovante do recolhimento' : 'Documento ainda não lido na apuração do órgão') + (id ? ' (' + id + ').' : '.'), e);
+        (fin ? 'Falta o comprovante do recolhimento' : 'Documento ainda não lido na apuração do órgão') + (id ? ' (' + id + ').' : '.'), e, null,
+        { grupo: 'acomp', orig: fin ? 'Financeiro' : 'Órgão' });
     });
     // divergência de verdade é card na fila de Inconsistências, com o vínculo ao DF e ao RF
     var feitos = al.map(function (a) { return a.card; });
@@ -433,11 +449,14 @@
       var t = i.rfId ? (String(i.tipoFiscal || '').toLowerCase() === 'ibs' ? 'ibs' : 'cbs') : null;
       var et = /^capur_|^mov_|^apur_/.test(i.tipo) ? 'CONC APURAÇÃO' : /^cfin_|^reconhecido_/.test(i.tipo) ? 'CONC FINANCEIRA' : i.tipo === 'integracao_erp' ? 'ERP' : null;
       var ev = et ? (evs || []).filter(function (e) { return e.trib === t && (et === 'ERP' ? e.tipo === 'ERP' && e.entrega === 'falhou' : e.tipo === et); }).sort(function (a, b) { return a.ts < b.ts ? 1 : -1; })[0] : null;
-      ponto('alerta', t, (i.tipoLabel || i.tipo) + (i.valor > 0 ? ' · ' + money(i.valor) : ''), i.resumo || 'Analisar no card.', ev, i);
+      ponto('alerta', t, (i.tipoLabel || i.tipo) + (i.valor > 0 ? ' · ' + money(i.valor) : ''), i.resumo || 'Analisar no card.', ev, i,
+        { tit: i.tipoLabel || (window.IncCatalogo && IncCatalogo.label ? IncCatalogo.label(i.tipo) : i.tipo), valor: i.valor > 0 ? i.valor : 0,
+          orig: et === 'ERP' ? 'ERP' : et === 'CONC FINANCEIRA' ? 'Financeiro' : t ? 'Órgão' : 'SplitHub' });
     });
     (evs || []).forEach(function (e) {
       if (e.alerta || !e.ts) return;
-      if (e.tipo === 'ERP' && e.entrega === 'pendente') ponto('atencao', e.trib, 'ERP sem confirmação', e.titulo.replace('Webhook ', '') + ': reenvio automático em andamento.', e);
+      if (e.tipo === 'ERP' && e.entrega === 'pendente') ponto('atencao', e.trib, 'ERP sem confirmação', e.titulo.replace('Webhook ', '') + ': reenvio automático em andamento.', e, null,
+        { grupo: 'acomp', orig: 'ERP' });
       else if (e.tipo === 'INCONSISTÊNCIA' || (e.cls === 'erro' && ['risco', 'conciliacao', 'erp'].indexOf(e.fase) < 0)) ponto('alerta', e.trib, e.titulo, curto(e.desc, 90), e);
     });
     (evs || []).forEach(function (e) { if (!e.ts && e.tipo === 'AGUARDANDO') info.push({ trib: e.trib, txt: curto(e.desc, 90) }); });
@@ -479,7 +498,7 @@
   }
   function resumo(evs, s) {
     var mov = evs.filter(function (e) { return e.mov; }).length, erp = evs.filter(function (e) { return e.fase === 'erp'; }).length;
-    var n = s.alertas.length;
+    var n = s ? s.alertas.length : 0;   // sem s: os pontos de atenção estão na aba Alertas (AV-DF)
     return '<div class="pp-resumo">' + evs.length + ' registros · ' + mov + ' movimentos de valor · ' + erp + ' integrações com o ERP'
       + (n ? ' · <span class="pp-alerta">' + n + ' ponto' + (n > 1 ? 's' : '') + ' de atenção</span>' : '') + '</div>';
   }
@@ -498,7 +517,7 @@
       return '<tr data-trib="' + (e.trib || 'doc') + '" data-orig="' + e.origem + '" data-ts="' + esc(e.ts || '') + '" onclick="this.classList.toggle(\'aberto\')">'
         + '<td class="pp-num pp-mut">' + brTs(e.ts) + '</td><td>' + chipTrib(e.trib) + '</td><td class="pp-mut">' + ORIGEM_ROT[e.origem] + '</td>'
         + '<td><strong class="pp-forte-t">' + esc(e.titulo) + '</strong> ' + statusErp(e)
-        + (e.alerta ? ' <span class="pp-st pp-st-' + NIVEL[e.alerta][1] + '">' + NIVEL[e.alerta][0] + '</span>' : '') + (e.card ? refCard(e.card) : '') + '<div class="pp-ev-desc">' + e.desc + (e.descEntrega ? ' · ' + e.descEntrega : '') + '</div></td>'
+        + (e.alerta && !c.semSituacao ? ' <span class="pp-st pp-st-' + NIVEL[e.alerta][1] + '">' + NIVEL[e.alerta][0] + '</span>' : '') + (e.card ? refCard(e.card) : '') + '<div class="pp-ev-desc">' + e.desc + (e.descEntrega ? ' · ' + e.descEntrega : '') + '</div></td>'
         + '<td>' + (e.valor > 0 && e.para !== undefined ? efeitoHtml(e) : '<span class="pp-mut">—</span>') + '</td><td class="pp-mut">' + esc(e.ator) + '</td></tr>';
     }).join('');
     return '<div data-pp-trilha>' + tool + '<div class="pp-scroll"><table class="pp-tab pp-trilha-t"><thead><tr><th>Data e hora</th><th>Tributo</th><th>Origem</th><th>Evento</th><th>Valor e efeito</th><th>Quem registrou</th></tr></thead><tbody>'
@@ -550,6 +569,8 @@
     if (!c.evs.length) return '<div class="pp-mut">Nenhum evento disponível.</div>';
     c.evs.forEach(function (e) { delete e.alerta; delete e.card; });
     var s = X.situacao(c.nf, c.rfs, c.evs);
+    // AV-DF: o histórico fica só com a trilha; a situação vai para a aba Alertas
+    if (c.semSituacao) return resumo(c.evs, null) + trilha(c, key);
     return resumo(c.evs, s) + situacaoHtml(s) + trilha(c, key);
   };
 
@@ -599,6 +620,8 @@
   /* ═══ montagem dos modais ═════════════════════════════════════════════ */
   // corpo do detalhe do DF de entrada com partição
   X.corpoDF = function (nf, ctx) {
+    // pacote AV-DF (js/detalhe-df.js): abas no topo, de entrada e de saída, com ou sem partição
+    if (X.abasTopo && X.abasTopo() && X.corpoDFAbas) return X.corpoDFAbas(nf, ctx);
     if (nf.tipo === 'saida') return corpoDFDeb(nf, ctx);
     var q = X.valores(nf), key = chave('df-' + nf.numero);
     var evs = X.eventos(nf, null);
@@ -626,6 +649,9 @@
       + '<div data-aba="hist"><div id="pph-' + key + '">' + X.historico(key) + '</div></div></div>';
     return '<div class="pp-body"><div class="mbox-col pp-col-l">' + esq + '</div><div class="mbox-col pp-col-r">' + dir + '</div></div>';
   }
+  // peças internas para o detalhe com abas no topo (pacote AV-DF, js/detalhe-df.js)
+  X._p = { quadro: quadro, quadroDeb: quadroDeb, rfsDe: rfsDe, rfsDeb: rfsDeb, chave: chave, trib: trib, chipTrib: chipTrib,
+    refCard: refCard, stCard: stCard, esc: esc, money: money, br: br, brTs: brTs, ORG: ORG, cada: cada };
   // histórico do DF sem partição (saída): só a trilha
   X.historicoDF = function (nf) {
     var key = chave('df-' + nf.numero);
