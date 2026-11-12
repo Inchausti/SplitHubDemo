@@ -9,7 +9,9 @@ Uso:
                                  ajustados para a pasta, antes de você editar a versão nova
   python tools/hub.py changelog <ver> <dd/mm/aaaa> "<módulo>" "<título>" "<corpo html>"
                                  insere a entrada com o próximo R-NNN no topo do prds.html e do
-                                 changelog-hub.html; o hub fica com as 30 mais recentes
+                                 changelog-hub.html; o hub fica com as 30 mais recentes.
+                                 Corpo com aspas (href="..."): passe @arquivo.html — o PowerShell
+                                 5.1 tira as aspas de dentro do argumento
 
 Desde 27/10/2026 (R-270) as versões antigas ficam em src/docs/versoes/, não ao lado das vigentes,
 e o histórico completo do changelog fica em src/docs/changelog-hub.html.
@@ -139,9 +141,20 @@ def _bloco_div(t, i):
     raise ValueError(i)
 
 
-def changelog(ver, data, modulo, titulo, corpo):
-    """Próximo R-NNN no topo dos dois changelogs; o hub guarda só as NO_HUB mais recentes."""
-    hub, todo = os.path.join(D, 'prds.html'), os.path.join(D, 'changelog-hub.html')
+def ler_corpo(corpo):
+    """'@arquivo' lê o corpo de um arquivo: no PowerShell 5.1 as aspas de href="..." se perdem no argumento."""
+    if corpo.startswith('@'):
+        return io.open(corpo[1:], encoding='utf-8').read().strip()
+    return corpo
+
+
+def changelog(ver, data, modulo, titulo, corpo, pasta=None):
+    """Próximo R-NNN no topo dos dois changelogs; o hub guarda só as NO_HUB mais recentes.
+
+    pasta é a src/docs onde gravar (padrão: a do repositório); tools/avaliacao.py registrar usa
+    uma cópia temporária para mostrar o diff antes de gravar."""
+    pasta = pasta or D
+    hub, todo = os.path.join(pasta, 'prds.html'), os.path.join(pasta, 'changelog-hub.html')
     nums = [int(x) for f in (hub, todo) for x in re.findall(r'cl-rel">R-(\d+)', io.open(f, encoding='utf-8').read())]
     rel = 'R-%03d' % (max(nums) + 1)
     ent = (u'<div class="cl-entry">\n        <div class="cl-left">\n          <div class="cl-rel">%s</div>\n          <div class="cl-ver">%s</div>\n'
@@ -182,7 +195,7 @@ if __name__ == '__main__':
     elif a[0] == 'arquivar' and len(a) == 3:
         print('arquivado em', arquivar(a[1], a[2]))
     elif a[0] == 'changelog' and len(a) == 6:
-        print('entrada', changelog(*a[1:]))
+        print('entrada', changelog(a[1], a[2], a[3], a[4], ler_corpo(a[5])))
     else:
         print(__doc__)
         sys.exit(1)

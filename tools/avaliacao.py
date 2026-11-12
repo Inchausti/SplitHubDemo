@@ -10,6 +10,31 @@ Uso:
   python tools/avaliacao.py relatorio                   gera src/docs/relatorio-avaliacao.html (e a cópia em docs/docs)
   python tools/avaliacao.py montar [--publicar "msg"]   refaz a branch avaliacao = master + pacotes pendentes
   python tools/avaliacao.py promover AV-EV [--enviar]   merge do pacote aprovado no master; sem --enviar, só simula
+  python tools/avaliacao.py registrar AV-GS [--dry-run] registra no hub o pacote já escrito no JSON (abaixo)
+  python tools/verificar-pacote.py AV-GS [--aqui]       abre a entrada do pacote num navegador headless (abaixo)
+
+Registrar um pacote novo (a entrada dele já está em tools/avaliacao-features.json):
+  python tools/avaliacao.py registrar AV-GS --dry-run   mostra o diff e não grava nada
+  python tools/avaliacao.py registrar AV-GS --modulo "Inconsistências" --corpo corpo.html
+    - "atualizado" do JSON passa a hoje e o relatório de avaliação é regerado;
+    - card-relatorio-avaliacao no prds.html: a frase "N pacotes em avaliação, M itens: …" com os
+      pacotes pendentes, o chip "X de Y decididos" e o mês; data-desc e card-desc ficam iguais.
+      O texto de cada pacote é o que o card já diz; o pacote novo usa o nome, ou --rotulo "…";
+    - entrada no changelog pelo tools/hub.py, chamado de dentro do Python. Corpo: --corpo
+      <arquivo.html> (nunca no argumento: o PowerShell 5.1 tira as aspas de href="…"); sem ele,
+      um corpo gerado do resumo, da branch e das flags. Também --titulo, --modulo (padrão
+      Avaliação), --versao (padrão feat) e --sem-changelog;
+    - espelha prds.html em docs/docs e docs/, e changelog-hub e relatório em docs/docs.
+  Não faz commit nem push: confira o diff, faça o commit e envie a origin e splithub.
+
+Conferir o pacote no navegador:
+  python tools/verificar-pacote.py AV-GS                o src/ da branch do pacote (git archive, em memória)
+  python tools/verificar-pacote.py AV-GS --aqui         o src/ deste checkout
+    Serve o src/ local (as flags em avaliação ligam ali), entra com sessionStorage.sh_auth='1' e
+    #lp-screen escondida (sem digitar senha), abre a rota "entrada" do pacote, junta os erros do
+    console e mede o estouro horizontal em 375, 768 e 1440 px: body.scrollWidth === innerWidth,
+    ignorando .twrap e o quadro do kanban. Usa o Chrome ou o Edge da máquina, headless, pelo
+    DevTools Protocol, só com a biblioteca padrão (sem Playwright). Sai com 1 se reprovar.
 
 As decisões ficam em tools/avaliacao-features.json (campo decisao de cada item: pendente, aprovado,
 alterar ou rejeitado). A promoção lê o arquivo como está no master: decisão não commitada não vale.
@@ -160,7 +185,7 @@ def cmd_status():
 # ── montar a integração ────────────────────────────────────────────────────
 def cmd_montar(publicar=None):
     dados = carregar()
-    pend = [p for p in dados['pacotes'] if p.get('situacao') not in ('promovido', 'rejeitado') and not no_master(p)]
+    pend = em_avaliacao(dados)
     ordem = []
     for p in pend:
         for x in cadeia(dados, p['id']):
@@ -254,6 +279,174 @@ def cmd_promover(pid, enviar=False):
     else:
         git(['update-ref', 'refs/heads/master', sha])
     print('Agora refaça a avaliação sem o pacote: python tools/avaliacao.py montar --publicar "pacote %s no app"' % pid)
+
+
+# ── registrar ──────────────────────────────────────────────────────────────
+PRDS = os.path.join('src', 'docs', 'prds.html')
+CLOG = os.path.join('src', 'docs', 'changelog-hub.html')
+CARD = 'card-relatorio-avaliacao'
+ESPELHOS = [(PRDS, os.path.join('docs', 'docs', 'prds.html')), (PRDS, os.path.join('docs', 'prds.html')),
+            (CLOG, os.path.join('docs', 'docs', 'changelog-hub.html')), (REL, REL_ESPELHO)]
+NUM = [u'Nenhum', u'Um', u'Dois', u'Três', u'Quatro', u'Cinco', u'Seis', u'Sete', u'Oito', u'Nove', u'Dez']
+MESES = u'Jan Fev Mar Abr Mai Jun Jul Ago Set Out Nov Dez'.split()
+# "Dois pacotes em avaliação, 17 itens: AV-BO …, de 12/11/2026." — termina no ponto seguido de nova frase
+FRASE = re.compile(u'(?:Nenhum pacote em avaliação|(?:%s|\\d+) pacotes? em avaliação, \\d+ ite(?:m|ns): (?P<lista>.*?))'
+                   u'\\.(?=\\s+[A-ZÀ-Ý]|\\s*$)' % u'|'.join(NUM[1:]))
+
+
+def em_avaliacao(dados):
+    return [p for p in dados['pacotes'] if p.get('situacao') not in ('promovido', 'rejeitado') and not no_master(p)]
+
+
+def extenso(n):
+    return NUM[n] if n < len(NUM) else str(n)
+
+
+def lista_pt(xs):
+    return xs[0] if len(xs) == 1 else u', '.join(xs[:-1]) + u' e ' + xs[-1]
+
+
+def rotulos_no_card(lista):
+    """O texto de cada pacote já citado no card, como está escrito (pode ter sido ajustado à mão)."""
+    out = {}
+    for seg in re.split(r'(?:, | e )(?=AV-[A-Z0-9]+ )', lista or u''):
+        m = re.match(r'(AV-[A-Z0-9]+) (.*)$', seg, re.S)
+        if m:
+            out[m.group(1)] = m.group(2)
+    return out
+
+
+def frase_card(pend, atuais, pid=None, rotulo=None):
+    """Rótulo de cada pacote: --rotulo (só o pacote registrado), senão o que o card já diz, senão o nome."""
+    if not pend:
+        return u'Nenhum pacote em avaliação.'
+    partes = []
+    for p in pend:
+        if rotulo and p['id'] == pid:
+            r = h(rotulo)
+        elif p['id'] in atuais:
+            r = atuais[p['id']]
+        else:
+            n = p['nome']
+            r = h(n if n[1:2].isupper() else n[:1].lower() + n[1:])
+        partes.append(u'%s %s' % (p['id'], r))
+    n_it = sum(len(p['itens']) for p in pend)
+    return u'%s %s em avaliação, %d %s: %s.' % (extenso(len(pend)), u'pacote' if len(pend) == 1 else u'pacotes',
+                                              n_it, u'item' if n_it == 1 else u'itens', lista_pt(partes))
+
+
+def reescrever_card(base, dados, hoje, pid=None, rotulo=None):
+    """Card do relatório no hub: a frase dos pacotes em avaliação, o chip de decididos e o mês.
+
+    O data-desc é a fonte; o card-desc visível sai idêntico a ele."""
+    arq = os.path.join(base, PRDS)
+    t = io.open(arq, encoding='utf-8').read()
+    ini, fim = t.find('<!-- CARD:%s:START -->' % CARD), t.find('<!-- CARD:%s:END -->' % CARD)
+    if ini < 0 or fim < 0:
+        raise SystemExit('card %s não encontrado em %s' % (CARD, PRDS))
+    card = t[ini:fim]
+    md = re.search(r'data-desc="([^"]*)"', card)
+    mc = re.search(r'<div class="prd-desc card-desc">(.*?)</div>', card, re.S)
+    if not md or not mc:
+        raise SystemExit('data-desc ou card-desc ausente no card %s' % CARD)
+    desc = md.group(1)
+    if mc.group(1) != desc:
+        print('aviso: card-desc diferia do data-desc; os dois ficam com o data-desc')
+    mf = FRASE.search(desc)
+    if not mf:
+        raise SystemExit(u'frase "N pacotes em avaliação, M itens: …" não encontrada no data-desc do card %s' % CARD)
+    frase = frase_card(em_avaliacao(dados), rotulos_no_card(mf.group('lista')), pid, rotulo)
+    desc = desc[:mf.start()] + frase + desc[mf.end():]
+    tot = sum(len(p['itens']) for p in dados['pacotes'])
+    dec = sum(1 for p in dados['pacotes'] for i in p['itens'] if i['decisao'] != 'pendente')
+    mes = u'%s/%d' % (MESES[hoje.month - 1], hoje.year)
+    card = re.sub(r'data-desc="[^"]*"', lambda m: u'data-desc="%s"' % desc, card, count=1)
+    card = re.sub(r'(<div class="prd-desc card-desc">).*?(</div>)', lambda m: m.group(1) + desc + m.group(2), card, count=1, flags=re.S)
+    card, n = re.subn(r'\d+ de \d+ decididos', u'%d de %d decididos' % (dec, tot), card, count=1)
+    if not n:
+        raise SystemExit('chip "X de Y decididos" não encontrado no card %s' % CARD)
+    card = re.sub(r'data-date="[^"]*"', u'data-date="%s"' % mes, card, count=1)
+    card = re.sub(r'(<span class="card-date">)[^<]*(</span>)', lambda m: m.group(1) + mes + m.group(2), card, count=1)
+    io.open(arq, 'w', encoding='utf-8', newline='\n').write(t[:ini] + card + t[fim:])
+    return frase, dec, tot
+
+
+def corpo_padrao(dados, p):
+    """Corpo do changelog quando não vem --corpo: o resumo do pacote, a branch, as flags e as contagens."""
+    fl = [u'<code>%s</code>' % h(k) for k in p['flags']]
+    atras = (u', atrás da flag %s' % fl[0]) if len(fl) == 1 else (u', atrás das flags %s' % lista_pt(fl)) if fl else u''
+    pend = sum(1 for q in dados['pacotes'] for i in q['itens'] if i['decisao'] == 'pendente')
+    n = len(p['itens'])
+    return (u'%s Construído na branch <code>%s</code>%s. %s %s no <a href="relatorio-avaliacao.html">relatório de avaliação</a>, '
+            u'que passa a %d %s. Não promovido ao app.') % (
+        h(p.get('resumo') or p['nome']), h(p['branch']), atras, extenso(n), u'item' if n == 1 else u'itens',
+        pend, u'item pendente' if pend == 1 else u'itens pendentes')
+
+
+def opcao(a, nome):
+    if nome not in a:
+        return None
+    k = a.index(nome)
+    if k + 1 >= len(a):
+        raise SystemExit('%s pede um valor' % nome)
+    return a[k + 1]
+
+
+def ler_texto(arq):
+    return io.open(arq, encoding='utf-8').read() if os.path.exists(arq) else None
+
+
+def cmd_registrar(pid, a):
+    """Registra no hub um pacote cuja entrada já está em tools/avaliacao-features.json.
+
+    Tudo é feito numa cópia temporária dos arquivos; --dry-run mostra o diff e não grava nada."""
+    sys.path.insert(0, os.path.join(REPO, 'tools'))
+    import hub
+    seco, sem_cl = '--dry-run' in a, '--sem-changelog' in a
+    tmp = tempfile.mkdtemp(prefix='sh-registrar-')
+    arqs = [REG, REL, PRDS, CLOG] + [d for _, d in ESPELHOS]
+    try:
+        for f in arqs:
+            if os.path.exists(os.path.join(REPO, f)):
+                os.makedirs(os.path.dirname(os.path.join(tmp, f)), exist_ok=True)
+                shutil.copyfile(os.path.join(REPO, f), os.path.join(tmp, f))
+        dados = carregar(tmp)
+        p = pacote(dados, pid)
+        if p.get('situacao') in ('promovido', 'rejeitado') or no_master(p):
+            raise SystemExit('%s não está em avaliação (%s): nada a registrar' % (pid, p.get('situacao')))
+        hoje = datetime.date.today()
+        dados['atualizado'] = hoje.strftime('%d/%m/%Y')
+        gravar(dados, tmp)
+        gerar_relatorio(dados, tmp)
+        frase, dec, tot = reescrever_card(tmp, dados, hoje, pid, opcao(a, '--rotulo'))
+        rel = None
+        if not sem_cl:
+            arq = opcao(a, '--corpo')
+            corpo = io.open(arq, encoding='utf-8').read().strip() if arq else corpo_padrao(dados, p)
+            rel = hub.changelog(opcao(a, '--versao') or u'feat', hoje.strftime('%d/%m/%Y'), opcao(a, '--modulo') or u'Avaliação',
+                                opcao(a, '--titulo') or u'Pacote %s em avaliação: %s' % (pid, p['nome']), corpo,
+                                os.path.join(tmp, 'src', 'docs'))
+        for origem, destino in ESPELHOS:
+            shutil.copyfile(os.path.join(tmp, origem), os.path.join(tmp, destino))
+        # compara o texto, não os bytes: o checkout tem CRLF (core.autocrlf) e as ferramentas gravam LF
+        mudou = [f for f in arqs if ler_texto(os.path.join(tmp, f)) != ler_texto(os.path.join(REPO, f))]
+        if seco:
+            import difflib
+            for f in mudou:
+                antes = (ler_texto(os.path.join(REPO, f)) or u'').splitlines(True)
+                depois = ler_texto(os.path.join(tmp, f)).splitlines(True)
+                sys.stdout.writelines(difflib.unified_diff(antes, depois, 'a/' + f.replace('\\', '/'), 'b/' + f.replace('\\', '/'), n=1))
+        else:
+            for f in mudou:
+                shutil.copyfile(os.path.join(tmp, f), os.path.join(REPO, f))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    print(u'\n%s · card: %s · %d de %d decididos%s' % (pid, frase, dec, tot, (u' · changelog %s' % rel) if rel else u''))
+    if seco:
+        print('simulação: nada foi gravado. %d arquivo(s) mudariam.' % len(mudou))
+        return
+    print('gravados:\n  ' + '\n  '.join(f.replace('\\', '/') for f in mudou) if mudou else 'nada mudou')
+    print('Confira no navegador: python tools/verificar-pacote.py %s' % pid)
 
 
 # ── relatório ──────────────────────────────────────────────────────────────
@@ -530,10 +723,16 @@ def main(a):
         cmd_montar(a[a.index('--publicar') + 1] if '--publicar' in a else None)
     elif c == 'promover' and len(a) > 1:
         cmd_promover(a[1], '--enviar' in a)
+    elif c == 'registrar' and len(a) > 1:
+        cmd_registrar(a[1], a[2:])
     else:
         print(__doc__)
         sys.exit(1)
 
 
 if __name__ == '__main__':
+    try:
+        sys.stdout.reconfigure(errors='replace')  # console fora de UTF-8 não derruba o diff
+    except AttributeError:
+        pass
     main(sys.argv[1:])
