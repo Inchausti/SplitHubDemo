@@ -21,9 +21,9 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.15'
-DATA = u'10/11/2026'
-BASE_MAPA = u'Mapa de Funcionalidades v2.14'
+VERSAO = u'v2.16'
+DATA = u'12/11/2026'
+BASE_MAPA = u'Mapa de Funcionalidades v2.15'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
 URL_DOCS = 'https://split-hubhq.github.io/app/docs/'
@@ -230,7 +230,7 @@ NOTA = {
     1:  u'O módulo que a tese defende entra quase inteiro: 11 de 14. Ficam fora três gráficos analíticos — eles explicam o crédito, não o garantem. O Top 5 e Top 10 de fornecedores subiu na revisão de 15/09: saber de quem cobrar primeiro é operação, não análise. O painel <strong>Ressarcimento no ciclo do crédito</strong> entra em M1 (D17): o M0 do módulo não muda. A <strong>parcialidade</strong> (D19) passou ao mapa em 26/10, com o protótipo incorporado ao master: partição por tributo, selo por tributo, detalhe com as duas partições e histórico de movimentos, as quatro em M0.',
     2:  u'Débito entra só para a apuração fechar. O produto se vende pelo crédito. O aviso da trava da intenção de ressarcimento entra em M1 (D17).',
     3:  u'Entra a guia, o comprovante e o rastro dos três status. A entrega ao ERP passa ao M0 junto com a API. Na revisão de 15/09 a <strong>aba Execução Programada</strong> entrou e a gestão de colunas saiu: o piloto precisa ver o que está agendado, não configurar a própria grade. Entra também o <strong>aviso ao fornecedor</strong> do recolhimento — sem ele o fornecedor paga o mesmo tributo de novo.',
-    4:  u'A inconsistência é o que impede o crédito de morrer em silêncio. Na revisão de 15/09 a <strong>atribuição de responsável</strong> entrou — inconsistência sem dono não é tratada — e os filtros multiselect saíram. A família Ressarcimento de inconsistências entra em M1 (D17). Em 09/11/2026 entrou o <strong>evento fiscal ou a nota de ajuste como ação</strong> da inconsistência (AV-EV): pedir o evento e acompanhar a solicitação ficam em M1, porque tiram o operador do meio; a prévia do efeito fica em M2, porque explica o saldo antes de mudá-lo. Em 10/11/2026 entraram a <strong>família I</strong>, uma ocorrência por tributo, e os <strong>alertas de competência</strong> (AV-E2), em M1 com o módulo de Eventos fiscais de que dependem: sem a esteira no M0, as ocorrências dela também não estão.',
+    4:  u'A inconsistência é o que impede o crédito de morrer em silêncio. Na revisão de 15/09 a <strong>atribuição de responsável</strong> entrou — inconsistência sem dono não é tratada — e os filtros multiselect saíram. A família Ressarcimento de inconsistências entra em M1 (D17). Em 09/11/2026 entrou o <strong>evento fiscal ou a nota de ajuste como ação</strong> da inconsistência (AV-EV): pedir o evento e acompanhar a solicitação ficam em M1, porque tiram o operador do meio; a prévia do efeito fica em M2, porque explica o saldo antes de mudá-lo. Em 10/11/2026 entraram a <strong>família I</strong>, uma ocorrência por tributo, e os <strong>alertas de competência</strong> (AV-E2), em M1 com o módulo de Eventos fiscais de que dependem: sem a esteira no M0, as ocorrências dela também não estão. Em 12/11/2026 entra o <strong>atendimento</strong> da proposta de Grupos e SLA, aprovada no mesmo dia (PRD v1.6), com a faixa sugerida nela: grupos, regras, o sorteio pela menor carga, a exigência em cada passagem, o SLA com o relógio e a listagem para trabalhar em volume ficam em M0, porque ocorrência sem dono e sem prazo não é tratada; teste de combinação, matriz, redistribuição, avisos, dashboard e o chamado no detalhe do documento em M1; os indicadores por grupo e de SLA em M2. O teto do SLA pelo prazo do crédito fica fora até a D-14 da proposta ser decidida.',
     5:  u'A porta de entrada inteira, inclusive por API: com a decisão de 14/09, o documento entra por arquivo ou por integração desde o primeiro dia.',
     6:  u'Projeção pressupõe base real acumulada. Não existe piloto que comece por aqui.',
     7:  u'<strong>Reclassificado em 15/09:</strong> 5 de 6 no M0. O score, o critério, o badge, o ranking e o mapa de bolhas deixam de ser argumento de renovação e passam a ser o que diz <em>de quem cobrar primeiro</em>. Só a evolução histórica do score fica para depois — ela exige série que o piloto ainda não tem.',
@@ -268,6 +268,52 @@ PRIO_NOTA = {
 
 # funcionalidades que NAO existem no produto e entram na priorizacao mesmo assim
 NOVAS = {
+    4: [
+        (u'Cadastrar grupos de atendimento', 'c', 'M0', None,
+         u'Grupos com nome, gestor e situação, e sempre um grupo padrão. É o que dá a cada área a fila que é dela, em vez de uma fila só para todos.'),
+        (u'Gerir membros e disponibilidade', 'c', 'M0', None,
+         u'Membros vindos da gestão de usuários, com perfil e escopo à vista, e ausência com data de volta. Quem está fora não recebe chamado.'),
+        (u'Regras de roteamento', 'c', 'M0', None,
+         u'Grupo por família ou tipo de ocorrência e por tipo de DF, vencendo a mais específica. A ocorrência já nasce no grupo que a resolve.'),
+        (u'Atribuição automática pela menor carga', 'a', 'M0', None,
+         u'Toda ocorrência nova recebe responsável sorteado entre os elegíveis de menor carga. Inconsistência sem dono não é tratada, e a carga evita que caia tudo na mesma pessoa.'),
+        (u'Grupo padrão e fila do grupo', 'c', 'M0', None,
+         u'O que nenhuma regra cobre vai para o grupo padrão, marcado sem regra; sem elegível disponível, a ocorrência espera na fila do grupo, com aviso ao gestor. Nada some.'),
+        (u'Kanban por grupo e responsável', 'l', 'M0', None,
+         u'Os cinco estados com grupo, responsável e relógio do SLA no card, e os recortes meus, do meu grupo e todos. É onde cada pessoa vê o que é dela.'),
+        (u'Assumir, reatribuir, transferir e devolver', 'a', 'M0', None,
+         u'Pegar da fila, reatribuir no grupo, devolver e transferir de grupo com motivo, cada ação com a origem na trilha.'),
+        (u'Testar uma combinação de roteamento', 'c', 'M1', None,
+         u'Escolher o tipo de ocorrência e o tipo de DF e ver qual regra vence, e por quê, antes de a regra pegar chamado de verdade.'),
+        (u'Matriz de cobertura do roteamento', 'g', 'M1', None,
+         u'Família × tipo de DF com o grupo resultante, destacando o que cai no padrão. Mostra o buraco de regra antes do primeiro chamado.'),
+        (u'Redistribuição de chamados', 'a', 'M1', None,
+         u'Quem sai do grupo, perde o perfil ou o CNPJ do escopo devolve as ocorrências abertas, que são distribuídas de novo pela menor carga.'),
+        (u'Indicadores por grupo', 'g', 'M2', None,
+         u'Abertas, sem responsável, idade média e carga por membro, na lista de grupos. Útil quando houver volume.'),
+        (u'Chamados sem regra de roteamento', 'l', 'M0', None,
+         u'O que caiu no padrão por falta de regra, por tipo × DF, com a regra criada a partir da linha e aviso quando o catálogo ganha tipo sem regra.'),
+        (u'Tipos de SLA', 'c', 'M0', None,
+         u'Primeiro atendimento, resolução e retorno do terceiro, com início, fim e pausa sobre os cinco estados. É o que o prazo mede.'),
+        (u'Regras de SLA e SLA padrão por família', 'c', 'M0', None,
+         u'Prazo de cada tipo de SLA por família ou tipo e tipo de DF; sem regra, o padrão da família. Toda ocorrência tem prazo.'),
+        (u'Relógio de SLA na ocorrência', 'r', 'M0', None,
+         u'Um relógio por tipo, com pausa enquanto depende de terceiro e calendário útil; o mais urgente aparece no card. Mostra o que vai vencer antes de vencer.'),
+        (u'Avisos de risco e estouro do SLA', 'a', 'M1', None,
+         u'Aviso ao responsável no risco e ao gestor no estouro, por e-mail na aplicação desenvolvida; no protótipo, na trilha e nos recortes.'),
+        (u'Indicadores de SLA', 'g', 'M2', None,
+         u'Percentual cumprido por grupo, regra e tipo de SLA, e tempo médio até o atendimento e a resolução. Explica a operação, não a garante.'),
+        (u'Listagem com grupo e SLA', 'l', 'M0', None,
+         u'Colunas de grupo, responsável, regra, SLA, prazo do crédito, reaberturas e solicitação, com filtros e ordenação pelo prazo. É onde se trabalha em volume.'),
+        (u'Dashboard de atendimento', 'g', 'M1', None,
+         u'Sem responsável, sem regra, em risco e estourado, tabela por grupo, crédito em risco pelo prazo e onde a ocorrência espera, por terceiro.'),
+        (u'Exigência em cada passagem de estado', 'a', 'M0', None,
+         u'A passagem não acontece sem o que a torna verdadeira: responsável, terceiro, resposta, desfecho e efeito revertido, ficha de glosa. Nenhum estado afirma o que não foi registrado.'),
+        (u'Elegibilidade por perfil e escopo', 'c', 'M0', None,
+         u'Só entra no sorteio e na atribuição quem pode operar a família e enxerga o CNPJ do documento. Ninguém fica com chamado que não pode resolver.'),
+        (u'Ocorrência com grupo e SLA no detalhe do documento', 'l', 'M1', None,
+         u'A linha da ocorrência na aba Alertas do DF e do RF mostra grupo, responsável e relógio do SLA, ao lado do link para o card.'),
+    ],
     18: [
         (u'Motor de execução das automações', 'c', 'M0', None,
          u'O que faz a régua disparar: avaliação diária dos registros contra as etapas, respeito ao teto de envios e '
@@ -309,6 +355,28 @@ NOVAS = {
 
 # vinculo com o PRD das funcionalidades que ainda nao existem
 NOVAS_PRD = {
+    u'Cadastrar grupos de atendimento': 'prd-inconsistencias.html#f-15',
+    u'Gerir membros e disponibilidade': 'prd-inconsistencias.html#f-16',
+    u'Regras de roteamento': 'prd-inconsistencias.html#f-17',
+    u'Atribuição automática pela menor carga': 'prd-inconsistencias.html#f-18',
+    u'Grupo padrão e fila do grupo': 'prd-inconsistencias.html#f-19',
+    u'Kanban por grupo e responsável': 'prd-inconsistencias.html#f-20',
+    u'Assumir, reatribuir, transferir e devolver': 'prd-inconsistencias.html#f-21',
+    u'Testar uma combinação de roteamento': 'prd-inconsistencias.html#f-22',
+    u'Matriz de cobertura do roteamento': 'prd-inconsistencias.html#f-23',
+    u'Redistribuição de chamados': 'prd-inconsistencias.html#f-24',
+    u'Indicadores por grupo': 'prd-inconsistencias.html#f-25',
+    u'Chamados sem regra de roteamento': 'prd-inconsistencias.html#f-26',
+    u'Tipos de SLA': 'prd-inconsistencias.html#f-27',
+    u'Regras de SLA e SLA padrão por família': 'prd-inconsistencias.html#f-28',
+    u'Relógio de SLA na ocorrência': 'prd-inconsistencias.html#f-29',
+    u'Avisos de risco e estouro do SLA': 'prd-inconsistencias.html#f-31',
+    u'Indicadores de SLA': 'prd-inconsistencias.html#f-32',
+    u'Listagem com grupo e SLA': 'prd-inconsistencias.html#f-33',
+    u'Dashboard de atendimento': 'prd-inconsistencias.html#f-34',
+    u'Exigência em cada passagem de estado': 'prd-inconsistencias.html#f-35',
+    u'Elegibilidade por perfil e escopo': 'prd-inconsistencias.html#f-36',
+    u'Ocorrência com grupo e SLA no detalhe do documento': 'prd-inconsistencias.html#f-37',
     u'Login próprio por e-mail e senha': 'prd-organizacao.html#s15',
     u'Login via SSO corporativo': 'prd-organizacao.html#s15',
 }
@@ -909,6 +977,10 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.16</div><div class="ver-desc">'
+  u'12/11/2026 — Base: <strong>Mapa v2.15, com 333 funcionalidades</strong>. Entra o <strong>atendimento de Inconsistências</strong> — grupos, roteamento, '
+  u'sorteio pela menor carga e SLA —, aprovado na proposta de Grupos e SLA e escrito no PRD v1.6: 22 funcionalidades novas, que ainda não estão no produto, '
+  u'14 em M0, 6 em M1 e 2 em M2, com a faixa sugerida na proposta. O teto do SLA pelo prazo do crédito fica fora enquanto a decisão dele estiver em aberto.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v2.15</div><div class="ver-desc">'
   u'10/11/2026 — Base: <strong>Mapa v2.14, com 333 funcionalidades</strong>. Entra o <strong>lote 2 de Eventos fiscais</strong> (AV-E2), '
   u'promovido ao app no mesmo dia: cinco funcionalidades no módulo 22, a família I e os alertas de competência em Inconsistências e o sétimo '
