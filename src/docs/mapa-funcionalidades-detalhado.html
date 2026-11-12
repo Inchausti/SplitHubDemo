@@ -103,6 +103,13 @@ body{background:var(--bg);color:var(--txt1);font:14px/1.6 'Segoe UI',system-ui,s
 .feat-num{font-size:11px;color:var(--txt3);font-weight:600;width:28px;padding-right:0;}
 .feat-name-cell{font-size:13px;font-weight:600;color:var(--txt1);}
 .feat-desc-cell{font-size:12px;color:var(--txt2);line-height:1.5;}
+/* vínculo com o PRD, sob a descrição — o mesmo da página de priorização */
+.prd-ref{margin-top:6px;overflow-wrap:anywhere;}
+.prd-link{display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:6px;font-size:11.5px;font-weight:600;color:var(--teal);text-decoration:none;border-bottom:1px dotted var(--teal);}
+.prd-link:hover{border-bottom-style:solid;}
+.prd-link .fid{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;font-weight:800;}
+.prd-sem{font-size:11.5px;font-weight:600;color:var(--amber);}
+.prd-sem a{color:var(--amber);}
 .feat-type-cell{text-align:center;}
 .ft{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap;}
 .ft-l{background:var(--blue-d);color:var(--blue);}
@@ -137,7 +144,7 @@ img, svg { max-width: 100%; height: auto; }
 
   <div class="doc-eyebrow">SplitHub · Produto</div>
   <h1 class="doc-title">Mapa de Funcionalidades — Detalhado</h1>
-  <p class="doc-sub">Descrição completa de cada funcionalidade entregue no SplitHub, organizada por módulo. Para visão rápida em chips, consulte a versão resumida.</p>
+  <p class="doc-sub">Descrição completa de cada funcionalidade entregue no SplitHub, organizada por módulo, com o link para o PRD que a descreve. Para visão rápida em chips, consulte a versão resumida.</p>
 
   <div class="meta-row">
     <div class="meta-item"><div class="meta-label">Produto</div><div class="meta-val">SplitHub</div></div>
@@ -169,6 +176,52 @@ img, svg { max-width: 100%; height: auto; }
 <script>
 var TYPE_LABEL = {l:'Listagem',a:'Ação',r:'Risco/Inc.',g:'Analítico',c:'Config.',p:'Transversal'};
 var TYPE_CLASS = {l:'ft-l',a:'ft-a',r:'ft-r',g:'ft-g',c:'ft-c',p:'ft-p'};
+
+/* Título de cada PRD, como no <title> dele. PRD novo citado num campo p entra aqui;
+   sem isso o link aparece com o nome do arquivo. */
+var PRD_NOME = {
+  'prd-analytics.html':'Analytics',
+  'prd-apuracao.html':'Apuração IBS/CBS',
+  'prd-arcabouco.html':'Arcabouço de interface',
+  'prd-automacoes.html':'Automações',
+  'prd-conciliacao.html':'Conciliação IBS/CBS',
+  'prd-contratos.html':'Contratos',
+  'prd-credito.html':'Crédito IBS/CBS',
+  'prd-debito.html':'Débitos IBS/CBS',
+  'prd-eventos-fiscais.html':'Eventos fiscais',
+  'prd-execucao-rad.html':'Execução RAD',
+  'prd-fornecedor.html':'Fornecedor',
+  'prd-inconsistencias.html':'Inconsistências',
+  'prd-ingestao.html':'Ingestão de DFs',
+  'prd-inicio.html':'Início',
+  'prd-integracoes.html':'Integrações',
+  'prd-organizacao.html':'Organização',
+  'prd-pagamentos.html':'Pagamentos RAD',
+  'prd-pcont.html':'PCONT',
+  'prd-portal-fornecedor.html':'Portal do Fornecedor',
+  'prd-ressarcimento.html':'Ressarcimento'
+};
+
+/* Campo p de cada funcionalidade (ver a skill mapa-funcionalidades):
+   prd-x.html#f-04 bloco · prd-x.html#s08 seção · prd-x.html o PRD inteiro · https://… externo
+   !prd-x.html o PRD existe e não descreve · - o módulo não tem PRD */
+function prdRef(p) {
+  if (!p || p === '-') return '<span class="prd-sem">Sem PRD</span>';
+  if (/^https?:\/\//.test(p))
+    return '<a class="prd-link" href="'+p+'" target="_blank" rel="noopener">PRD do módulo, publicado à parte ↗</a>';
+  var lacuna = p.charAt(0) === '!';
+  var alvo = lacuna ? p.slice(1) : p;
+  var arq = alvo.split('#')[0];
+  var anc = alvo.indexOf('#') >= 0 ? alvo.split('#')[1] : '';
+  var nome = PRD_NOME[arq] ? 'PRD de ' + PRD_NOME[arq] : arq;
+  if (lacuna)
+    return '<span class="prd-sem">Não descrita no '+nome+' — <a href="'+arq+'" target="_blank" rel="noopener">abrir o PRD ↗</a></span>';
+  if (!anc)
+    return '<a class="prd-link" href="'+arq+'" target="_blank" rel="noopener">'+nome+' ↗</a>';
+  var fid = /^f-/.test(anc) ? anc.toUpperCase() : (/^s\d+$/.test(anc) ? 'Seção ' + anc.slice(1) : '');
+  return '<a class="prd-link" href="'+alvo+'" target="_blank" rel="noopener">Descrição completa no '+nome+
+    (fid ? ' <span class="fid">'+fid+'</span>' : '')+' ↗</a>';
+}
 
 var GROUPS = [
   {num:'Operacional',title:'Gestão e operação fiscal',mods:[0,1,2,3,4,5,15,16,21,22,20]},
@@ -1354,7 +1407,7 @@ function buildPage() {
         '<thead><tr>' +
           '<th style="width:32px;">#</th>' +
           '<th style="width:220px;">Funcionalidade</th>' +
-          '<th>Descrição</th>' +
+          '<th>Descrição e PRD</th>' +
           '<th>Tipo</th>' +
         '</tr></thead>';
       var tbody = document.createElement('tbody');
@@ -1363,7 +1416,7 @@ function buildPage() {
         tr.innerHTML =
           '<td class="feat-num">'+(i+1)+'</td>' +
           '<td class="feat-name-cell" style="color:'+m.md+'">'+f.n+'</td>' +
-          '<td class="feat-desc-cell">'+f.d+'</td>' +
+          '<td class="feat-desc-cell">'+f.d+'<div class="prd-ref">'+prdRef(f.p)+'</div></td>' +
           '<td class="feat-type-cell"><span class="ft '+TYPE_CLASS[f.t]+'">'+TYPE_LABEL[f.t]+'</span></td>';
         tbody.appendChild(tr);
       });
