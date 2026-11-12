@@ -1,6 +1,6 @@
 {
   "versao": "1.2",
-  "atualizado": "10/11/2026",
+  "atualizado": "12/11/2026",
   "integracao": "avaliacao",
   "app": {
     "branch": "master",
@@ -1290,6 +1290,154 @@
           "limites": "",
           "decisao": "aprovado",
           "obs": "Aprovado em 11/11/2026: o detalhe do RF com abas no topo sobe ao app a pedido do usuário."
+        }
+      ]
+    },
+    {
+      "id": "AV-GS",
+      "nome": "Atendimento das inconsistências — grupos, sorteio e exigências",
+      "branch": "feat/grupos-sla",
+      "depende": [
+        "AV-00"
+      ],
+      "registro": "src/js/atendimento.js",
+      "flags": {
+        "atendimento_grupos": "Grupos, regras de roteamento, sorteio pela menor carga, recortes do kanban e ações do card",
+        "atendimento_exigencias": "Cada passagem do ciclo do chamado pede o que a proposta exige"
+      },
+      "principal": "atendimento_grupos",
+      "situacao": "em_avaliacao",
+      "promovido": null,
+      "proposta": "proposta-grupos-inconsistencias.html",
+      "resumo": "Lote 1 do atendimento das inconsistências, pela proposta v2.2 e pelo PRD de Inconsistências v1.6 (12/11/2026): grupos e regras de roteamento em Configurações › Atendimento, responsável sorteado entre os elegíveis de menor carga, kanban por pessoa e por grupo, ações do card e as exigências de cada passagem. SLA, listagem, dashboard e reabertura ficam para o lote 2.",
+      "itens": [
+        {
+          "id": "AV-GS-01",
+          "flag": "atendimento_grupos",
+          "titulo": "Grupos de atendimento, membros e ausência",
+          "construido": "Configurações › Atendimento lista os grupos com gestor, membros, quantos estão elegíveis agora e os chamados abertos. O editor do grupo usa os membros da gestão de usuários, aponta quem não pode atender e por quê (perfil ou escopo), e registra ausência com data de volta. Grupo sem ninguém elegível aparece em destaque, e a tabela de carga mostra quantos chamados abertos cada pessoa tem.",
+          "onde": "Configurações › Atendimento › aba Grupos",
+          "testar": [
+            "Abra o grupo Serviços tomados: um membro está ausente por 8 dias e há chamados na fila do grupo.",
+            "Marque a volta do membro ausente e salve: a fila é sorteada entre os elegíveis.",
+            "Tente salvar um grupo sem gestor ou sem membros: o editor diz o que falta."
+          ],
+          "atende": "Proposta v2.2, F-01 e F-02 · PRD de Inconsistências v1.6, F-15 e F-16 · D-16",
+          "limites": "Os membros são os usuários de exemplo da gestão de usuários; a ausência não lê agenda nem férias de outro sistema.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-GS-02",
+          "flag": "atendimento_grupos",
+          "titulo": "Regras de roteamento e teste de combinação",
+          "construido": "Cada regra liga família ou tipo de ocorrência, e tipo de DF, a um grupo. Quando mais de uma casa, vence a mais específica e, empatando, a que está mais acima na lista, que se reordena com ↑ e ↓. O teste de combinação mostra quais regras casam, qual vence e por quê. O editor da regra conta quantos chamados abertos ela pegaria antes de salvar.",
+          "onde": "Configurações › Atendimento › aba Regras",
+          "testar": [
+            "Teste a combinação família B (fisco) com NFS-e: casam a R-03 e a R-06, e vence a R-06 por ser mais específica.",
+            "Teste glosa de crédito: vence a R-01, que cita o tipo, sobre a regra da família.",
+            "Crie uma regra para a família I e veja a prévia do número de chamados antes de salvar."
+          ],
+          "atende": "Proposta v2.2, F-03 e F-04 · PRD v1.6, F-17 e F-22 · D-03 e D-20",
+          "limites": "A direção do DF (entrada ou saída) não é critério: depende da D-08, ainda em aberto.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-GS-03",
+          "flag": "atendimento_grupos",
+          "titulo": "Grupo padrão, chamados sem regra e matriz de cobertura",
+          "construido": "O chamado que nenhuma regra cobre vai para o grupo padrão e fica marcado \"sem regra\". A aba Sem regra agrupa as combinações descobertas, com o número de chamados, e cria a regra a partir da linha. O menu de Configurações avisa quantos chamados abertos estão sem regra. A matriz cruza família com tipo de DF e mostra, em cada célula, o grupo que receberia o chamado.",
+          "onde": "Configurações › Atendimento › abas Sem regra e Matriz · aviso no menu",
+          "testar": [
+            "Veja o número no menu de Atendimento e abra a aba Sem regra.",
+            "Use Criar regra numa linha da família I: o número do menu cai.",
+            "Na matriz, clique numa célula em âmbar para abrir a regra que a cobre."
+          ],
+          "atende": "Proposta v2.2, F-05, F-06 e F-07 · PRD v1.6, F-19, F-23 e F-26 · D-02",
+          "limites": "",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-GS-04",
+          "flag": "atendimento_grupos",
+          "titulo": "Atribuição pela menor carga e elegibilidade",
+          "construido": "Todo chamado novo recebe grupo pela regra e responsável por sorteio entre os elegíveis de menor carga, com o acaso só desempatando. Elegível é o membro ativo, presente, com perfil que opera a família (Tesouraria só opera a família D, Leitura não atende) e com o CNPJ do chamado no escopo. Sem elegível, o chamado fica na fila do grupo, com o card tracejado, e o gestor é avisado. O card explica quem estava no sorteio, quem ficou de fora e por quê.",
+          "onde": "Inconsistências › Kanban › abrir um card › bloco Atendimento",
+          "testar": [
+            "Abra um card e leia a explicação do sorteio: a carga de cada elegível e o motivo de quem ficou de fora.",
+            "Filtre Na fila do grupo: os chamados de Serviços tomados esperam alguém elegível.",
+            "Use Ver como Ana Ferreira (Tesouraria) e confira que ela só pega chamados da família D."
+          ],
+          "atende": "Proposta v2.2, F-08 · PRD v1.6, F-18 e F-36 · D-01 (menor carga, decisão de 12/11), D-07 e D-17",
+          "limites": "O CNPJ de cada chamado é derivado do número da ocorrência, porque as ocorrências de exemplo não trazem estabelecimento; o sorteio usa semente fixa para ser reproduzível.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-GS-05",
+          "flag": "atendimento_grupos",
+          "titulo": "Kanban com recortes, filtros e rótulo Ag. Terceiro",
+          "construido": "O kanban abre nos chamados de quem está olhando, com os recortes Meus, Do meu grupo e Todos e a contagem de cada um. Há filtros de grupo, de tributo, de chamados na fila e de chamados sem regra. O card traz a família, o tributo, o grupo e o responsável, e a coluna Ag. Emitente passa a Ag. Terceiro, dizendo de quem se espera a resposta.",
+          "onde": "Inconsistências › Kanban",
+          "testar": [
+            "Alterne Meus, Do meu grupo e Todos e confira as contagens.",
+            "Filtre por tributo IBS e por um grupo.",
+            "Troque a pessoa em Ver como: os recortes passam a ser os dela."
+          ],
+          "atende": "Proposta v2.2, F-09 · PRD v1.6, F-20 · D-20 e D-24",
+          "limites": "O seletor Ver como existe só no protótipo, para avaliar com outros perfis sem trocar de login. A listagem e o dashboard com grupo e responsável ficam para o lote 2.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-GS-06",
+          "flag": "atendimento_grupos",
+          "titulo": "Ações do card: assumir, reatribuir, transferir e devolver",
+          "construido": "O bloco Atendimento do card oferece Assumir (ou Pegar da fila), Reatribuir dentro do grupo, mostrando a carga de cada um, Transferir para outro grupo com motivo obrigatório, que faz novo sorteio no grupo de destino, e Devolver à fila. Cada botão diz quando está indisponível e por quê, e tudo entra no histórico com a origem.",
+          "onde": "Inconsistências › Kanban › abrir um card › bloco Atendimento",
+          "testar": [
+            "Como José da Silva, assuma um chamado da fila do seu grupo.",
+            "Transfira um chamado para outro grupo sem motivo: o botão não confirma.",
+            "Reatribua e confira a carga de cada membro na lista."
+          ],
+          "atende": "Proposta v2.2, F-10 · PRD v1.6, F-21 · D-06 e D-12",
+          "limites": "",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-GS-07",
+          "flag": "atendimento_grupos",
+          "titulo": "Redistribuição quando o grupo muda",
+          "construido": "Membro removido do grupo tem os chamados abertos sorteados de novo entre os que ficam. Membro que volta de ausência ou que entra no grupo faz a fila do grupo ser sorteada. Chamado transferido sem ninguém elegível no destino volta para aberta e fica na fila.",
+          "onde": "Configurações › Atendimento › editar grupo",
+          "testar": [
+            "Remova Rafael do grupo Fiscal — Confronto e salve: os chamados dele são sorteados entre os demais.",
+            "Ponha Rafael de volta em Serviços tomados: ele pega a fila, exceto o chamado de CNPJ fora do escopo dele."
+          ],
+          "atende": "Proposta v2.2, F-11 · PRD v1.6, F-24 · D-05",
+          "limites": "Desativar um usuário ou rebaixar o perfil dele na gestão de usuários ainda não redistribui os chamados; só a edição do grupo faz isso.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-GS-08",
+          "flag": "atendimento_exigencias",
+          "titulo": "Exigências de cada passagem do ciclo",
+          "construido": "Toda passagem de estado pede o que a seção 04 da proposta exige: assumir o chamado antes de analisar; para aguardar terceiro, quem é o terceiro e o que se espera dele; para retomar, a resposta recebida; para resolver, o desfecho e o efeito revertido; para glosar, a confirmação da decisão definitiva e a ficha de glosa. O terceiro oferece só o órgão do tributo do chamado: Receita Federal para CBS, Comitê Gestor para IBS. Vale no arrastar, no seletor do card e nas ações sugeridas. A passagem que a máquina não tem é barrada com o caminho certo.",
+          "onde": "Inconsistências › Kanban › arrastar um card ou mudar o estado no card",
+          "testar": [
+            "Arraste um chamado aberto direto para Resolvida: é barrado e oferece Assumir agora.",
+            "Mande um chamado de IBS para Ag. Terceiro: só o Comitê Gestor aparece entre os órgãos.",
+            "Glose um chamado sem ficha no formato GL-AAAA-NNNN: a confirmação não libera.",
+            "Desligue a flag atendimento_exigencias: o arrastar volta a ser livre."
+          ],
+          "atende": "Proposta v2.2, seção 04 · PRD v1.6, F-35 · D-18 e D-19",
+          "limites": "O evento fiscal pedido pelo card (pacote AV-EV) ainda muda o estado sem passar pelas exigências; entra no lote 2.",
+          "decisao": "pendente",
+          "obs": ""
         }
       ]
     }
