@@ -628,7 +628,7 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
     }
     if (c.k === 'B') return caixa('red', 'Cobrança suspensa', 'O fornecedor informou o pagamento integral depois de a guia ser emitida (' + esc(txtEvento(c.ev)) + '). A guia não deve ser paga: cancele-a, e o recolhimento volta ao fornecedor.'
       + '<div class="evl3-rad-b"><button class="btn btn-t" onclick="shEvl3.radCancelarGuia(\'' + n + '\')">Cancelar a guia</button>' + ver + '</div>');
-    if (c.k === 'C') return caixa('red', 'Pagamento em duplicidade', 'A guia do RAD foi paga e o fornecedor também informou o pagamento integral (' + esc(txtEvento(c.ev)) + '). O caminho é <b>restituição ou compensação</b>: pelo art. 36, § 3º, o excedente é transferido ao fornecedor em até 3 dias úteis. A ocorrência de duplicidade ainda não está no catálogo de Inconsistências.'
+    if (c.k === 'C') return caixa('red', 'Pagamento em duplicidade', 'A guia do RAD foi paga e o fornecedor também informou o pagamento integral (' + esc(txtEvento(c.ev)) + '). O caminho é <b>restituição ou compensação</b>. A ocorrência é a INC-PAG-10 do catálogo, que o produto ainda não abre.'
       + '<div class="evl3-rad-b">' + ver + '</div>');
     if (c.k === 'A2') return caixa('amber', 'O fornecedor informou o pagamento integral', esc(txtEvento(c.ev)) + '. A guia ainda não foi gerada: devolva o recolhimento ao fornecedor para não pagar duas vezes.');
     return '';
