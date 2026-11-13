@@ -92,7 +92,8 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
   var CACHE = null;
   function invalidar() { CACHE = null; }
   function baseDe(rf) { return rf._evl3Base != null ? rf._evl3Base : (Number(rf.valor) || 0); }
-  function novoRf(rf, nf) { return { rf: rf, nf: nf, t: T(rf), base: baseDe(rf), aplicado: 0, pendente: 0, evs: [], ultimo: null, div: false, observado: false, vigente: baseDe(rf) }; }
+  // pendente: o evento ainda espera o órgão · divergido: o órgão leu outro valor, e a divergência não aplica valor (D-09)
+  function novoRf(rf, nf) { return { rf: rf, nf: nf, t: T(rf), base: baseDe(rf), aplicado: 0, pendente: 0, divergido: 0, evs: [], ultimo: null, div: false, observado: false, vigente: baseDe(rf) }; }
   function modelo() {
     if (CACHE) return CACHE;
     var x = I(), M = { rf: {}, nf: {} };
@@ -117,6 +118,7 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
         if (!r.ultimo || ev.aut > r.ultimo.aut) r.ultimo = ev;
         var mov = x.movel(ev);
         if (x.aplicado(y)) { r.observado = true; if (mov) r.aplicado += y.delta || 0; }
+        else if (mov && y.estado === 'divergente') { if (!ev.revertidoPor) r.divergido += y.delta || 0; }
         else if (mov) r.pendente += y.delta || 0;
         if (y.estado === 'divergente' && !ev.revertidoPor) { r.div = true; ni.div = true; }
       });
@@ -326,6 +328,7 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
       var r = infoRf(rf, nf), h = '';
       if (Math.abs(r.aplicado) > 0.005) h += '<span class="evl3-s">' + money(r.base) + '</span> → <b>' + money(r.vigente) + '</b>';
       if (Math.abs(r.pendente) > 0.005) h += (h ? ' · ' : '') + '<span class="evl3-mut">previsto ' + sinal(r.pendente) + ', aguardando o órgão</span>';
+      if (Math.abs(r.divergido) > 0.005) h += (h ? ' · ' : '') + '<span class="evl3-mut">pedido ' + sinal(r.divergido) + ', não aplicado: o órgão não confirmou</span>';
       if (r.div) h += (h ? ' ' : '') + ch(rf._evl3Retido ? 'divergente · retido' : 'divergente', 'div');
       return h ? '<div><span class="evl3-tr">' + r.t + '</span>' + h + '</div>' : '';
     }).join('');
@@ -346,6 +349,8 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
   }
 
   /* ══ Detalhe do registro fiscal (T-04 e T-05) ═══════════════════════════ */
+  var MET_EXT = { compensacao: 'compensação', ressarcimento: 'ressarcimento', rad: 'RAD', split: 'split payment', 'split payment': 'split payment' };
+  function metExt(m) { var k = String(m || '').toLowerCase(); return MET_EXT[k] || k; }
   function marcos(r) {
     var rf = r.rf, ni = infoNf(r.nf.numero), e = ni.e112110, fs = fase(r);
     var ext = rf.dataExtincaoCredito && rf.dataExtincaoCredito !== '—' ? rf.dataExtincaoCredito : null;
@@ -353,7 +358,7 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
       ['Originado', fD(r.nf.data), 'emissão do documento', true],
       ['Fato gerador constituído', fD(fgEm(r.nf)), 'fgConstituidoEm · pela emissão', fs !== 'originado'],
       ['Apropriado', rf.dataApropriacao ? fD(rf.dataApropriacao) : 'aguardando', e ? 'pagamento integral informado pelo emitente · 112110 em ' + fDC(e.aut) : 'extinção do débito do fornecedor', fs === 'apropriado' || fs === 'utilizado'],
-      ['Utilizado', ext ? fD(ext) : '—', rf.metodoExtincao ? 'extinção por ' + String(rf.metodoExtincao).toLowerCase() : 'compensação ou ressarcimento', fs === 'utilizado']
+      ['Utilizado', ext ? fD(ext) : '—', rf.metodoExtincao ? 'extinção por ' + metExt(rf.metodoExtincao) :'compensação ou ressarcimento', fs === 'utilizado']
     ];
     return '<div class="evl3-marcos">' + M.map(function (m) {
       return '<div class="evl3-marco' + (m[3] ? ' on' : '') + '"><span class="evl3-dot"></span><div><div class="evl3-mt">' + esc(m[0]) + '</div><div class="evl3-mv">' + esc(m[1]) + '</div><div class="evl3-sub">' + esc(m[2]) + '</div></div></div>';
@@ -384,6 +389,7 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
         + DR('Saldo após eventos', '<b>' + money(r.vigente) + '</b>', 'var(--teal)');
     } else h += DR('Saldo após eventos', money(r.vigente) + ' <span class="evl3-mut">· nenhum evento mudou o valor</span>');
     if (Math.abs(r.pendente) > 0.005) h += DR('Previsto, não somado', sinal(r.pendente) + ' <span class="evl3-mut">· espera o reflexo ' + (r.t === 'CBS' ? 'da Receita Federal' : 'do Comitê Gestor') + '</span>');
+    if (Math.abs(r.divergido) > 0.005) h += DR('Pedido, não aplicado', sinal(r.divergido) + ' <span class="evl3-mut">· ' + (r.t === 'CBS' ? 'a Receita Federal' : 'o Comitê Gestor') + ' não confirmou este valor; divergência não aplica valor sozinha (D-09)</span>');
     var o = origem(r);
     h += DR('Origem do estado', ch(ORIG[o][0], ORIG[o][1]) + ' <span class="evl3-mut">' + { deduzido: 'o produto inferiu', observado: 'um evento ou a apuração confirmou', divergente: 'o evento diz uma coisa e o órgão outra' }[o] + '</span>');
     if (entrada && (on(F.cred) || on(F.base))) {
@@ -423,13 +429,14 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
     outros.sort();
     var h = '';
     if (doP.length) {
-      var imp = { CBS: 0, IBS: 0 };
-      doP.forEach(function (a) { ['CBS', 'IBS'].forEach(function (t) { var v = a.val[t]; if (v && v.st === 'pesa') imp[t] += v.v || 0; }); });
+      var imp = { CBS: 0, IBS: 0 }, tem = { CBS: false, IBS: false };
+      doP.forEach(function (a) { ['CBS', 'IBS'].forEach(function (t) { var v = a.val[t]; if (v && v.st === 'pesa') { imp[t] += v.v || 0; tem[t] = true; } }); });
+      var impT = function (t) { return tem[t] ? '<b>' + t + ' ' + sinal(imp[t]) + '</b>' : t + ' <span class="evl3-mut">sem impacto confirmado</span>'; };
       var j = doP[0].j, dias = Math.ceil((j - Date.now()) / DIA);
       var jan = dias >= 0 ? 'janela de ajuste até <b>' + fD(j) + '</b> — ' + pl(dias, 'dia', 'dias') + '; depois vem o aceite tácito (C-20)' : 'a janela de ajuste terminou em ' + fD(j) + ': aceite tácito';
       h += '<div class="evl3-pc' + (dias < 0 ? ' red' : '') + '"><div class="evl3-pc-t">' + pl(doP.length, 'evento mudou', 'eventos mudaram') + ' o saldo de ' + esc(rotP(P)) + ' depois do fechamento</div>'
         + '<div class="evl3-pc-s">Fechada em ' + fD(doP[0].f) + ' (simulado) · ' + jan + '</div>'
-        + '<div class="evl3-pc-s">Impacto: <b>CBS ' + sinal(imp.CBS) + '</b> · <b>IBS ' + sinal(imp.IBS) + '</b>. Os dois não se somam. <b>A apuração não foi reaberta</b> (D-14): cada caso é um alerta, e a decisão fica nele.</div>'
+        + '<div class="evl3-pc-s">Impacto: ' + impT('CBS') + ' · ' + impT('IBS') + '. Os dois não se somam. <b>A apuração não foi reaberta</b> (D-14): cada caso é um alerta, e a decisão fica nele.</div>'
         + '<div class="twrap evl3-tw"><table><thead><tr><th>Documento</th><th>Evento</th><th>Causa</th><th class="r">CBS</th><th class="r">IBS</th><th>Alerta</th></tr></thead><tbody>'
         + doP.map(function (a) {
           var c = function (t) { var v = a.val[t]; return !v || v.st === 'na' ? '<span class="evl3-mut">—</span>' : v.st === 'pesa' ? sinal(v.v || 0) : '<span class="evl3-mut">' + (v.st === 'apurado' ? 'já apurado' : 'aguardando') + '</span>'; };
@@ -511,7 +518,7 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
     var todas = linhasConc(), cont = {};
     todas.forEach(function (l) { cont[l.c] = (cont[l.c] || 0) + 1; });
     var L = todas.filter(function (l) { return (!CC.t || l.t === CC.t) && (!CC.c || l.c === CC.c); });
-    var kp = ['conciliado', 'aguardando', 'nao_refletiu', 'outro_valor', 'erp_omitiu', 'escrituracao'].map(function (k) {
+    var kp = ['conciliado', 'aguardando', 'montante', 'nao_refletiu', 'outro_valor', 'erp_omitiu', 'escrituracao'].map(function (k) {
       return '<button class="evl3-kp' + (CC.c === k ? ' on' : '') + '" onclick="shEvl3.concFiltro(\'c\',\'' + (CC.c === k ? '' : k) + '\')"><span class="evl3-kp-l">' + esc(CAUSAS[k][0]) + '</span><span class="evl3-kp-v">' + (cont[k] || 0) + '</span></button>';
     }).join('');
     var v = function (n) { return n == null ? '<em class="evl3-mut">sem evento</em>' : money(n); };
@@ -550,15 +557,23 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
   var RAD = {};
   function pagoRf(rf) { var s = rf.statusCredito || rf.status; return s === 'apropriado' || s === 'utilizado' || !!(rf.dataPagamento && rf.dataPagamento !== '—'); }
   function e112110(nf) { if (!nf || nf.tipo !== 'entrada') return null; return infoNf(nf.numero).e112110; }
-  function radAssumido(nf) { return nf.metodoPagamento === 'RAD' && nf.metodoPagamentoOrigem === 'alteracao_manual'; }
-  function guiaGerada(nf) { return rfsDe(nf).some(function (rf) { return rf.conversaoRAD && rf.conversaoRAD.guiaGeradaEm; }) || !!(nf.conversaoRAD && nf.conversaoRAD.guiaGeradaEm); }
-  // A: antes de assumir · B: guia emitida e não paga · C: guia paga · D: RAD pago e o evento nunca vem (nada a fazer)
+  // com a partição, o recolhimento é assumido por tributo (D-PAR-07): o documento só vira RAD quando os dois foram
+  function assumidos(nf) {
+    var rs = rfsDe(nf).filter(function (rf) { return rf.metodoPagamento === 'RAD' && rf.metodoPagamentoOrigem === 'alteracao_manual' && rf.conversaoRAD && !rf.conversaoRAD.revertidaId; });
+    if (!rs.length && nf.metodoPagamento === 'RAD' && nf.metodoPagamentoOrigem === 'alteracao_manual') rs = rfsDe(nf);
+    return rs;
+  }
+  function guiaDe(rf) { return !!(rf.conversaoRAD && rf.conversaoRAD.guiaGeradaEm); }
+  // com a partição, a guia paga zera o pendente do tributo; sem ela, o registro passa a pago
+  function guiaPaga(rf) { return rf.balances ? guiaDe(rf) && (rf.balances.pending || 0) <= 0.005 : pagoRf(rf); }
+  // A: antes de assumir · A2: assumido, guia não gerada · B: guia emitida e não paga · C: guia paga · D: RAD pago e o evento nunca vem (nada a fazer)
   function cenario(nf) {
     var ev = e112110(nf); if (!ev) return null;
-    if (!radAssumido(nf)) return { k: 'A', ev: ev };
-    if (rfsDe(nf).some(pagoRf)) return { k: 'C', ev: ev };
-    if (guiaGerada(nf)) return { k: 'B', ev: ev };
-    return { k: 'A2', ev: ev };   // assumido, guia ainda não gerada: a devolução segue aberta
+    var as = assumidos(nf);
+    if (!as.length) return { k: 'A', ev: ev };
+    if (as.some(guiaPaga)) return { k: 'C', ev: ev };
+    if (as.some(guiaDe) || !!(nf.conversaoRAD && nf.conversaoRAD.guiaGeradaEm)) return { k: 'B', ev: ev };
+    return { k: 'A2', ev: ev };   // a devolução segue aberta
   }
   function txtEvento(ev) { return 'Evento 112110 autorizado em ' + fDH(ev.aut) + ', protocolo ' + ev.protocolo; }
   function caixa(cls, titulo, corpo) { return '<div class="evl3-rad ' + cls + '"><div class="evl3-rad-t">' + titulo + '</div><div>' + corpo + '</div></div>'; }
@@ -569,7 +584,8 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
         var R = RAD.eleg.apply(this, arguments);
         try {
           if (!on(F.rad) || !R || !R.visivel || R.reverter || !R.ok) return R;
-          var c = cenario(nf); if (!c || c.k !== 'A') return R;
+          // com a partição, um tributo assumido não fecha a porta do outro: o 112110 vale para os dois
+          var c = cenario(nf); if (!c) return R;
           if (nf._evl3Exc) { R.avisos = (R.avisos || []).concat(['O fornecedor informou o pagamento integral (' + txtEvento(c.ev) + '). O recolhimento é assumido por exceção, registrada por ' + nf._evl3Exc.por + ': ' + nf._evl3Exc.just]); return R; }
           R.ok = false; R._evl3 = c.ev;
           R.motivo = 'O fornecedor já recolheu: ' + txtEvento(c.ev) + '. Assumir o RAD agora é recolher em duplicidade.';
@@ -583,11 +599,12 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
       window.shRADCelulaAcao = function (nf, st) {
         try {
           if (on(F.rad)) {
-            var el = window.shRADElegibilidade(nf, st);
-            if (el && el._evl3) return '<button class="evl3-rad-bt" onclick="event.stopPropagation();shEvl3.radBloqueio(\'' + esc(nf.numero) + '\')" title="' + esc(el.motivo) + '">Assumir RAD · bloqueado</button>';
+            // a guia emitida ou paga pesa mais que o bloqueio do outro tributo
             var c = cenario(nf);
             if (c && c.k === 'B') return '<button class="evl3-rad-bt" onclick="event.stopPropagation();abrirDetalhesNFporNumero(\'' + esc(nf.numero) + '\')">Cobrança suspensa</button>';
             if (c && c.k === 'C') return '<button class="evl3-rad-bt" onclick="event.stopPropagation();abrirDetalhesNFporNumero(\'' + esc(nf.numero) + '\')">Duplicidade</button>';
+            var el = window.shRADElegibilidade(nf, st);
+            if (el && el._evl3) return '<button class="evl3-rad-bt" onclick="event.stopPropagation();shEvl3.radBloqueio(\'' + esc(nf.numero) + '\')" title="' + esc(el.motivo) + '">Assumir RAD · bloqueado</button>';
           }
         } catch (e) { console.error('[eventos lote 3] RAD', e); }
         return RAD.cel.apply(this, arguments);
@@ -630,7 +647,9 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
       + '<div class="evl3-rad-b"><button class="btn btn-t" onclick="shEvl3.radCancelarGuia(\'' + n + '\')">Cancelar a guia</button>' + ver + '</div>');
     if (c.k === 'C') return caixa('red', 'Pagamento em duplicidade', 'A guia do RAD foi paga e o fornecedor também informou o pagamento integral (' + esc(txtEvento(c.ev)) + '). O caminho é <b>restituição ou compensação</b>. A ocorrência é a INC-PAG-10 do catálogo, que o produto ainda não abre.'
       + '<div class="evl3-rad-b">' + ver + '</div>');
-    if (c.k === 'A2') return caixa('amber', 'O fornecedor informou o pagamento integral', esc(txtEvento(c.ev)) + '. A guia ainda não foi gerada: devolva o recolhimento ao fornecedor para não pagar duas vezes.');
+    if (c.k === 'A2') return nf._evl3Exc
+      ? caixa('amber', 'Assumido por exceção ao 112110', 'O fornecedor informou o pagamento integral (' + esc(txtEvento(c.ev)) + '). Exceção registrada por ' + esc(nf._evl3Exc.por) + ' em ' + fDH(nf._evl3Exc.em) + ': <em>' + esc(nf._evl3Exc.just) + '</em>. A guia ainda não foi gerada: se a exceção não se sustentar, devolva o recolhimento ao fornecedor.')
+      : caixa('amber', 'O fornecedor informou o pagamento integral', esc(txtEvento(c.ev)) + '. A guia ainda não foi gerada: devolva o recolhimento ao fornecedor para não pagar duas vezes.');
     return '';
   }
   function overlay(id, largura, titulo, sub, corpo) {
@@ -686,9 +705,13 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
       });
     });
     if (!feito) { toast('Não há guia emitida neste documento.'); return; }
-    toast('Guia cancelada: o fornecedor informou o pagamento integral. O recolhimento pode voltar ao fornecedor.');
     ['nf-detalhe-overlay'].forEach(fechar);
-    if (typeof window.shRADAbrirReverter === 'function') window.shRADAbrirReverter(n);
+    // a devolução ao fornecedor é do documento: com a partição e um só tributo assumido, o produto ainda não a oferece
+    var nf = nfPorNumero(n), el = nf && typeof window.shRADElegibilidade === 'function' ? window.shRADElegibilidade(nf) : null;
+    if (el && el.ok && el.reverter && typeof window.shRADAbrirReverter === 'function') {
+      toast('Guia cancelada: o fornecedor informou o pagamento integral. O recolhimento pode voltar ao fornecedor.');
+      window.shRADAbrirReverter(n);
+    } else toast('Guia cancelada: o fornecedor informou o pagamento integral. O tributo segue assumido, sem guia; devolver um só tributo ao fornecedor ainda não existe no produto.');
   }
   // um exemplo do cenário A: 112110 num documento que ainda pode ter o recolhimento assumido
   function exemploRAD() {
@@ -740,15 +763,25 @@ window.shFeature && shFeature.registrar({"id": "AV-E3", "nome": "Eventos fiscais
       E[k]._evl3 = true;
     });
     ganchosRAD();
+    observarPcont();
     montarConc();
     completarEmpresa();
     exemploRAD();
   }
-  // a view do PCONT é redesenhada por cliques internos: o aviso volta depois de cada um
-  document.addEventListener('click', function (e) {
-    var v = document.getElementById('view-pcont');
-    if (v && e.target && v.contains(e.target) && on(F.pcont)) setTimeout(function () { try { if (!v.querySelector('[data-evl3-pc]')) pcont(); } catch (er) {} }, 0);
-  }, true);
+  // o PCONT se redesenha por dentro, sem passar por shPcont.render (a primeira abertura, o ano, o cartão):
+  // o aviso volta sempre que a view muda e ele não está lá
+  var obsPc = null;
+  function observarPcont() {
+    var v = document.getElementById('view-pcont'); if (!v || obsPc || typeof MutationObserver !== 'function') return;
+    var pend = false;
+    obsPc = new MutationObserver(function () {
+      if (pend || !on(F.pcont) || v.querySelector('[data-evl3-pc]')) return;
+      pend = true;
+      setTimeout(function () { pend = false; try { if (!v.querySelector('[data-evl3-pc]')) pcont(); } catch (e) { console.error('[eventos lote 3] PCONT', e); } }, 0);
+    });
+    obsPc.observe(v, { childList: true, subtree: true });
+    if (!v.querySelector('[data-evl3-pc]')) try { pcont(); } catch (e) { console.error('[eventos lote 3] PCONT', e); }
+  }
 
   window.shEvl3 = {
     on: on, modelo: modelo, aplicarBase: aplicarBase, atualizar: atualizar,
