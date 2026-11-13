@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Eventos fiscais · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="doc">
+<a class="back" href="../prds.html">← Hub de PRDs</a>
+<div class="eyebrow">PRD · Apuração Assistida → Eventos fiscais</div>
+<h1>Eventos fiscais — o que mudou no documento depois da emissão, por tributo</h1>
+<p class="subtitle">Depois de autorizado, o documento fiscal ainda muda: recebe aceite de nota de crédito, perecimento, crédito presumido, cancelamento. O módulo recebe esses eventos pela API ou por CSV, calcula o efeito no crédito e no débito, espera a Receita Federal confirmar a CBS e o Comitê Gestor confirmar o IBS, e só então aplica o valor. Pela inconsistência ou pelo documento, também prepara o evento que falta e o pede ao ERP, ou o transmite à SEFAZ.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.4</span></div>
+<div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Apuração Assistida → Eventos fiscais</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">11/11/2026</span></div>
+<div class="meta-pill"><span class="meta-label">Rotas</span>&nbsp;<span class="meta-val">#/eventos · #/eventos-fiscais</span></div>
+<div class="meta-pill"><span class="meta-label">Leiaute</span>&nbsp;<span class="meta-val">NT 2025.002-RTC v1.51</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">No app · lote 1 em 09/11 · lote 2 em 10/11/2026</span>&nbsp;<span class="chip warn">v1.3</span></div>
+</div>
+
+<div class="callout info" style="margin:18px 0"><div class="ct">De onde vem</div><p>Este PRD consolida sete documentos que tratavam os eventos fiscais em pedaços. Também descreve o que foi construído: os pacotes <strong>AV-EF</strong> (esteira e detalhe do evento) e <strong>AV-EV</strong> (evento fiscal e nota de ajuste como ação), aprovados com 9 de 9 itens cada e <strong>promovidos ao app em 09/11/2026</strong>. Quando uma proposta e uma decisão posterior se contradizem, vale a decisão. Quando a proposta e o app se contradizem, a seção 15 registra a diferença e diz qual dos dois este PRD adota. As propostas continuam no hub como histórico do raciocínio.</p><p>O <strong>lote 2</strong> foi construído em 10/11/2026 no pacote <strong>AV-E2</strong> (branch <code>feat/eventos-lote2</code>), aprovado com 11 de 11 itens e <strong>promovido ao app no mesmo dia</strong>. Onde este PRD descreve o lote 2, o selo <span class="chip ok">lote 2</span> marca o que o pacote construiu.</p></div>
+<div class="callout red" style="margin:18px 0"><div class="ct">Um tributo, um órgão</div><p>A <strong>Receita Federal</strong> confirma a CBS, e o <strong>Comitê Gestor</strong> confirma o IBS, cada um no seu tempo e pelo seu canal. O módulo nunca soma os dois tributos, nunca dá um evento por confirmado porque um dos órgãos confirmou, e não usa a palavra "Fisco" para os dois juntos. Uma divergência abre uma ocorrência por tributo, por evento (D-22).</p></div>
+
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Contexto e posicionamento</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> Escopo e recorte</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Documentos consolidados</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> O modelo do evento</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Esteira de eventos</a></li>
+<li><a href="#s06"><span class="toc-num">06</span> Detalhe do evento</a></li>
+<li><a href="#s07"><span class="toc-num">07</span> O evento como ação</a></li>
+<li><a href="#s08"><span class="toc-num">08</span> Modos de emissão e configuração</a></li>
+<li><a href="#s09"><span class="toc-num">09</span> Entrada: API e CSV</a></li>
+<li><a href="#s10"><span class="toc-num">10</span> Funcionalidades detalhadas</a></li>
+<li><a href="#s11"><span class="toc-num">11</span> Requisitos funcionais</a></li>
+<li><a href="#s12"><span class="toc-num">12</span> Regras de negócio</a></li>
+<li><a href="#s13"><span class="toc-num">13</span> Integrações e dependências</a></li>
+<li><a href="#s14"><span class="toc-num">14</span> Entrega e decisões</a></li>
+<li><a href="#s15"><span class="toc-num">15</span> Divergências: proposta de telas × PRD × app</a></li>
+<li><a href="#s16"><span class="toc-num">16</span> Glossário</a></li>
+<li><a href="#s17"><span class="toc-num">17</span> Histórico de versões</a></li>
+</ul></div>
+
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Contexto e posicionamento</span></div>
+<h3>1.1 O que o módulo resolve</h3>
+<p>O produto tratava o documento fiscal como um fato único e definitivo. Depois de autorizado, porém, o documento recebe eventos que mudam o valor do crédito, o débito, a destinação do bem e até a existência do direito. Enquanto o produto não os vê, ele apura sobre uma foto vencida, e a garantia da apropriação do crédito fica apoiada num número que pode já ter mudado no órgão.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>O que está em jogo</th><th>Exemplo</th><th>Efeito sem o módulo</th></tr></thead>
+<tbody>
+<tr><td><strong>Crédito que encolhe</strong></td><td>211128: o adquirente aceita a nota de crédito do fornecedor</td><td>O SplitHub mantém o crédito cheio; o órgão já o reduziu</td></tr>
+<tr><td><strong>Crédito que nasce</strong></td><td>211110, 211140, 211150: crédito presumido, de combustível, vinculado à atividade</td><td>Crédito que a empresa tem e não aparece</td></tr>
+<tr><td><strong>Crédito que some</strong></td><td>211124 e 112130: perecimento, perda, roubo ou furto</td><td>Crédito apropriado sobre mercadoria que não chegou</td></tr>
+<tr><td><strong>Atributo que muda o prazo</strong></td><td>211130: imobilização do item</td><td>Prazo de ressarcimento errado</td></tr>
+<tr><td><strong>Evento que deveria existir</strong></td><td>Nota de crédito sem o aceite do destinatário</td><td>Ninguém percebe a falta</td></tr>
+</tbody></table></div>
+<h3>1.2 O papel do SplitHub</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Quem</th><th>O quê</th></tr></thead>
+<tbody>
+<tr><td>ERP ou sistema fiscal do cliente</td><td>Emite o evento na SEFAZ e o envia ao SplitHub pela API ou por CSV (D-21). Emite também as notas de crédito e de débito.</td></tr>
+<tr><td>SplitHub</td><td>Recebe o evento autorizado, calcula o efeito por tributo, espera a confirmação de cada órgão, aplica o valor confirmado e aponta o que divergiu e o que faltou.</td></tr>
+<tr><td>SplitHub, a pedido</td><td>Prepara o evento ou a nota que falta e comanda o ERP por webhook. No modo direto, transmite o evento à SEFAZ com a credencial do cliente (proposta da ação, D-01).</td></tr>
+<tr><td>Receita Federal</td><td>Confirma o efeito na CBS, pela apuração assistida, com leitura agendada e leitura sob demanda dentro de uma cota.</td></tr>
+<tr><td>Comitê Gestor</td><td>Confirma o efeito no IBS, pelo arquivo que envia por webhook. Não há leitura sob demanda.</td></tr>
+</tbody></table></div>
+<h3>1.3 Onde fica</h3>
+<p>Apuração Assistida › <strong>Eventos fiscais</strong> (rota <code>#/eventos</code>, flag <code>eventos_modulo</code>): a esteira e o detalhe do evento. Configurações › <strong>Eventos fiscais</strong> (rota <code>#/eventos-fiscais</code>, flag <code>eventos_fiscais</code>): as solicitações, o modo de emissão, a qualidade de serviço, os webhooks e a trilha de configuração. O pedido de evento aparece também no detalhe da inconsistência, no detalhe do documento fiscal (DF) e no detalhe do registro fiscal (RF).</p>
+</div>
+
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Escopo e recorte</span></div>
+<h3>2.1 O que está no app</h3>
+<ul class="plain">
+<li>A esteira dos eventos recebidos, com indicadores, quatro abas, filtros, o gerenciador de colunas e a importação por CSV (AV-EF; colunas e CSV desde a v1.1).</li>
+<li>O detalhe do evento em quatro fases, com o estado de cada tributo e o que cada órgão precisa confirmar (AV-EF).</li>
+<li>As ausências: o evento esperado que não chegou, com a espera de 30 dias (AV-EF, D-EV-05).</li>
+<li>O evento fiscal ou a nota de ajuste como ação da inconsistência, com as 18 opções, a sugestão e a prévia do efeito (AV-EV).</li>
+<li>O pedido de evento no detalhe do DF e do RF, com justificativa (AV-EV).</li>
+<li>A emissão pelo ERP por webhook, a transmissão direta à SEFAZ, a credencial, o termo e a qualidade de serviço por ator (AV-EV).</li>
+<li>Os eventos no documento: as abas Eventos fiscais e Linha do tempo fiscal no detalhe do DF (lote 2, F-20). Desde 11/11, nas abas Eventos e ajustes e Linha do tempo do detalhe do DF e do RF; no RF, só com o órgão do tributo (AV-DF e AV-RF).</li>
+<li>Os estados não atribuível, revertida e aguardando documento, com a fila de órfãos (lote 2, F-21 a F-23).</li>
+<li>As solicitações feitas pela inconsistência, na esteira, com o pedido e a ocorrência de origem (lote 2, F-24).</li>
+<li>A família I em Inconsistências, uma ocorrência por tributo, e a aba Alertas de competência (lote 2, F-25 e F-26).</li>
+<li>O sétimo contexto da API, Eventos fiscais, em Integrações (lote 2, F-27).</li>
+</ul>
+<div class="callout warn"><div class="ct">O que o protótipo simula</div><p>Tudo o que envolve terceiro é simulado (proposta da ação, D-12): a entrada pela API e por CSV, o webhook, a resposta do ERP, a SEFAZ, a leitura da Receita Federal e o arquivo do Comitê Gestor. Os eventos da esteira são semeados a partir das NF-e da base, com datas relativas ao dia de hoje. Por isso, o mesmo documento pode mostrar eventos diferentes em dias diferentes.</p></div>
+<h3>2.2 O que vem depois</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Lote</th><th>O que entra</th><th>Telas da proposta</th></tr></thead>
+<tbody>
+<tr><td><strong>Lote 3</strong></td><td>O reflexo em Crédito (fase apropriável e origem do estado), em Débito, no PCONT, na Conciliação (terceira ponta) e o bloqueio do RAD pelo 112110</td><td>T-04 a T-07, T-09</td></tr>
+</tbody></table></div>
+<p>O lote 2 foi construído a pedido do usuário e subiu ao app em 10/11/2026, com quatro flags (seção 14). O resultado dos eventos ainda não volta para o crédito nem para o débito: a esteira, o documento e as ocorrências leem os documentos e os registros fiscais da base. Isso é o lote 3, que só começa a pedido do usuário.</p>
+<h3>2.3 O que não entra</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Fora do módulo</th><th>Por quê</th></tr></thead>
+<tbody>
+<tr><td>A camada de item no modelo de dados</td><td>Adiada (D-02 e D-12) e fora da primeira versão (decisão de 05/10/2026). O evento por item informa o item como rótulo; o ajuste é registrado no RF do tributo, por valor (proposta da ação, D-06).</td></tr>
+<tr><td>Emissão de nota de crédito ou de débito pelo SplitHub</td><td>A nota sai sempre pelo ERP; o SplitHub só comanda (proposta da ação, D-14 e D-21).</td></tr>
+<tr><td>Eventos de outros documentos além da NF-e modelo 55</td><td>Os dezesseis eventos da NT 2025.002-RTC são da NF-e; a extensão aos demais é pergunta aberta (N-01).</td></tr>
+<tr><td>Reabertura automática de apuração fechada</td><td>Evento que mexe em competência fechada vira alerta, à espera de ação humana (D-14).</td></tr>
+<tr><td>Split payment</td><td>Fora da primeira versão.</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Documentos consolidados</span></div>
+<p>As sete fontes abaixo continuam publicadas, mas este PRD passa a ser a referência do módulo. O que cada uma ainda acrescenta está na última coluna.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Documento</th><th>Versão</th><th>Situação</th><th>O que continua valendo</th></tr></thead>
+<tbody>
+<tr><td><a class="xref" href="../proposta-eventos-impacto.html">Leiautes, impacto, módulo e telas</a></td><td>2.10</td><td><span class="chip warn">Em decisão</span></td><td>O impacto por módulo, a lista de construção C-01 a C-21 e as decisões D-01 a D-20</td></tr>
+<tr><td><a class="xref" href="../proposta-eventos-modulo.html">Módulo de eventos fiscais</a></td><td>1.0</td><td><span class="chip gray">Superada</span></td><td>As decisões D-EV-01 a D-EV-07; quatro delas foram revistas por decisões posteriores (seção 14)</td></tr>
+<tr><td><a class="xref" href="../eventos-fiscais-dossie.html">Dossiê</a></td><td>1.6</td><td><span class="chip warn">Em decisão</span></td><td>As dezesseis fichas de evento, o modelo de quatro fases, os 39 tipos da família I e as perguntas abertas N-01 a N-06</td></tr>
+<tr><td><a class="xref" href="../eventos-fiscais-telas.html">Telas</a></td><td>1.3</td><td><span class="chip ok">Parcialmente construída</span></td><td>T-01, T-02, T-03 e T-08 como estão no app; o desenho de T-04 a T-07 e T-09, para o lote 3, já sem a camada de item</td></tr>
+<tr><td><a class="xref" href="../proposta-api-eventos-fiscais.html">API de eventos fiscais</a></td><td>1.5</td><td><span class="chip warn">Em decisão</span></td><td>Contrato de entrada, validações e o cálculo da fase pelo estado dos dois tributos, com as rotas em inglês (<code>/v1/fiscal-events</code>)</td></tr>
+<tr><td><a class="xref" href="../proposta-eventos-csv.html">Upload por CSV</a></td><td>1.2</td><td><span class="chip ok">Lote 1 no app</span></td><td>Os oito modelos de arquivo e o fluxo em quatro passos (AE-04), construídos com os limites da seção 9</td></tr>
+<tr><td><a class="xref" href="../proposta-eventos-credito-debito.html">Eventos de crédito e débito</a></td><td>1.2</td><td><span class="chip ok">Aprovada · a construir</span></td><td>Os webhooks <code>credit.*</code> e <code>debit.*</code> que o SplitHub envia ao ERP</td></tr>
+<tr><td><a class="xref" href="../proposta-eventos-acao-inconsistencias.html">Evento fiscal como ação da inconsistência</a></td><td>1.5</td><td><span class="chip ok">Aprovada · 25 de 25</span></td><td>Construída no AV-EV; os requisitos RF-EVA e as regras RN-EVA entram aqui sem mudança</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O modelo do evento</span></div>
+<h3>4.1 As quatro fases</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Fase</th><th>O que acontece</th><th>O que muda no saldo</th></tr></thead>
+<tbody>
+<tr><td><strong>1 · Capturado</strong></td><td>O evento chega pela API ou pelo CSV e é ligado ao documento pela chave de acesso.</td><td>Nada</td></tr>
+<tr><td><strong>2 · Planejado</strong></td><td>O SplitHub calcula o efeito por tributo e escreve a ação em linguagem de negócio.</td><td>Nada: o efeito fica como previsto</td></tr>
+<tr><td><strong>3 · Aguardando</strong></td><td>Cada tributo espera o seu órgão: a Receita Federal pela leitura da CBS e o Comitê Gestor pelo arquivo do IBS.</td><td>Nada</td></tr>
+<tr><td><strong>4 · Executado</strong></td><td>O órgão do tributo reflete o valor esperado e o SplitHub aplica o valor.</td><td>O crédito ou o débito do tributo confirmado</td></tr>
+</tbody></table></div>
+<p>O atributo declarado vale na autorização; o valor de cada tributo vale só no reflexo do órgão (RN-EVA-03). Por isso, um evento que só muda atributo, como o 112110 ou o 211130, não espera órgão: o detalhe diz que não há nada a confirmar.</p>
+<h3>4.2 Estados da ação, por tributo</h3>
+<div class="state-grid">
+<div class="state-row"><span class="state-name sn-gray">capturada</span><span class="state-desc">Recebida, com o efeito ainda em cálculo.</span></div>
+<div class="state-row"><span class="state-name sn-blue">planejada</span><span class="state-desc">Efeito calculado, à espera de o evento ser processado pelo órgão.</span></div>
+<div class="state-row"><span class="state-name sn-amber">aguardando</span><span class="state-desc">O órgão do tributo ainda não refletiu o valor.</span></div>
+<div class="state-row"><span class="state-name sn-green">executada</span><span class="state-desc">O órgão refletiu o valor esperado e o valor foi aplicado.</span></div>
+<div class="state-row"><span class="state-name sn-red">divergente</span><span class="state-desc">O órgão refletiu outro valor. Nada é aplicado; abre uma ocorrência por tributo (D-09 do ciclo de vida, D-22).</span></div>
+<div class="state-row"><span class="state-name sn-amber">ausente</span><span class="state-desc">O evento que deveria existir não chegou depois de 30 dias (D-EV-05). Não tem identificador.</span></div>
+<div class="state-row"><span class="state-name sn-gray">cancelada</span><span class="state-desc">O evento foi cancelado pelo 110001. Nada foi aplicado, ou o que foi aplicado foi revertido, nunca apagado (proposta da ação, D-10).</span></div>
+</div>
+<p>O dossiê previa mais três estados, que o lote 1 não tinha. Eles subiram ao app com o lote 2, em 10/11/2026 (DV-15):</p>
+<div class="state-grid">
+<div class="state-row"><span class="state-name sn-amber">não atribuível</span><span class="state-desc">Dois ou mais eventos do documento confirmaram na mesma leitura da Receita Federal. O montante da CBS fecha e é aplicado, mas a parte de cada evento não se separa, porque a Receita Federal informa o saldo do documento, não o lançamento. O aviso lista os outros eventos do documento na janela de 8 dias da CBS (DV-21). No IBS, o extrato do Comitê Gestor traz uma linha por lançamento, e a confirmação é por evento.</span></div>
+<div class="state-row"><span class="state-name sn-gray">revertida</span><span class="state-desc">O 110001 cancelou um evento já executado. O valor aplicado volta pelo cancelamento, que espera o órgão de cada tributo como qualquer valor, e a esteira guarda as duas linhas, a execução e a reversão. A parte que ainda esperava o órgão só se interrompe.</span></div>
+<div class="state-row"><span class="state-name sn-amber">aguardando documento</span><span class="state-desc">O evento chegou antes do documento e fica na fila de órfãos (C-12). Quando o documento chega pela ingestão, o evento é ligado pela chave e segue o ciclo na data da autorização, marcado como capturado com atraso. Passada a espera de 30 dias, abre uma ocorrência por tributo.</span></div>
+</div>
+<h3>4.3 A fase do evento</h3>
+<p>A fase do evento vem do estado dos dois tributos. Ela só chega a executada quando os dois tributos estão executados, e fica divergente se qualquer um divergir. Na esteira, a coluna Estado mostra um chip por tributo, nunca um estado somado.</p>
+<h3>4.4 Os eventos que o módulo conhece</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Código</th><th>Evento</th><th>Autor</th><th>Efeito</th><th>Na esteira</th><th>Como ação</th></tr></thead>
+<tbody>
+<tr><td><code>110001</code></td><td>Cancelamento de evento</td><td>Autor do evento cancelado</td><td>Reversão</td><td>Sim</td><td>Sim</td></tr>
+<tr><td><code>112110</code></td><td>Informação de efetivo pagamento integral</td><td>Emitente</td><td>Atributo</td><td>Sim</td><td>Sim</td></tr>
+<tr><td><code>112120</code></td><td>Importação em ALC/ZFM não convertida em isenção</td><td>Emitente</td><td>Valor</td><td>Sim</td><td>Sim</td></tr>
+<tr><td><code>112130</code></td><td>Perecimento, perda, roubo ou furto — transporte CIF</td><td>Emitente</td><td>Valor</td><td>Sim</td><td>Sim</td></tr>
+<tr><td><code>112140</code></td><td>Fornecimento não realizado com pagamento antecipado</td><td>Emitente</td><td>Valor</td><td>Sim</td><td>Sim</td></tr>
+<tr><td><code>112150</code></td><td>Atualização da data de previsão de entrega</td><td>Emitente</td><td>Atributo</td><td>Sim</td><td>Sim</td></tr>
+<tr><td><code>211110</code></td><td>Solicitação de apropriação de crédito presumido</td><td>Destinatário</td><td>Valor</td><td>Sim</td><td>Sim</td></tr>
+<tr><td><code>211124</code></td><td>Perecimento, perda, roubo ou furto — transporte FOB</td><td>Destinatário</td><td>Valor</td><td>Sim</td><td>Sim</td></tr>
+<tr><td><code>211128</code></td><td>Aceite de débito por emissão de nota de crédito</td><td>Destinatário</td><td>Valor</td><td>Sim</td><td>Sim</td></tr>
+<tr><td><code>211130</code></td><td>Imobilização de item</td><td>Destinatário</td><td>Atributo</td><td>Sim</td><td>Sim</td></tr>
+<tr><td><code>211140</code></td><td>Apropriação de crédito de combustível</td><td>Destinatário</td><td>Valor</td><td>Sim</td><td>Sim</td></tr>
+<tr><td><code>211150</code></td><td>Apropriação de crédito de bens e serviços vinculados à atividade</td><td>Destinatário</td><td>Valor</td><td>Sim</td><td>Sim</td></tr>
+<tr><td><code>212110</code>, <code>212120</code></td><td>Transferência de crédito por sucessão — IBS e CBS</td><td>Sucessora</td><td>Titularidade</td><td><span class="gap">Não</span></td><td>Sim</td></tr>
+<tr><td><code>412120</code>, <code>412130</code></td><td>Manifestação sobre a transferência — Comitê Gestor (IBS) e Receita Federal (CBS)</td><td>Órgão</td><td>Titularidade</td><td><span class="gap">Não</span></td><td>Sim, só pela importação</td></tr>
+<tr><td>NC · tipo 04</td><td>Nota de crédito</td><td>Emitente</td><td>Valor</td><td>—</td><td>Sim, sempre pelo ERP</td></tr>
+<tr><td>ND · tipo 06</td><td>Nota de débito</td><td>Cliente</td><td>Valor</td><td>—</td><td>Sim, sempre pelo ERP</td></tr>
+</tbody></table></div>
+<p>Os eventos de sucessão e de manifestação agem só no RF do tributo, e o RF do outro tributo não muda (D-20). A esteira do lote 1 não os recebe ainda; o filtro por série já prevê as séries 212 e 412.</p>
+</div>
+
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Esteira de eventos</span></div>
+<p>Apuração Assistida › Eventos fiscais. É a tela em que o analista vê o que mudou nos documentos depois da emissão, e a única em que a ausência aparece: um evento que deveria existir e não veio não tem lugar em nenhuma outra tela.</p>
+<h3>5.1 Cabeçalho</h3>
+<ul class="plain">
+<li>A origem dos eventos do período: quantos chegaram pela API e quantos por CSV.</li>
+<li>A última leitura da Receita Federal (agendada às 06:00) e o último arquivo do Comitê Gestor, em linhas separadas.</li>
+<li><strong>Ler a Receita Federal agora</strong>: leitura sob demanda da CBS, limitada a três por dia. Esgotada a cota, o botão fica desabilitado, com o motivo e o horário da próxima leitura agendada.</li>
+<li><strong>Simular arquivo do Comitê Gestor</strong>: só no protótipo. O Comitê Gestor envia o arquivo do IBS por webhook, e não há leitura sob demanda.</li>
+<li><strong>Importar CSV</strong>: para o Administrador e o Fiscal. Abre a importação em quatro passos (seção 9.2).</li>
+</ul>
+<h3>5.2 Indicadores</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Indicador</th><th>Conta</th><th>Cor</th><th>Clique</th></tr></thead>
+<tbody>
+<tr><td>Recebidos</td><td>Eventos do período, com os que ainda estão com o efeito em cálculo</td><td>Neutra</td><td>Limpa o filtro do indicador</td></tr>
+<tr><td>Planejados</td><td>Planejados e aguardando o órgão</td><td>Azul</td><td>Filtra</td></tr>
+<tr><td>Executados</td><td>Confirmados pelo órgão</td><td>Verde</td><td>Filtra</td></tr>
+<tr><td>Divergentes</td><td>O órgão não confirmou o valor</td><td>Vermelha</td><td>Filtra</td></tr>
+<tr><td>Ausentes</td><td>Deveriam existir</td><td>Âmbar</td><td>Filtra</td></tr>
+</tbody></table></div>
+<h3>5.3 Abas, colunas e filtros</h3>
+<ul class="plain">
+<li><strong>Abas</strong>: Esteira (todos), Ações pendentes (capturada, planejada e aguardando), Por documento (agrupado pela chave) e Ausências. Desde o lote 2, mais duas: Solicitações (os pedidos feitos pela inconsistência, com o caminho, a situação e o evento correspondente) e Fila de órfãos (os eventos à espera do documento, com a contagem de cada um).</li>
+<li><strong>Colunas</strong>: Evento, Tipo (código e nome), Documento, Ação planejada em linguagem de negócio, Efeito com sinal e cor, Trib. e Estado, com um chip por tributo. Evento que não move valor mostra R$ 0,00, não vazio.</li>
+<li><strong>Gerenciar colunas</strong>: o gerenciador das demais listagens. Mostra, oculta e reordena colunas, ordena pelo cabeçalho e exporta em CSV o que está visível. Oito colunas começam ocultas: Recebido em, Canal, Autorizado em, Autor, CBS · Receita Federal, IBS · Comitê Gestor, Competência e Protocolo. A escolha fica guardada por usuário.</li>
+<li><strong>Filtros</strong>: série do evento (110, 112, 211, 212 e 412), estado da ação, tributo, lado (entrada ou saída), autor, canal (API ou CSV) e período de recebimento, mais a busca por evento, documento, código ou entidade.</li>
+<li><strong>Ordem</strong>: pelo recebimento, do mais recente para o mais antigo. Na aba Ações pendentes e com um indicador ligado, ausentes e divergentes sobem para o topo.</li>
+</ul>
+<h3>5.4 Ausências</h3>
+<p>A linha ausente não tem identificador de evento: começa com —, e o efeito é "?". O clique abre o painel da ausência, com a contagem da espera ("12 de 30 dias") e a marca de revisão. Antes de 30 dias, a falta é processamento normal; passado o prazo, vira ocorrência da família I, uma por tributo. Desde o lote 2, o clique na ausência vencida abre a ocorrência direto, e o painel fica para as que estão dentro da espera (DV-13).</p>
+</div>
+
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Detalhe do evento</span></div>
+<p>Abre como janela sobre a esteira, pela rota <code>#/eventos/EV-nnnnnn</code>.</p>
+<ul class="plain">
+<li><strong>Cabeçalho</strong>: identificador, nome do evento e chip de estado; código, data de autorização, protocolo, autor e sequência. O protocolo é a prova de que a SEFAZ autorizou.</li>
+<li><strong>Quatro fases</strong>, sempre as quatro, mesmo vazias. A fase 3 mostra há quanto tempo o evento espera e quando é a próxima leitura.</li>
+<li><strong>Ação planejada, por tributo</strong>: Registro, Crédito antes, Previsto (ou Aplicado, depois de executado), Delta, Crédito vigente e Situação, uma linha por tributo. O previsto nunca soma ao vigente.</li>
+<li><strong>O que cada órgão precisa confirmar</strong>: Órgão, Campo na API (<code>creditos[].cbs.apurado</code> na Receita Federal; <code>CREDITO_A_PROPRIAR</code> no Comitê Gestor, ou os campos de débito na saída), Esperado, Última leitura, Lido em e Situação.</li>
+<li><strong>Trilha</strong> do evento: recebido (pela API, ou pelo CSV com o arquivo, as linhas, quem carregou e o SHA-256), planejado, cada leitura, os avisos da importação e o desfecho.</li>
+<li><strong>Ações</strong>: Ver documento, Ver payload original (o evento no formato da API; o que chegou por CSV aparece convertido) e Marcar para revisão. <strong>Só o Administrador vê o payload</strong> (V-05; RN-EVF-10).</li>
+</ul>
+<div class="table-wrap"><table>
+<thead><tr><th>Estado</th><th>O que muda na tela</th></tr></thead>
+<tbody>
+<tr><td>executada</td><td>A fase 4 é preenchida; Previsto vira Aplicado, e o crédito vigente já mostra o novo valor.</td></tr>
+<tr><td>divergente</td><td>Aviso vermelho no topo, com o esperado e o observado de cada tributo e a frase "nada foi aplicado". O aviso diz qual ocorrência foi aberta para cada tributo e leva ao card (DV-22). Com a flag <code>eventos_inconsistencias</code> desligada, volta o texto do lote 1: acompanhar pelo indicador Divergentes e pela marca de revisão, sem prometer ocorrência.</td></tr>
+<tr><td>não atribuível <span class="chip ok">lote 2</span></td><td>Aviso âmbar com o montante que a CBS moveu, a lista dos outros eventos do documento na janela de 8 dias, com o estado de cada um, e o link da ocorrência informativa (DV-21).</td></tr>
+<tr><td>revertida <span class="chip ok">lote 2</span></td><td>Faixa neutra com o 110001 que reverteu, a data e o que já voltou em cada tributo. O 110001 mostra uma faixa azul com o valor que leva de volta.</td></tr>
+<tr><td>aguardando documento <span class="chip ok">lote 2</span></td><td>Faixa âmbar com a chave, a contagem da espera e, passada a espera, as ocorrências. Um botão simula a chegada do documento pela ingestão.</td></tr>
+<tr><td>cancelada</td><td>Faixa neutra com o evento que cancelou e a data; nada foi aplicado, e a tela diz isso.</td></tr>
+<tr><td>evento de atributo ou 110001</td><td>A confirmação diz que não há nada a confirmar: o atributo vale na autorização, e o cancelamento não desfaz valor.</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">O evento como ação</span></div>
+<p>A inconsistência deixa de se resolver só por um registro de correção: ela se resolve pelo documento fiscal. Construído no AV-EV, conforme a <a class="xref" href="../proposta-eventos-acao-inconsistencias.html">proposta aprovada</a> (25 de 25 decisões).</p>
+<ul class="plain">
+<li><strong>As 18 opções</strong>: os dezesseis eventos da Reforma e as duas notas de ajuste, com a sugestão em destaque e o motivo. Qualquer uma pode ser escolhida; fora da sugestão, a justificativa é obrigatória.</li>
+<li><strong>A prévia do efeito</strong>: por tributo, o crédito e o débito antes e depois, e quando o ajuste vale, antes de a solicitação sair.</li>
+<li><strong>O caminho pela autoria</strong>: se o autor é o cliente, comando ao ERP ou transmissão direta; se é a outra parte, pedido ao autor, com o chamado em aguardando emitente; se é o órgão, só a importação. Nenhuma opção fica escondida.</li>
+<li><strong>A inconsistência acompanha</strong>: ela segue o estado da solicitação e só se resolve com o reflexo da Receita Federal e do Comitê Gestor. O desfecho vem preenchido, mas quem resolve é o responsável.</li>
+<li><strong>No detalhe do DF e do RF</strong>: o mesmo pedido, sem inconsistência aberta, com justificativa obrigatória.</li>
+<li><strong>A nota de ajuste</strong>: sempre um documento novo que referencia o original, emitido pelo ERP. A nota de crédito só consolida o ajuste com o aceite do destinatário (211128); pode ser rejeitada ou cancelada pelo 110001.</li>
+<li><strong>A trilha e a decomposição</strong>: o ajuste executado aparece na trilha do documento e na decomposição de valores (XML, ajustes e ajustado), com quem pediu, quando e por quê. Ajuste não se edita: correção é ajuste novo, reversão é cancelamento.</li>
+</ul>
+</div>
+
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Modos de emissão e configuração</span></div>
+<p>Configurações › Eventos fiscais, com cinco abas.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Aba</th><th>O que tem</th></tr></thead>
+<tbody>
+<tr><td>Solicitações</td><td>Cada pedido, com o caminho (pelo ERP, direto na SEFAZ ou pedido ao autor), a situação, o protocolo e a linha do tempo.</td></tr>
+<tr><td>Modo de emissão / Modo e credenciais</td><td>Por CNPJ autor: pelo ERP (padrão) ou direto na SEFAZ. A troca vale para as próximas solicitações. Com a transmissão direta ligada, a aba ganha as credenciais.</td></tr>
+<tr><td>Qualidade de serviço</td><td>Por ator (sistema do cliente, PSP, Receita Federal, Comitê Gestor e SEFAZ): tempo limite, retentativas, aviso e inconsistência. Padrão do sistema do cliente: aviso em 24 h sem retorno e inconsistência em 72 h.</td></tr>
+<tr><td>Webhooks</td><td>As entregas de <code>fiscal_event.requested</code> e <code>adjustment_note.requested</code>, com tentativas e resposta.</td></tr>
+<tr><td>Trilha de configuração</td><td>Quem mudou o quê e quando: modo, credencial, termo e prazos.</td></tr>
+</tbody></table></div>
+<h3>8.1 Transmissão direta à SEFAZ</h3>
+<p>Alternativa ao ERP, por CNPJ (flag <code>eventos_modo_direto</code>). Exige a credencial e-CNPJ A1 com a senha, guardada cifrada, sem download e gerida só pelo Administrador, com teste de conexão e aviso 30 dias antes do vencimento. Vencida a credencial, o modo direto do CNPJ fica suspenso, com as solicitações na fila. Ao ligar o modo, um Administrador aceita o termo de transmissão, que fica registrado com quem e quando. O SplitHub transmite à SVRS e avisa o ERP por <code>fiscal_event.authorized</code> ou <code>fiscal_event.rejected</code>, com o XML. Notas de ajuste não usam o modo direto.</p>
+</div>
+
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Entrada: API e CSV</span></div>
+<p>Os eventos chegam ao SplitHub enviados pelo cliente, a partir do ERP e do sistema fiscal; o SplitHub não consome o ambiente nacional (D-21). As duas entradas estão em proposta e, no protótipo, são simuladas.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Entrada</th><th>O que já está definido</th><th>O que falta</th></tr></thead>
+<tbody>
+<tr><td><strong>API</strong></td><td>Evento a evento e em lote, idempotente pelo Id do evento e ordenado pela sequência (C-13); a chave de acesso liga o evento ao documento, e o evento sem documento vai para a fila de órfãos (C-12). O payload original é guardado (D-09). Credencial de produção recusa evento de homologação (D-10).</td><td>Aprovar a proposta v1.5, que já usa as rotas em inglês (<code>/v1/fiscal-events</code>, decisão de 05/10/2026).</td></tr>
+<tr><td><strong>CSV</strong></td><td>Oito modelos de arquivo e o fluxo em quatro passos (AE-04), construídos na esteira em 09/11/2026 (F-19).</td><td>Os limites do lote 1, abaixo.</td></tr>
+</tbody></table></div>
+<h3 id="s09-csv">9.2 Importação por CSV no lote 1</h3>
+<p>O CSV não é uma porta nova (D-21): cada evento do arquivo passa pelas validações da API, V-01 a V-14, pela idempotência da chave natural (V-13) e pelo mesmo ciclo de vida, mais as cinco do arquivo, CV-01 a CV-05. O evento entra em capturada e passa a planejada quando o efeito é calculado.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Limite do lote 1</th><th>Como aparece</th><th>Quando cai</th></tr></thead>
+<tbody>
+<tr><td>O evento só entra com o documento já carregado</td><td>Erro <code>document_not_found</code></td><td><span class="chip ok">caiu</span> no lote 2, 10/11: vira o aviso <code>awaiting_document</code>, e o evento entra na fila de órfãos (DV-15)</td></tr>
+<tr><td>Os códigos que a esteira ainda não trata: <code>212110</code>, <code>212120</code>, <code>412120</code>, <code>412130</code> e o retirado <code>211120</code></td><td>Erro <code>event_code_not_supported</code></td><td>Quando a esteira receber sucessão e manifestação</td></tr>
+<tr><td>O <code>211128</code>, cujo valor vem da nota de crédito que referencia o documento</td><td>Erro <code>event_code_not_supported</code>, com o pedido de enviar pela API</td><td>Quando a importação ler a nota referenciada</td></tr>
+<tr><td>Cancelamento de evento já executado</td><td>Erro <code>cancel_after_execution</code></td><td><span class="chip ok">caiu</span> no lote 2, 10/11: vira o aviso <code>reversal_after_execution</code>, e o 110001 reverte o evento (DV-15)</td></tr>
+<tr><td>Sem camada de item (D-02)</td><td>Os itens somam por tributo no registro do documento; o <code>item_number</code> não é conferido contra o documento</td><td>Com a camada de item</td></tr>
+<tr><td>Evento sem efeito naquele lado do documento</td><td>Erro <code>event_side_not_supported</code></td><td>Não cai: é a regra</td></tr>
+</tbody></table></div>
+<p>Dois avisos deixam o evento entrar e ficam na trilha dele: <code>document_out_of_filter</code>, quando o documento está fora do filtro de empresa, e <code>concurrent_event</code>, quando o documento já tem outro evento esperando o órgão e o reflexo pode não ser atribuível a um só.</p>
+<p>No sentido contrário, o SplitHub avisa o ERP pelos webhooks <code>credit.*</code> e <code>debit.*</code> quando um evento move o crédito ou o débito (<a class="xref" href="../proposta-eventos-credito-debito.html">proposta aprovada</a>, a construir com o lote 3).</p>
+</div>
+
+<div class="section" id="s10">
+<div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Funcionalidades detalhadas</span></div>
+<p>F-01 a F-15 e F-19 a F-24 são o módulo 22 do Mapa de Funcionalidades; F-16 a F-18, F-25 e F-26 estão no módulo de Inconsistências, e F-27 no de Integrações. Todas são descritas aqui. F-20 a F-27 são o lote 2, no app desde 10/11/2026.</p>
+<div class="feat" id="f-01"><div class="feat-hdr"><span class="feat-id">F-01</span><span class="feat-name">Esteira de eventos fiscais</span><span class="feat-loc">AV-EF-01</span></div><div class="feat-body"><p>Os eventos recebidos pela API ou por CSV, com cinco indicadores, as abas Esteira, Ações pendentes, Por documento e Ausências, e o gerenciador de colunas das demais listagens (seção 5).</p></div></div>
+<div class="feat" id="f-02"><div class="feat-hdr"><span class="feat-id">F-02</span><span class="feat-name">Estado por tributo, sem somar CBS e IBS</span><span class="feat-loc">AV-EF-02</span></div><div class="feat-body"><p>Um chip por tributo na esteira e uma linha por tributo no detalhe. A Receita Federal confirma um, o Comitê Gestor confirma o outro, e um não fecha o outro.</p></div></div>
+<div class="feat" id="f-03"><div class="feat-hdr"><span class="feat-id">F-03</span><span class="feat-name">Filtros e busca da esteira</span><span class="feat-loc">AV-EF-03</span></div><div class="feat-body"><p>Série, estado, tributo, lado, autor, canal e período de recebimento, com busca por evento, documento, código ou entidade.</p></div></div>
+<div class="feat" id="f-04"><div class="feat-hdr"><span class="feat-id">F-04</span><span class="feat-name">Detalhe do evento em quatro fases</span><span class="feat-loc">AV-EF-04</span></div><div class="feat-body"><p>Capturado, planejado, aguardando e executado, com o crédito antes, o previsto e o vigente por tributo, e a trilha do evento.</p></div></div>
+<div class="feat" id="f-05"><div class="feat-hdr"><span class="feat-id">F-05</span><span class="feat-name">Confirmação por órgão</span><span class="feat-loc">AV-EF-05</span></div><div class="feat-body"><p>O campo que cada órgão precisa refletir, com o esperado, a última leitura e a data dela; leitura sob demanda da Receita Federal dentro de uma cota diária.</p></div></div>
+<div class="feat" id="f-06"><div class="feat-hdr"><span class="feat-id">F-06</span><span class="feat-name">Divergência sem valor aplicado</span><span class="feat-loc">AV-EF-06</span></div><div class="feat-body"><p>Quando a leitura do órgão diverge do esperado, nada é aplicado e o evento fica divergente, com o esperado e o observado de cada tributo. Desde o lote 2, cada tributo divergente abre uma ocorrência da família I, e o aviso leva a ela (F-25).</p></div></div>
+<div class="feat" id="f-07"><div class="feat-hdr"><span class="feat-id">F-07</span><span class="feat-name">Ausências do evento esperado</span><span class="feat-loc">AV-EF-07</span></div><div class="feat-body"><p>O documento que deveria ter evento e não tem, com a contagem da espera de 30 dias. Antes do prazo, é processamento normal.</p></div></div>
+<div class="feat" id="f-08"><div class="feat-hdr"><span class="feat-id">F-08</span><span class="feat-name">Cancelamento e eventos de atributo</span><span class="feat-loc">AV-EF-08</span></div><div class="feat-body"><p>O 110001 cancela o evento referido sem desfazer valor confirmado em silêncio; os eventos de atributo valem na autorização e não esperam órgão.</p></div></div>
+<div class="feat" id="f-09"><div class="feat-hdr"><span class="feat-id">F-09</span><span class="feat-name">Payload, revisão e exportação do evento</span><span class="feat-loc">AV-EF-09</span></div><div class="feat-body"><p>O evento no formato em que chegou, só para o Administrador (V-05), a marca de revisão no evento e na ausência, e a exportação em CSV das colunas visíveis, pelo gerenciador de colunas.</p></div></div>
+<div class="feat" id="f-10"><div class="feat-hdr"><span class="feat-id">F-10</span><span class="feat-name">Pedido de evento no detalhe do documento</span><span class="feat-loc">AV-EV-02</span></div><div class="feat-body"><p>O evento ou a nota também saem do detalhe do DF e do RF, sem inconsistência aberta, com justificativa obrigatória.</p></div></div>
+<div class="feat" id="f-11"><div class="feat-hdr"><span class="feat-id">F-11</span><span class="feat-name">Emissão pelo ERP por webhook</span><span class="feat-loc">AV-EV-04</span></div><div class="feat-body"><p>O SplitHub prepara e comanda por <code>fiscal_event.requested</code> e <code>adjustment_note.requested</code>; o ERP emite e devolve o autorizado pela API, com o <code>request_id</code>.</p></div></div>
+<div class="feat" id="f-12"><div class="feat-hdr"><span class="feat-id">F-12</span><span class="feat-name">Nota de ajuste com aceite, rejeição e cancelamento</span><span class="feat-loc">AV-EV-05</span></div><div class="feat-body"><p>A nota pedida pode ser aceita pelo 211128, rejeitada ou cancelada pelo 110001, e cada desfecho volta à inconsistência e ao documento.</p></div></div>
+<div class="feat" id="f-13"><div class="feat-hdr"><span class="feat-id">F-13</span><span class="feat-name">Ajuste na trilha e na decomposição de valores</span><span class="feat-loc">AV-EV-06</span></div><div class="feat-body"><p>O ajuste executado aparece na trilha e na decomposição de valores do documento, com quem pediu, quando e por quê. Nunca é editado nem apagado.</p></div></div>
+<div class="feat" id="f-14"><div class="feat-hdr"><span class="feat-id">F-14</span><span class="feat-name">Configuração de eventos fiscais</span><span class="feat-loc">AV-EV-08</span></div><div class="feat-body"><p>Configurações › Eventos fiscais: solicitações, modo de emissão, qualidade de serviço por ator, webhooks e trilha de configuração (seção 8).</p></div></div>
+<div class="feat" id="f-15"><div class="feat-hdr"><span class="feat-id">F-15</span><span class="feat-name">Transmissão direta à SEFAZ</span><span class="feat-loc">AV-EV-09</span></div><div class="feat-body"><p>Por CNPJ, com a credencial e-CNPJ A1 e o termo de transmissão; o ERP é avisado do autorizado e do rejeitado.</p></div></div>
+<div class="feat" id="f-16"><div class="feat-hdr"><span class="feat-id">F-16</span><span class="feat-name">Evento fiscal ou nota de ajuste como ação</span><span class="feat-loc">AV-EV-01</span></div><div class="feat-body"><p>A inconsistência oferece as 18 opções, com a sugestão em destaque e o motivo, como ação ou como resolução.</p></div></div>
+<div class="feat" id="f-17"><div class="feat-hdr"><span class="feat-id">F-17</span><span class="feat-name">Prévia do efeito antes de pedir o evento</span><span class="feat-loc">AV-EV-03</span></div><div class="feat-body"><p>Por tributo, o crédito e o débito antes e depois do evento, e quando o ajuste vale, antes de a solicitação sair.</p></div></div>
+<div class="feat" id="f-18"><div class="feat-hdr"><span class="feat-id">F-18</span><span class="feat-name">Inconsistência acompanha a solicitação do evento</span><span class="feat-loc">AV-EV-07</span></div><div class="feat-body"><p>A ocorrência segue o estado do evento ou da nota pedida e só se resolve com o reflexo da Receita Federal e do Comitê Gestor.</p></div></div>
+<div class="feat" id="f-19"><div class="feat-hdr"><span class="feat-id">F-19</span><span class="feat-name">Importação de eventos por CSV</span><span class="feat-loc">AE-04 · DV-11</span></div><div class="feat-body"><p>Para quem ainda não integrou, para carga retroativa e para registro pontual. O Administrador e o Fiscal carregam um arquivo num dos oito modelos; o modelo é reconhecido pelo cabeçalho, cada evento passa pelas validações da API antes do envio, e o que falhou volta num arquivo de erros com as linhas originais. Os limites do lote 1 estão na seção 9.2.</p></div></div>
+<div class="feat" id="f-20"><div class="feat-hdr"><span class="feat-id">F-20</span><span class="feat-name">Eventos e linha do tempo fiscal no documento</span><span class="feat-loc">AV-E2-01 · AV-E2-02 · AV-DF · AV-RF</span></div><div class="feat-body"><p>O detalhe do DF ganha duas abas. Eventos fiscais: um evento por linha, na ordem da autorização, com o autor, o efeito previsto e uma coluna para a CBS e outra para o IBS, no vocabulário do documento (conciliado, aguardando, divergente, sem reflexo, não atribuível), mais a ocorrência de cada tributo e a ausência esperada. Linha do tempo fiscal: a vida do documento com quatro marcadores, para o evento fiscal, o evento do produto, a ação planejada e a ação executada (T-03, DV-24).</p><p><strong>Desde 11/11/2026 (AV-DF e AV-RF)</strong>, com o detalhe de abas no topo (PRD de Crédito, 5.5).</p><p><strong>No DF</strong>, os eventos ficam na aba <em>Eventos e ajustes</em>, abaixo do quadro de ajustes e do botão <em>Emitir evento ou nota</em>, numa tabela compacta de cinco colunas: Evento, Efeito previsto, CBS · Receita Federal, IBS · Comitê Gestor e Ocorrência. O clique na linha abre o que cada órgão precisa confirmar; em coluna estreita, cada linha vira um cartão. A linha do tempo fica na aba <em>Linha do tempo</em>, e o <em>Ver documento</em> da esteira abre o documento em <em>Eventos e ajustes</em>.</p><p><strong>No RF</strong>, a mesma aba traz os eventos do documento em quatro colunas: Evento, Efeito previsto na CBS ou no IBS, o órgão do registro e Ocorrência. Aparece só a confirmação desse órgão: a Receita Federal no RF de CBS, o Comitê Gestor no de IBS. O outro tributo fica no registro dele. As ausências esperadas entram na tabela. A linha aberta traz <em>Abrir na esteira</em> e <em>Ver no documento</em>, que fecha o RF e abre o documento em <em>Eventos e ajustes</em> com a linha marcada. A <em>Linha do tempo</em> do RF mostra só o que é deste tributo.</p></div></div>
+<div class="feat" id="f-21"><div class="feat-hdr"><span class="feat-id">F-21</span><span class="feat-name">Variação não atribuível</span><span class="feat-loc">AV-E2-08</span></div><div class="feat-body"><p>Quando dois eventos do mesmo documento confirmam na mesma leitura da Receita Federal, a CBS é aplicada pelo montante, e o aviso lista os outros eventos do documento na janela de 8 dias, com o estado de cada um. Abre uma ocorrência informativa. No IBS, o Comitê Gestor confirma evento a evento (DV-15, DV-21).</p></div></div>
+<div class="feat" id="f-22"><div class="feat-hdr"><span class="feat-id">F-22</span><span class="feat-name">Reversão do evento já executado</span><span class="feat-loc">AV-E2-09</span></div><div class="feat-body"><p>O 110001 sobre um evento executado deixa de ser recusado: reverte o evento, leva o valor aplicado de volta e espera o órgão de cada tributo como qualquer valor. A esteira guarda a execução e a reversão (DV-15).</p></div></div>
+<div class="feat" id="f-23"><div class="feat-hdr"><span class="feat-id">F-23</span><span class="feat-name">Fila de órfãos</span><span class="feat-loc">AV-E2-10</span></div><div class="feat-body"><p>O evento que chega antes do documento espera na fila por 30 dias. Quando o documento chega pela ingestão, o evento é ligado pela chave e segue na data da autorização, marcado como capturado com atraso. Passada a espera, abre uma ocorrência por tributo (C-12, DV-15).</p></div></div>
+<div class="feat" id="f-24"><div class="feat-hdr"><span class="feat-id">F-24</span><span class="feat-name">Solicitações da inconsistência na esteira</span><span class="feat-loc">AV-E2-11</span></div><div class="feat-body"><p>O evento pedido a partir de uma ocorrência entra na esteira quando é autorizado, com o <code>request_id</code> e a ocorrência de origem. O reflexo vale nos dois sentidos: a confirmação do órgão na esteira fecha o ajuste da solicitação (DV-32).</p></div></div>
+<div class="feat" id="f-25"><div class="feat-hdr"><span class="feat-id">F-25</span><span class="feat-name">Ocorrências da família I, uma por tributo</span><span class="feat-loc">AV-E2-03 · 04 · 05</span></div><div class="feat-body"><p>Cinco tipos em Inconsistências: valor divergente no órgão, evento não refletido, reflexo não atribuível, evento esperado que não chegou e evento sem documento além do prazo. Sempre uma ocorrência por tributo. O aviso da divergência e o clique na ausência vencida levam direto ao card (D-13, DV-13, DV-22, DV-28).</p></div></div>
+<div class="feat" id="f-26"><div class="feat-hdr"><span class="feat-id">F-26</span><span class="feat-name">Alertas de competência</span><span class="feat-loc">AV-E2-07</span></div><div class="feat-body"><p>Aba em Inconsistências para o evento que mexe em apuração já fechada: chegou, confirmou ou reverteu depois do fechamento. A CBS e o IBS em colunas separadas, nunca somados. Refazer a apuração dentro da janela, encaminhar para retificação fora dela, assumir ou manter, sempre com justificativa. Nada reabre sozinho (D-14, DV-28).</p></div></div>
+<div class="feat" id="f-27"><div class="feat-hdr"><span class="feat-id">F-27</span><span class="feat-name">Contexto Eventos fiscais na API</span><span class="feat-loc">AV-E2-06</span></div><div class="feat-body"><p>O sétimo contexto em Integrações, bidirecional: as rotas de entrada de eventos, os webhooks que o SplitHub envia ao ERP e os escopos <code>fiscal_events:write</code> e <code>fiscal_events:read</code> (DV-28).</p></div></div>
+</div>
+
+<div class="section" id="s11">
+<div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Requisitos funcionais</span></div>
+<h3>11.1 Esteira e detalhe (lote 1)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Requisito</th><th>Aceite</th></tr></thead>
+<tbody>
+<tr><td><span class="rid">RF-EVF-01</span></td><td>A esteira lista todo evento recebido, de qualquer canal, ligado ao documento pela chave.</td><td>O cabeçalho mostra quantos chegaram pela API e quantos por CSV.</td></tr>
+<tr><td><span class="rid">RF-EVF-02</span></td><td>O estado é mostrado por tributo.</td><td>Nenhuma tela mostra um estado único que some CBS e IBS.</td></tr>
+<tr><td><span class="rid">RF-EVF-03</span></td><td>Os indicadores Planejados, Executados, Divergentes e Ausentes filtram a lista.</td><td>O clique filtra; Recebidos limpa o filtro.</td></tr>
+<tr><td><span class="rid">RF-EVF-04</span></td><td>O detalhe mostra sempre as quatro fases.</td><td>A fase não alcançada aparece com —.</td></tr>
+<tr><td><span class="rid">RF-EVF-05</span></td><td>O detalhe mostra o que cada órgão precisa confirmar.</td><td>Uma linha por tributo, com o campo na API, o esperado, a última leitura e a data.</td></tr>
+<tr><td><span class="rid">RF-EVF-06</span></td><td>A leitura sob demanda da Receita Federal respeita a cota diária.</td><td>Esgotada a cota, o botão fica desabilitado, com o motivo e a próxima leitura agendada.</td></tr>
+<tr><td><span class="rid">RF-EVF-07</span></td><td>O IBS não tem leitura sob demanda.</td><td>O reflexo do IBS só muda com o arquivo do Comitê Gestor.</td></tr>
+<tr><td><span class="rid">RF-EVF-08</span></td><td>A divergência não aplica valor.</td><td>O crédito vigente não muda; o aviso mostra esperado e observado por tributo.</td></tr>
+<tr><td><span class="rid">RF-EVF-09</span></td><td>A ausência só aparece depois da espera.</td><td>O painel mostra a contagem dos dias, e a falta vira ocorrência só depois de 30 dias.</td></tr>
+<tr><td><span class="rid">RF-EVF-10</span></td><td>O payload original de cada evento fica guardado e pode ser aberto pelo perfil técnico.</td><td>O detalhe abre o evento como chegou; só o Administrador vê o botão (V-05).</td></tr>
+<tr><td><span class="rid">RF-EVF-11</span></td><td>A esteira tem o gerenciador de colunas e exporta o que está filtrado.</td><td>O CSV traz as mesmas linhas e as colunas visíveis da tela; a escolha de colunas fica guardada por usuário.</td></tr>
+<tr><td><span class="rid">RF-EVF-12</span></td><td>A esteira importa eventos por CSV nos oito modelos da AE-04, para o Administrador e o Fiscal.</td><td>O modelo é reconhecido pelo cabeçalho, com as colunas em qualquer ordem; o modelo em branco e o dicionário de colunas estão na janela.</td></tr>
+<tr><td><span class="rid">RF-EVF-13</span></td><td>Antes do envio, cada evento do arquivo passa pelas validações da API e do arquivo.</td><td>A pré-validação mostra prontos, com aviso, com erro e já importados, por evento; um erro numa linha de item recusa o evento inteiro.</td></tr>
+<tr><td><span class="rid">RF-EVF-14</span></td><td>O que falhou volta num arquivo de erros.</td><td>As linhas originais, com <code>erro_codigo</code>, <code>erro_mensagem</code> e <code>erro_coluna</code>.</td></tr>
+<tr><td><span class="rid">RF-EVF-15</span></td><td>O evento importado registra a origem.</td><td>O canal é CSV, e a trilha mostra o arquivo, as linhas, quem carregou e o SHA-256.</td></tr>
+</tbody></table></div>
+<h3>11.2 O lote 2 (AV-E2)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Requisito</th><th>Aceite</th></tr></thead>
+<tbody>
+<tr><td><span class="rid">RF-EVF-16</span></td><td>O detalhe do DF mostra os eventos do documento, na aba <em>Eventos e ajustes</em>, e a linha do tempo fiscal, na aba <em>Linha do tempo</em>.</td><td>Uma coluna por tributo, nunca somados; a ausência esperada e a ocorrência de cada tributo aparecem na linha. A tabela tem cinco colunas e o clique abre o que cada órgão precisa confirmar.</td></tr>
+<tr><td><span class="rid">RF-EVF-17</span></td><td>Divergência, ausência vencida, órfão vencido e falta de reflexo abrem uma ocorrência da família I por tributo.</td><td>Nenhuma ocorrência soma CBS e IBS; o aviso da divergência e o clique na ausência vencida levam ao card.</td></tr>
+<tr><td><span class="rid">RF-EVF-18</span></td><td>A variação não atribuível aplica a CBS pelo montante e mostra os outros eventos da janela.</td><td>O aviso lista os eventos do documento na janela de 8 dias, com o estado; a ocorrência é informativa, de prioridade baixa.</td></tr>
+<tr><td><span class="rid">RF-EVF-19</span></td><td>O 110001 sobre evento executado reverte, sem apagar.</td><td>A esteira mostra a execução e a reversão; o valor volta só com o reflexo do órgão de cada tributo.</td></tr>
+<tr><td><span class="rid">RF-EVF-20</span></td><td>O evento sem documento entra na fila de órfãos.</td><td>A importação aceita com o aviso <code>awaiting_document</code>; a chegada do documento liga o evento pela chave; depois de 30 dias, uma ocorrência por tributo.</td></tr>
+<tr><td><span class="rid">RF-EVF-21</span></td><td>A solicitação autorizada feita pela inconsistência aparece na esteira.</td><td>O evento traz o <code>request_id</code> e a ocorrência de origem; o reflexo na esteira fecha o ajuste da solicitação.</td></tr>
+<tr><td><span class="rid">RF-EVF-22</span></td><td>O evento que mexe em competência fechada vira alerta.</td><td>A aba Alertas mostra a causa, o período e a janela; toda ação pede justificativa; nada reabre a apuração.</td></tr>
+<tr><td><span class="rid">RF-EVF-23</span></td><td>Integrações oferece o contexto Eventos fiscais.</td><td>As rotas, os webhooks e os escopos <code>fiscal_events:write</code> e <code>fiscal_events:read</code> aparecem no catálogo e na nova conexão.</td></tr>
+<tr><td><span class="rid">RF-EVF-24</span></td><td>O detalhe do RF mostra os eventos do documento com a confirmação só do órgão do tributo do registro, e a linha do tempo só deste tributo.</td><td>Quatro colunas; a Receita Federal no RF de CBS e o Comitê Gestor no de IBS, nunca os dois; <em>Abrir na esteira</em> e <em>Ver no documento</em> na linha aberta, que leva à linha certa no DF.</td></tr>
+</tbody></table></div>
+<h3>11.3 O evento como ação (AV-EV)</h3>
+<p>Os 24 requisitos da proposta aprovada, sem mudança. Prioridade: M obrigatório, S desejável, F futuro.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Requisito</th><th>Aceite</th><th>Prior.</th></tr></thead>
+<tbody>
+<tr><td><span class="rid">RF-EVA-001</span></td><td>A inconsistência apresenta todos os eventos da Reforma e as duas notas, com a sugestão em destaque.</td><td>As 18 opções aparecem; a sugerida vem primeiro, com o motivo.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-002</span></td><td>Só eventos da NT 2025.002-RTC podem ser solicitados.</td><td>Nenhum outro código é aceito.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-003</span></td><td>O formulário mostra o efeito antes de solicitar.</td><td>Cada mudança aparece por tributo, com antes, depois e quando.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-004</span></td><td>Futura: evento que muda valor passa pela aprovação de outro usuário com perfil Administrador.</td><td>Hoje, quem pede confirma; o campo de aprovação fica no modelo.</td><td>F</td></tr>
+<tr><td><span class="rid">RF-EVA-005</span></td><td>No modo pelo ERP, a solicitação confirmada sai pelo webhook assinado.</td><td>Entrega registrada, com retentativa e log.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-006</span></td><td>O evento autorizado volta pela importação com o <code>request_id</code>.</td><td>A solicitação passa a autorizada e o ajuste é registrado.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-007</span></td><td>A rejeição volta por rota própria, com código e motivo.</td><td>O chamado volta a em análise com o motivo no histórico.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-008</span></td><td>Ajuste de valor só move a partição quando o órgão do tributo reflete.</td><td>Antes do reflexo, o ajuste fica aguardando o órgão.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-009</span></td><td>Reflexo diferente do declarado não é aplicado.</td><td>Abre inconsistência; nenhum valor muda sozinho.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-010</span></td><td>Todo ajuste é imutável e auditável.</td><td>Nenhuma rota ou tela edita ou apaga ajuste.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-011</span></td><td>A decomposição de valores mostra o valor do XML, os ajustes e o ajustado.</td><td>Valores e atributos ajustados visíveis no documento e no RF.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-012</span></td><td>Cancelamento por 110001 gera ajustes inversos.</td><td>Os ajustes do evento cancelado ficam revertidos, não apagados.</td><td>S</td></tr>
+<tr><td><span class="rid">RF-EVA-013</span></td><td>Sem retorno em 24 horas, aviso; em 72, inconsistência de integração.</td><td>Os dois registrados no chamado.</td><td>S</td></tr>
+<tr><td><span class="rid">RF-EVA-014</span></td><td>Nota de crédito e de débito são emitidas pelo ERP; o SplitHub só comanda, pelo webhook.</td><td>Nenhuma nota é emitida pelo SplitHub.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-015</span></td><td>A nota emitida volta pela ingestão de documentos com o <code>request_id</code> e a chave referenciada.</td><td>A nota fica ligada ao comando, à inconsistência e ao documento original.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-016</span></td><td>Nota de crédito só consolida o ajuste com o aceite do destinatário.</td><td>Sem o 211128, o ajuste fica aguardando o aceite.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-017</span></td><td>No detalhe do documento é possível emitir qualquer evento ou nota, sem inconsistência.</td><td>A justificativa é obrigatória e o ajuste registra a origem.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-018</span></td><td>Escolher fora da sugestão exige justificativa.</td><td>A justificativa fica na trilha do ajuste.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-019</span></td><td>A autoria pela norma decide o caminho: comando ao ERP, pedido ao autor ou só o órgão.</td><td>Nenhuma opção fica escondida.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-020</span></td><td>O modo de emissão é configurado por CNPJ autor.</td><td>Pelo ERP é o padrão; a troca vale para as próximas solicitações.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-021</span></td><td>A credencial da SEFAZ fica cifrada, sem download, e só o Administrador a gerencia.</td><td>Nenhuma tela ou rota devolve o certificado ou a senha.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-022</span></td><td>A credencial tem teste de conexão e aviso de vencimento.</td><td>Aviso 30 dias antes; vencida, o modo direto do CNPJ fica suspenso.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-023</span></td><td>No modo direto, o SplitHub registra o protocolo e avisa o ERP.</td><td>Webhook <code>fiscal_event.authorized</code> ou <code>fiscal_event.rejected</code> com o XML.</td><td>M</td></tr>
+<tr><td><span class="rid">RF-EVA-024</span></td><td>Tempo limite, retentativas e prazos são configurados por ator.</td><td>Sistema do cliente, PSP, Receita Federal, Comitê Gestor e SEFAZ, com a mudança na trilha.</td><td>M</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s12">
+<div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Regras de negócio</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Regra</th><th>Origem</th></tr></thead>
+<tbody>
+<tr><td><span class="rid">RN-EVF-01</span></td><td>Os eventos chegam enviados pelo cliente, pela API ou por CSV. O SplitHub não consome o ambiente nacional.</td><td>D-21</td></tr>
+<tr><td><span class="rid">RN-EVF-02</span></td><td>O efeito previsto não muda valor nem estado do crédito antes da confirmação do órgão do tributo.</td><td>D-21, ciclo de vida</td></tr>
+<tr><td><span class="rid">RN-EVF-03</span></td><td>Divergência nunca aplica valor: abre uma ocorrência por tributo, por evento, nunca por item.</td><td>D-09 do ciclo de vida, D-22</td></tr>
+<tr><td><span class="rid">RN-EVF-04</span></td><td>A divergência vai para Inconsistências, família I · Eventos fiscais; não há fila própria no módulo.</td><td>D-13</td></tr>
+<tr><td><span class="rid">RN-EVF-05</span></td><td>Evento que mexe em competência fechada não reabre a apuração: vira alerta, à espera de ação humana.</td><td>D-14</td></tr>
+<tr><td><span class="rid">RN-EVF-06</span></td><td>A ausência só vira ocorrência depois de 30 dias. Antes disso, é processamento normal.</td><td>D-EV-05</td></tr>
+<tr><td><span class="rid">RN-EVF-07</span></td><td>O evento é idempotente pelo Id e ordenado pela sequência; o evento sem documento vai para a fila de órfãos.</td><td>C-12, C-13</td></tr>
+<tr><td><span class="rid">RN-EVF-08</span></td><td>O payload original de cada evento é guardado. O prazo de retenção ainda não está definido.</td><td>D-09</td></tr>
+<tr><td><span class="rid">RN-EVF-09</span></td><td>Eventos de sucessão e de manifestação agem só no RF do tributo.</td><td>D-20</td></tr>
+<tr><td><span class="rid">RN-EVF-10</span></td><td>O perfil técnico que vê o payload original é o Administrador, o único dos quatro perfis da v1 que cuida das integrações. Fiscal, Tesouraria e Leitura não veem.</td><td>V-05, D-USR-02</td></tr>
+<tr><td><span class="rid">RN-EVF-11</span></td><td>O CSV não é porta nova: cada evento do arquivo vira uma chamada da API, com as mesmas validações, a mesma idempotência e o mesmo ciclo de vida. Importar é do Administrador e do Fiscal.</td><td>D-21, AE-04</td></tr>
+<tr><td><span class="rid">RN-EVF-12</span></td><td>Quando dois ou mais eventos do documento confirmam na mesma leitura da Receita Federal, a CBS é aplicada pelo montante e a variação fica não atribuível, com uma ocorrência informativa. No IBS, a confirmação é por evento.</td><td>DV-15, DV-21</td></tr>
+<tr><td><span class="rid">RN-EVF-13</span></td><td>Cancelar um evento executado reverte o que foi aplicado: a reversão espera o órgão de cada tributo, e as duas linhas ficam na esteira.</td><td>Proposta da ação, D-10; DV-15</td></tr>
+<tr><td><span class="rid">RN-EVF-14</span></td><td>O evento que chega antes do documento espera na fila de órfãos; ligado pela chave, segue na data da autorização. Depois de 30 dias, abre uma ocorrência por tributo.</td><td>C-12, D-EV-05</td></tr>
+<tr><td><span class="rid">RN-EVF-15</span></td><td>O alerta de competência não reabre a apuração e não vira ocorrência quando a janela fecha. Até a DA-02, o fechamento é simulado no dia 3 do mês seguinte.</td><td>D-14, DA-01, DA-02</td></tr>
+<tr><td><span class="rid">RN-EVA-01</span></td><td>Pelo ERP, o SplitHub prepara e solicita, e o ERP transmite; direto na SEFAZ, o SplitHub transmite com o certificado do cliente. Nota de ajuste sai sempre pelo ERP.</td><td>Proposta da ação</td></tr>
+<tr><td><span class="rid">RN-EVA-02</span></td><td>Uma solicitação é de um evento; um evento pode gerar vários ajustes, um por tributo e um por atributo.</td><td>Proposta da ação</td></tr>
+<tr><td><span class="rid">RN-EVA-03</span></td><td>Atributo declarado, inclusive o valor bruto do documento, vale na autorização; o valor de cada tributo, no reflexo do órgão.</td><td>Proposta da ação</td></tr>
+<tr><td><span class="rid">RN-EVA-04</span></td><td>A Receita Federal reflete a CBS e o Comitê Gestor reflete o IBS, cada um no seu tempo, nunca somados.</td><td>Proposta da ação</td></tr>
+<tr><td><span class="rid">RN-EVA-05</span></td><td>A autoria pela norma não esconde nenhuma opção: decide o caminho, que é o comando ao ERP, o pedido ao autor ou, nos eventos do órgão, só a importação.</td><td>Proposta da ação</td></tr>
+<tr><td><span class="rid">RN-EVA-06</span></td><td>O desfecho do chamado vem preenchido pelo evento, mas quem resolve é o responsável.</td><td>Proposta da ação</td></tr>
+<tr><td><span class="rid">RN-EVA-07</span></td><td>A nota de ajuste é sempre um documento novo, que referencia o original; o XML do original nunca muda.</td><td>Proposta da ação</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s13">
+<div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Integrações e dependências</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Com</th><th>Sentido</th><th>O quê</th><th>No app</th></tr></thead>
+<tbody>
+<tr><td>ERP ou sistema fiscal</td><td>Entrada</td><td>Eventos pela API (<code>POST /v1/fiscal-events</code>) e por CSV</td><td>Simulado</td></tr>
+<tr><td>ERP</td><td>Saída</td><td><code>fiscal_event.requested</code>, <code>adjustment_note.requested</code>, <code>fiscal_event.authorized</code>, <code>fiscal_event.rejected</code></td><td>Simulado</td></tr>
+<tr><td>ERP</td><td>Saída</td><td><code>credit.*</code> e <code>debit.*</code></td><td>A construir (lote 3)</td></tr>
+<tr><td>Receita Federal</td><td>Leitura</td><td>Apuração assistida da CBS: leitura agendada às 06:00 e sob demanda, com cota</td><td>Simulado</td></tr>
+<tr><td>Comitê Gestor</td><td>Entrada</td><td>Arquivo do IBS por webhook</td><td>Simulado</td></tr>
+<tr><td>SEFAZ (SVRS)</td><td>Saída</td><td>Registro de evento no modo direto, com a credencial do cliente</td><td>Simulado</td></tr>
+<tr><td><a class="xref" href="../prd-inconsistencias.html">Inconsistências</a></td><td>Interna</td><td>O evento como ação, a família I com uma ocorrência por tributo e a aba Alertas de competência</td><td>No app</td></tr>
+<tr><td>Integrações</td><td>Interna</td><td>O sétimo contexto da API, Eventos fiscais: rotas, webhooks e escopos</td><td>No app</td></tr>
+<tr><td><a class="xref" href="../prd-credito.html">Crédito</a> e <a class="xref" href="../prd-debito.html">Débito</a></td><td>Interna</td><td>Fase apropriável, origem do estado, valor como saldo (D-01, D-03)</td><td>Lote 3</td></tr>
+<tr><td><a class="xref" href="../prd-pcont.html">PCONT</a></td><td>Interna</td><td>O evento que muda o saldo de competência já confrontada</td><td>Lote 3</td></tr>
+<tr><td><a class="xref" href="../prd-conciliacao.html">Conciliação</a></td><td>Interna</td><td>A terceira ponta: o evento</td><td>Lote 3</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s14">
+<div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Entrega e decisões</span></div>
+<p>Os pacotes <strong>AV-EF</strong> (branch <code>feat/modulo-eventos</code>) e <strong>AV-EV</strong> (branch <code>feat/eventos-fiscais</code>) foram aprovados com 9 de 9 itens cada e promovidos ao app em 09/11/2026, com a transmissão direta à SEFAZ. Desde o lote 2, os dois pacotes se falam: a solicitação autorizada feita pela inconsistência aparece na esteira (DV-32).</p>
+<p>O <strong>lote 2</strong> é o pacote <strong>AV-E2</strong> (branch <code>feat/eventos-lote2</code>), aprovado com 11 de 11 itens e promovido ao app em 10/11/2026. As quatro flags dele só valem com <code>eventos_modulo</code> ligada, e cada uma desliga sem afetar o lote 1.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Flag</th><th>Liga</th><th>Desligada</th></tr></thead>
+<tbody>
+<tr><td><code>eventos_modulo</code></td><td>A esteira e o detalhe do evento</td><td>Sem o item de menu</td></tr>
+<tr><td><code>eventos_fiscais</code></td><td>O evento como ação, o pedido no documento e Configurações › Eventos fiscais</td><td>A inconsistência sem as 18 opções</td></tr>
+<tr><td><code>eventos_modo_direto</code></td><td>A transmissão direta, as credenciais e o termo</td><td>Só pelo ERP</td></tr>
+<tr><td><code>eventos_documento</code> <span class="chip ok">lote 2</span></td><td>As abas Eventos fiscais e Linha do tempo fiscal no detalhe do DF (T-03). Com <code>detalhe_df_abas</code> e <code>detalhe_rf_abas</code>, aprovadas em 11/11, os eventos ficam em <em>Eventos e ajustes</em> no DF e no RF</td><td>O detalhe do DF como no lote 1</td></tr>
+<tr><td><code>eventos_inconsistencias</code> <span class="chip ok">lote 2</span></td><td>A família I, uma ocorrência por tributo; o link da divergência e da ausência vencida para a ocorrência; o sétimo contexto da API em Integrações</td><td>Sem família I; o aviso não promete ocorrência</td></tr>
+<tr><td><code>eventos_alertas</code> <span class="chip ok">lote 2</span></td><td>A aba Alertas de competência em Inconsistências (D-14)</td><td>Sem a aba</td></tr>
+<tr><td><code>eventos_estados</code> <span class="chip ok">lote 2</span></td><td>Não atribuível, revertida e aguardando documento, com a fila de órfãos; as solicitações do AV-EV na esteira</td><td>A importação recusa o órfão e o cancelamento depois da execução</td></tr>
+</tbody></table></div>
+<h3>14.1 Decisões que valem</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Decisão</th><th>O que vale</th><th>Data</th></tr></thead>
+<tbody>
+<tr><td>D-01, D-03, D-04</td><td>Fase apropriável no crédito; valor e crédito como saldo; o evento prevalece sobre o deduzido, com a divergência registrada</td><td>30/09/2026</td></tr>
+<tr><td>D-02, D-12</td><td>Camada de item adiada; sem item na primeira versão (05/10/2026)</td><td>30/09/2026</td></tr>
+<tr><td>D-05</td><td>O núcleo não entra no M0; a faixa definitiva não foi escolhida</td><td>30/09/2026</td></tr>
+<tr><td>D-08, D-09, D-10</td><td>Primeira carga em modo observação; payload guardado; evento de homologação recusado pela credencial</td><td>30/09/2026</td></tr>
+<tr><td>D-13, D-14</td><td>Família I em Inconsistências; alerta em vez de reabrir apuração</td><td>30/09/2026</td></tr>
+<tr><td>D-20</td><td>Sucessão e manifestação só no RF do tributo</td><td>17/09/2026</td></tr>
+<tr><td>D-21, D-22</td><td>Entrada pela API pública, confirmação por tributo; uma ocorrência por tributo, por evento</td><td>30/09/2026</td></tr>
+<tr><td>Proposta da ação, D-01 a D-25</td><td>Dois modos de emissão, as 18 opções, a nota pelo ERP, a credencial, o termo e a qualidade de serviço</td><td>26 e 27/10/2026</td></tr>
+<tr><td>D-EV-01, D-EV-05</td><td>Módulo próprio; espera de 30 dias para a ausência</td><td>21/09/2026</td></tr>
+</tbody></table></div>
+<h3>14.2 Decisões da proposta do módulo revistas depois</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Decisão</th><th>A proposta dizia</th><th>O que vale agora</th></tr></thead>
+<tbody>
+<tr><td>D-EV-02</td><td>A camada de item entra junto</td><td>Adiada (D-02) e fora da primeira versão</td></tr>
+<tr><td>D-EV-03</td><td>O SplitHub não emite evento nesta fase</td><td>Comanda o ERP e, no modo direto, transmite à SEFAZ (proposta da ação, D-01)</td></tr>
+<tr><td>D-EV-04</td><td>Evento sobre competência encerrada reabre a apuração</td><td>Não reabre: vira alerta (D-14)</td></tr>
+<tr><td>D-EV-06</td><td>As funcionalidades entram em M0</td><td>Núcleo fora do M0 (D-05); o módulo está em M1 provisório na priorização v2.13</td></tr>
+</tbody></table></div>
+<h3>14.3 Em aberto</h3>
+<ul class="plain">
+<li><strong>Faixa do módulo</strong>: M1 provisório até a decisão de escopo. Sobe ao M0 se o piloto tiver volume de eventos que mude o crédito antes da apropriação.</li>
+<li><strong>D-07</strong> (documentos fiscais ausentes), <strong>D-11</strong> (validação de schema), <strong>D-15 a D-19</strong> (112110, RAD, guia emitida, modelo de item): com recomendação, sem decisão.</li>
+<li><strong>D-EV-07</strong>: crédito já compensado que o evento anula — estorno na competência corrente, com trilha, ainda sem decisão.</li>
+<li><strong>N-01 a N-06</strong>: perguntas à norma (outros documentos, crédito presumido do produtor rural, tabela cCredPres, códigos do MOV do IBS).</li>
+<li><strong>Prazo de retenção do payload</strong> (D-09).</li>
+<li><strong>Espera da ausência por tipo e por órgão</strong>: o ciclo de vida prevê a espera configurável por tipo de evento e por órgão (D-08 do ciclo de vida); o lote 1 usa 30 dias fixos (DV-33).</li>
+<li><strong>DA-01 e DA-02</strong> (proposta de alertas): o alerta que expira vira ocorrência? de onde vem a data de fechamento da competência? O lote 2 simula o fechamento no dia 3 do mês seguinte e não abre ocorrência na expiração. A causa C-1 dos alertas (112150) espera a C-06 e a DV-34.</li>
+<li><strong>Divergências que pedem decisão</strong> (seção 15): a ordem padrão da esteira (DV-09), o que o payload mostra (DV-19), o bloqueio do RAD (DV-29, D-16), a espera da ausência (DV-33) e o texto da ação do 211110 e do 112150 (DV-34, C-06). Até a decisão, vale o app.</li>
+</ul>
+</div>
+
+<div class="section" id="s15">
+<div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Divergências: proposta de telas × PRD × app</span></div>
+<p>Comparação feita em 09/11/2026 entre a <a class="xref" href="../eventos-fiscais-telas.html">proposta de telas v1.2</a> e o que está no app. A coluna App descreve o app antes das correções do mesmo dia; a coluna PRD diz o que este documento adota. Na v1.1, o selo <span class="chip ok">corrigido</span> marca o que já foi resolvido, no app ou na proposta. Na v1.2, o lote 2 estava em avaliação no pacote AV-E2; na v1.3, ele subiu ao app, e o que construiu aparece como <span class="chip ok">corrigido</span> no app, 10/11. O tratamento tem quatro valores: <span class="chip ok">decisão posterior</span> quando a diferença vem de uma decisão tomada depois da proposta e o app está certo; <span class="chip red">corrigir app</span>; <span class="chip warn">corrigir proposta</span>; <span class="chip info">decidir</span> quando cabe ao usuário escolher.</p>
+<h3>15.1 T-01 · Esteira</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>#</th><th>Ponto</th><th>Proposta de telas</th><th>App</th><th>PRD</th><th>Tratamento</th></tr></thead>
+<tbody>
+<tr><td><span class="rid">DV-01</span></td><td>Origem dos eventos no subtítulo</td><td>"Eventos autorizados na SEFAZ … última coleta há 3h", como se o SplitHub coletasse</td><td>Quantos chegaram pela API e por CSV; leitura da Receita Federal e arquivo do Comitê Gestor em separado</td><td>App</td><td><span class="chip ok">decisão posterior</span> D-21</td></tr>
+<tr><td><span class="rid">DV-02</span></td><td>Rota</td><td><code>#/eventos-fiscais</code></td><td><code>#/eventos</code>; <code>#/eventos-fiscais</code> é a configuração do AV-EV</td><td>App</td><td><span class="chip ok">corrigido</span> telas v1.3</td></tr>
+<tr><td><span class="rid">DV-03</span></td><td>Menu</td><td>Análise → Eventos Fiscais</td><td>Apuração Assistida › Eventos fiscais</td><td>App</td><td><span class="chip ok">corrigido</span> telas v1.3</td></tr>
+<tr><td><span class="rid">DV-04</span></td><td>Cor dos indicadores</td><td>A tabela de composição põe Planejados em âmbar e Ausentes em vermelho; o princípio visual da própria proposta põe planejada em azul e ausente em âmbar</td><td>Segue o princípio visual: Planejados azul, Ausentes âmbar</td><td>App</td><td><span class="chip ok">corrigido</span> telas v1.3</td></tr>
+<tr><td><span class="rid">DV-05</span></td><td>Nome do primeiro indicador</td><td>Capturados</td><td>Recebidos</td><td>App</td><td><span class="chip ok">decisão posterior</span> D-21</td></tr>
+<tr><td><span class="rid">DV-06</span></td><td>Indicadores clicáveis</td><td>Só os três últimos</td><td>Os quatro últimos filtram; Recebidos limpa o filtro</td><td>App</td><td><span class="chip ok">corrigido</span> telas v1.3</td></tr>
+<tr><td><span class="rid">DV-07</span></td><td>Coluna Item ("3 de 8") e filtro "só com item"</td><td>Presentes</td><td>Ausentes</td><td>App</td><td><span class="chip ok">decisão posterior</span> D-02, 05/10</td></tr>
+<tr><td><span class="rid">DV-08</span></td><td>Filtros</td><td>Tipo por série, estado, tributo, documento, período, autor e "só com item"</td><td>Série (com a 110), estado, tributo, lado, autor, canal e período de recebimento, mais a busca</td><td>App</td><td><span class="chip ok">corrigido</span> telas v1.3</td></tr>
+<tr><td><span class="rid">DV-09</span></td><td>Ordem padrão</td><td>Pela data do evento (autorização); ausentes e divergentes sobem no filtro de pendências</td><td>Pelo recebimento; as pendências sobem na aba Ações pendentes e com um indicador ligado</td><td>Data do evento: é a que a Receita Federal e o Comitê Gestor usam</td><td><span class="chip info">decidir</span></td></tr>
+<tr><td><span class="rid">DV-10</span></td><td>Botão de leitura</td><td>"Reconciliar agora", uma coleta só</td><td>"Ler a Receita Federal agora", com cota, e "Simular arquivo do Comitê Gestor"</td><td>App: o IBS não tem leitura sob demanda</td><td><span class="chip ok">decisão posterior</span> D-21</td></tr>
+<tr><td><span class="rid">DV-11</span></td><td>Importação por CSV na esteira</td><td>Presente (AE-04, versão de 30/09)</td><td>Ausente; o canal CSV só aparece nos eventos semeados</td><td>Proposta</td><td><span class="chip ok">corrigido</span> no app, 09/11 (F-19)</td></tr>
+<tr><td><span class="rid">DV-12</span></td><td>Gerenciar colunas</td><td>Presente</td><td>Ausente</td><td>Proposta: as demais listagens do produto têm</td><td><span class="chip ok">corrigido</span> no app, 09/11</td></tr>
+<tr><td><span class="rid">DV-13</span></td><td>Clique na linha ausente</td><td>Abre a ocorrência</td><td>Abre o painel da ausência, com a espera de 30 dias</td><td>App até o lote 2; depois, a ocorrência</td><td><span class="chip ok">decisão posterior</span> lote 2 · <span class="chip ok">corrigido</span> no app, 10/11</td></tr>
+<tr><td><span class="rid">DV-14</span></td><td>Clique no chip de estado</td><td>Painel lateral com o histórico das quatro fases</td><td>O clique na linha abre o detalhe em janela, com as fases e a trilha</td><td>App</td><td><span class="chip ok">corrigido</span> telas v1.3</td></tr>
+<tr><td><span class="rid">DV-15</span></td><td>Estados</td><td>Inclui não atribuível; a API prevê aguardando documento</td><td>Sem não atribuível, revertida e aguardando documento</td><td>Proposta</td><td><span class="chip ok">corrigido</span> no app, 10/11</td></tr>
+</tbody></table></div>
+<h3>15.2 T-02 · Detalhe do evento</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>#</th><th>Ponto</th><th>Proposta de telas</th><th>App</th><th>PRD</th><th>Tratamento</th></tr></thead>
+<tbody>
+<tr><td><span class="rid">DV-16</span></td><td>Rota e forma</td><td>Modal ou rota própria, <code>#/eventos-fiscais/EV-…</code></td><td>Janela sobre a esteira, <code>#/eventos/EV-…</code></td><td>App</td><td><span class="chip ok">corrigido</span> telas v1.3</td></tr>
+<tr><td><span class="rid">DV-17</span></td><td>Ação planejada</td><td>Uma linha por item, com Produto e Origem (cCredPres)</td><td>Uma linha por tributo, com Registro, antes, previsto, delta, vigente e situação</td><td>App</td><td><span class="chip ok">decisão posterior</span> D-02, D-22</td></tr>
+<tr><td><span class="rid">DV-18</span></td><td>Título do bloco de confirmação</td><td>"O que o Fisco precisa confirmar"</td><td>"O que cada órgão precisa confirmar", com a coluna Lido em</td><td>App: Receita Federal e Comitê Gestor nunca agrupados</td><td><span class="chip ok">corrigido</span> telas v1.3</td></tr>
+<tr><td><span class="rid">DV-19</span></td><td>Payload original</td><td>O XML cru recebido</td><td>O evento no formato JSON da API</td><td>Os dois: o JSON recebido e o XML do evento, quando vier junto</td><td><span class="chip info">decidir</span></td></tr>
+<tr><td><span class="rid">DV-20</span></td><td>Quem vê o payload (V-05)</td><td>Perfil técnico; oculto no perfil fiscal</td><td>Visível para todos</td><td>Proposta</td><td><span class="chip ok">corrigido</span> no app, 09/11</td></tr>
+<tr><td><span class="rid">DV-21</span></td><td>Variação não atribuível</td><td>Aviso com a lista dos outros eventos do documento na janela</td><td>Não existe</td><td>Proposta</td><td><span class="chip ok">corrigido</span> no app, 10/11</td></tr>
+<tr><td><span class="rid">DV-22</span></td><td>Link da divergência</td><td>Para a ocorrência</td><td>Para a lista de Inconsistências, e o texto diz que a ocorrência da família I existe</td><td>Proposta; até o lote 2, o texto não pode prometer a ocorrência</td><td><span class="chip ok">corrigido</span> no app, 09/11 · link para a ocorrência: <span class="chip ok">corrigido</span> no app, 10/11</td></tr>
+<tr><td><span class="rid">DV-23</span></td><td>Trilha do evento</td><td>Não prevista</td><td>Presente</td><td>App</td><td><span class="chip ok">corrigido</span> telas v1.3</td></tr>
+</tbody></table></div>
+<h3>15.3 T-03 a T-09 · Telas dos lotes 2 e 3</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>#</th><th>Tela</th><th>Proposta de telas</th><th>App</th><th>PRD</th><th>Tratamento</th></tr></thead>
+<tbody>
+<tr><td><span class="rid">DV-24</span></td><td>T-03 Documento</td><td>Abas Itens, Eventos fiscais e Linha do tempo fiscal</td><td>Não construídas; o detalhe do DF tem o pedido de evento do AV-EV</td><td>Abas Eventos fiscais e Linha do tempo no lote 2; a aba Itens fica fora</td><td><span class="chip ok">corrigido</span> telas v1.3 · D-02 · abas: <span class="chip ok">corrigido</span> no app, 10/11</td></tr>
+<tr><td><span class="rid">DV-25</span></td><td>T-04 e T-05 Crédito e Débito</td><td>Crédito e débito por item, efeito parcial</td><td>Não construídas</td><td>Fase apropriável e origem do estado, por registro, sem item</td><td><span class="chip ok">corrigido</span> telas v1.3 · D-02</td></tr>
+<tr><td><span class="rid">DV-26</span></td><td>T-06 Apuração</td><td>Competência a recalcular na tela da Apuração IBS/CBS</td><td>A tela saiu do app: o PCONT a substituiu em 29/10</td><td>O aviso vai para o PCONT</td><td><span class="chip ok">corrigido</span> telas v1.3</td></tr>
+<tr><td><span class="rid">DV-27</span></td><td>T-07 Conciliação</td><td>Terceira ponta: o evento</td><td>Não construída</td><td>Proposta</td><td>Lote 3</td></tr>
+<tr><td><span class="rid">DV-28</span></td><td>T-08 Inconsistências e Integrações</td><td>Família I, aba de Alertas e o sétimo contexto da API em Integrações</td><td>Nada disso; a família I não está no catálogo do app</td><td>Proposta</td><td><span class="chip ok">corrigido</span> no app, 10/11</td></tr>
+<tr><td><span class="rid">DV-29</span></td><td>T-09 Pagamentos</td><td>Bloqueio de assumir o RAD quando o 112110 chegou</td><td>Não construída</td><td>Proposta, com a D-16 ainda sem decisão</td><td><span class="chip info">decidir</span> D-16</td></tr>
+</tbody></table></div>
+<h3>15.4 Pontos fora das telas</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>#</th><th>Ponto</th><th>Propostas</th><th>App</th><th>PRD</th><th>Tratamento</th></tr></thead>
+<tbody>
+<tr><td><span class="rid">DV-30</span></td><td>Nome das rotas da API</td><td><code>/v1/eventos-fiscais</code> (API v1.4)</td><td><code>/v1/fiscal-events</code> (AV-EV)</td><td>Inglês, decisão de 05/10/2026</td><td><span class="chip ok">corrigido</span> API v1.5, CSV v1.2, dossiê v1.6, impacto v2.10</td></tr>
+<tr><td><span class="rid">DV-31</span></td><td>Onde se escolhe o modo de emissão</td><td>Configurações › Integrações (proposta da ação, D-20)</td><td>Configurações › Eventos fiscais</td><td>App: o modo, a credencial e a qualidade de serviço ficam juntos</td><td><span class="chip ok">corrigido</span> ação v1.5</td></tr>
+<tr><td><span class="rid">DV-32</span></td><td>Ligação entre os dois pacotes</td><td>A solicitação feita pela inconsistência aparece na esteira</td><td>Os dois módulos não se referenciam</td><td>Proposta</td><td><span class="chip ok">corrigido</span> no app, 10/11</td></tr>
+<tr><td><span class="rid">DV-33</span></td><td>Espera da ausência</td><td>Configurável por tipo de evento e por órgão (ciclo de vida, D-08)</td><td>30 dias fixos (D-EV-05)</td><td>30 dias como padrão, configurável depois</td><td><span class="chip info">decidir</span></td></tr>
+<tr><td><span class="rid">DV-34</span></td><td>Ação do 211110 e do 112150</td><td>"Substituir destacado pelo presumido" e "Mover competência ago → set"</td><td>"Somar o crédito presumido" e "Registrar a nova data de entrega", sem competência</td><td>App no 211110; o 112150 depende do efeito na competência (C-06)</td><td><span class="chip info">decidir</span> C-06</td></tr>
+<tr><td><span class="rid">DV-35</span></td><td>Situação da proposta</td><td>Cabeçalho "Aguardando aprovação", data 25/09, histórico até 30/09 (v1.2)</td><td>T-01 e T-02 no app desde 09/11</td><td>Proposta passa a "Parcialmente construída", com remissão a este PRD</td><td><span class="chip ok">corrigido</span> telas v1.3</td></tr>
+</tbody></table></div>
+<div class="callout ok"><div class="ct">Placar em 10/11/2026, v1.3</div><p>35 divergências. <strong>6</strong> já resolvidas por decisão posterior, com o app certo. <strong>15</strong> corrigidas nas propostas: telas v1.3, API v1.5, CSV v1.2, dossiê v1.6, impacto v2.10 e ação v1.5. As <strong>7</strong> a corrigir no app estão corrigidas: <strong>4</strong> em 09/11 (DV-11, DV-12, DV-20 e DV-22) e <strong>3</strong> em 10/11, com o lote 2 (DV-15, DV-21 e DV-32). <strong>5</strong> pedem decisão do usuário (DV-09, DV-19, DV-29, DV-33 e DV-34) e ficam como estão no app. Das <strong>2</strong> sem conflito, a DV-28 subiu com o lote 2 e a DV-27 fica para o lote 3. O lote 2 também entregou a parte dele da DV-13 (a ausência vencida abre a ocorrência), da DV-22 (o link para a ocorrência) e da DV-24 (as abas do documento).</p></div>
+</div>
+
+<div class="section" id="s16">
+<div class="sec-hdr"><span class="sec-num">16</span><span class="sec-title">Glossário</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Termo</th><th>Significado</th></tr></thead>
+<tbody>
+<tr><td><strong>Evento fiscal</strong></td><td>Registro autorizado na SEFAZ que muda um documento já emitido, identificado pelo código (tpEvento), pela chave e pela sequência</td></tr>
+<tr><td><strong>Esteira</strong></td><td>A lista dos eventos recebidos, com a ação planejada e o estado de cada tributo</td></tr>
+<tr><td><strong>Ação planejada</strong></td><td>O que o SplitHub fará no crédito ou no débito quando o órgão confirmar, escrito em linguagem de negócio</td></tr>
+<tr><td><strong>Reflexo</strong></td><td>O valor que o órgão do tributo passa a mostrar depois de processar o evento</td></tr>
+<tr><td><strong>Ausência</strong></td><td>Evento que deveria existir e não chegou depois da espera</td></tr>
+<tr><td><strong>Nota de ajuste</strong></td><td>Nota de crédito (tipo 04) ou de débito (tipo 06) que referencia o documento original</td></tr>
+<tr><td><strong>Modo direto</strong></td><td>Transmissão do evento à SEFAZ pelo SplitHub, com a credencial do cliente</td></tr>
+<tr><td><strong>Família I</strong></td><td>Família de inconsistências dos eventos fiscais (D-13), com os tipos no dossiê</td></tr>
+<tr><td><strong>Fila de órfãos</strong></td><td>Os eventos que chegaram antes do documento, à espera da ingestão dele (C-12)</td></tr>
+<tr><td><strong>Não atribuível</strong></td><td>Reflexo da CBS que fecha o montante de vários eventos do documento sem dizer quanto é de cada um</td></tr>
+<tr><td><strong>Alerta de competência</strong></td><td>Evento cujo efeito confirmado pesa numa apuração já fechada; pede uma decisão, nunca reabre sozinho (D-14)</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s17">
+<div class="sec-hdr"><span class="sec-num">17</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.4</div><div class="ver-desc"><strong>11/11/2026</strong> — Os eventos no detalhe do DF e do RF como estão no app desde 11/11 (AV-DF e AV-RF, R-307). A F-20 descreve a aba <em>Eventos e ajustes</em>: no DF, a tabela compacta de cinco colunas abaixo do quadro de ajustes; no RF, quatro colunas com a confirmação só do órgão do tributo, as ausências e os atalhos <em>Abrir na esteira</em> e <em>Ver no documento</em>. A linha do tempo do RF mostra só o tributo. RF-EVF-16 revisto e RF-EVF-24 novo; a seção 2.1 e a flag <code>eventos_documento</code> citam o detalhe novo. Nenhuma regra muda. v1.3 em <a class="xref" href="prd-eventos-fiscais-v1.3.html">versoes/</a>.</div></div>
+<div class="ver-row"><div class="ver-num">v1.3</div><div class="ver-desc"><strong>10/11/2026</strong> — O lote 2 subiu ao app: o pacote AV-E2 foi aprovado com 11 de 11 itens e promovido no mesmo dia. Novas funcionalidades F-20 a F-27 (F-20 a F-24 no módulo de Eventos fiscais do mapa, F-25 e F-26 em Inconsistências, F-27 em Integrações), requisitos RF-EVF-16 a 23 (seção 11.2; o evento como ação passa a 11.3) e regras RN-EVF-12 a 15. A seção 2.1 ganha o lote 2, e a 2.2 fica só com o lote 3. A esteira tem as abas Solicitações e Fila de órfãos. Os selos "em avaliação" viram "lote 2", e na seção 15 viram "corrigido no app, 10/11"; o placar fecha as 7 divergências a corrigir no app.</div></div>
+<div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>10/11/2026</strong> — O lote 2 foi construído no pacote AV-E2, em avaliação, com quatro flags e 11 itens. Atualizadas as divergências DV-13 (a ausência vencida abre a ocorrência), DV-15 (três estados novos, seção 4.2), DV-21 (aviso da variação não atribuível), DV-22 (o aviso leva à ocorrência), DV-24 (abas Eventos fiscais e Linha do tempo fiscal), DV-28 (família I, aba de Alertas e sétimo contexto da API) e DV-32 (as solicitações do AV-EV na esteira). Na seção 9.2, os limites <code>document_not_found</code> e <code>cancel_after_execution</code> caem no AV-E2 e viram avisos. A seção 14 traz as quatro flags novas, e 14.3 ganha a DA-01, a DA-02 e a causa C-1 dos alertas. Placar da seção 15 refeito; glossário com fila de órfãos, não atribuível e alerta de competência. O app não muda: o lote 2 sobe só com a aprovação.</div></div>
+<div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>09/11/2026</strong> — Corrigidas quatro divergências no app: a importação por CSV entra na esteira (DV-11, nova F-19 e RF-EVF-12 a 15), com os limites do lote 1 na seção 9.2; a esteira ganha o gerenciador de colunas, que também exporta (DV-12); o payload original passa a ser só do Administrador, o perfil técnico de V-05 (DV-20, RN-EVF-10); e o aviso de divergência deixa de prometer a ocorrência da família I (DV-22). As quinze correções de proposta foram feitas (telas v1.3, API v1.5, CSV v1.2, dossiê v1.6, impacto v2.10, ação v1.5). Seção 3 com as versões atuais das fontes; a do impacto passa de 2.11 para 2.10, a versão que o documento tem de fato. As cinco divergências que pedem decisão entram em 14.3.</div></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>09/11/2026</strong> — PRD inicial. Consolida as sete propostas de eventos fiscais e o que foi construído nos pacotes AV-EF e AV-EV, promovidos ao app em 09/11/2026. Traz as 18 funcionalidades do mapa (F-01 a F-18), os requisitos RF-EVF e RF-EVA, as regras RN-EVF e RN-EVA, as decisões em vigor e as 35 divergências entre a proposta de telas v1.2, este PRD e o app.</div></div>
+</div>
+
+</div>
+</body>
+</html>

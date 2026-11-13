@@ -1,6 +1,6 @@
 {
   "versao": "1.2",
-  "atualizado": "12/11/2026",
+  "atualizado": "13/11/2026",
   "integracao": "avaliacao",
   "app": {
     "branch": "master",
@@ -1436,6 +1436,186 @@
           ],
           "atende": "Proposta v2.2, seção 04 · PRD v1.6, F-35 · D-18 e D-19",
           "limites": "O evento fiscal pedido pelo card (pacote AV-EV) ainda muda o estado sem passar pelas exigências; entra no lote 2.",
+          "decisao": "pendente",
+          "obs": ""
+        }
+      ]
+    },
+    {
+      "id": "AV-E3",
+      "nome": "Eventos fiscais — lote 3: reflexos em crédito, débito, PCONT, conciliação e RAD",
+      "branch": "feat/eventos-lote3",
+      "depende": [
+        "AV-00"
+      ],
+      "registro": "src/js/eventos-lote3.js",
+      "flags": {
+        "eventos_reflexo": "O registro fiscal passa a valer o saldo após eventos, e o motor do art. 53 compensa sobre ele",
+        "eventos_credito": "Crédito com fase, origem do estado, último evento e fato gerador (T-04)",
+        "eventos_debito": "Débito com o efeito de cada evento e o retido por divergência (T-05)",
+        "eventos_pcont": "Aviso de competência a recalcular no PCONT (T-06)",
+        "eventos_conciliacao": "A terceira ponta da conciliação: o evento (T-07)",
+        "eventos_rad": "O 112110 bloqueia assumir o RAD (T-09, D-16 em aberto)"
+      },
+      "principal": "eventos_reflexo",
+      "situacao": "em_avaliacao",
+      "promovido": null,
+      "proposta": "prd-eventos-fiscais.html",
+      "resumo": "Lote 3 do módulo de eventos fiscais, sobre os lotes 1 e 2 já no app, pelo PRD de Eventos fiscais v1.5 (13/11/2026). O registro fiscal passa a valer o saldo após eventos e o motor do art. 53 compensa sobre ele. Crédito, Débito, PCONT e Conciliação mostram o efeito de cada evento (T-04 a T-07), e o 112110 bloqueia assumir o RAD (T-09). Atende às DV-25, 26, 27 e 29. A DV-29 foi construída pela recomendação da D-16, que segue sem decisão; as DV-09, 19, 33 e 34 continuam em aberto. Os passos de teste não citam documento: os exemplos dependem da data, e o pacote ainda não foi testado no navegador.",
+      "itens": [
+        {
+          "id": "AV-E3-01",
+          "flag": "eventos_reflexo",
+          "titulo": "Saldo após eventos no registro fiscal",
+          "construido": "O valor de cada RF passa a ser o escriturado mais o que o órgão do tributo já confirmou: a Receita Federal na CBS, o Comitê Gestor no IBS. Entram os eventos executados e os não atribuíveis; o previsto, o aguardando e o divergente ficam de fora. O saldo é aplicado na base, antes do motor do art. 53 e da partição da parcialidade, e uma leitura da Receita Federal, um arquivo do Comitê Gestor ou uma importação o refazem.",
+          "onde": "Qualquer listagem ou detalhe de RF · a origem é a esteira em Apuração Assistida › Eventos fiscais",
+          "testar": [
+            "Na esteira, abra um evento de valor executado na CBS e anote o crédito antes e o vigente; abra o RF de CBS do documento: o valor é o vigente.",
+            "Num evento divergente, confira que o RF do tributo divergente continua no valor escriturado.",
+            "Desligue a flag eventos_reflexo e recarregue: o RF volta ao escriturado."
+          ],
+          "atende": "PRD de Eventos fiscais v1.5, F-28 · D-03 · RN-EVF-16",
+          "limites": "Dentro da sessão, a mudança refaz o valor, mas o motor do art. 53 e a partição só são refeitos no próximo processamento da base.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E3-02",
+          "flag": "eventos_reflexo",
+          "titulo": "Motor do art. 53 sobre o saldo, e débito retido pela divergência",
+          "construido": "O motor do art. 53 compensa sobre o saldo após eventos, e não sobre o escriturado: o crédito que encolheu compensa menos, o débito que cresceu pede mais. Débito com divergência de evento acende a flag inconsistencia e fica retido, fora da fila do art. 53, até a divergência se resolver. O detalhe do RF diz sobre que valor o motor compensou.",
+          "onde": "Débito › Registros Fiscais e detalhe do RF de saída · Crédito › detalhe do RF",
+          "testar": [
+            "Abra o RF de um documento de saída com evento divergente: as flags Inconsistência e Retido aparecem, com a nota de que o débito está fora da fila do art. 53.",
+            "Abra o RF de um documento com evento executado que mudou o valor: a nota diz que o motor compensou sobre o saldo após eventos."
+          ],
+          "atende": "PRD v1.5, F-28 · T-05 · D-DB-02 · RN-EVF-17",
+          "limites": "A D-EV-07 (estorno do crédito já compensado que o evento anula) segue em aberto: o motor refaz as compensações, sem lançamento de estorno.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E3-03",
+          "flag": "eventos_credito",
+          "titulo": "Fase, origem do estado, último evento e fato gerador no Crédito",
+          "construido": "A listagem de documentos do Crédito ganha quatro colunas no fim. Fase: originado, apropriável, apropriado, utilizado ou glosado. Origem do estado: deduzido, observado ou divergente. Também Último evento, que abre o evento, e Fato gerador. Um chip por documento quando a CBS e o IBS concordam, um por tributo quando não. A coluna de inconsistências mostra Divergência de evento e Evento faltante.",
+          "onde": "Crédito › Documentos Fiscais",
+          "testar": [
+            "Role a listagem até as colunas novas e procure um documento com origem divergente: o chip aparece por tributo, e a coluna de inconsistências mostra Divergência de evento.",
+            "Clique no código do último evento: o detalhe do evento abre.",
+            "Confira que o valor da listagem nunca soma o previsto (V-02)."
+          ],
+          "atende": "PRD v1.5, F-29 · T-04 · D-01 · D-04 · DV-25",
+          "limites": "O fato gerador segue a emissão: o efeito do 112150 na competência espera a C-06 e a DV-34, e a classificação CP/LP e de vencidos não muda.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E3-04",
+          "flag": "eventos_credito",
+          "titulo": "Filtros de fase, origem e presença de evento",
+          "construido": "Três filtros entram no painel avançado do Crédito: fase do crédito, origem do estado e presença de evento (com evento, sem evento, com divergência de evento, com evento faltante). A contagem da listagem mostra quantos documentos ficaram.",
+          "onde": "Crédito › Documentos Fiscais › filtros avançados",
+          "testar": [
+            "Filtre por Presença de evento › Com divergência de evento: só ficam documentos com o chip divergente.",
+            "Combine Fase › Apropriável com Origem › Deduzido e confira a contagem no cabeçalho."
+          ],
+          "atende": "PRD v1.5, F-29 · T-04",
+          "limites": "",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E3-05",
+          "flag": "eventos_credito",
+          "titulo": "Reflexo e quatro marcos no detalhe do RF",
+          "construido": "O detalhe do RF ganha a seção Reflexo dos eventos fiscais. Ela mostra o valor escriturado e o saldo após eventos, o previsto à parte e nunca somado, e a origem do estado com o motivo. No crédito, também a fase e os quatro marcos do ciclo: originado, fato gerador constituído (fgConstituidoEm), apropriado e utilizado. Quando há 112110, ele aparece como o evento por trás da apropriação. A lista dos eventos traz o efeito de cada um e abre o evento.",
+          "onde": "Detalhe de qualquer RF de entrada · seção Reflexo dos eventos fiscais",
+          "testar": [
+            "Abra o RF de um documento com evento executado: o escriturado aparece riscado e o saldo em destaque.",
+            "Num RF com evento ainda aguardando o órgão, o previsto aparece numa linha à parte e não muda o saldo.",
+            "Confira os quatro marcos e qual deles está aceso."
+          ],
+          "atende": "PRD v1.5, F-29 · T-04 · V-02 · RF-EVF-28",
+          "limites": "O 112110 marca a origem como observado, mas não move a fase para apropriado: a D-15 segue em aberto.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E3-06",
+          "flag": "eventos_debito",
+          "titulo": "Efeito de evento no Débito",
+          "construido": "A listagem de documentos do Débito ganha a coluna Efeito de evento: por tributo, o escriturado riscado e o saldo após eventos, o previsto à espera do órgão e a divergência com a marca de retido. A coluna de inconsistências mostra Divergência de evento e Evento faltante.",
+          "onde": "Débito › Documentos Fiscais",
+          "testar": [
+            "Procure um documento de saída com evento executado: a coluna mostra o valor riscado e o novo, com a CBS e o IBS em linhas separadas.",
+            "Num documento com evento divergente, o chip diz divergente · retido."
+          ],
+          "atende": "PRD v1.5, F-30 · T-05",
+          "limites": "O efeito é por registro; o efeito parcial por item fica fora (D-02).",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E3-07",
+          "flag": "eventos_pcont",
+          "titulo": "Competência a recalcular no PCONT",
+          "construido": "Na competência com alerta de evento aberto, o PCONT mostra quantos eventos mudaram o saldo depois do fechamento e o impacto. A CBS e o IBS ficam separados e nunca se somam. O aviso também traz a janela de ajuste com a contagem até o aceite tácito (C-20) e uma tabela com documento, evento, causa e alerta. O botão Ver os alertas do mês leva à aba Alertas filtrada pelo período. O aviso diz que a apuração não foi reaberta (D-14), e outras competências com alerta aparecem como atalho.",
+          "onde": "Apuração Assistida › PCONT · competência com alerta de evento",
+          "testar": [
+            "Abra o PCONT e use o atalho das competências com alerta: o aviso aparece abaixo do carrossel.",
+            "Clique em Ver os alertas do mês: a aba Alertas de competência abre filtrada pelo período.",
+            "Desligue eventos_alertas: o aviso some junto."
+          ],
+          "atende": "PRD v1.5, F-31 · T-06 · D-14 · C-20 · DV-26",
+          "limites": "O fechamento continua simulado no dia 3 do mês seguinte (DA-02), e a causa C-1 (112150) não é gerada.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E3-08",
+          "flag": "eventos_conciliacao",
+          "titulo": "Três pontas na conciliação",
+          "construido": "Aba nova na Conciliação, Três pontas · eventos, com uma linha por documento e tributo: 1 · ERP, 2 · Evento e 3 · Apuração lado a lado. A causa pode ser conciliado, aguardando o órgão, Órgão não refletiu, Órgão refletiu outro valor, ERP omitiu evento ou Escrituração errada. Os indicadores por causa filtram a tabela, e o filtro de tributo separa a Receita Federal do Comitê Gestor.",
+          "onde": "Conciliação › aba Três pontas · eventos",
+          "testar": [
+            "Clique no indicador ERP omitiu evento: as linhas são as ausências, sem evento no meio e com a apuração diferente do ERP.",
+            "Clique em Órgão não refletiu: o evento pede um valor e a apuração ficou no escriturado.",
+            "Abra antes o Dashboard ou a Listagem da conciliação para carregar as linhas de Escrituração errada."
+          ],
+          "atende": "PRD v1.5, F-32 · T-07 · DV-27",
+          "limites": "A escrituração errada vem do confronto da conciliação já existente, só depois de ele carregar.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E3-09",
+          "flag": "eventos_rad",
+          "titulo": "O 112110 bloqueia assumir o RAD",
+          "construido": "Quando o fornecedor informa o pagamento integral (112110), Assumir RAD fica bloqueado na captura, sem esperar o órgão, com a data e o protocolo do evento. A janela traz Ver evento, Reportar divergência e Assumir mesmo assim. A exceção pede justificativa de pelo menos 20 caracteres e a ciência da duplicidade, fica registrada no evento e segue para o fluxo normal de assumir o recolhimento.",
+          "onde": "Crédito › Documentos Fiscais, coluna de ação do RAD · detalhe do DF",
+          "testar": [
+            "Na esteira, filtre pelo código 112110 e abra o documento do exemplo do lote 3: o botão diz Assumir RAD · bloqueado.",
+            "Tente Assumir mesmo assim sem a ciência ou com menos de 20 caracteres: a janela diz o que falta.",
+            "Assuma por exceção e abra o evento: a trilha registra quem assumiu e por quê."
+          ],
+          "atende": "PRD v1.5, F-33 · T-09 · RN-EVF-19 · DV-29",
+          "limites": "A D-16 segue sem decisão: o pacote constrói a recomendação (bloquear, com exceção justificada). O exemplo é um 112110 semeado num documento elegível ao RAD.",
+          "decisao": "pendente",
+          "obs": ""
+        },
+        {
+          "id": "AV-E3-10",
+          "flag": "eventos_rad",
+          "titulo": "Cobrança suspensa e duplicidade",
+          "construido": "Com o RAD já assumido, o 112110 muda o que o documento mostra. Guia emitida e não paga: Cobrança suspensa, com a ação de cancelar a guia e devolver o recolhimento ao fornecedor. Guia paga: Pagamento em duplicidade, pelo caminho da restituição ou da compensação. Assumido sem guia: a sugestão de devolver o recolhimento ao fornecedor.",
+          "onde": "Detalhe do DF com RAD assumido e 112110",
+          "testar": [
+            "Assuma o RAD por exceção no documento do exemplo; depois de a guia ser gerada, o detalhe do documento passa a dizer Cobrança suspensa.",
+            "Clique em Cancelar a guia: a guia é cancelada e a devolução ao fornecedor abre para confirmar."
+          ],
+          "atende": "PRD v1.5, F-33 · T-09 · D-17 · D-18 · RN-EVF-20",
+          "limites": "A duplicidade está no catálogo (INC-PAG-10), mas o produto ainda não a abre. O cancelamento da guia não grava no log do RAD.",
           "decisao": "pendente",
           "obs": ""
         }
