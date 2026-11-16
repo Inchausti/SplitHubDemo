@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo × Live do tax-rs · v1.0</title>
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 800px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.callout.red { border-color: var(--red); background: var(--red-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 9px 13px; border-bottom: 1px solid var(--brd); vertical-align: top; color: var(--txt2); background: var(--sur); }
+td strong { color: var(--txt1); }
+tbody tr:last-child td { border-bottom: none; }
+td.grp { background: var(--sur2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); }
+td.id { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); white-space: nowrap; }
+code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--mono); padding: 1px 5px; border-radius: 4px; color: var(--txt1); overflow-wrap: anywhere; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 14px 0 18px; }
+@media (max-width: 860px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.kpi-v { font-size: 22px; font-weight: 800; color: var(--txt1); line-height: 1.2; }
+.kpi-l { font-size: 11.5px; color: var(--txt3); }
+.kpi.ok .kpi-v { color: var(--green); } .kpi.warn .kpi-v { color: var(--amber); }
+.kpi.info .kpi-v { color: var(--blue); } .kpi.red .kpi-v { color: var(--red); }
+.barra { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 6px 0 4px; background: var(--sur2); }
+.barra span { display: block; height: 100%; }
+.barra .ok { background: var(--green); } .barra .warn { background: var(--amber); } .barra .info { background: var(--blue); } .barra .red { background: var(--red); }
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+.filtros button { font: inherit; font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt2); cursor: pointer; }
+.filtros button[aria-pressed="true"] { background: var(--txt1); color: var(--bg); border-color: var(--txt1); }
+tr.oculta { display: none; }
+.ondas { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 14px 0; }
+.onda { background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.onda.crit { border-left-color: var(--red); }
+.onda.dep { border-left-color: var(--gray); }
+.onda-h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; margin-bottom: 6px; }
+.onda-n { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.onda.crit .onda-n { color: var(--red); }
+.onda.dep .onda-n { color: var(--gray); }
+.onda-t { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.onda-q { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.onda ul.plain { margin-left: 16px; }
+.onda ul.plain li { font-size: 12.5px; }
+.onda .pronto { font-size: 12px; color: var(--txt2); border-top: 1px dashed var(--brd); margin-top: 8px; padding-top: 8px; }
+.ids { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); }
+.foot { margin-top: 40px; font-size: 11px; color: var(--txt3); text-align: center; }
+.back { display: inline-block; font-size: 12px; color: var(--txt3); text-decoration: none; margin-bottom: 18px; }
+.back:hover { color: var(--txt1); }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html#sec-taxrs">← Hub de PRDs</a>
+<div class="eyebrow">tax-rs · Engenharia e produto</div>
+<h1>Demo × Live do tax-rs: o que o Live já tem e por onde seguir</h1>
+<p class="subtitle">Com o Demo em dia com o app, este relatório lista as funcionalidades do Demo e diz, para cada uma, se ela já existe no modo Live com dado real. No fim vem a proposta de priorização para o roadmap de evolução do Live.</p>
+
+<div class="meta-bar">
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.0</span></span>
+  <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">16/11/2026</span></span>
+  <span class="meta-pill"><span class="meta-label">Base</span><span class="meta-val"><code>main</code> do tax-rs no <code>a831ad9</code> (PR #41)</span></span>
+  <span class="meta-pill"><span class="meta-label">Demo</span><span class="meta-val">em dia com o app no <code>f0fa4d0</code></span></span>
+  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">0 de 5</span></span>
+</div>
+
+<nav class="toc">
+  <div class="toc-title">Conteúdo</div>
+  <ul class="toc-list">
+    <li><a href="#s1"><span class="toc-num">1</span>Resumo</a></li>
+    <li><a href="#s2"><span class="toc-num">2</span>Como o levantamento foi feito</a></li>
+    <li><a href="#s3"><span class="toc-num">3</span>Inventário das funcionalidades do Demo</a></li>
+    <li><a href="#s4"><span class="toc-num">4</span>O que só existe no Live</a></li>
+    <li><a href="#s5"><span class="toc-num">5</span>Pré-requisitos de produção</a></li>
+    <li><a href="#s6"><span class="toc-num">6</span>Proposta de priorização do Live</a></li>
+    <li><a href="#s7"><span class="toc-num">7</span>Decisões para fechar o roadmap</a></li>
+    <li><a href="#s8"><span class="toc-num">8</span>Fora deste roadmap</a></li>
+  </ul>
+</nav>
+
+<section class="section" id="s1">
+  <div class="sec-hdr"><span class="sec-num">1</span><span class="sec-title">Resumo</span></div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-v" data-conta="total">113</div><div class="kpi-l">funcionalidades do Demo</div></div>
+    <div class="kpi ok"><div class="kpi-v" data-conta="live">23</div><div class="kpi-l">já no Live</div></div>
+    <div class="kpi warn"><div class="kpi-v" data-conta="parcial">16</div><div class="kpi-l">no Live, mas parciais</div></div>
+    <div class="kpi info"><div class="kpi-v" data-conta="backend">9</div><div class="kpi-l">backend pronto, tela fora do Live</div></div>
+    <div class="kpi red"><div class="kpi-v" data-conta="demo">65</div><div class="kpi-l">só no Demo</div></div>
+  </div>
+  <div class="barra" aria-hidden="true"><span class="ok" data-barra="live"></span><span class="warn" data-barra="parcial"></span><span class="info" data-barra="backend"></span><span class="red" data-barra="demo"></span></div>
+  <p style="font-size:11.5px;color:var(--txt3)">Cada parte da barra é a proporção das 113 funcionalidades em cada situação.</p>
+
+  <ul class="plain">
+    <li><strong>O Live cobre o ciclo básico do crédito.</strong> Crédito, Conciliação, Inconsistências, Usuários, Fornecedor e Contratos funcionam com dado real. Também existem no Live o detalhe do documento e do registro (com a linha do tempo), a ficha de glosa e o uso do crédito na fila de compensação.</li>
+    <li><strong>Nove funcionalidades já têm backend e só falta liberar a tela.</strong> A maior delas é o Débito, que tem backend e tela prontos, mas o menu está bloqueado no Live. As outras são impugnar a glosa, a lista de registros do órgão sem documento e o catálogo de inconsistências lido do servidor.</li>
+    <li><strong>A maior lacuna é a parcialidade.</strong> No Demo, o crédito e o débito são partidos em parcelas, com status calculados e movimentos de valor. No backend, cada registro tem só um rótulo com 4 estados. Pagamentos, PCONT e várias ocorrências leem essa partição, então ela vem antes.</li>
+    <li><strong>Apuração assistida e eventos fiscais não têm backend.</strong> São o PCONT, o Painel executivo e os eventos fiscais (lotes 1 e 2), e dependem dos conectores reais da Receita Federal e do Comitê Gestor.</li>
+    <li><strong>A proposta tem seis ondas e uma trilha de base em paralelo.</strong> A ordem segue o KPI central, que é garantir a apropriação do crédito: primeiro ligar o que já existe, depois a parcialidade, as inconsistências, os pagamentos RAD, a apuração assistida e, por fim, o autoatendimento e os módulos de valor adicional.</li>
+  </ul>
+</section>
+
+<section class="section" id="s2">
+  <div class="sec-hdr"><span class="sec-num">2</span><span class="sec-title">Como o levantamento foi feito</span></div>
+  <p>A leitura foi no código da <code>main</code> do tax-rs depois do merge da paridade do Demo, conferindo três camadas:</p>
+  <ul class="plain">
+    <li><strong>O que o cliente Live consegue abrir:</strong> <code>frontend/lib/data/availability.ts</code>, que põe 14 rotas em "Em breve" e esconde o Ressarcimento, e <code>frontend/lib/nav.ts</code>, que define os menus.</li>
+    <li><strong>O que a tela do Live pede ao servidor:</strong> as chamadas do frontend ao cliente gerado (<code>lib/data/live/client.gen.ts</code>) e os desvios <code>aoVivo</code> de cada tela, que separam o que o Live mostra do que só o Demo mostra.</li>
+    <li><strong>O que o backend oferece:</strong> os endpoints <code>/app</code>, <code>/auth</code> e <code>/v1</code> dos serviços <code>ledger</code>, <code>reconciliation</code>, <code>inconsistencies</code>, <code>registry</code>, <code>identity</code>, <code>platform</code>, <code>dfe-capture</code> e do barramento.</li>
+  </ul>
+  <p>Também entraram o <code>roadmap.md</code>, o relatório de lacunas dos PRDs (<code>docs/gaps-prds-2026-11.md</code>, de 03/11, conferido de novo onde o roadmap já marcou itens como feitos) e o registro de paridade do Demo (<code>frontend/PARIDADE-PROTOTIPO.md</code>).</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Situação</th><th>Quer dizer</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip ok">No Live</span></td><td>Funciona com dado real: backend e tela, liberados para o cliente Live.</td></tr>
+      <tr><td><span class="chip warn">Parcial</span></td><td>Existe no Live, mas com menos do que o Demo mostra, ou com um defeito conhecido que afeta o resultado.</td></tr>
+      <tr><td><span class="chip info">Backend pronto</span></td><td>O servidor já atende. Falta a tela do Live chamar o endpoint ou falta liberar o menu.</td></tr>
+      <tr><td><span class="chip red">Só Demo</span></td><td>Existe só sobre a base de demonstração. No Live, a tela fica "Em breve", fica oculta ou não mostra a parte.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="section" id="s3">
+  <div class="sec-hdr"><span class="sec-num">3</span><span class="sec-title">Inventário das funcionalidades do Demo</span></div>
+  <p>As 113 funcionalidades estão agrupadas pelo menu do Demo. A coluna "Onda" liga cada item à proposta da seção 6. Os botões filtram a tabela pela situação.</p>
+  <div class="filtros" role="group" aria-label="Filtrar por situação">
+    <button type="button" data-f="todas" aria-pressed="true">Todas</button>
+    <button type="button" data-f="live" aria-pressed="false">No Live</button>
+    <button type="button" data-f="parcial" aria-pressed="false">Parcial</button>
+    <button type="button" data-f="backend" aria-pressed="false">Backend pronto</button>
+    <button type="button" data-f="demo" aria-pressed="false">Só Demo</button>
+  </div>
+  <div class="table-wrap"><table id="inv">
+    <thead><tr><th>Id</th><th>Funcionalidade</th><th>Live</th><th>Observação</th><th>Onda</th></tr></thead>
+    <tbody>
+      <tr class="g"><td class="grp" colspan="5">Início</td></tr>
+      <tr data-s="live"><td class="id">I-01</td><td><strong>KPIs do crédito e aproveitamento</strong></td><td><span class="chip ok">No Live</span></td><td>Lidos do backend (<code>dashboardLive</code>).</td><td>—</td></tr>
+      <tr data-s="live"><td class="id">I-02</td><td><strong>Evolução dos créditos, mensal e acumulada</strong></td><td><span class="chip ok">No Live</span></td><td></td><td>—</td></tr>
+      <tr data-s="live"><td class="id">I-03</td><td><strong>Ranking de fornecedores</strong></td><td><span class="chip ok">No Live</span></td><td></td><td>—</td></tr>
+      <tr data-s="live"><td class="id">I-04</td><td><strong>Seletor de período</strong></td><td><span class="chip ok">No Live</span></td><td>No Live, os períodos partem do mês corrente.</td><td>—</td></tr>
+      <tr data-s="parcial"><td class="id">I-05</td><td><strong>Card de inconsistências</strong></td><td><span class="chip warn">Parcial</span></td><td>O Live divide por direção e não traz as ocorrências da ingestão.</td><td>L2</td></tr>
+      <tr data-s="parcial"><td class="id">I-06</td><td><strong>Documentos a apropriar</strong></td><td><span class="chip warn">Parcial</span></td><td>No Live, até 100 linhas e só do mês corrente.</td><td>L0</td></tr>
+      <tr data-s="backend"><td class="id">I-07</td><td><strong>Card de Débito</strong></td><td><span class="chip info">Backend pronto</span></td><td>O resumo do débito existe no servidor; o card fica desfocado porque o menu está bloqueado.</td><td>L0</td></tr>
+      <tr data-s="demo"><td class="id">I-08</td><td><strong>Aproveitamento por parcela, por imposto</strong></td><td><span class="chip red">Só Demo</span></td><td>Depende da parcialidade.</td><td>L1</td></tr>
+      <tr data-s="demo"><td class="id">I-09</td><td><strong>Cards de Pagamento e Pagamentos executados</strong></td><td><span class="chip red">Só Demo</span></td><td>Desfocados no Live.</td><td>L3</td></tr>
+      <tr data-s="demo"><td class="id">I-10</td><td><strong>Alíquota efetiva</strong></td><td><span class="chip red">Só Demo</span></td><td>Desfocado no Live.</td><td>L6</td></tr>
+      <tr data-s="demo"><td class="id">I-11</td><td><strong>Inteligência SplitHub (avisos)</strong></td><td><span class="chip red">Só Demo</span></td><td>No Live, desfocado; no Demo, os avisos são texto fixo.</td><td>L6</td></tr>
+      <tr data-s="demo"><td class="id">I-12</td><td><strong>Saldo credor (ressarcimento)</strong></td><td><span class="chip red">Só Demo</span></td><td>Oculto no Live.</td><td>L6</td></tr>
+
+      <tr class="g"><td class="grp" colspan="5">Crédito</td></tr>
+      <tr data-s="live"><td class="id">C-01</td><td><strong>Visão geral: KPIs, ageing, calendário, Top 5 e Top 10, curto e longo prazo</strong></td><td><span class="chip ok">No Live</span></td><td></td><td>—</td></tr>
+      <tr data-s="live"><td class="id">C-02</td><td><strong>Vencimentos do mês</strong></td><td><span class="chip ok">No Live</span></td><td>Modal lido do backend (<code>creditsDueInMonth</code>).</td><td>—</td></tr>
+      <tr data-s="live"><td class="id">C-03</td><td><strong>Listagem de registros fiscais</strong>: filtros, colunas, paginação, CSV com registro da exportação</td><td><span class="chip ok">No Live</span></td><td>O servidor filtra, ordena e pagina; o CSV busca todas as páginas.</td><td>—</td></tr>
+      <tr data-s="live"><td class="id">C-04</td><td><strong>Listagem de documentos fiscais</strong></td><td><span class="chip ok">No Live</span></td><td></td><td>—</td></tr>
+      <tr data-s="live"><td class="id">C-05</td><td><strong>Ficha de glosa (consulta)</strong></td><td><span class="chip ok">No Live</span></td><td></td><td>—</td></tr>
+      <tr data-s="parcial"><td class="id">C-06</td><td><strong>Status do registro calculado pelas parcelas</strong> (8 status)</td><td><span class="chip warn">Parcial</span></td><td>O backend tem um rótulo único com 4 estados.</td><td>L1</td></tr>
+      <tr data-s="parcial"><td class="id">C-07</td><td><strong>Selo por tributo no documento</strong>, sem status próprio do documento</td><td><span class="chip warn">Parcial</span></td><td>O Live usa um status em cascata; um registro glosado marca o documento inteiro.</td><td>L1</td></tr>
+      <tr data-s="parcial"><td class="id">C-08</td><td><strong>Assumir e devolver o recolhimento via RAD</strong></td><td><span class="chip warn">Parcial</span></td><td>Funciona no Live, mas não bloqueia quando há inconsistência aberta.</td><td>L0</td></tr>
+      <tr data-s="parcial"><td class="id">C-09</td><td><strong>Prescrição contada por parcela apropriada</strong></td><td><span class="chip warn">Parcial</span></td><td>O Live conta a partir da emissão.</td><td>L1</td></tr>
+      <tr data-s="backend"><td class="id">C-10</td><td><strong>Impugnar a glosa e atribuir responsável</strong></td><td><span class="chip info">Backend pronto</span></td><td>Os endpoints existem (<code>/app/disallowances/:id/contest</code> e <code>/owner</code>); a tela só lê.</td><td>L0</td></tr>
+      <tr data-s="demo"><td class="id">C-11</td><td><strong>Cards, ageing, calendário e composição por parcela</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L1</td></tr>
+      <tr data-s="demo"><td class="id">C-12</td><td><strong>Selo e barra por parcela no registro; filtro "Crédito por tributo"</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L1</td></tr>
+      <tr data-s="demo"><td class="id">C-13</td><td><strong>Glosa parcial</strong>, com origem, destino e reversão</td><td><span class="chip red">Só Demo</span></td><td>No Live, a glosa marca o registro inteiro.</td><td>L1</td></tr>
+      <tr data-s="demo"><td class="id">C-14</td><td><strong>Comprovante RAD a partir do registro pago</strong></td><td><span class="chip red">Só Demo</span></td><td>As guias e os comprovantes do Live só existem no sandbox do barramento.</td><td>L3</td></tr>
+      <tr data-s="demo"><td class="id">C-15</td><td><strong>Marcas de ressarcimento no crédito</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L6</td></tr>
+
+      <tr class="g"><td class="grp" colspan="5">Detalhe do documento e do registro</td></tr>
+      <tr data-s="live"><td class="id">D-01</td><td><strong>Detalhe do documento e do registro, com a linha do tempo</strong></td><td><span class="chip ok">No Live</span></td><td>No Live, o detalhe segue o layout anterior (sem as abas no topo).</td><td>—</td></tr>
+      <tr data-s="live"><td class="id">D-02</td><td><strong>Uso do crédito na fila de compensação</strong></td><td><span class="chip ok">No Live</span></td><td>Lido do motor do backend (<code>getRecordOffsets</code>).</td><td>—</td></tr>
+      <tr data-s="parcial"><td class="id">D-03</td><td><strong>Histórico com um webhook do ERP por movimento de valor</strong></td><td><span class="chip warn">Parcial</span></td><td>O Live emite só parte dos eventos <code>credit.*</code>, com a lista de compensações vazia.</td><td>L1</td></tr>
+      <tr data-s="demo"><td class="id">D-04</td><td><strong>Layout com abas no topo e a situação na coluna da esquerda</strong></td><td><span class="chip red">Só Demo</span></td><td>No Live ficou o detalhe anterior, por decisão do plano do Demo.</td><td>L1</td></tr>
+      <tr data-s="demo"><td class="id">D-05</td><td><strong>Abas Partição e Movimentos</strong>, com o CSV dos movimentos</td><td><span class="chip red">Só Demo</span></td><td></td><td>L1</td></tr>
+      <tr data-s="demo"><td class="id">D-06</td><td><strong>Aba Alertas</strong>: o que exige ação, o que está em acompanhamento e o que é informativo</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">D-07</td><td><strong>Eventos e ajustes</strong>: quadro de ajustes e o botão "Emitir evento ou nota"</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">D-08</td><td><strong>Eventos do documento e linha do tempo fiscal</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">D-09</td><td><strong>Apuração por tributo</strong></td><td><span class="chip red">Só Demo</span></td><td>Lê o PCONT.</td><td>L4</td></tr>
+
+      <tr class="g"><td class="grp" colspan="5">Débito</td></tr>
+      <tr data-s="backend"><td class="id">B-01</td><td><strong>Visão geral do débito</strong>: KPIs, composição e flags do ciclo</td><td><span class="chip info">Backend pronto</span></td><td>Backend e tela prontos (<code>/app/debits/overview</code>); o menu está bloqueado no Live.</td><td>L0</td></tr>
+      <tr data-s="backend"><td class="id">B-02</td><td><strong>Listagens de registros e documentos de débito</strong>, filtros e CSV</td><td><span class="chip info">Backend pronto</span></td><td><code>/app/debits/records</code> e <code>/documents</code>.</td><td>L0</td></tr>
+      <tr data-s="parcial"><td class="id">B-03</td><td><strong>Fila de compensação com débito parcialmente extinto</strong></td><td><span class="chip warn">Parcial</span></td><td>O motor do backend põe o débito com o valor cheio e compensa de novo a parte já extinta.</td><td>L0</td></tr>
+      <tr data-s="parcial"><td class="id">B-04</td><td><strong>Eventos de débito ao ERP</strong>, com os créditos usados na extinção</td><td><span class="chip warn">Parcial</span></td><td><code>debit.settled</code> sai sem os créditos; suspensão, cancelamento e ajuste não são emitidos.</td><td>L1</td></tr>
+      <tr data-s="demo"><td class="id">B-05</td><td><strong>Parcelas do débito e meios de extinção com valor</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L1</td></tr>
+      <tr data-s="demo"><td class="id">B-06</td><td><strong>Filtro "Parcialmente extinto" e CSV com o status por tributo</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L1</td></tr>
+      <tr data-s="demo"><td class="id">B-07</td><td><strong>Suspensão e inexigibilidade do débito</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L1</td></tr>
+
+      <tr class="g"><td class="grp" colspan="5">Pagamentos RAD</td></tr>
+      <tr data-s="parcial"><td class="id">P-01</td><td><strong>Trava: registro com guia gerada não volta ao fornecedor</strong></td><td><span class="chip warn">Parcial</span></td><td>A função existe (<code>registerRadGuide</code>), mas só os testes a chamam. Está no P0 do roadmap.</td><td>L0</td></tr>
+      <tr data-s="demo"><td class="id">P-02</td><td><strong>Guias RAD</strong>: KPIs, listagem, seleção e confirmação em lote</td><td><span class="chip red">Só Demo</span></td><td>As guias do barramento existem só no sandbox.</td><td>L3</td></tr>
+      <tr data-s="demo"><td class="id">P-03</td><td><strong>Guia do IBS e DARF da CBS</strong>: código de barras, PIX e impressão</td><td><span class="chip red">Só Demo</span></td><td></td><td>L3</td></tr>
+      <tr data-s="demo"><td class="id">P-04</td><td><strong>Comprovante de pagamento</strong></td><td><span class="chip red">Só Demo</span></td><td><code>/v1/rad/proofs</code> grava só no sandbox.</td><td>L3</td></tr>
+      <tr data-s="demo"><td class="id">P-05</td><td><strong>Uma guia por imposto pelo saldo a apropriar</strong></td><td><span class="chip red">Só Demo</span></td><td>Depende da parcialidade.</td><td>L3</td></tr>
+      <tr data-s="demo"><td class="id">P-06</td><td><strong>Execução programada</strong>: cobertura, próximos lotes, aprovação, histórico e erros</td><td><span class="chip red">Só Demo</span></td><td></td><td>L3</td></tr>
+
+      <tr class="g"><td class="grp" colspan="5">Conciliação</td></tr>
+      <tr data-s="live"><td class="id">R-01</td><td><strong>KPIs da CAPUR e da CFIN e pipeline da jornada</strong></td><td><span class="chip ok">No Live</span></td><td>Sobre a fonte simulada dos entes.</td><td>—</td></tr>
+      <tr data-s="live"><td class="id">R-02</td><td><strong>Listagem unificada com o detalhe por etapa</strong></td><td><span class="chip ok">No Live</span></td><td></td><td>—</td></tr>
+      <tr data-s="parcial"><td class="id">R-03</td><td><strong>CFIN pendente quando a CAPUR está inconsistente</strong></td><td><span class="chip warn">Parcial</span></td><td>No Live, uma CAPUR inconsistente com tributo pago sai como CFIN conciliada.</td><td>L0</td></tr>
+      <tr data-s="backend"><td class="id">R-04</td><td><strong>Registros do órgão sem documento</strong></td><td><span class="chip info">Backend pronto</span></td><td><code>/app/reconciliation/authority-only</code> existe e a tela não usa.</td><td>L0</td></tr>
+      <tr data-s="demo"><td class="id">R-05</td><td><strong>Confronto parcela a parcela</strong>, com as parcelas divergentes no Δ e no filtro</td><td><span class="chip red">Só Demo</span></td><td></td><td>L1</td></tr>
+      <tr data-s="demo"><td class="id">R-06</td><td><strong>Aviso de divergência na conferência do ressarcimento da CBS</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L6</td></tr>
+
+      <tr class="g"><td class="grp" colspan="5">Inconsistências</td></tr>
+      <tr data-s="live"><td class="id">N-01</td><td><strong>Visão geral do ciclo de vida</strong></td><td><span class="chip ok">No Live</span></td><td></td><td>—</td></tr>
+      <tr data-s="live"><td class="id">N-02</td><td><strong>Listagem com filtros e CSV</strong></td><td><span class="chip ok">No Live</span></td><td>O servidor filtra e pagina.</td><td>—</td></tr>
+      <tr data-s="live"><td class="id">N-03</td><td><strong>Kanban com arrastar e soltar</strong></td><td><span class="chip ok">No Live</span></td><td>Carrega até 5 mil cards de uma vez (paginação no servidor está no roadmap).</td><td>—</td></tr>
+      <tr data-s="live"><td class="id">N-04</td><td><strong>Card da ocorrência</strong>: status, responsável, comentários, histórico e link direto</td><td><span class="chip ok">No Live</span></td><td>O responsável é conferido no diretório de usuários.</td><td>—</td></tr>
+      <tr data-s="parcial"><td class="id">N-05</td><td><strong>Tipos de ocorrência do catálogo</strong></td><td><span class="chip warn">Parcial</span></td><td>O backend detecta 5 dos 21 tipos (4 da família B e a glosa). O Demo levanta 12, mais os da partição e da família I.</td><td>L2</td></tr>
+      <tr data-s="parcial"><td class="id">N-06</td><td><strong>Prazo por família em dias úteis e prioridade pelo prazo</strong></td><td><span class="chip warn">Parcial</span></td><td>Família B com 21 dias corridos (o PRD pede 15 úteis); as famílias A, D, E e F ficam sem prazo; a prioridade usa só o valor.</td><td>L2</td></tr>
+      <tr data-s="backend"><td class="id">N-07</td><td><strong>Catálogo lido do servidor</strong></td><td><span class="chip info">Backend pronto</span></td><td><code>/app/inconsistencies/catalog</code> existe; a tela usa o catálogo do frontend.</td><td>L0</td></tr>
+      <tr data-s="demo"><td class="id">N-08</td><td><strong>As cinco ocorrências da partição</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L1</td></tr>
+      <tr data-s="demo"><td class="id">N-09</td><td><strong>Família I · Eventos fiscais</strong> (valor divergente, não refletido, não atribuível, ausente, documento ausente)</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">N-10</td><td><strong>Aba Alertas de competência</strong></td><td><span class="chip red">Só Demo</span></td><td>Depende do fechamento da competência no PCONT.</td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">N-11</td><td><strong>Evento fiscal ou nota como ação do card</strong>: 18 opções, formulários e acompanhamento</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+
+      <tr class="g"><td class="grp" colspan="5">Eventos fiscais</td></tr>
+      <tr data-s="demo"><td class="id">E-01</td><td><strong>Esteira</strong>: Esteira, Ações pendentes, Por documento e Ausências, com os indicadores que filtram</td><td><span class="chip red">Só Demo</span></td><td>Sem backend.</td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">E-02</td><td><strong>Detalhe do evento</strong>: fases, trilha e payload (só o Administrador)</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">E-03</td><td><strong>Ausências com pedido de reenvio</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">E-04</td><td><strong>Leitura da Receita Federal sob demanda e arquivo do Comitê Gestor</strong></td><td><span class="chip red">Só Demo</span></td><td>Depende dos conectores reais.</td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">E-05</td><td><strong>Importação por CSV</strong>: 8 modelos, prévia validada, arquivo de erros</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">E-06</td><td><strong>Solicitações</strong>: o pedido da ação, com o identificador</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">E-07</td><td><strong>Fila de órfãos e chegada do documento</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">E-08</td><td><strong>Estados depois da leitura</strong>: não atribuível, revertida, divergente</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">E-09</td><td><strong>Configurações › Eventos fiscais</strong>: modo de emissão por CNPJ, credenciais, qualidade de serviço, webhooks e trilha</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+
+      <tr class="g"><td class="grp" colspan="5">PCONT e Painel executivo</td></tr>
+      <tr data-s="demo"><td class="id">A-01</td><td><strong>Empresa do grupo, exercício e competências</strong>, com a etapa de cada tributo</td><td><span class="chip red">Só Demo</span></td><td>Sem backend. O motor do backend já guarda os saldos mensais (<code>/app/offsets/monthly</code>), que o PCONT pode reaproveitar.</td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">A-02</td><td><strong>Competência</strong>: consolidado, demonstrativo por tributo até o documento, conta corrente, créditos a apropriar</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">A-03</td><td><strong>Linha do tempo das etapas E1 a E8</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">A-04</td><td><strong>Divergências</strong>, com a decisão do chamado</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">A-05</td><td><strong>Guias e pagamentos</strong>: DARF da CBS, guia do IBS, ERP, comprovante, complemento, substituição, cancelamento</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">A-06</td><td><strong>Histórico e auditoria</strong>, com a trilha encadeada por hash</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">A-07</td><td><strong>Fechar, reabrir, recalcular e ler os entes</strong></td><td><span class="chip red">Só Demo</span></td><td>No backend, o recálculo regrava todos os períodos e não respeita competência fechada.</td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">A-08</td><td><strong>Painel executivo</strong>: grupo e empresas, saldo, cascata, mapa de etapas, funil de guias</td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+
+      <tr class="g"><td class="grp" colspan="5">Ressarcimento</td></tr>
+      <tr data-s="parcial"><td class="id">S-01</td><td><strong>Reserva do crédito na fila de compensação</strong></td><td><span class="chip warn">Parcial</span></td><td>O backend sabe reservar, mas só o seed chama.</td><td>L6</td></tr>
+      <tr data-s="demo"><td class="id">S-02</td><td><strong>Saldo credor da CBS e do IBS</strong>, comparação e saldo por período</td><td><span class="chip red">Só Demo</span></td><td>Menu oculto no Live.</td><td>L6</td></tr>
+      <tr data-s="demo"><td class="id">S-03</td><td><strong>Intenções</strong>: declarar e cancelar</td><td><span class="chip red">Só Demo</span></td><td></td><td>L6</td></tr>
+      <tr data-s="demo"><td class="id">S-04</td><td><strong>Pedidos</strong>: composição e decisão</td><td><span class="chip red">Só Demo</span></td><td></td><td>L6</td></tr>
+      <tr data-s="demo"><td class="id">S-05</td><td><strong>Recebimentos</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L6</td></tr>
+
+      <tr class="g"><td class="grp" colspan="5">Analytics</td></tr>
+      <tr data-s="demo"><td class="id">Y-01</td><td><strong>Inteligência</strong>: evolução da apropriação, mapa e score de risco, volume de RAD, alertas</td><td><span class="chip red">Só Demo</span></td><td></td><td>L6</td></tr>
+      <tr data-s="demo"><td class="id">Y-02</td><td><strong>Fluxo de Caixa Tributário</strong>: projeções e simulador de antecipação</td><td><span class="chip red">Só Demo</span></td><td></td><td>L6</td></tr>
+      <tr data-s="demo"><td class="id">Y-03</td><td><strong>Assistente tributário</strong></td><td><span class="chip red">Só Demo</span></td><td>Desligado também no Demo; o código continua no repositório.</td><td>L6</td></tr>
+
+      <tr class="g"><td class="grp" colspan="5">Configurações</td></tr>
+      <tr data-s="live"><td class="id">G-01</td><td><strong>Usuários</strong>: convite, perfis, escopo por CNPJ, sessões, senha, desativar e reativar</td><td><span class="chip ok">No Live</span></td><td>Serviço <code>identity</code>. Nos ambientes publicados, o convite fica gravado sem envio até haver e-mail transacional.</td><td>—</td></tr>
+      <tr data-s="live"><td class="id">G-02</td><td><strong>Fornecedor</strong>: cadastro por grupo, KPIs, detalhe e histórico</td><td><span class="chip ok">No Live</span></td><td>Serviço <code>registry</code>, com pré-cadastro a partir das notas recebidas.</td><td>—</td></tr>
+      <tr data-s="live"><td class="id">G-03</td><td><strong>Contratos</strong>: KPIs, filtros, criar, editar, encerrar, checagem de sobreposição</td><td><span class="chip ok">No Live</span></td><td>O caminho do admin da plataforma não confere a sobreposição.</td><td>—</td></tr>
+      <tr data-s="parcial"><td class="id">G-04</td><td><strong>Organização</strong>: CNPJs por grupo, política de RAD por CNPJ, trilha</td><td><span class="chip warn">Parcial</span></td><td>No Live, só o admin da plataforma cadastra os CNPJs; a tela do cliente está "Em breve".</td><td>L5</td></tr>
+      <tr data-s="backend"><td class="id">G-05</td><td><strong>Importação de DFs</strong>: painel, listagem, documento auxiliar, envio de CSV</td><td><span class="chip info">Backend pronto</span></td><td>O barramento recebe arquivos (<code>/v1/ingestions</code>, <code>/v1/uploads</code>); a tela do cliente está "Em breve". Atenção ao defeito do roadmap: com o modo de negócio, o arquivo importado seria recusado.</td><td>L5</td></tr>
+      <tr data-s="backend"><td class="id">G-06</td><td><strong>Integrações</strong>: conexões, rotação de segredo, teste, saúde, log de entregas e reenvio</td><td><span class="chip info">Backend pronto</span></td><td>Webhooks, entregas, reenvio e rotação existem no <code>/v1</code>; a credencial só sai pelo admin da plataforma; a tela do cliente está "Em breve".</td><td>L5</td></tr>
+      <tr data-s="backend"><td class="id">G-07</td><td><strong>Representantes fiscais do fornecedor</strong></td><td><span class="chip info">Backend pronto</span></td><td>Só no <code>/v1</code>, sem endpoint <code>/app</code>.</td><td>L5</td></tr>
+      <tr data-s="demo"><td class="id">G-08</td><td><strong>Acessos de fornecedores</strong>: painel, convite, aceite, revogação</td><td><span class="chip red">Só Demo</span></td><td>No Live, o painel diz "Em breve".</td><td>L5</td></tr>
+      <tr data-s="demo"><td class="id">G-09</td><td><strong>Fornecedor: aba Acessos, importação por CSV (3 arquivos) e lotes</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L5</td></tr>
+      <tr data-s="demo"><td class="id">G-10</td><td><strong>Execução RAD</strong>: políticas, conflitos de cobertura, editor, ativação em lote</td><td><span class="chip red">Só Demo</span></td><td></td><td>L3</td></tr>
+      <tr data-s="demo"><td class="id">G-11</td><td><strong>Integrações: o contexto Eventos fiscais</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L4</td></tr>
+      <tr data-s="demo"><td class="id">G-12</td><td><strong>Automações: relatórios agendados</strong></td><td><span class="chip red">Só Demo</span></td><td>Sem motor e sem e-mail transacional.</td><td>L6</td></tr>
+      <tr data-s="demo"><td class="id">G-13</td><td><strong>Automações: integração com ITSM</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L6</td></tr>
+      <tr data-s="demo"><td class="id">G-14</td><td><strong>Automações: régua de cobrança</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L6</td></tr>
+
+      <tr class="g"><td class="grp" colspan="5">Portal do Fornecedor</td></tr>
+      <tr data-s="demo"><td class="id">F-01</td><td><strong>Seletor de fornecedor, banner com score e dashboard</strong></td><td><span class="chip red">Só Demo</span></td><td>Não há papel de fornecedor nem endpoint do portal no backend.</td><td>L5</td></tr>
+      <tr data-s="demo"><td class="id">F-02</td><td><strong>Documentos, detalhe e comprovantes RAD</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L5</td></tr>
+      <tr data-s="demo"><td class="id">F-03</td><td><strong>Contestação e conversa por documento</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L5</td></tr>
+      <tr data-s="demo"><td class="id">F-04</td><td><strong>Organização do fornecedor</strong></td><td><span class="chip red">Só Demo</span></td><td></td><td>L5</td></tr>
+
+      <tr class="g"><td class="grp" colspan="5">Transversal</td></tr>
+      <tr data-s="live"><td class="id">T-01</td><td><strong>Menu agrupado, tema claro e escuro, telas responsivas</strong></td><td><span class="chip ok">No Live</span></td><td></td><td>—</td></tr>
+      <tr data-s="live"><td class="id">T-02</td><td><strong>Perfis Administrador, Fiscal, Tesouraria e Leitura</strong></td><td><span class="chip ok">No Live</span></td><td>Aplicados no backend.</td><td>—</td></tr>
+      <tr data-s="live"><td class="id">T-03</td><td><strong>Escopo por CNPJ por usuário</strong></td><td><span class="chip ok">No Live</span></td><td>Aqui o Live está à frente: recorta todas as consultas, e o Demo só registra o escopo.</td><td>—</td></tr>
+      <tr data-s="parcial"><td class="id">T-04</td><td><strong>Painel de filtros e gerenciador de colunas</strong></td><td><span class="chip warn">Parcial</span></td><td>O filtro aplica a cada mudança (o PRD pede no "Aplicar"); as colunas ficam guardadas por navegador, não por usuário.</td><td>L0</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="section" id="s4">
+  <div class="sec-hdr"><span class="sec-num">4</span><span class="sec-title">O que só existe no Live</span></div>
+  <p>Algumas funcionalidades existem só com dado real e não têm versão no Demo. Elas ficam fora da contagem acima, mas fazem parte do produto:</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Funcionalidade</th><th>O que faz</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Login, convite e redefinição de senha</strong></td><td>Login próprio (serviço <code>identity</code>), com verificação em duas etapas obrigatória para o admin da plataforma e senha conferida contra vazamentos conhecidos.</td></tr>
+      <tr><td><strong>Minha conta</strong></td><td>Troca de senha, verificação em duas etapas, códigos de recuperação e sessões abertas.</td></tr>
+      <tr><td><strong>Administração da plataforma</strong></td><td>Clientes, CNPJs, contratos, credenciais do ERP, fonte dos entes, captura SEFAZ por cliente, convites e usuários da plataforma.</td></tr>
+      <tr><td><strong>Captura SEFAZ</strong></td><td>Certificado A1 por raiz de CNPJ, busca das NF-e de compra no Ambiente Nacional e lista das notas capturadas. No Demo, a tela só explica.</td></tr>
+      <tr><td><strong>Barramento <code>/v1</code> para o ERP</strong></td><td>Documentos fiscais (unitário e em lote), ingestões e uploads, contratos, fornecedores e representantes, créditos e débitos, eventos e webhooks.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="section" id="s5">
+  <div class="sec-hdr"><span class="sec-num">5</span><span class="sec-title">Pré-requisitos de produção</span></div>
+  <p>Estes itens não são telas, mas travam a ida do Live a produção. Eles vêm do <code>roadmap.md</code> do tax-rs e formam a trilha de base, que corre em paralelo às ondas:</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Item</th><th>Por que trava</th><th>Destrava</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Conectores reais da Receita Federal (CBS) e do Comitê Gestor (IBS)</strong></td><td>Hoje a Conciliação roda sobre a fonte simulada. A API do IBS publicada empurra arquivo por webhook; a da CBS é consultada.</td><td>Conciliação real, PCONT, leituras dos eventos fiscais</td></tr>
+      <tr><td><strong>E-mail transacional</strong></td><td>Sem ele, convites e redefinições de senha ficam gravados sem envio nos ambientes publicados.</td><td>Usuários em produção, Acessos de fornecedores, Automações</td></tr>
+      <tr><td><strong>Endurecimento de segurança do portal</strong></td><td>Ajuste de segurança registrado no roadmap do repositório.</td><td>Segurança do Live</td></tr>
+      <tr><td><strong>Workflows e testes de integração na pipeline</strong></td><td>Hoje os workflows rodam só manualmente e a pipeline do Encore roda só os unitários.</td><td>Confiança para liberar cada onda</td></tr>
+      <tr><td><strong>Ajuste de permissão no ambiente de staging</strong></td><td>Impede a captura SEFAZ de rodar em staging.</td><td>Captura SEFAZ em staging</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="section" id="s6">
+  <div class="sec-hdr"><span class="sec-num">6</span><span class="sec-title">Proposta de priorização do Live</span></div>
+  <p>A ordem segue cinco critérios, nesta ordem de peso:</p>
+  <ol class="plain">
+    <li><strong>Protege a apropriação do crédito?</strong> É o KPI central do produto: crédito perdido por vencimento, inconsistência ou guia não paga não volta.</li>
+    <li><strong>É necessário para a primeira versão em produção?</strong></li>
+    <li><strong>Já tem backend?</strong> Ligar o que existe custa pouco e entrega logo.</li>
+    <li><strong>Outros itens dependem dele?</strong> A parcialidade, por exemplo, é lida por Pagamentos, PCONT e ocorrências.</li>
+    <li><strong>Depende de uma decisão de produto ainda aberta?</strong> Se depende, a decisão vem antes do código.</li>
+  </ol>
+  <p>O porte é uma ordem de grandeza relativa entre as ondas, sem data: pequeno, médio ou grande.</p>
+
+  <div class="ondas">
+    <div class="onda crit">
+      <div class="onda-h"><span class="onda-n">L0</span><span class="onda-t">Ligar o que já existe e corrigir o que afeta o crédito</span><span class="onda-q">porte pequeno · P0</span></div>
+      <ul class="plain">
+        <li><strong>Liberar o Débito no Live:</strong> menu e card do Início. Backend e tela estão prontos; falta conferir com dado real e tirar <code>/debitos</code> da lista de "Em breve".</li>
+        <li><strong>Glosa:</strong> impugnar e atribuir responsável pela tela, com os endpoints que já existem.</li>
+        <li><strong>Conciliação:</strong> a lista de registros do órgão sem documento, com o endpoint que já existe.</li>
+        <li><strong>Inconsistências:</strong> ler o catálogo do servidor, não o do frontend.</li>
+        <li><strong>Correções que mexem no valor do crédito:</strong>
+          <ul class="plain">
+            <li>a fila de compensação usa o saldo do débito parcialmente extinto, não o valor cheio;</li>
+            <li>CFIN pendente quando a CAPUR está inconsistente;</li>
+            <li>a RAD não é assumida com inconsistência aberta;</li>
+            <li>a trava da guia RAD ligada;</li>
+            <li>documentos a apropriar além de 100 linhas.</li>
+          </ul>
+        </li>
+        <li><strong>Arcabouço:</strong> o filtro aplica só no "Aplicar" e as colunas ficam guardadas por usuário.</li>
+      </ul>
+      <div class="pronto"><span class="ids">I-06 · I-07 · C-08 · C-10 · B-01 · B-02 · B-03 · P-01 · R-03 · R-04 · N-07 · T-04</span><br>Pronto quando: o cliente Live abre o Débito, impugna uma glosa pela tela, e os quatro defeitos de valor têm teste.</div>
+    </div>
+
+    <div class="onda crit">
+      <div class="onda-h"><span class="onda-n">L1</span><span class="onda-t">Parcialidade do crédito e do débito</span><span class="onda-q">porte grande · P1</span></div>
+      <ul class="plain">
+        <li><strong>No backend:</strong> o saldo partido em parcelas, os 8 status calculados, os movimentos de valor, a glosa parcial, a prescrição por parcela apropriada e o selo por tributo no documento.</li>
+        <li><strong>No débito:</strong> as parcelas, os meios de extinção com valor, a suspensão e a inexigibilidade.</li>
+        <li><strong>Eventos ao ERP:</strong> <code>credit.*</code> e <code>debit.*</code> completos, um por movimento de valor.</li>
+        <li><strong>Telas do Live:</strong> Crédito, Débito, Conciliação parcela a parcela, Início por parcela e o detalhe com as abas no topo, Partição e Movimentos.</li>
+        <li><strong>Ocorrências:</strong> as cinco ocorrências da partição.</li>
+      </ul>
+      <div class="pronto"><span class="ids">I-08 · C-06 · C-07 · C-09 · C-11 · C-12 · C-13 · D-03 · D-04 · D-05 · B-04 · B-05 · B-06 · B-07 · R-05 · N-08</span><br>Por que agora: é a maior lacuna e muda o modelo do ledger que todas as ondas seguintes leem. Pronto quando: a partição de cada registro bate com a do Demo sobre a mesma base.</div>
+    </div>
+
+    <div class="onda">
+      <div class="onda-h"><span class="onda-n">L2</span><span class="onda-t">Inconsistências completas</span><span class="onda-q">porte médio · P1</span></div>
+      <ul class="plain">
+        <li><strong>Tipos que faltam:</strong>
+          <ul class="plain">
+            <li>família A: chave inválida, CNPJ divergente, registro duplicado;</li>
+            <li>alíquotas do IBS e da CBS;</li>
+            <li>prazo de apuração expirado;</li>
+            <li>falha da integração ao ERP.</li>
+          </ul>
+        </li>
+        <li><strong>Regras:</strong> prazo por família em dias úteis, prioridade pelo prazo, espera do emitente suspendendo o prazo e a glosa mantida levando a ocorrência a "glosada".</li>
+        <li><strong>Início:</strong> o card de inconsistências com as ocorrências da ingestão.</li>
+      </ul>
+      <div class="pronto"><span class="ids">I-05 · N-05 · N-06</span><br>Fica fora daqui: a família D (split não executado), porque o split está fora da primeira versão, e a família E, que entra com o Ressarcimento.</div>
+    </div>
+
+    <div class="onda">
+      <div class="onda-h"><span class="onda-n">L3</span><span class="onda-t">Pagamentos RAD e Execução RAD</span><span class="onda-q">porte grande · P1</span></div>
+      <ul class="plain">
+        <li><strong>Guias e comprovantes reais</strong> (fora do sandbox): uma guia por imposto pelo saldo a apropriar, seleção e confirmação em lote, guia do IBS e DARF da CBS, comprovante a partir do registro pago.</li>
+        <li><strong>Execução programada e políticas por CNPJ</strong> (Configurações › Execução RAD).</li>
+        <li><strong>Início:</strong> cards de Pagamento e Pagamentos executados.</li>
+      </ul>
+      <div class="pronto"><span class="ids">I-09 · C-14 · P-02 · P-03 · P-04 · P-05 · P-06 · G-10</span><br>Antes do código: decidir quem apropria o crédito no pagamento (o PRD tem duas regras que se contradizem). Por que antes do PCONT: a guia não paga é uma das três formas de perder crédito.</div>
+    </div>
+
+    <div class="onda">
+      <div class="onda-h"><span class="onda-n">L4</span><span class="onda-t">Apuração assistida: PCONT e eventos fiscais</span><span class="onda-q">porte grande · P1</span></div>
+      <ul class="plain">
+        <li><strong>PCONT e Painel executivo:</strong> competências por empresa do grupo, demonstrativo de três colunas (SplitHub, ente, diferença), divergências, guias da apuração, fechar e reabrir com trilha encadeada por hash. Pode partir dos saldos mensais que o motor já guarda.</li>
+        <li><strong>Eventos fiscais, lote 1:</strong> esteira, ausências, importação por CSV, evento ou nota como ação do card, Configurações › Eventos fiscais e o contexto em Integrações.</li>
+        <li><strong>Eventos fiscais, lote 2:</strong> solicitações, fila de órfãos, estados depois da leitura, família I e a aba Alertas de competência, que lê o fechamento do PCONT.</li>
+        <li><strong>Detalhe:</strong> abas Alertas, Eventos e ajustes, linha do tempo fiscal e apuração por tributo.</li>
+      </ul>
+      <div class="pronto"><span class="ids">A-01..A-08 · E-01..E-09 · N-09 · N-10 · N-11 · D-06 · D-07 · D-08 · D-09 · G-11</span><br>Depende dos conectores reais da trilha de base. Ordem interna: PCONT primeiro, depois o lote 1 e o lote 2 dos eventos. Precisa estar pronto antes do fechamento da primeira competência de 2027.</div>
+    </div>
+
+    <div class="onda">
+      <div class="onda-h"><span class="onda-n">L5</span><span class="onda-t">Autoatendimento do cliente e do fornecedor</span><span class="onda-q">porte médio · P2</span></div>
+      <ul class="plain">
+        <li><strong>Organização na tela do cliente:</strong> os CNPJs e a política de RAD por CNPJ, sem associar documento a CNPJ inativo.</li>
+        <li><strong>Importação de DFs e Integrações na tela do cliente:</strong> credencial emitida pelo próprio cliente, rotação do segredo, escopo por CNPJ, formato da assinatura. Inclui corrigir o arquivo importado recusado no modo de negócio.</li>
+        <li><strong>Fornecedores:</strong> acessos de fornecedores, importação por CSV e representantes fiscais na tela.</li>
+        <li><strong>Portal do Fornecedor:</strong> papel de fornecedor no backend, filtro por CNPJ no servidor, contestação e conversa por documento.</li>
+      </ul>
+      <div class="pronto"><span class="ids">G-04 · G-05 · G-06 · G-07 · G-08 · G-09 · F-01..F-04</span><br>Os acessos de fornecedores dependem do e-mail transacional.</div>
+    </div>
+
+    <div class="onda dep">
+      <div class="onda-h"><span class="onda-n">L6</span><span class="onda-t">Ressarcimento, Analytics e Automações</span><span class="onda-q">porte médio a grande · P3</span></div>
+      <ul class="plain">
+        <li><strong>Ressarcimento:</strong> saldo credor, intenções, pedidos, recebimentos, a reserva na fila de compensação e a família E de ocorrências.</li>
+        <li><strong>Analytics:</strong> Inteligência e Fluxo de Caixa Tributário sobre os dados reais. O Assistente, se for ligado, passa por um endpoint do backend.</li>
+        <li><strong>Automações:</strong> relatórios agendados, ITSM e régua de cobrança, que dependem do e-mail transacional.</li>
+        <li><strong>Início:</strong> alíquota efetiva, avisos da Inteligência e saldo credor.</li>
+      </ul>
+      <div class="pronto"><span class="ids">I-10 · I-11 · I-12 · C-15 · R-06 · S-01..S-05 · Y-01..Y-03 · G-12 · G-13 · G-14</span></div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <div class="ct">O que entra no Demo depois</div>
+    <p>Os pacotes do app em avaliação (lote 3 de Eventos, AV-BO e AV-GS) entram primeiro no Demo, pela regra de cadência do <code>PARIDADE-PROTOTIPO.md</code>. Só depois ganham lugar numa onda do Live. Este relatório precisa ser refeito a cada pacote promovido.</p>
+  </div>
+</section>
+
+<section class="section" id="s7">
+  <div class="sec-hdr"><span class="sec-num">7</span><span class="sec-title">Decisões para fechar o roadmap</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>Decisão</th><th>Opções</th><th>Recomendação</th></tr></thead>
+    <tbody>
+      <tr><td class="id">D-LV-01</td><td><strong>Quando liberar o Débito no Live</strong></td><td>A: já, na L0, com o débito sem parcelas · B: junto com a parcialidade, na L1</td><td>A. O backend e a tela estão prontos, e o débito sem parcelas é o mesmo que o Live já mostra no detalhe.</td></tr>
+      <tr><td class="id">D-LV-02</td><td><strong>A parcialidade vem antes de Pagamentos e PCONT?</strong></td><td>A: sim, L1 antes da L3 e da L4 · B: PCONT primeiro, por causa do calendário de 2027</td><td>A. As guias por imposto e os créditos a apropriar do PCONT leem a partição; fazer antes evita refazer.</td></tr>
+      <tr><td class="id">D-LV-03</td><td><strong>Pagamentos RAD e PCONT em paralelo?</strong></td><td>A: duas frentes a partir da L3 · B: uma onda de cada vez</td><td>Depende da capacidade do time. Com duas frentes, a L4 começa assim que os conectores reais estiverem prontos.</td></tr>
+      <tr><td class="id">D-LV-04</td><td><strong>Família D de inconsistências</strong></td><td>A: fora da primeira versão, junto com o split · B: detectar já</td><td>A. Os quatro tipos da família D falam do split, que está fora da primeira versão.</td></tr>
+      <tr><td class="id">D-LV-05</td><td><strong>Onde este roadmap vive</strong></td><td>A: no <code>roadmap.md</code> do tax-rs, substituindo a seção "Menus fora do ar", num PR · B: só neste documento interno</td><td>A. O <code>roadmap.md</code> é onde o fluxo do repositório manda pegar itens.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Também seguem abertas, do relatório de lacunas: se o total de crédito inclui o glosado, o método padrão sem contrato e o corte do score de fornecedores (70 ou 80).</p>
+</section>
+
+<section class="section" id="s8">
+  <div class="sec-hdr"><span class="sec-num">8</span><span class="sec-title">Fora deste roadmap</span></div>
+  <ul class="plain">
+    <li><strong>O que não está no Demo:</strong> split com PSPs, ingestão no nível do item, DeRE e créditos sem documento fiscal estão no plano de 12 meses do produto, mas não têm tela no Demo. Entram neste roadmap quando passarem pelo app e pelo Demo.</li>
+    <li><strong>Endurecimento</strong> (desempenho, observabilidade, LGPD, RUNBOOK): segue na Etapa 9 do <code>roadmap.md</code>, em paralelo às ondas.</li>
+    <li><strong>Telas antigas sem menu:</strong> a Apuração IBS/CBS, substituída pelo PCONT, continua no código e não entra na contagem.</li>
+  </ul>
+</section>
+
+<div class="foot">Demo × Live do tax-rs · v1.0 · 16/11/2026</div>
+</div>
+
+<script>
+(function () {
+  var linhas = Array.prototype.slice.call(document.querySelectorAll('#inv tbody tr[data-s]'));
+  var conta = { live: 0, parcial: 0, backend: 0, demo: 0 };
+  linhas.forEach(function (tr) { conta[tr.getAttribute('data-s')]++; });
+  var total = linhas.length;
+  document.querySelectorAll('[data-conta]').forEach(function (el) {
+    var k = el.getAttribute('data-conta');
+    el.textContent = k === 'total' ? total : conta[k];
+  });
+  document.querySelectorAll('[data-barra]').forEach(function (el) {
+    el.style.width = (100 * conta[el.getAttribute('data-barra')] / total) + '%';
+  });
+  var botoes = document.querySelectorAll('.filtros button');
+  botoes.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var f = b.getAttribute('data-f');
+      botoes.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      linhas.forEach(function (tr) { tr.classList.toggle('oculta', f !== 'todas' && tr.getAttribute('data-s') !== f); });
+      document.querySelectorAll('#inv tbody tr.g').forEach(function (g) {
+        var n = g.nextElementSibling, visivel = false;
+        while (n && !n.classList.contains('g')) { if (!n.classList.contains('oculta')) visivel = true; n = n.nextElementSibling; }
+        g.classList.toggle('oculta', !visivel);
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

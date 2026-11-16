@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo do tax-rs × app do SplitHub · v1.5</title>
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 800px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.meta-fim { margin-left: auto; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.callout.red { border-color: var(--red); background: var(--red-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 9px 13px; border-bottom: 1px solid var(--brd); vertical-align: top; color: var(--txt2); background: var(--sur); }
+td strong { color: var(--txt1); }
+tbody tr:last-child td { border-bottom: none; }
+td.grp { background: var(--sur2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); }
+code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--mono); padding: 1px 5px; border-radius: 4px; color: var(--txt1); overflow-wrap: anywhere; }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 14px 0 18px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.kpi-v { font-size: 22px; font-weight: 800; color: var(--txt1); line-height: 1.2; }
+.kpi-l { font-size: 11.5px; color: var(--txt3); }
+.frente { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin: 14px 0; overflow: hidden; }
+.frente-h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; padding: 11px 16px; background: var(--sur2); border-bottom: 1px solid var(--brd); }
+.frente-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.frente-t { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.frente-q { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.frente-b { padding: 12px 16px; }
+.frente-b ul.plain { margin-left: 16px; }
+.frente-b ul.plain li { font-size: 12.5px; }
+.lado { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 8px; }
+@media (max-width: 760px) { .lado { grid-template-columns: minmax(0, 1fr); } }
+.lado > div { min-width: 0; }
+.lado h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); margin-bottom: 4px; }
+.ondas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 14px 0; }
+@media (max-width: 760px) { .ondas { grid-template-columns: minmax(0, 1fr); } }
+.onda { background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.onda.crit { border-left-color: var(--red); }
+.onda.dep { border-left-color: var(--gray); }
+.onda-h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; margin-bottom: 6px; }
+.onda-n { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.onda.crit .onda-n { color: var(--red); }
+.onda-t { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.onda-q { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.onda ul.plain { margin-left: 16px; }
+.onda ul.plain li { font-size: 12.5px; }
+.onda .pronto { font-size: 12px; color: var(--txt2); border-top: 1px dashed var(--brd); margin-top: 8px; padding-top: 8px; }
+.foot { margin-top: 40px; font-size: 11px; color: var(--txt3); text-align: center; }
+pre { overflow-x: auto; }
+pre code { overflow-wrap: normal; }
+.back { display: inline-block; font-size: 12px; color: var(--txt3); text-decoration: none; margin-bottom: 18px; }
+.back:hover { color: var(--txt1); }
+</style>
+</head>
+<body>
+<div class="doc">
+<a class="back" href="prds.html#sec-taxrs">← Hub de PRDs</a>
+<div class="eyebrow">tax-rs · Engenharia e produto · só o ambiente Demo</div>
+<h1>Demo do tax-rs × app do SplitHub: o que falta e o plano de adequação</h1>
+<p class="subtitle">O ambiente Demo do tax-rs reproduz o app do SplitHub a partir de uma base gerada no navegador. Ele foi portado do commit <code>c47b303</code> do app (30/09) e depois recebeu, uma a uma, a gestão de usuários, o menu agrupado, o CSV do Débito e o PCONT. Este documento lista o que o app tem hoje e o Demo ainda não tem, propõe ajustes para o contexto do Demo e organiza a adequação em ondas. <strong>O escopo é só o frontend, no modo Demo.</strong> Nada muda no modo live nem no backend.</p>
+<div class="meta-bar"><span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.5</span></span><span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">11/11/2026</span></span><span class="meta-pill"><span class="meta-label">App</span><span class="meta-val">master, código em 667ea2a (11/11)</span></span><span class="meta-pill"><span class="meta-label">tax-rs</span><span class="meta-val">main c3d332a (10/11)</span></span><span class="meta-pill meta-fim"><span class="chip ok">9 de 9 decididas</span></span></div>
+
+<div class="toc"><div class="toc-title">Conteúdo</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span>O essencial</a></li>
+<li><a href="#s02"><span class="toc-num">02</span>Como o Demo acompanha o app hoje</a></li>
+<li><a href="#s03"><span class="toc-num">03</span>O diff, tela a tela</a></li>
+<li><a href="#s04"><span class="toc-num">04</span>As cinco frentes em detalhe</a></li>
+<li><a href="#s05"><span class="toc-num">05</span>Ajustes propostos para o contexto do Demo</a></li>
+<li><a href="#s06"><span class="toc-num">06</span>O plano em ondas</a></li>
+<li><a href="#s07"><span class="toc-num">07</span>Riscos</a></li>
+<li><a href="#s08"><span class="toc-num">08</span>Decisões para começar</a></li>
+<li><a href="#s09"><span class="toc-num">09</span>Fontes e método</a></li>
+</ul></div>
+
+<div class="section" id="s01"><div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O essencial</span></div>
+<div class="callout ok"><div class="ct">Decidido em 11/11/2026</div><p>O escopo está fechado e as nove decisões foram tomadas (seção 08):</p><ul class="plain">
+<li><strong>Escopo:</strong> só o frontend, no modo Demo. O modo live e o backend não recebem nenhuma mudança: nem tela, nem coluna, nem menu, nem regra. Onde o Demo divide componente com o live, a novidade entra só no Demo e o live segue como está hoje.</li>
+<li><strong>Todas as funcionalidades do app vêm para o Demo, sem afetar o live.</strong> O critério é a suíte atual do live passar sem nenhuma alteração.
+  <ul class="plain">
+  <li>Nas telas que o Demo divide com o live, a novidade só aparece na demonstração (seção 05).</li>
+  <li>O detalhe do DF e do RF fica como hoje no live (D-DM-08 B).</li>
+  <li>Configurações › Eventos fiscais entra na lista de menus fora do live (D-DM-09 A).</li>
+  </ul></li><li><strong>Captura:</strong> frente por frente, como até aqui (D-DM-01 B). Cada frente é verificada no commit do app em que termina.</li>
+<li><strong>Ordem:</strong> a parcialidade e o detalhe vêm primeiro (D-DM-02 A).</li>
+<li><strong>Prioridade:</strong> o backend vem antes (D-DM-07). O Demo é ambiente de protótipo e avança com a capacidade que sobrar, sem data.</li>
+<li><strong>Ajustes:</strong> os quatro ajustes de contexto foram aprovados como recomendados (D-DM-03 a 06).</li>
+</ul></div>
+<div class="kpis">
+<div class="kpi"><div class="kpi-v">5</div><div class="kpi-l">frentes do app que o Demo não tem: parcialidade, eventos fiscais em dois lotes, o detalhe novo do DF e do RF, e a rota da API em inglês</div></div>
+<div class="kpi"><div class="kpi-v">44 + 8</div><div class="kpi-l">44 itens aprovados em 5 pacotes de avaliação, mais as 8 telas da parcialidade</div></div>
+<div class="kpi"><div class="kpi-v">21 → 31</div><div class="kpi-l">tipos de inconsistência: o app tem 10 a mais (5 da parcialidade e 5 da família I)</div></div>
+<div class="kpi"><div class="kpi-v">2</div><div class="kpi-l">menus novos: Apuração Assistida › Eventos fiscais e Configurações › Eventos fiscais</div></div>
+</div>
+<p>O Demo está em dia com o app em quase tudo o que não é parcialidade nem eventos fiscais. Usuários, PCONT, Painel executivo e o menu agrupado foram portados em 04/11, e os demais menus estão iguais desde o port. A diferença se concentra em dois blocos:</p>
+<ul class="plain">
+<li><strong>A parcialidade do crédito e do débito</strong>, de 22 e 23/10. O valor de cada registro fiscal passa a ser partido em parcelas, e oito telas mudam junto. O tax-rs já a marca como não portada, porque ela muda a base semeada e todas as capturas usadas nos testes.</li>
+<li><strong>Os eventos fiscais da Reforma</strong>, de 27/10 a 11/11: um módulo novo, uma tela de configuração nova, a ação dentro da inconsistência, a família I e o detalhe do documento e do registro reorganizado em abas.</li>
+</ul>
+<p>A proposta é adequar o Demo em <strong>cinco ondas</strong>. Na Onda 0 define-se o commit de captura de cada frente e sai a correção da rota da API. A Onda 1 traz a parcialidade e o detalhe já no formato final. As Ondas 2 e 3 trazem os dois lotes de eventos, e a Onda 4 fecha os testes e combina a cadência. Tudo junto soma cerca de 5.400 linhas de JavaScript no app, mais de quatro vezes o PCONT. O tamanho de cada onda está na seção 06.</p>
+<div class="callout warn"><div class="ct">O que mais pesa</div><p>A parcialidade muda a base de demonstração (200 NFs e 400 RFs), e os testes golden do Demo comparam essa base e as telas com capturas do app. Como ela vem primeiro, as capturas que dependem da base são refeitas uma vez só, na Onda 1. As frentes seguintes já são capturadas sobre a base nova, cada uma no commit em que termina (seção 06).</p></div>
+</div>
+
+<div class="section" id="s02"><div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Como o Demo acompanha o app hoje</span></div>
+<p>O registro de paridade do tax-rs (<code>frontend/PARIDADE-PROTOTIPO.md</code>) descreve o método, e ele vale para todo o plano:</p>
+<ul class="plain">
+<li><strong>Engine de domínio.</strong> <code>lib/domain/engine</code> é um port em TypeScript puro da lógica do app. <code>criarBasePrototipo({ seed, hoje })</code> gera a base em dez etapas, com o seed 20260918 e o hoje fixo em 24/04/2026. Mesmo seed e mesmo hoje dão a mesma base.</li>
+<li><strong>Telas.</strong> Cada tela tem um view-model puro em <code>lib/domain/views</code>, e as páginas em <code>pages/</code> só desenham.</li>
+<li><strong>Testes golden.</strong> Scripts em <code>tests/tools</code> capturam o app rodando: base, KPIs, linhas, modais e históricos. Os testes comparam o Demo com essas capturas, campo a campo e evento a evento.</li>
+<li><strong>Regras próprias do Demo.</strong>
+  <ul class="plain">
+  <li>As telas não citam leis nem artigos, nem mostram códigos de decisão (D-xx, DEF-xx).</li>
+  <li>O relógio é o hoje da base, não o da máquina.</li>
+  <li>As ações valem durante a sessão.</li>
+  <li>Defeitos do app são corrigidos e registrados como diferença deliberada.</li>
+  </ul></li>
+<li><strong>Modo live.</strong> O mesmo frontend tem um modo para cliente com dados reais. Nele, os menus sem backend ficam fora (PR #35, 05/11) e as colunas sem dado somem das tabelas e do CSV. <strong>Ele fica fora deste plano:</strong> nada do que entra aqui aparece nele.</li>
+</ul>
+<div class="table-wrap"><table>
+<thead><tr><th>Frente do app</th><th>Commits do app</th><th>No Demo</th></tr></thead>
+<tbody>
+<tr><td>Port inicial: todos os menus</td><td><code>c47b303</code> (30/09)</td><td><span class="chip ok">portado</span> fases 3 a 6</td></tr>
+<tr><td>Gestão de usuários</td><td><code>53d75cd</code>, <code>5eb24ef</code></td><td><span class="chip ok">portado</span> 04/11</td></tr>
+<tr><td>CSV do Débito; Assistente desabilitado</td><td><code>2ab690f</code></td><td><span class="chip ok">portado</span> 04/11</td></tr>
+<tr><td>Menu agrupado; recolher em qualquer largura</td><td><code>de88c6d</code>, <code>9657965</code></td><td><span class="chip ok">portado</span> 04/11</td></tr>
+<tr><td>PCONT, Painel executivo e auditoria</td><td><code>831e56b</code>, <code>a9e33c1</code>, <code>29961e7</code></td><td><span class="chip ok">portado</span> 04/11</td></tr>
+<tr><td>Parcialidade, detalhe B, histórico e aba de apuração</td><td><code>c558d49</code> … <code>15461b0</code> (8 commits)</td><td><span class="chip red">não portado</span></td></tr>
+<tr><td>Feature flags e painel do avaliador (AV-00)</td><td><code>2428b4c</code>, <code>874c508</code>, <code>a8816ea</code></td><td><span class="chip gray">não se aplica</span></td></tr>
+<tr><td>Eventos fiscais, lote 1 (AV-EV, AV-EF) e correções</td><td><code>411969f</code>, <code>5179fac</code>, <code>dc94985</code>, <code>a08fb83</code></td><td><span class="chip red">não portado</span></td></tr>
+<tr><td>Rota de documentos em inglês</td><td><code>cb1e772</code></td><td><span class="chip red">não portado</span></td></tr>
+<tr><td>Eventos fiscais, lote 2 (AV-E2)</td><td><code>b6fbfc3</code></td><td><span class="chip red">não portado</span></td></tr>
+<tr><td>Detalhe do DF e do RF com abas no topo</td><td><code>61046f2</code>, <code>4613fb6</code></td><td><span class="chip red">não portado</span></td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s03"><div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">O diff, tela a tela</span></div>
+<p>Uma linha por tela do app. A coluna Frente aponta para a seção 04.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Tela</th><th>O app tem</th><th>O Demo tem</th><th>Frente</th></tr></thead>
+<tbody>
+<tr><td class="grp" colspan="4">Crédito e Débito</td></tr>
+<tr><td><strong>Início</strong></td><td>Aproveitamento medido em valor, total e por tributo</td><td>Aproveitamento que soma o RF inteiro pelo rótulo de status</td><td>F1</td></tr>
+<tr><td><strong>Crédito › Visão geral</strong></td><td>Cards que somam parcelas, ageing da fatia a apropriar, calendário pelo prazo de cada fatia, composição mensal por parcela</td><td>Cards e gráficos que somam o RF inteiro pelo status</td><td>F1</td></tr>
+<tr><td><strong>Crédito › Documentos e Registros</strong></td><td>Selo e barra da partição por tributo; status calculado da partição; marcas de risco sobre a fatia</td><td>Um status por RF, escrito no registro</td><td>F1</td></tr>
+<tr><td><strong>Detalhe do DF</strong></td><td>Abas no topo, abrindo na Partição (quadro CBS × IBS): Alertas, Eventos e ajustes, Histórico com filtros, Apuração por tributo, Linha do tempo. Pedido de evento ou nota de ajuste</td><td>Modal com os cartões de RF e a linha do tempo antiga</td><td>F1 · F2 · F3 · F4</td></tr>
+<tr><td><strong>Detalhe do RF</strong></td><td>O mesmo modelo, só com o tributo do registro: Movimentos de valor, links para o documento e para o outro RF, janela de 1.120 px</td><td>Modal com o status único e a linha do tempo antiga</td><td>F1 · F2 · F3 · F4</td></tr>
+<tr><td><strong>Ficha de glosa</strong></td><td>Glosa com valor, parcela de origem e destino, recomendação para cada situação no lugar do botão de contencioso</td><td>Glosa do RF inteiro</td><td>F1</td></tr>
+<tr><td><strong>Crédito › Pagamentos RAD</strong></td><td>Uma guia por imposto pelo saldo a apropriar, uma por vez, com o líquido ao fornecedor decomposto</td><td>Guia pelo RF</td><td>F1</td></tr>
+<tr><td><strong>Débito</strong></td><td>Partição do débito, meios de extinção com valor, suspensão com a causa, selo por tributo no documento de saída, status Parcialmente extinto</td><td>Status pelo pior registro</td><td>F1</td></tr>
+<tr><td class="grp" colspan="4">Apuração Assistida</td></tr>
+<tr><td><strong>Conciliação</strong></td><td>Confronto parcela a parcela, por tributo e por órgão; pago × reconhecido; filtro de parcela divergente</td><td>CAPUR e CFIN pelo RF</td><td>F1</td></tr>
+<tr><td><strong>Inconsistências</strong></td><td>31 tipos em 7 famílias; o evento fiscal ou a nota de ajuste como ação (18 opções, sugestão e prévia); a ocorrência acompanha a solicitação; aba Alertas de competência</td><td>21 tipos em 6 famílias</td><td>F1 · F2 · F3</td></tr>
+<tr><td><strong>Eventos fiscais</strong> <span class="chip red">menu novo</span></td><td>Esteira, detalhe em quatro fases, confirmação por órgão, divergência sem valor aplicado, ausências, cancelamento, payload e exportação, importação por CSV, gerenciador de colunas; não atribuível, revertida, fila de órfãos e solicitações</td><td>Não existe</td><td>F2 · F3</td></tr>
+<tr><td><strong>PCONT e Painel executivo</strong></td><td colspan="2">Iguais: portados em 04/11</td><td>—</td></tr>
+<tr><td class="grp" colspan="4">Configurações</td></tr>
+<tr><td><strong>Integrações</strong></td><td>Rota <code>/v1/fiscal-documents</code>; sétimo contexto da API, Eventos fiscais</td><td>Rota <code>/v1/documentos-fiscais</code>, que o próprio barramento do tax-rs não usa; seis contextos</td><td>F5 · F3</td></tr>
+<tr><td><strong>Eventos fiscais</strong> <span class="chip red">menu novo</span></td><td>Solicitações, modo de emissão por CNPJ (ERP por webhook ou direto à SEFAZ), qualidade de serviço, webhooks e trilha</td><td>Não existe</td><td>F2</td></tr>
+<tr><td><strong>Organização, Usuários, Importação, Fornecedor, Contratos, Execução RAD, Automações</strong></td><td colspan="2">Iguais</td><td>—</td></tr>
+<tr><td class="grp" colspan="4">Demais menus</td></tr>
+<tr><td><strong>Ressarcimento, Analytics, Portal do Fornecedor</strong></td><td colspan="2">Iguais. A parcialidade não chegou a eles no app: a leitura por parcela nesses módulos ainda é plano (Parte 8)</td><td>—</td></tr>
+<tr><td class="grp" colspan="4">Fora da adequação</td></tr>
+<tr><td><strong>Feature flags e painel do avaliador</strong></td><td>Mecanismo do ambiente de avaliação (AV-00)</td><td>O Demo mostra tudo; o live esconde o que não tem backend</td><td>não portar</td></tr>
+<tr><td><strong>Backoffice da plataforma</strong></td><td>Só no ambiente de avaliação (AV-BO, 9 itens), ainda não no app</td><td>O tax-rs tem a própria área de administração</td><td>fora</td></tr>
+</tbody></table></div>
+<div class="callout"><div class="ct">O que o Demo tem e o app não</div><p>Fica como está: a área de administração da plataforma, o login com convite e redefinição de senha, a página Minha conta, o selo do modo de dados, o aviso "Em breve" e a Apuração IBS/CBS guardada fora do menu. Ficam também as correções de defeitos do app registradas no registro de paridade (por exemplo, a decisão de lote que vale de fato na Execução programada).</p></div>
+</div>
+
+<div class="section" id="s04"><div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">As cinco frentes em detalhe</span></div>
+<p>O tamanho de cada frente está em linhas de JavaScript do app a portar. Como referência, o PCONT, portado em 04/11, tem 1.219 linhas de JavaScript e 220 de CSS.</p>
+
+<div class="frente"><div class="frente-h"><span class="frente-id">F1</span><span class="frente-t">Parcialidade do crédito e do débito</span><span class="frente-q">~1.600 linhas · 1,3× o PCONT, mais a troca da base</span></div><div class="frente-b">
+<div class="lado"><div><h4>O que é</h4><ul class="plain">
+<li><strong>Modelo do RF:</strong> partição do valor apurado em parcelas, movimentos de valor entre parcelas, status calculado da partição e marcas de risco sobre a fatia.</li>
+<li><strong>T-01 a T-03:</strong> listagens com selo e barra por tributo, detalhe do documento com as duas partições e Movimentos no RF.</li>
+<li><strong>T-04:</strong> ficha de glosa com valor, que recomenda em vez de abrir o contencioso.</li>
+<li><strong>T-05:</strong> guia RAD por imposto pelo saldo.</li>
+<li><strong>T-06:</strong> conciliação parcela a parcela.</li>
+<li><strong>T-07:</strong> aproveitamento em valor, Visão geral por parcela, ageing e calendário por fatia.</li>
+<li><strong>T-08:</strong> partição do débito.</li>
+<li><strong>Junto:</strong> o detalhe B (quadro CBS × IBS), o histórico como trilha com os pontos de atenção que viram card, e a aba de apuração assistida por tributo.</li>
+<li><strong>Inconsistências:</strong> 5 tipos novos: partição que não fecha, movimento não refletido, movimento do órgão sem contrapartida, glosa parcial e reconhecido diferente do pago.</li>
+</ul></div><div><h4>Onde mexe no Demo</h4><ul class="plain">
+<li><code>criarBasePrototipo</code>: a partição e os movimentos entram na geração. Os casos de recolhimento, uso e glosa parciais vêm do seed.</li>
+<li>Engine: glosa, RAD, conciliação, status do débito e catálogo de inconsistências.</li>
+<li>View-models de Início, Crédito, Débito, Pagamentos e Conciliação.</li>
+<li><code>NfDetalheModal</code> e <code>RfDetalheModal</code>, construídos já no formato da F4.</li>
+<li>Todas as capturas das fases 3 a 7 mudam, porque a base muda.</li>
+</ul>
+<p><strong>Arquivos no app:</strong> <code>parcialidade.js</code>, <code>parcialidade-detalhe.js</code>, <code>glosa.js</code>, <code>status-debito.js</code>, parte de <code>data-sync-fixed.js</code> e <code>inc-catalogo.js</code>.</p></div></div>
+</div></div>
+
+<div class="frente"><div class="frente-h"><span class="frente-id">F2</span><span class="frente-t">Eventos fiscais, lote 1: ação, esteira e configuração</span><span class="frente-q">~2.200 linhas · 1,8× o PCONT</span></div><div class="frente-b">
+<div class="lado"><div><h4>O que é</h4><ul class="plain">
+<li><strong>AV-EV, 9 itens:</strong>
+  <ul class="plain">
+  <li>as 18 opções de evento ou nota na inconsistência, com a sugestão e a prévia do efeito;</li>
+  <li>o pedido no detalhe do DF e do RF;</li>
+  <li>a nota de ajuste com aceite, rejeição e cancelamento;</li>
+  <li>o ajuste na trilha e na decomposição de valores;</li>
+  <li>a ocorrência que acompanha a solicitação;</li>
+  <li>Configurações › Eventos fiscais, com o modo pelo ERP (webhook) ou direto à SEFAZ.</li>
+  </ul></li>
+<li><strong>AV-EF, 9 itens:</strong>
+  <ul class="plain">
+  <li>a esteira e o estado por tributo, nunca somado;</li>
+  <li>filtros e o detalhe em quatro fases;</li>
+  <li>o que cada órgão confirma: a Receita Federal na CBS e o Comitê Gestor no IBS;</li>
+  <li>a divergência sem valor aplicado;</li>
+  <li>ausências, cancelamento e eventos de atributo;</li>
+  <li>payload e exportação.</li>
+  </ul></li>
+<li><strong>Correções de 09/11 (R-297):</strong>
+  <ul class="plain">
+  <li>importação de eventos por CSV, com os oito modelos;</li>
+  <li>gerenciador de colunas;</li>
+  <li>payload só para o Administrador;</li>
+  <li>o texto do aviso de divergência.</li>
+  </ul></li>
+</ul></div><div><h4>Onde mexe no Demo</h4><ul class="plain">
+<li>Engine novo de eventos, com os eventos de exemplo gerados sobre as NF-e da base, como no app.</li>
+<li>Duas páginas novas: <code>pages/eventos</code> e <code>pages/configuracoes/EventosFiscaisPage</code>.</li>
+<li>Rotas e menu em <code>lib/nav.ts</code>: <code>APURACAO_SUBNAV</code> e <code>ADMIN_SUBNAV</code>.</li>
+<li>O modal do card em Inconsistências ganha a ação.</li>
+<li>Os detalhes do DF e do RF ganham o pedido e o quadro de ajustes.</li>
+</ul>
+<p><strong>Arquivos no app:</strong> <code>eventos-acao.js</code> e <code>eventos-modulo.js</code>.</p></div></div>
+</div></div>
+
+<div class="frente"><div class="frente-h"><span class="frente-id">F3</span><span class="frente-t">Eventos fiscais, lote 2: documento, ocorrências, alertas e estados</span><span class="frente-q">~1.200 linhas · 1× o PCONT</span></div><div class="frente-b">
+<div class="lado"><div><h4>O que é</h4><ul class="plain">
+<li><strong>AV-E2, 11 itens:</strong>
+  <ul class="plain">
+  <li>eventos e linha do tempo fiscal no documento, com a CBS e o IBS em colunas separadas;</li>
+  <li>família I em Inconsistências, com 5 tipos e uma ocorrência por tributo;</li>
+  <li>do aviso de divergência e da ausência vencida à ocorrência;</li>
+  <li>a aba Alertas de competência;</li>
+  <li>os estados não atribuível, revertida e aguardando documento, com a fila de órfãos;</li>
+  <li>as solicitações da inconsistência na esteira;</li>
+  <li>o sétimo contexto da API em Integrações.</li>
+  </ul></li>
+</ul></div><div><h4>Onde mexe no Demo</h4><ul class="plain">
+<li>Engine de eventos: os estados novos e a família I, que entra em <code>criarBasePrototipo</code> como etapa 11, depois das inconsistências.</li>
+<li>Inconsistências: tipos, filtro de família e a aba Alertas.</li>
+<li>Detalhe do DF e do RF: as abas Eventos e ajustes e Linha do tempo.</li>
+<li>O engine de Integrações ganha o contexto novo.</li>
+</ul>
+<p><strong>Arquivos no app:</strong> <code>eventos-lote2.js</code> e <code>inc-catalogo.js</code>.</p></div></div>
+</div></div>
+
+<div class="frente"><div class="frente-h"><span class="frente-id">F4</span><span class="frente-t">Detalhe do DF e do RF com abas no topo</span><span class="frente-q">~410 linhas · 0,35× o PCONT</span></div><div class="frente-b">
+<div class="lado"><div><h4>O que é</h4><ul class="plain">
+<li><strong>AV-DF, 7 itens:</strong>
+  <ul class="plain">
+  <li>abas presas no topo, abrindo na Partição;</li>
+  <li>a aba Alertas, em três grupos;</li>
+  <li>Eventos e ajustes numa aba só, com a tabela compacta de cinco colunas;</li>
+  <li>o Histórico só com a trilha;</li>
+  <li>todo documento, de entrada e de saída, com e sem partição;</li>
+  <li>celular e tablet.</li>
+  </ul>
+  O AV-DF-08, que compara com o detalhe antigo pela flag, não se aplica.</li>
+<li><strong>AV-RF, 7 itens:</strong> o mesmo modelo, só com o tributo e o documento, mais Movimentos como aba, a linha do tempo do tributo e a coluna da esquerda com o documento e o outro RF.</li>
+</ul></div><div><h4>Onde mexe no Demo</h4><ul class="plain">
+<li><code>components/fiscal/NfDetalheModal.tsx</code>, <code>RfDetalheModal.tsx</code> e <code>modal-parts.tsx</code>.</li>
+<li>Entra na Onda 1, com a parcialidade, para os detalhes serem construídos uma vez só, já no formato final. As abas de eventos são preenchidas nas Ondas 2 e 3.</li>
+<li>O modal é o mesmo nos dois modos. As abas novas entram só no Demo, e o live segue com o modal de hoje (A-09).</li>
+</ul>
+<p><strong>Arquivos no app:</strong> <code>detalhe-df.js</code>, <code>detalhe-rf.js</code> e os CSS.</p></div></div>
+</div></div>
+
+<div class="frente"><div class="frente-h"><span class="frente-id">F5</span><span class="frente-t">Rota de documentos fiscais em inglês</span><span class="frente-q">pequena · horas</span></div><div class="frente-b">
+<p>O engine de Integrações do Demo (<code>lib/domain/engine/integracoes.ts</code>) ainda mostra <code>/v1/documentos-fiscais</code> em oito lugares. A rota pública foi decidida em inglês em 05/10, e o barramento do próprio tax-rs já atende <code>/v1/fiscal-documents</code>. Hoje, quem segue o exemplo do Demo chama uma rota que o backend não tem. A troca é de texto: contrato, validações e erros não mudam.</p>
+</div></div>
+</div>
+
+<div class="section" id="s05"><div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Ajustes propostos para o contexto do Demo</span></div>
+<p>O pedido abre espaço para adaptar as funcionalidades ao Demo, em vez de copiá-las. Os ajustes abaixo seguem as regras que o Demo já tem e aproveitam o que o tax-rs construiu desde o port. Os que mudam comportamento viram decisão na seção 08.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>#</th><th>No app</th><th>Proposta para o Demo</th><th>Por quê</th></tr></thead>
+<tbody>
+<tr><td><strong>A-01</strong></td><td>36 leituras do relógio da máquina nos módulos de eventos e de parcialidade (espera da ausência, idade do órfão, prazo do alerta)</td><td>Usar o hoje da base, 24/04/2026</td><td>É a regra do Demo, e é o que torna as capturas e os testes reproduzíveis. Para capturar o app, congelar o relógio no mesmo dia</td></tr>
+<tr><td><strong>A-02</strong></td><td>Citações de artigo, de lei e do CTN, e códigos de decisão (D-02, DV-xx, AE-04, DA-02), em textos de tela e em comentários</td><td>Tirar das telas e manter nos comentários. Ex.: "prazo do art. 54" vira "prazo da fatia"; "causa do CTN art. 151" vira "causa da suspensão"; "O Alcance é só informação (D-02)" perde o código</td><td>Regra do Demo: o texto legal envelhece. Os testes já têm o filtro <code>sem-lei.ts</code> para comparar sem essas citações</td></tr>
+<tr><td><strong>A-03</strong></td><td>O fechamento da competência é simulado, porque a DA-02 está aberta</td><td>Usar o fechar e reabrir do PCONT, que o Demo já tem: o evento confirmado numa competência fechada no PCONT gera o alerta de competência</td><td>Liga duas telas que hoje não se falam e mostra o alerta pela causa real. <span class="chip ok">aprovado · D-DM-03</span></td></tr>
+<tr><td><strong>A-04</strong></td><td>A transmissão direta à SEFAZ pede o certificado na tela de Eventos fiscais</td><td>Mostrar o certificado A1 e o ambiente da SEFAZ que o admin do tax-rs já cadastra por cliente para a captura de NF-e (10/11), sem pedir de novo</td><td>Um cadastro só de certificado, como o produto real vai ter. <span class="chip ok">aprovado · D-DM-04</span></td></tr>
+<tr><td><strong>A-05</strong></td><td>Webhooks do modo ERP numa aba de Configurações › Eventos fiscais</td><td>Usar a gestão de webhooks de Integrações, já portada (conexões, log de entregas, reenvio), com um atalho a partir de Eventos fiscais</td><td>Evita dois lugares para o mesmo webhook. <span class="chip ok">aprovado · D-DM-05</span></td></tr>
+<tr><td><strong>A-06</strong></td><td>Sétimo contexto da API: Eventos fiscais</td><td>Mostrar no Demo com o selo "Em breve no barramento"</td><td>O barramento <code>/v1</code> do tax-rs ainda não tem a rota; o selo evita prometer uma integração que não está no backend. <span class="chip ok">aprovado · D-DM-06</span></td></tr>
+<tr><td><strong>A-07</strong></td><td>Rota <code>/v1/fiscal-documents</code></td><td>Corrigir já, na Onda 0 (F5)</td><td>O Demo contradiz o barramento do próprio tax-rs</td></tr>
+<tr><td><strong>A-08</strong></td><td>Feature flags por pacote, painel do avaliador e a comparação com o detalhe antigo</td><td>Não portar. No Demo tudo entra ligado. Os dois menus novos ficam fora do live. Eventos fiscais já está sob Apuração Assistida, que o live esconde. Configurações › Eventos fiscais entra na lista de menus fora do live, como o PCONT (D-DM-09 A)</td><td>É mecanismo do ambiente de avaliação do app, não do produto</td></tr>
+<tr><td><strong>A-09</strong></td><td>—</td><td>O detalhe novo do DF e do RF, com abas no topo, só no modo Demo. O live continua com o modal de hoje, sem nenhuma mudança</td><td>O modal é compartilhado, e o escopo é só o Demo. <span class="chip ok">aprovado · D-DM-08</span></td></tr>
+<tr><td><strong>A-10</strong></td><td>—</td><td>As colunas da parcialidade (selo, barra, parcelas) só no modo Demo, pelo mecanismo que o live já usa para esconder colunas sem dado. As listagens do live não mudam</td><td>A parcialidade não existe no backend, e o escopo é só o Demo</td></tr>
+<tr><td><strong>A-11</strong></td><td>Importação de eventos por CSV e gerenciador de colunas próprios do módulo</td><td>Reusar os componentes do Demo: o <code>DataTable</code>, com colunas e CSV, e o fluxo de prévia e importação da Importação de DFs</td><td>Menos código e o mesmo comportamento das outras telas</td></tr>
+<tr><td><strong>A-12</strong></td><td>O payload original só para o Administrador</td><td>Seguir o app: o payload original aparece só para o Administrador</td><td>Não há o que adaptar: a regra do app vale igual no Demo</td></tr>
+<tr><td><strong>A-13</strong></td><td>Eventos de exemplo semeados na primeira vez que o módulo é usado, com as datas contadas a partir do relógio da máquina</td><td>Gerar os eventos no engine, a partir do seed e do hoje da base, como etapa da base</td><td>Determinístico e testável, e a família I nasce junto com as outras ocorrências</td></tr>
+<tr><td><strong>A-14</strong></td><td>Defeitos do app que aparecerem no port</td><td>Corrigir e registrar como diferença deliberada no registro de paridade, como nas fases 3 a 7</td><td>Mesmo critério usado até aqui</td></tr>
+</tbody></table></div>
+<h3>As funcionalidades do app no Demo, sem afetar o live</h3>
+<p>Todas as funcionalidades do app vêm para o Demo. O Demo e o live são o mesmo frontend com duas fontes de dado, e essa convivência não pode ser afetada. O critério é objetivo: a suíte atual do live passa sem nenhuma alteração, a cada onda. São 22 arquivos de teste, entre eles o <code>live-isolation</code>, que confere que o cliente com dados reais não baixa o código da demonstração.</p>
+<p><strong>Sem impacto no live.</strong> Estas telas só rodam sobre a base de demonstração e já ficam fora do live, então entram como estão no app:</p>
+<ul class="plain">
+<li>o módulo Eventos fiscais (esteira, órfãos e solicitações), sob Apuração Assistida;</li>
+<li>Débito e Pagamentos, na parte da parcialidade;</li>
+<li>Integrações: a rota em inglês, os webhooks e o contexto de Eventos fiscais da API;</li>
+<li>o PCONT, no fechamento da competência;</li>
+<li>a base semeada, com a partição e os eventos.</li>
+</ul>
+<p><strong>Telas que o Demo divide com o live.</strong> Sem proteção, a novidade apareceria vazia para o cliente com dados reais, porque o backend não tem o dado:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Tela compartilhada</th><th>O que apareceria no live</th><th>Proteção</th><th>Onda</th></tr></thead>
+<tbody>
+<tr><td><strong>Crédito</strong> (listagens, glosa, visão geral), <strong>Início</strong> e <strong>Conciliação</strong></td><td>Colunas, selo e barra da parcialidade</td><td>O mecanismo que o live já usa para esconder colunas sem dado (A-10)</td><td>1</td></tr>
+<tr><td><strong>Inconsistências</strong></td><td>Os 10 tipos novos e a família I no filtro de famílias, que é uma lista fixa. Também a aba Alertas de competência e o botão de evento na inconsistência</td><td>Só aparecem quando a origem do dado é a demonstração</td><td>1 a 3</td></tr>
+<tr><td><strong>Detalhe do DF e do RF</strong></td><td>As abas no topo, Partição, Alertas, o pedido e o quadro de ajustes, Eventos e ajustes e Linha do tempo fiscal</td><td>O live mantém o modal de hoje (D-DM-08 B)</td><td>1 a 3</td></tr>
+<tr><td><strong>Configurações › Eventos fiscais</strong></td><td>O menu, porque a rota não está na lista do que fica fora do live</td><td>Uma linha na lista de menus fora do live, como foi feito com o PCONT. O live não passa a mostrar nada (D-DM-09 A)</td><td>2</td></tr>
+</tbody></table></div>
+<p><strong>Impactos:</strong></p>
+<ul class="plain">
+<li><strong>Esforço:</strong> cerca de uma semana a mais, já somada às Ondas 1 a 3.</li>
+<li><strong>Código condicional:</strong> os componentes compartilhados passam a ter trechos que só valem na demonstração. O detalhe do DF e do RF fica com dois layouts até o backend ter os dados (D-DM-08 B).</li>
+<li><strong>Isolamento:</strong> a lógica da partição e dos eventos fica no pacote da demonstração, que o live não carrega. Uma tela compartilhada que a importe direto faz o live baixá-la e quebra o <code>live-isolation</code>.</li>
+<li><strong>Perfis:</strong> a regra do app (o payload só para o Administrador, A-12) é feita com o que o Demo já tem, sem módulo novo na matriz de perfis do backend.</li>
+<li><strong>Certificado (A-04):</strong> é o único ajuste que tira uma funcionalidade do app, o cadastro de certificado na tela de Eventos fiscais. Foi mantido de propósito (D-DM-04, reconfirmada em 11/11).</li>
+</ul>
+</div>
+
+<div class="section" id="s06"><div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">O plano em ondas</span></div>
+<p>O backend tem prioridade (D-DM-07), e o Demo avança com a capacidade que sobrar. Por isso as ondas não têm data. O que está em cada uma é esforço, em ordem de grandeza para uma pessoa, a validar com quem desenvolve. Os ports de 04/11 (usuários, menu e PCONT no mesmo dia) mostram que o ritmo com agentes pode ser bem maior. A ordem das ondas vale mesmo com pausas entre elas: cada onda termina com o Demo estável e os testes passando.</p>
+<h3>Onde cada frente é capturada (D-DM-01 B)</h3>
+<p>Cada frente é verificada contra o app no commit em que termina, como foi feito até aqui. Há uma exceção: o detalhe do DF e do RF mudou de formato depois do lote 2. O que cada frente põe no detalhe é capturado no <code>667ea2a</code>, com as flags das frentes seguintes desligadas no navegador da captura (<code>sh-ff-off</code>). Assim o Demo não constrói o detalhe antigo para trocá-lo depois.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Frente</th><th>Onda</th><th>Commit de captura</th><th>O que se captura nele</th></tr></thead>
+<tbody>
+<tr><td><strong>F5</strong> · rota em inglês</td><td>0</td><td><code>cb1e772</code> (09/11)</td><td>A tela de Integrações: rotas e exemplo</td></tr>
+<tr><td><strong>F1</strong> · parcialidade</td><td>1</td><td><code>8adad44</code> (26/10, quando a parcialidade entrou no app)</td><td>A base nova, as listagens, Início, Visão geral, glosa, Pagamentos, Conciliação, Débito e os 5 tipos. Também se refazem as capturas das fases 3 a 7 que dependem da base</td></tr>
+<tr><td><strong>F4</strong> · detalhe do DF e do RF</td><td>1</td><td><code>667ea2a</code> (11/11), com as flags de eventos desligadas</td><td>As abas no topo, Partição, Alertas, Movimentos, Histórico, Apuração e Linha do tempo</td></tr>
+<tr><td><strong>F2</strong> · eventos, lote 1</td><td>2</td><td><code>a08fb83</code> (09/11, com as correções do R-297)<br>no detalhe: <code>667ea2a</code>, com as flags do lote 2 desligadas</td><td>Esteira, detalhe do evento, Configurações › Eventos fiscais, a ação na inconsistência. No detalhe do DF e do RF: o pedido e o quadro de ajustes</td></tr>
+<tr><td><strong>F3</strong> · eventos, lote 2</td><td>3</td><td><code>91adb32</code> (10/11)<br>no detalhe: <code>667ea2a</code>, com tudo ligado</td><td>Família I, Alertas de competência, estados, órfãos, solicitações e o contexto da API. No detalhe: Eventos e ajustes e Linha do tempo fiscal</td></tr>
+</tbody></table></div>
+<p>Desligar as flags na captura precisa ser conferido na Onda 0: o app aceita desligar flag aprovada no navegador, e isso já foi usado para comparar o detalhe novo com o antigo.</p>
+<div class="ondas">
+<div class="onda"><div class="onda-h"><span class="onda-n">Onda 0</span><span class="onda-t">Captura e correção rápida</span><span class="onda-q">2 a 3 dias de esforço</span></div>
+<ul class="plain">
+<li>Estender os scripts de <code>tests/tools</code> às telas novas (partição, detalhe com abas, eventos), com o relógio congelado em 24/04/2026.</li>
+<li>Conferir que desligar flags no navegador da captura isola as frentes no <code>667ea2a</code>.</li>
+<li>Entregar a F5, a rota em inglês, capturada no <code>cb1e772</code>.</li>
+</ul>
+<div class="pronto"><strong>Pronto quando:</strong> os scripts capturam cada frente no seu commit e a rota do Demo bate com a do barramento.</div></div>
+<div class="onda crit"><div class="onda-h"><span class="onda-n">Onda 1</span><span class="onda-t">Parcialidade e o detalhe no formato final</span><span class="onda-q">~3,5 semanas de esforço</span></div>
+<ul class="plain">
+<li>F1 inteira, capturada no <code>8adad44</code>: a partição na base, as oito telas e os cinco tipos de inconsistência.</li>
+<li>F4 sem as abas de eventos, capturada no <code>667ea2a</code> com as flags de eventos desligadas: abas no topo, Partição, Alertas, Movimentos, Histórico, Apuração e Linha do tempo do produto.</li>
+<li>Refazer as capturas das fases 3 a 7 que dependem da base e revisar as diferenças tela a tela.</li>
+<li>Proteções nas telas compartilhadas:
+  <ul class="plain">
+  <li>as colunas da parcialidade em Crédito, Início e Conciliação;</li>
+  <li>os cinco tipos em Inconsistências;</li>
+  <li>o modal de hoje no live (D-DM-08 B).</li>
+  </ul></li>
+<li>Ajustes A-01, A-02, A-09 e A-10.</li>
+</ul>
+<div class="pronto"><strong>Pronto quando:</strong> a base e as telas do Demo batem com o commit-alvo, e a suíte do live passa sem alteração.</div></div>
+<div class="onda"><div class="onda-h"><span class="onda-n">Onda 2</span><span class="onda-t">Eventos fiscais, lote 1</span><span class="onda-q">~2,5 semanas de esforço</span></div>
+<ul class="plain">
+<li>F2: o engine de eventos, a esteira e o detalhe, Configurações › Eventos fiscais, a ação na inconsistência, e o pedido e o quadro de ajustes nos detalhes.</li>
+<li>Ajustes A-04, A-05, A-11, A-12 e A-13.</li>
+<li>Configurações › Eventos fiscais na lista de menus fora do live (A-08, D-DM-09 A). O botão de evento na inconsistência só aparece na demonstração.</li>
+</ul>
+<div class="pronto"><strong>Pronto quando:</strong> os 18 itens do AV-EV e do AV-EF e as quatro correções passam contra a captura, com e2e da esteira, e a suíte do live passa sem alteração.</div></div>
+<div class="onda"><div class="onda-h"><span class="onda-n">Onda 3</span><span class="onda-t">Eventos fiscais, lote 2</span><span class="onda-q">~1,5 semana de esforço</span></div>
+<ul class="plain">
+<li>F3: família I, a aba Alertas de competência, os estados e a fila de órfãos, as solicitações na esteira e o contexto da API.</li>
+<li>As abas Eventos e ajustes e Linha do tempo fiscal nos detalhes completam a F4.</li>
+<li>Ajustes A-03 e A-06.</li>
+<li>A família I e a aba Alertas de competência só aparecem na demonstração.</li>
+</ul>
+<div class="pronto"><strong>Pronto quando:</strong> os 11 itens do AV-E2 e os 14 da F4 passam contra a captura, o catálogo do Demo tem os 31 tipos e a suíte do live passa sem alteração.</div></div>
+<div class="onda dep"><div class="onda-h"><span class="onda-n">Onda 4</span><span class="onda-t">Fechamento e cadência</span><span class="onda-q">~1 semana de esforço</span></div>
+<ul class="plain">
+<li>E2E completo, revisão visual em 375, 768 e 1440, nos temas claro e escuro.</li>
+<li>Registro de paridade atualizado, com as diferenças deliberadas.</li>
+<li>A regra para o que vier depois: cada pacote promovido no app entra no backlog do Demo com a captura do commit de promoção.</li>
+<li>Os próximos na fila do app: o lote 3 de eventos, o backoffice (comparar com o admin do tax-rs), ZFM, DeRE e os relatórios contábeis.</li>
+</ul>
+<div class="pronto"><strong>Pronto quando:</strong> o registro de paridade diz "em dia com o app no commit X" e a cadência está combinada.</div></div>
+</div>
+<div class="callout"><div class="ct">Por que a parcialidade vem antes dos eventos (D-DM-02 A)</div><p>Os eventos seriam mais vistosos numa demonstração. Mas a parcialidade muda a base, e tudo o que fosse capturado antes dela teria de ser capturado de novo. Ela também é o que mostra a garantia da apropriação do crédito, que é o centro do produto. E os detalhes do DF e do RF dependem dela para abrir na Partição.</p></div>
+</div>
+
+<div class="section" id="s07"><div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Riscos</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Risco</th><th>Efeito</th><th>Como reduzir</th></tr></thead>
+<tbody>
+<tr><td><strong>A base muda com a parcialidade</strong></td><td>Os testes golden das fases 3 a 7 quebram juntos, e fica difícil separar mudança esperada de regressão</td><td>A parcialidade vem primeiro (D-DM-02), então a base muda uma vez só. Refazer as capturas que dependem dela e revisar as diferenças tela a tela antes de portar o resto</td></tr>
+<tr><td><strong>O Demo e o live dividem componentes</strong></td><td>Mudar o detalhe e as listagens pode alterar sem querer Crédito, Conciliação e Inconsistências no live</td><td>Proteger as quatro telas compartilhadas listadas na seção 05. A cada onda, a suíte atual do live roda sem nenhuma alteração, só para confirmar que nada mudou nele</td></tr>
+<tr><td><strong>O live passa a baixar o código da demonstração</strong></td><td>Uma tela compartilhada que importe direto a lógica da partição ou dos eventos faz o cliente com dados reais carregar o engine da demonstração</td><td>A lógica nova fica no pacote da demonstração. O <code>live-isolation</code> acusa o vazamento</td></tr>
+<tr><td><strong>O Demo mostra o que o produto real ainda não tem</strong></td><td>A partição e os eventos passam a existir no Demo sem existir no backend, e quem assiste à demonstração pode tomar isso como pronto</td><td>Deixar claro na demonstração que o Demo é ambiente de protótipo. O engine fica em TypeScript puro, sem tela, como o resto do engine do Demo</td></tr>
+<tr><td><strong>O Demo fica para trás do app</strong></td><td>Com o backend em primeiro lugar (D-DM-07), o Demo anda devagar enquanto o app continua ganhando funcionalidades</td><td>Cada onda termina com o Demo estável, então dá para parar entre elas. O registro de paridade diz em que commit do app o Demo está, e a cadência da Onda 4 põe na fila o que vier depois</td></tr>
+<tr><td><strong>Captura em vários commits</strong></td><td>Frente por frente (D-DM-01), a mesma tela pode ser capturada em commits diferentes, e o detalhe mudou de formato no meio do caminho</td><td>Seguir a tabela de commits da seção 06; o detalhe é sempre capturado no <code>667ea2a</code>, com as flags das frentes seguintes desligadas</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s08"><div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Decisões para começar</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>#</th><th>Decisão</th><th>Opções</th><th>Recomendado</th><th>Decidido em 11/11/2026</th></tr></thead>
+<tbody>
+<tr><td><strong>D-DM-01</strong></td><td>Como capturar o app</td><td>A · um commit só para todas as frentes · B · frente por frente, como até aqui</td><td>A</td><td><span class="chip ok">B</span> Frente por frente, cada uma no commit em que termina. A tabela de commits está na seção 06</td></tr>
+<tr><td><strong>D-DM-02</strong></td><td>O que vem primeiro</td><td>A · parcialidade e detalhe (Onda 1) · B · eventos fiscais, lote 1, sobre a base atual, e a parcialidade depois</td><td>A</td><td><span class="chip ok">A</span> A parcialidade e o detalhe vêm primeiro</td></tr>
+<tr><td><strong>D-DM-03</strong></td><td>Fechamento da competência no Demo</td><td>A · pelo fechar e reabrir do PCONT · B · simulado, como no app</td><td>A</td><td><span class="chip ok">A</span> Ajuste A-03</td></tr>
+<tr><td><strong>D-DM-04</strong></td><td>Certificado da transmissão direta</td><td>A · o certificado do admin, da captura de NF-e · B · cadastro próprio na tela de Eventos fiscais, como no app</td><td>A</td><td><span class="chip ok">A</span> Ajuste A-04. Reconfirmada em 11/11, mesmo sabendo que a tela de Eventos fiscais fica sem o cadastro de certificado do app</td></tr>
+<tr><td><strong>D-DM-05</strong></td><td>Onde ficam os webhooks de eventos</td><td>A · em Integrações, com atalho · B · aba própria em Eventos fiscais, como no app</td><td>A</td><td><span class="chip ok">A</span> Ajuste A-05. Levar a mesma mudança ao app fica para quando houver pedido</td></tr>
+<tr><td><strong>D-DM-06</strong></td><td>O contexto Eventos fiscais da API</td><td>A · com o selo "Em breve no barramento" · B · igual ao app</td><td>A</td><td><span class="chip ok">A</span> Ajuste A-06</td></tr>
+<tr><td><strong>D-DM-07</strong></td><td>Quem faz e com que prioridade frente ao backend</td><td>A · a mesma pessoa, depois do caminho crítico · B · uma segunda pessoa no Demo · C · intercalar por onda</td><td>B</td><td><span class="chip ok">backend primeiro</span> O Demo é ambiente de protótipo. O backend é priorizado e evolui de forma ativa; o Demo avança com a capacidade que sobrar, sem data</td></tr>
+<tr><td><strong>D-DM-08</strong></td><td>O detalhe do DF e do RF no live</td><td>A · o live ganha o layout novo, só com as abas que têm dado · B · o live mantém o modal de hoje, e o layout novo fica só na demonstração</td><td>B</td><td><span class="chip ok">B</span> O live não muda. O componente fica com dois layouts até o backend ter os dados</td></tr>
+<tr><td><strong>D-DM-09</strong></td><td>A rota de Configurações › Eventos fiscais</td><td>A · uma linha na lista de menus fora do live, como o PCONT · B · a tela sob um prefixo que o live já esconde</td><td>A</td><td><span class="chip ok">A</span> A rota e o menu ficam iguais aos do app</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="section" id="s09"><div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Fontes e método</span></div>
+<ul class="plain">
+<li><strong>App:</strong> diff do código fora de <code>src/docs</code> entre <code>c47b303</code> e o master de 11/11: 31 arquivos, 28 commits, cerca de 8.900 linhas acrescentadas. Os pacotes e os itens vêm do registro de avaliação (<code>tools/avaliacao-features.json</code>), a parcialidade vem do registro da parcialidade, e os tipos vêm do <code>inc-catalogo.js</code> nos dois commits.</li>
+<li><strong>tax-rs:</strong> <code>frontend/PARIDADE-PROTOTIPO.md</code>, <code>frontend/lib/nav.ts</code>, <code>frontend/lib/domain/engine/integracoes.ts</code> e <code>roadmap.md</code> no <code>main</code> <code>c3d332a</code> (10/11), mais o log de commits desde 20/10.</li>
+<li><strong>Convivência com o live:</strong> lidos no tax-rs <code>lib/data/availability.ts</code>, <code>lib/data/mode.ts</code>, <code>hooks/usePermissao.ts</code>, <code>pages/creditos/colunas.tsx</code>, <code>components/fiscal/NfDetalheModal.tsx</code>, <code>pages/inconsistencias/ListagemTab.tsx</code> e os 22 arquivos de teste do live.</li>
+<li><strong>Contagens:</strong> leituras do relógio, citações e códigos foram contados por busca no código do app. Parte dos códigos fica em comentários e não aparece na tela.</li>
+<li><strong>Limite:</strong> o Demo não foi executado para este levantamento. A situação de cada tela vem do registro de paridade e do código.</li>
+<li><strong>Relacionado:</strong> o plano geral de 30/10 (<code>plano-evolucao-tax-rs-2026-10-30.html</code>), que cobre também o live e o backend. Este documento detalha só a parte do Demo, que lá era a "Onda 1 · paridade", e não puxa nada do live nem do backend.</li>
+</ul>
+<h3>Histórico</h3>
+<ul class="plain">
+<li><strong>v1.5 · 11/11/2026</strong> — Todas as funcionalidades do app vêm para o Demo sem afetar o live.
+  <ul class="plain">
+  <li>Nova seção 05 com as telas sem impacto, as quatro telas compartilhadas e a proteção de cada uma, e os impactos.</li>
+  <li>Decisões: D-DM-08 B (o live mantém o modal de hoje), D-DM-09 A (uma linha na lista de menus fora do live) e D-DM-04 reconfirmada.</li>
+  <li>As Ondas 1 e 2 ganham meia semana cada, e toda onda termina com a suíte do live passando sem alteração.</li>
+  <li>Novo risco: o live passar a baixar o código da demonstração.</li>
+  </ul></li>
+<li><strong>v1.4 · 11/11/2026</strong> — A sinergia com o live sai do plano, a pedido. O foco volta a ser só adequar o Demo ao app: os ajustes voltam ao texto da v1.2, e o A-12 passa a seguir a regra do app.</li>
+<li><strong>v1.3 · 11/11/2026</strong> — O Demo passa a seguir os mecanismos do live, sem alterar nada nele.
+  <ul class="plain">
+  <li>Nova tabela "Sinergia com o live" na seção 05.</li>
+  <li>A-12 usa a matriz de perfis com os módulos que já existem; a v1.2 dizia, errado, que o Demo não recorta por perfil.</li>
+  <li>A-08 põe as rotas novas sob prefixos que o live já deixa de fora.</li>
+  <li>A-09 e A-10 usam o tipo do detalhe e as colunas sem fonte do live.</li>
+  <li>A-04 e A-06 usam os campos do certificado e o selo "Em breve" do live.</li>
+  </ul></li>
+<li><strong>v1.2 · 11/11/2026</strong> — Escopo fechado: só o frontend, no modo Demo, e nada no modo live nem no backend.
+  <ul class="plain">
+  <li>A-08, A-09 e A-10 agora deixam as novidades só no Demo.</li>
+  <li>A-12 não prepara mais o recorte por perfil para o live.</li>
+  <li>A Onda 1 termina com o live idêntico ao de hoje.</li>
+  <li>A Onda 4 não fecha mais o live.</li>
+  <li>Os riscos foram revistos.</li>
+  </ul></li>
+<li><strong>v1.1 · 11/11/2026</strong> — As sete decisões foram tomadas:
+  <ul class="plain">
+  <li>captura frente por frente (D-DM-01 B), com a tabela de commits por frente na seção 06;</li>
+  <li>a parcialidade primeiro (D-DM-02 A);</li>
+  <li>o backend com prioridade e o Demo sem data (D-DM-07);</li>
+  <li>os ajustes A-03 a A-06 aprovados.</li>
+  </ul>
+  As ondas passam a mostrar esforço, não prazo.</li>
+<li><strong>v1.0 · 11/11/2026</strong> — Diff tela a tela, cinco frentes, 14 ajustes, plano em cinco ondas e sete decisões.</li>
+</ul>
+</div>
+
+<div class="foot">Demo do tax-rs × app do SplitHub · v1.5 · 11/11/2026</div>
+</div>
+</body>
+</html>

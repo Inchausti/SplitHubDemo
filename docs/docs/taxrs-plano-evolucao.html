@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protótipo → tax-rs · SplitHub v1.0</title>
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 780px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.meta-fim { margin-left: auto; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.callout.red { border-color: var(--red); background: var(--red-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 9px 13px; border-bottom: 1px solid var(--brd); vertical-align: top; color: var(--txt2); background: var(--sur); }
+td strong { color: var(--txt1); }
+tbody tr:last-child td { border-bottom: none; }
+td.grp { background: var(--sur2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); }
+code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--mono); padding: 1px 5px; border-radius: 4px; color: var(--txt1); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 14px 0 18px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+.kpi { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; }
+.kpi-v { font-size: 22px; font-weight: 800; color: var(--txt1); line-height: 1.2; }
+.kpi-l { font-size: 11.5px; color: var(--txt3); }
+.ondas { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 14px 0; }
+@media (max-width: 760px) { .ondas { grid-template-columns: 1fr; } }
+.onda { background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 8px; padding: 14px 16px; }
+.onda.crit { border-left-color: var(--red); }
+.onda.dep { border-left-color: var(--gray); }
+.onda-h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; margin-bottom: 6px; }
+.onda-n { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.onda.crit .onda-n { color: var(--red); }
+.onda-t { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.onda-q { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.onda ul.plain { margin-left: 16px; }
+.onda ul.plain li { font-size: 12.5px; }
+.onda .pronto { font-size: 12px; color: var(--txt2); border-top: 1px dashed var(--brd); margin-top: 8px; padding-top: 8px; }
+.foot { margin-top: 40px; font-size: 11px; color: var(--txt3); text-align: center; }
+.back { display: inline-block; font-size: 12px; color: var(--txt3); text-decoration: none; margin-bottom: 18px; }
+.back:hover { color: var(--txt1); }
+</style>
+</head>
+<body>
+<div class="doc">
+<a class="back" href="prds.html#sec-taxrs">← Hub de PRDs</a>
+<div class="eyebrow">tax-rs · Engenharia e produto</div>
+<h1>Protótipo → tax-rs: o gap e o plano para evoluir direto na ferramenta</h1>
+<p class="subtitle">O tax-rs nasceu do protótipo e dos PRDs em 10 e 11/10/2026. Desde então o protótipo ganhou 16 commits de produto, e os PRDs, novas versões. Este documento mede a distância entre os dois, módulo a módulo, e propõe a sequência para fechar o gap. O objetivo é que, ao final, o protótipo congele e toda a evolução aconteça no tax-rs.</p>
+<div class="meta-bar"><span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.0</span></span><span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">30/10/2026</span></span><span class="meta-pill"><span class="meta-label">Protótipo</span><span class="meta-val">master 6db2298</span></span><span class="meta-pill"><span class="meta-label">tax-rs</span><span class="meta-val">main 150fc33 (23/10)</span></span><span class="meta-pill meta-fim"><span class="chip warn">Em decisão</span></span></div>
+<div class="toc"><div class="toc-title">Conteúdo</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span>O essencial</a></li>
+<li><a href="#s02"><span class="toc-num">02</span>O que é o tax-rs hoje</a></li>
+<li><a href="#s03"><span class="toc-num">03</span>Os PRDs vigentes e o gap por módulo</a></li>
+<li><a href="#s04"><span class="toc-num">04</span>O que o protótipo ganhou depois da captura</a></li>
+<li><a href="#s05"><span class="toc-num">05</span>Regras decididas que o backend precisa absorver</a></li>
+<li><a href="#s06"><span class="toc-num">06</span>Divergências e pendências do próprio tax-rs</a></li>
+<li><a href="#s07"><span class="toc-num">07</span>O plano em ondas</a></li>
+<li><a href="#s08"><span class="toc-num">08</span>Como o desenvolvimento passa a acontecer</a></li>
+<li><a href="#s09"><span class="toc-num">09</span>Decisões para começar</a></li>
+<li><a href="#s10"><span class="toc-num">10</span>Fontes e método</a></li>
+</ul></div>
+
+<!-- 01 -->
+<div class="section" id="s01"><div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O essencial</span></div>
+<div class="kpis">
+<div class="kpi"><div class="kpi-v">4 de 19</div><div class="kpi-l">módulos com backend real no tax-rs (Crédito, Conciliação, Inconsistências e o núcleo do Início)</div></div>
+<div class="kpi"><div class="kpi-v">16</div><div class="kpi-l">commits de produto no protótipo depois da captura, em 6 blocos</div></div>
+<div class="kpi"><div class="kpi-v">74</div><div class="kpi-l">commits na branch <code>port/go</code>, que reescreve o backend em Go e não está no <code>main</code></div></div>
+<div class="kpi"><div class="kpi-v">1</div><div class="kpi-l">pessoa responsável pelos 208 commits do tax-rs</div></div>
+</div>
+<ul class="plain">
+<li><strong>A base é boa.</strong> O tax-rs tem arquitetura de serviços com banco próprio: ledger, conciliação, inconsistências, cadastro e plataforma. Tem também um barramento <code>/v1</code> completo para os ERPs, com documentos, lotes, arquivos, fornecedores, contratos, RAD e webhooks. Os testes comparam as telas com capturas do protótipo. O modo de demonstração reproduz o protótipo de 10/10 inteiro.</li>
+<li><strong>O gap tem três camadas:</strong>
+<ul class="plain">
+<li>o que o protótipo ganhou depois de 10/10 e o tax-rs não tem nem em demonstração: parcialidade, gestão de usuários, PCONT, menu agrupado;</li>
+<li>o que o tax-rs tem só em demonstração, sem backend: Pagamentos, Execução RAD, Ressarcimento, Analytics, Organização, Portal do Fornecedor e as telas de configuração;</li>
+<li>o que impede produção: provedor de identidade, conectores reais da Receita Federal e do Comitê Gestor, e endurecimento.</li>
+</ul></li>
+<li><strong>Há uma decisão antes de tudo.</strong> A branch <code>port/go</code> chegou à paridade com o backend em TypeScript em 17/10, mas o <code>main</code> seguiu em TypeScript depois disso. Evoluir sobre dois backends é o maior risco do plano.</li>
+<li><strong>O plano proposto tem seis ondas</strong>, ver a seção 07. A Onda 0 decide e congela. A Onda 1 fecha a paridade com o protótipo atual. As Ondas 2 e 3 correm em paralelo, com os entes e a identidade no caminho crítico de jan/2027. A Onda 5 leva à produção. Depois disso, o roadmap de 12 meses acontece direto no tax-rs.</li>
+</ul>
+<div class="callout warn"><div class="ct">O calendário é apertado</div><p>A Reforma começa a cobrar em jan/2027. Para um cliente operar em produção nessa data, o tax-rs precisa ter, no mínimo, os quatro menus centrais e o Débito com dados reais, o conector da CBS e o login real. Com uma pessoa só no desenvolvimento, as Ondas 2 e 3 não cabem em paralelo: reforçar o time é parte do plano (D-TX-08).</p></div>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s02"><div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O que é o tax-rs hoje</span></div>
+<div class="table-wrap"><table><thead><tr><th>Camada</th><th>O que existe</th><th>Situação</th></tr></thead><tbody>
+<tr><td><strong>Backend</strong></td><td>Encore.ts, um app com serviços de banco próprio:
+<ul class="plain">
+<li><code>ledger</code>: documentos e registros fiscais, ciclo de crédito e débito, motor do art. 53, ficha de glosa, assunção de RAD, histórico;</li>
+<li><code>tax-authority</code>: fatos dos entes atrás de uma porta única, hoje simulados;</li>
+<li><code>reconciliation</code>: CAPUR e CFIN;</li>
+<li><code>inconsistencies</code>: 21 tipos, detecção e workflow;</li>
+<li><code>platform</code>: clientes e modo dos dados;</li>
+<li><code>registry</code>: fornecedores e contratos.</li>
+</ul></td><td><span class="chip teal">etapas 0 a 8 concluídas</span><br>Próxima: endurecimento</td></tr>
+<tr><td><strong>Barramento</strong></td><td><code>/v1</code> com OAuth2. Documentos fiscais (um, em lote, por arquivo), ingestões, fornecedores e representantes, contratos, créditos, débitos, guias e comprovantes RAD, webhooks com entregas e reenvio. Eventos <code>credit.*</code>, <code>debit.*</code> e <code>rad.*</code>. Collections do Postman e do Bruno.</td><td><span class="chip teal">pronto</span><br>Cadastros e RAD ainda no sandbox</td></tr>
+<tr><td><strong>Frontend</strong></td><td>React 19 e Vite. Dois modos: <strong>demonstração</strong>, um port em TypeScript do motor do protótipo, e <strong>live</strong>, que lê o backend. Área de administração da plataforma.</td><td><span class="chip warn">live em 4 menus</span><br>Os demais aparecem como "Em breve" para cliente real</td></tr>
+<tr><td><strong>Qualidade</strong></td><td>134 arquivos de teste: unitários, integração e e2e. Testes golden contra capturas do protótipo.</td><td><span class="chip warn">CI desligado</span><br>Só manual; integração pulada no Encore</td></tr>
+<tr><td><strong>Processo</strong></td><td>OpenSpec (<code>/opsx:propose</code>, <code>apply</code>, <code>archive</code>), skills do Encore no Claude Code, ADRs locais (fora do git).</td><td><span class="chip gray">sem specs ativas</span></td></tr>
+<tr><td><strong>Branches fora do main</strong></td><td><code>port/go</code> (74 commits, até 19/10), <code>feat/api-collections</code> (29), <code>feat/registry-screens</code> (5), <code>feat/admin-mcp</code> (1)</td><td><span class="chip red">decidir</span></td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s03"><div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Os PRDs vigentes e o gap por módulo</span></div>
+<p>Uma linha para cada PRD vigente do hub. Legenda da coluna tax-rs: <span class="chip teal">live</span> tem backend e roda com dados reais; <span class="chip warn">parcial</span> roda live com falhas; <span class="chip gray">demo</span> só em demonstração; <span class="chip red">ausente</span> não existe nem em demonstração.</p>
+<div class="table-wrap"><table><thead><tr><th>Módulo · PRD</th><th>No protótipo</th><th>No tax-rs</th><th>O que falta</th></tr></thead><tbody>
+<tr><td colspan="4" class="grp">Ciclo do crédito e do débito</td></tr>
+<tr><td><strong>Crédito</strong> · v3.3</td><td>Completo, com a parcialidade (lotes 1 a 3), detalhe do RF na opção B, histórico com pontos de atenção e aba de apuração assistida</td><td><span class="chip warn">parcial</span> ciclo, flags, glosa, RAD e histórico no ledger; estados parciais já no modelo</td><td>O que a parcialidade trouxe: glosa com valor, RAD do saldo, tabela de movimentos compacta (T-01 a T-03), aproveitamento em valor, detalhe B, aba de apuração assistida, ficha de glosa que recomenda</td></tr>
+<tr><td><strong>Débito</strong> · v1.6.1</td><td>Completo, com a partição do débito por meio e o CSV completo</td><td><span class="chip warn">parcial</span> backend pronto; menu "Em breve" para cliente real</td><td>Liberar no live; partição do débito; CSV</td></tr>
+<tr><td><strong>Conciliação</strong> · v3.7</td><td>Completo, com conciliação por parcela</td><td><span class="chip teal">live</span> CAPUR e CFIN, DF sem registro, registro sem DF</td><td>Conciliação por parcela</td></tr>
+<tr><td><strong>Inconsistências</strong> · v1.4</td><td>Completo; evento fiscal e nota de ajuste como ação, em avaliação (AV-EV)</td><td><span class="chip teal">live</span> 21 tipos, famílias A a F, kanban e workflow</td><td>AV-EV quando aprovado; grupos e SLA quando a proposta v2.0 for decidida</td></tr>
+<tr><td><strong>Classificação de fato gerador</strong> · v1.0</td><td>Completo</td><td><span class="chip gray">demo</span> só na tela; sem regra no backend</td><td>Regra no ledger</td></tr>
+<tr><td><strong>Ressarcimento</strong> · v1.4.1</td><td>Completo</td><td><span class="chip gray">demo</span> oculto para cliente real; só a reserva no motor do art. 53</td><td>Intenções, pedidos, decisão e recebimento</td></tr>
+<tr><td colspan="4" class="grp">Recolhimento e apuração</td></tr>
+<tr><td><strong>PCONT</strong> · v1.2</td><td>No app desde 29/10, com painel executivo, empresa do grupo e auditoria</td><td><span class="chip red">ausente</span> a tela "Apuração" do tax-rs é a aba que o PCONT aposentou</td><td>Construir o módulo; a emissão por API depende do DARF da CBS (fim de nov/2026) e do documento de arrecadação do IBS (sem data)</td></tr>
+<tr><td><strong>Apuração IBS/CBS</strong> · v1.5</td><td>Aposentada, substituída pelo PCONT</td><td><span class="chip gray">demo</span></td><td>Retirar quando o PCONT entrar</td></tr>
+<tr><td><strong>Pagamentos</strong> · v2.12</td><td>Completo</td><td><span class="chip gray">demo</span> guias e comprovantes no sandbox do barramento</td><td>Guias, comprovantes, CNAB 240 (aprovado), regras de RAD (excesso e devolução)</td></tr>
+<tr><td><strong>Execução RAD</strong> · v1.8</td><td>Completo</td><td><span class="chip gray">demo</span> assunção de RAD no ledger</td><td>Políticas, janela e execução programada</td></tr>
+<tr><td colspan="4" class="grp">Cadeia e cadastro</td></tr>
+<tr><td><strong>Fornecedor</strong> · v2.6</td><td>Completo</td><td><span class="chip warn">parcial</span> serviço <code>registry</code> feito sobre a v2.6; telas live numa branch fora do main</td><td>Merge das telas; aba Acessos; importação CSV; confirmar a fórmula do score</td></tr>
+<tr><td><strong>Contratos</strong> · v2.9</td><td>Completo</td><td><span class="chip warn">parcial</span> <code>registry</code> sobre a v2.9; telas live pendentes</td><td>Telas live; editar e inativar pela tela; ligar o <code>/v1</code> ao serviço</td></tr>
+<tr><td><strong>Portal do Fornecedor</strong> · v1.1</td><td>Completo</td><td><span class="chip gray">demo</span></td><td>Backend e acesso do fornecedor</td></tr>
+<tr><td><strong>Organização</strong> · v2.5</td><td>Completo; gestão de usuários com as decisões D-USR (convite, cinco perfis, escopo por CNPJ, último administrador)</td><td><span class="chip gray">demo</span> CNPJs vêm do admin; tela de usuários anterior às D-USR; login de desenvolvimento</td><td>Provedor de identidade; gestão de usuários D-USR; trilha individual</td></tr>
+<tr><td colspan="4" class="grp">Integração e operação</td></tr>
+<tr><td><strong>Integrações</strong> · v2.3</td><td>Completo</td><td><span class="chip warn">parcial</span> o barramento atende; a tela é demonstração</td><td>Tela live; conferir o envio de arquivo (proposta aprovada, v1.3)</td></tr>
+<tr><td><strong>Importação de DFs</strong> · v2.3</td><td>Completo</td><td><span class="chip warn">parcial</span> o barramento recebe arquivo por API; a tela é demonstração</td><td>Tela live</td></tr>
+<tr><td><strong>Automações</strong> · v1.4</td><td>Completo</td><td><span class="chip gray">demo</span></td><td>Backend da régua de envio</td></tr>
+<tr><td><strong>Analytics</strong> · v1.5.1</td><td>Completo; Assistente Tributário em versão de avaliação</td><td><span class="chip gray">demo</span></td><td>Backend dos indicadores</td></tr>
+<tr><td><strong>Início</strong> · v1.4</td><td>Completo</td><td><span class="chip warn">parcial</span> cards de Débito, Pagamentos, Alíquota efetiva e Inteligência desfocados para cliente real</td><td>Voltam com os menus de origem; avisos da Inteligência hoje fixos</td></tr>
+<tr><td colspan="4" class="grp">Fora dos PRDs de módulo</td></tr>
+<tr><td><strong>Backoffice</strong> · proposta R-267</td><td>Em avaliação (AV-BO)</td><td><span class="chip teal">live</span> o admin da plataforma já cobre clientes, CNPJs, contratos, fonte dos entes, credenciais e trilha</td><td>Partir do admin do tax-rs; portar só o que o AV-BO tem a mais</td></tr>
+<tr><td><strong>Menu lateral agrupado</strong> · R-271</td><td>No app</td><td><span class="chip red">ausente</span> menu anterior</td><td>Portar</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s04"><div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">O que o protótipo ganhou depois da captura</span></div>
+<p>A captura do tax-rs é de 10 e 11/10. Estes são os commits de produto do protótipo depois disso.</p>
+<div class="table-wrap"><table><thead><tr><th>Quando</th><th>Bloco</th><th>Commits</th><th>Onde mexe no tax-rs</th></tr></thead><tbody>
+<tr><td>22 e 23/10</td><td><strong>Parcialidade do crédito</strong>, lotes 1 a 3: modelo do RF por valor, movimentos compactos, glosa com valor, RAD do saldo, conciliação por parcela, aproveitamento em valor e partição do débito</td><td><code>c558d49</code> <code>dc5ab42</code> <code>39afa88</code> <code>801ac61</code></td><td>Backend (ledger, conciliação) e frontend</td></tr>
+<tr><td>23/10</td><td><strong>Detalhe do DF e do RF</strong> (opções B e 3), histórico com pontos de atenção, aba de apuração assistida, ficha de glosa que recomenda em vez de abrir o contencioso</td><td><code>0f41d98</code> <code>288eb37</code> <code>93a77cc</code> <code>15461b0</code></td><td>Frontend e histórico do RF</td></tr>
+<tr><td>26/10</td><td><strong>Gestão de usuários</strong> funcional, com escopo por CNPJ e as decisões D-USR</td><td><code>53d75cd</code> <code>5eb24ef</code></td><td>Frontend; o backend depende do provedor de identidade</td></tr>
+<tr><td>26/10</td><td><strong>Débito</strong>: CSV completo, Assistente desabilitado</td><td><code>2ab690f</code></td><td>Frontend</td></tr>
+<tr><td>27/10</td><td><strong>Menu lateral</strong> agrupado em Crédito e Apuração Assistida</td><td><code>de88c6d</code> <code>9657965</code></td><td>Frontend</td></tr>
+<tr><td>29/10</td><td><strong>PCONT</strong>: pagamento do saldo por tributo, painel executivo do grupo e das empresas, auditoria encadeada</td><td><code>831e56b</code> <code>a9e33c1</code> <code>29961e7</code></td><td>Backend novo e frontend; aposenta a Apuração</td></tr>
+</tbody></table></div>
+<h3>O que está em avaliação, aprovado ou em decisão, e não foi construído em lugar nenhum</h3>
+<div class="table-wrap"><table><thead><tr><th>Item</th><th>Situação no hub</th><th>Entra no tax-rs</th></tr></thead><tbody>
+<tr><td>Evento fiscal e nota de ajuste como ação da inconsistência (AV-EV)</td><td>25 de 25 decisões aprovadas; protótipo em avaliação</td><td>Onda 4, depois da aprovação do pacote</td></tr>
+<tr><td>Backoffice (AV-BO) e flags de entrega (AV-00)</td><td>Em avaliação</td><td>O backoffice parte do admin do tax-rs. As flags passam a ser por cliente no <code>platform</code> (D-TX-06).</td></tr>
+<tr><td>Envio de arquivo de documentos fiscais · Comprovante pelo CNAB 240</td><td>Aprovadas</td><td>Arquivo: conferir contra o barramento. CNAB: Onda 3, em Pagamentos.</td></tr>
+<tr><td>Gestão de inconsistências v2.0 (grupos e SLA) · Alertas de competência · Eventos fiscais (API)</td><td>Em decisão</td><td>Roadmap: 1T e 2T/2027</td></tr>
+<tr><td>Módulo DeRE · créditos sem documento fiscal · split com PSPs · ingestão por item</td><td>Propostas; no roadmap de 12 meses</td><td>Onda 6 (1T a 3T/2027)</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s05"><div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Regras decididas que o backend precisa absorver</span></div>
+<p>Decisões de produto tomadas no hub depois da captura, ou que o tax-rs ainda não reflete. São regra de negócio, não tela: entram como especificação na onda indicada.</p>
+<div class="table-wrap"><table><thead><tr><th>Regra</th><th>Origem</th><th>Onda</th></tr></thead><tbody>
+<tr><td>Estado do RF por <strong>valor</strong>, não um rótulo por documento: o mesmo RF pode ter parte apropriada, parte glosada e parte pendente</td><td>Parcialidade, decisões de 22/10 (proposta v1.16)</td><td>1</td></tr>
+<tr><td>Art. 54 pela <strong>apropriação</strong>, e não pelo fato gerador</td><td>Revisão de 22/10 das decisões da API</td><td>1</td></tr>
+<tr><td>RAD: o excedente vai ao fornecedor em até 3 dias úteis e não há restituição ao adquirente. Na devolução depois do RAD, o fornecedor recebe dinheiro na CBS e crédito no IBS.</td><td>Decreto 12.955/2026 e Resolução CGIBS 6/2026, arts. 36, 57, 485 e 487 (pesquisa de 29/10)</td><td>3</td></tr>
+<tr><td>Evento fiscal: confirmação por tributo, uma ocorrência por tributo por evento, divergência nunca aplica valor sozinha</td><td>Decisões de 30/09 e de 27/10</td><td>4</td></tr>
+<tr><td>Gestão de usuários: cinco perfis, convite de 7 dias, escopo por CNPJ, proteção do último administrador, desativação que encerra sessões</td><td>D-USR, 8 de 8 decididas</td><td>2</td></tr>
+<tr><td>PCONT: não somar CBS e IBS, mas mostrar o desembolso total da competência; fechar e reabrir por tributo; trilha encadeada</td><td>D-PC, módulo aprovado em 29/10</td><td>3</td></tr>
+<tr><td>Primeira versão sem split payment e sem ingestão por item. Os dois entram no roadmap de 12 meses.</td><td>Escopo de 05/10, revisto em 29/10</td><td>6</td></tr>
+<tr><td>Juros e multa do RAD seguem simulados</td><td>Decisão de 11/09</td><td>3</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s06"><div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Divergências e pendências do próprio tax-rs</span></div>
+<div class="table-wrap"><table><thead><tr><th>Ponto</th><th>O que é</th><th>Proposta</th></tr></thead><tbody>
+<tr><td><strong>Dois backends</strong></td><td><code>port/go</code> reescreve o backend em Go, com relatório de paridade de 17/10: 1.115 requisições, 0 diferenças sem explicação. O <code>main</code> recebeu 34 commits em TypeScript depois disso, em 22 e 23/10 (outbox de eventos, limpeza do modo live).</td><td>Decidir na Onda 0 (D-TX-01)</td></tr>
+<tr><td><strong>Padrões C-01 a C-12</strong></td><td>Doze escolhas do ADR 0001 do tax-rs à espera de confirmação de produto: prescrição, vencimento, glosa por RF, unidade de conciliação, estados do kanban, catálogo, apropriação via RAD, filtros de débito, base do período, nomes de eventos, <code>split_payment</code>, vencidos no art. 53</td><td>Uma sessão de produto na Onda 0 (D-TX-05)</td></tr>
+<tr><td><strong>C-12, vencidos no art. 53</strong></td><td>O protótipo tratava como vencidos débitos ainda não vencidos; o backend usa o vencimento real. 8 débitos de IBS de jul/2026 diferem no seed.</td><td>O backend está certo; corrigir o protótipo só se a paridade exigir</td></tr>
+<tr><td><strong><code>split_payment</code> no contrato</strong></td><td>O contrato público tem <code>rad|supplier</code>; internamente existe <code>split_payment</code></td><td>Manter interno e mapear na publicação até o 3T/2027</td></tr>
+<tr><td><strong>Eventos ao ERP</strong></td><td>Falta a alocação do art. 53 em <code>credit.utilized</code> e <code>debit.settled</code>; não há evento quando o ente reverte uma glosa</td><td>Onda 3, com a avaliação da API</td></tr>
+<tr><td><strong>Avaliação da API (hub, v1.10)</strong></td><td>Apontou 9 gaps críticos na proposta do time de 15/10. O barramento atual parece ter resolvido os três essenciais (documento por API, guia RAD, comprovante).</td><td>Reconferir os 35 gaps contra o barramento na Onda 0</td></tr>
+<tr><td><strong>Citações legais nas telas</strong></td><td>O tax-rs tirou de propósito as citações de lei das telas; o protótipo ainda as tem</td><td>Manter como no tax-rs; a lei fica nos PRDs</td></tr>
+<tr><td><strong>Esteira</strong></td><td>CI só manual; testes de integração pulados no Encore; suítes de ingestão e de fatos instáveis; ADRs fora do git</td><td>Onda 0</td></tr>
+<tr><td><strong>Admin</strong></td><td>Desligar cliente é um checklist manual; contratos não se editam pela tela; CNPJ alfanumérico perde as letras na tela; prazo de contrato aceita 0</td><td>Onda 3</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s07"><div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">O plano em ondas</span></div>
+<p>As datas são uma proposta e supõem o time reforçado nas Ondas 2 e 3. A ordem dentro de cada onda segue a priorização do MVP: a faixa M0 vem primeiro.</p>
+<div class="ondas">
+<div class="onda crit"><div class="onda-h"><span class="onda-n">ONDA 0</span><span class="onda-t">Decidir e consolidar</span><span class="onda-q">03/11 a 14/11</span></div>
+<ul class="plain">
+<li>Decidir o backend (D-TX-01) e ficar com um só <code>main</code>.</li>
+<li>Mergear <code>registry-screens</code>, <code>api-collections</code> e <code>admin-mcp</code>, ou descartá-las.</li>
+<li>Religar o CI com os testes de integração e estabilizar as suítes instáveis. Versionar os ADRs.</li>
+<li>Sessão de produto para C-01 a C-12. Reconferir a avaliação da API contra o barramento.</li>
+<li>Escolher o provedor de identidade (D-TX-07).</li>
+<li>Congelar o protótipo (D-TX-02).</li>
+</ul>
+<div class="pronto"><strong>Pronto quando:</strong> um backend, CI verde com integração, decisões D-TX-01 a 07 registradas.</div></div>
+
+<div class="onda"><div class="onda-h"><span class="onda-n">ONDA 1</span><span class="onda-t">Paridade com o protótipo atual</span><span class="onda-q">17/11 a 19/12</span></div>
+<ul class="plain">
+<li>Recapturar o protótipo em <code>6db2298</code> e atualizar as capturas dos testes golden.</li>
+<li>Parcialidade no ledger: RF por valor, glosa com valor, RAD do saldo, aproveitamento em valor, partição do débito, conciliação por parcela.</li>
+<li>Telas: movimentos T-01 a T-03, detalhe do DF e do RF, histórico com pontos de atenção, aba de apuração assistida, ficha de glosa.</li>
+<li>Menu agrupado, CSV do Débito, art. 54 pela apropriação.</li>
+<li>PCONT e gestão de usuários em demonstração, para a tela existir antes do backend.</li>
+</ul>
+<div class="pronto"><strong>Pronto quando:</strong> os testes golden passam contra a captura nova, e não há mais nada no protótipo que falte no tax-rs.</div></div>
+
+<div class="onda crit"><div class="onda-h"><span class="onda-n">ONDA 2</span><span class="onda-t">Entes reais e identidade</span><span class="onda-q">03/11 a 31/01 · caminho crítico</span></div>
+<ul class="plain">
+<li><strong>Receita Federal (CBS)</strong> atrás da porta do <code>tax-authority</code>:
+<ul class="plain">
+<li>débitos e créditos, já disponíveis;</li>
+<li>pagamentos e recolhimentos, a partir do início de nov/2026;</li>
+<li>DARF do RAD e do PCONT, anunciados para o fim de nov/2026.</li>
+</ul></li>
+<li><strong>Comitê Gestor (IBS)</strong>: manual da API v1.10, arquivo por webhook, etapas 1 e 2.</li>
+<li><strong>Login real</strong> com perfis e escopo por CNPJ (D-USR), trilha com identidade individual e sessão no Gateway.</li>
+</ul>
+<div class="pronto"><strong>Pronto quando:</strong> um cliente piloto entra com usuário próprio e vê os fatos reais da CBS nos quatro menus centrais.</div></div>
+
+<div class="onda"><div class="onda-h"><span class="onda-n">ONDA 3</span><span class="onda-t">Backend dos menus em demonstração</span><span class="onda-q">01/12 a 27/02</span></div>
+<ul class="plain">
+<li><strong>M0 primeiro:</strong> Débito para cliente real; Pagamentos e Execução RAD (guias, comprovantes, CNAB 240, excesso e devolução); PCONT live; Fornecedores e Contratos live; Organização.</li>
+<li><strong>Depois:</strong> Portal do Fornecedor, Importação de DFs, Integrações e Automações pela tela, Ressarcimento, Analytics, Início completo, Classificação de fato gerador no ledger.</li>
+<li>Eventos ao ERP com a alocação do art. 53; pendências do admin.</li>
+</ul>
+<div class="pronto"><strong>Pronto quando:</strong> nenhum menu do MVP aparece como "Em breve" para cliente real.</div></div>
+
+<div class="onda dep"><div class="onda-h"><span class="onda-n">ONDA 4</span><span class="onda-t">Pacotes e propostas aprovadas</span><span class="onda-q">conforme aprovação</span></div>
+<ul class="plain">
+<li>AV-EV: evento fiscal e nota de ajuste como ação da inconsistência.</li>
+<li>Backoffice sobre o admin do tax-rs.</li>
+<li>Gestão de inconsistências v2.0, assim que a proposta for decidida.</li>
+</ul>
+<div class="pronto"><strong>Pronto quando:</strong> o relatório de avaliação do hub fica vazio, porque o que sobra é especificação nova, e não protótipo.</div></div>
+
+<div class="onda crit"><div class="onda-h"><span class="onda-n">ONDA 5</span><span class="onda-t">Endurecimento e produção</span><span class="onda-q">jan a fev/2027</span></div>
+<ul class="plain">
+<li>Desempenho: listas com 5 mil registros por empresa abaixo de 800 ms, índices conferidos, motor do art. 53 incremental, kanban paginado, teste de carga ponta a ponta.</li>
+<li>LGPD: CPF mascarado, logs revisados, trilha das ações do portal.</li>
+<li>Observabilidade: logs estruturados, alertas de fila e outbox, painel de saúde por cliente.</li>
+<li>Runbook, migração de dados, pentest (escopo no hub), Caderno de Testes da Implantação v2.2 (75 casos) executado no tax-rs.</li>
+</ul>
+<div class="pronto"><strong>Pronto quando:</strong> primeiro cliente em produção.</div></div>
+
+<div class="onda dep"><div class="onda-h"><span class="onda-n">ONDA 6</span><span class="onda-t">Roadmap de 12 meses, direto no tax-rs</span><span class="onda-q">1T a 3T/2027</span></div>
+<ul class="plain">
+<li><strong>1T/2027:</strong> DeRE, alertas de competência, trilha imutável de 5 anos.</li>
+<li><strong>2T/2027:</strong> ingestão por item, matriz de responsabilidade e SLA, API de eventos fiscais, fornecedores em massa.</li>
+<li><strong>3T/2027:</strong> split payment com PSPs, créditos sem documento fiscal, documento de arrecadação do IBS por API, conclusão da apuração da CBS por API.</li>
+</ul>
+<div class="pronto">O mesmo roadmap respondido à Raízen em 29/10.</div></div>
+</div>
+</div>
+
+<!-- 08 -->
+<div class="section" id="s08"><div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Como o desenvolvimento passa a acontecer</span></div>
+<ol class="plain">
+<li><strong>O protótipo congela</strong> ao fim da Onda 0. Ele vira referência de comportamento para a Onda 1. Depois disso, não recebe mais funcionalidade.</li>
+<li><strong>O PRD continua sendo o "o quê".</strong> Fica no hub, versionado, com changelog. Toda mudança de produto começa nele ou numa proposta.</li>
+<li><strong>A OpenSpec é o "como".</strong> Cada evolução vira uma change no tax-rs (<code>/opsx:propose</code> → <code>apply</code> → <code>archive</code>), citando o PRD e a versão. As telas de referência das propostas substituem o protótipo como esboço.</li>
+<li><strong>Avaliar continua possível, agora no tax-rs.</strong> Os pacotes AV-xx viram flags por cliente no serviço <code>platform</code>, ao lado do modo dos dados. Um cliente de demonstração vê a novidade antes; aprovado, a flag liga para todos.</li>
+<li><strong>Pronto</strong> quer dizer:
+<ul class="plain">
+<li>PR com testes unitários, de integração e e2e live;</li>
+<li>CI verde;</li>
+<li>PRD conferido;</li>
+<li>entrada no changelog do hub (R-NNN) apontando o PR.</li>
+</ul></li>
+<li><strong>As skills do hub mudam de régua.</strong> No mapa de funcionalidades, na priorização e no catálogo de inconsistências, "implementado" passa a querer dizer "no tax-rs, com dados reais".</li>
+<li><strong>A paridade com o protótipo acaba na Onda 1.</strong> Os testes golden param de olhar as capturas do protótipo, e os testes do próprio tax-rs passam a ser a referência.</li>
+</ol>
+</div>
+
+<!-- 09 -->
+<div class="section" id="s09"><div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Decisões para começar</span></div>
+<div class="table-wrap"><table><thead><tr><th>Decisão</th><th>Opções</th><th>Recomendação</th></tr></thead><tbody>
+<tr><td><strong>D-TX-01</strong> Backend em Go ou em TypeScript</td><td>Adotar a <code>port/go</code> e portar para ela o que o <code>main</code> recebeu depois de 19/10 · Ficar no TypeScript e arquivar a branch</td><td>Ouvir o desenvolvedor sobre o motivo do port. Sem um ganho claro de custo ou desempenho, ficar no TypeScript: é a mesma linguagem do frontend e o <code>main</code> está à frente. Se for trocar, trocar agora, antes da Onda 1.</td></tr>
+<tr><td><strong>D-TX-02</strong> Quando congelar o protótipo</td><td>Ao fim da Onda 0 · Ao fim da Onda 1 · Já</td><td>Ao fim da Onda 0, depois de decidir o AV-EV e o AV-BO</td></tr>
+<tr><td><strong>D-TX-03</strong> Onde ficam os PRDs</td><td>No hub · Na OpenSpec do tax-rs</td><td>No hub até o go-live; a OpenSpec guarda o técnico</td></tr>
+<tr><td><strong>D-TX-04</strong> Paridade antes dos entes ou em paralelo</td><td>Paralelo · Paridade primeiro</td><td>Em paralelo. Os entes e a identidade estão no caminho crítico de jan/2027.</td></tr>
+<tr><td><strong>D-TX-05</strong> C-01 a C-12</td><td>Sessão de produto · Aceitar o padrão do tax-rs</td><td>Uma sessão na Onda 0</td></tr>
+<tr><td><strong>D-TX-06</strong> Avaliação de funcionalidades</td><td>Flags por cliente no tax-rs · Ambiente de avaliação separado</td><td>Flags por cliente</td></tr>
+<tr><td><strong>D-TX-07</strong> Provedor de identidade</td><td>AWS Cognito com federação SAML/OIDC · Outro</td><td>Cognito, que é o que o questionário de segurança já declara; confirmar com o desenvolvedor</td></tr>
+<tr><td><strong>D-TX-08</strong> Capacidade</td><td>Reforçar o time · Seguir com uma pessoa</td><td>Reforçar para as Ondas 2 e 3. Com uma pessoa, jan/2027 só cabe com o escopo mínimo.</td></tr>
+</tbody></table></div>
+</div>
+
+<!-- 10 -->
+<div class="section" id="s10"><div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Fontes e método</span></div>
+<ul class="plain">
+<li><strong>tax-rs:</strong> <code>main</code> em <code>150fc33</code> (23/10); README, roadmap, <code>frontend/PARIDADE-PROTOTIPO.md</code>, <code>frontend/lib/data/availability.ts</code> (menus "Em breve"), rotas do barramento, branches remotas e o relatório de paridade da <code>port/go</code>.</li>
+<li><strong>Protótipo:</strong> <code>master</code> em <code>6db2298</code> (30/10); log de commits de <code>src/</code> desde 09/10.</li>
+<li><strong>Hub:</strong> versões vigentes dos PRDs, o relatório de avaliação, a avaliação da API (v1.10) e as memórias de decisão de produto.</li>
+<li><strong>Método:</strong>
+<ul class="plain">
+<li>"Live" vem da lista de menus liberados para cliente real no próprio tax-rs.</li>
+<li>"Parcial" marca um menu live em que falta parte do que o PRD vigente descreve.</li>
+<li>A comparação foi feita por leitura de código e documentação, sem rodar o tax-rs. A Onda 1 confirma cada linha com os testes golden.</li>
+</ul></li>
+</ul>
+</div>
+
+<div class="foot">Protótipo → tax-rs v1.0 · 30/10/2026</div>
+</div>
+</body>
+</html>
