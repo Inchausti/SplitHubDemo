@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIS/Cofins na transição para a CBS — Referência · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.meta-chips { margin-left: auto; display: flex; gap: 6px; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tag-n { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; white-space: nowrap; }
+.tag-n.no { background: var(--red-d); color: var(--red); }
+.tag-n.pd { background: var(--amber-d); color: var(--amber); }
+.tag-n.ok { background: var(--green-d); color: var(--green); }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.src { font-size: 11px; color: var(--txt3); }
+
+/* O essencial */
+.ess { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.ess-c { border: 1px solid var(--brd); border-radius: 12px; padding: 12px 14px; background: var(--sur); min-width: 0; }
+.ess-k { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--teal); }
+.ess-t { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 4px 0; }
+.ess-d { font-size: 12.5px; color: var(--txt2); line-height: 1.45; }
+@media (max-width: 1024px) { .ess { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .ess { grid-template-columns: minmax(0, 1fr); } }
+
+/* Passos */
+.steps { list-style: none; counter-reset: passo; display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+.steps li { counter-increment: passo; position: relative; background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 12px 16px 12px 52px; min-width: 0; }
+.steps li::before { content: counter(passo); position: absolute; left: 14px; top: 12px; width: 26px; height: 26px; border-radius: 50%; background: var(--teal-d); color: var(--teal); font: 700 12px/26px 'JetBrains Mono', monospace; text-align: center; }
+.steps .st { font-size: 13.5px; font-weight: 700; color: var(--txt1); margin-bottom: 3px; }
+.steps .sd { font-size: 12.5px; color: var(--txt2); }
+.steps li.later::before { background: var(--amber-d); color: var(--amber); }
+
+.fontes { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.fontes li { font-size: 12.5px; color: var(--txt2); }
+.fontes a { color: var(--blue); }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 0; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  body { padding: 28px 16px 64px; }
+  h1 { font-size: 23px; }
+  .meta-chips { margin-left: 0; }
+  .steps li { padding-left: 46px; }
+  .steps li::before { left: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Referência · Reforma Tributária</div>
+<h1>PIS/Cofins na transição para a CBS: onde ainda aparece e o que as APIs trazem</h1>
+<p class="subtitle">Se as APIs da CBS e do IBS informam alguma coisa sobre o PIS e a Cofins, em que cenários essas contribuições continuam sendo usadas — na convivência de 2026, na extinção e nos créditos que passam para a CBS — e onde está o dado de cada um.</p>
+
+<div class="meta-bar">
+  <div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.0</span></div>
+  <div class="meta-pill"><span class="meta-label">Tipo</span><span class="meta-val">Estudo de referência</span></div>
+  <div class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">17/11/2026</span></div>
+  <div class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">EC 132/2023 · LC 214/2025, arts. 12, 348, 378 a 383</span></div>
+  <div class="meta-chips"><span class="chip teal">Referência</span><span class="chip warn">v1.0</span></div>
+</div>
+
+<div class="callout warn"><div class="ct">Escopo e data da leitura</div><p>Estudo de referência regulatória: não descreve funcionalidade do SplitHub. Leitura feita em 17/11/2026 sobre a EC 132/2023, a LC 214/2025, o comunicado da Receita Federal de junho de 2026 sobre os créditos de PIS/Cofins e a documentação das APIs que o hub já referencia. A extinção em 2027 pode mudar se a PEC de adiamento avançar (seção 06).</p></div>
+
+<nav class="toc">
+  <div class="toc-title">Conteúdo</div>
+  <ul class="toc-list">
+    <li><a href="#s01"><span class="toc-num">01</span>O essencial</a></li>
+    <li><a href="#s02"><span class="toc-num">02</span>O que cada API traz</a></li>
+    <li><a href="#s03"><span class="toc-num">03</span>Cenários em que o PIS/Cofins aparece</a></li>
+    <li><a href="#s04"><span class="toc-num">04</span>Créditos que passam para a CBS</a></li>
+    <li><a href="#s05"><span class="toc-num">05</span>O que isso significa para o SplitHub</a></li>
+    <li><a href="#s06"><span class="toc-num">06</span>Ressalvas e pontos em aberto</a></li>
+    <li><a href="#s07"><span class="toc-num">07</span>Fontes</a></li>
+    <li><a href="#s08"><span class="toc-num">08</span>Histórico</a></li>
+  </ul>
+</nav>
+
+<!-- 01 -->
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O essencial</span></div>
+<div class="ess">
+  <div class="ess-c"><div class="ess-k">As APIs</div><div class="ess-t">Nenhum campo de PIS/Cofins</div><div class="ess-d">A API da CBS só traz valores da CBS; a do IBS, só do IBS. O PIS e a Cofins ficam nas declarações das contribuições e no PER/DCOMP.</div></div>
+  <div class="ess-c"><div class="ess-k">2026</div><div class="ess-t">Convivência</div><div class="ess-d">PIS/Cofins devidos por inteiro. CBS e IBS de teste, com recolhimento dispensado para quem cumpre as obrigações acessórias.</div></div>
+  <div class="ess-c"><div class="ess-k">01/01/2027</div><div class="ess-t">Extinção</div><div class="ess-d">PIS, Cofins e as contribuições de importação deixam de existir; a CBS passa a valer por inteiro.</div></div>
+  <div class="ess-c"><div class="ess-k">Depois de 2027</div><div class="ess-t">Os créditos ficam</div><div class="ess-d">Saldos, devoluções, depreciação e estoque viram uso contra a CBS ou ressarcimento, com prazo de 5 anos.</div></div>
+</div>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O que cada API traz</span></div>
+<p class="sec-sub">As APIs da Reforma tratam dos tributos novos. O PIS e a Cofins continuam no circuito das contribuições: escrituração, declaração de débitos e pedidos de compensação.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Onde</th><th>Quem mantém</th><th>O que traz sobre PIS/Cofins</th></tr></thead>
+<tbody>
+<tr><td><strong>API de Apuração da CBS</strong></td><td>Receita Federal</td><td><span class="tag-n no">Nada</span> Quatro endpoints por documento — débitos, créditos, pagamentos e recolhimentos —, todos só com valores da CBS: débito apurado, suspenso, extinto; crédito apropriado, utilizado, em pedido de ressarcimento, saldo credor. Detalhe em <a class="xref" href="integracao-apis-reforma.html#s02">Referência de APIs da Reforma</a>.</td></tr>
+<tr><td><strong>API de Apuração do IBS</strong></td><td>Comitê Gestor do IBS</td><td><span class="tag-n no">Nada</span> PIS e Cofins são contribuições federais; o Comitê Gestor não participa delas.</td></tr>
+<tr><td><strong>Calculadora de Tributos</strong></td><td>Receita Federal</td><td><span class="tag-n pd">Entrada</span> O cálculo da base do IBS e da CBS recebe os valores de ICMS, PIS e Cofins para tirá-los da base. É dado que se informa, não informação sobre o uso das contribuições.</td></tr>
+<tr><td><strong>Documento fiscal</strong></td><td>SEFAZ e emissor</td><td><span class="tag-n pd">Em 2026</span> A NF-e traz os grupos do PIS e da Cofins e o grupo do IBS e da CBS lado a lado.</td></tr>
+<tr><td><strong>EFD-Contribuições e DCTFWeb</strong></td><td>Receita Federal</td><td><span class="tag-n ok">Sim</span> Débitos e créditos de PIS/Cofins até a competência de dezembro de 2026, inclusive os saldos que passam para a transição.</td></tr>
+<tr><td><strong>PER/DCOMP Web</strong></td><td>Receita Federal</td><td><span class="tag-n ok">Sim</span> Canal anunciado para usar os saldos de PIS/Cofins: compensação com a CBS, ressarcimento ou compensação com outros tributos federais. Puxa os saldos da EFD-Contribuições de dezembro de 2026.</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Ponto em aberto</div><p>Quando um saldo de PIS/Cofins for usado para pagar CBS, o débito da CBS será extinto. A documentação da API da CBS que o hub referencia não diz se essa extinção vai aparecer identificada pela origem — para quem concilia, ela aparece como débito extinto sem pagamento correspondente.</p></div>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Cenários em que o PIS/Cofins aparece</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Cenário</th><th>Quando</th><th>O que acontece</th><th>Base</th></tr></thead>
+<tbody>
+<tr><td><strong>Convivência</strong></td><td>Fatos geradores de 2026</td><td>PIS/Cofins devidos por inteiro. CBS de 0,9% e IBS de 0,1% de teste; recolhimento dispensado para quem cumpre as obrigações acessórias. O que for recolhido de CBS e IBS abate o PIS/Cofins do mesmo período; a sobra compensa outros tributos federais ou é ressarcida em até 60 dias, a pedido. As alíquotas de teste não valem para o Simples Nacional.</td><td class="rid">ADCT, art. 125 · LC 214, art. 348</td></tr>
+<tr><td><strong>Base de cálculo</strong></td><td>2026 a 2032</td><td>ICMS, ISS, PIS e Cofins não entram na base do IBS e da CBS. Para o PIS/Cofins, isso só pesa em 2026, porque eles acabam em 2027.</td><td class="rid">art. 12, § 2º, V</td></tr>
+<tr><td><strong>Extinção</strong></td><td>01/01/2027</td><td>PIS, Cofins, PIS-Importação e Cofins-Importação são extintos; a CBS passa a ser cobrada por inteiro.</td><td class="rid">ADCT, art. 126</td></tr>
+<tr><td><strong>Créditos da transição</strong></td><td>A partir de 2027</td><td>Saldos não usados, devoluções de vendas anteriores, depreciação em curso e estoque passam para a CBS. Detalhe na seção 04.</td><td class="rid">arts. 378 a 383</td></tr>
+<tr><td><strong>Períodos anteriores</strong></td><td>Por cerca de 5 anos</td><td>Fatos geradores até 2026 continuam sujeitos a retificação, fiscalização e prescrição. EFD-Contribuições e DCTFWeb seguem existindo para esses períodos.</td><td class="rid">CTN</td></tr>
+</tbody></table></div>
+
+<h3>Exemplo de 2026</h3>
+<p>Uma empresa com R$ 100.000,00 de PIS/Cofins devidos no mês:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Situação</th><th>CBS e IBS recolhidos</th><th>PIS/Cofins a pagar</th><th>Total que sai do caixa</th></tr></thead>
+<tbody>
+<tr><td><strong>Cumpre as obrigações acessórias</strong> — recolhimento dispensado</td><td class="num">R$ 0,00</td><td class="num">R$ 100.000,00</td><td class="num">R$ 100.000,00</td></tr>
+<tr><td><strong>Recolhe CBS e IBS</strong></td><td class="num">R$ 10.000,00</td><td class="num">R$ 90.000,00</td><td class="num">R$ 100.000,00</td></tr>
+</tbody></table></div>
+<p class="src">Nos dois casos o custo do mês é o mesmo: o que se recolhe de CBS e IBS volta como abatimento do PIS/Cofins.</p>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Créditos que passam para a CBS</span></div>
+<p class="sec-sub">A extinção não apaga o crédito acumulado. A LC 214 dá a cada origem um caminho para a CBS ou para o ressarcimento. A referência <a class="xref" href="creditos-sem-df.html#s02">Créditos sem documento fiscal</a> trata desses créditos como origens sem nota.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Origem</th><th>O que vira</th><th>Como se usa</th><th>Lastro</th><th>Base</th></tr></thead>
+<tbody>
+<tr><td><strong>Saldo de PIS/Cofins não usado</strong></td><td>Continua válido, mantido o prazo</td><td>Compensação com a CBS, mediante pedido de utilização; ou ressarcimento e compensação com outros tributos federais, pelas regras das contribuições</td><td>EFD-Contribuições de dezembro de 2026</td><td class="rid">art. 378</td></tr>
+<tr><td><strong>Devolução, depois de 2027, de venda anterior</strong></td><td>Crédito de CBS igual ao PIS/Cofins que incidiu na venda original</td><td>Só compensa com a CBS; não pode ser ressarcido</td><td>Documento da devolução e a venda original</td><td class="rid">art. 379</td></tr>
+<tr><td><strong>Depreciação em curso</strong></td><td>Os créditos que vinham sendo apropriados por depreciação, amortização ou quota mensal seguem, agora como crédito presumido de CBS</td><td>Apropriação mês a mês, como antes</td><td>Controle do ativo e a escrituração anterior</td><td class="rid">art. 380</td></tr>
+<tr><td><strong>Estoque em 01/01/2027</strong></td><td>Crédito presumido de CBS sobre os bens materiais em estoque, para quem estava no regime cumulativo, entre outras hipóteses</td><td>Contra a CBS</td><td>Inventário na data</td><td class="rid">art. 381</td></tr>
+</tbody></table></div>
+<ul class="plain">
+  <li><span><strong>Ordem de uso.</strong> Os créditos de PIS/Cofins da transição têm preferência sobre os créditos de CBS na compensação <span class="src">(art. 382)</span>.</span></li>
+  <li><span><strong>Prazo.</strong> 5 anos contados do último dia do período em que houve a apropriação — não da emissão de um documento <span class="src">(art. 383)</span>.</span></li>
+  <li><span><strong>Regulamento.</strong> O Decreto 12.955/2026, art. 602, repete o caminho do saldo: compensação com a CBS mediante pedido de utilização, ou ressarcimento e compensação pelas regras das contribuições. Ver <a class="xref" href="ressarcimento-referencia.html#s09">Ressarcimento de IBS e CBS</a>.</span></li>
+</ul>
+<div class="callout warn"><div class="ct">Saldos divergentes</div><p>No comunicado de junho de 2026, a Receita Federal informou que cerca de 12 mil empresas tinham divergências nos saldos, perto de R$ 44 bilhões em créditos, e que elas seriam orientadas a regularizar pela EFD-Contribuições. Como o PER/DCOMP Web puxa o saldo de lá, o que estiver errado na escrituração de dezembro de 2026 chega errado ao pedido.</p></div>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O que isso significa para o SplitHub</span></div>
+<p class="sec-sub">Leitura para o produto, não decisão.</p>
+<ul class="plain">
+  <li><span><strong>Hoje está fora do produto.</strong> O <a class="xref" href="banco-respostas-rfp.html">banco de respostas de RFP</a> registra que os créditos de transição de PIS/Cofins não são tratados, e o <a class="xref" href="prd-ressarcimento.html">PRD de Ressarcimento</a> deixa o PIS/Cofins fora do módulo (RN-RES-10).</span></li>
+  <li><span><strong>A fonte não seria a API da CBS.</strong> Se esses créditos entrarem, o dado vem da EFD-Contribuições e do PER/DCOMP — saldo, pedido e decisão —, não das APIs de apuração.</span></li>
+  <li><span><strong>O produto não tem as regras.</strong> A ordem de uso do art. 382, o prazo do art. 383 e a apropriação em parcelas da depreciação estão listados como regras que não existem no produto em <a class="xref" href="creditos-sem-df.html#s06">Créditos sem documento fiscal</a>.</span></li>
+  <li><span><strong>Conciliação a partir de 2027.</strong> Débito de CBS extinto por saldo de PIS/Cofins não tem pagamento, split nem RAD que o explique. Sem conhecer essa origem, a conciliação não tem como fechar a extinção.</span></li>
+</ul>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Ressalvas e pontos em aberto</span></div>
+<ul class="plain">
+  <li><span><strong>PEC de adiamento.</strong> Uma PEC apresentada em novembro de 2026 propõe levar a CBS plena e a extinção do PIS/Cofins para 2028, com 2027 como mais um ano de teste e a CBS recolhida compensável com o PIS/Cofins. Não foi aprovada, e o governo mantém janeiro de 2027.</span></li>
+  <li><span><strong>Extinção do débito da CBS por saldo de PIS/Cofins.</strong> Não está documentado como aparece na API da CBS (seção 02).</span></li>
+  <li><span><strong>Prazo para o pedido de utilização.</strong> O comunicado da Receita Federal não informa.</span></li>
+  <li><span><strong>PIS sobre a folha.</strong> Fontes indicam que o PIS de 1% sobre a folha das entidades sem fins lucrativos também acaba em 2027; não confirmamos a norma.</span></li>
+  <li><span><strong>Texto consolidado.</strong> A LC 227/2026 alterou dezenas de artigos da LC 214; confira a redação vigente dos arts. 348 e 378 a 383 antes de usá-los numa regra do produto.</span></li>
+</ul>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Fontes</span></div>
+<p class="src">Consultadas em 17/11/2026.</p>
+<ol class="fontes">
+  <li><a href="https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm">Lei Complementar nº 214/2025</a>, arts. 12, 348 e 378 a 383.</li>
+  <li><a href="https://modeloinicial.com.br/lei/LCP-214-2025/lei-complementar-214/art-348">LC 214, art. 348</a> — Modelo Inicial.</li>
+  <li><a href="https://www2.camara.leg.br/legin/fed/decret/2026/decreto-12955-29-abril-2026-799019-publicacaooriginal-179077-pe.html">Decreto nº 12.955/2026</a> — regulamento da CBS, art. 602.</li>
+  <li><a href="https://www.legisweb.com.br/noticia/?id=33581">Receita Federal esclarece o uso de créditos de PIS/Cofins na transição para a CBS</a> — Legisweb, 03/06/2026.</li>
+  <li><a href="https://docs.receitafederal.gov.br/apuracao-cbs/">APIs de Apuração da CBS</a> — Receita Federal.</li>
+  <li><a href="https://consumo.tributos.gov.br/servico/calcular-tributos-consumo/calculadora/documentacao">Calculadora de Tributos — documentação</a> — Receita Federal.</li>
+  <li><a href="https://www.taxgroup.com.br/intelligence/compensacao-cbs-ibs-pis-cofins/">Compensação de CBS e IBS com PIS/Cofins</a> — TaxGroup.</li>
+  <li><a href="https://juridicocerto.com/p/thiago-reis2/artigos/nao-recolher-ibs-e-cbs-em-2026-depende-de-que-a-condicao-do-art-348-8001">A condição do art. 348</a> — Jurídico Certo.</li>
+  <li><a href="https://www.contabeis.com.br/noticias/80896/minuta-propoe-adiar-cobranca-da-cbs-para-2028/">Minuta propõe adiar a cobrança da CBS para 2028</a> — Contábeis.</li>
+  <li><a href="https://exame.com/economia/reforma-tributaria-pode-ser-adiada-veja-quem-defende-a-mudanca-e-o-que-diz-o-governo/">Reforma tributária pode ser adiada?</a> — Exame.</li>
+  <li><a href="https://www.ozai.com.br/fim-pis-pasep-folha-2027/">Fim do PIS/Pasep sobre a folha em 2027</a> — Ozai.</li>
+  <li>No hub: <a class="xref" href="creditos-sem-df.html">Créditos sem documento fiscal</a>, <a class="xref" href="ressarcimento-referencia.html">Ressarcimento de IBS e CBS</a> e <a class="xref" href="integracao-apis-reforma.html">Referência de APIs da Reforma</a>.</li>
+</ol>
+</div>
+
+<!-- 08 -->
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Histórico</span></div>
+<div class="ver-row"><span class="ver-num">v1.0</span><span class="ver-desc">17/11/2026 — Primeira versão: o que cada API traz, os cenários de 2026 a 2027, os créditos que passam para a CBS e o que isso significa para o SplitHub.</span></div>
+</div>
+
+</div>
+</body>
+</html>
