@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Destino fiscal no documento fiscal — Referência · SplitHub v1.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.meta-chips { margin-left: auto; display: flex; gap: 6px; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tag-n { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; white-space: nowrap; }
+.tag-n.no { background: var(--red-d); color: var(--red); }
+.tag-n.pd { background: var(--amber-d); color: var(--amber); }
+.tag-n.ok { background: var(--green-d); color: var(--green); }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.src { font-size: 11px; color: var(--txt3); }
+
+/* O essencial */
+.ess { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.ess-c { border: 1px solid var(--brd); border-radius: 12px; padding: 12px 14px; background: var(--sur); min-width: 0; }
+.ess-k { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--teal); }
+.ess-t { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 4px 0; }
+.ess-d { font-size: 12.5px; color: var(--txt2); line-height: 1.45; }
+@media (max-width: 1024px) { .ess { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .ess { grid-template-columns: minmax(0, 1fr); } }
+
+/* Passos */
+.steps { list-style: none; counter-reset: passo; display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+.steps li { counter-increment: passo; position: relative; background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; padding: 12px 16px 12px 52px; min-width: 0; }
+.steps li::before { content: counter(passo); position: absolute; left: 14px; top: 12px; width: 26px; height: 26px; border-radius: 50%; background: var(--teal-d); color: var(--teal); font: 700 12px/26px 'JetBrains Mono', monospace; text-align: center; }
+.steps .st { font-size: 13.5px; font-weight: 700; color: var(--txt1); margin-bottom: 3px; }
+.steps .sd { font-size: 12.5px; color: var(--txt2); }
+.steps li.later::before { background: var(--amber-d); color: var(--amber); }
+
+.fontes { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.fontes li { font-size: 12.5px; color: var(--txt2); }
+.fontes a { color: var(--blue); }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 0; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  body { padding: 28px 16px 64px; }
+  h1 { font-size: 23px; }
+  .meta-chips { margin-left: 0; }
+  .steps li { padding-left: 46px; }
+  .steps li::before { left: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Referência · Reforma Tributária</div>
+<h1>Destino fiscal no documento fiscal: o que valida hoje e como validar</h1>
+<p class="subtitle">Se existe alguma API que confira o destino do IBS e da CBS num documento fiscal, o que as regras de autorização conferem de fato, qual é a regra do local da operação e como conferir, campo a campo, se o destino de um DF está certo.</p>
+
+<div class="meta-bar">
+  <div class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.0</span></div>
+  <div class="meta-pill"><span class="meta-label">Tipo</span><span class="meta-val">Estudo de referência</span></div>
+  <div class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">17/11/2026</span></div>
+  <div class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">LC 214/2025, art. 11 · NT 2025.002-RTC</span></div>
+  <div class="meta-chips"><span class="chip teal">Referência</span><span class="chip warn">v1.0</span></div>
+</div>
+
+<div class="callout warn"><div class="ct">Escopo e data da leitura</div><p>Estudo de referência regulatória: não descreve funcionalidade do SplitHub. Leitura feita em 17/11/2026 sobre a LC 214/2025 com as alterações da LC 227/2026, a NT 2025.002-RTC e as regras de validação publicadas no MOC. Os números de regra e de rejeição mudam entre versões da NT: confira a versão em vigor antes de usar um código daqui numa regra do produto.</p></div>
+
+<nav class="toc">
+  <div class="toc-title">Conteúdo</div>
+  <ul class="toc-list">
+    <li><a href="#s01"><span class="toc-num">01</span>O essencial</a></li>
+    <li><a href="#s02"><span class="toc-num">02</span>O que existe hoje para validar</a></li>
+    <li><a href="#s03"><span class="toc-num">03</span>A regra: o local da operação</a></li>
+    <li><a href="#s04"><span class="toc-num">04</span>Como validar o destino de um DF</a></li>
+    <li><a href="#s05"><span class="toc-num">05</span>Quando o destino errado custa</a></li>
+    <li><a href="#s06"><span class="toc-num">06</span>O que isso significa para o SplitHub</a></li>
+    <li><a href="#s07"><span class="toc-num">07</span>Ressalvas e pontos em aberto</a></li>
+    <li><a href="#s08"><span class="toc-num">08</span>Fontes</a></li>
+    <li><a href="#s09"><span class="toc-num">09</span>Histórico</a></li>
+  </ul>
+</nav>
+
+<!-- 01 -->
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O essencial</span></div>
+<div class="ess">
+  <div class="ess-c"><div class="ess-k">Resposta curta</div><div class="ess-t">Nenhuma API confere o destino</div><div class="ess-d">Não há hoje serviço público que diga se o destino informado num DF é o destino correto da operação.</div></div>
+  <div class="ess-c"><div class="ess-k">O que existe</div><div class="ess-t">Validações de forma</div><div class="ess-d">A autorização da SEFAZ confere se o código do município existe, se o campo veio quando devia e se a alíquota é a do ano.</div></div>
+  <div class="ess-c"><div class="ess-k">A regra</div><div class="ess-t">Art. 11 da LC 214</div><div class="ess-d">O destino é o local da operação, e ele depende do que se vende: entrega do bem, local da prestação, domicílio do adquirente.</div></div>
+  <div class="ess-c"><div class="ess-k">Quando pesa</div><div class="ess-t">A partir de 2029</div><div class="ess-d">Até 2028 a alíquota de teste é igual em todo ente e o destino só decide quem recebe o IBS. Depois, destino errado é alíquota errada no destaque.</div></div>
+</div>
+<p>Validar o destino, portanto, é trabalho de quem recebe o DF: identificar a regra que vale para a operação, achar no documento o campo que carrega o local e comparar o município que ele indica com o município que a regra manda usar.</p>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O que existe hoje para validar</span></div>
+<p class="sec-sub">Duas frentes: as regras de rejeição na autorização da NF-e e da NFC-e, e os serviços que a Receita Federal e a NFS-e Nacional oferecem. Nenhuma das duas compara o destino informado com o destino que a lei manda usar.</p>
+
+<h3>Regras de autorização da NF-e e da NFC-e (SEFAZ)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Regra</th><th>Rejeição</th><th>O que confere</th><th>Confere o destino?</th></tr></thead>
+<tbody>
+<tr><td class="rid">B12-10</td><td>270</td><td>O <code>cMunFG</code> existe na tabela de municípios do IBGE.</td><td><span class="tag-n no">Não</span> Só a existência do código.</td></tr>
+<tr><td class="rid">B12-20</td><td>271</td><td>A UF do <code>cMunFG</code> é a mesma do emitente.</td><td><span class="tag-n no">Não</span> Confere o fato gerador contra o emitente, não contra o destino.</td></tr>
+<tr><td class="rid">B25b-60</td><td>1000</td><td>NFC-e: <code>cMunFGIBS</code> informado com <code>indPres</code> diferente de 5 (venda fora do estabelecimento).</td><td><span class="tag-n no">Não</span> Confere quando o campo pode vir.</td></tr>
+<tr><td class="rid">B25b-70</td><td>1005</td><td>NFC-e com <code>indPres</code> = 5 sem o <code>cMunFGIBS</code>.</td><td><span class="tag-n no">Não</span> Exige o campo, não confere o município.</td></tr>
+<tr><td class="rid">B25d-10</td><td>1099</td><td><code>cIndOp</code> não é permitido na NFC-e.</td><td><span class="tag-n no">Não</span></td></tr>
+<tr><td class="rid">B25d-20</td><td>1102</td><td><code>cIndOp</code> com código que a tabela <em>Código Indicador de Local da Operação</em> não permite na NF-e.</td><td><span class="tag-n no">Não</span> Confere o código contra a tabela.</td></tr>
+<tr><td class="rid">B25d-30</td><td>1110</td><td><code>cIndOp</code> 010104 ou 010105 exige o grupo <code>retirada</code>.</td><td><span class="tag-n pd">Parcial</span> Exige o endereço, não confere se ele é o destino certo.</td></tr>
+<tr><td class="rid">UB18-10</td><td>1026</td><td><code>pIBSUF</code> igual à alíquota do ano: 0,1% em 2026, 0,05% em 2027 e 2028; depois, a de referência ou a específica.</td><td><span class="tag-n no">Não</span> Até 2028 compara com o ano, e a alíquota de teste é a mesma em todo ente.</td></tr>
+<tr><td class="rid">UB37-10</td><td>1036</td><td><code>pIBSMun</code> igual à alíquota do ano: zero em 2026, 0,05% em 2027 e 2028; depois, a de referência.</td><td><span class="tag-n no">Não</span> Mesma lógica da regra anterior.</td></tr>
+</tbody></table></div>
+<p class="src">As duas regras de alíquota têm exceções por <code>cClassTrib</code> e não se aplicam à NF-e de finalidade 4 nem às notas de crédito dos tipos 03, 04 e 06. Fonte: MOC das regras de validação e NT 2025.002-RTC.</p>
+
+<h3>Serviços e APIs</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Serviço</th><th>Quem mantém</th><th>O que faz com o destino</th></tr></thead>
+<tbody>
+<tr><td><strong>Calculadora de Tributos</strong></td><td>Receita Federal</td><td>Roda no ambiente de quem usa. Recebe o município e a UF e devolve as alíquotas; aceita o município que receber, sem conferir se é o destino da operação. Detalhe em <a class="xref" href="integracao-apis-reforma.html">Referência de APIs da Reforma</a>.</td></tr>
+<tr><td><strong>Conformidade Fácil</strong></td><td>Receita Federal</td><td>Tabelas de CST e <code>cClassTrib</code>. Trata da classificação da operação, não do local.</td></tr>
+<tr><td><strong>NFS-e Nacional</strong></td><td>Sefin Nacional</td><td>A nota traz um município de incidência do IBS e da CBS separado do município de incidência do ISS. Não verificamos se a autorização confere esse campo contra a regra do art. 11.</td></tr>
+<tr><td><strong>Consultas de cadastro</strong></td><td>SEFAZ e Receita Federal</td><td>Devolvem o endereço cadastrado de um CNPJ. Ajudam a conferir o domicílio do adquirente (seção 03, inciso X), mas não dizem qual é o destino.</td></tr>
+</tbody></table></div>
+
+<div class="callout info"><div class="ct">Por que não existe a validação</div><p>O destino depende do que se vende e de onde se entrega ou se presta — informação que a SEFAZ não tem no momento da autorização. O documento declara o local; quem o autoriza só consegue conferir se a declaração é bem formada.</p></div>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">A regra: o local da operação</span></div>
+<p class="sec-sub">O art. 11 da LC 214/2025 define o local da operação, e o art. 15 manda usar esse local como destino: a alíquota do IBS é a soma da alíquota do Estado e da do Município de destino — ou a do Distrito Federal, quando o destino é lá. O crédito do adquirente nasce do valor destacado com essa alíquota.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Inciso</th><th>Operação</th><th>Local da operação</th><th>Onde está no DF</th></tr></thead>
+<tbody>
+<tr><td class="rid">I</td><td><strong>Bem móvel material</strong></td><td>Entrega ou disponibilização ao destinatário. Na venda não presencial, o destino final indicado pelo adquirente; em veículo automotor, o domicílio do destinatário (§ 1º).</td><td>NF-e: grupo <code>entrega</code> quando houver; sem ele, <code>enderDest</code>. Venda no balcão: o município do estabelecimento. NFC-e fora do estabelecimento: <code>cMunFGIBS</code>. Retirada em outro local: <code>cIndOp</code> com o grupo <code>retirada</code>.</td></tr>
+<tr><td class="rid">II</td><td><strong>Bem imóvel</strong> e serviços ligados a ele</td><td>Onde o imóvel está. Em mais de um município, o de maior área (§ 2º).</td><td>NFS-e: município de incidência do IBS e da CBS.</td></tr>
+<tr><td class="rid">III</td><td><strong>Serviço sobre pessoa física</strong> ou fruído presencialmente</td><td>Local da prestação. Prestado à distância, ainda que em parte, segue o inciso X (§ 5º).</td><td>NFS-e: município de incidência do IBS e da CBS.</td></tr>
+<tr><td class="rid">IV</td><td><strong>Feiras, congressos, espetáculos</strong> e similares</td><td>Local do evento.</td><td>NFS-e: município de incidência do IBS e da CBS.</td></tr>
+<tr><td class="rid">V</td><td><strong>Serviço físico sobre bem móvel</strong> e serviços portuários</td><td>Local da prestação.</td><td>NFS-e: município de incidência do IBS e da CBS.</td></tr>
+<tr><td class="rid">VI</td><td><strong>Transporte de passageiros</strong></td><td>Início do transporte.</td><td>Município de início da viagem no documento de transporte.</td></tr>
+<tr><td class="rid">VII</td><td><strong>Transporte de carga</strong></td><td>Local de entrega que consta no documento fiscal.</td><td>CT-e: <code>cMunFim</code>.</td></tr>
+<tr><td class="rid">VIII</td><td><strong>Exploração de via</strong> com cobrança</td><td>Cada Estado e Município, na proporção da extensão explorada.</td><td>Não cabe num campo só: é um rateio.</td></tr>
+<tr><td class="rid">IX</td><td><strong>Telefonia fixa</strong> e comunicação por cabo, fio ou fibra</td><td>Local de instalação do terminal.</td><td>NFCom: endereço de instalação do terminal.</td></tr>
+<tr><td class="rid">X</td><td><strong>Demais bens e serviços</strong>, inclusive bens imateriais</td><td>Na operação onerosa, o domicílio principal do adquirente; na não onerosa, o do destinatário. Redação da LC 227/2026: adquirente não residente no País passa ao destinatário residente.</td><td>NFS-e: tomador, conferido contra o cadastro (§ 3º).</td></tr>
+</tbody></table></div>
+
+<p>O § 3º define o domicílio principal pelo cadastro: na pessoa jurídica, cada estabelecimento; na falta de cadastro, dois critérios não conflitantes escolhidos pelo fornecedor ou o endereço declarado. Água, gás canalizado e energia elétrica para consumo seguem a entrega (§ 7º). A cessão de espaço publicitário segue o inciso X (§ 11).</p>
+<div class="callout warn"><div class="ct">Alterações da LC 227/2026</div><p>Além do inciso X, a LC 227/2026 deu nova redação ao § 4º, II (locação de bem móvel material em aquisição centralizada), ao § 7º, II (energia sem consumo efetivo) e ao § 9º (energia comprada de forma multilateral), e revogou o § 8º. Regimes específicos e pedágio têm regras próprias.</p></div>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Como validar o destino de um DF</span></div>
+<p class="sec-sub">Três passos valem desde já. O quarto passa a valer em 2029, quando a alíquota começa a depender do ente.</p>
+<ol class="steps">
+  <li><div class="st">Identificar o inciso e o campo</div><div class="sd">Pela natureza da operação — modelo do documento, CFOP, <code>cClassTrib</code>, se a venda foi presencial — decidir qual inciso do art. 11 vale e qual campo do DF carrega o local.</div></li>
+  <li><div class="st">Conferir o código</div><div class="sd">O município existe na tabela do IBGE e os dois primeiros dígitos correspondem à UF informada: <code>43</code> é RS, <code>35</code> é SP.</div></li>
+  <li><div class="st">Comparar o esperado com o informado</div><div class="sd">O município que a regra manda usar é o mesmo que o documento indica? O erro mais comum é usar o endereço do destinatário quando a entrega foi em outro lugar, ou o do emitente numa venda não presencial.</div></li>
+  <li class="later"><div class="st">A partir de 2029: conferir as alíquotas</div><div class="sd">Comparar <code>pIBSUF</code> e <code>pIBSMun</code> com as alíquotas do Estado e do Município esperados — por exemplo, rodando a Calculadora de Tributos com o município certo.</div></li>
+</ol>
+
+<h3>Exemplo</h3>
+<p>Venda de bem móvel de R$ 1.000,00 por um fornecedor de São Paulo (<code>cMunFG</code> 3550308) a uma empresa com sede em outro município do RS, com entrega em Porto Alegre (grupo <code>entrega</code>, <code>cMun</code> 4314902). Pelo inciso I, o destino é Porto Alegre, onde o bem foi entregue — não a sede do destinatário, nem São Paulo.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Ano</th><th>Alíquota municipal usada no destaque</th><th>IBS municipal destacado</th><th>Resultado</th></tr></thead>
+<tbody>
+<tr><td><strong>2027</strong></td><td>0,05% — a mesma em todo município</td><td class="num">R$ 0,50</td><td><span class="tag-n ok">Mesmo valor</span> O destino errado só desvia o IBS para outro município.</td></tr>
+<tr><td><strong>2029</strong>, destino certo</td><td>2% — Porto Alegre (hipotética)</td><td class="num">R$ 20,00</td><td><span class="tag-n ok">Correto</span></td></tr>
+<tr><td><strong>2029</strong>, sede do destinatário</td><td>3% — outro município (hipotética)</td><td class="num">R$ 30,00</td><td><span class="tag-n no">Diverge</span> R$ 10,00 a mais no destaque.</td></tr>
+</tbody></table></div>
+<p class="src">Alíquotas de 2029 hipotéticas, escolhidas para o exemplo; as reais serão fixadas por cada ente.</p>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Quando o destino errado custa</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Período</th><th>Efeito no IBS</th><th>Efeito na CBS</th></tr></thead>
+<tbody>
+<tr><td><strong>2026 a 2028</strong></td><td>Alíquota de teste igual em todo ente: o valor não muda, mas o IBS vai para o Estado e o Município errados. É o que a prefeitura confere na rotina C-04 do <a class="xref" href="repasse-ibs-municipios.html#s10">Repasse do IBS aos Municípios</a>.</td><td>Nenhum: a alíquota é uma só e o tributo é da União.</td></tr>
+<tr><td><strong>A partir de 2029</strong></td><td>Alíquota errada no destaque. O crédito do adquirente se apoia no valor destacado e pago, e a diferença vira risco de glosa ou de cobrança.</td><td>Nenhum no regime geral.</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">O risco é do adquirente também</div><p>Quando informação incorreta do adquirente reduz o tributo — por exemplo, um domicílio declarado que leva a uma alíquota menor —, a diferença é exigida dele, com os acréscimos legais (art. 11, § 6º).</p></div>
+<p>Fora do regime geral, o destino também decide benefícios, como os da Zona Franca de Manaus e das Áreas de Livre Comércio. Esses casos ficam fora deste estudo.</p>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s06">
+<div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">O que isso significa para o SplitHub</span></div>
+<p class="sec-sub">Nada aqui é funcionalidade decidida. São os pontos de partida que o estudo deixa para quem for desenhar a regra.</p>
+<ul class="plain">
+  <li><span><strong>O SplitHub já tem o dado que falta à SEFAZ.</strong> No DF de entrada o cliente é o adquirente, e o SplitHub conhece os estabelecimentos dele. Nos incisos I e X, o local esperado é, em regra, um desses estabelecimentos — dá para comparar sem consultar ninguém.</span></li>
+  <li><span><strong>Não há regra de destino no catálogo hoje.</strong> O <a class="xref" href="catalogo-inconsistencias.html">Catálogo de Inconsistências</a> não tem uma regra para destino divergente. Se entrar, ela nasce no catálogo e no PRD de Inconsistências, com o inciso como critério.</span></li>
+  <li><span><strong>Até 2028, o alerta é informativo.</strong> O valor do crédito não muda; o que muda é o ente que recebe. A partir de 2029 o mesmo alerta passa a proteger o crédito.</span></li>
+  <li><span><strong>Os três primeiros passos da seção 04 rodam já.</strong> O quarto depende da tabela de alíquotas por ente, que ainda não existe.</span></li>
+</ul>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s07">
+<div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Ressalvas e pontos em aberto</span></div>
+<ul class="plain">
+  <li><span><strong>Datas das regras de validação.</strong> As regras B25d estavam previstas para produção em 03/08/2026; a v1.51 da NT passou as regras revistas para homologação em 01/09/2026 e produção em 05/10/2026. Confirme no Portal da NF-e se entraram como previsto.</span></li>
+  <li><span><strong>Rejeição por ausência do grupo do IBS e da CBS.</strong> A regra UB12-10 (rejeição 1115) está suspensa, sem data nova.</span></li>
+  <li><span><strong>Regras de alíquota a partir de 2029.</strong> A NT remete à alíquota de referência ou à específica; não encontramos como a autorização vai cruzá-la com o ente de destino.</span></li>
+  <li><span><strong>NFS-e Nacional.</strong> Não verificamos se a Sefin Nacional confere o município de incidência do IBS e da CBS.</span></li>
+  <li><span><strong>Texto consolidado da lei.</strong> A leitura dos incisos é do texto do Planalto com as marcas da LC 227/2026. Regulamento e atos do Comitê Gestor podem detalhar casos que a lei não detalha.</span></li>
+</ul>
+</div>
+
+<!-- 08 -->
+<div class="section" id="s08">
+<div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Fontes</span></div>
+<p class="src">Consultadas em 17/11/2026.</p>
+<ol class="fontes">
+  <li><a href="https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm">Lei Complementar nº 214/2025</a>, arts. 11 e 15, com as alterações da LC 227/2026.</li>
+  <li><a href="https://www.nfe.fazenda.gov.br/portal/exibirArquivo.aspx?conteudo=AKD%2FmuSmiIY%3D">NT 2025.002-RTC</a> — Portal da NF-e.</li>
+  <li><a href="https://moc.sped.fazenda.pr.gov.br/NFe_NFCe/RegrasDeValida%C3%A7%C3%A3o.html">MOC — regras de validação da NF-e e da NFC-e</a> — SEFAZ-PR.</li>
+  <li><a href="http://reformatributaria.ndd.tech/nt-2025-002-altera-regras-de-validacao-do-ibs-e-cbs/">NT 2025.002 altera regras de validação do IBS e da CBS</a> — NDD.</li>
+  <li><a href="https://www.consult.com.br/artigos-e-noticias/nt-2025-002-v1-40-novas-regras-para-nf-e-na-reforma-tributaria/">NT 2025.002 v1.40: novas regras para a NF-e</a> — Consult.</li>
+  <li><a href="https://taxup.com.br/estudo-rejeicao-nfe-ibs-cbs/">Estudo de rejeições da NF-e no IBS e na CBS</a> — TaxUp.</li>
+  <li><a href="https://cnbsp.org.br/2026/05/26/artigo-o-criterio-espacial-do-ibs-e-da-cbs-por-janssen-murayama-e-lucas-almeida-dos-santos/">O critério espacial do IBS e da CBS</a> — CNB/SP.</li>
+  <li><a href="https://actana.com.br/reforma-tributaria-nfse-municipio-incidencia">NFS-e e o município de incidência na Reforma</a> — Actana.</li>
+  <li>No hub: <a class="xref" href="integracao-apis-reforma.html">Referência de APIs da Reforma</a> e <a class="xref" href="repasse-ibs-municipios.html">Repasse do IBS aos Municípios</a>.</li>
+</ol>
+</div>
+
+<!-- 09 -->
+<div class="section" id="s09">
+<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico</span></div>
+<div class="ver-row"><span class="ver-num">v1.0</span><span class="ver-desc">17/11/2026 — Primeira versão: o que valida hoje, a regra do art. 11, como validar e quando o destino errado custa.</span></div>
+</div>
+
+</div>
+</body>
+</html>
