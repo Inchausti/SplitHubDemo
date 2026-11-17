@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caderno do cliente × Live do tax-rs · v1.1</title>
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 800px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.callout.red { border-color: var(--red); background: var(--red-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 9px 13px; border-bottom: 1px solid var(--brd); vertical-align: top; color: var(--txt2); background: var(--sur); }
+td strong { color: var(--txt1); }
+tbody tr:last-child td { border-bottom: none; }
+td.grp { background: var(--sur2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); }
+td.id { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); white-space: nowrap; }
+code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--mono); padding: 1px 5px; border-radius: 4px; color: var(--txt1); overflow-wrap: anywhere; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 14px 0 18px; }
+@media (max-width: 860px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.kpi-v { font-size: 22px; font-weight: 800; color: var(--txt1); line-height: 1.2; }
+.kpi-l { font-size: 11.5px; color: var(--txt3); }
+.kpi.ok .kpi-v { color: var(--green); } .kpi.warn .kpi-v { color: var(--amber); }
+.kpi.info .kpi-v { color: var(--blue); } .kpi.red .kpi-v { color: var(--red); }
+.barra { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 6px 0 4px; background: var(--sur2); }
+.barra span { display: block; height: 100%; }
+.barra .ok { background: var(--green); } .barra .warn { background: var(--amber); } .barra .info { background: var(--blue); } .barra .red { background: var(--red); }
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+.filtros button { font: inherit; font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt2); cursor: pointer; }
+.filtros button[aria-pressed="true"] { background: var(--txt1); color: var(--bg); border-color: var(--txt1); }
+tr.oculta { display: none; }
+.ondas { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 14px 0; }
+.onda { background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.onda.crit { border-left-color: var(--red); }
+.onda.dep { border-left-color: var(--gray); }
+.onda-h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; margin-bottom: 6px; }
+.onda-n { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.onda.crit .onda-n { color: var(--red); }
+.onda.dep .onda-n { color: var(--gray); }
+.onda-t { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.onda-q { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.onda ul.plain { margin-left: 16px; }
+.onda ul.plain li { font-size: 12.5px; }
+.onda .pronto { font-size: 12px; color: var(--txt2); border-top: 1px dashed var(--brd); margin-top: 8px; padding-top: 8px; }
+.ids { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); }
+.foot { margin-top: 40px; font-size: 11px; color: var(--txt3); text-align: center; }
+.back { display: inline-block; font-size: 12px; color: var(--txt3); text-decoration: none; margin-bottom: 18px; }
+.back:hover { color: var(--txt1); }
+
+.gaps { display: flex; flex-wrap: wrap; gap: 4px; }
+.lv { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: var(--sur2); color: var(--txt1); border: 1px solid var(--brd); white-space: nowrap; text-decoration: none; }
+.lv:hover { border-color: var(--amber); }
+td.wrap { min-width: 220px; }
+.etapas td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr[id] { scroll-margin-top: 20px; }
+#lacunas tr[data-lv] td:not(.id) { border-bottom: 0; padding-bottom: 6px; }
+#lacunas tr.prio-row td { padding-top: 4px; }
+.prio { display: grid; grid-template-columns: 170px 130px minmax(220px, 1fr); gap: 6px 14px; align-items: start; padding: 10px 12px; background: var(--sur2); border: 1px solid var(--brd); border-radius: 8px; }
+.prio .f { display: grid; gap: 4px; }
+.prio label { font-size: 10.5px; font-weight: 700; color: var(--txt3); text-transform: uppercase; letter-spacing: .04em; }
+.prio select, .prio input, .prio textarea { font: inherit; font-size: 12.5px; line-height: 1.4; color: var(--txt1); background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; padding: 5px 8px; width: 100%; }
+.prio input { font-variant-numeric: tabular-nums; }
+.prio textarea { min-height: 34px; resize: vertical; }
+@media (max-width: 620px) { .prio { grid-template-columns: 1fr; max-width: calc(100vw - 140px); } }
+.prio select:focus, .prio input:focus, .prio textarea:focus { outline: 2px solid var(--blue); outline-offset: 1px; border-color: var(--blue); }
+.prio .dup { font-size: 11px; color: var(--red); }
+#lacunas tr[data-p="alta"] td.id { box-shadow: inset 3px 0 0 var(--red); }
+#lacunas tr[data-p="media"] td.id { box-shadow: inset 3px 0 0 var(--amber); }
+#lacunas tr[data-p="baixa"] td.id { box-shadow: inset 3px 0 0 var(--blue); }
+#lacunas tr[data-p="nao"] td.id { box-shadow: inset 3px 0 0 var(--gray); }
+.acoes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+.acoes .cont { font-size: 12px; color: var(--txt3); margin-right: auto; }
+.acoes .aviso { font-size: 12px; color: var(--green); }
+.btn { font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); cursor: pointer; }
+.btn:hover { border-color: var(--txt3); }
+.btn.pri { background: var(--blue); border-color: var(--blue); color: var(--sur); }
+.saida { width: 100%; min-height: 150px; font: 12px/1.5 'JetBrains Mono', monospace; color: var(--txt1); background: var(--sur2); border: 1px solid var(--brd); border-radius: 6px; padding: 10px; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html#sec-taxrs">← Hub de PRDs</a>
+<div class="eyebrow">tax-rs · Implantação do cliente</div>
+<h1>Caderno de testes do cliente × modo Live do tax-rs</h1>
+<p class="subtitle">Para cada um dos 59 casos do caderno, o que o modo Live do tax-rs já entrega e o que falta. No fim, as lacunas agrupadas e o planejamento para construí-las no Live na ordem em que o cronograma de testes precisa delas.</p>
+
+<div class="meta-bar">
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.1</span></span>
+  <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">17/11/2026</span></span>
+  <span class="meta-pill"><span class="meta-label">Caderno</span><span class="meta-val">v2.4 · cronograma v1.3</span></span>
+  <span class="meta-pill"><span class="meta-label">Base</span><span class="meta-val"><code>main</code> do tax-rs no <code>a831ad9</code></span></span>
+  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">0 de 6</span></span>
+</div>
+
+<nav class="toc">
+  <div class="toc-title">Conteúdo</div>
+  <ul class="toc-list">
+    <li><a href="#s1"><span class="toc-num">1</span>Resumo</a></li>
+    <li><a href="#s2"><span class="toc-num">2</span>Como a análise foi feita</a></li>
+    <li><a href="#s3"><span class="toc-num">3</span>Situação por etapa</a></li>
+    <li><a href="#s4"><span class="toc-num">4</span>Os 59 casos, um a um</a></li>
+    <li><a href="#s5"><span class="toc-num">5</span>O que falta no Live e a sua priorização</a></li>
+    <li><a href="#s6"><span class="toc-num">6</span>Planejamento da construção</a></li>
+    <li><a href="#s7"><span class="toc-num">7</span>Decisões</a></li>
+    <li><a href="#s8"><span class="toc-num">8</span>Riscos e observações</a></li>
+  </ul>
+</nav>
+<section class="section" id="s1">
+  <div class="sec-hdr"><span class="sec-num">1</span><span class="sec-title">Resumo</span></div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-v">59</div><div class="kpi-l">casos no caderno</div></div>
+    <div class="kpi ok"><div class="kpi-v">13</div><div class="kpi-l">rodam inteiros no Live</div></div>
+    <div class="kpi warn"><div class="kpi-v">21</div><div class="kpi-l">rodam em parte</div></div>
+    <div class="kpi red"><div class="kpi-v">25</div><div class="kpi-l">não rodam no Live</div></div>
+    <div class="kpi info"><div class="kpi-v">15</div><div class="kpi-l">lacunas a construir ou decidir</div></div>
+  </div>
+  <div class="barra" role="img" aria-label="13 no Live, 21 parciais, 25 faltam"><span class="ok" style="width:22.03%"></span><span class="warn" style="width:35.59%"></span><span class="red" style="width:42.37%"></span></div>
+  <p>22% no Live · 36% parciais · 42% faltam. Dos 13 casos que rodam no Live, 5 passam sobre o Fisco simulado do tax-rs: para valer como aceite, precisam da leitura real dos entes (LV-06).</p>
+  <div class="callout warn"><div class="ct">O que o cruzamento mostra</div>
+    <ul class="plain">
+      <li><strong>Hoje, 11 dos 59 casos rodam no Live valendo como aceite</strong>, contando os 3 que rodam com contorno. Outros 5 rodam, mas sobre o Fisco simulado.</li>
+      <li><strong>Até 22/12, com uma pessoa, cabe a onda C0 e, no melhor caso, a leitura dos entes</strong>: são 28 casos executáveis com valor de aceite. As etapas 4, 6, 7 e 8 dependem de três frentes grandes (parcialidade, Pagamentos RAD e Apuração) e não cabem no cronograma atual (D-CL-01).</li>
+      <li><strong>O caderno inteiro executável no Live:</strong> com uma pessoa, entre 31/03/27 e 22/09/27; com duas frentes, entre 10/02/27 e 09/06/27.</li>
+      <li><strong>Três lacunas não dependem só de código:</strong> a leitura dos entes, o leiaute do arquivo de retorno, que o CT-01-06 manda acordar com o cliente, e o provedor de e-mail.</li>
+      <li><strong>A etapa 1 já devia ter acontecido</strong> (09/11 a 13/11); todos os casos estão como "Não iniciado".</li>
+    </ul>
+  </div>
+</section>
+<section class="section" id="s2">
+  <div class="sec-hdr"><span class="sec-num">2</span><span class="sec-title">Como a análise foi feita</span></div>
+  <ul class="plain">
+    <li><strong>Caderno:</strong> a aba Casos do <code>Cronograma-de-Testes-da-Implantacao-v1.3.xlsx</code> (caderno v2.4 de 06/11/2026), lida de uma cópia; o original não foi alterado.</li>
+    <li><strong>Live:</strong> o inventário do <a href="taxrs-demo-live.html">relatório Demo × Live</a> de 16/11/2026, conferido no código da <code>main</code> do tax-rs no <code>a831ad9</code>. Os ids entre parênteses (G-05, B-01…) são os desse inventário.</li>
+    <li><strong>Conferido de novo no código, para este caderno:</strong> leitor de XML (NF-e e NFCom), recusas da ingestão, regra de direção e de CNPJ fora da organização, herança do método pelo contrato, efeito da troca de contrato nas notas já registradas, os 5 tipos de ocorrência que o backend detecta, as transições e as regras do workflow, o status de extinção do débito e a ausência de arquivo de retorno.</li>
+  </ul>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Situação</th><th>Significa</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip ok">No Live</span></td><td>O caso roda inteiro no Live hoje. Se depende da leitura dos entes, roda sobre o Fisco simulado.</td></tr>
+      <tr><td><span class="chip warn">Parcial</span></td><td>Parte do resultado esperado sai no Live; outra parte depende de uma lacuna, ou o Live se comporta diferente do que o caso pede.</td></tr>
+      <tr><td><span class="chip red">Falta no Live</span></td><td>O resultado esperado não sai no Live: a tela está bloqueada, só existe no Demo ou não existe.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+<section class="section" id="s3">
+  <div class="sec-hdr"><span class="sec-num">3</span><span class="sec-title">Situação por etapa</span></div>
+  <p>Na ordem do cronograma. As lacunas são as que bloqueiam pelo menos um caso da etapa.</p>
+  <div class="table-wrap"><table class="etapas">
+    <thead><tr><th>Etapa</th><th>Jornada</th><th>Janela</th><th>Casos</th><th>No Live</th><th>Parcial</th><th>Falta</th><th>Lacunas</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1</strong></td><td>J2 · Importação e validação de documentos fiscais</td><td class="n">09/11 a 13/11</td><td class="n">8</td><td class="n">1</td><td class="n">6</td><td class="n">1</td><td><div class="gaps"><a class=lv href=#LV-01>LV-01</a><a class=lv href=#LV-02>LV-02</a><a class=lv href=#LV-03>LV-03</a><a class=lv href=#LV-04>LV-04</a><a class=lv href=#LV-15>LV-15</a></div></td></tr>
+      <tr><td><strong>2</strong></td><td>J1 · Implantação da plataforma</td><td class="n">16/11 a 20/11</td><td class="n">9</td><td class="n">1</td><td class="n">5</td><td class="n">3</td><td><div class="gaps"><a class=lv href=#LV-01>LV-01</a><a class=lv href=#LV-02>LV-02</a><a class=lv href=#LV-05>LV-05</a><a class=lv href=#LV-06>LV-06</a><a class=lv href=#LV-07>LV-07</a><a class=lv href=#LV-13>LV-13</a><a class=lv href=#LV-14>LV-14</a><a class=lv href=#LV-15>LV-15</a></div></td></tr>
+      <tr><td><strong>3</strong></td><td>J9 · Governança contratual</td><td class="n">16/11 a 20/11</td><td class="n">6</td><td class="n">4</td><td class="n">1</td><td class="n">1</td><td><div class="gaps"><a class=lv href=#LV-07>LV-07</a><a class=lv href=#LV-13>LV-13</a></div></td></tr>
+      <tr><td><strong>4</strong></td><td>J4 · Conciliação e apropriação do crédito</td><td class="n">23/11 a 12/12</td><td class="n">9</td><td class="n">2</td><td class="n">3</td><td class="n">4</td><td><div class="gaps"><a class=lv href=#LV-04>LV-04</a><a class=lv href=#LV-05>LV-05</a><a class=lv href=#LV-06>LV-06</a><a class=lv href=#LV-11>LV-11</a></div></td></tr>
+      <tr><td><strong>5</strong></td><td>J7 · Tratamento de inconsistências</td><td class="n">30/11 a 11/12</td><td class="n">7</td><td class="n">4</td><td class="n">3</td><td class="n">0</td><td><div class="gaps"><a class=lv href=#LV-09>LV-09</a></div></td></tr>
+      <tr><td><strong>6</strong></td><td>J3 · Operação de pagamentos RAD</td><td class="n">30/11 a 18/12</td><td class="n">8</td><td class="n">0</td><td class="n">0</td><td class="n">8</td><td><div class="gaps"><a class=lv href=#LV-05>LV-05</a><a class=lv href=#LV-07>LV-07</a><a class=lv href=#LV-08>LV-08</a></div></td></tr>
+      <tr><td><strong>7</strong></td><td>J5 · Apuração do débito e extinção</td><td class="n">07/12 a 18/12</td><td class="n">6</td><td class="n">1</td><td class="n">2</td><td class="n">3</td><td><div class="gaps"><a class=lv href=#LV-01>LV-01</a><a class=lv href=#LV-02>LV-02</a><a class=lv href=#LV-10>LV-10</a><a class=lv href=#LV-12>LV-12</a><a class=lv href=#LV-15>LV-15</a></div></td></tr>
+      <tr><td><strong>8</strong></td><td>J6 · Fechamento da competência</td><td class="n">14/12 a 22/12</td><td class="n">6</td><td class="n">0</td><td class="n">1</td><td class="n">5</td><td><div class="gaps"><a class=lv href=#LV-06>LV-06</a><a class=lv href=#LV-10>LV-10</a></div></td></tr>
+    </tbody>
+  </table></div>
+</section>
+<section class="section" id="s4">
+  <div class="sec-hdr"><span class="sec-num">4</span><span class="sec-title">Os 59 casos, um a um</span></div>
+  <p>O resultado esperado é o texto do caderno. A observação diz o que o Live faz hoje.</p>
+  <div class="filtros" role="group" aria-label="Filtrar por situação">
+    <button type="button" data-f="" aria-pressed="true">Todos · 59</button>
+    <button type="button" data-f="live" aria-pressed="false">No Live · 13</button>
+    <button type="button" data-f="parcial" aria-pressed="false">Parcial · 21</button>
+    <button type="button" data-f="falta" aria-pressed="false">Falta · 25</button>
+  </div>
+  <div class="table-wrap"><table id="casos">
+    <thead><tr><th>Caso</th><th>Onde</th><th>Resultado esperado</th><th>Situação</th><th>Lacunas</th><th>O que o Live faz hoje</th></tr></thead>
+    <tbody>
+      <tr class="grp-row"><td class="grp" colspan="6">Etapa 1 · J2 · Importação e validação de documentos fiscais · 09/11 a 13/11</td></tr>
+      <tr data-s="parcial" id="CT-02-01"><td class="id">CT-02-01</td><td>Config → Importação de DFs</td><td class="wrap">Documento importado; dois registros fiscais com os valores exatos; crédito não apropriado, com a partição inteira em A apropriar .</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-01">LV-01</a><a class="lv" href="#LV-04">LV-04</a></div></td><td class="wrap">A importação e os dois registros com os valores funcionam pelo barramento; falta a tela de importação e a partição em A apropriar.</td></tr>
+      <tr data-s="parcial" id="CT-02-02"><td class="id">CT-02-02</td><td>Carga pela base</td><td class="wrap">Contagem final de 500, sem perda nem duplicidade; cada documento com a sua situação.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-01">LV-01</a><a class="lv" href="#LV-15">LV-15</a></div></td><td class="wrap">Lote por ZIP ou batch existe no barramento; a situação de cada documento só aparece na tela de importação.</td></tr>
+      <tr data-s="falta" id="CT-02-06"><td class="id">CT-02-06</td><td>Débito → Documentos Fiscais</td><td class="wrap">O documento aparece em Débito, e não em Crédito, com os registros de débito de CBS e de IBS.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-02">LV-02</a></div></td><td class="wrap">O backend registra o documento de saída como débito, mas o menu Débito está bloqueado no Live.</td></tr>
+      <tr data-s="live" id="CT-02-07"><td class="id">CT-02-07</td><td>Crédito → Registros Fiscais</td><td class="wrap">A primeira nota herda o método RAD do contrato cadastrado; a segunda aparece como não coberta no KPI de cobertura contratual.</td><td><span class="chip ok">No Live</span></td><td><div class="gaps">—</div></td><td class="wrap">O método vem do contrato vigente na emissão; sem contrato, fornecedor. A cobertura está nos KPIs de Contratos.</td></tr>
+      <tr data-s="parcial" id="CT-02-08"><td class="id">CT-02-08</td><td>Config → Importação de DFs · carga pela base</td><td class="wrap">Taxa de sucesso igual ou acima da meta acordada; nenhum documento sem situação.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-01">LV-01</a><a class="lv" href="#LV-15">LV-15</a></div></td><td class="wrap">Sem a tela de importação não há como acompanhar a taxa de sucesso; volume real nunca foi medido no tax-rs.</td></tr>
+      <tr data-s="parcial" id="CT-02-03"><td class="id">CT-02-03</td><td>Config → Importação de DFs</td><td class="wrap">A reimportação não cria registro novo; a chave com conteúdo divergente abre a ocorrência RF duplicado .</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-03">LV-03</a></div></td><td class="wrap">A reimportação é recusada (chave já registrada); a ocorrência RF duplicado não é aberta.</td></tr>
+      <tr data-s="parcial" id="CT-02-04"><td class="id">CT-02-04</td><td>Config → Importação de DFs</td><td class="wrap">Recusado com a mensagem da verificação; ocorrência Chave de acesso inválida .</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-03">LV-03</a></div></td><td class="wrap">Recusado com a mensagem (chave inválida); a ocorrência não é aberta.</td></tr>
+      <tr data-s="parcial" id="CT-02-05"><td class="id">CT-02-05</td><td>Config → Importação de DFs</td><td class="wrap">Ocorrência CNPJ divergente ; nenhum registro fiscal criado.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-03">LV-03</a></div></td><td class="wrap">Recusado sem criar registro (destinatário fora da organização); a ocorrência CNPJ divergente não é aberta.</td></tr>
+      <tr class="grp-row"><td class="grp" colspan="6">Etapa 2 · J1 · Implantação da plataforma · 16/11 a 20/11</td></tr>
+      <tr data-s="parcial" id="CT-01-01"><td class="id">CT-01-01</td><td>Config → Organização</td><td class="wrap">Todos os CNPJs ativos, com UF e tipo; a contagem bate com a lista oficial.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-13">LV-13</a></div></td><td class="wrap">Executável pelo admin da plataforma, que cadastra os CNPJs; a tela do cliente está &quot;Em breve&quot;.</td></tr>
+      <tr data-s="parcial" id="CT-01-09"><td class="id">CT-01-09</td><td>Config → Usuários</td><td class="wrap">Todos os usuários do cliente criados e ativos na lista de usuários.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-14">LV-14</a></div></td><td class="wrap">Usuários, perfis e escopo funcionam; fora do ambiente local o convite não é enviado por e-mail.</td></tr>
+      <tr data-s="parcial" id="CT-01-02"><td class="id">CT-01-02</td><td>Config → Fornecedor</td><td class="wrap">100% dos fornecedores do escopo cadastrados e agrupados por grupo econômico; o CNPJ duplicado é bloqueado com mensagem.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-13">LV-13</a></div></td><td class="wrap">Cadastro por grupo funciona um a um e pelas notas recebidas; a carga em lote por CSV é só Demo.</td></tr>
+      <tr data-s="live" id="CT-01-03"><td class="id">CT-01-03</td><td>Config → Contratos</td><td class="wrap">Cobertura contratual de 100% nos CNPJs do escopo; a sobreposição é recusada.</td><td><span class="chip ok">No Live</span></td><td><div class="gaps">—</div></td><td class="wrap">Pela tela do cliente a sobreposição é recusada; pelo caminho do admin da plataforma, não.</td></tr>
+      <tr data-s="falta" id="CT-01-08"><td class="id">CT-01-08</td><td>Config → Execução RAD</td><td class="wrap">A listagem mostra as guias previstas para a próxima janela e nomeia a sobreposição entre as duas políticas.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-07">LV-07</a></div></td><td class="wrap">Configurações › Execução RAD é só Demo.</td></tr>
+      <tr data-s="parcial" id="CT-01-04"><td class="id">CT-01-04</td><td>Config → Importação de DFs</td><td class="wrap">Cada XML lido com chave, participantes e valores de CBS e de IBS do documento; o contrato e o método de pagamento vêm do cadastro, nunca do documento.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-01">LV-01</a></div></td><td class="wrap">O leitor de XML extrai chave, participantes e valores (NF-e e NFCom); o método vem do contrato. Falta a tela.</td></tr>
+      <tr data-s="parcial" id="CT-01-05"><td class="id">CT-01-05</td><td>Carga pela base</td><td class="wrap">Documentos visíveis em Crédito e em Débito, com quantidade e totais de CBS e de IBS iguais aos da origem.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-01">LV-01</a><a class="lv" href="#LV-02">LV-02</a><a class="lv" href="#LV-15">LV-15</a></div></td><td class="wrap">Os documentos de entrada aparecem em Crédito; os de saída não, porque o Débito está bloqueado.</td></tr>
+      <tr data-s="falta" id="CT-01-06"><td class="id">CT-01-06</td><td>Arquivo de retorno</td><td class="wrap">Arquivo de texto entregue no local acordado, no leiaute acordado; o cliente lê todas as linhas sem erro.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-05">LV-05</a></div></td><td class="wrap">Não há arquivo de retorno no tax-rs.</td></tr>
+      <tr data-s="falta" id="CT-01-07"><td class="id">CT-01-07</td><td>Integração com os entes</td><td class="wrap">Consulta da CBS e arquivo do IBS registrados com protocolo, data e hora; campo que o Comitê Gestor não informa aparece como n/i , nunca como zero.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-06">LV-06</a></div></td><td class="wrap">O Fisco é simulado: não há leitura real, protocolo nem n/i.</td></tr>
+      <tr class="grp-row"><td class="grp" colspan="6">Etapa 3 · J9 · Governança contratual · 16/11 a 20/11</td></tr>
+      <tr data-s="live" id="CT-09-01"><td class="id">CT-09-01</td><td>Config → Contratos</td><td class="wrap">100% dos CNPJs fornecedores do escopo com contrato vigente.</td><td><span class="chip ok">No Live</span></td><td><div class="gaps">—</div></td><td class="wrap">—</td></tr>
+      <tr data-s="live" id="CT-09-02"><td class="id">CT-09-02</td><td>Config → Contratos</td><td class="wrap">Gravação recusada, com o conflito nomeado.</td><td><span class="chip ok">No Live</span></td><td><div class="gaps">—</div></td><td class="wrap">Vale pela tela do cliente; o caminho do admin da plataforma não confere a sobreposição.</td></tr>
+      <tr data-s="live" id="CT-09-03"><td class="id">CT-09-03</td><td>Config → Contratos</td><td class="wrap">Só as notas futuras mudam; o histórico registra a alteração com autor e data.</td><td><span class="chip ok">No Live</span></td><td><div class="gaps">—</div></td><td class="wrap">O documento guarda o método que recebeu na entrada; o contrato novo só vale para as notas seguintes. Histórico com autor e data.</td></tr>
+      <tr data-s="live" id="CT-09-04"><td class="id">CT-09-04</td><td>Config → Contratos</td><td class="wrap">A confirmação declara o impacto; o encerramento fica registrado no histórico.</td><td><span class="chip ok">No Live</span></td><td><div class="gaps">—</div></td><td class="wrap">—</td></tr>
+      <tr data-s="parcial" id="CT-09-05"><td class="id">CT-09-05</td><td>Config → Fornecedor</td><td class="wrap">O fornecedor aparece no filtro sem contrato ativo no dia seguinte, sem ação manual.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-13">LV-13</a></div></td><td class="wrap">O status do contrato vence sozinho pela vigência; o filtro de fornecedor sem contrato ativo não foi encontrado.</td></tr>
+      <tr data-s="falta" id="CT-09-06"><td class="id">CT-09-06</td><td>Config → Execução RAD</td><td class="wrap">As notas do contrato vencido saem do alcance da política.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-07">LV-07</a></div></td><td class="wrap">Depende das políticas de Execução RAD.</td></tr>
+      <tr class="grp-row"><td class="grp" colspan="6">Etapa 4 · J4 · Conciliação e apropriação do crédito · 23/11 a 12/12</td></tr>
+      <tr data-s="falta" id="CT-04-01"><td class="id">CT-04-01</td><td>Receita Federal · Conciliação</td><td class="wrap">Uma leitura por dia registrada, com protocolo; a conciliação roda a cada leitura.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-06">LV-06</a></div></td><td class="wrap">Sem leitura diária real da Receita Federal.</td></tr>
+      <tr data-s="falta" id="CT-04-02"><td class="id">CT-04-02</td><td>Comitê Gestor · detalhe do documento</td><td class="wrap">Arquivo processado, com protocolo, data e hora; os campos que o Comitê Gestor não informa aparecem como n/i , fora da soma.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-06">LV-06</a></div></td><td class="wrap">Sem o arquivo real do Comitê Gestor e sem n/i.</td></tr>
+      <tr data-s="falta" id="CT-04-08"><td class="id">CT-04-08</td><td>Arquivo de retorno</td><td class="wrap">A apropriação sai no arquivo de retorno, com o valor da fatia e o tributo.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-05">LV-05</a><a class="lv" href="#LV-04">LV-04</a></div></td><td class="wrap">Sem arquivo de retorno e sem a fatia de apropriação.</td></tr>
+      <tr data-s="live" id="CT-04-03"><td class="id">CT-04-03</td><td>Conciliação → Listagem</td><td class="wrap">Conciliação de apuração concluída nos dois tributos, com delta zero.</td><td><span class="chip ok">No Live</span></td><td><div class="gaps"><a class="lv" href="#LV-06" title="Com o Fisco simulado; para valer como aceite, precisa da leitura real">entes</a></div></td><td class="wrap">A conciliação roda no Live, sobre o Fisco simulado.</td></tr>
+      <tr data-s="live" id="CT-04-04"><td class="id">CT-04-04</td><td>Conciliação · Inconsistências</td><td class="wrap">Ocorrência Valor IBS divergente da apuração , com o delta e o órgão Comitê Gestor; nenhum ajuste automático.</td><td><span class="chip ok">No Live</span></td><td><div class="gaps"><a class="lv" href="#LV-06" title="Com o Fisco simulado; para valer como aceite, precisa da leitura real">entes</a></div></td><td class="wrap">O tipo Valor IBS divergente da apuração é detectado, com o delta; nada é ajustado sozinho.</td></tr>
+      <tr data-s="falta" id="CT-04-05"><td class="id">CT-04-05</td><td>Crédito → detalhe do documento</td><td class="wrap">Partição: o reconhecido em Disponível e o restante em A apropriar ; a soma das parcelas fecha; o prazo do art. 54 da fatia conta do primeiro dia do período seguinte.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-04">LV-04</a><a class="lv" href="#LV-06" title="Com o Fisco simulado; para valer como aceite, precisa da leitura real">entes</a></div></td><td class="wrap">Sem partição e sem o prazo do art. 54 por fatia.</td></tr>
+      <tr data-s="parcial" id="CT-04-06"><td class="id">CT-04-06</td><td>Crédito → detalhe do documento</td><td class="wrap">Ficha de glosa criada; o valor glosado em Inapropriável ; a glosa sai no arquivo de retorno; recomendação conforme a situação da glosa.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-04">LV-04</a><a class="lv" href="#LV-05">LV-05</a><a class="lv" href="#LV-06" title="Com o Fisco simulado; para valer como aceite, precisa da leitura real">entes</a></div></td><td class="wrap">A ficha de glosa e a ocorrência existem; a glosa marca o registro inteiro e não sai em arquivo.</td></tr>
+      <tr data-s="parcial" id="CT-04-07"><td class="id">CT-04-07</td><td>Conciliação → Listagem</td><td class="wrap">O documento fica em inconsistência financeira; o IBS não se apropria; a CBS segue independente.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-11">LV-11</a><a class="lv" href="#LV-06" title="Com o Fisco simulado; para valer como aceite, precisa da leitura real">entes</a></div></td><td class="wrap">A conciliação financeira existe, mas não separa os tributos como o caso pede.</td></tr>
+      <tr data-s="parcial" id="CT-04-09"><td class="id">CT-04-09</td><td>Início · Crédito</td><td class="wrap">Aproveitamento dentro da meta acordada; nenhum crédito apropriado sem leitura do órgão.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-06">LV-06</a></div></td><td class="wrap">O KPI de aproveitamento está no Live; o mês assistido pede a leitura real dos entes.</td></tr>
+      <tr class="grp-row"><td class="grp" colspan="6">Etapa 5 · J7 · Tratamento de inconsistências · 30/11 a 11/12</td></tr>
+      <tr data-s="live" id="CT-07-01"><td class="id">CT-07-01</td><td>Inconsistências · detalhe do documento</td><td class="wrap">Ocorrência aberta , órgão Comitê Gestor, valor em risco de R$ 200,00; card visível no documento e no registro fiscal.</td><td><span class="chip ok">No Live</span></td><td><div class="gaps"><a class="lv" href="#LV-06" title="Com o Fisco simulado; para valer como aceite, precisa da leitura real">entes</a></div></td><td class="wrap">Ocorrência com órgão e valor em risco; aparece na linha do tempo do registro fiscal.</td></tr>
+      <tr data-s="live" id="CT-07-02"><td class="id">CT-07-02</td><td>Inconsistências → Listagem</td><td class="wrap">Duas ocorrências, uma por tributo.</td><td><span class="chip ok">No Live</span></td><td><div class="gaps"><a class="lv" href="#LV-06" title="Com o Fisco simulado; para valer como aceite, precisa da leitura real">entes</a></div></td><td class="wrap">Os tipos são separados por tributo: duas ocorrências.</td></tr>
+      <tr data-s="parcial" id="CT-07-03"><td class="id">CT-07-03</td><td>Inconsistências → Kanban</td><td class="wrap">A passagem para em análise exige responsável.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-09">LV-09</a></div></td><td class="wrap">O Live não bloqueia: torna o autor o responsável.</td></tr>
+      <tr data-s="parcial" id="CT-07-04"><td class="id">CT-07-04</td><td>Inconsistências → detalhe</td><td class="wrap">O prazo interno fica suspenso e o terceiro, registrado.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-09">LV-09</a></div></td><td class="wrap">O estado existe, mas o prazo não é suspenso e o terceiro não é registrado.</td></tr>
+      <tr data-s="live" id="CT-07-05"><td class="id">CT-07-05</td><td>Inconsistências → detalhe</td><td class="wrap">A ocorrência não fecha sem desfecho.</td><td><span class="chip ok">No Live</span></td><td><div class="gaps">—</div></td><td class="wrap">Resolver exige desfecho com 10 caracteres ou mais.</td></tr>
+      <tr data-s="parcial" id="CT-07-06"><td class="id">CT-07-06</td><td>Inconsistências → detalhe</td><td class="wrap">Exige ficha de glosa vinculada; o valor sai do fluxo de apropriação.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-09">LV-09</a></div></td><td class="wrap">Glosar exige só o desfecho, não a ficha de glosa vinculada.</td></tr>
+      <tr data-s="live" id="CT-07-07"><td class="id">CT-07-07</td><td>Inconsistências → Listagem</td><td class="wrap">A ocorrência original é reaberta; nenhuma segunda é criada.</td><td><span class="chip ok">No Live</span></td><td><div class="gaps">—</div></td><td class="wrap">A re-detecção reabre a ocorrência resolvida; uma ocorrência por causa.</td></tr>
+      <tr class="grp-row"><td class="grp" colspan="6">Etapa 6 · J3 · Operação de pagamentos RAD · 30/11 a 18/12</td></tr>
+      <tr data-s="falta" id="CT-03-04"><td class="id">CT-03-04</td><td>Arquivo de retorno</td><td class="wrap">As guias saem no arquivo de retorno, uma linha por guia, com tributo, valor, vencimento e código de barras.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-05">LV-05</a><a class="lv" href="#LV-08">LV-08</a></div></td><td class="wrap">—</td></tr>
+      <tr data-s="falta" id="CT-03-05"><td class="id">CT-03-05</td><td>Arquivo de retorno</td><td class="wrap">Nenhuma guia aparece em duplicidade; o arquivo reprocessado fica identificado como tal.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-05">LV-05</a><a class="lv" href="#LV-08">LV-08</a></div></td><td class="wrap">—</td></tr>
+      <tr data-s="falta" id="CT-03-01"><td class="id">CT-03-01</td><td>Pagamentos → Execução Programada</td><td class="wrap">As guias aparecem em Próxima execução antes da janela e são geradas nela, sem ação humana.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-07">LV-07</a><a class="lv" href="#LV-08">LV-08</a></div></td><td class="wrap">—</td></tr>
+      <tr data-s="falta" id="CT-03-02"><td class="id">CT-03-02</td><td>Pagamentos → Guias RAD</td><td class="wrap">Duas guias — DARF de R$ 1.000,00 e guia do IBS de R$ 2.000,00 —, nunca somadas.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-08">LV-08</a></div></td><td class="wrap">—</td></tr>
+      <tr data-s="falta" id="CT-03-03"><td class="id">CT-03-03</td><td>Pagamentos → Execução Programada</td><td class="wrap">A janela aprovada segue para o arquivo de retorno; a recusada, não; as duas decisões ficam na trilha.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-08">LV-08</a></div></td><td class="wrap">—</td></tr>
+      <tr data-s="falta" id="CT-03-07"><td class="id">CT-03-07</td><td>Config → Execução RAD</td><td class="wrap">O aviso nomeia o par; a guia não sai em duplicidade.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-07">LV-07</a></div></td><td class="wrap">—</td></tr>
+      <tr data-s="falta" id="CT-03-06"><td class="id">CT-03-06</td><td>Pagamentos → Guias RAD</td><td class="wrap">Guia marcada como paga, com o comprovante vinculado; o crédito não se apropria até a leitura do ente: a Receita Federal para a CBS e o Comitê Gestor para o IBS.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-08">LV-08</a><a class="lv" href="#LV-06" title="Com o Fisco simulado; para valer como aceite, precisa da leitura real">entes</a></div></td><td class="wrap">O endpoint de comprovantes existe, mas grava só no sandbox do barramento.</td></tr>
+      <tr data-s="falta" id="CT-03-08"><td class="id">CT-03-08</td><td>Pagamentos → Execução Programada</td><td class="wrap">Zero guias vencidas; taxa de automação dentro da meta acordada.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-07">LV-07</a><a class="lv" href="#LV-08">LV-08</a></div></td><td class="wrap">—</td></tr>
+      <tr class="grp-row"><td class="grp" colspan="6">Etapa 7 · J5 · Apuração do débito e extinção · 07/12 a 18/12</td></tr>
+      <tr data-s="falta" id="CT-05-01"><td class="id">CT-05-01</td><td>Débito → Documentos Fiscais</td><td class="wrap">Dois registros de débito com os valores exatos.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-02">LV-02</a></div></td><td class="wrap">O backend cria os dois registros de débito (a NFCom é lida); a tela está bloqueada.</td></tr>
+      <tr data-s="falta" id="CT-05-02"><td class="id">CT-05-02</td><td>Apuração IBS/CBS · Débito</td><td class="wrap">R$ 600,00 compensados e R$ 400,00 a recolher; o débito de IBS não é tocado.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-10">LV-10</a><a class="lv" href="#LV-02">LV-02</a></div></td><td class="wrap">O motor compensa por tributo no backend; falta a tela de apuração.</td></tr>
+      <tr data-s="live" id="CT-05-04"><td class="id">CT-05-04</td><td>Débito · Inconsistências</td><td class="wrap">Ocorrência DF sem registro na apuração assistida , com o órgão nomeado.</td><td><span class="chip ok">No Live</span></td><td><div class="gaps"><a class="lv" href="#LV-06" title="Com o Fisco simulado; para valer como aceite, precisa da leitura real">entes</a></div></td><td class="wrap">O tipo DF sem registro na apuração assistida é detectado.</td></tr>
+      <tr data-s="falta" id="CT-05-03"><td class="id">CT-05-03</td><td>Débito → Documentos Fiscais</td><td class="wrap">O documento não aparece como Extinto .</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-12">LV-12</a><a class="lv" href="#LV-02">LV-02</a></div></td><td class="wrap">—</td></tr>
+      <tr data-s="parcial" id="CT-05-05"><td class="id">CT-05-05</td><td>Débito → Documentos Fiscais</td><td class="wrap">Status, inconsistência e método preenchidos no arquivo.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-02">LV-02</a><a class="lv" href="#LV-12">LV-12</a></div></td><td class="wrap">O CSV existe no backend, sem o status por tributo.</td></tr>
+      <tr data-s="parcial" id="CT-05-06"><td class="id">CT-05-06</td><td>Débito → Documentos Fiscais</td><td class="wrap">Todos os documentos com registro fiscal dentro do prazo acordado.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-01">LV-01</a><a class="lv" href="#LV-02">LV-02</a><a class="lv" href="#LV-15">LV-15</a></div></td><td class="wrap">Volume de faturamento real nunca foi medido no tax-rs.</td></tr>
+      <tr class="grp-row"><td class="grp" colspan="6">Etapa 8 · J6 · Fechamento da competência · 14/12 a 22/12</td></tr>
+      <tr data-s="falta" id="CT-06-01"><td class="id">CT-06-01</td><td>Apuração IBS/CBS</td><td class="wrap">Saldo a recolher de R$ 400,00 em guia; o IBS apurado à parte.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-10">LV-10</a></div></td><td class="wrap">—</td></tr>
+      <tr data-s="falta" id="CT-06-02"><td class="id">CT-06-02</td><td>Apuração IBS/CBS</td><td class="wrap">Saldo credor de R$ 500,00, transportado e aberto no período seguinte como saldo anterior.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-10">LV-10</a></div></td><td class="wrap">—</td></tr>
+      <tr data-s="parcial" id="CT-06-03"><td class="id">CT-06-03</td><td>Apuração IBS/CBS · detalhe do registro</td><td class="wrap">O saldo vencido é consumido primeiro; os vínculos aparecem no detalhe de cada registro fiscal.</td><td><span class="chip warn">Parcial</span></td><td><div class="gaps"><a class="lv" href="#LV-10">LV-10</a></div></td><td class="wrap">O motor consome o saldo vencido primeiro e mostra os vínculos no detalhe do registro; falta a tela da apuração.</td></tr>
+      <tr data-s="falta" id="CT-06-04"><td class="id">CT-06-04</td><td>Apuração IBS/CBS</td><td class="wrap">O período existe, marcado como só créditos apropriados .</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-10">LV-10</a></div></td><td class="wrap">—</td></tr>
+      <tr data-s="falta" id="CT-06-05"><td class="id">CT-06-05</td><td>Apuração IBS/CBS · Inconsistências</td><td class="wrap">Valores iguais por tributo; diferença abre ocorrência.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-10">LV-10</a><a class="lv" href="#LV-06">LV-06</a></div></td><td class="wrap">—</td></tr>
+      <tr data-s="falta" id="CT-06-06"><td class="id">CT-06-06</td><td>Apuração IBS/CBS</td><td class="wrap">Diferença zero, ou toda diferença explicada por uma ocorrência.</td><td><span class="chip red">Falta no Live</span></td><td><div class="gaps"><a class="lv" href="#LV-10">LV-10</a><a class="lv" href="#LV-06">LV-06</a></div></td><td class="wrap">—</td></tr>
+    </tbody>
+  </table></div>
+</section>
+<section class="section" id="s5">
+  <div class="sec-hdr"><span class="sec-num">5</span><span class="sec-title">O que falta no Live e a sua priorização</span></div>
+  <p>Cada lacuna com os casos que ela bloqueia e a data em que o cronograma precisa dela: o início planejado do primeiro desses casos. A onda é a do roadmap do Live (L0 a L6) proposto no relatório Demo × Live. O porte é relativo: pequeno, médio ou grande.</p>
+  <div class="callout"><div class="ct">Sua priorização</div>
+    <p>Logo abaixo de cada lacuna, marque a <strong>priorização</strong> (alta, média, baixa ou não priorizar), a <strong>ordem de execução</strong> (1 é a primeira a construir) e um <strong>comentário</strong>. O que você preenche fica salvo neste navegador. Para registrar ou mandar para o desenvolvimento, use <strong>Copiar priorização</strong> e cole na conversa. A ordem sugerida pelo plano está na seção 6.</p>
+  </div>
+  <div class="filtros" role="group" aria-label="Ordenar as lacunas">
+    <button type="button" data-ord="data" aria-pressed="true">Pela data do caderno</button>
+    <button type="button" data-ord="ordem" aria-pressed="false">Pela sua ordem de execução</button>
+  </div>
+  <div class="table-wrap"><table id="lacunas">
+    <thead><tr><th>Lacuna</th><th>O que falta</th><th>Casos que bloqueia</th><th>Precisa até</th><th>Porte</th><th>Onda</th><th>Inventário</th></tr></thead>
+    <tbody>
+      <tr id="LV-01" data-lv="LV-01" data-t="Tela de Importação de DFs no Live"><td class="id" rowspan="2">LV-01</td><td class="wrap"><strong>Tela de Importação de DFs no Live</strong><br>Painel, listagem e situação de cada documento, envio de arquivo. O backend já recebe XML e ZIP pelo barramento (<code>/v1/ingestions</code>, <code>/v1/uploads</code>); a tela do cliente está "Em breve".</td><td><div class="gaps"><a class="lv" href="#CT-02-01">CT-02-01</a> <a class="lv" href="#CT-02-02">CT-02-02</a> <a class="lv" href="#CT-02-08">CT-02-08</a> <a class="lv" href="#CT-01-04">CT-01-04</a> <a class="lv" href="#CT-01-05">CT-01-05</a> <a class="lv" href="#CT-05-06">CT-05-06</a></div></td><td>09/11 <span class="chip red">já passou</span></td><td>médio</td><td>L5 → antecipar</td><td class="ids">G-05</td></tr>
+      <tr class="prio-row" id="pr-LV-01"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-01"><div class="f"><label for="p-LV-01">Priorização</label><select id="p-LV-01"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-01">Ordem de execução</label><input id="o-LV-01" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-01" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-01">Comentário</label><textarea id="c-LV-01" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-04" data-lv="LV-04" data-t="Parcialidade do crédito"><td class="id" rowspan="2">LV-04</td><td class="wrap"><strong>Parcialidade do crédito</strong><br>Partição em A apropriar, Disponível e Inapropriável; status por parcela; prazo do art. 54 por fatia apropriada; glosa parcial; CBS e IBS independentes no documento.</td><td><div class="gaps"><a class="lv" href="#CT-02-01">CT-02-01</a> <a class="lv" href="#CT-04-08">CT-04-08</a> <a class="lv" href="#CT-04-05">CT-04-05</a> <a class="lv" href="#CT-04-06">CT-04-06</a></div></td><td>09/11 <span class="chip red">já passou</span></td><td>grande</td><td>L1</td><td class="ids">C-06 · C-07 · C-09 · C-11 · C-12 · C-13 · R-05</td></tr>
+      <tr class="prio-row" id="pr-LV-04"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-04"><div class="f"><label for="p-LV-04">Priorização</label><select id="p-LV-04"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-04">Ordem de execução</label><input id="o-LV-04" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-04" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-04">Comentário</label><textarea id="c-LV-04" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-15" data-lv="LV-15" data-t="Carga pela base"><td class="id" rowspan="2">LV-15</td><td class="wrap"><strong>Carga pela base</strong><br>O Live recebe arquivos e lotes pelo barramento (XML, ZIP e <code>/v1/fiscal-documents/batch</code>). Não existe leitura direta da base do cliente. Falta decidir qual dos dois o caderno chama de "carga pela base".<br><span class="chip gray">Decisão com o cliente</span></td><td><div class="gaps"><a class="lv" href="#CT-02-02">CT-02-02</a> <a class="lv" href="#CT-02-08">CT-02-08</a> <a class="lv" href="#CT-01-05">CT-01-05</a> <a class="lv" href="#CT-05-06">CT-05-06</a></div></td><td>09/11 <span class="chip red">já passou</span></td><td>—</td><td>decisão</td><td class="ids">decisão</td></tr>
+      <tr class="prio-row" id="pr-LV-15"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-15"><div class="f"><label for="p-LV-15">Priorização</label><select id="p-LV-15"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-15">Ordem de execução</label><input id="o-LV-15" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-15" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-15">Comentário</label><textarea id="c-LV-15" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-02" data-lv="LV-02" data-t="Liberar o Débito no Live"><td class="id" rowspan="2">LV-02</td><td class="wrap"><strong>Liberar o Débito no Live</strong><br>Menu, card do Início, listagens de documentos e registros de débito e CSV. Backend e tela prontos; o menu está bloqueado.</td><td><div class="gaps"><a class="lv" href="#CT-02-06">CT-02-06</a> <a class="lv" href="#CT-01-05">CT-01-05</a> <a class="lv" href="#CT-05-01">CT-05-01</a> <a class="lv" href="#CT-05-02">CT-05-02</a> <a class="lv" href="#CT-05-03">CT-05-03</a> <a class="lv" href="#CT-05-05">CT-05-05</a> <a class="lv" href="#CT-05-06">CT-05-06</a></div></td><td>10/11 <span class="chip red">já passou</span></td><td>pequeno</td><td>L0</td><td class="ids">B-01 · B-02 · I-07</td></tr>
+      <tr class="prio-row" id="pr-LV-02"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-02"><div class="f"><label for="p-LV-02">Priorização</label><select id="p-LV-02"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-02">Ordem de execução</label><input id="o-LV-02" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-02" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-02">Comentário</label><textarea id="c-LV-02" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-13" data-lv="LV-13" data-t="Cadastros do cliente no Live"><td class="id" rowspan="2">LV-13</td><td class="wrap"><strong>Cadastros do cliente no Live</strong><br>Organização: tela do cliente e carga da lista de CNPJs (hoje só o admin da plataforma cadastra). Fornecedor: carga por CSV (só Demo). Filtro de fornecedor sem contrato ativo.</td><td><div class="gaps"><a class="lv" href="#CT-01-01">CT-01-01</a> <a class="lv" href="#CT-01-02">CT-01-02</a> <a class="lv" href="#CT-09-05">CT-09-05</a></div></td><td>16/11 <span class="chip red">já passou</span></td><td>médio</td><td>L5 · contorno nos testes</td><td class="ids">G-04 · G-09</td></tr>
+      <tr class="prio-row" id="pr-LV-13"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-13"><div class="f"><label for="p-LV-13">Priorização</label><select id="p-LV-13"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-13">Ordem de execução</label><input id="o-LV-13" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-13" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-13">Comentário</label><textarea id="c-LV-13" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-14" data-lv="LV-14" data-t="E-mail transacional"><td class="id" rowspan="2">LV-14</td><td class="wrap"><strong>E-mail transacional</strong><br>Convites e redefinição de senha nos ambientes publicados. Hoje o convite fica gravado sem envio fora do ambiente local.<br><span class="chip gray">Contratar o provedor de e-mail</span></td><td><div class="gaps"><a class="lv" href="#CT-01-09">CT-01-09</a></div></td><td>16/11 <span class="chip red">já passou</span></td><td>pequeno</td><td>produção</td><td class="ids">pré-requisito de produção</td></tr>
+      <tr class="prio-row" id="pr-LV-14"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-14"><div class="f"><label for="p-LV-14">Priorização</label><select id="p-LV-14"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-14">Ordem de execução</label><input id="o-LV-14" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-14" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-14">Comentário</label><textarea id="c-LV-14" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-07" data-lv="LV-07" data-t="Execução RAD (políticas)"><td class="id" rowspan="2">LV-07</td><td class="wrap"><strong>Execução RAD (políticas)</strong><br>Políticas por CNPJ, por contrato e por faixa de valor; conflito de cobertura nomeado; guias previstas para a próxima janela; contrato vencido sai do alcance.</td><td><div class="gaps"><a class="lv" href="#CT-01-08">CT-01-08</a> <a class="lv" href="#CT-09-06">CT-09-06</a> <a class="lv" href="#CT-03-01">CT-03-01</a> <a class="lv" href="#CT-03-07">CT-03-07</a> <a class="lv" href="#CT-03-08">CT-03-08</a></div></td><td>17/11</td><td>médio</td><td>L3</td><td class="ids">G-10</td></tr>
+      <tr class="prio-row" id="pr-LV-07"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-07"><div class="f"><label for="p-LV-07">Priorização</label><select id="p-LV-07"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-07">Ordem de execução</label><input id="o-LV-07" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-07" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-07">Comentário</label><textarea id="c-LV-07" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-05" data-lv="LV-05" data-t="Arquivo de retorno ao ERP"><td class="id" rowspan="2">LV-05</td><td class="wrap"><strong>Arquivo de retorno ao ERP</strong><br>Não existe no tax-rs, nem no Demo. Leiaute, local de entrega e periodicidade acordados com o cliente; linhas de apropriação, glosa e guias; reprocessamento identificado e sem duplicidade. Pode nascer dos eventos que o barramento já emite (<code>credit.*</code>, <code>debit.*</code>), que hoje saem incompletos.<br><span class="chip gray">Leiaute a acordar com o cliente</span></td><td><div class="gaps"><a class="lv" href="#CT-01-06">CT-01-06</a> <a class="lv" href="#CT-04-08">CT-04-08</a> <a class="lv" href="#CT-04-06">CT-04-06</a> <a class="lv" href="#CT-03-04">CT-03-04</a> <a class="lv" href="#CT-03-05">CT-03-05</a></div></td><td>19/11</td><td>médio</td><td>nova</td><td class="ids">novo · D-03 · B-04</td></tr>
+      <tr class="prio-row" id="pr-LV-05"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-05"><div class="f"><label for="p-LV-05">Priorização</label><select id="p-LV-05"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-05">Ordem de execução</label><input id="o-LV-05" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-05" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-05">Comentário</label><textarea id="c-LV-05" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-06" data-lv="LV-06" data-t="Leitura real dos entes"><td class="id" rowspan="2">LV-06</td><td class="wrap"><strong>Leitura real dos entes</strong><br>CBS: consulta diária à Receita Federal, com protocolo. IBS: arquivo do Comitê Gestor por webhook (MOC v1.10), com protocolo, data e hora; campo não informado como n/i, fora da soma. Hoje o Fisco do tax-rs é simulado e não tem protocolo nem n/i.<br><span class="chip gray">Habilitação nos entes e autorização dos CNPJs do cliente</span></td><td><div class="gaps"><a class="lv" href="#CT-01-07">CT-01-07</a> <a class="lv" href="#CT-04-01">CT-04-01</a> <a class="lv" href="#CT-04-02">CT-04-02</a> <a class="lv" href="#CT-04-09">CT-04-09</a> <a class="lv" href="#CT-06-05">CT-06-05</a> <a class="lv" href="#CT-06-06">CT-06-06</a></div></td><td>19/11</td><td>grande</td><td>produção</td><td class="ids">pré-requisito de produção</td></tr>
+      <tr class="prio-row" id="pr-LV-06"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-06"><div class="f"><label for="p-LV-06">Priorização</label><select id="p-LV-06"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-06">Ordem de execução</label><input id="o-LV-06" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-06" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-06">Comentário</label><textarea id="c-LV-06" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-08" data-lv="LV-08" data-t="Pagamentos RAD reais"><td class="id" rowspan="2">LV-08</td><td class="wrap"><strong>Pagamentos RAD reais</strong><br>Uma guia por tributo (DARF da CBS e guia do IBS, nunca somadas); execução programada automática e assistida, com aprovação e recusa na trilha; comprovante pelo <code>/v1/rad/proofs</code> fora do sandbox; trava da guia gerada.</td><td><div class="gaps"><a class="lv" href="#CT-03-04">CT-03-04</a> <a class="lv" href="#CT-03-05">CT-03-05</a> <a class="lv" href="#CT-03-01">CT-03-01</a> <a class="lv" href="#CT-03-02">CT-03-02</a> <a class="lv" href="#CT-03-03">CT-03-03</a> <a class="lv" href="#CT-03-06">CT-03-06</a> <a class="lv" href="#CT-03-08">CT-03-08</a></div></td><td>30/11</td><td>grande</td><td>L3</td><td class="ids">P-01 · P-02 · P-03 · P-04 · P-05 · P-06 · C-14</td></tr>
+      <tr class="prio-row" id="pr-LV-08"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-08"><div class="f"><label for="p-LV-08">Priorização</label><select id="p-LV-08"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-08">Ordem de execução</label><input id="o-LV-08" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-08" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-08">Comentário</label><textarea id="c-LV-08" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-11" data-lv="LV-11" data-t="Inconsistência financeira por tributo"><td class="id" rowspan="2">LV-11</td><td class="wrap"><strong>Inconsistência financeira por tributo</strong><br>Quando o fornecedor recolhe a CBS e não o IBS: inconsistência financeira só no IBS, que não se apropria, com a CBS seguindo. Hoje uma CAPUR inconsistente com tributo pago sai como CFIN conciliada, e o status do documento é em cascata.</td><td><div class="gaps"><a class="lv" href="#CT-04-07">CT-04-07</a></div></td><td>03/12</td><td>pequeno</td><td>L0 + L1</td><td class="ids">R-03 · C-07</td></tr>
+      <tr class="prio-row" id="pr-LV-11"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-11"><div class="f"><label for="p-LV-11">Priorização</label><select id="p-LV-11"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-11">Ordem de execução</label><input id="o-LV-11" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-11" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-11">Comentário</label><textarea id="c-LV-11" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-10" data-lv="LV-10" data-t="Apuração IBS/CBS (PCONT) no Live"><td class="id" rowspan="2">LV-10</td><td class="wrap"><strong>Apuração IBS/CBS (PCONT) no Live</strong><br>Competência por tributo, saldo a recolher em guia, saldo credor transportado como saldo anterior, saldo vencido consumido primeiro, período só com créditos, comparação com a apuração de cada ente e fechamento. O motor de compensação do art. 53 já roda no backend (<code>/app/offsets/monthly</code>); falta o PCONT sobre ele.</td><td><div class="gaps"><a class="lv" href="#CT-05-02">CT-05-02</a> <a class="lv" href="#CT-06-01">CT-06-01</a> <a class="lv" href="#CT-06-02">CT-06-02</a> <a class="lv" href="#CT-06-03">CT-06-03</a> <a class="lv" href="#CT-06-04">CT-06-04</a> <a class="lv" href="#CT-06-05">CT-06-05</a> <a class="lv" href="#CT-06-06">CT-06-06</a></div></td><td>07/12</td><td>grande</td><td>L4</td><td class="ids">A-01 · A-02 · A-04 · A-05 · A-07</td></tr>
+      <tr class="prio-row" id="pr-LV-10"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-10"><div class="f"><label for="p-LV-10">Priorização</label><select id="p-LV-10"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-10">Ordem de execução</label><input id="o-LV-10" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-10" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-10">Comentário</label><textarea id="c-LV-10" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-12" data-lv="LV-12" data-t="Débito por tributo"><td class="id" rowspan="2">LV-12</td><td class="wrap"><strong>Débito por tributo</strong><br>Documento com o IBS extinto e a CBS não, sem aparecer como Extinto; CSV de saída com status por tributo, inconsistência e método. O backend já guarda a extinção por registro.</td><td><div class="gaps"><a class="lv" href="#CT-05-03">CT-05-03</a> <a class="lv" href="#CT-05-05">CT-05-05</a></div></td><td>08/12</td><td>médio</td><td>L1</td><td class="ids">B-05 · B-06</td></tr>
+      <tr class="prio-row" id="pr-LV-12"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-12"><div class="f"><label for="p-LV-12">Priorização</label><select id="p-LV-12"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-12">Ordem de execução</label><input id="o-LV-12" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-12" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-12">Comentário</label><textarea id="c-LV-12" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-03" data-lv="LV-03" data-t="Ocorrências da família A na ingestão"><td class="id" rowspan="2">LV-03</td><td class="wrap"><strong>Ocorrências da família A na ingestão</strong><br>Chave de acesso inválida, CNPJ divergente e RF duplicado (mesma chave, conteúdo diferente). Hoje a ingestão recusa o arquivo com a mensagem, mas não abre ocorrência: o catálogo tem os três tipos com <code>detected: false</code>.</td><td><div class="gaps"><a class="lv" href="#CT-02-03">CT-02-03</a> <a class="lv" href="#CT-02-04">CT-02-04</a> <a class="lv" href="#CT-02-05">CT-02-05</a></div></td><td>14/12</td><td>médio</td><td>L2</td><td class="ids">N-05</td></tr>
+      <tr class="prio-row" id="pr-LV-03"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-03"><div class="f"><label for="p-LV-03">Priorização</label><select id="p-LV-03"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-03">Ordem de execução</label><input id="o-LV-03" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-03" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-03">Comentário</label><textarea id="c-LV-03" rows="1"></textarea></div></div></td></tr>
+      <tr id="LV-09" data-lv="LV-09" data-t="Regras do workflow de inconsistências"><td class="id" rowspan="2">LV-09</td><td class="wrap"><strong>Regras do workflow de inconsistências</strong><br>Ir para em análise exige responsável (hoje o autor vira o responsável); aguardando emitente suspende o prazo e registra o terceiro (hoje não suspende); glosar exige ficha de glosa vinculada (hoje só o desfecho); prazo da família B em 15 dias úteis (hoje 21 corridos).</td><td><div class="gaps"><a class="lv" href="#CT-07-03">CT-07-03</a> <a class="lv" href="#CT-07-04">CT-07-04</a> <a class="lv" href="#CT-07-06">CT-07-06</a></div></td><td>14/12</td><td>médio</td><td>L2</td><td class="ids">N-06</td></tr>
+      <tr class="prio-row" id="pr-LV-09"><td colspan="6"><div class="prio" role="group" aria-label="Sua priorização da LV-09"><div class="f"><label for="p-LV-09">Priorização</label><select id="p-LV-09"><option value="">—</option><option value="alta">Alta</option><option value="media">Média</option><option value="baixa">Baixa</option><option value="nao">Não priorizar</option></select></div><div class="f"><label for="o-LV-09">Ordem de execução</label><input id="o-LV-09" type="number" min="1" max="15" step="1" inputmode="numeric" placeholder="1 a 15"><span class="dup" id="d-LV-09" hidden>Mesma ordem de outra lacuna</span></div><div class="f c"><label for="c-LV-09">Comentário</label><textarea id="c-LV-09" rows="1"></textarea></div></div></td></tr>
+    </tbody>
+  </table></div>
+  <div class="acoes"><span class="cont" id="prio-cont"></span><span class="aviso" id="prio-aviso" aria-live="polite"></span><button type="button" class="btn" id="prio-limpar">Limpar</button><button type="button" class="btn pri" id="prio-copiar">Copiar priorização</button></div>
+  <textarea id="prio-saida" class="saida" hidden aria-label="Priorização copiada"></textarea>
+  <p>A LV-06 também é condição de aceite para os 5 casos que rodam no Live sobre o Fisco simulado.</p>
+</section>
+<section class="section" id="s6">
+  <div class="sec-hdr"><span class="sec-num">6</span><span class="sec-title">Planejamento da construção</span></div>
+  <p>As lacunas viram sete ondas, na ordem em que o cronograma precisa delas e pelos critérios do roadmap do Live: proteger a apropriação do crédito, ligar primeiro o que já tem backend, e não começar código que depende de decisão aberta. As janelas são calculadas a partir de 18/11.</p>
+  <div class="callout"><div class="ct">Premissas da conta</div>
+    <ul class="plain">
+      <li><strong>Porte em semanas de uma pessoa:</strong> pequeno de 0,5 a 1; médio de 1 a 3; grande de 3 a 6. A faixa vai do melhor ao pior caso e deve ser refeita com o desenvolvedor.</li>
+      <li><strong>Uma pessoa</strong> (como hoje, D-TX-08): as ondas em sequência. <strong>Duas frentes</strong> (D-LV-03): a frente A faz C0, C1, C2 e C4; a B faz E, R e C3. C3 e C4 esperam a parcialidade (C2).</li>
+      <li>A contratação do e-mail (LV-14) e a decisão da carga pela base (LV-15) não somam semanas de desenvolvimento. A LV-13 não entra na conta: tem contorno nos testes.</li>
+      <li>Sem descontar o recesso de fim de ano.</li>
+    </ul>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Onda</th><th>Lacunas</th><th>Semanas</th><th>Uma pessoa: pronta entre</th><th>Duas frentes: pronta entre</th><th>Casos com aceite ao fim</th></tr></thead>
+    <tbody>
+      <tr><td><strong>C0</strong> · Ligar o que já tem backend</td><td><div class="gaps"><a class="lv" href="#LV-02">LV-02</a> <a class="lv" href="#LV-01">LV-01</a> <a class="lv" href="#LV-14">LV-14</a> <a class="lv" href="#LV-15">LV-15</a></div></td><td>1,5 a 4</td><td>28/11/26 e 16/12/26</td><td>28/11/26 e 16/12/26 <span class="chip gray">frente A</span></td></tr>
+      <tr><td><strong>E</strong> · Leitura dos entes</td><td><div class="gaps"><a class="lv" href="#LV-06">LV-06</a></div></td><td>3 a 6</td><td>20/12/26 e 27/01/27</td><td>09/12/26 e 30/12/26 <span class="chip gray">frente B</span></td></tr>
+      <tr><td><strong>C1</strong> · Inconsistências completas</td><td><div class="gaps"><a class="lv" href="#LV-03">LV-03</a> <a class="lv" href="#LV-09">LV-09</a> <a class="lv" href="#LV-11">LV-11</a></div></td><td>2,5 a 7</td><td>06/01/27 e 17/03/27</td><td>16/12/26 e 03/02/27 <span class="chip gray">frente A</span></td></tr>
+      <tr><td><strong>R</strong> · Arquivo de retorno</td><td><div class="gaps"><a class="lv" href="#LV-05">LV-05</a></div></td><td>1 a 3</td><td>13/01/27 e 07/04/27</td><td>16/12/26 e 20/01/27 <span class="chip gray">frente B</span></td></tr>
+      <tr><td><strong>C2</strong> · Parcialidade do crédito e do débito</td><td><div class="gaps"><a class="lv" href="#LV-04">LV-04</a> <a class="lv" href="#LV-12">LV-12</a></div></td><td>4 a 9</td><td>10/02/27 e 09/06/27</td><td>13/01/27 e 07/04/27 <span class="chip gray">frente A</span></td></tr>
+      <tr><td><strong>C3</strong> · Execução RAD e Pagamentos RAD</td><td><div class="gaps"><a class="lv" href="#LV-07">LV-07</a> <a class="lv" href="#LV-08">LV-08</a></div></td><td>4 a 9</td><td>10/03/27 e 11/08/27</td><td>10/02/27 e 09/06/27 <span class="chip gray">frente B</span></td></tr>
+      <tr><td><strong>C4</strong> · Apuração IBS/CBS no Live</td><td><div class="gaps"><a class="lv" href="#LV-10">LV-10</a></div></td><td>3 a 6</td><td>31/03/27 e 22/09/27</td><td>03/02/27 e 19/05/27 <span class="chip gray">frente A</span></td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>O caderno inteiro executável no Live:</strong> com uma pessoa, entre 31/03/27 e 22/09/27; com duas frentes, entre 10/02/27 e 09/06/27.</p>
+
+  <div class="ondas">
+    <div class="onda crit">
+      <div class="onda-h"><span class="onda-n">C0</span><span class="onda-t">Ligar o que já tem backend</span><span class="onda-q">primeira · pequeno e médio</span></div>
+      <ul class="plain">
+        <li><strong>LV-02</strong> Liberar o Débito: conferir com o dado real e tirar <code>/debitos</code> do "Em breve".</li>
+        <li><strong>LV-01</strong> Tela de Importação de DFs sobre a ingestão que o barramento já faz.</li>
+        <li><strong>LV-14</strong> Contratar o provedor de e-mail, para os convites saírem nos ambientes publicados.</li>
+        <li><strong>LV-15</strong> Decidir com o cliente o que é a carga pela base (D-CL-04).</li>
+      </ul>
+      <div class="pronto">Destrava a maior parte das etapas 1, 2 e 7 que não depende das frentes grandes.</div>
+    </div>
+    <div class="onda crit">
+      <div class="onda-h"><span class="onda-n">E</span><span class="onda-t">Leitura dos entes</span><span class="onda-q">grande · depende de fora do código</span></div>
+      <ul class="plain">
+        <li><strong>LV-06</strong> Ligar o tax-rs a uma fonte com protocolo e n/i: o MassGen nos testes, os entes reais depois (D-CL-02).</li>
+      </ul>
+      <div class="pronto">Destrava CT-01-07, CT-04-01 e CT-04-02, e é o que faz os casos que hoje passam sobre o Fisco simulado valerem como aceite.</div>
+    </div>
+    <div class="onda">
+      <div class="onda-h"><span class="onda-n">C1</span><span class="onda-t">Inconsistências completas</span><span class="onda-q">médio</span></div>
+      <ul class="plain">
+        <li><strong>LV-03</strong> Família A na ingestão: chave inválida, CNPJ divergente e RF duplicado.</li>
+        <li><strong>LV-09</strong> Regras do workflow: responsável na passagem para em análise (D-CL-06), prazo suspenso na espera do emitente, glosa com ficha vinculada, prazo da família B em dias úteis.</li>
+        <li><strong>LV-11</strong> Inconsistência financeira por tributo: a correção da CFIN no backend.</li>
+      </ul>
+      <div class="pronto">Destrava a etapa 5 e os casos CT-02-03 a CT-02-05.</div>
+    </div>
+    <div class="onda">
+      <div class="onda-h"><span class="onda-n">R</span><span class="onda-t">Arquivo de retorno</span><span class="onda-q">médio · leiaute do cliente</span></div>
+      <ul class="plain">
+        <li><strong>LV-05</strong> O leiaute sai da reunião do CT-01-06 (D-CL-03); o arquivo é gerado dos eventos do barramento.</li>
+      </ul>
+      <div class="pronto">Destrava CT-01-06 e, junto com C2 e C3, CT-04-08, CT-03-04 e CT-03-05.</div>
+    </div>
+    <div class="onda">
+      <div class="onda-h"><span class="onda-n">C2</span><span class="onda-t">Parcialidade do crédito e do débito</span><span class="onda-q">grande</span></div>
+      <ul class="plain">
+        <li><strong>LV-04</strong> Partição, status por parcela, art. 54 por fatia, glosa parcial e tributos independentes no documento.</li>
+        <li><strong>LV-12</strong> Débito por tributo: extinção por tributo e CSV com o status.</li>
+      </ul>
+      <div class="pronto">Destrava o resto das etapas 1 e 4. Vem antes de Pagamentos e da Apuração porque os dois leem o saldo por parcela (D-CL-05).</div>
+    </div>
+    <div class="onda dep">
+      <div class="onda-h"><span class="onda-n">C3</span><span class="onda-t">Execução RAD e Pagamentos RAD</span><span class="onda-q">médio + grande</span></div>
+      <ul class="plain">
+        <li><strong>LV-07</strong> Políticas e conflitos de cobertura.</li>
+        <li><strong>LV-08</strong> Guias reais por tributo, execução automática e assistida, comprovantes fora do sandbox.</li>
+      </ul>
+      <div class="pronto">Destrava a etapa 6, CT-01-08 e CT-09-06. Antes do código: decidir quem apropria o crédito no pagamento, porque o PRD tem duas regras que se contradizem.</div>
+    </div>
+    <div class="onda dep">
+      <div class="onda-h"><span class="onda-n">C4</span><span class="onda-t">Apuração IBS/CBS no Live</span><span class="onda-q">grande</span></div>
+      <ul class="plain">
+        <li><strong>LV-10</strong> O PCONT sobre o motor de compensação que já roda no backend.</li>
+      </ul>
+      <div class="pronto">Destrava a etapa 8 e o resto da etapa 7.</div>
+    </div>
+  </div>
+  <div class="callout"><div class="ct">Contorno nos testes, sem construir agora</div><p>Nos testes, o admin da plataforma cadastra os CNPJs, os fornecedores entram um a um ou pelas notas recebidas e o CT-09-05 é conferido pelo status do contrato. A tela do cliente fica no L5.</p></div>
+
+  <h3>Cada etapa contra a janela do caderno</h3>
+  <p>Quantos casos de cada etapa rodam no Live com valor de aceite, hoje e até 22/12 no melhor caso com uma pessoa, e quando a etapa fica executável inteira: o fim da última onda de que os casos dela precisam. O veredito compara essa data com o fim da janela atual.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Etapa</th><th>Janela atual</th><th>Roda hoje</th><th>Até 22/12, uma pessoa</th><th>Ondas</th><th>Inteira, uma pessoa</th><th>Inteira, duas frentes</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1</strong> · Importação e validação de documentos fiscais</td><td>09/11 a 13/11</td><td>1 de 8</td><td>até 4 de 8</td><td>C0, C1, C2</td><td><span class="chip red">não cabe</span> 10/02/27 e 09/06/27</td><td><span class="chip red">não cabe</span> 13/01/27 e 07/04/27</td></tr>
+      <tr><td><strong>2</strong> · Implantação da plataforma</td><td>16/11 a 20/11</td><td>3 de 9</td><td>até 7 de 9</td><td>C0, E, R, C3</td><td><span class="chip red">não cabe</span> 10/03/27 e 11/08/27</td><td><span class="chip red">não cabe</span> 10/02/27 e 09/06/27</td></tr>
+      <tr><td><strong>3</strong> · Governança contratual</td><td>16/11 a 20/11</td><td>5 de 6</td><td>até 5 de 6</td><td>C3</td><td><span class="chip red">não cabe</span> 10/03/27 e 11/08/27</td><td><span class="chip red">não cabe</span> 10/02/27 e 09/06/27</td></tr>
+      <tr><td><strong>4</strong> · Conciliação e apropriação do crédito</td><td>23/11 a 12/12</td><td>0 de 9</td><td>até 5 de 9</td><td>E, C1, R, C2</td><td><span class="chip red">não cabe</span> 10/02/27 e 09/06/27</td><td><span class="chip red">não cabe</span> 13/01/27 e 07/04/27</td></tr>
+      <tr><td><strong>5</strong> · Tratamento de inconsistências</td><td>30/11 a 11/12</td><td>2 de 7</td><td>até 4 de 7</td><td>E, C1</td><td><span class="chip red">não cabe</span> 06/01/27 e 17/03/27</td><td><span class="chip red">não cabe</span> 16/12/26 e 03/02/27</td></tr>
+      <tr><td><strong>6</strong> · Operação de pagamentos RAD</td><td>30/11 a 18/12</td><td>0 de 8</td><td>até 0 de 8</td><td>E, R, C3</td><td><span class="chip red">não cabe</span> 10/03/27 e 11/08/27</td><td><span class="chip red">não cabe</span> 10/02/27 e 09/06/27</td></tr>
+      <tr><td><strong>7</strong> · Apuração do débito e extinção</td><td>07/12 a 18/12</td><td>0 de 6</td><td>até 3 de 6</td><td>C0, E, C2, C4</td><td><span class="chip red">não cabe</span> 31/03/27 e 22/09/27</td><td><span class="chip red">não cabe</span> 03/02/27 e 19/05/27</td></tr>
+      <tr><td><strong>8</strong> · Fechamento da competência</td><td>14/12 a 22/12</td><td>0 de 6</td><td>até 0 de 6</td><td>E, C4</td><td><span class="chip red">não cabe</span> 31/03/27 e 22/09/27</td><td><span class="chip red">não cabe</span> 03/02/27 e 19/05/27</td></tr>
+    </tbody>
+  </table></div>
+</section>
+<section class="section" id="s7">
+  <div class="sec-hdr"><span class="sec-num">7</span><span class="sec-title">Decisões</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>Decisão</th><th>Opções</th><th>Recomendação</th></tr></thead>
+    <tbody>
+      <tr><td class="id">D-CL-01</td><td><strong>O cronograma de testes</strong></td><td>A · Manter 2026 para as etapas 1, 2, 3 e 5 e para a parte das etapas 4 e 7 que roda depois de C0, e levar o resto para 2027, conforme C2, C3 e C4 ficarem prontas.<br>B · Manter as datas e rodar no Demo o que não existe no Live.<br>C · Manter as datas e cortar casos.</td><td><strong>A.</strong> O B não serve como aceite da implantação, porque o Demo não usa o dado do cliente.</td></tr>
+      <tr><td class="id">D-CL-02</td><td><strong>A fonte dos entes nos testes</strong></td><td>A · Ligar o tax-rs ao MassGen, que emula a Receita Federal e o Comitê Gestor pela documentação deles.<br>B · Seguir com o Fisco simulado do tax-rs.<br>C · Esperar os conectores reais.</td><td><strong>A.</strong> O conector feito para o emulador é o mesmo que vai falar com os entes reais; o B não tem protocolo nem n/i.</td></tr>
+      <tr><td class="id">D-CL-03</td><td><strong>O arquivo de retorno</strong></td><td>A · Leiaute do cliente, acordado na reunião do CT-01-06.<br>B · Leiaute padrão do SplitHub, que o cliente adota.</td><td><strong>A</strong>, gerado a partir dos eventos do barramento, para não ter duas fontes da verdade.</td></tr>
+      <tr><td class="id">D-CL-04</td><td><strong>O que é a carga pela base</strong></td><td>A · A ingestão de arquivos e lotes pelo barramento, que já existe.<br>B · Um leitor direto da base do cliente.</td><td><strong>A.</strong> O B é uma integração nova, sem PRD.</td></tr>
+      <tr><td class="id">D-CL-05</td><td><strong>A ordem das frentes grandes</strong></td><td>A · Parcialidade, Pagamentos e Apuração, nessa ordem.<br>B · Pagamentos primeiro, porque a janela da etapa 6 começa antes.</td><td><strong>A</strong>, como na D-LV-02: a guia é gerada pelo saldo a apropriar.</td></tr>
+      <tr><td class="id">D-CL-06</td><td><strong>Em análise sem responsável</strong></td><td>A · O Live passa a recusar, como o caderno pede.<br>B · Manter o Live, que torna o autor responsável, e ajustar o caderno.</td><td><strong>A.</strong> O caderno segue o PRD.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+<section class="section" id="s8">
+  <div class="sec-hdr"><span class="sec-num">8</span><span class="sec-title">Riscos e observações</span></div>
+  <ul class="plain">
+    <li><strong>Volume do faturamento.</strong> CT-02-08 e CT-05-06 pedem uma semana e um ciclo de faturamento reais. O tax-rs nunca foi medido nesse volume, e a ingestão não valida o XSD, só a presença dos campos.</li>
+    <li><strong>Amostra de 13/11.</strong> Das notas da amostra importada no tax-rs, 48 foram recusadas. O relatório delas é a entrada natural da reexecução da etapa 1.</li>
+    <li><strong>Caminho do admin da plataforma.</strong> Contrato cadastrado por ele não confere a sobreposição. Nos testes, cadastrar contratos pela tela do cliente.</li>
+    <li><strong>Capacidade.</strong> Uma pessoa no tax-rs. Com C0 e C1 em primeiro, as frentes grandes começam em dezembro; o roadmap do Live (L0 a L6) e este plano disputam a mesma pessoa.</li>
+    <li><strong>Fisco simulado.</strong> Os casos marcados "entes" passam hoje, mas sobre o dado simulado. Não valem como aceite enquanto a LV-06 não estiver pronta.</li>
+  </ul>
+</section>
+
+<div class="foot">Caderno do cliente × Live do tax-rs · v1.1 · 17/11/2026</div>
+</div>
+<script>
+(function () {
+  var CHAVE = 'sh-taxrs-caderno-live-prio', ROT = { alta: 'Alta', media: 'Média', baixa: 'Baixa', nao: 'Não priorizar' };
+  function ler() { try { return JSON.parse(localStorage.getItem(CHAVE) || '{}'); } catch (e) { return {}; } }
+  function gravar(o) { try { localStorage.setItem(CHAVE, JSON.stringify(o)); } catch (e) {} }
+  var st = ler(), tb = document.querySelector('#lacunas tbody'), modo = 'data';
+  var linhas = Array.prototype.slice.call(tb.querySelectorAll('tr[data-lv]'));
+  function campos(tr) { var id = tr.getAttribute('data-lv'), g = function (x) { return document.getElementById(x + '-' + id); };
+    return { p: g('p'), o: g('o'), c: g('c'), d: g('d'), r: g('pr') }; }
+  function ordem(tr) { var n = parseInt(campos(tr).o.value, 10); return isNaN(n) ? Infinity : n; }
+  function ordenar() {
+    var foco = document.activeElement;
+    linhas.slice().sort(function (a, b) {
+      if (modo === 'ordem' && ordem(a) !== ordem(b)) return ordem(a) - ordem(b);
+      return a.getAttribute('data-i') - b.getAttribute('data-i');
+    }).forEach(function (tr) { tb.appendChild(tr); tb.appendChild(campos(tr).r); });
+    if (foco && tb.contains(foco)) foco.focus();
+  }
+  function marcar() {
+    var usados = {};
+    linhas.forEach(function (tr) { var o = campos(tr).o.value; if (o) usados[o] = (usados[o] || 0) + 1; });
+    var n = 0;
+    linhas.forEach(function (tr) {
+      var f = campos(tr);
+      tr.setAttribute('data-p', f.p.value);
+      f.d.hidden = !(f.o.value && usados[f.o.value] > 1);
+      if (f.p.value || f.o.value || f.c.value.trim()) n++;
+    });
+    document.getElementById('prio-cont').textContent = n + ' de ' + linhas.length + ' lacunas com priorização neste navegador';
+  }
+  linhas.forEach(function (tr, i) {
+    tr.setAttribute('data-i', i);
+    var id = tr.getAttribute('data-lv'), v = st[id] || {}, f = campos(tr);
+    f.p.value = v.p || ''; f.o.value = v.o || ''; f.c.value = v.c || '';
+    function salvar() {
+      if (f.p.value || f.o.value || f.c.value.trim()) st[id] = { p: f.p.value, o: f.o.value, c: f.c.value }; else delete st[id];
+      gravar(st); marcar();
+    }
+    f.p.addEventListener('change', salvar); f.o.addEventListener('input', salvar); f.c.addEventListener('input', salvar);
+    f.o.addEventListener('change', function () { if (modo === 'ordem') ordenar(); });
+  });
+  var obs = document.querySelectorAll('#s5 .filtros button');
+  obs.forEach(function (b) { b.addEventListener('click', function () {
+    modo = b.getAttribute('data-ord');
+    obs.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    ordenar();
+  }); });
+  marcar();
+  document.getElementById('prio-copiar').addEventListener('click', function () {
+    var sel = linhas.filter(function (tr) { var f = campos(tr); return f.p.value || f.o.value || f.c.value.trim(); });
+    sel.sort(function (a, b) { return ordem(a) !== ordem(b) ? ordem(a) - ordem(b) : a.getAttribute('data-i') - b.getAttribute('data-i'); });
+    var txt = sel.length ? document.title + ' · priorização das lacunas\n' + sel.map(function (tr) {
+      var f = campos(tr);
+      return (f.o.value ? f.o.value + '. ' : 'sem ordem · ') + tr.getAttribute('data-lv') + ' ' + tr.getAttribute('data-t') +
+        (f.p.value ? ' · ' + ROT[f.p.value] : '') + (f.c.value.trim() ? ' — ' + f.c.value.replace(/\s+/g, ' ').trim() : '');
+    }).join('\n') : 'Nenhuma lacuna priorizada.';
+    var s = document.getElementById('prio-saida'), aviso = document.getElementById('prio-aviso');
+    s.value = txt; s.hidden = false; s.select();
+    try {
+      navigator.clipboard.writeText(txt).then(function () { aviso.textContent = 'Copiado. Cole na conversa.'; },
+        function () { aviso.textContent = 'Selecione o texto abaixo e copie.'; });
+    } catch (e) { aviso.textContent = 'Selecione o texto abaixo e copie.'; }
+  });
+  document.getElementById('prio-limpar').addEventListener('click', function () {
+    if (!confirm('Apagar a priorização das ' + linhas.length + ' lacunas neste navegador?')) return;
+    st = {}; gravar(st);
+    linhas.forEach(function (tr) { var f = campos(tr); f.p.value = ''; f.o.value = ''; f.c.value = ''; });
+    document.getElementById('prio-saida').hidden = true; document.getElementById('prio-aviso').textContent = '';
+    marcar(); ordenar();
+  });
+})();
+(function () {
+  var bs = document.querySelectorAll('#s4 .filtros button'), rows = document.querySelectorAll('#casos tbody tr[data-s]'), grps = document.querySelectorAll('#casos tbody tr.grp-row');
+  bs.forEach(function (b) { b.addEventListener('click', function () {
+    var f = b.getAttribute('data-f');
+    bs.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    rows.forEach(function (r) { r.classList.toggle('oculta', !!f && r.getAttribute('data-s') !== f); });
+    grps.forEach(function (g) { var n = g.nextElementSibling, vis = false;
+      while (n && !n.classList.contains('grp-row')) { if (!n.classList.contains('oculta')) vis = true; n = n.nextElementSibling; }
+      g.classList.toggle('oculta', !vis); });
+  }); });
+})();
+</script>
+</body>
+</html>
