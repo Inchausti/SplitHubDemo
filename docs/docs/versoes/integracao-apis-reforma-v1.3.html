@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Referência de APIs — Reforma Tributária · SplitHub v1.3</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F7F8FA; --sur: #FFFFFF; --sur2: #F0F2F6; --sur3: #E8EBF2; --brd: #DDE1EA;
+  --txt1: #131720; --txt2: #4A5568; --txt3: #8A92A3;
+  --teal: #0E9E8E; --teal-d: rgba(14,158,142,.1);
+  --blue: #1D5FCC; --blue-d: rgba(29,95,204,.08);
+  --red: #D63A49; --red-d: rgba(214,58,73,.08);
+  --amber: #B97A10; --amber-d: rgba(185,122,16,.08);
+  --green: #1A7940; --green-d: rgba(26,121,64,.08);
+  --purple: #6B3FA0; --purple-d: rgba(107,63,160,.08);
+  --gray: #6B7280; --gray-d: rgba(107,114,128,.08);
+  --mono: #EDF0F5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+    --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+    --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+    --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+    --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+    --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+    --green: #22C55E; --green-d: rgba(34,197,94,.1);
+    --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+    --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+    --mono: #1A2030;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1117; --sur: #161C25; --sur2: #1E2533; --sur3: #232C3D; --brd: #262E3F;
+  --txt1: #E4E8EF; --txt2: #8A99B4; --txt3: #4F5B73;
+  --teal: #1FBAAA; --teal-d: rgba(31,186,170,.12);
+  --blue: #4D9FFF; --blue-d: rgba(77,159,255,.1);
+  --red: #F04B5C; --red-d: rgba(240,75,92,.1);
+  --amber: #F59E0B; --amber-d: rgba(245,158,11,.1);
+  --green: #22C55E; --green-d: rgba(34,197,94,.1);
+  --purple: #A78BFA; --purple-d: rgba(167,139,250,.1);
+  --gray: #9CA3AF; --gray-d: rgba(156,163,175,.1);
+  --mono: #1A2030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 20px 80px; }
+.doc { max-width: 940px; margin: 0 auto; }
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--txt3); text-decoration: none; margin-bottom: 28px; }
+.back:hover { color: var(--amber); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 680px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); }
+.chip.teal { background: var(--teal-d); color: var(--teal); }
+.chip.red { background: var(--red-d); color: var(--red); }
+.chip.gray { background: var(--gray-d); color: var(--gray); }
+
+/* TOC */
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+
+.section { margin-bottom: 46px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; color: var(--txt1); }
+.sec-sub { font-size: 13px; color: var(--txt2); margin-bottom: 16px; line-height: 1.65; }
+h3 { font-size: 14px; font-weight: 700; color: var(--txt1); margin: 24px 0 8px; }
+h4 { font-size: 12.5px; font-weight: 700; color: var(--txt2); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+ul.plain li { font-size: 13px; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; }
+ul.plain li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+ul.plain li strong { color: var(--txt1); }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.callout.warn { background: var(--amber-d); border-color: var(--amber); }
+.callout.warn .ct { color: var(--amber); }
+.callout.info { background: var(--blue-d); border-color: var(--blue); }
+.callout.info .ct { color: var(--blue); }
+.callout.ok { background: var(--green-d); border-color: var(--green); }
+.callout.ok .ct { color: var(--green); }
+.callout.red { background: var(--red-d); border-color: var(--red); }
+.callout.red .ct { color: var(--red); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 10px 13px; border-bottom: 1px solid var(--brd); color: var(--txt2); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sur2); }
+td strong { color: var(--txt1); font-weight: 600; }
+td code, th code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+td.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--amber); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 10px; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card li { font-size: 12.5px; color: var(--txt2); display: flex; align-items: baseline; gap: 7px; }
+.card li::before { content: "·"; color: var(--amber); font-weight: 900; flex-shrink: 0; }
+.card li strong { color: var(--txt1); }
+
+.code-block { background: var(--mono); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-x: auto; }
+.code-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--txt1); white-space: pre; display: block; line-height: 1.75; }
+.code-block code .k { color: var(--blue); font-weight: 600; }
+.code-block code .s { color: var(--green); }
+.code-block code .c { color: var(--txt3); font-style: italic; }
+.code-block code .v { color: var(--teal); }
+.code-block code .n { color: var(--amber); }
+
+/* Feature blocks */
+.feat { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.feat-hdr { padding: 13px 18px; background: var(--sur2); border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.feat-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); padding: 2px 8px; border-radius: 4px; }
+.feat-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.feat-loc { font-size: 10.5px; color: var(--txt3); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.feat-body { padding: 16px 18px; }
+.feat-body p:last-child { margin-bottom: 0; }
+
+/* Chart spec */
+.chart-spec { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+.chart-hdr { padding: 14px 18px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--purple); background: var(--purple-d); padding: 2px 8px; border-radius: 4px; }
+.chart-name { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.chart-type { font-size: 10.5px; color: var(--txt3); margin-left: auto; }
+.chart-body { padding: 16px 18px; }
+.spec-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; font-size: 12.5px; }
+.spec-k { color: var(--txt3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.spec-v { color: var(--txt2); }
+.spec-v code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.swatch { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; font-size: 12px; }
+.sw { width: 11px; height: 11px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+/* State rows */
+.state-grid { display: flex; flex-direction: column; gap: 7px; margin: 14px 0; }
+.state-row { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; flex-wrap: wrap; }
+.state-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; min-width: 150px; flex-shrink: 0; }
+.sn-amber { color: var(--amber); } .sn-blue { color: var(--blue); } .sn-teal { color: var(--teal); }
+.sn-green { color: var(--green); } .sn-red { color: var(--red); } .sn-gray { color: var(--txt3); }
+.sn-purple { color: var(--purple); }
+.state-desc { font-size: 12.5px; color: var(--txt2); flex: 1; min-width: 240px; }
+
+code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); }
+hr { border: none; border-top: 1px solid var(--brd); margin: 36px 0; }
+a.xref { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+a.xref:hover { border-bottom-style: solid; }
+.ver-row { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--brd); align-items: baseline; }
+.ver-row:last-child { border-bottom: none; }
+.ver-num { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 60px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.ver-desc { font-size: 12.5px; color: var(--txt2); flex: 1; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section, .tr-left, .tr-desc, .tr-name { overflow-wrap: anywhere; }
+}
+
+.rid { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.gap { color: var(--amber); font-weight: 700; }
+
+.src-note { font-size: 12px; color: var(--txt3); margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--brd); }
+.ext { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue); }
+.ext:hover { border-bottom-style: solid; }
+
+.api-hdr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin: 30px 0 10px; padding-top: 16px; border-top: 2px solid var(--brd); }
+.api-hdr:first-of-type { border-top: none; padding-top: 0; }
+.api-letra { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 12px; color: var(--sur); background: var(--teal); border-radius: 5px; padding: 1px 8px; }
+.api-nome { font-size: 16px; font-weight: 800; color: var(--txt1); }
+.api-org { font-size: 11.5px; color: var(--txt3); }
+.verbo { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; border-radius: 4px; padding: 1px 6px; min-width: 38px; text-align: center; }
+.verbo.post { background: var(--green-d); color: var(--green); }
+.verbo.get { background: var(--blue-d); color: var(--blue); }
+.verbo.head { background: var(--amber-d); color: var(--amber); }
+pre.code { background: var(--sur2); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.55; color: var(--txt1); margin: 8px 0 14px; white-space: pre; }
+.fluxo { counter-reset: passo; display: flex; flex-direction: column; gap: 0; margin: 10px 0 14px; }
+.fluxo > div { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--brd); font-size: 12.5px; color: var(--txt2); }
+.fluxo > div:last-child { border-bottom: none; }
+.fluxo > div::before { counter-increment: passo; content: counter(passo); display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--teal-d); color: var(--teal); font-weight: 800; font-size: 11px; }
+.fluxo b { color: var(--txt1); }
+.lado { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); margin-right: 6px; }
+
+.pls { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 16px; }
+details.pl { border: 1px solid var(--brd); border-radius: 8px; background: var(--sur); }
+details.pl > summary { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; font-size: 12.5px; color: var(--txt1); }
+details.pl > summary::-webkit-details-marker { display: none; }
+details.pl > summary::before { content: '▶'; font-size: 9px; color: var(--txt3); transition: transform .15s; }
+details.pl[open] > summary::before { transform: rotate(90deg); color: var(--teal); }
+details.pl > summary:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+details.pl > summary code { font-size: 11.5px; }
+.pl-tag { margin-left: auto; font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; border-radius: 10px; padding: 1px 8px; }
+.pl-tag.doc { background: var(--green-d); color: var(--green); }
+.pl-tag.ilus { background: var(--amber-d); color: var(--amber); }
+.pl-tag.sec { background: var(--blue-d); color: var(--blue); }
+.pl-tag.nao { background: var(--sur2); color: var(--txt3); }
+.pl-body { padding: 0 12px 10px; border-top: 1px solid var(--brd); }
+.pl-lbl { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); margin: 10px 0 0; }
+.pl-body pre.code { margin: 4px 0 6px; }
+.pl-note { font-size: 11.5px; color: var(--txt2); margin: 8px 0 2px; }
+@media (prefers-reduced-motion: reduce) { details.pl > summary::before { transition: none; } }
+</style>
+</head>
+
+<body>
+<div class="doc">
+
+<a class="back" href="../prds.html">← Hub de PRDs</a>
+<div class="eyebrow">Referência · Integração</div>
+<h1>Referência de APIs — Reforma Tributária</h1>
+<p class="subtitle">As APIs oficiais da Reforma Tributária do Consumo que o SplitHub consome ou precisa conhecer — comunicação, campos, payloads e regras, levantados da documentação oficial em 16/09/2026 e revistos em 24/09/2026, quando entrou o capítulo da API do IBS, publicada pelo Comitê Gestor em 23/09/2026.</p>
+<div class="meta-bar">
+<div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">1.3</span></div>
+<div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Referência técnica</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">24/09/2026</span></div>
+<div class="meta-pill"><span class="meta-label">APIs</span>&nbsp;<span class="meta-val">6</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v1.3</span></div>
+</div>
+<div class="toc"><div class="toc-title">Índice</div><ul class="toc-list">
+<li><a href="#s01"><span class="toc-num">01</span> Como usar esta referência</a></li>
+<li><a href="#s02"><span class="toc-num">02</span> As APIs em detalhe</a></li>
+<li><a href="#s03"><span class="toc-num">03</span> Glossário</a></li>
+<li><a href="#s04"><span class="toc-num">04</span> Fontes</a></li>
+<li><a href="#s05"><span class="toc-num">05</span> Histórico de versões</a></li>
+</ul></div>
+<div class="section" id="s01">
+<div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Como usar esta referência</span></div>
+<p>Referência técnica das APIs oficiais da Reforma Tributária do Consumo que importam ao SplitHub: o que cada uma oferece, como a comunicação acontece, os campos, os payloads e as regras de consumo. É um resumo <strong>verificado</strong> da documentação oficial — não a substitui. Antes de implementar, confira a fonte.</p><div class="table-wrap"><table><thead><tr><th>Selo nos payloads</th><th>Significado</th></tr></thead><tbody><tr><td><strong>estrutura documentada</strong></td><td>Campos conforme a documentação oficial; valores ilustrativos</td></tr><tr><td><strong>fonte secundária</strong></td><td>A página oficial não pôde ser lida; campos conforme guias que reproduzem a API</td></tr><tr><td><strong>exemplo ilustrativo</strong></td><td>Padrão conhecido, sem detalhe oficial publicado</td></tr><tr><td><strong>não publicado</strong></td><td>A documentação acessível não traz o formato — o bloco diz onde está</td></tr></tbody></table></div><div class="callout warn"><div class="ct">IBS: não há API pública da apuração assistida</div><p>O Comitê Gestor publicou as cartilhas de uso da tela e o cronograma do projeto piloto, mas nenhuma documentação de integração. Desde <strong>23/09/2026</strong> os dois lados têm contrato publicado: o Comitê Gestor lançou o <strong>MOC v1.10</strong> da API da Apuração Assistida do IBS, com Etapa 1 em homologação a partir de <strong>28/09/2026</strong>. O modelo, porém, é <strong>oposto ao da CBS</strong> — ver <a href="#api-f">F — Apuração Assistida do IBS</a> e a comparação campo a campo em <a href="../cbs-x-ibs-integracao.html">CBS × IBS</a>.</p></div>
+<div class="callout info"><div class="ct">Datas antes de código</div><p>O contrato das APIs da CBS está publicado, mas os endpoints entram em <strong>três ondas até o fim de novembro de 2026</strong> — ver <a class="xref" href="#a11">A.11</a>. O que a API nunca cobre, como o pedido e o acompanhamento de ressarcimento, está em <a class="xref" href="#a12">A.12</a>.</p></div>
+</div>
+<div class="section" id="s02">
+<div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">As APIs em detalhe</span></div>
+<p>O que cada API oferece, como a comunicação acontece e as regras que o consumidor precisa respeitar — levantado da documentação oficial em 16/09/2026 e revisto em 22/09/2026. Onde a documentação pública não detalha, está dito.</p><div class="table-wrap"><table><thead><tr><th>API</th><th>Estilo</th><th>Autenticação</th><th>Uso no SplitHub</th></tr></thead><tbody><tr><td><strong>A · Apuração da CBS</strong></td><td>REST assíncrona, webhook</td><td>OAuth 2.0 client credentials</td><td>Conciliação, crédito, débito, pagamentos, ressarcimento</td></tr><tr><td><strong>B · Calculadora de Tributos</strong></td><td>REST síncrona</td><td>Nenhuma — roda no ambiente do integrador</td><td>Validação do IBS/CBS dos documentos</td></tr><tr><td><strong>C · Conformidade Fácil</strong></td><td>REST síncrona</td><td>mTLS com certificado ICP-Brasil</td><td>Tabela de classificação tributária</td></tr><tr><td><strong>D · NFS-e Padrão Nacional</strong></td><td>REST síncrona, JSON com XML assinado</td><td>mTLS com certificado ICP-Brasil</td><td>Consulta de NFS-e e eventos</td></tr><tr><td><strong>E · Split Payment</strong></td><td>Orientada a eventos, remessa em lotes</td><td>Não detalhada no material público</td><td>Nenhum consumo direto — é API de PSPs</td></tr></tbody></table></div><div class="api-hdr" id="api-a"><span class="api-letra">A</span><span class="api-nome">APIs de Apuração da CBS</span><span class="api-org">Receita Federal · docs.receitafederal.gov.br/apuracao-cbs</span></div><h3>A.1 Ambientes e autenticação</h3><div class="table-wrap"><table><thead><tr><th>Item</th><th>Valor</th></tr></thead><tbody><tr><td><strong>Produção restrita</strong> (piloto)</td><td><code>https://api.receitafederal.gov.br/apuracao-cbs-prr/v2/</code></td></tr><tr><td><strong>Produção</strong></td><td><code>https://api.receitafederal.gov.br/apuracao-cbs/v2/</code></td></tr><tr><td><strong>Autenticação</strong></td><td>OAuth 2.0 <em>client credentials</em>: <code>Client Id</code> e <code>Client Secret</code> trocados por um <code>access_token</code> no endpoint de token, enviado em <code>Authorization: Bearer</code>. Instruções no Receita Integra (arquivos.receitafederal.gov.br → Documentos → Técnicos)</td></tr><tr><td><strong>Credencial</strong></td><td>Do estabelecimento <strong>matriz</strong>; no piloto, gerada no Portal RTC-CBS em “Gerar Credencial para API”</td></tr><tr><td><strong>Identificação</strong></td><td>CNPJ <strong>base</strong>, 8 dígitos, no caminho — a consulta cobre todos os estabelecimentos da raiz</td></tr><tr><td><strong>Token</strong></td><td><code>https://api.receitafederal.gov.br/token</code> — o manual de maio/2026 informa validade de 1 hora</td></tr><tr><td><strong>Pré-requisito</strong></td><td>Webhook HTTPS publicamente acessível</td></tr><tr><td><strong>Versão anterior (v1)</strong></td><td>Descrita no Manual da Plataforma CBS de maio/2026, só para débitos: <code>/rtc/apuracao-cbs/v1/{cnpj}</code> (2 solicitações por dia) e download em <code>/rtc/download/v1/{tiquete}</code> (8 por dia, arquivo por 24 horas). A v2 substitui esse fluxo por webhook e link assinado</td></tr></tbody></table></div><h3>A.2 Endpoints</h3><div class="table-wrap"><table><thead><tr><th>Método</th><th>Caminho</th><th>O que retorna</th><th>Disponível</th></tr></thead><tbody><tr><td><span class="verbo post">POST</span></td><td><code>/debitos/{cnpj}</code></td><td>Débitos de CBS incluídos ou atualizados, por documento</td><td>Início de out/2026</td></tr><tr><td><span class="verbo post">POST</span></td><td><code>/creditos/{cnpj}</code></td><td>Créditos de CBS e seus estados de apropriação e utilização</td><td>Início de out/2026</td></tr><tr><td><span class="verbo post">POST</span></td><td><code>/pagamentos/{cnpj}</code></td><td>Pagamentos que extinguem débitos: próprio (PCONT), RAD e split</td><td>Início de nov/2026</td></tr><tr><td><span class="verbo post">POST</span></td><td><code>/recolhimentos/{cnpj}</code></td><td>Recolhimentos feitos pelo contribuinte como <strong>adquirente</strong> (RAD e split), por documento do fornecedor</td><td>Início de nov/2026</td></tr><tr><td><span class="verbo get">GET</span></td><td><code>/situacao/{tiqueteSolicitacao}</code></td><td>Estado de uma solicitação e o link do arquivo</td><td>Com as demais</td></tr><tr><td>—</td><td>Emissão de DARF para RAD e PCONT</td><td>Anunciada; sem página de documentação publicada</td><td>Fim de nov/2026</td></tr><tr><td>—</td><td>Concluir Apuração de CBS do Mês Anterior</td><td><strong>API de ação</strong>, listada como prevista no manual de maio/2026; sem documentação ainda</td><td>Sem data</td></tr></tbody></table></div><div class="pl-lbl" style="margin-top:14px">Payloads</div><div class="pls"><details class="pl"><summary><span class="verbo post">POST</span><code>endpoint de token (Receita Integra)</code><span class="pl-tag ilus">exemplo ilustrativo</span></summary><div class="pl-body"><div class="pl-lbl">Requisição</div><pre class="code">POST https://api.receitafederal.gov.br/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+&amp;client_id={Client Id}
+&amp;client_secret={Client Secret}</pre><div class="pl-lbl">Resposta</div><pre class="code">{
+  "access_token": "eyJhbGciOi...",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}</pre><p class="pl-note">Endpoint do token e validade de 1 hora conforme o Manual da Plataforma CBS (maio/2026); corpo no padrão OAuth 2.0 <em>client credentials</em>, detalhado no material do Receita Integra.</p></div></details><details class="pl"><summary><span class="verbo post">POST</span><code>/debitos/{cnpj}</code><span class="pl-tag doc">estrutura documentada</span></summary><div class="pl-body"><div class="pl-lbl">Requisição</div><pre class="code">POST /apuracao-cbs/v2/debitos/12345678
+Authorization: Bearer eyJhbGciOi...
+Content-Type: application/json
+
+{
+  "urlRetorno": "https://integracao.splithub.com.br/rfb/webhook"
+}</pre><div class="pl-lbl">Resposta imediata · 201</div><pre class="code">HTTP/1.1 201 Created
+{
+  "tiqueteSolicitacao": "7b3f0c2e-5a41-4d8e-9f10-2c6a1e9b4d77",
+  "tEASegundos": "120"
+}</pre><div class="pl-lbl">Webhook · sucesso</div><pre class="code">HEAD https://integracao.splithub.com.br/rfb/webhook      ← validação, antes do 201
+POST https://integracao.splithub.com.br/rfb/webhook      ← aviso de conclusão
+{
+  "tiqueteSolicitacao": "7b3f0c2e-5a41-4d8e-9f10-2c6a1e9b4d77",
+  "urlAssinada": "https://api.receitafederal.gov.br/prr-rtc/download/v2/...",
+  "urlAssinadaExpiraEm": "2026-10-03T14:30:00Z"
+}
+→ o SplitHub responde 2xx; qualquer outro status gera nova tentativa</pre><div class="pl-lbl">Arquivo JSON</div><pre class="code">{
+  "tiqueteSolicitacao": "7b3f0c2e-5a41-4d8e-9f10-2c6a1e9b4d77",
+  "ni": "12345678",
+  "niConsumidor": "",
+  "geradoEm": "2026-10-01T09:14:22-03:00",
+  "apuracao": [
+    {
+      "pa": "09/2026",
+      "debitos": [
+        {
+          "origem": 0,
+          "documento": 55,
+          "chave": "43260912345678000190550010000128841000128847",
+          "emissao": "2026-09-14T10:02:00-03:00",
+          "registro": "2026-09-14T10:02:31-03:00",
+          "atualizacao": "2026-09-29T16:40:05-03:00",
+          "cbs": {
+            "apurado": 9000.00,
+            "excedente": 0.00,
+            "inexigivel": 0.00,
+            "suspenso": 0.00,
+            "extinto": 6000.00,
+            "saldoDevedor": 3000.00
+          }
+        }
+      ]
+    }
+  ]
+}</pre><div class="pl-lbl">Erro na abertura · 400</div><pre class="code">HTTP/1.1 400 Bad Request
+{
+  "codigoErro": "APURACAO-001",
+  "mensagemErro": "Parâmetros inválidos para o processamento da solicitação"
+}</pre><p class="pl-note">O arquivo é baixado pela <code>urlAssinada</code> recebida no webhook. A estrutura segue a documentação; chaves, datas e valores são ilustrativos.</p></div></details><details class="pl"><summary><span class="verbo post">POST</span><code>/creditos/{cnpj}</code><span class="pl-tag doc">estrutura documentada</span></summary><div class="pl-body"><div class="pl-lbl">Requisição</div><pre class="code">POST /apuracao-cbs/v2/creditos/12345678
+Authorization: Bearer eyJhbGciOi...
+Content-Type: application/json
+
+{
+  "urlRetorno": "https://integracao.splithub.com.br/rfb/webhook"
+}</pre><div class="pl-lbl">Resposta imediata · 201</div><pre class="code">HTTP/1.1 201 Created
+{
+  "tiqueteSolicitacao": "7b3f0c2e-5a41-4d8e-9f10-2c6a1e9b4d77",
+  "tEASegundos": "120"
+}</pre><div class="pl-lbl">Webhook · sucesso</div><pre class="code">HEAD https://integracao.splithub.com.br/rfb/webhook      ← validação, antes do 201
+POST https://integracao.splithub.com.br/rfb/webhook      ← aviso de conclusão
+{
+  "tiqueteSolicitacao": "7b3f0c2e-5a41-4d8e-9f10-2c6a1e9b4d77",
+  "urlAssinada": "https://api.receitafederal.gov.br/prr-rtc/download/v2/...",
+  "urlAssinadaExpiraEm": "2026-10-03T14:30:00Z"
+}
+→ o SplitHub responde 2xx; qualquer outro status gera nova tentativa</pre><div class="pl-lbl">Arquivo JSON</div><pre class="code">{
+  "tiqueteSolicitacao": "a41c9d02-7e3b-4f55-8c21-0b9e6d3f1a88",
+  "ni": "12345678",
+  "niConsumidor": "",
+  "geradoEm": "2026-10-01T09:20:47-03:00",
+  "apuracao": [
+    {
+      "pa": "09/2026",
+      "creditos": [
+        {
+          "origem": 0,
+          "documento": 55,
+          "chave": "43260998765432000110550010000402211000402219",
+          "emissao": "2026-09-10T08:15:00-03:00",
+          "registro": "2026-09-10T08:15:44-03:00",
+          "atualizacao": "2026-09-30T11:02:19-03:00",
+          "cbs": {
+            "apurado": 12000.00,
+            "excedente": 0.00,
+            "apropriacao": {
+              "inapropriavel": 0.00,
+              "suspenso": 0.00,
+              "prescrito": 0.00,
+              "aApropriar": 2000.00,
+              "apropriado": 10000.00
+            },
+            "utilizacao": {
+              "inutilizavel": 0.00,
+              "utilizado": 7500.00,
+              "restabelecido": 0.00,
+              "naoUtilizado": {
+                "saldoCredor": 2500.00,
+                "pedidoRessarcimento": 0.00
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}</pre><p class="pl-note">O arquivo é baixado pela <code>urlAssinada</code> recebida no webhook. A estrutura segue a documentação; chaves, datas e valores são ilustrativos. No exemplo: R$ 12 mil apurados, R$ 10 mil apropriados (R$ 2 mil ainda a apropriar), R$ 7,5 mil utilizados e R$ 2,5 mil de saldo credor.</p></div></details><details class="pl"><summary><span class="verbo post">POST</span><code>/pagamentos/{cnpj}</code><span class="pl-tag doc">estrutura documentada</span></summary><div class="pl-body"><div class="pl-lbl">Requisição</div><pre class="code">POST /apuracao-cbs/v2/pagamentos/12345678
+Authorization: Bearer eyJhbGciOi...
+Content-Type: application/json
+
+{
+  "urlRetorno": "https://integracao.splithub.com.br/rfb/webhook"
+}</pre><div class="pl-lbl">Resposta imediata · 201</div><pre class="code">HTTP/1.1 201 Created
+{
+  "tiqueteSolicitacao": "7b3f0c2e-5a41-4d8e-9f10-2c6a1e9b4d77",
+  "tEASegundos": "120"
+}</pre><div class="pl-lbl">Arquivo JSON</div><pre class="code">{
+  "tiqueteSolicitacao": "c9e21b7a-3d05-4a6f-b812-5f0c7a2e9d13",
+  "ni": "12345678",
+  "geradoEm": "2026-11-04T07:55:10-03:00",
+  "apuracao": [
+    {
+      "dataArrecadacao": "2026-10-30T14:12:00-03:00",
+      "pagamentos": [
+        {
+          "numeroDARF": "07.17.26303.1234567-8",
+          "tipo": 1,
+          "niAdquirente": "",
+          "composicao": [
+            { "pa": "09/2026", "principal": 3000.00, "multa": 0.00, "juros": 0.00, "total": 3000.00 }
+          ]
+        }
+      ]
+    }
+  ]
+}</pre><p class="pl-note">O arquivo é baixado pela <code>urlAssinada</code> recebida no webhook. A estrutura segue a documentação; chaves, datas e valores são ilustrativos. A enumeração de <code>tipo</code> não está publicada na página; o valor do exemplo é ilustrativo.</p></div></details><details class="pl"><summary><span class="verbo post">POST</span><code>/recolhimentos/{cnpj}</code><span class="pl-tag doc">estrutura documentada</span></summary><div class="pl-body"><div class="pl-lbl">Requisição</div><pre class="code">POST /apuracao-cbs/v2/recolhimentos/12345678
+Authorization: Bearer eyJhbGciOi...
+Content-Type: application/json
+
+{
+  "urlRetorno": "https://integracao.splithub.com.br/rfb/webhook"
+}</pre><div class="pl-lbl">Resposta imediata · 201</div><pre class="code">HTTP/1.1 201 Created
+{
+  "tiqueteSolicitacao": "7b3f0c2e-5a41-4d8e-9f10-2c6a1e9b4d77",
+  "tEASegundos": "120"
+}</pre><div class="pl-lbl">Arquivo JSON</div><pre class="code">{
+  "tiqueteSolicitacao": "e2d7f4a1-9b6c-4e03-a5d8-71f2c0b3e946",
+  "ni": "12345678",
+  "niConsumidor": "",
+  "geradoEm": "2026-11-04T08:03:51-03:00",
+  "apuracao": [
+    {
+      "dataArrecadacao": "2026-10-28T10:30:00-03:00",
+      "pagamentos": [
+        {
+          "numeroDARF": "07.17.26301.7654321-0",
+          "tipo": 2,
+          "composicao": [
+            {
+              "sequencial": 1,
+              "pa": "09/2026",
+              "vencimento": "2026-10-30T23:59:59-03:00",
+              "niFornecedor": "98765432000110",
+              "chaveDFE": "43260998765432000110550010000402211000402219",
+              "principal": 12000.00,
+              "multa": 0.00,
+              "juros": 0.00,
+              "total": 12000.00
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}</pre><p class="pl-note">O arquivo é baixado pela <code>urlAssinada</code> recebida no webhook. A estrutura segue a documentação; chaves, datas e valores são ilustrativos. Cada item de <code>composicao</code> liga o recolhimento ao fornecedor (<code>niFornecedor</code>) e ao documento (<code>chaveDFE</code>).</p></div></details><details class="pl"><summary><span class="verbo get">GET</span><code>/situacao/{tiqueteSolicitacao}</code><span class="pl-tag doc">estrutura documentada</span></summary><div class="pl-body"><div class="pl-lbl">Requisição</div><pre class="code">GET /apuracao-cbs/v2/situacao/7b3f0c2e-5a41-4d8e-9f10-2c6a1e9b4d77
+Authorization: Bearer eyJhbGciOi...
+Accept: application/json</pre><div class="pl-lbl">Resposta · em andamento</div><pre class="code">HTTP/1.1 200 OK
+{ "estado": "EM_PROCESSAMENTO" }</pre><div class="pl-lbl">Resposta · concluída</div><pre class="code">HTTP/1.1 200 OK
+{
+  "estado": "CONCLUIDA",
+  "urlAssinada": "https://api.receitafederal.gov.br/prr-rtc/download/v2/...",
+  "urlAssinadaExpiraEm": "2026-08-26T14:30:00Z"
+}</pre><div class="pl-lbl">Resposta · erro</div><pre class="code">{
+  "estado": "ERRO",
+  "codigoErro": "APURACAO-408",
+  "mensagemErro": "Tempo limite de processamento excedido (240 minutos)."
+}</pre></div></details><details class="pl"><summary><span class="verbo post">POST</span><code>webhook do SplitHub · erro</code><span class="pl-tag doc">estrutura documentada</span></summary><div class="pl-body"><div class="pl-lbl">Corpo recebido</div><pre class="code">{
+  "codigoErro": "APURACAO-408",
+  "mensagemErro": "Tempo limite de processamento excedido (240 minutos)."
+}</pre><p class="pl-note">Quando o processamento falha, o webhook recebe o erro no lugar do link.</p></div></details></div><h3>A.3 A comunicação, passo a passo</h3><p>Todas as consultas seguem o mesmo padrão assíncrono: pede-se, recebe-se um tíquete, e o arquivo chega depois, por webhook, como um link temporário.</p><div class="fluxo"><div><span><span class="lado">Cliente</span><b>Obtém o token</b> OAuth com Client Id e Client Secret.</span></div><div><span><span class="lado">Cliente</span><b>Abre a solicitação</b>: <code>POST /creditos/{cnpj}</code> com <code>urlRetorno</code> no corpo.</span></div><div><span><span class="lado">API</span><b>Valida o webhook com <code>HEAD</code></b> na <code>urlRetorno</code>. Se não responder, a solicitação é cancelada.</span></div><div><span><span class="lado">API</span><b>Responde <code>201</code></b> com <code>tiqueteSolicitacao</code> e <code>tEASegundos</code> (tempo estimado de atendimento).</span></div><div><span><span class="lado">API</span><b>Processa</b> — até 240 minutos. Passou disso, a solicitação vai para <code>ERRO</code> (<code>APURACAO-408</code>).</span></div><div><span><span class="lado">API</span><b>Chama o webhook</b> com <code>tiqueteSolicitacao</code>, <code>urlAssinada</code> e <code>urlAssinadaExpiraEm</code> — ou <code>codigoErro</code> e <code>mensagemErro</code>.</span></div><div><span><span class="lado">Cliente</span><b>Responde <code>2xx</code></b> só depois de aceitar o aviso. Qualquer outro status faz a API tentar de novo.</span></div><div><span><span class="lado">Cliente</span><b>Baixa o JSON</b> pela <code>urlAssinada</code> antes de 48 horas.</span></div><div><span><span class="lado">Alternativa</span><b>Polling</b>: <code>GET /situacao/{tiqueteSolicitacao}</code> no lugar do webhook.</span></div></div><h3>A.4 Regras de comunicação</h3><div class="table-wrap"><table><thead><tr><th>Regra</th><th>Valor</th><th>O que exige do consumidor</th></tr></thead><tbody><tr><td><strong>Limite de abertura</strong></td><td>4 chamadas por dia, por endpoint</td><td>Agendamento, nunca consulta sob demanda do usuário</td></tr><tr><td><strong>Janela de retorno</strong></td><td>Inclusões e atualizações dos últimos <strong>8 dias</strong>; na primeira consulta, desde o dia 1 do mês corrente</td><td>Consultar ao menos a cada 8 dias — um intervalo maior perde atualizações sem aviso</td></tr><tr><td><strong>Tempo de processamento</strong></td><td>Até 240 minutos</td><td>Não bloquear nenhuma tela esperando o arquivo</td></tr><tr><td><strong>Validade do arquivo</strong></td><td>48 horas a partir do aviso</td><td>Baixar e persistir assim que o webhook chegar</td></tr><tr><td><strong>Validação do webhook</strong></td><td><code>HEAD</code> na <code>urlRetorno</code> antes de aceitar</td><td>O endpoint precisa responder a <code>HEAD</code></td></tr><tr><td><strong>Aceite do aviso</strong></td><td>Só <code>2xx</code> conta como recebido; o resto gera nova tentativa</td><td>Tratar o aviso de forma idempotente pelo tíquete</td></tr><tr><td><strong>Segurança</strong></td><td>HTTPS obrigatório; <code>urlAssinada</code> é segredo temporário</td><td>Não gravar a URL em log, métrica nem histórico; mascarar tokens na auditoria</td></tr></tbody></table></div><h3>A.5 Estados da solicitação</h3><div class="table-wrap"><table><thead><tr><th>Estado</th><th>Campos presentes</th></tr></thead><tbody><tr><td><code>PENDENTE</code></td><td><code>estado</code></td></tr><tr><td><code>EM_PROCESSAMENTO</code></td><td><code>estado</code></td></tr><tr><td><code>CONCLUIDA</code></td><td><code>estado</code>, <code>urlAssinada</code>, <code>urlAssinadaExpiraEm</code></td></tr><tr><td><code>ERRO</code></td><td><code>estado</code>, <code>codigoErro</code>, <code>mensagemErro</code></td></tr></tbody></table></div><h3>A.6 Débitos — o arquivo</h3><div class="table-wrap"><table><thead><tr><th>Campo</th><th>Tipo</th><th>Significado</th></tr></thead><tbody><tr><td><code>ni</code> · <code>niConsumidor</code> · <code>geradoEm</code></td><td>string · string · datetime</td><td>Contribuinte, consumidor e geração do arquivo</td></tr><tr><td><code>apuracao[].pa</code></td><td>mm/aaaa</td><td>Período de apuração</td></tr><tr><td><code>debitos[].origem</code> · <code>documento</code> · <code>chave</code></td><td>int · int · string(50)</td><td>Origem do débito, tipo e chave do documento fiscal</td></tr><tr><td><code>debitos[].emissao</code> · <code>registro</code> · <code>atualizacao</code></td><td>datetime</td><td>Emissão, registro na base e última mudança — a chave da consulta incremental</td></tr><tr><td><code>cbs.apurado</code></td><td>decimal(18,2)</td><td>Valor apurado</td></tr><tr><td><code>cbs.excedente</code></td><td>decimal(18,2)</td><td>Valor ainda não processado</td></tr><tr><td><code>cbs.inexigivel</code> · <code>suspenso</code></td><td>decimal(18,2)</td><td>Parcela que não pode ser cobrada, ou está suspensa</td></tr><tr><td><code>cbs.extinto</code></td><td>decimal(18,2)</td><td>Parcela já extinta por alguma modalidade</td></tr><tr><td><code>cbs.saldoDevedor</code></td><td>decimal(18,2)</td><td>O que ainda falta extinguir</td></tr></tbody></table></div><h3>A.7 Créditos — o arquivo</h3><div class="table-wrap"><table><thead><tr><th>Campo</th><th>Tipo</th><th>Significado</th></tr></thead><tbody><tr><td><code>creditos[].origem</code> · <code>documento</code> · <code>chave</code></td><td>int · int · string(50)</td><td>Origem, tipo e chave do documento</td></tr><tr><td><code>cbs.apurado</code> · <code>excedente</code></td><td>decimal(18,2)</td><td>Valor apurado e ainda não processado</td></tr><tr><td><code>apropriacao.inapropriavel</code></td><td>decimal(18,2)</td><td>Parcela que não gera direito a crédito</td></tr><tr><td><code>apropriacao.suspenso</code></td><td>decimal(18,2)</td><td>Apropriação suspensa</td></tr><tr><td><code>apropriacao.prescrito</code></td><td>decimal(18,2)</td><td>Parcela que perdeu o prazo</td></tr><tr><td><code>apropriacao.aApropriar</code></td><td>decimal(18,2)</td><td>Aguardando a extinção do débito do fornecedor</td></tr><tr><td><code>apropriacao.apropriado</code></td><td>decimal(18,2)</td><td>Crédito já apropriado</td></tr><tr><td><code>utilizacao.inutilizavel</code></td><td>decimal(18,2)</td><td>Apropriado, mas que não pode ser usado</td></tr><tr><td><code>utilizacao.utilizado</code></td><td>decimal(18,2)</td><td>Já usado para extinguir débitos</td></tr><tr><td><code>utilizacao.restabelecido</code></td><td>decimal(18,2)</td><td>Devolvido ao saldo depois de ter sido usado</td></tr><tr><td><code>naoUtilizado.saldoCredor</code></td><td>decimal(18,2)</td><td>Crédito disponível que ainda não abateu nada</td></tr><tr><td><code>naoUtilizado.pedidoRessarcimento</code></td><td>decimal(18,2)</td><td>Parcela em pedido de ressarcimento</td></tr></tbody></table></div><div class="callout info"><div class="ct">Regra de leitura dos créditos</div><p>Os valores de <code>apropriacao</code> descrevem o caminho até o crédito existir; os de <code>utilizacao</code>, o que aconteceu com ele depois. Um documento pode ter parte apropriada, parte a apropriar e parte suspensa ao mesmo tempo — o estado do crédito no SplitHub precisa ser por <strong>valor</strong>, não um rótulo único por documento.</p></div><h3>A.8 Pagamentos e recolhimentos — o arquivo</h3><div class="table-wrap"><table><thead><tr><th>Campo</th><th>Pagamentos</th><th>Recolhimentos</th><th>Significado</th></tr></thead><tbody><tr><td><code>apuracao[].dataArrecadacao</code></td><td>✓</td><td>✓</td><td>Data e hora da arrecadação</td></tr><tr><td><code>pagamentos[].numeroDARF</code> · <code>tipo</code></td><td>✓</td><td>✓</td><td>DARF e tipo de pagamento (enumeração não publicada na página)</td></tr><tr><td><code>pagamentos[].niAdquirente</code></td><td>✓</td><td>—</td><td>Quem pagou, quando não foi o próprio contribuinte</td></tr><tr><td><code>composicao[].pa</code></td><td>✓</td><td>✓</td><td>Período a que o valor se refere</td></tr><tr><td><code>composicao[].principal</code> · <code>multa</code> · <code>juros</code> · <code>total</code></td><td>✓</td><td>✓</td><td>Composição do valor</td></tr><tr><td><code>composicao[].sequencial</code> · <code>vencimento</code></td><td>—</td><td>✓</td><td>Item e vencimento</td></tr><tr><td><code>composicao[].niFornecedor</code> · <code>chaveDFE</code></td><td>—</td><td>✓</td><td>Fornecedor e documento a que o recolhimento se vincula</td></tr></tbody></table></div><h3>A.9 Enumerações</h3><div class="table-wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;border:none;background:none"><div class="table-wrap"><table><thead><tr><th>Origem</th><th>Código</th></tr></thead><tbody><tr><td>Normal</td><td>0</td></tr><tr><td>Devolução por PCONT</td><td>20</td></tr><tr><td>Devolução por RAD</td><td>21</td></tr><tr><td>Devolução por crédito</td><td>22</td></tr><tr><td>Cancelamento de crédito</td><td>30</td></tr><tr><td>Cancelamento de RAD</td><td>31</td></tr><tr><td>Cancelamento de PCONT</td><td>32</td></tr><tr><td>Perecimento no transporte FOB</td><td>50</td></tr><tr><td>Perecimento no transporte CIF</td><td>51</td></tr><tr><td>Devolução de perecimento CIF por PCONT · RAD · crédito</td><td>52 · 53 · 54</td></tr><tr><td>Nota de crédito de multa e juros</td><td>55</td></tr></tbody></table></div><div class="table-wrap"><table><thead><tr><th>Documento</th><th>Código</th></tr></thead><tbody><tr><td>NF-e</td><td>55</td></tr><tr><td>CT-e</td><td>57</td></tr><tr><td>NFCom</td><td>62</td></tr><tr><td>BP-e</td><td>63</td></tr><tr><td>GTV-e</td><td>64</td></tr><tr><td>NFC-e</td><td>65</td></tr><tr><td>NF3-e</td><td>66</td></tr><tr><td>CT-e OS</td><td>67</td></tr><tr><td>NFS-e · NFS-e Via</td><td>91 · 92</td></tr><tr><td>BP-e TM</td><td>93</td></tr><tr><td>DeRE</td><td>94</td></tr><tr><td>CT-e Simplificado</td><td>97</td></tr></tbody></table></div></div><p class="src-note">A tabela de origem vale para débitos e créditos. A de documentos mostra que a apuração já recebe GTV-e, NFS-e Via, BP-e TM, DeRE e CT-e Simplificado — tipos que o protótipo não conhece.</p><h3>A.10 Erros</h3><div class="table-wrap"><table><thead><tr><th>HTTP</th><th>Quando</th><th>Corpo</th></tr></thead><tbody><tr><td><code>201</code></td><td>Solicitação aberta</td><td><code>tiqueteSolicitacao</code>, <code>tEASegundos</code></td></tr><tr><td><code>200</code></td><td>Consulta de situação</td><td><code>estado</code> e campos do estado</td></tr><tr><td><code>400</code> · <code>401</code> · <code>404</code> · <code>500</code></td><td>Parâmetro inválido, token ausente ou inválido, recurso inexistente, falha interna</td><td><code>codigoErro</code> (ex.: <code>APURACAO-001</code>) e <code>mensagemErro</code></td></tr><tr><td><code>ERRO</code> no estado</td><td>Processamento passou de 240 minutos</td><td><code>APURACAO-408</code></td></tr></tbody></table></div><h3 id="a11">A.11 Cronograma de liberação</h3><p>A Receita divulgou o calendário na notícia que acompanhou a nova documentação técnica, em setembro de 2026. São <strong>três ondas até o fim de novembro de 2026</strong>, e cada uma entra ao mesmo tempo nos dois ambientes — <strong>Produção Restrita (piloto da CBS)</strong> e <strong>Produção Beta</strong>. O calendário existe só no texto da notícia: a documentação técnica descreve o contrato, não a data.</p>
+<div class="table-wrap"><table><thead><tr><th>Onda</th><th>Endpoints</th><th>Ambientes</th></tr></thead><tbody>
+<tr><td><strong>Início de out/2026</strong></td><td><code>POST /debitos/{cnpj}</code> · <code>POST /creditos/{cnpj}</code></td><td>Produção Restrita (piloto) e Produção Beta</td></tr>
+<tr><td><strong>Início de nov/2026</strong></td><td><code>POST /pagamentos/{cnpj}</code> · <code>POST /recolhimentos/{cnpj}</code></td><td>Produção Restrita (piloto) e Produção Beta</td></tr>
+<tr><td><strong>Fim de nov/2026</strong></td><td>Emitir DARF para <strong>RAD</strong> · Emitir DARF para <strong>PCONT</strong></td><td>Produção Restrita (piloto) e Produção Beta</td></tr>
+<tr><td>Sem data</td><td>Concluir Apuração de CBS do Mês Anterior · ampliação do acesso para além do piloto</td><td>—</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">Onde estamos em 22/09/2026</div><p><strong>Nenhum endpoint da v2 está no ar.</strong> O que existe hoje é o fluxo v1 do Manual de maio/2026, só para débitos, com duas solicitações por dia e download em 24 horas. A primeira onda da v2 é a que liga a integração de verdade — e é a que o SplitHub precisa estar pronto para consumir.</p></div>
+<div class="table-wrap"><table><thead><tr><th>Marco</th><th>Data</th><th>O que significa</th></tr></thead><tbody>
+<tr><td>Liberação original da API de apuração</td><td>dez/2025</td><td>Primeira API, em produção restrita, só para as empresas do piloto</td></tr>
+<tr><td>Manual da Plataforma CBS</td><td>21/05/2026</td><td>Descreve a v1 e antecipa a API de conclusão da apuração</td></tr>
+<tr><td>Guia das APIs assíncronas v1.0</td><td>03/09/2026</td><td>Regras comuns da v2: 4 chamadas/dia, janela de 8 dias, 240 min, link de 48 h</td></tr>
+<tr><td>Nova documentação técnica publicada</td><td>set/2026</td><td>Contrato dos seis serviços e o cronograma das três ondas</td></tr>
+</tbody></table></div>
+<p class="src-note">Acesso hoje restrito às empresas do piloto da CBS, com credencial gerada no Portal RTC–CBS. Gratuito na fase de teste e nas etapas seguintes. A ampliação para além do piloto é descrita como gradual, <strong>sem data divulgada</strong>.</p>
+
+<h3 id="a12">A.12 O que a API não cobre</h3><p>Tão importante quanto o que existe: o que o produto <em>não</em> vai conseguir automatizar por essa via.</p>
+<div class="table-wrap"><table><thead><tr><th>Necessidade do SplitHub</th><th>Situação na API</th><th>O que sobra</th></tr></thead><tbody>
+<tr><td><strong>Solicitar ressarcimento</strong></td><td>Não existe endpoint, e nenhum aparece no cronograma até nov/2026</td><td>Pedido protocolado no portal por ação humana — é a decisão D-04 do PRD de Ressarcimento</td></tr>
+<tr><td><strong>Acompanhar o pedido de ressarcimento</strong></td><td>Não existe endpoint de situação do pedido: nem deferido, nem indeferido, nem pago, nem protocolo, nem contagem do prazo do art. 39</td><td>Situação e decisão continuam entrada manual no módulo</td></tr>
+<tr><td>Conferir quanto do crédito foi para ressarcimento</td><td><strong>Coberto</strong> — <code>naoUtilizado.pedidoRessarcimento</code> e <code>naoUtilizado.saldoCredor</code> no arquivo de créditos</td><td>Conciliação por documento e período: prova que o crédito reservado saiu do pool de compensação</td></tr>
+<tr><td>Emitir DARF</td><td>Anunciada para o fim de nov/2026, sem página de documentação publicada</td><td>Aguardar o contrato antes de desenhar a tela</td></tr>
+<tr><td>Fechar a apuração do mês</td><td>API de ação prevista no manual de maio/2026, sem documentação e sem data</td><td>Nada a implementar por ora</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">O campo de ressarcimento é valor, não estado</div><p><code>naoUtilizado.pedidoRessarcimento</code> diz <em>quanto</em> do crédito daquele documento está em pedido. Não diz em que pé o pedido está. Serve para conferência de saldo; não serve para a trilha do pedido.</p></div>
+
+<div class="api-hdr" id="api-b"><span class="api-letra">B</span><span class="api-nome">Calculadora de Tributos</span><span class="api-org">Receita Federal · consumo.tributos.gov.br</span></div><div class="table-wrap"><table><thead><tr><th>Item</th><th>Valor</th></tr></thead><tbody><tr><td><strong>Onde roda</strong></td><td><strong>Só localmente.</strong> O manual oficial é explícito: não há API pública hospedada para cálculo remoto. A integração usa o componente offline, em Docker ou Java 21, no ambiente do integrador</td></tr><tr><td><strong>Base local</strong></td><td><code>http://localhost:8080/api</code> — componente de código aberto, com banco embutido; mesmo motor do simulador web</td></tr><tr><td><strong>Autenticação</strong></td><td>Nenhuma — a API é local</td></tr><tr><td><strong>Swagger oficial</strong></td><td><code>consumo.tributos.gov.br/servico/calcular-tributos-consumo/api/swagger-ui/index.html</code></td></tr><tr><td><strong>Privacidade</strong></td><td>Sem coleta de dados nem telemetria: nada do que é calculado vai para a Receita</td></tr><tr><td><strong>Comunicação</strong></td><td>Síncrona, JSON</td></tr></tbody></table></div><div class="table-wrap"><table><thead><tr><th>Método</th><th>Caminho</th><th>Finalidade</th></tr></thead><tbody><tr><td><span class="verbo post">POST</span></td><td><code>/calculadora/regime-geral</code></td><td>Cálculo completo da operação: IBS estadual, IBS municipal, CBS e IS por item, com memória de cálculo</td></tr><tr><td><span class="verbo post">POST</span></td><td><code>/calculadora/base-calculo/cbs-ibs-mercadorias</code></td><td>Base de cálculo de CBS e IBS para mercadorias</td></tr><tr><td><span class="verbo post">POST</span></td><td><code>/calculadora/base-calculo/is-mercadorias</code></td><td>Base de cálculo do Imposto Seletivo</td></tr><tr><td><span class="verbo get">GET</span></td><td><code>/calculadora/dados-abertos/versao</code></td><td>Versão das regras e da base usadas pelo motor</td></tr></tbody></table></div><div class="pl-lbl" style="margin-top:14px">Payloads</div><div class="pls"><details class="pl"><summary><span class="verbo post">POST</span><code>/calculadora/regime-geral</code><span class="pl-tag sec">fonte secundária</span></summary><div class="pl-body"><div class="pl-lbl">Requisição</div><pre class="code">POST http://localhost:8080/api/calculadora/regime-geral
+Content-Type: application/json
+
+{
+  "id": "5f2c1a8e-7d3b-4c9a-a1e0-6b8d2f4c9e17",
+  "versao": "0.0.1",
+  "dataHoraEmissao": "2026-09-16T10:00:00-03:00",
+  "municipio": 4314902,
+  "uf": "RS",
+  "itens": [
+    {
+      "numero": 1,
+      "ncm": "84713012",
+      "cst": "000",
+      "baseCalculo": 200.00,
+      "quantidade": 1,
+      "unidade": "UN",
+      "cClassTrib": "000001",
+      "impostoSeletivo": { "…": "CST, base, quantidade, unidade, imposto informado e classificação" },
+      "tributacaoRegular": { "…": "CST e classificação" }
+    }
+  ]
+}</pre><div class="pl-lbl">Resposta · 200</div><pre class="code">{
+  "objetos": [
+    {
+      "nObj": 1,
+      "tribCalc": {
+        "IBSCBS": {
+          "CST": "000",
+          "cClassTrib": "000001",
+          "gIBSCBS": {
+            "vBC": 200.00,
+            "gIBSUF":  { "pIBSUF": 0.10, "vIBSUF": 0.20, "memoriaCalculo": "…" },
+            "gIBSMun": { "pIBSMun": 0.00, "vIBSMun": 0.00, "memoriaCalculo": "…" },
+            "gCBS":    { "pCBS": 0.90, "vCBS": 1.80, "memoriaCalculo": "…" }
+          }
+        }
+      }
+    }
+  ],
+  "total": { "…": "totais agregados de todos os itens" }
+}</pre><div class="pl-lbl">Erro · 422</div><pre class="code">{
+  "type": "…",
+  "title": "Erro de validação",
+  "status": 422,
+  "detail": "…",
+  "instance": "/api/calculadora/regime-geral",
+  "properties": { "…": "…" }
+}</pre><p class="pl-note">Chamada ao componente local. Campos e erros conforme a documentação de integração da NS Tecnologia, que reproduz a API oficial; o Swagger oficial fica em consumo.tributos.gov.br. Alíquotas de teste de 2026.</p></div></details><details class="pl"><summary><span class="verbo post">POST</span><code>/calculadora/base-calculo/cbs-ibs-mercadorias</code><span class="pl-tag sec">fonte secundária</span></summary><div class="pl-body"><div class="pl-lbl">Requisição</div><pre class="code">{
+  "anoFatoGerador": 2026,
+  "valorBem": "1000.00",
+  "icms": "180.00",
+  "pis": "16.50",
+  "cofins": "76.00",
+  "frete": "50.00",
+  "descontoIncondicional": "30.00"
+}</pre><div class="pl-lbl">Resposta · 200</div><pre class="code">{
+  "baseCalculo": "…"
+}</pre><p class="pl-note">Campos conforme fonte secundária que declara espelhar a API oficial. Nesta fase de transição, ICMS, PIS e Cofins entram na composição da base.</p></div></details><details class="pl"><summary><span class="verbo post">POST</span><code>/calculadora/base-calculo/is-mercadorias</code><span class="pl-tag nao">não publicado</span></summary><div class="pl-body"><p class="pl-note">Endpoint confirmado, mas o corpo da requisição e da resposta não está publicado nas fontes acessíveis. Consultar o Swagger do componente local da Calculadora.</p></div></details><details class="pl"><summary><span class="verbo get">GET</span><code>/calculadora/dados-abertos/versao</code><span class="pl-tag nao">não publicado</span></summary><div class="pl-body"><div class="pl-lbl">Requisição</div><pre class="code">GET http://localhost:8080/api/calculadora/dados-abertos/versao</pre><p class="pl-note">Retorna a versão das regras e da base do motor; o formato da resposta não está publicado nas fontes acessíveis.</p></div></details></div><div class="table-wrap"><table><thead><tr><th>Regra</th><th>Detalhe</th></tr></thead><tbody><tr><td><strong>Grupo de saída</strong></td><td>O retorno segue o grupo <code>IBSCBS</code> do leiaute do documento fiscal — dá para comparar campo a campo com o XML</td></tr><tr><td><strong>Alíquotas de 2026</strong></td><td>Teste: IBS estadual 0,10%, IBS municipal 0,00% e CBS 0,90%</td></tr><tr><td><strong>Classificação</strong></td><td>O cálculo depende de <code>cst</code> e <code>cClassTrib</code> — os mesmos da API do Conformidade Fácil</td></tr><tr><td><strong>Erros</strong></td><td><code>400</code> estrutura não reconhecida · <code>404</code> URL inválida · <code>422</code> validação · <code>500</code> interno; corpo no padrão <em>problem details</em>: <code>type</code>, <code>title</code>, <code>status</code>, <code>detail</code>, <code>instance</code></td></tr><tr><td><strong>Fora deste levantamento</strong></td><td>Demais endpoints de dados abertos, pedágio e geração ou validação de XML (o simulador tem assistente gerador e validador de XML) aparecem citados por terceiros, sem especificação oficial acessível</td></tr></tbody></table></div><div class="api-hdr" id="api-c"><span class="api-letra">C</span><span class="api-nome">Conformidade Fácil — Classificação Tributária</span><span class="api-org">SVRS · cff.svrs.rs.gov.br</span></div><div class="table-wrap"><table><thead><tr><th>Método</th><th>Endpoint</th><th>Filtros</th><th>Retorno</th></tr></thead><tbody><tr><td><span class="verbo get">GET</span></td><td><code>https://cff.svrs.rs.gov.br/api/v1/consultas/classTrib</code></td><td>CST · nome do CST · ou tabela completa</td><td>JSON com CST, cClassTrib e atributos: indicadores, percentuais de redução, tipo de alíquota e nomes</td></tr></tbody></table></div><div class="pl-lbl" style="margin-top:14px">Payloads</div><div class="pls"><details class="pl"><summary><span class="verbo get">GET</span><code>/api/v1/consultas/classTrib</code><span class="pl-tag nao">não publicado</span></summary><div class="pl-body"><div class="pl-lbl">Requisição · tabela completa</div><pre class="code">curl --cert certificado-a1.pem --key chave-privada.pem --tlsv1.2 \
+     https://cff.svrs.rs.gov.br/api/v1/consultas/classTrib</pre><div class="pl-lbl">Requisição · filtrada</div><pre class="code">GET https://cff.svrs.rs.gov.br/api/v1/consultas/classTrib?{filtro por CST ou nome do CST}</pre><p class="pl-note">O comunicado de liberação confirma o endpoint, o método, a autenticação mútua e os dois filtros, mas não publica o nome dos parâmetros nem as chaves do JSON de retorno. O que se sabe do retorno: CST, cClassTrib, indicadores, percentuais de redução, tipo de alíquota e nomes.</p></div></details></div><div class="table-wrap"><table><thead><tr><th>Regra</th><th>Detalhe</th></tr></thead><tbody><tr><td><strong>Autenticação</strong></td><td>Mútua (mTLS) com certificado ICP-Brasil x.509, sobre TLS 1.2</td></tr><tr><td><strong>Frequência</strong></td><td>Uma consulta por dia, por empresa, basta: as tabelas não mudam todo dia. Evitar consulta em laço</td></tr><tr><td><strong>Custo</strong></td><td>Gratuita</td></tr><tr><td><strong>Próximos métodos</strong></td><td>Anunciados: crédito presumido (cCredPres), anexos e indicadores de operação (indOp)</td></tr><tr><td><strong>Ferramentas do portal</strong></td><td>Validadores de XML para NF-e, NFC-e, CT-e, CT-e OS, BP-e, NF3-e, NFCom, NFAg e NFGas — sem API documentada</td></tr></tbody></table></div><div class="api-hdr" id="api-d"><span class="api-letra">D</span><span class="api-nome">NFS-e Padrão Nacional — Sefin Nacional</span><span class="api-org">Comitê Gestor da NFS-e · gov.br/nfse</span></div><div class="table-wrap"><table><thead><tr><th>Item</th><th>Valor</th></tr></thead><tbody><tr><td><strong>Autenticação</strong></td><td>Certificado ICP-Brasil na conexão (mTLS); a identidade do certificado define o que pode ser consultado</td></tr><tr><td><strong>Mensagens</strong></td><td>JSON na comunicação; o documento é XML assinado, comprimido e em Base64</td></tr><tr><td><strong>Comunicação</strong></td><td>Síncrona</td></tr><tr><td><strong>Swagger</strong> (produção restrita)</td><td><code>sefin.producaorestrita.nfse.gov.br/API/SefinNacional/docs</code> · ADN: <code>adn.producaorestrita.nfse.gov.br/contribuintes/docs</code></td></tr></tbody></table></div><div class="table-wrap"><table><thead><tr><th>Método</th><th>Caminho</th><th>Finalidade e regra</th></tr></thead><tbody><tr><td><span class="verbo get">GET</span></td><td><code>/parametros_municipais/{codigoMunicipio}/convenio</code></td><td>Parâmetros do convênio do município</td></tr><tr><td><span class="verbo get">GET</span></td><td><code>/parametros_municipais/{codigoMunicipio}/{codigoServico}</code></td><td>Alíquotas, regimes especiais e deduções por subitem da lista de serviços</td></tr><tr><td><span class="verbo get">GET</span></td><td><code>/parametros_municipais/{codigoMunicipio}/{CPF/CNPJ}</code></td><td>Retenções e benefícios do contribuinte no município</td></tr><tr><td><span class="verbo post">POST</span></td><td><code>/nfse</code></td><td>Recebe a DPS e gera a NFS-e na hora, ou rejeita com o motivo. DPS com chave de NFS-e existente gera a substituta e cancela a original por evento</td></tr><tr><td><span class="verbo get">GET</span></td><td><code>/nfse/{chaveAcesso}</code></td><td>Consulta a NFS-e pela chave</td></tr><tr><td><span class="verbo get">GET</span></td><td><code>/dps/{id}</code></td><td>Devolve a chave da NFS-e gerada a partir da DPS — só para prestador, tomador ou intermediário da nota (sigilo fiscal)</td></tr><tr><td><span class="verbo head">HEAD</span></td><td><code>/dps/{id}</code></td><td>Diz apenas se a NFS-e foi gerada, sem a chave — qualquer certificado válido</td></tr><tr><td><span class="verbo post">POST</span></td><td><code>/nfse/{chaveAcesso}/eventos</code></td><td>Registra evento (cancelamento, manifestação, apuração) — parte genérica e parte específica em XML assinado</td></tr><tr><td><span class="verbo get">GET</span></td><td><code>/nfse/{chaveAcesso}/eventos</code></td><td>Todos os eventos da nota</td></tr><tr><td><span class="verbo get">GET</span></td><td><code>/nfse/{chaveAcesso}/eventos/{tipoEvento}</code></td><td>Eventos de um tipo</td></tr><tr><td><span class="verbo get">GET</span></td><td><code>/nfse/{chaveAcesso}/eventos/{tipoEvento}/{numSeqEvento}</code></td><td>Um evento específico; sequencial 1 quando o tipo não admite repetição</td></tr></tbody></table></div><div class="pl-lbl" style="margin-top:14px">Payloads</div><div class="pls"><details class="pl"><summary><span class="verbo post">POST</span><code>/nfse</code><span class="pl-tag sec">fonte secundária</span></summary><div class="pl-body"><div class="pl-lbl">Requisição</div><pre class="code">POST https://sefin.producaorestrita.nfse.gov.br/SefinNacional/nfse
+(conexão mTLS com certificado ICP-Brasil)
+Content-Type: application/json
+
+{
+  "dpsXmlGZipB64": "H4sIAAAAAAAA...   ← XML da DPS assinado, comprimido em gzip e em Base64"
+}</pre><div class="pl-lbl">Resposta · 201</div><pre class="code">{
+  "chaveAcesso": "43149022123456780001900000000000000000000000000001",
+  "nfseXmlGZipB64": "H4sIAAAAAAAA...   ← XML da NFS-e autorizada, gzip + Base64"
+}</pre><p class="pl-note"><code>dpsXmlGZipB64</code>, <code>chaveAcesso</code> (50 posições) e <code>nfseXmlGZipB64</code> conforme guias de integração; demais campos da resposta e o formato da rejeição estão no Swagger da Sefin Nacional, que exige certificado.</p></div></details><details class="pl"><summary><span class="verbo get">GET</span><code>/nfse/{chaveAcesso}</code><span class="pl-tag sec">fonte secundária</span></summary><div class="pl-body"><div class="pl-lbl">Resposta · 200</div><pre class="code">{
+  "chaveAcesso": "43149022123456780001900000000000000000000000000001",
+  "nfseXmlGZipB64": "H4sIAAAAAAAA..."
+}</pre><p class="pl-note">Mesma representação da NFS-e devolvida na emissão.</p></div></details><details class="pl"><summary><span class="verbo get">GET</span><code>/dps/{id}</code><span class="pl-tag ilus">exemplo ilustrativo</span></summary><div class="pl-body"><div class="pl-lbl">Requisição</div><pre class="code">GET /dps/4314902212345678000190000010000000000000001</pre><div class="pl-lbl">Resposta · 200</div><pre class="code">{
+  "chaveAcesso": "43149022123456780001900000000000000000000000000001"
+}</pre><p class="pl-note">Id da DPS: município (7) + tipo de inscrição (1) + CPF/CNPJ (14) + série (5) + número (15). Só responde a quem é prestador, tomador ou intermediário da nota.</p></div></details><details class="pl"><summary><span class="verbo head">HEAD</span><code>/dps/{id}</code><span class="pl-tag ilus">exemplo ilustrativo</span></summary><div class="pl-body"><div class="pl-lbl">Resposta</div><pre class="code">200 OK          ← a NFS-e foi gerada a partir desta DPS
+404 Not Found   ← não foi
+(sem corpo)</pre><p class="pl-note">Aberto a qualquer certificado válido: diz se a nota existe, sem revelar a chave.</p></div></details><details class="pl"><summary><span class="verbo post">POST</span><code>/nfse/{chaveAcesso}/eventos</code><span class="pl-tag sec">fonte secundária</span></summary><div class="pl-body"><div class="pl-lbl">Requisição</div><pre class="code">POST /nfse/43149022123456780001900000000000000000000000000001/eventos
+Content-Type: application/json
+
+{
+  "pedidoRegistroEventoXmlGZipB64": "H4sIAAAAAAAA...   ← pedido de evento assinado, gzip + Base64"
+}</pre><div class="pl-lbl">Resposta</div><pre class="code">201 Created — evento registrado e vinculado à NFS-e</pre><p class="pl-note">Parte genérica e parte específica do evento vão dentro do XML, conforme o Anexo II (leiautes e regras de eventos).</p></div></details><details class="pl"><summary><span class="verbo get">GET</span><code>/nfse/{chaveAcesso}/eventos/{tipoEvento}/{numSeqEvento}</code><span class="pl-tag nao">não publicado</span></summary><div class="pl-body"><p class="pl-note">Também <code>/eventos</code> e <code>/eventos/{tipoEvento}</code>. Retornam os eventos da nota; o formato está no Swagger.</p></div></details><details class="pl"><summary><span class="verbo get">GET</span><code>/parametros_municipais/{codigoMunicipio}/…</code><span class="pl-tag nao">não publicado</span></summary><div class="pl-body"><p class="pl-note">Convênio, alíquotas e regimes por serviço, retenções e benefícios do contribuinte. O formato de retorno está no Swagger.</p></div></details></div><p class="src-note">Identificador da DPS: código IBGE do município (7) + tipo de inscrição (1) + CPF/CNPJ (14) + série (5) + número (15). A distribuição por NSU no ADN tem Swagger próprio, sem detalhamento no manual consultado.</p><div class="api-hdr" id="api-e"><span class="api-letra">E</span><span class="api-nome">Plataforma Pública do Split Payment</span><span class="api-org">Receita Federal e CGIBS · consumo.tributos.gov.br</span></div><div class="table-wrap"><table><thead><tr><th>Item</th><th>O que o Manual de Integração define</th></tr></thead><tbody><tr><td><strong>Quem integra</strong></td><td>Prestadores de serviço de pagamento, instituições financeiras e adquirentes enviam; RFB e CGIBS consomem</td></tr><tr><td><strong>Arquitetura</strong></td><td>Orientada a eventos, acompanhando o ciclo de cada meio de pagamento</td></tr><tr><td><strong>Ciclo completo</strong></td><td>Boleto, Pix Dinâmico e Pix Automático</td></tr><tr><td><strong>Liquidação direta</strong></td><td>Pix Estático, TED e TEF</td></tr><tr><td><strong>Remessa em três etapas atômicas</strong></td><td>1. Inicialização: metadados → <code>ResourceId</code> · 2. Transmissão: lotes de até 1.000 transações; um erro descarta o lote inteiro · 3. Encerramento: a plataforma confere a soma e fecha</td></tr><tr><td><strong>Chaves</strong></td><td><code>txId</code> (Pix), <code>numCtrlTED</code>, <code>numCtrlTEF</code>, <code>idInfSegr</code>, com formato por expressão regular</td></tr><tr><td><strong>Valores</strong></td><td>Decimal(18,2)</td></tr><tr><td><strong>CNPJ</strong></td><td>Alfanumérico (IN RFB 2.229/2024) — ex.: <code>cnpjRaizPspPag</code></td></tr><tr><td><strong>Vínculo com o documento</strong></td><td>A segregação depende das informações da NF-e, NFC-e e NFS-e</td></tr></tbody></table></div><div class="pl-lbl" style="margin-top:14px">Payloads</div><div class="pls"><details class="pl"><summary><span class="verbo post">POST</span><code>remessa · inicialização → transmissão → encerramento</code><span class="pl-tag nao">não publicado</span></summary><div class="pl-body"><div class="pl-lbl">Sequência documentada</div><pre class="code">1. inicialização   → PSP envia os metadados da remessa  → plataforma devolve ResourceId
+2. transmissão     → lotes de até 1.000 transações      → um erro descarta o lote inteiro
+3. encerramento    → PSP fecha a remessa                → plataforma confere a soma e encerra
+
+Chaves por meio de pagamento: txId (Pix) · numCtrlTED · numCtrlTEF · idInfSegr
+Valores: decimal(18,2) · CNPJ alfanumérico (ex.: cnpjRaizPspPag)</pre><p class="pl-note">Caminhos e corpos de cada recurso estão no Swagger oficial em consumo.tributos.gov.br, que não abriu sem autenticação.</p></div></details></div><div class="callout warn"><div class="ct">O SplitHub não consome esta API</div><p>Ela é o canal entre meios de pagamento e Fisco. O que interessa ao SplitHub — a retenção que extinguiu o débito — chega pelas APIs de Apuração da CBS, em <code>pagamentos</code> e <code>recolhimentos</code>. Os caminhos de cada recurso estão no Swagger oficial, que não estava acessível sem autenticação na consulta.</p></div><div class="api-hdr" id="api-f"><span class="api-letra">F</span><span class="api-nome">Apuração Assistida do IBS</span><span class="api-org">Comitê Gestor do IBS · cgibs.gov.br</span></div>
+<p>Em <strong>23/09/2026</strong> o Comitê Gestor publicou o <strong>MOC v1.10 — API de Integração com a Apuração Assistida do IBS</strong>, primeira versão oficial, sucedendo a minuta de julho de 2026. O IBS deixou de ser o lado sem contrato.</p>
+<div class="callout warn"><div class="ct">O modelo é o oposto do da CBS</div><p>Na CBS o produto <strong>puxa</strong>: abre solicitação, recebe tíquete e baixa por link assinado. No IBS o Fisco <strong>empurra</strong>: o Processamento Diário gera o <strong>Arquivo Diferencial (Delta)</strong>, o webhook avisa e o contribuinte baixa. A unidade também muda — a CBS entrega saldo por documento; o IBS entrega <strong>extrato de lançamentos por operação</strong>. A comparação campo a campo está em <a href="../cbs-x-ibs-integracao.html" style="color:var(--blue)">CBS × IBS: duas APIs, dois modelos</a>.</p></div>
+
+<h3 id="f1" style="margin-top:30px">F.1 Cronograma de liberação dos endpoints</h3>
+<p>O MOC organiza as APIs em <strong>quatro etapas</strong>. Só a Etapa 1 tem data: <strong>homologação a partir de 28/09/2026</strong>. As etapas 2, 3 e 4 constam no próprio manual como &ldquo;Implementação Futura&rdquo; em teste, implantação e produção — <strong>sem data divulgada</strong>.</p>
+<div class="table-wrap"><table><thead><tr><th>Etapa</th><th>O que entra</th><th>Homologação</th><th>Implantação</th><th>Produção</th></tr></thead><tbody>
+<tr><td><strong>Etapa 1</strong></td><td>Habilitação, Webhook de notificação e Obter Arquivo</td><td><strong>28/09/2026</strong></td><td>Não divulgada</td><td>Não divulgada</td></tr>
+<tr><td><strong>Etapa 2</strong></td><td>Consulta, inclusão e cancelamento de solicitações</td><td>Implementação futura</td><td>Implementação futura</td><td>Implementação futura</td></tr>
+<tr><td><strong>Etapa 3</strong></td><td>Consulta de operação, de documento fiscal e desabilitação</td><td>Implementação futura</td><td>Implementação futura</td><td>Implementação futura</td></tr>
+<tr><td><strong>Etapa 4</strong></td><td>Saldo e Documento de Arrecadação — emissão, itens e PDF</td><td>Implementação futura</td><td>Implementação futura</td><td>Implementação futura</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Especificação e etapa não andam juntas</div><p>Das treze APIs, <strong>seis já têm especificação técnica</strong> — as três da Etapa 1 e as três da Etapa 2. As sete das Etapas 3 e 4 estão apenas nomeadas, com finalidade declarada e sem rota, payload ou data. <strong>Ter especificação não significa estar no ar</strong>: só a Etapa 1 tem data de homologação.</p></div>
+<div class="table-wrap"><table><thead><tr><th>Marco</th><th>Data</th><th>O que significa</th></tr></thead><tbody>
+<tr><td>Piloto do Sistema de Apuração do IBS — Etapa 1</td><td>05/01/2026</td><td>123 empresas, NF-e modelo 55 em operações B2B</td></tr>
+<tr><td>Resolução CGIBS nº 6/2026</td><td>30/04/2026</td><td>Regulamento do IBS; detalha a apuração assistida do art. 46 da LC 214/2025</td></tr>
+<tr><td>Piloto — Etapa 2</td><td>jun/2026</td><td>Entram as NFS-e dos prestadores de serviço</td></tr>
+<tr><td><strong>MOC v1.00 — minuta</strong></td><td>jul/2026</td><td>Primeira publicação, restrita ao ambiente do projeto piloto</td></tr>
+<tr><td><strong>MOC v1.10 — primeira versão oficial</strong></td><td><strong>23/09/2026</strong></td><td>Sucede a minuta e acrescenta o capítulo de Perguntas Frequentes</td></tr>
+<tr><td>Etapa 1 em homologação</td><td><strong>28/09/2026</strong></td><td>Funcionalidades e APIs da Etapa 1, com informação nos arquivos</td></tr>
+<tr><td>Cobrança efetiva do IBS</td><td>01/01/2027</td><td>A apuração assistida passa a valer conforme o cronograma de transição</td></tr>
+</tbody></table></div>
+<div class="callout red"><div class="ct">Acesso restrito</div><p>O atendimento de dúvidas sobre as APIs está, neste momento, <strong>disponível exclusivamente às empresas participantes do projeto piloto</strong>. As Perguntas Frequentes ficarão no Portal de Serviços do CGIBS. Entrar no piloto deixou de ser acompanhamento e virou <strong>pré-requisito de integração</strong>.</p></div>
+
+<h3 id="f2" style="margin-top:30px">F.2 Todos os endpoints disponibilizados</h3>
+<p>As treze APIs do MOC, por etapa. As funcionalidades das APIs correspondem às do Portal do Contribuinte — mudam só pela forma de acesso.</p>
+<div class="table-wrap"><table><thead><tr><th>Etapa</th><th>Método e rota</th><th>API</th><th>Finalidade</th><th>Espec.</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td><code>POST /v1/aassist/habilitar</code></td><td>Habilitação do Contribuinte</td><td>Habilitar o contribuinte para a integração e registrar a <code>webhookUrl</code></td><td>Sim</td></tr>
+<tr><td><strong>1</strong></td><td><code>POST {webhookUrl cadastrada}</code></td><td>Notificação de Disponibilização</td><td>Avisar que há arquivo gerado — chamada do Fisco para o contribuinte</td><td>Sim</td></tr>
+<tr><td><strong>1</strong></td><td>Obter Arquivo <span style="color:var(--txt3)">(Anexos I e II)</span></td><td>Obter Arquivo</td><td>Baixar o arquivo do processamento diário, diferencial ou manual</td><td>Sim</td></tr>
+<tr><td><strong>2</strong></td><td><code>GET /v1/aassist/solicitacao/listar/{data_solic_ini}&amp;{data_solic_fim}&amp;{sit_solic}</code></td><td>Listagem de Solicitações</td><td>Consultar solicitações e os arquivos vinculados</td><td>Sim</td></tr>
+<tr><td><strong>2</strong></td><td><code>GET /v1/aassist/solicitacao/incluir</code></td><td>Nova Solicitação</td><td>Solicitar geração de arquivos para um período específico</td><td>Sim</td></tr>
+<tr><td><strong>2</strong></td><td><code>DELETE /v1/aassist/solicitacao/cancelamento/{IdSolic}</code></td><td>Cancelamento de Solicitação</td><td>Cancelar solicitação ainda não processada</td><td>Sim</td></tr>
+<tr><td><strong>3</strong></td><td>—</td><td>Consulta de Operação</td><td>Consultar informações de uma operação específica</td><td>Não</td></tr>
+<tr><td><strong>3</strong></td><td>—</td><td>Consulta de Documento Fiscal</td><td>Consultar informações de um documento fiscal específico</td><td>Não</td></tr>
+<tr><td><strong>3</strong></td><td>—</td><td>Desabilitação</td><td>Encerrar o recebimento de arquivos. <strong>Hoje só pelo Portal</strong></td><td>Não</td></tr>
+<tr><td><strong>4</strong></td><td>—</td><td>Consulta de Saldo</td><td>Saldos da apuração ao final de uma competência</td><td>Não</td></tr>
+<tr><td><strong>4</strong></td><td>—</td><td>Emissão de Documento de Arrecadação</td><td>Emitir o DA a partir de uma lista de documentos fiscais de certo fornecedor</td><td>Não</td></tr>
+<tr><td><strong>4</strong></td><td>—</td><td>Consulta de Itens do DA</td><td>Consultar os itens vinculados ao documento de arrecadação</td><td>Não</td></tr>
+<tr><td><strong>4</strong></td><td>—</td><td>Emissão do DA em PDF</td><td>Obter o DA em PDF — disponível ao adquirente <strong>e</strong> ao fornecedor</td><td>Não</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">O RAD do IBS não tem contrato</div><p>A <strong>emissão do Documento de Arrecadação é Etapa 4, sem especificação e sem data</strong>. Enquanto isso, o recolhimento pelo adquirente no IBS só se resolve pelo Portal, e a conciliação financeira depende do comprovante que vem do ERP. Do lado da CBS, a emissão de DARF para RAD e PCONT está anunciada para o <strong>fim de nov/2026</strong> — ver <a href="#a11" style="color:var(--blue)">A.11</a>.</p></div>
+
+<h3 id="f3" style="margin-top:30px">F.3 Autenticação e habilitação</h3>
+<p>As credenciais são geradas <strong>exclusivamente no Portal do Contribuinte</strong>, cujo acesso é por <strong>GOV.BR</strong>. São um par <code>Client ID</code> e <code>Client Secret</code>, enviados nos cabeçalhos de cada chamada — não há fluxo de token como na CBS. <strong>Os dois valores só aparecem no momento da geração</strong>, e gerar um novo par invalida automaticamente o anterior.</p>
+<div class="table-wrap"><table><thead><tr><th>Passo</th><th>Onde</th><th>O que vai</th><th>O que volta</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td>Portal do Contribuinte</td><td>Login GOV.BR, seleção do contribuinte, menu Credenciais de Acesso</td><td><code>Client ID</code> e <code>Client Secret</code> — copiar na hora</td></tr>
+<tr><td><strong>2</strong></td><td><code>POST /v1/aassist/habilitar</code></td><td>Headers <code>ClientID</code> e <code>ClientSecret</code>; corpo com <code>queroHabilitar</code>, <code>webhookUrl</code> HTTPS e <code>tokenContrib</code> opcional</td><td><code>habilitado</code> e <code>dataHabilitacao</code></td></tr>
+<tr><td><strong>3</strong></td><td>A partir daí</td><td>—</td><td>Notificação automática a cada Arquivo Diferencial, e acesso às demais APIs</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Na primeira etapa do projeto</div><p>O Portal oferece a opção <strong>Enviar Notificação</strong> com os nomes dos arquivos gerados, para simular o Processamento Diário e testar o webhook antes de haver movimento real.</p></div>
+
+<h3 id="f4" style="margin-top:30px">F.4 Payloads dos endpoints com especificação</h3>
+<div class="table-wrap"><table><thead><tr><th>Chamada</th><th>Requisição</th><th>Resposta</th></tr></thead><tbody>
+<tr><td><code>POST /v1/aassist/habilitar</code><br><span style="color:var(--txt3);font-size:11px">Etapa 1</span></td>
+<td><code>headers</code>: <code>clientid</code>, <code>clientsecret</code><br><code>body</code>: <code>queroHabilitar</code> (&ldquo;HAB&rdquo;, obrigatório) · <code>webhookUrl</code> (HTTPS, obrigatório) · <code>tokenContrib</code> (opcional)</td>
+<td><code>habilitado</code> — indica o sucesso ou o motivo do insucesso<br><code>dataHabilitacao</code></td></tr>
+
+<tr><td><code>POST {webhookUrl}</code><br><span style="color:var(--txt3);font-size:11px">Etapa 1 · o Fisco chama</span></td>
+<td><code>header</code>: <code>tokenContrib</code>, o mesmo informado na habilitação</td>
+<td><code>tipoSolic</code> (DIFERENCIAL · MANUAL) · <code>sitSolic</code> · <code>cnpj</code> · <code>idSolic</code> · <code>dataHoraSolic</code> · <code>dataHoraTransIni</code> · <code>dataHoraTransFim</code> · <code>qtdOperSolic</code> · <code>qtdArqVincul</code> · <code>dataValidSolic</code> · <code>arquivos[]</code> com <code>idArq</code> e <code>nomeArq</code></td></tr>
+
+<tr><td><code>GET /v1/aassist/solicitacao/listar/…</code><br><span style="color:var(--txt3);font-size:11px">Etapa 2</span></td>
+<td><code>headers</code>: <code>clientId</code>, <code>clientSecret</code><br>no caminho: <code>DataSolicIni</code> · <code>DataSolicFim</code> · <code>SituacaoSolic</code></td>
+<td><code>itens[]</code> — mesma estrutura da notificação, em lista</td></tr>
+
+<tr><td><code>GET /v1/aassist/solicitacao/incluir</code><br><span style="color:var(--txt3);font-size:11px">Etapa 2</span></td>
+<td><code>headers</code>: <code>clientId</code>, <code>clientSecret</code><br><code>body</code>: <code>cnpj</code> · <code>dataTransacaoIni</code> · <code>dataTransacaoFim</code></td>
+<td><code>tipoSolicitacao</code> (MANUAL) · <code>sitSolicitacao</code> (SOLICITADA) · <code>IdSolicitacao</code> · datas · <code>resultado</code></td></tr>
+
+<tr><td><code>DELETE …/cancelamento/{IdSolic}</code><br><span style="color:var(--txt3);font-size:11px">Etapa 2</span></td>
+<td><code>headers</code>: <code>clientid</code>, <code>clientsecret</code><br>no caminho: <code>IDSolicitacao</code></td>
+<td><code>resultado</code> — sucesso ou o motivo do erro</td></tr>
+</tbody></table></div>
+
+<p style="margin-top:18px"><strong>Obter Arquivo — Conta Corrente Fiscal.</strong> Nó raiz <code>header</code>, com <code>nomearquivo</code>, <code>tiposolicitacao</code>, <code>datageracao</code> e <code>parametrosgeracao</code> (<code>datainicial</code>, <code>datafinal</code>, <code>qtdoperacoes</code>). Dentro dele, <code>operacoes[]</code>:</p>
+<div class="table-wrap"><table><thead><tr><th>Campo</th><th>Tipo</th><th>Ocorr.</th><th>Observação</th></tr></thead><tbody>
+<tr><td><code>ID</code></td><td>N</td><td>1-1</td><td>Identifica o conta corrente da operação</td></tr>
+<tr><td><code>CHAVE_ACESSO</code></td><td>C(44)</td><td>1-1</td><td>Chave do documento que inaugurou o conta corrente</td></tr>
+<tr><td><code>DTH_EMISSAO</code></td><td>C data/hora</td><td>1-1</td><td>Formato <code>AAAA-MM-DD HH:MM:SS.sss +HH:MM</code></td></tr>
+<tr><td><code>DTH_AUTORIZACAO</code></td><td>C data/hora</td><td>1-1</td><td><strong>Não equivale</strong> ao <code>registro</code> da CBS</td></tr>
+<tr><td><code>CNPJ_FORNECEDOR</code></td><td>C(8)</td><td>1-1</td><td>CNPJ raiz</td></tr>
+<tr><td><code>CNPJ_ADQUIRENTE</code></td><td>C(8)</td><td>0-1</td><td>Pode não existir</td></tr>
+<tr><td><code>extrato_cc.hash</code></td><td>C(40)</td><td>1-1</td><td>SHA1 de <strong>todos</strong> os lançamentos, não só os da fatia</td></tr>
+<tr><td><code>extrato_cc.lista[]</code></td><td>LG</td><td>1-N</td><td>Uma linha por lançamento; sistemática incremental</td></tr>
+</tbody></table></div>
+<p style="margin-top:12px">Cada linha de <code>lista[]</code> traz <code>ID</code>, <code>DTH_LANCTO</code>, <code>MOV</code> e os <strong>sete valores financeiros</strong>: <code>RECURSO_FINANCEIRO_DISPONIVEL_PARA_TRANSFERENCIA</code>, <code>RECURSO_FINANCEIRO_A_TRANSFERIR</code>, <code>CREDITO_A_PROPRIAR</code>, <code>CREDITO_NAO_UTILIZADO</code>, <code>CREDITO_UTILIZADO</code>, <code>DEBITO_EM_ABERTO</code> e <code>DEBITO_EXTINTO</code>. <strong>Campo numérico vazio na origem chega como 0.</strong></p>
+
+<h3 id="f5" style="margin-top:30px">F.5 Conceitos e regras de consumo</h3>
+<div class="table-wrap"><table><thead><tr><th>Conceito</th><th>O que é</th></tr></thead><tbody>
+<tr><td><strong>Operação</strong></td><td>Um fornecimento, na visão do fornecedor, ou uma aquisição, na do adquirente. Tem ciclo de vida próprio e recebe vários lançamentos</td></tr>
+<tr><td><strong>Lançamento de movimentação</strong></td><td>Um evento da operação. O primeiro é o registro da própria operação; os demais são apropriações, utilizações, pagamentos, cancelamentos, devoluções e extinções de débito</td></tr>
+<tr><td><strong>Movimentação financeira</strong></td><td>O reflexo do lançamento sobre os <strong>sete campos</strong>: débito em aberto, débito extinto, crédito a apropriar, crédito não utilizado, crédito utilizado, recurso financeiro a transferir e disponível para transferência</td></tr>
+<tr><td><strong>Processamento Diário</strong></td><td>Roda após o encerramento do dia; identifica os lançamentos e gera as movimentações</td></tr>
+<tr><td><strong>Arquivo Diferencial (Delta)</strong></td><td>Gerado automaticamente após o Processamento. Uma operação aparece em vários Deltas ao longo da vida, sempre que houver lançamento novo</td></tr>
+<tr><td><strong>Arquivo Manual</strong></td><td>Mesma estrutura; muda o critério — reúne os lançamentos do período pedido pelo contribuinte</td></tr>
+</tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Regra de consumo</th><th>Valor</th><th>O que exige do SplitHub</th></tr></thead><tbody>
+<tr><td>Solicitações manuais</td><td><strong>2 por dia</strong> por contribuinte, e <strong>2 por competência</strong> no mesmo dia</td><td>Fila de recuperação com orçamento diário; recuperar um mês perdido leva cerca de <strong>15 dias</strong></td></tr>
+<tr><td>Período do pedido</td><td>Dentro de <strong>uma única competência</strong>, sem sobreposição</td><td>Quebrar o pedido por competência antes de enviar</td></tr>
+<tr><td>Entrega do manual</td><td>Só no <strong>próximo Processamento Diário</strong></td><td>Não prometer consulta pontual imediata em proposta comercial</td></tr>
+<tr><td>Validade do arquivo</td><td>Prazo informado na notificação; depois vira <strong>Expirada</strong></td><td>Baixar na chegada, nunca sob demanda do usuário</td></tr>
+<tr><td>Fatiamento</td><td>Uma operação pode vir em <strong>vários arquivos</strong></td><td>Remontar por <code>ID</code> de lançamento; validar o <code>hash</code> só com o conjunto completo</td></tr>
+<tr><td>Consumo Indevido</td><td>Repetição que afete a disponibilidade <strong>suspende</strong> o contribuinte</td><td>Limitar retentativa; alarme em vez de laço</td></tr>
+<tr><td>Convenções</td><td>HTTPS, JSON, UTF-8, versionamento explícito, registro das chamadas</td><td>Trilha das chamadas por cliente</td></tr>
+</tbody></table></div>
+
+<h3 id="f6" style="margin-top:30px">F.6 Pendências declaradas no manual</h3>
+<div class="table-wrap"><table><thead><tr><th>Pendência</th><th>Situação hoje</th><th>Risco</th></tr></thead><tbody>
+<tr><td><strong>Algoritmo do <code>hash</code></strong></td><td>Não definido. Os valores dos exemplos são ilustrativos, no formato SHA1</td><td>A verificação de completude do extrato <strong>ainda não pode ser implementada de verdade</strong></td></tr>
+<tr><td><strong>Tabela do campo <code>MOV</code></strong></td><td>Não existe. O campo vai preenchido com o <strong>texto</strong> da descrição da movimentação</td><td>Mapear causa por texto livre; qualquer parsing <strong>quebra quando a tabela sair</strong></td></tr>
+<tr><td><strong><code>hash_operacao</code></strong></td><td>Removido da especificação; não faz mais parte do payload</td><td>Sinal de que o contrato ainda se move dentro da v1.x</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">Consequência para o produto</div><p>A conciliação com a apuração assistida <strong>passa a existir dos dois lados</strong> — mas com profundidades diferentes. O IBS não nomeia <em>suspenso</em>, <em>prescrito</em>, <em>inapropriável</em> nem <em>inutilizável</em>, e não traz competência na operação nem modelo do documento. Enquanto a tabela do <code>MOV</code> não sair, <strong>o crédito de IBS chega com menos discernimento que o de CBS</strong>. A separação por órgão que o produto já pratica — Receita Federal na CBS, Comitê Gestor no IBS — continua valendo, e agora com dois contratos a manter.</p></div>
+
+<h3 style="margin-top:30px">O que as regras das APIs exigem do SplitHub</h3><div class="table-wrap"><table><thead><tr><th>Regra da API</th><th>Consequência no produto</th></tr></thead><tbody><tr><td>4 aberturas por dia e janela de 8 dias</td><td>Um agendador por CNPJ base e endpoint, com alarme se passar de 8 dias sem consulta concluída</td></tr><tr><td>Webhook HTTPS validado por <code>HEAD</code></td><td>Endpoint público do SplitHub, com resposta a <code>HEAD</code> e aceite idempotente pelo tíquete</td></tr><tr><td>Arquivo expira em 48 horas</td><td>Download e persistência imediatos; reprocessamento a partir do arquivo guardado, não da API</td></tr><tr><td>Consulta incremental por <code>atualizacao</code></td><td>Upsert por chave do documento, com histórico de mudança de valores</td></tr><tr><td>Crédito com vários estados de valor ao mesmo tempo</td><td>Estado do crédito por valor — o <code>statusCredito</code> único do protótipo não representa o arquivo</td></tr><tr><td>Treze tipos de documento na apuração</td><td>Cinco tipos novos para a ingestão e o fato gerador</td></tr><tr><td>Credencial por matriz e CNPJ base</td><td>Credencial no nível da raiz em Organização, não por estabelecimento</td></tr><tr><td>mTLS com certificado ICP-Brasil (Conformidade Fácil, NFS-e)</td><td>Gestão de certificado digital do cliente — hoje inexistente no produto</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s03">
+<div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Glossário</span></div>
+<p>Todo termo, sigla e campo que aparece nesta referência, na ordem em que a cabeça precisa deles: primeiro quem é quem, depois como o débito morre, depois o vocabulário da apuração, os estados do valor, os documentos, a mecânica da API e a base legal.</p>
+
+<h3 id="g1">Os tributos e quem administra</h3>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>O que é</th></tr></thead><tbody>
+<tr><td><strong>RTC</strong></td><td>Reforma Tributária do Consumo — o guarda-chuva de IBS, CBS e Imposto Seletivo</td></tr>
+<tr><td><strong>CBS</strong></td><td>Contribuição sobre Bens e Serviços — tributo federal, administrado pela <strong>Receita Federal</strong></td></tr>
+<tr><td><strong>IBS</strong></td><td>Imposto sobre Bens e Serviços — tributo de estados e municípios, administrado pelo <strong>Comitê Gestor do IBS</strong></td></tr>
+<tr><td><strong>RFB</strong></td><td>Receita Federal do Brasil. Publica as APIs de apuração da CBS</td></tr>
+<tr><td><strong>CGIBS</strong></td><td>Comitê Gestor do IBS. Não publicou API de apuração — ver <a class="xref" href="#api-f">F</a></td></tr>
+<tr><td><strong>IS</strong></td><td>Imposto Seletivo — calculado pela Calculadora de Tributos, fora do escopo da apuração assistida</td></tr>
+</tbody></table></div>
+<div class="callout info"><div class="ct">Por que a separação é regra e não detalhe</div><p>Os dois tributos vão a órgãos diferentes, com sistemas, prazos e decisões próprios. Nenhum número do produto soma CBS e IBS — e a API existe hoje só para a CBS.</p></div>
+
+<h3 id="g2">Como o débito é extinto</h3>
+<div class="table-wrap"><table><thead><tr><th>Sigla</th><th>Nome</th><th>Quem paga, e quando</th></tr></thead><tbody>
+<tr><td><strong>PCONT</strong></td><td>Pagamento do Contribuinte</td><td>O <strong>próprio devedor</strong> recolhe o que apurou, por DARF, no vencimento. É a via ordinária — o que sobrou depois de o split e o RAD já terem antecipado parte</td></tr>
+<tr><td><strong>RAD</strong></td><td>Recolhimento pelo Adquirente</td><td>O <strong>comprador</strong> recolhe no lugar do fornecedor, por DARF, e com isso destrava o próprio crédito quando o fornecedor não paga</td></tr>
+<tr><td><strong>Split payment</strong></td><td>Pagamento segregado</td><td>O <strong>meio de pagamento</strong> separa o tributo no instante da liquidação e repassa ao Fisco, antes de o dinheiro chegar ao vendedor</td></tr>
+<tr><td>—</td><td>Compensação</td><td>O crédito apropriado abate o débito na apuração, na ordem do art. 53. Não há dinheiro</td></tr>
+<tr><td>—</td><td>Ressarcimento</td><td>O saldo credor vira dinheiro devolvido pelo Fisco. Não extingue débito: é o caminho inverso</td></tr>
+</tbody></table></div>
+<div class="callout warn"><div class="ct">PCONT no produto</div><p>A API separa <code>/pagamentos</code> — o que o contribuinte pagou, PCONT e split — de <code>/recolhimentos</code>, o que ele pagou como <strong>adquirente</strong>, em RAD. São perspectivas opostas do mesmo fato e não se somam. O protótipo hoje chama de <em>DARF CBS</em> e <em>Guia IBS</em> o que a Receita chama de PCONT; a emissão do DARF de PCONT e de RAD pela API está prevista para o fim de nov/2026 (<a class="xref" href="#a11">A.11</a>).</p></div>
+
+<h3 id="g3">O vocabulário da apuração</h3>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>O que é</th></tr></thead><tbody>
+<tr><td><strong>Apuração assistida</strong></td><td>O Fisco monta a apuração a partir dos documentos fiscais e devolve ao contribuinte já calculada. Art. 46 da LC 214/2025</td></tr>
+<tr><td><strong>Período de apuração</strong> · <code>pa</code></td><td>O mês de competência, no formato <code>mm/aaaa</code></td></tr>
+<tr><td><strong>Apropriação</strong></td><td>O momento em que o crédito passa a existir para uso. Depende de o débito do fornecedor ter sido extinto — art. 47</td></tr>
+<tr><td><strong>Saldo credor</strong></td><td>Crédito apropriado que sobrou depois de abater os débitos do período</td></tr>
+<tr><td><strong>DARF</strong></td><td>Documento de Arrecadação de Receitas Federais — a guia pela qual CBS, PCONT e RAD são pagos</td></tr>
+<tr><td><strong>Fato gerador</strong></td><td>O evento que faz nascer a obrigação. Nem todo documento fiscal tem</td></tr>
+</tbody></table></div>
+
+<h3 id="g4">Os estados do valor no arquivo</h3>
+<p>A API não devolve um rótulo por documento: devolve <strong>valores por estado</strong>, e o mesmo documento pode ter parcelas em estados diferentes ao mesmo tempo.</p>
+<div class="table-wrap"><table><thead><tr><th>Campo</th><th>Onde</th><th>O que significa</th></tr></thead><tbody>
+<tr><td><code>apurado</code></td><td>débito e crédito</td><td>O valor que o Fisco calculou</td></tr>
+<tr><td><code>excedente</code></td><td>débito e crédito</td><td>Parcela ainda não processada pela apuração</td></tr>
+<tr><td><code>inexigivel</code> · <code>suspenso</code></td><td>débito</td><td>Não pode ser cobrado, ou está com a exigibilidade suspensa</td></tr>
+<tr><td><code>extinto</code> · <code>saldoDevedor</code></td><td>débito</td><td>O que já morreu por alguma modalidade, e o que ainda falta</td></tr>
+<tr><td><code>apropriacao.inapropriavel</code></td><td>crédito</td><td>Parcela que não gera direito a crédito</td></tr>
+<tr><td><code>apropriacao.prescrito</code></td><td>crédito</td><td>Perdeu o prazo — cinco anos, art. 54</td></tr>
+<tr><td><code>apropriacao.aApropriar</code></td><td>crédito</td><td>Direito constituído, à espera de o fornecedor extinguir o débito</td></tr>
+<tr><td><code>apropriacao.apropriado</code></td><td>crédito</td><td>Já pode ser usado</td></tr>
+<tr><td><code>utilizacao.utilizado</code></td><td>crédito</td><td>Já abateu débito</td></tr>
+<tr><td><code>utilizacao.restabelecido</code></td><td>crédito</td><td>Voltou ao saldo depois de ter sido usado</td></tr>
+<tr><td><code>naoUtilizado.saldoCredor</code></td><td>crédito</td><td>Disponível, ainda não abateu nada</td></tr>
+<tr><td><code>naoUtilizado.pedidoRessarcimento</code></td><td>crédito</td><td>Parcela em pedido de ressarcimento. <strong>É valor, não estado do pedido</strong> — ver <a class="xref" href="#a12">A.12</a></td></tr>
+</tbody></table></div>
+
+<h3 id="g5">Os documentos que a apuração recebe</h3>
+<div class="table-wrap"><table><thead><tr><th>Sigla</th><th>Documento</th></tr></thead><tbody>
+<tr><td><strong>NF-e</strong> · <strong>NFC-e</strong></td><td>Nota Fiscal eletrônica (mercadoria, B2B) e ao Consumidor</td></tr>
+<tr><td><strong>NFS-e</strong> · <strong>NFS-e Via</strong></td><td>Nota Fiscal de Serviço eletrônica, padrão nacional, e sua via</td></tr>
+<tr><td><strong>CT-e</strong> · <strong>CT-e OS</strong> · <strong>CT-e Simplificado</strong></td><td>Conhecimento de Transporte eletrônico, o de Outros Serviços e o simplificado</td></tr>
+<tr><td><strong>NFCom</strong> · <strong>NF3-e</strong></td><td>Comunicação e energia elétrica</td></tr>
+<tr><td><strong>BP-e</strong> · <strong>BP-e TM</strong></td><td>Bilhete de Passagem eletrônico e o de transporte metropolitano</td></tr>
+<tr><td><strong>GTV-e</strong></td><td>Guia de Transporte de Valores eletrônica</td></tr>
+<tr><td><strong>DeRE</strong></td><td>Declaração de Regimes Específicos — documentação técnica conjunta RFB e CGIBS</td></tr>
+<tr><td><strong>DFe</strong></td><td>Documento Fiscal eletrônico, o termo genérico. No produto, <strong>DF</strong></td></tr>
+<tr><td><strong>Chave</strong></td><td>Identificador único de 44 posições do documento; na API vem como <code>string(50)</code></td></tr>
+</tbody></table></div>
+
+<h3 id="g6">A mecânica das APIs</h3>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>O que é</th></tr></thead><tbody>
+<tr><td><strong>API assíncrona</strong></td><td>Pede-se, recebe-se um tíquete, e o resultado chega depois. Nenhuma tela pode esperar por ela</td></tr>
+<tr><td><code>tiqueteSolicitacao</code></td><td>Identificador da solicitação. É por ele que o aviso é tratado de forma idempotente</td></tr>
+<tr><td><code>tEASegundos</code></td><td>Tempo estimado de atendimento, em segundos, devolvido na abertura</td></tr>
+<tr><td><code>urlRetorno</code></td><td>O webhook do consumidor, informado no corpo da solicitação</td></tr>
+<tr><td><code>urlAssinada</code> · <code>urlAssinadaExpiraEm</code></td><td>Link temporário do arquivo e sua validade — 48 horas. É segredo: não vai para log nem histórico</td></tr>
+<tr><td><strong>Webhook</strong></td><td>Endereço HTTPS do consumidor que a API chama quando termina. Validado por <code>HEAD</code> antes de a solicitação ser aceita</td></tr>
+<tr><td><strong>Polling</strong></td><td>Alternativa ao webhook: perguntar de tempos em tempos por <code>GET /situacao/{tiquete}</code></td></tr>
+<tr><td><strong>Consulta incremental</strong></td><td>A resposta traz só o que mudou desde a última consulta. A chave é o campo <code>atualizacao</code> de cada registro</td></tr>
+<tr><td><strong>Janela de retorno</strong></td><td>8 dias de inclusões e atualizações; na primeira consulta, desde o dia 1 do mês corrente. Passar de 8 dias sem consultar <strong>perde atualização sem aviso</strong></td></tr>
+<tr><td><code>ni</code> · <code>niConsumidor</code></td><td>Número de identificação do contribuinte e, quando houver, do consumidor</td></tr>
+<tr><td><strong>CNPJ base</strong></td><td>Os 8 primeiros dígitos, a raiz. A consulta cobre todos os estabelecimentos da raiz de uma vez</td></tr>
+<tr><td><strong>Produção restrita</strong></td><td>Ambiente do piloto da CBS, com dados reais e acesso limitado às empresas selecionadas</td></tr>
+<tr><td><strong>Produção beta</strong></td><td>Ambiente aberto a mais contribuintes, anterior à produção plena</td></tr>
+<tr><td><strong>Swagger</strong> · <strong>OpenAPI</strong></td><td>Especificação legível por máquina dos caminhos e corpos de uma API</td></tr>
+<tr><td><strong>ADN</strong> · <strong>NSU</strong></td><td>Ambiente de Distribuição Nacional da NFS-e e o número sequencial único de cada documento distribuído</td></tr>
+</tbody></table></div>
+
+<h3 id="g7">Segurança e credenciais</h3>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>O que é</th></tr></thead><tbody>
+<tr><td><strong>OAuth 2.0 <em>client credentials</em></strong></td><td>Autenticação de sistema para sistema: <code>Client Id</code> e <code>Client Secret</code> viram um <code>access_token</code> de 1 hora, enviado em <code>Authorization: Bearer</code></td></tr>
+<tr><td><strong>mTLS</strong></td><td>TLS mútuo — além de o servidor se identificar, o cliente também apresenta certificado. Exigido por Conformidade Fácil e NFS-e</td></tr>
+<tr><td><strong>ICP-Brasil</strong></td><td>A cadeia de certificação digital oficial brasileira. O certificado do cliente precisa vir dela</td></tr>
+<tr><td><strong>Credencial de matriz</strong></td><td>A credencial é gerada pelo estabelecimento matriz e vale para a raiz do CNPJ — não há credencial por filial</td></tr>
+</tbody></table></div>
+
+<h3 id="g8">Split payment — termos próprios</h3>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>O que é</th></tr></thead><tbody>
+<tr><td><strong>PSP</strong></td><td>Prestador de Serviço de Pagamento — quem envia as remessas à plataforma</td></tr>
+<tr><td><strong>Pix Dinâmico</strong> · <strong>Automático</strong> · <strong>Estático</strong></td><td>Os dois primeiros têm ciclo completo na plataforma; o estático é de liquidação direta, como TED e TEF</td></tr>
+<tr><td><code>txId</code> · <code>numCtrlTED</code> · <code>numCtrlTEF</code> · <code>idInfSegr</code></td><td>Chaves de correlação por meio de pagamento, com formato definido por expressão regular</td></tr>
+<tr><td><code>ResourceId</code></td><td>Identificador devolvido na inicialização da remessa, usado nas etapas seguintes</td></tr>
+<tr><td><strong>Remessa atômica</strong></td><td>Inicialização, transmissão em lotes de até 1.000 transações e encerramento. Um erro descarta o lote inteiro</td></tr>
+</tbody></table></div>
+
+<h3 id="g9">Base legal citada</h3>
+<div class="table-wrap"><table><thead><tr><th>Norma</th><th>O que trata, nesta referência</th></tr></thead><tbody>
+<tr><td><strong>LC 214/2025, art. 46</strong></td><td>Apuração assistida</td></tr>
+<tr><td><strong>LC 214/2025, art. 47</strong></td><td>O crédito só se apropria depois de extinto o débito do fornecedor</td></tr>
+<tr><td><strong>LC 214/2025, art. 53</strong></td><td>A ordem de uso do crédito: saldo vencido, débitos do período, saldo credor</td></tr>
+<tr><td><strong>LC 214/2025, arts. 39 e 40</strong></td><td>Ressarcimento: prazos de 30, 60 e 180 dias, deferimento tácito e pagamento em 15 dias</td></tr>
+<tr><td><strong>Decreto 12.955/2026</strong></td><td>Regulamento da CBS, de 30/04/2026</td></tr>
+<tr><td><strong>Resolução CGIBS nº 6/2026</strong></td><td>Regulamento do IBS, do mesmo dia</td></tr>
+<tr><td><strong>Ato Técnico Conjunto RFB/CGIBS nº 1/2026</strong></td><td>Adaptação dos documentos fiscais eletrônicos ao IBS e à CBS</td></tr>
+<tr><td><strong>IN RFB 2.229/2024</strong></td><td>CNPJ alfanumérico, usado nos campos do split payment</td></tr>
+</tbody></table></div>
+</div>
+<div class="section" id="s04">
+<div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Fontes</span></div>
+<div class="table-wrap"><table><thead><tr><th>API</th><th>Fonte</th></tr></thead><tbody><tr><td>Apuração da CBS</td><td><a class="ext" href="https://docs.receitafederal.gov.br/apuracao-cbs/" target="_blank" rel="noopener">Documentação v2 ↗</a> · <a class="ext" href="https://docs.receitafederal.gov.br/apuracao-cbs/guiaapiassincrona.html" target="_blank" rel="noopener">Guia das APIs assíncronas v1.0, 03/09/2026 ↗</a> · <a class="ext" href="https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/manuais/reforma-tributaria-do-consumo/manual-plataforma-cbs-21-maio-2026-07h40.pdf" target="_blank" rel="noopener">Manual da Plataforma CBS (maio/2026) ↗</a></td></tr>
+<tr><td>Cronograma das APIs da CBS</td><td><a class="ext" href="https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2026/setembro/receita-federal-publica-nova-documentacao-tecnica-das-apis-de-apuracao-de-cbs" target="_blank" rel="noopener">Nova documentação técnica das APIs (set/2026) ↗</a> · <a class="ext" href="https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2025/dezembro/receita-libera-api-para-consulta-a-apuracao-de-cbs" target="_blank" rel="noopener">Liberação original da API (dez/2025) ↗</a></td></tr>
+<tr><td>Apuração do IBS</td><td><a class="ext" href="https://www.cgibs.gov.br/projeto-piloto-do-sistema-de-apuracao-do-ibs-avanca-para-nova-etapa-com-inclusao-de-notas-de-servico" target="_blank" rel="noopener">Etapa 2 do piloto, com NFS-e ↗</a> · <a class="ext" href="https://www.cgibs.gov.br/cgibs-inicia-selecao-de-empresas-para-o-projeto-piloto-do-sistema-de-apuracao-assistida-do-ibs" target="_blank" rel="noopener">Seleção das empresas do piloto ↗</a> · <a class="ext" href="https://www.cgibs.gov.br/upload/arquivos/202604/30084927-res-cgibs-n-6-30-abr-2026-regulamenta-o-ibs.pdf" target="_blank" rel="noopener">Resolução CGIBS nº 6/2026 ↗</a></td></tr><tr><td>Calculadora de Tributos</td><td><a class="ext" href="https://consumo.tributos.gov.br/servico/calcular-tributos-consumo/calculadora/documentacao" target="_blank" rel="noopener">Documentação oficial ↗</a> · manual da Plataforma CBS, seção Calculadora</td></tr><tr><td>Conformidade Fácil</td><td><a class="ext" href="https://dfe-portal.svrs.rs.gov.br/Cff/Noticias" target="_blank" rel="noopener">Comunicados do portal ↗</a></td></tr><tr><td>NFS-e Padrão Nacional</td><td><a class="ext" href="https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica/documentacao-atual" target="_blank" rel="noopener">Documentação técnica atual ↗</a></td></tr><tr><td>Split Payment</td><td><a class="ext" href="https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2026/junho/receita-federal-e-cgibs-publicaram-hoje-a-documentacao-tecnica-da-plataforma-publica-do-split-payment" target="_blank" rel="noopener">Publicação do Manual e Swagger ↗</a> · consumo.tributos.gov.br</td></tr></tbody></table></div>
+</div>
+<div class="section" id="s05">
+<div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Histórico de versões</span></div>
+<div class="ver-row"><div class="ver-num">v1.3</div><div class="ver-desc"><strong>24/09/2026</strong> — <strong>O IBS ganhou API.</strong> O bloco F foi reescrito a partir do <strong>MOC v1.10</strong>, publicado pelo Comitê Gestor em 23/09/2026: cronograma de liberação por etapa, com a Etapa 1 em homologação em <strong>28/09/2026</strong> e as etapas 2 a 4 sem data; as <strong>treze APIs</strong> com rota, finalidade e se têm especificação; autenticação por ClientID e ClientSecret gerados no Portal; os payloads dos seis endpoints especificados e a estrutura do Conta Corrente Fiscal campo a campo; os conceitos de operação, lançamento e movimentação financeira; as regras de consumo; e as três pendências declaradas no próprio manual. A comparação com a CBS saiu em documento próprio, <strong>CBS × IBS</strong>.</div></div>
+<div class="ver-row"><div class="ver-num">v1.2</div><div class="ver-desc"><strong>22/09/2026</strong> — <strong>Glossário.</strong> Nova seção 03 com todo termo, sigla e campo que a referência usa, em nove grupos: tributos e órgãos, modalidades de extinção do débito (PCONT, RAD, split, compensação e ressarcimento), vocabulário da apuração, os estados do valor no arquivo, os treze documentos fiscais, a mecânica das APIs, segurança e credenciais, termos próprios do split payment e a base legal citada. Fontes e histórico passam a 04 e 05.</div></div>
+<div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>22/09/2026</strong> — <strong>Cronograma e limites da integração.</strong> Nova seção A.11 com o calendário das três ondas de liberação dos endpoints da CBS, os ambientes de cada uma, os marcos desde dez/2025 e o estado em 22/09/2026 — nenhum endpoint da v2 no ar. Nova seção A.12 com o que a API não cobre, em especial a ausência de endpoint para solicitar e para acompanhar o ressarcimento, e a distinção entre <code>naoUtilizado.pedidoRessarcimento</code> como valor e o estado do pedido. Novo bloco F com a situação do IBS: sem API, com o cronograma do projeto piloto e o que o CGIBS publicou de técnico. Fontes ampliadas. Nada do conteúdo anterior foi alterado — as regras e os campos levantados em 16/09/2026 seguem conferidos contra a documentação.</div></div>
+<div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc">16/09/2026 — Primeira versão, a partir da proposta aprovada de documentação de integração: cinco APIs com ambientes, autenticação, endpoints, comunicação, campos, enumerações, erros, regras e payloads colapsáveis. Já com as correções do Manual da Plataforma CBS: Calculadora só local, API v1 descrita, API de conclusão da apuração prevista e ausência de API pública do IBS.</div></div>
+</div>
+</div>
+</body>
+</html>
