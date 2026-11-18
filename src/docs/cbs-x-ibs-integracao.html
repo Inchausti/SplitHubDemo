@@ -122,8 +122,8 @@ pre b { color: var(--txt1); font-weight: 600; }
 pre .cm { color: var(--txt3); }
 
 ol.steps { list-style: none; counter-reset: st; display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
-ol.steps li { counter-increment: st; font-size: 12.5px; color: var(--txt2); display: flex; gap: 10px; align-items: baseline; }
-ol.steps li::before { content: counter(st); flex-shrink: 0; width: 19px; height: 19px; border-radius: 4px; background: var(--sur3); color: var(--txt2); font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; }
+ol.steps li { counter-increment: st; font-size: 12.5px; color: var(--txt2); position: relative; padding-left: 29px; min-height: 19px; line-height: 1.6; overflow-wrap: anywhere; }
+ol.steps li::before { content: counter(st); position: absolute; left: 0; top: 1px; width: 19px; height: 19px; border-radius: 4px; background: var(--sur3); color: var(--txt2); font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; }
 ol.steps li strong { color: var(--txt1); }
 
 code { background: var(--mono); border-radius: 3px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
@@ -149,11 +149,11 @@ img, svg { max-width: 100%; height: auto; }
 <h1>CBS &times; IBS: duas APIs, dois modelos</h1>
 <p class="subtitle">Os dois entes fiscais publicaram contrato para a mesma coisa &mdash; a apura&ccedil;&atilde;o assistida &mdash; e resolveram de formas opostas. Este documento desce at&eacute; o campo de payload: o que vem em uma e n&atilde;o vem na outra, e o que cada aus&ecirc;ncia obriga o SplitHub a construir.</p>
 <div class="meta-bar">
-<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Vers&atilde;o</span>&nbsp;<span class="meta-val">1.1</span></div>
 <div class="meta-pill"><span class="meta-label">Tipo</span>&nbsp;<span class="meta-val">Refer&ecirc;ncia &middot; Integra&ccedil;&atilde;o</span></div>
-<div class="meta-pill"><span class="meta-label">Fontes</span>&nbsp;<span class="meta-val">MOC IBS v1.10 &middot; APIs CBS v2</span></div>
-<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">24/09/2026</span></div>
-<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip info">v1.0</span></div>
+<div class="meta-pill"><span class="meta-label">Fontes</span>&nbsp;<span class="meta-val">MOC IBS v1.10 &middot; APIs CBS v2 (nov/2026)</span></div>
+<div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">18/11/2026</span></div>
+<div class="meta-pill" style="margin-left:auto"><span class="chip ok">Publicado</span>&nbsp;<span class="chip info">v1.1</span></div>
 </div>
 
 <div class="toc"><div class="toc-title">&Iacute;ndice</div><ul class="toc-list">
@@ -190,14 +190,14 @@ img, svg { max-width: 100%; height: auto; }
 <tr><td><strong>Unidade</strong></td><td><strong>Documento fiscal</strong>, dentro de um per&iacute;odo de apura&ccedil;&atilde;o</td><td><strong>Opera&ccedil;&atilde;o</strong> (fornecimento ou aquisi&ccedil;&atilde;o), com conta corrente pr&oacute;pria</td></tr>
 <tr><td><strong>Natureza do dado</strong></td><td><strong>Saldo</strong> &mdash; a foto atual, particionada por estado</td><td><strong>Extrato</strong> &mdash; a lista de lan&ccedil;amentos que produziram o saldo</td></tr>
 <tr><td><strong>Recorte por assunto</strong></td><td><strong>Quatro endpoints</strong>: d&eacute;bitos, cr&eacute;ditos, pagamentos, recolhimentos</td><td><strong>Um arquivo &uacute;nico</strong>: cr&eacute;dito e d&eacute;bito no mesmo extrato</td></tr>
-<tr><td><strong>Transporte</strong></td><td>JSON por <code>urlAssinada</code>, v&aacute;lida 48 h</td><td>Arquivo <code>.zip</code> por download, validade informada na notifica&ccedil;&atilde;o</td></tr>
+<tr><td><strong>Transporte</strong></td><td>JSON por <code>urlAssinada</code>, pedida ao download, v&aacute;lida 48 h e baixada sem Bearer</td><td>Arquivo <code>.zip</code> por download, validade informada na notifica&ccedil;&atilde;o</td></tr>
 <tr><td><strong>Autentica&ccedil;&atilde;o</strong></td><td>OAuth 2.0 client credentials, token de 1 h</td><td><code>ClientID</code> e <code>ClientSecret</code> no header de cada chamada</td></tr>
 <tr><td><strong>Papel do webhook</strong></td><td>Avisa que <strong>o que pedimos</strong> ficou pronto</td><td>Avisa que <strong>o Fisco gerou</strong> algo por conta pr&oacute;pria</td></tr>
 <tr><td><strong>Repeti&ccedil;&atilde;o</strong></td><td><strong>Cumulativa</strong>: a janela de 8 dias reentrega o documento atualizado</td><td><strong>Incremental</strong>: o Delta traz o lan&ccedil;amento uma vez s&oacute;</td></tr>
-<tr><td><strong>Cota</strong></td><td>4 chamadas/dia <em>por endpoint</em></td><td>2 solicita&ccedil;&otilde;es manuais/dia; o Delta n&atilde;o consome cota</td></tr>
+<tr><td><strong>Cota</strong></td><td>4 chamadas/dia <em>por API</em>, por credencial</td><td>2 solicita&ccedil;&otilde;es manuais/dia; o Delta n&atilde;o consome cota</td></tr>
 <tr><td><strong>Compet&ecirc;ncia</strong></td><td>Campo <code>pa</code> em cada documento</td><td><strong>Ausente na opera&ccedil;&atilde;o</strong> &mdash; s&oacute; o per&iacute;odo do arquivo</td></tr>
-<tr><td><strong>Camada de arrecada&ccedil;&atilde;o</strong></td><td>DARF, multa, juros e vencimento no payload</td><td><strong>N&atilde;o existe na Etapa 1</strong> &mdash; Documento de Arrecada&ccedil;&atilde;o &eacute; Etapa 4</td></tr>
-<tr><td><strong>Integridade</strong></td><td>N&atilde;o h&aacute; verificador no payload</td><td><code>hash</code> SHA1 acumulado do extrato</td></tr>
+<tr><td><strong>Camada de arrecada&ccedil;&atilde;o</strong></td><td>DARF, multa, juros e vencimento no payload; guias de DARF do RAD e do PCONT por API</td><td><strong>N&atilde;o existe na Etapa 1</strong> &mdash; Documento de Arrecada&ccedil;&atilde;o &eacute; Etapa 4</td></tr>
+<tr><td><strong>Integridade</strong></td><td>N&atilde;o h&aacute; verificador no payload; desde 13/11/2026, schemas publicados</td><td><code>hash</code> SHA1 acumulado do extrato</td></tr>
 </tbody></table></div>
 <div class="callout warn"><div class="ct">A consequ&ecirc;ncia de uma linha s&oacute;</div><p>Cumulativo contra incremental &eacute; a diferen&ccedil;a que mais custa. Na CBS, <strong>perder uma coleta n&atilde;o perde dado</strong>: a pr&oacute;xima reentrega tudo o que mudou nos &uacute;ltimos 8 dias. No IBS, <strong>perder um Delta perde o lan&ccedil;amento</strong> &mdash; e a recupera&ccedil;&atilde;o depende de Arquivo Manual, limitado a duas solicita&ccedil;&otilde;es por dia.</p></div>
 </div>
@@ -208,7 +208,7 @@ img, svg { max-width: 100%; height: auto; }
 <p class="sec-sub">Antes do payload, o conceito. As duas APIs organizam a informa&ccedil;&atilde;o em torno de objetos diferentes, e isso governa tudo o que vem depois.</p>
 
 <h3>CBS: o documento dentro do per&iacute;odo</h3>
-<p>O envelope &eacute; o contribuinte (<code>ni</code>, CNPJ base de 8 d&iacute;gitos) e o per&iacute;odo de apura&ccedil;&atilde;o (<code>pa</code>). Dentro dele vem a lista de documentos, cada um com sua <code>chave</code> de 44 posi&ccedil;&otilde;es, o <code>modelo</code> e um bloco <code>cbs</code> com os valores <strong>no estado em que est&atilde;o hoje</strong>. N&atilde;o h&aacute; hist&oacute;rico: o que mudou aparece como um n&uacute;mero diferente numa coleta seguinte, e o campo <code>atualizacao</code> diz quando mudou &mdash; n&atilde;o o que mudou nem por qu&ecirc;.</p>
+<p>O envelope &eacute; o contribuinte (<code>ni</code>, CNPJ base de 8 d&iacute;gitos) e o per&iacute;odo de apura&ccedil;&atilde;o (<code>pa</code>). Dentro dele vem a lista de documentos, cada um com sua <code>chave</code> (at&eacute; 100 posi&ccedil;&otilde;es), o c&oacute;digo do <code>documento</code> e um bloco <code>cbs</code> com os valores <strong>no estado em que est&atilde;o hoje</strong>. N&atilde;o h&aacute; hist&oacute;rico: o que mudou aparece como um n&uacute;mero diferente numa coleta seguinte, e o campo <code>atualizacao</code> diz quando mudou &mdash; n&atilde;o o que mudou nem por qu&ecirc;.</p>
 
 <h3>IBS: a opera&ccedil;&atilde;o e seu conta corrente</h3>
 <p>O envelope &eacute; o arquivo. Dentro vem a lista de <strong>opera&ccedil;&otilde;es</strong> &mdash; cada uma um fornecimento (vis&atilde;o do fornecedor) ou uma aquisi&ccedil;&atilde;o (vis&atilde;o do adquirente), inaugurada por um documento fiscal e identificada por um <code>ID</code> pr&oacute;prio do Fisco. Cada opera&ccedil;&atilde;o carrega um <code>extrato_cc</code>: a <strong>lista de lan&ccedil;amentos</strong> que aconteceram nela. O primeiro lan&ccedil;amento &eacute; o registro da pr&oacute;pria opera&ccedil;&atilde;o; os seguintes s&atilde;o apropria&ccedil;&otilde;es, utiliza&ccedil;&otilde;es, pagamentos, cancelamentos, devolu&ccedil;&otilde;es e extin&ccedil;&otilde;es.</p>
@@ -225,15 +225,16 @@ img, svg { max-width: 100%; height: auto; }
 <div style="padding:14px 16px">
 <ol class="steps">
 <li>Obt&eacute;m o <strong>token</strong> em <code>POST /token</code> com <em>client credentials</em>. Validade 1 h</li>
-<li>Abre a solicita&ccedil;&atilde;o: <code>POST /creditos/{cnpj}</code> com <code>urlRetorno</code> no corpo</li>
-<li>Recebe <strong>201</strong> com <code>tiqueteSolicitacao</code> e <code>tEASegundos</code> &mdash; a estimativa de espera</li>
-<li>A Receita chama <code>HEAD</code> no webhook para <strong>validar o endere&ccedil;o</strong>, antes do 201</li>
-<li>Ao concluir, chama <code>POST</code> no webhook com <code>urlAssinada</code> e <code>urlAssinadaExpiraEm</code></li>
-<li>O produto responde <strong>2xx</strong>. Qualquer outro status faz a Receita tentar de novo</li>
-<li>Baixa o JSON pela <code>urlAssinada</code> <strong>antes de 48 h</strong></li>
+<li>Abre a solicita&ccedil;&atilde;o: <code>POST /creditos/{cnpj}</code> com <code>urlRetorno</code> no corpo &mdash; ou <code>""</code>, sem webhook</li>
+<li>Se houver <code>urlRetorno</code>, a Receita chama <code>HEAD</code> nela para <strong>validar o endere&ccedil;o</strong>, antes do 201</li>
+<li>Recebe <strong>201</strong> com <code>tiqueteSolicitacao</code> e <code>tEASegundos</code> &mdash; a estimativa de espera; <code>-1</code> sem estimativa</li>
+<li>Ao concluir, chama <code>POST</code> no webhook com <code>tiqueteSolicitacao</code> e <code>situacao</code> &mdash; <strong>sem o link e sem autentica&ccedil;&atilde;o</strong></li>
+<li>O produto responde <strong>2xx</strong> e trata o aviso pelo t&iacute;quete. A documenta&ccedil;&atilde;o atual n&atilde;o descreve novas tentativas</li>
+<li>Pede o link: <code>GET /download/{tiquete}</code> devolve <code>urlAssinada</code> e <code>urlAssinadaExpiraEm</code></li>
+<li>Baixa o JSON pela <code>urlAssinada</code>, sem Bearer, <strong>antes de 48 h</strong></li>
 <li>Alternativa sem webhook: <em>polling</em> em <code>GET /situacao/{tiquete}</code></li>
 </ol>
-<p class="src-note">Processamento at&eacute; <strong>240 minutos</strong>. Estouro devolve <code>APURACAO-408</code> no webhook, no lugar do link.</p>
+<p class="src-note">Processamento at&eacute; <strong>240 minutos</strong>. Estouro leva a solicita&ccedil;&atilde;o a <code>ERRO</code>, com <code>codigoErro</code> e <code>mensagemErro</code> no aviso e na situa&ccedil;&atilde;o; a situa&ccedil;&atilde;o tamb&eacute;m pode chegar a <code>EXPIRADA</code>. Fluxo conforme o guia das APIs ass&iacute;ncronas v1.1, de 14/10/2026.</p>
 </div></div>
 
 <div class="pane"><div class="pane-hdr ibs">IBS &middot; o Fisco empurra</div>
@@ -252,7 +253,7 @@ img, svg { max-width: 100%; height: auto; }
 </div></div>
 </div>
 
-<div class="callout red"><div class="ct">O webhook do IBS n&atilde;o &eacute; opcional</div><p>Na CBS o webhook tem alternativa: d&aacute; para trocar por <em>polling</em> em <code>/situacao</code>, porque sempre existe um t&iacute;quete nosso para consultar. <strong>No IBS n&atilde;o h&aacute; t&iacute;quete a consultar</strong> quando o arquivo &eacute; di&aacute;rio &mdash; a habilita&ccedil;&atilde;o exige <code>webhookUrl</code>, e o endere&ccedil;o precisa estar no ar todo dia. Sem ele, resta varrer <code>solicitacao/listar</code> por conta pr&oacute;pria.</p></div>
+<div class="callout red"><div class="ct">O webhook do IBS n&atilde;o &eacute; opcional</div><p>Na CBS o webhook tem alternativa &mdash; desde 14/10/2026, a pr&oacute;pria Receita Federal o declara opcional: d&aacute; para trocar por <em>polling</em> em <code>/situacao</code>, porque sempre existe um t&iacute;quete nosso para consultar. <strong>No IBS n&atilde;o h&aacute; t&iacute;quete a consultar</strong> quando o arquivo &eacute; di&aacute;rio &mdash; a habilita&ccedil;&atilde;o exige <code>webhookUrl</code>, e o endere&ccedil;o precisa estar no ar todo dia. Sem ele, resta varrer <code>solicitacao/listar</code> por conta pr&oacute;pria.</p></div>
 </div>
 
 <!-- 05 -->
@@ -263,8 +264,8 @@ img, svg { max-width: 100%; height: auto; }
 <tr><td><strong>Onde nasce</strong></td><td>Portal RTC&ndash;CBS, &ldquo;Gerar Credencial para API&rdquo;, do estabelecimento matriz</td><td>Portal do Contribuinte do CGIBS, menu Credenciais de Acesso, ap&oacute;s login GOV.BR</td></tr>
 <tr><td><strong>Validade</strong></td><td>Token de <strong>1 hora</strong>, renov&aacute;vel</td><td>Par sem validade declarada; <strong>gerar um novo invalida o anterior</strong></td></tr>
 <tr><td><strong>Visibilidade</strong></td><td>Credencial recuper&aacute;vel no Portal</td><td><strong>S&oacute; no momento da gera&ccedil;&atilde;o</strong> &mdash; depois n&atilde;o aparece mais</td></tr>
-<tr><td><strong>Identifica&ccedil;&atilde;o</strong></td><td>CNPJ base de 8 d&iacute;gitos no caminho; cobre toda a raiz</td><td>CNPJ no corpo da solicita&ccedil;&atilde;o; no arquivo, <strong>CNPJ raiz de 8</strong> em fornecedor e adquirente</td></tr>
-<tr><td><strong>Autentica&ccedil;&atilde;o do webhook</strong></td><td><code>HEAD</code> de valida&ccedil;&atilde;o antes do 201</td><td><code>tokenContrib</code> opcional, devolvido no header da notifica&ccedil;&atilde;o</td></tr>
+<tr><td><strong>Identifica&ccedil;&atilde;o</strong></td><td>CNPJ base de 8 d&iacute;gitos no caminho das consultas; cobre toda a raiz. As guias de DARF pedem 14 d&iacute;gitos</td><td>CNPJ no corpo da solicita&ccedil;&atilde;o; no arquivo, <strong>CNPJ raiz de 8</strong> em fornecedor e adquirente</td></tr>
+<tr><td><strong>Autentica&ccedil;&atilde;o do webhook</strong></td><td><strong>Nenhuma no aviso.</strong> O <code>HEAD</code> s&oacute; valida o endere&ccedil;o antes do 201; o guia recomenda aceitar apenas as faixas de IP de origem que a Receita Federal publica</td><td><code>tokenContrib</code> opcional, devolvido no header da notifica&ccedil;&atilde;o</td></tr>
 <tr><td><strong>Certificado digital</strong></td><td>e-CNPJ exigido para gerar a credencial no piloto</td><td>Acesso ao Portal por GOV.BR</td></tr>
 </tbody></table></div>
 <div class="callout warn"><div class="ct">Dois riscos operacionais distintos</div><p>Na CBS o risco &eacute; de <strong>expira&ccedil;&atilde;o</strong>: esquecer de renovar o token derruba a coleta por uma hora. No IBS o risco &eacute; de <strong>rota&ccedil;&atilde;o</strong>: algu&eacute;m gerar um novo par no Portal invalida silenciosamente o que o SplitHub est&aacute; usando, e o segredo n&atilde;o pode ser lido de novo para conferir. A rota&ccedil;&atilde;o precisa de procedimento, n&atilde;o s&oacute; de c&oacute;digo.</p></div>
@@ -280,7 +281,7 @@ img, svg { max-width: 100%; height: auto; }
 <pre>{
   "tiqueteSolicitacao": "c9e21b7a-…",
   <b>"ni"</b>: "12345678",
-  "niConsumidor": "",
+  "niConsumidor": "12345678000190",
   "geradoEm": "2026-10-01T09:14:22-03:00",
   <b>"apuracao"</b>: [
     {
@@ -301,18 +302,20 @@ img, svg { max-width: 100%; height: auto; }
               "suspenso":      0.00,
               "prescrito":     0.00,
               "aApropriar": 2000.00,
-              "apropriado":10000.00
-            },
-            <b>"utilizacao"</b>: {
-              "inutilizavel":  0.00,
-              "utilizado":  7500.00,
-              "restabelecido": 0.00,
-              "naoUtilizado": {
-                "saldoCredor":        2500.00,
-                "pedidoRessarcimento":   0.00
+              "apropriado":10000.00,
+              <b>"utilizacao"</b>: {
+                "inutilizavel":  0.00,
+                "utilizado":  7500.00,
+                "restabelecido": 0.00,
+                <b>"naoUtilizado"</b>: {
+                  "saldoCredor":        2500.00,
+                  "pedidoRessarcimento":   0.00
+                }
               }
             }
           }
+          <span class="cm">/* no arquivo, os zerados não vêm,
+             exceto apurado e saldoCredor */</span>
         }
       ]
     }
@@ -362,7 +365,7 @@ img, svg { max-width: 100%; height: auto; }
 }</pre></div>
 </div>
 
-<div class="callout info"><div class="ct">Leia as duas estruturas de novo</div><p>Na CBS, <code>cbs</code> &eacute; um <strong>objeto de saldos</strong> com onze n&uacute;meros nomeados. No IBS, os mesmos assuntos viram <strong>sete colunas repetidas em cada linha</strong> do extrato. A CBS nomeia estados; o IBS nomeia <em>movimenta&ccedil;&otilde;es</em> e deixa o estado emergir da soma.</p></div>
+<div class="callout info"><div class="ct">Leia as duas estruturas de novo</div><p>Na CBS, <code>cbs</code> &eacute; um <strong>objeto de saldos</strong> com doze n&uacute;meros nomeados, em tr&ecirc;s n&iacute;veis: <code>utilizacao</code> fica dentro de <code>apropriacao</code>, e <code>naoUtilizado</code> dentro de <code>utilizacao</code> &mdash; a v1.0 deste documento os mostrava lado a lado. No IBS, os mesmos assuntos viram <strong>sete colunas repetidas em cada linha</strong> do extrato. A CBS nomeia estados; o IBS nomeia <em>movimenta&ccedil;&otilde;es</em> e deixa o estado emergir da soma.</p></div>
 </div>
 
 <!-- 07 -->
@@ -374,9 +377,9 @@ img, svg { max-width: 100%; height: auto; }
 <tr><td><code>origem</code></td><td>Origem do lan&ccedil;amento</td><td>N&atilde;o existe (o an&aacute;logo &eacute; <code>MOV</code>, em texto)</td><td>Classifica&ccedil;&atilde;o da origem no IBS depende de texto livre</td></tr>
 <tr><td><code>suspenso</code></td><td>Cr&eacute;dito com exigibilidade suspensa</td><td><strong>N&atilde;o existe como campo</strong></td><td rowspan="3">Os tr&ecirc;s estados de risco do cr&eacute;dito s&atilde;o <strong>nomeados na CBS e mudos no IBS</strong>. As flags de risco do IBS dependem de interpretar <code>MOV</code></td></tr>
 <tr><td><code>prescrito</code></td><td>Cr&eacute;dito fora do prazo do art. 54</td><td>N&atilde;o existe como campo</td></tr>
-<tr><td><code>inapropriavel</code></td><td>Cr&eacute;dito vedado &mdash; art. 48</td><td>N&atilde;o existe como campo</td></tr>
+<tr><td><code>inapropriavel</code></td><td>Cr&eacute;dito que, por eventos posteriores, n&atilde;o pode mais ser apropriado</td><td>N&atilde;o existe como campo</td></tr>
 <tr><td><code>inutilizavel</code> &middot; <code>restabelecido</code></td><td>Cr&eacute;dito que n&atilde;o pode ser usado; e o que voltou</td><td>N&atilde;o existem</td><td>Glosa e restabelecimento no IBS s&oacute; aparecem como varia&ccedil;&atilde;o de valor</td></tr>
-<tr><td><code>excedente</code> &middot; <code>inexigivel</code></td><td>Sobra de apura&ccedil;&atilde;o; d&eacute;bito n&atilde;o exig&iacute;vel</td><td>N&atilde;o existem</td><td>A parti&ccedil;&atilde;o do d&eacute;bito do IBS &eacute; mais pobre: s&oacute; <em>em aberto</em> e <em>extinto</em></td></tr>
+<tr><td><code>excedente</code> &middot; <code>inexigivel</code> &middot; <code>pgtoAntecipado</code></td><td>Valor n&atilde;o processado por inconsist&ecirc;ncia com o documento; d&eacute;bito que deixou de ser exig&iacute;vel; d&eacute;bito extinto por pagamento antecipado (13/11/2026)</td><td>N&atilde;o existem</td><td>A parti&ccedil;&atilde;o do d&eacute;bito do IBS &eacute; mais pobre: s&oacute; <em>em aberto</em> e <em>extinto</em></td></tr>
 <tr><td><code>saldoDevedor</code> &middot; <code>saldoCredor</code></td><td>Saldos consolidados</td><td>N&atilde;o existem &mdash; equivalem a somar o extrato</td><td>O saldo do IBS &eacute; <strong>calculado por n&oacute;s</strong>. Diverg&ecirc;ncia de centavo vira inconsist&ecirc;ncia que o Fisco n&atilde;o reconhece</td></tr>
 <tr><td><code>numeroDARF</code></td><td>Guia que extinguiu o d&eacute;bito</td><td rowspan="5"><strong>Toda a camada de arrecada&ccedil;&atilde;o est&aacute; fora da Etapa 1.</strong> Documento de Arrecada&ccedil;&atilde;o &eacute; Etapa 4, sem especifica&ccedil;&atilde;o</td><td rowspan="5">A <strong>concilia&ccedil;&atilde;o financeira do RAD no IBS fica sem fonte</strong>. O produto emite a guia e n&atilde;o tem como confirmar a extin&ccedil;&atilde;o pelo contrato do IBS</td></tr>
 <tr><td><code>multa</code> &middot; <code>juros</code></td><td>Acr&eacute;scimos do recolhimento em atraso</td></tr>
@@ -415,7 +418,7 @@ img, svg { max-width: 100%; height: auto; }
 <tr><td><strong>Obriga&ccedil;&otilde;es acess&oacute;rias</strong></td><td><span class="tag none">nenhuma</span> Fora do escopo das duas APIs</td><td>Fora do escopo do produto</td></tr>
 <tr><td><strong>Contabiliza&ccedil;&atilde;o</strong></td><td><span class="tag none">nenhuma</span> Nenhuma das duas escritura</td><td>O produto emite evento; o ERP escritura</td></tr>
 <tr><td><strong>Concluir a apura&ccedil;&atilde;o do m&ecirc;s</strong></td><td><span class="tag cbs">s&oacute; CBS</span> Prevista, sem documenta&ccedil;&atilde;o nem data</td><td>A&ccedil;&atilde;o no portal at&eacute; existir contrato</td></tr>
-<tr><td><strong>Emitir guia de recolhimento</strong></td><td><span class="tag cbs">s&oacute; CBS</span> DARF para RAD e PCONT, fim de nov/2026. No IBS, Etapa 4 sem data</td><td>No IBS, guia pelo portal &mdash; o <strong>RAD do IBS n&atilde;o tem contrato</strong></td></tr>
+<tr><td><strong>Emitir guia de recolhimento</strong></td><td><span class="tag cbs">s&oacute; CBS</span> DARF do RAD e do PCONT por API s&iacute;ncrona, documentada em 13/11/2026 e anunciada para o fim de nov/2026. No IBS, Etapa 4 sem data</td><td>No IBS, guia pelo portal &mdash; o <strong>RAD do IBS n&atilde;o tem contrato</strong></td></tr>
 </tbody></table></div>
 </div>
 
@@ -423,12 +426,12 @@ img, svg { max-width: 100%; height: auto; }
 <div class="section" id="s10">
 <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Janela, limite e o custo de perder um arquivo</span></div>
 <div class="table-wrap"><table><thead><tr><th>Regra</th><th>CBS</th><th>IBS</th></tr></thead><tbody>
-<tr><td>Abertura de solicita&ccedil;&atilde;o</td><td>4 por dia, <strong>por endpoint</strong> &mdash; com 4 endpoints, at&eacute; 16</td><td>2 por dia, no total; mais 2 por compet&ecirc;ncia no mesmo dia</td></tr>
+<tr><td>Abertura de solicita&ccedil;&atilde;o</td><td>4 por dia, <strong>por API</strong> e por credencial, zerando &agrave; meia-noite &mdash; com 4 consultas, at&eacute; 16</td><td>2 por dia, no total; mais 2 por compet&ecirc;ncia no mesmo dia</td></tr>
 <tr><td>Entrega autom&aacute;tica</td><td>N&atilde;o h&aacute;: tudo parte de um pedido nosso</td><td><strong>Delta di&aacute;rio</strong>, sem consumir cota</td></tr>
-<tr><td>Janela retroativa</td><td>&Uacute;ltimos <strong>8 dias</strong>; na primeira, desde o dia 1 do m&ecirc;s</td><td>Per&iacute;odo livre no Manual, <strong>dentro de uma &uacute;nica compet&ecirc;ncia</strong>, sem sobreposi&ccedil;&atilde;o</td></tr>
-<tr><td>Validade do artefato</td><td><code>urlAssinada</code> por <strong>48 h</strong></td><td>Prazo informado na notifica&ccedil;&atilde;o; depois a solicita&ccedil;&atilde;o vira <strong>Expirada</strong></td></tr>
+<tr><td>Janela retroativa</td><td>Desde a &uacute;ltima consulta conclu&iacute;da, limitada aos &uacute;ltimos <strong>8 dias</strong>; sem consulta conclu&iacute;da em 3 meses, desde o dia 1 do m&ecirc;s</td><td>Per&iacute;odo livre no Manual, <strong>dentro de uma &uacute;nica compet&ecirc;ncia</strong>, sem sobreposi&ccedil;&atilde;o</td></tr>
+<tr><td>Validade do artefato</td><td><code>urlAssinada</code> por <strong>48 h</strong>; a solicita&ccedil;&atilde;o pode chegar a <code>EXPIRADA</code></td><td>Prazo informado na notifica&ccedil;&atilde;o; depois a solicita&ccedil;&atilde;o vira <strong>Expirada</strong></td></tr>
 <tr><td>Se a coleta falhar</td><td><strong>Sem perda</strong> &mdash; a pr&oacute;xima reentrega a janela</td><td><strong>Perda</strong> &mdash; s&oacute; recuper&aacute;vel por Manual, com 2 pedidos/dia</td></tr>
-<tr><td>Abuso</td><td>Limite por endpoint</td><td><strong>Consumo Indevido</strong> suspende o contribuinte por tempo determinado</td></tr>
+<tr><td>Abuso</td><td>Limite por API e por credencial</td><td><strong>Consumo Indevido</strong> suspende o contribuinte por tempo determinado</td></tr>
 <tr><td>Fatiamento</td><td>N&atilde;o documentado</td><td>Mesma opera&ccedil;&atilde;o em v&aacute;rios arquivos; <code>hash</code> &eacute; <strong>acumulado</strong>, n&atilde;o da fatia</td></tr>
 </tbody></table></div>
 <div class="callout red"><div class="ct">A conta que assusta</div><p>Um cliente com 30 dias de Delta n&atilde;o processado precisa de <strong>15 dias</strong> para recuperar pelo Manual &mdash; duas solicita&ccedil;&otilde;es por dia, uma compet&ecirc;ncia por vez, sem sobrepor per&iacute;odos. E o pr&oacute;prio manual avisa que repeti&ccedil;&atilde;o excessiva caracteriza <strong>Consumo Indevido</strong> e suspende o contribuinte. <strong>No IBS, monitorar a ingest&atilde;o n&atilde;o &eacute; higiene: &eacute; requisito.</strong></p></div>
@@ -441,7 +444,7 @@ img, svg { max-width: 100%; height: auto; }
 <div class="table-wrap"><table><thead><tr><th>#</th><th>O que muda</th><th>M&oacute;dulo</th><th>O que precisa existir</th></tr></thead><tbody>
 <tr><td><strong>1</strong></td><td>Dois formatos de chegada para o mesmo modelo interno</td><td>Integra&ccedil;&otilde;es</td><td><strong>Dois adaptadores, n&atilde;o um parametrizado.</strong> Um consome saldo e reconcilia por documento; o outro consome extrato e projeta saldo por opera&ccedil;&atilde;o</td></tr>
 <tr><td><strong>2</strong></td><td>Idempot&ecirc;ncia por chave diferente</td><td>Ingest&atilde;o</td><td>CBS: dedupe por <code>chave</code> + <code>pa</code>, sobrescrevendo saldo. IBS: dedupe por <code>ID</code> do lan&ccedil;amento, <strong>somando</strong> &mdash; reprocessar Manual n&atilde;o pode dobrar valor</td></tr>
-<tr><td><strong>3</strong></td><td>Webhook de entrada com dois significados</td><td>Integra&ccedil;&otilde;es</td><td>Endpoints separados. O da CBS casa com t&iacute;quete nosso; o do IBS aceita evento <strong>n&atilde;o solicitado</strong> e precisa de disponibilidade di&aacute;ria e do <code>tokenContrib</code></td></tr>
+<tr><td><strong>3</strong></td><td>Webhook de entrada com dois significados</td><td>Integra&ccedil;&otilde;es</td><td>Endpoints separados. O da CBS, sem autentica&ccedil;&atilde;o no aviso, aceita s&oacute; as faixas de IP publicadas e casa com t&iacute;quete nosso &mdash; ou &eacute; dispensado, com <em>polling</em>; o do IBS aceita evento <strong>n&atilde;o solicitado</strong> e precisa de disponibilidade di&aacute;ria e do <code>tokenContrib</code></td></tr>
 <tr><td><strong>4</strong></td><td>Rota&ccedil;&atilde;o de credencial destrutiva</td><td>Organiza&ccedil;&atilde;o</td><td>Cofre por cliente, alerta de falha de autentica&ccedil;&atilde;o e <strong>procedimento de rota&ccedil;&atilde;o</strong> &mdash; o segredo do IBS n&atilde;o pode ser lido depois</td></tr>
 <tr><td><strong>5</strong></td><td>Compet&ecirc;ncia ausente no IBS</td><td>Apura&ccedil;&atilde;o</td><td>Regra expl&iacute;cita de deriva&ccedil;&atilde;o, com o caso de evento fiscal que muda compet&ecirc;ncia. <strong>&Eacute; a maior fonte de erro silencioso</strong></td></tr>
 <tr><td><strong>6</strong></td><td>Modelo do documento ausente no IBS</td><td>Ingest&atilde;o</td><td>Derivar das posi&ccedil;&otilde;es 21&ndash;22 da chave, com exce&ccedil;&atilde;o da NFS-e. J&aacute; descrito em <a class="xref" href="layouts-df-api.html">Layouts dos DFs</a></td></tr>
@@ -464,7 +467,7 @@ img, svg { max-width: 100%; height: auto; }
 <div class="table-wrap"><table><thead><tr><th>Onda</th><th>Endpoints</th><th>Ambientes</th></tr></thead><tbody>
 <tr><td><strong>In&iacute;cio out/2026</strong></td><td><code>POST /debitos/{cnpj}</code> &middot; <code>POST /creditos/{cnpj}</code></td><td>Produ&ccedil;&atilde;o Restrita e Produ&ccedil;&atilde;o Beta</td></tr>
 <tr><td><strong>In&iacute;cio nov/2026</strong></td><td><code>POST /pagamentos/{cnpj}</code> &middot; <code>POST /recolhimentos/{cnpj}</code></td><td>Produ&ccedil;&atilde;o Restrita e Produ&ccedil;&atilde;o Beta</td></tr>
-<tr><td><strong>Fim nov/2026</strong></td><td>Emiss&atilde;o de DARF para RAD e PCONT</td><td>Produ&ccedil;&atilde;o Restrita e Produ&ccedil;&atilde;o Beta</td></tr>
+<tr><td><strong>Fim nov/2026</strong></td><td><code>POST /rad/{cnpj}</code> &middot; <code>POST /pcont/{cnpj}</code> &mdash; DARF do RAD e do PCONT, documentados em 13/11/2026</td><td>Produ&ccedil;&atilde;o Restrita e Produ&ccedil;&atilde;o Beta</td></tr>
 <tr><td><strong>Sem data</strong></td><td>Concluir Apura&ccedil;&atilde;o do M&ecirc;s Anterior &middot; acesso al&eacute;m do piloto</td><td>&mdash;</td></tr>
 </tbody></table></div>
 
@@ -494,8 +497,9 @@ img, svg { max-width: 100%; height: auto; }
 <tr><td><span class="tag ibs">IBS</span></td><td>Algoritmo do <code>hash</code> do extrato n&atilde;o definido &mdash; os exemplos s&atilde;o ilustrativos</td><td>A verifica&ccedil;&atilde;o de completude, que o item 7 da <a class="xref" href="#s11">se&ccedil;&atilde;o 11</a> exige, <strong>ainda n&atilde;o pode ser implementada de verdade</strong></td></tr>
 <tr><td><span class="tag ibs">IBS</span></td><td>Tabela de c&oacute;digos do <code>MOV</code> n&atilde;o existe &mdash; hoje &eacute; texto de descri&ccedil;&atilde;o</td><td>Qualquer mapeamento de causa <strong>quebra quando a tabela sair</strong>. Construir isolado e descart&aacute;vel</td></tr>
 <tr><td><span class="tag ibs">IBS</span></td><td><code>hash_operacao</code> foi removido da especifica&ccedil;&atilde;o</td><td>Sinal de que o contrato ainda se move na v1.x</td></tr>
-<tr><td><span class="tag cbs">CBS</span></td><td>Enumera&ccedil;&atilde;o de <code>tipo</code> em pagamentos n&atilde;o publicada</td><td>Distinguir PCONT, RAD e split depende de valor n&atilde;o documentado</td></tr>
-<tr><td><span class="tag cbs">CBS</span></td><td>Emiss&atilde;o de DARF anunciada sem p&aacute;gina de documenta&ccedil;&atilde;o</td><td>A automa&ccedil;&atilde;o do RAD federal s&oacute; pode ser desenhada, n&atilde;o constru&iacute;da</td></tr>
+<tr><td><span class="tag cbs">CBS</span></td><td>Enumera&ccedil;&atilde;o de <code>tipo</code> publicada em 13/11/2026 &mdash; 1 = RAD, 2 = PCONT &mdash;, sem valor para o split</td><td>PCONT e RAD j&aacute; se distinguem; <strong>por qual consulta chega a reten&ccedil;&atilde;o do split</strong> continua sem resposta</td></tr>
+<tr><td><span class="tag cbs">CBS</span></td><td>Guias de DARF documentadas em 13/11/2026 com pontos a confirmar: CNPJ de 14 d&iacute;gitos chamado de &ldquo;CNPJ base&rdquo;, erros do PCONT copiados do RAD e nenhum HTTP associado a cada <code>cdRetorno</code></td><td>A automa&ccedil;&atilde;o do RAD federal j&aacute; pode ser constru&iacute;da; os testes no piloto decidem esses tr&ecirc;s pontos</td></tr>
+<tr><td><span class="tag cbs">CBS</span></td><td>Aviso do webhook sem autentica&ccedil;&atilde;o, assinatura nem mTLS</td><td>O <code>HEAD</code> n&atilde;o autentica: o endpoint p&uacute;blico depende da lista de IPs de origem e de casar o t&iacute;quete com um pedido nosso</td></tr>
 <tr><td><span class="tag both">as duas</span></td><td>Acesso restrito ao piloto</td><td><strong>Entrar nos dois pilotos &eacute; pr&eacute;-requisito</strong> de qualquer cronograma de integra&ccedil;&atilde;o que prometamos a cliente</td></tr>
 </tbody></table></div>
 </div>
@@ -505,7 +509,7 @@ img, svg { max-width: 100%; height: auto; }
 <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Fontes</span></div>
 <ul class="plain">
 <li><strong>MOC &mdash; API de Integra&ccedil;&atilde;o com a Apura&ccedil;&atilde;o Assistida do IBS, v1.10</strong>, Comit&ecirc; Gestor do IBS, setembro de 2026. 44 p&aacute;ginas, com os Anexos I e II da API Conta Corrente Fiscal. Publicado em 23/09/2026</li>
-<li><strong>Documenta&ccedil;&atilde;o t&eacute;cnica das APIs de Apura&ccedil;&atilde;o da CBS v2</strong>, Receita Federal, setembro de 2026, e o <strong>Guia das APIs ass&iacute;ncronas v1.0</strong> de 03/09/2026 &mdash; reunidos em <a class="xref" href="integracao-apis-reforma.html#api-a">Refer&ecirc;ncia de APIs, se&ccedil;&atilde;o A</a></li>
+<li><strong>Documenta&ccedil;&atilde;o t&eacute;cnica das APIs de Apura&ccedil;&atilde;o da CBS v2</strong>, Receita Federal, setembro de 2026, revista em 13 e 14/10/2026 e em 13/11/2026, e o <strong>Guia das APIs ass&iacute;ncronas v1.1</strong> de 14/10/2026 &mdash; conferidos em 18/11/2026 e reunidos em <a class="xref" href="integracao-apis-reforma.html#api-a">Refer&ecirc;ncia de APIs v1.4, se&ccedil;&atilde;o A</a></li>
 <li><strong>Manual da Plataforma CBS</strong>, Receita Federal, 21/05/2026 &mdash; endpoint do token e validade de 1 hora</li>
 <li>Estruturas e nomes de campo transcritos <strong>na l&iacute;ngua original de cada API</strong>, sem tradu&ccedil;&atilde;o. Valores e chaves dos exemplos s&atilde;o ilustrativos</li>
 </ul>
@@ -514,6 +518,7 @@ img, svg { max-width: 100%; height: auto; }
 <!-- 15 -->
 <div class="section" id="s15">
 <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
+<div class="ver-row"><div class="ver-num">v1.1</div><div class="ver-desc"><strong>18/11/2026</strong> &mdash; O lado da CBS conferido na fonte, com as revis&otilde;es da Receita Federal de outubro e novembro. O aviso do webhook traz s&oacute; o t&iacute;quete e a situa&ccedil;&atilde;o, sem autentica&ccedil;&atilde;o; o link sai do download e &eacute; baixado sem Bearer; o webhook fica opcional; o estouro de 240 minutos vira <code>ERRO</code>, e a solicita&ccedil;&atilde;o pode expirar. O payload de cr&eacute;ditos passa a mostrar o aninhamento correto. Tamb&eacute;m foram atualizados a cota, a janela, os significados e o <code>pgtoAntecipado</code>, as guias de DARF e as pend&ecirc;ncias: o <code>tipo</code> foi publicado e as guias ganharam p&aacute;gina. O lado do IBS n&atilde;o mudou. Os dois passo a passo, que se espalhavam em colunas soltas, voltam a ser lidos como texto corrido. A v1.0 est&aacute; no <a href="versoes/cbs-x-ibs-integracao-v1.0.html">arquivo de vers&otilde;es</a>.</div></div>
 <div class="ver-row"><div class="ver-num">v1.0</div><div class="ver-desc"><strong>24/09/2026</strong> &mdash; Primeira vers&atilde;o, no dia seguinte &agrave; publica&ccedil;&atilde;o do MOC do IBS. Compara&ccedil;&atilde;o campo a campo dos dois contratos: doze eixos de contraste, os dois fluxos passo a passo, payloads lado a lado, treze campos que s&oacute; a CBS entrega, nove que s&oacute; o IBS entrega, sete necessidades que nenhuma das duas cobre, e quatorze impactos de produto com o m&oacute;dulo respons&aacute;vel.</div></div>
 </div>
 
