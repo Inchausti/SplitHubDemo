@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SLA no detalhe · v1.1</title>
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5;
+  --ff-mono:'JetBrains Mono', ui-monospace, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1100px; margin: 0 auto; }
+.back { display: inline-block; font-size: 12px; color: var(--txt3); text-decoration: none; margin-bottom: 18px; }
+.back:hover { color: var(--txt1); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 820px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: var(--ff-mono); font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: var(--ff-mono); }
+.sec-title { font-size: 17px; font-weight: 700; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+ul.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 9px 13px; border-bottom: 1px solid var(--brd); vertical-align: top; color: var(--txt2); background: var(--sur); }
+td strong { color: var(--txt1); }
+td.wrap { min-width: 190px; }
+td:first-child { min-width: 130px; }
+td.id { font-family: var(--ff-mono); font-size: 11px; color: var(--txt3); white-space: nowrap; }
+tbody tr:last-child td { border-bottom: none; }
+code { font-family: var(--ff-mono); font-size: 11.5px; background: var(--mono); padding: 1px 5px; border-radius: 4px; color: var(--txt1); overflow-wrap: anywhere; }
+.doc a:not([class]) { color: var(--blue); text-underline-offset: 2px; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.ok { background: var(--green-d); color: var(--green); }
+.foot { margin-top: 40px; font-size: 11px; color: var(--txt3); text-align: center; }
+
+/* escolha da tela e da situação */
+.seg { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 10px; }
+.seg button { font: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt2); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--txt1); border-color: var(--txt1); color: var(--bg); }
+.seg .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--teal); margin-left: 6px; }
+.seg button[aria-pressed="true"] .tag { color: var(--teal); }
+.seg.sm { margin: 0 0 12px; align-items: center; }
+.seg.sm .seg-l { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); margin-right: 4px; }
+.seg.sm button { font-size: 12px; padding: 4px 11px; border-radius: 20px; }
+.duas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 14px; }
+@media (max-width: 640px) { .duas { grid-template-columns: minmax(0, 1fr); } }
+.pc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 14px; min-width: 0; }
+.pc.ganha { border-color: var(--teal); }
+.pc.perde { border-color: var(--amber); }
+.pc .pct { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); margin-bottom: 4px; }
+.pc ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--txt2); }
+.pc li { margin: 3px 0; }
+.dica { font-size: 12.5px; color: var(--txt3); margin: 6px 0 10px; }
+
+/* a moldura e o modal do card */
+.fr { container-type: inline-size; border: 1px solid var(--brd); border-radius: 10px; background: var(--sur2); padding: 14px; min-width: 0; }
+.m { background: var(--sur); border: 1px solid var(--brd); border-radius: 10px; max-width: 920px; margin: 0 auto; min-width: 0; overflow: hidden; }
+.m-h { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-bottom: 1px solid var(--brd); min-width: 0; }
+.m-ic { width: 30px; height: 30px; border-radius: 8px; background: var(--red-d); color: var(--red); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 800; font-size: 14px; }
+.m-ht { min-width: 0; flex: 1 1 auto; }
+.m-id { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-family: var(--ff-mono); font-size: 11px; color: var(--txt3); }
+.m-tt { font-size: 15px; font-weight: 700; color: var(--txt1); line-height: 1.35; }
+.m-sub { font-size: 11.5px; color: var(--txt3); overflow-wrap: anywhere; }
+.m-x { color: var(--txt3); font-size: 15px; flex-shrink: 0; }
+.m-resumo { font: inherit; display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); cursor: pointer; max-width: 100%; text-align: left; }
+.m-resumo .pt { width: 8px; height: 8px; border-radius: 50%; background: var(--txt3); flex-shrink: 0; }
+.m-resumo.red .pt { background: var(--red); } .m-resumo.amb .pt { background: var(--amber); } .m-resumo.ok .pt { background: var(--blue); }
+.m-cols { display: grid; grid-template-columns: minmax(0, 1fr); }
+@container (min-width: 700px) { .m-cols { grid-template-columns: 280px minmax(0, 1fr); } .m-esq { border-right: 1px solid var(--brd); } }
+.m-esq, .m-dir { padding: 4px 14px 12px; min-width: 0; }
+.blk { padding: 10px 0; border-bottom: 1px solid var(--brd); min-width: 0; }
+.blk:last-child { border-bottom: 0; }
+.blk-t { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; justify-content: space-between; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); margin-bottom: 6px; }
+.blk-t span { font-weight: 500; text-transform: none; letter-spacing: 0; font-size: 11.5px; }
+.kvg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; }
+.kvg.tres { grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); }
+.kv { min-width: 0; }
+.kv .k { font-size: 10.5px; color: var(--txt3); }
+.kv .v { font-size: 12.5px; color: var(--txt1); font-weight: 600; overflow-wrap: anywhere; }
+.kv .v a { color: var(--blue); font-weight: 500; font-size: 11.5px; margin-left: 4px; }
+.txt { font-size: 12.5px; color: var(--txt2); }
+.txt.mt { margin-top: 6px; }
+.cols5 { display: flex; flex-wrap: wrap; gap: 4px; }
+.cols5 span { font-size: 11px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--brd); color: var(--txt2); }
+.cols5 span.on { background: var(--teal); border-color: var(--teal); color: var(--sur); font-weight: 600; }
+.av { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--teal-d); color: var(--teal); font-size: 9px; font-weight: 700; margin-right: 5px; vertical-align: -5px; }
+.bts { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.bt { font-size: 11.5px; font-weight: 600; padding: 4px 9px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); }
+.acs { display: flex; flex-direction: column; gap: 6px; }
+.ac { font-size: 12px; color: var(--txt2); border: 1px solid var(--brd); border-radius: 6px; padding: 6px 8px; }
+.ac b { color: var(--txt1); display: block; font-size: 12.5px; }
+/* histórico */
+.ev { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px dashed var(--brd); min-width: 0; }
+.ev:last-child { border-bottom: 0; }
+.ev-i { width: 8px; height: 8px; border-radius: 50%; background: var(--txt3); margin-top: 6px; flex-shrink: 0; }
+.ev.red .ev-i { background: var(--red); } .ev.amb .ev-i { background: var(--amber); } .ev.ok .ev-i { background: var(--green); } .ev.teal .ev-i { background: var(--teal); }
+.ev-c { min-width: 0; }
+.ev-h { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; font-size: 10.5px; color: var(--txt3); }
+.ev-h b { font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.ev-t { font-size: 12.5px; color: var(--txt1); }
+/* o bloco do SLA de hoje, na coluna */
+.hj { outline: 2px dashed var(--amber); outline-offset: 4px; border-radius: 4px; }
+.hj-row { padding: 5px 0; }
+.hj-row1 { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; justify-content: space-between; }
+.hj-n { font-size: 12.5px; font-weight: 600; color: var(--txt1); }
+.hj-t { font-size: 11.5px; color: var(--txt3); }
+.hj-kv { margin-top: 6px; }
+.hj-kv .k { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); }
+.hj-kv .v { font-size: 12.5px; color: var(--txt1); }
+.hj-nota { font-size: 11.5px; color: var(--blue); margin-top: 6px; }
+.marca { font-size: 11.5px; color: var(--amber); margin-top: 10px; text-align: center; }
+/* as pílulas e a barra do prazo */
+.pl { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.pl.red { background: var(--red-d); color: var(--red); }
+.pl.amb { background: var(--amber-d); color: var(--amber); }
+.pl.ok { background: var(--blue-d); color: var(--blue); }
+.pl.done { background: var(--green-d); color: var(--green); }
+.pl.gray { background: var(--gray-d); color: var(--gray); }
+.pl.off { border: 1px dashed var(--brd); color: var(--txt3); padding: 1px 7px; }
+.pb { position: relative; height: 6px; border-radius: 3px; background: var(--sur2); margin: 7px 0 5px; }
+.pb span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--blue); }
+.pb.red span { background: var(--red); } .pb.amb span { background: var(--amber); } .pb.done span { background: var(--green); } .pb.gray span { background: var(--gray); }
+.pb i { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--txt3); border-radius: 1px; }
+.pb-vz { height: 6px; margin: 7px 0 5px; border-top: 1px dashed var(--brd); transform: translateY(3px); }
+/* A · a faixa do SLA */
+.sf { padding: 12px 14px; border-bottom: 1px solid var(--brd); background: var(--bg); min-width: 0; }
+.sf-h { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; margin-bottom: 8px; }
+.sf-t { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); }
+.sf-r { font-size: 12px; color: var(--txt2); }
+.sf-h .lnk { margin-left: auto; }
+.lnk { font: inherit; font-size: 12px; background: none; border: 0; padding: 0; color: var(--blue); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.sf-g { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+@container (min-width: 620px) { .sf-g { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.tl { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.tl.off { background: transparent; border-style: dashed; }
+.tl-h { display: flex; gap: 6px; align-items: center; justify-content: space-between; min-width: 0; }
+.tl-n { font-size: 11.5px; font-weight: 600; color: var(--txt2); min-width: 0; }
+.tl-v { font-size: 15px; font-weight: 700; color: var(--txt1); margin-top: 3px; line-height: 1.3; }
+.tl.red .tl-v { color: var(--red); } .tl.amb .tl-v { color: var(--amber); } .tl.off .tl-v { color: var(--txt3); font-size: 13px; font-weight: 600; }
+.tl-s { font-size: 11.5px; color: var(--txt3); }
+.sf-rod { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 12px; color: var(--txt2); margin-top: 9px; }
+.sf-rod b { color: var(--txt1); font-weight: 600; }
+.sf-rod .k { color: var(--txt3); }
+.sf-re { font-size: 12px; color: var(--txt2); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--brd); }
+/* A compacta · o SLA numa linha, com os detalhes recolhidos */
+.sc { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: baseline; gap: 2px 16px; padding: 7px 14px; border-bottom: 1px solid var(--brd); min-width: 0; }
+.sc-t { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); }
+.sc-l { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 18px; min-width: 0; }
+.sc-i { display: inline-flex; align-items: baseline; gap: 6px; min-width: 0; font-size: 12.5px; line-height: 1.5; }
+.sc-i .d { align-self: center; width: 6px; height: 6px; border-radius: 50%; background: var(--txt3); flex-shrink: 0; }
+.sc-i.red .d { background: var(--red); } .sc-i.amb .d { background: var(--amber); } .sc-i.ok .d { background: var(--blue); }
+.sc-i.done .d { background: var(--green); } .sc-i.gray .d { background: var(--gray); }
+.sc-i.off .d { background: transparent; border: 1px solid var(--txt3); }
+.sc-n { color: var(--txt3); white-space: nowrap; }
+.sc-v { color: var(--txt2); min-width: 0; }
+.sc-i.red .sc-v { color: var(--red); font-weight: 600; } .sc-i.amb .sc-v { color: var(--amber); font-weight: 600; }
+.sc-i.off .sc-v, .sc-i.done .sc-v { color: var(--txt3); }
+.sc-x { font-size: 11.5px; color: var(--txt3); }
+.sc-mais { font: inherit; font-size: 12px; background: none; border: 0; padding: 2px 0; color: var(--txt3); cursor: pointer; display: inline-flex; gap: 4px; align-items: center; white-space: nowrap; }
+.sc-mais:hover, .sc-mais[aria-expanded="true"] { color: var(--txt1); }
+.sc-mais span { display: inline-block; transition: transform .15s; }
+.sc-mais[aria-expanded="true"] span { transform: rotate(180deg); }
+@container (max-width: 600px) {
+  .sc { grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; }
+  .sc-mais { grid-column: 2; grid-row: 1; }
+  .sc-l { grid-column: 1 / -1; grid-row: 2; flex-direction: column; align-items: flex-start; }
+}
+.sc-det { padding: 6px 14px 10px; border-bottom: 1px solid var(--brd); font-size: 12px; color: var(--txt2); min-width: 0; }
+.sd-r { color: var(--txt3); margin-bottom: 2px; }
+.sd-r b { color: var(--txt2); font-weight: 600; }
+.sd-i { display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px 14px; padding: 5px 0; align-items: center; min-width: 0; }
+@container (min-width: 600px) { .sd-i { grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr) minmax(0, 1fr); } }
+.sd-n { color: var(--txt1); font-weight: 600; }
+.sd-q { color: var(--txt2); }
+.pb.fina { height: 3px; margin: 0; }
+.pb.fina i { top: -2px; bottom: -2px; }
+.pb-vz.fina { height: 0; margin: 0; transform: none; }
+@container (max-width: 599px) { .pb-vz.fina { display: none; } }
+.sd-c { display: flex; flex-wrap: wrap; gap: 2px 18px; margin-top: 5px; padding-top: 6px; border-top: 1px dashed var(--brd); }
+.sd-c .k { color: var(--txt3); }
+.sd-re { margin-top: 4px; }
+.sd-como { margin-top: 6px; }
+.como { margin-top: 8px; padding: 8px 12px; border-radius: 6px; background: var(--sur); border: 1px solid var(--brd); }
+.como ul { margin: 0 0 0 16px; font-size: 12px; color: var(--txt2); }
+.como li { margin: 2px 0; }
+/* B · abas */
+.m-tabs { display: flex; gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; border-bottom: 1px solid var(--brd); padding: 0 8px; }
+.m-tab { font: inherit; font-size: 12.5px; font-weight: 600; white-space: nowrap; padding: 8px 11px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--txt3); cursor: pointer; }
+.m-tab.on { color: var(--txt1); border-bottom-color: var(--teal); }
+.m-tab .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-left: 5px; vertical-align: 1px; }
+.m-tab .dot.red { background: var(--red); } .m-tab .dot.amb { background: var(--amber); } .m-tab .dot.ok { background: var(--blue); }
+.m-body { padding: 12px 14px 14px; min-width: 0; }
+.sub-t { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); margin: 16px 0 6px; }
+.sub-t:first-child { margin-top: 0; }
+.sub-t span { font-weight: 500; text-transform: none; letter-spacing: 0; font-size: 12px; color: var(--txt2); }
+.rl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 9px 0; border-bottom: 1px solid var(--brd); align-items: center; min-width: 0; }
+.rl .rl-n { font-size: 12.5px; font-weight: 600; color: var(--txt1); }
+.rl .rl-p { justify-self: end; }
+.rl .rl-v { grid-column: 1 / -1; font-size: 12.5px; color: var(--txt1); }
+.rl .rl-q { grid-column: 1 / -1; font-size: 11.5px; color: var(--txt3); }
+.rl .rl-b { grid-column: 1 / -1; min-width: 0; }
+.rl.cab { display: none; }
+.rl.off .rl-n, .rl.off .rl-v { color: var(--txt3); }
+.rl.red .rl-v { color: var(--red); font-weight: 600; } .rl.amb .rl-v { color: var(--amber); font-weight: 600; }
+@container (min-width: 640px) {
+  .rl { grid-template-columns: minmax(0, 1.2fr) 96px minmax(0, 1.2fr) minmax(0, 1.5fr) minmax(0, 1fr); }
+  .rl .rl-p { justify-self: start; }
+  .rl .rl-v, .rl .rl-q, .rl .rl-b { grid-column: auto; }
+  .rl.cab { display: grid; padding: 0 0 5px; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--txt3); }
+}
+.lt { position: relative; height: 46px; margin: 4px 0 0; }
+.lt-in { position: absolute; top: 0; bottom: 0; left: 8px; right: 8px; }
+.lt-tr { position: absolute; left: 0; right: 0; top: 29px; height: 2px; background: var(--brd); border-radius: 1px; }
+.lt-dec { position: absolute; left: 0; top: 29px; height: 2px; background: var(--txt3); border-radius: 1px; }
+.lt-p { position: absolute; top: 22px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; border: 2px solid var(--txt3); background: var(--sur); color: var(--txt2); font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.lt-p.red { border-color: var(--red); color: var(--red); } .lt-p.amb { border-color: var(--amber); color: var(--amber); }
+.lt-p.ok { border-color: var(--blue); color: var(--blue); } .lt-p.done { border-color: var(--green); color: var(--green); }
+.lt-p.teto { border-color: var(--teal); color: var(--teal); } .lt-p.cred { border-color: var(--txt1); color: var(--txt1); }
+.lt-hj { position: absolute; top: 14px; bottom: 0; width: 2px; margin-left: -1px; background: var(--teal); }
+.lt-hj span { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.lt-hj.esq span { left: -1px; transform: none; }
+.lt-hj.dir span { left: auto; right: -1px; transform: none; }
+.lt-lg { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 4px 14px; list-style: none; margin-top: 8px; }
+.lt-lg li { display: flex; gap: 6px; align-items: baseline; font-size: 12px; color: var(--txt2); min-width: 0; }
+.lt-lg .n { font-family: var(--ff-mono); font-size: 10.5px; font-weight: 700; color: var(--txt3); flex-shrink: 0; width: 14px; }
+.lt-lg b { color: var(--txt1); font-weight: 600; white-space: nowrap; }
+.dupla { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 12px; }
+@container (min-width: 620px) { .dupla { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cx { border: 1px solid var(--brd); border-radius: 8px; padding: 9px 12px; min-width: 0; }
+.cx-t { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--txt3); margin-bottom: 4px; }
+.cx-v { font-size: 12.5px; color: var(--txt1); }
+.cx-s { font-size: 11.5px; color: var(--txt3); margin-top: 2px; }
+.re { font-size: 12px; color: var(--txt2); margin-top: 10px; padding: 8px 12px; border-radius: 6px; background: var(--blue-d); }
+.m-body ul.plain { margin-top: 0; }
+.m-body ul.plain li { font-size: 12px; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section { overflow-wrap: anywhere; }
+  .fr { padding: 8px; }
+  .m-h, .sf, .sc, .sc-det, .m-body, .m-esq, .m-dir { padding-left: 10px; padding-right: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="../prds.html#sec-taxrs">← Hub de PRDs</a>
+<div class="eyebrow">tax-rs · Modo Demo · Em decisão · D-SD-01 decidida · D-SD-02 e D-SD-03 abertas</div>
+<h1>Detalhe da inconsistência: o SLA numa linha, no topo</h1>
+<p class="subtitle">Propostas para o detalhe do card no kanban de Inconsistências do tax-rs, no modo Demo, com o atendimento ligado. O foco é o SLA: mais limpo e sem texto espremido na coluna estreita. A v1.1 traz a A compacta, a escolha da D-SD-01 numa versão menor e mais suave: o SLA numa linha só, com os detalhes recolhidos. A faixa da v1.0 e a B ficam para comparação. Todas são clicáveis, ao lado da tela de hoje, e mudam com a situação do chamado: estourado, em pausa, em risco ou reaberto. Os textos e os prazos seguem o motor de SLA do Demo; os valores dos exemplos foram arredondados.</p>
+<div class="meta-bar">
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.1</span></span>
+  <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">19/11/2026</span></span>
+  <span class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">main do tax-rs em 1e74ee5, com o #45</span></span>
+  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">1 de 3</span></span>
+  <span class="meta-pill"><span class="meta-label">Anterior</span><span class="meta-val"><a href="taxrs-sla-detalhe-telas-v1.0.html">v1.0</a></span></span>
+  <span class="meta-pill"><span class="meta-label">Guia</span><span class="meta-val"><a href="../taxrs-atendimento-como-configurar.html">Como configurar o atendimento</a></span></span>
+</div>
+
+<nav class="toc" aria-label="Sumário">
+  <div class="toc-title">Nesta página</div>
+  <ul class="toc-list">
+    <li><a href="#s1"><span class="toc-num">01</span>O problema na tela de hoje</a></li>
+    <li><a href="#s2"><span class="toc-num">02</span>O que muda entre as telas</a></li>
+    <li><a href="#s3"><span class="toc-num">03</span>As telas, clicáveis</a></li>
+    <li><a href="#s4"><span class="toc-num">04</span>Decisões</a></li>
+    <li><a href="#s5"><span class="toc-num">05</span>O que muda no código</a></li>
+    <li><a href="#s6"><span class="toc-num">06</span>Histórico</a></li>
+  </ul>
+</nav>
+
+<section class="section" id="s1">
+  <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">O problema na tela de hoje</span></div>
+  <p>O detalhe do card é um modal de 920 px com duas colunas. A da direita é o histórico do ciclo. A da esquerda, com 280 px, empilha sete blocos: dados da inconsistência, descrição, status, atendimento, SLA, evento fiscal e ações sugeridas. O SLA é o quinto.</p>
+  <p>O #45 já tirou do SLA as três colunas que viravam texto na vertical: cada relógio passou a ocupar duas linhas, e a explicação foi recolhida. O que sobra vem da largura da coluna:</p>
+  <ul class="plain">
+    <li><strong>O crédito afetado quebra em várias linhas.</strong> "IBS a apropriar · NFGás 000036 de 14/04/2026 · vence 31/05/2026" não cabe em 280 px, e o teto, que depende dele, vem num rótulo separado logo abaixo.</li>
+    <li><strong>Os três relógios são uma lista de frases.</strong> Não dá para ver, de relance, quanto do prazo já foi consumido nem onde começa o alerta.</li>
+    <li><strong>O SLA fica longe do topo.</strong> Para chegar a ele, é preciso rolar além de quatro blocos, e no celular ainda mais.</li>
+    <li><strong>Não aparece a relação entre hoje, o fim do prazo, o teto e o vencimento do crédito.</strong> São quatro datas espalhadas em frases separadas.</li>
+  </ul>
+  <p>As duas propostas da v1.0 dão ao SLA a largura toda do modal. A <strong>A</strong> o põe numa faixa logo abaixo do título e não mexe no resto. A <strong>B</strong> reorganiza o detalhe em abas, como o detalhe do DF e do RF no app, e o SLA ganha uma aba própria, com uma linha do tempo.</p>
+  <p>A escolhida foi a A, com um pedido: a faixa tomava tela demais. A <strong>A compacta</strong>, da v1.1, mantém o SLA no mesmo lugar, mas numa linha só, e recolhe o resto em Detalhes.</p>
+</section>
+
+<section class="section" id="s2">
+  <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O que muda entre as telas</span></div>
+  <p>A A compacta é a escolha da D-SD-01. A faixa e as abas, da v1.0, ficam para comparação.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th>Hoje (#45)</th><th>A compacta (v1.1)</th><th>A · faixa (v1.0)</th><th>B · abas (v1.0)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Onde fica o SLA</strong></td><td class="wrap">Quinto bloco da coluna da esquerda</td><td class="wrap">Numa linha na largura toda, logo abaixo do título</td><td class="wrap">Numa faixa na largura toda, logo abaixo do título</td><td class="wrap">Na aba SLA; um resumo no cabeçalho leva até ela</td></tr>
+      <tr><td><strong>Altura do SLA</strong></td><td class="wrap">Cerca de 350 px, dentro da coluna de 280 px</td><td class="wrap">38 px fechado; cerca de 100 px no celular</td><td class="wrap">Cerca de 200 px; 530 px no celular</td><td class="wrap">Uma pílula de 28 px no cabeçalho; o resto na aba</td></tr>
+      <tr><td><strong>Relógios</strong></td><td class="wrap">Um embaixo do outro: o nome e a situação numa linha, o prazo na outra</td><td class="wrap">Lado a lado: um ponto com a cor da situação, o nome curto e a situação em palavras</td><td class="wrap">Três blocos lado a lado, com a barra do prazo consumido</td><td class="wrap">Uma linha por relógio: situação, quanto falta, prazo e data, e a barra</td></tr>
+      <tr><td><strong>Prazo e barra</strong></td><td class="wrap">O prazo em texto, sem barra</td><td class="wrap">Nos Detalhes: uma linha por relógio, com o prazo, a data e uma barra fina</td><td class="wrap">No bloco de cada relógio, com a barra</td><td class="wrap">Na linha de cada relógio, com a barra</td></tr>
+      <tr><td><strong>Crédito afetado e teto</strong></td><td class="wrap">Rótulo em cima e o texto quebrado embaixo, em dois blocos</td><td class="wrap">Nos Detalhes, numa linha</td><td class="wrap">Uma linha só, no rodapé da faixa</td><td class="wrap">Uma linha do tempo com a detecção, os vencimentos, hoje, o teto e o vencimento do crédito</td></tr>
+      <tr><td><strong>Como o SLA conta</strong></td><td class="wrap">Recolhido no fim do bloco</td><td class="wrap">Um link no fim dos Detalhes</td><td class="wrap">Um link no cabeçalho da faixa abre a explicação embaixo dela</td><td class="wrap">A explicação aberta no fim da aba</td></tr>
+      <tr><td><strong>Relógio que não corre</strong></td><td class="wrap">Linha com "não iniciado" ou "não medido"</td><td class="wrap">Ponto vazio e uma palavra: "não iniciado" ou "não medido"</td><td class="wrap">Bloco tracejado, sem barra</td><td class="wrap">Linha apagada, sem barra</td></tr>
+      <tr><td><strong>O resto do detalhe</strong></td><td class="wrap">—</td><td class="wrap">Igual: as duas colunas continuam</td><td class="wrap">Igual: as duas colunas continuam</td><td class="wrap">Em cinco abas: Resumo, Atendimento, SLA, Histórico e Evento e ações</td></tr>
+      <tr><td><strong>No celular</strong></td><td class="wrap">Uma coluna; o SLA fica muito abaixo do topo</td><td class="wrap">Uma linha por relógio, com Detalhes ao lado do rótulo</td><td class="wrap">Os relógios empilham logo abaixo do título</td><td class="wrap">As abas rolam na horizontal; cada relógio ocupa quatro linhas curtas</td></tr>
+      <tr><td><strong>Mudança no código</strong></td><td class="wrap">—</td><td class="wrap">Pequena: a da A, mais o botão Detalhes</td><td class="wrap">Pequena: o bloco sai da coluna e vira a faixa</td><td class="wrap">Grande: o detalhe inteiro em abas, e os E2E do card mudam</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="section" id="s3">
+  <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">As telas, clicáveis</span></div>
+  <p>Escolha a tela e a situação do chamado. Cada situação usa a regra de SLA que o Demo aplicaria à família do chamado: a S-04 na família D, a S-03 na C, a S-01 na A e a S-02 na B. O hoje da base do Demo é 24/04/2026, uma sexta-feira; 21/04 é feriado.</p>
+  <div class="seg" role="group" aria-label="Escolher a tela">
+    <button type="button" data-v="hoje" aria-pressed="false">Hoje</button>
+    <button type="button" data-v="Ac" aria-pressed="false">A compacta<span class="tag">escolhida</span></button>
+    <button type="button" data-v="A" aria-pressed="false">A · faixa (v1.0)</button>
+    <button type="button" data-v="B" aria-pressed="false">B · abas (v1.0)</button>
+  </div>
+  <div class="seg sm" role="group" aria-label="Escolher a situação do chamado">
+    <span class="seg-l">Situação</span>
+    <button type="button" data-e="estourado" aria-pressed="false">Estourado</button>
+    <button type="button" data-e="pausado" aria-pressed="false">Em pausa</button>
+    <button type="button" data-e="risco" aria-pressed="false">Em risco</button>
+    <button type="button" data-e="reaberto" aria-pressed="false">Reaberto</button>
+  </div>
+
+  <div class="prop" data-p="hoje" hidden>
+    <p>A tela da main do tax-rs depois do #45. O bloco do SLA está marcado com a borda tracejada. Para a comparação, a coluna da esquerda mostra só o essencial de cada bloco; na tela real, eles são mais longos.</p>
+  </div>
+  <div class="prop" data-p="Ac" hidden>
+    <p>A escolha da D-SD-01, mais enxuta. O SLA fica no mesmo lugar da A, entre o título e as colunas, mas numa linha só: para cada relógio, um ponto com a cor da situação, o nome curto e a situação em palavras. Sem pílulas, sem fundo e sem barra na linha. <strong>Detalhes</strong> abre, logo abaixo, a regra, o prazo de cada relógio com uma barra fina, o crédito afetado, o teto e a reabertura. O resto do detalhe não muda.</p>
+    <div class="duas">
+      <div class="pc ganha"><div class="pct">Ganha</div><ul><li>O SLA fechado ocupa 38 px no computador e cerca de 100 px no celular, contra cerca de 200 px e 530 px da faixa da v1.0.</li><li>Continua a primeira coisa que se vê ao abrir o card.</li><li>A cor fica só no ponto e na situação que pede ação: estourado em vermelho, em risco em âmbar.</li><li>Muda pouco: o resto do modal fica como está.</li></ul></div>
+      <div class="pc perde"><div class="pct">Perde</div><ul><li>O prazo, a data, o crédito afetado e o teto ficam a um clique, em Detalhes.</li><li>Sem a barra na linha, quanto do prazo já foi só aparece nos Detalhes.</li></ul></div>
+    </div>
+  </div>
+  <div class="prop" data-p="A" hidden>
+    <p>A versão da v1.0. O SLA sai da coluna e vira uma faixa entre o título e as duas colunas. Cada relógio é um bloco com a situação, quanto falta (ou há quanto venceu), a barra do prazo consumido com a marca do alerta e, embaixo, o prazo e a data. O rodapé da faixa junta, numa linha, o crédito afetado e o teto. O resto do detalhe não muda.</p>
+    <div class="duas">
+      <div class="pc ganha"><div class="pct">Ganha</div><ul><li>O SLA é a primeira coisa que se vê ao abrir o card.</li><li>Cada texto cabe numa linha; nada quebra na vertical.</li><li>A barra mostra quanto do prazo já foi, e a marca, onde começa o alerta.</li><li>Muda pouco: o resto do modal fica como está.</li></ul></div>
+      <div class="pc perde"><div class="pct">Perde</div><ul><li>A faixa ocupa cerca de 200 px no topo, 530 px no celular, e empurra os dados e o histórico para baixo.</li><li>O relógio que não corre também ocupa um bloco.</li><li>O resto da coluna da esquerda, como a explicação do roteamento, continua estreito.</li></ul></div>
+    </div>
+  </div>
+  <div class="prop" data-p="B" hidden>
+    <p>A versão da v1.0. O detalhe passa a ter abas no topo, como o detalhe do DF e do RF no app. O cabeçalho ganha o resumo do relógio mais urgente, a mesma frase da linha do card no kanban, que leva à aba SLA. Na aba, uma linha por relógio, uma linha do tempo da detecção ao vencimento do crédito e, embaixo, a regra e o crédito afetado lado a lado. Aqui a tela abre na aba SLA; no produto, abriria no Resumo.</p>
+    <div class="duas">
+      <div class="pc ganha"><div class="pct">Ganha</div><ul><li>A largura toda para o SLA, sem nada disputando espaço.</li><li>A linha do tempo mostra onde fica hoje em relação ao prazo, ao teto e ao vencimento do crédito.</li><li>As abas também resolvem os outros blocos estreitos, como a explicação do roteamento.</li><li>O mesmo desenho do detalhe do DF e do RF.</li></ul></div>
+      <div class="pc perde"><div class="pct">Perde</div><ul><li>O SLA fica a um clique; o resumo no cabeçalho mostra só o relógio mais urgente.</li><li>O histórico deixa de ficar ao lado dos dados.</li><li>Mudança grande: o modal inteiro é refeito, e os E2E do card mudam junto.</li></ul></div>
+    </div>
+  </div>
+  <p class="dica" id="dica"></p>
+  <div class="fr" id="fr" aria-live="polite"></div>
+  <p class="marca" id="marca" hidden>Na tela de hoje, o SLA é o quinto bloco da coluna de 280 px.</p>
+</section>
+
+<section class="section" id="s4">
+  <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Decisões</span></div>
+  <p>Três decisões. A D-SD-01 foi decidida em 19/11/2026; as outras duas seguem abertas, com a recomendação ajustada à A compacta. A escolha é do usuário.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Decisão</th><th>Opções</th><th>Recomendação</th><th>Situação</th></tr></thead>
+    <tbody>
+      <tr id="D-SD-01"><td class="id">D-SD-01</td><td class="wrap"><strong>Qual tela</strong></td><td class="wrap">A · faixa do SLA no topo<br>B · abas, com uma aba de SLA</td><td class="wrap"><strong>Decidida em 19/11/2026: a A</strong>, numa versão mais compacta e mais suave, porque a faixa tomava tela demais. Virou a A compacta da v1.1. A faixa da v1.0 e a B ficam na página para comparação.</td><td><span class="chip ok">Decidida</span></td></tr>
+      <tr id="D-SD-02"><td class="id">D-SD-02</td><td class="wrap"><strong>Barra do prazo consumido, com a marca do alerta</strong></td><td class="wrap">Fina, só nos Detalhes<br>Também na linha, sob cada relógio<br>Sem barra</td><td class="wrap"><strong>Fina, só nos Detalhes.</strong> Na linha, o ponto e as palavras já dizem a situação. Quem abre os Detalhes vê quanto do prazo já foi e onde começa o alerta do tipo: 80% no Primeiro atendimento e na Resolução, 70% no Retorno do terceiro.</td><td><span class="chip warn">Aberta</span></td></tr>
+      <tr id="D-SD-03"><td class="id">D-SD-03</td><td class="wrap"><strong>Relógio que não corre</strong> (não iniciado ou não medido)</td><td class="wrap">Na linha, com o ponto vazio e uma palavra<br>Fora da linha, só nos Detalhes</td><td class="wrap"><strong>Na linha, com o ponto vazio e uma palavra.</strong> Ocupa pouco ("Retorno não iniciado") e evita a dúvida de o relógio ter sumido. O motivo fica nos Detalhes: "começa ao entrar em Aguardando terceiro" ou "a regra S-01 não mede este tipo".</td><td><span class="chip warn">Aberta</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn"><div class="ct">Fora destas decisões</div><p>A D-14, o teto pelo prazo do crédito, continua aberta. As duas telas mostram o teto como o Demo calcula hoje: ligado por padrão, com a folga da regra, de forma provisória até a decisão.</p></div>
+</section>
+
+<section class="section" id="s5">
+  <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O que muda no código</span></div>
+  <p>Só o modo Demo, atrás da flag <code>atendimento</code>; o Live não muda. A tabela vale para a A compacta, a tela escolhida; a da v1.0, com a faixa e a B, está na <a href="taxrs-sla-detalhe-telas-v1.0.html#s5">versão anterior</a>.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th>A compacta</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Modal do card</strong></td><td class="wrap">Em <code>pages/inconsistencias/InconsistenciasPage.tsx</code>, o <code>BlocoSla</code> sai da coluna da esquerda e passa para entre o cabeçalho e as colunas</td></tr>
+      <tr><td><strong>Componente</strong></td><td class="wrap"><code>BlocoSla</code> vira a linha, em <code>Kanban.tsx</code>, com o CSS em <code>atendimento.css</code>. O botão Detalhes abre, embaixo dela, a regra, o prazo de cada relógio com a barra fina, o crédito afetado, o teto, a reabertura e "Como o SLA conta"; começa fechado</td></tr>
+      <tr><td><strong>Motor do SLA</strong></td><td class="wrap"><code>detalheSla</code>, em <code>sla.ts</code>, passa a devolver, por relógio, o nome curto, a situação em palavras, o prazo, o consumo em porcentagem e o alerta do tipo</td></tr>
+      <tr><td><strong>Testes</strong></td><td class="wrap">O id <code>#at-slabox</code> fica, agora na linha; os unitários do SLA ganham os campos novos; os E2E que conferem o prazo, o crédito ou o teto no card passam a abrir os Detalhes antes</td></tr>
+      <tr><td><strong>Revisão visual</strong></td><td class="wrap">A tela do card entra em <code>revisao-visual.mjs</code>, com os Detalhes fechados e abertos, em 375, 768 e 1440 px, claro e escuro</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="section" id="s6">
+  <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Histórico</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Versão</th><th>Data</th><th>O que mudou</th></tr></thead>
+    <tbody>
+      <tr><td class="id">1.1</td><td>19/11/2026</td><td>A pedido do usuário, que escolheu a A e pediu o SLA menor e mais suave: entra a A compacta, com o SLA numa linha só e os detalhes recolhidos (38 px fechado, contra cerca de 200 px da faixa). D-SD-01 decidida; D-SD-02 e D-SD-03 com a recomendação ajustada à A compacta. A faixa da v1.0 e a B continuam clicáveis para comparação.</td></tr>
+      <tr><td class="id">1.0</td><td>19/11/2026</td><td>Primeira versão, a pedido do usuário: duas propostas para o detalhe do card, com foco num SLA limpo e sem texto na vertical, clicáveis ao lado da tela de hoje e em quatro situações de chamado; três decisões.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<div class="foot">SLA no detalhe da inconsistência · v1.1 · 19/11/2026</div>
+</div>
+<script>
+(function () {
+  var COMO = [
+    'O relógio conta no calendário do tipo: horas úteis das 9h às 17h, dias úteis ou dias corridos.',
+    'A linha do SLA no card do kanban mostra o relógio mais urgente em aberto.',
+    'Transferir de grupo não reinicia o relógio; reabrir começa relógios novos, ligados aos anteriores.',
+    'O teto pelo prazo do crédito segue a recomendação da D-14, ainda aberta: o prazo do chamado não passa do vencimento da parte do crédito afetada, menos a folga da regra.'
+  ];
+  var EX = {
+    estourado: {
+      id: 'INC-0030', crit: 'ALTA', st: 'Aberta', tit: 'Split do IBS não executado', forn: 'Petral Distribuidora Ltda · 73.612.590/0001-41',
+      dados: [['DF vinculado', 'NFGás 000036', 'Ver DF'], ['RF vinculado', 'RF-00000071', 'Ver RF'], ['Valor', 'R$ 400.000,00'], ['Fluxo', '↓ Entrada'], ['Tipo fiscal', 'IBS'], ['Detecção', '14/04/2026']],
+      desc: 'O split payment do IBS esperado para esta operação não foi confirmado pela instituição financeira.',
+      grupo: 'Tesouraria — Recolhimento', resp: 'José da Silva', av: 'JS', trib: 'IBS · Comitê Gestor',
+      explic: 'Roteado pela regra R-04 (família D) → Tesouraria — Recolhimento. Empate na menor carga, 1 aberto: o acaso escolheu José da Silva.',
+      regra: 'S-04 · família D', prazos: '4 h úteis · 2 dias úteis · 3 dias corridos', folgaTxt: 'teto com 3 dias de folga',
+      rl: [
+        { n: 'Primeiro atendimento', c: 'red', e: 'Estourado', v: 'venceu há 6 dias úteis', q: 'venceu 14/04 às 13:00', pz: '4 h úteis', pct: 100, al: 80, he: 'estourado há 6 dias úteis', ht: 'venceu 14/04 13:00' },
+        { n: 'Resolução', c: 'red', e: 'Estourado', v: 'venceu há 5 dias úteis', q: 'venceu 16/04', pz: '2 dias úteis', pct: 100, al: 80, he: 'estourado há 5 dias úteis', ht: 'venceu 16/04' },
+        { n: 'Retorno do terceiro', c: 'off', e: 'Não iniciado', v: 'não começou', q: 'começa ao entrar em “Aguardando terceiro”', pz: '3 dias corridos', pct: null, al: 70, he: 'não iniciado', ht: 'começa ao entrar em “Aguardando terceiro”' }
+      ],
+      parte: 'IBS a apropriar · NFGás 000036 de 14/04/2026 · vence 31/05/2026', parteCurta: 'IBS a apropriar da NFGás 000036, vence 31/05/2026',
+      teto: { txt: '3 dias antes de 31/05/2026 → 28/05, pelo crédito', curto: '28/05, 3 dias antes do vencimento do crédito' },
+      anterior: null,
+      pts: [['2026-04-14T09:00', 'Detecção', '', '14/04 9:00'], ['2026-04-14T13:00', 'Primeiro atendimento venceu', 'red', '14/04 13:00'], ['2026-04-16T17:00', 'Resolução venceu', 'red', '16/04'], ['2026-05-28T17:00', 'Teto do chamado', 'teto', '28/05'], ['2026-05-31T17:00', 'O IBS a apropriar vence', 'cred', '31/05']],
+      chip: ['red', 'Resolução venceu há 5 dias úteis'],
+      hist: [['red', 'SLA', '24/04', 'Resolução: prazo estourado, venceu 16/04 · aviso ao gestor do grupo · marcado estourado'], ['red', 'SLA', '14/04', 'Primeiro atendimento: prazo estourado, venceu 14/04 às 13:00 · aviso ao responsável e ao gestor'], ['teal', 'Atribuição', '14/04', 'R-04 → Tesouraria — Recolhimento · sorteio pela menor carga: José da Silva'], ['', 'Abertura', '14/04', 'INC-0030 aberta · Split do IBS não executado']]
+    },
+    pausado: {
+      id: 'INC-0012', crit: 'ALTA', st: 'Ag. Terceiro', tit: 'Glosa parcial do crédito', forn: 'Fornecedor Boa Vista Ltda · 12.345.678/0001-00',
+      dados: [['DF vinculado', 'NF-e 000120', 'Ver DF'], ['RF vinculado', 'RF-00000120', 'Ver RF'], ['Valor', 'R$ 100.000,00'], ['Fluxo', '↓ Entrada'], ['Tipo fiscal', 'CBS'], ['Detecção', '14/04/2026']],
+      desc: 'A Receita Federal glosou parte do crédito da CBS desta nota. O documento que sustenta o crédito foi pedido ao fornecedor.',
+      grupo: 'Fiscal — Ciclo do crédito', resp: 'Marina Lopes', av: 'ML', trib: 'CBS · Receita Federal',
+      explic: 'Roteado pela regra R-01 (tipo Glosa parcial) → Fiscal — Ciclo do crédito. Marina Lopes tinha a menor carga.',
+      regra: 'S-03 · família C', prazos: '8 h úteis · 10 dias úteis · 10 dias corridos', folgaTxt: 'teto com 5 dias de folga',
+      rl: [
+        { n: 'Primeiro atendimento', c: 'done', e: 'Cumprido', v: 'em 2 h de 8 h', q: 'saiu de “Aberta” em 14/04 às 11:00', pz: '8 h úteis', pct: 25, al: 80, he: 'cumprido', ht: '2 h de 8 h' },
+        { n: 'Resolução', c: 'gray', e: 'Pausado', v: 'parado desde 20/04', q: 'em “Aguardando terceiro” · 4 de 10 dias úteis contados', pz: '10 dias úteis', pct: 40, al: 80, he: 'pausado', ht: 'parado desde 20/04, em Aguardando terceiro · 4 dias úteis no total' },
+        { n: 'Retorno do terceiro', c: 'ok', e: 'No prazo', v: 'faltam 6 dias', q: 'vence 30/04', pz: '10 dias corridos', pct: 40, al: 70, he: 'faltam 6 dias', ht: 'vence 30/04' }
+      ],
+      parte: 'CBS a apropriar · NF-e 000120 de 01/04/2026 · vence 30/06/2026', parteCurta: 'CBS a apropriar da NF-e 000120, vence 30/06/2026',
+      teto: { txt: '5 dias antes de 30/06/2026 → 25/06, pelo crédito', curto: '25/06, 5 dias antes do vencimento do crédito' },
+      anterior: null,
+      pts: [['2026-04-14T09:00', 'Detecção', '', '14/04 9:00'], ['2026-04-14T11:00', 'Primeiro atendimento cumprido', 'done', '14/04 11:00'], ['2026-04-20T09:00', 'Pedido ao fornecedor: a Resolução pausa e o Retorno começa', '', '20/04'], ['2026-04-30T17:00', 'Retorno do terceiro vence', 'ok', '30/04'], ['2026-06-25T17:00', 'Teto do chamado', 'teto', '25/06'], ['2026-06-30T17:00', 'A CBS a apropriar vence', 'cred', '30/06']],
+      chip: ['ok', 'Retorno vence em 6 dias'],
+      hist: [['amb', 'Passagem', '20/04', 'Aguardando terceiro: pedido ao fornecedor · Resolução pausada · Retorno do terceiro começou'], ['ok', 'SLA', '14/04', 'Primeiro atendimento cumprido em 2 h de 8 h'], ['teal', 'Atribuição', '14/04', 'R-01 → Fiscal — Ciclo do crédito · sorteio pela menor carga: Marina Lopes'], ['', 'Abertura', '14/04', 'INC-0012 aberta · Glosa parcial do crédito']]
+    },
+    risco: {
+      id: 'INC-0052', crit: 'MÉDIA', st: 'Em Análise', tit: 'Chave de acesso inválida', forn: 'Fornecedor Serra Azul Ltda · 98.765.432/0001-00',
+      dados: [['DF vinculado', 'NF-e 000245', 'Ver DF'], ['RF vinculado', '—'], ['Valor', 'R$ 50.000,00'], ['Fluxo', '↓ Entrada'], ['Tipo fiscal', 'CBS'], ['Detecção', '20/04/2026']],
+      desc: 'A chave de acesso do documento não passou na validação da entrada.',
+      grupo: 'Cadastro e Ingestão', resp: 'Rafael Melo', av: 'RM', trib: 'CBS · Receita Federal',
+      explic: 'Roteado pela regra R-05 (família A) → Cadastro e Ingestão. Rafael Melo tinha a menor carga.',
+      regra: 'S-01 · família A', prazos: '4 h úteis · 5 dias úteis · Retorno não medido', folgaTxt: 'sem teto',
+      rl: [
+        { n: 'Primeiro atendimento', c: 'done', e: 'Cumprido', v: 'em 1 h de 4 h', q: 'saiu de “Aberta” em 20/04 às 10:00', pz: '4 h úteis', pct: 25, al: 80, he: 'cumprido', ht: '1 h de 4 h' },
+        { n: 'Resolução', c: 'amb', e: 'Em risco', v: 'falta 1 dia útil', q: 'vence 27/04', pz: '5 dias úteis', pct: 80, al: 80, he: 'falta 1 dia útil', ht: 'vence 27/04' },
+        { n: 'Retorno do terceiro', c: 'off', e: 'Não medido', v: 'a regra não mede', q: 'a regra S-01 não mede este tipo', pz: '—', pct: null, al: 70, he: 'não medido', ht: 'a regra S-01 não mede este tipo' }
+      ],
+      parte: 'CBS a apropriar · NF-e 000245 de 17/04/2026 · vence 31/07/2026', parteCurta: 'CBS a apropriar da NF-e 000245, vence 31/07/2026',
+      teto: null,
+      anterior: null,
+      pts: [['2026-04-20T09:00', 'Detecção', '', '20/04 9:00'], ['2026-04-20T10:00', 'Primeiro atendimento cumprido', 'done', '20/04 10:00'], ['2026-04-27T17:00', 'Resolução vence', 'amb', '27/04'], ['2026-07-31T17:00', 'A CBS a apropriar vence', 'cred', '31/07']],
+      chip: ['amb', 'Resolução em risco, vence em 1 dia útil'],
+      hist: [['amb', 'SLA', '24/04', 'Resolução em risco: 80% do prazo consumido · aviso ao responsável'], ['ok', 'SLA', '20/04', 'Primeiro atendimento cumprido em 1 h de 4 h'], ['teal', 'Atribuição', '20/04', 'R-05 → Cadastro e Ingestão · sorteio pela menor carga: Rafael Melo'], ['', 'Abertura', '20/04', 'INC-0052 aberta · Chave de acesso inválida']]
+    },
+    reaberto: {
+      id: 'INC-0018', crit: 'ALTA', st: 'Aberta', tit: 'Valor da CBS divergente do apurado', forn: 'Fornecedor Rio Claro Ltda · 45.678.901/0001-00',
+      dados: [['DF vinculado', 'NF-e 000310', 'Ver DF'], ['RF vinculado', 'RF-00000310', 'Ver RF'], ['Valor', 'R$ 200.000,00'], ['Fluxo', '↓ Entrada'], ['Tipo fiscal', 'CBS'], ['Detecção', '02/04/2026, reaberta em 24/04']],
+      desc: 'O valor da CBS apurado pela Receita Federal diverge do valor do documento.',
+      grupo: 'Fiscal — Confronto', resp: 'Marina Lopes', av: 'ML', trib: 'CBS · Receita Federal',
+      explic: 'Reaberto e roteado de novo pela regra R-03 (família B) → Fiscal — Confronto. Marina Lopes tinha a menor carga.',
+      regra: 'S-02 · família B', prazos: '8 h úteis · 15 dias úteis · 10 dias corridos', folgaTxt: 'teto com 5 dias de folga',
+      rl: [
+        { n: 'Primeiro atendimento', c: 'ok', e: 'No prazo', v: 'faltam 6 h', q: 'vence hoje, às 17:00', pz: '8 h úteis', pct: 25, al: 80, he: 'faltam 6 h', ht: 'vence 24/04 17:00' },
+        { n: 'Resolução', c: 'ok', e: 'No prazo', v: 'faltam 15 dias úteis', q: 'vence 18/05', pz: '15 dias úteis', pct: 2, al: 80, he: 'faltam 15 dias úteis', ht: 'vence 18/05' },
+        { n: 'Retorno do terceiro', c: 'off', e: 'Não iniciado', v: 'não começou', q: 'começa ao entrar em “Aguardando terceiro”', pz: '10 dias corridos', pct: null, al: 70, he: 'não iniciado', ht: 'começa ao entrar em “Aguardando terceiro”' }
+      ],
+      parte: 'CBS a apropriar · NF-e 000310 de 01/04/2026 · vence 30/06/2026', parteCurta: 'CBS a apropriar da NF-e 000310, vence 30/06/2026',
+      teto: { txt: '5 dias antes de 30/06/2026 → 25/06, pelo crédito', curto: '25/06, 5 dias antes do vencimento do crédito' },
+      anterior: { hoje: 'INC-0018 de 02/04, da detecção anterior — reaberto 1×', novo: 'Reaberto 1×. A detecção de 02/04 foi resolvida em 10/04, no prazo (6 de 15 dias úteis); os relógios de agora começaram na reabertura.' },
+      pts: [['2026-04-02T09:00', 'Detecção anterior', '', '02/04'], ['2026-04-10T15:00', 'Resolvida no prazo', 'done', '10/04'], ['2026-04-24T09:00', 'Reabertura', '', '24/04 9:00'], ['2026-04-24T17:00', 'Primeiro atendimento vence', 'ok', '24/04 17:00'], ['2026-05-18T17:00', 'Resolução vence', 'ok', '18/05'], ['2026-06-25T17:00', 'Teto do chamado', 'teto', '25/06'], ['2026-06-30T17:00', 'A CBS a apropriar vence', 'cred', '30/06']],
+      chip: ['ok', 'Atendimento vence em 6 h'],
+      hist: [['amb', 'Reabertura', '24/04', 'A mesma divergência voltou na leitura · chamado reaberto · relógios novos, ligados aos anteriores'], ['ok', 'Resolução', '10/04', 'Resolvida no prazo, em 6 de 15 dias úteis'], ['teal', 'Atribuição', '02/04', 'R-03 → Fiscal — Confronto · sorteio pela menor carga: Marina Lopes'], ['', 'Abertura', '02/04', 'INC-0018 aberta · Valor da CBS divergente do apurado']]
+    }
+  };
+  var HOJE = '2026-04-24T11:00';
+  var V = 'Ac', E = 'estourado', TAB = 'sla', COMO_A = false, DET = false;
+  var DICA = {
+    hoje: 'Troque a situação e compare o bloco marcado com o da A compacta.',
+    Ac: 'Troque a situação: as cores ficam só no ponto e na situação que pede ação. "Detalhes" abre a regra, o prazo de cada relógio com a barra fina, o crédito afetado e o teto.',
+    A: 'Troque a situação: veja a barra mudar de cor, o bloco tracejado do relógio que não corre e a linha da reabertura. "Como o SLA conta" abre a explicação embaixo da faixa.',
+    B: 'Troque a situação e veja a linha do tempo: os números estão na legenda, e a linha verde-azulada marca hoje. As outras abas funcionam; o resumo do cabeçalho leva de volta à aba SLA.'
+  };
+
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function rid(x) { return x.regra.split(' ')[0]; }
+  function pill(r) { return '<span class="pl ' + r.c + '">' + esc(r.e) + '</span>'; }
+  function barra(r, fina) {
+    var f = fina ? ' fina' : '';
+    if (r.pct === null) return '<div class="pb-vz' + f + '" aria-hidden="true"></div>';
+    return '<div class="pb ' + r.c + f + '" role="img" aria-label="' + esc(r.pct + '% do prazo consumido; alerta em ' + r.al + '%') + '"><span style="width:' + Math.min(r.pct, 100) + '%"></span><i style="left:' + r.al + '%"></i></div>';
+  }
+  function cab(x, comChip) {
+    var h = '<div class="m-h"><div class="m-ic" aria-hidden="true">!</div><div class="m-ht">';
+    h += '<div class="m-id"><span>' + x.id + '</span><span class="chip ' + (x.crit === 'ALTA' ? 'warn' : 'info') + '">' + x.crit + '</span><span class="chip gray">' + esc(x.st.toUpperCase()) + '</span></div>';
+    h += '<div class="m-tt">' + esc(x.tit) + '</div><div class="m-sub">' + esc(x.forn) + '</div>';
+    if (comChip) h += '<button type="button" class="m-resumo ' + x.chip[0] + '" data-tab="sla"><span class="pt"></span>' + esc(x.chip[1]) + '</button>';
+    return h + '</div><span class="m-x" aria-hidden="true">✕</span></div>';
+  }
+  function kv(k, v, a) { return '<div class="kv"><div class="k">' + esc(k) + '</div><div class="v">' + esc(v) + (a ? '<a>' + a + '</a>' : '') + '</div></div>'; }
+  function blkDados(x, tres) {
+    return '<div class="blk"><div class="blk-t">Dados da inconsistência</div><div class="kvg' + (tres ? ' tres' : '') + '">' + x.dados.map(function (d) { return kv(d[0], d[1], d[2]); }).join('') + '</div></div>';
+  }
+  function blkDesc(x) { return '<div class="blk"><div class="blk-t">Descrição do problema</div><div class="txt">' + esc(x.desc) + '</div></div>'; }
+  function blkStatus(x) {
+    var st = ['Aberta', 'Em Análise', 'Ag. Terceiro', 'Resolvida', 'Glosada'];
+    return '<div class="blk"><div class="blk-t">Status · mover coluna</div><div class="cols5">' + st.map(function (s) { return '<span' + (s === x.st ? ' class="on"' : '') + '>' + s + '</span>'; }).join('') + '</div></div>';
+  }
+  function blkAtend(x, tres) {
+    var h = '<div class="blk"><div class="blk-t">Atendimento</div><div class="kvg' + (tres ? ' tres' : '') + '">';
+    h += kv('Grupo', x.grupo) + '<div class="kv"><div class="k">Responsável</div><div class="v"><span class="av">' + x.av + '</span>' + esc(x.resp) + '</div></div>' + kv('Tributo · órgão', x.trib);
+    h += '</div><div class="txt mt">' + esc(x.explic) + '</div>';
+    return h + '<div class="bts"><span class="bt">Assumir</span><span class="bt">Reatribuir no grupo</span><span class="bt">Transferir de grupo</span><span class="bt">Devolver à fila</span></div></div>';
+  }
+  function blkEvento() {
+    return '<div class="blk"><div class="blk-t">Evento fiscal ou nota</div><div class="txt">Sem sugestão de evento para esta inconsistência.</div></div>' +
+      '<div class="blk"><div class="blk-t">Ações sugeridas</div><div class="acs"><div class="ac"><b>Consultar a instituição financeira</b>Confere o extrato do recolhimento</div><div class="ac"><b>Pedir o comprovante</b>Solicita o comprovante ao fornecedor</div></div></div>';
+  }
+  function hist(x) {
+    return '<div class="blk"><div class="blk-t">Histórico do ciclo <span>' + x.hist.length + ' eventos</span></div>' + x.hist.map(function (e) {
+      return '<div class="ev ' + e[0] + '"><span class="ev-i"></span><div class="ev-c"><div class="ev-h"><b>' + esc(e[1]) + '</b><span>' + e[2] + '/2026</span></div><div class="ev-t">' + esc(e[3]) + '</div></div></div>';
+    }).join('') + '</div>';
+  }
+  function slaHoje(x) {
+    var h = '<div class="blk"><div class="hj"><div class="blk-t">SLA <span>regra ' + esc(x.regra) + '</span></div>';
+    x.rl.forEach(function (r) { h += '<div class="hj-row"><div class="hj-row1"><span class="hj-n">' + esc(r.n) + '</span><span class="pl ' + r.c + '">' + esc(r.he) + '</span></div><div class="hj-t">' + esc(r.ht) + '</div></div>'; });
+    if (x.parte) h += '<div class="hj-kv"><div class="k">Parte afetada</div><div class="v">' + esc(x.parte) + '</div></div>';
+    if (x.teto) h += '<div class="hj-kv"><div class="k">Teto</div><div class="v">' + esc(x.teto.txt) + '</div></div>';
+    if (x.anterior) h += '<div class="hj-kv"><div class="k">Relógio anterior</div><div class="v">' + esc(x.anterior.hoje) + '</div></div>';
+    return h + '<div class="hj-nota">▸ Como o SLA conta</div></div></div>';
+  }
+  function telaHoje(x) {
+    return '<div class="m">' + cab(x, false) + '<div class="m-cols"><div class="m-esq">' + blkDados(x) + blkDesc(x) + blkStatus(x) + blkAtend(x) + slaHoje(x) + blkEvento() + '</div><div class="m-dir">' + hist(x) + '</div></div></div>';
+  }
+  function faixa(x) {
+    var h = '<div class="sf" id="at-slabox"><div class="sf-h"><span class="sf-t">SLA</span><span class="sf-r">regra ' + esc(x.regra) + ' · ' + esc(x.prazos) + '</span><button type="button" class="lnk" id="como-a" aria-expanded="' + COMO_A + '">Como o SLA conta</button></div><div class="sf-g">';
+    x.rl.forEach(function (r) {
+      h += '<div class="tl ' + r.c + '"><div class="tl-h"><span class="tl-n">' + esc(r.n) + '</span>' + pill(r) + '</div><div class="tl-v">' + esc(r.v) + '</div>' + barra(r) + '<div class="tl-s">' + (r.pz !== '—' ? 'prazo ' + esc(r.pz) + ' · ' : '') + esc(r.q) + '</div></div>';
+    });
+    h += '</div><div class="sf-rod">';
+    if (x.parte) h += '<span><span class="k">Crédito afetado:</span> <b>' + esc(x.parteCurta) + '</b></span>';
+    h += x.teto ? '<span><span class="k">Teto do chamado:</span> <b>' + esc(x.teto.curto) + '</b></span>' : '<span><span class="k">Teto:</span> a regra ' + esc(rid(x)) + ' não usa o teto pelo crédito</span>';
+    h += '</div>';
+    if (x.anterior) h += '<div class="sf-re">' + esc(x.anterior.novo) + '</div>';
+    if (COMO_A) h += '<div class="como"><ul>' + COMO.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul></div>';
+    return h + '</div>';
+  }
+  function curto(n) { return n === 'Primeiro atendimento' ? 'Atendimento' : n === 'Retorno do terceiro' ? 'Retorno' : n; }
+  function sit(r) {
+    if (r.c === 'gray') return 'em pausa desde ' + r.v.split(' ').pop();
+    if (r.c === 'amb') return 'em risco, ' + r.he;
+    return r.he;
+  }
+  function linhaC(x) {
+    var h = '<div class="sc" id="at-slabox"><span class="sc-t">SLA</span><span class="sc-l">';
+    x.rl.forEach(function (r) { h += '<span class="sc-i ' + r.c + '"><i class="d" aria-hidden="true"></i><span class="sc-n">' + esc(curto(r.n)) + '</span><span class="sc-v">' + esc(sit(r)) + '</span></span>'; });
+    if (x.anterior) h += '<span class="sc-x">reaberto 1×</span>';
+    h += '</span><button type="button" class="sc-mais" id="det-c" aria-expanded="' + DET + '" aria-controls="sc-det">Detalhes<span aria-hidden="true">▾</span></button></div>';
+    if (!DET) return h;
+    h += '<div class="sc-det" id="sc-det"><div class="sd-r">Regra <b>' + esc(x.regra) + '</b> · ' + esc(x.prazos) + ' · ' + esc(x.folgaTxt) + '</div>';
+    x.rl.forEach(function (r) { h += '<div class="sd-i"><span class="sd-n">' + esc(r.n) + '</span><span class="sd-q">' + (r.pz !== '—' ? 'prazo ' + esc(r.pz) + ' · ' : '') + esc(r.q) + '</span>' + barra(r, true) + '</div>'; });
+    h += '<div class="sd-c">';
+    if (x.parte) h += '<span><span class="k">Crédito afetado:</span> ' + esc(x.parteCurta) + '</span>';
+    h += x.teto ? '<span><span class="k">Teto do chamado:</span> ' + esc(x.teto.curto) + '</span>' : '<span><span class="k">Teto:</span> a regra ' + esc(rid(x)) + ' não usa o teto pelo crédito</span>';
+    h += '</div>';
+    if (x.anterior) h += '<div class="sd-re">' + esc(x.anterior.novo) + '</div>';
+    h += '<div class="sd-como"><button type="button" class="lnk" id="como-c" aria-expanded="' + COMO_A + '">Como o SLA conta</button></div>';
+    if (COMO_A) h += '<div class="como"><ul>' + COMO.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul></div>';
+    return h + '</div>';
+  }
+  function telaAc(x) {
+    return '<div class="m">' + cab(x, false) + linhaC(x) + '<div class="m-cols"><div class="m-esq">' + blkDados(x) + blkDesc(x) + blkStatus(x) + blkAtend(x) + blkEvento() + '</div><div class="m-dir">' + hist(x) + '</div></div></div>';
+  }
+  function telaA(x) {
+    return '<div class="m">' + cab(x, false) + faixa(x) + '<div class="m-cols"><div class="m-esq">' + blkDados(x) + blkDesc(x) + blkStatus(x) + blkAtend(x) + blkEvento() + '</div><div class="m-dir">' + hist(x) + '</div></div></div>';
+  }
+  function linhaTempo(x) {
+    var pts = x.pts.map(function (p, i) { return { t: Date.parse(p[0]), nome: p[1], c: p[2], l: p[3], n: i + 1 }; });
+    var hj = { t: Date.parse(HOJE), hoje: true };
+    var todos = pts.concat([hj]).sort(function (a, b) { return a.t - b.t; });
+    var t0 = todos[0].t, t1 = todos[todos.length - 1].t, G = 7.5, i;
+    todos.forEach(function (p) { p.x = (p.t - t0) / (t1 - t0) * 100; });
+    for (i = 1; i < todos.length; i++) if (todos[i].x < todos[i - 1].x + G) todos[i].x = todos[i - 1].x + G;
+    if (todos[todos.length - 1].x > 100) { todos[todos.length - 1].x = 100; for (i = todos.length - 2; i >= 0; i--) if (todos[i].x > todos[i + 1].x - G) todos[i].x = todos[i + 1].x - G; }
+    var h = '<div class="lt" role="img" aria-label="Linha do tempo do chamado, da detecção ao vencimento do crédito; a legenda abaixo lista os pontos"><div class="lt-in"><div class="lt-tr"></div><div class="lt-dec" style="width:' + hj.x + '%"></div>';
+    h += '<div class="lt-hj' + (hj.x < 15 ? ' esq' : hj.x > 85 ? ' dir' : '') + '" style="left:' + hj.x + '%"><span>hoje, 24/04</span></div>';
+    pts.forEach(function (p) { h += '<span class="lt-p ' + p.c + '" style="left:' + p.x + '%">' + p.n + '</span>'; });
+    h += '</div></div><ol class="lt-lg">' + pts.map(function (p) { return '<li><span class="n">' + p.n + '</span><span><b>' + esc(p.l) + '</b> ' + esc(p.nome) + '</span></li>'; }).join('') + '</ol>';
+    return h;
+  }
+  function abaSla(x) {
+    var h = '<div class="sub-t">Relógios <span>regra ' + esc(x.regra) + '</span></div>';
+    h += '<div class="rl cab" aria-hidden="true"><span>Relógio</span><span>Situação</span><span>Quanto falta</span><span>Prazo e data</span><span>Prazo consumido</span></div>';
+    x.rl.forEach(function (r) {
+      h += '<div class="rl ' + r.c + '"><span class="rl-n">' + esc(r.n) + '</span><span class="rl-p">' + pill(r) + '</span><span class="rl-v">' + esc(r.v) + '</span><span class="rl-q">' + (r.pz !== '—' ? esc(r.pz) + ' · ' : '') + esc(r.q) + '</span><span class="rl-b">' + barra(r) + '</span></div>';
+    });
+    h += '<div class="sub-t">Da detecção ao vencimento do crédito</div>' + linhaTempo(x);
+    h += '<div class="dupla"><div class="cx"><div class="cx-t">Regra de SLA</div><div class="cx-v">' + esc(x.regra) + '</div><div class="cx-s">' + esc(x.prazos) + ' · ' + esc(x.folgaTxt) + '</div></div>';
+    h += '<div class="cx"><div class="cx-t">Crédito afetado</div><div class="cx-v">' + esc(x.parteCurta) + '</div><div class="cx-s">' + (x.teto ? 'Teto do chamado: ' + esc(x.teto.curto) : 'Sem teto: a regra ' + esc(rid(x)) + ' não usa o teto pelo crédito') + '</div></div></div>';
+    if (x.anterior) h += '<div class="re">' + esc(x.anterior.novo) + '</div>';
+    h += '<div class="sub-t">Como o SLA conta</div><ul class="plain">' + COMO.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>';
+    return h;
+  }
+  function telaB(x) {
+    var abas = [['resumo', 'Resumo'], ['atend', 'Atendimento'], ['sla', 'SLA'], ['hist', 'Histórico · ' + x.hist.length], ['acoes', 'Evento e ações']];
+    var h = '<div class="m">' + cab(x, true) + '<div class="m-tabs" role="tablist">';
+    abas.forEach(function (a) {
+      h += '<button type="button" role="tab" class="m-tab' + (TAB === a[0] ? ' on' : '') + '" aria-selected="' + (TAB === a[0]) + '" data-tab="' + a[0] + '">' + a[1] + (a[0] === 'sla' ? '<span class="dot ' + x.chip[0] + '"></span>' : '') + '</button>';
+    });
+    h += '</div><div class="m-body">';
+    if (TAB === 'resumo') h += blkDados(x, true) + blkDesc(x) + blkStatus(x);
+    else if (TAB === 'atend') h += blkAtend(x, true);
+    else if (TAB === 'hist') h += hist(x);
+    else if (TAB === 'acoes') h += blkEvento();
+    else h += abaSla(x);
+    return h + '</div></div>';
+  }
+  function render() {
+    var x = EX[E];
+    document.getElementById('fr').innerHTML = V === 'hoje' ? telaHoje(x) : V === 'Ac' ? telaAc(x) : V === 'A' ? telaA(x) : telaB(x);
+    document.getElementById('marca').hidden = V !== 'hoje';
+    document.getElementById('dica').textContent = DICA[V];
+    document.querySelectorAll('.seg button[data-v]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-v') === V)); });
+    document.querySelectorAll('.seg button[data-e]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-e') === E)); });
+    document.querySelectorAll('.prop').forEach(function (p) { p.hidden = p.getAttribute('data-p') !== V; });
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('button');
+    if (!b) return;
+    if (b.hasAttribute('data-v')) { V = b.getAttribute('data-v'); render(); }
+    else if (b.hasAttribute('data-e')) { E = b.getAttribute('data-e'); render(); }
+    else if (b.hasAttribute('data-tab')) { TAB = b.getAttribute('data-tab'); render(); }
+    else if (b.id === 'como-a' || b.id === 'como-c') { COMO_A = !COMO_A; render(); }
+    else if (b.id === 'det-c') { DET = !DET; render(); }
+  });
+  render();
+})();
+</script>
+</body>
+</html>
