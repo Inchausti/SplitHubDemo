@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estrutura do emulador · v1.0</title>
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 800px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.callout.red { border-color: var(--red); background: var(--red-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 9px 13px; border-bottom: 1px solid var(--brd); vertical-align: top; color: var(--txt2); background: var(--sur); }
+td strong { color: var(--txt1); }
+tbody tr:last-child td { border-bottom: none; }
+td.grp { background: var(--sur2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); }
+td.id { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); white-space: nowrap; }
+code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--mono); padding: 1px 5px; border-radius: 4px; color: var(--txt1); overflow-wrap: anywhere; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 14px 0 18px; }
+@media (max-width: 860px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.kpi-v { font-size: 22px; font-weight: 800; color: var(--txt1); line-height: 1.2; }
+.kpi-l { font-size: 11.5px; color: var(--txt3); }
+.kpi.ok .kpi-v { color: var(--green); } .kpi.warn .kpi-v { color: var(--amber); }
+.kpi.info .kpi-v { color: var(--blue); } .kpi.red .kpi-v { color: var(--red); }
+.barra { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 6px 0 4px; background: var(--sur2); }
+.barra span { display: block; height: 100%; }
+.barra .ok { background: var(--green); } .barra .warn { background: var(--amber); } .barra .info { background: var(--blue); } .barra .red { background: var(--red); }
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+.filtros button { font: inherit; font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt2); cursor: pointer; }
+.filtros button[aria-pressed="true"] { background: var(--txt1); color: var(--bg); border-color: var(--txt1); }
+tr.oculta { display: none; }
+.ondas { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 14px 0; }
+.onda { background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.onda.crit { border-left-color: var(--red); }
+.onda.dep { border-left-color: var(--gray); }
+.onda-h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; margin-bottom: 6px; }
+.onda-n { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.onda.crit .onda-n { color: var(--red); }
+.onda.dep .onda-n { color: var(--gray); }
+.onda-t { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.onda-q { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.onda ul.plain { margin-left: 16px; }
+.onda ul.plain li { font-size: 12.5px; }
+.onda .pronto { font-size: 12px; color: var(--txt2); border-top: 1px dashed var(--brd); margin-top: 8px; padding-top: 8px; }
+.ids { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); }
+.foot { margin-top: 40px; font-size: 11px; color: var(--txt3); text-align: center; }
+.back { display: inline-block; font-size: 12px; color: var(--txt3); text-decoration: none; margin-bottom: 18px; }
+.back:hover { color: var(--txt1); }
+
+
+.doc a:not([class]) { color: var(--blue); text-underline-offset: 2px; }
+td.wrap { min-width: 200px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 12px; }
+.seg button { font: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt2); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--txt1); border-color: var(--txt1); color: var(--bg); }
+.seg .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--teal); margin-left: 6px; }
+.seg button[aria-pressed="true"] .tag { color: var(--teal-d); }
+.prop h3 { margin-top: 6px; }
+.duas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 14px; }
+@media (max-width: 640px) { .duas { grid-template-columns: minmax(0, 1fr); } }
+.pc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 14px; min-width: 0; }
+.pc.ganha { border-color: var(--teal); }
+.pc.perde { border-color: var(--amber); }
+.pc .pct { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); margin-bottom: 4px; }
+.pc ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--txt2); }
+.pc li { margin: 3px 0; }
+.dica { font-size: 12.5px; color: var(--txt3); margin: 6px 0; }
+/* a moldura: o painel administrativo de mentira */
+.fr { position: relative; overflow: hidden; border: 1px solid var(--brd); border-radius: 10px; background: var(--bg); min-height: 560px; min-width: 0; }
+.fr-url { display: flex; gap: 8px; align-items: center; padding: 6px 10px; background: var(--sur2); border-bottom: 1px solid var(--brd); font-family: var(--mono); font-size: 11.5px; color: var(--txt2); min-width: 0; }
+.fr-url .u { overflow-wrap: anywhere; min-width: 0; }
+.fr-url .pt { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.fr-top { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--sur); border-bottom: 1px solid var(--brd); }
+.fr-top .eb { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--teal); display: block; }
+.fr-top .nm { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.fr-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.fr-main { padding: 14px; min-width: 0; }
+.fb { font: inherit; font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); cursor: pointer; }
+.fb:hover { border-color: var(--teal); }
+.fb.on, .fb.pri { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+.fb.sec { background: var(--sur2); }
+.fb[disabled] { opacity: .5; cursor: default; }
+.lnk { font: inherit; background: none; border: 0; padding: 0; color: var(--blue); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.cl-h { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 2px; font-size: 17px; color: var(--txt1); }
+.selo { font-size: 10px; font-weight: 700; letter-spacing: .06em; padding: 2px 7px; border-radius: 4px; background: var(--teal-d); color: var(--teal); }
+.cl-sub { font-size: 12px; color: var(--txt3); margin-bottom: 10px; }
+.ctabs, .stabs, .ws-menu.lin { display: flex; gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; border-bottom: 1px solid var(--brd); margin-bottom: 12px; }
+.ctab, .stab { font: inherit; font-size: 12.5px; font-weight: 600; white-space: nowrap; padding: 7px 11px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--txt3); cursor: pointer; }
+.ctab.on, .stab.on { color: var(--txt1); border-bottom-color: var(--teal); }
+.stabs { background: var(--sur2); border-radius: 6px 6px 0 0; }
+.stab { font-size: 12px; padding: 6px 10px; }
+.vazio { padding: 30px 12px; text-align: center; font-size: 13px; color: var(--txt3); border: 1px dashed var(--brd); border-radius: 8px; }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; min-width: 0; }
+.card-t { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); margin-bottom: 8px; }
+.radios { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--txt2); }
+.radios label { display: flex; gap: 8px; align-items: flex-start; }
+.radios input { margin-top: 4px; accent-color: var(--teal); }
+.radios strong { color: var(--txt1); }
+.acoes { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; margin-top: 10px; }
+.acoes .nota { font-size: 11.5px; color: var(--txt3); margin-right: auto; }
+.acoes.esq { justify-content: flex-start; margin: 0 0 10px; }
+.acoes.esq .nota { margin-right: 0; }
+.minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); gap: 8px; margin-bottom: 12px; }
+.mini { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.mini .v { font-size: 18px; font-weight: 700; color: var(--txt1); }
+.mini .l { font-size: 11px; color: var(--txt3); }
+.mini.warn .v { color: var(--amber); }
+.campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 8px; }
+.campo { background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; padding: 7px 10px; min-width: 0; }
+.campo .cl { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.campo .cv { font-size: 12.5px; color: var(--txt1); overflow-wrap: anywhere; margin-top: 2px; }
+.tg { display: inline-flex; border: 1px solid var(--brd); border-radius: 5px; overflow: hidden; }
+.tg button { font: inherit; font-size: 10px; font-weight: 700; text-transform: none; letter-spacing: 0; padding: 2px 7px; border: 0; background: var(--sur2); color: var(--txt3); cursor: pointer; }
+.tg button.on { background: var(--teal); color: var(--sur); }
+.passos { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.passo { font: inherit; font-size: 11.5px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt2); cursor: pointer; }
+.passo.on { background: var(--txt1); color: var(--bg); border-color: var(--txt1); }
+.fr h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); margin: 12px 0 6px; }
+.fr .table-wrap { margin: 6px 0; }
+.fr table { font-size: 12px; }
+.fr td.n, .fr th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fr tr.clic { cursor: pointer; }
+.fr tr.clic:hover td { background: var(--sur2); }
+.msg { font-size: 12.5px; color: var(--teal); background: var(--teal-d); border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; }
+.bc { font-size: 12.5px; color: var(--txt3); margin-bottom: 10px; overflow-wrap: anywhere; }
+.ws { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 14px; }
+.ws-menu { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ws-menu .mi { font: inherit; font-size: 12.5px; font-weight: 600; text-align: left; padding: 7px 10px; border-radius: 6px; border: 0; background: none; color: var(--txt2); cursor: pointer; white-space: nowrap; }
+.ws-menu .mi.on { background: var(--teal-d); color: var(--teal); }
+.ws-main { min-width: 0; }
+@media (max-width: 720px) {
+  .ws { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .ws-menu { flex-direction: row; overflow-x: auto; -webkit-overflow-scrolling: touch; border-bottom: 1px solid var(--brd); margin-bottom: 12px; padding-bottom: 6px; }
+}
+.barra-c { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.barra-c .info { font-size: 12.5px; color: var(--txt2); background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; padding: 5px 10px; }
+.barra-c .info.warn { border-color: var(--amber); }
+.barra-c .dir { margin-left: auto; }
+.as-h { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 15px; color: var(--txt1); }
+.drw-fundo { position: absolute; inset: 0; background: var(--txt1); opacity: .14; }
+.drw { position: absolute; top: 0; right: 0; bottom: 0; width: min(420px, 94%); overflow-y: auto; background: var(--bg); border-left: 1px solid var(--brd); padding: 14px; box-sizing: border-box; }
+.drw-h { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--txt1); }
+.esc { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 12px; margin: 12px 0 4px; }
+.esc .esc-msg { flex-basis: 100%; font-size: 12.5px; color: var(--teal); min-height: 1em; }
+.dc-btn { font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur2); color: var(--txt1); cursor: pointer; }
+.dc-btn.pri { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section { overflow-wrap: anywhere; }
+  .fr-main { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="../prds.html#sec-taxrs">← Hub de PRDs</a>
+<div class="eyebrow">tax-rs · Modo Live · Proposta · D-EM-29</div>
+<h1>Emulador de lançamentos: a estrutura no painel do cliente</h1>
+<p class="subtitle">Três maneiras de organizar o módulo dentro do painel administrativo do tax-rs. As três são clicáveis: as abas, os menus e os botões mudam a tela. Os dados são de exemplo, os mesmos da <a href="../taxrs-emulador-lancamentos.html">proposta do emulador</a>.</p>
+<div class="meta-bar">
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.0</span></span>
+  <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">19/11/2026</span></span>
+  <span class="meta-pill"><span class="meta-label">Proposta</span><span class="meta-val">v1.2, seção 10</span></span>
+  <span class="meta-pill"><span class="meta-label">Decisão</span><span class="meta-val">D-EM-29</span></span>
+</div>
+<section class="section" id="s1">
+  <div class="sec-hdr"><span class="sec-num">1</span><span class="sec-title">Hoje e o que o módulo precisa</span></div>
+  <p>No admin do tax-rs (<code>ClienteDetalhe.tsx</code>), o cliente tem oito abas: Dados, Empresas, Contratos, Fonte do Fisco, Captura SEFAZ, Credenciais do ERP, Usuários e Histórico. A aba Fonte do Fisco tem só a escolha do modo (Simulada, Replay ou Desligada) e o botão Salvar.</p>
+  <p>O módulo da proposta tem sete telas: o painel (T-EM-01), criar DFs (T-EM-07), o novo lote em quatro passos com a prévia (T-EM-02 e 03), os cenários prontos, o lançamento unitário (T-EM-04), o Simulado (T-EM-06) e as execuções com a conferência (T-EM-05). A pergunta é onde essas telas moram.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th>A · Subabas</th><th>B · Espaço do emulador</th><th>C · Execução guiada</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Onde fica</strong></td><td class="wrap">Na aba Fonte do Fisco, numa segunda fila de abas</td><td class="wrap">A aba fica com o modo e o resumo; o emulador abre numa página do cliente, com menu lateral</td><td class="wrap">A aba vira a lista de execuções; um assistente faz tudo</td></tr>
+      <tr><td><strong>Criar DFs</strong></td><td class="wrap">Subaba</td><td class="wrap">Item do menu</td><td class="wrap">Passo 1 do assistente</td></tr>
+      <tr><td><strong>Lote</strong></td><td class="wrap">Subaba, com os quatro passos</td><td class="wrap">Item do menu, com os quatro passos</td><td class="wrap">Passos 1 a 4 do assistente</td></tr>
+      <tr><td><strong>Cenários prontos</strong></td><td class="wrap">Subaba</td><td class="wrap">Item do menu</td><td class="wrap">Dentro do passo 2</td></tr>
+      <tr><td><strong>Lançamento unitário</strong></td><td class="wrap">Subaba</td><td class="wrap">Item do menu</td><td class="wrap">No próprio DF, em painel lateral</td></tr>
+      <tr><td><strong>Simulado</strong></td><td class="wrap">Subaba</td><td class="wrap">Item do menu</td><td class="wrap">Painel lateral, aberto do aviso no topo</td></tr>
+      <tr><td><strong>Conferência</strong></td><td class="wrap">Subaba Execuções</td><td class="wrap">Item Execuções</td><td class="wrap">Passo 5 e cada execução da lista</td></tr>
+      <tr><td><strong>Endereço próprio por tela</strong></td><td class="wrap">Não</td><td class="wrap">Sim</td><td class="wrap">Só o assistente</td></tr>
+      <tr><td><strong>No celular</strong></td><td class="wrap">Duas filas de abas que rolam</td><td class="wrap">O menu vira uma fila no topo</td><td class="wrap">Uma tela por passo</td></tr>
+      <tr><td><strong>O que muda no tax-rs</strong></td><td class="wrap">O conteúdo da aba</td><td class="wrap">O conteúdo da aba e uma rota nova do admin</td><td class="wrap">O conteúdo da aba e o assistente</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout ok"><div class="ct">Recomendação: B</div><p>O módulo tem sete telas e um assistente de quatro passos. Nas subabas (A), fica apertado embaixo das oito abas do cliente; na execução guiada (C), o Simulado e o unitário ficam escondidos. O B deixa as abas do cliente como estão e dá endereço próprio a cada tela, para o suporte e para os testes.</p></div>
+</section>
+
+<section class="section" id="s2">
+  <div class="sec-hdr"><span class="sec-num">2</span><span class="sec-title">As três, clicáveis</span></div>
+  <div class="seg" role="group" aria-label="Escolher a proposta para ver">
+    <button type="button" data-p="A" aria-pressed="false">A · Subabas dentro da aba</button>
+    <button type="button" data-p="B" aria-pressed="false">B · Espaço próprio do emulador<span class="tag">recomendada</span></button>
+    <button type="button" data-p="C" aria-pressed="false">C · Execução guiada, de ponta a ponta</button>
+  </div>
+  <div class="prop" id="prop-A" hidden>
+    <h3>Proposta A · Subabas dentro da aba</h3>
+    <p>Tudo fica na aba Fonte do Fisco do cliente, numa segunda fila de abas: Visão geral (o modo e o painel), Simulado, Criar DFs, Novo lote, Cenários prontos, Unitário e Execuções. A navegação do admin não muda.</p>
+    <div class="duas">
+      <div class="pc ganha"><div class="pct">Ganha</div><ul><li>Nada muda na navegação do admin: o módulo é só o conteúdo da aba.</li><li>Tudo à vista, a um clique, sem sair do cliente.</li><li>A menor construção das três.</li></ul></div>
+      <div class="pc perde"><div class="pct">Perde</div><ul><li>Duas filas de abas: as 8 do cliente e as 7 do módulo; no celular, as duas rolam.</li><li>O assistente do lote e a prévia ficam na largura da aba, apertados.</li><li>Sem endereço próprio por tela: o suporte não manda o link de uma execução, e o teste e2e clica até chegar.</li></ul></div>
+    </div>
+    <p class="dica">Clique nas abas, no menu e nos botões. No Novo lote, os passos andam; em Criar DFs, cada característica alterna entre pré-definida e aleatória.</p>
+    <div class="fr" id="fr-A" data-prop="A"></div>
+    <div class="esc"><button type="button" class="dc-btn pri" data-escolher="A">Escolher a proposta A</button><a href="../taxrs-emulador-lancamentos.html#D-EM-29">Ver a D-EM-29 na proposta</a><span class="esc-msg" aria-live="polite"></span></div>
+  </div>
+  <div class="prop" id="prop-B" hidden>
+    <h3>Proposta B · Espaço próprio do emulador</h3>
+    <p>A aba Fonte do Fisco fica com o modo e um resumo (lançamentos por origem, a última execução, os alertas do Simulado) e o botão "Abrir o emulador". O botão leva a uma página do cliente com menu lateral: Painel, Criar DFs, Novo lote, Cenários prontos, Lançamento unitário, Simulado e Execuções. O caminho de volta fica no topo.</p>
+    <div class="duas">
+      <div class="pc ganha"><div class="pct">Ganha</div><ul><li>Espaço para o assistente do lote e para as tabelas da prévia e da conferência.</li><li>As abas do cliente ficam como estão.</li><li>Cada tela tem endereço próprio: o suporte manda o link da execução, e o teste e2e entra direto.</li><li>O menu cresce com a E3 sem apertar nada.</li></ul></div>
+      <div class="pc perde"><div class="pct">Perde</div><ul><li>Uma rota nova no admin, por cliente.</li><li>Sai da página do cliente; volta pelo caminho no topo.</li></ul></div>
+    </div>
+    <p class="dica">Clique nas abas, no menu e nos botões. No Novo lote, os passos andam; em Criar DFs, cada característica alterna entre pré-definida e aleatória.</p>
+    <div class="fr" id="fr-B" data-prop="B"></div>
+    <div class="esc"><button type="button" class="dc-btn pri" data-escolher="B">Escolher a proposta B</button><a href="../taxrs-emulador-lancamentos.html#D-EM-29">Ver a D-EM-29 na proposta</a><span class="esc-msg" aria-live="polite"></span></div>
+  </div>
+  <div class="prop" id="prop-C" hidden>
+    <h3>Proposta C · Execução guiada, de ponta a ponta</h3>
+    <p>A aba vira a lista de execuções do cliente, com o modo e o aviso do Simulado no topo. "Nova execução" abre um assistente: 1 DFs (filtrar, criar ou os dois), 2 Ações (ou um cenário pronto), 3 Quando, 4 Prévia, 5 Conferência. O lançamento unitário fica no próprio DF, na lista "DFs do cliente", e o Simulado, num painel lateral.</p>
+    <div class="duas">
+      <div class="pc ganha"><div class="pct">Ganha</div><ul><li>Um caminho só, que conduz quem usa o emulador de vez em quando.</li><li>Criar os DFs e agir sobre eles é um fluxo só.</li><li>A conferência fecha a execução, no mesmo lugar.</li></ul></div>
+      <div class="pc perde"><div class="pct">Perde</div><ul><li>O Simulado e o unitário ficam escondidos em painéis laterais.</li><li>Quem testa todo dia refaz o assistente; pede "repetir execução".</li><li>Os cenários prontos viram um passo, não um catálogo.</li></ul></div>
+    </div>
+    <p class="dica">Clique nas abas, no menu e nos botões. No Novo lote, os passos andam; em Criar DFs, cada característica alterna entre pré-definida e aleatória.</p>
+    <div class="fr" id="fr-C" data-prop="C"></div>
+    <div class="esc"><button type="button" class="dc-btn pri" data-escolher="C">Escolher a proposta C</button><a href="../taxrs-emulador-lancamentos.html#D-EM-29">Ver a D-EM-29 na proposta</a><span class="esc-msg" aria-live="polite"></span></div>
+  </div>
+</section>
+
+<section class="section" id="s3">
+  <div class="sec-hdr"><span class="sec-num">3</span><span class="sec-title">A escolha e o histórico</span></div>
+  <p>"Escolher" grava a proposta na D-EM-29, neste navegador, no mesmo lugar que a seção 14 da proposta usa: a escolha aparece lá, e "Copiar escolhas" leva junto as outras decisões. O nome da aba segue a D-EM-14; aqui ela aparece com o nome de hoje.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Versão</th><th>Data</th><th>O que mudou</th></tr></thead>
+    <tbody>
+      <tr><td class="id">1.0</td><td>19/11/2026</td><td>Primeira versão, a pedido do usuário: as três estruturas, clicáveis, com as sete telas da proposta v1.2.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<div class="foot">Estrutura do emulador no painel do cliente · v1.0 · 19/11/2026</div>
+</div>
+<script>
+(function () {
+  var CHAVE = 'taxrs-emulador-decisoes-v1';
+  function ler() { try { return JSON.parse(localStorage.getItem(CHAVE) || '{}') || {}; } catch (e) { return {}; } }
+  function gravar(o) { try { localStorage.setItem(CHAVE, JSON.stringify(o)); return true; } catch (e) { return false; } }
+
+  var ABAS = [['dados', 'Dados'], ['empresas', 'Empresas'], ['contratos', 'Contratos'], ['fonte', 'Fonte do Fisco'], ['captura', 'Captura SEFAZ'], ['credenciais', 'Credenciais do ERP'], ['usuarios', 'Usuários'], ['historico', 'Histórico']];
+  var TELAS = [['painel', 'Painel'], ['criar', 'Criar DFs'], ['lote', 'Novo lote'], ['cenarios', 'Cenários prontos'], ['unitario', 'Lançamento unitário'], ['simulado', 'Simulado'], ['execucoes', 'Execuções']];
+  var SUBA = [['painel', 'Visão geral'], ['simulado', 'Simulado'], ['criar', 'Criar DFs'], ['lote', 'Novo lote'], ['cenarios', 'Cenários prontos'], ['unitario', 'Unitário'], ['execucoes', 'Execuções']];
+  var SLUG = { painel: '', criar: '/dfs/novos', lote: '/lotes/novo', cenarios: '/cenarios', unitario: '/unitario', simulado: '/simulado', execucoes: '/execucoes' };
+  var CARAC = [
+    ['empresa', 'Empresa do grupo', 'Matriz (CNPJ …0001)', 'Sorteada entre os 3 CNPJs ativos'],
+    ['tipo', 'Direção e tipo', '60% NF-e de entrada · 20% CT-e de entrada · 20% NF-e de saída', 'Sorteado entre NF-e, CT-e e NFS-e, entrada e saída, em partes iguais'],
+    ['contra', 'Contraparte', 'Fornecedor A e Fornecedor B, do cliente', 'Fictícias: 50 fornecedores e 20 clientes [EMULADO]'],
+    ['emissao', 'Emissão', '15/10/2026', 'Entre 01/10/2026 e 31/10/2026'],
+    ['valor', 'Valor', 'R$ 10.000,00 para todos', 'Entre R$ 1.000,00 e R$ 100.000,00'],
+    ['recolh', 'Recolhimento', 'RAD, prazo de 30 dias, por cima do contrato', 'O padrão: o contrato do fornecedor']
+  ];
+
+  function b(txt, at, cls) { return '<button type="button" class="fb' + (cls ? ' ' + cls : '') + '" ' + (at || '') + '>' + txt + '</button>'; }
+  function campo(l, v, extra) { return '<div class="campo"><div class="cl"><span>' + l + '</span>' + (extra || '') + '</div><div class="cv">' + v + '</div></div>'; }
+  function tab(cab, linhas, nums, clic) {
+    var h = '<div class="table-wrap"><table><thead><tr>';
+    cab.forEach(function (c, i) { h += '<th' + (nums && nums.indexOf(i) >= 0 ? ' class="n"' : '') + '>' + c + '</th>'; });
+    h += '</tr></thead><tbody>';
+    linhas.forEach(function (l, j) {
+      h += '<tr' + (clic && clic[j] ? ' class="clic" ' + clic[j] : '') + '>';
+      l.forEach(function (c, i) { h += '<td' + (nums && nums.indexOf(i) >= 0 ? ' class="n"' : '') + '>' + c + '</td>'; });
+      h += '</tr>';
+    });
+    return h + '</tbody></table></div>';
+  }
+  function chip(c, t) { return '<span class="chip ' + c + '">' + t + '</span>'; }
+
+  // ── telas ──
+  function modo(s) {
+    var n = 'modo-' + s.p;
+    return '<div class="card"><div class="card-t">Modo da fonte</div><div class="radios">' +
+      '<label><input type="radio" name="' + n + '" checked><span><strong>Simulada</strong> · o Simulado segue os DFs novos e lança sozinho</span></label>' +
+      '<label><input type="radio" name="' + n + '"><span><strong>Replay</strong> · reproduz os fatos gravados</span></label>' +
+      '<label><input type="radio" name="' + n + '"><span><strong>Desligada</strong> · nenhum lançamento automático</span></label>' +
+      '</div><div class="acoes"><span class="nota">O emulador funciona em qualquer modo, fora da produção.</span>' + b('Salvar', 'disabled') + '</div></div>';
+  }
+  function minis() {
+    return '<div class="minis">' +
+      '<div class="mini"><div class="v">3.870</div><div class="l">lançamentos: 1.240 do Simulado, 2.630 do emulador</div></div>' +
+      '<div class="mini"><div class="v">1.000</div><div class="l">DFs criados pelo emulador</div></div>' +
+      '<div class="mini"><div class="v">12</div><div class="l">agendados pendentes</div></div>' +
+      '<div class="mini warn"><div class="v">2</div><div class="l">alertas do Simulado</div></div></div>';
+  }
+  var EXECS = [
+    ['4', '18/11/2026 15:10', 'Lote · 5 ações · 1.000 DFs · 2.630 lançamentos', chip('red', 'Divergente') + ' 998 atingidos, 2 divergentes'],
+    ['3', '18/11/2026 14:52', 'Criar DFs · 1.000 NF-e e CT-e', chip('ok', 'Atingido')],
+    ['2', '17/11/2026 10:05', 'Unitário · C07 no DF …0004', chip('ok', 'Atingido')],
+    ['1', '17/11/2026 09:40', 'Cenário pronto · SIM em 200 DFs', chip('warn', 'Aguardando') + ' 12 agendados']
+  ];
+  function listaExec(s, alvo) {
+    return tab(['#', 'Quando', 'O quê', 'Conferência'], EXECS, null, EXECS.map(function (x) { return alvo + ' data-exec="' + x[0] + '" tabindex="0"'; }));
+  }
+  function painel(s, k) {
+    return minis() + '<div class="acoes esq">' + b('Criar DFs', 'data-go="criar"', 'pri') + b('Novo lote', 'data-go="lote" data-step="1"') + b('Lançamento unitário', 'data-go="unitario"') + '</div>' +
+      '<h4>Execuções recentes</h4>' + listaExec(s, 'data-go="execucoes"');
+  }
+  function conferencia() {
+    return '<h4>Conferência da execução 4 · DF a DF</h4>' + tab(['DF', 'Ações', 'Ente', 'Esperado', 'Encontrado', 'Situação'], [
+      ['…0001', '1 e 4', 'CBS', 'utilized R$ 1.000,00', 'utilized R$ 1.000,00', chip('ok', 'Atingido')],
+      ['…0002', '2', 'CBS e IBS', 'not_appropriable', 'not_appropriable', chip('ok', 'Atingido')],
+      ['…0007', '3', 'CBS', '<code>capur_cbs_divergente</code>', 'nenhuma inconsistência', chip('red', 'Divergente')]
+    ]) + '<div class="acoes">' + b('Exportar CSV', '', 'sec') + b('Baixar o lote em JSON', '', 'sec') + '</div>';
+  }
+  function execucoes(s) {
+    return '<h4>Execuções</h4>' + listaExec(s, 'data-go="execucoes"') + (s.exec ? conferencia() : '<p class="dica">Clique numa execução para ver a conferência.</p>');
+  }
+  function criar(s, k) {
+    var h = '<div class="campos">' + campo('Quantidade', '1.000');
+    CARAC.forEach(function (c) {
+      var v = s.tg[c[0]] || 'p';
+      var t = '<span class="tg" role="group" aria-label="' + c[1] + '"><button type="button" data-tg="' + c[0] + '" data-v="p" class="' + (v === 'p' ? 'on' : '') + '" aria-pressed="' + (v === 'p') + '">Pré-definido</button><button type="button" data-tg="' + c[0] + '" data-v="a" class="' + (v === 'a' ? 'on' : '') + '" aria-pressed="' + (v === 'a') + '">' + (c[0] === 'recolh' ? 'Padrão' : 'Aleatório') + '</button></span>';
+      h += campo(c[1], v === 'p' ? c[2] : c[3], t);
+    });
+    h += campo('CBS e IBS', 'As de 2026: 0,9% e 0,1%') + campo('Semente', '4721') + '</div>';
+    var al = (s.tg.valor || 'p') === 'a';
+    var vs = al ? [['R$ 10.000,00', 'R$ 90,00', 'R$ 10,00'], ['R$ 2.000,00', 'R$ 18,00', 'R$ 2,00'], ['R$ 50.000,00', 'R$ 450,00', 'R$ 50,00']] : [['R$ 10.000,00', 'R$ 90,00', 'R$ 10,00'], ['R$ 10.000,00', 'R$ 90,00', 'R$ 10,00'], ['R$ 10.000,00', 'R$ 90,00', 'R$ 10,00']];
+    h += '<h4>Prévia · primeiros de 1.000</h4>' + tab(['DF', 'Tipo', 'Valor', 'CBS', 'IBS'], [
+      ['…0001', 'NF-e · entrada'].concat(vs[0]), ['…0002', 'CT-e · entrada'].concat(vs[1]), ['…0003', 'NF-e · saída'].concat(vs[2])], [2, 3, 4]);
+    if (k.inline) return h;
+    return h + '<div class="acoes"><span class="nota">Nada é criado antes de confirmar. 800 de entrada, 200 de saída.</span>' + b('Criar 1.000 DFs', 'data-feito="criados"') + b('Criar e seguir para as ações', k.seguir, 'pri') + '</div>';
+  }
+  function passos(s, n, extra) {
+    var nomes = ['DFs', 'Ações', 'Quando', 'Prévia', 'Conferência'].slice(0, n), h = '<div class="passos">';
+    nomes.forEach(function (x, i) { h += '<button type="button" class="passo' + (s.step === i + 1 ? ' on' : '') + '" data-step="' + (i + 1) + '">' + (i + 1) + ' · ' + x + '</button>'; });
+    return h + '</div>';
+  }
+  function origem(s) {
+    var o = s.orig, op = [['filtrar', 'Filtrar os DFs do cliente'], ['criar', 'Criar DFs'], ['dois', 'Os dois']];
+    return '<div class="acoes esq">' + op.map(function (x) { return b(x[1], 'data-orig="' + x[0] + '" aria-pressed="' + (o === x[0]) + '"', o === x[0] ? 'on' : ''); }).join('') + '</div>';
+  }
+  function filtro() {
+    return '<div class="campos">' + campo('Empresa do grupo', 'Todas') + campo('Direção', 'Entrada') + campo('Tributo', 'CBS e IBS') + campo('Competência', '10/2026') + campo('Situação no ente', 'A apropriar') + '</div><p class="dica">O filtro pega 1.012 DFs; 12 já estão glosados no ente. 1.000 elegíveis.</p>';
+  }
+  function lote(s, k) {
+    var n = k.cinco ? 5 : 4, h = passos(s, n);
+    if (s.step === 1) {
+      h += origem(s);
+      if (s.orig !== 'criar') h += filtro();
+      if (s.orig !== 'filtrar') h += k.cinco ? '<h4>DFs novos</h4>' + criar(s, { inline: true }) : '<div class="card"><div class="card-t">DFs novos</div><p class="dica">1.000 DFs, com as características definidas em Criar DFs.</p>' + b('Definir os DFs', 'data-go="criar"') + '</div>';
+    } else if (s.step === 2) {
+      h += tab(['#', 'Ação', 'Base', '%', 'DFs'], [
+        ['1', '<strong>RE-05</strong> Apropriar totalmente', 'o lote', '70%', '700'],
+        ['2', '<strong>RE-09</strong> Glosar antes da apropriação', 'o lote', '10%', '100'],
+        ['3', '<strong>RE-02</strong> Divergir o valor, só na CBS, 10% acima', 'o lote', '5%', '50'],
+        ['4', '<strong>RE-07</strong> Usar todo o saldo', 'ação 1', '50%', '350'],
+        ['5', '<strong>RE-08</strong> Usar 40% do saldo', 'ação 1', '20%', '140']], [3, 4]) +
+        '<div class="acoes esq">' + b('Adicionar ação', '', 'sec') + (k.cinco ? b('Usar um cenário pronto', 'data-cen="1"', 'sec') : b('Usar um cenário pronto', 'data-go="cenarios"', 'sec')) + '</div>' +
+        (k.cinco && s.cen ? '<h4>Cenários prontos</h4>' + cenTab() : '');
+    } else if (s.step === 3) {
+      h += '<div class="campos">' + campo('Ações 1 a 3', 'Agora') + campo('Ação 4', 'Espalhada entre 01/11/2026 e 30/11/2026') + campo('Ação 5', 'Agendada para 15/12/2026') + '</div>';
+    } else if (s.step === 4) {
+      h += tab(['Ação', 'DFs', 'O que o emulador lança', 'O que a plataforma mostra'], [
+        ['1 · RE-05 apropriar', '210', 'C02 · IBS-05', 'credit.appropriated'],
+        ['1 e 4 · apropriar e usar tudo', '350', 'C02 · IBS-05, depois C07 · IBS-06', 'credit.utilized; disponível zero'],
+        ['1 e 5 · apropriar e usar 40%', '140', 'C02 · IBS-05, depois C07 · IBS-06 de 40%', '60% disponível'],
+        ['2 · RE-09 glosar', '100', 'A glosa, nos dois entes', 'credit.disallowed'],
+        ['3 · RE-02 divergir, CBS', '50', 'O registro na CBS, 10% acima', '<code>capur_cbs_divergente</code>'],
+        ['Sem lançamento', '150', '—', '—']], [1]) +
+        '<div class="acoes"><span class="nota">Digite 1000 para confirmar.</span>' + b('Gravar 2.630 lançamentos', k.gravar, 'pri') + '</div>';
+    } else {
+      h += '<div class="msg">Execução 4 gravada. A conferência roda sozinha.</div>' + conferencia();
+    }
+    if (s.step < 4) h += '<div class="acoes">' + (s.step > 1 ? b('Voltar', 'data-step="' + (s.step - 1) + '"') : '') + b('Avançar', 'data-step="' + (s.step + 1) + '"', 'pri') + '</div>';
+    return h;
+  }
+  function cenTab() {
+    return tab(['Id', 'História', ''], [
+      ['SIM', 'Proporções do Simulado, de uma vez', b('Usar', 'data-step="2"')],
+      ['RT-A1', 'Fornecedor recolhe; crédito apropriado e usado', b('Usar', 'data-step="2"')],
+      ['RT-A2', 'Cliente paga pelo RAD', b('Usar', 'data-step="2"')],
+      ['RT-F1', 'Cliente recolhe pelo PCONT', b('Usar', 'data-step="2"')],
+      ['RT-F2', 'Compensação com créditos', b('Usar', 'data-step="2"')]]) + '<p class="dica">E os outros 13 roteiros do MassGen, na seção 6 da proposta.</p>';
+  }
+  function cenarios(s) {
+    return '<p class="dica">18 cenários prontos: os 17 roteiros do MassGen e as proporções do Simulado. "Usar" leva ao novo lote, com as ações do cenário.</p>' +
+      tab(['Id', 'História', ''], [
+        ['SIM', 'Proporções do Simulado, de uma vez', b('Usar no lote', 'data-go="lote" data-step="2"')],
+        ['RT-A1', 'Fornecedor recolhe; crédito apropriado e usado', b('Usar no lote', 'data-go="lote" data-step="2"')],
+        ['RT-A2', 'Cliente paga pelo RAD', b('Usar no lote', 'data-go="lote" data-step="2"')],
+        ['RT-F1', 'Cliente recolhe pelo PCONT', b('Usar no lote', 'data-go="lote" data-step="2"')],
+        ['RT-F2', 'Compensação com créditos', b('Usar no lote', 'data-go="lote" data-step="2"')]]);
+  }
+  function unitario(s) {
+    return '<div class="campos">' + campo('DF', '…0004 · entrada · Fornecedor A') + campo('CBS · Receita Federal', 'appropriated R$ 2.000,00 · available R$ 1.500,00') + campo('IBS · Comitê Gestor', 'não utilizado R$ 1.000,00') + '</div>' +
+      '<h4>Lançamento</h4><div class="campos">' + campo('Ente', 'Receita Federal') + campo('Lançamento', 'C07 Utilização') + campo('Valor', 'R$ 1.500,00 (o disponível)') + campo('Data', 'Agora') + '</div>' +
+      '<h4>Antes e depois</h4><div class="campos">' + campo('available', 'R$ 1.500,00 → zero') + campo('Evento', 'credit.utilized') + campo('Inconsistência', 'nenhuma') + '</div>' +
+      '<div class="acoes"><span class="nota">Forçar: desligado</span>' + b('Lançar', 'data-feito="lancado"', 'pri') + '</div>';
+  }
+  function simulado(s) {
+    return '<div class="minis"><div class="mini"><div class="v">14:00</div><div class="l">última emissão, 18/11/2026</div></div><div class="mini warn"><div class="v">2</div><div class="l">alertas da conferência</div></div></div>' +
+      '<div class="acoes esq">' + b('Avançar até agora', 'data-feito="avancado"', 'pri') + '<span class="nota">No ambiente local não há cron: o botão emite o que já venceu.</span></div>' +
+      '<h4>Plano por DF</h4>' + tab(['DF', 'Já saiu', 'O que vem', 'Quando'], [
+        ['…0101', 'CAPUR conciliada', 'Pagamento e apropriação', '30/11/2026'],
+        ['…0102', 'CAPUR divergente', '—', 'parado pelo plano'],
+        ['…0103', 'Pagamento e apropriação', 'Utilização de metade', '30/12/2026']]) +
+      '<h4>Proporções, fixas</h4><p class="dica">CAPUR: 70% conciliada, 20% divergente, 10% pendente. Créditos: 85% apropriados com o pagamento, metade usados 30 dias depois; 3% glosados.</p>';
+  }
+  function tela(s, k) {
+    var v = s.view;
+    if (v === 'criar') return criar(s, k);
+    if (v === 'lote') return lote(s, k);
+    if (v === 'cenarios') return cenarios(s);
+    if (v === 'unitario') return unitario(s);
+    if (v === 'simulado') return simulado(s);
+    if (v === 'execucoes') return execucoes(s);
+    return painel(s, k);
+  }
+  function cliente(s) {
+    var h = '<div>' + b('← Clientes', 'disabled', 'sec') + '</div><div class="cl-h"><strong>Cliente de teste</strong><span class="selo">LIVE</span></div>' +
+      '<div class="cl-sub"><code>cli_teste</code> · 3 CNPJ(s) ativo(s) · 2 contrato(s) · 1 credencial(is) ativa(s)</div><div class="ctabs" role="tablist">';
+    ABAS.forEach(function (a) { h += '<button type="button" role="tab" aria-selected="' + (s.tab === a[0]) + '" class="ctab' + (s.tab === a[0] ? ' on' : '') + '" data-tab="' + a[0] + '">' + a[1] + '</button>'; });
+    return h + '</div>';
+  }
+  function outraAba(s) {
+    var n = ABAS.filter(function (a) { return a[0] === s.tab; })[0][1];
+    return '<div class="vazio">Aba ' + n + ': como hoje. O módulo fica na aba Fonte do Fisco.</div>';
+  }
+  var FEITO = { criados: '1.000 DFs criados. Eles já aparecem no portal, marcados como emulados.', lancado: 'Lançamento gravado. A conferência marcou Atingido.', avancado: 'Emitido o que já tinha vencido: 6 lançamentos.' };
+
+  // ── as três estruturas ──
+  var R = {
+    A: {
+      url: function (s) { return '/admin/clientes/cli_teste'; },
+      corpo: function (s) {
+        var h = cliente(s);
+        if (s.tab !== 'fonte') return h + outraAba(s);
+        h += '<div class="stabs" role="tablist">';
+        SUBA.forEach(function (a) { h += '<button type="button" role="tab" aria-selected="' + (s.view === a[0]) + '" class="stab' + (s.view === a[0] ? ' on' : '') + '" data-go="' + a[0] + '">' + a[1] + '</button>'; });
+        h += '</div>';
+        var k = { seguir: 'data-go="lote" data-step="2" data-orig="criar"', gravar: 'data-go="execucoes" data-exec="4" data-feito="gravado"' };
+        return h + (s.view === 'painel' ? modo(s) : '') + tela(s, k);
+      }
+    },
+    B: {
+      url: function (s) {
+        if (s.view === 'cliente') return '/admin/clientes/cli_teste';
+        return '/admin/clientes/cli_teste/emulador' + (s.view === 'execucoes' && s.exec ? '/execucoes/' + s.exec : SLUG[s.view]);
+      },
+      corpo: function (s) {
+        if (s.view === 'cliente') {
+          var h = cliente(s);
+          if (s.tab !== 'fonte') return h + outraAba(s);
+          return h + modo(s) + '<div class="card"><div class="card-t">Emulador</div>' + minis() +
+            '<p class="dica">Última execução: 4, em 18/11/2026 15:10, lote com 1.000 DFs, Divergente em 2.</p><div class="acoes">' + b('Ver o Simulado', 'data-go="simulado"', 'sec') + b('Abrir o emulador', 'data-go="painel"', 'pri') + '</div></div>';
+        }
+        var m = '<nav class="ws-menu" aria-label="Emulador">';
+        TELAS.forEach(function (t) { m += '<button type="button" class="mi' + (s.view === t[0] ? ' on' : '') + '" data-go="' + t[0] + '"' + (t[0] === 'lote' ? ' data-step="1"' : '') + (s.view === t[0] ? ' aria-current="page"' : '') + '>' + t[1] + '</button>'; });
+        m += '</nav>';
+        var k = { seguir: 'data-go="lote" data-step="2" data-orig="criar"', gravar: 'data-go="execucoes" data-exec="4" data-feito="gravado"' };
+        return '<div class="bc"><button type="button" class="lnk" data-go="cliente">Cliente de teste</button> › Fonte do Fisco › <strong>Emulador</strong> · ' + TELAS.filter(function (t) { return t[0] === s.view; })[0][1] + '</div>' +
+          '<div class="ws">' + m + '<div class="ws-main">' + tela(s, k) + '</div></div>';
+      }
+    },
+    C: {
+      url: function (s) { return s.view === 'assistente' ? '/admin/clientes/cli_teste/execucoes/nova' : '/admin/clientes/cli_teste'; },
+      corpo: function (s) {
+        var h;
+        if (s.view === 'assistente') {
+          h = '<div class="as-h"><strong>Nova execução</strong>' + b('Fechar', 'data-go="inicio"', 'sec') + '</div>' +
+            lote(s, { cinco: true, gravar: 'data-step="5"' });
+        } else {
+          h = cliente(s);
+          if (s.tab !== 'fonte') return h + outraAba(s);
+          h += '<div class="barra-c"><span class="info">Modo: <strong>Simulada</strong> ' + b('Trocar', 'data-drawer="modo"', 'sec') + '</span><span class="info warn">Simulado: 2 alertas ' + b('Abrir', 'data-drawer="simulado"', 'sec') + '</span><span class="dir">' + b('Nova execução', 'data-go="assistente" data-step="1"', 'pri') + '</span></div>' +
+            '<div class="acoes esq">' + b('Execuções', 'data-lista="exec" aria-pressed="' + (s.lista !== 'dfs') + '"', s.lista !== 'dfs' ? 'on' : '') + b('DFs do cliente', 'data-lista="dfs" aria-pressed="' + (s.lista === 'dfs') + '"', s.lista === 'dfs' ? 'on' : '') + '</div>';
+          if (s.lista === 'dfs') {
+            h += tab(['DF', 'Tipo', 'Situação no ente', ''], [
+              ['…0004', 'NF-e · entrada · emulado', 'appropriated · available R$ 1.500,00', b('Lançar', 'data-drawer="unitario"')],
+              ['…0005', 'CT-e · entrada · emulado', 'a apropriar', b('Lançar', 'data-drawer="unitario"')],
+              ['…0006', 'NF-e · saída', 'débito em aberto', b('Lançar', 'data-drawer="unitario"')]]);
+          } else {
+            h += listaExec(s, 'data-drawer="conf"');
+          }
+        }
+        if (s.drawer) {
+          var d = { unitario: ['Lançamento unitário', unitario(s)], simulado: ['Simulado', simulado(s)], conf: ['Execução 4', conferencia()], modo: ['Modo da fonte', modo(s)] }[s.drawer];
+          h += '<div class="drw-fundo" data-fechar="1"></div><aside class="drw" aria-label="' + d[0] + '"><div class="drw-h"><strong>' + d[0] + '</strong>' + b('Fechar', 'data-fechar="1"', 'sec') + '</div>' + d[1] + '</aside>';
+        }
+        return h;
+      }
+    }
+  };
+  var INICIO = { A: { view: 'painel', tab: 'fonte' }, B: { view: 'cliente', tab: 'fonte' }, C: { view: 'inicio', tab: 'fonte' } };
+  var EST = {};
+  function render(L) {
+    var s = EST[L], fr = document.getElementById('fr-' + L);
+    var msg = s.msg ? '<div class="msg">' + s.msg + '</div>' : '';
+    fr.innerHTML = '<div class="fr-url"><span class="pt"></span><span class="u">admin.splithub · ' + R[L].url(../s) + '</span></div>' +
+      '<div class="fr-top"><div><span class="eb">SplitHub</span><span class="nm">Administração da plataforma</span></div><div class="fr-nav">' +
+      b('Clientes', 'aria-current="page"', 'on') + b('Administradores', 'disabled') + b('Minha conta', 'disabled') + '</div></div>' +
+      '<div class="fr-main">' + msg + R[L].corpo(s) + '</div>';
+  }
+  ['A', 'B', 'C'].forEach(function (L) {
+    var i = INICIO[L];
+    EST[L] = { p: L, view: i.view, tab: i.tab, step: 1, orig: 'filtrar', tg: {}, exec: null, drawer: null, lista: 'exec', cen: false, msg: '' };
+    var fr = document.getElementById('fr-' + L);
+    fr.addEventListener('click', function (ev) {
+      var el = ev.target.closest('button, tr.clic, .drw-fundo');
+      if (!el || el.disabled || !fr.contains(el)) return;
+      var s = EST[L], a = function (n) { return el.getAttribute(n); };
+      s.msg = '';
+      if (a('data-tab')) { s.tab = a('data-tab'); s.view = INICIO[L].view; s.drawer = null; }
+      if (a('data-go')) { s.view = a('data-go'); s.drawer = null; if (s.view !== 'execucoes') s.exec = null; }
+      if (a('data-step')) s.step = +a('data-step');
+      if (a('data-orig')) s.orig = a('data-orig');
+      if (a('data-exec')) s.exec = a('data-exec');
+      if (a('data-tg')) s.tg[a('data-tg')] = a('data-v');
+      if (a('data-lista')) s.lista = a('data-lista');
+      if (a('data-cen')) s.cen = !s.cen;
+      if (a('data-drawer')) s.drawer = a('data-drawer');
+      if (a('data-fechar')) s.drawer = null;
+      if (a('data-feito')) s.msg = a('data-feito') === 'gravado' ? 'Execução 4 gravada. A conferência roda sozinha.' : FEITO[a('data-feito')];
+      if (s.view === 'lote' && !a('data-step') && a('data-go')) s.step = 1;
+      render(L);
+    });
+    fr.addEventListener('keydown', function (ev) {
+      if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches && ev.target.matches('tr.clic')) { ev.preventDefault(); ev.target.click(); }
+    });
+    render(L);
+  });
+
+  // ── trocar de proposta e escolher ──
+  var bs = [].slice.call(document.querySelectorAll('.seg button'));
+  function mostrar(L) {
+    bs.forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-p') === L ? 'true' : 'false'); });
+    ['A', 'B', 'C'].forEach(function (x) { document.getElementById('prop-' + x).hidden = x !== L; });
+  }
+  bs.forEach(function (x) { x.addEventListener('click', function () { mostrar(x.getAttribute('data-p')); try { history.replaceState(null, '', '#' + x.getAttribute('data-p')); } catch (e) {} }); });
+  function marcarEscolha() {
+    var atual = (ler()['D-EM-29'] || {}).op;
+    document.querySelectorAll('[data-escolher]').forEach(function (x) {
+      var L = x.getAttribute('data-escolher');
+      x.textContent = atual === L ? 'Proposta ' + L + ' escolhida' : 'Escolher a proposta ' + L;
+    });
+    return atual;
+  }
+  document.querySelectorAll('[data-escolher]').forEach(function (x) {
+    x.addEventListener('click', function () {
+      var L = x.getAttribute('data-escolher'), o = ler(), ant = o['D-EM-29'] || {};
+      o['D-EM-29'] = { op: L, nota: ant.nota || '' };
+      var ok = gravar(o), m = x.parentNode.querySelector('.esc-msg');
+      m.textContent = ok ? 'Proposta ' + L + ' escolhida neste navegador. A D-EM-29, na seção 14 da proposta, já mostra a escolha; lá, "Copiar escolhas" leva junto as outras decisões.'
+        : 'O navegador não deixou guardar. Escolha a ' + L + ' na D-EM-29, na seção 14 da proposta.';
+      marcarEscolha();
+    });
+  });
+  var h = (location.hash || '').replace('#', '');
+  mostrar(['A', 'B', 'C'].indexOf(h) >= 0 ? h : (marcarEscolha() || 'A'));
+  marcarEscolha();
+})();
+</script>
+</body>
+</html>

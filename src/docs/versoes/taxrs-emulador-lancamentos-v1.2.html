@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emulador de lançamentos dos entes · v1.2</title>
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 800px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.callout.red { border-color: var(--red); background: var(--red-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 9px 13px; border-bottom: 1px solid var(--brd); vertical-align: top; color: var(--txt2); background: var(--sur); }
+td strong { color: var(--txt1); }
+tbody tr:last-child td { border-bottom: none; }
+td.grp { background: var(--sur2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); }
+td.id { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); white-space: nowrap; }
+code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--mono); padding: 1px 5px; border-radius: 4px; color: var(--txt1); overflow-wrap: anywhere; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 14px 0 18px; }
+@media (max-width: 860px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.kpi-v { font-size: 22px; font-weight: 800; color: var(--txt1); line-height: 1.2; }
+.kpi-l { font-size: 11.5px; color: var(--txt3); }
+.kpi.ok .kpi-v { color: var(--green); } .kpi.warn .kpi-v { color: var(--amber); }
+.kpi.info .kpi-v { color: var(--blue); } .kpi.red .kpi-v { color: var(--red); }
+.barra { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 6px 0 4px; background: var(--sur2); }
+.barra span { display: block; height: 100%; }
+.barra .ok { background: var(--green); } .barra .warn { background: var(--amber); } .barra .info { background: var(--blue); } .barra .red { background: var(--red); }
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+.filtros button { font: inherit; font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt2); cursor: pointer; }
+.filtros button[aria-pressed="true"] { background: var(--txt1); color: var(--bg); border-color: var(--txt1); }
+tr.oculta { display: none; }
+.ondas { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 14px 0; }
+.onda { background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.onda.crit { border-left-color: var(--red); }
+.onda.dep { border-left-color: var(--gray); }
+.onda-h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; margin-bottom: 6px; }
+.onda-n { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.onda.crit .onda-n { color: var(--red); }
+.onda.dep .onda-n { color: var(--gray); }
+.onda-t { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.onda-q { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.onda ul.plain { margin-left: 16px; }
+.onda ul.plain li { font-size: 12.5px; }
+.onda .pronto { font-size: 12px; color: var(--txt2); border-top: 1px dashed var(--brd); margin-top: 8px; padding-top: 8px; }
+.ids { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); }
+.foot { margin-top: 40px; font-size: 11px; color: var(--txt3); text-align: center; }
+.back { display: inline-block; font-size: 12px; color: var(--txt3); text-decoration: none; margin-bottom: 18px; }
+.back:hover { color: var(--txt1); }
+
+.gaps { display: flex; flex-wrap: wrap; gap: 4px; }
+.lv { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: var(--sur2); color: var(--txt1); border: 1px solid var(--brd); white-space: nowrap; text-decoration: none; }
+.lv:hover { border-color: var(--amber); }
+.doc a:not([class]) { color: var(--blue); text-underline-offset: 2px; }
+.sub { display: block; font-size: 11.5px; line-height: 1.45; color: var(--txt3); margin-top: 3px; }
+td.nome { min-width: 190px; }
+td.etapa { min-width: 120px; }
+#resultados th { white-space: normal; }
+.mudo { font-size: 11px; font-style: italic; color: var(--txt3); }
+td.wrap { min-width: 220px; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr[id] { scroll-margin-top: 20px; }
+tr:target td { background: var(--amber-d); }
+.fluxo { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 14px 0; }
+@media (max-width: 860px) { .fluxo { grid-template-columns: minmax(0, 1fr); } }
+.passo { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.passo.dest { border-color: var(--teal); background: var(--teal-d); }
+.passo .pn { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; color: var(--teal); }
+.passo .pt { font-size: 13px; font-weight: 700; color: var(--txt1); margin: 2px 0 4px; }
+.passo .pd { font-size: 12px; color: var(--txt2); line-height: 1.5; }
+.mock { border: 1px dashed var(--txt3); border-radius: 10px; background: var(--sur2); padding: 14px; margin: 14px 0; min-width: 0; }
+.mock-bar { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; margin-bottom: 10px; font-size: 11px; color: var(--txt3); }
+.mock-bar strong { color: var(--txt1); font-size: 13px; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.step { font-size: 11.5px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt2); }
+.step.on { background: var(--txt1); color: var(--bg); border-color: var(--txt1); }
+.campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.campo { background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; padding: 7px 10px; min-width: 0; }
+.campo .cl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.campo .cv { font-size: 12.5px; color: var(--txt1); overflow-wrap: anywhere; }
+.campo.off .cv { color: var(--txt3); text-decoration: line-through; }
+.mock h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); margin: 14px 0 6px; }
+.mock .table-wrap { margin: 6px 0; }
+.mock-acoes { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; margin-top: 12px; }
+.mock-acoes .nota { font-size: 11.5px; color: var(--txt3); margin-right: auto; }
+.mbtn { font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); }
+.mbtn.pri { background: var(--blue); border-color: var(--blue); color: var(--sur); }
+.dc-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 12px; margin: 12px 0 16px; }
+.dc-prog { font-size: 13px; color: var(--txt2); margin-right: auto; }
+.dc-prog strong { color: var(--txt1); }
+.dc-btn { font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur2); color: var(--txt1); cursor: pointer; }
+.dc-btn:hover { border-color: var(--teal); }
+.dc-btn.pri { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+.dc-msg { flex-basis: 100%; font-size: 12px; color: var(--teal); min-height: 1em; }
+.dc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 12px; }
+fieldset.dc { border: 1px solid var(--brd); border-radius: 8px; background: var(--sur); padding: 12px 14px; margin: 0; min-width: 0; }
+fieldset.dc.ok { border-color: var(--teal); }
+fieldset.dc.decidida { background: var(--sur2); }
+fieldset.dc legend { padding: 0 6px; font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--teal); margin-right: 6px; }
+.dc-op { display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; border-radius: 6px; font-size: 13px; line-height: 1.5; color: var(--txt2); cursor: pointer; }
+.dc-op:hover { background: var(--sur2); }
+.dc-op input { margin-top: 4px; flex-shrink: 0; accent-color: var(--teal); }
+.dc-op input:checked + span { color: var(--txt1); }
+.dc-op .rec-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--teal); margin-left: 4px; white-space: nowrap; }
+.dc-rec { font-size: 12.5px; color: var(--txt2); line-height: 1.5; border-top: 1px dashed var(--brd); margin-top: 8px; padding-top: 8px; }
+.dc-rec .rl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); margin-right: 6px; }
+.dc-nota { display: block; margin-top: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.dc-nota textarea { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 13px; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--txt1); background: var(--bg); border: 1px solid var(--brd); border-radius: 6px; padding: 6px 8px; resize: vertical; box-sizing: border-box; }
+#dc-saida { display: block; width: 100%; min-height: 120px; margin-top: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--txt1); background: var(--sur2); border: 1px solid var(--brd); border-radius: 6px; padding: 8px 10px; box-sizing: border-box; }
+.acoes-n td.n strong { color: var(--txt1); }
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section { overflow-wrap: anywhere; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="../prds.html#sec-taxrs">← Hub de PRDs</a>
+<div class="eyebrow">tax-rs · Modo Live · Proposta</div>
+<h1>Emulador de lançamentos da Receita Federal e do Comitê Gestor</h1>
+<p class="subtitle">Evolução da aba Fonte do Fisco, no cadastro do cliente do painel administrativo do tax-rs, com dois modelos. O Simulado, automático, segue os DFs novos e lança sozinho, e é revisto aqui. O emulador, manual, recebe um lote de DFs, filtrados entre os do cliente ou criados na hora, e várias ações, cada uma com o percentual dos DFs que atinge. Os dois gravam o que a Receita Federal (CBS) e o Comitê Gestor (IBS) fariam, pela mesma porta que os conectores reais vão usar.</p>
+<div class="meta-bar">
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.2</span></span>
+  <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">19/11/2026</span></span>
+  <span class="meta-pill"><span class="meta-label">Base</span><span class="meta-val"><code>main</code> do tax-rs no <code>a831ad9</code></span></span>
+  <span class="meta-pill"><span class="meta-label">Fontes</span><span class="meta-val">APIs da CBS e do IBS conferidas em 18/11/2026</span></span>
+  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">4 de 29</span></span>
+</div>
+<nav class="toc">
+  <div class="toc-title">Conteúdo</div>
+  <ul class="toc-list">
+    <li><a href="#s1"><span class="toc-num">1</span>Resumo</a></li>
+    <li><a href="#s2"><span class="toc-num">2</span>Hoje e a proposta</a></li>
+    <li><a href="#s3"><span class="toc-num">3</span>Os 51 lançamentos que a documentação prevê</a></li>
+    <li><a href="#s4"><span class="toc-num">4</span>Os 27 resultados que o administrador escolhe</a></li>
+    <li><a href="#s5"><span class="toc-num">5</span>O lote: DFs criados ou filtrados, várias ações</a></li>
+    <li><a href="#s6"><span class="toc-num">6</span>Cenários prontos</a></li>
+    <li><a href="#s7"><span class="toc-num">7</span>Lançamento unitário</a></li>
+    <li><a href="#s8"><span class="toc-num">8</span>O modo Simulado, revisto</a></li>
+    <li><a href="#s9"><span class="toc-num">9</span>Conferência do resultado</a></li>
+    <li><a href="#s10"><span class="toc-num">10</span>Telas</a></li>
+    <li><a href="#s11"><span class="toc-num">11</span>Regras e travas</a></li>
+    <li><a href="#s12"><span class="toc-num">12</span>Impacto no tax-rs</a></li>
+    <li><a href="#s13"><span class="toc-num">13</span>Etapas da construção</a></li>
+    <li><a href="#s14"><span class="toc-num">14</span>Decisões</a></li>
+    <li><a href="#s15"><span class="toc-num">15</span>Documentação conferida na fonte em 18/11/2026</a></li>
+    <li><a href="#s16"><span class="toc-num">16</span>Fontes e histórico</a></li>
+  </ul>
+</nav>
+<section class="section" id="s1">
+  <div class="sec-hdr"><span class="sec-num">1</span><span class="sec-title">Resumo</span></div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-v">51</div><div class="kpi-l">lançamentos na documentação (27 da CBS, 24 do IBS)</div></div>
+    <div class="kpi ok"><div class="kpi-v">17</div><div class="kpi-l">o tax-rs já representa</div></div>
+    <div class="kpi warn"><div class="kpi-v">14</div><div class="kpi-l">representa em parte</div></div>
+    <div class="kpi red"><div class="kpi-v">20</div><div class="kpi-l">não existem no tax-rs</div></div>
+    <div class="kpi info"><div class="kpi-v">27</div><div class="kpi-l">resultados para escolher</div></div>
+  </div>
+  <div class="barra" role="img" aria-label="17 já existem, 14 em parte, 20 novos"><span class="ok" style="width:33.33%"></span><span class="warn" style="width:27.45%"></span><span class="red" style="width:39.22%"></span></div>
+  <p>33% já existem · 28% em parte · 39% novos, contando os 51 lançamentos da CBS e do IBS.</p>
+  <div class="callout ok"><div class="ct">O que a proposta entrega</div>
+    <ul class="plain">
+      <li><strong>Dois modelos lado a lado.</strong> O Simulado continua sendo o automático: segue os DFs novos e lança sozinho, e é revisto para o crédito sair de "a apropriar" e o saldo andar (seção 8). O emulador é o manual: o administrador monta um lote e diz o que acontece com ele.</li>
+      <li><strong>O lote não precisa nomear DFs.</strong> O administrador filtra (competência, direção, tributo, fornecedor, situação, entre outros) e empilha ações, cada uma com o percentual dos DFs que atinge: 70% apropriados, 10% glosados e, dos apropriados, metade com todo o saldo usado, por exemplo. São 27 resultados para escolher.</li>
+      <li><strong>O emulador também cria DFs.</strong> Quantos, de que tipos e com que valores, cada característica pré-definida ou aleatória, com semente. O DF criado entra pela entrada interna do razão, a mesma do seed e da captura SEFAZ, marcado como emulado (seção 5).</li>
+      <li><strong>O resto do tax-rs reage como reagiria ao ente real.</strong> Os lançamentos entram pela porta de fatos do serviço <code>tax-authority</code>, a mesma dos conectores reais; o razão, a conciliação, as inconsistências e os eventos da API da plataforma não sabem que é emulação.</li>
+      <li><strong>Três formas de usar o emulador:</strong> o lote com várias ações, os cenários prontos e o lançamento unitário, um DF por vez.</li>
+      <li><strong>Cada execução se confere sozinha.</strong> DF a DF, a aba diz se o resultado pedido aconteceu: saldos, eventos e inconsistências.</li>
+    </ul>
+  </div>
+  <div class="callout warn"><div class="ct">O que pesa</div>
+    <ul class="plain">
+      <li><strong>O Simulado de hoje concilia a CAPUR e a CFIN, mas o crédito não sai de "a apropriar".</strong> O código mostra cinco causas (seção 8); no Live local, o cron que emite a apropriação nem roda. A regra agora é do usuário: pagou o imposto, o crédito é apropriado (D-EM-21).</li>
+      <li><strong>34 dos 51 lançamentos não existem ou existem em parte no tax-rs</strong>, e 12 dos 19 eventos de crédito e débito da API da plataforma não saem de nenhum fato hoje. A E1 e a E2 rodam só com o que existe: 11 resultados e 4 cenários prontos. A E3 traz o resto.</li>
+      <li><strong>A área admin do tax-rs não vê dado fiscal</strong> (D15). Escolher DFs exige ver chave e valor: a D-EM-04 propõe a exceção fora da produção, só nesta aba.</li>
+      <li><strong>6 lançamentos não têm evento na API da plataforma</strong> (D08, IBS-16, IBS-18, IBS-20, IBS-23 e IBS-24): a emulação mostra o efeito no saldo, mas a API ainda não diz como publicá-lo.</li>
+      <li><strong>4 de 29 decisões tomadas.</strong> As D-EM-20, 22, 23 e 24 travam a E0; as D-EM-04, 25, 26, 27 e 29, a E1; a D-EM-02, a E3. Escolha as abertas na <a href="#s14">seção 14</a>.</li>
+    </ul>
+  </div>
+</section>
+<section class="section" id="s2">
+  <div class="sec-hdr"><span class="sec-num">2</span><span class="sec-title">Hoje e a proposta</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Ponto</th><th>Hoje</th><th>Com o emulador</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Modos da fonte</strong></td><td>Simulada, Replay ou Desligada (na produção, só Desligada)</td><td>Os mesmos três (D-EM-05). O Simulado continua automático e é revisto; o emulador funciona ao lado, em qualquer modo, fora da produção</td></tr>
+      <tr><td><strong>De onde vêm os DFs</strong></td><td>Do ERP, pela API; da captura SEFAZ; do seed</td><td>Também do emulador: criados na aba, com quantidade, tipos e valores pré-definidos ou aleatórios, marcados como emulados</td></tr>
+      <tr><td><strong>Quem decide o que acontece</strong></td><td>O hash da chave do DF, com as proporções do protótipo: 70% da CAPUR conciliada, 20% divergente, 10% pendente; 85% dos créditos apropriados, metade usados; 3% glosados</td><td>No Simulado, as mesmas proporções, agora visíveis e com a apropriação ligada ao pagamento. No emulador, o administrador, por lote com várias ações e percentuais, por cenário pronto ou um DF por vez</td></tr>
+      <tr><td><strong>O que pode acontecer</strong></td><td>8 tipos de fato</td><td>Os 51 lançamentos da documentação das APIs da CBS e do IBS</td></tr>
+      <tr><td><strong>Quando</strong></td><td>Na data planejada, pelo cron de hora em hora, que não roda no ambiente local</td><td>No Simulado, também pelo botão "Avançar até agora". No emulador, por ação: agora, retroativa, agendada ou espalhada entre duas datas</td></tr>
+      <tr><td><strong>Conferência</strong></td><td>Nenhuma</td><td>DF a DF, ao fim de cada execução do emulador e de cada emissão do Simulado</td></tr>
+      <tr><td><strong>Rastreio</strong></td><td>Origem <code>simulated</code></td><td>Origem <code>emulated</code>, a execução e o autor; a execução entra na auditoria do cliente</td></tr>
+    </tbody>
+  </table></div>
+  <h3>O caminho de um lançamento emulado</h3>
+  <div class="fluxo">
+    <div class="passo"><div class="pn">1</div><div class="pt">Administrador</div><div class="pd">Filtra ou cria os DFs e empilha as ações, com percentual e data; vê a prévia; confirma.</div></div>
+    <div class="passo dest"><div class="pn">2</div><div class="pt">Emulador</div><div class="pd">No <code>tax-authority</code>: traduz o resultado nos lançamentos de cada ente, com os pré-requisitos.</div></div>
+    <div class="passo dest"><div class="pn">3</div><div class="pt">Porta de fatos</div><div class="pd">Só de inclusão, sem repetir o mesmo lançamento; publica no tópico dos fatos.</div></div>
+    <div class="passo"><div class="pn">4</div><div class="pt">Razão, conciliação, inconsistências</div><div class="pd">Aplicam o lançamento como se viesse do ente.</div></div>
+    <div class="passo"><div class="pn">5</div><div class="pt">Plataforma</div><div class="pd">Saldos e eventos na API, portal do cliente e a conferência da execução.</div></div>
+  </div>
+  <p>Os passos 3 a 5 já existem e são os mesmos para o conector real da Receita Federal, o do Comitê Gestor e o emulador. O que se testa com o emulador é o que a plataforma faz com o lançamento, e isso não muda quando o conector real chegar (LV-06 do <a href="../taxrs-caderno-live.html#LV-06">caderno × Live</a>).</p>
+  <div class="callout"><div class="ct">Emulado e fora do escopo</div>
+    <ul class="plain">
+      <li><strong>Emulado:</strong> o lançamento, isto é, o fato que o ente registra sobre um DF (registro, apropriação, utilização, glosa, extinção, pagamento, cancelamento, devolução, transferência), com valor e data, como a documentação de cada API descreve.</li>
+      <li><strong>Fora do escopo (D-EM-01):</strong> a conexão. Endpoints, token, webhook, link assinado, janela de consulta, limite de chamadas e erros de transporte ficam com os conectores reais e, nos testes deles, com o <a href="../proposta-gerador-massa.html">MassGen</a>.</li>
+    </ul>
+  </div>
+</section>
+<section class="section" id="s3">
+  <div class="sec-hdr"><span class="sec-num">3</span><span class="sec-title">Os 51 lançamentos que a documentação prevê</span></div>
+  <p>Tirados da documentação das APIs, conferida na fonte em 18/11/2026 (seção 15). Na CBS, a Receita Federal não manda o que mudou: manda a foto nova do documento, e cada lançamento abaixo é a mudança de um campo. No IBS, cada lançamento é um movimento do MOC. A última coluna diz como o tax-rs representa o lançamento hoje.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Ente</th><th class="n">Total</th><th class="n">Já existe</th><th class="n">Em parte</th><th class="n">Novo</th></tr></thead>
+    <tbody>
+      <tr><td>CBS · Receita Federal</td><td class="n">27</td><td class="n">10</td><td class="n">11</td><td class="n">6</td></tr>
+      <tr><td>IBS · Comitê Gestor</td><td class="n">24</td><td class="n">7</td><td class="n">3</td><td class="n">14</td></tr>
+      <tr><td><strong>Total</strong></td><td class="n"><strong>51</strong></td><td class="n"><strong>17</strong></td><td class="n"><strong>14</strong></td><td class="n"><strong>20</strong></td></tr>
+    </tbody>
+  </table></div>
+  <div class="filtros" role="group" aria-label="Filtrar lançamentos">
+    <button type="button" data-f="" aria-pressed="true">Todos (51)</button>
+    <button type="button" data-f="existe" aria-pressed="false">Já existe (17)</button>
+    <button type="button" data-f="parcial" aria-pressed="false">Em parte (14)</button>
+    <button type="button" data-f="novo" aria-pressed="false">Novo (20)</button>
+  </div>
+  <div class="table-wrap"><table id="catalogo">
+    <thead><tr><th>Id</th><th>Lançamento</th><th>O que muda no ente</th><th>Na plataforma (API v1.8.0)</th><th>No tax-rs hoje</th></tr></thead>
+    <tbody>
+      <tr class="grp-row"><td class="grp" colspan="5">CBS · Débitos · o cliente como vendedor</td></tr>
+      <tr id="L-D01" data-s="existe"><td class="id">D01</td><td><strong>Débito registrado</strong></td><td class="wrap"><code>apurado</code> e <code>saldoDevedor</code> com a CBS do DF</td><td>debit.registered · saldo outstanding</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>capur</code> do DF de saída</td></tr>
+      <tr id="L-D02" data-s="parcial"><td class="id">D02</td><td><strong>Débito excedente</strong></td><td class="wrap"><code>excedente</code> &gt; 0: valor ainda não processado</td><td>saldo unprocessed · debit.adjusted</td><td class="wrap"><span class="chip warn">Em parte</span><br><code>capur</code> com outro valor abre a divergência; o saldo unprocessed fica em zero</td></tr>
+      <tr id="L-D03" data-s="existe"><td class="id">D03</td><td><strong>Extinção parcial</strong></td><td class="wrap"><code>extinto</code> com parte; <code>saldoDevedor</code> com o resto</td><td>debit.partially_settled</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>settlement</code> com parte do valor</td></tr>
+      <tr id="L-D04" data-s="existe"><td class="id">D04</td><td><strong>Extinção total</strong></td><td class="wrap"><code>extinto</code> = <code>apurado</code>; <code>saldoDevedor</code> zero</td><td>debit.settled</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>settlement</code> com o valor todo</td></tr>
+      <tr id="L-D05" data-s="novo"><td class="id">D05</td><td><strong>Débito inexigível</strong></td><td class="wrap"><code>inexigivel</code> &gt; 0</td><td>saldo not_enforceable · debit.adjusted</td><td class="wrap"><span class="chip red">Novo</span><br>o saldo existe no registro público, sempre zero</td></tr>
+      <tr id="L-D06" data-s="novo"><td class="id">D06</td><td><strong>Débito suspenso</strong></td><td class="wrap"><code>suspenso</code> &gt; 0</td><td>debit.suspended e debit.released · saldo suspended</td><td class="wrap"><span class="chip red">Novo</span><br>o saldo existe no registro público, sempre zero</td></tr>
+      <tr id="L-D07" data-s="novo"><td class="id">D07</td><td><strong>Débito ajustado</strong></td><td class="wrap"><code>apurado</code> muda: complemento, cancelamento ou devolução</td><td>debit.adjusted ou debit.cancelled</td><td class="wrap"><span class="chip red">Novo</span><br>nenhum fato muda o valor apurado</td></tr>
+      <tr id="L-D08" data-s="novo"><td class="id">D08</td><td><strong>Pagamento antecipado na nota de débito</strong></td><td class="wrap"><code>cbs.pgtoAntecipado</code>: pagamento antecipado identificado na nota de débito vinculada. Novo na fonte em 13/11/2026</td><td>a definir: a API da plataforma ainda não prevê</td><td class="wrap"><span class="chip red">Novo</span><br>não existe</td></tr>
+      <tr class="grp-row"><td class="grp" colspan="5">CBS · Créditos · o cliente como comprador</td></tr>
+      <tr id="L-C01" data-s="existe"><td class="id">C01</td><td><strong>Crédito registrado</strong></td><td class="wrap"><code>apurado</code> e <code>apropriacao.aApropriar</code></td><td>credit.registered · saldo pending</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>capur</code> do DF de entrada</td></tr>
+      <tr id="L-C02" data-s="existe"><td class="id">C02</td><td><strong>Apropriação total</strong></td><td class="wrap"><code>apropriado</code> = <code>apurado</code></td><td>credit.appropriated · saldo appropriated</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>appropriation</code></td></tr>
+      <tr id="L-C03" data-s="parcial"><td class="id">C03</td><td><strong>Apropriação parcial</strong></td><td class="wrap">parte em <code>apropriado</code>, parte em <code>aApropriar</code></td><td>credit.appropriated · saldos appropriated e pending</td><td class="wrap"><span class="chip warn">Em parte</span><br>o razão apropria sempre o valor todo do DF</td></tr>
+      <tr id="L-C04" data-s="parcial"><td class="id">C04</td><td><strong>Crédito inapropriável</strong></td><td class="wrap"><code>inapropriavel</code> &gt; 0: vedação, uso e consumo pessoal</td><td>saldo not_appropriable · credit.disallowed</td><td class="wrap"><span class="chip warn">Em parte</span><br>a glosa (<code>disallowance</code>) leva o valor todo para not_appropriable; não há parte</td></tr>
+      <tr id="L-C05" data-s="novo"><td class="id">C05</td><td><strong>Apropriação suspensa</strong></td><td class="wrap"><code>apropriacao.suspenso</code> &gt; 0</td><td>credit.suspended e credit.released · saldo suspended</td><td class="wrap"><span class="chip red">Novo</span><br>o saldo existe no registro público, sempre zero</td></tr>
+      <tr id="L-C06" data-s="novo"><td class="id">C06</td><td><strong>Crédito prescrito</strong></td><td class="wrap"><code>prescrito</code> &gt; 0</td><td>credit.expired · saldo expired; antes, o alerta credit_expiring</td><td class="wrap"><span class="chip red">Novo</span><br>o saldo existe no registro público, sempre zero</td></tr>
+      <tr id="L-C07" data-s="existe"><td class="id">C07</td><td><strong>Utilização</strong></td><td class="wrap"><code>utilizacao.utilizado</code></td><td>credit.utilized · saldos utilized e available</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>utilization</code></td></tr>
+      <tr id="L-C08" data-s="parcial"><td class="id">C08</td><td><strong>Crédito inutilizável</strong></td><td class="wrap"><code>inutilizavel</code> &gt; 0: glosa depois da apropriação</td><td>saldo not_usable · credit.disallowed</td><td class="wrap"><span class="chip warn">Em parte</span><br>a glosa depois da apropriação vai para not_appropriable, não para not_usable</td></tr>
+      <tr id="L-C09" data-s="parcial"><td class="id">C09</td><td><strong>Crédito restabelecido</strong></td><td class="wrap"><code>restabelecido</code> &gt; 0</td><td>credit.restored · saldo restored</td><td class="wrap"><span class="chip warn">Em parte</span><br>a decisão <code>reverted</code> da glosa devolve o crédito, sem o saldo restored e sem o evento</td></tr>
+      <tr id="L-C10" data-s="existe"><td class="id">C10</td><td><strong>Saldo credor</strong></td><td class="wrap"><code>naoUtilizado.saldoCredor</code></td><td>saldo available</td><td class="wrap"><span class="chip ok">Já existe</span><br>calculado pelo razão</td></tr>
+      <tr id="L-C11" data-s="parcial"><td class="id">C11</td><td><strong>Pedido de ressarcimento</strong></td><td class="wrap"><code>naoUtilizado.pedidoRessarcimento</code></td><td>credit.refund_requested · saldo refund_requested</td><td class="wrap"><span class="chip warn">Em parte</span><br><code>utilization</code> com <code>refund</code> baixa o saldo, sem o pedido</td></tr>
+      <tr id="L-C12" data-s="parcial"><td class="id">C12</td><td><strong>Crédito excedente</strong></td><td class="wrap"><code>excedente</code> &gt; 0</td><td>saldo unprocessed · credit.adjusted</td><td class="wrap"><span class="chip warn">Em parte</span><br>como no D02</td></tr>
+      <tr class="grp-row"><td class="grp" colspan="5">CBS · Pagamentos · o que extingue o débito do cliente</td></tr>
+      <tr id="L-P01" data-s="existe"><td class="id">P01</td><td><strong>Pagamento próprio (PCONT)</strong></td><td class="wrap">Pagamentos, <code>tipo</code> 2, composição por <code>pa</code> com principal</td><td>debit.settled</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>payment</code> com <code>darf</code> e <code>settlement</code> com <code>payment</code></td></tr>
+      <tr id="L-P02" data-s="existe"><td class="id">P02</td><td><strong>RAD recebido de um adquirente</strong></td><td class="wrap">Pagamentos, <code>tipo</code> 1, com <code>niAdquirente</code> e <code>chaveDFE</code></td><td>debit.settled</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>settlement</code> com <code>rad</code></td></tr>
+      <tr id="L-P03" data-s="parcial"><td class="id">P03</td><td><strong>Split</strong></td><td class="wrap">retido no pagamento recebido; fora da enumeração de <code>tipo</code></td><td>debit.settled, com a marca split_payment</td><td class="wrap"><span class="chip warn">Em parte</span><br>o <code>settlement</code> não tem split; o split está fora do contrato público (ADR 0001 C-11)</td></tr>
+      <tr id="L-P04" data-s="parcial"><td class="id">P04</td><td><strong>Pagamento em atraso</strong></td><td class="wrap"><code>multa</code> e <code>juros</code> &gt; 0 na composição</td><td>debit.settled</td><td class="wrap"><span class="chip warn">Em parte</span><br>o fato não carrega multa nem juros</td></tr>
+      <tr class="grp-row"><td class="grp" colspan="5">CBS · Recolhimentos · o que o cliente paga pelo fornecedor</td></tr>
+      <tr id="L-R01" data-s="existe"><td class="id">R01</td><td><strong>RAD recolhido pelo cliente</strong></td><td class="wrap">Recolhimentos, <code>tipo</code> 1, com <code>niFornecedor</code>, <code>chaveDFE</code> e <code>vencimento</code></td><td>credit.appropriated</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>payment</code> com <code>rad</code> e <code>appropriation</code> pelo RAD</td></tr>
+      <tr id="L-R02" data-s="parcial"><td class="id">R02</td><td><strong>Split no pagamento do cliente</strong></td><td class="wrap">por documento do fornecedor; fora da enumeração de <code>tipo</code></td><td>credit.appropriated</td><td class="wrap"><span class="chip warn">Em parte</span><br>a apropriação pelo split existe; o recolhimento por split, não</td></tr>
+      <tr id="L-R03" data-s="parcial"><td class="id">R03</td><td><strong>Recolhimento em atraso</strong></td><td class="wrap"><code>multa</code> e <code>juros</code> &gt; 0</td><td>credit.appropriated</td><td class="wrap"><span class="chip warn">Em parte</span><br>como no P04</td></tr>
+      <tr class="grp-row"><td class="grp" colspan="5">IBS · Movimentos do MOC v1.10 · cada um mexe nos sete campos financeiros</td></tr>
+      <tr id="L-IBS-01" data-s="existe"><td class="id">IBS-01</td><td><strong>Aquisição</strong></td><td class="wrap">+ crédito a apropriar</td><td>credit.registered</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>capur</code> do DF de entrada</td></tr>
+      <tr id="L-IBS-02" data-s="existe"><td class="id">IBS-02</td><td><strong>Fornecimento</strong></td><td class="wrap">+ débito em aberto</td><td>debit.registered</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>capur</code> do DF de saída</td></tr>
+      <tr id="L-IBS-03" data-s="novo"><td class="id">IBS-03</td><td><strong>Complemento de aquisição</strong></td><td class="wrap">+ crédito a apropriar</td><td>credit.adjusted</td><td class="wrap"><span class="chip red">Novo</span><br>nenhum fato muda o valor apurado</td></tr>
+      <tr id="L-IBS-04" data-s="novo"><td class="id">IBS-04</td><td><strong>Complemento de fornecimento</strong></td><td class="wrap">+ débito em aberto</td><td>debit.adjusted</td><td class="wrap"><span class="chip red">Novo</span><br>nenhum fato muda o valor apurado</td></tr>
+      <tr id="L-IBS-05" data-s="existe"><td class="id">IBS-05</td><td><strong>Apropriação de crédito</strong></td><td class="wrap">− a apropriar, + não utilizado</td><td>credit.appropriated</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>appropriation</code>, só pelo valor todo (a parte vem com o C03)</td></tr>
+      <tr id="L-IBS-06" data-s="existe"><td class="id">IBS-06</td><td><strong>Utilização de crédito</strong></td><td class="wrap">− não utilizado, + utilizado</td><td>credit.utilized</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>utilization</code></td></tr>
+      <tr id="L-IBS-07" data-s="parcial"><td class="id">IBS-07</td><td><strong>Compensação com créditos por aquisição</strong></td><td class="wrap">conforme o caso</td><td>credit.utilized e debit.partially_settled ou debit.settled</td><td class="wrap"><span class="chip warn">Em parte</span><br>utilização e extinção existem, sem o vínculo entre elas</td></tr>
+      <tr id="L-IBS-08" data-s="existe"><td class="id">IBS-08</td><td><strong>Extinção por compensação</strong></td><td class="wrap">− débito em aberto, + extinto</td><td>debit.settled</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>settlement</code> com <code>credit_offset</code></td></tr>
+      <tr id="L-IBS-09" data-s="existe"><td class="id">IBS-09</td><td><strong>Extinção por recolhimento</strong></td><td class="wrap">− débito em aberto, + extinto</td><td>debit.settled</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>settlement</code> com <code>payment</code></td></tr>
+      <tr id="L-IBS-10" data-s="existe"><td class="id">IBS-10</td><td><strong>RAD provisionado</strong></td><td class="wrap">− débito em aberto, + extinto</td><td>debit.settled</td><td class="wrap"><span class="chip ok">Já existe</span><br><code>settlement</code> com <code>rad</code></td></tr>
+      <tr id="L-IBS-11" data-s="novo"><td class="id">IBS-11</td><td><strong>Estorno de RAD</strong></td><td class="wrap">+ débito em aberto, − extinto</td><td>debit.adjusted</td><td class="wrap"><span class="chip red">Novo</span><br>nenhum fato devolve o débito ao aberto</td></tr>
+      <tr id="L-IBS-12" data-s="parcial"><td class="id">IBS-12</td><td><strong>Split provisionado</strong></td><td class="wrap">− débito em aberto, + extinto</td><td>debit.settled, com a marca split_payment</td><td class="wrap"><span class="chip warn">Em parte</span><br>como no P03</td></tr>
+      <tr id="L-IBS-13" data-s="novo"><td class="id">IBS-13</td><td><strong>Estorno de split provisionado</strong></td><td class="wrap">+ débito em aberto, − extinto</td><td>debit.adjusted</td><td class="wrap"><span class="chip red">Novo</span><br>como no IBS-11</td></tr>
+      <tr id="L-IBS-14" data-s="parcial"><td class="id">IBS-14</td><td><strong>Extinção por split</strong></td><td class="wrap">− débito em aberto, + extinto</td><td>debit.settled</td><td class="wrap"><span class="chip warn">Em parte</span><br>como no P03</td></tr>
+      <tr id="L-IBS-15" data-s="novo"><td class="id">IBS-15</td><td><strong>Cancelamento: estorno de crédito não utilizado</strong></td><td class="wrap">− não utilizado</td><td>credit.cancelled</td><td class="wrap"><span class="chip red">Novo</span><br>não há cancelamento</td></tr>
+      <tr id="L-IBS-16" data-s="novo"><td class="id">IBS-16</td><td><strong>Cancelamento: abertura de débito para o adquirente</strong></td><td class="wrap">+ débito em aberto</td><td>a definir: débito do adquirente num DF de entrada</td><td class="wrap"><span class="chip red">Novo</span><br>não há cancelamento</td></tr>
+      <tr id="L-IBS-17" data-s="novo"><td class="id">IBS-17</td><td><strong>Cancelamento: estorno de débito em aberto</strong></td><td class="wrap">− débito em aberto</td><td>debit.cancelled</td><td class="wrap"><span class="chip red">Novo</span><br>não há cancelamento</td></tr>
+      <tr id="L-IBS-18" data-s="novo"><td class="id">IBS-18</td><td><strong>Cancelamento: split a transferir</strong></td><td class="wrap">+ recurso a transferir</td><td>a definir: não há evento</td><td class="wrap"><span class="chip red">Novo</span><br>não há cancelamento</td></tr>
+      <tr id="L-IBS-19" data-s="novo"><td class="id">IBS-19</td><td><strong>Devolução: estorno de crédito a apropriar</strong></td><td class="wrap">− a apropriar</td><td>credit.adjusted</td><td class="wrap"><span class="chip red">Novo</span><br>não há devolução</td></tr>
+      <tr id="L-IBS-20" data-s="novo"><td class="id">IBS-20</td><td><strong>Devolução: abertura de débito para o adquirente</strong></td><td class="wrap">+ débito em aberto</td><td>a definir: débito do adquirente num DF de entrada</td><td class="wrap"><span class="chip red">Novo</span><br>não há devolução</td></tr>
+      <tr id="L-IBS-21" data-s="novo"><td class="id">IBS-21</td><td><strong>Devolução: crédito a apropriar</strong></td><td class="wrap">+ a apropriar</td><td>credit.registered</td><td class="wrap"><span class="chip red">Novo</span><br>não há devolução</td></tr>
+      <tr id="L-IBS-22" data-s="novo"><td class="id">IBS-22</td><td><strong>Devolução: apropriação de crédito</strong></td><td class="wrap">+ não utilizado</td><td>credit.appropriated</td><td class="wrap"><span class="chip red">Novo</span><br>não há devolução</td></tr>
+      <tr id="L-IBS-23" data-s="novo"><td class="id">IBS-23</td><td><strong>Transferência para o fornecedor</strong></td><td class="wrap">− a transferir, + disponível para transferência</td><td>a definir: não há evento</td><td class="wrap"><span class="chip red">Novo</span><br>não há transferência</td></tr>
+      <tr id="L-IBS-24" data-s="novo"><td class="id">IBS-24</td><td><strong>Transferência para o fornecedor por excesso</strong></td><td class="wrap">+ disponível para transferência</td><td>a definir: não há evento</td><td class="wrap"><span class="chip red">Novo</span><br>não há transferência</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn"><div class="ct">O que o catálogo mostra</div>
+    <ul class="plain">
+      <li><strong>O razão do tax-rs apropria sempre o valor todo do DF</strong> e leva toda glosa para not_appropriable. Apropriação parcial, glosa de parte e o crédito inutilizável dependem dessa mudança.</li>
+      <li><strong>Os saldos existem no registro público, mas ficam em zero:</strong> suspended, expired, not_usable, restored, refund_requested, unprocessed e not_enforceable. Nenhum fato os movimenta.</li>
+      <li><strong>12 eventos da API da plataforma não saem de nenhum fato:</strong> <code>credit.restored</code>, <code>credit.suspended</code>, <code>credit.released</code>, <code>credit.expired</code>, <code>credit.refund_requested</code>, <code>credit.refund_available</code>, <code>credit.cancelled</code>, <code>credit.adjusted</code>, <code>debit.suspended</code>, <code>debit.released</code>, <code>debit.cancelled</code>, <code>debit.adjusted</code>. O <code>credit.refund_available</code>, só do IBS, continua sem lançamento, porque o MOC v1.10 não tem movimento de ressarcimento.</li>
+      <li><strong>Cancelamento, devolução, complemento, estorno e transferência</strong> não existem no tax-rs: são 14 dos 24 lançamentos do IBS.</li>
+      <li><strong>Dois fatos do tax-rs não têm lançamento próprio na documentação:</strong> a decisão sobre a glosa (<code>disallowance_decision</code>), que vem do processo de contestação, e o registro sem DF (<code>record_without_document</code>), que é o efeito, na plataforma, de um D01, C01, IBS-01 ou IBS-02 com uma chave que ela não tem.</li>
+    </ul>
+  </div>
+</section>
+<section class="section" id="s4">
+  <div class="sec-hdr"><span class="sec-num">4</span><span class="sec-title">Os 27 resultados que o administrador escolhe</span></div>
+  <p>O administrador não escolhe lançamento por lançamento: escolhe o resultado, e o emulador calcula o que cada ente lança. O que falta para o DF chegar lá (o registro antes da apropriação, por exemplo) entra junto, como pré-requisito, e aparece na prévia. Se o DF não pode chegar ao resultado (um crédito glosado não se apropria), ele é pulado, com o motivo.</p>
+  <p>"Mudo" quer dizer que o ente não tem esse lançamento na documentação: o IBS não tem suspensão, prescrição, inexigibilidade nem atraso no MOC v1.10. A CBS não tem estorno de RAD nem transferência ao fornecedor. A prévia mostra o ente mudo, e o resultado vale só para o outro (D-EM-09).</p>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-v">27</div><div class="kpi-l">resultados</div></div>
+    <div class="kpi info"><div class="kpi-v">11</div><div class="kpi-l">rodam na E2, com os lançamentos de hoje</div></div>
+    <div class="kpi"><div class="kpi-v">16</div><div class="kpi-l">esperam a E3</div></div>
+    <div class="kpi ok"><div class="kpi-v">51 de 51</div><div class="kpi-l">lançamentos cobertos por algum resultado</div></div>
+    <div class="kpi warn"><div class="kpi-v">5</div><div class="kpi-l">abrem inconsistência</div></div>
+  </div>
+  <div class="table-wrap"><table id="resultados">
+    <thead><tr><th>Id</th><th>Resultado</th><th>CBS</th><th>IBS</th><th>No fim, a plataforma mostra</th><th>Pré-requisito</th><th>Etapa</th></tr></thead>
+    <tbody>
+      <tr class="grp-row"><td class="grp" colspan="7">Registro e valores</td></tr>
+      <tr id="RE-01"><td class="id">RE-01</td><td class="nome"><strong>Registrar o DF no ente</strong><span class="sub">tributo (CBS, IBS ou os dois)</span></td><td><div class="gaps"><a class="lv" href="#L-D01">D01</a><a class="lv" href="#L-C01">C01</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-01">IBS-01</a><a class="lv" href="#L-IBS-02">IBS-02</a></div></td><td class="wrap">DF registrado; CAPUR conciliada; credit.registered ou debit.registered</td><td>—</td><td class="etapa"><span class="chip info">E2</span></td></tr>
+      <tr id="RE-02"><td class="id">RE-02</td><td class="nome"><strong>Divergir o valor do imposto</strong><span class="sub">diferença em R$ ou %; para cima ou para baixo; excedente (D02, C12) na E3</span></td><td><div class="gaps"><a class="lv" href="#L-D01">D01</a><a class="lv" href="#L-C01">C01</a><a class="lv" href="#L-D02">D02</a><a class="lv" href="#L-C12">C12</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-01">IBS-01</a><a class="lv" href="#L-IBS-02">IBS-02</a></div></td><td class="wrap"><code>capur_cbs_divergente</code> ou <code>capur_ibs_divergente</code> aberta</td><td>—</td><td class="etapa"><span class="chip info">E2</span><span class="sub">excedente na E3</span></td></tr>
+      <tr id="RE-03"><td class="id">RE-03</td><td class="nome"><strong>Não registrar o DF</strong><span class="sub">a prévia diz a data em que a inconsistência vai aparecer</span></td><td>—</td><td>—</td><td class="wrap"><code>apur_df_sem_registro</code> aberta 30 dias depois da emissão (tolerância do tax-rs)</td><td>—</td><td class="etapa"><span class="chip info">E2</span></td></tr>
+      <tr id="RE-04"><td class="id">RE-04</td><td class="nome"><strong>Registro sem DF</strong><span class="sub">direção, contraparte, valor, competência; chave fictícia marcada</span></td><td><div class="gaps"><a class="lv" href="#L-D01">D01</a><a class="lv" href="#L-C01">C01</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-01">IBS-01</a><a class="lv" href="#L-IBS-02">IBS-02</a></div></td><td class="wrap"><code>apur_registro_sem_df</code> aberta</td><td>—</td><td class="etapa"><span class="chip info">E2</span></td></tr>
+      <tr class="grp-row"><td class="grp" colspan="7">Crédito</td></tr>
+      <tr id="RE-05"><td class="id">RE-05</td><td class="nome"><strong>Apropriar totalmente</strong><span class="sub">causa: recolhimento do fornecedor, RAD pago pelo cliente ou split (split na E3)</span></td><td><div class="gaps"><a class="lv" href="#L-C02">C02</a><a class="lv" href="#L-R01">R01</a><a class="lv" href="#L-R02">R02</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-05">IBS-05</a></div></td><td class="wrap">credit.appropriated; saldo todo em appropriated</td><td>registro (C01, IBS-01); se a causa for o RAD, o recolhimento (R01)</td><td class="etapa"><span class="chip info">E2</span><span class="sub">split na E3</span></td></tr>
+      <tr id="RE-06"><td class="id">RE-06</td><td class="nome"><strong>Apropriar em parte</strong><span class="sub">parte em R$ ou %</span></td><td><div class="gaps"><a class="lv" href="#L-C03">C03</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-05">IBS-05</a></div></td><td class="wrap">credit.appropriated; parte em appropriated, parte em pending</td><td>registro</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr id="RE-07"><td class="id">RE-07</td><td class="nome"><strong>Usar todo o saldo disponível</strong><span class="sub">forma: compensação, ressarcimento ou transferência</span></td><td><div class="gaps"><a class="lv" href="#L-C07">C07</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-06">IBS-06</a></div></td><td class="wrap">credit.utilized; saldo available zero</td><td>registro e apropriação total</td><td class="etapa"><span class="chip info">E2</span></td></tr>
+      <tr id="RE-08"><td class="id">RE-08</td><td class="nome"><strong>Usar parte do saldo</strong><span class="sub">parte em R$ ou %; forma</span></td><td><div class="gaps"><a class="lv" href="#L-C07">C07</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-06">IBS-06</a></div></td><td class="wrap">credit.utilized; o resto em available</td><td>registro e apropriação</td><td class="etapa"><span class="chip info">E2</span></td></tr>
+      <tr id="RE-09"><td class="id">RE-09</td><td class="nome"><strong>Glosar antes da apropriação</strong><span class="sub">causa, base legal, prazo de contestação; parte do valor na E3</span></td><td><div class="gaps"><a class="lv" href="#L-C04">C04</a></div></td><td><span class="mudo">mudo</span></td><td class="wrap">credit.disallowed; <code>glosa_credito</code> aberta; saldo not_appropriable</td><td>registro</td><td class="etapa"><span class="chip info">E2</span><span class="sub">pelo valor todo · parte na E3</span></td></tr>
+      <tr id="RE-10"><td class="id">RE-10</td><td class="nome"><strong>Glosar depois da apropriação</strong><span class="sub">causa, base legal, prazo de contestação</span></td><td><div class="gaps"><a class="lv" href="#L-C08">C08</a></div></td><td><span class="mudo">mudo</span></td><td class="wrap">credit.disallowed; <code>glosa_credito</code> aberta; saldo not_usable</td><td>registro e apropriação</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr id="RE-11"><td class="id">RE-11</td><td class="nome"><strong>Restabelecer o crédito</strong><span class="sub">valor restabelecido</span></td><td><div class="gaps"><a class="lv" href="#L-C09">C09</a></div></td><td><span class="mudo">mudo</span></td><td class="wrap">credit.restored; saldo restored</td><td>glosa depois da apropriação (C08)</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr id="RE-12"><td class="id">RE-12</td><td class="nome"><strong>Suspender e liberar o crédito</strong><span class="sub">liberar depois de N dias ou manter suspenso</span></td><td><div class="gaps"><a class="lv" href="#L-C05">C05</a></div></td><td><span class="mudo">mudo</span></td><td class="wrap">credit.suspended e, se pedido, credit.released</td><td>registro</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr id="RE-13"><td class="id">RE-13</td><td class="nome"><strong>Prescrever o crédito</strong><span class="sub">data da prescrição (retroativa ou agendada)</span></td><td><div class="gaps"><a class="lv" href="#L-C06">C06</a></div></td><td><span class="mudo">mudo</span></td><td class="wrap">alerta credit_expiring, depois credit.expired; saldo expired</td><td>registro e apropriação</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr id="RE-14"><td class="id">RE-14</td><td class="nome"><strong>Pedir ressarcimento do saldo credor</strong><span class="sub">valor do pedido</span></td><td><div class="gaps"><a class="lv" href="#L-C10">C10</a><a class="lv" href="#L-C11">C11</a></div></td><td><span class="mudo">mudo</span></td><td class="wrap">credit.refund_requested; saldo refund_requested</td><td>registro e apropriação</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr class="grp-row"><td class="grp" colspan="7">Débito</td></tr>
+      <tr id="RE-15"><td class="id">RE-15</td><td class="nome"><strong>Extinguir por compensação</strong><span class="sub">parte ou todo; o vínculo com o crédito (IBS-07) na E3</span></td><td><div class="gaps"><a class="lv" href="#L-D03">D03</a><a class="lv" href="#L-D04">D04</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-07">IBS-07</a><a class="lv" href="#L-IBS-08">IBS-08</a></div></td><td class="wrap">debit.partially_settled ou debit.settled</td><td>registro (D01, IBS-02)</td><td class="etapa"><span class="chip info">E2</span><span class="sub">IBS-07 na E3</span></td></tr>
+      <tr id="RE-16"><td class="id">RE-16</td><td class="nome"><strong>Extinguir por pagamento próprio (PCONT)</strong><span class="sub">data do pagamento</span></td><td><div class="gaps"><a class="lv" href="#L-P01">P01</a><a class="lv" href="#L-D04">D04</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-09">IBS-09</a></div></td><td class="wrap">debit.settled</td><td>registro</td><td class="etapa"><span class="chip info">E2</span></td></tr>
+      <tr id="RE-17"><td class="id">RE-17</td><td class="nome"><strong>Extinguir pelo RAD do adquirente</strong><span class="sub">data do pagamento; estorno e excesso ficam no RE-26 e no RE-27</span></td><td><div class="gaps"><a class="lv" href="#L-P02">P02</a><a class="lv" href="#L-D04">D04</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-10">IBS-10</a></div></td><td class="wrap">debit.settled</td><td>registro</td><td class="etapa"><span class="chip info">E2</span></td></tr>
+      <tr id="RE-18"><td class="id">RE-18</td><td class="nome"><strong>Extinguir por split</strong><span class="sub">parte ou todo</span></td><td><div class="gaps"><a class="lv" href="#L-P03">P03</a><a class="lv" href="#L-D04">D04</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-12">IBS-12</a><a class="lv" href="#L-IBS-14">IBS-14</a></div></td><td class="wrap">debit.settled, com a marca split_payment</td><td>registro</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr id="RE-19"><td class="id">RE-19</td><td class="nome"><strong>Pagar em atraso</strong><span class="sub">dias de atraso; multa e juros calculados ou informados</span></td><td><div class="gaps"><a class="lv" href="#L-P04">P04</a><a class="lv" href="#L-R03">R03</a></div></td><td><span class="mudo">mudo</span></td><td class="wrap">debit.settled ou credit.appropriated, com multa e juros</td><td>registro</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr id="RE-20"><td class="id">RE-20</td><td class="nome"><strong>Pagamento antecipado na nota de débito</strong><span class="sub">valor antecipado</span></td><td><div class="gaps"><a class="lv" href="#L-D08">D08</a></div></td><td><span class="mudo">mudo</span></td><td class="wrap">a definir (D08 sem evento na API da plataforma)</td><td>registro</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr id="RE-21"><td class="id">RE-21</td><td class="nome"><strong>Tornar o débito inexigível</strong><span class="sub">parte ou todo</span></td><td><div class="gaps"><a class="lv" href="#L-D05">D05</a></div></td><td><span class="mudo">mudo</span></td><td class="wrap">debit.adjusted; saldo not_enforceable</td><td>registro</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr id="RE-22"><td class="id">RE-22</td><td class="nome"><strong>Suspender e liberar o débito</strong><span class="sub">liberar depois de N dias ou manter suspenso</span></td><td><div class="gaps"><a class="lv" href="#L-D06">D06</a></div></td><td><span class="mudo">mudo</span></td><td class="wrap">debit.suspended e, se pedido, debit.released</td><td>registro</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr class="grp-row"><td class="grp" colspan="7">Documento</td></tr>
+      <tr id="RE-23"><td class="id">RE-23</td><td class="nome"><strong>Cancelar</strong><span class="sub">o emulador escolhe os movimentos do IBS pelo estado: crédito usado ou não, split retido ou não</span></td><td><div class="gaps"><a class="lv" href="#L-D07">D07</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-15">IBS-15</a><a class="lv" href="#L-IBS-16">IBS-16</a><a class="lv" href="#L-IBS-17">IBS-17</a><a class="lv" href="#L-IBS-18">IBS-18</a></div></td><td class="wrap">credit.cancelled ou debit.cancelled; no IBS, o movimento conforme o estado do DF</td><td>registro</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr id="RE-24"><td class="id">RE-24</td><td class="nome"><strong>Devolver</strong><span class="sub">valor devolvido</span></td><td><div class="gaps"><a class="lv" href="#L-D07">D07</a><a class="lv" href="#L-C01">C01</a><a class="lv" href="#L-C02">C02</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-19">IBS-19</a><a class="lv" href="#L-IBS-20">IBS-20</a><a class="lv" href="#L-IBS-21">IBS-21</a><a class="lv" href="#L-IBS-22">IBS-22</a></div></td><td class="wrap">credit.adjusted, debit.registered do adquirente, crédito da devolução</td><td>registro</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr id="RE-25"><td class="id">RE-25</td><td class="nome"><strong>Complementar o valor</strong><span class="sub">valor do complemento</span></td><td><div class="gaps"><a class="lv" href="#L-D07">D07</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-03">IBS-03</a><a class="lv" href="#L-IBS-04">IBS-04</a></div></td><td class="wrap">credit.adjusted ou debit.adjusted</td><td>registro</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr id="RE-26"><td class="id">RE-26</td><td class="nome"><strong>Estornar RAD ou split</strong><span class="sub">qual estorno; valor</span></td><td><span class="mudo">mudo</span></td><td><div class="gaps"><a class="lv" href="#L-IBS-11">IBS-11</a><a class="lv" href="#L-IBS-13">IBS-13</a></div></td><td class="wrap">debit.adjusted; o débito volta a outstanding</td><td>RAD ou split provisionado</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+      <tr id="RE-27"><td class="id">RE-27</td><td class="nome"><strong>Transferir ao fornecedor</strong><span class="sub">por cancelamento ou por excesso</span></td><td><span class="mudo">mudo</span></td><td><div class="gaps"><a class="lv" href="#L-IBS-23">IBS-23</a><a class="lv" href="#L-IBS-24">IBS-24</a></div></td><td class="wrap">a definir (sem evento na API da plataforma)</td><td>split ou RAD a transferir</td><td class="etapa"><span class="chip gray">E3</span></td></tr>
+    </tbody>
+  </table></div>
+  <p>Resultados se encadeiam no mesmo lote: "apropriar totalmente e, desses, usar todo o saldo" é o RE-05 sobre o lote e o RE-07 sobre os DFs que o RE-05 atingiu, cada um com a sua data (seção 5).</p>
+</section>
+<section class="section" id="s5">
+  <div class="sec-hdr"><span class="sec-num">5</span><span class="sec-title">O lote: DFs criados ou filtrados, várias ações</span></div>
+  <p>O administrador não precisa nomear DFs (D-EM-16, decidida em 18/11/2026). O lote vem dos DFs que o cliente já tem, por filtro, de DFs que o emulador cria na hora, ou dos dois. Depois vêm as ações, cada uma com o percentual dos DFs que atinge.</p>
+  <ol class="plain">
+    <li><strong>O lote.</strong> Os DFs que o cliente já tem, por filtro: empresa do grupo (CNPJ), direção (entrada ou saída), tributo (CBS, IBS ou os dois), competência, modelo, fornecedor ou cliente, método de recolhimento, situação atual no ente, faixa de valor. O contador mostra quantos DFs o filtro pega. Uma lista de chaves, colada ou em CSV, continua possível, mas não é preciso. Ou DFs criados na hora (abaixo), ou os dois juntos.</li>
+    <li><strong>As ações.</strong> Uma lista em ordem. Cada ação traz um resultado da seção 4, o ente (Receita Federal, Comitê Gestor ou os dois), os parâmetros (a parte, a diferença), o percentual e a base.</li>
+    <li><strong>A base.</strong> O lote, ou os DFs que receberam uma ação anterior: "dos apropriados, 50% usam todo o saldo". Ações com a mesma base não se sobrepõem: um DF recebe só uma delas, elas somam até 100%, e o que sobra fica sem lançamento (D-EM-17).</li>
+    <li><strong>O percentual.</strong> Conta sobre os DFs elegíveis da base, os que podem chegar ao resultado; os outros aparecem à parte (D-EM-18). Vira número de DFs pelo maior resto, para a soma bater com o total, e a prévia mostra o número exato.</li>
+    <li><strong>O sorteio.</strong> Com semente: o mesmo filtro e a mesma semente sorteiam os mesmos DFs, noutro ambiente ou no teste automatizado (D-EM-19).</li>
+    <li><strong>Quando.</strong> Por ação: agora; retroativa (uma data passada, para testar prazo, nunca antes da emissão); agendada (uma data futura); espalhada (distribui os DFs entre duas datas).</li>
+    <li><strong>A prévia.</strong> Primeiro por ação (quantos DFs, quantos lançamentos, os eventos e as inconsistências esperados); depois DF a DF e ente a ente. Nada é gravado antes de confirmar.</li>
+    <li><strong>A execução.</strong> Grava os lançamentos com a origem <code>emulated</code>, o número da execução e a semente. Acima de 100 DFs atingidos, o administrador digita o número para confirmar (D-EM-13).</li>
+    <li><strong>A conferência.</strong> Seção 9.</li>
+  </ol>
+  <h3 id="criar-dfs">Criar DFs</h3>
+  <p>Para quando o cliente de teste não tem DFs, ou não tem os que o teste pede. O administrador diz quantos, de que tipos e com que valores. Cada característica é pré-definida (o administrador fixa) ou aleatória (o emulador sorteia dentro do que o administrador permite, com a semente do lote: a mesma semente cria os mesmos DFs).</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Característica</th><th>Pré-definida</th><th>Aleatória ou o padrão</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Quantidade</strong></td><td class="wrap">Um número, até 1.000 DFs por execução (D-EM-13)</td><td>—</td></tr>
+      <tr><td><strong>Empresa do grupo</strong></td><td class="wrap">Um CNPJ ativo do cliente, da aba Empresas</td><td class="wrap">Sorteada entre os CNPJs ativos</td></tr>
+      <tr><td><strong>Direção e tipo</strong></td><td class="wrap">A mistura, em percentual: 60% NF-e de entrada, 20% CT-e de entrada e 20% NF-e de saída, por exemplo, entre os 14 tipos que o tax-rs aceita</td><td class="wrap">Sorteado entre os tipos marcados, em partes iguais</td></tr>
+      <tr><td><strong>Contraparte</strong></td><td class="wrap">Uma ou mais das que o cliente já tem: fornecedores, na entrada; clientes, na saída</td><td class="wrap">Fictícias, criadas na hora, com CNPJ válido e o nome marcado "[EMULADO]" (D-EM-25)</td></tr>
+      <tr><td><strong>Emissão</strong></td><td class="wrap">Uma data; a competência acompanha o mês da emissão</td><td class="wrap">Espalhada entre duas datas</td></tr>
+      <tr><td><strong>Valor</strong></td><td class="wrap">Um valor para todos, ou uma lista colada, um por DF, que se repete</td><td class="wrap">Entre um mínimo e um máximo</td></tr>
+      <tr><td><strong>CBS e IBS</strong></td><td class="wrap">As alíquotas que o administrador informar</td><td class="wrap">O padrão: as do ano da emissão, pela lei; em 2026, CBS 0,9% e IBS 0,1% (D-EM-26)</td></tr>
+      <tr><td><strong>Recolhimento</strong>, na entrada</td><td class="wrap">Fornecedor ou RAD, com o prazo, por cima do contrato; ou a mistura, em percentual</td><td class="wrap">O padrão: o contrato do fornecedor, como no DF real; sem contrato, o fornecedor recolhe</td></tr>
+      <tr><td><strong>Chave, número e série</strong></td><td>—</td><td class="wrap">Gerados: chave de 44 dígitos com o CNPJ do emitente e o dígito verificador válidos, como o tax-rs exige; série própria do emulador, para não colidir com DF real</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Como o DF criado entra no tax-rs.</strong> Pela entrada interna do razão (<code>ledger/intake.ts</code>), a mesma que o seed e a captura SEFAZ usam, com a origem nova <code>emulated</code>. Valida como o DF da captura SEFAZ, sem itens, como na primeira versão do produto. O razão cria os registros da CBS e do IBS e avisa que o DF foi registrado; o Simulado segue o DF se o cliente está em Simulada (D-EM-27). Duas travas do tax-rs valem aqui: um lado do DF tem de ser empresa ativa do cliente, e só um lado (<code>ledger/lib/documents.ts:66</code>).</p>
+  <p><strong>No mesmo lote.</strong> Os DFs criados recebem as ações como o lote filtrado: "criar 1.000 NF-e de entrada de 10/2026, de R$ 10.000,00 cada (CBS R$ 90,00 e IBS R$ 10,00), e, desses, 70% apropriados e 10% glosados". Criar só os DFs, sem ação, também vale.</p>
+  <div class="callout warn"><div class="ct">Remover o que foi criado</div><p>Pela regra de hoje, nada se apaga (D-EM-10). A D-EM-28 decide se os DFs criados por uma execução podem ser removidos, fora da produção.</p></div>
+  <h3>Um lote com cinco ações</h3>
+  <p>Entradas de 10/2026, CBS e IBS: o filtro pega 1.012 DFs, e 12 já estão glosados no ente, fora do alcance das ações 1 a 3. Sobram 1.000 elegíveis.</p>
+  <div class="table-wrap"><table class="acoes-n">
+    <thead><tr><th>#</th><th>Ação</th><th>Base</th><th class="n">%</th><th class="n">DFs</th></tr></thead>
+    <tbody>
+      <tr><td class="id">1</td><td><strong>RE-05</strong> Apropriar totalmente, pelo recolhimento do fornecedor</td><td>o lote</td><td class="n">70%</td><td class="n">700</td></tr>
+      <tr><td class="id">2</td><td><strong>RE-09</strong> Glosar antes da apropriação</td><td>o lote</td><td class="n">10%</td><td class="n">100</td></tr>
+      <tr><td class="id">3</td><td><strong>RE-02</strong> Divergir o valor do imposto, só na CBS, 10% acima</td><td>o lote</td><td class="n">5%</td><td class="n">50</td></tr>
+      <tr><td class="id">—</td><td>Sem lançamento</td><td>o lote</td><td class="n">15%</td><td class="n">150</td></tr>
+      <tr><td class="id">4</td><td><strong>RE-07</strong> Usar todo o saldo disponível</td><td>ação 1</td><td class="n">50%</td><td class="n">350</td></tr>
+      <tr><td class="id">5</td><td><strong>RE-08</strong> Usar parte do saldo, 40%</td><td>ação 1</td><td class="n">20%</td><td class="n">140</td></tr>
+    </tbody>
+  </table></div>
+  <p>No fim: 210 créditos apropriados e intocados, 350 usados por inteiro, 140 com 60% ainda disponível, 100 glosados, 50 com a CAPUR da CBS divergente e 150 como estavam. A mesma semente repete a mesma distribuição.</p>
+  <h3>Os pedidos de antes, no lote</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Pedido</th><th>O lote</th><th>O que a plataforma mostra</th></tr></thead>
+    <tbody>
+      <tr><td class="wrap"><strong>Apropriar totalmente as entradas de 10/2026 do fornecedor A</strong></td><td class="wrap">Filtro por fornecedor e competência; uma ação, RE-05, 100%. Se algum DF não tiver o registro, o C01 entra antes.</td><td class="wrap">credit.appropriated em cada DF, por tributo.</td></tr>
+      <tr><td class="wrap"><strong>Usar todo o saldo disponível dos créditos apropriados</strong></td><td class="wrap">Filtro pela situação "apropriado"; uma ação, RE-07, no percentual pedido.</td><td class="wrap">credit.utilized; o disponível vai a zero.</td></tr>
+      <tr><td class="wrap"><strong>Gerar inconsistência de valor do IBS em 10% das saídas</strong></td><td class="wrap">Filtro de saída; uma ação, RE-02, só no Comitê Gestor, R$ 100,00 acima, 10%.</td><td class="wrap">Inconsistências <code>capur_ibs_divergente</code>, com a diferença de R$ 100,00.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+<section class="section" id="s6">
+  <div class="sec-hdr"><span class="sec-num">6</span><span class="sec-title">Cenários prontos</span></div>
+  <p>Os 17 roteiros do <a href="../proposta-gerador-massa.html">MassGen</a> (v4.3), que contam a história completa de um DF em cada ente, mais as proporções do Simulado. O administrador escolhe o cenário, o lote e a data; o emulador distribui. 4 rodam na E2.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>História</th><th>CBS</th><th>IBS</th><th>Etapa</th></tr></thead>
+    <tbody>
+      <tr><td class="id">SIM</td><td class="wrap"><strong>Proporções do Simulado</strong>, de uma vez num lote, em vez de ao longo do tempo: CAPUR 70% conciliada, 20% divergente, 10% pendente; crédito apropriado na data do recolhimento, metade usado 30 dias depois, 3% glosado; débito extinto pelo RAD ou por compensação</td><td><div class="gaps"><a class="lv" href="#L-C01">C01</a><a class="lv" href="#L-C02">C02</a><a class="lv" href="#L-C07">C07</a><a class="lv" href="#L-C04">C04</a><a class="lv" href="#L-D01">D01</a><a class="lv" href="#L-D03">D03</a><a class="lv" href="#L-D04">D04</a><a class="lv" href="#L-P02">P02</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-01">IBS-01</a><a class="lv" href="#L-IBS-02">IBS-02</a><a class="lv" href="#L-IBS-05">IBS-05</a><a class="lv" href="#L-IBS-06">IBS-06</a><a class="lv" href="#L-IBS-08">IBS-08</a><a class="lv" href="#L-IBS-10">IBS-10</a></div></td><td><span class="chip info">E2 · já roda hoje</span></td></tr>
+      <tr class="grp-row"><td class="grp" colspan="5">Cliente comprador</td></tr>
+      <tr><td class="id">RT-A1</td><td class="wrap"><strong>Fornecedor recolhe; crédito apropriado e usado</strong></td><td><div class="gaps"><a class="lv" href="#L-C01">C01</a><a class="lv" href="#L-C02">C02</a><a class="lv" href="#L-C07">C07</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-01">IBS-01</a><a class="lv" href="#L-IBS-05">IBS-05</a><a class="lv" href="#L-IBS-06">IBS-06</a></div></td><td><span class="chip info">E2</span></td></tr>
+      <tr><td class="id">RT-A2</td><td class="wrap"><strong>Cliente paga pelo RAD</strong></td><td><div class="gaps"><a class="lv" href="#L-C01">C01</a><a class="lv" href="#L-R01">R01</a><a class="lv" href="#L-C02">C02</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-01">IBS-01</a><a class="lv" href="#L-IBS-05">IBS-05</a></div></td><td><span class="chip info">E2</span></td></tr>
+      <tr><td class="id">RT-A3</td><td class="wrap"><strong>Pagamento com split</strong></td><td><div class="gaps"><a class="lv" href="#L-C01">C01</a><a class="lv" href="#L-R02">R02</a><a class="lv" href="#L-C02">C02</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-01">IBS-01</a><a class="lv" href="#L-IBS-05">IBS-05</a></div></td><td><span class="chip gray">E3</span></td></tr>
+      <tr><td class="id">RT-A4</td><td class="wrap"><strong>Apropriação parcial, depois complemento</strong></td><td><div class="gaps"><a class="lv" href="#L-C03">C03</a><a class="lv" href="#L-C02">C02</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-01">IBS-01</a><a class="lv" href="#L-IBS-03">IBS-03</a><a class="lv" href="#L-IBS-05">IBS-05</a></div></td><td><span class="chip gray">E3</span></td></tr>
+      <tr><td class="id">RT-A5</td><td class="wrap"><strong>Cancelada depois de usada</strong></td><td><div class="gaps"><a class="lv" href="#L-C07">C07</a><a class="lv" href="#L-D07">D07</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-15">IBS-15</a><a class="lv" href="#L-IBS-16">IBS-16</a><a class="lv" href="#L-IBS-08">IBS-08</a></div></td><td><span class="chip gray">E3</span></td></tr>
+      <tr><td class="id">RT-A6</td><td class="wrap"><strong>Devolvida ao fornecedor</strong></td><td><div class="gaps"><a class="lv" href="#L-D07">D07</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-19">IBS-19</a><a class="lv" href="#L-IBS-20">IBS-20</a><a class="lv" href="#L-IBS-09">IBS-09</a></div></td><td><span class="chip gray">E3</span></td></tr>
+      <tr><td class="id">RT-A7</td><td class="wrap"><strong>Crédito em risco</strong></td><td><div class="gaps"><a class="lv" href="#L-C04">C04</a><a class="lv" href="#L-C05">C05</a><a class="lv" href="#L-C06">C06</a><a class="lv" href="#L-C08">C08</a><a class="lv" href="#L-C09">C09</a></div></td><td><span class="mudo">mudo</span></td><td><span class="chip gray">E3</span></td></tr>
+      <tr><td class="id">RT-A8</td><td class="wrap"><strong>Saldo credor e ressarcimento</strong></td><td><div class="gaps"><a class="lv" href="#L-C10">C10</a><a class="lv" href="#L-C11">C11</a><a class="lv" href="#L-C12">C12</a></div></td><td><span class="mudo">mudo</span></td><td><span class="chip gray">E3</span></td></tr>
+      <tr><td class="id">RT-A9</td><td class="wrap"><strong>RAD em atraso</strong></td><td><div class="gaps"><a class="lv" href="#L-R03">R03</a></div></td><td><span class="mudo">mudo</span></td><td><span class="chip gray">E3</span></td></tr>
+      <tr class="grp-row"><td class="grp" colspan="5">Cliente vendedor</td></tr>
+      <tr><td class="id">RT-F1</td><td class="wrap"><strong>Cliente recolhe pelo PCONT</strong></td><td><div class="gaps"><a class="lv" href="#L-D01">D01</a><a class="lv" href="#L-P01">P01</a><a class="lv" href="#L-D04">D04</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-02">IBS-02</a><a class="lv" href="#L-IBS-09">IBS-09</a></div></td><td><span class="chip info">E2</span></td></tr>
+      <tr><td class="id">RT-F2</td><td class="wrap"><strong>Compensação com créditos</strong></td><td><div class="gaps"><a class="lv" href="#L-D01">D01</a><a class="lv" href="#L-D03">D03</a><a class="lv" href="#L-D04">D04</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-02">IBS-02</a><a class="lv" href="#L-IBS-07">IBS-07</a><a class="lv" href="#L-IBS-08">IBS-08</a></div></td><td><span class="chip gray">E3</span></td></tr>
+      <tr><td class="id">RT-F3</td><td class="wrap"><strong>Cliente do cliente paga pelo RAD, com estorno e excesso</strong></td><td><div class="gaps"><a class="lv" href="#L-D01">D01</a><a class="lv" href="#L-P02">P02</a><a class="lv" href="#L-D04">D04</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-02">IBS-02</a><a class="lv" href="#L-IBS-10">IBS-10</a><a class="lv" href="#L-IBS-11">IBS-11</a><a class="lv" href="#L-IBS-24">IBS-24</a></div></td><td><span class="chip gray">E3</span></td></tr>
+      <tr><td class="id">RT-F4</td><td class="wrap"><strong>Split, com estorno</strong></td><td><div class="gaps"><a class="lv" href="#L-D01">D01</a><a class="lv" href="#L-P03">P03</a><a class="lv" href="#L-D04">D04</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-02">IBS-02</a><a class="lv" href="#L-IBS-12">IBS-12</a><a class="lv" href="#L-IBS-13">IBS-13</a><a class="lv" href="#L-IBS-14">IBS-14</a></div></td><td><span class="chip gray">E3</span></td></tr>
+      <tr><td class="id">RT-F5</td><td class="wrap"><strong>Complemento de valor</strong></td><td><div class="gaps"><a class="lv" href="#L-D07">D07</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-04">IBS-04</a></div></td><td><span class="chip gray">E3</span></td></tr>
+      <tr><td class="id">RT-F6</td><td class="wrap"><strong>Cancelada com split já retido</strong></td><td><div class="gaps"><a class="lv" href="#L-D07">D07</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-17">IBS-17</a><a class="lv" href="#L-IBS-18">IBS-18</a><a class="lv" href="#L-IBS-23">IBS-23</a></div></td><td><span class="chip gray">E3</span></td></tr>
+      <tr><td class="id">RT-F7</td><td class="wrap"><strong>Devolução recebida do cliente do cliente</strong></td><td><div class="gaps"><a class="lv" href="#L-C01">C01</a><a class="lv" href="#L-C02">C02</a></div></td><td><div class="gaps"><a class="lv" href="#L-IBS-21">IBS-21</a><a class="lv" href="#L-IBS-22">IBS-22</a></div></td><td><span class="chip gray">E3</span></td></tr>
+      <tr><td class="id">RT-F8</td><td class="wrap"><strong>Débito excedente, inexigível, suspenso, pago em atraso</strong></td><td><div class="gaps"><a class="lv" href="#L-D02">D02</a><a class="lv" href="#L-D05">D05</a><a class="lv" href="#L-D06">D06</a><a class="lv" href="#L-P04">P04</a></div></td><td><span class="mudo">mudo</span></td><td><span class="chip gray">E3</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+<section class="section" id="s7">
+  <div class="sec-hdr"><span class="sec-num">7</span><span class="sec-title">Lançamento unitário</span></div>
+  <p>Um DF, um ente, um lançamento. Serve para reproduzir um caso, testar uma tela ou montar a situação de uma demonstração.</p>
+  <ul class="plain">
+    <li><strong>O DF:</strong> pela chave, ou escolhido na lista do cliente. A aba mostra a situação dele em cada ente, com os saldos.</li>
+    <li><strong>O lançamento:</strong> do catálogo da seção 3, filtrado pelo que a documentação permite na situação do DF. Os que não cabem aparecem riscados, com o motivo (um C07 sem saldo disponível, por exemplo).</li>
+    <li><strong>Valor e data:</strong> já sugeridos (o saldo, o valor do DF, agora); o administrador ajusta.</li>
+    <li><strong>Antes e depois:</strong> os saldos, o evento e a inconsistência esperados, antes de confirmar.</li>
+    <li><strong>Forçar:</strong> lança fora da ordem que a documentação permite (uma utilização sem apropriação, por exemplo), para testar a defesa da plataforma. Só aqui, e o lançamento fica marcado (D-EM-09).</li>
+    <li><strong>Chave desconhecida:</strong> registra no ente uma chave que a plataforma não tem, para o registro sem DF (RE-04).</li>
+  </ul>
+</section>
+<section class="section" id="s8">
+  <div class="sec-hdr"><span class="sec-num">8</span><span class="sec-title">O modo Simulado, revisto</span></div>
+  <p>O Simulado continua: é o modelo automático. Segue cada DF novo do cliente e lança sozinho, nas datas do plano, com as proporções do protótipo, sem ninguém pedir. O emulador é o modelo manual, ao lado (D-EM-05, decidida em 18/11/2026).</p>
+  <div class="callout warn"><div class="ct">O que se vê hoje</div><p>A CAPUR e a CFIN aparecem conciliadas, mas o saldo e a situação da apropriação do crédito não mudam.</p></div>
+  <div class="callout ok"><div class="ct">A regra, decidida pelo usuário em 18/11/2026</div><p>Quando se paga o imposto, o crédito é apropriado. No Simulado e no emulador, o ente simulado lança o pagamento e a apropriação juntos, na mesma data (D-EM-21). Pagar sem apropriar só acontece com "forçar", no lançamento unitário, para testar a defesa da plataforma.</p></div>
+  <h3>O que o código mostra</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>Achado</th><th>Onde</th><th>Efeito</th></tr></thead>
+    <tbody>
+      <tr><td class="id">G-SIM-01</td><td class="wrap">A apropriação tem data marcada no cadastro do DF e não olha o pagamento. Recolhimento pelo fornecedor: último dia do mês seguinte ao da emissão. RAD: 3 dias depois da emissão. Split: depois do prazo de pagamento (30 dias, se não houver).</td><td><code>tax-authority/lib/simulator.ts:84</code> · <code>ledger/lib/cycle.ts:26</code></td><td class="wrap">Um crédito de outubro com recolhimento do fornecedor só se apropria em 30/11, mesmo com a CAPUR conciliada e o pagamento feito.</td></tr>
+      <tr><td class="id">G-SIM-02</td><td class="wrap">O que vence depois do cadastro só sai pelo cron de hora em hora. O Encore não roda cron no ambiente local.</td><td><code>tax-authority/simulation.ts:76</code></td><td class="wrap">No Live local sai o que já tinha vencido no cadastro (a CAPUR de um DF antigo, por exemplo) e mais nada: a apropriação e a utilização não chegam.</td></tr>
+      <tr><td class="id">G-SIM-03</td><td class="wrap">O Simulado só segue o DF registrado depois que o cliente está em Simulada. Trocar o modo não adota os DFs que já existem.</td><td><code>tax-authority/simulation.ts:15</code> · <code>platform/admin.ts:220</code></td><td class="wrap">Quem veio do Replay ou do Desligado fica com os DFs antigos parados no que tinham.</td></tr>
+      <tr><td class="id">G-SIM-04</td><td class="wrap">A CFIN concilia quando o DF consta como pago, e "pago" inclui ter data de pagamento. O fato de pagamento sozinho (o do Replay, por exemplo) dá a data e não apropria, por regra: quem apropria é o ente.</td><td><code>reconciliation/lib/reconcile.ts:73</code> · <code>ledger/announce.ts:56</code> · <code>ledger/lib/fold.ts:158</code></td><td class="wrap">CFIN conciliada e crédito "a apropriar" ao mesmo tempo, o que a regra não admite.</td></tr>
+      <tr><td class="id">G-SIM-05</td><td class="wrap">Pelo plano, 15% dos créditos nunca se apropriam e 10% da CAPUR fica pendente para sempre. A aba não mostra isso.</td><td><code>tax-authority/lib/simulator.ts:28</code></td><td class="wrap">Parte dos DFs parece travada, e é o plano.</td></tr>
+    </tbody>
+  </table></div>
+  <p>O código não diz qual dos cinco o usuário viu. Para fechar, no Live local: o modo do cliente e desde quando; se os DFs parados foram cadastrados antes da troca para Simulada; os fatos gravados para um deles; e se a emissão de hora em hora rodou alguma vez.</p>
+  <h3>O que muda no Simulado</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>Mudança</th><th>Resolve</th></tr></thead>
+    <tbody>
+      <tr><td class="id">R-SIM-01</td><td class="wrap">Pagamento e apropriação juntos (D-EM-21, decidida). Na data do plano, o Simulado lança o pagamento e a apropriação. Se o pagamento chega antes por outro caminho (o ERP, o Replay, o emulador), o Simulado apropria na data dele. O saldo appropriated e o disponível andam no mesmo instante.</td><td>G-SIM-01 · G-SIM-04</td></tr>
+      <tr><td class="id">R-SIM-02</td><td class="wrap">Botão "Avançar até agora" na aba, que emite o que já venceu só daquele cliente, e a hora da última emissão. É o caminho no ambiente local, onde não há cron.</td><td>G-SIM-02</td></tr>
+      <tr><td class="id">R-SIM-03</td><td class="wrap">Na troca para Simulada, a aba mostra quantos DFs já existem e o administrador decide se o Simulado os adota (D-EM-22).</td><td>G-SIM-03</td></tr>
+      <tr><td class="id">R-SIM-04</td><td class="wrap">O plano de cada DF na aba: o que já saiu, o que vem e quando, e se o DF está entre os que o plano deixa parados.</td><td>G-SIM-05</td></tr>
+      <tr><td class="id">R-SIM-05</td><td class="wrap">Conferência depois de cada emissão, com o motor da seção 9: o saldo e a situação do DF têm de mudar como o lançamento manda. O que não bater vira alerta na aba.</td><td>Todos</td></tr>
+      <tr><td class="id">R-SIM-06</td><td class="wrap">O DF lançado pelo emulador sai do plano do Simulado naquele tributo (D-EM-20).</td><td>A briga entre os dois</td></tr>
+      <tr><td class="id">R-SIM-07</td><td class="wrap">As proporções aparecem na aba, fixas (D-EM-23).</td><td>G-SIM-05</td></tr>
+      <tr><td class="id">R-SIM-08</td><td class="wrap">Fora da emulação: quando o ente real ou o Replay registra o pagamento e não apropria, o razão segue o ente e a plataforma mostra a divergência (D-EM-24). A divergência entra no catálogo de inconsistências quando a D-EM-24 for decidida.</td><td>G-SIM-04</td></tr>
+    </tbody>
+  </table></div>
+</section>
+<section class="section" id="s9">
+  <div class="sec-hdr"><span class="sec-num">9</span><span class="sec-title">Conferência do resultado</span></div>
+  <p>Cada resultado vira um conjunto de checagens por DF e por ente, lidas do próprio tax-rs depois da gravação:</p>
+  <ul class="plain">
+    <li><strong>Saldos:</strong> os do registro público do DF (o mesmo que a API da plataforma devolve), comparados com o esperado na prévia.</li>
+    <li><strong>Eventos:</strong> os publicados para o DF depois da execução, na ordem esperada.</li>
+    <li><strong>Inconsistências:</strong> abertas ou fechadas, pelo código.</li>
+  </ul>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Situação</th><th>Quando</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip ok">Atingido</span></td><td>Todas as checagens passam.</td></tr>
+      <tr><td><span class="chip red">Divergente</span></td><td>Alguma checagem falha. A linha mostra o esperado e o encontrado.</td></tr>
+      <tr><td><span class="chip warn">Aguardando</span></td><td>Há lançamento agendado ainda não emitido, ou o efeito ainda não apareceu. Passa a Divergente se o efeito não aparecer até 15 minutos depois do último lançamento.</td></tr>
+    </tbody>
+  </table></div>
+  <p>A mesma conferência roda depois de cada emissão do Simulado (R-SIM-05).</p>
+  <p>A conferência se exporta em CSV e responde pela API do admin, para que os testes automatizados do tax-rs rodem um cenário e cobrem o Atingido em todos os DFs (D-EM-12).</p>
+</section>
+<section class="section" id="s10">
+  <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Telas</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>Tela</th><th>O que tem</th></tr></thead>
+    <tbody>
+      <tr><td class="id">T-EM-01</td><td><strong>Painel da aba</strong></td><td class="wrap">O modo (Simulada, Replay, Desligada); lançamentos gravados por ente e por origem; execuções recentes com a situação da conferência; agendados pendentes; alertas do Simulado. Botões: Novo lote, Lançamento unitário, Simulado.</td></tr>
+      <tr><td class="id">T-EM-02</td><td><strong>Novo lote</strong></td><td class="wrap">Três passos: DFs (filtrados, criados ou os dois), ações (resultado, ente, base, percentual) e quando. Os contadores se atualizam a cada filtro e a cada ação; a semente aparece e pode ser trocada.</td></tr>
+      <tr><td class="id">T-EM-03</td><td><strong>Prévia</strong></td><td class="wrap">Por ação (DFs, lançamentos, eventos e inconsistências esperados) e, abaixo, DF a DF e ente a ente; os fora do alcance, com o motivo; a confirmação.</td></tr>
+      <tr><td class="id">T-EM-04</td><td><strong>Lançamento unitário</strong></td><td class="wrap">O DF e a situação dele nos dois entes, o lançamento, valor e data, antes e depois, forçar.</td></tr>
+      <tr><td class="id">T-EM-05</td><td><strong>Execuções e conferência</strong></td><td class="wrap">Cada execução, com autor, pedido e situação; a conferência DF a DF; exportar CSV; baixar o cenário em JSON.</td></tr>
+      <tr><td class="id">T-EM-06</td><td><strong>Simulado</strong></td><td class="wrap">O plano por DF (o que saiu, o que vem e quando), a última emissão, o botão "Avançar até agora", os alertas da conferência e as proporções.</td></tr>
+      <tr><td class="id">T-EM-07</td><td><strong>Criar DFs</strong></td><td class="wrap">Quantidade, empresa do grupo, a mistura de direção e tipo, contraparte, emissão, valor, alíquotas e recolhimento, cada um pré-definido ou aleatório; a semente; a prévia com os primeiros DFs e os totais; criar só os DFs ou seguir para as ações.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><div class="ct">Onde as telas ficam no painel do cliente</div><p>Três estruturas, clicáveis, na <a href="../taxrs-emulador-estrutura.html">página da estrutura do módulo</a>: subabas dentro da aba, um espaço próprio do emulador ou uma execução guiada. A escolha é a D-EM-29.</p></div>
+  <h3>Esboço da T-EM-02 e da T-EM-03</h3>
+  <div class="mock" role="img" aria-label="Esboço da tela de novo lote com a prévia">
+    <div class="mock-bar"><strong>Fonte dos entes · Novo lote</strong><span>Cliente de teste · modo Simulada</span></div>
+    <div class="steps"><span class="step">1 · DFs</span><span class="step">2 · Ações</span><span class="step">3 · Quando</span><span class="step on">4 · Prévia</span></div>
+    <div class="campos">
+      <div class="campo"><div class="cl">Lote</div><div class="cv">Entrada · CBS e IBS · competência 10/2026 · 1.012 DFs, 1.000 elegíveis</div></div>
+      <div class="campo"><div class="cl">Semente</div><div class="cv">4721</div></div>
+      <div class="campo"><div class="cl">Quando</div><div class="cv">Agora, nas cinco ações</div></div>
+    </div>
+    <h4>Prévia por ação</h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Ação</th><th class="n">DFs</th><th>O que o emulador lança</th><th>O que a plataforma mostra</th></tr></thead>
+      <tbody>
+        <tr><td>1 · RE-05 apropriar</td><td class="n">210</td><td>C02 · IBS-05</td><td>credit.appropriated</td></tr>
+        <tr><td>1 e 4 · apropriar e usar tudo</td><td class="n">350</td><td>C02 · IBS-05, depois C07 · IBS-06 do saldo todo</td><td>credit.appropriated · credit.utilized; disponível zero</td></tr>
+        <tr><td>1 e 5 · apropriar e usar 40%</td><td class="n">140</td><td>C02 · IBS-05, depois C07 · IBS-06 de 40%</td><td>credit.utilized; 60% disponível</td></tr>
+        <tr><td>2 · RE-09 glosar</td><td class="n">100</td><td>A glosa, nos dois entes</td><td>credit.disallowed</td></tr>
+        <tr><td>3 · RE-02 divergir, CBS</td><td class="n">50</td><td>O registro na CBS, 10% acima</td><td><code>capur_cbs_divergente</code></td></tr>
+        <tr><td>Sem lançamento</td><td class="n">150</td><td>—</td><td>—</td></tr>
+        <tr><td>Fora do alcance</td><td class="n">12</td><td colspan="2">Já glosados no ente</td></tr>
+      </tbody>
+    </table></div>
+    <h4>DF a DF · primeiros de 1.000</h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>DF</th><th>Ações</th><th>Ente</th><th>Antes</th><th>Depois</th></tr></thead>
+      <tbody>
+        <tr><td class="id">…0001</td><td>1 e 4</td><td>CBS</td><td>pending R$ 1.000,00</td><td>utilized R$ 1.000,00</td></tr>
+        <tr><td class="id">…0001</td><td>1 e 4</td><td>IBS</td><td>a apropriar R$ 1.000,00</td><td>utilizado R$ 1.000,00</td></tr>
+        <tr><td class="id">…0002</td><td>2</td><td>CBS e IBS</td><td>pending R$ 2.000,00</td><td>not_appropriable R$ 2.000,00</td></tr>
+        <tr><td class="id">…0003</td><td>—</td><td>CBS e IBS</td><td colspan="2">Sem lançamento</td></tr>
+      </tbody>
+    </table></div>
+    <div class="mock-acoes"><span class="nota">Nada é gravado antes de confirmar. Digite 1000 para confirmar.</span><span class="mbtn">Voltar</span><span class="mbtn pri">Gravar 2.630 lançamentos</span></div>
+  </div>
+  <h3>Esboço da T-EM-04</h3>
+  <div class="mock" role="img" aria-label="Esboço da tela de lançamento unitário">
+    <div class="mock-bar"><strong>Fonte dos entes · Lançamento unitário</strong><span>DF …0004 · entrada · Fornecedor A</span></div>
+    <div class="campos">
+      <div class="campo"><div class="cl">CBS · Receita Federal</div><div class="cv">appropriated R$ 2.000,00 · utilized R$ 500,00 · available R$ 1.500,00</div></div>
+      <div class="campo"><div class="cl">IBS · Comitê Gestor</div><div class="cv">não utilizado R$ 1.000,00</div></div>
+    </div>
+    <h4>Lançamento</h4>
+    <div class="campos">
+      <div class="campo"><div class="cl">Ente</div><div class="cv">Receita Federal</div></div>
+      <div class="campo"><div class="cl">Lançamento</div><div class="cv">C07 Utilização</div></div>
+      <div class="campo"><div class="cl">Valor</div><div class="cv">R$ 1.500,00 (o disponível)</div></div>
+      <div class="campo"><div class="cl">Data</div><div class="cv">Agora</div></div>
+      <div class="campo off"><div class="cl">Não cabe</div><div class="cv">C02 Apropriação total: já apropriado</div></div>
+    </div>
+    <h4>Antes e depois</h4>
+    <div class="campos">
+      <div class="campo"><div class="cl">available</div><div class="cv">R$ 1.500,00 → zero</div></div>
+      <div class="campo"><div class="cl">Evento</div><div class="cv">credit.utilized</div></div>
+      <div class="campo"><div class="cl">Inconsistência</div><div class="cv">nenhuma</div></div>
+    </div>
+    <div class="mock-acoes"><span class="nota">Forçar: desligado</span><span class="mbtn">Cancelar</span><span class="mbtn pri">Lançar</span></div>
+  </div>
+  <h3>Esboço da T-EM-07</h3>
+  <div class="mock" role="img" aria-label="Esboço da tela de criar DFs">
+    <div class="mock-bar"><strong>Fonte dos entes · Criar DFs</strong><span>Cliente de teste · 3 CNPJs ativos</span></div>
+    <div class="campos">
+      <div class="campo"><div class="cl">Quantidade</div><div class="cv">1.000</div></div>
+      <div class="campo"><div class="cl">Empresa do grupo</div><div class="cv">Aleatória entre os 3 CNPJs ativos</div></div>
+      <div class="campo"><div class="cl">Direção e tipo</div><div class="cv">60% NF-e de entrada · 20% CT-e de entrada · 20% NF-e de saída</div></div>
+      <div class="campo"><div class="cl">Contraparte</div><div class="cv">Fictícias: 50 fornecedores e 20 clientes [EMULADO]</div></div>
+      <div class="campo"><div class="cl">Emissão</div><div class="cv">Aleatória entre 01/10/2026 e 31/10/2026</div></div>
+      <div class="campo"><div class="cl">Valor</div><div class="cv">Aleatório entre R$ 1.000,00 e R$ 100.000,00</div></div>
+      <div class="campo"><div class="cl">CBS e IBS</div><div class="cv">As de 2026: 0,9% e 0,1%</div></div>
+      <div class="campo"><div class="cl">Recolhimento</div><div class="cv">Pelo contrato do fornecedor</div></div>
+      <div class="campo"><div class="cl">Semente</div><div class="cv">4721</div></div>
+    </div>
+    <h4>Prévia · primeiros de 1.000</h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>DF</th><th>Tipo</th><th>Contraparte</th><th class="n">Valor</th><th class="n">CBS</th><th class="n">IBS</th></tr></thead>
+      <tbody>
+        <tr><td class="id">…0001</td><td>NF-e · entrada</td><td>Fornecedor 01 [EMULADO]</td><td class="n">R$ 10.000,00</td><td class="n">R$ 90,00</td><td class="n">R$ 10,00</td></tr>
+        <tr><td class="id">…0002</td><td>CT-e · entrada</td><td>Fornecedor 02 [EMULADO]</td><td class="n">R$ 2.000,00</td><td class="n">R$ 18,00</td><td class="n">R$ 2,00</td></tr>
+        <tr><td class="id">…0003</td><td>NF-e · saída</td><td>Cliente 01 [EMULADO]</td><td class="n">R$ 50.000,00</td><td class="n">R$ 450,00</td><td class="n">R$ 50,00</td></tr>
+      </tbody>
+    </table></div>
+    <div class="mock-acoes"><span class="nota">Nada é criado antes de confirmar. 800 de entrada, 200 de saída.</span><span class="mbtn">Criar 1.000 DFs</span><span class="mbtn pri">Criar e seguir para as ações</span></div>
+  </div>
+</section>
+<section class="section" id="s11">
+  <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Regras e travas</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>Regra</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RG-01</td><td>Só fora da produção. No ambiente de produção do Encore, a aba não mostra o emulador e os endpoints recusam, como já acontece com a escolha da fonte.</td></tr>
+      <tr><td class="id">RG-02</td><td>Só o administrador da plataforma, com MFA.</td></tr>
+      <tr><td class="id">RG-03</td><td>Fora da produção, em qualquer modo da fonte. Trocar o modo pede confirmação e entra na auditoria; trocar não apaga nada.</td></tr>
+      <tr><td class="id">RG-04</td><td>Prévia antes de gravar, no lote e no lançamento unitário.</td></tr>
+      <tr><td class="id">RG-05</td><td>Até 1.000 DFs atingidos por execução, somadas as ações, e até 1.000 DFs criados; acima de 100, o administrador digita o número de DFs para confirmar.</td></tr>
+      <tr><td class="id">RG-06</td><td>Nada se apaga. Desfazer é lançar o contrário quando a documentação do ente prevê (estorno, cancelamento).</td></tr>
+      <tr><td class="id">RG-07</td><td>Cada lançamento leva a origem <code>emulated</code>, a execução e o autor. Gravar a mesma execução de novo não duplica nada: a porta de fatos já ignora a mesma referência no mesmo cliente.</td></tr>
+      <tr><td class="id">RG-08</td><td>O emulador cria DF só fora da produção, pela entrada interna do razão, com a origem <code>emulated</code>, a chave com dígito verificador válido e a série própria; um lado do DF é sempre uma empresa ativa do cliente. O registro sem DF (RE-04) continua sem criar DF, com chave fictícia marcada.</td></tr>
+      <tr><td class="id">RG-09</td><td>Os valores saem do DF; o administrador informa só a diferença ou a parte, em R$ ou %.</td></tr>
+      <tr><td class="id">RG-10</td><td>Cada ente segue a sua documentação. Onde não há lançamento, o ente fica mudo e a prévia diz isso. Fora da ordem permitida, só com "forçar", no lançamento unitário, com marca.</td></tr>
+      <tr><td class="id">RG-11</td><td>Data retroativa nunca antes da emissão do DF. Agendada fica pendente e sai pelo cron, como hoje, ou pelo "Avançar até agora" no ambiente local.</td></tr>
+      <tr><td class="id">RG-12</td><td>Dado fiscal na área admin só nesta aba, fora da produção, com cada consulta na auditoria (D-EM-04).</td></tr>
+      <tr><td class="id">RG-13</td><td>Fora da produção, o portal do cliente marca o que veio do emulador (D-EM-11).</td></tr>
+      <tr><td class="id">RG-14</td><td>Uma execução por cliente de cada vez, para os lançamentos de um mesmo DF entrarem em ordem.</td></tr>
+      <tr><td class="id">RG-15</td><td>Ações com a mesma base não se sobrepõem: somam até 100% dos DFs elegíveis, e o resto fica sem lançamento (D-EM-17).</td></tr>
+      <tr><td class="id">RG-16</td><td>O percentual vira número de DFs pelo maior resto, e a prévia mostra o número exato por ação (D-EM-18).</td></tr>
+      <tr><td class="id">RG-17</td><td>O sorteio usa semente; o mesmo filtro e a mesma semente sorteiam os mesmos DFs (D-EM-19).</td></tr>
+      <tr><td class="id">RG-18</td><td>O DF lançado pelo emulador sai do plano do Simulado naquele tributo (D-EM-20).</td></tr>
+      <tr><td class="id">RG-19</td><td>Pagou, apropriou: no lote, um lançamento que paga o imposto de um crédito traz a apropriação junto, na mesma data. Pagar sem apropriar só com "forçar", no lançamento unitário (D-EM-21).</td></tr>
+      <tr><td class="id">RG-20</td><td>Na criação de DFs, cada característica é pré-definida ou aleatória; a aleatória usa a semente do lote, e a mesma semente cria os mesmos DFs (D-EM-19).</td></tr>
+      <tr><td class="id">RG-21</td><td>A CBS e o IBS do DF criado são o valor vezes a alíquota, arredondados ao centavo (D-EM-26).</td></tr>
+    </tbody>
+  </table></div>
+</section>
+<section class="section" id="s12">
+  <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Impacto no tax-rs</span></div>
+  <p>A construção segue o processo do tax-rs: uma mudança do OpenSpec por etapa (proposta, desenho, especificação e tarefas), com o harness completo (testes de unidade, <code>encore test</code> entre serviços e e2e da aba).</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Peça</th><th>O que muda</th><th>Etapa</th></tr></thead>
+    <tbody>
+      <tr><td><code>tax-authority</code></td><td class="wrap">Origem <code>emulated</code>. O planejador, sem efeito colateral: resultado mais situação do DF dão os lançamentos, os pré-requisitos e os fora do alcance. O lote com base, percentual e semente. Prévia, gravação pela porta de fatos, execuções e agendados (pela mesma emissão por data de hoje). O Simulado revisto: apropriação pelo pagamento, avanço sob demanda, adoção dos DFs existentes e o plano por DF (seção 8).</td><td>E0 · E1 · E2</td></tr>
+      <tr><td><code>ledger</code> (entrada)</td><td class="wrap">A origem <code>emulated</code> na entrada interna (<code>intake.ts</code>), validada como a da captura SEFAZ, sem itens, e a marca no documento.</td><td>E1</td></tr>
+      <tr><td>Contrato dos fatos</td><td class="wrap">O contrato de lançamento por ente (D-EM-02): 20 lançamentos novos e 14 que existem em parte.</td><td>E3</td></tr>
+      <tr><td><code>ledger</code></td><td class="wrap">Apropriação e glosa por valor, não só pelo todo. Os saldos suspended, expired, not_usable, restored, refund_requested, unprocessed e not_enforceable passam a se mover. Estorno, cancelamento, devolução, complemento e transferência.</td><td>E3</td></tr>
+      <tr><td><code>integration</code></td><td class="wrap">Os 12 eventos documentados que nenhum fato gera hoje.</td><td>E3</td></tr>
+      <tr><td><code>reconciliation</code></td><td class="wrap">Excedente (D02, C12) e pagamento antecipado (D08).</td><td>E3</td></tr>
+      <tr><td><code>inconsistencies</code></td><td class="wrap">Nada novo na detecção. A conferência lê os 5 códigos que existem.</td><td>—</td></tr>
+      <tr><td><code>platform</code> (admin)</td><td class="wrap">Endpoints do emulador: criar DFs (o gerador, com a semente, chama a entrada interna do razão), catálogo, prévia, execução, conferência, lançamento unitário e o Simulado (plano, avanço, adoção); tudo na auditoria do cliente.</td><td>E0 · E1 · E2</td></tr>
+      <tr><td>Frontend</td><td class="wrap">A aba renomeada (D-EM-14), com as telas T-EM-01 a T-EM-07, na estrutura da D-EM-29; a marca "emulado" no portal fora da produção.</td><td>E0 · E1 · E2</td></tr>
+      <tr><td>Testes</td><td class="wrap">Unidade do planejador (cada resultado contra cada situação de DF); <code>encore test</code> de ponta a ponta por resultado (executa e cobra Atingido); e2e da aba. Os cenários prontos viram a suíte de regressão do razão.</td><td>Todas</td></tr>
+    </tbody>
+  </table></div>
+</section>
+<section class="section" id="s13">
+  <div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Etapas da construção</span></div>
+  <div class="ondas">
+    <div class="onda crit"><div class="onda-h"><span class="onda-n">E0</span><span class="onda-t">O Simulado revisto</span><span class="onda-q">depende de D-EM-20, 22, 23 e 24</span></div>
+      <ul class="plain">
+        <li>R-SIM-01 a R-SIM-08 e a T-EM-06.</li>
+        <li>Testes do plano contra o pagamento, da adoção na troca de modo e do avanço sob demanda.</li>
+      </ul>
+      <div class="pronto"><strong>Pronto quando</strong>, no Live local, um DF de entrada com a CAPUR conciliada e o pagamento registrado aparece apropriado, com o saldo appropriated, sem esperar o cron; e um cliente que passa para Simulada vê andar os DFs que já tinha.</div>
+    </div>
+    <div class="onda"><div class="onda-h"><span class="onda-n">E1</span><span class="onda-t">DFs criados e lançamento unitário</span><span class="onda-q">depende de D-EM-04, 14, 25, 26, 27 e 29</span></div>
+      <ul class="plain">
+        <li>Origem <code>emulated</code>, ao lado do Simulado.</li>
+        <li>T-EM-01, T-EM-04 e T-EM-07, com prévia e auditoria, na estrutura da D-EM-29.</li>
+        <li>Criar DFs com as características da seção 5, pela entrada interna do razão.</li>
+        <li>Os 17 lançamentos que o tax-rs já representa.</li>
+      </ul>
+      <div class="pronto"><strong>Pronto quando</strong> o administrador cria 100 NF-e de entrada num cliente de teste sem DFs, elas aparecem no portal marcadas como emuladas, a mesma semente cria as mesmas 100 noutro cliente, e um C02 num deles faz a API da plataforma publicar <code>credit.appropriated</code> e o Simulado deixar de seguir esse DF na CBS.</div>
+    </div>
+    <div class="onda"><div class="onda-h"><span class="onda-n">E2</span><span class="onda-t">O lote e a conferência</span><span class="onda-q">depende de D-EM-06, 07, 08, 12, 13, 17, 18, 19 e 28</span></div>
+      <ul class="plain">
+        <li>T-EM-02, T-EM-03 e T-EM-05: o lote com várias ações, base, percentual e semente, sobre DFs filtrados, criados ou os dois.</li>
+        <li>Os 11 resultados que só usam lançamentos de hoje: RE-01, RE-02, RE-03, RE-04, RE-05, RE-07, RE-08, RE-09, RE-15, RE-16, RE-17.</li>
+        <li>4 cenários prontos: RT-A1, RT-A2, RT-F1 e as proporções do Simulado. Lote em JSON e API do admin.</li>
+      </ul>
+      <div class="pronto"><strong>Pronto quando</strong> o lote da seção 5 (1.000 DFs, cinco ações) sai Atingido em todos, pela tela e pela API, e a mesma semente sorteia os mesmos DFs.</div>
+    </div>
+    <div class="onda"><div class="onda-h"><span class="onda-n">E3</span><span class="onda-t">O contrato completo dos lançamentos</span><span class="onda-q">depende de D-EM-02, 09 e 15</span></div>
+      <ul class="plain">
+        <li>Os 20 lançamentos novos e os 14 em parte; os saldos do razão; os 12 eventos.</li>
+        <li>Os outros 16 resultados e os outros 14 cenários prontos.</li>
+      </ul>
+      <div class="pronto"><strong>Pronto quando</strong> os 18 cenários prontos saem Atingido.</div>
+    </div>
+    <div class="onda dep"><div class="onda-h"><span class="onda-n">E4</span><span class="onda-t">Bordas</span><span class="onda-q">depende de D-EM-10 e 11</span></div>
+      <ul class="plain">
+        <li>O mesmo lançamento entregue duas vezes; lançamento fora de ordem com "forçar"; atraso com multa e juros; chave desconhecida; duas execuções no mesmo cliente; 1.000 DFs numa execução.</li>
+      </ul>
+      <div class="pronto"><strong>Pronto quando</strong> cada borda tem teste e a plataforma se defende ou avisa, sem estado quebrado.</div>
+    </div>
+  </div>
+  <p>A estimativa de prazo sai com a mudança do OpenSpec de cada etapa, depois da aprovação.</p>
+</section>
+<section class="section" id="s14">
+  <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Decisões</span></div>
+  <p>Escolha uma opção em cada decisão em aberto e, se quiser, deixe uma observação. A escolha fica guardada neste navegador. "Copiar escolhas" monta o texto para mandar de volta; as escolhas entram na proposta na versão seguinte.</p>
+  <div class="dc-bar"><span class="dc-prog"><strong id="dc-n">0</strong> de 25 em aberto escolhidas · 4 decididas</span><button type="button" class="dc-btn" id="dc-rec">Marcar as recomendadas</button><button type="button" class="dc-btn" id="dc-limpar">Limpar</button><button type="button" class="dc-btn pri" id="dc-copiar">Copiar escolhas</button><span class="dc-msg" id="dc-msg" aria-live="polite"></span></div>
+  <div class="dc-grid">
+    <fieldset class="dc decidida ok" id="D-EM-01" data-id="D-EM-01" data-titulo="O que é emulado" data-rec="A">
+      <legend><span class="id">D-EM-01</span>O que é emulado</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-01" value="A" data-txt="Os lançamentos que a Receita Federal e o Comitê Gestor fazem sobre os DFs, tirados da documentação das APIs e gravados pela porta de fatos do tax-rs." checked disabled><span><strong>A</strong> · Os lançamentos que a Receita Federal e o Comitê Gestor fazem sobre os DFs, tirados da documentação das APIs e gravados pela porta de fatos do tax-rs.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-01" value="B" data-txt="A conexão com as APIs: endpoints, token, webhook, link assinado." disabled><span><strong>B</strong> · A conexão com as APIs: endpoints, token, webhook, link assinado.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 18/11/2026</span><strong>A</strong>, pelo usuário. A conexão fica com os conectores reais e, nos testes deles, com o MassGen.</div>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-02" data-id="D-EM-02" data-titulo="O formato do lançamento" data-rec="A">
+      <legend><span class="id">D-EM-02</span>O formato do lançamento</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-02" value="A" data-txt="Um contrato de lançamento por ente, espelhando a documentação: na CBS, a mudança de um campo do documento (campo, de, para, valor); no IBS, o movimento do MOC com os sete campos financeiros. Os 8 tipos de fato de hoje viram casos desse contrato."><span><strong>A</strong> · Um contrato de lançamento por ente, espelhando a documentação: na CBS, a mudança de um campo do documento (campo, de, para, valor); no IBS, o movimento do MOC com os sete campos financeiros. Os 8 tipos de fato de hoje viram casos desse contrato.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-02" value="B" data-txt="Estender os 8 tipos de fato um a um: 20 lançamentos novos e 14 ajustes."><span><strong>B</strong> · Estender os 8 tipos de fato um a um: 20 lançamentos novos e 14 ajustes.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Quando a documentação muda, muda um lugar só, e o conector real traduz a API para o contrato sem interpretar. A E1 e a E2 rodam com os fatos de hoje; esta decisão trava só a E3.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-02"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-03" data-id="D-EM-03" data-titulo="Onde o emulador roda" data-rec="A">
+      <legend><span class="id">D-EM-03</span>Onde o emulador roda</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-03" value="A" data-txt="Dentro do tax-rs, no serviço tax-authority, gravando pela porta de fatos."><span><strong>A</strong> · Dentro do tax-rs, no serviço <code>tax-authority</code>, gravando pela porta de fatos.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-03" value="B" data-txt="No MassGen, que já emula as APIs, com o tax-rs lendo dele por conector."><span><strong>B</strong> · No MassGen, que já emula as APIs, com o tax-rs lendo dele por conector.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O pedido é a aba do admin, e a emulação é de lançamento, não de conexão (D-EM-01). O MassGen continua sendo a peça para testar os conectores, como na D-CL-02 do <a href="../taxrs-caderno-live.html#s7">caderno × Live</a>.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-03"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-04" data-id="D-EM-04" data-titulo="Dado fiscal na área admin (D15 do tax-rs)" data-rec="A">
+      <legend><span class="id">D-EM-04</span>Dado fiscal na área admin (D15 do tax-rs)</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-04" value="A" data-txt="Exceção fora da produção, só nesta aba, com cada consulta na auditoria."><span><strong>A</strong> · Exceção fora da produção, só nesta aba, com cada consulta na auditoria.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-04" value="B" data-txt="O emulador vai para o portal do cliente, num perfil de teste."><span><strong>B</strong> · O emulador vai para o portal do cliente, num perfil de teste.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-04" value="C" data-txt="O admin escolhe DFs só por filtro, sem ver chave nem valor."><span><strong>C</strong> · O admin escolhe DFs só por filtro, sem ver chave nem valor.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O lote já não precisa de chave (D-EM-16); a exceção serve à prévia DF a DF e ao lançamento unitário. O B mistura teste com o uso do cliente; o C impede o lançamento unitário. Trava a E1.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-04"></textarea></label>
+    </fieldset>
+    <fieldset class="dc decidida ok" id="D-EM-05" data-id="D-EM-05" data-titulo="O modo da fonte" data-rec="B">
+      <legend><span class="id">D-EM-05</span>O modo da fonte</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-05" value="A" data-txt="Modo novo &quot;Emulada&quot;, no lugar de &quot;Simulada&quot;; a simulação de hoje vira um cenário pronto e uma política contínua." disabled><span><strong>A</strong> · Modo novo "Emulada", no lugar de "Simulada"; a simulação de hoje vira um cenário pronto e uma política contínua.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-05" value="B" data-txt="Manter &quot;Simulada&quot; como o modelo automático e pôr o emulador, manual e em lote, ao lado." checked disabled><span><strong>B</strong> · Manter "Simulada" como o modelo automático e pôr o emulador, manual e em lote, ao lado.<span class="rec-tag">decidida</span></span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 18/11/2026</span><strong>B</strong>, pelo usuário: o Simulado fica como o modelo automático e é revisto (seção 8); o emulador é o modelo manual, em lote, para gerir os eventos fiscais. A briga entre os dois no mesmo DF vira a D-EM-20.</div>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-06" data-id="D-EM-06" data-titulo="Como o administrador pede" data-rec="A">
+      <legend><span class="id">D-EM-06</span>Como o administrador pede</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-06" value="A" data-txt="Pelo resultado no lote (&quot;usar todo o saldo&quot;: o emulador calcula os lançamentos e os pré-requisitos) e pelo lançamento no unitário."><span><strong>A</strong> · Pelo resultado no lote ("usar todo o saldo": o emulador calcula os lançamentos e os pré-requisitos) e pelo lançamento no unitário.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-06" value="B" data-txt="Pelo resultado nos dois."><span><strong>B</strong> · Pelo resultado nos dois.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-06" value="C" data-txt="Pelo lançamento nos dois."><span><strong>C</strong> · Pelo lançamento nos dois.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> No lote, o administrador pensa no resultado; no unitário, quer controlar o lançamento.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-06"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-07" data-id="D-EM-07" data-titulo="A conferência" data-rec="A">
+      <legend><span class="id">D-EM-07</span>A conferência</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-07" value="A" data-txt="Automática, DF a DF, ao fim de cada execução: Atingido, Divergente ou Aguardando."><span><strong>A</strong> · Automática, DF a DF, ao fim de cada execução: Atingido, Divergente ou Aguardando.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-07" value="B" data-txt="Só a prévia; a conferência é à mão."><span><strong>B</strong> · Só a prévia; a conferência é à mão.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> A mesma conferência vira asserção dos testes automatizados e alerta do Simulado (R-SIM-05).</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-07"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-08" data-id="D-EM-08" data-titulo="As datas" data-rec="A">
+      <legend><span class="id">D-EM-08</span>As datas</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-08" value="A" data-txt="Agora, retroativa, agendada ou espalhada entre duas datas, por ação."><span><strong>A</strong> · Agora, retroativa, agendada ou espalhada entre duas datas, por ação.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-08" value="B" data-txt="Só agora."><span><strong>B</strong> · Só agora.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Prazos (os 30 dias do DF sem registro, a prescrição, o atraso) só se testam com data.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-08"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-09" data-id="D-EM-09" data-titulo="Fidelidade a cada ente" data-rec="A">
+      <legend><span class="id">D-EM-09</span>Fidelidade a cada ente</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-09" value="A" data-txt="Cada ente segue a sua documentação: o IBS fica mudo onde o MOC não tem movimento; &quot;forçar&quot; só no lançamento unitário, com marca."><span><strong>A</strong> · Cada ente segue a sua documentação: o IBS fica mudo onde o MOC não tem movimento; "forçar" só no lançamento unitário, com marca.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-09" value="B" data-txt="Espelhar no IBS o que a CBS tem."><span><strong>B</strong> · Espelhar no IBS o que a CBS tem.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O B testaria a plataforma contra um IBS que não existe.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-09"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-10" data-id="D-EM-10" data-titulo="Desfazer" data-rec="A">
+      <legend><span class="id">D-EM-10</span>Desfazer</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-10" value="A" data-txt="Nada se apaga. Desfazer é lançar o contrário quando a documentação prevê (estorno, cancelamento); para recomeçar, um cliente de teste novo."><span><strong>A</strong> · Nada se apaga. Desfazer é lançar o contrário quando a documentação prevê (estorno, cancelamento); para recomeçar, um cliente de teste novo.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-10" value="B" data-txt="Apagar os lançamentos de uma execução."><span><strong>B</strong> · Apagar os lançamentos de uma execução.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> A porta de fatos é só de inclusão; apagar quebra o razão e a auditoria.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-10"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-11" data-id="D-EM-11" data-titulo="Marca no portal do cliente" data-rec="A">
+      <legend><span class="id">D-EM-11</span>Marca no portal do cliente</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-11" value="A" data-txt="Fora da produção, o que veio do emulador aparece com a marca &quot;emulado&quot;."><span><strong>A</strong> · Fora da produção, o que veio do emulador aparece com a marca "emulado".<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-11" value="B" data-txt="Sem marca."><span><strong>B</strong> · Sem marca.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Quem testa no portal sabe que o lançamento não veio do ente.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-11"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-12" data-id="D-EM-12" data-titulo="Cenários reaproveitáveis" data-rec="A">
+      <legend><span class="id">D-EM-12</span>Cenários reaproveitáveis</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-12" value="A" data-txt="O lote se salva em JSON, com filtro, ações e semente, e a API do admin roda o mesmo lote nos testes automatizados."><span><strong>A</strong> · O lote se salva em JSON, com filtro, ações e semente, e a API do admin roda o mesmo lote nos testes automatizados.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-12" value="B" data-txt="Só pela tela."><span><strong>B</strong> · Só pela tela.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong></div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-12"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-13" data-id="D-EM-13" data-titulo="Limites" data-rec="A">
+      <legend><span class="id">D-EM-13</span>Limites</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-13" value="A" data-txt="Até 1.000 DFs atingidos por execução, somadas as ações, e até 1.000 DFs criados; acima de 100, o administrador digita o número de DFs para confirmar."><span><strong>A</strong> · Até 1.000 DFs atingidos por execução, somadas as ações, e até 1.000 DFs criados; acima de 100, o administrador digita o número de DFs para confirmar.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-13" value="B" data-txt="Sem limite."><span><strong>B</strong> · Sem limite.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong></div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-13"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-14" data-id="D-EM-14" data-titulo="Nome da aba" data-rec="A">
+      <legend><span class="id">D-EM-14</span>Nome da aba</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-14" value="A" data-txt="&quot;Fonte dos entes&quot;."><span><strong>A</strong> · "Fonte dos entes".<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-14" value="B" data-txt="&quot;Entes emulados&quot;."><span><strong>B</strong> · "Entes emulados".</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-14" value="C" data-txt="Manter &quot;Fonte do Fisco&quot;."><span><strong>C</strong> · Manter "Fonte do Fisco".</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> A aba passa a ter o Simulado e o emulador dos dois entes, e "Fisco" junta a Receita Federal e o Comitê Gestor num nome só.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-14"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-15" data-id="D-EM-15" data-titulo="A base do IBS" data-rec="A">
+      <legend><span class="id">D-EM-15</span>A base do IBS</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-15" value="A" data-txt="Só o MOC v1.10 (24 movimentos); rever quando o Comitê Gestor publicar versão nova."><span><strong>A</strong> · Só o MOC v1.10 (24 movimentos); rever quando o Comitê Gestor publicar versão nova.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-15" value="B" data-txt="Antecipar movimentos que a CBS tem e o IBS ainda não."><span><strong>B</strong> · Antecipar movimentos que a CBS tem e o IBS ainda não.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong></div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-15"></textarea></label>
+    </fieldset>
+    <fieldset class="dc decidida ok" id="D-EM-16" data-id="D-EM-16" data-titulo="O lote" data-rec="A">
+      <legend><span class="id">D-EM-16</span>O lote</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-16" value="A" data-txt="Várias ações no mesmo lote, os DFs por filtro (sem nomear) e, em cada ação, o percentual dos DFs que ela atinge." checked disabled><span><strong>A</strong> · Várias ações no mesmo lote, os DFs por filtro (sem nomear) e, em cada ação, o percentual dos DFs que ela atinge.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-16" value="B" data-txt="Uma ação por lote, com os DFs escolhidos um a um." disabled><span><strong>B</strong> · Uma ação por lote, com os DFs escolhidos um a um.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 18/11/2026</span><strong>A</strong>, pelo usuário. A lista de chaves continua possível, mas não é preciso.</div>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-17" data-id="D-EM-17" data-titulo="Sobre quais DFs vale cada ação" data-rec="A">
+      <legend><span class="id">D-EM-17</span>Sobre quais DFs vale cada ação</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-17" value="A" data-txt="Cada ação tem uma base: o lote, ou os DFs que receberam uma ação anterior. Ações com a mesma base não se sobrepõem: um DF recebe só uma delas, e elas somam até 100%."><span><strong>A</strong> · Cada ação tem uma base: o lote, ou os DFs que receberam uma ação anterior. Ações com a mesma base não se sobrepõem: um DF recebe só uma delas, e elas somam até 100%.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-17" value="B" data-txt="Toda ação vale sobre o lote inteiro, sorteada à parte; um DF pode cair em mais de uma."><span><strong>B</strong> · Toda ação vale sobre o lote inteiro, sorteada à parte; um DF pode cair em mais de uma.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Com o B, um DF pode ser glosado e apropriado no mesmo lote, e o percentual deixa de dizer quantos DFs terminam em cada situação.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-17"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-18" data-id="D-EM-18" data-titulo="O percentual conta sobre o quê" data-rec="A">
+      <legend><span class="id">D-EM-18</span>O percentual conta sobre o quê</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-18" value="A" data-txt="Sobre os DFs elegíveis da base, os que podem chegar ao resultado; os outros aparecem à parte na prévia."><span><strong>A</strong> · Sobre os DFs elegíveis da base, os que podem chegar ao resultado; os outros aparecem à parte na prévia.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-18" value="B" data-txt="Sobre todos os DFs da base; os que não podem chegar ao resultado são pulados."><span><strong>B</strong> · Sobre todos os DFs da base; os que não podem chegar ao resultado são pulados.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Com o B, 50% pode virar 30% sem aviso.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-18"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-19" data-id="D-EM-19" data-titulo="O sorteio" data-rec="A">
+      <legend><span class="id">D-EM-19</span>O sorteio</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-19" value="A" data-txt="Com semente: o mesmo filtro e a mesma semente sorteiam os mesmos DFs; a prévia mostra a semente."><span><strong>A</strong> · Com semente: o mesmo filtro e a mesma semente sorteiam os mesmos DFs; a prévia mostra a semente.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-19" value="B" data-txt="Sorteio novo a cada execução."><span><strong>B</strong> · Sorteio novo a cada execução.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Repete o lote noutro ambiente e nos testes automatizados (D-EM-12).</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-19"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-20" data-id="D-EM-20" data-titulo="Simulado e emulador no mesmo DF" data-rec="A">
+      <legend><span class="id">D-EM-20</span>Simulado e emulador no mesmo DF</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-20" value="A" data-txt="O DF que recebe lançamento do emulador sai do plano do Simulado naquele tributo."><span><strong>A</strong> · O DF que recebe lançamento do emulador sai do plano do Simulado naquele tributo.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-20" value="B" data-txt="Os dois seguem, e o razão aplica tudo pela data."><span><strong>B</strong> · Os dois seguem, e o razão aplica tudo pela data.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Com o B, o Simulado pode apropriar um crédito que o administrador acabou de glosar.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-20"></textarea></label>
+    </fieldset>
+    <fieldset class="dc decidida ok" id="D-EM-21" data-id="D-EM-21" data-titulo="Quando o Simulado apropria o crédito" data-rec="B">
+      <legend><span class="id">D-EM-21</span>Quando o Simulado apropria o crédito</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-21" value="A" data-txt="Na data do recolhimento marcada no cadastro do DF, como hoje, sem pagamento." disabled><span><strong>A</strong> · Na data do recolhimento marcada no cadastro do DF, como hoje, sem pagamento.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-21" value="B" data-txt="Sempre com o pagamento: o Simulado lança o pagamento e a apropriação juntos, na data do plano; se o pagamento chega antes por outro caminho, apropria na data dele." checked disabled><span><strong>B</strong> · Sempre com o pagamento: o Simulado lança o pagamento e a apropriação juntos, na data do plano; se o pagamento chega antes por outro caminho, apropria na data dele.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-21" value="C" data-txt="Quando o pagamento chega, ou na data do plano, o que vier primeiro, sem lançar o pagamento." disabled><span><strong>C</strong> · Quando o pagamento chega, ou na data do plano, o que vier primeiro, sem lançar o pagamento.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 18/11/2026</span><strong>B</strong>, pela regra do usuário: quando se paga o imposto, o crédito é apropriado. Pagamento e apropriação andam juntos, e a CFIN não concilia com o crédito "a apropriar".</div>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-22" data-id="D-EM-22" data-titulo="Os DFs que já existem quando o cliente passa para Simulada" data-rec="C">
+      <legend><span class="id">D-EM-22</span>Os DFs que já existem quando o cliente passa para Simulada</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-22" value="A" data-txt="O Simulado adota todos, na hora da troca."><span><strong>A</strong> · O Simulado adota todos, na hora da troca.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-22" value="B" data-txt="Só os DFs novos, como hoje."><span><strong>B</strong> · Só os DFs novos, como hoje.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-22" value="C" data-txt="Na troca, a aba mostra quantos DFs já existem e o administrador escolhe se o Simulado os adota."><span><strong>C</strong> · Na troca, a aba mostra quantos DFs já existem e o administrador escolhe se o Simulado os adota.<span class="rec-tag">recomendada</span></span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>C.</strong> Adotar mexe em DFs que já têm história (os do Replay, por exemplo); a escolha é de quem troca.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-22"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-23" data-id="D-EM-23" data-titulo="As proporções do Simulado" data-rec="A">
+      <legend><span class="id">D-EM-23</span>As proporções do Simulado</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-23" value="A" data-txt="Fixas, as do protótipo, e visíveis na aba."><span><strong>A</strong> · Fixas, as do protótipo, e visíveis na aba.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-23" value="B" data-txt="Configuráveis por cliente."><span><strong>B</strong> · Configuráveis por cliente.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Distribuição sob medida é o papel do lote do emulador (D-EM-16).</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-23"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-24" data-id="D-EM-24" data-titulo="Pagamento sem apropriação vindo do ente" data-rec="A">
+      <legend><span class="id">D-EM-24</span>Pagamento sem apropriação vindo do ente</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-24" value="A" data-txt="O razão continua seguindo o ente, e a plataforma mostra a divergência: o imposto foi pago e o ente não apropriou."><span><strong>A</strong> · O razão continua seguindo o ente, e a plataforma mostra a divergência: o imposto foi pago e o ente não apropriou.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-24" value="B" data-txt="O razão apropria sozinho ao ver o pagamento, sem esperar o ente."><span><strong>B</strong> · O razão apropria sozinho ao ver o pagamento, sem esperar o ente.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O SplitHub não controla o estado do crédito: segue o ente e evidencia a divergência. Com o B, o saldo do SplitHub deixa de bater com o do ente. Vale para o ente real e para o Replay; no Simulado e no emulador, a D-EM-21 já impede o caso.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-24"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-25" data-id="D-EM-25" data-titulo="A contraparte dos DFs criados" data-rec="C">
+      <legend><span class="id">D-EM-25</span>A contraparte dos DFs criados</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-25" value="A" data-txt="Fictícias, criadas na hora, com CNPJ válido e o nome marcado &quot;[EMULADO]&quot;."><span><strong>A</strong> · Fictícias, criadas na hora, com CNPJ válido e o nome marcado "[EMULADO]".</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-25" value="B" data-txt="Só as que o cliente já tem, nos DFs e nos contratos."><span><strong>B</strong> · Só as que o cliente já tem, nos DFs e nos contratos.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-25" value="C" data-txt="As duas, à escolha em cada criação."><span><strong>C</strong> · As duas, à escolha em cada criação.<span class="rec-tag">recomendada</span></span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>C.</strong> As fictícias servem ao volume. As do cliente servem para testar contrato e recolhimento, porque o contrato é por fornecedor: um DF de um fornecedor com contrato de RAD sai com o RAD.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-25"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-26" data-id="D-EM-26" data-titulo="As alíquotas da CBS e do IBS nos DFs criados" data-rec="C">
+      <legend><span class="id">D-EM-26</span>As alíquotas da CBS e do IBS nos DFs criados</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-26" value="A" data-txt="As do ano da emissão, pela lei, sem troca."><span><strong>A</strong> · As do ano da emissão, pela lei, sem troca.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-26" value="B" data-txt="Sempre informadas pelo administrador."><span><strong>B</strong> · Sempre informadas pelo administrador.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-26" value="C" data-txt="As do ano da emissão, com a opção de trocar."><span><strong>C</strong> · As do ano da emissão, com a opção de trocar.<span class="rec-tag">recomendada</span></span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>C.</strong> O padrão acerta o caso comum (em 2026, CBS 0,9% e IBS 0,1%); a troca serve para testar valor fora da regra e os anos seguintes.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-26"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-27" data-id="D-EM-27" data-titulo="Os DFs criados e o Simulado" data-rec="A">
+      <legend><span class="id">D-EM-27</span>Os DFs criados e o Simulado</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-27" value="A" data-txt="Entram no plano do Simulado como qualquer DF novo, quando o cliente está em Simulada; o tributo que recebe ação no mesmo lote sai do plano (D-EM-20)."><span><strong>A</strong> · Entram no plano do Simulado como qualquer DF novo, quando o cliente está em Simulada; o tributo que recebe ação no mesmo lote sai do plano (D-EM-20).<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-27" value="B" data-txt="Nunca entram no plano do Simulado."><span><strong>B</strong> · Nunca entram no plano do Simulado.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O DF criado se comporta como um DF real. Quem quer controle total age sobre ele no mesmo lote ou deixa o cliente fora de Simulada.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-27"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-28" data-id="D-EM-28" data-titulo="Remover os DFs criados" data-rec="A">
+      <legend><span class="id">D-EM-28</span>Remover os DFs criados</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-28" value="A" data-txt="Não se removem: ficam, marcados como emulados; para recomeçar, um cliente de teste novo, como na D-EM-10."><span><strong>A</strong> · Não se removem: ficam, marcados como emulados; para recomeçar, um cliente de teste novo, como na D-EM-10.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-28" value="B" data-txt="Remover todos os DFs criados por uma execução, com os lançamentos deles, fora da produção e com a auditoria."><span><strong>B</strong> · Remover todos os DFs criados por uma execução, com os lançamentos deles, fora da produção e com a auditoria.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O tax-rs já remove DF (a importação desfaz o que registrou pela metade), mas um DF criado pode já ter lançamentos e eventos publicados. Remover quebra o razão e a auditoria, pelo mesmo motivo da D-EM-10.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-28"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-29" data-id="D-EM-29" data-titulo="A estrutura do módulo no painel do cliente" data-rec="B">
+      <legend><span class="id">D-EM-29</span>A estrutura do módulo no painel do cliente</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-29" value="A" data-txt="Tudo dentro da aba, com subabas: Visão geral, Simulado, Criar DFs, Lote, Unitário e Execuções."><span><strong>A</strong> · Tudo dentro da aba, com subabas: Visão geral, Simulado, Criar DFs, Lote, Unitário e Execuções.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-29" value="B" data-txt="Espaço próprio do emulador: a aba fica com o modo e o resumo, e o botão &quot;Abrir o emulador&quot; leva a uma página do cliente com menu lateral."><span><strong>B</strong> · Espaço próprio do emulador: a aba fica com o modo e o resumo, e o botão "Abrir o emulador" leva a uma página do cliente com menu lateral.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-29" value="C" data-txt="Execução guiada: a aba vira a lista de execuções, com um assistente de ponta a ponta; o unitário fica no próprio DF, e o Simulado, num painel lateral."><span><strong>C</strong> · Execução guiada: a aba vira a lista de execuções, com um assistente de ponta a ponta; o unitário fica no próprio DF, e o Simulado, num painel lateral.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>B.</strong> O módulo tem sete telas e um assistente de quatro passos: nas subabas (A), fica apertado embaixo das oito abas do cliente; na execução guiada (C), o Simulado e o unitário ficam escondidos. O B deixa as abas do cliente como estão e dá endereço próprio a cada tela, para o suporte e os testes. As três estão clicáveis na <a href="../taxrs-emulador-estrutura.html">página da estrutura</a>.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-29"></textarea></label>
+    </fieldset>
+  </div>
+  <label class="dc-nota" for="dc-saida">O texto que vai ser copiado</label>
+  <textarea id="dc-saida" readonly rows="8"></textarea>
+</section>
+<section class="section" id="s15">
+  <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Documentação conferida na fonte em 18/11/2026</span></div>
+  <p>A referência do hub, <a href="../integracao-apis-reforma.html">integração com as APIs da Reforma</a> foi atualizada para a v1.4 em 18/11/2026, com as mesmas páginas oficiais que este catálogo usa.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Documento</th><th>Versão em vigor</th><th>O que mudou</th><th>Efeito no emulador</th></tr></thead>
+    <tbody>
+      <tr><td><a href="https://docs.receitafederal.gov.br/apuracao-cbs/guiaapiassincrona.html">CBS · Guia das APIs assíncronas</a></td><td>v1.1 · 14/10/2026</td><td class="wrap">O webhook leva só o tíquete e a situação (ou o erro); a URL de retorno é opcional; 4 chamadas por API, por dia, por credencial; processamento em até 240 minutos; link válido por 48 horas.</td><td class="wrap">Nenhum: é conexão (D-EM-01).</td></tr>
+      <tr><td><a href="https://docs.receitafederal.gov.br/apuracao-cbs/download.html">CBS · Download</a></td><td>v1.0 · 13/10/2026 · página nova</td><td class="wrap">O link assinado do arquivo e a validade dele saem por uma chamada própria.</td><td class="wrap">Nenhum: é conexão.</td></tr>
+      <tr><td><a href="https://docs.receitafederal.gov.br/apuracao-cbs/situacao-solicitacao.html">CBS · Situação da solicitação</a></td><td>v1.2 · 14/10/2026</td><td class="wrap">Situação nova, <code>EXPIRADA</code>; a concluída devolve só a situação.</td><td class="wrap">Nenhum: é conexão.</td></tr>
+      <tr><td><a href="https://docs.receitafederal.gov.br/apuracao-cbs/debito.html">CBS · Débitos</a></td><td>v1.3 · 13/11/2026</td><td class="wrap">JSON Schema 1.0.0; campos zerados omitidos, exceto o apurado e os saldos; campo novo <code>cbs.pgtoAntecipado</code>.</td><td class="wrap">Lançamento novo D08.</td></tr>
+      <tr><td><a href="https://docs.receitafederal.gov.br/apuracao-cbs/credito.html">CBS · Créditos</a></td><td>v1.3 · 13/11/2026</td><td class="wrap">JSON Schema 1.0.0; janela desde a última consulta concluída, no máximo 8 dias.</td><td class="wrap">Base do C01 ao C12.</td></tr>
+      <tr><td><a href="https://docs.receitafederal.gov.br/apuracao-cbs/pagamentos.html">CBS · Pagamentos</a></td><td>v1.3 · 13/11/2026</td><td class="wrap"><code>tipo</code> 1 é o RAD e 2 é o PCONT; composição com principal, multa, juros e total.</td><td class="wrap">Base do P01 ao P04; o split (P03) segue provisório.</td></tr>
+      <tr><td><a href="https://docs.receitafederal.gov.br/apuracao-cbs/recolhimentos.html">CBS · Recolhimentos</a></td><td>v1.3 · 13/11/2026</td><td class="wrap">Só o <code>tipo</code> 1, o RAD, com o fornecedor e a chave do DF.</td><td class="wrap">Base do R01 ao R03; o split (R02) segue provisório.</td></tr>
+      <tr><td><a href="https://docs.receitafederal.gov.br/apuracao-cbs/gerar-darf-ad.html">CBS · Gerar DARF do RAD</a></td><td>v1.0 · 13/11/2026 · página nova</td><td class="wrap">Gera, na hora, a guia do RAD por chave, total ou parcial, com PIX, código de barras e PDF.</td><td class="wrap">Nenhum lançamento: a guia não muda saldo; o pagamento dela volta como R01.</td></tr>
+      <tr><td><a href="https://docs.receitafederal.gov.br/apuracao-cbs/gerar-darf-contrib.html">CBS · Gerar DARF do PCONT</a></td><td>v1.0 · 13/11/2026 · página nova</td><td class="wrap">Gera, na hora, a guia do período, com multa e juros.</td><td class="wrap">Nenhum lançamento: o pagamento volta como P01 ou P04.</td></tr>
+      <tr><td><a href="https://www.cgibs.gov.br/apuracao-assistida-do-ibs">IBS · MOC da API da Apuração Assistida</a></td><td>v1.10 · 23/09/2026</td><td class="wrap">Nenhuma versão nova publicada; as etapas 2 a 4 seguem sem data.</td><td class="wrap">Base do IBS-01 ao IBS-24 (D-EM-15).</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn"><div class="ct">A confirmar com a Receita Federal</div>
+    <ul class="plain">
+      <li>As páginas das guias dizem que o CNPJ tem 14 dígitos e o chamam de "CNPJ base".</li>
+      <li>A lista de erros da guia do PCONT parece copiada da do RAD.</li>
+      <li>O split não aparece nas enumerações de pagamentos e recolhimentos; o P03 e o R02 seguem provisórios, como no MassGen.</li>
+    </ul>
+  </div>
+</section>
+<section class="section" id="s16">
+  <div class="sec-hdr"><span class="sec-num">16</span><span class="sec-title">Fontes e histórico</span></div>
+  <ul class="plain">
+    <li>Receita Federal, documentação da <a href="https://docs.receitafederal.gov.br/apuracao-cbs/">Apuração da CBS</a>: as páginas da seção 15 e as <a href="https://docs.receitafederal.gov.br/apuracao-cbs/faq.html">perguntas frequentes</a>, consultadas em 18/11/2026.</li>
+    <li>Comitê Gestor do IBS, <a href="https://www.cgibs.gov.br/apuracao-assistida-do-ibs">Apuração Assistida do IBS</a> e o <a href="https://www.cgibs.gov.br/upload/arquivos/202609/23171119-moc-api-apuracao-assistida-ibs-v1-10-23092026.pdf">MOC da API, v1.10</a>.</li>
+    <li>API da plataforma, v1.8.0: <a href="https://split-hubhq.github.io/docs/garantia-credito.html">garantia do crédito</a> e <a href="https://split-hubhq.github.io/docs/webhooks.html">webhooks</a>.</li>
+    <li><a href="../proposta-gerador-massa.html">MassGen</a>, proposta v4.3: catálogo de eventos e roteiros.</li>
+    <li>tax-rs, <code>main</code> no <code>a831ad9</code>: porta de fatos e simulador (<code>tax-authority</code>), registro público (<code>ledger</code>), detecção (<code>inconsistencies</code>), catálogo de eventos (<code>integration</code>), aba Fonte do Fisco (<code>ClienteDetalhe.tsx</code>) e a decisão D15.</li>
+  </ul>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Versão</th><th>Data</th><th>O que mudou</th></tr></thead>
+    <tbody>
+      <tr><td class="id">1.2</td><td>19/11/2026</td><td>Regra do usuário: quando se paga o imposto, o crédito é apropriado. A D-EM-21 fica decidida: o Simulado lança o pagamento e a apropriação juntos e apropria na data de um pagamento que chegue antes por outro caminho. Entram a R-SIM-08, a RG-19 e a D-EM-24, sobre o pagamento sem apropriação vindo do ente. Pedido do usuário: o emulador também cria DFs, com quantidade, tipos e valores pré-definidos ou aleatórios (seção 5, T-EM-07, RG-20 e RG-21, D-EM-25 a 28); e três estruturas clicáveis do módulo no painel do cliente, para a D-EM-29. A v1.1 está no <a href="taxrs-emulador-lancamentos-v1.1.html">arquivo de versões</a>.</td></tr>
+      <tr><td class="id">1.1</td><td>18/11/2026</td><td>Pedido do usuário: o Simulado fica como o modelo automático e o emulador como o manual, em lote (D-EM-05 decidida); o lote recebe várias ações, sem nomear DFs, cada uma com o percentual dos DFs que atinge (D-EM-16 decidida). A seção 8 passa a ser a revisão do Simulado, que concilia a CAPUR e a CFIN e não apropria: cinco achados no código e sete mudanças. A seção 14 vira a escolha das decisões, com as recomendadas, a observação e o texto para copiar. Sete decisões novas (D-EM-17 a 23), a E0 e quatro regras.</td></tr>
+      <tr><td class="id">1.0</td><td>18/11/2026</td><td>Primeira versão, para validação: 51 lançamentos, 27 resultados, 18 cenários prontos, 6 telas, 14 regras, 4 etapas e 15 decisões, com a D-EM-01 decidida. Está no <a href="taxrs-emulador-lancamentos-v1.0.html">arquivo de versões</a>.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+<div class="foot">Emulador de lançamentos da Receita Federal e do Comitê Gestor · v1.2 · 19/11/2026</div>
+</div>
+<script>
+(function () {
+  var bs = document.querySelectorAll('#s3 .filtros button'), rows = document.querySelectorAll('#catalogo tbody tr[data-s]'), grps = document.querySelectorAll('#catalogo tbody tr.grp-row');
+  bs.forEach(function (b) { b.addEventListener('click', function () {
+    var f = b.getAttribute('data-f');
+    bs.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    rows.forEach(function (r) { r.classList.toggle('oculta', !!f && r.getAttribute('data-s') !== f); });
+    grps.forEach(function (g) { var n = g.nextElementSibling, vis = false;
+      while (n && !n.classList.contains('grp-row')) { if (!n.classList.contains('oculta')) vis = true; n = n.nextElementSibling; }
+      g.classList.toggle('oculta', !vis); });
+  }); });
+  // um link para um lançamento escondido pelo filtro volta para "Todos"
+  document.addEventListener('click', function (ev) {
+    var a = ev.target.closest && ev.target.closest('a.lv'); if (!a) return;
+    var alvo = document.querySelector(a.getAttribute('href'));
+    if (alvo && alvo.classList.contains('oculta')) bs[0].click();
+  });
+})();
+(function () {
+  var CHAVE = 'taxrs-emulador-decisoes-v1', VERSAO = '1.2';
+  var todos = [].slice.call(document.querySelectorAll('fieldset.dc'));
+  var abertos = todos.filter(function (f) { return !f.classList.contains('decidida'); });
+  var saida = document.getElementById('dc-saida'), msg = document.getElementById('dc-msg');
+  function ler() { try { return JSON.parse(localStorage.getItem(CHAVE) || '{}') || {}; } catch (e) { return {}; } }
+  function gravar(o) { try { localStorage.setItem(CHAVE, JSON.stringify(o)); } catch (e) {} }
+  function marcado(f) { return f.querySelector('input[type=radio]:checked'); }
+  function nota(f) { var t = f.querySelector('textarea'); return t ? t.value.trim() : ''; }
+  function linha(f) {
+    var r = marcado(f), id = f.getAttribute('data-id'), tit = f.getAttribute('data-titulo');
+    var s = id + ' · ' + tit + ': ';
+    if (f.classList.contains('decidida')) return s + (r ? r.value + ' · ' + r.getAttribute('data-txt') : '') + ' (decidida)';
+    s += r ? r.value + ' · ' + r.getAttribute('data-txt') + (r.value === f.getAttribute('data-rec') ? ' (recomendada)' : ' (diferente da recomendada)') : 'sem escolha';
+    var n = nota(f); if (n) s += '\n  Observação: ' + n;
+    return s;
+  }
+  function atualizar() {
+    var n = 0, o = {};
+    abertos.forEach(function (f) {
+      var r = marcado(f), id = f.getAttribute('data-id');
+      f.classList.toggle('ok', !!r); if (r) n++;
+      if (r || nota(f)) o[id] = { op: r ? r.value : '', nota: nota(f) };
+    });
+    document.getElementById('dc-n').textContent = n;
+    gravar(o);
+    saida.value = 'Decisões do emulador de lançamentos · proposta v' + VERSAO + ' · ' + n + ' de ' + abertos.length + ' em aberto escolhidas\n\n' +
+      abertos.map(linha).join('\n') + '\n\nJá decididas:\n' + todos.filter(function (f) { return f.classList.contains('decidida'); }).map(linha).join('\n');
+  }
+  var st = ler();
+  abertos.forEach(function (f) {
+    var s = st[f.getAttribute('data-id')] || {};
+    if (s.op) { var r = f.querySelector('input[value="' + s.op + '"]'); if (r) r.checked = true; }
+    var t = f.querySelector('textarea'); if (t && s.nota) t.value = s.nota;
+    f.addEventListener('change', atualizar);
+    if (t) t.addEventListener('input', atualizar);
+  });
+  document.getElementById('dc-rec').addEventListener('click', function () {
+    var k = 0;
+    abertos.forEach(function (f) { if (!marcado(f)) { var r = f.querySelector('input[value="' + f.getAttribute('data-rec') + '"]'); if (r) { r.checked = true; k++; } } });
+    atualizar(); msg.textContent = k ? k + ' marcadas com a recomendação; as que já tinham escolha ficaram como estavam.' : 'Todas já tinham escolha.';
+  });
+  document.getElementById('dc-limpar').addEventListener('click', function () {
+    if (!window.confirm('Limpar todas as escolhas e observações deste navegador?')) return;
+    abertos.forEach(function (f) { var r = marcado(f); if (r) r.checked = false; var t = f.querySelector('textarea'); if (t) t.value = ''; });
+    atualizar(); msg.textContent = 'Escolhas limpas.';
+  });
+  document.getElementById('dc-copiar').addEventListener('click', function () {
+    atualizar();
+    var ok = function () { msg.textContent = 'Copiado. Cole na conversa para registrar as decisões.'; };
+    var manual = function () { saida.focus(); saida.select(); msg.textContent = 'O navegador não deixou copiar: o texto está selecionado abaixo, use Ctrl+C.'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(saida.value).then(ok, manual); else manual();
+  });
+  atualizar();
+})();
+</script>
+</body>
+</html>

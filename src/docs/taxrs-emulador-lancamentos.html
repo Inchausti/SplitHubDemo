@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Emulador de lançamentos dos entes · v1.2</title>
+<title>Emulador de lançamentos dos entes · v1.3</title>
 <style>
 :root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
   --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
@@ -173,15 +173,15 @@ img, svg { max-width: 100%; height: auto; }
 <div class="doc">
 
 <a class="back" href="prds.html#sec-taxrs">← Hub de PRDs</a>
-<div class="eyebrow">tax-rs · Modo Live · Proposta</div>
+<div class="eyebrow">tax-rs · Modo Live · Proposta aprovada</div>
 <h1>Emulador de lançamentos da Receita Federal e do Comitê Gestor</h1>
-<p class="subtitle">Evolução da aba Fonte do Fisco, no cadastro do cliente do painel administrativo do tax-rs, com dois modelos. O Simulado, automático, segue os DFs novos e lança sozinho, e é revisto aqui. O emulador, manual, recebe um lote de DFs, filtrados entre os do cliente ou criados na hora, e várias ações, cada uma com o percentual dos DFs que atinge. Os dois gravam o que a Receita Federal (CBS) e o Comitê Gestor (IBS) fariam, pela mesma porta que os conectores reais vão usar.</p>
+<p class="subtitle">Evolução da aba Fonte do Fisco, que passa a se chamar Fonte dos entes, no cadastro do cliente do painel administrativo do tax-rs, com dois modelos. O Simulado, automático, segue os DFs novos e lança sozinho, e é revisto aqui. O emulador, manual, recebe um lote de DFs, filtrados entre os do cliente ou criados na hora, e várias ações, cada uma com o percentual dos DFs que atinge. Os dois gravam o que a Receita Federal (CBS) e o Comitê Gestor (IBS) fariam, pela mesma porta que os conectores reais vão usar.</p>
 <div class="meta-bar">
-  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.2</span></span>
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.3</span></span>
   <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">19/11/2026</span></span>
   <span class="meta-pill"><span class="meta-label">Base</span><span class="meta-val"><code>main</code> do tax-rs no <code>a831ad9</code></span></span>
   <span class="meta-pill"><span class="meta-label">Fontes</span><span class="meta-val">APIs da CBS e do IBS conferidas em 18/11/2026</span></span>
-  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">4 de 29</span></span>
+  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">29 de 29</span></span>
 </div>
 <nav class="toc">
   <div class="toc-title">Conteúdo</div>
@@ -229,9 +229,9 @@ img, svg { max-width: 100%; height: auto; }
     <ul class="plain">
       <li><strong>O Simulado de hoje concilia a CAPUR e a CFIN, mas o crédito não sai de "a apropriar".</strong> O código mostra cinco causas (seção 8); no Live local, o cron que emite a apropriação nem roda. A regra agora é do usuário: pagou o imposto, o crédito é apropriado (D-EM-21).</li>
       <li><strong>34 dos 51 lançamentos não existem ou existem em parte no tax-rs</strong>, e 12 dos 19 eventos de crédito e débito da API da plataforma não saem de nenhum fato hoje. A E1 e a E2 rodam só com o que existe: 11 resultados e 4 cenários prontos. A E3 traz o resto.</li>
-      <li><strong>A área admin do tax-rs não vê dado fiscal</strong> (D15). Escolher DFs exige ver chave e valor: a D-EM-04 propõe a exceção fora da produção, só nesta aba.</li>
+      <li><strong>A área admin do tax-rs não vê dado fiscal</strong> (D15). Escolher DFs exige ver chave e valor: a D-EM-04 abre a exceção fora da produção, só nesta aba, com cada consulta na auditoria.</li>
       <li><strong>6 lançamentos não têm evento na API da plataforma</strong> (D08, IBS-16, IBS-18, IBS-20, IBS-23 e IBS-24): a emulação mostra o efeito no saldo, mas a API ainda não diz como publicá-lo.</li>
-      <li><strong>4 de 29 decisões tomadas.</strong> As D-EM-20, 22, 23 e 24 travam a E0; as D-EM-04, 25, 26, 27 e 29, a E1; a D-EM-02, a E3. Escolha as abertas na <a href="#s14">seção 14</a>.</li>
+      <li><strong>29 de 29 decisões tomadas</strong>, as últimas 25 em 19/11/2026, pela recomendação (<a href="#s14">seção 14</a>). Nenhuma etapa espera decisão; a próxima peça é a mudança do OpenSpec da E0 no tax-rs.</li>
     </ul>
   </div>
 </section>
@@ -434,7 +434,7 @@ img, svg { max-width: 100%; height: auto; }
   </table></div>
   <p><strong>Como o DF criado entra no tax-rs.</strong> Pela entrada interna do razão (<code>ledger/intake.ts</code>), a mesma que o seed e a captura SEFAZ usam, com a origem nova <code>emulated</code>. Valida como o DF da captura SEFAZ, sem itens, como na primeira versão do produto. O razão cria os registros da CBS e do IBS e avisa que o DF foi registrado; o Simulado segue o DF se o cliente está em Simulada (D-EM-27). Duas travas do tax-rs valem aqui: um lado do DF tem de ser empresa ativa do cliente, e só um lado (<code>ledger/lib/documents.ts:66</code>).</p>
   <p><strong>No mesmo lote.</strong> Os DFs criados recebem as ações como o lote filtrado: "criar 1.000 NF-e de entrada de 10/2026, de R$ 10.000,00 cada (CBS R$ 90,00 e IBS R$ 10,00), e, desses, 70% apropriados e 10% glosados". Criar só os DFs, sem ação, também vale.</p>
-  <div class="callout warn"><div class="ct">Remover o que foi criado</div><p>Pela regra de hoje, nada se apaga (D-EM-10). A D-EM-28 decide se os DFs criados por uma execução podem ser removidos, fora da produção.</p></div>
+  <div class="callout warn"><div class="ct">Remover o que foi criado</div><p>Não se removem (D-EM-28, decidida): os DFs criados ficam, marcados como emulados. Para recomeçar, um cliente de teste novo, como na D-EM-10.</p></div>
   <h3>Um lote com cinco ações</h3>
   <p>Entradas de 10/2026, CBS e IBS: o filtro pega 1.012 DFs, e 12 já estão glosados no ente, fora do alcance das ações 1 a 3. Sobram 1.000 elegíveis.</p>
   <div class="table-wrap"><table class="acoes-n">
@@ -528,7 +528,7 @@ img, svg { max-width: 100%; height: auto; }
       <tr><td class="id">R-SIM-05</td><td class="wrap">Conferência depois de cada emissão, com o motor da seção 9: o saldo e a situação do DF têm de mudar como o lançamento manda. O que não bater vira alerta na aba.</td><td>Todos</td></tr>
       <tr><td class="id">R-SIM-06</td><td class="wrap">O DF lançado pelo emulador sai do plano do Simulado naquele tributo (D-EM-20).</td><td>A briga entre os dois</td></tr>
       <tr><td class="id">R-SIM-07</td><td class="wrap">As proporções aparecem na aba, fixas (D-EM-23).</td><td>G-SIM-05</td></tr>
-      <tr><td class="id">R-SIM-08</td><td class="wrap">Fora da emulação: quando o ente real ou o Replay registra o pagamento e não apropria, o razão segue o ente e a plataforma mostra a divergência (D-EM-24). A divergência entra no catálogo de inconsistências quando a D-EM-24 for decidida.</td><td>G-SIM-04</td></tr>
+      <tr><td class="id">R-SIM-08</td><td class="wrap">Fora da emulação: quando o ente real ou o Replay registra o pagamento e não apropria, o razão segue o ente e a plataforma mostra a divergência (D-EM-24). Decidido em 19/11/2026 (D-EM-24); a divergência ainda precisa entrar no catálogo de inconsistências.</td><td>G-SIM-04</td></tr>
     </tbody>
   </table></div>
 </section>
@@ -565,7 +565,7 @@ img, svg { max-width: 100%; height: auto; }
       <tr><td class="id">T-EM-07</td><td><strong>Criar DFs</strong></td><td class="wrap">Quantidade, empresa do grupo, a mistura de direção e tipo, contraparte, emissão, valor, alíquotas e recolhimento, cada um pré-definido ou aleatório; a semente; a prévia com os primeiros DFs e os totais; criar só os DFs ou seguir para as ações.</td></tr>
     </tbody>
   </table></div>
-  <div class="callout"><div class="ct">Onde as telas ficam no painel do cliente</div><p>Três estruturas, clicáveis, na <a href="taxrs-emulador-estrutura.html">página da estrutura do módulo</a>: subabas dentro da aba, um espaço próprio do emulador ou uma execução guiada. A escolha é a D-EM-29.</p></div>
+  <div class="callout ok"><div class="ct">Onde as telas ficam no painel do cliente</div><p>No espaço próprio do emulador (D-EM-29, decidida em 19/11/2026). A aba Fonte dos entes fica com o modo e o resumo, e "Abrir o emulador" leva a uma página do cliente com menu lateral: Painel, Criar DFs, Novo lote, Cenários prontos, Lançamento unitário, Simulado e Execuções, cada tela com endereço próprio. As três estruturas avaliadas seguem clicáveis na <a href="taxrs-emulador-estrutura.html">página da estrutura do módulo</a>.</p></div>
   <h3>Esboço da T-EM-02 e da T-EM-03</h3>
   <div class="mock" role="img" aria-label="Esboço da tela de novo lote com a prévia">
     <div class="mock-bar"><strong>Fonte dos entes · Novo lote</strong><span>Cliente de teste · modo Simulada</span></div>
@@ -692,7 +692,7 @@ img, svg { max-width: 100%; height: auto; }
       <tr><td><code>reconciliation</code></td><td class="wrap">Excedente (D02, C12) e pagamento antecipado (D08).</td><td>E3</td></tr>
       <tr><td><code>inconsistencies</code></td><td class="wrap">Nada novo na detecção. A conferência lê os 5 códigos que existem.</td><td>—</td></tr>
       <tr><td><code>platform</code> (admin)</td><td class="wrap">Endpoints do emulador: criar DFs (o gerador, com a semente, chama a entrada interna do razão), catálogo, prévia, execução, conferência, lançamento unitário e o Simulado (plano, avanço, adoção); tudo na auditoria do cliente.</td><td>E0 · E1 · E2</td></tr>
-      <tr><td>Frontend</td><td class="wrap">A aba renomeada (D-EM-14), com as telas T-EM-01 a T-EM-07, na estrutura da D-EM-29; a marca "emulado" no portal fora da produção.</td><td>E0 · E1 · E2</td></tr>
+      <tr><td>Frontend</td><td class="wrap">A aba renomeada para "Fonte dos entes" (D-EM-14), com o modo e o resumo; o espaço próprio do emulador, com menu lateral e uma rota por tela (D-EM-29), com as telas T-EM-01 a T-EM-07; a marca "emulado" no portal fora da produção.</td><td>E0 · E1 · E2</td></tr>
       <tr><td>Testes</td><td class="wrap">Unidade do planejador (cada resultado contra cada situação de DF); <code>encore test</code> de ponta a ponta por resultado (executa e cobra Atingido); e2e da aba. Os cenários prontos viram a suíte de regressão do razão.</td><td>Todas</td></tr>
     </tbody>
   </table></div>
@@ -700,23 +700,23 @@ img, svg { max-width: 100%; height: auto; }
 <section class="section" id="s13">
   <div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Etapas da construção</span></div>
   <div class="ondas">
-    <div class="onda crit"><div class="onda-h"><span class="onda-n">E0</span><span class="onda-t">O Simulado revisto</span><span class="onda-q">depende de D-EM-20, 22, 23 e 24</span></div>
+    <div class="onda crit"><div class="onda-h"><span class="onda-n">E0</span><span class="onda-t">O Simulado revisto</span><span class="onda-q">decididas: D-EM-20, 22, 23 e 24</span></div>
       <ul class="plain">
         <li>R-SIM-01 a R-SIM-08 e a T-EM-06.</li>
         <li>Testes do plano contra o pagamento, da adoção na troca de modo e do avanço sob demanda.</li>
       </ul>
       <div class="pronto"><strong>Pronto quando</strong>, no Live local, um DF de entrada com a CAPUR conciliada e o pagamento registrado aparece apropriado, com o saldo appropriated, sem esperar o cron; e um cliente que passa para Simulada vê andar os DFs que já tinha.</div>
     </div>
-    <div class="onda"><div class="onda-h"><span class="onda-n">E1</span><span class="onda-t">DFs criados e lançamento unitário</span><span class="onda-q">depende de D-EM-04, 14, 25, 26, 27 e 29</span></div>
+    <div class="onda"><div class="onda-h"><span class="onda-n">E1</span><span class="onda-t">DFs criados e lançamento unitário</span><span class="onda-q">decididas: D-EM-04, 14, 25, 26, 27 e 29</span></div>
       <ul class="plain">
         <li>Origem <code>emulated</code>, ao lado do Simulado.</li>
-        <li>T-EM-01, T-EM-04 e T-EM-07, com prévia e auditoria, na estrutura da D-EM-29.</li>
+        <li>T-EM-01, T-EM-04 e T-EM-07, com prévia e auditoria, no espaço próprio do emulador (D-EM-29).</li>
         <li>Criar DFs com as características da seção 5, pela entrada interna do razão.</li>
         <li>Os 17 lançamentos que o tax-rs já representa.</li>
       </ul>
       <div class="pronto"><strong>Pronto quando</strong> o administrador cria 100 NF-e de entrada num cliente de teste sem DFs, elas aparecem no portal marcadas como emuladas, a mesma semente cria as mesmas 100 noutro cliente, e um C02 num deles faz a API da plataforma publicar <code>credit.appropriated</code> e o Simulado deixar de seguir esse DF na CBS.</div>
     </div>
-    <div class="onda"><div class="onda-h"><span class="onda-n">E2</span><span class="onda-t">O lote e a conferência</span><span class="onda-q">depende de D-EM-06, 07, 08, 12, 13, 17, 18, 19 e 28</span></div>
+    <div class="onda"><div class="onda-h"><span class="onda-n">E2</span><span class="onda-t">O lote e a conferência</span><span class="onda-q">decididas: D-EM-06, 07, 08, 12, 13, 17, 18, 19 e 28</span></div>
       <ul class="plain">
         <li>T-EM-02, T-EM-03 e T-EM-05: o lote com várias ações, base, percentual e semente, sobre DFs filtrados, criados ou os dois.</li>
         <li>Os 11 resultados que só usam lançamentos de hoje: RE-01, RE-02, RE-03, RE-04, RE-05, RE-07, RE-08, RE-09, RE-15, RE-16, RE-17.</li>
@@ -724,26 +724,25 @@ img, svg { max-width: 100%; height: auto; }
       </ul>
       <div class="pronto"><strong>Pronto quando</strong> o lote da seção 5 (1.000 DFs, cinco ações) sai Atingido em todos, pela tela e pela API, e a mesma semente sorteia os mesmos DFs.</div>
     </div>
-    <div class="onda"><div class="onda-h"><span class="onda-n">E3</span><span class="onda-t">O contrato completo dos lançamentos</span><span class="onda-q">depende de D-EM-02, 09 e 15</span></div>
+    <div class="onda"><div class="onda-h"><span class="onda-n">E3</span><span class="onda-t">O contrato completo dos lançamentos</span><span class="onda-q">decididas: D-EM-02, 09 e 15</span></div>
       <ul class="plain">
         <li>Os 20 lançamentos novos e os 14 em parte; os saldos do razão; os 12 eventos.</li>
         <li>Os outros 16 resultados e os outros 14 cenários prontos.</li>
       </ul>
       <div class="pronto"><strong>Pronto quando</strong> os 18 cenários prontos saem Atingido.</div>
     </div>
-    <div class="onda dep"><div class="onda-h"><span class="onda-n">E4</span><span class="onda-t">Bordas</span><span class="onda-q">depende de D-EM-10 e 11</span></div>
+    <div class="onda dep"><div class="onda-h"><span class="onda-n">E4</span><span class="onda-t">Bordas</span><span class="onda-q">decididas: D-EM-10 e 11</span></div>
       <ul class="plain">
         <li>O mesmo lançamento entregue duas vezes; lançamento fora de ordem com "forçar"; atraso com multa e juros; chave desconhecida; duas execuções no mesmo cliente; 1.000 DFs numa execução.</li>
       </ul>
       <div class="pronto"><strong>Pronto quando</strong> cada borda tem teste e a plataforma se defende ou avisa, sem estado quebrado.</div>
     </div>
   </div>
-  <p>A estimativa de prazo sai com a mudança do OpenSpec de cada etapa, depois da aprovação.</p>
+  <p>Com as 29 decisões tomadas, a proposta está aprovada para construção. A estimativa de prazo sai com a mudança do OpenSpec de cada etapa, a começar pela E0.</p>
 </section>
 <section class="section" id="s14">
   <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Decisões</span></div>
-  <p>Escolha uma opção em cada decisão em aberto e, se quiser, deixe uma observação. A escolha fica guardada neste navegador. "Copiar escolhas" monta o texto para mandar de volta; as escolhas entram na proposta na versão seguinte.</p>
-  <div class="dc-bar"><span class="dc-prog"><strong id="dc-n">0</strong> de 25 em aberto escolhidas · 4 decididas</span><button type="button" class="dc-btn" id="dc-rec">Marcar as recomendadas</button><button type="button" class="dc-btn" id="dc-limpar">Limpar</button><button type="button" class="dc-btn pri" id="dc-copiar">Copiar escolhas</button><span class="dc-msg" id="dc-msg" aria-live="polite"></span></div>
+  <div class="callout ok"><div class="ct">As 29 decisões estão tomadas</div><p>Quatro em 18/11/2026 e 25 em 19/11/2026; as de 19/11 seguiram a recomendação. Cada uma fica abaixo, com a opção escolhida e o motivo.</p></div>
   <div class="dc-grid">
     <fieldset class="dc decidida ok" id="D-EM-01" data-id="D-EM-01" data-titulo="O que é emulado" data-rec="A">
       <legend><span class="id">D-EM-01</span>O que é emulado</legend>
@@ -751,27 +750,24 @@ img, svg { max-width: 100%; height: auto; }
       <label class="dc-op"><input type="radio" name="D-EM-01" value="B" data-txt="A conexão com as APIs: endpoints, token, webhook, link assinado." disabled><span><strong>B</strong> · A conexão com as APIs: endpoints, token, webhook, link assinado.</span></label>
       <div class="dc-rec"><span class="rl">Decidida em 18/11/2026</span><strong>A</strong>, pelo usuário. A conexão fica com os conectores reais e, nos testes deles, com o MassGen.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-02" data-id="D-EM-02" data-titulo="O formato do lançamento" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-02" data-id="D-EM-02" data-titulo="O formato do lançamento" data-rec="A">
       <legend><span class="id">D-EM-02</span>O formato do lançamento</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-02" value="A" data-txt="Um contrato de lançamento por ente, espelhando a documentação: na CBS, a mudança de um campo do documento (campo, de, para, valor); no IBS, o movimento do MOC com os sete campos financeiros. Os 8 tipos de fato de hoje viram casos desse contrato."><span><strong>A</strong> · Um contrato de lançamento por ente, espelhando a documentação: na CBS, a mudança de um campo do documento (campo, de, para, valor); no IBS, o movimento do MOC com os sete campos financeiros. Os 8 tipos de fato de hoje viram casos desse contrato.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-02" value="B" data-txt="Estender os 8 tipos de fato um a um: 20 lançamentos novos e 14 ajustes."><span><strong>B</strong> · Estender os 8 tipos de fato um a um: 20 lançamentos novos e 14 ajustes.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Quando a documentação muda, muda um lugar só, e o conector real traduz a API para o contrato sem interpretar. A E1 e a E2 rodam com os fatos de hoje; esta decisão trava só a E3.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-02"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-02" value="A" data-txt="Um contrato de lançamento por ente, espelhando a documentação: na CBS, a mudança de um campo do documento (campo, de, para, valor); no IBS, o movimento do MOC com os sete campos financeiros. Os 8 tipos de fato de hoje viram casos desse contrato." checked disabled><span><strong>A</strong> · Um contrato de lançamento por ente, espelhando a documentação: na CBS, a mudança de um campo do documento (campo, de, para, valor); no IBS, o movimento do MOC com os sete campos financeiros. Os 8 tipos de fato de hoje viram casos desse contrato.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-02" value="B" data-txt="Estender os 8 tipos de fato um a um: 20 lançamentos novos e 14 ajustes." disabled><span><strong>B</strong> · Estender os 8 tipos de fato um a um: 20 lançamentos novos e 14 ajustes.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> Quando a documentação muda, muda um lugar só, e o conector real traduz a API para o contrato sem interpretar. A E1 e a E2 rodam com os fatos de hoje; esta decisão trava só a E3.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-03" data-id="D-EM-03" data-titulo="Onde o emulador roda" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-03" data-id="D-EM-03" data-titulo="Onde o emulador roda" data-rec="A">
       <legend><span class="id">D-EM-03</span>Onde o emulador roda</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-03" value="A" data-txt="Dentro do tax-rs, no serviço tax-authority, gravando pela porta de fatos."><span><strong>A</strong> · Dentro do tax-rs, no serviço <code>tax-authority</code>, gravando pela porta de fatos.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-03" value="B" data-txt="No MassGen, que já emula as APIs, com o tax-rs lendo dele por conector."><span><strong>B</strong> · No MassGen, que já emula as APIs, com o tax-rs lendo dele por conector.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O pedido é a aba do admin, e a emulação é de lançamento, não de conexão (D-EM-01). O MassGen continua sendo a peça para testar os conectores, como na D-CL-02 do <a href="taxrs-caderno-live.html#s7">caderno × Live</a>.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-03"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-03" value="A" data-txt="Dentro do tax-rs, no serviço tax-authority, gravando pela porta de fatos." checked disabled><span><strong>A</strong> · Dentro do tax-rs, no serviço <code>tax-authority</code>, gravando pela porta de fatos.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-03" value="B" data-txt="No MassGen, que já emula as APIs, com o tax-rs lendo dele por conector." disabled><span><strong>B</strong> · No MassGen, que já emula as APIs, com o tax-rs lendo dele por conector.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> O pedido é a aba do admin, e a emulação é de lançamento, não de conexão (D-EM-01). O MassGen continua sendo a peça para testar os conectores, como na D-CL-02 do <a href="taxrs-caderno-live.html#s7">caderno × Live</a>.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-04" data-id="D-EM-04" data-titulo="Dado fiscal na área admin (D15 do tax-rs)" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-04" data-id="D-EM-04" data-titulo="Dado fiscal na área admin (D15 do tax-rs)" data-rec="A">
       <legend><span class="id">D-EM-04</span>Dado fiscal na área admin (D15 do tax-rs)</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-04" value="A" data-txt="Exceção fora da produção, só nesta aba, com cada consulta na auditoria."><span><strong>A</strong> · Exceção fora da produção, só nesta aba, com cada consulta na auditoria.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-04" value="B" data-txt="O emulador vai para o portal do cliente, num perfil de teste."><span><strong>B</strong> · O emulador vai para o portal do cliente, num perfil de teste.</span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-04" value="C" data-txt="O admin escolhe DFs só por filtro, sem ver chave nem valor."><span><strong>C</strong> · O admin escolhe DFs só por filtro, sem ver chave nem valor.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O lote já não precisa de chave (D-EM-16); a exceção serve à prévia DF a DF e ao lançamento unitário. O B mistura teste com o uso do cliente; o C impede o lançamento unitário. Trava a E1.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-04"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-04" value="A" data-txt="Exceção fora da produção, só nesta aba, com cada consulta na auditoria." checked disabled><span><strong>A</strong> · Exceção fora da produção, só nesta aba, com cada consulta na auditoria.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-04" value="B" data-txt="O emulador vai para o portal do cliente, num perfil de teste." disabled><span><strong>B</strong> · O emulador vai para o portal do cliente, num perfil de teste.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-04" value="C" data-txt="O admin escolhe DFs só por filtro, sem ver chave nem valor." disabled><span><strong>C</strong> · O admin escolhe DFs só por filtro, sem ver chave nem valor.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> O lote já não precisa de chave (D-EM-16); a exceção serve à prévia DF a DF e ao lançamento unitário. O B mistura teste com o uso do cliente; o C impede o lançamento unitário. Trava a E1.</div>
     </fieldset>
     <fieldset class="dc decidida ok" id="D-EM-05" data-id="D-EM-05" data-titulo="O modo da fonte" data-rec="B">
       <legend><span class="id">D-EM-05</span>O modo da fonte</legend>
@@ -779,77 +775,67 @@ img, svg { max-width: 100%; height: auto; }
       <label class="dc-op"><input type="radio" name="D-EM-05" value="B" data-txt="Manter &quot;Simulada&quot; como o modelo automático e pôr o emulador, manual e em lote, ao lado." checked disabled><span><strong>B</strong> · Manter "Simulada" como o modelo automático e pôr o emulador, manual e em lote, ao lado.<span class="rec-tag">decidida</span></span></label>
       <div class="dc-rec"><span class="rl">Decidida em 18/11/2026</span><strong>B</strong>, pelo usuário: o Simulado fica como o modelo automático e é revisto (seção 8); o emulador é o modelo manual, em lote, para gerir os eventos fiscais. A briga entre os dois no mesmo DF vira a D-EM-20.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-06" data-id="D-EM-06" data-titulo="Como o administrador pede" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-06" data-id="D-EM-06" data-titulo="Como o administrador pede" data-rec="A">
       <legend><span class="id">D-EM-06</span>Como o administrador pede</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-06" value="A" data-txt="Pelo resultado no lote (&quot;usar todo o saldo&quot;: o emulador calcula os lançamentos e os pré-requisitos) e pelo lançamento no unitário."><span><strong>A</strong> · Pelo resultado no lote ("usar todo o saldo": o emulador calcula os lançamentos e os pré-requisitos) e pelo lançamento no unitário.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-06" value="B" data-txt="Pelo resultado nos dois."><span><strong>B</strong> · Pelo resultado nos dois.</span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-06" value="C" data-txt="Pelo lançamento nos dois."><span><strong>C</strong> · Pelo lançamento nos dois.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> No lote, o administrador pensa no resultado; no unitário, quer controlar o lançamento.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-06"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-06" value="A" data-txt="Pelo resultado no lote (&quot;usar todo o saldo&quot;: o emulador calcula os lançamentos e os pré-requisitos) e pelo lançamento no unitário." checked disabled><span><strong>A</strong> · Pelo resultado no lote ("usar todo o saldo": o emulador calcula os lançamentos e os pré-requisitos) e pelo lançamento no unitário.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-06" value="B" data-txt="Pelo resultado nos dois." disabled><span><strong>B</strong> · Pelo resultado nos dois.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-06" value="C" data-txt="Pelo lançamento nos dois." disabled><span><strong>C</strong> · Pelo lançamento nos dois.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> No lote, o administrador pensa no resultado; no unitário, quer controlar o lançamento.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-07" data-id="D-EM-07" data-titulo="A conferência" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-07" data-id="D-EM-07" data-titulo="A conferência" data-rec="A">
       <legend><span class="id">D-EM-07</span>A conferência</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-07" value="A" data-txt="Automática, DF a DF, ao fim de cada execução: Atingido, Divergente ou Aguardando."><span><strong>A</strong> · Automática, DF a DF, ao fim de cada execução: Atingido, Divergente ou Aguardando.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-07" value="B" data-txt="Só a prévia; a conferência é à mão."><span><strong>B</strong> · Só a prévia; a conferência é à mão.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> A mesma conferência vira asserção dos testes automatizados e alerta do Simulado (R-SIM-05).</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-07"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-07" value="A" data-txt="Automática, DF a DF, ao fim de cada execução: Atingido, Divergente ou Aguardando." checked disabled><span><strong>A</strong> · Automática, DF a DF, ao fim de cada execução: Atingido, Divergente ou Aguardando.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-07" value="B" data-txt="Só a prévia; a conferência é à mão." disabled><span><strong>B</strong> · Só a prévia; a conferência é à mão.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> A mesma conferência vira asserção dos testes automatizados e alerta do Simulado (R-SIM-05).</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-08" data-id="D-EM-08" data-titulo="As datas" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-08" data-id="D-EM-08" data-titulo="As datas" data-rec="A">
       <legend><span class="id">D-EM-08</span>As datas</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-08" value="A" data-txt="Agora, retroativa, agendada ou espalhada entre duas datas, por ação."><span><strong>A</strong> · Agora, retroativa, agendada ou espalhada entre duas datas, por ação.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-08" value="B" data-txt="Só agora."><span><strong>B</strong> · Só agora.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Prazos (os 30 dias do DF sem registro, a prescrição, o atraso) só se testam com data.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-08"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-08" value="A" data-txt="Agora, retroativa, agendada ou espalhada entre duas datas, por ação." checked disabled><span><strong>A</strong> · Agora, retroativa, agendada ou espalhada entre duas datas, por ação.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-08" value="B" data-txt="Só agora." disabled><span><strong>B</strong> · Só agora.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> Prazos (os 30 dias do DF sem registro, a prescrição, o atraso) só se testam com data.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-09" data-id="D-EM-09" data-titulo="Fidelidade a cada ente" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-09" data-id="D-EM-09" data-titulo="Fidelidade a cada ente" data-rec="A">
       <legend><span class="id">D-EM-09</span>Fidelidade a cada ente</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-09" value="A" data-txt="Cada ente segue a sua documentação: o IBS fica mudo onde o MOC não tem movimento; &quot;forçar&quot; só no lançamento unitário, com marca."><span><strong>A</strong> · Cada ente segue a sua documentação: o IBS fica mudo onde o MOC não tem movimento; "forçar" só no lançamento unitário, com marca.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-09" value="B" data-txt="Espelhar no IBS o que a CBS tem."><span><strong>B</strong> · Espelhar no IBS o que a CBS tem.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O B testaria a plataforma contra um IBS que não existe.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-09"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-09" value="A" data-txt="Cada ente segue a sua documentação: o IBS fica mudo onde o MOC não tem movimento; &quot;forçar&quot; só no lançamento unitário, com marca." checked disabled><span><strong>A</strong> · Cada ente segue a sua documentação: o IBS fica mudo onde o MOC não tem movimento; "forçar" só no lançamento unitário, com marca.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-09" value="B" data-txt="Espelhar no IBS o que a CBS tem." disabled><span><strong>B</strong> · Espelhar no IBS o que a CBS tem.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> O B testaria a plataforma contra um IBS que não existe.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-10" data-id="D-EM-10" data-titulo="Desfazer" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-10" data-id="D-EM-10" data-titulo="Desfazer" data-rec="A">
       <legend><span class="id">D-EM-10</span>Desfazer</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-10" value="A" data-txt="Nada se apaga. Desfazer é lançar o contrário quando a documentação prevê (estorno, cancelamento); para recomeçar, um cliente de teste novo."><span><strong>A</strong> · Nada se apaga. Desfazer é lançar o contrário quando a documentação prevê (estorno, cancelamento); para recomeçar, um cliente de teste novo.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-10" value="B" data-txt="Apagar os lançamentos de uma execução."><span><strong>B</strong> · Apagar os lançamentos de uma execução.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> A porta de fatos é só de inclusão; apagar quebra o razão e a auditoria.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-10"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-10" value="A" data-txt="Nada se apaga. Desfazer é lançar o contrário quando a documentação prevê (estorno, cancelamento); para recomeçar, um cliente de teste novo." checked disabled><span><strong>A</strong> · Nada se apaga. Desfazer é lançar o contrário quando a documentação prevê (estorno, cancelamento); para recomeçar, um cliente de teste novo.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-10" value="B" data-txt="Apagar os lançamentos de uma execução." disabled><span><strong>B</strong> · Apagar os lançamentos de uma execução.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> A porta de fatos é só de inclusão; apagar quebra o razão e a auditoria.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-11" data-id="D-EM-11" data-titulo="Marca no portal do cliente" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-11" data-id="D-EM-11" data-titulo="Marca no portal do cliente" data-rec="A">
       <legend><span class="id">D-EM-11</span>Marca no portal do cliente</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-11" value="A" data-txt="Fora da produção, o que veio do emulador aparece com a marca &quot;emulado&quot;."><span><strong>A</strong> · Fora da produção, o que veio do emulador aparece com a marca "emulado".<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-11" value="B" data-txt="Sem marca."><span><strong>B</strong> · Sem marca.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Quem testa no portal sabe que o lançamento não veio do ente.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-11"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-11" value="A" data-txt="Fora da produção, o que veio do emulador aparece com a marca &quot;emulado&quot;." checked disabled><span><strong>A</strong> · Fora da produção, o que veio do emulador aparece com a marca "emulado".<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-11" value="B" data-txt="Sem marca." disabled><span><strong>B</strong> · Sem marca.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> Quem testa no portal sabe que o lançamento não veio do ente.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-12" data-id="D-EM-12" data-titulo="Cenários reaproveitáveis" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-12" data-id="D-EM-12" data-titulo="Cenários reaproveitáveis" data-rec="A">
       <legend><span class="id">D-EM-12</span>Cenários reaproveitáveis</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-12" value="A" data-txt="O lote se salva em JSON, com filtro, ações e semente, e a API do admin roda o mesmo lote nos testes automatizados."><span><strong>A</strong> · O lote se salva em JSON, com filtro, ações e semente, e a API do admin roda o mesmo lote nos testes automatizados.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-12" value="B" data-txt="Só pela tela."><span><strong>B</strong> · Só pela tela.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong></div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-12"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-12" value="A" data-txt="O lote se salva em JSON, com filtro, ações e semente, e a API do admin roda o mesmo lote nos testes automatizados." checked disabled><span><strong>A</strong> · O lote se salva em JSON, com filtro, ações e semente, e a API do admin roda o mesmo lote nos testes automatizados.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-12" value="B" data-txt="Só pela tela." disabled><span><strong>B</strong> · Só pela tela.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong></div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-13" data-id="D-EM-13" data-titulo="Limites" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-13" data-id="D-EM-13" data-titulo="Limites" data-rec="A">
       <legend><span class="id">D-EM-13</span>Limites</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-13" value="A" data-txt="Até 1.000 DFs atingidos por execução, somadas as ações, e até 1.000 DFs criados; acima de 100, o administrador digita o número de DFs para confirmar."><span><strong>A</strong> · Até 1.000 DFs atingidos por execução, somadas as ações, e até 1.000 DFs criados; acima de 100, o administrador digita o número de DFs para confirmar.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-13" value="B" data-txt="Sem limite."><span><strong>B</strong> · Sem limite.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong></div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-13"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-13" value="A" data-txt="Até 1.000 DFs atingidos por execução, somadas as ações, e até 1.000 DFs criados; acima de 100, o administrador digita o número de DFs para confirmar." checked disabled><span><strong>A</strong> · Até 1.000 DFs atingidos por execução, somadas as ações, e até 1.000 DFs criados; acima de 100, o administrador digita o número de DFs para confirmar.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-13" value="B" data-txt="Sem limite." disabled><span><strong>B</strong> · Sem limite.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong></div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-14" data-id="D-EM-14" data-titulo="Nome da aba" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-14" data-id="D-EM-14" data-titulo="Nome da aba" data-rec="A">
       <legend><span class="id">D-EM-14</span>Nome da aba</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-14" value="A" data-txt="&quot;Fonte dos entes&quot;."><span><strong>A</strong> · "Fonte dos entes".<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-14" value="B" data-txt="&quot;Entes emulados&quot;."><span><strong>B</strong> · "Entes emulados".</span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-14" value="C" data-txt="Manter &quot;Fonte do Fisco&quot;."><span><strong>C</strong> · Manter "Fonte do Fisco".</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> A aba passa a ter o Simulado e o emulador dos dois entes, e "Fisco" junta a Receita Federal e o Comitê Gestor num nome só.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-14"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-14" value="A" data-txt="&quot;Fonte dos entes&quot;." checked disabled><span><strong>A</strong> · "Fonte dos entes".<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-14" value="B" data-txt="&quot;Entes emulados&quot;." disabled><span><strong>B</strong> · "Entes emulados".</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-14" value="C" data-txt="Manter &quot;Fonte do Fisco&quot;." disabled><span><strong>C</strong> · Manter "Fonte do Fisco".</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> A aba passa a ter o Simulado e o emulador dos dois entes, e "Fisco" junta a Receita Federal e o Comitê Gestor num nome só.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-15" data-id="D-EM-15" data-titulo="A base do IBS" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-15" data-id="D-EM-15" data-titulo="A base do IBS" data-rec="A">
       <legend><span class="id">D-EM-15</span>A base do IBS</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-15" value="A" data-txt="Só o MOC v1.10 (24 movimentos); rever quando o Comitê Gestor publicar versão nova."><span><strong>A</strong> · Só o MOC v1.10 (24 movimentos); rever quando o Comitê Gestor publicar versão nova.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-15" value="B" data-txt="Antecipar movimentos que a CBS tem e o IBS ainda não."><span><strong>B</strong> · Antecipar movimentos que a CBS tem e o IBS ainda não.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong></div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-15"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-15" value="A" data-txt="Só o MOC v1.10 (24 movimentos); rever quando o Comitê Gestor publicar versão nova." checked disabled><span><strong>A</strong> · Só o MOC v1.10 (24 movimentos); rever quando o Comitê Gestor publicar versão nova.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-15" value="B" data-txt="Antecipar movimentos que a CBS tem e o IBS ainda não." disabled><span><strong>B</strong> · Antecipar movimentos que a CBS tem e o IBS ainda não.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong></div>
     </fieldset>
     <fieldset class="dc decidida ok" id="D-EM-16" data-id="D-EM-16" data-titulo="O lote" data-rec="A">
       <legend><span class="id">D-EM-16</span>O lote</legend>
@@ -857,33 +843,29 @@ img, svg { max-width: 100%; height: auto; }
       <label class="dc-op"><input type="radio" name="D-EM-16" value="B" data-txt="Uma ação por lote, com os DFs escolhidos um a um." disabled><span><strong>B</strong> · Uma ação por lote, com os DFs escolhidos um a um.</span></label>
       <div class="dc-rec"><span class="rl">Decidida em 18/11/2026</span><strong>A</strong>, pelo usuário. A lista de chaves continua possível, mas não é preciso.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-17" data-id="D-EM-17" data-titulo="Sobre quais DFs vale cada ação" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-17" data-id="D-EM-17" data-titulo="Sobre quais DFs vale cada ação" data-rec="A">
       <legend><span class="id">D-EM-17</span>Sobre quais DFs vale cada ação</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-17" value="A" data-txt="Cada ação tem uma base: o lote, ou os DFs que receberam uma ação anterior. Ações com a mesma base não se sobrepõem: um DF recebe só uma delas, e elas somam até 100%."><span><strong>A</strong> · Cada ação tem uma base: o lote, ou os DFs que receberam uma ação anterior. Ações com a mesma base não se sobrepõem: um DF recebe só uma delas, e elas somam até 100%.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-17" value="B" data-txt="Toda ação vale sobre o lote inteiro, sorteada à parte; um DF pode cair em mais de uma."><span><strong>B</strong> · Toda ação vale sobre o lote inteiro, sorteada à parte; um DF pode cair em mais de uma.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Com o B, um DF pode ser glosado e apropriado no mesmo lote, e o percentual deixa de dizer quantos DFs terminam em cada situação.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-17"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-17" value="A" data-txt="Cada ação tem uma base: o lote, ou os DFs que receberam uma ação anterior. Ações com a mesma base não se sobrepõem: um DF recebe só uma delas, e elas somam até 100%." checked disabled><span><strong>A</strong> · Cada ação tem uma base: o lote, ou os DFs que receberam uma ação anterior. Ações com a mesma base não se sobrepõem: um DF recebe só uma delas, e elas somam até 100%.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-17" value="B" data-txt="Toda ação vale sobre o lote inteiro, sorteada à parte; um DF pode cair em mais de uma." disabled><span><strong>B</strong> · Toda ação vale sobre o lote inteiro, sorteada à parte; um DF pode cair em mais de uma.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> Com o B, um DF pode ser glosado e apropriado no mesmo lote, e o percentual deixa de dizer quantos DFs terminam em cada situação.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-18" data-id="D-EM-18" data-titulo="O percentual conta sobre o quê" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-18" data-id="D-EM-18" data-titulo="O percentual conta sobre o quê" data-rec="A">
       <legend><span class="id">D-EM-18</span>O percentual conta sobre o quê</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-18" value="A" data-txt="Sobre os DFs elegíveis da base, os que podem chegar ao resultado; os outros aparecem à parte na prévia."><span><strong>A</strong> · Sobre os DFs elegíveis da base, os que podem chegar ao resultado; os outros aparecem à parte na prévia.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-18" value="B" data-txt="Sobre todos os DFs da base; os que não podem chegar ao resultado são pulados."><span><strong>B</strong> · Sobre todos os DFs da base; os que não podem chegar ao resultado são pulados.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Com o B, 50% pode virar 30% sem aviso.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-18"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-18" value="A" data-txt="Sobre os DFs elegíveis da base, os que podem chegar ao resultado; os outros aparecem à parte na prévia." checked disabled><span><strong>A</strong> · Sobre os DFs elegíveis da base, os que podem chegar ao resultado; os outros aparecem à parte na prévia.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-18" value="B" data-txt="Sobre todos os DFs da base; os que não podem chegar ao resultado são pulados." disabled><span><strong>B</strong> · Sobre todos os DFs da base; os que não podem chegar ao resultado são pulados.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> Com o B, 50% pode virar 30% sem aviso.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-19" data-id="D-EM-19" data-titulo="O sorteio" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-19" data-id="D-EM-19" data-titulo="O sorteio" data-rec="A">
       <legend><span class="id">D-EM-19</span>O sorteio</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-19" value="A" data-txt="Com semente: o mesmo filtro e a mesma semente sorteiam os mesmos DFs; a prévia mostra a semente."><span><strong>A</strong> · Com semente: o mesmo filtro e a mesma semente sorteiam os mesmos DFs; a prévia mostra a semente.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-19" value="B" data-txt="Sorteio novo a cada execução."><span><strong>B</strong> · Sorteio novo a cada execução.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Repete o lote noutro ambiente e nos testes automatizados (D-EM-12).</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-19"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-19" value="A" data-txt="Com semente: o mesmo filtro e a mesma semente sorteiam os mesmos DFs; a prévia mostra a semente." checked disabled><span><strong>A</strong> · Com semente: o mesmo filtro e a mesma semente sorteiam os mesmos DFs; a prévia mostra a semente.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-19" value="B" data-txt="Sorteio novo a cada execução." disabled><span><strong>B</strong> · Sorteio novo a cada execução.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> Repete o lote noutro ambiente e nos testes automatizados (D-EM-12).</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-20" data-id="D-EM-20" data-titulo="Simulado e emulador no mesmo DF" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-20" data-id="D-EM-20" data-titulo="Simulado e emulador no mesmo DF" data-rec="A">
       <legend><span class="id">D-EM-20</span>Simulado e emulador no mesmo DF</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-20" value="A" data-txt="O DF que recebe lançamento do emulador sai do plano do Simulado naquele tributo."><span><strong>A</strong> · O DF que recebe lançamento do emulador sai do plano do Simulado naquele tributo.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-20" value="B" data-txt="Os dois seguem, e o razão aplica tudo pela data."><span><strong>B</strong> · Os dois seguem, e o razão aplica tudo pela data.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Com o B, o Simulado pode apropriar um crédito que o administrador acabou de glosar.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-20"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-20" value="A" data-txt="O DF que recebe lançamento do emulador sai do plano do Simulado naquele tributo." checked disabled><span><strong>A</strong> · O DF que recebe lançamento do emulador sai do plano do Simulado naquele tributo.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-20" value="B" data-txt="Os dois seguem, e o razão aplica tudo pela data." disabled><span><strong>B</strong> · Os dois seguem, e o razão aplica tudo pela data.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> Com o B, o Simulado pode apropriar um crédito que o administrador acabou de glosar.</div>
     </fieldset>
     <fieldset class="dc decidida ok" id="D-EM-21" data-id="D-EM-21" data-titulo="Quando o Simulado apropria o crédito" data-rec="B">
       <legend><span class="id">D-EM-21</span>Quando o Simulado apropria o crédito</legend>
@@ -892,69 +874,59 @@ img, svg { max-width: 100%; height: auto; }
       <label class="dc-op"><input type="radio" name="D-EM-21" value="C" data-txt="Quando o pagamento chega, ou na data do plano, o que vier primeiro, sem lançar o pagamento." disabled><span><strong>C</strong> · Quando o pagamento chega, ou na data do plano, o que vier primeiro, sem lançar o pagamento.</span></label>
       <div class="dc-rec"><span class="rl">Decidida em 18/11/2026</span><strong>B</strong>, pela regra do usuário: quando se paga o imposto, o crédito é apropriado. Pagamento e apropriação andam juntos, e a CFIN não concilia com o crédito "a apropriar".</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-22" data-id="D-EM-22" data-titulo="Os DFs que já existem quando o cliente passa para Simulada" data-rec="C">
+    <fieldset class="dc decidida ok" id="D-EM-22" data-id="D-EM-22" data-titulo="Os DFs que já existem quando o cliente passa para Simulada" data-rec="C">
       <legend><span class="id">D-EM-22</span>Os DFs que já existem quando o cliente passa para Simulada</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-22" value="A" data-txt="O Simulado adota todos, na hora da troca."><span><strong>A</strong> · O Simulado adota todos, na hora da troca.</span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-22" value="B" data-txt="Só os DFs novos, como hoje."><span><strong>B</strong> · Só os DFs novos, como hoje.</span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-22" value="C" data-txt="Na troca, a aba mostra quantos DFs já existem e o administrador escolhe se o Simulado os adota."><span><strong>C</strong> · Na troca, a aba mostra quantos DFs já existem e o administrador escolhe se o Simulado os adota.<span class="rec-tag">recomendada</span></span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>C.</strong> Adotar mexe em DFs que já têm história (os do Replay, por exemplo); a escolha é de quem troca.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-22"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-22" value="A" data-txt="O Simulado adota todos, na hora da troca." disabled><span><strong>A</strong> · O Simulado adota todos, na hora da troca.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-22" value="B" data-txt="Só os DFs novos, como hoje." disabled><span><strong>B</strong> · Só os DFs novos, como hoje.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-22" value="C" data-txt="Na troca, a aba mostra quantos DFs já existem e o administrador escolhe se o Simulado os adota." checked disabled><span><strong>C</strong> · Na troca, a aba mostra quantos DFs já existem e o administrador escolhe se o Simulado os adota.<span class="rec-tag">decidida</span></span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>C.</strong> Adotar mexe em DFs que já têm história (os do Replay, por exemplo); a escolha é de quem troca.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-23" data-id="D-EM-23" data-titulo="As proporções do Simulado" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-23" data-id="D-EM-23" data-titulo="As proporções do Simulado" data-rec="A">
       <legend><span class="id">D-EM-23</span>As proporções do Simulado</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-23" value="A" data-txt="Fixas, as do protótipo, e visíveis na aba."><span><strong>A</strong> · Fixas, as do protótipo, e visíveis na aba.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-23" value="B" data-txt="Configuráveis por cliente."><span><strong>B</strong> · Configuráveis por cliente.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Distribuição sob medida é o papel do lote do emulador (D-EM-16).</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-23"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-23" value="A" data-txt="Fixas, as do protótipo, e visíveis na aba." checked disabled><span><strong>A</strong> · Fixas, as do protótipo, e visíveis na aba.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-23" value="B" data-txt="Configuráveis por cliente." disabled><span><strong>B</strong> · Configuráveis por cliente.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> Distribuição sob medida é o papel do lote do emulador (D-EM-16).</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-24" data-id="D-EM-24" data-titulo="Pagamento sem apropriação vindo do ente" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-24" data-id="D-EM-24" data-titulo="Pagamento sem apropriação vindo do ente" data-rec="A">
       <legend><span class="id">D-EM-24</span>Pagamento sem apropriação vindo do ente</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-24" value="A" data-txt="O razão continua seguindo o ente, e a plataforma mostra a divergência: o imposto foi pago e o ente não apropriou."><span><strong>A</strong> · O razão continua seguindo o ente, e a plataforma mostra a divergência: o imposto foi pago e o ente não apropriou.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-24" value="B" data-txt="O razão apropria sozinho ao ver o pagamento, sem esperar o ente."><span><strong>B</strong> · O razão apropria sozinho ao ver o pagamento, sem esperar o ente.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O SplitHub não controla o estado do crédito: segue o ente e evidencia a divergência. Com o B, o saldo do SplitHub deixa de bater com o do ente. Vale para o ente real e para o Replay; no Simulado e no emulador, a D-EM-21 já impede o caso.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-24"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-24" value="A" data-txt="O razão continua seguindo o ente, e a plataforma mostra a divergência: o imposto foi pago e o ente não apropriou." checked disabled><span><strong>A</strong> · O razão continua seguindo o ente, e a plataforma mostra a divergência: o imposto foi pago e o ente não apropriou.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-24" value="B" data-txt="O razão apropria sozinho ao ver o pagamento, sem esperar o ente." disabled><span><strong>B</strong> · O razão apropria sozinho ao ver o pagamento, sem esperar o ente.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> O SplitHub não controla o estado do crédito: segue o ente e evidencia a divergência. Com o B, o saldo do SplitHub deixa de bater com o do ente. Vale para o ente real e para o Replay; no Simulado e no emulador, a D-EM-21 já impede o caso.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-25" data-id="D-EM-25" data-titulo="A contraparte dos DFs criados" data-rec="C">
+    <fieldset class="dc decidida ok" id="D-EM-25" data-id="D-EM-25" data-titulo="A contraparte dos DFs criados" data-rec="C">
       <legend><span class="id">D-EM-25</span>A contraparte dos DFs criados</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-25" value="A" data-txt="Fictícias, criadas na hora, com CNPJ válido e o nome marcado &quot;[EMULADO]&quot;."><span><strong>A</strong> · Fictícias, criadas na hora, com CNPJ válido e o nome marcado "[EMULADO]".</span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-25" value="B" data-txt="Só as que o cliente já tem, nos DFs e nos contratos."><span><strong>B</strong> · Só as que o cliente já tem, nos DFs e nos contratos.</span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-25" value="C" data-txt="As duas, à escolha em cada criação."><span><strong>C</strong> · As duas, à escolha em cada criação.<span class="rec-tag">recomendada</span></span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>C.</strong> As fictícias servem ao volume. As do cliente servem para testar contrato e recolhimento, porque o contrato é por fornecedor: um DF de um fornecedor com contrato de RAD sai com o RAD.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-25"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-25" value="A" data-txt="Fictícias, criadas na hora, com CNPJ válido e o nome marcado &quot;[EMULADO]&quot;." disabled><span><strong>A</strong> · Fictícias, criadas na hora, com CNPJ válido e o nome marcado "[EMULADO]".</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-25" value="B" data-txt="Só as que o cliente já tem, nos DFs e nos contratos." disabled><span><strong>B</strong> · Só as que o cliente já tem, nos DFs e nos contratos.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-25" value="C" data-txt="As duas, à escolha em cada criação." checked disabled><span><strong>C</strong> · As duas, à escolha em cada criação.<span class="rec-tag">decidida</span></span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>C.</strong> As fictícias servem ao volume. As do cliente servem para testar contrato e recolhimento, porque o contrato é por fornecedor: um DF de um fornecedor com contrato de RAD sai com o RAD.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-26" data-id="D-EM-26" data-titulo="As alíquotas da CBS e do IBS nos DFs criados" data-rec="C">
+    <fieldset class="dc decidida ok" id="D-EM-26" data-id="D-EM-26" data-titulo="As alíquotas da CBS e do IBS nos DFs criados" data-rec="C">
       <legend><span class="id">D-EM-26</span>As alíquotas da CBS e do IBS nos DFs criados</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-26" value="A" data-txt="As do ano da emissão, pela lei, sem troca."><span><strong>A</strong> · As do ano da emissão, pela lei, sem troca.</span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-26" value="B" data-txt="Sempre informadas pelo administrador."><span><strong>B</strong> · Sempre informadas pelo administrador.</span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-26" value="C" data-txt="As do ano da emissão, com a opção de trocar."><span><strong>C</strong> · As do ano da emissão, com a opção de trocar.<span class="rec-tag">recomendada</span></span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>C.</strong> O padrão acerta o caso comum (em 2026, CBS 0,9% e IBS 0,1%); a troca serve para testar valor fora da regra e os anos seguintes.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-26"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-26" value="A" data-txt="As do ano da emissão, pela lei, sem troca." disabled><span><strong>A</strong> · As do ano da emissão, pela lei, sem troca.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-26" value="B" data-txt="Sempre informadas pelo administrador." disabled><span><strong>B</strong> · Sempre informadas pelo administrador.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-26" value="C" data-txt="As do ano da emissão, com a opção de trocar." checked disabled><span><strong>C</strong> · As do ano da emissão, com a opção de trocar.<span class="rec-tag">decidida</span></span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>C.</strong> O padrão acerta o caso comum (em 2026, CBS 0,9% e IBS 0,1%); a troca serve para testar valor fora da regra e os anos seguintes.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-27" data-id="D-EM-27" data-titulo="Os DFs criados e o Simulado" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-27" data-id="D-EM-27" data-titulo="Os DFs criados e o Simulado" data-rec="A">
       <legend><span class="id">D-EM-27</span>Os DFs criados e o Simulado</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-27" value="A" data-txt="Entram no plano do Simulado como qualquer DF novo, quando o cliente está em Simulada; o tributo que recebe ação no mesmo lote sai do plano (D-EM-20)."><span><strong>A</strong> · Entram no plano do Simulado como qualquer DF novo, quando o cliente está em Simulada; o tributo que recebe ação no mesmo lote sai do plano (D-EM-20).<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-27" value="B" data-txt="Nunca entram no plano do Simulado."><span><strong>B</strong> · Nunca entram no plano do Simulado.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O DF criado se comporta como um DF real. Quem quer controle total age sobre ele no mesmo lote ou deixa o cliente fora de Simulada.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-27"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-27" value="A" data-txt="Entram no plano do Simulado como qualquer DF novo, quando o cliente está em Simulada; o tributo que recebe ação no mesmo lote sai do plano (D-EM-20)." checked disabled><span><strong>A</strong> · Entram no plano do Simulado como qualquer DF novo, quando o cliente está em Simulada; o tributo que recebe ação no mesmo lote sai do plano (D-EM-20).<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-27" value="B" data-txt="Nunca entram no plano do Simulado." disabled><span><strong>B</strong> · Nunca entram no plano do Simulado.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> O DF criado se comporta como um DF real. Quem quer controle total age sobre ele no mesmo lote ou deixa o cliente fora de Simulada.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-28" data-id="D-EM-28" data-titulo="Remover os DFs criados" data-rec="A">
+    <fieldset class="dc decidida ok" id="D-EM-28" data-id="D-EM-28" data-titulo="Remover os DFs criados" data-rec="A">
       <legend><span class="id">D-EM-28</span>Remover os DFs criados</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-28" value="A" data-txt="Não se removem: ficam, marcados como emulados; para recomeçar, um cliente de teste novo, como na D-EM-10."><span><strong>A</strong> · Não se removem: ficam, marcados como emulados; para recomeçar, um cliente de teste novo, como na D-EM-10.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-28" value="B" data-txt="Remover todos os DFs criados por uma execução, com os lançamentos deles, fora da produção e com a auditoria."><span><strong>B</strong> · Remover todos os DFs criados por uma execução, com os lançamentos deles, fora da produção e com a auditoria.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O tax-rs já remove DF (a importação desfaz o que registrou pela metade), mas um DF criado pode já ter lançamentos e eventos publicados. Remover quebra o razão e a auditoria, pelo mesmo motivo da D-EM-10.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-28"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-28" value="A" data-txt="Não se removem: ficam, marcados como emulados; para recomeçar, um cliente de teste novo, como na D-EM-10." checked disabled><span><strong>A</strong> · Não se removem: ficam, marcados como emulados; para recomeçar, um cliente de teste novo, como na D-EM-10.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-28" value="B" data-txt="Remover todos os DFs criados por uma execução, com os lançamentos deles, fora da produção e com a auditoria." disabled><span><strong>B</strong> · Remover todos os DFs criados por uma execução, com os lançamentos deles, fora da produção e com a auditoria.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>A.</strong> O tax-rs já remove DF (a importação desfaz o que registrou pela metade), mas um DF criado pode já ter lançamentos e eventos publicados. Remover quebra o razão e a auditoria, pelo mesmo motivo da D-EM-10.</div>
     </fieldset>
-    <fieldset class="dc" id="D-EM-29" data-id="D-EM-29" data-titulo="A estrutura do módulo no painel do cliente" data-rec="B">
+    <fieldset class="dc decidida ok" id="D-EM-29" data-id="D-EM-29" data-titulo="A estrutura do módulo no painel do cliente" data-rec="B">
       <legend><span class="id">D-EM-29</span>A estrutura do módulo no painel do cliente</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-29" value="A" data-txt="Tudo dentro da aba, com subabas: Visão geral, Simulado, Criar DFs, Lote, Unitário e Execuções."><span><strong>A</strong> · Tudo dentro da aba, com subabas: Visão geral, Simulado, Criar DFs, Lote, Unitário e Execuções.</span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-29" value="B" data-txt="Espaço próprio do emulador: a aba fica com o modo e o resumo, e o botão &quot;Abrir o emulador&quot; leva a uma página do cliente com menu lateral."><span><strong>B</strong> · Espaço próprio do emulador: a aba fica com o modo e o resumo, e o botão "Abrir o emulador" leva a uma página do cliente com menu lateral.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-29" value="C" data-txt="Execução guiada: a aba vira a lista de execuções, com um assistente de ponta a ponta; o unitário fica no próprio DF, e o Simulado, num painel lateral."><span><strong>C</strong> · Execução guiada: a aba vira a lista de execuções, com um assistente de ponta a ponta; o unitário fica no próprio DF, e o Simulado, num painel lateral.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>B.</strong> O módulo tem sete telas e um assistente de quatro passos: nas subabas (A), fica apertado embaixo das oito abas do cliente; na execução guiada (C), o Simulado e o unitário ficam escondidos. O B deixa as abas do cliente como estão e dá endereço próprio a cada tela, para o suporte e os testes. As três estão clicáveis na <a href="taxrs-emulador-estrutura.html">página da estrutura</a>.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-29"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-29" value="A" data-txt="Tudo dentro da aba, com subabas: Visão geral, Simulado, Criar DFs, Lote, Unitário e Execuções." disabled><span><strong>A</strong> · Tudo dentro da aba, com subabas: Visão geral, Simulado, Criar DFs, Lote, Unitário e Execuções.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-29" value="B" data-txt="Espaço próprio do emulador: a aba fica com o modo e o resumo, e o botão &quot;Abrir o emulador&quot; leva a uma página do cliente com menu lateral." checked disabled><span><strong>B</strong> · Espaço próprio do emulador: a aba fica com o modo e o resumo, e o botão "Abrir o emulador" leva a uma página do cliente com menu lateral.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-29" value="C" data-txt="Execução guiada: a aba vira a lista de execuções, com um assistente de ponta a ponta; o unitário fica no próprio DF, e o Simulado, num painel lateral." disabled><span><strong>C</strong> · Execução guiada: a aba vira a lista de execuções, com um assistente de ponta a ponta; o unitário fica no próprio DF, e o Simulado, num painel lateral.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>B.</strong> O módulo tem sete telas e um assistente de quatro passos: nas subabas (A), fica apertado embaixo das oito abas do cliente; na execução guiada (C), o Simulado e o unitário ficam escondidos. O B deixa as abas do cliente como estão e dá endereço próprio a cada tela, para o suporte e os testes. As três estão clicáveis na <a href="taxrs-emulador-estrutura.html">página da estrutura</a>.</div>
     </fieldset>
   </div>
-  <label class="dc-nota" for="dc-saida">O texto que vai ser copiado</label>
-  <textarea id="dc-saida" readonly rows="8"></textarea>
 </section>
 <section class="section" id="s15">
   <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Documentação conferida na fonte em 18/11/2026</span></div>
@@ -994,13 +966,14 @@ img, svg { max-width: 100%; height: auto; }
   <div class="table-wrap"><table>
     <thead><tr><th>Versão</th><th>Data</th><th>O que mudou</th></tr></thead>
     <tbody>
+      <tr><td class="id">1.3</td><td>19/11/2026</td><td>As 25 decisões em aberto, tomadas pelo usuário em 19/11/2026, todas pela recomendação: 29 de 29. A estrutura do módulo é o espaço próprio do emulador (D-EM-29), e a aba passa a se chamar Fonte dos entes (D-EM-14). A proposta fica aprovada para construção, e a seção 14 mostra as escolhas. A v1.2 está no <a href="versoes/taxrs-emulador-lancamentos-v1.2.html">arquivo de versões</a>.</td></tr>
       <tr><td class="id">1.2</td><td>19/11/2026</td><td>Regra do usuário: quando se paga o imposto, o crédito é apropriado. A D-EM-21 fica decidida: o Simulado lança o pagamento e a apropriação juntos e apropria na data de um pagamento que chegue antes por outro caminho. Entram a R-SIM-08, a RG-19 e a D-EM-24, sobre o pagamento sem apropriação vindo do ente. Pedido do usuário: o emulador também cria DFs, com quantidade, tipos e valores pré-definidos ou aleatórios (seção 5, T-EM-07, RG-20 e RG-21, D-EM-25 a 28); e três estruturas clicáveis do módulo no painel do cliente, para a D-EM-29. A v1.1 está no <a href="versoes/taxrs-emulador-lancamentos-v1.1.html">arquivo de versões</a>.</td></tr>
       <tr><td class="id">1.1</td><td>18/11/2026</td><td>Pedido do usuário: o Simulado fica como o modelo automático e o emulador como o manual, em lote (D-EM-05 decidida); o lote recebe várias ações, sem nomear DFs, cada uma com o percentual dos DFs que atinge (D-EM-16 decidida). A seção 8 passa a ser a revisão do Simulado, que concilia a CAPUR e a CFIN e não apropria: cinco achados no código e sete mudanças. A seção 14 vira a escolha das decisões, com as recomendadas, a observação e o texto para copiar. Sete decisões novas (D-EM-17 a 23), a E0 e quatro regras.</td></tr>
       <tr><td class="id">1.0</td><td>18/11/2026</td><td>Primeira versão, para validação: 51 lançamentos, 27 resultados, 18 cenários prontos, 6 telas, 14 regras, 4 etapas e 15 decisões, com a D-EM-01 decidida. Está no <a href="versoes/taxrs-emulador-lancamentos-v1.0.html">arquivo de versões</a>.</td></tr>
     </tbody>
   </table></div>
 </section>
-<div class="foot">Emulador de lançamentos da Receita Federal e do Comitê Gestor · v1.2 · 19/11/2026</div>
+<div class="foot">Emulador de lançamentos da Receita Federal e do Comitê Gestor · v1.3 · 19/11/2026</div>
 </div>
 <script>
 (function () {
@@ -1021,7 +994,8 @@ img, svg { max-width: 100%; height: auto; }
   });
 })();
 (function () {
-  var CHAVE = 'taxrs-emulador-decisoes-v1', VERSAO = '1.2';
+  if (!document.getElementById('dc-saida')) return;  // nada em aberto
+  var CHAVE = 'taxrs-emulador-decisoes-v1', VERSAO = '1.3';
   var todos = [].slice.call(document.querySelectorAll('fieldset.dc'));
   var abertos = todos.filter(function (f) { return !f.classList.contains('decidida'); });
   var saida = document.getElementById('dc-saida'), msg = document.getElementById('dc-msg');
