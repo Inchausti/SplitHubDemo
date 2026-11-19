@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Emulador de lançamentos dos entes · v1.3</title>
+<title>Emulador de lançamentos dos entes · v1.4</title>
 <style>
 :root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
   --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
@@ -177,11 +177,11 @@ img, svg { max-width: 100%; height: auto; }
 <h1>Emulador de lançamentos da Receita Federal e do Comitê Gestor</h1>
 <p class="subtitle">Evolução da aba Fonte do Fisco, que passa a se chamar Fonte dos entes, no cadastro do cliente do painel administrativo do tax-rs, com dois modelos. O Simulado, automático, segue os DFs novos e lança sozinho, e é revisto aqui. O emulador, manual, recebe um lote de DFs, filtrados entre os do cliente ou criados na hora, e várias ações, cada uma com o percentual dos DFs que atinge. Os dois gravam o que a Receita Federal (CBS) e o Comitê Gestor (IBS) fariam, pela mesma porta que os conectores reais vão usar.</p>
 <div class="meta-bar">
-  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.3</span></span>
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.4</span></span>
   <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">19/11/2026</span></span>
   <span class="meta-pill"><span class="meta-label">Base</span><span class="meta-val"><code>main</code> do tax-rs no <code>a831ad9</code></span></span>
   <span class="meta-pill"><span class="meta-label">Fontes</span><span class="meta-val">APIs da CBS e do IBS conferidas em 18/11/2026</span></span>
-  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">29 de 29</span></span>
+  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">29 de 30</span></span>
 </div>
 <nav class="toc">
   <div class="toc-title">Conteúdo</div>
@@ -231,7 +231,7 @@ img, svg { max-width: 100%; height: auto; }
       <li><strong>34 dos 51 lançamentos não existem ou existem em parte no tax-rs</strong>, e 12 dos 19 eventos de crédito e débito da API da plataforma não saem de nenhum fato hoje. A E1 e a E2 rodam só com o que existe: 11 resultados e 4 cenários prontos. A E3 traz o resto.</li>
       <li><strong>A área admin do tax-rs não vê dado fiscal</strong> (D15). Escolher DFs exige ver chave e valor: a D-EM-04 abre a exceção fora da produção, só nesta aba, com cada consulta na auditoria.</li>
       <li><strong>6 lançamentos não têm evento na API da plataforma</strong> (D08, IBS-16, IBS-18, IBS-20, IBS-23 e IBS-24): a emulação mostra o efeito no saldo, mas a API ainda não diz como publicá-lo.</li>
-      <li><strong>29 de 29 decisões tomadas</strong>, as últimas 25 em 19/11/2026, pela recomendação (<a href="#s14">seção 14</a>). Nenhuma etapa espera decisão; a próxima peça é a mudança do OpenSpec da E0 no tax-rs.</li>
+      <li><strong>29 de 30 decisões tomadas</strong>, as últimas 25 em 19/11/2026, pela recomendação (<a href="#s14">seção 14</a>). Falta a D-EM-30, as telas do emulador, em <a href="taxrs-emulador-telas.html">duas propostas clicáveis</a>: ela trava as telas da E1 e da E2. A E0 não espera nada e é a próxima peça, com a mudança do OpenSpec no tax-rs.</li>
     </ul>
   </div>
 </section>
@@ -406,7 +406,7 @@ img, svg { max-width: 100%; height: auto; }
   <div class="sec-hdr"><span class="sec-num">5</span><span class="sec-title">O lote: DFs criados ou filtrados, várias ações</span></div>
   <p>O administrador não precisa nomear DFs (D-EM-16, decidida em 18/11/2026). O lote vem dos DFs que o cliente já tem, por filtro, de DFs que o emulador cria na hora, ou dos dois. Depois vêm as ações, cada uma com o percentual dos DFs que atinge.</p>
   <ol class="plain">
-    <li><strong>O lote.</strong> Os DFs que o cliente já tem, por filtro: empresa do grupo (CNPJ), direção (entrada ou saída), tributo (CBS, IBS ou os dois), competência, modelo, fornecedor ou cliente, método de recolhimento, situação atual no ente, faixa de valor. O contador mostra quantos DFs o filtro pega. Uma lista de chaves, colada ou em CSV, continua possível, mas não é preciso. Ou DFs criados na hora (abaixo), ou os dois juntos.</li>
+    <li><strong>O lote.</strong> Os DFs que o cliente já tem, por filtro: empresa do grupo (CNPJ), direção (entrada ou saída), tributo (CBS, IBS ou os dois), competência, modelo, fornecedor ou cliente, método de recolhimento, situação atual no ente, faixa de valor. O contador mostra quantos DFs o filtro pega, e cada opção mostra quantos DFs ela traz com os outros filtros; a lista dos primeiros DFs que o filtro pega fica a um clique. O lote tem uma direção, entrada ou saída: ação de crédito só vale em lote de entrada, ação de débito só em lote de saída, e o tributo do filtro limita os entes das ações (RG-23). Uma lista de chaves, colada ou em CSV, continua possível, mas não é preciso. Ou DFs criados na hora (abaixo), ou os dois juntos.</li>
     <li><strong>As ações.</strong> Uma lista em ordem. Cada ação traz um resultado da seção 4, o ente (Receita Federal, Comitê Gestor ou os dois), os parâmetros (a parte, a diferença), o percentual e a base.</li>
     <li><strong>A base.</strong> O lote, ou os DFs que receberam uma ação anterior: "dos apropriados, 50% usam todo o saldo". Ações com a mesma base não se sobrepõem: um DF recebe só uma delas, elas somam até 100%, e o que sobra fica sem lançamento (D-EM-17).</li>
     <li><strong>O percentual.</strong> Conta sobre os DFs elegíveis da base, os que podem chegar ao resultado; os outros aparecem à parte (D-EM-18). Vira número de DFs pelo maior resto, para a soma bater com o total, e a prévia mostra o número exato.</li>
@@ -428,10 +428,11 @@ img, svg { max-width: 100%; height: auto; }
       <tr><td><strong>Emissão</strong></td><td class="wrap">Uma data; a competência acompanha o mês da emissão</td><td class="wrap">Espalhada entre duas datas</td></tr>
       <tr><td><strong>Valor</strong></td><td class="wrap">Um valor para todos, ou uma lista colada, um por DF, que se repete</td><td class="wrap">Entre um mínimo e um máximo</td></tr>
       <tr><td><strong>CBS e IBS</strong></td><td class="wrap">As alíquotas que o administrador informar</td><td class="wrap">O padrão: as do ano da emissão, pela lei; em 2026, CBS 0,9% e IBS 0,1% (D-EM-26)</td></tr>
-      <tr><td><strong>Recolhimento</strong>, na entrada</td><td class="wrap">Fornecedor ou RAD, com o prazo, por cima do contrato; ou a mistura, em percentual</td><td class="wrap">O padrão: o contrato do fornecedor, como no DF real; sem contrato, o fornecedor recolhe</td></tr>
+      <tr><td><strong>Recolhimento</strong>, na entrada</td><td class="wrap">Um método para todos (fornecedor ou RAD), com o prazo, por cima do contrato; ou misto: linhas com a quantidade, o modelo do DF e o método, cada uma com o seu prazo, e o que sobra segue o contrato (abaixo)</td><td class="wrap">O padrão: o contrato do fornecedor, como no DF real; sem contrato, o fornecedor recolhe</td></tr>
       <tr><td><strong>Chave, número e série</strong></td><td>—</td><td class="wrap">Gerados: chave de 44 dígitos com o CNPJ do emitente e o dígito verificador válidos, como o tax-rs exige; série própria do emulador, para não colidir com DF real</td></tr>
     </tbody>
   </table></div>
+  <p><strong>Recolhimento misto.</strong> Para testar métodos de recolhimento diferentes na mesma criação. Cada linha diz quantos DFs de entrada, de que modelo e com que método e prazo. Numa criação de 1.000 DFs com 800 de entrada (600 NF-e e 200 CT-e): 300 NF-e com RAD a 30 dias, 150 NF-e pelo fornecedor a 30 dias e 100 CT-e com RAD a 60 dias; os outros 250 seguem o contrato do fornecedor. Uma linha pode valer para qualquer modelo, e a linha "pelo contrato" não leva prazo. As linhas de um modelo não passam dos DFs de entrada daquele modelo, e a soma de todas não passa dos DFs de entrada; se passar, a tela mostra o erro e não cria (RG-22). No tax-rs, o DF de uma linha com método leva o método por cima do contrato (<code>override_contract_params</code>, com <code>payment_method</code> e <code>payment_term_days</code>), como um DF que informa o próprio método; o DF que segue o contrato não leva nada, como o DF real. O split payment entra na E3.</p>
   <p><strong>Como o DF criado entra no tax-rs.</strong> Pela entrada interna do razão (<code>ledger/intake.ts</code>), a mesma que o seed e a captura SEFAZ usam, com a origem nova <code>emulated</code>. Valida como o DF da captura SEFAZ, sem itens, como na primeira versão do produto. O razão cria os registros da CBS e do IBS e avisa que o DF foi registrado; o Simulado segue o DF se o cliente está em Simulada (D-EM-27). Duas travas do tax-rs valem aqui: um lado do DF tem de ser empresa ativa do cliente, e só um lado (<code>ledger/lib/documents.ts:66</code>).</p>
   <p><strong>No mesmo lote.</strong> Os DFs criados recebem as ações como o lote filtrado: "criar 1.000 NF-e de entrada de 10/2026, de R$ 10.000,00 cada (CBS R$ 90,00 e IBS R$ 10,00), e, desses, 70% apropriados e 10% glosados". Criar só os DFs, sem ação, também vale.</p>
   <div class="callout warn"><div class="ct">Remover o que foi criado</div><p>Não se removem (D-EM-28, decidida): os DFs criados ficam, marcados como emulados. Para recomeçar, um cliente de teste novo, como na D-EM-10.</p></div>
@@ -562,10 +563,11 @@ img, svg { max-width: 100%; height: auto; }
       <tr><td class="id">T-EM-04</td><td><strong>Lançamento unitário</strong></td><td class="wrap">O DF e a situação dele nos dois entes, o lançamento, valor e data, antes e depois, forçar.</td></tr>
       <tr><td class="id">T-EM-05</td><td><strong>Execuções e conferência</strong></td><td class="wrap">Cada execução, com autor, pedido e situação; a conferência DF a DF; exportar CSV; baixar o cenário em JSON.</td></tr>
       <tr><td class="id">T-EM-06</td><td><strong>Simulado</strong></td><td class="wrap">O plano por DF (o que saiu, o que vem e quando), a última emissão, o botão "Avançar até agora", os alertas da conferência e as proporções.</td></tr>
-      <tr><td class="id">T-EM-07</td><td><strong>Criar DFs</strong></td><td class="wrap">Quantidade, empresa do grupo, a mistura de direção e tipo, contraparte, emissão, valor, alíquotas e recolhimento, cada um pré-definido ou aleatório; a semente; a prévia com os primeiros DFs e os totais; criar só os DFs ou seguir para as ações.</td></tr>
+      <tr><td class="id">T-EM-07</td><td><strong>Criar DFs</strong></td><td class="wrap">Quantidade, empresa do grupo, a mistura de direção e tipo, contraparte, emissão, valor, alíquotas e recolhimento, cada um pré-definido ou aleatório; o recolhimento também misto, com quantidade, modelo e método por linha; a semente; a prévia com os primeiros DFs e os totais; criar só os DFs ou seguir para as ações.</td></tr>
     </tbody>
   </table></div>
   <div class="callout ok"><div class="ct">Onde as telas ficam no painel do cliente</div><p>No espaço próprio do emulador (D-EM-29, decidida em 19/11/2026). A aba Fonte dos entes fica com o modo e o resumo, e "Abrir o emulador" leva a uma página do cliente com menu lateral: Painel, Criar DFs, Novo lote, Cenários prontos, Lançamento unitário, Simulado e Execuções, cada tela com endereço próprio. As três estruturas avaliadas seguem clicáveis na <a href="taxrs-emulador-estrutura.html">página da estrutura do módulo</a>.</p></div>
+  <div class="callout"><div class="ct">As telas, em duas propostas</div><p>O assistente em passos ou o montador numa tela só, clicáveis e com a conta do lote funcionando, na <a href="taxrs-emulador-telas.html">página das telas</a>. A escolha é a D-EM-30.</p></div>
   <h3>Esboço da T-EM-02 e da T-EM-03</h3>
   <div class="mock" role="img" aria-label="Esboço da tela de novo lote com a prévia">
     <div class="mock-bar"><strong>Fonte dos entes · Novo lote</strong><span>Cliente de teste · modo Simulada</span></div>
@@ -582,7 +584,7 @@ img, svg { max-width: 100%; height: auto; }
         <tr><td>1 · RE-05 apropriar</td><td class="n">210</td><td>C02 · IBS-05</td><td>credit.appropriated</td></tr>
         <tr><td>1 e 4 · apropriar e usar tudo</td><td class="n">350</td><td>C02 · IBS-05, depois C07 · IBS-06 do saldo todo</td><td>credit.appropriated · credit.utilized; disponível zero</td></tr>
         <tr><td>1 e 5 · apropriar e usar 40%</td><td class="n">140</td><td>C02 · IBS-05, depois C07 · IBS-06 de 40%</td><td>credit.utilized; 60% disponível</td></tr>
-        <tr><td>2 · RE-09 glosar</td><td class="n">100</td><td>A glosa, nos dois entes</td><td>credit.disallowed</td></tr>
+        <tr><td>2 · RE-09 glosar</td><td class="n">100</td><td>A glosa, só na Receita Federal; o Comitê Gestor fica mudo</td><td>credit.disallowed</td></tr>
         <tr><td>3 · RE-02 divergir, CBS</td><td class="n">50</td><td>O registro na CBS, 10% acima</td><td><code>capur_cbs_divergente</code></td></tr>
         <tr><td>Sem lançamento</td><td class="n">150</td><td>—</td><td>—</td></tr>
         <tr><td>Fora do alcance</td><td class="n">12</td><td colspan="2">Já glosados no ente</td></tr>
@@ -598,7 +600,7 @@ img, svg { max-width: 100%; height: auto; }
         <tr><td class="id">…0003</td><td>—</td><td>CBS e IBS</td><td colspan="2">Sem lançamento</td></tr>
       </tbody>
     </table></div>
-    <div class="mock-acoes"><span class="nota">Nada é gravado antes de confirmar. Digite 1000 para confirmar.</span><span class="mbtn">Voltar</span><span class="mbtn pri">Gravar 2.630 lançamentos</span></div>
+    <div class="mock-acoes"><span class="nota">Nada é gravado antes de confirmar. Digite 1000 para confirmar.</span><span class="mbtn">Voltar</span><span class="mbtn pri">Gravar 2.530 lançamentos</span></div>
   </div>
   <h3>Esboço da T-EM-04</h3>
   <div class="mock" role="img" aria-label="Esboço da tela de lançamento unitário">
@@ -634,7 +636,7 @@ img, svg { max-width: 100%; height: auto; }
       <div class="campo"><div class="cl">Emissão</div><div class="cv">Aleatória entre 01/10/2026 e 31/10/2026</div></div>
       <div class="campo"><div class="cl">Valor</div><div class="cv">Aleatório entre R$ 1.000,00 e R$ 100.000,00</div></div>
       <div class="campo"><div class="cl">CBS e IBS</div><div class="cv">As de 2026: 0,9% e 0,1%</div></div>
-      <div class="campo"><div class="cl">Recolhimento</div><div class="cv">Pelo contrato do fornecedor</div></div>
+      <div class="campo"><div class="cl">Recolhimento · misto</div><div class="cv">300 NF-e com RAD a 30 dias · 150 NF-e pelo fornecedor a 30 dias · 100 CT-e com RAD a 60 dias · os outros 250 pelo contrato</div></div>
       <div class="campo"><div class="cl">Semente</div><div class="cv">4721</div></div>
     </div>
     <h4>Prévia · primeiros de 1.000</h4>
@@ -675,6 +677,8 @@ img, svg { max-width: 100%; height: auto; }
       <tr><td class="id">RG-19</td><td>Pagou, apropriou: no lote, um lançamento que paga o imposto de um crédito traz a apropriação junto, na mesma data. Pagar sem apropriar só com "forçar", no lançamento unitário (D-EM-21).</td></tr>
       <tr><td class="id">RG-20</td><td>Na criação de DFs, cada característica é pré-definida ou aleatória; a aleatória usa a semente do lote, e a mesma semente cria os mesmos DFs (D-EM-19).</td></tr>
       <tr><td class="id">RG-21</td><td>A CBS e o IBS do DF criado são o valor vezes a alíquota, arredondados ao centavo (D-EM-26).</td></tr>
+      <tr><td class="id">RG-22</td><td>No recolhimento misto da criação de DFs, cada linha diz quantos DFs de entrada, de que modelo e com que método e prazo; as linhas de um modelo não passam dos DFs de entrada daquele modelo, a soma não passa dos DFs de entrada, e o que sobra segue o contrato do fornecedor.</td></tr>
+      <tr><td class="id">RG-23</td><td>O lote tem uma direção: ação de crédito só vale em lote de entrada, ação de débito só em lote de saída, e o tributo do filtro limita os entes das ações. A tela barra o lote que fere isso.</td></tr>
     </tbody>
   </table></div>
 </section>
@@ -692,7 +696,7 @@ img, svg { max-width: 100%; height: auto; }
       <tr><td><code>reconciliation</code></td><td class="wrap">Excedente (D02, C12) e pagamento antecipado (D08).</td><td>E3</td></tr>
       <tr><td><code>inconsistencies</code></td><td class="wrap">Nada novo na detecção. A conferência lê os 5 códigos que existem.</td><td>—</td></tr>
       <tr><td><code>platform</code> (admin)</td><td class="wrap">Endpoints do emulador: criar DFs (o gerador, com a semente, chama a entrada interna do razão), catálogo, prévia, execução, conferência, lançamento unitário e o Simulado (plano, avanço, adoção); tudo na auditoria do cliente.</td><td>E0 · E1 · E2</td></tr>
-      <tr><td>Frontend</td><td class="wrap">A aba renomeada para "Fonte dos entes" (D-EM-14), com o modo e o resumo; o espaço próprio do emulador, com menu lateral e uma rota por tela (D-EM-29), com as telas T-EM-01 a T-EM-07; a marca "emulado" no portal fora da produção.</td><td>E0 · E1 · E2</td></tr>
+      <tr><td>Frontend</td><td class="wrap">A aba renomeada para "Fonte dos entes" (D-EM-14), com o modo e o resumo; o espaço próprio do emulador, com menu lateral e uma rota por tela (D-EM-29), com as telas T-EM-01 a T-EM-07, no desenho da D-EM-30; a marca "emulado" no portal fora da produção.</td><td>E0 · E1 · E2</td></tr>
       <tr><td>Testes</td><td class="wrap">Unidade do planejador (cada resultado contra cada situação de DF); <code>encore test</code> de ponta a ponta por resultado (executa e cobra Atingido); e2e da aba. Os cenários prontos viram a suíte de regressão do razão.</td><td>Todas</td></tr>
     </tbody>
   </table></div>
@@ -707,7 +711,7 @@ img, svg { max-width: 100%; height: auto; }
       </ul>
       <div class="pronto"><strong>Pronto quando</strong>, no Live local, um DF de entrada com a CAPUR conciliada e o pagamento registrado aparece apropriado, com o saldo appropriated, sem esperar o cron; e um cliente que passa para Simulada vê andar os DFs que já tinha.</div>
     </div>
-    <div class="onda"><div class="onda-h"><span class="onda-n">E1</span><span class="onda-t">DFs criados e lançamento unitário</span><span class="onda-q">decididas: D-EM-04, 14, 25, 26, 27 e 29</span></div>
+    <div class="onda"><div class="onda-h"><span class="onda-n">E1</span><span class="onda-t">DFs criados e lançamento unitário</span><span class="onda-q">decididas: D-EM-04, 14, 25, 26, 27 e 29 · em aberto: D-EM-30</span></div>
       <ul class="plain">
         <li>Origem <code>emulated</code>, ao lado do Simulado.</li>
         <li>T-EM-01, T-EM-04 e T-EM-07, com prévia e auditoria, no espaço próprio do emulador (D-EM-29).</li>
@@ -716,7 +720,7 @@ img, svg { max-width: 100%; height: auto; }
       </ul>
       <div class="pronto"><strong>Pronto quando</strong> o administrador cria 100 NF-e de entrada num cliente de teste sem DFs, elas aparecem no portal marcadas como emuladas, a mesma semente cria as mesmas 100 noutro cliente, e um C02 num deles faz a API da plataforma publicar <code>credit.appropriated</code> e o Simulado deixar de seguir esse DF na CBS.</div>
     </div>
-    <div class="onda"><div class="onda-h"><span class="onda-n">E2</span><span class="onda-t">O lote e a conferência</span><span class="onda-q">decididas: D-EM-06, 07, 08, 12, 13, 17, 18, 19 e 28</span></div>
+    <div class="onda"><div class="onda-h"><span class="onda-n">E2</span><span class="onda-t">O lote e a conferência</span><span class="onda-q">decididas: D-EM-06, 07, 08, 12, 13, 17, 18, 19 e 28 · em aberto: D-EM-30</span></div>
       <ul class="plain">
         <li>T-EM-02, T-EM-03 e T-EM-05: o lote com várias ações, base, percentual e semente, sobre DFs filtrados, criados ou os dois.</li>
         <li>Os 11 resultados que só usam lançamentos de hoje: RE-01, RE-02, RE-03, RE-04, RE-05, RE-07, RE-08, RE-09, RE-15, RE-16, RE-17.</li>
@@ -738,11 +742,12 @@ img, svg { max-width: 100%; height: auto; }
       <div class="pronto"><strong>Pronto quando</strong> cada borda tem teste e a plataforma se defende ou avisa, sem estado quebrado.</div>
     </div>
   </div>
-  <p>Com as 29 decisões tomadas, a proposta está aprovada para construção. A estimativa de prazo sai com a mudança do OpenSpec de cada etapa, a começar pela E0.</p>
+  <p>A proposta está aprovada para construção. A E0 não espera decisão; a D-EM-30 decide as telas antes da E1. A estimativa de prazo sai com a mudança do OpenSpec de cada etapa, a começar pela E0.</p>
 </section>
 <section class="section" id="s14">
   <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Decisões</span></div>
-  <div class="callout ok"><div class="ct">As 29 decisões estão tomadas</div><p>Quatro em 18/11/2026 e 25 em 19/11/2026; as de 19/11 seguiram a recomendação. Cada uma fica abaixo, com a opção escolhida e o motivo.</p></div>
+  <p>Escolha uma opção em cada decisão em aberto e, se quiser, deixe uma observação. A escolha fica guardada neste navegador. "Copiar escolhas" monta o texto para mandar de volta; as escolhas entram na proposta na versão seguinte.</p>
+  <div class="dc-bar"><span class="dc-prog"><strong id="dc-n">0</strong> de 1 em aberto escolhidas · 29 decididas</span><button type="button" class="dc-btn" id="dc-rec">Marcar as recomendadas</button><button type="button" class="dc-btn" id="dc-limpar">Limpar</button><button type="button" class="dc-btn pri" id="dc-copiar">Copiar escolhas</button><span class="dc-msg" id="dc-msg" aria-live="polite"></span></div>
   <div class="dc-grid">
     <fieldset class="dc decidida ok" id="D-EM-01" data-id="D-EM-01" data-titulo="O que é emulado" data-rec="A">
       <legend><span class="id">D-EM-01</span>O que é emulado</legend>
@@ -926,7 +931,16 @@ img, svg { max-width: 100%; height: auto; }
       <label class="dc-op"><input type="radio" name="D-EM-29" value="C" data-txt="Execução guiada: a aba vira a lista de execuções, com um assistente de ponta a ponta; o unitário fica no próprio DF, e o Simulado, num painel lateral." disabled><span><strong>C</strong> · Execução guiada: a aba vira a lista de execuções, com um assistente de ponta a ponta; o unitário fica no próprio DF, e o Simulado, num painel lateral.</span></label>
       <div class="dc-rec"><span class="rl">Decidida em 19/11/2026, pela recomendação</span><strong>B.</strong> O módulo tem sete telas e um assistente de quatro passos: nas subabas (A), fica apertado embaixo das oito abas do cliente; na execução guiada (C), o Simulado e o unitário ficam escondidos. O B deixa as abas do cliente como estão e dá endereço próprio a cada tela, para o suporte e os testes. As três estão clicáveis na <a href="taxrs-emulador-estrutura.html">página da estrutura</a>.</div>
     </fieldset>
+    <fieldset class="dc" id="D-EM-30" data-id="D-EM-30" data-titulo="As telas do emulador" data-rec="B">
+      <legend><span class="id">D-EM-30</span>As telas do emulador</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-30" value="A" data-txt="Assistente em passos: o novo lote anda em quatro passos (DFs, ações, quando, prévia), um de cada vez, com a conta no fim; cada execução abre numa página com abas."><span><strong>A</strong> · Assistente em passos: o novo lote anda em quatro passos (DFs, ações, quando, prévia), um de cada vez, com a conta no fim; cada execução abre numa página com abas.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-30" value="B" data-txt="Montador numa tela só: os DFs e as ações à esquerda e a prévia à direita, que se refaz a cada mudança; as execuções em lista, com a escolhida ao lado."><span><strong>B</strong> · Montador numa tela só: os DFs e as ações à esquerda e a prévia à direita, que se refaz a cada mudança; as execuções em lista, com a escolhida ao lado.<span class="rec-tag">recomendada</span></span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>B.</strong> O difícil do lote é ver como percentual e base se combinam (50% da ação 1 são 350 DFs, não 500); com a prévia ao lado, isso aparece enquanto se digita, e o erro de passar de 100% aparece na hora. Quem usa o emulador testa, repete e ajusta lotes; no assistente, cada ajuste é uma volta de passos. As duas estão clicáveis na <a href="taxrs-emulador-telas.html">página das telas</a>.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-30"></textarea></label>
+    </fieldset>
   </div>
+  <label class="dc-nota" for="dc-saida">O texto que vai ser copiado</label>
+  <textarea id="dc-saida" readonly rows="8"></textarea>
 </section>
 <section class="section" id="s15">
   <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Documentação conferida na fonte em 18/11/2026</span></div>
@@ -966,6 +980,7 @@ img, svg { max-width: 100%; height: auto; }
   <div class="table-wrap"><table>
     <thead><tr><th>Versão</th><th>Data</th><th>O que mudou</th></tr></thead>
     <tbody>
+      <tr><td class="id">1.4</td><td>19/11/2026</td><td>A pedido do usuário, as telas do emulador em <a href="taxrs-emulador-telas.html">duas propostas clicáveis</a> (assistente em passos ou montador numa tela só), para a D-EM-30. Correção: a glosa antes da apropriação (RE-09) só tem lançamento na Receita Federal, porque o MOC do IBS não tem glosa; o lote de exemplo grava 2.530 lançamentos, e não 2.630, como o esboço da T-EM-03 dizia desde a v1.1. Também a pedido do usuário: o recolhimento misto na criação de DFs, com quantidade, modelo e método por linha (seção 5, esboço da T-EM-07, RG-22); e os filtros do lote com a contagem por opção e a direção do lote (seção 5, RG-23), os dois funcionando nas telas clicáveis. A v1.3 está no <a href="versoes/taxrs-emulador-lancamentos-v1.3.html">arquivo de versões</a>.</td></tr>
       <tr><td class="id">1.3</td><td>19/11/2026</td><td>As 25 decisões em aberto, tomadas pelo usuário em 19/11/2026, todas pela recomendação: 29 de 29. A estrutura do módulo é o espaço próprio do emulador (D-EM-29), e a aba passa a se chamar Fonte dos entes (D-EM-14). A proposta fica aprovada para construção, e a seção 14 mostra as escolhas. A v1.2 está no <a href="versoes/taxrs-emulador-lancamentos-v1.2.html">arquivo de versões</a>.</td></tr>
       <tr><td class="id">1.2</td><td>19/11/2026</td><td>Regra do usuário: quando se paga o imposto, o crédito é apropriado. A D-EM-21 fica decidida: o Simulado lança o pagamento e a apropriação juntos e apropria na data de um pagamento que chegue antes por outro caminho. Entram a R-SIM-08, a RG-19 e a D-EM-24, sobre o pagamento sem apropriação vindo do ente. Pedido do usuário: o emulador também cria DFs, com quantidade, tipos e valores pré-definidos ou aleatórios (seção 5, T-EM-07, RG-20 e RG-21, D-EM-25 a 28); e três estruturas clicáveis do módulo no painel do cliente, para a D-EM-29. A v1.1 está no <a href="versoes/taxrs-emulador-lancamentos-v1.1.html">arquivo de versões</a>.</td></tr>
       <tr><td class="id">1.1</td><td>18/11/2026</td><td>Pedido do usuário: o Simulado fica como o modelo automático e o emulador como o manual, em lote (D-EM-05 decidida); o lote recebe várias ações, sem nomear DFs, cada uma com o percentual dos DFs que atinge (D-EM-16 decidida). A seção 8 passa a ser a revisão do Simulado, que concilia a CAPUR e a CFIN e não apropria: cinco achados no código e sete mudanças. A seção 14 vira a escolha das decisões, com as recomendadas, a observação e o texto para copiar. Sete decisões novas (D-EM-17 a 23), a E0 e quatro regras.</td></tr>
@@ -973,7 +988,7 @@ img, svg { max-width: 100%; height: auto; }
     </tbody>
   </table></div>
 </section>
-<div class="foot">Emulador de lançamentos da Receita Federal e do Comitê Gestor · v1.3 · 19/11/2026</div>
+<div class="foot">Emulador de lançamentos da Receita Federal e do Comitê Gestor · v1.4 · 19/11/2026</div>
 </div>
 <script>
 (function () {
@@ -995,7 +1010,7 @@ img, svg { max-width: 100%; height: auto; }
 })();
 (function () {
   if (!document.getElementById('dc-saida')) return;  // nada em aberto
-  var CHAVE = 'taxrs-emulador-decisoes-v1', VERSAO = '1.3';
+  var CHAVE = 'taxrs-emulador-decisoes-v1', VERSAO = '1.4';
   var todos = [].slice.call(document.querySelectorAll('fieldset.dc'));
   var abertos = todos.filter(function (f) { return !f.classList.contains('decidida'); });
   var saida = document.getElementById('dc-saida'), msg = document.getElementById('dc-msg');

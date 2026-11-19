@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telas do emulador · v1.0</title>
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 800px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.callout.red { border-color: var(--red); background: var(--red-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 9px 13px; border-bottom: 1px solid var(--brd); vertical-align: top; color: var(--txt2); background: var(--sur); }
+td strong { color: var(--txt1); }
+tbody tr:last-child td { border-bottom: none; }
+td.grp { background: var(--sur2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); }
+td.id { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); white-space: nowrap; }
+code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--mono); padding: 1px 5px; border-radius: 4px; color: var(--txt1); overflow-wrap: anywhere; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 14px 0 18px; }
+@media (max-width: 860px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.kpi-v { font-size: 22px; font-weight: 800; color: var(--txt1); line-height: 1.2; }
+.kpi-l { font-size: 11.5px; color: var(--txt3); }
+.kpi.ok .kpi-v { color: var(--green); } .kpi.warn .kpi-v { color: var(--amber); }
+.kpi.info .kpi-v { color: var(--blue); } .kpi.red .kpi-v { color: var(--red); }
+.barra { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 6px 0 4px; background: var(--sur2); }
+.barra span { display: block; height: 100%; }
+.barra .ok { background: var(--green); } .barra .warn { background: var(--amber); } .barra .info { background: var(--blue); } .barra .red { background: var(--red); }
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+.filtros button { font: inherit; font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt2); cursor: pointer; }
+.filtros button[aria-pressed="true"] { background: var(--txt1); color: var(--bg); border-color: var(--txt1); }
+tr.oculta { display: none; }
+.ondas { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 14px 0; }
+.onda { background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.onda.crit { border-left-color: var(--red); }
+.onda.dep { border-left-color: var(--gray); }
+.onda-h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; margin-bottom: 6px; }
+.onda-n { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.onda.crit .onda-n { color: var(--red); }
+.onda.dep .onda-n { color: var(--gray); }
+.onda-t { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.onda-q { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.onda ul.plain { margin-left: 16px; }
+.onda ul.plain li { font-size: 12.5px; }
+.onda .pronto { font-size: 12px; color: var(--txt2); border-top: 1px dashed var(--brd); margin-top: 8px; padding-top: 8px; }
+.ids { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); }
+.foot { margin-top: 40px; font-size: 11px; color: var(--txt3); text-align: center; }
+.back { display: inline-block; font-size: 12px; color: var(--txt3); text-decoration: none; margin-bottom: 18px; }
+.back:hover { color: var(--txt1); }
+
+
+.doc a:not([class]) { color: var(--blue); text-underline-offset: 2px; }
+td.wrap { min-width: 200px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 12px; }
+.seg button { font: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt2); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--txt1); border-color: var(--txt1); color: var(--bg); }
+.seg .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--teal); margin-left: 6px; }
+.seg button[aria-pressed="true"] .tag { color: var(--teal-d); }
+.prop h3 { margin-top: 6px; }
+.duas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 14px; }
+@media (max-width: 640px) { .duas { grid-template-columns: minmax(0, 1fr); } }
+.pc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 14px; min-width: 0; }
+.pc.ganha { border-color: var(--teal); }
+.pc.perde { border-color: var(--amber); }
+.pc .pct { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); margin-bottom: 4px; }
+.pc ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--txt2); }
+.pc li { margin: 3px 0; }
+.dica { font-size: 12.5px; color: var(--txt3); margin: 6px 0; }
+/* a moldura: o painel administrativo de mentira */
+.fr { position: relative; overflow: hidden; border: 1px solid var(--brd); border-radius: 10px; background: var(--bg); min-height: 560px; min-width: 0; }
+.fr-url { display: flex; gap: 8px; align-items: center; padding: 6px 10px; background: var(--sur2); border-bottom: 1px solid var(--brd); font-family: var(--mono); font-size: 11.5px; color: var(--txt2); min-width: 0; }
+.fr-url .u { overflow-wrap: anywhere; min-width: 0; }
+.fr-url .pt { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.fr-top { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--sur); border-bottom: 1px solid var(--brd); }
+.fr-top .eb { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--teal); display: block; }
+.fr-top .nm { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.fr-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.fr-main { padding: 14px; min-width: 0; }
+.fb { font: inherit; font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); cursor: pointer; }
+.fb:hover { border-color: var(--teal); }
+.fb.on, .fb.pri { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+.fb.sec { background: var(--sur2); }
+.fb[disabled] { opacity: .5; cursor: default; }
+.lnk { font: inherit; background: none; border: 0; padding: 0; color: var(--blue); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.cl-h { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 2px; font-size: 17px; color: var(--txt1); }
+.selo { font-size: 10px; font-weight: 700; letter-spacing: .06em; padding: 2px 7px; border-radius: 4px; background: var(--teal-d); color: var(--teal); }
+.cl-sub { font-size: 12px; color: var(--txt3); margin-bottom: 10px; }
+.ctabs, .stabs, .ws-menu.lin { display: flex; gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; border-bottom: 1px solid var(--brd); margin-bottom: 12px; }
+.ctab, .stab { font: inherit; font-size: 12.5px; font-weight: 600; white-space: nowrap; padding: 7px 11px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--txt3); cursor: pointer; }
+.ctab.on, .stab.on { color: var(--txt1); border-bottom-color: var(--teal); }
+.stabs { background: var(--sur2); border-radius: 6px 6px 0 0; }
+.stab { font-size: 12px; padding: 6px 10px; }
+.vazio { padding: 30px 12px; text-align: center; font-size: 13px; color: var(--txt3); border: 1px dashed var(--brd); border-radius: 8px; }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; min-width: 0; }
+.card-t { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); margin-bottom: 8px; }
+.radios { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--txt2); }
+.radios label { display: flex; gap: 8px; align-items: flex-start; }
+.radios input { margin-top: 4px; accent-color: var(--teal); }
+.radios strong { color: var(--txt1); }
+.acoes { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; margin-top: 10px; }
+.acoes .nota { font-size: 11.5px; color: var(--txt3); margin-right: auto; }
+.acoes.esq { justify-content: flex-start; margin: 0 0 10px; }
+.acoes.esq .nota { margin-right: 0; }
+.minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); gap: 8px; margin-bottom: 12px; }
+.mini { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.mini .v { font-size: 18px; font-weight: 700; color: var(--txt1); }
+.mini .l { font-size: 11px; color: var(--txt3); }
+.mini.warn .v { color: var(--amber); }
+.campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 8px; }
+.campo { background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; padding: 7px 10px; min-width: 0; }
+.campo .cl { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.campo .cv { font-size: 12.5px; color: var(--txt1); overflow-wrap: anywhere; margin-top: 2px; }
+.tg { display: inline-flex; border: 1px solid var(--brd); border-radius: 5px; overflow: hidden; }
+.tg button { font: inherit; font-size: 10px; font-weight: 700; text-transform: none; letter-spacing: 0; padding: 2px 7px; border: 0; background: var(--sur2); color: var(--txt3); cursor: pointer; }
+.tg button.on { background: var(--teal); color: var(--sur); }
+.passos { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.passo { font: inherit; font-size: 11.5px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt2); cursor: pointer; }
+.passo.on { background: var(--txt1); color: var(--bg); border-color: var(--txt1); }
+.fr h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); margin: 12px 0 6px; }
+.fr .table-wrap { margin: 6px 0; }
+.fr table { font-size: 12px; }
+.fr td.n, .fr th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fr tr.clic { cursor: pointer; }
+.fr tr.clic:hover td { background: var(--sur2); }
+.msg { font-size: 12.5px; color: var(--teal); background: var(--teal-d); border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; }
+.bc { font-size: 12.5px; color: var(--txt3); margin-bottom: 10px; overflow-wrap: anywhere; }
+.ws { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 14px; }
+.ws-menu { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ws-menu .mi { font: inherit; font-size: 12.5px; font-weight: 600; text-align: left; padding: 7px 10px; border-radius: 6px; border: 0; background: none; color: var(--txt2); cursor: pointer; white-space: nowrap; }
+.ws-menu .mi.on { background: var(--teal-d); color: var(--teal); }
+.ws-main { min-width: 0; }
+@media (max-width: 720px) {
+  .ws { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .ws-menu { flex-direction: row; overflow-x: auto; -webkit-overflow-scrolling: touch; border-bottom: 1px solid var(--brd); margin-bottom: 12px; padding-bottom: 6px; }
+}
+.barra-c { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.barra-c .info { font-size: 12.5px; color: var(--txt2); background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; padding: 5px 10px; }
+.barra-c .info.warn { border-color: var(--amber); }
+.barra-c .dir { margin-left: auto; }
+.as-h { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 15px; color: var(--txt1); }
+.drw-fundo { position: absolute; inset: 0; background: var(--txt1); opacity: .14; }
+.drw { position: absolute; top: 0; right: 0; bottom: 0; width: min(420px, 94%); overflow-y: auto; background: var(--bg); border-left: 1px solid var(--brd); padding: 14px; box-sizing: border-box; }
+.drw-h { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--txt1); }
+.esc { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 12px; margin: 12px 0 4px; }
+.esc .esc-msg { flex-basis: 100%; font-size: 12.5px; color: var(--teal); min-height: 1em; }
+.dc-btn { font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur2); color: var(--txt1); cursor: pointer; }
+.dc-btn.pri { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section { overflow-wrap: anywhere; }
+  .fr-main { padding: 10px; }
+}
+
+.in { font: inherit; font-size: 12.5px; color: var(--txt1); background: var(--bg); border: 1px solid var(--brd); border-radius: 6px; padding: 4px 6px; min-width: 0; max-width: 100%; box-sizing: border-box; }
+.in.num { width: 68px; text-align: right; }
+.in.conf { width: 90px; }
+input[type=range].rg { width: 100%; accent-color: var(--teal); min-width: 0; }
+.erro { font-size: 12.5px; color: var(--red); background: var(--red-d); border-radius: 6px; padding: 6px 10px; margin: 8px 0; }
+.cnt { font-family: var(--mono); font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: var(--teal-d); color: var(--teal); white-space: nowrap; }
+.mont { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.md { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 14px; align-items: start; }
+.doc { max-width: 1280px; }
+.ws-main { container-type: inline-size; }
+@container (max-width: 760px) { .mont, .md { grid-template-columns: minmax(0, 1fr); } }
+.bloco { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; min-width: 0; }
+.bloco-t { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); margin-bottom: 8px; }
+.ac { border: 1px solid var(--brd); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; background: var(--bg); min-width: 0; }
+.ac.e3 { border-color: var(--amber); }
+.ac-h { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.ac-h .id { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--teal); }
+.ac-h select { flex: 1 1 0; min-width: 0; }
+.ac-c { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr)); gap: 6px; }
+.ac-c label { display: flex; flex-direction: column; gap: 2px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--txt3); min-width: 0; }
+.pct { display: flex; gap: 6px; align-items: center; }
+.ac .nota { font-size: 11.5px; color: var(--txt3); margin-top: 4px; }
+.pv { background: var(--sur); border: 1px solid var(--teal); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.pv th { white-space: normal; padding: 8px 8px; }
+.pv td { padding: 8px 8px; }
+.pv td:first-child { min-width: 8.5em; }
+.pv td:last-child { font-size: 11.5px; overflow-wrap: anywhere; }
+.pv-t { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--teal); margin-bottom: 8px; }
+.bar { display: flex; height: 14px; border-radius: 4px; overflow: hidden; background: var(--sur2); margin: 4px 0; }
+.bar span { display: block; height: 100%; }
+.bl { font-size: 11.5px; color: var(--txt2); margin-top: 8px; }
+.lg { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 11px; color: var(--txt2); margin-bottom: 4px; }
+.lg i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.c1 { background: var(--teal); } .c2 { background: var(--blue); } .c3 { background: var(--amber); } .c4 { background: var(--red); } .c5 { background: var(--green); } .c6 { background: var(--txt2); } .c0 { background: var(--brd); } .cf { background: var(--txt3); }
+.sem { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--txt2); margin: 8px 0; }
+.carac { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 6px; }
+.lst-ex .it { display: block; width: 100%; text-align: left; font: inherit; font-size: 12.5px; color: var(--txt1); background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; cursor: pointer; }
+.lst-ex .it.on { border-color: var(--teal); background: var(--teal-d); }
+.lst-ex .it small { display: block; color: var(--txt3); font-size: 11.5px; margin-top: 2px; }
+.etabs { display: flex; gap: 2px; overflow-x: auto; border-bottom: 1px solid var(--brd); margin: 8px 0 10px; }
+.flt { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 6px; margin-top: 8px; }
+.fg { border: 1px solid var(--brd); border-radius: 8px; padding: 6px 8px; background: var(--bg); min-width: 0; }
+.fg-t { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--txt3); margin-bottom: 4px; }
+.chps { display: flex; flex-wrap: wrap; gap: 4px; }
+.chp { font: inherit; font-size: 12px; color: var(--txt2); background: var(--sur); border: 1px solid var(--brd); border-radius: 999px; padding: 2px 9px; cursor: pointer; }
+.chp small { font-family: var(--mono); font-size: 10.5px; color: var(--txt3); margin-left: 5px; }
+.chp.on { background: var(--teal-d); border-color: var(--teal); color: var(--teal); font-weight: 600; }
+.chp.on small { color: var(--teal); }
+.faixa { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--txt2); }
+.faixa .in { width: 0; flex: 1 1 64px; }
+.ac-c label .in, .rec-l label .in { font-weight: 400; letter-spacing: normal; }
+.in:disabled { color: var(--txt3); background: var(--sur2); }
+.fres { font-size: 12.5px; color: var(--txt2); margin-top: 8px; }
+.fres td:first-child { white-space: nowrap; }
+.fres summary { cursor: pointer; color: var(--teal); font-size: 12px; margin-top: 4px; }
+.campo.largo { grid-column: 1 / -1; }
+.rec { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.rec-l { display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-end; padding-bottom: 6px; border-bottom: 1px dashed var(--brd); }
+.rec-l label { display: flex; flex-direction: column; gap: 2px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--txt3); flex: 1 1 76px; min-width: 0; }
+.rec-l label.lm { flex: 2 1 150px; }
+.rec-l label.lmod { flex: 1.3 1 100px; }
+.rec-l .in, .rec-l .in.num { width: 100%; }
+.rec-resto { font-size: 12px; color: var(--txt2); font-weight: 400; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html#sec-taxrs">← Hub de PRDs</a>
+<div class="eyebrow">tax-rs · Modo Live · Proposta · D-EM-30</div>
+<h1>Emulador de lançamentos: as telas</h1>
+<p class="subtitle">Duas propostas para as telas do emulador, dentro do espaço próprio decidido na D-EM-29 (<a href="taxrs-emulador-estrutura.html">a estrutura</a>). As duas são clicáveis e fazem a conta: mude um percentual, a base ou o ente de uma ação e veja quantos DFs e lançamentos saem. Os dados são os do exemplo da <a href="taxrs-emulador-lancamentos.html#s5">proposta do emulador</a>.</p>
+<div class="meta-bar">
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.0</span></span>
+  <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">19/11/2026</span></span>
+  <span class="meta-pill"><span class="meta-label">Proposta</span><span class="meta-val">v1.4, seção 10</span></span>
+  <span class="meta-pill"><span class="meta-label">Decisão</span><span class="meta-val">D-EM-30</span></span>
+</div>
+<section class="section" id="s1">
+  <div class="sec-hdr"><span class="sec-num">1</span><span class="sec-title">O que muda entre as duas</span></div>
+  <p>As duas ficam no espaço próprio do emulador, com o menu lateral da D-EM-29, e usam a mesma conta: o percentual vale sobre os DFs elegíveis da base, vira número de DFs pelo maior resto, e cada DF gera um lançamento por ente que tem o lançamento na documentação (a glosa antes da apropriação, por exemplo, só existe na Receita Federal). O que muda é o jeito de montar o lote e de ver o resultado.</p>
+  <p>Os filtros e a criação de DFs são os mesmos nas duas. Os filtros trabalham sobre uma base de exemplo do cliente de teste, com 6.670 DFs (três empresas, três competências, entrada e saída), e cada opção mostra quantos DFs traz com os outros filtros. O lote tem uma direção: ação de crédito só vale em lote de entrada, e ação de débito só em lote de saída; o tributo do filtro limita os entes das ações. Na criação de DFs, o recolhimento pode ser misto: cada linha diz quantos DFs de entrada, de que modelo e com que método e prazo.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th>A · Assistente em passos</th><th>B · Montador numa tela só</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Novo lote</strong></td><td class="wrap">Quatro passos: DFs, ações, quando, prévia</td><td class="wrap">Uma tela: DFs e ações à esquerda, prévia à direita</td></tr>
+      <tr><td><strong>Quando aparece a conta</strong></td><td class="wrap">No passo 4</td><td class="wrap">A cada mudança, ao lado</td></tr>
+      <tr><td><strong>Erro (ações acima de 100%, resultado da E3)</strong></td><td class="wrap">Ao avançar do passo 2 e na prévia</td><td class="wrap">Na hora, na prévia; gravar fica travado</td></tr>
+      <tr><td><strong>Filtros do lote</strong></td><td class="wrap">No passo 1; o efeito na conta aparece no passo 4</td><td class="wrap">No bloco 1; a prévia refaz a conta a cada filtro</td></tr>
+      <tr><td><strong>Criar DFs</strong></td><td class="wrap">Dois passos: características e revisão</td><td class="wrap">Formulário com o resumo dos DFs ao lado</td></tr>
+      <tr><td><strong>Execuções</strong></td><td class="wrap">Lista; cada execução abre numa página com abas</td><td class="wrap">Lista com a execução escolhida ao lado</td></tr>
+      <tr><td><strong>Painel, cenários prontos, unitário e Simulado</strong></td><td class="wrap">Iguais nas duas</td><td class="wrap">Iguais nas duas</td></tr>
+      <tr><td><strong>No celular</strong></td><td class="wrap">Um passo por tela</td><td class="wrap">A prévia desce para baixo das ações</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout ok"><div class="ct">Recomendação: B</div><p>O difícil do lote é ver como percentual e base se combinam: 50% da ação 1 são 350 DFs, não 500. Com a prévia ao lado, isso aparece enquanto se digita, e o erro de passar de 100% aparece na hora. Quem usa o emulador testa, repete e ajusta lotes; no assistente, cada ajuste é uma volta de passos.</p></div>
+</section>
+
+<section class="section" id="s2">
+  <div class="sec-hdr"><span class="sec-num">2</span><span class="sec-title">As duas, clicáveis</span></div>
+  <div class="seg" role="group" aria-label="Escolher a proposta para ver">
+    <button type="button" data-p="A" aria-pressed="false">A · Assistente em passos</button>
+    <button type="button" data-p="B" aria-pressed="false">B · Montador numa tela só<span class="tag">recomendada</span></button>
+  </div>
+  <div class="prop" id="prop-A" hidden>
+    <h3>Proposta A · Assistente em passos</h3>
+    <p>O novo lote anda em quatro passos, um de cada vez: os DFs (filtrar, criar ou os dois), as ações, quando e a prévia. A conta só aparece no passo 4, e um erro (ações que somam mais de 100%, por exemplo) aparece ao avançar. Criar DFs também tem dois passos: as características e a revisão. Cada execução abre numa página própria, com as abas Resumo, Conferência e Lançamentos.</p>
+    <div class="duas">
+      <div class="pc ganha"><div class="pct">Ganha</div><ul><li>Conduz quem usa o emulador de vez em quando: uma pergunta por vez.</li><li>Cada passo cabe inteiro na tela, no celular também.</li><li>A prévia no fim funciona como revisão antes de gravar.</li></ul></div>
+      <div class="pc perde"><div class="pct">Perde</div><ul><li>O efeito de um percentual só aparece no passo 4: ajustar é ir e voltar.</li><li>Base e percentual se entendem vendo a conta, e a conta fica longe de onde se digita.</li><li>Quem repete lotes refaz os quatro passos.</li></ul></div>
+    </div>
+    <p class="dica">Comece pelo Novo lote: marque e desmarque os filtros (empresa, competência, modelo, fornecedor, situação, faixa de valor) e veja o número de DFs mudar; mude o percentual da ação 1, troque a base da ação 4, ponha a ação 2 em 40% para ver o erro; troque a direção para saída e veja as ações de crédito barradas. Em Criar DFs, escolha o recolhimento misto. Depois grave e veja a execução.</p>
+    <div class="fr" id="fr-A"></div>
+    <div class="esc"><button type="button" class="dc-btn pri" data-escolher="A">Escolher a proposta A</button><a href="taxrs-emulador-lancamentos.html#D-EM-30">Ver a D-EM-30 na proposta</a><span class="esc-msg" aria-live="polite"></span></div>
+  </div>
+  <div class="prop" id="prop-B" hidden>
+    <h3>Proposta B · Montador numa tela só</h3>
+    <p>O novo lote é uma tela só. À esquerda, os DFs e as ações em cartões (resultado, ente, base, percentual e quando); à direita, a prévia, que se refaz a cada mudança: as barras mostram como os DFs se dividem, e os números dizem quantos DFs e lançamentos saem. Criar DFs segue o mesmo desenho, com o resumo dos DFs ao lado. As execuções ficam em lista, com a escolhida ao lado.</p>
+    <div class="duas">
+      <div class="pc ganha"><div class="pct">Ganha</div><ul><li>O efeito de cada percentual aparece na hora, nas barras e nos números.</li><li>O erro aparece enquanto se digita, e o botão de gravar fica travado até corrigir.</li><li>Repetir e ajustar um lote é mexer num número, sem voltar passos.</li></ul></div>
+      <div class="pc perde"><div class="pct">Perde</div><ul><li>Mais coisa na tela de uma vez; quem usa pouco pode se perder.</li><li>No celular, a prévia desce para baixo das ações e sai de vista enquanto se digita.</li></ul></div>
+    </div>
+    <p class="dica">Comece pelo Novo lote: marque e desmarque os filtros (empresa, competência, modelo, fornecedor, situação, faixa de valor) e veja o número de DFs mudar; mude o percentual da ação 1, troque a base da ação 4, ponha a ação 2 em 40% para ver o erro; troque a direção para saída e veja as ações de crédito barradas. Em Criar DFs, escolha o recolhimento misto. Depois grave e veja a execução.</p>
+    <div class="fr" id="fr-B"></div>
+    <div class="esc"><button type="button" class="dc-btn pri" data-escolher="B">Escolher a proposta B</button><a href="taxrs-emulador-lancamentos.html#D-EM-30">Ver a D-EM-30 na proposta</a><span class="esc-msg" aria-live="polite"></span></div>
+  </div>
+</section>
+
+<section class="section" id="s3">
+  <div class="sec-hdr"><span class="sec-num">3</span><span class="sec-title">A escolha e o histórico</span></div>
+  <p>"Escolher" grava a proposta na D-EM-30, neste navegador, no mesmo lugar que a seção 14 da proposta usa: a escolha aparece lá, e "Copiar escolhas" monta o texto para mandar de volta.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Versão</th><th>Data</th><th>O que mudou</th></tr></thead>
+    <tbody>
+      <tr><td class="id">1.0</td><td>19/11/2026</td><td>Primeira versão, a pedido do usuário: as duas propostas, clicáveis, com a conta do lote funcionando; os filtros do lote com seleção de verdade sobre uma base de exemplo, com a contagem por opção e a direção do lote; e o recolhimento misto na criação de DFs, com quantidade, modelo e método por linha.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<div class="foot">Telas do emulador · v1.0 · 19/11/2026</div>
+</div>
+<script>
+var RES = [{"id": "RE-01", "g": "Registro e valores", "n": "Registrar o DF no ente", "cbs": 1, "ibs": 1, "m": "DF registrado; CAPUR conciliada; credit.registered ou debit.registered", "e": "E2"}, {"id": "RE-02", "g": "Registro e valores", "n": "Divergir o valor do imposto", "cbs": 1, "ibs": 1, "m": "capur_cbs_divergente ou capur_ibs_divergente aberta", "e": "E2"}, {"id": "RE-03", "g": "Registro e valores", "n": "Não registrar o DF", "cbs": 0, "ibs": 0, "m": "apur_df_sem_registro aberta 30 dias depois da emissão (tolerância do tax-rs)", "e": "E2"}, {"id": "RE-04", "g": "Registro e valores", "n": "Registro sem DF", "cbs": 1, "ibs": 1, "m": "apur_registro_sem_df aberta", "e": "E2"}, {"id": "RE-05", "g": "Crédito", "n": "Apropriar totalmente", "cbs": 1, "ibs": 1, "m": "credit.appropriated; saldo todo em appropriated", "e": "E2"}, {"id": "RE-06", "g": "Crédito", "n": "Apropriar em parte", "cbs": 1, "ibs": 1, "m": "credit.appropriated; parte em appropriated, parte em pending", "e": "E3"}, {"id": "RE-07", "g": "Crédito", "n": "Usar todo o saldo disponível", "cbs": 1, "ibs": 1, "m": "credit.utilized; saldo available zero", "e": "E2"}, {"id": "RE-08", "g": "Crédito", "n": "Usar parte do saldo", "cbs": 1, "ibs": 1, "m": "credit.utilized; o resto em available", "e": "E2"}, {"id": "RE-09", "g": "Crédito", "n": "Glosar antes da apropriação", "cbs": 1, "ibs": -1, "m": "credit.disallowed; glosa_credito aberta; saldo not_appropriable", "e": "E2"}, {"id": "RE-10", "g": "Crédito", "n": "Glosar depois da apropriação", "cbs": 1, "ibs": -1, "m": "credit.disallowed; glosa_credito aberta; saldo not_usable", "e": "E3"}, {"id": "RE-11", "g": "Crédito", "n": "Restabelecer o crédito", "cbs": 1, "ibs": -1, "m": "credit.restored; saldo restored", "e": "E3"}, {"id": "RE-12", "g": "Crédito", "n": "Suspender e liberar o crédito", "cbs": 1, "ibs": -1, "m": "credit.suspended e, se pedido, credit.released", "e": "E3"}, {"id": "RE-13", "g": "Crédito", "n": "Prescrever o crédito", "cbs": 1, "ibs": -1, "m": "alerta credit_expiring, depois credit.expired; saldo expired", "e": "E3"}, {"id": "RE-14", "g": "Crédito", "n": "Pedir ressarcimento do saldo credor", "cbs": 1, "ibs": -1, "m": "credit.refund_requested; saldo refund_requested", "e": "E3"}, {"id": "RE-15", "g": "Débito", "n": "Extinguir por compensação", "cbs": 1, "ibs": 1, "m": "debit.partially_settled ou debit.settled", "e": "E2"}, {"id": "RE-16", "g": "Débito", "n": "Extinguir por pagamento próprio (PCONT)", "cbs": 1, "ibs": 1, "m": "debit.settled", "e": "E2"}, {"id": "RE-17", "g": "Débito", "n": "Extinguir pelo RAD do adquirente", "cbs": 1, "ibs": 1, "m": "debit.settled", "e": "E2"}, {"id": "RE-18", "g": "Débito", "n": "Extinguir por split", "cbs": 1, "ibs": 1, "m": "debit.settled, com a marca split_payment", "e": "E3"}, {"id": "RE-19", "g": "Débito", "n": "Pagar em atraso", "cbs": 1, "ibs": -1, "m": "debit.settled ou credit.appropriated, com multa e juros", "e": "E3"}, {"id": "RE-20", "g": "Débito", "n": "Pagamento antecipado na nota de débito", "cbs": 1, "ibs": -1, "m": "a definir (D08 sem evento na API da plataforma)", "e": "E3"}, {"id": "RE-21", "g": "Débito", "n": "Tornar o débito inexigível", "cbs": 1, "ibs": -1, "m": "debit.adjusted; saldo not_enforceable", "e": "E3"}, {"id": "RE-22", "g": "Débito", "n": "Suspender e liberar o débito", "cbs": 1, "ibs": -1, "m": "debit.suspended e, se pedido, debit.released", "e": "E3"}, {"id": "RE-23", "g": "Documento", "n": "Cancelar", "cbs": 1, "ibs": 1, "m": "credit.cancelled ou debit.cancelled; no IBS, o movimento conforme o estado do DF", "e": "E3"}, {"id": "RE-24", "g": "Documento", "n": "Devolver", "cbs": 1, "ibs": 1, "m": "credit.adjusted, debit.registered do adquirente, crédito da devolução", "e": "E3"}, {"id": "RE-25", "g": "Documento", "n": "Complementar o valor", "cbs": 1, "ibs": 1, "m": "credit.adjusted ou debit.adjusted", "e": "E3"}, {"id": "RE-26", "g": "Documento", "n": "Estornar RAD ou split", "cbs": -1, "ibs": 1, "m": "debit.adjusted; o débito volta a outstanding", "e": "E3"}, {"id": "RE-27", "g": "Documento", "n": "Transferir ao fornecedor", "cbs": -1, "ibs": 1, "m": "a definir (sem evento na API da plataforma)", "e": "E3"}];
+(function () {
+  var CHAVE = 'taxrs-emulador-decisoes-v1';
+  function ler() { try { return JSON.parse(localStorage.getItem(CHAVE) || '{}') || {}; } catch (e) { return {}; } }
+  function gravarLS(o) { try { localStorage.setItem(CHAVE, JSON.stringify(o)); return true; } catch (e) { return false; } }
+  var RESM = {}; RES.forEach(function (r) { RESM[r.id] = r; });
+  var TELAS = [['painel', 'Painel'], ['criar', 'Criar DFs'], ['lote', 'Novo lote'], ['cenarios', 'Cenários prontos'], ['unitario', 'Lançamento unitário'], ['simulado', 'Simulado'], ['execucoes', 'Execuções']];
+  var SLUG = { painel: '', criar: '/dfs/novos', lote: '/lotes/novo', cenarios: '/cenarios', unitario: '/unitario', simulado: '/simulado', execucoes: '/execucoes' };
+  var ENTES = [['dois', 'Os dois'], ['rfb', 'Receita Federal'], ['cg', 'Comitê Gestor']];
+  var QUANDO = [['agora', 'Agora'], ['retro', 'Retroativa'], ['agend', 'Agendada'], ['espalh', 'Espalhada']];
+  var CARAC = [
+    ['empresa', 'Empresa do grupo', 'Matriz (CNPJ …0001)', 'Sorteada entre os 3 CNPJs ativos'],
+    ['tipo', 'Direção e tipo', '60% NF-e de entrada · 20% CT-e de entrada · 20% NF-e de saída', 'Sorteado entre NF-e, CT-e e NFS-e, entrada e saída, em partes iguais'],
+    ['contra', 'Contraparte', 'Fornecedor A e Fornecedor B, do cliente', 'Fictícias: 50 fornecedores e 20 clientes [EMULADO]'],
+    ['emissao', 'Emissão', '15/10/2026', 'Entre 01/10/2026 e 31/10/2026'],
+    ['valor', 'Valor', 'R$ 10.000,00 para todos', 'Entre R$ 1.000,00 e R$ 100.000,00'],
+    ['recolh', 'Recolhimento', 'RAD, prazo de 30 dias, por cima do contrato', 'O padrão: o contrato do fornecedor']
+  ];
+
+  function fmt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+  function rs(v) { var c = Math.round(v * 100), d = String(c % 100); return 'R$ ' + fmt(Math.floor(c / 100)) + ',' + (d.length < 2 ? '0' + d : d); }
+  function b(txt, at, cls) { return '<button type="button" class="fb' + (cls ? ' ' + cls : '') + '" ' + (at || '') + '>' + txt + '</button>'; }
+  function campo(l, v, extra, cls) { return '<div class="campo' + (cls ? ' ' + cls : '') + '"><div class="cl"><span>' + l + '</span>' + (extra || '') + '</div><div class="cv">' + v + '</div></div>'; }
+  function chip(c, t) { return '<span class="chip ' + c + '">' + t + '</span>'; }
+  function tab(cab, linhas, nums, clic) {
+    var h = '<div class="table-wrap"><table><thead><tr>';
+    cab.forEach(function (c, i) { h += '<th' + (nums && nums.indexOf(i) >= 0 ? ' class="n"' : '') + '>' + c + '</th>'; });
+    h += '</tr></thead><tbody>';
+    linhas.forEach(function (l, j) {
+      h += '<tr' + (clic && clic[j] ? ' class="clic" tabindex="0" ' + clic[j] : '') + '>';
+      l.forEach(function (c, i) { h += '<td' + (nums && nums.indexOf(i) >= 0 ? ' class="n"' : '') + '>' + c + '</td>'; });
+      h += '</tr>';
+    });
+    return h + '</tbody></table></div>';
+  }
+  function sel(campoNome, id, opcoes, valor, extra) {
+    var h = '<select class="in" data-campo="' + campoNome + '" data-id="' + id + '"' + (extra || '') + '>';
+    opcoes.forEach(function (o) { h += '<option value="' + o[0] + '"' + (String(o[0]) === String(valor) ? ' selected' : '') + (o[2] ? ' disabled' : '') + '>' + o[1] + '</option>'; });
+    return h + '</select>';
+  }
+  function erroH(x) { return '<div class="erro">' + x + '</div>'; }
+
+  // ── a base de DFs do cliente de teste: sorteada com semente fixa, a mesma a cada carga ──
+  var EMP = [['m', 'Matriz', '…0001'], ['sp', 'Filial SP', '…0002'], ['rj', 'Filial RJ', '…0003']];
+  var COMPS = ['08/2026', '09/2026', '10/2026'], MODS = ['NF-e', 'CT-e', 'NFS-e'];
+  var FORN = ['Fornecedor A', 'Fornecedor B', 'Fornecedor C', 'Fornecedor D', 'Fornecedor E'], CLIS = ['Cliente A', 'Cliente B', 'Cliente C'];
+  var METS = [['fornecedor', 'Pelo fornecedor'], ['rad', 'RAD']];
+  var SITS = { entrada: [['apropriar', 'A apropriar'], ['apropriado', 'Apropriado'], ['utilizado', 'Utilizado'], ['glosado', 'Glosado']], saida: [['aberto', 'Débito em aberto'], ['extinto', 'Extinto']] };
+  var BLOCOS = [ // competência, direção, situação no ente, DFs, quantos deles já glosados no ente
+    ['10/2026', 'entrada', 'apropriar', 1012, 12], ['10/2026', 'entrada', 'apropriado', 380, 0], ['10/2026', 'entrada', 'utilizado', 120, 0],
+    ['10/2026', 'saida', 'aberto', 640, 0], ['10/2026', 'saida', 'extinto', 160, 0],
+    ['09/2026', 'entrada', 'apropriar', 64, 2], ['09/2026', 'entrada', 'apropriado', 820, 0], ['09/2026', 'entrada', 'utilizado', 410, 0], ['09/2026', 'entrada', 'glosado', 18, 18],
+    ['09/2026', 'saida', 'aberto', 90, 0], ['09/2026', 'saida', 'extinto', 700, 0],
+    ['08/2026', 'entrada', 'apropriar', 21, 1], ['08/2026', 'entrada', 'apropriado', 600, 0], ['08/2026', 'entrada', 'utilizado', 760, 0], ['08/2026', 'entrada', 'glosado', 25, 25],
+    ['08/2026', 'saida', 'aberto', 30, 0], ['08/2026', 'saida', 'extinto', 820, 0]
+  ];
+  function semente(a) { return function () { a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function pesar(r, pesos) {
+    var t = pesos.reduce(function (s, x) { return s + x[1]; }, 0), x = r() * t;
+    for (var i = 0; i < pesos.length; i++) { x -= pesos[i][1]; if (x < 0) return pesos[i][0]; }
+    return pesos[pesos.length - 1][0];
+  }
+  var BASE = (function () {
+    var r = semente(4721), out = [], n = 0;
+    BLOCOS.forEach(function (bl) {
+      var ent = bl[1] === 'entrada', ctr = ent ? FORN : CLIS;
+      for (var i = 0; i < bl[3]; i++) {
+        out.push({ n: ++n, comp: bl[0], dir: bl[1], sit: bl[2], g: i < bl[4],
+          emp: pesar(r, [['m', 55], ['sp', 30], ['rj', 15]]),
+          mod: pesar(r, ent ? [['NF-e', 70], ['CT-e', 25], ['NFS-e', 5]] : [['NF-e', 85], ['NFS-e', 15]]),
+          contra: ctr[Math.floor(r() * ctr.length)],
+          met: ent ? pesar(r, [['fornecedor', 62], ['rad', 38]]) : '',
+          v: Math.round(100 * Math.pow(100, r())) * 10 });
+      }
+    });
+    return out;
+  })();
+  var FACETS = ['emp', 'comp', 'mod', 'contra', 'met', 'sit'];
+  function filtroPadrao() { return { dir: 'entrada', trib: 'dois', emp: [], comp: ['10/2026'], mod: [], contra: [], met: [], sit: ['apropriar'], vmin: '', vmax: '' }; }
+  var CACHE = { k: '', r: null };
+  // um passe só: o DF que passa em tudo conta em todas as opções; o que falha num filtro só conta na opção dele nesse filtro
+  function filtrar(f) {
+    var k = JSON.stringify(f);
+    if (CACHE.k === k) return CACHE.r;
+    var fc = {}, n = 0, g = 0, prim = [], vmin = +f.vmin || 0, vmax = +f.vmax || 0;
+    FACETS.forEach(function (x) { fc[x] = {}; });
+    BASE.forEach(function (d) {
+      if (d.dir !== f.dir || (vmin && d.v < vmin) || (vmax && d.v > vmax)) return;
+      var nf = 0, falha = '';
+      for (var i = 0; i < FACETS.length && nf < 2; i++) { var x = FACETS[i], s = f[x]; if (s.length && s.indexOf(d[x]) < 0) { nf++; falha = x; } }
+      if (nf === 0) {
+        n++;
+        if (d.g) g++; else if (prim.length < 5) prim.push(d);
+        FACETS.forEach(function (x) { fc[x][d[x]] = (fc[x][d[x]] || 0) + 1; });
+      } else if (nf === 1) fc[falha][d[falha]] = (fc[falha][d[falha]] || 0) + 1;
+    });
+    CACHE = { k: k, r: { n: n, g: g, eleg: n - g, fc: fc, prim: prim } };
+    return CACHE.r;
+  }
+  function nomeDe(lista, k) { var x = lista.filter(function (o) { return o[0] === k; })[0]; return x ? x[1] : k; }
+
+  // a mistura dos DFs criados e o recolhimento misto
+  function mistura(m) {
+    var al = (m.tg.tipo || 'p') === 'a';
+    var t = al ? [['NF-e', 'entrada', 1], ['NF-e', 'saida', 1], ['CT-e', 'entrada', 1], ['CT-e', 'saida', 1], ['NFS-e', 'entrada', 1], ['NFS-e', 'saida', 1]]
+               : [['NF-e', 'entrada', 60], ['CT-e', 'entrada', 20], ['NF-e', 'saida', 20]];
+    var soma = t.reduce(function (s, x) { return s + x[2]; }, 0), d = distrib(m.qtd, t.map(function (x) { return 100 * x[2] / soma; }));
+    return { al: al, tipos: t.map(function (x, i) { return { rot: x[0] + ' · ' + (x[1] === 'entrada' ? 'entrada' : 'saída'), mod: x[0], dir: x[1], n: d[i] }; }) };
+  }
+  function criadosDir(m) { return mistura(m).tipos.reduce(function (s, t) { return s + (t.dir === m.f.dir ? t.n : 0); }, 0); }
+  var METODOS = [['contrato', 'Pelo contrato do fornecedor'], ['fornecedor', 'Fornecedor recolhe'], ['rad', 'RAD: o cliente recolhe'], ['split', 'Split payment (na E3)', true]];
+  function entradasCriadas(m) {
+    var por = {}, tot = 0;
+    mistura(m).tipos.forEach(function (t) { if (t.dir === 'entrada') { por[t.mod] = (por[t.mod] || 0) + t.n; tot += t.n; } });
+    return { por: por, tot: tot };
+  }
+  function recPadrao(m) {
+    var en = entradasCriadas(m), out = [], id = 1, nf = en.por['NF-e'] || 0, ct = en.por['CT-e'] || 0;
+    if (nf) { out.push({ id: id++, qtd: Math.round(nf / 2), mod: 'NF-e', met: 'rad', prazo: 30 }); out.push({ id: id++, qtd: Math.round(nf / 4), mod: 'NF-e', met: 'fornecedor', prazo: 30 }); }
+    if (ct) out.push({ id: id++, qtd: Math.round(ct / 2), mod: 'CT-e', met: 'rad', prazo: 60 });
+    m.recProx = id;
+    return out.filter(function (r) { return r.qtd > 0; });
+  }
+  function recCalc(m) {
+    var en = entradasCriadas(m), usado = {}, tot = 0, erros = [];
+    if ((m.tg.recolh || 'p') !== 'm') return { erros: erros, resto: en.tot, en: en };
+    m.rec.forEach(function (r) { usado[r.mod] = (usado[r.mod] || 0) + r.qtd; tot += r.qtd; });
+    Object.keys(usado).forEach(function (k) {
+      if (k !== '*' && usado[k] > (en.por[k] || 0)) erros.push('Recolhimento misto: as linhas pedem ' + fmt(usado[k]) + ' ' + k + ' de entrada, e a mistura cria ' + fmt(en.por[k] || 0) + '.');
+    });
+    if (tot > en.tot) erros.push('Recolhimento misto: as linhas somam ' + fmt(tot) + ' DFs, e os de entrada são ' + fmt(en.tot) + '.');
+    return { erros: erros, resto: Math.max(0, en.tot - tot), en: en };
+  }
+
+  // ── o modelo e a conta (a mesma nas duas propostas) ──
+  function acoesPadrao() {
+    return [{ id: 1, re: 'RE-05', ente: 'dois', base: 0, pct: 70, q: 'agora' }, { id: 2, re: 'RE-09', ente: 'dois', base: 0, pct: 10, q: 'agora' },
+            { id: 3, re: 'RE-02', ente: 'rfb', base: 0, pct: 5, q: 'agora' }, { id: 4, re: 'RE-07', ente: 'dois', base: 1, pct: 50, q: 'agora' },
+            { id: 5, re: 'RE-08', ente: 'dois', base: 1, pct: 20, q: 'agora' }];
+  }
+  // lançamentos por DF: um por ente que tem o lançamento na documentação, dentro do tributo do filtro
+  function entes(a, trib) {
+    var r = RESM[a.re], rfb = a.ente !== 'cg' && trib !== 'ibs' && r.cbs === 1, cg = a.ente !== 'rfb' && trib !== 'cbs' && r.ibs === 1;
+    return (rfb ? 1 : 0) + (cg ? 1 : 0);
+  }
+  function mudo(a, trib) {
+    var r = RESM[a.re], m = [];
+    if (a.ente !== 'cg' && trib !== 'ibs' && r.cbs === -1) m.push('a Receita Federal');
+    if (a.ente !== 'rfb' && trib !== 'cbs' && r.ibs === -1) m.push('o Comitê Gestor');
+    return m.length ? m.join(' e ') + (m.length > 1 ? ' ficam mudos' : ' fica mudo') + ': a documentação não tem esse lançamento.' : '';
+  }
+  function distrib(n, pcts) {
+    var tot = pcts.reduce(function (s, x) { return s + x; }, 0), alvo = Math.round(n * Math.min(tot, 100) / 100);
+    var ex = pcts.map(function (x) { return n * x / 100; }), base = ex.map(Math.floor);
+    var falta = alvo - base.reduce(function (s, x) { return s + x; }, 0);
+    var ord = ex.map(function (x, i) { return [x - Math.floor(x), i]; }).sort(function (u, v) { return v[0] - u[0] || u[1] - v[1]; });
+    for (var k = 0; k < falta && k < ord.length; k++) base[ord[k][1]]++;
+    return base;
+  }
+  function nLote(m) { var e = filtrar(m.f).eleg; return m.orig === 'filtrar' ? e : m.orig === 'criar' ? criadosDir(m) : e + criadosDir(m); }
+  function calc(m) {
+    var cnt = {}, tam = { 0: nLote(m) }, erros = [], grupos = {}, linhas = [];
+    m.acoes.forEach(function (a) { (grupos[a.base] = grupos[a.base] || []).push(a); });
+    (function resolver(base) {
+      var g = grupos[base] || [];
+      if (!g.length) return;
+      var soma = g.reduce(function (s, a) { return s + a.pct; }, 0);
+      if (soma > 100) erros.push('As ações sobre ' + (base ? 'os DFs da ação ' + base : 'o lote') + ' somam ' + soma + '%: o máximo é 100%.');
+      var d = distrib(tam[base], g.map(function (a) { return a.pct; }));
+      g.forEach(function (a, i) { cnt[a.id] = d[i]; tam[a.id] = d[i]; });
+      g.forEach(function (a) { resolver(a.id); });
+    })(0);
+    var e3 = m.acoes.filter(function (a) { return RESM[a.re].e !== 'E2'; });
+    if (e3.length) erros.push(e3.map(function (a) { return a.re; }).join(', ') + ' só roda depois da E3.');
+    var f = m.f, DIRG = { 'Crédito': 'entrada', 'Débito': 'saida' };
+    m.acoes.forEach(function (a) {
+      var dg = DIRG[RESM[a.re].g];
+      if (dg && dg !== f.dir) erros.push('A ação ' + a.id + ' (' + a.re + ') é de ' + (dg === 'entrada' ? 'crédito e só vale em lote de entrada.' : 'débito e só vale em lote de saída.'));
+      if (f.trib !== 'dois' && a.ente !== 'dois' && a.ente !== (f.trib === 'cbs' ? 'rfb' : 'cg'))
+        erros.push('A ação ' + a.id + ' lança ' + (a.ente === 'rfb' ? 'na Receita Federal' : 'no Comitê Gestor') + ', e o filtro é só ' + (f.trib === 'cbs' ? 'CBS' : 'IBS') + '.');
+    });
+    if (m.orig !== 'filtrar') erros = erros.concat(recCalc(m).erros);
+    var lanc = 0;
+    m.acoes.forEach(function (a) { lanc += (cnt[a.id] || 0) * entes(a, f.trib); });
+    var g0 = grupos[0] || [], ating = g0.reduce(function (s, a) { return s + (cnt[a.id] || 0); }, 0);
+    (function folhas(lista, cam, lc) {
+      lista.forEach(function (a) {
+        var c2 = cam.concat([a.id]), l2 = lc + entes(a, f.trib), filhos = grupos[a.id] || [];
+        var resto = (cnt[a.id] || 0) - filhos.reduce(function (s, f) { return s + (cnt[f.id] || 0); }, 0);
+        if (resto > 0) linhas.push([c2.join(' e ') + ' · ' + RESM[a.re].n, resto, resto * l2, RESM[a.re].m]);
+        folhas(filhos, c2, l2);
+      });
+    })(g0, [], 0);
+    return { cnt: cnt, tam: tam, erros: erros, lanc: lanc, ating: ating, linhas: linhas, sem: Math.max(0, tam[0] - ating), fora: m.orig === 'criar' ? 0 : filtrar(f).g, grupos: grupos };
+  }
+  function podeGravar(m, c) { return !c.erros.length && c.ating > 0 && (c.ating <= 100 || m.conf === String(c.ating)); }
+  function opcoesRes() { return RES.map(function (r) { return [r.id, r.id + ' · ' + r.n + (r.e === 'E2' ? '' : ' (E3)'), r.e !== 'E2']; }); }
+  function opcoesBase(m, a) {
+    var o = [[0, 'o lote']];
+    m.acoes.forEach(function (x) { if (x.id < a.id) o.push([x.id, 'os DFs da ação ' + x.id]); });
+    return o;
+  }
+
+  // ── telas iguais nas duas ──
+  var EXECS0 = [
+    { n: 4, quando: '18/11/2026 15:10', oque: 'Lote · 5 ações · 1.000 DFs · 2.530 lançamentos', sit: chip('red', 'Divergente') + ' 998 atingidos, 2 divergentes', div: true },
+    { n: 3, quando: '18/11/2026 14:52', oque: 'Criar DFs · 1.000 NF-e e CT-e', sit: chip('ok', 'Atingido') },
+    { n: 2, quando: '17/11/2026 10:05', oque: 'Unitário · C07 no DF …0004', sit: chip('ok', 'Atingido') },
+    { n: 1, quando: '17/11/2026 09:40', oque: 'Cenário pronto · SIM em 200 DFs', sit: chip('warn', 'Aguardando') + ' 12 agendados' }
+  ];
+  function minis(s) {
+    var tot = s.execs.reduce(function (t, e) { return t + (e.lanc || 0); }, 2530);
+    return '<div class="minis"><div class="mini"><div class="v">' + fmt(1240 + tot) + '</div><div class="l">lançamentos: 1.240 do Simulado, ' + fmt(tot) + ' do emulador</div></div>' +
+      '<div class="mini"><div class="v">1.000</div><div class="l">DFs criados pelo emulador</div></div>' +
+      '<div class="mini"><div class="v">12</div><div class="l">agendados pendentes</div></div>' +
+      '<div class="mini warn"><div class="v">2</div><div class="l">alertas do Simulado</div></div></div>';
+  }
+  function todasExecs(s) { return s.execs.slice().reverse().concat(EXECS0); }
+  function listaExec(s) {
+    var ex = todasExecs(s);
+    return tab(['#', 'Quando', 'O quê', 'Conferência'], ex.map(function (e) { return [String(e.n), e.quando, e.oque, e.sit]; }), null,
+      ex.map(function (e) { return 'data-go="execucoes" data-exec="' + e.n + '"'; }));
+  }
+  function painel(s) {
+    return minis(s) + '<div class="acoes esq">' + b('Criar DFs', 'data-go="criar"', 'pri') + b('Novo lote', 'data-go="lote"') + b('Lançamento unitário', 'data-go="unitario"') + '</div>' +
+      '<h4>Execuções recentes</h4>' + listaExec(s);
+  }
+  function cenarios(s) {
+    var u = function () { return b('Usar no lote', 'data-cen="1"'); };
+    return '<p class="dica">18 cenários prontos: os 17 roteiros do MassGen e as proporções do Simulado. "Usar no lote" põe as ações do cenário no novo lote, para ajustar.</p>' +
+      tab(['Id', 'História', ''], [['SIM', 'Proporções do Simulado, de uma vez', u()], ['RT-A1', 'Fornecedor recolhe; crédito apropriado e usado', u()],
+        ['RT-A2', 'Cliente paga pelo RAD', u()], ['RT-F1', 'Cliente recolhe pelo PCONT', u()], ['RT-F2', 'Compensação com créditos', u()]]) +
+      '<p class="dica">E os outros 13 roteiros, na seção 6 da proposta.</p>';
+  }
+  function unitario() {
+    return '<div class="campos">' + campo('DF', '…0004 · entrada · Fornecedor A') + campo('CBS · Receita Federal', 'appropriated R$ 2.000,00 · available R$ 1.500,00') + campo('IBS · Comitê Gestor', 'não utilizado R$ 1.000,00') + '</div>' +
+      '<h4>Lançamento</h4><div class="campos">' + campo('Ente', 'Receita Federal') + campo('Lançamento', 'C07 Utilização') + campo('Valor', 'R$ 1.500,00 (o disponível)') + campo('Data', 'Agora') + '</div>' +
+      '<h4>Antes e depois</h4><div class="campos">' + campo('available', 'R$ 1.500,00 → zero') + campo('Evento', 'credit.utilized') + campo('Inconsistência', 'nenhuma') + '</div>' +
+      '<div class="acoes"><span class="nota">Forçar: desligado</span>' + b('Lançar', 'data-feito="Lançamento gravado. A conferência marcou Atingido."', 'pri') + '</div>';
+  }
+  function simulado() {
+    return '<div class="minis"><div class="mini"><div class="v">14:00</div><div class="l">última emissão, 18/11/2026</div></div><div class="mini warn"><div class="v">2</div><div class="l">alertas da conferência</div></div></div>' +
+      '<div class="acoes esq">' + b('Avançar até agora', 'data-feito="Emitido o que já tinha vencido: 6 lançamentos."', 'pri') + '<span class="nota">No ambiente local não há cron: o botão emite o que já venceu.</span></div>' +
+      '<h4>Plano por DF</h4>' + tab(['DF', 'Já saiu', 'O que vem', 'Quando'], [['…0101', 'CAPUR conciliada', 'Pagamento e apropriação', '30/11/2026'],
+        ['…0102', 'CAPUR divergente', '—', 'parado pelo plano'], ['…0103', 'Pagamento e apropriação', 'Utilização de metade', '30/12/2026']]) +
+      '<h4>Proporções, fixas</h4><p class="dica">CAPUR: 70% conciliada, 20% divergente, 10% pendente. Créditos: 85% apropriados com o pagamento, metade usados 30 dias depois; 3% glosados.</p>';
+  }
+
+  // criar DFs: as características e o resumo
+  function caracteristicas(s) {
+    var m = s.m, h = '<div class="carac">' + campo('Quantidade', '<input class="in num" type="number" min="1" max="1000" value="' + m.qtd + '" data-qtd="1" aria-label="Quantidade de DFs"> DFs, até 1.000');
+    CARAC.forEach(function (c) {
+      var v = m.tg[c[0]] || 'p', ops = c[0] === 'recolh' ? [['p', 'Pré-definido'], ['m', 'Misto'], ['a', 'Padrão']] : [['p', 'Pré-definido'], ['a', 'Aleatório']];
+      var t = '<span class="tg" role="group" aria-label="' + c[1] + '">' + ops.map(function (o) {
+        return '<button type="button" data-tg="' + c[0] + '" data-v="' + o[0] + '" class="' + (v === o[0] ? 'on' : '') + '" aria-pressed="' + (v === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</span>';
+      h += campo(c[1], v === 'm' ? recMisto(m) : v === 'p' ? c[2] : c[3], t, v === 'm' ? 'largo' : '');
+    });
+    return h + campo('CBS e IBS', 'As de 2026: 0,9% e 0,1%') + '</div>';
+  }
+  function selRec(r, k, ops) {
+    var h = '<select class="in" data-rec="' + r.id + '" data-rc="' + k + '">';
+    ops.forEach(function (o) { h += '<option value="' + o[0] + '"' + (o[0] === r[k] ? ' selected' : '') + (o[2] ? ' disabled' : '') + '>' + o[1] + '</option>'; });
+    return h + '</select>';
+  }
+  function recResto(m) {
+    var rc = recCalc(m), en = rc.en;
+    return rc.erros.map(erroH).join('') + 'Os outros <strong>' + fmt(rc.resto) + '</strong> DFs de entrada seguem o contrato do fornecedor. A mistura cria ' + fmt(en.tot) + ' de entrada: ' +
+      Object.keys(en.por).map(function (k) { return fmt(en.por[k]) + ' ' + k; }).join(', ') + '.';
+  }
+  function recMisto(m) {
+    var en = entradasCriadas(m), mods = Object.keys(en.por).map(function (k) { return [k, k]; }).concat([['*', 'Qualquer modelo']]), h = '<div class="rec">';
+    m.rec.forEach(function (r, i) {
+      var ms = mods.some(function (x) { return x[0] === r.mod; }) ? mods : mods.concat([[r.mod, r.mod]]);
+      h += '<div class="rec-l"><label>Quantidade<input class="in num" type="number" min="1" max="1000" value="' + r.qtd + '" data-rec="' + r.id + '" data-rc="qtd" aria-label="Quantidade da linha ' + (i + 1) + '"></label>' +
+        '<label class="lmod">Modelo' + selRec(r, 'mod', ms) + '</label><label class="lm">Método' + selRec(r, 'met', METODOS) + '</label>' +
+        '<label>Prazo, dias<input class="in num" type="number" min="1" max="360" value="' + (r.met === 'contrato' ? '' : r.prazo) + '" data-rec="' + r.id + '" data-rc="prazo"' + (r.met === 'contrato' ? ' disabled placeholder="do contrato"' : '') + ' aria-label="Prazo da linha ' + (i + 1) + ', em dias"></label>' +
+        b('×', 'data-recrm="' + r.id + '" aria-label="Tirar a linha ' + (i + 1) + '"', 'sec') + '</div>';
+    });
+    return h + '<div class="rec-resto" data-recresto="1">' + recResto(m) + '</div><div class="acoes esq">' + b('Adicionar linha', 'data-recadd="1"', 'sec') + '</div></div>';
+  }
+  function recResumo(m) {
+    var rc = recCalc(m), en = rc.en, modo = m.tg.recolh || 'p', h = '<div class="bl">Recolhimento · ' + fmt(en.tot) + ' DFs de entrada</div>';
+    if (modo !== 'm' || !en.tot) return h + '<p class="dica">' + (!en.tot ? 'A mistura não cria DF de entrada.' : modo === 'p' ? 'Todos com RAD, prazo de 30 dias, por cima do contrato.' : 'Todos pelo contrato do fornecedor; sem contrato, o fornecedor recolhe.') + '</p>';
+    if (rc.erros.length) return h + '<p class="dica">O recolhimento misto tem erro: veja as linhas. Nada é criado até corrigir.</p>';
+    var br = '<div class="bar">', lg = '<div class="lg">';
+    m.rec.forEach(function (r, i) {
+      var c = 'c' + (i % 6 + 1);
+      br += '<span class="' + c + '" style="width:' + (100 * r.qtd / en.tot) + '%"></span>';
+      lg += '<span><i class="' + c + '"></i>' + fmt(r.qtd) + ' ' + (r.mod === '*' ? 'de qualquer modelo' : r.mod) + ' · ' + nomeDe(METODOS, r.met) + (r.met === 'contrato' ? '' : ', ' + r.prazo + ' dias') + '</span>';
+    });
+    if (rc.resto) { br += '<span class="c0" style="width:' + (100 * rc.resto / en.tot) + '%"></span>'; lg += '<span><i class="c0"></i>' + fmt(rc.resto) + ' pelo contrato do fornecedor</span>'; }
+    return h + br + '</div>' + lg + '</div>';
+  }
+  function resumoCriar(s) {
+    var m = s.m, q = m.qtd, mx = mistura(m), tipos = mx.tipos, vAl = (m.tg.valor || 'p') === 'a';
+    var bar = '<div class="bar">', lg = '<div class="lg">';
+    tipos.forEach(function (x, i) { var c = 'c' + (i % 6 + 1); bar += '<span class="' + c + '" style="width:' + (100 * x.n / q) + '%" title="' + x.rot + '"></span>'; lg += '<span><i class="' + c + '"></i>' + x.rot + ' · ' + fmt(x.n) + '</span>'; });
+    var media = vAl ? 50500 : 10000, pre = vAl ? 'cerca de ' : '';
+    return '<div class="bl">' + fmt(q) + ' DFs, por tipo' + (mx.al ? ' (sorteio; os números são o esperado)' : '') + '</div>' + bar + '</div>' + lg + '</div>' + recResumo(m) +
+      '<div class="campos">' + campo('Valor somado', pre + rs(q * media)) + campo('CBS, 0,9%', pre + rs(q * media * 0.009)) + campo('IBS, 0,1%', pre + rs(q * media * 0.001)) + '</div>' +
+      '<h4>Os primeiros</h4>' + tab(['DF', 'Tipo', 'Valor', 'CBS', 'IBS'], (vAl ? [10000, 2000, 50000] : [10000, 10000, 10000]).map(function (v, i) {
+        return ['…000' + (i + 1), tipos[i % tipos.length].rot, rs(v), rs(v * 0.009), rs(v * 0.001)]; }), [2, 3, 4]);
+  }
+  function botoesCriar(s, extra) {
+    var trav = recCalc(s.m).erros.length ? ' disabled' : '';
+    return b('Criar ' + fmt(s.m.qtd) + ' DFs', 'data-criar="1" data-feito="' + fmt(s.m.qtd) + ' DFs criados, marcados como emulados."' + trav) +
+      b('Criar e seguir para as ações', 'data-go="lote" data-orig="criar"' + (extra || '') + trav, 'pri');
+  }
+
+  // prévia do lote
+  function previa(s, c) {
+    var m = s.m, h = '';
+    if (c.erros.length) h += c.erros.map(function (x) { return '<div class="erro">' + x + '</div>'; }).join('');
+    h += '<div class="minis"><div class="mini"><div class="v">' + fmt(c.ating) + '</div><div class="l">DFs atingidos, de ' + fmt(c.tam[0]) + '</div></div>' +
+      '<div class="mini"><div class="v">' + fmt(c.lanc) + '</div><div class="l">lançamentos</div></div>' +
+      '<div class="mini"><div class="v">' + fmt(c.sem) + '</div><div class="l">sem lançamento</div></div></div>';
+    return h;
+  }
+  function barras(s, c) {
+    var m = s.m, h = '';
+    function barra(base, titulo) {
+      var g = c.grupos[base] || [], n = c.tam[base] || 0;
+      if (!g.length || !n) return '';
+      var usados = 0, br = '<div class="bar">', lg = '<div class="lg">';
+      g.forEach(function (a) {
+        var k = c.cnt[a.id] || 0, cl = 'c' + ((a.id - 1) % 6 + 1); usados += k;
+        br += '<span class="' + cl + '" style="width:' + Math.min(100, 100 * k / n) + '%" title="Ação ' + a.id + '"></span>';
+        lg += '<span><i class="' + cl + '"></i>' + a.id + ' · ' + a.re + ' · ' + fmt(k) + '</span>';
+      });
+      if (n - usados > 0) { br += '<span class="c0" style="width:' + (100 * (n - usados) / n) + '%"></span>'; lg += '<span><i class="c0"></i>' + (base ? 'só a ação ' + base : 'sem lançamento') + ' · ' + fmt(n - usados) + '</span>'; }
+      return '<div class="bl">' + titulo + ' · ' + fmt(n) + ' DFs</div>' + br + '</div>' + lg + '</div>';
+    }
+    h += barra(0, 'O lote');
+    m.acoes.forEach(function (a) { h += barra(a.id, 'Os DFs da ação ' + a.id); });
+    return h;
+  }
+  function tabelaFim(s, c) {
+    var l = c.linhas.map(function (x) { return [x[0], fmt(x[1]), fmt(x[2]), x[3]]; });
+    if (c.sem > 0) l.push(['Sem lançamento', fmt(c.sem), '0', '—']);
+    if (c.fora) l.push(['Fora do alcance (já glosados no ente)', fmt(c.fora), '0', '—']);
+    return tab(['No fim', 'DFs', 'Lançamentos', 'O que a plataforma mostra'], l, [1, 2]);
+  }
+  function gravarBloco(s, c) {
+    return '<div class="sem">Semente <code>' + s.m.sem + '</code>' + b('Sortear outra', 'data-sortear="1"', 'sec') + '<span>muda quais DFs, não quantos.</span></div>' +
+      '<div class="acoes">' + (c.ating > 100 ? '<span class="nota">Digite ' + c.ating + ' para confirmar: <input class="in conf" inputmode="numeric" data-conf="1" value="' + s.m.conf + '" aria-label="Número de DFs para confirmar"></span>' : '<span class="nota">Nada é gravado antes de confirmar.</span>') +
+      b('Gravar ' + fmt(c.lanc) + ' lançamentos', 'data-gravar="1"' + (podeGravar(s.m, c) ? '' : ' disabled'), 'pri') + '</div>';
+  }
+  function origem(s) {
+    var o = s.m.orig;
+    return '<div class="acoes esq">' + [['filtrar', 'Filtrar os DFs do cliente'], ['criar', 'Criar DFs'], ['dois', 'Os dois']].map(function (x) {
+      return b(x[1], 'data-orig="' + x[0] + '" aria-pressed="' + (o === x[0]) + '"', o === x[0] ? 'on' : ''); }).join('') + '</div>';
+  }
+  function chps(k, ops, f, fc) {
+    var multi = Array.isArray(f[k]);
+    return '<div class="chps">' + ops.map(function (o) {
+      var on = multi ? f[k].indexOf(o[0]) >= 0 : f[k] === o[0];
+      return '<button type="button" class="chp' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-f="' + k + '" data-fv="' + o[0] + '">' + o[1] +
+        (fc ? '<small data-fc="' + k + '|' + o[0] + '">' + fmt(fc[k][o[0]] || 0) + '</small>' : '') + '</button>';
+    }).join('') + '</div>';
+  }
+  function fg(t, h) { return '<div class="fg"><div class="fg-t">' + t + '</div>' + h + '</div>'; }
+  function direcao(m) {
+    return '<div class="flt">' + fg('Direção do lote', chps('dir', [['entrada', 'Entrada · crédito'], ['saida', 'Saída · débito']], m.f)) +
+      fg('Tributo', chps('trib', [['dois', 'CBS e IBS'], ['cbs', 'Só CBS'], ['ibs', 'Só IBS']], m.f)) + '</div>';
+  }
+  function filtro(m) {
+    var f = m.f, r = filtrar(f), ent = f.dir === 'entrada', lista = function (l) { return l.map(function (x) { return [x, x]; }); };
+    return '<div class="flt">' +
+      fg('Empresa do grupo', chps('emp', EMP.map(function (e) { return [e[0], e[1] + ' ' + e[2]]; }), f, r.fc)) +
+      fg('Competência', chps('comp', lista(COMPS), f, r.fc)) +
+      fg('Modelo', chps('mod', lista(MODS), f, r.fc)) +
+      fg(ent ? 'Fornecedor' : 'Cliente', chps('contra', lista(ent ? FORN : CLIS), f, r.fc)) +
+      (ent ? fg('Método de recolhimento', chps('met', METS, f, r.fc)) : '') +
+      fg('Situação no ente', chps('sit', SITS[f.dir], f, r.fc)) +
+      fg('Faixa de valor', '<div class="faixa">de R$ <input class="in" type="number" min="0" step="1000" value="' + f.vmin + '" data-fval="vmin" aria-label="Valor mínimo, em reais"> até R$ <input class="in" type="number" min="0" step="1000" value="' + f.vmax + '" data-fval="vmax" aria-label="Valor máximo, em reais"></div>') +
+      '</div><p class="dica">Sem nada marcado num filtro, vale tudo. O número em cada opção é quantos DFs ela traz com os outros filtros.</p>' +
+      '<div class="fres" data-fres="1">' + fres(m, r) + '</div>';
+  }
+  function fres(m, r) {
+    var t = 'O filtro pega <strong>' + fmt(r.n) + ' DFs</strong>' + (r.g ? '; ' + fmt(r.g) + (r.g === 1 ? ' já está glosado no ente e fica fora' : ' já estão glosados no ente e ficam fora') : '') + '. <strong>' + fmt(r.eleg) + ' elegíveis.</strong>';
+    if (!r.eleg) return t + ' Nenhum DF elegível com esses filtros.';
+    return t + '<details' + (m.fver ? ' open' : '') + ' data-fver="1"><summary>Ver os primeiros DFs do filtro</summary>' + tab(['DF', 'Empresa', 'Modelo', 'Contraparte', 'Valor', 'Situação'], r.prim.map(function (d) {
+      return ['…' + ('000' + d.n).slice(-4), nomeDe(EMP, d.emp), d.mod, d.contra, rs(d.v), nomeDe(SITS[d.dir], d.sit) + (d.met ? ' · ' + nomeDe(METS, d.met) : '')]; }), [4]) + '</details>';
+  }
+  function gravarExec(s) {
+    var c = calc(s.m), n = 5 + s.execs.length;
+    s.execs.push({ n: n, quando: '19/11/2026 10:' + (10 + s.execs.length * 7), oque: 'Lote · ' + s.m.acoes.length + ' ações · ' + fmt(c.ating) + ' DFs · ' + fmt(c.lanc) + ' lançamentos', sit: chip('ok', 'Atingido') + ' ' + fmt(c.ating) + ' de ' + fmt(c.ating), lanc: c.lanc, c: c });
+    s.m.conf = ''; s.exec = n; s.view = 'execucoes'; s.aba = 'conf';
+    s.msg = 'Execução ' + n + ' gravada. A conferência roda sozinha.';
+  }
+  function detalheExec(s) {
+    var e = todasExecs(s).filter(function (x) { return x.n === s.exec; })[0];
+    if (!e) return '';
+    var res = '<div class="campos">' + campo('Quando', e.quando) + campo('Autor', 'Administrador da plataforma') + campo('O quê', e.oque) + campo('Conferência', e.sit) + campo('Semente', '4721') + '</div>';
+    var conf = e.div ? tab(['DF', 'Ações', 'Ente', 'Esperado', 'Encontrado', 'Situação'], [
+        ['…0001', '1 e 4', 'CBS', 'utilized R$ 1.000,00', 'utilized R$ 1.000,00', chip('ok', 'Atingido')],
+        ['…0002', '2', 'CBS', 'not_appropriable', 'not_appropriable', chip('ok', 'Atingido')],
+        ['…0007', '3', 'CBS', 'capur_cbs_divergente', 'nenhuma inconsistência', chip('red', 'Divergente')]])
+      : e.c ? tab(['No fim', 'DFs', 'Situação'], e.c.linhas.map(function (x) { return [x[0], fmt(x[1]), chip('ok', 'Atingido')]; }), [1])
+      : tab(['DF', 'Situação'], [['…0001', chip('ok', 'Atingido')], ['…0002', chip('ok', 'Atingido')]]);
+    var lanc = tab(['DF', 'Lançamento', 'Ente', 'Quando'], [['…0001', 'C02 Apropriação', 'Receita Federal', e.quando], ['…0001', 'IBS-05 Apropriação', 'Comitê Gestor', e.quando], ['…0002', 'C04 Glosa', 'Receita Federal', e.quando]]);
+    return { res: res, conf: conf, lanc: lanc, e: e };
+  }
+
+  // ── A · assistente em passos ──
+  function loteA(s) {
+    var m = s.m, c = calc(m), h = '<div class="passos">';
+    ['DFs', 'Ações', 'Quando', 'Prévia'].forEach(function (x, i) { h += '<button type="button" class="passo' + (s.step === i + 1 ? ' on' : '') + '" data-step="' + (i + 1) + '">' + (i + 1) + ' · ' + x + '</button>'; });
+    h += '</div>';
+    if (s.step === 1) {
+      h += origem(s) + direcao(m);
+      if (m.orig !== 'criar') h += filtro(m);
+      if (m.orig !== 'filtrar') h += '<div class="card"><div class="card-t">DFs novos</div><p class="dica">' + criadosTxt(m) + '</p>' + b('Definir os DFs', 'data-go="criar"') + '</div>';
+      h += '<p class="dica"><strong>Lote: <span data-nlote="1">' + fmt(nLote(m)) + ' elegíveis</span>.</strong></p>';
+    } else if (s.step === 2) {
+      if (s.erroPasso) h += c.erros.map(function (x) { return '<div class="erro">' + x + '</div>'; }).join('');
+      h += tab(['#', 'Resultado', 'Ente', 'Base', '%', ''], m.acoes.map(function (a) {
+        return [String(a.id), sel('re', a.id, opcoesRes(), a.re), sel('ente', a.id, ENTES, a.ente), sel('base', a.id, opcoesBase(m, a), a.base),
+          '<input class="in num" type="number" min="0" max="100" value="' + a.pct + '" data-campo="pct" data-id="' + a.id + '" aria-label="Percentual da ação ' + a.id + '">',
+          b('Tirar', 'data-rm="' + a.id + '"', 'sec')];
+      })) + '<div class="acoes esq">' + b('Adicionar ação', 'data-add="1"', 'sec') + b('Usar um cenário pronto', 'data-go="cenarios"', 'sec') + '</div>';
+    } else if (s.step === 3) {
+      h += tab(['#', 'Resultado', 'Quando'], m.acoes.map(function (a) { return [String(a.id), a.re + ' · ' + RESM[a.re].n, sel('q', a.id, QUANDO, a.q)]; }));
+    } else {
+      h += previa(s, c) + tabelaFim(s, c) + gravarBloco(s, c);
+    }
+    if (s.step < 4) h += '<div class="acoes">' + (s.step > 1 ? b('Voltar', 'data-step="' + (s.step - 1) + '"') : '') + b('Avançar', 'data-avancar="1"', 'pri') + '</div>';
+    else h += '<div class="acoes esq">' + b('Voltar', 'data-step="3"') + '</div>';
+    return h;
+  }
+  function criarA(s) {
+    var h = '<div class="passos">' + ['Características', 'Revisar e criar'].map(function (x, i) { return '<button type="button" class="passo' + (s.sub === i + 1 ? ' on' : '') + '" data-sub="' + (i + 1) + '">' + (i + 1) + ' · ' + x + '</button>'; }).join('') + '</div>';
+    if (s.sub === 1) return h + caracteristicas(s) + '<div class="acoes">' + b('Avançar', 'data-sub="2"', 'pri') + '</div>';
+    return h + resumoCriar(s) + '<div class="acoes">' + b('Voltar', 'data-sub="1"') + botoesCriar(s, ' data-step="2"') + '</div>';
+  }
+  function execA(s) {
+    if (!s.exec) return '<h4>Execuções</h4>' + listaExec(s) + '<p class="dica">Clique numa execução para abrir a página dela.</p>';
+    var d = detalheExec(s), abas = [['res', 'Resumo'], ['conf', 'Conferência DF a DF'], ['lanc', 'Lançamentos']];
+    return '<div class="acoes esq">' + b('← Execuções', 'data-go="execucoes" data-exec="0"', 'sec') + '</div><h4>Execução ' + d.e.n + '</h4><div class="etabs">' +
+      abas.map(function (x) { return '<button type="button" class="stab' + (s.aba === x[0] ? ' on' : '') + '" data-aba="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      d[s.aba] + (s.aba === 'conf' ? '<div class="acoes">' + b('Exportar CSV', '', 'sec') + b('Baixar o lote em JSON', '', 'sec') + '</div>' : '');
+  }
+
+  // ── B · montador numa tela só ──
+  function loteBEsq(s) {
+    var m = s.m, c = calc(m), h = '<div class="bloco"><div class="bloco-t"><span>1 · Os DFs</span><span class="cnt" data-nlote="1">' + fmt(nLote(m)) + ' elegíveis</span></div>' + origem(s) + direcao(m);
+    if (m.orig !== 'criar') h += filtro(m);
+    if (m.orig !== 'filtrar') h += '<h4>DFs novos</h4>' + caracteristicas(s) + '<p class="dica" data-ncri="1">' + criadosTxt(m) + '</p>';
+    h += '</div><div class="bloco"><div class="bloco-t"><span>2 · As ações</span>' + b('Usar um cenário pronto', 'data-go="cenarios"', 'sec') + '</div>';
+    m.acoes.forEach(function (a) {
+      var md = mudo(a, m.f.trib), e3 = RESM[a.re].e !== 'E2';
+      h += '<div class="ac' + (e3 ? ' e3' : '') + '"><div class="ac-h"><span class="id">' + a.id + '</span>' + sel('re', a.id, opcoesRes(), a.re, ' aria-label="Resultado da ação ' + a.id + '"') +
+        '<span class="cnt" data-cnt="' + a.id + '">' + fmt(c.cnt[a.id] || 0) + ' DFs</span>' + b('×', 'data-rm="' + a.id + '" aria-label="Tirar a ação ' + a.id + '"', 'sec') + '</div>' +
+        '<div class="ac-c"><label>Ente' + sel('ente', a.id, ENTES, a.ente) + '</label><label>Base' + sel('base', a.id, opcoesBase(m, a), a.base) + '</label>' +
+        '<label>Percentual<span class="pct"><input class="rg" type="range" min="0" max="100" value="' + a.pct + '" data-campo="pct" data-id="' + a.id + '" aria-label="Percentual da ação ' + a.id + '">' +
+        '<input class="in num" type="number" min="0" max="100" value="' + a.pct + '" data-campo="pct" data-id="' + a.id + '" aria-label="Percentual da ação ' + a.id + ', em número"></span></label>' +
+        '<label>Quando' + sel('q', a.id, QUANDO, a.q) + '</label></div>' + (md ? '<div class="nota">' + md + '</div>' : '') + '</div>';
+    });
+    return h + '<div class="acoes esq">' + b('Adicionar ação', 'data-add="1"', 'sec') + '</div></div>';
+  }
+  function loteBDir(s) {
+    var c = calc(s.m);
+    return '<div class="pv"><div class="pv-t">Prévia, ao vivo</div>' + previa(s, c) + barras(s, c) + '<h4>No fim</h4>' + tabelaFim(s, c) + gravarBloco(s, c) + '</div>';
+  }
+  function criarB(s) {
+    return '<div class="mont"><div><div class="bloco"><div class="bloco-t"><span>Os DFs novos</span></div>' + caracteristicas(s) + '</div></div>' +
+      '<div class="pv" data-pvcriar="1">' + pvCriar(s) + '</div></div>';
+  }
+  function pvCriar(s) { return '<div class="pv-t">O que vai ser criado</div>' + resumoCriar(s) + '<div class="acoes">' + botoesCriar(s) + '</div>'; }
+  function criadosTxt(m) {
+    return 'De ' + fmt(m.qtd) + ' DFs criados, ' + fmt(criadosDir(m)) + ' são de ' + (m.f.dir === 'entrada' ? 'entrada' : 'saída') + ' e entram no lote, que é de ' + (m.f.dir === 'entrada' ? 'entrada' : 'saída') + '.';
+  }
+  function execB(s) {
+    var ex = todasExecs(s), h = '<div class="md"><div class="lst-ex">';
+    ex.forEach(function (e) { h += '<button type="button" class="it' + (s.exec === e.n ? ' on' : '') + '" data-exec="' + e.n + '" data-go="execucoes"><strong>Execução ' + e.n + '</strong> · ' + e.quando + '<small>' + e.oque + '</small><small>' + e.sit + '</small></button>'; });
+    h += '</div><div>';
+    if (!s.exec) h += '<div class="vazio">Escolha uma execução na lista.</div>';
+    else { var d = detalheExec(s); h += '<div class="pv"><div class="pv-t">Execução ' + d.e.n + '</div>' + d.res + '<h4>Conferência DF a DF</h4>' + d.conf + '<h4>Lançamentos</h4>' + d.lanc + '<div class="acoes">' + b('Exportar CSV', '', 'sec') + b('Baixar o lote em JSON', '', 'sec') + '</div></div>'; }
+    return h + '</div></div>';
+  }
+
+  function tela(L, s) {
+    var v = s.view;
+    if (v === 'criar') return L === 'A' ? criarA(s) : criarB(s);
+    if (v === 'lote') return L === 'A' ? loteA(s) : '<div class="mont"><div id="ml-B">' + loteBEsq(s) + '</div><div id="mr-B">' + loteBDir(s) + '</div></div>';
+    if (v === 'execucoes') return L === 'A' ? execA(s) : execB(s);
+    if (v === 'cenarios') return cenarios(s);
+    if (v === 'unitario') return unitario();
+    if (v === 'simulado') return simulado();
+    return painel(s);
+  }
+  var EST = {};
+  function render(L) {
+    var s = EST[L], fr = document.getElementById('fr-' + L), nome = TELAS.filter(function (t) { return t[0] === s.view; })[0][1];
+    var url = '/admin/clientes/cli_teste/emulador' + (s.view === 'execucoes' && s.exec ? '/execucoes/' + s.exec : SLUG[s.view]);
+    var menu = '<nav class="ws-menu" aria-label="Emulador">';
+    TELAS.forEach(function (t) { menu += '<button type="button" class="mi' + (s.view === t[0] ? ' on' : '') + '" data-go="' + t[0] + '"' + (s.view === t[0] ? ' aria-current="page"' : '') + '>' + t[1] + '</button>'; });
+    menu += '</nav>';
+    fr.innerHTML = '<div class="fr-url"><span class="pt"></span><span class="u">admin.splithub · ' + url + '</span></div>' +
+      '<div class="fr-top"><div><span class="eb">SplitHub</span><span class="nm">Administração da plataforma</span></div><div class="fr-nav">' +
+      b('Clientes', 'aria-current="page"', 'on') + b('Administradores', 'disabled') + b('Minha conta', 'disabled') + '</div></div>' +
+      '<div class="fr-main"><div class="bc">Cliente de teste › Fonte dos entes › <strong>Emulador</strong> · ' + nome + '</div>' +
+      (s.msg ? '<div class="msg">' + s.msg + '</div>' : '') + '<div class="ws">' + menu + '<div class="ws-main">' + tela(L, s) + '</div></div></div>';
+  }
+  // B: só a prévia muda enquanto se digita, para o campo não perder o foco
+  // atualiza o que depende dos números sem refazer os campos, para o campo em que se digita não perder o foco
+  function renderPrevia(L) {
+    var s = EST[L], m = s.m, fr = document.getElementById('fr-' + L), c = calc(m), r = filtrar(m.f), um = function (sel) { return fr.querySelector(sel); };
+    if (um('#mr-B')) um('#mr-B').innerHTML = loteBDir(s);
+    fr.querySelectorAll('[data-cnt]').forEach(function (x) { x.textContent = fmt(c.cnt[+x.getAttribute('data-cnt')] || 0) + ' DFs'; });
+    fr.querySelectorAll('[data-fc]').forEach(function (x) { var p = x.getAttribute('data-fc').split('|'); x.textContent = fmt(r.fc[p[0]][p[1]] || 0); });
+    if (um('[data-nlote]')) um('[data-nlote]').textContent = fmt(nLote(m)) + ' elegíveis';
+    if (um('[data-fres]')) um('[data-fres]').innerHTML = fres(m, r);
+    if (um('[data-ncri]')) um('[data-ncri]').textContent = criadosTxt(m);
+    if (um('[data-recresto]')) um('[data-recresto]').innerHTML = recResto(m);
+    if (um('[data-pvcriar]')) um('[data-pvcriar]').innerHTML = pvCriar(s);
+  }
+  function trava(L) {
+    var s = EST[L], c = calc(s.m), g = document.getElementById('fr-' + L).querySelector('[data-gravar]');
+    if (g) g.disabled = !podeGravar(s.m, c);
+  }
+
+  ['A', 'B'].forEach(function (L) {
+    EST[L] = { view: 'lote', step: 1, sub: 1, aba: 'conf', exec: 0, msg: '', execs: [], erroPasso: false,
+               m: { orig: 'filtrar', qtd: 1000, tg: {}, sem: 4721, conf: '', acoes: acoesPadrao(), prox: 6, f: filtroPadrao(), fver: false, rec: [], recProx: 1, recTocado: false } };
+    var fr = document.getElementById('fr-' + L);
+    fr.addEventListener('click', function (ev) {
+      var el = ev.target.closest('button, tr.clic');
+      if (!el || el.disabled || !fr.contains(el)) return;
+      var s = EST[L], m = s.m, a = function (n) { return el.getAttribute(n); };
+      s.msg = '';
+      if (a('data-go')) { s.view = a('data-go'); if (s.view === 'lote' && !a('data-step')) s.step = 1; if (s.view === 'criar') s.sub = 1; }
+      if (a('data-exec') !== null) { s.exec = +a('data-exec'); s.aba = 'conf'; }
+      if (a('data-step')) { s.step = +a('data-step'); s.erroPasso = false; }
+      if (a('data-avancar')) { var c = calc(m); if (s.step === 2 && c.erros.length) s.erroPasso = true; else { s.step++; s.erroPasso = false; } }
+      if (a('data-sub')) s.sub = +a('data-sub');
+      if (a('data-aba')) s.aba = a('data-aba');
+      if (a('data-orig')) m.orig = a('data-orig');
+      if (a('data-tg')) { m.tg[a('data-tg')] = a('data-v'); if (a('data-tg') === 'recolh' && a('data-v') === 'm' && !m.recTocado) m.rec = recPadrao(m); }
+      if (a('data-f')) {
+        var fk = a('data-f'), fv = a('data-fv'), f = m.f;
+        if (fk === 'dir') { if (f.dir !== fv) { f.dir = fv; f.contra = []; f.met = []; f.sit = fv === 'entrada' ? ['apropriar'] : ['aberto']; } }
+        else if (fk === 'trib') f.trib = fv;
+        else { var ix = f[fk].indexOf(fv); if (ix >= 0) f[fk].splice(ix, 1); else f[fk].push(fv); }
+      }
+      if (a('data-recadd')) { m.rec.push({ id: m.recProx++, qtd: 10, mod: '*', met: 'fornecedor', prazo: 30 }); m.recTocado = true; }
+      if (a('data-recrm')) { m.rec = m.rec.filter(function (x) { return x.id !== +a('data-recrm'); }); m.recTocado = true; }
+      if (a('data-add')) m.acoes.push({ id: m.prox++, re: 'RE-01', ente: 'dois', base: 0, pct: 0, q: 'agora' });
+      if (a('data-rm')) {
+        var id = +a('data-rm'), alvo = m.acoes.filter(function (x) { return x.id === id; })[0];
+        m.acoes = m.acoes.filter(function (x) { return x.id !== id; });
+        m.acoes.forEach(function (x) { if (x.base === id) x.base = alvo.base; });
+      }
+      if (a('data-cen')) { m.acoes = acoesPadrao(); m.prox = 6; s.view = 'lote'; s.step = 2; s.msg = 'As ações do cenário entraram no lote. Ajuste o que quiser.'; }
+      if (a('data-sortear')) m.sem = 1000 + Math.floor(Math.random() * 9000);
+      if (a('data-feito')) s.msg = a('data-feito');
+      if (a('data-gravar')) gravarExec(s);
+      render(L);
+    });
+    function campo(ev, vivo) {
+      var el = ev.target, s = EST[L], m = s.m;
+      if (el.hasAttribute('data-qtd')) {
+        m.qtd = Math.max(1, Math.min(1000, Math.round(+el.value || 1)));
+        if (m.tg.recolh === 'm' && !m.recTocado) {  // linhas que ninguém mexeu acompanham a quantidade
+          var novas = recPadrao(m);
+          if (novas.length !== m.rec.length) { m.rec = novas; render(L); return; }
+          m.rec = novas;
+          novas.forEach(function (r) { var x = fr.querySelector('input[data-rec="' + r.id + '"][data-rc="qtd"]'); if (x) x.value = r.qtd; });
+        }
+        renderPrevia(L);
+        return;
+      }
+      if (el.hasAttribute('data-fval')) { m.f[el.getAttribute('data-fval')] = el.value.replace(/\D/g, ''); renderPrevia(L); return; }
+      if (el.hasAttribute('data-rec')) {
+        var rl = m.rec.filter(function (x) { return x.id === +el.getAttribute('data-rec'); })[0], rk = el.getAttribute('data-rc');
+        if (!rl) return;
+        m.recTocado = true;
+        if (rk === 'qtd' || rk === 'prazo') { rl[rk] = Math.max(1, Math.min(rk === 'qtd' ? 1000 : 360, Math.round(+el.value || 1))); renderPrevia(L); return; }
+        rl[rk] = el.value;
+        render(L);
+        return;
+      }
+      if (el.hasAttribute('data-conf')) { m.conf = el.value.replace(/\D/g, ''); trava(L); return; }
+      var nome = el.getAttribute('data-campo'); if (!nome) return;
+      var ac = m.acoes.filter(function (x) { return x.id === +el.getAttribute('data-id'); })[0]; if (!ac) return;
+      if (nome === 'pct') {
+        ac.pct = Math.max(0, Math.min(100, Math.round(+el.value || 0)));
+        fr.querySelectorAll('[data-campo="pct"][data-id="' + ac.id + '"]').forEach(function (x) { if (x !== el) x.value = ac.pct; });
+        if (vivo) renderPrevia(L);
+        return;
+      }
+      ac[nome] = nome === 'base' ? +el.value : el.value;
+      if (vivo || nome === 're') render(L);
+    }
+    fr.addEventListener('input', function (ev) { campo(ev, L === 'B'); });
+    fr.addEventListener('toggle', function (ev) { if (ev.target.hasAttribute && ev.target.hasAttribute('data-fver')) EST[L].m.fver = ev.target.open; }, true);
+    fr.addEventListener('keydown', function (ev) {
+      if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches && ev.target.matches('tr.clic')) { ev.preventDefault(); ev.target.click(); }
+    });
+    render(L);
+  });
+
+  // ── trocar de proposta e escolher ──
+  var bs = [].slice.call(document.querySelectorAll('.seg button'));
+  function mostrar(L) {
+    bs.forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-p') === L ? 'true' : 'false'); });
+    ['A', 'B'].forEach(function (x) { document.getElementById('prop-' + x).hidden = x !== L; });
+  }
+  bs.forEach(function (x) { x.addEventListener('click', function () { mostrar(x.getAttribute('data-p')); try { history.replaceState(null, '', '#' + x.getAttribute('data-p')); } catch (e) {} }); });
+  function marcar() {
+    var atual = (ler()['D-EM-30'] || {}).op;
+    document.querySelectorAll('[data-escolher]').forEach(function (x) { var L = x.getAttribute('data-escolher'); x.textContent = atual === L ? 'Proposta ' + L + ' escolhida' : 'Escolher a proposta ' + L; });
+    return atual;
+  }
+  document.querySelectorAll('[data-escolher]').forEach(function (x) {
+    x.addEventListener('click', function () {
+      var L = x.getAttribute('data-escolher'), o = ler(), ant = o['D-EM-30'] || {};
+      o['D-EM-30'] = { op: L, nota: ant.nota || '' };
+      var ok = gravarLS(o), msg = x.parentNode.querySelector('.esc-msg');
+      msg.textContent = ok ? 'Proposta ' + L + ' escolhida neste navegador. A D-EM-30, na seção 14 da proposta, já mostra a escolha; lá, "Copiar escolhas" monta o texto para mandar de volta.'
+        : 'O navegador não deixou guardar. Escolha a ' + L + ' na D-EM-30, na seção 14 da proposta.';
+      marcar();
+    });
+  });
+  var h = (location.hash || '').replace('#', '');
+  mostrar(['A', 'B'].indexOf(h) >= 0 ? h : (marcar() || 'A'));
+  marcar();
+})();
+</script>
+</body>
+</html>
