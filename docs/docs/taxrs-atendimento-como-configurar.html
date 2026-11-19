@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurar o atendimento · v1.0</title>
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5;
+  --ff-mono:'JetBrains Mono', ui-monospace, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 960px; margin: 0 auto; }
+.back { display: inline-block; font-size: 12px; color: var(--txt3); text-decoration: none; margin-bottom: 18px; }
+.back:hover { color: var(--txt1); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 780px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--teal); }
+.toc-num { color: var(--txt3); font-family: var(--ff-mono); font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; font-family: var(--ff-mono); }
+.sec-title { font-size: 17px; font-weight: 700; }
+.sec-onde { font-size: 12px; color: var(--txt3); margin-left: auto; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 9px 13px; border-bottom: 1px solid var(--brd); vertical-align: top; color: var(--txt2); background: var(--sur); }
+td strong { color: var(--txt1); }
+td.wrap { min-width: 180px; }
+td:first-child { min-width: 120px; }
+td.id { font-family: var(--ff-mono); font-size: 11px; color: var(--txt3); white-space: nowrap; }
+td.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+tbody tr:last-child td { border-bottom: none; }
+code { font-family: var(--ff-mono); font-size: 11.5px; background: var(--mono); padding: 1px 5px; border-radius: 4px; color: var(--txt1); overflow-wrap: anywhere; }
+.doc a:not([class]) { color: var(--blue); text-underline-offset: 2px; }
+.ui { font-weight: 600; color: var(--txt1); background: var(--sur2); border: 1px solid var(--brd); border-radius: 4px; padding: 0 5px; white-space: nowrap; font-size: 12.5px; }
+.foot { margin-top: 40px; font-size: 11px; color: var(--txt3); text-align: center; }
+
+/* o fluxo de um chamado */
+.fluxo { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 14px 0; }
+@media (min-width: 760px) { .fluxo { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.fx { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.fx-t { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 8px; }
+.fx ol { list-style: none; display: flex; flex-direction: column; gap: 0; }
+.fx li { position: relative; padding: 0 0 10px 26px; font-size: 12.5px; color: var(--txt2); }
+.fx li:last-child { padding-bottom: 0; }
+.fx li::before { content: ''; position: absolute; left: 7px; top: 18px; bottom: 0; width: 2px; background: var(--brd); }
+.fx li:last-child::before { display: none; }
+.fx li b { color: var(--txt1); }
+.fx .bo { position: absolute; left: 0; top: 2px; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--teal); background: var(--sur); }
+.fx .bo.p { border-color: var(--amber); }
+/* passos */
+.passos { list-style: none; counter-reset: passo; display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.passos > li { counter-increment: passo; position: relative; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 14px 10px 46px; font-size: 13px; color: var(--txt2); min-width: 0; }
+.passos > li::before { content: counter(passo); position: absolute; left: 12px; top: 10px; width: 22px; height: 22px; border-radius: 50%; background: var(--teal-d); color: var(--teal); font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.passos > li strong { color: var(--txt1); }
+.passos > li ul { margin: 6px 0 0 16px; display: flex; flex-direction: column; gap: 4px; }
+.passos > li ul li { font-size: 12.5px; }
+.campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 8px; margin: 10px 0; }
+.campo { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 9px 12px; min-width: 0; }
+.campo-n { font-size: 12.5px; font-weight: 700; color: var(--txt1); display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.campo-n .ob { font-size: 10px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .05em; }
+.campo-d { font-size: 12px; color: var(--txt2); margin-top: 2px; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.ordem { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0; }
+.ordem a { font-size: 12.5px; font-weight: 600; color: var(--txt1); background: var(--sur); border: 1px solid var(--brd); border-radius: 20px; padding: 4px 12px; text-decoration: none; }
+.ordem a:hover { border-color: var(--teal); }
+.ordem .seta { color: var(--txt3); font-size: 12px; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section { overflow-wrap: anywhere; }
+  .ui { white-space: normal; }
+  .sec-onde { margin-left: 0; flex-basis: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html#sec-taxrs">← Hub de PRDs</a>
+<div class="eyebrow">tax-rs · Modo Demo · Guia</div>
+<h1>Atendimento das inconsistências: como configurar</h1>
+<p class="subtitle">O passo a passo de <strong>Configurações › Atendimento</strong> no modo Demo do tax-rs: os grupos e quem está neles, as regras que levam cada chamado a um grupo, o grupo padrão, a cobertura das regras, os tipos e as regras de SLA, e como conferir o resultado no kanban. Os nomes de botões e campos são os da tela.</p>
+<div class="meta-bar">
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.0</span></span>
+  <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">19/11/2026</span></span>
+  <span class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">main do tax-rs em 1e74ee5, flag <code>atendimento</code> aprovada</span></span>
+  <span class="meta-pill"><span class="meta-label">Proposta</span><span class="meta-val"><a href="proposta-grupos-inconsistencias.html">gestão de inconsistências v2.2</a></span></span>
+</div>
+
+<nav class="toc" aria-label="Sumário">
+  <div class="toc-title">Nesta página</div>
+  <ul class="toc-list">
+    <li><a href="#s0"><span class="toc-num">00</span>Antes de começar</a></li>
+    <li><a href="#s1"><span class="toc-num">01</span>Como um chamado chega a alguém</a></li>
+    <li><a href="#s2"><span class="toc-num">02</span>Grupos</a></li>
+    <li><a href="#s3"><span class="toc-num">03</span>Regras de roteamento</a></li>
+    <li><a href="#s4"><span class="toc-num">04</span>Grupo padrão e chamados sem regra</a></li>
+    <li><a href="#s5"><span class="toc-num">05</span>Matriz de cobertura</a></li>
+    <li><a href="#s6"><span class="toc-num">06</span>Tipos de SLA</a></li>
+    <li><a href="#s7"><span class="toc-num">07</span>Regras de SLA, SLA padrão e teto</a></li>
+    <li><a href="#s8"><span class="toc-num">08</span>Conferir no kanban e no card</a></li>
+    <li><a href="#s9"><span class="toc-num">09</span>Quando algo não sai como esperado</a></li>
+  </ul>
+</nav>
+
+<section class="section" id="s0">
+  <div class="sec-hdr"><span class="sec-num">00</span><span class="sec-title">Antes de começar</span></div>
+  <ul class="plain">
+    <li><strong>Onde fica.</strong> No menu <span class="ui">Configurações</span>, item <span class="ui">Atendimento</span>, que o perfil Administrador vê. A tela tem seis abas: <span class="ui">Grupos</span>, <span class="ui">Regras de roteamento</span>, <span class="ui">Chamados sem regra</span>, <span class="ui">Matriz de cobertura</span>, <span class="ui">Tipos de SLA</span> e <span class="ui">Regras de SLA</span>.</li>
+    <li><strong>Só no modo Demo.</strong> No modo Live, a tela mostra "O atendimento das inconsistências ainda roda só na demonstração".</li>
+    <li><strong>O Demo já vem configurado.</strong> Seis grupos, seis regras de roteamento, três tipos de SLA, sete regras de SLA e o SLA padrão. Dá para começar mexendo no que existe em vez de criar do zero.</li>
+    <li><strong>A configuração vale para os próximos chamados.</strong> Os já criados ficam no grupo onde estão e guardam os prazos da regra de SLA do dia em que nasceram (RN-SLA-03). Para mudar um chamado que já existe, transfira-o no card.</li>
+    <li><strong>No Demo, a configuração vive na aba do navegador.</strong> Navegar pelo produto mantém o que foi mudado; recarregar a página ou abrir outra aba volta à configuração de fábrica do Demo.</li>
+  </ul>
+  <p>A ordem que funciona melhor é a das abas:</p>
+  <div class="ordem">
+    <a href="#s2">Grupos</a><span class="seta">→</span><a href="#s3">Regras de roteamento</a><span class="seta">→</span><a href="#s4">Grupo padrão</a><span class="seta">→</span><a href="#s5">Matriz</a><span class="seta">→</span><a href="#s6">Tipos de SLA</a><span class="seta">→</span><a href="#s7">Regras de SLA</a><span class="seta">→</span><a href="#s8">Conferir</a>
+  </div>
+</section>
+
+<section class="section" id="s1">
+  <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Como um chamado chega a alguém</span></div>
+  <p>Toda inconsistência detectada vira um chamado. Duas configurações agem sobre ele, cada uma por um caminho:</p>
+  <div class="fluxo">
+    <div class="fx">
+      <div class="fx-t">Para quem vai · roteamento</div>
+      <ol>
+        <li><span class="bo"></span><b>As regras de roteamento</b> comparam a família ou o tipo da inconsistência e o tipo de DF.</li>
+        <li><span class="bo"></span><b>A regra que vence</b> manda o chamado para um grupo. Se nenhuma casa, ele vai para o <b>grupo padrão</b>, com a marca "sem regra".</li>
+        <li><span class="bo"></span><b>Dentro do grupo</b>, o responsável sai de um sorteio entre os <b>elegíveis</b> de menor carga.</li>
+        <li><span class="bo p"></span><b>Sem ninguém elegível</b>, o chamado fica na fila do grupo, e o gestor é avisado. A fila é sorteada quando alguém volta.</li>
+      </ol>
+    </div>
+    <div class="fx">
+      <div class="fx-t">Em quanto tempo · SLA</div>
+      <ol>
+        <li><span class="bo"></span><b>As regras de SLA</b> comparam os mesmos critérios. Se nenhuma casa, vale o <b>SLA padrão</b> da família.</li>
+        <li><span class="bo"></span><b>A regra dá o prazo de cada tipo</b>: Primeiro atendimento, Resolução e Retorno do terceiro.</li>
+        <li><span class="bo"></span><b>Cada tipo é um relógio</b>, com começo, fim, pausa e calendário próprios.</li>
+        <li><span class="bo p"></span><b>O teto</b> encurta o prazo quando o crédito afetado vence antes.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Termo</th><th>O que é</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Elegível</strong></td><td>Membro do grupo que pode receber o chamado agora: está ativo, não está ausente e tem um perfil que age sobre a família do chamado.</td></tr>
+      <tr><td><strong>Carga</strong></td><td>Quantos chamados abertos a pessoa tem, somando todos os grupos: aberta, em análise e aguardando terceiro. É o número que o sorteio compara.</td></tr>
+      <tr><td><strong>Grupo padrão</strong></td><td>O grupo que recebe o que nenhuma regra cobre. Sempre existe um, e ele não pode ser desativado.</td></tr>
+      <tr><td><strong>Tipo de SLA</strong></td><td>O que é medido: quando o relógio começa, quando termina, quando pausa e em que calendário conta.</td></tr>
+      <tr><td><strong>Regra de SLA</strong></td><td>Os prazos de cada tipo para um conjunto de famílias, tipos de inconsistência ou tipos de DF.</td></tr>
+      <tr><td><strong>Teto</strong></td><td>O limite do prazo pelo crédito: o chamado nunca vence depois do prazo da parte do crédito afetada, menos a folga da regra.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="section" id="s2">
+  <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Grupos</span><span class="sec-onde">Aba Grupos</span></div>
+  <p>Os membros vêm da lista de usuários, com o perfil e o escopo de cada um. Administrador e Fiscal operam todas as famílias; Tesouraria, só a família D; Leitura não entra em grupo.</p>
+  <h3>Criar ou editar um grupo</h3>
+  <ol class="passos">
+    <li>Clique em <span class="ui">+ Novo grupo</span>, ou em <span class="ui">Editar</span> na linha do grupo.</li>
+    <li>Preencha os dados do grupo:
+      <div class="campos">
+        <div class="campo"><div class="campo-n">Nome <span class="ob">obrigatório</span></div><div class="campo-d">Único: dois grupos não podem ter o mesmo nome.</div></div>
+        <div class="campo"><div class="campo-n">Gestor <span class="ob">obrigatório</span></div><div class="campo-d">Recebe os avisos do grupo, como o de fila sem ninguém elegível e o de prazo estourado.</div></div>
+        <div class="campo"><div class="campo-n">Descrição</div><div class="campo-d">O que o grupo trata. Aparece embaixo do nome na lista.</div></div>
+        <div class="campo"><div class="campo-n">Grupo ativo</div><div class="campo-d">Desmarcado, o grupo deixa de aparecer na escolha das regras e do grupo padrão.</div></div>
+      </div>
+    </li>
+    <li>Em <span class="ui">+ Adicionar usuário…</span>, escolha a pessoa e clique em <span class="ui">Adicionar</span>. Só aparecem Administrador, Fiscal e Tesouraria.</li>
+    <li>Na coluna <strong>Disponibilidade</strong> de cada membro, deixe <span class="ui">Disponível</span> ou escolha <span class="ui">Ausente até</span> e a data de volta, que precisa ser futura.</li>
+    <li>Clique em <span class="ui">Salvar grupo</span>. Enquanto faltar algo, o botão fica travado, e a linha acima dele diz o que falta.</li>
+  </ol>
+  <h3>O que acontece em cada mudança</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Mudança</th><th>Efeito</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Membro ausente</strong></td><td class="wrap">Sai do sorteio e mantém os chamados que já tem. Na data de volta, entra no sorteio de novo, sozinho.</td></tr>
+      <tr><td><strong>Membro removido</strong></td><td class="wrap">Os chamados abertos dele neste grupo são sorteados de novo entre os elegíveis. O aviso aparece antes de salvar.</td></tr>
+      <tr><td><strong>Membro de Tesouraria</strong></td><td class="wrap">Recebe só a família D. Se uma regra trouxer outra família para o grupo, ele fica fora do sorteio desses chamados.</td></tr>
+      <tr><td><strong>Grupo desativado</strong></td><td class="wrap">Só depois de transferir os chamados abertos dele. O grupo padrão não pode ser desativado.</td></tr>
+      <tr><td><strong>Grupo padrão</strong></td><td class="wrap">Precisa de pelo menos um membro disponível; sem isso, não salva.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Conferir</h3>
+  <ul class="plain">
+    <li>A coluna <strong>Elegíveis agora</strong> mostra quantos membros podem receber chamados neste momento; a <strong>Situação</strong> fica <span class="chip ok">Ativo</span>, <span class="chip warn">Sem elegíveis</span> ou <span class="chip gray">Inativo</span>.</li>
+    <li>Grupo sem ninguém elegível ganha uma caixa amarela embaixo da tabela, com quem está ausente e até quando.</li>
+    <li>A tabela <strong>Carga de cada pessoa</strong> mostra, por pessoa, os grupos e os chamados abertos com ela.</li>
+  </ul>
+  <p>O Demo já traz seis grupos: Fiscal — Confronto, Tesouraria — Recolhimento, Cadastro e Ingestão, Fiscal — Ciclo do crédito, Serviços tomados e Fila geral, que é o padrão.</p>
+</section>
+
+<section class="section" id="s3">
+  <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Regras de roteamento</span><span class="sec-onde">Aba Regras de roteamento</span></div>
+  <p>Cada regra diz: chamados com estes critérios vão para este grupo.</p>
+  <h3>Criar ou editar uma regra</h3>
+  <ol class="passos">
+    <li>Clique em <span class="ui">+ Nova regra</span>, ou em <span class="ui">Editar</span> na linha da regra.</li>
+    <li>Marque os critérios. Pelo menos um; o que ficar vazio vale como "qualquer".
+      <ul>
+        <li><strong>Família ou tipo de inconsistência.</strong> Marcar a família inteira marca e trava os tipos dela, e inclui os tipos que o catálogo ganhar depois. Para uma regra só de alguns tipos, marque os tipos sem marcar a família.</li>
+        <li><strong>Tipo de DF.</strong> NF-e, NFS-e, CT-e e os outros modelos.</li>
+      </ul>
+    </li>
+    <li>Escolha o <strong>Grupo</strong>, obrigatório, entre os grupos ativos, e deixe <span class="ui">Regra ativa</span> marcada.</li>
+    <li>Leia a prévia, embaixo: quantos chamados de hoje casariam com a regra. Eles ficam onde estão; a regra vale para os próximos.</li>
+    <li>Clique em <span class="ui">Salvar regra</span>.</li>
+  </ol>
+  <h3>Qual regra vence</h3>
+  <p>Quando mais de uma regra casa com o chamado, <strong>vence a mais específica</strong>: a que tem mais critérios (família ou tipo, e tipo de DF). <strong>No empate, vence a que está antes na lista.</strong> As setas ↑ e ↓ da coluna Ordem mudam a posição.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Chamado</th><th>Regras que casam</th><th>Vence</th><th>Por quê</th></tr></thead>
+    <tbody>
+      <tr><td class="wrap">Família B numa NF-e</td><td class="wrap">R-03 (família B)</td><td class="wrap">R-03 → Fiscal — Confronto</td><td class="wrap">Só ela casa</td></tr>
+      <tr><td class="wrap">Família B numa NFS-e</td><td class="wrap">R-02 (NFS-e), R-03 (família B) e R-06 (família B e NFS-e)</td><td class="wrap">R-06 → Fiscal — Confronto</td><td class="wrap">Dois critérios ganham de um</td></tr>
+      <tr><td class="wrap">Família A numa NFS-e</td><td class="wrap">R-02 (NFS-e) e R-05 (família A)</td><td class="wrap">R-02 → Serviços tomados</td><td class="wrap">Empate em um critério: a R-02 vem antes na lista</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><div class="ct">Teste antes de salvar</div><p>O quadro <strong>Testar uma combinação</strong>, acima da tabela, recebe um tipo de inconsistência e um tipo de DF e responde quais regras casam, qual vence, para que grupo o próximo chamado iria e quem está elegível nele.</p></div>
+  <ul class="plain">
+    <li>A coluna <strong>Chamados</strong> conta os que a regra roteou desde a ativação. Regra que nunca casa é candidata a sair.</li>
+    <li>Tributo e órgão não são critério de regra: entram como filtro no kanban.</li>
+  </ul>
+</section>
+
+<section class="section" id="s4">
+  <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Grupo padrão e chamados sem regra</span><span class="sec-onde">Aba Chamados sem regra</span></div>
+  <ol class="passos">
+    <li>No campo <strong>Grupo padrão</strong>, escolha quem recebe o que nenhuma regra cobre. Só grupos ativos aparecem; o que não tem ninguém elegível vem marcado "sem elegíveis". A troca vale para os próximos chamados.</li>
+    <li>Leia a caixa amarela <strong>Tipos do catálogo que nenhuma regra cobre</strong>. O aviso fica no menu Atendimento até alguém criar a regra.</li>
+    <li>Na tabela, cada linha é uma combinação de tipo de inconsistência e tipo de DF que já gerou chamado sem regra. Clique em <span class="ui">Criar regra</span>: o editor abre com o tipo e o tipo de DF preenchidos, e falta escolher o grupo.</li>
+  </ol>
+  <p>Quando uma regra passa a cobrir a combinação, a linha some. Os chamados já criados ficam onde estão, com a marca "sem regra". Os três números do topo (chamados sem regra, combinações descobertas e parcela do total) mostram quanto do volume ainda cai no padrão.</p>
+</section>
+
+<section class="section" id="s5">
+  <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Matriz de cobertura</span><span class="sec-onde">Aba Matriz de cobertura</span></div>
+  <p>A matriz cruza as famílias e seus tipos com os tipos de DF e mostra, em cada célula, para que grupo o chamado iria pelas regras ativas. É a forma mais rápida de achar buracos antes que eles virem chamados.</p>
+  <ul class="plain">
+    <li><strong>Célula amarela</strong>: cai no grupo padrão por falta de regra. Clicar nela abre o editor de regra com a combinação preenchida.</li>
+    <li><strong>Coluna Demais DF</strong>: vale para os tipos de DF que nenhuma regra cita.</li>
+  </ul>
+</section>
+
+<section class="section" id="s6">
+  <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Tipos de SLA</span><span class="sec-onde">Aba Tipos de SLA</span></div>
+  <p>O tipo define o que é medido; o prazo vem das regras de SLA. O Demo traz os três tipos da proposta:</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tipo</th><th>Começa quando</th><th>Termina quando</th><th>Pausa em</th><th>Calendário</th><th class="n">Alerta</th><th>Ao estourar</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Primeiro atendimento</strong></td><td>O chamado nasce ou reabre</td><td>Sai de "Aberta"</td><td>—</td><td>Horas úteis</td><td class="n">80%</td><td>Avisa responsável e gestor</td></tr>
+      <tr><td><strong>Resolução</strong></td><td>O chamado nasce ou reabre</td><td>Resolvida ou glosada</td><td>Aguardando terceiro</td><td>Dias úteis</td><td class="n">80%</td><td>Avisa gestor e marca estourado</td></tr>
+      <tr><td><strong>Retorno do terceiro</strong></td><td>Entra em "Aguardando terceiro"</td><td>Sai de "Aguardando terceiro"</td><td>—</td><td>Dias corridos</td><td class="n">70%</td><td>Avisa o responsável para cobrar</td></tr>
+    </tbody>
+  </table></div>
+  <ol class="passos">
+    <li>Clique em <span class="ui">Editar</span> num dos três, ou em <span class="ui">+ Novo tipo</span>. Nos três da proposta, começo, fim e pausa não mudam; o nome, o calendário, o alerta e a ação mudam.</li>
+    <li>Preencha os campos:
+      <div class="campos">
+        <div class="campo"><div class="campo-n">Nome <span class="ob">obrigatório</span></div><div class="campo-d">Único entre os tipos.</div></div>
+        <div class="campo"><div class="campo-n">Começa quando · Termina quando</div><div class="campo-d">Estados do PRD de Inconsistências; o fim precisa vir depois do começo.</div></div>
+        <div class="campo"><div class="campo-n">Pausa em</div><div class="campo-d">Não pode ser o próprio estado que o tipo mede.</div></div>
+        <div class="campo"><div class="campo-n">Calendário</div><div class="campo-d">Horas úteis, dias úteis ou dias corridos.</div></div>
+        <div class="campo"><div class="campo-n">Alerta, em % do prazo consumido</div><div class="campo-d">Entre 1% e 99%. Passou disso, o relógio fica "em risco".</div></div>
+        <div class="campo"><div class="campo-n">Ao estourar · Tipo ativo</div><div class="campo-d">Quem é avisado quando o prazo vence, e se o tipo conta.</div></div>
+      </div>
+    </li>
+    <li>Clique em <span class="ui">Salvar tipo</span>. Vale para os relógios que começarem daqui em diante.</li>
+  </ol>
+  <ul class="plain">
+    <li><strong>Calendário útil:</strong> expediente das 9h às 17h (8 horas por dia), de segunda a sexta, sem os feriados nacionais; a Sexta-feira Santa conta como feriado. Dias corridos contam todos os dias.</li>
+    <li><strong>Trocar o calendário</strong> leva os prazos das regras para a unidade nova: horas viram dias úteis, arredondando para cima.</li>
+    <li><strong>Avisos:</strong> saem por e-mail na aplicação desenvolvida; no Demo, ficam no histórico do chamado.</li>
+  </ul>
+</section>
+
+<section class="section" id="s7">
+  <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Regras de SLA, SLA padrão e teto</span><span class="sec-onde">Aba Regras de SLA</span></div>
+  <p>A precedência é a mesma do roteamento: a regra mais específica vence, depois a ordem da lista. Quem não casa com nenhuma fica com o SLA padrão da família, e por isso todo chamado tem SLA.</p>
+  <h3>Criar ou editar uma regra de SLA</h3>
+  <ol class="passos">
+    <li>Clique em <span class="ui">+ Nova regra de SLA</span>, ou em <span class="ui">Editar</span> na linha da regra.</li>
+    <li>Marque os critérios, como no roteamento: família ou tipo de inconsistência e tipo de DF. Pelo menos um.</li>
+    <li>Em <strong>Prazos</strong>, marque cada tipo que a regra mede e preencha o número e a unidade. Tipo desmarcado não é medido por esta regra. As unidades seguem o calendário do tipo: horas úteis ou dias úteis no Primeiro atendimento, dias úteis na Resolução, dias corridos no Retorno do terceiro.</li>
+    <li>Decida o teto: <span class="ui">Teto pelo prazo do crédito</span> e a <strong>Folga, em dias corridos antes do prazo</strong>. Numa regra nova, vem ligado, com 5 dias. Na família I, a caixa da janela de ajuste estende o teto ao fim da janela da competência do evento (D-25).</li>
+    <li>Deixe <span class="ui">Regra ativa</span> marcada, leia a prévia e clique em <span class="ui">Salvar regra</span>.</li>
+  </ol>
+  <h3>As regras que o Demo traz</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Critério</th><th>Primeiro atendimento</th><th>Resolução</th><th>Retorno do terceiro</th><th>Teto</th></tr></thead>
+    <tbody>
+      <tr><td class="id">S-01</td><td>Família A</td><td>4 h úteis</td><td>5 dias úteis</td><td>não mede</td><td>sem teto</td></tr>
+      <tr><td class="id">S-02</td><td>Família B</td><td>8 h úteis</td><td>15 dias úteis</td><td>10 dias corridos</td><td>5 dias de folga</td></tr>
+      <tr><td class="id">S-03</td><td>Família C</td><td>8 h úteis</td><td>10 dias úteis</td><td>10 dias corridos</td><td>5 dias de folga</td></tr>
+      <tr><td class="id">S-04</td><td>Família D</td><td>4 h úteis</td><td>2 dias úteis</td><td>3 dias corridos</td><td>3 dias de folga</td></tr>
+      <tr><td class="id">S-05</td><td>Família F</td><td>2 h úteis</td><td>1 dia útil</td><td>não mede</td><td>sem teto</td></tr>
+      <tr><td class="id">S-06</td><td>Tipo "Reflexo não atribuível a um evento"</td><td>1 dia útil</td><td>15 dias úteis</td><td>não mede</td><td>sem teto</td></tr>
+      <tr><td class="id">S-07</td><td>Família I</td><td>8 h úteis</td><td>10 dias úteis</td><td>10 dias corridos</td><td>5 dias de folga, com a janela de ajuste</td></tr>
+    </tbody>
+  </table></div>
+  <p>A S-06 vem antes da S-07: as duas têm um critério, e no empate vence a primeira da lista. Por isso o tipo da família I tem prazo próprio.</p>
+  <h3>O SLA padrão</h3>
+  <p>A última linha da tabela, <strong>SLA padrão — nenhuma regra casou</strong>, tem o próprio <span class="ui">Editar</span>. Ali ficam o Primeiro atendimento (1 dia útil no Demo), o Retorno do terceiro (10 dias corridos), o teto (5 dias de folga) e a <strong>Resolução por família, em dias úteis</strong> (D-22):</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Família</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>I</th></tr></thead>
+    <tbody><tr><td><strong>Resolução</strong></td><td>5</td><td>15</td><td>10</td><td>2</td><td>10</td><td>1</td><td>10</td></tr></tbody>
+  </table></div>
+  <h3>Como o teto funciona</h3>
+  <p>O prazo do chamado nunca passa do prazo mais próximo da parte do crédito afetada (o vencimento do que está a apropriar, ou o prazo do art. 54 da fatia disponível) menos a folga da regra. Um exemplo com a folga de 5 dias:</p>
+  <ul class="plain">
+    <li>Um chamado da família C nasce na segunda-feira, 03/08, e a S-03 dá 10 dias úteis de Resolução: o prazo seria 14/08.</li>
+    <li>A CBS a apropriar da nota vence em 10/08. O teto é 10/08 menos 5 dias: <strong>05/08</strong>.</li>
+    <li>O prazo do chamado passa a ser 05/08, e o card mostra que o fim foi decidido pelo teto.</li>
+  </ul>
+  <div class="callout warn"><div class="ct">D-14 aberta</div><p>O teto ainda depende da D-14. No Demo, ele segue a recomendação: ligado por padrão, com 5 dias de folga e configurável em cada regra; é provisório até a decisão. Documento de saída não tem teto na primeira versão (D-21).</p></div>
+  <h3>Conferir</h3>
+  <ul class="plain">
+    <li>Os quatro números do topo: <strong>Relógios em aberto</strong>, <strong>Em risco</strong>, <strong>Estourados</strong> e <strong>Prazo pelo teto</strong>.</li>
+    <li>O quadro <strong>Testar uma combinação</strong> diz que regra de SLA vale para um tipo de inconsistência e um tipo de DF, e quais prazos ela dá.</li>
+    <li>A coluna <strong>Em 30 dias</strong> conta os chamados que começaram o relógio com a regra nos últimos 30 dias; <strong>No prazo</strong>, a parcela dos relógios dentro do prazo.</li>
+  </ul>
+</section>
+
+<section class="section" id="s8">
+  <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Conferir no kanban e no card</span><span class="sec-onde">Inconsistências › Kanban</span></div>
+  <ol class="passos">
+    <li>No kanban, use os recortes <span class="ui">Meus</span>, <span class="ui">Do meu grupo</span> e <span class="ui">Todos</span>, e os filtros de grupo, tributo, <span class="ui">Na fila do grupo</span> e <span class="ui">Sem regra</span>.</li>
+    <li>Cada card mostra, numa linha própria, o relógio mais urgente: "Resolução venceu há 5 dias úteis", "Atendimento vence em 4 h". Os botões de SLA filtram os estourados e os em risco, e ordenam pelo menor prazo.</li>
+    <li>Em <span class="ui">Ver como</span>, escolha outra pessoa para ver o kanban como ela vê: o que chegou para ela e o que ela pode fazer. Só o responsável pede um evento ou põe o chamado em Aguardando terceiro. O "Ver como" só existe no Demo.</li>
+    <li>Abra um card. O bloco <strong>Atendimento</strong> diz que regra roteou o chamado, quem estava elegível e por que o responsável foi escolhido. O bloco <strong>SLA</strong> mostra a regra, cada relógio, o crédito afetado e o teto.</li>
+    <li>Num chamado resolvido ou glosado, <span class="ui">Simular nova detecção</span> reproduz a volta da mesma causa: o resolvido reabre; o glosado vira um chamado novo, ligado a ele. No produto, isso acontece pela leitura ou pela ingestão, sem botão.</li>
+  </ol>
+  <p>Para ver a mudança de uma regra na prática, crie a regra, simule uma nova detecção num chamado da combinação e confira no card que regra o roteou.</p>
+</section>
+
+<section class="section" id="s9">
+  <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Quando algo não sai como esperado</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>O que aparece</th><th>Por quê</th><th>O que fazer</th></tr></thead>
+    <tbody>
+      <tr><td class="wrap"><strong>O botão de salvar não responde</strong></td><td class="wrap">Falta um campo ou há uma regra violada</td><td class="wrap">Leia a linha acima do botão: ela lista o que falta</td></tr>
+      <tr><td class="wrap"><strong>Um chamado caiu no grupo padrão</strong></td><td class="wrap">Nenhuma regra casou com a combinação</td><td class="wrap">Aba Chamados sem regra › <span class="ui">Criar regra</span>, ou a célula amarela da matriz</td></tr>
+      <tr><td class="wrap"><strong>Mudei a regra e o chamado não mudou de grupo</strong></td><td class="wrap">A regra vale para os próximos chamados</td><td class="wrap">Transfira o chamado no card</td></tr>
+      <tr><td class="wrap"><strong>Mudei o prazo e o relógio não mudou</strong></td><td class="wrap">O chamado guarda a regra de SLA do dia em que nasceu (RN-SLA-03)</td><td class="wrap">Nada a fazer: o prazo novo vale para os próximos</td></tr>
+      <tr><td class="wrap"><strong>Grupo "Sem elegíveis"</strong></td><td class="wrap">Todos os membros estão ausentes ou não agem sobre a família</td><td class="wrap">Adicione alguém ou corrija a data de volta; a fila é sorteada quando alguém fica elegível</td></tr>
+      <tr><td class="wrap"><strong>Alguém de Tesouraria não recebe chamados</strong></td><td class="wrap">Tesouraria só opera a família D</td><td class="wrap">Use Administrador ou Fiscal nos grupos das outras famílias</td></tr>
+      <tr><td class="wrap"><strong>Um usuário não aparece para adicionar</strong></td><td class="wrap">Perfil Leitura ou usuário inativo</td><td class="wrap">Troque o perfil em Configurações › Usuários</td></tr>
+      <tr><td class="wrap"><strong>O grupo não desativa</strong></td><td class="wrap">Tem chamados abertos, ou é o grupo padrão</td><td class="wrap">Transfira os abertos; troque o padrão antes, se for o caso</td></tr>
+      <tr><td class="wrap"><strong>O prazo veio menor que o da regra</strong></td><td class="wrap">O teto pelo crédito encurtou o prazo</td><td class="wrap">Confira o crédito afetado e o teto no bloco SLA do card</td></tr>
+      <tr><td class="wrap"><strong>A configuração sumiu</strong></td><td class="wrap">No Demo, ela vive na aba do navegador</td><td class="wrap">Navegue pelo menu em vez de recarregar a página</td></tr>
+    </tbody>
+  </table></div>
+  <p>Veja também as <a href="taxrs-sla-detalhe-telas.html">duas propostas de tela para o SLA no detalhe do card</a>.</p>
+</section>
+
+<section class="section" id="s10">
+  <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Histórico</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Versão</th><th>Data</th><th>O que mudou</th></tr></thead>
+    <tbody>
+      <tr><td class="id">1.0</td><td>19/11/2026</td><td>Primeira versão, a pedido do usuário: o passo a passo das seis abas de Configurações › Atendimento, a conferência no kanban e no card, e os problemas comuns. Baseada na main do tax-rs em 1e74ee5.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<div class="foot">Atendimento das inconsistências: como configurar · v1.0 · 19/11/2026</div>
+</div>
+</body>
+</html>
