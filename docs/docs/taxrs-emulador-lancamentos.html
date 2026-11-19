@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Emulador de lançamentos dos entes · v1.1</title>
+<title>Emulador de lançamentos dos entes · v1.2</title>
 <style>
 :root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
   --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
@@ -154,6 +154,19 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
 .dc-nota textarea { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 13px; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--txt1); background: var(--bg); border: 1px solid var(--brd); border-radius: 6px; padding: 6px 8px; resize: vertical; box-sizing: border-box; }
 #dc-saida { display: block; width: 100%; min-height: 120px; margin-top: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--txt1); background: var(--sur2); border: 1px solid var(--brd); border-radius: 6px; padding: 8px 10px; box-sizing: border-box; }
 .acoes-n td.n strong { color: var(--txt1); }
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section { overflow-wrap: anywhere; }
+}
 </style>
 </head>
 <body>
@@ -162,13 +175,13 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
 <a class="back" href="prds.html#sec-taxrs">← Hub de PRDs</a>
 <div class="eyebrow">tax-rs · Modo Live · Proposta</div>
 <h1>Emulador de lançamentos da Receita Federal e do Comitê Gestor</h1>
-<p class="subtitle">Evolução da aba Fonte do Fisco, no cadastro do cliente do painel administrativo do tax-rs, com dois modelos. O Simulado, automático, segue os DFs novos e lança sozinho, e é revisto aqui. O emulador, manual, recebe um lote de DFs por filtro e várias ações, cada uma com o percentual dos DFs que atinge. Os dois gravam o que a Receita Federal (CBS) e o Comitê Gestor (IBS) fariam, pela mesma porta que os conectores reais vão usar.</p>
+<p class="subtitle">Evolução da aba Fonte do Fisco, no cadastro do cliente do painel administrativo do tax-rs, com dois modelos. O Simulado, automático, segue os DFs novos e lança sozinho, e é revisto aqui. O emulador, manual, recebe um lote de DFs, filtrados entre os do cliente ou criados na hora, e várias ações, cada uma com o percentual dos DFs que atinge. Os dois gravam o que a Receita Federal (CBS) e o Comitê Gestor (IBS) fariam, pela mesma porta que os conectores reais vão usar.</p>
 <div class="meta-bar">
-  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.1</span></span>
-  <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">18/11/2026</span></span>
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.2</span></span>
+  <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">19/11/2026</span></span>
   <span class="meta-pill"><span class="meta-label">Base</span><span class="meta-val"><code>main</code> do tax-rs no <code>a831ad9</code></span></span>
   <span class="meta-pill"><span class="meta-label">Fontes</span><span class="meta-val">APIs da CBS e do IBS conferidas em 18/11/2026</span></span>
-  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">3 de 23</span></span>
+  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">4 de 29</span></span>
 </div>
 <nav class="toc">
   <div class="toc-title">Conteúdo</div>
@@ -177,7 +190,7 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
     <li><a href="#s2"><span class="toc-num">2</span>Hoje e a proposta</a></li>
     <li><a href="#s3"><span class="toc-num">3</span>Os 51 lançamentos que a documentação prevê</a></li>
     <li><a href="#s4"><span class="toc-num">4</span>Os 27 resultados que o administrador escolhe</a></li>
-    <li><a href="#s5"><span class="toc-num">5</span>O lote: várias ações, por percentual</a></li>
+    <li><a href="#s5"><span class="toc-num">5</span>O lote: DFs criados ou filtrados, várias ações</a></li>
     <li><a href="#s6"><span class="toc-num">6</span>Cenários prontos</a></li>
     <li><a href="#s7"><span class="toc-num">7</span>Lançamento unitário</a></li>
     <li><a href="#s8"><span class="toc-num">8</span>O modo Simulado, revisto</a></li>
@@ -206,6 +219,7 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
     <ul class="plain">
       <li><strong>Dois modelos lado a lado.</strong> O Simulado continua sendo o automático: segue os DFs novos e lança sozinho, e é revisto para o crédito sair de "a apropriar" e o saldo andar (seção 8). O emulador é o manual: o administrador monta um lote e diz o que acontece com ele.</li>
       <li><strong>O lote não precisa nomear DFs.</strong> O administrador filtra (competência, direção, tributo, fornecedor, situação, entre outros) e empilha ações, cada uma com o percentual dos DFs que atinge: 70% apropriados, 10% glosados e, dos apropriados, metade com todo o saldo usado, por exemplo. São 27 resultados para escolher.</li>
+      <li><strong>O emulador também cria DFs.</strong> Quantos, de que tipos e com que valores, cada característica pré-definida ou aleatória, com semente. O DF criado entra pela entrada interna do razão, a mesma do seed e da captura SEFAZ, marcado como emulado (seção 5).</li>
       <li><strong>O resto do tax-rs reage como reagiria ao ente real.</strong> Os lançamentos entram pela porta de fatos do serviço <code>tax-authority</code>, a mesma dos conectores reais; o razão, a conciliação, as inconsistências e os eventos da API da plataforma não sabem que é emulação.</li>
       <li><strong>Três formas de usar o emulador:</strong> o lote com várias ações, os cenários prontos e o lançamento unitário, um DF por vez.</li>
       <li><strong>Cada execução se confere sozinha.</strong> DF a DF, a aba diz se o resultado pedido aconteceu: saldos, eventos e inconsistências.</li>
@@ -213,11 +227,11 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
   </div>
   <div class="callout warn"><div class="ct">O que pesa</div>
     <ul class="plain">
-      <li><strong>O Simulado de hoje concilia a CAPUR e a CFIN, mas o crédito não sai de "a apropriar".</strong> O código mostra cinco causas (seção 8); no Live local, o cron que emite a apropriação nem roda.</li>
+      <li><strong>O Simulado de hoje concilia a CAPUR e a CFIN, mas o crédito não sai de "a apropriar".</strong> O código mostra cinco causas (seção 8); no Live local, o cron que emite a apropriação nem roda. A regra agora é do usuário: pagou o imposto, o crédito é apropriado (D-EM-21).</li>
       <li><strong>34 dos 51 lançamentos não existem ou existem em parte no tax-rs</strong>, e 12 dos 19 eventos de crédito e débito da API da plataforma não saem de nenhum fato hoje. A E1 e a E2 rodam só com o que existe: 11 resultados e 4 cenários prontos. A E3 traz o resto.</li>
       <li><strong>A área admin do tax-rs não vê dado fiscal</strong> (D15). Escolher DFs exige ver chave e valor: a D-EM-04 propõe a exceção fora da produção, só nesta aba.</li>
       <li><strong>6 lançamentos não têm evento na API da plataforma</strong> (D08, IBS-16, IBS-18, IBS-20, IBS-23 e IBS-24): a emulação mostra o efeito no saldo, mas a API ainda não diz como publicá-lo.</li>
-      <li><strong>3 de 23 decisões tomadas.</strong> As D-EM-20 a 23 travam a E0; a D-EM-04, a E1; a D-EM-02, a E3. Escolha as abertas na <a href="#s14">seção 14</a>.</li>
+      <li><strong>4 de 29 decisões tomadas.</strong> As D-EM-20, 22, 23 e 24 travam a E0; as D-EM-04, 25, 26, 27 e 29, a E1; a D-EM-02, a E3. Escolha as abertas na <a href="#s14">seção 14</a>.</li>
     </ul>
   </div>
 </section>
@@ -227,6 +241,7 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
     <thead><tr><th>Ponto</th><th>Hoje</th><th>Com o emulador</th></tr></thead>
     <tbody>
       <tr><td><strong>Modos da fonte</strong></td><td>Simulada, Replay ou Desligada (na produção, só Desligada)</td><td>Os mesmos três (D-EM-05). O Simulado continua automático e é revisto; o emulador funciona ao lado, em qualquer modo, fora da produção</td></tr>
+      <tr><td><strong>De onde vêm os DFs</strong></td><td>Do ERP, pela API; da captura SEFAZ; do seed</td><td>Também do emulador: criados na aba, com quantidade, tipos e valores pré-definidos ou aleatórios, marcados como emulados</td></tr>
       <tr><td><strong>Quem decide o que acontece</strong></td><td>O hash da chave do DF, com as proporções do protótipo: 70% da CAPUR conciliada, 20% divergente, 10% pendente; 85% dos créditos apropriados, metade usados; 3% glosados</td><td>No Simulado, as mesmas proporções, agora visíveis e com a apropriação ligada ao pagamento. No emulador, o administrador, por lote com várias ações e percentuais, por cenário pronto ou um DF por vez</td></tr>
       <tr><td><strong>O que pode acontecer</strong></td><td>8 tipos de fato</td><td>Os 51 lançamentos da documentação das APIs da CBS e do IBS</td></tr>
       <tr><td><strong>Quando</strong></td><td>Na data planejada, pelo cron de hora em hora, que não roda no ambiente local</td><td>No Simulado, também pelo botão "Avançar até agora". No emulador, por ação: agora, retroativa, agendada ou espalhada entre duas datas</td></tr>
@@ -236,7 +251,7 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
   </table></div>
   <h3>O caminho de um lançamento emulado</h3>
   <div class="fluxo">
-    <div class="passo"><div class="pn">1</div><div class="pt">Administrador</div><div class="pd">Filtra os DFs e empilha as ações, com percentual e data; vê a prévia; confirma.</div></div>
+    <div class="passo"><div class="pn">1</div><div class="pt">Administrador</div><div class="pd">Filtra ou cria os DFs e empilha as ações, com percentual e data; vê a prévia; confirma.</div></div>
     <div class="passo dest"><div class="pn">2</div><div class="pt">Emulador</div><div class="pd">No <code>tax-authority</code>: traduz o resultado nos lançamentos de cada ente, com os pré-requisitos.</div></div>
     <div class="passo dest"><div class="pn">3</div><div class="pt">Porta de fatos</div><div class="pd">Só de inclusão, sem repetir o mesmo lançamento; publica no tópico dos fatos.</div></div>
     <div class="passo"><div class="pn">4</div><div class="pt">Razão, conciliação, inconsistências</div><div class="pd">Aplicam o lançamento como se viesse do ente.</div></div>
@@ -388,10 +403,10 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
   <p>Resultados se encadeiam no mesmo lote: "apropriar totalmente e, desses, usar todo o saldo" é o RE-05 sobre o lote e o RE-07 sobre os DFs que o RE-05 atingiu, cada um com a sua data (seção 5).</p>
 </section>
 <section class="section" id="s5">
-  <div class="sec-hdr"><span class="sec-num">5</span><span class="sec-title">O lote: várias ações, por percentual</span></div>
-  <p>O administrador não precisa nomear DFs (D-EM-16, decidida em 18/11/2026). Filtra o lote, empilha as ações e diz, em cada uma, o percentual dos DFs que ela atinge.</p>
+  <div class="sec-hdr"><span class="sec-num">5</span><span class="sec-title">O lote: DFs criados ou filtrados, várias ações</span></div>
+  <p>O administrador não precisa nomear DFs (D-EM-16, decidida em 18/11/2026). O lote vem dos DFs que o cliente já tem, por filtro, de DFs que o emulador cria na hora, ou dos dois. Depois vêm as ações, cada uma com o percentual dos DFs que atinge.</p>
   <ol class="plain">
-    <li><strong>O lote.</strong> Filtros: empresa do grupo (CNPJ), direção (entrada ou saída), tributo (CBS, IBS ou os dois), competência, modelo, fornecedor ou cliente, método de recolhimento, situação atual no ente, faixa de valor. O contador mostra quantos DFs o filtro pega. Uma lista de chaves, colada ou em CSV, continua possível, mas não é preciso.</li>
+    <li><strong>O lote.</strong> Os DFs que o cliente já tem, por filtro: empresa do grupo (CNPJ), direção (entrada ou saída), tributo (CBS, IBS ou os dois), competência, modelo, fornecedor ou cliente, método de recolhimento, situação atual no ente, faixa de valor. O contador mostra quantos DFs o filtro pega. Uma lista de chaves, colada ou em CSV, continua possível, mas não é preciso. Ou DFs criados na hora (abaixo), ou os dois juntos.</li>
     <li><strong>As ações.</strong> Uma lista em ordem. Cada ação traz um resultado da seção 4, o ente (Receita Federal, Comitê Gestor ou os dois), os parâmetros (a parte, a diferença), o percentual e a base.</li>
     <li><strong>A base.</strong> O lote, ou os DFs que receberam uma ação anterior: "dos apropriados, 50% usam todo o saldo". Ações com a mesma base não se sobrepõem: um DF recebe só uma delas, elas somam até 100%, e o que sobra fica sem lançamento (D-EM-17).</li>
     <li><strong>O percentual.</strong> Conta sobre os DFs elegíveis da base, os que podem chegar ao resultado; os outros aparecem à parte (D-EM-18). Vira número de DFs pelo maior resto, para a soma bater com o total, e a prévia mostra o número exato.</li>
@@ -401,6 +416,25 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
     <li><strong>A execução.</strong> Grava os lançamentos com a origem <code>emulated</code>, o número da execução e a semente. Acima de 100 DFs atingidos, o administrador digita o número para confirmar (D-EM-13).</li>
     <li><strong>A conferência.</strong> Seção 9.</li>
   </ol>
+  <h3 id="criar-dfs">Criar DFs</h3>
+  <p>Para quando o cliente de teste não tem DFs, ou não tem os que o teste pede. O administrador diz quantos, de que tipos e com que valores. Cada característica é pré-definida (o administrador fixa) ou aleatória (o emulador sorteia dentro do que o administrador permite, com a semente do lote: a mesma semente cria os mesmos DFs).</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Característica</th><th>Pré-definida</th><th>Aleatória ou o padrão</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Quantidade</strong></td><td class="wrap">Um número, até 1.000 DFs por execução (D-EM-13)</td><td>—</td></tr>
+      <tr><td><strong>Empresa do grupo</strong></td><td class="wrap">Um CNPJ ativo do cliente, da aba Empresas</td><td class="wrap">Sorteada entre os CNPJs ativos</td></tr>
+      <tr><td><strong>Direção e tipo</strong></td><td class="wrap">A mistura, em percentual: 60% NF-e de entrada, 20% CT-e de entrada e 20% NF-e de saída, por exemplo, entre os 14 tipos que o tax-rs aceita</td><td class="wrap">Sorteado entre os tipos marcados, em partes iguais</td></tr>
+      <tr><td><strong>Contraparte</strong></td><td class="wrap">Uma ou mais das que o cliente já tem: fornecedores, na entrada; clientes, na saída</td><td class="wrap">Fictícias, criadas na hora, com CNPJ válido e o nome marcado "[EMULADO]" (D-EM-25)</td></tr>
+      <tr><td><strong>Emissão</strong></td><td class="wrap">Uma data; a competência acompanha o mês da emissão</td><td class="wrap">Espalhada entre duas datas</td></tr>
+      <tr><td><strong>Valor</strong></td><td class="wrap">Um valor para todos, ou uma lista colada, um por DF, que se repete</td><td class="wrap">Entre um mínimo e um máximo</td></tr>
+      <tr><td><strong>CBS e IBS</strong></td><td class="wrap">As alíquotas que o administrador informar</td><td class="wrap">O padrão: as do ano da emissão, pela lei; em 2026, CBS 0,9% e IBS 0,1% (D-EM-26)</td></tr>
+      <tr><td><strong>Recolhimento</strong>, na entrada</td><td class="wrap">Fornecedor ou RAD, com o prazo, por cima do contrato; ou a mistura, em percentual</td><td class="wrap">O padrão: o contrato do fornecedor, como no DF real; sem contrato, o fornecedor recolhe</td></tr>
+      <tr><td><strong>Chave, número e série</strong></td><td>—</td><td class="wrap">Gerados: chave de 44 dígitos com o CNPJ do emitente e o dígito verificador válidos, como o tax-rs exige; série própria do emulador, para não colidir com DF real</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Como o DF criado entra no tax-rs.</strong> Pela entrada interna do razão (<code>ledger/intake.ts</code>), a mesma que o seed e a captura SEFAZ usam, com a origem nova <code>emulated</code>. Valida como o DF da captura SEFAZ, sem itens, como na primeira versão do produto. O razão cria os registros da CBS e do IBS e avisa que o DF foi registrado; o Simulado segue o DF se o cliente está em Simulada (D-EM-27). Duas travas do tax-rs valem aqui: um lado do DF tem de ser empresa ativa do cliente, e só um lado (<code>ledger/lib/documents.ts:66</code>).</p>
+  <p><strong>No mesmo lote.</strong> Os DFs criados recebem as ações como o lote filtrado: "criar 1.000 NF-e de entrada de 10/2026, de R$ 10.000,00 cada (CBS R$ 90,00 e IBS R$ 10,00), e, desses, 70% apropriados e 10% glosados". Criar só os DFs, sem ação, também vale.</p>
+  <div class="callout warn"><div class="ct">Remover o que foi criado</div><p>Pela regra de hoje, nada se apaga (D-EM-10). A D-EM-28 decide se os DFs criados por uma execução podem ser removidos, fora da produção.</p></div>
   <h3>Um lote com cinco ações</h3>
   <p>Entradas de 10/2026, CBS e IBS: o filtro pega 1.012 DFs, e 12 já estão glosados no ente, fora do alcance das ações 1 a 3. Sobram 1.000 elegíveis.</p>
   <div class="table-wrap"><table class="acoes-n">
@@ -470,6 +504,7 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
   <div class="sec-hdr"><span class="sec-num">8</span><span class="sec-title">O modo Simulado, revisto</span></div>
   <p>O Simulado continua: é o modelo automático. Segue cada DF novo do cliente e lança sozinho, nas datas do plano, com as proporções do protótipo, sem ninguém pedir. O emulador é o modelo manual, ao lado (D-EM-05, decidida em 18/11/2026).</p>
   <div class="callout warn"><div class="ct">O que se vê hoje</div><p>A CAPUR e a CFIN aparecem conciliadas, mas o saldo e a situação da apropriação do crédito não mudam.</p></div>
+  <div class="callout ok"><div class="ct">A regra, decidida pelo usuário em 18/11/2026</div><p>Quando se paga o imposto, o crédito é apropriado. No Simulado e no emulador, o ente simulado lança o pagamento e a apropriação juntos, na mesma data (D-EM-21). Pagar sem apropriar só acontece com "forçar", no lançamento unitário, para testar a defesa da plataforma.</p></div>
   <h3>O que o código mostra</h3>
   <div class="table-wrap"><table>
     <thead><tr><th>Id</th><th>Achado</th><th>Onde</th><th>Efeito</th></tr></thead>
@@ -477,7 +512,7 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
       <tr><td class="id">G-SIM-01</td><td class="wrap">A apropriação tem data marcada no cadastro do DF e não olha o pagamento. Recolhimento pelo fornecedor: último dia do mês seguinte ao da emissão. RAD: 3 dias depois da emissão. Split: depois do prazo de pagamento (30 dias, se não houver).</td><td><code>tax-authority/lib/simulator.ts:84</code> · <code>ledger/lib/cycle.ts:26</code></td><td class="wrap">Um crédito de outubro com recolhimento do fornecedor só se apropria em 30/11, mesmo com a CAPUR conciliada e o pagamento feito.</td></tr>
       <tr><td class="id">G-SIM-02</td><td class="wrap">O que vence depois do cadastro só sai pelo cron de hora em hora. O Encore não roda cron no ambiente local.</td><td><code>tax-authority/simulation.ts:76</code></td><td class="wrap">No Live local sai o que já tinha vencido no cadastro (a CAPUR de um DF antigo, por exemplo) e mais nada: a apropriação e a utilização não chegam.</td></tr>
       <tr><td class="id">G-SIM-03</td><td class="wrap">O Simulado só segue o DF registrado depois que o cliente está em Simulada. Trocar o modo não adota os DFs que já existem.</td><td><code>tax-authority/simulation.ts:15</code> · <code>platform/admin.ts:220</code></td><td class="wrap">Quem veio do Replay ou do Desligado fica com os DFs antigos parados no que tinham.</td></tr>
-      <tr><td class="id">G-SIM-04</td><td class="wrap">A CFIN concilia quando o DF consta como pago, e "pago" inclui ter data de pagamento. O fato de pagamento sozinho (o do Replay, por exemplo) dá a data e não apropria, por regra: quem apropria é o ente.</td><td><code>reconciliation/lib/reconcile.ts:73</code> · <code>ledger/announce.ts:56</code> · <code>ledger/lib/fold.ts:158</code></td><td class="wrap">CFIN conciliada e crédito "a apropriar" ao mesmo tempo, sem nada na tela que explique.</td></tr>
+      <tr><td class="id">G-SIM-04</td><td class="wrap">A CFIN concilia quando o DF consta como pago, e "pago" inclui ter data de pagamento. O fato de pagamento sozinho (o do Replay, por exemplo) dá a data e não apropria, por regra: quem apropria é o ente.</td><td><code>reconciliation/lib/reconcile.ts:73</code> · <code>ledger/announce.ts:56</code> · <code>ledger/lib/fold.ts:158</code></td><td class="wrap">CFIN conciliada e crédito "a apropriar" ao mesmo tempo, o que a regra não admite.</td></tr>
       <tr><td class="id">G-SIM-05</td><td class="wrap">Pelo plano, 15% dos créditos nunca se apropriam e 10% da CAPUR fica pendente para sempre. A aba não mostra isso.</td><td><code>tax-authority/lib/simulator.ts:28</code></td><td class="wrap">Parte dos DFs parece travada, e é o plano.</td></tr>
     </tbody>
   </table></div>
@@ -486,13 +521,14 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
   <div class="table-wrap"><table>
     <thead><tr><th>Id</th><th>Mudança</th><th>Resolve</th></tr></thead>
     <tbody>
-      <tr><td class="id">R-SIM-01</td><td class="wrap">A apropriação reage ao pagamento: chegou o pagamento de um crédito com a CAPUR conciliada, o Simulado apropria na data dele; sem pagamento, vale a data do plano (D-EM-21). O saldo appropriated e o disponível andam no mesmo instante.</td><td>G-SIM-01 · G-SIM-04</td></tr>
+      <tr><td class="id">R-SIM-01</td><td class="wrap">Pagamento e apropriação juntos (D-EM-21, decidida). Na data do plano, o Simulado lança o pagamento e a apropriação. Se o pagamento chega antes por outro caminho (o ERP, o Replay, o emulador), o Simulado apropria na data dele. O saldo appropriated e o disponível andam no mesmo instante.</td><td>G-SIM-01 · G-SIM-04</td></tr>
       <tr><td class="id">R-SIM-02</td><td class="wrap">Botão "Avançar até agora" na aba, que emite o que já venceu só daquele cliente, e a hora da última emissão. É o caminho no ambiente local, onde não há cron.</td><td>G-SIM-02</td></tr>
       <tr><td class="id">R-SIM-03</td><td class="wrap">Na troca para Simulada, a aba mostra quantos DFs já existem e o administrador decide se o Simulado os adota (D-EM-22).</td><td>G-SIM-03</td></tr>
       <tr><td class="id">R-SIM-04</td><td class="wrap">O plano de cada DF na aba: o que já saiu, o que vem e quando, e se o DF está entre os que o plano deixa parados.</td><td>G-SIM-05</td></tr>
       <tr><td class="id">R-SIM-05</td><td class="wrap">Conferência depois de cada emissão, com o motor da seção 9: o saldo e a situação do DF têm de mudar como o lançamento manda. O que não bater vira alerta na aba.</td><td>Todos</td></tr>
       <tr><td class="id">R-SIM-06</td><td class="wrap">O DF lançado pelo emulador sai do plano do Simulado naquele tributo (D-EM-20).</td><td>A briga entre os dois</td></tr>
       <tr><td class="id">R-SIM-07</td><td class="wrap">As proporções aparecem na aba, fixas (D-EM-23).</td><td>G-SIM-05</td></tr>
+      <tr><td class="id">R-SIM-08</td><td class="wrap">Fora da emulação: quando o ente real ou o Replay registra o pagamento e não apropria, o razão segue o ente e a plataforma mostra a divergência (D-EM-24). A divergência entra no catálogo de inconsistências quando a D-EM-24 for decidida.</td><td>G-SIM-04</td></tr>
     </tbody>
   </table></div>
 </section>
@@ -521,13 +557,15 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
     <thead><tr><th>Id</th><th>Tela</th><th>O que tem</th></tr></thead>
     <tbody>
       <tr><td class="id">T-EM-01</td><td><strong>Painel da aba</strong></td><td class="wrap">O modo (Simulada, Replay, Desligada); lançamentos gravados por ente e por origem; execuções recentes com a situação da conferência; agendados pendentes; alertas do Simulado. Botões: Novo lote, Lançamento unitário, Simulado.</td></tr>
-      <tr><td class="id">T-EM-02</td><td><strong>Novo lote</strong></td><td class="wrap">Três passos: DFs por filtro, ações (resultado, ente, base, percentual) e quando. Os contadores se atualizam a cada filtro e a cada ação; a semente aparece e pode ser trocada.</td></tr>
+      <tr><td class="id">T-EM-02</td><td><strong>Novo lote</strong></td><td class="wrap">Três passos: DFs (filtrados, criados ou os dois), ações (resultado, ente, base, percentual) e quando. Os contadores se atualizam a cada filtro e a cada ação; a semente aparece e pode ser trocada.</td></tr>
       <tr><td class="id">T-EM-03</td><td><strong>Prévia</strong></td><td class="wrap">Por ação (DFs, lançamentos, eventos e inconsistências esperados) e, abaixo, DF a DF e ente a ente; os fora do alcance, com o motivo; a confirmação.</td></tr>
       <tr><td class="id">T-EM-04</td><td><strong>Lançamento unitário</strong></td><td class="wrap">O DF e a situação dele nos dois entes, o lançamento, valor e data, antes e depois, forçar.</td></tr>
       <tr><td class="id">T-EM-05</td><td><strong>Execuções e conferência</strong></td><td class="wrap">Cada execução, com autor, pedido e situação; a conferência DF a DF; exportar CSV; baixar o cenário em JSON.</td></tr>
       <tr><td class="id">T-EM-06</td><td><strong>Simulado</strong></td><td class="wrap">O plano por DF (o que saiu, o que vem e quando), a última emissão, o botão "Avançar até agora", os alertas da conferência e as proporções.</td></tr>
+      <tr><td class="id">T-EM-07</td><td><strong>Criar DFs</strong></td><td class="wrap">Quantidade, empresa do grupo, a mistura de direção e tipo, contraparte, emissão, valor, alíquotas e recolhimento, cada um pré-definido ou aleatório; a semente; a prévia com os primeiros DFs e os totais; criar só os DFs ou seguir para as ações.</td></tr>
     </tbody>
   </table></div>
+  <div class="callout"><div class="ct">Onde as telas ficam no painel do cliente</div><p>Três estruturas, clicáveis, na <a href="taxrs-emulador-estrutura.html">página da estrutura do módulo</a>: subabas dentro da aba, um espaço próprio do emulador ou uma execução guiada. A escolha é a D-EM-29.</p></div>
   <h3>Esboço da T-EM-02 e da T-EM-03</h3>
   <div class="mock" role="img" aria-label="Esboço da tela de novo lote com a prévia">
     <div class="mock-bar"><strong>Fonte dos entes · Novo lote</strong><span>Cliente de teste · modo Simulada</span></div>
@@ -585,6 +623,31 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
     </div>
     <div class="mock-acoes"><span class="nota">Forçar: desligado</span><span class="mbtn">Cancelar</span><span class="mbtn pri">Lançar</span></div>
   </div>
+  <h3>Esboço da T-EM-07</h3>
+  <div class="mock" role="img" aria-label="Esboço da tela de criar DFs">
+    <div class="mock-bar"><strong>Fonte dos entes · Criar DFs</strong><span>Cliente de teste · 3 CNPJs ativos</span></div>
+    <div class="campos">
+      <div class="campo"><div class="cl">Quantidade</div><div class="cv">1.000</div></div>
+      <div class="campo"><div class="cl">Empresa do grupo</div><div class="cv">Aleatória entre os 3 CNPJs ativos</div></div>
+      <div class="campo"><div class="cl">Direção e tipo</div><div class="cv">60% NF-e de entrada · 20% CT-e de entrada · 20% NF-e de saída</div></div>
+      <div class="campo"><div class="cl">Contraparte</div><div class="cv">Fictícias: 50 fornecedores e 20 clientes [EMULADO]</div></div>
+      <div class="campo"><div class="cl">Emissão</div><div class="cv">Aleatória entre 01/10/2026 e 31/10/2026</div></div>
+      <div class="campo"><div class="cl">Valor</div><div class="cv">Aleatório entre R$ 1.000,00 e R$ 100.000,00</div></div>
+      <div class="campo"><div class="cl">CBS e IBS</div><div class="cv">As de 2026: 0,9% e 0,1%</div></div>
+      <div class="campo"><div class="cl">Recolhimento</div><div class="cv">Pelo contrato do fornecedor</div></div>
+      <div class="campo"><div class="cl">Semente</div><div class="cv">4721</div></div>
+    </div>
+    <h4>Prévia · primeiros de 1.000</h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>DF</th><th>Tipo</th><th>Contraparte</th><th class="n">Valor</th><th class="n">CBS</th><th class="n">IBS</th></tr></thead>
+      <tbody>
+        <tr><td class="id">…0001</td><td>NF-e · entrada</td><td>Fornecedor 01 [EMULADO]</td><td class="n">R$ 10.000,00</td><td class="n">R$ 90,00</td><td class="n">R$ 10,00</td></tr>
+        <tr><td class="id">…0002</td><td>CT-e · entrada</td><td>Fornecedor 02 [EMULADO]</td><td class="n">R$ 2.000,00</td><td class="n">R$ 18,00</td><td class="n">R$ 2,00</td></tr>
+        <tr><td class="id">…0003</td><td>NF-e · saída</td><td>Cliente 01 [EMULADO]</td><td class="n">R$ 50.000,00</td><td class="n">R$ 450,00</td><td class="n">R$ 50,00</td></tr>
+      </tbody>
+    </table></div>
+    <div class="mock-acoes"><span class="nota">Nada é criado antes de confirmar. 800 de entrada, 200 de saída.</span><span class="mbtn">Criar 1.000 DFs</span><span class="mbtn pri">Criar e seguir para as ações</span></div>
+  </div>
 </section>
 <section class="section" id="s11">
   <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Regras e travas</span></div>
@@ -595,10 +658,10 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
       <tr><td class="id">RG-02</td><td>Só o administrador da plataforma, com MFA.</td></tr>
       <tr><td class="id">RG-03</td><td>Fora da produção, em qualquer modo da fonte. Trocar o modo pede confirmação e entra na auditoria; trocar não apaga nada.</td></tr>
       <tr><td class="id">RG-04</td><td>Prévia antes de gravar, no lote e no lançamento unitário.</td></tr>
-      <tr><td class="id">RG-05</td><td>Até 1.000 DFs atingidos por execução, somadas as ações; acima de 100, o administrador digita o número de DFs para confirmar.</td></tr>
+      <tr><td class="id">RG-05</td><td>Até 1.000 DFs atingidos por execução, somadas as ações, e até 1.000 DFs criados; acima de 100, o administrador digita o número de DFs para confirmar.</td></tr>
       <tr><td class="id">RG-06</td><td>Nada se apaga. Desfazer é lançar o contrário quando a documentação do ente prevê (estorno, cancelamento).</td></tr>
       <tr><td class="id">RG-07</td><td>Cada lançamento leva a origem <code>emulated</code>, a execução e o autor. Gravar a mesma execução de novo não duplica nada: a porta de fatos já ignora a mesma referência no mesmo cliente.</td></tr>
-      <tr><td class="id">RG-08</td><td>O emulador não cria DF. O único lançamento sem DF é o do registro sem DF (RE-04), com chave fictícia marcada.</td></tr>
+      <tr><td class="id">RG-08</td><td>O emulador cria DF só fora da produção, pela entrada interna do razão, com a origem <code>emulated</code>, a chave com dígito verificador válido e a série própria; um lado do DF é sempre uma empresa ativa do cliente. O registro sem DF (RE-04) continua sem criar DF, com chave fictícia marcada.</td></tr>
       <tr><td class="id">RG-09</td><td>Os valores saem do DF; o administrador informa só a diferença ou a parte, em R$ ou %.</td></tr>
       <tr><td class="id">RG-10</td><td>Cada ente segue a sua documentação. Onde não há lançamento, o ente fica mudo e a prévia diz isso. Fora da ordem permitida, só com "forçar", no lançamento unitário, com marca.</td></tr>
       <tr><td class="id">RG-11</td><td>Data retroativa nunca antes da emissão do DF. Agendada fica pendente e sai pelo cron, como hoje, ou pelo "Avançar até agora" no ambiente local.</td></tr>
@@ -609,6 +672,9 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
       <tr><td class="id">RG-16</td><td>O percentual vira número de DFs pelo maior resto, e a prévia mostra o número exato por ação (D-EM-18).</td></tr>
       <tr><td class="id">RG-17</td><td>O sorteio usa semente; o mesmo filtro e a mesma semente sorteiam os mesmos DFs (D-EM-19).</td></tr>
       <tr><td class="id">RG-18</td><td>O DF lançado pelo emulador sai do plano do Simulado naquele tributo (D-EM-20).</td></tr>
+      <tr><td class="id">RG-19</td><td>Pagou, apropriou: no lote, um lançamento que paga o imposto de um crédito traz a apropriação junto, na mesma data. Pagar sem apropriar só com "forçar", no lançamento unitário (D-EM-21).</td></tr>
+      <tr><td class="id">RG-20</td><td>Na criação de DFs, cada característica é pré-definida ou aleatória; a aleatória usa a semente do lote, e a mesma semente cria os mesmos DFs (D-EM-19).</td></tr>
+      <tr><td class="id">RG-21</td><td>A CBS e o IBS do DF criado são o valor vezes a alíquota, arredondados ao centavo (D-EM-26).</td></tr>
     </tbody>
   </table></div>
 </section>
@@ -619,13 +685,14 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
     <thead><tr><th>Peça</th><th>O que muda</th><th>Etapa</th></tr></thead>
     <tbody>
       <tr><td><code>tax-authority</code></td><td class="wrap">Origem <code>emulated</code>. O planejador, sem efeito colateral: resultado mais situação do DF dão os lançamentos, os pré-requisitos e os fora do alcance. O lote com base, percentual e semente. Prévia, gravação pela porta de fatos, execuções e agendados (pela mesma emissão por data de hoje). O Simulado revisto: apropriação pelo pagamento, avanço sob demanda, adoção dos DFs existentes e o plano por DF (seção 8).</td><td>E0 · E1 · E2</td></tr>
+      <tr><td><code>ledger</code> (entrada)</td><td class="wrap">A origem <code>emulated</code> na entrada interna (<code>intake.ts</code>), validada como a da captura SEFAZ, sem itens, e a marca no documento.</td><td>E1</td></tr>
       <tr><td>Contrato dos fatos</td><td class="wrap">O contrato de lançamento por ente (D-EM-02): 20 lançamentos novos e 14 que existem em parte.</td><td>E3</td></tr>
       <tr><td><code>ledger</code></td><td class="wrap">Apropriação e glosa por valor, não só pelo todo. Os saldos suspended, expired, not_usable, restored, refund_requested, unprocessed e not_enforceable passam a se mover. Estorno, cancelamento, devolução, complemento e transferência.</td><td>E3</td></tr>
       <tr><td><code>integration</code></td><td class="wrap">Os 12 eventos documentados que nenhum fato gera hoje.</td><td>E3</td></tr>
       <tr><td><code>reconciliation</code></td><td class="wrap">Excedente (D02, C12) e pagamento antecipado (D08).</td><td>E3</td></tr>
       <tr><td><code>inconsistencies</code></td><td class="wrap">Nada novo na detecção. A conferência lê os 5 códigos que existem.</td><td>—</td></tr>
-      <tr><td><code>platform</code> (admin)</td><td class="wrap">Endpoints do emulador: catálogo, prévia, execução, conferência, lançamento unitário e o Simulado (plano, avanço, adoção); tudo na auditoria do cliente.</td><td>E0 · E1 · E2</td></tr>
-      <tr><td>Frontend</td><td class="wrap">A aba renomeada (D-EM-14), com as telas T-EM-01 a T-EM-06; a marca "emulado" no portal fora da produção.</td><td>E0 · E1 · E2</td></tr>
+      <tr><td><code>platform</code> (admin)</td><td class="wrap">Endpoints do emulador: criar DFs (o gerador, com a semente, chama a entrada interna do razão), catálogo, prévia, execução, conferência, lançamento unitário e o Simulado (plano, avanço, adoção); tudo na auditoria do cliente.</td><td>E0 · E1 · E2</td></tr>
+      <tr><td>Frontend</td><td class="wrap">A aba renomeada (D-EM-14), com as telas T-EM-01 a T-EM-07, na estrutura da D-EM-29; a marca "emulado" no portal fora da produção.</td><td>E0 · E1 · E2</td></tr>
       <tr><td>Testes</td><td class="wrap">Unidade do planejador (cada resultado contra cada situação de DF); <code>encore test</code> de ponta a ponta por resultado (executa e cobra Atingido); e2e da aba. Os cenários prontos viram a suíte de regressão do razão.</td><td>Todas</td></tr>
     </tbody>
   </table></div>
@@ -633,24 +700,25 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
 <section class="section" id="s13">
   <div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Etapas da construção</span></div>
   <div class="ondas">
-    <div class="onda crit"><div class="onda-h"><span class="onda-n">E0</span><span class="onda-t">O Simulado revisto</span><span class="onda-q">depende de D-EM-20, 21, 22 e 23</span></div>
+    <div class="onda crit"><div class="onda-h"><span class="onda-n">E0</span><span class="onda-t">O Simulado revisto</span><span class="onda-q">depende de D-EM-20, 22, 23 e 24</span></div>
       <ul class="plain">
-        <li>R-SIM-01 a R-SIM-07 e a T-EM-06.</li>
+        <li>R-SIM-01 a R-SIM-08 e a T-EM-06.</li>
         <li>Testes do plano contra o pagamento, da adoção na troca de modo e do avanço sob demanda.</li>
       </ul>
       <div class="pronto"><strong>Pronto quando</strong>, no Live local, um DF de entrada com a CAPUR conciliada e o pagamento registrado aparece apropriado, com o saldo appropriated, sem esperar o cron; e um cliente que passa para Simulada vê andar os DFs que já tinha.</div>
     </div>
-    <div class="onda"><div class="onda-h"><span class="onda-n">E1</span><span class="onda-t">Lançamento unitário com o que já existe</span><span class="onda-q">depende de D-EM-04 e 14</span></div>
+    <div class="onda"><div class="onda-h"><span class="onda-n">E1</span><span class="onda-t">DFs criados e lançamento unitário</span><span class="onda-q">depende de D-EM-04, 14, 25, 26, 27 e 29</span></div>
       <ul class="plain">
         <li>Origem <code>emulated</code>, ao lado do Simulado.</li>
-        <li>T-EM-01 e T-EM-04, com prévia e auditoria.</li>
+        <li>T-EM-01, T-EM-04 e T-EM-07, com prévia e auditoria, na estrutura da D-EM-29.</li>
+        <li>Criar DFs com as características da seção 5, pela entrada interna do razão.</li>
         <li>Os 17 lançamentos que o tax-rs já representa.</li>
       </ul>
-      <div class="pronto"><strong>Pronto quando</strong> o administrador lança um C02 num DF de entrada e a API da plataforma publica <code>credit.appropriated</code>, e o Simulado deixa de seguir esse DF na CBS.</div>
+      <div class="pronto"><strong>Pronto quando</strong> o administrador cria 100 NF-e de entrada num cliente de teste sem DFs, elas aparecem no portal marcadas como emuladas, a mesma semente cria as mesmas 100 noutro cliente, e um C02 num deles faz a API da plataforma publicar <code>credit.appropriated</code> e o Simulado deixar de seguir esse DF na CBS.</div>
     </div>
-    <div class="onda"><div class="onda-h"><span class="onda-n">E2</span><span class="onda-t">O lote e a conferência</span><span class="onda-q">depende de D-EM-06, 07, 08, 12, 13, 17, 18 e 19</span></div>
+    <div class="onda"><div class="onda-h"><span class="onda-n">E2</span><span class="onda-t">O lote e a conferência</span><span class="onda-q">depende de D-EM-06, 07, 08, 12, 13, 17, 18, 19 e 28</span></div>
       <ul class="plain">
-        <li>T-EM-02, T-EM-03 e T-EM-05: o lote com várias ações, base, percentual e semente.</li>
+        <li>T-EM-02, T-EM-03 e T-EM-05: o lote com várias ações, base, percentual e semente, sobre DFs filtrados, criados ou os dois.</li>
         <li>Os 11 resultados que só usam lançamentos de hoje: RE-01, RE-02, RE-03, RE-04, RE-05, RE-07, RE-08, RE-09, RE-15, RE-16, RE-17.</li>
         <li>4 cenários prontos: RT-A1, RT-A2, RT-F1 e as proporções do Simulado. Lote em JSON e API do admin.</li>
       </ul>
@@ -675,7 +743,7 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
 <section class="section" id="s14">
   <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Decisões</span></div>
   <p>Escolha uma opção em cada decisão em aberto e, se quiser, deixe uma observação. A escolha fica guardada neste navegador. "Copiar escolhas" monta o texto para mandar de volta; as escolhas entram na proposta na versão seguinte.</p>
-  <div class="dc-bar"><span class="dc-prog"><strong id="dc-n">0</strong> de 20 em aberto escolhidas · 3 decididas</span><button type="button" class="dc-btn" id="dc-rec">Marcar as recomendadas</button><button type="button" class="dc-btn" id="dc-limpar">Limpar</button><button type="button" class="dc-btn pri" id="dc-copiar">Copiar escolhas</button><span class="dc-msg" id="dc-msg" aria-live="polite"></span></div>
+  <div class="dc-bar"><span class="dc-prog"><strong id="dc-n">0</strong> de 25 em aberto escolhidas · 4 decididas</span><button type="button" class="dc-btn" id="dc-rec">Marcar as recomendadas</button><button type="button" class="dc-btn" id="dc-limpar">Limpar</button><button type="button" class="dc-btn pri" id="dc-copiar">Copiar escolhas</button><span class="dc-msg" id="dc-msg" aria-live="polite"></span></div>
   <div class="dc-grid">
     <fieldset class="dc decidida ok" id="D-EM-01" data-id="D-EM-01" data-titulo="O que é emulado" data-rec="A">
       <legend><span class="id">D-EM-01</span>O que é emulado</legend>
@@ -763,7 +831,7 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
     </fieldset>
     <fieldset class="dc" id="D-EM-13" data-id="D-EM-13" data-titulo="Limites" data-rec="A">
       <legend><span class="id">D-EM-13</span>Limites</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-13" value="A" data-txt="Até 1.000 DFs atingidos por execução, somadas as ações; acima de 100, o administrador digita o número de DFs para confirmar."><span><strong>A</strong> · Até 1.000 DFs atingidos por execução, somadas as ações; acima de 100, o administrador digita o número de DFs para confirmar.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-13" value="A" data-txt="Até 1.000 DFs atingidos por execução, somadas as ações, e até 1.000 DFs criados; acima de 100, o administrador digita o número de DFs para confirmar."><span><strong>A</strong> · Até 1.000 DFs atingidos por execução, somadas as ações, e até 1.000 DFs criados; acima de 100, o administrador digita o número de DFs para confirmar.<span class="rec-tag">recomendada</span></span></label>
       <label class="dc-op"><input type="radio" name="D-EM-13" value="B" data-txt="Sem limite."><span><strong>B</strong> · Sem limite.</span></label>
       <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong></div>
       <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-13"></textarea></label>
@@ -817,13 +885,12 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
       <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Com o B, o Simulado pode apropriar um crédito que o administrador acabou de glosar.</div>
       <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-20"></textarea></label>
     </fieldset>
-    <fieldset class="dc" id="D-EM-21" data-id="D-EM-21" data-titulo="Quando o Simulado apropria o crédito" data-rec="B">
+    <fieldset class="dc decidida ok" id="D-EM-21" data-id="D-EM-21" data-titulo="Quando o Simulado apropria o crédito" data-rec="B">
       <legend><span class="id">D-EM-21</span>Quando o Simulado apropria o crédito</legend>
-      <label class="dc-op"><input type="radio" name="D-EM-21" value="A" data-txt="Na data do recolhimento marcada no cadastro do DF, como hoje."><span><strong>A</strong> · Na data do recolhimento marcada no cadastro do DF, como hoje.</span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-21" value="B" data-txt="Quando o pagamento chega (o mesmo que concilia a CFIN), ou na data marcada, o que vier primeiro."><span><strong>B</strong> · Quando o pagamento chega (o mesmo que concilia a CFIN), ou na data marcada, o que vier primeiro.<span class="rec-tag">recomendada</span></span></label>
-      <label class="dc-op"><input type="radio" name="D-EM-21" value="C" data-txt="Só quando o pagamento chega."><span><strong>C</strong> · Só quando o pagamento chega.</span></label>
-      <div class="dc-rec"><span class="rl">Recomendação</span><strong>B.</strong> CFIN conciliada e crédito apropriado andam juntos, como o usuário espera ver. O C deixa sem apropriação o DF cujo pagamento nunca chega.</div>
-      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-21"></textarea></label>
+      <label class="dc-op"><input type="radio" name="D-EM-21" value="A" data-txt="Na data do recolhimento marcada no cadastro do DF, como hoje, sem pagamento." disabled><span><strong>A</strong> · Na data do recolhimento marcada no cadastro do DF, como hoje, sem pagamento.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-21" value="B" data-txt="Sempre com o pagamento: o Simulado lança o pagamento e a apropriação juntos, na data do plano; se o pagamento chega antes por outro caminho, apropria na data dele." checked disabled><span><strong>B</strong> · Sempre com o pagamento: o Simulado lança o pagamento e a apropriação juntos, na data do plano; se o pagamento chega antes por outro caminho, apropria na data dele.<span class="rec-tag">decidida</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-21" value="C" data-txt="Quando o pagamento chega, ou na data do plano, o que vier primeiro, sem lançar o pagamento." disabled><span><strong>C</strong> · Quando o pagamento chega, ou na data do plano, o que vier primeiro, sem lançar o pagamento.</span></label>
+      <div class="dc-rec"><span class="rl">Decidida em 18/11/2026</span><strong>B</strong>, pela regra do usuário: quando se paga o imposto, o crédito é apropriado. Pagamento e apropriação andam juntos, e a CFIN não concilia com o crédito "a apropriar".</div>
     </fieldset>
     <fieldset class="dc" id="D-EM-22" data-id="D-EM-22" data-titulo="Os DFs que já existem quando o cliente passa para Simulada" data-rec="C">
       <legend><span class="id">D-EM-22</span>Os DFs que já existem quando o cliente passa para Simulada</legend>
@@ -839,6 +906,51 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
       <label class="dc-op"><input type="radio" name="D-EM-23" value="B" data-txt="Configuráveis por cliente."><span><strong>B</strong> · Configuráveis por cliente.</span></label>
       <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> Distribuição sob medida é o papel do lote do emulador (D-EM-16).</div>
       <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-23"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-24" data-id="D-EM-24" data-titulo="Pagamento sem apropriação vindo do ente" data-rec="A">
+      <legend><span class="id">D-EM-24</span>Pagamento sem apropriação vindo do ente</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-24" value="A" data-txt="O razão continua seguindo o ente, e a plataforma mostra a divergência: o imposto foi pago e o ente não apropriou."><span><strong>A</strong> · O razão continua seguindo o ente, e a plataforma mostra a divergência: o imposto foi pago e o ente não apropriou.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-24" value="B" data-txt="O razão apropria sozinho ao ver o pagamento, sem esperar o ente."><span><strong>B</strong> · O razão apropria sozinho ao ver o pagamento, sem esperar o ente.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O SplitHub não controla o estado do crédito: segue o ente e evidencia a divergência. Com o B, o saldo do SplitHub deixa de bater com o do ente. Vale para o ente real e para o Replay; no Simulado e no emulador, a D-EM-21 já impede o caso.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-24"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-25" data-id="D-EM-25" data-titulo="A contraparte dos DFs criados" data-rec="C">
+      <legend><span class="id">D-EM-25</span>A contraparte dos DFs criados</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-25" value="A" data-txt="Fictícias, criadas na hora, com CNPJ válido e o nome marcado &quot;[EMULADO]&quot;."><span><strong>A</strong> · Fictícias, criadas na hora, com CNPJ válido e o nome marcado "[EMULADO]".</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-25" value="B" data-txt="Só as que o cliente já tem, nos DFs e nos contratos."><span><strong>B</strong> · Só as que o cliente já tem, nos DFs e nos contratos.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-25" value="C" data-txt="As duas, à escolha em cada criação."><span><strong>C</strong> · As duas, à escolha em cada criação.<span class="rec-tag">recomendada</span></span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>C.</strong> As fictícias servem ao volume. As do cliente servem para testar contrato e recolhimento, porque o contrato é por fornecedor: um DF de um fornecedor com contrato de RAD sai com o RAD.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-25"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-26" data-id="D-EM-26" data-titulo="As alíquotas da CBS e do IBS nos DFs criados" data-rec="C">
+      <legend><span class="id">D-EM-26</span>As alíquotas da CBS e do IBS nos DFs criados</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-26" value="A" data-txt="As do ano da emissão, pela lei, sem troca."><span><strong>A</strong> · As do ano da emissão, pela lei, sem troca.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-26" value="B" data-txt="Sempre informadas pelo administrador."><span><strong>B</strong> · Sempre informadas pelo administrador.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-26" value="C" data-txt="As do ano da emissão, com a opção de trocar."><span><strong>C</strong> · As do ano da emissão, com a opção de trocar.<span class="rec-tag">recomendada</span></span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>C.</strong> O padrão acerta o caso comum (em 2026, CBS 0,9% e IBS 0,1%); a troca serve para testar valor fora da regra e os anos seguintes.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-26"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-27" data-id="D-EM-27" data-titulo="Os DFs criados e o Simulado" data-rec="A">
+      <legend><span class="id">D-EM-27</span>Os DFs criados e o Simulado</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-27" value="A" data-txt="Entram no plano do Simulado como qualquer DF novo, quando o cliente está em Simulada; o tributo que recebe ação no mesmo lote sai do plano (D-EM-20)."><span><strong>A</strong> · Entram no plano do Simulado como qualquer DF novo, quando o cliente está em Simulada; o tributo que recebe ação no mesmo lote sai do plano (D-EM-20).<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-27" value="B" data-txt="Nunca entram no plano do Simulado."><span><strong>B</strong> · Nunca entram no plano do Simulado.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O DF criado se comporta como um DF real. Quem quer controle total age sobre ele no mesmo lote ou deixa o cliente fora de Simulada.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-27"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-28" data-id="D-EM-28" data-titulo="Remover os DFs criados" data-rec="A">
+      <legend><span class="id">D-EM-28</span>Remover os DFs criados</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-28" value="A" data-txt="Não se removem: ficam, marcados como emulados; para recomeçar, um cliente de teste novo, como na D-EM-10."><span><strong>A</strong> · Não se removem: ficam, marcados como emulados; para recomeçar, um cliente de teste novo, como na D-EM-10.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-28" value="B" data-txt="Remover todos os DFs criados por uma execução, com os lançamentos deles, fora da produção e com a auditoria."><span><strong>B</strong> · Remover todos os DFs criados por uma execução, com os lançamentos deles, fora da produção e com a auditoria.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>A.</strong> O tax-rs já remove DF (a importação desfaz o que registrou pela metade), mas um DF criado pode já ter lançamentos e eventos publicados. Remover quebra o razão e a auditoria, pelo mesmo motivo da D-EM-10.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-28"></textarea></label>
+    </fieldset>
+    <fieldset class="dc" id="D-EM-29" data-id="D-EM-29" data-titulo="A estrutura do módulo no painel do cliente" data-rec="B">
+      <legend><span class="id">D-EM-29</span>A estrutura do módulo no painel do cliente</legend>
+      <label class="dc-op"><input type="radio" name="D-EM-29" value="A" data-txt="Tudo dentro da aba, com subabas: Visão geral, Simulado, Criar DFs, Lote, Unitário e Execuções."><span><strong>A</strong> · Tudo dentro da aba, com subabas: Visão geral, Simulado, Criar DFs, Lote, Unitário e Execuções.</span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-29" value="B" data-txt="Espaço próprio do emulador: a aba fica com o modo e o resumo, e o botão &quot;Abrir o emulador&quot; leva a uma página do cliente com menu lateral."><span><strong>B</strong> · Espaço próprio do emulador: a aba fica com o modo e o resumo, e o botão "Abrir o emulador" leva a uma página do cliente com menu lateral.<span class="rec-tag">recomendada</span></span></label>
+      <label class="dc-op"><input type="radio" name="D-EM-29" value="C" data-txt="Execução guiada: a aba vira a lista de execuções, com um assistente de ponta a ponta; o unitário fica no próprio DF, e o Simulado, num painel lateral."><span><strong>C</strong> · Execução guiada: a aba vira a lista de execuções, com um assistente de ponta a ponta; o unitário fica no próprio DF, e o Simulado, num painel lateral.</span></label>
+      <div class="dc-rec"><span class="rl">Recomendação</span><strong>B.</strong> O módulo tem sete telas e um assistente de quatro passos: nas subabas (A), fica apertado embaixo das oito abas do cliente; na execução guiada (C), o Simulado e o unitário ficam escondidos. O B deixa as abas do cliente como estão e dá endereço próprio a cada tela, para o suporte e os testes. As três estão clicáveis na <a href="taxrs-emulador-estrutura.html">página da estrutura</a>.</div>
+      <label class="dc-nota">Observação<textarea rows="2" data-nota="D-EM-29"></textarea></label>
     </fieldset>
   </div>
   <label class="dc-nota" for="dc-saida">O texto que vai ser copiado</label>
@@ -882,12 +994,13 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
   <div class="table-wrap"><table>
     <thead><tr><th>Versão</th><th>Data</th><th>O que mudou</th></tr></thead>
     <tbody>
+      <tr><td class="id">1.2</td><td>19/11/2026</td><td>Regra do usuário: quando se paga o imposto, o crédito é apropriado. A D-EM-21 fica decidida: o Simulado lança o pagamento e a apropriação juntos e apropria na data de um pagamento que chegue antes por outro caminho. Entram a R-SIM-08, a RG-19 e a D-EM-24, sobre o pagamento sem apropriação vindo do ente. Pedido do usuário: o emulador também cria DFs, com quantidade, tipos e valores pré-definidos ou aleatórios (seção 5, T-EM-07, RG-20 e RG-21, D-EM-25 a 28); e três estruturas clicáveis do módulo no painel do cliente, para a D-EM-29. A v1.1 está no <a href="versoes/taxrs-emulador-lancamentos-v1.1.html">arquivo de versões</a>.</td></tr>
       <tr><td class="id">1.1</td><td>18/11/2026</td><td>Pedido do usuário: o Simulado fica como o modelo automático e o emulador como o manual, em lote (D-EM-05 decidida); o lote recebe várias ações, sem nomear DFs, cada uma com o percentual dos DFs que atinge (D-EM-16 decidida). A seção 8 passa a ser a revisão do Simulado, que concilia a CAPUR e a CFIN e não apropria: cinco achados no código e sete mudanças. A seção 14 vira a escolha das decisões, com as recomendadas, a observação e o texto para copiar. Sete decisões novas (D-EM-17 a 23), a E0 e quatro regras.</td></tr>
       <tr><td class="id">1.0</td><td>18/11/2026</td><td>Primeira versão, para validação: 51 lançamentos, 27 resultados, 18 cenários prontos, 6 telas, 14 regras, 4 etapas e 15 decisões, com a D-EM-01 decidida. Está no <a href="versoes/taxrs-emulador-lancamentos-v1.0.html">arquivo de versões</a>.</td></tr>
     </tbody>
   </table></div>
 </section>
-<div class="foot">Emulador de lançamentos da Receita Federal e do Comitê Gestor · v1.1 · 18/11/2026</div>
+<div class="foot">Emulador de lançamentos da Receita Federal e do Comitê Gestor · v1.2 · 19/11/2026</div>
 </div>
 <script>
 (function () {
@@ -908,7 +1021,7 @@ fieldset.dc legend .id { font-family: 'JetBrains Mono', monospace; font-size: 11
   });
 })();
 (function () {
-  var CHAVE = 'taxrs-emulador-decisoes-v1', VERSAO = '1.1';
+  var CHAVE = 'taxrs-emulador-decisoes-v1', VERSAO = '1.2';
   var todos = [].slice.call(document.querySelectorAll('fieldset.dc'));
   var abertos = todos.filter(function (f) { return !f.classList.contains('decidida'); });
   var saida = document.getElementById('dc-saida'), msg = document.getElementById('dc-msg');
