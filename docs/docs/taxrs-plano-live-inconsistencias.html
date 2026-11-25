@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano do Live: Inconsistências e Atendimento · v1.0</title>
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 800px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.callout.red { border-color: var(--red); background: var(--red-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 9px 13px; border-bottom: 1px solid var(--brd); vertical-align: top; color: var(--txt2); background: var(--sur); }
+td strong { color: var(--txt1); }
+tbody tr:last-child td { border-bottom: none; }
+td.grp { background: var(--sur2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); }
+td.id { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); white-space: nowrap; }
+code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--mono); padding: 1px 5px; border-radius: 4px; color: var(--txt1); overflow-wrap: anywhere; }
+pre { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--mono); color: var(--txt1); padding: 12px 14px; border-radius: 8px; overflow-x: auto; margin: 10px 0 14px; line-height: 1.55; }
+pre code { background: none; padding: 0; overflow-wrap: normal; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 14px 0 18px; }
+@media (max-width: 860px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.kpi-v { font-size: 22px; font-weight: 800; color: var(--txt1); line-height: 1.2; }
+.kpi-l { font-size: 11.5px; color: var(--txt3); }
+.kpi.ok .kpi-v { color: var(--green); } .kpi.warn .kpi-v { color: var(--amber); }
+.kpi.info .kpi-v { color: var(--blue); } .kpi.red .kpi-v { color: var(--red); }
+.ondas { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 14px 0; }
+.onda { background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 8px; padding: 14px 16px; min-width: 0; scroll-margin-top: 20px; }
+.onda.crit { border-left-color: var(--red); }
+.onda.dep { border-left-color: var(--gray); }
+.onda-h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; margin-bottom: 6px; }
+.onda-n { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.onda.crit .onda-n { color: var(--red); }
+.onda.dep .onda-n { color: var(--gray); }
+.onda-t { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.onda-q { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.onda-g { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 20px; }
+@media (max-width: 760px) { .onda-g { grid-template-columns: minmax(0, 1fr); } }
+.onda-g > div { min-width: 0; }
+.onda .lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-top: 8px; }
+.onda ul.plain { margin-left: 16px; margin-top: 4px; }
+.onda ul.plain li { font-size: 12.5px; }
+.onda .pronto { font-size: 12px; color: var(--txt2); border-top: 1px dashed var(--brd); margin-top: 10px; padding-top: 8px; }
+.passos { counter-reset: passo; list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.passos > li { counter-increment: passo; position: relative; padding: 10px 14px 10px 46px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; font-size: 13px; color: var(--txt2); min-width: 0; }
+.passos > li::before { content: counter(passo); position: absolute; left: 12px; top: 10px; width: 22px; height: 22px; border-radius: 50%; background: var(--teal-d); color: var(--teal); font: 700 11px/22px 'JetBrains Mono', monospace; text-align: center; }
+.passos > li strong { color: var(--txt1); }
+.fluxo { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 12px 0; min-width: 0; }
+.fluxo-t { font-size: 13.5px; font-weight: 700; color: var(--txt1); margin-bottom: 4px; }
+.fluxo ol.plain li { font-size: 12.5px; }
+.lado { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; margin-right: 4px; white-space: nowrap; }
+.lado.be { background: var(--blue-d); color: var(--blue); }
+.lado.fe { background: var(--teal-d); color: var(--teal); }
+.lado.job { background: var(--amber-d); color: var(--amber); }
+.diagram { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 14px; margin: 14px 0; overflow-x: auto; }
+.diagram svg { display: block; min-width: 760px; width: 100%; height: auto; }
+.diagram text { font-family: 'Inter', system-ui, sans-serif; fill: var(--txt1); }
+.diagram .sub { fill: var(--txt3); font-size: 10.5px; }
+.diagram .box { fill: var(--sur2); stroke: var(--brd); }
+.diagram .box-be { fill: var(--blue-d); stroke: var(--blue); }
+.diagram .box-fe { fill: var(--teal-d); stroke: var(--teal); }
+.diagram .box-ext { fill: var(--gray-d); stroke: var(--gray); stroke-dasharray: 4 3; }
+.diagram .seta { stroke: var(--txt3); stroke-width: 1.3; fill: none; marker-end: url(#ponta); }
+.diagram #ponta path { fill: var(--txt3); }
+.check { list-style: none; display: flex; flex-direction: column; gap: 5px; margin: 8px 0 12px; }
+.check li { font-size: 12.5px; color: var(--txt2); padding-left: 22px; position: relative; }
+.check li::before { content: "☐"; position: absolute; left: 2px; color: var(--teal); }
+.foot { margin-top: 40px; font-size: 11px; color: var(--txt3); text-align: center; }
+.back { display: inline-block; font-size: 12px; color: var(--txt3); text-decoration: none; margin-bottom: 18px; }
+.back:hover { color: var(--txt1); }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="prds.html#sec-taxrs">← Hub de PRDs</a>
+<div class="eyebrow">tax-rs · Engenharia e produto</div>
+<h1>Inconsistências e Atendimento no modo Live: plano de desenvolvimento</h1>
+<p class="subtitle">O Demo do tax-rs já tem a gestão de inconsistências completa, com o atendimento da proposta v2.2: grupos, roteamento, sorteio, passagens com exigência e SLA. O Live tem o quadro, o card e o workflow básico, com 5 dos 21 tipos detectados, e nada do atendimento. Este plano leva as duas coisas ao Live com dado real: as etapas, o que muda no backend e no frontend em cada uma, os fluxos ponta a ponta, o processo de desenvolvimento e as decisões que destravam o início.</p>
+
+<div class="meta-bar">
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.0</span></span>
+  <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">25/11/2026</span></span>
+  <span class="meta-pill"><span class="meta-label">Base</span><span class="meta-val"><code>main</code> do tax-rs no <code>9ec1af0</code></span></span>
+  <span class="meta-pill"><span class="meta-label">Referência funcional</span><span class="meta-val">o Demo (flags <code>inconsistencias</code> e <code>atendimento</code>)</span></span>
+  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">0 de 10</span></span>
+</div>
+
+<nav class="toc">
+  <div class="toc-title">Conteúdo</div>
+  <ul class="toc-list">
+    <li><a href="#s1"><span class="toc-num">1</span>Resumo</a></li>
+    <li><a href="#s2"><span class="toc-num">2</span>Ponto de partida: o que o Live já tem</a></li>
+    <li><a href="#s3"><span class="toc-num">3</span>Escopo</a></li>
+    <li><a href="#s4"><span class="toc-num">4</span>Arquitetura alvo</a></li>
+    <li><a href="#s5"><span class="toc-num">5</span>Modelo de dados</a></li>
+    <li><a href="#s6"><span class="toc-num">6</span>API</a></li>
+    <li><a href="#s7"><span class="toc-num">7</span>Fluxos ponta a ponta</a></li>
+    <li><a href="#s8"><span class="toc-num">8</span>Frontend no Live</a></li>
+    <li><a href="#s9"><span class="toc-num">9</span>Etapas</a></li>
+    <li><a href="#s10"><span class="toc-num">10</span>Fluxo de desenvolvimento</a></li>
+    <li><a href="#s11"><span class="toc-num">11</span>Estratégia de testes</a></li>
+    <li><a href="#s12"><span class="toc-num">12</span>Liberação e dados existentes</a></li>
+    <li><a href="#s13"><span class="toc-num">13</span>Riscos</a></li>
+    <li><a href="#s14"><span class="toc-num">14</span>Decisões para começar</a></li>
+    <li><a href="#s15"><span class="toc-num">15</span>Rastreabilidade</a></li>
+  </ul>
+</nav>
+
+<!-- 1 -->
+<section class="section" id="s1">
+  <div class="sec-hdr"><span class="sec-num">1</span><span class="sec-title">Resumo</span></div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-v">10</div><div class="kpi-l">etapas, de LI-0 a LI-9</div></div>
+    <div class="kpi info"><div class="kpi-v">2</div><div class="kpi-l">frentes em paralelo</div></div>
+    <div class="kpi warn"><div class="kpi-v">5 → 9</div><div class="kpi-l">tipos detectados no Live</div></div>
+    <div class="kpi ok"><div class="kpi-v">26</div><div class="kpi-l">funcionalidades do atendimento (F-01 a F-26)</div></div>
+    <div class="kpi red"><div class="kpi-v">10</div><div class="kpi-l">decisões D-LI abertas</div></div>
+  </div>
+  <ul class="plain">
+    <li><strong>O Demo é a especificação executável.</strong> O motor do atendimento do Demo (<code>frontend/lib/domain/engine/atendimento/</code>, cerca de 4.300 linhas de funções puras) é portado para o backend. Os mesmos cenários rodam nos dois lados e precisam dar o mesmo resultado: roteamento, sorteio, prazos e leitura do SLA.</li>
+    <li><strong>O atendimento entra no serviço <code>inconsistencies</code>, não num serviço novo</strong> (D-LI-01). A passagem de estado, o responsável e o relógio do SLA precisam mudar na mesma transação que grava o histórico, e a regra de que só esse serviço resolve uma ocorrência (D9, RN-INC-10) continua valendo.</li>
+    <li><strong>As telas do Demo são reaproveitadas.</strong> No Live, o contexto do atendimento deixa de ser inerte: um provedor Live publica a mesma API que o motor da sessão publica no Demo, só que lendo e gravando no servidor. Os componentes de <code>components/atendimento/</code> não mudam.</li>
+    <li><strong>Duas frentes.</strong> A frente A deixa as inconsistências do Live completas (correções, tipos novos, quadro paginado). A frente B constrói o atendimento (configuração, roteamento, passagens, SLA, listagem e visão geral). As duas se encontram na etapa LI-8, de fechamento.</li>
+    <li><strong>Liberação por empresa.</strong> O atendimento liga por cliente, por uma permissão de recurso no servidor (D-LI-03). Na ativação, as ocorrências abertas são roteadas e os relógios começam a contar dali, sem SLA retroativo (D-LI-04).</li>
+    <li><strong>O que depende de outras ondas do Live fica de fora, com o gancho pronto.</strong> As ocorrências da partição dependem da L1. A família I, os alertas de competência e o evento pedido do card dependem da L4. A família D (split) está fora da v1.</li>
+  </ul>
+</section>
+
+<!-- 2 -->
+<section class="section" id="s2">
+  <div class="sec-hdr"><span class="sec-num">2</span><span class="sec-title">Ponto de partida: o que o Live já tem</span></div>
+
+  <h3>Backend: serviço <code>inconsistencies</code></h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Peça</th><th>O que faz hoje</th></tr></thead>
+    <tbody>
+      <tr><td><code>lib/catalog.ts</code></td><td>21 tipos em 6 famílias (A a F), com dono e prazo de cada família. Só 5 tipos com <code>detected: true</code>: os 4 da família B (valor divergente de IBS e de CBS, DF sem registro, registro sem DF) e a glosa.</td></tr>
+      <tr><td><code>lib/detect.ts</code></td><td>Regras puras, cada uma com chave de dedup estável. Fontes: as cópias do ledger, os resultados da conciliação e os fatos de glosa.</td></tr>
+      <tr><td><code>lib/workflow.ts</code></td><td>5 estados (<code>open</code>, <code>in_review</code>, <code>awaiting_issuer</code>, <code>resolved</code>, <code>disallowed</code>), transições permitidas, desfecho com no mínimo 10 caracteres, prioridade só pelo valor.</td></tr>
+      <tr><td><code>store.ts</code></td><td><code>upsertDetection</code> com lock por chave: causa nova abre, nova detecção reabre o resolvido (nunca o glosado), causa que some resolve sozinha.</td></tr>
+      <tr><td><code>api.ts</code></td><td><code>/app/inconsistencies</code> (listagem paginada e filtrada no servidor), <code>/overview</code>, <code>/occurrences/:id</code>, <code>/state</code>, <code>/assignee</code>, <code>/comments</code> e <code>/catalog</code>. Escrita exige <code>inconsistencias: operar</code>; o responsável é conferido no diretório (<code>identity.activeMember</code>).</td></tr>
+      <tr><td><code>announce.ts</code>, <code>projection.ts</code></td><td>Anúncio <code>inconsistency-changed</code> ao ledger por outbox, com <code>seq</code> monotônico; varredura a cada minuto; reconciliação diária das projeções.</td></tr>
+      <tr><td>Esquema (<code>2_occurrences.up.sql</code>)</td><td><code>occurrences</code> (uma por empresa e chave de dedup), <code>occurrence_history</code> (trilha de tudo), <code>occurrence_comments</code>, cópias <code>ledger_records</code> e <code>reconciliation_results</code>. A cópia do ledger já traz <code>expiration_date</code>, de que o teto do SLA precisa.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Frontend: o que a tela do Live usa</h3>
+  <ul class="plain">
+    <li><code>lib/data/inconsistencies/live.ts</code> traduz as ocorrências do servidor para o formato do card do Demo (<code>cardDe</code>, <code>kpisDe</code>, <code>graficosDe</code>, <code>detalheDe</code>). A página escolhe o caminho por <code>modeOf("inconsistencies") === "live"</code>.</li>
+    <li>O quadro carrega até 5 mil cards de uma vez e filtra no navegador. A listagem já é paginada no servidor.</li>
+    <li>No Live, o atendimento fica inerte (<code>AtendimentoContext</code>) e a rota <code>/configuracoes/atendimento</code> está em <code>SOON_WHEN_LIVE</code>. A aba Alertas e o evento como ação do card são só do Demo.</li>
+  </ul>
+
+  <h3>As lacunas</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>Lacuna</th><th>Onde está registrada</th><th>Etapa</th></tr></thead>
+    <tbody>
+      <tr><td class="grp" colspan="4">Inconsistências</td></tr>
+      <tr><td class="id">N-05</td><td>Só 5 dos 21 tipos são detectados. O Demo levanta 12, mais os da partição e da família I.</td><td>Relatório Demo × Live; <code>roadmap.md</code> P1</td><td>LI-1</td></tr>
+      <tr><td class="id">N-06</td><td>Família B com 21 dias corridos (o PRD pede 15 dias úteis); A, D, E e F sem prazo; prioridade só pelo valor.</td><td>Relatório; <code>CLAUDE.md</code> do serviço</td><td>LI-0</td></tr>
+      <tr><td class="id">N-07</td><td>A tela lê o catálogo do frontend, embora <code>/app/inconsistencies/catalog</code> exista.</td><td>Relatório</td><td>LI-0</td></tr>
+      <tr><td class="id">I-05</td><td>O card do Início divide por direção e não traz as ocorrências da ingestão.</td><td>Relatório</td><td>LI-0</td></tr>
+      <tr><td class="id">—</td><td>"DF sem registro" sai sem tributo.</td><td><code>roadmap.md</code> P1</td><td>LI-0</td></tr>
+      <tr><td class="id">N-03</td><td>Quadro sem paginação no servidor (teto de 5 mil cards).</td><td><code>roadmap.md</code></td><td>LI-2</td></tr>
+      <tr><td class="id">—</td><td>Tesouraria opera todas as famílias; a restrição à família D é só um comentário em <code>permissions.ts</code>.</td><td><code>CLAUDE.md</code> do serviço</td><td>LI-0</td></tr>
+      <tr><td class="grp" colspan="4">Atendimento</td></tr>
+      <tr><td class="id">F-01 a F-26</td><td>Nada no Live: sem grupos, regras, sorteio, fila, passagens com exigência, reabertura ligada, redistribuição, SLA, indicadores nem os campos novos da listagem e da visão geral.</td><td>Proposta v2.2; plano do Demo</td><td>LI-3 a LI-7</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 3 -->
+<section class="section" id="s3">
+  <div class="sec-hdr"><span class="sec-num">3</span><span class="sec-title">Escopo</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Entra</th><th>Fica de fora, com o gancho pronto</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><ul class="plain">
+          <li>As correções do que o Live já tem (prazos, prioridade, catálogo, tributo, card do Início, Tesouraria).</li>
+          <li>Os 4 tipos novos que já têm fonte no Live: os 3 da família A, a partir do resultado da importação, e o prazo expirado, a partir do crédito expirado que o ledger já calcula (seção 9, LI-1).</li>
+          <li>O quadro paginado no servidor, com recortes e filtros.</li>
+          <li>O atendimento inteiro da proposta v2.2, menos o evento pedido do card: configuração, roteamento, sorteio, fila, ações do card, passagens com exigência, reabertura, glosado que vira chamado novo, redistribuição, SLA, listagem, visão geral e indicadores.</li>
+          <li>Os avisos de risco e de estouro do SLA no histórico e no sino da aplicação.</li>
+        </ul></td>
+        <td><ul class="plain">
+          <li><strong>As cinco ocorrências da partição</strong>: dependem da parcialidade no Live (onda L1). O ledger já calcula as parcelas do crédito (<code>ledger/lib/fold.ts</code>), o que pode antecipar parte delas.</li>
+          <li><strong>Alíquota incorreta, do IBS e da CBS</strong>: o backend não tem hoje a alíquota esperada com que comparar a do documento. Os dois tipos entram quando houver essa fonte (D-LI-08).</li>
+          <li><strong>A família I, a aba Alertas de competência e o evento ou a nota como ação do card</strong>: dependem dos eventos fiscais e do PCONT no Live (onda L4). O roteamento e o SLA já aceitam a família I, de modo que ela entra só com a detecção.</li>
+          <li><strong>A família D (split)</strong>: fora da v1 (D-LV-04).</li>
+          <li><strong>A família E (ressarcimento)</strong>: depende do Ressarcimento no Live (onda L6).</li>
+          <li><strong>A família F (integração ao ERP)</strong>: depende dos conectores de ERP.</li>
+          <li><strong>O e-mail dos avisos</strong>: depende do provedor transacional, ainda não escolhido (D-LI-06).</li>
+          <li>O que é só do Demo continua só do Demo: "Ver como", "Simular nova detecção" e o relógio parado no hoje da base.</li>
+        </ul></td>
+      </tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 4 -->
+<section class="section" id="s4">
+  <div class="sec-hdr"><span class="sec-num">4</span><span class="sec-title">Arquitetura alvo</span></div>
+
+  <div class="diagram" role="img" aria-label="Serviços e fluxos do atendimento no Live">
+    <svg viewBox="0 0 960 400" xmlns="http://www.w3.org/2000/svg">
+      <defs><marker id="ponta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z"/></marker></defs>
+      <!-- fontes -->
+      <rect class="box" x="10" y="20" width="190" height="56" rx="8"/><text x="22" y="44" font-size="13" font-weight="700">ledger</text><text class="sub" x="22" y="62">ledger-record-changed</text>
+      <rect class="box" x="10" y="92" width="190" height="56" rx="8"/><text x="22" y="116" font-size="13" font-weight="700">reconciliation</text><text class="sub" x="22" y="134">reconciliation-results</text>
+      <rect class="box" x="10" y="164" width="190" height="56" rx="8"/><text x="22" y="188" font-size="13" font-weight="700">tax-authority / integration</text><text class="sub" x="22" y="206">fatos de glosa · recusas da ingestão</text>
+      <rect class="box" x="10" y="236" width="190" height="56" rx="8"/><text x="22" y="260" font-size="13" font-weight="700">identity</text><text class="sub" x="22" y="278">member-changed (novo)</text>
+      <!-- serviço -->
+      <rect class="box-be" x="250" y="20" width="420" height="300" rx="10"/>
+      <text x="266" y="44" font-size="14" font-weight="800">serviço inconsistencies</text>
+      <rect class="box" x="266" y="58" width="185" height="52" rx="6"/><text x="276" y="80" font-size="12" font-weight="700">detecção</text><text class="sub" x="276" y="97">detect.ts · upsertDetection</text>
+      <rect class="box" x="469" y="58" width="185" height="52" rx="6"/><text x="479" y="80" font-size="12" font-weight="700">roteamento e sorteio</text><text class="sub" x="479" y="97">attendance/routing · draw</text>
+      <rect class="box" x="266" y="124" width="185" height="52" rx="6"/><text x="276" y="146" font-size="12" font-weight="700">passagens</text><text class="sub" x="276" y="163">workflow + exigências</text>
+      <rect class="box" x="469" y="124" width="185" height="52" rx="6"/><text x="479" y="146" font-size="12" font-weight="700">relógios do SLA</text><text class="sub" x="479" y="163">sla_clocks · calendário útil</text>
+      <rect class="box" x="266" y="190" width="388" height="52" rx="6"/><text x="276" y="212" font-size="12" font-weight="700">uma transação: occurrences + occurrence_history + sla_clocks</text><text class="sub" x="276" y="229">seq monotônico → inconsistency-changed (outbox) ao ledger</text>
+      <rect class="box" x="266" y="256" width="185" height="52" rx="6"/><text x="276" y="278" font-size="12" font-weight="700">jobs e assinaturas</text><text class="sub" x="276" y="295">sla-sweep · queue-draw · backfill</text>
+      <rect class="box" x="469" y="256" width="185" height="52" rx="6"/><text x="479" y="278" font-size="12" font-weight="700">API /app</text><text class="sub" x="479" y="295">inconsistencies · attendance</text>
+      <!-- frontend -->
+      <rect class="box-fe" x="720" y="20" width="230" height="300" rx="10"/>
+      <text x="736" y="44" font-size="14" font-weight="800">frontend (Live)</text>
+      <rect class="box" x="736" y="58" width="198" height="52" rx="6"/><text x="746" y="80" font-size="12" font-weight="700">client.gen.ts</text><text class="sub" x="746" y="97">bun run gen:client</text>
+      <rect class="box" x="736" y="124" width="198" height="52" rx="6"/><text x="746" y="146" font-size="12" font-weight="700">adaptadores Live</text><text class="sub" x="746" y="163">lib/data/attendance/live.ts</text>
+      <rect class="box" x="736" y="190" width="198" height="52" rx="6"/><text x="746" y="212" font-size="12" font-weight="700">AtendimentoLive</text><text class="sub" x="746" y="229">mesma API do motor do Demo</text>
+      <rect class="box" x="736" y="256" width="198" height="52" rx="6"/><text x="746" y="278" font-size="12" font-weight="700">telas do Demo, sem mudança</text><text class="sub" x="746" y="295">components/atendimento/</text>
+      <!-- externos -->
+      <rect class="box-ext" x="250" y="340" width="420" height="44" rx="8"/><text x="266" y="367" font-size="12">e-mail transacional (quando houver provedor) · sino da aplicação</text>
+      <!-- setas -->
+      <path class="seta" d="M200 48 H262"/>
+      <path class="seta" d="M200 120 C230 120 240 96 262 92"/>
+      <path class="seta" d="M200 192 C232 192 240 110 262 104"/>
+      <path class="seta" d="M200 264 C230 264 240 282 262 282"/>
+      <path class="seta" d="M451 84 H465"/>
+      <path class="seta" d="M654 282 H732"/>
+      <path class="seta" d="M835 110 V120"/>
+      <path class="seta" d="M835 176 V186"/>
+      <path class="seta" d="M835 242 V252"/>
+      <path class="seta" d="M360 308 V336"/>
+    </svg>
+  </div>
+
+  <h3>Princípios que não se quebram</h3>
+  <ul class="plain">
+    <li><strong>Uma transação por comando.</strong> Mover, atribuir, transferir, devolver, reabrir e rotear gravam a ocorrência, o histórico e os relógios juntos. Toda mudança de <code>state</code> continua gravando <code>occurrence_history</code> na mesma transação, porque o <code>seq</code> do anúncio ao ledger sai dali.</li>
+    <li><strong>Só o serviço <code>inconsistencies</code> resolve</strong> (D9). O atendimento não cria um segundo dono do estado: ele acrescenta exigências e campos às transições que já existem em <code>lib/workflow.ts</code>.</li>
+    <li><strong>Regras puras em <code>lib/</code>, efeitos fora.</strong> O motor portado do Demo fica em <code>backend/inconsistencies/lib/attendance/</code>, sem banco e sem relógio de parede. Tudo recebe um <code>Clock</code> (<code>shared/clock.ts</code>), para que os testes fixem o "agora".</li>
+    <li><strong>Escopo sempre na consulta.</strong> Toda consulta nova filtra pela empresa da sessão e pelo escopo de CNPJ (<code>remoteScope()</code>). A ocorrência sem estabelecimento só aparece para quem tem a empresa inteira.</li>
+    <li><strong>O nome vem do diretório, nunca da requisição.</strong> Vale para responsável, gestor e membro de grupo.</li>
+    <li><strong>Determinismo no sorteio.</strong> O sorteio escolhe, entre os elegíveis, quem tem a menor carga. O empate se resolve por um hash estável da ocorrência e da pessoa, e não por um gerador aleatório. Assim o mesmo estado dá sempre o mesmo resultado, e os testes conseguem comparar com o Demo.</li>
+    <li><strong>Concorrência.</strong> O sorteio e a fila usam um lock consultivo por empresa e grupo (<code>pg_advisory_xact_lock</code>). Assim, dois chamados detectados ao mesmo tempo não caem na mesma pessoa por lerem a mesma carga.</li>
+  </ul>
+</section>
+
+<!-- 5 -->
+<section class="section" id="s5">
+  <div class="sec-hdr"><span class="sec-num">5</span><span class="sec-title">Modelo de dados</span></div>
+  <p>Migrações só para a frente, a partir da <code>5_</code> do serviço <code>inconsistencies</code>. Nenhuma apaga dado: coluna nova nasce anulável ou com padrão, e restrição nova entra depois do preenchimento.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Migração</th><th>Tabela</th><th>Colunas e regras</th><th>Etapa</th></tr></thead>
+    <tbody>
+      <tr><td class="id">5_business_calendar</td><td><code>holidays</code></td><td><code>day</code>, <code>scope</code> (<code>BR</code> agora; UF e município depois, D-LI-05), <code>name</code>. Semente com os feriados nacionais de 2026 a 2030. Quem calcula é <code>shared/business-days.ts</code>, que o prazo das famílias também usa.</td><td>LI-0</td></tr>
+      <tr><td class="id">6_attendance_settings</td><td><code>attendance_settings</code></td><td>Por empresa: <code>enabled_at</code>, <code>default_group_id</code>, <code>ceiling_enabled</code> (padrão verdadeiro), <code>ceiling_slack_days</code> (padrão 5), <code>version</code>.</td><td>LI-3</td></tr>
+      <tr><td class="id">6_attendance_settings</td><td><code>attendance_groups</code></td><td><code>id</code>, <code>company_id</code>, <code>name</code>, <code>description</code>, <code>manager_id</code>, <code>active</code>, <code>version</code>. Nome único por empresa.</td><td>LI-3</td></tr>
+      <tr><td class="id">6_attendance_settings</td><td><code>attendance_group_members</code></td><td><code>group_id</code>, <code>user_id</code>, <code>company_id</code>, <code>absent_until</code> (data ou nulo), <code>since</code>. Chave (<code>group_id</code>, <code>user_id</code>).</td><td>LI-3</td></tr>
+      <tr><td class="id">7_routing_rules</td><td><code>routing_rules</code></td><td><code>id</code>, <code>company_id</code>, <code>group_id</code>, <code>position</code>, <code>families</code>, <code>codes</code>, <code>document_types</code> (listas; vazia = qualquer), <code>active</code>. <code>position</code> única por empresa, com restrição adiável para reordenar numa transação.</td><td>LI-3</td></tr>
+      <tr><td class="id">8_occurrence_attendance</td><td><code>occurrences</code> (colunas novas)</td><td><code>group_id</code>, <code>rule_id</code>, <code>unrouted</code>, <code>routing_note</code> (a explicação do roteamento e do sorteio), <code>third_party</code> (jsonb: tipo, nome, o que se espera, desde, origem), <code>response</code>, <code>outcome_effect</code>, <code>disallowance_sheet</code>, <code>transferred</code>, <code>reopen_count</code>, <code>linked_to</code>. Índices (<code>company_id</code>, <code>group_id</code>, <code>state</code>) e (<code>company_id</code>, <code>assignee_id</code>, <code>state</code>).</td><td>LI-4, LI-5</td></tr>
+      <tr><td class="id">8_occurrence_attendance</td><td><code>occurrence_history</code></td><td>A restrição de <code>action</code> ganha <code>routed</code>, <code>queued</code>, <code>drawn</code>, <code>taken</code>, <code>reassigned</code>, <code>transferred</code>, <code>returned</code>, <code>third_party_set</code>, <code>responded</code>, <code>linked</code>, <code>sla_risk</code>, <code>sla_breach</code>. Coluna nova <code>origin</code> (pessoa, regra, sorteio, sistema, redistribuição), que o histórico do card mostra.</td><td>LI-4</td></tr>
+      <tr><td class="id">9_sla</td><td><code>sla_types</code></td><td><code>id</code>, <code>company_id</code>, <code>name</code>, <code>measure</code> (<code>first_response</code>, <code>resolution</code>, <code>third_party_return</code>), <code>calendar</code> (horas úteis, dias úteis, dias corridos), <code>starts</code>, <code>ends</code>, <code>pauses</code>, <code>on_breach</code> (responsável e gestor, só o gestor, só o responsável).</td><td>LI-6</td></tr>
+      <tr><td class="id">9_sla</td><td><code>sla_rules</code></td><td><code>id</code>, <code>company_id</code>, <code>position</code>, <code>families</code>, <code>codes</code>, <code>document_types</code>, <code>deadlines</code> (jsonb: prazo por tipo de SLA), <code>active</code>. Mesma precedência do roteamento.</td><td>LI-6</td></tr>
+      <tr><td class="id">9_sla</td><td><code>sla_defaults</code></td><td>Por empresa e família: prazo de resolução. Semente: A 5, B 15, C 10, D 2, F 1 e I 10 dias úteis (os do Demo; E segue a linha padrão, D-LI-07).</td><td>LI-6</td></tr>
+      <tr><td class="id">9_sla</td><td><code>sla_clocks</code></td><td><code>id</code>, <code>occurrence_id</code>, <code>company_id</code>, <code>sla_type_id</code>, <code>rule_id</code>, <code>started_at</code>, <code>due_at</code>, <code>ceiling_at</code>, <code>paused_since</code>, <code>paused_ms</code>, <code>closed_at</code>, <code>state</code> (no prazo, em risco, estourado, pausado, cumprido), <code>risk_noticed_at</code>, <code>breach_noticed_at</code>. Índice (<code>company_id</code>, <code>state</code>, <code>due_at</code>) para a varredura.</td><td>LI-6</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><div class="ct">Por que os relógios ficam numa tabela</div><p>No Demo, a leitura do SLA é calculada a cada render a partir das passagens. No Live, a varredura precisa achar "quem entra em risco agora" sem ler todas as ocorrências. Por isso o relógio fica gravado com <code>due_at</code> e estado, e a varredura lê só os abertos cujo prazo está perto. A leitura exibida (quanto falta, em palavras) continua sendo calculada pela mesma função pura, com o relógio gravado como entrada.</p></div>
+</section>
+
+<!-- 6 -->
+<section class="section" id="s6">
+  <div class="sec-hdr"><span class="sec-num">6</span><span class="sec-title">API</span></div>
+  <p>Endpoints expostos em <code>/app</code>, com a empresa da sessão. A permissão nova <code>atendimento</code> entra na matriz de <code>shared/session/permissions.ts</code> com dois níveis: <code>configurar</code> (Administrador) e <code>ver</code> (os demais). Quem gere a fila de um grupo é o gestor dele, conferido no servidor. As ações de operar continuam em <code>inconsistencias: operar</code>.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Método e caminho</th><th>Para quê</th><th>Etapa</th></tr></thead>
+    <tbody>
+      <tr><td class="grp" colspan="3">Inconsistências (existentes, ampliados)</td></tr>
+      <tr><td><code>GET /app/inconsistencies</code></td><td>Parâmetros novos: <code>view</code> (meus, do meu grupo, todos), <code>group_id</code>, <code>assignee_id</code>, <code>sla_state</code>, <code>document_type</code>, <code>shortcut</code> (sem regra, sem responsável, com solicitação), <code>sort=due</code>. Cada item traz grupo, responsável, regra e a leitura do SLA.</td><td>LI-2, LI-7</td></tr>
+      <tr><td><code>GET /app/inconsistencies/board</code></td><td>Novo. Quadro paginado por coluna (cursor por estado), com os mesmos filtros e as contagens de cada coluna.</td><td>LI-2</td></tr>
+      <tr><td><code>GET /app/inconsistencies/overview</code></td><td>Ganha o painel do atendimento: sem responsável, sem regra, estourados, em risco, no prazo com meta, tabela por grupo, crédito em risco pelo prazo e onde o chamado espera, por terceiro.</td><td>LI-7</td></tr>
+      <tr><td><code>POST /app/inconsistencies/occurrences/:id/state</code></td><td>Ganha as exigências da passagem: <code>third_party</code> e <code>expected</code> para Aguardando terceiro; <code>response</code> para voltar; <code>outcome</code> e <code>effect</code> para Resolvida; <code>sheet</code> para Glosada. A falta de uma exigência volta como erro 400, com o campo que falta.</td><td>LI-5</td></tr>
+      <tr><td><code>GET /app/inconsistencies/catalog</code></td><td>Passa a ser a fonte da tela, no lugar do catálogo do frontend.</td><td>LI-0</td></tr>
+      <tr><td class="grp" colspan="3">Ações do atendimento no card</td></tr>
+      <tr><td><code>POST …/occurrences/:id/assume</code></td><td>Assumir (quem é elegível no grupo) ou pegar da fila.</td><td>LI-4</td></tr>
+      <tr><td><code>POST …/occurrences/:id/reassign</code></td><td><code>{ user_id, reason }</code>. Só o gestor do grupo ou o Administrador.</td><td>LI-4</td></tr>
+      <tr><td><code>POST …/occurrences/:id/transfer</code></td><td><code>{ group_id, reason }</code>. O chamado vai para outro grupo e é sorteado lá.</td><td>LI-4</td></tr>
+      <tr><td><code>POST …/occurrences/:id/return</code></td><td><code>{ reason }</code>. O responsável devolve o chamado à fila do grupo.</td><td>LI-4</td></tr>
+      <tr><td class="grp" colspan="3">Configuração (Configurações › Atendimento)</td></tr>
+      <tr><td><code>GET/PUT /app/attendance/settings</code></td><td>Ativação, grupo padrão, teto e folga.</td><td>LI-3</td></tr>
+      <tr><td><code>GET/POST /app/attendance/groups</code>, <code>PUT …/groups/:id</code></td><td>Grupos com membros, gestor e ausência. A resposta traz quem está elegível agora e a carga de cada pessoa.</td><td>LI-3</td></tr>
+      <tr><td><code>GET/POST /app/attendance/routing-rules</code>, <code>PUT …/:id</code>, <code>POST …/order</code>, <code>POST …/test</code></td><td>Regras de roteamento, ordem, teste de combinação e prévia de quantos chamados a regra pega.</td><td>LI-3</td></tr>
+      <tr><td><code>GET /app/attendance/coverage</code>, <code>GET /app/attendance/unrouted</code></td><td>Matriz de cobertura e chamados sem regra, com o grupo padrão.</td><td>LI-3</td></tr>
+      <tr><td><code>GET/POST /app/attendance/sla-types</code>, <code>…/sla-rules</code> (com <code>order</code> e <code>test</code>), <code>…/sla-defaults</code></td><td>Tipos, regras e SLA padrão por família.</td><td>LI-6</td></tr>
+      <tr><td><code>GET /app/attendance/sla/ceiling-examples</code></td><td>Os exemplos do teto pelo prazo do crédito, que a tela mostra ao editar a folga.</td><td>LI-6</td></tr>
+      <tr><td><code>GET /app/attendance/overview</code></td><td>KPIs e indicadores por grupo, por regra e por tipo de SLA.</td><td>LI-7</td></tr>
+      <tr><td class="grp" colspan="3">Internos e mensagens</td></tr>
+      <tr><td>Tópico <code>identity-member-changed</code> (novo, no <code>identity</code>)</td><td><code>{ company_id, user_id, change }</code>, com <code>change</code> = desativado, perfil, escopo ou reativado. Publicado pela gestão de usuários, por outbox.</td><td>LI-5</td></tr>
+      <tr><td><code>POST /internal/attendance/backfill</code></td><td>Roteia as ocorrências ativas na ativação, em lotes. É idempotente: ocorrência já roteada é pulada.</td><td>LI-4</td></tr>
+      <tr><td>CronJob <code>attendance-sla-sweep</code> (5 min)</td><td>Passa os relógios a em risco ou estourado, grava os avisos uma vez só e publica para o sino.</td><td>LI-6</td></tr>
+      <tr><td>CronJob <code>attendance-queue-draw</code> (15 min)</td><td>Sorteia a fila dos grupos com alguém que voltou de ausência ou ficou elegível.</td><td>LI-5</td></tr>
+    </tbody>
+  </table></div>
+  <p>Toda mudança de contrato passa por <code>bun run gen:client</code> (regera <code>frontend/lib/data/live/client.gen.ts</code>) e, no que tocar o barramento, por <code>bun run api:check</code> no backend.</p>
+</section>
+
+<!-- 7 -->
+<section class="section" id="s7">
+  <div class="sec-hdr"><span class="sec-num">7</span><span class="sec-title">Fluxos ponta a ponta</span></div>
+  <p>Cada fluxo marca o lado: <span class="lado be">backend</span> <span class="lado fe">frontend</span> <span class="lado job">job</span>.</p>
+
+  <div class="fluxo"><div class="fluxo-t">F1 · Detecção → roteamento → sorteio → relógio</div><ol class="plain">
+    <li><span class="lado be">backend</span> Uma mensagem (<code>ledger-record-changed</code>, <code>reconciliation-results</code>, fato de glosa ou recusa da ingestão) chega à assinatura e <code>detect.ts</code> produz a detecção com a chave de dedup.</li>
+    <li><span class="lado be">backend</span> <code>upsertDetection</code> abre a ocorrência e, na mesma transação, se o atendimento está ativo para a empresa, chama <code>route()</code>. A primeira regra ativa, pela ordem, que casa família, tipo e tipo de DF dá o grupo. Sem regra, vai para o grupo padrão com <code>unrouted = true</code>.</li>
+    <li><span class="lado be">backend</span> Com o lock do grupo, <code>draw()</code> calcula os elegíveis: membro ativo, sem ausência hoje, com perfil que opera a família (Tesouraria só a D) e com o CNPJ da ocorrência no escopo. Escolhe a menor carga; o empate sai pelo hash. Sem elegível, o chamado fica na fila do grupo e o gestor recebe um aviso.</li>
+    <li><span class="lado be">backend</span> O SLA aplicável (regra de SLA ou padrão da família) abre os relógios de Primeiro atendimento e de Resolução, com o teto pelo prazo do crédito (<code>expiration_date</code> menos a folga) quando o documento é de entrada.</li>
+    <li><span class="lado be">backend</span> O histórico grava <code>detected</code>, <code>routed</code> e <code>drawn</code> (ou <code>queued</code>), com a origem e o texto da explicação. O anúncio ao ledger segue como hoje.</li>
+    <li><span class="lado fe">frontend</span> O quadro e a listagem mostram grupo, responsável ou "na fila" e o chip do SLA. O bloco Atendimento do card mostra por que o chamado caiu ali.</li>
+  </ol></div>
+
+  <div class="fluxo"><div class="fluxo-t">F2 · Passagem de estado com exigência</div><ol class="plain">
+    <li><span class="lado fe">frontend</span> Arrastar, o seletor de estado ou uma ação sugerida abre o modal da passagem (o mesmo do Demo), que pede o que falta. Exemplo: para Aguardando terceiro, quem é o terceiro e o que se espera dele.</li>
+    <li><span class="lado be">backend</span> <code>POST …/state</code> confere a transição (<code>checkMove</code>), as exigências e se quem pede é o responsável, ou o gestor, ou o Administrador. Se falta algo, responde 400 com o campo que falta.</li>
+    <li><span class="lado be">backend</span> Na mesma transação: estado e campos novos, histórico, e os relógios. Sair de Aberta fecha o Primeiro atendimento. Entrar em Aguardando terceiro pausa a Resolução e abre o Retorno do terceiro. Voltar retoma a Resolução e fecha o Retorno. Resolver ou glosar fecha tudo como cumprido ou estourado.</li>
+    <li><span class="lado fe">frontend</span> O detalhe atualizado substitui o aberto e as listas são lidas de novo, como os comandos do Live já fazem (<code>comando()</code> em <code>InconsistenciasPage.tsx</code>).</li>
+  </ol></div>
+
+  <div class="fluxo"><div class="fluxo-t">F3 · Assumir, pegar da fila, reatribuir, transferir, devolver</div><ol class="plain">
+    <li><span class="lado be">backend</span> <strong>Assumir e pegar da fila</strong>: quem pede precisa ser elegível no grupo. Vira responsável, com a origem "pessoa".</li>
+    <li><span class="lado be">backend</span> <strong>Reatribuir</strong>: só o gestor ou o Administrador, para um elegível do mesmo grupo, com motivo.</li>
+    <li><span class="lado be">backend</span> <strong>Transferir</strong>: para outro grupo ativo, com motivo. O chamado é sorteado no destino e marcado como <code>transferred</code>. O relógio não reinicia.</li>
+    <li><span class="lado be">backend</span> <strong>Devolver</strong>: o responsável devolve, com motivo. O chamado volta à fila e é sorteado de novo, sem cair na mesma pessoa.</li>
+  </ol></div>
+
+  <div class="fluxo"><div class="fluxo-t">F4 · Reabertura e glosado que vira chamado novo</div><ol class="plain">
+    <li><span class="lado be">backend</span> A causa é identificada pelo documento, o tributo e o tipo (é a chave de dedup que já existe). Quando ela volta num chamado resolvido, ele reabre no mesmo grupo e com o mesmo responsável, se ele ainda for elegível; se não, é sorteado. <code>reopen_count</code> sobe e os relógios abrem de novo.</li>
+    <li><span class="lado be">backend</span> Quando a causa volta num chamado glosado, ele não reabre: nasce um chamado novo com a chave sufixada (<code>-R1</code>, <code>-R2</code>), <code>linked_to</code> apontando para o anterior e roteado pelas regras atuais. Isto muda a regra de hoje, que ignora a nova detecção do glosado, e precisa da mudança correspondente em <code>upsertDetection</code> e no teste golden.</li>
+  </ol></div>
+
+  <div class="fluxo"><div class="fluxo-t">F5 · Redistribuição pela gestão de usuários</div><ol class="plain">
+    <li><span class="lado be">backend</span> O <code>identity</code>, ao desativar, rebaixar a Leitura ou tirar um CNPJ do escopo, grava a mensagem <code>identity-member-changed</code> no outbox da mesma transação.</li>
+    <li><span class="lado be">backend</span> A assinatura em <code>inconsistencies</code> acha os chamados ativos da pessoa que ela não pode mais operar e os sorteia de novo no grupo, com a origem "redistribuição". Se a pessoa saiu de vez, sai também dos grupos.</li>
+    <li><span class="lado job">job</span> <code>attendance-queue-draw</code> sorteia a fila quando alguém volta de ausência ou passa a ser elegível.</li>
+  </ol></div>
+
+  <div class="fluxo"><div class="fluxo-t">F6 · SLA: risco, estouro e avisos</div><ol class="plain">
+    <li><span class="lado job">job</span> A cada 5 minutos, <code>attendance-sla-sweep</code> lê os relógios abertos com <code>due_at</code> perto e recalcula o estado pela função pura.</li>
+    <li><span class="lado job">job</span> Quem passou a em risco ou a estourado grava <code>sla_risk</code> ou <code>sla_breach</code> no histórico uma vez só (<code>risk_noticed_at</code>, <code>breach_noticed_at</code>) e avisa quem <code>on_breach</code> manda: o responsável e o gestor, só o gestor ou só o responsável.</li>
+    <li><span class="lado fe">frontend</span> O chip do card, a linha do SLA no topo do detalhe e os recortes "em risco" e "estourado" leem o estado gravado.</li>
+  </ol></div>
+
+  <div class="fluxo"><div class="fluxo-t">F7 · Ativação do atendimento numa empresa</div><ol class="plain">
+    <li><span class="lado fe">frontend</span> O Administrador monta grupos e regras em Configurações › Atendimento antes de ativar. A tela mostra a matriz de cobertura e os chamados que ficariam sem regra.</li>
+    <li><span class="lado be">backend</span> Ativar grava <code>enabled_at</code> e dispara o backfill: as ocorrências ativas são roteadas e sorteadas em lotes de 500. O histórico registra "roteado na ativação". Os relógios começam em <code>enabled_at</code> (D-LI-04).</li>
+    <li><span class="lado fe">frontend</span> O seletor simples de responsável dá lugar ao bloco Atendimento, e o quadro abre no recorte "Meus".</li>
+  </ol></div>
+
+  <div class="fluxo"><div class="fluxo-t">F8 · Configuração com chamados abertos</div><ol class="plain">
+    <li><span class="lado be">backend</span> Mudar uma regra de roteamento não move os chamados que já estão em algum grupo: a mudança vale para as detecções seguintes. A prévia mostra quantos chamados abertos a regra pegaria, e "Aplicar aos sem regra" roteia só os que estão no grupo padrão sem regra.</li>
+    <li><span class="lado be">backend</span> Tirar um membro do grupo sorteia de novo os chamados dele naquele grupo (o aviso do Demo, <code>avisoRemovidos</code>, vira a confirmação da tela).</li>
+    <li><span class="lado be">backend</span> Mudar uma regra de SLA vale para os relógios que abrirem depois. Os relógios abertos ficam com o prazo de quando abriram, como no Demo.</li>
+  </ol></div>
+</section>
+
+<!-- 8 -->
+<section class="section" id="s8">
+  <div class="sec-hdr"><span class="sec-num">8</span><span class="sec-title">Frontend no Live</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Peça</th><th>O que muda</th></tr></thead>
+    <tbody>
+      <tr><td><code>lib/data/attendance/live.ts</code> (novo)</td><td>Traduz as respostas do servidor para os tipos do motor do Demo (<code>Grupo</code>, <code>RegraRot</code>, <code>Chamado</code>, <code>TipoSLA</code>, <code>RegraSLA</code>, <code>Relogio</code>), como <code>lib/data/inconsistencies/live.ts</code> já faz com o card. Testes de contrato com respostas gravadas.</td></tr>
+      <tr><td><code>contexts/AtendimentoLive.tsx</code> (novo)</td><td>Publica no <code>AtendimentoContext</code> a mesma API que <code>AtendimentoMotor.tsx</code> publica no Demo. As leituras vêm de consultas com <code>useLiveQuery</code>; os comandos chamam o servidor e invalidam as consultas. Carregado sob demanda, como o motor do Demo.</td></tr>
+      <tr><td>Escolha do provedor</td><td>Demo: o motor da sessão, se a flag <code>atendimento</code> estiver ligada. Live: <code>AtendimentoLive</code>, se a sessão trouxer a permissão de recurso <code>attendance</code> da empresa. Sem ela, o contexto continua inerte, como hoje.</td></tr>
+      <tr><td>Telas (<code>components/atendimento/</code>, <code>pages/inconsistencias/</code>)</td><td>Sem mudança de layout. Saem do caminho Live só o que é do Demo: "Ver como", "Simular nova detecção" e a nota do relógio parado. O que o Demo calcula sobre o estado inteiro (KPIs, matriz, indicadores) passa a vir pronto do servidor no Live.</td></tr>
+      <tr><td>Quadro</td><td>Paginado por coluna (<code>/board</code>), com rolagem infinita em cada coluna. Os recortes e filtros vão ao servidor, em vez de filtrar 5 mil cards no navegador.</td></tr>
+      <tr><td>Catálogo</td><td>Rótulos, famílias e prazos lidos de <code>/catalog</code> no Live. O catálogo do frontend fica só para o Demo.</td></tr>
+      <tr><td><code>lib/data/availability.ts</code></td><td><code>/configuracoes/atendimento</code> sai de <code>SOON_WHEN_LIVE</code> quando a empresa tem o recurso, na etapa LI-3.</td></tr>
+      <tr><td><code>bun run check:bundle</code></td><td>Continua passando: os adaptadores e o provedor Live ficam fora do chunk inicial.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 9 -->
+<section class="section" id="s9">
+  <div class="sec-hdr"><span class="sec-num">9</span><span class="sec-title">Etapas</span></div>
+  <p>Tamanho em semanas de uma pessoa, estimativa de ordem de grandeza para planejar e não compromisso: <strong>P</strong> ≈ 1, <strong>M</strong> ≈ 2, <strong>G</strong> ≈ 3 a 4. A soma fica entre 22 e 28 semanas de uma pessoa. Com as duas frentes em paralelo, isso dá cerca de 14 a 16 semanas de calendário.</p>
+
+  <div class="ondas">
+
+  <div class="onda crit" id="li0"><div class="onda-h"><span class="onda-n">LI-0 · Frente A</span><span class="onda-t">Base e correções do que o Live já tem</span><span class="onda-q">M · sem dependência</span></div>
+    <div class="onda-g">
+      <div><div class="lbl">Backend</div><ul class="plain">
+        <li><code>shared/business-days.ts</code> e a tabela <code>holidays</code> (feriados nacionais).</li>
+        <li>Prazo por família em dias úteis: B 15, A 5, F 1; C pelo prazo legal; D pelo vencimento da guia; E pelo último dia útil de M+1.</li>
+        <li>Prioridade pelo valor em risco cruzado com o prazo legal (PRD de Inconsistências, seção 05), recalculada a cada mudança de valor ou de data.</li>
+        <li>"DF sem registro" com o tributo.</li>
+        <li>Tesouraria restrita à família D no servidor (D-LI-10).</li>
+        <li>Permissão de recurso por empresa na sessão (<code>features</code>), lida pelo frontend.</li>
+      </ul></div>
+      <div><div class="lbl">Frontend</div><ul class="plain">
+        <li>Catálogo lido de <code>/catalog</code> no Live.</li>
+        <li>Card do Início com as ocorrências da ingestão e sem a divisão por direção.</li>
+        <li><code>ligadaNoModo</code> passa a consultar a permissão de recurso da sessão no Live.</li>
+      </ul></div>
+    </div>
+    <div class="pronto"><strong>Pronto quando:</strong> uma ocorrência B detectada numa sexta-feira antes de um feriado nacional vence em 15 dias úteis; o golden de <code>rules.test.ts</code> está atualizado; o card do Início do Live bate com a visão geral.</div>
+  </div>
+
+  <div class="onda" id="li1"><div class="onda-h"><span class="onda-n">LI-1 · Frente A</span><span class="onda-t">Detecção ampliada</span><span class="onda-q">M · depende de LI-0</span></div>
+    <div class="onda-g">
+      <div><div class="lbl">Tipos com fonte no Live</div><ul class="plain">
+        <li><code>duplicidade_rf</code>, <code>chave_invalida</code> e <code>cnpj_divergente</code>: a importação já devolve, por documento, <code>outcome</code> (<code>duplicate</code> ou <code>rejected</code>) com <code>code</code> e <code>message</code> (<code>ImportOutcome</code>, em <code>integration/ingestion/core.ts</code>). Falta mapear os códigos para os tipos, como o Demo faz com as falhas da ingestão: erro de layout e rejeição viram chave inválida, erro de dados vira CNPJ divergente, duplicado vira RF duplicado.</li>
+        <li><code>prazo_expirado</code>: do crédito expirado que o ledger já calcula (<code>credit_status</code> <code>expired</code>, lançamento C06), que chega na cópia local <code>ledger_records</code>. A regra exata se confere contra o PRD na etapa.</li>
+      </ul></div>
+      <div><div class="lbl">Como</div><ul class="plain">
+        <li>A ingestão publica o resultado da importação como fato (tópico novo ou extensão do existente), que <code>inconsistencies</code> assina.</li>
+        <li>A ocorrência de uma importação recusada nasce sem documento no ledger: guarda a chave de acesso e o que a importação leu do arquivo, com origem <code>integration</code>.</li>
+        <li>Cada regra nova é pura em <code>detect.ts</code>, com a chave de dedup e o caso golden, e marca <code>detected: true</code> no catálogo.</li>
+      </ul></div>
+    </div>
+    <div class="pronto"><strong>Pronto quando:</strong> o Live detecta 9 tipos; cada tipo novo tem teste unitário, teste de integração da assinatura e a linha no relatório Demo × Live atualizada.</div>
+  </div>
+
+  <div class="onda" id="li2"><div class="onda-h"><span class="onda-n">LI-2 · Frente A</span><span class="onda-t">Quadro paginado no servidor</span><span class="onda-q">M · depende de LI-0</span></div>
+    <div class="onda-g">
+      <div><div class="lbl">Backend</div><ul class="plain">
+        <li><code>GET /app/inconsistencies/board</code> com cursor por coluna e contagem por coluna.</li>
+        <li>Índices para os filtros do quadro.</li>
+      </ul></div>
+      <div><div class="lbl">Frontend</div><ul class="plain">
+        <li>Rolagem infinita por coluna; filtros e busca vão ao servidor.</li>
+        <li>Arrastar entre colunas atualiza as duas, sem ler o quadro inteiro de novo.</li>
+      </ul></div>
+    </div>
+    <div class="pronto"><strong>Pronto quando:</strong> com 50 mil ocorrências na base de carga, o quadro abre em menos de 1 segundo (meta a confirmar, D-LI-09) e nenhuma coluna traz mais de 50 cards por página.</div>
+  </div>
+
+  <div class="onda crit" id="li3"><div class="onda-h"><span class="onda-n">LI-3 · Frente B</span><span class="onda-t">Configuração do atendimento</span><span class="onda-q">G · depende de LI-0</span></div>
+    <div class="onda-g">
+      <div><div class="lbl">Backend</div><ul class="plain">
+        <li>Migrações 6 e 7: configurações, grupos, membros, regras.</li>
+        <li>Porte das funções puras de grupo e regra do Demo (<code>rotear</code>, <code>casa</code>, <code>elegiveis</code>, <code>matriz</code>, <code>combos</code>, <code>faltasGrupo</code>, <code>faltasRegra</code>, <code>previaRegra</code>) para <code>lib/attendance/</code>.</li>
+        <li>Endpoints de configuração, teste de regra, cobertura e sem regra.</li>
+      </ul></div>
+      <div><div class="lbl">Frontend</div><ul class="plain">
+        <li><code>lib/data/attendance/live.ts</code> e o primeiro corte de <code>AtendimentoLive</code> (configuração).</li>
+        <li>Configurações › Atendimento no Live: KPIs, Grupos, Regras, Chamados sem regra, Matriz; o aviso no menu dos tipos sem regra.</li>
+      </ul></div>
+    </div>
+    <div class="pronto"><strong>Pronto quando:</strong> as funções portadas passam nos mesmos cenários golden do Demo; um Administrador monta 3 grupos e 5 regras no Live; a matriz bate com a do Demo para o mesmo cenário.</div>
+  </div>
+
+  <div class="onda crit" id="li4"><div class="onda-h"><span class="onda-n">LI-4 · Frente B</span><span class="onda-t">Roteamento, sorteio e atribuição</span><span class="onda-q">G · depende de LI-3</span></div>
+    <div class="onda-g">
+      <div><div class="lbl">Backend</div><ul class="plain">
+        <li>Migração 8: colunas do atendimento em <code>occurrences</code> e ações novas no histórico.</li>
+        <li>Roteamento e sorteio dentro de <code>upsertDetection</code>, com lock por grupo (fluxo F1).</li>
+        <li>Assumir, pegar da fila, reatribuir, transferir e devolver (fluxo F3).</li>
+        <li>Ativação e backfill (fluxo F7).</li>
+      </ul></div>
+      <div><div class="lbl">Frontend</div><ul class="plain">
+        <li>Recortes Meus, Do meu grupo e Todos; filtros de grupo e de tributo; "Na fila do grupo" e "Sem regra".</li>
+        <li>Card do quadro com família, tributo, grupo e responsável ou "na fila"; bloco Atendimento no detalhe, com as ações.</li>
+      </ul></div>
+    </div>
+    <div class="pronto"><strong>Pronto quando:</strong> 100 detecções simultâneas num grupo de 4 pessoas terminam com 25 chamados por pessoa, nenhum duplicado (teste de integração com concorrência); o backfill de 10 mil ocorrências roda sem erro duas vezes seguidas e a segunda não muda nada.</div>
+  </div>
+
+  <div class="onda" id="li5"><div class="onda-h"><span class="onda-n">LI-5 · Frente B</span><span class="onda-t">Passagens com exigência e ciclo completo</span><span class="onda-q">G · depende de LI-4</span></div>
+    <div class="onda-g">
+      <div><div class="lbl">Backend</div><ul class="plain">
+        <li>Exigências em <code>POST …/state</code> (fluxo F2), com o porte de <code>passagens.ts</code>.</li>
+        <li>Reabertura no mesmo grupo e glosado que vira <code>-R1</code> ligado (fluxo F4).</li>
+        <li>Tópico <code>identity-member-changed</code> e a redistribuição (fluxo F5); job <code>attendance-queue-draw</code>.</li>
+      </ul></div>
+      <div><div class="lbl">Frontend</div><ul class="plain">
+        <li>Os modais de passagem do Demo, ligados ao servidor; a mensagem de exigência faltando vem do 400.</li>
+        <li>O vínculo do chamado ligado no detalhe e na listagem.</li>
+      </ul></div>
+    </div>
+    <div class="pronto"><strong>Pronto quando:</strong> o E2E do Demo (regra nova → roteado → assumir → aguardar a Receita Federal → retomar → resolver → reabrir) roda no Live local; desativar um usuário com 10 chamados os redistribui no mesmo minuto.</div>
+  </div>
+
+  <div class="onda crit" id="li6"><div class="onda-h"><span class="onda-n">LI-6 · Frente B</span><span class="onda-t">SLA</span><span class="onda-q">G · depende de LI-4 e da LI-0 (calendário)</span></div>
+    <div class="onda-g">
+      <div><div class="lbl">Backend</div><ul class="plain">
+        <li>Migração 9: tipos, regras, padrão e relógios.</li>
+        <li>Porte de <code>sla.ts</code> (calendário em horas úteis das 9h às 17h, dias úteis e corridos; leitura do relógio; teto).</li>
+        <li>Abertura, pausa e fechamento dos relógios nas passagens; job <code>attendance-sla-sweep</code>; avisos no histórico e no sino.</li>
+      </ul></div>
+      <div><div class="lbl">Frontend</div><ul class="plain">
+        <li>Tipos de SLA e Regras de SLA em Configurações › Atendimento; os exemplos do teto.</li>
+        <li>Chip no card do quadro, a linha do SLA no topo do detalhe (a A compacta) e os recortes em risco e estourado.</li>
+      </ul></div>
+    </div>
+    <div class="pronto"><strong>Pronto quando:</strong> com o relógio fixo, um chamado B aberto às 16h de uma sexta vence 15 dias úteis depois às 16h, pausa enquanto aguarda terceiro e volta do ponto em que parou; o aviso de estouro sai uma vez só, mesmo com duas varreduras sobrepostas.</div>
+  </div>
+
+  <div class="onda" id="li7"><div class="onda-h"><span class="onda-n">LI-7 · Frente B</span><span class="onda-t">Listagem, visão geral e indicadores</span><span class="onda-q">M · depende de LI-6</span></div>
+    <div class="onda-g">
+      <div><div class="lbl">Backend</div><ul class="plain">
+        <li>Filtros, atalhos e ordenação pelo prazo na listagem; a exportação com as colunas novas.</li>
+        <li>O painel do atendimento na visão geral e <code>/app/attendance/overview</code> (indicadores por grupo, regra e tipo de SLA), com o porte de <code>indicadores.ts</code>.</li>
+      </ul></div>
+      <div><div class="lbl">Frontend</div><ul class="plain">
+        <li>As colunas e filtros da listagem do Demo; o painel da visão geral.</li>
+        <li>A linha do chamado no detalhe do DF e do RF (F-25).</li>
+      </ul></div>
+    </div>
+    <div class="pronto"><strong>Pronto quando:</strong> os números do painel, para o mesmo cenário, batem com os do Demo; o CSV abre no Excel com as colunas novas.</div>
+  </div>
+
+  <div class="onda" id="li8"><div class="onda-h"><span class="onda-n">LI-8 · Frentes A e B</span><span class="onda-t">Fechamento e liberação</span><span class="onda-q">M · depende de todas</span></div>
+    <div class="onda-g">
+      <div><div class="lbl">Qualidade</div><ul class="plain">
+        <li>E2E do fluxo inteiro no Live local, no Chromium e no Firefox.</li>
+        <li>Teste de carga: 50 mil ocorrências, 200 usuários, 20 grupos.</li>
+        <li>Revisão visual das telas em 375, 768 e 1440 px, claro e escuro, sem rolagem lateral.</li>
+      </ul></div>
+      <div><div class="lbl">Operação</div><ul class="plain">
+        <li>Logs estruturados com empresa, ocorrência e chamado; métricas dos jobs (duração, relógios lidos, avisos).</li>
+        <li><code>CLAUDE.md</code> do serviço, <code>docs/decisoes.md</code>, <code>roadmap.md</code> e o relatório Demo × Live atualizados.</li>
+        <li>Piloto em uma empresa, depois liberação geral.</li>
+      </ul></div>
+    </div>
+    <div class="pronto"><strong>Pronto quando:</strong> o piloto roda duas semanas sem chamado duplicado, sem aviso repetido e sem relógio parado por engano.</div>
+  </div>
+
+  <div class="onda dep" id="li9"><div class="onda-h"><span class="onda-n">LI-9</span><span class="onda-t">Dependentes de outras ondas do Live</span><span class="onda-q">fora deste plano</span></div>
+    <ul class="plain">
+      <li><strong>Partição</strong> (cinco ocorrências): entra com a L1. A detecção nova cai no roteamento e no SLA que já existem.</li>
+      <li><strong>Família I, aba Alertas de competência e evento ou nota como ação do card</strong>: entram com a L4. O evento pedido leva o chamado a Aguardando terceiro, com o terceiro e o esperado da solicitação; a <code>third_party</code> já tem a origem "solicitação" para isso.</li>
+      <li><strong>Família E</strong> com a L6; <strong>família F</strong> com os conectores de ERP; <strong>família D</strong> fora da v1.</li>
+      <li><strong>Alíquota incorreta, do IBS e da CBS</strong>: quando houver uma fonte da alíquota esperada.</li>
+      <li><strong>E-mail dos avisos</strong>: quando o provedor transacional existir; o job já grava o aviso, e falta só a entrega.</li>
+    </ul>
+  </div>
+
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="section" id="s10">
+  <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Fluxo de desenvolvimento</span></div>
+
+  <h3>Em cada etapa</h3>
+  <ol class="passos">
+    <li><strong>Fechar as decisões da etapa.</strong> Nenhuma etapa começa com uma D-LI dela aberta. A decisão vai para <code>docs/decisoes.md</code> do tax-rs.</li>
+    <li><strong>Branch própria</strong> a partir da <code>main</code>: <code>feat/live-inc-li&lt;n&gt;-&lt;assunto&gt;</code>, por exemplo <code>feat/live-inc-li4-roteamento</code>. Uma etapa grande pode ter mais de um PR, cada um verde sozinho.</li>
+    <li><strong>Cenários golden primeiro.</strong> Exportar do motor do Demo os cenários da etapa: entrada (grupos, regras, usuários, ocorrências, relógio) e saída esperada. Ficam em <code>backend/inconsistencies/lib/attendance/__fixtures__/</code>, gerados por um script em <code>frontend/tests/tools/</code>.</li>
+    <li><strong>Migração.</strong> Só para a frente, rodada em <code>encore run</code> local sobre a semente e sobre uma cópia da base de carga.</li>
+    <li><strong>Funções puras</strong> em <code>lib/attendance/</code>, com testes unitários que passam nos cenários golden.</li>
+    <li><strong>Serviço e endpoints</strong>, com testes de integração (<code>encore test</code>) que montam o escopo a partir de <code>TEST_SESSIONS</code> e fixam o relógio.</li>
+    <li><strong>Contrato.</strong> <code>bun run gen:client</code> e, quando tocar o barramento, <code>bun run api:check</code>. O cliente gerado vai no mesmo PR.</li>
+    <li><strong>Adaptador e provedor Live</strong> no frontend, com testes de contrato sobre respostas gravadas.</li>
+    <li><strong>Tela.</strong> Ligar os componentes existentes ao provedor Live; testes unitários com a sessão Live (<code>sessaoTeste</code> com <code>data_mode: "live"</code>); E2E com <code>tests/e2e/helpers/live-stub.ts</code>.</li>
+    <li><strong>Verificação no navegador</strong> com o Live local (Docker por usuário, semente com <code>encore exec bun</code>), nas três larguras.</li>
+    <li><strong>Documentação</strong>: <code>CLAUDE.md</code> do serviço (regras e armadilhas novas), <code>roadmap.md</code>, e a linha da etapa neste plano.</li>
+    <li><strong>PR</strong> com o modelo do repositório; merge só com aprovação. O CI do tax-rs roda à mão (<code>workflow_dispatch</code>): rodar <code>backend-tests</code> e <code>frontend-tests</code> antes de pedir a revisão.</li>
+  </ol>
+
+  <h3>Portões de cada PR</h3>
+<pre><code># backend
+cd backend
+bun run typecheck
+bun run test:unit
+bun run test:integration      # encore test
+
+# frontend
+cd frontend
+bun run typecheck &amp;&amp; bun run lint &amp;&amp; bun run test
+bun run build &amp;&amp; bun run check:bundle
+bun run test:e2e              # com VITE_BACKEND_URL apontando para o Live local ou para o stub</code></pre>
+  <p><code>bun run format:check</code> acusa arquivos com CRLF por causa do <code>core.autocrlf</code> do Windows. Vale o resultado nos arquivos tocados (<code>bunx prettier --check &lt;arquivos&gt;</code>).</p>
+
+  <h3>Definição de pronto de uma etapa</h3>
+  <ul class="check">
+    <li>Os cenários golden da etapa dão o mesmo resultado no Demo e no backend.</li>
+    <li>Toda consulta nova filtra por empresa e por escopo de CNPJ, com um teste de escopo (o padrão do D-USR-05).</li>
+    <li>Toda mudança de estado grava histórico na mesma transação; o <code>seq</code> do anúncio continua monotônico.</li>
+    <li>Nenhum nome vem da requisição; todos vêm do diretório.</li>
+    <li>Os jobs são idempotentes: rodar duas vezes não duplica nada.</li>
+    <li>A suíte do Demo passa sem mudança e o <code>check:bundle</code> passa.</li>
+    <li>As telas novas no Live não têm rolagem lateral em 375, 768 e 1440 px.</li>
+    <li>O <code>CLAUDE.md</code> do serviço e o <code>roadmap.md</code> estão atualizados.</li>
+  </ul>
+</section>
+
+<!-- 11 -->
+<section class="section" id="s11">
+  <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Estratégia de testes</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Camada</th><th>O quê</th><th>Onde</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Paridade com o Demo</strong></td><td>Os mesmos cenários rodam no motor do Demo e nas funções portadas: roteamento, elegibilidade, sorteio, carga, prazos, teto, leitura do relógio, indicadores. Uma diferença quebra o teste dos dois lados.</td><td><code>lib/attendance/__fixtures__/</code>; script de exportação em <code>frontend/tests/tools/</code></td></tr>
+      <tr><td><strong>Unitário</strong></td><td>Funções puras, com relógio fixo; calendário útil com os feriados nacionais e as viradas de ano.</td><td><code>backend/inconsistencies/__tests__/</code></td></tr>
+      <tr><td><strong>Integração</strong></td><td>Endpoints, assinaturas e jobs com banco real: escopo, permissões, concorrência do sorteio, idempotência do backfill e da varredura, redistribuição pela mensagem do <code>identity</code>.</td><td><code>encore test</code></td></tr>
+      <tr><td><strong>Contrato</strong></td><td>Adaptadores do frontend sobre respostas gravadas do servidor; o cliente gerado compila com as telas.</td><td><code>frontend/tests/unit/</code></td></tr>
+      <tr><td><strong>E2E</strong></td><td>O fluxo da onda 5 do Demo no Live: regra nova → roteado → assumir → aguardar → retomar → resolver → reabrir; e o glosado que vira <code>-R1</code>.</td><td><code>frontend/tests/e2e/live-atendimento.spec.ts</code></td></tr>
+      <tr><td><strong>Carga</strong></td><td>50 mil ocorrências, 200 usuários, 20 grupos: abertura do quadro, varredura do SLA em menos de 30 segundos, backfill de 10 mil.</td><td>Base de carga semeada no Live local</td></tr>
+      <tr><td><strong>Visual</strong></td><td>As telas do atendimento no modo Live em 375, 768 e 1440 px, claro e escuro.</td><td><code>tests/tools/revisao-visual.mjs</code></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 12 -->
+<section class="section" id="s12">
+  <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Liberação e dados existentes</span></div>
+  <ul class="plain">
+    <li><strong>Desligado por padrão.</strong> Cada empresa começa sem o atendimento. As inconsistências seguem como hoje: o seletor simples de responsável, sem grupo e sem SLA.</li>
+    <li><strong>Ativar é uma ação do Administrador</strong>, depois de montar grupos e regras (fluxo F7). A ativação roteia as ocorrências abertas; os relógios começam na ativação (D-LI-04).</li>
+    <li><strong>Desativar não apaga nada.</strong> O roteamento e os relógios param; os chamados ficam com o responsável que tinham. Reativar retoma de onde parou, com os relógios abertos na reativação.</li>
+    <li><strong>As ocorrências resolvidas e glosadas antes da ativação</strong> não ganham grupo nem SLA. Se a causa voltar, a reabertura ou o <code>-R1</code> já nascem roteados.</li>
+    <li><strong>Piloto.</strong> Uma empresa, duas semanas, com acompanhamento dos indicadores (sem responsável, sem regra, estourados) antes da liberação geral.</li>
+  </ul>
+</section>
+
+<!-- 13 -->
+<section class="section" id="s13">
+  <div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Riscos</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Risco</th><th>Efeito</th><th>Mitigação</th></tr></thead>
+    <tbody>
+      <tr><td>O porte diverge do motor do Demo</td><td>O Live roteia ou mede diferente do que o cliente viu na demonstração.</td><td>Cenários golden compartilhados; o teste quebra nos dois lados.</td></tr>
+      <tr><td>Sorteio concorrente</td><td>Duas detecções ao mesmo tempo caem na mesma pessoa, ou um chamado ganha dois responsáveis.</td><td>Lock consultivo por empresa e grupo; teste de integração com 100 detecções simultâneas.</td></tr>
+      <tr><td>Calendário útil errado</td><td>Prazo vencido antes ou depois do certo; aviso de estouro indevido.</td><td>Uma só implementação (<code>shared/business-days.ts</code>) para o prazo da família e para o SLA; testes nas viradas de ano e nos feriados móveis.</td></tr>
+      <tr><td>Varredura do SLA pesada</td><td>O job passa do intervalo e se sobrepõe.</td><td>Índice por <code>due_at</code>; leitura só dos que estão perto do prazo; avisos idempotentes; métrica de duração.</td></tr>
+      <tr><td>Mudança da regra do glosado</td><td>Hoje a nova detecção do glosado é ignorada; o <code>-R1</code> muda o anúncio ao ledger.</td><td>Etapa própria (LI-5), com o golden de <code>rules.test.ts</code> e o teste do anúncio atualizados juntos.</td></tr>
+      <tr><td>Decisão D-14 ainda aberta no app</td><td>O teto pelo prazo do crédito pode mudar depois de construído.</td><td>Teto configurável (ligado, com folga de 5 dias) desde o início, como no Demo; ajuste vira configuração.</td></tr>
+      <tr><td>Sem provedor de e-mail</td><td>O aviso de estouro não chega a quem está fora da aplicação.</td><td>Sino da aplicação e histórico desde a LI-6; e-mail entra sem mudar o job (D-LI-06).</td></tr>
+      <tr><td>Vazamento entre CNPJs</td><td>Alguém vê chamado de estabelecimento fora do escopo, por exemplo na fila do grupo.</td><td>Escopo em toda consulta nova, inclusive nas contagens; teste de escopo em cada etapa.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 14 -->
+<section class="section" id="s14">
+  <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Decisões para começar</span></div>
+  <p>Recomendação em cada uma. As três primeiras destravam a frente B; a D-LI-10 destrava a LI-0.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>Pergunta</th><th>Opções</th><th>Recomendação</th><th>Trava</th></tr></thead>
+    <tbody>
+      <tr><td class="id">D-LI-01</td><td>Onde vive o atendimento?</td><td>A · dentro do serviço <code>inconsistencies</code><br>B · serviço novo <code>attendance</code></td><td><strong>A.</strong> Passagem, responsável e relógio mudam numa transação só, e só esse serviço resolve.</td><td>LI-3</td></tr>
+      <tr><td class="id">D-LI-02</td><td>Como o motor do Demo chega ao backend?</td><td>A · porte com cenários golden compartilhados<br>B · pacote compartilhado entre frontend e backend</td><td><strong>A.</strong> O motor do Demo muta estado em memória e usa o relógio parado; um pacote único forçaria o Demo a mudar.</td><td>LI-3</td></tr>
+      <tr><td class="id">D-LI-03</td><td>Como liberar?</td><td>A · por empresa, com permissão de recurso no servidor<br>B · para todos de uma vez</td><td><strong>A.</strong> Permite piloto e ativação depois de configurar.</td><td>LI-3</td></tr>
+      <tr><td class="id">D-LI-04</td><td>Quando os relógios começam para o que já estava aberto?</td><td>A · na ativação<br>B · na detecção, retroativo</td><td><strong>A.</strong> Retroativo nasceria com chamados estourados sem culpa de ninguém.</td><td>LI-4</td></tr>
+      <tr><td class="id">D-LI-05</td><td>Que feriados o calendário útil considera?</td><td>A · nacionais agora; estaduais e municipais por CNPJ depois<br>B · todos desde o início</td><td><strong>A.</strong> A tabela já tem o campo de abrangência; B pede uma fonte de feriados locais.</td><td>LI-0</td></tr>
+      <tr><td class="id">D-LI-06</td><td>Como os avisos chegam?</td><td>A · histórico e sino agora; e-mail quando houver provedor<br>B · esperar o provedor de e-mail</td><td><strong>A.</strong> Não trava o SLA no provedor.</td><td>LI-6</td></tr>
+      <tr><td class="id">D-LI-07</td><td>Teto pelo prazo do crédito e prazo da família E</td><td>A · como no Demo: teto ligado, folga de 5 dias, configurável; E com 10 dias úteis<br>B · esperar a D-14 do app</td><td><strong>A</strong>, revisto quando a D-14 for decidida no app.</td><td>LI-6</td></tr>
+      <tr><td class="id">D-LI-08</td><td>Que tipos entram na LI-1?</td><td>A · só os 4 com fonte no Live<br>B · também os 2 de alíquota, com uma fonte nova da alíquota esperada</td><td><strong>A.</strong> A fonte de alíquotas é um trabalho próprio; os outros tipos dependem de módulos de outras ondas (seção 3).</td><td>LI-1</td></tr>
+      <tr><td class="id">D-LI-09</td><td>Metas de desempenho</td><td>Quadro em menos de 1 s com 50 mil ocorrências; varredura em menos de 30 s</td><td>Confirmar as metas e o tamanho da base de carga com o time.</td><td>LI-2</td></tr>
+      <tr><td class="id">D-LI-10</td><td>Tesouraria opera só a família D?</td><td>A · sim, no servidor, como diz a proposta<br>B · manter todas as famílias</td><td><strong>A.</strong> Hoje a restrição é só um comentário; o sorteio precisa dela para calcular os elegíveis.</td><td>LI-0</td></tr>
+    </tbody>
+  </table></div>
+  <p>Este plano também depende de duas decisões do relatório Demo × Live: a D-LV-02 (parcialidade antes de Pagamentos e PCONT), que decide quando a partição entra; e a D-LV-03 (duas frentes em paralelo), que decide se as frentes A e B correm juntas.</p>
+</section>
+
+<!-- 15 -->
+<section class="section" id="s15">
+  <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Rastreabilidade</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Origem</th><th>O quê</th><th>Etapa</th></tr></thead>
+    <tbody>
+      <tr><td class="grp" colspan="3">Proposta de gestão de inconsistências v2.2 (lote 1, AV-GS no app)</td></tr>
+      <tr><td class="id">F-01 a F-10, F-12, F-22, F-24</td><td>Configurações › Atendimento (T-01 a T-05): grupos, regras, sem regra, matriz, aviso no menu.</td><td>LI-3</td></tr>
+      <tr><td class="id">(mesmas)</td><td>Kanban (T-06) e bloco Atendimento do card (T-07): recortes, filtros, fila, assumir, reatribuir, transferir, devolver.</td><td>LI-4</td></tr>
+      <tr><td class="id">(mesmas)</td><td>Passagens com exigência (T-08).</td><td>LI-5</td></tr>
+      <tr><td class="grp" colspan="3">Proposta v2.2 (lote 2, só no Demo)</td></tr>
+      <tr><td class="id">F-23, F-26, parte da F-10</td><td>Reabertura pela mesma causa, glosado que vira chamado ligado, redistribuição pela gestão de usuários.</td><td>LI-5</td></tr>
+      <tr><td class="id">(parte)</td><td>Evento pedido do card.</td><td>LI-9 (L4)</td></tr>
+      <tr><td class="id">F-13 a F-18</td><td>Tipos de SLA, regras de SLA, SLA padrão por família, relógio, teto pelo prazo do crédito, avisos (T-09 a T-11).</td><td>LI-6</td></tr>
+      <tr><td class="id">F-11, F-19, F-20, F-21</td><td>Indicadores por grupo e de SLA, listagem (T-13) e visão geral (T-12).</td><td>LI-7</td></tr>
+      <tr><td class="id">F-25</td><td>A linha do chamado no detalhe do DF e do RF.</td><td>LI-7</td></tr>
+      <tr><td class="grp" colspan="3">Relatório Demo × Live</td></tr>
+      <tr><td class="id">N-06, N-07, I-05</td><td>Prazos e prioridade; catálogo do servidor; card do Início.</td><td>LI-0</td></tr>
+      <tr><td class="id">N-05</td><td>Tipos detectados.</td><td>LI-1</td></tr>
+      <tr><td class="id">N-03</td><td>Quadro paginado.</td><td>LI-2</td></tr>
+      <tr><td class="id">N-08</td><td>Ocorrências da partição.</td><td>LI-9 (L1)</td></tr>
+      <tr><td class="id">N-09, N-10, N-11</td><td>Família I, alertas de competência, evento como ação do card.</td><td>LI-9 (L4)</td></tr>
+    </tbody>
+  </table></div>
+  <p>Documentos de referência: <a href="proposta-grupos-inconsistencias.html">proposta de gestão de inconsistências v2.2</a>, <a href="prd-inconsistencias.html">PRD de Inconsistências</a>, <a href="taxrs-demo-live.html">relatório Demo × Live</a>, <a href="taxrs-atendimento-como-configurar.html">guia de configuração do atendimento</a> e, no tax-rs, <code>docs/plano-demo-atendimento.md</code> e <code>frontend/PARIDADE-PROTOTIPO.md</code> (seções F6).</p>
+</section>
+
+<p class="foot">SplitHub · tax-rs · Plano do Live: Inconsistências e Atendimento · v1.0 · 25/11/2026</p>
+</div>
+</body>
+</html>
