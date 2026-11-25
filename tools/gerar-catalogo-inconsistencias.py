@@ -676,18 +676,20 @@ add('INC-PAG-02', u'Split de CBS n&atilde;o executado', 'financeiro',
     'fora', 'vivo', 'cfin_cbs_split')
 
 add('INC-PAG-03', u'Comprovante de IBS divergente', 'financeiro',
-    u'O valor recolhido n&atilde;o corresponde ao devido no registro.',
-    'RN-CONC-02, RN-CONC-07',
-    u'Confronto CFIN por valor.',
+    u'O valor recolhido n&atilde;o corresponde ao devido no registro. Desde a v3.8 do PRD de '
+    u'Concilia&ccedil;&atilde;o: no RAD, o principal do comprovante difere do que o Comit&ecirc; Gestor apropriou.',
+    'RN-CONC-02, RN-CONC-05, RN-CONC-07',
+    u'Confronto CFIN por valor. Na v3.8, s&oacute; o principal, sem toler&acirc;ncia; multa e juros ficam fora.',
     'critica',
-    u'Complementar quando a menor; pedir restitui&ccedil;&atilde;o quando a maior. '
+    u'Recolher a diferen&ccedil;a quando a menor; pedir restitui&ccedil;&atilde;o quando a maior. '
+    u'Na v3.8 n&atilde;o h&aacute; comprovante complementar: um por DF e tributo. '
     u'A menor trava a apropria&ccedil;&atilde;o pelo art. 47.',
     'misto', 'vivo', 'cfin_ibs_valor')
 
 add('INC-PAG-04', u'Comprovante de CBS divergente', 'financeiro',
     u'Mesma falha na parcela federal.',
     'RN-CONC-02, RN-CONC-07',
-    u'Confronto CFIN por valor.',
+    u'Confronto CFIN por valor. Na v3.8, o principal do comprovante contra o que a Receita Federal apropriou.',
     'critica',
     u'Mesmo caminho do IBS, com recolhimento complementar pelo c&oacute;digo de receita 5952.',
     'misto', 'vivo', 'cfin_cbs_valor')
@@ -758,6 +760,45 @@ add('INC-PAG-11', u'Registro RAD sem guia e sem comprovante', 'financeiro',
     u'Gerar a guia. Se o registro estava retido por marca de risco, resolver a marca '
     u'devolve o registro ao lote (RN-EXR-09).',
     'dentro')
+
+add('INC-PAG-12', u'Apropria&ccedil;&atilde;o RAD do IBS sem comprovante', 'financeiro',
+    u'O Comit&ecirc; Gestor apropriou o cr&eacute;dito de um DF RAD e o comprovante do cliente n&atilde;o '
+    u'chegou &agrave; plataforma em D+2 &uacute;teis, contados da data da apropria&ccedil;&atilde;o.',
+    'RN-CONC-02, RN-CONC-05',
+    u'Registro com apropria&ccedil;&atilde;o RAD, sem comprovante no tributo, passado o D+2 &uacute;til. '
+    u'Resolve-se sozinha quando o comprovante chega.',
+    'alta',
+    u'Lan&ccedil;ar o comprovante do pagamento na plataforma. Sem ele, a CFIN n&atilde;o fica positiva '
+    u'e o cr&eacute;dito n&atilde;o &eacute; apropri&aacute;vel na plataforma.',
+    'dentro')
+
+add('INC-PAG-13', u'Apropria&ccedil;&atilde;o RAD da CBS sem comprovante', 'financeiro',
+    u'Mesma falha na parcela federal: a Receita Federal apropriou e o comprovante n&atilde;o chegou em D+2 &uacute;teis.',
+    'RN-CONC-02, RN-CONC-05',
+    u'Registro com apropria&ccedil;&atilde;o RAD, sem comprovante no tributo, passado o D+2 &uacute;til.',
+    'alta',
+    u'Id&ecirc;ntico ao IBS.',
+    'dentro')
+
+add('INC-PAG-14', u'Comprovante de IBS sem apropria&ccedil;&atilde;o', 'financeiro',
+    u'O comprovante chegou e o Comit&ecirc; Gestor n&atilde;o apropriou no RAD em D+3 &uacute;teis, contados da '
+    u'entrada do comprovante. &Eacute; o sinal de pagamento em duplicidade (o fornecedor ou o split j&aacute; '
+    u'recolheu), de DF cancelado ou de cr&eacute;dito glosado.',
+    'RN-CONC-02, RN-CONC-05, art. 36 &sect; 3&ordm;, II',
+    u'Comprovante no tributo sem apropria&ccedil;&atilde;o RAD do ente, passado o D+3 &uacute;til. '
+    u'Resolve-se sozinha quando a apropria&ccedil;&atilde;o RAD chega.',
+    'critica',
+    u'Conferir com o Comit&ecirc; Gestor se o pagamento foi reconhecido. Se outro m&eacute;todo j&aacute; '
+    u'recolheu, ou o DF foi cancelado, pedir restitui&ccedil;&atilde;o &mdash; a&ccedil;&atilde;o fora do produto.',
+    'misto')
+
+add('INC-PAG-15', u'Comprovante de CBS sem apropria&ccedil;&atilde;o', 'financeiro',
+    u'Mesma falha na parcela federal: a Receita Federal n&atilde;o apropriou no RAD em D+3 &uacute;teis.',
+    'RN-CONC-02, RN-CONC-05, art. 36 &sect; 3&ordm;, II',
+    u'Comprovante no tributo sem apropria&ccedil;&atilde;o RAD do ente, passado o D+3 &uacute;til.',
+    'critica',
+    u'Id&ecirc;ntico ao IBS, com a restitui&ccedil;&atilde;o pedida &agrave; Receita Federal.',
+    'misto')
 
 # ---- EXR -------------------------------------------------------------------
 add('INC-EXR-01', u'Registro retido por marca de risco', 'financeiro',

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRD — Conciliação IBS/CBS · SplitHub v3.6</title>
+<title>PRD — Conciliação IBS/CBS · SplitHub v3.8</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -194,14 +194,14 @@ img, svg { max-width: 100%; height: auto; }
   <p class="subtitle">Confronta o que o SplitHub escriturou com o que a <strong>Plataforma Centralizada</strong> apurou, e confirma que o tributo foi efetivamente pago. Sem os dois confrontos positivos, o direito ao crédito do Art. 48 fica bloqueado — por mais correto que o documento pareça.</p>
 
   <div class="meta-bar">
-    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">3.7</span></div>
+    <div class="meta-pill"><span class="meta-label">Versão</span>&nbsp;<span class="meta-val">3.8</span></div>
     <div class="meta-pill"><span class="meta-label">Módulo</span>&nbsp;<span class="meta-val">Fiscal → Conciliação</span></div>
-    <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Set/2026</span></div>
+    <div class="meta-pill"><span class="meta-label">Data</span>&nbsp;<span class="meta-val">Nov/2026</span></div>
     <div class="meta-pill"><span class="meta-label">View</span>&nbsp;<span class="meta-val">#view-conciliacao</span></div>
     <div class="meta-pill"><span class="meta-label">Base legal</span>&nbsp;<span class="meta-val">CF/88 Art. 156-A e 195</span></div>
     <div class="meta-pill"><span class="meta-label">LC 214/2025</span>&nbsp;<span class="meta-val">Arts. 21, 22, 48, 57, 59, 109</span></div>
     <div class="meta-pill" style="margin-left:auto">
-      <span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v3.7</span>
+      <span class="chip ok">Publicado</span>&nbsp;<span class="chip warn">v3.8</span>
     </div>
   </div>
 
@@ -330,11 +330,11 @@ img, svg { max-width: 100%; height: auto; }
     <h3>3.1 O que está dentro</h3>
     <ul class="plain">
       <li>Confronto CAPUR entre os valores escriturados e os apurados pela Plataforma Centralizada</li>
-      <li>Confronto CFIN entre os comprovantes recebidos e o apurado</li>
+      <li>Confronto CFIN entre o evento de apropriação de cada ente e, no RAD, o comprovante do cliente</li>
       <li>Sequenciamento: CFIN só avalia depois de CAPUR concluída</li>
       <li>Painel unificado com os dois status por documento e a próxima ação sugerida</li>
       <li>Listagem de registros fiscais com oito filtros e paginação</li>
-      <li>Taxonomia de 14 tipos de inconsistência, distribuída em CAPUR, CFIN e ingestão</li>
+      <li>Taxonomia de 20 tipos de inconsistência, distribuída em CAPUR, CFIN e ingestão</li>
       <li>Cinco indicadores da posição consolidada</li>
     </ul>
 
@@ -424,18 +424,36 @@ nf._concReg  =  _concRegFin || _concRegApur   <span class="c">// compat: o regis
     </div>
 
     <h3>5.2 Status de CFIN</h3>
-    <p>Diferente da CAPUR, a CFIN é <strong>derivada dos comprovantes</strong>, com regra explícita:</p>
+    <p>Desde a v3.8, a CFIN é <strong>derivada do evento de apropriação de cada ente</strong>, por tributo: a Receita Federal na CBS, o Comitê Gestor no IBS. No RAD, quem recolheu foi o cliente, e o comprovante dele entra no confronto:</p>
     <div class="code-block"><code>capur_status === <span class="s">"pendente"</span>
    → cfin_status = <span class="s">"pendente"</span>          <span class="c">// a sequência é obrigatória</span>
 
-caso contrário, sobre os dois RFs (IBS e CBS):
-   ambos pagos e nenhum inconsistente  → <span class="s">"conciliado"</span>
-   qualquer um inconsistente           → <span class="s">"inconsistencia"</span>
-   caso contrário                      → <span class="s">"pendente"</span></code></div>
+caso contrário, por registro (IBS e CBS):
+   sem apropriação do ente               → <span class="s">"pendente"</span>
+   apropriado por fornecedor ou split    → <span class="s">"conciliado"</span>
+   apropriado no RAD, sem comprovante    → <span class="s">"pendente"</span>   <span class="c">// D+2 úteis: inconsistência</span>
+   RAD, principal igual ao apropriado    → <span class="s">"conciliado"</span>
+   RAD, principal diferente              → <span class="s">"inconsistencia"</span>
+comprovante sem apropriação do ente     → <span class="s">"pendente"</span>   <span class="c">// D+3 úteis: inconsistência</span>
+
+no documento: qualquer registro inconsistente → <span class="s">"inconsistencia"</span>;
+              todos conciliados               → <span class="s">"conciliado"</span></code></div>
+    <ul class="plain">
+      <li><span><strong>O método</strong> vem do evento quando ele diz (na CBS, R01 é RAD, R02 é split, C02 é fornecedor). Quando não diz, como em todo o IBS e no recolhimento em atraso da CBS, vale o método de recolhimento do documento.</span></li>
+      <li><span><strong>Só o principal</strong> entra no confronto, sem tolerância: um centavo já é divergência. Multa e juros de um RAD pago com atraso ficam fora; o que fazer com eles está pendente.</span></li>
+      <li><span><strong>Um comprovante por DF e tributo.</strong> Um comprovante pode trazer os dois tributos, e cada valor espera a apropriação do seu ente. Não há comprovante complementar.</span></li>
+      <li><span><strong>Os prazos contam em dias úteis</strong>, com os feriados nacionais: o D+2 a partir da data da apropriação, o D+3 a partir da entrada do comprovante na plataforma. Correm mesmo com a CAPUR pendente; só a conciliação espera a CAPUR.</span></li>
+      <li><span><strong>A CFIN não muda o crédito.</strong> O que o ente apropriou continua apropriado; a CFIN confere e, se for o caso, abre a inconsistência.</span></li>
+    </ul>
 
     <div class="callout warn">
       <div class="ct">A sequência não é convenção, é regra</div>
-      <p>Enquanto a CAPUR não conclui, a CFIN é forçada a <em>pendente</em> — mesmo que os comprovantes já tenham chegado. Confirmar pagamento de um valor que ainda não se sabe correto seria conciliar contra um alvo móvel.</p>
+      <p>Enquanto a CAPUR não conclui, a CFIN é forçada a <em>pendente</em> — mesmo que a apropriação e o comprovante já tenham chegado. Confirmar pagamento de um valor que ainda não se sabe correto seria conciliar contra um alvo móvel.</p>
+    </div>
+
+    <div class="callout info">
+      <div class="ct">Onde a regra da v3.8 já vale</div>
+      <p>A regra nasce no Live do tax-rs, pelo <a class="xref" href="taxrs-plano-cfin.html">plano da CFIN pela apropriação do ente</a>. O app e o Demo seguem a regra da v3.7, pelos comprovantes, até serem alinhados. A CFIN da venda (débito) continua na regra da v3.7 até a decisão D-CF-01.</p>
     </div>
 
     <h3>5.3 Os dois status juntos</h3>
@@ -457,7 +475,7 @@ caso contrário, sobre os dois RFs (IBS e CBS):
   <!-- ══ 06 ══ -->
   <div class="section" id="s06">
     <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Taxonomia de inconsistências</span></div>
-    <p class="sec-sub">Dezesseis tipos, distribuídos em quatro origens.</p>
+    <p class="sec-sub">Vinte tipos, distribuídos em quatro origens.</p>
     <div class="callout info"><div class="ct">Os dois tipos de conciliação com o Fisco (v3.3)</div><p><strong>DF sem registro na apuração assistida</strong> — documento na plataforma que o Fisco não tem depois de 30 dias. <strong>Registro na apuração assistida sem DF</strong> — documento que o Fisco tem e a plataforma não recebeu. Os dois nomeiam o órgão: Receita Federal na CBS, Comitê Gestor no IBS.</p></div>
     <p>Cada inconsistência gera <strong>um card</strong> no módulo de Inconsistências, sempre vinculado ao
     documento. Um mesmo DF pode gerar vários — até seis do tipo CAPUR, mais os de CFIN, mais os herdados da
@@ -479,15 +497,19 @@ caso contrário, sobre os dois RFs (IBS e CBS):
       </table>
     </div>
 
-    <h3>6.2 CFIN — divergência entre comprovantes e apuração</h3>
+    <h3>6.2 CFIN — apropriação do ente e comprovante</h3>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Tipo</th><th>Rótulo</th><th>RF vinculado</th><th>Causa</th></tr></thead>
         <tbody>
           <tr><td><code>cfin_ibs_split</code></td><td>Split IBS não executado</td><td>RF IBS</td><td>Comprovante de recolhimento de IBS não recebido ou não vinculado ao documento</td></tr>
           <tr><td><code>cfin_cbs_split</code></td><td>Split CBS não executado</td><td>RF CBS</td><td>Comprovante de recolhimento de CBS não recebido ou não vinculado</td></tr>
-          <tr><td><code>cfin_ibs_valor</code></td><td>Comprovante IBS divergente</td><td>RF IBS</td><td>Valor recolhido difere do apurado pelo CG-IBS</td></tr>
-          <tr><td><code>cfin_cbs_valor</code></td><td>Comprovante CBS divergente</td><td>RF CBS</td><td>Valor recolhido difere do apurado pela RFB</td></tr>
+          <tr><td><code>cfin_ibs_valor</code></td><td>Comprovante IBS divergente</td><td>RF IBS</td><td>No RAD, o principal do comprovante difere do apropriado pelo Comitê Gestor</td></tr>
+          <tr><td><code>cfin_cbs_valor</code></td><td>Comprovante CBS divergente</td><td>RF CBS</td><td>No RAD, o principal do comprovante difere do apropriado pela Receita Federal</td></tr>
+          <tr><td><code>cfin_ibs_sem_comprovante</code></td><td>Apropriação RAD do IBS sem comprovante</td><td>RF IBS</td><td>O Comitê Gestor apropriou no RAD e o comprovante não chegou em D+2 úteis (v3.8)</td></tr>
+          <tr><td><code>cfin_cbs_sem_comprovante</code></td><td>Apropriação RAD da CBS sem comprovante</td><td>RF CBS</td><td>A Receita Federal apropriou no RAD e o comprovante não chegou em D+2 úteis (v3.8)</td></tr>
+          <tr><td><code>cfin_ibs_sem_apropriacao</code></td><td>Comprovante IBS sem apropriação</td><td>RF IBS</td><td>O comprovante chegou e o Comitê Gestor não apropriou no RAD em D+3 úteis. Pagamento em duplicidade, DF cancelado ou crédito glosado (v3.8)</td></tr>
+          <tr><td><code>cfin_cbs_sem_apropriacao</code></td><td>Comprovante CBS sem apropriação</td><td>RF CBS</td><td>O comprovante chegou e a Receita Federal não apropriou no RAD em D+3 úteis. Pagamento em duplicidade, DF cancelado ou crédito glosado (v3.8)</td></tr>
         </tbody>
       </table>
     </div>
@@ -707,9 +729,9 @@ caso contrário, sobre os dois RFs (IBS e CBS):
           <tr><td class="rid">RF-CONC-001</td><td>Só documentos com status <code>importado</code> entram no pipeline de conciliação.</td><td>Documento em inconsistência de ingestão não aparece no painel unificado.</td><td>M</td></tr>
           <tr><td class="rid">RF-CONC-002</td><td>A CAPUR deve confrontar o valor escriturado com o apurado pela Plataforma Centralizada.</td><td>O registro traz valor do DF, valor apurado, delta, protocolo e data. <em>Hoje o status vem de hash, não de confronto — DEF-01.</em></td><td>M</td></tr>
           <tr><td class="rid">RF-CONC-003</td><td>O protocolo da apuração deve ser registrado por documento.</td><td>A referência permite rastrear a consulta na origem.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CONC-004</td><td>A CFIN deve derivar dos comprovantes dos dois registros fiscais.</td><td>Ambos pagos e sem inconsistência resulta em conciliado.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CONC-004</td><td>A CFIN deve derivar do evento de apropriação de cada ente e, no RAD, do comprovante do cliente (v3.8).</td><td>Fornecedor e split conciliam na apropriação; no RAD, o principal do comprovante igual ao apropriado concilia; sem apropriação, fica pendente.</td><td>M</td></tr>
           <tr><td class="rid">RF-CONC-005</td><td>Um único registro inconsistente deve levar o documento inteiro a inconsistência.</td><td>IBS conciliado e CBS divergente resulta em CFIN inconsistente.</td><td>M</td></tr>
-          <tr><td class="rid">RF-CONC-006</td><td>A CFIN deve permanecer pendente enquanto a CAPUR não concluir.</td><td>Comprovantes já recebidos não antecipam o status.</td><td>M</td></tr>
+          <tr><td class="rid">RF-CONC-006</td><td>A CFIN deve permanecer pendente enquanto a CAPUR não concluir.</td><td>Apropriação e comprovante já recebidos não antecipam o status; os prazos de D+2 e D+3 correm assim mesmo.</td><td>M</td></tr>
           <tr><td class="rid">RF-CONC-007</td><td>O resultado deve ser propagado para o documento e para os dois registros.</td><td><code>_concRegApur</code> e <code>_concRegFin</code> ficam iguais nas três entidades.</td><td>M</td></tr>
           <tr><td class="rid">RF-CONC-008</td><td>O campo de compatibilidade deve apontar para o estágio mais avançado.</td><td><code>_concReg</code> traz o financeiro quando existe, o de apuração quando não.</td><td>M</td></tr>
         </tbody>
@@ -764,10 +786,10 @@ caso contrário, sobre os dois RFs (IBS e CBS):
         <thead><tr><th>ID</th><th>Regra</th><th>Razão</th></tr></thead>
         <tbody>
           <tr><td class="rid">RN-CONC-01</td><td>A unidade de conciliação é o documento fiscal, nunca o registro.</td><td>A divergência de alíquota existe antes de qualquer recolhimento; prender o card ao RF a faria desaparecer nos casos mais graves.</td></tr>
-          <tr><td class="rid">RN-CONC-02</td><td>Sem CFIN positiva, o crédito não é apropriável, ainda que a CAPUR esteja conciliada.</td><td>O Art. 48 condiciona o crédito ao recolhimento, não à escrituração correta.</td></tr>
+          <tr><td class="rid">RN-CONC-02</td><td>Sem CFIN positiva, o crédito não é apropriável na plataforma, ainda que a CAPUR esteja conciliada. A CFIN só é positiva com a apropriação do ente e, no RAD, com o comprovante (v3.8).</td><td>O Art. 48 condiciona o crédito ao recolhimento, não à escrituração correta. Quem atesta o recolhimento é o ente; a CFIN confirma a apropriação dele.</td></tr>
           <tr><td class="rid">RN-CONC-03</td><td>A CFIN só é avaliada depois de a CAPUR concluir.</td><td>Confirmar pagamento contra valor ainda não validado é conciliar contra alvo móvel.</td></tr>
           <tr><td class="rid">RN-CONC-04</td><td>Um único registro inconsistente basta para o documento ficar inconsistente.</td><td>Meio recolhimento não é meio crédito.</td></tr>
-          <tr><td class="rid">RN-CONC-05</td><td>A conciliação independe do mecanismo de pagamento.</td><td>Split payment e RAD chegam ao mesmo confronto; muda quem recolhe, não o que se verifica.</td></tr>
+          <tr><td class="rid">RN-CONC-05</td><td>O mecanismo de recolhimento muda o confronto só no RAD: fornecedor e split conciliam com a apropriação do ente; no RAD, o principal do comprovante do cliente é confrontado com o apropriado (v3.8).</td><td>No split e no fornecedor, quem recolhe não é o cliente, e a apropriação do ente é a prova. No RAD, o cliente pagou e tem a prova do que pagou.</td></tr>
           <tr><td class="rid">RN-CONC-06</td><td>Documento não importado não é conciliado.</td><td>Não há o que confrontar antes de o documento existir na base.</td></tr>
           <tr><td class="rid">RN-CONC-07</td><td>O delta entre escriturado e apurado é registrado, não apenas o fato da divergência.</td><td>Saber de quanto é a diferença é o que permite priorizar.</td></tr>
         </tbody>
@@ -872,7 +894,8 @@ caso contrário, sobre os dois RFs (IBS e CBS):
 
 <div class="section" id="s17">
 <div class="sec-hdr"><span class="sec-num">17</span><span class="sec-title">Hist&oacute;rico de vers&otilde;es</span></div>
-    <div class="ver-row"><div class="ver-num">v3.7</div><div class="ver-desc"><strong>15/10/2026</strong> &mdash; <strong>Sem base de cálculo no documento.</strong> A base de cálculo saiu do envio de documentos fiscais (docs v1.4.0). A alíquota efetiva deixa de ser derivada por valor ÷ base, e o RF-CONC-012 é retirado: a verificação de alíquota depende só da alíquota informada por item.</div></div>
+    <div class="ver-row"><div class="ver-num">v3.8</div><div class="ver-desc"><strong>25/11/2026</strong> &mdash; <strong>CFIN pela apropriação do ente.</strong> A CFIN passa a depender do evento de apropriação de cada ente; fornecedor e split conciliam na apropriação, e no RAD o principal do comprovante do cliente é confrontado com o apropriado, sem tolerância, um comprovante por DF e tributo. Quatro tipos novos (<code>cfin_*_sem_comprovante</code> em D+2 úteis, <code>cfin_*_sem_apropriacao</code> em D+3 úteis); RN-CONC-02, RN-CONC-05, RF-CONC-004 e RF-CONC-006 revistos. Vale primeiro no Live do tax-rs (<a class="xref" href="taxrs-plano-cfin.html">plano da CFIN</a>, etapa CF-0); o app e o Demo seguem a v3.7 até serem alinhados.</div></div>
+<div class="ver-row"><div class="ver-num">v3.7</div><div class="ver-desc"><strong>15/10/2026</strong> &mdash; <strong>Sem base de cálculo no documento.</strong> A base de cálculo saiu do envio de documentos fiscais (docs v1.4.0). A alíquota efetiva deixa de ser derivada por valor ÷ base, e o RF-CONC-012 é retirado: a verificação de alíquota depende só da alíquota informada por item.</div></div>
 <div class="ver-row"><div class="ver-num">v3.6</div><div class="ver-desc"><strong>23/09/2026</strong> &mdash; <strong>Quem controla o estado do ciclo.</strong> Fica escrito que o estado do cr&eacute;dito e do d&eacute;bito pertence aos entes fiscais &mdash; apura&ccedil;&atilde;o assistida na CBS, Comit&ecirc; Gestor no IBS &mdash; e que o produto recebe, concilia, evidencia e segue. Este m&oacute;dulo &eacute; onde o princ&iacute;pio se realiza: ele n&atilde;o decide estado, <strong>confronta</strong> o recebido com o calculado e <strong>evidencia</strong> a diferen&ccedil;a. Nenhuma diverg&ecirc;ncia &eacute; resolvida em sil&ecirc;ncio a favor de um dos lados.</div></div>
 <div class="ver-row"><div class="ver-num">v3.5</div><div class="ver-desc"><strong>22/09/2026</strong> &mdash; Campos e defini&ccedil;&otilde;es pendentes: <code>capur_cbs_cst</code> e <code>capur_ibs_cst</code>, que decidem se a linha gera cr&eacute;dito e est&atilde;o ausentes do produto; a coluna <em>NF L&iacute;quido</em>; e a pend&ecirc;ncia do painel unificado declarado em F-05 e n&atilde;o encontrado. Registra que a concilia&ccedil;&atilde;o do IBS n&atilde;o tem fonte automatizada.</div></div>
 <div class="ver-row"><div class="ver-num">v3.4</div><div class="ver-desc"><strong>22/09/2026</strong> — <strong>Fronteiras de integração.</strong> Fronteiras de integração: a conferência com a apuração assistida da CBS passa a apontar a Referência de APIs da Reforma, e fica registrado que o IBS não tem API.</div></div>
