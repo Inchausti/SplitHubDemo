@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roadmap de dezembro · v1.1</title>
+<title>Roadmap de dezembro · v1.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -167,6 +167,8 @@ th.num{font-size:.72rem}
 .filters button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .filters button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .filters input{font:inherit;font-size:.9rem;padding:6px 10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:3px;min-width:0;flex:1 1 220px}
+.filters button:disabled{opacity:.4;cursor:default}
+.filters .lbl{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-right:4px}
 .filters .sep{width:1px;height:22px;background:var(--line)}
 .count{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
 #inv td.nm{font-weight:600}
@@ -197,7 +199,7 @@ footer a{color:var(--accent)}
     <span>Roadmap <b>V1 do time</b> · 241 tarefas (216 do plano e 25 adicionais)</span>
     <span>Status das tarefas: planilha atualizada em <b>26/11/2026</b></span>
     <span>Só tópicos funcionais (os Itens 1, 2, 8 e 9 ficaram fora)</span>
-    <span>26/11/2026 · v1.1</span>
+    <span>26/11/2026 · v1.2</span>
   </div>
   <nav class="jump" aria-label="Seções">
     <a href="#resumo">Resumo</a><a href="#mudou">O que mudou</a><a href="#cadeia">Cadeia do crédito</a><a href="#dezembro">Dezembro</a><a href="#depois">Depois</a><a href="#priorizar">Priorizar</a><a href="#modulos">Por módulo</a><a href="#inventario">Inventário</a><a href="#confirmar">Para confirmar</a>
@@ -245,8 +247,9 @@ footer a{color:var(--accent)}
 
 <section id="priorizar">
   <div class="sec-head"><div class="eyebrow">Priorização</div><h2>Priorizar o que falta</h2>
-  <p class="muted">Os 107 itens M0 que ainda não foram concluídos, na ordem sugerida por este relatório: primeiro os blocos de dezembro, depois Operação e Complemento. Para mudar a prioridade de um item, digite a posição no campo ou use as setas; os outros itens se reorganizam. A ordem fica salva neste navegador. Para compartilhar, copie a ordem (ela cola direto numa planilha) ou exporte em CSV.</p></div>
+  <p class="muted">Os 107 itens M0 que ainda não foram concluídos, na ordem sugerida por este relatório: primeiro os blocos de dezembro, depois Operação e Complemento. Filtre por faixa e por módulo (dá para marcar vários módulos ao mesmo tempo) e busque por texto; a posição de cada item continua sendo a da lista inteira. Para mudar a prioridade de um item, digite a posição no campo ou use as setas; os outros itens se reorganizam. A ordem fica salva neste navegador. Para compartilhar, copie a ordem (ela cola direto numa planilha) ou exporte em CSV.</p></div>
   <div class="filters" id="pfilters"></div>
+  <div class="filters" id="pmods" aria-label="Filtrar por módulo"></div>
   <div class="count" id="pcount" aria-live="polite"></div>
   <ol class="plist" id="plist"></ol>
   <div class="pactions">
@@ -266,6 +269,7 @@ footer a{color:var(--accent)}
 <section id="inventario">
   <div class="sec-head"><div class="eyebrow">Inventário</div><h2>Os 136 itens M0, um a um</h2></div>
   <div class="filters" id="filters"></div>
+  <div class="filters" id="fmods" aria-label="Filtrar por módulo"></div>
   <div class="count" id="count"></div>
   <div class="scroll"><table id="inv"></table></div>
 </section>
@@ -287,7 +291,7 @@ footer a{color:var(--accent)}
   </ol>
 </section>
 
-<footer>Fontes: <a href="priorizacao-mvp.html">Priorização do MVP</a> v2.16 (12/11/2026) e a planilha do Roadmap V1 do time, com o status das tarefas atualizado em 26/11/2026. A planilha com o cruzamento item a item fica fora do hub, para uso interno. A classificação Core, Operação e Complemento é uma proposta deste relatório e não altera as faixas da priorização; na v1.1, ela vale também para os itens que antes estavam cobertos pela V1. Versão anterior: <a href="versoes/roadmap-dezembro-v1.0.html">v1.0 (24/11/2026)</a>.</footer>
+<footer>Fontes: <a href="priorizacao-mvp.html">Priorização do MVP</a> v2.16 (12/11/2026) e a planilha do Roadmap V1 do time, com o status das tarefas atualizado em 26/11/2026. A planilha com o cruzamento item a item fica fora do hub, para uso interno. A classificação Core, Operação e Complemento é uma proposta deste relatório e não altera as faixas da priorização; na v1.1, ela vale também para os itens que antes estavam cobertos pela V1. Versões anteriores: <a href="versoes/roadmap-dezembro-v1.0.html">v1.0 (24/11/2026)</a> e <a href="versoes/roadmap-dezembro-v1.1.html">v1.1 (26/11/2026)</a>.</footer>
 </div>
 
 <script>
@@ -402,6 +406,11 @@ try {
 } catch (e) {}
 const salvar = () => { try { localStorage.setItem(PKEY, JSON.stringify(ordem)); } catch (e) {} };
 let pTier = 'all', pq = '';
+const pMods = new Set();
+const pm = document.getElementById('pmods');
+const PMODS = [...new Set(SUG.map(i => by(i).mod))];
+pm.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; const m = b.dataset.mod;
+  if (!m) pMods.clear(); else if (pMods.has(m)) pMods.delete(m); else pMods.add(m); renderP(); });
 const pf = document.getElementById('pfilters'), pl = document.getElementById('plist'), pfb = document.getElementById('pfb');
 pf.innerHTML = `<button type="button" data-v="all" aria-pressed="true">Todas as faixas</button>` +
   Object.entries(TIER).map(([k, l]) => `<button type="button" data-v="${k}" aria-pressed="false">${l} (${count(SUG.map(by), x => x.tier === k)})</button>`).join('') +
@@ -411,9 +420,12 @@ document.getElementById('pbusca').addEventListener('input', e => { pq = e.target
 const avisar = t => { pfb.textContent = t; };
 function renderP(foco) {
   pf.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(pTier === b.dataset.v)));
+  const xs = SUG.map(by).filter(x => pTier === 'all' || x.tier === pTier);
+  pm.innerHTML = '<span class="lbl">Módulo</span>' + `<button type="button" data-mod="" aria-pressed="${!pMods.size}">Todos os módulos</button>` +
+    PMODS.map(m => { const c = count(xs, x => x.mod === m); return `<button type="button" data-mod="${esc(m)}" aria-pressed="${pMods.has(m)}"${c ? '' : ' disabled'}>${esc(m)} (${c})</button>`; }).join('');
   const n = ordem.length;
   const vis = ordem.filter(i => { const x = by(i);
-    return (pTier === 'all' || x.tier === pTier) && (!pq || [x.nm, x.mod, tkOf(x), BLOCO[i], ST[x.st].l, x.nt || ''].join(' ').toLowerCase().includes(pq)); });
+    return (pTier === 'all' || x.tier === pTier) && (!pMods.size || pMods.has(x.mod)) && (!pq || [x.nm, x.mod, tkOf(x), BLOCO[i], ST[x.st].l, x.nt || ''].join(' ').toLowerCase().includes(pq)); });
   const fora = count(ordem, (i, k) => SUG[k] !== i);
   document.getElementById('pcount').textContent = `${vis.length} de ${n} itens · ` + (fora ? `${plural(fora, 'item fora', 'itens fora')} da posição sugerida` : 'na ordem sugerida');
   pl.innerHTML = vis.map((i, v) => { const x = by(i), p = ordem.indexOf(i) + 1, s = SUG.indexOf(i) + 1;
@@ -491,7 +503,9 @@ document.getElementById('modtab').innerHTML = `<thead><tr><th>Módulo</th><th>Di
 // inventário
 const FKEY = 'rd-filtros-v11';
 let fSt = 'all', fTier = 'all', q = '';
-try { const s = JSON.parse(localStorage.getItem(FKEY) || '{}'); fSt = s.st || 'all'; fTier = s.tier || 'all'; } catch (e) {}
+const fMods = new Set();
+const IMODS = [...new Set(DATA.map(x => x.mod))];
+try { const s = JSON.parse(localStorage.getItem(FKEY) || '{}'); fSt = s.st || 'all'; fTier = s.tier || 'all'; (s.mods || []).forEach(m => { if (IMODS.includes(m)) fMods.add(m); }); } catch (e) {}
 if (fSt !== 'all' && !tot[fSt]) fSt = 'all';
 if (fTier !== 'all' && !TIER[fTier]) fTier = 'all';
 const fl = document.getElementById('filters');
@@ -502,13 +516,19 @@ fl.innerHTML = btn('st','all','Todas') + ORDER.filter(k => tot[k]).map(k => btn(
 fl.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.g === 'st') fSt = b.dataset.v; else fTier = b.dataset.v;
-  try { localStorage.setItem(FKEY, JSON.stringify({st: fSt, tier: fTier})); } catch (e) {}
-  render();
+  salvarF(); render();
 });
+const salvarF = () => { try { localStorage.setItem(FKEY, JSON.stringify({st: fSt, tier: fTier, mods: [...fMods]})); } catch (e) {} };
+const fm = document.getElementById('fmods');
+fm.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; const m = b.dataset.mod;
+  if (!m) fMods.clear(); else if (fMods.has(m)) fMods.delete(m); else fMods.add(m); salvarF(); render(); });
 document.getElementById('busca').addEventListener('input', e => { q = e.target.value.toLowerCase(); render(); });
 function render() {
   fl.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.g === 'st' ? fSt : fTier) === b.dataset.v)));
-  const rows = DATA.filter(x => (fSt === 'all' || x.st === fSt) && (fTier === 'all' || x.tier === fTier) &&
+  const base = DATA.filter(x => (fSt === 'all' || x.st === fSt) && (fTier === 'all' || x.tier === fTier));
+  fm.innerHTML = '<span class="lbl">Módulo</span>' + `<button type="button" data-mod="" aria-pressed="${!fMods.size}">Todos os módulos</button>` +
+    IMODS.map(m => { const c = count(base, x => x.mod === m); return `<button type="button" data-mod="${esc(m)}" aria-pressed="${fMods.has(m)}"${c ? '' : ' disabled'}>${esc(m)} (${c})</button>`; }).join('');
+  const rows = base.filter(x => (!fMods.size || fMods.has(x.mod)) &&
     (!q || [x.nm, x.mod, x.tk, tkOf(x), x.nt || '', x.desc].join(' ').toLowerCase().includes(q)));
   document.getElementById('count').textContent = `${rows.length} de ${DATA.length} itens`;
   document.getElementById('inv').innerHTML = `<thead><tr><th>Módulo</th><th>Item M0</th><th>Situação</th><th>Tarefas e status</th><th>Faixa</th></tr></thead><tbody>` +
