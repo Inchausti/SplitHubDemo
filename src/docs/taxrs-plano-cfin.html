@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Plano da CFIN pela apropriação · v1.3</title>
+<title>Plano da CFIN pela apropriação · v1.4</title>
 <style>
 :root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
   --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
@@ -125,7 +125,7 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
 <p class="subtitle">Hoje a CFIN do tax-rs fecha sozinha: basta a CAPUR e o registro estar "pago". Este plano muda a regra para o que o processo pede. A CFIN só roda com o evento de apropriação de cada ente, e no RAD ela confronta a apropriação com o comprovante do cliente. Os comprovantes nascem no emulador, que também passa a gerar comprovantes certos ou com divergência.</p>
 
 <div class="meta-bar">
-  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.3</span> <a href="versoes/taxrs-plano-cfin-v1.2.html" style="font-size:11px;color:var(--txt3)">v1.2</a> <a href="versoes/taxrs-plano-cfin-v1.1.html" style="font-size:11px;color:var(--txt3)">v1.1</a> <a href="versoes/taxrs-plano-cfin-v1.0.html" style="font-size:11px;color:var(--txt3)">v1.0</a></span>
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.4</span> <a href="versoes/taxrs-plano-cfin-v1.3.html" style="font-size:11px;color:var(--txt3)">v1.3</a> <a href="versoes/taxrs-plano-cfin-v1.2.html" style="font-size:11px;color:var(--txt3)">v1.2</a> <a href="versoes/taxrs-plano-cfin-v1.1.html" style="font-size:11px;color:var(--txt3)">v1.1</a> <a href="versoes/taxrs-plano-cfin-v1.0.html" style="font-size:11px;color:var(--txt3)">v1.0</a></span>
   <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">25/11/2026</span></span>
   <span class="meta-pill"><span class="meta-label">Base</span><span class="meta-val"><code>main</code> do tax-rs no <code>27a8a25</code> (emulador E0–E4)</span></span>
   <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">11 de 13</span> <span class="chip warn">D-CF-01 e D-CF-13 pendentes</span></span>
@@ -214,6 +214,7 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
     <li><strong>Um comprovante por DF e tributo</strong> (D-CF-11): não há complemento. Um segundo comprovante para o mesmo DF e tributo é recusado, e a divergência da situação 5 fica aberta até ser tratada.</li>
     <li><strong>A ordem não importa:</strong> a data da CFIN é a do segundo lado que chegar. Quando o lado que faltava chega, as ocorrências 2a e 3a se resolvem e a CFIN segue para 4 ou 5.</li>
     <li><strong>Os prazos contam em dias úteis</strong>, com os feriados nacionais (D-CF-12): o D+2 a partir da data do evento de apropriação, o D+3 a partir da data em que o comprovante entrou na plataforma. Eles correm mesmo com a CAPUR pendente, porque o lado que espera já pede ação; só a conciliação em si espera a CAPUR.</li>
+    <li><strong>Os prazos são só do emulador</strong> (pedido de 25/11): o D+2 corre só quando a apropriação veio do emulador, e o D+3 só quando o comprovante veio do emulador. Com a integração com os entes ligada, a apropriação RAD sem comprovante fica pendente, sem prazo e sem inconsistência, até existir a entrada do comprovante pelo cliente.</li>
     <li><strong>O status do comprovante é derivado</strong> da comparação, não gravado à parte: uma apropriação corrigida não deixa o comprovante desatualizado.</li>
   </ul>
   <h3>Casos de borda</h3>
@@ -302,11 +303,24 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
         </ul>
       </div></div>
     <div class="onda"><div class="onda-h"><span class="onda-n">CF-1</span><span class="onda-t">Comprovante e apropriação no razão</span></div>
-      <ul class="plain"><li>Tabelas e endpoint do comprovante.</li><li>Fold com valor, método e data da apropriação; anúncio do RF e cópia na conciliação.</li><li>A CFIN ainda usa a regra antiga: nada muda na tela.</li></ul></div>
+      <ul class="plain"><li>Tabelas e endpoint do comprovante.</li><li>Fold com valor, método e data da apropriação; anúncio do RF e cópia na conciliação.</li><li>A CFIN ainda usa a regra antiga: nada muda na tela.</li></ul>
+      <div class="pronto"><strong>Na main do tax-rs em 25/11/2026</strong> (PR #52, merge <code>7204d4d</code>).</div></div>
     <div class="onda"><div class="onda-h"><span class="onda-n">CF-2</span><span class="onda-t">Comprovantes no emulador</span></div>
-      <ul class="plain"><li>"Criar comprovante" para 1 DF e o resultado do lote para N DFs.</li><li>As opções de comprovante na apropriação via RAD, as recusas do segundo comprovante e da apropriação parcial em DF RAD, prévia, JSON e cenários prontos.</li></ul></div>
+      <ul class="plain"><li>"Criar comprovante" para 1 DF e o resultado do lote para N DFs.</li><li>As opções de comprovante na apropriação via RAD, as recusas do segundo comprovante e da apropriação parcial em DF RAD, prévia, JSON e cenários prontos.</li></ul>
+      <div class="pronto"><strong>Na main do tax-rs em 25/11/2026</strong> (PR #53, merge <code>1bf525f</code>).</div></div>
     <div class="onda crit"><div class="onda-h"><span class="onda-n">CF-3</span><span class="onda-t">A troca da regra</span></div>
-      <ul class="plain"><li>Calendário útil em <code>shared</code> com os feriados nacionais (D-CF-12), se a LI-0 ainda não o tiver feito.</li><li><code>reconcile()</code> com as situações 1 a 5, os prazos no cron e as quatro ocorrências novas, mais as duas que passam a ser detectadas.</li><li>Conferência do emulador lendo a CFIN.</li><li>Relatório do recálculo por empresa, depois o recálculo.</li></ul></div>
+      <ul class="plain"><li>Calendário útil em <code>shared</code> com os feriados nacionais (D-CF-12), se a LI-0 ainda não o tiver feito.</li><li><code>reconcile()</code> com as situações 1 a 5, os prazos no cron e as quatro ocorrências novas, mais as duas que passam a ser detectadas.</li><li>Conferência do emulador lendo a CFIN.</li><li>Relatório do recálculo por empresa, depois o recálculo.</li></ul>
+      <div class="pronto"><strong>PR aberto em 25/11/2026</strong> (branch <code>feat/cfin-cf3</code>, commit <code>2f4640d</code>).
+        <ul class="plain">
+          <li>Calendário útil em <code>shared/business-days.ts</code>, com a lista do Demo (a Sexta-feira Santa conta). A LI-0 usa o mesmo.</li>
+          <li>Os prazos isolados por origem: o anúncio do RF leva se a apropriação veio de fato do emulador e a origem do comprovante. Sem essa origem, nada vira ocorrência pelo relógio.</li>
+          <li>Ocorrências <code>cfin_&lt;tributo&gt;_sem_comprovante</code> e <code>_sem_apropriacao</code> detectadas, e <code>cfin_&lt;tributo&gt;_valor</code> passa a ser. O catálogo do tax-rs vai a 25 tipos.</li>
+          <li>A conferência do lote espera essas ocorrências e conta o D+2 e o D+3 na espera do item.</li>
+          <li>Recálculo em três passos por empresa: o razão anuncia de novo os RFs (preenche o que anúncios antigos não traziam), o relatório mostra o que muda sem gravar, e o recálculo.</li>
+          <li>Golden do protótipo: CFIN conciliadas 129 → 108 e apropriáveis 104 → 85. O protótipo não tem comprovante nem fato do emulador, então 19 DFs esperam o comprovante sem prazo.</li>
+          <li>Corrigido junto: a comparação do resultado da conciliação nunca batia, porque o banco devolve os campos em outra ordem, e todo recálculo subia versão e republicava.</li>
+        </ul>
+      </div></div>
     <div class="onda"><div class="onda-h"><span class="onda-n">CF-4</span><span class="onda-t">Frontend Live</span></div>
       <ul class="plain"><li>Conciliação e detalhe do RF com apropriado × comprovado e o status do comprovante.</li></ul></div>
     <div class="onda"><div class="onda-h"><span class="onda-n">CF-5</span><span class="onda-t">Fechamento</span></div>
@@ -333,8 +347,8 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
 <div class="section" id="s9">
   <div class="sec-hdr"><span class="sec-num">9</span><span class="sec-title">Consequências e riscos</span></div>
   <ul class="plain">
-    <li><strong>Produção depende da entrada do comprovante pelo cliente.</strong> Hoje a fonte dos entes está desligada em produção, então nada muda lá. Mas, quando os entes reais forem ligados sem tela ou API de comprovante, toda apropriação RAD vira inconsistência em D+2. A entrada do cliente, com a guia, precisa vir antes.</li>
-    <li><strong>O Simulado vai abrir inconsistências no RAD.</strong> Como ele não gera comprovantes (D-CF-06), todo DF RAD que ele apropriar vira <code>sem_comprovante</code> em D+2, até o emulador criar o comprovante. É o comportamento pedido, mas muda os números do Simulado.</li>
+    <li><strong>Produção depende da entrada do comprovante pelo cliente.</strong> Hoje a fonte dos entes está desligada em produção, então nada muda lá. Desde a v1.4 os prazos são só do emulador: quando os entes reais forem ligados, a apropriação RAD sem comprovante fica pendente, sem virar inconsistência. A CFIN do RAD só concilia quando existir a entrada do cliente, com a guia, e então os prazos podem valer para ela também.</li>
+    <li><strong>O Simulado deixa o RAD pendente.</strong> Ele não gera comprovantes (D-CF-06) e não é o emulador: o DF RAD que ele apropria fica esperando o comprovante, sem prazo e sem inconsistência. Os números do Simulado mudam, porque esses DFs deixam de ficar conciliados.</li>
     <li><strong>O recálculo mexe em números visíveis</strong> nas empresas em reprodução, Simulado ou emulador. CFIN hoje conciliadas sem apropriação do ente, ou RAD sem comprovante, voltam a pendente ou viram inconsistência, de uma vez. Por isso o relatório antes, empresa por empresa.</li>
     <li><strong>"Apropriável" muda de sentido</strong> na Conciliação: passa a exigir a apropriação do ente e, no RAD, o comprovante.</li>
     <li><strong>O app e o Demo seguem o PRD v3.6</strong> (CFIN pelos comprovantes, sem o evento do ente). O Live passa à regra nova; alinhar os outros dois é outra frente, depois do PRD.</li>
@@ -345,6 +359,11 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
 
 <div class="section" id="s10">
   <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">O que mudou em cada versão</span></div>
+  <h3>v1.4 · CF-1 a CF-3</h3>
+  <ul class="plain">
+    <li>CF-1 e CF-2 na main do tax-rs (PR #52 e #53); CF-3 com PR aberto. O detalhe está nas etapas, <a href="#s7">seção 7</a>.</li>
+    <li><strong>Os prazos D+2 e D+3 passam a ser só do emulador</strong>, a pedido do usuário: ficam isolados pela origem da apropriação e do comprovante, para não atrapalhar quando a integração com os entes for ligada. Os riscos de produção e do Simulado mudam com isso (<a href="#s9">seção 9</a>).</li>
+  </ul>
   <h3>v1.3 · CF-0 feita</h3>
   <ul class="plain">
     <li>PRD de Conciliação v3.8, catálogo com INC-PAG-12 a 15 e PRD de Inconsistências v1.7. O MOC do IBS foi conferido. O calendário útil já estava em <code>shared</code> no plano do Live v1.1. O detalhe está na CF-0, <a href="#s7">seção 7</a>.</li>
@@ -375,7 +394,7 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
   </ol>
 </div>
 
-<div class="foot">SplitHub · tax-rs · Plano da CFIN pela apropriação do ente · v1.3 · 25/11/2026</div>
+<div class="foot">SplitHub · tax-rs · Plano da CFIN pela apropriação do ente · v1.4 · 25/11/2026</div>
 </div>
 </body>
 </html>
