@@ -122,6 +122,12 @@ footer{font-size:.84rem;color:var(--muted);border-top:1px solid var(--line);padd
 .mais .mb{display:flex;flex-direction:column;gap:6px;padding-top:6px;font-size:.84rem}
 .card.temnota{box-shadow:inset 0 -2px 0 var(--accent)}
 .vazio{font-size:.84rem;color:var(--muted);padding:6px 2px}
+.card .ct input[type=checkbox],.ch input[type=checkbox]{width:18px;height:18px;margin:0;flex:none;accent-color:var(--accent);cursor:pointer}
+.card.sel{outline:2px solid var(--accent);outline-offset:-1px;background:var(--soft)}
+.ch .mt{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);cursor:pointer}
+.lote{position:sticky;bottom:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;background:var(--surface);border:2px solid var(--accent);box-shadow:0 -4px 14px rgba(0,0,0,.12)}
+.lote[hidden]{display:none}
+.lote b{font-family:var(--f-display);font-stretch:85%;font-size:1rem}
 @media (max-width:760px){.board{grid-auto-flow:row;grid-auto-columns:auto;overflow-x:visible}.ch{position:static}}
 </style>
 </head>
@@ -134,7 +140,7 @@ footer{font-size:.84rem;color:var(--muted);border-top:1px solid var(--line);padd
   <p class="lead">Cada mês é uma coluna e cada item é um cartão, agrupado por tema. Dezembro abre com o que ficou da V1, que é a prioridade. Os grandes temas entram com o M0 em dezembro, ou em janeiro no caso do PCONT, e o resto deles fica em <b>A discutir</b> para o time decidir se entra.</p>
   <div class="meta"><span><b>214</b> itens em 7 temas</span><span>Dezembro <b>111</b> · Janeiro <b>11</b> · A discutir <b>92</b></span><span>Transbordo da V1: <b>68</b> tarefas (38 🟢 e 30 🟡)</span><span>Status do Roadmap V1 do time: <b>26/11/2026</b></span><span>Priorização do MVP <b>v2.17</b></span><span><b>39</b> itens com ressalva</span><span>27/11/2026 · v1.0</span></div>
   <div class="how">
-    <div><b>Mover</b><span>Escolha o mês no seletor do cartão, use → para o mês seguinte, ou arraste o cartão pela alça ⠿ até outra coluna ou outro cartão.</span></div>
+    <div><b>Mover</b><span>Escolha o mês no seletor do cartão, use → para o mês seguinte, ou arraste o cartão pela alça ⠿ até outra coluna ou outro cartão. Para vários de uma vez, marque a caixa dos cartões (ou "Marcar os visíveis da coluna") e escolha o mês na barra de lote.</span></div>
     <div><b>Reordenar</b><span>▲ e ▼ trocam o cartão de lugar com o vizinho do mesmo tema, dentro da coluna. A ordem é a prioridade do mês.</span></div>
     <div><b>Meses</b><span>"+ Mês" cria o mês seguinte ao último. Um mês vazio pode ser tirado pelo ✕ da coluna.</span></div>
     <div><b>Guardar e compartilhar</b><span>Tudo fica salvo neste navegador. Para levar a outra pessoa, use "Salvar arquivo" e ela usa "Carregar arquivo". CSV e "Copiar" levam a ordem para uma planilha.</span></div>
@@ -158,6 +164,15 @@ footer{font-size:.84rem;color:var(--muted);border-top:1px solid var(--line);padd
 </section>
 
 <div class="board" id="board"></div>
+
+<div class="lote" id="lote" hidden role="region" aria-label="Mudança em lote">
+  <b id="lote-n"></b>
+  <label class="muted" for="lote-mes" style="font-size:.88rem">Mover para</label>
+  <select id="lote-mes"></select>
+  <button type="button" class="btn pri" id="lote-ir">Mover</button>
+  <button type="button" class="btn" id="lote-vis">Marcar todos os visíveis</button>
+  <button type="button" class="btn" id="lote-limpar">Desmarcar</button>
+</div>
 
 <section class="espec" id="especificar">
   <h2>Para especificar: <span id="espec-n"></span> itens com ressalva</h2>
@@ -289,22 +304,30 @@ document.getElementById('soflag').addEventListener('change', e => { soFlag = e.t
 const visivel = x => (!ativos.size || ativos.has(x.tema)) && busca(x, q) && (!soFlag || x.fk);
 function card(x, m, irmaos) {
   const k = irmaos.indexOf(x.id), prox = proximoDe(m);
-  return `<article class="card t-${x.tema}${S.nota[x.id] ? ' temnota' : ''}" data-id="${x.id}">
+  return `<article class="card t-${x.tema}${S.nota[x.id] ? ' temnota' : ''}${sel.has(x.id) ? ' sel' : ''}" data-id="${x.id}">
     <div class="tt">${esc(x.nm)}</div>${x.grupo ? `<div class="gr">${esc(x.grupo)}</div>` : ''}
     <div class="bd">${chipOrig(x)}${chipSt(x)}${chipFlag(x)}</div>${x.ts ? `<div class="ts">${esc(x.ts)}</div>` : ''}
     <details class="mais"><summary>Detalhes e nota</summary><div class="mb">${x.desc ? `<p>${esc(x.desc)}</p>` : ''}
       ${x.fk ? `<p class="flagtxt ${x.fk}">${esc(x.flag)}</p>` : ''}<div class="refs">${refsHtml(x)}</div>
       <textarea class="nota" data-nota="${x.id}" placeholder="Nota para a discussão" aria-label="Nota sobre ${esc(x.nm)}">${esc(S.nota[x.id] || '')}</textarea></div></details>
-    <div class="ct"><span class="hd" draggable="true" title="Arrastar" aria-hidden="true">⠿</span>
+    <div class="ct"><input type="checkbox" data-sel="${x.id}"${sel.has(x.id) ? ' checked' : ''} aria-label="Selecionar ${esc(x.nm)}" title="Selecionar para mover em lote"><span class="hd" draggable="true" title="Arrastar" aria-hidden="true">⠿</span>
       <select data-mes="${x.id}" aria-label="Mês de ${esc(x.nm)}">${opcoesMes(m)}</select>
       <button type="button" data-m="-1" aria-label="Subir ${esc(x.nm)}"${k <= 0 ? ' disabled' : ''}>▲</button>
       <button type="button" data-m="1" aria-label="Descer ${esc(x.nm)}"${k === irmaos.length - 1 ? ' disabled' : ''}>▼</button>
       <button type="button" data-prox="${x.id}" aria-label="Mover ${esc(x.nm)} para o mês seguinte"${prox ? '' : ' disabled'} title="${prox ? 'Para ' + rotMes(prox) : ''}">→</button></div>
   </article>`;
 }
+const sel = new Set();
+const lote = document.getElementById('lote');
+function renderLote() {
+  lote.hidden = !sel.size;
+  document.getElementById('lote-n').textContent = plural(sel.size, 'item selecionado', 'itens selecionados');
+  const s = document.getElementById('lote-mes'), v = s.value; s.innerHTML = opcoesMes(ordemCols().includes(v) ? v : S.meses[0]);
+}
 function render(foco) {
   board.innerHTML = ordemCols().map(m => {
     const ids = S.col[m], xs = ids.map(i => BY[i]);
+    const visCol = ids.filter(i => visivel(BY[i])), todosMarc = visCol.length && visCol.every(i => sel.has(i));
     const mix = TEMAS.map(t => [t, count(xs, x => x.tema === t.id)]).filter(a => a[1]).map(([t, n]) => `<span class="t-${t.id}" style="width:${n / xs.length * 100}%" title="${esc(t.nm)}: ${n}"></span>`).join('');
     const grupos = TEMAS.map(t => { const irm = ids.filter(i => BY[i].tema === t.id), vis = irm.filter(i => visivel(BY[i]));
       if (!vis.length) return '';
@@ -314,13 +337,21 @@ function render(foco) {
     return `<section class="col ${m === 'disc' ? 'disc' : ''}" data-col="${m}" aria-label="${rotMes(m)}">
       <div class="ch"><div class="r"><h2>${rotMes(m)}</h2><span class="n">${plural(ids.length, 'item', 'itens')}</span>
         ${m !== 'disc' && !ids.length ? `<button type="button" class="btn" data-tirar="${m}" aria-label="Tirar ${rotMes(m)}">✕</button>` : ''}</div>
-        <div class="mix" aria-hidden="true">${mix}</div></div>
+        <div class="mix" aria-hidden="true">${mix}</div>
+        ${visCol.length ? `<label class="mt"><input type="checkbox" data-selcol="${m}"${todosMarc ? ' checked' : ''}> Marcar os ${visCol.length} visíveis da coluna</label>` : ''}</div>
       <div class="cb">${grupos || '<p class="vazio">Nenhum item aqui com os filtros atuais.</p>'}</div></section>`;
   }).join('');
+  renderLote();
   if (foco) { const c = board.querySelector(`.card[data-id="${foco.id}"]`); let el = c && c.querySelector(foco.sel); if (el && el.disabled) el = c.querySelector('select'); if (el) { el.focus({preventScroll:true}); c.scrollIntoView({block:'nearest', inline:'nearest'}); } }
 }
 board.addEventListener('toggle', e => { const d = e.target; if (d.dataset && d.dataset.g) { d.open ? fechados.delete(d.dataset.g) : fechados.add(d.dataset.g); } }, true);
 board.addEventListener('change', e => {
+  const ck = e.target.closest('input[data-sel]');
+  if (ck) { const id = ck.dataset.sel; ck.checked ? sel.add(id) : sel.delete(id); ck.closest('.card').classList.toggle('sel', ck.checked);
+    const m = mesDe(id), vc = S.col[m].filter(i => visivel(BY[i])), cc = board.querySelector(`input[data-selcol="${m}"]`); if (cc) cc.checked = vc.every(i => sel.has(i));
+    renderLote(); return; }
+  const cl = e.target.closest('input[data-selcol]');
+  if (cl) { S.col[cl.dataset.selcol].filter(i => visivel(BY[i])).forEach(i => cl.checked ? sel.add(i) : sel.delete(i)); render(); return; }
   const s = e.target.closest('select[data-mes]'); if (!s) return;
   const id = s.dataset.mes; mover(id, s.value); render({id, sel:'select'}); avisar(`${BY[id].nm.slice(0, 80)} → ${rotMes(s.value)}.`);
 });
@@ -347,6 +378,16 @@ board.addEventListener('drop', e => { if (!arrastando) return; const col = e.tar
   const m = col.dataset.col, alvo = e.target.closest('.card'), id = arrastando;
   let pos = null; if (alvo && alvo.dataset.id !== id) { const arr = S.col[m].filter(i => i !== id); pos = arr.indexOf(alvo.dataset.id); }
   mover(id, m, pos); arrastando = null; render(); avisar(`${BY[id].nm.slice(0, 80)} → ${rotMes(m)}.`); });
+document.getElementById('lote-ir').addEventListener('click', () => {
+  const para = document.getElementById('lote-mes').value;
+  const ids = ordemCols().flatMap(m => S.col[m].filter(i => sel.has(i)));
+  const mudam = ids.filter(i => mesDe(i) !== para);
+  mudam.forEach(i => mover(i, para));
+  sel.clear(); render();
+  avisar(mudam.length ? `${plural(mudam.length, 'item movido', 'itens movidos')} para ${rotMes(para)}, no fim da coluna.` + (ids.length > mudam.length ? ` ${ids.length - mudam.length} já estava${ids.length - mudam.length > 1 ? 'm' : ''} lá.` : '') : `Os itens selecionados já estavam em ${rotMes(para)}.`);
+});
+document.getElementById('lote-vis').addEventListener('click', () => { ITENS.forEach(x => visivel(x) && sel.add(x.id)); render(); avisar(`${plural(sel.size, 'item selecionado', 'itens selecionados')}.`); });
+document.getElementById('lote-limpar').addEventListener('click', () => { sel.clear(); render(); avisar('Seleção desfeita.'); });
 ligarAcoes(avisar, () => render());
 render(); espec();
 </script>
