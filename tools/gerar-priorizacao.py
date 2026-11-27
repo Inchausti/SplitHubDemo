@@ -21,8 +21,8 @@ BASE = os.path.join(RAIZ, 'src', 'docs') + os.sep
 DEST = BASE + 'priorizacao-mvp.html'
 XLSX = 'priorizacao-mvp.xlsx'      # planilha de revisao, gerada na mesma execucao
 
-VERSAO = u'v2.16'
-DATA = u'12/11/2026'
+VERSAO = u'v2.17'
+DATA = u'27/11/2026'
 BASE_MAPA = u'Mapa de Funcionalidades v2.15'
 
 # a planilha e aberta fora do site: os links para o PRD precisam ser absolutos
@@ -227,7 +227,7 @@ REV_INDEX = {(h['bi'], h['i']): h for h in REV_HIST}
 # justificativa do corte, por modulo
 NOTA = {
     0:  u'Só o que responde “onde está meu crédito hoje”. Forecast e cockpit dependem de série histórica que o piloto ainda não tem. O <strong>card de saldo credor e ressarcimento</strong> entra em M1 (D17).',
-    1:  u'O módulo que a tese defende entra quase inteiro: 11 de 14. Ficam fora três gráficos analíticos — eles explicam o crédito, não o garantem. O Top 5 e Top 10 de fornecedores subiu na revisão de 15/09: saber de quem cobrar primeiro é operação, não análise. O painel <strong>Ressarcimento no ciclo do crédito</strong> entra em M1 (D17): o M0 do módulo não muda. A <strong>parcialidade</strong> (D19) passou ao mapa em 26/10, com o protótipo incorporado ao master: partição por tributo, selo por tributo, detalhe com as duas partições e histórico de movimentos, as quatro em M0.',
+    1:  u'O módulo que a tese defende entra quase inteiro: 11 de 14. Ficam fora três gráficos analíticos — eles explicam o crédito, não o garantem. O Top 5 e Top 10 de fornecedores subiu na revisão de 15/09: saber de quem cobrar primeiro é operação, não análise. O painel <strong>Ressarcimento no ciclo do crédito</strong> entra em M1 (D17): o M0 do módulo não muda. A <strong>parcialidade</strong> (D19) passou ao mapa em 26/10, com o protótipo incorporado ao master: partição por tributo, selo por tributo, detalhe com as duas partições e histórico de movimentos, as quatro em M0. Em 27/11 entrou o <strong>novo detalhe do documento e do registro fiscal</strong>, com abas no topo: são onze funcionalidades no M0, porque é no detalhe que o analista confere o crédito de cada tributo e trata o que ficou pendente.',
     2:  u'Débito entra só para a apuração fechar. O produto se vende pelo crédito. O aviso da trava da intenção de ressarcimento entra em M1 (D17).',
     3:  u'Entra a guia, o comprovante e o rastro dos três status. A entrega ao ERP passa ao M0 junto com a API. Na revisão de 15/09 a <strong>aba Execução Programada</strong> entrou e a gestão de colunas saiu: o piloto precisa ver o que está agendado, não configurar a própria grade. Entra também o <strong>aviso ao fornecedor</strong> do recolhimento — sem ele o fornecedor paga o mesmo tributo de novo.',
     4:  u'A inconsistência é o que impede o crédito de morrer em silêncio. Na revisão de 15/09 a <strong>atribuição de responsável</strong> entrou — inconsistência sem dono não é tratada — e os filtros multiselect saíram. A família Ressarcimento de inconsistências entra em M1 (D17). Em 09/11/2026 entrou o <strong>evento fiscal ou a nota de ajuste como ação</strong> da inconsistência (AV-EV): pedir o evento e acompanhar a solicitação ficam em M1, porque tiram o operador do meio; a prévia do efeito fica em M2, porque explica o saldo antes de mudá-lo. Em 10/11/2026 entraram a <strong>família I</strong>, uma ocorrência por tributo, e os <strong>alertas de competência</strong> (AV-E2), em M1 com o módulo de Eventos fiscais de que dependem: sem a esteira no M0, as ocorrências dela também não estão. Em 12/11/2026 entra o <strong>atendimento</strong> da proposta de Grupos e SLA, aprovada no mesmo dia (PRD v1.6), com a faixa sugerida nela: grupos, regras, o sorteio pela menor carga, a exigência em cada passagem, o SLA com o relógio e a listagem para trabalhar em volume ficam em M0, porque ocorrência sem dono e sem prazo não é tratada; teste de combinação, matriz, redistribuição, avisos, dashboard e o chamado no detalhe do documento em M1; os indicadores por grupo e de SLA em M2. O teto do SLA pelo prazo do crédito fica fora até a D-14 da proposta ser decidida.',
@@ -268,6 +268,30 @@ PRIO_NOTA = {
 
 # funcionalidades que NAO existem no produto e entram na priorizacao mesmo assim
 NOVAS = {
+    1: [
+        (u'Detalhe do DF com abas no topo', 'l', 'M0', None,
+         u'O documento na coluna da esquerda e só abas, presas no topo, na da direita, abrindo sempre na Partição (D-DF-01 e D-DF-05). É onde o analista confere o crédito de cada tributo sem rolar a página inteira.'),
+        (u'Aba Alertas do documento', 'r', 'M0', None,
+         u'Os pontos de atenção em três grupos: exigem ação, em acompanhamento e informativos, com tributo, órgão, valor, origem e atalhos para o card, o evento e o histórico. O selo da aba conta o que pede ação (D-DF-06).'),
+        (u'Aba Eventos e ajustes do documento', 'l', 'M0', None,
+         u'O quadro de ajustes por tributo com o botão Emitir evento ou nota, e a tabela compacta de eventos, de cinco colunas, que vira cartão na coluna estreita. Aparece sempre, mesmo sem evento (D-DF-02 a D-DF-04).'),
+        (u'Histórico do documento com filtros combinados', 'l', 'M0', None,
+         u'A trilha do ciclo sem os pontos de atenção, com filtro por imposto (Todos, CBS, IBS, DF) e por natureza (Órgão, Financeiro, SplitHub, ERP), a ordem e o CSV (D-DF-07).'),
+        (u'Apuração por tributo e linha do tempo no detalhe do DF', 'l', 'M0', None,
+         u'Uma aba de apuração assistida para a CBS e outra para o IBS, e a linha do tempo fiscal do documento, com eventos, ações e divergências.'),
+        (u'Detalhe do DF no celular', 'l', 'M0', None,
+         u'A coluna do documento vira um bloco recolhido acima das abas, e a barra de abas fica presa no topo da janela, rolando de lado.'),
+        (u'Detalhe do RF com abas no topo, de um tributo só', 'l', 'M0', None,
+         u'O mesmo modelo do documento, na janela de 1.120 px, abrindo na Partição. O RF do IBS mostra só o Comitê Gestor e o da CBS só a Receita Federal; o que é do documento aparece marcado como DF (D-RF-01 a D-RF-03, D-RF-09).'),
+        (u'Eventos e ajustes no RF', 'l', 'M0', None,
+         u'Os ajustes do documento neste tributo, com o botão Emitir evento ou nota, e os eventos com o efeito previsto e a confirmação só deste órgão, em quatro colunas, com Ver no documento (D-RF-04).'),
+        (u'Aba Movimentos do RF', 'l', 'M0', None,
+         u'Os movimentos de valor entre parcelas, cada um com a quantia, a parcela de origem e a de destino e a data de reconhecimento pelo órgão (D-RF-05).'),
+        (u'Histórico e linha do tempo do RF por tributo', 'l', 'M0', None,
+         u'A trilha do registro e do documento, com filtro por tributo e por natureza, a ordem e o CSV, e a linha do tempo só com o que é deste tributo (D-RF-06 e D-RF-07).'),
+        (u'Links do RF para o documento e o outro tributo', 'a', 'M0', None,
+         u'Da coluna da esquerda, abrir o documento na Partição ou trocar para o RF do outro tributo do mesmo documento (D-RF-08).'),
+    ],
     4: [
         (u'Cadastrar grupos de atendimento', 'c', 'M0', None,
          u'Grupos com nome, gestor e situação, e sempre um grupo padrão. É o que dá a cada área a fila que é dela, em vez de uma fila só para todos.'),
@@ -355,6 +379,17 @@ NOVAS = {
 
 # vinculo com o PRD das funcionalidades que ainda nao existem
 NOVAS_PRD = {
+    u'Detalhe do DF com abas no topo': 'prd-credito.html#f-10',
+    u'Aba Alertas do documento': 'prd-credito.html#f-10',
+    u'Aba Eventos e ajustes do documento': 'prd-eventos-fiscais.html#f-20',
+    u'Histórico do documento com filtros combinados': 'prd-credito.html#f-10',
+    u'Apuração por tributo e linha do tempo no detalhe do DF': 'prd-eventos-fiscais.html#f-20',
+    u'Detalhe do DF no celular': 'prd-credito.html#f-10',
+    u'Detalhe do RF com abas no topo, de um tributo só': 'prd-credito.html#f-11',
+    u'Eventos e ajustes no RF': 'prd-eventos-fiscais.html#f-20',
+    u'Aba Movimentos do RF': 'prd-credito.html#f-11',
+    u'Histórico e linha do tempo do RF por tributo': 'prd-credito.html#f-11',
+    u'Links do RF para o documento e o outro tributo': 'prd-credito.html#f-11',
     u'Cadastrar grupos de atendimento': 'prd-inconsistencias.html#f-15',
     u'Gerir membros e disponibilidade': 'prd-inconsistencias.html#f-16',
     u'Regras de roteamento': 'prd-inconsistencias.html#f-17',
@@ -977,6 +1012,11 @@ A(u'</div>')
 # 07 historico
 A(u'<div class="section">')
 A(u'<div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Histórico de versões</span></div>')
+A(u'<div class="ver-row"><div class="ver-num">v2.17</div><div class="ver-desc">'
+  u'27/11/2026 — Base: <strong>Mapa v2.15, com 333 funcionalidades</strong>. Entra o <strong>novo detalhe do documento e do registro fiscal</strong>, '
+  u'com abas no topo, a pedido do usuário para o roadmap de dezembro: 11 funcionalidades no módulo Créditos IBS/CBS, todas em M0. A estrutura foi aprovada em 10/11 '
+  u'(D-DF-01..07 e D-RF-01..10) e está no protótipo do app desde 11/11, mas ainda não no produto do time, por isso entram como novas. '
+  u'As abas de eventos dependem do módulo de Eventos fiscais, que segue em M1: até ele entrar, a aba aparece com o quadro de ajustes e o estado vazio.</div></div>')
 A(u'<div class="ver-row"><div class="ver-num">v2.16</div><div class="ver-desc">'
   u'12/11/2026 — Base: <strong>Mapa v2.15, com 333 funcionalidades</strong>. Entra o <strong>atendimento de Inconsistências</strong> — grupos, roteamento, '
   u'sorteio pela menor carga e SLA —, aprovado na proposta de Grupos e SLA e escrito no PRD v1.6: 22 funcionalidades novas, que ainda não estão no produto, '
