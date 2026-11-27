@@ -55,7 +55,8 @@ header.top{display:flex;flex-direction:column;gap:14px;border-bottom:2px solid v
 .how b{font-family:var(--f-display);font-stretch:85%;font-size:1rem}
 .temas{display:flex;flex-wrap:wrap;gap:8px}
 .tm{font:inherit;font-size:.86rem;display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:3px;cursor:pointer}
-.tm[aria-pressed="false"]{opacity:.45;text-decoration:line-through}
+.tm[aria-pressed="true"]{border-color:var(--t);box-shadow:inset 0 0 0 1px var(--t);background:var(--soft);font-weight:700}
+.tm.limpar{color:var(--accent);border-color:var(--accent)}
 .dot{display:inline-block;width:10px;height:10px;border-radius:2px;flex:none}
 .t-v1{--t:var(--t-v1)} .t-inc{--t:var(--t-inc)} .t-ev{--t:var(--t-ev)} .t-det{--t:var(--t-det)} .t-pc{--t:var(--t-pc)} .t-fp{--t:var(--t-fp)} .t-cad{--t:var(--t-cad)}
 .dot.tdot{background:var(--t)}
@@ -273,15 +274,19 @@ function espec() {
 
 const fb = document.getElementById('fb'), board = document.getElementById('board');
 const avisar = t => { fb.textContent = t; };
-const ativos = new Set(TEMAS.map(t => t.id));
+const ativos = new Set();
 let q = '', soFlag = false;
 const fechados = new Set(ordemCols().filter(m => m === 'disc').flatMap(m => TEMAS.map(t => m + '|' + t.id)));
-document.getElementById('temas').innerHTML = TEMAS.map(t => `<button type="button" class="tm t-${t.id}" data-t="${t.id}" aria-pressed="true" title="${esc(t.desc)}"><span class="dot tdot"></span>${esc(t.nm)} <span class="mono muted">${count(ITENS, x => x.tema === t.id)}</span></button>`).join('');
-document.getElementById('temas').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
-  const t = b.dataset.t; ativos.has(t) ? ativos.delete(t) : ativos.add(t); b.setAttribute('aria-pressed', String(ativos.has(t))); render(); });
+const elTemas = document.getElementById('temas');
+elTemas.innerHTML = '<span class="muted" style="font-size:.86rem;align-self:center">Filtrar por tema:</span>' + TEMAS.map(t => `<button type="button" class="tm t-${t.id}" data-t="${t.id}" aria-pressed="false" title="${esc(t.desc)}"><span class="dot tdot"></span>${esc(t.nm)} <span class="mono muted">${count(ITENS, x => x.tema === t.id)}</span></button>`).join('') +
+  '<button type="button" class="tm limpar" id="limpar" hidden>Mostrar todos</button>';
+const marcarTemas = () => { elTemas.querySelectorAll('[data-t]').forEach(b => b.setAttribute('aria-pressed', String(ativos.has(b.dataset.t)))); document.getElementById('limpar').hidden = !ativos.size; };
+elTemas.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'limpar') ativos.clear(); else { const t = b.dataset.t; ativos.has(t) ? ativos.delete(t) : ativos.add(t); }
+  marcarTemas(); render(); });
 document.getElementById('q').addEventListener('input', e => { q = e.target.value.toLowerCase(); render(); });
 document.getElementById('soflag').addEventListener('change', e => { soFlag = e.target.checked; render(); });
-const visivel = x => ativos.has(x.tema) && busca(x, q) && (!soFlag || x.fk);
+const visivel = x => (!ativos.size || ativos.has(x.tema)) && busca(x, q) && (!soFlag || x.fk);
 function card(x, m, irmaos) {
   const k = irmaos.indexOf(x.id), prox = proximoDe(m);
   return `<article class="card t-${x.tema}${S.nota[x.id] ? ' temnota' : ''}" data-id="${x.id}">
