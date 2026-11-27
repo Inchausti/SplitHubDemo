@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usar o emulador · v1.2</title>
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5;
+  --ff-mono:'JetBrains Mono', ui-monospace, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 960px; margin: 0 auto; }
+.back { display: inline-block; font-size: 12px; color: var(--txt3); text-decoration: none; margin-bottom: 18px; }
+.back:hover { color: var(--txt1); }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--teal); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 780px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--teal); }
+.toc-num { color: var(--txt3); font-family: var(--ff-mono); font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--teal); background: var(--teal-d); border-radius: 4px; padding: 2px 7px; font-family: var(--ff-mono); }
+.sec-title { font-size: 17px; font-weight: 700; }
+.sec-onde { font-size: 12px; color: var(--txt3); margin-left: auto; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 9px 13px; border-bottom: 1px solid var(--brd); vertical-align: top; color: var(--txt2); background: var(--sur); }
+td strong { color: var(--txt1); }
+td.wrap { min-width: 180px; }
+td:first-child { min-width: 120px; }
+td.id { font-family: var(--ff-mono); font-size: 11px; color: var(--txt3); white-space: nowrap; }
+td.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+tbody tr:last-child td { border-bottom: none; }
+code { font-family: var(--ff-mono); font-size: 11.5px; background: var(--mono); padding: 1px 5px; border-radius: 4px; color: var(--txt1); overflow-wrap: anywhere; }
+.doc a:not([class]) { color: var(--blue); text-underline-offset: 2px; }
+.ui { font-weight: 600; color: var(--txt1); background: var(--sur2); border: 1px solid var(--brd); border-radius: 4px; padding: 0 5px; white-space: nowrap; font-size: 12.5px; }
+.foot { margin-top: 40px; font-size: 11px; color: var(--txt3); text-align: center; }
+
+/* blocos do guia */
+.fluxo { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 14px 0; }
+@media (min-width: 760px) { .fluxo { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.fx { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.fx-t { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-bottom: 8px; }
+.fx ol { list-style: none; display: flex; flex-direction: column; gap: 0; }
+.fx li { position: relative; padding: 0 0 10px 26px; font-size: 12.5px; color: var(--txt2); }
+.fx li:last-child { padding-bottom: 0; }
+.fx li::before { content: ''; position: absolute; left: 7px; top: 18px; bottom: 0; width: 2px; background: var(--brd); }
+.fx li:last-child::before { display: none; }
+.fx li b { color: var(--txt1); }
+.fx .bo { position: absolute; left: 0; top: 2px; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--teal); background: var(--sur); }
+.fx .bo.p { border-color: var(--amber); }
+/* passos */
+.passos { list-style: none; counter-reset: passo; display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.passos > li { counter-increment: passo; position: relative; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 14px 10px 46px; font-size: 13px; color: var(--txt2); min-width: 0; }
+.passos > li::before { content: counter(passo); position: absolute; left: 12px; top: 10px; width: 22px; height: 22px; border-radius: 50%; background: var(--teal-d); color: var(--teal); font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.passos > li strong { color: var(--txt1); }
+.passos > li ul { margin: 6px 0 0 16px; display: flex; flex-direction: column; gap: 4px; }
+.passos > li ul li { font-size: 12.5px; }
+.campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 8px; margin: 10px 0; }
+.campo { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 9px 12px; min-width: 0; }
+.campo-n { font-size: 12.5px; font-weight: 700; color: var(--txt1); display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.campo-n .ob { font-size: 10px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .05em; }
+.campo-d { font-size: 12px; color: var(--txt2); margin-top: 2px; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.ordem { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0; }
+.ordem a { font-size: 12.5px; font-weight: 600; color: var(--txt1); background: var(--sur); border: 1px solid var(--brd); border-radius: 20px; padding: 4px 12px; text-decoration: none; }
+.ordem a:hover { border-color: var(--teal); }
+.ordem .seta { color: var(--txt3); font-size: 12px; }
+
+/* ══ Responsivo — padrão de projeto ═══════════════════════════════
+   Ver a skill `responsividade`. Token indivisível — endpoint, chave,
+   JSON, ID — quebra dentro do próprio bloco em vez de empurrar a
+   página. Bloco largo rola dentro do seu container, nunca no body. */
+code, kbd, samp { overflow-wrap: anywhere; }
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+pre code { overflow-wrap: normal; }
+ul.plain li, ul.plain li > * { min-width: 0; overflow-wrap: anywhere; }
+img, svg { max-width: 100%; height: auto; }
+.twrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .doc, .section { overflow-wrap: anywhere; }
+  .ui { white-space: normal; }
+  .sec-onde { margin-left: 0; flex-basis: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="../prds.html#sec-taxrs">← Hub de PRDs</a>
+<div class="eyebrow">tax-rs · Modo Live · Guia</div>
+<h1>Emulador de lançamentos: como usar</h1>
+<p class="subtitle">O passo a passo do emulador de lançamentos no painel administrativo do tax-rs. O guia mostra como fazer a Receita Federal (CBS) e o Comitê Gestor (IBS) lançarem nos DFs de um cliente de teste, um por um ou em lote, e conferir se a plataforma chegou ao resultado esperado. Os nomes de botões e campos são os da tela.</p>
+<div class="meta-bar">
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.2</span> <a href="taxrs-emulador-como-usar-v1.1.html" style="font-size:11px;color:var(--txt3)">v1.1</a> <a href="taxrs-emulador-como-usar-v1.0.html" style="font-size:11px;color:var(--txt3)">v1.0</a></span>
+  <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">26/11/2026</span></span>
+  <span class="meta-pill"><span class="meta-label">Base</span><span class="meta-val">main do tax-rs em <code>e87b9de</code> (etapas E0 a E4, a CFIN pela apropriação e a importação de DFs no Simulado)</span></span>
+  <span class="meta-pill"><span class="meta-label">Proposta</span><span class="meta-val"><a href="../taxrs-emulador-lancamentos.html">emulador de lançamentos v1.6</a> e <a href="../taxrs-plano-cfin.html">plano da CFIN</a></span></span>
+</div>
+
+<nav class="toc" aria-label="Sumário">
+  <div class="toc-title">Nesta página</div>
+  <ul class="toc-list">
+    <li><a href="#s0"><span class="toc-num">00</span>Antes de começar</a></li>
+    <li><a href="#s1"><span class="toc-num">01</span>Simulado e emulador: qual usar</a></li>
+    <li><a href="#s2"><span class="toc-num">02</span>Painel</a></li>
+    <li><a href="#s3"><span class="toc-num">03</span>Simulado e Importar DFs</a></li>
+    <li><a href="#s4"><span class="toc-num">04</span>Criar DFs</a></li>
+    <li><a href="#s5"><span class="toc-num">05</span>Lançamento unitário</a></li>
+    <li><a href="#s6"><span class="toc-num">06</span>Novo lote</a></li>
+    <li><a href="#s7"><span class="toc-num">07</span>Os 28 resultados</a></li>
+    <li><a href="#s8"><span class="toc-num">08</span>Cenários prontos</a></li>
+    <li><a href="#s9"><span class="toc-num">09</span>Execuções e conferência</a></li>
+    <li><a href="#s10"><span class="toc-num">10</span>Roteiros de teste</a></li>
+    <li><a href="#s11"><span class="toc-num">11</span>Problemas comuns</a></li>
+    <li><a href="#s12"><span class="toc-num">12</span>O que ainda vem</a></li>
+  </ul>
+</nav>
+
+<!-- 00 -->
+<section class="section" id="s0">
+  <div class="sec-hdr"><span class="sec-num">00</span><span class="sec-title">Antes de começar</span></div>
+  <ul class="plain">
+    <li><strong>Onde fica:</strong> no painel administrativo, abra o cliente e vá à aba <span class="ui">Fonte dos entes</span>. O botão <span class="ui">Abrir o emulador</span> leva ao espaço do emulador, que tem um menu lateral próprio: <span class="ui">Painel</span>, <span class="ui">Simulado</span>, <span class="ui">Criar DFs</span>, <span class="ui">Lançamento unitário</span>, <span class="ui">Novo lote</span>, <span class="ui">Execuções</span> e <span class="ui">Cenários prontos</span>.</li>
+    <li><strong>Só fora da produção:</strong> o emulador lança como se fosse o ente. Em produção, ele não abre.</li>
+    <li><strong>Tudo fica registrado:</strong> cada consulta e cada comando entram no histórico do cliente, com quem fez e quando.</li>
+    <li><strong>Os DFs criados não se removem</strong> (D-EM-28). Para recomeçar do zero, cadastre um cliente de teste novo. Por isso, use sempre um cliente de teste, nunca um cliente que vai para a apresentação com dados reais.</li>
+    <li><strong>Os lançamentos do ente também não se desfazem.</strong> O emulador grava pela mesma porta que os conectores reais usariam, e o razão aplica como se a Receita Federal ou o Comitê Gestor tivessem mandado.</li>
+  </ul>
+  <div class="callout">
+    <div class="ct">Cada ente lança o seu</div>
+    <p>A CBS é lançada pela Receita Federal e o IBS pelo Comitê Gestor. Os dois entes não têm o mesmo catálogo: alguns lançamentos existem só em um deles. Quando uma ação pede um lançamento que o ente não tem, aquele tributo <strong>fica mudo</strong> na ação (D-EM-09), e a tela avisa.</p>
+  </div>
+</section>
+
+<!-- 01 -->
+<section class="section" id="s1">
+  <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Simulado e emulador: qual usar</span><span class="sec-onde">aba Fonte dos entes</span></div>
+  <p>A aba <span class="ui">Fonte dos entes</span> diz de onde vêm os lançamentos dos entes para o cliente. Há três fontes:</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Fonte</th><th>O que faz</th><th>Quando usar</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Simulada</strong></td><td class="wrap">O Simulado gera sozinho a CAPUR, a apropriação, a utilização e as glosas de cada DF que chega, em proporções fixas.</td><td class="wrap">Demonstração e desenvolvimento, quando basta um movimento parecido com o real, sem escolher DF a DF.</td></tr>
+      <tr><td><strong>Replay</strong></td><td class="wrap">Recebe fatos gravados antes (a carga do protótipo).</td><td class="wrap">Repetir uma história já conhecida.</td></tr>
+      <tr><td><strong>Desligada</strong></td><td class="wrap">Nenhum fato simulado.</td><td class="wrap">Único modo aceito em produção enquanto não houver conector real.</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>O emulador lança em qualquer fonte</strong>, desde que fora da produção. O Simulado só emite com a fonte Simulada. Os dois convivem: quando o emulador lança num DF, aquele tributo sai do plano do Simulado (D-EM-20), e o Simulado deixa de lançar nele.</p>
+  <h3>Ao trocar para Simulada</h3>
+  <p>Se o cliente já tem DFs, aparece a caixa <span class="ui">O Simulado também adota os N DF(s) que o cliente já tem</span>. Sem marcar, o Simulado segue só os DFs que chegarem depois da troca. Marcando, ele passa a planejar os antigos também e emite na hora o que já venceu. Dá para adotar depois, na tela do Simulado.</p>
+</section>
+
+<!-- 02 -->
+<section class="section" id="s2">
+  <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">Painel</span><span class="sec-onde">Emulador › Painel</span></div>
+  <p>É a entrada do emulador. Quatro números no topo:</p>
+  <ul class="plain">
+    <li><strong>Lançamentos dos entes:</strong> o total, separado entre os do Simulado, os do emulador e os de outras fontes.</li>
+    <li><strong>DFs criados pelo emulador</strong>, de quantos o cliente tem no razão.</li>
+    <li><strong>DFs com algum tributo fora do plano do Simulado:</strong> aqueles em que o emulador já lançou.</li>
+    <li><strong>Alertas da conferência do Simulado</strong>, em vermelho quando há algum.</li>
+  </ul>
+  <p>Logo abaixo ficam os atalhos <span class="ui">Criar DFs</span>, <span class="ui">Novo lote</span> e <span class="ui">Lançamento unitário</span>, e a fonte atual do cliente. A tabela <strong>Execuções recentes</strong> lista o que foi feito: número, quando, quem, o que e a situação da conferência. Clique no número para abrir a execução.</p>
+  <div class="callout">
+    <div class="ct">Por onde começar</div>
+    <p>Cliente sem DFs: comece por <span class="ui">Criar DFs</span>. Cliente que já tem DFs: comece pelo <span class="ui">Lançamento unitário</span>, para ver um DF de perto, ou por um <span class="ui">Cenário pronto</span>.</p>
+  </div>
+</section>
+
+<!-- 03 -->
+<section class="section" id="s3">
+  <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Simulado e Importar DFs</span><span class="sec-onde">Emulador › Simulado</span></div>
+  <p>A tela mostra o que o Simulado fez e o que ainda vai fazer. Ela só funciona com a fonte <strong>Simulada</strong>. Em outra fonte, aparece um aviso com o botão <span class="ui">Trocar na aba Fonte dos entes</span>.</p>
+  <h3>Avançar até agora</h3>
+  <p>No ambiente local não há agendador. O botão <span class="ui">Avançar até agora</span> emite, só para este cliente, tudo o que já venceu e responde com quantos lançamentos saíram e como ficou a conferência. Use depois de criar DFs ou de adotar os antigos.</p>
+  <h3>O que a tela mostra</h3>
+  <ul class="plain">
+    <li><strong>DFs que o Simulado não segue:</strong> os que chegaram antes da troca para Simulada, com o botão <span class="ui">Adotar N DF(s)</span>. A adoção não apaga nada e fica no histórico.</li>
+    <li><strong>Alertas da conferência:</strong> os DFs em que o razão não mostra o que os lançamentos mandam, 15 minutos depois da emissão.</li>
+    <li><strong>Plano por DF:</strong> para cada DF, o que <em>já saiu</em>, o que <em>vem</em> e quando, a situação e a conferência. Os filtros são <span class="ui">Todos</span>, <span class="ui">Com lançamentos por vir</span>, <span class="ui">Parados pelo plano</span> e <span class="ui">Divergentes</span>.</li>
+    <li><strong>Proporções, fixas:</strong> o que o Simulado faz com cada DF. Ele paga e apropria juntos, na data do recolhimento (a regra "pagou, apropriou"). Distribuição sob medida é com o lote do emulador.</li>
+  </ul>
+  <p>O administrador vê o final da chave de cada DF, as datas e as situações, nunca valores.</p>
+  <h3 id="s3-importar">Importar DFs</h3>
+  <p>Em <span class="ui">Emulador › Simulado › Importar DFs</span>, os DFs do próprio cliente entram no Simulado a partir dos arquivos. Só com a fonte <strong>Simulada</strong> e fora da produção.</p>
+  <ol class="passos">
+    <li><strong>Arquivos:</strong> XML de qualquer modelo que a plataforma lê (um, vários ou um ZIP), o JSON ou o CSV da importação, e o JSON Lines da NFCom (TAXLAKE/Sovos). Até 1.000 DFs e 50 MB.</li>
+    <li><strong>Conciliação a executar:</strong>
+      <ul class="plain">
+        <li><span class="ui">Só CAPUR</span>: a CAPUR é sorteada (70% conciliada, 20% divergente, 10% pendente) e o comprovante RAD sai sempre correto, então a CFIN bate.</li>
+        <li><span class="ui">Só CFIN</span>: a CAPUR sai sempre conciliada e o comprovante RAD é sorteado (70% correto, 20% R$ 1,00 abaixo, 10% sem comprovante).</li>
+        <li><span class="ui">Ambas</span>: os dois sorteios.</li>
+      </ul>
+    </li>
+    <li><strong>Semente:</strong> a mesma semente sorteia os mesmos DFs.</li>
+    <li><span class="ui">Pré-visualizar</span> mostra quantos foram lidos, quantos entram e quantos são recusados, a CAPUR por direção e as ações do emulador. A tabela <em>Recusados</em> traz o arquivo, a posição e o motivo: DF de quem não é estabelecimento do cliente, DF que o cliente já tem ou chave repetida.</li>
+    <li><span class="ui">Importar N DFs</span>. Acima de 100 DFs, digite o número para confirmar. A execução abre em <span class="ui">Execuções</span>.</li>
+  </ol>
+  <p>O Simulado só lança a CAPUR. O resto vem do emulador, num lote próprio com conferência, nas proporções do Simulado: na entrada, 50% apropriado e usado, 32% apropriado, 15% não pago e 3% glosado; na saída, 4/12 extinto pelo RAD, 1/12 por compensação, 2/12 metade compensada e 5/12 em aberto. A apropriação segue o método de cada DF. O DF com a CAPUR pendente fica sem outro evento, e todo DF importado tem linha na conferência. Os DFs importados saem do plano do Simulado; os que entram por outros caminhos seguem como antes.</p>
+</section>
+
+<!-- 04 -->
+<section class="section" id="s4">
+  <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Criar DFs</span><span class="sec-onde">Emulador › Criar DFs</span></div>
+  <p>Cria DFs novos no razão do cliente, pela mesma entrada da captura da SEFAZ, marcados como emulados. À esquerda ficam as características; à direita, a <strong>Prévia</strong>, que se refaz a cada mudança e mostra exatamente os DFs que serão criados.</p>
+  <div class="campos">
+    <div class="campo"><div class="campo-n">Quantidade</div><div class="campo-d">De 1 a 1.000 DFs por execução.</div></div>
+    <div class="campo"><div class="campo-n">Empresa do grupo</div><div class="campo-d">Uma empresa ou "Sorteada entre as ativas".</div></div>
+    <div class="campo"><div class="campo-n">Direção e tipo</div><div class="campo-d"><b>Pré-definida</b>: cada linha com tipo, direção e percentual, somando 100%. <b>Aleatória</b>: cada DF sorteado entre os tipos da lista, em partes iguais.</div></div>
+    <div class="campo"><div class="campo-n">Contraparte</div><div class="campo-d"><b>Fictícias</b>: criadas na hora, com CNPJ válido e o nome marcado [EMULADO]. <b>As do cliente</b>: escolha entre as que já aparecem nos DFs; sem marcar nenhuma, valem todas.</div></div>
+    <div class="campo"><div class="campo-n">Emissão</div><div class="campo-d"><b>Uma data</b> ou <b>Espalhada</b> entre duas datas, até hoje. A competência acompanha o mês da emissão.</div></div>
+    <div class="campo"><div class="campo-n">Valor</div><div class="campo-d"><b>Um para todos</b>, <b>Lista</b> (um por linha, na ordem dos DFs, e a lista se repete) ou <b>Entre dois</b> (sorteado em reais inteiros). É a base da CBS e do IBS.</div></div>
+    <div class="campo"><div class="campo-n">CBS e IBS</div><div class="campo-d"><b>As do ano</b>: as alíquotas da lei pelo ano da emissão (em 2026, CBS 0,9% e IBS 0,1%). <b>Informadas</b>: você digita as duas.</div></div>
+    <div class="campo"><div class="campo-n">Recolhimento, na entrada</div><div class="campo-d"><b>Pelo contrato</b>: como no DF real; sem contrato, o fornecedor recolhe. <b>Um para todos</b>: RAD ou fornecedor, com o prazo em dias. <b>Misto</b>: linhas de quantidade, modelo, método e prazo; o que sobra segue o contrato.</div></div>
+    <div class="campo"><div class="campo-n">Semente</div><div class="campo-d">A mesma semente cria os mesmos DFs. Em outro cliente, ela faz os mesmos sorteios com os CNPJs dele. <span class="ui">Sortear outra</span> troca a semente.</div></div>
+  </div>
+  <p>A prévia mostra a quantidade por tipo, o recolhimento das entradas, o valor somado, a CBS e o IBS totais, e os primeiros DFs. Depois há três caminhos:</p>
+  <ul class="plain">
+    <li><span class="ui">Criar N DFs</span>: cria e registra uma execução. <strong>Acima de 100 DFs</strong>, a confirmação pede para digitar a quantidade (D-EM-13).</li>
+    <li><span class="ui">Seguir para as ações</span>: leva estes DFs para o <span class="ui">Novo lote</span>, para criar e lançar numa execução só.</li>
+    <li><span class="ui">Ver no painel</span>.</li>
+  </ul>
+  <p>Se o cliente está com a fonte Simulada, o Simulado passa a seguir os DFs criados.</p>
+</section>
+
+<!-- 05 -->
+<section class="section" id="s5">
+  <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">Lançamento unitário</span><span class="sec-onde">Emulador › Lançamento unitário</span></div>
+  <p>Um DF, um ente, um lançamento. É o jeito de ver de perto o que cada lançamento faz.</p>
+  <ol class="passos">
+    <li><strong>Escolha o DF.</strong> Busque por chave, número ou contraparte e clique em <span class="ui">Escolher</span>. Se colar uma chave de 44 dígitos, aparece <span class="ui">Abrir esta chave</span>. Os DFs criados pelo emulador têm o selo <em>Emulado</em>.</li>
+    <li><strong>Escolha o ente:</strong> <span class="ui">CBS · Receita Federal</span> ou <span class="ui">IBS · Comitê Gestor</span>. Ao lado aparece a situação do DF naquele ente: a situação, a CAPUR, os saldos e quantos lançamentos o ente já mandou.</li>
+    <li><strong>Escolha o lançamento.</strong> A lista traz os lançamentos do ente. Os que não cabem na situação atual aparecem riscados, com o motivo.</li>
+    <li><strong>Preencha o que o lançamento pede:</strong>
+      <ul>
+        <li><b>Valor</b>: fixo (o do DF no ente) ou editável, com o teto indicado.</li>
+        <li><b>Data</b>: entre a emissão do DF e hoje, nunca no futuro. Aqui não se agenda.</li>
+        <li><b>Forçar</b>: lança fora da ordem ou acima do valor permitido. Só aparece quando o lançamento admite.</li>
+      </ul>
+    </li>
+    <li><strong>Confira a prévia:</strong> o antes e depois dos saldos, os lançamentos do ente que serão gravados e o evento que sai na API. Se o lançamento tira o tributo do plano do Simulado, a prévia avisa.</li>
+    <li><strong>Clique em <span class="ui">Lançar</span>.</strong> Forçado, ele pede confirmação. A resposta traz o número da execução.</li>
+  </ol>
+  <h3>Comprovante RAD</h3>
+  <p>O comprovante é o pagamento da guia pelo adquirente, não um fato do ente: vai ao razão, nunca à porta dos fatos. Ele só existe em DF de compra, e no máximo um por DF e tributo (D-CF-11). Há dois caminhos no unitário:</p>
+  <ul class="plain">
+    <li><strong>Junto da apropriação via RAD.</strong> No <em>R01 RAD recolhido pelo cliente</em> (e nos outros lançamentos que apropriam pelo RAD), marque <span class="ui">Gravar junto o comprovante do pagamento da guia</span>. Escolha <span class="ui">Correto</span> ou <span class="ui">Com divergência no principal</span>, acima ou abaixo do apropriado, em R$ ou %. A prévia mostra o principal do comprovante.</li>
+    <li><strong>Criar comprovante RAD.</strong> O bloco aparece embaixo, para qualquer DF de compra: os tributos, correto ou com divergência, a data do pagamento e a multa e os juros de um RAD em atraso. A multa e os juros ficam guardados, fora da comparação. Sem apropriação do ente, a base é o imposto do DF.</li>
+  </ul>
+  <div class="callout">
+    <div class="ct">O que a plataforma faz com o comprovante</div>
+    <p>A Conciliação compara o principal apropriado pelo ente com o principal do comprovante, sem tolerância. Os prazos só correm para o que veio do emulador: uma apropriação RAD sem comprovante vira <code>cfin_&lt;tributo&gt;_sem_comprovante</code> em dois dias úteis; um comprovante sem apropriação vira <code>_sem_apropriacao</code> em três. Um comprovante diferente do apropriado abre <code>_valor</code>.</p>
+  </div>
+  <div class="callout warn">
+    <div class="ct">Forçar não desfaz</div>
+    <p>O lançamento forçado vai mesmo sem caber na situação do DF. A execução fica marcada como forçada, e a conferência pode acusar a diferença. É o modo de testar como a plataforma se defende de um ente que manda fora de ordem.</p>
+  </div>
+</section>
+
+<!-- 06 -->
+<section class="section" id="s6">
+  <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Novo lote</span><span class="sec-onde">Emulador › Novo lote</span></div>
+  <p>O lote aplica ações a muitos DFs de uma vez, cada ação com um percentual. À esquerda ficam os blocos <strong>1 · Os DFs</strong> e <strong>2 · As ações</strong>; à direita, a <strong>Prévia, ao vivo</strong>, que o backend refaz a cada mudança com os mesmos lançamentos que vai gravar.</p>
+  <p>O lote pode começar vazio ou vir de quatro lugares, e a tela avisa de onde veio: um cenário pronto, o <span class="ui">Repetir o lote</span> de uma execução, o <span class="ui">Seguir para as ações</span> da tela Criar DFs, ou um JSON colado.</p>
+
+  <h3>1 · Os DFs</h3>
+  <ul class="plain">
+    <li><strong>De onde vêm:</strong> <span class="ui">Filtrar os do cliente</span>, <span class="ui">Criar DFs</span> (os campos da seção 04, com a semente do lote) ou <span class="ui">Os dois</span>.</li>
+    <li><strong>Direção do lote:</strong> <span class="ui">Entrada · crédito</span> ou <span class="ui">Saída · débito</span>. As ações de crédito só valem num lote de entrada, e as de débito só num lote de saída.</li>
+    <li><strong>Tributo:</strong> <span class="ui">CBS e IBS</span>, <span class="ui">Só CBS</span> ou <span class="ui">Só IBS</span>.</li>
+    <li><strong>Filtro:</strong> empresa do grupo, competência, modelo, fornecedor ou cliente, método de recolhimento (na entrada), situação no ente e faixa de valor. Também dá para colar as chaves. Sem nada marcado num filtro, vale tudo. Cada opção mostra quantos DFs traz junto com os outros filtros.</li>
+  </ul>
+  <p>Embaixo do filtro aparece quantos DFs ele pega, quantos ficam <em>fora do alcance</em> e por quê, e quantos são <strong>elegíveis</strong>. <span class="ui">Ver os primeiros DFs do filtro</span> abre a amostra.</p>
+
+  <h3>2 · As ações</h3>
+  <p>Sem ação, o lote só cria os DFs. <span class="ui">Adicionar ação</span> cria um cartão. Cada cartão tem:</p>
+  <div class="campos">
+    <div class="campo"><div class="campo-n">Resultado</div><div class="campo-d">Um dos 28 da <a href="#s7">seção 07</a>, marcado como de crédito ou de débito.</div></div>
+    <div class="campo"><div class="campo-n">Ente</div><div class="campo-d">Os dois, só a Receita Federal (CBS) ou só o Comitê Gestor (IBS).</div></div>
+    <div class="campo"><div class="campo-n">Base</div><div class="campo-d"><b>O lote</b> ou <b>Os DFs da ação N</b>: a ação atua sobre os DFs que uma ação anterior atingiu.</div></div>
+    <div class="campo"><div class="campo-n">Percentual</div><div class="campo-d">A fatia da base que a ação atinge.</div></div>
+    <div class="campo"><div class="campo-n">Quando</div><div class="campo-d"><b>Agora</b>, <b>Numa data passada</b>, <b>Agendado</b> ou <b>Espalhado entre datas</b>. Os agendados saem na data deles.</div></div>
+    <div class="campo"><div class="campo-n">Parâmetros</div><div class="campo-d">Os do resultado escolhido: a parte em R$ ou %, a forma de uso, os dias para liberar, o código e a base legal da glosa, a multa e os juros, o comprovante RAD (no RE-28, no RE-05 com a causa RAD e no RE-19), e assim por diante.</div></div>
+  </div>
+  <div class="callout">
+    <div class="ct">Exemplo: empilhar ações</div>
+    <p>Num lote de entrada com 100 DFs elegíveis:</p>
+    <ul class="plain">
+      <li>Ação 1: <em>Apropriar totalmente</em>, base "O lote", 70%. Atinge 70 DFs.</li>
+      <li>Ação 2: <em>Glosar antes da apropriação</em>, base "O lote", 10%. Atinge 10 DFs, que não se sobrepõem aos 70.</li>
+      <li>Ação 3: <em>Usar todo o saldo disponível</em>, base "Os DFs da ação 1", 50%. Atinge 35 dos 70 apropriados.</li>
+    </ul>
+    <p>Sobram 20 DFs sem lançamento. Ações sobre a mesma base não se sobrepõem e somam até 100% (D-EM-17).</p>
+  </div>
+  <p>Cada cartão avisa quando falta DF elegível, quantos ficam de fora e por quê, quantos lançamentos são agendados e qual ente fica mudo. <span class="ui">Usar um cenário pronto</span> leva à <a href="#s8">seção 08</a>.</p>
+
+  <h3>A prévia</h3>
+  <ul class="plain">
+    <li>Três números: <strong>DFs atingidos</strong> (de quantos elegíveis), <strong>lançamentos</strong> (e quantos agendados) e <strong>sem lançamento</strong>.</li>
+    <li>Uma barra por base, com a fatia de cada ação.</li>
+    <li><strong>No fim:</strong> cada caminho (a combinação de ações que um DF recebe), quantos DFs seguem por ele, o que a plataforma vai mostrar, os eventos da API e as inconsistências que abrem.</li>
+    <li><span class="ui">DF a DF · um exemplo de cada caminho</span>: para um DF de cada caminho e cada ente, a situação antes, os lançamentos e a situação depois.</li>
+  </ul>
+
+  <h3>Semente</h3>
+  <p>A semente muda <strong>quais</strong> DFs cada ação atinge, nunca <strong>quantos</strong> (D-EM-19). Com a mesma semente, o mesmo filtro e as mesmas ações, o lote atinge os mesmos DFs.</p>
+
+  <h3>Gravar</h3>
+  <p>O botão diz o que vai acontecer: <span class="ui">Gravar N lançamentos</span>, ou <span class="ui">Criar N DFs</span> num lote sem ação. A confirmação resume quantos DFs o lote atinge, quantos foram criados na hora e quantos lançamentos são agendados. <strong>Acima de 100 DFs</strong>, pede para digitar o número. O lote roda em segundo plano e a tela abre a execução dele.</p>
+  <p>Só roda um lote por cliente de cada vez. Se houver outro rodando, a prévia avisa e o botão fica desligado.</p>
+
+  <h3>JSON</h3>
+  <p><span class="ui">Baixar o lote em JSON</span> salva o lote montado. <span class="ui">Colar um lote em JSON</span> carrega um lote salvo. O mesmo JSON roda pela API do admin (D-EM-12), o que serve para repetir um teste sem montar tudo de novo.</p>
+</section>
+
+<!-- 07 -->
+<section class="section" id="s7">
+  <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Os 28 resultados</span></div>
+  <p>Cada ação do lote aplica um resultado. A coluna <em>Ente</em> diz onde o resultado existe; no outro ente, o tributo fica mudo.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Código</th><th>Resultado</th><th>Lado</th><th>Ente</th></tr></thead>
+    <tbody>
+      <tr><td class="id">RE-01</td><td>Registrar o DF no ente</td><td>qualquer</td><td>os dois</td></tr>
+      <tr><td class="id">RE-02</td><td>Divergir o valor do imposto (para cima, para baixo ou excedente)</td><td>qualquer</td><td>os dois; o excedente só na Receita Federal</td></tr>
+      <tr><td class="id">RE-03</td><td>Não registrar o DF</td><td>qualquer</td><td>os dois</td></tr>
+      <tr><td class="id">RE-04</td><td>Registro sem DF (chaves fictícias)</td><td>qualquer</td><td>os dois</td></tr>
+      <tr><td class="id">RE-05</td><td>Apropriar totalmente (fornecedor recolhe, RAD pago pelo cliente ou split)</td><td>crédito</td><td>os dois</td></tr>
+      <tr><td class="id">RE-06</td><td>Apropriar em parte</td><td>crédito</td><td>os dois</td></tr>
+      <tr><td class="id">RE-07</td><td>Usar todo o saldo disponível (compensação, ressarcimento ou transferência)</td><td>crédito</td><td>os dois</td></tr>
+      <tr><td class="id">RE-08</td><td>Usar parte do saldo</td><td>crédito</td><td>os dois</td></tr>
+      <tr><td class="id">RE-09</td><td>Glosar antes da apropriação</td><td>crédito</td><td>Receita Federal</td></tr>
+      <tr><td class="id">RE-10</td><td>Glosar depois da apropriação</td><td>crédito</td><td>Receita Federal</td></tr>
+      <tr><td class="id">RE-11</td><td>Restabelecer o crédito</td><td>crédito</td><td>Receita Federal</td></tr>
+      <tr><td class="id">RE-12</td><td>Suspender e liberar o crédito</td><td>crédito</td><td>Receita Federal</td></tr>
+      <tr><td class="id">RE-13</td><td>Prescrever o crédito</td><td>crédito</td><td>Receita Federal</td></tr>
+      <tr><td class="id">RE-14</td><td>Pedir ressarcimento do saldo credor</td><td>crédito</td><td>Receita Federal</td></tr>
+      <tr><td class="id">RE-15</td><td>Extinguir por compensação (com ou sem vincular os créditos do IBS)</td><td>débito</td><td>os dois</td></tr>
+      <tr><td class="id">RE-16</td><td>Extinguir por pagamento próprio (PCONT)</td><td>débito</td><td>os dois</td></tr>
+      <tr><td class="id">RE-17</td><td>Extinguir pelo RAD do adquirente</td><td>débito</td><td>os dois</td></tr>
+      <tr><td class="id">RE-18</td><td>Extinguir por split</td><td>débito</td><td>os dois</td></tr>
+      <tr><td class="id">RE-19</td><td>Pagar em atraso (dias de atraso, multa e juros)</td><td>qualquer</td><td>Receita Federal</td></tr>
+      <tr><td class="id">RE-20</td><td>Pagamento antecipado na nota de débito</td><td>débito</td><td>Receita Federal</td></tr>
+      <tr><td class="id">RE-21</td><td>Tornar o débito inexigível</td><td>débito</td><td>Receita Federal</td></tr>
+      <tr><td class="id">RE-22</td><td>Suspender e liberar o débito</td><td>débito</td><td>Receita Federal</td></tr>
+      <tr><td class="id">RE-23</td><td>Cancelar</td><td>qualquer</td><td>os dois</td></tr>
+      <tr><td class="id">RE-24</td><td>Devolver</td><td>qualquer</td><td>os dois; na saída, só a Receita Federal</td></tr>
+      <tr><td class="id">RE-25</td><td>Complementar o valor</td><td>qualquer</td><td>os dois</td></tr>
+      <tr><td class="id">RE-26</td><td>Estornar RAD ou split</td><td>débito</td><td>Comitê Gestor</td></tr>
+      <tr><td class="id">RE-27</td><td>Transferir ao fornecedor</td><td>débito</td><td>Comitê Gestor</td></tr>
+      <tr><td class="id">RE-28</td><td>Comprovante RAD do adquirente (correto ou com divergência no principal; multa e juros guardados)</td><td>crédito</td><td>os dois</td></tr>
+    </tbody>
+  </table></div>
+  <p>O RE-28 não grava lançamento do ente: grava só o comprovante no razão, e a prévia conta à parte os <em>comprovantes RAD, ao razão</em>. DFs que já têm comprovante no tributo ficam de fora. No RE-05 com a causa <em>RAD pago pelo cliente</em> e no RE-19, a ação também pode gravar o comprovante junto.</p>
+  <p>Os lançamentos que cada resultado grava, código a código, estão na <a href="../taxrs-emulador-lancamentos.html#s3">seção 03 da proposta</a>.</p>
+</section>
+
+<!-- 08 -->
+<section class="section" id="s8">
+  <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Cenários prontos</span><span class="sec-onde">Emulador › Cenários prontos</span></div>
+  <p>São 18 lotes montados: as proporções do Simulado e os 17 roteiros do MassGen. A tabela mostra a história, os lançamentos de cada ente e as ações. <span class="ui">Usar no lote</span> (ou <span class="ui">Usar na entrada</span> e <span class="ui">Usar na saída</span>, quando o cenário tem os dois lados) leva as ações para o <span class="ui">Novo lote</span>, onde você ajusta o filtro, os percentuais e a semente antes de gravar.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>Lado</th><th>História</th></tr></thead>
+    <tbody>
+      <tr><td class="id">SIM</td><td>Simulado</td><td>As proporções do Simulado num lote só: CAPUR 70% conciliada, 20% divergente e 10% pendente; crédito apropriado, metade usado e 3% glosado; débito extinto pelo RAD ou por compensação.</td></tr>
+      <tr><td class="id">RT-A1</td><td>Comprador</td><td>Fornecedor recolhe; crédito apropriado e usado.</td></tr>
+      <tr><td class="id">RT-A2</td><td>Comprador</td><td>Cliente paga pelo RAD.</td></tr>
+      <tr><td class="id">RT-A3</td><td>Comprador</td><td>Pagamento com split.</td></tr>
+      <tr><td class="id">RT-A4</td><td>Comprador</td><td>Apropriação parcial, depois complemento.</td></tr>
+      <tr><td class="id">RT-A5</td><td>Comprador</td><td>Cancelada depois de usada.</td></tr>
+      <tr><td class="id">RT-A6</td><td>Comprador</td><td>Devolvida ao fornecedor.</td></tr>
+      <tr><td class="id">RT-A7</td><td>Comprador</td><td>Crédito em risco (só Receita Federal).</td></tr>
+      <tr><td class="id">RT-A8</td><td>Comprador</td><td>Saldo credor e ressarcimento (só Receita Federal).</td></tr>
+      <tr><td class="id">RT-A9</td><td>Comprador</td><td>RAD em atraso (só Receita Federal).</td></tr>
+      <tr><td class="id">RT-F1</td><td>Vendedor</td><td>Cliente recolhe pelo PCONT.</td></tr>
+      <tr><td class="id">RT-F2</td><td>Vendedor</td><td>Compensação com créditos.</td></tr>
+      <tr><td class="id">RT-F3</td><td>Vendedor</td><td>Cliente do cliente paga pelo RAD, com estorno e excesso.</td></tr>
+      <tr><td class="id">RT-F4</td><td>Vendedor</td><td>Split, com estorno.</td></tr>
+      <tr><td class="id">RT-F5</td><td>Vendedor</td><td>Complemento de valor.</td></tr>
+      <tr><td class="id">RT-F6</td><td>Vendedor</td><td>Cancelada com split já retido.</td></tr>
+      <tr><td class="id">RT-F7</td><td>Vendedor</td><td>Devolução recebida do cliente do cliente.</td></tr>
+      <tr><td class="id">RT-F8</td><td>Vendedor</td><td>Débito excedente, inexigível, suspenso e pago em atraso (só Receita Federal).</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout ok">
+    <div class="ct">Dica</div>
+    <p>Um cenário de saída com <span class="ui">Criar DFs</span> cria os DFs já na direção de saída. Não é preciso ter DFs de venda no cliente para testar os roteiros RT-F.</p>
+  </div>
+</section>
+
+<!-- 09 -->
+<section class="section" id="s9">
+  <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Execuções e conferência</span><span class="sec-onde">Emulador › Execuções</span></div>
+  <p>Toda criação, lançamento unitário e lote vira uma execução numerada. A lista fica à esquerda, com a situação da conferência; a execução escolhida abre à direita. Enquanto um lote roda em segundo plano, a tela se atualiza sozinha.</p>
+  <h3>A conferência</h3>
+  <p>A conferência compara, DF a DF e ente a ente, o que os lançamentos mandam com o que a plataforma mostra. Cada linha cai em uma de três situações:</p>
+  <ul class="plain">
+    <li><span class="chip ok">Atingido</span> a plataforma chegou ao esperado.</li>
+    <li><span class="chip warn">Aguardando</span> ainda não chegou, dentro da carência de 15 minutos.</li>
+    <li><span class="chip" style="background:var(--red-d);color:var(--red)">Divergente</span> passou da carência e não bate. A linha mostra o esperado e o encontrado.</li>
+  </ul>
+  <p>Os eventos podem chegar fora de ordem. Por isso, uma diferença só vira divergência depois dos 15 minutos.</p>
+  <p>Num DF de compra, a coluna <em>Encontrado</em> mostra também a CFIN que a Conciliação calculou, com o apropriado × o comprovado. Quando o esperado é uma ocorrência da CFIN que espera prazo (D+2 ou D+3 úteis), a linha fica em <span class="chip warn">Aguardando</span> até o prazo vencer.</p>
+  <h3>O que dá para fazer numa execução de lote</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Botão</th><th>O que faz</th></tr></thead>
+    <tbody>
+      <tr><td><span class="ui">Conferir agora</span></td><td class="wrap">Refaz a conferência e responde quantos estão atingidos, aguardando e divergentes.</td></tr>
+      <tr><td><span class="ui">Emitir os agendados que venceram</span></td><td class="wrap">Aparece quando há agendados. Emite os que já chegaram na data.</td></tr>
+      <tr><td><span class="ui">Exportar CSV</span></td><td class="wrap">A conferência inteira, uma linha por DF e ente, com as colunas <code>cfin</code>, <code>apropriado</code> e <code>comprovado</code>.</td></tr>
+      <tr><td><span class="ui">Baixar o lote em JSON</span></td><td class="wrap">O pedido exato do lote, para guardar ou rodar pela API.</td></tr>
+      <tr><td><span class="ui">Repetir o lote</span></td><td class="wrap">Abre o <span class="ui">Novo lote</span> com o mesmo pedido, para ajustar e gravar de novo.</td></tr>
+    </tbody>
+  </table></div>
+  <p>A execução mostra também quando foi, o autor, a semente, os DFs criados, os <strong>lançamentos gravados</strong> por tipo (emitidos e agendados) e a contagem por caminho. Use os filtros <span class="ui">Divergentes</span>, <span class="ui">Aguardando</span> e <span class="ui">Atingidos</span> para ver as linhas de cada situação.</p>
+</section>
+
+<!-- 10 -->
+<section class="section" id="s10">
+  <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Roteiros de teste</span></div>
+  <h3>A · Crédito apropriado e usado, do zero</h3>
+  <ol class="passos">
+    <li>Em <span class="ui">Cenários prontos</span>, clique em <span class="ui">Usar no lote</span> no <strong>RT-A1</strong>.</li>
+    <li>No <span class="ui">Novo lote</span>, em <em>De onde vêm</em>, escolha <span class="ui">Criar DFs</span> e peça 10 DFs de entrada, valor <em>Um para todos</em> de R$ 10.000,00.</li>
+    <li>Confira na prévia: 10 DFs atingidos, e o caminho final com o crédito apropriado e usado nos dois entes.</li>
+    <li><span class="ui">Gravar</span>. A execução abre sozinha; espere ficar <span class="chip ok">Atingido</span> em todas as linhas.</li>
+  </ol>
+  <h3>B · Um DF de perto</h3>
+  <ol class="passos">
+    <li>Em <span class="ui">Lançamento unitário</span>, escolha um DF de entrada.</li>
+    <li>Na CBS, escolha a apropriação e leia na prévia o antes e depois dos saldos e o evento que sai na API, antes de lançar.</li>
+    <li>Troque para o IBS e veja que o Comitê Gestor ainda não lançou: cada ente segue o seu.</li>
+  </ol>
+  <h3>C · Repetir o mesmo teste em outro cliente</h3>
+  <ol class="passos">
+    <li>Na execução do teste, clique em <span class="ui">Baixar o lote em JSON</span>.</li>
+    <li>No outro cliente, abra <span class="ui">Novo lote</span> e use <span class="ui">Colar um lote em JSON</span>.</li>
+    <li>A mesma semente faz os mesmos sorteios com os CNPJs do outro cliente.</li>
+  </ol>
+  <h3>D · Ver a plataforma abrir inconsistências</h3>
+  <ol class="passos">
+    <li>Monte um lote de entrada com <em>Glosar antes da apropriação</em> em 10% e <em>Divergir o valor do imposto</em> em 10%.</li>
+    <li>Na prévia, a tabela <strong>No fim</strong> mostra as inconsistências que abrem em cada caminho.</li>
+    <li>Grave e confira as inconsistências no módulo do cliente.</li>
+  </ol>
+  <h3>E · A CFIN de um RAD com comprovante divergente</h3>
+  <ol class="passos">
+    <li>Em <span class="ui">Criar DFs</span>, crie 1 NF-e de entrada de R$ 10.000,00 com o recolhimento <em>Um para todos</em> em <em>RAD: o cliente recolhe</em>. CBS de R$ 90,00 e IBS de R$ 10,00.</li>
+    <li>No <span class="ui">Lançamento unitário</span>, na CBS, lance o <em>C01 Crédito registrado</em>. Depois escolha o <em>R01 RAD recolhido pelo cliente</em>, marque o comprovante, escolha <span class="ui">Com divergência no principal</span> com R$ 1,00 abaixo e lance. A execução diz "com comprovante RAD R$ 89,00".</li>
+    <li>Como usuário do cliente, abra a <span class="ui">Conciliação</span>, busque o número do DF e abra a linha. Na etapa 2, a CBS aparece com R$ 90,00 apropriado, R$ 89,00 comprovado e <em>Divergente</em>; o IBS, sem apropriação, aparece aguardando o ente.</li>
+    <li>Clique no chip da CBS: o detalhe do RF mostra a seção <em>Conciliação Financeira</em> e o evento <em>COMPROVANTE RAD</em> no histórico.</li>
+  </ol>
+  <p>É o roteiro do e2e do Live no tax-rs (<code>frontend/tests/e2e/live.spec.ts</code>).</p>
+  <h3>F · Os XMLs do cliente no Simulado</h3>
+  <ol class="passos">
+    <li>Cadastre um cliente de teste com a matriz. Ele já nasce com a fonte Simulada.</li>
+    <li>Em <span class="ui">Simulado › Importar DFs</span>, escolha os XMLs das NF-e de compra do cliente e mais um XML de outra empresa.</li>
+    <li>Escolha <span class="ui">Ambas</span> e clique em <span class="ui">Pré-visualizar</span>: o XML alheio aparece em <em>Recusados</em>.</li>
+    <li><span class="ui">Importar</span>. Na execução, use <span class="ui">Conferir agora</span> até ficar sem divergentes. Quem espera o comprovante fica em Aguardando até o D+2.</li>
+    <li>Importe os mesmos arquivos de novo: todos aparecem como "O cliente já tem este DF".</li>
+  </ol>
+  <p>Também é um e2e do Live no tax-rs.</p>
+</section>
+
+<!-- 11 -->
+<section class="section" id="s11">
+  <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Problemas comuns</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>O que acontece</th><th>Por quê</th><th>O que fazer</th></tr></thead>
+    <tbody>
+      <tr><td class="wrap">O Simulado não emite nada.</td><td class="wrap">A fonte não está em Simulada, ou nada venceu ainda.</td><td class="wrap">Troque a fonte na aba Fonte dos entes e use <span class="ui">Avançar até agora</span>.</td></tr>
+      <tr><td class="wrap">O lote mostra 0 elegíveis.</td><td class="wrap">O filtro é estreito demais, ou a direção do lote não bate com os DFs.</td><td class="wrap">Afrouxe o filtro, confira a direção ou crie DFs no próprio lote.</td></tr>
+      <tr><td class="wrap">A ação avisa que um ente fica mudo.</td><td class="wrap">O resultado não existe naquele ente (<a href="#s7">seção 07</a>).</td><td class="wrap">É o comportamento esperado; para testar só o outro ente, escolha-o em <em>Ente</em>.</td></tr>
+      <tr><td class="wrap">"Faltam N DFs elegíveis".</td><td class="wrap">O percentual pede mais DFs do que a base tem.</td><td class="wrap">Baixe o percentual ou aumente a base.</td></tr>
+      <tr><td class="wrap">O botão Gravar está desligado.</td><td class="wrap">Há um problema na prévia, a prévia está desatualizada ou já há um lote rodando no cliente.</td><td class="wrap">Leia a lista de problemas da prévia ou espere o lote terminar.</td></tr>
+      <tr><td class="wrap">Linhas em Aguardando por muito tempo.</td><td class="wrap">A plataforma ainda está aplicando os lançamentos, ou há agendados.</td><td class="wrap">Use <span class="ui">Conferir agora</span> e, se houver, <span class="ui">Emitir os agendados que venceram</span>.</td></tr>
+      <tr><td class="wrap">Lançamento riscado no unitário.</td><td class="wrap">Não cabe na situação atual do DF naquele ente.</td><td class="wrap">Lance antes o que ele exige ou use <em>Forçar</em>, sabendo que a execução fica marcada.</td></tr>
+      <tr><td class="wrap">O comprovante é recusado.</td><td class="wrap">O DF é de venda, ou já tem comprovante naquele tributo (D-CF-11).</td><td class="wrap">Use um DF de compra sem comprovante. No lote, esses DFs já ficam de fora na prévia.</td></tr>
+      <tr><td class="wrap">A apropriação em parte é recusada num DF RAD.</td><td class="wrap">No RAD, o ente apropria sempre o saldo total (D-CF-07).</td><td class="wrap">Use a apropriação total.</td></tr>
+      <tr><td class="wrap">A importação diz que exige a fonte Simulada.</td><td class="wrap">O cliente está em outra fonte.</td><td class="wrap">Troque para Simulada na aba Fonte dos entes.</td></tr>
+      <tr><td class="wrap">O botão Importar está desligado.</td><td class="wrap">Nenhum DF entra (todos recusados), a prévia está desatualizada ou outro lote está rodando no cliente.</td><td class="wrap">Leia as recusas, clique em Pré-visualizar de novo ou espere o lote terminar.</td></tr>
+      <tr><td class="wrap">Quero apagar os DFs de teste.</td><td class="wrap">Os DFs criados não se removem (D-EM-28).</td><td class="wrap">Cadastre um cliente de teste novo.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 12 -->
+<section class="section" id="s12">
+  <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">O que ainda vem</span></div>
+  <ul class="plain">
+    <li><strong>E3 e E4 na main do tax-rs:</strong> o contrato completo (51 lançamentos, os resultados e os 18 cenários) e as seis bordas, com o botão <span class="ui">Entregar de novo</span> na execução.</li>
+    <li><strong>CFIN pela apropriação, CF-1 a CF-4 na main:</strong> o comprovante RAD descrito nesta versão. Seguem pendentes a CFIN da venda (D-CF-01) e o que fazer com a multa e os juros do comprovante (D-CF-13).</li>
+    <li><strong>Importação no Simulado, XS-1 a XS-3:</strong> descrita nesta versão (D31 no tax-rs).</li>
+    <li><strong>O comprovante pelo cliente:</strong> hoje ele só nasce no emulador. Com os entes reais ligados, a apropriação RAD sem comprovante fica pendente, sem prazo, até existir essa entrada.</li>
+  </ul>
+</section>
+
+<div class="foot">Emulador de lançamentos: como usar · v1.2 · 26/11/2026</div>
+</div>
+</body>
+</html>
