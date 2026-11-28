@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora da Receita no Live · v1.5</title>
+<style>
+:root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
+  --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
+  --amber:#B97A10; --amber-d:rgba(185,122,16,.08); --green:#1A7940; --green-d:rgba(26,121,64,.08); --gray:#6B7280; --gray-d:rgba(107,114,128,.08); --mono:#EDF0F5; --fmono:'JetBrains Mono', ui-monospace, monospace; --veu:rgba(19,23,32,.18); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --veu:rgba(0,0,0,.45); } }
+:root[data-theme="dark"] { --bg:#0D1117; --sur:#161C25; --sur2:#1E2533; --brd:#262E3F; --txt1:#E4E8EF; --txt2:#8A99B4; --txt3:#4F5B73;
+  --teal:#1FBAAA; --teal-d:rgba(31,186,170,.12); --blue:#4D9FFF; --blue-d:rgba(77,159,255,.1); --red:#F04B5C; --red-d:rgba(240,75,92,.1);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,.1); --green:#22C55E; --green-d:rgba(34,197,94,.1); --gray:#9CA3AF; --gray-d:rgba(156,163,175,.1); --mono:#1A2030; --veu:rgba(0,0,0,.45); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--txt1); font: 14px/1.65 'Inter', system-ui, sans-serif; padding: 40px 16px 80px; }
+.doc { max-width: 1040px; margin: 0 auto; }
+.eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 10px; }
+h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--txt2); margin-bottom: 24px; max-width: 800px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 14px 18px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; margin-bottom: 20px; align-items: center; }
+.meta-pill { font-size: 11px; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.meta-label { color: var(--txt3); font-weight: 500; }
+.meta-val { color: var(--txt1); font-weight: 700; }
+.chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.chip.ok { background: var(--green-d); color: var(--green); } .chip.warn { background: var(--amber-d); color: var(--amber); }
+.chip.red { background: var(--red-d); color: var(--red); } .chip.gray { background: var(--gray-d); color: var(--gray); }
+.chip.info { background: var(--blue-d); color: var(--blue); } .chip.teal { background: var(--teal-d); color: var(--teal); }
+.toc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 18px 22px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--txt3); margin-bottom: 12px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; list-style: none; }
+@media (max-width: 620px) { .toc-list { grid-template-columns: minmax(0, 1fr); } }
+.toc-list a { font-size: 12.5px; color: var(--txt2); text-decoration: none; display: flex; gap: 8px; }
+.toc-list a:hover { color: var(--amber); }
+.toc-num { color: var(--txt3); font-family: 'JetBrains Mono', monospace; font-size: 11px; flex-shrink: 0; }
+.section { margin-bottom: 50px; scroll-margin-top: 20px; }
+.sec-hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brd); }
+.sec-num { font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-d); border-radius: 4px; padding: 2px 7px; font-family: 'JetBrains Mono', monospace; }
+.sec-title { font-size: 17px; font-weight: 700; }
+p { font-size: 13px; color: var(--txt2); margin-bottom: 10px; }
+p strong { color: var(--txt1); }
+h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+ul.plain, ol.plain { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px 18px; }
+ul.plain li, ol.plain li { font-size: 13px; color: var(--txt2); }
+ul.plain li strong, ol.plain li strong { color: var(--txt1); }
+.callout { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid var(--blue); background: var(--blue-d); }
+.callout.ok { border-color: var(--green); background: var(--green-d); }
+.callout.warn { border-color: var(--amber); background: var(--amber-d); }
+.callout.red { border-color: var(--red); background: var(--red-d); }
+.ct { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; color: var(--txt1); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.table-wrap { overflow-x: auto; margin: 14px 0; border-radius: 8px; border: 1px solid var(--brd); }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--sur2); }
+th { padding: 9px 13px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); border-bottom: 1px solid var(--brd); white-space: nowrap; }
+td { padding: 9px 13px; border-bottom: 1px solid var(--brd); vertical-align: top; color: var(--txt2); background: var(--sur); }
+td strong { color: var(--txt1); }
+tbody tr:last-child td { border-bottom: none; }
+td.grp { background: var(--sur2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); }
+td.id { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--txt3); white-space: nowrap; }
+code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--mono); padding: 1px 5px; border-radius: 4px; color: var(--txt1); overflow-wrap: anywhere; }
+pre { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--mono); color: var(--txt1); padding: 12px 14px; border-radius: 8px; overflow-x: auto; margin: 10px 0 14px; line-height: 1.55; }
+pre code { background: none; padding: 0; overflow-wrap: normal; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 14px 0 18px; }
+@media (max-width: 860px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.kpi-v { font-size: 22px; font-weight: 800; color: var(--txt1); line-height: 1.2; }
+.kpi-l { font-size: 11.5px; color: var(--txt3); }
+.kpi.ok .kpi-v { color: var(--green); } .kpi.warn .kpi-v { color: var(--amber); }
+.kpi.info .kpi-v { color: var(--blue); } .kpi.red .kpi-v { color: var(--red); }
+.ondas { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 14px 0; }
+.onda { background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 8px; padding: 14px 16px; min-width: 0; scroll-margin-top: 20px; }
+.onda.crit { border-left-color: var(--red); }
+.onda.dep { border-left-color: var(--gray); }
+.onda-h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; margin-bottom: 6px; }
+.onda-n { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--teal); }
+.onda.crit .onda-n { color: var(--red); }
+.onda.dep .onda-n { color: var(--gray); }
+.onda-t { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.onda-q { font-size: 11px; color: var(--txt3); margin-left: auto; }
+.onda-g { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 20px; }
+@media (max-width: 760px) { .onda-g { grid-template-columns: minmax(0, 1fr); } }
+.onda-g > div { min-width: 0; }
+.onda .lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--txt3); margin-top: 8px; }
+.onda ul.plain { margin-left: 16px; margin-top: 4px; }
+.onda ul.plain li { font-size: 12.5px; }
+.onda .pronto { font-size: 12px; color: var(--txt2); border-top: 1px dashed var(--brd); margin-top: 10px; padding-top: 8px; }
+.passos { counter-reset: passo; list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.passos > li { counter-increment: passo; position: relative; padding: 10px 14px 10px 46px; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; font-size: 13px; color: var(--txt2); min-width: 0; }
+.passos > li::before { content: counter(passo); position: absolute; left: 12px; top: 10px; width: 22px; height: 22px; border-radius: 50%; background: var(--teal-d); color: var(--teal); font: 700 11px/22px 'JetBrains Mono', monospace; text-align: center; }
+.passos > li strong { color: var(--txt1); }
+.fluxo { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 14px 16px; margin: 12px 0; min-width: 0; }
+.fluxo-t { font-size: 13.5px; font-weight: 700; color: var(--txt1); margin-bottom: 4px; }
+.fluxo ol.plain li { font-size: 12.5px; }
+.lado { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; margin-right: 4px; white-space: nowrap; }
+.lado.be { background: var(--blue-d); color: var(--blue); }
+.lado.fe { background: var(--teal-d); color: var(--teal); }
+.lado.job { background: var(--amber-d); color: var(--amber); }
+.diagram { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 14px; margin: 14px 0; overflow-x: auto; }
+.diagram svg { display: block; min-width: 760px; width: 100%; height: auto; }
+.diagram text { font-family: 'Inter', system-ui, sans-serif; fill: var(--txt1); }
+.diagram .sub { fill: var(--txt3); font-size: 10.5px; }
+.diagram .box { fill: var(--sur2); stroke: var(--brd); }
+.diagram .box-be { fill: var(--blue-d); stroke: var(--blue); }
+.diagram .box-fe { fill: var(--teal-d); stroke: var(--teal); }
+.diagram .box-ext { fill: var(--gray-d); stroke: var(--gray); stroke-dasharray: 4 3; }
+.diagram .seta { stroke: var(--txt3); stroke-width: 1.3; fill: none; marker-end: url(#ponta); }
+.diagram #ponta path { fill: var(--txt3); }
+.check { list-style: none; display: flex; flex-direction: column; gap: 5px; margin: 8px 0 12px; }
+.check li { font-size: 12.5px; color: var(--txt2); padding-left: 22px; position: relative; }
+.check li::before { content: "☐"; position: absolute; left: 2px; color: var(--teal); }
+.foot { margin-top: 40px; font-size: 11px; color: var(--txt3); text-align: center; }
+.back { display: inline-block; font-size: 12px; color: var(--txt3); text-decoration: none; margin-bottom: 18px; }
+.back:hover { color: var(--txt1); }
+td.wrap { min-width: 180px; }
+/* jornadas */
+.jrs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 12px; margin: 14px 0; }
+.jr { background: var(--sur); border: 1px solid var(--brd); border-left: 3px solid var(--teal); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.jr-h { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; margin-bottom: 4px; }
+.jr-id { font-family: var(--fmono); font-size: 11px; font-weight: 700; color: var(--teal); }
+.jr-t { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.jr-a { font-size: 11.5px; color: var(--txt3); margin-bottom: 6px; }
+.jr ol { margin: 6px 0 6px 18px; font-size: 12.5px; color: var(--txt2); display: flex; flex-direction: column; gap: 3px; }
+.jr .res { font-size: 12px; color: var(--txt2); border-top: 1px dashed var(--brd); padding-top: 6px; margin-top: 6px; }
+.jr .ir { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.jr .ir button { font: inherit; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--brd); background: var(--sur2); color: var(--txt1); cursor: pointer; }
+.jr .ir button:hover { border-color: var(--teal); color: var(--teal); }
+/* propostas */
+.seg { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 12px; }
+.seg button { font: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt2); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--txt1); border-color: var(--txt1); color: var(--bg); }
+.seg .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--teal); margin-left: 6px; }
+.duas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 14px; }
+@media (max-width: 640px) { .duas { grid-template-columns: minmax(0, 1fr); } }
+.pc { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 14px; min-width: 0; }
+.pc.ganha { border-color: var(--teal); } .pc.perde { border-color: var(--amber); }
+.pc .pct { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); margin-bottom: 4px; }
+.pc ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--txt2); } .pc li { margin: 3px 0; }
+.dica { font-size: 12.5px; color: var(--txt3); margin: 6px 0 10px; }
+/* moldura do app */
+.fr { position: relative; overflow: hidden; border: 1px solid var(--brd); border-radius: 10px; background: var(--bg); min-height: 600px; min-width: 0; }
+.fr-url { display: flex; gap: 8px; align-items: center; padding: 6px 10px; background: var(--sur2); border-bottom: 1px solid var(--brd); font-family: var(--fmono); font-size: 11.5px; color: var(--txt2); min-width: 0; }
+.fr-url .u { overflow-wrap: anywhere; min-width: 0; }
+.fr-url .pt { width: 8px; height: 8px; border-radius: 50%; background: var(--brd); flex-shrink: 0; }
+.fr-top { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--sur); border-bottom: 1px solid var(--brd); }
+.fr-top .eb { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--teal); display: block; }
+.fr-top .nm { font-size: 13.5px; font-weight: 700; color: var(--txt1); }
+.fr-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.fr-main { padding: 14px; min-width: 0; }
+@media (max-width: 640px) { .fr-main { padding: 10px; } }
+.fb { font: inherit; font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 6px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt1); cursor: pointer; }
+.fb:hover { border-color: var(--teal); }
+.fb.on, .fb.pri { background: var(--teal); border-color: var(--teal); color: var(--sur); }
+.fb.sec { background: var(--sur2); }
+.fb[disabled] { opacity: .5; cursor: default; }
+.lnk { font: inherit; background: none; border: 0; padding: 0; color: var(--blue); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; text-align: left; }
+.h2 { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; font-size: 16px; font-weight: 700; color: var(--txt1); margin-bottom: 4px; }
+.sub { font-size: 12px; color: var(--txt3); margin-bottom: 10px; }
+.bc { font-size: 12.5px; color: var(--txt3); margin-bottom: 10px; overflow-wrap: anywhere; }
+.minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 8px; margin-bottom: 12px; }
+.mini { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.mini .v { font-size: 19px; font-weight: 700; color: var(--txt1); font-variant-numeric: tabular-nums; }
+.mini .l { font-size: 11px; color: var(--txt3); }
+.mini.warn .v { color: var(--amber); } .mini.red .v { color: var(--red); } .mini.ok .v { color: var(--green); } .mini.info .v { color: var(--blue); }
+.mini.clic { cursor: pointer; } .mini.clic:hover { border-color: var(--teal); }
+.chps { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; align-items: center; }
+.chp { font: inherit; font-size: 12px; color: var(--txt2); background: var(--sur); border: 1px solid var(--brd); border-radius: 999px; padding: 2px 10px; cursor: pointer; }
+.chp small { font-family: var(--fmono); font-size: 10.5px; color: var(--txt3); margin-left: 5px; }
+.chp.on { background: var(--teal-d); border-color: var(--teal); color: var(--teal); font-weight: 600; }
+.fr .table-wrap { margin: 6px 0 10px; }
+.fr table { font-size: 12px; }
+.fr th { padding: 7px 9px; } .fr td { padding: 7px 9px; overflow-wrap: break-word; }
+.fr td.n, .fr th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fr tr.clic { cursor: pointer; } .fr tr.clic:hover td { background: var(--sur2); }
+.fr tr.atual td { background: var(--teal-d); }
+.fr td.ck { width: 28px; } .fr input[type=checkbox], .fr input[type=radio] { accent-color: var(--teal); }
+.selo { display: inline-flex; flex-wrap: wrap; gap: 3px; align-items: center; }
+.et { font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+.et.ok { background: var(--green-d); color: var(--green); } .et.red { background: var(--red-d); color: var(--red); }
+.et.warn { background: var(--amber-d); color: var(--amber); } .et.gray { background: var(--gray-d); color: var(--gray); } .et.info { background: var(--blue-d); color: var(--blue); }
+.st { display: block; font-size: 11px; color: var(--txt3); margin-top: 2px; }
+.prev { outline: 2px dashed var(--amber); outline-offset: 1px; }
+.card { background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; min-width: 0; }
+.card-t { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt2); margin-bottom: 8px; }
+.campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap: 8px; margin-bottom: 10px; }
+.campo { background: var(--sur); border: 1px solid var(--brd); border-radius: 6px; padding: 6px 10px; min-width: 0; }
+.campo .cl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--txt3); }
+.campo .cv { font-size: 12.5px; color: var(--txt1); overflow-wrap: anywhere; margin-top: 2px; }
+.msg { font-size: 12.5px; color: var(--teal); background: var(--teal-d); border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; }
+.aviso { font-size: 12.5px; color: var(--amber); background: var(--amber-d); border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; }
+.erro { font-size: 12px; color: var(--red); }
+.acoes { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0; }
+.acoes .nota { font-size: 11.5px; color: var(--txt3); }
+.acoes.fim { justify-content: flex-end; }
+.tl { list-style: none; border-left: 2px solid var(--brd); margin: 4px 0 4px 6px; padding-left: 12px; display: flex; flex-direction: column; gap: 8px; }
+.tl li { font-size: 12px; color: var(--txt2); position: relative; }
+.tl li::before { content: ''; position: absolute; left: -18px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--sur); border: 2px solid var(--teal); }
+.tl li b { color: var(--txt1); } .tl li small { display: block; color: var(--txt3); }
+.memo { font-family: var(--fmono); font-size: 11.5px; background: var(--mono); border-radius: 6px; padding: 8px 10px; color: var(--txt1); overflow-x: auto; white-space: pre; margin: 6px 0; }
+.lado { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
+@media (max-width: 560px) { .lado { grid-template-columns: minmax(0, 1fr); } }
+.lado .campo .cv { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ttabs { display: flex; gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; border-bottom: 1px solid var(--brd); margin-bottom: 12px; }
+.ttab { font: inherit; font-size: 12.5px; font-weight: 600; white-space: nowrap; padding: 7px 11px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--txt3); cursor: pointer; }
+.ttab.on { color: var(--txt1); border-bottom-color: var(--teal); }
+.in { font: inherit; font-size: 12.5px; color: var(--txt1); background: var(--bg); border: 1px solid var(--brd); border-radius: 6px; padding: 5px 8px; min-width: 0; max-width: 100%; }
+textarea.in { width: 100%; min-height: 96px; font-family: var(--fmono); font-size: 11.5px; resize: vertical; }
+input[type=range].rg { width: 100%; accent-color: var(--teal); }
+.radios { display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: var(--txt2); }
+.radios label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+.radios input { margin-top: 3px; } .radios strong { color: var(--txt1); }
+.tolv { font-size: 22px; font-weight: 800; color: var(--teal); font-variant-numeric: tabular-nums; }
+.drop { border: 2px dashed var(--brd); border-radius: 10px; padding: 22px 14px; text-align: center; color: var(--txt3); font-size: 12.5px; background: var(--sur); }
+.drop.sobre { border-color: var(--teal); background: var(--teal-d); }
+.drop strong { color: var(--txt1); display: block; font-size: 13.5px; margin-bottom: 4px; }
+.prog { height: 10px; border-radius: 6px; background: var(--sur2); overflow: hidden; margin: 6px 0; }
+.prog span { display: block; height: 100%; background: var(--teal); transition: width .25s; }
+.bar { display: flex; height: 12px; border-radius: 4px; overflow: hidden; background: var(--sur2); margin: 6px 0; }
+.bar span { display: block; height: 100%; }
+.b-ok { background: var(--green); } .b-red { background: var(--red); } .b-warn { background: var(--amber); } .b-gray { background: var(--gray); } .b-info { background: var(--blue); }
+.lg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: var(--txt2); margin-bottom: 6px; }
+.lg i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+/* layouts por proposta */
+.ws { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 14px; }
+.ws-menu { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ws-menu .mi { font: inherit; font-size: 12.5px; font-weight: 600; text-align: left; padding: 7px 10px; border-radius: 6px; border: 0; background: none; color: var(--txt2); cursor: pointer; white-space: nowrap; }
+.ws-menu .mi.on { background: var(--teal-d); color: var(--teal); }
+.ws-menu .mi small { font-family: var(--fmono); font-size: 10.5px; color: var(--txt3); margin-left: 4px; }
+.ws-main { min-width: 0; container-type: inline-size; }
+@media (max-width: 760px) { .ws { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .ws-menu { flex-direction: row; overflow-x: auto; -webkit-overflow-scrolling: touch; border-bottom: 1px solid var(--brd); margin-bottom: 12px; padding-bottom: 6px; } }
+.md { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 12px; align-items: start; }
+@container (max-width: 820px) { .md { grid-template-columns: minmax(0, 1fr); } }
+.drw-fundo { position: absolute; inset: 0; background: var(--veu); }
+.drw { position: absolute; top: 0; right: 0; bottom: 0; width: min(560px, 96%); overflow-y: auto; background: var(--bg); border-left: 1px solid var(--brd); padding: 14px; box-shadow: -8px 0 24px var(--veu); }
+.drw.estreita { width: min(420px, 96%); }
+.drw-h { display: flex; gap: 8px; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--txt1); }
+.drw-h small { display: block; font-size: 11.5px; font-weight: 400; color: var(--txt3); }
+.massa { position: sticky; bottom: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--txt1); color: var(--bg); border-radius: 8px; padding: 8px 12px; margin-top: 8px; font-size: 12.5px; }
+.massa .fb { background: var(--bg); color: var(--txt1); border-color: var(--bg); }
+.modal-fundo { position: absolute; inset: 0; background: var(--veu); display: flex; align-items: flex-start; justify-content: center; padding: 40px 12px; overflow-y: auto; }
+.modal { background: var(--bg); border: 1px solid var(--brd); border-radius: 10px; padding: 14px; width: min(560px, 100%); }
+.esc { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; background: var(--sur); border: 1px solid var(--brd); border-radius: 8px; padding: 10px 12px; margin: 12px 0 4px; font-size: 12.5px; color: var(--txt2); }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<a class="back" href="../prds.html#sec-taxrs">← Hub de PRDs</a>
+<div class="eyebrow">tax-rs · Estudo e proposta</div>
+<h1>Calculadora da Receita Federal no Live: estudo do código e proposta de uso</h1>
+<p class="subtitle">A Receita Federal publicou como código aberto a calculadora do regime regular da reforma: CBS, IBS e Imposto Seletivo da LC 214/2025. Este documento estuda o código (versão 1.7.3, de 26/11/2026), lista cada validação que ela faz e propõe como o Live do tax-rs passa a usá-la. A proposta tem dois usos: o cálculo oficial como primeira etapa da CAPUR e um validador de DF-e que o próprio cliente usa.</p>
+
+<div class="meta-bar">
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.5</span> <a href="taxrs-calculadora-rtc-v1.4.html" style="font-size:11px;color:var(--txt3)">v1.4</a> <a href="taxrs-calculadora-rtc-v1.3.html" style="font-size:11px;color:var(--txt3)">v1.3</a> <a href="taxrs-calculadora-rtc-v1.2.html" style="font-size:11px;color:var(--txt3)">v1.2</a> <a href="taxrs-calculadora-rtc-v1.1.html" style="font-size:11px;color:var(--txt3)">v1.1</a> <a href="taxrs-calculadora-rtc-v1.0.html" style="font-size:11px;color:var(--txt3)">v1.0</a></span>
+  <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">28/11/2026</span></span>
+  <span class="meta-pill"><span class="meta-label">Calculadora</span><span class="meta-val"><code>ReceitaFederal/calculadora-rtc-regime-regular</code> 1.7.3 (<code>0d4b073</code>)</span></span>
+  <span class="meta-pill"><span class="meta-label">tax-rs</span><span class="meta-val"><code>main</code> no <code>a81fdd6</code></span></span>
+  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">13 de 14</span> <span class="chip warn">Em decisão · D-CR-13</span></span>
+</div>
+
+<div class="callout warn">
+  <div class="ct">v1.5 · um documento só</div>
+  <ul class="plain">
+    <li><strong>Estudo, jornadas e telas no mesmo documento:</strong> as jornadas viraram a seção 15 e as três propostas clicáveis a seção 16. A página separada de telas saiu; o endereço antigo leva para cá, e a última versão dela está no <a href="taxrs-calculadora-telas-v1.1.html">arquivo de versões</a>.</li>
+    <li><strong>No hub, em "Em decisão":</strong> o card saiu da seção do tax-rs e foi para a seção 03, porque a D-CR-13 segue aberta.</li>
+  </ul>
+  <h3>v1.4 · telas decididas</h3>
+  <ul class="plain">
+    <li><strong>D-CR-14 decidida: A, nas telas de hoje.</strong> Escolhida pelo usuário em 28/11/2026, como recomendado. Selo e filtro na Conciliação, bloco "Etapa 1" no detalhe do DF, tipos novos em Inconsistências, validador e configuração em telas novas, como a seção 6.4 já descrevia. A B e a C ficam na <a href="#s16">página de telas</a> para comparação.</li>
+    <li><strong>Falta a D-CR-13:</strong> levar as decisões aos PRDs, como a seção 14 descreve, agora com as telas da A.</li>
+  </ul>
+  <h3>v1.3 · jornadas, telas e mudanças propostas nos PRDs</h3>
+  <ul class="plain">
+    <li><strong>Jornadas e telas:</strong> seis jornadas (J-CR-01 a 06) e três propostas de telas clicáveis, numa página própria: <a href="#s16">Jornadas e telas</a> (seção 15). A escolha é a D-CR-14.</li>
+    <li><strong>Mudanças nos PRDs, só como proposta:</strong> a seção 14 diz o que mudaria em Conciliação, Crédito, Inconsistências, catálogo, mapa e priorização. Nada foi aplicado nos módulos do hub; aplicar é a D-CR-13.</li>
+    <li><strong>Ajuste à D-CR-10:</strong> a RN-INC-10 diz que só uma pessoa resolve ocorrência. Por isso "o ente prevalece" não fecha a ocorrência sozinho: o produto a devolve ao responsável com o desfecho preenchido, como já faz com o reflexo do evento fiscal, e ele confere.</li>
+  </ul>
+  <h3>v1.2 · as 12 decisões de 28/11</h3>
+  <ul class="plain">
+    <li><strong>Aprovadas como recomendado:</strong> D-CR-01, 02, 03, 05, 07, 08, 09, 11 e 12 (seção 12).</li>
+    <li><strong>D-CR-04 e D-CR-10 viraram configuração da empresa:</strong> a tolerância e a regra para quando a etapa 1 diverge mas o ente apura igual ao destacado. Elas ficam numa tela nova do Administrador do cliente, com padrão e auditoria (seção 6.5).</li>
+    <li><strong>D-CR-06 ganhou o reprocessamento por lista:</strong> além do automático a cada versão, o usuário indica os DFs a reprocessar, colando chaves, subindo um CSV ou selecionando na Conciliação (seção 6.3).</li>
+    <li><strong>Correção:</strong> a retenção do validador agora diz o que a D-CR-08 decidiu (XML por 90 dias, relatório por 5 anos).</li>
+  </ul>
+  <h3>v1.1 · o cálculo oficial vira etapa da CAPUR</h3>
+  <ul class="plain">
+    <li><strong>Sem CCALC:</strong> a conferência da calculadora deixa de ser uma terceira conferência e passa a ser a etapa 1 da CAPUR. A etapa 2 é a apuração do ente, como hoje (seção 6).</li>
+    <li><strong>Status combinado:</strong> a tabela 6.2 mostra como as duas etapas formam o status da CAPUR. O ente continua dando a palavra final.</li>
+    <li><strong>Ocorrências com prefixo <code>capur_</code>:</strong> as de alíquota e de base ficam na família B; as de classificação, na A. "Sem direito a crédito" sai da CAPUR e vai para o crédito (seção 10).</li>
+    <li><strong>Telas:</strong> em vez de uma coluna e uma aba novas, um selo de duas etapas na CAPUR e o bloco "Etapa 1 · Cálculo oficial" na seção CAPUR do detalhe.</li>
+    <li><strong>Decisões novas:</strong> D-CR-10 a 12.</li>
+  </ul>
+</div>
+
+<div class="toc">
+  <div class="toc-title">Conteúdo</div>
+  <ul class="toc-list">
+    <li><a href="#s1"><span class="toc-num">01</span>Resumo</a></li>
+    <li><a href="#s2"><span class="toc-num">02</span>O que a Receita Federal publicou</a></li>
+    <li><a href="#s3"><span class="toc-num">03</span>Os tipos de validação</a></li>
+    <li><a href="#s4"><span class="toc-num">04</span>A ordem das validações num item</a></li>
+    <li><a href="#s5"><span class="toc-num">05</span>O que o Live faz hoje</a></li>
+    <li><a href="#s6"><span class="toc-num">06</span>Uso 1: o cálculo oficial como etapa da CAPUR</a></li>
+    <li><a href="#s7"><span class="toc-num">07</span>Uso 2: validador de DF-e do cliente</a></li>
+    <li><a href="#s8"><span class="toc-num">08</span>Outros usos</a></li>
+    <li><a href="#s9"><span class="toc-num">09</span>Arquitetura</a></li>
+    <li><a href="#s10"><span class="toc-num">10</span>Do código da calculadora à inconsistência</a></li>
+    <li><a href="#s11"><span class="toc-num">11</span>Etapas</a></li>
+    <li><a href="#s12"><span class="toc-num">12</span>Decisões</a></li>
+    <li><a href="#s13"><span class="toc-num">13</span>Riscos e limites</a></li>
+    <li><a href="#s14"><span class="toc-num">14</span>Mudanças propostas nos PRDs</a></li>
+    <li><a href="#s15"><span class="toc-num">15</span>Jornadas</a></li>
+    <li><a href="#s16"><span class="toc-num">16</span>Telas: três propostas clicáveis</a></li>
+  </ul>
+</div>
+
+<!-- 01 -->
+<div class="section" id="s1">
+  <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Resumo</span></div>
+  <div class="kpis">
+    <div class="kpi info"><div class="kpi-v">66</div><div class="kpi-l">códigos de validação e erro (37 REG, 13 CAL, 16 VAL)</div></div>
+    <div class="kpi"><div class="kpi-v">5</div><div class="kpi-l">estados possíveis de um item</div></div>
+    <div class="kpi"><div class="kpi-v">8</div><div class="kpi-l">modelos com validação por XSD</div></div>
+    <div class="kpi ok"><div class="kpi-v">MIT</div><div class="kpi-l">licença: pode rodar dentro do produto</div></div>
+    <div class="kpi warn"><div class="kpi-v">15</div><div class="kpi-l">versões de 13/08 a 26/11/2026</div></div>
+  </div>
+  <p><strong>O que é.</strong> Uma API REST em Java 25 e Spring Boot 4, com banco SQLite embarcado e somente leitura. O banco traz as tabelas oficiais: CST, cClassTrib, NCM, NBS, alíquotas, reduções e fundamentação legal. As regras de cálculo ficam no banco como expressões e mudam por migração, sem mexer no código. A mesma API roda no ambiente piloto da Receita Federal.</p>
+  <p><strong>O que ela valida.</strong> São seis camadas. A primeira é o formato do JSON de entrada. Depois vêm as regras de negócio da classificação tributária: NCM ou NBS, CST × cClassTrib, vínculo com o tipo de DF, Imposto Seletivo, base de cálculo, localização e alíquotas. Por fim, as falhas do próprio cálculo, o aviso de dados simulados, o XML contra o XSD do leiaute e as bases unificadas da NF-e e da NFS-e. O modo de observabilidade devolve o resultado item a item, sem parar no primeiro erro, e é o modo que o tax-rs usa.</p>
+  <p><strong>Por que importa para o SplitHub.</strong> Hoje o Live confere o valor do RF só contra a apuração do ente (CAPUR) e contra o recolhimento (CFIN). Ele não sabe se o valor destacado pelo fornecedor está certo, nem se a classificação dá direito ao crédito. A calculadora responde às duas perguntas com a regra oficial e antes da apuração. É a garantia da apropriação do crédito chegando mais cedo.</p>
+  <div class="callout ok">
+    <div class="ct">A proposta em uma frase</div>
+    <p>Subir a calculadora como serviço nosso, ao lado do backend. A <strong>CAPUR ganha uma primeira etapa</strong>: valor destacado × valor calculado, na entrada do DF, com histórico e detalhe por item. A divergência abre inconsistência já nesse momento, e a apuração do ente continua sendo a segunda etapa e a palavra final. O cliente ganha o <strong>Validador de DF-e</strong>, onde ele sobe XMLs ou um ZIP e recebe um relatório de aceite ou de divergências, sem nada entrar no razão.</p>
+  </div>
+</div>
+
+<!-- 02 -->
+<div class="section" id="s2">
+  <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">O que a Receita Federal publicou</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Item</th><th>Situação no repositório</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Escopo</strong></td><td>Cálculo da CBS, do IBS e do Imposto Seletivo no regime regular. Ficam de fora o Simples Nacional, que é outra API, e os regimes específicos.</td></tr>
+      <tr><td><strong>Stack</strong></td><td>Java 25, Spring Boot 4.1.2, SQLite somente leitura, Flyway (76 migrações), Caffeine para cache, JEXL3 em sandbox para as expressões, Springdoc com OpenAPI 3.1.</td></tr>
+      <tr><td><strong>Como roda</strong></td><td>Gera o banco com <code>flyway:migrate</code>, depois <code>java -jar api-regime-geral.jar</code> no perfil <code>offline</code>. Responde em <code>/api/calculadora</code> e documenta em <code>/api/swagger-ui.html</code>.</td></tr>
+      <tr><td><strong>Licença</strong></td><td>MIT, da Receita Federal do Brasil. Pode rodar e ser modificada dentro de um produto comercial, desde que se mantenha o aviso.</td></tr>
+      <tr><td><strong>Testes</strong></td><td>175 arquivos de teste, a maioria de integração contra o banco gerado. Cobertura publicada com JaCoCo.</td></tr>
+      <tr><td><strong>Cadência</strong></td><td>15 versões de 13/08 a 26/11/2026 (da 1.3.0 à 1.7.3). A 1.7.2 (18/11) mudou o arredondamento em centavos e a 1.7.3 (26/11) mudou vigências de tabela. Quem integra precisa acompanhar.</td></tr>
+      <tr><td><strong>Versão consultável</strong></td><td><code>GET /dados-abertos/versao</code> devolve a versão da aplicação e a do banco. O perfil offline compara com a instalação online da Receita Federal (<code>piloto-cbs.tributos.gov.br</code>).</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Os endpoints</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Função</th><th>Endpoint</th><th>Uso no SplitHub</th></tr></thead>
+    <tbody>
+      <tr><td>Cálculo, falha no primeiro erro (HTTP 422)</td><td><code>POST /regime-geral</code></td><td>Não usar: um item ruim derruba o documento inteiro.</td></tr>
+      <tr><td><strong>Cálculo com observabilidade</strong></td><td><code>POST /observabilidade/regime-geral</code></td><td><span class="chip ok">Principal</span> HTTP 200 sempre, com estado e erros por item. Os totais somam só os itens calculados.</td></tr>
+      <tr><td>Descrição de um código de erro</td><td><code>GET /observabilidade/erros?codigo=</code></td><td>Texto do detalhe na tela.</td></tr>
+      <tr><td>Base unificada NF-e/NFC-e e NFS-e</td><td><code>POST /base-calculo/base-calculo-unificada[-nfse]</code></td><td>Conferir a base (<code>vBC</code>) a partir dos componentes do item.</td></tr>
+      <tr><td>Validação de XML contra o XSD</td><td><code>POST /xml/validate?tipo=&amp;subtipo=grupo|nota</code></td><td>Validador de DF-e e entrada pelo barramento <code>/v1</code>.</td></tr>
+      <tr><td>Geração do grupo XML</td><td><code>POST /xml/generate</code></td><td>Não se aplica: o SplitHub não emite DF.</td></tr>
+      <tr><td>Dados abertos (CST, cClassTrib, NCM, NBS, alíquotas, fundamentação)</td><td><code>GET /dados-abertos/*</code> (34 rotas)</td><td>Indicadores de crédito da cClassTrib, memória e telas de consulta.</td></tr>
+      <tr><td>NFS-e: indicador de operação e locais</td><td><code>/nfse/*</code></td><td>Conferir o local da operação nas NFS-e de entrada.</td></tr>
+      <tr><td>Pedágio</td><td><code>POST /pedagio</code></td><td>Fora da v1.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>O que vem na resposta</h3>
+  <ul class="plain">
+    <li><strong>Por item:</strong> <code>nObj</code>, <code>estadoItem</code>, <code>tribCalc</code> com os grupos do leiaute (<code>gIBSCBS</code>, <code>gIBSUF</code>, <code>gIBSMun</code>, <code>gCBS</code>, <code>gRed</code>, diferimento, monofasia, crédito presumido, compra governamental) e <code>erros</code> com <code>code</code>, <code>title</code>, <code>pointer</code> e <code>detail</code>.</li>
+    <li><strong>Memória de cálculo</strong> (desde a Release 15): texto por tributo (CBS, IBS estadual, IBS municipal) com os elementos usados no valor.</li>
+    <li><strong>Totais</strong> no formato do <code>IBSCBSTot</code>.</li>
+    <li><strong>Cabeçalho</strong> <code>x-warning-dados-simulados</code>, quando o cálculo usou dado simulado (seção 3.5).</li>
+    <li><strong>Pela cClassTrib</strong> (dados abertos): <code>indicaApropriacaoCreditoAdquirenteCbs</code>, <code>indicaApropriacaoCreditoAdquirenteIbs</code>, <code>creditoOperacaoAntecedente</code> (manter ou anular), <code>indicaCreditoPresumidoFornecedor</code> e <code>indicaCreditoPresumidoAdquirente</code>.</li>
+  </ul>
+</div>
+
+<!-- 03 -->
+<div class="section" id="s3">
+  <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Os tipos de validação</span></div>
+  <p>O catálogo está em <code>ProblemType.java</code> e <code>CodigoValidacao.java</code>. Cada código tem título, campo apontado e o estado em que deixa o item. São três famílias de código (VAL, REG e CAL) e mais três validações sem código próprio: o aviso de dado simulado, o XSD e as bases unificadas.</p>
+
+  <h3>3.1 Formato da entrada (VAL): estado <code>INCONSISTENCIA_ENTRADA</code></h3>
+  <p>As anotações de Bean Validation no JSON de entrada. O código sai da anotação que falhou.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Código</th><th>Regra</th><th>Onde se aplica na operação</th></tr></thead>
+    <tbody>
+      <tr><td class="id">VAL-001</td><td>Campo obrigatório (<code>NotNull</code>)</td><td><code>id</code>, <code>versao</code>, <code>municipio</code>; no item, <code>numero</code>, <code>cst</code>, <code>cClassTrib</code></td></tr>
+      <tr><td class="id">VAL-002 · 003</td><td>Em branco · lista vazia</td><td><code>itens</code> não pode vir vazio</td></tr>
+      <tr><td class="id">VAL-004</td><td>Tamanho</td><td><code>uf</code> com 2, <code>cst</code> com 3, <code>cClassTrib</code> com 6</td></tr>
+      <tr><td class="id">VAL-005 · 006</td><td>Mínimo · máximo</td><td><code>municipio</code> até 9999999; <code>tpDoc</code> de 1 a 999; <code>numero</code> do item de 1 a 9999999</td></tr>
+      <tr><td class="id">VAL-007 · 008</td><td>Decimal mínimo · máximo</td><td>Campos decimais dos grupos</td></tr>
+      <tr><td class="id">VAL-009</td><td>Formato</td><td><code>cst</code> e <code>cClassTrib</code> só com dígitos</td></tr>
+      <tr><td class="id">VAL-010</td><td>Dígitos</td><td><code>baseCalculo</code> com 13 inteiros e 2 decimais; <code>quantidade</code> com 11 e 4</td></tr>
+      <tr><td class="id">VAL-012 · 013</td><td>Positivo · positivo ou zero</td><td><code>baseCalculo</code> ≥ 0</td></tr>
+      <tr><td class="id">VAL-011 · 014 · 015 · 000</td><td>E-mail, asserções, sem categoria</td><td>Genéricos do catálogo</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>3.2 Regras de negócio (REG): estado <code>INCONSISTENCIA_ENTRADA</code></h3>
+  <p>É aqui que está o valor para o SplitHub: são as regras da classificação tributária aplicadas à data do fato gerador.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Código</th><th>Validação</th><th>Campo</th></tr></thead>
+    <tbody>
+      <tr><td class="grp" colspan="3">Nomenclatura (NCM e NBS)</td></tr>
+      <tr><td class="id">REG-001</td><td>NCM e NBS informadas juntas no mesmo item</td><td>item</td></tr>
+      <tr><td class="id">REG-002 · 003</td><td>NCM ou NBS inexistente na base vigente na data do fato gerador</td><td><code>ncm</code> · <code>nbs</code></td></tr>
+      <tr><td class="id">REG-007</td><td>Nomenclatura incoerente com a classificação vigente</td><td><code>ncm</code></td></tr>
+      <tr><td class="id">REG-011 · 012</td><td>NCM ou NBS não vinculada à cClassTrib (o anexo da LC 214 não prevê aquele código para o tratamento)</td><td><code>ncm</code> · <code>nbs</code></td></tr>
+      <tr><td class="id">REG-015 · 016</td><td>NCM ou NBS incompleta quando a operação exige o código completo</td><td><code>ncm</code> · <code>nbs</code></td></tr>
+      <tr><td class="id">REG-033</td><td>cClassTrib com anexo exige NCM ou NBS completa no tipo de DF e ela não veio</td><td>item</td></tr>
+      <tr><td class="grp" colspan="3">Situação e classificação tributária</td></tr>
+      <tr><td class="id">REG-004</td><td>CST inexistente para o tributo na data</td><td><code>cst</code></td></tr>
+      <tr><td class="id">REG-005</td><td>cClassTrib inexistente na base vigente</td><td><code>cClassTrib</code></td></tr>
+      <tr><td class="id">REG-006</td><td>cClassTrib não pertence ao CST informado (CBS e IBS, ou Imposto Seletivo)</td><td><code>cClassTrib</code></td></tr>
+      <tr><td class="id">REG-008</td><td>Sem tratamento cadastrado para a combinação informada</td><td><code>cClassTrib</code></td></tr>
+      <tr><td class="id">REG-009 · 022</td><td>Grupo de tributação regular ausente quando exigido, ou presente quando não</td><td><code>tributacaoRegular</code></td></tr>
+      <tr><td class="id">REG-010</td><td>cClassTrib incompatível com a suspensão do item</td><td><code>tributacaoRegular/cClassTrib</code></td></tr>
+      <tr><td class="grp" colspan="3">Tipo de documento fiscal (<code>tpDoc</code>)</td></tr>
+      <tr><td class="id">REG-028</td><td>Tipo de DF inexistente ou fora de vigência</td><td><code>tpDoc</code></td></tr>
+      <tr><td class="id">REG-029</td><td>cClassTrib sem vínculo vigente com o tipo de DF</td><td><code>cClassTrib</code></td></tr>
+      <tr><td class="id">REG-030 · 031</td><td>Nomenclatura não aceita para a cClassTrib naquele DF, ou o DF não admite NCM/NBS</td><td>item</td></tr>
+      <tr><td class="id">REG-032</td><td>Produto sujeito ao Imposto Seletivo num DF que não admite o imposto</td><td><code>impostoSeletivo</code></td></tr>
+      <tr><td class="id">REG-038</td><td>Tipo de DF sem tratamento implementado na calculadora</td><td><code>tpDoc</code></td></tr>
+      <tr><td class="grp" colspan="3">Imposto Seletivo</td></tr>
+      <tr><td class="id">REG-013 · 014</td><td>Grupo do IS ausente quando a classificação prevê incidência, ou presente quando não</td><td><code>impostoSeletivo</code></td></tr>
+      <tr><td class="id">REG-035</td><td>Produto com IS e alíquota ainda não definida em lei nem informada</td><td><code>aliquotasNominais/impostoSeletivo</code></td></tr>
+      <tr><td class="grp" colspan="3">Base de cálculo</td></tr>
+      <tr><td class="id">REG-025</td><td>Base da CBS e do IBS ausente sem o grupo do IS para derivá-la</td><td><code>baseCalculo</code></td></tr>
+      <tr><td class="id">REG-026</td><td>Base da CBS e do IBS diferente de base do IS + IS</td><td><code>baseCalculo</code></td></tr>
+      <tr><td class="id">REG-027</td><td>Base da CBS e do IBS menor que a base do IS</td><td><code>baseCalculo</code></td></tr>
+      <tr><td class="id">REG-034</td><td>Base declarada diferente da base calculada a partir dos componentes (<code>vProd</code>, frete, seguro, desconto, ICMS…)</td><td><code>baseCalculo</code></td></tr>
+      <tr><td class="grp" colspan="3">Localização e data</td></tr>
+      <tr><td class="id">REG-018 · 019 · 020</td><td>Município fora da UF, município ou UF inexistente</td><td>operação</td></tr>
+      <tr><td class="id">REG-021</td><td>Data do fato gerador ausente</td><td>operação</td></tr>
+      <tr><td class="grp" colspan="3">Alíquotas nominais</td></tr>
+      <tr><td class="id">REG-036</td><td>Alíquotas informadas para fato gerador antes de 01/01/2027 (a calculadora usa as vigentes)</td><td><code>aliquotasNominais</code></td></tr>
+      <tr><td class="id">REG-037</td><td>Alíquotas não informadas para fato gerador a partir de 01/01/2027</td><td><code>aliquotasNominais</code></td></tr>
+      <tr><td class="grp" colspan="3">Genéricos</td></tr>
+      <tr><td class="id">REG-023 · 024</td><td>Validação sem categoria (quantidade zero, ad rem sem unidade, base negativa…) e campo inválido</td><td>variável</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>3.3 Falhas do cálculo (CAL): estado <code>FALHA_TECNICA</code> ou <code>NAO_IMPLEMENTADO</code></h3>
+  <p>Não são erro do documento: a calculadora não conseguiu calcular. O SplitHub nunca transforma essas falhas em inconsistência do cliente.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Código</th><th>Falha</th><th>Estado</th></tr></thead>
+    <tbody>
+      <tr><td class="id">CAL-001 a 004</td><td>Alíquota não encontrada: aplicável, padrão, de referência ou ad rem</td><td>Falha técnica</td></tr>
+      <tr><td class="id">CAL-005 · 006</td><td>Alíquota negativa · tipo de alíquota desconhecido</td><td>Falha técnica</td></tr>
+      <tr><td class="id">CAL-007</td><td>cClassTrib ainda sem implementação completa</td><td><span class="chip warn">Não implementado</span></td></tr>
+      <tr><td class="id">CAL-008</td><td>Erro ao avaliar a expressão do cálculo</td><td>Falha técnica</td></tr>
+      <tr><td class="id">CAL-009 a 012</td><td>Tratamento, percentual de redução, fundamentação ou par tributo × CST não encontrado</td><td>Falha técnica</td></tr>
+      <tr><td class="id">CAL-999</td><td>Erro interno inesperado</td><td>Falha técnica</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>3.4 Os cinco estados de um item</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Estado</th><th>Quando</th><th>Leitura no SplitHub</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip ok">CALCULADO</span></td><td>Cálculo feito com as alíquotas da própria calculadora (fato gerador até 2026)</td><td>Pode comparar com o destacado</td></tr>
+      <tr><td><span class="chip info">CALCULO_SIMULADO</span></td><td>Cálculo feito com alíquotas informadas por quem chamou (obrigatório a partir de 2027)</td><td>Pode comparar, com a origem da alíquota registrada</td></tr>
+      <tr><td><span class="chip red">INCONSISTENCIA_ENTRADA</span></td><td>Qualquer VAL ou REG</td><td>Erro do documento: candidato a inconsistência</td></tr>
+      <tr><td><span class="chip warn">NAO_IMPLEMENTADO</span></td><td>CAL-007</td><td>Sem conclusão: "não conferido"</td></tr>
+      <tr><td><span class="chip gray">FALHA_TECNICA</span></td><td>Demais CAL</td><td>Sem conclusão: tentar de novo e avisar o time técnico</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>3.5 Aviso de dados simulados</h3>
+  <p>O cabeçalho <code>x-warning-dados-simulados</code> avisa quando o resultado não é a regra definitiva. Fato gerador depois de 2026 dá "cálculos simulados". Os CST 010, 220 e 221 a partir de 2026 dão "alíquotas fictícias". Imposto Seletivo e compra governamental a partir de 2027 também geram aviso, mas a detecção de compra governamental ainda está como TODO no código. O SplitHub guarda o aviso junto com o resultado e mostra na tela.</p>
+
+  <h3>3.6 XML contra o XSD</h3>
+  <p><code>POST /xml/validate</code> valida o <strong>grupo</strong> da reforma ou a <strong>nota</strong> inteira contra o XSD oficial do leiaute. São oito modelos: NF-e, NFC-e, CT-e, CT-e simplificado, BP-e, BP-e TM, NF3e e NFS-e. A resposta é sim ou não, com a mensagem do validador. É a validação que o parser do tax-rs declara não ter.</p>
+
+  <h3>3.7 Bases unificadas e NFS-e</h3>
+  <ul class="plain">
+    <li><strong>Base unificada da NF-e e da NFC-e:</strong> só aceita <code>tpDoc</code> 55 ou 65. Aplica a vigência de cada componente ao ano: em 2027, PIS e COFINS saem com aviso e ICMS e FCP ainda deduzem. Recusa campo proibido a partir de um ano e base negativa.</li>
+    <li><strong>NFS-e:</strong> indicador de operação inexistente na data, NBS inexistente, avisos de MEI, de optante pendente e de documento de ajuste ignorado fora de locação.</li>
+  </ul>
+</div>
+
+<!-- 04 -->
+<div class="section" id="s4">
+  <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">A ordem das validações num item</span></div>
+  <p>Em <code>ProcessamentoItemService.processarItem</code>, o item passa pelas etapas abaixo e para na primeira que falha. Por isso cada item devolve um erro de cada vez: corrigido o primeiro, pode surgir o segundo.</p>
+  <ol class="passos">
+    <li><strong>Padrões:</strong> quantidade 1 e unidade "UN" quando ausentes. NCM <code>00</code> anulada quando o DF não pede NCM.</li>
+    <li><strong>Base de cálculo:</strong> com componentes, calcula e compara (REG-034); sem componentes, aplica as regras com e sem IS (REG-025 a 027).</li>
+    <li><strong>NCM e NBS:</strong> exclusividade e existência na data (REG-001 a 003).</li>
+    <li><strong>CST</strong> na data (REG-004).</li>
+    <li><strong>Alíquotas nominais</strong> pela data do fato gerador (REG-036, 037).</li>
+    <li><strong>Classificação:</strong> cClassTrib existe, pertence ao CST, aceita a NCM ou NBS e tem vínculo com o tipo de DF. Depois, tributação regular, suspensão e Imposto Seletivo (REG-005 a 016, 028 a 035).</li>
+    <li><strong>Localização:</strong> UF e município (REG-018 a 020).</li>
+    <li><strong>Cálculo:</strong> alíquota, redução, diferimento, arredondamento único por campo publicado (desde a 1.7.2). As falhas aqui são CAL.</li>
+  </ol>
+</div>
+
+<!-- 05 -->
+<div class="section" id="s5">
+  <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-title">O que o Live faz hoje</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Ponto</th><th>Hoje no tax-rs</th><th>O que a calculadora acrescenta</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Leitura do XML</strong></td><td><code>integration/ingestion/lib/xml.ts</code> lê só o nível do documento: chave, partes e totais <code>vBCIBSCBS</code>, <code>vIBS</code> e <code>vCBS</code>. O próprio arquivo diz que os itens não são lidos e que não há validação por XSD.</td><td>A conferência pede os itens (<code>det/imposto/IBSCBS</code>). XSD pronto para oito modelos.</td></tr>
+      <tr><td><strong>Conciliação</strong></td><td><code>reconciliation</code> calcula CAPUR (RF × apuração do ente) e CFIN (recolhimento × apropriação) por documento e tributo, e publica <code>reconciliation-results</code>.</td><td>Uma primeira etapa na CAPUR, antes da apuração chegar: o valor destacado estava certo?</td></tr>
+      <tr><td><strong>Inconsistências</strong></td><td>25 tipos em seis famílias. <code>capur_ibs_aliquota</code> e <code>capur_cbs_aliquota</code> ("Alíquota incorreta") estão catalogadas com <code>detected: false</code>. A família A (Documento) não detecta nada.</td><td>Detecção das duas alíquotas e uma família A com regra oficial.</td></tr>
+      <tr><td><strong>Crédito</strong></td><td>O crédito esperado sai do valor destacado no DF.</td><td>O indicador da cClassTrib diz se o adquirente pode apropriar o crédito. O crédito esperado de um DF sem direito vira zero, com o motivo explicado.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn">
+    <div class="ct">Conflito com o escopo da v1</div>
+    <p>A decisão de 05/10 deixou o item fora da v1, e a de 29/10 o traz em até 12 meses. A calculadora trabalha por item. A proposta lê os itens <strong>só para conferir</strong>: o crédito, o RF e a apuração continuam no nível do documento, e o resultado por item fica numa tabela própria da conferência. A D-CR-02 pede a confirmação.</p>
+  </div>
+</div>
+
+<!-- 06 -->
+<div class="section" id="s6">
+  <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Uso 1: o cálculo oficial como primeira etapa da CAPUR</span></div>
+  <p>Hoje a CAPUR tem uma etapa só: compara o RF com a apuração do ente e fica pendente até a apuração chegar. Na v1.1, a CAPUR de cada documento e tributo passa a ter <strong>duas etapas</strong>. Não nasce conferência nova: a calculadora vira o começo da CAPUR.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Etapa</th><th>Quando roda</th><th>O que compara</th><th>Quem dá a palavra</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1 · Cálculo oficial</strong></td><td>Na entrada do DF, antes da apuração</td><td>Valor destacado pelo fornecedor × valor calculado pela calculadora, item a item, somado por tributo</td><td>A regra (calculadora da Receita Federal)</td></tr>
+      <tr><td><strong>2 · Apuração do ente</strong></td><td>Quando chega a apuração, como hoje</td><td>Valor do RF × apuração da Receita Federal (CBS) ou do Comitê Gestor (IBS)</td><td>O ente: é a palavra final da CAPUR</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout ok">
+    <div class="ct">Por que dentro da CAPUR</div>
+    <ul class="plain">
+      <li><strong>O catálogo já previa isso.</strong> <code>capur_ibs_aliquota</code> e <code>capur_cbs_aliquota</code> ("Alíquota incorreta") estão na família B como causas da CAPUR, com <code>detected: false</code> por falta de quem detectasse. A etapa 1 é quem detecta.</li>
+      <li><strong>Nada novo na conciliação:</strong> nem coluna, nem tópico, nem conjunto de status paralelo. O <code>reconciliation-results</code>, o outbox e a regra "CFIN nunca conciliada com CAPUR pendente" ficam como estão.</li>
+      <li><strong>A divergência ganha causa.</strong> Quando a etapa 2 diverge, a etapa 1 diz se o problema foi a alíquota, a base ou a classificação do fornecedor, ou se está do lado do ente.</li>
+      <li><strong>Aviso antecipado.</strong> A CAPUR deixa de ser só "pendente" até a apuração chegar. Ela já mostra "pendente · cálculo divergente" no dia em que o DF entra.</li>
+    </ul>
+  </div>
+
+  <h3>6.1 Resultado da etapa 1</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Situação</th><th>Resultado da etapa 1</th></tr></thead>
+    <tbody>
+      <tr><td>Todos os itens calculados, e o calculado igual ao destacado por tributo, dentro da tolerância configurada pela empresa (D-CR-04, seção 6.5)</td><td><span class="chip ok">Cálculo conforme</span></td></tr>
+      <tr><td>Itens calculados, mas o IBS ou a CBS difere do destacado</td><td><span class="chip red">Cálculo divergente</span>, com a causa: alíquota ou base</td></tr>
+      <tr><td>Algum item com REG</td><td><span class="chip red">Classificação inconsistente</span></td></tr>
+      <tr><td>Algum item <code>NAO_IMPLEMENTADO</code> ou <code>FALHA_TECNICA</code>, nenhum REG</td><td><span class="chip gray">Cálculo não conferido</span></td></tr>
+      <tr><td>Calculadora fora do ar</td><td><span class="chip gray">Cálculo pendente</span>: a fila tenta de novo, e o cron diário da conciliação revisita</td></tr>
+    </tbody>
+  </table></div>
+  <p>O "sem direito a crédito" da cClassTrib não é resultado da CAPUR, porque não compara valores. Ele vai para o crédito (CR-3, família C), lido da mesma execução.</p>
+
+  <h3>6.2 Como as duas etapas formam o status da CAPUR</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Etapa 1</th><th>Etapa 2</th><th>CAPUR</th><th>Ocorrência</th></tr></thead>
+    <tbody>
+      <tr><td>Conforme</td><td>Pendente</td><td><span class="chip gray">Pendente</span> · cálculo conforme</td><td>Nenhuma</td></tr>
+      <tr><td>Divergente</td><td>Pendente</td><td><span class="chip warn">Pendente</span> · cálculo divergente</td><td><code>capur_*_aliquota</code> ou <code>capur_*_base</code> abre já, como aviso antecipado</td></tr>
+      <tr><td>Conforme</td><td>Igual ao RF</td><td><span class="chip ok">Conciliada</span></td><td>Nenhuma</td></tr>
+      <tr><td>Divergente</td><td>Ente igual ao destacado</td><td><span class="chip ok">Conciliada</span> · com ressalva do cálculo</td><td>Depende da configuração da empresa (D-CR-10, seção 6.5). No padrão, "o ente prevalece", a da etapa 1 volta ao responsável com o desfecho "superada pela apuração do ente" preenchido, ele confere e resolve, e a ressalva fica no histórico. Na outra opção, ela continua aberta como "risco de revisão"</td></tr>
+      <tr><td>Divergente</td><td>Ente igual ao calculado</td><td><span class="chip red">Divergente</span> · causa: valor do fornecedor</td><td>Uma ocorrência só: a da etapa 1 continua e recebe o valor do ente; <code>capur_*_divergente</code> não abre em duplicidade (D-CR-11)</td></tr>
+      <tr><td>Conforme</td><td>Diferente do RF</td><td><span class="chip red">Divergente</span> · o cálculo oficial bate com o RF</td><td><code>capur_*_divergente</code>, como hoje, com a nota "verificar a apuração do ente"</td></tr>
+      <tr><td>Classificação inconsistente</td><td>Qualquer</td><td>Segue a etapa 2, com a marca "classificação inconsistente"</td><td>A de classificação (seção 10), mais a da etapa 2 se houver</td></tr>
+      <tr><td>Não conferido ou pendente</td><td>Qualquer</td><td>Segue a etapa 2, como hoje, com a marca "cálculo não conferido"</td><td>Só as da etapa 2</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Exemplo.</strong> NF-e de 01/12/2026, um item com base de R$ 1.000,00, CST 000 e cClassTrib 000001. A calculadora devolve CBS de R$ 9,00 (0,9%) e IBS de R$ 1,00 (0,1%), mas o fornecedor destacou CBS de R$ 10,00. No dia da entrada, a CAPUR da CBS fica "Pendente · cálculo divergente" e abre <code>capur_cbs_aliquota</code> com o item e a memória de cálculo. A do IBS fica "Pendente · cálculo conforme". Quando a Receita Federal apura R$ 9,00, a CAPUR da CBS vira "Divergente · causa: valor do fornecedor", na mesma ocorrência. Se a Receita Federal apurar R$ 10,00, ela vira "Conciliada · com ressalva do cálculo" e a ocorrência volta ao responsável com o desfecho preenchido.</p>
+  <div class="callout">
+    <div class="ct">A etapa 1 não muda valor</div>
+    <p>Como na decisão de 30/09 sobre os eventos fiscais (divergência nunca aplica valor sozinha), a etapa 1 <strong>não muda</strong> o valor do RF nem o status do crédito. Ela abre ou qualifica a ocorrência, e quem resolve é o time fiscal, com o fornecedor.</p>
+  </div>
+
+  <h3>6.3 Histórico</h3>
+  <p>Cada execução da calculadora grava uma linha em <code>calc_runs</code>, que nunca é reescrita. A linha traz a chave do DF, o tributo, o momento, a <strong>versão da aplicação e a do banco da calculadora</strong>, o motivo, a entrada enviada (<code>OperacaoInput</code>, com hash), a resposta completa, o resultado da etapa 1 e quem pediu. A CAPUR usa a última execução, e as anteriores ficam na timeline do RF como eventos da etapa 1, ao lado dos da etapa 2.</p>
+  <ul class="plain">
+    <li><strong>Motivos:</strong> entrada do DF, nova versão da calculadora, reprocessamento pedido pelo usuário, correção do DF (evento ou carta de correção), cron de pendentes.</li>
+    <li><strong>Nova versão da calculadora:</strong> por padrão, reprocessa só as CAPUR com a etapa 1 aberta (divergente, inconsistente ou não conferida) e ainda sem apuração. Os conformes antigos ficam como estão (D-CR-06).</li>
+    <li><strong>Reprocessamento por lista (D-CR-06):</strong> o usuário indica os DFs a reprocessar de três jeitos: colando chaves de acesso, subindo um CSV com uma chave por linha ou selecionando linhas na Conciliação. São até 5.000 DFs por pedido. O pedido vira um job com progresso, e cada execução entra no histórico com o motivo "reprocessamento por lista", o autor e o id do pedido. Ao terminar, sai um resumo de quantos mudaram de resultado e quais. Chave fora do escopo da sessão é ignorada, com aviso. Serve também para aplicar uma configuração nova da seção 6.5 a DFs já conferidos.</li>
+    <li><strong>Mudança de resultado entre versões</strong> fica visível. Uma divergência que some depois da 1.7.2, por exemplo, aparece na timeline como "Etapa 1 · conforme · calculadora 1.7.2", e a ocorrência volta ao responsável com o desfecho "conforme na execução nova".</li>
+    <li><strong>O registro da CAPUR</strong> passa a guardar o id da execução usada, junto da apuração usada na etapa 2. Assim dá para reconstituir qualquer status passado.</li>
+  </ul>
+
+  <h3>6.4 Detalhamento na tela</h3>
+  <ul class="plain">
+    <li><strong>Conciliação:</strong> o selo da CAPUR passa a mostrar as duas etapas, por exemplo "Cálculo ✓ · Apuração ⏳". Ganha um filtro por resultado da etapa 1 e o KPI "CAPUR com cálculo divergente". Não há coluna nova.</li>
+    <li><strong>Detalhe do DF, seção CAPUR:</strong> o bloco "Etapa 1 · Cálculo oficial" fica acima do confronto com a apuração. Ele traz uma tabela por item (NCM/NBS, CST, cClassTrib, base, destacado × calculado por tributo, estado e erro com código, campo e texto). Também traz a memória de cálculo do item, os indicadores de crédito, a fundamentação legal, a versão da calculadora e o aviso de dado simulado.</li>
+    <li><strong>Timeline do RF:</strong> eventos "CAPUR · etapa 1" e "CAPUR · etapa 2", com os selos de <code>timeline.ts</code>.</li>
+    <li><strong>Ocorrência:</strong> o detalhe já chega com o item, o código da calculadora e o texto. Quando a etapa 2 chega, mostra lado a lado o destacado, o calculado e o apurado. O botão "Reprocessar cálculo" roda a etapa 1 de novo.</li>
+  </ul>
+  <h3>6.5 Configuração da conferência de cálculo</h3>
+  <p>Uma tela nova em Configurações da empresa, visível só para o Administrador do cliente: "Conferência de cálculo (CAPUR · etapa 1)". Cada alteração fica na auditoria com quem, quando, o valor anterior e o novo, e vale só para as execuções que vierem depois. O que já foi conferido não muda sozinho; o usuário pode reprocessar uma lista se quiser aplicar a regra nova.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Configuração</th><th>Opções</th><th>Padrão</th><th>Decisão</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Tolerância da comparação</strong></td><td>Valor em reais, aplicado por item e por tributo, de R$ 0,00 a R$ 1,00. Opcional: uma tolerância no total do documento.</td><td>R$ 0,01 por item, sem tolerância no documento</td><td>D-CR-04</td></tr>
+      <tr><td><strong>Etapa 1 divergente e o ente apura igual ao destacado</strong></td><td>"O ente prevalece": a CAPUR fica conciliada com ressalva e a ocorrência volta ao responsável com o desfecho "superada" preenchido. "Manter aberta como risco": a CAPUR fica conciliada e a ocorrência continua aberta, com o rótulo "risco de revisão".</td><td>O ente prevalece</td><td>D-CR-10</td></tr>
+    </tbody>
+  </table></div>
+  <p>A regra pura em <code>reconcile.ts</code> recebe as duas configurações como entrada, e o registro da CAPUR guarda os valores usados. Assim um status passado se reconstitui com a configuração da época. O teto de R$ 1,00 é da plataforma, para que a tolerância não esconda divergência real.</p>
+
+  <p><strong>O que muda no PRD de Conciliação:</strong> a definição da CAPUR e as regras dela passam a descrever as duas etapas e a tabela 6.2. O PRD de Inconsistências passa a detectar <code>capur_*_aliquota</code> e recebe os tipos novos da seção 10.</p>
+</div>
+
+<!-- 07 -->
+<div class="section" id="s7">
+  <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-title">Uso 2: validador de DF-e do cliente</span></div>
+  <p>Um menu novo onde o próprio usuário sobe XMLs ou arquivos de DF e recebe um relatório de aceite ou de divergências. Nada entra no razão, na apuração ou nas inconsistências. Serve para conferir notas antes de lançar no ERP, testar a parametrização do próprio faturamento e checar um lote de um fornecedor.</p>
+
+  <h3>7.1 Fluxo</h3>
+  <ol class="passos">
+    <li><strong>Envio:</strong> arrastar XMLs soltos ou um ZIP. Limite inicial sugerido de 500 documentos e 50 MB por lote (D-CR-08). O parser recusa DTD e entidade, como já faz o <code>xml.ts</code>.</li>
+    <li><strong>Opções do lote:</strong> validar também o XSD (nota inteira) e, para fato gerador a partir de 2027, a origem das alíquotas nominais (D-CR-03).</li>
+    <li><strong>Processamento em segundo plano:</strong> o lote vira um job com progresso na tela. Cada documento passa pelo XSD, se pedido, e pela observabilidade. O usuário pode sair e voltar.</li>
+    <li><strong>Relatório:</strong> resumo do lote e lista por documento, com drill-down por item.</li>
+    <li><strong>Exportação:</strong> PDF do relatório (aceite assinado com data, versão da calculadora e hash de cada XML) e CSV/XLSX das divergências por item.</li>
+  </ol>
+
+  <h3>7.2 O relatório</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Resultado do documento</th><th>Critério</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip ok">Aceito</span></td><td>XSD válido (se pedido), todos os itens calculados e o destacado igual ao calculado em IBS e CBS</td></tr>
+      <tr><td><span class="chip red">Divergente</span></td><td>Itens calculados e valor diferente do destacado. Mostra destacado, calculado e diferença por item e tributo</td></tr>
+      <tr><td><span class="chip red">Rejeitado na classificação</span></td><td>Algum REG ou VAL. Mostra código, campo e texto</td></tr>
+      <tr><td><span class="chip red">XML inválido</span></td><td>XSD reprovado ou XML malformado</td></tr>
+      <tr><td><span class="chip gray">Não conferido</span></td><td>Item não implementado na calculadora ou falha técnica</td></tr>
+    </tbody>
+  </table></div>
+  <p>O resumo traz contagens por resultado, soma destacada × soma calculada por tributo, os cinco códigos mais frequentes e o aviso de dado simulado quando houver. O cabeçalho sempre diz: "Conferência pela calculadora da Receita Federal versão X, banco Y".</p>
+
+  <h3>7.3 Regras do módulo</h3>
+  <ul class="plain">
+    <li><strong>Sem efeito no Live:</strong> o lote não cria DF, RF nem ocorrência. A importação dos aceitos para a ingestão fica para depois da primeira versão (D-CR-07).</li>
+    <li><strong>Escopo da empresa:</strong> o lote pertence à empresa da sessão, como todo endpoint <code>/app</code>. CNPJ fora dos estabelecimentos visíveis ainda é validado, mas sai com aviso.</li>
+    <li><strong>Retenção:</strong> XML guardado por 90 dias e relatório por 5 anos (D-CR-08). Entra no relatório LGPD.</li>
+    <li><strong>Perfil:</strong> permissão nova "Validar DF-e" na gestão de usuários, ligada por padrão para os perfis fiscais.</li>
+    <li><strong>No Demo:</strong> o mesmo menu com uma calculadora simulada de três ou quatro cenários fixos, sem chamar o serviço.</li>
+  </ul>
+</div>
+
+<!-- 08 -->
+<div class="section" id="s8">
+  <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-title">Outros usos</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Uso</th><th>O que faz</th><th>Etapa</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Direito ao crédito</strong></td><td>Os indicadores da cClassTrib entram no crédito esperado: sem direito, manter ou anular o crédito da operação anterior, crédito presumido</td><td>CR-3</td></tr>
+      <tr><td><strong>XSD na entrada pelo <code>/v1</code></strong></td><td>O ERP que manda XML pelo barramento recebe a recusa <code>invalid_schema</code> com a mensagem do XSD</td><td>CR-5</td></tr>
+      <tr><td><strong>Consulta das tabelas oficiais</strong></td><td>Telas de consulta de cClassTrib, NCM e NBS com vigência, e seletor de cClassTrib nos cadastros</td><td>CR-5</td></tr>
+      <tr><td><strong>Débito</strong></td><td>Mesma conferência para o DF emitido pelo cliente, quando o Débito sair do bloqueio</td><td>Depois</td></tr>
+      <tr><td><strong>Emulador</strong></td><td>O emulador do tax-rs pode usar a calculadora para gerar o valor esperado da apuração, em vez de repetir o destacado</td><td>Depois</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- 09 -->
+<div class="section" id="s9">
+  <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-title">Arquitetura</span></div>
+  <div class="diagram">
+    <svg viewBox="0 0 900 330" role="img" aria-label="Fluxo da calculadora no tax-rs">
+      <defs><marker id="ponta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z"/></marker></defs>
+      <rect class="box-be" x="20" y="30" width="170" height="60" rx="8"/><text x="105" y="56" text-anchor="middle" font-size="13" font-weight="700">dfe-capture · /v1</text><text class="sub" x="105" y="74" text-anchor="middle">XML do DF</text>
+      <rect class="box-be" x="250" y="30" width="190" height="60" rx="8"/><text x="345" y="56" text-anchor="middle" font-size="13" font-weight="700">integration · ingestão</text><text class="sub" x="345" y="74" text-anchor="middle">documento + itens (só p/ conferência)</text>
+      <rect class="box-be" x="500" y="30" width="180" height="60" rx="8"/><text x="590" y="56" text-anchor="middle" font-size="13" font-weight="700">serviço rtc-check</text><text class="sub" x="590" y="74" text-anchor="middle">monta OperacaoInput · calc_runs</text>
+      <rect class="box-ext" x="730" y="30" width="150" height="60" rx="8"/><text x="805" y="56" text-anchor="middle" font-size="13" font-weight="700">Calculadora RF</text><text class="sub" x="805" y="74" text-anchor="middle">Java 25 · container</text>
+      <rect class="box-be" x="500" y="150" width="180" height="60" rx="8"/><text x="590" y="176" text-anchor="middle" font-size="13" font-weight="700">reconciliation</text><text class="sub" x="590" y="194" text-anchor="middle">CAPUR (etapas 1 e 2) · CFIN</text>
+      <rect class="box-be" x="730" y="150" width="150" height="60" rx="8"/><text x="805" y="176" text-anchor="middle" font-size="13" font-weight="700">inconsistencies</text><text class="sub" x="805" y="194" text-anchor="middle">abre a ocorrência</text>
+      <rect class="box-fe" x="250" y="150" width="190" height="60" rx="8"/><text x="345" y="176" text-anchor="middle" font-size="13" font-weight="700">Conciliação · Detalhe do DF</text><text class="sub" x="345" y="194" text-anchor="middle">aba Cálculo oficial · timeline</text>
+      <rect class="box-fe" x="20" y="250" width="170" height="60" rx="8"/><text x="105" y="276" text-anchor="middle" font-size="13" font-weight="700">Validador de DF-e</text><text class="sub" x="105" y="294" text-anchor="middle">upload XML / ZIP</text>
+      <rect class="box-be" x="250" y="250" width="190" height="60" rx="8"/><text x="345" y="276" text-anchor="middle" font-size="13" font-weight="700">job do lote</text><text class="sub" x="345" y="294" text-anchor="middle">sem razão · relatório PDF/CSV</text>
+      <path class="seta" d="M190,60 H248"/><path class="seta" d="M440,60 H498"/><path class="seta" d="M680,52 H728"/><path class="seta" d="M728,70 H682"/>
+      <path class="seta" d="M590,90 V148"/><path class="seta" d="M680,180 H728"/><path class="seta" d="M500,180 H442"/>
+      <path class="seta" d="M190,280 H248"/><path class="seta" d="M440,280 C520,280 560,250 575,92"/>
+    </svg>
+  </div>
+  <ul class="plain">
+    <li><strong>Hospedagem:</strong> a calculadora roda como container nosso (Java 25, JAR + banco SQLite), com a versão fixada por tag da Receita Federal e atualizada por PR. O Encore não roda Java, então o container fica fora do Encore Cloud e é chamado por HTTP privado, com a URL e o token em secret. A instalação online da Receita Federal fica só como contingência ou para staging (D-CR-01).</li>
+    <li><strong>Serviço novo <code>rtc-check</code></strong> no Encore: monta o <code>OperacaoInput</code> a partir do XML, chama a observabilidade, grava <code>calc_runs</code> e <code>calc_items</code> e publica o tópico <code>calc-results</code>. A <code>reconciliation</code> assina e usa o resultado como etapa 1 da CAPUR, no mesmo <code>recompute()</code>; as <code>inconsistencies</code> recebem pelo <code>reconciliation-results</code> de sempre.</li>
+    <li><strong>Mapeamento do XML para a entrada:</strong> <code>dhFatoGerador</code> ← <code>ide/dhEmi</code>; <code>municipio</code> ← <code>ide/cMunFG</code>; <code>uf</code> ← UF do município; <code>tpDoc</code> ← <code>ide/mod</code>. Por item: <code>ncm</code> ou <code>nbs</code>, <code>cst</code>, <code>cClassTrib</code>, <code>baseCalculo</code> ← <code>gIBSCBS/vBC</code> e o grupo do IS. Os componentes da base (<code>gComponentesBC</code>) também vão, para a REG-034 conferir a base.</li>
+    <li><strong>Cliente tipado</strong> gerado do OpenAPI 3.1 da calculadora, com teste de contrato rodando contra o container na CI.</li>
+    <li><strong>Resiliência:</strong> timeout de 10 s, três tentativas, circuit breaker. Calculadora fora do ar nunca bloqueia a ingestão: a etapa 1 fica "Cálculo pendente" e a CAPUR segue com a etapa 2.</li>
+    <li><strong>Volume:</strong> uma chamada por documento, com todos os itens. Medir com as 252 NF-e do staging da Claro antes de dimensionar.</li>
+  </ul>
+</div>
+
+<!-- 10 -->
+<div class="section" id="s10">
+  <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Do código da calculadora à inconsistência</span></div>
+  <p>Proposta de mapeamento. Tudo o que vem da etapa 1 leva o prefixo <code>capur_</code>, porque nasce da CAPUR. Os tipos novos entram no catálogo de inconsistências e no PRD pelo fluxo de sempre, depois da decisão.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Origem na etapa 1</th><th>Tipo de ocorrência</th><th>Família</th><th>Situação no catálogo</th></tr></thead>
+    <tbody>
+      <tr><td>Calculado ≠ destacado, mesma base, alíquota diferente</td><td><code>capur_ibs_aliquota</code> · <code>capur_cbs_aliquota</code> "Alíquota incorreta"</td><td>B</td><td>Existe; passa a <code>detected: true</code></td></tr>
+      <tr><td>Calculado ≠ destacado por base ou arredondamento</td><td><code>capur_ibs_base</code> · <code>capur_cbs_base</code> "Base ou valor divergente do cálculo oficial"</td><td>B</td><td>Novo</td></tr>
+      <tr><td>REG-001 a 003, 007, 011, 012, 015, 016, 033</td><td><code>capur_nomenclatura</code> "NCM/NBS incompatível com a classificação"</td><td>A (D-CR-12)</td><td>Novo</td></tr>
+      <tr><td>REG-004 a 006, 008 a 010, 022</td><td><code>capur_classificacao</code> "CST/cClassTrib inválido ou incompatível"</td><td>A (D-CR-12)</td><td>Novo</td></tr>
+      <tr><td>REG-028 a 032, 038</td><td><code>capur_tipo_documento</code> "Classificação não admitida no tipo de DF"</td><td>A (D-CR-12)</td><td>Novo</td></tr>
+      <tr><td>REG-013, 014, 025 a 027, 034, 035</td><td><code>capur_base_is</code> "Base de cálculo ou Imposto Seletivo inconsistente"</td><td>A (D-CR-12)</td><td>Novo</td></tr>
+      <tr><td>REG-018 a 021, 023, 024, 036, 037; VAL</td><td>Não abre para o cliente, porque é erro de montagem nossa. Vai para a família F</td><td>F</td><td><code>integracao_erp</code>, existente</td></tr>
+      <tr><td>CAL-*</td><td>Nenhuma para o cliente. Falha repetida vai para o time técnico</td><td>F</td><td>—</td></tr>
+      <tr><td>Indicador de apropriação = não (fora da CAPUR)</td><td><code>credito_sem_direito</code> "Classificação sem direito a crédito"</td><td>C</td><td>Novo</td></tr>
+    </tbody>
+  </table></div>
+  <p>Dono e prazo seguem a família: B é o time fiscal com o órgão, em 15 dias úteis; A é o time fiscal com o emitente, em 5 dias úteis; C segue o prazo legal. O produto nunca resolve uma ocorrência da etapa 1 sozinho (RN-INC-10). Ele a devolve ao responsável, com o desfecho preenchido, em três casos: uma execução nova sai conforme, a etapa 2 a supera (D-CR-10) ou ela é absorvida pela divergência da etapa 2 (D-CR-11).</p>
+</div>
+
+<!-- 11 -->
+<div class="section" id="s11">
+  <div class="sec-hdr"><span class="sec-num">11</span><span class="sec-title">Etapas</span></div>
+  <div class="ondas">
+    <div class="onda crit" id="cr0"><div class="onda-h"><span class="onda-n">CR-0</span><span class="onda-t">Subir a calculadora</span><span class="onda-q">base de tudo</span></div>
+      <div class="onda-g"><div><div class="lbl">Entrega</div><ul class="plain"><li>Container com JAR e banco gerado, healthcheck, versão exposta</li><li>Secret com URL e token; cliente TS gerado do OpenAPI</li><li>Teste de contrato na CI</li></ul></div>
+      <div><div class="lbl">Pronto quando</div><ul class="plain"><li>O exemplo de quatro itens da documentação da Receita Federal devolve os mesmos estados, chamado do Encore</li></ul></div></div></div>
+    <div class="onda crit" id="cr1"><div class="onda-h"><span class="onda-n">CR-1</span><span class="onda-t">Conferência por DF e histórico</span><span class="onda-q">Uso 1, backend</span></div>
+      <div class="onda-g"><div><div class="lbl">Entrega</div><ul class="plain"><li>Leitura dos itens no <code>xml.ts</code>, só para a conferência</li><li>Serviço <code>rtc-check</code>, <code>calc_runs</code>, <code>calc_items</code>, tópico <code>calc-results</code></li><li>Fila, novas tentativas e cron dos pendentes</li></ul></div>
+      <div><div class="lbl">Pronto quando</div><ul class="plain"><li>As 252 NF-e do staging têm execução gravada, com versão e estado por item</li></ul></div></div></div>
+    <div class="onda" id="cr2"><div class="onda-h"><span class="onda-n">CR-2</span><span class="onda-t">Etapa 1 da CAPUR e inconsistências</span><span class="onda-q">Uso 1, regra e telas</span></div>
+      <div class="onda-g"><div><div class="lbl">Entrega</div><ul class="plain"><li>CAPUR em duas etapas em <code>reconcile.ts</code> (tabela 6.2), com testes de propriedade</li><li>Tipos da seção 10 no catálogo e na detecção</li><li>Selo de duas etapas, bloco "Etapa 1" no detalhe, eventos na timeline, botão "Reprocessar"</li><li>Tela de configuração da conferência (tolerância e regra da D-CR-10), com auditoria</li><li>Reprocessamento por lista de DFs: chaves, CSV ou seleção</li><li>PRDs de Conciliação e de Inconsistências</li></ul></div>
+      <div><div class="lbl">Pronto quando</div><ul class="plain"><li>O exemplo da seção 6.2 percorre os três estados (pendente com cálculo divergente, divergente com causa e conciliada com ressalva) numa ocorrência só</li></ul></div></div></div>
+    <div class="onda" id="cr3"><div class="onda-h"><span class="onda-n">CR-3</span><span class="onda-t">Direito ao crédito</span><span class="onda-q">KPI do crédito</span></div>
+      <div class="onda-g"><div><div class="lbl">Entrega</div><ul class="plain"><li>Indicadores da cClassTrib no crédito esperado</li><li><code>credito_sem_direito</code>, lido da mesma execução da etapa 1</li></ul></div>
+      <div><div class="lbl">Pronto quando</div><ul class="plain"><li>Um DF com cClassTrib sem direito mostra crédito esperado zero e o motivo, com o RF intacto</li></ul></div></div></div>
+    <div class="onda" id="cr4"><div class="onda-h"><span class="onda-n">CR-4</span><span class="onda-t">Validador de DF-e</span><span class="onda-q">Uso 2</span></div>
+      <div class="onda-g"><div><div class="lbl">Entrega</div><ul class="plain"><li>Upload XML/ZIP, job do lote, relatório na tela</li><li>Exportação em PDF e CSV/XLSX, retenção, permissão</li><li>Versão Demo com cenários fixos</li></ul></div>
+      <div><div class="lbl">Pronto quando</div><ul class="plain"><li>Um ZIP com documentos aceitos, divergentes e rejeitados gera o relatório certo, e nada aparece no razão</li></ul></div></div></div>
+    <div class="onda dep" id="cr5"><div class="onda-h"><span class="onda-n">CR-5</span><span class="onda-t">XSD no /v1 e consultas</span><span class="onda-q">depois</span></div>
+      <div class="onda-g"><div><div class="lbl">Entrega</div><ul class="plain"><li>XSD na entrada pelo barramento</li><li>Telas de consulta de cClassTrib, NCM e NBS</li></ul></div>
+      <div><div class="lbl">Depende de</div><ul class="plain"><li>CR-0. Pode correr em paralelo com CR-2 a CR-4</li></ul></div></div></div>
+  </div>
+  <p>CR-4 depende só de CR-0 e pode correr em paralelo com CR-1 a CR-3, se o time tiver duas frentes.</p>
+</div>
+
+<!-- 12 -->
+<div class="section" id="s12">
+  <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Decisões</span></div>
+  <p>As 12 primeiras foram decididas em 28/11/2026; a D-CR-14 foi decidida no mesmo dia (a A) e a D-CR-13 está em aberto. Três respostas trouxeram ajustes à recomendação: a tolerância (D-CR-04) e a regra da D-CR-10 viraram configuração da empresa, e a D-CR-06 ganhou o reprocessamento por lista de DFs.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>Pergunta</th><th>Decisão</th><th>Como fica</th></tr></thead>
+    <tbody>
+      <tr><td class="id">D-CR-01</td><td>Onde a calculadora roda?</td><td><span class="chip ok">Container nosso</span></td><td>JAR e banco num container próprio, versão fixada por tag e atualizada por PR. A instalação online da Receita Federal fica só como contingência em staging.</td></tr>
+      <tr><td class="id">D-CR-02</td><td>Ler os itens do XML na v1?</td><td><span class="chip ok">Sim, só para conferir</span></td><td>Os itens ficam numa tabela da etapa 1. Crédito, RF e apuração continuam por documento.</td></tr>
+      <tr><td class="id">D-CR-03</td><td>Alíquotas nominais a partir de 2027</td><td><span class="chip ok">Tabela oficial</span></td><td>Dados abertos por UF e município. A alíquota do XML fica registrada ao lado.</td></tr>
+      <tr><td class="id">D-CR-04</td><td>Tolerância da comparação</td><td><span class="chip info">Configuração do cliente</span></td><td>Cada empresa define a sua; o padrão é R$ 0,01 por item (seção 6.5).</td></tr>
+      <tr><td class="id">D-CR-05</td><td>"Sem direito a crédito" zera o esperado?</td><td><span class="chip ok">Zera o esperado</span></td><td>O crédito esperado vai a zero, com o motivo. O RF fica intacto e abre <code>credito_sem_direito</code>.</td></tr>
+      <tr><td class="id">D-CR-06</td><td>O que reprocessar a cada versão nova</td><td><span class="chip ok">Só etapa 1 aberta</span> <span class="chip info">+ lista de DFs</span></td><td>Automático: CAPUR com a etapa 1 aberta e ainda sem apuração. Além disso, o usuário pode reprocessar uma lista de DFs indicada por ele (seção 6.3).</td></tr>
+      <tr><td class="id">D-CR-07</td><td>O validador importa os aceitos?</td><td><span class="chip ok">Não na primeira versão</span></td><td>O validador fica sem efeito no Live.</td></tr>
+      <tr><td class="id">D-CR-08</td><td>Limites e retenção do validador</td><td><span class="chip ok">Como proposto</span></td><td>Lote de até 500 documentos e 50 MB. O XML fica guardado por 90 dias e o relatório por 5 anos.</td></tr>
+      <tr><td class="id">D-CR-09</td><td>Ordem das etapas</td><td><span class="chip ok">CAPUR primeiro</span></td><td>CR-0 → CR-1 → CR-2 → CR-3, com o validador (CR-4) em paralelo se houver segunda frente.</td></tr>
+      <tr><td class="id">D-CR-10</td><td>Etapa 1 divergente e o ente apura igual ao destacado</td><td><span class="chip info">Configuração do cliente</span></td><td>A empresa escolhe entre "o ente prevalece" (padrão) e "manter aberta como risco de revisão" (seção 6.5). No padrão, a ocorrência volta ao responsável com o desfecho preenchido; resolver é dele (v1.3).</td></tr>
+      <tr><td class="id">D-CR-11</td><td>Uma ou duas ocorrências quando as duas etapas divergem</td><td><span class="chip ok">Uma só</span></td><td>A ocorrência da etapa 1 continua e recebe o valor do ente.</td></tr>
+      <tr><td class="id">D-CR-12</td><td>Família das ocorrências de classificação</td><td><span class="chip ok">Família A</span></td><td>Dono: o emitente. Prazo: 5 dias úteis. Prefixo <code>capur_</code>.</td></tr>
+      <tr id="D-CR-13"><td class="id">D-CR-13</td><td>Levar as decisões aos PRDs?</td><td><span class="chip warn">Em aberto</span></td><td>Recomendado: sim, como a seção 14 descreve, com as telas da A (D-CR-14).</td></tr>
+      <tr id="D-CR-14"><td class="id">D-CR-14</td><td>Qual proposta de telas?</td><td><span class="chip ok">A · nas telas de hoje</span></td><td>Escolhida pelo usuário, como recomendado: segue a v1.1 e menos constrói. B (espaço próprio) e C (gaveta na Conciliação) estão clicáveis em <a href="#s16">Jornadas e telas</a>.</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- 13 -->
+<div class="section" id="s13">
+  <div class="sec-hdr"><span class="sec-num">13</span><span class="sec-title">Riscos e limites</span></div>
+  <ul class="plain">
+    <li><strong>A calculadora muda muito.</strong> Foram 15 versões em pouco mais de três meses, com mudança de centavos e de vigência. Mitigação: versão fixada, histórico por versão e reprocessamento seletivo.</li>
+    <li><strong>A partir de 2027 o cálculo é "simulado".</strong> A calculadora deixa de saber as alíquotas e exige que quem chama informe. O resultado vale o que valer a tabela de alíquotas que usamos (D-CR-03).</li>
+    <li><strong>Cobertura incompleta.</strong> CAL-007 marca classificações ainda não implementadas, e a detecção de compra governamental para o aviso está como TODO. O "Não conferido" precisa aparecer como tal, nunca como conforme.</li>
+    <li><strong>Um erro por item.</strong> A validação para no primeiro problema do item, então corrigir um pode revelar outro. Na tela, o texto deve dizer "primeiro problema encontrado".</li>
+    <li><strong>A calculadora não é a apuração.</strong> Por isso ela é a etapa 1 e o ente é a etapa 2 da CAPUR. Ela diz o que a regra manda, mas não o que a Receita Federal (CBS) ou o Comitê Gestor (IBS) apuraram. A CAPUR continua sendo a palavra final do ente. A etapa 1 avisa mais cedo.</li>
+    <li><strong>Java na stack.</strong> É uma peça nova para operar: imagem, atualização, monitoramento. O tamanho e o consumo de memória precisam de medição na CR-0.</li>
+    <li><strong>Código de homologação.</strong> Os arquivos trazem o cabeçalho "Versão de Homologação/Testes". Acompanhar o anúncio de versão de produção da Receita Federal.</li>
+  </ul>
+  <h3>Fontes</h3>
+  <ul class="plain">
+    <li>Repositório <code>github.com/ReceitaFederal/calculadora-rtc-regime-regular</code>, commit <code>0d4b073</code> (1.7.3): <code>README.md</code>, <code>ROADMAP.md</code>, <code>CHANGELOG.md</code>, <code>docs/exemplos.md</code>, <code>docs/adr/*</code>, <code>ProblemType.java</code>, <code>CodigoValidacao.java</code>, <code>ProcessamentoItemService.java</code>, <code>AvisoDadosSimuladosService.java</code>, <code>XmlService.java</code>, <code>DadosAbertosController.java</code>.</li>
+    <li>tax-rs <code>main</code> no <code>a81fdd6</code>: <code>integration/ingestion/lib/xml.ts</code>, <code>reconciliation/CLAUDE.md</code>, <code>inconsistencies/lib/catalog.ts</code>.</li>
+    <li>Hub: <a href="../taxrs-demo-live.html">Demo × Live</a>, <a href="../taxrs-plano-live-inconsistencias.html">Plano do Live: Inconsistências</a>, <a href="../catalogo-inconsistencias.html">Catálogo de inconsistências</a>.</li>
+  </ul>
+</div>
+
+<!-- 14 -->
+<div class="section" id="s14">
+  <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Mudanças propostas nos PRDs</span></div>
+  <div class="callout warn">
+    <div class="ct">Proposta para decisão: nada foi aplicado</div>
+    <p>Esta seção descreve o que mudaria nos PRDs e documentos de produto do hub se as decisões deste estudo forem levadas a eles. As seções dos módulos <strong>não foram alteradas</strong>: os PRDs, o catálogo, o mapa e a priorização seguem como estavam. Aplicar é a D-CR-13 (seção 12).</p>
+  </div>
+
+  <h3>14.1 PRD de Conciliação · de v3.8 para v3.9</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Seção do PRD</th><th>Mudança proposta</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Topo</strong></td><td>Quadro "v3.9 — a CAPUR em duas etapas", com o link para este estudo.</td></tr>
+      <tr><td><strong>05 · Máquinas de estado</strong></td><td>Nova 5.1.1 com os cinco resultados da etapa 1 e a tabela de combinação das duas etapas (a 6.2 deste estudo).</td></tr>
+      <tr><td><strong>06 · Taxonomia</strong></td><td><code>capur_*_aliquota</code> passa a ser detectado pela etapa 1. Entram <code>capur_ibs_base</code> e <code>capur_cbs_base</code> (6.1), e uma 6.4 com os quatro tipos de classificação da família A. A seção vai de vinte a vinte e seis tipos.</td></tr>
+      <tr><td><strong>08 · Funcionalidades</strong></td><td><strong>F-09</strong> Conferir o cálculo oficial (etapa 1), <strong>F-10</strong> Configurar a conferência de cálculo, <strong>F-11</strong> Reprocessar a etapa 1 por lista de DFs.</td></tr>
+      <tr><td><strong>09 · KPIs</strong></td><td>"Cálculo divergente": CAPUR com a etapa 1 divergente ou com classificação inconsistente.</td></tr>
+      <tr><td><strong>10 · Requisitos</strong></td><td>Nova 10.5 com RF-CONC-023 a 031: itens lidos só para conferir, comparação com tolerância, combinação das etapas, histórico por versão, calculadora fora do ar sem bloquear, configuração auditada, reprocessamento automático e por lista, bloco no detalhe do DF.</td></tr>
+      <tr><td><strong>11 · Regras</strong></td><td>RN-CONC-08 (duas etapas, o ente é a palavra final), 09 (a etapa 1 não muda valor), 10 (tolerância configurável, padrão R$ 0,01 e teto R$ 1,00), 11 (regra configurável quando o ente apura igual ao destacado), 12 (uma ocorrência só), 13 (não conferido nunca vira ocorrência do cliente), 14 (execução e configuração guardadas).</td></tr>
+      <tr><td><strong>14 · Integrações · 15 · Glossário</strong></td><td>A calculadora como dependência consumida; "Etapa 1", "Etapa 2" e "Tolerância".</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>14.2 PRD de Crédito · de v3.3.1 para v3.4</h3>
+  <p><strong>RN-CRE-30:</strong> quando os indicadores da cClassTrib negam ao adquirente o direito ao crédito, o crédito esperado do tributo vai a zero, com o motivo visível. O RF fica intacto e abre <code>credito_sem_direito</code>. Se o ente apropriar mesmo assim, vale o ente.</p>
+
+  <h3>14.3 PRD de Inconsistências · de v1.7 para v1.8</h3>
+  <ul class="plain">
+    <li><strong>Seção 03:</strong> uma subseção com os sete tipos aprovados para a etapa 1, separada dos 31 que o app abre hoje, para não mudar a contagem nem a cobertura.</li>
+    <li><strong>Seção 04:</strong> uma passagem nova em que o produto devolve a <code>em_analise</code> a ocorrência superada, com o desfecho preenchido. Resolver continua com o responsável.</li>
+    <li><strong>Seção 14:</strong> a decisão D-14 com a família dos sete tipos.</li>
+  </ul>
+  <div class="callout">
+    <div class="ct">Ajuste necessário à D-CR-10</div>
+    <p>A RN-INC-10 e as decisões D-10 e D-23 do PRD de Inconsistências dizem que só uma pessoa resolve ocorrência. Por isso "o ente prevalece" não pode fechar a ocorrência sozinho. A proposta: o produto a devolve ao responsável com o desfecho "superada pela apuração do ente" preenchido, e ele confere, como já acontece com o reflexo do evento fiscal. O mesmo vale para a execução nova que sai conforme. As seções 6.2, 6.3, 6.5 e 10 deste estudo já estão escritas assim.</p>
+  </div>
+
+  <h3>14.4 Catálogo, mapa e priorização</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Documento</th><th>Mudança proposta</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Catálogo de inconsistências</strong> · v1.2 → v1.3</td><td>Sete entradas propostas: INC-CONC-14 e 15 (base ou valor divergente do cálculo oficial, família B), INC-CONC-16 a 19 (classificação reprovada na regra oficial, família A, dono o emitente) e INC-CRE-09 (classificação sem direito a crédito). INC-CONC-03 e 04 passam a ser detectados pela etapa 1. O catálogo iria de 90 para 97 ocorrências.</td></tr>
+      <tr><td><strong>Mapa de funcionalidades</strong> · v2.15 → v2.16</td><td>Três funcionalidades em Conciliação, de 333 para 336: cálculo oficial como etapa 1 (risco), configuração da conferência (configuração) e reprocessamento por lista (ação).</td></tr>
+      <tr><td><strong>Priorização do MVP</strong> · v2.17 → v2.18</td><td>As três em <strong>M1</strong>, de 376 para 379 itens, com o M0 inalterado em 147. A cadeia do crédito fecha sem elas, pela apuração do ente; elas antecipam a divergência e qualificam a causa.</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+
+<!-- 15 -->
+<div class="section" id="s15">
+  <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Jornadas</span></div>
+  <h3>15.1 Quem usa e para quê</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Ator</th><th>O que faz com a calculadora</th><th>Jornadas</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Analista fiscal</strong></td><td class="wrap">Vê o aviso antecipado na Conciliação, abre o cálculo do DF item a item, trata a ocorrência com o fornecedor e reprocessa quando o fornecedor corrige.</td><td class="id">J-CR-01 · 02 · 03</td></tr>
+      <tr><td><strong>Administrador do cliente</strong></td><td class="wrap">Define a tolerância e a regra da D-CR-10, vê quantas CAPUR mudariam antes de gravar e decide se reprocessa.</td><td class="id">J-CR-04</td></tr>
+      <tr><td><strong>Analista fiscal ou de compras</strong></td><td class="wrap">Sobe um lote de XMLs para conferir antes de lançar no ERP ou para testar o próprio faturamento, sem efeito no Live.</td><td class="id">J-CR-05</td></tr>
+      <tr><td><strong>Produto (automático)</strong></td><td class="wrap">Instala uma versão nova da calculadora e reprocessa as CAPUR com a etapa 1 aberta e ainda sem apuração. O analista vê a mudança no histórico.</td><td class="id">J-CR-06</td></tr>
+    </tbody>
+  </table></div>
+  <h3>15.2 As seis jornadas</h3>
+  <p>Cada jornada tem um botão por proposta que abre o protótipo da seção 16 no ponto de partida dela.</p>
+  <div class="jrs" id="jornadas"></div>
+</div>
+
+<!-- 16 -->
+<div class="section" id="s16">
+  <div class="sec-hdr"><span class="sec-num">16</span><span class="sec-title">Telas: três propostas clicáveis</span></div>
+  <div class="callout ok"><div class="ct">Decidida: A, nas telas de hoje (D-CR-14)</div><p>O usuário escolheu a A em 28/11/2026, a recomendada. A B e a C seguem clicáveis para comparação. As telas são protótipo, com dados de exemplo e valores redondos; nada disso está no tax-rs.</p></div>
+  <h3>16.1 O que muda entre as três</h3>
+  <p>As três usam a mesma regra, os mesmos dados e as mesmas ações. Elas diferem em onde a calculadora mora: espalhada nas telas que o Live já tem (A), num espaço próprio (B) ou numa gaveta que abre sobre a Conciliação (C).</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th>A · Nas telas de hoje</th><th>B · Espaço "Cálculo oficial"</th><th>C · Gaveta na Conciliação</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Aviso antecipado</strong></td><td class="wrap">Selo de duas etapas na lista da Conciliação e filtro pelo resultado da etapa 1</td><td class="wrap">Painel próprio com indicadores; a Conciliação mostra só o selo, com link</td><td class="wrap">Selo na lista, como na A</td></tr>
+      <tr><td><strong>Cálculo do DF</strong></td><td class="wrap">Bloco "Etapa 1" na seção CAPUR do detalhe do DF, que abre em página</td><td class="wrap">Lista e detalhe lado a lado no espaço próprio</td><td class="wrap">Gaveta com abas (etapa 1, etapa 2, histórico, ocorrência) sem sair da lista</td></tr>
+      <tr><td><strong>Ocorrência</strong></td><td class="wrap">Em Inconsistências, como hoje</td><td class="wrap">Dentro do detalhe da conferência</td><td class="wrap">Aba da gaveta</td></tr>
+      <tr><td><strong>Reprocessar por lista</strong></td><td class="wrap">Botão na Conciliação, com janela de três modos</td><td class="wrap">Menu "Reprocessamentos" com os pedidos e o progresso</td><td class="wrap">Barra de seleção em massa e gaveta de pedido</td></tr>
+      <tr><td><strong>Configuração</strong></td><td class="wrap">Em Configurações da empresa, com prévia do impacto</td><td class="wrap">Menu "Configuração" do espaço, com prévia</td><td class="wrap">Gaveta; a prévia aparece na própria lista enquanto se arrasta a tolerância</td></tr>
+      <tr><td><strong>Validador</strong></td><td class="wrap">Menu novo "Validador de DF-e"</td><td class="wrap">Menu do espaço</td><td class="wrap">Botão "Validar XMLs" que abre uma gaveta</td></tr>
+      <tr><td><strong>O que o tax-rs constrói a mais</strong></td><td class="wrap">Pouco: bloco no detalhe, selo, janela, duas telas novas</td><td class="wrap">Um espaço novo com cinco telas e navegação própria</td><td class="wrap">O componente de gaveta na Conciliação e a prévia sobre a lista</td></tr>
+      <tr><td><strong>No celular</strong></td><td class="wrap">Igual ao resto do Live</td><td class="wrap">O detalhe desce para baixo da lista</td><td class="wrap">A gaveta ocupa a tela inteira</td></tr>
+    </tbody>
+  </table></div>
+  <h3>16.2 As três, clicáveis</h3>
+  <div class="seg" role="group" aria-label="Escolher a proposta para ver">
+    <button type="button" data-p="A" aria-pressed="true">A · Nas telas de hoje<span class="tag">decidida</span></button>
+    <button type="button" data-p="B" aria-pressed="false">B · Espaço "Cálculo oficial"</button>
+    <button type="button" data-p="C" aria-pressed="false">C · Gaveta na Conciliação</button>
+  </div>
+
+  <div class="prop" id="prop-A">
+    <h3>Proposta A · Nas telas de hoje</h3>
+    <p>É o que o estudo descreve na seção 6.4. A calculadora não ganha lugar próprio: a Conciliação ganha o selo de duas etapas, um filtro e o reprocessamento; o detalhe do DF ganha o bloco "Etapa 1 · Cálculo oficial"; Inconsistências recebe os tipos novos; o validador e a configuração são telas novas nos menus que já existem.</p>
+    <div class="duas">
+      <div class="pc ganha"><div class="pct">Ganha</div><ul><li>Segue a decisão da v1.1: a etapa 1 é parte da CAPUR, não um módulo à parte.</li><li>O analista não aprende lugar novo; tudo está onde a CAPUR já está.</li><li>Menor construção no tax-rs.</li></ul></div>
+      <div class="pc perde"><div class="pct">Perde</div><ul><li>Ver o cálculo de vários DFs é abrir e voltar, um de cada vez.</li><li>Não há um panorama da calculadora (versão, códigos mais comuns) num lugar só.</li></ul></div>
+    </div>
+    <p class="dica">Comece pela Conciliação: filtre por "Cálculo divergente", abra a NF-e 1002 e veja o item; simule a chegada da apuração na NF-e 1004 e veja a ocorrência voltar ao responsável com o desfecho preenchido. Em Configurações, arraste a tolerância e veja a prévia.</p>
+    <div class="fr" id="fr-A"></div>
+    <div class="esc"><strong>Proposta escolhida na D-CR-14, em 28/11/2026.</strong> <a href="#D-CR-14">Ver a D-CR-14</a></div>
+  </div>
+  <div class="prop" id="prop-B" hidden>
+    <h3>Proposta B · Espaço "Cálculo oficial"</h3>
+    <p>A calculadora ganha um item no menu do Live, com cinco telas: um painel, a lista de conferências com o detalhe ao lado, os reprocessamentos, o validador e a configuração. A Conciliação mostra só o selo de duas etapas, que leva ao espaço.</p>
+    <div class="duas">
+      <div class="pc ganha"><div class="pct">Ganha</div><ul><li>Panorama num lugar só: quantos divergem, os códigos mais comuns, a versão em uso.</li><li>Lista e detalhe lado a lado: dá para passar por vários DFs rápido.</li><li>Os pedidos de reprocessamento têm tela própria, com progresso e resumo.</li></ul></div>
+      <div class="pc perde"><div class="pct">Perde</div><ul><li>Contraria a v1.1: a etapa 1 volta a parecer uma conferência à parte.</li><li>O analista alterna entre a Conciliação e o espaço para entender uma CAPUR.</li><li>Maior construção.</li></ul></div>
+    </div>
+    <p class="dica">Comece pelo Painel: clique num indicador para filtrar as conferências; abra uma e veja o detalhe ao lado. Em Reprocessamentos, cole chaves ou suba um CSV; no Painel, simule a versão 1.7.4 da calculadora.</p>
+    <div class="fr" id="fr-B"></div>
+    <div class="esc">Não escolhida; fica para comparação.</div>
+  </div>
+  <div class="prop" id="prop-C" hidden>
+    <h3>Proposta C · Gaveta na Conciliação</h3>
+    <p>Tudo acontece a partir da lista da Conciliação. Clicar numa CAPUR abre uma gaveta com quatro abas; marcar linhas mostra uma barra para reprocessar; "Validar XMLs" e a engrenagem abrem gavetas. Na configuração, enquanto se arrasta a tolerância, a lista atrás mostra a prévia com contorno tracejado.</p>
+    <div class="duas">
+      <div class="pc ganha"><div class="pct">Ganha</div><ul><li>O analista não perde a lista de vista: abre, confere, fecha, abre a próxima.</li><li>A prévia da configuração aparece sobre os dados reais, o efeito fica evidente.</li><li>Reprocessar a partir da seleção é um clique.</li></ul></div>
+      <div class="pc perde"><div class="pct">Perde</div><ul><li>A gaveta fica cheia: quatro abas num espaço estreito.</li><li>O validador numa gaveta tem pouco espaço para lotes grandes.</li><li>No celular a gaveta vira tela cheia e o ganho some.</li></ul></div>
+    </div>
+    <p class="dica">Clique numa linha para abrir a gaveta; marque duas linhas e reprocesse pela barra. Abra a engrenagem e arraste a tolerância: as linhas com contorno tracejado mudariam de resultado.</p>
+    <div class="fr" id="fr-C"></div>
+    <div class="esc">Não escolhida; fica para comparação.</div>
+  </div>
+  <h3>16.3 A base de exemplo</h3>
+  <p>Dez NF-e de entrada de dezembro de 2026, com um item de base R$ 1.000,00 cada (a NF-e 1003 tem dois), CBS a 0,9% e IBS a 0,1%. Cada DF foi escolhido para mostrar uma linha da tabela 6.2 do estudo.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>DF</th><th>O que mostra</th></tr></thead>
+    <tbody id="base-ex"></tbody>
+  </table></div>
+  <p>A tolerância começa em R$ 0,01 por item e a regra da D-CR-10 em "o ente prevalece". A configuração vale para as execuções seguintes: gravar não muda o que já foi conferido, e a prévia mostra o que mudaria num reprocessamento. A versão 1.7.4 da calculadora é fictícia e corrige o centavo da NF-e 1003.</p>
+</div>
+
+<div class="foot">SplitHub · tax-rs · Calculadora da Receita Federal no Live · v1.5 · 28/11/2026</div>
+</div>
+<script>
+(function () {
+'use strict';
+/* ── dados de exemplo ─────────────────────────────────────────── */
+var FORN = ['Alfa Componentes', 'Beta Logística', 'Gama Insumos', 'Delta Serviços', 'Épsilon Metais', 'Zeta Plásticos', 'Eta Química', 'Teta Alimentos', 'Iota Têxtil', 'Kappa Embalagens'];
+function it(n, ncm, cst, cct, base, dest, calc, extra) {
+  var o = { n: n, ncm: ncm, cst: cst, cct: cct, base: base, dest: dest, calc: calc, est: 'CALCULADO' };
+  for (var k in extra || {}) o[k] = extra[k];
+  return o;
+}
+var BASE = [
+  { num: 1001, it: [it(1, '8471.30.12', '000', '000001', 1000, { cbs: 9, ibs: 1 }, { cbs: 9, ibs: 1 })], ente: { cbs: 9, ibs: 1 },
+    ex: 'Tudo conforme e o ente apurou igual: CAPUR conciliada.' },
+  { num: 1002, it: [it(1, '3926.90.90', '000', '000001', 1000, { cbs: 10, ibs: 1 }, { cbs: 9, ibs: 1 }, { causa: 'aliquota' })], futuro: { cbs: 9, ibs: 1 },
+    ex: 'O exemplo do estudo: CBS destacada a 1%, calculada a 0,9%. Aviso antecipado; quando o ente apura R$ 9,00, a divergência é do fornecedor.' },
+  { num: 1003, it: [it(1, '3920.10.99', '000', '000001', 1000, { cbs: 9, ibs: 1 }, { cbs: 9, ibs: 1 }), it(2, '3920.20.19', '000', '000001', 1000, { cbs: 9.02, ibs: 1 }, { cbs: 9, ibs: 1 }, { causa: 'aliquota', c174: { cbs: 9.02, ibs: 1 } })], futuro: { cbs: 18.02, ibs: 2 },
+    ex: 'Dois centavos de diferença no item 2: diverge com tolerância de R$ 0,01 e fica conforme a partir de R$ 0,02. A versão 1.7.4 fictícia também corrige.' },
+  { num: 1004, it: [it(1, '8536.50.90', '000', '000001', 1000, { cbs: 9.5, ibs: 1 }, { cbs: 9, ibs: 1 }, { causa: 'aliquota' })], futuro: { cbs: 9.5, ibs: 1 },
+    ex: 'Cinquenta centavos de diferença, e o ente apura igual ao destacado: é o caso da D-CR-10. Simule a apuração com cada regra.' },
+  { num: 1005, it: [it(1, '7208.51.00', '000', '000001', 1000, { cbs: 9, ibs: 1 }, { cbs: 9, ibs: 1 })], futuro: { cbs: 8, ibs: 1 },
+    ex: 'O cálculo bate com o destacado, mas o ente apura R$ 8,00: divergente, com a nota "verificar a apuração do ente".' },
+  { num: 1006, it: [it(1, '3923.30.00', '000', '200034', 1000, { cbs: 9, ibs: 1 }, null, { est: 'REG', cod: 'REG-006', campo: 'cClassTrib', txt: 'cClassTrib 200034 não pertence ao CST 000' })], ente: { cbs: 9, ibs: 1 },
+    ex: 'Classificação reprovada (REG-006): a CAPUR segue a etapa 2, com a marca, e abre a ocorrência de classificação do emitente.' },
+  { num: 1007, it: [it(1, '2815.11.00', '000', '000001', 1100, { cbs: 9.9, ibs: 1.1 }, { cbs: 9, ibs: 1 }, { causa: 'base', baseCalc: 1000 })], futuro: { cbs: 9, ibs: 1 },
+    ex: 'Base declarada de R$ 1.100,00 contra R$ 1.000,00 calculada: divergente por base, em CBS e IBS.' },
+  { num: 1008, it: [it(1, '1905.90.90', '000', '410999', 1000, { cbs: 9, ibs: 1 }, null, { est: 'NAO_IMPLEMENTADO', cod: 'CAL-007', campo: 'cClassTrib', txt: 'cClassTrib ainda sem implementação completa' })], futuro: { cbs: 9, ibs: 1 },
+    ex: 'Classificação ainda não implementada na calculadora (CAL-007): não conferido, nunca vira ocorrência do cliente.' },
+  { num: 1009, it: [it(1, '5208.12.00', '000', '000001', 1000, { cbs: 9, ibs: 1 }, { cbs: 9, ibs: 1 })], futuro: { cbs: 9, ibs: 1 },
+    ex: 'Conforme e ainda sem apuração: "Pendente · cálculo conforme".' },
+  { num: 1010, it: [it(1, '4819.10.00', '000', '000001', 1000, { cbs: 10.5, ibs: 1 }, { cbs: 9, ibs: 1 }, { causa: 'aliquota' })], futuro: { cbs: 9, ibs: 1 },
+    ex: 'R$ 1,50 de diferença: diverge mesmo com a tolerância no teto de R$ 1,00.' }
+];
+BASE.forEach(function (d, i) {
+  d.forn = FORN[i];
+  d.cnpj = String(11111111000100 + (i + 1) * 101).slice(0, 14);
+  d.chave = '352612' + d.cnpj + '55001' + ('000000000' + d.num).slice(-9) + '10000000' + String(10 + i);
+  d.data = String(1 + i).padStart(2, '0') + '/12/2026';
+});
+var LOTE_EX = [
+  ['NFe-2001-alfa.xml', 'aceito'], ['NFe-2002-beta.xml', 'divergente'], ['NFe-2003-gama.xml', 'aceito'], ['NFe-2004-delta.xml', 'rejeitado'],
+  ['NFe-2005-epsilon.xml', 'aceito'], ['NFe-2006-zeta.xml', 'invalido'], ['NFe-2007-eta.xml', 'naoconf'], ['NFe-2008-teta.xml', 'aceito']
+];
+var TRIB = ['cbs', 'ibs'];
+var TN = { cbs: 'CBS', ibs: 'IBS' };
+var ENTE = { cbs: 'Receita Federal', ibs: 'Comitê Gestor' };
+var E1 = {
+  conforme: { r: 'Cálculo conforme', s: 'Cálculo ✓', c: 'ok' }, divergente: { r: 'Cálculo divergente', s: 'Cálculo ✗', c: 'red' },
+  inconsistente: { r: 'Classificação inconsistente', s: 'Classificação ✗', c: 'red' }, naoconf: { r: 'Cálculo não conferido', s: 'Não conferido', c: 'gray' }
+};
+var VRES = { aceito: ['Aceito', 'ok'], divergente: ['Divergente', 'red'], rejeitado: ['Rejeitado na classificação', 'red'], invalido: ['XML inválido', 'warn'], naoconf: ['Não conferido', 'gray'] };
+var OCC_T = {
+  capur_cbs_aliquota: 'Alíquota incorreta · CBS', capur_ibs_aliquota: 'Alíquota incorreta · IBS', capur_cbs_base: 'Base divergente do cálculo oficial · CBS',
+  capur_ibs_base: 'Base divergente do cálculo oficial · IBS', capur_classificacao: 'Classificação reprovada na regra oficial', capur_cbs_divergente: 'CAPUR divergente · CBS', capur_ibs_divergente: 'CAPUR divergente · IBS'
+};
+
+/* ── utilidades ───────────────────────────────────────────────── */
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function rs(v) { if (v === null || v === undefined) return '—'; var neg = v < 0; v = Math.abs(v); var c = Math.round(v * 100); var i = String(Math.floor(c / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); var d = String(c % 100).padStart(2, '0'); return (neg ? '−' : '') + 'R$ ' + i + ',' + d; }
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function et(c, t) { return '<span class="et ' + c + '">' + t + '</span>'; }
+function chip(c, t) { return '<span class="chip ' + c + '">' + t + '</span>'; }
+function eq(a, b, tol) { return Math.abs(a - b) <= tol + 1e-9; }
+function curta(ch) { return ch.slice(0, 6) + '…' + ch.slice(-8); }
+function hashN(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+
+/* ── a regra (igual nas três) ─────────────────────────────────── */
+function calcV(df, item, t, ver) { if (!item.calc) return null; if (ver === '1.7.4' && item.c174) return item.c174[t]; return item.calc[t]; }
+function etapa1(df, t, tol, ver) {
+  var items = df.it, i, dif = 0, causa = null, pior = null;
+  for (i = 0; i < items.length; i++) if (items[i].est === 'REG') return { res: 'inconsistente', item: items[i] };
+  for (i = 0; i < items.length; i++) if (items[i].est !== 'CALCULADO') return { res: 'naoconf', item: items[i] };
+  for (i = 0; i < items.length; i++) {
+    var d = Math.abs(items[i].dest[t] - calcV(df, items[i], t, ver));
+    if (d > tol + 1e-9 && d > dif) { dif = d; causa = items[i].causa || 'aliquota'; pior = items[i]; }
+  }
+  return dif > 0 ? { res: 'divergente', causa: causa, dif: dif, item: pior } : { res: 'conforme' };
+}
+function tot(df, t, k, ver) { return df.it.reduce(function (s, x) { if (k === 'dest') return s + x.dest[t]; var v = calcV(df, x, t, ver); return v === null ? s : s + v; }, 0); }
+function capur(df, t) {
+  var r = df.run[t], ente = df.ente[t], dest = tot(df, t, 'dest'), calc = tot(df, t, 'calc', r.ver), tol = r.tol;
+  var e1 = E1[r.res], o = { e1: r.res, e2: ente === null ? 'pendente' : (eq(ente, dest, tol) ? 'igual' : 'diferente'), marca: '' };
+  if (r.res === 'inconsistente') o.marca = 'classificação inconsistente';
+  if (r.res === 'naoconf') o.marca = 'cálculo não conferido';
+  if (ente === null) { o.rot = 'Pendente · ' + e1.r.toLowerCase(); o.c = r.res === 'divergente' || r.res === 'inconsistente' ? 'warn' : 'gray'; }
+  else if (r.res === 'divergente') {
+    if (eq(ente, dest, tol)) { o.rot = r.regra === 'ente' ? 'Conciliada · com ressalva do cálculo' : 'Conciliada · risco de revisão'; o.c = r.regra === 'ente' ? 'ok' : 'warn'; o.d10 = true; }
+    else if (eq(ente, calc, tol)) { o.rot = 'Divergente · causa: valor do fornecedor'; o.c = 'red'; }
+    else { o.rot = 'Divergente'; o.c = 'red'; }
+  } else if (eq(ente, dest, tol)) { o.rot = 'Conciliada'; o.c = 'ok'; }
+  else { o.rot = r.res === 'conforme' ? 'Divergente · o cálculo oficial bate com o RF' : 'Divergente'; o.c = 'red'; }
+  o.etapa2 = ente === null ? et('gray', 'Apuração ⏳') : (o.e2 === 'igual' ? et('ok', 'Apuração ✓') : et('red', 'Apuração ✗'));
+  o.etapa1 = et(e1.c, e1.s);
+  return o;
+}
+function occTipo(df, t) {
+  var r = df.run[t], ente = df.ente[t], dest = tot(df, t, 'dest');
+  if (r.res === 'divergente') return 'capur_' + t + '_' + (r.causa === 'base' ? 'base' : 'aliquota');
+  if (r.res === 'inconsistente') return t === 'cbs' ? 'capur_classificacao' : null;
+  if (ente !== null && !eq(ente, dest, r.tol)) return 'capur_' + t + '_divergente';
+  return null;
+}
+
+/* ── um protótipo por proposta, cada um com o próprio estado ──── */
+function App(V) {
+  var root = document.getElementById('fr-' + V);
+  var S = { dfs: clone(BASE), tol: 0.01, regra: 'ente', cTol: 0.01, cRegra: 'ente', ver: '1.7.3', relogio: 0, occ: {}, aud: [], jobs: [], lote: null, msg: '',
+    filtro: 'todos', sel: {}, tela: V === 'B' ? 'painel' : 'conc', df: null, trib: 'cbs', aba: 'e1', drw: null, modal: null, repModo: 'colar', repTxt: '', ocSel: null, valDoc: null, valFiltro: 'todos' };
+  function agora() { S.relogio += 7; var m = 8 * 60 + S.relogio; return '15/12/2026 ' + String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+  function executar(df, motivo, autor, pedido) {
+    var mud = false;
+    TRIB.forEach(function (t) {
+      var r = etapa1(df, t, S.tol, S.ver), ant = df.run && df.run[t] ? df.run[t].res : null;
+      if (ant && ant !== r.res) mud = true;
+      df.run = df.run || {};
+      df.run[t] = { res: r.res, causa: r.causa, dif: r.dif, item: r.item ? r.item.n : null, ver: S.ver, tol: S.tol, regra: df.run[t] ? df.run[t].regra : S.regra };
+      if (df.ente[t] === null) df.run[t].regra = S.regra;
+      var tp = occTipo(df, t), k = df.num + ':' + t;
+      if (tp && !S.occ[k]) S.occ[k] = { tipo: tp, st: 'aberta', desde: agora() };
+      else if (tp && S.occ[k] && S.occ[k].st !== 'resolvida') S.occ[k].tipo = tp;
+    });
+    df.hist.unshift({ q: agora(), e: 'Etapa 1', txt: TRIB.map(function (t) { return TN[t] + ' ' + E1[df.run[t].res].r.toLowerCase(); }).join(' · '), sub: 'calculadora ' + S.ver + ' · tolerância ' + rs(S.tol) + ' · ' + motivo + (autor ? ' · ' + autor : '') + (pedido ? ' · ' + pedido : '') });
+    return mud;
+  }
+  S.dfs.forEach(function (d) {
+    d.ente = { cbs: d.ente ? d.ente.cbs : null, ibs: d.ente ? d.ente.ibs : null };
+    d.hist = [{ q: d.data + ' 07:00', e: 'Entrada', txt: 'DF recebido pela ingestão', sub: 'NF-e de entrada · ' + d.forn }];
+    executar(d, 'entrada do DF', null, null);
+    d.hist[0].q = d.data + ' 07:01';
+    if (d.ente.cbs !== null) d.hist.unshift({ q: d.data + ' 18:00', e: 'Etapa 2', txt: 'Apuração do ente recebida', sub: 'CBS ' + rs(d.ente.cbs) + ' · IBS ' + rs(d.ente.ibs) });
+  });
+  Object.keys(S.occ).forEach(function (k) { S.occ[k].desde = dfDe(Number(k.split(':')[0])).data + ' 07:01'; });
+  S.relogio = 0;
+  function dfDe(n) { return S.dfs.filter(function (d) { return d.num === n; })[0]; }
+  function ocorrencia(df, t) {
+    var k = df.num + ':' + t, o = S.occ[k], tp = occTipo(df, t), c = capur(df, t);
+    if (!o) return null;
+    if (o.st === 'resolvida') return { k: k, tipo: o.tipo, st: 'resolvida', desf: o.desf, desde: o.desde };
+    if (tp && c.d10 && df.run[t].regra === 'ente') return { k: k, tipo: o.tipo, st: 'em_analise', desf: 'Superada pela apuração do ente', desde: o.desde };
+    if (tp && c.d10) return { k: k, tipo: o.tipo, st: 'aberta', rot: 'risco de revisão', desde: o.desde };
+    if (tp) return { k: k, tipo: tp, st: 'aberta', desde: o.desde };
+    return { k: k, tipo: o.tipo, st: 'em_analise', desf: 'Conforme na execução nova', desde: o.desde };
+  }
+  function ocs() { var out = []; S.dfs.forEach(function (d) { TRIB.forEach(function (t) { var o = ocorrencia(d, t); if (o) { o.df = d; o.t = t; out.push(o); } }); }); return out; }
+  function stOcc(o) { if (o.st === 'resolvida') return chip('ok', 'Resolvida'); if (o.st === 'em_analise') return chip('info', 'Em análise · desfecho preenchido'); return chip('red', o.rot ? 'Aberta · ' + o.rot : 'Aberta'); }
+  function filtrar() {
+    return S.dfs.filter(function (d) {
+      if (S.filtro === 'todos') return true;
+      if (S.filtro === 'pend') return d.ente.cbs === null;
+      return TRIB.some(function (t) { return d.run[t].res === S.filtro; });
+    });
+  }
+  function contagem(res) { return S.dfs.filter(function (d) { return TRIB.some(function (t) { return d.run[t].res === res; }); }).length; }
+  function previa(tol, ver) {
+    var n = 0, lst = {};
+    S.dfs.forEach(function (d) {
+      TRIB.forEach(function (t) { var r = etapa1(d, t, tol, ver || S.ver); if (r.res !== d.run[t].res) { lst[d.num] = lst[d.num] || []; lst[d.num].push({ t: t, de: d.run[t].res, para: r.res }); } }); });
+    Object.keys(lst).forEach(function () { n++; });
+    return { n: n, lst: lst };
+  }
+
+  /* ── pedaços de tela, reaproveitados nas três ── */
+  function selos(d, prevMap) {
+    return TRIB.map(function (t) {
+      var c = capur(d, t), p = prevMap && prevMap[d.num] && prevMap[d.num].filter(function (x) { return x.t === t; })[0];
+      return '<div><span class="selo' + (p ? ' prev' : '') + '"><b style="font-size:10.5px;color:var(--txt3);width:28px">' + TN[t] + '</b>' + c.etapa1 + c.etapa2 + '</span>' +
+        '<span class="st">' + c.rot + (c.marca ? ' · ' + c.marca : '') + (p ? ' · <b style="color:var(--amber)">prévia: ' + E1[p.para].r.toLowerCase() + '</b>' : '') + '</span></div>';
+    }).join('');
+  }
+  function kpis(clicavel) {
+    var a = [['divergente', 'Cálculo divergente', 'red'], ['inconsistente', 'Classificação inconsistente', 'red'], ['naoconf', 'Não conferido', 'gray'], ['conforme', 'Cálculo conforme', 'ok'], ['pend', 'Aguardando o ente', 'warn']];
+    return '<div class="minis">' + a.map(function (x) {
+      var n = x[0] === 'pend' ? S.dfs.filter(function (d) { return d.ente.cbs === null; }).length : contagem(x[0]);
+      return '<div class="mini ' + x[2] + (clicavel ? ' clic" data-a="filtro" data-v="' + x[0] : '') + '"><div class="v">' + n + '</div><div class="l">' + x[1] + '</div></div>';
+    }).join('') + '</div>';
+  }
+  function filtros() {
+    var a = [['todos', 'Todas', S.dfs.length], ['divergente', 'Cálculo divergente', contagem('divergente')], ['inconsistente', 'Classificação inconsistente', contagem('inconsistente')], ['naoconf', 'Não conferido', contagem('naoconf')], ['conforme', 'Conforme', contagem('conforme')], ['pend', 'Aguardando o ente', S.dfs.filter(function (d) { return d.ente.cbs === null; }).length]];
+    return '<div class="chps"><span style="font-size:11px;color:var(--txt3);margin-right:4px">Etapa 1</span>' + a.map(function (x) { return '<button type="button" class="chp' + (S.filtro === x[0] ? ' on' : '') + '" data-a="filtro" data-v="' + x[0] + '">' + x[1] + '<small>' + x[2] + '</small></button>'; }).join('') + '</div>';
+  }
+  function tabelaConc(opts) {
+    opts = opts || {};
+    var lst = filtrar(), pv = opts.previa;
+    var h = '<div class="table-wrap"><table><thead><tr>' + (opts.sel ? '<th class="ck"><input type="checkbox" data-a="selTodos" aria-label="Selecionar todas"' + (lst.length && lst.every(function (d) { return S.sel[d.num]; }) ? ' checked' : '') + '></th>' : '') +
+      '<th>DF</th><th>Fornecedor</th><th>CAPUR · duas etapas</th><th class="n">Destacado CBS</th></tr></thead><tbody>';
+    if (!lst.length) h += '<tr><td colspan="5" style="text-align:center;color:var(--txt3)">Nenhuma CAPUR com esse filtro.</td></tr>';
+    lst.forEach(function (d) {
+      h += '<tr class="clic' + (opts.atual === d.num ? ' atual' : '') + '" data-a="abrir" data-v="' + d.num + '">' + (opts.sel ? '<td class="ck"><input type="checkbox" data-a="sel" data-v="' + d.num + '"' + (S.sel[d.num] ? ' checked' : '') + ' aria-label="Selecionar NF-e ' + d.num + '"></td>' : '') +
+        '<td><strong>NF-e ' + d.num + '</strong><span class="st">' + d.data + '</span></td><td>' + d.forn + '</td><td>' + selos(d, pv) + '</td><td class="n">' + rs(tot(d, 'cbs', 'dest')) + '</td></tr>';
+    });
+    return h + '</tbody></table></div>';
+  }
+  function blocoEtapa1(d, t) {
+    var r = d.run[t];
+    var h = '<div class="card"><div class="card-t"><span>Etapa 1 · Cálculo oficial · ' + TN[t] + '</span>' + chip(E1[r.res].c === 'ok' ? 'ok' : E1[r.res].c === 'red' ? 'red' : 'gray', E1[r.res].r + (r.causa ? ' · causa: ' + (r.causa === 'base' ? 'base' : 'alíquota') : '')) + '</div>';
+    h += '<div class="table-wrap"><table><thead><tr><th>Item</th><th>NCM · CST · cClassTrib</th><th class="n">Base</th><th class="n">Destacado</th><th class="n">Calculado</th><th class="n">Diferença</th><th>Estado</th></tr></thead><tbody>';
+    d.it.forEach(function (x) {
+      var cv = calcV(d, x, t, r.ver), dif = cv === null ? null : x.dest[t] - cv, fora = dif !== null && Math.abs(dif) > r.tol + 1e-9;
+      h += '<tr><td>' + x.n + '</td><td><code>' + x.ncm + '</code> · ' + x.cst + ' · <code>' + x.cct + '</code></td><td class="n">' + rs(x.base) + (x.baseCalc ? '<span class="st">calc. ' + rs(x.baseCalc) + '</span>' : '') + '</td><td class="n">' + rs(x.dest[t]) + '</td><td class="n">' + rs(cv) + '</td><td class="n"' + (fora ? ' style="color:var(--red);font-weight:700"' : '') + '>' + (dif === null ? '—' : rs(dif)) + '</td><td>' +
+        (x.est === 'CALCULADO' ? et(fora ? 'red' : 'ok', fora ? 'Fora da tolerância' : 'Calculado') : et(x.est === 'REG' ? 'red' : 'gray', x.est === 'REG' ? 'Inconsistência de entrada' : 'Não implementado') + '<span class="st"><code>' + x.cod + '</code> · ' + x.campo + ' · ' + x.txt + '</span>') + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+    var x0 = d.it.filter(function (x) { return x.n === (r.item || 1); })[0] || d.it[0];
+    if (x0.calc) {
+      var al = t === 'cbs' ? '0,90%' : '0,10%', b = x0.baseCalc || x0.base;
+      h += '<details><summary style="cursor:pointer;font-size:12px;color:var(--teal)">Memória de cálculo do item ' + x0.n + '</summary><div class="memo">base de cálculo     ' + rs(b) + '\nalíquota ' + TN[t] + '        ' + al + '  (cClassTrib ' + x0.cct + ', tributação integral)\nvalor calculado    ' + rs(calcV(d, x0, t, r.ver)) + '\nfundamentação      LC 214/2025, art. 12 e art. 14\ncrédito            o adquirente tem direito (indicador da cClassTrib)</div></details>';
+    }
+    h += '<div class="acoes"><span class="nota">Calculadora ' + r.ver + ' · tolerância ' + rs(r.tol) + ' por item · regra D-CR-10: ' + (r.regra === 'ente' ? 'o ente prevalece' : 'manter aberta como risco') + '</span></div>';
+    return h + '</div>';
+  }
+  function blocoEtapa2(d, t) {
+    var c = capur(d, t), ente = d.ente[t];
+    var h = '<div class="card"><div class="card-t"><span>Etapa 2 · Apuração do ente · ' + TN[t] + ' (' + ENTE[t] + ')</span>' + chip(c.c, c.rot) + '</div>';
+    h += '<div class="lado"><div class="campo"><div class="cl">Destacado (RF)</div><div class="cv">' + rs(tot(d, t, 'dest')) + '</div></div><div class="campo"><div class="cl">Calculado</div><div class="cv">' + rs(d.run[t].res === 'conforme' || d.run[t].res === 'divergente' ? tot(d, t, 'calc', d.run[t].ver) : null) + '</div></div><div class="campo"><div class="cl">Apurado pelo ente</div><div class="cv">' + rs(ente) + '</div></div></div>';
+    if (ente === null) h += '<div class="acoes"><button type="button" class="fb pri" data-a="apurar" data-v="' + d.num + '">Simular chegada da apuração</button><span class="nota">No Live, chega pela API do ente.</span></div>';
+    if (c.marca) h += '<div class="aviso">Marca na CAPUR: ' + c.marca + '.</div>';
+    return h + '</div>';
+  }
+  function blocoHist(d) { return '<div class="card"><div class="card-t"><span>Histórico da CAPUR</span><span style="font-weight:400;text-transform:none;letter-spacing:0">' + d.hist.length + ' eventos</span></div><ul class="tl">' + d.hist.map(function (h) { return '<li><b>' + h.e + '</b> · ' + h.txt + '<small>' + h.q + ' · ' + h.sub + '</small></li>'; }).join('') + '</ul></div>'; }
+  function blocoOcc(d, t, completo) {
+    var o = ocorrencia(d, t);
+    if (!o) return '<div class="card"><div class="card-t"><span>Ocorrência · ' + TN[t] + '</span></div><p style="margin:0">Nenhuma ocorrência para este tributo.</p></div>';
+    var h = '<div class="card"><div class="card-t"><span>Ocorrência · <code>' + o.tipo + '</code></span>' + stOcc(o) + '</div>';
+    h += '<div class="campos"><div class="campo"><div class="cl">Tipo</div><div class="cv">' + OCC_T[o.tipo] + '</div></div><div class="campo"><div class="cl">Família · dono</div><div class="cv">' + (o.tipo === 'capur_classificacao' ? 'A · Documento · emitente' : 'B · Fisco · fornecedor') + '</div></div><div class="campo"><div class="cl">Aberta em</div><div class="cv">' + o.desde + '</div></div></div>';
+    if (completo) h += '<div class="lado"><div class="campo"><div class="cl">Destacado</div><div class="cv">' + rs(tot(d, t, 'dest')) + '</div></div><div class="campo"><div class="cl">Calculado</div><div class="cv">' + rs(d.run[t].res === 'inconsistente' ? null : tot(d, t, 'calc', d.run[t].ver)) + '</div></div><div class="campo"><div class="cl">Apurado</div><div class="cv">' + rs(d.ente[t]) + '</div></div></div>';
+    if (o.st === 'em_analise') h += '<div class="msg">Desfecho preenchido pelo produto: <strong>' + o.desf + '</strong>. Só o responsável resolve (RN-INC-10).</div>';
+    if (o.st !== 'resolvida') h += '<div class="acoes"><button type="button" class="fb' + (o.st === 'em_analise' ? ' pri' : '') + '" data-a="resolver" data-v="' + o.k + '">' + (o.st === 'em_analise' ? 'Conferir e resolver' : 'Resolver com desfecho…') + '</button><button type="button" class="fb sec" data-a="repUm" data-v="' + d.num + '">Reprocessar cálculo</button></div>';
+    else h += '<p style="margin:0">Resolvida com o desfecho "' + o.desf + '".</p>';
+    return h + '</div>';
+  }
+  function tribTabs() { return '<div class="ttabs">' + TRIB.map(function (t) { return '<button type="button" class="ttab' + (S.trib === t ? ' on' : '') + '" data-a="trib" data-v="' + t + '">' + TN[t] + '</button>'; }).join('') + '</div>'; }
+  function cabDF(d) { return '<div class="h2"><span>NF-e ' + d.num + ' · ' + d.forn + '</span><span style="font-size:11px;font-weight:400;color:var(--txt3)"><code>' + curta(d.chave) + '</code></span></div><div class="sub">Entrada · ' + d.data + ' · CNPJ ' + d.cnpj + ' · ' + d.it.length + (d.it.length > 1 ? ' itens' : ' item') + '</div>'; }
+  function telaConfig(estreita) {
+    var pv = previa(S.cTol), mudou = S.cTol !== S.tol || S.cRegra !== S.regra;
+    var h = '<div class="h2"><span>Conferência de cálculo (CAPUR · etapa 1)</span></div><div class="sub">Só o Administrador do cliente vê esta tela. Cada alteração vai para a auditoria e vale para as execuções seguintes.</div>';
+    h += '<div class="card"><div class="card-t"><span>Tolerância da comparação · D-CR-04</span></div><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span class="tolv" id="' + V + '-tolv">' + rs(S.cTol) + '</span><span style="font-size:12px;color:var(--txt3)">por item e por tributo · de R$ 0,00 a R$ 1,00 (teto da plataforma)</span></div>' +
+      '<input class="rg" type="range" min="0" max="100" step="1" value="' + Math.round(S.cTol * 100) + '" data-a="tol" aria-label="Tolerância em centavos"></div>';
+    h += '<div class="card"><div class="card-t"><span>Etapa 1 divergente e o ente apura igual ao destacado · D-CR-10</span></div><div class="radios">' +
+      '<label><input type="radio" name="rg-' + V + '" value="ente" data-a="regra"' + (S.cRegra === 'ente' ? ' checked' : '') + '><span><strong>O ente prevalece</strong> (padrão). A CAPUR fica conciliada com ressalva e a ocorrência volta ao responsável com o desfecho "superada pela apuração do ente".</span></label>' +
+      '<label><input type="radio" name="rg-' + V + '" value="risco" data-a="regra"' + (S.cRegra === 'risco' ? ' checked' : '') + '><span><strong>Manter aberta como risco de revisão.</strong> A CAPUR fica conciliada e a ocorrência continua aberta, com o rótulo.</span></label></div></div>';
+    h += '<div class="card" id="' + V + '-prev">' + prevBox(pv) + '</div>';
+    h += '<div class="acoes fim"><button type="button" class="fb sec" data-a="cfgDesfaz"' + (mudou ? '' : ' disabled') + '>Desfazer</button><button type="button" class="fb pri" data-a="cfgGrava"' + (mudou ? '' : ' disabled') + '>Gravar</button></div>';
+    if (S.aud.length) h += '<div class="card"><div class="card-t"><span>Auditoria</span></div><ul class="tl">' + S.aud.map(function (a) { return '<li><b>' + a.c + '</b>: ' + a.de + ' → ' + a.para + '<small>' + a.q + ' · Administrador do cliente</small></li>'; }).join('') + '</ul></div>';
+    return h;
+  }
+  function prevBox(pv) {
+    var ks = Object.keys(pv.lst);
+    var h = '<div class="card-t"><span>Prévia do impacto num reprocessamento</span>' + chip(ks.length ? 'warn' : 'gray', ks.length + (ks.length === 1 ? ' DF mudaria' : ' DFs mudariam')) + '</div>';
+    if (!ks.length) return h + '<p style="margin:0">Com estes valores, nenhuma CAPUR muda de resultado na etapa 1.</p>';
+    h += '<ul class="plain" style="margin-left:16px">' + ks.map(function (k) { return '<li><strong>NF-e ' + k + '</strong>: ' + pv.lst[k].map(function (x) { return TN[x.t] + ' ' + E1[x.de].r.toLowerCase() + ' → ' + E1[x.para].r.toLowerCase(); }).join('; ') + '</li>'; }).join('') + '</ul>';
+    return h + '<p style="margin:0;font-size:12px">Gravar não muda o que já foi conferido. Depois de gravar, dá para reprocessar estes DFs de uma vez.</p>';
+  }
+  function telaReproc(compacta) {
+    var h = '<div class="h2"><span>Reprocessar o cálculo por lista</span></div><div class="sub">Até 5.000 DFs por pedido. Cada execução entra no histórico com o motivo "reprocessamento por lista", o autor e o pedido.</div>';
+    h += '<div class="ttabs">' + [['colar', 'Colar chaves'], ['csv', 'Subir CSV'], ['selecao', 'Seleção (' + Object.keys(S.sel).filter(function (k) { return S.sel[k]; }).length + ')']].map(function (x) { return '<button type="button" class="ttab' + (S.repModo === x[0] ? ' on' : '') + '" data-a="repModo" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>';
+    if (S.repModo === 'colar') h += '<textarea class="in" data-a="repTxt" placeholder="Uma chave de acesso por linha">' + esc(S.repTxt) + '</textarea><div class="acoes"><button type="button" class="lnk" data-a="repEx">Colar chaves de exemplo</button></div>';
+    if (S.repModo === 'csv') h += '<div class="drop"><strong>CSV com uma chave por linha</strong><input type="file" accept=".csv,.txt" data-a="repCsv" style="margin-top:8px;max-width:100%"><div style="margin-top:6px">O arquivo é lido aqui no navegador; chaves da base de exemplo são reconhecidas.</div></div>';
+    if (S.repModo === 'selecao') h += '<p>Marque as linhas na Conciliação.</p>';
+    h += '<div id="' + V + '-repc">' + repConta() + '</div>';
+    if (S.jobs.length && !compacta) h += jobsH();
+    return h;
+  }
+  function chavesPedido() {
+    if (S.repModo === 'selecao') return Object.keys(S.sel).filter(function (k) { return S.sel[k]; }).map(Number);
+    var linhas = S.repTxt.split(/[\s,;]+/).filter(Boolean), nums = [], fora = 0;
+    linhas.forEach(function (l) { var d = S.dfs.filter(function (x) { return x.chave === l.replace(/\D/g, ''); })[0]; if (d) { if (nums.indexOf(d.num) < 0) nums.push(d.num); } else fora++; });
+    nums.fora = fora; return nums;
+  }
+  function repConta() {
+    var n = chavesPedido();
+    return '<div class="acoes"><span class="nota">' + n.length + ' DF' + (n.length === 1 ? '' : 's') + ' reconhecido' + (n.length === 1 ? '' : 's') + (n.fora ? ' · <span class="erro">' + n.fora + ' chave' + (n.fora === 1 ? '' : 's') + ' não encontrada' + (n.fora === 1 ? '' : 's') + ' na empresa</span>' : '') + '</span><button type="button" class="fb pri" data-a="repVai"' + (n.length ? '' : ' disabled') + '>Reprocessar ' + n.length + '</button></div>';
+  }
+  function jobsH() {
+    return '<div class="card"><div class="card-t"><span>Pedidos</span></div><div class="table-wrap"><table><thead><tr><th>Pedido</th><th>Motivo</th><th class="n">DFs</th><th>Progresso</th><th>Resumo</th></tr></thead><tbody>' + S.jobs.map(function (j) {
+      return '<tr><td class="id">' + j.id + '</td><td>' + j.motivo + '<span class="st">' + j.q + ' · ' + j.autor + '</span></td><td class="n">' + j.n + '</td><td style="min-width:110px"><div class="prog"><span style="width:' + j.p + '%"></span></div><span class="st">' + (j.p < 100 ? j.p + '%' : 'concluído') + '</span></td><td>' + (j.p < 100 ? '…' : j.mud + ' mudaram de resultado · ' + (j.n - j.mud) + ' iguais') + '</td></tr>';
+    }).join('') + '</tbody></table></div></div>';
+  }
+  function telaValidador() {
+    var L = S.lote, h = '<div class="h2"><span>Validador de DF-e</span></div><div class="sub">Confere XMLs pela calculadora da Receita Federal sem efeito no Live: não cria DF, RF nem ocorrência. Até 500 documentos e 50 MB por lote.</div>';
+    if (!L) {
+      return h + '<div class="drop" data-a="drop"><strong>Arraste XMLs ou um ZIP aqui</strong>ou<div class="acoes" style="justify-content:center"><label class="fb" style="display:inline-block">Escolher arquivos<input type="file" multiple accept=".xml,.zip" data-a="valArq" hidden></label><button type="button" class="fb pri" data-a="valEx">Usar o lote de exemplo (8 XMLs)</button></div>' +
+        '<div style="margin-top:6px;font-size:11.5px">Protótipo: dos arquivos escolhidos, só o nome é usado; o resultado é sorteado pelo nome.</div></div><div class="acoes"><label style="font-size:12.5px;color:var(--txt2)"><input type="checkbox" checked> Validar também o XSD (nota inteira)</label></div>';
+    }
+    if (L.p < 100) return h + '<div class="card"><div class="card-t"><span>Lote ' + L.id + ' · ' + L.docs.length + ' documentos</span>' + chip('info', 'Processando') + '</div><div class="prog"><span style="width:' + L.p + '%"></span></div><p style="margin:0;font-size:12px">' + Math.round(L.docs.length * L.p / 100) + ' de ' + L.docs.length + ' conferidos. Você pode sair e voltar.</p></div>';
+    var cont = {}; L.docs.forEach(function (d) { cont[d.res] = (cont[d.res] || 0) + 1; });
+    var sd = 0, sc = 0; L.docs.forEach(function (d) { if (d.calc !== null) { sd += d.dest; sc += d.calc; } });
+    h += '<div class="card"><div class="card-t"><span>Lote ' + L.id + ' · ' + L.docs.length + ' documentos · calculadora ' + S.ver + '</span><span><button type="button" class="fb sec" data-a="valPdf">Aceite em PDF</button> <button type="button" class="fb sec" data-a="valCsv">Divergências em CSV</button></span></div>';
+    h += '<div class="bar">' + Object.keys(VRES).map(function (k) { return cont[k] ? '<span class="b-' + VRES[k][1] + '" style="width:' + (100 * cont[k] / L.docs.length) + '%"></span>' : ''; }).join('') + '</div>';
+    h += '<div class="chps">' + [['todos', 'Todos', L.docs.length]].concat(Object.keys(VRES).map(function (k) { return [k, VRES[k][0], cont[k] || 0]; })).map(function (x) { return '<button type="button" class="chp' + (S.valFiltro === x[0] ? ' on' : '') + '" data-a="valFiltro" data-v="' + x[0] + '">' + x[1] + '<small>' + x[2] + '</small></button>'; }).join('') + '</div>';
+    h += '<p style="margin:0;font-size:12px">CBS destacada ' + rs(sd) + ' × calculada ' + rs(sc) + ' nos documentos calculados. Códigos mais frequentes: ' + (function () { var c = {}; L.docs.forEach(function (d) { if (d.cod) c[d.cod] = (c[d.cod] || 0) + 1; }); return Object.keys(c).map(function (k) { return '<code>' + k + '</code> (' + c[k] + ')'; }).join(', ') || 'nenhum'; })() + '.</p>';
+    if (S.msg && S.msg.indexOf('lote') >= 0) h += '<div class="msg" style="margin-top:8px">' + S.msg + '</div>';
+    h += '</div><div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Resultado</th><th class="n">CBS destacada</th><th class="n">CBS calculada</th><th>Primeiro problema</th></tr></thead><tbody>';
+    L.docs.filter(function (d) { return S.valFiltro === 'todos' || d.res === S.valFiltro; }).forEach(function (d, i) {
+      h += '<tr class="clic' + (S.valDoc === d.nome ? ' atual' : '') + '" data-a="valDoc" data-v="' + esc(d.nome) + '"><td><code>' + esc(d.nome) + '</code></td><td>' + chip(VRES[d.res][1], VRES[d.res][0]) + '</td><td class="n">' + rs(d.dest) + '</td><td class="n">' + rs(d.calc) + '</td><td>' + (d.cod ? '<code>' + d.cod + '</code> · ' + d.txt : (d.txt || '—')) + '</td></tr>';
+      if (S.valDoc === d.nome) h += '<tr><td colspan="5"><div class="memo">' + esc(d.nome) + '\nitem 1 · NCM 3926.90.90 · CST 000 · cClassTrib ' + (d.res === 'rejeitado' ? '200034' : '000001') + '\nCBS destacada ' + rs(d.dest) + ' · calculada ' + rs(d.calc) + (d.cod ? '\n' + d.cod + ' · ' + d.txt : '') + '\nhash sha256 ' + hashN(d.nome).toString(16).padStart(8, '0') + '…</div></td></tr>';
+    });
+    h += '</tbody></table></div><div class="acoes"><button type="button" class="fb" data-a="valNovo">Novo lote</button><span class="nota">XML guardado por 90 dias e relatório por 5 anos (D-CR-08).</span></div>';
+    return h;
+  }
+  function telaInc() {
+    var l = ocs();
+    var h = '<div class="h2"><span>Inconsistências · da CAPUR</span></div><div class="sub">As ocorrências que a etapa 1 abre ou qualifica. Os demais tipos do app ficam como estão.</div>';
+    h += '<div class="table-wrap"><table><thead><tr><th>Ocorrência</th><th>DF</th><th>Estado</th><th>Desfecho</th></tr></thead><tbody>' + (l.length ? l.map(function (o) {
+      return '<tr class="clic" data-a="abrirOcc" data-v="' + o.k + '"><td><code>' + o.tipo + '</code><span class="st">' + OCC_T[o.tipo] + '</span></td><td>NF-e ' + o.df.num + '<span class="st">' + o.df.forn + '</span></td><td>' + stOcc(o) + '</td><td>' + (o.desf || '—') + '</td></tr>';
+    }).join('') : '<tr><td colspan="4">Nenhuma.</td></tr>') + '</tbody></table></div>';
+    return h;
+  }
+  function frame(url, nav, corpo, extra) {
+    return '<div class="fr-url"><span class="pt"></span><span class="pt"></span><span class="pt"></span><span class="u">' + url + '</span></div>' +
+      '<div class="fr-top"><div><span class="eb">tax-rs · Live · Cliente de teste</span><span class="nm">Empresa: Indústria Exemplo S.A.</span></div><div class="fr-nav">' + nav + '</div></div>' +
+      '<div class="fr-main">' + (S.msg && S.msg.indexOf('lote') < 0 ? '<div class="msg">' + S.msg + '</div>' : '') + corpo + '</div>' + (extra || '');
+  }
+  function navB(itens, ativo) { return itens.map(function (x) { return '<button type="button" class="fb' + (ativo === x[0] ? ' on' : '') + '" data-a="go" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join(''); }
+
+  /* ── proposta A ── */
+  function renderA() {
+    var nav = navB([['conc', 'Conciliação'], ['inc', 'Inconsistências'], ['val', 'Validador de DF-e'], ['cfg', 'Configurações']], S.tela === 'df' ? 'conc' : S.tela === 'occ' ? 'inc' : S.tela), c = '', url = '/app/conciliacao', extra = '';
+    if (S.tela === 'conc') {
+      var nsel = Object.keys(S.sel).filter(function (k) { return S.sel[k]; }).length;
+      c = '<div class="h2"><span>Conciliação · CAPUR</span><span><button type="button" class="fb" data-a="modalRep">Reprocessar por lista</button>' + (nsel ? ' <button type="button" class="fb pri" data-a="repSel">Reprocessar ' + nsel + ' selecionado' + (nsel > 1 ? 's' : '') + '</button>' : '') + '</span></div><div class="sub">Dezembro de 2026 · entrada · o selo mostra as duas etapas de cada tributo</div>' + kpis(true) + filtros() + tabelaConc({ sel: true });
+    } else if (S.tela === 'df') {
+      var d = dfDe(S.df); url = '/app/dfs/' + curta(d.chave);
+      c = '<div class="bc"><button type="button" class="lnk" data-a="go" data-v="conc">Conciliação</button> › NF-e ' + d.num + '</div>' + cabDF(d) +
+        '<div class="ttabs"><button type="button" class="ttab">Resumo</button><button type="button" class="ttab">Itens</button><button type="button" class="ttab on">CAPUR</button><button type="button" class="ttab">CFIN</button><button type="button" class="ttab">Eventos</button></div>' + tribTabs() + blocoEtapa1(d, S.trib) + blocoEtapa2(d, S.trib) + blocoOcc(d, S.trib, false) + blocoHist(d);
+    } else if (S.tela === 'inc') { url = '/app/inconsistencias'; c = telaInc(); }
+    else if (S.tela === 'occ') {
+      var p = S.ocSel.split(':'), d2 = dfDe(Number(p[0])); url = '/app/inconsistencias/' + p[0] + '-' + p[1];
+      c = '<div class="bc"><button type="button" class="lnk" data-a="go" data-v="inc">Inconsistências</button> › NF-e ' + d2.num + ' · ' + TN[p[1]] + '</div>' + cabDF(d2) + blocoOcc(d2, p[1], true) + blocoEtapa1(d2, p[1]) + '<div class="acoes"><button type="button" class="lnk" data-a="abrir" data-v="' + d2.num + '">Abrir o DF</button></div>';
+    } else if (S.tela === 'val') { url = '/app/validador'; c = telaValidador(); }
+    else if (S.tela === 'cfg') { url = '/app/configuracoes/conferencia-calculo'; c = '<div class="bc">Configurações da empresa › Conferência de cálculo</div>' + telaConfig(); }
+    if (S.modal === 'rep') extra = '<div class="modal-fundo" data-a="fecharFundo"><div class="modal" role="dialog" aria-label="Reprocessar por lista">' + telaReproc(true) + '<div class="acoes fim"><button type="button" class="fb sec" data-a="fechar">Fechar</button></div></div></div>';
+    if (S.jobs.length && S.tela === 'conc') c += jobsH();
+    root.innerHTML = frame(url, nav, c, extra);
+  }
+  /* ── proposta B ── */
+  function renderB() {
+    var menu = [['painel', 'Painel'], ['confs', 'Conferências'], ['reproc', 'Reprocessamentos'], ['val', 'Validador'], ['cfg', 'Configuração']];
+    var nav = navB([['conc', 'Conciliação'], ['painel', 'Cálculo oficial'], ['inc', 'Inconsistências']], S.tela === 'conc' ? 'conc' : S.tela === 'inc' ? 'inc' : 'painel'), c = '', url = '/app/calculo-oficial';
+    if (S.tela === 'conc') {
+      url = '/app/conciliacao';
+      c = '<div class="h2"><span>Conciliação · CAPUR</span></div><div class="sub">Na B, a Conciliação mostra só o selo; o cálculo mora no espaço próprio.</div>' + tabelaConc({}) + '<div class="acoes"><button type="button" class="fb pri" data-a="go" data-v="confs">Ver no Cálculo oficial</button></div>';
+      root.innerHTML = frame(url, nav, c); return;
+    }
+    if (S.tela === 'inc') { root.innerHTML = frame('/app/inconsistencias', nav, telaInc()); return; }
+    var m = '<nav class="ws-menu" aria-label="Cálculo oficial">' + menu.map(function (x) { var n = x[0] === 'confs' ? S.dfs.length : x[0] === 'reproc' ? S.jobs.length : null; return '<button type="button" class="mi' + (S.tela === x[0] ? ' on' : '') + '" data-a="go" data-v="' + x[0] + '">' + x[1] + (n !== null ? '<small>' + n + '</small>' : '') + '</button>'; }).join('') + '</nav>';
+    if (S.tela === 'painel') {
+      var cnt = { conforme: 0, divergente: 0, inconsistente: 0, naoconf: 0 }; S.dfs.forEach(function (d) { TRIB.forEach(function (t) { cnt[d.run[t].res]++; }); });
+      var totc = S.dfs.length * 2, cods = {}; S.dfs.forEach(function (d) { d.it.forEach(function (x) { if (x.cod) cods[x.cod] = (cods[x.cod] || 0) + 1; }); });
+      c = '<div class="h2"><span>Painel do cálculo oficial</span><span style="font-size:12px;font-weight:400;color:var(--txt3)">calculadora ' + S.ver + ' · banco ' + (S.ver === '1.7.4' ? '2026.12.02' : '2026.11.26') + '</span></div><div class="sub">Dezembro de 2026 · entrada · clique num indicador para ver as conferências</div>' + kpis(true) +
+        '<div class="card"><div class="card-t"><span>Etapa 1 por tributo · ' + totc + ' CAPUR</span></div><div class="bar"><span class="b-ok" style="width:' + (100 * cnt.conforme / totc) + '%"></span><span class="b-red" style="width:' + (100 * (cnt.divergente + cnt.inconsistente) / totc) + '%"></span><span class="b-gray" style="width:' + (100 * cnt.naoconf / totc) + '%"></span></div><div class="lg"><span><i class="b-ok"></i>Conforme ' + cnt.conforme + '</span><span><i class="b-red"></i>Divergente ou inconsistente ' + (cnt.divergente + cnt.inconsistente) + '</span><span><i class="b-gray"></i>Não conferido ' + cnt.naoconf + '</span></div></div>' +
+        '<div class="card"><div class="card-t"><span>Códigos da calculadora</span></div>' + (Object.keys(cods).length ? Object.keys(cods).map(function (k) { return '<code>' + k + '</code> ' + cods[k]; }).join(' · ') : 'Nenhum') + '</div>' +
+        '<div class="card"><div class="card-t"><span>Versão da calculadora</span></div>' + (S.ver === '1.7.3' ? '<p>Em uso: 1.7.3, de 26/11/2026.</p><div class="acoes"><button type="button" class="fb pri" data-a="versao">Simular a versão 1.7.4</button><span class="nota">Reprocessa sozinha as CAPUR com a etapa 1 aberta e ainda sem apuração (D-CR-06).</span></div>' : '<p style="margin:0">Em uso: 1.7.4 (fictícia). O reprocessamento automático está em Reprocessamentos.</p>') + '</div>';
+    } else if (S.tela === 'confs') {
+      var d = S.df ? dfDe(S.df) : filtrar()[0];
+      var lista = filtros() + '<div class="table-wrap"><table><thead><tr><th>DF</th><th>Etapa 1</th></tr></thead><tbody>' + filtrar().map(function (x) {
+        return '<tr class="clic' + (d && x.num === d.num ? ' atual' : '') + '" data-a="abrir" data-v="' + x.num + '"><td><strong>NF-e ' + x.num + '</strong><span class="st">' + x.forn + '</span></td><td>' + TRIB.map(function (t) { var e = E1[x.run[t].res]; return '<div>' + et(e.c, TN[t] + ' · ' + e.s) + '</div>'; }).join('') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+      c = '<div class="h2"><span>Conferências</span></div><div class="md"><div>' + lista + '</div><div>' + (d ? cabDF(d) + tribTabs() + blocoEtapa1(d, S.trib) + blocoEtapa2(d, S.trib) + blocoOcc(d, S.trib, false) + blocoHist(d) : '<p>Nenhuma conferência com esse filtro.</p>') + '</div></div>';
+    } else if (S.tela === 'reproc') { S.repModo = S.repModo === 'selecao' ? 'colar' : S.repModo; c = telaReproc(false); }
+    else if (S.tela === 'val') c = telaValidador();
+    else if (S.tela === 'cfg') c = telaConfig();
+    root.innerHTML = frame(url + (S.tela === 'painel' ? '' : '/' + S.tela), nav, '<div class="ws">' + m + '<div class="ws-main">' + c + '</div></div>');
+  }
+  /* ── proposta C ── */
+  function renderC() {
+    var nsel = Object.keys(S.sel).filter(function (k) { return S.sel[k]; }).length, pv = S.drw === 'cfg' ? previa(S.cTol).lst : null;
+    var nav = '<button type="button" class="fb on">Conciliação</button><button type="button" class="fb" data-a="drw" data-v="val">Validar XMLs</button><button type="button" class="fb" data-a="drw" data-v="cfg" aria-label="Configuração da conferência">⚙ Conferência</button>';
+    var c = '<div class="h2"><span>Conciliação · CAPUR</span></div><div class="sub">Dezembro de 2026 · entrada · clique numa linha para abrir a gaveta</div>' + kpis(true) + filtros() + '<div id="C-tab">' + tabelaConc({ sel: true, previa: pv, atual: S.drw === 'df' ? S.df : null }) + '</div>';
+    if (nsel) c += '<div class="massa"><span>' + nsel + ' selecionado' + (nsel > 1 ? 's' : '') + '</span><button type="button" class="fb" data-a="repSel">Reprocessar cálculo</button><button type="button" class="fb" data-a="selLimpa">Limpar</button></div>';
+    if (S.jobs.length) c += jobsH();
+    var extra = '';
+    if (S.drw) {
+      var g = '';
+      if (S.drw === 'df') {
+        var d = dfDe(S.df), oc = ocorrencia(d, S.trib);
+        g = '<div class="drw-h"><div>NF-e ' + d.num + ' · ' + d.forn + '<small>' + d.data + ' · <code>' + curta(d.chave) + '</code></small></div><button type="button" class="fb sec" data-a="fechar" aria-label="Fechar">✕</button></div>' + tribTabs() +
+          '<div class="ttabs">' + [['e1', 'Etapa 1'], ['e2', 'Etapa 2'], ['hist', 'Histórico'], ['occ', 'Ocorrência' + (oc && oc.st !== 'resolvida' ? ' ●' : '')]].map(function (x) { return '<button type="button" class="ttab' + (S.aba === x[0] ? ' on' : '') + '" data-a="aba" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+          (S.aba === 'e1' ? blocoEtapa1(d, S.trib) : S.aba === 'e2' ? blocoEtapa2(d, S.trib) : S.aba === 'hist' ? blocoHist(d) : blocoOcc(d, S.trib, true));
+      } else if (S.drw === 'cfg') g = '<div class="drw-h"><div>Conferência de cálculo<small>A lista atrás mostra a prévia com contorno tracejado</small></div><button type="button" class="fb sec" data-a="fechar" aria-label="Fechar">✕</button></div>' + telaConfig(true);
+      else if (S.drw === 'val') g = '<div class="drw-h"><div>Validar XMLs<small>Sem efeito no Live</small></div><button type="button" class="fb sec" data-a="fechar" aria-label="Fechar">✕</button></div>' + telaValidador();
+      else if (S.drw === 'rep') g = '<div class="drw-h"><div>Reprocessar o cálculo</div><button type="button" class="fb sec" data-a="fechar" aria-label="Fechar">✕</button></div>' + telaReproc(true);
+      extra = (S.drw === 'cfg' ? '' : '<div class="drw-fundo" data-a="fechar"></div>') + '<aside class="drw' + (S.drw === 'cfg' ? ' estreita' : '') + '">' + g + '</aside>';
+    }
+    root.innerHTML = frame('/app/conciliacao' + (S.drw === 'df' ? '?capur=' + S.df : ''), nav, c, extra);
+  }
+  function render() { (V === 'A' ? renderA : V === 'B' ? renderB : renderC)(); }
+
+  /* ── ações ── */
+  var proxJob = 1, proxLote = 1, timers = [];
+  function novoJob(nums, motivo, autor) {
+    var j = { id: 'RP-' + String(proxJob++).padStart(4, '0'), n: nums.length, p: 0, motivo: motivo, autor: autor, q: agora(), mud: 0 };
+    S.jobs.unshift(j);
+    var tm = setInterval(function () {
+      j.p = Math.min(100, j.p + 25);
+      if (j.p === 100) { clearInterval(tm); nums.forEach(function (n) { if (executar(dfDe(n), motivo, autor, j.id)) j.mud++; }); S.msg = 'Pedido ' + j.id + ' concluído: ' + j.mud + ' de ' + j.n + ' mudaram de resultado na etapa 1.'; }
+      render();
+    }, 350);
+    timers.push(tm);
+  }
+  function novoLote(docs) {
+    S.lote = { id: 'VL-' + String(proxLote++).padStart(4, '0'), docs: docs, p: 0 }; S.valDoc = null; S.valFiltro = 'todos';
+    var L = S.lote, tm = setInterval(function () { L.p = Math.min(100, L.p + 20); if (L.p === 100) clearInterval(tm); if (S.lote === L) render(); }, 300);
+    timers.push(tm);
+  }
+  function docVal(nome, res) {
+    var o = { nome: nome, res: res, dest: 9, calc: 9, cod: null, txt: '' };
+    if (res === 'divergente') { o.dest = 10; o.calc = 9; o.txt = 'CBS destacada R$ 1,00 acima da calculada'; }
+    if (res === 'rejeitado') { o.calc = null; o.cod = 'REG-006'; o.txt = 'cClassTrib não pertence ao CST informado'; }
+    if (res === 'invalido') { o.dest = null; o.calc = null; o.cod = 'XSD'; o.txt = 'elemento gIBSCBS fora da ordem do leiaute'; }
+    if (res === 'naoconf') { o.calc = null; o.cod = 'CAL-007'; o.txt = 'cClassTrib ainda sem implementação completa'; }
+    return o;
+  }
+  root.addEventListener('click', function (ev) {
+    var el = ev.target.closest('[data-a]'); if (!el || !root.contains(el)) return;
+    var a = el.getAttribute('data-a'), v = el.getAttribute('data-v');
+    if (a === 'sel' || a === 'selTodos') { ev.stopPropagation(); return; }
+    if (a === 'fecharFundo' && ev.target !== el) return;
+    if (['tol', 'regra', 'repTxt', 'repCsv', 'valArq', 'drop'].indexOf(a) >= 0) return;
+    S.msg = '';
+    switch (a) {
+      case 'go': S.tela = v; S.modal = null; if (v === 'confs' && !S.df) S.df = filtrar()[0] ? filtrar()[0].num : null; break;
+      case 'filtro': S.filtro = v; if (V === 'B' && S.tela === 'painel') S.tela = 'confs'; if (V === 'B') S.df = filtrar()[0] ? filtrar()[0].num : null; break;
+      case 'abrir': S.df = Number(v); S.trib = TRIB.filter(function (t) { return dfDe(S.df).run[t].res !== 'conforme'; })[0] || 'cbs'; if (V === 'A') S.tela = 'df'; if (V === 'B') S.tela = 'confs'; if (V === 'C') { S.drw = 'df'; S.aba = 'e1'; } break;
+      case 'trib': S.trib = v; break;
+      case 'aba': S.aba = v; break;
+      case 'apurar': (function () { var d = dfDe(Number(v)); TRIB.forEach(function (t) { d.ente[t] = d.futuro[t]; d.run[t].regra = S.regra; var tp = occTipo(d, t), k = d.num + ':' + t; if (tp && !S.occ[k]) S.occ[k] = { tipo: tp, st: 'aberta', desde: agora() }; });
+        d.hist.unshift({ q: agora(), e: 'Etapa 2', txt: 'Apuração do ente recebida', sub: 'CBS ' + rs(d.ente.cbs) + ' (Receita Federal) · IBS ' + rs(d.ente.ibs) + ' (Comitê Gestor) · regra D-CR-10: ' + (S.regra === 'ente' ? 'o ente prevalece' : 'manter como risco') });
+        S.msg = 'Apuração recebida na NF-e ' + d.num + ': CBS ' + capur(d, 'cbs').rot.toLowerCase() + '.'; })(); break;
+      case 'resolver': (function () { var p = v.split(':'), d = dfDe(Number(p[0])), o = ocorrencia(d, p[1]); S.occ[v].st = 'resolvida'; S.occ[v].desf = o.desf || 'Fornecedor emitiu documento de ajuste'; S.occ[v].tipo = o.tipo;
+        d.hist.unshift({ q: agora(), e: 'Ocorrência', txt: o.tipo + ' resolvida', sub: 'desfecho: ' + S.occ[v].desf + ' · Analista fiscal' }); S.msg = 'Ocorrência resolvida com o desfecho "' + S.occ[v].desf + '".'; })(); break;
+      case 'abrirOcc': S.ocSel = v; S.tela = V === 'A' ? 'occ' : S.tela; if (V === 'B') { S.df = Number(v.split(':')[0]); S.trib = v.split(':')[1]; S.tela = 'confs'; } break;
+      case 'repUm': novoJob([Number(v)], 'reprocessamento pedido pelo usuário', 'Analista fiscal'); break;
+      case 'modalRep': S.modal = 'rep'; S.repModo = 'colar'; break;
+      case 'repSel': (function () { var n = Object.keys(S.sel).filter(function (k) { return S.sel[k]; }).map(Number); novoJob(n, 'reprocessamento por lista', 'Analista fiscal'); S.sel = {}; })(); break;
+      case 'selLimpa': S.sel = {}; break;
+      case 'repModo': S.repModo = v; break;
+      case 'repEx': S.repTxt = [S.dfs[2].chave, S.dfs[3].chave, S.dfs[9].chave, '35261299999999000199550010000099991000000099'].join('\n'); break;
+      case 'repVai': (function () { var n = chavesPedido(); novoJob(n, 'reprocessamento por lista', 'Analista fiscal'); S.modal = null; S.repTxt = ''; if (S.repModo === 'selecao') S.sel = {}; if (V === 'C') S.drw = null; })(); break;
+      case 'versao': S.ver = '1.7.4'; (function () { var n = S.dfs.filter(function (d) { return d.ente.cbs === null && TRIB.some(function (t) { return d.run[t].res !== 'conforme'; }); }).map(function (d) { return d.num; }); novoJob(n, 'nova versão da calculadora', 'Produto (automático)'); })(); break;
+      case 'cfgDesfaz': S.cTol = S.tol; S.cRegra = S.regra; break;
+      case 'cfgGrava': (function () { var q = agora(); if (S.cTol !== S.tol) S.aud.unshift({ c: 'Tolerância', de: rs(S.tol), para: rs(S.cTol), q: q }); if (S.cRegra !== S.regra) S.aud.unshift({ c: 'Regra D-CR-10', de: S.regra === 'ente' ? 'o ente prevalece' : 'manter como risco', para: S.cRegra === 'ente' ? 'o ente prevalece' : 'manter como risco', q: q });
+        var pv = previa(S.cTol); S.tol = S.cTol; S.regra = S.cRegra; S.msg = 'Configuração gravada. Vale para as próximas execuções.'; S.pendRep = Object.keys(pv.lst).map(Number); })(); break;
+      case 'drw': S.drw = v; if (v === 'cfg') { S.cTol = S.tol; S.cRegra = S.regra; } if (v === 'rep') S.repModo = 'selecao'; break;
+      case 'fechar': case 'fecharFundo': S.drw = null; S.modal = null; break;
+      case 'valEx': novoLote(LOTE_EX.map(function (x) { return docVal(x[0], x[1]); })); break;
+      case 'valNovo': S.lote = null; break;
+      case 'valFiltro': S.valFiltro = v; break;
+      case 'valDoc': S.valDoc = S.valDoc === v ? null : v; break;
+      case 'valPdf': S.msg = 'Aceite do lote ' + S.lote.id + ' gerado: data, versão ' + S.ver + ' da calculadora e o hash de cada XML (no protótipo, nada é baixado).'; break;
+      case 'valCsv': S.msg = 'Divergências do lote ' + S.lote.id + ' exportadas por item (no protótipo, nada é baixado).'; break;
+      case 'repAfetados': novoJob(S.pendRep || [], 'reprocessamento por lista', 'Administrador do cliente'); S.pendRep = null; break;
+      default: return;
+    }
+    render();
+    if (a === 'cfgGrava' && S.pendRep && S.pendRep.length) {
+      var box = root.querySelector('.msg'); if (box) box.innerHTML += ' <button type="button" class="lnk" data-a="repAfetados">Reprocessar ' + (S.pendRep.length === 1 ? 'o DF afetado' : 'os ' + S.pendRep.length + ' DFs afetados') + '</button>';
+    }
+  });
+  root.addEventListener('change', function (ev) {
+    var el = ev.target, a = el.getAttribute('data-a');
+    if (a === 'sel') { S.sel[el.getAttribute('data-v')] = el.checked; render(); }
+    else if (a === 'selTodos') { filtrar().forEach(function (d) { S.sel[d.num] = el.checked; }); render(); }
+    else if (a === 'regra') { S.cRegra = el.value; render(); }
+    else if (a === 'repCsv' && el.files && el.files[0]) { var fr = new FileReader(); fr.onload = function () { S.repTxt = String(fr.result); S.repModo = 'colar'; render(); }; fr.readAsText(el.files[0]); }
+    else if (a === 'valArq' && el.files && el.files.length) {
+      var ks = Object.keys(VRES), docs = Array.prototype.slice.call(el.files, 0, 500).map(function (f) { return docVal(f.name, ks[hashN(f.name) % ks.length]); }); novoLote(docs); render();
+    }
+  });
+  root.addEventListener('input', function (ev) {
+    var el = ev.target, a = el.getAttribute('data-a');
+    if (a === 'tol') {
+      S.cTol = Number(el.value) / 100;
+      var tv = document.getElementById(V + '-tolv'); if (tv) tv.textContent = rs(S.cTol);
+      var pb = document.getElementById(V + '-prev'); if (pb) pb.innerHTML = prevBox(previa(S.cTol));
+      root.querySelectorAll('[data-a="cfgGrava"],[data-a="cfgDesfaz"]').forEach(function (b) { b.disabled = S.cTol === S.tol && S.cRegra === S.regra; });
+      if (V === 'C') { var tb = document.getElementById('C-tab'); if (tb) tb.innerHTML = tabelaConc({ sel: true, previa: previa(S.cTol).lst }); }
+    } else if (a === 'repTxt') { S.repTxt = el.value; var rc = document.getElementById(V + '-repc'); if (rc) rc.innerHTML = repConta(); }
+  });
+  root.addEventListener('dragover', function (ev) { var d = ev.target.closest('.drop'); if (d) { ev.preventDefault(); d.classList.add('sobre'); } });
+  root.addEventListener('dragleave', function (ev) { var d = ev.target.closest('.drop'); if (d) d.classList.remove('sobre'); });
+  root.addEventListener('drop', function (ev) {
+    var d = ev.target.closest('.drop'); if (!d) return; ev.preventDefault();
+    var fs = ev.dataTransfer && ev.dataTransfer.files; if (!fs || !fs.length) return;
+    var ks = Object.keys(VRES); novoLote(Array.prototype.slice.call(fs, 0, 500).map(function (f) { return docVal(f.name, ks[hashN(f.name) % ks.length]); })); render();
+  });
+  render();
+  return {
+    ir: function (j) { // ponto de partida de cada jornada
+      S.msg = ''; S.drw = null; S.modal = null; S.filtro = 'todos';
+      if (j === 1) { S.filtro = 'divergente'; if (V === 'A') S.tela = 'conc'; if (V === 'B') S.tela = 'painel'; }
+      if (j === 2) { S.df = 1004; S.trib = 'cbs'; if (V === 'A') S.tela = 'df'; if (V === 'B') S.tela = 'confs'; if (V === 'C') { S.drw = 'df'; S.aba = 'e2'; } }
+      if (j === 3) { if (V === 'A') { S.tela = 'conc'; S.modal = 'rep'; S.repModo = 'colar'; } if (V === 'B') { S.tela = 'reproc'; S.repModo = 'colar'; } if (V === 'C') { S.drw = 'rep'; S.repModo = 'colar'; } }
+      if (j === 4) { S.cTol = S.tol; S.cRegra = S.regra; if (V === 'C') S.drw = 'cfg'; else S.tela = 'cfg'; }
+      if (j === 5) { if (V === 'C') S.drw = 'val'; else S.tela = 'val'; }
+      if (j === 6) { if (V === 'B') S.tela = 'painel'; else { S.df = 1003; S.trib = 'cbs'; if (V === 'A') S.tela = 'df'; else { S.drw = 'df'; S.aba = 'hist'; } } }
+      render();
+    },
+    versao: function () { if (S.ver === '1.7.3') { S.ver = '1.7.4'; var n = S.dfs.filter(function (d) { return d.ente.cbs === null && TRIB.some(function (t) { return d.run[t].res !== 'conforme'; }); }).map(function (d) { return d.num; }); novoJob(n, 'nova versão da calculadora', 'Produto (automático)'); render(); } }
+  };
+}
+
+/* ── jornadas ─────────────────────────────────────────────────── */
+var JR = [
+  { id: 'J-CR-01', t: 'Ver o aviso antecipado e entender a causa', a: 'Analista fiscal · todo dia', p: ['O DF entra; a etapa 1 roda na hora.', 'Na Conciliação, filtra por "Cálculo divergente".', 'Abre a CAPUR da NF-e 1002: CBS destacada R$ 10,00, calculada R$ 9,00.', 'Lê a memória de cálculo e o código do item.', 'Vê que a ocorrência capur_cbs_aliquota já está aberta para o fornecedor.'], r: 'A divergência aparece no dia da entrada, com causa (alíquota, base ou classificação), antes de a apuração chegar.' },
+  { id: 'J-CR-02', t: 'Tratar a ocorrência quando a apuração chega', a: 'Analista fiscal · quando o ente apura', p: ['Abre a NF-e 1004 (etapa 1 divergente em R$ 0,50).', 'Simula a chegada da apuração: o ente apura igual ao destacado.', 'Com "o ente prevalece", a CAPUR fica conciliada com ressalva e a ocorrência volta com o desfecho "superada pela apuração do ente" preenchido.', 'Confere e resolve. Com a outra regra, a ocorrência segue aberta como risco de revisão.'], r: 'O ente dá a palavra final; o produto prepara o desfecho e só a pessoa resolve (RN-INC-10).' },
+  { id: 'J-CR-03', t: 'Reprocessar uma lista de DFs', a: 'Analista fiscal · depois que o fornecedor corrige', p: ['Escolhe o modo: colar chaves, subir CSV ou selecionar linhas.', 'Vê quantas chaves foram reconhecidas e quais não são da empresa.', 'Pede o reprocessamento; acompanha o progresso do pedido.', 'Lê o resumo: quantos mudaram de resultado.'], r: 'Cada execução entra no histórico com o motivo, o autor e o número do pedido (D-CR-06).' },
+  { id: 'J-CR-04', t: 'Configurar a conferência', a: 'Administrador do cliente · na implantação e quando precisar', p: ['Abre a conferência de cálculo.', 'Arrasta a tolerância de R$ 0,01 para R$ 0,02 e vê a prévia: a NF-e 1003 passaria a conforme.', 'Escolhe a regra da D-CR-10.', 'Grava; a auditoria registra o antes e o depois.', 'Decide se reprocessa os DFs afetados.'], r: 'A configuração vale para as próximas execuções; o passado só muda num reprocessamento pedido (D-CR-04, D-CR-10).' },
+  { id: 'J-CR-05', t: 'Validar um lote de XMLs', a: 'Analista fiscal ou de compras · sob demanda', p: ['Arrasta XMLs ou um ZIP, ou usa o lote de exemplo.', 'Acompanha o processamento.', 'Filtra o relatório por resultado e abre um documento.', 'Exporta o aceite em PDF ou as divergências em CSV.'], r: 'Conferência sem efeito no Live: nada vira DF, RF ou ocorrência (D-CR-07, D-CR-08).' },
+  { id: 'J-CR-06', t: 'Versão nova da calculadora', a: 'Produto (automático) e analista fiscal', p: ['A versão 1.7.4 é instalada.', 'O produto reprocessa só as CAPUR com a etapa 1 aberta e ainda sem apuração.', 'A NF-e 1003 passa a conforme; o histórico mostra "calculadora 1.7.4".', 'A ocorrência volta ao responsável com o desfecho "conforme na execução nova".'], r: 'Os conformes antigos ficam como estão; a mudança de resultado entre versões fica visível (D-CR-06).' }
+];
+var apps = { A: App('A'), B: App('B'), C: App('C') };
+document.getElementById('jornadas').innerHTML = JR.map(function (j, i) {
+  return '<div class="jr"><div class="jr-h"><span class="jr-id">' + j.id + '</span><span class="jr-t">' + j.t + '</span></div><div class="jr-a">' + j.a + '</div><ol>' + j.p.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol><div class="res"><strong>Resultado:</strong> ' + j.r + '</div>' +
+    '<div class="ir">' + ['A', 'B', 'C'].map(function (p) { return '<button type="button" data-j="' + (i + 1) + '" data-pp="' + p + '">Percorrer na ' + p + '</button>'; }).join('') + '</div></div>';
+}).join('');
+document.getElementById('base-ex').innerHTML = BASE.map(function (d) { return '<tr><td><strong>NF-e ' + d.num + '</strong><span style="display:block;font-size:11px;color:var(--txt3)">' + d.forn + '</span></td><td>' + d.ex + '</td></tr>'; }).join('');
+function mostrar(p) {
+  document.querySelectorAll('.seg button').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-p') === p ? 'true' : 'false'); });
+  ['A', 'B', 'C'].forEach(function (x) { document.getElementById('prop-' + x).hidden = x !== p; });
+  try { localStorage.setItem('calc-telas-prop', p); } catch (e) {}
+}
+document.querySelector('.seg').addEventListener('click', function (ev) { var b = ev.target.closest('button[data-p]'); if (b) mostrar(b.getAttribute('data-p')); });
+document.getElementById('jornadas').addEventListener('click', function (ev) {
+  var b = ev.target.closest('button[data-j]'); if (!b) return;
+  var p = b.getAttribute('data-pp'), j = Number(b.getAttribute('data-j'));
+  mostrar(p); apps[p].ir(j); if (j === 6) apps[p].versao();
+  document.getElementById('prop-' + p).scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+})();
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Calculadora da Receita no Live · v1.5</title>
+<title>Calculadora da Receita no Live · v1.6</title>
 <style>
 :root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
   --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
@@ -248,21 +248,29 @@ input[type=range].rg { width: 100%; accent-color: var(--teal); }
 <body>
 <div class="doc">
 
-<a class="back" href="prds.html#sec-taxrs">← Hub de PRDs</a>
+<a class="back" href="prds.html#card-taxrs-calculadora-rtc">← Hub de PRDs</a>
 <div class="eyebrow">tax-rs · Estudo e proposta</div>
 <h1>Calculadora da Receita Federal no Live: estudo do código e proposta de uso</h1>
-<p class="subtitle">A Receita Federal publicou como código aberto a calculadora do regime regular da reforma: CBS, IBS e Imposto Seletivo da LC 214/2025. Este documento estuda o código (versão 1.7.3, de 26/11/2026), lista cada validação que ela faz e propõe como o Live do tax-rs passa a usá-la. A proposta tem dois usos: o cálculo oficial como primeira etapa da CAPUR e um validador de DF-e que o próprio cliente usa.</p>
+<p class="subtitle">A Receita Federal publicou como código aberto a calculadora do regime regular da reforma: CBS, IBS e Imposto Seletivo da LC 214/2025. Este documento estuda o código (versão 1.7.3, de 26/11/2026), lista cada validação que ela faz e propõe como o Live do tax-rs passa a usá-la. A proposta tem dois usos: o cálculo oficial como primeira etapa da CAPUR e um validador de DF-e que o próprio cliente usa. Desde a v1.6, estuda também a calculadora do Simples Nacional e propõe a rota de cada tributo pelo regime que o emitente declarou no DF (seção 17).</p>
 
 <div class="meta-bar">
-  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.5</span> <a href="versoes/taxrs-calculadora-rtc-v1.4.html" style="font-size:11px;color:var(--txt3)">v1.4</a> <a href="versoes/taxrs-calculadora-rtc-v1.3.html" style="font-size:11px;color:var(--txt3)">v1.3</a> <a href="versoes/taxrs-calculadora-rtc-v1.2.html" style="font-size:11px;color:var(--txt3)">v1.2</a> <a href="versoes/taxrs-calculadora-rtc-v1.1.html" style="font-size:11px;color:var(--txt3)">v1.1</a> <a href="versoes/taxrs-calculadora-rtc-v1.0.html" style="font-size:11px;color:var(--txt3)">v1.0</a></span>
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.6</span> <a href="versoes/taxrs-calculadora-rtc-v1.5.html" style="font-size:11px;color:var(--txt3)">v1.5</a> <a href="versoes/taxrs-calculadora-rtc-v1.4.html" style="font-size:11px;color:var(--txt3)">v1.4</a> <a href="versoes/taxrs-calculadora-rtc-v1.3.html" style="font-size:11px;color:var(--txt3)">v1.3</a> <a href="versoes/taxrs-calculadora-rtc-v1.2.html" style="font-size:11px;color:var(--txt3)">v1.2</a> <a href="versoes/taxrs-calculadora-rtc-v1.1.html" style="font-size:11px;color:var(--txt3)">v1.1</a> <a href="versoes/taxrs-calculadora-rtc-v1.0.html" style="font-size:11px;color:var(--txt3)">v1.0</a></span>
   <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">28/11/2026</span></span>
   <span class="meta-pill"><span class="meta-label">Calculadora</span><span class="meta-val"><code>ReceitaFederal/calculadora-rtc-regime-regular</code> 1.7.3 (<code>0d4b073</code>)</span></span>
+  <span class="meta-pill"><span class="meta-label">Simples Nacional</span><span class="meta-val"><code>ReceitaFederal/calculadora-rtc-simples-nacional</code> 1.0.2 (<code>a926d5a</code>)</span></span>
   <span class="meta-pill"><span class="meta-label">tax-rs</span><span class="meta-val"><code>main</code> no <code>a81fdd6</code></span></span>
-  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">13 de 14</span> <span class="chip warn">Em decisão · D-CR-13</span></span>
+  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">13 de 30</span> <span class="chip warn">Em decisão · D-CR-13</span></span>
 </div>
 
 <div class="callout warn">
-  <div class="ct">v1.5 · um documento só</div>
+  <div class="ct">v1.6 · a calculadora do Simples Nacional na etapa 1</div>
+  <ul class="plain">
+    <li><strong>Segunda calculadora:</strong> a Receita Federal publicou a do Simples Nacional (1.0.2, de 18/11/2026). A seção 17 estuda o código dela e propõe a rota de cada tributo na etapa 1, pelo regime que o emitente declara no DF: o regime normal puro segue na calculadora do regime regular, o resto passa pela do Simples, e no sublimite a CBS fica no Simples e o IBS vai à do regime regular.</li>
+    <li><strong>A alíquota do Simples não é conferida:</strong> ela vem do PGDAS-D, que a calculadora não consulta. Por isso o conforme do Simples tem nome próprio, "Conta conforme · alíquota não conferida", e um KPI novo mostra o crédito que depende dessa alíquota, em três faixas.</li>
+    <li><strong>16 decisões novas, todas em aberto:</strong> D-CR-15 a D-CR-30 (seção 12.1). Nada muda de valor, nenhum PRD foi alterado, e a D-CR-13 passa a cobrir também as mudanças da seção 14.5.</li>
+    <li><strong>Jornada e protótipo:</strong> a J-CR-07 e seis NF-e de março de 2027 (1011 a 1016) mostram os casos do Simples nas telas da A. As NF-e 1001 a 1010 passam a dizer CRT 3.</li>
+  </ul>
+  <h3>v1.5 · um documento só</h3>
   <ul class="plain">
     <li><strong>Estudo, jornadas e telas no mesmo documento:</strong> as jornadas viraram a seção 15 e as três propostas clicáveis a seção 16. A página separada de telas saiu; o endereço antigo leva para cá, e a última versão dela está no <a href="versoes/taxrs-calculadora-telas-v1.1.html">arquivo de versões</a>.</li>
     <li><strong>No hub, em "Em decisão":</strong> o card saiu da seção do tax-rs e foi para a seção 03, porque a D-CR-13 segue aberta.</li>
@@ -314,6 +322,7 @@ input[type=range].rg { width: 100%; accent-color: var(--teal); }
     <li><a href="#s14"><span class="toc-num">14</span>Mudanças propostas nos PRDs</a></li>
     <li><a href="#s15"><span class="toc-num">15</span>Jornadas</a></li>
     <li><a href="#s16"><span class="toc-num">16</span>Telas: três propostas clicáveis</a></li>
+    <li><a href="#s17"><span class="toc-num">17</span>Simples Nacional: a rota por regime na etapa 1</a></li>
   </ul>
 </div>
 
@@ -334,6 +343,7 @@ input[type=range].rg { width: 100%; accent-color: var(--teal); }
     <div class="ct">A proposta em uma frase</div>
     <p>Subir a calculadora como serviço nosso, ao lado do backend. A <strong>CAPUR ganha uma primeira etapa</strong>: valor destacado × valor calculado, na entrada do DF, com histórico e detalhe por item. A divergência abre inconsistência já nesse momento, e a apuração do ente continua sendo a segunda etapa e a palavra final. O cliente ganha o <strong>Validador de DF-e</strong>, onde ele sobe XMLs ou um ZIP e recebe um relatório de aceite ou de divergências, sem nada entrar no razão.</p>
   </div>
+  <p><strong>Fornecedor do Simples (v1.6).</strong> A calculadora do regime regular não lê o regime do emitente. Mandar a ela um DF de optante abriria divergência falsa. A <a href="#s17">seção 17</a> propõe ler o regime no DF e mandar cada tributo à calculadora certa, com a do Simples Nacional ao lado da do regime regular.</p>
 </div>
 
 <!-- 02 -->
@@ -550,6 +560,7 @@ input[type=range].rg { width: 100%; accent-color: var(--teal); }
     </tbody>
   </table></div>
   <p>O "sem direito a crédito" da cClassTrib não é resultado da CAPUR, porque não compara valores. Ele vai para o crédito (CR-3, família C), lido da mesma execução.</p>
+  <p><strong>Fornecedor do Simples (v1.6):</strong> a etapa 1 ganha dois resultados, "Conta conforme · alíquota não conferida" e "Dados do Simples inconsistentes", e a tabela 6.2 ganha quatro linhas. Ver a <a href="#s17">seção 17.5</a>.</p>
 
   <h3>6.2 Como as duas etapas formam o status da CAPUR</h3>
   <div class="table-wrap"><table>
@@ -734,7 +745,7 @@ input[type=range].rg { width: 100%; accent-color: var(--teal); }
 <!-- 12 -->
 <div class="section" id="s12">
   <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Decisões</span></div>
-  <p>As 12 primeiras foram decididas em 28/11/2026; a D-CR-14 foi decidida no mesmo dia (a A) e a D-CR-13 está em aberto. Três respostas trouxeram ajustes à recomendação: a tolerância (D-CR-04) e a regra da D-CR-10 viraram configuração da empresa, e a D-CR-06 ganhou o reprocessamento por lista de DFs.</p>
+  <p>São 30 decisões, 13 tomadas. As 12 primeiras foram decididas em 28/11/2026; a D-CR-14 foi decidida no mesmo dia (a A) e a D-CR-13 está em aberto. As 16 do Simples Nacional (v1.6) estão na 12.1, todas em aberto. Três respostas trouxeram ajustes à recomendação: a tolerância (D-CR-04) e a regra da D-CR-10 viraram configuração da empresa, e a D-CR-06 ganhou o reprocessamento por lista de DFs.</p>
   <div class="table-wrap"><table>
     <thead><tr><th>Id</th><th>Pergunta</th><th>Decisão</th><th>Como fica</th></tr></thead>
     <tbody>
@@ -750,8 +761,31 @@ input[type=range].rg { width: 100%; accent-color: var(--teal); }
       <tr><td class="id">D-CR-10</td><td>Etapa 1 divergente e o ente apura igual ao destacado</td><td><span class="chip info">Configuração do cliente</span></td><td>A empresa escolhe entre "o ente prevalece" (padrão) e "manter aberta como risco de revisão" (seção 6.5). No padrão, a ocorrência volta ao responsável com o desfecho preenchido; resolver é dele (v1.3).</td></tr>
       <tr><td class="id">D-CR-11</td><td>Uma ou duas ocorrências quando as duas etapas divergem</td><td><span class="chip ok">Uma só</span></td><td>A ocorrência da etapa 1 continua e recebe o valor do ente.</td></tr>
       <tr><td class="id">D-CR-12</td><td>Família das ocorrências de classificação</td><td><span class="chip ok">Família A</span></td><td>Dono: o emitente. Prazo: 5 dias úteis. Prefixo <code>capur_</code>.</td></tr>
-      <tr id="D-CR-13"><td class="id">D-CR-13</td><td>Levar as decisões aos PRDs?</td><td><span class="chip warn">Em aberto</span></td><td>Recomendado: sim, como a seção 14 descreve, com as telas da A (D-CR-14).</td></tr>
+      <tr id="D-CR-13"><td class="id">D-CR-13</td><td>Levar as decisões aos PRDs?</td><td><span class="chip warn">Em aberto</span></td><td>Recomendado: sim, como a seção 14 descreve, com as telas da A (D-CR-14). Desde a v1.6 cobre também a 14.5, se as decisões do Simples forem aprovadas.</td></tr>
       <tr id="D-CR-14"><td class="id">D-CR-14</td><td>Qual proposta de telas?</td><td><span class="chip ok">A · nas telas de hoje</span></td><td>Escolhida pelo usuário, como recomendado: segue a v1.1 e menos constrói. B (espaço próprio) e C (gaveta na Conciliação) estão clicáveis em <a href="#s16">Jornadas e telas</a>.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>12.1 Simples Nacional (v1.6) · 16 decisões em aberto</h3>
+  <p>Vêm da seção 17. Todas estão em aberto; a coluna da direita traz a recomendação. Nenhuma muda valor: a etapa 1 segue só conferindo, e o ente dá a palavra final.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>Pergunta</th><th>Opções</th><th>Recomendado</th></tr></thead>
+    <tbody>
+      <tr id="D-CR-15"><td class="id">D-CR-15</td><td class="wrap">De onde vem o regime que decide a rota?</td><td class="wrap">(a) Do DF, com cautela pelo cadastro e pelo regime observado · (b) Do cadastro · (c) De uma consulta oficial</td><td class="wrap"><span class="chip warn">Em aberto</span> (a). O DF diz o regime daquela operação. O cadastro é opcional, quase sempre nulo e sem MEI; a consulta oficial traz alíquota, não regime.</td></tr>
+      <tr id="D-CR-16"><td class="id">D-CR-16</td><td class="wrap">Qual endpoint, e como montar a linha de alíquotas?</td><td class="wrap">(a) Não assistido, um par declarado por chamada, replicado nos anexos, IS "0.00" quando não há · (b) Clássico · (c) Esperar o assistido</td><td class="wrap"><span class="chip warn">Em aberto</span> (a). O clássico é obsoleto e recusa o optante no regime regular. Esperar deixaria regime, tipo de receita, destino e conta sem conferência em 2027.</td></tr>
+      <tr id="D-CR-17"><td class="id">D-CR-17</td><td class="wrap">Quem decide a rota, e o que acontece sem resposta da do Simples?</td><td class="wrap">(a) Pré-rota local + o código devolvido · (a') A (a) com contingência nos dois casos sem ambiguidade · (b) Copiar os 11 enquadramentos</td><td class="wrap"><span class="chip warn">Em aberto</span> (a'). O enquadramento é dado da Receita Federal e muda por script. A contingência cobre só o que o DF decide sozinho e é reconferida depois.</td></tr>
+      <tr id="D-CR-18"><td class="id">D-CR-18</td><td class="wrap">No sublimite, quem confere o IBS?</td><td class="wrap">(a) A do regime regular, sobre o <code>gIBSCBS</code> · (b) Ninguém · (c) A do Simples</td><td class="wrap"><span class="chip warn">Em aberto</span> (a). Nesse regime a do Simples não gera IBS. O PENDENTE_SUBLIMITE fica não conferido.</td></tr>
+      <tr id="D-CR-19"><td class="id">D-CR-19</td><td class="wrap">Como mostrar o conforme do Simples, se a alíquota não é conferida?</td><td class="wrap">(a) "Conta conforme · alíquota não conferida", com KPI · (b) "Cálculo conforme" com nota · (c) Sempre "Não conferido"</td><td class="wrap"><span class="chip warn">Em aberto</span> (a). A (b) faz ler como garantida uma alíquota que ninguém conferiu; a (c) joga fora o que foi conferido.</td></tr>
+      <tr id="D-CR-20"><td class="id">D-CR-20</td><td class="wrap">O que, no Simples, vira ocorrência do emitente?</td><td class="wrap">(a) <code>capur_regime</code> (sob condição) e <code>capur_simples</code>, na família A · (b) Um tipo só · (c) Reaproveitar <code>capur_classificacao</code></td><td class="wrap"><span class="chip warn">Em aberto</span> (a). Separa o erro do DF inteiro do erro do item. O <code>capur_regime</code> só entra se o autorizador não rejeitar as combinações proibidas.</td></tr>
+      <tr id="D-CR-21"><td class="id">D-CR-21</td><td class="wrap">Como comparar, e o que fazer com as regras provisórias?</td><td class="wrap">(a) Por parte e por item, com marcas; regras provisórias não conferidas · (b) Sempre a soma · (c) A (a) com o IS conferido pelas duas bases</td><td class="wrap"><span class="chip warn">Em aberto</span> (a). Só a comparação por parte vê o destino trocado. Ocorrência sobre regra provisória iria a um dono sem o que corrigir.</td></tr>
+      <tr id="D-CR-22"><td class="id">D-CR-22</td><td class="wrap">MEI, optante antes de 2027 ou sem enquadramento?</td><td class="wrap">(a) Não conferido, com o motivo, a marca e o KPI · (b) Ocorrência quando houver destaque · (c) Mandar tudo à do Simples</td><td class="wrap"><span class="chip warn">Em aberto</span> (a), reabrindo quando o jurídico responder (D-CR-24).</td></tr>
+      <tr id="D-CR-23"><td class="id">D-CR-23</td><td class="wrap">Cadastro diverge do DF: o que fazer?</td><td class="wrap">(a) Nota no bloco e linha na tela Fornecedor · (b) Ocorrência por fornecedor (família A) · (c) Ocorrência na família G</td><td class="wrap"><span class="chip warn">Em aberto</span> (a). A rota não depende do cadastro, e ele não entra em nenhum cálculo. Rever a (b) quando um PRD der requisito ao regime.</td></tr>
+      <tr id="D-CR-24"><td class="id">D-CR-24</td><td class="wrap">O crédito esperado do DF de optante muda?</td><td class="wrap">(a) Não; parecer jurídico antes de mexer no PRD de Crédito · (b) Limitar já ao recolhido · (c) Ler do evento do Simples</td><td class="wrap"><span class="chip warn">Em aberto</span> (a). O hub não tem o artigo do crédito na compra de optante. Como nada muda de valor, esperar não põe crédito em risco.</td></tr>
+      <tr id="D-CR-25"><td class="id">D-CR-25</td><td class="wrap">Onde a calculadora do Simples roda?</td><td class="wrap">(a) No mesmo container, como segundo processo · (b) Uma imagem, dois containers · (c) Instalação online da Receita Federal</td><td class="wrap"><span class="chip warn">Em aberto</span> (b), como complemento da D-CR-01. Mesmo banco garantido, sem ponto de falha comum.</td></tr>
+      <tr id="D-CR-26"><td class="id">D-CR-26</td><td class="wrap">O validador valida o XSD de DF de optante?</td><td class="wrap">(a) Avisar e não reprovar pelas tags do Simples · (b) Manter o XSD para todos</td><td class="wrap"><span class="chip warn">Em aberto</span> (a), até a Receita Federal publicar XSDs com a NT 2026.005. Manter daria "XML inválido" falso.</td></tr>
+      <tr id="D-CR-27"><td class="id">D-CR-27</td><td class="wrap">Em que ordem o Simples entra?</td><td class="wrap">(a) Guarda no CR-1 e CR-2; CR-6 em paralelo; CR-7 mirando 01/01/2027; CR-8 depois · (b) Tudo depois do CR-4 · (c) Só depois do assistido</td><td class="wrap"><span class="chip warn">Em aberto</span> (a). A guarda é pequena e impede a ocorrência falsa desde o primeiro dia.</td></tr>
+      <tr id="D-CR-28"><td class="id">D-CR-28</td><td class="wrap">DF de optante sem <code>IBSCBSTot</code>: aceitar ou recusar?</td><td class="wrap">(a) Propor ao PRD de Ingestão aceitar com totais zero e a marca · (b) Manter a recusa, com motivo próprio · (c) Fazer o RF nascer dos valores do Simples</td><td class="wrap"><span class="chip warn">Em aberto</span> (a), com o CRT 4 a confirmar na NT. Hoje o crédito some da plataforma sem marca nem KPI.</td></tr>
+      <tr id="D-CR-29"><td class="id">D-CR-29</td><td class="wrap">Compra governamental no Simples: como conferir?</td><td class="wrap">(a) Não conferido até a H3, salvo fator zero · (b) Supor alíquota de antes do deslocamento · (c) Supor de depois</td><td class="wrap"><span class="chip warn">Em aberto</span> (a), escolhendo (b) ou (c) quando a H3 for confirmada. Supor errado gera divergência falsa.</td></tr>
+      <tr id="D-CR-30"><td class="id">D-CR-30</td><td class="wrap">Como produzir DF do Simples no Live para testar?</td><td class="wrap">(a) XMLs de teste pela importação do Simulado + proposta de cenário no emulador · (b) Só os XMLs · (c) Cenário no emulador já no CR-7</td><td class="wrap"><span class="chip warn">Em aberto</span> (a). O emulador e o MassGen não têm cenário por regime.</td></tr>
     </tbody>
   </table></div>
 </div>
@@ -768,10 +802,25 @@ input[type=range].rg { width: 100%; accent-color: var(--teal); }
     <li><strong>Java na stack.</strong> É uma peça nova para operar: imagem, atualização, monitoramento. O tamanho e o consumo de memória precisam de medição na CR-0.</li>
     <li><strong>Código de homologação.</strong> Os arquivos trazem o cabeçalho "Versão de Homologação/Testes". Acompanhar o anúncio de versão de produção da Receita Federal.</li>
   </ul>
+  <h3>Simples Nacional (v1.6)</h3>
+  <ul class="plain">
+    <li><strong>Leiaute sem confirmação (H1, H2, H3).</strong> As tags do Simples não estão nos XSDs embarcados. Ler mal o <code>tpRegimeIBSCBS</code> manda o optante que apura no regime regular para a do Simples. Se o evento 412140 for registrado pelo ambiente e não pelo emitente, não há "destacado do fornecedor" no Simples, e a etapa 1 do Simples precisa ser revista. Mitigação: o CR-7 começa por aí. Até lá a guarda decide só pelo CRT, e o CRT 3 + 2 (opção pendente) vai à do regime regular por engano.</li>
+    <li><strong>RF do optante zerado ou ausente.</strong> Com <code>IBSCBSTot</code> zerado, o RF nasce zero e a etapa 2 diverge sem culpa do fornecedor; sem <code>IBSCBSTot</code>, o DF é recusado e o crédito some da plataforma. Mitigação: a marca "RF sem o valor do Simples" e a D-CR-28.</li>
+    <li><strong>A rota depende da calculadora do Simples.</strong> Sem resposta dela, ficam pendentes até tributos que iriam à do regime regular. Mitigação: a contingência da D-CR-17 e os dois containers da D-CR-25.</li>
+    <li><strong>Alíquota efetiva sem conferência até a Release 16.</strong> No Simples, "conforme" quer dizer "a conta bate". Os "percentuais pré-carregados por anexo e ano" que o roteiro cita não existem no código nem no banco. Mitigação: o nome do resultado, o KPI e a nota dupla na divergência da etapa 2.</li>
+    <li><strong>Regras provisórias dentro da calculadora.</strong> O PENDENTE_SUBLIMITE é hipótese; o zero da exportação indireta na opção pendente é literal de uma regra que o próprio script chama de contraintuitiva; o IS fica fora da receita, ao contrário da base unificada do regime regular. Mitigação: "não conferido · regra provisória", sem ocorrência, e o reprocessamento por versão.</li>
+    <li><strong>Banco compartilhado.</strong> Uma versão nova do banco gerado pelo regime regular pode mudar o Simples sem aviso. Mitigação: o par de versões fixado, uma imagem só e o teste de contrato do par.</li>
+    <li><strong>Contrato e documentação instáveis.</strong> O assistido não foi publicado; o CHANGELOG 1.0.0 fala em três endpoints de cálculo e num GET de alíquotas que não existem; o README não lista o não assistido; 53 de 143 arquivos trazem o cabeçalho de homologação. As mensagens dos VSN são texto livre: o motivo sai dos campos do DF.</li>
+    <li><strong>Cobertura de entrada.</strong> No começo, o Simples só é conferido em NF-e e NFC-e por XML. CT-e e NFS-e dependem da ingestão; pelo JSON do /v1 o regime não chega, e por CSV nem os itens chegam.</li>
+    <li><strong>Correção do regime.</strong> É hipótese que a carta de correção não possa mudar CRT nem <code>tpRegimeIBSCBS</code>. Se não puder, a correção é um DF novo, e a J-CR-07 já segue o caminho de cancelar e reemitir.</li>
+    <li><strong>Prazo.</strong> O destaque do Simples começa em 01/01/2027, a um mês desta data. A guarda do CR-1 e do CR-2 é o mínimo para não gerar falso positivo.</li>
+    <li><strong>Base legal.</strong> O artigo do crédito na compra de optante não está no hub. O efeito no crédito da opção pendente, do MEI e de 2026 fica em aberto (D-CR-24).</li>
+  </ul>
   <h3>Fontes</h3>
   <ul class="plain">
     <li>Repositório <code>github.com/ReceitaFederal/calculadora-rtc-regime-regular</code>, commit <code>0d4b073</code> (1.7.3): <code>README.md</code>, <code>ROADMAP.md</code>, <code>CHANGELOG.md</code>, <code>docs/exemplos.md</code>, <code>docs/adr/*</code>, <code>ProblemType.java</code>, <code>CodigoValidacao.java</code>, <code>ProcessamentoItemService.java</code>, <code>AvisoDadosSimuladosService.java</code>, <code>XmlService.java</code>, <code>DadosAbertosController.java</code>.</li>
-    <li>tax-rs <code>main</code> no <code>a81fdd6</code>: <code>integration/ingestion/lib/xml.ts</code>, <code>reconciliation/CLAUDE.md</code>, <code>inconsistencies/lib/catalog.ts</code>.</li>
+    <li>Repositório <code>github.com/ReceitaFederal/calculadora-rtc-simples-nacional</code>, commit <code>a926d5a</code> (1.0.2): <code>README.md</code>, <code>ROADMAP.md</code>, <code>CHANGELOG.md</code>, <code>SimplesNacionalController.java</code>, <code>CalculoSimplesUnificadoService.java</code>, <code>SimplesNacionalCalculoService.java</code>, <code>ProcessadorItemSimples.java</code>, <code>EscolhaParAliquotasService.java</code>, <code>CodigoValidacaoSimples.java</code>, <code>application-offline.yml</code>. Do regime regular, as migrações <code>V0050</code>, <code>V0051</code> e <code>V0071</code>, que trazem as regras e o enquadramento do Simples.</li>
+    <li>tax-rs <code>main</code> no <code>a81fdd6</code>: <code>integration/ingestion/lib/xml.ts</code>, <code>integration/contracts/validators-documents.ts</code>, <code>integration/contracts/resources/supplier.ts</code>, <code>ledger/intake.ts</code>, <code>reconciliation/CLAUDE.md</code>, <code>inconsistencies/lib/catalog.ts</code>.</li>
     <li>Hub: <a href="taxrs-demo-live.html">Demo × Live</a>, <a href="taxrs-plano-live-inconsistencias.html">Plano do Live: Inconsistências</a>, <a href="catalogo-inconsistencias.html">Catálogo de inconsistências</a>.</li>
   </ul>
 </div>
@@ -822,6 +871,22 @@ input[type=range].rg { width: 100%; accent-color: var(--teal); }
       <tr><td><strong>Priorização do MVP</strong> · v2.17 → v2.18</td><td>As três em <strong>M1</strong>, de 376 para 379 itens, com o M0 inalterado em 147. A cadeia do crédito fecha sem elas, pela apuração do ente; elas antecipam a divergência e qualificam a causa.</td></tr>
     </tbody>
   </table></div>
+
+  <h3>14.5 Extensão do Simples Nacional (v1.6)</h3>
+  <p>Se as decisões da seção 17 forem aprovadas, a D-CR-13 passa a levar também isto aos documentos do hub. Nada foi aplicado.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Documento</th><th>Mudança proposta</th></tr></thead>
+    <tbody>
+      <tr><td><strong>PRD de Conciliação</strong> (a v3.9 da 14.1)</td><td class="wrap">5.1.1 com sete resultados da etapa 1 e as quatro linhas novas da 6.2. Taxonomia de vinte e seis para vinte e oito tipos (vinte e sete sem <code>capur_regime</code>). KPI "Crédito sobre alíquota do Simples não conferida". RF-CONC-032 a 036: pré-rota e rota por regime, chamada à calculadora do Simples e montagem da linha, comparação por parte e marcas, KPI, contingência. RN-CONC-15 (a rota segue o regime declarado no DF; o cadastro só cruza), 16 (no Simples o conforme é "conta conforme"), 17 (crédito em suspenso pelo destino do item) e 18 (regra provisória e compra governamental sem a H3 ficam não conferidas, sem ocorrência). A calculadora do Simples como segunda dependência.</td></tr>
+      <tr><td><strong>PRD de Crédito</strong></td><td class="wrap">Nada nesta extensão. A RN-CRE-30 não muda, e o parecer jurídico vem antes (D-CR-24).</td></tr>
+      <tr><td><strong>PRD de Inconsistências</strong></td><td class="wrap">De sete para nove tipos da etapa 1 (oito sem <code>capur_regime</code>).</td></tr>
+      <tr><td><strong>PRD de Fornecedor</strong></td><td class="wrap">Linha só de leitura "Regime: cadastro (vem do ERP) × observado nos DFs" e a regra de que o produto nunca grava <code>tax_regime</code>.</td></tr>
+      <tr><td><strong>PRD de Ingestão</strong></td><td class="wrap">Leitura do CRT junto dos itens e, confirmada a H1, do <code>tpRegimeIBSCBS</code> e do grupo do Simples. Com a D-CR-28, o DF de optante sem <code>IBSCBSTot</code> aceito com totais zero e a marca.</td></tr>
+      <tr><td><strong>Catálogo de inconsistências</strong></td><td class="wrap">De 97 para 99 ocorrências (98 sem <code>capur_regime</code>), com as entradas novas na família A, dono o emitente.</td></tr>
+      <tr><td><strong>Mapa de funcionalidades</strong></td><td class="wrap">De 336 para 339: roteamento por regime na etapa 1 (risco) e KPI de crédito sobre alíquota do Simples não conferida (analítico), em Conciliação; regime cadastro × observado (analítico), em Fornecedor. Com a D-CR-28, uma quarta em Ingestão (340).</td></tr>
+      <tr><td><strong>Priorização do MVP</strong></td><td class="wrap">As novas em M1, de 379 para 382 (383 com a D-CR-28), com o M0 inalterado em 147. A cadeia do crédito fecha sem elas, pela apuração do ente.</td></tr>
+    </tbody>
+  </table></div>
 </div>
 
 
@@ -835,10 +900,11 @@ input[type=range].rg { width: 100%; accent-color: var(--teal); }
       <tr><td><strong>Analista fiscal</strong></td><td class="wrap">Vê o aviso antecipado na Conciliação, abre o cálculo do DF item a item, trata a ocorrência com o fornecedor e reprocessa quando o fornecedor corrige.</td><td class="id">J-CR-01 · 02 · 03</td></tr>
       <tr><td><strong>Administrador do cliente</strong></td><td class="wrap">Define a tolerância e a regra da D-CR-10, vê quantas CAPUR mudariam antes de gravar e decide se reprocessa.</td><td class="id">J-CR-04</td></tr>
       <tr><td><strong>Analista fiscal ou de compras</strong></td><td class="wrap">Sobe um lote de XMLs para conferir antes de lançar no ERP ou para testar o próprio faturamento, sem efeito no Live.</td><td class="id">J-CR-05</td></tr>
+      <tr><td><strong>Analista fiscal · fornecedor do Simples</strong></td><td class="wrap">Confere o DF de optante pela regra dele: filtra por regime, vê o crédito sobre alíquota não conferida, abre o sublimite com as duas calculadoras e pede a correção do regime incoerente.</td><td class="id">J-CR-07</td></tr>
       <tr><td><strong>Produto (automático)</strong></td><td class="wrap">Instala uma versão nova da calculadora e reprocessa as CAPUR com a etapa 1 aberta e ainda sem apuração. O analista vê a mudança no histórico.</td><td class="id">J-CR-06</td></tr>
     </tbody>
   </table></div>
-  <h3>15.2 As seis jornadas</h3>
+  <h3>15.2 As sete jornadas</h3>
   <p>Cada jornada tem um botão por proposta que abre o protótipo da seção 16 no ponto de partida dela.</p>
   <div class="jrs" id="jornadas"></div>
 </div>
@@ -903,7 +969,7 @@ input[type=range].rg { width: 100%; accent-color: var(--teal); }
     <div class="esc">Não escolhida; fica para comparação.</div>
   </div>
   <h3>16.3 A base de exemplo</h3>
-  <p>Dez NF-e de entrada de dezembro de 2026, com um item de base R$ 1.000,00 cada (a NF-e 1003 tem dois), CBS a 0,9% e IBS a 0,1%. Cada DF foi escolhido para mostrar uma linha da tabela 6.2 do estudo.</p>
+  <p>Dezesseis NF-e de entrada. As dez primeiras são de dezembro de 2026, de fornecedores do regime regular (CRT 3), com um item de base R$ 1.000,00 cada (a NF-e 1003 tem dois), CBS a 0,9% e IBS a 0,1%; cada uma mostra uma linha da tabela 6.2. As seis últimas (v1.6) são de março de 2027, de fornecedores do Simples, com um item de base R$ 1.000,00, sem IS, e mostram a rota da seção 17.</p>
   <div class="table-wrap"><table>
     <thead><tr><th>DF</th><th>O que mostra</th></tr></thead>
     <tbody id="base-ex"></tbody>
@@ -911,13 +977,278 @@ input[type=range].rg { width: 100%; accent-color: var(--teal); }
   <p>A tolerância começa em R$ 0,01 por item e a regra da D-CR-10 em "o ente prevalece". A configuração vale para as execuções seguintes: gravar não muda o que já foi conferido, e a prévia mostra o que mudaria num reprocessamento. A versão 1.7.4 da calculadora é fictícia e corrige o centavo da NF-e 1003.</p>
 </div>
 
-<div class="foot">SplitHub · tax-rs · Calculadora da Receita Federal no Live · v1.5 · 28/11/2026</div>
+<!-- 17 -->
+<div class="section" id="s17">
+  <div class="sec-hdr"><span class="sec-num">17</span><span class="sec-title">Simples Nacional: a rota por regime na etapa 1</span></div>
+  <div class="callout warn">
+    <div class="ct">Proposta para decisão (v1.6)</div>
+    <p>A Receita Federal publicou uma segunda calculadora, só para o Simples Nacional. Esta seção estuda o código dela e propõe como a etapa 1 da CAPUR manda cada tributo para a calculadora certa, pelo regime que o próprio emitente declarou no DF. Nada foi aplicado nos PRDs nem no tax-rs. As decisões novas vão da D-CR-15 à D-CR-30 (seção 12), e a D-CR-13 passa a cobri-las também.</p>
+  </div>
+  <div class="kpis">
+    <div class="kpi info"><div class="kpi-v">51</div><div class="kpi-l">códigos VSN, independentes dos REG, CAL e VAL</div></div>
+    <div class="kpi"><div class="kpi-v">5</div><div class="kpi-l">regimes que a calculadora devolve</div></div>
+    <div class="kpi warn"><div class="kpi-v">0</div><div class="kpi-l">conferências da alíquota efetiva: ela vem do PGDAS-D</div></div>
+    <div class="kpi"><div class="kpi-v">1</div><div class="kpi-l">banco de dados, o mesmo da calculadora do regime regular</div></div>
+    <div class="kpi red"><div class="kpi-v">2027</div><div class="kpi-l">o destaque do Simples é obrigatório a partir de 01/01</div></div>
+  </div>
+  <div class="callout ok">
+    <div class="ct">A proposta em uma frase</div>
+    <p>Na entrada do DF, o tax-rs lê o regime que o emitente declarou: <code>CRT</code> e <code>tpRegimeIBSCBS</code> ou, na NFS-e, <code>opSimpNac</code>, <code>regApIBSCBSSN</code> e <code>regApTribSN</code>. O regime normal puro e os modelos sem regime seguem para a calculadora do regime regular, como hoje. O resto passa pela calculadora do Simples, e o regime que ela devolve decide a rota de cada tributo. No sublimite, a CBS fica no Simples e o IBS vai à do regime regular. A etapa 1 continua sem mudar valor, e a apuração da Receita Federal (CBS) e a do Comitê Gestor (IBS) seguem como palavra final.</p>
+  </div>
+
+  <h3>17.1 O que a Receita Federal publicou</h3>
+  <p>O repositório <code>ReceitaFederal/calculadora-rtc-simples-nacional</code>, versão 1.0.2 (<code>a926d5a</code>, 18/11/2026), com licença MIT. É uma API REST em Java 25 e Spring Boot 4, baseada na NT 2026.005. Roda na porta 8082 (contexto <code>/api</code>), com métricas na 9103, e não tem autenticação.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Endpoint</th><th>O que faz</th><th>Para o tax-rs</th></tr></thead>
+    <tbody>
+      <tr><td><code>POST …/simples-nacional</code></td><td class="wrap">O clássico. Recebe a alíquota do Simples em cada item e fala só o vocabulário do CRT. O OpenAPI o marca como obsoleto. Recusa o optante que apura no regime regular com 422 (VSN-019).</td><td>Não usar</td></tr>
+      <tr><td><code>POST …/simples-nacional/nao-assistido</code></td><td class="wrap">Acha o regime pela tabela de enquadramento, no vocabulário do próprio documento, e devolve o <code>regimeApuracao</code>. A linha de alíquotas vem uma vez por operação, em <code>aliquotasEfetivas</code>, e a calculadora escolhe o anexo e o par de cada item.</td><td>O endpoint da proposta (D-CR-16)</td></tr>
+      <tr><td>Assistido</td><td class="wrap">Leria as alíquotas pelo contribuinte. Não tem rota no repositório; restaram só os modelos de dados e dois códigos.</td><td>Depois, quando existir</td></tr>
+      <tr><td><code>GET …/erros?codigo=</code> · atividades · <code>/versao</code></td><td class="wrap">Texto de cada código, a lista de atividades do Simples por anexo e documento, e a versão da aplicação e do banco.</td><td>Exibição, cadastro de apoio e histórico</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Os estados de um item.</strong> CALCULADO, NAO_CALCULADO (com o motivo), NAO_IMPLEMENTADO (VSN-027), INCONSISTENCIA_ENTRADA e FALHA_TECNICA (VSN-999). Como na outra calculadora, o HTTP 200 sai mesmo com erro em item, e o 422 é erro da operação inteira.</p>
+  <p><strong>Os códigos.</strong> São 51 códigos VSN num catálogo próprio, duplicado de propósito do regime regular: 17 rejeitam a operação com 422, 26 marcam o item como inconsistente, e 20 têm análogo conceitual no regime regular. As dez validações de NCM e NBS são as mesmas exceções do regime regular, com outro número (VSN-041 a 050).</p>
+  <p><strong>A conta.</strong> Valor = arredondamento em duas casas de receita × fator do tipo de receita × alíquota declarada. A receita é vProd + vFrete + vSeg + vOutro − vDesc, sem o Imposto Seletivo. O fator vem da cClassTrib: 1 na receita interna, 0,5 no tipo 5, zero nos tipos 2, 3 e 9. O destino vem do regime e do tipo de receita: devido, ou pendente/suspenso.</p>
+  <div class="callout">
+    <div class="ct">O que ela confere e o que não confere</div>
+    <ul class="plain">
+      <li><strong>Confere:</strong> o regime, o tipo de receita, o destino (devido ou pendente/suspenso), a conta e se a atividade do Simples existe e é admitida no documento.</li>
+      <li><strong>Não confere a alíquota efetiva.</strong> Ela valida só o formato e a presença. A alíquota efetiva vem do PGDAS-D, pela receita dos últimos 12 meses, e o próprio roteiro diz que a calculadora não a calcula. A Release 16 prevê receber as alíquotas do PGDAS-D pelo MDD e uma consulta autenticada pelo Receita Integra.</li>
+      <li><strong>Banco compartilhado:</strong> ela abre o mesmo banco da calculadora do regime regular, gerado pelo Flyway daquele repositório, e exige pelo menos a migração V0071 (versão 1.7.0). Ela não confere a versão do banco.</li>
+    </ul>
+  </div>
+
+  <h3>17.2 Onde o regime está no DF</h3>
+  <p>Hoje o parser do tax-rs lê só CNPJ, nome e UF do emitente, e não lê os itens. O CR-1 já vai ler os itens só para conferir (D-CR-02); a proposta aproveita a mesma leitura para pegar o regime do emitente e o grupo do Simples de cada item.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Modelo</th><th>Onde está o regime</th><th>Situação no tax-rs</th></tr></thead>
+    <tbody>
+      <tr><td><strong>NF-e (55) e NFC-e (65)</strong></td><td class="wrap"><code>emit/CRT</code> de 1 a 4 (o 4 é o MEI). O <code>tpRegimeIBSCBS</code> e, por item, <code>cAtivSN</code>, <code>pIBSSN</code> e <code>pCBSSN</code>: posição a confirmar (H1).</td><td class="wrap">Entram pelo XML. São os primeiros a ser conferidos.</td></tr>
+      <tr><td><strong>CT-e (57) e CT-e OS (67)</strong></td><td class="wrap">CRT de 1 a 4.</td><td class="wrap">O XML real é recusado hoje, porque o IBS/CBS fica em <code>imp/IBSCBS</code>. O CT-e OS não tem CAPUR.</td></tr>
+      <tr><td><strong>BP-e (63)</strong></td><td class="wrap">CRT de 1 a 3, sem MEI.</td><td class="wrap">O BP-e TM (93), que o Simples aceita, não existe no contrato do tax-rs.</td></tr>
+      <tr><td><strong>NFCom (62)</strong></td><td class="wrap">Está na lista do Simples, mas o XSD não está no repositório.</td><td class="wrap">Cautela da D-CR-15 até confirmar o leiaute.</td></tr>
+      <tr><td><strong>NFS-e</strong></td><td class="wrap"><code>prest/regTrib</code>, com <code>opSimpNac</code> e <code>regApTribSN</code>; o <code>regApIBSCBSSN</code> só no Anexo VI v1.04.01.</td><td class="wrap">Fica para quando a ingestão ler NFS-e.</td></tr>
+      <tr><td><strong>NF3e, NFAg, NFGás, MDF-e, GTV-e</strong></td><td class="wrap">Sem campo de regime ou fora da lista do Simples.</td><td class="wrap">Seguem na calculadora do regime regular.</td></tr>
+      <tr><td><strong>JSON do /v1 por API</strong></td><td class="wrap">Traz itens, mas não traz regime.</td><td class="wrap">Cautela da D-CR-15.</td></tr>
+      <tr><td><strong>CSV e JSON por arquivo</strong></td><td class="wrap">Sem itens e sem regime.</td><td class="wrap">"Não conferido · sem itens", em qualquer regime.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn">
+    <div class="ct">Três hipóteses a confirmar na NT 2026.005</div>
+    <ul class="plain">
+      <li><strong>H1 · onde ficam as tags do Simples.</strong> <code>tpRegimeIBSCBS</code>, <code>cAtivSN</code>, <code>pIBSSN</code> e <code>pCBSSN</code> não aparecem em nenhum dos 129 XSDs da calculadora do regime regular, que são anteriores à NT. Quem as atribui ao DF é a calculadora do Simples.</li>
+      <li><strong>H2 · onde estão os valores do Simples.</strong> No total <code>IBSCBSTot</code>, num grupo do item ou no Evento de Tributação do Simples Nacional (412140), que a saída da calculadora espelha. Inclui saber se o DF separa o devido do pendente/suspenso e se traz o valor por item.</li>
+      <li><strong>H3 · compra governamental.</strong> Num DF com <code>gCompraGov</code>, a alíquota declarada pode vir antes ou depois do deslocamento entre CBS e IBS. A calculadora desloca o que recebe; mandar a de depois deslocaria duas vezes.</li>
+    </ul>
+    <p>Confirmá-las é o primeiro passo do CR-7. Até lá, a guarda do CR-1 decide só pelo CRT.</p>
+  </div>
+  <p><strong>Quando ler.</strong> Na entrada: o arquivo enviado por upload expira em 24 horas. A captura SEFAZ guarda o XML inteiro, o que permite reler o regime pelo reprocessamento por lista (D-CR-06). Nada vai para o ledger: a tabela de documentos não tem coluna de regime, e o crédito e o RF continuam por documento. O regime lido, o devolvido e a rota ficam na execução da etapa 1.</p>
+
+  <h3>17.3 Os regimes que a calculadora devolve</h3>
+  <p>O endpoint não assistido acha o regime numa tabela de enquadramento do banco (11 linhas na V0071) e devolve um de cinco códigos neutros, limitados por uma restrição do próprio banco. A proposta usa só os cinco códigos; não copia as 11 linhas.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>No DF</th><th>Código devolvido</th><th>O que quer dizer</th></tr></thead>
+    <tbody>
+      <tr><td>CRT 1 · NFS-e 3 + regApIBSCBSSN 1</td><td><code>SN_PLENO</code></td><td class="wrap">Optante que recolhe IBS e CBS pelo Simples.</td></tr>
+      <tr><td>CRT 2 · NFS-e 3 + 2</td><td><code>SN_SUBLIMITE</code></td><td class="wrap">Optante que passou do sublimite: a CBS segue no Simples, e o IBS é declarado no grupo do regime regular (<code>gIBSCBS</code>).</td></tr>
+      <tr><td>CRT 3 + tpRegimeIBSCBS 2 · NFS-e 4 + 1</td><td><code>PENDENTE</code></td><td class="wrap">Opção pelo Simples pendente: tudo vai para pendente/suspenso.</td></tr>
+      <tr><td>NFS-e 4 + 2</td><td><code>PENDENTE_SUBLIMITE</code></td><td class="wrap">Hipótese da própria calculadora: o leiaute prevê só a CBS e não diz o destino.</td></tr>
+      <tr><td>CRT 1 ou 2 + tpRegimeIBSCBS 1 · NFS-e 3 + 3 e 4 + 3</td><td><code>SOMENTE_RECEITA</code></td><td class="wrap">Optante que apura IBS e CBS no regime regular (LC 214, art. 41, § 3º). A calculadora só registra a receita.</td></tr>
+      <tr><td>CRT 4 · NFS-e opSimpNac 2</td><td>422 VSN-019</td><td class="wrap">MEI: fora do enquadramento.</td></tr>
+      <tr><td>CRT 3 sem tag · NFS-e opSimpNac 1</td><td>422 VSN-019</td><td class="wrap">Regime normal puro: não é caso para esta calculadora.</td></tr>
+      <tr><td>CRT 1 ou 2 + tag 2 · CRT 3 + tag 1 · CRT 4 + tag</td><td>422 VSN-018</td><td class="wrap">Combinação que o leiaute proíbe (regras C21a-10, 20 e 30). Na NFS-e, VSN-031 e 032.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>17.4 A rota de cada tributo</h3>
+  <p><strong>Pré-rota local.</strong> O tax-rs decide sem chamar a calculadora do Simples em quatro casos:</p>
+  <ul class="plain">
+    <li><strong>Regime normal puro</strong> (CRT 3 sem tag; NFS-e opSimpNac 1): calculadora do regime regular, como hoje.</li>
+    <li><strong>Modelos sem campo de regime ou fora da lista do Simples:</strong> calculadora do regime regular.</li>
+    <li><strong>Fato gerador antes de 01/01/2027:</strong> CRT 3 sem tag e, como hipótese, CRT 1 ou 2 + tpRegimeIBSCBS 1 vão à do regime regular. O resto fica "Não conferido · Simples antes de 2027": a calculadora do Simples não tem vigência antes de 2027, e as alíquotas de teste de 2026 não valem para o Simples.</li>
+    <li><strong>DF sem regime legível ou sem itens:</strong> segue a D-CR-15, por canal.</li>
+  </ul>
+  <p><strong>Rota pela resposta.</strong> Os demais DFs vão primeiro ao endpoint não assistido, e o código devolvido decide por uma tabela fixa. Sem resposta (fora do ar, tempo esgotado), os tributos desses DFs ficam "Cálculo pendente", salvo a contingência. Um código neutro desconhecido fica "não conferido · regime desconhecido", com alerta ao time técnico.</p>
+  <p><strong>Contingência (D-CR-17).</strong> Só quando a calculadora do Simples não responde, ou responde 422 por erro da nossa montagem, e só nos dois casos que o DF decide sozinho: CRT 1 ou 2 + tpRegimeIBSCBS 1 manda os dois tributos à do regime regular, e o IBS do CRT 2 vai à do regime regular. A execução fica marcada como "rota de contingência" e é reconferida quando a do Simples volta.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Combinação no DF</th><th>Regime</th><th>CBS: quem confere</th><th>IBS: quem confere</th><th>Observação</th></tr></thead>
+    <tbody>
+      <tr><td>CRT 3 sem tag · NFS-e opSimpNac 1</td><td>Normal puro</td><td>Regime regular</td><td>Regime regular</td><td class="wrap">Pré-rota; a do Simples não é chamada. Os cinco resultados de hoje.</td></tr>
+      <tr><td>NF3e, NFAg, NFGás, MDF-e, GTV-e</td><td>Não lido</td><td>Regime regular</td><td>Regime regular</td><td class="wrap">Sem campo de regime ou fora da lista do Simples.</td></tr>
+      <tr><td>CRT 1</td><td><code>SN_PLENO</code></td><td>Simples</td><td>Simples</td><td class="wrap">Alíquota declarada, sem conferência. Na exportação indireta (tipo de receita 4), o valor vai para pendente/suspenso também neste regime.</td></tr>
+      <tr><td>CRT 2</td><td><code>SN_SUBLIMITE</code></td><td>Simples</td><td>Regime regular, sobre o <code>gIBSCBS</code></td><td class="wrap">Duas chamadas. A classificação dos itens vem da execução do Simples.</td></tr>
+      <tr><td>CRT 3 + tpRegimeIBSCBS 2</td><td><code>PENDENTE</code></td><td>Simples</td><td>Simples</td><td class="wrap">Tudo pendente/suspenso, comparado por parte (D-CR-21).</td></tr>
+      <tr><td>NFS-e 4 + 2</td><td><code>PENDENTE_SUBLIMITE</code></td><td>Não conferido</td><td>Não conferido</td><td class="wrap">"Regra provisória", até a calculadora confirmar o destino.</td></tr>
+      <tr><td>CRT 1 ou 2 + tpRegimeIBSCBS 1</td><td><code>SOMENTE_RECEITA</code></td><td>Regime regular</td><td>Regime regular</td><td class="wrap">Segunda chamada. Da resposta do Simples só vale o regime; os itens ficam "não usados". Entra na contingência.</td></tr>
+      <tr><td>CRT 4</td><td>MEI</td><td>Nenhuma</td><td>Nenhuma</td><td class="wrap">"Não conferido · MEI", sem ocorrência, no KPI (D-CR-22).</td></tr>
+      <tr><td>Combinação proibida</td><td>Incoerente</td><td>Nenhuma</td><td>Nenhuma</td><td class="wrap">"Dados do Simples inconsistentes" e <code>capur_regime</code>, sob a condição da D-CR-20.</td></tr>
+      <tr><td>Fato gerador antes de 2027</td><td>Pré-rota por data</td><td colspan="2">CRT 3 sem tag e, como hipótese, CRT 1 ou 2 + tag 1: regime regular. O resto: nenhuma.</td><td class="wrap">"Não conferido · Simples antes de 2027".</td></tr>
+      <tr><td>Compra governamental (<code>tpEnteGov</code>)</td><td>O devolvido</td><td colspan="2">No Simples: "não conferido · compra governamental" até a H3. O IBS do sublimite segue no regime regular.</td><td class="wrap">Exceção: tpEnteGov 2 a 4 em 2027 e 2028, com fator zero, confere normalmente (D-CR-29).</td></tr>
+      <tr><td>JSON do /v1 · NFCom</td><td>Não lido</td><td colspan="2">Regime regular. Se o cadastro diz Simples, ou DFs anteriores do CNPJ declararam Simples: nenhuma.</td><td class="wrap">"Não conferido · regime não lido". O cadastro nunca escolhe a calculadora.</td></tr>
+      <tr><td>CSV e JSON por arquivo</td><td>Sem itens</td><td>Nenhuma</td><td>Nenhuma</td><td class="wrap">"Não conferido · sem itens", também no regime regular.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout">
+    <div class="ct">Antes do CR-7: a guarda (D-CR-27)</div>
+    <p>A guarda entra com o CR-1 e o CR-2, em qualquer data. Passam pela calculadora do regime regular só o regime normal puro, os modelos sem regime e, antes de 2027, os casos da pré-rota de data. O resto fica "Não conferido · aguardando a calculadora do Simples". Sem ela, um DF de optante iria para uma calculadora que não lê regime, e a etapa 1 abriria uma <code>capur_*_aliquota</code> falsa contra o fornecedor.</p>
+  </div>
+
+  <h3>17.5 Resultados da etapa 1 e status da CAPUR</h3>
+  <p>A tabela 6.1 ganha dois resultados, e quatro dos atuais ganham motivos ou causas.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Resultado</th><th>Quando</th><th></th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip info">Conta conforme · alíquota não conferida</span></td><td class="wrap">O tributo foi conferido pela calculadora do Simples e o calculado bate com o destacado, dentro da tolerância, comparado por parte (D-CR-21). Selo "Conta ✓". Leva a marca "crédito em suspenso" quando algum item tem pendente/suspenso.</td><td>Novo (D-CR-19)</td></tr>
+      <tr><td><span class="chip red">Dados do Simples inconsistentes</span></td><td class="wrap">Regime incoerente no DF (VSN-018, 031, 032), alíquota do Simples exigida e não declarada no item (VSN-004, 006), atividade 90 com receita tributável (VSN-023), campos do ISS inválidos (VSN-036 a 038), ou pares diferentes para o anexo I ou II no mesmo DF. Selo "Simples ✗".</td><td>Novo (D-CR-20)</td></tr>
+      <tr><td><span class="chip red">Cálculo divergente</span></td><td class="wrap">Causas no Simples: base, tipo de receita, destino (calculado pendente × destacado como devido), regime (IBS destacado num regime que não gera IBS) e arredondamento. A causa "alíquota" não acontece, porque a alíquota usada é a do próprio DF.</td><td>Alterado</td></tr>
+      <tr><td><span class="chip red">Classificação inconsistente</span></td><td class="wrap">Recebe os VSN de classificação, nomenclatura e IS do item. VSN-001 a 003 só quando o campo de origem do DF está ausente ou inválido; fora disso são erro da nossa montagem.</td><td>Alterado</td></tr>
+      <tr><td><span class="chip gray">Cálculo não conferido</span></td><td class="wrap">Sempre com o motivo. Entram: MEI; Simples antes de 2027; regime não lido; sem itens; aguardando a calculadora do Simples; regra provisória; compra governamental; atividade ausente, desconhecida ou não admitida no documento; sem enquadramento; regime desconhecido.</td><td>Alterado</td></tr>
+      <tr><td><span class="chip warn">Cálculo pendente</span></td><td class="wrap">Com a do Simples fora do ar, ficam pendentes os tributos de todos os DFs que não são regime normal puro, porque a rota depende da resposta dela. A exceção é a contingência.</td><td>Alterado</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Precedência, por tributo:</strong> inconsistente, depois divergente nos itens calculados, depois não conferido, por fim conforme. Um item não conferido impede o "Conta conforme", mas não esconde uma divergência em outro item.</p>
+  <p><strong>Tolerância.</strong> A mesma da D-CR-04, por item e por tributo. Se o destacado do Simples só existir no total do documento (H2), vale a tolerância no total que a seção 6.5 já prevê como opcional; sem ela, a tolerância por item vezes o número de itens, com a marca "comparado no total".</p>
+  <p><strong>A tabela 6.2 ganha quatro linhas.</strong> As oito de hoje valem igual para o "Cálculo divergente" do Simples, inclusive a D-CR-10 e a D-CR-11.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Etapa 1</th><th>Etapa 2</th><th>CAPUR</th><th>Ocorrência</th></tr></thead>
+    <tbody>
+      <tr><td>Conta conforme</td><td>Pendente</td><td class="wrap">Pendente · conta conforme, alíquota do Simples não conferida</td><td class="wrap">Nenhuma. O valor fica no KPI.</td></tr>
+      <tr><td>Conta conforme</td><td>Igual ao RF</td><td>Conciliada</td><td class="wrap">Nenhuma. O valor sai do KPI.</td></tr>
+      <tr><td>Conta conforme</td><td>Diferente do RF</td><td class="wrap">Divergente · a conta bate; causas possíveis: alíquota declarada pelo fornecedor ou recolhimento do Simples</td><td class="wrap"><code>capur_*_divergente</code>, com nota dupla: verificar a apuração do ente e conferir com o fornecedor a alíquota declarada.</td></tr>
+      <tr><td>Dados do Simples inconsistentes</td><td>Qualquer</td><td class="wrap">Segue a etapa 2, com a marca "dados do Simples inconsistentes"</td><td class="wrap"><code>capur_regime</code> ou <code>capur_simples</code>, mais a da etapa 2, se houver.</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Rota mista.</strong> A CAPUR já é por documento e tributo. No sublimite, a da CBS usa a etapa 1 do Simples e a do IBS usa a do regime regular: no mesmo DF, a CBS pode estar "Conciliada" e o IBS "Pendente · cálculo divergente". <strong>Histórico:</strong> a lista de motivos da 6.3 ganha "calculadora do Simples disponível". O reprocessamento automático com esse motivo pega só os DFs "aguardando a calculadora do Simples", ou com rota de contingência, ainda sem apuração.</p>
+
+  <h3>17.6 Crédito: nada muda no valor, e o risco fica à vista</h3>
+  <p>A etapa 1 não muda o RF nem o status do crédito. O RF nasce do total do DF, e depois passa a valer o apurado pelo ente (RF-CRE-074). O roteamento só escolhe a regra de conferência (D-CR-24). O artigo da LC 214 que trata do crédito na compra de optante não está no hub, e não se sabe se o crédito é o destacado ou o efetivamente recolhido pelo Simples. Isso fica para parecer jurídico antes de qualquer mudança no PRD de Crédito; nada nesta proposta depende disso.</p>
+  <div class="callout ok">
+    <div class="ct">KPI novo na Conciliação: "Crédito sobre alíquota do Simples não conferida"</div>
+    <p>Soma o crédito esperado (o valor do RF) dos tributos conferidos pela calculadora do Simples, ou retidos pela cautela da D-CR-15, enquanto a etapa 2 não chega. Ficam de fora o SOMENTE_RECEITA e o IBS do sublimite, que seguem a regra do regime regular. Três faixas:</p>
+    <ul class="plain">
+      <li><strong>Conta conferida:</strong> os tributos "Conta conforme" sem nada em suspenso.</li>
+      <li><strong>Em suspenso:</strong> o pendente/suspenso calculado dos itens, em qualquer regime.</li>
+      <li><strong>Não conferido:</strong> o tributo inteiro quando o resultado é "Não conferido" ou "Pendente", com qualquer motivo.</li>
+    </ul>
+    <p>Divergentes e inconsistentes vão para o KPI de sempre. O valor sai quando a etapa 2 chega. Nem o KPI nem as faixas são configuráveis.</p>
+  </div>
+  <p><strong>RF sem o valor do Simples (H2).</strong> Se o <code>IBSCBSTot</code> vier com zero, o RF nasce zero, e a etapa 1 mostra a marca "RF sem o valor do Simples", com o destacado do Simples como base do KPI. Se o <code>IBSCBSTot</code> não vier, a ingestão recusa o DF hoje, e o crédito some da plataforma sem marca nem KPI. É o caso provável do optante de 2026. A D-CR-28 propõe ao PRD de Ingestão aceitar esse DF com totais zero e a marca.</p>
+  <p><strong>O "sem direito a crédito" (CR-3) vale em qualquer rota:</strong> o indicador é da cClassTrib, lido nos dados abertos, na mesma tabela que as duas calculadoras usam.</p>
+
+  <h3>17.7 Cadastro do fornecedor</h3>
+  <p>No tax-rs, o <code>tax_regime</code> do fornecedor é opcional, aceita só lucro real, lucro presumido e Simples Nacional (sem MEI), entra só pelo ERP e fica nulo no pré-cadastro feito a partir de DF. Nenhum serviço fora do cadastro o lê. Por isso a proposta segue três princípios (D-CR-15 e D-CR-23):</p>
+  <ul class="plain">
+    <li><strong>O DF manda na rota.</strong> Ele diz o regime daquela operação, no vocabulário que a calculadora pede, e é o que o ente apura.</li>
+    <li><strong>O cadastro só cruza.</strong> Ele nunca escolhe a calculadora. A exceção é a cautela: DF sem regime legível de um fornecedor que o cadastro, ou DFs anteriores, dão como Simples sai "não conferido · regime não lido".</li>
+    <li><strong>O produto nunca grava <code>tax_regime</code>.</strong> Quem altera o cadastro é o ERP, com auditoria.</li>
+  </ul>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Regime no DF</th><th>Cadastro compatível</th><th>Divergente</th></tr></thead>
+    <tbody>
+      <tr><td>CRT 1 ou 2</td><td>Simples Nacional</td><td>Lucro real ou presumido</td></tr>
+      <tr><td>CRT 3 sem tag</td><td>Lucro real ou presumido</td><td>Simples Nacional</td></tr>
+      <tr><td>CRT 3 + tpRegimeIBSCBS 2</td><td colspan="2">Sem comparação: aviso "opção pelo Simples pendente; o cadastro pode estar desatualizado"</td></tr>
+      <tr><td>CRT 4 (MEI)</td><td colspan="2">Sem comparação: marca "MEI no DF; o cadastro não tem MEI"</td></tr>
+      <tr><td>Incoerente, não lido ou cadastro nulo</td><td colspan="2">Sem comparação. Com cadastro nulo, a tela mostra o regime observado como sugestão para o ERP</td></tr>
+    </tbody>
+  </table></div>
+  <p>A diferença entre o cadastro e o DF <strong>não abre ocorrência</strong>. Ela aparece como nota no bloco "Etapa 1" ("O cadastro diz Lucro presumido, que vem do ERP; o DF diz CRT 1. A conferência seguiu o DF.") e numa linha só de leitura na tela Fornecedor: "Regime: cadastro × observado nos DFs". A ocorrência por fornecedor fica registrada na D-CR-23 para quando um PRD der requisito de negócio ao regime.</p>
+
+  <h3>17.8 Ocorrências</h3>
+  <p>Família, dono e prazo seguem o catálogo. Nenhuma ocorrência muda valor, e o produto nunca resolve sozinho (RN-INC-10). Os tipos da família A são deduplicados por DF, tipo e item, qualquer que seja a calculadora.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tipo</th><th>Família · dono · prazo</th><th>Gatilho</th><th>Códigos</th></tr></thead>
+    <tbody>
+      <tr><td><code>capur_regime</code> · Regime do emitente incoerente no DF<span class="st">novo, sob condição</span></td><td>A · emitente · 5 dias úteis</td><td class="wrap">Combinação de regime que o leiaute proíbe. Uma por DF. Só entra se a NT confirmar que o autorizador não rejeita essas combinações; se rejeitar, os códigos vão para a família F.</td><td>VSN-018; VSN-031 e 032 na NFS-e</td></tr>
+      <tr><td><code>capur_simples</code> · Atividade ou alíquota do Simples inconsistente no item<span class="st">novo</span></td><td>A · emitente · 5 dias úteis</td><td class="wrap">Alíquota exigida e não declarada; atividade 90 com receita tributável; ISS da NFS-e inválido; pares diferentes no anexo I ou II do mesmo DF. Nos anexos III a V, a diferença fica só como aviso.</td><td>VSN-004, 006, 023, 036 a 038</td></tr>
+      <tr><td><code>capur_ibs_base</code> · <code>capur_cbs_base</code><span class="st">valem também para o Simples</span></td><td>B · com o órgão · 15 dias úteis</td><td class="wrap">Calculado pelo Simples diferente do destacado, além da tolerância. Causa no detalhe.</td><td>Item CALCULADO</td></tr>
+      <tr><td><code>capur_*_aliquota</code><span class="st">não abrem no Simples</span></td><td>B</td><td class="wrap">Só na rota do regime regular. No Simples a alíquota usada é a declarada.</td><td>—</td></tr>
+      <tr><td><code>capur_classificacao</code>, <code>capur_tipo_documento</code>, <code>capur_nomenclatura</code>, <code>capur_base_is</code><span class="st">recebem VSN</span></td><td>A · emitente · 5 dias úteis</td><td class="wrap">Os mesmos fatos do regime regular, vindos da calculadora do Simples.</td><td>VSN-020, 021; 022, 035, 045; 041 a 044 e 047 a 051; 001 a 003</td></tr>
+      <tr><td><code>integracao_erp</code></td><td>F · time técnico · 1 dia útil</td><td class="wrap">Erro na montagem da chamada, que é nossa. Não abre para o cliente.</td><td>VSN-010 a 014, 016, 017, 024, 030, 033, 034, 039, 040</td></tr>
+      <tr><td>Nenhuma</td><td>—</td><td class="wrap">Não conferido, com o motivo; falha repetida vai ao time técnico. Também a diferença entre cadastro e DF (só nota).</td><td>VSN-015, 019, 025, 026, 027, 999; atividade ausente ou não admitida</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Para não gerar ocorrência falsa pela montagem:</strong> a chamada leva o Imposto Seletivo do item, ou "0.00" quando o item não tem IS. Sem isso, quase todo item de NF-e sairia com VSN-003 contra o emitente, porque a calculadora trata a ausência como IS inválido. E leva sempre o grupo de alíquotas, mesmo vazio, para que a falta de alíquota no DF vire VSN-004 ou 006 no item, e não um erro da operação.</p>
+  <p><strong>Contagem, se aprovado:</strong> dois tipos novos na família A (um só, se <code>capur_regime</code> não entrar). Os tipos da etapa 1 iriam de sete para nove, e o catálogo proposto na seção 14.4, de 97 para 99.</p>
+
+  <h3>17.9 Validador e configuração</h3>
+  <p><strong>Validador.</strong> Usa a mesma pré-rota e a mesma rota, documento a documento; num lote convivem DFs conferidos por uma, pela outra e pelas duas. Limites, retenção e a falta de efeito no Live não mudam (D-CR-07 e D-CR-08).</p>
+  <ul class="plain">
+    <li><strong>Resultados novos:</strong> "Aceito · alíquota do Simples não conferida" (com a marca "crédito em suspenso" quando houver) e "Rejeitado no regime". "Rejeitado na classificação" e "Divergente" recebem os VSN e as causas do Simples. "Não conferido" sempre com o motivo.</li>
+    <li><strong>Relatório:</strong> colunas "Regime lido" e "Calculadora por tributo"; o cabeçalho cita as duas versões e o banco; o aceite em PDF traz, para cada DF do Simples, a ressalva de que a alíquota efetiva foi declarada pelo emitente e não foi conferida com o PGDAS-D.</li>
+    <li><strong>XSD (D-CR-26):</strong> nenhum dos 129 XSDs tem as tags do Simples, e o da NFS-e só aceita opSimpNac de 1 a 3. Para DF de optante, a opção de validar o XSD avisa e não reprova por essas tags, até a Receita Federal publicar XSDs com a NT 2026.005.</li>
+    <li><strong>Evento do Simples (H2):</strong> se os valores estiverem no evento 412140, o lote aceita o XML do evento no mesmo ZIP, pareado pela chave.</li>
+  </ul>
+  <p><strong>Configuração.</strong> Nenhuma opção nova. A tolerância e a regra da D-CR-10 valem igual para o Simples, e o texto da tela passa a dizer isso. A rota é regra da plataforma, como o teto de R$ 1,00: uma chave como "não conferir Simples" esconderia o risco que o desenho quer mostrar. Entram só um quadro de leitura "Calculadoras em uso" (as duas versões e o banco) e uma nota fixa: no Simples, a alíquota usada é a declarada; a tabela oficial da D-CR-03 vale para o IBS do sublimite e para o optante que apura no regime regular.</p>
+
+  <h3>17.10 Arquitetura</h3>
+  <ul class="plain">
+    <li><strong>Uma imagem, dois containers (D-CR-25).</strong> A imagem leva os dois JARs e o banco do par de versões; sai um container por calculadora. Cada um continua com JAR e banco, como a D-CR-01 pede, e as portas não colidem (8080 e 8082). Um JAR só não dá: as duas têm as mesmas coordenadas Maven e a mesma classe principal. Nenhum dos dois repositórios traz Dockerfile.</li>
+    <li><strong>Par de versões fixado.</strong> O banco é gerado uma vez, no build, pelo Flyway da tag fixada do regime regular, e cada container o abre em somente leitura. Como a do Simples não confere a versão do banco, o par (hoje 1.7.3 e 1.0.2) muda junto, só num PR, com teste de contrato das duas contra o banco do par.</li>
+    <li><strong>O serviço rtc-check continua um só e ganha um roteador:</strong> pré-rota, rota pela resposta e contingência; mapeamento do tipo do DF para o tpDoc da calculadora; montagem da linha de alíquotas.</li>
+    <li><strong>A linha de alíquotas.</strong> Uma chamada por par declarado distinto. O mesmo par vai nos anexos I a V e, nos III a V, também no par sem redistribuição do ISS, com o fator r fixo. Como a calculadora não confere a alíquota, assim o anexo e o fator r não mudam a conta, e não é preciso saber o anexo de cada atividade antes de chamar. A convenção fica gravada na execução.</li>
+    <li><strong>Versão no histórico.</strong> Os cabeçalhos de versão só saem no HTTP 200; no 422, o rtc-check usa o <code>/versao</code> lido na subida. A D-CR-06 passa a valer para a versão nova de qualquer uma das duas.</li>
+    <li><strong>Resiliência e acesso.</strong> Tempo limite, novas tentativas e circuit breaker por calculadora. A do Simples não tem autenticação: fica só na rede privada, atrás do mesmo token. A memória das duas JVMs e o tamanho da imagem são medidos no CR-6.</li>
+  </ul>
+
+  <h3>17.11 Etapas</h3>
+  <p>A ordem da D-CR-09 não muda. A proposta ajusta o CR-1, o CR-2 e o CR-4 e acrescenta três etapas.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Etapa</th><th>Entrega</th><th>Pronto quando</th></tr></thead>
+    <tbody>
+      <tr><td class="id">CR-1 (ajuste)</td><td class="wrap">O parser lê o <code>CRT</code> junto dos itens (e o <code>tpRegimeIBSCBS</code> e o grupo do Simples, confirmada a H1). O rtc-check aplica a pré-rota e a guarda.</td><td class="wrap">As 252 NF-e do staging têm o CRT gravado; uma NF-e de teste com CRT 1 não vai à do regime regular; a mesma, datada de 2026, sai "Simples antes de 2027".</td></tr>
+      <tr><td class="id">CR-2 (ajuste)</td><td class="wrap">Os resultados "aguardando a calculadora do Simples", "Simples antes de 2027" e "sem itens", sem abrir <code>capur_*_aliquota</code>.</td><td class="wrap">A NF-e com CRT 1 sai não conferida e sem ocorrência.</td></tr>
+      <tr><td class="id">CR-6</td><td class="wrap">Subir a calculadora do Simples: segundo JAR na mesma imagem e segundo container, par de versões fixado, healthcheck, cliente TS do não assistido, teste de contrato, medição de memória. Corre em paralelo desde o CR-0.</td><td class="wrap">Chamado pelo Encore, o não assistido devolve os 11 enquadramentos e o teste do próprio repositório, e uma NF-e sem IS sai CALCULADO.</td></tr>
+      <tr><td class="id">CR-7</td><td class="wrap">Começa confirmando H1, H2 e H3. Depois: leitura do grupo do Simples, roteador e contingência, comparação por parte, resultados novos, <code>capur_regime</code> e <code>capur_simples</code>, marcas, selo, filtro "Regime no DF", KPI, bloco da A, J-CR-07 e os XMLs de teste da D-CR-30.</td><td class="wrap">As NF-e 1011 a 1016 percorrem os seis casos no Live; a 1011 chega a "Divergente · a conta bate" numa ocorrência só; com a do Simples parada, a CBS da 1013 fica pendente e o IBS segue pela contingência.</td></tr>
+      <tr><td class="id">CR-8</td><td class="wrap">Regime observado e cadastro: o cadastro grava o regime observado nos DFs, a nota no bloco, a linha na tela Fornecedor e a cautela para DF sem regime.</td><td class="wrap">Um fornecedor cadastrado como Lucro presumido que emite com CRT 1 mostra a nota, sem ocorrência e sem mudar rota nem valor.</td></tr>
+      <tr><td class="id">CR-4 (ajuste)</td><td class="wrap">Antes do CR-7, os DFs de optante saem "aguardando a calculadora do Simples". Depois, ganham a rota, as colunas, os resultados novos e a regra do XSD.</td><td class="wrap">Um ZIP com DFs do regime regular, do Simples, do sublimite e com regime incoerente gera o relatório com a calculadora de cada um.</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Prazo de referência:</strong> 01/01/2027, quando o destaque do Simples passa a ser obrigatório, a um mês desta data. Se o CR-7 atrasar, a guarda do CR-1 e do CR-2 é o que evita falso positivo. <strong>Depois, fora deste plano:</strong> a alíquota oficial pelo assistido ou pelo Receita Integra, quando a Receita Federal os publicar (aí "alíquota não conferida" passa a "conforme" de verdade); NFS-e e CT-e, quando a ingestão aceitar esses XMLs; um campo de regime no /v1; o cenário "fornecedor do Simples" no emulador.</p>
+
+  <h3>17.12 Exemplo com valores redondos</h3>
+  <p>NF-e de 15/03/2027 de um fornecedor que declara CRT 1, sem <code>tpRegimeIBSCBS</code> e sem compra governamental. O ERP o cadastrou como Lucro presumido. Um item: cClassTrib 000001 (receita interna), atividade 01 (Anexo I), base de R$ 10.000,00, sem IS. O DF declara CBS a 2,00% e IBS a 1,00%: R$ 200,00 e R$ 100,00 devidos.</p>
+  <ol class="plain" style="padding-left:20px;list-style:decimal">
+    <li><strong>Rota.</strong> CRT 1 não é regime normal puro, a data é de 2027 e não há compra governamental. O rtc-check chama o não assistido com o par 2,00% e 1,00% replicado nos anexos e o IS "0.00".</li>
+    <li><strong>Resposta.</strong> <code>SN_PLENO</code>, Anexo I, item CALCULADO. CBS e IBS ficam no Simples.</li>
+    <li><strong>Conta.</strong> CBS = 10.000 × 1 × 2,00% = R$ 200,00. IBS = 10.000 × 1 × 1,00% = R$ 100,00. Nada pendente.</li>
+    <li><strong>Etapa 1.</strong> Devido com devido: R$ 200,00 com R$ 200,00 e R$ 100,00 com R$ 100,00. Os dois ficam "Conta conforme · alíquota não conferida", sem ocorrência. O KPI soma R$ 300,00 na faixa "conta conferida". O bloco traz a nota do cadastro.</li>
+    <li><strong>Etapa 2.</strong> A Receita Federal apura CBS de R$ 200,00 e o Comitê Gestor apura IBS de R$ 100,00. As duas CAPUR ficam "Conciliada", o RF não se moveu, e os R$ 300,00 saem do KPI.</li>
+  </ol>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Variação da mesma nota</th><th>O que acontece</th></tr></thead>
+    <tbody>
+      <tr><td><strong>O Comitê Gestor apura IBS de R$ 80,00</strong></td><td class="wrap">A CAPUR do IBS fica "Divergente · a conta bate; causas possíveis: alíquota declarada pelo fornecedor ou recolhimento do Simples", com <code>capur_ibs_divergente</code> e a nota dupla. A causa é hipótese até o parecer da D-CR-24.</td></tr>
+      <tr><td><strong>Tipo de receita 5</strong> (cClassTrib 222001, fator 0,5)</td><td class="wrap">Calculado R$ 100,00 e R$ 50,00 contra R$ 200,00 e R$ 100,00 destacados: "Cálculo divergente · causa: tipo de receita", com <code>capur_cbs_base</code> e <code>capur_ibs_base</code>.</td></tr>
+      <tr><td><strong>Exportação indireta</strong> (cClassTrib 550001, tipo 4)</td><td class="wrap">A calculadora põe R$ 200,00 e R$ 100,00 em pendente/suspenso. Se o DF declara assim: "Conta conforme" com a marca "crédito em suspenso", e os R$ 300,00 vão para a faixa "em suspenso". Se declara como devido: "Cálculo divergente · causa: destino".</td></tr>
+      <tr><td><strong>Sublimite</strong> (CRT 2)</td><td class="wrap">A CBS vai à do Simples: R$ 200,00, conta conforme. O IBS vai à do regime regular, sobre o <code>gIBSCBS</code>, que destaca R$ 10,00 (alíquota ilustrativa de 0,10%): conforme. Se o DF pusesse IBS no grupo do Simples, sairia "causa: regime".</td></tr>
+      <tr><td><strong>Opção pendente</strong> (CRT 3 + tpRegimeIBSCBS 2)</td><td class="wrap">Tudo pendente/suspenso. Declarado assim, "Conta conforme" com a marca e os R$ 300,00 em "em suspenso".</td></tr>
+      <tr><td><strong>Regime incoerente</strong> (CRT 1 + tpRegimeIBSCBS 2)</td><td class="wrap">VSN-018 (regra C21a-10): "Dados do Simples inconsistentes" e <code>capur_regime</code> para o emitente, se a condição da D-CR-20 se confirmar.</td></tr>
+      <tr><td><strong>MEI</strong> (CRT 4)</td><td class="wrap">"Não conferido · MEI", sem ocorrência, na faixa "não conferido" do KPI.</td></tr>
+      <tr><td><strong>Imposto Seletivo de R$ 50,00</strong></td><td class="wrap">"Não conferido · regra provisória": a calculadora deixa o IS fora da receita, contra a base unificada do regime regular (D-CR-21).</td></tr>
+      <tr><td><strong>Calculadora do Simples parada</strong></td><td class="wrap">Os dois tributos ficam "Cálculo pendente". Numa nota CRT 2, a CBS fica pendente e o IBS segue pela contingência, marcado.</td></tr>
+      <tr><td><strong>A mesma nota em 15/12/2026</strong></td><td class="wrap">Pré-rota: "Não conferido · Simples antes de 2027", sem chamar calculadora. Sem a guarda, iria à do regime regular, a 0,9% (R$ 90,00), e abriria uma <code>capur_cbs_aliquota</code> falsa.</td></tr>
+    </tbody>
+  </table></div>
+  <p>A jornada J-CR-07 (seção 15) e as NF-e 1011 a 1016 do protótipo (seção 16) mostram estes casos nas telas da A.</p>
+</div>
+
+<div class="foot">SplitHub · tax-rs · Calculadora da Receita Federal no Live · v1.6 · 28/11/2026</div>
 </div>
 <script>
 (function () {
 'use strict';
 /* ── dados de exemplo ─────────────────────────────────────────── */
-var FORN = ['Alfa Componentes', 'Beta Logística', 'Gama Insumos', 'Delta Serviços', 'Épsilon Metais', 'Zeta Plásticos', 'Eta Química', 'Teta Alimentos', 'Iota Têxtil', 'Kappa Embalagens'];
+var FORN = ['Alfa Componentes', 'Beta Logística', 'Gama Insumos', 'Delta Serviços', 'Épsilon Metais', 'Zeta Plásticos', 'Eta Química', 'Teta Alimentos', 'Iota Têxtil', 'Kappa Embalagens', 'Lambda Ferragens', 'Mi Utilidades', 'Ni Peças', 'Xi Reparos', 'Ômicron Móveis', 'Pi Insumos'];
+var REG = {
+  rr: { f: 'rr', lab: 'Regular · CRT 3', crt: 'CRT 3', nome: 'regime regular', cod: null, rot: { cbs: 'rr', ibs: 'rr' } },
+  sn: { f: 'sn', lab: 'Simples · CRT 1', crt: 'CRT 1', nome: 'Simples Nacional', cod: 'SN_PLENO', rot: { cbs: 'sn', ibs: 'sn' } },
+  sub: { f: 'sub', lab: 'Sublimite · CRT 2 · CBS: SN · IBS: regular', crt: 'CRT 2', nome: 'Simples Nacional no sublimite', cod: 'SN_SUBLIMITE', rot: { cbs: 'sn', ibs: 'rr' } },
+  mei: { f: 'mei', lab: 'MEI · CRT 4', crt: 'CRT 4', nome: 'MEI', cod: null, rot: { cbs: '—', ibs: '—' }, motivo: 'MEI' },
+  inc: { f: 'inc', lab: 'Incoerente · CRT 1 + tpRegimeIBSCBS 2', crt: 'CRT 1 + tpRegimeIBSCBS 2', nome: 'regime incoerente', cod: null, rot: { cbs: '—', ibs: '—' } }
+};
+function sn(at, anexo, tp, fator, al) { return { at: at, anexo: anexo, tp: tp, fator: fator, al: al }; }
 function it(n, ncm, cst, cct, base, dest, calc, extra) {
   var o = { n: n, ncm: ncm, cst: cst, cct: cct, base: base, dest: dest, calc: calc, est: 'CALCULADO' };
   for (var k in extra || {}) o[k] = extra[k];
@@ -943,29 +1274,47 @@ var BASE = [
   { num: 1009, it: [it(1, '5208.12.00', '000', '000001', 1000, { cbs: 9, ibs: 1 }, { cbs: 9, ibs: 1 })], futuro: { cbs: 9, ibs: 1 },
     ex: 'Conforme e ainda sem apuração: "Pendente · cálculo conforme".' },
   { num: 1010, it: [it(1, '4819.10.00', '000', '000001', 1000, { cbs: 10.5, ibs: 1 }, { cbs: 9, ibs: 1 }, { causa: 'aliquota' })], futuro: { cbs: 9, ibs: 1 },
-    ex: 'R$ 1,50 de diferença: diverge mesmo com a tolerância no teto de R$ 1,00.' }
+    ex: 'R$ 1,50 de diferença: diverge mesmo com a tolerância no teto de R$ 1,00.' },
+  { num: 1011, reg: 'sn', cad: 'Lucro presumido', it: [it(1, '9403.60.00', '—', '000001', 1000, { cbs: 20, ibs: 10 }, { cbs: 20, ibs: 10 }, { sn: sn('01', 'I', '1', '1', { cbs: '2,00%', ibs: '1,00%' }) })], futuro: { cbs: 20, ibs: 8 },
+    ex: 'Simples · CRT 1: conta conforme, alíquota não conferida. O cadastro diz Lucro presumido e aparece a nota. Simule a apuração: o Comitê Gestor apura IBS de R$ 8,00.' },
+  { num: 1012, reg: 'sn', it: [it(1, '7318.15.00', '—', '222001', 1000, { cbs: 20, ibs: 10 }, { cbs: 10, ibs: 5 }, { causa: 'tiporeceita', sn: sn('01', 'I', '5', '0,5', { cbs: '2,00%', ibs: '1,00%' }) })], futuro: { cbs: 10, ibs: 5 },
+    ex: 'Simples · tipo de receita 5 (fator 0,5): calculado R$ 10,00 e R$ 5,00 contra R$ 20,00 e R$ 10,00. Divergente, causa tipo de receita.' },
+  { num: 1013, reg: 'sub', it: [it(1, '8708.29.99', '000', '000001', 1000, { cbs: 20, ibs: 1 }, { cbs: 20, ibs: 1 }, { sn: sn('01', 'I', '1', '1', { cbs: '2,00%' }) })], futuro: { cbs: 20, ibs: 1 },
+    ex: 'Sublimite · CRT 2: a CBS pela do Simples (R$ 20,00) e o IBS pela do regime regular, no gIBSCBS (R$ 1,00, alíquota ilustrativa de 0,10%). Os dois conformes.' },
+  { num: 1014, reg: 'mei', it: [it(1, '9987.00.00', '—', '000001', 1000, { cbs: 20, ibs: 10 }, null, { est: 'NAOCONF', cod: 'VSN-019', campo: 'CRT', txt: 'MEI: a calculadora do Simples não calcula' })], futuro: { cbs: 20, ibs: 10 },
+    ex: 'MEI · CRT 4: não conferido, sem ocorrência, na faixa "não conferido" do KPI.' },
+  { num: 1015, reg: 'inc', it: [it(1, '9401.61.00', '—', '000001', 1000, { cbs: 20, ibs: 10 }, null, { est: 'SIMPLES', cod: 'VSN-018', campo: 'CRT × tpRegimeIBSCBS', txt: 'regime incoerente (regra C21a-10)' })], futuro: { cbs: 20, ibs: 10 },
+    ex: 'CRT 1 com tpRegimeIBSCBS 2: dados do Simples inconsistentes, com capur_regime para o emitente.' },
+  { num: 1016, reg: 'sn', it: [it(1, '1006.30.21', '—', '550001', 1000, { cbs: 20, ibs: 10 }, { cbs: 20, ibs: 10 }, { susp: true, sn: sn('01', 'I', '4', '1', { cbs: '2,00%', ibs: '1,00%' }) })], futuro: { cbs: 20, ibs: 10 },
+    ex: 'Exportação indireta (tipo de receita 4): tudo pendente/suspenso, declarado e calculado. Conta conforme com a marca "crédito em suspenso".' }
 ];
 BASE.forEach(function (d, i) {
+  var snd = d.num > 1010;
   d.forn = FORN[i];
+  d.reg = REG[d.reg || 'rr'];
   d.cnpj = String(11111111000100 + (i + 1) * 101).slice(0, 14);
-  d.chave = '352612' + d.cnpj + '55001' + ('000000000' + d.num).slice(-9) + '10000000' + String(10 + i);
-  d.data = String(1 + i).padStart(2, '0') + '/12/2026';
+  d.chave = (snd ? '352703' : '352612') + d.cnpj + '55001' + ('000000000' + d.num).slice(-9) + '10000000' + String(10 + i);
+  d.data = snd ? String(5 + i) + '/03/2027' : String(1 + i).padStart(2, '0') + '/12/2026';
 });
 var LOTE_EX = [
   ['NFe-2001-alfa.xml', 'aceito'], ['NFe-2002-beta.xml', 'divergente'], ['NFe-2003-gama.xml', 'aceito'], ['NFe-2004-delta.xml', 'rejeitado'],
-  ['NFe-2005-epsilon.xml', 'aceito'], ['NFe-2006-zeta.xml', 'invalido'], ['NFe-2007-eta.xml', 'naoconf'], ['NFe-2008-teta.xml', 'aceito']
+  ['NFe-2005-epsilon.xml', 'aceito'], ['NFe-2006-zeta.xml', 'invalido'], ['NFe-2007-eta.xml', 'naoconf'], ['NFe-2008-teta.xml', 'aceito'],
+  ['NFe-3011-simples.xml', 'aceitosn'], ['NFe-3013-sublimite.xml', 'aceito'], ['NFe-3016-exportacao.xml', 'aceitosn'], ['NFe-3014-mei.xml', 'naoconf'], ['NFe-3015-incoerente.xml', 'regime']
 ];
 var TRIB = ['cbs', 'ibs'];
 var TN = { cbs: 'CBS', ibs: 'IBS' };
 var ENTE = { cbs: 'Receita Federal', ibs: 'Comitê Gestor' };
 var E1 = {
   conforme: { r: 'Cálculo conforme', s: 'Cálculo ✓', c: 'ok' }, divergente: { r: 'Cálculo divergente', s: 'Cálculo ✗', c: 'red' },
-  inconsistente: { r: 'Classificação inconsistente', s: 'Classificação ✗', c: 'red' }, naoconf: { r: 'Cálculo não conferido', s: 'Não conferido', c: 'gray' }
+  inconsistente: { r: 'Classificação inconsistente', s: 'Classificação ✗', c: 'red' }, naoconf: { r: 'Cálculo não conferido', s: 'Não conferido', c: 'gray' },
+  contaok: { r: 'Conta conforme · alíquota não conferida', s: 'Conta ✓', c: 'info' }, simples: { r: 'Dados do Simples inconsistentes', s: 'Simples ✗', c: 'red' }
 };
-var VRES = { aceito: ['Aceito', 'ok'], divergente: ['Divergente', 'red'], rejeitado: ['Rejeitado na classificação', 'red'], invalido: ['XML inválido', 'warn'], naoconf: ['Não conferido', 'gray'] };
+var CAUSA = { base: 'base', aliquota: 'alíquota', tiporeceita: 'tipo de receita' };
+function calcDe(d, t, ver) { var r = d.reg.rot[t]; return r === 'sn' ? 'Simples Nacional 1.0.2' : r === 'rr' ? 'regime regular ' + ver : 'nenhuma'; }
+var VRES = { aceito: ['Aceito', 'ok'], aceitosn: ['Aceito · alíquota do Simples não conferida', 'info'], divergente: ['Divergente', 'red'], rejeitado: ['Rejeitado na classificação', 'red'], regime: ['Rejeitado no regime', 'red'], invalido: ['XML inválido', 'warn'], naoconf: ['Não conferido', 'gray'] };
 var OCC_T = {
   capur_cbs_aliquota: 'Alíquota incorreta · CBS', capur_ibs_aliquota: 'Alíquota incorreta · IBS', capur_cbs_base: 'Base divergente do cálculo oficial · CBS',
-  capur_ibs_base: 'Base divergente do cálculo oficial · IBS', capur_classificacao: 'Classificação reprovada na regra oficial', capur_cbs_divergente: 'CAPUR divergente · CBS', capur_ibs_divergente: 'CAPUR divergente · IBS'
+  capur_ibs_base: 'Base divergente do cálculo oficial · IBS', capur_classificacao: 'Classificação reprovada na regra oficial', capur_cbs_divergente: 'CAPUR divergente · CBS', capur_ibs_divergente: 'CAPUR divergente · IBS', capur_regime: 'Regime do emitente incoerente no DF'
 };
 
 /* ── utilidades ───────────────────────────────────────────────── */
@@ -981,22 +1330,32 @@ function hashN(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + 
 /* ── a regra (igual nas três) ─────────────────────────────────── */
 function calcV(df, item, t, ver) { if (!item.calc) return null; if (ver === '1.7.4' && item.c174) return item.c174[t]; return item.calc[t]; }
 function etapa1(df, t, tol, ver) {
-  var items = df.it, i, dif = 0, causa = null, pior = null;
+  var items = df.it, i, dif = 0, causa = null, pior = null, rota = df.reg.rot[t];
+  if (rota === '—') return df.reg.f === 'inc' ? { res: 'simples', item: items[0] } : { res: 'naoconf', item: items[0], motivo: df.reg.motivo };
   for (i = 0; i < items.length; i++) if (items[i].est === 'REG') return { res: 'inconsistente', item: items[i] };
   for (i = 0; i < items.length; i++) if (items[i].est !== 'CALCULADO') return { res: 'naoconf', item: items[i] };
   for (i = 0; i < items.length; i++) {
     var d = Math.abs(items[i].dest[t] - calcV(df, items[i], t, ver));
     if (d > tol + 1e-9 && d > dif) { dif = d; causa = items[i].causa || 'aliquota'; pior = items[i]; }
   }
-  return dif > 0 ? { res: 'divergente', causa: causa, dif: dif, item: pior } : { res: 'conforme' };
+  if (dif > 0) return { res: 'divergente', causa: causa, dif: dif, item: pior };
+  if (rota === 'sn') return { res: 'contaok', susp: items.some(function (x) { return x.susp; }) };
+  return { res: 'conforme' };
 }
 function tot(df, t, k, ver) { return df.it.reduce(function (s, x) { if (k === 'dest') return s + x.dest[t]; var v = calcV(df, x, t, ver); return v === null ? s : s + v; }, 0); }
 function capur(df, t) {
   var r = df.run[t], ente = df.ente[t], dest = tot(df, t, 'dest'), calc = tot(df, t, 'calc', r.ver), tol = r.tol;
   var e1 = E1[r.res], o = { e1: r.res, e2: ente === null ? 'pendente' : (eq(ente, dest, tol) ? 'igual' : 'diferente'), marca: '' };
   if (r.res === 'inconsistente') o.marca = 'classificação inconsistente';
-  if (r.res === 'naoconf') o.marca = 'cálculo não conferido';
-  if (ente === null) { o.rot = 'Pendente · ' + e1.r.toLowerCase(); o.c = r.res === 'divergente' || r.res === 'inconsistente' ? 'warn' : 'gray'; }
+  if (r.res === 'naoconf') o.marca = r.motivo ? 'não conferido · ' + r.motivo : 'cálculo não conferido';
+  if (r.res === 'simples') o.marca = 'dados do Simples inconsistentes';
+  if (r.res === 'contaok' && r.susp) o.marca = 'crédito em suspenso';
+  if (r.res === 'contaok') {
+    if (ente === null) { o.rot = 'Pendente · conta conforme, alíquota do Simples não conferida'; o.c = 'info'; }
+    else if (eq(ente, dest, tol)) { o.rot = 'Conciliada'; o.c = 'ok'; }
+    else { o.rot = 'Divergente · a conta bate; causas possíveis: alíquota declarada pelo fornecedor ou recolhimento do Simples'; o.c = 'red'; }
+  } else if (ente === null && r.res === 'simples') { o.rot = 'Pendente · dados do Simples inconsistentes'; o.c = 'warn'; }
+  else if (ente === null) { o.rot = 'Pendente · ' + e1.r.toLowerCase().replace(/simples/g, 'Simples'); o.c = r.res === 'divergente' || r.res === 'inconsistente' ? 'warn' : 'gray'; }
   else if (r.res === 'divergente') {
     if (eq(ente, dest, tol)) { o.rot = r.regra === 'ente' ? 'Conciliada · com ressalva do cálculo' : 'Conciliada · risco de revisão'; o.c = r.regra === 'ente' ? 'ok' : 'warn'; o.d10 = true; }
     else if (eq(ente, calc, tol)) { o.rot = 'Divergente · causa: valor do fornecedor'; o.c = 'red'; }
@@ -1009,8 +1368,9 @@ function capur(df, t) {
 }
 function occTipo(df, t) {
   var r = df.run[t], ente = df.ente[t], dest = tot(df, t, 'dest');
-  if (r.res === 'divergente') return 'capur_' + t + '_' + (r.causa === 'base' ? 'base' : 'aliquota');
+  if (r.res === 'divergente') return 'capur_' + t + '_' + (r.causa === 'base' || r.causa === 'tiporeceita' ? 'base' : 'aliquota');
   if (r.res === 'inconsistente') return t === 'cbs' ? 'capur_classificacao' : null;
+  if (r.res === 'simples' && t === 'cbs') return 'capur_regime';
   if (ente !== null && !eq(ente, dest, r.tol)) return 'capur_' + t + '_divergente';
   return null;
 }
@@ -1019,26 +1379,26 @@ function occTipo(df, t) {
 function App(V) {
   var root = document.getElementById('fr-' + V);
   var S = { dfs: clone(BASE), tol: 0.01, regra: 'ente', cTol: 0.01, cRegra: 'ente', ver: '1.7.3', relogio: 0, occ: {}, aud: [], jobs: [], lote: null, msg: '',
-    filtro: 'todos', sel: {}, tela: V === 'B' ? 'painel' : 'conc', df: null, trib: 'cbs', aba: 'e1', drw: null, modal: null, repModo: 'colar', repTxt: '', ocSel: null, valDoc: null, valFiltro: 'todos' };
-  function agora() { S.relogio += 7; var m = 8 * 60 + S.relogio; return '15/12/2026 ' + String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+    filtro: 'todos', freg: 'todos', sel: {}, tela: V === 'B' ? 'painel' : 'conc', df: null, trib: 'cbs', aba: 'e1', drw: null, modal: null, repModo: 'colar', repTxt: '', ocSel: null, valDoc: null, valFiltro: 'todos' };
+  function agora() { S.relogio += 7; var m = 8 * 60 + S.relogio; return '22/03/2027 ' + String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
   function executar(df, motivo, autor, pedido) {
     var mud = false;
     TRIB.forEach(function (t) {
       var r = etapa1(df, t, S.tol, S.ver), ant = df.run && df.run[t] ? df.run[t].res : null;
       if (ant && ant !== r.res) mud = true;
       df.run = df.run || {};
-      df.run[t] = { res: r.res, causa: r.causa, dif: r.dif, item: r.item ? r.item.n : null, ver: S.ver, tol: S.tol, regra: df.run[t] ? df.run[t].regra : S.regra };
+      df.run[t] = { res: r.res, causa: r.causa, dif: r.dif, item: r.item ? r.item.n : null, ver: S.ver, tol: S.tol, regra: df.run[t] ? df.run[t].regra : S.regra, motivo: r.motivo, susp: r.susp };
       if (df.ente[t] === null) df.run[t].regra = S.regra;
       var tp = occTipo(df, t), k = df.num + ':' + t;
       if (tp && !S.occ[k]) S.occ[k] = { tipo: tp, st: 'aberta', desde: agora() };
       else if (tp && S.occ[k] && S.occ[k].st !== 'resolvida') S.occ[k].tipo = tp;
     });
-    df.hist.unshift({ q: agora(), e: 'Etapa 1', txt: TRIB.map(function (t) { return TN[t] + ' ' + E1[df.run[t].res].r.toLowerCase(); }).join(' · '), sub: 'calculadora ' + S.ver + ' · tolerância ' + rs(S.tol) + ' · ' + motivo + (autor ? ' · ' + autor : '') + (pedido ? ' · ' + pedido : '') });
+    df.hist.unshift({ q: agora(), e: 'Etapa 1', txt: TRIB.map(function (t) { return TN[t] + ' ' + E1[df.run[t].res].r.toLowerCase().replace(/simples/g, 'Simples'); }).join(' · '), sub: (df.reg.f === 'rr' ? 'calculadora ' + S.ver : df.reg.f === 'sub' ? 'CBS pela do Simples 1.0.2 · IBS pela do regime regular ' + S.ver : df.reg.f === 'sn' ? 'calculadora do Simples 1.0.2' : 'regime lido: ' + df.reg.crt + ' · nenhuma calculadora') + ' · tolerância ' + rs(S.tol) + ' · ' + motivo + (autor ? ' · ' + autor : '') + (pedido ? ' · ' + pedido : '') });
     return mud;
   }
   S.dfs.forEach(function (d) {
     d.ente = { cbs: d.ente ? d.ente.cbs : null, ibs: d.ente ? d.ente.ibs : null };
-    d.hist = [{ q: d.data + ' 07:00', e: 'Entrada', txt: 'DF recebido pela ingestão', sub: 'NF-e de entrada · ' + d.forn }];
+    d.hist = [{ q: d.data + ' 07:00', e: 'Entrada', txt: 'DF recebido pela ingestão', sub: 'NF-e de entrada · ' + d.forn + ' · regime lido: ' + d.reg.crt }];
     executar(d, 'entrada do DF', null, null);
     d.hist[0].q = d.data + ' 07:01';
     if (d.ente.cbs !== null) d.hist.unshift({ q: d.data + ' 18:00', e: 'Etapa 2', txt: 'Apuração do ente recebida', sub: 'CBS ' + rs(d.ente.cbs) + ' · IBS ' + rs(d.ente.ibs) });
@@ -1059,6 +1419,7 @@ function App(V) {
   function stOcc(o) { if (o.st === 'resolvida') return chip('ok', 'Resolvida'); if (o.st === 'em_analise') return chip('info', 'Em análise · desfecho preenchido'); return chip('red', o.rot ? 'Aberta · ' + o.rot : 'Aberta'); }
   function filtrar() {
     return S.dfs.filter(function (d) {
+      if (S.freg !== 'todos' && d.reg.f !== S.freg) return false;
       if (S.filtro === 'todos') return true;
       if (S.filtro === 'pend') return d.ente.cbs === null;
       return TRIB.some(function (t) { return d.run[t].res === S.filtro; });
@@ -1074,23 +1435,45 @@ function App(V) {
   }
 
   /* ── pedaços de tela, reaproveitados nas três ── */
+  function marcaCurta(c) {
+    var m = c.marca, r = c.rot.toLowerCase();
+    if (!m || r.indexOf(m.toLowerCase()) >= 0) return '';
+    if (m.indexOf('não conferido · ') === 0 && r.indexOf('não conferido') >= 0) m = m.slice(16);
+    return ' · ' + m;
+  }
   function selos(d, prevMap) {
     return TRIB.map(function (t) {
       var c = capur(d, t), p = prevMap && prevMap[d.num] && prevMap[d.num].filter(function (x) { return x.t === t; })[0];
       return '<div><span class="selo' + (p ? ' prev' : '') + '"><b style="font-size:10.5px;color:var(--txt3);width:28px">' + TN[t] + '</b>' + c.etapa1 + c.etapa2 + '</span>' +
-        '<span class="st">' + c.rot + (c.marca ? ' · ' + c.marca : '') + (p ? ' · <b style="color:var(--amber)">prévia: ' + E1[p.para].r.toLowerCase() + '</b>' : '') + '</span></div>';
+        '<span class="st">' + c.rot + marcaCurta(c) + (p ? ' · <b style="color:var(--amber)">prévia: ' + E1[p.para].r.toLowerCase().replace(/simples/g, 'Simples') + '</b>' : '') + '</span></div>';
     }).join('');
   }
   function kpis(clicavel) {
-    var a = [['divergente', 'Cálculo divergente', 'red'], ['inconsistente', 'Classificação inconsistente', 'red'], ['naoconf', 'Não conferido', 'gray'], ['conforme', 'Cálculo conforme', 'ok'], ['pend', 'Aguardando o ente', 'warn']];
+    var a = [['divergente', 'Cálculo divergente', 'red'], ['inconsistente', 'Classificação inconsistente', 'red'], ['simples', 'Dados do Simples inconsistentes', 'red'], ['naoconf', 'Não conferido', 'gray'], ['conforme', 'Cálculo conforme', 'ok'], ['contaok', 'Conta conforme · Simples', 'info'], ['pend', 'Aguardando o ente', 'warn']];
     return '<div class="minis">' + a.map(function (x) {
       var n = x[0] === 'pend' ? S.dfs.filter(function (d) { return d.ente.cbs === null; }).length : contagem(x[0]);
       return '<div class="mini ' + x[2] + (clicavel ? ' clic" data-a="filtro" data-v="' + x[0] : '') + '"><div class="v">' + n + '</div><div class="l">' + x[1] + '</div></div>';
     }).join('') + '</div>';
   }
   function filtros() {
-    var a = [['todos', 'Todas', S.dfs.length], ['divergente', 'Cálculo divergente', contagem('divergente')], ['inconsistente', 'Classificação inconsistente', contagem('inconsistente')], ['naoconf', 'Não conferido', contagem('naoconf')], ['conforme', 'Conforme', contagem('conforme')], ['pend', 'Aguardando o ente', S.dfs.filter(function (d) { return d.ente.cbs === null; }).length]];
-    return '<div class="chps"><span style="font-size:11px;color:var(--txt3);margin-right:4px">Etapa 1</span>' + a.map(function (x) { return '<button type="button" class="chp' + (S.filtro === x[0] ? ' on' : '') + '" data-a="filtro" data-v="' + x[0] + '">' + x[1] + '<small>' + x[2] + '</small></button>'; }).join('') + '</div>';
+    var a = [['todos', 'Todas', S.dfs.length], ['divergente', 'Cálculo divergente', contagem('divergente')], ['inconsistente', 'Classificação inconsistente', contagem('inconsistente')], ['simples', 'Dados do Simples inconsistentes', contagem('simples')], ['naoconf', 'Não conferido', contagem('naoconf')], ['conforme', 'Conforme', contagem('conforme')], ['contaok', 'Conta conforme', contagem('contaok')], ['pend', 'Aguardando o ente', S.dfs.filter(function (d) { return d.ente.cbs === null; }).length]];
+    var g = [['todos', 'Todos'], ['rr', 'Regime regular'], ['sn', 'Simples'], ['sub', 'Sublimite'], ['mei', 'MEI'], ['inc', 'Incoerente']];
+    return '<div class="chps"><span style="font-size:11px;color:var(--txt3);margin-right:4px">Regime no DF</span>' + g.map(function (x) { var n = x[0] === 'todos' ? S.dfs.length : S.dfs.filter(function (d) { return d.reg.f === x[0]; }).length; return '<button type="button" class="chp' + (S.freg === x[0] ? ' on' : '') + '" data-a="freg" data-v="' + x[0] + '">' + x[1] + '<small>' + n + '</small></button>'; }).join('') + '</div>' +
+      '<div class="chps"><span style="font-size:11px;color:var(--txt3);margin-right:4px">Etapa 1</span>' + a.map(function (x) { return '<button type="button" class="chp' + (S.filtro === x[0] ? ' on' : '') + '" data-a="filtro" data-v="' + x[0] + '">' + x[1] + '<small>' + x[2] + '</small></button>'; }).join('') + '</div>';
+  }
+  function kpiSN() {
+    var f = { conta: 0, susp: 0, nao: 0 };
+    S.dfs.forEach(function (d) { TRIB.forEach(function (t) {
+      var r = d.run[t], rota = d.reg.rot[t];
+      if (d.ente[t] !== null || !(rota === 'sn' || d.reg.f === 'mei')) return;
+      var v = tot(d, t, 'dest');
+      if (r.res === 'contaok') { if (r.susp) f.susp += v; else f.conta += v; } else if (r.res === 'naoconf') f.nao += v;
+    }); });
+    var T = f.conta + f.susp + f.nao, pc = function (v) { return T ? 100 * v / T : 0; };
+    return '<div class="card"><div class="card-t"><span>Crédito sobre alíquota do Simples não conferida</span><span style="font-size:15px;color:var(--txt1);text-transform:none;letter-spacing:0">' + rs(T) + '</span></div>' +
+      '<div class="bar"><span class="b-info" style="width:' + pc(f.conta) + '%"></span><span class="b-warn" style="width:' + pc(f.susp) + '%"></span><span class="b-gray" style="width:' + pc(f.nao) + '%"></span></div>' +
+      '<div class="lg"><span><i class="b-info"></i>Conta conferida ' + rs(f.conta) + '</span><span><i class="b-warn"></i>Em suspenso ' + rs(f.susp) + '</span><span><i class="b-gray"></i>Não conferido ' + rs(f.nao) + '</span></div>' +
+      '<p style="margin:0;font-size:11.5px;color:var(--txt3)">Crédito esperado dos tributos conferidos pela calculadora do Simples, enquanto a apuração do ente não chega. Divergentes e inconsistentes ficam nos indicadores de sempre.</p></div>';
   }
   function tabelaConc(opts) {
     opts = opts || {};
@@ -1100,13 +1483,42 @@ function App(V) {
     if (!lst.length) h += '<tr><td colspan="5" style="text-align:center;color:var(--txt3)">Nenhuma CAPUR com esse filtro.</td></tr>';
     lst.forEach(function (d) {
       h += '<tr class="clic' + (opts.atual === d.num ? ' atual' : '') + '" data-a="abrir" data-v="' + d.num + '">' + (opts.sel ? '<td class="ck"><input type="checkbox" data-a="sel" data-v="' + d.num + '"' + (S.sel[d.num] ? ' checked' : '') + ' aria-label="Selecionar NF-e ' + d.num + '"></td>' : '') +
-        '<td><strong>NF-e ' + d.num + '</strong><span class="st">' + d.data + '</span></td><td>' + d.forn + '</td><td>' + selos(d, pv) + '</td><td class="n">' + rs(tot(d, 'cbs', 'dest')) + '</td></tr>';
+        '<td><strong>NF-e ' + d.num + '</strong><span class="st">' + d.data + '</span><span class="st">' + d.reg.lab + '</span></td><td>' + d.forn + '</td><td>' + selos(d, pv) + '</td><td class="n">' + rs(tot(d, 'cbs', 'dest')) + '</td></tr>';
     });
     return h + '</tbody></table></div>';
   }
+  function cabRota(d, t) {
+    var rota = d.reg.rot[t], h = '<p style="margin:0 0 8px;font-size:12px">Regime lido no DF: <strong>' + d.reg.nome + '</strong> (' + d.reg.crt + ')' + (d.reg.cod ? '. Devolvido: <code>' + d.reg.cod + '</code>' : '') + '. ';
+    if (rota === 'sn') h += 'Conferido pela calculadora do Simples Nacional 1.0.2.';
+    else if (rota === 'rr' && d.reg.f === 'sub') h += 'IBS pela calculadora do regime regular ' + d.run[t].ver + ': o fornecedor no sublimite declara o IBS no grupo do regime regular (<code>gIBSCBS</code>).';
+    else if (rota === 'rr') h += 'Conferido pela calculadora do regime regular ' + d.run[t].ver + '.';
+    else h += 'Nenhuma calculadora confere este DF.';
+    h += '</p>';
+    if (d.cad) h += '<div class="aviso" style="margin:0 0 8px">O cadastro do fornecedor diz ' + d.cad + ' (vem do ERP); o DF diz ' + d.reg.crt + ' (' + d.reg.nome + '). A conferência seguiu o DF.</div>';
+    return h;
+  }
   function blocoEtapa1(d, t) {
-    var r = d.run[t];
-    var h = '<div class="card"><div class="card-t"><span>Etapa 1 · Cálculo oficial · ' + TN[t] + '</span>' + chip(E1[r.res].c === 'ok' ? 'ok' : E1[r.res].c === 'red' ? 'red' : 'gray', E1[r.res].r + (r.causa ? ' · causa: ' + (r.causa === 'base' ? 'base' : 'alíquota') : '')) + '</div>';
+    var r = d.run[t], rota = d.reg.rot[t];
+    var h = '<div class="card"><div class="card-t"><span>Etapa 1 · Cálculo oficial · ' + TN[t] + '</span>' + chip(E1[r.res].c, E1[r.res].r + (r.causa ? ' · causa: ' + CAUSA[r.causa] : '') + (r.motivo ? ' · ' + r.motivo : '')) + '</div>' + cabRota(d, t);
+    if (rota === '—') {
+      var x9 = d.it[0];
+      h += d.reg.f === 'mei' ? '<p style="margin:0 0 6px">O fornecedor é MEI (CRT 4). A calculadora do Simples não calcula MEI. O valor é o destacado, e a apuração do ente dá a palavra final.</p>'
+        : '<p style="margin:0 0 6px">O DF declara CRT 1 com tpRegimeIBSCBS 2, combinação que o leiaute proíbe. A calculadora do Simples recusa a operação, e nada é calculado.</p>';
+      h += '<div class="memo"><code>' + x9.cod + '</code> · ' + x9.campo + ' · ' + x9.txt + '\ndestacado ' + TN[t] + '      ' + rs(x9.dest[t]) + '\nmotivo            ' + (d.reg.f === 'mei' ? 'tirado do CRT do DF; o código só confirma' : 'regra C21a-10 do leiaute') + '</div>';
+      return h + '<div class="acoes"><span class="nota">Calculadora do Simples Nacional 1.0.2 · ' + (d.reg.f === 'mei' ? 'sem ocorrência; o valor entra na faixa "não conferido" do KPI' : 'abre capur_regime para o emitente, sob a condição da D-CR-20') + '</span></div></div>';
+    }
+    if (rota === 'sn') {
+      h += '<div class="table-wrap"><table><thead><tr><th>Item</th><th>cClassTrib · atividade · tipo de receita</th><th class="n">Receita</th><th class="n">Alíquota declarada</th><th class="n">Destacado</th><th class="n">Calculado</th><th class="n">Diferença</th><th>Estado</th></tr></thead><tbody>';
+      d.it.forEach(function (x) {
+        var cv = calcV(d, x, t, r.ver), dif = x.dest[t] - cv, fora = Math.abs(dif) > r.tol + 1e-9, dst = x.susp ? '<span class="st">pendente/suspenso</span>' : '<span class="st">devido</span>';
+        h += '<tr><td>' + x.n + '</td><td><code>' + x.cct + '</code> · atividade ' + x.sn.at + ' (Anexo ' + x.sn.anexo + ') · tipo ' + x.sn.tp + ', fator ' + x.sn.fator + '</td><td class="n">' + rs(x.base) + '</td><td class="n">' + x.sn.al[t] + '</td><td class="n">' + rs(x.dest[t]) + dst + '</td><td class="n">' + rs(cv) + dst + '</td><td class="n"' + (fora ? ' style="color:var(--red);font-weight:700"' : '') + '>' + rs(dif) + '</td><td>' + et(fora ? 'red' : 'info', fora ? 'Fora da tolerância' : 'Calculado') + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+      var y = d.it[0];
+      h += '<details><summary style="cursor:pointer;font-size:12px;color:var(--teal)">Memória de cálculo do item ' + y.n + '</summary><div class="memo">receita            ' + rs(y.base) + '  (vProd + vFrete + vSeg + vOutro − vDesc, sem IS)\nfator              ' + y.sn.fator + '  (tipo de receita ' + y.sn.tp + ', cClassTrib ' + y.cct + ')\nalíquota ' + TN[t] + '       ' + y.sn.al[t] + '  (declarada no DF; não conferida)\nvalor calculado    ' + rs(calcV(d, y, t, r.ver)) + '\ndestino            ' + (y.susp ? 'pendente/suspenso' : 'devido') + '</div></details>';
+      h += '<div class="aviso" style="margin-top:8px">A alíquota efetiva do Simples é calculada pelo PGDAS-D. A calculadora não a confere, e a consulta oficial ainda não existe.' + (r.susp ? ' Marca: crédito em suspenso.' : '') + '</div>';
+      return h + '<div class="acoes"><span class="nota">Calculadora do Simples Nacional 1.0.2 · tolerância ' + rs(r.tol) + ' por item · comparação por parte (devido e pendente/suspenso)</span></div></div>';
+    }
     h += '<div class="table-wrap"><table><thead><tr><th>Item</th><th>NCM · CST · cClassTrib</th><th class="n">Base</th><th class="n">Destacado</th><th class="n">Calculado</th><th class="n">Diferença</th><th>Estado</th></tr></thead><tbody>';
     d.it.forEach(function (x) {
       var cv = calcV(d, x, t, r.ver), dif = cv === null ? null : x.dest[t] - cv, fora = dif !== null && Math.abs(dif) > r.tol + 1e-9;
@@ -1125,7 +1537,7 @@ function App(V) {
   function blocoEtapa2(d, t) {
     var c = capur(d, t), ente = d.ente[t];
     var h = '<div class="card"><div class="card-t"><span>Etapa 2 · Apuração do ente · ' + TN[t] + ' (' + ENTE[t] + ')</span>' + chip(c.c, c.rot) + '</div>';
-    h += '<div class="lado"><div class="campo"><div class="cl">Destacado (RF)</div><div class="cv">' + rs(tot(d, t, 'dest')) + '</div></div><div class="campo"><div class="cl">Calculado</div><div class="cv">' + rs(d.run[t].res === 'conforme' || d.run[t].res === 'divergente' ? tot(d, t, 'calc', d.run[t].ver) : null) + '</div></div><div class="campo"><div class="cl">Apurado pelo ente</div><div class="cv">' + rs(ente) + '</div></div></div>';
+    h += '<div class="lado"><div class="campo"><div class="cl">Destacado (RF)</div><div class="cv">' + rs(tot(d, t, 'dest')) + '</div></div><div class="campo"><div class="cl">Calculado</div><div class="cv">' + rs(d.run[t].res === 'conforme' || d.run[t].res === 'divergente' || d.run[t].res === 'contaok' ? tot(d, t, 'calc', d.run[t].ver) : null) + '</div></div><div class="campo"><div class="cl">Apurado pelo ente</div><div class="cv">' + rs(ente) + '</div></div></div>';
     if (ente === null) h += '<div class="acoes"><button type="button" class="fb pri" data-a="apurar" data-v="' + d.num + '">Simular chegada da apuração</button><span class="nota">No Live, chega pela API do ente.</span></div>';
     if (c.marca) h += '<div class="aviso">Marca na CAPUR: ' + c.marca + '.</div>';
     return h + '</div>';
@@ -1135,15 +1547,17 @@ function App(V) {
     var o = ocorrencia(d, t);
     if (!o) return '<div class="card"><div class="card-t"><span>Ocorrência · ' + TN[t] + '</span></div><p style="margin:0">Nenhuma ocorrência para este tributo.</p></div>';
     var h = '<div class="card"><div class="card-t"><span>Ocorrência · <code>' + o.tipo + '</code></span>' + stOcc(o) + '</div>';
-    h += '<div class="campos"><div class="campo"><div class="cl">Tipo</div><div class="cv">' + OCC_T[o.tipo] + '</div></div><div class="campo"><div class="cl">Família · dono</div><div class="cv">' + (o.tipo === 'capur_classificacao' ? 'A · Documento · emitente' : 'B · Fisco · fornecedor') + '</div></div><div class="campo"><div class="cl">Aberta em</div><div class="cv">' + o.desde + '</div></div></div>';
-    if (completo) h += '<div class="lado"><div class="campo"><div class="cl">Destacado</div><div class="cv">' + rs(tot(d, t, 'dest')) + '</div></div><div class="campo"><div class="cl">Calculado</div><div class="cv">' + rs(d.run[t].res === 'inconsistente' ? null : tot(d, t, 'calc', d.run[t].ver)) + '</div></div><div class="campo"><div class="cl">Apurado</div><div class="cv">' + rs(d.ente[t]) + '</div></div></div>';
+    h += '<div class="campos"><div class="campo"><div class="cl">Tipo</div><div class="cv">' + OCC_T[o.tipo] + '</div></div><div class="campo"><div class="cl">Família · dono</div><div class="cv">' + (o.tipo === 'capur_classificacao' || o.tipo === 'capur_regime' ? 'A · Documento · emitente' : 'B · Fisco · fornecedor') + '</div></div><div class="campo"><div class="cl">Aberta em</div><div class="cv">' + o.desde + '</div></div></div>';
+    if (completo) h += '<div class="lado"><div class="campo"><div class="cl">Destacado</div><div class="cv">' + rs(tot(d, t, 'dest')) + '</div></div><div class="campo"><div class="cl">Calculado</div><div class="cv">' + rs(d.run[t].res === 'inconsistente' || d.run[t].res === 'simples' || d.run[t].res === 'naoconf' ? null : tot(d, t, 'calc', d.run[t].ver)) + '</div></div><div class="campo"><div class="cl">Apurado</div><div class="cv">' + rs(d.ente[t]) + '</div></div></div>';
+    if (/_divergente$/.test(o.tipo) && d.run[t].res === 'contaok') h += '<div class="aviso">Nota dupla: verificar a apuração do ente e conferir com o fornecedor a alíquota efetiva declarada. A causa é hipótese até o parecer da D-CR-24.</div>';
+    if (o.tipo === 'capur_regime') h += '<div class="aviso">Regra violada: C21a-10 (CRT 1 com tpRegimeIBSCBS 2). O fornecedor corrige cancelando e reemitindo; quando o cancelamento entra, a ocorrência volta ao responsável com o desfecho "documento substituído".</div>';
     if (o.st === 'em_analise') h += '<div class="msg">Desfecho preenchido pelo produto: <strong>' + o.desf + '</strong>. Só o responsável resolve (RN-INC-10).</div>';
     if (o.st !== 'resolvida') h += '<div class="acoes"><button type="button" class="fb' + (o.st === 'em_analise' ? ' pri' : '') + '" data-a="resolver" data-v="' + o.k + '">' + (o.st === 'em_analise' ? 'Conferir e resolver' : 'Resolver com desfecho…') + '</button><button type="button" class="fb sec" data-a="repUm" data-v="' + d.num + '">Reprocessar cálculo</button></div>';
     else h += '<p style="margin:0">Resolvida com o desfecho "' + o.desf + '".</p>';
     return h + '</div>';
   }
   function tribTabs() { return '<div class="ttabs">' + TRIB.map(function (t) { return '<button type="button" class="ttab' + (S.trib === t ? ' on' : '') + '" data-a="trib" data-v="' + t + '">' + TN[t] + '</button>'; }).join('') + '</div>'; }
-  function cabDF(d) { return '<div class="h2"><span>NF-e ' + d.num + ' · ' + d.forn + '</span><span style="font-size:11px;font-weight:400;color:var(--txt3)"><code>' + curta(d.chave) + '</code></span></div><div class="sub">Entrada · ' + d.data + ' · CNPJ ' + d.cnpj + ' · ' + d.it.length + (d.it.length > 1 ? ' itens' : ' item') + '</div>'; }
+  function cabDF(d) { return '<div class="h2"><span>NF-e ' + d.num + ' · ' + d.forn + '</span><span style="font-size:11px;font-weight:400;color:var(--txt3)"><code>' + curta(d.chave) + '</code></span></div><div class="sub">Entrada · ' + d.data + ' · CNPJ ' + d.cnpj + ' · ' + d.it.length + (d.it.length > 1 ? ' itens' : ' item') + ' · ' + d.reg.lab + '</div>'; }
   function telaConfig(estreita) {
     var pv = previa(S.cTol), mudou = S.cTol !== S.tol || S.cRegra !== S.regra;
     var h = '<div class="h2"><span>Conferência de cálculo (CAPUR · etapa 1)</span></div><div class="sub">Só o Administrador do cliente vê esta tela. Cada alteração vai para a auditoria e vale para as execuções seguintes.</div>';
@@ -1161,7 +1575,7 @@ function App(V) {
     var ks = Object.keys(pv.lst);
     var h = '<div class="card-t"><span>Prévia do impacto num reprocessamento</span>' + chip(ks.length ? 'warn' : 'gray', ks.length + (ks.length === 1 ? ' DF mudaria' : ' DFs mudariam')) + '</div>';
     if (!ks.length) return h + '<p style="margin:0">Com estes valores, nenhuma CAPUR muda de resultado na etapa 1.</p>';
-    h += '<ul class="plain" style="margin-left:16px">' + ks.map(function (k) { return '<li><strong>NF-e ' + k + '</strong>: ' + pv.lst[k].map(function (x) { return TN[x.t] + ' ' + E1[x.de].r.toLowerCase() + ' → ' + E1[x.para].r.toLowerCase(); }).join('; ') + '</li>'; }).join('') + '</ul>';
+    h += '<ul class="plain" style="margin-left:16px">' + ks.map(function (k) { return '<li><strong>NF-e ' + k + '</strong>: ' + pv.lst[k].map(function (x) { return TN[x.t] + ' ' + E1[x.de].r.toLowerCase().replace(/simples/g, 'Simples') + ' → ' + E1[x.para].r.toLowerCase().replace(/simples/g, 'Simples'); }).join('; ') + '</li>'; }).join('') + '</ul>';
     return h + '<p style="margin:0;font-size:12px">Gravar não muda o que já foi conferido. Depois de gravar, dá para reprocessar estes DFs de uma vez.</p>';
   }
   function telaReproc(compacta) {
@@ -1192,21 +1606,21 @@ function App(V) {
   function telaValidador() {
     var L = S.lote, h = '<div class="h2"><span>Validador de DF-e</span></div><div class="sub">Confere XMLs pela calculadora da Receita Federal sem efeito no Live: não cria DF, RF nem ocorrência. Até 500 documentos e 50 MB por lote.</div>';
     if (!L) {
-      return h + '<div class="drop" data-a="drop"><strong>Arraste XMLs ou um ZIP aqui</strong>ou<div class="acoes" style="justify-content:center"><label class="fb" style="display:inline-block">Escolher arquivos<input type="file" multiple accept=".xml,.zip" data-a="valArq" hidden></label><button type="button" class="fb pri" data-a="valEx">Usar o lote de exemplo (8 XMLs)</button></div>' +
+      return h + '<div class="drop" data-a="drop"><strong>Arraste XMLs ou um ZIP aqui</strong>ou<div class="acoes" style="justify-content:center"><label class="fb" style="display:inline-block">Escolher arquivos<input type="file" multiple accept=".xml,.zip" data-a="valArq" hidden></label><button type="button" class="fb pri" data-a="valEx">Usar o lote de exemplo (13 XMLs)</button></div>' +
         '<div style="margin-top:6px;font-size:11.5px">Protótipo: dos arquivos escolhidos, só o nome é usado; o resultado é sorteado pelo nome.</div></div><div class="acoes"><label style="font-size:12.5px;color:var(--txt2)"><input type="checkbox" checked> Validar também o XSD (nota inteira)</label></div>';
     }
     if (L.p < 100) return h + '<div class="card"><div class="card-t"><span>Lote ' + L.id + ' · ' + L.docs.length + ' documentos</span>' + chip('info', 'Processando') + '</div><div class="prog"><span style="width:' + L.p + '%"></span></div><p style="margin:0;font-size:12px">' + Math.round(L.docs.length * L.p / 100) + ' de ' + L.docs.length + ' conferidos. Você pode sair e voltar.</p></div>';
     var cont = {}; L.docs.forEach(function (d) { cont[d.res] = (cont[d.res] || 0) + 1; });
     var sd = 0, sc = 0; L.docs.forEach(function (d) { if (d.calc !== null) { sd += d.dest; sc += d.calc; } });
-    h += '<div class="card"><div class="card-t"><span>Lote ' + L.id + ' · ' + L.docs.length + ' documentos · calculadora ' + S.ver + '</span><span><button type="button" class="fb sec" data-a="valPdf">Aceite em PDF</button> <button type="button" class="fb sec" data-a="valCsv">Divergências em CSV</button></span></div>';
+    h += '<div class="card"><div class="card-t"><span>Lote ' + L.id + ' · ' + L.docs.length + ' documentos · regime regular ' + S.ver + ' e Simples Nacional 1.0.2</span><span><button type="button" class="fb sec" data-a="valPdf">Aceite em PDF</button> <button type="button" class="fb sec" data-a="valCsv">Divergências em CSV</button></span></div>';
     h += '<div class="bar">' + Object.keys(VRES).map(function (k) { return cont[k] ? '<span class="b-' + VRES[k][1] + '" style="width:' + (100 * cont[k] / L.docs.length) + '%"></span>' : ''; }).join('') + '</div>';
     h += '<div class="chps">' + [['todos', 'Todos', L.docs.length]].concat(Object.keys(VRES).map(function (k) { return [k, VRES[k][0], cont[k] || 0]; })).map(function (x) { return '<button type="button" class="chp' + (S.valFiltro === x[0] ? ' on' : '') + '" data-a="valFiltro" data-v="' + x[0] + '">' + x[1] + '<small>' + x[2] + '</small></button>'; }).join('') + '</div>';
     h += '<p style="margin:0;font-size:12px">CBS destacada ' + rs(sd) + ' × calculada ' + rs(sc) + ' nos documentos calculados. Códigos mais frequentes: ' + (function () { var c = {}; L.docs.forEach(function (d) { if (d.cod) c[d.cod] = (c[d.cod] || 0) + 1; }); return Object.keys(c).map(function (k) { return '<code>' + k + '</code> (' + c[k] + ')'; }).join(', ') || 'nenhum'; })() + '.</p>';
     if (S.msg && S.msg.indexOf('lote') >= 0) h += '<div class="msg" style="margin-top:8px">' + S.msg + '</div>';
-    h += '</div><div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Resultado</th><th class="n">CBS destacada</th><th class="n">CBS calculada</th><th>Primeiro problema</th></tr></thead><tbody>';
+    h += '</div><div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Resultado</th><th>Regime lido</th><th>Calculadora por tributo</th><th class="n">CBS destacada</th><th class="n">CBS calculada</th><th>Primeiro problema</th></tr></thead><tbody>';
     L.docs.filter(function (d) { return S.valFiltro === 'todos' || d.res === S.valFiltro; }).forEach(function (d, i) {
-      h += '<tr class="clic' + (S.valDoc === d.nome ? ' atual' : '') + '" data-a="valDoc" data-v="' + esc(d.nome) + '"><td><code>' + esc(d.nome) + '</code></td><td>' + chip(VRES[d.res][1], VRES[d.res][0]) + '</td><td class="n">' + rs(d.dest) + '</td><td class="n">' + rs(d.calc) + '</td><td>' + (d.cod ? '<code>' + d.cod + '</code> · ' + d.txt : (d.txt || '—')) + '</td></tr>';
-      if (S.valDoc === d.nome) h += '<tr><td colspan="5"><div class="memo">' + esc(d.nome) + '\nitem 1 · NCM 3926.90.90 · CST 000 · cClassTrib ' + (d.res === 'rejeitado' ? '200034' : '000001') + '\nCBS destacada ' + rs(d.dest) + ' · calculada ' + rs(d.calc) + (d.cod ? '\n' + d.cod + ' · ' + d.txt : '') + '\nhash sha256 ' + hashN(d.nome).toString(16).padStart(8, '0') + '…</div></td></tr>';
+      h += '<tr class="clic' + (S.valDoc === d.nome ? ' atual' : '') + '" data-a="valDoc" data-v="' + esc(d.nome) + '"><td><code>' + esc(d.nome) + '</code></td><td>' + chip(VRES[d.res][1], VRES[d.res][0]) + '</td><td>' + d.reg + '</td><td>' + d.calcs + '</td><td class="n">' + rs(d.dest) + '</td><td class="n">' + rs(d.calc) + '</td><td>' + (d.cod ? '<code>' + d.cod + '</code> · ' + d.txt : (d.txt || '—')) + '</td></tr>';
+      if (S.valDoc === d.nome) h += '<tr><td colspan="7"><div class="memo">' + esc(d.nome) + '\n' + (d.sn ? 'regime lido ' + d.reg + ' · atividade 01 · tipo de receita ' + (d.susp ? '4' : '1') + ' · alíquota declarada 2,00%\nressalva: o aceite cobre o regime, o tipo de receita, o destino e a conta; a alíquota efetiva do Simples foi declarada pelo emitente e não foi conferida com o PGDAS-D' : 'item 1 · NCM 3926.90.90 · CST 000 · cClassTrib ' + (d.res === 'rejeitado' ? '200034' : '000001')) + '\nCBS destacada ' + rs(d.dest) + ' · calculada ' + rs(d.calc) + (d.cod ? '\n' + d.cod + ' · ' + d.txt : '') + '\nhash sha256 ' + hashN(d.nome).toString(16).padStart(8, '0') + '…</div></td></tr>';
     });
     h += '</tbody></table></div><div class="acoes"><button type="button" class="fb" data-a="valNovo">Novo lote</button><span class="nota">XML guardado por 90 dias e relatório por 5 anos (D-CR-08).</span></div>';
     return h;
@@ -1231,7 +1645,7 @@ function App(V) {
     var nav = navB([['conc', 'Conciliação'], ['inc', 'Inconsistências'], ['val', 'Validador de DF-e'], ['cfg', 'Configurações']], S.tela === 'df' ? 'conc' : S.tela === 'occ' ? 'inc' : S.tela), c = '', url = '/app/conciliacao', extra = '';
     if (S.tela === 'conc') {
       var nsel = Object.keys(S.sel).filter(function (k) { return S.sel[k]; }).length;
-      c = '<div class="h2"><span>Conciliação · CAPUR</span><span><button type="button" class="fb" data-a="modalRep">Reprocessar por lista</button>' + (nsel ? ' <button type="button" class="fb pri" data-a="repSel">Reprocessar ' + nsel + ' selecionado' + (nsel > 1 ? 's' : '') + '</button>' : '') + '</span></div><div class="sub">Dezembro de 2026 · entrada · o selo mostra as duas etapas de cada tributo</div>' + kpis(true) + filtros() + tabelaConc({ sel: true });
+      c = '<div class="h2"><span>Conciliação · CAPUR</span><span><button type="button" class="fb" data-a="modalRep">Reprocessar por lista</button>' + (nsel ? ' <button type="button" class="fb pri" data-a="repSel">Reprocessar ' + nsel + ' selecionado' + (nsel > 1 ? 's' : '') + '</button>' : '') + '</span></div><div class="sub">Dezembro de 2026 e março de 2027 · entrada · o selo mostra as duas etapas de cada tributo</div>' + kpis(true) + kpiSN() + filtros() + tabelaConc({ sel: true });
     } else if (S.tela === 'df') {
       var d = dfDe(S.df); url = '/app/dfs/' + curta(d.chave);
       c = '<div class="bc"><button type="button" class="lnk" data-a="go" data-v="conc">Conciliação</button> › NF-e ' + d.num + '</div>' + cabDF(d) +
@@ -1258,12 +1672,12 @@ function App(V) {
     if (S.tela === 'inc') { root.innerHTML = frame('/app/inconsistencias', nav, telaInc()); return; }
     var m = '<nav class="ws-menu" aria-label="Cálculo oficial">' + menu.map(function (x) { var n = x[0] === 'confs' ? S.dfs.length : x[0] === 'reproc' ? S.jobs.length : null; return '<button type="button" class="mi' + (S.tela === x[0] ? ' on' : '') + '" data-a="go" data-v="' + x[0] + '">' + x[1] + (n !== null ? '<small>' + n + '</small>' : '') + '</button>'; }).join('') + '</nav>';
     if (S.tela === 'painel') {
-      var cnt = { conforme: 0, divergente: 0, inconsistente: 0, naoconf: 0 }; S.dfs.forEach(function (d) { TRIB.forEach(function (t) { cnt[d.run[t].res]++; }); });
+      var cnt = { conforme: 0, contaok: 0, divergente: 0, inconsistente: 0, simples: 0, naoconf: 0 }; S.dfs.forEach(function (d) { TRIB.forEach(function (t) { cnt[d.run[t].res]++; }); });
       var totc = S.dfs.length * 2, cods = {}; S.dfs.forEach(function (d) { d.it.forEach(function (x) { if (x.cod) cods[x.cod] = (cods[x.cod] || 0) + 1; }); });
-      c = '<div class="h2"><span>Painel do cálculo oficial</span><span style="font-size:12px;font-weight:400;color:var(--txt3)">calculadora ' + S.ver + ' · banco ' + (S.ver === '1.7.4' ? '2026.12.02' : '2026.11.26') + '</span></div><div class="sub">Dezembro de 2026 · entrada · clique num indicador para ver as conferências</div>' + kpis(true) +
-        '<div class="card"><div class="card-t"><span>Etapa 1 por tributo · ' + totc + ' CAPUR</span></div><div class="bar"><span class="b-ok" style="width:' + (100 * cnt.conforme / totc) + '%"></span><span class="b-red" style="width:' + (100 * (cnt.divergente + cnt.inconsistente) / totc) + '%"></span><span class="b-gray" style="width:' + (100 * cnt.naoconf / totc) + '%"></span></div><div class="lg"><span><i class="b-ok"></i>Conforme ' + cnt.conforme + '</span><span><i class="b-red"></i>Divergente ou inconsistente ' + (cnt.divergente + cnt.inconsistente) + '</span><span><i class="b-gray"></i>Não conferido ' + cnt.naoconf + '</span></div></div>' +
+      c = '<div class="h2"><span>Painel do cálculo oficial</span><span style="font-size:12px;font-weight:400;color:var(--txt3)">calculadora ' + S.ver + ' · banco ' + (S.ver === '1.7.4' ? '2026.12.02' : '2026.11.26') + '</span></div><div class="sub">Dezembro de 2026 e março de 2027 · entrada · clique num indicador para ver as conferências</div>' + kpis(true) + kpiSN() +
+        '<div class="card"><div class="card-t"><span>Etapa 1 por tributo · ' + totc + ' CAPUR</span></div><div class="bar"><span class="b-ok" style="width:' + (100 * cnt.conforme / totc) + '%"></span><span class="b-info" style="width:' + (100 * cnt.contaok / totc) + '%"></span><span class="b-red" style="width:' + (100 * (cnt.divergente + cnt.inconsistente + cnt.simples) / totc) + '%"></span><span class="b-gray" style="width:' + (100 * cnt.naoconf / totc) + '%"></span></div><div class="lg"><span><i class="b-ok"></i>Conforme ' + cnt.conforme + '</span><span><i class="b-info"></i>Conta conforme · Simples ' + cnt.contaok + '</span><span><i class="b-red"></i>Divergente ou inconsistente ' + (cnt.divergente + cnt.inconsistente + cnt.simples) + '</span><span><i class="b-gray"></i>Não conferido ' + cnt.naoconf + '</span></div></div>' +
         '<div class="card"><div class="card-t"><span>Códigos da calculadora</span></div>' + (Object.keys(cods).length ? Object.keys(cods).map(function (k) { return '<code>' + k + '</code> ' + cods[k]; }).join(' · ') : 'Nenhum') + '</div>' +
-        '<div class="card"><div class="card-t"><span>Versão da calculadora</span></div>' + (S.ver === '1.7.3' ? '<p>Em uso: 1.7.3, de 26/11/2026.</p><div class="acoes"><button type="button" class="fb pri" data-a="versao">Simular a versão 1.7.4</button><span class="nota">Reprocessa sozinha as CAPUR com a etapa 1 aberta e ainda sem apuração (D-CR-06).</span></div>' : '<p style="margin:0">Em uso: 1.7.4 (fictícia). O reprocessamento automático está em Reprocessamentos.</p>') + '</div>';
+        '<div class="card"><div class="card-t"><span>Versão da calculadora</span></div>' + (S.ver === '1.7.3' ? '<p>Em uso: regime regular 1.7.3, de 26/11/2026, e Simples Nacional 1.0.2, de 18/11/2026.</p><div class="acoes"><button type="button" class="fb pri" data-a="versao">Simular a versão 1.7.4</button><span class="nota">Reprocessa sozinha as CAPUR com a etapa 1 aberta e ainda sem apuração (D-CR-06).</span></div>' : '<p style="margin:0">Em uso: 1.7.4 (fictícia). O reprocessamento automático está em Reprocessamentos.</p>') + '</div>';
     } else if (S.tela === 'confs') {
       var d = S.df ? dfDe(S.df) : filtrar()[0];
       var lista = filtros() + '<div class="table-wrap"><table><thead><tr><th>DF</th><th>Etapa 1</th></tr></thead><tbody>' + filtrar().map(function (x) {
@@ -1279,7 +1693,7 @@ function App(V) {
   function renderC() {
     var nsel = Object.keys(S.sel).filter(function (k) { return S.sel[k]; }).length, pv = S.drw === 'cfg' ? previa(S.cTol).lst : null;
     var nav = '<button type="button" class="fb on">Conciliação</button><button type="button" class="fb" data-a="drw" data-v="val">Validar XMLs</button><button type="button" class="fb" data-a="drw" data-v="cfg" aria-label="Configuração da conferência">⚙ Conferência</button>';
-    var c = '<div class="h2"><span>Conciliação · CAPUR</span></div><div class="sub">Dezembro de 2026 · entrada · clique numa linha para abrir a gaveta</div>' + kpis(true) + filtros() + '<div id="C-tab">' + tabelaConc({ sel: true, previa: pv, atual: S.drw === 'df' ? S.df : null }) + '</div>';
+    var c = '<div class="h2"><span>Conciliação · CAPUR</span></div><div class="sub">Dezembro de 2026 e março de 2027 · entrada · clique numa linha para abrir a gaveta</div>' + kpis(true) + kpiSN() + filtros() + '<div id="C-tab">' + tabelaConc({ sel: true, previa: pv, atual: S.drw === 'df' ? S.df : null }) + '</div>';
     if (nsel) c += '<div class="massa"><span>' + nsel + ' selecionado' + (nsel > 1 ? 's' : '') + '</span><button type="button" class="fb" data-a="repSel">Reprocessar cálculo</button><button type="button" class="fb" data-a="selLimpa">Limpar</button></div>';
     if (S.jobs.length) c += jobsH();
     var extra = '';
@@ -1317,7 +1731,11 @@ function App(V) {
     timers.push(tm);
   }
   function docVal(nome, res) {
-    var o = { nome: nome, res: res, dest: 9, calc: 9, cod: null, txt: '' };
+    var o = { nome: nome, res: res, dest: 9, calc: 9, cod: null, txt: '', reg: 'Regular · CRT 3', calcs: 'CBS e IBS: regime regular' }, nm = nome.toLowerCase();
+    if (res === 'aceitosn') { o.sn = true; o.reg = 'Simples · CRT 1'; o.calcs = 'CBS e IBS: Simples'; o.dest = 20; o.calc = 20; o.txt = 'alíquota declarada, não conferida com o PGDAS-D'; if (nm.indexOf('export') >= 0) { o.susp = true; o.txt = 'crédito em suspenso · alíquota não conferida'; } }
+    if (nm.indexOf('sublimite') >= 0) { o.sn = true; o.reg = 'Sublimite · CRT 2'; o.calcs = 'CBS: Simples · IBS: regime regular'; o.dest = 20; o.calc = 20; o.txt = 'CBS conta conforme; IBS conforme no gIBSCBS'; }
+    if (res === 'regime') { o.reg = 'Incoerente · CRT 1 + 2'; o.calcs = 'Nenhuma'; o.dest = 20; o.calc = null; o.cod = 'VSN-018'; o.txt = 'regime incoerente (regra C21a-10)'; return o; }
+    if (res === 'naoconf' && nm.indexOf('mei') >= 0) { o.reg = 'MEI · CRT 4'; o.calcs = 'Nenhuma'; o.dest = 20; o.calc = null; o.cod = 'VSN-019'; o.txt = 'MEI: a calculadora do Simples não calcula'; return o; }
     if (res === 'divergente') { o.dest = 10; o.calc = 9; o.txt = 'CBS destacada R$ 1,00 acima da calculada'; }
     if (res === 'rejeitado') { o.calc = null; o.cod = 'REG-006'; o.txt = 'cClassTrib não pertence ao CST informado'; }
     if (res === 'invalido') { o.dest = null; o.calc = null; o.cod = 'XSD'; o.txt = 'elemento gIBSCBS fora da ordem do leiaute'; }
@@ -1333,6 +1751,7 @@ function App(V) {
     S.msg = '';
     switch (a) {
       case 'go': S.tela = v; S.modal = null; if (v === 'confs' && !S.df) S.df = filtrar()[0] ? filtrar()[0].num : null; break;
+      case 'freg': S.freg = v; if (V === 'B') S.df = filtrar()[0] ? filtrar()[0].num : null; break;
       case 'filtro': S.filtro = v; if (V === 'B' && S.tela === 'painel') S.tela = 'confs'; if (V === 'B') S.df = filtrar()[0] ? filtrar()[0].num : null; break;
       case 'abrir': S.df = Number(v); S.trib = TRIB.filter(function (t) { return dfDe(S.df).run[t].res !== 'conforme'; })[0] || 'cbs'; if (V === 'A') S.tela = 'df'; if (V === 'B') S.tela = 'confs'; if (V === 'C') { S.drw = 'df'; S.aba = 'e1'; } break;
       case 'trib': S.trib = v; break;
@@ -1340,7 +1759,7 @@ function App(V) {
       case 'apurar': (function () { var d = dfDe(Number(v)); TRIB.forEach(function (t) { d.ente[t] = d.futuro[t]; d.run[t].regra = S.regra; var tp = occTipo(d, t), k = d.num + ':' + t; if (tp && !S.occ[k]) S.occ[k] = { tipo: tp, st: 'aberta', desde: agora() }; });
         d.hist.unshift({ q: agora(), e: 'Etapa 2', txt: 'Apuração do ente recebida', sub: 'CBS ' + rs(d.ente.cbs) + ' (Receita Federal) · IBS ' + rs(d.ente.ibs) + ' (Comitê Gestor) · regra D-CR-10: ' + (S.regra === 'ente' ? 'o ente prevalece' : 'manter como risco') });
         S.msg = 'Apuração recebida na NF-e ' + d.num + ': CBS ' + capur(d, 'cbs').rot.toLowerCase() + '.'; })(); break;
-      case 'resolver': (function () { var p = v.split(':'), d = dfDe(Number(p[0])), o = ocorrencia(d, p[1]); S.occ[v].st = 'resolvida'; S.occ[v].desf = o.desf || 'Fornecedor emitiu documento de ajuste'; S.occ[v].tipo = o.tipo;
+      case 'resolver': (function () { var p = v.split(':'), d = dfDe(Number(p[0])), o = ocorrencia(d, p[1]); S.occ[v].st = 'resolvida'; S.occ[v].desf = o.desf || (o.tipo === 'capur_regime' ? 'Documento substituído' : 'Fornecedor emitiu documento de ajuste'); S.occ[v].tipo = o.tipo;
         d.hist.unshift({ q: agora(), e: 'Ocorrência', txt: o.tipo + ' resolvida', sub: 'desfecho: ' + S.occ[v].desf + ' · Analista fiscal' }); S.msg = 'Ocorrência resolvida com o desfecho "' + S.occ[v].desf + '".'; })(); break;
       case 'abrirOcc': S.ocSel = v; S.tela = V === 'A' ? 'occ' : S.tela; if (V === 'B') { S.df = Number(v.split(':')[0]); S.trib = v.split(':')[1]; S.tela = 'confs'; } break;
       case 'repUm': novoJob([Number(v)], 'reprocessamento pedido pelo usuário', 'Analista fiscal'); break;
@@ -1350,7 +1769,7 @@ function App(V) {
       case 'repModo': S.repModo = v; break;
       case 'repEx': S.repTxt = [S.dfs[2].chave, S.dfs[3].chave, S.dfs[9].chave, '35261299999999000199550010000099991000000099'].join('\n'); break;
       case 'repVai': (function () { var n = chavesPedido(); novoJob(n, 'reprocessamento por lista', 'Analista fiscal'); S.modal = null; S.repTxt = ''; if (S.repModo === 'selecao') S.sel = {}; if (V === 'C') S.drw = null; })(); break;
-      case 'versao': S.ver = '1.7.4'; (function () { var n = S.dfs.filter(function (d) { return d.ente.cbs === null && TRIB.some(function (t) { return d.run[t].res !== 'conforme'; }); }).map(function (d) { return d.num; }); novoJob(n, 'nova versão da calculadora', 'Produto (automático)'); })(); break;
+      case 'versao': S.ver = '1.7.4'; (function () { var n = S.dfs.filter(function (d) { return d.ente.cbs === null && TRIB.some(function (t) { return d.reg.rot[t] === 'rr' && d.run[t].res !== 'conforme'; }); }).map(function (d) { return d.num; }); novoJob(n, 'nova versão da calculadora', 'Produto (automático)'); })(); break;
       case 'cfgDesfaz': S.cTol = S.tol; S.cRegra = S.regra; break;
       case 'cfgGrava': (function () { var q = agora(); if (S.cTol !== S.tol) S.aud.unshift({ c: 'Tolerância', de: rs(S.tol), para: rs(S.cTol), q: q }); if (S.cRegra !== S.regra) S.aud.unshift({ c: 'Regra D-CR-10', de: S.regra === 'ente' ? 'o ente prevalece' : 'manter como risco', para: S.cRegra === 'ente' ? 'o ente prevalece' : 'manter como risco', q: q });
         var pv = previa(S.cTol); S.tol = S.cTol; S.regra = S.cRegra; S.msg = 'Configuração gravada. Vale para as próximas execuções.'; S.pendRep = Object.keys(pv.lst).map(Number); })(); break;
@@ -1400,16 +1819,17 @@ function App(V) {
   render();
   return {
     ir: function (j) { // ponto de partida de cada jornada
-      S.msg = ''; S.drw = null; S.modal = null; S.filtro = 'todos';
+      S.msg = ''; S.drw = null; S.modal = null; S.filtro = 'todos'; S.freg = 'todos';
       if (j === 1) { S.filtro = 'divergente'; if (V === 'A') S.tela = 'conc'; if (V === 'B') S.tela = 'painel'; }
       if (j === 2) { S.df = 1004; S.trib = 'cbs'; if (V === 'A') S.tela = 'df'; if (V === 'B') S.tela = 'confs'; if (V === 'C') { S.drw = 'df'; S.aba = 'e2'; } }
       if (j === 3) { if (V === 'A') { S.tela = 'conc'; S.modal = 'rep'; S.repModo = 'colar'; } if (V === 'B') { S.tela = 'reproc'; S.repModo = 'colar'; } if (V === 'C') { S.drw = 'rep'; S.repModo = 'colar'; } }
       if (j === 4) { S.cTol = S.tol; S.cRegra = S.regra; if (V === 'C') S.drw = 'cfg'; else S.tela = 'cfg'; }
       if (j === 5) { if (V === 'C') S.drw = 'val'; else S.tela = 'val'; }
+      if (j === 7) { S.freg = 'sn'; S.df = 1011; S.trib = 'cbs'; if (V === 'A') S.tela = 'conc'; if (V === 'B') S.tela = 'confs'; }
       if (j === 6) { if (V === 'B') S.tela = 'painel'; else { S.df = 1003; S.trib = 'cbs'; if (V === 'A') S.tela = 'df'; else { S.drw = 'df'; S.aba = 'hist'; } } }
       render();
     },
-    versao: function () { if (S.ver === '1.7.3') { S.ver = '1.7.4'; var n = S.dfs.filter(function (d) { return d.ente.cbs === null && TRIB.some(function (t) { return d.run[t].res !== 'conforme'; }); }).map(function (d) { return d.num; }); novoJob(n, 'nova versão da calculadora', 'Produto (automático)'); render(); } }
+    versao: function () { if (S.ver === '1.7.3') { S.ver = '1.7.4'; var n = S.dfs.filter(function (d) { return d.ente.cbs === null && TRIB.some(function (t) { return d.reg.rot[t] === 'rr' && d.run[t].res !== 'conforme'; }); }).map(function (d) { return d.num; }); novoJob(n, 'nova versão da calculadora', 'Produto (automático)'); render(); } }
   };
 }
 
@@ -1420,7 +1840,8 @@ var JR = [
   { id: 'J-CR-03', t: 'Reprocessar uma lista de DFs', a: 'Analista fiscal · depois que o fornecedor corrige', p: ['Escolhe o modo: colar chaves, subir CSV ou selecionar linhas.', 'Vê quantas chaves foram reconhecidas e quais não são da empresa.', 'Pede o reprocessamento; acompanha o progresso do pedido.', 'Lê o resumo: quantos mudaram de resultado.'], r: 'Cada execução entra no histórico com o motivo, o autor e o número do pedido (D-CR-06).' },
   { id: 'J-CR-04', t: 'Configurar a conferência', a: 'Administrador do cliente · na implantação e quando precisar', p: ['Abre a conferência de cálculo.', 'Arrasta a tolerância de R$ 0,01 para R$ 0,02 e vê a prévia: a NF-e 1003 passaria a conforme.', 'Escolhe a regra da D-CR-10.', 'Grava; a auditoria registra o antes e o depois.', 'Decide se reprocessa os DFs afetados.'], r: 'A configuração vale para as próximas execuções; o passado só muda num reprocessamento pedido (D-CR-04, D-CR-10).' },
   { id: 'J-CR-05', t: 'Validar um lote de XMLs', a: 'Analista fiscal ou de compras · sob demanda', p: ['Arrasta XMLs ou um ZIP, ou usa o lote de exemplo.', 'Acompanha o processamento.', 'Filtra o relatório por resultado e abre um documento.', 'Exporta o aceite em PDF ou as divergências em CSV.'], r: 'Conferência sem efeito no Live: nada vira DF, RF ou ocorrência (D-CR-07, D-CR-08).' },
-  { id: 'J-CR-06', t: 'Versão nova da calculadora', a: 'Produto (automático) e analista fiscal', p: ['A versão 1.7.4 é instalada.', 'O produto reprocessa só as CAPUR com a etapa 1 aberta e ainda sem apuração.', 'A NF-e 1003 passa a conforme; o histórico mostra "calculadora 1.7.4".', 'A ocorrência volta ao responsável com o desfecho "conforme na execução nova".'], r: 'Os conformes antigos ficam como estão; a mudança de resultado entre versões fica visível (D-CR-06).' }
+  { id: 'J-CR-06', t: 'Versão nova da calculadora', a: 'Produto (automático) e analista fiscal', p: ['A versão 1.7.4 é instalada.', 'O produto reprocessa só as CAPUR com a etapa 1 aberta e ainda sem apuração.', 'A NF-e 1003 passa a conforme; o histórico mostra "calculadora 1.7.4".', 'A ocorrência volta ao responsável com o desfecho "conforme na execução nova".'], r: 'Os conformes antigos ficam como estão; a mudança de resultado entre versões fica visível (D-CR-06).' },
+  { id: 'J-CR-07', t: 'Conferir o DF de um fornecedor do Simples', a: 'Analista fiscal · a partir de 2027 · v1.6', p: ['A NF-e 1011 entra com CRT 1; a calculadora do Simples devolve SN_PLENO, e a CBS e o IBS ficam com ela.', 'Na Conciliação, filtra "Regime no DF: Simples" e lê o indicador do crédito sobre alíquota do Simples não conferida: R$ 110,00, em três faixas.', 'Abre a 1011: "Conta conforme · alíquota não conferida", com a nota do cadastro (Lucro presumido, vem do ERP).', 'Abre a 1012 (tipo de receita 5): cálculo divergente, com capur_cbs_base e capur_ibs_base abertas.', 'Abre a 1013 (sublimite): a CBS pela do Simples e o IBS pela do regime regular, os dois conformes.', 'Abre a 1015 (CRT 1 com tpRegimeIBSCBS 2): "Simples ✗" e capur_regime para o emitente.', 'Simula a apuração na 1011: o Comitê Gestor apura IBS de R$ 8,00, e a CAPUR do IBS vira "Divergente · a conta bate", com a nota dupla.'], r: 'O DF do optante é conferido pela regra dele, sem divergência falsa. O crédito sobre alíquota não conferida, e o que está em suspenso, ficam à vista desde a entrada; o ente dá a palavra final (seção 17).' }
 ];
 var apps = { A: App('A'), B: App('B'), C: App('C') };
 document.getElementById('jornadas').innerHTML = JR.map(function (j, i) {
