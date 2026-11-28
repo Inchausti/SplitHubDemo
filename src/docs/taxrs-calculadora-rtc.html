@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Calculadora da Receita no Live · v1.0</title>
+<title>Calculadora da Receita no Live · v1.1</title>
 <style>
 :root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
   --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
@@ -122,14 +122,25 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
 <a class="back" href="prds.html#sec-taxrs">← Hub de PRDs</a>
 <div class="eyebrow">tax-rs · Estudo e proposta</div>
 <h1>Calculadora da Receita Federal no Live: estudo do código e proposta de uso</h1>
-<p class="subtitle">A Receita Federal publicou como código aberto a calculadora do regime regular da reforma: CBS, IBS e Imposto Seletivo da LC 214/2025. Este documento estuda o código (versão 1.7.3, de 26/11/2026), lista cada validação que ela faz e propõe como o Live do tax-rs passa a usá-la. A proposta tem dois usos: uma terceira conferência dentro da conciliação da apuração e um validador de DF-e que o próprio cliente usa.</p>
+<p class="subtitle">A Receita Federal publicou como código aberto a calculadora do regime regular da reforma: CBS, IBS e Imposto Seletivo da LC 214/2025. Este documento estuda o código (versão 1.7.3, de 26/11/2026), lista cada validação que ela faz e propõe como o Live do tax-rs passa a usá-la. A proposta tem dois usos: o cálculo oficial como primeira etapa da CAPUR e um validador de DF-e que o próprio cliente usa.</p>
 
 <div class="meta-bar">
-  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.0</span></span>
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.1</span> <a href="versoes/taxrs-calculadora-rtc-v1.0.html" style="font-size:11px;color:var(--txt3)">v1.0</a></span>
   <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">28/11/2026</span></span>
   <span class="meta-pill"><span class="meta-label">Calculadora</span><span class="meta-val"><code>ReceitaFederal/calculadora-rtc-regime-regular</code> 1.7.3 (<code>0d4b073</code>)</span></span>
   <span class="meta-pill"><span class="meta-label">tax-rs</span><span class="meta-val"><code>main</code> no <code>a81fdd6</code></span></span>
-  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">0 de 9</span> <span class="chip warn">Em decisão</span></span>
+  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">0 de 12</span> <span class="chip warn">Em decisão</span></span>
+</div>
+
+<div class="callout ok">
+  <div class="ct">v1.1 · o cálculo oficial vira etapa da CAPUR</div>
+  <ul class="plain">
+    <li><strong>Sem CCALC:</strong> a conferência da calculadora deixa de ser uma terceira conferência e passa a ser a etapa 1 da CAPUR. A etapa 2 é a apuração do ente, como hoje (seção 6).</li>
+    <li><strong>Status combinado:</strong> a tabela 6.2 mostra como as duas etapas formam o status da CAPUR. O ente continua dando a palavra final.</li>
+    <li><strong>Ocorrências com prefixo <code>capur_</code>:</strong> as de alíquota e de base ficam na família B; as de classificação, na A. "Sem direito a crédito" sai da CAPUR e vai para o crédito (seção 10).</li>
+    <li><strong>Telas:</strong> em vez de uma coluna e uma aba novas, um selo de duas etapas na CAPUR e o bloco "Etapa 1 · Cálculo oficial" na seção CAPUR do detalhe.</li>
+    <li><strong>Decisões novas:</strong> D-CR-10 a 12. São 12 no total, nenhuma decidida.</li>
+  </ul>
 </div>
 
 <div class="toc">
@@ -140,7 +151,7 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
     <li><a href="#s3"><span class="toc-num">03</span>Os tipos de validação</a></li>
     <li><a href="#s4"><span class="toc-num">04</span>A ordem das validações num item</a></li>
     <li><a href="#s5"><span class="toc-num">05</span>O que o Live faz hoje</a></li>
-    <li><a href="#s6"><span class="toc-num">06</span>Uso 1: conferência de cálculo na conciliação</a></li>
+    <li><a href="#s6"><span class="toc-num">06</span>Uso 1: o cálculo oficial como etapa da CAPUR</a></li>
     <li><a href="#s7"><span class="toc-num">07</span>Uso 2: validador de DF-e do cliente</a></li>
     <li><a href="#s8"><span class="toc-num">08</span>Outros usos</a></li>
     <li><a href="#s9"><span class="toc-num">09</span>Arquitetura</a></li>
@@ -166,7 +177,7 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
   <p><strong>Por que importa para o SplitHub.</strong> Hoje o Live confere o valor do RF só contra a apuração do ente (CAPUR) e contra o recolhimento (CFIN). Ele não sabe se o valor destacado pelo fornecedor está certo, nem se a classificação dá direito ao crédito. A calculadora responde às duas perguntas com a regra oficial e antes da apuração. É a garantia da apropriação do crédito chegando mais cedo.</p>
   <div class="callout ok">
     <div class="ct">A proposta em uma frase</div>
-    <p>Subir a calculadora como serviço nosso, ao lado do backend. A conciliação ganha uma terceira conferência, a <strong>CCALC</strong> (valor destacado × valor calculado), com histórico e detalhe por item, e a divergência abre inconsistência. O cliente ganha o <strong>Validador de DF-e</strong>, onde ele sobe XMLs ou um ZIP e recebe um relatório de aceite ou de divergências, sem nada entrar no razão.</p>
+    <p>Subir a calculadora como serviço nosso, ao lado do backend. A <strong>CAPUR ganha uma primeira etapa</strong>: valor destacado × valor calculado, na entrada do DF, com histórico e detalhe por item. A divergência abre inconsistência já nesse momento, e a apuração do ente continua sendo a segunda etapa e a palavra final. O cliente ganha o <strong>Validador de DF-e</strong>, onde ele sobe XMLs ou um ZIP e recebe um relatório de aceite ou de divergências, sem nada entrar no razão.</p>
   </div>
 </div>
 
@@ -340,7 +351,7 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
     <thead><tr><th>Ponto</th><th>Hoje no tax-rs</th><th>O que a calculadora acrescenta</th></tr></thead>
     <tbody>
       <tr><td><strong>Leitura do XML</strong></td><td><code>integration/ingestion/lib/xml.ts</code> lê só o nível do documento: chave, partes e totais <code>vBCIBSCBS</code>, <code>vIBS</code> e <code>vCBS</code>. O próprio arquivo diz que os itens não são lidos e que não há validação por XSD.</td><td>A conferência pede os itens (<code>det/imposto/IBSCBS</code>). XSD pronto para oito modelos.</td></tr>
-      <tr><td><strong>Conciliação</strong></td><td><code>reconciliation</code> calcula CAPUR (RF × apuração do ente) e CFIN (recolhimento × apropriação) por documento e tributo, e publica <code>reconciliation-results</code>.</td><td>Uma terceira conferência, antes das duas: o valor destacado estava certo?</td></tr>
+      <tr><td><strong>Conciliação</strong></td><td><code>reconciliation</code> calcula CAPUR (RF × apuração do ente) e CFIN (recolhimento × apropriação) por documento e tributo, e publica <code>reconciliation-results</code>.</td><td>Uma primeira etapa na CAPUR, antes da apuração chegar: o valor destacado estava certo?</td></tr>
       <tr><td><strong>Inconsistências</strong></td><td>25 tipos em seis famílias. <code>capur_ibs_aliquota</code> e <code>capur_cbs_aliquota</code> ("Alíquota incorreta") estão catalogadas com <code>detected: false</code>. A família A (Documento) não detecta nada.</td><td>Detecção das duas alíquotas e uma família A com regra oficial.</td></tr>
       <tr><td><strong>Crédito</strong></td><td>O crédito esperado sai do valor destacado no DF.</td><td>O indicador da cClassTrib diz se o adquirente pode apropriar o crédito. O crédito esperado de um DF sem direito vira zero, com o motivo explicado.</td></tr>
     </tbody>
@@ -353,42 +364,75 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
 
 <!-- 06 -->
 <div class="section" id="s6">
-  <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Uso 1: conferência de cálculo na conciliação (CCALC)</span></div>
-  <p>Cada DF que entra no Live passa pela calculadora. O resultado vira uma conferência nova da conciliação, ao lado da CAPUR e da CFIN, com a mesma mecânica de versão, outbox e publicação. Quando há divergência, a inconsistência abre sozinha.</p>
-
-  <h3>6.1 A regra</h3>
+  <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-title">Uso 1: o cálculo oficial como primeira etapa da CAPUR</span></div>
+  <p>Hoje a CAPUR tem uma etapa só: compara o RF com a apuração do ente e fica pendente até a apuração chegar. Na v1.1, a CAPUR de cada documento e tributo passa a ter <strong>duas etapas</strong>. Não nasce conferência nova: a calculadora vira o começo da CAPUR.</p>
   <div class="table-wrap"><table>
-    <thead><tr><th>Situação</th><th>Status da CCALC</th><th>Inconsistência</th></tr></thead>
+    <thead><tr><th>Etapa</th><th>Quando roda</th><th>O que compara</th><th>Quem dá a palavra</th></tr></thead>
     <tbody>
-      <tr><td>Todos os itens calculados, e o calculado igual ao destacado por tributo, dentro da tolerância (D-CR-04)</td><td><span class="chip ok">Conforme</span></td><td>Nenhuma</td></tr>
-      <tr><td>Itens calculados, mas o valor do IBS ou da CBS difere do destacado</td><td><span class="chip red">Valor divergente</span></td><td><code>capur_ibs_aliquota</code> ou <code>capur_cbs_aliquota</code> quando é a alíquota; tipo novo <code>ccalc_*_valor</code> quando é base ou arredondamento (seção 10)</td></tr>
-      <tr><td>Algum item com REG</td><td><span class="chip red">Classificação inconsistente</span></td><td>Tipo novo da família A, por grupo de REG (seção 10)</td></tr>
-      <tr><td>cClassTrib sem direito a crédito para o adquirente</td><td><span class="chip warn">Sem direito a crédito</span></td><td>Tipo novo <code>ccalc_sem_direito_credito</code>; o crédito esperado vai a zero</td></tr>
-      <tr><td>Algum item <code>NAO_IMPLEMENTADO</code> ou <code>FALHA_TECNICA</code>, nenhum REG</td><td><span class="chip gray">Não conferido</span></td><td>Nenhuma para o cliente. Falha técnica repetida abre <code>integracao_erp</code> (família F) para o time técnico</td></tr>
-      <tr><td>Calculadora fora do ar</td><td><span class="chip gray">Pendente</span></td><td>Nenhuma. A fila tenta de novo, e o cron diário revisita</td></tr>
+      <tr><td><strong>1 · Cálculo oficial</strong></td><td>Na entrada do DF, antes da apuração</td><td>Valor destacado pelo fornecedor × valor calculado pela calculadora, item a item, somado por tributo</td><td>A regra (calculadora da Receita Federal)</td></tr>
+      <tr><td><strong>2 · Apuração do ente</strong></td><td>Quando chega a apuração, como hoje</td><td>Valor do RF × apuração da Receita Federal (CBS) ou do Comitê Gestor (IBS)</td><td>O ente: é a palavra final da CAPUR</td></tr>
     </tbody>
   </table></div>
-  <p><strong>Exemplo.</strong> NF-e de 01/12/2026, um item com base de R$ 1.000,00, CST 000 e cClassTrib 000001. A calculadora devolve CBS de R$ 9,00 (0,9%) e IBS de R$ 1,00 (0,1%). O fornecedor destacou CBS de R$ 10,00. A CCALC da CBS fica "Valor divergente": destacado R$ 10,00, calculado R$ 9,00, diferença de R$ 1,00. Abre <code>capur_cbs_aliquota</code> com o detalhe do item e a memória de cálculo. A do IBS fica conforme.</p>
-  <div class="callout">
-    <div class="ct">A CCALC não decide o crédito sozinha</div>
-    <p>Como na decisão de 30/09 sobre os eventos fiscais (divergência nunca aplica valor sozinha), a CCALC <strong>não muda</strong> o valor do RF nem o status do crédito. Ela abre a ocorrência, e quem resolve é o time fiscal, com o fornecedor. A única exceção proposta é o "sem direito a crédito": ele zera o crédito <strong>esperado</strong> do painel, mas não o RF (D-CR-05).</p>
+  <div class="callout ok">
+    <div class="ct">Por que dentro da CAPUR</div>
+    <ul class="plain">
+      <li><strong>O catálogo já previa isso.</strong> <code>capur_ibs_aliquota</code> e <code>capur_cbs_aliquota</code> ("Alíquota incorreta") estão na família B como causas da CAPUR, com <code>detected: false</code> por falta de quem detectasse. A etapa 1 é quem detecta.</li>
+      <li><strong>Nada novo na conciliação:</strong> nem coluna, nem tópico, nem conjunto de status paralelo. O <code>reconciliation-results</code>, o outbox e a regra "CFIN nunca conciliada com CAPUR pendente" ficam como estão.</li>
+      <li><strong>A divergência ganha causa.</strong> Quando a etapa 2 diverge, a etapa 1 diz se o problema foi a alíquota, a base ou a classificação do fornecedor, ou se está do lado do ente.</li>
+      <li><strong>Aviso antecipado.</strong> A CAPUR deixa de ser só "pendente" até a apuração chegar. Ela já mostra "pendente · cálculo divergente" no dia em que o DF entra.</li>
+    </ul>
   </div>
 
-  <h3>6.2 Histórico</h3>
-  <p>Cada execução grava uma linha em <code>calc_runs</code>, que nunca é reescrita. A linha traz a chave do DF, o tributo, o momento, a <strong>versão da aplicação e a do banco da calculadora</strong>, o motivo da execução, a entrada enviada (<code>OperacaoInput</code>, com hash), a resposta completa, o status resultante e quem pediu. A conferência vigente é a última execução, e as anteriores ficam na timeline do RF.</p>
+  <h3>6.1 Resultado da etapa 1</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Situação</th><th>Resultado da etapa 1</th></tr></thead>
+    <tbody>
+      <tr><td>Todos os itens calculados, e o calculado igual ao destacado por tributo, dentro da tolerância (D-CR-04)</td><td><span class="chip ok">Cálculo conforme</span></td></tr>
+      <tr><td>Itens calculados, mas o IBS ou a CBS difere do destacado</td><td><span class="chip red">Cálculo divergente</span>, com a causa: alíquota ou base</td></tr>
+      <tr><td>Algum item com REG</td><td><span class="chip red">Classificação inconsistente</span></td></tr>
+      <tr><td>Algum item <code>NAO_IMPLEMENTADO</code> ou <code>FALHA_TECNICA</code>, nenhum REG</td><td><span class="chip gray">Cálculo não conferido</span></td></tr>
+      <tr><td>Calculadora fora do ar</td><td><span class="chip gray">Cálculo pendente</span>: a fila tenta de novo, e o cron diário da conciliação revisita</td></tr>
+    </tbody>
+  </table></div>
+  <p>O "sem direito a crédito" da cClassTrib não é resultado da CAPUR, porque não compara valores. Ele vai para o crédito (CR-3, família C), lido da mesma execução.</p>
+
+  <h3>6.2 Como as duas etapas formam o status da CAPUR</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Etapa 1</th><th>Etapa 2</th><th>CAPUR</th><th>Ocorrência</th></tr></thead>
+    <tbody>
+      <tr><td>Conforme</td><td>Pendente</td><td><span class="chip gray">Pendente</span> · cálculo conforme</td><td>Nenhuma</td></tr>
+      <tr><td>Divergente</td><td>Pendente</td><td><span class="chip warn">Pendente</span> · cálculo divergente</td><td><code>capur_*_aliquota</code> ou <code>capur_*_base</code> abre já, como aviso antecipado</td></tr>
+      <tr><td>Conforme</td><td>Igual ao RF</td><td><span class="chip ok">Conciliada</span></td><td>Nenhuma</td></tr>
+      <tr><td>Divergente</td><td>Ente igual ao destacado</td><td><span class="chip ok">Conciliada</span> · com ressalva do cálculo</td><td>A da etapa 1 fecha como "superada pela apuração do ente", e a ressalva fica no histórico (D-CR-10)</td></tr>
+      <tr><td>Divergente</td><td>Ente igual ao calculado</td><td><span class="chip red">Divergente</span> · causa: valor do fornecedor</td><td>Uma ocorrência só: a da etapa 1 continua e recebe o valor do ente; <code>capur_*_divergente</code> não abre em duplicidade (D-CR-11)</td></tr>
+      <tr><td>Conforme</td><td>Diferente do RF</td><td><span class="chip red">Divergente</span> · o cálculo oficial bate com o RF</td><td><code>capur_*_divergente</code>, como hoje, com a nota "verificar a apuração do ente"</td></tr>
+      <tr><td>Classificação inconsistente</td><td>Qualquer</td><td>Segue a etapa 2, com a marca "classificação inconsistente"</td><td>A de classificação (seção 10), mais a da etapa 2 se houver</td></tr>
+      <tr><td>Não conferido ou pendente</td><td>Qualquer</td><td>Segue a etapa 2, como hoje, com a marca "cálculo não conferido"</td><td>Só as da etapa 2</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Exemplo.</strong> NF-e de 01/12/2026, um item com base de R$ 1.000,00, CST 000 e cClassTrib 000001. A calculadora devolve CBS de R$ 9,00 (0,9%) e IBS de R$ 1,00 (0,1%), mas o fornecedor destacou CBS de R$ 10,00. No dia da entrada, a CAPUR da CBS fica "Pendente · cálculo divergente" e abre <code>capur_cbs_aliquota</code> com o item e a memória de cálculo. A do IBS fica "Pendente · cálculo conforme". Quando a Receita Federal apura R$ 9,00, a CAPUR da CBS vira "Divergente · causa: valor do fornecedor", na mesma ocorrência. Se a Receita Federal apurar R$ 10,00, ela vira "Conciliada · com ressalva do cálculo" e a ocorrência fecha.</p>
+  <div class="callout">
+    <div class="ct">A etapa 1 não muda valor</div>
+    <p>Como na decisão de 30/09 sobre os eventos fiscais (divergência nunca aplica valor sozinha), a etapa 1 <strong>não muda</strong> o valor do RF nem o status do crédito. Ela abre ou qualifica a ocorrência, e quem resolve é o time fiscal, com o fornecedor.</p>
+  </div>
+
+  <h3>6.3 Histórico</h3>
+  <p>Cada execução da calculadora grava uma linha em <code>calc_runs</code>, que nunca é reescrita. A linha traz a chave do DF, o tributo, o momento, a <strong>versão da aplicação e a do banco da calculadora</strong>, o motivo, a entrada enviada (<code>OperacaoInput</code>, com hash), a resposta completa, o resultado da etapa 1 e quem pediu. A CAPUR usa a última execução, e as anteriores ficam na timeline do RF como eventos da etapa 1, ao lado dos da etapa 2.</p>
   <ul class="plain">
     <li><strong>Motivos:</strong> entrada do DF, nova versão da calculadora, reprocessamento pedido pelo usuário, correção do DF (evento ou carta de correção), cron de pendentes.</li>
-    <li><strong>Nova versão da calculadora:</strong> por padrão, reprocessa só os DFs com CCALC aberta (divergente ou não conferida) e os de fato gerador ainda não apurado. Os conformes antigos ficam como estão (D-CR-06).</li>
-    <li><strong>Mudança de resultado entre versões</strong> fica visível. Uma divergência que some depois da 1.7.2, por exemplo, mostra na timeline "Conforme · calculadora 1.7.2" e a ocorrência fecha como "resolvida pela regra oficial".</li>
+    <li><strong>Nova versão da calculadora:</strong> por padrão, reprocessa só as CAPUR com a etapa 1 aberta (divergente, inconsistente ou não conferida) e ainda sem apuração. Os conformes antigos ficam como estão (D-CR-06).</li>
+    <li><strong>Mudança de resultado entre versões</strong> fica visível. Uma divergência que some depois da 1.7.2, por exemplo, aparece na timeline como "Etapa 1 · conforme · calculadora 1.7.2", e a ocorrência fecha como "resolvida pela regra oficial".</li>
+    <li><strong>O registro da CAPUR</strong> passa a guardar o id da execução usada, junto da apuração usada na etapa 2. Assim dá para reconstituir qualquer status passado.</li>
   </ul>
 
-  <h3>6.3 Detalhamento na tela</h3>
+  <h3>6.4 Detalhamento na tela</h3>
   <ul class="plain">
-    <li><strong>Conciliação:</strong> coluna nova "Cálculo" ao lado de CAPUR e CFIN, com os mesmos selos. KPI de conformidade do cálculo e filtro por status.</li>
-    <li><strong>Detalhe do DF, aba nova "Cálculo oficial":</strong> tabela por item com NCM/NBS, CST, cClassTrib, base, destacado × calculado por tributo, estado e erro (código, título, campo e texto). Abre a memória de cálculo do item. Mostra os indicadores de crédito da cClassTrib, a fundamentação legal, a versão da calculadora e o aviso de dado simulado.</li>
-    <li><strong>Timeline do RF:</strong> selo da CCALC a cada execução, como os selos de CAPUR e CFIN em <code>timeline.ts</code>.</li>
-    <li><strong>Ocorrência:</strong> o detalhe já vem com o item, o código da calculadora e o texto. O botão "Reprocessar cálculo" roda de novo e anexa a execução nova.</li>
+    <li><strong>Conciliação:</strong> o selo da CAPUR passa a mostrar as duas etapas, por exemplo "Cálculo ✓ · Apuração ⏳". Ganha um filtro por resultado da etapa 1 e o KPI "CAPUR com cálculo divergente". Não há coluna nova.</li>
+    <li><strong>Detalhe do DF, seção CAPUR:</strong> o bloco "Etapa 1 · Cálculo oficial" fica acima do confronto com a apuração. Ele traz uma tabela por item (NCM/NBS, CST, cClassTrib, base, destacado × calculado por tributo, estado e erro com código, campo e texto). Também traz a memória de cálculo do item, os indicadores de crédito, a fundamentação legal, a versão da calculadora e o aviso de dado simulado.</li>
+    <li><strong>Timeline do RF:</strong> eventos "CAPUR · etapa 1" e "CAPUR · etapa 2", com os selos de <code>timeline.ts</code>.</li>
+    <li><strong>Ocorrência:</strong> o detalhe já chega com o item, o código da calculadora e o texto. Quando a etapa 2 chega, mostra lado a lado o destacado, o calculado e o apurado. O botão "Reprocessar cálculo" roda a etapa 1 de novo.</li>
   </ul>
+  <p><strong>O que muda no PRD de Conciliação:</strong> a definição da CAPUR e as regras dela passam a descrever as duas etapas e a tabela 6.2. O PRD de Inconsistências passa a detectar <code>capur_*_aliquota</code> e recebe os tipos novos da seção 10.</p>
 </div>
 
 <!-- 07 -->
@@ -453,7 +497,7 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
       <rect class="box-be" x="250" y="30" width="190" height="60" rx="8"/><text x="345" y="56" text-anchor="middle" font-size="13" font-weight="700">integration · ingestão</text><text class="sub" x="345" y="74" text-anchor="middle">documento + itens (só p/ conferência)</text>
       <rect class="box-be" x="500" y="30" width="180" height="60" rx="8"/><text x="590" y="56" text-anchor="middle" font-size="13" font-weight="700">serviço rtc-check</text><text class="sub" x="590" y="74" text-anchor="middle">monta OperacaoInput · calc_runs</text>
       <rect class="box-ext" x="730" y="30" width="150" height="60" rx="8"/><text x="805" y="56" text-anchor="middle" font-size="13" font-weight="700">Calculadora RF</text><text class="sub" x="805" y="74" text-anchor="middle">Java 25 · container</text>
-      <rect class="box-be" x="500" y="150" width="180" height="60" rx="8"/><text x="590" y="176" text-anchor="middle" font-size="13" font-weight="700">reconciliation</text><text class="sub" x="590" y="194" text-anchor="middle">CAPUR · CFIN · CCALC</text>
+      <rect class="box-be" x="500" y="150" width="180" height="60" rx="8"/><text x="590" y="176" text-anchor="middle" font-size="13" font-weight="700">reconciliation</text><text class="sub" x="590" y="194" text-anchor="middle">CAPUR (etapas 1 e 2) · CFIN</text>
       <rect class="box-be" x="730" y="150" width="150" height="60" rx="8"/><text x="805" y="176" text-anchor="middle" font-size="13" font-weight="700">inconsistencies</text><text class="sub" x="805" y="194" text-anchor="middle">abre a ocorrência</text>
       <rect class="box-fe" x="250" y="150" width="190" height="60" rx="8"/><text x="345" y="176" text-anchor="middle" font-size="13" font-weight="700">Conciliação · Detalhe do DF</text><text class="sub" x="345" y="194" text-anchor="middle">aba Cálculo oficial · timeline</text>
       <rect class="box-fe" x="20" y="250" width="170" height="60" rx="8"/><text x="105" y="276" text-anchor="middle" font-size="13" font-weight="700">Validador de DF-e</text><text class="sub" x="105" y="294" text-anchor="middle">upload XML / ZIP</text>
@@ -465,10 +509,10 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
   </div>
   <ul class="plain">
     <li><strong>Hospedagem:</strong> a calculadora roda como container nosso (Java 25, JAR + banco SQLite), com a versão fixada por tag da Receita Federal e atualizada por PR. O Encore não roda Java, então o container fica fora do Encore Cloud e é chamado por HTTP privado, com a URL e o token em secret. A instalação online da Receita Federal fica só como contingência ou para staging (D-CR-01).</li>
-    <li><strong>Serviço novo <code>rtc-check</code></strong> no Encore: monta o <code>OperacaoInput</code> a partir do XML, chama a observabilidade, grava <code>calc_runs</code> e <code>calc_items</code> e publica o tópico <code>calc-results</code>. A <code>reconciliation</code> assina e calcula a CCALC; as <code>inconsistencies</code> recebem pelo <code>reconciliation-results</code> de sempre.</li>
+    <li><strong>Serviço novo <code>rtc-check</code></strong> no Encore: monta o <code>OperacaoInput</code> a partir do XML, chama a observabilidade, grava <code>calc_runs</code> e <code>calc_items</code> e publica o tópico <code>calc-results</code>. A <code>reconciliation</code> assina e usa o resultado como etapa 1 da CAPUR, no mesmo <code>recompute()</code>; as <code>inconsistencies</code> recebem pelo <code>reconciliation-results</code> de sempre.</li>
     <li><strong>Mapeamento do XML para a entrada:</strong> <code>dhFatoGerador</code> ← <code>ide/dhEmi</code>; <code>municipio</code> ← <code>ide/cMunFG</code>; <code>uf</code> ← UF do município; <code>tpDoc</code> ← <code>ide/mod</code>. Por item: <code>ncm</code> ou <code>nbs</code>, <code>cst</code>, <code>cClassTrib</code>, <code>baseCalculo</code> ← <code>gIBSCBS/vBC</code> e o grupo do IS. Os componentes da base (<code>gComponentesBC</code>) também vão, para a REG-034 conferir a base.</li>
     <li><strong>Cliente tipado</strong> gerado do OpenAPI 3.1 da calculadora, com teste de contrato rodando contra o container na CI.</li>
-    <li><strong>Resiliência:</strong> timeout de 10 s, três tentativas, circuit breaker. Calculadora fora do ar nunca bloqueia a ingestão: a CCALC fica "Pendente".</li>
+    <li><strong>Resiliência:</strong> timeout de 10 s, três tentativas, circuit breaker. Calculadora fora do ar nunca bloqueia a ingestão: a etapa 1 fica "Cálculo pendente" e a CAPUR segue com a etapa 2.</li>
     <li><strong>Volume:</strong> uma chamada por documento, com todos os itens. Medir com as 252 NF-e do staging da Claro antes de dimensionar.</li>
   </ul>
 </div>
@@ -476,22 +520,22 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
 <!-- 10 -->
 <div class="section" id="s10">
   <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-title">Do código da calculadora à inconsistência</span></div>
-  <p>Proposta de mapeamento. Os tipos novos entram no catálogo de inconsistências e no PRD pelo fluxo de sempre, depois da decisão.</p>
+  <p>Proposta de mapeamento. Tudo o que vem da etapa 1 leva o prefixo <code>capur_</code>, porque nasce da CAPUR. Os tipos novos entram no catálogo de inconsistências e no PRD pelo fluxo de sempre, depois da decisão.</p>
   <div class="table-wrap"><table>
-    <thead><tr><th>Origem</th><th>Tipo de ocorrência</th><th>Família</th><th>Situação no catálogo</th></tr></thead>
+    <thead><tr><th>Origem na etapa 1</th><th>Tipo de ocorrência</th><th>Família</th><th>Situação no catálogo</th></tr></thead>
     <tbody>
-      <tr><td>Calculado ≠ destacado, mesma base, alíquota diferente</td><td><code>capur_ibs_aliquota</code> · <code>capur_cbs_aliquota</code></td><td>B</td><td>Existe, passa a <code>detected: true</code>. O nome "capur" fica por estabilidade, e o rótulo continua "Alíquota incorreta"</td></tr>
-      <tr><td>Calculado ≠ destacado por base ou arredondamento</td><td><code>ccalc_ibs_valor</code> · <code>ccalc_cbs_valor</code> "Valor destacado diverge do cálculo oficial"</td><td>A</td><td>Novo</td></tr>
-      <tr><td>REG-001 a 003, 007, 011, 012, 015, 016, 033</td><td><code>ccalc_nomenclatura</code> "NCM/NBS incompatível com a classificação"</td><td>A</td><td>Novo</td></tr>
-      <tr><td>REG-004 a 006, 008 a 010, 022</td><td><code>ccalc_classificacao</code> "CST/cClassTrib inválido ou incompatível"</td><td>A</td><td>Novo</td></tr>
-      <tr><td>REG-028 a 032, 038</td><td><code>ccalc_tipo_documento</code> "Classificação não admitida no tipo de DF"</td><td>A</td><td>Novo</td></tr>
-      <tr><td>REG-013, 014, 025 a 027, 034, 035</td><td><code>ccalc_base_is</code> "Base de cálculo ou Imposto Seletivo inconsistente"</td><td>A</td><td>Novo</td></tr>
-      <tr><td>REG-018 a 021, 023, 024, 036, 037; VAL</td><td>Não abre para o cliente: erro de montagem nossa. Vai para a família F</td><td>F</td><td><code>integracao_erp</code> existente</td></tr>
-      <tr><td>Indicador de apropriação = não</td><td><code>ccalc_sem_direito_credito</code> "Classificação sem direito a crédito"</td><td>C</td><td>Novo</td></tr>
+      <tr><td>Calculado ≠ destacado, mesma base, alíquota diferente</td><td><code>capur_ibs_aliquota</code> · <code>capur_cbs_aliquota</code> "Alíquota incorreta"</td><td>B</td><td>Existe; passa a <code>detected: true</code></td></tr>
+      <tr><td>Calculado ≠ destacado por base ou arredondamento</td><td><code>capur_ibs_base</code> · <code>capur_cbs_base</code> "Base ou valor divergente do cálculo oficial"</td><td>B</td><td>Novo</td></tr>
+      <tr><td>REG-001 a 003, 007, 011, 012, 015, 016, 033</td><td><code>capur_nomenclatura</code> "NCM/NBS incompatível com a classificação"</td><td>A (D-CR-12)</td><td>Novo</td></tr>
+      <tr><td>REG-004 a 006, 008 a 010, 022</td><td><code>capur_classificacao</code> "CST/cClassTrib inválido ou incompatível"</td><td>A (D-CR-12)</td><td>Novo</td></tr>
+      <tr><td>REG-028 a 032, 038</td><td><code>capur_tipo_documento</code> "Classificação não admitida no tipo de DF"</td><td>A (D-CR-12)</td><td>Novo</td></tr>
+      <tr><td>REG-013, 014, 025 a 027, 034, 035</td><td><code>capur_base_is</code> "Base de cálculo ou Imposto Seletivo inconsistente"</td><td>A (D-CR-12)</td><td>Novo</td></tr>
+      <tr><td>REG-018 a 021, 023, 024, 036, 037; VAL</td><td>Não abre para o cliente, porque é erro de montagem nossa. Vai para a família F</td><td>F</td><td><code>integracao_erp</code>, existente</td></tr>
       <tr><td>CAL-*</td><td>Nenhuma para o cliente. Falha repetida vai para o time técnico</td><td>F</td><td>—</td></tr>
+      <tr><td>Indicador de apropriação = não (fora da CAPUR)</td><td><code>credito_sem_direito</code> "Classificação sem direito a crédito"</td><td>C</td><td>Novo</td></tr>
     </tbody>
   </table></div>
-  <p>Dono e prazo seguem a família: A é o time fiscal com o emitente, em 5 dias úteis; C segue o prazo legal. A ocorrência fecha sozinha quando uma execução nova da CCALC sai conforme, seja por evento do DF, seja por versão nova da calculadora.</p>
+  <p>Dono e prazo seguem a família: B é o time fiscal com o órgão, em 15 dias úteis; A é o time fiscal com o emitente, em 5 dias úteis; C segue o prazo legal. Uma ocorrência da etapa 1 fecha sozinha em três casos: uma execução nova sai conforme, a etapa 2 a supera (D-CR-10) ou ela é absorvida pela divergência da etapa 2 (D-CR-11).</p>
 </div>
 
 <!-- 11 -->
@@ -504,11 +548,11 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
     <div class="onda crit" id="cr1"><div class="onda-h"><span class="onda-n">CR-1</span><span class="onda-t">Conferência por DF e histórico</span><span class="onda-q">Uso 1, backend</span></div>
       <div class="onda-g"><div><div class="lbl">Entrega</div><ul class="plain"><li>Leitura dos itens no <code>xml.ts</code>, só para a conferência</li><li>Serviço <code>rtc-check</code>, <code>calc_runs</code>, <code>calc_items</code>, tópico <code>calc-results</code></li><li>Fila, novas tentativas e cron dos pendentes</li></ul></div>
       <div><div class="lbl">Pronto quando</div><ul class="plain"><li>As 252 NF-e do staging têm execução gravada, com versão e estado por item</li></ul></div></div></div>
-    <div class="onda" id="cr2"><div class="onda-h"><span class="onda-n">CR-2</span><span class="onda-t">CCALC na conciliação e inconsistências</span><span class="onda-q">Uso 1, regra e telas</span></div>
-      <div class="onda-g"><div><div class="lbl">Entrega</div><ul class="plain"><li>CCALC em <code>reconcile.ts</code>, com versão e outbox</li><li>Tipos da seção 10 no catálogo e na detecção</li><li>Coluna "Cálculo", aba "Cálculo oficial", selos na timeline, botão "Reprocessar"</li></ul></div>
-      <div><div class="lbl">Pronto quando</div><ul class="plain"><li>O exemplo da seção 6.1 abre <code>capur_cbs_aliquota</code> com o item e a memória, e fecha ao reprocessar com o DF corrigido</li></ul></div></div></div>
+    <div class="onda" id="cr2"><div class="onda-h"><span class="onda-n">CR-2</span><span class="onda-t">Etapa 1 da CAPUR e inconsistências</span><span class="onda-q">Uso 1, regra e telas</span></div>
+      <div class="onda-g"><div><div class="lbl">Entrega</div><ul class="plain"><li>CAPUR em duas etapas em <code>reconcile.ts</code> (tabela 6.2), com testes de propriedade</li><li>Tipos da seção 10 no catálogo e na detecção</li><li>Selo de duas etapas, bloco "Etapa 1" no detalhe, eventos na timeline, botão "Reprocessar"</li><li>PRDs de Conciliação e de Inconsistências</li></ul></div>
+      <div><div class="lbl">Pronto quando</div><ul class="plain"><li>O exemplo da seção 6.2 percorre os três estados (pendente com cálculo divergente, divergente com causa e conciliada com ressalva) numa ocorrência só</li></ul></div></div></div>
     <div class="onda" id="cr3"><div class="onda-h"><span class="onda-n">CR-3</span><span class="onda-t">Direito ao crédito</span><span class="onda-q">KPI do crédito</span></div>
-      <div class="onda-g"><div><div class="lbl">Entrega</div><ul class="plain"><li>Indicadores da cClassTrib no crédito esperado</li><li><code>ccalc_sem_direito_credito</code></li></ul></div>
+      <div class="onda-g"><div><div class="lbl">Entrega</div><ul class="plain"><li>Indicadores da cClassTrib no crédito esperado</li><li><code>credito_sem_direito</code>, lido da mesma execução da etapa 1</li></ul></div>
       <div><div class="lbl">Pronto quando</div><ul class="plain"><li>Um DF com cClassTrib sem direito mostra crédito esperado zero e o motivo, com o RF intacto</li></ul></div></div></div>
     <div class="onda" id="cr4"><div class="onda-h"><span class="onda-n">CR-4</span><span class="onda-t">Validador de DF-e</span><span class="onda-q">Uso 2</span></div>
       <div class="onda-g"><div><div class="lbl">Entrega</div><ul class="plain"><li>Upload XML/ZIP, job do lote, relatório na tela</li><li>Exportação em PDF e CSV/XLSX, retenção, permissão</li><li>Versão Demo com cenários fixos</li></ul></div>
@@ -531,10 +575,13 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
       <tr><td class="id">D-CR-03</td><td>De onde vêm as alíquotas nominais a partir de 2027?</td><td>A: tabela oficial dos dados abertos, por UF e município · B: do próprio XML (<code>pCBS</code>, <code>pIBSUF</code>, <code>pIBSMun</code>) · C: cadastro nosso</td><td><strong>A</strong>, com B registrado ao lado. Usar a alíquota do próprio XML faria a conferência só repetir o fornecedor.</td></tr>
       <tr><td class="id">D-CR-04</td><td>Tolerância da comparação destacado × calculado</td><td>A: zero · B: R$ 0,01 por item · C: R$ 0,01 por item e por documento</td><td><strong>B</strong>. A própria calculadora mudou centavos na 1.7.2.</td></tr>
       <tr><td class="id">D-CR-05</td><td>"Sem direito a crédito" zera o crédito esperado?</td><td>A: zera o esperado, mantém o RF · B: só abre a ocorrência</td><td><strong>A</strong>.</td></tr>
-      <tr><td class="id">D-CR-06</td><td>O que reprocessar quando sai versão nova da calculadora?</td><td>A: só CCALC aberta e fato gerador não apurado · B: tudo · C: nada, só sob pedido</td><td><strong>A</strong>.</td></tr>
+      <tr><td class="id">D-CR-06</td><td>O que reprocessar quando sai versão nova da calculadora?</td><td>A: só CAPUR com etapa 1 aberta e ainda sem apuração · B: tudo · C: nada, só sob pedido</td><td><strong>A</strong>.</td></tr>
       <tr><td class="id">D-CR-07</td><td>O validador pode importar os aceitos para o Live?</td><td>A: não na primeira versão · B: sim, botão "Importar os aceitos"</td><td><strong>A</strong>. Mantém o módulo sem efeito colateral.</td></tr>
       <tr><td class="id">D-CR-08</td><td>Limites e retenção do validador</td><td>Lote de 500 documentos e 50 MB; XML por 90 dias e relatório por 5 anos</td><td>Como proposto.</td></tr>
       <tr><td class="id">D-CR-09</td><td>Ordem das etapas</td><td>A: CR-0 → CR-1 → CR-2 → CR-3, com CR-4 em paralelo · B: CR-4 primeiro, como vitrine</td><td><strong>A</strong>. O uso 1 protege o crédito. B só se houver demanda comercial.</td></tr>
+      <tr><td class="id">D-CR-10</td><td>Etapa 1 divergente, mas o ente apura igual ao destacado: o que acontece?</td><td>A: o ente prevalece, a CAPUR fica conciliada com ressalva e a ocorrência fecha como superada · B: a ocorrência continua aberta como risco de revisão</td><td><strong>A</strong>. O crédito é o que o ente apura; uma revisão posterior chega como glosa.</td></tr>
+      <tr><td class="id">D-CR-11</td><td>Etapa 1 e etapa 2 divergem no mesmo sentido: uma ou duas ocorrências?</td><td>A: uma só, a da etapa 1, que recebe o valor do ente · B: as duas, ligadas</td><td><strong>A</strong>. Evita tratar a mesma causa duas vezes.</td></tr>
+      <tr><td class="id">D-CR-12</td><td>Família das ocorrências de classificação da etapa 1</td><td>A: família A (Documento, dono o emitente, 5 dias úteis), com o prefixo <code>capur_</code> · B: família B, como as de alíquota</td><td><strong>A</strong>. Quem corrige a classificação é o emitente, não o órgão.</td></tr>
     </tbody>
   </table></div>
 </div>
@@ -547,7 +594,7 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
     <li><strong>A partir de 2027 o cálculo é "simulado".</strong> A calculadora deixa de saber as alíquotas e exige que quem chama informe. O resultado vale o que valer a tabela de alíquotas que usamos (D-CR-03).</li>
     <li><strong>Cobertura incompleta.</strong> CAL-007 marca classificações ainda não implementadas, e a detecção de compra governamental para o aviso está como TODO. O "Não conferido" precisa aparecer como tal, nunca como conforme.</li>
     <li><strong>Um erro por item.</strong> A validação para no primeiro problema do item, então corrigir um pode revelar outro. Na tela, o texto deve dizer "primeiro problema encontrado".</li>
-    <li><strong>A calculadora não é a apuração.</strong> Ela diz o que a regra manda, mas não o que a Receita Federal (CBS) ou o Comitê Gestor (IBS) apuraram. A CAPUR continua sendo a palavra final do ente. A CCALC avisa mais cedo.</li>
+    <li><strong>A calculadora não é a apuração.</strong> Por isso ela é a etapa 1 e o ente é a etapa 2 da CAPUR. Ela diz o que a regra manda, mas não o que a Receita Federal (CBS) ou o Comitê Gestor (IBS) apuraram. A CAPUR continua sendo a palavra final do ente. A etapa 1 avisa mais cedo.</li>
     <li><strong>Java na stack.</strong> É uma peça nova para operar: imagem, atualização, monitoramento. O tamanho e o consumo de memória precisam de medição na CR-0.</li>
     <li><strong>Código de homologação.</strong> Os arquivos trazem o cabeçalho "Versão de Homologação/Testes". Acompanhar o anúncio de versão de produção da Receita Federal.</li>
   </ul>
@@ -559,7 +606,7 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
   </ul>
 </div>
 
-<div class="foot">SplitHub · tax-rs · Calculadora da Receita Federal no Live · v1.0 · 28/11/2026</div>
+<div class="foot">SplitHub · tax-rs · Calculadora da Receita Federal no Live · v1.1 · 28/11/2026</div>
 </div>
 </body>
 </html>
