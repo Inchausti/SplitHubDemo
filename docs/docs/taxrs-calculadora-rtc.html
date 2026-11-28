@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Calculadora da Receita no Live · v1.2</title>
+<title>Calculadora da Receita no Live · v1.3</title>
 <style>
 :root { --bg:#F7F8FA; --sur:#FFFFFF; --sur2:#F0F2F6; --brd:#DDE1EA; --txt1:#131720; --txt2:#4A5568; --txt3:#8A92A3;
   --teal:#0E9E8E; --teal-d:rgba(14,158,142,.1); --blue:#1D5FCC; --blue-d:rgba(29,95,204,.08); --red:#D63A49; --red-d:rgba(214,58,73,.08);
@@ -125,15 +125,21 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
 <p class="subtitle">A Receita Federal publicou como código aberto a calculadora do regime regular da reforma: CBS, IBS e Imposto Seletivo da LC 214/2025. Este documento estuda o código (versão 1.7.3, de 26/11/2026), lista cada validação que ela faz e propõe como o Live do tax-rs passa a usá-la. A proposta tem dois usos: o cálculo oficial como primeira etapa da CAPUR e um validador de DF-e que o próprio cliente usa.</p>
 
 <div class="meta-bar">
-  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.2</span> <a href="versoes/taxrs-calculadora-rtc-v1.1.html" style="font-size:11px;color:var(--txt3)">v1.1</a> <a href="versoes/taxrs-calculadora-rtc-v1.0.html" style="font-size:11px;color:var(--txt3)">v1.0</a></span>
+  <span class="meta-pill"><span class="meta-label">Versão</span><span class="meta-val">1.3</span> <a href="versoes/taxrs-calculadora-rtc-v1.2.html" style="font-size:11px;color:var(--txt3)">v1.2</a> <a href="versoes/taxrs-calculadora-rtc-v1.1.html" style="font-size:11px;color:var(--txt3)">v1.1</a> <a href="versoes/taxrs-calculadora-rtc-v1.0.html" style="font-size:11px;color:var(--txt3)">v1.0</a></span>
   <span class="meta-pill"><span class="meta-label">Data</span><span class="meta-val">28/11/2026</span></span>
   <span class="meta-pill"><span class="meta-label">Calculadora</span><span class="meta-val"><code>ReceitaFederal/calculadora-rtc-regime-regular</code> 1.7.3 (<code>0d4b073</code>)</span></span>
   <span class="meta-pill"><span class="meta-label">tax-rs</span><span class="meta-val"><code>main</code> no <code>a81fdd6</code></span></span>
-  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">12 de 12</span> <span class="chip ok">Aprovada · aguarda o tax-rs</span></span>
+  <span class="meta-pill"><span class="meta-label">Decisões</span><span class="meta-val">12 de 14</span> <span class="chip warn">Em decisão · D-CR-13 e 14</span></span>
 </div>
 
-<div class="callout ok">
-  <div class="ct">v1.2 · as 12 decisões de 28/11</div>
+<div class="callout warn">
+  <div class="ct">v1.3 · jornadas, telas e mudanças propostas nos PRDs</div>
+  <ul class="plain">
+    <li><strong>Jornadas e telas:</strong> seis jornadas (J-CR-01 a 06) e três propostas de telas clicáveis, numa página própria: <a href="taxrs-calculadora-telas.html">Jornadas e telas</a> (seção 15). A escolha é a D-CR-14.</li>
+    <li><strong>Mudanças nos PRDs, só como proposta:</strong> a seção 14 diz o que mudaria em Conciliação, Crédito, Inconsistências, catálogo, mapa e priorização. Nada foi aplicado nos módulos do hub; aplicar é a D-CR-13.</li>
+    <li><strong>Ajuste à D-CR-10:</strong> a RN-INC-10 diz que só uma pessoa resolve ocorrência. Por isso "o ente prevalece" não fecha a ocorrência sozinho: o produto a devolve ao responsável com o desfecho preenchido, como já faz com o reflexo do evento fiscal, e ele confere.</li>
+  </ul>
+  <h3>v1.2 · as 12 decisões de 28/11</h3>
   <ul class="plain">
     <li><strong>Aprovadas como recomendado:</strong> D-CR-01, 02, 03, 05, 07, 08, 09, 11 e 12 (seção 12).</li>
     <li><strong>D-CR-04 e D-CR-10 viraram configuração da empresa:</strong> a tolerância e a regra para quando a etapa 1 diverge mas o ente apura igual ao destacado. Elas ficam numa tela nova do Administrador do cliente, com padrão e auditoria (seção 6.5).</li>
@@ -166,6 +172,8 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
     <li><a href="#s11"><span class="toc-num">11</span>Etapas</a></li>
     <li><a href="#s12"><span class="toc-num">12</span>Decisões</a></li>
     <li><a href="#s13"><span class="toc-num">13</span>Riscos e limites</a></li>
+    <li><a href="#s14"><span class="toc-num">14</span>Mudanças propostas nos PRDs</a></li>
+    <li><a href="#s15"><span class="toc-num">15</span>Jornadas e telas</a></li>
   </ul>
 </div>
 
@@ -410,14 +418,14 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
       <tr><td>Conforme</td><td>Pendente</td><td><span class="chip gray">Pendente</span> · cálculo conforme</td><td>Nenhuma</td></tr>
       <tr><td>Divergente</td><td>Pendente</td><td><span class="chip warn">Pendente</span> · cálculo divergente</td><td><code>capur_*_aliquota</code> ou <code>capur_*_base</code> abre já, como aviso antecipado</td></tr>
       <tr><td>Conforme</td><td>Igual ao RF</td><td><span class="chip ok">Conciliada</span></td><td>Nenhuma</td></tr>
-      <tr><td>Divergente</td><td>Ente igual ao destacado</td><td><span class="chip ok">Conciliada</span> · com ressalva do cálculo</td><td>Depende da configuração da empresa (D-CR-10, seção 6.5). No padrão, "o ente prevalece", a da etapa 1 fecha como "superada pela apuração do ente" e a ressalva fica no histórico. Na outra opção, ela continua aberta como "risco de revisão"</td></tr>
+      <tr><td>Divergente</td><td>Ente igual ao destacado</td><td><span class="chip ok">Conciliada</span> · com ressalva do cálculo</td><td>Depende da configuração da empresa (D-CR-10, seção 6.5). No padrão, "o ente prevalece", a da etapa 1 volta ao responsável com o desfecho "superada pela apuração do ente" preenchido, ele confere e resolve, e a ressalva fica no histórico. Na outra opção, ela continua aberta como "risco de revisão"</td></tr>
       <tr><td>Divergente</td><td>Ente igual ao calculado</td><td><span class="chip red">Divergente</span> · causa: valor do fornecedor</td><td>Uma ocorrência só: a da etapa 1 continua e recebe o valor do ente; <code>capur_*_divergente</code> não abre em duplicidade (D-CR-11)</td></tr>
       <tr><td>Conforme</td><td>Diferente do RF</td><td><span class="chip red">Divergente</span> · o cálculo oficial bate com o RF</td><td><code>capur_*_divergente</code>, como hoje, com a nota "verificar a apuração do ente"</td></tr>
       <tr><td>Classificação inconsistente</td><td>Qualquer</td><td>Segue a etapa 2, com a marca "classificação inconsistente"</td><td>A de classificação (seção 10), mais a da etapa 2 se houver</td></tr>
       <tr><td>Não conferido ou pendente</td><td>Qualquer</td><td>Segue a etapa 2, como hoje, com a marca "cálculo não conferido"</td><td>Só as da etapa 2</td></tr>
     </tbody>
   </table></div>
-  <p><strong>Exemplo.</strong> NF-e de 01/12/2026, um item com base de R$ 1.000,00, CST 000 e cClassTrib 000001. A calculadora devolve CBS de R$ 9,00 (0,9%) e IBS de R$ 1,00 (0,1%), mas o fornecedor destacou CBS de R$ 10,00. No dia da entrada, a CAPUR da CBS fica "Pendente · cálculo divergente" e abre <code>capur_cbs_aliquota</code> com o item e a memória de cálculo. A do IBS fica "Pendente · cálculo conforme". Quando a Receita Federal apura R$ 9,00, a CAPUR da CBS vira "Divergente · causa: valor do fornecedor", na mesma ocorrência. Se a Receita Federal apurar R$ 10,00, ela vira "Conciliada · com ressalva do cálculo" e a ocorrência fecha.</p>
+  <p><strong>Exemplo.</strong> NF-e de 01/12/2026, um item com base de R$ 1.000,00, CST 000 e cClassTrib 000001. A calculadora devolve CBS de R$ 9,00 (0,9%) e IBS de R$ 1,00 (0,1%), mas o fornecedor destacou CBS de R$ 10,00. No dia da entrada, a CAPUR da CBS fica "Pendente · cálculo divergente" e abre <code>capur_cbs_aliquota</code> com o item e a memória de cálculo. A do IBS fica "Pendente · cálculo conforme". Quando a Receita Federal apura R$ 9,00, a CAPUR da CBS vira "Divergente · causa: valor do fornecedor", na mesma ocorrência. Se a Receita Federal apurar R$ 10,00, ela vira "Conciliada · com ressalva do cálculo" e a ocorrência volta ao responsável com o desfecho preenchido.</p>
   <div class="callout">
     <div class="ct">A etapa 1 não muda valor</div>
     <p>Como na decisão de 30/09 sobre os eventos fiscais (divergência nunca aplica valor sozinha), a etapa 1 <strong>não muda</strong> o valor do RF nem o status do crédito. Ela abre ou qualifica a ocorrência, e quem resolve é o time fiscal, com o fornecedor.</p>
@@ -429,7 +437,7 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
     <li><strong>Motivos:</strong> entrada do DF, nova versão da calculadora, reprocessamento pedido pelo usuário, correção do DF (evento ou carta de correção), cron de pendentes.</li>
     <li><strong>Nova versão da calculadora:</strong> por padrão, reprocessa só as CAPUR com a etapa 1 aberta (divergente, inconsistente ou não conferida) e ainda sem apuração. Os conformes antigos ficam como estão (D-CR-06).</li>
     <li><strong>Reprocessamento por lista (D-CR-06):</strong> o usuário indica os DFs a reprocessar de três jeitos: colando chaves de acesso, subindo um CSV com uma chave por linha ou selecionando linhas na Conciliação. São até 5.000 DFs por pedido. O pedido vira um job com progresso, e cada execução entra no histórico com o motivo "reprocessamento por lista", o autor e o id do pedido. Ao terminar, sai um resumo de quantos mudaram de resultado e quais. Chave fora do escopo da sessão é ignorada, com aviso. Serve também para aplicar uma configuração nova da seção 6.5 a DFs já conferidos.</li>
-    <li><strong>Mudança de resultado entre versões</strong> fica visível. Uma divergência que some depois da 1.7.2, por exemplo, aparece na timeline como "Etapa 1 · conforme · calculadora 1.7.2", e a ocorrência fecha como "resolvida pela regra oficial".</li>
+    <li><strong>Mudança de resultado entre versões</strong> fica visível. Uma divergência que some depois da 1.7.2, por exemplo, aparece na timeline como "Etapa 1 · conforme · calculadora 1.7.2", e a ocorrência volta ao responsável com o desfecho "conforme na execução nova".</li>
     <li><strong>O registro da CAPUR</strong> passa a guardar o id da execução usada, junto da apuração usada na etapa 2. Assim dá para reconstituir qualquer status passado.</li>
   </ul>
 
@@ -446,7 +454,7 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
     <thead><tr><th>Configuração</th><th>Opções</th><th>Padrão</th><th>Decisão</th></tr></thead>
     <tbody>
       <tr><td><strong>Tolerância da comparação</strong></td><td>Valor em reais, aplicado por item e por tributo, de R$ 0,00 a R$ 1,00. Opcional: uma tolerância no total do documento.</td><td>R$ 0,01 por item, sem tolerância no documento</td><td>D-CR-04</td></tr>
-      <tr><td><strong>Etapa 1 divergente e o ente apura igual ao destacado</strong></td><td>"O ente prevalece": a CAPUR fica conciliada com ressalva e a ocorrência fecha como superada. "Manter aberta como risco": a CAPUR fica conciliada e a ocorrência continua aberta, com o rótulo "risco de revisão".</td><td>O ente prevalece</td><td>D-CR-10</td></tr>
+      <tr><td><strong>Etapa 1 divergente e o ente apura igual ao destacado</strong></td><td>"O ente prevalece": a CAPUR fica conciliada com ressalva e a ocorrência volta ao responsável com o desfecho "superada" preenchido. "Manter aberta como risco": a CAPUR fica conciliada e a ocorrência continua aberta, com o rótulo "risco de revisão".</td><td>O ente prevalece</td><td>D-CR-10</td></tr>
     </tbody>
   </table></div>
   <p>A regra pura em <code>reconcile.ts</code> recebe as duas configurações como entrada, e o registro da CAPUR guarda os valores usados. Assim um status passado se reconstitui com a configuração da época. O teto de R$ 1,00 é da plataforma, para que a tolerância não esconda divergência real.</p>
@@ -554,7 +562,7 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
       <tr><td>Indicador de apropriação = não (fora da CAPUR)</td><td><code>credito_sem_direito</code> "Classificação sem direito a crédito"</td><td>C</td><td>Novo</td></tr>
     </tbody>
   </table></div>
-  <p>Dono e prazo seguem a família: B é o time fiscal com o órgão, em 15 dias úteis; A é o time fiscal com o emitente, em 5 dias úteis; C segue o prazo legal. Uma ocorrência da etapa 1 fecha sozinha em três casos: uma execução nova sai conforme, a etapa 2 a supera (D-CR-10) ou ela é absorvida pela divergência da etapa 2 (D-CR-11).</p>
+  <p>Dono e prazo seguem a família: B é o time fiscal com o órgão, em 15 dias úteis; A é o time fiscal com o emitente, em 5 dias úteis; C segue o prazo legal. O produto nunca resolve uma ocorrência da etapa 1 sozinho (RN-INC-10). Ele a devolve ao responsável, com o desfecho preenchido, em três casos: uma execução nova sai conforme, a etapa 2 a supera (D-CR-10) ou ela é absorvida pela divergência da etapa 2 (D-CR-11).</p>
 </div>
 
 <!-- 11 -->
@@ -586,7 +594,7 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
 <!-- 12 -->
 <div class="section" id="s12">
   <div class="sec-hdr"><span class="sec-num">12</span><span class="sec-title">Decisões</span></div>
-  <p>As 12 foram decididas em 28/11/2026. Três respostas trouxeram ajustes à recomendação: a tolerância (D-CR-04) e a regra da D-CR-10 viraram configuração da empresa, e a D-CR-06 ganhou o reprocessamento por lista de DFs.</p>
+  <p>As 12 primeiras foram decididas em 28/11/2026; a D-CR-13 e a D-CR-14, da v1.3, estão em aberto. Três respostas trouxeram ajustes à recomendação: a tolerância (D-CR-04) e a regra da D-CR-10 viraram configuração da empresa, e a D-CR-06 ganhou o reprocessamento por lista de DFs.</p>
   <div class="table-wrap"><table>
     <thead><tr><th>Id</th><th>Pergunta</th><th>Decisão</th><th>Como fica</th></tr></thead>
     <tbody>
@@ -599,9 +607,11 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
       <tr><td class="id">D-CR-07</td><td>O validador importa os aceitos?</td><td><span class="chip ok">Não na primeira versão</span></td><td>O validador fica sem efeito no Live.</td></tr>
       <tr><td class="id">D-CR-08</td><td>Limites e retenção do validador</td><td><span class="chip ok">Como proposto</span></td><td>Lote de até 500 documentos e 50 MB. O XML fica guardado por 90 dias e o relatório por 5 anos.</td></tr>
       <tr><td class="id">D-CR-09</td><td>Ordem das etapas</td><td><span class="chip ok">CAPUR primeiro</span></td><td>CR-0 → CR-1 → CR-2 → CR-3, com o validador (CR-4) em paralelo se houver segunda frente.</td></tr>
-      <tr><td class="id">D-CR-10</td><td>Etapa 1 divergente e o ente apura igual ao destacado</td><td><span class="chip info">Configuração do cliente</span></td><td>A empresa escolhe entre "o ente prevalece" (padrão) e "manter aberta como risco de revisão" (seção 6.5).</td></tr>
+      <tr><td class="id">D-CR-10</td><td>Etapa 1 divergente e o ente apura igual ao destacado</td><td><span class="chip info">Configuração do cliente</span></td><td>A empresa escolhe entre "o ente prevalece" (padrão) e "manter aberta como risco de revisão" (seção 6.5). No padrão, a ocorrência volta ao responsável com o desfecho preenchido; resolver é dele (v1.3).</td></tr>
       <tr><td class="id">D-CR-11</td><td>Uma ou duas ocorrências quando as duas etapas divergem</td><td><span class="chip ok">Uma só</span></td><td>A ocorrência da etapa 1 continua e recebe o valor do ente.</td></tr>
       <tr><td class="id">D-CR-12</td><td>Família das ocorrências de classificação</td><td><span class="chip ok">Família A</span></td><td>Dono: o emitente. Prazo: 5 dias úteis. Prefixo <code>capur_</code>.</td></tr>
+      <tr id="D-CR-13"><td class="id">D-CR-13</td><td>Levar as decisões aos PRDs?</td><td><span class="chip warn">Em aberto</span></td><td>Recomendado: sim, como a seção 14 descreve, depois da D-CR-14, para os PRDs já citarem as telas escolhidas.</td></tr>
+      <tr id="D-CR-14"><td class="id">D-CR-14</td><td>Qual proposta de telas?</td><td><span class="chip warn">Em aberto</span></td><td>Recomendada: A, nas telas de hoje, que segue a v1.1 e menos constrói. B (espaço próprio) e C (gaveta na Conciliação) estão clicáveis em <a href="taxrs-calculadora-telas.html#s4">Jornadas e telas</a>.</td></tr>
     </tbody>
   </table></div>
 </div>
@@ -626,7 +636,81 @@ pre code { background: none; padding: 0; overflow-wrap: normal; }
   </ul>
 </div>
 
-<div class="foot">SplitHub · tax-rs · Calculadora da Receita Federal no Live · v1.2 · 28/11/2026</div>
+<!-- 14 -->
+<div class="section" id="s14">
+  <div class="sec-hdr"><span class="sec-num">14</span><span class="sec-title">Mudanças propostas nos PRDs</span></div>
+  <div class="callout warn">
+    <div class="ct">Proposta para decisão: nada foi aplicado</div>
+    <p>Esta seção descreve o que mudaria nos PRDs e documentos de produto do hub se as decisões deste estudo forem levadas a eles. As seções dos módulos <strong>não foram alteradas</strong>: os PRDs, o catálogo, o mapa e a priorização seguem como estavam. Aplicar é a D-CR-13 (seção 12).</p>
+  </div>
+
+  <h3>14.1 PRD de Conciliação · de v3.8 para v3.9</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Seção do PRD</th><th>Mudança proposta</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Topo</strong></td><td>Quadro "v3.9 — a CAPUR em duas etapas", com o link para este estudo.</td></tr>
+      <tr><td><strong>05 · Máquinas de estado</strong></td><td>Nova 5.1.1 com os cinco resultados da etapa 1 e a tabela de combinação das duas etapas (a 6.2 deste estudo).</td></tr>
+      <tr><td><strong>06 · Taxonomia</strong></td><td><code>capur_*_aliquota</code> passa a ser detectado pela etapa 1. Entram <code>capur_ibs_base</code> e <code>capur_cbs_base</code> (6.1), e uma 6.4 com os quatro tipos de classificação da família A. A seção vai de vinte a vinte e seis tipos.</td></tr>
+      <tr><td><strong>08 · Funcionalidades</strong></td><td><strong>F-09</strong> Conferir o cálculo oficial (etapa 1), <strong>F-10</strong> Configurar a conferência de cálculo, <strong>F-11</strong> Reprocessar a etapa 1 por lista de DFs.</td></tr>
+      <tr><td><strong>09 · KPIs</strong></td><td>"Cálculo divergente": CAPUR com a etapa 1 divergente ou com classificação inconsistente.</td></tr>
+      <tr><td><strong>10 · Requisitos</strong></td><td>Nova 10.5 com RF-CONC-023 a 031: itens lidos só para conferir, comparação com tolerância, combinação das etapas, histórico por versão, calculadora fora do ar sem bloquear, configuração auditada, reprocessamento automático e por lista, bloco no detalhe do DF.</td></tr>
+      <tr><td><strong>11 · Regras</strong></td><td>RN-CONC-08 (duas etapas, o ente é a palavra final), 09 (a etapa 1 não muda valor), 10 (tolerância configurável, padrão R$ 0,01 e teto R$ 1,00), 11 (regra configurável quando o ente apura igual ao destacado), 12 (uma ocorrência só), 13 (não conferido nunca vira ocorrência do cliente), 14 (execução e configuração guardadas).</td></tr>
+      <tr><td><strong>14 · Integrações · 15 · Glossário</strong></td><td>A calculadora como dependência consumida; "Etapa 1", "Etapa 2" e "Tolerância".</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>14.2 PRD de Crédito · de v3.3.1 para v3.4</h3>
+  <p><strong>RN-CRE-30:</strong> quando os indicadores da cClassTrib negam ao adquirente o direito ao crédito, o crédito esperado do tributo vai a zero, com o motivo visível. O RF fica intacto e abre <code>credito_sem_direito</code>. Se o ente apropriar mesmo assim, vale o ente.</p>
+
+  <h3>14.3 PRD de Inconsistências · de v1.7 para v1.8</h3>
+  <ul class="plain">
+    <li><strong>Seção 03:</strong> uma subseção com os sete tipos aprovados para a etapa 1, separada dos 31 que o app abre hoje, para não mudar a contagem nem a cobertura.</li>
+    <li><strong>Seção 04:</strong> uma passagem nova em que o produto devolve a <code>em_analise</code> a ocorrência superada, com o desfecho preenchido. Resolver continua com o responsável.</li>
+    <li><strong>Seção 14:</strong> a decisão D-14 com a família dos sete tipos.</li>
+  </ul>
+  <div class="callout">
+    <div class="ct">Ajuste necessário à D-CR-10</div>
+    <p>A RN-INC-10 e as decisões D-10 e D-23 do PRD de Inconsistências dizem que só uma pessoa resolve ocorrência. Por isso "o ente prevalece" não pode fechar a ocorrência sozinho. A proposta: o produto a devolve ao responsável com o desfecho "superada pela apuração do ente" preenchido, e ele confere, como já acontece com o reflexo do evento fiscal. O mesmo vale para a execução nova que sai conforme. As seções 6.2, 6.3, 6.5 e 10 deste estudo já estão escritas assim.</p>
+  </div>
+
+  <h3>14.4 Catálogo, mapa e priorização</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Documento</th><th>Mudança proposta</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Catálogo de inconsistências</strong> · v1.2 → v1.3</td><td>Sete entradas propostas: INC-CONC-14 e 15 (base ou valor divergente do cálculo oficial, família B), INC-CONC-16 a 19 (classificação reprovada na regra oficial, família A, dono o emitente) e INC-CRE-09 (classificação sem direito a crédito). INC-CONC-03 e 04 passam a ser detectados pela etapa 1. O catálogo iria de 90 para 97 ocorrências.</td></tr>
+      <tr><td><strong>Mapa de funcionalidades</strong> · v2.15 → v2.16</td><td>Três funcionalidades em Conciliação, de 333 para 336: cálculo oficial como etapa 1 (risco), configuração da conferência (configuração) e reprocessamento por lista (ação).</td></tr>
+      <tr><td><strong>Priorização do MVP</strong> · v2.17 → v2.18</td><td>As três em <strong>M1</strong>, de 376 para 379 itens, com o M0 inalterado em 147. A cadeia do crédito fecha sem elas, pela apuração do ente; elas antecipam a divergência e qualificam a causa.</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+
+<!-- 15 -->
+<div class="section" id="s15">
+  <div class="sec-hdr"><span class="sec-num">15</span><span class="sec-title">Jornadas e telas</span></div>
+  <p>As jornadas e as três propostas de telas estão numa página própria, <a href="taxrs-calculadora-telas.html">Calculadora no Live: jornadas e telas</a>, com protótipo clicável que faz a conta sobre dez NF-e de exemplo.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Jornada</th><th>Ator</th><th>O que cobre</th></tr></thead>
+    <tbody>
+      <tr><td class="id">J-CR-01</td><td>Analista fiscal</td><td>Ver o aviso antecipado na Conciliação e entender a causa no cálculo do item (seções 6.1 e 6.4).</td></tr>
+      <tr><td class="id">J-CR-02</td><td>Analista fiscal</td><td>Tratar a ocorrência quando a apuração do ente chega, com as duas regras da D-CR-10 (seção 6.2).</td></tr>
+      <tr><td class="id">J-CR-03</td><td>Analista fiscal</td><td>Reprocessar uma lista de DFs: colar chaves, CSV ou seleção (seção 6.3).</td></tr>
+      <tr><td class="id">J-CR-04</td><td>Administrador do cliente</td><td>Configurar tolerância e regra, com prévia do impacto e auditoria (seção 6.5).</td></tr>
+      <tr><td class="id">J-CR-05</td><td>Analista fiscal ou de compras</td><td>Validar um lote de XMLs e exportar o relatório (seção 7).</td></tr>
+      <tr><td class="id">J-CR-06</td><td>Produto e analista fiscal</td><td>Versão nova da calculadora e o reprocessamento automático (seção 6.3).</td></tr>
+    </tbody>
+  </table></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Proposta</th><th>Onde a calculadora mora</th></tr></thead>
+    <tbody>
+      <tr><td><strong>A · Nas telas de hoje</strong> <span class="chip warn">recomendada</span></td><td>Selo e filtro na Conciliação, bloco "Etapa 1" no detalhe do DF, tipos novos em Inconsistências, validador e configuração em telas novas. É o que a seção 6.4 descreve.</td></tr>
+      <tr><td><strong>B · Espaço "Cálculo oficial"</strong></td><td>Um item de menu com painel, conferências (lista e detalhe lado a lado), reprocessamentos, validador e configuração.</td></tr>
+      <tr><td><strong>C · Gaveta na Conciliação</strong></td><td>Tudo a partir da lista: gaveta com abas, barra de seleção para reprocessar, gavetas do validador e da configuração com prévia sobre a lista.</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<div class="foot">SplitHub · tax-rs · Calculadora da Receita Federal no Live · v1.3 · 28/11/2026</div>
 </div>
 </body>
 </html>
